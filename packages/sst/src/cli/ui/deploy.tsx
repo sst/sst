@@ -254,7 +254,7 @@ function getApiAccessLogPermissionsHelper(error: string) {
   // note: this should be handled in SST as access log group names are now
   //       hardcoded with /aws/vendedlogs/apis prefix.
   if (error.indexOf("Insufficient permissions to enable logging") > -1) {
-    return `This is a common deploy error. Check out this GitHub issue for more details - https://github.com/serverless-stack/sst/issues/125`;
+    return `This is a common deploy error. Check out this GitHub issue for more details - https://github.com/sst/sst/issues/125`;
   }
 }
 

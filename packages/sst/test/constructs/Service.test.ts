@@ -38,11 +38,11 @@ test("default", async () => {
   const { service, stack } = await createService();
   expect(service.url).toBeDefined();
   expect(service.customDomainUrl).toBeUndefined();
-  expect(service.cdk!.vpc).toBeDefined();
-  expect(service.cdk!.cluster).toBeDefined();
-  expect(service.cdk!.distribution.distributionId).toBeDefined();
-  expect(service.cdk!.distribution.distributionDomainName).toBeDefined();
-  expect(service.cdk!.certificate).toBeUndefined();
+  expect(service.cdk?.vpc).toBeDefined();
+  expect(service.cdk?.cluster).toBeDefined();
+  expect(service.cdk?.distribution?.distributionId).toBeDefined();
+  expect(service.cdk?.distribution?.distributionDomainName).toBeDefined();
+  expect(service.cdk?.certificate).toBeUndefined();
   printResource(stack, "AWS::EC2::AutoScalingGroup");
   countResources(stack, "AWS::EC2::VPC", 1);
   hasResource(stack, "AWS::EC2::VPC", {
@@ -258,13 +258,29 @@ test("file defiend", async () => {
   });
   countResources(stack, "AWS::ECS::TaskDefinition", 1);
 });
-
 test("file invalid", async () => {
   expect(async () => {
     await createService({
       file: "path/to/garbage",
     });
   }).rejects.toThrow(/No Dockerfile found/);
+});
+
+test("logRetention undefined", async () => {
+  const { stack } = await createService({});
+  hasResource(stack, "Custom::LogRetention", {
+    RetentionInDays: ABSENT,
+    LogGroupName: "/sst/service/test-app-Service",
+  });
+});
+test("logRetention defined", async () => {
+  const { service, stack } = await createService({
+    logRetention: "one_month",
+  });
+  hasResource(stack, "Custom::LogRetention", {
+    RetentionInDays: 30,
+    LogGroupName: "/sst/service/test-app-Service",
+  });
 });
 
 test("scaling.minContainers undefined", async () => {
@@ -433,7 +449,60 @@ test("environment", async () => {
   });
 });
 
-test("constructor: sst remove", async () => {
+test("cdk.container", async () => {
+  const { stack } = await createService({
+    cdk: {
+      container: {
+        healthCheck: {
+          command: ["CMD-SHELL", "cmd"],
+        },
+      },
+    },
+  });
+  hasResource(stack, "AWS::ECS::TaskDefinition", {
+    ContainerDefinitions: [
+      objectLike({
+        HealthCheck: objectLike({
+          Command: ["CMD-SHELL", "cmd"],
+        }),
+      }),
+    ],
+  });
+});
+
+test("cdk.cloudfrontDistribution", async () => {
+  const { stack, service } = await createService({
+    cdk: {
+      cloudfrontDistribution: false,
+    },
+  });
+  countResources(stack, "AWS::ECS::Cluster", 1);
+  countResources(stack, "AWS::CloudFront::Distribution", 0);
+  countResources(stack, "Custom::CloudFrontInvalidator", 0);
+  expect(service.url).toBeUndefined();
+  expect(service.cdk?.vpc).toBeDefined();
+  expect(service.cdk?.cluster).toBeDefined();
+  expect(service.cdk?.distribution).toBeUndefined();
+});
+
+test("cdk.applicationLoadBalancer", async () => {
+  const { stack, service } = await createService({
+    cdk: {
+      applicationLoadBalancer: false,
+    },
+  });
+  countResources(stack, "AWS::ECS::Cluster", 1);
+  countResources(stack, "AWS::CloudFront::Distribution", 0);
+  countResources(stack, "Custom::CloudFrontInvalidator", 0);
+  countResources(stack, "AWS::ElasticLoadBalancingV2::LoadBalancer", 0);
+  countResources(stack, "AWS::ApplicationAutoScaling::ScalingPolicy", 2);
+  expect(service.url).toBeUndefined();
+  expect(service.cdk?.vpc).toBeDefined();
+  expect(service.cdk?.cluster).toBeDefined();
+  expect(service.cdk?.distribution).toBeUndefined();
+});
+
+test("sst remove", async () => {
   const app = await createApp({ mode: "remove" });
   const stack = new Stack(app, "stack");
   const service = new Service(stack, "Service", {
@@ -448,7 +517,7 @@ test("constructor: sst remove", async () => {
   countResources(stack, "Custom::CloudFrontInvalidator", 0);
 });
 
-test("constructor: sst deploy inactive stack", async () => {
+test("sst deploy inactive stack", async () => {
   const app = await createApp({
     mode: "deploy",
     isActiveStack(stackName) {
@@ -468,7 +537,7 @@ test("constructor: sst deploy inactive stack", async () => {
   countResources(stack, "Custom::CloudFrontInvalidator", 0);
 });
 
-test("constructor: sst dev: dev.url undefined", async () => {
+test("sst dev: dev.url undefined", async () => {
   const app = await createApp({ mode: "dev" });
   const stack = new Stack(app, "stack");
   const service = new Service(stack, "Service", {
@@ -483,7 +552,7 @@ test("constructor: sst dev: dev.url undefined", async () => {
   countResources(stack, "Custom::CloudFrontInvalidator", 0);
 });
 
-test("constructor: sst dev: dev.url string", async () => {
+test("sst dev: dev.url string", async () => {
   const app = await createApp({ mode: "dev" });
   const stack = new Stack(app, "stack");
   const service = new Service(stack, "Service", {
@@ -496,7 +565,7 @@ test("constructor: sst dev: dev.url string", async () => {
   expect(service.url).toBe("localhost:3000");
 });
 
-test("constructor: sst dev: disablePlaceholder true", async () => {
+test("sst dev: disablePlaceholder true", async () => {
   const app = await createApp({ mode: "dev" });
   const stack = new Stack(app, "stack");
   const service = new Service(stack, "Service", {
@@ -512,7 +581,7 @@ test("constructor: sst dev: disablePlaceholder true", async () => {
   countResources(stack, "Custom::CloudFrontInvalidator", 1);
 });
 
-test("constructor: sst remove", async () => {
+test("sst remove", async () => {
   const app = await createApp({ mode: "remove" });
   const stack = new Stack(app, "stack");
   const service = new Service(stack, "Service", {
@@ -531,7 +600,7 @@ test("constructor: sst remove", async () => {
 // Test Methods
 /////////////////////////////
 
-test("bind", async () => {
+test("bind()", async () => {
   const { service, stack } = await createService();
   const topic = new Topic(stack, "Topic");
   const MY_TOPIC_ARN = new Config.Parameter(stack, "MY_TOPIC_ARN", {
@@ -549,7 +618,7 @@ test("bind", async () => {
   });
 });
 
-test("attachPermissions", async () => {
+test("attachPermissions()", async () => {
   const { service, stack } = await createService({});
   service.attachPermissions(["sns"]);
   countResourcesLike(stack, "AWS::IAM::Policy", 1, {
@@ -566,7 +635,7 @@ test("attachPermissions", async () => {
   });
 });
 
-test("addEnvironment", async () => {
+test("addEnvironment()", async () => {
   const { service, stack } = await createService();
   service.addEnvironment("DEBUG", "*");
   hasResource(stack, "AWS::ECS::TaskDefinition", {

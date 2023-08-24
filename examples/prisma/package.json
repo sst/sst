@@ -12,20 +12,20 @@
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
-    "sst": "^2.20.1",
-    "aws-cdk-lib": "2.84.0",
-    "constructs": "10.1.156",
+    "sst": "^2.24.11",
+    "aws-cdk-lib": "2.91.0",
+    "constructs": "10.2.69",
     "typescript": "^5.1.6",
     "@tsconfig/node16": "^16.1.0",
     "@types/fs-extra": "^11.0.1",
-    "prisma": "^5.0.0"
+    "prisma": "^5.1.1"
   },
   "workspaces": [
     "packages/*"
   ],
   "dependencies": {
-    "prisma": "^5.0.0",
+    "prisma": "^5.1.1",
     "fs-extra": "^11.1.1",
-    "@prisma/client": "^5.0.0"
+    "@prisma/client": "^5.1.1"
   }
 }

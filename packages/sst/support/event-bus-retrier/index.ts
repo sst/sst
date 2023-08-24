@@ -3,7 +3,10 @@ import { SQSClient, SendMessageCommand } from "@aws-sdk/client-sqs";
 import type { SQSHandler } from "aws-lambda";
 
 const lambda = new LambdaClient({});
+lambda.middlewareStack.remove("recursionDetectionMiddleware");
 const sqs = new SQSClient({});
+sqs.middlewareStack.remove("recursionDetectionMiddleware");
+
 const retries = JSON.parse(process.env.RETRIES!);
 
 export const handler: SQSHandler = async (evt) => {

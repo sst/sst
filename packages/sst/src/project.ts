@@ -27,6 +27,7 @@ export interface ConfigOptions {
   outputs?: string;
   advanced?: {
     disableParameterizedStackNameCheck?: boolean;
+    disableAppModeCheck?: boolean;
   };
   bootstrap?: {
     useCdkBucket?: boolean;
@@ -36,12 +37,14 @@ export interface ConfigOptions {
   cdk?: {
     toolkitStackName?: string;
     qualifier?: string;
+    bootstrapStackVersionSsmParameter?: string;
     fileAssetsBucketName?: string;
     customPermissionsBoundary?: string;
     publicAccessBlockConfiguration?: boolean;
     deployRoleArn?: string;
     fileAssetPublishingRoleArn?: string;
     imageAssetPublishingRoleArn?: string;
+    imageAssetsRepositoryName?: string;
     cloudFormationExecutionRole?: string;
     lookupRoleArn?: string;
     pathMetadata?: boolean;
@@ -198,14 +201,13 @@ export async function initProject(globals: GlobalOptions) {
     }
   })();
 
-  dotenv.config({
-    path: path.join(project.paths.root, `.env.${project.config.stage}`),
-    override: true,
-  });
-  dotenv.config({
-    path: path.join(project.paths.root, `.env.${project.config.stage}.local`),
-    override: true,
-  });
+  // Load .env files
+  [
+    path.join(project.paths.root, `.env`),
+    path.join(project.paths.root, `.env.local`),
+    path.join(project.paths.root, `.env.${project.config.stage}`),
+    path.join(project.paths.root, `.env.${project.config.stage}.local`),
+  ].forEach((path) => dotenv.config({ path, override: true }));
 
   Logger.debug("Config loaded", project);
 }

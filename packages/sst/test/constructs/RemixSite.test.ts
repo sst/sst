@@ -217,6 +217,16 @@ test("default", async () => {
   });
 });
 
+test("path not exist", async () => {
+  expect(async () => {
+    await createSite({
+      path: "does-not-exist",
+      // @ts-expect-error: "sstTest" is not exposed in props
+      sstTest: true,
+    });
+  }).rejects.toThrow(/Could not find/);
+});
+
 test("edge: undefined: environment set on server function", async () => {
   const { site, stack } = await createSite((stack) => {
     const api = new Api(stack, "Api");
@@ -237,7 +247,6 @@ test("edge: undefined: environment set on server function", async () => {
     },
   });
 });
-
 test("edge: false", async () => {
   const { site, stack } = await createSite({
     edge: false,
@@ -280,7 +289,6 @@ test("edge: false", async () => {
     }),
   });
 });
-
 test("edge: true", async () => {
   const { site, stack } = await createSite({
     edge: true,
@@ -430,7 +438,6 @@ test("edge: true", async () => {
     paths: ["/*"],
   });
 });
-
 test("edge: true: environment generates placeholders", async () => {
   const { site, stack } = await createSite((stack) => {
     const api = new Api(stack, "Api");
@@ -475,16 +482,6 @@ test("edge: true: environment generates placeholders", async () => {
       },
     ],
   });
-});
-
-test("constructor: path not exist", async () => {
-  expect(async () => {
-    await createSite({
-      path: "does-not-exist",
-      // @ts-expect-error: "sstTest" is not exposed in props
-      sstTest: true,
-    });
-  }).rejects.toThrow(/Could not find/);
 });
 
 test("customDomain: string", async () => {
@@ -624,7 +621,45 @@ test("fileOptions: defined", async () => {
   });
 });
 
-test("constructor: cdk.serverCachePolicy undefined", async () => {
+test("regional.enableServerUrlIamAuth: undefined", async () => {
+  const { site, stack } = await createSite({
+    // @ts-expect-error: "sstTest" is not exposed in props
+    sstTest: true,
+  });
+  countResources(stack, "Custom::SSTEdgeLambda", 0);
+  hasResource(stack, "AWS::CloudFront::Distribution", {
+    DistributionConfig: objectLike({
+      DefaultCacheBehavior: objectLike({
+        LambdaFunctionAssociations: [],
+      }),
+    }),
+  });
+});
+test("regional.enableServerUrlIamAuth: true", async () => {
+  const { site, stack } = await createSite({
+    // @ts-expect-error: "sstTest" is not exposed in props
+    sstTest: true,
+    regional: {
+      enableServerUrlIamAuth: true,
+    },
+  });
+  countResources(stack, "Custom::SSTEdgeLambda", 1);
+  hasResource(stack, "AWS::CloudFront::Distribution", {
+    DistributionConfig: objectLike({
+      DefaultCacheBehavior: objectLike({
+        LambdaFunctionAssociations: [
+          {
+            EventType: "origin-request",
+            IncludeBody: true,
+            LambdaFunctionARN: ANY,
+          },
+        ],
+      }),
+    }),
+  });
+});
+
+test("cdk.serverCachePolicy undefined", async () => {
   const { site, stack } = await createSite({
     // @ts-expect-error: "sstTest" is not exposed in props
     sstTest: true,
@@ -636,8 +671,7 @@ test("constructor: cdk.serverCachePolicy undefined", async () => {
     }),
   });
 });
-
-test("constructor: cdk.serverCachePolicy override", async () => {
+test("cdk.serverCachePolicy override", async () => {
   const { site, stack } = await createSite((stack) => ({
     cdk: {
       serverCachePolicy: CachePolicy.fromCachePolicyId(
@@ -651,15 +685,14 @@ test("constructor: cdk.serverCachePolicy override", async () => {
   countResources(stack, "AWS::CloudFront::CachePolicy", 0);
 });
 
-test("constructor: cdk.responseHeadersPolicy undefined", async () => {
+test("cdk.responseHeadersPolicy undefined", async () => {
   const { site, stack } = await createSite({
     // @ts-expect-error: "sstTest" is not exposed in props
     sstTest: true,
   });
   countResources(stack, "AWS::CloudFront::ResponseHeadersPolicy", 0);
 });
-
-test("constructor: cdk.responseHeadersPolicy override", async () => {
+test("cdk.responseHeadersPolicy override", async () => {
   const { site, stack } = await createSite((stack) => ({
     cdk: {
       responseHeadersPolicy: new ResponseHeadersPolicy(stack, "Policy", {
@@ -671,7 +704,7 @@ test("constructor: cdk.responseHeadersPolicy override", async () => {
   countResources(stack, "AWS::CloudFront::CachePolicy", 1);
 });
 
-test("constructor: cdk.distribution props", async () => {
+test("cdk.distribution props", async () => {
   const { site, stack } = await createSite({
     cdk: {
       distribution: {
@@ -688,8 +721,7 @@ test("constructor: cdk.distribution props", async () => {
     }),
   });
 });
-
-test("constructor: cdk.distribution defaultBehavior override", async () => {
+test("cdk.distribution defaultBehavior override", async () => {
   const { site, stack } = await createSite({
     cdk: {
       distribution: {
@@ -721,7 +753,7 @@ test("constructor: cdk.distribution defaultBehavior override", async () => {
   });
 });
 
-test("constructor: cdk.bucket is props", async () => {
+test("cdk.bucket is props", async () => {
   const { site, stack } = await createSite({
     cdk: {
       bucket: {
@@ -736,8 +768,7 @@ test("constructor: cdk.bucket is props", async () => {
     BucketName: "my-bucket",
   });
 });
-
-test("constructor: cdk.bucket is construct", async () => {
+test("cdk.bucket is construct", async () => {
   const { site, stack } = await createSite((stack) => ({
     cdk: {
       bucket: s3.Bucket.fromBucketName(stack, "Bucket", "my-bucket"),
@@ -772,7 +803,7 @@ test("constructor: cdk.bucket is construct", async () => {
   });
 });
 
-test("constructor: cdk.distribution.defaultBehavior no functionAssociations", async () => {
+test("cdk.distribution.defaultBehavior no functionAssociations", async () => {
   const { site, stack } = await createSite();
   hasResource(stack, "AWS::CloudFront::Distribution", {
     DistributionConfig: objectLike({
@@ -787,8 +818,7 @@ test("constructor: cdk.distribution.defaultBehavior no functionAssociations", as
     }),
   });
 });
-
-test("constructor: cdk.distribution.defaultBehavior additional functionAssociations", async () => {
+test("cdk.distribution.defaultBehavior additional functionAssociations", async () => {
   const { site, stack } = await createSite((stack) => ({
     cdk: {
       distribution: {
@@ -823,7 +853,7 @@ test("constructor: cdk.distribution.defaultBehavior additional functionAssociati
   });
 });
 
-test("constructor: cdk.server.logRetention", async () => {
+test("cdk.server.logRetention", async () => {
   const { site, stack } = await createSite({
     cdk: {
       server: {
@@ -838,22 +868,7 @@ test("constructor: cdk.server.logRetention", async () => {
   });
 });
 
-test("constructor: sst remove", async () => {
-  const app = await createApp({ mode: "remove" });
-  const stack = new Stack(app, "stack");
-  const site = new RemixSite(stack, "Site", {
-    path: sitePath,
-  });
-  await app.finish();
-  expect(site.url).toBeUndefined();
-  expect(site.customDomainUrl).toBeUndefined();
-  expect(site.cdk).toBeUndefined();
-  countResources(stack, "Custom::SSTBucketDeployment", 0);
-  countResources(stack, "Custom::CloudFrontInvalidator", 0);
-  countResources(stack, "AWS::CloudFront::Distribution", 0);
-});
-
-test("constructor: sst deploy inactive stack", async () => {
+test("sst deploy inactive stack", async () => {
   const app = await createApp({
     mode: "deploy",
     isActiveStack(stackName) {
@@ -873,7 +888,7 @@ test("constructor: sst deploy inactive stack", async () => {
   countResources(stack, "Custom::CloudFrontInvalidator", 0);
 });
 
-test("constructor: sst dev: dev.url undefined", async () => {
+test("sst dev: dev.url undefined", async () => {
   const app = await createApp({ mode: "dev" });
   const stack = new Stack(app, "stack");
   const site = new RemixSite(stack, "Site", {
@@ -887,8 +902,7 @@ test("constructor: sst dev: dev.url undefined", async () => {
   countResources(stack, "Custom::SSTBucketDeployment", 0);
   countResources(stack, "Custom::CloudFrontInvalidator", 0);
 });
-
-test("constructor: sst dev: dev.url string", async () => {
+test("sst dev: dev.url string", async () => {
   const app = await createApp({ mode: "dev" });
   const stack = new Stack(app, "stack");
   const site = new RemixSite(stack, "Site", {
@@ -900,8 +914,7 @@ test("constructor: sst dev: dev.url string", async () => {
   await app.finish();
   expect(site.url).toBe("localhost:3000");
 });
-
-test("constructor: sst dev: disablePlaceholder true", async () => {
+test("sst dev: disablePlaceholder true", async () => {
   const app = await createApp({ mode: "dev" });
   const stack = new Stack(app, "stack");
   const site = new RemixSite(stack, "Site", {
@@ -917,7 +930,7 @@ test("constructor: sst dev: disablePlaceholder true", async () => {
   countResources(stack, "AWS::CloudFront::Distribution", 1);
 });
 
-test("constructor: sst remove", async () => {
+test("sst remove", async () => {
   const app = await createApp({ mode: "remove" });
   const stack = new Stack(app, "stack");
   const site = new RemixSite(stack, "Site", {

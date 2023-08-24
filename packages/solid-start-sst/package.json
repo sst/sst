@@ -1,6 +1,6 @@
 {
   "name": "solid-start-sst",
-  "version": "2.23.2",
+  "version": "2.24.13",
   "description": "Adapter for Solid apps to work on AWS Lambda and AWS Lambda@Edge.",
   "main": "./index.mjs",
   "types": "./index.d.ts",
@@ -17,7 +17,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/serverless-stack/sst.git",
+    "url": "https://github.com/sst/sst.git",
     "directory": "packages/solid-start-sst"
   },
   "license": "MIT",

@@ -1,5 +1,67 @@
 # astro-sst
 
+## 2.24.13
+
+## 2.24.12
+
+## 2.24.11
+
+## 2.24.10
+
+## 2.24.9
+
+## 2.24.8
+
+## 2.24.7
+
+## 2.24.6
+
+## 2.24.5
+
+## 2.24.4
+
+### Patch Changes
+
+- [#3220](https://github.com/sst/sst/pull/3220) [`a5c917183`](https://github.com/sst/sst/commit/a5c917183e0361781fbf69c34f72200cbf6af2ee) Thanks [@adamelmore](https://github.com/adamelmore)! - AstroSite: fix redirects for streaming response
+
+## 2.24.3
+
+## 2.24.2
+
+## 2.24.1
+
+## 2.24.0
+
+### Patch Changes
+
+- [#3201](https://github.com/sst/sst/pull/3201) [`f5a7d5609`](https://github.com/sst/sst/commit/f5a7d560930434b48d1970c7eddf3c5044caae58) Thanks [@jayair](https://github.com/jayair)! - Update serverless-stack to sst
+
+## 2.23.15
+
+## 2.23.14
+
+## 2.23.13
+
+## 2.23.12
+
+## 2.23.11
+
+## 2.23.10
+
+## 2.23.9
+
+## 2.23.8
+
+## 2.23.7
+
+## 2.23.6
+
+## 2.23.5
+
+## 2.23.4
+
+## 2.23.3
+
 ## 2.23.2
 
 ## 2.23.1

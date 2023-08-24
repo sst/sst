@@ -13,7 +13,7 @@ import { Context } from "../../context/context.js";
 import { VisibleError } from "../../error.js";
 import { Colors } from "../../cli/colors.js";
 import { Logger } from "../../logger.js";
-import { findAbove } from "../../util/fs.js";
+import { findAbove, findBelow } from "../../util/fs.js";
 
 export const useNodeHandler = Context.memo(async () => {
   const workers = await useRuntimeWorkers();
@@ -140,70 +140,68 @@ export const useNodeHandler = Context.memo(async () => {
       }
 
       // Rebuilt using existing esbuild context
-      const exists = rebuildCache[input.functionID];
-      if (exists) {
-        const result = await exists.ctx.rebuild();
-        rebuildCache[input.functionID] = {
-          ctx: exists.ctx,
-          result,
-        };
-        return {
-          type: "success",
-          handler,
-        };
-      }
-
-      const { external, ...override } = nodejs.esbuild || {};
+      let ctx = rebuildCache[input.functionID]?.ctx;
       const forceExternal = [
         "sharp",
         "pg-native",
         ...(isESM || input.props.runtime === "nodejs18.x" ? [] : ["aws-sdk"]),
       ];
-      const options: BuildOptions = {
-        entryPoints: [file],
-        platform: "node",
-        external: [
-          ...forceExternal,
-          ...(nodejs.install || []),
-          ...(external || []),
-        ],
-        loader: nodejs.loader,
-        keepNames: true,
-        bundle: true,
-        logLevel: "silent",
-        metafile: true,
-        ...(isESM
-          ? {
-              format: "esm",
-              target: "esnext",
-              mainFields: ["module", "main"],
-              banner: {
-                js: [
-                  `import { createRequire as topLevelCreateRequire } from 'module';`,
-                  `const require = topLevelCreateRequire(import.meta.url);`,
-                  `import { fileURLToPath as topLevelFileUrlToPath, URL as topLevelURL } from "url"`,
-                  `const __dirname = topLevelFileUrlToPath(new topLevelURL(".", import.meta.url))`,
-                  nodejs.banner || "",
-                ].join("\n"),
-              },
-            }
-          : {
-              format: "cjs",
-              target: "node14",
-              banner: nodejs.banner
-                ? {
-                    js: nodejs.banner,
-                  }
-                : undefined,
-            }),
-        outfile: target,
-        sourcemap: input.mode === "start" ? "linked" : nodejs.sourcemap,
-        minify: nodejs.minify,
-        ...override,
-      };
+      const { external, ...override } = nodejs.esbuild || {};
+      if (!ctx) {
+        const options: BuildOptions = {
+          entryPoints: [file],
+          platform: "node",
+          external: [
+            ...forceExternal,
+            ...(nodejs.install || []),
+            ...(external || []),
+          ],
+          loader: nodejs.loader,
+          keepNames: true,
+          bundle: true,
+          logLevel: "silent",
+          metafile: true,
+          ...(isESM
+            ? {
+                format: "esm",
+                target: "esnext",
+                mainFields: ["module", "main"],
+                banner: {
+                  js: [
+                    `import { createRequire as topLevelCreateRequire } from 'module';`,
+                    `const require = topLevelCreateRequire(import.meta.url);`,
+                    `import { fileURLToPath as topLevelFileUrlToPath, URL as topLevelURL } from "url"`,
+                    `const __dirname = topLevelFileUrlToPath(new topLevelURL(".", import.meta.url))`,
+                    nodejs.banner || "",
+                  ].join("\n"),
+                },
+              }
+            : {
+                format: "cjs",
+                target: "node14",
+                banner: nodejs.banner
+                  ? {
+                      js: nodejs.banner,
+                    }
+                  : undefined,
+              }),
+          outfile: target,
+          // always generate sourcemaps in local
+          // never generate sourcemaps if explicitly false
+          // otherwise generate sourcemaps
+          sourcemap:
+            input.mode === "start"
+              ? "linked"
+              : nodejs.sourcemap === false
+              ? false
+              : true,
+          minify: nodejs.minify,
+          ...override,
+        };
+        ctx = await esbuild.context(options);
+      }
 
       try {
-        const ctx = await esbuild.context(options);
         const result = await ctx.rebuild();
 
         // Install node_modules
@@ -288,6 +286,11 @@ export const useNodeHandler = Context.memo(async () => {
         return {
           type: "success",
           handler,
+          sourcemap: !nodejs.sourcemap
+            ? Object.keys(result.metafile?.outputs || {}).find((item) =>
+                item.endsWith(".map")
+              )
+            : undefined,
         };
       } catch (ex: any) {
         const result = ex as BuildResult;

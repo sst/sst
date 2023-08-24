@@ -18,7 +18,7 @@ mv build/target/dependency/aws-lambda-java-serialization-1.0.0.jar release/
 # - AWS_LAMBDA_RUNTIME_API has to be of the format "host:port", subpath is not support (ie. "host:port/path")
 # - official JAR uses NativeClient that cannot be run on user's machine
 rm -rf aws-lambda-java-libs
-git clone https://github.com/serverless-stack/aws-lambda-java-libs.git
+git clone https://github.com/sst/aws-lambda-java-libs.git
 cd aws-lambda-java-libs/aws-lambda-java-runtime-interface-client
 mvn -Dmaven.test.skip=true install
 cd ../..

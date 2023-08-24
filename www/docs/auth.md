@@ -48,7 +48,7 @@ Want to learn more about `Auth`? Check out the [launch livestream on YouTube](ht
 
 Let's look at an example of how to add auth to your app. We'll be allowing your users to _Sign in with Google_.
 
-Follow along by creating a new SST app by running `npx create-sst@latest`. Alternatively, you can refer to [this example repo](https://github.com/serverless-stack/sst/tree/master/examples/standard) that's based on the same template.
+Follow along by creating a new SST app by running `npx create-sst@latest`. Alternatively, you can refer to [this example repo](https://github.com/sst/sst/tree/master/examples/standard-api) that's based on the same template.
 
 ---
 

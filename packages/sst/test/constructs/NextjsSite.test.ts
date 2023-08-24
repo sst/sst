@@ -12,11 +12,8 @@ import {
   createApp,
 } from "./helper.js";
 import { Vpc } from "aws-cdk-lib/aws-ec2";
-import * as s3 from "aws-cdk-lib/aws-s3";
 import * as cf from "aws-cdk-lib/aws-cloudfront";
-import * as route53 from "aws-cdk-lib/aws-route53";
-import * as acm from "aws-cdk-lib/aws-certificatemanager";
-import { Api, Stack, NextjsSite, NextjsSiteProps } from "../../dist/constructs";
+import { Stack, NextjsSite, NextjsSiteProps } from "../../dist/constructs";
 
 process.env.SST_RESOURCES_TESTS = "enabled";
 const sitePath = "test/constructs/nextjs-site";

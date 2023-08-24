@@ -281,8 +281,7 @@ export class App extends CDKApp {
         Tags.of(child).add("sst:stage", this.stage);
 
         // Set removal policy
-        if (this._defaultRemovalPolicy)
-          this.applyRemovalPolicy(child, this._defaultRemovalPolicy);
+        this.applyRemovalPolicy(child);
 
         // Stack names need to be parameterized with the stage name
         if (
@@ -387,70 +386,32 @@ export class App extends CDKApp {
     ].filter((c): c is SSTConstruct & IConstruct => Boolean(c));
   }
 
-  private applyRemovalPolicy(current: IConstruct, policy: AppRemovalPolicy) {
+  private applyRemovalPolicy(current: IConstruct) {
+    if (!this._defaultRemovalPolicy) return;
+
+    // Apply removal policy to all resources
     if (current instanceof CfnResource) {
       current.applyRemovalPolicy(
-        RemovalPolicy[policy.toUpperCase() as keyof typeof RemovalPolicy]
+        RemovalPolicy[
+          this._defaultRemovalPolicy.toUpperCase() as keyof typeof RemovalPolicy
+        ]
       );
     }
 
-    // Had to copy this in to enable deleting objects in bucket
-    // https://github.com/aws/aws-cdk/blob/master/packages/%40aws-cdk/aws-s3/lib/bucket.ts#L1910
+    // Remove S3 objects on destroy
     if (
+      this._defaultRemovalPolicy === "destroy" &&
       current instanceof Bucket &&
       !current.node.tryFindChild("AutoDeleteObjectsCustomResource")
     ) {
-      const AUTO_DELETE_OBJECTS_RESOURCE_TYPE = "Custom::S3AutoDeleteObjects";
-      const provider = CustomResourceProvider.getOrCreateProvider(
-        current,
-        AUTO_DELETE_OBJECTS_RESOURCE_TYPE,
-        {
-          codeDirectory: path.join(
-            require.resolve("aws-cdk-lib/aws-s3"),
-            "../lib/auto-delete-objects-handler"
-          ),
-          runtime: CustomResourceProviderRuntime.NODEJS_16_X,
-          description: `Lambda function for auto-deleting objects in ${current.bucketName} S3 bucket.`,
-        }
-      );
-
-      // Use a bucket policy to allow the custom resource to delete
-      // objects in the bucket
-      current.addToResourcePolicy(
-        new PolicyStatement({
-          actions: [
-            // list objects
-            "s3:GetBucket*",
-            "s3:List*",
-            // and then delete them
-            "s3:DeleteObject*",
-          ],
-          resources: [current.bucketArn, current.arnForObjects("*")],
-          principals: [new ArnPrincipal(provider.roleArn)],
-        })
-      );
-
-      const customResource = new CustomResource(
-        current,
-        "AutoDeleteObjectsCustomResource",
-        {
-          resourceType: AUTO_DELETE_OBJECTS_RESOURCE_TYPE,
-          serviceToken: provider.serviceToken,
-          properties: {
-            BucketName: current.bucketName,
-          },
-        }
-      );
-
-      // Ensure bucket policy is deleted AFTER the custom resource otherwise
-      // we don't have permissions to list and delete in the bucket.
-      // (add a `if` to make TS happy)
-      if (current.policy) {
-        customResource.node.addDependency(current.policy);
-      }
+      // Calling a private method here. It's the easiest way to lazily
+      // enable auto-delete.
+      // @ts-expect-error
+      (current as Bucket).enableAutoDeleteObjects();
     }
+
     current.node.children.forEach((resource) =>
-      this.applyRemovalPolicy(resource, policy)
+      this.applyRemovalPolicy(resource)
     );
   }
 
@@ -549,7 +510,7 @@ export class App extends CDKApp {
     Aspects.of(this).add(new EnsureUniqueConstructIds());
   }
 
-  private codegenTypes() {
+  public codegenTypes() {
     const project = useProject();
 
     const typesPath = path.resolve(project.paths.out, "types");
@@ -572,6 +533,8 @@ export class App extends CDKApp {
         `    STAGE: string;`,
         `  }`,
         `}`,
+        ``,
+        ``,
       ].join("\n")
     );
 
@@ -603,6 +566,8 @@ export class App extends CDKApp {
               `    "${id}": string;`,
               `  }`,
               `}`,
+              ``,
+              ``,
             ]
           : [
               `import "sst/node/${binding.clientPackage}";`,
@@ -613,6 +578,8 @@ export class App extends CDKApp {
               `    }`,
               `  }`,
               `}`,
+              ``,
+              ``,
             ]
         ).join("\n")
       );

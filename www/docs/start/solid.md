@@ -19,7 +19,7 @@ Create and deploy a SolidStart app to AWS with SST.
 
 ## Prerequisites
 
-You'll need at least [Node.js 16](https://nodejs.org/) and [npm 7](https://www.npmjs.com/). You also need to have an AWS account and [**AWS credentials configured locally**](advanced/iam-credentials.md#loading-from-a-file).
+You'll need at least [Node.js 16.6](https://nodejs.org/) and [npm 7](https://www.npmjs.com/). You also need to have an AWS account and [**AWS credentials configured locally**](advanced/iam-credentials.md#loading-from-a-file).
 
 ---
 
@@ -87,10 +87,34 @@ Start your local dev environment.
 <TabItem value="npm">
 
 ```bash
-# Start SST locally
 npx sst dev
+```
 
-# Start Solid locally
+</TabItem>
+<TabItem value="yarn">
+
+```bash
+yarn sst dev
+```
+
+</TabItem>
+<TabItem value="pnpm">
+
+```bash
+pnpm sst dev
+```
+
+</TabItem>
+</MultiPackagerCode>
+
+---
+
+#### Start Solid
+
+<MultiPackagerCode>
+<TabItem value="npm">
+
+```bash
 npm run dev
 ```
 
@@ -98,10 +122,6 @@ npm run dev
 <TabItem value="yarn">
 
 ```bash
-# Start SST locally
-yarn sst dev
-
-# Start Solid locally
 yarn run dev
 ```
 
@@ -109,10 +129,6 @@ yarn run dev
 <TabItem value="pnpm">
 
 ```bash
-# Start SST locally
-pnpm sst dev
-
-# Start Solid locally
 pnpm run dev
 ```
 
@@ -295,7 +311,7 @@ pnpm sst deploy --stage prod
 ![SolidStart app deployed to AWS with SST](/img/start/solidstart-app-deployed-to-aws-with-sst.png)
 
 :::info
-[View the source](https://github.com/serverless-stack/sst/tree/master/examples/quickstart-solidstart) for this example on GitHub.
+[View the source](https://github.com/sst/sst/tree/master/examples/quickstart-solidstart) for this example on GitHub.
 :::
 
 ---

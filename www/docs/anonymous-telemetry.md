@@ -71,7 +71,7 @@ An example telemetry event looks like:
 }
 ```
 
-These events are then sent to an endpoint hosted on our side. You can view the source for the service that stores the telemetry events in this repo: [`serverless-stack/telemetry`](https://github.com/serverless-stack/telemetry)
+These events are then sent to an endpoint hosted on our side. You can view the source for the service that stores the telemetry events in this repo: [`sst/telemetry`](https://github.com/sst/telemetry)
 
 ---
 

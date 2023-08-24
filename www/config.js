@@ -9,6 +9,6 @@ module.exports = {
   newsletter: "https://sst.dev/newsletter.html",
   twitter: "https://twitter.com/SST_dev",
   examples: "https://sst.dev/examples/index.html",
-  github: "https://github.com/serverless-stack/sst",
-  roadmap: "https://github.com/serverless-stack/sst/projects/1",
+  github: "https://github.com/sst/sst",
+  roadmap: "https://github.com/sst/sst/projects/1",
 };

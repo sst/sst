@@ -124,7 +124,7 @@ Note that, the [`setDefaultRemovalPolicy`](#setdefaultremovalpolicy) method isn'
 
 ### Upgrading to v0.42.0
 
-Prior to [v0.42.0](https://github.com/serverless-stack/sst/releases/tag/v0.42.0), there was a single `setDefaultFunctionProps` function that could be called from anywhere and overwrote some parameters and merged others. This created some confusion as it was not obvious which parameters were being merged.
+Prior to [v0.42.0](https://github.com/sst/sst/releases/tag/v0.42.0), there was a single `setDefaultFunctionProps` function that could be called from anywhere and overwrote some parameters and merged others. This created some confusion as it was not obvious which parameters were being merged.
 
 In v0.42.0, `setDefaultFunctionProps` was updated so it can only be called at the beginning of your app, _before_ any stack with functions have been added. It'll throw an error if it's called after adding them.
 

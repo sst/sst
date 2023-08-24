@@ -1,13 +1,10 @@
 {
   "$schema": "https://unpkg.com/@changesets/config@2.0.0/schema.json",
-  "changelog": [
-    "@changesets/changelog-github",
-    { "repo": "serverless-stack/sst" }
-  ],
+  "changelog": ["@changesets/changelog-github", { "repo": "sst/sst" }],
   "commit": false,
   "fixed": [
     [
-      "@serverless-stack/console",
+      "@sst/console",
       "create-sst",
       "sst",
       "astro-sst",

@@ -1,13 +1,13 @@
 <p align="center">
   <a href="https://sst.dev/">
-    <img alt="SST" src="https://raw.githubusercontent.com/serverless-stack/identity/main/variants/sst-full.svg" width="300" />
+    <img alt="SST" src="https://raw.githubusercontent.com/sst/identity/main/variants/sst-full.svg" width="300" />
   </a>
 </p>
 
 <p align="center">
   <a href="https://sst.dev/discord"><img alt="Discord" src="https://img.shields.io/discord/983865673656705025?style=flat-square" /></a>
   <a href="https://www.npmjs.com/package/sst"><img alt="npm" src="https://img.shields.io/npm/v/sst.svg?style=flat-square" /></a>
-  <a href="https://github.com/serverless-stack/sst/actions/workflows/test.yml"><img alt="Build status" src="https://img.shields.io/github/actions/workflow/status/serverless-stack/sst/test.yml?style=flat-square&branch=master" /></a>
+  <a href="https://github.com/sst/sst/actions/workflows/test.yml"><img alt="Build status" src="https://img.shields.io/github/actions/workflow/status/sst/sst/test.yml?style=flat-square&branch=master" /></a>
 </p>
 
 ---

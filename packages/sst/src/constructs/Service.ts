@@ -7,7 +7,7 @@ import { existsAsync } from "../util/fs.js";
 import { Colors } from "../cli/colors.js";
 
 import { Construct } from "constructs";
-import { Duration as CdkDuration } from "aws-cdk-lib/core";
+import { Duration as CdkDuration, IgnoreMode } from "aws-cdk-lib/core";
 import {
   Role,
   Effect,
@@ -59,8 +59,9 @@ import {
   FargateService,
   CfnTaskDefinition,
   ContainerDefinition,
+  ContainerDefinitionOptions,
 } from "aws-cdk-lib/aws-ecs";
-import { LogGroup, RetentionDays } from "aws-cdk-lib/aws-logs";
+import { LogGroup, LogRetention, RetentionDays } from "aws-cdk-lib/aws-logs";
 import { Platform } from "aws-cdk-lib/aws-ecr-assets";
 import {
   ApplicationLoadBalancer,
@@ -348,6 +349,28 @@ export interface ServiceProps {
    * ```
    */
   environment?: Record<string, string>;
+  /**
+   * The duration logs are kept in CloudWatch Logs.
+   * @default Logs retained indefinitely
+   * @example
+   * ```js
+   * {
+   *   logRetention: "one_week"
+   * }
+   * ```
+   */
+  logRetention?: Lowercase<keyof typeof RetentionDays>;
+  /**
+   * While deploying, SST waits for the CloudFront cache invalidation process to finish. This ensures that the new content will be served once the deploy command finishes. However, this process can sometimes take more than 5 mins. For non-prod environments it might make sense to pass in `false`. That'll skip waiting for the cache to invalidate and speed up the deploy process.
+   * @default false
+   * @example
+   * ```js
+   * {
+   *   waitForInvalidation: true
+   * }
+   * ```
+   */
+  waitForInvalidation?: boolean;
   dev?: {
     /**
      * When running `sst dev, site is not deployed. This is to ensure `sst dev` can start up quickly.
@@ -375,18 +398,45 @@ export interface ServiceProps {
      */
     url?: string;
   };
-  /**
-   * While deploying, SST waits for the CloudFront cache invalidation process to finish. This ensures that the new content will be served once the deploy command finishes. However, this process can sometimes take more than 5 mins. For non-prod environments it might make sense to pass in `false`. That'll skip waiting for the cache to invalidate and speed up the deploy process.
-   * @default false
-   * @example
-   * ```js
-   * {
-   *   waitForInvalidation: true
-   * }
-   * ```
-   */
-  waitForInvalidation?: boolean;
   cdk?: {
+    /**
+     * By default, SST creates a CloudFront distribution. Set this to `false` to skip creating the distribution.
+     * @default true
+     * @example
+     * ```js
+     * {
+     *   cloudfrontDistribution: false
+     * }
+     * ```
+     */
+    cloudfrontDistribution?: boolean;
+    /**
+     * By default, SST creates an Application Load Balancer to distribute requests across containers. Set this to `false` to skip creating the load balancer.
+     * @default true
+     * @example
+     * ```js
+     * {
+     *   applicationLoadBalancer: false
+     * }
+     * ```
+     */
+    applicationLoadBalancer?: boolean;
+    /**
+     * Customizing the container definition for the ECS task.
+     * @example
+     * ```js
+     * {
+     *   cdk: {
+     *     container: {
+     *       healthCheck: {
+     *         command: ["CMD-SHELL", "curl -f http://localhost/ || exit 1"],
+     *       },
+     *     }
+     *   }
+     * }
+     * ```
+     */
+    container?: Omit<ContainerDefinitionOptions, "image">;
     /**
      * Runs codebuild job in the specified VPC. Note this will only work once deployed.
      *
@@ -404,40 +454,6 @@ export interface ServiceProps {
      * ```
      */
     vpc?: IVpc;
-    /**
-     * Where to place the network interfaces within the VPC.
-     * @default All private subnets.
-     * @example
-     * ```js
-     * import { SubnetType } from "aws-cdk-lib/aws-ec2";
-     *
-     * {
-     *   cdk: {
-     *     vpc,
-     *     vpcSubnets: { subnetType: SubnetType.PRIVATE_WITH_EGRESS }
-     *   }
-     * }
-     * ```
-     */
-    vpcSubnets?: SubnetSelection;
-    /**
-     * The list of security groups to associate with the Job's network interfaces.
-     * @default A new security group is created.
-     * @example
-     * ```js
-     * import { SecurityGroup } from "aws-cdk-lib/aws-ec2";
-     *
-     * {
-     *   cdk: {
-     *     vpc,
-     *     securityGroups: [
-     *       new SecurityGroup(stack, "MyJobSG", { vpc })
-     *     ]
-     *   }
-     * }
-     * ```
-     */
-    securityGroups?: ISecurityGroup[];
   };
 }
 
@@ -446,6 +462,7 @@ type ServiceNormalizedProps = ServiceProps & {
   cpu: Exclude<ServiceProps["cpu"], undefined>;
   memory: Exclude<ServiceProps["memory"], undefined>;
   port: Exclude<ServiceProps["port"], undefined>;
+  logRetention: Exclude<ServiceProps["logRetention"], undefined>;
   waitForInvalidation: Exclude<ServiceProps["waitForInvalidation"], undefined>;
 };
 
@@ -469,7 +486,7 @@ export class Service extends Construct implements SSTConstruct {
   private cluster: Cluster;
   private container: ContainerDefinition;
   private taskDefinition: FargateTaskDefinition;
-  private distribution: Distribution;
+  private distribution?: Distribution;
 
   constructor(scope: Construct, id: string, props?: ServiceProps) {
     super(scope, id);
@@ -479,10 +496,11 @@ export class Service extends Construct implements SSTConstruct {
     this.id = id;
     this.props = {
       path: ".",
-      waitForInvalidation: false,
       cpu: props?.cpu || "0.25 vCPU",
       memory: props?.memory || "0.5 GB",
       port: props?.port || 3000,
+      logRetention: props?.logRetention || "infinite",
+      waitForInvalidation: false,
       ...props,
     };
     this.doNotDeploy =
@@ -545,7 +563,7 @@ export class Service extends Construct implements SSTConstruct {
       }
 
       // Invalidate CloudFront
-      this.distribution.createInvalidation();
+      this.distribution?.createInvalidation();
     });
   }
 
@@ -559,7 +577,7 @@ export class Service extends Construct implements SSTConstruct {
   public get url() {
     if (this.doNotDeploy) return this.props.dev?.url;
 
-    return this.distribution.url;
+    return this.distribution?.url;
   }
 
   /**
@@ -569,7 +587,7 @@ export class Service extends Construct implements SSTConstruct {
   public get customDomainUrl() {
     if (this.doNotDeploy) return;
 
-    return this.distribution.customDomainUrl;
+    return this.distribution?.customDomainUrl;
   }
 
   /**
@@ -581,9 +599,9 @@ export class Service extends Construct implements SSTConstruct {
     return {
       vpc: this.vpc,
       cluster: this.cluster,
-      distribution: this.distribution.cdk.distribution,
-      hostedZone: this.distribution.cdk.hostedZone,
-      certificate: this.distribution.cdk.certificate,
+      distribution: this.distribution?.cdk.distribution,
+      hostedZone: this.distribution?.cdk.hostedZone,
+      certificate: this.distribution?.cdk.certificate,
     };
   }
 
@@ -614,31 +632,37 @@ export class Service extends Construct implements SSTConstruct {
   /** @internal */
   public getFunctionBinding(): FunctionBindingProps {
     const app = this.node.root as App;
-    return {
-      clientPackage: "service",
-      variables: {
-        url: this.doNotDeploy
-          ? {
-              type: "plain",
-              value: this.props.dev?.url ?? "localhost",
-            }
-          : {
-              // Do not set real value b/c we don't want to make the Lambda function
-              // depend on the Site. B/c often the site depends on the Api, causing
-              // a CloudFormation circular dependency if the Api and the Site belong
-              // to different stacks.
-              type: "site_url",
-              value: this.customDomainUrl || this.url!,
-            },
-      },
-      permissions: {
-        "ssm:GetParameters": [
-          `arn:${Stack.of(this).partition}:ssm:${app.region}:${
-            app.account
-          }:parameter${getParameterPath(this, "url")}`,
-        ],
-      },
-    };
+    return this.distribution
+      ? {
+          clientPackage: "service",
+          variables: {
+            url: this.doNotDeploy
+              ? {
+                  type: "plain",
+                  value: this.props.dev?.url ?? "localhost",
+                }
+              : {
+                  // Do not set real value b/c we don't want to make the Lambda function
+                  // depend on the Site. B/c often the site depends on the Api, causing
+                  // a CloudFormation circular dependency if the Api and the Site belong
+                  // to different stacks.
+                  type: "site_url",
+                  value: this.customDomainUrl || this.url!,
+                },
+          },
+          permissions: {
+            "ssm:GetParameters": [
+              `arn:${Stack.of(this).partition}:ssm:${app.region}:${
+                app.account
+              }:parameter${getParameterPath(this, "url")}`,
+            ],
+          },
+        }
+      : {
+          clientPackage: "service",
+          variables: {},
+          permissions: {},
+        };
   }
 
   /**
@@ -729,19 +753,23 @@ export class Service extends Construct implements SSTConstruct {
     return (
       cdk?.vpc ??
       new Vpc(this, "Vpc", {
-        natGateways: 0,
+        natGateways: 1,
       })
     );
   }
 
   private createService(vpc: IVpc) {
-    const { cpu, memory, port } = this.props;
+    const { cpu, memory, port, logRetention, cdk } = this.props;
     const app = this.node.root as App;
     const clusterName = app.logicalPrefixedName(this.node.id);
 
-    const logGroup = new LogGroup(this, "LogGroup", {
+    const logGroup = new LogRetention(this, "LogRetention", {
       logGroupName: `/sst/service/${clusterName}`,
-      retention: RetentionDays.INFINITE,
+      retention:
+        RetentionDays[logRetention.toUpperCase() as keyof typeof RetentionDays],
+      logRetentionRetryOptions: {
+        maxRetries: 100,
+      },
     });
 
     const cluster = new Cluster(this, "Cluster", {
@@ -756,9 +784,12 @@ export class Service extends Construct implements SSTConstruct {
     });
 
     const container = taskDefinition.addContainer("Container", {
-      image: { bind: () => ({ imageName: "placeholder" }) },
       logging: new AwsLogDriver({
-        logGroup,
+        logGroup: LogGroup.fromLogGroupArn(
+          this,
+          "LogGroup",
+          logGroup.logGroupArn
+        ),
         streamPrefix: "service",
       }),
       portMappings: [{ containerPort: port }],
@@ -767,6 +798,8 @@ export class Service extends Construct implements SSTConstruct {
         SST_STAGE: app.stage,
         SST_SSM_PREFIX: useProject().config.ssmPrefix,
       },
+      ...cdk?.container,
+      image: { bind: () => ({ imageName: "placeholder" }) },
     });
 
     const service = new FargateService(this, "Service", {
@@ -778,6 +811,13 @@ export class Service extends Construct implements SSTConstruct {
   }
 
   private createLoadBalancer(vpc: IVpc, service: FargateService) {
+    const { cdk } = this.props;
+
+    // Do not create load balancer if disabled
+    if (cdk?.applicationLoadBalancer === false) {
+      return {};
+    }
+
     const alb = new ApplicationLoadBalancer(this, "LoadBalancer", {
       vpc,
       internetFacing: true,
@@ -792,7 +832,7 @@ export class Service extends Construct implements SSTConstruct {
 
   private createAutoScaling(
     service: FargateService,
-    target: ApplicationTargetGroup
+    target?: ApplicationTargetGroup
   ) {
     const {
       minContainers,
@@ -814,14 +854,19 @@ export class Service extends Construct implements SSTConstruct {
       targetUtilizationPercent: memoryUtilization ?? 70,
       scaleOutCooldown: CdkDuration.seconds(300),
     });
-    scaling.scaleOnRequestCount("RequestScaling", {
-      requestsPerTarget: requestsPerContainer ?? 500,
-      targetGroup: target,
-    });
+    if (target) {
+      scaling.scaleOnRequestCount("RequestScaling", {
+        requestsPerTarget: requestsPerContainer ?? 500,
+        targetGroup: target,
+      });
+    }
   }
 
-  private createDistribution(alb: ApplicationLoadBalancer) {
-    const { customDomain } = this.props;
+  private createDistribution(alb?: ApplicationLoadBalancer) {
+    const { cdk, customDomain } = this.props;
+
+    // Do not create distribution if disabled or if ALB was not created (ie. disabled)
+    if (!alb || cdk?.cloudfrontDistribution === false) return;
 
     const cachePolicy = new CachePolicy(this, "CachePolicy", {
       queryStringBehavior: CacheQueryStringBehavior.all(),
@@ -1011,6 +1056,8 @@ export class Service extends Construct implements SSTConstruct {
     const image = ContainerImage.fromAsset(this.props.path, {
       platform: Platform.LINUX_AMD64,
       file: dockerfile,
+      exclude: [".sst"],
+      ignoreMode: IgnoreMode.GLOB,
     });
     const cfnTask = taskDefinition.node.defaultChild as CfnTaskDefinition;
     cfnTask.addPropertyOverride(

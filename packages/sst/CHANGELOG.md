@@ -1,5 +1,187 @@
 # @serverless-stack/cli2
 
+## 2.24.13
+
+### Patch Changes
+
+- [#3248](https://github.com/sst/sst/pull/3248) [`ffa986a42`](https://github.com/sst/sst/commit/ffa986a4259d820a8200f88365e9c399352b57c1) Thanks [@niklaswallerstedt](https://github.com/niklaswallerstedt)! - future/Auth: Single tenant auth for Azure AD
+
+- [#3210](https://github.com/sst/sst/pull/3210) [`3b005776c`](https://github.com/sst/sst/commit/3b005776c31a29946ee997f9c480e271d48383c5) Thanks [@ipatka](https://github.com/ipatka)! - Fix typings for custom authorizers in ApiGatewayV1 construct
+
+- [`a34f72a3b`](https://github.com/sst/sst/commit/a34f72a3b6ea9f3f8d51735e7c4cb4e016b93e87) Thanks [@thdxr](https://github.com/thdxr)! - bus: remove recursion detection from lambda retries
+
+- [#3250](https://github.com/sst/sst/pull/3250) [`b81d5d8d5`](https://github.com/sst/sst/commit/b81d5d8d50f868d6c8518d01c329d9985ea44d8b) Thanks [@tanquetav](https://github.com/tanquetav)! - python-runtime: pin poetry dependency to fix ssl error
+
+- [`12e7295fa`](https://github.com/sst/sst/commit/12e7295fa7a24d9df3f3091a84ff63dedafd337d) Thanks [@thdxr](https://github.com/thdxr)! - function: allow completely disabling sourcemap
+
+## 2.24.12
+
+### Patch Changes
+
+- [#3246](https://github.com/sst/sst/pull/3246) [`a09c72070`](https://github.com/sst/sst/commit/a09c720704573fa6d913ca12acd0867fc35149ac) Thanks [@omikader](https://github.com/omikader)! - Service: Add node client and docs
+
+- [`eab6225a2`](https://github.com/sst/sst/commit/eab6225a214a32590e6874f7c160cd884e7050ac) Thanks [@fwang](https://github.com/fwang)! - Bootstrap: support cdk bootstrapStackVersionSsmParameter and imageAssetsRepositoryName options
+
+## 2.24.11
+
+### Patch Changes
+
+- [`ed586ba15`](https://github.com/sst/sst/commit/ed586ba15508ba0f3d6a856eedeafe5959f6fb5d) Thanks [@thdxr](https://github.com/thdxr)! - eventbus: dataloader pattern for batching events
+
+## 2.24.10
+
+### Patch Changes
+
+- [`6681ab708`](https://github.com/sst/sst/commit/6681ab70826dd7eef07328c43bd7ae19e19e2417) Thanks [@thdxr](https://github.com/thdxr)! - eventbus: disable aws recursion prevention for eventbus loop
+
+## 2.24.9
+
+### Patch Changes
+
+- [`5bbcc6d0a`](https://github.com/sst/sst/commit/5bbcc6d0ab2f89bdf1fff117d6e9a338f4898a5f) Thanks [@fwang](https://github.com/fwang)! - sst bind: fix .env not loaded
+
+## 2.24.8
+
+### Patch Changes
+
+- [`04ecc8648`](https://github.com/sst/sst/commit/04ecc864887516999049eaa36804257b2a5d936c) Thanks [@thdxr](https://github.com/thdxr)! - function: delete sourcemap after reading
+
+## 2.24.7
+
+### Patch Changes
+
+- [`18ac7b541`](https://github.com/sst/sst/commit/18ac7b5410f9e9dd208791f3e0ef6fe296838170) Thanks [@thdxr](https://github.com/thdxr)! - function: collect and upload sourcemaps
+
+## 2.24.6
+
+### Patch Changes
+
+- [#3232](https://github.com/sst/sst/pull/3232) [`1c8972690`](https://github.com/sst/sst/commit/1c89726905f8ab50d872b517f6be45bcba4608fd) Thanks [@fwang](https://github.com/fwang)! - Respect project region for AWS credentials provider
+
+## 2.24.5
+
+### Patch Changes
+
+- [#3227](https://github.com/sst/sst/pull/3227) [`820c8e55c`](https://github.com/sst/sst/commit/820c8e55cbd9349e5c1dc9195e99650fed750e77) Thanks [@jamesgibbons92](https://github.com/jamesgibbons92)! - sst types: add CLI command to generate resource types
+
+## 2.24.4
+
+### Patch Changes
+
+- [#3222](https://github.com/sst/sst/pull/3222) [`a594b1964`](https://github.com/sst/sst/commit/a594b1964afb285308fb31fd0c5748f10b22693e) Thanks [@adolfogc](https://github.com/adolfogc)! - Function: support Python 3.11 runtie
+
+- [#3224](https://github.com/sst/sst/pull/3224) [`3b89a6201`](https://github.com/sst/sst/commit/3b89a6201baf222f7640159f5002c9a111228f3a) Thanks [@jamesgibbons92](https://github.com/jamesgibbons92)! - Bucket: fix auto delete objects on destroy removal
+
+- [`caf7f0712`](https://github.com/sst/sst/commit/caf7f07124e39212fd81b967a156230ce9aa7098) Thanks [@fwang](https://github.com/fwang)! - Bump @smithy/signature-v4 to 2.0.4
+
+## 2.24.3
+
+### Patch Changes
+
+- [`11bb33900`](https://github.com/sst/sst/commit/11bb339009a743f23446a9a1a3fcf0741e54ca6b) Thanks [@thdxr](https://github.com/thdxr)! - cli: fix nodejs rebuilding issue
+
+- [`5ecba62dd`](https://github.com/sst/sst/commit/5ecba62dddcbafc88f43d8a1d1fcc930207076b1) Thanks [@thdxr](https://github.com/thdxr)! - cli: ignore any babel config files
+
+## 2.24.2
+
+### Patch Changes
+
+- [`62f78efd7`](https://github.com/sst/sst/commit/62f78efd7367c95d1b58737d18a52bcae293e3f2) Thanks [@fwang](https://github.com/fwang)! - Service: support private services
+
+## 2.24.1
+
+### Patch Changes
+
+- [`77bec32bc`](https://github.com/sst/sst/commit/77bec32bcce20a6e045951dbd2a6f730184cfc33) Thanks [@fwang](https://github.com/fwang)! - sst bind: fix cli hanging before site is deployed
+
+## 2.24.0
+
+### Minor Changes
+
+- [#3217](https://github.com/sst/sst/pull/3217) [`01d16a8d4`](https://github.com/sst/sst/commit/01d16a8d461d411c6beb31507ef9ab102f446ec9) Thanks [@github-actions](https://github.com/apps/github-actions)! - Update CDK to 2.91.0
+
+### Patch Changes
+
+- [#3201](https://github.com/sst/sst/pull/3201) [`f5a7d5609`](https://github.com/sst/sst/commit/f5a7d560930434b48d1970c7eddf3c5044caae58) Thanks [@jayair](https://github.com/jayair)! - Update serverless-stack to sst
+
+## 2.23.15
+
+### Patch Changes
+
+- [`cb4bc1a26`](https://github.com/sst/sst/commit/cb4bc1a2654b29378b1c555b987707adbba07230) Thanks [@thdxr](https://github.com/thdxr)! - console: update console URL
+
+## 2.23.14
+
+### Patch Changes
+
+- [`18e3cf975`](https://github.com/sst/sst/commit/18e3cf975c81f8c077ba6c9a425c80e25fb67b40) Thanks [@fwang](https://github.com/fwang)! - config: add `disableAppModeCheck` to disable confirmation prompt when switching between `sst deploy` and `sst dev` deployment modes
+
+## 2.23.13
+
+## 2.23.12
+
+### Patch Changes
+
+- [`1873d697d`](https://github.com/sst/sst/commit/1873d697d1232618b6060134425d1c02cd843dc5) Thanks [@thdxr](https://github.com/thdxr)! - cli: remove log statements
+
+- [#3091](https://github.com/sst/sst/pull/3091) [`d22ea127f`](https://github.com/sst/sst/commit/d22ea127fad1f2314e714338e5aada59e8f7c679) Thanks [@ealain](https://github.com/ealain)! - SsrSite: support protecting server URL with IAM auth
+
+## 2.23.11
+
+### Patch Changes
+
+- [`32683248f`](https://github.com/sst/sst/commit/32683248fe933805e4c58306a3e4967d851d3b41) Thanks [@thdxr](https://github.com/thdxr)! - create-sst: fix missing replacement of project name
+
+## 2.23.10
+
+## 2.23.9
+
+### Patch Changes
+
+- [`92e13b161`](https://github.com/sst/sst/commit/92e13b1611e5c88f9489e782d67d494333d2c089) Thanks [@thdxr](https://github.com/thdxr)! - function: include runtime in ssrfunction metadata
+
+## 2.23.8
+
+### Patch Changes
+
+- [`9326ee600`](https://github.com/sst/sst/commit/9326ee60092df938ad710fcd860aee618184f354) Thanks [@thdxr](https://github.com/thdxr)! - function: include runtime in ssrfunction metadata
+
+## 2.23.7
+
+### Patch Changes
+
+- [`5f3c449bc`](https://github.com/sst/sst/commit/5f3c449bcf306195ad137d638d064eb1802106c1) Thanks [@thdxr](https://github.com/thdxr)! - function: include runtime in metadata
+
+## 2.23.6
+
+### Patch Changes
+
+- [`8850d20a4`](https://github.com/serverless-stack/sst/commit/8850d20a44032d2eaa142f4a12b8b65a3233cb0c) Thanks [@thdxr](https://github.com/thdxr)! - Prevent `sst bind` from handling function invocations
+
+## 2.23.5
+
+### Patch Changes
+
+- [`54cb27189`](https://github.com/serverless-stack/sst/commit/54cb27189adfede103692318dc4f13ff6c90213e) Thanks [@thdxr](https://github.com/thdxr)! - build: remove bundled cli
+
+## 2.23.4
+
+### Patch Changes
+
+- [`137f5059b`](https://github.com/serverless-stack/sst/commit/137f5059b87ac3690ba47f2494ee11e2a50a1db3) Thanks [@fwang](https://github.com/fwang)! - Service: create 1 NAT Gateway as the default VPC setting
+
+- [`75ca05dc1`](https://github.com/serverless-stack/sst/commit/75ca05dc18e011c4661f28a7909af307b4daa745) Thanks [@fwang](https://github.com/fwang)! - Service: docker ignore .sst folder when staging image
+
+- [`435ab9ce2`](https://github.com/serverless-stack/sst/commit/435ab9ce2f32c79e9f8eb2e4099aafebc1246aad) Thanks [@fwang](https://github.com/fwang)! - sst update: detect CDK v1 dependencies
+
+## 2.23.3
+
+### Patch Changes
+
+- [`19cc5c5cb`](https://github.com/serverless-stack/sst/commit/19cc5c5cb22f57876a78b1eea155a5ef03dee2d9) Thanks [@fwang](https://github.com/fwang)! - Service: configure log retention via "logRetention"
+
+- [`fb6f4e208`](https://github.com/serverless-stack/sst/commit/fb6f4e208c0be8a3785d96438e1ca67ba56579f2) Thanks [@fwang](https://github.com/fwang)! - Service: configure container definition via "cdk.container"
+
 ## 2.23.2
 
 ### Patch Changes

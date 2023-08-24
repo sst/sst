@@ -12,6 +12,8 @@ Install the example.
 $ npx create-sst@latest --template=examples/middy-validator
 # Or with Yarn
 $ yarn create sst --template=examples/middy-validator
+# Or with PNPM
+$ pnpm create sst --template=examples/middy-validator
 ```
 
 ## Commands

@@ -10,6 +10,8 @@ Install the example.
 $ npx create-sst@latest --template=examples/remix-app
 # Or with Yarn
 $ yarn create sst --template=examples/remix-app
+# Or with PNPM
+$ pnpm create sst --template=examples/remix-app
 ```
 
 ## Commands

@@ -37,9 +37,7 @@ export const useLocalServerConfig = Context.memo(async () => {
 
   return {
     port,
-    url: `https://console.sst.dev/${project.config.name}/${
-      project.config.stage
-    }${port !== 13557 ? `?_port=${port}` : ""}`,
+    url: `https://console.sst.dev${port !== 13557 ? `?_port=${port}` : ""}`,
   };
 });
 

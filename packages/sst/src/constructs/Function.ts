@@ -48,12 +48,15 @@ import {
   Token,
   Size as CDKSize,
   Duration as CDKDuration,
+  IgnoreMode,
 } from "aws-cdk-lib/core";
 import { Effect, PolicyStatement, Role } from "aws-cdk-lib/aws-iam";
 import { StringParameter } from "aws-cdk-lib/aws-ssm";
 import { Platform } from "aws-cdk-lib/aws-ecr-assets";
 import { useBootstrap } from "../bootstrap.js";
 import { Colors } from "../cli/colors.js";
+import { BucketDeployment, Source } from "aws-cdk-lib/aws-s3-deployment";
+import { Bucket } from "aws-cdk-lib/aws-s3";
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 
 const supportedRuntimes = {
@@ -67,6 +70,7 @@ const supportedRuntimes = {
   "python3.8": CDKRuntime.PYTHON_3_8,
   "python3.9": CDKRuntime.PYTHON_3_9,
   "python3.10": CDKRuntime.PYTHON_3_10,
+  "python3.11": CDKRuntime.PYTHON_3_11,
   "dotnetcore3.1": CDKRuntime.DOTNET_CORE_3_1,
   dotnet6: CDKRuntime.DOTNET_6,
   java8: CDKRuntime.JAVA_8,
@@ -337,7 +341,7 @@ export interface FunctionProps
    *
    * Note that, if a Layer is created in a stack (say `stackA`) and is referenced in another stack (say `stackB`), SST automatically creates an SSM parameter in `stackA` with the Layer's ARN. And in `stackB`, SST reads the ARN from the SSM parameter, and then imports the Layer.
    *
-   *  This is to get around the limitation that a Lambda Layer ARN cannot be referenced across stacks via a stack export. The Layer ARN contains a version number that is incremented everytime the Layer is modified. When you refer to a Layer's ARN across stacks, a CloudFormation export is created. However, CloudFormation does not allow an exported value to be updated. Once exported, if you try to deploy the updated layer, the CloudFormation update will fail. You can read more about this issue here - https://github.com/serverless-stack/sst/issues/549.
+   *  This is to get around the limitation that a Lambda Layer ARN cannot be referenced across stacks via a stack export. The Layer ARN contains a version number that is incremented everytime the Layer is modified. When you refer to a Layer's ARN across stacks, a CloudFormation export is created. However, CloudFormation does not allow an exported value to be updated. Once exported, if you try to deploy the updated layer, the CloudFormation update will fail. You can read more about this issue here - https://github.com/sst/sst/issues/549.
    *
    * @default no layers
    *
@@ -845,6 +849,8 @@ export class Function extends CDKFunction implements SSTConstruct {
                 ...(props.container?.file
                   ? { file: props.container.file }
                   : {}),
+                exclude: [".sst"],
+                ignoreMode: IgnoreMode.GLOB,
               }),
               handler: CDKHandler.FROM_IMAGE,
               runtime: CDKRuntime.FROM_IMAGE,
@@ -878,6 +884,7 @@ export class Function extends CDKFunction implements SSTConstruct {
           this.node.addr,
           "deploy"
         );
+
         if (result.type === "error") {
           throw new VisibleError(
             [
@@ -894,6 +901,20 @@ export class Function extends CDKFunction implements SSTConstruct {
         const cfnFunction = this.node.defaultChild as CfnFunction;
         const code = AssetCode.fromAsset(result.out);
         const codeConfig = code.bind(this);
+        const bootstrap = await useBootstrap();
+        if (result.sourcemap)
+          new BucketDeployment(this, "Sourcemap", {
+            sources: [Source.asset(result.sourcemap)],
+            contentEncoding: "gzip",
+            contentType: "application/json",
+            destinationBucket: Bucket.fromBucketName(
+              this,
+              "BootstrapBucket",
+              bootstrap.bucket
+            ),
+            destinationKeyPrefix: `sourcemap/${app.name}/${app.stage}/${this.functionArn}/`,
+          });
+
         cfnFunction.code = {
           s3Bucket: codeConfig.s3Location?.bucketName,
           s3Key: codeConfig.s3Location?.objectKey,
@@ -1020,6 +1041,7 @@ export class Function extends CDKFunction implements SSTConstruct {
       type: "Function" as const,
       data: {
         arn: this.functionArn,
+        runtime: this.props.runtime,
         handler: this.props.handler,
         localId: this.node.addr,
         secrets: this.allBindings

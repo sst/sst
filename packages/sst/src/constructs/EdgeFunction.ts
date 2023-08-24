@@ -70,11 +70,11 @@ export class EdgeFunction extends Construct {
   public role: Role;
   public functionArn: string;
   public function: CdkIFunction;
+  public currentVersion: IVersion;
   private functionCR: CustomResource;
   private assetReplacer: CustomResource;
   private assetReplacerPolicy: Policy;
   private scope: IConstruct;
-  private versionId: string;
   private bindingEnvs: Record<string, string>;
   private props: EdgeFunctionProps & {
     environment: Exclude<EdgeFunctionProps["environment"], undefined>;
@@ -131,17 +131,13 @@ export class EdgeFunction extends Construct {
     );
     this.functionCR = fn;
     this.functionArn = fnArn;
-    this.versionId = versionId;
+    this.currentVersion = Version.fromVersionArn(
+      this,
+      `${id}FunctionVersion`,
+      `${fnArn}:${versionId}`
+    );
     this.assetReplacer = assetReplacer;
     this.assetReplacerPolicy = assetReplacerPolicy;
-  }
-
-  public get currentVersion(): IVersion {
-    return Version.fromVersionArn(
-      this,
-      `${this.node.id}FunctionVersion`,
-      `${this.functionArn}:${this.versionId}`
-    );
   }
 
   public async build() {

@@ -25,9 +25,10 @@ Here's an example of the `Dockerfile` for a simple Express app.
 FROM node:18-bullseye-slim
 
 COPY . /app
+WORKDIR /app/
+
 RUN npm install
 
-WORKDIR /app/
 ENTRYPOINT ["node", "app.mjs"]
 ```
 
@@ -57,16 +58,6 @@ When you run `sst deploy`, SST does a couple things:
 - Creates an Auto Scaling Group to auto-scale the cluster
 - Creates an Application Load Balancer (ALB) to route traffic to the cluster
 - Creates a CloudFront Distribution to allow configuration of caching and custom domains
-
----
-
-## Using Nixpacks
-
-If a `Dockerfile` is not found in the service's path, [Nixpacks](https://nixpacks.com/docs) will be used to analyze the service code, and then generate a `Dockerfile` within `.nixpacks`. This file will build and run your application. [Read more about customizing the Nixpacks builds.](https://nixpacks.com/docs/guides/configuring-builds)
-
-:::note
-The generated `.nixpacks` directory should be added to your `.gitignore` file.
-:::
 
 ---
 
@@ -186,6 +177,32 @@ Read more about this in the [Resource Binding](../resource-binding.md) doc.
 
 ---
 
+## Private services
+
+If you don't want your service to be publicly accessible, create a private service by disabling the Application Load Balancer and CloudFront distribution.
+
+```ts
+new Service(stack, "MyService", {
+  path: "./service",
+  cdk: {
+    applicationLoadBalancer: false,
+    cloudfrontDistribution: false,
+  },
+});
+```
+
+---
+
+## Using Nixpacks
+
+If a `Dockerfile` is not found in the service's path, [Nixpacks](https://nixpacks.com/docs) will be used to analyze the service code, and then generate a `Dockerfile` within `.nixpacks`. This file will build and run your application. [Read more about customizing the Nixpacks builds.](https://nixpacks.com/docs/guides/configuring-builds)
+
+:::note
+The generated `.nixpacks` directory should be added to your `.gitignore` file.
+:::
+
+---
+
 ## Examples
 
 ### Creating a Service
@@ -208,7 +225,17 @@ new Service(stack, "MyService", {
 });
 ```
 
-### Setting additional props
+### Configuring log retention
+
+The Service construct creates a CloudWatch log group to store the logs. By default, the logs are retained indefinitely. You can configure the log retention period like this:
+
+```js
+new Service(stack, "MyService", {
+  logRetention: "one_week",
+});
+```
+
+### Configuring additional props
 
 ```js
 new Service(stack, "MyService", {
@@ -224,6 +251,26 @@ new Service(stack, "MyService", {
   },
   config: [STRIPE_KEY, API_URL],
   permissions: ["ses", bucket],
+});
+```
+
+### Configuring container health check
+
+```js
+import { Duration } from "aws-cdk-lib/core";
+
+new Service(stack, "MyService", {
+  cdk: {
+    container: {
+      healthCheck: {
+        command: ["CMD-SHELL", "curl -f http://localhost/ || exit 1"],
+        interval: Duration.minutes(30),
+        retries: 20,
+        startPeriod: Duration.minutes(30),
+        timeout: Duration.minutes(30),
+      },
+    },
+  },
 });
 ```
 

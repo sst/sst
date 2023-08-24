@@ -155,7 +155,6 @@ export const bind = (program: Program) =>
         function isInSsrSite() {
           const cwd = process.cwd();
           return useSsrSites().all.find(({ props }) => {
-            console.log(path.resolve(project.paths.root, props.path));
             return path.resolve(project.paths.root, props.path) === cwd;
           });
         }
@@ -164,11 +163,9 @@ export const bind = (program: Program) =>
           const cwd = process.cwd();
           return (
             useStaticSites().all.find(({ props }) => {
-              console.log(path.resolve(project.paths.root, props.path));
               return path.resolve(project.paths.root, props.path) === cwd;
             }) ||
             useSlsNextjsSites().all.find(({ props }) => {
-              console.log(path.resolve(project.paths.root, props.path));
               return path.resolve(project.paths.root, props.path) === cwd;
             })
           );
@@ -177,7 +174,6 @@ export const bind = (program: Program) =>
         function isInService() {
           const cwd = process.cwd();
           return useServices().all.find(({ props }) => {
-            console.log(path.resolve(project.paths.root, props.path));
             return path.resolve(project.paths.root, props.path) === cwd;
           });
         }
@@ -257,7 +253,7 @@ export const bind = (program: Program) =>
           ]);
           const metadataData = await metadataForStack(ssrSite!.stack);
           const metadata = metadataData
-            .filter((c): c is SSRSiteMetadata =>
+            ?.filter((c): c is SSRSiteMetadata =>
               [
                 "NextjsSite",
                 "AstroSite",
@@ -295,7 +291,7 @@ export const bind = (program: Program) =>
           const { metadataForStack } = await import("../../stacks/metadata.js");
           const metadataData = await metadataForStack(staticSite!.stack);
           const metadata = metadataData
-            .filter((c): c is StaticSiteMetadata | SlsNextjsMetadata =>
+            ?.filter((c): c is StaticSiteMetadata | SlsNextjsMetadata =>
               ["StaticSite", "SlsNextjsSite"].includes(c.type)
             )
             .find((c) => {
@@ -334,7 +330,7 @@ export const bind = (program: Program) =>
           // Get metadata
           const metadataData = await metadataForStack(service!.stack);
           const metadata = metadataData
-            .filter((c): c is ServiceMetadata => ["Service"].includes(c.type))
+            ?.filter((c): c is ServiceMetadata => ["Service"].includes(c.type))
             .find((c) => {
               return (
                 path.resolve(project.paths.root, c.data.path) === process.cwd()
@@ -467,7 +463,7 @@ export const bind = (program: Program) =>
             return credentials;
           };
 
-          // Assue role with max duration first. This can fail if chaining roles, or if
+          // Assume role with max duration first. This can fail if chaining roles, or if
           // the role has a max duration set. If it fails, assume role with 1 hour duration.
           let err: any;
           try {

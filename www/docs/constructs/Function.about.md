@@ -1,4 +1,4 @@
-A construct for a Lambda Function that allows you to [develop it locally](live-lambda-development.md). Supports JS, TypeScript, Python, Golang, C#, and container runtime. It also applies a couple of defaults:
+A construct for a Lambda Function that allows you to [develop it locally](live-lambda-development.md). Supports JS, TypeScript, Python, Golang, C#, Rust, and container runtime. It also applies a couple of defaults:
 
 - Sets the default memory setting to 1024MB.
 - Sets the default Lambda function timeout to 10 seconds.
@@ -268,6 +268,22 @@ new Function(stack, "MyLambda", {
   handler: "example.Handler::handleRequest",
   runtime: "java17",
 });
+```
+
+### Configuring Rust runtime (beta)
+
+#### handler
+
+Path to the handler function. Uses the format, `/path/to/file.rs`.
+
+Note that there needs to be a `bin` field in your `Cargo.toml` with a name that matches the file's name.
+
+For example, if your handler file is in `src/main.rs`, then you should include the following block in your `Cargo.toml`:
+
+```toml
+[[bin]]
+name = "main"
+path = "src/main.rs"
 ```
 
 ### Function URLs

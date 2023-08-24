@@ -34,14 +34,19 @@ export async function metadataForStack(stack: String) {
     credentials: credentials,
   });
 
-  const result = await s3.send(
-    new GetObjectCommand({
-      Key: `stackMetadata/app.${project.config.name}/stage.${project.config.stage}/stack.${stack}.json`,
-      Bucket: bootstrap.bucket,
-    })
-  );
-  const body = await result.Body!.transformToString();
-  return JSON.parse(body) as Metadata[];
+  try {
+    const result = await s3.send(
+      new GetObjectCommand({
+        Key: `stackMetadata/app.${project.config.name}/stage.${project.config.stage}/stack.${stack}.json`,
+        Bucket: bootstrap.bucket,
+      })
+    );
+    const body = await result.Body!.transformToString();
+    return JSON.parse(body) as Metadata[];
+  } catch (e) {
+    Logger.debug(`Fetching metadata for stack ${stack} failed`, e);
+    return;
+  }
 }
 
 export async function metadata() {

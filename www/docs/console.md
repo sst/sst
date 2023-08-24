@@ -1,9 +1,10 @@
 ---
-title: SST Console
-description: "The SST Console is a web based dashboard to manage your SST apps."
+title: Console
+description: "The SST Console is a web based dashboard for managing your SST apps with your team."
 ---
 
 import config from "../config";
+import Calculator from "../src/components/PricingCalculator";
 import HeadlineText from "@site/src/components/HeadlineText";
 
 export const ConsoleUrl = ({url}) =>
@@ -17,148 +18,125 @@ The <a href={config.console}>SST Console</a> is a web based dashboard to manage 
 
 ---
 
-![SST Console homescreen](/img/console/sst-console-homescreen.png)
+![SST Console homescreen](/img/console/sst-console-logs.png)
 
-With the Console you can view real-time logs, invoke functions, replay invocations, make queries, run migrations, view uploaded files, query your GraphQL APIs, and more!
+With the SST Console you can invoke functions, view and search logs, and manage all your apps with your team — **<ConsoleUrl url={config.console} />**
 
-:::info Console 2.0
-We have a new version of the [SST Console](https://twitter.com/thdxr/status/1681834634374422531) in the works. [Read more about it below](#console-20).
+:::info
+Looking for the Old Console? You can still access it here — <ConsoleUrl url="https://old.console.sst.dev" />
 :::
 
 ---
 
 ## Quick start
 
-To use the SST Console in local development:
+Here's how to get started. <a href={config.console}>Head over to the Console</a> and create an account with your email.
 
-1. In your project root, start the [Live Lambda Dev](live-lambda-development.md) environment.
+1. **Create a workspace**
 
-   ```bash
-   npx sst dev
-   ```
+   ![SST Console create a workspace](/img/console/sst-console-create-new-workspace.png)
+   
+   You can add your apps and invite your team to a workspace. A workspace can be for a personal project or for your team at work. You can create as many workspaces as you want.
 
-2. You'll see something like this once your local environment is ready.
+   :::tip
+   Create a workspace for your organization. You can use it to invite your team and connect all your AWS accounts.
+   :::
 
-   ```
-   ➜ Stage:   Jay
-   ➜ Console: https://console.sst.dev/acme/Jay
-   ```
+2. **Connect your AWS account**
 
-3. Head over to the printed URL or — **<ConsoleUrl url={config.console} />**
+   ![SST Console connect an AWS account](/img/console/sst-console-connect-aws-account.png)
 
-It'll connect to the app you are working on locally. You can read more about [how this works](#how-it-works) below.
+   This will ask you to create a CloudFormation stack in your AWS account.
 
----
+   ![SST Console connect an AWS account](/img/console/sst-console-create-cloudformation-stack.png)
 
-## Explorers
+   Make sure that this stack is being added to **us-east-1**. Scroll down and click **Create stack**.
 
-The SST Console has separate tabs or _explorers_ for managing the different parts of your application.
+   :::caution
+   The CloudFormation stack needs to be created in **us-east-1**. If you create it in the wrong region by mistake, remove it and create it again.
+   :::
 
----
+   This stack will scan all the regions in your account for SST apps and subscribe to them. Once created, you'll see all your apps, stages, and the functions in the apps.
 
-### Logs
+   ![SST Console app resources](/img/console/sst-console-resources.png)
 
-View **real-time logs** from your [Live Lambda Dev](live-lambda-development.md) environment.
+3. **Invite your team**
 
-![SST Console Local tab](/img/console/sst-console-local-tab.png)
+   ![SST Console invite team](/img/console/sst-console-invite-user.png)
 
----
-
-### Stacks
-
-View all the deployed **stacks** and **resources** in your app.
-
-![SST Console Stacks tab](/img/console/sst-console-stacks-tab.png)
+   Use the email address of your teammates to invite them. They just need to login with the email you've used and they'll be able to join your workspace.
 
 ---
 
-### Functions
+## Requirements
 
-**Invoke** the functions in your app and **replay** invocations.
+**SST apps v2.19.2 or newer** are supported by the Console. Note that, apps **older than v2** won't be detected by the Console.
 
-![SST Console Functions tab](/img/console/sst-console-functions-tab.png)
-
----
-
-### API
-
-The API explorer lets you **make HTTP requests** to any of the routes in your [`Api`](constructs/Api.md) and [`ApiGatewayV1Api`](constructs/ApiGatewayV1Api.md) constructs.
-
-![SST Console API tab](/img/console/sst-console-api-tab.png)
-
-Set the headers, query params, request body, and view the function logs in the response.
+:::note
+The SST Console is optional to use. It simply compliments the SST CLI.
+:::
 
 ---
 
-### RDS
+## How it works
 
-The RDS explorer allows you to manage the RDS instance created with the [`RDS`](constructs/RDS.md) constructs in your app.
+At a high level, here's how the Console works.
 
-![SST Console RDS tab](/img/console/sst-console-rds-tab.png)
+1. It's hosted on our side
 
-You can use the **query editor** to run queries. You can also use the migrations panel to view all of your **migrations and apply them**.
+   - It stores some data about your account and your logs on our side.
+   - We'll have a version that can be self-hosted in the future.
 
----
+2. You can view all your apps and stages
 
-### Buckets
+   - Once you've connected your AWS accounts, it'll deploy a separate CloudFormation stack and connect to any SST apps in it.
+   - And all your apps and stages will show up automatically.
 
-The Buckets explorer allows you to manage the S3 Buckets created with the [`Bucket`](constructs/Bucket.md) constructs in your app.
+3. You can manage your apps
 
-![SST Console Buckets tab](/img/console/sst-console-buckets-tab.png)
+   - You can view all the SST Functions in your app.
+   - You can view their logs, invoke them, or replay invocations
+   - You can also save event payloads to your workspace.
+   - For your local [`sst dev`](live-lambda-development.md) stage, the logs will be streamed in real-time from your local machine.
 
-It allows you to **upload**, **delete**, and **download** files. You can also create and delete folders.
+4. It doesn't support all the features of the [Old Console](#old-console)
 
----
+   - We are starting with just functions and logs for now. We might add the other [Explorers](#explorers) in the future.
 
-### GraphQL
+5. It's open-source, built with SST, and deployed with [Seed](https://seed.run)
 
-The GraphQL explorer lets you **query GraphQL endpoints** created with the [`Api`](constructs/Api.md) and [`AppSyncApi`](constructs/AppSyncApi.md) constructs in your app.
-
-![SST Console GraphQL tab](/img/console/sst-console-graphql-tab.png)
-
----
-
-### Cognito
-
-The Cognito explorer allows you to manage the User Pools created with the [`Cognito`](constructs/Cognito.md) constructs in your app.
-
-![SST Console Cognito tab](/img/console/sst-console-cognito-tab.png)
-
-It allows you to **create** new users and **delete** existing **users**.
+   - The Console is a full-stack SST app. You can view the <a href="https://github.com/sst/console">source on GitHub</a>.
 
 ---
 
-### DynamoDB
+### AWS account access
 
-The DynamoDB explorer lets you **query the DynamoDB** tables in the [`Table`](constructs/Table.md) constructs in your app.
+The SST Console needs access to your AWS account to do the following things:
 
-![SST Console DynamoDB tab](/img/console/sst-console-dynamodb-tab.png)
-
-You can scan the table, query specific keys, create and edit items.
-
----
-
-## Deployed environments
-
-By default the Console connects to the app you are running locally with `sst dev`. To use the Console with a deployed environment you'll first need to run the [`sst console`](packages/sst.md#sst-console) command.
-
-```bash
-npx sst console
-```
-
-This will start a server locally and use your local AWS credentials to power the Console.
-
-With this, you can use the Console to **manage apps** that are in **production**. In this mode, the Console will display CloudWatch logs instead of ones from your Live Lambda environment.
+1. Discover all the SST apps and stages across the various AWS regions.
+2. Access the resources created while deploying your SST apps.
+3. Access the CloudWatch APIs to let you view your logs in production.
+4. Invoke the Lambda functions in your SST apps when you invoke them in the Console.
 
 ---
 
-## Support
+## Local logs
 
-The SST Console works in all browsers and environments. But for certain browsers like Safari or Brave, and Gitpod, it needs some additional configuration.
+When the Console starts up, it checks if you are running `sst dev` locally. If so, then it'll show you real-time logs from your local terminal.
+
+![SST Console tailing local logs](/img/console/sst-console-tailing-local-logs.png)
+
+This works by connecting to a local server that's run as a part of the SST CLI.
+
+:::info
+The local server only allows access from `localhost` and `console.sst.dev`.
+:::
+
+The local logs works in all browsers and environments. But for certain browsers like Safari or Brave, and Gitpod, it needs some additional configuration.
 
 ---
 
-### Safari and Brave
+### Safari & Brave
 
 Certain browsers like Safari and Brave require the local connection between the browser and the `sst dev` CLI to be running on HTTPS.
 
@@ -185,107 +163,267 @@ The companion app runs locally and creates a tunnelled connection to your Gitpod
 
 ---
 
-## How it works
+## Security
 
-The <a href={ config.console }>SST Console</a> is a static single-page app hosted at <ConsoleUrl url={config.console} />.
+The CloudFormation stack that the SST Console uses creates an IAM Role in your account to manage your resources. If this is a concern for your production environments, we have a couple of options.
 
-It uses the local credentials from the SST CLI ([`sst dev`](packages/sst.md#sst-dev) or [`sst console`](packages/sst.md#sst-console)) to make calls to your AWS account.
+By default, this role is granted `AdministratorAccess`, but you can customize it to restrict access. We'll look at this below. Additionally, if you'd like us to sign a BAA, feel free to <a href={`mailto:${config.email}`}>contact us</a>.
 
-When the Console starts up, it gets the credentials from a local server that is run as a part of the SST CLI. It also gets some metadata from the app that's running locally. The local server only allows access from `localhost` and `console.sst.dev`.
-
-The Console then uses these credentials to make calls to AWS using the AWS SDK. For some resources (like S3), the Console will proxy calls through your local CLI to get around the CORS restrictions in the browser.
-
-:::info
-The SST Console requires the SST CLI to be running (either `sst dev` or `sst console`) to work.
-:::
-
-When connected to `sst dev`, the Console will display real-time logs from the local invocations of your functions. Whereas, when connected to `sst console`, it'll show you the [CloudWatch](https://aws.amazon.com/cloudwatch/) logs for them instead.
-
-The source for the Console can be viewed in the <a href={`${config.github}/tree/master/packages/console`}>SST GitHub repo</a>.
+There maybe we cases where you don't want any data leaving your AWS account. For this, we'll be supporting self-hosting the Console in the future. You can let us know if this is a priority for you by sending us a message over on Discord.
 
 ---
 
-## Console 2.0
+### IAM permissions
 
-We are working on a new version of the SST Console. It'll make it easier to view your logs and manage all your SST apps in production.
+Permissions for the SST Console fall into two categories: read and write.
 
-![SST Console homescreen](/img/console/sst-console-20.png)
+- **Read Permissions** — The Console needs specific permissions to display information about resources within your SST apps:
 
-You won't need to run the `sst console` command to view a specific stage. It'll automatically show all the SST apps with their stages in your account.
+  | Purpose                                | AWS IAM Action                   |
+  |----------------------------------------|----------------------------------|
+  | Fetch stack outputs                    | `cloudformation:DescribeStacks`  |
+  | Retrieve function runtime and size     | `lambda:GetFunctionCommand`      |
+  | Access stack metadata                  | `s3:GetObject`<br/>`s3:ListObjectsV2`|
+  | Display function logs                  | `logs:DescribeLogStreams`<br/>`logs:FilterLogEvents`<br/>`logs:GetLogEvents`<br/>`logs:StartQuery`|
+  | Monitor invocation usage               | `cloudwatch:GetMetricData`       |
 
-The new console is also [open source and is built with SST](https://github.com/serverless-stack/console).
+  Attach the `arn:aws:iam::aws:policy/ReadOnlyAccess` AWS managed policy to the IAM Role for comprehensive read access.
+
+- **Write Permissions** — The Console requires the following write permissions:
+
+  | Purpose                                          | AWS IAM Action                                                               |
+  |-----------------------------------------------------|------------------------------------------------------------------------------|
+  | Forward bootstrap bucket events to event bus     | `s3:PutBucketNotification`                                      |
+  | Send events to SST Console                       | `events:PutRule`<br/>`events:PutTargets`                           |
+  | Grant event bus access for SST Console           | `iam:CreateRole`<br/>`iam:DeleteRole`<br/>`iam:DeleteRolePolicy`<br/>`iam:PassRole`<br/>`iam:PutRolePolicy` |
+  | Invok Lambda functions or replaying invocations  | `lambda:InvokeFunction` |
+
+---
+
+### Customize policy
+
+To customize IAM permissions for the CloudFormation stack:
+
+1. On the CloudFormation create stack page, download the default `template.json`.
+
+   ![SST Console template URL](/img/console/sst-console-template-url.png)
+
+2. Edit the template file with necessary changes.
+
+  <details>
+  <summary>View the template changes</summary>
+  
+    ```diff
+        "SSTRole": {
+          "Type": "AWS::IAM::Role",
+          "Properties": {
+            ...
+            "ManagedPolicyArns": [
+    -         "arn:aws:iam::aws:policy/AdministratorAccess"
+    +         "arn:aws:iam::aws:policy/ReadOnlyAccess"
+    +       ],
+    +       "Policies": [
+    +         {
+    +           "PolicyName": "SSTPolicy",
+    +           "PolicyDocument": {
+    +             "Version": "2012-10-17",
+    +             "Statement": [
+    +               {
+    +                 "Effect": "Allow",
+    +                 "Action": [
+    +                   "s3:PutBucketNotification"
+    +                 ],
+    +                 "Resource": [
+    +                   "arn:aws:s3:::sstbootstrap-*"
+    +                 ]
+    +               },
+    +               {
+    +                 "Effect": "Allow",
+    +                 "Action": [
+    +                   "events:PutRule",
+    +                   "events:PutTargets"
+    +                 ],
+    +                 "Resource": {
+    +                   "Fn::Sub": "arn:aws:events:*:${AWS::AccountId}:rule/SSTConsole*"
+    +                 }
+    +               },
+    +               {
+    +                 "Effect": "Allow",
+    +                 "Action": [
+    +                   "iam:CreateRole",
+    +                   "iam:DeleteRole",
+    +                   "iam:DeleteRolePolicy",
+    +                   "iam:PassRole",
+    +                   "iam:PutRolePolicy"
+    +                 ],
+    +                 "Resource": {
+    +                   "Fn::Sub": "arn:aws:iam::${AWS::AccountId}:role/SSTConsolePublisher*"
+    +                 }
+    +               },
+    +               {
+    +                 "Effect": "Allow",
+    +                 "Action": [
+    +                   "lambda:InvokeFunction"
+    +                 ],
+    +                 "Resource": {
+    +                   "Fn::Sub": "arn:aws:lambda:*:${AWS::AccountId}:function:*"
+    +                 }
+    +               }
+    +             ]
+    +           }
+    +         }
+            ]
+          }
+        }
+    ```
+  
+  </details>
+
+3. Upload your edited `template.json` file to an S3 bucket.
+
+4. Return to the CloudFormation create stack page and replace the template URL in the page URL.
 
 :::tip
-The [new console's codebase](https://github.com/serverless-stack/console) is a good example of what a production SST app looks like.
+The SST Console is constantly evolving. As new features are added, additional permissions might be required. It's good practice to periodically review and update the IAM policy.
 :::
 
 ---
 
-### Join the beta
+## Pricing
 
-Console 2.0 is currently in public beta. If you'd like to try it out, <a href={config.discord}>join us in #console on Discord</a>.
+The SST Console pricing is based on the number of times the Lambda functions in your SST apps are invoked per month and it uses the following tiers.
+
+| Invocations | Rate (per invocation) |
+|-------------|------|
+| First 1M    | Free |
+| 1M - 10M    | $0.00002 |
+| 10M+        | $0.000002 |
+
+These are calculated for a given workspace on a monthly basis. For volume pricing, feel free to <a href={`mailto:${config.email}`}>contact us</a>.
 
 ---
 
-#### What's changing
+#### Pricing calculator
 
-We are making some key changes with the new version.
+You can use this pricing calculator to estimate what your monthly cost will be.
 
-1. You'll need to sign up for it
+<Calculator />
 
-   - You can create an account and create a workspace.
+For further details, check out the [Pricing FAQ below](#pricing-faq).
 
-2. You can use it with your team
+---
 
-   - You can also invite your team members to the workspace.
+## Getting help
 
-3. The new console is hosted on our side
+If you have any questions or if you need help, <a href={config.discord}>**join us in #console on Discord**</a>.
 
-   - This lets you connect your AWS accounts. It'll deploy a separate CloudFormation stack and connect to any SST apps in it.
-   - It also stores some data about your account and your logs on our side.
+---
 
-4. You can view all your apps and stages
+## Old Console
 
-   - Once you've connected your AWS accounts, all your apps and stages will show up automatically.
-   - You can view logs, invoke functions, or save event payloads as a team.
-   - Just as before, you can also view logs in real-time from your local stage.
 
-5. It doesn't support all the [Explorers](#explorers)
-
-   - We are starting with just functions and logs for now.
-
-6. It'll be a paid product
-
-   - You'll be able to view local logs and stages for free.
-   - But viewing and searching for production logs will be a paid feature.
-   - We'll release pricing details shortly but it'll be based on how often your functions are invoked.
+The Old SST Console is a static single-page app hosted at <ConsoleUrl url="https://old.console.sst.dev" />
 
 :::info
-Just as before, the new console is completely optional to use.
+We'll be moving away from the Old Console in the future.
 :::
+
+#### Explorers
+
+The Old Console has separate tabs or _explorers_ for managing the different parts of your application.
+
+- Logs
+
+  View **real-time logs** from your [Live Lambda Dev](live-lambda-development.md) environment.
+
+- Stacks
+
+  View all the deployed **stacks** and **resources** in your app.
+
+- Functions
+
+  **Invoke** the functions in your app and **replay** invocations.
+
+- API
+
+  The API explorer lets you **make HTTP requests** to any of the routes in your [`Api`](constructs/Api.md) and [`ApiGatewayV1Api`](constructs/ApiGatewayV1Api.md) constructs.
+
+  Set the headers, query params, request body, and view the function logs in the response.
+
+- RDS
+
+  The RDS explorer allows you to manage the RDS instance created with the [`RDS`](constructs/RDS.md) constructs in your app.
+
+  You can use the **query editor** to run queries. You can also use the migrations panel to view all of your **migrations and apply them**.
+
+- Buckets
+
+  The Buckets explorer allows you to manage the S3 Buckets created with the [`Bucket`](constructs/Bucket.md) constructs in your app.
+
+  It allows you to **upload**, **delete**, and **download** files. You can also create and delete folders.
+
+- GraphQL
+
+  The GraphQL explorer lets you **query GraphQL endpoints** created with the [`Api`](constructs/Api.md) and [`AppSyncApi`](constructs/AppSyncApi.md) constructs in your app.
+
+- Cognito
+
+  The Cognito explorer allows you to manage the User Pools created with the [`Cognito`](constructs/Cognito.md) constructs in your app.
+
+  It allows you to **create** new users and **delete** existing **users**.
+
+- DynamoDB
+
+  The DynamoDB explorer lets you **query the DynamoDB** tables in the [`Table`](constructs/Table.md) constructs in your app.
+
+  You can scan the table, query specific keys, create and edit items.
 
 ---
 
-#### Frequently asked questions
+## FAQ
 
-- When is the new console going live?
+- Do I need to use the Console to use SST?
 
-  It's currently in public beta and will be going live in the coming weeks.
+  You don't need the Console to use SST. It displays the local logs from your terminal in a UI that's more convenient.
 
-- What will happen to the old console?
+- What if I don't want to pay for the Console?
 
-  We'll still keep it around for some time but it'll be moved to a different URL.
+  You can still invite your team and use it to view your local logs and stages.
 
-- Will there be a free tier?
+- Why did we move away from the Old Console?
 
-  We haven't finalized this yet but there will most likely be a free tier for apps that don't have a lot of invocations or logs.
+  It required you to run a command when you wanted to view logs for a specific stage. It also was purely a client-side app, this made it very limited for viewing or searching production logs.
 
-- What if I don't want to pay for it?
+- What will happen to the [Old Console](#old-console)?
 
-  You can still invite your team and use it to view your local stages.
+  It'll be available at <ConsoleUrl url="https://old.console.sst.dev" /> for some time but we'll be moving away from it.
 
-- What happens to Seed?
+- What will happen to Seed?
 
   [Seed](https://seed.run) also lets you view logs for your SST apps, so there is some overlap between the two products. But Seed will continue to work just as before.
 
-If you have any further questions, feel free to ask us on Discord.
+---
+
+### Pricing FAQ
+
+- Do I need a credit card to get started?
+
+  The Console is free to get started and **doesn't need a credit card**.
+
+- Which Lambda functions are included in the number of invocations?
+
+  The number of invocations are only counted for the **Lambda functions in your SST apps**. Other Lambda functions in your AWS accounts are not included.
+
+- Do the functions in my local stages count as a part of the invocations?
+
+  Lambda functions that are invoked **locally are not included**.
+
+- Can I access the local stages if I'm above the free tier?
+
+  If you go above the free tier in your _production_ stages, you **can still access your local stages**. You'll just need to add your billing information to access the _production_ ones.
+
+- My invocation volume is far higher than the listed tiers. Are there any other options?
+
+  Feel free to <a href={`mailto:${config.email}`}>contact us</a> and we can figure out a pricing plan that works for you.
+
+If you have any further questions, feel free to ask us on Discord or <a href={`mailto:${config.email}`}>send us an email</a>.

@@ -338,6 +338,7 @@ export class SsrFunction extends Construct implements SSTConstruct {
       type: "Function" as const,
       data: {
         arn: this.functionArn,
+        runtime: this.props.runtime,
         handler: this.props.handler,
         localId: this.node.addr,
         secrets: [] as string[],

@@ -25,6 +25,13 @@ const Root = styled("div", {
   color: "$hiContrast",
 });
 
+const Announcement = styled("div", {
+  borderBottom: "1px solid $border",
+  padding: "12px 10px 14px",
+  fontSize: 14,
+  textAlign: "center",
+});
+
 const Fill = styled("div", {
   display: "flex",
   flexGrow: 1,
@@ -49,6 +56,13 @@ export function Stage() {
     );
   return (
     <Root>
+      <Announcement>
+        Check out the{" "}
+        <a href="https://console.sst.dev" target="_blank">
+          new SST Console
+        </a>
+        . We'll be migrating to it in the coming weeks.{" "}
+      </Announcement>
       <Fill>
         <Panel />
         <Content>

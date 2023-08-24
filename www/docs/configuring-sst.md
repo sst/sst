@@ -81,17 +81,20 @@ Here's the full list of config options that can be returned:
 - **`ssmPrefix`** SSM prefix for all SSM parameters that SST creates
 - **`advanced`**
   - **`disableParameterizedStackNameCheck`** Disable the check for stack names to be parameterized with the stage name.
+  - **`disableAppModeCheck`** Disables the confirmation prompt when switching between `sst deploy` and `sst dev` deployment modes. If set to `true`, the prompt will be suppressed when changing modes.
 - **`bootstrap`**
   - **`stackName`** The name to use for the SST bootstrap stack
   - **`tags`** Tags to use for the SST bootstrap stack
   - **`useCdkBucket`** Use the S3 bucket created by the CDK bootstrap process instead of creating a new one
 - **`cdk`**
+  - **`bootstrapStackVersionSsmParameter`** The name of the SSM parameter which describes the bootstrap stack version number
   - **`cloudFormationExecutionRole`** IAM role assumed by the CloudFormation to deploy
-  - **`customPermissionsBoundary`** The Name of the IAM permissions boundary policy to use for the CDK toolkit stack and SST bootstrap stack
+  - **`customPermissionsBoundary`** The name of the IAM permissions boundary policy to use for the CDK toolkit stack and SST bootstrap stack
   - **`deployRoleArn`**: IAM role used to initiate a deployment
   - **`fileAssetPublishingRoleArn`** IAM role used to publish file assets to the S3 bucket
   - **`fileAssetsBucketName`** The name of the CDK toolkit bucket
   - **`imageAssetPublishingRoleArn`** IAM role used to publish image assets to the ECR repository
+  - **`imageAssetsRepositoryName`** The name of the ECR repository for Docker image assets
   - **`lookupRoleArn`** IAM role used to look up values from the AWS account
   - **`pathMetadata`** Add CDK path metadata to templates. This enables the CDK Construct tree view in the CloudFormation console. Default `false`.
   - **`publicAccessBlockConfiguration`** Block public access configuration on the CDK toolkit bucket and SST bootstrap bucket
