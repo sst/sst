@@ -13,7 +13,6 @@ import { Permissions } from "./util/permission.js";
 import { bindParameters, bindType } from "./util/functionBinding.js";
 import { StackProps } from "./Stack.js";
 import { FunctionalStack, stack } from "./FunctionalStack.js";
-import { createRequire } from "module";
 import { Auth } from "./Auth.js";
 import { useDeferredTasks } from "./deferred_task.js";
 import { AppContext } from "./context.js";
@@ -27,24 +26,14 @@ import {
   IAspect,
   CfnResource,
   RemovalPolicy,
-  CustomResourceProvider,
-  CustomResourceProviderRuntime,
   CustomResource,
   Aspects,
 } from "aws-cdk-lib/core";
 import { CfnFunction, ILayerVersion } from "aws-cdk-lib/aws-lambda";
 import { Bucket } from "aws-cdk-lib/aws-s3";
-import {
-  ArnPrincipal,
-  Effect,
-  Policy,
-  PolicyStatement,
-} from "aws-cdk-lib/aws-iam";
+import { Effect, Policy, PolicyStatement } from "aws-cdk-lib/aws-iam";
 import { CfnLogGroup } from "aws-cdk-lib/aws-logs";
-import { BucketDeployment, Source } from "aws-cdk-lib/aws-s3-deployment";
-import { bootstrapSST, useBootstrap } from "../bootstrap.js";
-import { Asset } from "aws-cdk-lib/aws-s3-assets";
-const require = createRequire(import.meta.url);
+import { useBootstrap } from "../bootstrap.js";
 
 function exitWithMessage(message: string) {
   console.error(message);
@@ -271,11 +260,6 @@ export class App extends CDKApp {
     this.buildConstructsMetadata();
     this.ensureUniqueConstructIds();
     this.codegenTypes();
-
-    await fs.promises.rm(path.join(paths.artifacts, "sourcemaps"), {
-      recursive: true,
-      force: true,
-    });
 
     // Run deferred tasks
     // - after codegen b/c some frontend frameworks (ie. Next.js apps) runs
