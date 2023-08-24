@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.24.14
+
+### Patch Changes
+
+- [`053198804`](https://github.com/sst/sst/commit/053198804afd1a6822ea8ad2ce65a5c78dfa7b57) Thanks [@thdxr](https://github.com/thdxr)! - function: bulk sourcemap upload
+
 ## 2.24.13
 
 ### Patch Changes
