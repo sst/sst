@@ -4,6 +4,9 @@
 import path from "path";
 import type { Loader, BuildOptions } from "esbuild";
 import { Construct } from "constructs";
+import fs from "fs/promises";
+import crypto from "crypto";
+import zlib from "zlib";
 
 import { App } from "./App.js";
 import { Stack } from "./Stack.js";
@@ -56,7 +59,8 @@ import { Platform } from "aws-cdk-lib/aws-ecr-assets";
 import { useBootstrap } from "../bootstrap.js";
 import { Colors } from "../cli/colors.js";
 import { BucketDeployment, Source } from "aws-cdk-lib/aws-s3-deployment";
-import { Bucket } from "aws-cdk-lib/aws-s3";
+import { Bucket, IBucket } from "aws-cdk-lib/aws-s3";
+import { Asset } from "aws-cdk-lib/aws-s3-assets";
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 
 const supportedRuntimes = {
@@ -879,6 +883,8 @@ export class Function extends CDKFunction implements SSTConstruct {
             `➜  Building the container image for the "${this.node.id}" function...`
           );
 
+        const project = useProject();
+
         // Build function
         const result = await useRuntimeHandlers().build(
           this.node.addr,
@@ -897,23 +903,24 @@ export class Function extends CDKFunction implements SSTConstruct {
         // No need to update code if runtime is container
         if (props.runtime === "container") return;
 
+        if (result.sourcemap) {
+          const data = await fs.readFile(result.sourcemap);
+          await fs.writeFile(result.sourcemap, zlib.gzipSync(data));
+          const asset = new Asset(stack, this.id + "-Sourcemap", {
+            path: result.sourcemap,
+          });
+          await fs.rm(result.sourcemap);
+          useFunctions().sourcemaps.add(stack.stackName, {
+            bucket: asset.bucket,
+            key: asset.s3ObjectKey,
+            arn: this.functionArn,
+          });
+        }
+
         // Update code
         const cfnFunction = this.node.defaultChild as CfnFunction;
         const code = AssetCode.fromAsset(result.out);
         const codeConfig = code.bind(this);
-        const bootstrap = await useBootstrap();
-        if (result.sourcemap)
-          new BucketDeployment(this, "Sourcemap", {
-            sources: [Source.asset(result.sourcemap)],
-            contentEncoding: "gzip",
-            contentType: "application/json",
-            destinationBucket: Bucket.fromBucketName(
-              this,
-              "BootstrapBucket",
-              bootstrap.bucket
-            ),
-            destinationKeyPrefix: `sourcemap/${app.name}/${app.stage}/${this.functionArn}/`,
-          });
 
         cfnFunction.code = {
           s3Bucket: codeConfig.s3Location?.bucketName,
@@ -1274,8 +1281,24 @@ export class Function extends CDKFunction implements SSTConstruct {
 
 export const useFunctions = createAppContext(() => {
   const functions: Record<string, FunctionProps> = {};
+  type Sourcemap = {
+    arn: string;
+    bucket: IBucket;
+    key: string;
+  };
+  const sourcemaps: Record<string, Sourcemap[]> = {};
 
   return {
+    sourcemaps: {
+      add(stack: string, source: Sourcemap) {
+        let arr = sourcemaps[stack];
+        if (!arr) sourcemaps[stack] = arr = [];
+        arr.push(source);
+      },
+      forStack(stack: string) {
+        return sourcemaps[stack] || [];
+      },
+    },
     fromID(id: string) {
       const result = functions[id];
       if (!result) return;
