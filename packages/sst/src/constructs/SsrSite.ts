@@ -121,10 +121,6 @@ export interface SsrSiteProps {
    */
   path?: string;
   /**
-   * The command for running the development server.
-   */
-  devCommand?: string;
-  /**
    * The command for building the website
    * @default `npm run build`
    * @example
@@ -239,6 +235,16 @@ export interface SsrSiteProps {
      * ```
      */
     url?: string;
+    /**
+     * The command for running the development server.
+     * @example
+     * ```js
+     * dev: {
+     *   command: "yarn run dev"
+     * }
+     * ```
+     */
+    command?: string;
   };
   /**
    * While deploying, SST waits for the CloudFront cache invalidation process to finish. This ensures that the new content will be served once the deploy command finishes. However, this process can sometimes take more than 5 mins. For non-prod environments it might make sense to pass in `false`. That'll skip waiting for the cache to invalidate and speed up the deploy process.

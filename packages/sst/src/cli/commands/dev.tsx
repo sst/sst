@@ -307,7 +307,7 @@ export const dev = (program: Program) =>
                         ? ""
                         : `cd ${props.path} && `;
                     const devCommand =
-                      props.devCommand || `${cdCmd}npm run dev`;
+                      props.dev?.command || `${cdCmd}npm run dev`;
                     Colors.line(
                       Colors.primary(`➜ `),
                       Colors.bold(`Start ${framework}:`),
