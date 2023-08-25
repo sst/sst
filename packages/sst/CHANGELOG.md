@@ -1,5 +1,13 @@
 # @serverless-stack/cli2
 
+## 2.24.15
+
+### Patch Changes
+
+- [`be7e0b13f`](https://github.com/sst/sst/commit/be7e0b13fe26bdba2eca20e146b67b4a6febe129) Thanks [@thdxr](https://github.com/thdxr)! - future-auth: better interface for creating sessions
+
+- [#3207](https://github.com/sst/sst/pull/3207) [`27138d1e6`](https://github.com/sst/sst/commit/27138d1e6f86f1435d862ac40ae1ac7cea9d3e24) Thanks [@oleghind](https://github.com/oleghind)! - Upgrade fast-jwt
+
 ## 2.24.14
 
 ### Patch Changes
