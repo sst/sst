@@ -14,41 +14,23 @@ import {
   useQueryParams,
   useResponse,
 } from "../../api/index.js";
-import { SessionValue } from "./session.js";
+import { SessionBuilder, SessionValue } from "./session.js";
 import { Config } from "../../config/index.js";
 
-const onSuccessResponse = {
-  session(input: SessionCreateInput) {
-    return {
-      type: "session" as const,
-      properties: input,
-    };
-  },
-  http(input: APIGatewayProxyStructuredResultV2) {
-    return {
-      type: "http" as const,
-      properties: input,
-    };
-  },
-  provider(provider: string) {
-    return {
-      type: "http" as const,
-      properties: {
-        statusCode: 302,
-        headers: {
-          Location:
-            "/authorize?" +
-            new URLSearchParams({
-              provider,
-            }).toString(),
-        },
-      } satisfies APIGatewayProxyStructuredResultV2,
-    };
-  },
-};
+interface OnSuccessResponder<T> {
+  session(input: T & Partial<SignerOptions>): {
+    type: "session";
+    properties: T;
+  };
+  http(input: APIGatewayProxyStructuredResultV2): {
+    type: "http";
+    properties: typeof input;
+  };
+}
 
 export function AuthHandler<
   Providers extends Record<string, Adapter<any>>,
+  Sessions extends SessionBuilder,
   Result = {
     [key in keyof Providers]: {
       provider: key;
@@ -59,15 +41,20 @@ export function AuthHandler<
   }[keyof Providers]
 >(input: {
   providers: Providers;
+  sessions?: Sessions;
   clients: () => Promise<Record<string, string>>;
   onAuthorize?: (
     event: APIGatewayProxyEventV2
   ) => Promise<void | keyof Providers>;
   onSuccess: (
     input: Result,
-    response: typeof onSuccessResponse
+    response: OnSuccessResponder<SessionValue | Sessions["$type"]>
   ) => Promise<
-    ReturnType<(typeof onSuccessResponse)[keyof typeof onSuccessResponse]>
+    ReturnType<
+      OnSuccessResponder<
+        SessionValue | Sessions["$type"]
+      >[keyof OnSuccessResponder<any>]
+    >
   >;
   onIndex?: (
     event: APIGatewayProxyEventV2
@@ -250,7 +237,20 @@ export function AuthHandler<
           provider,
           ...result.properties,
         },
-        onSuccessResponse
+        {
+          http(input) {
+            return {
+              type: "http",
+              properties: input,
+            };
+          },
+          session(input) {
+            return {
+              type: "session",
+              properties: input,
+            };
+          },
+        }
       );
       console.log("onSuccess", onSuccess);
 
@@ -346,5 +346,3 @@ export function AuthHandler<
     }
   });
 }
-
-export type SessionCreateInput = SessionValue & Partial<SignerOptions>;
