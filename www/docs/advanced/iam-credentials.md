@@ -11,7 +11,7 @@ There are a few different ways to set the credentials that SST will use. Startin
 
 ### Loading from a file
 
-You can keep you AWS credentials in a file. The credentials are found at:
+You can keep your AWS credentials in a file. The credentials are found at:
 
 - `~/.aws/credentials` on Linux, Unix, and macOS;
 - `C:\Users\USER_NAME\.aws\credentials` on Windows
