@@ -134,7 +134,14 @@ Once completed, you can follow the steps above to set your custom domains.
 The alternative approach is to create a CNAME record in your existing provider and point it to the CloudFront distribution. This is the auto-generated URL that you get when you deploy your frontend or API, `d111111abcdef8.cloudfront.net`.
 
 :::info
-You cannot point a CNAME to a root domain. For example, you can point it to `www.my-app.com` but not `my-app.com`. You'll need to migrate your DNS to Route 53 for that.
+You cannot point a CNAME to a root domain.
+For example, you can point it to `www.my-app.com` but not `my-app.com`.
+
+However, there are a couple of ways to get around this:
+- [Migrate your DNS to Route 53](https://docs.sst.dev/custom-domains#migrate-dns-to-route-53)
+- Use a subdomain like `www.my-app.com`
+- Use a redirect from `my-app.com` to `www.my-app.com`
+- Use a domain provider that supports ALIAS, ANAME, or CNAME flattening.
 :::
 
 To point the CNAME, you need to:
