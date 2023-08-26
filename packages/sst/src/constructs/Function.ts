@@ -906,7 +906,7 @@ export class Function extends CDKFunction implements SSTConstruct {
         if (result.sourcemap) {
           const data = await fs.readFile(result.sourcemap);
           await fs.writeFile(result.sourcemap, zlib.gzipSync(data));
-          const asset = new Asset(stack, this.id + "-Sourcemap", {
+          const asset = new Asset(this, this.id + "-Sourcemap", {
             path: result.sourcemap,
           });
           await fs.rm(result.sourcemap);
