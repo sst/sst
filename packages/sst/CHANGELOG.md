@@ -1,5 +1,15 @@
 # @serverless-stack/cli2
 
+## 2.24.16
+
+### Patch Changes
+
+- [`d21ed32cb`](https://github.com/sst/sst/commit/d21ed32cbbd3eef26e823aedb08c795e5c1fb1c1) Thanks [@thdxr](https://github.com/thdxr)! - function: make sure sourcemap ids don't conflict
+
+- [`5c7f126ef`](https://github.com/sst/sst/commit/5c7f126ef80cea4849cdf87fb5bf2eee4742d335) Thanks [@fwang](https://github.com/fwang)! - Telemetry: report CLI status
+
+- [`5c7f126ef`](https://github.com/sst/sst/commit/5c7f126ef80cea4849cdf87fb5bf2eee4742d335) Thanks [@fwang](https://github.com/fwang)! - Bootstrap: hide JSII Node.js warning
+
 ## 2.24.15
 
 ### Patch Changes
