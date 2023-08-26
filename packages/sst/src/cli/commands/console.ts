@@ -1,4 +1,3 @@
-import { useLocalServerConfig } from "../local/server.js";
 import type { Program } from "../program.js";
 
 export const consoleCommand = async (program: Program) =>
@@ -7,20 +6,27 @@ export const consoleCommand = async (program: Program) =>
     "Start the SST Console",
     (yargs) => yargs,
     async () => {
-      const { blue } = await import("colorette");
+      const { exit, exitWithError } = await import("../program.js");
       const { useRuntimeServer } = await import("../../runtime/server.js");
       const { useLocalServer } = await import("../local/server.js");
       const { printHeader } = await import("../ui/header.js");
       const { clear } = await import("../terminal.js");
-      await Promise.all([
-        useRuntimeServer(),
-        useLocalServer({
-          key: "",
-          cert: "",
-          live: false,
-        }),
-      ]);
-      clear();
-      printHeader({ console: true, hint: "ready!" });
+
+      try {
+        await Promise.all([
+          useRuntimeServer(),
+          useLocalServer({
+            key: "",
+            cert: "",
+            live: false,
+          }),
+        ]);
+        clear();
+        printHeader({ console: true, hint: "ready!" });
+
+        await exit();
+      } catch (e: any) {
+        await exitWithError(e);
+      }
     }
   );

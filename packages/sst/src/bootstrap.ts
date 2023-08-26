@@ -364,6 +364,7 @@ async function bootstrapCDK() {
           AWS_SESSION_TOKEN: credentials.sessionToken,
           AWS_REGION: region,
           AWS_PROFILE: profile,
+          JSII_SILENCE_WARNING_DEPRECATED_NODE_VERSION: "1",
         },
         stdio: "pipe",
         shell: true,

@@ -16,6 +16,18 @@ type EventContext = {
   sessionId: string;
 };
 
+type CliFailedEvent = {
+  rawCommand: string;
+  duration: number;
+  errorName: string;
+  errorMessage: string;
+};
+
+type CliSucceededEvent = {
+  rawCommand: string;
+  duration: number;
+};
+
 const conf = initializeConf();
 const sessionId = randomBytes(32).toString("hex");
 const projectId = hash(getRawProjectId());
@@ -39,10 +51,24 @@ export function isEnabled(): boolean {
   return conf.get(TELEMETRY_KEY_ENABLED, true) !== false;
 }
 
-export function trackCli(command: string): void {
-  record("CLI_COMMAND", {
-    command,
-  });
+export function trackCli(command: string) {
+  return record("CLI_COMMAND", { command });
+}
+
+export function trackCliFailed(event: CliFailedEvent) {
+  return record("CLI_COMMAND_FAILED", event);
+}
+
+export function trackCliSucceeded(event: CliSucceededEvent) {
+  return record("CLI_COMMAND_SUCCEEDED", event);
+}
+
+export function trackCliDevError(event: CliFailedEvent) {
+  return record("CLI_COMMAND_DEV_ERROR", event);
+}
+
+export function trackCliDevRunning(event: CliSucceededEvent) {
+  return record("CLI_COMMAND_DEV_RUNNING", event);
 }
 
 function initializeConf() {

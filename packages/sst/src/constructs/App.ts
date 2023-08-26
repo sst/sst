@@ -17,6 +17,7 @@ import { Auth } from "./Auth.js";
 import { useDeferredTasks } from "./deferred_task.js";
 import { AppContext } from "./context.js";
 import { useProject } from "../project.js";
+import { VisibleError } from "../error.js";
 import { Logger } from "../logger.js";
 import {
   AppProps as CDKAppProps,
@@ -34,11 +35,6 @@ import { Bucket } from "aws-cdk-lib/aws-s3";
 import { Effect, Policy, PolicyStatement } from "aws-cdk-lib/aws-iam";
 import { CfnLogGroup } from "aws-cdk-lib/aws-logs";
 import { useBootstrap } from "../bootstrap.js";
-
-function exitWithMessage(message: string) {
-  console.error(message);
-  process.exit(1);
-}
 
 /**
  * @internal
@@ -348,7 +344,9 @@ export class App extends CDKApp {
     try {
       metaJson = JSON.parse(fs.readFileSync(file).toString());
     } catch (e) {
-      exitWithMessage("There was a problem reading the esbuild metafile.");
+      throw new VisibleError(
+        "There was a problem reading the esbuild metafile."
+      );
     }
 
     return Object.keys(metaJson.inputs).map((input) => path.resolve(input));

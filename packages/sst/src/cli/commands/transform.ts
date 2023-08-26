@@ -12,16 +12,24 @@ export const transform = (program: Program) =>
       }),
     async (args) => {
       const { Colors } = await import("../colors.js");
-      if (args.mod === "resource-binding-secrets") {
-        await handleSecretsMigration();
-        Colors.line(
-          Colors.success(`✔ `),
-          `Transform "${args.mod}" applied successfully!`
-        );
-        return;
-      }
+      const { exit, exitWithError } = await import("../program.js");
 
-      Colors.line(Colors.danger(`✖ `), `Transform "${args.mod}" not found`);
+      try {
+        if (args.mod === "resource-binding-secrets") {
+          await handleSecretsMigration();
+          Colors.line(
+            Colors.success(`✔ `),
+            `Transform "${args.mod}" applied successfully!`
+          );
+          return;
+        }
+
+        Colors.line(Colors.danger(`✖ `), `Transform "${args.mod}" not found`);
+
+        await exit();
+      } catch (e: any) {
+        await exitWithError(e);
+      }
     }
   );
 
