@@ -1,5 +1,13 @@
 # @serverless-stack/cli2
 
+## 2.24.17
+
+### Patch Changes
+
+- [`f19d579cf`](https://github.com/sst/sst/commit/f19d579cf57b97d548093103ce0b069701c5bcef) Thanks [@thdxr](https://github.com/thdxr)! - ApiHandler: support throwing Response
+
+- [`ca6f763fd`](https://github.com/sst/sst/commit/ca6f763fdfddd099ce2260202d0ce48c72e211ea) Thanks [@thdxr](https://github.com/thdxr)! - auth: remove extra log
+
 ## 2.24.16
 
 ### Patch Changes
