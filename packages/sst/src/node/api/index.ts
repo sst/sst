@@ -20,6 +20,10 @@ export const AppSyncApi =
 export const ApiGatewayV1Api =
   /* @__PURE__ */ createProxy<ApiGatewayV1ApiResources>("ApiGatewayV1Api");
 
+export class Response {
+  constructor(public readonly result: APIGatewayProxyStructuredResultV2) {}
+}
+
 /**
  * Create a new api handler that can be used to create an authenticated session.
  *
@@ -31,7 +35,14 @@ export const ApiGatewayV1Api =
  */
 export function ApiHandler(cb: Parameters<typeof Handler<"api">>[1]) {
   return Handler("api", async (evt, ctx) => {
-    const result = await cb(evt, ctx);
+    let result: APIGatewayProxyStructuredResultV2 | undefined | void;
+    try {
+      result = await cb(evt, ctx);
+    } catch (e) {
+      if (e instanceof Response) {
+        result = e.result;
+      } else throw e;
+    }
     const serialized = useResponse().serialize(result || {});
     return serialized;
   });
