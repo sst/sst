@@ -713,15 +713,39 @@ export class Service extends Construct implements SSTConstruct {
 
   private validateServiceExists() {
     const { path: servicePath, file } = this.props;
+
+    // Validate path exists
     if (!fs.existsSync(servicePath)) {
-      throw new Error(`No service found at "${path.resolve(servicePath)}"`);
+      throw new VisibleError(
+        `In the "${this.node.id}" Service, path is not found at "${path.resolve(
+          servicePath
+        )}"`
+      );
     }
 
+    // Validate path is a directory
+    if (fs.statSync(servicePath).isFile()) {
+      throw new VisibleError(
+        [
+          `In the "${this.node.id}" Service, the path "${path.resolve(
+            servicePath
+          )}" should be a directory.`,
+          `Did you mean:`,
+          ``,
+          `  {`,
+          `    path: "${path.dirname(servicePath)}",`,
+          `    file: "${path.basename(servicePath)}",`,
+          `  }`,
+        ].join("\n")
+      );
+    }
+
+    // Validate path exists
     if (file) {
       const dockerfilePath = path.join(servicePath, file);
       if (!fs.existsSync(dockerfilePath)) {
-        throw new Error(
-          `No Dockerfile found at "${dockerfilePath}". Make sure to set the "file" property to the path of the Dockerfile relative to "${servicePath}".`
+        throw new VisibleError(
+          `In the "${this.node.id}" Service, no Dockerfile is found at "${dockerfilePath}". Make sure to set the "file" property to the path of the Dockerfile relative to "${servicePath}".`
         );
       }
     }
@@ -730,19 +754,23 @@ export class Service extends Construct implements SSTConstruct {
   private validateMemoryAndCpu() {
     const { memory, cpu } = this.props;
     if (!supportedCpus[cpu]) {
-      throw new Error(
-        `Only the following "cpu" settings are supported for the ${
+      throw new VisibleError(
+        `In the "${
           this.node.id
-        } service: ${Object.keys(supportedCpus).join(", ")}`
+        }" Service, only the following "cpu" settings are supported: ${Object.keys(
+          supportedCpus
+        ).join(", ")}`
       );
     }
 
     // @ts-ignore
     if (!supportedMemories[cpu][memory]) {
-      throw new Error(
-        `Only the following "memory" settings are supported with "${cpu}" for the ${
+      throw new VisibleError(
+        `In the "${
           this.node.id
-        } service: ${Object.keys(supportedMemories[cpu]).join(", ")}`
+        }" Service, only the following "memory" settings are supported with "${cpu}": ${Object.keys(
+          supportedMemories[cpu]
+        ).join(", ")}`
       );
     }
   }

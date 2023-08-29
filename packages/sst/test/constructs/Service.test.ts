@@ -162,7 +162,7 @@ test("path: not exist", async () => {
     await createService({
       path: "does-not-exist",
     });
-  }).rejects.toThrow(/No service found/);
+  }).rejects.toThrow(/path is not found/);
 });
 
 test("customDomain: string", async () => {
@@ -203,7 +203,7 @@ test("cpu invalid", async () => {
       // @ts-expect-error
       cpu: "3 vCPU",
     });
-  }).rejects.toThrow(/Only the following "cpu" settings/);
+  }).rejects.toThrow(/only the following "cpu" settings/);
 });
 
 test("memory undefined", async () => {
@@ -225,7 +225,7 @@ test("memory invalid", async () => {
     await createService({
       memory: "10000 GB",
     });
-  }).rejects.toThrow(/Only the following "memory" settings/);
+  }).rejects.toThrow(/only the following "memory" settings/);
 });
 
 test("port undefined", async () => {
@@ -263,7 +263,7 @@ test("file invalid", async () => {
     await createService({
       file: "path/to/garbage",
     });
-  }).rejects.toThrow(/No Dockerfile found/);
+  }).rejects.toThrow(/no Dockerfile is found/);
 });
 
 test("logRetention undefined", async () => {
