@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.24.19
+
+### Patch Changes
+
+- [`4e02121df`](https://github.com/sst/sst/commit/4e02121df0b03c92d05719347bf59a7f9f9c12d8) Thanks [@fwang](https://github.com/fwang)! - Service: fix thrashing id in dev mode
+
 ## 2.24.18
 
 ### Patch Changes
