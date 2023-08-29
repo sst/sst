@@ -1,5 +1,11 @@
 # @serverless-stack/docs
 
+## 2.5.14
+
+### Patch Changes
+
+- [`5b1b3e706`](https://github.com/sst/sst/commit/5b1b3e70634a104fd53871e738c30fd1eda46704) Thanks [@fwang](https://github.com/fwang)! - Service: detect invalid path and suggest fix
+
 ## 2.5.13
 
 ### Patch Changes
