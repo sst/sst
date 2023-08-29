@@ -25,7 +25,6 @@ import {
   SSRSiteMetadata,
 } from "./constructs/Metadata.js";
 
-const ssm = useAWSClient(SSMClient);
 const FALLBACK_STAGE = ".fallback";
 const SECRET_UPDATED_AT_ENV = "SST_ADMIN_SECRET_UPDATED_AT";
 
@@ -261,6 +260,7 @@ export namespace Config {
 }
 
 async function* scanParameters(prefix: string) {
+  const ssm = useAWSClient(SSMClient);
   let token: string | undefined;
 
   while (true) {
@@ -280,6 +280,7 @@ async function* scanParameters(prefix: string) {
 }
 
 function getParameter(name: string) {
+  const ssm = useAWSClient(SSMClient);
   return ssm.send(
     new GetParameterCommand({
       Name: name,
@@ -289,6 +290,7 @@ function getParameter(name: string) {
 }
 
 function putParameter(name: string, value: string) {
+  const ssm = useAWSClient(SSMClient);
   return ssm.send(
     new PutParameterCommand({
       Name: name,
@@ -301,6 +303,7 @@ function putParameter(name: string, value: string) {
 }
 
 function deleteParameter(name: string) {
+  const ssm = useAWSClient(SSMClient);
   return ssm.send(
     new DeleteParameterCommand({
       Name: name,
