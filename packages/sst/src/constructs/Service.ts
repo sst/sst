@@ -914,7 +914,7 @@ export class Service extends Construct implements SSTConstruct {
       maxSessionDuration: CdkDuration.hours(12),
     });
 
-    return new Function(this, `ServerFunction`, {
+    const fn = new Function(this, `ServerFunction`, {
       description: "Service dev function",
       handler: path.join(
         __dirname,
@@ -929,6 +929,8 @@ export class Service extends Construct implements SSTConstruct {
       environment,
       permissions,
     });
+    fn._doNotAllowOthersToBind = true;
+    return fn;
   }
 
   private bindForService(constructs: SSTConstruct[]): void {
