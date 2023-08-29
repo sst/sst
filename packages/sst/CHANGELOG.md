@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.24.18
+
+### Patch Changes
+
+- [`024439549`](https://github.com/sst/sst/commit/02443954945cd4593ac053fcce5dd870f9c891d4) Thanks [@fwang](https://github.com/fwang)! - Secret: support advanced parameter for secrets longer than 4KB in size
+
 ## 2.24.17
 
 ### Patch Changes
