@@ -1113,6 +1113,9 @@ function handler(event) {
           compress: true,
           cachePolicy: CachePolicy.CACHING_OPTIMIZED,
           responseHeadersPolicy: cdk?.responseHeadersPolicy,
+          functionAssociations: [
+            ...this.buildBehaviorFunctionAssociations(),
+         ]
         }
       );
     }
