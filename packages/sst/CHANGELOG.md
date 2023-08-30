@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.24.21
+
+### Patch Changes
+
+- [`28b886397`](https://github.com/sst/sst/commit/28b8863976630e787b389eec0af3c71dff33227b) Thanks [@thdxr](https://github.com/thdxr)! - auth: support onError when cookies can't be found
+
 ## 2.24.20
 
 ### Patch Changes
