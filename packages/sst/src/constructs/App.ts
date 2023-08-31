@@ -8,16 +8,16 @@ import {
   isSSTConstruct,
   isStackConstruct,
 } from "./Construct.js";
-import { FunctionProps } from "./Function.js";
+import { FunctionProps, useFunctions } from "./Function.js";
 import { Permissions } from "./util/permission.js";
 import { bindParameters, bindType } from "./util/functionBinding.js";
 import { StackProps } from "./Stack.js";
 import { FunctionalStack, stack } from "./FunctionalStack.js";
-import { createRequire } from "module";
 import { Auth } from "./Auth.js";
 import { useDeferredTasks } from "./deferred_task.js";
 import { AppContext } from "./context.js";
 import { useProject } from "../project.js";
+import { VisibleError } from "../error.js";
 import { Logger } from "../logger.js";
 import {
   AppProps as CDKAppProps,
@@ -27,21 +27,14 @@ import {
   IAspect,
   CfnResource,
   RemovalPolicy,
-  CustomResourceProvider,
-  CustomResourceProviderRuntime,
   CustomResource,
   Aspects,
 } from "aws-cdk-lib/core";
 import { CfnFunction, ILayerVersion } from "aws-cdk-lib/aws-lambda";
 import { Bucket } from "aws-cdk-lib/aws-s3";
-import { ArnPrincipal, PolicyStatement } from "aws-cdk-lib/aws-iam";
+import { Effect, Policy, PolicyStatement } from "aws-cdk-lib/aws-iam";
 import { CfnLogGroup } from "aws-cdk-lib/aws-logs";
-const require = createRequire(import.meta.url);
-
-function exitWithMessage(message: string) {
-  console.error(message);
-  process.exit(1);
-}
+import { useBootstrap } from "../bootstrap.js";
 
 /**
  * @internal
@@ -258,6 +251,7 @@ export class App extends CDKApp {
   public async finish() {
     if (this.isFinished) return;
     this.isFinished = true;
+    const { config, paths } = useProject();
     Auth.injectConfig();
     this.buildConstructsMetadata();
     this.ensureUniqueConstructIds();
@@ -272,13 +266,54 @@ export class App extends CDKApp {
 
     this.createBindingSsmParameters();
     this.removeGovCloudUnsupportedResourceProperties();
-    const { config } = useProject();
+    const bootstrap = await useBootstrap();
 
     for (const child of this.node.children) {
       if (isStackConstruct(child)) {
         // Tag stacks
         Tags.of(child).add("sst:app", this.name);
         Tags.of(child).add("sst:stage", this.stage);
+
+        if (child instanceof Stack) {
+          const functions = useFunctions();
+          const sourcemaps = functions.sourcemaps.forStack(child.stackName);
+          if (sourcemaps.length) {
+            const policy = new Policy(
+              child,
+              "FunctionSourcemapUploaderPolicy",
+              {
+                statements: [
+                  new PolicyStatement({
+                    effect: Effect.ALLOW,
+                    actions: ["s3:GetObject", "s3:PutObject"],
+                    resources: [
+                      sourcemaps[0].bucket.bucketArn + "/*",
+                      `arn:${child.partition}:s3:::${bootstrap.bucket}/*`,
+                    ],
+                  }),
+                ],
+              }
+            );
+            child.customResourceHandler.role?.attachInlinePolicy(policy);
+
+            const resource = new CustomResource(
+              child,
+              "FunctionSourcemapUploader",
+              {
+                serviceToken: child.customResourceHandler.functionArn,
+                resourceType: "Custom::FunctionSourcemapUploader",
+                properties: {
+                  app: this.name,
+                  stage: this.stage,
+                  bootstrap: bootstrap.bucket,
+                  bucket: sourcemaps[0].bucket.bucketName,
+                  functions: sourcemaps.map((s) => [s.arn, s.key]),
+                },
+              }
+            );
+            resource.node.addDependency(policy);
+          }
+        }
 
         // Set removal policy
         this.applyRemovalPolicy(child);
@@ -309,7 +344,9 @@ export class App extends CDKApp {
     try {
       metaJson = JSON.parse(fs.readFileSync(file).toString());
     } catch (e) {
-      exitWithMessage("There was a problem reading the esbuild metafile.");
+      throw new VisibleError(
+        "There was a problem reading the esbuild metafile."
+      );
     }
 
     return Object.keys(metaJson.inputs).map((input) => path.resolve(input));

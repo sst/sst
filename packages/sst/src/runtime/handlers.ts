@@ -139,30 +139,11 @@ export const useRuntimeHandlers = Context.memo(() => {
 
         if (func.hooks?.afterBuild) await func.hooks.afterBuild(func, out);
 
-        let sourcemap: string | undefined;
-        if (built.sourcemap && mode === "deploy") {
-          const data = await fs.readFile(built.sourcemap);
-          await fs.rm(built.sourcemap);
-          const hash = crypto.createHash("md5").update(data).digest("hex");
-          const dir = path.join(
-            project.paths.artifacts,
-            "sourcemaps",
-            functionID
-          );
-          await fs.rm(dir, { recursive: true, force: true });
-          await fs.mkdir(dir, { recursive: true });
-          sourcemap = dir;
-          await fs.writeFile(
-            path.join(dir, `${hash}.map`),
-            zlib.gzipSync(data)
-          );
-        }
-
         bus.publish("function.build.success", { functionID });
         return {
           ...built,
           out,
-          sourcemap,
+          sourcemap: built.sourcemap,
         };
       }
 
@@ -209,8 +190,8 @@ export const useFunctionBuilder = Context.memo(() => {
   watcher.subscribe("file.changed", async (evt) => {
     try {
       const functions = useFunctions();
-      for (const [functionID, props] of Object.entries(functions.all)) {
-        const handler = handlers.for(props.runtime!);
+      for (const [functionID, info] of Object.entries(functions.all)) {
+        const handler = handlers.for(info.runtime!);
         if (
           !handler?.shouldBuild({
             functionID,

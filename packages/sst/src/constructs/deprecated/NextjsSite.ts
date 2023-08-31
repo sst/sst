@@ -53,6 +53,7 @@ import {
 import * as crossRegionHelper from "./cross-region-helper.js";
 import { gray, red } from "colorette";
 import { useProject } from "../../project.js";
+import { VisibleError } from "../../error.js";
 import { createAppContext } from "../context.js";
 
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
@@ -521,10 +522,9 @@ export class NextjsSite extends Construct implements SSTConstruct {
       }
     );
     if (result.status !== 0) {
-      console.error(
+      throw new VisibleError(
         `There was a problem generating the "${this.node.id}" NextjsSite package.`
       );
-      process.exit(1);
     }
 
     // create assets
@@ -1005,10 +1005,9 @@ export class NextjsSite extends Construct implements SSTConstruct {
       }
     );
     if (result.status !== 0) {
-      console.error(
+      throw new VisibleError(
         `There was a problem building the "${this.node.id}" NextjsSite.`
       );
-      process.exit(1);
     }
 
     return buildOutput;

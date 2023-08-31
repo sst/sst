@@ -26,6 +26,9 @@ import { SqsEventSource } from "aws-cdk-lib/aws-lambda-event-sources";
 import { SqsDestination } from "aws-cdk-lib/aws-lambda-destinations";
 import url from "url";
 import path from "path";
+import { Effect, PolicyStatement } from "aws-cdk-lib/aws-iam";
+import { Duration } from "aws-cdk-lib/core";
+import { Stack } from "./Stack.js";
 const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
 
 /////////////////////
@@ -592,7 +595,6 @@ export class EventBus extends Construct implements SSTConstruct {
 
   private retrierQueue: sqs.Queue | undefined;
   private retrierFn: lambda.Function | undefined;
-  private retrierMap: Record<string, number> = {};
   private getRetrier() {
     const app = this.node.root as App;
     if (this.retrierFn && this.retrierQueue) {
@@ -604,6 +606,7 @@ export class EventBus extends Construct implements SSTConstruct {
     this.retrierFn = new lambda.Function(this, `RetrierFunction`, {
       functionName: app.logicalPrefixedName(this.node.id + "Retrier"),
       runtime: lambda.Runtime.NODEJS_14_X,
+      timeout: Duration.seconds(30),
       handler: "index.handler",
       code: lambda.Code.fromAsset(
         path.join(__dirname, "../support/event-bus-retrier")
@@ -612,6 +615,23 @@ export class EventBus extends Construct implements SSTConstruct {
         RETRIER_QUEUE_URL: this.retrierQueue.queueUrl,
       },
     });
+    this.retrierFn.addToRolePolicy(
+      new PolicyStatement({
+        effect: Effect.ALLOW,
+        actions: ["lambda:InvokeFunction", "lambda:GetFunction"],
+        resources: [
+          `arn:${Stack.of(this).partition}:lambda:${app.region}:${
+            app.account
+          }:function:*`,
+        ],
+        conditions: {
+          StringEquals: {
+            "aws:ResourceTag/sst:app": app.name,
+            "aws:ResourceTag/sst:stage": app.stage,
+          },
+        },
+      })
+    );
     this.retrierFn.addEventSource(new SqsEventSource(this.retrierQueue));
     this.retrierQueue.grantSendMessages(this.retrierFn);
     return { fn: this.retrierFn, queue: this.retrierQueue };
@@ -765,7 +785,36 @@ export class EventBus extends Construct implements SSTConstruct {
     type: string | string[],
     target: FunctionDefinition,
     props?: { retries?: number }
+  ): EventBus;
+  public subscribe(
+    scope: Construct,
+    type: string | string[],
+    target: FunctionDefinition,
+    props?: { retries?: number }
+  ): EventBus;
+  public subscribe(
+    scope_or_type: string | string[] | Construct,
+    type_or_target: FunctionDefinition | string | string[],
+    target_or_props?: { retries?: number } | FunctionDefinition,
+    maybe_props?: { retries?: number }
   ) {
+    let [scope, type, target, props]: [
+      Construct,
+      string | string[],
+      FunctionDefinition,
+      { retries?: number } | undefined
+    ] = (() => {
+      if (scope_or_type instanceof Construct) {
+        return [
+          scope_or_type,
+          type_or_target,
+          target_or_props,
+          maybe_props,
+        ] as any;
+      }
+      return [this, scope_or_type, type_or_target, maybe_props] as any;
+    })();
+
     type = Array.isArray(type) ? type : [type];
     const joined = type.length > 1 ? "multi" : type.join("_");
     const count = (this.subs.get(joined) || 0) + 1;
@@ -775,18 +824,15 @@ export class EventBus extends Construct implements SSTConstruct {
     const fn = (() => {
       if (retries) {
         const retrier = this.getRetrier();
-        const fn = Fn.fromDefinition(this, name, target, {
+        const fn = Fn.fromDefinition(scope, name, target, {
           onFailure: new SqsDestination(retrier.queue),
         });
-        this.retrierMap[fn.functionArn] = retries;
-        retrier.fn.addEnvironment(`RETRIES`, JSON.stringify(this.retrierMap));
-
-        fn.grantInvoke(retrier.fn);
+        fn.addEnvironment("SST_RETRIES", retries.toString());
         return fn;
       }
-      return Fn.fromDefinition(this, name, target);
+      return Fn.fromDefinition(scope, name, target);
     })();
-    this.addRule(this, name + "_rule", {
+    this.addRule(scope, name + "_rule", {
       pattern: {
         detailType: type,
       },
