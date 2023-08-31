@@ -215,7 +215,7 @@ export interface SsrSiteProps {
   };
   dev?: {
     /**
-     * When running `sst dev, site is not deployed. This is to ensure `sst dev` can start up quickly.
+     * When running `sst dev`, site is not deployed. This is to ensure `sst dev` can start up quickly.
      * @default false
      * @example
      * ```js
