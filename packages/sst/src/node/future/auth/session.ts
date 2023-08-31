@@ -4,6 +4,7 @@ import { useCookie, useHeader } from "../../api/index.js";
 import { Auth } from "../../auth/index.js";
 import { Config } from "../../config/index.js";
 import { useContextType } from "../../../context/handler.js";
+import { SessionTimeout } from "aws-sdk/clients/iotwireless.js";
 
 export interface SessionTypes {
   public: {};
@@ -114,9 +115,7 @@ function verify<T = SessionValue>(token: string) {
         key: getPublicKey(),
       })(token);
       return jwt as T;
-    } catch (e) {
-      console.log(e);
-    }
+    } catch (e) {}
   }
   return {
     type: "public",
@@ -128,3 +127,62 @@ export const Session = {
   create,
   verify,
 };
+
+export type SessionBuilder = ReturnType<typeof createSessionBuilder>;
+
+export function createSessionBuilder<
+  SessionTypes extends Record<string, any> = {}
+>() {
+  type SessionValue =
+    | {
+        [type in keyof SessionTypes]: {
+          type: type;
+          properties: SessionTypes[type];
+        };
+      }[keyof SessionTypes]
+    | {
+        type: "public";
+        properties: {};
+      };
+
+  return {
+    create<T extends SessionValue["type"]>(
+      type: T,
+      properties: SessionTypes[T],
+      options?: Partial<SignerOptions>
+    ) {
+      // @ts-expect-error
+      const key = Config[process.env.AUTH_ID + "PrivateKey"];
+      const signer = createSigner({
+        ...options,
+        key,
+        algorithm: "RS512",
+      });
+      const token = signer({
+        type: type,
+        properties: properties,
+      });
+      return token as string;
+    },
+    verify(token: string): SessionValue {
+      if (token) {
+        try {
+          const jwt = createVerifier({
+            algorithms: ["RS512"],
+            key: getPublicKey(),
+          })(token);
+          return jwt;
+        } catch (e) {}
+      }
+      return {
+        type: "public" as const,
+        properties: {},
+      };
+    },
+    use() {
+      const ctx = SessionMemo();
+      return ctx as SessionValue;
+    },
+    $type: {} as SessionValue,
+  };
+}

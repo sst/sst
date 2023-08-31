@@ -4,6 +4,7 @@ import { CloudFrontInvalidator } from "./cloudfront-invalidator.js";
 import { ApiGatewayCloudWatchRole } from "./apigateway-cloudwatch-role.js";
 import { FunctionInvoker } from "./function-invoker.js";
 import { log, wrapper } from "./util.js";
+import { FunctionSourcemapUploader } from "./function-sourcemap-uploader.js";
 
 export const handler = wrapper(async (cfnRequest: any) => {
   log("onEventHandler", cfnRequest);
@@ -23,6 +24,9 @@ export const handler = wrapper(async (cfnRequest: any) => {
       break;
     case "Custom::FunctionInvoker":
       await FunctionInvoker(cfnRequest);
+      break;
+    case "Custom::FunctionSourcemapUploader":
+      await FunctionSourcemapUploader(cfnRequest);
       break;
   }
 });

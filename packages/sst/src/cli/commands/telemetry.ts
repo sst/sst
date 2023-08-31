@@ -14,15 +14,22 @@ export const telemetry = (program: Program) =>
       }),
     async (args) => {
       const { enable, disable } = await import("../telemetry/telemetry.js");
+      const { exit, exitWithError } = await import("../program.js");
 
-      if (args.action === "enable") {
-        enable();
-        Colors.line(Colors.success(`✔ `), `Telemetry enabled`);
-      }
+      try {
+        if (args.action === "enable") {
+          enable();
+          Colors.line(Colors.success(`✔ `), `Telemetry enabled`);
+        }
 
-      if (args.action === "disable") {
-        disable();
-        Colors.line(Colors.success(`✔ `), `Telemetry disabled`);
+        if (args.action === "disable") {
+          disable();
+          Colors.line(Colors.success(`✔ `), `Telemetry disabled`);
+        }
+
+        await exit();
+      } catch (e: any) {
+        await exitWithError(e);
       }
     }
   );

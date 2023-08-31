@@ -639,7 +639,9 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
       });
     } catch (e) {
       throw new Error(
-        `There was a problem building the "${this.node.id}" site.`
+        `There was a problem building the "${this.node.id}" ${
+          this.getConstructMetadata().type
+        }.`
       );
     }
   }

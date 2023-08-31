@@ -186,7 +186,15 @@ export const useNodeHandler = Context.memo(async () => {
                   : undefined,
               }),
           outfile: target,
-          sourcemap: input.mode === "start" ? "linked" : true,
+          // always generate sourcemaps in local
+          // never generate sourcemaps if explicitly false
+          // otherwise generate sourcemaps
+          sourcemap:
+            input.mode === "start"
+              ? "linked"
+              : nodejs.sourcemap === false
+              ? false
+              : true,
           minify: nodejs.minify,
           ...override,
         };

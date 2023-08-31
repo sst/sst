@@ -25,6 +25,20 @@ import {
   SSRSiteMetadata,
 } from "./constructs/Metadata.js";
 
+const FALLBACK_STAGE = ".fallback";
+const SECRET_UPDATED_AT_ENV = "SST_ADMIN_SECRET_UPDATED_AT";
+
+const PREFIX = {
+  get STAGE() {
+    const project = useProject();
+    return project.config.ssmPrefix;
+  },
+  get FALLBACK() {
+    const project = useProject();
+    return `/sst/${project.config.name}/${FALLBACK_STAGE}/`;
+  },
+};
+
 declare module "./bus.js" {
   export interface Events {
     "config.secret.updated": { name: string };
@@ -40,7 +54,7 @@ export namespace Config {
   export async function parameters() {
     const result: (ReturnType<typeof parse> & { value: string })[] = [];
 
-    for await (const p of scan(PREFIX.FALLBACK)) {
+    for await (const p of scanParameters(PREFIX.FALLBACK)) {
       const parsed = parse(p.Name!, PREFIX.FALLBACK);
       if (parsed.type === "secrets") continue;
       result.push({
@@ -49,7 +63,7 @@ export namespace Config {
       });
     }
 
-    for await (const p of scan(PREFIX.STAGE)) {
+    for await (const p of scanParameters(PREFIX.STAGE)) {
       const parsed = parse(p.Name!, PREFIX.STAGE);
       if (parsed.type === "secrets") continue;
       result.push({
@@ -88,13 +102,13 @@ export namespace Config {
   export async function secrets() {
     const result: Record<string, Secret> = {};
 
-    for await (const p of scan(PREFIX.STAGE + "Secret")) {
+    for await (const p of scanParameters(PREFIX.STAGE + "Secret")) {
       const parsed = parse(p.Name!, PREFIX.STAGE);
       if (!result[parsed.id]) result[parsed.id] = {};
       result[parsed.id].value = p.Value;
     }
 
-    for await (const p of scan(PREFIX.FALLBACK + "Secret")) {
+    for await (const p of scanParameters(PREFIX.FALLBACK + "Secret")) {
       const parsed = parse(p.Name!, PREFIX.FALLBACK);
       if (!result[parsed.id]) result[parsed.id] = {};
       result[parsed.id].fallback = p.Value;
@@ -126,20 +140,26 @@ export namespace Config {
     value: string;
     fallback?: boolean;
   }) {
-    const ssm = useAWSClient(SSMClient);
-    await ssm.send(
-      new PutParameterCommand({
-        Name: pathFor({
-          id: input.key,
-          type: "Secret",
-          prop: "value",
-          fallback: input.fallback,
-        }),
-        Value: input.value,
-        Type: "SecureString",
-        Overwrite: true,
-      })
-    );
+    const paramName = pathFor({
+      id: input.key,
+      type: "Secret",
+      prop: "value",
+      fallback: input.fallback,
+    });
+    try {
+      await putParameter(paramName, input.value);
+    } catch (e: any) {
+      // If the parameter was previously ADVANCED, re-create it in STANDARD tier.
+      const wasAdvanced =
+        e.name === "ValidationException" &&
+        e.message.startsWith(
+          "This parameter uses the advanced-parameter tier. You can't downgrade a parameter from the advanced-parameter tier to the standard-parameter tier."
+        );
+      if (!wasAdvanced) throw e;
+
+      await deleteParameter(paramName);
+      await putParameter(paramName, input.value);
+    }
 
     // Publish event
     const iot = await useIOT();
@@ -148,16 +168,12 @@ export namespace Config {
   }
 
   export async function getSecret(input: { key: string; fallback?: boolean }) {
-    const ssm = useAWSClient(SSMClient);
-    const result = await ssm.send(
-      new GetParameterCommand({
-        Name: pathFor({
-          id: input.key,
-          prop: "value",
-          type: "Secret",
-          fallback: input.fallback,
-        }),
-        WithDecryption: true,
+    const result = await getParameter(
+      pathFor({
+        id: input.key,
+        prop: "value",
+        type: "Secret",
+        fallback: input.fallback,
       })
     );
     return result.Parameter?.Value;
@@ -167,15 +183,12 @@ export namespace Config {
     key: string;
     fallback?: boolean;
   }) {
-    const ssm = useAWSClient(SSMClient);
-    await ssm.send(
-      new DeleteParameterCommand({
-        Name: pathFor({
-          id: input.key,
-          type: "Secret",
-          prop: "value",
-          fallback: input.fallback,
-        }),
+    await deleteParameter(
+      pathFor({
+        id: input.key,
+        type: "Secret",
+        prop: "value",
+        fallback: input.fallback,
       })
     );
   }
@@ -246,7 +259,7 @@ export namespace Config {
   }
 }
 
-async function* scan(prefix: string) {
+async function* scanParameters(prefix: string) {
   const ssm = useAWSClient(SSMClient);
   let token: string | undefined;
 
@@ -266,19 +279,37 @@ async function* scan(prefix: string) {
   }
 }
 
-const FALLBACK_STAGE = ".fallback";
-const SECRET_UPDATED_AT_ENV = "SST_ADMIN_SECRET_UPDATED_AT";
+function getParameter(name: string) {
+  const ssm = useAWSClient(SSMClient);
+  return ssm.send(
+    new GetParameterCommand({
+      Name: name,
+      WithDecryption: true,
+    })
+  );
+}
 
-const PREFIX = {
-  get STAGE() {
-    const project = useProject();
-    return project.config.ssmPrefix;
-  },
-  get FALLBACK() {
-    const project = useProject();
-    return `/sst/${project.config.name}/${FALLBACK_STAGE}/`;
-  },
-};
+function putParameter(name: string, value: string) {
+  const ssm = useAWSClient(SSMClient);
+  return ssm.send(
+    new PutParameterCommand({
+      Name: name,
+      Value: value,
+      Type: "SecureString",
+      Overwrite: true,
+      Tier: value.length > 4096 ? "Advanced" : "Standard",
+    })
+  );
+}
+
+function deleteParameter(name: string) {
+  const ssm = useAWSClient(SSMClient);
+  return ssm.send(
+    new DeleteParameterCommand({
+      Name: name,
+    })
+  );
+}
 
 function parse(ssmName: string, prefix: string) {
   const parts = ssmName.substring(prefix.length).split("/");

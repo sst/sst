@@ -449,7 +449,9 @@ Here are some frequently asked questions about `Config`.
 
 ### How much does it cost to use `Config`?
 
-Secrets and Parameters are stored in AWS SSM with the _Standard Parameter type_ and _Standard Throughput_. This makes `Config` [free to use](https://aws.amazon.com/systems-manager/pricing/) in your SST apps.
+Secrets and Parameters are stored in AWS SSM as **Standard parameters** by default. This makes `Config` [free to use](https://aws.amazon.com/systems-manager/pricing/#Parameter_Store) in your SST apps.
+
+Note that Standard parameters have a content size limit of 4KB. If your secrets exceed this size, they will be stored as **Advanced parameters**, which can store up to 8KB. Each advanced parameter [costs roughly $0.05 per month](https://aws.amazon.com/systems-manager/pricing/#Parameter_Store).
 
 ---
 

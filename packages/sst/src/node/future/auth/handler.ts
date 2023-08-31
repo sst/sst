@@ -14,41 +14,27 @@ import {
   useQueryParams,
   useResponse,
 } from "../../api/index.js";
-import { SessionValue } from "./session.js";
+import { SessionBuilder, SessionValue } from "./session.js";
 import { Config } from "../../config/index.js";
 
-const onSuccessResponse = {
-  session(input: SessionCreateInput) {
-    return {
-      type: "session" as const,
-      properties: input,
-    };
-  },
-  http(input: APIGatewayProxyStructuredResultV2) {
-    return {
-      type: "http" as const,
-      properties: input,
-    };
-  },
-  provider(provider: string) {
-    return {
-      type: "http" as const,
-      properties: {
-        statusCode: 302,
-        headers: {
-          Location:
-            "/authorize?" +
-            new URLSearchParams({
-              provider,
-            }).toString(),
-        },
-      } satisfies APIGatewayProxyStructuredResultV2,
-    };
-  },
-};
+interface OnSuccessResponder<T> {
+  session(input: T & Partial<SignerOptions>): {
+    type: "session";
+    properties: T;
+  };
+  http(input: APIGatewayProxyStructuredResultV2): {
+    type: "http";
+    properties: typeof input;
+  };
+}
+
+export class UnknownProviderError {
+  constructor(public provider?: string) {}
+}
 
 export function AuthHandler<
   Providers extends Record<string, Adapter<any>>,
+  Sessions extends SessionBuilder,
   Result = {
     [key in keyof Providers]: {
       provider: key;
@@ -59,20 +45,27 @@ export function AuthHandler<
   }[keyof Providers]
 >(input: {
   providers: Providers;
+  sessions?: Sessions;
   clients: () => Promise<Record<string, string>>;
   onAuthorize?: (
     event: APIGatewayProxyEventV2
   ) => Promise<void | keyof Providers>;
   onSuccess: (
     input: Result,
-    response: typeof onSuccessResponse
+    response: OnSuccessResponder<SessionValue | Sessions["$type"]>
   ) => Promise<
-    ReturnType<(typeof onSuccessResponse)[keyof typeof onSuccessResponse]>
+    ReturnType<
+      OnSuccessResponder<
+        SessionValue | Sessions["$type"]
+      >[keyof OnSuccessResponder<any>]
+    >
   >;
   onIndex?: (
     event: APIGatewayProxyEventV2
   ) => Promise<APIGatewayProxyStructuredResultV2>;
-  onError?: () => Promise<APIGatewayProxyStructuredResultV2>;
+  onError?: (
+    error: UnknownProviderError
+  ) => Promise<APIGatewayProxyStructuredResultV2 | undefined>;
 }) {
   return ApiHandler(async (evt) => {
     const step = usePathParam("step");
@@ -230,6 +223,8 @@ export function AuthHandler<
     }
 
     if (!provider || !input.providers[provider]) {
+      const response = input.onError?.(new UnknownProviderError(provider));
+      if (response) return response;
       return {
         statusCode: 400,
         body: `Was not able to find provider "${String(provider)}"`,
@@ -240,6 +235,7 @@ export function AuthHandler<
     }
     const adapter = input.providers[provider];
     const result = await adapter(evt);
+
     if (result.type === "step") {
       return result.properties;
     }
@@ -250,7 +246,20 @@ export function AuthHandler<
           provider,
           ...result.properties,
         },
-        onSuccessResponse
+        {
+          http(input) {
+            return {
+              type: "http",
+              properties: input,
+            };
+          },
+          session(input) {
+            return {
+              type: "session",
+              properties: input,
+            };
+          },
+        }
       );
       console.log("onSuccess", onSuccess);
 
@@ -338,7 +347,6 @@ export function AuthHandler<
     }
 
     if (result.type === "error") {
-      if (input.onError) return input.onError();
       return {
         statusCode: 400,
         body: "an error has occured",
@@ -346,5 +354,3 @@ export function AuthHandler<
     }
   });
 }
-
-export type SessionCreateInput = SessionValue & Partial<SignerOptions>;

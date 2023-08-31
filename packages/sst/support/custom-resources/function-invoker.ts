@@ -1,8 +1,9 @@
 import { LambdaClient, InvokeCommand } from "@aws-sdk/client-lambda";
 import { sdkLogger } from "./util.js";
+import { CdkCustomResourceEvent } from "aws-lambda";
 const lambda = new LambdaClient({ logger: sdkLogger });
 
-export async function FunctionInvoker(cfnRequest: any) {
+export async function FunctionInvoker(cfnRequest: CdkCustomResourceEvent) {
   switch (cfnRequest.RequestType) {
     case "Create":
     case "Update":

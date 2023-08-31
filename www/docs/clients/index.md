@@ -174,7 +174,48 @@ The [`job`](job.md) also exports a [method](job.md#run) to run a job.
 
 ## Language support
 
-Currently the client only supports JavaScript and TypeScript. But if you are looking to add support for other languages, <a href={ config.discord }>message us in Discord</a> and we can help you get started.
+Currently the client only supports JavaScript and TypeScript. If you are looking to add support for other languages, here's a basic guide to set the ball rolling. If you need help, feel free to <a href={ config.discord }>message us in Discord</a>.
+
+#### How the client works
+
+For every bound resource, an environment variable is added to the `Function`. The environment variable naming convention is:
+```
+SST_{construct}_{prop}_{id}
+```
+
+For example, if you bind a `Bucket`:
+
+```ts
+const myBucket = new Bucket(stack, "myBucket");
+myFn.bind([myBucket]);
+```
+
+An environment variable called `SST_Bucket_bucketName_myBucket` is added, containing the bucket name as its value. The client should provide a convenient accessor to this value. In the Node client, the accessor pattern is:
+
+```ts
+import { Bucket } from "sst/node/bucket";
+console.log(Bucket.myBucket.bucketName);
+```
+
+#### Fetching from SSM
+
+Sometimes the value in the environment variable might be
+```
+__FETCH_FROM_SSM__
+```
+In this case, you'll need to fetch the value from SSM Parameter Store at path:
+```
+/sst/{app}/{stage}/{construct}/{id}/{prop}
+```
+The `{app}` and `{stage}` segments can be obtained from the environment variables `SST_APP` and `SST_STAGE`. You should batch SSM calls for efficiency.
+
+#### Referencing SSM values
+
+If the environment variable value is
+```
+__FETCH_FROM_SECRET__:{secret}
+```
+You must first resolve the Secret's value and assign it to the variable.
 
 ---
 

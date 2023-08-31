@@ -82,3 +82,144 @@ There are a couple of other reasons why Seed is a good fit for SST.
    Seed also directly plugs into the SST deployment process. So when an SST app is waiting for CloudFormation to update your stacks, Seed pauses the build process and does this asynchronously. This allows Seed to make SST deployments very efficient and offer it to you for free!
 
 Once your app is in a Git repo, follow these steps in the Seed docs to [add your SST app](https://seed.run/docs/adding-a-cdk-app).
+
+
+---
+
+## Deploy from GitHub Actions
+
+In your GitHub workflow, it is recommended to [use OpenID Connect to authenticate with AWS](https://docs.github.com/en/actions/deployment/security-hardening-your-deployments/configuring-openid-connect-in-amazon-web-services).
+
+To setup OpenID Connect manually:
+
+1. Go to AWS IAM Console, and add an Identity provider with the following data.
+   - Provider URL: `https://token.actions.githubusercontent.com`
+   - Audience: `sts.amazonaws.com`
+
+   ![AWS IAM Console add Identity provider](/img/going-to-production/aws-iam-console-add-identity-provider.png)
+
+2. In the AWS IAM Console, create an IAM Role with the following data.
+   - Trusted entity type: Web identity
+   - Identity provider: `token.actions.githubusercontent.com`
+   - Audience: `sts.amazonaws.com`
+   - GitHub organization: your GitHub organization
+
+   You can leave GitHub repository and branch field empty if you want to all your repos to use this role to authenticate with AWS.
+
+   On the next screen, check the `AdministratorAccess` policy. Optional you can select `Create policy` to customize IAM permissions.
+
+   On the next screen, enter `GitHub` for the `Role name`. And select `Create role`.
+
+3. Head over to your GitHub workflow file. Add these lines to authenticate:
+   ```diff
+     name: SST workflow
+     on:
+       push
+
+     # permission can be added at job level or workflow level    
+   + permissions:
+   +   id-token: write   # This is required for requesting the JWT
+   +   contents: read    # This is required for actions/checkout
+
+      jobs:
+        DeployApp:
+          runs-on: ubuntu-latest
+          steps:
+            - name: Git clone the repository
+              uses: actions/checkout@v3
+   +        - name: configure aws credentials
+   +          uses: aws-actions/configure-aws-credentials@v2
+   +          with:
+   +            role-to-assume: arn:aws:iam::1234567890:role/GitHub
+   +            aws-region: us-east-1
+            - name: Deploy app
+              run: |
+                pnpm sst deploy
+   ```
+
+   Make sure to replace `1234567890` and `us-east-1` with your AWS account ID and region.
+
+To setup OpenID Connect using a construct:
+
+1. Create a new stack in your app
+
+
+  ```ts
+  import { Duration } from 'aws-cdk-lib';
+  import * as iam from 'aws-cdk-lib/aws-iam';
+  import { StackContext } from 'sst/constructs';
+
+  export function IAM({ app, stack }: StackContext) {
+    if (app.stage === 'prod') {
+
+      const provider = new iam.OpenIdConnectProvider(stack, 'GitHub', {
+        url: 'https://token.actions.githubusercontent.com',
+        clientIds: ['sts.amazonaws.com'],
+      });
+
+      const organization = 'my-org'; // Use your GitHub organization
+      const repository = 'my-repo'; // Use your GitHub repository
+
+      new iam.Role(stack, 'GitHubActionsRole', {
+        assumedBy: new iam.OpenIdConnectPrincipal(provider).withConditions({
+          StringLike: {
+            'token.actions.githubusercontent.com:sub': `repo:${organization}/${repository}:*`,
+          },
+        }),
+        description: 'Role assumed for deploying from GitHub CI using AWS CDK',
+        roleName: 'GitHub', // Change this to match the role name in the GitHub workflow file
+        maxSessionDuration: Duration.hours(1),
+        inlinePolicies: { // You could attach AdministratorAccess here or constrain it even more, but this uses more granular permissions used by SST
+          SSTDeploymentPolicy: new iam.PolicyDocument({
+            assignSids: true,
+            statements: [
+              new iam.PolicyStatement({
+                effect: iam.Effect.ALLOW,
+                actions: [
+                  'cloudformation:DeleteStack',
+                  'cloudformation:DescribeStackEvents',
+                  'cloudformation:DescribeStackResources',
+                  'cloudformation:DescribeStacks',
+                  'cloudformation:GetTemplate',
+                  'cloudformation:ListImports',
+                  'ecr:CreateRepository',
+                  'iam:PassRole',
+                  'iot:Connect',
+                  'iot:DescribeEndpoint',
+                  'iot:Publish',
+                  'iot:Receive',
+                  'iot:Subscribe',
+                  'lambda:GetFunction',
+                  'lambda:GetFunctionConfiguration',
+                  'lambda:UpdateFunctionConfiguration',
+                  's3:ListBucket',
+                  's3:PutObjectAcl',
+                  's3:GetObject',
+                  's3:PutObject',
+                  's3:DeleteObject',
+                  's3:ListObjectsV2',
+                  's3:CreateBucket',
+                  's3:PutBucketPolicy',
+                  'ssm:DeleteParameter',
+                  'ssm:GetParameter',
+                  'ssm:GetParameters',
+                  'ssm:GetParametersByPath',
+                  'ssm:PutParameter',
+                  'sts:AssumeRole',
+                ],
+                resources: [
+                  '*',
+                ],
+              }),
+            ],
+          }),
+        },
+      });
+    }
+  }    
+  ```
+
+2. Deploy your application to your production stage
+      - Since the Identity Provider is global make sure to remove any existing provider for GitHub in your account before deploying this stack.
+
+3. Use the same Github workflow file from the manual setup above to authenticate with AWS

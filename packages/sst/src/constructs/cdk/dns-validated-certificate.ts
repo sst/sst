@@ -144,7 +144,7 @@ export class DnsValidatedCertificate
           path.join(__dirname, "../../support/certificate-requestor")
         ),
         handler: "index.certificateRequestHandler",
-        runtime: lambda.Runtime.NODEJS_14_X,
+        runtime: lambda.Runtime.NODEJS_16_X,
         timeout: Duration.minutes(15),
         role: props.customResourceRole,
       }

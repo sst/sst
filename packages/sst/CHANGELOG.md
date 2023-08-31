@@ -1,5 +1,75 @@
 # @serverless-stack/cli2
 
+## 2.24.21
+
+### Patch Changes
+
+- [`28b886397`](https://github.com/sst/sst/commit/28b8863976630e787b389eec0af3c71dff33227b) Thanks [@thdxr](https://github.com/thdxr)! - auth: support onError when cookies can't be found
+
+## 2.24.20
+
+### Patch Changes
+
+- [`5b1b3e706`](https://github.com/sst/sst/commit/5b1b3e70634a104fd53871e738c30fd1eda46704) Thanks [@fwang](https://github.com/fwang)! - Service: detect invalid path and suggest fix
+
+## 2.24.19
+
+### Patch Changes
+
+- [`4e02121df`](https://github.com/sst/sst/commit/4e02121df0b03c92d05719347bf59a7f9f9c12d8) Thanks [@fwang](https://github.com/fwang)! - Service: fix thrashing id in dev mode
+
+## 2.24.18
+
+### Patch Changes
+
+- [`024439549`](https://github.com/sst/sst/commit/02443954945cd4593ac053fcce5dd870f9c891d4) Thanks [@fwang](https://github.com/fwang)! - Secret: support advanced parameter for secrets longer than 4KB in size
+
+## 2.24.17
+
+### Patch Changes
+
+- [`f19d579cf`](https://github.com/sst/sst/commit/f19d579cf57b97d548093103ce0b069701c5bcef) Thanks [@thdxr](https://github.com/thdxr)! - ApiHandler: support throwing Response
+
+- [`ca6f763fd`](https://github.com/sst/sst/commit/ca6f763fdfddd099ce2260202d0ce48c72e211ea) Thanks [@thdxr](https://github.com/thdxr)! - auth: remove extra log
+
+## 2.24.16
+
+### Patch Changes
+
+- [`d21ed32cb`](https://github.com/sst/sst/commit/d21ed32cbbd3eef26e823aedb08c795e5c1fb1c1) Thanks [@thdxr](https://github.com/thdxr)! - function: make sure sourcemap ids don't conflict
+
+- [`5c7f126ef`](https://github.com/sst/sst/commit/5c7f126ef80cea4849cdf87fb5bf2eee4742d335) Thanks [@fwang](https://github.com/fwang)! - Telemetry: report CLI status
+
+- [`5c7f126ef`](https://github.com/sst/sst/commit/5c7f126ef80cea4849cdf87fb5bf2eee4742d335) Thanks [@fwang](https://github.com/fwang)! - Bootstrap: hide JSII Node.js warning
+
+## 2.24.15
+
+### Patch Changes
+
+- [`be7e0b13f`](https://github.com/sst/sst/commit/be7e0b13fe26bdba2eca20e146b67b4a6febe129) Thanks [@thdxr](https://github.com/thdxr)! - future-auth: better interface for creating sessions
+
+- [#3207](https://github.com/sst/sst/pull/3207) [`27138d1e6`](https://github.com/sst/sst/commit/27138d1e6f86f1435d862ac40ae1ac7cea9d3e24) Thanks [@oleghind](https://github.com/oleghind)! - Upgrade fast-jwt
+
+## 2.24.14
+
+### Patch Changes
+
+- [`053198804`](https://github.com/sst/sst/commit/053198804afd1a6822ea8ad2ce65a5c78dfa7b57) Thanks [@thdxr](https://github.com/thdxr)! - function: bulk sourcemap upload
+
+## 2.24.13
+
+### Patch Changes
+
+- [#3248](https://github.com/sst/sst/pull/3248) [`ffa986a42`](https://github.com/sst/sst/commit/ffa986a4259d820a8200f88365e9c399352b57c1) Thanks [@niklaswallerstedt](https://github.com/niklaswallerstedt)! - future/Auth: Single tenant auth for Azure AD
+
+- [#3210](https://github.com/sst/sst/pull/3210) [`3b005776c`](https://github.com/sst/sst/commit/3b005776c31a29946ee997f9c480e271d48383c5) Thanks [@ipatka](https://github.com/ipatka)! - Fix typings for custom authorizers in ApiGatewayV1 construct
+
+- [`a34f72a3b`](https://github.com/sst/sst/commit/a34f72a3b6ea9f3f8d51735e7c4cb4e016b93e87) Thanks [@thdxr](https://github.com/thdxr)! - bus: remove recursion detection from lambda retries
+
+- [#3250](https://github.com/sst/sst/pull/3250) [`b81d5d8d5`](https://github.com/sst/sst/commit/b81d5d8d50f868d6c8518d01c329d9985ea44d8b) Thanks [@tanquetav](https://github.com/tanquetav)! - python-runtime: pin poetry dependency to fix ssl error
+
+- [`12e7295fa`](https://github.com/sst/sst/commit/12e7295fa7a24d9df3f3091a84ff63dedafd337d) Thanks [@thdxr](https://github.com/thdxr)! - function: allow completely disabling sourcemap
+
 ## 2.24.12
 
 ### Patch Changes

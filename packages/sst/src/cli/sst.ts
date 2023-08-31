@@ -3,7 +3,7 @@
 import { blue, red } from "colorette";
 
 import { program } from "./program.js";
-import { VisibleError } from "../error.js";
+import { SilentError, VisibleError } from "../error.js";
 import { useSpinners } from "./spinner.js";
 import { Logger } from "../logger.js";
 
@@ -59,21 +59,24 @@ process.on("uncaughtException", (err) => {
   for (const spinner of spinners) {
     if (spinner.isSpinning) spinner.fail(spinner.text);
   }
-  console.log(red("Error:"), err.message);
-  if (!(err instanceof VisibleError)) {
+
+  if (!(err instanceof SilentError)) {
     console.log();
-    console.trace(err.stack);
+    console.log(red("Error:"), err.message);
+    if (!(err instanceof VisibleError)) {
+      console.log();
+      console.trace(err.stack);
+    }
+    console.log();
+    console.log(
+      `Need help with this error? Post it in #help on the SST Discord ${blue(
+        `https://sst.dev/discord`
+      )}`
+    );
   }
-  console.log();
-  console.log(
-    `Need help with this error? Post it in #help on the SST Discord ${blue(
-      `https://sst.dev/discord`
-    )}`
-  );
+
   process.exit(1);
 });
-
-process.on("beforeExit", () => {});
 
 // Check Node version
 const nodeVersion = process.versions.node;

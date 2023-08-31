@@ -71,8 +71,8 @@ function resetDependencies(id: any) {
   const info = state.contexts.get(id);
   if (!info) return;
   for (const dependantID of info.dependants) {
-    resetDependencies(dependantID);
     state.contexts.delete(dependantID);
+    resetDependencies(dependantID);
   }
 }
 
