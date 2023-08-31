@@ -1,5 +1,23 @@
 # @serverless-stack/cli2
 
+## 2.24.20
+
+### Patch Changes
+
+- [`5b1b3e706`](https://github.com/sst/sst/commit/5b1b3e70634a104fd53871e738c30fd1eda46704) Thanks [@fwang](https://github.com/fwang)! - Service: detect invalid path and suggest fix
+
+## 2.24.19
+
+### Patch Changes
+
+- [`4e02121df`](https://github.com/sst/sst/commit/4e02121df0b03c92d05719347bf59a7f9f9c12d8) Thanks [@fwang](https://github.com/fwang)! - Service: fix thrashing id in dev mode
+
+## 2.24.18
+
+### Patch Changes
+
+- [`024439549`](https://github.com/sst/sst/commit/02443954945cd4593ac053fcce5dd870f9c891d4) Thanks [@fwang](https://github.com/fwang)! - Secret: support advanced parameter for secrets longer than 4KB in size
+
 ## 2.24.17
 
 ### Patch Changes

@@ -61,6 +61,7 @@ process.on("uncaughtException", (err) => {
   }
 
   if (!(err instanceof SilentError)) {
+    console.log();
     console.log(red("Error:"), err.message);
     if (!(err instanceof VisibleError)) {
       console.log();

@@ -221,6 +221,7 @@ new Service(stack, "MyService", {
 import { Service } from "sst/constructs";
 
 new Service(stack, "MyService", {
+  path: "./service",
   file: "path/to/Dockerfile.prod",
 });
 ```
@@ -231,6 +232,7 @@ The Service construct creates a CloudWatch log group to store the logs. By defau
 
 ```js
 new Service(stack, "MyService", {
+  path: "./service",
   logRetention: "one_week",
 });
 ```
@@ -239,6 +241,7 @@ new Service(stack, "MyService", {
 
 ```js
 new Service(stack, "MyService", {
+  path: "./service",
   port: 8080,
   cpu: "2 vCPU",
   memory: "8 GB",
@@ -260,6 +263,7 @@ new Service(stack, "MyService", {
 import { Duration } from "aws-cdk-lib/core";
 
 new Service(stack, "MyService", {
+  path: "./service",
   cdk: {
     container: {
       healthCheck: {
@@ -280,6 +284,7 @@ new Service(stack, "MyService", {
 import { Vpc } from "aws-cdk-lib/aws-ec2";
 
 new Service(stack, "MyService", {
+  path: "./service",
   cdk: {
     vpc: Vpc.fromLookup(stack, "VPC", {
       vpcId: "vpc-xxxxxxxxxx",
