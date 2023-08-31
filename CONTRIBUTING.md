@@ -67,6 +67,16 @@ $ pnpm dev
 
 This will start a watcher that will rebuild changes you make - ensure there are no type errors before submitting a PR.
 
+If you want to test your changes against a project you are working on you can make use of `pnpm link`
+
+```bash
+$ cd ./path/to/project
+$ pnpm link ./path/to/sst/packages/sst/dist
+$ pnpm sst dev
+```
+
+Note that we link to the `./dist` folder since that is where we publish out of.
+
 ### Docs
 
 To run the docs site.
