@@ -122,7 +122,7 @@ The `packages/` directory houses everything that powers our backend. This includ
 
 - `packages/web` contains a React application created with [Vite](https://vitejs.dev/). It's already wired up to be able to talk to the GraphQL API. If you are using a different frontend, for example NextJS, you can delete this folder and provision it yourself.
 
-- `packages/functions` is where you can place all the code for your Lambda functions. Your functions should generally be fairly simple. They should mostly be calling into code previously defined in `services/core`.
+- `packages/functions` is where you can place all the code for your Lambda functions. Your functions should generally be fairly simple. They should mostly be calling into code previously defined in `packages/core`.
 
 - `packages/graphql` contains the outputs of GraphQL related code generation. Typically you won't be touching this but it needs to be committed to Git. It contains code shared between the frontend and backend.
 
