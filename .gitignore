@@ -7,3 +7,6 @@ cdk.out
 dist
 .vscode
 .idea
+!packages/sst/dist
+packages/sst/dist/*
+!packages/sst/dist/package.json

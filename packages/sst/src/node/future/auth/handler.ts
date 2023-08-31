@@ -28,6 +28,10 @@ interface OnSuccessResponder<T> {
   };
 }
 
+export class UnknownProviderError {
+  constructor(public provider?: string) {}
+}
+
 export function AuthHandler<
   Providers extends Record<string, Adapter<any>>,
   Sessions extends SessionBuilder,
@@ -59,7 +63,9 @@ export function AuthHandler<
   onIndex?: (
     event: APIGatewayProxyEventV2
   ) => Promise<APIGatewayProxyStructuredResultV2>;
-  onError?: () => Promise<APIGatewayProxyStructuredResultV2>;
+  onError?: (
+    error: UnknownProviderError
+  ) => Promise<APIGatewayProxyStructuredResultV2 | undefined>;
 }) {
   return ApiHandler(async (evt) => {
     const step = usePathParam("step");
@@ -217,6 +223,8 @@ export function AuthHandler<
     }
 
     if (!provider || !input.providers[provider]) {
+      const response = input.onError?.(new UnknownProviderError(provider));
+      if (response) return response;
       return {
         statusCode: 400,
         body: `Was not able to find provider "${String(provider)}"`,
@@ -227,6 +235,7 @@ export function AuthHandler<
     }
     const adapter = input.providers[provider];
     const result = await adapter(evt);
+
     if (result.type === "step") {
       return result.properties;
     }
@@ -338,7 +347,6 @@ export function AuthHandler<
     }
 
     if (result.type === "error") {
-      if (input.onError) return input.onError();
       return {
         statusCode: 400,
         body: "an error has occured",
