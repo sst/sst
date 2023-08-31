@@ -54,49 +54,18 @@ To run this project locally, clone the repo and initialize the project.
 ```bash
 $ git clone https://github.com/sst/sst.git
 $ cd sst
-$ pnpm install
-```
-
-Build the project
-
-```bash
-$ pnpm build
+$ pnpm i
 ```
 
 ### SST
 
-If you are working on the `packages/sst` part, run the watcher at the root.
+If you are working on SST go to the `packages/sst` folder and run the `dev` script.
 
 ```bash
-$ pnpm watch
+$ pnpm dev
 ```
 
-Finally, after making your changes, run all the tests in the `packages/sst` directory.
-
-```bash
-$ pnpm test
-```
-
-Alternatively, you can run the tests for a specific construct.
-
-```bash
-$ pnpm test <path_to_the_test_for_the_construct>
-```
-
-### Console
-
-If you are working on the `packages/console` just go ahead and make your changes. Then run your tests.
-
-```bash
-$ cd packages/console
-$ pnpm test
-```
-
-Alternatively, you can run a specific test.
-
-```bash
-$ pnpm test <path_to_the_test_dir>
-```
+This will start a watcher that will rebuild changes you make - ensure there are no type errors before submitting a PR.
 
 ### Docs
 
