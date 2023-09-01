@@ -1,5 +1,11 @@
 # @serverless-stack/docs
 
+## 2.5.15
+
+### Patch Changes
+
+- [#3254](https://github.com/sst/sst/pull/3254) [`23c650a6a`](https://github.com/sst/sst/commit/23c650a6a2b22ae747528c88e120a9766fb7542a) Thanks [@niklaswallerstedt](https://github.com/niklaswallerstedt)! - Doc: adds oidc construct example for Github Actions
+
 ## 2.5.14
 
 ### Patch Changes
