@@ -66,6 +66,7 @@ import { Platform } from "aws-cdk-lib/aws-ecr-assets";
 import {
   ApplicationLoadBalancer,
   ApplicationTargetGroup,
+  HealthCheck,
 } from "aws-cdk-lib/aws-elasticloadbalancingv2";
 import { createAppContext } from "./context.js";
 
@@ -289,6 +290,24 @@ export interface ServiceProps {
      */
     requestsPerContainer?: number;
   };
+  /**
+   * Healthcheck for your service. This is used by the load balancer to determine if the container is healthy.
+   * @default
+   * ```js
+   * {
+   *   enabled: true,
+   *   healthyHttpCodes: '200',
+   *   healthyThresholdCount: 5,
+   *   interval: CdkDuration.seconds(10),
+   *   path: "/",
+   *   port: "traffic-port",
+   *   protocol: Protocol.HTTP,
+   *   timeout: CdkDuration.seconds(6),
+   *   unhealthyThresholdCount: 2,
+   * }
+   * ```
+   */
+  healthCheck?: HealthCheck;
   /**
    * Bind resources for the function
    *
@@ -839,7 +858,7 @@ export class Service extends Construct implements SSTConstruct {
   }
 
   private createLoadBalancer(vpc: IVpc, service: FargateService) {
-    const { cdk } = this.props;
+    const { cdk, healthCheck } = this.props;
 
     // Do not create load balancer if disabled
     if (cdk?.applicationLoadBalancer === false) {
@@ -852,6 +871,7 @@ export class Service extends Construct implements SSTConstruct {
     });
     const listener = alb.addListener("Listener", { port: 80 });
     const target = listener.addTargets("TargetGroup", {
+      healthCheck,
       port: 80,
       targets: [service],
     });
