@@ -1,5 +1,13 @@
 # @serverless-stack/cli2
 
+## 2.24.22
+
+### Patch Changes
+
+- [`bf431e102`](https://github.com/sst/sst/commit/bf431e102cc27c218b83fbde84f613bc5311c70b) Thanks [@thdxr](https://github.com/thdxr)! - context: fix bug causing infinite loop when context depends on itself
+
+- [#3266](https://github.com/sst/sst/pull/3266) [`76f57c12f`](https://github.com/sst/sst/commit/76f57c12f287560d3c17fd765076bf5f2a5668eb) Thanks [@jamesgibbons92](https://github.com/jamesgibbons92)! - Update nodejs 14 -> 16 for DnsValidatedCertificate and Eventbridge retrier functions
+
 ## 2.24.21
 
 ### Patch Changes
