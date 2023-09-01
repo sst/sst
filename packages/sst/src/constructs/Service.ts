@@ -175,6 +175,7 @@ const supportedMemories = {
 };
 
 export interface ServiceDomainProps extends DistributionDomainProps {}
+export interface ServiceHealthCheck extends HealthCheck {}
 export interface ServiceProps {
   /**
    * Path to the directory where the app is located.
@@ -307,7 +308,7 @@ export interface ServiceProps {
    * }
    * ```
    */
-  healthCheck?: HealthCheck;
+  healthCheck?: ServiceHealthCheck;
   /**
    * Bind resources for the function
    *
