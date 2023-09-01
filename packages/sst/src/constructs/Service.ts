@@ -175,7 +175,6 @@ const supportedMemories = {
 };
 
 export interface ServiceDomainProps extends DistributionDomainProps {}
-export interface ServiceHealthCheck extends HealthCheck {}
 export interface ServiceProps {
   /**
    * Path to the directory where the app is located.
@@ -293,22 +292,16 @@ export interface ServiceProps {
   };
   /**
    * Healthcheck for your service. This is used by the load balancer to determine if the container is healthy.
-   * @default
+   *
+   * @example
    * ```js
    * {
-   *   enabled: true,
-   *   healthyHttpCodes: '200',
-   *   healthyThresholdCount: 5,
-   *   interval: CdkDuration.seconds(10),
+   *   healthyHttpCodes: '200-299',
    *   path: "/",
-   *   port: "traffic-port",
-   *   protocol: Protocol.HTTP,
-   *   timeout: CdkDuration.seconds(6),
-   *   unhealthyThresholdCount: 2,
    * }
    * ```
    */
-  healthCheck?: ServiceHealthCheck;
+  healthCheck?: HealthCheck;
   /**
    * Bind resources for the function
    *
