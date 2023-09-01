@@ -399,6 +399,20 @@ test("scaling.requestsPerContainer defined", async () => {
   });
 });
 
+test("healthCheck", async () => {
+  const { service, stack } = await createService({
+    healthCheck: {
+      healthyHttpCodes: "200, 302",
+      path: "/health",
+    },
+  });
+  hasResource(stack, "AWS::ElasticLoadBalancingV2::TargetGroup", {
+    Matcher: {
+      HttpCode: "200, 302",
+    },
+    HealthCheckPath: "/health",
+  });
+});
 test("bind", async () => {
   const { stack } = await createService((stack) => {
     const topic = new Topic(stack, "Topic");
