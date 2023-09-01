@@ -329,4 +329,4 @@ The `sst deploy` command internally uses OpenNext to build your app.
    - [Live Lambda Dev](../live-lambda-development.md) — SST's local dev environment
    - [Resource Binding](../resource-binding.md) — Typesafe access to your resources
 2. Have a Next.js app on Vercel? [**Migrate it to SST**](../migrating/vercel.md).
-3. Ready to dive into the details of SST? [**Check out our tutorial**](../learn/index.md).
+3. Ready to dive into the details of SST? <a href={config.guide}>**Check out our guide**</a>.

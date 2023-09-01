@@ -26,7 +26,7 @@ This might've been fine if you are an individual developer who has a ton of expe
 
 Hence, one of the design principles of SST is to make sure that it works out of the box. It comes _**batteries included**_, making it easy to get started.
 
-You can learn more about this if you [check out our tutorial](learn/index.md).
+You can learn more about this if you <a href={config.guide}>check out our guide</a>.
 
 ---
 

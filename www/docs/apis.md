@@ -250,10 +250,6 @@ new Api(stack, "api", {
 });
 ```
 
-:::tip Tutorial
-[Check out our tutorial](learn/index.md) on how to build an app with a GraphQL API.
-:::
-
 ---
 
 #### AppSync

@@ -6,13 +6,13 @@ description: "Learn how to build your first full-stack application with SST."
 import config from "../../config";
 import styles from "../video.module.css";
 
+:::info
+This tutorial is currently undergoing an upgrade. <a href={config.guide}>**Check out our guide**</a> instead.
+:::
+
 We created this tutorial to help you build your first app with SST.
 
 We'll cover most of the key concepts of SST by working on an app. You'll get a feel for how SST works and we'll end by deploying the app to production!
-
-:::tip
-Before you start, join our community on <a href={ config.discord }><b>Discord</b></a>. We are always around to answer any questions!
-:::
 
 ---
 

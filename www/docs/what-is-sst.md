@@ -3,6 +3,7 @@ title: What is SST
 description: "SST is a framework that makes it easy to build modern full-stack applications on AWS."
 ---
 
+import config from "../config";
 import styles from "./video.module.css";
 import HeadlineText from "@site/src/components/HeadlineText";
 
@@ -414,4 +415,4 @@ With the Console you can view and interact with your application in real-time. Y
    - [Create a standalone SST app](start/standalone.md)
    - [Use SST with your Next.js app](start/nextjs.md)
    - [Use SST with your Astro site](start/astro.md)
-2. Ready to dive into the details of SST? [**Check out our tutorial**](learn/index.md).
+2. Ready to dive into the details of SST? <a href={config.guide}>**Check out our guide**</a>.

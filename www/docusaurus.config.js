@@ -44,16 +44,14 @@ module.exports = {
       },
       items: [
         {
-          to: "/",
+          to: config.home,
           label: "Home",
           position: "left",
-          activeBaseRegex: "^/(?!(constructs|clients|learn))",
         },
         {
-          to: "/learn",
-          label: "Learn",
+          to: config.guide,
+          label: "Guide",
           position: "left",
-          activeBaseRegex: "^/learn",
         },
         {
           href: config.examples,

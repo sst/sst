@@ -327,4 +327,4 @@ pnpm sst deploy --stage prod
    - [`Bucket`](../constructs/Bucket.md) — Add S3 buckets to your app
    - [`RemixSite`](../constructs/RemixSite.md) — Deploy Remix apps to AWS
    - [Live Lambda Dev](../live-lambda-development.md) — SST's local dev environment
-2. Ready to dive into the details of SST? [**Check out our tutorial**](../learn/index.md).
+2. Ready to dive into the details of SST? <a href={config.guide}>**Check out our guide**</a>.
