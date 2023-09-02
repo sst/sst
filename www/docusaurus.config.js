@@ -48,6 +48,7 @@ module.exports = {
           to: "/",
           label: "Home",
           position: "left",
+          activeBaseRegex: "^/$",
         },
         {
           to: config.guide,
