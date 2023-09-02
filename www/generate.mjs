@@ -31,6 +31,7 @@ const CDK_DOCS_MAP = {
   ISecret: "aws_secretsmanager",
   IApplicationListener: "aws_elasticloadbalancingv2",
   INetworkListener: "aws_elasticloadbalancingv2",
+  ApplicationTargetGroupProps: "aws_elasticloadbalancingv2",
   Certificate: "aws_certificatemanager",
   ICertificate: "aws_certificatemanager",
   DnsValidatedCertificate: "aws_certificatemanager",

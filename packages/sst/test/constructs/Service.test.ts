@@ -502,6 +502,42 @@ test("cdk.applicationLoadBalancer", async () => {
   expect(service.cdk?.distribution).toBeUndefined();
 });
 
+test("cdk.applicationLoadBalancerTargetGroup", async () => {
+  const { service, stack } = await createService({
+    cdk: {
+      applicationLoadBalancerTargetGroup: {
+        healthCheck: {
+          healthyHttpCodes: "200, 302",
+          path: "/health",
+        },
+      },
+    },
+  });
+  hasResource(stack, "AWS::ElasticLoadBalancingV2::TargetGroup", {
+    Matcher: {
+      HttpCode: "200, 302",
+    },
+    HealthCheckPath: "/health",
+  });
+});
+test("cdk.applicationLoadBalancerTargetGroup: ALB disabled", async () => {
+  expect(async () => {
+    await createService({
+      cdk: {
+        applicationLoadBalancer: false,
+        applicationLoadBalancerTargetGroup: {
+          healthCheck: {
+            healthyHttpCodes: "200, 302",
+            path: "/health",
+          },
+        },
+      },
+    });
+  }).rejects.toThrow(
+    /"cdk.applicationLoadBalancerTargetGroup" cannot be applied/
+  );
+});
+
 test("sst remove", async () => {
   const app = await createApp({ mode: "remove" });
   const stack = new Stack(app, "stack");
