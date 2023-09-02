@@ -41,10 +41,11 @@ module.exports = {
       logo: {
         alt: "SST Logo",
         src: "img/logo.svg",
+        href: config.home,
       },
       items: [
         {
-          to: config.home,
+          to: "/",
           label: "Home",
           position: "left",
         },
