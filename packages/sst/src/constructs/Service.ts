@@ -66,7 +66,7 @@ import { Platform } from "aws-cdk-lib/aws-ecr-assets";
 import {
   ApplicationLoadBalancer,
   ApplicationTargetGroup,
-  HealthCheck,
+  ApplicationTargetGroupProps,
 } from "aws-cdk-lib/aws-elasticloadbalancingv2";
 import { createAppContext } from "./context.js";
 
@@ -291,18 +291,6 @@ export interface ServiceProps {
     requestsPerContainer?: number;
   };
   /**
-   * Healthcheck for your service. This is used by the load balancer to determine if the container is healthy.
-   *
-   * @example
-   * ```js
-   * {
-   *   healthyHttpCodes: '200-299',
-   *   path: "/",
-   * }
-   * ```
-   */
-  healthCheck?: HealthCheck;
-  /**
    * Bind resources for the function
    *
    * @example
@@ -418,7 +406,9 @@ export interface ServiceProps {
      * @example
      * ```js
      * {
-     *   cloudfrontDistribution: false
+     *   cdk: {
+     *     cloudfrontDistribution: false
+     *   }
      * }
      * ```
      */
@@ -429,11 +419,30 @@ export interface ServiceProps {
      * @example
      * ```js
      * {
-     *   applicationLoadBalancer: false
+     *   cdk: {
+     *     applicationLoadBalancer: false
+     *   }
      * }
      * ```
      */
     applicationLoadBalancer?: boolean;
+    /**
+     * Customize the Application Load Balancer's target group.
+     * @default true
+     * @example
+     * ```js
+     * {
+     *   cdk: {
+     *     applicationLoadBalancerTargetGroup: {
+     *       healthCheck: {
+     *         path: "/health"
+     *       }
+     *     }
+     *   }
+     * }
+     * ```
+     */
+    applicationLoadBalancerTargetGroup?: ApplicationTargetGroupProps;
     /**
      * Customizing the container definition for the ECS task.
      * @example
@@ -852,10 +861,14 @@ export class Service extends Construct implements SSTConstruct {
   }
 
   private createLoadBalancer(vpc: IVpc, service: FargateService) {
-    const { cdk, healthCheck } = this.props;
+    const { cdk } = this.props;
 
     // Do not create load balancer if disabled
     if (cdk?.applicationLoadBalancer === false) {
+      if (cdk?.applicationLoadBalancerTargetGroup)
+        throw new VisibleError(
+          `In the "${this.node.id}" Service, the "cdk.applicationLoadBalancerTargetGroup" cannot be applied if the Application Load Balancer is diabled.`
+        );
       return {};
     }
 
@@ -865,9 +878,9 @@ export class Service extends Construct implements SSTConstruct {
     });
     const listener = alb.addListener("Listener", { port: 80 });
     const target = listener.addTargets("TargetGroup", {
-      healthCheck,
       port: 80,
       targets: [service],
+      ...cdk?.applicationLoadBalancerTargetGroup,
     });
     return { alb, target };
   }

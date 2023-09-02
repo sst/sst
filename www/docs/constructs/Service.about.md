@@ -257,6 +257,24 @@ new Service(stack, "MyService", {
 });
 ```
 
+### Configuring ALB health check
+
+```js
+import { Duration } from "aws-cdk-lib/core";
+
+new Service(stack, "MyService", {
+  path: "./service",
+  cdk: {
+    applicationLoadBalancerTargetGroup: {
+      healthCheck: {
+        healthyHttpCodes: "200, 302",
+        path: "/health",
+      },
+    },
+  },
+});
+```
+
 ### Configuring container health check
 
 ```js

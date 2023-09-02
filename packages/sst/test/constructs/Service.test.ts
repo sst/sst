@@ -399,20 +399,6 @@ test("scaling.requestsPerContainer defined", async () => {
   });
 });
 
-test("healthCheck", async () => {
-  const { service, stack } = await createService({
-    healthCheck: {
-      healthyHttpCodes: "200, 302",
-      path: "/health",
-    },
-  });
-  hasResource(stack, "AWS::ElasticLoadBalancingV2::TargetGroup", {
-    Matcher: {
-      HttpCode: "200, 302",
-    },
-    HealthCheckPath: "/health",
-  });
-});
 test("bind", async () => {
   const { stack } = await createService((stack) => {
     const topic = new Topic(stack, "Topic");
@@ -514,6 +500,42 @@ test("cdk.applicationLoadBalancer", async () => {
   expect(service.cdk?.vpc).toBeDefined();
   expect(service.cdk?.cluster).toBeDefined();
   expect(service.cdk?.distribution).toBeUndefined();
+});
+
+test("cdk.applicationLoadBalancerTargetGroup", async () => {
+  const { service, stack } = await createService({
+    cdk: {
+      applicationLoadBalancerTargetGroup: {
+        healthCheck: {
+          healthyHttpCodes: "200, 302",
+          path: "/health",
+        },
+      },
+    },
+  });
+  hasResource(stack, "AWS::ElasticLoadBalancingV2::TargetGroup", {
+    Matcher: {
+      HttpCode: "200, 302",
+    },
+    HealthCheckPath: "/health",
+  });
+});
+test("cdk.applicationLoadBalancerTargetGroup: ALB disabled", async () => {
+  expect(async () => {
+    await createService({
+      cdk: {
+        applicationLoadBalancer: false,
+        applicationLoadBalancerTargetGroup: {
+          healthCheck: {
+            healthyHttpCodes: "200, 302",
+            path: "/health",
+          },
+        },
+      },
+    });
+  }).rejects.toThrow(
+    /"cdk.applicationLoadBalancerTargetGroup" cannot be applied/
+  );
 });
 
 test("sst remove", async () => {
