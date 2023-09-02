@@ -18,7 +18,7 @@ export const useJavaHandler = Context.memo(async () => {
   const handlers = useRuntimeHandlers();
   const processes = new Map<string, ChildProcessWithoutNullStreams>();
   const sources = new Map<string, string>();
-  const runningBuilds = new Map<string, Promise<void>>();
+  const runningBuilds = new Map<string, ReturnType<typeof execAsync>>();
 
   handlers.register({
     shouldBuild: (input) => {
@@ -75,37 +75,31 @@ export const useJavaHandler = Context.memo(async () => {
       const outputDir = input.props.java?.buildOutputDir || "distributions";
       sources.set(input.functionID, srcPath);
 
-      async function build() {
-        // build
-        await execAsync(
-          `${buildBinary} ${buildTask} -Dorg.gradle.logging.level=${
-            process.env.DEBUG ? "debug" : "lifecycle"
-          }`,
-          {
-            cwd: srcPath,
-          }
-        );
+      try {
+        // Build
+        // Note: run gradle build once per directory. Otherwise they'll interfere
+        // with one another
+        const buildPromise =
+          runningBuilds.get(buildBinary) ??
+          execAsync(
+            `${buildBinary} ${buildTask} -Dorg.gradle.logging.level=${
+              process.env.DEBUG ? "debug" : "lifecycle"
+            }`,
+            {
+              cwd: srcPath,
+            }
+          );
+        runningBuilds.set(buildBinary, buildPromise);
+        await buildPromise;
+        runningBuilds.delete(buildBinary);
 
         // unzip
         const buildOutput = path.join(srcPath, "build", outputDir);
         const zip = (await fs.readdir(buildOutput)).find((f) =>
           f.endsWith(".zip")
         )!;
-        await new Promise((resolve, reject) => {
-          const zipper = new AdmZip(path.join(buildOutput, zip));
-          zipper.extractAllToAsync(input.out, false, false, (err) =>
-            err ? reject(err) : resolve(undefined)
-          );
-        });
-      }
-
-      try {
-        // Run gradle build once per directory. Otherwise they'll interfere
-        // with one another
-        const buildPromise = runningBuilds.get(buildBinary) ?? build();
-        runningBuilds.set(buildBinary, buildPromise);
-        await buildPromise;
-        runningBuilds.delete(buildBinary);
+        const zipper = new AdmZip(path.join(buildOutput, zip));
+        zipper.extractAllTo(input.out, false, false);
 
         return {
           type: "success",
