@@ -61,6 +61,7 @@ import {
   CpuArchitecture,
   FargateService,
   FargateTaskDefinition,
+  FargateServiceProps,
 } from "aws-cdk-lib/aws-ecs";
 import { LogGroup, LogRetention, RetentionDays } from "aws-cdk-lib/aws-logs";
 import { Platform } from "aws-cdk-lib/aws-ecr-assets";
@@ -475,6 +476,20 @@ export interface ServiceProps {
      */
     applicationLoadBalancerTargetGroup?: ApplicationTargetGroupProps;
     /**
+     * Customize the Fargate Service.
+     * @example
+     * ```js
+     * {
+     *   cdk: {
+     *     fargateService: {
+     *       circuitBreaker: { rollback: true }
+     *     }
+     *   }
+     * }
+     * ```
+     */
+    fargateService?: Omit<FargateServiceProps, "cluster" | "taskDefinition">;
+    /**
      * Customizing the container definition for the ECS task.
      * @example
      * ```js
@@ -482,8 +497,8 @@ export interface ServiceProps {
      *   cdk: {
      *     container: {
      *       healthCheck: {
-     *         command: ["CMD-SHELL", "curl -f http://localhost/ || exit 1"],
-     *       },
+     *         command: ["CMD-SHELL", "curl -f http://localhost/ || exit 1"]
+     *       }
      *     }
      *   }
      * }
@@ -901,6 +916,7 @@ export class Service extends Construct implements SSTConstruct {
     const service = new FargateService(this, "Service", {
       cluster,
       taskDefinition,
+      ...cdk?.fargateService,
     });
 
     return { cluster, taskDefinition, container, service };

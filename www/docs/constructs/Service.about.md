@@ -284,25 +284,24 @@ new Service(stack, "MyService", {
 });
 ```
 
-### Configuring ALB health check
+### Configuring Fargate Service
+
+Here's an example of configuring the circuit breaker for the Fargate service.
 
 ```js
-import { Duration } from "aws-cdk-lib/core";
-
 new Service(stack, "MyService", {
   path: "./service",
   cdk: {
-    applicationLoadBalancerTargetGroup: {
-      healthCheck: {
-        healthyHttpCodes: "200, 302",
-        path: "/health",
-      },
+    fargateService: {
+      circuitBreaker: { rollback: true },
     },
   },
 });
 ```
 
-### Configuring container health check
+### Configuring Service Container
+
+Here's an example of configuring the Fargate container health check.
 
 ```js
 import { Duration } from "aws-cdk-lib/core";
@@ -317,6 +316,26 @@ new Service(stack, "MyService", {
         retries: 20,
         startPeriod: Duration.minutes(30),
         timeout: Duration.minutes(30),
+      },
+    },
+  },
+});
+```
+
+### Configuring Application Load Balancer
+
+Here's an example of configuring the Application Load Balancer health check.
+
+```js
+import { Duration } from "aws-cdk-lib/core";
+
+new Service(stack, "MyService", {
+  path: "./service",
+  cdk: {
+    applicationLoadBalancerTargetGroup: {
+      healthCheck: {
+        healthyHttpCodes: "200, 302",
+        path: "/health",
       },
     },
   },

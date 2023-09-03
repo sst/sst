@@ -469,6 +469,24 @@ test("environment", async () => {
   });
 });
 
+test("cdk.fargateService", async () => {
+  const { stack } = await createService({
+    cdk: {
+      fargateService: {
+        circuitBreaker: { rollback: true },
+      },
+    },
+  });
+  hasResource(stack, "AWS::ECS::Service", {
+    LaunchType: "FARGATE",
+    DeploymentConfiguration: {
+      DeploymentCircuitBreaker: {
+        Rollback: true,
+      },
+    },
+  });
+});
+
 test("cdk.container: image defined", async () => {
   const { stack } = await createService({
     cdk: {
@@ -540,7 +558,6 @@ test("cdk.applicationLoadBalancer", async () => {
   expect(service.cdk?.cluster).toBeDefined();
   expect(service.cdk?.distribution).toBeUndefined();
 });
-
 test("cdk.applicationLoadBalancerTargetGroup", async () => {
   const { service, stack } = await createService({
     cdk: {
