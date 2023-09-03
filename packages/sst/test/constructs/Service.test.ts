@@ -182,6 +182,25 @@ test("customDomain: string", async () => {
   });
 });
 
+test("architecture: undefined", async () => {
+  const { stack } = await createService({});
+  hasResource(stack, "AWS::ECS::TaskDefinition", {
+    RuntimePlatform: objectLike({
+      CpuArchitecture: "X86_64",
+    }),
+  });
+});
+test("architecture: defined", async () => {
+  const { stack } = await createService({
+    architecture: "arm64",
+  });
+  hasResource(stack, "AWS::ECS::TaskDefinition", {
+    RuntimePlatform: objectLike({
+      CpuArchitecture: "ARM64",
+    }),
+  });
+});
+
 test("cpu undefined", async () => {
   const { stack } = await createService({});
   hasResource(stack, "AWS::ECS::TaskDefinition", {

@@ -53,13 +53,14 @@ import {
 } from "aws-cdk-lib/aws-ec2";
 import {
   AwsLogDriver,
-  Cluster,
-  FargateTaskDefinition,
-  ContainerImage,
-  FargateService,
   CfnTaskDefinition,
+  Cluster,
+  ContainerImage,
   ContainerDefinition,
   ContainerDefinitionOptions,
+  CpuArchitecture,
+  FargateService,
+  FargateTaskDefinition,
 } from "aws-cdk-lib/aws-ecs";
 import { LogGroup, LogRetention, RetentionDays } from "aws-cdk-lib/aws-logs";
 import { Platform } from "aws-cdk-lib/aws-ecr-assets";
@@ -187,7 +188,20 @@ export interface ServiceProps {
    */
   file?: string;
   /**
-   * The amount of cpu allocated.
+   * The CPU architecture of the container.
+   * @default "x86_64"
+   * @example
+   * ```js
+   * {
+   *   architecture: "arm64",
+   * }
+   * ```
+   */
+  architecture?: Lowercase<
+    keyof Pick<typeof CpuArchitecture, "ARM64" | "X86_64">
+  >;
+  /**
+   * The amount of CPU allocated.
    * @default "0.25 vCPU"
    * @example
    * ```js
@@ -480,8 +494,9 @@ export interface ServiceProps {
 }
 
 type ServiceNormalizedProps = ServiceProps & {
-  path: Exclude<ServiceProps["path"], undefined>;
+  architecture: Exclude<ServiceProps["architecture"], undefined>;
   cpu: Exclude<ServiceProps["cpu"], undefined>;
+  path: Exclude<ServiceProps["path"], undefined>;
   memory: Exclude<ServiceProps["memory"], undefined>;
   port: Exclude<ServiceProps["port"], undefined>;
   logRetention: Exclude<ServiceProps["logRetention"], undefined>;
@@ -518,6 +533,7 @@ export class Service extends Construct implements SSTConstruct {
     this.id = id;
     this.props = {
       path: ".",
+      architecture: props?.architecture || "x86_64",
       cpu: props?.cpu || "0.25 vCPU",
       memory: props?.memory || "0.5 GB",
       port: props?.port || 3000,
@@ -809,7 +825,7 @@ export class Service extends Construct implements SSTConstruct {
   }
 
   private createService(vpc: IVpc) {
-    const { cpu, memory, port, logRetention, cdk } = this.props;
+    const { architecture, cpu, memory, port, logRetention, cdk } = this.props;
     const app = this.node.root as App;
     const clusterName = app.logicalPrefixedName(this.node.id);
 
@@ -831,6 +847,12 @@ export class Service extends Construct implements SSTConstruct {
       // @ts-ignore
       memoryLimitMiB: supportedMemories[cpu][memory],
       cpu: supportedCpus[cpu],
+      runtimePlatform: {
+        cpuArchitecture:
+          architecture === "arm64"
+            ? CpuArchitecture.ARM64
+            : CpuArchitecture.X86_64,
+      },
     });
 
     const container = taskDefinition.addContainer("Container", {
@@ -1083,13 +1105,16 @@ export class Service extends Construct implements SSTConstruct {
   }
 
   private async runDockerBuild(dockerfile: string) {
+    const { architecture } = this.props;
     try {
       await execAsync(
         [
           "docker",
           "build",
           `-t sst-build:service-${this.node.id}`,
-          "--platform=linux/amd64",
+          `--platform ${
+            architecture === "arm64" ? "linux/arm64" : "linux/amd64"
+          }`,
           `-f ${path.join(this.props.path, dockerfile)}`,
           this.props.path,
         ].join(" "),
