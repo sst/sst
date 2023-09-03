@@ -1,5 +1,21 @@
 # @serverless-stack/cli2
 
+## 2.24.24
+
+### Patch Changes
+
+- [`a933265d6`](https://github.com/sst/sst/commit/a933265d657b9b29036d2e98d28fb4b6cc0cf203) Thanks [@fwang](https://github.com/fwang)! - Service: support build args for docker build
+
+- [`83f205f2b`](https://github.com/sst/sst/commit/83f205f2b6dc794243fc9d8894f15cb9296a28fb) Thanks [@fwang](https://github.com/fwang)! - Service: support configuring Fargate Service (ie. circuit breaker)
+
+- [`438ee2dda`](https://github.com/sst/sst/commit/438ee2dda57e4ee849dcd68e536a9504a57d2b63) Thanks [@fwang](https://github.com/fwang)! - Service: support using existing ECR image
+
+- [`fcf4e60c7`](https://github.com/sst/sst/commit/fcf4e60c7e6056433bab0e24e94022757d18cb05) Thanks [@fwang](https://github.com/fwang)! - Service: support ARM64 cpu architecture
+
+- [`a933265d6`](https://github.com/sst/sst/commit/a933265d657b9b29036d2e98d28fb4b6cc0cf203) Thanks [@fwang](https://github.com/fwang)! - Job: support build args for docker build
+
+- [`a933265d6`](https://github.com/sst/sst/commit/a933265d657b9b29036d2e98d28fb4b6cc0cf203) Thanks [@fwang](https://github.com/fwang)! - Function: support build args for docker build
+
 ## 2.24.23
 
 ### Patch Changes
