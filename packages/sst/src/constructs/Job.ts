@@ -69,6 +69,19 @@ export interface JobContainerProps {
    * ```
    */
   file?: string;
+  /**
+   * Build args to pass to the docker build command.
+   * @default No build args
+   * @example
+   * ```js
+   * container: {
+   *   buildArgs: {
+   *     FOO: "bar"
+   *   }
+   * }
+   * ```
+   */
+  buildArgs?: Record<string, string>;
 }
 
 export interface JobProps {
@@ -511,6 +524,7 @@ export class Job extends Construct implements SSTConstruct {
               ? Platform.custom("linux/arm64")
               : Platform.custom("linux/amd64"),
           file: container?.file,
+          buildArgs: container?.buildArgs,
           exclude: [".sst"],
           ignoreMode: IgnoreMode.GLOB,
         });

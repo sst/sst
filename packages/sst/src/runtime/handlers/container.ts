@@ -60,6 +60,9 @@ export const useContainerHandler = Context.memo(async () => {
               ...(input.props.container?.file
                 ? [`-f ${input.props.container.file}`]
                 : []),
+              ...Object.entries(input.props.container?.buildArgs || {}).map(
+                ([k, v]) => `--build-arg ${k}=${v}`
+              ),
               `.`,
             ].join(" "),
             {
@@ -90,6 +93,9 @@ export const useContainerHandler = Context.memo(async () => {
               ...(input.props.container?.file
                 ? [`-f ${input.props.container.file}`]
                 : []),
+              ...Object.entries(input.props.container?.buildArgs || {}).map(
+                ([k, v]) => `--build-arg ${k}=${v}`
+              ),
               `--platform ${platform}`,
               `.`,
             ].join(" "),

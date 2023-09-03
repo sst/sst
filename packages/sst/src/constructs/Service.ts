@@ -386,6 +386,23 @@ export interface ServiceProps {
    * ```
    */
   waitForInvalidation?: boolean;
+  build?: {
+    /**
+     * Build args to pass to the docker build command.
+     * @default No build args
+     * @example
+     * ```js
+     * {
+     *   build: {
+     *     buildArgs: {
+     *       FOO: "bar"
+     *     }
+     *   }
+     * }
+     * ```
+     */
+    buildArgs?: Record<string, string>;
+  };
   dev?: {
     /**
      * When running `sst dev, site is not deployed. This is to ensure `sst dev` can start up quickly.
@@ -1112,17 +1129,19 @@ export class Service extends Construct implements SSTConstruct {
   }
 
   private async runDockerBuild(dockerfile: string) {
-    const { architecture } = this.props;
+    const { path: servicePath, architecture, build } = this.props;
+    const platform = architecture === "arm64" ? "linux/arm64" : "linux/amd64";
     try {
       await execAsync(
         [
           "docker",
           "build",
           `-t sst-build:service-${this.node.id}`,
-          `--platform ${
-            architecture === "arm64" ? "linux/arm64" : "linux/amd64"
-          }`,
-          `-f ${path.join(this.props.path, dockerfile)}`,
+          `--platform ${platform}`,
+          `-f ${path.join(servicePath, dockerfile)}`,
+          ...Object.entries(build?.buildArgs || {}).map(
+            ([k, v]) => `--build-arg ${k}=${v}`
+          ),
           this.props.path,
         ].join(" "),
         {
@@ -1142,9 +1161,12 @@ export class Service extends Construct implements SSTConstruct {
     taskDefinition: FargateTaskDefinition,
     container: ContainerDefinition
   ) {
-    const image = ContainerImage.fromAsset(this.props.path, {
-      platform: Platform.LINUX_AMD64,
+    const { path: servicePath, architecture, build } = this.props;
+    const image = ContainerImage.fromAsset(servicePath, {
+      platform:
+        architecture === "arm64" ? Platform.LINUX_ARM64 : Platform.LINUX_AMD64,
       file: dockerfile,
+      buildArgs: build?.buildArgs,
       exclude: [".sst"],
       ignoreMode: IgnoreMode.GLOB,
     });

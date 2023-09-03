@@ -654,6 +654,19 @@ export interface ContainerProps {
    * ```
    */
   file?: string;
+  /**
+   * Build args to pass to the docker build command.
+   * @default No build args
+   * @example
+   * ```js
+   * container: {
+   *   buildArgs: {
+   *     FOO: "bar"
+   *   }
+   * }
+   * ```
+   */
+  buildArgs?: Record<string, string>;
 }
 
 /**
@@ -852,6 +865,9 @@ export class Function extends CDKFunction implements SSTConstruct {
                 ...(props.container?.cmd ? { cmd: props.container.cmd } : {}),
                 ...(props.container?.file
                   ? { file: props.container.file }
+                  : {}),
+                ...(props.container?.buildArgs
+                  ? { buildArgs: props.container.buildArgs }
                   : {}),
                 exclude: [".sst"],
                 ignoreMode: IgnoreMode.GLOB,
