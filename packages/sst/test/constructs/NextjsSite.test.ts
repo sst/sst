@@ -74,6 +74,27 @@ test("default", async () => {
   });
 });
 
+test("default: check cache policy configured correctly", async () => {
+  const { stack, site } = await createSite();
+  printResource(stack, "AWS::CloudFront::CachePolicy");
+  countResources(stack, "AWS::CloudFront::CachePolicy", 1);
+  hasResource(stack, "AWS::CloudFront::CachePolicy", {
+    CachePolicyConfig: objectLike({
+      ParametersInCacheKeyAndForwardedToOrigin: objectLike({
+        HeadersConfig: objectLike({
+          Headers: [
+            "accept",
+            "rsc",
+            "next-router-prefetch",
+            "next-router-state-tree",
+            "next-url",
+          ],
+        }),
+      }),
+    }),
+  });
+});
+
 test("timeout defined", async () => {
   const { stack } = await createSite({
     timeout: 100,

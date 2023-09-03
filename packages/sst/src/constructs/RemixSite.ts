@@ -73,10 +73,10 @@ export class RemixSite extends SsrSite {
       serverBuildOutputFile: "build/index.js",
       clientBuildOutputDir: "public",
       clientBuildVersionedSubDir: "build",
-      // Note: When using libraries like remix-flat-routes the file
-      // contains some special characters like +, we need to encode the path
-      serverCFFunctionInjection: `
-       request.uri = request.uri.split('/').map(encodedURIComponent).join('/');
+      // Note: When using libraries like remix-flat-routes the file can
+      // contains special characters like "+". It needs to be encoded.
+      clientCFFunctionInjection: `
+       request.uri = request.uri.split('/').map(encodeURIComponent).join('/');
       `,
     };
   }

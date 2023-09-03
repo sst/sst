@@ -1,6 +1,7 @@
 import { test, expect, beforeAll, vi } from "vitest";
 import { execSync } from "child_process";
 import {
+  getResources,
   countResources,
   countResourcesLike,
   hasResource,
@@ -215,6 +216,46 @@ test("default", async () => {
   hasResource(stack, "Custom::CloudFrontInvalidator", {
     paths: ["/*"],
   });
+});
+test("default: check CloudFront functions configured correctly", async () => {
+  const { site, stack } = await createSite({
+    // @ts-expect-error: "sstTest" is not exposed in props
+    sstTest: true,
+  });
+  hasResource(stack, "AWS::CloudFront::Distribution", {
+    DistributionConfig: objectLike({
+      DefaultCacheBehavior: objectLike({
+        FunctionAssociations: ANY,
+      }),
+      CacheBehaviors: [
+        objectLike({
+          PathPattern: "build/*",
+          FunctionAssociations: ANY,
+        }),
+        objectLike({
+          PathPattern: "favicon.ico",
+          FunctionAssociations: ANY,
+        }),
+        objectLike({
+          PathPattern: "foo/*",
+          FunctionAssociations: ANY,
+        }),
+      ],
+    }),
+  });
+  // Ensure that the server function is not the same as the static function
+  const r = getResources(stack, "AWS::CloudFront::Distribution")
+    .SiteDistribution390DED28.Properties.DistributionConfig;
+  const serverCfFunctionArn =
+    r.DefaultCacheBehavior.FunctionAssociations[0].FunctionARN;
+  const staticCfFunctionArns = [
+    r.CacheBehaviors[0].FunctionAssociations[0].FunctionARN,
+    r.CacheBehaviors[1].FunctionAssociations[0].FunctionARN,
+    r.CacheBehaviors[2].FunctionAssociations[0].FunctionARN,
+  ];
+  expect(serverCfFunctionArn).not.toEqual(staticCfFunctionArns[0]);
+  expect(staticCfFunctionArns[0]).toEqual(staticCfFunctionArns[1]);
+  expect(staticCfFunctionArns[0]).toEqual(staticCfFunctionArns[2]);
 });
 
 test("path not exist", async () => {

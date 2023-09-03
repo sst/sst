@@ -345,8 +345,7 @@ export class NextjsSite extends SsrSite {
 
     const { customDomain, cdk } = this.props;
     const cfDistributionProps = cdk?.distribution || {};
-    const cachePolicy = cdk?.serverCachePolicy ?? this.buildServerCachePolicy();
-    const serverBehavior = this.buildDefaultBehaviorForRegional(cachePolicy);
+    const serverBehavior = this.buildDefaultBehaviorForRegional();
 
     return new Distribution(this, "CDN", {
       scopeOverride: this,
@@ -362,7 +361,7 @@ export class NextjsSite extends SsrSite {
           additionalBehaviors: {
             "api/*": serverBehavior,
             "_next/data/*": serverBehavior,
-            "_next/image*": this.buildImageBehavior(cachePolicy),
+            "_next/image*": this.buildImageBehavior(),
             ...(cfDistributionProps.additionalBehaviors || {}),
           },
         },
@@ -373,8 +372,7 @@ export class NextjsSite extends SsrSite {
   protected createCloudFrontDistributionForEdge() {
     const { customDomain, cdk } = this.props;
     const cfDistributionProps = cdk?.distribution || {};
-    const cachePolicy = cdk?.serverCachePolicy ?? this.buildServerCachePolicy();
-    const serverBehavior = this.buildDefaultBehaviorForEdge(cachePolicy);
+    const serverBehavior = this.buildDefaultBehaviorForEdge();
 
     return new Distribution(this, "CDN", {
       scopeOverride: this,
@@ -390,7 +388,7 @@ export class NextjsSite extends SsrSite {
           additionalBehaviors: {
             "api/*": serverBehavior,
             "_next/data/*": serverBehavior,
-            "_next/image*": this.buildImageBehavior(cachePolicy),
+            "_next/image*": this.buildImageBehavior(),
             ...(cfDistributionProps.additionalBehaviors || {}),
           },
         },
@@ -398,8 +396,8 @@ export class NextjsSite extends SsrSite {
     });
   }
 
-  protected buildServerCachePolicy() {
-    return super.buildServerCachePolicy([
+  protected useServerBehaviorCachePolicy() {
+    return super.useServerBehaviorCachePolicy([
       "accept",
       "rsc",
       "next-router-prefetch",
@@ -408,7 +406,7 @@ export class NextjsSite extends SsrSite {
     ]);
   }
 
-  private buildImageBehavior(cachePolicy: ICachePolicy): BehaviorOptions {
+  private buildImageBehavior(): BehaviorOptions {
     const { cdk, regional } = this.props;
     const imageFn = this.createImageOptimizationFunction();
     const imageFnUrl = imageFn.addFunctionUrl({
@@ -423,7 +421,8 @@ export class NextjsSite extends SsrSite {
       allowedMethods: AllowedMethods.ALLOW_ALL,
       cachedMethods: CachedMethods.CACHE_GET_HEAD_OPTIONS,
       compress: true,
-      cachePolicy,
+      cachePolicy:
+        cdk?.serverCachePolicy ?? this.useServerBehaviorCachePolicy(),
       responseHeadersPolicy: cdk?.responseHeadersPolicy,
       edgeLambdas: regional?.enableServerUrlIamAuth
         ? [
