@@ -208,8 +208,6 @@ The generated `.nixpacks` directory should be added to your `.gitignore` file.
 ### Creating a Service
 
 ```js
-import { Service } from "sst/constructs";
-
 new Service(stack, "MyService", {
   path: "./service",
 });
@@ -218,11 +216,25 @@ new Service(stack, "MyService", {
 ### Using custom Dockerfile
 
 ```js
-import { Service } from "sst/constructs";
-
 new Service(stack, "MyService", {
   path: "./service",
   file: "path/to/Dockerfile.prod",
+});
+```
+
+### Using existing ECR image
+
+```js
+import { ContainerImage } from "aws-cdk-lib/aws-ecs";
+
+new Service(stack, "MyService", {
+  cdk: {
+    container: {
+      image: ContainerImage.fromRegistry(
+        "public.ecr.aws/amazonlinux/amazonlinux:latest"
+      ),
+    },
+  },
 });
 ```
 

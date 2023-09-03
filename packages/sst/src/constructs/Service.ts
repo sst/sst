@@ -472,7 +472,9 @@ export interface ServiceProps {
      * }
      * ```
      */
-    container?: Omit<ContainerDefinitionOptions, "image">;
+    container?: Omit<ContainerDefinitionOptions, "image"> & {
+      image?: ContainerDefinitionOptions["image"];
+    };
     /**
      * Runs codebuild job in the specified VPC. Note this will only work once deployed.
      *
@@ -579,20 +581,23 @@ export class Service extends Construct implements SSTConstruct {
     );
 
     useDeferredTasks().add(async () => {
-      if (!app.isRunningSSTTest()) {
+      if (!app.isRunningSSTTest() && !props?.cdk?.container?.image) {
         Colors.line(
           `➜  Building the container image for the "${this.node.id}" service...`
         );
 
         // Build app
         let dockerfile: string;
+        // case: custom Dockerfile provided
         if (this.props.file) {
           dockerfile = this.props.file;
-        } else if (
-          await existsAsync(path.join(this.props.path, "Dockerfile"))
-        ) {
+        }
+        // case: default Dockerfile found
+        else if (await existsAsync(path.join(this.props.path, "Dockerfile"))) {
           dockerfile = "Dockerfile";
-        } else {
+        }
+        // case: nixpack
+        else {
           await this.createNixpacksBuilder();
           dockerfile = await this.runNixpacksBuild();
         }
@@ -871,7 +876,9 @@ export class Service extends Construct implements SSTConstruct {
         SST_SSM_PREFIX: useProject().config.ssmPrefix,
       },
       ...cdk?.container,
-      image: { bind: () => ({ imageName: "placeholder" }) },
+      image: cdk?.container?.image ?? {
+        bind: () => ({ imageName: "placeholder" }),
+      },
     });
 
     const service = new FargateService(this, "Service", {

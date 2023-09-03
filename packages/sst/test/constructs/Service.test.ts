@@ -1,5 +1,6 @@
 import { test, expect, beforeAll, vi } from "vitest";
 import { HostedZone } from "aws-cdk-lib/aws-route53";
+import { ContainerImage } from "aws-cdk-lib/aws-ecs";
 import {
   countResources,
   countResourcesLike,
@@ -468,7 +469,26 @@ test("environment", async () => {
   });
 });
 
-test("cdk.container", async () => {
+test("cdk.container: image defined", async () => {
+  const { stack } = await createService({
+    cdk: {
+      container: {
+        image: ContainerImage.fromRegistry(
+          "public.ecr.aws/amazonlinux/amazonlinux:latest"
+        ),
+      },
+    },
+  });
+  printResource(stack, "AWS::ECS::TaskDefinition");
+  hasResource(stack, "AWS::ECS::TaskDefinition", {
+    ContainerDefinitions: [
+      objectLike({
+        Image: "public.ecr.aws/amazonlinux/amazonlinux:latest",
+      }),
+    ],
+  });
+});
+test("cdk.container: healthCheck defined", async () => {
   const { stack } = await createService({
     cdk: {
       container: {
