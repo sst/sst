@@ -1,5 +1,15 @@
 # @serverless-stack/cli2
 
+## 2.24.23
+
+### Patch Changes
+
+- [#3271](https://github.com/sst/sst/pull/3271) [`f493dfe0a`](https://github.com/sst/sst/commit/f493dfe0a2e1502d88a1c23a098e83cb9711ff33) Thanks [@barakcodes](https://github.com/barakcodes)! - RemixSite: url encode special characters in asset urls
+
+- [`dfb640f7a`](https://github.com/sst/sst/commit/dfb640f7aecb07874c9b9328be611a68a4c79ce7) Thanks [@fwang](https://github.com/fwang)! - Function: fix java handlers from the same project builds empty zip
+
+- [#3277](https://github.com/sst/sst/pull/3277) [`786ea2baa`](https://github.com/sst/sst/commit/786ea2baa3d7a4236a0268160e020e019dfc36e7) Thanks [@alistairstead](https://github.com/alistairstead)! - Container: support customizing ALB target group (ie. health check)
+
 ## 2.24.22
 
 ### Patch Changes
