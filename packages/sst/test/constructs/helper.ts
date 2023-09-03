@@ -111,6 +111,11 @@ class StringNotMatch extends Matcher {
 // Template functions //
 ////////////////////////
 
+export function getResources(stack: Stack, type: string) {
+  const template = Template.fromStack(stack);
+  return template.findResources(type);
+}
+
 export function countResources(
   stack: Stack,
   type: string,

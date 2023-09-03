@@ -51,6 +51,7 @@ import {
   CacheCookieBehavior,
   Distribution as CdkDistribution,
   OriginRequestPolicy,
+  IOriginRequestPolicy,
   Function as CfFunction,
   FunctionCode as CfFunctionCode,
   FunctionEventType as CfFunctionEventType,
@@ -93,6 +94,7 @@ export type SsrBuildConfig = {
   clientBuildOutputDir: string;
   clientBuildVersionedSubDir: string;
   clientBuildS3KeyPrefix?: string;
+  clientCFFunctionInjection?: string;
   prerenderedBuildOutputDir?: string;
   prerenderedBuildS3KeyPrefix?: string;
 };
@@ -365,7 +367,10 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
   private serverLambdaForDev?: SsrFunction;
   private serverUrlSigningFunction?: EdgeFunction;
   protected bucket: Bucket;
-  private cfFunction: CfFunction;
+  private serverCfFunction?: CfFunction;
+  private serverBehaviorCachePolicy?: CachePolicy;
+  private serverBehaviorOriginRequestPolicy?: IOriginRequestPolicy;
+  private staticCfFunction?: CfFunction;
   private s3Origin: S3Origin;
   private distribution: Distribution;
 
@@ -394,8 +399,8 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
     useSites().add(stack.stackName, id, this.constructor.name, this.props);
 
     if (this.doNotDeploy) {
-      // @ts-ignore
-      this.cfFunction = this.bucket = this.s3Origin = this.distribution = null;
+      // @ts-expect-error
+      this.bucket = this.s3Origin = this.distribution = null;
       this.serverLambdaForDev = this.createFunctionForDev();
       return;
     }
@@ -413,7 +418,6 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
 
     // Create CloudFront
     this.s3Origin = this.createCloudFrontS3Origin();
-    this.cfFunction = this.createCloudFrontFunction();
     this.distribution = this.props.edge
       ? this.createCloudFrontDistributionForEdge()
       : this.createCloudFrontDistributionForRegional();
@@ -924,22 +928,9 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
     });
   }
 
-  private createCloudFrontFunction() {
-    return new CfFunction(this, "CloudFrontFunction", {
-      code: CfFunctionCode.fromInline(`
-function handler(event) {
-  var request = event.request;
-  request.headers["x-forwarded-host"] = request.headers.host;
-  ${this.buildConfig.serverCFFunctionInjection || ""}
-  return request;
-}`),
-    });
-  }
-
   protected createCloudFrontDistributionForRegional() {
     const { customDomain, cdk } = this.props;
     const cfDistributionProps = cdk?.distribution || {};
-    const cachePolicy = cdk?.serverCachePolicy ?? this.buildServerCachePolicy();
 
     return new Distribution(this, "CDN", {
       scopeOverride: this,
@@ -951,7 +942,7 @@ function handler(event) {
           // Override props.
           ...cfDistributionProps,
           // these values can NOT be overwritten by cfDistributionProps
-          defaultBehavior: this.buildDefaultBehaviorForRegional(cachePolicy),
+          defaultBehavior: this.buildDefaultBehaviorForRegional(),
           additionalBehaviors: {
             ...(cfDistributionProps.additionalBehaviors || {}),
           },
@@ -963,7 +954,6 @@ function handler(event) {
   protected createCloudFrontDistributionForEdge() {
     const { customDomain, cdk } = this.props;
     const cfDistributionProps = cdk?.distribution || {};
-    const cachePolicy = cdk?.serverCachePolicy ?? this.buildServerCachePolicy();
 
     return new Distribution(this, "CDN", {
       scopeOverride: this,
@@ -975,7 +965,7 @@ function handler(event) {
           // Override props.
           ...cfDistributionProps,
           // these values can NOT be overwritten by cfDistributionProps
-          defaultBehavior: this.buildDefaultBehaviorForEdge(cachePolicy),
+          defaultBehavior: this.buildDefaultBehaviorForEdge(),
           additionalBehaviors: {
             ...(cfDistributionProps.additionalBehaviors || {}),
           },
@@ -984,9 +974,7 @@ function handler(event) {
     });
   }
 
-  protected buildDefaultBehaviorForRegional(
-    cachePolicy: ICachePolicy
-  ): BehaviorOptions {
+  protected buildDefaultBehaviorForRegional(): BehaviorOptions {
     const { timeout, regional, cdk } = this.props;
     const cfDistributionProps = cdk?.distribution || {};
 
@@ -1010,12 +998,13 @@ function handler(event) {
       allowedMethods: AllowedMethods.ALLOW_ALL,
       cachedMethods: CachedMethods.CACHE_GET_HEAD_OPTIONS,
       compress: true,
-      cachePolicy,
+      cachePolicy:
+        cdk?.serverCachePolicy ?? this.useServerBehaviorCachePolicy(),
       responseHeadersPolicy: cdk?.responseHeadersPolicy,
-      originRequestPolicy: this.buildServerOriginRequestPolicy(),
+      originRequestPolicy: this.useServerBehaviorOriginRequestPolicy(),
       ...(cfDistributionProps.defaultBehavior || {}),
       functionAssociations: [
-        ...this.buildBehaviorFunctionAssociations(),
+        ...this.useServerBehaviorFunctionAssociations(),
         ...(cfDistributionProps.defaultBehavior?.functionAssociations || []),
       ],
       edgeLambdas: [
@@ -1034,28 +1023,7 @@ function handler(event) {
     };
   }
 
-  protected useServerUrlSigningFunction() {
-    this.serverUrlSigningFunction =
-      this.serverUrlSigningFunction ??
-      new EdgeFunction(this, "ServerUrlSigningFunction", {
-        bundle: path.join(__dirname, "../support/signing-function"),
-        runtime: "nodejs18.x",
-        handler: "index.handler",
-        timeout: 10,
-        memorySize: 128,
-        permissions: [
-          new PolicyStatement({
-            actions: ["lambda:InvokeFunctionUrl"],
-            resources: [this.serverLambdaForRegional?.functionArn!],
-          }),
-        ],
-      });
-    return this.serverUrlSigningFunction;
-  }
-
-  protected buildDefaultBehaviorForEdge(
-    cachePolicy: ICachePolicy
-  ): BehaviorOptions {
+  protected buildDefaultBehaviorForEdge(): BehaviorOptions {
     const { cdk } = this.props;
     const cfDistributionProps = cdk?.distribution || {};
 
@@ -1065,12 +1033,13 @@ function handler(event) {
       allowedMethods: AllowedMethods.ALLOW_ALL,
       cachedMethods: CachedMethods.CACHE_GET_HEAD_OPTIONS,
       compress: true,
-      cachePolicy,
+      cachePolicy:
+        cdk?.serverCachePolicy ?? this.useServerBehaviorCachePolicy(),
       responseHeadersPolicy: cdk?.responseHeadersPolicy,
-      originRequestPolicy: this.buildServerOriginRequestPolicy(),
+      originRequestPolicy: this.useServerBehaviorOriginRequestPolicy(),
       ...(cfDistributionProps.defaultBehavior || {}),
       functionAssociations: [
-        ...this.buildBehaviorFunctionAssociations(),
+        ...this.useServerBehaviorFunctionAssociations(),
         ...(cfDistributionProps.defaultBehavior?.functionAssociations || []),
       ],
       edgeLambdas: [
@@ -1082,15 +1051,6 @@ function handler(event) {
         ...(cfDistributionProps.defaultBehavior?.edgeLambdas || []),
       ],
     };
-  }
-
-  protected buildBehaviorFunctionAssociations() {
-    return [
-      {
-        eventType: CfFunctionEventType.VIEWER_REQUEST,
-        function: this.cfFunction,
-      },
-    ];
   }
 
   protected addStaticFileBehaviors() {
@@ -1113,35 +1073,106 @@ function handler(event) {
           compress: true,
           cachePolicy: CachePolicy.CACHING_OPTIMIZED,
           responseHeadersPolicy: cdk?.responseHeadersPolicy,
+          functionAssociations: [
+            ...this.useStaticBehaviorFunctionAssociations(),
+          ],
         }
       );
     }
   }
 
-  protected buildServerCachePolicy(allowedHeaders?: string[]) {
-    return new CachePolicy(this, "ServerCache", {
-      queryStringBehavior: CacheQueryStringBehavior.all(),
-      headerBehavior:
-        allowedHeaders && allowedHeaders.length > 0
-          ? CacheHeaderBehavior.allowList(...allowedHeaders)
-          : CacheHeaderBehavior.none(),
-      cookieBehavior: CacheCookieBehavior.none(),
-      defaultTtl: CdkDuration.days(0),
-      maxTtl: CdkDuration.days(365),
-      minTtl: CdkDuration.days(0),
-      enableAcceptEncodingBrotli: true,
-      enableAcceptEncodingGzip: true,
-      comment: "SST server response cache policy",
-    });
+  protected useServerBehaviorFunctionAssociations() {
+    this.serverCfFunction =
+      this.serverCfFunction ??
+      new CfFunction(this, "CloudFrontFunction", {
+        code: CfFunctionCode.fromInline(`
+function handler(event) {
+  var request = event.request;
+  request.headers["x-forwarded-host"] = request.headers.host;
+  ${this.buildConfig.serverCFFunctionInjection || ""}
+  return request;
+}`),
+      });
+
+    return [
+      {
+        eventType: CfFunctionEventType.VIEWER_REQUEST,
+        function: this.serverCfFunction,
+      },
+    ];
   }
 
-  protected buildServerOriginRequestPolicy() {
+  protected useStaticBehaviorFunctionAssociations() {
+    if (!this.buildConfig.clientCFFunctionInjection) return [];
+
+    this.staticCfFunction =
+      this.staticCfFunction ??
+      new CfFunction(this, "CloudFrontFunctionForStaticBehavior", {
+        code: CfFunctionCode.fromInline(`
+function handler(event) {
+  var request = event.request;
+  ${this.buildConfig.clientCFFunctionInjection || ""}
+  return request;
+}`),
+      });
+
+    return [
+      {
+        eventType: CfFunctionEventType.VIEWER_REQUEST,
+        function: this.staticCfFunction,
+      },
+    ];
+  }
+
+  protected useServerUrlSigningFunction() {
+    this.serverUrlSigningFunction =
+      this.serverUrlSigningFunction ??
+      new EdgeFunction(this, "ServerUrlSigningFunction", {
+        bundle: path.join(__dirname, "../support/signing-function"),
+        runtime: "nodejs18.x",
+        handler: "index.handler",
+        timeout: 10,
+        memorySize: 128,
+        permissions: [
+          new PolicyStatement({
+            actions: ["lambda:InvokeFunctionUrl"],
+            resources: [this.serverLambdaForRegional?.functionArn!],
+          }),
+        ],
+      });
+    return this.serverUrlSigningFunction;
+  }
+
+  protected useServerBehaviorCachePolicy(allowedHeaders?: string[]) {
+    this.serverBehaviorCachePolicy =
+      this.serverBehaviorCachePolicy ??
+      new CachePolicy(this, "ServerCache", {
+        queryStringBehavior: CacheQueryStringBehavior.all(),
+        headerBehavior:
+          allowedHeaders && allowedHeaders.length > 0
+            ? CacheHeaderBehavior.allowList(...allowedHeaders)
+            : CacheHeaderBehavior.none(),
+        cookieBehavior: CacheCookieBehavior.none(),
+        defaultTtl: CdkDuration.days(0),
+        maxTtl: CdkDuration.days(365),
+        minTtl: CdkDuration.days(0),
+        enableAcceptEncodingBrotli: true,
+        enableAcceptEncodingGzip: true,
+        comment: "SST server response cache policy",
+      });
+    return this.serverBehaviorCachePolicy;
+  }
+
+  private useServerBehaviorOriginRequestPolicy() {
     // CloudFront's Managed-AllViewerExceptHostHeader policy
-    return OriginRequestPolicy.fromOriginRequestPolicyId(
-      this,
-      "ServerOriginRequestPolicy",
-      "b689b0a8-53d0-40ab-baf2-68738e2966ac"
-    );
+    this.serverBehaviorOriginRequestPolicy =
+      this.serverBehaviorOriginRequestPolicy ??
+      OriginRequestPolicy.fromOriginRequestPolicyId(
+        this,
+        "ServerOriginRequestPolicy",
+        "b689b0a8-53d0-40ab-baf2-68738e2966ac"
+      );
+    return this.serverBehaviorOriginRequestPolicy;
   }
 
   /////////////////////
