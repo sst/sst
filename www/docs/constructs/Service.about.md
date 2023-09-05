@@ -80,7 +80,7 @@ To work on your app locally with SST:
    npx sst bind node app.mjs
    ```
 
-   The `sst bind` loads service resources, environment variables, and the IAM permissions granted to the service. [Read more about `sst bind` here](../packages/sst.md#sst-bind).
+   The `sst bind` command loads service resources, environment variables, and the IAM permissions granted to the service. [Read more about `sst bind` here](../packages/sst.md#sst-bind).
 
 3. Staring your app inside Docker
 
@@ -90,7 +90,7 @@ To work on your app locally with SST:
    sst bind "env | grep SST_ > .env.tmp && docker run --env-file .env.tmp my-image"
    ```
 
-   This sequence fetches variables starting with SST_, saving them to .env.tmp, which is then used in the Docker run.
+   This sequence fetches variables starting with SST_, saving them to the `.env.tmp` file, which is then used in the Docker run.
 
 :::note
 When running `sst dev`, SST does not deploy your app. It's meant to be run locally.
