@@ -95,7 +95,7 @@ export type SsrBuildConfig = {
   typesPath: string;
   serverOperationMode?: "ssr" | "ssr-hybrid";
   serverBuildOutputFile: string;
-  serverCFFunctionInjection?: string;
+  serverCFFunctionInjection?: string | (() => string);
   clientBuildOutputDir: string;
   clientBuildVersionedSubDir: string;
   clientBuildS3KeyPrefix?: string;
@@ -361,11 +361,6 @@ type SsrSiteNormalizedProps = SsrSiteProps & {
   waitForInvalidation: Exclude<SsrSiteProps["waitForInvalidation"], undefined>;
 };
 
-export type ImportedSsrBuildProps = {
-  props?: SsrSiteProps;
-  buildConfig?: SsrBuildConfig;
-};
-
 /**
  * The `SsrSite` construct is a higher level CDK construct that makes it easy to create modern web apps with Server Side Rendering capabilities.
  * @example
@@ -382,26 +377,20 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
   protected props: SsrSiteNormalizedProps;
   protected doNotDeploy: boolean;
   protected buildConfig: SsrBuildConfig;
-  protected importedBuildProps?: ImportedSsrBuildProps;
   protected deferredTaskCallbacks: (() => void)[] = [];
   protected serverLambdaForEdge?: EdgeFunction;
   protected serverLambdaForRegional?: SsrFunction;
   private serverLambdaForDev?: SsrFunction;
   private serverUrlSigningFunction?: EdgeFunction;
-  protected bucket: Bucket;
-  private cfFunction: CfFunction;
-  private s3Origin: S3Origin;
-  private distribution: Distribution;
+  private _singletonBucket?: Bucket;
+  private _singletonCfFunction?: CfFunction;
+  private _singletonS3Origin?: S3Origin;
+  private _singletonDistribution?: Distribution;
   private _singletonSsrOrigin?: HttpOrigin;
   private _singletonCachePolicy?: CachePolicy;
   private _singletonServerOriginRequestPolicy?: IOriginRequestPolicy;
 
-  constructor(
-    scope: Construct,
-    id: string,
-    props?: SsrSiteProps,
-    importedBuildProps?: ImportedSsrBuildProps
-  ) {
+  constructor(scope: Construct, id: string, props?: SsrSiteProps) {
     super(scope, props?.cdk?.id || id);
 
     const app = scope.node.root as App;
@@ -413,13 +402,11 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
       runtime: "nodejs18.x",
       timeout: "10 seconds",
       memorySize: "1024 MB",
-      ...importedBuildProps?.props,
       ...props,
     };
     this.doNotDeploy =
       !stack.isActive || (app.mode === "dev" && !this.props.dev?.deploy);
 
-    this.importedBuildProps = importedBuildProps;
     this.buildConfig = this.initBuildConfig();
     this.validateSiteExists();
     this.validateTimeout();
@@ -429,33 +416,24 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
 
     if (this.doNotDeploy) {
       // @ts-ignore
-      this.cfFunction = this.bucket = this.s3Origin = this.distribution = null;
       this.serverLambdaForDev = this.createFunctionForDev();
       return;
     }
 
-    // Create Bucket which will be utilised to contain the statics
-    this.bucket = this.createS3Bucket();
-
-    // Create Server functions
-    if (this.props.edge) {
-      this.serverLambdaForEdge = this.createFunctionForEdge();
-    } else {
-      this.serverLambdaForRegional = this.createFunctionForRegional();
-    }
-    this.grantServerS3Permissions();
-
-    // Create CloudFront
-    this.s3Origin = this.createCloudFrontS3Origin();
-    this.cfFunction = this.createCloudFrontFunction();
-    this.distribution = this.props.edge
-      ? this.createCloudFrontDistributionForEdge()
-      : this.createCloudFrontDistributionForRegional();
-    this.grantServerCloudFrontPermissions();
-
     useDeferredTasks().add(async () => {
       // Build app
       this.buildApp();
+
+      // Create Server functions
+      if (this.props.edge) {
+        this.serverLambdaForEdge = this.createFunctionForEdge();
+      } else {
+        this.serverLambdaForRegional = this.createFunctionForRegional();
+      }
+      this.grantServerS3Permissions();
+
+      // Create CloudFront
+      this.grantServerCloudFrontPermissions();
 
       // Build server functions
       await this.serverLambdaForEdge?.build();
@@ -500,7 +478,7 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
   public get url() {
     if (this.doNotDeploy) return this.props.dev?.url;
 
-    return this.distribution.url;
+    return this.isDistributionInitialized ? this.distribution?.url : undefined;
   }
 
   /**
@@ -510,7 +488,9 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
   public get customDomainUrl() {
     if (this.doNotDeploy) return;
 
-    return this.distribution.customDomainUrl;
+    return this.isDistributionInitialized
+      ? this.distribution?.customDomainUrl
+      : undefined;
   }
 
   /**
@@ -528,46 +508,6 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
       hostedZone: this.distribution.cdk.hostedZone,
       certificate: this.distribution.cdk.certificate,
     };
-  }
-
-  /** @internal */
-  protected get ssrOrigin() {
-    if (this._singletonSsrOrigin) return this._singletonSsrOrigin;
-
-    const { timeout, regional } = this.props;
-    const fnUrl = this.serverLambdaForRegional!.addFunctionUrl({
-      authType: regional?.enableServerUrlIamAuth
-        ? FunctionUrlAuthType.AWS_IAM
-        : FunctionUrlAuthType.NONE,
-      invokeMode: this.supportsStreaming()
-        ? InvokeMode.RESPONSE_STREAM
-        : undefined,
-    });
-
-    this._singletonSsrOrigin = new HttpOrigin(Fn.parseDomainName(fnUrl.url), {
-      readTimeout:
-        typeof timeout === "string"
-          ? toCdkDuration(timeout)
-          : CdkDuration.seconds(timeout),
-    });
-    return this._singletonSsrOrigin;
-  }
-
-  /** @internal */
-  protected get cachePolicy() {
-    if (this._singletonCachePolicy) return this._singletonCachePolicy;
-    this._singletonCachePolicy = this.buildServerCachePolicy();
-    return this._singletonCachePolicy;
-  }
-
-  /** @internal */
-  protected get serverOriginRequestPolicy() {
-    if (this._singletonServerOriginRequestPolicy) {
-      return this._singletonServerOriginRequestPolicy;
-    }
-    this._singletonServerOriginRequestPolicy =
-      this.buildServerOriginRequestPolicy();
-    return this._singletonServerOriginRequestPolicy;
   }
 
   /////////////////////
@@ -842,7 +782,9 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
     return fileOptions;
   }
 
-  private createS3Bucket(): Bucket {
+  protected get bucket() {
+    if (this._singletonBucket) return this._singletonBucket;
+
     const { cdk } = this.props;
 
     // cdk.bucket is an imported construct
@@ -851,13 +793,15 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
     }
 
     // cdk.bucket is a prop
-    return new Bucket(this, "S3Bucket", {
+    this._singletonBucket = new Bucket(this, "S3Bucket", {
       publicReadAccess: false,
       blockPublicAccess: BlockPublicAccess.BLOCK_ALL,
       autoDeleteObjects: true,
       removalPolicy: RemovalPolicy.DESTROY,
       ...cdk?.bucket,
     });
+
+    return this._singletonBucket;
   }
 
   private createS3Deployment(
@@ -975,7 +919,12 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
 
   private grantServerS3Permissions() {
     const server = this.serverLambdaForEdge || this.serverLambdaForRegional;
-    this.bucket.grantReadWrite(server!.role!);
+
+    if (typeof server === "undefined") {
+      throw new Error("server roles is undefined");
+    }
+
+    this.bucket.grantReadWrite(server.role!);
   }
 
   private grantServerCloudFrontPermissions() {
@@ -998,22 +947,51 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
   // CloudFront Distribution
   /////////////////////
 
-  private createCloudFrontS3Origin() {
-    return new S3Origin(this.bucket, {
+  protected get s3Origin() {
+    if (this._singletonS3Origin) return this._singletonS3Origin;
+
+    this._singletonS3Origin = new S3Origin(this.bucket, {
       originPath: "/" + (this.buildConfig.clientBuildS3KeyPrefix ?? ""),
     });
+
+    return this._singletonS3Origin;
   }
 
-  private createCloudFrontFunction() {
-    return new CfFunction(this, "CloudFrontFunction", {
+  protected get cfFunction() {
+    if (this._singletonCfFunction) return this._singletonCfFunction;
+
+    const cfInjection =
+      typeof this.buildConfig.serverCFFunctionInjection === "string"
+        ? this.buildConfig.serverCFFunctionInjection
+        : typeof this.buildConfig.serverCFFunctionInjection === "function"
+        ? this.buildConfig.serverCFFunctionInjection()
+        : undefined;
+
+    this._singletonCfFunction = new CfFunction(this, "CloudFrontFunction", {
       code: CfFunctionCode.fromInline(`
 function handler(event) {
-  var request = event.request;
-  request.headers["x-forwarded-host"] = request.headers.host;
-  ${this.buildConfig.serverCFFunctionInjection || ""}
-  return request;
+var request = event.request;
+request.headers["x-forwarded-host"] = request.headers.host;
+${cfInjection ?? ""}
+return request;
 }`),
     });
+
+    return this._singletonCfFunction;
+  }
+
+  private get isDistributionInitialized() {
+    return typeof this._singletonDistribution !== "undefined";
+  }
+
+  protected get distribution() {
+    if (this._singletonDistribution) return this._singletonDistribution;
+
+    this._singletonDistribution = this.props.edge
+      ? this.createCloudFrontDistributionForEdge()
+      : this.createCloudFrontDistributionForRegional();
+
+    return this._singletonDistribution;
   }
 
   protected createCloudFrontDistributionForRegional() {
@@ -1060,6 +1038,50 @@ function handler(event) {
         },
       },
     });
+  }
+
+  protected get ssrOrigin() {
+    if (this._singletonSsrOrigin) return this._singletonSsrOrigin;
+
+    const { timeout, regional } = this.props;
+
+    if (typeof this.serverLambdaForRegional === "undefined") {
+      throw new Error(
+        "serverLambdaForRegional is being used before it is defined"
+      );
+    }
+
+    const fnUrl = this.serverLambdaForRegional.addFunctionUrl({
+      authType: regional?.enableServerUrlIamAuth
+        ? FunctionUrlAuthType.AWS_IAM
+        : FunctionUrlAuthType.NONE,
+      invokeMode: this.supportsStreaming()
+        ? InvokeMode.RESPONSE_STREAM
+        : undefined,
+    });
+
+    this._singletonSsrOrigin = new HttpOrigin(Fn.parseDomainName(fnUrl.url), {
+      readTimeout:
+        typeof timeout === "string"
+          ? toCdkDuration(timeout)
+          : CdkDuration.seconds(timeout),
+    });
+    return this._singletonSsrOrigin;
+  }
+
+  protected get cachePolicy() {
+    if (this._singletonCachePolicy) return this._singletonCachePolicy;
+    this._singletonCachePolicy = this.buildServerCachePolicy();
+    return this._singletonCachePolicy;
+  }
+
+  protected get serverOriginRequestPolicy() {
+    if (this._singletonServerOriginRequestPolicy) {
+      return this._singletonServerOriginRequestPolicy;
+    }
+    this._singletonServerOriginRequestPolicy =
+      this.buildServerOriginRequestPolicy();
+    return this._singletonServerOriginRequestPolicy;
   }
 
   protected buildDefaultBehaviorForRegional(): BehaviorOptions {
@@ -1131,6 +1153,10 @@ function handler(event) {
     const { cdk } = this.props;
     const cfDistributionProps = cdk?.distribution || {};
 
+    if (typeof this.serverLambdaForEdge === "undefined") {
+      throw new Error("serverLambdaForEdge is being used before it is defined");
+    }
+
     return {
       viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
       origin: this.s3Origin,
@@ -1149,7 +1175,7 @@ function handler(event) {
         {
           includeBody: true,
           eventType: LambdaEdgeEventType.ORIGIN_REQUEST,
-          functionVersion: this.serverLambdaForEdge!.currentVersion,
+          functionVersion: this.serverLambdaForEdge.currentVersion,
         },
         ...(cfDistributionProps.defaultBehavior?.edgeLambdas || []),
       ],

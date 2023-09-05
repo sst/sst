@@ -1,5 +1,5 @@
 import type { AstroAdapter, AstroIntegration } from "astro";
-import { BuildProps } from "../lib/buildProps";
+import { BuildMeta } from "../lib/buildMeta";
 
 const PACKAGE_NAME = "astro-sst/edge";
 
@@ -16,12 +16,12 @@ export default function createIntegration(): AstroIntegration {
     name: PACKAGE_NAME,
     hooks: {
       "astro:config:done": ({ config, setAdapter }) => {
-        BuildProps.setAstroConfig(config);
+        BuildMeta.setAstroConfig(config);
         setAdapter(getAdapter());
       },
       "astro:build:done": async (buildResults) => {
-        BuildProps.setBuildResults(buildResults);
-        await BuildProps.exportBuildProps();
+        BuildMeta.setBuildResults(buildResults);
+        await BuildMeta.exportBuildMeta();
       },
     },
   };

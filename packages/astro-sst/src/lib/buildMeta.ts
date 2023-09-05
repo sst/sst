@@ -6,9 +6,9 @@ import type {
 } from "astro";
 import { join, relative } from "path";
 import { writeFile } from "fs/promises";
-import { fileURLToPath, parse } from "url";
+import { fileURLToPath } from "url";
 
-const BUILD_EXPORT_NAME = "sst.build-props.json";
+const BUILD_EXPORT_NAME = "sst.buildMeta.json";
 
 type BuildResults = {
   pages: {
@@ -27,7 +27,7 @@ type SerializableRoute = {
   redirectStatus?: ValidRedirectStatus;
 };
 
-export class BuildProps {
+export class BuildMeta {
   protected static astroConfig: AstroConfig;
   protected static buildResults: BuildResults;
 
@@ -54,16 +54,7 @@ export class BuildProps {
     };
   }
 
-  private static get domainName() {
-    if (
-      typeof this.astroConfig.site === "string" &&
-      this.astroConfig.site.length > 0
-    ) {
-      return parse(this.astroConfig.site).hostname ?? undefined;
-    }
-  }
-
-  public static async exportBuildProps(buildExportName = BUILD_EXPORT_NAME) {
+  public static async exportBuildMeta(buildExportName = BUILD_EXPORT_NAME) {
     const rootDir = fileURLToPath(this.astroConfig.root);
 
     const outputPath = join(
@@ -71,22 +62,7 @@ export class BuildProps {
       buildExportName
     );
 
-    const buildProps = {
-      props: {
-        customDomain: this.domainName,
-      },
-      buildConfig: {
-        typesPath: relative(rootDir, fileURLToPath(this.astroConfig.srcDir)),
-        serverBuildOutputFile: join(
-          relative(rootDir, fileURLToPath(this.astroConfig.build.server)),
-          this.astroConfig.build.serverEntry
-        ),
-        clientBuildOutputDir: relative(
-          rootDir,
-          fileURLToPath(this.astroConfig.build.client)
-        ),
-        clientBuildVersionedSubDir: this.astroConfig.build.assets,
-      },
+    const buildMeta = {
       astroSite: {
         outputMode: this.astroConfig.output,
         pageResolution: this.astroConfig.build.format,
@@ -97,6 +73,6 @@ export class BuildProps {
       },
     };
 
-    await writeFile(outputPath, JSON.stringify(buildProps));
+    await writeFile(outputPath, JSON.stringify(buildMeta));
   }
 }

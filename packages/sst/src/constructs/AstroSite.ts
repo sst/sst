@@ -2,21 +2,15 @@ import fs from "fs";
 import path from "path";
 
 import type { RouteType } from "astro";
-import { Construct } from "constructs";
-import {
-  SsrSite,
-  SsrSiteProps,
-  ImportedSsrBuildProps,
-  SsrBuildConfig,
-} from "./SsrSite.js";
+import { SsrSite, SsrBuildConfig } from "./SsrSite.js";
 import { SsrFunction } from "./SsrFunction.js";
 import { EdgeFunction } from "./EdgeFunction.js";
 
-type AstroImportedBuildProps = ImportedSsrBuildProps & {
+type AstroBuildMeta = {
   astroSite: {
     outputMode: "server" | "static" | "hybrid";
     pageResolution: "file" | "directory";
-    trailingSlash: boolean;
+    trailingSlash?: boolean;
     routes: Array<{
       route: string;
       type: RouteType;
@@ -40,27 +34,6 @@ type AstroImportedBuildProps = ImportedSsrBuildProps & {
  * ```
  */
 export class AstroSite extends SsrSite {
-  protected declare importedBuildProps: AstroImportedBuildProps;
-
-  constructor(scope: Construct, id: string, props: SsrSiteProps) {
-    const buildPropsPath = path.join(
-      props.path ?? ".",
-      "dist",
-      "sst.build-props.json"
-    );
-    let importedBuildProps: AstroImportedBuildProps;
-
-    if (fs.existsSync(buildPropsPath)) {
-      importedBuildProps = JSON.parse(fs.readFileSync(buildPropsPath, "utf8"));
-    } else {
-      throw new Error(
-        `Could not find build props file at ${buildPropsPath}. Update your 'astro-sst' package version and rebuild your Astro site.`
-      );
-    }
-
-    super(scope, id, props, importedBuildProps);
-  }
-
   protected initBuildConfig(): SsrBuildConfig {
     return {
       typesPath: "src",
@@ -68,12 +41,20 @@ export class AstroSite extends SsrSite {
       serverBuildOutputFile: "dist/server/entry.mjs",
       clientBuildOutputDir: "dist/client",
       clientBuildVersionedSubDir: "_astro",
-      serverCFFunctionInjection: this.createCFRoutingFunction(),
-      ...this.importedBuildProps.buildConfig,
+      serverCFFunctionInjection: () => this.createCFRoutingFunction(),
     };
   }
 
+  private get buildMetaPath() {
+    return path.join(this.props.path, "dist", "sst.buildMeta.json");
+  }
+
   protected validateBuildOutput() {
+    if (!fs.existsSync(this.buildMetaPath)) {
+      throw new Error(
+        `Could not find build meta file at ${this.buildMetaPath}. Update your 'astro-sst' package version and rebuild your Astro site.`
+      );
+    }
     if (!fs.existsSync(this.buildConfig.serverBuildOutputFile)) {
       throw new Error(
         `Build output inside "dist/" does not contain the server entry file. Make sure Server-side Rendering (SSR) is enabled in your Astro app. If you are looking to deploy the Astro app as a static site, please use the StaticSite construct — https://docs.sst.dev/constructs/StaticSite`
@@ -91,19 +72,15 @@ export class AstroSite extends SsrSite {
   /**
    * String literal to be injected into the function handler ran by the CloudFront distribution
    * for performing route rewrites and user redirects.
-   *
-   * Context for code injection:
-   * function handler(event) {
-   *   var request = event.request;
-   *   request.headers["x-forwarded-host"] = request.headers.host;
-   *   ${this.buildConfig.serverCFFunctionInjection || ""}
-   *   return request;
-   * }
    */
   protected createCFRoutingFunction() {
+    const importedBuildMeta: AstroBuildMeta = JSON.parse(
+      fs.readFileSync(this.buildMetaPath, "utf8")
+    );
+
     const serializedRoutes =
       "[\n" +
-      this.importedBuildProps.astroSite.routes
+      importedBuildMeta.astroSite.routes
         .map((route) => {
           return `    {route: "${route.route}", pattern: ${
             route.pattern
@@ -124,7 +101,7 @@ export class AstroSite extends SsrSite {
   if (matchedRoute) {
     if (matchedRoute.type === "page" && matchedRoute.prerender) {
       ${
-        this.importedBuildProps.astroSite.pageResolution === "file"
+        importedBuildMeta.astroSite.pageResolution === "file"
           ? `request.uri = request.uri === "/" ? "/index.html" : request.uri.replace(/\\/?$/, ".html");`
           : `request.uri = request.uri.replace(/\\/?$/, "/index.html");`
       }
