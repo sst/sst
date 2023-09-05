@@ -95,15 +95,14 @@ To fix this, we need to first remove `StackB`'s dependency on `StackA`, deploy i
    import { StackContext, Table } from "sst/constructs";
 
    export function StackA({ stack }: StackContext) {
-       const table = new Table(stack, "MyTable", {
-         fields: {
-           pk: "string",
-         },
-         primaryIndex: { partitionKey: "pk" },
-       });
+     const table = new Table(stack, "MyTable", {
+       fields: {
+         pk: "string",
+       },
+       primaryIndex: { partitionKey: "pk" },
+     });
 
-       stack.exportValue(table.tableName);
-     }
+     stack.exportValue(table.tableName);
    }
    ```
 
