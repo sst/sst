@@ -104,6 +104,7 @@ export const usePythonHandler = Context.memo(async () => {
 
       bundle({
         installCommands: input.props.python?.installCommands,
+        exclude: input.props.python?.exclude,
         entry: src,
         runtime: RUNTIME_MAP[input.props.runtime!],
         architecture: input.props.architecture,

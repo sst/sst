@@ -528,6 +528,29 @@ export interface PythonProps {
    * ```
    */
   installCommands?: string[];
+
+   /**
+   * A list of paths to exclude from bundle. Checks if exclusion exists in absolute path string.
+   *
+   * Each path in the array is a command that'll be run. For example:
+   *
+   * @default "[]"
+   *
+   * @example
+   * ```js
+   * new Function(stack, "Function", {
+   *   python: {
+   *     exclude: [
+   *       '/.sst/',
+   *       '/.git/',
+   *       'partial/path',
+   *       'file.js'
+   *     ]
+   *   }
+   * })
+   * ```
+   */
+   exclude?: string[];
 }
 
 /**

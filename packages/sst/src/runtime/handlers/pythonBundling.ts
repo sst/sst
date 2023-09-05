@@ -85,13 +85,15 @@ export interface BundlingOptions {
   readonly assetHash?: string;
 
   readonly installCommands?: string[];
+
+  readonly exclude?: string[];
 }
 
 /**
  * Produce bundled Lambda asset code
  */
 export function bundle(options: BundlingOptions & { out: string }) {
-  const { entry, runtime, architecture, outputPathSuffix, installCommands } = options;
+  const { entry, exclude, runtime, architecture, outputPathSuffix, installCommands } = options;
 
   const stagedir = FileSystem.mkdtemp("python-bundling-");
   const hasDeps = stageDependencies(entry, stagedir);
@@ -136,6 +138,11 @@ export function bundle(options: BundlingOptions & { out: string }) {
   // Copy source code to the bundle.
   fs.cpSync(entry, outputPath, {
     recursive: true,
+    filter(source, destination) {
+      if (!exclude) return true;
+
+      return !exclude.some(str => source.includes(str))
+    },
   });
 }
 
