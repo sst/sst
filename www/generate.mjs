@@ -23,6 +23,7 @@ const CDK_DOCS_MAP = {
   SubnetSelection: "aws_ec2",
   Cluster: "aws_ecs",
   ContainerDefinitionOptions: "aws_ecs",
+  FargateServiceProps: "aws_ecs",
   FunctionUrlOptions: "aws_lambda",
   LogGroup: "aws_logs",
   LogGroupProps: "aws_logs",
