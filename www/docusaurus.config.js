@@ -46,7 +46,7 @@ module.exports = {
       items: [
         {
           to: "/",
-          label: "Home",
+          label: "Docs",
           position: "left",
           activeBaseRegex: "^/$",
         },
