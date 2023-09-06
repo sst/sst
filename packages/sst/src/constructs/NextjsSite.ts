@@ -85,7 +85,7 @@ export interface NextjsSiteProps extends Omit<SsrSiteProps, "nodejs"> {
      * })
      * ```
      */
-    serverCachePolicy?: SsrSiteProps["cdk"]["serverCachePolicy"];
+    serverCachePolicy?: NonNullable<SsrSiteProps["cdk"]>["serverCachePolicy"];
   };
 }
 
