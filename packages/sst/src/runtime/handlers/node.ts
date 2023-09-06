@@ -12,6 +12,7 @@ import { useRuntimeWorkers } from "../workers.js";
 import { Colors } from "../../cli/colors.js";
 import { Logger } from "../../logger.js";
 import { findAbove, findBelow } from "../../util/fs.js";
+import { lazy } from "../../util/lazy.js";
 
 export const useNodeHandler = (): RuntimeHandler => {
   const rebuildCache: Record<

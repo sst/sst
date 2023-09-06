@@ -87,7 +87,7 @@ export async function metadata() {
   return result as Record<string, Metadata[]>;
 }
 
-const MetadataContext = Context.create(async () => {
+export const useMetadataCache = Context.create("MetadataCache", async () => {
   const bus = useBus();
   const cache = await useCache();
 
@@ -95,14 +95,12 @@ const MetadataContext = Context.create(async () => {
     const data = await metadata();
     await cache.write(`metadata.json`, JSON.stringify(data));
     bus.publish("stacks.metadata", data);
-    MetadataContext.provide(Promise.resolve(data));
   });
 
   bus.subscribe("stacks.metadata.deleted", async () => {
     const data = await metadata();
     await cache.write(`metadata.json`, JSON.stringify(data));
     bus.publish("stacks.metadata", data);
-    MetadataContext.provide(Promise.resolve(data));
   });
 
   while (true) {
@@ -114,6 +112,4 @@ const MetadataContext = Context.create(async () => {
       await new Promise((resolve) => setTimeout(resolve, 1000));
     }
   }
-});
-
-export const useMetadata = MetadataContext.use;
+}).use;

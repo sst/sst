@@ -1,9 +1,9 @@
 import { Context } from "../../context/context.js";
 
-const LoaderContext = Context.create(() => {
+const LoaderContext = Context.create("Loader", () => {
   const loaders = new Map<any, any>();
   return loaders;
-}, "loader-context");
+});
 
 export function createLoader<Key, Value>(
   batchFn: (keys: Key[]) => Promise<Value[]>

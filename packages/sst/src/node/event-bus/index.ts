@@ -54,8 +54,6 @@ export function createEventBuilder<
       ? z.object(props.metadata)
       : undefined;
     const publish = async (properties: any, metadata: any) => {
-      console.log("publishing", type, properties);
-
       const result = await useLoader(
         "sst.bus.publish",
         async (input: PutEventsRequestEntry[]) => {

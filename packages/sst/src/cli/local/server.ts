@@ -14,8 +14,7 @@ import { sync } from "cross-spawn";
 import { useProject } from "../../project.js";
 import { useBus } from "../../bus.js";
 import getPort from "get-port";
-import { Context } from "../../context/context.js";
-import { useMetadata } from "../../stacks/metadata.js";
+import { lazy } from "../../util/lazy.js";
 
 type Opts = {
   key: any;
@@ -29,8 +28,7 @@ declare module "../../bus.js" {
   }
 }
 
-export const useLocalServerConfig = Context.memo(async () => {
-  const project = useProject();
+export const useLocalServerConfig = lazy(async () => {
   const port = await getPort({
     port: 13557,
   });

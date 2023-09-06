@@ -5,8 +5,9 @@ import { Logger } from "../logger.js";
 import { useRuntimeWorkers } from "./workers.js";
 import https from "https";
 import getPort from "get-port";
+import { lazy } from "../util/lazy.js";
 
-export const useRuntimeServerConfig = Context.memo(async () => {
+export const useRuntimeServerConfig = lazy(async () => {
   const port = await getPort({
     port: 12557,
   });
@@ -17,7 +18,7 @@ export const useRuntimeServerConfig = Context.memo(async () => {
   };
 });
 
-export const useRuntimeServer = Context.memo(async () => {
+export const useRuntimeServer = lazy(async () => {
   const bus = useBus();
   const app = express();
   const workers = await useRuntimeWorkers();

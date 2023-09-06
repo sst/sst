@@ -16,7 +16,7 @@ export type SessionValue = {
   };
 }[keyof SessionTypes];
 
-const SessionMemo = /* @__PURE__ */ Context.memo(() => {
+const SessionMemo = /* @__PURE__ */ Context.create("Session", () => {
   // Get the context type and hooks that match that type
   let token = "";
 
@@ -49,7 +49,7 @@ const SessionMemo = /* @__PURE__ */ Context.memo(() => {
 
 // This is a crazy TS hack to prevent the types from being evaluated too soon
 export function useSession<T = SessionValue>() {
-  const ctx = SessionMemo();
+  const ctx = SessionMemo.use();
   return ctx as T;
 }
 
@@ -179,7 +179,7 @@ export function createSessionBuilder<
       };
     },
     use() {
-      const ctx = SessionMemo();
+      const ctx = SessionMemo.use();
       return ctx as SessionValue;
     },
     $type: {} as SessionTypes,

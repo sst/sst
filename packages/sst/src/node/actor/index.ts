@@ -10,7 +10,7 @@ export class WrongActorError extends SSTError {}
 
 export function createActors<T extends Definition>() {
   type Actors = T | { type: "public"; properties: {} };
-  const ctx = Context.create<Actors>();
+  const ctx = Context.create<Actors>("Actors");
   return {
     useActor: ctx.use,
     provideActor: ctx.provide,

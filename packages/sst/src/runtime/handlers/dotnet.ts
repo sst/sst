@@ -6,6 +6,7 @@ import { findBelow, isChild } from "../../util/fs.js";
 import { useProject } from "../../project.js";
 import { execAsync } from "../../util/process.js";
 import url from "url";
+import { lazy } from "../../util/lazy.js";
 
 const FRAMEWORK_MAP: Record<string, string> = {
   "dotnetcore1.0": "netcoreapp3.1",

@@ -8,8 +8,9 @@ import { promisify } from "util";
 const execAsync = promisify(exec);
 import path from "path";
 import { Colors } from "../../colors.js";
+import { lazy } from "../../../util/lazy.js";
 
-export const usePothosBuilder = Context.memo(() => {
+export const usePothosBuilder = lazy(() => {
   let routes: Extract<
     ApiMetadata["data"]["routes"][number],
     { type: "graphql" | "pothos" }

@@ -3,8 +3,9 @@ import fs from "fs/promises";
 import { useProject } from "./project.js";
 import { Logger } from "./logger.js";
 import { Context } from "./context/context.js";
+import { lazy } from "./util/lazy.js";
 
-export const useCache = Context.memo(async () => {
+export const useCache = lazy(async () => {
   const project = useProject();
   const cache = path.join(project.paths.out, "cache");
   await fs.mkdir(cache, {

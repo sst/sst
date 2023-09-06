@@ -4,6 +4,7 @@ import { useFunctionBuilder, useRuntimeHandlers } from "./handlers.js";
 import { useRuntimeServerConfig } from "./server.js";
 import { Logger } from "../logger.js";
 import { useFunctions } from "../constructs/Function.js";
+import { lazy } from "../util/lazy.js";
 
 declare module "../bus.js" {
   export interface Events {
@@ -33,7 +34,7 @@ interface Worker {
   functionID: string;
 }
 
-export const useRuntimeWorkers = Context.memo(async () => {
+export const useRuntimeWorkers = lazy(async () => {
   const workers = new Map<string, Worker>();
   const bus = useBus();
   const handlers = useRuntimeHandlers();

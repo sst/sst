@@ -1,20 +1,12 @@
 import { Context } from "./context/context.js";
 import { fromNodeProviderChain } from "@aws-sdk/credential-providers";
-import { Client } from "@aws-sdk/smithy-client";
-import { RegionInputConfig } from "@aws-sdk/config-resolver";
-import { RetryInputConfig } from "@aws-sdk/middleware-retry";
-import { AwsAuthInputConfig } from "@aws-sdk/middleware-signing";
 import { GetCallerIdentityCommand, STSClient } from "@aws-sdk/client-sts";
 import { Logger } from "./logger.js";
 import { SdkProvider } from "sst-aws-cdk/lib/api/aws-auth/sdk-provider.js";
 import { StandardRetryStrategy } from "@aws-sdk/middleware-retry";
+import type {} from "@smithy/types";
 
-type Config = RegionInputConfig &
-  RetryInputConfig &
-  AwsAuthInputConfig &
-  HostHeaderConditionConfig;
-
-export const useAWSCredentialsProvider = Context.memo(() => {
+export const useAWSCredentialsProvider = lazy(() => {
   const project = useProject();
   Logger.debug("Using AWS profile", project.config.profile);
   const provider = fromNodeProviderChain({
@@ -51,7 +43,7 @@ export const useAWSCredentials = () => {
   return provider();
 };
 
-export const useSTSIdentity = Context.memo(async () => {
+export const useSTSIdentity = lazy(async () => {
   const sts = useAWSClient(STSClient);
   const identity = await sts.send(new GetCallerIdentityCommand({}));
   Logger.debug(
@@ -64,10 +56,10 @@ export const useSTSIdentity = Context.memo(async () => {
   return identity;
 });
 
-const useClientCache = Context.memo(() => new Map<string, any>());
+const useClientCache = lazy(() => new Map<string, any>());
 
-export function useAWSClient<C extends Client<any, any, any, any>>(
-  client: new (config: Config) => C,
+export function useAWSClient<C extends any>(
+  client: new (config: any) => C,
   force = false
 ) {
   const cache = useClientCache();
@@ -136,13 +128,13 @@ import stupid from "aws-sdk/lib/maintenance_mode_message.js";
 stupid.suppress = true;
 import aws from "aws-sdk";
 import { useProject } from "./project.js";
-import { HostHeaderConditionConfig } from "aws-sdk/clients/elbv2.js";
+import { lazy } from "./util/lazy.js";
 const CredentialProviderChain = aws.CredentialProviderChain;
 
 /**
  * Do not use this. It is only used for AWS CDK compatibility.
  */
-export const useAWSProvider = Context.memo(async () => {
+export const useAWSProvider = lazy(async () => {
   Logger.debug("Loading v2 AWS SDK");
   const project = useProject();
   const creds = await useAWSCredentials();

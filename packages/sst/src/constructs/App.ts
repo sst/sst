@@ -15,7 +15,7 @@ import { StackProps } from "./Stack.js";
 import { FunctionalStack, stack } from "./FunctionalStack.js";
 import { Auth } from "./Auth.js";
 import { useDeferredTasks } from "./deferred_task.js";
-import { AppContext } from "./context.js";
+import { provideApp } from "./context.js";
 import { useProject } from "../project.js";
 import { VisibleError } from "../error.js";
 import { Logger } from "../logger.js";
@@ -131,7 +131,7 @@ export class App extends CDKApp {
    */
   constructor(deployProps: AppDeployProps, props: AppProps = {}) {
     super(props);
-    AppContext.provide(this);
+    provideApp(this);
     this.appPath = process.cwd();
 
     this.mode = deployProps.mode;
