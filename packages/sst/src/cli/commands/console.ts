@@ -23,8 +23,6 @@ export const consoleCommand = async (program: Program) =>
         ]);
         clear();
         printHeader({ console: true, hint: "ready!" });
-
-        await exit();
       } catch (e: any) {
         await exitWithError(e);
       }
