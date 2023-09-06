@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.24.25
+
+### Patch Changes
+
+- [`8e51f5d51`](https://github.com/sst/sst/commit/8e51f5d51891089d055dbbbe7261152a214be8b5) Thanks [@thdxr](https://github.com/thdxr)! - cli: fix console command exiting
+
 ## 2.24.24
 
 ### Patch Changes
