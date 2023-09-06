@@ -25,6 +25,10 @@ SST features a local development environment that lets you debug and test your L
 
 Live Lambda Development or Live Lambda is feature of SST that allows you to **debug and test your Lambda functions locally**, while being **invoked remotely by resources in AWS**. It works by proxying requests from your AWS account to your local machine.
 
+:::info
+If the runtime of the Lambda function is different from the one you've defined, it's because SST creates a stub Lambda function for `sst dev`.
+:::
+
 Changes are automatically detected, built, and **live reloaded** in under 10 milliseconds. You can also use **breakpoints to debug** your functions live with your favorite IDE.
 
 ---
