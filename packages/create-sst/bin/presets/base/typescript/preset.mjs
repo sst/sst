@@ -4,7 +4,7 @@ export default [
   extend("presets/base/javascript"),
   extract(),
   install({
-    packages: ["typescript", "@tsconfig/node16"],
+    packages: ["typescript", "@tsconfig/node18"],
     dev: true,
   }),
   patch({
