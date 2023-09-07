@@ -2,6 +2,7 @@
   "extends": "@tsconfig/node16/tsconfig.json",
   "exclude": ["packages"],
   "compilerOptions": {
+    "module": "esnext",
     "moduleResolution": "node"
   }
 }
