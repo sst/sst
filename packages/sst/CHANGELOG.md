@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.24.26
+
+### Patch Changes
+
+- [`1ec49e7f1`](https://github.com/sst/sst/commit/1ec49e7f166d0264304e583f2f68db1f34939458) Thanks [@fwang](https://github.com/fwang)! - Job: ensure unique handler function id
+
 ## 2.24.25
 
 ### Patch Changes

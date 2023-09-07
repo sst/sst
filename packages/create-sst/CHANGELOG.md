@@ -1,5 +1,13 @@
 # create-sst
 
+## 2.24.26
+
+### Patch Changes
+
+- [`4a890f9bd`](https://github.com/sst/sst/commit/4a890f9bd7d203b3b4077eccf12a03574e7ee474) Thanks [@thdxr](https://github.com/thdxr)! - create-sst: upgrade templates to node18
+
+- [`35d3bae46`](https://github.com/sst/sst/commit/35d3bae46a1ceca45f87bf6dc11f81c73f85f327) Thanks [@thdxr](https://github.com/thdxr)! - create-sst: fix typechecking issue on base templates
+
 ## 2.24.25
 
 ## 2.24.24
