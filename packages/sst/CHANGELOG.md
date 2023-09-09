@@ -1,5 +1,13 @@
 # @serverless-stack/cli2
 
+## 2.24.27
+
+### Patch Changes
+
+- [#3285](https://github.com/sst/sst/pull/3285) [`715dc3e5d`](https://github.com/sst/sst/commit/715dc3e5d61320378c02bf2ce5486836c9675b19) Thanks [@omikader](https://github.com/omikader)! - SsrSite: Upgrade s3 handler python versions
+
+- [`8627a6a3d`](https://github.com/sst/sst/commit/8627a6a3d8cbf05d515db8238fb314aa310e7472) Thanks [@thdxr](https://github.com/thdxr)! - cli: bun related fixes
+
 ## 2.24.26
 
 ### Patch Changes
