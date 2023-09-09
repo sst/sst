@@ -795,7 +795,7 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
         path.join(__dirname, "../support/base-site-custom-resource")
       ),
       layers: [cliLayer],
-      runtime: Runtime.PYTHON_3_7,
+      runtime: Runtime.PYTHON_3_11,
       handler: "s3-upload.handler",
       timeout: CdkDuration.minutes(15),
       memorySize: 1024,
@@ -809,7 +809,7 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
         path.join(__dirname, "../support/base-site-custom-resource")
       ),
       layers: [cliLayer],
-      runtime: Runtime.PYTHON_3_7,
+      runtime: Runtime.PYTHON_3_11,
       handler: "s3-handler.handler",
       timeout: CdkDuration.minutes(15),
       memorySize: 1024,
