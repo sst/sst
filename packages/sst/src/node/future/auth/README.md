@@ -41,6 +41,7 @@ import {
   GithubAdapter,
   createSessionBuilder,
 } from "sst/node/future/auth";
+import { Config } from "sst/node/config";
 
 // define session types
 export const sessions = createSessionBuilder<{
