@@ -9,7 +9,6 @@ const _ = await import("@babel/generator");
 const generate = _.default?.default ?? _.default;
 // @ts-expect-error
 import ts from "@babel/plugin-syntax-typescript";
-import { Logger } from "../logger.js";
 
 declare module "../bus.js" {
   export interface Events {
