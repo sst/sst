@@ -5,7 +5,8 @@ import { dynamicImport } from "../util/module.js";
 import { findAbove } from "../util/fs.js";
 import { VisibleError } from "../error.js";
 import babel from "@babel/core";
-import generate from "@babel/generator";
+const _ = await import("@babel/generator");
+const generate = _.default?.default ?? _.default;
 // @ts-expect-error
 import ts from "@babel/plugin-syntax-typescript";
 import { Logger } from "../logger.js";
@@ -74,7 +75,7 @@ export async function load(input: string, shallow?: boolean) {
                 },
               });
               return {
-                contents: generate.default(ast!).code,
+                contents: generate(ast!).code,
                 loader: "ts",
               };
             });
