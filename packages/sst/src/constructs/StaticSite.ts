@@ -690,7 +690,7 @@ interface ImportMeta {
         path.join(__dirname, "../support/base-site-custom-resource")
       ),
       layers: [cliLayer],
-      runtime: Runtime.PYTHON_3_7,
+      runtime: Runtime.PYTHON_3_11,
       handler: "s3-upload.handler",
       timeout: Duration.minutes(15),
       memorySize: 1024,
@@ -704,7 +704,7 @@ interface ImportMeta {
         path.join(__dirname, "../support/base-site-custom-resource")
       ),
       layers: [cliLayer],
-      runtime: Runtime.PYTHON_3_7,
+      runtime: Runtime.PYTHON_3_11,
       handler: "s3-handler.handler",
       timeout: Duration.minutes(15),
       memorySize: 1024,
