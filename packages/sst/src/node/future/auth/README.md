@@ -171,7 +171,7 @@ export async function get(ctx: APIContext) {
 }
 ```
 
-### Accessing the session in your API
+### Accessing the session in your API or SSR
 
 Make sure the auth construct is bound to your API like in the example above. Then you can just call `sessions.use()` to access the current session. It also provides `sessions.verify("mytoken")` if you want to manually pass in a token.
 
@@ -185,3 +185,11 @@ export const handler = ApiHandler(() => {
 ```
 
 It will return `{ type: "public" }` if auth is missing or invalid
+
+If you need to access the session in a different project you can share types and initialize `createSessionBuilder()`
+
+```js
+import { sessions } from "@myproject/functions/auth-handler"
+
+const sessions = createSessionBuilder<typeof sessions.$type>()
+```

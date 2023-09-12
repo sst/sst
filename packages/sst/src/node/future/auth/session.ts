@@ -4,7 +4,6 @@ import { useCookie, useHeader } from "../../api/index.js";
 import { Auth } from "../../auth/index.js";
 import { Config } from "../../config/index.js";
 import { useContextType } from "../../../context/handler.js";
-import { SessionTimeout } from "aws-sdk/clients/iotwireless.js";
 
 export interface SessionTypes {
   public: {};
@@ -183,6 +182,6 @@ export function createSessionBuilder<
       const ctx = SessionMemo();
       return ctx as SessionValue;
     },
-    $type: {} as SessionValue,
+    $type: {} as SessionTypes,
   };
 }
