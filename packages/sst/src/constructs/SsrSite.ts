@@ -261,8 +261,22 @@ export interface SsrSiteProps {
      * Override the CloudFront cache policy properties for responses from the
      * server rendering Lambda.
      *
-     * @note The default cache policy that is used in the abscene of this property
-     * is one that performs no caching of the server response.
+     * @default
+     * By default, the cache policy is configured to cache all responses from
+     * the server rendering Lambda based on the query-key only. If you're using
+     * cookie or header based authentication, you'll need to override the
+     * cache policy to cache based on those values as well.
+     *
+     * ```js
+     * serverCachePolicy: new CachePolicy(this, "ServerCache", {
+     *   queryStringBehavior: CacheQueryStringBehavior.all()
+     *   headerBehavior: CacheHeaderBehavior.none()
+     *   cookieBehavior: CacheCookieBehavior.none()
+     *   defaultTtl: Duration.days(0)
+     *   maxTtl: Duration.days(365)
+     *   minTtl: Duration.days(0)
+     * })
+     * ```
      */
     serverCachePolicy?: ICachePolicy;
     /**

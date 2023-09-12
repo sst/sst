@@ -58,6 +58,34 @@ export interface NextjsSiteProps extends Omit<SsrSiteProps, "nodejs"> {
   warm?: number;
   cdk?: SsrSiteProps["cdk"] & {
     revalidation?: Pick<FunctionProps, "vpc" | "vpcSubnets">;
+    /**
+     * Override the CloudFront cache policy properties for responses from the
+     * server rendering Lambda.
+     *
+     * @default
+     * By default, the cache policy is configured to cache all responses from
+     * the server rendering Lambda based on the query-key only. If you're using
+     * cookie or header based authentication, you'll need to override the
+     * cache policy to cache based on those values as well.
+     *
+     * ```js
+     * serverCachePolicy: new CachePolicy(this, "ServerCache", {
+     *   queryStringBehavior: CacheQueryStringBehavior.all()
+     *   headerBehavior: CacheHeaderBehavior.allowList(
+     *     "accept",
+     *     "rsc",
+     *     "next-router-prefetch",
+     *     "next-router-state-tree",
+     *     "next-url",
+     *   ),
+     *   cookieBehavior: CacheCookieBehavior.none()
+     *   defaultTtl: Duration.days(0)
+     *   maxTtl: Duration.days(365)
+     *   minTtl: Duration.days(0)
+     * })
+     * ```
+     */
+    serverCachePolicy?: NonNullable<SsrSiteProps["cdk"]>["serverCachePolicy"];
   };
 }
 
