@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.24.28
+
+### Patch Changes
+
+- [`90e93a206`](https://github.com/sst/sst/commit/90e93a206eb9c7d28c4323a2df584bdaa3680a7e) Thanks [@thdxr](https://github.com/thdxr)! - future/auth: expose privateKey if it needs to be bound
+
 ## 2.24.27
 
 ### Patch Changes
