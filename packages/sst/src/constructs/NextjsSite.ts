@@ -1,7 +1,7 @@
 import fs from "fs";
 import path from "path";
 import { Construct } from "constructs";
-import { Duration as CdkDuration, RemovalPolicy } from "aws-cdk-lib/core";
+import { Duration as CdkDuration, CustomResource } from "aws-cdk-lib/core";
 import {
   Code,
   Runtime,
@@ -9,12 +9,17 @@ import {
   FunctionProps,
   Architecture,
 } from "aws-cdk-lib/aws-lambda";
+import { AttributeType, BillingMode, Table } from "aws-cdk-lib/aws-dynamodb";
+import { Provider } from "aws-cdk-lib/custom-resources";
 import { Queue } from "aws-cdk-lib/aws-sqs";
 import { SqsEventSource } from "aws-cdk-lib/aws-lambda-event-sources";
 import { Stack } from "./Stack.js";
 import { SsrSite, SsrSiteProps } from "./SsrSite.js";
 import { Size, toCdkSize } from "./util/size.js";
+import { App } from "./App.js";
 import { Bucket } from "aws-cdk-lib/aws-s3";
+import { PolicyStatement } from "aws-cdk-lib/aws-iam";
+import { RetentionDays } from "aws-cdk-lib/aws-logs";
 
 export interface NextjsSiteProps extends Omit<SsrSiteProps, "nodejs"> {
   imageOptimization?: {
@@ -271,6 +276,60 @@ export class NextjsSite extends SsrSite {
     server?.addEnvironment("REVALIDATION_QUEUE_URL", queue.queueUrl);
     server?.addEnvironment("REVALIDATION_QUEUE_REGION", Stack.of(this).region);
     queue.grantSendMessages(server?.role!);
+
+    const app = this.node.root as App;
+
+    const table = new Table(this, "RevalidationTable", {
+      partitionKey: { name: "tag", type: AttributeType.STRING },
+      sortKey: { name: "path", type: AttributeType.STRING },
+      pointInTimeRecovery: true,
+      billingMode: BillingMode.PAY_PER_REQUEST,
+      tableName: app.logicalPrefixedName("next-revalidation-table"),
+    });
+
+    table.addGlobalSecondaryIndex({
+      indexName: "revalidate",
+      partitionKey: { name: "path", type: AttributeType.STRING },
+      sortKey: { name: "revalidatedAt", type: AttributeType.NUMBER },
+    });
+
+    server?.addEnvironment("CACHE_DYNAMO_TABLE", table.tableName);
+    table.grantReadWriteData(server?.role!);
+
+    const insertFn = new CdkFunction(this, "RevalidationInsertFunction", {
+      description: "Next.js revalidation data insert",
+      handler: "index.handler",
+      code: Code.fromAsset(
+        path.join(this.props.path, ".open-next", "dynamodb-provider")
+      ),
+      runtime: Runtime.NODEJS_18_X,
+      timeout: CdkDuration.minutes(14),
+      initialPolicy: [
+        new PolicyStatement({
+          actions: [
+            "dynamodb:BatchWriteItem",
+            "dynamodb:PutItem",
+            "dynamodb:DescribeTable",
+          ],
+          resources: [table.tableArn],
+        }),
+      ],
+      environment: {
+        CACHE_DYNAMO_TABLE: table.tableName,
+      }
+    });
+
+    const provider = new Provider(this, "RevalidationProvider", {
+      onEventHandler: insertFn,
+      logRetention: RetentionDays.ONE_DAY,
+    });
+
+    new CustomResource(this, "RevalidationResource", {
+      serviceToken: provider.serviceToken,
+      properties: {
+        version: Date.now().toString()
+      }
+    });
   }
 
   public getConstructMetadata() {
