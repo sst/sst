@@ -1,5 +1,13 @@
 # @serverless-stack/cli2
 
+## 2.25.1
+
+### Patch Changes
+
+- [#3303](https://github.com/sst/sst/pull/3303) [`89827c084`](https://github.com/sst/sst/commit/89827c08438cf944075833acd37ebf74d2f65f7a) Thanks [@fwang](https://github.com/fwang)! - RemixSite: add support for esm
+
+- [#3301](https://github.com/sst/sst/pull/3301) [`841eb05c9`](https://github.com/sst/sst/commit/841eb05c9869a4d372f5bba0867c4ff982db6a3d) Thanks [@fwang](https://github.com/fwang)! - SsrSite: support warming for all SSR sites
+
 ## 2.25.0
 
 ### Minor Changes
