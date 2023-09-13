@@ -6,6 +6,8 @@ const require = createRequire(import.meta.url);
 import { SsrSite } from "./SsrSite.js";
 import { SsrFunction } from "./SsrFunction.js";
 import { EdgeFunction } from "./EdgeFunction.js";
+import { VisibleError } from "../error.js";
+import { useWarning } from "./util/warning.js";
 
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 
@@ -32,6 +34,8 @@ type RemixConfig = {
  * ```
  */
 export class RemixSite extends SsrSite {
+  private serverModuleFormat: "cjs" | "esm" = "cjs";
+
   protected initBuildConfig() {
     const { path: sitePath } = this.props;
 
@@ -39,31 +43,35 @@ export class RemixSite extends SsrSite {
       assetsBuildDirectory: "public/build",
       publicPath: "/build/",
       serverBuildPath: "build/index.js",
-      serverModuleFormat: "cjs",
+      serverModuleFormat: "esm",
       serverPlatform: "node",
     };
 
     // Validate config path
     const configPath = path.resolve(sitePath, "remix.config.js");
     if (!fs.existsSync(configPath)) {
-      throw new Error(
-        `Could not find "remix.config.js" at expected path "${configPath}".`
+      throw new VisibleError(
+        `In the "${this.node.id}" Site, could not find "remix.config.js" at expected path "${configPath}".`
       );
     }
 
     // Load config
     const userConfig = require(configPath);
+    this.serverModuleFormat = userConfig.serverModuleFormat ?? "cjs";
+    if (userConfig.serverModuleFormat !== "esm") {
+      useWarning().add("remix.cjs");
+    }
+
+    // Validate config
     const config: RemixConfig = {
       ...configDefaults,
       ...userConfig,
     };
-
-    // Validate config
     Object.keys(configDefaults).forEach((key) => {
       const k = key as keyof RemixConfig;
       if (config[k] !== configDefaults[k]) {
-        throw new Error(
-          `RemixSite: remix.config.js "${key}" must be "${configDefaults[k]}".`
+        throw new VisibleError(
+          `In the "${this.node.id}" Site, remix.config.js "${key}" must be "${configDefaults[k]}".`
         );
       }
     });
@@ -151,7 +159,7 @@ export class RemixSite extends SsrSite {
       memorySize,
       timeout,
       nodejs: {
-        format: "cjs",
+        format: this.serverModuleFormat,
         ...nodejs,
         esbuild: {
           ...esbuild,
@@ -190,7 +198,7 @@ export class RemixSite extends SsrSite {
       environment,
       permissions,
       nodejs: {
-        format: "cjs",
+        format: this.serverModuleFormat,
         ...nodejs,
         esbuild: {
           ...esbuild,

@@ -431,13 +431,10 @@ new Api(stack, "Api", {
 
 If you have the domain name stored in AWS SSM Parameter Store, you can reference the value as the domain name:
 
-```js {3,6-9}
+```js {3}
 import { StringParameter } from "aws-cdk-lib/aws-ssm";
 
-const rootDomain = StringParameter.valueForStringParameter(
-  stack,
-  `/myApp/domain`
-);
+const rootDomain = StringParameter.valueForStringParameter(stack, `/myApp/domain`);
 
 new Api(stack, "Api", {
   customDomain: {

@@ -35,6 +35,7 @@ import { Bucket } from "aws-cdk-lib/aws-s3";
 import { Effect, Policy, PolicyStatement } from "aws-cdk-lib/aws-iam";
 import { CfnLogGroup } from "aws-cdk-lib/aws-logs";
 import { useBootstrap } from "../bootstrap.js";
+import { useWarning } from "./util/warning.js";
 
 /**
  * @internal
@@ -266,6 +267,7 @@ export class App extends CDKApp {
 
     this.createBindingSsmParameters();
     this.removeGovCloudUnsupportedResourceProperties();
+    useWarning().print();
     const bootstrap = await useBootstrap();
 
     for (const child of this.node.children) {

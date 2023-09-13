@@ -50,13 +50,8 @@ The `RemixSite` construct is a higher level CDK construct that makes it easy to 
 
    ```js
    module.exports = {
-     // ...
-     assetsBuildDirectory: "public/build",
-     publicPath: "/build/",
-     serverBuildPath: "build/index.js",
-     serverBuildTarget: "node-cjs",
-     server: undefined,
-     // ...
+     ignoredRouteFiles: ["**/.*"],
+     serverModuleFormat: "esm",
    };
    ```
 
@@ -280,28 +275,36 @@ There are a couple of things happening behind the scenes here:
 
 :::
 
+---
+
 ## Using AWS services
 
-Since the `RemixSite` construct deploys your Remix app to your AWS account, it's very convenient to access other resources in your AWS account in your Remix loaders/actions. `RemixSite` provides a simple way to grant [permissions](Permissions.md) to access specific AWS resources.
+SST makes it very easy for your `RemixSite` construct to access other resources in your AWS account. Imagine you have an S3 bucket created using the [`Bucket`](../constructs/Bucket.md) construct. You can bind it to your Remix app.
 
-Imagine you have a DynamoDB table created using the [`Table`](../constructs/Table.md) construct, and you want to fetch data from the Table.
-
-```ts {12}
-const table = new Table(stack, "Table", {
-  // ...
-});
+```ts {5}
+const bucket = new Bucket(stack, "Uploads");
 
 const site = new RemixSite(stack, "Site", {
   path: "my-remix-app/",
-  environment: {
-    TABLE_NAME: table.tableName,
-  },
+  bind: [bucket],
 });
-
-site.attachPermissions([table]);
 ```
 
-Note that we are also passing the table name into the environment, so the Remix loaders/actions can fetch the value `process.env.TABLE_NAME` when calling the DynamoDB API to query the table.
+This will attach the necessary IAM permissions and allow your Remix app to access the bucket through the typesafe [`sst/node`](../clients/index.md) client.
+
+```ts {4}
+import { Bucket } from "sst/node/bucket";
+
+export async function loader() {
+  console.log(Bucket.Uploads.bucketName);
+}
+```
+
+You can read more about this over on the [Resource Binding](../resource-binding.md) doc.
+
+:::info
+The [`sst/node`](../clients/index.md) client utilizes top-level await and requires the Remix server to be built using the `esm` output format. Ensure that [`serverModuleFormat``](https://remix.run/docs/en/main/file-conventions/remix-config#servermoduleformat) is set to `esm` in your `remix.config.js`.
+:::
 
 ---
 

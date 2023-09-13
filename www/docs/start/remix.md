@@ -158,14 +158,11 @@ Add an S3 bucket to your `sst.config.ts`.
 const bucket = new Bucket(stack, "public");
 ```
 
-Let your Remix app access the bucket.
+Bind it to your Remix app.
 
 ```diff title="sst.config.ts"
 const site = new RemixSite(stack, "site", {
-+ permissions: [bucket],
-+ environment: {
-+   BUCKET_NAME: bucket.bucketName,
-+ },
++ bind: [bucket],
 });
 ```
 
@@ -180,7 +177,7 @@ export async function loader() {
   const command = new PutObjectCommand({
     ACL: "public-read",
     Key: crypto.randomUUID(),
-    Bucket: process.env.BUCKET_NAME,
+    Bucket: Bucket.public.bucketName,
   });
   const url = await getSignedUrl(new S3Client({}), command);
 
@@ -239,10 +236,7 @@ new Cron(stack, "cron", {
   schedule: "rate(1 minute)",
   job: {
     function: {
-      permissions: [bucket],
-      environment: {
-        BUCKET_NAME: bucket.bucketName,
-      },
+      bind: [bucket],
       handler: "functions/delete.handler",
     },
   },
@@ -263,7 +257,7 @@ export async function handler() {
 
   const list = await client.send(
     new ListObjectsCommand({
-      Bucket: process.env.BUCKET_NAME,
+      Bucket: Bucket.public.bucketName,
     })
   );
 
@@ -272,7 +266,7 @@ export async function handler() {
       client.send(
         new DeleteObjectCommand({
           Key: file.Key,
-          Bucket: process.env.BUCKET_NAME,
+          Bucket: Bucket.public.bucketName,
         })
       )
     )
