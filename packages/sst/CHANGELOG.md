@@ -1,5 +1,17 @@
 # @serverless-stack/cli2
 
+## 2.25.0
+
+### Minor Changes
+
+- [#3297](https://github.com/sst/sst/pull/3297) [`62dede23c`](https://github.com/sst/sst/commit/62dede23c6ce71816c648d5f16c8f5913d6244b3) Thanks [@fwang](https://github.com/fwang)! - Update CDK to v2.95.1
+
+### Patch Changes
+
+- [#3294](https://github.com/sst/sst/pull/3294) [`2749ba60e`](https://github.com/sst/sst/commit/2749ba60eecf065bcd2931a977edf82c8e0f8f7c) Thanks [@DanielTatarkin](https://github.com/DanielTatarkin)! - StaticSite: Upgrade S3 uploader and handler Pyhon versions 3_7 -> 3_11
+
+- [#3242](https://github.com/sst/sst/pull/3242) [`c2c886ca1`](https://github.com/sst/sst/commit/c2c886ca15ef7a99b2eaf08ad7159d6a114cb8a0) Thanks [@dani-mp](https://github.com/dani-mp)! - SsrSite: support `copyFiles` for server function
+
 ## 2.24.28
 
 ### Patch Changes
