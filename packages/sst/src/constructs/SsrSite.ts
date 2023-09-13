@@ -21,6 +21,7 @@ import {
   IBucket,
 } from "aws-cdk-lib/aws-s3";
 import {
+  Effect,
   Role,
   Policy,
   PolicyStatement,
@@ -58,6 +59,8 @@ import {
 } from "aws-cdk-lib/aws-cloudfront";
 import { AwsCliLayer } from "aws-cdk-lib/lambda-layer-awscli";
 import { S3Origin, HttpOrigin } from "aws-cdk-lib/aws-cloudfront-origins";
+import { Rule, Schedule } from "aws-cdk-lib/aws-events";
+import { LambdaFunction } from "aws-cdk-lib/aws-events-targets";
 
 import { App } from "./App.js";
 import { Stack } from "./Stack.js";
@@ -84,6 +87,7 @@ import {
   getParameterPath,
 } from "./util/functionBinding.js";
 import { useProject } from "../project.js";
+import { VisibleError } from "../error.js";
 
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 
@@ -97,6 +101,7 @@ export type SsrBuildConfig = {
   clientCFFunctionInjection?: string;
   prerenderedBuildOutputDir?: string;
   prerenderedBuildS3KeyPrefix?: string;
+  warmerFunctionAssetPath?: string;
 };
 
 export interface SsrSiteNodeJSProps extends NodeJSProps {}
@@ -208,6 +213,11 @@ export interface SsrSiteProps {
    * ```
    */
   environment?: Record<string, string>;
+  /**
+   * The number of server functions to keep warm. This option is only supported for the regional mode.
+   * @default Server function is not kept warm
+   */
+  warm?: number;
   regional?: {
     /**
      * Secure the server function URL using AWS IAM authentication. By default, the server function URL is publicly accessible. When this flag is enabled, the server function URL will require IAM authorization, and a Lambda@Edge function will sign the requests. Be aware that this introduces added latency to the requests.
@@ -446,6 +456,11 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
       await this.serverLambdaForEdge?.build();
       await this.serverLambdaForRegional?.build();
       await this.serverUrlSigningFunction?.build();
+
+      // Create warmer
+      // Note: create warmer after build app b/c the warmer code
+      //       for NextjsSite depends on OpenNext build output
+      this.createWarmer();
 
       // Create S3 Deployment
       const cliLayer = new AwsCliLayer(this, "AwsCliLayer");
@@ -931,6 +946,65 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
       ],
     });
     server?.role?.attachInlinePolicy(policy);
+  }
+
+  private createWarmer() {
+    const { warm, edge } = this.props;
+    if (!warm) return;
+
+    if (warm && edge) {
+      throw new VisibleError(
+        `In the "${this.node.id}" Site, warming is currently supported only for the regional mode.`
+      );
+    }
+
+    if (!this.serverLambdaForRegional) return;
+
+    // Create warmer function
+    const warmer = new CdkFunction(this, "WarmerFunction", {
+      description: "Next.js warmer",
+      code: Code.fromAsset(
+        this.buildConfig.warmerFunctionAssetPath ??
+          path.join(__dirname, "../support/ssr-warmer")
+      ),
+      runtime: Runtime.NODEJS_18_X,
+      handler: "index.handler",
+      timeout: CdkDuration.minutes(15),
+      memorySize: 1024,
+      environment: {
+        FUNCTION_NAME: this.serverLambdaForRegional.functionName,
+        CONCURRENCY: warm.toString(),
+      },
+    });
+    this.serverLambdaForRegional.grantInvoke(warmer);
+
+    // Create cron job
+    new Rule(this, "WarmerRule", {
+      schedule: Schedule.rate(CdkDuration.minutes(5)),
+      targets: [new LambdaFunction(warmer, { retryAttempts: 0 })],
+    });
+
+    // Create custom resource to prewarm on deploy
+    const stack = Stack.of(this) as Stack;
+    const policy = new Policy(this, "PrewarmerPolicy", {
+      statements: [
+        new PolicyStatement({
+          effect: Effect.ALLOW,
+          actions: ["lambda:InvokeFunction"],
+          resources: [warmer.functionArn],
+        }),
+      ],
+    });
+    stack.customResourceHandler.role?.attachInlinePolicy(policy);
+    const resource = new CustomResource(this, "Prewarmer", {
+      serviceToken: stack.customResourceHandler.functionArn,
+      resourceType: "Custom::FunctionInvoker",
+      properties: {
+        version: Date.now().toString(),
+        functionName: warmer.functionName,
+      },
+    });
+    resource.node.addDependency(policy);
   }
 
   /////////////////////

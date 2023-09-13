@@ -662,6 +662,54 @@ test("fileOptions: defined", async () => {
   });
 });
 
+test("warm: undefined", async () => {
+  const { stack } = await createSite({
+    // @ts-expect-error: "sstTest" is not exposed in props
+    sstTest: true,
+  });
+  countResourcesLike(stack, "AWS::Lambda::Function", 0, {
+    Environment: {
+      Variables: {
+        FUNCTION_NAME: ANY,
+        CONCURRENCY: ANY,
+      },
+    },
+  });
+});
+test("warm: defined", async () => {
+  const { stack } = await createSite({
+    // @ts-expect-error: "sstTest" is not exposed in props
+    sstTest: true,
+    warm: 2,
+  });
+  countResourcesLike(stack, "AWS::Lambda::Function", 1, {
+    Environment: {
+      Variables: {
+        FUNCTION_NAME: ANY,
+        CONCURRENCY: ANY,
+      },
+    },
+  });
+  hasResource(stack, "AWS::Lambda::Function", {
+    Environment: {
+      Variables: {
+        FUNCTION_NAME: { Ref: "SiteServerFunction70E7C026" },
+        CONCURRENCY: "2",
+      },
+    },
+  });
+});
+test("warm: edge", async () => {
+  expect(async () => {
+    await createSite({
+      // @ts-expect-error: "sstTest" is not exposed in props
+      sstTest: true,
+      warm: 2,
+      edge: true,
+    });
+  }).rejects.toThrow(/warming is currently supported/);
+});
+
 test("regional.enableServerUrlIamAuth: undefined", async () => {
   const { site, stack } = await createSite({
     // @ts-expect-error: "sstTest" is not exposed in props
