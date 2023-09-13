@@ -1,5 +1,11 @@
 # create-sst
 
+## 2.25.0
+
+### Minor Changes
+
+- [#3297](https://github.com/sst/sst/pull/3297) [`62dede23c`](https://github.com/sst/sst/commit/62dede23c6ce71816c648d5f16c8f5913d6244b3) Thanks [@fwang](https://github.com/fwang)! - Update CDK to v2.95.1
+
 ## 2.24.28
 
 ## 2.24.27
