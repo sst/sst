@@ -1,5 +1,11 @@
 # @serverless-stack/docs
 
+## 2.5.17
+
+### Patch Changes
+
+- [#3303](https://github.com/sst/sst/pull/3303) [`89827c084`](https://github.com/sst/sst/commit/89827c08438cf944075833acd37ebf74d2f65f7a) Thanks [@fwang](https://github.com/fwang)! - RemixSite: add support for esm
+
 ## 2.5.16
 
 ### Patch Changes

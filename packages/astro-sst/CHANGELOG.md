@@ -1,5 +1,11 @@
 # astro-sst
 
+## 2.25.1
+
+### Patch Changes
+
+- [#3216](https://github.com/sst/sst/pull/3216) [`49b68ef55`](https://github.com/sst/sst/commit/49b68ef55c45d7d9d787ed1b618a42dfbaf706e5) Thanks [@adamelmore](https://github.com/adamelmore)! - AstroSite: support streaming compression
+
 ## 2.25.0
 
 ## 2.24.28
