@@ -33,7 +33,7 @@ import {
   Code,
   Runtime,
   FunctionUrlAuthType,
-  FunctionProps,
+  FunctionProps as CdkFunctionProps,
   InvokeMode,
 } from "aws-cdk-lib/aws-lambda";
 import { Asset } from "aws-cdk-lib/aws-s3-assets";
@@ -65,7 +65,7 @@ import { Distribution, DistributionDomainProps } from "./Distribution.js";
 import { Logger } from "../logger.js";
 import { createAppContext } from "./context.js";
 import { SSTConstruct, isCDKConstruct } from "./Construct.js";
-import { NodeJSProps } from "./Function.js";
+import { NodeJSProps, FunctionProps } from "./Function.js";
 import { Secret } from "./Secret.js";
 import { SsrFunction } from "./SsrFunction.js";
 import { EdgeFunction } from "./EdgeFunction.js";
@@ -285,7 +285,7 @@ export interface SsrSiteProps {
      */
     responseHeadersPolicy?: IResponseHeadersPolicy;
     server?: Pick<
-      FunctionProps,
+      CdkFunctionProps,
       | "vpc"
       | "vpcSubnets"
       | "securityGroups"
@@ -293,7 +293,8 @@ export interface SsrSiteProps {
       | "allowPublicSubnet"
       | "architecture"
       | "logRetention"
-    >;
+    > &
+      Pick<FunctionProps, "copyFiles">;
   };
   /**
    * Pass in a list of file options to customize cache control and content type specific files.
