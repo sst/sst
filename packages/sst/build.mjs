@@ -99,9 +99,10 @@ await Promise.all(
   [
     "bootstrap-metadata-function",
     "custom-resources",
-    "script-function",
     "job-manager",
+    "script-function",
     "signing-function",
+    "ssr-warmer",
   ].map((dir) =>
     esbuild.build({
       bundle: true,
