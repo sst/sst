@@ -440,7 +440,7 @@ const vpc = new Vpc(stack, "myVPC");
 // Alternatively use an existing VPC
 const vpc = Vpc.fromLookup(stack, "myVPC", { ... });
 const vpcSubnets = {
-  subnetType: SubnetType.PRIVATE_WITH_NAT,
+  subnetType: SubnetType.PRIVATE_WITH_EGRESS,
 };
 
 new NextjsSite(stack, "Site", {
