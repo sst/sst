@@ -20,7 +20,7 @@ The <a href={config.console}>SST Console</a> is a web based dashboard to manage 
 
 ![SST Console homescreen](/img/console/sst-console-logs.png)
 
-With the SST Console you can invoke functions, view and search logs, and manage all your apps with your team — **<ConsoleUrl url={config.console} />**
+With the SST Console you can invoke functions, debug issues, view and search logs, and manage all your apps with your team — **<ConsoleUrl url={config.console} />**
 
 :::info
 Looking for the Old Console? You can still access it here — <ConsoleUrl url="https://old.console.sst.dev" />
@@ -70,11 +70,9 @@ Here's how to get started. <a href={config.console}>Head over to the Console</a>
 
 ## Requirements
 
-**SST apps v2.19.2 or newer** are supported by the Console. Note that, apps **older than v2** won't be detected by the Console.
-
-:::note
-The SST Console is optional to use. It simply compliments the SST CLI.
-:::
+- SST apps **v2.19.2 or newer** are supported by the Console.
+- Source map support in [Issues](#issues) is available for **v2.24.16 or newer**.
+- Apps **older than v2** won't be detected by the Console.
 
 ---
 
@@ -95,7 +93,8 @@ At a high level, here's how the Console works.
 3. You can manage your apps
 
    - You can view all the SST Functions in your app.
-   - You can view their logs, invoke them, or replay invocations
+   - You can view all the issues in your functions in real-time with the source maps automatically applied.
+   - You can view functions logs, invoke them, or replay invocations
    - You can also save event payloads to your workspace.
    - For your local [`sst dev`](live-lambda-development.md) stage, the logs will be streamed in real-time from your local machine.
 
@@ -117,6 +116,67 @@ The SST Console needs access to your AWS account to do the following things:
 2. Access the resources created while deploying your SST apps.
 3. Access the CloudWatch APIs to let you view your logs in production.
 4. Invoke the Lambda functions in your SST apps when you invoke them in the Console.
+
+---
+
+## Issues
+
+The SST Console will automatically show you any errors in your Lambda functions in real-time.
+
+![SST Console issues](/img/console/sst-console-issues.png)
+
+:::info
+Issues works out of the box and you don't need to instrument your functions or upload any source maps.
+:::
+
+There is nothing to configure and all the SST Functions in your app are automatically subscribed to.
+
+---
+
+#### Behind the scenes
+
+Here's how it works.
+
+1. When an app is deployed or when an account is first synced, we add a log subscriber to your Lambda functions. 
+   - Note there's a maximum of 2 subscribers allowed. More on this below.
+2. The subscriber filters for anything that looks like an error and processes those log lines.
+3. It applies the source maps to the error stack trace.
+4. Finally, it groups similar looking errors together.
+
+---
+
+#### Adding a log subscriber
+
+The process of adding a log subscriber to your Lambda functions might fail. This can happen due to:
+
+- We don't have enough permissions to add a subscriber. In this case, update the [permissions](#iam-permissions) that you've granted to the Console.
+- We've hit the limit for the number of subscribers. To fix this, you can remove one of the existing subscribers.
+
+You can see these errors in the Issues tab. Once you've fixed these issues, you can hit **Retry** and it'll try attaching the subscriber again. 
+
+---
+
+#### Error detection
+
+Issues reports Lambda function failures. In addition, for Node.js it reports errors that are logged using `console.error`.
+
+---
+
+#### Source map support
+
+Automatic source map support is supported for SST apps newer than v2.24.16.
+
+---
+
+#### Limits
+
+There's a soft limit of 10K issues per hour per workspace. If your account goes over this limit, Issues will be temporarily paused. You can <a href={`mailto:${config.email}`}>contact us</a> if this happens.
+
+---
+
+#### Feedback
+
+If some errors are not grouped correctly or if the error messages have not been parsed properly, <a href={config.discord}>send us a message in #console on Discord</a>.
 
 ---
 
@@ -299,7 +359,11 @@ The SST Console pricing is based on the number of times the Lambda functions in 
 | 1M - 10M    | $0.00002 |
 | 10M+        | $0.000002 |
 
-These are calculated for a given workspace on a monthly basis. For volume pricing, feel free to <a href={`mailto:${config.email}`}>contact us</a>.
+A couple of things to note.
+
+- These are calculated for a given workspace on a monthly basis.
+- There's also a soft limit for [Issues](#limits) on all accounts.
+- For volume pricing, feel free to <a href={`mailto:${config.email}`}>contact us</a>.
 
 ---
 

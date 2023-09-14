@@ -14,6 +14,16 @@ Changelog for all notable SST Console updates.
 
 ---
 
+## Issues
+
+**Released Sep 14, 2023**
+
+The Console now shows you Lambda function errors in real-time. You don't need to instrument your functions or upload your source maps.
+
+[Learn more about Issues](../console.md#issues).
+
+---
+
 ## Restricted IAM policy
 
 **Released Aug 22, 2023**
