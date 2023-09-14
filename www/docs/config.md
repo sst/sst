@@ -140,6 +140,16 @@ npx sst secrets set STRIPE_KEY sk_test_abc123
 
 An SSM parameter of the type `SecureString` is created with the name `/sst/{appName}/{stageName}/Secret/STRIPE_KEY/value`, where `{appName}` is the name of your SST app, and `{stageName}` is the stage you are configuring for. The parameter value `sk_test_abc123` gets encrypted and stored in AWS SSM.
 
+:::tip
+You can set a secret for another stage using the `--stage` option.
+:::
+
+By default, the [`sst secrets`](packages/sst.md#sst-secrets) CLI acts on your current local stage. To set a secret for another stage (say `prod`), you can use the [`--stage`](packages/sst.md#global-options) option.
+
+```bash
+npx sst secrets set --stage prod STRIPE_KEY sk_test_abc123
+```
+
 ---
 
 #### Function handler
