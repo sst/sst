@@ -20,6 +20,7 @@ import {
   FunctionOptions,
   Function as CdkFunction,
   FunctionUrlOptions,
+  ILayerVersion,
 } from "aws-cdk-lib/aws-lambda";
 import { Bucket } from "aws-cdk-lib/aws-s3";
 import {
@@ -61,6 +62,7 @@ export interface SsrFunctionProps
   environment?: Record<string, string>;
   bind?: SSTConstruct[];
   nodejs?: NodeJSProps;
+  layers?: ILayerVersion[];
   copyFiles?: FunctionCopyFilesProps[];
   logRetention?: RetentionDays;
 }
@@ -272,6 +274,7 @@ export class SsrFunction extends Construct implements SSTConstruct {
       handler: this.props.handler,
       runtime: this.props.runtime,
       nodejs: this.props.nodejs,
+      layers: this.props.layers,
       copyFiles: this.props.copyFiles,
     });
 

@@ -36,6 +36,7 @@ import {
   FunctionUrlAuthType,
   FunctionProps as CdkFunctionProps,
   InvokeMode,
+  ILayerVersion,
 } from "aws-cdk-lib/aws-lambda";
 import { Asset } from "aws-cdk-lib/aws-s3-assets";
 import {
@@ -220,6 +221,18 @@ export interface SsrSiteProps {
    * Used to configure nodejs function properties
    */
   nodejs?: SsrSiteNodeJSProps;
+  /**
+   * Adds layers to SSR function to regional deployments. Ignored for edge deployments layers are unsupported for Lambda@Edge. Will likely require setting layer module in `nodejs` prop to avoid bundling the module.
+   * @example
+   * ```js
+   * layers: [
+   *   new lambda.LayerVersion(stack, "MyLayer", {
+   *     code: lambda.Code.fromAsset("layers/sharp"),
+   *   }),
+   * ],
+   * ```
+   */
+  layers?: ILayerVersion[];
   /**
    * Attaches the given list of permissions to the SSR function. Configuring this property is equivalent to calling `attachPermissions()` after the site is created.
    * @example
