@@ -4,9 +4,9 @@ export function ExampleStack({ stack }: StackContext) {
   // Create the HTTP API
   const api = new Api(stack, "Api", {
     routes: {
-      "GET /notes": "packages/functions/list.handler",
-      "GET /notes/{id}": "packages/functions/get.handler",
-      "PUT /notes/{id}": "packages/functions/update.handler",
+      "GET /notes": "packages/functions/src/list.handler",
+      "GET /notes/{id}": "packages/functions/src/get.handler",
+      "PUT /notes/{id}": "packages/functions/src/update.handler",
     },
   });
 
