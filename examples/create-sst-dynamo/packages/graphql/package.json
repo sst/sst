@@ -10,6 +10,6 @@
   },
   "devDependencies": {
     "@genql/cli": "^6.2.1",
-    "@types/react": "^18.2.20"
+    "@types/react": "^18.2.21"
   }
 }
