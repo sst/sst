@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.25.2
+
+### Patch Changes
+
+- [`c47a18930`](https://github.com/sst/sst/commit/c47a18930243654c96376ade4b224736a5c89587) Thanks [@thdxr](https://github.com/thdxr)! - future/auth: fix typing problem with response.session
+
 ## 2.25.1
 
 ### Patch Changes

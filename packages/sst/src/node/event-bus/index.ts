@@ -16,6 +16,15 @@ import { ZodAny, ZodObject, ZodRawShape, z } from "zod";
 import { useLoader } from "../util/loader.js";
 import { Config } from "../config/index.js";
 
+/**
+ * PutEventsCommandOutput is used in return type of createEvent, in case the consumer of SST builds
+ * their project with declaration files, this is not portable. In order to allow TS to generate a
+ * declaration file without reference to @aws-sdk/client-eventbridge, we must re-export the type.
+ *
+ * More information here: https://github.com/microsoft/TypeScript/issues/47663#issuecomment-1519138189
+ */
+export { PutEventsCommandOutput };
+
 const client = new EventBridgeClient({});
 
 export function createEventBuilder<

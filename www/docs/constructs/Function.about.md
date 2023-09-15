@@ -118,7 +118,7 @@ export async function main(event) {
 
 The `handler` property points to the path of the entry point and handler function. Uses the format, `/path/to/file.function`. Where the first part is the path to the file, followed by the name of the function that's exported in that file.
 
-For example, if your handler file is in `src/lambda.ts` and it exported a function called `main`. The handler would be `src/lambda.handler`.
+For example, if your handler file is in `src/lambda.ts` and it exported a function called `main`. The handler would be `src/lambda.main`.
 
 SST checks for a file with a `.ts`, `.tsx`, `.js`, or `.jsx` extension.
 

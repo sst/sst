@@ -52,11 +52,25 @@ export function AuthHandler<
   ) => Promise<void | keyof Providers>;
   onSuccess: (
     input: Result,
-    response: OnSuccessResponder<SessionValue | Sessions["$type"]>
+    response: OnSuccessResponder<
+      | SessionValue
+      | {
+          [key in keyof Sessions["$type"]]: {
+            type: key;
+            properties: Sessions["$type"][key];
+          };
+        }[keyof Sessions["$type"]]
+    >
   ) => Promise<
     ReturnType<
       OnSuccessResponder<
-        SessionValue | Sessions["$type"]
+        | SessionValue
+        | {
+            [key in keyof Sessions["$type"]]: {
+              type: key;
+              properties: Sessions["$type"][key];
+            };
+          }[keyof Sessions["$type"]]
       >[keyof OnSuccessResponder<any>]
     >
   >;
