@@ -43,7 +43,6 @@ export class RemixSite extends SsrSite {
       assetsBuildDirectory: "public/build",
       publicPath: "/build/",
       serverBuildPath: "build/index.js",
-      serverModuleFormat: "esm",
       serverPlatform: "node",
     };
 
