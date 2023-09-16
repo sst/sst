@@ -11,26 +11,26 @@
     "sst:dev": "sst dev"
   },
   "dependencies": {
-    "@aws-sdk/client-s3": "^3.395.0",
-    "@aws-sdk/s3-request-presigner": "^3.395.0",
-    "@remix-run/css-bundle": "^1.19.3",
-    "@remix-run/node": "^1.19.3",
-    "@remix-run/react": "^1.19.3",
-    "@remix-run/serve": "^1.19.3",
+    "@aws-sdk/client-s3": "^3.414.0",
+    "@aws-sdk/s3-request-presigner": "^3.414.0",
+    "@remix-run/css-bundle": "^2.0.0",
+    "@remix-run/node": "^2.0.0",
+    "@remix-run/react": "^2.0.0",
+    "@remix-run/serve": "^2.0.0",
     "isbot": "^3.6.13",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   },
   "devDependencies": {
-    "@remix-run/dev": "^1.19.3",
-    "@remix-run/eslint-config": "^1.19.3",
-    "@types/react": "^18.2.20",
+    "@remix-run/dev": "^2.0.0",
+    "@remix-run/eslint-config": "^2.0.0",
+    "@types/react": "^18.2.21",
     "@types/react-dom": "^18.2.7",
     "aws-cdk-lib": "2.91.0",
     "constructs": "10.2.69",
-    "eslint": "^8.47.0",
-    "sst": "^2.24.11",
-    "typescript": "^5.1.6"
+    "eslint": "^8.49.0",
+    "sst": "^2.25.2",
+    "typescript": "^5.2.2"
   },
   "engines": {
     "node": ">=14"
