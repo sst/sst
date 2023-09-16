@@ -125,23 +125,27 @@ The SST Console will automatically show you any errors in your Lambda functions 
 
 ![SST Console issues](/img/console/sst-console-issues.png)
 
-:::info
-Issues works out of the box and you don't need to instrument your functions or upload any source maps.
-:::
+With Issues, there is:
 
-There is nothing to configure and all the SST Functions in your app are automatically subscribed to.
+- **Nothing to setup**, no code to instrument
+- **Source maps** are supported **automatically**, no need to upload
+- **No impact on performance** or cold starts, since the handlers aren't changed
+
+Here's how it works.
 
 ---
 
 #### Behind the scenes
-
-Here's how it works.
 
 1. When an app is deployed or when an account is first synced, we add a log subscriber to your Lambda functions. 
    - Note there's a maximum of 2 subscribers allowed. More on this below.
 2. The subscriber filters for anything that looks like an error and processes those log lines.
 3. It applies the source maps to the error stack trace.
 4. Finally, it groups similar looking errors together.
+
+:::info
+Issues works out of the box and has no impact on performance or cold starts.
+:::
 
 ---
 
