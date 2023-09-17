@@ -222,7 +222,7 @@ export interface SsrSiteProps {
    */
   nodejs?: SsrSiteNodeJSProps;
   /**
-   * Adds layers to SSR function to regional deployments. Ignored for edge deployments layers are unsupported for Lambda@Edge. Will likely require setting layer module in `nodejs` prop to avoid bundling the module.
+   * Adds layers to SSR function to regional deployments. Ignored for edge deployments as layers are unsupported for Lambda@Edge. Will likely require setting layer module in `nodejs` prop to avoid bundling the module.
    * @example
    * ```js
    * layers: [
