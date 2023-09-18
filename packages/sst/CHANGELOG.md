@@ -1,5 +1,19 @@
 # @serverless-stack/cli2
 
+## 2.25.3
+
+### Patch Changes
+
+- [#3299](https://github.com/sst/sst/pull/3299) [`d0bb94461`](https://github.com/sst/sst/commit/d0bb9446148f197709e070958602f72945dd3b46) Thanks [@rekotiira](https://github.com/rekotiira)! - node/event-bus: Fix incompatible type inference in exported function
+
+- [#3313](https://github.com/sst/sst/pull/3313) [`74657375a`](https://github.com/sst/sst/commit/74657375a4a16821f8977be4f8dca5e71c8b587c) Thanks [@jamesgibbons92](https://github.com/jamesgibbons92)! - AppSyncApi: Update deprecated appsync schema prop
+
+- [#3311](https://github.com/sst/sst/pull/3311) [`47cb76700`](https://github.com/sst/sst/commit/47cb767001faaeeb9d02d967202609e2acec8b21) Thanks [@berenddeboer](https://github.com/berenddeboer)! - SsrSite: enforce ssl on bucket to get security hub
+
+- [#3314](https://github.com/sst/sst/pull/3314) [`ad6429b7e`](https://github.com/sst/sst/commit/ad6429b7e4e7a4353bb240f319f95c0776d920ce) Thanks [@fwang](https://github.com/fwang)! - Function: bring back using user provided runtime for Java
+
+- [#3310](https://github.com/sst/sst/pull/3310) [`0321ac44a`](https://github.com/sst/sst/commit/0321ac44a92ebf55b20a65bfe493845334957210) Thanks [@Nirlah](https://github.com/Nirlah)! - RemixSite: do not enforce ESM
+
 ## 2.25.2
 
 ### Patch Changes
