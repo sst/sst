@@ -268,15 +268,14 @@ export class App extends CDKApp {
     this.createBindingSsmParameters();
     this.removeGovCloudUnsupportedResourceProperties();
     useWarning().print();
-    const bootstrap = await useBootstrap();
-
     for (const child of this.node.children) {
       if (isStackConstruct(child)) {
         // Tag stacks
         Tags.of(child).add("sst:app", this.name);
         Tags.of(child).add("sst:stage", this.stage);
 
-        if (child instanceof Stack) {
+        if (child instanceof Stack && process.env.NODE_ENV !== "test") {
+          const bootstrap = await useBootstrap();
           const functions = useFunctions();
           const sourcemaps = functions.sourcemaps.forStack(child.stackName);
           if (sourcemaps.length) {
