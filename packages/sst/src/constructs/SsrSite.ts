@@ -810,6 +810,7 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
       blockPublicAccess: BlockPublicAccess.BLOCK_ALL,
       autoDeleteObjects: true,
       removalPolicy: RemovalPolicy.DESTROY,
+      enforceSSL: true,
       ...cdk?.bucket,
     });
   }
