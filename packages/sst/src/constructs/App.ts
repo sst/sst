@@ -263,9 +263,7 @@ export class App extends CDKApp {
     //   type checking in the build step
     // - before remove govcloud unsupported resource properties b/c deferred
     //   tasks may add govcloud unsupported resource properties
-    console.log("running deferred tasks...");
     await useDeferredTasks().run();
-    console.log("Done running");
 
     this.createBindingSsmParameters();
     this.removeGovCloudUnsupportedResourceProperties();
