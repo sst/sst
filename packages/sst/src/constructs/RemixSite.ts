@@ -15,7 +15,6 @@ type RemixConfig = {
   assetsBuildDirectory: string;
   publicPath: string;
   serverBuildPath: string;
-  serverModuleFormat: string;
   serverPlatform: string;
   server?: string;
 };
@@ -43,7 +42,6 @@ export class RemixSite extends SsrSite {
       assetsBuildDirectory: "public/build",
       publicPath: "/build/",
       serverBuildPath: "build/index.js",
-      serverModuleFormat: "esm",
       serverPlatform: "node",
     };
 
