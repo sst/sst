@@ -43,6 +43,7 @@ import {
   Resolver,
   ResolverProps,
   SchemaFile,
+  Definition,
 } from "aws-cdk-lib/aws-appsync";
 import { ICertificate } from "aws-cdk-lib/aws-certificatemanager";
 import { IDomain } from "aws-cdk-lib/aws-opensearchservice";
@@ -806,7 +807,7 @@ export class AppSyncApi extends Construct implements SSTConstruct {
       this.cdk.graphqlApi = new GraphqlApi(this, "Api", {
         name: app.logicalPrefixedName(id),
         xrayEnabled: true,
-        schema: mainSchema,
+        definition: Definition.fromSchema(mainSchema),
         domainName: domainData && {
           certificate: domainData.certificate,
           domainName: domainData.domainName,
