@@ -18,8 +18,6 @@ import {
   StaticSiteProps,
 } from "../../dist/constructs/";
 
-process.env.SST_RESOURCES_TESTS = "enabled";
-
 beforeEach(async () => {
   await clearBuildOutput();
 });

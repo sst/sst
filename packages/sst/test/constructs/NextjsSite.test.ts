@@ -15,7 +15,6 @@ import { Vpc } from "aws-cdk-lib/aws-ec2";
 import * as cf from "aws-cdk-lib/aws-cloudfront";
 import { Stack, NextjsSite, NextjsSiteProps } from "../../dist/constructs";
 
-process.env.SST_RESOURCES_TESTS = "enabled";
 const sitePath = "test/constructs/nextjs-site";
 
 beforeAll(async () => {

@@ -25,7 +25,6 @@ import {
 } from "../../dist/constructs/Distribution.js";
 import { HttpOrigin } from "aws-cdk-lib/aws-cloudfront-origins";
 
-process.env.SST_RESOURCES_TESTS = "enabled";
 const sitePath = "test/constructs/remix-site";
 
 type DistributionTestProps = Omit<DistributionProps, "cdk"> & {

@@ -28,7 +28,6 @@ import { RetentionDays } from "aws-cdk-lib/aws-logs";
 import { Api, Stack, RemixSite } from "../../dist/constructs/";
 import { SsrSiteProps } from "../../dist/constructs/SsrSite";
 
-process.env.SST_RESOURCES_TESTS = "enabled";
 const sitePath = "test/constructs/remix-site";
 
 beforeAll(async () => {

@@ -15,7 +15,6 @@ import {
 import { Config, Stack, Topic, Service } from "../../dist/constructs";
 import { ServiceProps } from "../../dist/constructs/Service";
 
-process.env.SST_RESOURCES_TESTS = "enabled";
 const servicePath = "test/constructs/service";
 
 async function createService(

@@ -335,8 +335,7 @@ export class App extends CDKApp {
   }
 
   isRunningSSTTest(): boolean {
-    // Check the env var set inside test/setup-tests.js
-    return process.env.SST_RESOURCES_TESTS === "enabled";
+    return process.env.NODE_ENV === "test";
   }
 
   getInputFilesFromEsbuildMetafile(file: string): Array<string> {
