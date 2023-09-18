@@ -20,7 +20,6 @@ import {
   FunctionOptions,
   Function as CdkFunction,
   FunctionUrlOptions,
-  ILayerVersion,
 } from "aws-cdk-lib/aws-lambda";
 import { Bucket } from "aws-cdk-lib/aws-s3";
 import {
@@ -62,7 +61,6 @@ export interface SsrFunctionProps
   environment?: Record<string, string>;
   bind?: SSTConstruct[];
   nodejs?: NodeJSProps;
-  layers?: ILayerVersion[];
   copyFiles?: FunctionCopyFilesProps[];
   logRetention?: RetentionDays;
 }
