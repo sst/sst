@@ -951,15 +951,12 @@ export class Function extends CDKFunction implements SSTConstruct {
         this.runtime =
           supportedRuntimes[props.runtime as keyof typeof supportedRuntimes];
         cfnFunction.runtime = this.runtime.toString();
-        /*
-        if (isJavaRuntime) {
-          const providedRuntime = (bundle as FunctionBundleJavaProps)
-            .experimentalUseProvidedRuntime;
-          if (providedRuntime) {
-            cfnFunction.runtime = providedRuntime;
-          }
+        if (
+          props.runtime?.startsWith("java") &&
+          props.java?.experimentalUseProvidedRuntime
+        ) {
+          cfnFunction.runtime = props.java?.experimentalUseProvidedRuntime;
         }
-        */
       });
     }
 
