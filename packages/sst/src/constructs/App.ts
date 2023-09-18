@@ -263,7 +263,9 @@ export class App extends CDKApp {
     //   type checking in the build step
     // - before remove govcloud unsupported resource properties b/c deferred
     //   tasks may add govcloud unsupported resource properties
+    console.log("running deferred tasks...");
     await useDeferredTasks().run();
+    console.log("Done running");
 
     this.createBindingSsmParameters();
     this.removeGovCloudUnsupportedResourceProperties();
@@ -274,7 +276,7 @@ export class App extends CDKApp {
         Tags.of(child).add("sst:app", this.name);
         Tags.of(child).add("sst:stage", this.stage);
 
-        if (child instanceof Stack && process.env.NODE_ENV !== "test") {
+        if (child instanceof Stack && !this.isRunningSSTTest()) {
           const bootstrap = await useBootstrap();
           const functions = useFunctions();
           const sourcemaps = functions.sourcemaps.forStack(child.stackName);

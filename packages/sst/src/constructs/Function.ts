@@ -834,6 +834,7 @@ export class Function extends CDKFunction implements SSTConstruct {
       });
       this.addEnvironment("SST_FUNCTION_ID", this.node.addr);
       useDeferredTasks().add(async () => {
+        if (app.isRunningSSTTest()) return;
         const bootstrap = await useBootstrap();
         const bootstrapBucketArn = `arn:${Stack.of(this).partition}:s3:::${
           bootstrap.bucket
