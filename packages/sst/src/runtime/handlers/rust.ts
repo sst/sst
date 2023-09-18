@@ -1,24 +1,20 @@
 import path from "path";
 import fs from "fs/promises";
-import { useRuntimeHandlers } from "../handlers.js";
+import { RuntimeHandler, useRuntimeHandlers } from "../handlers.js";
 import { useRuntimeWorkers } from "../workers.js";
 import { Context } from "../../context/context.js";
-import { VisibleError } from "../../error.js";
 import { ChildProcessWithoutNullStreams, exec, spawn } from "child_process";
 import { promisify } from "util";
 import { useRuntimeServerConfig } from "../server.js";
-import { findAbove, findBelow, isChild } from "../../util/fs.js";
+import { findAbove, isChild } from "../../util/fs.js";
 const execAsync = promisify(exec);
 
-export const useRustHandler = Context.memo(async () => {
-  const workers = await useRuntimeWorkers();
-  const server = await useRuntimeServerConfig();
-  const handlers = useRuntimeHandlers();
+export const useRustHandler = (): RuntimeHandler => {
   const processes = new Map<string, ChildProcessWithoutNullStreams>();
   const sources = new Map<string, string>();
   const handlerName = process.platform === "win32" ? `handler.exe` : `handler`;
 
-  handlers.register({
+  return {
     shouldBuild: (input) => {
       if (!input.file.endsWith(".rs")) return false;
       const parent = sources.get(input.functionID);
@@ -28,6 +24,8 @@ export const useRustHandler = Context.memo(async () => {
     },
     canHandle: (input) => input.startsWith("rust"),
     startWorker: async (input) => {
+      const workers = await useRuntimeWorkers();
+      const server = await useRuntimeServerConfig();
       const proc = spawn(path.join(input.out, handlerName), {
         env: {
           ...process.env,
@@ -123,5 +121,5 @@ export const useRustHandler = Context.memo(async () => {
         handler: "handler",
       };
     },
-  });
-});
+  };
+};

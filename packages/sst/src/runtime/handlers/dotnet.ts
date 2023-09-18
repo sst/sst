@@ -1,6 +1,5 @@
-import { useRuntimeHandlers } from "../handlers.js";
+import { RuntimeHandler, useRuntimeHandlers } from "../handlers.js";
 import { useRuntimeWorkers } from "../workers.js";
-import { Context } from "../../context/context.js";
 import { ChildProcessWithoutNullStreams, spawn } from "child_process";
 import { useRuntimeServerConfig } from "../server.js";
 import { findBelow, isChild } from "../../util/fs.js";
@@ -24,15 +23,12 @@ const BOOTSTRAP_MAP: Record<string, string> = {
   dotnet6: "dotnet6-bootstrap",
 };
 
-export const useDotnetHandler = Context.memo(async () => {
-  const workers = await useRuntimeWorkers();
-  const server = await useRuntimeServerConfig();
-  const handlers = useRuntimeHandlers();
+export const useDotnetHandler = (): RuntimeHandler => {
   const processes = new Map<string, ChildProcessWithoutNullStreams>();
   const sources = new Map<string, string>();
   const handlerName = process.platform === "win32" ? `handler.exe` : `handler`;
 
-  handlers.register({
+  return {
     shouldBuild: (input) => {
       if (!input.file.endsWith(".cs") && !input.file.endsWith(".fs"))
         return false;
@@ -42,6 +38,8 @@ export const useDotnetHandler = Context.memo(async () => {
     },
     canHandle: (input) => input.startsWith("dotnet"),
     startWorker: async (input) => {
+      const workers = await useRuntimeWorkers();
+      const server = await useRuntimeServerConfig();
       const name = input.handler!.split(":")[0];
       const proc = spawn(
         `dotnet`,
@@ -131,5 +129,5 @@ export const useDotnetHandler = Context.memo(async () => {
         };
       }
     },
-  });
-});
+  };
+};

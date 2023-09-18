@@ -29,13 +29,6 @@ export async function synth(opts: SynthOptions) {
   const { usePythonHandler } = await import("../runtime/handlers/python.js");
   const { useJavaHandler } = await import("../runtime/handlers/java.js");
   if (opts.mode !== "remove") {
-    useNodeHandler();
-    useGoHandler();
-    useContainerHandler();
-    usePythonHandler();
-    useJavaHandler();
-    useDotnetHandler();
-    useRustHandler();
   }
   const cxapi = await import("@aws-cdk/cx-api");
   const { Configuration } = await import("sst-aws-cdk/lib/settings.js");

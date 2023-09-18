@@ -48,13 +48,6 @@ export async function createApp(props?: Partial<AppDeployProps>) {
   });
   const project = useProject();
 
-  await useNodeHandler();
-  await usePythonHandler();
-  await useDotnetHandler();
-  await useJavaHandler();
-  await useGoHandler();
-  await useContainerHandler();
-
   return new App({
     mode: "deploy",
     stage: project.config.stage,

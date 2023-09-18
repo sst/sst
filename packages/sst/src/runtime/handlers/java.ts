@@ -1,7 +1,7 @@
 import path from "path";
 import fs from "fs/promises";
 import os from "os";
-import { useRuntimeHandlers } from "../handlers.js";
+import { RuntimeHandler, useRuntimeHandlers } from "../handlers.js";
 import { useRuntimeWorkers } from "../workers.js";
 import { Context } from "../../context/context.js";
 import { ChildProcessWithoutNullStreams, spawn } from "child_process";
@@ -12,15 +12,12 @@ import { execAsync } from "../../util/process.js";
 import url from "url";
 import AdmZip from "adm-zip";
 
-export const useJavaHandler = Context.memo(async () => {
-  const workers = await useRuntimeWorkers();
-  const server = await useRuntimeServerConfig();
-  const handlers = useRuntimeHandlers();
+export const useJavaHandler = (): RuntimeHandler => {
   const processes = new Map<string, ChildProcessWithoutNullStreams>();
   const sources = new Map<string, string>();
   const runningBuilds = new Map<string, ReturnType<typeof execAsync>>();
 
-  handlers.register({
+  return {
     shouldBuild: (input) => {
       if (!input.file.endsWith(".java")) return false;
       const parent = sources.get(input.functionID);
@@ -29,6 +26,8 @@ export const useJavaHandler = Context.memo(async () => {
     },
     canHandle: (input) => input.startsWith("java"),
     startWorker: async (input) => {
+      const workers = await useRuntimeWorkers();
+      const server = await useRuntimeServerConfig();
       const proc = spawn(
         `java`,
         [
@@ -112,8 +111,8 @@ export const useJavaHandler = Context.memo(async () => {
         };
       }
     },
-  });
-});
+  };
+};
 
 async function getGradleBinary(srcPath: string) {
   // Use a gradle wrapper if provided in the folder, otherwise fall back

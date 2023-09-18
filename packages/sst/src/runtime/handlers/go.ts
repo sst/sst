@@ -1,26 +1,21 @@
 import path from "path";
 import fs from "fs/promises";
 import os from "os";
-import { useRuntimeHandlers } from "../handlers.js";
+import { RuntimeHandler } from "../handlers.js";
 import { useRuntimeWorkers } from "../workers.js";
-import { Context } from "../../context/context.js";
 import { VisibleError } from "../../error.js";
-import { ChildProcessWithoutNullStreams, exec, spawn } from "child_process";
-import { promisify } from "util";
+import { ChildProcessWithoutNullStreams, spawn } from "child_process";
 import { useRuntimeServerConfig } from "../server.js";
 import { isChild } from "../../util/fs.js";
 import { execAsync } from "../../util/process.js";
 
-export const useGoHandler = Context.memo(async () => {
-  const workers = await useRuntimeWorkers();
-  const server = await useRuntimeServerConfig();
-  const handlers = useRuntimeHandlers();
+export const useGoHandler = (): RuntimeHandler => {
   const processes = new Map<string, ChildProcessWithoutNullStreams>();
   const sources = new Map<string, string>();
   const handlerName =
     process.platform === "win32" ? `bootstrap.exe` : `bootstrap`;
 
-  handlers.register({
+  return {
     shouldBuild: (input) => {
       const parent = sources.get(input.functionID);
       if (!parent) return false;
@@ -28,6 +23,8 @@ export const useGoHandler = Context.memo(async () => {
     },
     canHandle: (input) => input.startsWith("go"),
     startWorker: async (input) => {
+      const workers = await useRuntimeWorkers();
+      const server = await useRuntimeServerConfig();
       const proc = spawn(path.join(input.out, handlerName), {
         env: {
           ...process.env,
@@ -129,8 +126,8 @@ export const useGoHandler = Context.memo(async () => {
         handler: "bootstrap",
       };
     },
-  });
-});
+  };
+};
 
 async function find(dir: string, target: string): Promise<string> {
   if (dir === "/") throw new VisibleError(`Could not find a ${target} file`);

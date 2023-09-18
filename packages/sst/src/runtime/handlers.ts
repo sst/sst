@@ -8,6 +8,13 @@ import { useBus } from "../bus.js";
 import crypto from "crypto";
 import { useProject } from "../project.js";
 import { FunctionProps, useFunctions } from "../constructs/Function.js";
+import { useNodeHandler } from "./handlers/node.js";
+import { useContainerHandler } from "./handlers/container.js";
+import { useDotnetHandler } from "./handlers/dotnet.js";
+import { useGoHandler } from "./handlers/go.js";
+import { useJavaHandler } from "./handlers/java.js";
+import { usePythonHandler } from "./handlers/python.js";
+import { useRustHandler } from "./handlers/rust.js";
 
 declare module "../bus.js" {
   export interface Events {
@@ -65,7 +72,15 @@ export interface RuntimeHandler {
 }
 
 export const useRuntimeHandlers = Context.memo(() => {
-  const handlers: RuntimeHandler[] = [];
+  const handlers: RuntimeHandler[] = [
+    useNodeHandler(),
+    useGoHandler(),
+    useContainerHandler(),
+    usePythonHandler(),
+    useJavaHandler(),
+    useDotnetHandler(),
+    useRustHandler(),
+  ];
   const project = useProject();
   const bus = useBus();
 

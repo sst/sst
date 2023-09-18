@@ -7,17 +7,13 @@ import { useProject } from "../../project.js";
 import esbuild, { BuildOptions, BuildResult } from "esbuild";
 import url from "url";
 import { Worker } from "worker_threads";
-import { useRuntimeHandlers } from "../handlers.js";
+import { RuntimeHandler } from "../handlers.js";
 import { useRuntimeWorkers } from "../workers.js";
-import { Context } from "../../context/context.js";
-import { VisibleError } from "../../error.js";
 import { Colors } from "../../cli/colors.js";
 import { Logger } from "../../logger.js";
 import { findAbove, findBelow } from "../../util/fs.js";
 
-export const useNodeHandler = Context.memo(async () => {
-  const workers = await useRuntimeWorkers();
-  const handlers = useRuntimeHandlers();
+export const useNodeHandler = (): RuntimeHandler => {
   const rebuildCache: Record<
     string,
     {
@@ -33,7 +29,7 @@ export const useNodeHandler = Context.memo(async () => {
   const project = useProject();
   const threads = new Map<string, Worker>();
 
-  handlers.register({
+  return {
     shouldBuild: (input) => {
       const cache = rebuildCache[input.functionID];
       if (!cache) return false;
@@ -45,6 +41,7 @@ export const useNodeHandler = Context.memo(async () => {
     },
     canHandle: (input) => input.startsWith("nodejs"),
     startWorker: async (input) => {
+      const workers = await useRuntimeWorkers();
       new Promise(async () => {
         const worker = new Worker(
           url.fileURLToPath(
@@ -311,8 +308,8 @@ export const useNodeHandler = Context.memo(async () => {
         };
       }
     },
-  });
-});
+  };
+};
 
 function logMemoryUsage(functionID: string, handler: string) {
   const printInMB = (bytes: number) => `${Math.round(bytes / 1024 / 1024)} MB`;
