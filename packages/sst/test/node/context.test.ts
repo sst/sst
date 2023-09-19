@@ -66,6 +66,23 @@ test("memo", () => {
   });
 });
 
+test("double memo", () => {
+  const A = create<number>("A");
+  const B = memo(() => A.use() * 2);
+  let runs = 0;
+  const C = memo(() => {
+    runs++;
+    return B() * 2;
+  });
+  A.with(1, () => {
+    expect(B()).toEqual(2);
+    expect(C()).toEqual(4);
+    C();
+    expect(runs).toEqual(1);
+  });
+  expect(C).toThrow(ContextNotFoundError);
+});
+
 test("memo async", async () => {
   const A = create<number>("A");
   let runs = 0;

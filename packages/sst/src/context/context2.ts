@@ -14,21 +14,21 @@ let count = 0;
 export function create<T>(name: string) {
   const storage = new AsyncLocalStorage<{
     value: T;
-    version: number;
+    version: string;
   }>();
 
-  const memos = [] as MemoReset[];
+  const children = [] as MemoReset[];
   // notify all memos to reset
   function reset() {
-    for (const memo of memos) {
-      memo();
+    for (const child of children) {
+      child();
     }
   }
 
   const ctx = {
     name,
     with<R>(value: T, cb: () => R) {
-      const version = ++count;
+      const version = (++count).toString();
       return storage.run({ value, version }, () => {
         return runWithCleanup(cb, () => reset());
       });
@@ -38,7 +38,7 @@ export function create<T>(name: string) {
       // use is being called within a memo, so track dependency
       if (memo) {
         memo.deps.push(ctx);
-        memos.push(memo.reset);
+        children.push(memo.reset);
       }
       const result = storage.getStore();
       if (result === undefined) throw new ContextNotFoundError(name);
@@ -53,15 +53,20 @@ export function create<T>(name: string) {
   return ctx;
 }
 
+interface Trackable {
+  version(): string;
+}
+
 type MemoReset = () => void;
 const ContextMemo = new AsyncLocalStorage<{
   reset: MemoReset;
-  deps: Context<any>[];
+  deps: Trackable[];
 }>();
 
 export function memo<T>(cb: () => T) {
-  const deps = [] as Context<any>[];
+  const deps = [] as Trackable[];
   const cache = new Map<string, T>();
+  const children = [] as MemoReset[];
   let tracked = false;
 
   function key() {
@@ -70,6 +75,9 @@ export function memo<T>(cb: () => T) {
 
   function reset() {
     cache.delete(key());
+    for (const child of children) {
+      child();
+    }
   }
 
   function save(value: T) {
@@ -77,6 +85,11 @@ export function memo<T>(cb: () => T) {
   }
 
   return () => {
+    const child = ContextMemo.getStore();
+    if (child) {
+      child.deps.push({ version: () => key() });
+      children.push(child.reset);
+    }
     // Memo never run so build up dependency list
     if (!tracked) {
       return ContextMemo.run({ deps, reset }, () => {
@@ -88,7 +101,9 @@ export function memo<T>(cb: () => T) {
     }
 
     const cached = cache.get(key());
-    if (cached) return cached;
+    if (cached) {
+      return cached;
+    }
 
     const result = cb();
     save(result);
@@ -96,7 +111,7 @@ export function memo<T>(cb: () => T) {
   };
 }
 
-function runWithCleanup<R>(cb: () => R, cleanup: (input: R) => void) {
+function runWithCleanup<R>(cb: () => R, cleanup: (input: R) => void): R {
   const result = cb();
   if (
     result &&
