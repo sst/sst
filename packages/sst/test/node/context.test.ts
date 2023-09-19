@@ -71,7 +71,10 @@ test("memo async", async () => {
   let runs = 0;
   const B = memo(async () => {
     runs++;
-    return A.use() * 2;
+    const a = A.use();
+    return new Promise<number>((resolve) =>
+      setTimeout(() => resolve(a * 2), 0)
+    );
   });
   await A.with(1, async () => {
     expect(await B()).toEqual(2);

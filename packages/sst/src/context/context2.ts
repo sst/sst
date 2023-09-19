@@ -18,6 +18,7 @@ export function create<T>(name: string) {
   }>();
 
   const memos = [] as MemoReset[];
+  // notify all memos to reset
   function reset() {
     for (const memo of memos) {
       memo();
@@ -34,6 +35,7 @@ export function create<T>(name: string) {
     },
     use() {
       const memo = ContextMemo.getStore();
+      // use is being called within a memo, so track dependency
       if (memo) {
         memo.deps.push(ctx);
         memos.push(memo.reset);
@@ -75,8 +77,8 @@ export function memo<T>(cb: () => T) {
   }
 
   return () => {
+    // Memo never run so build up dependency list
     if (!tracked) {
-      console.log("tracking");
       return ContextMemo.run({ deps, reset }, () => {
         return runWithCleanup(cb, (result) => {
           tracked = true;
