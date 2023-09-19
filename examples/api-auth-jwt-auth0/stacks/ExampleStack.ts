@@ -7,8 +7,8 @@ export function ExampleStack({ stack, app }: StackContext) {
       auth0: {
         type: "jwt",
         jwt: {
-          issuer: process.env.AUTH0_DOMAIN!,
-          audience: [process.env.AUTH0_DOMAIN + "api/v2/"],
+          issuer: `https://${process.env.AUTH0_DOMAIN!}`,
+          audience: [`https://${process.env.AUTH0_DOMAIN}` + "api/v2/"],
         },
       },
     },
