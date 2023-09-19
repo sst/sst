@@ -17,7 +17,11 @@ import {
   ViewerProtocolPolicy,
   AllowedMethods,
   BehaviorOptions,
+  CacheCookieBehavior,
+  CacheHeaderBehavior,
   CachedMethods,
+  CachePolicy,
+  CacheQueryStringBehavior,
   LambdaEdgeEventType,
 } from "aws-cdk-lib/aws-cloudfront";
 import { HttpOrigin } from "aws-cdk-lib/aws-cloudfront-origins";
@@ -380,8 +384,17 @@ export class NextjsSite extends SsrSite {
       allowedMethods: AllowedMethods.ALLOW_ALL,
       cachedMethods: CachedMethods.CACHE_GET_HEAD_OPTIONS,
       compress: true,
-      cachePolicy:
-        cdk?.serverCachePolicy ?? this.useServerBehaviorCachePolicy(),
+      cachePolicy: new CachePolicy(this, "ImageOptimizationCache", {
+        queryStringBehavior: CacheQueryStringBehavior.all(),
+        headerBehavior: CacheHeaderBehavior.none(),
+        cookieBehavior: CacheCookieBehavior.none(),
+        defaultTtl: CdkDuration.days(0),
+        maxTtl: CdkDuration.days(365),
+        minTtl: CdkDuration.days(0),
+        enableAcceptEncodingBrotli: true,
+        enableAcceptEncodingGzip: true,
+        comment: "SST Image Optimization response cache policy",
+      }),
       responseHeadersPolicy: cdk?.responseHeadersPolicy,
       edgeLambdas: regional?.enableServerUrlIamAuth
         ? [
