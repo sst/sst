@@ -1,4 +1,5 @@
 import { Context } from "../../context/context.js";
+import { create } from "../../context/context2.js";
 import { SSTError } from "../../util/error.js";
 
 interface Definition {
@@ -10,10 +11,10 @@ export class WrongActorError extends SSTError {}
 
 export function createActors<T extends Definition>() {
   type Actors = T | { type: "public"; properties: {} };
-  const ctx = Context.create<Actors>("Actors");
+  const ctx = create<Actors>("Actors");
   return {
     useActor: ctx.use,
-    provideActor: ctx.provide,
+    withActor: ctx.with,
     assertActor<T extends Actors["type"]>(type: T) {
       const actor = ctx.use();
       if (actor.type === type)

@@ -1,5 +1,4 @@
 import { createProxy } from "../util/index.js";
-import { Context } from "../../context/context.js";
 import {
   useEvent,
   Handler,
@@ -7,6 +6,7 @@ import {
   useContextType,
 } from "../../context/handler.js";
 import { APIGatewayProxyStructuredResultV2 } from "aws-lambda";
+import { memo } from "../../context/context2.js";
 
 export interface ApiResources {}
 export interface AppSyncApiResources {}
@@ -48,7 +48,7 @@ export function ApiHandler(cb: Parameters<typeof Handler<"api">>[1]) {
   });
 }
 
-export const useCookies = /* @__PURE__ */ Context.memo("ApiCookies", () => {
+export const useCookies = /* @__PURE__ */ memo(() => {
   const evt = useEvent("api");
   const cookies = evt.cookies || [];
   return Object.fromEntries(
@@ -61,7 +61,7 @@ export function useCookie(name: string) {
   return cookies[name] as string | undefined;
 }
 
-export const useBody = /* @__PURE__ */ Context.memo("ApiBody", () => {
+export const useBody = /* @__PURE__ */ memo(() => {
   const type = useContextType() as ApiHandlerTypes;
   const evt = useEvent(type);
   if (!evt.body) return;
@@ -71,20 +71,20 @@ export const useBody = /* @__PURE__ */ Context.memo("ApiBody", () => {
   return body;
 });
 
-export const useJsonBody = /* @__PURE__ */ Context.memo("ApiJsonBody", () => {
+export const useJsonBody = /* @__PURE__ */ memo(() => {
   const body = useBody();
   if (!body) return;
   return JSON.parse(body);
 });
 
-export const useFormData = /* @__PURE__ */ Context.memo("ApiFormData", () => {
+export const useFormData = /* @__PURE__ */ memo(() => {
   const body = useBody();
   if (!body) return;
   const params = new URLSearchParams(body);
   return params;
 });
 
-export const usePath = /* @__PURE__ */ Context.memo("ApiPath", () => {
+export const usePath = /* @__PURE__ */ memo(() => {
   const evt = useEvent("api");
   return evt.rawPath.split("/").filter(Boolean);
 });
@@ -99,7 +99,7 @@ interface CookieOptions {
   sameSite?: "Strict" | "Lax" | "None";
 }
 
-export const useResponse = /* @__PURE__ */ Context.memo("ApiResponse", () => {
+export const useResponse = /* @__PURE__ */ memo(() => {
   const response: APIGatewayProxyStructuredResultV2 = {
     headers: {},
     cookies: [],
