@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.25.4
+
+### Patch Changes
+
+- [`86b894dd6`](https://github.com/sst/sst/commit/86b894dd6e3ba765866fa0f7bea815e7ab77abd1) Thanks [@thdxr](https://github.com/thdxr)! - future/auth: support allowClient callback
+
 ## 2.25.3
 
 ### Patch Changes
