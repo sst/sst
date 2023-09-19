@@ -385,21 +385,21 @@ export class NextjsSite extends SsrSite {
       responseHeadersPolicy: cdk?.responseHeadersPolicy,
       edgeLambdas: regional?.enableServerUrlIamAuth
         ? [
-          (() => {
-            const fn = this.useServerUrlSigningFunction();
-            fn.attachPermissions([
-              new PolicyStatement({
-                actions: ["lambda:InvokeFunctionUrl"],
-                resources: [imageFn.functionArn],
-              }),
-            ]);
-            return {
-              includeBody: true,
-              eventType: LambdaEdgeEventType.ORIGIN_REQUEST,
-              functionVersion: fn.currentVersion,
-            };
-          })(),
-        ]
+            (() => {
+              const fn = this.useServerUrlSigningFunction();
+              fn.attachPermissions([
+                new PolicyStatement({
+                  actions: ["lambda:InvokeFunctionUrl"],
+                  resources: [imageFn.functionArn],
+                }),
+              ]);
+              return {
+                includeBody: true,
+                eventType: LambdaEdgeEventType.ORIGIN_REQUEST,
+                functionVersion: fn.currentVersion,
+              };
+            })(),
+          ]
         : [],
     };
   }
