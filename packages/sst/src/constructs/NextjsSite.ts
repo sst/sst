@@ -386,7 +386,8 @@ export class NextjsSite extends SsrSite {
       compress: true,
       cachePolicy: new CachePolicy(this, "ImageOptimizationCache", {
         queryStringBehavior: CacheQueryStringBehavior.all(),
-        headerBehavior: CacheHeaderBehavior.allowList("accept"),
+        // This is required to ensure the correct format is sent to the end user. W/o the accept header, the image optimization won't optimize to webphttps://github.com/vercel/next.js/blob/ffafad2c35a3f9677bb520f68e989f58f192b931/packages/next/src/server/image-optimizer.ts#L712
+        headerBehavior: CacheHeaderBehavior.allowList("accept"), 
         cookieBehavior: CacheCookieBehavior.none(),
         defaultTtl: CdkDuration.days(0),
         maxTtl: CdkDuration.days(365),
