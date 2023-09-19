@@ -1,5 +1,5 @@
 import { createSigner, createVerifier, SignerOptions } from "fast-jwt";
-import { Context } from "../../../context/context.js";
+import { Context } from "../../../context/context2.js";
 import { useCookie, useHeader } from "../../api/index.js";
 import { Auth } from "../../auth/index.js";
 import { Config } from "../../config/index.js";
@@ -16,7 +16,7 @@ export type SessionValue = {
   };
 }[keyof SessionTypes];
 
-const SessionMemo = /* @__PURE__ */ Context.create("Session", () => {
+const SessionMemo = /* @__PURE__ */ Context.memo(() => {
   // Get the context type and hooks that match that type
   let token = "";
 
@@ -49,7 +49,7 @@ const SessionMemo = /* @__PURE__ */ Context.create("Session", () => {
 
 // This is a crazy TS hack to prevent the types from being evaluated too soon
 export function useSession<T = SessionValue>() {
-  const ctx = SessionMemo.use();
+  const ctx = SessionMemo();
   return ctx as T;
 }
 
@@ -179,7 +179,7 @@ export function createSessionBuilder<
       };
     },
     use() {
-      const ctx = SessionMemo.use();
+      const ctx = SessionMemo();
       return ctx as SessionValue;
     },
     $type: {} as SessionTypes,

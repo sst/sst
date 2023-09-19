@@ -113,3 +113,8 @@ function runWithCleanup<R>(cb: () => R, cleanup: (input: R) => void) {
   cleanup(result);
   return result;
 }
+
+export const Context = {
+  create,
+  memo,
+};
