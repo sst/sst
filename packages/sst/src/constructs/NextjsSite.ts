@@ -386,7 +386,7 @@ export class NextjsSite extends SsrSite {
       compress: true,
       cachePolicy: new CachePolicy(this, "ImageOptimizationCache", {
         queryStringBehavior: CacheQueryStringBehavior.all(),
-        headerBehavior: CacheHeaderBehavior.none(),
+        headerBehavior: CacheHeaderBehavior.allowList("accept"),
         cookieBehavior: CacheCookieBehavior.none(),
         defaultTtl: CdkDuration.days(0),
         maxTtl: CdkDuration.days(365),
