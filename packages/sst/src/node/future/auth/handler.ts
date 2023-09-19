@@ -6,6 +6,7 @@ import { Adapter } from "./adapter/adapter.js";
 import { createSigner, createVerifier, SignerOptions } from "fast-jwt";
 import {
   ApiHandler,
+  Response,
   useCookie,
   useCookies,
   useFormValue,
@@ -46,7 +47,9 @@ export function AuthHandler<
 >(input: {
   providers: Providers;
   sessions?: Sessions;
-  clients: () => Promise<Record<string, string>>;
+  /** @deprecated use allowClient callback instead */
+  clients?: () => Promise<Record<string, string>>;
+  allowClient?: (clientID: string, redirect: string) => Promise<boolean>;
   onAuthorize?: (
     event: APIGatewayProxyEventV2
   ) => Promise<void | keyof Providers>;
@@ -87,7 +90,7 @@ export function AuthHandler<
       if (input.onIndex) {
         return input.onIndex(evt);
       }
-      const clients = await input.clients();
+      const clients = (await input.clients?.()) || {};
       return {
         statusCode: 200,
         headers: {
@@ -191,6 +194,13 @@ export function AuthHandler<
         ...useQueryParams(),
       } as Record<string, string>;
 
+      if (!redirect_uri) {
+        return {
+          statusCode: 400,
+          body: "Missing redirect_uri",
+        };
+      }
+
       if (!provider) {
         return {
           statusCode: 400,
@@ -212,10 +222,23 @@ export function AuthHandler<
         };
       }
 
-      if (!redirect_uri) {
+      if (input.clients) {
+        const clients = await input.clients();
+        if (clients[client_id] !== redirect_uri) {
+          return {
+            statusCode: 400,
+            body: "Invalid redirect_uri",
+          };
+        }
+      }
+
+      if (
+        input.allowClient &&
+        !(await input.allowClient(client_id, redirect_uri))
+      ) {
         return {
           statusCode: 400,
-          body: "Missing redirect_uri",
+          body: "Invalid redirect_uri",
         };
       }
 
