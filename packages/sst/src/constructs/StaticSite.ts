@@ -756,12 +756,13 @@ interface ImportMeta {
   /////////////////////
 
   private createCfDistribution(): Distribution {
-    const { errorPage, customDomain, cdk } = this.props;
+    const { errorPage, customDomain, waitForInvalidation, cdk } = this.props;
     const indexPage = this.props.indexPage || "index.html";
 
     return new Distribution(this, "CDN", {
       scopeOverride: this,
       customDomain,
+      waitForInvalidation,
       cdk: {
         distribution:
           cdk?.distribution && isCDKConstruct(cdk.distribution)

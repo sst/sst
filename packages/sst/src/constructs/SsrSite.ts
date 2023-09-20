@@ -1019,12 +1019,13 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
   }
 
   protected createCloudFrontDistributionForRegional() {
-    const { customDomain, cdk } = this.props;
+    const { customDomain, waitForInvalidation, cdk } = this.props;
     const cfDistributionProps = cdk?.distribution || {};
 
     return new Distribution(this, "CDN", {
       scopeOverride: this,
       customDomain,
+      waitForInvalidation,
       cdk: {
         distribution: {
           // these values can be overwritten by cfDistributionProps
@@ -1042,12 +1043,13 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
   }
 
   protected createCloudFrontDistributionForEdge() {
-    const { customDomain, cdk } = this.props;
+    const { customDomain, waitForInvalidation, cdk } = this.props;
     const cfDistributionProps = cdk?.distribution || {};
 
     return new Distribution(this, "CDN", {
       scopeOverride: this,
       customDomain,
+      waitForInvalidation,
       cdk: {
         distribution: {
           // these values can be overwritten by cfDistributionProps

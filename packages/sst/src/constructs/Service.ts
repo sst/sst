@@ -980,7 +980,7 @@ export class Service extends Construct implements SSTConstruct {
   }
 
   private createDistribution(alb?: ApplicationLoadBalancer) {
-    const { cdk, customDomain } = this.props;
+    const { cdk, customDomain, waitForInvalidation } = this.props;
 
     // Do not create distribution if disabled or if ALB was not created (ie. disabled)
     if (!alb || cdk?.cloudfrontDistribution === false) return;
@@ -999,6 +999,7 @@ export class Service extends Construct implements SSTConstruct {
 
     return new Distribution(this, "CDN", {
       customDomain,
+      waitForInvalidation,
       cdk: {
         distribution: {
           defaultRootObject: "",

@@ -302,13 +302,14 @@ export class NextjsSite extends SsrSite {
      *    - x-vercel-cache: MISS
      */
 
-    const { customDomain, cdk } = this.props;
+    const { customDomain, waitForInvalidation, cdk } = this.props;
     const cfDistributionProps = cdk?.distribution || {};
     const serverBehavior = this.buildDefaultBehaviorForRegional();
 
     return new Distribution(this, "CDN", {
       scopeOverride: this,
       customDomain,
+      waitForInvalidation,
       cdk: {
         distribution: {
           // these values can be overwritten by cfDistributionProps
@@ -329,13 +330,14 @@ export class NextjsSite extends SsrSite {
   }
 
   protected createCloudFrontDistributionForEdge() {
-    const { customDomain, cdk } = this.props;
+    const { customDomain, waitForInvalidation, cdk } = this.props;
     const cfDistributionProps = cdk?.distribution || {};
     const serverBehavior = this.buildDefaultBehaviorForEdge();
 
     return new Distribution(this, "CDN", {
       scopeOverride: this,
       customDomain,
+      waitForInvalidation,
       cdk: {
         distribution: {
           // these values can be overwritten by cfDistributionProps
