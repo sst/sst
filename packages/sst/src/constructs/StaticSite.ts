@@ -208,6 +208,16 @@ export interface StaticSiteProps {
    */
   environment?: Record<string, string>;
   /**
+   * The viewer protocol policy to use for the cloudfront distribution behaviours. Default is ViewerProtocolPolicy.REDIRECT_TO_HTTPS.
+   * @default ViewerProtocolPolicy.REDIRECT_TO_HTTPS
+   * @example 
+   * ```js
+   * new StaticSite(stack, "frontend", {
+   *  viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+   * });
+   */
+  viewerProtocolPolicy?: ViewerProtocolPolicy;
+  /**
    * While deploying, SST removes old files that no longer exist. Pass in `false` to keep the old files around.
    *
    * @default true
@@ -795,10 +805,10 @@ interface ImportMeta {
   }
 
   private buildDistributionBehavior(): BehaviorOptions {
-    const { cdk } = this.props;
+    const { cdk, viewerProtocolPolicy } = this.props;
     return {
       origin: new S3Origin(this.bucket),
-      viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+      viewerProtocolPolicy: viewerProtocolPolicy ?? ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
       functionAssociations: [
         {
           // Note: this is required in Frameworks like Astro where `index.html`
