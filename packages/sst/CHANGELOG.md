@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.25.6
+
+### Patch Changes
+
+- [`f554d4bd7`](https://github.com/sst/sst/commit/f554d4bd76bc2eb1cc932a0ce1caddd21fa177dc) Thanks [@thdxr](https://github.com/thdxr)! - function: fix bridge throwing error when stack trace is missing
+
 ## 2.25.5
 
 ### Patch Changes
