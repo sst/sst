@@ -459,7 +459,7 @@ Here are some frequently asked questions about `Config`.
 
 ### How much does it cost to use `Config`?
 
-Secrets and Parameters are stored in AWS SSM as **Standard parameters** by default. This makes `Config` [free to use](https://aws.amazon.com/systems-manager/pricing/#Parameter_Store) in your SST apps.
+Secrets and Parameters are stored in AWS SSM as **Standard parameters** by default. This makes `Config` [free to use](https://aws.amazon.com/systems-manager/pricing/#Parameter_Store) in your SST apps. However when storing a `Config.Secret` the value is encrypted by AWS KMS. These are retrieved at runtime in your Lambda functions when it starts up. AWS KMS has a [free tier](https://aws.amazon.com/kms/pricing/#Free_tier) of 20,000 API calls per month. And it costs $0.03 for every 10,000 subsequent API calls. This is worth keeping in mind as these secrets are fetched per Lambda function cold start.
 
 Note that Standard parameters have a content size limit of 4KB. If your secrets exceed this size, they will be stored as **Advanced parameters**, which can store up to 8KB. Each advanced parameter [costs roughly $0.05 per month](https://aws.amazon.com/systems-manager/pricing/#Parameter_Store).
 
