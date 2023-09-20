@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.25.5
+
+### Patch Changes
+
+- [#3320](https://github.com/sst/sst/pull/3320) [`93ed65728`](https://github.com/sst/sst/commit/93ed65728d224ddafcc045f0ba802ebe5e0151ec) Thanks [@khuezy](https://github.com/khuezy)! - NextjsSite: update OpenNext to 2.1.5
+
 ## 2.25.4
 
 ### Patch Changes
