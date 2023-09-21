@@ -119,7 +119,47 @@ The SST Console needs access to your AWS account to do the following things:
 
 ---
 
-## Issues
+## Features
+
+Here are a few of the things the Console does for you.
+
+---
+
+### Logs
+
+With the SST Console, you don't need to go to CloudWatch to look at the logs for your functions.
+
+![SST Console recent logs](/img/console/sst-console-logs.png)
+
+There are a couple of different modes for the logs view.
+
+---
+
+#### Recent
+
+By default, the Console will scan and pull the recent logs of a function. This is useful for cases where you've just seen an error and you want to pull up the logs for it. 
+
+---
+
+#### Live
+
+In _Live_ mode, you'll see the logs come in live for the function.
+
+---
+
+#### Time interval presets
+
+There are a couple preset time intervals like _5min ago_, _15min ago_, _1hr ago_, etc. These pull up the logs between now and the time range selected.
+
+---
+
+#### Custom time interval
+
+You can also specify a time interval using the _Specify a time_ option.
+
+---
+
+### Issues
 
 The SST Console will automatically show you any errors in your Lambda functions in real-time.
 
@@ -184,23 +224,35 @@ If some errors are not grouped correctly or if the error messages have not been 
 
 ---
 
-## Local logs
+### Local logs
 
-When the Console starts up, it checks if you are running `sst dev` locally. If so, then it'll show you real-time logs from your local terminal.
-
-![SST Console tailing local logs](/img/console/sst-console-tailing-local-logs.png)
-
-This works by connecting to a local server that's run as a part of the SST CLI.
+When the Console starts up, it checks if you are running `sst dev` locally. If so, then it'll show you real-time logs from your local terminal. This works by connecting to a local server that's run as a part of the SST CLI.
 
 :::info
 The local server only allows access from `localhost` and `console.sst.dev`.
 :::
 
-The local logs works in all browsers and environments. But for certain browsers like Safari or Brave, and Gitpod, it needs some additional configuration.
+The local logs works in all browsers and environments. But for certain browsers like [Safari or Brave](#safari--brave), and [Gitpod](#gitpod), it needs some additional configuration. We'll look at them below.
 
 ---
 
-### Safari & Brave
+#### All local logs
+
+If you head over to the _Local_ tab, you'll see the logs from all your functions.
+
+![SST Console local tab](/img/console/sst-console-local-tab.png)
+
+---
+
+#### Local function log
+
+You can also view the logs for a specific function.
+
+![SST Console tailing local logs](/img/console/sst-console-tailing-local-logs.png)
+
+---
+
+#### Safari & Brave
 
 Certain browsers like Safari and Brave require the local connection between the browser and the `sst dev` CLI to be running on HTTPS.
 
@@ -213,7 +265,7 @@ SST integrates with [mkcert](https://github.com/FiloSottile/mkcert) to automatic
 
 ---
 
-### Gitpod
+#### Gitpod
 
 If you are using [Gitpod](https://www.gitpod.io/), you can use the Gitpod Local Companion app to connect to the `sst dev` or `sst console` process running inside your Gitpod workspace.
 
