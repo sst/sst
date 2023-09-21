@@ -171,7 +171,7 @@ import * as cdk from "aws-cdk-lib";
 
 stack
   .getAllFunctions()
-  .forEach((fn) => cdk.Tags.of(fn).add("lumigo:auto-trace", "true"));
+  .forEach((fn) => cdk.Tags.of(fn).add("baselime:tracing", "true"));
 ```
 
 To enable capturing logs from your ECS services, you can use [AWS Firelens log driver](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/using_firelens.html) to send logs to Baselime’s backend.
