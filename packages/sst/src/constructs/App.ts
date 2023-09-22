@@ -308,11 +308,12 @@ export class App extends CDKApp {
                   stage: this.stage,
                   bootstrap: bootstrap.bucket,
                   bucket: sourcemaps[0].bucket.bucketName,
-                  functions: sourcemaps.map((s) => [s.arn, s.key]),
+                  functions: sourcemaps.map((s) => [s.func.functionArn, s.key]),
                 },
               }
             );
             resource.node.addDependency(policy);
+            sourcemaps.forEach((s) => s.func.node.addDependency(resource));
           }
         }
 
