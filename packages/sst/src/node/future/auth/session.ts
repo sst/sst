@@ -1,5 +1,5 @@
 import { createSigner, createVerifier, SignerOptions } from "fast-jwt";
-import { Context } from "../../../context/context.js";
+import { Context } from "../../../context/context2.js";
 import { useCookie, useHeader } from "../../api/index.js";
 import { Auth } from "../../auth/index.js";
 import { Config } from "../../config/index.js";

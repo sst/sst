@@ -1,8 +1,8 @@
-import { Context } from "./context/context.js";
 import chokidar from "chokidar";
 import { useBus } from "./bus.js";
 import path from "path";
 import { useProject } from "./project.js";
+import { lazy } from "./util/lazy.js";
 
 declare module "./bus.js" {
   export interface Events {
@@ -13,7 +13,7 @@ declare module "./bus.js" {
   }
 }
 
-export const useWatcher = Context.memo(() => {
+export const useWatcher = lazy(() => {
   const project = useProject();
   const bus = useBus();
 

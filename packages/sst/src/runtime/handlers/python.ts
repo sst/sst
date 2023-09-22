@@ -7,7 +7,6 @@ import { useRuntimeServerConfig } from "../server.js";
 import { findAbove, isChild } from "../../util/fs.js";
 import { Runtime } from "aws-cdk-lib/aws-lambda";
 import { bundle } from "./pythonBundling.js";
-const execAsync = promisify(exec);
 import os from "os";
 import url from "url";
 

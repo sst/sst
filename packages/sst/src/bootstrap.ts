@@ -39,6 +39,7 @@ import {
 import { VisibleError } from "./error.js";
 import { Logger } from "./logger.js";
 import { Stacks } from "./stacks/index.js";
+import { lazy } from "./util/lazy.js";
 
 const CDK_STACK_NAME = "CDKToolkit";
 const SST_STACK_NAME = "SSTBootstrap";
@@ -47,7 +48,7 @@ const OUTPUT_BUCKET = "BucketName";
 const LATEST_VERSION = "7.2";
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 
-export const useBootstrap = Context.memo(async () => {
+export const useBootstrap = lazy(async () => {
   Logger.debug("Initializing bootstrap context");
   let [cdkStatus, sstStatus] = await Promise.all([
     loadCDKStatus(),
@@ -88,7 +89,7 @@ export const useBootstrap = Context.memo(async () => {
     version: string;
     bucket: string;
   };
-}, "Bootstrap");
+});
 
 async function loadCDKStatus() {
   const { cdk } = useProject().config;

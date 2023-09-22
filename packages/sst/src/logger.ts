@@ -1,11 +1,11 @@
 import fs from "fs";
 import path from "path";
-import { Context } from "./context/context.js";
 import { useProject } from "./project.js";
+import { lazy } from "./util/lazy.js";
 
 let previous = new Date();
 
-const useFile = Context.memo(() => {
+const useFile = lazy(() => {
   const project = useProject();
   const filePath = path.join(project.paths.out, "debug.log");
   const file = fs.createWriteStream(filePath);

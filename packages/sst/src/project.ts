@@ -74,10 +74,11 @@ interface Project {
   stacks: SSTConfig["stacks"];
 }
 
-export const ProjectContext = Context.create<Project>("Project");
+let project: Project | undefined;
 
 export function useProject() {
-  return ProjectContext.use();
+  if (!project) throw new Error("Project not initialized");
+  return project;
 }
 
 const CONFIG_EXTENSIONS = [
@@ -155,7 +156,7 @@ export async function initProject(globals: GlobalOptions) {
       return ["unknown", "unknown"];
     }
   })();
-  const project: Project = {
+  project = {
     version,
     cdkVersion,
     constructsVersion,
@@ -181,8 +182,6 @@ export async function initProject(globals: GlobalOptions) {
       artifacts: path.join(out, "artifacts"),
     },
   };
-
-  ProjectContext.provide(project);
 
   // Cleanup old config files
   (async function () {

@@ -14,6 +14,7 @@ import { useBus } from "../../../bus.js";
 import { FunctionMetadata, RDSMetadata } from "../../../constructs/Metadata.js";
 import { Logger } from "../../../logger.js";
 import { useAWSClient } from "../../../credentials.js";
+import { lazy } from "../../../util/lazy.js";
 
 interface Database {
   migratorID: string;
@@ -27,7 +28,7 @@ interface Database {
   };
 }
 
-export const useKyselyTypeGenerator = Context.memo(async () => {
+export const useKyselyTypeGenerator = lazy(async () => {
   let databases: Database[] = [];
   const bus = useBus();
   const logger = Logger.debug.bind(null, "[kysely-codegen]");

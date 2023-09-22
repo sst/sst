@@ -1,9 +1,9 @@
-import { Context } from "../../context/context.js";
+import { Context } from "../../context/context2.js";
 
-const LoaderContext = Context.create(() => {
+const LoaderContext = Context.memo(() => {
   const loaders = new Map<any, any>();
   return loaders;
-}, "loader-context");
+});
 
 export function createLoader<Key, Value>(
   batchFn: (keys: Key[]) => Promise<Value[]>
@@ -55,7 +55,7 @@ export function useLoader<Key, Value>(
   key: any,
   batchFn: (keys: Key[]) => Promise<Value[]>
 ) {
-  const loaders = LoaderContext.use();
+  const loaders = LoaderContext();
   if (loaders.has(key)) {
     return loaders.get(key) as (key: Key) => Promise<Value>;
   }
