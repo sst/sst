@@ -30,8 +30,8 @@ module.exports = {
     image: "img/og-image.png",
     metaImage: "img/og-image.png",
     announcementBar: {
-      id: "v2",
-      content: `SST v2 is now available! Check out the <a href="https://docs.sst.dev/upgrade-guide">upgrade guide</a>.`,
+      id: "console",
+      content: `Check out the new SST Console, a web based dashboard for your SST apps. <a href="https://docs.sst.dev/console">Learn more</a>.`,
       backgroundColor: "#395C6B",
       textColor: "#FFFFFF",
       isCloseable: false,
