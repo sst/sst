@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 3.0.0
+
+### Major Changes
+
+- [`6605fe06b`](https://github.com/sst/sst/commit/6605fe06bff53faff867b76b03064e904192ca90) Thanks [@thdxr](https://github.com/thdxr)! - function: rollback sourcemap uploader dependency
+
 ## 2.26.1
 
 ### Patch Changes
