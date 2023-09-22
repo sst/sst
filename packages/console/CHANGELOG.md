@@ -1,5 +1,7 @@
 # @sst/console
 
+## 2.26.1
+
 ## 2.26.0
 
 ### Patch Changes
