@@ -4,7 +4,7 @@ import path from "path";
 import { dynamicImport } from "../util/module.js";
 import { findAbove } from "../util/fs.js";
 import { VisibleError } from "../error.js";
-import babel from "@babel/core";
+import * as babel from "@babel/core";
 const _ = await import("@babel/generator");
 const generate = _.default?.default ?? _.default;
 // @ts-expect-error
