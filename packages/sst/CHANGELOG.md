@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.26.1
+
+### Patch Changes
+
+- [`32c21a867`](https://github.com/sst/sst/commit/32c21a867ae38b22e0819241cb3084bbc95d3fe6) Thanks [@thdxr](https://github.com/thdxr)! - upload sourcemaps before anything else
+
 ## 2.26.0
 
 ### Minor Changes
