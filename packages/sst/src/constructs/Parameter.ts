@@ -1,5 +1,6 @@
 import { Construct } from "constructs";
 import { SSTConstruct } from "./Construct.js";
+import { App } from "./App.js";
 import { FunctionBindingProps } from "./util/functionBinding.js";
 
 export interface ParameterProps {
@@ -32,6 +33,9 @@ export class Parameter extends Construct implements SSTConstruct {
     this.id = id;
     this.name = id;
     this.value = props.value;
+
+    const app = this.node.root as App;
+    app.registerTypes(this);
   }
 
   /** @internal */

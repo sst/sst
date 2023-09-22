@@ -363,6 +363,8 @@ export class Job extends Construct implements SSTConstruct {
       ...props,
       runtime: this.convertJobRuntimeToFunctionRuntime(),
     });
+
+    app.registerTypes(this);
   }
 
   public getConstructMetadata() {
@@ -467,7 +469,7 @@ export class Job extends Construct implements SSTConstruct {
     // Note: make the invoker function the same ID as the Job
     //       construct so users can identify the invoker function
     //       in the Console.
-    const fn = new Function(this, this.node.id, {
+    return new Function(this, this.node.id, {
       ...this.props,
       runtime: this.convertJobRuntimeToFunctionRuntime(),
       memorySize: 1024,
@@ -476,9 +478,8 @@ export class Job extends Construct implements SSTConstruct {
         ...this.props.environment,
         SST_DEBUG_JOB: "true",
       },
+      _doNotAllowOthersToBind: true,
     });
-    fn._doNotAllowOthersToBind = true;
-    return fn;
   }
 
   private createLogRetention() {

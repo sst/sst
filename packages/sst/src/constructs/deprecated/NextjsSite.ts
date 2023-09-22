@@ -377,6 +377,8 @@ export class NextjsSite extends Construct implements SSTConstruct {
 
     // Connect Custom Domain to CloudFront Distribution
     this.createRoute53Records();
+
+    app.registerTypes(this);
   }
 
   /**

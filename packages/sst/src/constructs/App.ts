@@ -144,6 +144,7 @@ export class App extends CDKApp {
       deployProps.account || process.env.CDK_DEFAULT_ACCOUNT || "my-account";
     this.isActiveStack = deployProps.isActiveStack;
     this.defaultFunctionProps = [];
+    this.createTypesFile();
 
     if (this.mode === "dev") {
       this.debugScriptVersion = deployProps.debugScriptVersion;
@@ -248,6 +249,83 @@ export class App extends CDKApp {
     });
   }
 
+  private useTypesPath() {
+    const project = useProject();
+    return path.resolve(project.paths.out, "types");
+  }
+
+  private createTypesFile() {
+    const typesPath = this.useTypesPath();
+    Logger.debug(`Generating types in ${typesPath}`);
+
+    fs.rmSync(typesPath, {
+      recursive: true,
+      force: true,
+    });
+    fs.mkdirSync(typesPath, {
+      recursive: true,
+    });
+    fs.appendFileSync(
+      `${typesPath}/index.ts`,
+      [
+        `import "sst/node/config";`,
+        `declare module "sst/node/config" {`,
+        `  export interface ConfigTypes {`,
+        `    APP: string;`,
+        `    STAGE: string;`,
+        `  }`,
+        `}`,
+        ``,
+        ``,
+      ].join("\n")
+    );
+  }
+
+  public registerTypes(c: SSTConstruct) {
+    const typesPath = this.useTypesPath();
+
+    if ("_doNotAllowOthersToBind" in c && c._doNotAllowOthersToBind) {
+      return;
+    }
+
+    const binding = bindType(c);
+    if (!binding) {
+      return;
+    }
+
+    const className = c.constructor.name;
+    const id = c.id;
+
+    fs.appendFileSync(
+      `${typesPath}/index.ts`,
+      (binding.variables[0] === "."
+        ? // Case: variable does not have properties, ie. Secrets and Parameters
+          [
+            `import "sst/node/${binding.clientPackage}";`,
+            `declare module "sst/node/${binding.clientPackage}" {`,
+            `  export interface ${className}Resources {`,
+            `    "${id}": string;`,
+            `  }`,
+            `}`,
+            ``,
+            ``,
+          ]
+        : [
+            `import "sst/node/${binding.clientPackage}";`,
+            `declare module "sst/node/${binding.clientPackage}" {`,
+            `  export interface ${className}Resources {`,
+            `    "${id}": {`,
+            ...binding.variables.map((p) => `      ${p}: string;`),
+            `    }`,
+            `  }`,
+            `}`,
+            ``,
+            ``,
+          ]
+      ).join("\n")
+    );
+  }
+
   private isFinished = false;
   public async finish() {
     if (this.isFinished) return;
@@ -256,7 +334,6 @@ export class App extends CDKApp {
     Auth.injectConfig();
     this.buildConstructsMetadata();
     this.ensureUniqueConstructIds();
-    this.codegenTypes();
 
     // Run deferred tasks
     // - after codegen b/c some frontend frameworks (ie. Next.js apps) runs
@@ -545,82 +622,6 @@ export class App extends CDKApp {
     }
 
     Aspects.of(this).add(new EnsureUniqueConstructIds());
-  }
-
-  public codegenTypes() {
-    const project = useProject();
-
-    const typesPath = path.resolve(project.paths.out, "types");
-    Logger.debug(`Generating types in ${typesPath}`);
-
-    fs.rmSync(typesPath, {
-      recursive: true,
-      force: true,
-    });
-    fs.mkdirSync(typesPath, {
-      recursive: true,
-    });
-    fs.appendFileSync(
-      `${typesPath}/index.ts`,
-      [
-        `import "sst/node/config";`,
-        `declare module "sst/node/config" {`,
-        `  export interface ConfigTypes {`,
-        `    APP: string;`,
-        `    STAGE: string;`,
-        `  }`,
-        `}`,
-        ``,
-        ``,
-      ].join("\n")
-    );
-
-    this.foreachConstruct((c) => {
-      if (!isSSTConstruct(c)) {
-        return;
-      }
-      if ("_doNotAllowOthersToBind" in c && c._doNotAllowOthersToBind) {
-        return;
-      }
-
-      const binding = bindType(c);
-      if (!binding) {
-        return;
-      }
-
-      const className = c.constructor.name;
-      const id = c.id;
-
-      // Case 1: variable does not have properties, ie. Secrets and Parameters
-
-      fs.appendFileSync(
-        `${typesPath}/index.ts`,
-        (binding.variables[0] === "."
-          ? [
-              `import "sst/node/${binding.clientPackage}";`,
-              `declare module "sst/node/${binding.clientPackage}" {`,
-              `  export interface ${className}Resources {`,
-              `    "${id}": string;`,
-              `  }`,
-              `}`,
-              ``,
-              ``,
-            ]
-          : [
-              `import "sst/node/${binding.clientPackage}";`,
-              `declare module "sst/node/${binding.clientPackage}" {`,
-              `  export interface ${className}Resources {`,
-              `    "${id}": {`,
-              ...binding.variables.map((p) => `      ${p}: string;`),
-              `    }`,
-              `  }`,
-              `}`,
-              ``,
-              ``,
-            ]
-        ).join("\n")
-      );
-    });
   }
 
   private foreachConstruct(fn: (c: IConstruct) => void) {

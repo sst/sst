@@ -1,34 +1,20 @@
 import fs from "fs";
 import path from "path";
 import { Construct } from "constructs";
-import { Fn, Duration as CdkDuration, RemovalPolicy } from "aws-cdk-lib/core";
-import { PolicyStatement } from "aws-cdk-lib/aws-iam";
-import { RetentionDays } from "aws-cdk-lib/aws-logs";
+import { Duration as CdkDuration, RemovalPolicy } from "aws-cdk-lib/core";
 import {
-  CfnFunction,
   Code,
   Runtime,
-  Architecture,
   Function as CdkFunction,
-  FunctionUrlAuthType,
   FunctionProps,
+  Architecture,
 } from "aws-cdk-lib/aws-lambda";
-import {
-  ViewerProtocolPolicy,
-  AllowedMethods,
-  BehaviorOptions,
-  CachedMethods,
-  LambdaEdgeEventType,
-} from "aws-cdk-lib/aws-cloudfront";
-import { HttpOrigin } from "aws-cdk-lib/aws-cloudfront-origins";
 import { Queue } from "aws-cdk-lib/aws-sqs";
 import { SqsEventSource } from "aws-cdk-lib/aws-lambda-event-sources";
 import { Stack } from "./Stack.js";
-import { Distribution } from "./Distribution.js";
-import { SsrFunction } from "./SsrFunction.js";
-import { EdgeFunction } from "./EdgeFunction.js";
 import { SsrSite, SsrSiteProps } from "./SsrSite.js";
 import { Size, toCdkSize } from "./util/size.js";
+import { Bucket } from "aws-cdk-lib/aws-s3";
 
 export interface NextjsSiteProps extends Omit<SsrSiteProps, "nodejs"> {
   imageOptimization?: {
@@ -104,13 +90,163 @@ export class NextjsSite extends SsrSite {
       ...props,
     });
 
-    this.deferredTaskCallbacks.push(() => {
-      this.createRevalidation();
+    this.createRevalidation();
+  }
+
+  protected plan(bucket: Bucket) {
+    const { path: sitePath, edge, imageOptimization } = this.props;
+    const serverConfig = {
+      description: "Next.js server",
+      bundle: path.join(sitePath, ".open-next", "server-function"),
+      handler: "index.handler",
+      environment: {
+        CACHE_BUCKET_NAME: bucket.bucketName,
+        CACHE_BUCKET_KEY_PREFIX: "_cache",
+        CACHE_BUCKET_REGION: Stack.of(this).region,
+      },
+    };
+    return this.validatePlan({
+      cloudFrontFunctions: {
+        serverCfFunction: {
+          constructId: "CloudFrontFunction",
+          injections: [this.useCloudFrontFunctionHostHeaderInjection()],
+        },
+      },
+      edgeFunctions: edge
+        ? {
+            edgeServer: {
+              constructId: "ServerFunction",
+              function: serverConfig,
+            },
+          }
+        : undefined,
+      origins: {
+        ...(edge
+          ? {}
+          : {
+              regionalServer: {
+                type: "function",
+                constructId: "ServerFunction",
+                function: serverConfig,
+              },
+            }),
+        imageOptimizer: {
+          type: "image-optimization-function",
+          constructId: "ImageFunction",
+          function: {
+            description: "Next.js image optimizer",
+            handler: "index.handler",
+            code: Code.fromAsset(
+              path.join(sitePath, ".open-next/image-optimization-function")
+            ),
+            runtime: Runtime.NODEJS_18_X,
+            architecture: Architecture.ARM_64,
+            environment: {
+              BUCKET_NAME: bucket.bucketName,
+              BUCKET_KEY_PREFIX: "_assets",
+            },
+            memorySize: imageOptimization?.memorySize
+              ? typeof imageOptimization.memorySize === "string"
+                ? toCdkSize(imageOptimization.memorySize).toMebibytes()
+                : imageOptimization.memorySize
+              : 1536,
+          },
+        },
+        s3: {
+          type: "s3",
+          originPath: "_assets",
+          copy: [
+            {
+              from: ".open-next/assets",
+              to: "_assets",
+              cached: true,
+              versionedSubDir: "_next",
+            },
+            { from: ".open-next/cache", to: "_cache", cached: false },
+          ],
+        },
+      },
+      behaviors: [
+        ...(edge
+          ? [
+              {
+                cacheType: "server",
+                cfFunction: "serverCfFunction",
+                edgeFunction: "edgeServer",
+                origin: "s3",
+              } as const,
+              {
+                cacheType: "server",
+                pattern: "api/*",
+                cfFunction: "serverCfFunction",
+                edgeFunction: "edgeServer",
+                origin: "s3",
+              } as const,
+              {
+                cacheType: "server",
+                pattern: "_next/data/*",
+                cfFunction: "serverCfFunction",
+                edgeFunction: "edgeServer",
+                origin: "s3",
+              } as const,
+            ]
+          : [
+              {
+                cacheType: "server",
+                cfFunction: "serverCfFunction",
+                origin: "regionalServer",
+              } as const,
+              {
+                cacheType: "server",
+                pattern: "api/*",
+                cfFunction: "serverCfFunction",
+                origin: "regionalServer",
+              } as const,
+              {
+                cacheType: "server",
+                pattern: "_next/data/*",
+                cfFunction: "serverCfFunction",
+                origin: "regionalServer",
+              } as const,
+            ]),
+        {
+          cacheType: "server",
+          pattern: "_next/image*",
+          cfFunction: "serverCfFunction",
+          origin: "imageOptimizer",
+        },
+        // create 1 behaviour for each top level asset file/folder
+        ...fs.readdirSync(path.join(sitePath, ".open-next/assets")).map(
+          (item) =>
+            ({
+              cacheType: "static",
+              pattern: fs
+                .statSync(path.join(sitePath, ".open-next/assets", item))
+                .isDirectory()
+                ? `${item}/*`
+                : item,
+              origin: "s3",
+            } as const)
+        ),
+      ],
+      cachePolicyAllowedHeaders: [
+        "accept",
+        "rsc",
+        "next-router-prefetch",
+        "next-router-state-tree",
+        "next-url",
+      ],
+      buildId: fs
+        .readFileSync(path.join(sitePath, ".next/BUILD_ID"))
+        .toString(),
+      warmerConfig: {
+        function: path.join(sitePath, ".open-next", "warmer-function"),
+      },
     });
   }
 
   protected createRevalidation() {
-    if (!this.serverLambdaForRegional && !this.serverLambdaForEdge) return;
+    if (!this.serverFunction) return;
 
     const { cdk } = this.props;
 
@@ -131,282 +267,10 @@ export class NextjsSite extends SsrSite {
     consumer.addEventSource(new SqsEventSource(queue, { batchSize: 5 }));
 
     // Allow server to send messages to the queue
-    const server = this.serverLambdaForRegional || this.serverLambdaForEdge;
+    const server = this.serverFunction;
     server?.addEnvironment("REVALIDATION_QUEUE_URL", queue.queueUrl);
     server?.addEnvironment("REVALIDATION_QUEUE_REGION", Stack.of(this).region);
     queue.grantSendMessages(server?.role!);
-  }
-
-  protected initBuildConfig() {
-    return {
-      typesPath: ".",
-      serverBuildOutputFile: ".open-next/server-function/index.mjs",
-      clientBuildOutputDir: ".open-next/assets",
-      clientBuildVersionedSubDir: "_next",
-      clientBuildS3KeyPrefix: "_assets",
-      prerenderedBuildOutputDir: ".open-next/cache",
-      prerenderedBuildS3KeyPrefix: "_cache",
-      warmerFunctionAssetPath: path.join(
-        this.props.path,
-        ".open-next/warmer-function"
-      ),
-    };
-  }
-
-  protected createFunctionForRegional() {
-    const {
-      runtime,
-      timeout,
-      memorySize,
-      bind,
-      permissions,
-      environment,
-      cdk,
-    } = this.props;
-    return new SsrFunction(this, `ServerFunction`, {
-      description: "Next.js server",
-      bundle: path.join(this.props.path, ".open-next", "server-function"),
-      handler: "index.handler",
-      runtime,
-      timeout,
-      memorySize,
-      bind,
-      permissions,
-      environment: {
-        ...environment,
-        CACHE_BUCKET_NAME: this.bucket.bucketName,
-        CACHE_BUCKET_KEY_PREFIX: "_cache",
-        CACHE_BUCKET_REGION: Stack.of(this).region,
-      },
-      ...cdk?.server,
-    });
-  }
-
-  protected createFunctionForEdge() {
-    const { runtime, timeout, memorySize, bind, permissions, environment } =
-      this.props;
-    return new EdgeFunction(this, "ServerFunction", {
-      bundle: path.join(this.props.path, ".open-next", "server-function"),
-      handler: "index.handler",
-      runtime,
-      timeout,
-      memorySize,
-      bind,
-      permissions,
-      environment: {
-        ...environment,
-        CACHE_BUCKET_NAME: this.bucket.bucketName,
-        CACHE_BUCKET_KEY_PREFIX: "_cache",
-        CACHE_BUCKET_REGION: Stack.of(this).region,
-      },
-    });
-  }
-
-  private createImageOptimizationFunction() {
-    const { imageOptimization, path: sitePath } = this.props;
-
-    const fn = new CdkFunction(this, `ImageFunction`, {
-      description: "Next.js image optimizer",
-      handler: "index.handler",
-      currentVersionOptions: {
-        removalPolicy: RemovalPolicy.DESTROY,
-      },
-      logRetention: RetentionDays.THREE_DAYS,
-      code: Code.fromInline("export function handler() {}"),
-      runtime: Runtime.NODEJS_18_X,
-      memorySize: imageOptimization?.memorySize
-        ? typeof imageOptimization.memorySize === "string"
-          ? toCdkSize(imageOptimization.memorySize).toMebibytes()
-          : imageOptimization.memorySize
-        : 1536,
-      timeout: CdkDuration.seconds(25),
-      architecture: Architecture.ARM_64,
-      environment: {
-        BUCKET_NAME: this.bucket.bucketName,
-        BUCKET_KEY_PREFIX: "_assets",
-      },
-      initialPolicy: [
-        new PolicyStatement({
-          actions: ["s3:GetObject"],
-          resources: [this.bucket.arnForObjects("*")],
-        }),
-      ],
-    });
-
-    // update code after build
-    this.deferredTaskCallbacks.push(() => {
-      const cfnFunction = fn.node.defaultChild as CfnFunction;
-      const code = Code.fromAsset(
-        path.join(sitePath, ".open-next/image-optimization-function")
-      );
-      const codeConfig = code.bind(fn);
-      cfnFunction.code = {
-        s3Bucket: codeConfig.s3Location?.bucketName,
-        s3Key: codeConfig.s3Location?.objectKey,
-        s3ObjectVersion: codeConfig.s3Location?.objectVersion,
-      };
-      code.bindToResource(cfnFunction);
-    });
-
-    return fn;
-  }
-
-  protected createCloudFrontDistributionForRegional() {
-    /**
-     * Next.js requests
-     *
-     * - Public asset
-     *  Use case: When you request an asset in /public
-     *  Request: /myImage.png
-     *  Response cache:
-     *  - Cache-Control: public, max-age=0, must-revalidate
-     *  - x-vercel-cache: MISS (1st request)
-     *  - x-vercel-cache: HIT (2nd request)
-     *
-     * - SSG page
-     *  Use case: When you request an SSG page directly
-     *  Request: /myPage
-     *  Response cache:
-     *  - Cache-Control: public, max-age=0, must-revalidate
-     *  - Content-Encoding: br
-     *  - x-vercel-cache: HIT (2nd request, not set for 1st request)
-     *
-     * - SSR page (directly)
-     *  Use case: When you request an SSR page directly
-     *  Request: /myPage
-     *  Response cache:
-     *  - Cache-Control: private, no-cache, no-store, max-age=0, must-revalidate
-     *  - x-vercel-cache: MISS
-     *
-     * - SSR pages (user transition)
-     *  Use case: When the page uses getServerSideProps(), and you request this page on
-     *            client-side page trasitions. Next.js sends an API request to the server,
-     *            which runs getServerSideProps()
-     *  Request: /_next/data/_-fpIB1rqWyRD-EJO59pO/myPage.json
-     *  Response cache:
-     *  - Cache-Control: private, no-cache, no-store, max-age=0, must-revalidate
-     *  - x-vercel-cache: MISS
-     *
-     * - Image optimization
-     *  Use case: when you request an image
-     *  Request: /_next/image?url=%2F_next%2Fstatic%2Fmedia%2F4600x4600.ce39e3d6.jpg&w=256&q=75
-     *  Response cache:
-     *    - Cache-Control: public, max-age=31536000, immutable
-     *    - x-vercel-cache: HIT
-     *
-     * - API
-     *  Use case: when you request an API endpoint
-     *  Request: /api/hello
-     *  Response cache:
-     *    - Cache-Control: public, max-age=0, must-revalidate
-     *    - x-vercel-cache: MISS
-     */
-
-    const { customDomain, cdk } = this.props;
-    const cfDistributionProps = cdk?.distribution || {};
-    const serverBehavior = this.buildDefaultBehaviorForRegional();
-
-    return new Distribution(this, "CDN", {
-      scopeOverride: this,
-      customDomain,
-      cdk: {
-        distribution: {
-          // these values can be overwritten by cfDistributionProps
-          defaultRootObject: "",
-          // Override props.
-          ...cfDistributionProps,
-          // these values can NOT be overwritten by cfDistributionProps
-          defaultBehavior: serverBehavior,
-          additionalBehaviors: {
-            "api/*": serverBehavior,
-            "_next/data/*": serverBehavior,
-            "_next/image*": this.buildImageBehavior(),
-            ...(cfDistributionProps.additionalBehaviors || {}),
-          },
-        },
-      },
-    });
-  }
-
-  protected createCloudFrontDistributionForEdge() {
-    const { customDomain, cdk } = this.props;
-    const cfDistributionProps = cdk?.distribution || {};
-    const serverBehavior = this.buildDefaultBehaviorForEdge();
-
-    return new Distribution(this, "CDN", {
-      scopeOverride: this,
-      customDomain,
-      cdk: {
-        distribution: {
-          // these values can be overwritten by cfDistributionProps
-          defaultRootObject: "",
-          // Override props.
-          ...cfDistributionProps,
-          // these values can NOT be overwritten by cfDistributionProps
-          defaultBehavior: serverBehavior,
-          additionalBehaviors: {
-            "api/*": serverBehavior,
-            "_next/data/*": serverBehavior,
-            "_next/image*": this.buildImageBehavior(),
-            ...(cfDistributionProps.additionalBehaviors || {}),
-          },
-        },
-      },
-    });
-  }
-
-  protected useServerBehaviorCachePolicy() {
-    return super.useServerBehaviorCachePolicy([
-      "accept",
-      "rsc",
-      "next-router-prefetch",
-      "next-router-state-tree",
-      "next-url",
-    ]);
-  }
-
-  private buildImageBehavior(): BehaviorOptions {
-    const { cdk, regional } = this.props;
-    const imageFn = this.createImageOptimizationFunction();
-    const imageFnUrl = imageFn.addFunctionUrl({
-      authType: regional?.enableServerUrlIamAuth
-        ? FunctionUrlAuthType.AWS_IAM
-        : FunctionUrlAuthType.NONE,
-    });
-
-    return {
-      viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
-      origin: new HttpOrigin(Fn.parseDomainName(imageFnUrl.url)),
-      allowedMethods: AllowedMethods.ALLOW_ALL,
-      cachedMethods: CachedMethods.CACHE_GET_HEAD_OPTIONS,
-      compress: true,
-      cachePolicy:
-        cdk?.serverCachePolicy ?? this.useServerBehaviorCachePolicy(),
-      responseHeadersPolicy: cdk?.responseHeadersPolicy,
-      edgeLambdas: regional?.enableServerUrlIamAuth
-        ? [
-            (() => {
-              const fn = this.useServerUrlSigningFunction();
-              fn.attachPermissions([
-                new PolicyStatement({
-                  actions: ["lambda:InvokeFunctionUrl"],
-                  resources: [imageFn.functionArn],
-                }),
-              ]);
-              return {
-                includeBody: true,
-                eventType: LambdaEdgeEventType.ORIGIN_REQUEST,
-                functionVersion: fn.currentVersion,
-              };
-            })(),
-          ]
-        : [],
-    };
-  }
-
-  protected generateBuildId(): string {
-    const filePath = path.join(this.props.path, ".next/BUILD_ID");
-    return fs.readFileSync(filePath).toString();
   }
 
   public getConstructMetadata() {
