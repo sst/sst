@@ -20,7 +20,8 @@ const SessionMemo = /* @__PURE__ */ Context.memo(() => {
   // Get the context type and hooks that match that type
   let token = "";
 
-  const header = useHeader("authorization")!;
+  // Websockets don't lowercase headers
+  const header = useHeader("authorization") || useHeader("Authorization");
   if (header) token = header.substring(7);
 
   const ctxType = useContextType();
