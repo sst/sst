@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.25.7
+
+### Patch Changes
+
+- [`9e3302c3a`](https://github.com/sst/sst/commit/9e3302c3a138a6c4e8eab4a07f1e5a8df789ae2a) Thanks [@thdxr](https://github.com/thdxr)! - local: improve invocation protocol
+
 ## 2.25.6
 
 ### Patch Changes
