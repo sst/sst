@@ -245,10 +245,13 @@ export class Stack extends CDKStack {
     const { config } = useProject();
     const props: DefaultStackSynthesizerProps = {
       qualifier: config.cdk?.qualifier,
+      bootstrapStackVersionSsmParameter:
+        config.cdk?.bootstrapStackVersionSsmParameter,
       fileAssetsBucketName: config.cdk?.fileAssetsBucketName,
       deployRoleArn: config.cdk?.deployRoleArn,
       fileAssetPublishingRoleArn: config.cdk?.fileAssetPublishingRoleArn,
       imageAssetPublishingRoleArn: config.cdk?.imageAssetPublishingRoleArn,
+      imageAssetsRepositoryName: config.cdk?.imageAssetsRepositoryName,
       cloudFormationExecutionRole: config.cdk?.cloudFormationExecutionRole,
       lookupRoleArn: config.cdk?.lookupRoleArn,
     };

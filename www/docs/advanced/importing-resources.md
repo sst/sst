@@ -10,9 +10,13 @@ You might have some existing resources in your AWS account that you'd like to us
 
 In this doc we'll look at both these approaches.
 
+---
+
 ## Reference resources
 
 The easiest way to use an existing resource in your AWS app is to just reference it. To reference a resource, you can use the `fromXXX()` methods that most CDK Constructs support . Here are a couple of examples of it in action.
+
+---
 
 ### Using an existing VPC for Lambda Functions
 
@@ -28,6 +32,8 @@ new Api(stack, "Api", {
   },
 });
 ```
+
+---
 
 ### Adding routes to an existing HTTP API
 
@@ -46,6 +52,8 @@ new Api(stack, "Api", {
 });
 ```
 
+---
+
 ### Adding subscribers to an existing SNS Topic
 
 ```js {4}
@@ -57,6 +65,8 @@ new Topic(stack, "Topic", {
 });
 ```
 
+---
+
 ### Limitations
 
 In general, most SST constructs support using existing AWS resources. You can find examples in the doc for the construct. However, the following AWS limitations should be noted:
@@ -64,6 +74,8 @@ In general, most SST constructs support using existing AWS resources. You can fi
 - [`Cognito`](../constructs/Cognito.md) does not support configuring triggers to existing Cognito User Pools.
 
 In addition, when you reference a resource, you cannot modify the resource or configure it. You are using it as-is. To have full control over an existing resource, you should look at migrating it over to SST.
+
+---
 
 ## Migrate resources
 
@@ -77,3 +89,39 @@ To use SST to manage an existing resource, you need to migrate it over. It is a 
 6. Finally, run a stack drift check (Stack actions > Detect drift) to ensure all configurations are synchronized.
 
 From now on the resource can be modified in your SST app.
+
+---
+
+## Orphan resources
+
+Sometimes while deploying you might run into errors that look like this.
+
+```
+"Resource of type 'AWS::DynamoDB::Table' with identifier 'some-stack-name-table-name' already exists."
+```
+
+These usually happens because of a combination of the default [removal policy](removal-policy.md#retained-resources) and an accidental change of the stack name. Recall that stacks are not removed when you [take them out of your stacks code](removal-policy.md#removing-the-resources-in-a-stack) and certain stateful resources are not removed by default.
+
+This creates a case of orphaned resources. For CloudFormation to use these resources as a part of the stack it needs the following to be true:
+
+1. The stack name of the deployment needs to be the same as the currently orphaned resource.
+2. The logical ID in the CloudFormation template for the resource is the same.
+3. The name of the resource also has to be the same.
+
+Say you have a bucket.
+
+```ts title="stack/MyStack.ts"
+new Bucket(stack, "bucket");
+```
+
+The logical ID of this resource is generated based on the name of the stage it's being deployed to, the stack name, and the name provided here.
+
+You can force CDK to use a specific ID, instead of letting SST generate it by passing it in as a part of the `cdk` prop.
+
+```ts title="stack/MyStack.ts"
+new Bucket(stack, "adminFiles", {
+  cdk: { id: "bucket" },
+});
+```
+
+You can check the logical ID of a resource by running `sst build` and looking at the `.sst/dist` directory for the generated CloudFormation templates. 

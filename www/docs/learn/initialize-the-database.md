@@ -14,7 +14,6 @@ SST v2.5.5  ready!
 
 ➜  App:     my-sst-app
    Stage:   Jay
-   Console: https://console.sst.dev/my-sst-app/Jay
 ```
 
 We are now ready to initialize our database. We are using RDS with PostgreSQL in this setup.
@@ -39,12 +38,12 @@ We'll use RDS with PostgreSQL in this tutorial because it is the most familiar o
 
 <ChangeText>
 
-Head over to the [Console](../console.md) link in your browser — [console.sst.dev](https://console.sst.dev/)
+Head over to the [Console](../console.md) link in your browser — [**old.console.sst.dev**](https://old.console.sst.dev/)
 
 </ChangeText>
 
 :::info
-The SST Console is a web based dashboard to manage your SST apps.
+There's a new version of the SST Console ([console.sst.dev](https://console.sst.dev)). We'll be updating this tutorial soon. But for now let's use the older version.
 :::
 
 <ChangeText>
@@ -56,7 +55,7 @@ Then navigate to the **RDS** tab.
 ![Console RDS tab](/img/initialize-database/console-rds-tab.png)
 
 :::tip
-The Console needs a self-signed certificate to work with Safari or Brave. [Follow these steps to set it up.](../console.md#safari-and-brave).
+The Console needs a self-signed certificate to work with Safari or Brave. [Follow these steps to set it up](../console.md#safari--brave).
 :::
 
 At this point we don't have any tables in our database. To add them in, we are going to run a migration.

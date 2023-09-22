@@ -40,6 +40,9 @@ export type SlsNextjsMetadata = ExtractMetadata<SlsNextjsSite>;
 import type { Queue } from "./Queue.js";
 export type QueueMetadata = ExtractMetadata<Queue>;
 
+import type { Service } from "./Service.js";
+export type ServiceMetadata = ExtractMetadata<Service>;
+
 import type { StaticSite } from "./StaticSite.js";
 export type StaticSiteMetadata = ExtractMetadata<StaticSite>;
 
@@ -108,4 +111,5 @@ export type Metadata =
   | AuthMetadata
   | ScriptMetadata
   | JobMetadata
-  | SSRSiteMetadata;
+  | SSRSiteMetadata
+  | ServiceMetadata;

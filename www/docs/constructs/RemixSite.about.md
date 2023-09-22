@@ -50,13 +50,8 @@ The `RemixSite` construct is a higher level CDK construct that makes it easy to 
 
    ```js
    module.exports = {
-     // ...
-     assetsBuildDirectory: "public/build",
-     publicPath: "/build/",
-     serverBuildPath: "build/index.js",
-     serverBuildTarget: "node-cjs",
-     server: undefined,
-     // ...
+     ignoredRouteFiles: ["**/.*"],
+     serverModuleFormat: "esm",
    };
    ```
 
@@ -280,28 +275,87 @@ There are a couple of things happening behind the scenes here:
 
 :::
 
+---
+
 ## Using AWS services
 
-Since the `RemixSite` construct deploys your Remix app to your AWS account, it's very convenient to access other resources in your AWS account in your Remix loaders/actions. `RemixSite` provides a simple way to grant [permissions](Permissions.md) to access specific AWS resources.
+SST makes it very easy for your `RemixSite` construct to access other resources in your AWS account. Imagine you have an S3 bucket created using the [`Bucket`](../constructs/Bucket.md) construct. You can bind it to your Remix app.
 
-Imagine you have a DynamoDB table created using the [`Table`](../constructs/Table.md) construct, and you want to fetch data from the Table.
-
-```ts {12}
-const table = new Table(stack, "Table", {
-  // ...
-});
+```ts {5}
+const bucket = new Bucket(stack, "Uploads");
 
 const site = new RemixSite(stack, "Site", {
   path: "my-remix-app/",
-  environment: {
-    TABLE_NAME: table.tableName,
-  },
+  bind: [bucket],
 });
-
-site.attachPermissions([table]);
 ```
 
-Note that we are also passing the table name into the environment, so the Remix loaders/actions can fetch the value `process.env.TABLE_NAME` when calling the DynamoDB API to query the table.
+This will attach the necessary IAM permissions and allow your Remix app to access the bucket through the typesafe [`sst/node`](../clients/index.md) client.
+
+```ts {4}
+import { Bucket } from "sst/node/bucket";
+
+export async function loader() {
+  console.log(Bucket.Uploads.bucketName);
+}
+```
+
+You can read more about this over on the [Resource Binding](../resource-binding.md) doc.
+
+:::info
+The [`sst/node`](../clients/index.md) client utilizes top-level await and requires the Remix server to be built using the `esm` output format. Ensure that [`serverModuleFormat``](https://remix.run/docs/en/main/file-conventions/remix-config#servermoduleformat) is set to `esm` in your `remix.config.js`.
+:::
+
+---
+
+## Warming
+
+Server functions may experience performance issues due to Lambda cold starts. SST helps mitigate this by creating an EventBridge scheduled rule to periodically invoke the server function.
+
+```ts {5}
+new RemixSite(stack, "Site", {
+  path: "my-remix-app/",
+  warm: 20,
+});
+```
+
+Setting `warm` to 20 keeps 20 server function instances active, invoking them every 5 minutes.
+
+Note that warming is currently supported only in regional mode.
+
+#### Cost
+
+There are three components to the cost:
+
+1. EventBridge scheduler: $0.00864
+
+   ```
+   Requests cost — 8,640 invocations per month x $1/million = $0.00864
+   ```
+
+1. Warmer function: $0.145728288
+
+   ```
+   Requests cost — 8,640 invocations per month x $0.2/million = $0.001728
+   Duration cost — 8,640 invocations per month x 1GB memory x 1s duration x $0.0000166667/GB-second = $0.144000288
+   ```
+
+1. Server function: $0.0161280288 per warmed instance
+
+   ```
+   Requests cost — 8,640 invocations per month x $0.2/million = $0.001728
+   Duration cost — 8,640 invocations per month x 1GB memory x 100ms duration x $0.0000166667/GB-second = $0.0144000288
+   ```
+
+For example, keeping 50 instances of the server function warm will cost approximately **$0.96 per month**
+
+```
+$0.00864 + $0.145728288 + $0.0161280288 x 50 = $0.960769728
+```
+
+This cost estimate is based on the `us-east-1` region pricing and does not consider any free tier benefits.
+
+---
 
 ## Examples
 
@@ -543,8 +597,10 @@ When deployed to a single region, instead of sending the request to the server f
 import { Fn } from "aws-cdk-lib";
 import * as origins from "aws-cdk-lib/aws-cloudfront-origins";
 
+// Create an API Gateway API
 const api = new Api(stack, "Api");
 
+// Configure the CloudFront distribution to route requests to the API endpoint
 const site = new RemixSite(stack, "Site", {
   path: "my-remix-app/",
   cdk: {
@@ -556,12 +612,16 @@ const site = new RemixSite(stack, "Site", {
   },
 });
 
-api.addRoutes(stack, {
-  "ANY /{proxy+}": {
-    type: "function",
-    cdk: {
-      function: site.cdk.function,
+// Configure the API Gateway to route all incoming requests to the site's SSR function
+// Note: The site is not deployed when using the `sst dev` command
+if (!app.local) {
+  api.addRoutes(stack, {
+    "ANY /{proxy+}": {
+      type: "function",
+      cdk: {
+        function: site.cdk.function,
+      },
     },
-  },
-});
+  });
+}
 ```

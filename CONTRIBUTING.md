@@ -52,51 +52,30 @@ Here's how to run SST locally.
 To run this project locally, clone the repo and initialize the project.
 
 ```bash
-$ git clone https://github.com/serverless-stack/sst.git
+$ git clone https://github.com/sst/sst.git
 $ cd sst
-$ pnpm install
-```
-
-Build the project
-
-```bash
-$ pnpm build
+$ pnpm i
 ```
 
 ### SST
 
-If you are working on the `packages/sst` part, run the watcher at the root.
+If you are working on SST go to the `packages/sst` folder and run the `dev` script.
 
 ```bash
-$ pnpm watch
+$ pnpm dev
 ```
 
-Finally, after making your changes, run all the tests in the `packages/sst` directory.
+This will start a watcher that will rebuild changes you make - ensure there are no type errors before submitting a PR.
+
+If you want to test your changes against a project you are working on you can make use of `pnpm link`
 
 ```bash
-$ pnpm test
+$ cd ./path/to/project
+$ pnpm link ./path/to/sst/packages/sst/dist
+$ pnpm sst dev
 ```
 
-Alternatively, you can run the tests for a specific construct.
-
-```bash
-$ pnpm test <path_to_the_test_for_the_construct>
-```
-
-### Console
-
-If you are working on the `packages/console` just go ahead and make your changes. Then run your tests.
-
-```bash
-$ cd packages/console
-$ pnpm test
-```
-
-Alternatively, you can run a specific test.
-
-```bash
-$ pnpm test <path_to_the_test_dir>
-```
+Note that we link to the `./dist` folder since that is where we publish out of.
 
 ### Docs
 
@@ -157,12 +136,12 @@ To cut a release, start by merging the PRs that are going into this release.
 
 3. Draft a new release
 
-   Copy the changelog that was generated above and [draft a new release](https://github.com/serverless-stack/sst/releases/new).
+   Copy the changelog that was generated above and [draft a new release](https://github.com/sst/sst/releases/new).
 
    Make necessary edits to the changelog to make it more readable and helpful.
 
-   - For `breaking` changes, add a message at the top clearly documenting the change ([example](https://github.com/serverless-stack/sst/releases/tag/v0.26.0)).
-   - For major `enhancement` changes, add a code snippet on how to use the feature ([example](https://github.com/serverless-stack/sst/releases/tag/v0.36.0)).
+   - For `breaking` changes, add a message at the top clearly documenting the change ([example](https://github.com/sst/sst/releases/tag/v0.26.0)).
+   - For major `enhancement` changes, add a code snippet on how to use the feature ([example](https://github.com/sst/sst/releases/tag/v0.36.0)).
 
    Add this snippet at the bottom of the changelog and replace it with the version that's going to be released.
 
@@ -172,7 +151,7 @@ To cut a release, start by merging the PRs that are going into this release.
    Update using:
 
    ```sh
-   $ npm install --save --save-exact @serverless-stack/cli@x.x.x @serverless-stack/resources@x.x.x
+   $ npm install --save --save-exact @sst/cli@x.x.x @sst/resources@x.x.x
    ```
    ````
 
@@ -246,4 +225,4 @@ See the `Table` construct for a deprecation example of renaming `secondaryIndexe
 Help us improve this doc. If you've had a chance to contribute to SST, feel free to edit this doc and submit a PR.
 
 [discord]: https://sst.dev/discord
-[issue]: https://github.com/serverless-stack/sst/issues/new
+[issue]: https://github.com/sst/sst/issues/new

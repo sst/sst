@@ -1,5 +1,5 @@
 import { createSigner, createVerifier, SignerOptions } from "fast-jwt";
-import { Context } from "../../../context/context.js";
+import { Context } from "../../../context/context2.js";
 import { useCookie, useHeader } from "../../api/index.js";
 import { Auth } from "../../auth/index.js";
 import { Config } from "../../config/index.js";
@@ -20,7 +20,8 @@ const SessionMemo = /* @__PURE__ */ Context.memo(() => {
   // Get the context type and hooks that match that type
   let token = "";
 
-  const header = useHeader("authorization")!;
+  // Websockets don't lowercase headers
+  const header = useHeader("authorization") || useHeader("Authorization");
   if (header) token = header.substring(7);
 
   const ctxType = useContextType();
@@ -28,7 +29,7 @@ const SessionMemo = /* @__PURE__ */ Context.memo(() => {
   if (cookie) token = cookie;
 
   // WebSocket may also set the token in the protocol header
-  // TODO: Once https://github.com/serverless-stack/sst/pull/2838 is merged,
+  // TODO: Once https://github.com/sst/sst/pull/2838 is merged,
   // then we should no longer need to check both casing for the header.
   const wsProtocol =
     ctxType === "ws"
@@ -114,9 +115,7 @@ function verify<T = SessionValue>(token: string) {
         key: getPublicKey(),
       })(token);
       return jwt as T;
-    } catch (e) {
-      console.log(e);
-    }
+    } catch (e) {}
   }
   return {
     type: "public",
@@ -128,3 +127,62 @@ export const Session = {
   create,
   verify,
 };
+
+export type SessionBuilder = ReturnType<typeof createSessionBuilder>;
+
+export function createSessionBuilder<
+  SessionTypes extends Record<string, any> = {}
+>() {
+  type SessionValue =
+    | {
+        [type in keyof SessionTypes]: {
+          type: type;
+          properties: SessionTypes[type];
+        };
+      }[keyof SessionTypes]
+    | {
+        type: "public";
+        properties: {};
+      };
+
+  return {
+    create<T extends SessionValue["type"]>(
+      type: T,
+      properties: SessionTypes[T],
+      options?: Partial<SignerOptions>
+    ) {
+      // @ts-expect-error
+      const key = Config[process.env.AUTH_ID + "PrivateKey"];
+      const signer = createSigner({
+        ...options,
+        key,
+        algorithm: "RS512",
+      });
+      const token = signer({
+        type: type,
+        properties: properties,
+      });
+      return token as string;
+    },
+    verify(token: string): SessionValue {
+      if (token) {
+        try {
+          const jwt = createVerifier({
+            algorithms: ["RS512"],
+            key: getPublicKey(),
+          })(token);
+          return jwt;
+        } catch (e) {}
+      }
+      return {
+        type: "public" as const,
+        properties: {},
+      };
+    },
+    use() {
+      const ctx = SessionMemo();
+      return ctx as SessionValue;
+    },
+    $type: {} as SessionTypes,
+  };
+}

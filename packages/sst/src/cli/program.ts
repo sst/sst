@@ -44,7 +44,7 @@ export const program = yargs(hideBin(process.argv))
   .recommendCommands()
   .demandCommand()
   .strict()
-  .fail((_, error, yargs) => {
+  .fail(async (_, error, yargs) => {
     if (!error) {
       yargs.showHelp();
       process.exit(1);
@@ -53,3 +53,45 @@ export const program = yargs(hideBin(process.argv))
   });
 
 export type Program = typeof program;
+
+const startAt = Date.now();
+
+export async function exitWithError(error: Error) {
+  const { trackCliFailed } = await import("./telemetry/telemetry.js");
+  await trackCliFailed({
+    rawCommand: process.argv.slice(2).join(" "),
+    duration: Date.now() - startAt,
+    errorName: error.name,
+    errorMessage: error.message,
+  });
+
+  throw error;
+}
+
+export async function exit(code?: number) {
+  const { trackCliSucceeded } = await import("./telemetry/telemetry.js");
+  await trackCliSucceeded({
+    rawCommand: process.argv.slice(2).join(" "),
+    duration: Date.now() - startAt,
+  });
+
+  process.exit(code);
+}
+
+export async function trackDevError(error: Error) {
+  const { trackCliDevError } = await import("./telemetry/telemetry.js");
+  await trackCliDevError({
+    rawCommand: process.argv.slice(2).join(" "),
+    duration: Date.now() - startAt,
+    errorName: error.name,
+    errorMessage: error.message,
+  });
+}
+
+export async function trackDevRunning() {
+  const { trackCliDevRunning } = await import("./telemetry/telemetry.js");
+  await trackCliDevRunning({
+    rawCommand: process.argv.slice(2).join(" "),
+    duration: Date.now() - startAt,
+  });
+}

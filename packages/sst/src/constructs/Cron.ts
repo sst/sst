@@ -228,7 +228,7 @@ export class Cron extends Construct implements SSTConstruct {
     }
 
     // create function
-    const fn = Func.fromDefinition(this, "Job", jobFunction);
+    const fn = Func.fromDefinition(this, `Job_${this.node.id}`, jobFunction);
     this.cdk.rule.addTarget(new eventsTargets.LambdaFunction(fn, jobProps));
 
     return fn;

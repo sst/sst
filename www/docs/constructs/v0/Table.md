@@ -320,7 +320,7 @@ new Table(this, "Table", {
 
 ### Upgrading to v0.21.0
 
-The [v0.21.0 release](https://github.com/serverless-stack/sst/releases/tag/v0.21.1) of the Table construct includes a small breaking change. You might be impacted by this change if:
+The [v0.21.0 release](https://github.com/sst/sst/releases/tag/v0.21.1) of the Table construct includes a small breaking change. You might be impacted by this change if:
 
 - You are currently using any version `< v0.21.0`
 - And using consumers with table Streams enabled

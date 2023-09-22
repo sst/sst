@@ -1,11 +1,21 @@
 import { Context } from "../context/context.js";
 import { Logger } from "../logger.js";
 import path from "path";
+import zlib from "zlib";
 import fs from "fs/promises";
 import { useWatcher } from "../watcher.js";
 import { useBus } from "../bus.js";
+import crypto from "crypto";
 import { useProject } from "../project.js";
 import { FunctionProps, useFunctions } from "../constructs/Function.js";
+import { useNodeHandler } from "./handlers/node.js";
+import { useContainerHandler } from "./handlers/container.js";
+import { useDotnetHandler } from "./handlers/dotnet.js";
+import { useGoHandler } from "./handlers/go.js";
+import { useJavaHandler } from "./handlers/java.js";
+import { usePythonHandler } from "./handlers/python.js";
+import { useRustHandler } from "./handlers/rust.js";
+import { lazy } from "../util/lazy.js";
 
 declare module "../bus.js" {
   export interface Events {
@@ -53,6 +63,7 @@ export interface RuntimeHandler {
     | {
         type: "success";
         handler: string;
+        sourcemap?: string;
       }
     | {
         type: "error";
@@ -61,8 +72,16 @@ export interface RuntimeHandler {
   >;
 }
 
-export const useRuntimeHandlers = Context.memo(() => {
-  const handlers: RuntimeHandler[] = [];
+export const useRuntimeHandlers = lazy(() => {
+  const handlers: RuntimeHandler[] = [
+    useNodeHandler(),
+    useGoHandler(),
+    useContainerHandler(),
+    usePythonHandler(),
+    useJavaHandler(),
+    useDotnetHandler(),
+    useRustHandler(),
+  ];
   const project = useProject();
   const bus = useBus();
 
@@ -140,6 +159,7 @@ export const useRuntimeHandlers = Context.memo(() => {
         return {
           ...built,
           out,
+          sourcemap: built.sourcemap,
         };
       }
 
@@ -164,7 +184,7 @@ interface Artifact {
   handler: string;
 }
 
-export const useFunctionBuilder = Context.memo(() => {
+export const useFunctionBuilder = lazy(() => {
   const artifacts = new Map<string, Artifact>();
   const handlers = useRuntimeHandlers();
 
@@ -186,8 +206,8 @@ export const useFunctionBuilder = Context.memo(() => {
   watcher.subscribe("file.changed", async (evt) => {
     try {
       const functions = useFunctions();
-      for (const [functionID, props] of Object.entries(functions.all)) {
-        const handler = handlers.for(props.runtime!);
+      for (const [functionID, info] of Object.entries(functions.all)) {
+        const handler = handlers.for(info.runtime!);
         if (
           !handler?.shouldBuild({
             functionID,

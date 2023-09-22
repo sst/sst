@@ -9,7 +9,6 @@ import {
 } from "./helper";
 import * as s3 from "aws-cdk-lib/aws-s3";
 import * as acm from "aws-cdk-lib/aws-certificatemanager";
-import * as cloudfront from "aws-cdk-lib/aws-cloudfront";
 import * as route53 from "aws-cdk-lib/aws-route53";
 import * as cf from "aws-cdk-lib/aws-cloudfront";
 import {
@@ -18,8 +17,6 @@ import {
   StaticSite,
   StaticSiteProps,
 } from "../../dist/constructs/";
-
-process.env.SST_RESOURCES_TESTS = "enabled";
 
 beforeEach(async () => {
   await clearBuildOutput();
@@ -869,7 +866,7 @@ test("cdk.bucket is construct", async () => {
   });
 });
 
-test("constructor: cfDistribution props", async () => {
+test("cdk.distribution is props", async () => {
   const { stack } = await createSite({
     cdk: {
       distribution: {
@@ -885,11 +882,11 @@ test("constructor: cfDistribution props", async () => {
   });
 });
 
-test("constructor: cfDistribution is construct", async () => {
+test("cdk.distribution is construct", async () => {
   const { stack, site } = await createSite((stack) => ({
     customDomain: "domain.com",
     cdk: {
-      distribution: cloudfront.Distribution.fromDistributionAttributes(
+      distribution: cf.Distribution.fromDistributionAttributes(
         stack,
         "IDistribution",
         {
@@ -904,13 +901,9 @@ test("constructor: cfDistribution is construct", async () => {
   hasResource(stack, "Custom::CloudFrontInvalidator", {
     paths: ["/*"],
   });
-  countResources(stack, "AWS::Route53::HostedZone", 1);
-  hasResource(stack, "AWS::Route53::HostedZone", {
-    Name: "domain.com.",
-  });
 });
 
-test("constructor: cfDistribution props override errorResponses", async () => {
+test("cdk.distribution props override errorResponses", async () => {
   const { stack, site } = await createSite({
     cdk: {
       distribution: {
@@ -938,28 +931,7 @@ test("constructor: cfDistribution props override errorResponses", async () => {
   });
 });
 
-test("constructor: cfDistribution props override errorResponses error", async () => {
-  expect(async () => {
-    await createSite({
-      errorPage: "error.html",
-      cdk: {
-        distribution: {
-          errorResponses: [
-            {
-              httpStatus: 403,
-              responsePagePath: `/new.html`,
-              responseHttpStatus: 200,
-            },
-          ],
-        },
-      },
-    });
-  }).rejects.toThrow(
-    /Cannot configure the "cfDistribution.errorResponses" when "errorPage" is passed in./
-  );
-});
-
-test("constructor: cfDistribution defaultBehavior override", async () => {
+test("cdk.distribution defaultBehavior override", async () => {
   const { stack, site } = await createSite({
     cdk: {
       distribution: {
@@ -989,7 +961,7 @@ test("constructor: cfDistribution defaultBehavior override", async () => {
   });
 });
 
-test("constructor: cfDistribution certificate conflict", async () => {
+test("cdk.distribution certificate conflict", async () => {
   expect(async () => {
     await createSite((stack) => ({
       cdk: {
@@ -1003,7 +975,7 @@ test("constructor: cfDistribution certificate conflict", async () => {
   }).rejects.toThrow(/Do not configure the "cfDistribution.certificate"/);
 });
 
-test("constructor: cfDistribution domainNames conflict", async () => {
+test("cdk.distribution domainNames conflict", async () => {
   expect(async () => {
     await createSite({
       cdk: {
@@ -1142,38 +1114,4 @@ test("constructor: sst remove", async () => {
   countResources(stack, "AWS::CloudFront::Distribution", 0);
   countResources(stack, "Custom::SSTBucketDeployment", 0);
   countResources(stack, "Custom::CloudFrontInvalidator", 0);
-});
-
-/////////////////////////////
-// Test extending ()
-/////////////////////////////
-
-test("constructor: extending createRoute53Records", async () => {
-  let dummy: string;
-
-  class MyStaticSite extends StaticSite {
-    protected createRoute53Records(): void {
-      dummy = "dummy";
-    }
-  }
-
-  const app = await createApp();
-  const stack = new Stack(app, "stack");
-  route53.HostedZone.fromLookup = vi
-    .fn()
-    .mockImplementation((scope, id, { domainName }) => {
-      return new route53.HostedZone(scope, id, { zoneName: domainName });
-    });
-  const site = new MyStaticSite(stack, "Site", {
-    path: "test/constructs/site",
-    customDomain: "domain.com",
-  });
-  await app.finish();
-  expect(site.url).toBeDefined();
-  expect(site.customDomainUrl).toBeDefined();
-  expect(dummy!).toMatch("dummy");
-  countResources(stack, "AWS::S3::Bucket", 1);
-  countResources(stack, "AWS::CloudFront::Distribution", 1);
-  countResources(stack, "AWS::Route53::RecordSet", 0);
-  countResources(stack, "AWS::Route53::HostedZone", 1);
 });

@@ -7,7 +7,6 @@ import {
   ReflectionKind,
 } from "typedoc";
 import path from "path";
-import { exit } from "process";
 
 const cmd = process.argv[2];
 
@@ -22,6 +21,9 @@ const CDK_DOCS_MAP = {
   IVpc: "aws_ec2",
   ISecurityGroup: "aws_ec2",
   SubnetSelection: "aws_ec2",
+  Cluster: "aws_ecs",
+  ContainerDefinitionOptions: "aws_ecs",
+  FargateServiceProps: "aws_ecs",
   FunctionUrlOptions: "aws_lambda",
   LogGroup: "aws_logs",
   LogGroupProps: "aws_logs",
@@ -30,6 +32,7 @@ const CDK_DOCS_MAP = {
   ISecret: "aws_secretsmanager",
   IApplicationListener: "aws_elasticloadbalancingv2",
   INetworkListener: "aws_elasticloadbalancingv2",
+  ApplicationTargetGroupProps: "aws_elasticloadbalancingv2",
   Certificate: "aws_certificatemanager",
   ICertificate: "aws_certificatemanager",
   DnsValidatedCertificate: "aws_certificatemanager",
@@ -125,6 +128,7 @@ app.bootstrap({
     "../packages/sst/src/constructs/Parameter.ts",
     "../packages/sst/src/constructs/Script.ts",
     "../packages/sst/src/constructs/Secret.ts",
+    "../packages/sst/src/constructs/Service.ts",
     "../packages/sst/src/constructs/Queue.ts",
     "../packages/sst/src/constructs/Function.ts",
     "../packages/sst/src/constructs/EventBus.ts",
@@ -492,7 +496,7 @@ function renderProperties(file, files, properties, prefix, onlyPublic) {
         lines.push(
           ...examples
             .map(renderTag)
-            .map((x) => x.replace(/new .+\(/g, `new ${file.name}(`))
+            .map((x) => x.replace(/new SsrSite/g, `new ${file.name}`))
         );
       }
       lines.push(
@@ -545,7 +549,7 @@ function renderSignature(file, children, method, signature) {
       lines.push(
         ...examples
           .map(renderTag)
-          .map((x) => x.replace(/new .+\(/g, `new ${file.name}(`))
+          .map((x) => x.replace(/new SsrSite/g, `new ${file.name}`))
       );
     }
     lines.push(...tags.filter((x) => x.tag !== "@example").map(renderTag));
@@ -582,7 +586,7 @@ function renderSignatureForDeprecated(file, method, signature) {
       lines.push(
         ...examples
           .map(renderTag)
-          .map((x) => x.replace(/new .+\(/g, `new ${file.name}(`))
+          .map((x) => x.replace(/new SsrSite/g, `new ${file.name}`))
       );
     }
     lines.push(...tags.filter((x) => x.tag !== "@example").map(renderTag));

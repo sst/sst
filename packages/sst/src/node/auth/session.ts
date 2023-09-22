@@ -1,6 +1,6 @@
 import { createSigner, createVerifier, SignerOptions } from "fast-jwt";
 import { APIGatewayProxyStructuredResultV2 } from "aws-lambda";
-import { Context } from "../../context/context.js";
+import { Context } from "../../context/context2.js";
 import { useCookie, useHeader } from "../api/index.js";
 import { getPrivateKey, getPublicKey } from "./auth.js";
 import { useContextType } from "../../context/handler.js";
@@ -28,7 +28,7 @@ const SessionMemo = /* @__PURE__ */ Context.memo(() => {
   if (cookie) token = cookie;
 
   // WebSocket may also set the token in the protocol header
-  // TODO: Once https://github.com/serverless-stack/sst/pull/2838 is merged,
+  // TODO: Once https://github.com/sst/sst/pull/2838 is merged,
   // then we should no longer need to check both casing for the header.
   const wsProtocol =
     ctxType === "ws"

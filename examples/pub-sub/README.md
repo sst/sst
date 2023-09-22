@@ -12,6 +12,8 @@ Install the example.
 $ npx create-sst@latest --template=examples/pub-sub
 # Or with Yarn
 $ yarn create sst --template=examples/pub-sub
+# Or with PNPM
+$ pnpm create sst --template=examples/pub-sub
 ```
 
 ## Commands

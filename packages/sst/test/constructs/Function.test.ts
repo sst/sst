@@ -11,6 +11,7 @@ import {
   createApp,
   objectLike,
   ANY,
+  printResource,
 } from "./helper";
 import * as s3 from "aws-cdk-lib/aws-s3";
 import * as ec2 from "aws-cdk-lib/aws-ec2";
@@ -216,16 +217,16 @@ test("copyFiles nonexistent", async () => {
   }).rejects.toThrow(/no such file/);
 });
 
-test("runtime: nodejs10.x", async () => {
+test("runtime: nodejs18.x", async () => {
   const app = await createApp();
   const stack = new Stack(app, "stack");
   new Function(stack, "Function", {
     handler: "test/constructs/lambda.handler",
-    runtime: "nodejs10.x",
+    runtime: "nodejs18.x",
   });
   await app.finish();
   hasResource(stack, "AWS::Lambda::Function", {
-    Runtime: "nodejs10.x",
+    Runtime: "nodejs18.x",
   });
 });
 
@@ -242,6 +243,20 @@ test("runtime: container", async () => {
       ImageUri: ANY,
     }),
   });
+});
+
+test("runtime: container: invalid file", async () => {
+  const app = await createApp();
+  const stack = new Stack(app, "stack");
+  expect(() => {
+    new Function(stack, "Function", {
+      runtime: "container",
+      handler: "test/constructs/container-function",
+      container: {
+        file: "Dockerfile.garbage",
+      },
+    });
+  }).toThrow(/Cannot find file/);
 });
 
 test("runtime: invalid", async () => {
@@ -367,7 +382,7 @@ test("xray-disabled", async () => {
   });
 });
 
-test("constructor: bind", async () => {
+test("bind", async () => {
   const stack = new Stack(await createApp(), "stack");
   const s = new Config.Secret(stack, "MY_SECRET");
   const p = new Config.Parameter(stack, "MY_PARAM", {
@@ -426,7 +441,7 @@ test("constructor: bind", async () => {
   });
 });
 
-test("constructor: config", async () => {
+test("bind: config", async () => {
   const stack = new Stack(await createApp(), "stack");
   const s = new Config.Secret(stack, "MY_SECRET");
   const s2 = new Config.Secret(stack, "MY_SECRET2");
@@ -2545,7 +2560,7 @@ test("fromDefinition-lambdaFunction", async () => {
       stack,
       "Function",
       new lambda.Function(stack, "Function", {
-        runtime: lambda.Runtime.NODEJS_10_X,
+        runtime: lambda.Runtime.NODEJS_18_X,
         handler: "test/lambda.handler",
         code: lambda.Code.fromAsset("test"),
       }) as Function

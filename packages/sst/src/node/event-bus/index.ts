@@ -8,9 +8,22 @@ export const EventBus =
 import {
   EventBridgeClient,
   PutEventsCommand,
+  PutEventsCommandOutput,
+  PutEventsRequestEntry,
 } from "@aws-sdk/client-eventbridge";
 import { EventBridgeEvent } from "aws-lambda";
 import { ZodAny, ZodObject, ZodRawShape, z } from "zod";
+import { useLoader } from "../util/loader.js";
+import { Config } from "../config/index.js";
+
+/**
+ * PutEventsCommandOutput is used in return type of createEvent, in case the consumer of SST builds
+ * their project with declaration files, this is not portable. In order to allow TS to generate a
+ * declaration file without reference to @aws-sdk/client-eventbridge, we must re-export the type.
+ *
+ * More information here: https://github.com/microsoft/TypeScript/issues/47663#issuecomment-1519138189
+ */
+export { PutEventsCommandOutput };
 
 const client = new EventBridgeClient({});
 
@@ -29,7 +42,7 @@ export function createEventBuilder<
     Properties = z.infer<ZodObject<Shape, "strip", ZodAny>>
   >(type: Type, properties: Shape) {
     type Publish = undefined extends MetadataShape
-      ? (properties: Properties) => Promise<void>
+      ? (properties: Properties) => Promise<PutEventsCommandOutput>
       : (
           properties: Properties,
           metadata: z.infer<
@@ -41,31 +54,54 @@ export function createEventBuilder<
       ? z.object(props.metadata)
       : undefined;
     const publish = async (properties: any, metadata: any) => {
-      console.log("publishing", type, properties);
-      await client.send(
-        new PutEventsCommand({
-          Entries: [
-            {
-              // @ts-expect-error
-              EventBusName: EventBus[props.bus].eventBusName,
-              Source: "console",
-              Detail: JSON.stringify({
-                properties: propertiesSchema.parse(properties),
-                metadata: (() => {
-                  if (metadataSchema) {
-                    return metadataSchema.parse(metadata);
-                  }
+      const result = await useLoader(
+        "sst.bus.publish",
+        async (input: PutEventsRequestEntry[]) => {
+          const size = 10;
 
-                  if (props.metadataFn) {
-                    return props.metadataFn();
-                  }
-                })(),
-              }),
-              DetailType: type,
-            },
-          ],
-        })
-      );
+          const promises: Promise<any>[] = [];
+          for (let i = 0; i < input.length; i += size) {
+            const chunk = input.slice(i, i + size);
+            promises.push(
+              client.send(
+                new PutEventsCommand({
+                  Entries: chunk,
+                })
+              )
+            );
+          }
+          const settled = await Promise.allSettled(promises);
+          const result = new Array<PutEventsCommandOutput>(input.length);
+          for (let i = 0; i < result.length; i++) {
+            const item = settled[Math.floor(i / 10)];
+            if (item.status === "rejected") {
+              result[i] = item.reason;
+              continue;
+            }
+            result[i] = item.value;
+          }
+          return result;
+        }
+      )({
+        // @ts-expect-error
+        EventBusName: EventBus[props.bus].eventBusName,
+        // @ts-expect-error
+        Source: Config.APP,
+        Detail: JSON.stringify({
+          properties: propertiesSchema.parse(properties),
+          metadata: (() => {
+            if (metadataSchema) {
+              return metadataSchema.parse(metadata);
+            }
+
+            if (props.metadataFn) {
+              return props.metadataFn();
+            }
+          })(),
+        }),
+        DetailType: type,
+      });
+      return result;
     };
 
     return {
@@ -99,6 +135,7 @@ type EventPayload<E extends Event> = {
   metadata: undefined extends E["shape"]["metadata"]
     ? E["shape"]["metadataFn"]
     : E["shape"]["metadata"];
+  attempts: number;
 };
 
 export function EventHandler<Events extends Event>(
@@ -109,11 +146,14 @@ export function EventHandler<Events extends Event>(
     }[Events["type"]]
   ) => Promise<void>
 ) {
-  return async (event: EventBridgeEvent<string, any>) => {
+  return async (
+    event: EventBridgeEvent<string, any> & { attempts?: number }
+  ) => {
     await cb({
       type: event["detail-type"],
       properties: event.detail.properties,
       metadata: event.detail.metadata,
+      attempts: event.attempts ?? 0,
     });
   };
 }

@@ -1,13 +1,8 @@
 import fs from "fs";
 import path from "path";
 import { Construct } from "constructs";
-import {
-  Fn,
-  Duration as CdkDuration,
-  RemovalPolicy,
-  CustomResource,
-} from "aws-cdk-lib/core";
-import { Effect, Policy, PolicyStatement } from "aws-cdk-lib/aws-iam";
+import { Fn, Duration as CdkDuration, RemovalPolicy } from "aws-cdk-lib/core";
+import { PolicyStatement } from "aws-cdk-lib/aws-iam";
 import { RetentionDays } from "aws-cdk-lib/aws-logs";
 import {
   CfnFunction,
@@ -19,20 +14,17 @@ import {
   FunctionProps,
 } from "aws-cdk-lib/aws-lambda";
 import {
-  Distribution,
   ViewerProtocolPolicy,
   AllowedMethods,
   BehaviorOptions,
   CachedMethods,
-  CachePolicy,
-  ICachePolicy,
+  LambdaEdgeEventType,
 } from "aws-cdk-lib/aws-cloudfront";
 import { HttpOrigin } from "aws-cdk-lib/aws-cloudfront-origins";
-import { Rule, Schedule } from "aws-cdk-lib/aws-events";
-import { LambdaFunction } from "aws-cdk-lib/aws-events-targets";
 import { Queue } from "aws-cdk-lib/aws-sqs";
 import { SqsEventSource } from "aws-cdk-lib/aws-lambda-event-sources";
 import { Stack } from "./Stack.js";
+import { Distribution } from "./Distribution.js";
 import { SsrFunction } from "./SsrFunction.js";
 import { EdgeFunction } from "./EdgeFunction.js";
 import { SsrSite, SsrSiteProps } from "./SsrSite.js";
@@ -50,13 +42,36 @@ export interface NextjsSiteProps extends Omit<SsrSiteProps, "nodejs"> {
      */
     memorySize?: number | Size;
   };
-  /**
-   * The number of server functions to keep warm. This option is only supported for the regional mode.
-   * @default Server function is not kept warm
-   */
-  warm?: number;
   cdk?: SsrSiteProps["cdk"] & {
     revalidation?: Pick<FunctionProps, "vpc" | "vpcSubnets">;
+    /**
+     * Override the CloudFront cache policy properties for responses from the
+     * server rendering Lambda.
+     *
+     * @default
+     * By default, the cache policy is configured to cache all responses from
+     * the server rendering Lambda based on the query-key only. If you're using
+     * cookie or header based authentication, you'll need to override the
+     * cache policy to cache based on those values as well.
+     *
+     * ```js
+     * serverCachePolicy: new CachePolicy(this, "ServerCache", {
+     *   queryStringBehavior: CacheQueryStringBehavior.all()
+     *   headerBehavior: CacheHeaderBehavior.allowList(
+     *     "accept",
+     *     "rsc",
+     *     "next-router-prefetch",
+     *     "next-router-state-tree",
+     *     "next-url",
+     *   ),
+     *   cookieBehavior: CacheCookieBehavior.none()
+     *   defaultTtl: Duration.days(0)
+     *   maxTtl: Duration.days(365)
+     *   minTtl: Duration.days(0)
+     * })
+     * ```
+     */
+    serverCachePolicy?: NonNullable<SsrSiteProps["cdk"]>["serverCachePolicy"];
   };
 }
 
@@ -85,12 +100,11 @@ export class NextjsSite extends SsrSite {
 
   constructor(scope: Construct, id: string, props?: NextjsSiteProps) {
     super(scope, id, {
-      buildCommand: "npx --yes open-next@2.0.4 build",
+      buildCommand: "npx --yes open-next@2.1.5 build",
       ...props,
     });
 
     this.deferredTaskCallbacks.push(() => {
-      this.createWarmer();
       this.createRevalidation();
     });
   }
@@ -132,6 +146,10 @@ export class NextjsSite extends SsrSite {
       clientBuildS3KeyPrefix: "_assets",
       prerenderedBuildOutputDir: ".open-next/cache",
       prerenderedBuildS3KeyPrefix: "_cache",
+      warmerFunctionAssetPath: path.join(
+        this.props.path,
+        ".open-next/warmer-function"
+      ),
     };
   }
 
@@ -204,13 +222,13 @@ export class NextjsSite extends SsrSite {
       timeout: CdkDuration.seconds(25),
       architecture: Architecture.ARM_64,
       environment: {
-        BUCKET_NAME: this.cdk!.bucket.bucketName,
+        BUCKET_NAME: this.bucket.bucketName,
         BUCKET_KEY_PREFIX: "_assets",
       },
       initialPolicy: [
         new PolicyStatement({
           actions: ["s3:GetObject"],
-          resources: [this.cdk!.bucket.arnForObjects("*")],
+          resources: [this.bucket.arnForObjects("*")],
         }),
       ],
     });
@@ -233,65 +251,7 @@ export class NextjsSite extends SsrSite {
     return fn;
   }
 
-  private createWarmer() {
-    const { warm, edge } = this.props;
-    if (!warm) return;
-
-    if (warm && edge) {
-      throw new Error(
-        `Warming is currently supported only for the regional mode.`
-      );
-    }
-
-    if (!this.serverLambdaForRegional) return;
-
-    // Create warmer function
-    const warmer = new CdkFunction(this, "WarmerFunction", {
-      description: "Next.js warmer",
-      code: Code.fromAsset(
-        path.join(this.props.path, ".open-next/warmer-function")
-      ),
-      runtime: Runtime.NODEJS_18_X,
-      handler: "index.handler",
-      timeout: CdkDuration.minutes(15),
-      memorySize: 1024,
-      environment: {
-        FUNCTION_NAME: this.serverLambdaForRegional.functionName,
-        CONCURRENCY: warm.toString(),
-      },
-    });
-    this.serverLambdaForRegional.grantInvoke(warmer);
-
-    // Create cron job
-    new Rule(this, "WarmerRule", {
-      schedule: Schedule.rate(CdkDuration.minutes(5)),
-      targets: [new LambdaFunction(warmer, { retryAttempts: 0 })],
-    });
-
-    // Create custom resource to prewarm on deploy
-    const stack = Stack.of(this) as Stack;
-    const policy = new Policy(this, "PrewarmerPolicy", {
-      statements: [
-        new PolicyStatement({
-          effect: Effect.ALLOW,
-          actions: ["lambda:InvokeFunction"],
-          resources: [warmer.functionArn],
-        }),
-      ],
-    });
-    stack.customResourceHandler.role?.attachInlinePolicy(policy);
-    const resource = new CustomResource(this, "Prewarmer", {
-      serviceToken: stack.customResourceHandler.functionArn,
-      resourceType: "Custom::FunctionInvoker",
-      properties: {
-        version: Date.now().toString(),
-        functionName: warmer.functionName,
-      },
-    });
-    resource.node.addDependency(policy);
-  }
-
-  protected createCloudFrontDistributionForRegional(): Distribution {
+  protected createCloudFrontDistributionForRegional() {
     /**
      * Next.js requests
      *
@@ -342,81 +302,105 @@ export class NextjsSite extends SsrSite {
      *    - x-vercel-cache: MISS
      */
 
-    const { cdk } = this.props;
+    const { customDomain, cdk } = this.props;
     const cfDistributionProps = cdk?.distribution || {};
-    const cachePolicy =
-      cdk?.serverCachePolicy ??
-      this.buildServerCachePolicy([
-        "accept",
-        "rsc",
-        "next-router-prefetch",
-        "next-router-state-tree",
-      ]);
-    const serverBehavior = this.buildDefaultBehaviorForRegional(cachePolicy);
+    const serverBehavior = this.buildDefaultBehaviorForRegional();
 
-    return new Distribution(this, "Distribution", {
-      // these values can be overwritten by cfDistributionProps
-      defaultRootObject: "",
-      // Override props.
-      ...cfDistributionProps,
-      // these values can NOT be overwritten by cfDistributionProps
-      domainNames: this.buildDistributionDomainNames(),
-      certificate: this.cdk!.certificate,
-      defaultBehavior: serverBehavior,
-      additionalBehaviors: {
-        "api/*": serverBehavior,
-        "_next/data/*": serverBehavior,
-        "_next/image*": this.buildImageBehavior(cachePolicy),
-        ...(cfDistributionProps.additionalBehaviors || {}),
+    return new Distribution(this, "CDN", {
+      scopeOverride: this,
+      customDomain,
+      cdk: {
+        distribution: {
+          // these values can be overwritten by cfDistributionProps
+          defaultRootObject: "",
+          // Override props.
+          ...cfDistributionProps,
+          // these values can NOT be overwritten by cfDistributionProps
+          defaultBehavior: serverBehavior,
+          additionalBehaviors: {
+            "api/*": serverBehavior,
+            "_next/data/*": serverBehavior,
+            "_next/image*": this.buildImageBehavior(),
+            ...(cfDistributionProps.additionalBehaviors || {}),
+          },
+        },
       },
     });
   }
 
-  protected createCloudFrontDistributionForEdge(): Distribution {
-    const { cdk } = this.props;
+  protected createCloudFrontDistributionForEdge() {
+    const { customDomain, cdk } = this.props;
     const cfDistributionProps = cdk?.distribution || {};
-    const cachePolicy =
-      cdk?.serverCachePolicy ??
-      this.buildServerCachePolicy([
-        "accept",
-        "rsc",
-        "next-router-prefetch",
-        "next-router-state-tree",
-      ]);
-    const serverBehavior = this.buildDefaultBehaviorForEdge(cachePolicy);
+    const serverBehavior = this.buildDefaultBehaviorForEdge();
 
-    return new Distribution(this, "Distribution", {
-      // these values can be overwritten by cfDistributionProps
-      defaultRootObject: "",
-      // Override props.
-      ...cfDistributionProps,
-      // these values can NOT be overwritten by cfDistributionProps
-      domainNames: this.buildDistributionDomainNames(),
-      certificate: this.cdk!.certificate,
-      defaultBehavior: serverBehavior,
-      additionalBehaviors: {
-        "api/*": serverBehavior,
-        "_next/data/*": serverBehavior,
-        "_next/image*": this.buildImageBehavior(cachePolicy),
-        ...(cfDistributionProps.additionalBehaviors || {}),
+    return new Distribution(this, "CDN", {
+      scopeOverride: this,
+      customDomain,
+      cdk: {
+        distribution: {
+          // these values can be overwritten by cfDistributionProps
+          defaultRootObject: "",
+          // Override props.
+          ...cfDistributionProps,
+          // these values can NOT be overwritten by cfDistributionProps
+          defaultBehavior: serverBehavior,
+          additionalBehaviors: {
+            "api/*": serverBehavior,
+            "_next/data/*": serverBehavior,
+            "_next/image*": this.buildImageBehavior(),
+            ...(cfDistributionProps.additionalBehaviors || {}),
+          },
+        },
       },
     });
   }
 
-  private buildImageBehavior(cachePolicy: ICachePolicy): BehaviorOptions {
-    const { cdk } = this.props;
+  protected useServerBehaviorCachePolicy() {
+    return super.useServerBehaviorCachePolicy([
+      "accept",
+      "rsc",
+      "next-router-prefetch",
+      "next-router-state-tree",
+      "next-url",
+    ]);
+  }
+
+  private buildImageBehavior(): BehaviorOptions {
+    const { cdk, regional } = this.props;
     const imageFn = this.createImageOptimizationFunction();
     const imageFnUrl = imageFn.addFunctionUrl({
-      authType: FunctionUrlAuthType.NONE,
+      authType: regional?.enableServerUrlIamAuth
+        ? FunctionUrlAuthType.AWS_IAM
+        : FunctionUrlAuthType.NONE,
     });
+
     return {
       viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
       origin: new HttpOrigin(Fn.parseDomainName(imageFnUrl.url)),
       allowedMethods: AllowedMethods.ALLOW_ALL,
       cachedMethods: CachedMethods.CACHE_GET_HEAD_OPTIONS,
       compress: true,
-      cachePolicy,
+      cachePolicy:
+        cdk?.serverCachePolicy ?? this.useServerBehaviorCachePolicy(),
       responseHeadersPolicy: cdk?.responseHeadersPolicy,
+      edgeLambdas: regional?.enableServerUrlIamAuth
+        ? [
+            (() => {
+              const fn = this.useServerUrlSigningFunction();
+              fn.attachPermissions([
+                new PolicyStatement({
+                  actions: ["lambda:InvokeFunctionUrl"],
+                  resources: [imageFn.functionArn],
+                }),
+              ]);
+              return {
+                includeBody: true,
+                eventType: LambdaEdgeEventType.ORIGIN_REQUEST,
+                functionVersion: fn.currentVersion,
+              };
+            })(),
+          ]
+        : [],
     };
   }
 

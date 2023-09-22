@@ -5,12 +5,23 @@ export const version = (program: Program) =>
     "version",
     "Print SST and CDK version",
     (yargs) => yargs,
-    async (args) => {
+    async () => {
+      const { exit, exitWithError } = await import("../program.js");
       const { Colors } = await import("../colors.js");
       const { useProject } = await import("../../project.js");
-      const project = useProject();
-      Colors.line(Colors.bold(`SST:`), `v${project.version}`);
-      Colors.line(Colors.bold(`CDK:`), `v${project.cdkVersion}`);
-      Colors.line(Colors.bold(`Constructs:`), `v${project.constructsVersion}`);
+
+      try {
+        const project = useProject();
+        Colors.line(Colors.bold(`SST:`), `v${project.version}`);
+        Colors.line(Colors.bold(`CDK:`), `v${project.cdkVersion}`);
+        Colors.line(
+          Colors.bold(`Constructs:`),
+          `v${project.constructsVersion}`
+        );
+
+        await exit();
+      } catch (e: any) {
+        await exitWithError(e);
+      }
     }
   );

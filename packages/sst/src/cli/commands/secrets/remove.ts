@@ -1,4 +1,5 @@
 import type { Program } from "../../program.js";
+import { exitWithError } from "../../program.js";
 
 export const remove = (program: Program) =>
   program.command(
@@ -17,15 +18,20 @@ export const remove = (program: Program) =>
         }),
     async (args) => {
       const { Config } = await import("../../../config.js");
+      const { exit, exitWithError } = await import("../../program.js");
+      const { SilentError } = await import("../../../error.js");
       const { Colors } = await import("../../colors.js");
+
       try {
         await Config.removeSecret({
           key: args.name,
           fallback: args.fallback === true,
         });
         Colors.line(Colors.success(`✔ `), `Removed "${args.name}"`);
+        await exit();
       } catch {
         Colors.line(Colors.danger(`✖ `), `"${args.name}" is not set`);
+        await exitWithError(new SilentError(`"${args.name}" is not set`));
       }
     }
   );

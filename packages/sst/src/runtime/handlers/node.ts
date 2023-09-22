@@ -1,3 +1,4 @@
+import os from "os";
 import path from "path";
 import fs from "fs/promises";
 import { exec } from "child_process";
@@ -6,37 +7,42 @@ import { useProject } from "../../project.js";
 import esbuild, { BuildOptions, BuildResult } from "esbuild";
 import url from "url";
 import { Worker } from "worker_threads";
-import { useRuntimeHandlers } from "../handlers.js";
+import { RuntimeHandler } from "../handlers.js";
 import { useRuntimeWorkers } from "../workers.js";
-import { Context } from "../../context/context.js";
-import { VisibleError } from "../../error.js";
 import { Colors } from "../../cli/colors.js";
+import { Logger } from "../../logger.js";
+import { findAbove, findBelow } from "../../util/fs.js";
+import { lazy } from "../../util/lazy.js";
 
-export const useNodeHandler = Context.memo(async () => {
-  const workers = await useRuntimeWorkers();
-  const handlers = useRuntimeHandlers();
-  const cache: Record<
+export const useNodeHandler = (): RuntimeHandler => {
+  const rebuildCache: Record<
     string,
     {
-      last: esbuild.BuildResult;
+      result: esbuild.BuildResult;
       ctx: esbuild.BuildContext;
     }
   > = {};
+  process.on("exit", () => {
+    for (const { ctx } of Object.values(rebuildCache)) {
+      ctx.dispose();
+    }
+  });
   const project = useProject();
   const threads = new Map<string, Worker>();
 
-  handlers.register({
+  return {
     shouldBuild: (input) => {
-      const result = cache[input.functionID];
-      if (!result) return false;
+      const cache = rebuildCache[input.functionID];
+      if (!cache) return false;
       const relative = path
         .relative(project.paths.root, input.file)
         .split(path.sep)
         .join(path.posix.sep);
-      return Boolean(result.last.metafile?.inputs[relative]);
+      return Boolean(cache.result.metafile?.inputs[relative]);
     },
     canHandle: (input) => input.startsWith("nodejs"),
     startWorker: async (input) => {
+      const workers = await useRuntimeWorkers();
       new Promise(async () => {
         const worker = new Worker(
           url.fileURLToPath(
@@ -69,7 +75,6 @@ export const useNodeHandler = Context.memo(async () => {
       await worker?.terminate();
     },
     build: async (input) => {
-      const exists = cache[input.functionID];
       const parsed = path.parse(input.props.handler!);
       const file = [
         ".ts",
@@ -112,69 +117,89 @@ export const useNodeHandler = Context.memo(async () => {
         .split(path.sep)
         .join(path.posix.sep);
 
-      if (exists) {
-        const result = await exists.ctx.rebuild();
-        cache[input.functionID] = {
-          ctx: exists.ctx,
-          last: result,
-        };
-        return {
-          type: "success",
-          handler,
-        };
+      if (input.mode === "start") {
+        const root = await findAbove(parsed.dir, "package.json");
+        if (!root) {
+          return {
+            type: "error",
+            errors: [
+              `Could not find package.json for handler "${input.props.handler}"`,
+            ],
+          };
+        }
+        const dir = path.join(root, "node_modules");
+        try {
+          await fs.symlink(
+            path.resolve(dir),
+            path.resolve(path.join(input.out, "node_modules")),
+            "dir"
+          );
+        } catch {}
       }
 
-      const { external, ...override } = nodejs.esbuild || {};
+      // Rebuilt using existing esbuild context
+      let ctx = rebuildCache[input.functionID]?.ctx;
       const forceExternal = [
         "sharp",
         "pg-native",
         ...(isESM || input.props.runtime === "nodejs18.x" ? [] : ["aws-sdk"]),
       ];
-      const options: BuildOptions = {
-        entryPoints: [file],
-        platform: "node",
-        external: [
-          ...forceExternal,
-          ...(nodejs.install || []),
-          ...(external || []),
-        ],
-        loader: nodejs.loader,
-        keepNames: true,
-        bundle: true,
-        logLevel: "silent",
-        metafile: true,
-        ...(isESM
-          ? {
-              format: "esm",
-              target: "esnext",
-              mainFields: ["module", "main"],
-              banner: {
-                js: [
-                  `import { createRequire as topLevelCreateRequire } from 'module';`,
-                  `const require = topLevelCreateRequire(import.meta.url);`,
-                  `import { fileURLToPath as topLevelFileUrlToPath, URL as topLevelURL } from "url"`,
-                  `const __dirname = topLevelFileUrlToPath(new topLevelURL(".", import.meta.url))`,
-                  nodejs.banner || "",
-                ].join("\n"),
-              },
-            }
-          : {
-              format: "cjs",
-              target: "node14",
-              banner: nodejs.banner
-                ? {
-                    js: nodejs.banner,
-                  }
-                : undefined,
-            }),
-        outfile: target,
-        sourcemap: input.mode === "start" ? "linked" : nodejs.sourcemap,
-        minify: nodejs.minify,
-        ...override,
-      };
+      const { external, ...override } = nodejs.esbuild || {};
+      if (!ctx) {
+        const options: BuildOptions = {
+          entryPoints: [file],
+          platform: "node",
+          external: [
+            ...forceExternal,
+            ...(nodejs.install || []),
+            ...(external || []),
+          ],
+          loader: nodejs.loader,
+          keepNames: true,
+          bundle: true,
+          logLevel: "silent",
+          metafile: true,
+          ...(isESM
+            ? {
+                format: "esm",
+                target: "esnext",
+                mainFields: ["module", "main"],
+                banner: {
+                  js: [
+                    `import { createRequire as topLevelCreateRequire } from 'module';`,
+                    `const require = topLevelCreateRequire(import.meta.url);`,
+                    `import { fileURLToPath as topLevelFileUrlToPath, URL as topLevelURL } from "url"`,
+                    `const __dirname = topLevelFileUrlToPath(new topLevelURL(".", import.meta.url))`,
+                    nodejs.banner || "",
+                  ].join("\n"),
+                },
+              }
+            : {
+                format: "cjs",
+                target: "node14",
+                banner: nodejs.banner
+                  ? {
+                      js: nodejs.banner,
+                    }
+                  : undefined,
+              }),
+          outfile: target,
+          // always generate sourcemaps in local
+          // never generate sourcemaps if explicitly false
+          // otherwise generate sourcemaps
+          sourcemap:
+            input.mode === "start"
+              ? "linked"
+              : nodejs.sourcemap === false
+              ? false
+              : true,
+          minify: nodejs.minify,
+          ...override,
+        };
+        ctx = await esbuild.context(options);
+      }
 
       try {
-        const ctx = await esbuild.context(options);
         const result = await ctx.rebuild();
 
         // Install node_modules
@@ -203,21 +228,16 @@ export const useNodeHandler = Context.memo(async () => {
               })
         );
 
-        async function find(dir: string, target: string): Promise<string> {
-          if (dir === "/")
-            throw new VisibleError("Could not find a package.json file");
-          if (
-            await fs
-              .access(path.join(dir, target))
-              .then(() => true)
-              .catch(() => false)
-          )
-            return dir;
-          return find(path.join(dir, ".."), target);
-        }
-
         if (input.mode === "deploy" && installPackages) {
-          const src = await find(parsed.dir, "package.json");
+          const src = await findAbove(parsed.dir, "package.json");
+          if (!src) {
+            return {
+              type: "error",
+              errors: [
+                `Could not find package.json for handler "${input.props.handler}"`,
+              ],
+            };
+          }
           const json = JSON.parse(
             await fs
               .readFile(path.join(src, "package.json"))
@@ -250,27 +270,25 @@ export const useNodeHandler = Context.memo(async () => {
           });
         }
 
+        // Cache esbuild result and context for rebuild
         if (input.mode === "start") {
-          const dir = path.join(
-            await find(parsed.dir, "package.json"),
-            "node_modules"
-          );
-          try {
-            await fs.symlink(
-              path.resolve(dir),
-              path.resolve(path.join(input.out, "node_modules")),
-              "dir"
-            );
-          } catch {}
+          rebuildCache[input.functionID] = { ctx, result };
         }
 
-        cache[input.functionID] = {
-          ctx,
-          last: result,
-        };
+        if (input.mode === "deploy") {
+          ctx.dispose();
+        }
+
+        logMemoryUsage(input.functionID, input.props.handler!);
+
         return {
           type: "success",
           handler,
+          sourcemap: !nodejs.sourcemap
+            ? Object.keys(result.metafile?.outputs || {}).find((item) =>
+                item.endsWith(".map")
+              )
+            : undefined,
         };
       } catch (ex: any) {
         const result = ex as BuildResult;
@@ -291,5 +309,21 @@ export const useNodeHandler = Context.memo(async () => {
         };
       }
     },
+  };
+};
+
+function logMemoryUsage(functionID: string, handler: string) {
+  const printInMB = (bytes: number) => `${Math.round(bytes / 1024 / 1024)} MB`;
+  const used = process.memoryUsage();
+  for (const key in used) {
+    // @ts-ignore
+    used[key] = printInMB(used[key]);
+  }
+  Logger.debug({
+    functionID,
+    handler,
+    freeMemory: printInMB(os.freemem()),
+    totalMemory: printInMB(os.totalmem()),
+    ...used,
   });
-});
+}

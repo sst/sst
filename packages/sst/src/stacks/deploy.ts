@@ -112,6 +112,10 @@ export async function deploy(
   }));
   try {
     await addInUseExports(stack);
+    bus.publish("stack.status", {
+      stackID: stack.stackName,
+      status: "PUBLISH_ASSETS_IN_PROGRESS",
+    });
     const result = await deployment.deployStack({
       stack: stack as any,
       quiet: true,

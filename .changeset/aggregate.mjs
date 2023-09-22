@@ -31,7 +31,7 @@ for (const pkg of packages) {
     if (start) {
       if (line.startsWith("-") || line.startsWith("*")) {
         if (line.includes("Updated dependencies")) continue;
-        if (line.includes("@serverless-stack/")) continue;
+        if (line.includes("@sst/")) continue;
 
         for (const user of THANKLESS_COMMITTERS) {
           line = line.replace(

@@ -23,7 +23,7 @@ Take SST for a spin and create your first project.
 
 ## Prerequisites
 
-You'll need at least [Node.js 16](https://nodejs.org/) and [npm 7](https://www.npmjs.com/). You also need to have an AWS account and [**AWS credentials configured locally**](advanced/iam-credentials.md#loading-from-a-file).
+You'll need at least [Node.js 16.6](https://nodejs.org/) and [npm 7](https://www.npmjs.com/). You also need to have an AWS account and [**AWS credentials configured locally**](advanced/iam-credentials.md#loading-from-a-file).
 
 ---
 
@@ -154,7 +154,7 @@ const web = new StaticSite(stack, "web", {
 
 #### Call your API
 
-Start Vite locally and bind SST to it.
+Start Vite locally and bind SST to it by running in `packages/web`.
 
 <MultiPackagerCode>
 <TabItem value="npm">
@@ -237,7 +237,7 @@ pnpm sst deploy --stage prod
 ![Standalone SST app deployed to AWS](/img/start/standalone-sst-app-deployed-to-aws.png)
 
 :::info
-[View the source](https://github.com/serverless-stack/sst/tree/master/examples/quickstart-standalone) for this example on GitHub.
+[View the source](https://github.com/sst/sst/tree/master/examples/quickstart-standalone) for this example on GitHub.
 :::
 
 ---
@@ -249,4 +249,4 @@ pnpm sst deploy --stage prod
    - [`StaticSite`](../constructs/StaticSite.md) — Deploy a static site to AWS
    - [Live Lambda Dev](../live-lambda-development.md) — SST's local dev environment
    - [Resource Binding](../resource-binding.md) — Typesafe access to your resources
-2. Ready to dive into the details of SST? [**Check out our tutorial**](../learn/index.md).
+2. Ready to dive into the details of SST? <a href={config.guide}>**Check out our guide**</a>.

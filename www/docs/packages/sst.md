@@ -168,37 +168,48 @@ npx sst diff stack-a stack-b
 
 ### `sst bind`
 
-Bind your app's resources to the given `command`. This allows the [`sst/node`](clients/index.md) client to work as if it was running inside a Lambda function.
+Bind your app's resources to the given `command`. This allows the [`sst/node`](clients/index.md) client to work as if it was running inside the live AWS environment.
 
 ```bash
 npx sst bind <command> [options]
 ```
 
-So for example, you can start your frontend with all the binding values.
+`sst bind` can be used in several scenarios.
+
+##### Bind to a frontend framework
+
+You can launch your frontend with all the binding values.
 
 ```bash
 npx sst bind next dev
 ```
 
-`sst bind` auto-detects the following frontend frameworks.
+`sst bind` auto-detects if any of the below frontend constructs, in the SST app, are linked to the current directory:
 
-- Angular: detects `angular.json`
-- Astro: detects `astro.config.js`
-- Create React App: detects `react-scripts` in `package.json`
-- Ember: detects `ember-cli-build.js`
-- Gatsby: detects `gatsby-config.js`
-- Next.js: detects `next.config.js`
-- Plain HTML: detects `index.html`
-- Preact: detects `@preact/preset-vite` in `vite.config.js`
-- React: detects `plugin-react` in `vite.config.js`
-- Remix: detects `remix.config.js`
-- Solid: detects `solid-start` in `vite.config.js`
-- Svelte: detects `svelte.config.js`
-- Vue: detects `plugin-vue` in `vite.config.js`
+- [`AstroSite`](../constructs/AstroSite.md)
+- [`NextjsSite`](../constructs/NextjsSite.md)
+- [`SvelteKitSite`](../constructs/SvelteKitSite.md)
+- [`RemixSite`](../constructs/RemixSite.md)
+- [`SolidStartSite`](../constructs/SolidStartSite.md)
+- [`StaticSite`](../constructs/StaticSite.md)
 
 When detected, `sst bind` will load the site's bound resources, environment variables, and the IAM permissions granted to the site.
 
-If a frontend framework is not detected in the current directory, `sst bind` will bind all the resources in your app and use it to run the command.
+##### Bind to a container service
+
+You can start your container service with all the binding values.
+
+```bash
+npx sst bind node app.js
+```
+
+`sst bind` auto-detects if any [`Service`](../constructs/Service.md) constructs created in the SST app are linked to the current directory.
+
+When detected, `sst bind` will load the service's bound resources, environment variables, and the IAM permissions granted to the service.
+
+##### Bind to a script
+
+If a frontend framework or container service is not detected in the current directory, `sst bind` will bind all the resources in your app and use it to run the command.
 
 For example, you can use it to [run your tests](../testing.md).
 
@@ -210,21 +221,25 @@ You can also use the `sst bind` to run any scripts.
 
 #### Options
 
-- **`--site`**
-
-  If your framework is not auto-detected by SST, then pass in `--site` to signal to SST that you are starting your frontend.
-
-  ```bash
-  npx sst bind --site npm run start
-  ```
-
 - **`--script`**
 
-  Similarly, if SST has detected a frontend framework in the current directory, but you are not starting your frontend, then pass in `--script`. This is useful when you are running a script inside your frontend directory.
+  If SST has detected a frontend framework in the current directory, but you are not starting your frontend, then pass in `--script`. This is useful when you are running a script inside your frontend directory.
 
   ```bash
   npx sst bind --script npm run build
   ```
+
+---
+
+### `sst types`
+
+Generates your app resource types in `.sst/types`. This offers a faster way to generate the types without building the assets for your functions and sites.
+
+```bash
+npx sst types [options]
+```
+
+Supports [global options](#global-options)
 
 ---
 
@@ -278,15 +293,35 @@ In addition to the [global options](#global-options), the following options are 
 
 ### `sst remove`
 
-Remove your app and all their resources from AWS. Or optionally deploy a specific stack by passing in a `filter`.
+Remove your app and all their resources from AWS. Or optionally remove a specific stack by passing in a `filter`.
 
 ```bash
 npx sst remove [filter] [options]
 ```
 
 :::info Removal Policy
-By default, AWS does not remove resources like S3 buckets or DynamoDB tables. To let SST remove these, you'd need to [set the default removal policy](../advanced/removal-policy.md).
+By default, AWS does not remove resources like S3 buckets or DynamoDB tables. To let SST remove these, you'd need to [set the default removal policy](../advanced/removal-policy.md#changing-the-removal-policy).
 :::
+
+For example, you can remove your entire app for the current stage.
+
+```bash
+npx sst remove
+```
+
+Or remove it for a specific stage.
+
+```bash
+npx sst remove --stage dev
+```
+
+Or remove a specific stack in your app.
+
+```bash
+npx sst remove MyStack
+```
+
+Where `MyStack` is a stack defined in your stacks code.
 
 ---
 
@@ -352,7 +387,7 @@ This command does not instrument your code. It simply uses your local credential
 
 ### `sst secrets`
 
-Manage secrets in your app.
+Manage the secrets in your app. This command is meant to be used alongside [Config](../docs/config.md). 
 
 ```bash
 npx sst secrets <command> [options]
@@ -375,6 +410,8 @@ And remove the secret.
 ```bash
 npx sst secrets remove MY_SECRET
 ```
+
+Behind the scenes the secrets are stored in [AWS SSM](https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-parameter-store.html) or AWS Systems Manager Parameter Store, [read more about how it works](../config.md#how-it-works).
 
 #### Options
 

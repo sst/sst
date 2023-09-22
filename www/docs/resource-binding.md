@@ -26,7 +26,7 @@ Access the resources in your app in a secure and typesafe way.
 
 To see how Resource Binding works, we are going to create an S3 bucket and bind it to a Next.js frontend.
 
-To follow along, you can create a new SST app by running `npx create-sst@latest`. Alternatively, you can refer to [this example repo](https://github.com/serverless-stack/sst/tree/master/examples/standard-nextjs) that's based on the same template.
+To follow along, you can create a new SST app by running `npx create-sst@latest`. Alternatively, you can refer to [this example repo](https://github.com/sst/sst/tree/master/examples/standard-nextjs) that's based on the same template.
 
 1. To create a new bucket, open up `stacks/Default.ts` and add a [`Bucket`](constructs/Bucket.md) construct below the [`NextjsSite`](constructs/NextjsSite.md).
 

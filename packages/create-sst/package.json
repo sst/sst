@@ -1,8 +1,8 @@
 {
   "name": "create-sst",
-  "version": "2.21.4",
-  "homepage": "https://serverless-stack.com",
-  "description": "Create Serverless Stack apps.",
+  "version": "2.26.2",
+  "homepage": "https://sst.dev",
+  "description": "Create SST apps",
   "main": "src/index.mjs",
   "bin": {
     "create-sst": "./bin/create-sst.mjs"
@@ -11,12 +11,12 @@
     "import": "./src/index.mjs"
   },
   "author": {
-    "name": "Serverless Stack",
-    "url": "https://serverless-stack.com"
+    "name": "SST",
+    "url": "https://sst.dev"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/serverless-stack/sst.git",
+    "url": "https://github.com/sst/sst.git",
     "directory": "packages/create-sst"
   },
   "license": "MIT",
@@ -39,6 +39,6 @@
     "@tsconfig/node14": "^1.0.1",
     "@types/inquirer": "^8.2.1",
     "@types/node": "^17.0.23",
-    "typescript": "^4.8.4"
+    "typescript": "^5.2.2"
   }
 }

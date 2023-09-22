@@ -9,6 +9,7 @@ import {
 import { Context } from "../context/context.js";
 import { Logger } from "../logger.js";
 import { useProject } from "../project.js";
+import { lazy } from "../util/lazy.js";
 
 interface Metadata {
   mode: "deploy" | "dev";
@@ -90,9 +91,7 @@ function useS3Key() {
   return `appMetadata/app.${project.config.name}/stage.${project.config.stage}.json`;
 }
 
-const MetadataContext = Context.create(async () => {
+export const useAppMetadata = lazy(async () => {
   const data = await metadata();
   return data;
 });
-
-export const useAppMetadata = MetadataContext.use;

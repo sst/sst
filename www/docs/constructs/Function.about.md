@@ -1,4 +1,4 @@
-A construct for a Lambda Function that allows you to [develop it locally](live-lambda-development.md). Supports JS, TypeScript, Python, Golang, C#, and container runtime. It also applies a couple of defaults:
+A construct for a Lambda Function that allows you to [develop it locally](live-lambda-development.md). Supports JS, TypeScript, Python, Golang, C#, Rust, and container runtime. It also applies a couple of defaults:
 
 - Sets the default memory setting to 1024MB.
 - Sets the default Lambda function timeout to 10 seconds.
@@ -118,7 +118,7 @@ export async function main(event) {
 
 The `handler` property points to the path of the entry point and handler function. Uses the format, `/path/to/file.function`. Where the first part is the path to the file, followed by the name of the function that's exported in that file.
 
-For example, if your handler file is in `src/lambda.ts` and it exported a function called `main`. The handler would be `src/lambda.handler`.
+For example, if your handler file is in `src/lambda.ts` and it exported a function called `main`. The handler would be `src/lambda.main`.
 
 SST checks for a file with a `.ts`, `.tsx`, `.js`, or `.jsx` extension.
 
@@ -268,6 +268,22 @@ new Function(stack, "MyLambda", {
   handler: "example.Handler::handleRequest",
   runtime: "java17",
 });
+```
+
+### Configuring Rust runtime (beta)
+
+#### handler
+
+Path to the handler function. Uses the format, `/path/to/file.rs`.
+
+Note that there needs to be a `bin` field in your `Cargo.toml` with a name that matches the file's name.
+
+For example, if your handler file is in `src/main.rs`, then you should include the following block in your `Cargo.toml`:
+
+```toml
+[[bin]]
+name = "main"
+path = "src/main.rs"
 ```
 
 ### Function URLs

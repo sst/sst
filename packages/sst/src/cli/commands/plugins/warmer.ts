@@ -6,8 +6,9 @@ import {
   ExecuteStatementCommand,
 } from "@aws-sdk/client-rds-data";
 import { useAWSClient } from "../../../credentials.js";
+import { lazy } from "../../../util/lazy.js";
 
-export const useRDSWarmer = Context.memo(async () => {
+export const useRDSWarmer = lazy(async () => {
   let interval: NodeJS.Timer;
   const bus = useBus();
   const client = useAWSClient(RDSDataClient);

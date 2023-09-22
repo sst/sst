@@ -14,8 +14,7 @@ import { sync } from "cross-spawn";
 import { useProject } from "../../project.js";
 import { useBus } from "../../bus.js";
 import getPort from "get-port";
-import { Context } from "../../context/context.js";
-import { useMetadata } from "../../stacks/metadata.js";
+import { lazy } from "../../util/lazy.js";
 
 type Opts = {
   key: any;
@@ -29,17 +28,14 @@ declare module "../../bus.js" {
   }
 }
 
-export const useLocalServerConfig = Context.memo(async () => {
-  const project = useProject();
+export const useLocalServerConfig = lazy(async () => {
   const port = await getPort({
     port: 13557,
   });
 
   return {
     port,
-    url: `https://console.sst.dev/${project.config.name}/${
-      project.config.stage
-    }${port !== 13557 ? `?_port=${port}` : ""}`,
+    url: `https://console.sst.dev${port !== 13557 ? `?_port=${port}` : ""}`,
   };
 });
 
@@ -155,10 +151,77 @@ export async function useLocalServer(opts: Opts) {
   const wss2 = new WebSocketServer({ noServer: true });
 
   const sockets = new Set<WebSocket>();
+
+  interface Invocation {
+    id: string;
+    source: string;
+    cold: boolean;
+    input?: any;
+    output?: any;
+    errors: {
+      id: string;
+      error: string;
+      message: string;
+      stack: { raw: string }[];
+    }[];
+    report?: {
+      duration: number;
+      size: number;
+      memory: number;
+      xray: string;
+    };
+    start: number;
+    end?: number;
+    logs: {
+      id: string;
+      timestamp: number;
+      message: string;
+    }[];
+  }
+
+  let invocations: Invocation[] = [];
+  function publish(invocation: Invocation) {
+    invocations.push(invocation);
+    const json = JSON.stringify({
+      type: "invocation",
+      properties: [invocation],
+    });
+    [...sockets.values()].map((s) => s.send(json));
+  }
   wss2.on("connection", (socket, req) => {
     sockets.add(socket);
+    socket.send(
+      JSON.stringify({
+        type: "cli.dev",
+        properties: {
+          app: project.config.name,
+          stage: project.config.stage,
+        },
+      })
+    );
+    for (const invocation of invocations) {
+      socket.send(
+        JSON.stringify({
+          type: "invocation",
+          properties: [invocation],
+        })
+      );
+    }
     socket.on("close", () => {
       sockets.delete(socket);
+    });
+
+    socket.on("message", (data) => {
+      const parsed = JSON.parse(data.toString());
+      if (parsed.type === "log.cleared") {
+        if (parsed.properties.source === "all") {
+          invocations = [];
+          return;
+        }
+        invocations = invocations.filter(
+          (item) => item.source === parsed.properties.source
+        );
+      }
     });
   });
 
@@ -236,31 +299,16 @@ export async function useLocalServer(opts: Opts) {
     });
   }
 
-  type Log =
-    | ["e", number, string, string]
-    | ["s", number, string, string, boolean]
-    | ["r", number, string, string, number]
-    | ["m", number, string, string, string, string, string];
-
-  function publish(type: string, properties: any) {
-    const msg = JSON.stringify({
-      type,
-      properties,
-    });
-    [...sockets.values()].map((s) => s.send(msg));
-  }
-
   bus.subscribe("function.invoked", async (evt) => {
-    publish("log", [
-      [
-        "s",
-        Date.now(),
-        evt.properties.functionID,
-        evt.properties.requestID,
-        false,
-      ],
-    ] satisfies Log[]);
-    publish("function.invoked", evt.properties);
+    publish({
+      start: Date.now(),
+      cold: false,
+      input: evt.properties.event,
+      id: evt.properties.requestID,
+      errors: [],
+      logs: [],
+      source: evt.properties.functionID,
+    });
     updateFunction(evt.properties.functionID, (draft) => {
       if (draft.invocations.length >= 25) draft.invocations.pop();
       draft.invocations.unshift({
@@ -275,17 +323,17 @@ export async function useLocalServer(opts: Opts) {
   });
 
   bus.subscribe("worker.stdout", (evt) => {
-    publish("log", [
-      [
-        "m",
-        Date.now(),
-        evt.properties.functionID,
-        evt.properties.requestID,
-        "info",
-        evt.properties.message,
-        Math.random().toString(),
-      ],
-    ] satisfies Log[]);
+    const invocation = invocations.findLast(
+      (i) => i.source === evt.properties.functionID
+    );
+    if (invocation) {
+      invocation.logs.push({
+        id: Math.random().toString(),
+        message: evt.properties.message,
+        timestamp: Date.now(),
+      });
+      publish(invocation);
+    }
     updateFunction(evt.properties.functionID, (draft) => {
       const entry = draft.invocations.find(
         (i) => i.id === evt.properties.requestID
@@ -299,10 +347,20 @@ export async function useLocalServer(opts: Opts) {
   });
 
   bus.subscribe("function.success", (evt) => {
-    publish("log", [
-      ["e", Date.now(), evt.properties.functionID, evt.properties.requestID],
-    ] satisfies Log[]);
-    publish("function.success", evt.properties);
+    const invocation = invocations.findLast(
+      (i) => i.source === evt.properties.functionID
+    );
+    if (invocation) {
+      invocation.end = Date.now();
+      invocation.report = {
+        duration: invocation.end - invocation.start,
+        size: 0,
+        xray: "",
+        memory: 0,
+      };
+      invocation.output = evt.properties.body;
+      publish(invocation);
+    }
     updateFunction(evt.properties.functionID, (draft) => {
       const invocation = draft.invocations.find(
         (x) => x.id === evt.properties.requestID
@@ -317,10 +375,27 @@ export async function useLocalServer(opts: Opts) {
   });
 
   bus.subscribe("function.error", (evt) => {
-    publish("log", [
-      ["e", Date.now(), evt.properties.functionID, evt.properties.requestID],
-    ] satisfies Log[]);
-    publish("function.error", evt.properties);
+    const invocation = invocations.findLast(
+      (i) => i.source === evt.properties.functionID
+    );
+    if (invocation) {
+      invocation.errors.push({
+        id: invocation.id,
+        error: evt.properties.errorType,
+        message: evt.properties.errorMessage,
+        stack: evt.properties.trace.map((t) => ({
+          raw: t,
+        })),
+      });
+      invocation.end = Date.now();
+      invocation.report = {
+        duration: invocation.end - invocation.start,
+        size: 0,
+        xray: "",
+        memory: 0,
+      };
+      publish(invocation);
+    }
     updateFunction(evt.properties.functionID, (draft) => {
       const invocation = draft.invocations.find(
         (x) => x.id === evt.properties.requestID

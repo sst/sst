@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import type { StackEvent, StackResource } from "@aws-sdk/client-cloudformation";
 import { Box, Text } from "ink";
 import { useBus } from "../../bus.js";
-import { Stacks } from "../../stacks/index.js";
+import { Stacks, STATUSES } from "../../stacks/index.js";
 import Spinner from "ink-spinner";
 import { Colors } from "../colors.js";
 import type { CloudAssembly } from "aws-cdk-lib/cx-api";
@@ -13,15 +13,40 @@ interface Props {
   remove?: boolean;
 }
 export const DeploymentUI = (props: Props) => {
+  const [statuses, setStatuses] = useState<
+    Record<string, (typeof STATUSES)[number]>
+  >({});
   const [resources, setResources] = useState<Record<string, StackEvent>>({});
 
   useEffect(() => {
     Colors.gap();
     const bus = useBus();
 
+    const status = bus.subscribe("stack.status", (payload) => {
+      const { stackID, status } = payload.properties;
+      setStatuses((previous) => {
+        if (status !== "PUBLISH_ASSETS_IN_PROGRESS") {
+          if (previous[stackID]) {
+            Colors.line(
+              Colors.warning(Colors.prefix),
+              Colors.dim(stackNameToId(stackID)),
+              Colors.dim("PUBLISH_ASSETS_COMPLETE"),
+              ""
+            );
+          }
+          const { [stackID]: _, ...next } = previous;
+          return next;
+        }
+
+        return {
+          ...previous,
+          [stackID]: status,
+        };
+      });
+    });
+
     const event = bus.subscribe("stack.event", (payload) => {
       const { event } = payload.properties;
-      // if (event.ResourceType === "AWS::CloudFormation::Stack") return;
       setResources((previous) => {
         if (Stacks.isFinal(event.ResourceStatus!)) {
           const readable = logicalIdToCdkPath(
@@ -61,6 +86,7 @@ export const DeploymentUI = (props: Props) => {
 
     return () => {
       bus.unsubscribe(event);
+      bus.unsubscribe(status);
     };
   }, []);
 
@@ -72,8 +98,25 @@ export const DeploymentUI = (props: Props) => {
 
   return (
     <Box flexDirection="column">
-      {Object.entries(resources)
+      {Object.entries(statuses)
         .slice(0, process.stdout.rows - 2)
+        .map(([stack, status], index) => {
+          return (
+            <Box key={index}>
+              <Text>
+                <Spinner />
+                {"  "}
+                {stackNameToId(stack)}{" "}
+              </Text>
+              <Text color={color(status)}>{status}</Text>
+            </Box>
+          );
+        })}
+      {Object.entries(resources)
+        .slice(
+          0,
+          Math.max(0, process.stdout.rows - Object.entries(statuses).length - 2)
+        )
         .map(([_, evt], index) => {
           const readable = logicalIdToCdkPath(
             props.assembly,
@@ -97,17 +140,18 @@ export const DeploymentUI = (props: Props) => {
             </Box>
           );
         })}
-      {Object.entries(resources).length === 0 && (
-        <Box>
-          <Text>
-            <Spinner />
-            {"  "}
-            <Text dimColor>
-              {props.remove ? "Removing..." : "Deploying..."}
+      {Object.entries(resources).length === 0 &&
+        Object.entries(statuses).length === 0 && (
+          <Box>
+            <Text>
+              <Spinner />
+              {"  "}
+              <Text dimColor>
+                {props.remove ? "Removing..." : "Deploying..."}
+              </Text>
             </Text>
-          </Text>
-        </Box>
-      )}
+          </Box>
+        )}
     </Box>
   );
 };
@@ -210,7 +254,7 @@ function getApiAccessLogPermissionsHelper(error: string) {
   // note: this should be handled in SST as access log group names are now
   //       hardcoded with /aws/vendedlogs/apis prefix.
   if (error.indexOf("Insufficient permissions to enable logging") > -1) {
-    return `This is a common deploy error. Check out this GitHub issue for more details - https://github.com/serverless-stack/sst/issues/125`;
+    return `This is a common deploy error. Check out this GitHub issue for more details - https://github.com/sst/sst/issues/125`;
   }
 }
 

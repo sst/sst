@@ -36,15 +36,22 @@ const api = new Api(stack, "api", {
 
 `packages/functions/src/auth.handler`
 ```js
-declare module "sst/node/future/auth" {
-  export interface SessionTypes {
-    user: {
-      userID: string
-    }
+import {
+  AuthHandler,
+  GithubAdapter,
+  createSessionBuilder,
+} from "sst/node/future/auth";
+import { Config } from "sst/node/config";
+
+// define session types
+export const sessions = createSessionBuilder<{
+  user: {
+    userID: string
   }
-}
+}>()
 
 export const handler = AuthHandler({
+  sessions,
   clients: async () => ({
     // This allows local clients to redirect back to localhost
     local: "http://localhost",
@@ -164,16 +171,25 @@ export async function get(ctx: APIContext) {
 }
 ```
 
-### Accessing the session in your API
+### Accessing the session in your API or SSR
 
-Make sure the auth construct is bound to your API like in the example above. Then you can just call `useSession()` to access the current session.
+Make sure the auth construct is bound to your API like in the example above. Then you can just call `sessions.use()` to access the current session. It also provides `sessions.verify("mytoken")` if you want to manually pass in a token.
 
 ```js
 import { ApiHandler } from "sst/node/api"
+import { sessions } from "../auth-handler"
 
 export const handler = ApiHandler(() => {
-  const session = useSession()
+  const session = sesssions.use()
 })
 ```
 
 It will return `{ type: "public" }` if auth is missing or invalid
+
+If you need to access the session in a different project you can share types and initialize `createSessionBuilder()`
+
+```js
+import { sessions } from "@myproject/functions/auth-handler"
+
+const sessions = createSessionBuilder<typeof sessions.$type>()
+```

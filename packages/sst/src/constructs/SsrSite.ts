@@ -21,8 +21,8 @@ import {
   IBucket,
 } from "aws-cdk-lib/aws-s3";
 import {
-  Role,
   Effect,
+  Role,
   Policy,
   PolicyStatement,
   AccountPrincipal,
@@ -31,22 +31,14 @@ import {
 } from "aws-cdk-lib/aws-iam";
 import {
   Function as CdkFunction,
-  IFunction as ICdkFunction,
   Code,
   Runtime,
   FunctionUrlAuthType,
-  FunctionProps,
+  FunctionProps as CdkFunctionProps,
+  InvokeMode,
 } from "aws-cdk-lib/aws-lambda";
-import {
-  HostedZone,
-  IHostedZone,
-  ARecord,
-  AaaaRecord,
-  RecordTarget,
-} from "aws-cdk-lib/aws-route53";
 import { Asset } from "aws-cdk-lib/aws-s3-assets";
 import {
-  Distribution,
   ICachePolicy,
   IResponseHeadersPolicy,
   BehaviorOptions,
@@ -58,34 +50,35 @@ import {
   CacheQueryStringBehavior,
   CacheHeaderBehavior,
   CacheCookieBehavior,
+  Distribution as CdkDistribution,
   OriginRequestPolicy,
+  IOriginRequestPolicy,
   Function as CfFunction,
   FunctionCode as CfFunctionCode,
   FunctionEventType as CfFunctionEventType,
 } from "aws-cdk-lib/aws-cloudfront";
-import { ICertificate } from "aws-cdk-lib/aws-certificatemanager";
 import { AwsCliLayer } from "aws-cdk-lib/lambda-layer-awscli";
 import { S3Origin, HttpOrigin } from "aws-cdk-lib/aws-cloudfront-origins";
-import { CloudFrontTarget } from "aws-cdk-lib/aws-route53-targets";
+import { Rule, Schedule } from "aws-cdk-lib/aws-events";
+import { LambdaFunction } from "aws-cdk-lib/aws-events-targets";
 
 import { App } from "./App.js";
 import { Stack } from "./Stack.js";
+import { Distribution, DistributionDomainProps } from "./Distribution.js";
 import { Logger } from "../logger.js";
 import { createAppContext } from "./context.js";
 import { SSTConstruct, isCDKConstruct } from "./Construct.js";
-import { NodeJSProps } from "./Function.js";
+import { NodeJSProps, FunctionProps } from "./Function.js";
 import { Secret } from "./Secret.js";
 import { SsrFunction } from "./SsrFunction.js";
 import { EdgeFunction } from "./EdgeFunction.js";
 import {
-  BaseSiteDomainProps,
+  BaseSiteFileOptions,
   BaseSiteReplaceProps,
   BaseSiteCdkDistributionProps,
   getBuildCmdEnvironment,
 } from "./BaseSite.js";
 import { useDeferredTasks } from "./deferred_task.js";
-import { HttpsRedirect } from "./cdk/website-redirect.js";
-import { DnsValidatedCertificate } from "./cdk/dns-validated-certificate.js";
 import { Size } from "./util/size.js";
 import { Duration, toCdkDuration } from "./util/duration.js";
 import { Permissions, attachPermissionsToRole } from "./util/permission.js";
@@ -94,6 +87,7 @@ import {
   getParameterPath,
 } from "./util/functionBinding.js";
 import { useProject } from "../project.js";
+import { VisibleError } from "../error.js";
 
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 
@@ -104,12 +98,15 @@ export type SsrBuildConfig = {
   clientBuildOutputDir: string;
   clientBuildVersionedSubDir: string;
   clientBuildS3KeyPrefix?: string;
+  clientCFFunctionInjection?: string;
   prerenderedBuildOutputDir?: string;
   prerenderedBuildS3KeyPrefix?: string;
+  warmerFunctionAssetPath?: string;
 };
 
 export interface SsrSiteNodeJSProps extends NodeJSProps {}
-export interface SsrDomainProps extends BaseSiteDomainProps {}
+export interface SsrDomainProps extends DistributionDomainProps {}
+export interface SsrSiteFileOptions extends BaseSiteFileOptions {}
 export interface SsrSiteReplaceProps extends BaseSiteReplaceProps {}
 export interface SsrCdkDistributionProps extends BaseSiteCdkDistributionProps {}
 export interface SsrSiteProps {
@@ -216,9 +213,21 @@ export interface SsrSiteProps {
    * ```
    */
   environment?: Record<string, string>;
+  /**
+   * The number of server functions to keep warm. This option is only supported for the regional mode.
+   * @default Server function is not kept warm
+   */
+  warm?: number;
+  regional?: {
+    /**
+     * Secure the server function URL using AWS IAM authentication. By default, the server function URL is publicly accessible. When this flag is enabled, the server function URL will require IAM authorization, and a Lambda@Edge function will sign the requests. Be aware that this introduces added latency to the requests.
+     * @default false
+     */
+    enableServerUrlIamAuth?: boolean;
+  };
   dev?: {
     /**
-     * When running `sst dev, site is not deployed. This is to ensure `sst dev` can start up quickly.
+     * When running `sst dev`, site is not deployed. This is to ensure `sst dev` can start up quickly.
      * @default false
      * @example
      * ```js
@@ -262,8 +271,22 @@ export interface SsrSiteProps {
      * Override the CloudFront cache policy properties for responses from the
      * server rendering Lambda.
      *
-     * @note The default cache policy that is used in the abscene of this property
-     * is one that performs no caching of the server response.
+     * @default
+     * By default, the cache policy is configured to cache all responses from
+     * the server rendering Lambda based on the query-key only. If you're using
+     * cookie or header based authentication, you'll need to override the
+     * cache policy to cache based on those values as well.
+     *
+     * ```js
+     * serverCachePolicy: new CachePolicy(this, "ServerCache", {
+     *   queryStringBehavior: CacheQueryStringBehavior.all()
+     *   headerBehavior: CacheHeaderBehavior.none()
+     *   cookieBehavior: CacheCookieBehavior.none()
+     *   defaultTtl: Duration.days(0)
+     *   maxTtl: Duration.days(365)
+     *   minTtl: Duration.days(0)
+     * })
+     * ```
      */
     serverCachePolicy?: ICachePolicy;
     /**
@@ -272,7 +295,7 @@ export interface SsrSiteProps {
      */
     responseHeadersPolicy?: IResponseHeadersPolicy;
     server?: Pick<
-      FunctionProps,
+      CdkFunctionProps,
       | "vpc"
       | "vpcSubnets"
       | "securityGroups"
@@ -280,8 +303,63 @@ export interface SsrSiteProps {
       | "allowPublicSubnet"
       | "architecture"
       | "logRetention"
-    >;
+    > &
+      Pick<FunctionProps, "copyFiles">;
   };
+  /**
+   * Pass in a list of file options to customize cache control and content type specific files.
+   *
+   * @default
+   * Versioned files cached for 1 year at the CDN and brower level.
+   * Unversioned files cached for 1 year at the CDN level, but not at the browser level.
+   * ```js
+   * fileOptions: [
+   *   {
+   *     exclude: "*",
+   *     include: "{versioned_directory}/*",
+   *     cacheControl: "public,max-age=31536000,immutable",
+   *   },
+   *   {
+   *     exclude: "*",
+   *     include: "[{non_versioned_file1}, {non_versioned_file2}, ...]",
+   *     cacheControl: "public,max-age=0,s-maxage=31536000,must-revalidate",
+   *   },
+   *   {
+   *     exclude: "*",
+   *     include: "[{non_versioned_dir_1}/*, {non_versioned_dir_2}/*, ...]",
+   *     cacheControl: "public,max-age=0,s-maxage=31536000,must-revalidate",
+   *   },
+   * ]
+   * ```
+   *
+   * @example
+   * ```js
+   * fileOptions: [
+   *   {
+   *     exclude: "*",
+   *     include: "{versioned_directory}/*.css",
+   *     cacheControl: "public,max-age=31536000,immutable",
+   *     contentType: "text/css; charset=UTF-8",
+   *   },
+   *   {
+   *     exclude: "*",
+   *     include: "{versioned_directory}/*.js",
+   *     cacheControl: "public,max-age=31536000,immutable",
+   *   },
+   *   {
+   *     exclude: "*",
+   *     include: "[{non_versioned_file1}, {non_versioned_file2}, ...]",
+   *     cacheControl: "public,max-age=0,s-maxage=31536000,must-revalidate",
+   *   },
+   *   {
+   *     exclude: "*",
+   *     include: "[{non_versioned_dir_1}/*, {non_versioned_dir_2}/*, ...]",
+   *     cacheControl: "public,max-age=0,s-maxage=31536000,must-revalidate",
+   *   },
+   * ]
+   * ```
+   */
+  fileOptions?: SsrSiteFileOptions[];
 }
 
 type SsrSiteNormalizedProps = SsrSiteProps & {
@@ -309,16 +387,17 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
   protected doNotDeploy: boolean;
   protected buildConfig: SsrBuildConfig;
   protected deferredTaskCallbacks: (() => void)[] = [];
-  private serverLambdaCdkFunctionForEdge?: ICdkFunction;
   protected serverLambdaForEdge?: EdgeFunction;
   protected serverLambdaForRegional?: SsrFunction;
   private serverLambdaForDev?: SsrFunction;
+  private serverUrlSigningFunction?: EdgeFunction;
   protected bucket: Bucket;
-  private cfFunction: CfFunction;
+  private serverCfFunction?: CfFunction;
+  private serverBehaviorCachePolicy?: CachePolicy;
+  private serverBehaviorOriginRequestPolicy?: IOriginRequestPolicy;
+  private staticCfFunction?: CfFunction;
   private s3Origin: S3Origin;
   private distribution: Distribution;
-  private hostedZone?: IHostedZone;
-  private certificate?: ICertificate;
 
   constructor(scope: Construct, id: string, props?: SsrSiteProps) {
     super(scope, props?.cdk?.id || id);
@@ -342,11 +421,11 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
     this.validateTimeout();
     this.writeTypesFile();
 
-    useSites().add(id, this.constructor.name, this.props);
+    useSites().add(stack.stackName, id, this.constructor.name, this.props);
 
     if (this.doNotDeploy) {
-      // @ts-ignore
-      this.cfFunction = this.bucket = this.s3Origin = this.distribution = null;
+      // @ts-expect-error
+      this.bucket = this.s3Origin = this.distribution = null;
       this.serverLambdaForDev = this.createFunctionForDev();
       return;
     }
@@ -357,35 +436,17 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
     // Create Server functions
     if (this.props.edge) {
       this.serverLambdaForEdge = this.createFunctionForEdge();
-      this.serverLambdaCdkFunctionForEdge = CdkFunction.fromFunctionAttributes(
-        this,
-        "IEdgeFunction",
-        {
-          functionArn: this.serverLambdaForEdge.functionArn,
-          role: this.serverLambdaForEdge.role,
-        }
-      );
     } else {
       this.serverLambdaForRegional = this.createFunctionForRegional();
     }
     this.grantServerS3Permissions();
 
-    // Create Custom Domain
-    this.validateCustomDomainSettings();
-    this.hostedZone = this.lookupHostedZone();
-    this.certificate = this.createCertificate();
-
     // Create CloudFront
-    this.validateCloudFrontDistributionSettings();
     this.s3Origin = this.createCloudFrontS3Origin();
-    this.cfFunction = this.createCloudFrontFunction();
     this.distribution = this.props.edge
       ? this.createCloudFrontDistributionForEdge()
       : this.createCloudFrontDistributionForRegional();
     this.grantServerCloudFrontPermissions();
-
-    // Connect Custom Domain to CloudFront Distribution
-    this.createRoute53Records();
 
     useDeferredTasks().add(async () => {
       // Build app
@@ -394,6 +455,12 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
       // Build server functions
       await this.serverLambdaForEdge?.build();
       await this.serverLambdaForRegional?.build();
+      await this.serverUrlSigningFunction?.build();
+
+      // Create warmer
+      // Note: create warmer after build app b/c the warmer code
+      //       for NextjsSite depends on OpenNext build output
+      this.createWarmer();
 
       // Create S3 Deployment
       const cliLayer = new AwsCliLayer(this, "AwsCliLayer");
@@ -410,7 +477,7 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
       this.addStaticFileBehaviors();
 
       // Invalidate CloudFront
-      this.createCloudFrontInvalidation();
+      this.distribution.createInvalidation(this.generateBuildId());
 
       for (const task of this.deferredTaskCallbacks) {
         await task();
@@ -428,7 +495,7 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
   public get url() {
     if (this.doNotDeploy) return this.props.dev?.url;
 
-    return `https://${this.distribution.distributionDomainName}`;
+    return this.distribution.url;
   }
 
   /**
@@ -438,14 +505,7 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
   public get customDomainUrl() {
     if (this.doNotDeploy) return;
 
-    const { customDomain } = this.props;
-    if (!customDomain) return;
-
-    if (typeof customDomain === "string") {
-      return `https://${customDomain}`;
-    } else {
-      return `https://${customDomain.domainName}`;
-    }
+    return this.distribution.customDomainUrl;
   }
 
   /**
@@ -456,11 +516,12 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
 
     return {
       function:
-        this.serverLambdaCdkFunctionForEdge || this.serverLambdaForRegional,
+        this.serverLambdaForEdge?.function ||
+        this.serverLambdaForRegional?.function,
       bucket: this.bucket,
-      distribution: this.distribution,
-      hostedZone: this.hostedZone,
-      certificate: this.certificate,
+      distribution: this.distribution.cdk.distribution,
+      hostedZone: this.distribution.cdk.hostedZone,
+      certificate: this.distribution.cdk.certificate,
     };
   }
 
@@ -479,7 +540,7 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
    */
   public attachPermissions(permissions: Permissions): void {
     const server =
-      this.serverLambdaCdkFunctionForEdge ||
+      this.serverLambdaForEdge ||
       this.serverLambdaForRegional ||
       this.serverLambdaForDev;
     attachPermissionsToRole(server?.role as Role, permissions);
@@ -493,13 +554,14 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
           ? ("placeholder" as const)
           : ("deployed" as const),
         path: this.props.path,
+        runtime: this.props.runtime,
         customDomainUrl: this.customDomainUrl,
         url: this.url,
         edge: this.props.edge,
         server: (
           this.serverLambdaForDev ||
           this.serverLambdaForRegional ||
-          this.serverLambdaCdkFunctionForEdge
+          this.serverLambdaForEdge
         )?.functionArn!,
         secrets: (this.props.bind || [])
           .filter((c) => c instanceof Secret)
@@ -611,7 +673,9 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
       });
     } catch (e) {
       throw new Error(
-        `There was a problem building the "${this.node.id}" site.`
+        `There was a problem building the "${this.node.id}" ${
+          this.getConstructMetadata().type
+        }.`
       );
     }
   }
@@ -692,6 +756,8 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
   }
 
   private createS3AssetFileOptions() {
+    if (this.props.fileOptions) return this.props.fileOptions;
+
     // Build file options
     const fileOptions = [];
     const clientPath = path.join(
@@ -700,7 +766,7 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
     );
     for (const item of fs.readdirSync(clientPath)) {
       // Versioned files will be cached for 1 year (immutable) both at
-      // CDN and browser level.
+      // the CDN and browser level.
       if (item === this.buildConfig.clientBuildVersionedSubDir) {
         fileOptions.push({
           exclude: "*",
@@ -744,6 +810,7 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
       blockPublicAccess: BlockPublicAccess.BLOCK_ALL,
       autoDeleteObjects: true,
       removalPolicy: RemovalPolicy.DESTROY,
+      enforceSSL: true,
       ...cdk?.bucket,
     });
   }
@@ -751,7 +818,7 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
   private createS3Deployment(
     cliLayer: AwsCliLayer,
     assets: Asset[],
-    fileOptions: { exclude: string; include: string; cacheControl: string }[]
+    fileOptions: SsrSiteFileOptions[]
   ): CustomResource {
     // Create a Lambda function that will be doing the uploading
     const uploader = new CdkFunction(this, "S3Uploader", {
@@ -759,7 +826,7 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
         path.join(__dirname, "../support/base-site-custom-resource")
       ),
       layers: [cliLayer],
-      runtime: Runtime.PYTHON_3_7,
+      runtime: Runtime.PYTHON_3_11,
       handler: "s3-upload.handler",
       timeout: CdkDuration.minutes(15),
       memorySize: 1024,
@@ -773,7 +840,7 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
         path.join(__dirname, "../support/base-site-custom-resource")
       ),
       layers: [cliLayer],
-      runtime: Runtime.PYTHON_3_7,
+      runtime: Runtime.PYTHON_3_11,
       handler: "s3-handler.handler",
       timeout: CdkDuration.minutes(15),
       memorySize: 1024,
@@ -795,15 +862,19 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
         })),
         DestinationBucketName: this.bucket.bucketName,
         FileOptions: (fileOptions || []).map(
-          ({ exclude, include, cacheControl }) => {
+          ({ exclude, include, cacheControl, contentType }) => {
+            if (typeof exclude === "string") {
+              exclude = [exclude];
+            }
+            if (typeof include === "string") {
+              include = [include];
+            }
             return [
-              "--exclude",
-              exclude,
-              "--include",
-              include,
-              "--cache-control",
-              cacheControl,
-            ];
+              ...exclude.map((per) => ["--exclude", per]),
+              ...include.map((per) => ["--include", per]),
+              ["--cache-control", cacheControl],
+              contentType ? ["--content-type", contentType] : [],
+            ].flat();
           }
         ),
         ReplaceValues: this.getS3ContentReplaceValues(),
@@ -858,21 +929,19 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
   }
 
   private grantServerS3Permissions() {
-    const server =
-      this.serverLambdaCdkFunctionForEdge || this.serverLambdaForRegional;
+    const server = this.serverLambdaForEdge || this.serverLambdaForRegional;
     this.bucket.grantReadWrite(server!.role!);
   }
 
   private grantServerCloudFrontPermissions() {
     const stack = Stack.of(this) as Stack;
-    const server =
-      this.serverLambdaCdkFunctionForEdge || this.serverLambdaForRegional;
+    const server = this.serverLambdaForEdge || this.serverLambdaForRegional;
     const policy = new Policy(this, "ServerFunctionInvalidatorPolicy", {
       statements: [
         new PolicyStatement({
           actions: ["cloudfront:CreateInvalidation"],
           resources: [
-            `arn:${stack.partition}:cloudfront::${stack.account}:distribution/${this.distribution.distributionId}`,
+            `arn:${stack.partition}:cloudfront::${stack.account}:distribution/${this.distribution.cdk.distribution.distributionId}`,
           ],
         }),
       ],
@@ -880,23 +949,68 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
     server?.role?.attachInlinePolicy(policy);
   }
 
+  private createWarmer() {
+    const { warm, edge } = this.props;
+    if (!warm) return;
+
+    if (warm && edge) {
+      throw new VisibleError(
+        `In the "${this.node.id}" Site, warming is currently supported only for the regional mode.`
+      );
+    }
+
+    if (!this.serverLambdaForRegional) return;
+
+    // Create warmer function
+    const warmer = new CdkFunction(this, "WarmerFunction", {
+      description: "Next.js warmer",
+      code: Code.fromAsset(
+        this.buildConfig.warmerFunctionAssetPath ??
+          path.join(__dirname, "../support/ssr-warmer")
+      ),
+      runtime: Runtime.NODEJS_18_X,
+      handler: "index.handler",
+      timeout: CdkDuration.minutes(15),
+      memorySize: 1024,
+      environment: {
+        FUNCTION_NAME: this.serverLambdaForRegional.functionName,
+        CONCURRENCY: warm.toString(),
+      },
+    });
+    this.serverLambdaForRegional.grantInvoke(warmer);
+
+    // Create cron job
+    new Rule(this, "WarmerRule", {
+      schedule: Schedule.rate(CdkDuration.minutes(5)),
+      targets: [new LambdaFunction(warmer, { retryAttempts: 0 })],
+    });
+
+    // Create custom resource to prewarm on deploy
+    const stack = Stack.of(this) as Stack;
+    const policy = new Policy(this, "PrewarmerPolicy", {
+      statements: [
+        new PolicyStatement({
+          effect: Effect.ALLOW,
+          actions: ["lambda:InvokeFunction"],
+          resources: [warmer.functionArn],
+        }),
+      ],
+    });
+    stack.customResourceHandler.role?.attachInlinePolicy(policy);
+    const resource = new CustomResource(this, "Prewarmer", {
+      serviceToken: stack.customResourceHandler.functionArn,
+      resourceType: "Custom::FunctionInvoker",
+      properties: {
+        version: Date.now().toString(),
+        functionName: warmer.functionName,
+      },
+    });
+    resource.node.addDependency(policy);
+  }
+
   /////////////////////
   // CloudFront Distribution
   /////////////////////
-
-  private validateCloudFrontDistributionSettings() {
-    const { cdk } = this.props;
-    if (cdk?.distribution?.certificate) {
-      throw new Error(
-        `Do not configure the "cfDistribution.certificate". Use the "customDomain" to configure the domain certificate.`
-      );
-    }
-    if (cdk?.distribution?.domainNames) {
-      throw new Error(
-        `Do not configure the "cfDistribution.domainNames". Use the "customDomain" to configure the domain name.`
-      );
-    }
-  }
 
   private createCloudFrontS3Origin() {
     return new S3Origin(this.bucket, {
@@ -904,86 +1018,63 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
     });
   }
 
-  private createCloudFrontFunction() {
-    return new CfFunction(this, "CloudFrontFunction", {
-      code: CfFunctionCode.fromInline(`
-function handler(event) {
-  var request = event.request;
-  request.headers["x-forwarded-host"] = request.headers.host;
-  ${this.buildConfig.serverCFFunctionInjection || ""}
-  return request;
-}`),
-    });
-  }
-
-  protected createCloudFrontDistributionForRegional(): Distribution {
-    const { cdk } = this.props;
+  protected createCloudFrontDistributionForRegional() {
+    const { customDomain, cdk } = this.props;
     const cfDistributionProps = cdk?.distribution || {};
-    const cachePolicy = cdk?.serverCachePolicy ?? this.buildServerCachePolicy();
 
-    return new Distribution(this, "Distribution", {
-      // these values can be overwritten by cfDistributionProps
-      defaultRootObject: "",
-      // Override props.
-      ...cfDistributionProps,
-      // these values can NOT be overwritten by cfDistributionProps
-      domainNames: this.buildDistributionDomainNames(),
-      certificate: this.certificate,
-      defaultBehavior: this.buildDefaultBehaviorForRegional(cachePolicy),
-      additionalBehaviors: {
-        ...(cfDistributionProps.additionalBehaviors || {}),
+    return new Distribution(this, "CDN", {
+      scopeOverride: this,
+      customDomain,
+      cdk: {
+        distribution: {
+          // these values can be overwritten by cfDistributionProps
+          defaultRootObject: "",
+          // Override props.
+          ...cfDistributionProps,
+          // these values can NOT be overwritten by cfDistributionProps
+          defaultBehavior: this.buildDefaultBehaviorForRegional(),
+          additionalBehaviors: {
+            ...(cfDistributionProps.additionalBehaviors || {}),
+          },
+        },
       },
     });
   }
 
-  protected createCloudFrontDistributionForEdge(): Distribution {
-    const { cdk } = this.props;
+  protected createCloudFrontDistributionForEdge() {
+    const { customDomain, cdk } = this.props;
     const cfDistributionProps = cdk?.distribution || {};
-    const cachePolicy = cdk?.serverCachePolicy ?? this.buildServerCachePolicy();
 
-    return new Distribution(this, "Distribution", {
-      // these values can be overwritten by cfDistributionProps
-      defaultRootObject: "",
-      // Override props.
-      ...cfDistributionProps,
-      // these values can NOT be overwritten by cfDistributionProps
-      domainNames: this.buildDistributionDomainNames(),
-      certificate: this.certificate,
-      defaultBehavior: this.buildDefaultBehaviorForEdge(cachePolicy),
-      additionalBehaviors: {
-        ...(cfDistributionProps.additionalBehaviors || {}),
+    return new Distribution(this, "CDN", {
+      scopeOverride: this,
+      customDomain,
+      cdk: {
+        distribution: {
+          // these values can be overwritten by cfDistributionProps
+          defaultRootObject: "",
+          // Override props.
+          ...cfDistributionProps,
+          // these values can NOT be overwritten by cfDistributionProps
+          defaultBehavior: this.buildDefaultBehaviorForEdge(),
+          additionalBehaviors: {
+            ...(cfDistributionProps.additionalBehaviors || {}),
+          },
+        },
       },
     });
   }
 
-  protected buildDistributionDomainNames(): string[] {
-    const { customDomain } = this.props;
-    const domainNames = [];
-    if (!customDomain) {
-      // no domain
-    } else if (typeof customDomain === "string") {
-      domainNames.push(customDomain);
-    } else {
-      domainNames.push(customDomain.domainName);
-      if (customDomain.alternateNames) {
-        if (!customDomain.cdk?.certificate)
-          throw new Error(
-            "Certificates for alternate domains cannot be automatically created. Please specify certificate to use"
-          );
-        domainNames.push(...customDomain.alternateNames);
-      }
-    }
-    return domainNames;
-  }
-
-  protected buildDefaultBehaviorForRegional(
-    cachePolicy: ICachePolicy
-  ): BehaviorOptions {
-    const { timeout, cdk } = this.props;
+  protected buildDefaultBehaviorForRegional(): BehaviorOptions {
+    const { timeout, regional, cdk } = this.props;
     const cfDistributionProps = cdk?.distribution || {};
 
     const fnUrl = this.serverLambdaForRegional!.addFunctionUrl({
-      authType: FunctionUrlAuthType.NONE,
+      authType: regional?.enableServerUrlIamAuth
+        ? FunctionUrlAuthType.AWS_IAM
+        : FunctionUrlAuthType.NONE,
+      invokeMode: this.supportsStreaming()
+        ? InvokeMode.RESPONSE_STREAM
+        : undefined,
     });
 
     return {
@@ -997,20 +1088,32 @@ function handler(event) {
       allowedMethods: AllowedMethods.ALLOW_ALL,
       cachedMethods: CachedMethods.CACHE_GET_HEAD_OPTIONS,
       compress: true,
-      cachePolicy,
+      cachePolicy:
+        cdk?.serverCachePolicy ?? this.useServerBehaviorCachePolicy(),
       responseHeadersPolicy: cdk?.responseHeadersPolicy,
-      originRequestPolicy: this.buildServerOriginRequestPolicy(),
+      originRequestPolicy: this.useServerBehaviorOriginRequestPolicy(),
       ...(cfDistributionProps.defaultBehavior || {}),
       functionAssociations: [
-        ...this.buildBehaviorFunctionAssociations(),
+        ...this.useServerBehaviorFunctionAssociations(),
         ...(cfDistributionProps.defaultBehavior?.functionAssociations || []),
+      ],
+      edgeLambdas: [
+        ...(regional?.enableServerUrlIamAuth
+          ? [
+              {
+                includeBody: true,
+                eventType: LambdaEdgeEventType.ORIGIN_REQUEST,
+                functionVersion:
+                  this.useServerUrlSigningFunction().currentVersion,
+              },
+            ]
+          : []),
+        ...(cfDistributionProps.defaultBehavior?.edgeLambdas || []),
       ],
     };
   }
 
-  protected buildDefaultBehaviorForEdge(
-    cachePolicy: ICachePolicy
-  ): BehaviorOptions {
+  protected buildDefaultBehaviorForEdge(): BehaviorOptions {
     const { cdk } = this.props;
     const cfDistributionProps = cdk?.distribution || {};
 
@@ -1020,12 +1123,13 @@ function handler(event) {
       allowedMethods: AllowedMethods.ALLOW_ALL,
       cachedMethods: CachedMethods.CACHE_GET_HEAD_OPTIONS,
       compress: true,
-      cachePolicy,
+      cachePolicy:
+        cdk?.serverCachePolicy ?? this.useServerBehaviorCachePolicy(),
       responseHeadersPolicy: cdk?.responseHeadersPolicy,
-      originRequestPolicy: this.buildServerOriginRequestPolicy(),
+      originRequestPolicy: this.useServerBehaviorOriginRequestPolicy(),
       ...(cfDistributionProps.defaultBehavior || {}),
       functionAssociations: [
-        ...this.buildBehaviorFunctionAssociations(),
+        ...this.useServerBehaviorFunctionAssociations(),
         ...(cfDistributionProps.defaultBehavior?.functionAssociations || []),
       ],
       edgeLambdas: [
@@ -1039,15 +1143,6 @@ function handler(event) {
     };
   }
 
-  protected buildBehaviorFunctionAssociations() {
-    return [
-      {
-        eventType: CfFunctionEventType.VIEWER_REQUEST,
-        function: this.cfFunction,
-      },
-    ];
-  }
-
   protected addStaticFileBehaviors() {
     const { cdk } = this.props;
 
@@ -1058,217 +1153,116 @@ function handler(event) {
     );
     for (const item of fs.readdirSync(publicDir)) {
       const isDir = fs.statSync(path.join(publicDir, item)).isDirectory();
-      this.distribution.addBehavior(isDir ? `${item}/*` : item, this.s3Origin, {
-        viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
-        allowedMethods: AllowedMethods.ALLOW_GET_HEAD_OPTIONS,
-        cachedMethods: CachedMethods.CACHE_GET_HEAD_OPTIONS,
-        compress: true,
-        cachePolicy: CachePolicy.CACHING_OPTIMIZED,
-        responseHeadersPolicy: cdk?.responseHeadersPolicy,
-      });
+      (this.distribution.cdk.distribution as CdkDistribution).addBehavior(
+        isDir ? `${item}/*` : item,
+        this.s3Origin,
+        {
+          viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+          allowedMethods: AllowedMethods.ALLOW_GET_HEAD_OPTIONS,
+          cachedMethods: CachedMethods.CACHE_GET_HEAD_OPTIONS,
+          compress: true,
+          cachePolicy: CachePolicy.CACHING_OPTIMIZED,
+          responseHeadersPolicy: cdk?.responseHeadersPolicy,
+          functionAssociations: [
+            ...this.useStaticBehaviorFunctionAssociations(),
+          ],
+        }
+      );
     }
   }
 
-  protected buildServerCachePolicy(allowedHeaders?: string[]) {
-    return new CachePolicy(this, "ServerCache", {
-      queryStringBehavior: CacheQueryStringBehavior.all(),
-      headerBehavior:
-        allowedHeaders && allowedHeaders.length > 0
-          ? CacheHeaderBehavior.allowList(...allowedHeaders)
-          : CacheHeaderBehavior.none(),
-      cookieBehavior: CacheCookieBehavior.none(),
-      defaultTtl: CdkDuration.days(0),
-      maxTtl: CdkDuration.days(365),
-      minTtl: CdkDuration.days(0),
-      enableAcceptEncodingBrotli: true,
-      enableAcceptEncodingGzip: true,
-      comment: "SST server response cache policy",
-    });
-  }
+  protected useServerBehaviorFunctionAssociations() {
+    this.serverCfFunction =
+      this.serverCfFunction ??
+      new CfFunction(this, "CloudFrontFunction", {
+        code: CfFunctionCode.fromInline(`
+function handler(event) {
+  var request = event.request;
+  request.headers["x-forwarded-host"] = request.headers.host;
+  ${this.buildConfig.serverCFFunctionInjection || ""}
+  return request;
+}`),
+      });
 
-  protected buildServerOriginRequestPolicy() {
-    // CloudFront's Managed-AllViewerExceptHostHeader policy
-    return OriginRequestPolicy.fromOriginRequestPolicyId(
-      this,
-      "ServerOriginRequestPolicy",
-      "b689b0a8-53d0-40ab-baf2-68738e2966ac"
-    );
-  }
-
-  private createCloudFrontInvalidation() {
-    const stack = Stack.of(this) as Stack;
-
-    const policy = new Policy(this, "CloudFrontInvalidatorPolicy", {
-      statements: [
-        new PolicyStatement({
-          effect: Effect.ALLOW,
-          actions: [
-            "cloudfront:GetInvalidation",
-            "cloudfront:CreateInvalidation",
-          ],
-          resources: [
-            `arn:${stack.partition}:cloudfront::${stack.account}:distribution/${this.distribution.distributionId}`,
-          ],
-        }),
-      ],
-    });
-    stack.customResourceHandler.role?.attachInlinePolicy(policy);
-
-    const resource = new CustomResource(this, "CloudFrontInvalidator", {
-      serviceToken: stack.customResourceHandler.functionArn,
-      resourceType: "Custom::CloudFrontInvalidator",
-      properties: {
-        buildId: this.generateBuildId(),
-        distributionId: this.distribution.distributionId,
-        paths: ["/*"],
-        waitForInvalidation: this.props.waitForInvalidation,
+    return [
+      {
+        eventType: CfFunctionEventType.VIEWER_REQUEST,
+        function: this.serverCfFunction,
       },
-    });
-    resource.node.addDependency(policy);
-
-    return resource;
+    ];
   }
 
-  /////////////////////
-  // Custom Domain
-  /////////////////////
+  protected useStaticBehaviorFunctionAssociations() {
+    if (!this.buildConfig.clientCFFunctionInjection) return [];
 
-  protected validateCustomDomainSettings() {
-    const { customDomain } = this.props;
+    this.staticCfFunction =
+      this.staticCfFunction ??
+      new CfFunction(this, "CloudFrontFunctionForStaticBehavior", {
+        code: CfFunctionCode.fromInline(`
+function handler(event) {
+  var request = event.request;
+  ${this.buildConfig.clientCFFunctionInjection || ""}
+  return request;
+}`),
+      });
 
-    if (!customDomain) {
-      return;
-    }
-
-    if (typeof customDomain === "string") {
-      return;
-    }
-
-    if (customDomain.isExternalDomain === true) {
-      if (!customDomain.cdk?.certificate) {
-        throw new Error(
-          `A valid certificate is required when "isExternalDomain" is set to "true".`
-        );
-      }
-      if (customDomain.domainAlias) {
-        throw new Error(
-          `Domain alias is only supported for domains hosted on Amazon Route 53. Do not set the "customDomain.domainAlias" when "isExternalDomain" is enabled.`
-        );
-      }
-      if (customDomain.hostedZone) {
-        throw new Error(
-          `Hosted zones can only be configured for domains hosted on Amazon Route 53. Do not set the "customDomain.hostedZone" when "isExternalDomain" is enabled.`
-        );
-      }
-    }
+    return [
+      {
+        eventType: CfFunctionEventType.VIEWER_REQUEST,
+        function: this.staticCfFunction,
+      },
+    ];
   }
 
-  protected lookupHostedZone(): IHostedZone | undefined {
-    const { customDomain } = this.props;
-
-    // Skip if customDomain is not configured
-    if (!customDomain) {
-      return;
-    }
-
-    let hostedZone;
-
-    if (typeof customDomain === "string") {
-      hostedZone = HostedZone.fromLookup(this, "HostedZone", {
-        domainName: customDomain,
+  protected useServerUrlSigningFunction() {
+    this.serverUrlSigningFunction =
+      this.serverUrlSigningFunction ??
+      new EdgeFunction(this, "ServerUrlSigningFunction", {
+        bundle: path.join(__dirname, "../support/signing-function"),
+        runtime: "nodejs18.x",
+        handler: "index.handler",
+        timeout: 10,
+        memorySize: 128,
+        permissions: [
+          new PolicyStatement({
+            actions: ["lambda:InvokeFunctionUrl"],
+            resources: [this.serverLambdaForRegional?.functionArn!],
+          }),
+        ],
       });
-    } else if (customDomain.cdk?.hostedZone) {
-      hostedZone = customDomain.cdk.hostedZone;
-    } else if (typeof customDomain.hostedZone === "string") {
-      hostedZone = HostedZone.fromLookup(this, "HostedZone", {
-        domainName: customDomain.hostedZone,
-      });
-    } else if (typeof customDomain.domainName === "string") {
-      // Skip if domain is not a Route53 domain
-      if (customDomain.isExternalDomain === true) {
-        return;
-      }
-
-      hostedZone = HostedZone.fromLookup(this, "HostedZone", {
-        domainName: customDomain.domainName,
-      });
-    } else {
-      hostedZone = customDomain.hostedZone;
-    }
-
-    return hostedZone;
+    return this.serverUrlSigningFunction;
   }
 
-  private createCertificate(): ICertificate | undefined {
-    const { customDomain } = this.props;
-
-    if (!customDomain) {
-      return;
-    }
-
-    let acmCertificate;
-
-    // HostedZone is set for Route 53 domains
-    if (this.hostedZone) {
-      if (typeof customDomain === "string") {
-        acmCertificate = new DnsValidatedCertificate(this, "Certificate", {
-          domainName: customDomain,
-          hostedZone: this.hostedZone,
-          region: "us-east-1",
-        });
-      } else if (customDomain.cdk?.certificate) {
-        acmCertificate = customDomain.cdk.certificate;
-      } else {
-        acmCertificate = new DnsValidatedCertificate(this, "Certificate", {
-          domainName: customDomain.domainName,
-          hostedZone: this.hostedZone,
-          region: "us-east-1",
-        });
-      }
-    }
-    // HostedZone is NOT set for non-Route 53 domains
-    else {
-      if (typeof customDomain !== "string") {
-        acmCertificate = customDomain.cdk?.certificate;
-      }
-    }
-
-    return acmCertificate;
+  protected useServerBehaviorCachePolicy(allowedHeaders?: string[]) {
+    this.serverBehaviorCachePolicy =
+      this.serverBehaviorCachePolicy ??
+      new CachePolicy(this, "ServerCache", {
+        queryStringBehavior: CacheQueryStringBehavior.all(),
+        headerBehavior:
+          allowedHeaders && allowedHeaders.length > 0
+            ? CacheHeaderBehavior.allowList(...allowedHeaders)
+            : CacheHeaderBehavior.none(),
+        cookieBehavior: CacheCookieBehavior.none(),
+        defaultTtl: CdkDuration.days(0),
+        maxTtl: CdkDuration.days(365),
+        minTtl: CdkDuration.days(0),
+        enableAcceptEncodingBrotli: true,
+        enableAcceptEncodingGzip: true,
+        comment: "SST server response cache policy",
+      });
+    return this.serverBehaviorCachePolicy;
   }
 
-  protected createRoute53Records(): void {
-    const { customDomain } = this.props;
-
-    if (!customDomain || !this.hostedZone) {
-      return;
-    }
-
-    let recordName;
-    let domainAlias;
-    if (typeof customDomain === "string") {
-      recordName = customDomain;
-    } else {
-      recordName = customDomain.domainName;
-      domainAlias = customDomain.domainAlias;
-    }
-
-    // Create DNS record
-    const recordProps = {
-      recordName,
-      zone: this.hostedZone,
-      target: RecordTarget.fromAlias(new CloudFrontTarget(this.distribution)),
-    };
-    new ARecord(this, "AliasRecord", recordProps);
-    new AaaaRecord(this, "AliasRecordAAAA", recordProps);
-
-    // Create Alias redirect record
-    if (domainAlias) {
-      new HttpsRedirect(this, "Redirect", {
-        zone: this.hostedZone,
-        recordNames: [domainAlias],
-        targetDomain: recordName,
-      });
-    }
+  private useServerBehaviorOriginRequestPolicy() {
+    // CloudFront's Managed-AllViewerExceptHostHeader policy
+    this.serverBehaviorOriginRequestPolicy =
+      this.serverBehaviorOriginRequestPolicy ??
+      OriginRequestPolicy.fromOriginRequestPolicyId(
+        this,
+        "ServerOriginRequestPolicy",
+        "b689b0a8-53d0-40ab-baf2-68738e2966ac"
+      );
+    return this.serverBehaviorOriginRequestPolicy;
   }
 
   /////////////////////
@@ -1371,17 +1365,27 @@ function handler(event) {
 
     return buildId;
   }
+
+  protected supportsStreaming(): boolean {
+    return false;
+  }
 }
 
 export const useSites = createAppContext(() => {
   const sites: {
+    stack: string;
     name: string;
     type: string;
     props: SsrSiteNormalizedProps;
   }[] = [];
   return {
-    add(name: string, type: string, props: SsrSiteNormalizedProps) {
-      sites.push({ name, type, props });
+    add(
+      stack: string,
+      name: string,
+      type: string,
+      props: SsrSiteNormalizedProps
+    ) {
+      sites.push({ stack, name, type, props });
     },
     get all() {
       return sites;

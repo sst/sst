@@ -2,7 +2,8 @@ import url from "url";
 import path from "path";
 import fs from "fs/promises";
 import { Construct } from "constructs";
-import { Duration as CdkDuration } from "aws-cdk-lib/core";
+import { Duration as CdkDuration, IgnoreMode } from "aws-cdk-lib/core";
+import { Platform } from "aws-cdk-lib/aws-ecr-assets";
 import { PolicyStatement, Role, Effect } from "aws-cdk-lib/aws-iam";
 import {
   AssetCode,
@@ -41,7 +42,7 @@ import { ISecurityGroup, IVpc, SubnetSelection } from "aws-cdk-lib/aws-ec2";
 import { useDeferredTasks } from "./deferred_task.js";
 import { useProject } from "../project.js";
 import { useRuntimeHandlers } from "../runtime/handlers.js";
-import { Platform } from "aws-cdk-lib/aws-ecr-assets";
+import { Colors } from "../cli/colors.js";
 
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 
@@ -58,15 +59,50 @@ export interface JobContainerProps {
    * ```
    */
   cmd: string[];
+  /**
+   * Name of the Dockerfile.
+   * @example
+   * ```js
+   * container: {
+   *   file: "path/to/Dockerfile.prod"
+   * }
+   * ```
+   */
+  file?: string;
+  /**
+   * Build args to pass to the docker build command.
+   * @default No build args
+   * @example
+   * ```js
+   * container: {
+   *   buildArgs: {
+   *     FOO: "bar"
+   *   }
+   * }
+   * ```
+   */
+  buildArgs?: Record<string, string>;
 }
 
 export interface JobProps {
+  /**
+   * The CPU architecture of the job.
+   * @default "x86_64"
+   * @example
+   * ```js
+   * new Job(stack, "MyJob", {
+   *   architecture: "arm_64",
+   *   handler: "src/job.handler",
+   * })
+   * ```
+   */
+  architecture?: "x86_64" | "arm_64";
   /**
    * The runtime environment for the job.
    * @default "nodejs"
    * @example
    * ```js
-   * new Function(stack, "Function", {
+   * new Job(stack, "MyJob", {
    *   runtime: "container",
    *   handler: "src/job",
    * })
@@ -303,6 +339,7 @@ export class Job extends Construct implements SSTConstruct {
       app.mode === "dev" && (this.props.enableLiveDev === false ? false : true);
 
     this.validateContainerProps();
+    this.validateMemoryProps();
 
     this.job = this.createCodeBuildJob();
     if (!stack.isActive) {
@@ -459,9 +496,14 @@ export class Job extends Construct implements SSTConstruct {
   }
 
   private buildCodeBuildProjectCode() {
-    const { handler, runtime, container } = this.props;
+    const { handler, architecture, runtime, container } = this.props;
 
     useDeferredTasks().add(async () => {
+      if (runtime === "container")
+        Colors.line(
+          `➜  Building the container image for the "${this.node.id}" job...`
+        );
+
       // Build function
       const result = await useRuntimeHandlers().build(this.node.addr, "deploy");
       if (result.type === "error") {
@@ -477,12 +519,20 @@ export class Job extends Construct implements SSTConstruct {
       if (runtime === "container") {
         const image = LinuxBuildImage.fromAsset(this, "ContainerImage", {
           directory: handler,
-          platform: Platform.custom("linux/amd64"),
+          platform:
+            architecture === "arm_64"
+              ? Platform.custom("linux/arm64")
+              : Platform.custom("linux/amd64"),
+          file: container?.file,
+          buildArgs: container?.buildArgs,
+          exclude: [".sst"],
+          ignoreMode: IgnoreMode.GLOB,
         });
         image.repository?.grantPull(this.job.role!);
         const project = this.job.node.defaultChild as CfnProject;
         project.environment = {
           ...project.environment,
+          type: architecture === "arm_64" ? "ARM_CONTAINER" : "LINUX_CONTAINER",
           image: image.imageId,
           imagePullCredentialsType: "SERVICE_ROLE",
         };
@@ -537,10 +587,14 @@ export class Job extends Construct implements SSTConstruct {
       const codeConfig = code.bind(this);
       const project = this.job.node.defaultChild as CfnProject;
       const image = LinuxBuildImage.fromDockerRegistry(
-        "amazon/aws-lambda-nodejs:16"
+        // ARM images can be found here https://hub.docker.com/r/amazon/aws-lambda-nodejs
+        architecture === "arm_64"
+          ? "amazon/aws-lambda-nodejs:16.2023.07.13.14"
+          : "amazon/aws-lambda-nodejs:16"
       );
       project.environment = {
         ...project.environment,
+        type: architecture === "arm_64" ? "ARM_CONTAINER" : "LINUX_CONTAINER",
         image: image.imageId,
       };
       image.repository?.grantPull(this.job.role!);
@@ -644,6 +698,17 @@ export class Job extends Construct implements SSTConstruct {
     if (runtime === "container") {
       if (!container) {
         throw new Error(`No commands defined for the ${this.node.id} Job.`);
+      }
+    }
+  }
+
+  private validateMemoryProps() {
+    const { architecture, memorySize } = this.props;
+    if (architecture === "arm_64") {
+      if (memorySize === "7 GB" || memorySize === "145 GB") {
+        throw new Error(
+          `ARM architecture only supports "3 GB" and "15 GB" memory sizes for the ${this.node.id} Job.`
+        );
       }
     }
   }

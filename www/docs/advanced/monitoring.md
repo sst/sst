@@ -148,6 +148,100 @@ For more details, [check out the Datadog docs](https://docs.datadoghq.com/server
 
 ---
 
+## Baselime
+
+[Baselime](https://baselime.io) offers a [Serverless Observability and Error-Tracking Platform](https://baselime.io) for your AWS Lambda functions and Amazon ECS services.
+
+To get started, [sign up for an account](https://console.baselime.io). Then [connect your AWS account](https://baselime.io/docs/quick-start/) by deploying their CloudFormation stack in your AWS account.
+
+Baselime will start to automatically collect logs, metrics and [AWS X-Ray traces](https://aws.amazon.com/xray/) from your AWS account.
+
+Then to enable [OpenTelemetry](https://opentelemetry.io/) tracing for a function, add a `baselime:tracing` tag and set it to `true`.
+
+```js title="stacks/Foo.js"
+import * as cdk from "aws-cdk-lib";
+
+cdk.Tags.of(myfunc).add("baselime:tracing", "true");
+```
+
+To enable [OpenTelemetry](https://opentelemetry.io/) tracing on all your functions, you can use the [Stack](https://docs.sst.dev/constructs/Stack) construct's [`getAllFunctions`](https://docs.sst.dev/constructs/Stack#getallfunctions) method and do the following at the bottom of your stack definition.
+
+```js title="stacks/Foo.js"
+import * as cdk from "aws-cdk-lib";
+
+stack
+  .getAllFunctions()
+  .forEach((fn) => cdk.Tags.of(fn).add("baselime:tracing", "true"));
+```
+
+To enable capturing logs from your ECS services, you can use [AWS Firelens log driver](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/using_firelens.html) to send logs to Baselime’s backend.
+
+```js title="stacks/Foo.js"
+import { StackContext, Service } from "sst/constructs";
+import { StringParameter } from 'aws-cdk-lib/aws-ssm';
+import * as ecs from 'aws-cdk-lib/aws-ecs';
+
+export function API({ stack }: StackContext) {
+	// Get your API key from the Baselime console and store it in SSM or secrets manager
+  const key = StringParameter.valueForStringParameter(stack, 'baselime-key');
+  
+  const service = new Service(stack, 'sst-service', {
+    path: './',
+    environment: {
+      BASELIME_KEY: key
+    },
+    cdk: {
+      container: {
+        // Set the container logging to send logs to the Baselime dedicated ECS logs endpoint
+        logging: new ecs.FireLensLogDriver({
+          options: {
+            "Name": "http",
+            "Host": "ecs-logs-ingest.baselime.io",
+            "Port": "443",
+            "TLS": "on",
+            "format": "json",
+            "retry_limit": "2",
+            "header": `x-api-key ${key}`,
+          },
+        }),
+      }
+    }
+  });
+}
+```
+
+Baselime also enables you to create dashboards and alerts using SST. Install the `@baselime/cdk` package from [npm](https://www.npmjs.com/package/@baselime/cdk).
+
+```bash
+npm install --save-dev @baselime/cdk
+```
+
+To create an alert that sends all error and critial logs to a Slack channel:
+
+```js title="stacks/Foo.js"
+import { Alert, filter, Baselime } from "@baselime/cdk";
+
+// Get your API key from the Baselime console and store it in SSM or secrets manager
+const key = StringParameter.valueForStringParameter(stack, 'baselime-key');
+
+Baselime.init(stack, {
+  apiKey: key,
+});
+
+new Alert("service-errors", {
+  parameters: {
+    query: {
+      filters: [
+        filter.inArray("LogLevel", ["ERROR", "CRITICAL"]),
+      ],
+    },
+    channels: [{ type: "slack", targets: ["baselime-alerts"] }]
+  },
+});
+```
+
+For more details, [check out the Baselime docs](https://baselime.io/docs).
+
 ## Sentry
 
 [Sentry](https://sentry.io) offers [Serverless Error Monitoring](https://sentry.io/for/serverless/) for your Lambda functions. Integration is done through a Lambda Layer.

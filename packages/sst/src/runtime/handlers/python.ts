@@ -1,15 +1,12 @@
 import path from "path";
-import { useRuntimeHandlers } from "../handlers.js";
+import { RuntimeHandler } from "../handlers.js";
 import { useRuntimeWorkers } from "../workers.js";
-import { Context } from "../../context/context.js";
 import { ChildProcessWithoutNullStreams, exec, spawn } from "child_process";
 import { promisify } from "util";
 import { useRuntimeServerConfig } from "../server.js";
-import { existsAsync, findAbove, isChild } from "../../util/fs.js";
+import { findAbove, isChild } from "../../util/fs.js";
 import { Runtime } from "aws-cdk-lib/aws-lambda";
-import fs from "fs/promises";
 import { bundle } from "./pythonBundling.js";
-const execAsync = promisify(exec);
 import os from "os";
 import url from "url";
 
@@ -20,12 +17,10 @@ const RUNTIME_MAP: Record<string, Runtime> = {
   "python3.8": Runtime.PYTHON_3_8,
   "python3.9": Runtime.PYTHON_3_9,
   "python3.10": Runtime.PYTHON_3_10,
+  "python3.11": Runtime.PYTHON_3_11,
 };
 
-export const usePythonHandler = Context.memo(async () => {
-  const workers = await useRuntimeWorkers();
-  const server = await useRuntimeServerConfig();
-  const handlers = useRuntimeHandlers();
+export const usePythonHandler = (): RuntimeHandler => {
   const processes = new Map<string, ChildProcessWithoutNullStreams>();
   const sources = new Map<string, string>();
 
@@ -37,7 +32,7 @@ export const usePythonHandler = Context.memo(async () => {
     }
   }
 
-  handlers.register({
+  return {
     shouldBuild: (input) => {
       const parent = sources.get(input.functionID);
       if (!parent) return false;
@@ -45,6 +40,8 @@ export const usePythonHandler = Context.memo(async () => {
     },
     canHandle: (input) => input.startsWith("python"),
     startWorker: async (input) => {
+      const workers = await useRuntimeWorkers();
+      const server = await useRuntimeServerConfig();
       const src = await findSrc(input.handler);
       if (!src) throw new Error(`Could not find src for ${input.handler}`);
       const parsed = path.parse(path.relative(src, input.handler));
@@ -152,5 +149,5 @@ export const usePythonHandler = Context.memo(async () => {
           .join(path.posix.sep),
       };
     },
-  });
-});
+  };
+};

@@ -19,7 +19,7 @@ Create and deploy a Remix app to AWS with SST.
 
 ## Prerequisites
 
-You'll need at least [Node.js 16](https://nodejs.org/) and [npm 7](https://www.npmjs.com/). You also need to have an AWS account and [**AWS credentials configured locally**](advanced/iam-credentials.md#loading-from-a-file).
+You'll need at least [Node.js 16.6](https://nodejs.org/) and [npm 7](https://www.npmjs.com/). You also need to have an AWS account and [**AWS credentials configured locally**](advanced/iam-credentials.md#loading-from-a-file).
 
 ---
 
@@ -90,9 +90,34 @@ Start your local dev environment.
 <TabItem value="npm">
 
 ```bash
-# Start SST locally
 npx sst dev
-# Start Remix locally
+```
+
+</TabItem>
+<TabItem value="yarn">
+
+```bash
+yarn sst dev
+```
+
+</TabItem>
+<TabItem value="pnpm">
+
+```bash
+pnpm sst dev
+```
+
+</TabItem>
+</MultiPackagerCode>
+
+---
+
+#### Start Remix
+
+<MultiPackagerCode>
+<TabItem value="npm">
+
+```bash
 npm run dev
 ```
 
@@ -100,9 +125,6 @@ npm run dev
 <TabItem value="yarn">
 
 ```bash
-# Start SST locally
-yarn sst dev
-# Start Remix locally
 yarn run dev
 ```
 
@@ -110,14 +132,15 @@ yarn run dev
 <TabItem value="pnpm">
 
 ```bash
-# Start SST locally
-pnpm sst dev
-# Start Remix locally
 pnpm run dev
 ```
 
 </TabItem>
 </MultiPackagerCode>
+
+:::info
+When running `sst dev`, SST does not deploy your Remix app. You are meant to run Remix locally.
+:::
 
 ---
 
@@ -135,14 +158,11 @@ Add an S3 bucket to your `sst.config.ts`.
 const bucket = new Bucket(stack, "public");
 ```
 
-Let your Remix app access the bucket.
+Bind it to your Remix app.
 
 ```diff title="sst.config.ts"
 const site = new RemixSite(stack, "site", {
-+ permissions: [bucket],
-+ environment: {
-+   BUCKET_NAME: bucket.bucketName,
-+ },
++ bind: [bucket],
 });
 ```
 
@@ -157,7 +177,7 @@ export async function loader() {
   const command = new PutObjectCommand({
     ACL: "public-read",
     Key: crypto.randomUUID(),
-    Bucket: process.env.BUCKET_NAME,
+    Bucket: Bucket.public.bucketName,
   });
   const url = await getSignedUrl(new S3Client({}), command);
 
@@ -216,10 +236,7 @@ new Cron(stack, "cron", {
   schedule: "rate(1 minute)",
   job: {
     function: {
-      permissions: [bucket],
-      environment: {
-        BUCKET_NAME: bucket.bucketName,
-      },
+      bind: [bucket],
       handler: "functions/delete.handler",
     },
   },
@@ -240,7 +257,7 @@ export async function handler() {
 
   const list = await client.send(
     new ListObjectsCommand({
-      Bucket: process.env.BUCKET_NAME,
+      Bucket: Bucket.public.bucketName,
     })
   );
 
@@ -249,7 +266,7 @@ export async function handler() {
       client.send(
         new DeleteObjectCommand({
           Key: file.Key,
-          Bucket: process.env.BUCKET_NAME,
+          Bucket: Bucket.public.bucketName,
         })
       )
     )
@@ -292,7 +309,7 @@ pnpm sst deploy --stage prod
 ![Remix app deployed to AWS with SST](/img/start/remix-app-deployed-to-aws-with-sst.png)
 
 :::info
-[View the source](https://github.com/serverless-stack/sst/tree/master/examples/quickstart-remix) for this example on GitHub.
+[View the source](https://github.com/sst/sst/tree/master/examples/quickstart-remix) for this example on GitHub.
 :::
 
 ---
@@ -304,4 +321,4 @@ pnpm sst deploy --stage prod
    - [`Bucket`](../constructs/Bucket.md) — Add S3 buckets to your app
    - [`RemixSite`](../constructs/RemixSite.md) — Deploy Remix apps to AWS
    - [Live Lambda Dev](../live-lambda-development.md) — SST's local dev environment
-2. Ready to dive into the details of SST? [**Check out our tutorial**](../learn/index.md).
+2. Ready to dive into the details of SST? <a href={config.guide}>**Check out our guide**</a>.

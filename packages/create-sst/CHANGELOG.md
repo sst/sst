@@ -1,5 +1,187 @@
 # create-sst
 
+## 2.26.2
+
+## 2.26.1
+
+## 2.26.0
+
+### Patch Changes
+
+- [#3332](https://github.com/sst/sst/pull/3332) [`920baa5e0`](https://github.com/sst/sst/commit/920baa5e02350c66adc79e46add604473ddd7c99) Thanks [@thdxr](https://github.com/thdxr)! - Use lazy loading instead of context
+
+## 2.25.7
+
+## 2.25.6
+
+## 2.25.5
+
+## 2.25.4
+
+## 2.25.3
+
+## 2.25.2
+
+## 2.25.1
+
+## 2.25.0
+
+### Minor Changes
+
+- [#3297](https://github.com/sst/sst/pull/3297) [`62dede23c`](https://github.com/sst/sst/commit/62dede23c6ce71816c648d5f16c8f5913d6244b3) Thanks [@fwang](https://github.com/fwang)! - Update CDK to v2.95.1
+
+## 2.24.28
+
+## 2.24.27
+
+## 2.24.26
+
+### Patch Changes
+
+- [`4a890f9bd`](https://github.com/sst/sst/commit/4a890f9bd7d203b3b4077eccf12a03574e7ee474) Thanks [@thdxr](https://github.com/thdxr)! - create-sst: upgrade templates to node18
+
+- [`35d3bae46`](https://github.com/sst/sst/commit/35d3bae46a1ceca45f87bf6dc11f81c73f85f327) Thanks [@thdxr](https://github.com/thdxr)! - create-sst: fix typechecking issue on base templates
+
+## 2.24.25
+
+## 2.24.24
+
+## 2.24.23
+
+## 2.24.22
+
+## 2.24.21
+
+## 2.24.20
+
+## 2.24.19
+
+## 2.24.18
+
+## 2.24.17
+
+## 2.24.16
+
+## 2.24.15
+
+## 2.24.14
+
+## 2.24.13
+
+## 2.24.12
+
+## 2.24.11
+
+## 2.24.10
+
+## 2.24.9
+
+## 2.24.8
+
+## 2.24.7
+
+## 2.24.6
+
+## 2.24.5
+
+## 2.24.4
+
+### Patch Changes
+
+- [#3222](https://github.com/sst/sst/pull/3222) [`a594b1964`](https://github.com/sst/sst/commit/a594b1964afb285308fb31fd0c5748f10b22693e) Thanks [@adolfogc](https://github.com/adolfogc)! - Function: support Python 3.11 runtie
+
+## 2.24.3
+
+## 2.24.2
+
+## 2.24.1
+
+## 2.24.0
+
+### Minor Changes
+
+- [#3217](https://github.com/sst/sst/pull/3217) [`01d16a8d4`](https://github.com/sst/sst/commit/01d16a8d461d411c6beb31507ef9ab102f446ec9) Thanks [@github-actions](https://github.com/apps/github-actions)! - Update CDK to 2.91.0
+
+### Patch Changes
+
+- [#3201](https://github.com/sst/sst/pull/3201) [`f5a7d5609`](https://github.com/sst/sst/commit/f5a7d560930434b48d1970c7eddf3c5044caae58) Thanks [@jayair](https://github.com/jayair)! - Update serverless-stack to sst
+
+## 2.23.15
+
+## 2.23.14
+
+## 2.23.13
+
+### Patch Changes
+
+- [`b0dd52c2d`](https://github.com/sst/sst/commit/b0dd52c2d4a609683d2701ee1a88a1bd5a003de9) Thanks [@thdxr](https://github.com/thdxr)! - rds: allow migrating from CLI
+
+## 2.23.12
+
+## 2.23.11
+
+## 2.23.10
+
+### Patch Changes
+
+- [`e676552bf`](https://github.com/sst/sst/commit/e676552bf26c2683c9b99b84ed7269f9bc415a33) Thanks [@fwang](https://github.com/fwang)! - create-sst: fix app name not replaced in sst.config.ts
+
+## 2.23.9
+
+## 2.23.8
+
+## 2.23.7
+
+## 2.23.6
+
+## 2.23.5
+
+## 2.23.4
+
+### Patch Changes
+
+- [`7841ed6f5`](https://github.com/serverless-stack/sst/commit/7841ed6f58976f821b0a116f050b4527191ffb96) Thanks [@fwang](https://github.com/fwang)! - Service: support drop-in mode
+
+## 2.23.3
+
+## 2.23.2
+
+## 2.23.1
+
+## 2.23.0
+
+## 2.22.11
+
+## 2.22.10
+
+## 2.22.9
+
+## 2.22.8
+
+## 2.22.7
+
+## 2.22.6
+
+## 2.22.5
+
+## 2.22.4
+
+## 2.22.3
+
+## 2.22.2
+
+## 2.22.1
+
+## 2.22.0
+
+## 2.21.8
+
+## 2.21.7
+
+## 2.21.6
+
+## 2.21.5
+
 ## 2.21.4
 
 ## 2.21.3

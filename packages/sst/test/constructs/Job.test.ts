@@ -68,6 +68,37 @@ test("constructor: default", async () => {
   });
 });
 
+test("architecture: default", async () => {
+  const { stack } = await createJob({});
+  hasResource(stack, "AWS::CodeBuild::Project", {
+    Environment: objectLike({
+      Type: "LINUX_CONTAINER",
+    }),
+  });
+});
+
+test("architecture: arm_64", async () => {
+  const { stack } = await createJob({
+    architecture: "arm_64",
+  });
+  hasResource(stack, "AWS::CodeBuild::Project", {
+    Environment: objectLike({
+      Type: "ARM_CONTAINER",
+    }),
+  });
+});
+
+test("architecture: x86_64", async () => {
+  const { stack } = await createJob({
+    architecture: "x86_64",
+  });
+  hasResource(stack, "AWS::CodeBuild::Project", {
+    Environment: objectLike({
+      Type: "LINUX_CONTAINER",
+    }),
+  });
+});
+
 test("timeout", async () => {
   const { stack } = await createJob({
     timeout: "1 hour",
@@ -143,7 +174,20 @@ test("runtime: container: no cmd", async () => {
   }).rejects.toThrow(/No commands/);
 });
 
-test("constructor: memorySize", async () => {
+test("runtime: container: invalid file", async () => {
+  expect(async () => {
+    await createJob({
+      runtime: "container",
+      handler: "test/constructs/container-function",
+      container: {
+        cmd: ["echo", "hello"],
+        file: "Dockerfile.garbage",
+      },
+    });
+  }).rejects.toThrow(/Failed to build job/);
+});
+
+test("memorySize", async () => {
   const { stack } = await createJob({
     memorySize: "15 GB",
   });
@@ -154,7 +198,28 @@ test("constructor: memorySize", async () => {
   });
 });
 
-test("constructor: memorySize: invalid", async () => {
+test("memorySize: supported by arm64", async () => {
+  const { stack } = await createJob({
+    architecture: "arm_64",
+    memorySize: "3 GB",
+  });
+  hasResource(stack, "AWS::CodeBuild::Project", {
+    Environment: {
+      ComputeType: "BUILD_GENERAL1_SMALL",
+    },
+  });
+});
+
+test("memorySize: not supported by arm64", async () => {
+  expect(async () => {
+    await createJob({
+      architecture: "arm_64",
+      memorySize: "7 GB",
+    });
+  }).rejects.toThrow(/ARM architecture only supports/);
+});
+
+test("memorySize: invalid", async () => {
   expect(async () => {
     await createJob({
       // @ts-ignore Allow type casting

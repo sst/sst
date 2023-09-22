@@ -16,7 +16,11 @@ import {
   RemovalPolicy,
 } from "aws-cdk-lib/core";
 import { Function, Runtime, Code } from "aws-cdk-lib/aws-lambda";
-import { PolicyStatement } from "aws-cdk-lib/aws-iam";
+import {
+  ManagedPolicy,
+  PermissionsBoundary,
+  PolicyStatement,
+} from "aws-cdk-lib/aws-iam";
 import { Rule } from "aws-cdk-lib/aws-events";
 import { LambdaFunction } from "aws-cdk-lib/aws-events-targets";
 import {
@@ -35,6 +39,7 @@ import {
 import { VisibleError } from "./error.js";
 import { Logger } from "./logger.js";
 import { Stacks } from "./stacks/index.js";
+import { lazy } from "./util/lazy.js";
 
 const CDK_STACK_NAME = "CDKToolkit";
 const SST_STACK_NAME = "SSTBootstrap";
@@ -43,30 +48,37 @@ const OUTPUT_BUCKET = "BucketName";
 const LATEST_VERSION = "7.2";
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 
-export const useBootstrap = Context.memo(async () => {
+export const useBootstrap = lazy(async () => {
   Logger.debug("Initializing bootstrap context");
   let [cdkStatus, sstStatus] = await Promise.all([
     loadCDKStatus(),
     loadSSTStatus(),
   ]);
   Logger.debug("Loaded bootstrap status");
-  const needToBootstrapCDK = !cdkStatus;
-  const needToBootstrapSST = !sstStatus;
+  const needToBootstrapCDK = cdkStatus.status !== "ready";
+  const needToBootstrapSST = sstStatus.status !== "ready";
 
   if (needToBootstrapCDK || needToBootstrapSST) {
     const spinner = createSpinner(
-      "Deploying bootstrap stack, this only needs to happen once"
+      cdkStatus.status === "bootstrap" || sstStatus.status === "bootstrap"
+        ? "Deploying bootstrap stack, this only needs to happen once"
+        : "Updating bootstrap stack"
     ).start();
 
     if (needToBootstrapCDK) {
       await bootstrapCDK();
+
+      // fetch bootstrap status
+      cdkStatus = await loadCDKStatus();
+      if (cdkStatus.status !== "ready")
+        throw new VisibleError("Failed to load bootstrap stack status");
     }
     if (needToBootstrapSST) {
-      await bootstrapSST();
+      await bootstrapSST(cdkStatus.bucket!);
 
       // fetch bootstrap status
       sstStatus = await loadSSTStatus();
-      if (!sstStatus)
+      if (sstStatus.status !== "ready")
         throw new VisibleError("Failed to load bootstrap stack status");
     }
     spinner.succeed();
@@ -77,7 +89,7 @@ export const useBootstrap = Context.memo(async () => {
     version: string;
     bucket: string;
   };
-}, "Bootstrap");
+});
 
 async function loadCDKStatus() {
   const { cdk } = useProject().config;
@@ -88,31 +100,43 @@ async function loadCDKStatus() {
       new DescribeStacksCommand({ StackName: stackName })
     );
     // Check CDK bootstrap stack exists
-    if (!stacks || stacks.length === 0) return false;
+    if (!stacks || stacks.length === 0) return { status: "bootstrap" };
 
     // Check CDK bootstrap stack deployed successfully
     if (
-      !["CREATE_COMPLETE", "UPDATE_COMPLETE"].includes(stacks[0].StackStatus!)
+      ![
+        "CREATE_COMPLETE",
+        "UPDATE_COMPLETE",
+        "UPDATE_ROLLBACK_COMPLETE",
+      ].includes(stacks[0].StackStatus!)
     ) {
-      return false;
+      return { status: "bootstrap" };
     }
 
     // Check CDK bootstrap stack is up to date
     // note: there is no a programmatical way to get the minimal required version
     //       of CDK bootstrap stack. We are going to hardcode it to 14 for now,
     //       which is the latest version as of CDK v2.62.2
-    const output = stacks[0].Outputs?.find(
-      (o) => o.OutputKey === "BootstrapVersion"
-    );
-    if (!output || parseInt(output.OutputValue!) < 14) return false;
+    let version: number | undefined;
+    let bucket: string | undefined;
+    const output = stacks[0].Outputs?.forEach((o) => {
+      if (o.OutputKey === "BootstrapVersion") {
+        version = parseInt(o.OutputValue!);
+      } else if (o.OutputKey === "BucketName") {
+        bucket = o.OutputValue!;
+      }
+    });
+    if (!version || version < 14 || !bucket) {
+      return { status: "update" };
+    }
 
-    return true;
+    return { status: "ready", version, bucket };
   } catch (e: any) {
     if (
       e.name === "ValidationError" &&
       e.message === `Stack with id ${stackName} does not exist`
     ) {
-      return false;
+      return { status: "bootstrap" };
     } else {
       throw e;
     }
@@ -136,7 +160,7 @@ async function loadSSTStatus() {
       e.Code === "ValidationError" &&
       e.message === `Stack with id ${stackName} does not exist`
     ) {
-      return null;
+      return { status: "bootstrap" };
     }
     throw e;
   }
@@ -152,7 +176,7 @@ async function loadSSTStatus() {
     }
   });
   if (!version || !bucket) {
-    return null;
+    return { status: "bootstrap" };
   }
 
   // Need to update bootstrap stack:
@@ -171,13 +195,13 @@ async function loadSSTStatus() {
     currentMajor > latestMajor ||
     currentMinor < latestMinor
   ) {
-    return null;
+    return { status: "update" };
   }
 
-  return { version, bucket };
+  return { status: "ready", version, bucket };
 }
 
-export async function bootstrapSST() {
+export async function bootstrapSST(cdkBucket: string) {
   const { region, bootstrap, cdk } = useProject().config;
 
   // Create bootstrap stack
@@ -189,10 +213,12 @@ export async function bootstrapSST() {
     },
     synthesizer: new DefaultStackSynthesizer({
       qualifier: cdk?.qualifier,
+      bootstrapStackVersionSsmParameter: cdk?.bootstrapStackVersionSsmParameter,
       fileAssetsBucketName: cdk?.fileAssetsBucketName,
       deployRoleArn: cdk?.deployRoleArn,
       fileAssetPublishingRoleArn: cdk?.fileAssetPublishingRoleArn,
       imageAssetPublishingRoleArn: cdk?.imageAssetPublishingRoleArn,
+      imageAssetsRepositoryName: cdk?.imageAssetsRepositoryName,
       cloudFormationExecutionRole: cdk?.cloudFormationExecutionRole,
       lookupRoleArn: cdk?.lookupRoleArn,
     }),
@@ -204,23 +230,28 @@ export async function bootstrapSST() {
   }
 
   // Create S3 bucket to store stacks metadata
-  const bucket = new Bucket(stack, region!, {
-    encryption: BucketEncryption.S3_MANAGED,
-    removalPolicy: RemovalPolicy.DESTROY,
-    autoDeleteObjects: true,
-    enforceSSL: true,
-    lifecycleRules: [
-      {
-        id: "Remove partial uploads after 3 days",
-        enabled: true,
-        abortIncompleteMultipartUploadAfter: Duration.days(3),
-      },
-    ],
-    blockPublicAccess:
-      cdk?.publicAccessBlockConfiguration !== false
-        ? BlockPublicAccess.BLOCK_ALL
-        : undefined,
-  });
+  const bucket = bootstrap?.useCdkBucket
+    ? {
+        bucketName: cdkBucket,
+        bucketArn: `arn:${stack.partition}:s3:::${cdkBucket}`,
+      }
+    : new Bucket(stack, region!, {
+        encryption: BucketEncryption.S3_MANAGED,
+        removalPolicy: RemovalPolicy.DESTROY,
+        autoDeleteObjects: true,
+        enforceSSL: true,
+        lifecycleRules: [
+          {
+            id: "Remove partial uploads after 3 days",
+            enabled: true,
+            abortIncompleteMultipartUploadAfter: Duration.days(3),
+          },
+        ],
+        blockPublicAccess:
+          cdk?.publicAccessBlockConfiguration !== false
+            ? BlockPublicAccess.BLOCK_ALL
+            : undefined,
+      });
 
   // Create Function and subscribe to CloudFormation events
   const fn = new Function(stack, "MetadataHandler", {
@@ -269,6 +300,16 @@ export async function bootstrapSST() {
     },
   });
   rule.addTarget(new LambdaFunction(fn));
+
+  // Create permissions boundary
+  if (cdk?.customPermissionsBoundary) {
+    const boundaryPolicy = ManagedPolicy.fromManagedPolicyName(
+      stack,
+      "PermissionBoundaryPolicy",
+      cdk.customPermissionsBoundary
+    );
+    PermissionsBoundary.of(stack).apply(boundaryPolicy);
+  }
 
   // Create stack outputs to store bootstrap stack info
   new CfnOutput(stack, OUTPUT_VERSION, { value: LATEST_VERSION });
@@ -324,6 +365,7 @@ async function bootstrapCDK() {
           AWS_SESSION_TOKEN: credentials.sessionToken,
           AWS_REGION: region,
           AWS_PROFILE: profile,
+          JSII_SILENCE_WARNING_DEPRECATED_NODE_VERSION: "1",
         },
         stdio: "pipe",
         shell: true,

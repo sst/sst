@@ -24,22 +24,27 @@ export interface ConfigOptions {
   profile?: string;
   role?: string;
   ssmPrefix?: string;
+  outputs?: string;
   advanced?: {
     disableParameterizedStackNameCheck?: boolean;
+    disableAppModeCheck?: boolean;
   };
   bootstrap?: {
+    useCdkBucket?: boolean;
     stackName?: string;
     tags?: Record<string, string>;
   };
   cdk?: {
     toolkitStackName?: string;
     qualifier?: string;
+    bootstrapStackVersionSsmParameter?: string;
     fileAssetsBucketName?: string;
     customPermissionsBoundary?: string;
     publicAccessBlockConfiguration?: boolean;
     deployRoleArn?: string;
     fileAssetPublishingRoleArn?: string;
     imageAssetPublishingRoleArn?: string;
+    imageAssetsRepositoryName?: string;
     cloudFormationExecutionRole?: string;
     lookupRoleArn?: string;
     pathMetadata?: boolean;
@@ -69,10 +74,11 @@ interface Project {
   stacks: SSTConfig["stacks"];
 }
 
-export const ProjectContext = Context.create<Project>("Project");
+let project: Project | undefined;
 
 export function useProject() {
-  return ProjectContext.use();
+  if (!project) throw new Error("Project not initialized");
+  return project;
 }
 
 const CONFIG_EXTENSIONS = [
@@ -121,10 +127,17 @@ export async function initProject(globals: GlobalOptions) {
 
   const config = await Promise.resolve(sstConfig.config(globals));
   const stage =
+    process.env.SST_STAGE ||
     globals.stage ||
     config.stage ||
     (await usePersonalStage(out)) ||
     (await promptPersonalStage(out));
+  // Set stage to SST_STAGE so that if SST spawned processes are aware
+  // of the stage. ie.
+  // `sst deploy --stage prod`: `prod` stage passed in via CLI
+  // -> spawns `open-next build`
+  // -> spawns `sst bind`: `prod` stage read from SST_STAGE
+  process.env.SST_STAGE = stage;
   const [version, cdkVersion, constructsVersion] = await (async () => {
     try {
       const packageJson = JSON.parse(
@@ -143,7 +156,7 @@ export async function initProject(globals: GlobalOptions) {
       return ["unknown", "unknown"];
     }
   })();
-  const project: Project = {
+  project = {
     version,
     cdkVersion,
     constructsVersion,
@@ -170,8 +183,6 @@ export async function initProject(globals: GlobalOptions) {
     },
   };
 
-  ProjectContext.provide(project);
-
   // Cleanup old config files
   (async function () {
     const files = await fs.readdir(project.paths.root);
@@ -189,14 +200,13 @@ export async function initProject(globals: GlobalOptions) {
     }
   })();
 
-  dotenv.config({
-    path: path.join(project.paths.root, `.env.${project.config.stage}`),
-    override: true,
-  });
-  dotenv.config({
-    path: path.join(project.paths.root, `.env.${project.config.stage}.local`),
-    override: true,
-  });
+  // Load .env files
+  [
+    path.join(project.paths.root, `.env`),
+    path.join(project.paths.root, `.env.local`),
+    path.join(project.paths.root, `.env.${project.config.stage}`),
+    path.join(project.paths.root, `.env.${project.config.stage}.local`),
+  ].forEach((path) => dotenv.config({ path, override: true }));
 
   Logger.debug("Config loaded", project);
 }

@@ -32,6 +32,10 @@ npx create-sst@latest --template standard/nextjs
 
 Let's create a simple hit counter in our app.
 
+:::tip Guide
+<a href={config.guide}>Check out our guide</a> for a full tutorial on how to build an app powered by a DynamoDB database.
+:::
+
 ---
 
 ## Add the table
@@ -220,10 +224,6 @@ new RDS(stack, "db", {
 ```
 
 Here we are using the [`RDS`](constructs/RDS.md) construct. It also supports [running migrations](constructs/RDS.md#migrations).
-
-:::tip Tutorial
-[Check out our tutorial](learn/index.md) on how to build an app powered by an RDS database.
-:::
 
 ---
 

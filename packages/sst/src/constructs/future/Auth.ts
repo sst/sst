@@ -78,8 +78,8 @@ export class Auth extends Construct implements SSTConstruct {
   private readonly authenticator: FunctionDefinition;
 
   private api: Api;
-  private publicKey: Secret;
-  private privateKey: Secret;
+  public publicKey: Secret;
+  public privateKey: Secret;
 
   constructor(scope: Construct, id: string, props: AuthProps) {
     super(scope, props.cdk?.id || id);

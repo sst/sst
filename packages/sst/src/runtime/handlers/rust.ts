@@ -1,24 +1,20 @@
 import path from "path";
 import fs from "fs/promises";
-import { useRuntimeHandlers } from "../handlers.js";
+import { RuntimeHandler, useRuntimeHandlers } from "../handlers.js";
 import { useRuntimeWorkers } from "../workers.js";
 import { Context } from "../../context/context.js";
-import { VisibleError } from "../../error.js";
 import { ChildProcessWithoutNullStreams, exec, spawn } from "child_process";
 import { promisify } from "util";
 import { useRuntimeServerConfig } from "../server.js";
-import { findAbove, findBelow, isChild } from "../../util/fs.js";
+import { findAbove, isChild } from "../../util/fs.js";
 const execAsync = promisify(exec);
 
-export const useRustHandler = Context.memo(async () => {
-  const workers = await useRuntimeWorkers();
-  const server = await useRuntimeServerConfig();
-  const handlers = useRuntimeHandlers();
+export const useRustHandler = (): RuntimeHandler => {
   const processes = new Map<string, ChildProcessWithoutNullStreams>();
   const sources = new Map<string, string>();
   const handlerName = process.platform === "win32" ? `handler.exe` : `handler`;
 
-  handlers.register({
+  return {
     shouldBuild: (input) => {
       if (!input.file.endsWith(".rs")) return false;
       const parent = sources.get(input.functionID);
@@ -28,6 +24,8 @@ export const useRustHandler = Context.memo(async () => {
     },
     canHandle: (input) => input.startsWith("rust"),
     startWorker: async (input) => {
+      const workers = await useRuntimeWorkers();
+      const server = await useRuntimeServerConfig();
       const proc = spawn(path.join(input.out, handlerName), {
         env: {
           ...process.env,
@@ -67,35 +65,54 @@ export const useRustHandler = Context.memo(async () => {
 
       if (input.mode === "start") {
         try {
-          await execAsync(`cargo build --bin ${parsed.name}`, {
-            cwd: project,
-            env: {
-              ...process.env,
-            },
-          });
+          await execAsync(
+            ["cargo", "build", `--bin ${parsed.name}`].join(" "),
+            {
+              cwd: project,
+              env: {
+                ...process.env,
+              },
+            }
+          );
           await fs.cp(
             path.join(project, `target/debug`, parsed.name),
             path.join(input.out, "handler")
           );
         } catch (ex) {
-          throw new VisibleError("Failed to build");
+          return {
+            type: "error",
+            errors: [String(ex)],
+          };
         }
       }
 
       if (input.mode === "deploy") {
         try {
-          await execAsync(`cargo lambda build --release --bin ${parsed.name}`, {
-            cwd: project,
-            env: {
-              ...process.env,
-            },
-          });
+          await execAsync(
+            [
+              "cargo",
+              "lambda",
+              "build",
+              "--release",
+              ...(input.props.architecture === "arm_64" ? ["--arm64"] : []),
+              `--bin ${parsed.name}`,
+            ].join(" "),
+            {
+              cwd: project,
+              env: {
+                ...process.env,
+              },
+            }
+          );
           await fs.cp(
             path.join(project, `target/lambda/`, parsed.name, "bootstrap"),
             path.join(input.out, "bootstrap")
           );
         } catch (ex) {
-          throw new VisibleError("Failed to build");
+          return {
+            type: "error",
+            errors: [String(ex)],
+          };
         }
       }
 
@@ -104,5 +121,5 @@ export const useRustHandler = Context.memo(async () => {
         handler: "handler",
       };
     },
-  });
-});
+  };
+};

@@ -6,6 +6,8 @@ const require = createRequire(import.meta.url);
 import { SsrSite } from "./SsrSite.js";
 import { SsrFunction } from "./SsrFunction.js";
 import { EdgeFunction } from "./EdgeFunction.js";
+import { VisibleError } from "../error.js";
+import { useWarning } from "./util/warning.js";
 
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 
@@ -13,7 +15,6 @@ type RemixConfig = {
   assetsBuildDirectory: string;
   publicPath: string;
   serverBuildPath: string;
-  serverModuleFormat: string;
   serverPlatform: string;
   server?: string;
 };
@@ -32,6 +33,8 @@ type RemixConfig = {
  * ```
  */
 export class RemixSite extends SsrSite {
+  private serverModuleFormat: "cjs" | "esm" = "cjs";
+
   protected initBuildConfig() {
     const { path: sitePath } = this.props;
 
@@ -39,31 +42,34 @@ export class RemixSite extends SsrSite {
       assetsBuildDirectory: "public/build",
       publicPath: "/build/",
       serverBuildPath: "build/index.js",
-      serverModuleFormat: "cjs",
       serverPlatform: "node",
     };
 
     // Validate config path
     const configPath = path.resolve(sitePath, "remix.config.js");
     if (!fs.existsSync(configPath)) {
-      throw new Error(
-        `Could not find "remix.config.js" at expected path "${configPath}".`
+      throw new VisibleError(
+        `In the "${this.node.id}" Site, could not find "remix.config.js" at expected path "${configPath}".`
       );
     }
 
     // Load config
     const userConfig = require(configPath);
+    this.serverModuleFormat = userConfig.serverModuleFormat ?? "cjs";
+    if (userConfig.serverModuleFormat !== "esm") {
+      useWarning().add("remix.cjs");
+    }
+
+    // Validate config
     const config: RemixConfig = {
       ...configDefaults,
       ...userConfig,
     };
-
-    // Validate config
     Object.keys(configDefaults).forEach((key) => {
       const k = key as keyof RemixConfig;
       if (config[k] !== configDefaults[k]) {
-        throw new Error(
-          `RemixSite: remix.config.js "${key}" must be "${configDefaults[k]}".`
+        throw new VisibleError(
+          `In the "${this.node.id}" Site, remix.config.js "${key}" must be "${configDefaults[k]}".`
         );
       }
     });
@@ -73,6 +79,11 @@ export class RemixSite extends SsrSite {
       serverBuildOutputFile: "build/index.js",
       clientBuildOutputDir: "public",
       clientBuildVersionedSubDir: "build",
+      // Note: When using libraries like remix-flat-routes the file can
+      // contains special characters like "+". It needs to be encoded.
+      clientCFFunctionInjection: `
+       request.uri = request.uri.split('/').map(encodeURIComponent).join('/');
+      `,
     };
   }
 
@@ -95,11 +106,14 @@ export class RemixSite extends SsrSite {
     // template to create this wrapper within the "core server build" output
     // directory.
 
+    // Ensure build directory exists
+    const buildPath = path.join(this.props.path, "build");
+    fs.mkdirSync(buildPath, { recursive: true });
+
     // Copy the server lambda handler
-    const handler = path.join(this.props.path, "build", "server.js");
     fs.copyFileSync(
       path.resolve(__dirname, `../support/remix-site-function/${wrapperFile}`),
-      handler
+      path.join(buildPath, "server.js")
     );
 
     // Copy the Remix polyfil to the server build directory
@@ -109,14 +123,14 @@ export class RemixSite extends SsrSite {
     // doesn't appear to guarantee this, we therefore leverage ESBUild's
     // `inject` option to ensure that the polyfills are injected at the top of
     // the bundle.
-    const polyfillDest = path.join(this.props.path, "build/polyfill.js");
+    const polyfillDest = path.join(buildPath, "polyfill.js");
     fs.copyFileSync(
       path.resolve(__dirname, "../support/remix-site-function/polyfill.js"),
       polyfillDest
     );
 
     return {
-      handler: path.join(this.props.path, "build", "server.handler"),
+      handler: path.join(buildPath, "server.handler"),
       esbuild: { inject: [polyfillDest] },
     };
   }
@@ -143,7 +157,7 @@ export class RemixSite extends SsrSite {
       memorySize,
       timeout,
       nodejs: {
-        format: "cjs",
+        format: this.serverModuleFormat,
         ...nodejs,
         esbuild: {
           ...esbuild,
@@ -182,7 +196,7 @@ export class RemixSite extends SsrSite {
       environment,
       permissions,
       nodejs: {
-        format: "cjs",
+        format: this.serverModuleFormat,
         ...nodejs,
         esbuild: {
           ...esbuild,

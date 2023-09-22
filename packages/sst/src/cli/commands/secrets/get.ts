@@ -1,4 +1,4 @@
-import { Program } from "../../program.js";
+import type { Program } from "../../program.js";
 
 export const get = (program: Program) =>
   program.command(
@@ -16,17 +16,22 @@ export const get = (program: Program) =>
           describe: "Get the fallback value",
         }),
     async (args) => {
-      const { red } = await import("colorette");
+      const { exit, exitWithError } = await import("../../program.js");
       const { Config } = await import("../../../config.js");
+      const { SilentError } = await import("../../../error.js");
       const { Colors } = await import("../../colors.js");
+
       try {
         const result = await Config.getSecret({
           key: args.name,
           fallback: args.fallback === true,
         });
         console.log(result!);
+
+        await exit();
       } catch {
         Colors.line(Colors.danger(`✖ `), `"${args.name}" is not set`);
+        await exitWithError(new SilentError(`"${args.name}" is not set`));
       }
     }
   );

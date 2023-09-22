@@ -1,111 +1,19 @@
 import http from "http";
 import { spawn } from "child_process";
-import { StartWorkerInput, useRuntimeHandlers } from "../handlers.js";
+import { RuntimeHandler, StartWorkerInput } from "../handlers.js";
 import { useRuntimeWorkers } from "../workers.js";
 import { useRuntimeServerConfig } from "../server.js";
-import { Context } from "../../context/context.js";
 import { VisibleError } from "../../error.js";
 import { isChild } from "../../util/fs.js";
 import { execAsync } from "../../util/process.js";
 import { useFunctions } from "../../constructs/Function.js";
+import { lazy } from "../../util/lazy.js";
 
-export const useContainerHandler = Context.memo(async () => {
-  const workers = await useRuntimeWorkers();
-  const server = await useRuntimeServerConfig();
-  const handlers = useRuntimeHandlers();
+export const useContainerHandler = (): RuntimeHandler => {
   const containers = new Map<string, string>();
   const sources = new Map<string, string>();
 
-  handlers.register({
-    shouldBuild: (input) => {
-      const parent = sources.get(input.functionID);
-      if (!parent) return false;
-      return isChild(parent, input.file);
-    },
-    canHandle: (input) => input.startsWith("container"),
-    startWorker: async (input) => {
-      input.environment.SST_DEBUG_JOB
-        ? startJobWorker(input)
-        : startLambdaWorker(input);
-    },
-    stopWorker: async (workerID) => {
-      const name = containers.get(workerID);
-      if (name) {
-        try {
-          // note:
-          // - calling `docker kill` kills the docker process much faster than `docker stop`
-          // - process.kill() does not work on docker processes
-          await execAsync(`docker kill ${name}`, {
-            env: {
-              ...process.env,
-            },
-          });
-        } catch (ex) {
-          console.error(ex);
-          throw new VisibleError(`Could not stop docker container ${name}`);
-        }
-        containers.delete(workerID);
-      }
-    },
-    build: async (input) => {
-      const project = input.props.handler!;
-      sources.set(input.functionID, project);
-
-      if (input.mode === "start") {
-        try {
-          const result = await execAsync(
-            `docker build -t sst-dev:${input.functionID} .`,
-            {
-              cwd: project,
-              env: {
-                ...process.env,
-              },
-            }
-          );
-        } catch (ex) {
-          return {
-            type: "error",
-            errors: [String(ex)],
-          };
-        }
-      }
-
-      if (input.mode === "deploy") {
-        try {
-          const platform =
-            input.props.architecture === "arm_64"
-              ? "linux/arm64"
-              : "linux/amd64";
-          await execAsync(
-            [
-              `docker build`,
-              `-t sst-build:${input.functionID}`,
-              `--platform ${platform}`,
-              `.`,
-            ].join(" "),
-            {
-              cwd: project,
-              env: {
-                ...process.env,
-              },
-            }
-          );
-        } catch (ex) {
-          return {
-            type: "error",
-            errors: [String(ex)],
-          };
-        }
-      }
-
-      return {
-        type: "success",
-        handler: "not required for container",
-      };
-    },
-  });
-
-  function dockerRun(
+  async function dockerRun(
     input: StartWorkerInput,
     opts: {
       entrypoint?: string;
@@ -114,6 +22,7 @@ export const useContainerHandler = Context.memo(async () => {
     },
     onExit: (code: number) => void
   ) {
+    const workers = await useRuntimeWorkers();
     const name = `sst-workerID-${input.workerID}-${Date.now()}`;
     const proc = spawn(
       "docker",
@@ -154,7 +63,9 @@ export const useContainerHandler = Context.memo(async () => {
     containers.set(input.workerID, name);
   }
 
-  function startLambdaWorker(input: StartWorkerInput) {
+  async function startLambdaWorker(input: StartWorkerInput) {
+    const server = await useRuntimeServerConfig();
+    const workers = await useRuntimeWorkers();
     const fn = useFunctions().fromID(input.functionID);
     dockerRun(
       input,
@@ -171,6 +82,7 @@ export const useContainerHandler = Context.memo(async () => {
   }
 
   async function startJobWorker(input: StartWorkerInput) {
+    const workers = await useRuntimeWorkers();
     // Job container is special:
     // 1. Not capable of receiving the `event` payload
     //    - on `sst deploy`, the CodeBuild job is started with `SST_PAYLOAD` env var
@@ -182,7 +94,7 @@ export const useContainerHandler = Context.memo(async () => {
     const awsRequestId = result.headers["lambda-runtime-aws-request-id"];
     const fn = useFunctions().fromID(input.functionID);
     try {
-      dockerRun(
+      await dockerRun(
         input,
         {
           entrypoint: "",
@@ -297,4 +209,108 @@ export const useContainerHandler = Context.memo(async () => {
       });
     }
   }
-});
+  return {
+    shouldBuild: (input) => {
+      const parent = sources.get(input.functionID);
+      if (!parent) return false;
+      return isChild(parent, input.file);
+    },
+    canHandle: (input) => input.startsWith("container"),
+    startWorker: async (input) => {
+      input.environment.SST_DEBUG_JOB
+        ? await startJobWorker(input)
+        : await startLambdaWorker(input);
+    },
+    stopWorker: async (workerID) => {
+      const name = containers.get(workerID);
+      if (name) {
+        try {
+          // note:
+          // - calling `docker kill` kills the docker process much faster than `docker stop`
+          // - process.kill() does not work on docker processes
+          await execAsync(`docker kill ${name}`, {
+            env: {
+              ...process.env,
+            },
+          });
+        } catch (ex) {
+          console.error(ex);
+          throw new VisibleError(`Could not stop docker container ${name}`);
+        }
+        containers.delete(workerID);
+      }
+    },
+    build: async (input) => {
+      const project = input.props.handler!;
+      sources.set(input.functionID, project);
+
+      if (input.mode === "start") {
+        try {
+          const result = await execAsync(
+            [
+              `docker build`,
+              `-t sst-dev:${input.functionID}`,
+              ...(input.props.container?.file
+                ? [`-f ${input.props.container.file}`]
+                : []),
+              ...Object.entries(input.props.container?.buildArgs || {}).map(
+                ([k, v]) => `--build-arg ${k}=${v}`
+              ),
+              `.`,
+            ].join(" "),
+            {
+              cwd: project,
+              env: {
+                ...process.env,
+              },
+            }
+          );
+        } catch (ex) {
+          return {
+            type: "error",
+            errors: [String(ex)],
+          };
+        }
+      }
+
+      if (input.mode === "deploy") {
+        try {
+          const platform =
+            input.props.architecture === "arm_64"
+              ? "linux/arm64"
+              : "linux/amd64";
+          await execAsync(
+            [
+              `docker build`,
+              `-t sst-build:${input.functionID}`,
+              ...(input.props.container?.file
+                ? [`-f ${input.props.container.file}`]
+                : []),
+              ...Object.entries(input.props.container?.buildArgs || {}).map(
+                ([k, v]) => `--build-arg ${k}=${v}`
+              ),
+              `--platform ${platform}`,
+              `.`,
+            ].join(" "),
+            {
+              cwd: project,
+              env: {
+                ...process.env,
+              },
+            }
+          );
+        } catch (ex) {
+          return {
+            type: "error",
+            errors: [String(ex)],
+          };
+        }
+      }
+
+      return {
+        type: "success",
+        handler: "not required for container",
+      };
+    },
+  };
+};

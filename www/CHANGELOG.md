@@ -1,5 +1,117 @@
 # @serverless-stack/docs
 
+## 2.5.18
+
+### Patch Changes
+
+- [#3332](https://github.com/sst/sst/pull/3332) [`920baa5e0`](https://github.com/sst/sst/commit/920baa5e02350c66adc79e46add604473ddd7c99) Thanks [@thdxr](https://github.com/thdxr)! - Use lazy loading instead of context
+
+## 2.5.17
+
+### Patch Changes
+
+- [#3303](https://github.com/sst/sst/pull/3303) [`89827c084`](https://github.com/sst/sst/commit/89827c08438cf944075833acd37ebf74d2f65f7a) Thanks [@fwang](https://github.com/fwang)! - RemixSite: add support for esm
+
+## 2.5.16
+
+### Patch Changes
+
+- [`a933265d6`](https://github.com/sst/sst/commit/a933265d657b9b29036d2e98d28fb4b6cc0cf203) Thanks [@fwang](https://github.com/fwang)! - Service: support build args for docker build
+
+- [`83f205f2b`](https://github.com/sst/sst/commit/83f205f2b6dc794243fc9d8894f15cb9296a28fb) Thanks [@fwang](https://github.com/fwang)! - Service: support configuring Fargate Service (ie. circuit breaker)
+
+- [`438ee2dda`](https://github.com/sst/sst/commit/438ee2dda57e4ee849dcd68e536a9504a57d2b63) Thanks [@fwang](https://github.com/fwang)! - Service: support using existing ECR image
+
+- [`a933265d6`](https://github.com/sst/sst/commit/a933265d657b9b29036d2e98d28fb4b6cc0cf203) Thanks [@fwang](https://github.com/fwang)! - Job: support build args for docker build
+
+- [`a933265d6`](https://github.com/sst/sst/commit/a933265d657b9b29036d2e98d28fb4b6cc0cf203) Thanks [@fwang](https://github.com/fwang)! - Function: support build args for docker build
+
+## 2.5.15
+
+### Patch Changes
+
+- [#3254](https://github.com/sst/sst/pull/3254) [`23c650a6a`](https://github.com/sst/sst/commit/23c650a6a2b22ae747528c88e120a9766fb7542a) Thanks [@niklaswallerstedt](https://github.com/niklaswallerstedt)! - Doc: adds oidc construct example for Github Actions
+
+## 2.5.14
+
+### Patch Changes
+
+- [`5b1b3e706`](https://github.com/sst/sst/commit/5b1b3e70634a104fd53871e738c30fd1eda46704) Thanks [@fwang](https://github.com/fwang)! - Service: detect invalid path and suggest fix
+
+## 2.5.13
+
+### Patch Changes
+
+- [`024439549`](https://github.com/sst/sst/commit/02443954945cd4593ac053fcce5dd870f9c891d4) Thanks [@fwang](https://github.com/fwang)! - Secret: support advanced parameter for secrets longer than 4KB in size
+
+## 2.5.12
+
+### Patch Changes
+
+- [`eab6225a2`](https://github.com/sst/sst/commit/eab6225a214a32590e6874f7c160cd884e7050ac) Thanks [@fwang](https://github.com/fwang)! - Bootstrap: support cdk bootstrapStackVersionSsmParameter and imageAssetsRepositoryName options
+
+## 2.5.11
+
+### Patch Changes
+
+- [#3227](https://github.com/sst/sst/pull/3227) [`820c8e55c`](https://github.com/sst/sst/commit/820c8e55cbd9349e5c1dc9195e99650fed750e77) Thanks [@jamesgibbons92](https://github.com/jamesgibbons92)! - sst types: add CLI command to generate resource types
+
+## 2.5.10
+
+### Patch Changes
+
+- [#3222](https://github.com/sst/sst/pull/3222) [`a594b1964`](https://github.com/sst/sst/commit/a594b1964afb285308fb31fd0c5748f10b22693e) Thanks [@adolfogc](https://github.com/adolfogc)! - Function: support Python 3.11 runtie
+
+## 2.5.9
+
+### Patch Changes
+
+- [`62f78efd7`](https://github.com/sst/sst/commit/62f78efd7367c95d1b58737d18a52bcae293e3f2) Thanks [@fwang](https://github.com/fwang)! - Service: support private services
+
+## 2.5.8
+
+### Patch Changes
+
+- [#3201](https://github.com/sst/sst/pull/3201) [`f5a7d5609`](https://github.com/sst/sst/commit/f5a7d560930434b48d1970c7eddf3c5044caae58) Thanks [@jayair](https://github.com/jayair)! - Update serverless-stack to sst
+
+## 2.5.7
+
+### Patch Changes
+
+- [`18e3cf975`](https://github.com/sst/sst/commit/18e3cf975c81f8c077ba6c9a425c80e25fb67b40) Thanks [@fwang](https://github.com/fwang)! - config: add `disableAppModeCheck` to disable confirmation prompt when switching between `sst deploy` and `sst dev` deployment modes
+
+## 2.5.6
+
+### Patch Changes
+
+- [`435ab9ce2`](https://github.com/serverless-stack/sst/commit/435ab9ce2f32c79e9f8eb2e4099aafebc1246aad) Thanks [@fwang](https://github.com/fwang)! - sst update: detect CDK v1 dependencies
+
+## 2.5.5
+
+### Patch Changes
+
+- [`19cc5c5cb`](https://github.com/serverless-stack/sst/commit/19cc5c5cb22f57876a78b1eea155a5ef03dee2d9) Thanks [@fwang](https://github.com/fwang)! - Service: configure log retention via "logRetention"
+
+- [`fb6f4e208`](https://github.com/serverless-stack/sst/commit/fb6f4e208c0be8a3785d96438e1ca67ba56579f2) Thanks [@fwang](https://github.com/fwang)! - Service: configure container definition via "cdk.container"
+
+## 2.5.4
+
+### Patch Changes
+
+- [`cb9744e57`](https://github.com/serverless-stack/sst/commit/cb9744e57d605a2fda82d7e5f1583b212f24b365) Thanks [@fwang](https://github.com/fwang)! - Bootstrap: allow using CDK bootstrap bucket instead of creating a new one
+
+## 2.5.3
+
+### Patch Changes
+
+- [#3177](https://github.com/serverless-stack/sst/pull/3177) [`8a31945c4`](https://github.com/serverless-stack/sst/commit/8a31945c44048308b5f8cf4cc7e5fe490eb835c9) Thanks [@fwang](https://github.com/fwang)! - AstroSite: support streaming
+
+## 2.5.2
+
+### Patch Changes
+
+- [#3106](https://github.com/serverless-stack/sst/pull/3106) [`ded5370c1`](https://github.com/serverless-stack/sst/commit/ded5370c1f26a16616545f3588a11a3d466277df) Thanks [@MattJenko](https://github.com/MattJenko)! - Bootstrap: support custom permissions boundary
+
 ## 2.5.1
 
 ### Patch Changes

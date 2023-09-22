@@ -1,11 +1,10 @@
 import type { SSRManifest } from "astro";
-import type {
-  APIGatewayProxyEventV2,
-  APIGatewayProxyStructuredResultV2,
-} from "aws-lambda";
+import type { APIGatewayProxyEventV2 } from "aws-lambda";
+import type { ResponseStream } from "../lib/types";
 import { NodeApp } from "astro/app/node";
 import { polyfill } from "@astrojs/webapi";
-import { isBinaryContentType } from "../lib/binary.js";
+import { convertFrom, convertTo } from "../lib/event-mapper.js";
+import { debug } from "../lib/logger.js";
 
 polyfill(globalThis, {
   exclude: "window document",
@@ -14,46 +13,71 @@ polyfill(globalThis, {
 export function createExports(manifest: SSRManifest) {
   const app = new NodeApp(manifest);
 
+  async function handler(
+    event: APIGatewayProxyEventV2,
+    responseStream: ResponseStream
+  ) {
+    debug("event", event);
+
+    // Parse Lambda event
+    const internalEvent = convertFrom(event);
+
+    // Build request
+    const requestUrl = internalEvent.url;
+    const requestProps = {
+      method: internalEvent.method,
+      headers: internalEvent.headers,
+      body: ["GET", "HEAD"].includes(internalEvent.method)
+        ? undefined
+        : internalEvent.body,
+    };
+    debug("request", requestUrl, requestProps);
+    const request = new Request(requestUrl, requestProps);
+
+    // Handle page not found
+    const routeData = app.match(request, { matchNotFound: true });
+    if (!routeData) {
+      return streamError(404, "Not found", responseStream);
+    }
+
+    // Process request
+    const response = await app.render(request, routeData);
+    debug("response", response);
+
+    // Stream response back to Cloudfront
+    await convertTo({
+      type: internalEvent.type,
+      response,
+      responseStream,
+      cookies: app.setCookieHeaders
+        ? (() => {
+            const cookies: string[] = [];
+            for (const header of app.setCookieHeaders(response)) {
+              cookies.push(header);
+            }
+            return cookies;
+          })()
+        : undefined,
+    });
+  }
+
   return {
-    async handler(
-      event: APIGatewayProxyEventV2
-    ): Promise<APIGatewayProxyStructuredResultV2> {
-      const {
-        body,
-        headers,
-        rawPath,
-        rawQueryString,
-        requestContext,
-        isBase64Encoded,
-      } = event;
-
-      // Convert API Gateway request to Node request
-      const scheme = headers["x-forwarded-protocol"] || "https";
-      const host = headers["x-forwarded-host"] || headers.host;
-      const qs = rawQueryString.length > 0 ? `?${rawQueryString}` : "";
-      const url = new URL(`${rawPath}${qs}`, `${scheme}://${host}`);
-      const encoding = isBase64Encoded ? "base64" : "utf8";
-      const request = new Request(url.toString(), {
-        method: requestContext.http.method,
-        headers: new Headers(headers as any),
-        body: typeof body === "string" ? Buffer.from(body, encoding) : body,
-      });
-
-      // Process request
-      const rendered = await app.render(request);
-
-      // Convert Node response to API Gateway response
-      const contentType = rendered.headers.get("content-type");
-      const responseIsBase64Encoded = isBinaryContentType(contentType);
-      return {
-        statusCode: rendered.status,
-        headers: Object.fromEntries(rendered.headers.entries()),
-        cookies: Array.from(app.setCookieHeaders(rendered)),
-        body: responseIsBase64Encoded
-          ? Buffer.from(await rendered.arrayBuffer()).toString("base64")
-          : await rendered.text(),
-        isBase64Encoded: responseIsBase64Encoded,
-      };
-    },
+    // https://docs.aws.amazon.com/lambda/latest/dg/configuration-response-streaming.html
+    handler: awslambda.streamifyResponse(handler),
   };
+}
+
+export function streamError(
+  statusCode: number,
+  error: string | Error,
+  responseStream: ResponseStream
+) {
+  console.error(error);
+
+  responseStream = awslambda.HttpResponseStream.from(responseStream, {
+    statusCode,
+  });
+
+  responseStream.write(error.toString());
+  responseStream.end();
 }

@@ -132,13 +132,23 @@ Let's take a look at how secrets and parameters work behind the scenes.
 
 ### Secrets
 
-Behind the scenes, secrets are stored as [AWS SSM](https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-parameter-store.html) Parameters in your AWS account. When you run:
+Behind the scenes, secrets are stored as [AWS SSM](https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-parameter-store.html) or AWS Systems Manager Parameters in your AWS account. When you run:
 
 ```bash
 npx sst secrets set STRIPE_KEY sk_test_abc123
 ```
 
 An SSM parameter of the type `SecureString` is created with the name `/sst/{appName}/{stageName}/Secret/STRIPE_KEY/value`, where `{appName}` is the name of your SST app, and `{stageName}` is the stage you are configuring for. The parameter value `sk_test_abc123` gets encrypted and stored in AWS SSM.
+
+:::tip
+You can set a secret for another stage using the `--stage` option.
+:::
+
+By default, the [`sst secrets`](packages/sst.md#sst-secrets) CLI acts on your current local stage. To set a secret for another stage (say `prod`), you can use the [`--stage`](packages/sst.md#global-options) option.
+
+```bash
+npx sst secrets set --stage prod STRIPE_KEY sk_test_abc123
+```
 
 ---
 
@@ -449,7 +459,9 @@ Here are some frequently asked questions about `Config`.
 
 ### How much does it cost to use `Config`?
 
-Secrets and Parameters are stored in AWS SSM with the _Standard Parameter type_ and _Standard Throughput_. This makes `Config` [free to use](https://aws.amazon.com/systems-manager/pricing/) in your SST apps.
+Secrets and Parameters are stored in AWS SSM as **Standard parameters** by default. This makes `Config` [free to use](https://aws.amazon.com/systems-manager/pricing/#Parameter_Store) in your SST apps. However when storing a `Config.Secret` the value is encrypted by AWS KMS. These are retrieved at runtime in your Lambda functions when it starts up. AWS KMS has a [free tier](https://aws.amazon.com/kms/pricing/#Free_tier) of 20,000 API calls per month. And it costs $0.03 for every 10,000 subsequent API calls. This is worth keeping in mind as these secrets are fetched per Lambda function cold start.
+
+Note that Standard parameters have a content size limit of 4KB. If your secrets exceed this size, they will be stored as **Advanced parameters**, which can store up to 8KB. Each advanced parameter [costs roughly $0.05 per month](https://aws.amazon.com/systems-manager/pricing/#Parameter_Store).
 
 ---
 

@@ -77,6 +77,8 @@ export class SsrFunction extends Construct implements SSTConstruct {
     environment: Exclude<SsrFunctionProps["environment"], undefined>;
     permissions: Exclude<SsrFunctionProps["permissions"], undefined>;
   };
+  /** @internal */
+  public _doNotAllowOthersToBind = true;
 
   constructor(scope: Construct, id: string, props: SsrFunctionProps) {
     super(scope, id);
@@ -145,7 +147,14 @@ export class SsrFunction extends Construct implements SSTConstruct {
   }
 
   private createFunction(assetBucket: string, assetKey: string) {
-    const { runtime, timeout, memorySize, handler, logRetention } = this.props;
+    const {
+      architecture,
+      runtime,
+      timeout,
+      memorySize,
+      handler,
+      logRetention,
+    } = this.props;
 
     return new CdkFunction(this, `ServerFunction`, {
       ...this.props,
@@ -161,7 +170,7 @@ export class SsrFunction extends Construct implements SSTConstruct {
           : runtime === "nodejs16.x"
           ? Runtime.NODEJS_16_X
           : Runtime.NODEJS_18_X,
-      architecture: Architecture.ARM_64,
+      architecture: architecture || Architecture.ARM_64,
       memorySize:
         typeof memorySize === "string"
           ? toCdkSize(memorySize).toMebibytes()
@@ -329,6 +338,7 @@ export class SsrFunction extends Construct implements SSTConstruct {
       type: "Function" as const,
       data: {
         arn: this.functionArn,
+        runtime: this.props.runtime,
         handler: this.props.handler,
         localId: this.node.addr,
         secrets: [] as string[],

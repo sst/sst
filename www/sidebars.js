@@ -101,6 +101,7 @@ module.exports = {
             "advanced/removal-policy",
             "advanced/lambda-layers",
             "advanced/iam-credentials",
+            "advanced/console-updates",
             "advanced/tagging-resources",
             "advanced/importing-resources",
             "advanced/connecting-via-proxy",
@@ -204,6 +205,7 @@ module.exports = {
         "constructs/EventBus",
         "constructs/KinesisStream",
       ],
+      Container: ["constructs/Service"],
       Storage: ["constructs/Bucket"],
       Auth: ["constructs/Auth", "constructs/Cognito"],
       Types: [
@@ -233,6 +235,7 @@ module.exports = {
         "clients/config",
         "clients/queue",
         "clients/bucket",
+        "clients/service",
         "clients/graphql",
         "clients/function",
         "clients/event-bus",

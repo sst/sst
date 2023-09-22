@@ -122,7 +122,7 @@ The `packages/` directory houses everything that powers our backend. This includ
 
 - `packages/web` contains a React application created with [Vite](https://vitejs.dev/). It's already wired up to be able to talk to the GraphQL API. If you are using a different frontend, for example NextJS, you can delete this folder and provision it yourself.
 
-- `packages/functions` is where you can place all the code for your Lambda functions. Your functions should generally be fairly simple. They should mostly be calling into code previously defined in `services/core`.
+- `packages/functions` is where you can place all the code for your Lambda functions. Your functions should generally be fairly simple. They should mostly be calling into code previously defined in `packages/core`.
 
 - `packages/graphql` contains the outputs of GraphQL related code generation. Typically you won't be touching this but it needs to be committed to Git. It contains code shared between the frontend and backend.
 
@@ -211,7 +211,7 @@ Here's what these scripts do:
 - `deploy`: Build the infrastructure and deploy the app to AWS.
 - `remove`: Completely remove the app's infrastructure from AWS for the _default_ stage. Use with caution!
 - `console`: Start the [SST Console](../console.md) for the _default_ stage. Useful for managing _non-local_ stages.
-- `typecheck`: Run typecheck for the entire project. By default, our editor should automatically typecheck our code using the `tsconfig.json` in our project root. However, this script lets you explicitly run typecheck as a part of our CI process.
+- `typecheck`: Run typecheck for your stacks code. By default, our editor should automatically typecheck our code using the `tsconfig.json` in our project root. However, this script lets you explicitly run typecheck as a part of our CI process.
 - `test`: Load our `Config` and run our tests. Our starter uses [Vitest](https://vitest.dev).
 - `gen`: Uses [Hygen](http://www.hygen.io) to run built-in code gen tasks. Currently only supports `npm run gen migration new`. This will help you code gen a new migration.
 

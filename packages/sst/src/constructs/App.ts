@@ -8,16 +8,16 @@ import {
   isSSTConstruct,
   isStackConstruct,
 } from "./Construct.js";
-import { Function, FunctionProps } from "./Function.js";
+import { FunctionProps, useFunctions } from "./Function.js";
 import { Permissions } from "./util/permission.js";
 import { bindParameters, bindType } from "./util/functionBinding.js";
 import { StackProps } from "./Stack.js";
 import { FunctionalStack, stack } from "./FunctionalStack.js";
-import { createRequire } from "module";
 import { Auth } from "./Auth.js";
 import { useDeferredTasks } from "./deferred_task.js";
-import { AppContext } from "./context.js";
+import { provideApp } from "./context.js";
 import { useProject } from "../project.js";
+import { VisibleError } from "../error.js";
 import { Logger } from "../logger.js";
 import {
   AppProps as CDKAppProps,
@@ -27,21 +27,15 @@ import {
   IAspect,
   CfnResource,
   RemovalPolicy,
-  CustomResourceProvider,
-  CustomResourceProviderRuntime,
   CustomResource,
   Aspects,
 } from "aws-cdk-lib/core";
 import { CfnFunction, ILayerVersion } from "aws-cdk-lib/aws-lambda";
 import { Bucket } from "aws-cdk-lib/aws-s3";
-import { ArnPrincipal, PolicyStatement } from "aws-cdk-lib/aws-iam";
+import { Effect, Policy, PolicyStatement } from "aws-cdk-lib/aws-iam";
 import { CfnLogGroup } from "aws-cdk-lib/aws-logs";
-const require = createRequire(import.meta.url);
-
-function exitWithMessage(message: string) {
-  console.error(message);
-  process.exit(1);
-}
+import { useBootstrap } from "../bootstrap.js";
+import { useWarning } from "./util/warning.js";
 
 /**
  * @internal
@@ -137,7 +131,7 @@ export class App extends CDKApp {
    */
   constructor(deployProps: AppDeployProps, props: AppProps = {}) {
     super(props);
-    AppContext.provide(this);
+    provideApp(this);
     this.appPath = process.cwd();
 
     this.mode = deployProps.mode;
@@ -258,6 +252,7 @@ export class App extends CDKApp {
   public async finish() {
     if (this.isFinished) return;
     this.isFinished = true;
+    const { config, paths } = useProject();
     Auth.injectConfig();
     this.buildConstructsMetadata();
     this.ensureUniqueConstructIds();
@@ -272,17 +267,57 @@ export class App extends CDKApp {
 
     this.createBindingSsmParameters();
     this.removeGovCloudUnsupportedResourceProperties();
-    const { config } = useProject();
-
+    useWarning().print();
     for (const child of this.node.children) {
       if (isStackConstruct(child)) {
         // Tag stacks
         Tags.of(child).add("sst:app", this.name);
         Tags.of(child).add("sst:stage", this.stage);
 
+        if (child instanceof Stack && !this.isRunningSSTTest()) {
+          const bootstrap = await useBootstrap();
+          const functions = useFunctions();
+          const sourcemaps = functions.sourcemaps.forStack(child.stackName);
+          if (sourcemaps.length) {
+            const policy = new Policy(
+              child,
+              "FunctionSourcemapUploaderPolicy",
+              {
+                statements: [
+                  new PolicyStatement({
+                    effect: Effect.ALLOW,
+                    actions: ["s3:GetObject", "s3:PutObject"],
+                    resources: [
+                      sourcemaps[0].bucket.bucketArn + "/*",
+                      `arn:${child.partition}:s3:::${bootstrap.bucket}/*`,
+                    ],
+                  }),
+                ],
+              }
+            );
+            child.customResourceHandler.role?.attachInlinePolicy(policy);
+
+            const resource = new CustomResource(
+              child,
+              "FunctionSourcemapUploader",
+              {
+                serviceToken: child.customResourceHandler.functionArn,
+                resourceType: "Custom::FunctionSourcemapUploader",
+                properties: {
+                  app: this.name,
+                  stage: this.stage,
+                  bootstrap: bootstrap.bucket,
+                  bucket: sourcemaps[0].bucket.bucketName,
+                  functions: sourcemaps.map((s) => [s.func.functionArn, s.key]),
+                },
+              }
+            );
+            resource.node.addDependency(policy);
+          }
+        }
+
         // Set removal policy
-        if (this._defaultRemovalPolicy)
-          this.applyRemovalPolicy(child, this._defaultRemovalPolicy);
+        this.applyRemovalPolicy(child);
 
         // Stack names need to be parameterized with the stage name
         if (
@@ -300,8 +335,7 @@ export class App extends CDKApp {
   }
 
   isRunningSSTTest(): boolean {
-    // Check the env var set inside test/setup-tests.js
-    return process.env.SST_RESOURCES_TESTS === "enabled";
+    return process.env.NODE_ENV === "test";
   }
 
   getInputFilesFromEsbuildMetafile(file: string): Array<string> {
@@ -310,7 +344,9 @@ export class App extends CDKApp {
     try {
       metaJson = JSON.parse(fs.readFileSync(file).toString());
     } catch (e) {
-      exitWithMessage("There was a problem reading the esbuild metafile.");
+      throw new VisibleError(
+        "There was a problem reading the esbuild metafile."
+      );
     }
 
     return Object.keys(metaJson.inputs).map((input) => path.resolve(input));
@@ -322,7 +358,7 @@ export class App extends CDKApp {
         if (!isSSTConstruct(c)) {
           return;
         }
-        if (c instanceof Function && c._doNotAllowOthersToBind) {
+        if ("_doNotAllowOthersToBind" in c && c._doNotAllowOthersToBind) {
           return;
         }
 
@@ -387,70 +423,32 @@ export class App extends CDKApp {
     ].filter((c): c is SSTConstruct & IConstruct => Boolean(c));
   }
 
-  private applyRemovalPolicy(current: IConstruct, policy: AppRemovalPolicy) {
+  private applyRemovalPolicy(current: IConstruct) {
+    if (!this._defaultRemovalPolicy) return;
+
+    // Apply removal policy to all resources
     if (current instanceof CfnResource) {
       current.applyRemovalPolicy(
-        RemovalPolicy[policy.toUpperCase() as keyof typeof RemovalPolicy]
+        RemovalPolicy[
+          this._defaultRemovalPolicy.toUpperCase() as keyof typeof RemovalPolicy
+        ]
       );
     }
 
-    // Had to copy this in to enable deleting objects in bucket
-    // https://github.com/aws/aws-cdk/blob/master/packages/%40aws-cdk/aws-s3/lib/bucket.ts#L1910
+    // Remove S3 objects on destroy
     if (
+      this._defaultRemovalPolicy === "destroy" &&
       current instanceof Bucket &&
       !current.node.tryFindChild("AutoDeleteObjectsCustomResource")
     ) {
-      const AUTO_DELETE_OBJECTS_RESOURCE_TYPE = "Custom::S3AutoDeleteObjects";
-      const provider = CustomResourceProvider.getOrCreateProvider(
-        current,
-        AUTO_DELETE_OBJECTS_RESOURCE_TYPE,
-        {
-          codeDirectory: path.join(
-            require.resolve("aws-cdk-lib/aws-s3"),
-            "../lib/auto-delete-objects-handler"
-          ),
-          runtime: CustomResourceProviderRuntime.NODEJS_16_X,
-          description: `Lambda function for auto-deleting objects in ${current.bucketName} S3 bucket.`,
-        }
-      );
-
-      // Use a bucket policy to allow the custom resource to delete
-      // objects in the bucket
-      current.addToResourcePolicy(
-        new PolicyStatement({
-          actions: [
-            // list objects
-            "s3:GetBucket*",
-            "s3:List*",
-            // and then delete them
-            "s3:DeleteObject*",
-          ],
-          resources: [current.bucketArn, current.arnForObjects("*")],
-          principals: [new ArnPrincipal(provider.roleArn)],
-        })
-      );
-
-      const customResource = new CustomResource(
-        current,
-        "AutoDeleteObjectsCustomResource",
-        {
-          resourceType: AUTO_DELETE_OBJECTS_RESOURCE_TYPE,
-          serviceToken: provider.serviceToken,
-          properties: {
-            BucketName: current.bucketName,
-          },
-        }
-      );
-
-      // Ensure bucket policy is deleted AFTER the custom resource otherwise
-      // we don't have permissions to list and delete in the bucket.
-      // (add a `if` to make TS happy)
-      if (current.policy) {
-        customResource.node.addDependency(current.policy);
-      }
+      // Calling a private method here. It's the easiest way to lazily
+      // enable auto-delete.
+      // @ts-expect-error
+      (current as Bucket).enableAutoDeleteObjects();
     }
+
     current.node.children.forEach((resource) =>
-      this.applyRemovalPolicy(resource, policy)
+      this.applyRemovalPolicy(resource)
     );
   }
 
@@ -487,7 +485,7 @@ export class App extends CDKApp {
         if (!isSSTConstruct(c)) {
           return;
         }
-        if (c instanceof Function && c._doNotAllowOthersToBind) {
+        if ("_doNotAllowOthersToBind" in c && c._doNotAllowOthersToBind) {
           return;
         }
 
@@ -549,7 +547,7 @@ export class App extends CDKApp {
     Aspects.of(this).add(new EnsureUniqueConstructIds());
   }
 
-  private codegenTypes() {
+  public codegenTypes() {
     const project = useProject();
 
     const typesPath = path.resolve(project.paths.out, "types");
@@ -572,6 +570,8 @@ export class App extends CDKApp {
         `    STAGE: string;`,
         `  }`,
         `}`,
+        ``,
+        ``,
       ].join("\n")
     );
 
@@ -579,7 +579,7 @@ export class App extends CDKApp {
       if (!isSSTConstruct(c)) {
         return;
       }
-      if (c instanceof Function && c._doNotAllowOthersToBind) {
+      if ("_doNotAllowOthersToBind" in c && c._doNotAllowOthersToBind) {
         return;
       }
 
@@ -603,6 +603,8 @@ export class App extends CDKApp {
               `    "${id}": string;`,
               `  }`,
               `}`,
+              ``,
+              ``,
             ]
           : [
               `import "sst/node/${binding.clientPackage}";`,
@@ -613,6 +615,8 @@ export class App extends CDKApp {
               `    }`,
               `  }`,
               `}`,
+              ``,
+              ``,
             ]
         ).join("\n")
       );

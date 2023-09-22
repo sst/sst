@@ -4,10 +4,8 @@ import {
   DescribeStackResourcesOutput,
   DescribeStacksCommand,
   DescribeStackEventsCommand,
-  DescribeStackEventsOutput,
   StackEvent,
 } from "@aws-sdk/client-cloudformation";
-import { SdkError } from "@aws-sdk/types";
 import { useBus } from "../bus.js";
 import { useAWSClient } from "../credentials.js";
 import { Logger } from "../logger.js";
@@ -41,6 +39,7 @@ const STATUSES_PENDING = [
   "UPDATE_IN_PROGRESS",
   "UPDATE_ROLLBACK_COMPLETE_CLEANUP_IN_PROGRESS",
   "UPDATE_ROLLBACK_IN_PROGRESS",
+  "PUBLISH_ASSETS_IN_PROGRESS",
 ] as const;
 
 const STATUSES_SUCCESS = [

@@ -48,13 +48,6 @@ export async function createApp(props?: Partial<AppDeployProps>) {
   });
   const project = useProject();
 
-  await useNodeHandler();
-  await usePythonHandler();
-  await useDotnetHandler();
-  await useJavaHandler();
-  await useGoHandler();
-  await useContainerHandler();
-
   return new App({
     mode: "deploy",
     stage: project.config.stage,
@@ -110,6 +103,11 @@ class StringNotMatch extends Matcher {
 ////////////////////////
 // Template functions //
 ////////////////////////
+
+export function getResources(stack: Stack, type: string) {
+  const template = Template.fromStack(stack);
+  return template.findResources(type);
+}
 
 export function countResources(
   stack: Stack,

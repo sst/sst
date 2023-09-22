@@ -14,12 +14,39 @@ import { useBus } from "../bus.js";
 import { Logger } from "../logger.js";
 import { useProject } from "../project.js";
 import type { Metadata } from "../constructs/Metadata.js";
+import { lazy } from "../util/lazy.js";
 
 declare module "../bus.js" {
   export interface Events {
     "stacks.metadata": Awaited<ReturnType<typeof metadata>>;
     "stacks.metadata.updated": {};
     "stacks.metadata.deleted": {};
+  }
+}
+
+export async function metadataForStack(stack: String) {
+  const project = useProject();
+  const [credentials, bootstrap] = await Promise.all([
+    useAWSCredentials(),
+    useBootstrap(),
+  ]);
+  const s3 = new S3Client({
+    region: project.config.region,
+    credentials: credentials,
+  });
+
+  try {
+    const result = await s3.send(
+      new GetObjectCommand({
+        Key: `stackMetadata/app.${project.config.name}/stage.${project.config.stage}/stack.${stack}.json`,
+        Bucket: bootstrap.bucket,
+      })
+    );
+    const body = await result.Body!.transformToString();
+    return JSON.parse(body) as Metadata[];
+  } catch (e) {
+    Logger.debug(`Fetching metadata for stack ${stack} failed`, e);
+    return;
   }
 }
 
@@ -61,7 +88,7 @@ export async function metadata() {
   return result as Record<string, Metadata[]>;
 }
 
-const MetadataContext = Context.create(async () => {
+export const useMetadataCache = lazy(async () => {
   const bus = useBus();
   const cache = await useCache();
 
@@ -69,14 +96,12 @@ const MetadataContext = Context.create(async () => {
     const data = await metadata();
     await cache.write(`metadata.json`, JSON.stringify(data));
     bus.publish("stacks.metadata", data);
-    MetadataContext.provide(Promise.resolve(data));
   });
 
   bus.subscribe("stacks.metadata.deleted", async () => {
     const data = await metadata();
     await cache.write(`metadata.json`, JSON.stringify(data));
     bus.publish("stacks.metadata", data);
-    MetadataContext.provide(Promise.resolve(data));
   });
 
   while (true) {
@@ -89,5 +114,3 @@ const MetadataContext = Context.create(async () => {
     }
   }
 });
-
-export const useMetadata = MetadataContext.use;

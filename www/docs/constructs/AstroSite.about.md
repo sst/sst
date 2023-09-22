@@ -142,6 +142,14 @@ Note that, in the case you have a centralized database, Edge locations are often
 We recommend you to deploy to a single region when unsure.
 :::
 
+## Streaming
+
+Astro natively supports [streaming](https://docs.astro.build/en/guides/server-side-rendering/#streaming), allowing a page to be broken down into chunks. These chunks can be sent over the network in sequential order and then incrementally rendered in the browser. This process significantly enhances page performance.
+
+:::info
+Currently streaming is only supported by `AstroSite` when deployed in single region mode.
+:::
+
 ## Custom domains
 
 You can configure the website with a custom domain hosted either on [Route 53](https://aws.amazon.com/route53/) or [externally](#configuring-externally-hosted-domain).
@@ -297,6 +305,57 @@ site.attachPermissions([table]);
 ```
 
 Note that we are also passing the table name into the environment, so the Astro server code can fetch the value `process.env.TABLE_NAME` when calling the DynamoDB API to query the table.
+
+---
+
+## Warming
+
+Server functions may experience performance issues due to Lambda cold starts. SST helps mitigate this by creating an EventBridge scheduled rule to periodically invoke the server function.
+
+```ts {5}
+new AstroSite(stack, "Site", {
+  path: "my-astro-app/",
+  warm: 20,
+});
+```
+
+Setting `warm` to 20 keeps 20 server function instances active, invoking them every 5 minutes.
+
+Note that warming is currently supported only in regional mode.
+
+#### Cost
+
+There are three components to the cost:
+
+1. EventBridge scheduler: $0.00864
+
+   ```
+   Requests cost — 8,640 invocations per month x $1/million = $0.00864
+   ```
+
+1. Warmer function: $0.145728288
+
+   ```
+   Requests cost — 8,640 invocations per month x $0.2/million = $0.001728
+   Duration cost — 8,640 invocations per month x 1GB memory x 1s duration x $0.0000166667/GB-second = $0.144000288
+   ```
+
+1. Server function: $0.0161280288 per warmed instance
+
+   ```
+   Requests cost — 8,640 invocations per month x $0.2/million = $0.001728
+   Duration cost — 8,640 invocations per month x 1GB memory x 100ms duration x $0.0000166667/GB-second = $0.0144000288
+   ```
+
+For example, keeping 50 instances of the server function warm will cost approximately **$0.96 per month**
+
+```
+$0.00864 + $0.145728288 + $0.0161280288 x 50 = $0.960769728
+```
+
+This cost estimate is based on the `us-east-1` region pricing and does not consider any free tier benefits.
+
+---
 
 ## Examples
 
@@ -538,8 +597,10 @@ When deployed to a single region, instead of sending the request to the server f
 import { Fn } from "aws-cdk-lib";
 import * as origins from "aws-cdk-lib/aws-cloudfront-origins";
 
+// Create an API Gateway API
 const api = new Api(stack, "Api");
-
+ 
+// Configure the CloudFront distribution to route requests to the API endpoint
 const site = new AstroSite(stack, "Site", {
   path: "my-astro-app/",
   cdk: {
@@ -551,12 +612,16 @@ const site = new AstroSite(stack, "Site", {
   },
 });
 
-api.addRoutes(stack, {
-  "ANY /{proxy+}": {
-    type: "function",
-    cdk: {
-      function: site.cdk.function,
+// Configure the API Gateway to route all incoming requests to the site's SSR function
+// Note: The site is not deployed when using the `sst dev` command
+if (!app.local) {
+  api.addRoutes(stack, {
+    "ANY /{proxy+}": {
+      type: "function",
+      cdk: {
+        function: site.cdk.function,
+      },
     },
-  },
-});
+  });
+}
 ```

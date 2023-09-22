@@ -58,6 +58,10 @@ Here's how it works at a high level.
      },
    ```
 
+:::note
+If you are using `getStaticProps` in your app, you'll need to change your build command from `next build` to `sst bind next build`. [Read more about this below](#resource-binding-and-ssg).
+:::
+
 Check out the [full Next.js tutorial](../start/nextjs.md).
 
 ---
@@ -165,22 +169,15 @@ You can read more about this over on the [Resource Binding](../resource-binding.
 
 ---
 
-## Warming
+#### Resource binding and SSG
 
-Server functions may experience performance issues due to Lambda cold starts. SST helps mitigate this by periodically invoking the server function.
+If your app is using `getStaticProps` and is connecting to resources that've been bound it, you might see an error like this while deploying your app.
 
-```ts {5}
-new NextjsSite(stack, "Site", {
-  path: "packages/web",
-  warm: 20,
-});
+```
+Cannot access bound resources. This usually happens if the "sst/node" package is used at build time.
 ```
 
-Setting `warm` to 20 keeps 20 server function instances active, invoking them every 5 minutes.
-
-Note that warming is currently supported only in regional mode.
-
-[Read more about how warming works and the associated cost.](https://github.com/serverless-stack/open-next#warmer-function)
+You'll need to wrap your `next build` command with `sst bind next build`. This'll allow Next.js to build while having access to your resources.
 
 ---
 
@@ -208,6 +205,55 @@ console.log(process.env.NEXT_PUBLIC_BUCKET_NAME);
 In Next.js, only environment variables prefixed with `NEXT_PUBLIC_` are available in your client side code. Read more about using environment variables over on the [Next.js docs](https://nextjs.org/docs/basic-features/environment-variables#exposing-environment-variables-to-the-browser).
 
 You can also [read about how this works](../resource-binding.md#client-side-environment-variables) behind the scenes in SST.
+
+---
+
+## Warming
+
+Server functions may experience performance issues due to Lambda cold starts. SST helps mitigate this by creating an EventBridge scheduled rule to periodically invoke the server function.
+
+```ts {5}
+new NextjsSite(stack, "Site", {
+  path: "packages/web",
+  warm: 20,
+});
+```
+
+Setting `warm` to 20 keeps 20 server function instances active, invoking them every 5 minutes.
+
+Note that warming is currently supported only in regional mode.
+
+#### Cost
+
+There are three components to the cost:
+
+1. EventBridge scheduler: $0.00864
+
+   ```
+   Requests cost — 8,640 invocations per month x $1/million = $0.00864
+   ```
+
+1. Warmer function: $0.145728288
+
+   ```
+   Requests cost — 8,640 invocations per month x $0.2/million = $0.001728
+   Duration cost — 8,640 invocations per month x 1GB memory x 1s duration x $0.0000166667/GB-second = $0.144000288
+   ```
+
+1. Server function: $0.0161280288 per warmed instance
+
+   ```
+   Requests cost — 8,640 invocations per month x $0.2/million = $0.001728
+   Duration cost — 8,640 invocations per month x 1GB memory x 100ms duration x $0.0000166667/GB-second = $0.0144000288
+   ```
+
+For example, keeping 50 instances of the server function warm will cost approximately **$0.96 per month**
+
+```
+$0.00864 + $0.145728288 + $0.0161280288 x 50 = $0.960769728
+```
+
+This cost estimate is based on the `us-east-1` region pricing and does not consider any free tier benefits.
 
 ---
 
@@ -394,7 +440,7 @@ const vpc = new Vpc(stack, "myVPC");
 // Alternatively use an existing VPC
 const vpc = Vpc.fromLookup(stack, "myVPC", { ... });
 const vpcSubnets = {
-  subnetType: SubnetType.PRIVATE_WITH_NAT,
+  subnetType: SubnetType.PRIVATE_WITH_EGRESS,
 };
 
 new NextjsSite(stack, "Site", {

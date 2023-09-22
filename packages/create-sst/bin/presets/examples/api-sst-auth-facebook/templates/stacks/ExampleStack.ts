@@ -24,16 +24,14 @@ export function ExampleStack({ stack }: StackContext) {
       },
     },
     routes: {
-      "GET /": "packages/functions/src/lambda.handler",
-      "GET /session": "packages/functions/src/session.handler",
+      "GET /": "packages/functions/src/auth.ts",
+      "GET /session": "packages/functions/src/session.ts",
     },
   });
 
-  // Create a React site
+  // Create a static site
   const site = new StaticSite(stack, "site", {
     path: "web",
-    buildCommand: "npm run build",
-    buildOutput: "dist",
     environment: {
       VITE_APP_API_URL: api.url,
     },

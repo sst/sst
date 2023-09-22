@@ -1,9 +1,8 @@
 import path from "path";
 import fs from "fs/promises";
 import os from "os";
-import { useRuntimeHandlers } from "../handlers.js";
+import { RuntimeHandler } from "../handlers.js";
 import { useRuntimeWorkers } from "../workers.js";
-import { Context } from "../../context/context.js";
 import { ChildProcessWithoutNullStreams, spawn } from "child_process";
 import { useRuntimeServerConfig } from "../server.js";
 import { existsAsync, findBelow, isChild } from "../../util/fs.js";
@@ -12,15 +11,12 @@ import { execAsync } from "../../util/process.js";
 import url from "url";
 import AdmZip from "adm-zip";
 
-export const useJavaHandler = Context.memo(async () => {
-  const workers = await useRuntimeWorkers();
-  const server = await useRuntimeServerConfig();
-  const handlers = useRuntimeHandlers();
+export const useJavaHandler = (): RuntimeHandler => {
   const processes = new Map<string, ChildProcessWithoutNullStreams>();
   const sources = new Map<string, string>();
-  const handlerName = process.platform === "win32" ? `handler.exe` : `handler`;
+  const runningBuilds = new Map<string, ReturnType<typeof execAsync>>();
 
-  handlers.register({
+  return {
     shouldBuild: (input) => {
       if (!input.file.endsWith(".java")) return false;
       const parent = sources.get(input.functionID);
@@ -29,6 +25,8 @@ export const useJavaHandler = Context.memo(async () => {
     },
     canHandle: (input) => input.startsWith("java"),
     startWorker: async (input) => {
+      const workers = await useRuntimeWorkers();
+      const server = await useRuntimeServerConfig();
       const proc = spawn(
         `java`,
         [
@@ -76,20 +74,31 @@ export const useJavaHandler = Context.memo(async () => {
       sources.set(input.functionID, srcPath);
 
       try {
-        await execAsync(
-          `${buildBinary} ${buildTask} -Dorg.gradle.logging.level=${
-            process.env.DEBUG ? "debug" : "lifecycle"
-          }`,
-          {
-            cwd: srcPath,
-          }
-        );
+        // Build
+        // Note: run gradle build once per directory. Otherwise they'll interfere
+        // with one another
+        const buildPromise =
+          runningBuilds.get(buildBinary) ??
+          execAsync(
+            `${buildBinary} ${buildTask} -Dorg.gradle.logging.level=${
+              process.env.DEBUG ? "debug" : "lifecycle"
+            }`,
+            {
+              cwd: srcPath,
+            }
+          );
+        runningBuilds.set(buildBinary, buildPromise);
+        await buildPromise;
+        runningBuilds.delete(buildBinary);
 
+        // unzip
         const buildOutput = path.join(srcPath, "build", outputDir);
         const zip = (await fs.readdir(buildOutput)).find((f) =>
           f.endsWith(".zip")
         )!;
-        new AdmZip(path.join(buildOutput, zip)).extractAllTo(input.out);
+        const zipper = new AdmZip(path.join(buildOutput, zip));
+        zipper.extractAllTo(input.out, false, false);
+
         return {
           type: "success",
           handler: input.props.handler!,
@@ -101,8 +110,8 @@ export const useJavaHandler = Context.memo(async () => {
         };
       }
     },
-  });
-});
+  };
+};
 
 async function getGradleBinary(srcPath: string) {
   // Use a gradle wrapper if provided in the folder, otherwise fall back
