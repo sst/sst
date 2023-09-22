@@ -5,10 +5,15 @@ export const load = (program: Program) =>
     "load <filename>",
     "Loads secrets from an .env file",
     (yargs) =>
-      yargs.positional("filename", {
-        type: "string",
-        demandOption: true,
-      }),
+      yargs
+          .positional("filename", {
+            type: "string",
+            demandOption: true,
+          })
+          .option("fallback", {
+            type: "boolean",
+            describe: "Load the fallback values",
+          }),
     async (args) => {
       const { Config } = await import("../../../config.js");
       const { Colors } = await import("../../colors.js");
@@ -26,7 +31,11 @@ export const load = (program: Program) =>
         ` Setting secrets from "${args.filename}"`
       ).start();
       for (const [key, value] of Object.entries(envVars)) {
-        await Config.setSecret({ key, value });
+        await Config.setSecret({
+          key: key,
+          value: value,
+          fallback: args.fallback === true,
+        });
       }
       setting.succeed();
 
