@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.26.3
+
+### Patch Changes
+
+- [#3340](https://github.com/sst/sst/pull/3340) [`c61396b0a`](https://github.com/sst/sst/commit/c61396b0a9197dcac59bc3ffd5bdbdc308b47f30) Thanks [@fwang](https://github.com/fwang)! - SsrSite: standardize interface
+
 ## 2.26.2
 
 ### Patch Changes

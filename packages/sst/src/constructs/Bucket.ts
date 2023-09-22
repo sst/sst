@@ -2,6 +2,7 @@ import { Construct } from "constructs";
 import { Queue } from "./Queue.js";
 import { Topic } from "./Topic.js";
 import { getFunctionRef, SSTConstruct, isCDKConstruct } from "./Construct.js";
+import { App } from "./App.js";
 import {
   Function as Fn,
   FunctionProps,
@@ -312,6 +313,9 @@ export class Bucket extends Construct implements SSTConstruct {
 
     this.createBucket();
     this.addNotifications(this, props?.notifications || {});
+
+    const app = this.node.root as App;
+    app.registerTypes(this);
   }
 
   /**

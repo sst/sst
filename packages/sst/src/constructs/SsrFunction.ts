@@ -47,6 +47,7 @@ import {
 import { Permissions, attachPermissionsToRole } from "./util/permission.js";
 import { Size, toCdkSize } from "./util/size.js";
 import { Duration, toCdkDuration } from "./util/duration.js";
+import { useDeferredTasks } from "./deferred_task.js";
 const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
 
 export interface SsrFunctionProps
@@ -54,8 +55,8 @@ export interface SsrFunctionProps
   bundle?: string;
   handler: string;
   runtime?: "nodejs14.x" | "nodejs16.x" | "nodejs18.x";
-  timeout: number | Duration;
-  memorySize: number | Size;
+  timeout?: number | Duration;
+  memorySize?: number | Size;
   permissions?: Permissions;
   environment?: Record<string, string>;
   bind?: SSTConstruct[];
@@ -70,15 +71,17 @@ export interface SsrFunctionProps
 
 export class SsrFunction extends Construct implements SSTConstruct {
   public readonly id: string;
+  /** @internal */
+  public readonly _doNotAllowOthersToBind = true;
   public function: CdkFunction;
   private assetReplacer: CustomResource;
   private assetReplacerPolicy: Policy;
   private props: SsrFunctionProps & {
+    timeout: Exclude<SsrFunctionProps["timeout"], undefined>;
+    memorySize: Exclude<SsrFunctionProps["memorySize"], undefined>;
     environment: Exclude<SsrFunctionProps["environment"], undefined>;
     permissions: Exclude<SsrFunctionProps["permissions"], undefined>;
   };
-  /** @internal */
-  public _doNotAllowOthersToBind = true;
 
   constructor(scope: Construct, id: string, props: SsrFunctionProps) {
     super(scope, id);
@@ -86,6 +89,8 @@ export class SsrFunction extends Construct implements SSTConstruct {
 
     this.props = {
       ...props,
+      timeout: 10,
+      memorySize: 1024,
       environment: props.environment || {},
       permissions: props.permissions || [],
     };
@@ -104,6 +109,21 @@ export class SsrFunction extends Construct implements SSTConstruct {
 
     this.assetReplacer = assetReplacer;
     this.assetReplacerPolicy = assetReplacerPolicy;
+
+    useDeferredTasks().add(async () => {
+      const { bundle } = props;
+      const code = bundle
+        ? await this.buildAssetFromBundle(bundle)
+        : await this.buildAssetFromHandler();
+      const codeConfig = code.bind(this.function);
+      const assetBucket = codeConfig.s3Location?.bucketName!;
+      const assetKey = codeConfig.s3Location?.objectKey!;
+      this.updateCodeReplacer(assetBucket, assetKey);
+      this.updateFunction(code, assetBucket, assetKey);
+    });
+
+    const app = this.node.root as App;
+    app.registerTypes(this);
   }
 
   public get role() {
@@ -128,18 +148,6 @@ export class SsrFunction extends Construct implements SSTConstruct {
 
   public grantInvoke(grantee: IGrantable) {
     return this.function.grantInvoke(grantee);
-  }
-
-  public async build() {
-    const { bundle, handler } = this.props;
-    const code = bundle
-      ? await this.buildAssetFromBundle(bundle)
-      : await this.buildAssetFromHandler();
-    const codeConfig = code.bind(this.function);
-    const assetBucket = codeConfig.s3Location?.bucketName!;
-    const assetKey = codeConfig.s3Location?.objectKey!;
-    this.updateCodeReplacer(assetBucket, assetKey);
-    this.updateFunction(code, assetBucket, assetKey);
   }
 
   public attachPermissions(permissions: Permissions) {

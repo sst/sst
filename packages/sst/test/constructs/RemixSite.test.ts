@@ -264,7 +264,7 @@ test("path not exist", async () => {
       // @ts-expect-error: "sstTest" is not exposed in props
       sstTest: true,
     });
-  }).rejects.toThrow(/Could not find/);
+  }).rejects.toThrow(/No site found/);
 });
 
 test("edge: undefined: environment set on server function", async () => {
@@ -493,7 +493,7 @@ test("edge: true: environment generates placeholders", async () => {
   countResourcesLike(stack, "Custom::AssetReplacer", 1, {
     replacements: [
       {
-        files: "/server.cjs",
+        files: "/server.mjs",
         search: '"{{ _SST_FUNCTION_ENVIRONMENT_ }}"',
         replace: {
           "Fn::Join": [

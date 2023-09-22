@@ -159,6 +159,9 @@ export class Script extends Construct implements SSTConstruct {
     this.deleteFunction = this.createUserFunction("onDelete", props.onDelete);
     const crFunction = this.createCustomResourceFunction();
     this.createCustomResource(root, crFunction);
+
+    const app = this.node.root as App;
+    app.registerTypes(this);
   }
 
   /**

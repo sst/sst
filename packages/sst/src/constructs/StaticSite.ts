@@ -366,6 +366,7 @@ export class StaticSite extends Construct implements SSTConstruct {
     if (this.doNotDeploy) {
       // @ts-ignore
       this.bucket = this.distribution = null;
+      app.registerTypes(this);
       return;
     }
     this.bucket = this.createS3Bucket();
@@ -389,6 +390,8 @@ export class StaticSite extends Construct implements SSTConstruct {
       // Invalidate CloudFront
       this.distribution.createInvalidation(this.generateInvalidationId(assets));
     });
+
+    app.registerTypes(this);
   }
 
   /**
