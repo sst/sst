@@ -313,7 +313,6 @@ export class App extends CDKApp {
               }
             );
             resource.node.addDependency(policy);
-            sourcemaps.forEach((s) => s.func.node.addDependency(resource));
           }
         }
 
