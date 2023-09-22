@@ -36,6 +36,7 @@ async function createFn(
     handler,
     timeout: 10,
     memorySize: 1024,
+    runtime: "nodejs18.x",
     ...(typeof props === "function" ? props(stack) : props),
   });
   await app.finish();

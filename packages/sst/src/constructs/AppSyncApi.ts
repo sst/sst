@@ -512,6 +512,9 @@ export class AppSyncApi extends Construct implements SSTConstruct {
         this.addResolver(this, key, props.resolvers[key]);
       }
     }
+
+    const app = this.node.root as App;
+    app.registerTypes(this);
   }
 
   /**

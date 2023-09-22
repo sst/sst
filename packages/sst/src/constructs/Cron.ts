@@ -3,6 +3,7 @@ import * as events from "aws-cdk-lib/aws-events";
 import * as eventsTargets from "aws-cdk-lib/aws-events-targets";
 
 import { getFunctionRef, SSTConstruct } from "./Construct.js";
+import { App } from "./App.js";
 import {
   Function as Func,
   FunctionInlineDefinition,
@@ -146,6 +147,9 @@ export class Cron extends Construct implements SSTConstruct {
 
     this.createEventsRule();
     this.jobFunction = this.createRuleTarget();
+
+    const app = this.node.root as App;
+    app.registerTypes(this);
   }
 
   /**

@@ -355,6 +355,9 @@ export class EventBus extends Construct implements SSTConstruct {
 
     this.createEventBus();
     this.addRules(this, props?.rules || {});
+
+    const app = this.node.root as App;
+    app.registerTypes(this);
   }
 
   /**

@@ -302,6 +302,9 @@ export class WebSocketApi extends Construct implements SSTConstruct {
         resources: [this._connectionsArn],
       }),
     ]);
+
+    const app = this.node.root as App;
+    app.registerTypes(this);
   }
 
   /**

@@ -1,9 +1,6 @@
 import fs from "fs";
 import path from "path";
-
 import { SsrSite } from "./SsrSite.js";
-import { SsrFunction } from "./SsrFunction.js";
-import { EdgeFunction } from "./EdgeFunction.js";
 
 /**
  * The `AstroSite` construct is a higher level CDK construct that makes it easy to create a Astro app.
@@ -17,80 +14,83 @@ import { EdgeFunction } from "./EdgeFunction.js";
  * ```
  */
 export class AstroSite extends SsrSite {
-  protected initBuildConfig() {
-    return {
-      typesPath: "src",
-      serverBuildOutputFile: "dist/server/entry.mjs",
-      clientBuildOutputDir: "dist/client",
-      clientBuildVersionedSubDir: "assets",
-    };
-  }
+  protected typesPath = "src";
 
-  protected validateBuildOutput() {
-    const serverDir = path.join(this.props.path, "dist/server");
-    const clientDir = path.join(this.props.path, "dist/client");
-    if (!fs.existsSync(serverDir) || !fs.existsSync(clientDir)) {
-      throw new Error(
-        `Build output inside "dist/" does not contain the "server" and "client" folders. Make sure Server-side Rendering (SSR) is enabled in your Astro app. If you are looking to deploy the Astro app as a static site, please use the StaticSite construct — https://docs.sst.dev/constructs/StaticSite`
-      );
-    }
-
-    super.validateBuildOutput();
-  }
-
-  protected createFunctionForRegional() {
-    const {
-      runtime,
-      timeout,
-      memorySize,
-      permissions,
-      environment,
-      nodejs,
-      bind,
-      cdk,
-    } = this.props;
-
-    return new SsrFunction(this, `ServerFunction`, {
+  protected plan() {
+    const { path: sitePath, edge } = this.props;
+    const serverConfig = {
       description: "Server handler for Astro",
-      handler: path.join(this.props.path, "dist", "server", "entry.handler"),
-      runtime,
-      memorySize,
-      timeout,
-      nodejs: {
-        format: "esm",
-        ...nodejs,
-      },
-      bind,
-      environment,
-      permissions,
-      ...cdk?.server,
-    });
-  }
+      handler: path.join(sitePath, "dist", "server", "entry.handler"),
+    };
 
-  protected createFunctionForEdge() {
-    const {
-      runtime,
-      timeout,
-      memorySize,
-      bind,
-      permissions,
-      environment,
-      nodejs,
-    } = this.props;
-
-    return new EdgeFunction(this, `Server`, {
-      scopeOverride: this,
-      handler: path.join(this.props.path, "dist", "server", "entry.handler"),
-      runtime,
-      timeout,
-      memorySize,
-      bind,
-      environment,
-      permissions,
-      nodejs: {
-        format: "esm",
-        ...nodejs,
+    return this.validatePlan({
+      cloudFrontFunctions: {
+        serverCfFunction: {
+          constructId: "CloudFrontFunction",
+          injections: [this.useCloudFrontFunctionHostHeaderInjection()],
+        },
       },
+      edgeFunctions: edge
+        ? {
+            edgeServer: {
+              constructId: "Server",
+              function: {
+                scopeOverride: this as AstroSite,
+                ...serverConfig,
+              },
+            },
+          }
+        : undefined,
+      origins: {
+        ...(edge
+          ? {}
+          : {
+              regionalServer: {
+                type: "function",
+                constructId: "ServerFunction",
+                function: serverConfig,
+                streaming: true,
+              },
+            }),
+        s3: {
+          type: "s3" as const,
+          copy: [
+            {
+              from: "dist/client",
+              to: "",
+              cached: true,
+              versionedSubDir: "assets",
+            },
+          ],
+        },
+      },
+      behaviors: [
+        edge
+          ? {
+              cacheType: "server",
+              cfFunction: "serverCfFunction",
+              edgeFunction: "edgeServer",
+              origin: "s3",
+            }
+          : {
+              cacheType: "server",
+              cfFunction: "serverCfFunction",
+              origin: "regionalServer",
+            },
+        // create 1 behaviour for each top level asset file/folder
+        ...fs.readdirSync(path.join(sitePath, "dist/client")).map(
+          (item) =>
+            ({
+              cacheType: "static",
+              pattern: fs
+                .statSync(path.join(sitePath, "dist/client", item))
+                .isDirectory()
+                ? `${item}/*`
+                : item,
+              origin: "s3",
+            } as const)
+        ),
+      ],
     });
   }
 
@@ -99,9 +99,5 @@ export class AstroSite extends SsrSite {
       type: "AstroSite" as const,
       ...this.getConstructMetadataBase(),
     };
-  }
-
-  protected supportsStreaming(): boolean {
-    return true;
   }
 }
