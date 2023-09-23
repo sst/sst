@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.26.5
+
+### Patch Changes
+
+- [`3c98abc65`](https://github.com/sst/sst/commit/3c98abc6584ab8834eceb915b44a08cc72dac047) Thanks [@thdxr](https://github.com/thdxr)! - function: use less memory for local invocation cache
+
 ## 2.26.4
 
 ### Patch Changes
