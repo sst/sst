@@ -130,13 +130,6 @@ export class RemixSite extends SsrSite {
   protected getServerModuleFormat(): "cjs" | "esm" {
     const { path: sitePath } = this.props;
 
-    const configDefaults: RemixConfig = {
-      assetsBuildDirectory: "public/build",
-      publicPath: "/build/",
-      serverBuildPath: "build/index.js",
-      serverPlatform: "node",
-    };
-
     // Validate config path
     const configPath = path.resolve(sitePath, "remix.config.js");
     if (!fs.existsSync(configPath)) {
@@ -146,13 +139,30 @@ export class RemixSite extends SsrSite {
     }
 
     // Load config
-    const userConfig = require(configPath);
+    // note: we try to handle Remix v1 and v2
+    //  - In v1, the config is in CJS by default (ie. module.exports = { ... })
+    //    and the config can be `require`d directly. We will determine the server
+    //    format based on "serverModuleFormat" in the config.
+    //  - In v2, the config is in ESM by default (ie. export default { ... })
+    //    and we will assume the server format to be ESM.
+    let userConfig: any;
+    try {
+      userConfig = require(configPath);
+    } catch (e) {
+      return "esm";
+    }
     const format = userConfig.serverModuleFormat ?? "cjs";
     if (userConfig.serverModuleFormat !== "esm") {
       useWarning().add("remix.cjs");
     }
 
     // Validate config
+    const configDefaults: RemixConfig = {
+      assetsBuildDirectory: "public/build",
+      publicPath: "/build/",
+      serverBuildPath: "build/index.js",
+      serverPlatform: "node",
+    };
     const config: RemixConfig = {
       ...configDefaults,
       ...userConfig,
