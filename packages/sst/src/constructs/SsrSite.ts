@@ -977,7 +977,7 @@ function handler(event) {
       const result = spawn.sync(
         "node",
         [
-          script,
+          `"${script}"`, // wrapping in quotes to escape paths with spaces
           Buffer.from(
             JSON.stringify(
               copy.map((files) => ({
@@ -986,7 +986,7 @@ function handler(event) {
               }))
             )
           ).toString("base64"),
-          zipOutDir,
+          `"${zipOutDir}"`,
           `${fileSizeLimit}`,
         ],
         {
