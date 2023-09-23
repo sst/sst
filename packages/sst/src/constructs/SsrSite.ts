@@ -7,7 +7,6 @@ import spawn from "cross-spawn";
 import { execSync } from "child_process";
 
 import { Construct } from "constructs";
-import { Lazy } from "aws-cdk-lib";
 import {
   Fn,
   Token,
@@ -747,13 +746,15 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
             : undefined,
         };
       } else if (behavior.cacheType === "server") {
+
         return {
+
           viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
           origin,
           allowedMethods: AllowedMethods.ALLOW_ALL,
           cachedMethods: CachedMethods.CACHE_GET_HEAD_OPTIONS,
           compress: true,
-          cachePolicy: cdk?.serverCachePolicy ?? useServerBehaviorCachePolicy(),
+          cachePolicy: behavior.origin === "imageOptimizer" ? useImageOptimizerBehaviorCachePolicy() : cdk?.serverCachePolicy ?? useServerBehaviorCachePolicy(),
           responseHeadersPolicy: cdk?.responseHeadersPolicy,
           originRequestPolicy: useServerBehaviorOriginRequestPolicy(),
           ...(cdk?.distribution?.defaultBehavior || {}),
@@ -1138,6 +1139,20 @@ function handler(event) {
           comment: "SST server response cache policy",
         });
       return singletonCachePolicy;
+    }
+
+    function useImageOptimizerBehaviorCachePolicy() {
+       return new CachePolicy(self, "ImageOptimizerServerCache", {
+          queryStringBehavior: CacheQueryStringBehavior.all(),
+          headerBehavior: CacheHeaderBehavior.allowList("accept"),
+          cookieBehavior: CacheCookieBehavior.none(),
+          defaultTtl: CdkDuration.days(0),
+          maxTtl: CdkDuration.days(365),
+          minTtl: CdkDuration.days(0),
+          enableAcceptEncodingBrotli: true,
+          enableAcceptEncodingGzip: true,
+          comment: "SST Image Optimizer server response cache policy",
+        });
     }
 
     function useServerBehaviorOriginRequestPolicy() {
