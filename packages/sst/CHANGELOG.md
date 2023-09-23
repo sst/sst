@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.26.4
+
+### Patch Changes
+
+- [`c215530de`](https://github.com/sst/sst/commit/c215530de1786a2f4917d89849baa1c8eebc9e00) Thanks [@fwang](https://github.com/fwang)! - RemixSite: add support for Remix v2
+
 ## 2.26.3
 
 ### Patch Changes
