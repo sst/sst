@@ -3,7 +3,7 @@ import { Context } from "./context/context.js";
 import { useAWSClient, useAWSCredentials } from "./credentials.js";
 import { VisibleError } from "./error.js";
 
-export const useIOTEndpoint = Context.memo(async () => {
+export const useIOTEndpoint = lazy(async () => {
   const iot = useAWSClient(IoTClient);
   Logger.debug("Getting IoT endpoint");
   const response = await iot.send(
@@ -26,6 +26,7 @@ import { Logger } from "./logger.js";
 import { randomUUID } from "crypto";
 import { useBootstrap } from "./bootstrap.js";
 import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import { lazy } from "./util/lazy.js";
 
 interface Fragment {
   id: string;
@@ -34,7 +35,7 @@ interface Fragment {
   data: string;
 }
 
-export const useIOT = Context.memo(async () => {
+export const useIOT = lazy(async () => {
   const bus = useBus();
 
   const endpoint = await useIOTEndpoint();

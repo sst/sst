@@ -215,6 +215,9 @@ export class Cognito extends Construct implements SSTConstruct {
     this.createUserPoolClient();
     this.addTriggers();
     this.createIdentityPool();
+
+    const app = this.node.root as App;
+    app.registerTypes(this);
   }
 
   /**

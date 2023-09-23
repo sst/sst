@@ -20,6 +20,7 @@ import {
 } from "./deployments.js";
 import { makeBodyParameter, DeployStackOptions } from "./deploy-stack.js";
 import { Context } from "../context/context.js";
+import { lazy } from "../util/lazy.js";
 
 export async function publishDeployAssets(
   sdkProvider: SdkProvider,
@@ -86,7 +87,7 @@ export async function publishDeployAssets(
   });
 }
 
-const useDeployment = Context.memo(() => {
+const useDeployment = lazy(() => {
   const state = new Map<
     string,
     {

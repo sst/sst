@@ -14,8 +14,7 @@ import { sync } from "cross-spawn";
 import { useProject } from "../../project.js";
 import { useBus } from "../../bus.js";
 import getPort from "get-port";
-import { Context } from "../../context/context.js";
-import { useMetadata } from "../../stacks/metadata.js";
+import { lazy } from "../../util/lazy.js";
 
 type Opts = {
   key: any;
@@ -29,8 +28,7 @@ declare module "../../bus.js" {
   }
 }
 
-export const useLocalServerConfig = Context.memo(async () => {
-  const project = useProject();
+export const useLocalServerConfig = lazy(async () => {
   const port = await getPort({
     port: 13557,
   });
@@ -153,28 +151,61 @@ export async function useLocalServer(opts: Opts) {
   const wss2 = new WebSocketServer({ noServer: true });
 
   const sockets = new Set<WebSocket>();
-  let buffer: any[] = [
-    {
-      type: "cli.dev",
-      properties: {
-        stage: project.config.stage,
-        app: project.config.name,
-      },
-    },
-  ];
-  function publish(type: string, properties: any) {
-    const msg = {
-      type,
-      properties,
+
+  interface Invocation {
+    id: string;
+    source: string;
+    cold: boolean;
+    input?: any;
+    output?: any;
+    errors: {
+      id: string;
+      error: string;
+      message: string;
+      stack: { raw: string }[];
+    }[];
+    report?: {
+      duration: number;
+      size: number;
+      memory: number;
+      xray: string;
     };
-    buffer.push(msg);
-    const json = JSON.stringify(msg);
+    start: number;
+    end?: number;
+    logs: {
+      id: string;
+      timestamp: number;
+      message: string;
+    }[];
+  }
+
+  let invocations: Invocation[] = [];
+  function publish(invocation: Invocation) {
+    invocations.push(invocation);
+    const json = JSON.stringify({
+      type: "invocation",
+      properties: [invocation],
+    });
     [...sockets.values()].map((s) => s.send(json));
   }
   wss2.on("connection", (socket, req) => {
     sockets.add(socket);
-    for (const msg of buffer) {
-      socket.send(JSON.stringify(msg));
+    socket.send(
+      JSON.stringify({
+        type: "cli.dev",
+        properties: {
+          app: project.config.name,
+          stage: project.config.stage,
+        },
+      })
+    );
+    for (const invocation of invocations) {
+      socket.send(
+        JSON.stringify({
+          type: "invocation",
+          properties: [invocation],
+        })
+      );
     }
     socket.on("close", () => {
       sockets.delete(socket);
@@ -183,8 +214,12 @@ export async function useLocalServer(opts: Opts) {
     socket.on("message", (data) => {
       const parsed = JSON.parse(data.toString());
       if (parsed.type === "log.cleared") {
-        buffer = buffer.filter(
-          (msg) => msg.properties?.functionID !== parsed.properties?.functionID
+        if (parsed.properties.source === "all") {
+          invocations = [];
+          return;
+        }
+        invocations = invocations.filter(
+          (item) => item.source === parsed.properties.source
         );
       }
     });
@@ -265,7 +300,15 @@ export async function useLocalServer(opts: Opts) {
   }
 
   bus.subscribe("function.invoked", async (evt) => {
-    publish("function.invoked", evt.properties);
+    publish({
+      start: Date.now(),
+      cold: false,
+      input: evt.properties.event,
+      id: evt.properties.requestID,
+      errors: [],
+      logs: [],
+      source: evt.properties.functionID,
+    });
     updateFunction(evt.properties.functionID, (draft) => {
       if (draft.invocations.length >= 25) draft.invocations.pop();
       draft.invocations.unshift({
@@ -280,7 +323,17 @@ export async function useLocalServer(opts: Opts) {
   });
 
   bus.subscribe("worker.stdout", (evt) => {
-    publish("worker.stdout", evt.properties);
+    const invocation = invocations.findLast(
+      (i) => i.source === evt.properties.functionID
+    );
+    if (invocation) {
+      invocation.logs.push({
+        id: Math.random().toString(),
+        message: evt.properties.message,
+        timestamp: Date.now(),
+      });
+      publish(invocation);
+    }
     updateFunction(evt.properties.functionID, (draft) => {
       const entry = draft.invocations.find(
         (i) => i.id === evt.properties.requestID
@@ -294,7 +347,20 @@ export async function useLocalServer(opts: Opts) {
   });
 
   bus.subscribe("function.success", (evt) => {
-    publish("function.success", evt.properties);
+    const invocation = invocations.findLast(
+      (i) => i.source === evt.properties.functionID
+    );
+    if (invocation) {
+      invocation.end = Date.now();
+      invocation.report = {
+        duration: invocation.end - invocation.start,
+        size: 0,
+        xray: "",
+        memory: 0,
+      };
+      invocation.output = evt.properties.body;
+      publish(invocation);
+    }
     updateFunction(evt.properties.functionID, (draft) => {
       const invocation = draft.invocations.find(
         (x) => x.id === evt.properties.requestID
@@ -309,7 +375,27 @@ export async function useLocalServer(opts: Opts) {
   });
 
   bus.subscribe("function.error", (evt) => {
-    publish("function.error", evt.properties);
+    const invocation = invocations.findLast(
+      (i) => i.source === evt.properties.functionID
+    );
+    if (invocation) {
+      invocation.errors.push({
+        id: invocation.id,
+        error: evt.properties.errorType,
+        message: evt.properties.errorMessage,
+        stack: evt.properties.trace.map((t) => ({
+          raw: t,
+        })),
+      });
+      invocation.end = Date.now();
+      invocation.report = {
+        duration: invocation.end - invocation.start,
+        size: 0,
+        xray: "",
+        memory: 0,
+      };
+      publish(invocation);
+    }
     updateFunction(evt.properties.functionID, (draft) => {
       const invocation = draft.invocations.find(
         (x) => x.id === evt.properties.requestID

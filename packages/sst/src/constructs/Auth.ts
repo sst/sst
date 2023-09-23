@@ -132,6 +132,9 @@ export class Auth extends Construct implements SSTConstruct {
       },
     });
     resource.node.addDependency(policy);
+
+    const app = this.node.root as App;
+    app.registerTypes(this);
   }
 
   /** @internal */

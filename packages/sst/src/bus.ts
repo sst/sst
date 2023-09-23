@@ -1,6 +1,7 @@
 import crypto from "crypto";
 import { Context } from "./context/context.js";
 import { Logger } from "./logger.js";
+import { lazy } from "./util/lazy.js";
 
 export interface Events {}
 
@@ -19,7 +20,7 @@ type Subscription = {
   cb: (payload: any) => void;
 };
 
-export const useBus = Context.memo(() => {
+export const useBus = lazy(() => {
   const subscriptions: Record<string, Subscription[]> = {};
 
   function subscribers(type: EventTypes) {

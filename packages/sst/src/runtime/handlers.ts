@@ -15,6 +15,7 @@ import { useGoHandler } from "./handlers/go.js";
 import { useJavaHandler } from "./handlers/java.js";
 import { usePythonHandler } from "./handlers/python.js";
 import { useRustHandler } from "./handlers/rust.js";
+import { lazy } from "../util/lazy.js";
 
 declare module "../bus.js" {
   export interface Events {
@@ -71,7 +72,7 @@ export interface RuntimeHandler {
   >;
 }
 
-export const useRuntimeHandlers = Context.memo(() => {
+export const useRuntimeHandlers = lazy(() => {
   const handlers: RuntimeHandler[] = [
     useNodeHandler(),
     useGoHandler(),
@@ -183,7 +184,7 @@ interface Artifact {
   handler: string;
 }
 
-export const useFunctionBuilder = Context.memo(() => {
+export const useFunctionBuilder = lazy(() => {
   const artifacts = new Map<string, Artifact>();
   const handlers = useRuntimeHandlers();
 

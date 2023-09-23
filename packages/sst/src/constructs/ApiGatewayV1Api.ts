@@ -267,9 +267,9 @@ export interface ApiGatewayV1ApiFunctionRouteProps<AuthorizerKeys = never> {
     | "none"
     | "iam"
     // | (string extends AuthorizerKeys ? never : AuthorizerKeys);
-      | (string extends AuthorizerKeys
-          ? Omit<AuthorizerKeys, "none" | "iam">
-          : AuthorizerKeys);
+    | (string extends AuthorizerKeys
+        ? Omit<AuthorizerKeys, "none" | "iam">
+        : AuthorizerKeys);
   authorizationScopes?: string[];
   cdk?: {
     method?: Omit<
@@ -594,6 +594,9 @@ export class ApiGatewayV1Api<
     this.createRestApi();
     this.addAuthorizers(this.props.authorizers || ({} as Authorizers));
     this.addRoutes(this, this.props.routes || {});
+
+    const app = this.node.root as App;
+    app.registerTypes(this);
   }
 
   /**
@@ -1453,12 +1456,16 @@ export class ApiGatewayV1Api<
       };
     }
 
-    if (!this.props.authorizers || !this.props.authorizers[authorizerKey as string]) {
+    if (
+      !this.props.authorizers ||
+      !this.props.authorizers[authorizerKey as string]
+    ) {
       throw new Error(`Cannot find authorizer "${authorizerKey.toString()}"`);
     }
 
     const authorizer = this.authorizersData[authorizerKey as string];
-    const authorizationType = this.props.authorizers[authorizerKey as string].type;
+    const authorizationType =
+      this.props.authorizers[authorizerKey as string].type;
     if (authorizationType === "user_pools") {
       return {
         authorizationType: apig.AuthorizationType.COGNITO,

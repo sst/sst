@@ -14,6 +14,7 @@ import { useBus } from "../bus.js";
 import { Logger } from "../logger.js";
 import { useProject } from "../project.js";
 import type { Metadata } from "../constructs/Metadata.js";
+import { lazy } from "../util/lazy.js";
 
 declare module "../bus.js" {
   export interface Events {
@@ -87,7 +88,7 @@ export async function metadata() {
   return result as Record<string, Metadata[]>;
 }
 
-const MetadataContext = Context.create(async () => {
+export const useMetadataCache = lazy(async () => {
   const bus = useBus();
   const cache = await useCache();
 
@@ -95,14 +96,12 @@ const MetadataContext = Context.create(async () => {
     const data = await metadata();
     await cache.write(`metadata.json`, JSON.stringify(data));
     bus.publish("stacks.metadata", data);
-    MetadataContext.provide(Promise.resolve(data));
   });
 
   bus.subscribe("stacks.metadata.deleted", async () => {
     const data = await metadata();
     await cache.write(`metadata.json`, JSON.stringify(data));
     bus.publish("stacks.metadata", data);
-    MetadataContext.provide(Promise.resolve(data));
   });
 
   while (true) {
@@ -115,5 +114,3 @@ const MetadataContext = Context.create(async () => {
     }
   }
 });
-
-export const useMetadata = MetadataContext.use;

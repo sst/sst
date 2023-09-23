@@ -75,7 +75,6 @@ test("default", async () => {
 
 test("default: check cache policy configured correctly", async () => {
   const { stack, site } = await createSite();
-  printResource(stack, "AWS::CloudFront::CachePolicy");
   countResources(stack, "AWS::CloudFront::CachePolicy", 1);
   hasResource(stack, "AWS::CloudFront::CachePolicy", {
     CachePolicyConfig: objectLike({

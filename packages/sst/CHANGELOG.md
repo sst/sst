@@ -1,5 +1,63 @@
 # @serverless-stack/cli2
 
+## 2.26.4
+
+### Patch Changes
+
+- [`c215530de`](https://github.com/sst/sst/commit/c215530de1786a2f4917d89849baa1c8eebc9e00) Thanks [@fwang](https://github.com/fwang)! - RemixSite: add support for Remix v2
+
+## 2.26.3
+
+### Patch Changes
+
+- [#3340](https://github.com/sst/sst/pull/3340) [`c61396b0a`](https://github.com/sst/sst/commit/c61396b0a9197dcac59bc3ffd5bdbdc308b47f30) Thanks [@fwang](https://github.com/fwang)! - SsrSite: standardize interface
+
+## 2.26.2
+
+### Patch Changes
+
+- [`6605fe06b`](https://github.com/sst/sst/commit/6605fe06bff53faff867b76b03064e904192ca90) Thanks [@thdxr](https://github.com/thdxr)! - function: rollback sourcemap uploader dependency
+
+## 2.26.1
+
+### Patch Changes
+
+- [`32c21a867`](https://github.com/sst/sst/commit/32c21a867ae38b22e0819241cb3084bbc95d3fe6) Thanks [@thdxr](https://github.com/thdxr)! - upload sourcemaps before anything else
+
+## 2.26.0
+
+### Minor Changes
+
+- [#3332](https://github.com/sst/sst/pull/3332) [`920baa5e0`](https://github.com/sst/sst/commit/920baa5e02350c66adc79e46add604473ddd7c99) Thanks [@thdxr](https://github.com/thdxr)! - context: support asynclocalstorage
+
+### Patch Changes
+
+- [#3332](https://github.com/sst/sst/pull/3332) [`920baa5e0`](https://github.com/sst/sst/commit/920baa5e02350c66adc79e46add604473ddd7c99) Thanks [@thdxr](https://github.com/thdxr)! - Use lazy loading instead of context
+
+## 2.25.7
+
+### Patch Changes
+
+- [`9e3302c3a`](https://github.com/sst/sst/commit/9e3302c3a138a6c4e8eab4a07f1e5a8df789ae2a) Thanks [@thdxr](https://github.com/thdxr)! - local: improve invocation protocol
+
+## 2.25.6
+
+### Patch Changes
+
+- [`f554d4bd7`](https://github.com/sst/sst/commit/f554d4bd76bc2eb1cc932a0ce1caddd21fa177dc) Thanks [@thdxr](https://github.com/thdxr)! - function: fix bridge throwing error when stack trace is missing
+
+## 2.25.5
+
+### Patch Changes
+
+- [#3320](https://github.com/sst/sst/pull/3320) [`93ed65728`](https://github.com/sst/sst/commit/93ed65728d224ddafcc045f0ba802ebe5e0151ec) Thanks [@khuezy](https://github.com/khuezy)! - NextjsSite: update OpenNext to 2.1.5
+
+## 2.25.4
+
+### Patch Changes
+
+- [`86b894dd6`](https://github.com/sst/sst/commit/86b894dd6e3ba765866fa0f7bea815e7ab77abd1) Thanks [@thdxr](https://github.com/thdxr)! - future/auth: support allowClient callback
+
 ## 2.25.3
 
 ### Patch Changes

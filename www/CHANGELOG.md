@@ -1,5 +1,11 @@
 # @serverless-stack/docs
 
+## 2.5.18
+
+### Patch Changes
+
+- [#3332](https://github.com/sst/sst/pull/3332) [`920baa5e0`](https://github.com/sst/sst/commit/920baa5e02350c66adc79e46add604473ddd7c99) Thanks [@thdxr](https://github.com/thdxr)! - Use lazy loading instead of context
+
 ## 2.5.17
 
 ### Patch Changes

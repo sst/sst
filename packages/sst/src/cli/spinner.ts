@@ -1,8 +1,8 @@
-import { Context } from "../context/context.js";
 import ora, { Options, Ora } from "ora";
 import { Colors } from "./colors.js";
+import { lazy } from "../util/lazy.js";
 
-export const useSpinners = Context.memo(() => {
+export const useSpinners = lazy(() => {
   const spinners: Ora[] = [];
   return spinners;
 });

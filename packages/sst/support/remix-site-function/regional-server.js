@@ -7,8 +7,6 @@ import { installGlobals } from "@remix-run/node";
 installGlobals();
 
 import {
-  Headers as NodeHeaders,
-  Request as NodeRequest,
   createRequestHandler as createNodeRequestHandler,
   readableStreamToString,
 } from "@remix-run/node";
@@ -94,14 +92,14 @@ function convertApigRequestToNode(event) {
   );
 
   // Build headers
-  const headers = new NodeHeaders();
+  const headers = new Headers();
   for (let [header, value] of Object.entries(event.headers)) {
     if (value) {
       headers.append(header, value);
     }
   }
 
-  return new NodeRequest(url.href, {
+  return new Request(url.href, {
     method: event.requestContext.http.method,
     headers,
     body:

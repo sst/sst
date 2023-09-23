@@ -154,6 +154,9 @@ export class Queue extends Construct implements SSTConstruct {
     if (props?.consumer) {
       this.addConsumer(this, props.consumer);
     }
+
+    const app = this.node.root as App;
+    app.registerTypes(this);
   }
 
   /**

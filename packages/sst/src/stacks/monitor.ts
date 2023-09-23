@@ -4,10 +4,8 @@ import {
   DescribeStackResourcesOutput,
   DescribeStacksCommand,
   DescribeStackEventsCommand,
-  DescribeStackEventsOutput,
   StackEvent,
 } from "@aws-sdk/client-cloudformation";
-import { SdkError } from "@aws-sdk/types";
 import { useBus } from "../bus.js";
 import { useAWSClient } from "../credentials.js";
 import { Logger } from "../logger.js";

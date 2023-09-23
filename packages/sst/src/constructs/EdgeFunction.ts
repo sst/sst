@@ -47,14 +47,15 @@ import {
 import { Size, toCdkSize } from "./util/size.js";
 import { Duration, toCdkDuration } from "./util/duration.js";
 import { Permissions, attachPermissionsToRole } from "./util/permission.js";
+import { useDeferredTasks } from "./deferred_task.js";
 const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
 
 export interface EdgeFunctionProps {
   bundle?: string;
   handler: string;
-  runtime: "nodejs14.x" | "nodejs16.x" | "nodejs18.x";
-  timeout: number | Duration;
-  memorySize: number | Size;
+  runtime?: "nodejs14.x" | "nodejs16.x" | "nodejs18.x";
+  timeout?: number | Duration;
+  memorySize?: number | Size;
   permissions?: Permissions;
   environment?: Record<string, string>;
   bind?: SSTConstruct[];
@@ -77,6 +78,9 @@ export class EdgeFunction extends Construct {
   private scope: IConstruct;
   private bindingEnvs: Record<string, string>;
   private props: EdgeFunctionProps & {
+    runtime: Exclude<EdgeFunctionProps["runtime"], undefined>;
+    timeout: Exclude<EdgeFunctionProps["timeout"], undefined>;
+    memorySize: Exclude<EdgeFunctionProps["memorySize"], undefined>;
     environment: Exclude<EdgeFunctionProps["environment"], undefined>;
     permissions: Exclude<EdgeFunctionProps["permissions"], undefined>;
   };
@@ -94,11 +98,14 @@ export class EdgeFunction extends Construct {
 
     this.props = {
       ...props,
+      runtime: "nodejs18.x",
+      timeout: 10,
+      memorySize: 1024,
       environment: props.environment || {},
       permissions: props.permissions || [],
     };
 
-    // Bind first b/e function's environment variables cannot be added after
+    // Bind first b/c function's environment variables cannot be added after
     this.bindingEnvs = {};
     this.bind(props.bind || []);
 
@@ -138,20 +145,20 @@ export class EdgeFunction extends Construct {
     );
     this.assetReplacer = assetReplacer;
     this.assetReplacerPolicy = assetReplacerPolicy;
-  }
 
-  public async build() {
-    const { bundle, handler } = this.props;
-    const { asset, handlerFilename } = bundle
-      ? await this.buildAssetFromBundle(bundle, handler)
-      : await this.buildAssetFromHandler();
+    useDeferredTasks().add(async () => {
+      const { bundle, handler } = props;
+      const { asset, handlerFilename } = bundle
+        ? await this.buildAssetFromBundle(bundle, handler)
+        : await this.buildAssetFromHandler();
 
-    this.updateCodeReplacer(
-      asset.s3BucketName,
-      asset.s3ObjectKey,
-      handlerFilename
-    );
-    this.updateFunctionInUsEast1(asset.s3BucketName, asset.s3ObjectKey);
+      this.updateCodeReplacer(
+        asset.s3BucketName,
+        asset.s3ObjectKey,
+        handlerFilename
+      );
+      this.updateFunctionInUsEast1(asset.s3BucketName, asset.s3ObjectKey);
+    });
   }
 
   public attachPermissions(permissions: Permissions) {

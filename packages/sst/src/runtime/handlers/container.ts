@@ -7,6 +7,7 @@ import { VisibleError } from "../../error.js";
 import { isChild } from "../../util/fs.js";
 import { execAsync } from "../../util/process.js";
 import { useFunctions } from "../../constructs/Function.js";
+import { lazy } from "../../util/lazy.js";
 
 export const useContainerHandler = (): RuntimeHandler => {
   const containers = new Map<string, string>();

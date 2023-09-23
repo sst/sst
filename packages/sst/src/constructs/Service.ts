@@ -589,6 +589,7 @@ export class Service extends Construct implements SSTConstruct {
       // @ts-expect-error
       this.distribution = null;
       this.devFunction = this.createDevFunction();
+      app.registerTypes(this);
       return;
     }
 
@@ -640,6 +641,8 @@ export class Service extends Construct implements SSTConstruct {
       // Invalidate CloudFront
       this.distribution?.createInvalidation();
     });
+
+    app.registerTypes(this);
   }
 
   /////////////////////
@@ -1031,7 +1034,7 @@ export class Service extends Construct implements SSTConstruct {
       maxSessionDuration: CdkDuration.hours(12),
     });
 
-    const fn = new Function(this, `ServerFunction`, {
+    return new Function(this, `ServerFunction`, {
       description: "Service dev function",
       handler: path.join(
         __dirname,
@@ -1045,9 +1048,8 @@ export class Service extends Construct implements SSTConstruct {
       bind,
       environment,
       permissions,
+      _doNotAllowOthersToBind: true,
     });
-    fn._doNotAllowOthersToBind = true;
-    return fn;
   }
 
   private bindForService(constructs: SSTConstruct[]): void {

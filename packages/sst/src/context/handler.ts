@@ -11,7 +11,7 @@ import {
   SQSBatchResponse,
   SQSEvent,
 } from "aws-lambda";
-import { Context } from "./context.js";
+import { create } from "./context2.js";
 
 export interface Handlers {
   api: {
@@ -45,7 +45,7 @@ type Requests = {
   };
 }[HandlerTypes];
 
-const RequestContext = Context.create<Requests>("RequestContext");
+const RequestContext = create<Requests>("RequestContext");
 
 export function useContextType(): HandlerTypes {
   const ctx = RequestContext.use();
@@ -69,7 +69,8 @@ export function Handler<
   Response = Handlers[Type]["response"]
 >(type: Type, cb: (evt: Event, ctx: LambdaContext) => Promise<Response>) {
   return function handler(event: Event, context: LambdaContext) {
-    RequestContext.provide({ type, event: event as any, context });
-    return cb(event, context);
+    return RequestContext.with({ type, event: event as any, context }, () =>
+      cb(event, context)
+    );
   };
 }

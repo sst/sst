@@ -371,6 +371,10 @@ export interface FunctionProps
    * ```
    */
   logRetention?: Lowercase<keyof typeof RetentionDays>;
+  /**
+   * @internal
+   */
+  _doNotAllowOthersToBind?: boolean;
 }
 
 export interface FunctionNameProps {
@@ -707,7 +711,7 @@ export class Function extends CDKFunction implements SSTConstruct {
   public readonly id: string;
   public readonly _isLiveDevEnabled: boolean;
   /** @internal */
-  public _doNotAllowOthersToBind?: boolean;
+  public readonly _doNotAllowOthersToBind?: boolean;
   private functionUrl?: FunctionUrl;
   private props: FunctionProps;
   private allBindings: SSTConstruct[] = [];
@@ -930,7 +934,7 @@ export class Function extends CDKFunction implements SSTConstruct {
           useFunctions().sourcemaps.add(stack.stackName, {
             bucket: asset.bucket,
             key: asset.s3ObjectKey,
-            arn: this.functionArn,
+            func: this,
           });
         }
 
@@ -962,6 +966,7 @@ export class Function extends CDKFunction implements SSTConstruct {
     }
 
     this.id = id;
+    this._doNotAllowOthersToBind = props._doNotAllowOthersToBind;
     this.props = props || {};
 
     if (this.isNodeRuntime()) {
@@ -987,6 +992,8 @@ export class Function extends CDKFunction implements SSTConstruct {
 
     this._isLiveDevEnabled = isLiveDevEnabled;
     useFunctions().add(this.node.addr, props);
+
+    app.registerTypes(this);
   }
 
   /**
@@ -1219,12 +1226,11 @@ export class Function extends CDKFunction implements SSTConstruct {
     inheritErrorMessage?: string
   ): Function {
     if (typeof definition === "string") {
-      const fn = new Function(scope, id, {
+      return new Function(scope, id, {
         ...(inheritedProps || {}),
         handler: definition,
+        _doNotAllowOthersToBind: true,
       });
-      fn._doNotAllowOthersToBind = true;
-      return fn;
     } else if (definition instanceof Function) {
       if (inheritedProps && Object.keys(inheritedProps).length > 0) {
         throw new Error(
@@ -1238,13 +1244,10 @@ export class Function extends CDKFunction implements SSTConstruct {
         `Please use sst.Function instead of lambda.Function for the "${id}" Function.`
       );
     } else if ((definition as FunctionProps).handler !== undefined) {
-      const fn = new Function(
-        scope,
-        id,
-        Function.mergeProps(inheritedProps, definition)
-      );
-      fn._doNotAllowOthersToBind = true;
-      return fn;
+      return new Function(scope, id, {
+        ...Function.mergeProps(inheritedProps, definition),
+        _doNotAllowOthersToBind: true,
+      });
     }
     throw new Error(`Invalid function definition for the "${id}" Function`);
   }
@@ -1296,9 +1299,9 @@ export class Function extends CDKFunction implements SSTConstruct {
 export const useFunctions = createAppContext(() => {
   const functions: Record<string, FunctionProps> = {};
   type Sourcemap = {
-    arn: string;
     bucket: IBucket;
     key: string;
+    func: Function;
   };
   const sourcemaps: Record<string, Sourcemap[]> = {};
 

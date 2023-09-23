@@ -1,5 +1,6 @@
 import type { CloudAssembly } from "aws-cdk-lib/cx-api";
 import type { Program } from "../program.js";
+import { lazy } from "../../util/lazy.js";
 
 export const dev = (program: Program) =>
   program.command(
@@ -43,7 +44,7 @@ export const dev = (program: Program) =>
       const { useKyselyTypeGenerator } = await import("./plugins/kysely.js");
       const { useRDSWarmer } = await import("./plugins/warmer.js");
       const { useProject } = await import("../../project.js");
-      const { useMetadata } = await import("../../stacks/metadata.js");
+      const { useMetadataCache } = await import("../../stacks/metadata.js");
       const { useIOT } = await import("../../iot.js");
       const { clear } = await import("../terminal.js");
       const { getCiInfo } = await import("../ci-info.js");
@@ -61,7 +62,7 @@ export const dev = (program: Program) =>
 
         const project = useProject();
 
-        const useFunctionLogger = Context.memo(async () => {
+        const useFunctionLogger = lazy(async () => {
           const bus = useBus();
 
           const colors = ["#01cdfe", "#ff71ce", "#05ffa1", "#b967ff"];
@@ -192,7 +193,7 @@ export const dev = (program: Program) =>
           });
         });
 
-        const useStackBuilder = Context.memo(async () => {
+        const useStackBuilder = lazy(async () => {
           const watcher = useWatcher();
 
           const scriptVersion = Date.now().toString();
@@ -374,7 +375,7 @@ export const dev = (program: Program) =>
           await build();
         });
 
-        const useDisconnector = Context.memo(async () => {
+        const useDisconnector = lazy(async () => {
           const bus = useBus();
           const iot = await useIOT();
 
@@ -447,7 +448,7 @@ export const dev = (program: Program) =>
           useIOTBridge(),
           useRuntimeServer(),
           usePothosBuilder(),
-          useMetadata(),
+          useMetadataCache(),
           useKyselyTypeGenerator(),
           useRDSWarmer(),
           useFunctionLogger(),
