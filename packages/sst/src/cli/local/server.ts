@@ -181,7 +181,11 @@ export async function useLocalServer(opts: Opts) {
 
   let invocations: Invocation[] = [];
   function publish(invocation: Invocation) {
-    invocations.push(invocation);
+    const index = invocations.findLastIndex((i) => i.id === invocation.id);
+
+    if (index < 0) invocations.push(invocation);
+    else invocations[index] = invocation;
+
     const json = JSON.stringify({
       type: "invocation",
       properties: [invocation],
@@ -324,7 +328,7 @@ export async function useLocalServer(opts: Opts) {
 
   bus.subscribe("worker.stdout", (evt) => {
     const invocation = invocations.findLast(
-      (i) => i.source === evt.properties.functionID
+      (i) => i.id === evt.properties.requestID
     );
     if (invocation) {
       invocation.logs.push({
@@ -348,7 +352,7 @@ export async function useLocalServer(opts: Opts) {
 
   bus.subscribe("function.success", (evt) => {
     const invocation = invocations.findLast(
-      (i) => i.source === evt.properties.functionID
+      (i) => i.id === evt.properties.requestID
     );
     if (invocation) {
       invocation.end = Date.now();
@@ -376,7 +380,7 @@ export async function useLocalServer(opts: Opts) {
 
   bus.subscribe("function.error", (evt) => {
     const invocation = invocations.findLast(
-      (i) => i.source === evt.properties.functionID
+      (i) => i.id === evt.properties.requestID
     );
     if (invocation) {
       invocation.errors.push({

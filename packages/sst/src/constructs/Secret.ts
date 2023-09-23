@@ -28,6 +28,9 @@ export class Secret extends Construct implements SSTConstruct {
     super(scope, id);
     this.id = id;
     this.name = id;
+
+    const app = this.node.root as App;
+    app.registerTypes(this);
   }
 
   /** @internal */

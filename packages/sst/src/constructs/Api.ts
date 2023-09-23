@@ -775,6 +775,9 @@ export class Api<
     this.createHttpApi();
     this.addAuthorizers(this.props.authorizers || ({} as Authorizers));
     this.addRoutes(this, this.props.routes || {});
+
+    const app = this.node.root as App;
+    app.registerTypes(this);
   }
 
   /**

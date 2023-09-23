@@ -1,5 +1,23 @@
 # @serverless-stack/cli2
 
+## 2.26.5
+
+### Patch Changes
+
+- [`3c98abc65`](https://github.com/sst/sst/commit/3c98abc6584ab8834eceb915b44a08cc72dac047) Thanks [@thdxr](https://github.com/thdxr)! - function: use less memory for local invocation cache
+
+## 2.26.4
+
+### Patch Changes
+
+- [`c215530de`](https://github.com/sst/sst/commit/c215530de1786a2f4917d89849baa1c8eebc9e00) Thanks [@fwang](https://github.com/fwang)! - RemixSite: add support for Remix v2
+
+## 2.26.3
+
+### Patch Changes
+
+- [#3340](https://github.com/sst/sst/pull/3340) [`c61396b0a`](https://github.com/sst/sst/commit/c61396b0a9197dcac59bc3ffd5bdbdc308b47f30) Thanks [@fwang](https://github.com/fwang)! - SsrSite: standardize interface
+
 ## 2.26.2
 
 ### Patch Changes

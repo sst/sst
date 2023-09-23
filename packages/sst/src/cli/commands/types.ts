@@ -16,14 +16,10 @@ export const types = (program: Program) =>
       try {
         const project = useProject();
         const [_metafile, sstConfig] = await Stacks.load(project.paths.config);
-        const app = new App({
-          mode: "deploy",
-          stage: project.config.stage,
-          name: project.config.name,
-          region: project.config.region,
+        await Stacks.synth({
+          fn: sstConfig.stacks,
+          mode: "remove",
         });
-        sstConfig.stacks(app);
-        app.codegenTypes();
         Colors.line(
           Colors.success(`✔ `),
           `Types generated in ${path.resolve(project.paths.out, "types")}`

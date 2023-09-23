@@ -7,6 +7,7 @@ import spawn from "cross-spawn";
 import { execSync } from "child_process";
 
 import { Construct } from "constructs";
+import { Lazy } from "aws-cdk-lib";
 import {
   Fn,
   Token,
@@ -36,6 +37,7 @@ import {
   FunctionUrlAuthType,
   FunctionProps as CdkFunctionProps,
   InvokeMode,
+  Architecture,
 } from "aws-cdk-lib/aws-lambda";
 import { Asset } from "aws-cdk-lib/aws-s3-assets";
 import {
@@ -56,6 +58,8 @@ import {
   Function as CfFunction,
   FunctionCode as CfFunctionCode,
   FunctionEventType as CfFunctionEventType,
+  IDistribution,
+  IOrigin,
 } from "aws-cdk-lib/aws-cloudfront";
 import { AwsCliLayer } from "aws-cdk-lib/lambda-layer-awscli";
 import { S3Origin, HttpOrigin } from "aws-cdk-lib/aws-cloudfront-origins";
@@ -70,15 +74,14 @@ import { createAppContext } from "./context.js";
 import { SSTConstruct, isCDKConstruct } from "./Construct.js";
 import { NodeJSProps, FunctionProps } from "./Function.js";
 import { Secret } from "./Secret.js";
-import { SsrFunction } from "./SsrFunction.js";
-import { EdgeFunction } from "./EdgeFunction.js";
+import { SsrFunction, SsrFunctionProps } from "./SsrFunction.js";
+import { EdgeFunction, EdgeFunctionProps } from "./EdgeFunction.js";
 import {
   BaseSiteFileOptions,
   BaseSiteReplaceProps,
   BaseSiteCdkDistributionProps,
   getBuildCmdEnvironment,
 } from "./BaseSite.js";
-import { useDeferredTasks } from "./deferred_task.js";
 import { Size } from "./util/size.js";
 import { Duration, toCdkDuration } from "./util/duration.js";
 import { Permissions, attachPermissionsToRole } from "./util/permission.js";
@@ -88,20 +91,32 @@ import {
 } from "./util/functionBinding.js";
 import { useProject } from "../project.js";
 import { VisibleError } from "../error.js";
+import { RetentionDays } from "aws-cdk-lib/aws-logs";
+import { Behavior } from "@aws-sdk/client-iot";
 
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 
-export type SsrBuildConfig = {
-  typesPath: string;
-  serverBuildOutputFile: string;
-  serverCFFunctionInjection?: string;
-  clientBuildOutputDir: string;
-  clientBuildVersionedSubDir: string;
-  clientBuildS3KeyPrefix?: string;
-  clientCFFunctionInjection?: string;
-  prerenderedBuildOutputDir?: string;
-  prerenderedBuildS3KeyPrefix?: string;
-  warmerFunctionAssetPath?: string;
+type CloudFrontFunctionConfig = { constructId: string; injections: string[] };
+type EdgeFunctionConfig = { constructId: string; function: EdgeFunctionProps };
+type FunctionOriginConfig = {
+  type: "function";
+  constructId: string;
+  function: SsrFunctionProps;
+  streaming?: boolean;
+};
+type ImageOptimizationFunctionOriginConfig = {
+  type: "image-optimization-function";
+  function: CdkFunctionProps;
+};
+type S3OriginConfig = {
+  type: "s3";
+  originPath?: string;
+  copy: {
+    from: string;
+    to: string;
+    cached: boolean;
+    versionedSubDir?: string;
+  }[];
 };
 
 export interface SsrSiteNodeJSProps extends NodeJSProps {}
@@ -259,7 +274,7 @@ export interface SsrSiteProps {
      */
     id?: string;
     /**
-     * Allows you to override default settings this construct uses internally to ceate the bucket
+     * Allows you to override default settings this construct uses internally to create the bucket
      */
     bucket?: BucketProps | IBucket;
     /**
@@ -385,109 +400,823 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
   public readonly id: string;
   protected props: SsrSiteNormalizedProps;
   protected doNotDeploy: boolean;
-  protected buildConfig: SsrBuildConfig;
-  protected deferredTaskCallbacks: (() => void)[] = [];
-  protected serverLambdaForEdge?: EdgeFunction;
-  protected serverLambdaForRegional?: SsrFunction;
-  private serverLambdaForDev?: SsrFunction;
-  private serverUrlSigningFunction?: EdgeFunction;
+  protected typesPath = ".";
   protected bucket: Bucket;
-  private serverCfFunction?: CfFunction;
-  private serverBehaviorCachePolicy?: CachePolicy;
-  private serverBehaviorOriginRequestPolicy?: IOriginRequestPolicy;
-  private staticCfFunction?: CfFunction;
-  private s3Origin: S3Origin;
+  protected serverFunction?: EdgeFunction | SsrFunction;
+  private serverFunctionForDev?: SsrFunction;
   private distribution: Distribution;
 
-  constructor(scope: Construct, id: string, props?: SsrSiteProps) {
-    super(scope, props?.cdk?.id || id);
+  constructor(scope: Construct, id: string, rawProps?: SsrSiteProps) {
+    super(scope, rawProps?.cdk?.id || id);
 
-    const app = scope.node.root as App;
-    const stack = Stack.of(this) as Stack;
-    this.id = id;
-    this.props = {
+    const props: SsrSiteNormalizedProps = {
       path: ".",
       waitForInvalidation: false,
       runtime: "nodejs18.x",
       timeout: "10 seconds",
       memorySize: "1024 MB",
-      ...props,
+      ...rawProps,
     };
-    this.doNotDeploy =
-      !stack.isActive || (app.mode === "dev" && !this.props.dev?.deploy);
+    this.id = id;
+    this.props = props;
 
-    this.buildConfig = this.initBuildConfig();
-    this.validateSiteExists();
-    this.validateTimeout();
-    this.writeTypesFile();
+    const app = scope.node.root as App;
+    const stack = Stack.of(this) as Stack;
+    const self = this;
+    const {
+      path: sitePath,
+      buildCommand,
+      runtime,
+      timeout,
+      memorySize,
+      edge,
+      regional,
+      dev,
+      nodejs,
+      permissions,
+      environment,
+      bind,
+      customDomain,
+      waitForInvalidation,
+      fileOptions,
+      warm,
+      cdk,
+    } = props;
 
-    useSites().add(stack.stackName, id, this.constructor.name, this.props);
+    this.doNotDeploy = !stack.isActive || (app.mode === "dev" && !dev?.deploy);
+
+    validateSiteExists();
+    validateTimeout();
+    writeTypesFile(this.typesPath);
+
+    useSites().add(stack.stackName, id, this.constructor.name, props);
 
     if (this.doNotDeploy) {
       // @ts-expect-error
-      this.bucket = this.s3Origin = this.distribution = null;
-      this.serverLambdaForDev = this.createFunctionForDev();
+      this.bucket = this.distribution = null;
+      this.serverFunctionForDev = createServerFunctionForDev();
+      app.registerTypes(this);
       return;
     }
 
-    // Create Bucket which will be utilised to contain the statics
-    this.bucket = this.createS3Bucket();
+    let s3DeployCRs: CustomResource[] = [];
+    let ssrFunctions: SsrFunction[] = [];
+    let singletonAwsCliLayer: AwsCliLayer;
+    let singletonUrlSigner: EdgeFunction;
+    let singletonCachePolicy: CachePolicy;
+    let singletonOriginRequestPolicy: IOriginRequestPolicy;
 
-    // Create Server functions
-    if (this.props.edge) {
-      this.serverLambdaForEdge = this.createFunctionForEdge();
-    } else {
-      this.serverLambdaForRegional = this.createFunctionForRegional();
-    }
-    this.grantServerS3Permissions();
+    // Create Bucket
+    const bucket = createS3Bucket();
+
+    // Build app
+    buildApp();
+    const plan = this.plan(bucket);
 
     // Create CloudFront
-    this.s3Origin = this.createCloudFrontS3Origin();
-    this.distribution = this.props.edge
-      ? this.createCloudFrontDistributionForEdge()
-      : this.createCloudFrontDistributionForRegional();
-    this.grantServerCloudFrontPermissions();
+    const cfFunctions = createCloudFrontFunctions();
+    const edgeFunctions = createEdgeFunctions();
+    const origins = createOrigins();
+    const distribution = createCloudFrontDistribution();
+    distribution.createInvalidation(plan.buildId ?? generateBuildId());
 
-    useDeferredTasks().add(async () => {
-      // Build app
-      this.buildApp();
+    // Create Warmer
+    createWarmer();
 
-      // Build server functions
-      await this.serverLambdaForEdge?.build();
-      await this.serverLambdaForRegional?.build();
-      await this.serverUrlSigningFunction?.build();
+    this.bucket = bucket;
+    this.distribution = distribution;
+    this.serverFunction =
+      ssrFunctions.length > 0
+        ? ssrFunctions[0]
+        : Object.values(edgeFunctions).length > 0
+        ? Object.values(edgeFunctions)[0]
+        : undefined;
 
-      // Create warmer
-      // Note: create warmer after build app b/c the warmer code
-      //       for NextjsSite depends on OpenNext build output
-      this.createWarmer();
+    app.registerTypes(this);
 
-      // Create S3 Deployment
-      const cliLayer = new AwsCliLayer(this, "AwsCliLayer");
-      const assets = this.createS3Assets();
-      const assetFileOptions = this.createS3AssetFileOptions();
-      const s3deployCR = this.createS3Deployment(
-        cliLayer,
-        assets,
-        assetFileOptions
-      );
-      this.distribution.node.addDependency(s3deployCR);
-
-      // Add static file behaviors
-      this.addStaticFileBehaviors();
-
-      // Invalidate CloudFront
-      this.distribution.createInvalidation(this.generateBuildId());
-
-      for (const task of this.deferredTaskCallbacks) {
-        await task();
+    function validateSiteExists() {
+      if (!fs.existsSync(sitePath)) {
+        throw new Error(`No site found at "${path.resolve(sitePath)}"`);
       }
-    });
-  }
+    }
 
-  /////////////////////
-  // Public Properties
-  /////////////////////
+    function validateTimeout() {
+      const num =
+        typeof timeout === "number"
+          ? timeout
+          : toCdkDuration(timeout).toSeconds();
+      const limit = edge ? 30 : 180;
+      if (num > limit) {
+        throw new Error(
+          edge
+            ? `Timeout must be less than or equal to 30 seconds when the "edge" flag is enabled.`
+            : `Timeout must be less than or equal to 180 seconds.`
+        );
+      }
+    }
+
+    function writeTypesFile(typesPath: string) {
+      const filePath = path.resolve(sitePath, typesPath, "sst-env.d.ts");
+
+      // Do not override the types file if it already exists
+      if (fs.existsSync(filePath)) return;
+
+      const relPathToSstTypesFile = path.join(
+        path.relative(path.dirname(filePath), useProject().paths.root),
+        ".sst/types/index.ts"
+      );
+      fs.writeFileSync(
+        filePath,
+        `/// <reference path="${relPathToSstTypesFile}" />`
+      );
+    }
+
+    function buildApp() {
+      if (app.isRunningSSTTest()) return;
+
+      const defaultCommand = "npm run build";
+      const cmd = buildCommand || defaultCommand;
+
+      if (cmd === defaultCommand) {
+        // Ensure that the site has a build script defined
+        if (!fs.existsSync(path.join(sitePath, "package.json"))) {
+          throw new Error(`No package.json found at "${sitePath}".`);
+        }
+        const packageJson = JSON.parse(
+          fs.readFileSync(path.join(sitePath, "package.json")).toString()
+        );
+        if (!packageJson.scripts || !packageJson.scripts.build) {
+          throw new Error(
+            `No "build" script found within package.json in "${sitePath}".`
+          );
+        }
+      }
+
+      // Run build
+      Logger.debug(`Running "${cmd}" script`);
+      try {
+        execSync(cmd, {
+          cwd: sitePath,
+          stdio: "inherit",
+          env: {
+            SST: "1",
+            ...process.env,
+            ...getBuildCmdEnvironment(environment),
+          },
+        });
+      } catch (e) {
+        throw new VisibleError(
+          `There was a problem building the "${id}" site.`
+        );
+      }
+    }
+
+    function createS3Bucket() {
+      // cdk.bucket is an imported construct
+      if (cdk?.bucket && isCDKConstruct(cdk?.bucket)) {
+        return cdk.bucket as Bucket;
+      }
+
+      // cdk.bucket is a prop
+      return new Bucket(self, "S3Bucket", {
+        publicReadAccess: false,
+        blockPublicAccess: BlockPublicAccess.BLOCK_ALL,
+        autoDeleteObjects: true,
+        removalPolicy: RemovalPolicy.DESTROY,
+        enforceSSL: true,
+        ...cdk?.bucket,
+      });
+    }
+
+    function createServerFunctionForDev() {
+      const role = new Role(self, "ServerFunctionRole", {
+        assumedBy: new CompositePrincipal(
+          new AccountPrincipal(app.account),
+          new ServicePrincipal("lambda.amazonaws.com")
+        ),
+        maxSessionDuration: CdkDuration.hours(12),
+      });
+
+      return new SsrFunction(self, `ServerFunction`, {
+        description: "Server handler placeholder",
+        bundle: path.join(__dirname, "../support/ssr-site-function-stub"),
+        handler: "index.handler",
+        runtime,
+        memorySize,
+        timeout,
+        role,
+        bind,
+        environment,
+        permissions,
+        // note: do not need to set vpc settings b/c this function is not being used
+      });
+    }
+
+    function createWarmer() {
+      // note: Currently all sites have a single server function. When we add
+      //       support for multiple server functions (ie. route splitting), we
+      //       need to handle warming multiple functions.
+      if (!warm) return;
+
+      if (warm && edge) {
+        throw new VisibleError(
+          `In the "${id}" Site, warming is currently supported only for the regional mode.`
+        );
+      }
+
+      if (ssrFunctions.length === 0) return;
+
+      // Create warmer function
+      const warmer = new CdkFunction(self, "WarmerFunction", {
+        description: "Next.js warmer",
+        code: Code.fromAsset(
+          plan.warmerConfig?.function ??
+            path.join(__dirname, "../support/ssr-warmer")
+        ),
+        runtime: Runtime.NODEJS_18_X,
+        handler: "index.handler",
+        timeout: CdkDuration.minutes(15),
+        memorySize: 1024,
+        environment: {
+          FUNCTION_NAME: ssrFunctions[0].functionName,
+          CONCURRENCY: warm.toString(),
+        },
+      });
+      ssrFunctions[0].grantInvoke(warmer);
+
+      // Create cron job
+      new Rule(self, "WarmerRule", {
+        schedule: Schedule.rate(CdkDuration.minutes(5)),
+        targets: [new LambdaFunction(warmer, { retryAttempts: 0 })],
+      });
+
+      // Create custom resource to prewarm on deploy
+      const policy = new Policy(self, "PrewarmerPolicy", {
+        statements: [
+          new PolicyStatement({
+            effect: Effect.ALLOW,
+            actions: ["lambda:InvokeFunction"],
+            resources: [warmer.functionArn],
+          }),
+        ],
+      });
+      stack.customResourceHandler.role?.attachInlinePolicy(policy);
+      const resource = new CustomResource(self, "Prewarmer", {
+        serviceToken: stack.customResourceHandler.functionArn,
+        resourceType: "Custom::FunctionInvoker",
+        properties: {
+          version: Date.now().toString(),
+          functionName: warmer.functionName,
+        },
+      });
+      resource.node.addDependency(policy);
+    }
+
+    function createCloudFrontDistribution() {
+      const distribution = new Distribution(self, "CDN", {
+        scopeOverride: self,
+        customDomain,
+        waitForInvalidation,
+        cdk: {
+          distribution: {
+            // these values can be overwritten
+            defaultRootObject: "",
+            // override props.
+            ...cdk?.distribution,
+            // these values can NOT be overwritten
+            defaultBehavior: buildBehavior(
+              plan.behaviors.find((behavior) => !behavior.pattern)!
+            ),
+            additionalBehaviors: {
+              ...plan.behaviors
+                .filter((behavior) => behavior.pattern)
+                .reduce((acc, behavior) => {
+                  acc[behavior.pattern!] = buildBehavior(behavior);
+                  return acc;
+                }, {} as Record<string, BehaviorOptions>),
+              ...(cdk?.distribution?.additionalBehaviors || {}),
+            },
+          },
+        },
+      });
+
+      // allow all functions to invalidate the distribution
+      const policy = new Policy(self, "ServerFunctionInvalidatorPolicy", {
+        statements: [
+          new PolicyStatement({
+            actions: ["cloudfront:CreateInvalidation"],
+            resources: [
+              `arn:${stack.partition}:cloudfront::${stack.account}:distribution/${distribution.cdk.distribution.distributionId}`,
+            ],
+          }),
+        ],
+      });
+      ssrFunctions.forEach((fn) => fn.role?.attachInlinePolicy(policy));
+      Object.values(edgeFunctions).forEach((fn) =>
+        fn.role?.attachInlinePolicy(policy)
+      );
+
+      // create distribution after s3 upload finishes
+      s3DeployCRs.forEach((cr) => distribution.node.addDependency(cr));
+
+      return distribution;
+    }
+    function buildBehavior(
+      behavior: ReturnType<typeof self.validatePlan>["behaviors"][number]
+    ) {
+      const origin = origins[behavior.origin];
+      const edgeFunction = edgeFunctions[behavior.edgeFunction || ""];
+      const cfFunction = cfFunctions[behavior.cfFunction || ""];
+
+      if (behavior.cacheType === "static") {
+        return {
+          origin,
+          viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+          allowedMethods: AllowedMethods.ALLOW_GET_HEAD_OPTIONS,
+          cachedMethods: CachedMethods.CACHE_GET_HEAD_OPTIONS,
+          compress: true,
+          cachePolicy: CachePolicy.CACHING_OPTIMIZED,
+          responseHeadersPolicy: cdk?.responseHeadersPolicy,
+          functionAssociations: cfFunction
+            ? [
+                {
+                  eventType: CfFunctionEventType.VIEWER_REQUEST,
+                  function: cfFunction,
+                },
+              ]
+            : undefined,
+        };
+      } else if (behavior.cacheType === "server") {
+        return {
+          viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+          origin,
+          allowedMethods: AllowedMethods.ALLOW_ALL,
+          cachedMethods: CachedMethods.CACHE_GET_HEAD_OPTIONS,
+          compress: true,
+          cachePolicy: cdk?.serverCachePolicy ?? useServerBehaviorCachePolicy(),
+          responseHeadersPolicy: cdk?.responseHeadersPolicy,
+          originRequestPolicy: useServerBehaviorOriginRequestPolicy(),
+          ...(cdk?.distribution?.defaultBehavior || {}),
+          functionAssociations: [
+            ...(cfFunction
+              ? [
+                  {
+                    eventType: CfFunctionEventType.VIEWER_REQUEST,
+                    function: cfFunction,
+                  },
+                ]
+              : []),
+            ...(cdk?.distribution?.defaultBehavior?.functionAssociations || []),
+          ],
+          edgeLambdas: [
+            ...(edgeFunction
+              ? [
+                  {
+                    includeBody: true,
+                    eventType: LambdaEdgeEventType.ORIGIN_REQUEST,
+                    functionVersion: edgeFunction.currentVersion,
+                  },
+                ]
+              : []),
+            ...(regional?.enableServerUrlIamAuth
+              ? [
+                  {
+                    includeBody: true,
+                    eventType: LambdaEdgeEventType.ORIGIN_REQUEST,
+                    functionVersion:
+                      useFunctionUrlSigningFunction().currentVersion,
+                  },
+                ]
+              : []),
+            ...(cdk?.distribution?.defaultBehavior?.edgeLambdas || []),
+          ],
+        };
+      }
+
+      throw new Error(`Invalid behavior type in the "${id}" site.`);
+    }
+
+    function createCloudFrontFunctions() {
+      const functions: Record<string, CfFunction> = {};
+
+      Object.entries(plan.cloudFrontFunctions ?? {}).forEach(
+        ([name, { constructId, injections }]) => {
+          functions[name] = new CfFunction(self, constructId, {
+            code: CfFunctionCode.fromInline(`
+function handler(event) {
+  var request = event.request;
+  ${injections.join("\n")}
+  return request;
+}`),
+          });
+        }
+      );
+      return functions;
+    }
+
+    function createEdgeFunctions() {
+      const functions: Record<string, EdgeFunction> = {};
+
+      Object.entries(plan.edgeFunctions ?? {}).forEach(
+        ([name, { constructId, function: props }]) => {
+          const fn = new EdgeFunction(self, constructId, {
+            runtime,
+            timeout,
+            memorySize,
+            bind,
+            permissions,
+            ...props,
+            nodejs: {
+              format: "esm" as const,
+              ...nodejs,
+              ...props.nodejs,
+              esbuild: {
+                ...nodejs?.esbuild,
+                ...props.nodejs?.esbuild,
+              },
+            },
+            environment: {
+              ...environment,
+              ...props.environment,
+            },
+          });
+
+          bucket.grantReadWrite(fn.role!);
+          functions[name] = fn;
+        }
+      );
+      return functions;
+    }
+
+    function createOrigins() {
+      const origins: Record<string, S3Origin | HttpOrigin> = {};
+
+      Object.entries(plan.origins ?? {}).forEach(([name, props]) => {
+        if (!props) return;
+
+        // S3 Origin
+        if (props.type === "s3") {
+          origins[name] = new S3Origin(bucket, {
+            originPath: "/" + (props.originPath ?? ""),
+          });
+
+          const assets = createS3OriginAssets(props.copy);
+          const assetFileOptions =
+            fileOptions || createS3OriginAssetFileOptions(props.copy);
+          const s3deployCR = createS3OriginDeployment(assets, assetFileOptions);
+          s3DeployCRs.push(s3deployCR);
+        }
+
+        // Server Origin
+        else if (props.type === "function") {
+          const fn = new SsrFunction(self, props.constructId, {
+            runtime,
+            timeout,
+            memorySize,
+            bind,
+            permissions,
+            ...props.function,
+            nodejs: {
+              format: "esm" as const,
+              ...nodejs,
+              ...props.function.nodejs,
+              esbuild: {
+                ...nodejs?.esbuild,
+                ...props.function.nodejs?.esbuild,
+              },
+            },
+            environment: {
+              ...environment,
+              ...props.function.environment,
+            },
+            ...cdk?.server,
+          });
+          ssrFunctions.push(fn);
+
+          bucket.grantReadWrite(fn?.role!);
+
+          const fnUrl = fn.addFunctionUrl({
+            authType: regional?.enableServerUrlIamAuth
+              ? FunctionUrlAuthType.AWS_IAM
+              : FunctionUrlAuthType.NONE,
+            invokeMode: props.streaming
+              ? InvokeMode.RESPONSE_STREAM
+              : undefined,
+          });
+          if (regional?.enableServerUrlIamAuth) {
+            useFunctionUrlSigningFunction().attachPermissions([
+              new PolicyStatement({
+                actions: ["lambda:InvokeFunctionUrl"],
+                resources: [fn.functionArn],
+              }),
+            ]);
+          }
+
+          origins[name] = new HttpOrigin(Fn.parseDomainName(fnUrl.url), {
+            readTimeout:
+              typeof timeout === "string"
+                ? toCdkDuration(timeout)
+                : CdkDuration.seconds(timeout),
+          });
+        }
+
+        // Image Optimization Origin
+        else if (props.type === "image-optimization-function") {
+          const fn = new CdkFunction(self, `ImageFunction`, {
+            currentVersionOptions: {
+              removalPolicy: RemovalPolicy.DESTROY,
+            },
+            logRetention: RetentionDays.THREE_DAYS,
+            timeout: CdkDuration.seconds(25),
+            initialPolicy: [
+              new PolicyStatement({
+                actions: ["s3:GetObject"],
+                resources: [bucket.arnForObjects("*")],
+              }),
+            ],
+            ...props.function,
+          });
+
+          const fnUrl = fn.addFunctionUrl({
+            authType: regional?.enableServerUrlIamAuth
+              ? FunctionUrlAuthType.AWS_IAM
+              : FunctionUrlAuthType.NONE,
+          });
+          if (regional?.enableServerUrlIamAuth) {
+            useFunctionUrlSigningFunction().attachPermissions([
+              new PolicyStatement({
+                actions: ["lambda:InvokeFunctionUrl"],
+                resources: [fn.functionArn],
+              }),
+            ]);
+          }
+
+          origins[name] = new HttpOrigin(Fn.parseDomainName(fnUrl.url));
+        }
+      });
+
+      return origins;
+    }
+    function createS3OriginAssets(copy: S3OriginConfig["copy"]) {
+      // Create temp folder, clean up if exists
+      const zipOutDir = path.resolve(
+        path.join(useProject().paths.artifacts, `Site-${id}-${self.node.addr}`)
+      );
+      fs.rmSync(zipOutDir, { recursive: true, force: true });
+
+      // Create zip files
+      const script = path.resolve(
+        __dirname,
+        "../support/base-site-archiver.mjs"
+      );
+      const fileSizeLimit = app.isRunningSSTTest()
+        ? // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+          // @ts-ignore: "sstTestFileSizeLimitOverride" not exposed in props
+          props.sstTestFileSizeLimitOverride || 200
+        : 200;
+      const result = spawn.sync(
+        "node",
+        [
+          script,
+          Buffer.from(
+            JSON.stringify(
+              copy.map((files) => ({
+                src: path.join(sitePath, files.from),
+                tar: files.to,
+              }))
+            )
+          ).toString("base64"),
+          zipOutDir,
+          `${fileSizeLimit}`,
+        ],
+        {
+          stdio: "inherit",
+        }
+      );
+      if (result.status !== 0) {
+        throw new Error(`There was a problem generating the assets package.`);
+      }
+
+      // Create S3 Assets for each zip file
+      const assets = [];
+      for (let partId = 0; ; partId++) {
+        const zipFilePath = path.join(zipOutDir, `part${partId}.zip`);
+        if (!fs.existsSync(zipFilePath)) {
+          break;
+        }
+        assets.push(
+          new Asset(self, `Asset${partId}`, {
+            path: zipFilePath,
+          })
+        );
+      }
+      return assets;
+    }
+    function createS3OriginAssetFileOptions(copy: S3OriginConfig["copy"]) {
+      const fileOptions = [];
+
+      for (const files of copy) {
+        if (!files.cached) continue;
+
+        const filesPath = path.join(sitePath, files.from);
+
+        for (const item of fs.readdirSync(filesPath)) {
+          const itemPath = path.join(filesPath, item);
+          const isDir = fs.statSync(itemPath).isDirectory();
+          fileOptions.push({
+            exclude: "*",
+            include: path.posix.join(files.to, item, isDir ? "*" : ""),
+            cacheControl:
+              item === files.versionedSubDir
+                ? // Versioned files will be cached for 1 year (immutable) both at
+                  // the CDN and browser level.
+                  "public,max-age=31536000,immutable"
+                : // Un-versioned files will be cached for 1 year at the CDN level.
+                  // But not at the browser level. CDN cache will be invalidated on deploy.
+                  "public,max-age=0,s-maxage=31536000,must-revalidate",
+          });
+        }
+      }
+
+      return fileOptions;
+    }
+    function createS3OriginDeployment(
+      assets: Asset[],
+      fileOptions: SsrSiteFileOptions[]
+    ): CustomResource {
+      // Create a Lambda function that will be doing the uploading
+      const uploader = new CdkFunction(self, "S3Uploader", {
+        code: Code.fromAsset(
+          path.join(__dirname, "../support/base-site-custom-resource")
+        ),
+        layers: [useAwsCliLayer()],
+        runtime: Runtime.PYTHON_3_11,
+        handler: "s3-upload.handler",
+        timeout: CdkDuration.minutes(15),
+        memorySize: 1024,
+      });
+      bucket.grantReadWrite(uploader);
+      assets.forEach((asset) => asset.grantRead(uploader));
+
+      // Create the custom resource function
+      const handler = new CdkFunction(self, "S3Handler", {
+        code: Code.fromAsset(
+          path.join(__dirname, "../support/base-site-custom-resource")
+        ),
+        layers: [useAwsCliLayer()],
+        runtime: Runtime.PYTHON_3_11,
+        handler: "s3-handler.handler",
+        timeout: CdkDuration.minutes(15),
+        memorySize: 1024,
+        environment: {
+          UPLOADER_FUNCTION_NAME: uploader.functionName,
+        },
+      });
+      bucket.grantReadWrite(handler);
+      uploader.grantInvoke(handler);
+
+      // Create custom resource
+      return new CustomResource(self, "S3Deployment", {
+        serviceToken: handler.functionArn,
+        resourceType: "Custom::SSTBucketDeployment",
+        properties: {
+          Sources: assets.map((asset) => ({
+            BucketName: asset.s3BucketName,
+            ObjectKey: asset.s3ObjectKey,
+          })),
+          DestinationBucketName: bucket.bucketName,
+          FileOptions: (fileOptions || []).map(
+            ({ exclude, include, cacheControl, contentType }) => {
+              if (typeof exclude === "string") {
+                exclude = [exclude];
+              }
+              if (typeof include === "string") {
+                include = [include];
+              }
+              return [
+                ...exclude.map((per) => ["--exclude", per]),
+                ...include.map((per) => ["--include", per]),
+                ["--cache-control", cacheControl],
+                contentType ? ["--content-type", contentType] : [],
+              ].flat();
+            }
+          ),
+          ReplaceValues: getS3ContentReplaceValues(),
+        },
+      });
+    }
+
+    function useFunctionUrlSigningFunction() {
+      singletonUrlSigner =
+        singletonUrlSigner ??
+        new EdgeFunction(self, "ServerUrlSigningFunction", {
+          bundle: path.join(__dirname, "../support/signing-function"),
+          runtime: "nodejs18.x",
+          handler: "index.handler",
+          timeout: 10,
+          memorySize: 128,
+        });
+      return singletonUrlSigner;
+    }
+
+    function useServerBehaviorCachePolicy() {
+      const allowedHeaders = plan.cachePolicyAllowedHeaders || [];
+      singletonCachePolicy =
+        singletonCachePolicy ??
+        new CachePolicy(self, "ServerCache", {
+          queryStringBehavior: CacheQueryStringBehavior.all(),
+          headerBehavior:
+            allowedHeaders.length > 0
+              ? CacheHeaderBehavior.allowList(...allowedHeaders)
+              : CacheHeaderBehavior.none(),
+          cookieBehavior: CacheCookieBehavior.none(),
+          defaultTtl: CdkDuration.days(0),
+          maxTtl: CdkDuration.days(365),
+          minTtl: CdkDuration.days(0),
+          enableAcceptEncodingBrotli: true,
+          enableAcceptEncodingGzip: true,
+          comment: "SST server response cache policy",
+        });
+      return singletonCachePolicy;
+    }
+
+    function useServerBehaviorOriginRequestPolicy() {
+      // CloudFront's Managed-AllViewerExceptHostHeader policy
+      singletonOriginRequestPolicy =
+        singletonOriginRequestPolicy ??
+        OriginRequestPolicy.fromOriginRequestPolicyId(
+          self,
+          "ServerOriginRequestPolicy",
+          "b689b0a8-53d0-40ab-baf2-68738e2966ac"
+        );
+      return singletonOriginRequestPolicy;
+    }
+
+    function useAwsCliLayer() {
+      singletonAwsCliLayer =
+        singletonAwsCliLayer ?? new AwsCliLayer(self, "AwsCliLayer");
+      return singletonAwsCliLayer;
+    }
+
+    function getS3ContentReplaceValues() {
+      const replaceValues: SsrSiteReplaceProps[] = [];
+
+      Object.entries(environment || {})
+        .filter(([, value]) => Token.isUnresolved(value))
+        .forEach(([key, value]) => {
+          const token = `{{ ${key} }}`;
+          replaceValues.push(
+            {
+              files: "**/*.html",
+              search: token,
+              replace: value,
+            },
+            {
+              files: "**/*.js",
+              search: token,
+              replace: value,
+            },
+            {
+              files: "**/*.json",
+              search: token,
+              replace: value,
+            }
+          );
+        });
+      return replaceValues;
+    }
+
+    function generateBuildId(): string {
+      // We will generate a hash based on the contents of the S3 files with cache enabled.
+      // This will be used to determine if we need to invalidate our CloudFront cache.
+      const s3Origin = Object.values(plan.origins).find(
+        (origin) => origin.type === "s3"
+      );
+      if (s3Origin?.type !== "s3") return "unchanged";
+      const cachedS3Files = s3Origin.copy.find((item) => item.cached);
+      if (!cachedS3Files) return "unchanged";
+
+      // The below options are needed to support following symlinks when building zip files:
+      // - nodir: This will prevent symlinks themselves from being copied into the zip.
+      // - follow: This will follow symlinks and copy the files within.
+      const globOptions = {
+        dot: true,
+        nodir: true,
+        follow: true,
+        cwd: path.resolve(sitePath, cachedS3Files.from),
+      };
+      const files = glob.sync("**", globOptions);
+      const hash = crypto.createHash("sha1");
+      for (const file of files) {
+        hash.update(file);
+      }
+      const buildId = hash.digest("hex");
+
+      Logger.debug(`Generated build ID ${buildId}`);
+
+      return buildId;
+    }
+  }
 
   /**
    * The CloudFront URL of the website.
@@ -515,9 +1244,7 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
     if (this.doNotDeploy) return;
 
     return {
-      function:
-        this.serverLambdaForEdge?.function ||
-        this.serverLambdaForRegional?.function,
+      function: this.serverFunction?.function,
       bucket: this.bucket,
       distribution: this.distribution.cdk.distribution,
       hostedZone: this.distribution.cdk.hostedZone,
@@ -539,10 +1266,7 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
    * ```
    */
   public attachPermissions(permissions: Permissions): void {
-    const server =
-      this.serverLambdaForEdge ||
-      this.serverLambdaForRegional ||
-      this.serverLambdaForDev;
+    const server = this.serverFunction || this.serverFunctionForDev;
     attachPermissionsToRole(server?.role as Role, permissions);
   }
 
@@ -558,11 +1282,8 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
         customDomainUrl: this.customDomainUrl,
         url: this.url,
         edge: this.props.edge,
-        server: (
-          this.serverLambdaForDev ||
-          this.serverLambdaForRegional ||
-          this.serverLambdaForEdge
-        )?.functionArn!,
+        server: (this.serverFunctionForDev || this.serverFunction)
+          ?.functionArn!,
         secrets: (this.props.bind || [])
           .filter((c) => c instanceof Secret)
           .map((c) => (c as Secret).name),
@@ -604,770 +1325,39 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
     };
   }
 
-  /////////////////////
-  // Build App
-  /////////////////////
+  protected useCloudFrontFunctionHostHeaderInjection() {
+    return `request.headers["x-forwarded-host"] = request.headers.host;`;
+  }
 
-  protected initBuildConfig(): SsrBuildConfig {
-    return {
-      typesPath: ".",
-      serverBuildOutputFile: "placeholder",
-      clientBuildOutputDir: "placeholder",
-      clientBuildVersionedSubDir: "placeholder",
+  protected abstract plan(bucket: Bucket): ReturnType<typeof this.validatePlan>;
+
+  protected validatePlan<
+    CloudFrontFunctions extends Record<string, CloudFrontFunctionConfig>,
+    EdgeFunctions extends Record<string, EdgeFunctionConfig>,
+    Origins extends Record<
+      string,
+      | FunctionOriginConfig
+      | ImageOptimizationFunctionOriginConfig
+      | S3OriginConfig
+    >
+  >(input: {
+    cloudFrontFunctions?: CloudFrontFunctions;
+    edgeFunctions?: EdgeFunctions;
+    origins: Origins;
+    behaviors: {
+      cacheType: "server" | "static";
+      pattern?: string;
+      origin: keyof Origins;
+      cfFunction?: keyof CloudFrontFunctions;
+      edgeFunction?: keyof EdgeFunctions;
+    }[];
+    cachePolicyAllowedHeaders?: string[];
+    buildId?: string;
+    warmerConfig?: {
+      function: string;
     };
-  }
-
-  private buildApp() {
-    const app = this.node.root as App;
-    if (!app.isRunningSSTTest()) {
-      this.runBuild();
-    }
-    this.validateBuildOutput();
-  }
-
-  protected validateBuildOutput() {
-    const serverBuildFile = path.join(
-      this.props.path,
-      this.buildConfig.serverBuildOutputFile
-    );
-    if (!fs.existsSync(serverBuildFile)) {
-      throw new Error(`No server build output found at "${serverBuildFile}"`);
-    }
-  }
-
-  private runBuild() {
-    const {
-      path: sitePath,
-      buildCommand: rawBuildCommand,
-      environment,
-    } = this.props;
-    const defaultCommand = "npm run build";
-    const buildCommand = rawBuildCommand || defaultCommand;
-
-    if (buildCommand === defaultCommand) {
-      // Ensure that the site has a build script defined
-      if (!fs.existsSync(path.join(sitePath, "package.json"))) {
-        throw new Error(`No package.json found at "${sitePath}".`);
-      }
-      const packageJson = JSON.parse(
-        fs.readFileSync(path.join(sitePath, "package.json")).toString()
-      );
-      if (!packageJson.scripts || !packageJson.scripts.build) {
-        throw new Error(
-          `No "build" script found within package.json in "${sitePath}".`
-        );
-      }
-    }
-
-    // Run build
-    Logger.debug(`Running "${buildCommand}" script`);
-    try {
-      execSync(buildCommand, {
-        cwd: sitePath,
-        stdio: "inherit",
-        env: {
-          SST: "1",
-          ...process.env,
-          ...getBuildCmdEnvironment(environment),
-        },
-      });
-    } catch (e) {
-      throw new Error(
-        `There was a problem building the "${this.node.id}" ${
-          this.getConstructMetadata().type
-        }.`
-      );
-    }
-  }
-
-  /////////////////////
-  // Bundle S3 Assets
-  /////////////////////
-
-  private createS3Assets(): Asset[] {
-    // Create temp folder, clean up if exists
-    const zipOutDir = path.resolve(
-      path.join(
-        useProject().paths.artifacts,
-        `Site-${this.node.id}-${this.node.addr}`
-      )
-    );
-    fs.rmSync(zipOutDir, { recursive: true, force: true });
-
-    // Create zip files
-    const app = this.node.root as App;
-    const script = path.resolve(__dirname, "../support/base-site-archiver.mjs");
-    const fileSizeLimit = app.isRunningSSTTest()
-      ? // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore: "sstTestFileSizeLimitOverride" not exposed in props
-        this.props.sstTestFileSizeLimitOverride || 200
-      : 200;
-    const result = spawn.sync(
-      "node",
-      [
-        script,
-        Buffer.from(
-          JSON.stringify([
-            {
-              src: path.join(
-                this.props.path,
-                this.buildConfig.clientBuildOutputDir
-              ),
-              tar: this.buildConfig.clientBuildS3KeyPrefix || "",
-            },
-            ...(this.buildConfig.prerenderedBuildOutputDir
-              ? [
-                  {
-                    src: path.join(
-                      this.props.path,
-                      this.buildConfig.prerenderedBuildOutputDir
-                    ),
-                    tar: this.buildConfig.prerenderedBuildS3KeyPrefix || "",
-                  },
-                ]
-              : []),
-          ])
-        ).toString("base64"),
-        zipOutDir,
-        `${fileSizeLimit}`,
-      ],
-      {
-        stdio: "inherit",
-      }
-    );
-    if (result.status !== 0) {
-      throw new Error(`There was a problem generating the assets package.`);
-    }
-
-    // Create S3 Assets for each zip file
-    const assets = [];
-    for (let partId = 0; ; partId++) {
-      const zipFilePath = path.join(zipOutDir, `part${partId}.zip`);
-      if (!fs.existsSync(zipFilePath)) {
-        break;
-      }
-      assets.push(
-        new Asset(this, `Asset${partId}`, {
-          path: zipFilePath,
-        })
-      );
-    }
-    return assets;
-  }
-
-  private createS3AssetFileOptions() {
-    if (this.props.fileOptions) return this.props.fileOptions;
-
-    // Build file options
-    const fileOptions = [];
-    const clientPath = path.join(
-      this.props.path,
-      this.buildConfig.clientBuildOutputDir
-    );
-    for (const item of fs.readdirSync(clientPath)) {
-      // Versioned files will be cached for 1 year (immutable) both at
-      // the CDN and browser level.
-      if (item === this.buildConfig.clientBuildVersionedSubDir) {
-        fileOptions.push({
-          exclude: "*",
-          include: path.posix.join(
-            this.buildConfig.clientBuildS3KeyPrefix ?? "",
-            this.buildConfig.clientBuildVersionedSubDir,
-            "*"
-          ),
-          cacheControl: "public,max-age=31536000,immutable",
-        });
-      }
-      // Un-versioned files will be cached for 1 year at the CDN level.
-      // But not at the browser level. CDN cache will be invalidated on deploy.
-      else {
-        const itemPath = path.join(clientPath, item);
-        fileOptions.push({
-          exclude: "*",
-          include: path.posix.join(
-            this.buildConfig.clientBuildS3KeyPrefix ?? "",
-            item,
-            fs.statSync(itemPath).isDirectory() ? "*" : ""
-          ),
-          cacheControl: "public,max-age=0,s-maxage=31536000,must-revalidate",
-        });
-      }
-    }
-    return fileOptions;
-  }
-
-  private createS3Bucket(): Bucket {
-    const { cdk } = this.props;
-
-    // cdk.bucket is an imported construct
-    if (cdk?.bucket && isCDKConstruct(cdk?.bucket)) {
-      return cdk.bucket as Bucket;
-    }
-
-    // cdk.bucket is a prop
-    return new Bucket(this, "S3Bucket", {
-      publicReadAccess: false,
-      blockPublicAccess: BlockPublicAccess.BLOCK_ALL,
-      autoDeleteObjects: true,
-      removalPolicy: RemovalPolicy.DESTROY,
-      enforceSSL: true,
-      ...cdk?.bucket,
-    });
-  }
-
-  private createS3Deployment(
-    cliLayer: AwsCliLayer,
-    assets: Asset[],
-    fileOptions: SsrSiteFileOptions[]
-  ): CustomResource {
-    // Create a Lambda function that will be doing the uploading
-    const uploader = new CdkFunction(this, "S3Uploader", {
-      code: Code.fromAsset(
-        path.join(__dirname, "../support/base-site-custom-resource")
-      ),
-      layers: [cliLayer],
-      runtime: Runtime.PYTHON_3_11,
-      handler: "s3-upload.handler",
-      timeout: CdkDuration.minutes(15),
-      memorySize: 1024,
-    });
-    this.bucket.grantReadWrite(uploader);
-    assets.forEach((asset) => asset.grantRead(uploader));
-
-    // Create the custom resource function
-    const handler = new CdkFunction(this, "S3Handler", {
-      code: Code.fromAsset(
-        path.join(__dirname, "../support/base-site-custom-resource")
-      ),
-      layers: [cliLayer],
-      runtime: Runtime.PYTHON_3_11,
-      handler: "s3-handler.handler",
-      timeout: CdkDuration.minutes(15),
-      memorySize: 1024,
-      environment: {
-        UPLOADER_FUNCTION_NAME: uploader.functionName,
-      },
-    });
-    this.bucket.grantReadWrite(handler);
-    uploader.grantInvoke(handler);
-
-    // Create custom resource
-    return new CustomResource(this, "S3Deployment", {
-      serviceToken: handler.functionArn,
-      resourceType: "Custom::SSTBucketDeployment",
-      properties: {
-        Sources: assets.map((asset) => ({
-          BucketName: asset.s3BucketName,
-          ObjectKey: asset.s3ObjectKey,
-        })),
-        DestinationBucketName: this.bucket.bucketName,
-        FileOptions: (fileOptions || []).map(
-          ({ exclude, include, cacheControl, contentType }) => {
-            if (typeof exclude === "string") {
-              exclude = [exclude];
-            }
-            if (typeof include === "string") {
-              include = [include];
-            }
-            return [
-              ...exclude.map((per) => ["--exclude", per]),
-              ...include.map((per) => ["--include", per]),
-              ["--cache-control", cacheControl],
-              contentType ? ["--content-type", contentType] : [],
-            ].flat();
-          }
-        ),
-        ReplaceValues: this.getS3ContentReplaceValues(),
-      },
-    });
-  }
-
-  /////////////////////
-  // Bundle Lambda Server
-  /////////////////////
-
-  protected createFunctionForRegional() {
-    return {} as SsrFunction;
-  }
-
-  protected createFunctionForEdge() {
-    return {} as EdgeFunction;
-  }
-
-  protected createFunctionForDev() {
-    const { runtime, timeout, memorySize, permissions, environment, bind } =
-      this.props;
-
-    const app = this.node.root as App;
-    const role = new Role(this, "ServerFunctionRole", {
-      assumedBy: new CompositePrincipal(
-        new AccountPrincipal(app.account),
-        new ServicePrincipal("lambda.amazonaws.com")
-      ),
-      maxSessionDuration: CdkDuration.hours(12),
-    });
-
-    const ssrFn = new SsrFunction(this, `ServerFunction`, {
-      description: "Server handler placeholder",
-      bundle: path.join(__dirname, "../support/ssr-site-function-stub"),
-      handler: "index.handler",
-      runtime,
-      memorySize,
-      timeout,
-      role,
-      bind,
-      environment,
-      permissions,
-      // note: do not need to set vpc settings b/c this function is not being used
-    });
-
-    useDeferredTasks().add(async () => {
-      await ssrFn.build();
-    });
-
-    return ssrFn;
-  }
-
-  private grantServerS3Permissions() {
-    const server = this.serverLambdaForEdge || this.serverLambdaForRegional;
-    this.bucket.grantReadWrite(server!.role!);
-  }
-
-  private grantServerCloudFrontPermissions() {
-    const stack = Stack.of(this) as Stack;
-    const server = this.serverLambdaForEdge || this.serverLambdaForRegional;
-    const policy = new Policy(this, "ServerFunctionInvalidatorPolicy", {
-      statements: [
-        new PolicyStatement({
-          actions: ["cloudfront:CreateInvalidation"],
-          resources: [
-            `arn:${stack.partition}:cloudfront::${stack.account}:distribution/${this.distribution.cdk.distribution.distributionId}`,
-          ],
-        }),
-      ],
-    });
-    server?.role?.attachInlinePolicy(policy);
-  }
-
-  private createWarmer() {
-    const { warm, edge } = this.props;
-    if (!warm) return;
-
-    if (warm && edge) {
-      throw new VisibleError(
-        `In the "${this.node.id}" Site, warming is currently supported only for the regional mode.`
-      );
-    }
-
-    if (!this.serverLambdaForRegional) return;
-
-    // Create warmer function
-    const warmer = new CdkFunction(this, "WarmerFunction", {
-      description: "Next.js warmer",
-      code: Code.fromAsset(
-        this.buildConfig.warmerFunctionAssetPath ??
-          path.join(__dirname, "../support/ssr-warmer")
-      ),
-      runtime: Runtime.NODEJS_18_X,
-      handler: "index.handler",
-      timeout: CdkDuration.minutes(15),
-      memorySize: 1024,
-      environment: {
-        FUNCTION_NAME: this.serverLambdaForRegional.functionName,
-        CONCURRENCY: warm.toString(),
-      },
-    });
-    this.serverLambdaForRegional.grantInvoke(warmer);
-
-    // Create cron job
-    new Rule(this, "WarmerRule", {
-      schedule: Schedule.rate(CdkDuration.minutes(5)),
-      targets: [new LambdaFunction(warmer, { retryAttempts: 0 })],
-    });
-
-    // Create custom resource to prewarm on deploy
-    const stack = Stack.of(this) as Stack;
-    const policy = new Policy(this, "PrewarmerPolicy", {
-      statements: [
-        new PolicyStatement({
-          effect: Effect.ALLOW,
-          actions: ["lambda:InvokeFunction"],
-          resources: [warmer.functionArn],
-        }),
-      ],
-    });
-    stack.customResourceHandler.role?.attachInlinePolicy(policy);
-    const resource = new CustomResource(this, "Prewarmer", {
-      serviceToken: stack.customResourceHandler.functionArn,
-      resourceType: "Custom::FunctionInvoker",
-      properties: {
-        version: Date.now().toString(),
-        functionName: warmer.functionName,
-      },
-    });
-    resource.node.addDependency(policy);
-  }
-
-  /////////////////////
-  // CloudFront Distribution
-  /////////////////////
-
-  private createCloudFrontS3Origin() {
-    return new S3Origin(this.bucket, {
-      originPath: "/" + (this.buildConfig.clientBuildS3KeyPrefix ?? ""),
-    });
-  }
-
-  protected createCloudFrontDistributionForRegional() {
-    const { customDomain, cdk } = this.props;
-    const cfDistributionProps = cdk?.distribution || {};
-
-    return new Distribution(this, "CDN", {
-      scopeOverride: this,
-      customDomain,
-      cdk: {
-        distribution: {
-          // these values can be overwritten by cfDistributionProps
-          defaultRootObject: "",
-          // Override props.
-          ...cfDistributionProps,
-          // these values can NOT be overwritten by cfDistributionProps
-          defaultBehavior: this.buildDefaultBehaviorForRegional(),
-          additionalBehaviors: {
-            ...(cfDistributionProps.additionalBehaviors || {}),
-          },
-        },
-      },
-    });
-  }
-
-  protected createCloudFrontDistributionForEdge() {
-    const { customDomain, cdk } = this.props;
-    const cfDistributionProps = cdk?.distribution || {};
-
-    return new Distribution(this, "CDN", {
-      scopeOverride: this,
-      customDomain,
-      cdk: {
-        distribution: {
-          // these values can be overwritten by cfDistributionProps
-          defaultRootObject: "",
-          // Override props.
-          ...cfDistributionProps,
-          // these values can NOT be overwritten by cfDistributionProps
-          defaultBehavior: this.buildDefaultBehaviorForEdge(),
-          additionalBehaviors: {
-            ...(cfDistributionProps.additionalBehaviors || {}),
-          },
-        },
-      },
-    });
-  }
-
-  protected buildDefaultBehaviorForRegional(): BehaviorOptions {
-    const { timeout, regional, cdk } = this.props;
-    const cfDistributionProps = cdk?.distribution || {};
-
-    const fnUrl = this.serverLambdaForRegional!.addFunctionUrl({
-      authType: regional?.enableServerUrlIamAuth
-        ? FunctionUrlAuthType.AWS_IAM
-        : FunctionUrlAuthType.NONE,
-      invokeMode: this.supportsStreaming()
-        ? InvokeMode.RESPONSE_STREAM
-        : undefined,
-    });
-
-    return {
-      viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
-      origin: new HttpOrigin(Fn.parseDomainName(fnUrl.url), {
-        readTimeout:
-          typeof timeout === "string"
-            ? toCdkDuration(timeout)
-            : CdkDuration.seconds(timeout),
-      }),
-      allowedMethods: AllowedMethods.ALLOW_ALL,
-      cachedMethods: CachedMethods.CACHE_GET_HEAD_OPTIONS,
-      compress: true,
-      cachePolicy:
-        cdk?.serverCachePolicy ?? this.useServerBehaviorCachePolicy(),
-      responseHeadersPolicy: cdk?.responseHeadersPolicy,
-      originRequestPolicy: this.useServerBehaviorOriginRequestPolicy(),
-      ...(cfDistributionProps.defaultBehavior || {}),
-      functionAssociations: [
-        ...this.useServerBehaviorFunctionAssociations(),
-        ...(cfDistributionProps.defaultBehavior?.functionAssociations || []),
-      ],
-      edgeLambdas: [
-        ...(regional?.enableServerUrlIamAuth
-          ? [
-              {
-                includeBody: true,
-                eventType: LambdaEdgeEventType.ORIGIN_REQUEST,
-                functionVersion:
-                  this.useServerUrlSigningFunction().currentVersion,
-              },
-            ]
-          : []),
-        ...(cfDistributionProps.defaultBehavior?.edgeLambdas || []),
-      ],
-    };
-  }
-
-  protected buildDefaultBehaviorForEdge(): BehaviorOptions {
-    const { cdk } = this.props;
-    const cfDistributionProps = cdk?.distribution || {};
-
-    return {
-      viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
-      origin: this.s3Origin,
-      allowedMethods: AllowedMethods.ALLOW_ALL,
-      cachedMethods: CachedMethods.CACHE_GET_HEAD_OPTIONS,
-      compress: true,
-      cachePolicy:
-        cdk?.serverCachePolicy ?? this.useServerBehaviorCachePolicy(),
-      responseHeadersPolicy: cdk?.responseHeadersPolicy,
-      originRequestPolicy: this.useServerBehaviorOriginRequestPolicy(),
-      ...(cfDistributionProps.defaultBehavior || {}),
-      functionAssociations: [
-        ...this.useServerBehaviorFunctionAssociations(),
-        ...(cfDistributionProps.defaultBehavior?.functionAssociations || []),
-      ],
-      edgeLambdas: [
-        {
-          includeBody: true,
-          eventType: LambdaEdgeEventType.ORIGIN_REQUEST,
-          functionVersion: this.serverLambdaForEdge!.currentVersion,
-        },
-        ...(cfDistributionProps.defaultBehavior?.edgeLambdas || []),
-      ],
-    };
-  }
-
-  protected addStaticFileBehaviors() {
-    const { cdk } = this.props;
-
-    // Create a template for statics behaviours
-    const publicDir = path.join(
-      this.props.path,
-      this.buildConfig.clientBuildOutputDir
-    );
-    for (const item of fs.readdirSync(publicDir)) {
-      const isDir = fs.statSync(path.join(publicDir, item)).isDirectory();
-      (this.distribution.cdk.distribution as CdkDistribution).addBehavior(
-        isDir ? `${item}/*` : item,
-        this.s3Origin,
-        {
-          viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
-          allowedMethods: AllowedMethods.ALLOW_GET_HEAD_OPTIONS,
-          cachedMethods: CachedMethods.CACHE_GET_HEAD_OPTIONS,
-          compress: true,
-          cachePolicy: CachePolicy.CACHING_OPTIMIZED,
-          responseHeadersPolicy: cdk?.responseHeadersPolicy,
-          functionAssociations: [
-            ...this.useStaticBehaviorFunctionAssociations(),
-          ],
-        }
-      );
-    }
-  }
-
-  protected useServerBehaviorFunctionAssociations() {
-    this.serverCfFunction =
-      this.serverCfFunction ??
-      new CfFunction(this, "CloudFrontFunction", {
-        code: CfFunctionCode.fromInline(`
-function handler(event) {
-  var request = event.request;
-  request.headers["x-forwarded-host"] = request.headers.host;
-  ${this.buildConfig.serverCFFunctionInjection || ""}
-  return request;
-}`),
-      });
-
-    return [
-      {
-        eventType: CfFunctionEventType.VIEWER_REQUEST,
-        function: this.serverCfFunction,
-      },
-    ];
-  }
-
-  protected useStaticBehaviorFunctionAssociations() {
-    if (!this.buildConfig.clientCFFunctionInjection) return [];
-
-    this.staticCfFunction =
-      this.staticCfFunction ??
-      new CfFunction(this, "CloudFrontFunctionForStaticBehavior", {
-        code: CfFunctionCode.fromInline(`
-function handler(event) {
-  var request = event.request;
-  ${this.buildConfig.clientCFFunctionInjection || ""}
-  return request;
-}`),
-      });
-
-    return [
-      {
-        eventType: CfFunctionEventType.VIEWER_REQUEST,
-        function: this.staticCfFunction,
-      },
-    ];
-  }
-
-  protected useServerUrlSigningFunction() {
-    this.serverUrlSigningFunction =
-      this.serverUrlSigningFunction ??
-      new EdgeFunction(this, "ServerUrlSigningFunction", {
-        bundle: path.join(__dirname, "../support/signing-function"),
-        runtime: "nodejs18.x",
-        handler: "index.handler",
-        timeout: 10,
-        memorySize: 128,
-        permissions: [
-          new PolicyStatement({
-            actions: ["lambda:InvokeFunctionUrl"],
-            resources: [this.serverLambdaForRegional?.functionArn!],
-          }),
-        ],
-      });
-    return this.serverUrlSigningFunction;
-  }
-
-  protected useServerBehaviorCachePolicy(allowedHeaders?: string[]) {
-    this.serverBehaviorCachePolicy =
-      this.serverBehaviorCachePolicy ??
-      new CachePolicy(this, "ServerCache", {
-        queryStringBehavior: CacheQueryStringBehavior.all(),
-        headerBehavior:
-          allowedHeaders && allowedHeaders.length > 0
-            ? CacheHeaderBehavior.allowList(...allowedHeaders)
-            : CacheHeaderBehavior.none(),
-        cookieBehavior: CacheCookieBehavior.none(),
-        defaultTtl: CdkDuration.days(0),
-        maxTtl: CdkDuration.days(365),
-        minTtl: CdkDuration.days(0),
-        enableAcceptEncodingBrotli: true,
-        enableAcceptEncodingGzip: true,
-        comment: "SST server response cache policy",
-      });
-    return this.serverBehaviorCachePolicy;
-  }
-
-  private useServerBehaviorOriginRequestPolicy() {
-    // CloudFront's Managed-AllViewerExceptHostHeader policy
-    this.serverBehaviorOriginRequestPolicy =
-      this.serverBehaviorOriginRequestPolicy ??
-      OriginRequestPolicy.fromOriginRequestPolicyId(
-        this,
-        "ServerOriginRequestPolicy",
-        "b689b0a8-53d0-40ab-baf2-68738e2966ac"
-      );
-    return this.serverBehaviorOriginRequestPolicy;
-  }
-
-  /////////////////////
-  // Helper Functions
-  /////////////////////
-
-  private getS3ContentReplaceValues() {
-    const replaceValues: SsrSiteReplaceProps[] = [];
-
-    Object.entries(this.props.environment || {})
-      .filter(([, value]) => Token.isUnresolved(value))
-      .forEach(([key, value]) => {
-        const token = `{{ ${key} }}`;
-        replaceValues.push(
-          {
-            files: "**/*.html",
-            search: token,
-            replace: value,
-          },
-          {
-            files: "**/*.js",
-            search: token,
-            replace: value,
-          },
-          {
-            files: "**/*.json",
-            search: token,
-            replace: value,
-          }
-        );
-      });
-    return replaceValues;
-  }
-
-  private validateSiteExists() {
-    const { path: sitePath } = this.props;
-    if (!fs.existsSync(sitePath)) {
-      throw new Error(`No site found at "${path.resolve(sitePath)}"`);
-    }
-  }
-
-  private validateTimeout() {
-    const { edge, timeout } = this.props;
-    const num =
-      typeof timeout === "number"
-        ? timeout
-        : toCdkDuration(timeout).toSeconds();
-    const limit = edge ? 30 : 180;
-    if (num > limit) {
-      throw new Error(
-        edge
-          ? `Timeout must be less than or equal to 30 seconds when the "edge" flag is enabled.`
-          : `Timeout must be less than or equal to 180 seconds.`
-      );
-    }
-  }
-
-  private writeTypesFile() {
-    const typesPath = path.resolve(
-      this.props.path,
-      this.buildConfig.typesPath,
-      "sst-env.d.ts"
-    );
-
-    // Do not override the types file if it already exists
-    if (fs.existsSync(typesPath)) return;
-
-    const relPathToSstTypesFile = path.join(
-      path.relative(path.dirname(typesPath), useProject().paths.root),
-      ".sst/types/index.ts"
-    );
-    fs.writeFileSync(
-      typesPath,
-      `/// <reference path="${relPathToSstTypesFile}" />`
-    );
-  }
-
-  protected generateBuildId(): string {
-    // We will generate a hash based on the contents of the "public" folder
-    // which will be used to indicate if we need to invalidate our CloudFront
-    // cache.
-
-    // The below options are needed to support following symlinks when building zip files:
-    // - nodir: This will prevent symlinks themselves from being copied into the zip.
-    // - follow: This will follow symlinks and copy the files within.
-    const globOptions = {
-      dot: true,
-      nodir: true,
-      follow: true,
-      cwd: path.resolve(this.props.path, this.buildConfig.clientBuildOutputDir),
-    };
-    const files = glob.sync("**", globOptions);
-    const hash = crypto.createHash("sha1");
-    for (const file of files) {
-      hash.update(file);
-    }
-    const buildId = hash.digest("hex");
-
-    Logger.debug(`Generated build ID ${buildId}`);
-
-    return buildId;
-  }
-
-  protected supportsStreaming(): boolean {
-    return false;
+  }) {
+    return input;
   }
 }
 

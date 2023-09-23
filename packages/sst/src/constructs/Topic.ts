@@ -188,6 +188,9 @@ export class Topic extends Construct implements SSTConstruct {
 
     this.createTopic();
     this.addSubscribers(this, props?.subscribers || {});
+
+    const app = this.node.root as App;
+    app.registerTypes(this);
   }
 
   /**

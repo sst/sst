@@ -172,6 +172,9 @@ export class KinesisStream extends Construct implements SSTConstruct {
         this.addConsumer(this, consumerName, props.consumers[consumerName]);
       }
     }
+
+    const app = this.node.root as App;
+    app.registerTypes(this);
   }
 
   /**

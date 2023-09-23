@@ -20,7 +20,7 @@ The <a href={config.console}>SST Console</a> is a web based dashboard to manage 
 
 ![SST Console homescreen](/img/console/sst-console-logs.png)
 
-With the SST Console you can invoke functions, debug issues, view and search logs, and manage all your apps with your team — **<ConsoleUrl url={config.console} />**
+With the SST Console you can invoke functions, debug issues, view logs, and manage all your apps with your team — **<ConsoleUrl url={config.console} />**
 
 :::info
 Looking for the Old Console? You can still access it here — <ConsoleUrl url="https://old.console.sst.dev" />
@@ -129,7 +129,7 @@ Here are a few of the things the Console does for you.
 
 With the SST Console, you don't need to go to CloudWatch to look at the logs for your functions.
 
-![SST Console recent logs](/img/console/sst-console-logs.png)
+![SST Console log modes](/img/console/sst-console-log-modes.png)
 
 There are a couple of different modes for the logs view.
 
@@ -169,7 +169,7 @@ With Issues, there is:
 
 - **Nothing to setup**, no code to instrument
 - **Source maps** are supported **automatically**, no need to upload
-- **No impact on performance** or cold starts, since the handlers aren't changed
+- **No impact on performance** or cold starts, since the functions aren't modified
 
 Here's how it works.
 

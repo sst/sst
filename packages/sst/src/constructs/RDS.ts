@@ -249,6 +249,9 @@ export class RDS extends Construct implements SSTConstruct {
       this.createMigrationsFunction(migrations);
       this.createMigrationCustomResource(migrations);
     }
+
+    const app = this.node.root as App;
+    app.registerTypes(this);
   }
 
   /**
@@ -512,7 +515,7 @@ export class RDS extends Construct implements SSTConstruct {
     // - when running resources tests, __dirname is `resources/src`
     // For now we will do `__dirname/../dist` to make both cases work.
 
-    const fn = new Fn(this, "MigrationFunction", {
+    this.migratorFunction = new Fn(this, "MigrationFunction", {
       handler: path.resolve(
         path.join(__dirname, "../support/rds-migrator/index.handler")
       ),
@@ -529,6 +532,7 @@ export class RDS extends Construct implements SSTConstruct {
         RDS_MIGRATIONS_PATH:
           app.mode === "dev" ? migrations : migrationsDestination,
       },
+      permissions: [this.cdk.cluster],
       // Note that we need to generate a relative path of the migrations off the
       // srcPath because sst.Function internally builds the copy "from" path by
       // joining the srcPath and the from path.
@@ -542,12 +546,8 @@ export class RDS extends Construct implements SSTConstruct {
         install: ["kysely", "kysely-data-api"],
         format: "esm",
       },
+      _doNotAllowOthersToBind: true,
     });
-    fn._doNotAllowOthersToBind = true;
-
-    fn.attachPermissions([this.cdk.cluster]);
-
-    this.migratorFunction = fn;
   }
 
   private createMigrationCustomResource(migrations: string) {

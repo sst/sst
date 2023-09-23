@@ -7,8 +7,6 @@ import { installGlobals } from "@remix-run/node";
 installGlobals();
 
 import {
-  Headers as NodeHeaders,
-  Request as NodeRequest,
   createRequestHandler as createNodeRequestHandler,
   readableStreamToString,
 } from "@remix-run/node";
@@ -96,7 +94,7 @@ function convertCfRequestToNode(event) {
   );
 
   // Build headers
-  const headers = new NodeHeaders();
+  const headers = new Headers();
   for (const [key, values] of Object.entries(request.headers)) {
     for (const { value } of values) {
       if (value) {
@@ -105,7 +103,7 @@ function convertCfRequestToNode(event) {
     }
   }
 
-  return new NodeRequest(url.toString(), {
+  return new Request(url.toString(), {
     method: request.method,
     headers,
     body: request.body?.data

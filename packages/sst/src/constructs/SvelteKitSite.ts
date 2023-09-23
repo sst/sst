@@ -1,8 +1,6 @@
 import fs from "fs";
 import path from "path";
 import { SsrSite } from "./SsrSite.js";
-import { SsrFunction } from "./SsrFunction.js";
-import { EdgeFunction } from "./EdgeFunction.js";
 
 /**
  * The `SvelteKitSite` construct is a higher level CDK construct that makes it easy to create a SvelteKit app.
@@ -16,132 +14,127 @@ import { EdgeFunction } from "./EdgeFunction.js";
  * ```
  */
 export class SvelteKitSite extends SsrSite {
-  protected initBuildConfig() {
-    return {
-      typesPath: "src",
-      serverBuildOutputFile:
-        ".svelte-kit/svelte-kit-sst/server/lambda-handler/index.js",
-      // Note: form action requests contain "/" in request query string
-      //       ie. POST request with query string "?/action"
-      //       CloudFront does not allow query string with "/". It needs to be encoded.
-      serverCFFunctionInjection: `
-        for (var key in request.querystring) {
-          if (key.includes("/")) {
-            request.querystring[encodeURIComponent(key)] = request.querystring[key];
-            delete request.querystring[key];
-          }
-        }
-      `,
-      clientBuildOutputDir: ".svelte-kit/svelte-kit-sst/client",
-      clientBuildVersionedSubDir: "_app",
-      prerenderedBuildOutputDir: ".svelte-kit/svelte-kit-sst/prerendered",
-    };
-  }
+  protected typesPath = "src";
 
-  protected createFunctionForRegional() {
-    const {
-      runtime,
-      timeout,
-      memorySize,
-      permissions,
-      environment,
-      nodejs,
-      bind,
-      cdk,
-    } = this.props;
-
-    return new SsrFunction(this, `ServerFunction`, {
+  protected plan() {
+    const { path: sitePath, edge } = this.props;
+    const serverDir = ".svelte-kit/svelte-kit-sst/server";
+    const clientDir = ".svelte-kit/svelte-kit-sst/client";
+    const prerenderedDir = ".svelte-kit/svelte-kit-sst/prerendered";
+    const serverConfig = {
       description: "Server handler for SvelteKit",
       handler: path.join(
-        this.props.path,
-        ".svelte-kit",
-        "svelte-kit-sst",
-        "server",
+        sitePath,
+        serverDir,
         "lambda-handler",
         "index.handler"
       ),
-      runtime,
-      memorySize,
-      timeout,
-      bind,
-      environment,
-      permissions,
       nodejs: {
-        format: "esm",
-        ...nodejs,
         esbuild: {
           minify: process.env.SST_DEBUG ? false : true,
-          sourcemap: process.env.SST_DEBUG ? "inline" : false,
+          sourcemap: process.env.SST_DEBUG ? ("inline" as const) : false,
           define: {
             "process.env.SST_DEBUG": process.env.SST_DEBUG ? "true" : "false",
           },
-          ...nodejs?.esbuild,
         },
       },
       copyFiles: [
         {
-          from: path.join(
-            this.props.path,
-            ".svelte-kit",
-            "svelte-kit-sst",
-            "prerendered"
-          ),
+          from: path.join(sitePath, prerenderedDir),
           to: "prerendered",
         },
       ],
-      ...cdk?.server,
-    });
-  }
+    };
 
-  protected createFunctionForEdge() {
-    const {
-      runtime,
-      timeout,
-      memorySize,
-      bind,
-      permissions,
-      environment,
-      nodejs,
-    } = this.props;
-
-    return new EdgeFunction(this, `Server`, {
-      scopeOverride: this,
-      handler: path.join(
-        this.props.path,
-        ".svelte-kit",
-        "svelte-kit-sst",
-        "server",
-        "lambda-handler",
-        "index.handler"
-      ),
-      runtime,
-      timeout,
-      memorySize,
-      bind,
-      environment,
-      permissions,
-      nodejs: {
-        format: "esm",
-        ...nodejs,
-        esbuild: {
-          minify: process.env.SST_DEBUG ? false : true,
-          sourcemap: process.env.SST_DEBUG ? "inline" : false,
-          define: {
-            "process.env.SST_DEBUG": process.env.SST_DEBUG ? "true" : "false",
-          },
-          ...nodejs?.esbuild,
+    return this.validatePlan({
+      buildId: JSON.parse(
+        fs
+          .readFileSync(path.join(sitePath, clientDir, "_app/version.json"))
+          .toString()
+      ).version,
+      cloudFrontFunctions: {
+        serverCfFunction: {
+          constructId: "CloudFrontFunction",
+          injections: [
+            this.useCloudFrontFunctionHostHeaderInjection(),
+            // Note: form action requests contain "/" in request query string
+            //       ie. POST request with query string "?/action"
+            //       CloudFront does not allow query string with "/". It needs to be encoded.
+            `for (var key in request.querystring) {`,
+            `  if (key.includes("/")) {`,
+            `    request.querystring[encodeURIComponent(key)] = request.querystring[key];`,
+            `    delete request.querystring[key];`,
+            `  }`,
+            `}`,
+          ],
         },
       },
+      edgeFunctions: edge
+        ? {
+            edgeServer: {
+              constructId: "Server",
+              function: {
+                scopeOverride: this as SvelteKitSite,
+                ...serverConfig,
+              },
+            },
+          }
+        : undefined,
+      origins: {
+        ...(edge
+          ? {}
+          : {
+              regionalServer: {
+                type: "function",
+                constructId: "ServerFunction",
+                function: serverConfig,
+              },
+            }),
+        s3: {
+          type: "s3",
+          copy: [
+            {
+              from: clientDir,
+              to: "",
+              cached: true,
+              versionedSubDir: "_app",
+            },
+            {
+              from: prerenderedDir,
+              to: "",
+              cached: false,
+            },
+          ],
+        },
+      },
+      behaviors: [
+        edge
+          ? {
+              cacheType: "server",
+              cfFunction: "serverCfFunction",
+              edgeFunction: "edgeServer",
+              origin: "s3",
+            }
+          : {
+              cacheType: "server",
+              cfFunction: "serverCfFunction",
+              origin: "regionalServer",
+            },
+        // create 1 behaviour for each top level asset file/folder
+        ...fs.readdirSync(path.join(sitePath, clientDir)).map(
+          (item) =>
+            ({
+              cacheType: "static",
+              pattern: fs
+                .statSync(path.join(sitePath, clientDir, item))
+                .isDirectory()
+                ? `${item}/*`
+                : item,
+              origin: "s3",
+            } as const)
+        ),
+      ],
     });
-  }
-
-  protected generateBuildId() {
-    const filePath = path.join(
-      this.props.path,
-      ".svelte-kit/svelte-kit-sst/client/_app/version.json"
-    );
-    const content = fs.readFileSync(filePath).toString();
-    return JSON.parse(content).version;
   }
 
   public getConstructMetadata() {

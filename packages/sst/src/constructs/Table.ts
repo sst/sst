@@ -344,6 +344,9 @@ export class Table extends Construct implements SSTConstruct {
 
     // Create Kinesis Stream
     this.buildKinesisStreamSpec(kinesisStream);
+
+    const app = this.node.root as App;
+    app.registerTypes(this);
   }
 
   /**

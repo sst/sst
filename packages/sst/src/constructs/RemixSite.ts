@@ -4,8 +4,6 @@ import path from "path";
 import { createRequire } from "module";
 const require = createRequire(import.meta.url);
 import { SsrSite } from "./SsrSite.js";
-import { SsrFunction } from "./SsrFunction.js";
-import { EdgeFunction } from "./EdgeFunction.js";
 import { VisibleError } from "../error.js";
 import { useWarning } from "./util/warning.js";
 
@@ -33,17 +31,104 @@ type RemixConfig = {
  * ```
  */
 export class RemixSite extends SsrSite {
-  private serverModuleFormat: "cjs" | "esm" = "cjs";
+  protected plan() {
+    const { path: sitePath, edge } = this.props;
 
-  protected initBuildConfig() {
-    const { path: sitePath } = this.props;
-
-    const configDefaults: RemixConfig = {
-      assetsBuildDirectory: "public/build",
-      publicPath: "/build/",
-      serverBuildPath: "build/index.js",
-      serverPlatform: "node",
+    const { handler, inject } = this.createServerLambdaBundle(
+      edge ? "edge-server.js" : "regional-server.js"
+    );
+    const format = this.getServerModuleFormat();
+    const serverConfig = {
+      description: "Server handler for Remix",
+      handler,
+      format,
+      nodejs: {
+        esbuild: {
+          inject,
+        },
+      },
     };
+
+    return this.validatePlan({
+      cloudFrontFunctions: {
+        serverCfFunction: {
+          constructId: "CloudFrontFunction",
+          injections: [this.useCloudFrontFunctionHostHeaderInjection()],
+        },
+        staticCfFunction: {
+          constructId: "CloudFrontFunctionForStaticBehavior",
+          injections: [
+            // Note: When using libraries like remix-flat-routes the file can
+            // contains special characters like "+". It needs to be encoded.
+            `request.uri = request.uri.split('/').map(encodeURIComponent).join('/');`,
+          ],
+        },
+      },
+      edgeFunctions: edge
+        ? {
+            edgeServer: {
+              constructId: "Server",
+              function: {
+                scopeOverride: this as RemixSite,
+                ...serverConfig,
+              },
+            },
+          }
+        : undefined,
+      origins: {
+        ...(edge
+          ? {}
+          : {
+              regionalServer: {
+                type: "function",
+                constructId: "ServerFunction",
+                function: serverConfig,
+              },
+            }),
+        s3: {
+          type: "s3",
+          copy: [
+            {
+              from: "public",
+              to: "",
+              cached: true,
+              versionedSubDir: "build",
+            },
+          ],
+        },
+      },
+      behaviors: [
+        edge
+          ? {
+              cacheType: "server",
+              cfFunction: "serverCfFunction",
+              edgeFunction: "edgeServer",
+              origin: "s3",
+            }
+          : {
+              cacheType: "server",
+              cfFunction: "serverCfFunction",
+              origin: "regionalServer",
+            },
+        // create 1 behaviour for each top level asset file/folder
+        ...fs.readdirSync(path.join(sitePath, "public")).map(
+          (item) =>
+            ({
+              cacheType: "static",
+              pattern: fs
+                .statSync(path.join(sitePath, "public", item))
+                .isDirectory()
+                ? `${item}/*`
+                : item,
+              cfFunction: "staticCfFunction",
+              origin: "s3",
+            } as const)
+        ),
+      ],
+    });
+  }
+  protected getServerModuleFormat(): "cjs" | "esm" {
+    const { path: sitePath } = this.props;
 
     // Validate config path
     const configPath = path.resolve(sitePath, "remix.config.js");
@@ -54,13 +139,30 @@ export class RemixSite extends SsrSite {
     }
 
     // Load config
-    const userConfig = require(configPath);
-    this.serverModuleFormat = userConfig.serverModuleFormat ?? "cjs";
+    // note: we try to handle Remix v1 and v2
+    //  - In v1, the config is in CJS by default (ie. module.exports = { ... })
+    //    and the config can be `require`d directly. We will determine the server
+    //    format based on "serverModuleFormat" in the config.
+    //  - In v2, the config is in ESM by default (ie. export default { ... })
+    //    and we will assume the server format to be ESM.
+    let userConfig: any;
+    try {
+      userConfig = require(configPath);
+    } catch (e) {
+      return "esm";
+    }
+    const format = userConfig.serverModuleFormat ?? "cjs";
     if (userConfig.serverModuleFormat !== "esm") {
       useWarning().add("remix.cjs");
     }
 
     // Validate config
+    const configDefaults: RemixConfig = {
+      assetsBuildDirectory: "public/build",
+      publicPath: "/build/",
+      serverBuildPath: "build/index.js",
+      serverPlatform: "node",
+    };
     const config: RemixConfig = {
       ...configDefaults,
       ...userConfig,
@@ -74,17 +176,7 @@ export class RemixSite extends SsrSite {
       }
     });
 
-    return {
-      typesPath: ".",
-      serverBuildOutputFile: "build/index.js",
-      clientBuildOutputDir: "public",
-      clientBuildVersionedSubDir: "build",
-      // Note: When using libraries like remix-flat-routes the file can
-      // contains special characters like "+". It needs to be encoded.
-      clientCFFunctionInjection: `
-       request.uri = request.uri.split('/').map(encodeURIComponent).join('/');
-      `,
-    };
+    return format;
   }
 
   private createServerLambdaBundle(wrapperFile: string) {
@@ -131,80 +223,8 @@ export class RemixSite extends SsrSite {
 
     return {
       handler: path.join(buildPath, "server.handler"),
-      esbuild: { inject: [polyfillDest] },
+      inject: [polyfillDest],
     };
-  }
-
-  protected createFunctionForRegional() {
-    const {
-      runtime,
-      timeout,
-      memorySize,
-      permissions,
-      environment,
-      bind,
-      nodejs,
-      cdk,
-    } = this.props;
-
-    const { handler, esbuild } =
-      this.createServerLambdaBundle("regional-server.js");
-
-    return new SsrFunction(this, `ServerFunction`, {
-      description: "Server handler for Remix",
-      handler,
-      runtime,
-      memorySize,
-      timeout,
-      nodejs: {
-        format: this.serverModuleFormat,
-        ...nodejs,
-        esbuild: {
-          ...esbuild,
-          ...nodejs?.esbuild,
-          inject: [...(nodejs?.esbuild?.inject || []), ...esbuild.inject],
-        },
-      },
-      bind,
-      environment,
-      permissions,
-      ...cdk?.server,
-    });
-  }
-
-  protected createFunctionForEdge() {
-    const {
-      runtime,
-      timeout,
-      memorySize,
-      bind,
-      permissions,
-      environment,
-      nodejs,
-    } = this.props;
-
-    const { handler, esbuild } =
-      this.createServerLambdaBundle("edge-server.js");
-
-    return new EdgeFunction(this, `Server`, {
-      scopeOverride: this,
-      handler,
-      runtime,
-      timeout,
-      memorySize,
-      bind,
-      environment,
-      permissions,
-      nodejs: {
-        format: this.serverModuleFormat,
-        ...nodejs,
-        esbuild: {
-          ...esbuild,
-          ...nodejs?.esbuild,
-          inject: [...(nodejs?.esbuild?.inject || []), ...esbuild.inject],
-        },
-      },
-    });
   }
 
   public getConstructMetadata() {
