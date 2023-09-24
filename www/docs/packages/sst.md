@@ -419,7 +419,7 @@ Behind the scenes the secrets are stored in [AWS SSM](https://docs.aws.amazon.co
 
   _Default_: false
 
-  Set this option if you want to `get`, `set`, `list`, or `remove` the fallback version of a secret. For example, to get the fallback of a secret.
+  Set this option if you want to `get`, `set`, `load`, `list`, or `remove` the fallback version of a secret. For example, to get the fallback of a secret.
 
   ```bash
   npx sst secrets get --fallback STRIPE_KEY
@@ -456,7 +456,7 @@ npx sst secrets set <name> <value> [options]
 Loads secrets from an .env file.
 
 ```bash
-npx sst secrets load <filename>
+npx sst secrets load <filename> [options]
 ```
 
 ---
