@@ -5,6 +5,7 @@ import { dynamicImport } from "../util/module.js";
 import { findAbove } from "../util/fs.js";
 import { VisibleError } from "../error.js";
 import babel from "@babel/core";
+import { stringLiteral } from "@babel/types";
 const _ = await import("@babel/generator");
 const generate = _.default?.default ?? _.default;
 // @ts-expect-error
@@ -76,6 +77,38 @@ export async function load(input: string, shallow?: boolean) {
                   const { key } = path.node;
                   if ("name" in key && key.name === "stacks") {
                     path.remove();
+                  }
+                },
+              });
+              return {
+                contents: generate(ast!).code,
+                loader: "ts",
+              };
+            });
+          },
+        },
+        {
+          name: "pathReplacer",
+          setup(build) {
+            build.onLoad({ filter: /.*/ }, async (args) => {
+              let contents = await fs
+                .readFile(args.path)
+                .then((x) => x.toString());
+              const ast = babel.parse(contents, {
+                sourceType: "module",
+                babelrc: false,
+                configFile: false,
+                plugins: [ts],
+              });
+              babel.traverse(ast, {
+                Identifier(astPath) {
+                  if (astPath.node.name === "__SST_FILENAME") {
+                    astPath.replaceWith(stringLiteral(args.path));
+                  }
+                  if (astPath.node.name === "__SST_DIRNAME") {
+                    astPath.replaceWith(
+                      stringLiteral(path.parse(args.path).dir)
+                    );
                   }
                 },
               });

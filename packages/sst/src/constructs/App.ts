@@ -276,6 +276,10 @@ export class App extends CDKApp {
         `  }`,
         `}`,
         ``,
+        `declare global {`,
+        `  const __SST_DIRNAME: string;`,
+        `  const __SST_FILENAME: string;`,
+        `}`,
         ``,
       ].join("\n")
     );

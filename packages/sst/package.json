@@ -62,6 +62,7 @@
     "@babel/core": "^7.0.0-0",
     "@babel/generator": "^7.20.5",
     "@babel/plugin-syntax-typescript": "^7.21.4",
+    "@babel/types": "^7.22.19",
     "@smithy/signature-v4": "^2.0.16",
     "@trpc/server": "9.16.0",
     "adm-zip": "^0.5.10",
