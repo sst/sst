@@ -270,6 +270,7 @@ export function AuthHandler<
         },
       };
     }
+
     const adapter = input.providers[provider];
     const result = await adapter(evt);
 
@@ -298,7 +299,6 @@ export function AuthHandler<
           },
         }
       );
-      console.log("onSuccess", onSuccess);
 
       if (onSuccess.type === "session") {
         const { type, properties, ...rest } = onSuccess.properties;

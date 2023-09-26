@@ -12,40 +12,21 @@ export const dev = (program: Program) =>
         description: "Increase function timeout",
       }),
     async (args) => {
+      const { Logger } = await import("../../logger.js");
       const { Colors } = await import("../colors.js");
       const { printHeader } = await import("../ui/header.js");
       const { mapValues } = await import("remeda");
       const path = await import("path");
-      const { useRuntimeWorkers } = await import("../../runtime/workers.js");
-      const { useIOTBridge } = await import("../../runtime/iot.js");
-      const { useRuntimeServer } = await import("../../runtime/server.js");
       const { useBus } = await import("../../bus.js");
       const { useWatcher } = await import("../../watcher.js");
-      const { useAppMetadata, saveAppMetadata, Stacks } = await import(
-        "../../stacks/index.js"
-      );
       const { exit, exitWithError, trackDevError, trackDevRunning } =
         await import("../program.js");
-      const { Logger } = await import("../../logger.js");
       const { createSpinner } = await import("../spinner.js");
       const { bold, dim, yellow } = await import("colorette");
-      const { render } = await import("ink");
-      const React = await import("react");
-      const { Context } = await import("../../context/context.js");
-      const { printDeploymentResults, DeploymentUI } = await import(
-        "../ui/deploy.js"
-      );
       const { useLocalServer } = await import("../local/server.js");
       const fs = await import("fs/promises");
       const crypto = await import("crypto");
-      const { useFunctions } = await import("../../constructs/Function.js");
-      const { useSites } = await import("../../constructs/SsrSite.js");
-      const { usePothosBuilder } = await import("./plugins/pothos.js");
-      const { useKyselyTypeGenerator } = await import("./plugins/kysely.js");
-      const { useRDSWarmer } = await import("./plugins/warmer.js");
       const { useProject } = await import("../../project.js");
-      const { useMetadataCache } = await import("../../stacks/metadata.js");
-      const { useIOT } = await import("../../iot.js");
       const { clear } = await import("../terminal.js");
       const { getCiInfo } = await import("../ci-info.js");
 
@@ -63,6 +44,7 @@ export const dev = (program: Program) =>
         const project = useProject();
 
         const useFunctionLogger = lazy(async () => {
+          const { useFunctions } = await import("../../constructs/Function.js");
           const bus = useBus();
 
           const colors = ["#01cdfe", "#ff71ce", "#05ffa1", "#b967ff"];
@@ -195,6 +177,11 @@ export const dev = (program: Program) =>
 
         const useStackBuilder = lazy(async () => {
           const watcher = useWatcher();
+          const { printDeploymentResults, DeploymentUI } = await import(
+            "../ui/deploy.js"
+          );
+          const { render } = await import("ink");
+          const React = await import("react");
 
           const scriptVersion = Date.now().toString();
           let lastDeployed: string;
@@ -202,6 +189,7 @@ export const dev = (program: Program) =>
           let isDirty = false;
 
           async function build() {
+            const { Stacks } = await import("../../stacks/index.js");
             if (isWorking) {
               isDirty = true;
               return;
@@ -265,9 +253,39 @@ export const dev = (program: Program) =>
           }
 
           async function deploy(assembly: CloudAssembly) {
+            const metadata = await appMetadata();
+            if (
+              !project.config.advanced?.disableAppModeCheck &&
+              !getCiInfo().isCI &&
+              metadata &&
+              metadata.mode !== "dev"
+            ) {
+              async function promptChangeMode() {
+                const readline = await import("readline");
+                const rl = readline.createInterface({
+                  input: process.stdin,
+                  output: process.stdout,
+                });
+                return new Promise<boolean>((resolve) => {
+                  console.log("");
+                  rl.question(
+                    `You have previously deployed the stage "${project.config.stage}" in production. It is recommended that you use a different stage for development. Read more here — https://docs.sst.dev/live-lambda-development\n\nAre you sure you want to run this stage in dev mode? [y/N] `,
+                    async (input) => {
+                      rl.close();
+                      resolve(input.trim() === "y");
+                    }
+                  );
+                });
+              }
+              if (!(await promptChangeMode())) {
+                await exit();
+              }
+            }
             const nextChecksum = await checksum(assembly.directory);
+            const { useSites } = await import("../../constructs/SsrSite.js");
 
             const component = render(<DeploymentUI assembly={assembly} />);
+            const { Stacks } = await import("../../stacks/index.js");
             const results = await Stacks.deployMany(assembly.stacks);
             component.clear();
             component.unmount();
@@ -275,7 +293,9 @@ export const dev = (program: Program) =>
 
             // Run after initial deploy
             if (!lastDeployed) {
-              await saveAppMetadata({ mode: "dev" });
+              await import("../../stacks/app-metadata.js").then((mod) =>
+                mod.saveAppMetadata({ mode: "dev" })
+              );
 
               // Check failed stacks
               const failed = Object.values(results).find((result) =>
@@ -377,7 +397,7 @@ export const dev = (program: Program) =>
 
         const useDisconnector = lazy(async () => {
           const bus = useBus();
-          const iot = await useIOT();
+          const iot = await import("../../iot.js").then((mod) => mod.useIOT());
 
           bus.subscribe("cli.dev", async (evt) => {
             const topic = `${iot.prefix}/events`;
@@ -401,56 +421,36 @@ export const dev = (program: Program) =>
           });
         });
 
-        const [appMetadata] = await Promise.all([
-          useAppMetadata(),
+        console.log("wtf");
+        Logger.debug("dev is ready");
+        const appMetadata = lazy(() =>
+          import("../../stacks/app-metadata.js").then((mod) =>
+            mod.useAppMetadata()
+          )
+        );
+
+        clear();
+        await printHeader({ console: true, hint: "ready!" });
+        await Promise.all([
+          useStackBuilder(),
+          useDisconnector(),
+          import("../../runtime/workers.js").then((mod) =>
+            mod.useRuntimeWorkers()
+          ),
+          import("../../runtime/iot.js").then((mod) => mod.useIOTBridge()),
+          import("../../runtime/server.js").then((mod) =>
+            mod.useRuntimeServer()
+          ),
           useLocalServer({
             key: "",
             cert: "",
             live: true,
           }),
-        ]);
-
-        async function promptChangeMode() {
-          const readline = await import("readline");
-          const rl = readline.createInterface({
-            input: process.stdin,
-            output: process.stdout,
-          });
-          return new Promise<boolean>((resolve) => {
-            console.log("");
-            rl.question(
-              `You have previously deployed the stage "${project.config.stage}" in production. It is recommended that you use a different stage for development. Read more here — https://docs.sst.dev/live-lambda-development\n\nAre you sure you want to run this stage in dev mode? [y/N] `,
-              async (input) => {
-                rl.close();
-                resolve(input.trim() === "y");
-              }
-            );
-          });
-        }
-        // Check app mode changed
-        if (
-          !project.config.advanced?.disableAppModeCheck &&
-          !getCiInfo().isCI &&
-          appMetadata &&
-          appMetadata.mode !== "dev"
-        ) {
-          if (!(await promptChangeMode())) {
-            await exit();
-          }
-        }
-
-        clear();
-        await printHeader({ console: true, hint: "ready!" });
-        await useStackBuilder();
-        await Promise.all([
-          useDisconnector(),
-          useRuntimeWorkers(),
-          useIOTBridge(),
-          useRuntimeServer(),
-          usePothosBuilder(),
-          useMetadataCache(),
-          useKyselyTypeGenerator(),
-          useRDSWarmer(),
+          import("./plugins/pothos.js").then((mod) => mod.usePothosBuilder()),
+          import("./plugins/kysely.js").then((mod) =>
+            mod.useKyselyTypeGenerator()
+          ),
+          import("./plugins/warmer.js").then((mod) => mod.useRDSWarmer()),
           useFunctionLogger(),
         ]);
       } catch (e: any) {

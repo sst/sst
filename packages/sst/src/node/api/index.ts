@@ -100,6 +100,7 @@ interface CookieOptions {
 }
 
 export const useResponse = /* @__PURE__ */ memo(() => {
+  useEvent("api");
   const response: APIGatewayProxyStructuredResultV2 = {
     headers: {},
     cookies: [],
