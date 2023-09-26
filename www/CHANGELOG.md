@@ -1,5 +1,11 @@
 # @serverless-stack/docs
 
+## 2.5.19
+
+### Patch Changes
+
+- [#3337](https://github.com/sst/sst/pull/3337) [`f294d8e68`](https://github.com/sst/sst/commit/f294d8e683d791276e6c81241991bf82a172dcef) Thanks [@dfoulger](https://github.com/dfoulger)! - Update "secrets load" command to support the --fallback option
+
 ## 2.5.18
 
 ### Patch Changes
