@@ -1,8 +1,8 @@
-The `StaticSite` construct is a higher level CDK construct that makes it easy to create a static website. It provides a simple way to build and deploy the site to AWS:
+The `StaticSite` construct is a higher-level CDK construct that makes it easy to create a static website. It provides a simple way to build and deploy the site to AWS:
 
-- The assets are deployed to an S3 Bucket, and served out from a CloudFront CDN for fast content delivery.
+- The assets are deployed to an S3 Bucket and served out from a CloudFront CDN for fast content delivery.
 - It enables you to [configure custom domains](#custom-domains) for the website URL.
-- It also enable you to [automatically set the environment variables](#environment-variables) for your static site directly from the outputs in your SST app.
+- It also enables you to [automatically set the environment variables](#environment-variables) for your static site directly from the outputs in your SST app.
 
 ## Working locally
 
@@ -53,7 +53,7 @@ new StaticSite(stack, "Site", {
 
 ## Environment variables
 
-The `StaticSite` construct allows you to set the environment variables in your site based on outputs from other constructs in your SST app. So you don't have to hard code the config from your backend. Let's look at how.
+The `StaticSite` construct allows you to set the environment variables in your site based on outputs from other constructs in your SST app. So you don't have to hardcode the config from your backend. Let's look at how.
 
 Imagine you have a Vite site and an API created using the [`Api`](../constructs/Api.md) construct. To fetch data from the API, you would pass the API's endpoint to your site.
 
@@ -112,7 +112,7 @@ new StaticSite(stack, "Site", {
 
 #### While deploying
 
-On `sst deploy`, the environment variables are will first be replaced by placeholder values, ie. `{{ VITE_APP_API_URL }}`, when building the Vite site. And after the api has been created, the placeholders in the HTML and JS files will then be replaced with the actual values.
+On `sst deploy`, the environment variables will first be replaced by placeholder values, ie. `{{ VITE_APP_API_URL }}`, when building the Vite site. And after the api has been created, the placeholders in the HTML and JS files will then be replaced with the actual values.
 
 #### While developing
 
@@ -158,7 +158,7 @@ There are a couple of things happening behind the scenes here:
 
 ## Examples
 
-The `StaticSite` construct is designed to make it easy to get started with, while allowing for a way to fully configure it as well. Let's look at how, through a couple of examples.
+The `StaticSite` construct is designed to make it easy to get started with, while allowing for a way to fully configure it as well. Let's look at how through a couple of examples.
 
 ### Creating a React site
 
@@ -309,7 +309,7 @@ new StaticSite(stack, "frontend", {
 
 #### Configuring alternate domain names (Route 53 domains)
 
-You can specify additional domain names for the site url. Note that the certificate for these names will not be automatically generated, so the certificate option must be specified. Also note that you need to manually create the Route 53 records for the alternate domain names.
+You can specify additional domain names for the site url. Note that the certificate for these names will not be automatically generated, so the certificate option must be specified. Also, note that you need to manually create the Route 53 records for the alternate domain names.
 
 ```js
 import * as acm from "aws-cdk-lib/aws-certificatemanager";
@@ -370,7 +370,7 @@ new StaticSite(stack, "frontend", {
 });
 ```
 
-Note that, the certificate needs be created in the `us-east-1`(N. Virginia) region as required by AWS CloudFront.
+Note that, the certificate needs to be created in the `us-east-1`(N. Virginia) region as required by AWS CloudFront.
 
 #### Specifying a hosted zone (Route 53 domains)
 
@@ -410,13 +410,13 @@ new StaticSite(stack, "frontend", {
 });
 ```
 
-Note that the certificate needs be created in the `us-east-1`(N. Virginia) region as required by AWS CloudFront, and validated. After the `Distribution` has been created, create a CNAME DNS record for your domain name with the `Distribution's` URL as the value. Here are more details on [configuring SSL Certificate on externally hosted domains](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/CNAMEs.html).
+Note that the certificate needs to be created in the `us-east-1`(N. Virginia) region as required by AWS CloudFront, and validated. After the `Distribution` has been created, create a CNAME DNS record for your domain name with the `Distribution's` URL as the value. Here are more details on [configuring SSL Certificate on externally hosted domains](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/CNAMEs.html).
 
-Also note that you can also migrate externally hosted domains to Route 53 by [following this guide](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/MigratingDNS.html).
+Also, note that you can also migrate externally hosted domains to Route 53 by [following this guide](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/MigratingDNS.html).
 
 ### Caching
 
-Configure the Cache Control settings based on different file types.
+Configure the Cache-Control settings based on different file types.
 
 ```js {6-17}
 new StaticSite(stack, "frontend", {
@@ -439,13 +439,13 @@ new StaticSite(stack, "frontend", {
 });
 ```
 
-This configures all the `.html` files to not be cached by the, while the `.js` and `.css` files to be cached forever.
+This configures all the `.html` files to not be cached by the browser, while the `.js` and `.css` files to be cached forever.
 
 Note that, you need to specify the `exclude: "*"` along with the `include` option. It allows you to pick the files you want, while excluding everything else.
 
 ### Content type
 
-The content type for files is automatically assigned based on their extentions by default. For files without an extension, the default content type is `binary/octet-stream`. However, you can override this default setting:
+The content type for files is automatically assigned based on their extensions by default. For files without an extension, the default content type is `binary/octet-stream`. However, you can override this default setting:
 
 ```js {17-22}
 new StaticSite(stack, "frontend", {
