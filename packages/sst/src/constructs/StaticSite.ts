@@ -46,7 +46,7 @@ import {
   FunctionBindingProps,
   getParameterPath,
 } from "./util/functionBinding.js";
-import { gray } from "colorette";
+import { gray, red } from "colorette";
 import { useProject } from "../project.js";
 import { createAppContext } from "./context.js";
 
@@ -510,6 +510,7 @@ interface ImportMeta {
   }
 
   private buildApp() {
+    let output: Buffer;
     const { path: sitePath, buildCommand } = this.props;
 
     // validate site path exists
@@ -525,7 +526,7 @@ interface ImportMeta {
     if (buildCommand) {
       try {
         console.log(gray(`Building static site ${sitePath}`));
-        execSync(buildCommand, {
+        output = execSync(buildCommand, {
           cwd: sitePath,
           stdio: "inherit",
           env: {
@@ -534,6 +535,7 @@ interface ImportMeta {
           },
         });
       } catch (e) {
+        console.error(red(output));
         throw new Error(
           `There was a problem building the "${this.node.id}" StaticSite.`
         );
