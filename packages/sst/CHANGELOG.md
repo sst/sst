@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.26.7
+
+### Patch Changes
+
+- [`01d8dbf9c`](https://github.com/sst/sst/commit/01d8dbf9c14edf07c9254ffb6d0b6f55f75f53b4) Thanks [@thdxr](https://github.com/thdxr)! - future/auth: support connect flow, check deprecated functions
+
 ## 2.26.6
 
 ### Patch Changes
