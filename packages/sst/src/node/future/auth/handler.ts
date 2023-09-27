@@ -167,41 +167,6 @@ export function AuthHandler<
   return ApiHandler(async (evt) => {
     const step = usePathParam("step");
 
-    if (!step) {
-      if (input.callbacks.index) {
-        return input.callbacks.index(evt);
-      }
-      const clients = (await input.clients?.()) || {};
-      return {
-        statusCode: 200,
-        headers: {
-          "Content-Type": "text/html",
-        },
-        body: `
-          <html>
-          <head>
-            <link rel="icon" href="data:,">
-          </head>
-            <body>
-            <table>
-              <tr>${Object.keys(clients).map(
-                (client) => `<td>${client}</td>`
-              )}</tr>
-            ${Object.keys(input.providers).map((name) => {
-              return `<tr>
-                ${Object.keys(clients).map((client_id) => {
-                  const redirect_uri = clients[client_id];
-                  return `<td><a href="/authorize?provider=${name}&response_type=token&client_id=${client_id}&redirect_uri=${redirect_uri}">${name} - ${client_id}</a></td>`;
-                })}
-              </tr>`;
-            })}
-            </table>
-            </body>
-          </html>
-        `,
-      };
-    }
-
     if (step === "favicon.ico") {
       return {
         statusCode: 404,
