@@ -40,6 +40,7 @@ module.exports = {
       title: "",
       logo: {
         alt: "SST Logo",
+        target: "_self",
         src: "img/logo.svg",
         href: config.home,
       },
@@ -52,11 +53,13 @@ module.exports = {
         },
         {
           to: config.guide,
+          target: "_self",
           label: "Guide",
           position: "left",
         },
         {
           href: config.examples,
+          target: "_self",
           label: "Examples",
           position: "left",
         },
