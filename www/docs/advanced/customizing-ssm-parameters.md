@@ -7,16 +7,19 @@ You can customize the SSM parameter names that SST creates behind the scenes to 
 
 ## Setting the SSM name prefix
 
-To provide a prefix, open up the `sst.json` and add a `ssmPrefix` field.
+To provide a prefix, open up the `sst.config.ts` and add a `ssmPrefix` field.
 
-```diff
-{
-  "name": "my-sst-app",
-  "region": "us-east-1",
-- "main": "lib/index.ts"
-+ "main": "lib/index.ts",
-+ "ssmPrefix": "/myOrg/myTeam/"
-}
+```ts title="sst.config.ts" {6}
+export default {
+  config(input) {
+    return {
+      name: "myapp",
+      region: "us-east-1",
+      ssmPrefix: "/myOrg/myTeam/",
+    };
+  },
+  stacks(app) {},
+} satisfies SSTConfig;
 ```
 
 For example, the default SSM parameter name that's created for a [Bucket](../constructs/Bucket.md) is:
