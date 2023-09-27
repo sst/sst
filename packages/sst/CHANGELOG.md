@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.26.8
+
+### Patch Changes
+
+- [`be9a8ba80`](https://github.com/sst/sst/commit/be9a8ba80b9266cdd9a133f6d0780100cd286277) Thanks [@thdxr](https://github.com/thdxr)! - node: remove rogue console.log
+
 ## 2.26.7
 
 ### Patch Changes
