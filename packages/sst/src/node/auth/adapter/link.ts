@@ -34,7 +34,7 @@ export const LinkAdapter = /* @__PURE__ */ createAdapter(
         "https://" +
         [useDomainName(), ...usePath().slice(0, -1), "callback"].join("/");
 
-      if (step === "authorize") {
+      if (step === "authorize" || step === "connect") {
         const url = new URL(callback);
         const claims = useQueryParams();
         url.searchParams.append("token", signer(claims));

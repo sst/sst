@@ -5,7 +5,6 @@ import path from "path";
 import type { Loader, BuildOptions } from "esbuild";
 import { Construct } from "constructs";
 import fs from "fs/promises";
-import crypto from "crypto";
 import zlib from "zlib";
 
 import { App } from "./App.js";
@@ -58,8 +57,7 @@ import { StringParameter } from "aws-cdk-lib/aws-ssm";
 import { Platform } from "aws-cdk-lib/aws-ecr-assets";
 import { useBootstrap } from "../bootstrap.js";
 import { Colors } from "../cli/colors.js";
-import { BucketDeployment, Source } from "aws-cdk-lib/aws-s3-deployment";
-import { Bucket, IBucket } from "aws-cdk-lib/aws-s3";
+import { IBucket } from "aws-cdk-lib/aws-s3";
 import { Asset } from "aws-cdk-lib/aws-s3-assets";
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 

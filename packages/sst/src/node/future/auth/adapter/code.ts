@@ -36,7 +36,7 @@ export function CodeAdapter(config: {
   return async function () {
     const step = usePathParam("step");
 
-    if (step === "authorize") {
+    if (step === "authorize" || step === "connect") {
       const code = generate();
       const claims = useQueryParams();
       delete claims["client_id"];
@@ -71,7 +71,8 @@ export function CodeAdapter(config: {
       );
       if (!code || !claims) {
         return {
-          type: "error",
+          type: "step",
+          properties: await config.onCodeInvalid(code, claims),
         };
       }
       const compare = useQueryParam("code");
@@ -96,9 +97,5 @@ export function CodeAdapter(config: {
         },
       };
     }
-
-    return {
-      type: "error",
-    };
   } satisfies Adapter;
 }

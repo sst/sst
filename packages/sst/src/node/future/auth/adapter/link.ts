@@ -30,7 +30,7 @@ export function LinkAdapter(config: {
     const callback = "https://" + useDomainName() + "/callback";
     const step = usePathParam("step");
 
-    if (step === "authorize") {
+    if (step === "authorize" || step === "connect") {
       const url = new URL(callback);
       const claims = useQueryParams();
       url.searchParams.append("token", signer(claims));
@@ -55,9 +55,5 @@ export function LinkAdapter(config: {
         };
       } catch (ex) {}
     }
-
-    return {
-      type: "error",
-    };
   } satisfies Adapter;
 }

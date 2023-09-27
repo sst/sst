@@ -50,7 +50,7 @@ export const OauthAdapter = /* @__PURE__ */ createAdapter(
         response_types: ["code"],
       });
 
-      if (step === "authorize") {
+      if (step === "authorize" || step === "connect") {
         const code_verifier = generators.codeVerifier();
         const state = generators.state();
         const code_challenge = generators.codeChallenge(code_verifier);
