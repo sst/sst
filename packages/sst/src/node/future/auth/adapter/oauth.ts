@@ -7,7 +7,7 @@ import {
   useQueryParams,
   useResponse,
 } from "../../../api/index.js";
-import { Adapter } from "./adapter.js";
+import { Adapter, AdapterError } from "./adapter.js";
 
 export interface OauthBasicConfig {
   /**
@@ -36,12 +36,15 @@ export interface OauthConfig extends OauthBasicConfig {
   issuer: Issuer;
 }
 
+export class OauthError extends AdapterError {}
+
 export const OauthAdapter =
   /* @__PURE__ */
   (config: OauthConfig) => {
     return async function () {
       const step = usePathParam("step");
       const callback = "https://" + useDomainName() + "/callback";
+      console.log("callback", callback);
 
       const client = new config.issuer.Client({
         client_id: config.clientID,
@@ -50,7 +53,7 @@ export const OauthAdapter =
         response_types: ["code"],
       });
 
-      if (step === "authorize") {
+      if (step === "authorize" || step === "connect") {
         const code_verifier = generators.codeVerifier();
         const state = generators.state();
         const code_challenge = generators.codeChallenge(code_verifier);
@@ -89,6 +92,12 @@ export const OauthAdapter =
 
       if (step === "callback") {
         const params = useQueryParams();
+        if (params.error) {
+          return {
+            type: "error",
+            error: new OauthError(params.error),
+          };
+        }
         const code_verifier = useCookie("auth_code_verifier");
         const state = useCookie("auth_state");
         const tokenset = await client[
@@ -108,7 +117,5 @@ export const OauthAdapter =
         };
         return x;
       }
-
-      throw new Error("Invalid auth request");
     } satisfies Adapter;
   };

@@ -184,5 +184,6 @@ export function createSessionBuilder<
       return ctx as SessionValue;
     },
     $type: {} as SessionTypes,
+    $typeValues: {} as SessionValue,
   };
 }

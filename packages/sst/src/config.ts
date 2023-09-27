@@ -272,6 +272,7 @@ async function* scanParameters(prefix: string) {
         NextToken: token,
       })
     );
+    console.log("results", results.Parameters?.length);
     yield* results.Parameters || [];
 
     if (!results.NextToken) break;

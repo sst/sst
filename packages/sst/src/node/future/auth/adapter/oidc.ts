@@ -35,7 +35,7 @@ export const OidcAdapter = /* @__PURE__ */ (config: OidcConfig) => {
       response_types: ["id_token"],
     });
 
-    if (step === "authorize") {
+    if (step === "authorize" || step === "connect") {
       const nonce = generators.nonce();
       const state = generators.state();
       const url = client.authorizationUrl({

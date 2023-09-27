@@ -351,7 +351,11 @@ export class App extends CDKApp {
         Tags.of(child).add("sst:app", this.name);
         Tags.of(child).add("sst:stage", this.stage);
 
-        if (child instanceof Stack && !this.isRunningSSTTest()) {
+        if (
+          child instanceof Stack &&
+          !this.isRunningSSTTest() &&
+          this.mode !== "dev"
+        ) {
           const bootstrap = await useBootstrap();
           const functions = useFunctions();
           const sourcemaps = functions.sourcemaps.forStack(child.stackName);

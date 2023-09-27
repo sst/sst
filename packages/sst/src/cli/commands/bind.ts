@@ -82,7 +82,7 @@ export const bind = (program: Program) =>
             );
           }
 
-          await useIOT();
+          useIOT();
           const bus = useBus();
           const project = useProject();
           let p: ReturnType<typeof spawn> | undefined;
