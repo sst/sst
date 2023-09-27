@@ -74,15 +74,15 @@ export function AuthHandler<
 >(input: {
   providers: Providers;
   sessions?: Sessions;
-  /** @deprecated use on.auth.allowClient callback instead */
+  /** @deprecated use callbacks.auth.allowClient callback instead */
   clients?: () => Promise<Record<string, string>>;
-  /** @deprecated use on.auth.allowClient callback instead */
+  /** @deprecated use callbacks.auth.allowClient callback instead */
   allowClient?: (clientID: string, redirect: string) => Promise<boolean>;
-  /** @deprecated use on.auth.start callback instead */
+  /** @deprecated use callbacks.auth.start callback instead */
   onAuthorize?: (
     event: APIGatewayProxyEventV2
   ) => Promise<void | keyof Providers>;
-  /** @deprecated use on.auth.success callback instead */
+  /** @deprecated use callbacks.auth.success callback instead */
   onSuccess?: (
     input: Result,
     response: OnSuccessResponder<Sessions["$typeValues"]>
@@ -91,7 +91,7 @@ export function AuthHandler<
       OnSuccessResponder<Sessions["$typeValues"]>[keyof OnSuccessResponder<any>]
     >
   >;
-  /** @deprecated on.index callback instead */
+  /** @deprecated */
   onIndex?: (
     event: APIGatewayProxyEventV2
   ) => Promise<APIGatewayProxyStructuredResultV2>;
