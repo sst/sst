@@ -7,7 +7,6 @@ import spawn from "cross-spawn";
 import { execSync } from "child_process";
 
 import { Construct } from "constructs";
-import { Lazy } from "aws-cdk-lib";
 import {
   Fn,
   Token,
@@ -37,7 +36,6 @@ import {
   FunctionUrlAuthType,
   FunctionProps as CdkFunctionProps,
   InvokeMode,
-  Architecture,
 } from "aws-cdk-lib/aws-lambda";
 import { Asset } from "aws-cdk-lib/aws-s3-assets";
 import {
@@ -58,8 +56,6 @@ import {
   Function as CfFunction,
   FunctionCode as CfFunctionCode,
   FunctionEventType as CfFunctionEventType,
-  IDistribution,
-  IOrigin,
 } from "aws-cdk-lib/aws-cloudfront";
 import { AwsCliLayer } from "aws-cdk-lib/lambda-layer-awscli";
 import { S3Origin, HttpOrigin } from "aws-cdk-lib/aws-cloudfront-origins";
@@ -92,7 +88,6 @@ import {
 import { useProject } from "../project.js";
 import { VisibleError } from "../error.js";
 import { RetentionDays } from "aws-cdk-lib/aws-logs";
-import { Behavior } from "@aws-sdk/client-iot";
 
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 
