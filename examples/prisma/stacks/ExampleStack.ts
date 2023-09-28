@@ -1,5 +1,5 @@
 import path from "path";
-import fs from "fs";
+import fs from "fs-extra";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import { Api, StackContext } from "sst/constructs";
 
@@ -10,7 +10,7 @@ export function ExampleStack({ stack, app }: StackContext) {
     const layerPath = ".sst/layers/prisma";
 
     // Clear out the layer path
-    fs.removeSync(layerPath, { force: true, recursive: true });
+    fs.removeSync(layerPath);
     fs.mkdirSync(layerPath, { recursive: true });
 
     // Copy files to the layer
