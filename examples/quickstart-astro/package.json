@@ -13,13 +13,13 @@
     "sst:dev": "sst dev"
   },
   "dependencies": {
-    "@aws-sdk/client-s3": "^3.414.0",
-    "@aws-sdk/s3-request-presigner": "^3.414.0",
-    "astro": "^3.1.0"
+    "@aws-sdk/client-s3": "^3.421.0",
+    "@aws-sdk/s3-request-presigner": "^3.421.0",
+    "astro": "^3.1.4"
   },
   "devDependencies": {
-    "sst": "^2.25.2",
-    "astro-sst": "^2.25.2",
+    "sst": "^2.26.8",
+    "astro-sst": "^2.26.8",
     "aws-cdk-lib": "2.91.0",
     "constructs": "10.2.69"
   }
