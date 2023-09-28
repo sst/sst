@@ -762,6 +762,7 @@ export class Function extends CDKFunction implements SSTConstruct {
       Tracing[
         (props.tracing || "active").toUpperCase() as keyof typeof Tracing
       ];
+    const isCloudWatchLogsEnabled = props.logsEnabled ?? true;
     const logRetention =
       props.logRetention &&
       RetentionDays[
@@ -994,7 +995,7 @@ export class Function extends CDKFunction implements SSTConstruct {
     this.attachPermissions(props.permissions || []);
 
     // Disable CloudWatch Logs
-    if (!this.props.logsEnabled) {
+    if (!isCloudWatchLogsEnabled) {
       this.attachPermissions([
         new PolicyStatement({
           effect: Effect.DENY,
