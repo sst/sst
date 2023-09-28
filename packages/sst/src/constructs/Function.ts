@@ -356,6 +356,21 @@ export interface FunctionProps
    */
   layers?: (string | ILayerVersion)[];
   /**
+   * Specifies whether logs should be sent to CloudWatch Logs or not.
+   *
+   * This setting does not effect logs from the SST CLI.
+   * @default true
+   * @example
+   * ```js
+   * new Function(stack, "Function", {
+   *   handler: "src/function.handler",
+   *   logsEnabled: false
+   * })
+   * ```
+   *
+   */
+  logsEnabled?: boolean;
+  /**
    * The duration function logs are kept in CloudWatch Logs.
    *
    * When updating this property, unsetting it doesn't retain the logs indefinitely. Explicitly set the value to "infinite".
@@ -977,6 +992,21 @@ export class Function extends CDKFunction implements SSTConstruct {
 
     // Attach permissions
     this.attachPermissions(props.permissions || []);
+
+    // Disable CloudWatch Logs
+    if (!this.props.logsEnabled) {
+      this.attachPermissions([
+        new PolicyStatement({
+          effect: Effect.DENY,
+          actions: [
+            "logs:CreateLogGroup",
+            "logs:CreateLogStream",
+            "logs:PutLogEvents",
+          ],
+          resources: ["*"],
+        }),
+      ]);
+    }
 
     // Add config
     this.addEnvironment("SST_APP", app.name, { removeInEdge: true });

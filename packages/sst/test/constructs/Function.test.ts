@@ -371,6 +371,44 @@ test("logRetention-infinite", async () => {
   });
 });
 
+test("logsEnabled-default", async () => {
+  const stack = new Stack(await createApp(), "stack");
+  new Function(stack, "Function", {
+    handler: "test/lambda.handler",
+  });
+  hasResource(stack, "AWS::IAM::Policy", {
+    PolicyDocument: {
+      Statement: [lambdaDefaultPolicy],
+      Version: "2012-10-17",
+    },
+  });
+});
+
+test("logsEnabled-false", async () => {
+  const stack = new Stack(await createApp(), "stack");
+  new Function(stack, "Function", {
+    handler: "test/lambda.handler",
+    logsEnabled: false,
+  });
+  hasResource(stack, "AWS::IAM::Policy", {
+    PolicyDocument: {
+      Statement: [
+        lambdaDefaultPolicy,
+        {
+          Action: [
+            "logs:CreateLogGroup",
+            "logs:CreateLogStream",
+            "logs:PutLogEvents",
+          ],
+          Effect: "DENY",
+          Resource: ["*"],
+        },
+      ],
+      Version: "2012-10-17",
+    },
+  });
+});
+
 test("xray-disabled", async () => {
   const stack = new Stack(await createApp(), "stack");
   new Function(stack, "Function", {
