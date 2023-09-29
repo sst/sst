@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.26.9
+
+### Patch Changes
+
+- [`47c5c0733`](https://github.com/sst/sst/commit/47c5c0733630727c18d40b61b04558a158cabbab) Thanks [@thdxr](https://github.com/thdxr)! - cli: remove unnecessary console.log
+
 ## 2.26.8
 
 ### Patch Changes
