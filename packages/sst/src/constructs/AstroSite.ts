@@ -1,6 +1,28 @@
-import fs from "fs";
-import path from "path";
+import { readFileSync, existsSync, readdirSync, statSync } from "fs";
+import { join } from "path";
+import type { RouteType } from "astro";
+import type { Bucket } from "aws-cdk-lib/aws-s3";
 import { SsrSite } from "./SsrSite.js";
+
+const BUILD_META_EXPORT_NAME = "sst.buildMeta.json";
+
+type AstroBuildMeta = {
+  domainName?: string;
+  outputMode: "server" | "static" | "hybrid";
+  pageResolution: "file" | "directory";
+  trailingSlash: "ignore" | "always" | "never";
+  serverBuildOutputFile: string;
+  clientBuildOutputDir: string;
+  clientBuildVersionedSubDir: string;
+  routes: Array<{
+    route: string;
+    type: RouteType;
+    pattern: string;
+    prerender: boolean;
+    redirectPath?: string;
+    redirectStatus?: 300 | 301 | 302 | 303 | 304 | 307 | 308;
+  }>;
+};
 
 /**
  * The `AstroSite` construct is a higher level CDK construct that makes it easy to create a Astro app.
@@ -16,11 +38,25 @@ import { SsrSite } from "./SsrSite.js";
 export class AstroSite extends SsrSite {
   protected typesPath = "src";
 
-  protected plan() {
+  private static getBuildMeta(filePath: string) {
+    if (!existsSync(filePath)) {
+      throw new Error(
+        `Could not find build meta file at ${filePath}. Update your 'astro-sst' package version and rebuild your Astro site.`
+      );
+    }
+
+    return JSON.parse(readFileSync(filePath, "utf-8")) as AstroBuildMeta;
+  }
+
+  protected plan(_bucket: Bucket) {
     const { path: sitePath, edge } = this.props;
+    const buildMeta = AstroSite.getBuildMeta(
+      join(sitePath, "dist", BUILD_META_EXPORT_NAME)
+    );
+
     const serverConfig = {
       description: "Server handler for Astro",
-      handler: path.join(sitePath, "dist", "server", "entry.handler"),
+      handler: join(sitePath, "dist", "server", "entry.handler"),
     };
 
     return this.validatePlan({
@@ -56,7 +92,7 @@ export class AstroSite extends SsrSite {
           type: "s3" as const,
           copy: [
             {
-              from: "dist/client",
+              from: buildMeta.clientBuildOutputDir,
               to: "",
               cached: true,
               versionedSubDir: "assets",
@@ -77,14 +113,13 @@ export class AstroSite extends SsrSite {
               cfFunction: "serverCfFunction",
               origin: "regionalServer",
             },
-        // create 1 behaviour for each top level asset file/folder
-        ...fs.readdirSync(path.join(sitePath, "dist/client")).map(
+        ...readdirSync(join(sitePath, buildMeta.clientBuildOutputDir)).map(
           (item) =>
             ({
               cacheType: "static",
-              pattern: fs
-                .statSync(path.join(sitePath, "dist/client", item))
-                .isDirectory()
+              pattern: statSync(
+                join(sitePath, buildMeta.clientBuildOutputDir, item)
+              ).isDirectory()
                 ? `${item}/*`
                 : item,
               origin: "s3",

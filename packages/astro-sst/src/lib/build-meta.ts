@@ -6,9 +6,9 @@ import type {
 } from "astro";
 import { join, relative } from "path";
 import { writeFile } from "fs/promises";
-import { fileURLToPath } from "url";
+import { fileURLToPath, parse } from "url";
 
-const BUILD_EXPORT_NAME = "sst.buildMeta.json";
+const BUILD_META_EXPORT_NAME = "sst.buildMeta.json";
 
 type BuildResults = {
   pages: {
@@ -39,6 +39,15 @@ export class BuildMeta {
     this.buildResults = buildResults;
   }
 
+  private static get domainName() {
+    if (
+      typeof this.astroConfig.site === "string" &&
+      this.astroConfig.site.length > 0
+    ) {
+      return parse(this.astroConfig.site).hostname ?? undefined;
+    }
+  }
+
   private static serializableRoute(route: RouteData): SerializableRoute {
     return {
       route: route.route,
@@ -54,7 +63,7 @@ export class BuildMeta {
     };
   }
 
-  public static async exportBuildMeta(buildExportName = BUILD_EXPORT_NAME) {
+  public static async exportBuildMeta(buildExportName = BUILD_META_EXPORT_NAME) {
     const rootDir = fileURLToPath(this.astroConfig.root);
 
     const outputPath = join(
@@ -63,14 +72,22 @@ export class BuildMeta {
     );
 
     const buildMeta = {
-      astroSite: {
-        outputMode: this.astroConfig.output,
-        pageResolution: this.astroConfig.build.format,
-        trailingSlash: this.astroConfig.trailingSlash,
-        routes: this.buildResults.routes.map((route) =>
-          this.serializableRoute(route)
-        ),
-      },
+      domainName: this.domainName ?? undefined,
+      outputMode: this.astroConfig.output,
+      pageResolution: this.astroConfig.build.format,
+      trailingSlash: this.astroConfig.trailingSlash,
+      serverBuildOutputFile: join(
+        relative(rootDir, fileURLToPath(this.astroConfig.build.server)),
+        this.astroConfig.build.serverEntry
+      ),
+      clientBuildOutputDir: relative(
+        rootDir,
+        fileURLToPath(this.astroConfig.build.client)
+      ),
+      clientBuildVersionedSubDir: this.astroConfig.build.assets,
+      routes: this.buildResults.routes.map((route) =>
+        this.serializableRoute(route)
+      ),
     };
 
     await writeFile(outputPath, JSON.stringify(buildMeta));
