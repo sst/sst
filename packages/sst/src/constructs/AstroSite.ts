@@ -3,6 +3,7 @@ import { join } from "path";
 import type { RouteType } from "astro";
 import type { Bucket } from "aws-cdk-lib/aws-s3";
 import { SsrSite } from "./SsrSite.js";
+import { AllowedMethods } from "aws-cdk-lib/aws-cloudfront";
 
 const BUILD_META_EXPORT_NAME = "sst.buildMeta.json";
 
@@ -78,16 +79,6 @@ export class AstroSite extends SsrSite {
           }
         : undefined,
       origins: {
-        ...(edge
-          ? {}
-          : {
-              regionalServer: {
-                type: "function",
-                constructId: "ServerFunction",
-                function: serverConfig,
-                streaming: true,
-              },
-            }),
         s3: {
           type: "s3" as const,
           copy: [
@@ -99,6 +90,22 @@ export class AstroSite extends SsrSite {
             },
           ],
         },
+        ...(edge
+          ? {}
+          : {
+              regionalServer: {
+                type: "function",
+                constructId: "ServerFunction",
+                function: serverConfig,
+                streaming: true,
+              },
+              fallthroughServer: {
+                type: "group",
+                primaryOriginName: "s3",
+                fallbackOriginName: "regionalServer",
+                fallbackStatusCodes: [403, 404],
+              },
+            }),
       },
       behaviors: [
         edge
@@ -111,7 +118,8 @@ export class AstroSite extends SsrSite {
           : {
               cacheType: "server",
               cfFunction: "serverCfFunction",
-              origin: "regionalServer",
+              origin: "fallthroughServer",
+              allowedMethods: AllowedMethods.ALLOW_GET_HEAD_OPTIONS,
             },
         ...readdirSync(join(sitePath, buildMeta.clientBuildOutputDir)).map(
           (item) =>
