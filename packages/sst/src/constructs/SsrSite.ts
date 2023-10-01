@@ -57,7 +57,11 @@ import {
   FunctionEventType as CfFunctionEventType,
 } from "aws-cdk-lib/aws-cloudfront";
 import { AwsCliLayer } from "aws-cdk-lib/lambda-layer-awscli";
-import { S3Origin, HttpOrigin, OriginGroup } from "aws-cdk-lib/aws-cloudfront-origins";
+import {
+  S3Origin,
+  HttpOrigin,
+  OriginGroup,
+} from "aws-cdk-lib/aws-cloudfront-origins";
 import { Rule, Schedule } from "aws-cdk-lib/aws-events";
 import { LambdaFunction } from "aws-cdk-lib/aws-events-targets";
 
@@ -87,7 +91,6 @@ import {
 import { useProject } from "../project.js";
 import { VisibleError } from "../error.js";
 import { RetentionDays } from "aws-cdk-lib/aws-logs";
-import { create } from "domain";
 
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 
@@ -119,6 +122,7 @@ type OriginGroupConfig = {
   fallbackOriginName: string;
   fallbackStatusCodes?: number[];
 };
+type OriginsMap = Record<string, S3Origin | HttpOrigin | OriginGroup>;
 
 export interface SsrSiteNodeJSProps extends NodeJSProps {}
 export interface SsrDomainProps extends DistributionDomainProps {}
@@ -722,7 +726,7 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
 
       return distribution;
     }
-    
+
     function buildBehavior(
       behavior: ReturnType<typeof self.validatePlan>["behaviors"][number]
     ) {
@@ -734,7 +738,7 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
         return {
           origin,
           viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
-          allowedMethods: AllowedMethods.ALLOW_GET_HEAD_OPTIONS,
+          allowedMethods: behavior.allowedMethods ?? AllowedMethods.ALLOW_GET_HEAD_OPTIONS,
           cachedMethods: CachedMethods.CACHE_GET_HEAD_OPTIONS,
           compress: true,
           cachePolicy: CachePolicy.CACHING_OPTIMIZED,
@@ -752,7 +756,7 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
         return {
           viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
           origin,
-          allowedMethods: AllowedMethods.ALLOW_ALL,
+          allowedMethods: behavior.allowedMethods ?? AllowedMethods.ALLOW_ALL,
           cachedMethods: CachedMethods.CACHE_GET_HEAD_OPTIONS,
           compress: true,
           cachePolicy: cdk?.serverCachePolicy ?? useServerBehaviorCachePolicy(),
@@ -856,7 +860,7 @@ function handler(event) {
         fileOptions || createS3OriginAssetFileOptions(props.copy);
       const s3deployCR = createS3OriginDeployment(assets, assetFileOptions);
       s3DeployCRs.push(s3deployCR);
-      
+
       return new S3Origin(bucket, {
         originPath: "/" + (props.originPath ?? ""),
       });
@@ -893,9 +897,7 @@ function handler(event) {
         authType: regional?.enableServerUrlIamAuth
           ? FunctionUrlAuthType.AWS_IAM
           : FunctionUrlAuthType.NONE,
-        invokeMode: props.streaming
-          ? InvokeMode.RESPONSE_STREAM
-          : undefined,
+        invokeMode: props.streaming ? InvokeMode.RESPONSE_STREAM : undefined,
       });
       if (regional?.enableServerUrlIamAuth) {
         useFunctionUrlSigningFunction().attachPermissions([
@@ -914,15 +916,17 @@ function handler(event) {
       });
     }
 
-    function createOriginGroup(props: OriginGroupConfig) {
+    function createOriginGroup(props: OriginGroupConfig, origins: OriginsMap) {
       return new OriginGroup({
         primaryOrigin: origins[props.primaryOriginName],
         fallbackOrigin: origins[props.fallbackOriginName],
         fallbackStatusCodes: props.fallbackStatusCodes,
-      })
+      });
     }
 
-    function createImageOptimizationFunctionOrigin(props: ImageOptimizationFunctionOriginConfig) {
+    function createImageOptimizationFunctionOrigin(
+      props: ImageOptimizationFunctionOriginConfig
+    ) {
       const fn = new CdkFunction(self, `ImageFunction`, {
         currentVersionOptions: {
           removalPolicy: RemovalPolicy.DESTROY,
@@ -956,12 +960,12 @@ function handler(event) {
     }
 
     function createOrigins() {
-      const origins: Record<string, S3Origin | HttpOrigin | OriginGroup> = {};
+      const origins: OriginsMap = {};
 
       Object.entries(plan.origins ?? {}).forEach(([name, props]) => {
         if (!props) return;
 
-        switch(props.type) {
+        switch (props.type) {
           case "s3":
             origins[name] = createS3Origin(props);
             break;
@@ -969,7 +973,7 @@ function handler(event) {
             origins[name] = createFunctionOrigin(props);
             break;
           case "group":
-            origins[name] = createOriginGroup(props);
+            origins[name] = createOriginGroup(props, origins);
             break;
           case "image-optimization-function":
             origins[name] = createImageOptimizationFunctionOrigin(props);
@@ -1371,6 +1375,7 @@ function handler(event) {
       cacheType: "server" | "static";
       pattern?: string;
       origin: keyof Origins;
+      allowedMethods?: AllowedMethods;
       cfFunction?: keyof CloudFrontFunctions;
       edgeFunction?: keyof EdgeFunctions;
     }[];
