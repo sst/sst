@@ -22,6 +22,7 @@ import { PolicyStatement } from "aws-cdk-lib/aws-iam";
 import { RetentionDays } from "aws-cdk-lib/aws-logs";
 
 export interface NextjsSiteProps extends Omit<SsrSiteProps, "nodejs"> {
+  experimentalStreaming?: boolean;
   imageOptimization?: {
     /**
      * The amount of memory in MB allocated for image optimization function.
@@ -91,7 +92,7 @@ export class NextjsSite extends SsrSite {
 
   constructor(scope: Construct, id: string, props?: NextjsSiteProps) {
     super(scope, id, {
-      buildCommand: "npx --yes open-next@2.1.5 build",
+      buildCommand: `npx --yes open-next@2.2.0 build ${props?.experimentalStreaming ? "--streaming" : ""}`,
       ...props,
     });
 
@@ -99,7 +100,7 @@ export class NextjsSite extends SsrSite {
   }
 
   protected plan(bucket: Bucket) {
-    const { path: sitePath, edge, imageOptimization } = this.props;
+    const { path: sitePath, edge, imageOptimization, experimentalStreaming } = this.props;
     const serverConfig = {
       description: "Next.js server",
       bundle: path.join(sitePath, ".open-next", "server-function"),
@@ -133,6 +134,7 @@ export class NextjsSite extends SsrSite {
                 type: "function",
                 constructId: "ServerFunction",
                 function: serverConfig,
+                streaming: experimentalStreaming,
               },
             }),
         imageOptimizer: {

@@ -901,7 +901,7 @@ function handler(event) {
               : FunctionUrlAuthType.NONE,
             invokeMode: props.streaming
               ? InvokeMode.RESPONSE_STREAM
-              : undefined,
+              : InvokeMode.BUFFERED,
           });
           if (regional?.enableServerUrlIamAuth) {
             useFunctionUrlSigningFunction().attachPermissions([
