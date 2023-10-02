@@ -1,4 +1,4 @@
-The `AstroSite` construct is a higher level CDK construct that makes it easy to create an Astro app. It provides a simple way to build and deploy the app to AWS:
+The `AstroSite` construct is a higher level CDK construct that makes it easy to create an Astro app. It provides a simple way to build and deploy the app to AWS in either `server` or `hybrid` modes:
 
 - The client assets are deployed to an S3 Bucket, and served out from a CloudFront CDN for fast content delivery.
 - The app server is deployed to Lambda. You can deploy to Lambda@Edge instead if the `edge` flag is enabled. Read more about [Single region vs Edge](#single-region-vs-edge).
@@ -174,6 +174,26 @@ const site = new AstroSite(stack, "Site", {
   },
 });
 ```
+
+## SSR Exclusive Routes
+
+For regional deployments, all routes are first checked against the S3 cache before being directed to the Lambda function for server rendering. There is a minimal performance penalty for this check and it does limit the default supported request methods for all routes to `GET`, `HEAD`, and `OPTIONS`. To bypass this check to support other request methods or for the very slight performance improvement, specify the route pattern in the `ssrExclusiveRoutes` property of the `AstroSite` construct.
+
+```js {5}
+const site = new AstroSite(stack, "Site", {
+  path: "my-astro-app/",
+  ssrExclusiveRoutes: [
+    'feedback', // Feedback page which requires POST method
+    'login',    // Login page which requires POST method
+    'user/*',   // Directory of user routes which are all SSR
+    'api/*'     // Directory of API endpoints which require all methods
+  ]
+});
+```
+
+:::info
+The `ssrExclusiveRoutes` property only supports up to 23 routes due to [quota limitation](https://docs.sst.dev/known-issues#cloudfront-cachebehaviors-limit-exceeded) imposed by CloudFront.
+:::
 
 ## Environment variables
 

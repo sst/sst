@@ -1,6 +1,7 @@
 ---
 "astro-sst": major
-"sst": minor
+"sst": patch
+"@sst/docs": patch
 ---
 
 Improves SSR support for Astro Site
