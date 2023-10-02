@@ -628,7 +628,7 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
 
       // Create warmer function
       const warmer = new CdkFunction(self, "WarmerFunction", {
-        description: "Next.js warmer",
+        description: "SSR warmer",
         code: Code.fromAsset(
           plan.warmerConfig?.function ??
             path.join(__dirname, "../support/ssr-warmer")
@@ -636,7 +636,7 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
         runtime: Runtime.NODEJS_18_X,
         handler: "index.handler",
         timeout: CdkDuration.minutes(15),
-        memorySize: 1024,
+        memorySize: 128,
         environment: {
           FUNCTION_NAME: ssrFunctions[0].functionName,
           CONCURRENCY: warm.toString(),
@@ -646,7 +646,8 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
 
       // Create cron job
       new Rule(self, "WarmerRule", {
-        schedule: Schedule.rate(CdkDuration.minutes(5)),
+        schedule:
+          plan.warmerConfig?.schedule ?? Schedule.rate(CdkDuration.minutes(5)),
         targets: [new LambdaFunction(warmer, { retryAttempts: 0 })],
       });
 
@@ -1355,6 +1356,7 @@ function handler(event) {
     buildId?: string;
     warmerConfig?: {
       function: string;
+      schedule?: Schedule;
     };
   }) {
     return input;
