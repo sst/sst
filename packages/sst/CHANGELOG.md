@@ -1,5 +1,25 @@
 # @serverless-stack/cli2
 
+## 2.26.10
+
+### Patch Changes
+
+- [`1e39f6490`](https://github.com/sst/sst/commit/1e39f6490e97a2303e9cddf4a81221b90c9a48d2) Thanks [@thdxr](https://github.com/thdxr)! - cli: clear build dir on synth
+
+- [`4a433ce1b`](https://github.com/sst/sst/commit/4a433ce1b9b8176a7b9f495758397901e57a64f6) Thanks [@thdxr](https://github.com/thdxr)! - future/auth: fix index url
+
+## 2.26.9
+
+### Patch Changes
+
+- [`47c5c0733`](https://github.com/sst/sst/commit/47c5c0733630727c18d40b61b04558a158cabbab) Thanks [@thdxr](https://github.com/thdxr)! - cli: remove unnecessary console.log
+
+## 2.26.8
+
+### Patch Changes
+
+- [`be9a8ba80`](https://github.com/sst/sst/commit/be9a8ba80b9266cdd9a133f6d0780100cd286277) Thanks [@thdxr](https://github.com/thdxr)! - node: remove rogue console.log
+
 ## 2.26.7
 
 ### Patch Changes

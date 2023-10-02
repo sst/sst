@@ -7,15 +7,15 @@
     "typecheck": "tsc -noEmit"
   },
   "devDependencies": {
-    "@types/node": "^20.6.1",
-    "@types/aws-lambda": "^8.10.121",
-    "vitest": "^0.34.4",
-    "sst": "^2.25.2"
+    "@types/node": "^20.7.1",
+    "@types/aws-lambda": "^8.10.122",
+    "vitest": "^0.34.5",
+    "sst": "^2.26.8"
   },
   "dependencies": {
-    "@pothos/core": "^3.35.0",
-    "graphql": "^16.8.0",
+    "@pothos/core": "^3.38.0",
+    "graphql": "^16.8.1",
     "ulid": "^2.3.0",
-    "@types/aws-lambda": "^8.10.121"
+    "@types/aws-lambda": "^8.10.122"
   }
 }

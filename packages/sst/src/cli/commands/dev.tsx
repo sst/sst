@@ -421,7 +421,6 @@ export const dev = (program: Program) =>
           });
         });
 
-        console.log("wtf");
         Logger.debug("dev is ready");
         const appMetadata = lazy(() =>
           import("../../stacks/app-metadata.js").then((mod) =>
