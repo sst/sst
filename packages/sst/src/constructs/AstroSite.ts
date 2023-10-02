@@ -2,8 +2,9 @@ import { readFileSync, existsSync, readdirSync, statSync } from "fs";
 import { join } from "path";
 import type { RouteType } from "astro";
 import type { Bucket } from "aws-cdk-lib/aws-s3";
-import { SsrSite } from "./SsrSite.js";
+import { SsrSite, SsrSiteNormalizedProps, SsrSiteProps } from "./SsrSite.js";
 import { AllowedMethods } from "aws-cdk-lib/aws-cloudfront";
+import { Construct } from "constructs";
 
 const BUILD_META_EXPORT_NAME = "sst.buildMeta.json";
 
@@ -25,6 +26,12 @@ type AstroBuildMeta = {
   }>;
 };
 
+export interface AstroSiteProps extends SsrSiteProps {
+  ssrExclusiveRoutes?: string[];
+}
+
+type AstroSiteNormalizedProps = AstroSiteProps & SsrSiteNormalizedProps;
+
 /**
  * The `AstroSite` construct is a higher level CDK construct that makes it easy to create a Astro app.
  * @example
@@ -37,6 +44,12 @@ type AstroBuildMeta = {
  * ```
  */
 export class AstroSite extends SsrSite {
+  declare props: AstroSiteNormalizedProps;
+
+  constructor(scope: Construct, id: string, props: AstroSiteProps) {
+    super(scope, id, props);
+  }
+
   protected typesPath = "src";
 
   private static getBuildMeta(filePath: string) {
@@ -198,6 +211,14 @@ export class AstroSite extends SsrSite {
               pattern: `${buildMeta.clientBuildVersionedSubDir}/*`,
               origin: "s3",
             },
+            ...(this.props.ssrExclusiveRoutes ?? []).map(
+              (route) =>
+                ({
+                  cacheType: "server",
+                  pattern: route,
+                  origin: "regionalServer",
+                } as const)
+            ),
           ],
     });
   }

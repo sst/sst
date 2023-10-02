@@ -382,7 +382,7 @@ export interface SsrSiteProps {
   fileOptions?: SsrSiteFileOptions[];
 }
 
-type SsrSiteNormalizedProps = SsrSiteProps & {
+export type SsrSiteNormalizedProps = SsrSiteProps & {
   path: Exclude<SsrSiteProps["path"], undefined>;
   runtime: Exclude<SsrSiteProps["runtime"], undefined>;
   timeout: Exclude<SsrSiteProps["timeout"], undefined>;
