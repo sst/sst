@@ -424,6 +424,14 @@ export function AuthHandler<
       }
 
       if (response_type === "token" || response_type === "code") {
+        if (!redirect_uri) {
+          return (
+            (await input.callbacks.auth.error?.(new UnknownStateError())) || {
+              statusCode: 400,
+              body: new UnknownStateError().message,
+            }
+          );
+        }
         const onSuccess = await input.callbacks.auth.success(
           {
             provider,
@@ -477,7 +485,7 @@ export function AuthHandler<
               }
             );
 
-          const { client_id, redirect_uri, state } = useCookies();
+          const { client_id, state } = useCookies();
 
           if (response_type === "token") {
             const location = new URL(redirect_uri);
