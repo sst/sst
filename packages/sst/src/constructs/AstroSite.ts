@@ -49,6 +49,61 @@ export class AstroSite extends SsrSite {
     return JSON.parse(readFileSync(filePath, "utf-8")) as AstroBuildMeta;
   }
 
+  private static getCFRoutingFunction({
+    routes,
+    pageResolution,
+  }: AstroBuildMeta) {
+    const serializedRoutes =
+      "[\n" +
+      routes
+        .map((route) => {
+          return `    {route: "${route.route}", pattern: ${
+            route.pattern
+          }, type: "${route.type}", prerender: ${route.prerender}, ${
+            route.redirectPath ? `redirectPath: "${route.redirectPath}", ` : ""
+          }${
+            route.redirectStatus
+              ? `redirectStatus: ${route.redirectStatus}`
+              : ""
+          } }`;
+        })
+        .join(",\n") +
+      "\n  ]";
+
+    return `// AstroSite CF Routing Function
+  var astroRoutes = ${serializedRoutes};
+  var matchedRoute = astroRoutes.find(route => route.pattern.test(request.uri));
+  if (matchedRoute) {
+    if (matchedRoute.type === "page" && matchedRoute.prerender) {
+      ${
+        pageResolution === "file"
+          ? `request.uri = request.uri === "/" ? "/index.html" : request.uri.replace(/\\/?$/, ".html");`
+          : `request.uri = request.uri.replace(/\\/?$/, "/index.html");`
+      }
+    } else if (matchedRoute.type === "redirect") {
+      var redirectPath = matchedRoute.redirectPath;
+      var slug = matchedRoute.pattern.exec(request.uri)[1];
+      if (slug) {
+        var redirectToRoute = astroRoutes.find(route => route.route === redirectPath);
+        redirectPath = redirectToRoute.route.replace(redirectToRoute.pattern.exec(redirectToRoute.route)[1], slug);
+      }
+      var statusCode = matchedRoute.redirectStatus || 302;
+      var statusDescription = 
+        statusCode === 302
+        ? "Found"
+        : statusCode === 301
+        ? "Moved Permanently"
+        : "Redirect";
+      return {
+        statusCode,
+        statusDescription,
+        headers: { location: { value: redirectPath } }
+      }
+    }
+  }
+  // End AstroSite CF Routing Function`;
+  }
+
   protected plan(_bucket: Bucket) {
     const { path: sitePath, edge } = this.props;
     const buildMeta = AstroSite.getBuildMeta(
@@ -64,7 +119,10 @@ export class AstroSite extends SsrSite {
       cloudFrontFunctions: {
         serverCfFunction: {
           constructId: "CloudFrontFunction",
-          injections: [this.useCloudFrontFunctionHostHeaderInjection()],
+          injections: [
+            this.useCloudFrontFunctionHostHeaderInjection(),
+            ...(!edge ? [AstroSite.getCFRoutingFunction(buildMeta)] : []),
+          ],
         },
       },
       edgeFunctions: edge
@@ -107,33 +165,40 @@ export class AstroSite extends SsrSite {
               },
             }),
       },
-      behaviors: [
-        edge
-          ? {
+      behaviors: edge
+        ? [
+            {
               cacheType: "server",
               cfFunction: "serverCfFunction",
               edgeFunction: "edgeServer",
               origin: "s3",
-            }
-          : {
+            },
+            ...readdirSync(join(sitePath, buildMeta.clientBuildOutputDir)).map(
+              (item) =>
+                ({
+                  cacheType: "static",
+                  pattern: statSync(
+                    join(sitePath, buildMeta.clientBuildOutputDir, item)
+                  ).isDirectory()
+                    ? `${item}/*`
+                    : item,
+                  origin: "s3",
+                } as const)
+            ),
+          ]
+        : [
+            {
               cacheType: "server",
               cfFunction: "serverCfFunction",
               origin: "fallthroughServer",
               allowedMethods: AllowedMethods.ALLOW_GET_HEAD_OPTIONS,
             },
-        ...readdirSync(join(sitePath, buildMeta.clientBuildOutputDir)).map(
-          (item) =>
-            ({
+            {
               cacheType: "static",
-              pattern: statSync(
-                join(sitePath, buildMeta.clientBuildOutputDir, item)
-              ).isDirectory()
-                ? `${item}/*`
-                : item,
+              pattern: `${buildMeta.clientBuildVersionedSubDir}/*`,
               origin: "s3",
-            } as const)
-        ),
-      ],
+            },
+          ],
     });
   }
 

@@ -738,7 +738,8 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
         return {
           origin,
           viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
-          allowedMethods: behavior.allowedMethods ?? AllowedMethods.ALLOW_GET_HEAD_OPTIONS,
+          allowedMethods:
+            behavior.allowedMethods ?? AllowedMethods.ALLOW_GET_HEAD_OPTIONS,
           cachedMethods: CachedMethods.CACHE_GET_HEAD_OPTIONS,
           compress: true,
           cachePolicy: CachePolicy.CACHING_OPTIMIZED,
