@@ -167,6 +167,15 @@ export function AuthHandler<
   return ApiHandler(async (evt) => {
     const step = usePathParam("step");
 
+    if (!step) {
+      return (
+        input.callbacks.index?.(evt) || {
+          statusCode: 404,
+          body: "Not found",
+        }
+      );
+    }
+
     if (step === "favicon.ico") {
       return {
         statusCode: 404,
