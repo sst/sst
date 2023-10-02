@@ -35,6 +35,24 @@ export class BuildMeta {
     this.astroConfig = config;
   }
 
+  private static getRedirectPath(
+    { segments }: RouteData,
+    shouldForceTrailingSlash: boolean
+  ) {
+    let i = 0;
+    return (
+      "/" +
+      segments
+        .map((segment) =>
+          segment
+            .map((part) => (part.dynamic ? `\${${++i}}` : part.content))
+            .join("")
+        )
+        .join("/") +
+      (shouldForceTrailingSlash ? "/" : "")
+    );
+  }
+
   public static setBuildResults(buildResults: BuildResults) {
     this.buildResults = buildResults;
   }
@@ -48,14 +66,22 @@ export class BuildMeta {
     }
   }
 
-  private static serializableRoute(route: RouteData): SerializableRoute {
+  private static serializableRoute(
+    route: RouteData,
+    shouldForceTrailingSlash: boolean
+  ): SerializableRoute {
     return {
       route: route.route,
       type: route.type,
       pattern: route.pattern.toString(),
       prerender: route.prerender,
       redirectPath:
-        typeof route.redirect === "string"
+        typeof route.redirectRoute !== "undefined"
+          ? BuildMeta.getRedirectPath(
+              route.redirectRoute,
+              shouldForceTrailingSlash
+            )
+          : typeof route.redirect === "string"
           ? route.redirect
           : route.redirect?.destination,
       redirectStatus:
@@ -63,7 +89,9 @@ export class BuildMeta {
     };
   }
 
-  public static async exportBuildMeta(buildExportName = BUILD_META_EXPORT_NAME) {
+  public static async exportBuildMeta(
+    buildExportName = BUILD_META_EXPORT_NAME
+  ) {
     const rootDir = fileURLToPath(this.astroConfig.root);
 
     const outputPath = join(
@@ -86,7 +114,10 @@ export class BuildMeta {
       ),
       clientBuildVersionedSubDir: this.astroConfig.build.assets,
       routes: this.buildResults.routes.map((route) =>
-        this.serializableRoute(route)
+        this.serializableRoute(
+          route,
+          this.astroConfig.trailingSlash === "always"
+        )
       ),
     };
 

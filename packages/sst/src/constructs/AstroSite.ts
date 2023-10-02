@@ -83,34 +83,25 @@ export class AstroSite extends SsrSite {
         .join(",\n") +
       "\n  ]";
 
-    return `// AstroSite CF Routing Function
+    return `  // AstroSite CF Routing Function
   var astroRoutes = ${serializedRoutes};
-  var matchedRoute = astroRoutes.find(route => route.pattern.test(request.uri));
+  var matchedRoute = astroRoutes.find((route) => route.pattern.test(request.uri));
   if (matchedRoute) {
-    if (matchedRoute.type === "page" && matchedRoute.prerender) {
+    if (matchedRoute.type === "redirect") {
+      var redirectPath = matchedRoute.redirectPath;
+      matchedRoute.pattern.exec(request.uri).forEach((match, index) => {
+        redirectPath = redirectPath.replace(\`\\\${\${index}}\`, match);
+      });
+      var statusCode = matchedRoute.redirectStatus || request.method === 'GET' ? 301 : 308;
+      return {
+        statusCode,
+        headers: { location: { value: redirectPath } },
+      };
+    } else if (matchedRoute.type === "page" && matchedRoute.prerender) {
       ${
         pageResolution === "file"
           ? `request.uri = request.uri === "/" ? "/index.html" : request.uri.replace(/\\/?$/, ".html");`
           : `request.uri = request.uri.replace(/\\/?$/, "/index.html");`
-      }
-    } else if (matchedRoute.type === "redirect") {
-      var redirectPath = matchedRoute.redirectPath;
-      var slug = matchedRoute.pattern.exec(request.uri)[1];
-      if (slug) {
-        var redirectToRoute = astroRoutes.find(route => route.route === redirectPath);
-        redirectPath = redirectToRoute.route.replace(redirectToRoute.pattern.exec(redirectToRoute.route)[1], slug);
-      }
-      var statusCode = matchedRoute.redirectStatus || 302;
-      var statusDescription = 
-        statusCode === 302
-        ? "Found"
-        : statusCode === 301
-        ? "Moved Permanently"
-        : "Redirect";
-      return {
-        statusCode,
-        statusDescription,
-        headers: { location: { value: redirectPath } }
       }
     }
   }
