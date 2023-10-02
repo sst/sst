@@ -50,7 +50,7 @@ export class BuildMeta {
         )
         .join("/") +
       (shouldForceTrailingSlash ? "/" : "")
-    );
+    ).replace(/\/+/g, "/");
   }
 
   public static setBuildResults(buildResults: BuildResults) {
