@@ -2,7 +2,12 @@ import { readFileSync, existsSync, readdirSync, statSync } from "fs";
 import { join } from "path";
 import type { RouteType } from "astro";
 import type { Bucket } from "aws-cdk-lib/aws-s3";
-import { SsrSite, SsrSiteNormalizedProps, SsrSiteProps } from "./SsrSite.js";
+import {
+  Plan,
+  SsrSite,
+  SsrSiteNormalizedProps,
+  SsrSiteProps,
+} from "./SsrSite.js";
 import { AllowedMethods } from "aws-cdk-lib/aws-cloudfront";
 import { Construct } from "constructs";
 
@@ -122,7 +127,7 @@ export class AstroSite extends SsrSite {
       handler: join(sitePath, "dist", "server", "entry.handler"),
     };
 
-    return this.validatePlan({
+    const plan: Plan = {
       cloudFrontFunctions: {
         serverCfFunction: {
           constructId: "CloudFrontFunction",
@@ -132,89 +137,111 @@ export class AstroSite extends SsrSite {
           ],
         },
       },
-      edgeFunctions: edge
-        ? {
-            edgeServer: {
-              constructId: "Server",
-              function: {
-                scopeOverride: this as AstroSite,
-                ...serverConfig,
-              },
-            },
-          }
-        : undefined,
       origins: {
-        s3: {
+        staticsServer: {
           type: "s3" as const,
           copy: [
             {
               from: buildMeta.clientBuildOutputDir,
               to: "",
               cached: true,
-              versionedSubDir: "assets",
+              versionedSubDir: buildMeta.clientBuildVersionedSubDir,
             },
           ],
         },
-        ...(edge
-          ? {}
-          : {
-              regionalServer: {
-                type: "function",
-                constructId: "ServerFunction",
-                function: serverConfig,
-                streaming: true,
-              },
-              fallthroughServer: {
-                type: "group",
-                primaryOriginName: "s3",
-                fallbackOriginName: "regionalServer",
-                fallbackStatusCodes: [403, 404],
-              },
-            }),
       },
-      behaviors: edge
-        ? [
-            {
-              cacheType: "server",
-              cfFunction: "serverCfFunction",
-              edgeFunction: "edgeServer",
-              origin: "s3",
-            },
-            ...readdirSync(join(sitePath, buildMeta.clientBuildOutputDir)).map(
-              (item) =>
-                ({
-                  cacheType: "static",
-                  pattern: statSync(
-                    join(sitePath, buildMeta.clientBuildOutputDir, item)
-                  ).isDirectory()
-                    ? `${item}/*`
-                    : item,
-                  origin: "s3",
-                } as const)
-            ),
-          ]
-        : [
-            {
-              cacheType: "server",
-              cfFunction: "serverCfFunction",
-              origin: "fallthroughServer",
-              allowedMethods: AllowedMethods.ALLOW_GET_HEAD_OPTIONS,
-            },
-            {
+      behaviors: [],
+    };
+
+    if (edge) {
+      plan.edgeFunctions = {
+        edgeServer: {
+          constructId: "Server",
+          function: {
+            scopeOverride: this as AstroSite,
+            ...serverConfig,
+          },
+        },
+      };
+      plan.behaviors.push(
+        {
+          cacheType: "server",
+          cfFunction: "serverCfFunction",
+          edgeFunction: "edgeServer",
+          origin: "staticsServer",
+        },
+        ...readdirSync(join(sitePath, buildMeta.clientBuildOutputDir)).map(
+          (item) =>
+            ({
               cacheType: "static",
-              pattern: `${buildMeta.clientBuildVersionedSubDir}/*`,
-              origin: "s3",
-            },
-            ...(this.props.ssrExclusiveRoutes ?? []).map(
-              (route) =>
-                ({
-                  cacheType: "server",
-                  pattern: route,
-                  origin: "regionalServer",
-                } as const)
-            ),
-          ],
-    });
+              pattern: statSync(
+                join(sitePath, buildMeta.clientBuildOutputDir, item)
+              ).isDirectory()
+                ? `${item}/*`
+                : item,
+              origin: "staticsServer",
+            } as const)
+        )
+      );
+      plan.behaviors.push(
+        {
+          cacheType: "server",
+          cfFunction: "serverCfFunction",
+          edgeFunction: "edgeServer",
+          origin: "staticsServer",
+        },
+        ...readdirSync(join(sitePath, buildMeta.clientBuildOutputDir)).map(
+          (item) =>
+            ({
+              cacheType: "static",
+              pattern: statSync(
+                join(sitePath, buildMeta.clientBuildOutputDir, item)
+              ).isDirectory()
+                ? `${item}/*`
+                : item,
+              origin: "staticsServer",
+            } as const)
+        )
+      );
+    } else {
+      plan.origins.regionalServer = {
+        type: "function",
+        constructId: "ServerFunction",
+        function: serverConfig,
+        streaming: true,
+      };
+
+      plan.origins.fallthroughServer = {
+        type: "group",
+        primaryOriginName: "staticsServer",
+        fallbackOriginName: "regionalServer",
+        fallbackStatusCodes: [403, 404],
+      };
+
+      plan.behaviors.push(
+        {
+          cacheType: "server",
+          cfFunction: "serverCfFunction",
+          origin: "fallthroughServer",
+          allowedMethods: AllowedMethods.ALLOW_GET_HEAD_OPTIONS,
+        },
+        {
+          cacheType: "static",
+          pattern: `${buildMeta.clientBuildVersionedSubDir}/*`,
+          origin: "staticsServer",
+        },
+        ...(this.props.ssrExclusiveRoutes ?? []).map(
+          (route) =>
+            ({
+              cacheType: "server",
+              pattern: route,
+              origin: "regionalServer",
+            } as const)
+        )
+      );
+    }
+
+    return this.validatePlan(plan);
   }
 
   public getConstructMetadata() {

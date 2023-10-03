@@ -124,6 +124,7 @@ type OriginGroupConfig = {
 };
 type OriginsMap = Record<string, S3Origin | HttpOrigin | OriginGroup>;
 
+export type Plan = ReturnType<SsrSite["validatePlan"]>;
 export interface SsrSiteNodeJSProps extends NodeJSProps {}
 export interface SsrDomainProps extends DistributionDomainProps {}
 export interface SsrSiteFileOptions extends BaseSiteFileOptions {}
@@ -856,15 +857,17 @@ function handler(event) {
     }
 
     function createS3Origin(props: S3OriginConfig) {
+      const s3Origin = new S3Origin(bucket, {
+        originPath: "/" + (props.originPath ?? ""),
+      });
+
       const assets = createS3OriginAssets(props.copy);
       const assetFileOptions =
         fileOptions || createS3OriginAssetFileOptions(props.copy);
       const s3deployCR = createS3OriginDeployment(assets, assetFileOptions);
       s3DeployCRs.push(s3deployCR);
 
-      return new S3Origin(bucket, {
-        originPath: "/" + (props.originPath ?? ""),
-      });
+      return s3Origin;
     }
 
     function createFunctionOrigin(props: FunctionOriginConfig) {
@@ -963,27 +966,37 @@ function handler(event) {
     function createOrigins() {
       const origins: OriginsMap = {};
 
-      Object.entries(plan.origins ?? {}).forEach(([name, props]) => {
-        if (!props) return;
+      Object.entries(plan.origins ?? {})
+        .sort(([_A, propsA], [_B, propsB]) => {
+          if (propsA.type === "group" && propsB.type !== "group") { 
+            return 1;
+          } else if (propsA.type !== "group" && propsB.type === "group") {
+            return -1;
+          }
+          return 0;
+        })
+        .forEach(([name, props]) => {
+          if (!props) return;
 
-        switch (props.type) {
-          case "s3":
-            origins[name] = createS3Origin(props);
-            break;
-          case "function":
-            origins[name] = createFunctionOrigin(props);
-            break;
-          case "group":
-            origins[name] = createOriginGroup(props, origins);
-            break;
-          case "image-optimization-function":
-            origins[name] = createImageOptimizationFunctionOrigin(props);
-            break;
-        }
-      });
+          switch (props.type) {
+            case "s3":
+              origins[name] = createS3Origin(props);
+              break;
+            case "function":
+              origins[name] = createFunctionOrigin(props);
+              break;
+            case "group":
+              origins[name] = createOriginGroup(props, origins);
+              break;
+            case "image-optimization-function":
+              origins[name] = createImageOptimizationFunctionOrigin(props);
+              break;
+          }
+        });
 
       return origins;
     }
+
     function createS3OriginAssets(copy: S3OriginConfig["copy"]) {
       // Create temp folder, clean up if exists
       const zipOutDir = path.resolve(
@@ -1039,6 +1052,7 @@ function handler(event) {
       }
       return assets;
     }
+
     function createS3OriginAssetFileOptions(copy: S3OriginConfig["copy"]) {
       const fileOptions = [];
 
@@ -1067,6 +1081,7 @@ function handler(event) {
 
       return fileOptions;
     }
+
     function createS3OriginDeployment(
       assets: Asset[],
       fileOptions: SsrSiteFileOptions[]
