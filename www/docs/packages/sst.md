@@ -177,7 +177,7 @@ npx sst bind <command> [options]
 For example, you can start Next.js while connecting to your SST app using `npx sst bind next dev`.
 
 :::tip
-To pass in additional options to your command you can wrap it in quotes like so, `npx sst bind "next dev -p 3003"`.
+To pass in additional options to your command you can wrap it in quotes, for example: `npx sst bind "next dev -p 3003"`
 :::
 
 `sst bind` can be used in several scenarios.
