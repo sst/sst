@@ -76,6 +76,10 @@ interface Project {
 
 let project: Project | undefined;
 
+export function setProject(p: Project) {
+  project = p;
+}
+
 export function useProject() {
   if (!project) throw new Error("Project not initialized");
   return project;
