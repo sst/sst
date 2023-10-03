@@ -22,7 +22,7 @@ type SerializableRoute = {
   route: string;
   type: RouteType;
   pattern: string;
-  prerender: boolean;
+  prerender?: boolean;
   redirectPath?: string;
   redirectStatus?: ValidRedirectStatus;
 };
@@ -66,7 +66,7 @@ export class BuildMeta {
     }
   }
 
-  private static serializableRoute(
+  private static getSerializableRoute(
     route: RouteData,
     shouldForceTrailingSlash: boolean
   ): SerializableRoute {
@@ -74,7 +74,7 @@ export class BuildMeta {
       route: route.route,
       type: route.type,
       pattern: route.pattern.toString(),
-      prerender: route.prerender,
+      prerender: route.type !== "redirect" ? route.prerender : undefined,
       redirectPath:
         typeof route.redirectRoute !== "undefined"
           ? BuildMeta.getRedirectPath(
@@ -89,6 +89,27 @@ export class BuildMeta {
     };
   }
 
+  private static getTrailingSlashRedirect(
+    route: RouteData,
+    trailingSlash: "always" | "never"
+  ) {
+    if (trailingSlash === "never") {
+      return {
+        route: route.route + "/",
+        type: "redirect" as const,
+        pattern: route.pattern.toString().replace(/\$\/$/, "\\/$/"),
+        redirectPath: BuildMeta.getRedirectPath(route, false),
+      };
+    }
+
+    return {
+      route: route.route.replace(/\/$/, ""),
+      type: "redirect" as const,
+      pattern: route.pattern.toString().replace(/\/\$\/$/, "$/"),
+      redirectPath: BuildMeta.getRedirectPath(route, true),
+    };
+  }
+
   public static async exportBuildMeta(
     buildExportName = BUILD_META_EXPORT_NAME
   ) {
@@ -98,6 +119,30 @@ export class BuildMeta {
       relative(rootDir, fileURLToPath(this.astroConfig.outDir)),
       buildExportName
     );
+
+    const shouldForceTrailingSlash =
+      this.astroConfig.trailingSlash === "always";
+
+    const routes = this.buildResults.routes
+      .map((route) => {
+        const routeSet = [
+          this.getSerializableRoute(route, shouldForceTrailingSlash),
+        ];
+
+        if (
+          route.type === "page" &&
+          route.route !== "/" &&
+          (this.astroConfig.trailingSlash === "always" ||
+            this.astroConfig.trailingSlash === "never")
+        ) {
+          routeSet.push(
+            this.getTrailingSlashRedirect(route, this.astroConfig.trailingSlash)
+          );
+        }
+
+        return routeSet;
+      })
+      .flat();
 
     const buildMeta = {
       domainName: this.domainName ?? undefined,
@@ -113,12 +158,7 @@ export class BuildMeta {
         fileURLToPath(this.astroConfig.build.client)
       ),
       clientBuildVersionedSubDir: this.astroConfig.build.assets,
-      routes: this.buildResults.routes.map((route) =>
-        this.serializableRoute(
-          route,
-          this.astroConfig.trailingSlash === "always"
-        )
-      ),
+      routes,
     };
 
     await writeFile(outputPath, JSON.stringify(buildMeta));

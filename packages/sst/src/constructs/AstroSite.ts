@@ -20,7 +20,7 @@ type AstroBuildMeta = {
     route: string;
     type: RouteType;
     pattern: string;
-    prerender: boolean;
+    prerender?: boolean;
     redirectPath?: string;
     redirectStatus?: 300 | 301 | 302 | 303 | 304 | 307 | 308;
   }>;
@@ -45,12 +45,11 @@ type AstroSiteNormalizedProps = AstroSiteProps & SsrSiteNormalizedProps;
  */
 export class AstroSite extends SsrSite {
   declare props: AstroSiteNormalizedProps;
+  protected typesPath = "src";
 
   constructor(scope: Construct, id: string, props: AstroSiteProps) {
     super(scope, id, props);
   }
-
-  protected typesPath = "src";
 
   private static getBuildMeta(filePath: string) {
     if (!existsSync(filePath)) {
@@ -72,7 +71,11 @@ export class AstroSite extends SsrSite {
         .map((route) => {
           return `    {route: "${route.route}", pattern: ${
             route.pattern
-          }, type: "${route.type}", prerender: ${route.prerender}, ${
+          }, type: "${route.type}", ${
+            typeof route.prerender !== "undefined"
+              ? `prerender: ${route.prerender}, `
+              : ``
+          }${
             route.redirectPath ? `redirectPath: "${route.redirectPath}", ` : ""
           }${
             route.redirectStatus
@@ -92,7 +95,7 @@ export class AstroSite extends SsrSite {
       matchedRoute.pattern.exec(request.uri).forEach((match, index) => {
         redirectPath = redirectPath.replace(\`\\\${\${index}}\`, match);
       });
-      var statusCode = matchedRoute.redirectStatus || request.method === 'GET' ? 301 : 308;
+      var statusCode = matchedRoute.redirectStatus || 308;
       return {
         statusCode,
         headers: { location: { value: redirectPath } },
