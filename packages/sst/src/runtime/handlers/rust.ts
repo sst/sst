@@ -87,27 +87,42 @@ export const useRustHandler = (): RuntimeHandler => {
       }
 
       if (input.mode === "deploy") {
+        let resultPath =
+          input.props.rust?.prebuilt ??
+          path.join(project, `target/lambda/`, parsed.name, "bootstrap");
+
+        if (!input.props.rust?.prebuilt) {
+          try {
+            await execAsync(
+              [
+                "cargo",
+                "lambda",
+                "build",
+                "--release",
+                ...(input.props.architecture === "arm_64" ? ["--arm64"] : []),
+                `--bin ${parsed.name}`,
+              ].join(" "),
+              {
+                cwd: project,
+                env: {
+                  ...process.env,
+                },
+              }
+            );
+            await fs.cp(
+              path.join(project, `target/lambda/`, parsed.name, "bootstrap"),
+              path.join(input.out, "bootstrap")
+            );
+          } catch (ex) {
+            return {
+              type: "error",
+              errors: [String(ex)],
+            };
+          }
+        }
+
         try {
-          await execAsync(
-            [
-              "cargo",
-              "lambda",
-              "build",
-              "--release",
-              ...(input.props.architecture === "arm_64" ? ["--arm64"] : []),
-              `--bin ${parsed.name}`,
-            ].join(" "),
-            {
-              cwd: project,
-              env: {
-                ...process.env,
-              },
-            }
-          );
-          await fs.cp(
-            path.join(project, `target/lambda/`, parsed.name, "bootstrap"),
-            path.join(input.out, "bootstrap")
-          );
+          await fs.cp(resultPath, path.join(input.out, "bootstrap"));
         } catch (ex) {
           return {
             type: "error",

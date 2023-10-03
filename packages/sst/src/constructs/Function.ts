@@ -129,6 +129,11 @@ export interface FunctionProps
   go?: GoProps;
 
   /**
+   * Used to configure rust function properties
+   */
+  rust?: RustProps;
+
+  /**
    * Used to configure nodejs function properties
    */
   nodejs?: NodeJSProps;
@@ -582,6 +587,23 @@ export interface GoProps {
    * ```
    */
   cgoEnabled?: boolean;
+}
+
+/**
+ * Used to configure Rust bundling options
+ */
+export interface RustProps {
+  /**
+   * The path to a precompiled Rust binary to use instead of letting SST compile the Rust code for you.
+   *
+   * @example
+   * ```js
+   * rust: {
+   *   prebuild: "./target/lambda/main/bootstrap",
+   * }
+   * ```
+   */
+  prebuilt?: string;
 }
 
 /**
