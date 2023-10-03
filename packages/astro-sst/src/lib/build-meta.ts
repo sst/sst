@@ -77,10 +77,7 @@ export class BuildMeta {
       prerender: route.type !== "redirect" ? route.prerender : undefined,
       redirectPath:
         typeof route.redirectRoute !== "undefined"
-          ? BuildMeta.getRedirectPath(
-              route.redirectRoute,
-              trailingSlash
-            )
+          ? BuildMeta.getRedirectPath(route.redirectRoute, trailingSlash)
           : typeof route.redirect === "string"
           ? route.redirect
           : route.redirect?.destination,
