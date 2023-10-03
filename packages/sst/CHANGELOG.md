@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.26.11
+
+### Patch Changes
+
+- [`cd2cd55e4`](https://github.com/sst/sst/commit/cd2cd55e42ecf17f41e3ca93422acf700440f1c7) Thanks [@fwang](https://github.com/fwang)! - Service: expose fargateService and taskDefinition
+
 ## 2.26.10
 
 ### Patch Changes
