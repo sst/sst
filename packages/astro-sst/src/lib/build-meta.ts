@@ -37,7 +37,7 @@ export class BuildMeta {
 
   private static getRedirectPath(
     { segments }: RouteData,
-    shouldForceTrailingSlash: boolean
+    trailingSlash: "always" | "never" | "ignore"
   ) {
     let i = 0;
     return (
@@ -49,7 +49,7 @@ export class BuildMeta {
             .join("")
         )
         .join("/") +
-      (shouldForceTrailingSlash ? "/" : "")
+      (trailingSlash === "always" ? "/" : "")
     ).replace(/\/+/g, "/");
   }
 
@@ -68,10 +68,10 @@ export class BuildMeta {
 
   private static getSerializableRoute(
     route: RouteData,
-    shouldForceTrailingSlash: boolean
+    trailingSlash: "always" | "never" | "ignore"
   ): SerializableRoute {
     return {
-      route: route.route,
+      route: route.route + (trailingSlash === "always" ? "/" : ""),
       type: route.type,
       pattern: route.pattern.toString(),
       prerender: route.type !== "redirect" ? route.prerender : undefined,
@@ -79,7 +79,7 @@ export class BuildMeta {
         typeof route.redirectRoute !== "undefined"
           ? BuildMeta.getRedirectPath(
               route.redirectRoute,
-              shouldForceTrailingSlash
+              trailingSlash
             )
           : typeof route.redirect === "string"
           ? route.redirect
@@ -98,15 +98,15 @@ export class BuildMeta {
         route: route.route + "/",
         type: "redirect" as const,
         pattern: route.pattern.toString().replace(/\$\/$/, "\\/$/"),
-        redirectPath: BuildMeta.getRedirectPath(route, false),
+        redirectPath: BuildMeta.getRedirectPath(route, trailingSlash),
       };
     }
 
     return {
       route: route.route.replace(/\/$/, ""),
       type: "redirect" as const,
-      pattern: route.pattern.toString().replace(/\/\$\/$/, "$/"),
-      redirectPath: BuildMeta.getRedirectPath(route, true),
+      pattern: route.pattern.toString().replace(/\\\/\$\/$/, "$/"),
+      redirectPath: BuildMeta.getRedirectPath(route, trailingSlash),
     };
   }
 
@@ -120,24 +120,28 @@ export class BuildMeta {
       buildExportName
     );
 
-    const shouldForceTrailingSlash =
-      this.astroConfig.trailingSlash === "always";
-
     const routes = this.buildResults.routes
       .map((route) => {
         const routeSet = [
-          this.getSerializableRoute(route, shouldForceTrailingSlash),
+          this.getSerializableRoute(route, this.astroConfig.trailingSlash),
         ];
 
-        if (
-          route.type === "page" &&
-          route.route !== "/" &&
-          (this.astroConfig.trailingSlash === "always" ||
-            this.astroConfig.trailingSlash === "never")
-        ) {
-          routeSet.push(
-            this.getTrailingSlashRedirect(route, this.astroConfig.trailingSlash)
-          );
+        if (route.type === "page" && route.route !== "/") {
+          if (this.astroConfig.trailingSlash === "never") {
+            routeSet.unshift(
+              this.getTrailingSlashRedirect(
+                route,
+                this.astroConfig.trailingSlash
+              )
+            );
+          } else if (this.astroConfig.trailingSlash === "always") {
+            routeSet.push(
+              this.getTrailingSlashRedirect(
+                route,
+                this.astroConfig.trailingSlash
+              )
+            );
+          }
         }
 
         return routeSet;
