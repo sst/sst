@@ -55,6 +55,7 @@ import {
   Function as CfFunction,
   FunctionCode as CfFunctionCode,
   FunctionEventType as CfFunctionEventType,
+  ErrorResponse,
 } from "aws-cdk-lib/aws-cloudfront";
 import { AwsCliLayer } from "aws-cdk-lib/lambda-layer-awscli";
 import {
@@ -702,6 +703,7 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
                 }, {} as Record<string, BehaviorOptions>),
               ...(cdk?.distribution?.additionalBehaviors || {}),
             },
+            errorResponses: plan.errorResponses,
           },
         },
       });
@@ -1395,6 +1397,7 @@ function handler(event) {
       cfFunction?: keyof CloudFrontFunctions;
       edgeFunction?: keyof EdgeFunctions;
     }[];
+    errorResponses?: ErrorResponse[];
     cachePolicyAllowedHeaders?: string[];
     buildId?: string;
     warmerConfig?: {

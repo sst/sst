@@ -53,6 +53,27 @@ export class AstroSite extends SsrSite {
   protected typesPath = "src";
 
   constructor(scope: Construct, id: string, props: AstroSiteProps) {
+    props.fileOptions = props.fileOptions ?? [
+      {
+        exclude: "*",
+        include: "*.css",
+        cacheControl: "public,max-age=0,s-maxage=31536000,must-revalidate",
+        contentType: "text/css; charset=UTF-8",
+      },
+      {
+        exclude: "*",
+        include: "*.js",
+        cacheControl: "public,max-age=0,s-maxage=31536000,must-revalidate",
+        contentType: "application/javascript; charset=UTF-8",
+      },
+      {
+        exclude: "*",
+        include: "*.html",
+        cacheControl: "public,max-age=0,s-maxage=31536000,must-revalidate",
+        contentType: "text/html; charset=UTF-8",
+      },
+    ];
+
     super(scope, id, props);
   }
 
@@ -116,7 +137,7 @@ export class AstroSite extends SsrSite {
   // End AstroSite CF Routing Function`;
   }
 
-  protected plan(_bucket: Bucket) {
+  protected plan() {
     const { path: sitePath, edge } = this.props;
     const buildMeta = AstroSite.getBuildMeta(
       join(sitePath, "dist", BUILD_META_EXPORT_NAME)
@@ -151,6 +172,7 @@ export class AstroSite extends SsrSite {
         },
       },
       behaviors: [],
+      errorResponses: [],
     };
 
     if (edge) {
@@ -239,6 +261,18 @@ export class AstroSite extends SsrSite {
             } as const)
         )
       );
+
+      const notFoundRoute = buildMeta.routes.find(
+        ({ route, type }) => route.match(/^\/404\/?$/) && type === "page"
+      );
+
+      if (notFoundRoute) {
+        plan.errorResponses?.push({
+          httpStatus: 404,
+          responsePagePath: "/404.html",
+          responseHttpStatus: 404,
+        });
+      }
     }
 
     return this.validatePlan(plan);
