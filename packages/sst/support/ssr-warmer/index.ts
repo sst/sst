@@ -38,15 +38,13 @@ export async function handler(_event: any, context: Context) {
           new InvokeCommand({
             FunctionName: FUNCTION_NAME,
             InvocationType: "RequestResponse",
-            Payload: Buffer.from(
-              JSON.stringify({
-                type: "warmer",
-                warmerId,
-                index: i,
-                concurrency: CONCURRENCY,
-                delay: 75,
-              } satisfies WarmerEvent)
-            ),
+            Payload: JSON.stringify({
+              type: "warmer",
+              warmerId,
+              index: i,
+              concurrency: CONCURRENCY,
+              delay: 75,
+            } satisfies WarmerEvent),
           })
         );
       } catch (e) {
@@ -63,10 +61,15 @@ export async function handler(_event: any, context: Context) {
       console.error(`failed to warm up #${i}:`, r?.Payload?.toString());
       return;
     }
-    const payload = JSON.parse(
-      Buffer.from(r.Payload).toString()
-    ) as WarmerResponse;
-    warmedServerIds.push(payload.serverId);
+    const payloadString = r.Payload.transformToString();
+    if (payloadString) {
+      const payload = JSON.parse(
+        r.Payload.transformToString()
+      ) as WarmerResponse;
+      warmedServerIds.push(payload.serverId);
+    } else {
+      warmedServerIds.push("unknown");
+    }
   });
   console.log({
     event: "warmer result",

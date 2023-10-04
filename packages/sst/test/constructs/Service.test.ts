@@ -40,10 +40,11 @@ test("default", async () => {
   expect(service.customDomainUrl).toBeUndefined();
   expect(service.cdk?.vpc).toBeDefined();
   expect(service.cdk?.cluster).toBeDefined();
+  expect(service.cdk?.fargateService).toBeDefined();
+  expect(service.cdk?.taskDefinition).toBeDefined();
   expect(service.cdk?.distribution?.distributionId).toBeDefined();
   expect(service.cdk?.distribution?.distributionDomainName).toBeDefined();
   expect(service.cdk?.certificate).toBeUndefined();
-  printResource(stack, "AWS::EC2::AutoScalingGroup");
   countResources(stack, "AWS::EC2::VPC", 1);
   hasResource(stack, "AWS::EC2::VPC", {
     CidrBlock: "10.0.0.0/16",
@@ -496,7 +497,6 @@ test("cdk.container: image defined", async () => {
       },
     },
   });
-  printResource(stack, "AWS::ECS::TaskDefinition");
   hasResource(stack, "AWS::ECS::TaskDefinition", {
     ContainerDefinitions: [
       objectLike({
@@ -538,6 +538,8 @@ test("cdk.cloudfrontDistribution", async () => {
   expect(service.url).toBeUndefined();
   expect(service.cdk?.vpc).toBeDefined();
   expect(service.cdk?.cluster).toBeDefined();
+  expect(service.cdk?.fargateService).toBeDefined();
+  expect(service.cdk?.taskDefinition).toBeDefined();
   expect(service.cdk?.distribution).toBeUndefined();
 });
 
@@ -555,6 +557,8 @@ test("cdk.applicationLoadBalancer", async () => {
   expect(service.url).toBeUndefined();
   expect(service.cdk?.vpc).toBeDefined();
   expect(service.cdk?.cluster).toBeDefined();
+  expect(service.cdk?.fargateService).toBeDefined();
+  expect(service.cdk?.taskDefinition).toBeDefined();
   expect(service.cdk?.distribution).toBeUndefined();
 });
 test("cdk.applicationLoadBalancerTargetGroup", async () => {

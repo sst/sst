@@ -88,9 +88,9 @@ export class SsrFunction extends Construct implements SSTConstruct {
     this.id = id;
 
     this.props = {
-      ...props,
       timeout: 10,
       memorySize: 1024,
+      ...props,
       environment: props.environment || {},
       permissions: props.permissions || [],
     };
