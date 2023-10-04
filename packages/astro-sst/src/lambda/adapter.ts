@@ -8,6 +8,20 @@ function getAdapter(): AstroAdapter {
     name: PACKAGE_NAME,
     serverEntrypoint: `${PACKAGE_NAME}/entrypoint`,
     exports: ["handler"],
+    adapterFeatures: {
+      edgeMiddleware: true,
+      functionPerRoute: false,
+    },
+    supportedAstroFeatures: {
+      staticOutput: "stable",
+      hybridOutput: "stable",
+      serverOutput: "stable",
+      assets: {
+        supportKind: "stable",
+        isSharpCompatible: true,
+        isSquooshCompatible: true,
+      },
+    },
   };
 }
 
