@@ -1,7 +1,11 @@
 import fs from "fs";
 import path from "path";
 import { Construct } from "constructs";
-import { Duration as CdkDuration, CustomResource } from "aws-cdk-lib/core";
+import {
+  Duration as CdkDuration,
+  RemovalPolicy,
+  CustomResource,
+} from "aws-cdk-lib/core";
 import {
   Code,
   Runtime,
@@ -9,7 +13,11 @@ import {
   FunctionProps,
   Architecture,
 } from "aws-cdk-lib/aws-lambda";
-import { AttributeType, BillingMode, Table } from "aws-cdk-lib/aws-dynamodb";
+import {
+  AttributeType,
+  Billing,
+  TableV2 as Table,
+} from "aws-cdk-lib/aws-dynamodb";
 import { Provider } from "aws-cdk-lib/custom-resources";
 import { Queue } from "aws-cdk-lib/aws-sqs";
 import { SqsEventSource } from "aws-cdk-lib/aws-lambda-event-sources";
@@ -22,7 +30,6 @@ import { PolicyStatement } from "aws-cdk-lib/aws-iam";
 import { RetentionDays } from "aws-cdk-lib/aws-logs";
 
 export interface NextjsSiteProps extends Omit<SsrSiteProps, "nodejs"> {
-  experimentalStreaming?: boolean;
   imageOptimization?: {
     /**
      * The amount of memory in MB allocated for image optimization function.
@@ -33,6 +40,17 @@ export interface NextjsSiteProps extends Omit<SsrSiteProps, "nodejs"> {
      * ```
      */
     memorySize?: number | Size;
+  };
+  regional?: SsrSiteProps["regional"] & {
+    /**
+     * Enable streaming. Currently an experimental feature in OpenNext.
+     * @default false
+     * @example
+     * ```js
+     * experimentalStreaming: true,
+     * ```
+     */
+    experimentalStreaming?: boolean;
   };
   cdk?: SsrSiteProps["cdk"] & {
     revalidation?: Pick<FunctionProps, "vpc" | "vpcSubnets">;
@@ -92,15 +110,19 @@ export class NextjsSite extends SsrSite {
 
   constructor(scope: Construct, id: string, props?: NextjsSiteProps) {
     super(scope, id, {
-      buildCommand: `npx --yes open-next@2.2.0 build ${props?.experimentalStreaming ? "--streaming" : ""}`,
+      buildCommand: [
+        "npx --yes open-next@2.2.0 build",
+        ...(props?.regional?.experimentalStreaming ? ["--streaming"] : []),
+      ].join(" "),
       ...props,
     });
 
-    this.createRevalidation();
+    this.createRevalidationQueue();
+    this.createRevalidationTable();
   }
 
   protected plan(bucket: Bucket) {
-    const { path: sitePath, edge, imageOptimization, experimentalStreaming } = this.props;
+    const { path: sitePath, edge, regional, imageOptimization } = this.props;
     const serverConfig = {
       description: "Next.js server",
       bundle: path.join(sitePath, ".open-next", "server-function"),
@@ -134,7 +156,7 @@ export class NextjsSite extends SsrSite {
                 type: "function",
                 constructId: "ServerFunction",
                 function: serverConfig,
-                streaming: experimentalStreaming,
+                streaming: regional?.experimentalStreaming,
               },
             }),
         imageOptimizer: {
@@ -252,10 +274,11 @@ export class NextjsSite extends SsrSite {
     });
   }
 
-  protected createRevalidation() {
+  private createRevalidationQueue() {
     if (!this.serverFunction) return;
 
     const { cdk } = this.props;
+    const server = this.serverFunction;
 
     const queue = new Queue(this, "RevalidationQueue", {
       fifo: true,
@@ -274,41 +297,50 @@ export class NextjsSite extends SsrSite {
     consumer.addEventSource(new SqsEventSource(queue, { batchSize: 5 }));
 
     // Allow server to send messages to the queue
-    const server = this.serverFunction;
-    server?.addEnvironment("REVALIDATION_QUEUE_URL", queue.queueUrl);
-    server?.addEnvironment("REVALIDATION_QUEUE_REGION", Stack.of(this).region);
-    queue.grantSendMessages(server?.role!);
+    server.addEnvironment("REVALIDATION_QUEUE_URL", queue.queueUrl);
+    server.addEnvironment("REVALIDATION_QUEUE_REGION", Stack.of(this).region);
+    queue.grantSendMessages(server.role!);
+  }
 
+  private createRevalidationTable() {
+    if (!this.serverFunction) return;
+
+    const { path: sitePath } = this.props;
     const app = this.node.root as App;
+    const server = this.serverFunction;
 
     const table = new Table(this, "RevalidationTable", {
+      tableName: app.logicalPrefixedName("next-revalidation-table"),
       partitionKey: { name: "tag", type: AttributeType.STRING },
       sortKey: { name: "path", type: AttributeType.STRING },
       pointInTimeRecovery: true,
-      billingMode: BillingMode.PAY_PER_REQUEST,
-      tableName: app.logicalPrefixedName("next-revalidation-table"),
-    });
-
-    table.addGlobalSecondaryIndex({
-      indexName: "revalidate",
-      partitionKey: { name: "path", type: AttributeType.STRING },
-      sortKey: { name: "revalidatedAt", type: AttributeType.NUMBER },
+      billing: Billing.onDemand(),
+      globalSecondaryIndexes: [
+        {
+          indexName: "revalidate",
+          partitionKey: { name: "path", type: AttributeType.STRING },
+          sortKey: { name: "revalidatedAt", type: AttributeType.NUMBER },
+        },
+      ],
+      removalPolicy: RemovalPolicy.DESTROY,
     });
 
     server?.addEnvironment("CACHE_DYNAMO_TABLE", table.tableName);
-    table.grantReadWriteData(server?.role!);
+    table.grantReadWriteData(server.role!);
 
-    const dynamodbProviderPath = path.join(this.props.path, ".open-next", "dynamodb-provider");
+    const dynamodbProviderPath = path.join(
+      sitePath,
+      ".open-next",
+      "dynamodb-provider"
+    );
 
-    if(fs.existsSync(dynamodbProviderPath)) {
+    if (fs.existsSync(dynamodbProviderPath)) {
       const insertFn = new CdkFunction(this, "RevalidationInsertFunction", {
         description: "Next.js revalidation data insert",
         handler: "index.handler",
-        code: Code.fromAsset(
-          path.join(this.props.path, ".open-next", "dynamodb-provider")
-        ),
+        code: Code.fromAsset(dynamodbProviderPath),
         runtime: Runtime.NODEJS_18_X,
-        timeout: CdkDuration.minutes(14),
+        timeout: CdkDuration.minutes(15),
         initialPolicy: [
           new PolicyStatement({
             actions: [
@@ -321,19 +353,19 @@ export class NextjsSite extends SsrSite {
         ],
         environment: {
           CACHE_DYNAMO_TABLE: table.tableName,
-        }
+        },
       });
-  
+
       const provider = new Provider(this, "RevalidationProvider", {
         onEventHandler: insertFn,
         logRetention: RetentionDays.ONE_DAY,
       });
-  
+
       new CustomResource(this, "RevalidationResource", {
         serviceToken: provider.serviceToken,
         properties: {
-          version: Date.now().toString()
-        }
+          version: Date.now().toString(),
+        },
       });
     }
   }
