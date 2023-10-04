@@ -1,7 +1,6 @@
 import { readFileSync, existsSync, readdirSync, statSync } from "fs";
 import { join } from "path";
 import type { RouteType } from "astro";
-import type { Bucket } from "aws-cdk-lib/aws-s3";
 import {
   Plan,
   SsrSite,
