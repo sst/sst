@@ -89,8 +89,8 @@ export class SsrFunction extends Construct implements SSTConstruct {
 
     this.props = {
       ...props,
-      timeout: 10,
-      memorySize: 1024,
+      timeout: props.timeout ?? 10,
+      memorySize: props.memorySize ?? 1024,
       environment: props.environment || {},
       permissions: props.permissions || [],
     };
