@@ -83,6 +83,31 @@ export interface NextjsSiteProps extends Omit<SsrSiteProps, "nodejs"> {
      */
     serverCachePolicy?: NonNullable<SsrSiteProps["cdk"]>["serverCachePolicy"];
   };
+
+  /**
+   * Dangerous options.
+   * Using these options incorrectly can cause your site to be in an inconsistent state.
+   * Use these options only if you know what you are doing.
+   */
+  dangerous?: {
+    /**
+     *  Disable DynamoDB cache.
+     *  Disabling DynamoDB cache will cause next/cache revalidation to fail silently.
+     *  Both revalidateTag and revalidatePath will fail.
+     *  @default false
+     */
+    disableDynamoDbCache?: boolean;
+    /**
+     *  Disable incremental cache.
+     *  Disabling incremental cache will disable the incremental cache feature.
+     *  Be aware that this will cause the entire page to be revalidated on each request.
+     *  This will cause ISR and SSG pages to be in an inconsistent state.
+     *  Use this only if you are using SSR pages only. or you know what you are doing.
+     *  You don't need to disable DynamoDB cache when disabling incremental cache.
+     *  @default false
+     */
+    disableIncrementalCache?: boolean;
+  }
 }
 
 /**
@@ -111,14 +136,21 @@ export class NextjsSite extends SsrSite {
   constructor(scope: Construct, id: string, props?: NextjsSiteProps) {
     super(scope, id, {
       buildCommand: [
-        "npx --yes open-next@2.2.0 build",
+        "npx --yes open-next@2.2.1 build",
         ...(props?.regional?.experimentalStreaming ? ["--streaming"] : []),
+        ...(props?.dangerous?.disableDynamoDbCache ? ["--dangerously-disable-dynamodb-cache"] : []),
+        ...(props?.dangerous?.disableIncrementalCache ? ["--dangerously-disable-incremental-cache"] : []),
       ].join(" "),
       ...props,
     });
 
-    this.createRevalidationQueue();
-    this.createRevalidationTable();
+    
+    if (!props?.dangerous?.disableIncrementalCache) {
+      this.createRevalidationQueue();
+    }
+    if (!props?.dangerous?.disableDynamoDbCache || !props?.dangerous?.disableIncrementalCache) {
+      this.createRevalidationTable();
+    }
   }
 
   protected plan(bucket: Bucket) {
