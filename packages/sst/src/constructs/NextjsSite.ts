@@ -148,7 +148,7 @@ export class NextjsSite extends SsrSite {
     if (!props?.dangerous?.disableIncrementalCache) {
       this.createRevalidationQueue();
     }
-    if (!props?.dangerous?.disableDynamoDbCache || !props?.dangerous?.disableIncrementalCache) {
+    if (!(props?.dangerous?.disableDynamoDbCache || props?.dangerous?.disableIncrementalCache)) {
       this.createRevalidationTable();
     }
   }
