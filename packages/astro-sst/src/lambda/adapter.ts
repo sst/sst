@@ -9,7 +9,7 @@ function getAdapter(): AstroAdapter {
     serverEntrypoint: `${PACKAGE_NAME}/entrypoint`,
     exports: ["handler"],
     adapterFeatures: {
-      edgeMiddleware: true,
+      edgeMiddleware: false,
       functionPerRoute: false,
     },
     supportedAstroFeatures: {
