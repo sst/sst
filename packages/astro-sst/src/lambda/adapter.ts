@@ -13,11 +13,11 @@ function getAdapter(): AstroAdapter {
       functionPerRoute: false,
     },
     supportedAstroFeatures: {
-      staticOutput: "stable",
+      staticOutput: "unsupported",
       hybridOutput: "stable",
       serverOutput: "stable",
       assets: {
-        supportKind: "stable",
+        supportKind: "experimental",
         isSharpCompatible: true,
         isSquooshCompatible: true,
       },
