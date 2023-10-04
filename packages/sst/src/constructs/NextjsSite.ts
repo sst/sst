@@ -310,7 +310,6 @@ export class NextjsSite extends SsrSite {
     const server = this.serverFunction;
 
     const table = new Table(this, "RevalidationTable", {
-      tableName: app.logicalPrefixedName("next-revalidation-table"),
       partitionKey: { name: "tag", type: AttributeType.STRING },
       sortKey: { name: "path", type: AttributeType.STRING },
       pointInTimeRecovery: true,
