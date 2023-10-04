@@ -27,6 +27,24 @@ type SerializableRoute = {
   redirectStatus?: ValidRedirectStatus;
 };
 
+export type BuildMetaConfig = {
+  domainName?: string;
+  outputMode: "server" | "static" | "hybrid";
+  pageResolution: "file" | "directory";
+  trailingSlash: "ignore" | "always" | "never";
+  serverBuildOutputFile: string;
+  clientBuildOutputDir: string;
+  clientBuildVersionedSubDir: string;
+  routes: Array<{
+    route: string;
+    type: RouteType;
+    pattern: string;
+    prerender?: boolean;
+    redirectPath?: string;
+    redirectStatus?: 300 | 301 | 302 | 303 | 304 | 307 | 308;
+  }>;
+};
+
 export class BuildMeta {
   protected static astroConfig: AstroConfig;
   protected static buildResults: BuildResults;
@@ -160,7 +178,7 @@ export class BuildMeta {
       ),
       clientBuildVersionedSubDir: this.astroConfig.build.assets,
       routes,
-    };
+    } satisfies BuildMetaConfig;
 
     await writeFile(outputPath, JSON.stringify(buildMeta));
   }

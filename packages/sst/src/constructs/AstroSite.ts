@@ -1,6 +1,6 @@
 import { readFileSync, existsSync, readdirSync, statSync } from "fs";
 import { join } from "path";
-import type { RouteType } from "astro";
+import type { BuildMetaConfig } from "../../../astro-sst/src/lib/build-meta.js";
 import {
   Plan,
   SsrSite,
@@ -12,26 +12,10 @@ import { Construct } from "constructs";
 
 const BUILD_META_EXPORT_NAME = "sst.buildMeta.json";
 
-type AstroBuildMeta = {
-  domainName?: string;
-  outputMode: "server" | "static" | "hybrid";
-  pageResolution: "file" | "directory";
-  trailingSlash: "ignore" | "always" | "never";
-  serverBuildOutputFile: string;
-  clientBuildOutputDir: string;
-  clientBuildVersionedSubDir: string;
-  routes: Array<{
-    route: string;
-    type: RouteType;
-    pattern: string;
-    prerender?: boolean;
-    redirectPath?: string;
-    redirectStatus?: 300 | 301 | 302 | 303 | 304 | 307 | 308;
-  }>;
-};
-
 export interface AstroSiteProps extends SsrSiteProps {
-  ssrExclusiveRoutes?: string[];
+  regional?: SsrSiteProps["regional"] & {
+    serverRoutes?: string[];
+  };
 }
 
 type AstroSiteNormalizedProps = AstroSiteProps & SsrSiteNormalizedProps;
@@ -83,13 +67,13 @@ export class AstroSite extends SsrSite {
       );
     }
 
-    return JSON.parse(readFileSync(filePath, "utf-8")) as AstroBuildMeta;
+    return JSON.parse(readFileSync(filePath, "utf-8")) as BuildMetaConfig;
   }
 
   private static getCFRoutingFunction({
     routes,
     pageResolution,
-  }: AstroBuildMeta) {
+  }: BuildMetaConfig) {
     const serializedRoutes =
       "[\n" +
       routes
@@ -251,7 +235,7 @@ export class AstroSite extends SsrSite {
           pattern: `${buildMeta.clientBuildVersionedSubDir}/*`,
           origin: "staticsServer",
         },
-        ...(this.props.ssrExclusiveRoutes ?? []).map(
+        ...(this.props.regional?.serverRoutes ?? []).map(
           (route) =>
             ({
               cacheType: "server",
