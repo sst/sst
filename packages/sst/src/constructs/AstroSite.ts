@@ -14,6 +14,18 @@ const BUILD_META_EXPORT_NAME = "sst.buildMeta.json";
 
 export interface AstroSiteProps extends SsrSiteProps {
   regional?: SsrSiteProps["regional"] & {
+    /**
+     * Matched routes bypass the S3 origin and are passed directly to the Lambda function to allow other HTTP methods other than `GET`.
+     * 
+     * ```js
+     * serverRoutes: [
+     *   'feedback', // Feedback page which requires POST method
+     *   'login',    // Login page which requires POST method
+     *   'user/*',   // Directory of user routes which are all SSR
+     *   'api/*'     // Directory of API endpoints which require all methods
+     * ]
+     * ```
+     */
     serverRoutes?: string[];
   };
 }

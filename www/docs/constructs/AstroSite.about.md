@@ -175,24 +175,26 @@ const site = new AstroSite(stack, "Site", {
 });
 ```
 
-## SSR Exclusive Routes
+## Regional Server Routes
 
-For regional deployments, all routes are first checked against the S3 cache before being directed to the Lambda function for server rendering. There is a minimal performance penalty for this check and it does limit the default supported request methods for all routes to `GET`, `HEAD`, and `OPTIONS`. To bypass this check to support other request methods or for the very slight performance improvement, specify the route pattern in the `ssrExclusiveRoutes` property of the `AstroSite` construct.
+For regional deployments, all routes are first checked against the S3 cache before being directed to the Lambda function for server rendering. There is a minimal performance penalty for this check and it does limit the default supported request methods for all routes to `GET`, `HEAD`, and `OPTIONS`. To bypass this check to support other request methods or for the very slight performance improvement, specify the route pattern in the `regional.serverRoutes` property of the `AstroSite` construct.
 
 ```js {5}
 const site = new AstroSite(stack, "Site", {
   path: "my-astro-app/",
-  ssrExclusiveRoutes: [
-    'feedback', // Feedback page which requires POST method
-    'login',    // Login page which requires POST method
-    'user/*',   // Directory of user routes which are all SSR
-    'api/*'     // Directory of API endpoints which require all methods
-  ]
+  regional: {
+    serverRoutes: [
+      'feedback', // Feedback page which requires POST method
+      'login',    // Login page which requires POST method
+      'user/*',   // Directory of user routes which are all SSR
+      'api/*'     // Directory of API endpoints which require all methods
+    ]
+  }
 });
 ```
 
 :::info
-The `ssrExclusiveRoutes` property only supports up to 23 routes due to [quota limitation](https://docs.sst.dev/known-issues#cloudfront-cachebehaviors-limit-exceeded) imposed by CloudFront.
+The `regional.serverRoutes` property only supports up to 23 routes due to [quota limitation](https://docs.sst.dev/known-issues#cloudfront-cachebehaviors-limit-exceeded) imposed by CloudFront.
 :::
 
 ## Environment variables
@@ -645,3 +647,16 @@ if (!app.local) {
   });
 }
 ```
+
+## Common Errors
+
+### CloudFront 403 Error - The request could not be satisfied.
+
+**Error message:**
+```
+403 ERROR
+The request could not be satisfied.
+This distribution is not configured to allow the HTTP request method that was used for this request. The distribution supports only cachable requests. We can't connect to the server for this app or website at this time. There might be too much traffic or a configuration error. Try again later, or contact the app or website owner.
+```
+
+When this error appears for a regional deployment of a site, it is likely that the request method was something other than `GET` and the route that was requested was not matched by any of the routes specified in the [`regional.serverRoutes`](#regional-server-routes) property. To resolve, add a route pattern to the `regional.serverRoutes` property that matches the route that was requested.
