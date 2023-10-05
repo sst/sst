@@ -64,32 +64,35 @@ type AstroSiteNormalizedProps = AstroSiteProps & SsrSiteNormalizedProps;
 export class AstroSite extends SsrSite {
   declare props: AstroSiteNormalizedProps;
 
-  constructor(scope: Construct, id: string, props: AstroSiteProps) {
-    props.typesPath = props.typesPath ?? "src";
-    props.fileOptions = props.fileOptions ?? [
-      {
-        exclude: "*",
-        include: "*.css",
-        cacheControl: "public,max-age=0,s-maxage=31536000,must-revalidate",
-        contentType: "text/css; charset=UTF-8",
+  constructor(scope: Construct, id: string, props?: AstroSiteProps) {
+    super(scope, id, {
+      ...props,
+      typesPath: props?.typesPath ?? "src",
+      fileOptions: props?.fileOptions ?? [
+        {
+          exclude: "*",
+          include: "*.css",
+          cacheControl: "public,max-age=0,s-maxage=31536000,must-revalidate",
+          contentType: "text/css; charset=UTF-8",
+        },
+        {
+          exclude: "*",
+          include: "*.js",
+          cacheControl: "public,max-age=0,s-maxage=31536000,must-revalidate",
+          contentType: "application/javascript; charset=UTF-8",
+        },
+        {
+          exclude: "*",
+          include: "*.html",
+          cacheControl: "public,max-age=0,s-maxage=31536000,must-revalidate",
+          contentType: "text/html; charset=UTF-8",
+        },
+      ],
+      regional: {
+        streaming: props?.regional?.streaming ?? true,
+        ...props?.regional,
       },
-      {
-        exclude: "*",
-        include: "*.js",
-        cacheControl: "public,max-age=0,s-maxage=31536000,must-revalidate",
-        contentType: "application/javascript; charset=UTF-8",
-      },
-      {
-        exclude: "*",
-        include: "*.html",
-        cacheControl: "public,max-age=0,s-maxage=31536000,must-revalidate",
-        contentType: "text/html; charset=UTF-8",
-      },
-    ];
-    props.regional = props.regional ?? {};
-    props.regional.streaming = props.regional.streaming ?? true;
-
-    super(scope, id, props);
+    });
   }
 
   private static getBuildMeta(filePath: string) {
