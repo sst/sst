@@ -11,24 +11,38 @@ import { AllowedMethods } from "aws-cdk-lib/aws-cloudfront";
 import { Construct } from "constructs";
 
 export interface AstroSiteProps extends SsrSiteProps {
-  regional: SsrSiteProps["regional"] & {
+  regional?: SsrSiteProps["regional"] & {
     /**
-     * Matched routes bypass the S3 origin and are passed directly to the Lambda function to allow other HTTP methods other than `GET`.
+     * List all routes that will be handling non-GET requests. For example, routes like form submissions, logins, and API endpoints.
      *
+     * Route patterns are case sensitive. And the following wildcard characters can be used:
+     *   - "*" matches 0 or more characters.
+     *   - "?" matches exactly 1 character.
+     *
+     * Matched routes will be handled directly by the server function.
+     * @default true
+     * @example
      * ```js
-     * serverRoutes: [
-     *   'feedback', // Feedback page which requires POST method
-     *   'login',    // Login page which requires POST method
-     *   'user/*',   // Directory of user routes which are all SSR
-     *   'api/*'     // Directory of API endpoints which require all methods
-     * ]
+     * regional: {
+     *   serverRoutes: [
+     *     "feedback", // Feedback page which requires POST method
+     *     "login",    // Login page which requires POST method
+     *     "user/*",   // Directory of user routes which are all SSR
+     *     "api/*"     // Directory of API endpoints which require all methods
+     *   ]
+     * }
      * ```
      */
     serverRoutes?: string[];
     /**
-     * The site supports [Astro streaming](https://docs.astro.build/en/guides/server-side-rendering/#using-streaming-to-improve-page-performance) responses.
-     *
+     * Supports [streaming](https://docs.astro.build/en/guides/server-side-rendering/#using-streaming-to-improve-page-performance) responses.
      * @default true
+     * @example
+     * ```js
+     * regional: {
+     *   streaming: false,
+     * }
+     * ```
      */
     streaming?: boolean;
   };
