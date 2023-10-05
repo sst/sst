@@ -568,6 +568,9 @@ importers:
       archiver:
         specifier: ^5.3.1
         version: 5.3.1
+      astro-sst:
+        specifier: 0.0.0-20231005195323
+        version: 0.0.0-20231005195323
       tsx:
         specifier: ^3.12.1
         version: 3.12.1
@@ -860,7 +863,6 @@ packages:
     deprecated: This package is not used by Astro any more and is no longer maintained. In Astro 3.0 polyfills are part of a core module.
     dependencies:
       undici: 5.25.4
-    dev: false
 
   /@aws-cdk/asset-awscli-v1@2.2.200:
     resolution: {integrity: sha512-Kf5J8DfJK4wZFWT2Myca0lhwke7LwHcHBo+4TvWOGJrFVVKVuuiLCkzPPRBQQVDj0Vtn2NBokZAz8pfMpAqAKg==}
@@ -13166,6 +13168,13 @@ packages:
     resolution: {integrity: sha512-Z7tMw1ytTXt5jqMcOP+OQteU1VuNK9Y02uuJtKQ1Sv69jXQKKg5cibLwGJow8yzZP+eAc18EmLGPal0bp36rvQ==}
     engines: {node: '>=8'}
     dev: false
+
+  /astro-sst@0.0.0-20231005195323:
+    resolution: {integrity: sha512-SedC4kRNXAr3xU8oO8HvPqFUQZzc1h8XriWZxjrEcjI1QjBVYoab3lfdjldZ0wbMIGVQT6bh3zv88g8dnJeoCA==}
+    dependencies:
+      '@astrojs/webapi': 3.0.0
+      set-cookie-parser: 2.6.0
+    dev: true
 
   /astro@3.1.4:
     resolution: {integrity: sha512-MKGJXHkkYK4QpqYHydPu+eeLBGU3cHx9Xdrtk6RFvu3dVkxuJsYm6L+lgIeH0hrTF9qlaDih/KbNnTKrCXdidw==}
