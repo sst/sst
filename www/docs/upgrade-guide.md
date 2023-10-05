@@ -16,6 +16,26 @@ To view the latest release and all historical releases, <a href={`${config.githu
 
 ---
 
+## Upgrade to v2.27.0
+
+[AstroSite](constructs/AstroSite.md) has been re-architectured to support deploying Astro sites in a "hybrid" mode, coupled with other SSR improvements. sites should operate seamlessly, as the update is largely backward compatible. However, if your Astro app contains non-GET routes, such us form submissions, logins, or API endpoints, you'll need to specify them manually:
+
+```diff
+new AstroSite(stack, "Site", {
+  path: "my-astro-app/",
++ regional: {
++   serverRoutes: [
++     "feedback", // Feedback page which requires POST method
++     "login",    // Login page which requires POST method
++     "user/*",   // Directory of user routes which are all SSR
++     "api/*"     // Directory of API endpoints which require all methods
++   ]
++ }
+});
+```
+
+[Read more about `serverRoutes`.](constructs/AstroSite.md#regional-server-routes)
+
 ## Upgrade to v2.3.0
 
 [Resource Binding](resource-binding.md) now lets you bind resources to your frontend frameworks. It simplifies accessing the resources in the server side rendered (SSR) code. For example, here's how we bind the bucket to the Next.js app:
