@@ -1,5 +1,21 @@
 # @serverless-stack/cli2
 
+## 2.27.0
+
+### Minor Changes
+
+- [#3363](https://github.com/sst/sst/pull/3363) [`3299f350f`](https://github.com/sst/sst/commit/3299f350f5e08843ea158d8beadc449d9cbc8d3a) Thanks [@bayssmekanique](https://github.com/bayssmekanique)! - AstroSite: support "hybrid" mode
+
+### Patch Changes
+
+- [#3370](https://github.com/sst/sst/pull/3370) [`bd9605ca6`](https://github.com/sst/sst/commit/bd9605ca63d0ac9a1dc77e55ffeda36cf7b3be9c) Thanks [@bayssmekanique](https://github.com/bayssmekanique)! - Fixes props passing to SSR function
+
+- [#3363](https://github.com/sst/sst/pull/3363) [`3299f350f`](https://github.com/sst/sst/commit/3299f350f5e08843ea158d8beadc449d9cbc8d3a) Thanks [@bayssmekanique](https://github.com/bayssmekanique)! - AstriSite: improves SSR support
+
+- [#3363](https://github.com/sst/sst/pull/3363) [`3299f350f`](https://github.com/sst/sst/commit/3299f350f5e08843ea158d8beadc449d9cbc8d3a) Thanks [@bayssmekanique](https://github.com/bayssmekanique)! - AstroSite: handle redirect in CloudFront functions
+
+- [#3365](https://github.com/sst/sst/pull/3365) [`1ce715444`](https://github.com/sst/sst/commit/1ce7154448171cf9a36b4ec6b167cf5028270c5a) Thanks [@bayssmekanique](https://github.com/bayssmekanique)! - Fixes warmer for SSR sites
+
 ## 2.26.11
 
 ### Patch Changes
