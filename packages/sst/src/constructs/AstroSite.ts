@@ -153,11 +153,7 @@ export class AstroSite extends SsrSite {
   }
 
   protected plan() {
-    const {
-      path: sitePath,
-      edge,
-      regional: { streaming, serverRoutes },
-    } = this.props;
+    const { path: sitePath, edge, regional } = this.props;
 
     const buildMeta = AstroSite.getBuildMeta(
       join(sitePath, "dist", BUILD_META_FILE_NAME)
@@ -250,7 +246,7 @@ export class AstroSite extends SsrSite {
         type: "function",
         constructId: "ServerFunction",
         function: serverConfig,
-        streaming,
+        streaming: regional?.streaming,
       };
 
       plan.origins.fallthroughServer = {
@@ -272,7 +268,7 @@ export class AstroSite extends SsrSite {
           pattern: `${buildMeta.clientBuildVersionedSubDir}/*`,
           origin: "staticsServer",
         },
-        ...(serverRoutes ?? []).map(
+        ...(regional?.serverRoutes ?? []).map(
           (route) =>
             ({
               cacheType: "server",
