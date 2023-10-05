@@ -150,6 +150,11 @@ export interface SsrSiteProps {
    */
   path?: string;
   /**
+   * Path relative to the app location where the type definitions are located.
+   * @default "."
+   */
+  typesPath?: string;
+  /**
    * The command for building the website
    * @default `npm run build`
    * @example
@@ -386,6 +391,7 @@ export interface SsrSiteProps {
 
 export type SsrSiteNormalizedProps = SsrSiteProps & {
   path: Exclude<SsrSiteProps["path"], undefined>;
+  typesPath: Exclude<SsrSiteProps["typesPath"], undefined>;
   runtime: Exclude<SsrSiteProps["runtime"], undefined>;
   timeout: Exclude<SsrSiteProps["timeout"], undefined>;
   memorySize: Exclude<SsrSiteProps["memorySize"], undefined>;
@@ -407,7 +413,6 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
   public readonly id: string;
   protected props: SsrSiteNormalizedProps;
   protected doNotDeploy: boolean;
-  protected typesPath = ".";
   protected bucket: Bucket;
   protected serverFunction?: EdgeFunction | SsrFunction;
   private serverFunctionForDev?: SsrFunction;
@@ -418,6 +423,7 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
 
     const props: SsrSiteNormalizedProps = {
       path: ".",
+      typesPath: ".",
       waitForInvalidation: false,
       runtime: "nodejs18.x",
       timeout: "10 seconds",
@@ -432,6 +438,7 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
     const self = this;
     const {
       path: sitePath,
+      typesPath,
       buildCommand,
       runtime,
       timeout,
@@ -454,7 +461,7 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
 
     validateSiteExists();
     validateTimeout();
-    writeTypesFile(this.typesPath);
+    writeTypesFile(typesPath);
 
     useSites().add(stack.stackName, id, this.constructor.name, props);
 
@@ -904,7 +911,9 @@ function handler(event) {
         authType: regional?.enableServerUrlIamAuth
           ? FunctionUrlAuthType.AWS_IAM
           : FunctionUrlAuthType.NONE,
-        invokeMode: props.streaming ? InvokeMode.RESPONSE_STREAM : InvokeMode.BUFFERED,
+        invokeMode: props.streaming
+          ? InvokeMode.RESPONSE_STREAM
+          : InvokeMode.BUFFERED,
       });
       if (regional?.enableServerUrlIamAuth) {
         useFunctionUrlSigningFunction().attachPermissions([

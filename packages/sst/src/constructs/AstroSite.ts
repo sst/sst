@@ -49,9 +49,9 @@ type AstroSiteNormalizedProps = AstroSiteProps & SsrSiteNormalizedProps;
  */
 export class AstroSite extends SsrSite {
   declare props: AstroSiteNormalizedProps;
-  protected typesPath = "src";
 
   constructor(scope: Construct, id: string, props: AstroSiteProps) {
+    props.typesPath = props.typesPath ?? "src";
     props.fileOptions = props.fileOptions ?? [
       {
         exclude: "*",
