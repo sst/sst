@@ -147,7 +147,7 @@ We recommend you to deploy to a single region when unsure.
 
 Due to the [CloudFront limit of 25 path pattern per distribution](https://docs.sst.dev/known-issues#cloudfront-cachebehaviors-limit-exceeded), it's impractical to create one path for each route in your Astro app. To work around this limitation, all routes are first checked against the S3 cache before being directed to the Lambda function for server rendering. This method utilizes the CloudFront origin group, with the S3 bucket serving as the primary origin and the server function as the failover origin. Note that the origin group can only support `GET`, `HEAD`, and `OPTIONS` request methods. To support other request methods, you should specify the route patterns in the `regional.serverRoutes` property of the `AstroSite` construct.
 
-```js {5}
+```js {3-10}
 new AstroSite(stack, "Site", {
   path: "my-astro-app/",
   regional: {
