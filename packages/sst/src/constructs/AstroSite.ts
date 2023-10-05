@@ -14,7 +14,7 @@ export interface AstroSiteProps extends SsrSiteProps {
   regional?: SsrSiteProps["regional"] & {
     /**
      * Matched routes bypass the S3 origin and are passed directly to the Lambda function to allow other HTTP methods other than `GET`.
-     * 
+     *
      * ```js
      * serverRoutes: [
      *   'feedback', // Feedback page which requires POST method

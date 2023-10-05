@@ -969,33 +969,27 @@ function handler(event) {
     function createOrigins() {
       const origins: OriginsMap = {};
 
-      Object.entries(plan.origins ?? {})
-        .sort(([_A, propsA], [_B, propsB]) => {
-          if (propsA.type === "group" && propsB.type !== "group") { 
-            return 1;
-          } else if (propsA.type !== "group" && propsB.type === "group") {
-            return -1;
-          }
-          return 0;
-        })
-        .forEach(([name, props]) => {
-          if (!props) return;
+      // Create non-group origins
+      Object.entries(plan.origins ?? {}).forEach(([name, props]) => {
+        switch (props.type) {
+          case "s3":
+            origins[name] = createS3Origin(props);
+            break;
+          case "function":
+            origins[name] = createFunctionOrigin(props);
+            break;
+          case "image-optimization-function":
+            origins[name] = createImageOptimizationFunctionOrigin(props);
+            break;
+        }
+      });
 
-          switch (props.type) {
-            case "s3":
-              origins[name] = createS3Origin(props);
-              break;
-            case "function":
-              origins[name] = createFunctionOrigin(props);
-              break;
-            case "group":
-              origins[name] = createOriginGroup(props, origins);
-              break;
-            case "image-optimization-function":
-              origins[name] = createImageOptimizationFunctionOrigin(props);
-              break;
-          }
-        });
+      // Create group origins
+      Object.entries(plan.origins ?? {}).forEach(([name, props]) => {
+        if (props.type === "group") {
+          origins[name] = createOriginGroup(props, origins);
+        }
+      });
 
       return origins;
     }
