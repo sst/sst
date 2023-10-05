@@ -4,4 +4,4 @@
 "@sst/docs": patch
 ---
 
-AstroSite: handle redirect in CloudFront functions
+AstriSite: improves SSR support
