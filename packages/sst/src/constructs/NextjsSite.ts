@@ -12,7 +12,7 @@ import {
 import { Queue } from "aws-cdk-lib/aws-sqs";
 import { SqsEventSource } from "aws-cdk-lib/aws-lambda-event-sources";
 import { Stack } from "./Stack.js";
-import { SsrSite, SsrSiteProps } from "./SsrSite.js";
+import { SsrSite, SsrSiteNormalizedProps, SsrSiteProps } from "./SsrSite.js";
 import { Size, toCdkSize } from "./util/size.js";
 import { Bucket } from "aws-cdk-lib/aws-s3";
 
@@ -61,6 +61,8 @@ export interface NextjsSiteProps extends Omit<SsrSiteProps, "nodejs"> {
   };
 }
 
+type NextjsSiteNormalizedProps = NextjsSiteProps & SsrSiteNormalizedProps;
+
 /**
  * The `NextjsSite` construct is a higher level CDK construct that makes it easy to create a Next.js app.
  * @example
@@ -73,16 +75,7 @@ export interface NextjsSiteProps extends Omit<SsrSiteProps, "nodejs"> {
  * ```
  */
 export class NextjsSite extends SsrSite {
-  protected declare props: NextjsSiteProps & {
-    path: Exclude<NextjsSiteProps["path"], undefined>;
-    runtime: Exclude<NextjsSiteProps["runtime"], undefined>;
-    timeout: Exclude<NextjsSiteProps["timeout"], undefined>;
-    memorySize: Exclude<NextjsSiteProps["memorySize"], undefined>;
-    waitForInvalidation: Exclude<
-      NextjsSiteProps["waitForInvalidation"],
-      undefined
-    >;
-  };
+  declare props: NextjsSiteNormalizedProps;
 
   constructor(scope: Construct, id: string, props?: NextjsSiteProps) {
     super(scope, id, {
