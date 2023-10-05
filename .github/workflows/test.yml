@@ -46,7 +46,6 @@ jobs:
 
       - name: Build
         run: pnpm build
-        working-directory: packages/sst
 
       - name: Test
         run: pnpm test
