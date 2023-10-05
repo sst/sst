@@ -1,5 +1,5 @@
 import type { AstroAdapter, AstroIntegration } from "astro";
-import { BuildMeta } from "../lib/build-meta";
+import { BuildMeta } from "../lib/build-meta.js";
 
 const PACKAGE_NAME = "astro-sst/lambda";
 
