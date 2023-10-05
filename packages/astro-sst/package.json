@@ -23,6 +23,7 @@
     "./edge/entrypoint": "./dist/edge/entrypoint.js",
     "./lambda": "./dist/lambda/adapter.js",
     "./lambda/entrypoint": "./dist/lambda/entrypoint.js",
+    "./build-meta": "./dist/lib/build-meta.js",
     "./package.json": "./package.json"
   },
   "typesVersions": {
@@ -32,6 +33,9 @@
       ],
       "lambda": [
         "dist/lambda/adapter.d.ts"
+      ],
+      "build-meta": [
+        "dist/lib/build-meta.d.ts"
       ]
     }
   },

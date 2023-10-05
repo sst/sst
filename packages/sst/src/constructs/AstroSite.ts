@@ -1,6 +1,6 @@
 import { readFileSync, existsSync, readdirSync, statSync } from "fs";
 import { join } from "path";
-import type { BuildMetaConfig } from "../../../astro-sst/src/lib/build-meta.js";
+import { BuildMetaConfig, BUILD_META_FILE_NAME } from "astro-sst/build-meta";
 import {
   Plan,
   SsrSite,
@@ -9,8 +9,6 @@ import {
 } from "./SsrSite.js";
 import { AllowedMethods } from "aws-cdk-lib/aws-cloudfront";
 import { Construct } from "constructs";
-
-const BUILD_META_EXPORT_NAME = "sst.buildMeta.json";
 
 export interface AstroSiteProps extends SsrSiteProps {
   regional?: SsrSiteProps["regional"] & {
@@ -135,7 +133,7 @@ export class AstroSite extends SsrSite {
   protected plan() {
     const { path: sitePath, edge } = this.props;
     const buildMeta = AstroSite.getBuildMeta(
-      join(sitePath, "dist", BUILD_META_EXPORT_NAME)
+      join(sitePath, "dist", BUILD_META_FILE_NAME)
     );
 
     const serverConfig = {

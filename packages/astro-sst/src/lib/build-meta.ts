@@ -8,7 +8,7 @@ import { join, relative } from "path";
 import { writeFile } from "fs/promises";
 import { fileURLToPath, parse } from "url";
 
-const BUILD_META_EXPORT_NAME = "sst.buildMeta.json";
+export const BUILD_META_FILE_NAME = "sst.buildMeta.json";
 
 type BuildResults = {
   pages: {
@@ -126,7 +126,7 @@ export class BuildMeta {
   }
 
   public static async exportBuildMeta(
-    buildExportName = BUILD_META_EXPORT_NAME
+    buildExportName = BUILD_META_FILE_NAME
   ) {
     const rootDir = fileURLToPath(this.astroConfig.root);
 

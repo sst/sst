@@ -130,7 +130,8 @@
     "vitest": "^0.33.0"
   },
   "peerDependencies": {
-    "@sls-next/lambda-at-edge": "^3.7.0"
+    "@sls-next/lambda-at-edge": "^3.7.0",
+    "astro-sst": "2"
   },
   "peerDependenciesMeta": {
     "@sls-next/lambda-at-edge": {
