@@ -11,10 +11,10 @@ import { AllowedMethods } from "aws-cdk-lib/aws-cloudfront";
 import { Construct } from "constructs";
 
 export interface AstroSiteProps extends SsrSiteProps {
-  regional?: SsrSiteProps["regional"] & {
+  regional: SsrSiteProps["regional"] & {
     /**
      * Matched routes bypass the S3 origin and are passed directly to the Lambda function to allow other HTTP methods other than `GET`.
-     * 
+     *
      * ```js
      * serverRoutes: [
      *   'feedback', // Feedback page which requires POST method
@@ -25,6 +25,12 @@ export interface AstroSiteProps extends SsrSiteProps {
      * ```
      */
     serverRoutes?: string[];
+    /**
+     * The site supports [Astro streaming](https://docs.astro.build/en/guides/server-side-rendering/#using-streaming-to-improve-page-performance) responses.
+     *
+     * @default true
+     */
+    streaming?: boolean;
   };
 }
 
@@ -66,6 +72,8 @@ export class AstroSite extends SsrSite {
         contentType: "text/html; charset=UTF-8",
       },
     ];
+    props.regional = props.regional ?? {};
+    props.regional.streaming = props.regional.streaming ?? true;
 
     super(scope, id, props);
   }
@@ -131,7 +139,12 @@ export class AstroSite extends SsrSite {
   }
 
   protected plan() {
-    const { path: sitePath, edge } = this.props;
+    const {
+      path: sitePath,
+      edge,
+      regional: { streaming, serverRoutes },
+    } = this.props;
+
     const buildMeta = AstroSite.getBuildMeta(
       join(sitePath, "dist", BUILD_META_FILE_NAME)
     );
@@ -223,7 +236,7 @@ export class AstroSite extends SsrSite {
         type: "function",
         constructId: "ServerFunction",
         function: serverConfig,
-        streaming: true,
+        streaming,
       };
 
       plan.origins.fallthroughServer = {
@@ -245,7 +258,7 @@ export class AstroSite extends SsrSite {
           pattern: `${buildMeta.clientBuildVersionedSubDir}/*`,
           origin: "staticsServer",
         },
-        ...(this.props.regional?.serverRoutes ?? []).map(
+        ...(serverRoutes ?? []).map(
           (route) =>
             ({
               cacheType: "server",

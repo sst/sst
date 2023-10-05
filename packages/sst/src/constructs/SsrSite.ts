@@ -904,7 +904,7 @@ function handler(event) {
         authType: regional?.enableServerUrlIamAuth
           ? FunctionUrlAuthType.AWS_IAM
           : FunctionUrlAuthType.NONE,
-        invokeMode: props.streaming ? InvokeMode.RESPONSE_STREAM : undefined,
+        invokeMode: props.streaming ? InvokeMode.RESPONSE_STREAM : InvokeMode.BUFFERED,
       });
       if (regional?.enableServerUrlIamAuth) {
         useFunctionUrlSigningFunction().attachPermissions([
@@ -971,7 +971,7 @@ function handler(event) {
 
       Object.entries(plan.origins ?? {})
         .sort(([_A, propsA], [_B, propsB]) => {
-          if (propsA.type === "group" && propsB.type !== "group") { 
+          if (propsA.type === "group" && propsB.type !== "group") {
             return 1;
           } else if (propsA.type !== "group" && propsB.type === "group") {
             return -1;
