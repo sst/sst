@@ -177,8 +177,8 @@ const supportedMemories = {
   },
 };
 
-interface ServiceDomainProps extends DistributionDomainProps {}
-interface ServiceCdkDistributionProps
+export interface ServiceDomainProps extends DistributionDomainProps {}
+export interface ServiceCdkDistributionProps
   extends Omit<DistributionProps, "defaultBehavior"> {}
 
 export interface ServiceProps {
