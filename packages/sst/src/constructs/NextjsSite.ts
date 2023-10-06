@@ -36,21 +36,52 @@ export interface NextjsSiteProps extends Omit<SsrSiteProps, "nodejs"> {
      * @default 1024 MB
      * @example
      * ```js
-     * memorySize: "512 MB",
+     * imageOptimization: {
+     *   memorySize: "512 MB",
+     * }
      * ```
      */
     memorySize?: number | Size;
   };
-  regional?: SsrSiteProps["regional"] & {
+  experimental?: {
     /**
      * Enable streaming. Currently an experimental feature in OpenNext.
      * @default false
      * @example
      * ```js
-     * experimentalStreaming: true,
+     * experimental: {
+     *   streaming: true,
+     * }
      * ```
      */
-    experimentalStreaming?: boolean;
+    streaming?: boolean;
+    /**
+     * Enables incremental cache.
+     *
+     * Disabling incremental cache will cause the entire page to be revalidated on each request. This can result in ISR and SSG pages to be in an inconsistent state. Specify this option if you are using SSR pages only.
+     *
+     * Note that it is possible to disable incremental cache while leaving on-demand revalidation enabled.
+     * @default true
+     * @example
+     * ```js
+     * experimental: {
+     *   enableIncrementalCache: false,
+     * }
+     */
+    enableIncrementalCache?: boolean;
+    /**
+     * Enables on-demand revalidation by path (`revalidatePath`) or by cache tag (`revalidateTag`).
+     *
+     * If disabled, both `revalidateTag` and `revalidatePath` will fail silently.
+     * @default true
+     * @example
+     * ```js
+     * experimental: {
+     *   enableOnDemandRevalidation: false,
+     * }
+     * ```
+     */
+    enableOnDemandRevalidation?: boolean;
   };
   cdk?: SsrSiteProps["cdk"] & {
     revalidation?: Pick<FunctionProps, "vpc" | "vpcSubnets">;
@@ -83,31 +114,6 @@ export interface NextjsSiteProps extends Omit<SsrSiteProps, "nodejs"> {
      */
     serverCachePolicy?: NonNullable<SsrSiteProps["cdk"]>["serverCachePolicy"];
   };
-
-  /**
-   * Dangerous options.
-   * Using these options incorrectly can cause your site to be in an inconsistent state.
-   * Use these options only if you know what you are doing.
-   */
-  dangerous?: {
-    /**
-     *  Disable DynamoDB cache.
-     *  Disabling DynamoDB cache will cause next/cache revalidation to fail silently.
-     *  Both revalidateTag and revalidatePath will fail.
-     *  @default false
-     */
-    disableDynamoDbCache?: boolean;
-    /**
-     *  Disable incremental cache.
-     *  Disabling incremental cache will disable the incremental cache feature.
-     *  Be aware that this will cause the entire page to be revalidated on each request.
-     *  This will cause ISR and SSG pages to be in an inconsistent state.
-     *  Use this only if you are using SSR pages only. or you know what you are doing.
-     *  You don't need to disable DynamoDB cache when disabling incremental cache.
-     *  @default false
-     */
-    disableIncrementalCache?: boolean;
-  }
 }
 
 type NextjsSiteNormalizedProps = NextjsSiteProps & SsrSiteNormalizedProps;
@@ -127,27 +133,42 @@ export class NextjsSite extends SsrSite {
   declare props: NextjsSiteNormalizedProps;
 
   constructor(scope: Construct, id: string, props?: NextjsSiteProps) {
+    const { streaming, enableOnDemandRevalidation, enableIncrementalCache } = {
+      streaming: false,
+      enableOnDemandRevalidation: true,
+      enableIncrementalCache: true,
+      ...props?.experimental,
+    };
+
     super(scope, id, {
       buildCommand: [
         "npx --yes open-next@2.2.1 build",
-        ...(props?.regional?.experimentalStreaming ? ["--streaming"] : []),
-        ...(props?.dangerous?.disableDynamoDbCache ? ["--dangerously-disable-dynamodb-cache"] : []),
-        ...(props?.dangerous?.disableIncrementalCache ? ["--dangerously-disable-incremental-cache"] : []),
+        ...(streaming ? ["--streaming"] : []),
+        ...(enableOnDemandRevalidation === false
+          ? ["--dangerously-disable-dynamodb-cache"]
+          : []),
+        ...(enableIncrementalCache === false
+          ? ["--dangerously-disable-incremental-cache"]
+          : []),
       ].join(" "),
       ...props,
     });
 
-    
-    if (!props?.dangerous?.disableIncrementalCache) {
+    if (enableIncrementalCache) {
       this.createRevalidationQueue();
     }
-    if (!(props?.dangerous?.disableDynamoDbCache || props?.dangerous?.disableIncrementalCache)) {
+    if (enableIncrementalCache && enableOnDemandRevalidation) {
       this.createRevalidationTable();
     }
   }
 
   protected plan(bucket: Bucket) {
-    const { path: sitePath, edge, regional, imageOptimization } = this.props;
+    const {
+      path: sitePath,
+      edge,
+      experimental,
+      imageOptimization,
+    } = this.props;
     const serverConfig = {
       description: "Next.js server",
       bundle: path.join(sitePath, ".open-next", "server-function"),
@@ -181,7 +202,7 @@ export class NextjsSite extends SsrSite {
                 type: "function",
                 constructId: "ServerFunction",
                 function: serverConfig,
-                streaming: regional?.experimentalStreaming,
+                streaming: experimental?.streaming,
               },
             }),
         imageOptimizer: {
