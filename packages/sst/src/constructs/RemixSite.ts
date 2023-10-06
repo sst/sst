@@ -35,7 +35,7 @@ export class RemixSite extends SsrSite {
     const { path: sitePath, edge } = this.props;
 
     const { handler, inject } = this.createServerLambdaBundle(
-      edge ? "edge-server.js" : "regional-server.js"
+      edge ? "edge-server.js" : "regional-server-stream.js"
     );
     const format = this.getServerModuleFormat();
     const serverConfig = {
@@ -83,6 +83,7 @@ export class RemixSite extends SsrSite {
                 type: "function",
                 constructId: "ServerFunction",
                 function: serverConfig,
+                streaming: true,
               },
             }),
         s3: {
