@@ -8,7 +8,8 @@ import { join, relative } from "path";
 import { writeFile } from "fs/promises";
 import { fileURLToPath, parse } from "url";
 
-export const BUILD_META_FILE_NAME = "sst.buildMeta.json";
+export type BuildMetaFileName = "sst.buildMeta.json";
+export const BUILD_META_FILE_NAME: BuildMetaFileName = "sst.buildMeta.json";
 
 type BuildResults = {
   pages: {
