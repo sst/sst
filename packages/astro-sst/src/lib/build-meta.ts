@@ -7,6 +7,12 @@ import type {
 import { join, relative } from "path";
 import { writeFile } from "fs/promises";
 import { fileURLToPath, parse } from "url";
+import type {
+  OutputMode,
+  PageResolution,
+  ResponseMode,
+  TrailingSlash,
+} from "./types";
 
 export const BUILD_META_FILE_NAME = "sst.buildMeta.json";
 
@@ -29,12 +35,14 @@ type SerializableRoute = {
 
 export type BuildMetaConfig = {
   domainName?: string;
-  outputMode: "server" | "static" | "hybrid";
-  pageResolution: "file" | "directory";
-  trailingSlash: "ignore" | "always" | "never";
+  outputMode: OutputMode;
+  responseMode: ResponseMode;
+  pageResolution: PageResolution;
+  trailingSlash: TrailingSlash;
   serverBuildOutputFile: string;
   clientBuildOutputDir: string;
   clientBuildVersionedSubDir: string;
+  serverRoutes: string[];
   routes: Array<{
     route: string;
     type: RouteType;
@@ -45,9 +53,19 @@ export type BuildMetaConfig = {
   }>;
 };
 
+export type IntegrationConfig = {
+  responseMode: ResponseMode;
+  serverRoutes: string[];
+};
+
 export class BuildMeta {
+  protected static integrationConfig: IntegrationConfig;
   protected static astroConfig: AstroConfig;
   protected static buildResults: BuildResults;
+
+  public static setIntegrationConfig(config: IntegrationConfig) {
+    this.integrationConfig = config;
+  }
 
   public static setAstroConfig(config: AstroConfig) {
     this.astroConfig = config;
@@ -55,7 +73,7 @@ export class BuildMeta {
 
   private static getRedirectPath(
     { segments }: RouteData,
-    trailingSlash: "always" | "never" | "ignore"
+    trailingSlash: TrailingSlash
   ) {
     let i = 0;
     return (
@@ -86,7 +104,7 @@ export class BuildMeta {
 
   private static getSerializableRoute(
     route: RouteData,
-    trailingSlash: "always" | "never" | "ignore"
+    trailingSlash: TrailingSlash
   ): SerializableRoute {
     return {
       route: route.route + (trailingSlash === "always" ? "/" : ""),
@@ -125,9 +143,7 @@ export class BuildMeta {
     };
   }
 
-  public static async exportBuildMeta(
-    buildExportName = BUILD_META_FILE_NAME
-  ) {
+  public static async exportBuildMeta(buildExportName = BUILD_META_FILE_NAME) {
     const rootDir = fileURLToPath(this.astroConfig.root);
 
     const outputPath = join(
@@ -166,6 +182,7 @@ export class BuildMeta {
     const buildMeta = {
       domainName: this.domainName ?? undefined,
       outputMode: this.astroConfig.output,
+      responseMode: this.integrationConfig.responseMode,
       pageResolution: this.astroConfig.build.format,
       trailingSlash: this.astroConfig.trailingSlash,
       serverBuildOutputFile: join(
@@ -178,6 +195,7 @@ export class BuildMeta {
       ),
       clientBuildVersionedSubDir: this.astroConfig.build.assets,
       routes,
+      serverRoutes: this.integrationConfig.serverRoutes,
     } satisfies BuildMetaConfig;
 
     await writeFile(outputPath, JSON.stringify(buildMeta));

@@ -1,5 +1,5 @@
 import type { AstroAdapter, AstroIntegration } from "astro";
-import { BuildMeta } from "../lib/build-meta";
+import { BuildMeta, IntegrationConfig } from "../lib/build-meta";
 
 const PACKAGE_NAME = "astro-sst/edge";
 
@@ -26,6 +26,13 @@ function getAdapter(): AstroAdapter {
 }
 
 export default function createIntegration(): AstroIntegration {
+  const integrationConfig: IntegrationConfig = {
+    responseMode: "buffer",
+    serverRoutes: [],
+  };
+
+  BuildMeta.setIntegrationConfig(integrationConfig);
+
   return {
     name: PACKAGE_NAME,
     hooks: {
