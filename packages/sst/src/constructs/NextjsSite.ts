@@ -1,7 +1,11 @@
 import fs from "fs";
 import path from "path";
 import { Construct } from "constructs";
-import { Duration as CdkDuration, RemovalPolicy } from "aws-cdk-lib/core";
+import {
+  Duration as CdkDuration,
+  RemovalPolicy,
+  CustomResource,
+} from "aws-cdk-lib/core";
 import {
   Code,
   Runtime,
@@ -9,12 +13,20 @@ import {
   FunctionProps,
   Architecture,
 } from "aws-cdk-lib/aws-lambda";
+import {
+  AttributeType,
+  Billing,
+  TableV2 as Table,
+} from "aws-cdk-lib/aws-dynamodb";
+import { Provider } from "aws-cdk-lib/custom-resources";
 import { Queue } from "aws-cdk-lib/aws-sqs";
 import { SqsEventSource } from "aws-cdk-lib/aws-lambda-event-sources";
 import { Stack } from "./Stack.js";
 import { SsrSite, SsrSiteNormalizedProps, SsrSiteProps } from "./SsrSite.js";
 import { Size, toCdkSize } from "./util/size.js";
 import { Bucket } from "aws-cdk-lib/aws-s3";
+import { PolicyStatement } from "aws-cdk-lib/aws-iam";
+import { RetentionDays } from "aws-cdk-lib/aws-logs";
 
 export interface NextjsSiteProps extends Omit<SsrSiteProps, "nodejs"> {
   imageOptimization?: {
@@ -23,10 +35,48 @@ export interface NextjsSiteProps extends Omit<SsrSiteProps, "nodejs"> {
      * @default 1024 MB
      * @example
      * ```js
-     * memorySize: "512 MB",
+     * imageOptimization: {
+     *   memorySize: "512 MB",
+     * }
      * ```
      */
     memorySize?: number | Size;
+  };
+  experimental?: {
+    /**
+     * Enable streaming. Currently an experimental feature in OpenNext.
+     * @default false
+     * @example
+     * ```js
+     * experimental: {
+     *   streaming: true,
+     * }
+     * ```
+     */
+    streaming?: boolean;
+    /**
+     * Disabling incremental cache will cause the entire page to be revalidated on each request. This can result in ISR and SSG pages to be in an inconsistent state. Specify this option if you are using SSR pages only.
+     *
+     * Note that it is possible to disable incremental cache while leaving on-demand revalidation enabled.
+     * @default false
+     * @example
+     * ```js
+     * experimental: {
+     *   disableIncrementalCache: true,
+     * }
+     */
+    disableIncrementalCache?: boolean;
+    /**
+     * Disabling DynamoDB cache will cause on-demand revalidation by path (`revalidatePath`) and by cache tag (`revalidateTag`) to fail silently.
+     * @default false
+     * @example
+     * ```js
+     * experimental: {
+     *   disableDynamoDBCache: true,
+     * }
+     * ```
+     */
+    disableDynamoDBCache?: boolean;
   };
   cdk?: SsrSiteProps["cdk"] & {
     revalidation?: Pick<FunctionProps, "vpc" | "vpcSubnets">;
@@ -78,16 +128,42 @@ export class NextjsSite extends SsrSite {
   declare props: NextjsSiteNormalizedProps;
 
   constructor(scope: Construct, id: string, props?: NextjsSiteProps) {
+    const { streaming, disableDynamoDBCache, disableIncrementalCache } = {
+      streaming: false,
+      disableDynamoDBCache: false,
+      disableIncrementalCache: false,
+      ...props?.experimental,
+    };
+
     super(scope, id, {
-      buildCommand: "npx --yes open-next@2.1.5 build",
+      buildCommand: [
+        "npx --yes open-next@2.2.1 build",
+        ...(streaming ? ["--streaming"] : []),
+        ...(disableDynamoDBCache
+          ? ["--dangerously-disable-dynamodb-cache"]
+          : []),
+        ...(disableIncrementalCache
+          ? ["--dangerously-disable-incremental-cache"]
+          : []),
+      ].join(" "),
       ...props,
     });
 
-    this.createRevalidation();
+    if (!disableIncrementalCache) {
+      this.createRevalidationQueue();
+      if (!disableDynamoDBCache) {
+        this.createRevalidationTable();
+      }
+    }
   }
 
   protected plan(bucket: Bucket) {
-    const { path: sitePath, edge, imageOptimization } = this.props;
+    const {
+      path: sitePath,
+      edge,
+      experimental,
+      imageOptimization,
+    } = this.props;
     const serverConfig = {
       description: "Next.js server",
       bundle: path.join(sitePath, ".open-next", "server-function"),
@@ -121,6 +197,7 @@ export class NextjsSite extends SsrSite {
                 type: "function",
                 constructId: "ServerFunction",
                 function: serverConfig,
+                streaming: experimental?.streaming,
               },
             }),
         imageOptimizer: {
@@ -238,10 +315,11 @@ export class NextjsSite extends SsrSite {
     });
   }
 
-  protected createRevalidation() {
+  private createRevalidationQueue() {
     if (!this.serverFunction) return;
 
     const { cdk } = this.props;
+    const server = this.serverFunction;
 
     const queue = new Queue(this, "RevalidationQueue", {
       fifo: true,
@@ -260,10 +338,75 @@ export class NextjsSite extends SsrSite {
     consumer.addEventSource(new SqsEventSource(queue, { batchSize: 5 }));
 
     // Allow server to send messages to the queue
+    server.addEnvironment("REVALIDATION_QUEUE_URL", queue.queueUrl);
+    server.addEnvironment("REVALIDATION_QUEUE_REGION", Stack.of(this).region);
+    queue.grantSendMessages(server.role!);
+  }
+
+  private createRevalidationTable() {
+    if (!this.serverFunction) return;
+
+    const { path: sitePath } = this.props;
     const server = this.serverFunction;
-    server?.addEnvironment("REVALIDATION_QUEUE_URL", queue.queueUrl);
-    server?.addEnvironment("REVALIDATION_QUEUE_REGION", Stack.of(this).region);
-    queue.grantSendMessages(server?.role!);
+
+    const table = new Table(this, "RevalidationTable", {
+      partitionKey: { name: "tag", type: AttributeType.STRING },
+      sortKey: { name: "path", type: AttributeType.STRING },
+      pointInTimeRecovery: true,
+      billing: Billing.onDemand(),
+      globalSecondaryIndexes: [
+        {
+          indexName: "revalidate",
+          partitionKey: { name: "path", type: AttributeType.STRING },
+          sortKey: { name: "revalidatedAt", type: AttributeType.NUMBER },
+        },
+      ],
+      removalPolicy: RemovalPolicy.DESTROY,
+    });
+
+    server?.addEnvironment("CACHE_DYNAMO_TABLE", table.tableName);
+    table.grantReadWriteData(server.role!);
+
+    const dynamodbProviderPath = path.join(
+      sitePath,
+      ".open-next",
+      "dynamodb-provider"
+    );
+
+    if (fs.existsSync(dynamodbProviderPath)) {
+      const insertFn = new CdkFunction(this, "RevalidationInsertFunction", {
+        description: "Next.js revalidation data insert",
+        handler: "index.handler",
+        code: Code.fromAsset(dynamodbProviderPath),
+        runtime: Runtime.NODEJS_18_X,
+        timeout: CdkDuration.minutes(15),
+        initialPolicy: [
+          new PolicyStatement({
+            actions: [
+              "dynamodb:BatchWriteItem",
+              "dynamodb:PutItem",
+              "dynamodb:DescribeTable",
+            ],
+            resources: [table.tableArn],
+          }),
+        ],
+        environment: {
+          CACHE_DYNAMO_TABLE: table.tableName,
+        },
+      });
+
+      const provider = new Provider(this, "RevalidationProvider", {
+        onEventHandler: insertFn,
+        logRetention: RetentionDays.ONE_DAY,
+      });
+
+      new CustomResource(this, "RevalidationResource", {
+        serviceToken: provider.serviceToken,
+        properties: {
+          version: Date.now().toString(),
+        },
+      });
+    }
   }
 
   public getConstructMetadata() {
