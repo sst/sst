@@ -5,6 +5,7 @@ import { useAWSProvider, useSTSIdentity } from "../credentials.js";
 import * as contextproviders from "sst-aws-cdk/lib/context-providers/index.js";
 import path from "path";
 import { VisibleError } from "../error.js";
+import fs from "fs/promises";
 import { useDotnetHandler } from "../runtime/handlers/dotnet.js";
 
 interface SynthOptions {
@@ -20,16 +21,6 @@ interface SynthOptions {
 export async function synth(opts: SynthOptions) {
   Logger.debug("Synthesizing stacks...");
   const { App } = await import("../constructs/App.js");
-  const { useNodeHandler } = await import("../runtime/handlers/node.js");
-  const { useGoHandler } = await import("../runtime/handlers/go.js");
-  const { useContainerHandler } = await import(
-    "../runtime/handlers/container.js"
-  );
-  const { useRustHandler } = await import("../runtime/handlers/rust.js");
-  const { usePythonHandler } = await import("../runtime/handlers/python.js");
-  const { useJavaHandler } = await import("../runtime/handlers/java.js");
-  if (opts.mode !== "remove") {
-  }
   const cxapi = await import("@aws-cdk/cx-api");
   const { Configuration } = await import("sst-aws-cdk/lib/settings.js");
   const project = useProject();
@@ -38,6 +29,9 @@ export async function synth(opts: SynthOptions) {
     ...opts,
     buildDir: opts.buildDir || path.join(project.paths.out, "dist"),
   };
+
+  await fs.rm(opts.buildDir!, { recursive: true, force: true });
+  await fs.mkdir(opts.buildDir!, { recursive: true });
 
   /*
   console.log(JSON.stringify(cfg.context));

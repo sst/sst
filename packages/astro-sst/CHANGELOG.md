@@ -1,5 +1,29 @@
 # astro-sst
 
+## 2.28.0
+
+### Patch Changes
+
+- [#3378](https://github.com/sst/sst/pull/3378) [`62c709d16`](https://github.com/sst/sst/commit/62c709d16a3c680f10eec22187c6dd1fedd64e89) Thanks [@bayssmekanique](https://github.com/bayssmekanique)! - AstroSite: fixes build bug introduced with astro-sst changes
+
+## 2.27.0
+
+### Minor Changes
+
+- [#3363](https://github.com/sst/sst/pull/3363) [`3299f350f`](https://github.com/sst/sst/commit/3299f350f5e08843ea158d8beadc449d9cbc8d3a) Thanks [@bayssmekanique](https://github.com/bayssmekanique)! - AstroSite: support "hybrid" mode
+
+### Patch Changes
+
+- [#3363](https://github.com/sst/sst/pull/3363) [`3299f350f`](https://github.com/sst/sst/commit/3299f350f5e08843ea158d8beadc449d9cbc8d3a) Thanks [@bayssmekanique](https://github.com/bayssmekanique)! - AstriSite: improves SSR support
+
+- [#3363](https://github.com/sst/sst/pull/3363) [`3299f350f`](https://github.com/sst/sst/commit/3299f350f5e08843ea158d8beadc449d9cbc8d3a) Thanks [@bayssmekanique](https://github.com/bayssmekanique)! - AstroSite: handle redirect in CloudFront functions
+
+## 2.26.11
+
+## 2.26.10
+
+## 2.26.9
+
 ## 2.26.8
 
 ## 2.26.7

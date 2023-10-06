@@ -1,5 +1,6 @@
 The `AstroSite` construct is a higher level CDK construct that makes it easy to create an Astro app. It provides a simple way to build and deploy the app to AWS:
 
+- It supports both `server` and `hybrid` modes.
 - The client assets are deployed to an S3 Bucket, and served out from a CloudFront CDN for fast content delivery.
 - The app server is deployed to Lambda. You can deploy to Lambda@Edge instead if the `edge` flag is enabled. Read more about [Single region vs Edge](#single-region-vs-edge).
 - It enables you to [configure custom domains](#custom-domains) for the website URL.
@@ -141,6 +142,28 @@ Note that, in the case you have a centralized database, Edge locations are often
 :::info
 We recommend you to deploy to a single region when unsure.
 :::
+
+#### Regional Server Routes
+
+Due to the [CloudFront limit of 25 path pattern per distribution](https://docs.sst.dev/known-issues#cloudfront-cachebehaviors-limit-exceeded), it's impractical to create one path for each route in your Astro app. To work around this limitation, all routes are first checked against the S3 cache before being directed to the Lambda function for server rendering. This method utilizes the CloudFront origin group, with the S3 bucket serving as the primary origin and the server function as the failover origin. Note that the origin group can only support `GET`, `HEAD`, and `OPTIONS` request methods. To support other request methods, you should specify the route patterns in the `regional.serverRoutes` property of the `AstroSite` construct.
+
+```js {3-10}
+new AstroSite(stack, "Site", {
+  path: "my-astro-app/",
+  regional: {
+    serverRoutes: [
+      "feedback", // Feedback page which requires POST method
+      "login",    // Login page which requires POST method
+      "user/*",   // Directory of user routes which are all SSR
+      "api/*"     // Directory of API endpoints which require all methods
+    ]
+  }
+});
+```
+
+Route patterns are case sensitive. And the following wildcard characters can be used:
+- \* matches 0 or more characters.
+- ? matches exactly 1 character.
 
 ## Streaming
 
@@ -625,3 +648,16 @@ if (!app.local) {
   });
 }
 ```
+
+## Common Errors
+
+### CloudFront 403 Error - The request could not be satisfied.
+
+**Error message:**
+```
+403 ERROR
+The request could not be satisfied.
+This distribution is not configured to allow the HTTP request method that was used for this request. The distribution supports only cachable requests. We can't connect to the server for this app or website at this time. There might be too much traffic or a configuration error. Try again later, or contact the app or website owner.
+```
+
+This typically occurs when the site is deployed in the regional mode. It's likely because the request method was not `GET`, and the requested route was not specified in the [`regional.serverRoutes`](#regional-server-routes) property. To resolve this, add a route pattern to the `regional.serverRoutes` property that matches the requested route.

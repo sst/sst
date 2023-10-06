@@ -24,6 +24,7 @@ import {
   CacheQueryStringBehavior,
   CacheHeaderBehavior,
   CacheCookieBehavior,
+  DistributionProps,
   OriginProtocolPolicy,
   OriginRequestPolicy,
 } from "aws-cdk-lib/aws-cloudfront";
@@ -177,6 +178,9 @@ const supportedMemories = {
 };
 
 export interface ServiceDomainProps extends DistributionDomainProps {}
+export interface ServiceCdkDistributionProps
+  extends Omit<DistributionProps, "defaultBehavior"> {}
+
 export interface ServiceProps {
   /**
    * Path to the directory where the app is located.
@@ -433,7 +437,7 @@ export interface ServiceProps {
   };
   cdk?: {
     /**
-     * By default, SST creates a CloudFront distribution. Set this to `false` to skip creating the distribution.
+     * By default, SST creates a CloudFront distribution. Pass in a value to override the default settings this construct uses to create the CDK `Distribution` internally. Alternatively, set this to `false` to skip creating the distribution.
      * @default true
      * @example
      * ```js
@@ -444,7 +448,7 @@ export interface ServiceProps {
      * }
      * ```
      */
-    cloudfrontDistribution?: boolean;
+    cloudfrontDistribution?: boolean | ServiceCdkDistributionProps;
     /**
      * By default, SST creates an Application Load Balancer to distribute requests across containers. Set this to `false` to skip creating the load balancer.
      * @default true
@@ -557,6 +561,7 @@ export class Service extends Construct implements SSTConstruct {
   private cluster: Cluster;
   private container: ContainerDefinition;
   private taskDefinition: FargateTaskDefinition;
+  private service: FargateService;
   private distribution?: Distribution;
 
   constructor(scope: Construct, id: string, props?: ServiceProps) {
@@ -585,7 +590,9 @@ export class Service extends Construct implements SSTConstruct {
 
     if (this.doNotDeploy) {
       // @ts-expect-error
-      this.vpc = this.cluster = this.container = this.taskDefinition = null;
+      this.vpc = this.cluster = null;
+      // @ts-expect-error
+      this.service = this.container = this.taskDefinition = null;
       // @ts-expect-error
       this.distribution = null;
       this.devFunction = this.createDevFunction();
@@ -605,6 +612,7 @@ export class Service extends Construct implements SSTConstruct {
 
     this.vpc = vpc;
     this.cluster = cluster;
+    this.service = service;
     this.container = container;
     this.taskDefinition = taskDefinition;
     this.bindForService(props?.bind || []);
@@ -677,6 +685,8 @@ export class Service extends Construct implements SSTConstruct {
     return {
       vpc: this.vpc,
       cluster: this.cluster,
+      fargateService: this.service,
+      taskDefinition: this.taskDefinition,
       distribution: this.distribution?.cdk.distribution,
       hostedZone: this.distribution?.cdk.hostedZone,
       certificate: this.distribution?.cdk.certificate,
@@ -1017,6 +1027,9 @@ export class Service extends Construct implements SSTConstruct {
             cachePolicy,
             originRequestPolicy: OriginRequestPolicy.ALL_VIEWER,
           },
+          ...(cdk?.cloudfrontDistribution === true
+            ? {}
+            : cdk?.cloudfrontDistribution),
         },
       },
     });

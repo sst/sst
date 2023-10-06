@@ -110,6 +110,49 @@ test("timeout defined", async () => {
   });
 });
 
+test("experimental.streaming undefined", async () => {
+  const { stack } = await createSite();
+  hasResource(stack, "AWS::Lambda::Url", {
+    InvokeMode: "BUFFERED",
+  });
+});
+test("experimental.streaming true", async () => {
+  const { stack } = await createSite({
+    experimental: {
+      streaming: true,
+    },
+  });
+  hasResource(stack, "AWS::Lambda::Url", {
+    InvokeMode: "RESPONSE_STREAM",
+  });
+});
+
+test("experimental.disableIncrementalCache undefined", async () => {
+  const { stack } = await createSite();
+  countResources(stack, "AWS::SQS::Queue", 1);
+});
+test("experimental.disableIncrementalCache true", async () => {
+  const { stack } = await createSite({
+    experimental: {
+      disableIncrementalCache: true,
+    },
+  });
+  countResources(stack, "AWS::SQS::Queue", 0);
+});
+
+test("experimental.disableDynamoDBCache undefined", async () => {
+  const { stack } = await createSite();
+  countResources(stack, "AWS::DynamoDB::GlobalTable", 1);
+});
+test("experimental.disableDynamoDBCache true", async () => {
+  const { stack } = await createSite({
+    experimental: {
+      disableDynamoDBCache: true,
+    },
+  });
+  countResources(stack, "AWS::DynamoDB::GlobalTable", 0);
+});
+
 test("cdk.distribution.defaultBehavior", async () => {
   const { stack, site } = await createSite({
     cdk: {

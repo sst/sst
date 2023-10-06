@@ -1,5 +1,57 @@
 # @serverless-stack/cli2
 
+## 2.28.0
+
+### Minor Changes
+
+- [#3295](https://github.com/sst/sst/pull/3295) [`db36c2451`](https://github.com/sst/sst/commit/db36c2451def103773e54f67e5837723358cead2) Thanks [@conico974](https://github.com/conico974)! - NextjsSite: support OpenNext v2.2.1
+
+- [#3295](https://github.com/sst/sst/pull/3295) [`db36c2451`](https://github.com/sst/sst/commit/db36c2451def103773e54f67e5837723358cead2) Thanks [@conico974](https://github.com/conico974)! - NextjsSite: support on-demand `revalidatePath` and `revalidateTag`
+
+- [#3295](https://github.com/sst/sst/pull/3295) [`db36c2451`](https://github.com/sst/sst/commit/db36c2451def103773e54f67e5837723358cead2) Thanks [@conico974](https://github.com/conico974)! - NextjsSite: support streaming response
+
+### Patch Changes
+
+- [#3378](https://github.com/sst/sst/pull/3378) [`62c709d16`](https://github.com/sst/sst/commit/62c709d16a3c680f10eec22187c6dd1fedd64e89) Thanks [@bayssmekanique](https://github.com/bayssmekanique)! - AstroSite: fixes build bug introduced with astro-sst changes
+
+- [`bb1e8c473`](https://github.com/sst/sst/commit/bb1e8c473c9730d957d119757e879f4d2c28a38c) Thanks [@fwang](https://github.com/fwang)! - Service: allow customizing CloudFront distribution
+
+## 2.27.0
+
+### Minor Changes
+
+- [#3363](https://github.com/sst/sst/pull/3363) [`3299f350f`](https://github.com/sst/sst/commit/3299f350f5e08843ea158d8beadc449d9cbc8d3a) Thanks [@bayssmekanique](https://github.com/bayssmekanique)! - AstroSite: support "hybrid" mode
+
+### Patch Changes
+
+- [#3370](https://github.com/sst/sst/pull/3370) [`bd9605ca6`](https://github.com/sst/sst/commit/bd9605ca63d0ac9a1dc77e55ffeda36cf7b3be9c) Thanks [@bayssmekanique](https://github.com/bayssmekanique)! - Fixes props passing to SSR function
+
+- [#3363](https://github.com/sst/sst/pull/3363) [`3299f350f`](https://github.com/sst/sst/commit/3299f350f5e08843ea158d8beadc449d9cbc8d3a) Thanks [@bayssmekanique](https://github.com/bayssmekanique)! - AstriSite: improves SSR support
+
+- [#3363](https://github.com/sst/sst/pull/3363) [`3299f350f`](https://github.com/sst/sst/commit/3299f350f5e08843ea158d8beadc449d9cbc8d3a) Thanks [@bayssmekanique](https://github.com/bayssmekanique)! - AstroSite: handle redirect in CloudFront functions
+
+- [#3365](https://github.com/sst/sst/pull/3365) [`1ce715444`](https://github.com/sst/sst/commit/1ce7154448171cf9a36b4ec6b167cf5028270c5a) Thanks [@bayssmekanique](https://github.com/bayssmekanique)! - Fixes warmer for SSR sites
+
+## 2.26.11
+
+### Patch Changes
+
+- [`cd2cd55e4`](https://github.com/sst/sst/commit/cd2cd55e42ecf17f41e3ca93422acf700440f1c7) Thanks [@fwang](https://github.com/fwang)! - Service: expose fargateService and taskDefinition
+
+## 2.26.10
+
+### Patch Changes
+
+- [`1e39f6490`](https://github.com/sst/sst/commit/1e39f6490e97a2303e9cddf4a81221b90c9a48d2) Thanks [@thdxr](https://github.com/thdxr)! - cli: clear build dir on synth
+
+- [`4a433ce1b`](https://github.com/sst/sst/commit/4a433ce1b9b8176a7b9f495758397901e57a64f6) Thanks [@thdxr](https://github.com/thdxr)! - future/auth: fix index url
+
+## 2.26.9
+
+### Patch Changes
+
+- [`47c5c0733`](https://github.com/sst/sst/commit/47c5c0733630727c18d40b61b04558a158cabbab) Thanks [@thdxr](https://github.com/thdxr)! - cli: remove unnecessary console.log
+
 ## 2.26.8
 
 ### Patch Changes

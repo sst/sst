@@ -7,7 +7,6 @@ import spawn from "cross-spawn";
 import { execSync } from "child_process";
 
 import { Construct } from "constructs";
-import { Lazy } from "aws-cdk-lib";
 import {
   Fn,
   Token,
@@ -37,7 +36,6 @@ import {
   FunctionUrlAuthType,
   FunctionProps as CdkFunctionProps,
   InvokeMode,
-  Architecture,
 } from "aws-cdk-lib/aws-lambda";
 import { Asset } from "aws-cdk-lib/aws-s3-assets";
 import {
@@ -52,17 +50,19 @@ import {
   CacheQueryStringBehavior,
   CacheHeaderBehavior,
   CacheCookieBehavior,
-  Distribution as CdkDistribution,
   OriginRequestPolicy,
   IOriginRequestPolicy,
   Function as CfFunction,
   FunctionCode as CfFunctionCode,
   FunctionEventType as CfFunctionEventType,
-  IDistribution,
-  IOrigin,
+  ErrorResponse,
 } from "aws-cdk-lib/aws-cloudfront";
 import { AwsCliLayer } from "aws-cdk-lib/lambda-layer-awscli";
-import { S3Origin, HttpOrigin } from "aws-cdk-lib/aws-cloudfront-origins";
+import {
+  S3Origin,
+  HttpOrigin,
+  OriginGroup,
+} from "aws-cdk-lib/aws-cloudfront-origins";
 import { Rule, Schedule } from "aws-cdk-lib/aws-events";
 import { LambdaFunction } from "aws-cdk-lib/aws-events-targets";
 
@@ -92,7 +92,6 @@ import {
 import { useProject } from "../project.js";
 import { VisibleError } from "../error.js";
 import { RetentionDays } from "aws-cdk-lib/aws-logs";
-import { Behavior } from "@aws-sdk/client-iot";
 
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 
@@ -118,7 +117,15 @@ type S3OriginConfig = {
     versionedSubDir?: string;
   }[];
 };
+type OriginGroupConfig = {
+  type: "group";
+  primaryOriginName: string;
+  fallbackOriginName: string;
+  fallbackStatusCodes?: number[];
+};
+type OriginsMap = Record<string, S3Origin | HttpOrigin | OriginGroup>;
 
+export type Plan = ReturnType<SsrSite["validatePlan"]>;
 export interface SsrSiteNodeJSProps extends NodeJSProps {}
 export interface SsrDomainProps extends DistributionDomainProps {}
 export interface SsrSiteFileOptions extends BaseSiteFileOptions {}
@@ -142,6 +149,11 @@ export interface SsrSiteProps {
    * @default "."
    */
   path?: string;
+  /**
+   * Path relative to the app location where the type definitions are located.
+   * @default "."
+   */
+  typesPath?: string;
   /**
    * The command for building the website
    * @default `npm run build`
@@ -377,8 +389,9 @@ export interface SsrSiteProps {
   fileOptions?: SsrSiteFileOptions[];
 }
 
-type SsrSiteNormalizedProps = SsrSiteProps & {
+export type SsrSiteNormalizedProps = SsrSiteProps & {
   path: Exclude<SsrSiteProps["path"], undefined>;
+  typesPath: Exclude<SsrSiteProps["typesPath"], undefined>;
   runtime: Exclude<SsrSiteProps["runtime"], undefined>;
   timeout: Exclude<SsrSiteProps["timeout"], undefined>;
   memorySize: Exclude<SsrSiteProps["memorySize"], undefined>;
@@ -400,7 +413,6 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
   public readonly id: string;
   protected props: SsrSiteNormalizedProps;
   protected doNotDeploy: boolean;
-  protected typesPath = ".";
   protected bucket: Bucket;
   protected serverFunction?: EdgeFunction | SsrFunction;
   private serverFunctionForDev?: SsrFunction;
@@ -411,6 +423,7 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
 
     const props: SsrSiteNormalizedProps = {
       path: ".",
+      typesPath: ".",
       waitForInvalidation: false,
       runtime: "nodejs18.x",
       timeout: "10 seconds",
@@ -425,6 +438,7 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
     const self = this;
     const {
       path: sitePath,
+      typesPath,
       buildCommand,
       runtime,
       timeout,
@@ -447,7 +461,7 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
 
     validateSiteExists();
     validateTimeout();
-    writeTypesFile(this.typesPath);
+    writeTypesFile(typesPath);
 
     useSites().add(stack.stackName, id, this.constructor.name, props);
 
@@ -628,7 +642,7 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
 
       // Create warmer function
       const warmer = new CdkFunction(self, "WarmerFunction", {
-        description: "Next.js warmer",
+        description: "SSR warmer",
         code: Code.fromAsset(
           plan.warmerConfig?.function ??
             path.join(__dirname, "../support/ssr-warmer")
@@ -636,7 +650,7 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
         runtime: Runtime.NODEJS_18_X,
         handler: "index.handler",
         timeout: CdkDuration.minutes(15),
-        memorySize: 1024,
+        memorySize: 128,
         environment: {
           FUNCTION_NAME: ssrFunctions[0].functionName,
           CONCURRENCY: warm.toString(),
@@ -646,7 +660,8 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
 
       // Create cron job
       new Rule(self, "WarmerRule", {
-        schedule: Schedule.rate(CdkDuration.minutes(5)),
+        schedule:
+          plan.warmerConfig?.schedule ?? Schedule.rate(CdkDuration.minutes(5)),
         targets: [new LambdaFunction(warmer, { retryAttempts: 0 })],
       });
 
@@ -696,6 +711,7 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
                 }, {} as Record<string, BehaviorOptions>),
               ...(cdk?.distribution?.additionalBehaviors || {}),
             },
+            errorResponses: plan.errorResponses,
           },
         },
       });
@@ -721,6 +737,7 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
 
       return distribution;
     }
+
     function buildBehavior(
       behavior: ReturnType<typeof self.validatePlan>["behaviors"][number]
     ) {
@@ -732,7 +749,8 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
         return {
           origin,
           viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
-          allowedMethods: AllowedMethods.ALLOW_GET_HEAD_OPTIONS,
+          allowedMethods:
+            behavior.allowedMethods ?? AllowedMethods.ALLOW_GET_HEAD_OPTIONS,
           cachedMethods: CachedMethods.CACHE_GET_HEAD_OPTIONS,
           compress: true,
           cachePolicy: CachePolicy.CACHING_OPTIMIZED,
@@ -750,7 +768,7 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
         return {
           viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
           origin,
-          allowedMethods: AllowedMethods.ALLOW_ALL,
+          allowedMethods: behavior.allowedMethods ?? AllowedMethods.ALLOW_ALL,
           cachedMethods: CachedMethods.CACHE_GET_HEAD_OPTIONS,
           compress: true,
           cachePolicy: cdk?.serverCachePolicy ?? useServerBehaviorCachePolicy(),
@@ -848,115 +866,143 @@ function handler(event) {
       return functions;
     }
 
+    function createS3Origin(props: S3OriginConfig) {
+      const s3Origin = new S3Origin(bucket, {
+        originPath: "/" + (props.originPath ?? ""),
+      });
+
+      const assets = createS3OriginAssets(props.copy);
+      const assetFileOptions =
+        fileOptions || createS3OriginAssetFileOptions(props.copy);
+      const s3deployCR = createS3OriginDeployment(assets, assetFileOptions);
+      s3DeployCRs.push(s3deployCR);
+
+      return s3Origin;
+    }
+
+    function createFunctionOrigin(props: FunctionOriginConfig) {
+      const fn = new SsrFunction(self, props.constructId, {
+        runtime,
+        timeout,
+        memorySize,
+        bind,
+        permissions,
+        ...props.function,
+        nodejs: {
+          format: "esm" as const,
+          ...nodejs,
+          ...props.function.nodejs,
+          esbuild: {
+            ...nodejs?.esbuild,
+            ...props.function.nodejs?.esbuild,
+          },
+        },
+        environment: {
+          ...environment,
+          ...props.function.environment,
+        },
+        ...cdk?.server,
+      });
+      ssrFunctions.push(fn);
+
+      bucket.grantReadWrite(fn?.role!);
+
+      const fnUrl = fn.addFunctionUrl({
+        authType: regional?.enableServerUrlIamAuth
+          ? FunctionUrlAuthType.AWS_IAM
+          : FunctionUrlAuthType.NONE,
+        invokeMode: props.streaming
+          ? InvokeMode.RESPONSE_STREAM
+          : InvokeMode.BUFFERED,
+      });
+      if (regional?.enableServerUrlIamAuth) {
+        useFunctionUrlSigningFunction().attachPermissions([
+          new PolicyStatement({
+            actions: ["lambda:InvokeFunctionUrl"],
+            resources: [fn.functionArn],
+          }),
+        ]);
+      }
+
+      return new HttpOrigin(Fn.parseDomainName(fnUrl.url), {
+        readTimeout:
+          typeof timeout === "string"
+            ? toCdkDuration(timeout)
+            : CdkDuration.seconds(timeout),
+      });
+    }
+
+    function createOriginGroup(props: OriginGroupConfig, origins: OriginsMap) {
+      return new OriginGroup({
+        primaryOrigin: origins[props.primaryOriginName],
+        fallbackOrigin: origins[props.fallbackOriginName],
+        fallbackStatusCodes: props.fallbackStatusCodes,
+      });
+    }
+
+    function createImageOptimizationFunctionOrigin(
+      props: ImageOptimizationFunctionOriginConfig
+    ) {
+      const fn = new CdkFunction(self, `ImageFunction`, {
+        currentVersionOptions: {
+          removalPolicy: RemovalPolicy.DESTROY,
+        },
+        logRetention: RetentionDays.THREE_DAYS,
+        timeout: CdkDuration.seconds(25),
+        initialPolicy: [
+          new PolicyStatement({
+            actions: ["s3:GetObject"],
+            resources: [bucket.arnForObjects("*")],
+          }),
+        ],
+        ...props.function,
+      });
+
+      const fnUrl = fn.addFunctionUrl({
+        authType: regional?.enableServerUrlIamAuth
+          ? FunctionUrlAuthType.AWS_IAM
+          : FunctionUrlAuthType.NONE,
+      });
+      if (regional?.enableServerUrlIamAuth) {
+        useFunctionUrlSigningFunction().attachPermissions([
+          new PolicyStatement({
+            actions: ["lambda:InvokeFunctionUrl"],
+            resources: [fn.functionArn],
+          }),
+        ]);
+      }
+
+      return new HttpOrigin(Fn.parseDomainName(fnUrl.url));
+    }
+
     function createOrigins() {
-      const origins: Record<string, S3Origin | HttpOrigin> = {};
+      const origins: OriginsMap = {};
 
+      // Create non-group origins
       Object.entries(plan.origins ?? {}).forEach(([name, props]) => {
-        if (!props) return;
-
-        // S3 Origin
-        if (props.type === "s3") {
-          origins[name] = new S3Origin(bucket, {
-            originPath: "/" + (props.originPath ?? ""),
-          });
-
-          const assets = createS3OriginAssets(props.copy);
-          const assetFileOptions =
-            fileOptions || createS3OriginAssetFileOptions(props.copy);
-          const s3deployCR = createS3OriginDeployment(assets, assetFileOptions);
-          s3DeployCRs.push(s3deployCR);
+        switch (props.type) {
+          case "s3":
+            origins[name] = createS3Origin(props);
+            break;
+          case "function":
+            origins[name] = createFunctionOrigin(props);
+            break;
+          case "image-optimization-function":
+            origins[name] = createImageOptimizationFunctionOrigin(props);
+            break;
         }
+      });
 
-        // Server Origin
-        else if (props.type === "function") {
-          const fn = new SsrFunction(self, props.constructId, {
-            runtime,
-            timeout,
-            memorySize,
-            bind,
-            permissions,
-            ...props.function,
-            nodejs: {
-              format: "esm" as const,
-              ...nodejs,
-              ...props.function.nodejs,
-              esbuild: {
-                ...nodejs?.esbuild,
-                ...props.function.nodejs?.esbuild,
-              },
-            },
-            environment: {
-              ...environment,
-              ...props.function.environment,
-            },
-            ...cdk?.server,
-          });
-          ssrFunctions.push(fn);
-
-          bucket.grantReadWrite(fn?.role!);
-
-          const fnUrl = fn.addFunctionUrl({
-            authType: regional?.enableServerUrlIamAuth
-              ? FunctionUrlAuthType.AWS_IAM
-              : FunctionUrlAuthType.NONE,
-            invokeMode: props.streaming
-              ? InvokeMode.RESPONSE_STREAM
-              : undefined,
-          });
-          if (regional?.enableServerUrlIamAuth) {
-            useFunctionUrlSigningFunction().attachPermissions([
-              new PolicyStatement({
-                actions: ["lambda:InvokeFunctionUrl"],
-                resources: [fn.functionArn],
-              }),
-            ]);
-          }
-
-          origins[name] = new HttpOrigin(Fn.parseDomainName(fnUrl.url), {
-            readTimeout:
-              typeof timeout === "string"
-                ? toCdkDuration(timeout)
-                : CdkDuration.seconds(timeout),
-          });
-        }
-
-        // Image Optimization Origin
-        else if (props.type === "image-optimization-function") {
-          const fn = new CdkFunction(self, `ImageFunction`, {
-            currentVersionOptions: {
-              removalPolicy: RemovalPolicy.DESTROY,
-            },
-            logRetention: RetentionDays.THREE_DAYS,
-            timeout: CdkDuration.seconds(25),
-            initialPolicy: [
-              new PolicyStatement({
-                actions: ["s3:GetObject"],
-                resources: [bucket.arnForObjects("*")],
-              }),
-            ],
-            ...props.function,
-          });
-
-          const fnUrl = fn.addFunctionUrl({
-            authType: regional?.enableServerUrlIamAuth
-              ? FunctionUrlAuthType.AWS_IAM
-              : FunctionUrlAuthType.NONE,
-          });
-          if (regional?.enableServerUrlIamAuth) {
-            useFunctionUrlSigningFunction().attachPermissions([
-              new PolicyStatement({
-                actions: ["lambda:InvokeFunctionUrl"],
-                resources: [fn.functionArn],
-              }),
-            ]);
-          }
-
-          origins[name] = new HttpOrigin(Fn.parseDomainName(fnUrl.url));
+      // Create group origins
+      Object.entries(plan.origins ?? {}).forEach(([name, props]) => {
+        if (props.type === "group") {
+          origins[name] = createOriginGroup(props, origins);
         }
       });
 
       return origins;
     }
+
     function createS3OriginAssets(copy: S3OriginConfig["copy"]) {
       // Create temp folder, clean up if exists
       const zipOutDir = path.resolve(
@@ -1012,6 +1058,7 @@ function handler(event) {
       }
       return assets;
     }
+
     function createS3OriginAssetFileOptions(copy: S3OriginConfig["copy"]) {
       const fileOptions = [];
 
@@ -1040,6 +1087,7 @@ function handler(event) {
 
       return fileOptions;
     }
+
     function createS3OriginDeployment(
       assets: Asset[],
       fileOptions: SsrSiteFileOptions[]
@@ -1339,6 +1387,7 @@ function handler(event) {
       | FunctionOriginConfig
       | ImageOptimizationFunctionOriginConfig
       | S3OriginConfig
+      | OriginGroupConfig
     >
   >(input: {
     cloudFrontFunctions?: CloudFrontFunctions;
@@ -1348,13 +1397,16 @@ function handler(event) {
       cacheType: "server" | "static";
       pattern?: string;
       origin: keyof Origins;
+      allowedMethods?: AllowedMethods;
       cfFunction?: keyof CloudFrontFunctions;
       edgeFunction?: keyof EdgeFunctions;
     }[];
+    errorResponses?: ErrorResponse[];
     cachePolicyAllowedHeaders?: string[];
     buildId?: string;
     warmerConfig?: {
       function: string;
+      schedule?: Schedule;
     };
   }) {
     return input;

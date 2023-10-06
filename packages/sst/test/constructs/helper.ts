@@ -1,7 +1,7 @@
 import { Match, Matcher, MatchResult, Template } from "aws-cdk-lib/assertions";
 import { Stack } from "aws-cdk-lib";
 import { App, AppDeployProps, AppProps } from "../../dist/constructs";
-import { ProjectContext, useProject } from "../../dist/project.js";
+import { setProject, useProject } from "../../dist/project.js";
 import { useNodeHandler } from "../../dist/runtime/handlers/node.js";
 import { usePythonHandler } from "../../dist/runtime/handlers/python.js";
 import { useDotnetHandler } from "../../dist/runtime/handlers/dotnet.js";
@@ -28,7 +28,7 @@ export async function createApp(props?: Partial<AppDeployProps>) {
   const root = path.join(os.tmpdir(), "sst", crypto.randomUUID());
   await fs.mkdir(root, { recursive: true });
   await fs.mkdir(path.join(root, ".sst"), { recursive: true });
-  ProjectContext.provide({
+  setProject({
     version: "test",
     cdkVersion: "test",
     stacks: async () => {},
