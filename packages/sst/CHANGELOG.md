@@ -1,5 +1,21 @@
 # @serverless-stack/cli2
 
+## 2.28.0
+
+### Minor Changes
+
+- [#3295](https://github.com/sst/sst/pull/3295) [`db36c2451`](https://github.com/sst/sst/commit/db36c2451def103773e54f67e5837723358cead2) Thanks [@conico974](https://github.com/conico974)! - NextjsSite: support OpenNext v2.2.1
+
+- [#3295](https://github.com/sst/sst/pull/3295) [`db36c2451`](https://github.com/sst/sst/commit/db36c2451def103773e54f67e5837723358cead2) Thanks [@conico974](https://github.com/conico974)! - NextjsSite: support on-demand `revalidatePath` and `revalidateTag`
+
+- [#3295](https://github.com/sst/sst/pull/3295) [`db36c2451`](https://github.com/sst/sst/commit/db36c2451def103773e54f67e5837723358cead2) Thanks [@conico974](https://github.com/conico974)! - NextjsSite: support streaming response
+
+### Patch Changes
+
+- [#3378](https://github.com/sst/sst/pull/3378) [`62c709d16`](https://github.com/sst/sst/commit/62c709d16a3c680f10eec22187c6dd1fedd64e89) Thanks [@bayssmekanique](https://github.com/bayssmekanique)! - AstroSite: fixes build bug introduced with astro-sst changes
+
+- [`bb1e8c473`](https://github.com/sst/sst/commit/bb1e8c473c9730d957d119757e879f4d2c28a38c) Thanks [@fwang](https://github.com/fwang)! - Service: allow customizing CloudFront distribution
+
 ## 2.27.0
 
 ### Minor Changes
