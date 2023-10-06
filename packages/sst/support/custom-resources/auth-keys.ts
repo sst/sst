@@ -1,8 +1,8 @@
 import {
   SSMClient,
-  DeleteParameterCommand,
   GetParameterCommand,
   PutParameterCommand,
+  DeleteParametersCommand,
 } from "@aws-sdk/client-ssm";
 import crypto from "crypto";
 import { promisify } from "util";
@@ -94,18 +94,11 @@ export async function AuthKeys(cfnRequest: any) {
       }
       break;
     case "Delete":
-      await Promise.all([
-        client.send(
-          new DeleteParameterCommand({
-            Name: privatePath,
-          })
-        ),
-        client.send(
-          new DeleteParameterCommand({
-            Name: publicPath,
-          })
-        ),
-      ]);
+      await client.send(
+        new DeleteParametersCommand({
+          Names: [publicPath, privatePath],
+        })
+      );
       break;
     default:
       throw new Error("Unsupported request type");
