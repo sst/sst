@@ -1,6 +1,6 @@
 import { readFileSync, existsSync, readdirSync, statSync } from "fs";
 import { join } from "path";
-import { BuildMetaConfig, BUILD_META_FILE_NAME } from "astro-sst/build-meta";
+import type { BuildMetaConfig, BuildMetaFileName } from "astro-sst/build-meta";
 import {
   Plan,
   SsrSite,
@@ -9,6 +9,8 @@ import {
 } from "./SsrSite.js";
 import { AllowedMethods } from "aws-cdk-lib/aws-cloudfront";
 import { Construct } from "constructs";
+
+const BUILD_META_FILE_NAME: BuildMetaFileName = "sst.buildMeta.json";
 
 export interface AstroSiteProps extends SsrSiteProps {
   regional?: SsrSiteProps["regional"] & {
