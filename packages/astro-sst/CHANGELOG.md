@@ -1,5 +1,11 @@
 # astro-sst
 
+## 2.28.0
+
+### Patch Changes
+
+- [#3378](https://github.com/sst/sst/pull/3378) [`62c709d16`](https://github.com/sst/sst/commit/62c709d16a3c680f10eec22187c6dd1fedd64e89) Thanks [@bayssmekanique](https://github.com/bayssmekanique)! - AstroSite: fixes build bug introduced with astro-sst changes
+
 ## 2.27.0
 
 ### Minor Changes
