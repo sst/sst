@@ -24,6 +24,7 @@ import {
   CacheQueryStringBehavior,
   CacheHeaderBehavior,
   CacheCookieBehavior,
+  DistributionProps,
   OriginProtocolPolicy,
   OriginRequestPolicy,
 } from "aws-cdk-lib/aws-cloudfront";
@@ -176,7 +177,10 @@ const supportedMemories = {
   },
 };
 
-export interface ServiceDomainProps extends DistributionDomainProps {}
+interface ServiceDomainProps extends DistributionDomainProps {}
+interface ServiceCdkDistributionProps
+  extends Omit<DistributionProps, "defaultBehavior"> {}
+
 export interface ServiceProps {
   /**
    * Path to the directory where the app is located.
@@ -433,7 +437,7 @@ export interface ServiceProps {
   };
   cdk?: {
     /**
-     * By default, SST creates a CloudFront distribution. Set this to `false` to skip creating the distribution.
+     * By default, SST creates a CloudFront distribution. Pass in a value to override the default settings this construct uses to create the CDK `Distribution` internally. Alternatively, set this to `false` to skip creating the distribution.
      * @default true
      * @example
      * ```js
@@ -444,7 +448,7 @@ export interface ServiceProps {
      * }
      * ```
      */
-    cloudfrontDistribution?: boolean;
+    cloudfrontDistribution?: boolean | ServiceCdkDistributionProps;
     /**
      * By default, SST creates an Application Load Balancer to distribute requests across containers. Set this to `false` to skip creating the load balancer.
      * @default true
@@ -1023,6 +1027,9 @@ export class Service extends Construct implements SSTConstruct {
             cachePolicy,
             originRequestPolicy: OriginRequestPolicy.ALL_VIEWER,
           },
+          ...(cdk?.cloudfrontDistribution === true
+            ? {}
+            : cdk?.cloudfrontDistribution),
         },
       },
     });

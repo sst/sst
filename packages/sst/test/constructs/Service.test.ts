@@ -14,6 +14,7 @@ import {
 } from "./helper.js";
 import { Config, Stack, Topic, Service } from "../../dist/constructs";
 import { ServiceProps } from "../../dist/constructs/Service";
+import { HttpVersion } from "aws-cdk-lib/aws-cloudfront";
 
 const servicePath = "test/constructs/service";
 
@@ -526,7 +527,7 @@ test("cdk.container: healthCheck defined", async () => {
   });
 });
 
-test("cdk.cloudfrontDistribution", async () => {
+test("cdk.cloudfrontDistribution is false", async () => {
   const { stack, service } = await createService({
     cdk: {
       cloudfrontDistribution: false,
@@ -541,6 +542,20 @@ test("cdk.cloudfrontDistribution", async () => {
   expect(service.cdk?.fargateService).toBeDefined();
   expect(service.cdk?.taskDefinition).toBeDefined();
   expect(service.cdk?.distribution).toBeUndefined();
+});
+test("cdk.cloudfrontDistribution is props", async () => {
+  const { stack, service } = await createService({
+    cdk: {
+      cloudfrontDistribution: {
+        httpVersion: HttpVersion.HTTP1_1,
+      },
+    },
+  });
+  hasResource(stack, "AWS::CloudFront::Distribution", {
+    DistributionConfig: objectLike({
+      HttpVersion: "http1.1",
+    }),
+  });
 });
 
 test("cdk.applicationLoadBalancer", async () => {
