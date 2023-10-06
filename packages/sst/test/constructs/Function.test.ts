@@ -12,6 +12,7 @@ import {
   objectLike,
   ANY,
   printResource,
+  arrayWith,
 } from "./helper";
 import * as s3 from "aws-cdk-lib/aws-s3";
 import * as ec2 from "aws-cdk-lib/aws-ec2";
@@ -371,29 +372,14 @@ test("logRetention-infinite", async () => {
   });
 });
 
-test("logsEnabled-default", async () => {
+test("disableCloudWatchLogs is default", async () => {
   const stack = new Stack(await createApp(), "stack");
   new Function(stack, "Function", {
     handler: "test/lambda.handler",
   });
-  hasResource(stack, "AWS::IAM::Policy", {
-    PolicyDocument: {
-      Statement: [lambdaDefaultPolicy],
-      Version: "2012-10-17",
-    },
-  });
-});
-
-test("logsEnabled-false", async () => {
-  const stack = new Stack(await createApp(), "stack");
-  new Function(stack, "Function", {
-    handler: "test/lambda.handler",
-    logsEnabled: false,
-  });
-  hasResource(stack, "AWS::IAM::Policy", {
-    PolicyDocument: {
-      Statement: [
-        lambdaDefaultPolicy,
+  countResourcesLike(stack, "AWS::IAM::Policy", 0, {
+    PolicyDocument: objectLike({
+      Statement: arrayWith([
         {
           Action: [
             "logs:CreateLogGroup",
@@ -403,9 +389,30 @@ test("logsEnabled-false", async () => {
           Effect: "DENY",
           Resource: ["*"],
         },
-      ],
-      Version: "2012-10-17",
-    },
+      ]),
+    }),
+  });
+});
+test("disableCloudWatchLogs is true", async () => {
+  const stack = new Stack(await createApp(), "stack");
+  new Function(stack, "Function", {
+    handler: "test/lambda.handler",
+    disableCloudWatchLogs: true,
+  });
+  countResourcesLike(stack, "AWS::IAM::Policy", 1, {
+    PolicyDocument: objectLike({
+      Statement: arrayWith([
+        {
+          Action: [
+            "logs:CreateLogGroup",
+            "logs:CreateLogStream",
+            "logs:PutLogEvents",
+          ],
+          Effect: "Deny",
+          Resource: "*",
+        },
+      ]),
+    }),
   });
 });
 

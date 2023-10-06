@@ -343,7 +343,7 @@ export interface FunctionProps
    *
    * Note that, if a Layer is created in a stack (say `stackA`) and is referenced in another stack (say `stackB`), SST automatically creates an SSM parameter in `stackA` with the Layer's ARN. And in `stackB`, SST reads the ARN from the SSM parameter, and then imports the Layer.
    *
-   *  This is to get around the limitation that a Lambda Layer ARN cannot be referenced across stacks via a stack export. The Layer ARN contains a version number that is incremented everytime the Layer is modified. When you refer to a Layer's ARN across stacks, a CloudFormation export is created. However, CloudFormation does not allow an exported value to be updated. Once exported, if you try to deploy the updated layer, the CloudFormation update will fail. You can read more about this issue here - https://github.com/sst/sst/issues/549.
+   * This is to get around the limitation that a Lambda Layer ARN cannot be referenced across stacks via a stack export. The Layer ARN contains a version number that is incremented everytime the Layer is modified. When you refer to a Layer's ARN across stacks, a CloudFormation export is created. However, CloudFormation does not allow an exported value to be updated. Once exported, if you try to deploy the updated layer, the CloudFormation update will fail. You can read more about this issue here - https://github.com/sst/sst/issues/549.
    *
    * @default no layers
    *
@@ -356,20 +356,20 @@ export interface FunctionProps
    */
   layers?: (string | ILayerVersion)[];
   /**
-   * Specifies whether logs should be sent to CloudWatch Logs or not.
+   * Disable sending function logs to CloudWatch Logs.
    *
-   * This setting does not effect logs from the SST CLI.
-   * @default true
+   * Note that, logs will continue to show in the CLI when running `sst dev`.
+   * @default false
    * @example
    * ```js
    * new Function(stack, "Function", {
    *   handler: "src/function.handler",
-   *   logsEnabled: false
+   *   disableCloudWatchLogs: true
    * })
    * ```
    *
    */
-  logsEnabled?: boolean;
+  disableCloudWatchLogs?: boolean;
   /**
    * The duration function logs are kept in CloudWatch Logs.
    *
@@ -762,7 +762,6 @@ export class Function extends CDKFunction implements SSTConstruct {
       Tracing[
         (props.tracing || "active").toUpperCase() as keyof typeof Tracing
       ];
-    const isCloudWatchLogsEnabled = props.logsEnabled ?? true;
     const logRetention =
       props.logRetention &&
       RetentionDays[
@@ -991,23 +990,7 @@ export class Function extends CDKFunction implements SSTConstruct {
       });
     }
 
-    // Attach permissions
     this.attachPermissions(props.permissions || []);
-
-    // Disable CloudWatch Logs
-    if (!isCloudWatchLogsEnabled) {
-      this.attachPermissions([
-        new PolicyStatement({
-          effect: Effect.DENY,
-          actions: [
-            "logs:CreateLogGroup",
-            "logs:CreateLogStream",
-            "logs:PutLogEvents",
-          ],
-          resources: ["*"],
-        }),
-      ]);
-    }
 
     // Add config
     this.addEnvironment("SST_APP", app.name, { removeInEdge: true });
@@ -1017,6 +1000,7 @@ export class Function extends CDKFunction implements SSTConstruct {
     });
     this.bind(props.bind || []);
 
+    this.disableCloudWatchLogs();
     this.createUrl();
 
     this._isLiveDevEnabled = isLiveDevEnabled;
@@ -1146,6 +1130,23 @@ export class Function extends CDKFunction implements SSTConstruct {
       authType,
       cors: functionUrlCors.buildCorsConfig(cors),
     });
+  }
+
+  private disableCloudWatchLogs() {
+    const disableCloudWatchLogs = this.props.disableCloudWatchLogs ?? false;
+    if (!disableCloudWatchLogs) return;
+
+    this.attachPermissions([
+      new PolicyStatement({
+        effect: Effect.DENY,
+        actions: [
+          "logs:CreateLogGroup",
+          "logs:CreateLogStream",
+          "logs:PutLogEvents",
+        ],
+        resources: ["*"],
+      }),
+    ]);
   }
 
   private isNodeRuntime() {
