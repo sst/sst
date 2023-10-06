@@ -3,4 +3,4 @@
 "sst": patch
 ---
 
-Fixes build bug introduced with Astro-SST changes
+AstroSite: fixes build bug introduced with astro-sst changes
