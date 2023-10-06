@@ -24,7 +24,6 @@ import { SqsEventSource } from "aws-cdk-lib/aws-lambda-event-sources";
 import { Stack } from "./Stack.js";
 import { SsrSite, SsrSiteNormalizedProps, SsrSiteProps } from "./SsrSite.js";
 import { Size, toCdkSize } from "./util/size.js";
-import { App } from "./App.js";
 import { Bucket } from "aws-cdk-lib/aws-s3";
 import { PolicyStatement } from "aws-cdk-lib/aws-iam";
 import { RetentionDays } from "aws-cdk-lib/aws-logs";
@@ -56,32 +55,28 @@ export interface NextjsSiteProps extends Omit<SsrSiteProps, "nodejs"> {
      */
     streaming?: boolean;
     /**
-     * Enables incremental cache.
-     *
      * Disabling incremental cache will cause the entire page to be revalidated on each request. This can result in ISR and SSG pages to be in an inconsistent state. Specify this option if you are using SSR pages only.
      *
      * Note that it is possible to disable incremental cache while leaving on-demand revalidation enabled.
-     * @default true
+     * @default false
      * @example
      * ```js
      * experimental: {
-     *   enableIncrementalCache: false,
+     *   disableIncrementalCache: true,
      * }
      */
-    enableIncrementalCache?: boolean;
+    disableIncrementalCache?: boolean;
     /**
-     * Enables on-demand revalidation by path (`revalidatePath`) or by cache tag (`revalidateTag`).
-     *
-     * If disabled, both `revalidateTag` and `revalidatePath` will fail silently.
-     * @default true
+     * Disabling DynamoDB cache will cause on-demand revalidation by path (`revalidatePath`) and by cache tag (`revalidateTag`) to fail silently.
+     * @default false
      * @example
      * ```js
      * experimental: {
-     *   enableOnDemandRevalidation: false,
+     *   disableDynamoDBCache: true,
      * }
      * ```
      */
-    enableOnDemandRevalidation?: boolean;
+    disableDynamoDBCache?: boolean;
   };
   cdk?: SsrSiteProps["cdk"] & {
     revalidation?: Pick<FunctionProps, "vpc" | "vpcSubnets">;
@@ -133,10 +128,10 @@ export class NextjsSite extends SsrSite {
   declare props: NextjsSiteNormalizedProps;
 
   constructor(scope: Construct, id: string, props?: NextjsSiteProps) {
-    const { streaming, enableOnDemandRevalidation, enableIncrementalCache } = {
+    const { streaming, disableDynamoDBCache, disableIncrementalCache } = {
       streaming: false,
-      enableOnDemandRevalidation: true,
-      enableIncrementalCache: true,
+      disableDynamoDBCache: false,
+      disableIncrementalCache: false,
       ...props?.experimental,
     };
 
@@ -144,21 +139,21 @@ export class NextjsSite extends SsrSite {
       buildCommand: [
         "npx --yes open-next@2.2.1 build",
         ...(streaming ? ["--streaming"] : []),
-        ...(enableOnDemandRevalidation === false
+        ...(disableDynamoDBCache
           ? ["--dangerously-disable-dynamodb-cache"]
           : []),
-        ...(enableIncrementalCache === false
+        ...(disableIncrementalCache
           ? ["--dangerously-disable-incremental-cache"]
           : []),
       ].join(" "),
       ...props,
     });
 
-    if (enableIncrementalCache) {
+    if (!disableIncrementalCache) {
       this.createRevalidationQueue();
-    }
-    if (enableIncrementalCache && enableOnDemandRevalidation) {
-      this.createRevalidationTable();
+      if (!disableDynamoDBCache) {
+        this.createRevalidationTable();
+      }
     }
   }
 
@@ -352,7 +347,6 @@ export class NextjsSite extends SsrSite {
     if (!this.serverFunction) return;
 
     const { path: sitePath } = this.props;
-    const app = this.node.root as App;
     const server = this.serverFunction;
 
     const table = new Table(this, "RevalidationTable", {
