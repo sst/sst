@@ -238,7 +238,7 @@ export class AstroSite extends SsrSite {
         type: "function",
         constructId: "ServerFunction",
         function: serverConfig,
-        streaming: buildMeta.responseMode === "streaming",
+        streaming: buildMeta.responseMode === "stream",
       };
 
       plan.origins.fallthroughServer = {

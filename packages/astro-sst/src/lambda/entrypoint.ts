@@ -27,6 +27,7 @@ export function createExports(
   manifest: SSRManifest,
   { responseMode }: { responseMode: ResponseMode }
 ) {
+  debug("handlerInit", { responseMode });
   const useStreaming = responseMode === "stream";
   const app = new NodeApp(manifest, useStreaming);
 
@@ -57,9 +58,7 @@ export function createExports(
       type: internalEvent.type,
       response,
       responseStream,
-      cookies: app.setCookieHeaders
-        ? Array.from(app.setCookieHeaders(response))
-        : undefined,
+      cookies: Array.from(app.setCookieHeaders(response))
     });
   }
 
@@ -86,13 +85,11 @@ export function createExports(
     const response = await app.render(request, routeData);
     debug("response", response);
 
-    // Stream response back to Cloudfront
-    return convertTo({
+    // Buffer response back to Cloudfront
+    return await convertTo({
       type: internalEvent.type,
       response,
-      cookies: app.setCookieHeaders
-        ? Array.from(app.setCookieHeaders(response))
-        : undefined,
+      cookies: Array.from(app.setCookieHeaders(response))
     });
   }
 
