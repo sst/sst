@@ -358,7 +358,7 @@ export interface FunctionProps
   /**
    * Disable sending function logs to CloudWatch Logs.
    *
-   * Note that, logs will continue to show in the CLI when running `sst dev`.
+   * Note that, logs will still appear locally when running `sst dev`.
    * @default false
    * @example
    * ```js
