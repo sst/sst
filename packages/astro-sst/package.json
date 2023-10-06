@@ -1,7 +1,7 @@
 {
   "name": "astro-sst",
   "description": "Adapter for Astro apps to work on AWS Lambda and AWS Lambda@Edge.",
-  "version": "2.26.11",
+  "version": "2.27.0",
   "type": "module",
   "license": "MIT",
   "author": {
@@ -23,6 +23,7 @@
     "./edge/entrypoint": "./dist/edge/entrypoint.js",
     "./lambda": "./dist/lambda/adapter.js",
     "./lambda/entrypoint": "./dist/lambda/entrypoint.js",
+    "./build-meta": "./dist/lib/build-meta.js",
     "./package.json": "./package.json"
   },
   "typesVersions": {
@@ -32,6 +33,9 @@
       ],
       "lambda": [
         "dist/lambda/adapter.d.ts"
+      ],
+      "build-meta": [
+        "dist/lib/build-meta.d.ts"
       ]
     }
   },
@@ -39,12 +43,12 @@
     "build": "tsc"
   },
   "dependencies": {
-    "@astrojs/webapi": "^2.1.0",
+    "@astrojs/webapi": "^3.0.0",
     "set-cookie-parser": "^2.6.0"
   },
   "devDependencies": {
     "@types/aws-lambda": "^8.10.112",
     "@types/set-cookie-parser": "^2.4.3",
-    "astro": "^2.1.3"
+    "astro": "^3.1.4"
   }
 }
