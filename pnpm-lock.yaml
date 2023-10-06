@@ -569,7 +569,7 @@ importers:
         specifier: ^5.3.1
         version: 5.3.1
       astro-sst:
-        specifier: workspace:*
+        specifier: 2.28.0
         version: link:../astro-sst
       tsx:
         specifier: ^3.12.1
