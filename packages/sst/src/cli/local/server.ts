@@ -387,7 +387,7 @@ export async function useLocalServer(opts: Opts) {
         id: invocation.id,
         error: evt.properties.errorType,
         message: evt.properties.errorMessage,
-        stack: evt.properties.trace.map((t) => ({
+        stack: (evt.properties.trace || []).map((t) => ({
           raw: t,
         })),
       });
