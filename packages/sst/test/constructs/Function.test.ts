@@ -12,6 +12,7 @@ import {
   objectLike,
   ANY,
   printResource,
+  arrayWith,
 } from "./helper";
 import * as s3 from "aws-cdk-lib/aws-s3";
 import * as ec2 from "aws-cdk-lib/aws-ec2";
@@ -368,6 +369,50 @@ test("logRetention-infinite", async () => {
   });
   hasResource(stack, "Custom::LogRetention", {
     RetentionInDays: ABSENT,
+  });
+});
+
+test("disableCloudWatchLogs is default", async () => {
+  const stack = new Stack(await createApp(), "stack");
+  new Function(stack, "Function", {
+    handler: "test/lambda.handler",
+  });
+  countResourcesLike(stack, "AWS::IAM::Policy", 0, {
+    PolicyDocument: objectLike({
+      Statement: arrayWith([
+        {
+          Action: [
+            "logs:CreateLogGroup",
+            "logs:CreateLogStream",
+            "logs:PutLogEvents",
+          ],
+          Effect: "DENY",
+          Resource: ["*"],
+        },
+      ]),
+    }),
+  });
+});
+test("disableCloudWatchLogs is true", async () => {
+  const stack = new Stack(await createApp(), "stack");
+  new Function(stack, "Function", {
+    handler: "test/lambda.handler",
+    disableCloudWatchLogs: true,
+  });
+  countResourcesLike(stack, "AWS::IAM::Policy", 1, {
+    PolicyDocument: objectLike({
+      Statement: arrayWith([
+        {
+          Action: [
+            "logs:CreateLogGroup",
+            "logs:CreateLogStream",
+            "logs:PutLogEvents",
+          ],
+          Effect: "Deny",
+          Resource: "*",
+        },
+      ]),
+    }),
   });
 });
 
