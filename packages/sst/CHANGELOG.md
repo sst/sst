@@ -1,5 +1,17 @@
 # @serverless-stack/cli2
 
+## 2.28.1
+
+### Patch Changes
+
+- [#3381](https://github.com/sst/sst/pull/3381) [`b9853e668`](https://github.com/sst/sst/commit/b9853e6680969a55a37174a0dbbfb5cab77b887e) Thanks [@bayssmekanique](https://github.com/bayssmekanique)! - Fixes Astro streaming
+
+- [#3382](https://github.com/sst/sst/pull/3382) [`6c5b72aee`](https://github.com/sst/sst/commit/6c5b72aeec8b0f5a8258ab8089e5fae7b0a0937f) Thanks [@michaelgmcd](https://github.com/michaelgmcd)! - Auth: batch delete keys on remove
+
+- [#3357](https://github.com/sst/sst/pull/3357) [`f9f58dc48`](https://github.com/sst/sst/commit/f9f58dc4895d3fce8b94ab6c39ce5b35ae668b96) Thanks [@blytheaw](https://github.com/blytheaw)! - Function: support disabling CloudWatch logs
+
+- [`cdcf410b2`](https://github.com/sst/sst/commit/cdcf410b24bfc83392390da027594b67317e4ad5) Thanks [@thdxr](https://github.com/thdxr)! - cli: fix error in go function creating error in cli during live dev
+
 ## 2.28.0
 
 ### Minor Changes

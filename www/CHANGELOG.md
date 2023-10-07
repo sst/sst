@@ -1,5 +1,11 @@
 # @serverless-stack/docs
 
+## 2.6.1
+
+### Patch Changes
+
+- [#3381](https://github.com/sst/sst/pull/3381) [`b9853e668`](https://github.com/sst/sst/commit/b9853e6680969a55a37174a0dbbfb5cab77b887e) Thanks [@bayssmekanique](https://github.com/bayssmekanique)! - Fixes Astro streaming
+
 ## 2.6.0
 
 ### Minor Changes
