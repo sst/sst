@@ -143,22 +143,21 @@ Note that, in the case you have a centralized database, Edge locations are often
 We recommend you to deploy to a single region when unsure.
 :::
 
-#### Regional Server Routes
+#### Server Routes
 
-Due to the [CloudFront limit of 25 path pattern per distribution](https://docs.sst.dev/known-issues#cloudfront-cachebehaviors-limit-exceeded), it's impractical to create one path for each route in your Astro app. To work around this limitation, all routes are first checked against the S3 cache before being directed to the Lambda function for server rendering. This method utilizes the CloudFront origin group, with the S3 bucket serving as the primary origin and the server function as the failover origin. Note that the origin group can only support `GET`, `HEAD`, and `OPTIONS` request methods. To support other request methods, you should specify the route patterns in the `regional.serverRoutes` property of the `AstroSite` construct.
+Due to the [CloudFront limit of 25 path pattern per distribution](https://docs.sst.dev/known-issues#cloudfront-cachebehaviors-limit-exceeded), it's impractical to create one path for each route in your Astro app. To work around this limitation, all routes are first checked against the S3 cache before being directed to the Lambda function for server rendering. This method utilizes the CloudFront origin group, with the S3 bucket serving as the primary origin and the server function as the failover origin. Note that the origin group can only support `GET`, `HEAD`, and `OPTIONS` request methods. To support other request methods, you should specify the route patterns in the `astro.config.mjs` file as the `serverRoutes` parameter on the adapter registration method (ie `aws({serverRoutes: []})`).
 
 ```js {3-10}
-new AstroSite(stack, "Site", {
-  path: "my-astro-app/",
-  regional: {
+export default defineConfig({
+  adapter: aws({
     serverRoutes: [
       "feedback", // Feedback page which requires POST method
       "login",    // Login page which requires POST method
       "user/*",   // Directory of user routes which are all SSR
       "api/*"     // Directory of API endpoints which require all methods
     ]
-  }
-});
+  })
+})
 ```
 
 Route patterns are case sensitive. And the following wildcard characters can be used:
@@ -167,7 +166,15 @@ Route patterns are case sensitive. And the following wildcard characters can be 
 
 ## Streaming
 
-Astro natively supports [streaming](https://docs.astro.build/en/guides/server-side-rendering/#streaming), allowing a page to be broken down into chunks. These chunks can be sent over the network in sequential order and then incrementally rendered in the browser. This process significantly enhances page performance.
+Astro natively supports [streaming](https://docs.astro.build/en/guides/server-side-rendering/#streaming), allowing a page to be broken down into chunks. These chunks can be sent over the network in sequential order and then incrementally rendered in the browser. This process can significantly enhances page performance and allow larger responses sizes than buffered responses, but there is a slight performance overhead. To enable streaming, set the `responseMode` property on the adapter registration method within the `astro.config.mjs` to `stream`. The default response mode is `buffer` which will wait for the entire response to be generated before sending it to the client.
+
+```js {3-10}
+export default defineConfig({
+  adapter: aws({
+    responseMode: "stream"
+  })
+})
+```
 
 :::info
 Currently streaming is only supported by `AstroSite` when deployed in single region mode.
@@ -660,4 +667,4 @@ The request could not be satisfied.
 This distribution is not configured to allow the HTTP request method that was used for this request. The distribution supports only cachable requests. We can't connect to the server for this app or website at this time. There might be too much traffic or a configuration error. Try again later, or contact the app or website owner.
 ```
 
-This typically occurs when the site is deployed in the regional mode. It's likely because the request method was not `GET`, and the requested route was not specified in the [`regional.serverRoutes`](#regional-server-routes) property. To resolve this, add a route pattern to the `regional.serverRoutes` property that matches the requested route.
+This typically occurs when the site is deployed in the regional mode. It's likely because the request method was not `GET`, and the requested route was not specified in the [`serverRoutes`](#server-routes) property in the `astro.config.mjs` file. To resolve this, add a route pattern to the `serverRoutes` property that matches the requested route.

@@ -1,12 +1,18 @@
 import type { AstroAdapter, AstroIntegration } from "astro";
-import { BuildMeta } from "../lib/build-meta.js";
+import type { ResponseMode } from "../lib/types.js";
+import { BuildMeta, IntegrationConfig } from "../lib/build-meta.js";
 
 const PACKAGE_NAME = "astro-sst/lambda";
 
-function getAdapter(): AstroAdapter {
+function getAdapter({
+  responseMode,
+}: {
+  responseMode: ResponseMode;
+}): AstroAdapter {
   return {
     name: PACKAGE_NAME,
     serverEntrypoint: `${PACKAGE_NAME}/entrypoint`,
+    args: { responseMode },
     exports: ["handler"],
     adapterFeatures: {
       edgeMiddleware: false,
@@ -25,13 +31,30 @@ function getAdapter(): AstroAdapter {
   };
 }
 
-export default function createIntegration(): AstroIntegration {
+export default function createIntegration({
+  responseMode,
+  serverRoutes,
+}: {
+  responseMode?: ResponseMode;
+  serverRoutes?: string[];
+} = {}): AstroIntegration {
+  const integrationConfig: IntegrationConfig = {
+    responseMode: responseMode ?? "buffer",
+    serverRoutes: serverRoutes ?? [],
+  };
+
+  BuildMeta.setIntegrationConfig(integrationConfig);
+
   return {
     name: PACKAGE_NAME,
     hooks: {
       "astro:config:done": ({ config, setAdapter }) => {
         BuildMeta.setAstroConfig(config);
-        setAdapter(getAdapter());
+        setAdapter(
+          getAdapter({
+            responseMode: integrationConfig.responseMode,
+          })
+        );
       },
       "astro:build:done": async (buildResults) => {
         BuildMeta.setBuildResults(buildResults);

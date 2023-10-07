@@ -13,7 +13,7 @@ import { debug } from "./logger.js";
 import { isBinaryContentType } from "./binary.js";
 import zlib from "zlib";
 
-type InternalEvent = {
+export type InternalEvent = {
   readonly type: "v1" | "v2" | "cf";
   readonly method: string;
   readonly queryString: string;

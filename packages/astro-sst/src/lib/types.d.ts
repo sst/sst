@@ -36,3 +36,8 @@ export type RequestHandler = (
   context?: Context,
   callback?: Callback
 ) => void | Promise<void>;
+
+export type OutputMode = "server" | "static" | "hybrid";
+export type ResponseMode = "stream" | "buffer";
+export type PageResolution = "file" | "directory";
+export type TrailingSlash = "never" | "always" | "ignore";

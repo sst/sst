@@ -22,6 +22,7 @@ export interface AstroSiteProps extends SsrSiteProps {
      *   - "?" matches exactly 1 character.
      *
      * Matched routes will be handled directly by the server function.
+     * @deprecated Define `serverRoutes` in `astro.config.mjs` instead.
      * @default true
      * @example
      * ```js
@@ -36,17 +37,6 @@ export interface AstroSiteProps extends SsrSiteProps {
      * ```
      */
     serverRoutes?: string[];
-    /**
-     * Supports [streaming](https://docs.astro.build/en/guides/server-side-rendering/#using-streaming-to-improve-page-performance) responses.
-     * @default true
-     * @example
-     * ```js
-     * regional: {
-     *   streaming: false,
-     * }
-     * ```
-     */
-    streaming?: boolean;
   };
 }
 
@@ -91,7 +81,6 @@ export class AstroSite extends SsrSite {
         },
       ],
       regional: {
-        streaming: props?.regional?.streaming ?? true,
         ...props?.regional,
       },
     });
@@ -251,7 +240,7 @@ export class AstroSite extends SsrSite {
         type: "function",
         constructId: "ServerFunction",
         function: serverConfig,
-        streaming: regional?.streaming,
+        streaming: buildMeta.responseMode === "stream",
       };
 
       plan.origins.fallthroughServer = {
@@ -273,7 +262,7 @@ export class AstroSite extends SsrSite {
           pattern: `${buildMeta.clientBuildVersionedSubDir}/*`,
           origin: "staticsServer",
         },
-        ...(regional?.serverRoutes ?? []).map(
+        ...(buildMeta.serverRoutes ?? regional?.serverRoutes ?? []).map(
           (route) =>
             ({
               cacheType: "server",
