@@ -272,17 +272,28 @@ export class AstroSite extends SsrSite {
         )
       );
 
-      const notFoundRoute = buildMeta.routes.find(
-        ({ route, type }) => route.match(/^\/404\/?$/) && type === "page"
-      );
-
-      if (notFoundRoute) {
-        plan.errorResponses?.push({
-          httpStatus: 404,
-          responsePagePath: "/404.html",
-          responseHttpStatus: 404,
+      buildMeta.routes
+        .filter(({ type, route }) => type === "page" && /^\/\d{3}\/?$/.test(route))
+        .forEach(({ route, prerender }) => {
+          switch (route) {
+            case "/404":
+            case "/404/":
+              plan.errorResponses?.push({
+                httpStatus: 404,
+                responsePagePath: prerender ? "/404.html" : "/404",
+                responseHttpStatus: 404,
+              });
+              break;
+            case "/500":
+            case "/500/":
+              plan.errorResponses?.push({
+                httpStatus: 500,
+                responsePagePath: prerender ? "/500.html" : "/500",
+                responseHttpStatus: 500,
+              });
+              break;
+          }
         });
-      }
     }
 
     return this.validatePlan(plan);
