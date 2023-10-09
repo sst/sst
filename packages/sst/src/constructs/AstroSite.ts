@@ -273,7 +273,9 @@ export class AstroSite extends SsrSite {
       );
 
       buildMeta.routes
-        .filter(({ type, route }) => type === "page" && /^\/\d{3}\/?$/.test(route))
+        .filter(
+          ({ type, route }) => type === "page" && /^\/\d{3}\/?$/.test(route)
+        )
         .forEach(({ route, prerender }) => {
           switch (route) {
             case "/404":
