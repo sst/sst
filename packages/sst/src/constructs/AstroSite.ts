@@ -60,26 +60,6 @@ export class AstroSite extends SsrSite {
     super(scope, id, {
       ...props,
       typesPath: props?.typesPath ?? "src",
-      fileOptions: props?.fileOptions ?? [
-        {
-          exclude: "*",
-          include: "*.css",
-          cacheControl: "public,max-age=0,s-maxage=31536000,must-revalidate",
-          contentType: "text/css; charset=UTF-8",
-        },
-        {
-          exclude: "*",
-          include: "*.js",
-          cacheControl: "public,max-age=0,s-maxage=31536000,must-revalidate",
-          contentType: "application/javascript; charset=UTF-8",
-        },
-        {
-          exclude: "*",
-          include: "*.html",
-          cacheControl: "public,max-age=0,s-maxage=31536000,must-revalidate",
-          contentType: "text/html; charset=UTF-8",
-        },
-      ],
       regional: {
         ...props?.regional,
       },

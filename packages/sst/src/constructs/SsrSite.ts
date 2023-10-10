@@ -323,6 +323,7 @@ export interface SsrSiteProps {
     responseHeadersPolicy?: IResponseHeadersPolicy;
     server?: Pick<
       CdkFunctionProps,
+      | "layers"
       | "vpc"
       | "vpcSubnets"
       | "securityGroups"
@@ -622,7 +623,7 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
         bind,
         environment,
         permissions,
-        // note: do not need to set vpc settings b/c this function is not being used
+        // note: do not need to set vpc and layers settings b/c this function is not being used
       });
     }
 
