@@ -1,5 +1,13 @@
 # @serverless-stack/cli2
 
+## 2.28.2
+
+### Patch Changes
+
+- [#3391](https://github.com/sst/sst/pull/3391) [`c8db185c1`](https://github.com/sst/sst/commit/c8db185c1b9e38db575fa6f19cfa1ee822d3eb10) Thanks [@bayssmekanique](https://github.com/bayssmekanique)! - Fixes AstroSite cache headers
+
+- [#3390](https://github.com/sst/sst/pull/3390) [`0d3e6ef78`](https://github.com/sst/sst/commit/0d3e6ef78b149d53c9e6b10f386ff3da1a7dce69) Thanks [@bayssmekanique](https://github.com/bayssmekanique)! - Adds Lambda layer support to SSR Site
+
 ## 2.28.1
 
 ### Patch Changes
