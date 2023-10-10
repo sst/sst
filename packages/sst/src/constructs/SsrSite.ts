@@ -1060,30 +1060,91 @@ function handler(event) {
     }
 
     function createS3OriginAssetFileOptions(copy: S3OriginConfig["copy"]) {
-      const fileOptions = [];
+      const fileOptions: SsrSiteFileOptions[] = [];
 
-      for (const files of copy) {
-        if (!files.cached) continue;
+      const commonWebFileExtensions: Record<
+        string,
+        { mime: string; isText: boolean }
+      > = {
+        txt: { mime: "text/plain", isText: true },
+        htm: { mime: "text/html", isText: true },
+        html: { mime: "text/html", isText: true },
+        xhtml: { mime: "application/xhtml+xml", isText: true },
+        css: { mime: "text/css", isText: true },
+        js: { mime: "text/javascript", isText: true },
+        mjs: { mime: "text/javascript", isText: true },
+        apng: { mime: "image/apng", isText: false },
+        avif: { mime: "image/avif", isText: false },
+        gif: { mime: "image/gif", isText: false },
+        jpeg: { mime: "image/jpeg", isText: false },
+        jpg: { mime: "image/jpeg", isText: false },
+        png: { mime: "image/png", isText: false },
+        svg: { mime: "image/svg+xml", isText: true },
+        bmp: { mime: "image/bmp", isText: false },
+        tiff: { mime: "image/tiff", isText: false },
+        webp: { mime: "image/webp", isText: false },
+        ico: { mime: "image/vnd.microsoft.icon", isText: false },
+        eot: { mime: "application/vnd.ms-fontobject", isText: false },
+        ttf: { mime: "font/ttf", isText: false },
+        otf: { mime: "font/otf", isText: false },
+        woff: { mime: "font/woff", isText: false },
+        woff2: { mime: "font/woff2", isText: false },
+        json: { mime: "application/json", isText: true },
+        jsonld: { mime: "application/ld+json", isText: true },
+        xml: { mime: "application/xml", isText: true },
+        pdf: { mime: "application/pdf", isText: false },
+        zip: { mime: "application/zip", isText: false },
+      };
 
-        const filesPath = path.join(sitePath, files.from);
+      copy.forEach((files) => {
+        if (!files.cached) return;
 
-        for (const item of fs.readdirSync(filesPath)) {
-          const itemPath = path.join(filesPath, item);
-          const isDir = fs.statSync(itemPath).isDirectory();
+        for (const [extension, contentType] of Object.entries(
+          commonWebFileExtensions
+        )) {
           fileOptions.push({
             exclude: "*",
-            include: path.posix.join(files.to, item, isDir ? "*" : ""),
-            cacheControl:
-              item === files.versionedSubDir
-                ? // Versioned files will be cached for 1 year (immutable) both at
-                  // the CDN and browser level.
-                  "public,max-age=31536000,immutable"
-                : // Un-versioned files will be cached for 1 year at the CDN level.
-                  // But not at the browser level. CDN cache will be invalidated on deploy.
-                  "public,max-age=0,s-maxage=31536000,must-revalidate",
+            include: `${path.posix.join(files.to, "*")}.${extension}`,
+            cacheControl: "public,max-age=31536000,must-revalidate",
+            contentType: `${contentType.mime}${
+              contentType.isText ? "; charset=UTF-8" : ""
+            }`,
+          });
+
+          if (typeof files.versionedSubDir === "string") {
+            fileOptions.push({
+              exclude: "*",
+              include: `${path.posix.join(
+                files.to,
+                files.versionedSubDir,
+                "*"
+              )}.${extension}`,
+              cacheControl: "public,max-age=31536000,immutable",
+              contentType: `${contentType.mime}${
+                contentType.isText ? "; charset=UTF-8" : ""
+              }`,
+            });
+          }
+        }
+
+        fileOptions.push({
+          exclude: Object.entries(commonWebFileExtensions).map(
+            ([ext]) => `*.${ext}`
+          ),
+          include: `${path.posix.join(files.to, "*")}`,
+          cacheControl: "public,max-age=0,s-maxage=31536000,must-revalidate",
+        });
+
+        if (typeof files.versionedSubDir === "string") {
+          fileOptions.push({
+            exclude: Object.entries(commonWebFileExtensions).map(
+              ([ext]) => `*.${ext}`
+            ),
+            include: `${path.posix.join(files.to, files.versionedSubDir, "*")}`,
+            cacheControl: "public,max-age=0,s-maxage=31536000,must-revalidate",
           });
         }
-      }
+      });
 
       return fileOptions;
     }
