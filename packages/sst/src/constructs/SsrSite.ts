@@ -361,7 +361,7 @@ export interface SsrSiteProps {
      *   ],
      * }
      */
-    fileOptions: SsrSiteFileOptions[];
+    fileOptions?: SsrSiteFileOptions[];
   };
   /**
    * While deploying, SST waits for the CloudFront cache invalidation process to finish. This ensures that the new content will be served once the deploy command finishes. However, this process can sometimes take more than 5 mins. For non-prod environments it might make sense to pass in `false`. That'll skip waiting for the cache to invalidate and speed up the deploy process.
@@ -424,7 +424,7 @@ export interface SsrSiteProps {
   };
   /**
    * Pass in a list of file options to customize cache control and content type specific files. Specifying file options will bypass all default file options and only use the ones specified. Most configurations within the `cache` prop will be ignored.
-   * 
+   *
    * @deprecated Use `cache.fileOptions` instead. Note that the `cache.fileOptions` are appended to default file options, not a replacement as this prop was.
    * @default
    * Versioned files cached for 1 year at the CDN and browser level.
@@ -1417,8 +1417,7 @@ function handler(event) {
     function createDistributionInvalidation(importedBuildId?: string) {
       let invalidationBuildId = importedBuildId;
 
-      const cdnInvalidationStrategy =
-        cache?.cdnInvalidationStrategy ?? "all";
+      const cdnInvalidationStrategy = cache?.cdnInvalidationStrategy ?? "all";
 
       if (cdnInvalidationStrategy === "never") return;
 
