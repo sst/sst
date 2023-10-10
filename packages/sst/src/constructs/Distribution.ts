@@ -202,7 +202,7 @@ export class Distribution extends Construct {
     };
   }
 
-  public createInvalidation(buildId?: string) {
+  public createInvalidation(buildId?: string, paths?: string[]) {
     const stack = Stack.of(this) as Stack;
 
     const policy = new Policy(this.scope, "CloudFrontInvalidatorPolicy", {
@@ -227,7 +227,7 @@ export class Distribution extends Construct {
       properties: {
         buildId: buildId || Date.now().toString(),
         distributionId: this.distribution.distributionId,
-        paths: ["/*"],
+        paths: paths ?? ["/*"],
         waitForInvalidation: this.props.waitForInvalidation,
       },
     });
