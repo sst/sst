@@ -288,16 +288,16 @@ export interface SsrSiteProps {
      */
     textEncoding?: "utf-8" | "iso-8859-1" | "ascii" | "none";
     /**
-     * The strategy to use for invalidating the CDN cache. By default, the CDN cache will invalidate on changes to long lived versioned files only.
+     * The strategy to use for invalidating the CDN cache. By default, the CDN cache will invalidate on changes any cached file, but this could become slow on very large projects.
      * - "never" - No invalidation will be performed.
-     * - "all" - All files will be invalidated when any file changes. (Requires checking file content which will increase deployment time)
-     * - "versioned" - Only versioned files will be invalidated when versioned files change. (Default)
-     * - "always" - All files are invalidated on every deployment. (Could get expensive if you deploy often)
-     * @default versioned
+     * - "all" - All files will be invalidated when any file changes. (Default, requires checking file content which will increase deployment time)
+     * - "versioned" - Only versioned files will be invalidated when versioned files change.
+     * - "always" - All files are invalidated on every deployment.
+     * @default all
      * @example
      * ```js
      * cache: {
-     *   cdnInvalidationStrategy: "all"
+     *   cdnInvalidationStrategy: "versioned"
      * }
      * ```
      */
@@ -308,7 +308,7 @@ export interface SsrSiteProps {
      * @example
      * ```js
      * cache: {
-     *  versionedFilesTTL: Duration.days(365)
+     *  versionedFilesTTL: '30 days'
      * }
      * ```
      */
@@ -326,18 +326,18 @@ export interface SsrSiteProps {
     versionedFilesCacheHeader?: string;
     /**
      * The TTL for non-versioned files (ex: `index.html`) in the CDN cache. Ignored when `nonVersionedFilesCacheHeader` is specified.
-     * @default 1 hour
+     * @default 1 day
      * @example
      * ```js
      * cache: {
-     *  nonVersionedFilesTTL: Duration.hours(1)
+     *  nonVersionedFilesTTL: '4 hours'
      * }
      * ```
      */
     nonVersionedFilesTTL?: number | Duration;
     /**
      * The header to use for non-versioned files (ex: `index.html`) in the CDN cache. When specified, the `nonVersionedFilesTTL` option is ignored.
-     * @default public,max-age=0,s-maxage=3600,stale-while-revalidate=600
+     * @default public,max-age=0,s-maxage=86400,stale-while-revalidate=8640
      * @example
      * ```js
      * cache: {
@@ -1143,10 +1143,10 @@ function handler(event) {
       const nonVersionedFilesTTL =
         typeof cache?.nonVersionedFilesTTL === "number"
           ? cache.nonVersionedFilesTTL
-          : toCdkDuration(cache?.nonVersionedFilesTTL ?? "1 hour").toSeconds();
-      const staleWhileRevalidateTTL = Math.min(
-        Math.floor(nonVersionedFilesTTL / 100),
-        600
+          : toCdkDuration(cache?.nonVersionedFilesTTL ?? "1 day").toSeconds();
+      const staleWhileRevalidateTTL = Math.max(
+        Math.floor(nonVersionedFilesTTL / 10),
+        30
       );
       const nonVersionedFilesCacheHeader =
         cache?.nonVersionedFilesCacheHeader ??
@@ -1397,7 +1397,7 @@ function handler(event) {
       let invalidationBuildId = importedBuildId;
 
       const cdnInvalidationStrategy =
-        cache?.cdnInvalidationStrategy ?? "versioned";
+        cache?.cdnInvalidationStrategy ?? "all";
 
       if (cdnInvalidationStrategy === "never") return;
 
