@@ -103,7 +103,7 @@
     "uuid": "^9.0.0",
     "ws": "^8.11.0",
     "yargs": "^17.6.2",
-    "zod": "^3.21.4"
+    "zod": "^3.22.3"
   },
   "devDependencies": {
     "@aws-sdk/client-api-gateway": "^3.208.0",
