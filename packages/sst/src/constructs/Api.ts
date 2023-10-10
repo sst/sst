@@ -270,7 +270,7 @@ export interface ApiProps<
    */
   cors?: boolean | ApiCorsProps;
   /**
-   * Enable CloudWatch access logs for this API
+   * Enable CloudWatch access logs for this API. Defaults to true.
    *
    * @default true
    *
