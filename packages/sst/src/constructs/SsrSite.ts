@@ -346,6 +346,22 @@ export interface SsrSiteProps {
      * ```
      */
     nonVersionedFilesCacheHeader?: string;
+    /**
+     * List of file options to specify cache control and content type for cached files. These file options are appended to the default file options so it's possible to override the default file options by specifying an overlapping file pattern.
+     * @example
+     * ```js
+     * cache: {
+     *   fileOptions: [
+     *     {
+     *       exclude: "*",
+     *       include: "*.zip",
+     *       cacheControl: "private,no-cache,no-store,must-revalidate",
+     *       contentType: "application/zip",
+     *     },
+     *   ],
+     * }
+     */
+    fileOptions: SsrSiteFileOptions[];
   };
   /**
    * While deploying, SST waits for the CloudFront cache invalidation process to finish. This ensures that the new content will be served once the deploy command finishes. However, this process can sometimes take more than 5 mins. For non-prod environments it might make sense to pass in `false`. That'll skip waiting for the cache to invalidate and speed up the deploy process.
@@ -408,10 +424,11 @@ export interface SsrSiteProps {
   };
   /**
    * Pass in a list of file options to customize cache control and content type specific files. Specifying file options will bypass all default file options and only use the ones specified. Most configurations within the `cache` prop will be ignored.
-   *
+   * 
+   * @deprecated Use `cache.fileOptions` instead. Note that the `cache.fileOptions` are appended to default file options, not a replacement as this prop was.
    * @default
    * Versioned files cached for 1 year at the CDN and browser level.
-   * Unversioned files cached for 1 day at the CDN level, but not at the browser level.
+   * Nonversioned files cached for 1 day at the CDN level, but not at the browser level.
    * ```js
    * fileOptions: [
    *   {
@@ -422,12 +439,12 @@ export interface SsrSiteProps {
    *   {
    *     exclude: "*",
    *     include: "[{non_versioned_file1}, {non_versioned_file2}, ...]",
-   *     cacheControl: "public,max-age=0,s-maxage=3600,stale-while-revalidate=3600",
+   *     cacheControl: "public,max-age=0,s-maxage=86400,stale-while-revalidate=8640",
    *   },
    *   {
    *     exclude: "*",
    *     include: "[{non_versioned_dir_1}/*, {non_versioned_dir_2}/*, ...]",
-   *     cacheControl: "public,max-age=0,s-maxage=3600,stale-while-revalidate=600",
+   *     cacheControl: "public,max-age=0,s-maxage=86400,stale-while-revalidate=8640",
    *   },
    * ]
    * ```
@@ -1243,6 +1260,10 @@ function handler(event) {
           });
         }
       });
+
+      if (cache?.fileOptions) {
+        fileOptions.push(...cache.fileOptions);
+      }
 
       return fileOptions;
     }
