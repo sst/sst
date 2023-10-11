@@ -190,16 +190,6 @@ export interface SsrSiteProps {
    */
   edge?: boolean;
   /**
-   * The viewer protocol policy to use for the cloudfront distribution behaviours. Default is ViewerProtocolPolicy.REDIRECT_TO_HTTPS.
-   * @default ViewerProtocolPolicy.REDIRECT_TO_HTTPS
-   * @example
-   * ```js
-   * viewerProtocolPolicy: ViewerProtocolPolicy.ALLOW_ALL,
-   * ```
-   * 
-   */
-  viewerProtocolPolicy?: ViewerProtocolPolicy;
-  /**
    * The execution timeout in seconds for SSR function.
    * @default 10 seconds
    * @example
@@ -760,7 +750,7 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
           origin,
           allowedMethods:
             behavior.allowedMethods ?? AllowedMethods.ALLOW_GET_HEAD_OPTIONS,
-          viewerProtocolPolicy: props.viewerProtocolPolicy ?? ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+          viewerProtocolPolicy: cdk?.distribution?.defaultBehavior?.viewerProtocolPolicy ?? ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
           cachedMethods: CachedMethods.CACHE_GET_HEAD_OPTIONS,
           compress: true,
           cachePolicy: CachePolicy.CACHING_OPTIMIZED,
@@ -776,7 +766,7 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
         };
       } else if (behavior.cacheType === "server") {
         return {
-          viewerProtocolPolicy: props.viewerProtocolPolicy ?? ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+          viewerProtocolPolicy: cdk?.distribution?.defaultBehavior?.viewerProtocolPolicy ?? ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
           origin,
           allowedMethods: behavior.allowedMethods ?? AllowedMethods.ALLOW_ALL,
           cachedMethods: CachedMethods.CACHE_GET_HEAD_OPTIONS,

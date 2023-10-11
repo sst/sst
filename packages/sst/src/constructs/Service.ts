@@ -346,17 +346,6 @@ export interface ServiceProps {
    */
   customDomain?: string | ServiceDomainProps;
   /**
-   * The viewer protocol policy to use for the cloudfront distribution behaviours. Default is ViewerProtocolPolicy.REDIRECT_TO_HTTPS.
-   * @default ViewerProtocolPolicy.REDIRECT_TO_HTTPS
-   * @example 
-   * ```js
-   * {
-   *  viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS
-   * }
-   * ```
-   */
-  viewerProtocolPolicy?: ViewerProtocolPolicy;
-  /**
    * Attaches the given list of permissions to the SSR function. Configuring this property is equivalent to calling `attachPermissions()` after the site is created.
    * @example
    * ```js
@@ -1004,7 +993,7 @@ export class Service extends Construct implements SSTConstruct {
   }
 
   private createDistribution(alb?: ApplicationLoadBalancer) {
-    const { cdk, customDomain, viewerProtocolPolicy } = this.props;
+    const { cdk, customDomain } = this.props;
 
     // Do not create distribution if disabled or if ALB was not created (ie. disabled)
     if (!alb || cdk?.cloudfrontDistribution === false) return;
@@ -1027,7 +1016,7 @@ export class Service extends Construct implements SSTConstruct {
         distribution: {
           defaultRootObject: "",
           defaultBehavior: {
-            viewerProtocolPolicy: viewerProtocolPolicy ?? ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+            viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
             origin: new HttpOrigin(alb.loadBalancerDnsName, {
               protocolPolicy: OriginProtocolPolicy.HTTP_ONLY,
               readTimeout: CdkDuration.seconds(60),

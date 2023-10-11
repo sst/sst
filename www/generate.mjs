@@ -103,7 +103,6 @@ const CDK_DOCS_MAP = {
   OriginRequestPolicyProps: "aws_cloudfront",
   AddBehaviorOptions: "aws_cloudfront",
   IResponseHeadersPolicy: "aws_cloudfront",
-  ViewerProtocolPolicy: "aws_cloudfront",
   GraphqlApi: "aws_appsync",
   IGraphqlApi: "aws_appsync",
   ResolverProps: "aws_appsync",
