@@ -1,6 +1,5 @@
 import type { CloudAssembly } from "aws-cdk-lib/cx-api";
 import type { Program } from "../program.js";
-import { lazy } from "../../util/lazy.js";
 
 export const dev = (program: Program) =>
   program.command(
@@ -29,6 +28,8 @@ export const dev = (program: Program) =>
       const { useProject } = await import("../../project.js");
       const { clear } = await import("../terminal.js");
       const { getCiInfo } = await import("../ci-info.js");
+      const { useMetadataCache } = await import("../../stacks/metadata.js");
+      const { lazy } = await import("../../util/lazy.js");
 
       try {
         if (args._[0] === "start") {
@@ -432,6 +433,7 @@ export const dev = (program: Program) =>
         await printHeader({ console: true, hint: "ready!" });
         await Promise.all([
           useStackBuilder(),
+          useMetadataCache(),
           useDisconnector(),
           import("../../runtime/workers.js").then((mod) =>
             mod.useRuntimeWorkers()
