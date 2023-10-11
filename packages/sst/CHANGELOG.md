@@ -1,5 +1,13 @@
 # @serverless-stack/cli2
 
+## 2.28.5
+
+### Patch Changes
+
+- [#3397](https://github.com/sst/sst/pull/3397) [`ecd5b68a0`](https://github.com/sst/sst/commit/ecd5b68a0d45c237aa6709cde544385e1aaa0c9f) Thanks [@fwang](https://github.com/fwang)! - NextjsSite: update to OpenNext v2.2.3
+
+- [#3397](https://github.com/sst/sst/pull/3397) [`ecd5b68a0`](https://github.com/sst/sst/commit/ecd5b68a0d45c237aa6709cde544385e1aaa0c9f) Thanks [@fwang](https://github.com/fwang)! - NextjsSite: store routes in metadata
+
 ## 2.28.4
 
 ### Patch Changes
