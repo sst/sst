@@ -139,7 +139,7 @@ export class NextjsSite extends SsrSite {
 
     super(scope, id, {
       buildCommand: [
-        "npx --yes open-next@2.2.1 build",
+        "npx --yes open-next@2.2.3 build",
         ...(streaming ? ["--streaming"] : []),
         ...(disableDynamoDBCache
           ? ["--dangerously-disable-dynamodb-cache"]
@@ -169,7 +169,7 @@ export class NextjsSite extends SsrSite {
     const serverConfig = {
       description: "Next.js server",
       bundle: path.join(sitePath, ".open-next", "server-function"),
-      handler: "index.handler",
+      handler: this.wrapHandler(),
       environment: {
         CACHE_BUCKET_NAME: bucket.bucketName,
         CACHE_BUCKET_KEY_PREFIX: "_cache",
@@ -419,6 +419,24 @@ export class NextjsSite extends SsrSite {
         routes: this.getRoutes(),
       },
     };
+  }
+
+  private wrapHandler() {
+    const { path: sitePath } = this.props;
+    const wrapperName = "nextjssite-index";
+    const serverPath = path.join(sitePath, ".open-next", "server-function");
+
+    fs.writeFileSync(
+      path.join(serverPath, `${wrapperName}.mjs`),
+      [
+        `import { handler as rawHandler } from "./index.mjs";`,
+        `export const handler = (event, context) => {`,
+        `  return rawHandler(event, context);`,
+        `};`,
+      ].join("\n")
+    );
+
+    return `${wrapperName}.handler`;
   }
 
   private getRoutes() {
