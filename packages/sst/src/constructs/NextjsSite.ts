@@ -27,6 +27,7 @@ import { Size, toCdkSize } from "./util/size.js";
 import { Bucket } from "aws-cdk-lib/aws-s3";
 import { PolicyStatement } from "aws-cdk-lib/aws-iam";
 import { RetentionDays } from "aws-cdk-lib/aws-logs";
+import { VisibleError } from "../error.js";
 
 export interface NextjsSiteProps extends Omit<SsrSiteProps, "nodejs"> {
   imageOptimization?: {
@@ -126,6 +127,7 @@ type NextjsSiteNormalizedProps = NextjsSiteProps & SsrSiteNormalizedProps;
  */
 export class NextjsSite extends SsrSite {
   declare props: NextjsSiteNormalizedProps;
+  private buildId?: string;
 
   constructor(scope: Construct, id: string, props?: NextjsSiteProps) {
     const { streaming, disableDynamoDBCache, disableIncrementalCache } = {
@@ -137,7 +139,7 @@ export class NextjsSite extends SsrSite {
 
     super(scope, id, {
       buildCommand: [
-        "npx --yes open-next@2.2.1 build",
+        "npx --yes open-next@2.2.3 build",
         ...(streaming ? ["--streaming"] : []),
         ...(disableDynamoDBCache
           ? ["--dangerously-disable-dynamodb-cache"]
@@ -167,7 +169,7 @@ export class NextjsSite extends SsrSite {
     const serverConfig = {
       description: "Next.js server",
       bundle: path.join(sitePath, ".open-next", "server-function"),
-      handler: "index.handler",
+      handler: this.wrapHandler(),
       environment: {
         CACHE_BUCKET_NAME: bucket.bucketName,
         CACHE_BUCKET_KEY_PREFIX: "_cache",
@@ -306,9 +308,7 @@ export class NextjsSite extends SsrSite {
         "next-router-state-tree",
         "next-url",
       ],
-      buildId: fs
-        .readFileSync(path.join(sitePath, ".next/BUILD_ID"))
-        .toString(),
+      buildId: this.useBuildId(),
       warmerConfig: {
         function: path.join(sitePath, ".open-next", "warmer-function"),
       },
@@ -410,9 +410,66 @@ export class NextjsSite extends SsrSite {
   }
 
   public getConstructMetadata() {
+    const metadata = this.getConstructMetadataBase();
     return {
+      ...metadata,
       type: "NextjsSite" as const,
-      ...this.getConstructMetadataBase(),
+      data: {
+        ...metadata.data,
+        routes: this.getRoutes(),
+      },
     };
+  }
+
+  private wrapHandler() {
+    const { path: sitePath } = this.props;
+    const wrapperName = "nextjssite-index";
+    const serverPath = path.join(sitePath, ".open-next", "server-function");
+
+    fs.writeFileSync(
+      path.join(serverPath, `${wrapperName}.mjs`),
+      [
+        `import { handler as rawHandler } from "./index.mjs";`,
+        `export const handler = (event, context) => {`,
+        `  return rawHandler(event, context);`,
+        `};`,
+      ].join("\n")
+    );
+
+    return `${wrapperName}.handler`;
+  }
+
+  private getRoutes() {
+    const id = this.node.id;
+    const { path: sitePath } = this.props;
+    try {
+      const content = JSON.parse(
+        fs
+          .readFileSync(path.join(sitePath, ".next/routes-manifest.json"))
+          .toString()
+      );
+      return [
+        ...[...content.dynamicRoutes, ...content.staticRoutes].map(
+          ({ page }: { page: string }) => ({
+            route: page,
+          })
+        ),
+        ...(content.dataRoutes || []).map(({ page }: { page: string }) => ({
+          route: page.endsWith("/")
+            ? `/_next/data/${this.useBuildId()}${page}index.json`
+            : `/_next/data/${this.useBuildId()}${page}.json`,
+        })),
+      ];
+    } catch (e) {
+      console.error(e);
+      throw new VisibleError(
+        `Failed to read routes data from ".next/routes-manifest.json" for the "${id}" site.`
+      );
+    }
+  }
+
+  private useBuildId() {
+    const { path: sitePath } = this.props;
+    return fs.readFileSync(path.join(sitePath, ".next/BUILD_ID")).toString();
   }
 }
