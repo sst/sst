@@ -426,13 +426,11 @@ new StaticSite(stack, "frontend", {
   errorPage: "redirect_to_index_page",
   fileOptions: [
     {
-      exclude: "*",
-      include: "*.html",
+      filters: [{ exclude: "*" }, { include: "*.html" }],
       cacheControl: "max-age=0,no-cache,no-store,must-revalidate",
     },
     {
-      exclude: "*",
-      include: ["*.js", "*.css"],
+      filters: [{ exclude: "*" }, { include: "*.js" }, { include: "*.css" }],
       cacheControl: "max-age=31536000,public,immutable",
     },
   ],
@@ -441,7 +439,7 @@ new StaticSite(stack, "frontend", {
 
 This configures all the `.html` files to not be cached by the browser, while the `.js` and `.css` files to be cached forever.
 
-Note that, you need to specify the `exclude: "*"` along with the `include` option. It allows you to pick the files you want, while excluding everything else.
+Note that the file filters are applied in order and filters later in the array will take precedence over filters earlier in the array. In the above example, all files are first excluded, and then only the specific files are re-added using the `include` filter. For further details on wildcard and the matching logic please refer 
 
 ### Content type
 
@@ -455,18 +453,18 @@ new StaticSite(stack, "frontend", {
   errorPage: "redirect_to_index_page",
   fileOptions: [
     {
-      exclude: "*",
-      include: "*.html",
+      filters: [{ exclude: "*" }, { include: "*.html" }],
       cacheControl: "max-age=0,no-cache,no-store,must-revalidate",
     },
     {
-      exclude: "*",
-      include: ["*.js", "*.css"],
+      filters: [{ exclude: "*" }, { include: "*.js" }, { include: "*.css" }],
       cacheControl: "max-age=31536000,public,immutable",
     },
     {
-      exclude: "*",
-      include: ".well-known/site-association-json",
+      filters: [
+        { exclude: "*" }, 
+        { include: ".well-known/site-association-json" },
+      ],
       cacheControl: "max-age=31536000,public,immutable",
       contentType: "application/json",
     },

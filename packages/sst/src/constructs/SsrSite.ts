@@ -81,6 +81,7 @@ import {
   BaseSiteReplaceProps,
   BaseSiteCdkDistributionProps,
   getBuildCmdEnvironment,
+  SiteFileFilter,
 } from "./BaseSite.js";
 import { Size } from "./util/size.js";
 import { Duration, toCdkDuration } from "./util/duration.js";
@@ -286,7 +287,7 @@ export interface SsrSiteProps {
      * }
      * ```
      */
-    textEncoding?: "utf-8" | "iso-8859-1" | "ascii" | "none";
+    textEncoding?: "UTF-8" | "ISO-8859-1" | "Windows-1252" | "ASCII" | "none";
     /**
      * The strategy to use for invalidating the CDN cache. By default, the CDN cache will invalidate on changes any cached file, but this could become slow on very large projects.
      * - "never" - No invalidation will be performed.
@@ -353,8 +354,7 @@ export interface SsrSiteProps {
      * cache: {
      *   fileOptions: [
      *     {
-     *       exclude: "*",
-     *       include: "*.zip",
+     *       filters: [ { exclude: "*" }, { include: "*.zip" } ],
      *       cacheControl: "private,no-cache,no-store,must-revalidate",
      *       contentType: "application/zip",
      *     },
@@ -432,18 +432,11 @@ export interface SsrSiteProps {
    * ```js
    * fileOptions: [
    *   {
-   *     exclude: "*",
-   *     include: "{versioned_directory}/*",
+   *     filters: [ { exclude: "*" }, { include: "{versioned_directory}/*" } ],
    *     cacheControl: "public,max-age=31536000,immutable",
    *   },
    *   {
-   *     exclude: "*",
-   *     include: "[{non_versioned_file1}, {non_versioned_file2}, ...]",
-   *     cacheControl: "public,max-age=0,s-maxage=86400,stale-while-revalidate=8640",
-   *   },
-   *   {
-   *     exclude: "*",
-   *     include: "[{non_versioned_dir_1}/*, {non_versioned_dir_2}/*, ...]",
+   *     filters: [ { include: "*" }, { exclude: "{versioned_directory}/*" } ],
    *     cacheControl: "public,max-age=0,s-maxage=86400,stale-while-revalidate=8640",
    *   },
    * ]
@@ -453,25 +446,17 @@ export interface SsrSiteProps {
    * ```js
    * fileOptions: [
    *   {
-   *     exclude: "*",
-   *     include: "{versioned_directory}/*.css",
-   *     cacheControl: "public,max-age=31536000,immutable",
-   *     contentType: "text/css; charset=UTF-8",
-   *   },
-   *   {
-   *     exclude: "*",
-   *     include: "{versioned_directory}/*.js",
+   *     filters: [ { exclude: "*" }, { include: "{versioned_directory}/*" } ],
    *     cacheControl: "public,max-age=31536000,immutable",
    *   },
    *   {
-   *     exclude: "*",
-   *     include: "[{non_versioned_file1}, {non_versioned_file2}, ...]",
-   *     cacheControl: "public,max-age=0,s-maxage=31536000,must-revalidate",
+   *     filters: [ { include: "*" }, { exclude: "{versioned_directory}/*" } ],
+   *     cacheControl: "public,max-age=0,s-maxage=86400,stale-while-revalidate=8640",
    *   },
    *   {
-   *     exclude: "*",
-   *     include: "[{non_versioned_dir_1}/*, {non_versioned_dir_2}/*, ...]",
-   *     cacheControl: "public,max-age=0,s-maxage=31536000,must-revalidate",
+   *     filters: [ { exclude: "*" }, { include: "*.zip" } ],
+   *     cacheControl: "private,no-cache,no-store,must-revalidate",
+   *     contentType: "application/zip",
    *   },
    * ]
    * ```
@@ -1156,7 +1141,7 @@ function handler(event) {
     ) {
       const fileOptions: SsrSiteFileOptions[] = [];
 
-      const textEncoding = cache?.textEncoding ?? "utf-8";
+      const textEncoding = cache?.textEncoding ?? "UTF-8";
       const nonVersionedFilesTTL =
         typeof cache?.nonVersionedFilesTTL === "number"
           ? cache.nonVersionedFilesTTL
@@ -1217,45 +1202,76 @@ function handler(event) {
         for (const [extension, contentType] of Object.entries(
           commonWebFileExtensions
         )) {
+          const filters: SiteFileFilter[] = [
+            { exclude: "*" },
+            { include: `${path.posix.join(files.to, "*")}.${extension}` },
+          ];
+          if (files.versionedSubDir) {
+            filters.push({
+              exclude: path.posix.join(files.to, files.versionedSubDir, "*"),
+            });
+          }
+
           fileOptions.push({
-            exclude: "*",
-            include: `${path.posix.join(files.to, "*")}.${extension}`,
+            filters,
             cacheControl: nonVersionedFilesCacheHeader,
             contentType: `${contentType.mime}${
-              textEncoding !== "none" ? `; charset=${textEncoding}` : ""
+              contentType.isText && textEncoding !== "none"
+                ? `;charset=${textEncoding}`
+                : ""
             }`,
           });
 
-          if (typeof files.versionedSubDir === "string") {
+          if (files.versionedSubDir) {
             fileOptions.push({
-              exclude: "*",
-              include: `${path.posix.join(
-                files.to,
-                files.versionedSubDir,
-                "*"
-              )}.${extension}`,
+              filters: [
+                { exclude: "*" },
+                {
+                  include: path.posix.join(
+                    files.to,
+                    files.versionedSubDir,
+                    `*.${extension}`
+                  ),
+                },
+              ],
               cacheControl: versionedFilesCacheHeader,
               contentType: `${contentType.mime}${
-                textEncoding !== "none" ? `; charset=${textEncoding}` : ""
+                contentType.isText && textEncoding !== "none"
+                  ? `;charset=${textEncoding}`
+                  : ""
               }`,
             });
           }
         }
 
+        const remainingFilesFilters = [
+          { include: "*" },
+          ...Object.entries(commonWebFileExtensions).map(([ext]) => ({
+            exclude: `*.${ext}`,
+          })),
+        ];
+
+        if (files.versionedSubDir) {
+          remainingFilesFilters.splice(1, 0, {
+            exclude: path.posix.join(files.to, files.versionedSubDir, "*"),
+          });
+        }
+
         fileOptions.push({
-          exclude: Object.entries(commonWebFileExtensions).map(
-            ([ext]) => `*.${ext}`
-          ),
-          include: `${path.posix.join(files.to, "*")}`,
+          filters: remainingFilesFilters,
           cacheControl: nonVersionedFilesCacheHeader,
         });
 
         if (typeof files.versionedSubDir === "string") {
           fileOptions.push({
-            exclude: Object.entries(commonWebFileExtensions).map(
-              ([ext]) => `*.${ext}`
-            ),
-            include: `${path.posix.join(files.to, files.versionedSubDir, "*")}`,
+            filters: [
+              {
+                include: path.posix.join(files.to, files.versionedSubDir, "*"),
+              },
+              ...Object.entries(commonWebFileExtensions).map(([ext]) => ({
+                exclude: `*.${ext}`,
+              })),
+            ],
             cacheControl: versionedFilesCacheHeader,
           });
         }
@@ -1314,18 +1330,19 @@ function handler(event) {
           })),
           DestinationBucketName: bucket.bucketName,
           FileOptions: (fileOptions || []).map(
-            ({ exclude, include, cacheControl, contentType }) => {
-              if (typeof exclude === "string") {
-                exclude = [exclude];
-              }
-              if (typeof include === "string") {
-                include = [include];
-              }
+            ({ filters, cacheControl, contentType, contentEncoding }) => {
               return [
-                ...exclude.map((per) => ["--exclude", per]),
-                ...include.map((per) => ["--include", per]),
-                ["--cache-control", cacheControl],
+                filters
+                  .map((filter) =>
+                    Object.entries(filter).map(([key, value]) => [
+                      `--${key}`,
+                      value,
+                    ])
+                  )
+                  .flat(2),
+                cacheControl ? ["--cache-control", cacheControl] : [],
                 contentType ? ["--content-type", contentType] : [],
+                contentEncoding ? ["--content-encoding", contentEncoding] : [],
               ].flat();
             }
           ),

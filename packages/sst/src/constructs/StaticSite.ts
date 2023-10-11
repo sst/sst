@@ -121,13 +121,11 @@ export interface StaticSiteProps {
    * ```js
    * [
    *   {
-   *     exclude: "*",
-   *     include: "*.html",
+   *     filters: [{ exclude: "*" }, { include: "*.html" }],
    *     cacheControl: "max-age=0,no-cache,no-store,must-revalidate",
    *   },
    *   {
-   *     exclude: "*",
-   *     include: ["*.js", "*.css"],
+   *     filters: [{ exclude: "*" }, { include: "*.js" }, { include: "*.css" }],
    *     cacheControl: "max-age=31536000,public,immutable",
    *   },
    * ]
@@ -137,8 +135,7 @@ export interface StaticSiteProps {
    * new StaticSite(stack, "Site", {
    *   buildOutput: "dist",
    *   fileOptions: [{
-   *     exclude: "*",
-   *     include: "*.js",
+   *     filters: [{ exclude: "*" }, { include: "*.js" }],
    *     cacheControl: "max-age=31536000,public,immutable",
    *   }]
    * });
@@ -674,15 +671,13 @@ interface ImportMeta {
     assets: Asset[],
     filenamesAsset?: Asset
   ): CustomResource {
-    const fileOptions: StaticSiteFileOptions[] = this.props.fileOptions || [
+    const fileOptions: StaticSiteFileOptions[] = this.props.fileOptions ?? [
       {
-        exclude: "*",
-        include: "*.html",
+        filters: [{ exclude: "*" }, { include: "*.html" }],
         cacheControl: "max-age=0,no-cache,no-store,must-revalidate",
       },
       {
-        exclude: "*",
-        include: ["*.js", "*.css"],
+        filters: [{ exclude: "*" }, { include: "*.js" }, { include: "*.css" }],
         cacheControl: "max-age=31536000,public,immutable",
       },
     ];
@@ -734,18 +729,19 @@ interface ImportMeta {
           ObjectKey: filenamesAsset.s3ObjectKey,
         },
         FileOptions: (fileOptions || []).map(
-          ({ exclude, include, cacheControl, contentType }) => {
-            if (typeof exclude === "string") {
-              exclude = [exclude];
-            }
-            if (typeof include === "string") {
-              include = [include];
-            }
+          ({ filters, cacheControl, contentType, contentEncoding }) => {
             return [
-              ...exclude.map((per) => ["--exclude", per]),
-              ...include.map((per) => ["--include", per]),
-              ["--cache-control", cacheControl],
+              filters
+                .map((filter) =>
+                  Object.entries(filter).map(([key, value]) => [
+                    `--${key}`,
+                    value,
+                  ])
+                )
+                .flat(2),
+              cacheControl ? ["--cache-control", cacheControl] : [],
               contentType ? ["--content-type", contentType] : [],
+              contentEncoding ? ["--content-encoding", contentEncoding] : [],
             ].flat();
           }
         ),
