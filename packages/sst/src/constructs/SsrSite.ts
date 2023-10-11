@@ -1512,22 +1512,21 @@ function handler(event) {
             })
             .forEach((filePath) => hash.update(filePath));
         }
+
         // For non-versioned files, use file content for digest
-        else {
-          if (cdnInvalidationStrategy === "all") {
-            glob
-              .sync("**", {
-                ...globOptions,
-                ignore: item.versionedSubDir
-                  ? [path.posix.join(item.versionedSubDir, "**")]
-                  : undefined,
-              })
-              .forEach((filePath) =>
-                hash.update(
-                  fs.readFileSync(path.resolve(sitePath, item.from, filePath))
-                )
-              );
-          }
+        if (cdnInvalidationStrategy === "all") {
+          glob
+            .sync("**", {
+              ...globOptions,
+              ignore: item.versionedSubDir
+                ? [path.posix.join(item.versionedSubDir, "**")]
+                : undefined,
+            })
+            .forEach((filePath) =>
+              hash.update(
+                fs.readFileSync(path.resolve(sitePath, item.from, filePath))
+              )
+            );
         }
       });
 
