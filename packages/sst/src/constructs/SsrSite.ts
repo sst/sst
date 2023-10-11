@@ -81,7 +81,6 @@ import {
   BaseSiteReplaceProps,
   BaseSiteCdkDistributionProps,
   getBuildCmdEnvironment,
-  SiteFileFilter,
 } from "./BaseSite.js";
 import { Size } from "./util/size.js";
 import { Duration, toCdkDuration } from "./util/duration.js";
@@ -309,7 +308,7 @@ export interface SsrSiteProps {
      * @example
      * ```js
      * cache: {
-     *  versionedFilesTTL: '30 days'
+     *  versionedFilesTTL: "30 days"
      * }
      * ```
      */
@@ -331,7 +330,7 @@ export interface SsrSiteProps {
      * @example
      * ```js
      * cache: {
-     *  nonVersionedFilesTTL: '4 hours'
+     *  nonVersionedFilesTTL: "4 hours"
      * }
      * ```
      */
@@ -568,7 +567,7 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
     const edgeFunctions = createEdgeFunctions();
     const origins = createOrigins();
     const distribution = createCloudFrontDistribution();
-    createDistributionInvalidation(plan.buildId);
+    createDistributionInvalidation();
 
     // Create Warmer
     createWarmer();
@@ -1202,18 +1201,23 @@ function handler(event) {
         for (const [extension, contentType] of Object.entries(
           commonWebFileExtensions
         )) {
-          const filters: SiteFileFilter[] = [
-            { exclude: "*" },
-            { include: `${path.posix.join(files.to, "*")}.${extension}` },
-          ];
-          if (files.versionedSubDir) {
-            filters.push({
-              exclude: path.posix.join(files.to, files.versionedSubDir, "*"),
-            });
-          }
-
+          // Create a file option for: common extension + unversioned files
           fileOptions.push({
-            filters,
+            filters: [
+              { exclude: "*" },
+              { include: `${path.posix.join(files.to, "*")}.${extension}` },
+              ...(files.versionedSubDir
+                ? [
+                    {
+                      exclude: path.posix.join(
+                        files.to,
+                        files.versionedSubDir,
+                        "*"
+                      ),
+                    },
+                  ]
+                : []),
+            ],
             cacheControl: nonVersionedFilesCacheHeader,
             contentType: `${contentType.mime}${
               contentType.isText && textEncoding !== "none"
@@ -1222,6 +1226,7 @@ function handler(event) {
             }`,
           });
 
+          // Create a file option for: common extension + versioned files
           if (files.versionedSubDir) {
             fileOptions.push({
               filters: [
@@ -1244,25 +1249,30 @@ function handler(event) {
           }
         }
 
-        const remainingFilesFilters = [
-          { include: "*" },
-          ...Object.entries(commonWebFileExtensions).map(([ext]) => ({
-            exclude: `*.${ext}`,
-          })),
-        ];
-
-        if (files.versionedSubDir) {
-          remainingFilesFilters.splice(1, 0, {
-            exclude: path.posix.join(files.to, files.versionedSubDir, "*"),
-          });
-        }
-
+        // Create a file option for: other extensions + unversioned files
         fileOptions.push({
-          filters: remainingFilesFilters,
+          filters: [
+            { include: "*" },
+            ...(files.versionedSubDir
+              ? [
+                  {
+                    exclude: path.posix.join(
+                      files.to,
+                      files.versionedSubDir,
+                      "*"
+                    ),
+                  },
+                ]
+              : []),
+            ...Object.entries(commonWebFileExtensions).map(([ext]) => ({
+              exclude: `*.${ext}`,
+            })),
+          ],
           cacheControl: nonVersionedFilesCacheHeader,
         });
 
-        if (typeof files.versionedSubDir === "string") {
+        // Create a file option for: other extensions + versioned files
+        if (files.versionedSubDir) {
           fileOptions.push({
             filters: [
               {
@@ -1444,24 +1454,19 @@ function handler(event) {
       return replaceValues;
     }
 
-    function createDistributionInvalidation(importedBuildId?: string) {
-      let invalidationBuildId = importedBuildId;
-
+    function createDistributionInvalidation() {
       const cdnInvalidationStrategy = cache?.cdnInvalidationStrategy ?? "all";
-
       if (cdnInvalidationStrategy === "never") return;
-
-      if (cdnInvalidationStrategy === "always" && !invalidationBuildId) {
-        invalidationBuildId =
-          Date.now().toString(16) + Math.random().toString(16).slice(2);
-      }
-
-      if (invalidationBuildId) {
+      if (plan.buildId) {
         distribution.createInvalidation(plan.buildId);
         return;
       }
-
-      const invalidationPaths: string[] = [];
+      if (cdnInvalidationStrategy === "always") {
+        const buildId =
+          Date.now().toString(16) + Math.random().toString(16).slice(2);
+        distribution.createInvalidation(buildId);
+        return;
+      }
 
       // We will generate a hash based on the contents of the S3 files with cache enabled.
       // This will be used to determine if we need to invalidate our CloudFront cache.
@@ -1472,6 +1477,19 @@ function handler(event) {
       const cachedS3Files = s3Origin.copy.filter((file) => file.cached);
       if (cachedS3Files.length === 0) return;
 
+      // Build invalidation paths
+      const invalidationPaths: string[] = [];
+      if (cdnInvalidationStrategy === "versioned") {
+        cachedS3Files.forEach((item) => {
+          if (!item.versionedSubDir) return;
+          invalidationPaths.push(
+            path.posix.join("/", item.to, item.versionedSubDir, "*")
+          );
+        });
+      }
+      if (invalidationPaths.length === 0) invalidationPaths.push("/*");
+
+      // Build build ID
       const hash = crypto.createHash("md5");
 
       cachedS3Files.forEach((item) => {
@@ -1485,52 +1503,39 @@ function handler(event) {
           cwd: path.resolve(sitePath, item.from),
         };
 
-        if (
-          (cdnInvalidationStrategy === "versioned" ||
-            cdnInvalidationStrategy === "all") &&
-          item.versionedSubDir
-        ) {
-          if (cdnInvalidationStrategy === "versioned") {
-            invalidationPaths.push(
-              path.posix.join("/", item.to, item.versionedSubDir, "*")
-            );
-          }
+        // For versioned files, use file path for digest since file version in name should change on content change
+        if (item.versionedSubDir) {
           glob
             .sync("**", {
               ...globOptions,
               cwd: path.resolve(sitePath, item.from, item.versionedSubDir),
             })
-            .forEach((filePath) => {
-              // Only using file path for digest since file version in name should change on content change.
-              hash.update(filePath);
-            });
+            .forEach((filePath) => hash.update(filePath));
         }
-
-        if (cdnInvalidationStrategy === "all") {
-          glob
-            .sync("**", {
-              ...globOptions,
-              ignore: item.versionedSubDir
-                ? [path.posix.join(item.versionedSubDir, "**")]
-                : undefined,
-            })
-            .forEach((filePath) => {
-              // Must use the full file buffer to detect changes in content for non-versioned files.
-              hash.update(
-                fs.readFileSync(path.resolve(sitePath, item.from, filePath))
+        // For non-versioned files, use file content for digest
+        else {
+          if (cdnInvalidationStrategy === "all") {
+            glob
+              .sync("**", {
+                ...globOptions,
+                ignore: item.versionedSubDir
+                  ? [path.posix.join(item.versionedSubDir, "**")]
+                  : undefined,
+              })
+              .forEach((filePath) =>
+                hash.update(
+                  fs.readFileSync(path.resolve(sitePath, item.from, filePath))
+                )
               );
-            });
+          }
         }
       });
 
-      invalidationBuildId = hash.digest("hex");
+      const buildId = hash.digest("hex");
 
-      Logger.debug(`Generated build ID ${invalidationBuildId}`);
+      Logger.debug(`Generated build ID ${buildId}`);
 
-      distribution.createInvalidation(
-        invalidationBuildId,
-        invalidationPaths.length > 0 ? invalidationPaths : ["/*"]
-      );
+      distribution.createInvalidation(buildId, invalidationPaths);
     }
   }
 

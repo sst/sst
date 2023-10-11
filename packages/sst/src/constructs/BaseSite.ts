@@ -6,10 +6,8 @@ import {
   IOrigin,
 } from "aws-cdk-lib/aws-cloudfront";
 
-export type SiteFileFilter = { [key in "include" | "exclude"]?: string };
-
 export interface BaseSiteFileOptions {
-  filters: SiteFileFilter[];
+  filters: { [key in "include" | "exclude"]?: string }[];
   /**
    * @deprecated Use `filters` parameter instead.
    */
