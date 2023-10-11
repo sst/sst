@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.28.4
+
+### Patch Changes
+
+- [`069274df1`](https://github.com/sst/sst/commit/069274df14b79091a1604d360fa65062d5ace0ac) Thanks [@thdxr](https://github.com/thdxr)! - cli: fix pothos builder
+
 ## 2.28.3
 
 ### Patch Changes
