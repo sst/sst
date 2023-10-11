@@ -729,9 +729,22 @@ interface ImportMeta {
           ObjectKey: filenamesAsset.s3ObjectKey,
         },
         FileOptions: (fileOptions || []).map(
-          ({ filters, cacheControl, contentType, contentEncoding }) => {
+          ({
+            filters,
+            include,
+            exclude,
+            cacheControl,
+            contentType,
+            contentEncoding,
+          }) => {
             return [
-              filters
+              ...(typeof include === "string" ? [include] : include ?? [])
+                .map((entry) => ["--include", entry])
+                .flat(2),
+              ...(typeof exclude === "string" ? [exclude] : exclude ?? [])
+                .map((entry) => ["--exclude", entry])
+                .flat(2),
+              ...filters
                 .map((filter) =>
                   Object.entries(filter).map(([key, value]) => [
                     `--${key}`,

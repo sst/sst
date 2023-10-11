@@ -10,6 +10,14 @@ export type SiteFileFilter = { [key in "include" | "exclude"]?: string };
 
 export interface BaseSiteFileOptions {
   filters: SiteFileFilter[];
+  /**
+   * @deprecated Use `filters` parameter instead.
+   */
+  include?: string | string[];
+  /**
+   * @deprecated Use `filters` parameter instead.
+   */
+  exclude?: string | string[];
   cacheControl?: string;
   contentType?: string;
   contentEncoding?: string;
