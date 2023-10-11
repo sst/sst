@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.28.3
+
+### Patch Changes
+
+- [#3388](https://github.com/sst/sst/pull/3388) [`f760343c1`](https://github.com/sst/sst/commit/f760343c13b152c680c27c5a05d8bbd72c4b9dc6) Thanks [@bayssmekanique](https://github.com/bayssmekanique)! - Fixes Astro Site error response pages
+
 ## 2.28.2
 
 ### Patch Changes
