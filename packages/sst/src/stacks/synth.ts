@@ -6,7 +6,6 @@ import * as contextproviders from "sst-aws-cdk/lib/context-providers/index.js";
 import path from "path";
 import { VisibleError } from "../error.js";
 import fs from "fs/promises";
-import { useDotnetHandler } from "../runtime/handlers/dotnet.js";
 
 interface SynthOptions {
   buildDir?: string;
@@ -24,16 +23,28 @@ export async function synth(opts: SynthOptions) {
   const cxapi = await import("@aws-cdk/cx-api");
   const { Configuration } = await import("sst-aws-cdk/lib/settings.js");
   const project = useProject();
-  const identity = await useSTSIdentity();
-  opts = {
-    ...opts,
-    buildDir: opts.buildDir || path.join(project.paths.out, "dist"),
-  };
 
-  await fs.rm(opts.buildDir!, { recursive: true, force: true });
-  await fs.mkdir(opts.buildDir!, { recursive: true });
+  const cwd = process.cwd();
+  process.chdir(project.paths.root);
+  try {
+    return await synthInRoot();
+  } catch (e) {
+    throw e;
+  } finally {
+    process.chdir(cwd);
+  }
 
-  /*
+  async function synthInRoot() {
+    const identity = await useSTSIdentity();
+    opts = {
+      ...opts,
+      buildDir: opts.buildDir || path.join(project.paths.out, "dist"),
+    };
+
+    await fs.rm(opts.buildDir!, { recursive: true, force: true });
+    await fs.mkdir(opts.buildDir!, { recursive: true });
+
+    /*
   console.log(JSON.stringify(cfg.context));
   const executable = new CloudExecutable({
     sdkProvider: await useAWSProvider(),
@@ -42,57 +53,58 @@ export async function synth(opts: SynthOptions) {
   });
   const { assembly } = await executable.synthesize(true);
   */
-  const cfg = new Configuration();
-  await cfg.load();
-  let previous = new Set<string>();
+    const cfg = new Configuration();
+    await cfg.load();
+    let previous = new Set<string>();
 
-  while (true) {
-    const app = new App(
-      {
-        account: identity.Account!,
-        stage: project.config.stage,
-        name: project.config.name,
-        region: project.config.region,
-        mode: opts.mode,
-        debugIncreaseTimeout: opts.increaseTimeout,
-        debugScriptVersion: opts.scriptVersion,
-        isActiveStack: opts.isActiveStack,
-      },
-      {
-        outdir: opts.buildDir,
-        context: {
-          ...cfg.context.all,
-          [cxapi.PATH_METADATA_ENABLE_CONTEXT]:
-            project.config.cdk?.pathMetadata ?? false,
+    while (true) {
+      const app = new App(
+        {
+          account: identity.Account!,
+          stage: project.config.stage,
+          name: project.config.name,
+          region: project.config.region,
+          mode: opts.mode,
+          debugIncreaseTimeout: opts.increaseTimeout,
+          debugScriptVersion: opts.scriptVersion,
+          isActiveStack: opts.isActiveStack,
         },
-      }
-    );
-
-    await opts.fn(app);
-    await app.finish();
-    const assembly = app.synth();
-    Logger.debug(assembly.manifest.missing);
-    const { missing } = assembly.manifest;
-    const provider = await useAWSProvider();
-
-    if (missing && missing.length) {
-      const next = missing.map((x) => x.key);
-      if (next.length === previous.size && next.every((x) => previous.has(x)))
-        throw new VisibleError(formatErrorMessage(next.join("")));
-      Logger.debug("Looking up context for:", next, "Previous:", previous);
-      previous = new Set(next);
-      await contextproviders.provideContextValues(
-        missing,
-        cfg.context,
-        provider
+        {
+          outdir: opts.buildDir,
+          context: {
+            ...cfg.context.all,
+            [cxapi.PATH_METADATA_ENABLE_CONTEXT]:
+              project.config.cdk?.pathMetadata ?? false,
+          },
+        }
       );
-      if (cfg.context.keys.length) {
-        await cfg.saveContext();
+
+      await opts.fn(app);
+      await app.finish();
+      const assembly = app.synth();
+      Logger.debug(assembly.manifest.missing);
+      const { missing } = assembly.manifest;
+      const provider = await useAWSProvider();
+
+      if (missing && missing.length) {
+        const next = missing.map((x) => x.key);
+        if (next.length === previous.size && next.every((x) => previous.has(x)))
+          throw new VisibleError(formatErrorMessage(next.join("")));
+        Logger.debug("Looking up context for:", next, "Previous:", previous);
+        previous = new Set(next);
+        await contextproviders.provideContextValues(
+          missing,
+          cfg.context,
+          provider
+        );
+        if (cfg.context.keys.length) {
+          await cfg.saveContext();
+        }
+        continue;
       }
-      continue;
+      Logger.debug("Finished synthesizing");
+      return assembly;
     }
-    Logger.debug("Finished synthesizing");
-    return assembly;
   }
 }
 
