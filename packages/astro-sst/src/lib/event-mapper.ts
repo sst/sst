@@ -157,7 +157,7 @@ export async function convertTo({
     cookies.push(...appCookies);
   }
   if (cookies.length > 0) {
-    headers["set-cookie"] = [cookies.join(";")];
+    headers["set-cookie"] = cookies;
   }
 
   // Parse isBase64Encoded
