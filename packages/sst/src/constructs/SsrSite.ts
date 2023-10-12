@@ -749,9 +749,9 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
       if (behavior.cacheType === "static") {
         return {
           origin,
-          viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
           allowedMethods:
             behavior.allowedMethods ?? AllowedMethods.ALLOW_GET_HEAD_OPTIONS,
+          viewerProtocolPolicy: cdk?.distribution?.defaultBehavior?.viewerProtocolPolicy ?? ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
           cachedMethods: CachedMethods.CACHE_GET_HEAD_OPTIONS,
           compress: true,
           cachePolicy: CachePolicy.CACHING_OPTIMIZED,
@@ -767,7 +767,7 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
         };
       } else if (behavior.cacheType === "server") {
         return {
-          viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+          viewerProtocolPolicy: cdk?.distribution?.defaultBehavior?.viewerProtocolPolicy ?? ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
           origin,
           allowedMethods: behavior.allowedMethods ?? AllowedMethods.ALLOW_ALL,
           cachedMethods: CachedMethods.CACHE_GET_HEAD_OPTIONS,
