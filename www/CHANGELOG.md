@@ -1,5 +1,11 @@
 # @serverless-stack/docs
 
+## 2.7.0
+
+### Minor Changes
+
+- [`c1e2fffc3`](https://github.com/sst/sst/commit/c1e2fffc32e596676604a9aeede1f6367af599a2) Thanks [@thdxr](https://github.com/thdxr)! - cli: require node 18
+
 ## 2.6.1
 
 ### Patch Changes
