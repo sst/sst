@@ -430,11 +430,16 @@ export class NextjsSite extends SsrSite {
     fs.writeFileSync(
       path.join(serverPath, `${wrapperName}.mjs`),
       [
-        `import { handler as rawHandler } from "./index.mjs";`,
+        `import { handler as rawHandler } from "./handler.mjs";`,
         `export const handler = (event, context) => {`,
         `  return rawHandler(event, context);`,
         `};`,
       ].join("\n")
+    );
+
+    fs.renameSync(
+      path.join(serverPath, "index.mjs"),
+      path.join(serverPath, "handler.mjs")
     );
 
     return `${wrapperName}.handler`;
