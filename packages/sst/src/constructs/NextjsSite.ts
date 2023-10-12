@@ -169,7 +169,7 @@ export class NextjsSite extends SsrSite {
     const serverConfig = {
       description: "Next.js server",
       bundle: path.join(sitePath, ".open-next", "server-function"),
-      handler: this.wrapHandler(),
+      handler: 'index.handler',
       environment: {
         CACHE_BUCKET_NAME: bucket.bucketName,
         CACHE_BUCKET_KEY_PREFIX: "_cache",
@@ -420,29 +420,6 @@ export class NextjsSite extends SsrSite {
           this.props.edge || this.doNotDeploy ? undefined : this.getRoutes(),
       },
     };
-  }
-
-  private wrapHandler() {
-    const { path: sitePath } = this.props;
-    const wrapperName = "nextjssite-index";
-    const serverPath = path.join(sitePath, ".open-next", "server-function");
-
-    fs.writeFileSync(
-      path.join(serverPath, `${wrapperName}.mjs`),
-      [
-        `import { handler as rawHandler } from "./handler.mjs";`,
-        `export const handler = (event, context) => {`,
-        `  return rawHandler(event, context);`,
-        `};`,
-      ].join("\n")
-    );
-
-    fs.renameSync(
-      path.join(serverPath, "index.mjs"),
-      path.join(serverPath, "handler.mjs")
-    );
-
-    return `${wrapperName}.handler`;
   }
 
   private getRoutes() {
