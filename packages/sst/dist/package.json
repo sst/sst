@@ -1,4 +1,9 @@
 {
+  "publishConfig": {
+    "@alexabidri:registry": "https://npm.pkg.github.com",
+    "directory": "dist",
+    "access": "public"
+  },
   "sideEffects": false,
   "name": "sst",
   "version": "2.26.5",
@@ -16,7 +21,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/sst/sst.git",
+    "url": "git+https://github.com/@alexabidri/sst.git",
     "directory": "packages/cli"
   },
   "exports": {

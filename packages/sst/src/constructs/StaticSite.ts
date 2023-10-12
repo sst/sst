@@ -787,7 +787,7 @@ interface ImportMeta {
     const { cdk } = this.props;
     return {
       origin: new S3Origin(this.bucket),
-      viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+      viewerProtocolPolicy: ViewerProtocolPolicy.ALLOW_ALL,
       functionAssociations: [
         {
           // Note: this is required in Frameworks like Astro where `index.html`
