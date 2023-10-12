@@ -308,7 +308,7 @@ export class NextjsSite extends SsrSite {
         "next-router-state-tree",
         "next-url",
       ],
-      buildId: this.useBuildId(),
+      buildId: this.getBuildId(),
       warmerConfig: {
         function: path.join(sitePath, ".open-next", "warmer-function"),
       },
@@ -416,7 +416,8 @@ export class NextjsSite extends SsrSite {
       type: "NextjsSite" as const,
       data: {
         ...metadata.data,
-        routes: this.getRoutes(),
+        routes:
+          this.props.edge || this.doNotDeploy ? undefined : this.getRoutes(),
       },
     };
   }
@@ -443,22 +444,28 @@ export class NextjsSite extends SsrSite {
     const id = this.node.id;
     const { path: sitePath } = this.props;
     try {
-      const content = JSON.parse(
+      const content: {
+        dynamicRoutes: { page: string }[];
+        staticRoutes: { page: string }[];
+        dataRoutes?: { page: string }[];
+      } = JSON.parse(
         fs
           .readFileSync(path.join(sitePath, ".next/routes-manifest.json"))
           .toString()
       );
       return [
-        ...[...content.dynamicRoutes, ...content.staticRoutes].map(
-          ({ page }: { page: string }) => ({
+        ...[...content.dynamicRoutes, ...content.staticRoutes]
+          .map(({ page }: { page: string }) => ({
             route: page,
-          })
-        ),
-        ...(content.dataRoutes || []).map(({ page }: { page: string }) => ({
-          route: page.endsWith("/")
-            ? `/_next/data/${this.useBuildId()}${page}index.json`
-            : `/_next/data/${this.useBuildId()}${page}.json`,
-        })),
+          }))
+          .sort((a, b) => a.route.localeCompare(b.route)),
+        ...(content.dataRoutes || [])
+          .map(({ page }: { page: string }) => ({
+            route: page.endsWith("/")
+              ? `/_next/data/BUILD_ID${page}index.json`
+              : `/_next/data/BUILD_ID${page}.json`,
+          }))
+          .sort((a, b) => a.route.localeCompare(b.route)),
       ];
     } catch (e) {
       console.error(e);
@@ -468,7 +475,7 @@ export class NextjsSite extends SsrSite {
     }
   }
 
-  private useBuildId() {
+  private getBuildId() {
     const { path: sitePath } = this.props;
     return fs.readFileSync(path.join(sitePath, ".next/BUILD_ID")).toString();
   }
