@@ -73,6 +73,26 @@ test("default", async () => {
   });
 });
 
+const SERVER_CACHE_POLICY_HEADER_EXPECTATION =
+  [
+    "accept",
+    "rsc",
+    "next-router-prefetch",
+    "next-router-state-tree",
+    "next-url",
+  ]
+
+test("default: check cache policy exposed as static method", () => {
+  expect(NextjsSite.buildDefaultServerCachePolicyProps).toBeDefined();
+
+  expect(NextjsSite.buildDefaultServerCachePolicyProps()).toEqual(expect.objectContaining({
+    headerBehavior: {
+      behavior: "whitelist",
+      headers: SERVER_CACHE_POLICY_HEADER_EXPECTATION,
+    }
+  }));
+});
+
 test("default: check cache policy configured correctly", async () => {
   const { stack, site } = await createSite();
   countResources(stack, "AWS::CloudFront::CachePolicy", 1);
@@ -80,13 +100,7 @@ test("default: check cache policy configured correctly", async () => {
     CachePolicyConfig: objectLike({
       ParametersInCacheKeyAndForwardedToOrigin: objectLike({
         HeadersConfig: objectLike({
-          Headers: [
-            "accept",
-            "rsc",
-            "next-router-prefetch",
-            "next-router-state-tree",
-            "next-url",
-          ],
+          Headers: SERVER_CACHE_POLICY_HEADER_EXPECTATION,
         }),
       }),
     }),

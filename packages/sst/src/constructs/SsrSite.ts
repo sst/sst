@@ -412,7 +412,7 @@ export type SsrSiteNormalizedProps = SsrSiteProps & {
  * ```
  */
 export abstract class SsrSite extends Construct implements SSTConstruct {
-  public static buildDefaultServerCachePolicyProps(
+  protected static buildDefaultServerCachePolicyProps(
     allowedHeaders: string[]
   ): CachePolicyProps {
     return {
