@@ -499,16 +499,7 @@ import {
   CacheCookieBehavior,
 } from "aws-cdk-lib/aws-cloudfront";
 
-const serverCachePolicy = new CachePolicy(stack, "ServerCache", {
-  queryStringBehavior: CacheQueryStringBehavior.all(),
-  headerBehavior: CacheHeaderBehavior.none(),
-  cookieBehavior: CacheCookieBehavior.all(),
-  defaultTtl: Duration.days(0),
-  maxTtl: Duration.days(365),
-  minTtl: Duration.days(0),
-  enableAcceptEncodingBrotli: true,
-  enableAcceptEncodingGzip: true,
-});
+const serverCachePolicy = new CachePolicy(stack, "ServerCache", NextjsSite.buildDefaultServerCachePolicyProps());
 
 new NextjsSite(stack, "Site1", {
   path: "my-next-app/",
