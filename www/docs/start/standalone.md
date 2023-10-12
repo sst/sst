@@ -23,7 +23,7 @@ Take SST for a spin and create your first project.
 
 ## Prerequisites
 
-You'll need at least [Node.js 16.6](https://nodejs.org/) and [npm 7](https://www.npmjs.com/). You also need to have an AWS account and [**AWS credentials configured locally**](advanced/iam-credentials.md#loading-from-a-file).
+You'll need at least [Node.js 18](https://nodejs.org/) and [npm 7](https://www.npmjs.com/). You also need to have an AWS account and [**AWS credentials configured locally**](advanced/iam-credentials.md#loading-from-a-file).
 
 ---
 
