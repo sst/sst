@@ -5,7 +5,6 @@ import { blue, red } from "colorette";
 import { program } from "./program.js";
 import { SilentError, VisibleError } from "../error.js";
 import { useSpinners } from "./spinner.js";
-import { Logger } from "../logger.js";
 
 import dotenv from "dotenv";
 dotenv.config({
@@ -54,7 +53,6 @@ if ("setSourceMapsEnabled" in process) {
 }
 process.removeAllListeners("uncaughtException");
 process.on("uncaughtException", (err) => {
-  Logger.debug(err);
   const spinners = useSpinners();
   for (const spinner of spinners) {
     if (spinner.isSpinning) spinner.fail(spinner.text);
