@@ -1,5 +1,13 @@
 # @serverless-stack/cli2
 
+## 2.29.1
+
+### Patch Changes
+
+- [`3becfd945`](https://github.com/sst/sst/commit/3becfd9458a7c2c2d86d0d77289307bbba5b8b6b) Thanks [@fwang](https://github.com/fwang)! - sst bind: fix "Project not initialized" error
+
+- [#3404](https://github.com/sst/sst/pull/3404) [`e2b82e9e6`](https://github.com/sst/sst/commit/e2b82e9e664da7974a35966e1fe6a31ca3ecb472) Thanks [@thdxr](https://github.com/thdxr)! - Update aws cdk to 2.95.1
+
 ## 2.29.0
 
 ### Minor Changes
