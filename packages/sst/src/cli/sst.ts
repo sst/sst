@@ -80,9 +80,9 @@ process.on("uncaughtException", (err) => {
 
 // Check Node version
 const nodeVersion = process.versions.node;
-if (Number(nodeVersion.split(".")[0]) < 16) {
+if (Number(nodeVersion.split(".")[0]) < 18) {
   throw new VisibleError(
-    `Node.js version ${nodeVersion} is not supported by SST. Please upgrade to Node.js 16 or later.`
+    `Node.js version ${nodeVersion} is not supported by SST. Please upgrade to Node.js 18 or later.`
   );
 }
 

@@ -9,7 +9,7 @@ Let's create our first SST app!
 
 ## Prerequisites
 
-- SST is built with Node, so make sure your local machine has it installed; [Node.js 16](https://nodejs.org/) and [npm 7](https://www.npmjs.com/).
+- SST is built with Node, so make sure your local machine has it installed; [Node.js 18](https://nodejs.org/) and [npm 7](https://www.npmjs.com/).
 - And we'll need a code editor. We use [VS Code](https://code.visualstudio.com/) in this tutorial.
 - Some basic TypeScript, AWS, or React knowledge would help, but it's not necessary.
 

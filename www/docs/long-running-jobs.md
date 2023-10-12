@@ -154,7 +154,7 @@ Let's look at how `Job` works. It uses a few resources behind the scenes:
 
 ### Runtime environment
 
-The job function runs inside a docker container, using the official [`aws-lambda-nodejs`](https://hub.docker.com/r/amazon/aws-lambda-nodejs) Node.js 16 container image. This image is **similar to the AWS Lambda execution environment**.
+The job function runs inside a docker container, using the official [`aws-lambda-nodejs`](https://hub.docker.com/r/amazon/aws-lambda-nodejs) Node.js 18 container image. This image is **similar to the AWS Lambda execution environment**.
 
 Jobs currently only support Node.js runtimes, and they are always bundled by esbuild with the `esm` format. If you are interested in other runtimes, talk to us on Discord.
 
