@@ -1,5 +1,13 @@
 # @serverless-stack/cli2
 
+## 2.28.6
+
+### Patch Changes
+
+- [`f1bffc551`](https://github.com/sst/sst/commit/f1bffc5510d35f716b68380a347937dfe169ea32) Thanks [@fwang](https://github.com/fwang)! - NextjsSite: sort routes in metadata
+
+- [`f1bffc551`](https://github.com/sst/sst/commit/f1bffc5510d35f716b68380a347937dfe169ea32) Thanks [@fwang](https://github.com/fwang)! - NextjsSite: fix cannot find routes file when running sst dev
+
 ## 2.28.5
 
 ### Patch Changes
