@@ -83,7 +83,6 @@ There are a couple of other reasons why Seed is a good fit for SST.
 
 Once your app is in a Git repo, follow these steps in the Seed docs to [add your SST app](https://seed.run/docs/adding-a-cdk-app).
 
-
 ---
 
 ## Deploy from GitHub Actions
@@ -114,34 +113,38 @@ To setup OpenID Connect manually:
 
    On the next screen, enter `GitHub` for the `Role name`. And select `Create role`.
 
-3. Head over to your GitHub workflow file. Add these lines to authenticate:
+3. Head over to your GitHub workflow file. Add these lines to authenticate and deploy on push:
+
    ```diff
-     name: SST workflow
-     on:
-       push
+    name: SST workflow
+    on: push
 
-     # concurrency group name ensures concurrent workflow runs wait for any in-progress job to finish
-     concurrency: merge-${{ github.ref }}
+    # Concurrency group name ensures concurrent workflow runs wait for any in-progress job to finish
+    concurrency:
+      group: merge-${{ github.ref }}
 
-     # permission can be added at job level or workflow level    
-   + permissions:
-   +   id-token: write   # This is required for requesting the JWT
-   +   contents: read    # This is required for actions/checkout
+    permissions:
+      id-token: write # This is required for requesting the JWT
+      contents: read # This is required for actions/checkout
 
-      jobs:
-        DeployApp:
-          runs-on: ubuntu-latest
-          steps:
-            - name: Git clone the repository
-              uses: actions/checkout@v3
-   +        - name: configure aws credentials
-   +          uses: aws-actions/configure-aws-credentials@v2
-   +          with:
-   +            role-to-assume: arn:aws:iam::1234567890:role/GitHub
-   +            aws-region: us-east-1
-            - name: Deploy app
-              run: |
-                pnpm sst deploy
+    jobs:
+      DeployApp:
+        runs-on: ubuntu-latest
+        env:
+        #Define your envs needed for static generation:
+        # ENV_NAME: ${{ secrets.ENV_NAME }}
+        steps:
+          - name: Git clone the repository
+            uses: actions/checkout@v3
+          - name: Configure AWS credentials
+            uses: aws-actions/configure-aws-credentials@v2
+            with:
+              role-to-assume: arn:aws:iam::1234567890:role/GitHub
+              role-duration-seconds: 14390 #adjust as needed for your build time
+              aws-region: us-east-1
+          - name: Deploy app
+            run: |
+              npm i && npx sst deploy --stage prod
    ```
 
    Make sure to replace `1234567890` and `us-east-1` with your AWS account ID and region.
