@@ -168,4 +168,7 @@ await Promise.all(
   )
 );
 
+// Copy src to dist for declaration maps
+await fs.cp('src', 'dist/src', {recursive: true});
+
 console.log("Built");

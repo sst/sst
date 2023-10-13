@@ -14,7 +14,7 @@
   "license": "MIT",
   "scripts": {
     "prepare": "",
-    "build": "node build.mjs && tsc",
+    "build": "node build.mjs && tsc -p dist",
     "test": "vitest run",
     "dev": "tsc -w"
   },

@@ -10,3 +10,4 @@ dist
 !packages/sst/dist
 packages/sst/dist/*
 !packages/sst/dist/package.json
+!packages/sst/dist/tsconfig.json
