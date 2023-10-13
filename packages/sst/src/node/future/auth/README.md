@@ -1,6 +1,6 @@
 ## Auth
 
-This is a preview of the next version of SST Auth which aims to be more compliant with the oauth specification.
+This is a preview of the next version of SST Auth which aims to be more compliant with the oauth specification. You can see real-world usage of it here: https://github.com/sst/console/blob/dev/packages/functions/src/auth.ts
 
 
 ### Using the construct
@@ -57,10 +57,6 @@ import { sessions } from "./sessions"
 
 export const handler = AuthHandler({
   sessions,
-  clients: async () => ({
-    // This allows local clients to redirect back to localhost
-    local: "http://localhost",
-  }),
   providers: {
     github: GithubAdapter({
       scope: "read:user user:email",
@@ -70,9 +66,6 @@ export const handler = AuthHandler({
   },
   callbacks: {
     auth: {
-      async start() {
-        // any code you want to run when auth begins
-      },
       async success(input, response) {
         let user: User.Info | undefined = undefined
         if (input.provider === "github") {
