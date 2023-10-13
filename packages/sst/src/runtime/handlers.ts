@@ -170,9 +170,11 @@ export const useRuntimeHandlers = lazy(() => {
       const promise = task();
       pendingBuilds.set(functionID, promise);
       Logger.debug("Building function", functionID);
-      const r = await promise;
-      pendingBuilds.delete(functionID);
-      return r;
+      try {
+        return await promise;
+      } finally {
+        pendingBuilds.delete(functionID);
+      }
     },
   };
 
