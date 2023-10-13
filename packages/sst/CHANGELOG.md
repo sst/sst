@@ -1,5 +1,13 @@
 # @serverless-stack/cli2
 
+## 2.29.2
+
+### Patch Changes
+
+- [`364f696a9`](https://github.com/sst/sst/commit/364f696a96b6d3b236eb2bc6a638082237c153bb) Thanks [@thdxr](https://github.com/thdxr)! - cli: limit sst dev to 4 concurrent function builds
+
+- [`794d8bfa6`](https://github.com/sst/sst/commit/794d8bfa67fcade66a519bfd17e9b5bcf2a7f43b) Thanks [@fwang](https://github.com/fwang)! - Print out correct error message for deprecated node versions
+
 ## 2.29.1
 
 ### Patch Changes

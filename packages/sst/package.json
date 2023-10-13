@@ -5,7 +5,7 @@
   },
   "sideEffects": false,
   "name": "sst",
-  "version": "2.29.1",
+  "version": "2.29.2",
   "bin": {
     "sst": "cli/sst.js"
   },
@@ -129,7 +129,7 @@
     "@types/ws": "^8.5.3",
     "@types/yargs": "^17.0.13",
     "archiver": "^5.3.1",
-    "astro-sst": "2.29.1",
+    "astro-sst": "2.29.2",
     "tsx": "^3.12.1",
     "typescript": "^5.2.2",
     "vitest": "^0.33.0"
