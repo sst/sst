@@ -1,7 +1,14 @@
 import esbuild from "esbuild";
 import fs from "fs/promises";
 
-const pkg = await fs.readFile("package.json").then(JSON.parse);
+// Copy package.json to dist, excluding publishConfig
+await fs.mkdir("dist", { recursive: true });
+const { publishConfig, ...pkg } = await fs
+  .readFile("package.json")
+  .then(JSON.parse);
+await fs.writeFile("dist/package.json", JSON.stringify(pkg, null, 2), {
+  encoding: "utf-8",
+});
 
 // support/nodejs-runtime
 await esbuild.build({
@@ -168,7 +175,23 @@ await Promise.all(
   )
 );
 
-// Copy src to dist for declaration maps
-await fs.cp('src', 'dist/src', {recursive: true});
+// Declaration maps:
+
+// 1. Copy src to dist for declaration maps
+await fs.cp("src", "dist/src", { recursive: true });
+
+// 2. Write tsconfig.json to dist, referencing the root tsconfig.json
+await fs.writeFile(
+  "dist/tsconfig.json",
+  JSON.stringify(
+    {
+      extends: "../tsconfig.json",
+      include: ["src"],
+    },
+    null,
+    2
+  ),
+  { encoding: "utf-8" }
+);
 
 console.log("Built");
