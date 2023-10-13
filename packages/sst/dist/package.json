@@ -1,7 +1,7 @@
 {
   "sideEffects": false,
   "name": "sst",
-  "version": "2.26.5",
+  "version": "2.29.2",
   "bin": {
     "sst": "cli/sst.js"
   },
@@ -10,14 +10,14 @@
   "license": "MIT",
   "scripts": {
     "prepare": "",
-    "build": "node build.mjs && tsc",
+    "build": "node build.mjs && tsc -p dist",
     "test": "vitest run",
     "dev": "tsc -w"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/sst/sst.git",
-    "directory": "packages/cli"
+    "directory": "packages/sst"
   },
   "exports": {
     "./constructs/deprecated": "./constructs/deprecated/index.js",

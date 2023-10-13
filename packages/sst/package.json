@@ -21,7 +21,7 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/sst/sst.git",
-    "directory": "packages/cli"
+    "directory": "packages/sst"
   },
   "exports": {
     "./constructs/deprecated": "./constructs/deprecated/index.js",
