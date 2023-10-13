@@ -432,8 +432,8 @@ export class NextjsSite extends SsrSite {
       experimental?.streaming
         ? [
             `import { handler as rawHandler } from "./index.mjs";`,
-            `export const handler = awslambda.streamifyResponse((event, context) => {`,
-            `  return rawHandler(event, context);`,
+            `export const handler = awslambda.streamifyResponse((..args) => {`,
+            `  return rawHandler(..args);`,
             `});`,
           ].join("\n")
         : [
