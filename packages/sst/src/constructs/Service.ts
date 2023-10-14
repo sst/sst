@@ -233,7 +233,7 @@ export interface ServiceProps {
    * }
    *```
    */
-  port?: number;
+  ports?: number[];
   scaling?: {
     /**
      * The minimum capacity for the cluster.
@@ -532,7 +532,7 @@ type ServiceNormalizedProps = ServiceProps & {
   cpu: Exclude<ServiceProps["cpu"], undefined>;
   path: Exclude<ServiceProps["path"], undefined>;
   memory: Exclude<ServiceProps["memory"], undefined>;
-  port: Exclude<ServiceProps["port"], undefined>;
+  ports: Exclude<ServiceProps["ports"], undefined>;
   logRetention: Exclude<ServiceProps["logRetention"], undefined>;
   waitForInvalidation: Exclude<ServiceProps["waitForInvalidation"], undefined>;
 };
@@ -570,7 +570,7 @@ export class Service extends Construct implements SSTConstruct {
       architecture: props?.architecture || "x86_64",
       cpu: props?.cpu || "0.25 vCPU",
       memory: props?.memory || "0.5 GB",
-      port: props?.port || 3000,
+      ports: props?.ports || [3000],
       logRetention: props?.logRetention || "infinite",
       waitForInvalidation: false,
       ...props,
@@ -865,7 +865,7 @@ export class Service extends Construct implements SSTConstruct {
   }
 
   private createService(vpc: IVpc) {
-    const { architecture, cpu, memory, port, logRetention, cdk } = this.props;
+    const { architecture, cpu, memory, ports, logRetention, cdk } = this.props;
     const app = this.node.root as App;
     const clusterName = app.logicalPrefixedName(this.node.id);
 
@@ -904,7 +904,7 @@ export class Service extends Construct implements SSTConstruct {
         ),
         streamPrefix: "service",
       }),
-      portMappings: [{ containerPort: port }],
+      portMappings: ports.map((port) => ({ containerPort: port })),
       environment: {
         SST_APP: app.name,
         SST_STAGE: app.stage,
