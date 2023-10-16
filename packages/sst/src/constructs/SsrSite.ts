@@ -412,25 +412,6 @@ export type SsrSiteNormalizedProps = SsrSiteProps & {
  * ```
  */
 export abstract class SsrSite extends Construct implements SSTConstruct {
-  protected static buildDefaultServerCachePolicyProps(
-    allowedHeaders: string[]
-  ): CachePolicyProps {
-    return {
-      queryStringBehavior: CacheQueryStringBehavior.all(),
-      headerBehavior:
-        allowedHeaders.length > 0
-          ? CacheHeaderBehavior.allowList(...allowedHeaders)
-          : CacheHeaderBehavior.none(),
-      cookieBehavior: CacheCookieBehavior.none(),
-      defaultTtl: CdkDuration.days(0),
-      maxTtl: CdkDuration.days(365),
-      minTtl: CdkDuration.days(0),
-      enableAcceptEncodingBrotli: true,
-      enableAcceptEncodingGzip: true,
-      comment: "SST server response cache policy",
-    };
-  }
-
   public readonly id: string;
   protected props: SsrSiteNormalizedProps;
   protected doNotDeploy: boolean;
@@ -1276,6 +1257,25 @@ function handler(event) {
 
       return buildId;
     }
+  }
+
+  protected static buildDefaultServerCachePolicyProps(
+    allowedHeaders: string[]
+  ): CachePolicyProps {
+    return {
+      queryStringBehavior: CacheQueryStringBehavior.all(),
+      headerBehavior:
+        allowedHeaders.length > 0
+          ? CacheHeaderBehavior.allowList(...allowedHeaders)
+          : CacheHeaderBehavior.none(),
+      cookieBehavior: CacheCookieBehavior.none(),
+      defaultTtl: CdkDuration.days(0),
+      maxTtl: CdkDuration.days(365),
+      minTtl: CdkDuration.days(0),
+      enableAcceptEncodingBrotli: true,
+      enableAcceptEncodingGzip: true,
+      comment: "SST server response cache policy",
+    };
   }
 
   /**

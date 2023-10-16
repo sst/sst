@@ -113,6 +113,14 @@ export interface NextjsSiteProps extends Omit<SsrSiteProps, "nodejs"> {
   };
 }
 
+const DEFAULT_CACHE_POLICY_ALLOWED_HEADERS = [
+  "accept",
+  "rsc",
+  "next-router-prefetch",
+  "next-router-state-tree",
+  "next-url",
+];
+
 type NextjsSiteNormalizedProps = NextjsSiteProps & SsrSiteNormalizedProps;
 
 /**
@@ -127,19 +135,6 @@ type NextjsSiteNormalizedProps = NextjsSiteProps & SsrSiteNormalizedProps;
  * ```
  */
 export class NextjsSite extends SsrSite {
-  public static readonly DEFAULT_CACHE_POLICY_ALLOWED_HEADERS = [
-    "accept",
-    "rsc",
-    "next-router-prefetch",
-    "next-router-state-tree",
-    "next-url",
-  ];
-  public static override buildDefaultServerCachePolicyProps(): CachePolicyProps {
-    return super.buildDefaultServerCachePolicyProps(
-      NextjsSite.DEFAULT_CACHE_POLICY_ALLOWED_HEADERS
-    );
-  }
-
   declare props: NextjsSiteNormalizedProps;
   private buildId?: string;
 
@@ -171,6 +166,12 @@ export class NextjsSite extends SsrSite {
         this.createRevalidationTable();
       }
     }
+  }
+
+  public static override buildDefaultServerCachePolicyProps(): CachePolicyProps {
+    return super.buildDefaultServerCachePolicyProps(
+      DEFAULT_CACHE_POLICY_ALLOWED_HEADERS
+    );
   }
 
   protected plan(bucket: Bucket) {
@@ -315,8 +316,7 @@ export class NextjsSite extends SsrSite {
             } as const)
         ),
       ],
-      cachePolicyAllowedHeaders:
-        NextjsSite.DEFAULT_CACHE_POLICY_ALLOWED_HEADERS,
+      cachePolicyAllowedHeaders: DEFAULT_CACHE_POLICY_ALLOWED_HEADERS,
       buildId: this.getBuildId(),
       warmerConfig: {
         function: path.join(sitePath, ".open-next", "warmer-function"),
