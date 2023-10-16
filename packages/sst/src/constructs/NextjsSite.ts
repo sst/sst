@@ -28,6 +28,7 @@ import { Bucket } from "aws-cdk-lib/aws-s3";
 import { PolicyStatement } from "aws-cdk-lib/aws-iam";
 import { RetentionDays } from "aws-cdk-lib/aws-logs";
 import { VisibleError } from "../error.js";
+import { CachePolicyProps } from "aws-cdk-lib/aws-cloudfront";
 
 export interface NextjsSiteProps extends Omit<SsrSiteProps, "nodejs"> {
   imageOptimization?: {
@@ -112,6 +113,14 @@ export interface NextjsSiteProps extends Omit<SsrSiteProps, "nodejs"> {
   };
 }
 
+const DEFAULT_CACHE_POLICY_ALLOWED_HEADERS = [
+  "accept",
+  "rsc",
+  "next-router-prefetch",
+  "next-router-state-tree",
+  "next-url",
+];
+
 type NextjsSiteNormalizedProps = NextjsSiteProps & SsrSiteNormalizedProps;
 
 /**
@@ -157,6 +166,12 @@ export class NextjsSite extends SsrSite {
         this.createRevalidationTable();
       }
     }
+  }
+
+  public static override buildDefaultServerCachePolicyProps(): CachePolicyProps {
+    return super.buildDefaultServerCachePolicyProps(
+      DEFAULT_CACHE_POLICY_ALLOWED_HEADERS
+    );
   }
 
   protected plan(bucket: Bucket) {
@@ -301,13 +316,7 @@ export class NextjsSite extends SsrSite {
             } as const)
         ),
       ],
-      cachePolicyAllowedHeaders: [
-        "accept",
-        "rsc",
-        "next-router-prefetch",
-        "next-router-state-tree",
-        "next-url",
-      ],
+      cachePolicyAllowedHeaders: DEFAULT_CACHE_POLICY_ALLOWED_HEADERS,
       buildId: this.getBuildId(),
       warmerConfig: {
         function: path.join(sitePath, ".open-next", "warmer-function"),

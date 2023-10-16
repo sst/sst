@@ -80,17 +80,22 @@ test("default: check cache policy configured correctly", async () => {
     CachePolicyConfig: objectLike({
       ParametersInCacheKeyAndForwardedToOrigin: objectLike({
         HeadersConfig: objectLike({
-          Headers: [
-            "accept",
-            "rsc",
-            "next-router-prefetch",
-            "next-router-state-tree",
-            "next-url",
-          ],
+          Headers: arrayWith(["accept"]),
         }),
       }),
     }),
   });
+});
+
+test("buildDefaultServerCachePolicyProps", () => {
+  expect(NextjsSite.buildDefaultServerCachePolicyProps()).toEqual(
+    expect.objectContaining({
+      headerBehavior: {
+        behavior: "whitelist",
+        headers: expect.arrayContaining(["accept"]),
+      },
+    })
+  );
 });
 
 test("timeout defined", async () => {

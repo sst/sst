@@ -47,6 +47,7 @@ import {
   CachedMethods,
   LambdaEdgeEventType,
   CachePolicy,
+  CachePolicyProps,
   CacheQueryStringBehavior,
   CacheHeaderBehavior,
   CacheCookieBehavior,
@@ -1172,20 +1173,11 @@ function handler(event) {
       const allowedHeaders = plan.cachePolicyAllowedHeaders || [];
       singletonCachePolicy =
         singletonCachePolicy ??
-        new CachePolicy(self, "ServerCache", {
-          queryStringBehavior: CacheQueryStringBehavior.all(),
-          headerBehavior:
-            allowedHeaders.length > 0
-              ? CacheHeaderBehavior.allowList(...allowedHeaders)
-              : CacheHeaderBehavior.none(),
-          cookieBehavior: CacheCookieBehavior.none(),
-          defaultTtl: CdkDuration.days(0),
-          maxTtl: CdkDuration.days(365),
-          minTtl: CdkDuration.days(0),
-          enableAcceptEncodingBrotli: true,
-          enableAcceptEncodingGzip: true,
-          comment: "SST server response cache policy",
-        });
+        new CachePolicy(
+          self,
+          "ServerCache",
+          SsrSite.buildDefaultServerCachePolicyProps(allowedHeaders)
+        );
       return singletonCachePolicy;
     }
 
@@ -1265,6 +1257,25 @@ function handler(event) {
 
       return buildId;
     }
+  }
+
+  protected static buildDefaultServerCachePolicyProps(
+    allowedHeaders: string[]
+  ): CachePolicyProps {
+    return {
+      queryStringBehavior: CacheQueryStringBehavior.all(),
+      headerBehavior:
+        allowedHeaders.length > 0
+          ? CacheHeaderBehavior.allowList(...allowedHeaders)
+          : CacheHeaderBehavior.none(),
+      cookieBehavior: CacheCookieBehavior.none(),
+      defaultTtl: CdkDuration.days(0),
+      maxTtl: CdkDuration.days(365),
+      minTtl: CdkDuration.days(0),
+      enableAcceptEncodingBrotli: true,
+      enableAcceptEncodingGzip: true,
+      comment: "SST server response cache policy",
+    };
   }
 
   /**
