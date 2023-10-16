@@ -432,18 +432,25 @@ export class NextjsSite extends SsrSite {
   }
 
   private wrapHandler() {
-    const { path: sitePath } = this.props;
+    const { path: sitePath, experimental } = this.props;
     const wrapperName = "nextjssite-index";
     const serverPath = path.join(sitePath, ".open-next", "server-function");
 
     fs.writeFileSync(
       path.join(serverPath, `${wrapperName}.mjs`),
-      [
-        `import { handler as rawHandler } from "./index.mjs";`,
-        `export const handler = (event, context) => {`,
-        `  return rawHandler(event, context);`,
-        `};`,
-      ].join("\n")
+      experimental?.streaming
+        ? [
+            `import { handler as rawHandler } from "./index.mjs";`,
+            `export const handler = awslambda.streamifyResponse((...args) => {`,
+            `  return rawHandler(...args);`,
+            `});`,
+          ].join("\n")
+        : [
+            `import { handler as rawHandler } from "./index.mjs";`,
+            `export const handler = (...args) => {`,
+            `  return rawHandler(...args);`,
+            `};`,
+          ].join("\n")
     );
 
     return `${wrapperName}.handler`;
