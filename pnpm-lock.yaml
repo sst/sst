@@ -478,8 +478,8 @@ importers:
         specifier: ^1.3.0
         version: 1.3.0
       sst-aws-cdk:
-        specifier: 2.91.0
-        version: 2.91.0
+        specifier: 2.95.1
+        version: 2.95.1
       tree-kill:
         specifier: ^1.2.2
         version: 1.2.2
@@ -569,7 +569,7 @@ importers:
         specifier: ^5.3.1
         version: 5.3.1
       astro-sst:
-        specifier: 2.29.0
+        specifier: 2.29.2
         version: link:../astro-sst
       tsx:
         specifier: ^3.12.1
@@ -14138,11 +14138,11 @@ packages:
   /chalk@5.2.0:
     resolution: {integrity: sha512-ree3Gqw/nazQAPuJJEy+avdl7QfZMcUvmHIKgEZkGL+xOBzRvup5Hxo6LHuMceSxOabuJLJm5Yp/92R9eMmMvA==}
     engines: {node: ^12.17.0 || ^14.13 || >=16.0.0}
+    dev: false
 
   /chalk@5.3.0:
     resolution: {integrity: sha512-dLitG79d+GV1Nb/VYcCDFivJeK1hiukt9QjRNVOsUtTy1rR1YJsmpGGTZ3qJos+uw7WmWF4wUwBd9jxjocFC2w==}
     engines: {node: ^12.17.0 || ^14.13 || >=16.0.0}
-    dev: true
 
   /character-entities-html4@2.1.0:
     resolution: {integrity: sha512-1v7fgQRj6hnSwFpq1Eu0ynr/CDEw0rXo2B61qXrLNdHZmPKgb7fqS1a2JwF0rISo9q77jDI8VMEHoApn8qDoZA==}
@@ -18850,7 +18850,7 @@ packages:
     resolution: {integrity: sha512-l0x2DvrW294C9uDCoQe1VSU4gf529FkSZ6leBl4TiqZH/e+0R7hSfHQBNut2mNygDgHwvYHfFLn6Oxb3VWj2rA==}
     engines: {node: '>=12'}
     dependencies:
-      chalk: 5.2.0
+      chalk: 5.3.0
       is-unicode-supported: 1.3.0
 
   /longest-streak@3.1.0:
@@ -23457,8 +23457,8 @@ packages:
   /sprintf-js@1.0.3:
     resolution: {integrity: sha512-D9cPgkvLlV3t3IzL0D0YLvGA9Ahk4PcvVwUbN0dSGr1aP0Nrt4AEnTUbuGvquEC0mA64Gqt1fzirlRs5ibXx8g==}
 
-  /sst-aws-cdk@2.91.0:
-    resolution: {integrity: sha512-vQFs52ANjfEmVqwqcmfCwZVjWsFwQVwbdfLD8stJm/Cl7sZE+DngXX5LfGgF8M1o0F/qbj6d0N00vpVk1q6tSQ==}
+  /sst-aws-cdk@2.95.1:
+    resolution: {integrity: sha512-C9ZITc6GLscxLbIhtjzralohDF6VGwmYKmZ+zFp7gfYgX5zCbJkBvI8q9jUbEDAGm6YK92xvQz2CJDUhTqsdSg==}
     engines: {node: '>= 14.15.0'}
     hasBin: true
     dependencies:

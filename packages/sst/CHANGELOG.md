@@ -1,5 +1,21 @@
 # @serverless-stack/cli2
 
+## 2.29.2
+
+### Patch Changes
+
+- [`364f696a9`](https://github.com/sst/sst/commit/364f696a96b6d3b236eb2bc6a638082237c153bb) Thanks [@thdxr](https://github.com/thdxr)! - cli: limit sst dev to 4 concurrent function builds
+
+- [`794d8bfa6`](https://github.com/sst/sst/commit/794d8bfa67fcade66a519bfd17e9b5bcf2a7f43b) Thanks [@fwang](https://github.com/fwang)! - Print out correct error message for deprecated node versions
+
+## 2.29.1
+
+### Patch Changes
+
+- [`3becfd945`](https://github.com/sst/sst/commit/3becfd9458a7c2c2d86d0d77289307bbba5b8b6b) Thanks [@fwang](https://github.com/fwang)! - sst bind: fix "Project not initialized" error
+
+- [#3404](https://github.com/sst/sst/pull/3404) [`e2b82e9e6`](https://github.com/sst/sst/commit/e2b82e9e664da7974a35966e1fe6a31ca3ecb472) Thanks [@thdxr](https://github.com/thdxr)! - Update aws cdk to 2.95.1
+
 ## 2.29.0
 
 ### Minor Changes

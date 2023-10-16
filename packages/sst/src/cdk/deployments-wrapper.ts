@@ -9,7 +9,7 @@ import {
 } from "sst-aws-cdk/lib/api/util/cloudformation.js";
 import { Mode } from "sst-aws-cdk/lib/api/aws-auth/credentials.js";
 import { ISDK } from "sst-aws-cdk/lib/api/aws-auth/sdk.js";
-import { ToolkitInfo } from "sst-aws-cdk/lib/api/toolkit-info.js";
+import { EnvironmentResources } from "sst-aws-cdk/lib/api/environment-resources.js";
 import { addMetadataAssetsToManifest } from "sst-aws-cdk/lib/assets.js";
 import { publishAssets } from "sst-aws-cdk/lib/util/asset-publishing.js";
 import { SdkProvider } from "sst-aws-cdk/lib/api/aws-auth/sdk-provider.js";
@@ -19,7 +19,6 @@ import {
   DeployStackOptions as PublishStackAssetsOptions,
 } from "./deployments.js";
 import { makeBodyParameter, DeployStackOptions } from "./deploy-stack.js";
-import { Context } from "../context/context.js";
 import { lazy } from "../util/lazy.js";
 
 export async function publishDeployAssets(
@@ -28,7 +27,7 @@ export async function publishDeployAssets(
 ) {
   const {
     deployment,
-    toolkitInfo,
+    envResources,
     stackSdk,
     resolvedEnvironment,
     cloudFormationRoleArn,
@@ -70,7 +69,7 @@ export async function publishDeployAssets(
     sdkProvider,
     roleArn: cloudFormationRoleArn,
     reuseAssets: options.reuseAssets,
-    toolkitInfo,
+    envResources,
     tags: options.tags,
     deploymentMethod: options.deploymentMethod,
     force: options.force,
@@ -92,7 +91,7 @@ const useDeployment = lazy(() => {
     string,
     {
       deployment: Deployments;
-      toolkitInfo: ToolkitInfo;
+      envResources: EnvironmentResources;
       stackSdk: ISDK;
       resolvedEnvironment: Environment;
       cloudFormationRoleArn?: string;
@@ -103,16 +102,15 @@ const useDeployment = lazy(() => {
       const region = options.stack.environment.region;
       if (!state.has(region)) {
         const deployment = new Deployments({ sdkProvider });
-        const { stackSdk, resolvedEnvironment, cloudFormationRoleArn } =
-          await deployment.prepareSdkFor(
-            options.stack,
-            options.roleArn,
-            Mode.ForWriting
-          );
-        const toolkitInfo = await ToolkitInfo.lookup(
-          resolvedEnvironment,
+        const {
           stackSdk,
-          options.toolkitStackName
+          resolvedEnvironment,
+          cloudFormationRoleArn,
+          envResources,
+        } = await deployment.prepareSdkFor(
+          options.stack,
+          options.roleArn,
+          Mode.ForWriting
         );
 
         // Do a verification of the bootstrap stack version
@@ -120,12 +118,12 @@ const useDeployment = lazy(() => {
           options.stack.stackName,
           options.stack.requiresBootstrapStackVersion,
           options.stack.bootstrapStackVersionSsmParameter,
-          toolkitInfo
+          envResources
         );
 
         state.set(region, {
           deployment,
-          toolkitInfo,
+          envResources,
           stackSdk,
           resolvedEnvironment,
           cloudFormationRoleArn,
@@ -171,7 +169,7 @@ async function deployStack(options: DeployStackOptions): Promise<any> {
   const assetParams = await addMetadataAssetsToManifest(
     stackArtifact,
     legacyAssets,
-    options.toolkitInfo,
+    options.envResources,
     options.reuseAssets
   );
 
@@ -191,7 +189,7 @@ async function deployStack(options: DeployStackOptions): Promise<any> {
     stackArtifact,
     options.resolvedEnvironment,
     legacyAssets,
-    options.toolkitInfo,
+    options.envResources,
     options.sdk,
     options.overrideTemplate
   );

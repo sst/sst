@@ -170,9 +170,11 @@ export const useRuntimeHandlers = lazy(() => {
       const promise = task();
       pendingBuilds.set(functionID, promise);
       Logger.debug("Building function", functionID);
-      const r = await promise;
-      pendingBuilds.delete(functionID);
-      return r;
+      try {
+        return await promise;
+      } finally {
+        pendingBuilds.delete(functionID);
+      }
     },
   };
 
@@ -187,6 +189,7 @@ interface Artifact {
 export const useFunctionBuilder = lazy(() => {
   const artifacts = new Map<string, Artifact>();
   const handlers = useRuntimeHandlers();
+  const semaphore = new Semaphore(4);
 
   const result = {
     artifact: (functionID: string) => {
@@ -194,11 +197,16 @@ export const useFunctionBuilder = lazy(() => {
       return result.build(functionID);
     },
     build: async (functionID: string) => {
-      const result = await handlers.build(functionID, "start");
-      if (!result) return;
-      if (result.type === "error") return;
-      artifacts.set(functionID, result);
-      return artifacts.get(functionID)!;
+      const unlock = await semaphore.lock();
+      try {
+        const result = await handlers.build(functionID, "start");
+        if (!result) return;
+        if (result.type === "error") return;
+        artifacts.set(functionID, result);
+        return artifacts.get(functionID)!;
+      } finally {
+        unlock();
+      }
     },
   };
 
@@ -223,3 +231,33 @@ export const useFunctionBuilder = lazy(() => {
 
   return result;
 });
+
+class Semaphore {
+  private queue: Array<(unlock: () => void) => void> = [];
+  private locked: number = 0;
+  private maxLocks: number;
+
+  constructor(maxLocks: number = 1) {
+    this.maxLocks = maxLocks;
+  }
+
+  lock(): Promise<() => void> {
+    return new Promise((resolve) => {
+      const unlock = () => {
+        this.locked--;
+        const next = this.queue.shift();
+        if (next) {
+          this.locked++;
+          next(unlock);
+        }
+      };
+
+      if (this.locked < this.maxLocks) {
+        this.locked++;
+        resolve(unlock);
+      } else {
+        this.queue.push(unlock);
+      }
+    });
+  }
+}

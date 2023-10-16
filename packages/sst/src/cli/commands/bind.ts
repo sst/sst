@@ -145,13 +145,10 @@ export const bind = (program: Program) =>
             const [_metafile, sstConfig] = await Stacks.load(
               project.paths.config
             );
-            const cwd = process.cwd();
-            process.chdir(project.paths.root);
             await Stacks.synth({
               fn: sstConfig.stacks,
               mode: "remove",
             });
-            process.chdir(cwd);
           }
 
           function isInSsrSite() {

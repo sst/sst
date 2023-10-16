@@ -22,7 +22,13 @@ export async function load(input: string, shallow?: boolean) {
   const parsed = path.parse(input);
   const root = await findAbove(input, "package.json");
   if (!root) throw new VisibleError("Could not find a package.json file");
-  const outfile = path.join(parsed.dir, `.${parsed.name}.${Date.now()}.mjs`);
+  // Create the output file in the current working directory. This is because
+  // the sst cli command might not always run from where `sst.config.ts` is. When
+  // running from another workspace (ie. running `sst bind` in frontend workspace),
+  // the "sst" package imported from within the output file might resolve to a
+  // different "sst" package than the one resolved by the sst cli command. This
+  // will cause issues like "Project not initialized".
+  const outfile = path.join(process.cwd(), `.${parsed.name}.${Date.now()}.mjs`);
   const pkg = JSON.parse(
     await fs.readFile(path.join(root, "package.json")).then((x) => x.toString())
   );

@@ -10,10 +10,10 @@ import { AssetManifestBuilder } from "sst-aws-cdk/lib/util/asset-manifest-builde
 import { publishAssets } from "sst-aws-cdk/lib/util/asset-publishing.js";
 import { contentHash } from "sst-aws-cdk/lib/util/content-hash.js";
 import { ISDK, SdkProvider } from "sst-aws-cdk/lib/api/aws-auth/index.js";
+import { EnvironmentResources } from "sst-aws-cdk/lib/api/environment-resources.js";
 import { CfnEvaluationException } from "sst-aws-cdk/lib/api/evaluate-cloudformation-template.js";
 import { HotswapMode, ICON } from "sst-aws-cdk/lib/api/hotswap/common.js";
 import { tryHotswapDeployment } from "sst-aws-cdk/lib/api/hotswap-deployments.js";
-import { ToolkitInfo } from "sst-aws-cdk/lib/api/toolkit-info.js";
 import {
   changeSetHasNoChanges,
   CloudFormationStack,
@@ -87,7 +87,7 @@ export interface DeployStackOptions {
   /**
    * Information about the bootstrap stack found in the target environment
    */
-  readonly toolkitInfo: ToolkitInfo;
+  readonly envResources: EnvironmentResources;
 
   /**
    * Role to pass to CloudFormation to execute the change set
@@ -288,7 +288,7 @@ export async function deployStack(
   const assetParams = await addMetadataAssetsToManifest(
     stackArtifact,
     legacyAssets,
-    options.toolkitInfo,
+    options.envResources,
     options.reuseAssets
   );
 
@@ -329,7 +329,7 @@ export async function deployStack(
     stackArtifact,
     options.resolvedEnvironment,
     legacyAssets,
-    options.toolkitInfo,
+    options.envResources,
     options.sdk,
     options.overrideTemplate
   );
@@ -734,7 +734,7 @@ export async function makeBodyParameter(
   stack: cxapi.CloudFormationStackArtifact,
   resolvedEnvironment: cxapi.Environment,
   assetManifest: AssetManifestBuilder,
-  toolkitInfo: ToolkitInfo,
+  resources: EnvironmentResources,
   sdk: ISDK,
   overrideTemplate?: any
 ): Promise<TemplateBodyParameter> {
@@ -756,6 +756,7 @@ export async function makeBodyParameter(
     return { TemplateBody: templateJson };
   }
 
+  const toolkitInfo = await resources.lookupToolkit();
   if (!toolkitInfo.found) {
     error(
       `The template for stack "${stack.displayName}" is ${Math.round(
@@ -806,7 +807,7 @@ export async function makeBodyParameter(
 export async function makeBodyParameterAndUpload(
   stack: cxapi.CloudFormationStackArtifact,
   resolvedEnvironment: cxapi.Environment,
-  toolkitInfo: ToolkitInfo,
+  resources: EnvironmentResources,
   sdkProvider: SdkProvider,
   sdk: ISDK,
   overrideTemplate?: any
@@ -822,7 +823,7 @@ export async function makeBodyParameterAndUpload(
     forceUploadStack,
     resolvedEnvironment,
     builder,
-    toolkitInfo,
+    resources,
     sdk,
     overrideTemplate
   );

@@ -384,3 +384,44 @@ new Function(stack, "MyFunction", {
 If you need access to resources within a VPC, then run your AWS Lambda function within a VPC. If you do not require this access, then do not run it within a VPC.
 
 Read more about [working with VPC](https://docs.sst.dev/live-lambda-development#working-with-a-vpc).
+
+#### Using Existing IAM Roles
+
+By default, a `Function`` creates its own IAM role. To use an existing IAM role, import it into your app.
+
+```js
+import { Role } as iam from "aws-cdk-lib/aws-iam";
+
+const role = Role.fromRoleName(stack, "ImportedRole", "my-existing-role");
+
+new Function(stack, "MyFunction", {
+  handler: "src/lambda.handler",
+  role,
+});
+```
+
+If sharing an imported IAM role across multiple stacks, import it only once. This prevents multiple stacks from appending identical policies repeatedly. Consider importing the role in a shared stack and referencing it in others.
+
+```js
+// Shared stack
+import { Role } as iam from "aws-cdk-lib/aws-iam";
+import { StackContext } from "sst/constructs";
+
+export function Shared({ app, stack }: StackContext) {
+  return {
+    role: Role.fromRoleName(stack, "ImportedRole", "my-existing-role"),
+  }
+}
+
+// Other stack
+import { use, StackContext } from "sst/constructs";
+
+export function Other({ app, stack }: StackContext) {
+  const { role } = use(Shared);
+
+  new Function(stack, "MyFunction", {
+    handler: "src/lambda.handler",
+    role,
+  });
+}
+```

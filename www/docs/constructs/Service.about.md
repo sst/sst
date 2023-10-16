@@ -242,7 +242,7 @@ new Service(stack, "MyService", {
 ```js
 import { ContainerImage } from "aws-cdk-lib/aws-ecs";
 
-new Service(stack, "MyService", {
+const service = new Service(stack, "MyService", {
   cdk: {
     container: {
       image: ContainerImage.fromRegistry(
@@ -250,6 +250,11 @@ new Service(stack, "MyService", {
       ),
     },
   },
+});
+
+// Grants permissions to pull private images from the ECR registry
+service.cdk?.taskDefinition.executionRole?.addManagedPolicy({
+  managedPolicyArn: "arn:aws:iam::aws:policy/AmazonECSTaskExecutionRolePolicy",
 });
 ```
 
