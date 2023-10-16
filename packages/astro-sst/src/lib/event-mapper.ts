@@ -8,8 +8,7 @@ import type {
   CloudFrontHeaders,
 } from "aws-lambda";
 import type { ResponseStream } from "./types";
-import { splitCookiesString } from "set-cookie-parser";
-import { debug } from "./logger.js";
+import { splitCookiesString, parse, Cookie } from "set-cookie-parser";
 import { isBinaryContentType } from "./binary.js";
 import zlib from "zlib";
 
@@ -34,14 +33,16 @@ type InternalResultInput = {
 type InternalResult = {
   readonly type: "v1" | "v2" | "cf";
   statusCode: number;
-  headers: Record<string, string | string[]>;
+  headers: Record<string, string>;
+  cookies: Cookie[];
   body: string;
   isBase64Encoded: boolean;
 };
 
 type InternalStreamingResult = {
   statusCode: number;
-  headers: Record<string, string | string[]>;
+  headers: Record<string, string>;
+  cookies: Cookie[];
   body: ReadableStream | null;
   responseStream: ResponseStream;
   isBase64Encoded: boolean;
@@ -140,32 +141,23 @@ export async function convertTo({
   responseStream,
   cookies: appCookies,
 }: InternalResultInput) {
-  // Parse headers
-  const headers: Record<string, string[]> = {};
-  response.headers.forEach((value, key) => {
-    headers[key] = headers[key] || [];
-    headers[key].push(value);
-  });
+  // Parse headers (except cookies)
+  const headers: { [key: string]: string } = Object.fromEntries(
+    response.headers.entries()
+  );
+  Object.assign(headers, { "set-cookie": undefined });
 
   // Parse cookies
-  const cookies: string[] = [];
-  const setCookieHeader = response.headers.get("set-cookie");
-  if (setCookieHeader) {
-    cookies.push(...splitCookiesString(setCookieHeader));
-  }
-  if (appCookies) {
-    cookies.push(...appCookies);
-  }
-  if (cookies.length > 0) {
-    headers["set-cookie"] = cookies;
-  }
+  const cookies = parse(
+    [
+      ...splitCookiesString(response.headers.getSetCookie() ?? undefined),
+      ...(appCookies ?? []),
+    ],
+    { decodeValues: false, map: false, silent: true }
+  );
 
   // Parse isBase64Encoded
-  const isBase64Encoded = isBinaryContentType(
-    Array.isArray(headers["content-type"])
-      ? headers["content-type"][0]
-      : headers["content-type"]
-  );
+  const isBase64Encoded = isBinaryContentType(headers["content-type"]);
 
   // Build streaming result
   if (type === "v2" && responseStream) {
@@ -173,6 +165,7 @@ export async function convertTo({
       statusCode: response.status,
       headers,
       body: response.body,
+      cookies,
       responseStream,
       isBase64Encoded,
     });
@@ -183,6 +176,7 @@ export async function convertTo({
     type,
     statusCode: response.status,
     headers,
+    cookies,
     isBase64Encoded,
     body: isBase64Encoded
       ? Buffer.from(await response.arrayBuffer()).toString("base64")
@@ -198,72 +192,64 @@ export async function convertTo({
   throw new Error("Unsupported event type");
 }
 
-function convertToApigV1Result(result: InternalResult): APIGatewayProxyResult {
-  const headers: Record<string, string> = {};
+function convertToApigV1Result({
+  headers,
+  statusCode,
+  body,
+  isBase64Encoded,
+  cookies,
+}: InternalResult): APIGatewayProxyResult {
   const multiValueHeaders: Record<string, string[]> = {};
-  Object.entries(result.headers).forEach(([key, value]) => {
-    if (Array.isArray(value)) {
-      multiValueHeaders[key] = value;
-    } else {
-      if (value === null) {
-        headers[key] = "";
-        return;
-      }
-      headers[key] = value;
-    }
-  });
+  multiValueHeaders["set-cookie"] = stringifyCookies(cookies);
+
   const response: APIGatewayProxyResult = {
-    statusCode: result.statusCode,
+    statusCode,
     headers,
-    body: result.body,
-    isBase64Encoded: result.isBase64Encoded,
     multiValueHeaders,
+    body,
+    isBase64Encoded,
   };
-  debug(response);
+
   return response;
 }
 
-function convertToApigV2Result(
-  result: InternalResult
-): APIGatewayProxyResultV2 {
-  const headers: Record<string, string> = {};
-  Object.entries(result.headers)
-    .filter(([key]) => key.toLowerCase() !== "set-cookie")
-    .forEach(([key, value]) => {
-      if (value === null) {
-        headers[key] = "";
-        return;
-      }
-      headers[key] = Array.isArray(value) ? value.join(", ") : value.toString();
-    });
+function convertToApigV2Result({
+  headers,
+  statusCode,
+  body,
+  isBase64Encoded,
+  cookies,
+}: InternalResult): APIGatewayProxyResultV2 {
   const response: APIGatewayProxyResultV2 = {
-    statusCode: result.statusCode,
+    statusCode,
     headers,
-    cookies: result.headers["set-cookie"] as string[] | undefined,
-    body: result.body,
-    isBase64Encoded: result.isBase64Encoded,
+    cookies: stringifyCookies(cookies),
+    body,
+    isBase64Encoded,
   };
-  debug(response);
+
   return response;
 }
 
 function convertToApigV2StreamingResult({
   statusCode,
-  headers: rawHeaders,
+  headers,
+  cookies,
   body,
   responseStream,
   isBase64Encoded,
 }: InternalStreamingResult) {
-  const headers: Record<string, string> = {};
-  Object.entries(rawHeaders).forEach(([key, value]) => {
-    if (value === null) {
-      headers[key] = "";
-      return;
-    }
-    headers[key] = Array.isArray(value) ? value.join(", ") : value.toString();
-  });
-  if (!isBase64Encoded) headers["content-encoding"] = "gzip";
-  const metadata = { statusCode, headers };
+  if (!isBase64Encoded) {
+    headers["content-encoding"] = "gzip";
+  }
+
+  const metadata = {
+    statusCode,
+    headers: {
+      ...headers,
+      "set-cookie": stringifyCookies(cookies).join(", "),
+    },
+  };
   responseStream = awslambda.HttpResponseStream.from(responseStream, metadata);
 
   if (!body) {
@@ -351,26 +337,36 @@ function convertToApigV2StreamingResult({
   }
 }
 
-function convertToCfResult(result: InternalResult): CloudFrontRequestResult {
-  const headers: CloudFrontHeaders = {};
-  Object.entries(result.headers)
-    .filter(([key]) => key.toLowerCase() !== "content-length")
-    .forEach(([key, value]) => {
-      headers[key] = [
-        ...(headers[key] || []),
-        ...(Array.isArray(value)
-          ? value.map((v) => ({ key, value: v }))
-          : [{ key, value: value.toString() }]),
-      ];
-    });
+function convertToCfResult({
+  statusCode,
+  headers,
+  cookies,
+  body,
+  isBase64Encoded,
+}: InternalResult): CloudFrontRequestResult {
+  const combinedHeaders = Object.entries(headers).reduce(
+    (headers, [key, value]) => {
+      headers[key.toLowerCase()] = [{ key, value }];
+      return headers;
+    },
+    {} as CloudFrontHeaders
+  );
+  combinedHeaders["set-cookie"] = stringifyCookies(cookies).map((cookie) => ({
+    key: "set-cookie",
+    value: cookie,
+  }));
+
   const response: CloudFrontRequestResult = {
-    status: result.statusCode.toString(),
+    status: statusCode.toString(),
     statusDescription: "OK",
-    headers,
-    bodyEncoding: result.isBase64Encoded ? "base64" : "text",
-    body: result.body,
+    headers: Object.entries(headers).reduce((headers, [key, value]) => {
+      headers[key.toLowerCase()] = [{ key, value }];
+      return headers;
+    }, {} as CloudFrontHeaders),
+    bodyEncoding: isBase64Encoded ? "base64" : "text",
+    body: body,
   };
-  debug(response);
+
   return response;
 }
 
@@ -457,4 +453,26 @@ function normalizeCfHeaders(event: CloudFrontRequestEvent) {
   }
 
   return headers;
+}
+
+function stringifyCookies(cookies: Cookie[]) {
+  return cookies.map(
+    (cookie) =>
+      `${cookie.name}=${cookie.value};${Object.entries(cookie)
+        .filter(
+          ([key, value]) =>
+            key !== "value" &&
+            key !== "name" &&
+            typeof value !== "undefined" &&
+            value !== false
+        )
+        .map(([key, value]) =>
+          typeof value === "boolean"
+            ? `${key};`
+            : typeof value.toUTCString !== "undefined"
+            ? `${key}=${value.toUTCString()};`
+            : `${key}=${value};`
+        )
+        .join("")}`
+  );
 }
