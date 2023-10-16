@@ -133,9 +133,11 @@ export class NextjsSite extends SsrSite {
     "next-router-prefetch",
     "next-router-state-tree",
     "next-url",
-  ]
+  ];
   public static override buildDefaultServerCachePolicyProps(): CachePolicyProps {
-    return super.buildDefaultServerCachePolicyProps(NextjsSite.DEFAULT_CACHE_POLICY_ALLOWED_HEADERS);
+    return super.buildDefaultServerCachePolicyProps(
+      NextjsSite.DEFAULT_CACHE_POLICY_ALLOWED_HEADERS
+    );
   }
 
   declare props: NextjsSiteNormalizedProps;
@@ -197,23 +199,23 @@ export class NextjsSite extends SsrSite {
       },
       edgeFunctions: edge
         ? {
-          edgeServer: {
-            constructId: "ServerFunction",
-            function: serverConfig,
-          },
-        }
+            edgeServer: {
+              constructId: "ServerFunction",
+              function: serverConfig,
+            },
+          }
         : undefined,
       origins: {
         ...(edge
           ? {}
           : {
-            regionalServer: {
-              type: "function",
-              constructId: "ServerFunction",
-              function: serverConfig,
-              streaming: experimental?.streaming,
-            },
-          }),
+              regionalServer: {
+                type: "function",
+                constructId: "ServerFunction",
+                function: serverConfig,
+                streaming: experimental?.streaming,
+              },
+            }),
         imageOptimizer: {
           type: "image-optimization-function",
           constructId: "ImageFunction",
@@ -253,46 +255,46 @@ export class NextjsSite extends SsrSite {
       behaviors: [
         ...(edge
           ? [
-            {
-              cacheType: "server",
-              cfFunction: "serverCfFunction",
-              edgeFunction: "edgeServer",
-              origin: "s3",
-            } as const,
-            {
-              cacheType: "server",
-              pattern: "api/*",
-              cfFunction: "serverCfFunction",
-              edgeFunction: "edgeServer",
-              origin: "s3",
-            } as const,
-            {
-              cacheType: "server",
-              pattern: "_next/data/*",
-              cfFunction: "serverCfFunction",
-              edgeFunction: "edgeServer",
-              origin: "s3",
-            } as const,
-          ]
+              {
+                cacheType: "server",
+                cfFunction: "serverCfFunction",
+                edgeFunction: "edgeServer",
+                origin: "s3",
+              } as const,
+              {
+                cacheType: "server",
+                pattern: "api/*",
+                cfFunction: "serverCfFunction",
+                edgeFunction: "edgeServer",
+                origin: "s3",
+              } as const,
+              {
+                cacheType: "server",
+                pattern: "_next/data/*",
+                cfFunction: "serverCfFunction",
+                edgeFunction: "edgeServer",
+                origin: "s3",
+              } as const,
+            ]
           : [
-            {
-              cacheType: "server",
-              cfFunction: "serverCfFunction",
-              origin: "regionalServer",
-            } as const,
-            {
-              cacheType: "server",
-              pattern: "api/*",
-              cfFunction: "serverCfFunction",
-              origin: "regionalServer",
-            } as const,
-            {
-              cacheType: "server",
-              pattern: "_next/data/*",
-              cfFunction: "serverCfFunction",
-              origin: "regionalServer",
-            } as const,
-          ]),
+              {
+                cacheType: "server",
+                cfFunction: "serverCfFunction",
+                origin: "regionalServer",
+              } as const,
+              {
+                cacheType: "server",
+                pattern: "api/*",
+                cfFunction: "serverCfFunction",
+                origin: "regionalServer",
+              } as const,
+              {
+                cacheType: "server",
+                pattern: "_next/data/*",
+                cfFunction: "serverCfFunction",
+                origin: "regionalServer",
+              } as const,
+            ]),
         {
           cacheType: "server",
           pattern: "_next/image*",
@@ -302,15 +304,15 @@ export class NextjsSite extends SsrSite {
         // create 1 behaviour for each top level asset file/folder
         ...fs.readdirSync(path.join(sitePath, ".open-next/assets")).map(
           (item) =>
-          ({
-            cacheType: "static",
-            pattern: fs
-              .statSync(path.join(sitePath, ".open-next/assets", item))
-              .isDirectory()
-              ? `${item}/*`
-              : item,
-            origin: "s3",
-          } as const)
+            ({
+              cacheType: "static",
+              pattern: fs
+                .statSync(path.join(sitePath, ".open-next/assets", item))
+                .isDirectory()
+                ? `${item}/*`
+                : item,
+              origin: "s3",
+            } as const)
         ),
       ],
       cachePolicyAllowedHeaders:

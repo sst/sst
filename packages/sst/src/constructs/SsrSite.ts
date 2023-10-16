@@ -127,11 +127,11 @@ type OriginGroupConfig = {
 type OriginsMap = Record<string, S3Origin | HttpOrigin | OriginGroup>;
 
 export type Plan = ReturnType<SsrSite["validatePlan"]>;
-export interface SsrSiteNodeJSProps extends NodeJSProps { }
-export interface SsrDomainProps extends DistributionDomainProps { }
-export interface SsrSiteFileOptions extends BaseSiteFileOptions { }
-export interface SsrSiteReplaceProps extends BaseSiteReplaceProps { }
-export interface SsrCdkDistributionProps extends BaseSiteCdkDistributionProps { }
+export interface SsrSiteNodeJSProps extends NodeJSProps {}
+export interface SsrDomainProps extends DistributionDomainProps {}
+export interface SsrSiteFileOptions extends BaseSiteFileOptions {}
+export interface SsrSiteReplaceProps extends BaseSiteReplaceProps {}
+export interface SsrCdkDistributionProps extends BaseSiteCdkDistributionProps {}
 export interface SsrSiteProps {
   /**
    * Bind resources for the function
@@ -333,7 +333,7 @@ export interface SsrSiteProps {
       | "architecture"
       | "logRetention"
     > &
-    Pick<FunctionProps, "copyFiles">;
+      Pick<FunctionProps, "copyFiles">;
   };
   /**
    * Pass in a list of file options to customize cache control and content type specific files.
@@ -524,8 +524,8 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
       ssrFunctions.length > 0
         ? ssrFunctions[0]
         : Object.values(edgeFunctions).length > 0
-          ? Object.values(edgeFunctions)[0]
-          : undefined;
+        ? Object.values(edgeFunctions)[0]
+        : undefined;
 
     app.registerTypes(this);
 
@@ -666,7 +666,7 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
         description: "SSR warmer",
         code: Code.fromAsset(
           plan.warmerConfig?.function ??
-          path.join(__dirname, "../support/ssr-warmer")
+            path.join(__dirname, "../support/ssr-warmer")
         ),
         runtime: Runtime.NODEJS_18_X,
         handler: "index.handler",
@@ -778,11 +778,11 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
           responseHeadersPolicy: cdk?.responseHeadersPolicy,
           functionAssociations: cfFunction
             ? [
-              {
-                eventType: CfFunctionEventType.VIEWER_REQUEST,
-                function: cfFunction,
-              },
-            ]
+                {
+                  eventType: CfFunctionEventType.VIEWER_REQUEST,
+                  function: cfFunction,
+                },
+              ]
             : undefined,
         };
       } else if (behavior.cacheType === "server") {
@@ -799,33 +799,33 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
           functionAssociations: [
             ...(cfFunction
               ? [
-                {
-                  eventType: CfFunctionEventType.VIEWER_REQUEST,
-                  function: cfFunction,
-                },
-              ]
+                  {
+                    eventType: CfFunctionEventType.VIEWER_REQUEST,
+                    function: cfFunction,
+                  },
+                ]
               : []),
             ...(cdk?.distribution?.defaultBehavior?.functionAssociations || []),
           ],
           edgeLambdas: [
             ...(edgeFunction
               ? [
-                {
-                  includeBody: true,
-                  eventType: LambdaEdgeEventType.ORIGIN_REQUEST,
-                  functionVersion: edgeFunction.currentVersion,
-                },
-              ]
+                  {
+                    includeBody: true,
+                    eventType: LambdaEdgeEventType.ORIGIN_REQUEST,
+                    functionVersion: edgeFunction.currentVersion,
+                  },
+                ]
               : []),
             ...(regional?.enableServerUrlIamAuth
               ? [
-                {
-                  includeBody: true,
-                  eventType: LambdaEdgeEventType.ORIGIN_REQUEST,
-                  functionVersion:
-                    useFunctionUrlSigningFunction().currentVersion,
-                },
-              ]
+                  {
+                    includeBody: true,
+                    eventType: LambdaEdgeEventType.ORIGIN_REQUEST,
+                    functionVersion:
+                      useFunctionUrlSigningFunction().currentVersion,
+                  },
+                ]
               : []),
             ...(cdk?.distribution?.defaultBehavior?.edgeLambdas || []),
           ],
@@ -1038,8 +1038,8 @@ function handler(event) {
       );
       const fileSizeLimit = app.isRunningSSTTest()
         ? // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore: "sstTestFileSizeLimitOverride" not exposed in props
-        props.sstTestFileSizeLimitOverride || 200
+          // @ts-ignore: "sstTestFileSizeLimitOverride" not exposed in props
+          props.sstTestFileSizeLimitOverride || 200
         : 200;
       const result = spawn.sync(
         "node",
@@ -1097,11 +1097,11 @@ function handler(event) {
             cacheControl:
               item === files.versionedSubDir
                 ? // Versioned files will be cached for 1 year (immutable) both at
-                // the CDN and browser level.
-                "public,max-age=31536000,immutable"
+                  // the CDN and browser level.
+                  "public,max-age=31536000,immutable"
                 : // Un-versioned files will be cached for 1 year at the CDN level.
-                // But not at the browser level. CDN cache will be invalidated on deploy.
-                "public,max-age=0,s-maxage=31536000,must-revalidate",
+                  // But not at the browser level. CDN cache will be invalidated on deploy.
+                  "public,max-age=0,s-maxage=31536000,must-revalidate",
           });
         }
       }
@@ -1363,21 +1363,22 @@ function handler(event) {
       variables: {
         url: this.doNotDeploy
           ? {
-            type: "plain",
-            value: this.props.dev?.url ?? "localhost",
-          }
+              type: "plain",
+              value: this.props.dev?.url ?? "localhost",
+            }
           : {
-            // Do not set real value b/c we don't want to make the Lambda function
-            // depend on the Site. B/c often the site depends on the Api, causing
-            // a CloudFormation circular dependency if the Api and the Site belong
-            // to different stacks.
-            type: "site_url",
-            value: this.customDomainUrl || this.url!,
-          },
+              // Do not set real value b/c we don't want to make the Lambda function
+              // depend on the Site. B/c often the site depends on the Api, causing
+              // a CloudFormation circular dependency if the Api and the Site belong
+              // to different stacks.
+              type: "site_url",
+              value: this.customDomainUrl || this.url!,
+            },
       },
       permissions: {
         "ssm:GetParameters": [
-          `arn:${Stack.of(this).partition}:ssm:${app.region}:${app.account
+          `arn:${Stack.of(this).partition}:ssm:${app.region}:${
+            app.account
           }:parameter${getParameterPath(this, "url")}`,
         ],
       },
