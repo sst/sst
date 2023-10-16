@@ -389,7 +389,7 @@ Read more about [working with VPC](https://docs.sst.dev/live-lambda-development#
 
 By default, a `Function`` creates its own IAM role. To use an existing IAM role, import it into your app.
 
-```js {5}
+```js
 import { Role } as iam from "aws-cdk-lib/aws-iam";
 
 const role = Role.fromRoleName(stack, "ImportedRole", "my-existing-role");
