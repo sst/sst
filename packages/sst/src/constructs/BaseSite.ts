@@ -7,10 +7,18 @@ import {
 } from "aws-cdk-lib/aws-cloudfront";
 
 export interface BaseSiteFileOptions {
-  exclude: string | string[];
-  include: string | string[];
-  cacheControl: string;
+  filters: { [key in "include" | "exclude"]?: string }[];
+  /**
+   * @deprecated Use `filters` parameter instead.
+   */
+  include?: string | string[];
+  /**
+   * @deprecated Use `filters` parameter instead.
+   */
+  exclude?: string | string[];
+  cacheControl?: string;
   contentType?: string;
+  contentEncoding?: string;
 }
 
 export interface BaseSiteEnvironmentOutputsInfo {
