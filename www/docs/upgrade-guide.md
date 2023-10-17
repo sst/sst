@@ -16,7 +16,7 @@ To view the latest release and all historical releases, <a href={`${config.githu
 
 ---
 
-## Upgrade to v2.30.0
+## Upgrade to v2.30.1
 
 `NextjsSite`, `AstroSite`, `RemixSite`, `SvelteKitSite`, and `SolidStartSite` now support enhanced cache options with the `cache` prop. **Replace `fileOptions` with `cache.fileOptions`, as `fileOptions` is deprecated.**
 
