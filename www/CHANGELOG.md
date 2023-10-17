@@ -1,5 +1,11 @@
 # @serverless-stack/docs
 
+## 2.7.1
+
+### Patch Changes
+
+- [#3407](https://github.com/sst/sst/pull/3407) [`220ef51d7`](https://github.com/sst/sst/commit/220ef51d7211fab2505236afe4ac2bae8a2289cb) Thanks [@dkershner6](https://github.com/dkershner6)! - NextjsSite: expose a static function to create server cache policy
+
 ## 2.7.0
 
 ### Minor Changes
