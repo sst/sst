@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.30.2
+
+### Patch Changes
+
+- [`7bb494883`](https://github.com/sst/sst/commit/7bb49488353a3035e109b0aa834ba4ccfeb08a57) Thanks [@fwang](https://github.com/fwang)! - NextjsSite: add `openNextVersion` to specify the OpenNext version for building the Next.js site
+
 ## 2.30.1
 
 ### Patch Changes
