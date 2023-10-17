@@ -31,6 +31,15 @@ import { VisibleError } from "../error.js";
 import { CachePolicyProps } from "aws-cdk-lib/aws-cloudfront";
 
 export interface NextjsSiteProps extends Omit<SsrSiteProps, "nodejs"> {
+  /**
+   * OpenNext version for building the Next.js site.
+   * @default Latest OpenNext version
+   * @example
+   * ```js
+   * openNextVersion: "2.2.4",
+   * ```
+   */
+  openNextVersion?: string;
   imageOptimization?: {
     /**
      * The amount of memory in MB allocated for image optimization function.
@@ -113,6 +122,7 @@ export interface NextjsSiteProps extends Omit<SsrSiteProps, "nodejs"> {
   };
 }
 
+const DEFAULT_OPEN_NEXT_VERSION = "2.2.4";
 const DEFAULT_CACHE_POLICY_ALLOWED_HEADERS = [
   "accept",
   "rsc",
@@ -136,7 +146,6 @@ type NextjsSiteNormalizedProps = NextjsSiteProps & SsrSiteNormalizedProps;
  */
 export class NextjsSite extends SsrSite {
   declare props: NextjsSiteNormalizedProps;
-  private buildId?: string;
 
   constructor(scope: Construct, id: string, props?: NextjsSiteProps) {
     const { streaming, disableDynamoDBCache, disableIncrementalCache } = {
@@ -148,7 +157,10 @@ export class NextjsSite extends SsrSite {
 
     super(scope, id, {
       buildCommand: [
-        "npx --yes open-next@2.2.3 build",
+        "npx",
+        "--yes",
+        `open-next@${props?.openNextVersion ?? DEFAULT_OPEN_NEXT_VERSION}`,
+        "build",
         ...(streaming ? ["--streaming"] : []),
         ...(disableDynamoDBCache
           ? ["--dangerously-disable-dynamodb-cache"]
