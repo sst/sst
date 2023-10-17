@@ -16,9 +16,33 @@ To view the latest release and all historical releases, <a href={`${config.githu
 
 ---
 
+## Upgrade to v2.30.0
+
+`NextjsSite`, `AstroSite`, `RemixSite`, `SvelteKitSite`, and `SolidStartSite` now support enhanced cache options with the `cache` prop. **Replace `fileOptions` with `cache.fileOptions`, as `fileOptions` is deprecated.**
+
+```diff
+new NextjsSite(stack, "Site", {
+- fileOptions: [
+-   {
+-     exclude: "*",
+-     include: "*.zip",
+-     cacheControl: "public,max-age=31536000,immutable",
+-   },
+- ],
++ cache: {
++   fileOptions: [
++     {
++       filters: [{ exclude: "*", include: "*.zip" }],
++       cacheControl: "public,max-age=31536000,immutable",
++     },
++   ],
++ },
+});
+```
+
 ## Upgrade to v2.27.0
 
-[AstroSite](constructs/AstroSite.md) has been re-architectured to support deploying Astro sites in a "hybrid" mode, coupled with other SSR improvements. sites should operate seamlessly, as the update is largely backward compatible. However, if your Astro app contains non-GET routes, such us form submissions, logins, or API endpoints, you'll need to specify them manually:
+[AstroSite](constructs/AstroSite.md) has been re-architectured to support deploying Astro sites in a "hybrid" mode, coupled with other SSR improvements. sites should operate seamlessly, as the update is largely backward compatible. However, **if your Astro app contains non-GET routes**, such us form submissions, logins, or API endpoints, you'll need to **specify them manually**:
 
 ```diff
 new AstroSite(stack, "Site", {
