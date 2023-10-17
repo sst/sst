@@ -34,6 +34,7 @@ import { Stack } from "./Stack.js";
 import { Distribution, DistributionDomainProps } from "./Distribution.js";
 import {
   BaseSiteFileOptions,
+  BaseSiteFileOptionsFilter,
   BaseSiteReplaceProps,
   BaseSiteCdkDistributionProps,
   getBuildCmdEnvironment,
@@ -311,7 +312,11 @@ export interface StaticSiteProps {
 }
 
 export interface StaticSiteDomainProps extends DistributionDomainProps {}
-export interface StaticSiteFileOptions extends BaseSiteFileOptions {}
+export interface StaticSiteFileOptionsFilter
+  extends BaseSiteFileOptionsFilter {}
+export interface StaticSiteFileOptions extends BaseSiteFileOptions {
+  filters: StaticSiteFileOptionsFilter[];
+}
 export interface StaticSiteFileOptionsDeprecated
   extends BaseSiteFileOptionsDeprecated {}
 export interface StaticSiteReplaceProps extends BaseSiteReplaceProps {}

@@ -6,8 +6,12 @@ import {
   IOrigin,
 } from "aws-cdk-lib/aws-cloudfront";
 
+export interface BaseSiteFileOptionsFilter {
+  include?: string;
+  exclude?: string;
+}
 export interface BaseSiteFileOptions {
-  filters: { [key in "include" | "exclude"]?: string }[];
+  filters: BaseSiteFileOptionsFilter[];
   cacheControl?: string;
   contentType?: string;
   contentEncoding?: string;

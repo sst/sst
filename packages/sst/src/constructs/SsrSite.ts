@@ -79,6 +79,7 @@ import { SsrFunction, SsrFunctionProps } from "./SsrFunction.js";
 import { EdgeFunction, EdgeFunctionProps } from "./EdgeFunction.js";
 import {
   BaseSiteFileOptions,
+  BaseSiteFileOptionsFilter,
   BaseSiteFileOptionsDeprecated,
   BaseSiteReplaceProps,
   BaseSiteCdkDistributionProps,
@@ -130,7 +131,10 @@ type OriginsMap = Record<string, S3Origin | HttpOrigin | OriginGroup>;
 export type Plan = ReturnType<SsrSite["validatePlan"]>;
 export interface SsrSiteNodeJSProps extends NodeJSProps {}
 export interface SsrDomainProps extends DistributionDomainProps {}
-export interface SsrSiteFileOptions extends BaseSiteFileOptions {}
+export interface SsrSiteFileOptionsFilter extends BaseSiteFileOptionsFilter {}
+export interface SsrSiteFileOptions extends BaseSiteFileOptions {
+  filters: SsrSiteFileOptionsFilter[];
+}
 export interface SsrSiteFileOptionsDeprecated
   extends BaseSiteFileOptionsDeprecated {}
 export interface SsrSiteReplaceProps extends BaseSiteReplaceProps {}
