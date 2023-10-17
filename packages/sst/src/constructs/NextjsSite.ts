@@ -440,14 +440,14 @@ export class NextjsSite extends SsrSite {
       path.join(serverPath, `${wrapperName}.mjs`),
       experimental?.streaming
         ? [
-            `import { handler as rawHandler } from "./index.mjs";`,
-            `export const handler = awslambda.streamifyResponse((...args) => {`,
+            `export const handler = awslambda.streamifyResponse(async (...args) => {`,
+            `  const { handler: rawHandler} = await import("./index.mjs");`,
             `  return rawHandler(...args);`,
             `});`,
           ].join("\n")
         : [
-            `import { handler as rawHandler } from "./index.mjs";`,
-            `export const handler = (...args) => {`,
+            `export const handler = async (...args) => {`,
+            `  const { handler: rawHandler} = await import("./index.mjs");`,
             `  return rawHandler(...args);`,
             `};`,
           ].join("\n")
