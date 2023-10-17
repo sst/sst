@@ -1,5 +1,21 @@
 # @serverless-stack/cli2
 
+## 2.30.0
+
+### Minor Changes
+
+- [#3392](https://github.com/sst/sst/pull/3392) [`c823382f8`](https://github.com/sst/sst/commit/c823382f886c4a4b5f8a3e8c96ced6b9db80e271) Thanks [@bayssmekanique](https://github.com/bayssmekanique)! - SsrSite: improve cache deployment behavior and invalidation strategy
+
+### Patch Changes
+
+- [`c76d0fa05`](https://github.com/sst/sst/commit/c76d0fa05ad78ef5d880b38d99905113e0c84ac4) Thanks [@fwang](https://github.com/fwang)! - sst types: do not require AWS credentials to generate types
+
+- [#3422](https://github.com/sst/sst/pull/3422) [`8f9c4900b`](https://github.com/sst/sst/commit/8f9c4900be577fe2f2080fb7c9e6a44df41a649c) Thanks [@fwang](https://github.com/fwang)! - NextjsSite: fix edge import order
+
+- [#3411](https://github.com/sst/sst/pull/3411) [`9b719087b`](https://github.com/sst/sst/commit/9b719087b3d31e71e875ccae4452ed7b1b041dfa) Thanks [@fwang](https://github.com/fwang)! - NextjsSite: fix wrapper function for streaming
+
+- [#3407](https://github.com/sst/sst/pull/3407) [`220ef51d7`](https://github.com/sst/sst/commit/220ef51d7211fab2505236afe4ac2bae8a2289cb) Thanks [@dkershner6](https://github.com/dkershner6)! - NextjsSite: expose a static function to create server cache policy
+
 ## 2.29.2
 
 ### Patch Changes
