@@ -39,6 +39,7 @@ import {
   getBuildCmdEnvironment,
   buildErrorResponsesFor404ErrorPage,
   buildErrorResponsesForRedirectToIndex,
+  BaseSiteFileOptionsDeprecated,
 } from "./BaseSite.js";
 import { useDeferredTasks } from "./deferred_task.js";
 import { SSTConstruct, isCDKConstruct } from "./Construct.js";
@@ -116,7 +117,6 @@ export interface StaticSiteProps {
   buildOutput?: string;
   /**
    * Pass in a list of file options to configure cache control for different files. Behind the scenes, the `StaticSite` construct uses a combination of the `s3 cp` and `s3 sync` commands to upload the website content to the S3 bucket. An `s3 cp` command is run for each file option block, and the options are passed in as the command options.
-   *
    * @default No cache control for HTML files, and a 1 year cache control for JS/CSS files.
    * ```js
    * [
@@ -141,7 +141,7 @@ export interface StaticSiteProps {
    * });
    * ```
    */
-  fileOptions?: StaticSiteFileOptions[];
+  fileOptions?: StaticSiteFileOptions[] | StaticSiteFileOptionsDeprecated[];
   /**
    * Pass in a list of placeholder values to be replaced in the website content. For example, the follow configuration:
    *
@@ -312,6 +312,8 @@ export interface StaticSiteProps {
 
 export interface StaticSiteDomainProps extends DistributionDomainProps {}
 export interface StaticSiteFileOptions extends BaseSiteFileOptions {}
+export interface StaticSiteFileOptionsDeprecated
+  extends BaseSiteFileOptionsDeprecated {}
 export interface StaticSiteReplaceProps extends BaseSiteReplaceProps {}
 export interface StaticSiteCdkDistributionProps
   extends BaseSiteCdkDistributionProps {}
@@ -671,7 +673,9 @@ interface ImportMeta {
     assets: Asset[],
     filenamesAsset?: Asset
   ): CustomResource {
-    const fileOptions: StaticSiteFileOptions[] = this.props.fileOptions ?? [
+    const fileOptions:
+      | StaticSiteFileOptions[]
+      | StaticSiteFileOptionsDeprecated[] = this.props.fileOptions ?? [
       {
         filters: [{ exclude: "*" }, { include: "*.html" }],
         cacheControl: "max-age=0,no-cache,no-store,must-revalidate",
@@ -728,36 +732,30 @@ interface ImportMeta {
           BucketName: filenamesAsset.s3BucketName,
           ObjectKey: filenamesAsset.s3ObjectKey,
         },
-        FileOptions: (fileOptions || []).map(
-          ({
-            filters,
-            include,
-            exclude,
-            cacheControl,
-            contentType,
-            contentEncoding,
-          }) => {
-            return [
-              ...(typeof include === "string" ? [include] : include ?? [])
-                .map((entry) => ["--include", entry])
-                .flat(2),
-              ...(typeof exclude === "string" ? [exclude] : exclude ?? [])
-                .map((entry) => ["--exclude", entry])
-                .flat(2),
-              ...filters
-                .map((filter) =>
-                  Object.entries(filter).map(([key, value]) => [
-                    `--${key}`,
-                    value,
-                  ])
-                )
-                .flat(2),
-              cacheControl ? ["--cache-control", cacheControl] : [],
-              contentType ? ["--content-type", contentType] : [],
-              contentEncoding ? ["--content-encoding", contentEncoding] : [],
-            ].flat();
-          }
-        ),
+        FileOptions: (fileOptions || []).map((o) => {
+          const { filters, cacheControl, contentType, contentEncoding } =
+            o as StaticSiteFileOptions;
+          const { include, exclude } = o as StaticSiteFileOptionsDeprecated;
+          return [
+            ...(typeof exclude === "string" ? [exclude] : exclude ?? [])
+              .map((entry) => ["--exclude", entry])
+              .flat(2),
+            ...(typeof include === "string" ? [include] : include ?? [])
+              .map((entry) => ["--include", entry])
+              .flat(2),
+            ...(filters || [])
+              .map((filter) =>
+                Object.entries(filter).map(([key, value]) => [
+                  `--${key}`,
+                  value,
+                ])
+              )
+              .flat(2),
+            cacheControl ? ["--cache-control", cacheControl] : [],
+            contentType ? ["--content-type", contentType] : [],
+            contentEncoding ? ["--content-encoding", contentEncoding] : [],
+          ].flat();
+        }),
         ReplaceValues: this.getS3ContentReplaceValues(),
       },
     });

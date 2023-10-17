@@ -8,13 +8,13 @@ import {
 
 export interface BaseSiteFileOptions {
   filters: { [key in "include" | "exclude"]?: string }[];
-  /**
-   * @deprecated Use `filters` parameter instead.
-   */
+  cacheControl?: string;
+  contentType?: string;
+  contentEncoding?: string;
+}
+
+export interface BaseSiteFileOptionsDeprecated {
   include?: string | string[];
-  /**
-   * @deprecated Use `filters` parameter instead.
-   */
   exclude?: string | string[];
   cacheControl?: string;
   contentType?: string;

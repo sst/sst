@@ -1,3 +1,5 @@
+import * as fs from "fs";
+import * as path from "path";
 import { test, expect, beforeAll, vi } from "vitest";
 import { execSync } from "child_process";
 import {
@@ -23,7 +25,6 @@ import {
   AllowedMethods,
 } from "aws-cdk-lib/aws-cloudfront";
 import * as route53 from "aws-cdk-lib/aws-route53";
-import * as acm from "aws-cdk-lib/aws-certificatemanager";
 import { RetentionDays } from "aws-cdk-lib/aws-logs";
 import { Api, Stack, RemixSite } from "../../dist/constructs/";
 import { SsrSiteProps } from "../../dist/constructs/SsrSite";
@@ -31,10 +32,13 @@ import { SsrSiteProps } from "../../dist/constructs/SsrSite";
 const sitePath = "test/constructs/remix-site";
 
 beforeAll(async () => {
-  // ℹ️ Uncomment the below to iterate faster on tests in vitest watch mode;
-  // if (fs.pathExistsSync(path.join(sitePath, "node_modules"))) {
-  //   return;
-  // }
+  // Set `SKIP_BUILD` to iterate faster on tests in vitest watch mode;
+  if (
+    process.env.SKIP_BUILD &&
+    fs.existsSync(path.join(sitePath, "node_modules"))
+  ) {
+    return;
+  }
 
   // Install Remix app dependencies
   execSync("npm install", {
@@ -184,36 +188,6 @@ test("default", async () => {
     DestinationBucketName: {
       Ref: "SiteS3Bucket43E5BB2F",
     },
-    FileOptions: [
-      [
-        "--exclude",
-        "*",
-        "--include",
-        "build/*",
-        "--cache-control",
-        "public,max-age=31536000,immutable",
-      ],
-      [
-        "--exclude",
-        "*",
-        "--include",
-        "favicon.ico",
-        "--cache-control",
-        "public,max-age=0,s-maxage=31536000,must-revalidate",
-      ],
-      [
-        "--exclude",
-        "*",
-        "--include",
-        "foo/*",
-        "--cache-control",
-        "public,max-age=0,s-maxage=31536000,must-revalidate",
-      ],
-    ],
-  });
-  countResources(stack, "Custom::CloudFrontInvalidator", 1);
-  hasResource(stack, "Custom::CloudFrontInvalidator", {
-    paths: ["/*"],
   });
 });
 test("default: check CloudFront functions configured correctly", async () => {
@@ -446,32 +420,6 @@ test("edge: true", async () => {
     DestinationBucketName: {
       Ref: "SiteS3Bucket43E5BB2F",
     },
-    FileOptions: [
-      [
-        "--exclude",
-        "*",
-        "--include",
-        "build/*",
-        "--cache-control",
-        "public,max-age=31536000,immutable",
-      ],
-      [
-        "--exclude",
-        "*",
-        "--include",
-        "favicon.ico",
-        "--cache-control",
-        "public,max-age=0,s-maxage=31536000,must-revalidate",
-      ],
-      [
-        "--exclude",
-        "*",
-        "--include",
-        "foo/*",
-        "--cache-control",
-        "public,max-age=0,s-maxage=31536000,must-revalidate",
-      ],
-    ],
   });
   countResources(stack, "Custom::CloudFrontInvalidator", 1);
   hasResource(stack, "Custom::CloudFrontInvalidator", {
@@ -598,41 +546,75 @@ test("timeout too alrge for edge", async () => {
   }).rejects.toThrow(/Timeout must be less than or equal to 30 seconds/);
 });
 
-test("fileOptions: undefined", async () => {
+test("cache.fileOptions: undefined", async () => {
   const { site, stack } = await createSite({
     // @ts-expect-error: "sstTest" is not exposed in props
     sstTest: true,
   });
+  const bucketDeploymentResource = Object.values(
+    getResources(stack, "Custom::SSTBucketDeployment")
+  )[0];
+  expect(bucketDeploymentResource.Properties.FileOptions.length).toEqual(58);
   hasResource(stack, "Custom::SSTBucketDeployment", {
-    FileOptions: [
+    ServiceToken: {
+      "Fn::GetAtt": ["SiteS3Handler5F76C26E", "Arn"],
+    },
+    Sources: [
+      {
+        BucketName: ANY,
+        ObjectKey: ANY,
+      },
+    ],
+    DestinationBucketName: {
+      Ref: "SiteS3Bucket43E5BB2F",
+    },
+    FileOptions: arrayWith([
       [
         "--exclude",
         "*",
         "--include",
+        "*.txt",
+        "--exclude",
         "build/*",
         "--cache-control",
+        "public,max-age=0,s-maxage=86400,stale-while-revalidate=8640",
+        "--content-type",
+        "text/plain;charset=UTF-8",
+      ],
+      [
+        "--exclude",
+        "*",
+        "--include",
+        "build/*.txt",
+        "--cache-control",
         "public,max-age=31536000,immutable",
+        "--content-type",
+        "text/plain;charset=UTF-8",
       ],
-      [
-        "--exclude",
-        "*",
-        "--include",
-        "favicon.ico",
-        "--cache-control",
-        "public,max-age=0,s-maxage=31536000,must-revalidate",
-      ],
-      [
-        "--exclude",
-        "*",
-        "--include",
-        "foo/*",
-        "--cache-control",
-        "public,max-age=0,s-maxage=31536000,must-revalidate",
-      ],
-    ],
+    ]),
   });
 });
-test("fileOptions: defined", async () => {
+test("cache.fileOptions: defined", async () => {
+  const { site, stack } = await createSite({
+    // @ts-expect-error: "sstTest" is not exposed in props
+    sstTest: true,
+    cache: {
+      fileOptions: [
+        {
+          filters: [{ exclude: "*" }, { include: "*.zip" }],
+        },
+      ],
+    },
+  });
+  const bucketDeploymentResource = Object.values(
+    getResources(stack, "Custom::SSTBucketDeployment")
+  )[0];
+  expect(bucketDeploymentResource.Properties.FileOptions.length).toEqual(59);
+  hasResource(stack, "Custom::SSTBucketDeployment", {
+    FileOptions: arrayWith([["--exclude", "*", "--include", "*.zip"]]),
+  });
+});
+test("fileOptions (deprecated): defined", async () => {
   const { site, stack } = await createSite({
     // @ts-expect-error: "sstTest" is not exposed in props
     sstTest: true,
@@ -659,6 +641,26 @@ test("fileOptions: defined", async () => {
       ],
     ],
   });
+});
+test("cache.cdnInvalidationStrategy: undefined", async () => {
+  const { site, stack } = await createSite({
+    // @ts-expect-error: "sstTest" is not exposed in props
+    sstTest: true,
+  });
+  countResources(stack, "Custom::CloudFrontInvalidator", 1);
+  hasResource(stack, "Custom::CloudFrontInvalidator", {
+    paths: ["/*"],
+  });
+});
+test("cache.cdnInvalidationStrategy: never", async () => {
+  const { site, stack } = await createSite({
+    // @ts-expect-error: "sstTest" is not exposed in props
+    sstTest: true,
+    cache: {
+      cdnInvalidationStrategy: "never",
+    },
+  });
+  countResources(stack, "Custom::CloudFrontInvalidator", 0);
 });
 
 test("warm: undefined", async () => {

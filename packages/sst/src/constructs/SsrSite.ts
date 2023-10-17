@@ -79,6 +79,7 @@ import { SsrFunction, SsrFunctionProps } from "./SsrFunction.js";
 import { EdgeFunction, EdgeFunctionProps } from "./EdgeFunction.js";
 import {
   BaseSiteFileOptions,
+  BaseSiteFileOptionsDeprecated,
   BaseSiteReplaceProps,
   BaseSiteCdkDistributionProps,
   getBuildCmdEnvironment,
@@ -130,6 +131,8 @@ export type Plan = ReturnType<SsrSite["validatePlan"]>;
 export interface SsrSiteNodeJSProps extends NodeJSProps {}
 export interface SsrDomainProps extends DistributionDomainProps {}
 export interface SsrSiteFileOptions extends BaseSiteFileOptions {}
+export interface SsrSiteFileOptionsDeprecated
+  extends BaseSiteFileOptionsDeprecated {}
 export interface SsrSiteReplaceProps extends BaseSiteReplaceProps {}
 export interface SsrCdkDistributionProps extends BaseSiteCdkDistributionProps {}
 export interface SsrSiteProps {
@@ -424,7 +427,6 @@ export interface SsrSiteProps {
   };
   /**
    * Pass in a list of file options to customize cache control and content type specific files. Specifying file options will bypass all default file options and only use the ones specified. Most configurations within the `cache` prop will be ignored.
-   *
    * @deprecated Use `cache.fileOptions` instead. Note that the `cache.fileOptions` are appended to default file options, not a replacement as this prop was.
    * @default
    * Versioned files cached for 1 year at the CDN and browser level.
@@ -432,12 +434,19 @@ export interface SsrSiteProps {
    * ```js
    * fileOptions: [
    *   {
-   *     filters: [ { exclude: "*" }, { include: "{versioned_directory}/*" } ],
+   *     exclude: "*",
+   *     include: "{versioned_directory}/*",
    *     cacheControl: "public,max-age=31536000,immutable",
    *   },
    *   {
-   *     filters: [ { include: "*" }, { exclude: "{versioned_directory}/*" } ],
-   *     cacheControl: "public,max-age=0,s-maxage=86400,stale-while-revalidate=8640",
+   *     exclude: "*",
+   *     include: "[{non_versioned_file1}, {non_versioned_file2}, ...]",
+   *     cacheControl: "public,max-age=0,s-maxage=31536000,must-revalidate",
+   *   },
+   *   {
+   *     exclude: "*",
+   *     include: "[{non_versioned_dir_1}/*, {non_versioned_dir_2}/*, ...]",
+   *     cacheControl: "public,max-age=0,s-maxage=31536000,must-revalidate",
    *   },
    * ]
    * ```
@@ -446,22 +455,29 @@ export interface SsrSiteProps {
    * ```js
    * fileOptions: [
    *   {
-   *     filters: [ { exclude: "*" }, { include: "{versioned_directory}/*" } ],
+   *     exclude: "*",
+   *     include: "{versioned_directory}/*.css",
+   *     cacheControl: "public,max-age=31536000,immutable",
+   *     contentType: "text/css; charset=UTF-8",
+   *   },
+   *   {
+   *     exclude: "*",
+   *     include: "{versioned_directory}/*.js",
    *     cacheControl: "public,max-age=31536000,immutable",
    *   },
    *   {
-   *     filters: [ { include: "*" }, { exclude: "{versioned_directory}/*" } ],
-   *     cacheControl: "public,max-age=0,s-maxage=86400,stale-while-revalidate=8640",
+   *     exclude: "*",
+   *     include: "[{non_versioned_file1}, {non_versioned_file2}, ...]",
+   *     cacheControl: "public,max-age=0,s-maxage=31536000,must-revalidate",
    *   },
    *   {
-   *     filters: [ { exclude: "*" }, { include: "*.zip" } ],
-   *     cacheControl: "private,no-cache,no-store,must-revalidate",
-   *     contentType: "application/zip",
+   *     exclude: "*",
+   *     include: "[{non_versioned_dir_1}/*, {non_versioned_dir_2}/*, ...]",
+   *     cacheControl: "public,max-age=0,s-maxage=31536000,must-revalidate",
    *   },
    * ]
-   * ```
    */
-  fileOptions?: SsrSiteFileOptions[];
+  fileOptions?: SsrSiteFileOptionsDeprecated[];
 }
 
 export type SsrSiteNormalizedProps = SsrSiteProps & {
@@ -1297,7 +1313,7 @@ function handler(event) {
 
     function createS3OriginDeployment(
       assets: Asset[],
-      fileOptions: SsrSiteFileOptions[]
+      fileOptions: SsrSiteFileOptions[] | SsrSiteFileOptionsDeprecated[]
     ): CustomResource {
       // Create a Lambda function that will be doing the uploading
       const uploader = new CdkFunction(self, "S3Uploader", {
@@ -1340,36 +1356,30 @@ function handler(event) {
             ObjectKey: asset.s3ObjectKey,
           })),
           DestinationBucketName: bucket.bucketName,
-          FileOptions: (fileOptions || []).map(
-            ({
-              filters,
-              include,
-              exclude,
-              cacheControl,
-              contentType,
-              contentEncoding,
-            }) => {
-              return [
-                ...(typeof include === "string" ? [include] : include ?? [])
-                  .map((entry) => ["--include", entry])
-                  .flat(2),
-                ...(typeof exclude === "string" ? [exclude] : exclude ?? [])
-                  .map((entry) => ["--exclude", entry])
-                  .flat(2),
-                ...filters
-                  .map((filter) =>
-                    Object.entries(filter).map(([key, value]) => [
-                      `--${key}`,
-                      value,
-                    ])
-                  )
-                  .flat(2),
-                cacheControl ? ["--cache-control", cacheControl] : [],
-                contentType ? ["--content-type", contentType] : [],
-                contentEncoding ? ["--content-encoding", contentEncoding] : [],
-              ].flat();
-            }
-          ),
+          FileOptions: (fileOptions || []).map((o) => {
+            const { filters, cacheControl, contentType, contentEncoding } =
+              o as SsrSiteFileOptions;
+            const { include, exclude } = o as SsrSiteFileOptionsDeprecated;
+            return [
+              ...(typeof exclude === "string" ? [exclude] : exclude ?? [])
+                .map((entry) => ["--exclude", entry])
+                .flat(2),
+              ...(typeof include === "string" ? [include] : include ?? [])
+                .map((entry) => ["--include", entry])
+                .flat(2),
+              ...(filters || [])
+                .map((filter) =>
+                  Object.entries(filter).map(([key, value]) => [
+                    `--${key}`,
+                    value,
+                  ])
+                )
+                .flat(2),
+              cacheControl ? ["--cache-control", cacheControl] : [],
+              contentType ? ["--content-type", contentType] : [],
+              contentEncoding ? ["--content-encoding", contentEncoding] : [],
+            ].flat();
+          }),
           ReplaceValues: getS3ContentReplaceValues(),
         },
       });
