@@ -367,6 +367,7 @@ export interface SsrSiteProps {
      *     },
      *   ],
      * }
+     * ```
      */
     fileOptions?: SsrSiteFileOptions[];
   };
