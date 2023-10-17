@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.30.1
+
+### Patch Changes
+
+- [`73943d36d`](https://github.com/sst/sst/commit/73943d36df2f2dfb0e37ff2a85fdaed92f76dad9) Thanks [@thdxr](https://github.com/thdxr)! - cli: prevent concurrent synth
+
 ## 2.30.0
 
 ### Minor Changes
