@@ -45,8 +45,8 @@ export async function synth(opts: SynthOptions) {
       buildDir: opts.buildDir || path.join(project.paths.out, "dist"),
     };
 
-    await fs.rm(opts.buildDir!, { recursive: true, force: true });
-    await fs.mkdir(opts.buildDir!, { recursive: true });
+    // await fs.rm(opts.buildDir!, { recursive: true, force: true });
+    // await fs.mkdir(opts.buildDir!, { recursive: true });
     const cfg = new Configuration();
     await cfg.load();
     let previous = new Set<string>();
