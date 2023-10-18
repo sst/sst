@@ -1,5 +1,13 @@
 # @serverless-stack/cli2
 
+## 2.30.3
+
+### Patch Changes
+
+- [`48c432320`](https://github.com/sst/sst/commit/48c4323201afd729ee9bbc662b3f4448a4fc190b) Thanks [@thdxr](https://github.com/thdxr)! - cli: rollback clearing dist folder on every synth
+
+- [#3426](https://github.com/sst/sst/pull/3426) [`bd4986a8c`](https://github.com/sst/sst/commit/bd4986a8c22ea2ee1121191ad2fb940ba16ec341) Thanks [@fwang](https://github.com/fwang)! - Update CDK to v2.101.1
+
 ## 2.30.2
 
 ### Patch Changes
