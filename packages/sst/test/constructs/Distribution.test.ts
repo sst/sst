@@ -489,3 +489,25 @@ test("createInvalidation called with buildId", async () => {
     paths: ["/*"],
   });
 });
+
+test("createInvalidation called with custom paths", async () => {
+  const { distribution, stack } = await createDistribution({
+    defaultInvalidationPaths: ["/path1", "/path2*"],
+  });
+  distribution.createInvalidation();
+  countResources(stack, "Custom::CloudFrontInvalidator", 1);
+  hasResource(stack, "Custom::CloudFrontInvalidator", {
+    paths: ["/path1", "/path2*"],
+  });
+});
+
+test("createInvalidation called with duplicated paths", async () => {
+  const { distribution, stack } = await createDistribution({
+    defaultInvalidationPaths: ["/path1", "/path1"],
+  });
+  distribution.createInvalidation();
+  countResources(stack, "Custom::CloudFrontInvalidator", 1);
+  hasResource(stack, "Custom::CloudFrontInvalidator", {
+    paths: ["/path1"],
+  });
+});

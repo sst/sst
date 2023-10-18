@@ -114,6 +114,10 @@ export interface DistributionProps {
    */
   customDomain?: string | DistributionDomainProps;
   /**
+   * Allows you to define custom default paths for CloudFront invalidation
+   */
+  defaultInvalidationPaths?: string[];
+  /**
    * The SSR function is deployed to Lambda in a single region. Alternatively, you can enable this option to deploy to Lambda@Edge.
    * @default false
    */
@@ -221,13 +225,17 @@ export class Distribution extends Construct {
     });
     stack.customResourceHandler.role?.attachInlinePolicy(policy);
 
+    const defaultInvalidationPaths = this.props.defaultInvalidationPaths
+          ? [...new Set(this.props.defaultInvalidationPaths)]
+          : ["/*"]
+
     const resource = new CustomResource(this.scope, "CloudFrontInvalidator", {
       serviceToken: stack.customResourceHandler.functionArn,
       resourceType: "Custom::CloudFrontInvalidator",
       properties: {
         buildId: buildId || Date.now().toString(),
         distributionId: this.distribution.distributionId,
-        paths: paths ?? ["/*"],
+        paths: paths ?? defaultInvalidationPaths,
         waitForInvalidation: this.props.waitForInvalidation,
       },
     });

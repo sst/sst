@@ -372,6 +372,10 @@ export interface SsrSiteProps {
     fileOptions?: SsrSiteFileOptions[];
   };
   /**
+   * Allows you to define custom default paths for CloudFront invalidation
+   */
+  defaultInvalidationPaths?: string[];
+  /**
    * While deploying, SST waits for the CloudFront cache invalidation process to finish. This ensures that the new content will be served once the deploy command finishes. However, this process can sometimes take more than 5 mins. For non-prod environments it might make sense to pass in `false`. That'll skip waiting for the cache to invalidate and speed up the deploy process.
    * @default false
    */
@@ -548,6 +552,7 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
       environment,
       bind,
       customDomain,
+      defaultInvalidationPaths,
       waitForInvalidation,
       fileOptions,
       warm,
@@ -788,6 +793,7 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
       const distribution = new Distribution(self, "CDN", {
         scopeOverride: self,
         customDomain,
+        defaultInvalidationPaths,
         waitForInvalidation,
         cdk: {
           distribution: {
@@ -1494,7 +1500,6 @@ function handler(event) {
           );
         });
       }
-      if (invalidationPaths.length === 0) invalidationPaths.push("/*");
 
       // Build build ID
       const hash = crypto.createHash("md5");
@@ -1541,7 +1546,12 @@ function handler(event) {
 
       Logger.debug(`Generated build ID ${buildId}`);
 
-      distribution.createInvalidation(buildId, invalidationPaths);
+      distribution.createInvalidation(
+        buildId,
+        invalidationPaths.length > 0
+          ? invalidationPaths
+          : undefined,
+      );
     }
   }
 
