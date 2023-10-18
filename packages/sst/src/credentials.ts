@@ -4,7 +4,7 @@ import { GetCallerIdentityCommand, STSClient } from "@aws-sdk/client-sts";
 import { Logger } from "./logger.js";
 import { SdkProvider } from "sst-aws-cdk/lib/api/aws-auth/sdk-provider.js";
 import { StandardRetryStrategy } from "@aws-sdk/middleware-retry";
-import type {} from "@smithy/types";
+export type {} from "@smithy/types";
 
 export const useAWSCredentialsProvider = lazy(() => {
   const project = useProject();
