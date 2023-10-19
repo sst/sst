@@ -27,7 +27,7 @@ import { Stack } from "./Stack.js";
 import { SsrSite, SsrSiteNormalizedProps, SsrSiteProps } from "./SsrSite.js";
 import { Size, toCdkSize } from "./util/size.js";
 import { Bucket } from "aws-cdk-lib/aws-s3";
-import { PolicyStatement } from "aws-cdk-lib/aws-iam";
+import { Effect, Policy, PolicyStatement } from "aws-cdk-lib/aws-iam";
 import { RetentionDays } from "aws-cdk-lib/aws-logs";
 import { VisibleError } from "../error.js";
 import { CachePolicyProps } from "aws-cdk-lib/aws-cloudfront";
@@ -46,15 +46,15 @@ export interface NextjsSiteProps extends Omit<SsrSiteProps, "nodejs"> {
   openNextVersion?: string;
   /**
    * How the logs are stored in CloudWatch
-   * - "aggregate" - Logs from all routes are stored in the same log group.
+   * - "combined" - Logs from all routes are stored in the same log group.
    * - "per-route" - Logs from each route are stored in a separate log group.
-   * @default "aggregate"
+   * @default "combined"
    * @example
    * ```js
    * logging: "per-route",
    * ```
    */
-  logging?: "aggregate" | "per-route";
+  _logging?: "combined" | "per-route";
   imageOptimization?: {
     /**
      * The amount of memory in MB allocated for image optimization function.
@@ -187,6 +187,10 @@ export class NextjsSite extends SsrSite {
       ].join(" "),
       ...props,
     });
+
+    if (this.isPerRouteLoggingEnabled()) {
+      this.disableDefaultLogging();
+    }
 
     if (!disableIncrementalCache) {
       this.createRevalidationQueue();
@@ -585,8 +589,31 @@ export class NextjsSite extends SsrSite {
     return (
       !this.doNotDeploy &&
       !this.props.edge &&
-      this.props.logging === "per-route"
+      this.props._logging === "per-route"
     );
+  }
+
+  private disableDefaultLogging() {
+    const stack = Stack.of(this);
+    const server = this.serverFunction as SsrFunction;
+
+    const policy = new Policy(this, "DisableLoggingPolicy", {
+      statements: [
+        new PolicyStatement({
+          effect: Effect.DENY,
+          actions: [
+            "logs:CreateLogGroup",
+            "logs:CreateLogStream",
+            "logs:PutLogEvents",
+          ],
+          resources: [
+            `arn:aws:logs:${stack.region}:${stack.account}:log-group:/aws/lambda/${server.functionName}`,
+            `arn:aws:logs:${stack.region}:${stack.account}:log-group:/aws/lambda/${server.functionName}:*`,
+          ],
+        }),
+      ],
+    });
+    server.role?.attachInlinePolicy(policy);
   }
 
   private static buildCloudWatchRouteName(route: string) {
