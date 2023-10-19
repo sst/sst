@@ -1,5 +1,6 @@
 import fs from "fs";
 import path from "path";
+import crypto from "crypto";
 import { Construct } from "constructs";
 import {
   Duration as CdkDuration,
@@ -12,6 +13,7 @@ import {
   Function as CdkFunction,
   FunctionProps,
   Architecture,
+  LayerVersion,
 } from "aws-cdk-lib/aws-lambda";
 import {
   AttributeType,
@@ -29,6 +31,8 @@ import { PolicyStatement } from "aws-cdk-lib/aws-iam";
 import { RetentionDays } from "aws-cdk-lib/aws-logs";
 import { VisibleError } from "../error.js";
 import { CachePolicyProps } from "aws-cdk-lib/aws-cloudfront";
+import { SsrFunction, SsrFunctionProps } from "./SsrFunction.js";
+import { EdgeFunctionProps } from "./EdgeFunction.js";
 
 export interface NextjsSiteProps extends Omit<SsrSiteProps, "nodejs"> {
   /**
@@ -40,6 +44,17 @@ export interface NextjsSiteProps extends Omit<SsrSiteProps, "nodejs"> {
    * ```
    */
   openNextVersion?: string;
+  /**
+   * How the logs are stored in CloudWatch
+   * - "aggregate" - Logs from all routes are stored in the same log group.
+   * - "per-route" - Logs from each route are stored in a separate log group.
+   * @default "aggregate"
+   * @example
+   * ```js
+   * logging: "per-route",
+   * ```
+   */
+  logging?: "aggregate" | "per-route";
   imageOptimization?: {
     /**
      * The amount of memory in MB allocated for image optimization function.
@@ -122,6 +137,7 @@ export interface NextjsSiteProps extends Omit<SsrSiteProps, "nodejs"> {
   };
 }
 
+const LAYER_VERSION = "9";
 const DEFAULT_OPEN_NEXT_VERSION = "2.2.4";
 const DEFAULT_CACHE_POLICY_ALLOWED_HEADERS = [
   "accept",
@@ -146,14 +162,14 @@ type NextjsSiteNormalizedProps = NextjsSiteProps & SsrSiteNormalizedProps;
  */
 export class NextjsSite extends SsrSite {
   declare props: NextjsSiteNormalizedProps;
+  private routes?: { route: string; regex: string; logGroupPath: string }[];
 
   constructor(scope: Construct, id: string, props?: NextjsSiteProps) {
-    const { streaming, disableDynamoDBCache, disableIncrementalCache } = {
-      streaming: false,
-      disableDynamoDBCache: false,
-      disableIncrementalCache: false,
-      ...props?.experimental,
-    };
+    const streaming = props?.experimental?.streaming ?? false;
+    const disableDynamoDBCache =
+      props?.experimental?.disableDynamoDBCache ?? false;
+    const disableIncrementalCache =
+      props?.experimental?.disableIncrementalCache ?? false;
 
     super(scope, id, {
       buildCommand: [
@@ -193,16 +209,16 @@ export class NextjsSite extends SsrSite {
       experimental,
       imageOptimization,
     } = this.props;
-    const serverConfig = {
+    const serverConfig = this.wrapServerFunction({
       description: "Next.js server",
       bundle: path.join(sitePath, ".open-next", "server-function"),
-      handler: this.wrapHandler(),
+      handler: "index.handler",
       environment: {
         CACHE_BUCKET_NAME: bucket.bucketName,
         CACHE_BUCKET_KEY_PREFIX: "_cache",
         CACHE_BUCKET_REGION: Stack.of(this).region,
       },
-    };
+    });
     return this.validatePlan({
       cloudFrontFunctions: {
         serverCfFunction: {
@@ -437,64 +453,121 @@ export class NextjsSite extends SsrSite {
       type: "NextjsSite" as const,
       data: {
         ...metadata.data,
-        routes:
-          this.props.edge || this.doNotDeploy ? undefined : this.getRoutes(),
+        routes: this.isPerRouteLoggingEnabled()
+          ? {
+              logGroupPrefix: `/sst/lambda/${
+                (this.serverFunction as SsrFunction).functionName
+              }`,
+              data: this.useRoutes().map(({ route, logGroupPath }) => ({
+                route,
+                logGroupPath,
+              })),
+            }
+          : undefined,
       },
     };
   }
 
-  private wrapHandler() {
+  private wrapServerFunction(config: SsrFunctionProps | EdgeFunctionProps) {
     const { path: sitePath, experimental } = this.props;
+    const stack = Stack.of(this);
     const wrapperName = "nextjssite-index";
     const serverPath = path.join(sitePath, ".open-next", "server-function");
+
+    const injections: string[] = [];
+    if (this.isPerRouteLoggingEnabled()) {
+      injections.push(`
+      const routeData = ${JSON.stringify(
+        this.useRoutes()
+      )}.find(({ regex }) => event.rawPath.match(new RegExp(regex)));
+      if (routeData) {
+        console.log("::sst::" + JSON.stringify({
+          action:"log.split",
+          properties: {
+            logGroupName:"/sst/lambda/" + context.functionName + routeData.logGroupPath,
+          },
+        }));
+      }`);
+    }
 
     fs.writeFileSync(
       path.join(serverPath, `${wrapperName}.mjs`),
       experimental?.streaming
         ? [
-            `export const handler = awslambda.streamifyResponse(async (...args) => {`,
+            `export const handler = awslambda.streamifyResponse(async (event, context) => {`,
+            ...injections,
             `  const { handler: rawHandler} = await import("./index.mjs");`,
-            `  return rawHandler(...args);`,
+            `  return rawHandler(event, context);`,
             `});`,
           ].join("\n")
         : [
-            `export const handler = async (...args) => {`,
+            `export const handler = async (event, context) => {`,
+            ...injections,
             `  const { handler: rawHandler} = await import("./index.mjs");`,
-            `  return rawHandler(...args);`,
+            `  return rawHandler(event, context);`,
             `};`,
           ].join("\n")
     );
 
-    return `${wrapperName}.handler`;
+    return {
+      ...config,
+      layers: this.isPerRouteLoggingEnabled()
+        ? [
+            LayerVersion.fromLayerVersionArn(
+              this,
+              "SSTExtension",
+              `arn:aws:lambda:${stack.region}:226609089145:layer:sst-extension:${LAYER_VERSION}`
+            ),
+          ]
+        : undefined,
+      handler: `${wrapperName}.handler`,
+    };
   }
 
-  private getRoutes() {
+  private useRoutes() {
+    if (this.routes) return this.routes;
+
     const id = this.node.id;
     const { path: sitePath } = this.props;
     try {
       const content: {
-        dynamicRoutes: { page: string }[];
-        staticRoutes: { page: string }[];
-        dataRoutes?: { page: string }[];
+        dynamicRoutes: { page: string; regex: string }[];
+        staticRoutes: { page: string; regex: string }[];
+        dataRoutes?: { page: string; dataRouteRegex: string }[];
       } = JSON.parse(
         fs
           .readFileSync(path.join(sitePath, ".next/routes-manifest.json"))
           .toString()
       );
-      return [
+      this.routes = [
         ...[...content.dynamicRoutes, ...content.staticRoutes]
-          .map(({ page }: { page: string }) => ({
-            route: page,
-          }))
+          .map(({ page, regex }) => {
+            const cwRoute = NextjsSite.buildCloudWatchRouteName(page);
+            const cwHash = NextjsSite.buildCloudWatchRouteHash(page);
+            return {
+              route: page,
+              regex,
+              logGroupPath: `/${cwHash}${cwRoute}`,
+            };
+          })
           .sort((a, b) => a.route.localeCompare(b.route)),
         ...(content.dataRoutes || [])
-          .map(({ page }: { page: string }) => ({
-            route: page.endsWith("/")
+          .map(({ page, dataRouteRegex }) => {
+            const routeDisplayName = page.endsWith("/")
               ? `/_next/data/BUILD_ID${page}index.json`
-              : `/_next/data/BUILD_ID${page}.json`,
-          }))
+              : `/_next/data/BUILD_ID${page}.json`;
+            const cwRoute =
+              NextjsSite.buildCloudWatchRouteName(routeDisplayName);
+            const cwHash = NextjsSite.buildCloudWatchRouteHash(`data:${page}`);
+            return {
+              route: routeDisplayName,
+              regex: dataRouteRegex,
+              logGroupPath: `/${cwHash}${cwRoute}`,
+            };
+          })
           .sort((a, b) => a.route.localeCompare(b.route)),
       ];
+      return this.routes;
     } catch (e) {
       console.error(e);
       throw new VisibleError(
@@ -507,4 +580,26 @@ export class NextjsSite extends SsrSite {
     const { path: sitePath } = this.props;
     return fs.readFileSync(path.join(sitePath, ".next/BUILD_ID")).toString();
   }
+
+  private isPerRouteLoggingEnabled() {
+    return (
+      !this.doNotDeploy &&
+      !this.props.edge &&
+      this.props.logging === "per-route"
+    );
+  }
+
+  private static buildCloudWatchRouteName(route: string) {
+    return route.replace(/[^a-zA-Z0-9_\-/.#]/g, "");
+  }
+
+  private static buildCloudWatchRouteHash(route: string) {
+    const hash = crypto.createHash("sha256");
+    hash.update(route);
+    return hash.digest("hex").substring(0, 8);
+  }
+
+  public static _test = {
+    buildCloudWatchRouteName: NextjsSite.buildCloudWatchRouteName,
+  };
 }
