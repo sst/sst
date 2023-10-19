@@ -82,7 +82,7 @@ At a high level, here's how the Console works.
 
 1. It's hosted on our side
 
-   - It stores some data about your account and your logs on our side.
+   - It stores some metadata about what resources you have deployed.
    - We'll have a version that can be self-hosted in the future.
 
 2. You can view all your apps and stages

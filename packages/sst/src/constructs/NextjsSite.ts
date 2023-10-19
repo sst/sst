@@ -1,5 +1,6 @@
 import fs from "fs";
 import path from "path";
+import crypto from "crypto";
 import { Construct } from "constructs";
 import {
   Duration as CdkDuration,
@@ -12,6 +13,7 @@ import {
   Function as CdkFunction,
   FunctionProps,
   Architecture,
+  LayerVersion,
 } from "aws-cdk-lib/aws-lambda";
 import {
   AttributeType,
@@ -25,10 +27,12 @@ import { Stack } from "./Stack.js";
 import { SsrSite, SsrSiteNormalizedProps, SsrSiteProps } from "./SsrSite.js";
 import { Size, toCdkSize } from "./util/size.js";
 import { Bucket } from "aws-cdk-lib/aws-s3";
-import { PolicyStatement } from "aws-cdk-lib/aws-iam";
+import { Effect, Policy, PolicyStatement } from "aws-cdk-lib/aws-iam";
 import { RetentionDays } from "aws-cdk-lib/aws-logs";
 import { VisibleError } from "../error.js";
 import { CachePolicyProps } from "aws-cdk-lib/aws-cloudfront";
+import { SsrFunction, SsrFunctionProps } from "./SsrFunction.js";
+import { EdgeFunctionProps } from "./EdgeFunction.js";
 
 export interface NextjsSiteProps extends Omit<SsrSiteProps, "nodejs"> {
   /**
@@ -40,6 +44,17 @@ export interface NextjsSiteProps extends Omit<SsrSiteProps, "nodejs"> {
    * ```
    */
   openNextVersion?: string;
+  /**
+   * How the logs are stored in CloudWatch
+   * - "combined" - Logs from all routes are stored in the same log group.
+   * - "per-route" - Logs from each route are stored in a separate log group.
+   * @default "combined"
+   * @example
+   * ```js
+   * logging: "per-route",
+   * ```
+   */
+  logging?: "combined" | "per-route";
   imageOptimization?: {
     /**
      * The amount of memory in MB allocated for image optimization function.
@@ -122,6 +137,7 @@ export interface NextjsSiteProps extends Omit<SsrSiteProps, "nodejs"> {
   };
 }
 
+const LAYER_VERSION = "2";
 const DEFAULT_OPEN_NEXT_VERSION = "2.2.4";
 const DEFAULT_CACHE_POLICY_ALLOWED_HEADERS = [
   "accept",
@@ -146,14 +162,14 @@ type NextjsSiteNormalizedProps = NextjsSiteProps & SsrSiteNormalizedProps;
  */
 export class NextjsSite extends SsrSite {
   declare props: NextjsSiteNormalizedProps;
+  private routes?: { route: string; regex: string; logGroupPath: string }[];
 
   constructor(scope: Construct, id: string, props?: NextjsSiteProps) {
-    const { streaming, disableDynamoDBCache, disableIncrementalCache } = {
-      streaming: false,
-      disableDynamoDBCache: false,
-      disableIncrementalCache: false,
-      ...props?.experimental,
-    };
+    const streaming = props?.experimental?.streaming ?? false;
+    const disableDynamoDBCache =
+      props?.experimental?.disableDynamoDBCache ?? false;
+    const disableIncrementalCache =
+      props?.experimental?.disableIncrementalCache ?? false;
 
     super(scope, id, {
       buildCommand: [
@@ -171,6 +187,10 @@ export class NextjsSite extends SsrSite {
       ].join(" "),
       ...props,
     });
+
+    if (this.isPerRouteLoggingEnabled()) {
+      this.disableDefaultLogging();
+    }
 
     if (!disableIncrementalCache) {
       this.createRevalidationQueue();
@@ -193,16 +213,16 @@ export class NextjsSite extends SsrSite {
       experimental,
       imageOptimization,
     } = this.props;
-    const serverConfig = {
+    const serverConfig = this.wrapServerFunction({
       description: "Next.js server",
       bundle: path.join(sitePath, ".open-next", "server-function"),
-      handler: this.wrapHandler(),
+      handler: "index.handler",
       environment: {
         CACHE_BUCKET_NAME: bucket.bucketName,
         CACHE_BUCKET_KEY_PREFIX: "_cache",
         CACHE_BUCKET_REGION: Stack.of(this).region,
       },
-    };
+    });
     return this.validatePlan({
       cloudFrontFunctions: {
         serverCfFunction: {
@@ -437,64 +457,123 @@ export class NextjsSite extends SsrSite {
       type: "NextjsSite" as const,
       data: {
         ...metadata.data,
-        routes:
-          this.props.edge || this.doNotDeploy ? undefined : this.getRoutes(),
+        routes: this.isPerRouteLoggingEnabled()
+          ? {
+              logGroupPrefix: `/sst/lambda/${
+                (this.serverFunction as SsrFunction).functionName
+              }`,
+              data: this.useRoutes().map(({ route, logGroupPath }) => ({
+                route,
+                logGroupPath,
+              })),
+            }
+          : undefined,
       },
     };
   }
 
-  private wrapHandler() {
-    const { path: sitePath, experimental } = this.props;
+  private wrapServerFunction(config: SsrFunctionProps | EdgeFunctionProps) {
+    const { path: sitePath, experimental, cdk } = this.props;
+    const stack = Stack.of(this);
     const wrapperName = "nextjssite-index";
     const serverPath = path.join(sitePath, ".open-next", "server-function");
+
+    const injections: string[] = [];
+    if (this.isPerRouteLoggingEnabled()) {
+      injections.push(`
+      const routeData = ${JSON.stringify(
+        this.useRoutes()
+      )}.find(({ regex }) => event.rawPath.match(new RegExp(regex)));
+      if (routeData) {
+        console.log("::sst::" + JSON.stringify({
+          action:"log.split",
+          properties: {
+            logGroupName:"/sst/lambda/" + context.functionName + routeData.logGroupPath,
+          },
+        }));
+      }`);
+    }
 
     fs.writeFileSync(
       path.join(serverPath, `${wrapperName}.mjs`),
       experimental?.streaming
         ? [
-            `export const handler = awslambda.streamifyResponse(async (...args) => {`,
+            `export const handler = awslambda.streamifyResponse(async (event, context) => {`,
+            ...injections,
             `  const { handler: rawHandler} = await import("./index.mjs");`,
-            `  return rawHandler(...args);`,
+            `  return rawHandler(event, context);`,
             `});`,
           ].join("\n")
         : [
-            `export const handler = async (...args) => {`,
+            `export const handler = async (event, context) => {`,
+            ...injections,
             `  const { handler: rawHandler} = await import("./index.mjs");`,
-            `  return rawHandler(...args);`,
+            `  return rawHandler(event, context);`,
             `};`,
           ].join("\n")
     );
 
-    return `${wrapperName}.handler`;
+    return {
+      ...config,
+      layers: this.isPerRouteLoggingEnabled()
+        ? [
+            LayerVersion.fromLayerVersionArn(
+              this,
+              "SSTExtension",
+              cdk?.server?.architecture?.name === Architecture.X86_64.name
+                ? `arn:aws:lambda:${stack.region}:226609089145:layer:sst-extension-amd64:${LAYER_VERSION}`
+                : `arn:aws:lambda:${stack.region}:226609089145:layer:sst-extension-arm64:${LAYER_VERSION}`
+            ),
+          ]
+        : undefined,
+      handler: `${wrapperName}.handler`,
+    };
   }
 
-  private getRoutes() {
+  private useRoutes() {
+    if (this.routes) return this.routes;
+
     const id = this.node.id;
     const { path: sitePath } = this.props;
     try {
       const content: {
-        dynamicRoutes: { page: string }[];
-        staticRoutes: { page: string }[];
-        dataRoutes?: { page: string }[];
+        dynamicRoutes: { page: string; regex: string }[];
+        staticRoutes: { page: string; regex: string }[];
+        dataRoutes?: { page: string; dataRouteRegex: string }[];
       } = JSON.parse(
         fs
           .readFileSync(path.join(sitePath, ".next/routes-manifest.json"))
           .toString()
       );
-      return [
+      this.routes = [
         ...[...content.dynamicRoutes, ...content.staticRoutes]
-          .map(({ page }: { page: string }) => ({
-            route: page,
-          }))
+          .map(({ page, regex }) => {
+            const cwRoute = NextjsSite.buildCloudWatchRouteName(page);
+            const cwHash = NextjsSite.buildCloudWatchRouteHash(page);
+            return {
+              route: page,
+              regex,
+              logGroupPath: `/${cwHash}${cwRoute}`,
+            };
+          })
           .sort((a, b) => a.route.localeCompare(b.route)),
         ...(content.dataRoutes || [])
-          .map(({ page }: { page: string }) => ({
-            route: page.endsWith("/")
+          .map(({ page, dataRouteRegex }) => {
+            const routeDisplayName = page.endsWith("/")
               ? `/_next/data/BUILD_ID${page}index.json`
-              : `/_next/data/BUILD_ID${page}.json`,
-          }))
+              : `/_next/data/BUILD_ID${page}.json`;
+            const cwRoute =
+              NextjsSite.buildCloudWatchRouteName(routeDisplayName);
+            const cwHash = NextjsSite.buildCloudWatchRouteHash(`data:${page}`);
+            return {
+              route: routeDisplayName,
+              regex: dataRouteRegex,
+              logGroupPath: `/${cwHash}${cwRoute}`,
+            };
+          })
           .sort((a, b) => a.route.localeCompare(b.route)),
       ];
+      return this.routes;
     } catch (e) {
       console.error(e);
       throw new VisibleError(
@@ -507,4 +586,51 @@ export class NextjsSite extends SsrSite {
     const { path: sitePath } = this.props;
     return fs.readFileSync(path.join(sitePath, ".next/BUILD_ID")).toString();
   }
+
+  private isPerRouteLoggingEnabled() {
+    return (
+      !this.doNotDeploy &&
+      !this.props.edge &&
+      this.props.logging === "per-route"
+    );
+  }
+
+  private disableDefaultLogging() {
+    // Note: keep default logs enabled
+    return;
+    const stack = Stack.of(this);
+    const server = this.serverFunction as SsrFunction;
+
+    const policy = new Policy(this, "DisableLoggingPolicy", {
+      statements: [
+        new PolicyStatement({
+          effect: Effect.DENY,
+          actions: [
+            "logs:CreateLogGroup",
+            "logs:CreateLogStream",
+            "logs:PutLogEvents",
+          ],
+          resources: [
+            `arn:aws:logs:${stack.region}:${stack.account}:log-group:/aws/lambda/${server.functionName}`,
+            `arn:aws:logs:${stack.region}:${stack.account}:log-group:/aws/lambda/${server.functionName}:*`,
+          ],
+        }),
+      ],
+    });
+    server.role?.attachInlinePolicy(policy);
+  }
+
+  private static buildCloudWatchRouteName(route: string) {
+    return route.replace(/[^a-zA-Z0-9_\-/.#]/g, "");
+  }
+
+  private static buildCloudWatchRouteHash(route: string) {
+    const hash = crypto.createHash("sha256");
+    hash.update(route);
+    return hash.digest("hex").substring(0, 8);
+  }
+
+  public static _test = {
+    buildCloudWatchRouteName: NextjsSite.buildCloudWatchRouteName,
+  };
 }
