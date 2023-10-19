@@ -54,7 +54,7 @@ export interface NextjsSiteProps extends Omit<SsrSiteProps, "nodejs"> {
    * logging: "per-route",
    * ```
    */
-  _logging?: "combined" | "per-route";
+  logging?: "combined" | "per-route";
   imageOptimization?: {
     /**
      * The amount of memory in MB allocated for image optimization function.
@@ -137,7 +137,7 @@ export interface NextjsSiteProps extends Omit<SsrSiteProps, "nodejs"> {
   };
 }
 
-const LAYER_VERSION = "9";
+const LAYER_VERSION = "2";
 const DEFAULT_OPEN_NEXT_VERSION = "2.2.4";
 const DEFAULT_CACHE_POLICY_ALLOWED_HEADERS = [
   "accept",
@@ -473,7 +473,7 @@ export class NextjsSite extends SsrSite {
   }
 
   private wrapServerFunction(config: SsrFunctionProps | EdgeFunctionProps) {
-    const { path: sitePath, experimental } = this.props;
+    const { path: sitePath, experimental, cdk } = this.props;
     const stack = Stack.of(this);
     const wrapperName = "nextjssite-index";
     const serverPath = path.join(sitePath, ".open-next", "server-function");
@@ -520,7 +520,9 @@ export class NextjsSite extends SsrSite {
             LayerVersion.fromLayerVersionArn(
               this,
               "SSTExtension",
-              `arn:aws:lambda:${stack.region}:226609089145:layer:sst-extension:${LAYER_VERSION}`
+              cdk?.server?.architecture?.name === Architecture.X86_64.name
+                ? `arn:aws:lambda:${stack.region}:226609089145:layer:sst-extension-amd64:${LAYER_VERSION}`
+                : `arn:aws:lambda:${stack.region}:226609089145:layer:sst-extension-arm64:${LAYER_VERSION}`
             ),
           ]
         : undefined,
@@ -589,11 +591,13 @@ export class NextjsSite extends SsrSite {
     return (
       !this.doNotDeploy &&
       !this.props.edge &&
-      this.props._logging === "per-route"
+      this.props.logging === "per-route"
     );
   }
 
   private disableDefaultLogging() {
+    // Note: keep default logs enabled
+    return;
     const stack = Stack.of(this);
     const server = this.serverFunction as SsrFunction;
 
