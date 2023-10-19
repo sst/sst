@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.30.4
+
+### Patch Changes
+
+- [#3431](https://github.com/sst/sst/pull/3431) [`b3abbfd19`](https://github.com/sst/sst/commit/b3abbfd19318e0e1ab94f590c2e5ed4619d5fe51) Thanks [@fwang](https://github.com/fwang)! - NextjsSite: add beta option for per-route logging [wip]
+
 ## 2.30.3
 
 ### Patch Changes
