@@ -27,20 +27,16 @@ import {
   ViewerProtocolPolicy,
 } from "aws-cdk-lib/aws-cloudfront";
 import { S3Origin } from "aws-cdk-lib/aws-cloudfront-origins";
-import { AwsCliLayer } from "aws-cdk-lib/lambda-layer-awscli";
-
 import { App } from "./App.js";
 import { Stack } from "./Stack.js";
 import { Distribution, DistributionDomainProps } from "./Distribution.js";
 import {
   BaseSiteFileOptions,
-  BaseSiteFileOptionsFilter,
   BaseSiteReplaceProps,
   BaseSiteCdkDistributionProps,
   getBuildCmdEnvironment,
   buildErrorResponsesFor404ErrorPage,
   buildErrorResponsesForRedirectToIndex,
-  BaseSiteFileOptionsDeprecated,
 } from "./BaseSite.js";
 import { useDeferredTasks } from "./deferred_task.js";
 import { SSTConstruct, isCDKConstruct } from "./Construct.js";
@@ -51,6 +47,7 @@ import {
 import { gray } from "colorette";
 import { useProject } from "../project.js";
 import { createAppContext } from "./context.js";
+import { Effect, Policy, PolicyStatement } from "aws-cdk-lib/aws-iam";
 
 const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
 
@@ -122,11 +119,11 @@ export interface StaticSiteProps {
    * ```js
    * [
    *   {
-   *     filters: [{ exclude: "*" }, { include: "*.html" }],
+   *     files: "**",
    *     cacheControl: "max-age=0,no-cache,no-store,must-revalidate",
    *   },
    *   {
-   *     filters: [{ exclude: "*" }, { include: "*.js" }, { include: "*.css" }],
+   *     files: "**\/*.{js,css}",
    *     cacheControl: "max-age=31536000,public,immutable",
    *   },
    * ]
@@ -136,13 +133,13 @@ export interface StaticSiteProps {
    * new StaticSite(stack, "Site", {
    *   buildOutput: "dist",
    *   fileOptions: [{
-   *     filters: [{ exclude: "*" }, { include: "*.js" }],
+   *     files: "**\/*.zip",
    *     cacheControl: "max-age=31536000,public,immutable",
    *   }]
    * });
    * ```
    */
-  fileOptions?: StaticSiteFileOptions[] | StaticSiteFileOptionsDeprecated[];
+  fileOptions?: StaticSiteFileOptions[];
   /**
    * Pass in a list of placeholder values to be replaced in the website content. For example, the follow configuration:
    *
@@ -312,13 +309,7 @@ export interface StaticSiteProps {
 }
 
 export interface StaticSiteDomainProps extends DistributionDomainProps {}
-export interface StaticSiteFileOptionsFilter
-  extends BaseSiteFileOptionsFilter {}
-export interface StaticSiteFileOptions extends BaseSiteFileOptions {
-  filters: StaticSiteFileOptionsFilter[];
-}
-export interface StaticSiteFileOptionsDeprecated
-  extends BaseSiteFileOptionsDeprecated {}
+export interface StaticSiteFileOptions extends BaseSiteFileOptions {}
 export interface StaticSiteReplaceProps extends BaseSiteReplaceProps {}
 export interface StaticSiteCdkDistributionProps
   extends BaseSiteCdkDistributionProps {}
@@ -381,14 +372,9 @@ export class StaticSite extends Construct implements SSTConstruct {
       this.buildApp();
 
       // Create S3 Deployment
-      const cliLayer = new AwsCliLayer(this, "AwsCliLayer");
       const assets = this.createS3Assets();
       const filenamesAsset = this.bundleFilenamesAsset();
-      const s3deployCR = this.createS3Deployment(
-        cliLayer,
-        assets,
-        filenamesAsset
-      );
+      const s3deployCR = this.createS3Deployment(assets, filenamesAsset);
       this.distribution.node.addDependency(s3deployCR);
 
       // Invalidate CloudFront
@@ -674,96 +660,65 @@ interface ImportMeta {
   }
 
   private createS3Deployment(
-    cliLayer: AwsCliLayer,
     assets: Asset[],
     filenamesAsset?: Asset
   ): CustomResource {
-    const fileOptions:
-      | StaticSiteFileOptions[]
-      | StaticSiteFileOptionsDeprecated[] = this.props.fileOptions ?? [
-      {
-        filters: [{ exclude: "*" }, { include: "*.html" }],
-        cacheControl: "max-age=0,no-cache,no-store,must-revalidate",
-      },
-      {
-        filters: [{ exclude: "*" }, { include: "*.js" }, { include: "*.css" }],
-        cacheControl: "max-age=31536000,public,immutable",
-      },
-    ];
-
-    // Create a Lambda function that will be doing the uploading
-    const uploader = new Function(this, "S3Uploader", {
-      code: Code.fromAsset(
-        path.join(__dirname, "../support/base-site-custom-resource")
-      ),
-      layers: [cliLayer],
-      runtime: Runtime.PYTHON_3_11,
-      handler: "s3-upload.handler",
-      timeout: Duration.minutes(15),
-      memorySize: 1024,
-    });
-    this.bucket.grantReadWrite(uploader);
-    assets.forEach((asset) => asset.grantRead(uploader));
-
-    // Create the custom resource function
-    const handler = new Function(this, "S3Handler", {
-      code: Code.fromAsset(
-        path.join(__dirname, "../support/base-site-custom-resource")
-      ),
-      layers: [cliLayer],
-      runtime: Runtime.PYTHON_3_11,
-      handler: "s3-handler.handler",
-      timeout: Duration.minutes(15),
-      memorySize: 1024,
-      environment: {
-        UPLOADER_FUNCTION_NAME: uploader.functionName,
-      },
-    });
-    this.bucket.grantReadWrite(handler);
-    filenamesAsset?.grantRead(handler);
-    uploader.grantInvoke(handler);
-
-    // Create custom resource
-    return new CustomResource(this, "S3Deployment", {
-      serviceToken: handler.functionArn,
-      resourceType: "Custom::SSTBucketDeployment",
-      properties: {
-        Sources: assets.map((asset) => ({
-          BucketName: asset.s3BucketName,
-          ObjectKey: asset.s3ObjectKey,
-        })),
-        DestinationBucketName: this.bucket.bucketName,
-        Filenames: filenamesAsset && {
-          BucketName: filenamesAsset.s3BucketName,
-          ObjectKey: filenamesAsset.s3ObjectKey,
-        },
-        FileOptions: (fileOptions || []).map((o) => {
-          const { filters, cacheControl, contentType, contentEncoding } =
-            o as StaticSiteFileOptions;
-          const { include, exclude } = o as StaticSiteFileOptionsDeprecated;
-          return [
-            ...(typeof exclude === "string" ? [exclude] : exclude ?? [])
-              .map((entry) => ["--exclude", entry])
-              .flat(2),
-            ...(typeof include === "string" ? [include] : include ?? [])
-              .map((entry) => ["--include", entry])
-              .flat(2),
-            ...(filters || [])
-              .map((filter) =>
-                Object.entries(filter).map(([key, value]) => [
-                  `--${key}`,
-                  value,
-                ])
-              )
-              .flat(2),
-            cacheControl ? ["--cache-control", cacheControl] : [],
-            contentType ? ["--content-type", contentType] : [],
-            contentEncoding ? ["--content-encoding", contentEncoding] : [],
-          ].flat();
+    const stack = Stack.of(this) as Stack;
+    const policy = new Policy(this, "S3UploaderPolicy", {
+      statements: [
+        new PolicyStatement({
+          effect: Effect.ALLOW,
+          actions: ["lambda:InvokeFunction"],
+          resources: [stack.customResourceHandler.functionArn],
         }),
-        ReplaceValues: this.getS3ContentReplaceValues(),
+        new PolicyStatement({
+          effect: Effect.ALLOW,
+          actions: [
+            "s3:ListObjectsV2Command",
+            "s3:PutObject",
+            "s3:DeleteObject",
+          ],
+          resources: [`${this.bucket.bucketArn}/*`],
+        }),
+        new PolicyStatement({
+          effect: Effect.ALLOW,
+          actions: ["s3:GetObject"],
+          resources: [`${assets[0].bucket.bucketArn}/*`],
+        }),
+      ],
+    });
+    stack.customResourceHandler.role?.attachInlinePolicy(policy);
+
+    const resource = new CustomResource(this, "S3Uploader", {
+      serviceToken: stack.customResourceHandler.functionArn,
+      resourceType: "Custom::S3Uploader",
+      properties: {
+        sources: assets.map((asset) => ({
+          bucketName: asset.s3BucketName,
+          objectKey: asset.s3ObjectKey,
+        })),
+        destinationBucketName: this.bucket.bucketName,
+        filenames: filenamesAsset && {
+          bucketName: filenamesAsset.s3BucketName,
+          objectKey: filenamesAsset.s3ObjectKey,
+        },
+        fileOptions: [
+          {
+            files: "**",
+            cacheControl: "max-age=0,no-cache,no-store,must-revalidate",
+          },
+          {
+            files: "**/*.{js,css}",
+            cacheControl: "max-age=31536000,public,immutable",
+          },
+          ...(this.props.fileOptions || []),
+        ],
+        replaceValues: this.getS3ContentReplaceValues(),
       },
     });
+    resource.node.addDependency(policy);
+
+    return resource;
   }
 
   /////////////////////

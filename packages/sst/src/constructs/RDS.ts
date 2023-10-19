@@ -1,5 +1,5 @@
 import path from "path";
-import glob from "glob";
+import { globSync } from "glob";
 import fs from "fs";
 import url from "url";
 import * as crypto from "crypto";
@@ -595,7 +595,7 @@ export class RDS extends Construct implements SSTConstruct {
 
   private generateMigrationsHash(migrations: string): string {
     // Get all files inside the migrations folder
-    const files = glob.sync("**", {
+    const files = globSync("**", {
       dot: true,
       nodir: true,
       follow: true,

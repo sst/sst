@@ -1,7 +1,7 @@
 import path from "path";
 import url from "url";
 import fs from "fs";
-import glob from "glob";
+import { globSync } from "glob";
 import crypto from "crypto";
 import spawn from "cross-spawn";
 import { execSync } from "child_process";
@@ -58,7 +58,6 @@ import {
   FunctionEventType as CfFunctionEventType,
   ErrorResponse,
 } from "aws-cdk-lib/aws-cloudfront";
-import { AwsCliLayer } from "aws-cdk-lib/lambda-layer-awscli";
 import {
   S3Origin,
   HttpOrigin,
@@ -79,8 +78,6 @@ import { SsrFunction, SsrFunctionProps } from "./SsrFunction.js";
 import { EdgeFunction, EdgeFunctionProps } from "./EdgeFunction.js";
 import {
   BaseSiteFileOptions,
-  BaseSiteFileOptionsFilter,
-  BaseSiteFileOptionsDeprecated,
   BaseSiteReplaceProps,
   BaseSiteCdkDistributionProps,
   getBuildCmdEnvironment,
@@ -131,12 +128,7 @@ type OriginsMap = Record<string, S3Origin | HttpOrigin | OriginGroup>;
 export type Plan = ReturnType<SsrSite["validatePlan"]>;
 export interface SsrSiteNodeJSProps extends NodeJSProps {}
 export interface SsrDomainProps extends DistributionDomainProps {}
-export interface SsrSiteFileOptionsFilter extends BaseSiteFileOptionsFilter {}
-export interface SsrSiteFileOptions extends BaseSiteFileOptions {
-  filters: SsrSiteFileOptionsFilter[];
-}
-export interface SsrSiteFileOptionsDeprecated
-  extends BaseSiteFileOptionsDeprecated {}
+export interface SsrSiteFileOptions extends BaseSiteFileOptions {}
 export interface SsrSiteReplaceProps extends BaseSiteReplaceProps {}
 export interface SsrCdkDistributionProps extends BaseSiteCdkDistributionProps {}
 export interface SsrSiteProps {
@@ -361,7 +353,7 @@ export interface SsrSiteProps {
      * cache: {
      *   fileOptions: [
      *     {
-     *       filters: [ { exclude: "*" }, { include: "*.zip" } ],
+     *       files: "**\/*.zip",
      *       cacheControl: "private,no-cache,no-store,must-revalidate",
      *       contentType: "application/zip",
      *     },
@@ -430,59 +422,6 @@ export interface SsrSiteProps {
     > &
       Pick<FunctionProps, "copyFiles">;
   };
-  /**
-   * Pass in a list of file options to customize cache control and content type specific files. Specifying file options will bypass all default file options and only use the ones specified. Most configurations within the `cache` prop will be ignored.
-   * @deprecated Use `cache.fileOptions` instead. Note that the `cache.fileOptions` are appended to default file options, not a replacement as this prop was.
-   * @default
-   * Versioned files cached for 1 year at the CDN and browser level.
-   * Nonversioned files cached for 1 day at the CDN level, but not at the browser level.
-   * ```js
-   * fileOptions: [
-   *   {
-   *     exclude: "*",
-   *     include: "{versioned_directory}/*",
-   *     cacheControl: "public,max-age=31536000,immutable",
-   *   },
-   *   {
-   *     exclude: "*",
-   *     include: "[{non_versioned_file1}, {non_versioned_file2}, ...]",
-   *     cacheControl: "public,max-age=0,s-maxage=31536000,must-revalidate",
-   *   },
-   *   {
-   *     exclude: "*",
-   *     include: "[{non_versioned_dir_1}/*, {non_versioned_dir_2}/*, ...]",
-   *     cacheControl: "public,max-age=0,s-maxage=31536000,must-revalidate",
-   *   },
-   * ]
-   * ```
-   *
-   * @example
-   * ```js
-   * fileOptions: [
-   *   {
-   *     exclude: "*",
-   *     include: "{versioned_directory}/*.css",
-   *     cacheControl: "public,max-age=31536000,immutable",
-   *     contentType: "text/css; charset=UTF-8",
-   *   },
-   *   {
-   *     exclude: "*",
-   *     include: "{versioned_directory}/*.js",
-   *     cacheControl: "public,max-age=31536000,immutable",
-   *   },
-   *   {
-   *     exclude: "*",
-   *     include: "[{non_versioned_file1}, {non_versioned_file2}, ...]",
-   *     cacheControl: "public,max-age=0,s-maxage=31536000,must-revalidate",
-   *   },
-   *   {
-   *     exclude: "*",
-   *     include: "[{non_versioned_dir_1}/*, {non_versioned_dir_2}/*, ...]",
-   *     cacheControl: "public,max-age=0,s-maxage=31536000,must-revalidate",
-   *   },
-   * ]
-   */
-  fileOptions?: SsrSiteFileOptionsDeprecated[];
 }
 
 export type SsrSiteNormalizedProps = SsrSiteProps & {
@@ -549,7 +488,6 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
       bind,
       customDomain,
       waitForInvalidation,
-      fileOptions,
       warm,
       cdk,
     } = props;
@@ -572,7 +510,6 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
 
     let s3DeployCRs: CustomResource[] = [];
     let ssrFunctions: SsrFunction[] = [];
-    let singletonAwsCliLayer: AwsCliLayer;
     let singletonUrlSigner: EdgeFunction;
     let singletonCachePolicy: CachePolicy;
     let singletonOriginRequestPolicy: IOriginRequestPolicy;
@@ -969,9 +906,7 @@ function handler(event) {
       });
 
       const assets = createS3OriginAssets(props.copy);
-      const assetFileOptions =
-        fileOptions || createS3OriginAssetFileOptions(props.copy, cache);
-      const s3deployCR = createS3OriginDeployment(assets, assetFileOptions);
+      const s3deployCR = createS3OriginDeployment(props.copy, assets);
       s3DeployCRs.push(s3deployCR);
 
       return s3Origin;
@@ -1156,10 +1091,91 @@ function handler(event) {
       return assets;
     }
 
-    function createS3OriginAssetFileOptions(
+    function createS3OriginDeployment(
       copy: S3OriginConfig["copy"],
-      cache: SsrSiteProps["cache"]
-    ) {
+      assets: Asset[]
+    ): CustomResource {
+      const policy = new Policy(self, "S3UploaderPolicy", {
+        statements: [
+          new PolicyStatement({
+            effect: Effect.ALLOW,
+            actions: ["lambda:InvokeFunction"],
+            resources: [stack.customResourceHandler.functionArn],
+          }),
+          new PolicyStatement({
+            effect: Effect.ALLOW,
+            actions: [
+              "s3:ListObjectsV2Command",
+              "s3:PutObject",
+              "s3:DeleteObject",
+            ],
+            resources: [`${bucket.bucketArn}/*`],
+          }),
+          new PolicyStatement({
+            effect: Effect.ALLOW,
+            actions: ["s3:GetObject"],
+            resources: [`${assets[0].bucket.bucketArn}/*`],
+          }),
+        ],
+      });
+      stack.customResourceHandler.role?.attachInlinePolicy(policy);
+
+      const resource = new CustomResource(self, "S3Uploader", {
+        serviceToken: stack.customResourceHandler.functionArn,
+        resourceType: "Custom::S3Uploader",
+        properties: {
+          sources: assets.map((asset) => ({
+            bucketName: asset.s3BucketName,
+            objectKey: asset.s3ObjectKey,
+          })),
+          destinationBucketName: bucket.bucketName,
+          fileOptions: getS3FileOptions(copy),
+          replaceValues: getS3ContentReplaceValues(),
+        },
+      });
+      resource.node.addDependency(policy);
+
+      return resource;
+    }
+
+    function useFunctionUrlSigningFunction() {
+      singletonUrlSigner =
+        singletonUrlSigner ??
+        new EdgeFunction(self, "ServerUrlSigningFunction", {
+          bundle: path.join(__dirname, "../support/signing-function"),
+          runtime: "nodejs18.x",
+          handler: "index.handler",
+          timeout: 10,
+          memorySize: 128,
+        });
+      return singletonUrlSigner;
+    }
+
+    function useServerBehaviorCachePolicy() {
+      const allowedHeaders = plan.cachePolicyAllowedHeaders || [];
+      singletonCachePolicy =
+        singletonCachePolicy ??
+        new CachePolicy(
+          self,
+          "ServerCache",
+          SsrSite.buildDefaultServerCachePolicyProps(allowedHeaders)
+        );
+      return singletonCachePolicy;
+    }
+
+    function useServerBehaviorOriginRequestPolicy() {
+      // CloudFront's Managed-AllViewerExceptHostHeader policy
+      singletonOriginRequestPolicy =
+        singletonOriginRequestPolicy ??
+        OriginRequestPolicy.fromOriginRequestPolicyId(
+          self,
+          "ServerOriginRequestPolicy",
+          "b689b0a8-53d0-40ab-baf2-68738e2966ac"
+        );
+      return singletonOriginRequestPolicy;
+    }
+
+    function getS3FileOptions(copy: S3OriginConfig["copy"]) {
       const fileOptions: SsrSiteFileOptions[] = [];
 
       const textEncoding = cache?.textEncoding ?? "UTF-8";
@@ -1217,95 +1233,51 @@ function handler(event) {
         zip: { mime: "application/zip", isText: false },
       };
 
-      copy.forEach((files) => {
-        if (!files.cached) return;
+      copy.forEach(({ cached, to, versionedSubDir }) => {
+        if (!cached) return;
 
-        for (const [extension, contentType] of Object.entries(
-          commonWebFileExtensions
-        )) {
-          // Create a file option for: common extension + unversioned files
-          fileOptions.push({
-            filters: [
-              { exclude: "*" },
-              { include: `${path.posix.join(files.to, "*")}.${extension}` },
-              ...(files.versionedSubDir
-                ? [
-                    {
-                      exclude: path.posix.join(
-                        files.to,
-                        files.versionedSubDir,
-                        "*"
-                      ),
-                    },
-                  ]
-                : []),
-            ],
-            cacheControl: nonVersionedFilesCacheHeader,
-            contentType: `${contentType.mime}${
-              contentType.isText && textEncoding !== "none"
-                ? `;charset=${textEncoding}`
-                : ""
-            }`,
-          });
-
-          // Create a file option for: common extension + versioned files
-          if (files.versionedSubDir) {
-            fileOptions.push({
-              filters: [
-                { exclude: "*" },
-                {
-                  include: path.posix.join(
-                    files.to,
-                    files.versionedSubDir,
-                    `*.${extension}`
-                  ),
-                },
-              ],
-              cacheControl: versionedFilesCacheHeader,
-              contentType: `${contentType.mime}${
-                contentType.isText && textEncoding !== "none"
-                  ? `;charset=${textEncoding}`
-                  : ""
-              }`,
-            });
-          }
-        }
-
-        // Create a file option for: other extensions + unversioned files
+        // Create a default file option for: unversioned files
         fileOptions.push({
-          filters: [
-            { include: "*" },
-            ...(files.versionedSubDir
-              ? [
-                  {
-                    exclude: path.posix.join(
-                      files.to,
-                      files.versionedSubDir,
-                      "*"
-                    ),
-                  },
-                ]
-              : []),
-            ...Object.entries(commonWebFileExtensions).map(([ext]) => ({
-              exclude: `*.${ext}`,
-            })),
-          ],
+          files: "**",
+          ignore: versionedSubDir
+            ? path.posix.join("/", to, versionedSubDir, "**")
+            : undefined,
           cacheControl: nonVersionedFilesCacheHeader,
         });
 
-        // Create a file option for: other extensions + versioned files
-        if (files.versionedSubDir) {
+        // Create a default file option for: versioned files
+        if (versionedSubDir) {
           fileOptions.push({
-            filters: [
-              {
-                include: path.posix.join(files.to, files.versionedSubDir, "*"),
-              },
-              ...Object.entries(commonWebFileExtensions).map(([ext]) => ({
-                exclude: `*.${ext}`,
-              })),
-            ],
+            files: path.posix.join("/", to, versionedSubDir, "**"),
             cacheControl: versionedFilesCacheHeader,
           });
+        }
+
+        for (const [ext, extData] of Object.entries(commonWebFileExtensions)) {
+          const contentType = `${extData.mime}${
+            extData.isText && textEncoding !== "none"
+              ? `;charset=${textEncoding}`
+              : ""
+          }`;
+
+          // Create a file option for: common extension + unversioned files
+          fileOptions.push({
+            files: path.posix.join("/", to, `**/*.${ext}`),
+            ignore: versionedSubDir
+              ? path.posix.join("/", to, versionedSubDir, "**")
+              : undefined,
+            cacheControl: nonVersionedFilesCacheHeader,
+            contentType,
+          });
+
+          // Create a file option for: common extension + versioned files
+          if (versionedSubDir) {
+            fileOptions.push({
+              files: path.posix.join("/", to, versionedSubDir, `**/*.${ext}`),
+              cacheControl: versionedFilesCacheHeader,
+              contentType,
+            });
+          }
         }
       });
 
@@ -1314,123 +1286,6 @@ function handler(event) {
       }
 
       return fileOptions;
-    }
-
-    function createS3OriginDeployment(
-      assets: Asset[],
-      fileOptions: SsrSiteFileOptions[] | SsrSiteFileOptionsDeprecated[]
-    ): CustomResource {
-      // Create a Lambda function that will be doing the uploading
-      const uploader = new CdkFunction(self, "S3Uploader", {
-        code: Code.fromAsset(
-          path.join(__dirname, "../support/base-site-custom-resource")
-        ),
-        layers: [useAwsCliLayer()],
-        runtime: Runtime.PYTHON_3_11,
-        handler: "s3-upload.handler",
-        timeout: CdkDuration.minutes(15),
-        memorySize: 1024,
-      });
-      bucket.grantReadWrite(uploader);
-      assets.forEach((asset) => asset.grantRead(uploader));
-
-      // Create the custom resource function
-      const handler = new CdkFunction(self, "S3Handler", {
-        code: Code.fromAsset(
-          path.join(__dirname, "../support/base-site-custom-resource")
-        ),
-        layers: [useAwsCliLayer()],
-        runtime: Runtime.PYTHON_3_11,
-        handler: "s3-handler.handler",
-        timeout: CdkDuration.minutes(15),
-        memorySize: 1024,
-        environment: {
-          UPLOADER_FUNCTION_NAME: uploader.functionName,
-        },
-      });
-      bucket.grantReadWrite(handler);
-      uploader.grantInvoke(handler);
-
-      // Create custom resource
-      return new CustomResource(self, "S3Deployment", {
-        serviceToken: handler.functionArn,
-        resourceType: "Custom::SSTBucketDeployment",
-        properties: {
-          Sources: assets.map((asset) => ({
-            BucketName: asset.s3BucketName,
-            ObjectKey: asset.s3ObjectKey,
-          })),
-          DestinationBucketName: bucket.bucketName,
-          FileOptions: (fileOptions || []).map((o) => {
-            const { filters, cacheControl, contentType, contentEncoding } =
-              o as SsrSiteFileOptions;
-            const { include, exclude } = o as SsrSiteFileOptionsDeprecated;
-            return [
-              ...(typeof exclude === "string" ? [exclude] : exclude ?? [])
-                .map((entry) => ["--exclude", entry])
-                .flat(2),
-              ...(typeof include === "string" ? [include] : include ?? [])
-                .map((entry) => ["--include", entry])
-                .flat(2),
-              ...(filters || [])
-                .map((filter) =>
-                  Object.entries(filter).map(([key, value]) => [
-                    `--${key}`,
-                    value,
-                  ])
-                )
-                .flat(2),
-              cacheControl ? ["--cache-control", cacheControl] : [],
-              contentType ? ["--content-type", contentType] : [],
-              contentEncoding ? ["--content-encoding", contentEncoding] : [],
-            ].flat();
-          }),
-          ReplaceValues: getS3ContentReplaceValues(),
-        },
-      });
-    }
-
-    function useFunctionUrlSigningFunction() {
-      singletonUrlSigner =
-        singletonUrlSigner ??
-        new EdgeFunction(self, "ServerUrlSigningFunction", {
-          bundle: path.join(__dirname, "../support/signing-function"),
-          runtime: "nodejs18.x",
-          handler: "index.handler",
-          timeout: 10,
-          memorySize: 128,
-        });
-      return singletonUrlSigner;
-    }
-
-    function useServerBehaviorCachePolicy() {
-      const allowedHeaders = plan.cachePolicyAllowedHeaders || [];
-      singletonCachePolicy =
-        singletonCachePolicy ??
-        new CachePolicy(
-          self,
-          "ServerCache",
-          SsrSite.buildDefaultServerCachePolicyProps(allowedHeaders)
-        );
-      return singletonCachePolicy;
-    }
-
-    function useServerBehaviorOriginRequestPolicy() {
-      // CloudFront's Managed-AllViewerExceptHostHeader policy
-      singletonOriginRequestPolicy =
-        singletonOriginRequestPolicy ??
-        OriginRequestPolicy.fromOriginRequestPolicyId(
-          self,
-          "ServerOriginRequestPolicy",
-          "b689b0a8-53d0-40ab-baf2-68738e2966ac"
-        );
-      return singletonOriginRequestPolicy;
-    }
-
-    function useAwsCliLayer() {
-      singletonAwsCliLayer =
-        singletonAwsCliLayer ?? new AwsCliLayer(self, "AwsCliLayer");
-      return singletonAwsCliLayer;
     }
 
     function getS3ContentReplaceValues() {
@@ -1503,37 +1358,32 @@ function handler(event) {
         // The below options are needed to support following symlinks when building zip files:
         // - nodir: This will prevent symlinks themselves from being copied into the zip.
         // - follow: This will follow symlinks and copy the files within.
-        const globOptions: glob.IOptions = {
-          dot: true,
-          nodir: true,
-          follow: true,
-          cwd: path.resolve(sitePath, item.from),
-        };
 
         // For versioned files, use file path for digest since file version in name should change on content change
         if (item.versionedSubDir) {
-          glob
-            .sync("**", {
-              ...globOptions,
-              cwd: path.resolve(sitePath, item.from, item.versionedSubDir),
-            })
-            .forEach((filePath) => hash.update(filePath));
+          globSync("**", {
+            dot: true,
+            nodir: true,
+            follow: true,
+            cwd: path.resolve(sitePath, item.from, item.versionedSubDir),
+          }).forEach((filePath) => hash.update(filePath));
         }
 
         // For non-versioned files, use file content for digest
         if (cdnInvalidationStrategy === "all") {
-          glob
-            .sync("**", {
-              ...globOptions,
-              ignore: item.versionedSubDir
-                ? [path.posix.join(item.versionedSubDir, "**")]
-                : undefined,
-            })
-            .forEach((filePath) =>
-              hash.update(
-                fs.readFileSync(path.resolve(sitePath, item.from, filePath))
-              )
-            );
+          globSync("**", {
+            ignore: item.versionedSubDir
+              ? [path.posix.join(item.versionedSubDir, "**")]
+              : undefined,
+            dot: true,
+            nodir: true,
+            follow: true,
+            cwd: path.resolve(sitePath, item.from),
+          }).forEach((filePath) =>
+            hash.update(
+              fs.readFileSync(path.resolve(sitePath, item.from, filePath))
+            )
+          );
         }
       });
 
