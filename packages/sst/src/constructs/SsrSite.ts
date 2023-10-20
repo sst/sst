@@ -275,18 +275,18 @@ export interface SsrSiteProps {
      */
     url?: string;
   };
-  cache?: {
+  assets?: {
     /**
-     * Character encoding for text based assets stored in the S3 cache (ex: html, css, js, etc.). If "none" is specified, no charset will be returned in header.
+     * Character encoding for text based assets uploaded to S3 (ex: html, css, js, etc.). If "none" is specified, no charset will be returned in header.
      * @default utf-8
      * @example
      * ```js
-     * cache: {
-     *  textEncoding: "iso-8859-1"
+     * assets: {
+     *   textEncoding: "iso-8859-1"
      * }
      * ```
      */
-    textEncoding?: "UTF-8" | "ISO-8859-1" | "Windows-1252" | "ASCII" | "none";
+    textEncoding?: "utf-8" | "iso-8859-1" | "windows-1252" | "ascii" | "none";
     /**
      * The strategy to use for invalidating the CDN cache. By default, the CDN cache will invalidate on changes any cached file, but this could become slow on very large projects.
      * - "never" - No invalidation will be performed.
@@ -296,7 +296,7 @@ export interface SsrSiteProps {
      * @default all
      * @example
      * ```js
-     * cache: {
+     * assets: {
      *   cdnInvalidationStrategy: "versioned"
      * }
      * ```
@@ -307,8 +307,8 @@ export interface SsrSiteProps {
      * @default 1 year
      * @example
      * ```js
-     * cache: {
-     *  versionedFilesTTL: "30 days"
+     * assets: {
+     *   versionedFilesTTL: "30 days"
      * }
      * ```
      */
@@ -318,7 +318,7 @@ export interface SsrSiteProps {
      * @default public,max-age=31536000,immutable
      * @example
      * ```js
-     * cache: {
+     * assets: {
      *   versionedFilesCacheHeader: "public,max-age=31536000,immutable"
      * }
      * ```
@@ -329,8 +329,8 @@ export interface SsrSiteProps {
      * @default 1 day
      * @example
      * ```js
-     * cache: {
-     *  nonVersionedFilesTTL: "4 hours"
+     * assets: {
+     *   nonVersionedFilesTTL: "4 hours"
      * }
      * ```
      */
@@ -340,7 +340,7 @@ export interface SsrSiteProps {
      * @default public,max-age=0,s-maxage=86400,stale-while-revalidate=8640
      * @example
      * ```js
-     * cache: {
+     * assets: {
      *   nonVersionedFilesCacheHeader: "public,max-age=0,no-cache"
      * }
      * ```
@@ -350,7 +350,7 @@ export interface SsrSiteProps {
      * List of file options to specify cache control and content type for cached files. These file options are appended to the default file options so it's possible to override the default file options by specifying an overlapping file pattern.
      * @example
      * ```js
-     * cache: {
+     * assets: {
      *   fileOptions: [
      *     {
      *       files: "**\/*.zip",
@@ -485,7 +485,7 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
       edge,
       regional,
       dev,
-      cache,
+      assets,
       nodejs,
       permissions,
       environment,
@@ -500,6 +500,7 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
 
     validateSiteExists();
     validateTimeout();
+    validateDeprecatedFileOptions();
     writeTypesFile(typesPath);
 
     useSites().add(stack.stackName, id, this.constructor.name, props);
@@ -548,7 +549,7 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
 
     function validateSiteExists() {
       if (!fs.existsSync(sitePath)) {
-        throw new Error(`No site found at "${path.resolve(sitePath)}"`);
+        throw new VisibleError(`No site found at "${path.resolve(sitePath)}"`);
       }
     }
 
@@ -559,10 +560,19 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
           : toCdkDuration(timeout).toSeconds();
       const limit = edge ? 30 : 180;
       if (num > limit) {
-        throw new Error(
+        throw new VisibleError(
           edge
-            ? `Timeout must be less than or equal to 30 seconds when the "edge" flag is enabled.`
-            : `Timeout must be less than or equal to 180 seconds.`
+            ? `In the "${id}" construct, timeout must be less than or equal to 30 seconds when the "edge" flag is enabled.`
+            : `In the "${id}" construct, timeout must be less than or equal to 180 seconds.`
+        );
+      }
+    }
+
+    function validateDeprecatedFileOptions() {
+      // @ts-expect-error
+      if (props.fileOptions) {
+        throw new VisibleError(
+          `In the "${id}" construct, the "fileOptions" property has been replaced by "assets.fileOptions". More details on upgrading - https://docs.sst.dev/upgrade-guide#upgrade-to-v2310`
         );
       }
     }
@@ -1097,7 +1107,7 @@ function handler(event) {
 
     function createS3OriginDeployment(
       copy: S3OriginConfig["copy"],
-      assets: Asset[]
+      s3Assets: Asset[]
     ): CustomResource {
       const policy = new Policy(self, "S3UploaderPolicy", {
         statements: [
@@ -1114,7 +1124,7 @@ function handler(event) {
           new PolicyStatement({
             effect: Effect.ALLOW,
             actions: ["s3:GetObject"],
-            resources: [`${assets[0].bucket.bucketArn}/*`],
+            resources: [`${s3Assets[0].bucket.bucketArn}/*`],
           }),
         ],
       });
@@ -1124,13 +1134,13 @@ function handler(event) {
         serviceToken: stack.customResourceHandler.functionArn,
         resourceType: "Custom::S3Uploader",
         properties: {
-          sources: assets.map((asset) => ({
-            bucketName: asset.s3BucketName,
-            objectKey: asset.s3ObjectKey,
+          sources: s3Assets.map((s3Asset) => ({
+            bucketName: s3Asset.s3BucketName,
+            objectKey: s3Asset.s3ObjectKey,
           })),
           destinationBucketName: bucket.bucketName,
-          concurrency: cache?._uploadConcurrency,
-          textEncoding: cache?.textEncoding ?? "UTF-8",
+          concurrency: assets?._uploadConcurrency,
+          textEncoding: assets?.textEncoding ?? "utf-8",
           fileOptions: getS3FileOptions(copy).reverse(),
           replaceValues: getS3ContentReplaceValues(),
         },
@@ -1181,17 +1191,17 @@ function handler(event) {
       const fileOptions: SsrSiteFileOptions[] = [];
 
       const nonVersionedFilesTTL =
-        typeof cache?.nonVersionedFilesTTL === "number"
-          ? cache.nonVersionedFilesTTL
-          : toCdkDuration(cache?.nonVersionedFilesTTL ?? "1 day").toSeconds();
+        typeof assets?.nonVersionedFilesTTL === "number"
+          ? assets.nonVersionedFilesTTL
+          : toCdkDuration(assets?.nonVersionedFilesTTL ?? "1 day").toSeconds();
       const staleWhileRevalidateTTL = Math.max(
         Math.floor(nonVersionedFilesTTL / 10),
         30
       );
       const versionedFilesTTL =
-        typeof cache?.versionedFilesTTL === "number"
-          ? cache.versionedFilesTTL
-          : toCdkDuration(cache?.versionedFilesTTL ?? "365 days").toSeconds();
+        typeof assets?.versionedFilesTTL === "number"
+          ? assets.versionedFilesTTL
+          : toCdkDuration(assets?.versionedFilesTTL ?? "365 days").toSeconds();
 
       copy.forEach(({ cached, to, versionedSubDir }) => {
         if (!cached) return;
@@ -1200,26 +1210,26 @@ function handler(event) {
         fileOptions.push({
           files: "**",
           ignore: versionedSubDir
-            ? path.posix.join("/", to, versionedSubDir, "**")
+            ? path.posix.join(to, versionedSubDir, "**")
             : undefined,
           cacheControl:
-            cache?.nonVersionedFilesCacheHeader ??
+            assets?.nonVersionedFilesCacheHeader ??
             `public,max-age=0,s-maxage=${nonVersionedFilesTTL},stale-while-revalidate=${staleWhileRevalidateTTL}`,
         });
 
         // Create a default file option for: versioned files
         if (versionedSubDir) {
           fileOptions.push({
-            files: path.posix.join("/", to, versionedSubDir, "**"),
+            files: path.posix.join(to, versionedSubDir, "**"),
             cacheControl:
-              cache?.versionedFilesCacheHeader ??
+              assets?.versionedFilesCacheHeader ??
               `public,max-age=${versionedFilesTTL},immutable`,
           });
         }
       });
 
-      if (cache?.fileOptions) {
-        fileOptions.push(...cache.fileOptions);
+      if (assets?.fileOptions) {
+        fileOptions.push(...assets.fileOptions);
       }
 
       return fileOptions;
@@ -1254,7 +1264,7 @@ function handler(event) {
     }
 
     function createDistributionInvalidation() {
-      const cdnInvalidationStrategy = cache?.cdnInvalidationStrategy ?? "all";
+      const cdnInvalidationStrategy = assets?.cdnInvalidationStrategy ?? "all";
       if (cdnInvalidationStrategy === "never") return;
       if (plan.buildId) {
         distribution.createInvalidation(plan.buildId);

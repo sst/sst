@@ -42,6 +42,7 @@ import { gray } from "colorette";
 import { useProject } from "../project.js";
 import { createAppContext } from "./context.js";
 import { Effect, Policy, PolicyStatement } from "aws-cdk-lib/aws-iam";
+import { VisibleError } from "../error.js";
 
 const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
 
@@ -182,23 +183,23 @@ export interface StaticSiteProps {
    * ```
    */
   purgeFiles?: boolean;
-  cache?: {
+  assets?: {
     /**
-     * Character encoding for text based assets stored in the S3 cache (ex: html, css, js, etc.). If "none" is specified, no charset will be returned in header.
+     * Character encoding for text based assets uploaded to S3 (ex: html, css, js, etc.). If "none" is specified, no charset will be returned in header.
      * @default utf-8
      * @example
      * ```js
-     * cache: {
-     *  textEncoding: "iso-8859-1"
+     * assets: {
+     *   textEncoding: "iso-8859-1"
      * }
      * ```
      */
-    textEncoding?: "UTF-8" | "ISO-8859-1" | "Windows-1252" | "ASCII" | "none";
+    textEncoding?: "utf-8" | "iso-8859-1" | "windows-1252" | "ascii" | "none";
     /**
      * Pass in a list of file options to configure cache control for different files. Behind the scenes, the `StaticSite` construct uses a combination of the `s3 cp` and `s3 sync` commands to upload the website content to the S3 bucket. An `s3 cp` command is run for each file option block, and the options are passed in as the command options.
      * @default No cache control for HTML files, and a 1 year cache control for JS/CSS files.
      * ```js
-     * cache: {
+     * assets: {
      *   fileOptions: [
      *     {
      *       files: "**",
@@ -213,7 +214,7 @@ export interface StaticSiteProps {
      * ```
      * @example
      * ```js
-     * cache: {
+     * assets: {
      *   fileOptions: [
      *     {
      *       files: "**\/*.zip",
@@ -366,6 +367,7 @@ export class StaticSite extends Construct implements SSTConstruct {
     this.doNotDeploy =
       !stack.isActive || (app.mode === "dev" && !this.props.dev?.deploy);
 
+    this.validateDeprecatedFileOptions();
     this.generateViteTypes();
     useSites().add(stack.stackName, id, this.props);
 
@@ -474,6 +476,15 @@ export class StaticSite extends Construct implements SSTConstruct {
         ],
       },
     };
+  }
+
+  private validateDeprecatedFileOptions() {
+    // @ts-expect-error
+    if (this.props.fileOptions) {
+      throw new VisibleError(
+        `In the "${this.node.id}" construct, the "fileOptions" property has been replaced by "assets.fileOptions". More details on upgrading - https://docs.sst.dev/upgrade-guide#upgrade-to-v2310`
+      );
+    }
   }
 
   private generateViteTypes() {
@@ -709,17 +720,17 @@ interface ImportMeta {
           bucketName: filenamesAsset.s3BucketName,
           objectKey: filenamesAsset.s3ObjectKey,
         },
-        textEncoding: this.props.cache?.textEncoding ?? "UTF-8",
+        textEncoding: this.props.assets?.textEncoding ?? "utf-8",
         fileOptions: [
           {
             files: "**",
             cacheControl: "max-age=0,no-cache,no-store,must-revalidate",
           },
           {
-            files: "**/*.{js,css}",
+            files: ["**/*.js", "**/*.css"],
             cacheControl: "max-age=31536000,public,immutable",
           },
-          ...(this.props.cache?.fileOptions || []),
+          ...(this.props.assets?.fileOptions || []),
         ].reverse(),
         replaceValues: this.getS3ContentReplaceValues(),
       },

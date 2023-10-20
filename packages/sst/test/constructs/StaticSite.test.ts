@@ -127,38 +127,28 @@ test("customDomain: no domain", async () => {
   });
   countResources(stack, "AWS::Route53::RecordSet", 0);
   countResources(stack, "AWS::Route53::HostedZone", 0);
-  countResources(stack, "Custom::SSTBucketDeployment", 1);
-  hasResource(stack, "Custom::SSTBucketDeployment", {
-    Sources: [
+  countResources(stack, "Custom::S3Uploader", 1);
+  hasResource(stack, "Custom::S3Uploader", {
+    sources: [
       {
-        BucketName: ANY,
-        ObjectKey: ANY,
+        bucketName: ANY,
+        objectKey: ANY,
       },
     ],
-    DestinationBucketName: {
+    destinationBucketName: {
       Ref: "SiteS3Bucket43E5BB2F",
     },
-    FileOptions: [
-      [
-        "--exclude",
-        "*",
-        "--include",
-        "*.html",
-        "--cache-control",
-        "max-age=0,no-cache,no-store,must-revalidate",
-      ],
-      [
-        "--exclude",
-        "*",
-        "--include",
-        "*.js",
-        "--include",
-        "*.css",
-        "--cache-control",
-        "max-age=31536000,public,immutable",
-      ],
+    fileOptions: [
+      {
+        files: ["**/*.js", "**/*.css"],
+        cacheControl: "max-age=31536000,public,immutable",
+      },
+      {
+        files: "**",
+        cacheControl: "max-age=0,no-cache,no-store,must-revalidate",
+      },
     ],
-    ReplaceValues: [],
+    replaceValues: [],
   });
   countResources(stack, "Custom::CloudFrontInvalidator", 1);
   hasResource(stack, "Custom::CloudFrontInvalidator", {
@@ -578,20 +568,19 @@ test("constructor: buildOutput multiple files", async () => {
     // @ts-ignore: "sstTestFileSizeLimitOverride" not exposed in props
     sstTestFileSizeLimitOverride: 0.000025,
   });
-  hasResource(stack, "Custom::SSTBucketDeployment", {
-    Sources: [
+  hasResource(stack, "Custom::S3Uploader", {
+    sources: [
       {
-        BucketName: ANY,
-        ObjectKey: ANY,
+        bucketName: ANY,
+        objectKey: ANY,
       },
       {
-        BucketName: ANY,
-        ObjectKey: ANY,
+        bucketName: ANY,
+        objectKey: ANY,
       },
     ],
   });
 });
-
 test("constructor: buildOutput not exist", async () => {
   expect(async () => {
     await createSite({
@@ -600,114 +589,47 @@ test("constructor: buildOutput not exist", async () => {
   }).rejects.toThrow(/No build output found/);
 });
 
-test("constructor: fileOptions", async () => {
+test("assets.fileOptions", async () => {
   const { stack, site } = await createSite({
+    assets: {
+      fileOptions: [
+        {
+          files: "**/*.zip",
+          contentType: "application/zip",
+        },
+      ],
+    },
+  });
+  hasResource(stack, "Custom::S3Uploader", {
     fileOptions: [
       {
-        exclude: "*",
-        include: "*.html",
+        files: "**/*.zip",
+        contentType: "application/zip",
+      },
+      {
+        files: ["**/*.js", "**/*.css"],
+        cacheControl: "max-age=31536000,public,immutable",
+      },
+      {
+        files: "**",
         cacheControl: "max-age=0,no-cache,no-store,must-revalidate",
       },
-      {
-        exclude: "*",
-        include: "*.js",
-        cacheControl: "max-age=31536000,public,immutable",
-      },
     ],
-  });
-  hasResource(stack, "Custom::SSTBucketDeployment", {
-    Sources: [
-      {
-        BucketName: ANY,
-        ObjectKey: ANY,
-      },
-    ],
-    DestinationBucketName: {
-      Ref: "SiteS3Bucket43E5BB2F",
-    },
-    FileOptions: [
-      [
-        "--exclude",
-        "*",
-        "--include",
-        "*.html",
-        "--cache-control",
-        "max-age=0,no-cache,no-store,must-revalidate",
-      ],
-      [
-        "--exclude",
-        "*",
-        "--include",
-        "*.js",
-        "--cache-control",
-        "max-age=31536000,public,immutable",
-      ],
-    ],
-    ReplaceValues: [],
   });
 });
-
-test("constructor: fileOptions array value", async () => {
-  const { stack, site } = await createSite({
-    fileOptions: [
-      {
-        exclude: "*",
-        include: ["*.js", "*.css"],
-        cacheControl: "max-age=31536000,public,immutable",
-      },
-    ],
-  });
-  hasResource(stack, "Custom::SSTBucketDeployment", {
-    Sources: [
-      {
-        BucketName: ANY,
-        ObjectKey: ANY,
-      },
-    ],
-    DestinationBucketName: {
-      Ref: "SiteS3Bucket43E5BB2F",
-    },
-    FileOptions: [
-      [
-        "--exclude",
-        "*",
-        "--include",
-        "*.js",
-        "--include",
-        "*.css",
-        "--cache-control",
-        "max-age=31536000,public,immutable",
+test("fileOptions (deprecated): defined", async () => {
+  expect(async () => {
+    await createSite({
+      // @ts-expect-error
+      fileOptions: [
+        {
+          exclude: "*",
+          include: "*.zip",
+          contentType: "application/zip",
+        },
       ],
-    ],
-    ReplaceValues: [],
-  });
-});
-
-test("constructor: fileOptions: contentType", async () => {
-  const { stack, site } = await createSite({
-    fileOptions: [
-      {
-        exclude: "*",
-        include: ".well-known/site-association",
-        cacheControl: "max-age=0",
-        contentType: "application/json",
-      },
-    ],
-  });
-  hasResource(stack, "Custom::SSTBucketDeployment", {
-    FileOptions: [
-      [
-        "--exclude",
-        "*",
-        "--include",
-        ".well-known/site-association",
-        "--cache-control",
-        "max-age=0",
-        "--content-type",
-        "application/json",
-      ],
-    ],
-  });
+    });
+  }).rejects.toThrow(/property has been replaced/);
 });
 
 test("constructor: replaceValues", async () => {
@@ -725,17 +647,17 @@ test("constructor: replaceValues", async () => {
       },
     ],
   });
-  hasResource(stack, "Custom::SSTBucketDeployment", {
-    Sources: [
+  hasResource(stack, "Custom::S3Uploader", {
+    sources: [
       {
-        BucketName: ANY,
-        ObjectKey: ANY,
+        bucketName: ANY,
+        objectKey: ANY,
       },
     ],
-    DestinationBucketName: {
+    destinationBucketName: {
       Ref: "SiteS3Bucket43E5BB2F",
     },
-    ReplaceValues: [
+    replaceValues: [
       {
         files: "*.js",
         search: "{{ API_URL }}",
@@ -861,8 +783,8 @@ test("cdk.bucket is construct", async () => {
       ],
     }),
   });
-  hasResource(stack, "Custom::SSTBucketDeployment", {
-    DestinationBucketName: "my-bucket",
+  hasResource(stack, "Custom::S3Uploader", {
+    destinationBucketName: "my-bucket",
   });
 });
 
@@ -997,8 +919,8 @@ test("constructor: environment generates placeholders", async () => {
       },
     };
   });
-  hasResource(stack, "Custom::SSTBucketDeployment", {
-    ReplaceValues: [
+  hasResource(stack, "Custom::S3Uploader", {
+    replaceValues: [
       {
         files: "**/*.html",
         search: "{{ REFERENCE_ENV }}",
@@ -1030,8 +952,8 @@ test("constructor: environment appends to replaceValues", async () => {
       ],
     };
   });
-  hasResource(stack, "Custom::SSTBucketDeployment", {
-    ReplaceValues: [
+  hasResource(stack, "Custom::S3Uploader", {
+    replaceValues: [
       {
         files: "*.txt",
         search: "{{ KEY }}",
@@ -1067,7 +989,7 @@ test("constructor: sst deploy inactive stack", async () => {
   expect(site.customDomainUrl).toBeUndefined();
   expect(site.cdk).toBeUndefined();
   countResources(stack, "AWS::CloudFront::Distribution", 0);
-  countResources(stack, "Custom::SSTBucketDeployment", 0);
+  countResources(stack, "Custom::S3Uploader", 0);
   countResources(stack, "Custom::CloudFrontInvalidator", 0);
 });
 
@@ -1082,7 +1004,7 @@ test("constructor: sst dev: dev.url undefined", async () => {
   expect(site.customDomainUrl).toBeUndefined();
   expect(site.cdk).toBeUndefined();
   countResources(stack, "AWS::CloudFront::Distribution", 0);
-  countResources(stack, "Custom::SSTBucketDeployment", 0);
+  countResources(stack, "Custom::S3Uploader", 0);
   countResources(stack, "Custom::CloudFrontInvalidator", 0);
 });
 
@@ -1112,6 +1034,6 @@ test("constructor: sst remove", async () => {
   expect(site.customDomainUrl).toBeUndefined();
   expect(site.cdk).toBeUndefined();
   countResources(stack, "AWS::CloudFront::Distribution", 0);
-  countResources(stack, "Custom::SSTBucketDeployment", 0);
+  countResources(stack, "Custom::S3Uploader", 0);
   countResources(stack, "Custom::CloudFrontInvalidator", 0);
 });
