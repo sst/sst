@@ -226,6 +226,7 @@ export interface SsrSiteProps {
    * ```
    */
   permissions?: Permissions;
+  disableServerFunction?: boolean;
   /**
    * An object with the key being the environment variable name.
    *
