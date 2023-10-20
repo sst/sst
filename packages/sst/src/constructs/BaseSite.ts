@@ -11,7 +11,6 @@ export interface BaseSiteFileOptions {
   ignore?: string | string[];
   cacheControl?: string;
   contentType?: string;
-  contentEncoding?: string;
 }
 
 export interface BaseSiteEnvironmentOutputsInfo {

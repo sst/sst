@@ -865,12 +865,11 @@ export class NextjsSite extends Construct implements SSTConstruct {
         }),
         new PolicyStatement({
           effect: Effect.ALLOW,
-          actions: [
-            "s3:ListObjectsV2Command",
-            "s3:PutObject",
-            "s3:DeleteObject",
+          actions: ["s3:ListBucket", "s3:PutObject", "s3:DeleteObject"],
+          resources: [
+            this.cdk.bucket.bucketArn,
+            `${this.cdk.bucket.bucketArn}/*`,
           ],
-          resources: [`${this.cdk.bucket.bucketArn}/*`],
         }),
         new PolicyStatement({
           effect: Effect.ALLOW,
@@ -890,6 +889,7 @@ export class NextjsSite extends Construct implements SSTConstruct {
           objectKey: asset.s3ObjectKey,
         })),
         destinationBucketName: this.cdk.bucket.bucketName,
+        textEncoding: "UTF-8",
         fileOptions: [
           {
             files: "/public/**",
@@ -911,7 +911,7 @@ export class NextjsSite extends Construct implements SSTConstruct {
             files: "/_next/static/**",
             cacheControl: "public,max-age=31536000,immutable",
           },
-        ],
+        ].reverse(),
         replaceValues: this.getS3ContentReplaceValues(),
       },
     });

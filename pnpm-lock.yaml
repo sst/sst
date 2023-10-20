@@ -532,6 +532,9 @@ importers:
       '@types/adm-zip':
         specifier: ^0.5.0
         version: 0.5.0
+      '@types/async':
+        specifier: ^3.2.22
+        version: 3.2.22
       '@types/aws-iot-device-sdk':
         specifier: ^2.2.4
         version: 2.2.4
@@ -571,6 +574,9 @@ importers:
       astro-sst:
         specifier: 2.30.4
         version: link:../astro-sst
+      async:
+        specifier: ^3.2.4
+        version: 3.2.4
       tsx:
         specifier: ^3.12.1
         version: 3.12.1
@@ -11402,6 +11408,10 @@ packages:
     resolution: {integrity: sha512-FCJBJq9ODsQZUNURo5ILAQueuA8WJhRvuihS3ke2iI25mJlfV2LK8jG2Qj2z2AWg8U0FtWWqBHVRetceLskSaw==}
     dependencies:
       '@types/node': 18.15.3
+    dev: true
+
+  /@types/async@3.2.22:
+    resolution: {integrity: sha512-aYsrMkRWXwJfchKtwubTIgvWcgRU8zFT+lL48l9jSu7RJKa3A+E3qwmAJVYap4Do9QzTCLm6p63JmOuII3j7dg==}
     dev: true
 
   /@types/aws-iot-device-sdk@2.2.4:

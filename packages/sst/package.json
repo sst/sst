@@ -117,6 +117,7 @@
     "@tsconfig/node16": "^1.0.3",
     "@tsconfig/node18": "^18.2.2",
     "@types/adm-zip": "^0.5.0",
+    "@types/async": "^3.2.22",
     "@types/aws-iot-device-sdk": "^2.2.4",
     "@types/aws-lambda": "^8.10.108",
     "@types/babel__core": "^7.1.20",
@@ -130,6 +131,7 @@
     "@types/yargs": "^17.0.13",
     "archiver": "^5.3.1",
     "astro-sst": "2.30.4",
+    "async": "^3.2.4",
     "tsx": "^3.12.1",
     "typescript": "^5.2.2",
     "vitest": "^0.33.0"

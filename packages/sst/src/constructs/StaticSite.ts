@@ -4,12 +4,7 @@ import fs from "fs";
 import crypto from "crypto";
 import { execSync } from "child_process";
 import { Construct } from "constructs";
-import {
-  Token,
-  Duration,
-  RemovalPolicy,
-  CustomResource,
-} from "aws-cdk-lib/core";
+import { Token, RemovalPolicy, CustomResource } from "aws-cdk-lib/core";
 import {
   BlockPublicAccess,
   Bucket,
@@ -17,7 +12,6 @@ import {
   IBucket,
 } from "aws-cdk-lib/aws-s3";
 import { Asset } from "aws-cdk-lib/aws-s3-assets";
-import { Code, Function, Runtime } from "aws-cdk-lib/aws-lambda";
 import {
   BehaviorOptions,
   IDistribution,
@@ -114,33 +108,6 @@ export interface StaticSiteProps {
    */
   buildOutput?: string;
   /**
-   * Pass in a list of file options to configure cache control for different files. Behind the scenes, the `StaticSite` construct uses a combination of the `s3 cp` and `s3 sync` commands to upload the website content to the S3 bucket. An `s3 cp` command is run for each file option block, and the options are passed in as the command options.
-   * @default No cache control for HTML files, and a 1 year cache control for JS/CSS files.
-   * ```js
-   * [
-   *   {
-   *     files: "**",
-   *     cacheControl: "max-age=0,no-cache,no-store,must-revalidate",
-   *   },
-   *   {
-   *     files: "**\/*.{js,css}",
-   *     cacheControl: "max-age=31536000,public,immutable",
-   *   },
-   * ]
-   * ```
-   * @example
-   * ```js
-   * new StaticSite(stack, "Site", {
-   *   buildOutput: "dist",
-   *   fileOptions: [{
-   *     files: "**\/*.zip",
-   *     cacheControl: "max-age=31536000,public,immutable",
-   *   }]
-   * });
-   * ```
-   */
-  fileOptions?: StaticSiteFileOptions[];
-  /**
    * Pass in a list of placeholder values to be replaced in the website content. For example, the follow configuration:
    *
    * @example
@@ -215,6 +182,50 @@ export interface StaticSiteProps {
    * ```
    */
   purgeFiles?: boolean;
+  cache?: {
+    /**
+     * Character encoding for text based assets stored in the S3 cache (ex: html, css, js, etc.). If "none" is specified, no charset will be returned in header.
+     * @default utf-8
+     * @example
+     * ```js
+     * cache: {
+     *  textEncoding: "iso-8859-1"
+     * }
+     * ```
+     */
+    textEncoding?: "UTF-8" | "ISO-8859-1" | "Windows-1252" | "ASCII" | "none";
+    /**
+     * Pass in a list of file options to configure cache control for different files. Behind the scenes, the `StaticSite` construct uses a combination of the `s3 cp` and `s3 sync` commands to upload the website content to the S3 bucket. An `s3 cp` command is run for each file option block, and the options are passed in as the command options.
+     * @default No cache control for HTML files, and a 1 year cache control for JS/CSS files.
+     * ```js
+     * cache: {
+     *   fileOptions: [
+     *     {
+     *       files: "**",
+     *       cacheControl: "max-age=0,no-cache,no-store,must-revalidate",
+     *     },
+     *     {
+     *       files: "**\/*.{js,css}",
+     *       cacheControl: "max-age=31536000,public,immutable",
+     *     },
+     *   ],
+     * }
+     * ```
+     * @example
+     * ```js
+     * cache: {
+     *   fileOptions: [
+     *     {
+     *       files: "**\/*.zip",
+     *       cacheControl: "private,no-cache,no-store,must-revalidate",
+     *       contentType: "application/zip",
+     *     },
+     *   ],
+     * }
+     * ```
+     */
+    fileOptions?: StaticSiteFileOptions[];
+  };
   dev?: {
     /**
      * When running `sst dev, site is not deployed. This is to ensure `sst dev` can start up quickly.
@@ -673,12 +684,8 @@ interface ImportMeta {
         }),
         new PolicyStatement({
           effect: Effect.ALLOW,
-          actions: [
-            "s3:ListObjectsV2Command",
-            "s3:PutObject",
-            "s3:DeleteObject",
-          ],
-          resources: [`${this.bucket.bucketArn}/*`],
+          actions: ["s3:ListBucket", "s3:PutObject", "s3:DeleteObject"],
+          resources: [this.bucket.bucketArn, `${this.bucket.bucketArn}/*`],
         }),
         new PolicyStatement({
           effect: Effect.ALLOW,
@@ -702,6 +709,7 @@ interface ImportMeta {
           bucketName: filenamesAsset.s3BucketName,
           objectKey: filenamesAsset.s3ObjectKey,
         },
+        textEncoding: this.props.cache?.textEncoding ?? "UTF-8",
         fileOptions: [
           {
             files: "**",
@@ -711,8 +719,8 @@ interface ImportMeta {
             files: "**/*.{js,css}",
             cacheControl: "max-age=31536000,public,immutable",
           },
-          ...(this.props.fileOptions || []),
-        ],
+          ...(this.props.cache?.fileOptions || []),
+        ].reverse(),
         replaceValues: this.getS3ContentReplaceValues(),
       },
     });

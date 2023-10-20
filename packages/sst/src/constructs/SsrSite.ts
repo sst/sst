@@ -362,6 +362,10 @@ export interface SsrSiteProps {
      * ```
      */
     fileOptions?: SsrSiteFileOptions[];
+    /**
+     * @internal
+     */
+    _uploadConcurrency?: number;
   };
   /**
    * While deploying, SST waits for the CloudFront cache invalidation process to finish. This ensures that the new content will be served once the deploy command finishes. However, this process can sometimes take more than 5 mins. For non-prod environments it might make sense to pass in `false`. That'll skip waiting for the cache to invalidate and speed up the deploy process.
@@ -1104,12 +1108,8 @@ function handler(event) {
           }),
           new PolicyStatement({
             effect: Effect.ALLOW,
-            actions: [
-              "s3:ListObjectsV2Command",
-              "s3:PutObject",
-              "s3:DeleteObject",
-            ],
-            resources: [`${bucket.bucketArn}/*`],
+            actions: ["s3:ListBucket", "s3:PutObject", "s3:DeleteObject"],
+            resources: [bucket.bucketArn, `${bucket.bucketArn}/*`],
           }),
           new PolicyStatement({
             effect: Effect.ALLOW,
@@ -1129,7 +1129,9 @@ function handler(event) {
             objectKey: asset.s3ObjectKey,
           })),
           destinationBucketName: bucket.bucketName,
-          fileOptions: getS3FileOptions(copy),
+          concurrency: cache?._uploadConcurrency,
+          textEncoding: cache?.textEncoding ?? "UTF-8",
+          fileOptions: getS3FileOptions(copy).reverse(),
           replaceValues: getS3ContentReplaceValues(),
         },
       });
@@ -1178,7 +1180,6 @@ function handler(event) {
     function getS3FileOptions(copy: S3OriginConfig["copy"]) {
       const fileOptions: SsrSiteFileOptions[] = [];
 
-      const textEncoding = cache?.textEncoding ?? "UTF-8";
       const nonVersionedFilesTTL =
         typeof cache?.nonVersionedFilesTTL === "number"
           ? cache.nonVersionedFilesTTL
@@ -1187,51 +1188,10 @@ function handler(event) {
         Math.floor(nonVersionedFilesTTL / 10),
         30
       );
-      const nonVersionedFilesCacheHeader =
-        cache?.nonVersionedFilesCacheHeader ??
-        `public,max-age=0,s-maxage=${nonVersionedFilesTTL},stale-while-revalidate=${staleWhileRevalidateTTL}`;
-
       const versionedFilesTTL =
         typeof cache?.versionedFilesTTL === "number"
           ? cache.versionedFilesTTL
           : toCdkDuration(cache?.versionedFilesTTL ?? "365 days").toSeconds();
-      const versionedFilesCacheHeader =
-        cache?.versionedFilesCacheHeader ??
-        `public,max-age=${versionedFilesTTL},immutable`;
-
-      const commonWebFileExtensions: Record<
-        string,
-        { mime: string; isText: boolean }
-      > = {
-        txt: { mime: "text/plain", isText: true },
-        htm: { mime: "text/html", isText: true },
-        html: { mime: "text/html", isText: true },
-        xhtml: { mime: "application/xhtml+xml", isText: true },
-        css: { mime: "text/css", isText: true },
-        js: { mime: "text/javascript", isText: true },
-        mjs: { mime: "text/javascript", isText: true },
-        apng: { mime: "image/apng", isText: false },
-        avif: { mime: "image/avif", isText: false },
-        gif: { mime: "image/gif", isText: false },
-        jpeg: { mime: "image/jpeg", isText: false },
-        jpg: { mime: "image/jpeg", isText: false },
-        png: { mime: "image/png", isText: false },
-        svg: { mime: "image/svg+xml", isText: true },
-        bmp: { mime: "image/bmp", isText: false },
-        tiff: { mime: "image/tiff", isText: false },
-        webp: { mime: "image/webp", isText: false },
-        ico: { mime: "image/vnd.microsoft.icon", isText: false },
-        eot: { mime: "application/vnd.ms-fontobject", isText: false },
-        ttf: { mime: "font/ttf", isText: false },
-        otf: { mime: "font/otf", isText: false },
-        woff: { mime: "font/woff", isText: false },
-        woff2: { mime: "font/woff2", isText: false },
-        json: { mime: "application/json", isText: true },
-        jsonld: { mime: "application/ld+json", isText: true },
-        xml: { mime: "application/xml", isText: true },
-        pdf: { mime: "application/pdf", isText: false },
-        zip: { mime: "application/zip", isText: false },
-      };
 
       copy.forEach(({ cached, to, versionedSubDir }) => {
         if (!cached) return;
@@ -1242,42 +1202,19 @@ function handler(event) {
           ignore: versionedSubDir
             ? path.posix.join("/", to, versionedSubDir, "**")
             : undefined,
-          cacheControl: nonVersionedFilesCacheHeader,
+          cacheControl:
+            cache?.nonVersionedFilesCacheHeader ??
+            `public,max-age=0,s-maxage=${nonVersionedFilesTTL},stale-while-revalidate=${staleWhileRevalidateTTL}`,
         });
 
         // Create a default file option for: versioned files
         if (versionedSubDir) {
           fileOptions.push({
             files: path.posix.join("/", to, versionedSubDir, "**"),
-            cacheControl: versionedFilesCacheHeader,
+            cacheControl:
+              cache?.versionedFilesCacheHeader ??
+              `public,max-age=${versionedFilesTTL},immutable`,
           });
-        }
-
-        for (const [ext, extData] of Object.entries(commonWebFileExtensions)) {
-          const contentType = `${extData.mime}${
-            extData.isText && textEncoding !== "none"
-              ? `;charset=${textEncoding}`
-              : ""
-          }`;
-
-          // Create a file option for: common extension + unversioned files
-          fileOptions.push({
-            files: path.posix.join("/", to, `**/*.${ext}`),
-            ignore: versionedSubDir
-              ? path.posix.join("/", to, versionedSubDir, "**")
-              : undefined,
-            cacheControl: nonVersionedFilesCacheHeader,
-            contentType,
-          });
-
-          // Create a file option for: common extension + versioned files
-          if (versionedSubDir) {
-            fileOptions.push({
-              files: path.posix.join("/", to, versionedSubDir, `**/*.${ext}`),
-              cacheControl: versionedFilesCacheHeader,
-              contentType,
-            });
-          }
         }
       });
 
