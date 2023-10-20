@@ -1,5 +1,15 @@
 # @serverless-stack/cli2
 
+## 2.31.0
+
+### Minor Changes
+
+- [#3432](https://github.com/sst/sst/pull/3432) [`8e655cfb9`](https://github.com/sst/sst/commit/8e655cfb926e271275e45fdb3ea02c617db4e933) Thanks [@fwang](https://github.com/fwang)! - Sites: add `assets` option to allow customizing static file options
+
+### Patch Changes
+
+- [`5613c727a`](https://github.com/sst/sst/commit/5613c727a967f95daba0e23447d504552b8edc13) Thanks [@fwang](https://github.com/fwang)! - NextjsSite: finalize per-route logging
+
 ## 2.30.4
 
 ### Patch Changes
