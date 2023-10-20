@@ -153,7 +153,6 @@ await Promise.all(
     "sls-nextjs-site-build-helper",
     "sls-nextjs-site-function-code-replacer",
     "ssr-site-function-stub",
-    "base-site-custom-resource",
     "python-runtime",
     "java-runtime",
     "dotnet31-bootstrap",

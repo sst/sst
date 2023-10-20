@@ -1,6 +1,7 @@
 import { CopyObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { CdkCustomResourceEvent } from "aws-lambda";
 import path from "path";
+import { sdkLogger } from "./util.js";
 
 interface Props {
   functions: [string, string][];
@@ -10,7 +11,7 @@ interface Props {
   stage: string;
 }
 
-const s3 = new S3Client({});
+const s3 = new S3Client({ logger: sdkLogger });
 export async function FunctionSourcemapUploader(
   cfnRequest: CdkCustomResourceEvent
 ) {
