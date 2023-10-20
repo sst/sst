@@ -140,12 +140,12 @@ test("customDomain: no domain", async () => {
     },
     fileOptions: [
       {
-        files: ["**/*.js", "**/*.css"],
-        cacheControl: "max-age=31536000,public,immutable",
-      },
-      {
         files: "**",
         cacheControl: "max-age=0,no-cache,no-store,must-revalidate",
+      },
+      {
+        files: ["**/*.js", "**/*.css"],
+        cacheControl: "max-age=31536000,public,immutable",
       },
     ],
     replaceValues: [],
@@ -603,16 +603,16 @@ test("assets.fileOptions", async () => {
   hasResource(stack, "Custom::S3Uploader", {
     fileOptions: [
       {
-        files: "**/*.zip",
-        contentType: "application/zip",
+        files: "**",
+        cacheControl: "max-age=0,no-cache,no-store,must-revalidate",
       },
       {
         files: ["**/*.js", "**/*.css"],
         cacheControl: "max-age=31536000,public,immutable",
       },
       {
-        files: "**",
-        cacheControl: "max-age=0,no-cache,no-store,must-revalidate",
+        files: "**/*.zip",
+        contentType: "application/zip",
       },
     ],
   });

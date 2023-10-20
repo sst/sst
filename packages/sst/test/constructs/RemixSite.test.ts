@@ -567,14 +567,14 @@ test("assets.fileOptions: undefined", async () => {
     },
     fileOptions: [
       {
-        files: "build/**",
-        cacheControl: "public,max-age=31536000,immutable",
-      },
-      {
         files: "**",
         ignore: "build/**",
         cacheControl:
           "public,max-age=0,s-maxage=86400,stale-while-revalidate=8640",
+      },
+      {
+        files: "build/**",
+        cacheControl: "public,max-age=31536000,immutable",
       },
     ],
   });
@@ -594,17 +594,17 @@ test("assets.fileOptions: defined", async () => {
   });
   hasResource(stack, "Custom::S3Uploader", {
     fileOptions: [
-      { files: "**/*.zip", contentType: "application/zip" },
-      {
-        files: "build/**",
-        cacheControl: "public,max-age=31536000,immutable",
-      },
       {
         files: "**",
         ignore: "build/**",
         cacheControl:
           "public,max-age=0,s-maxage=86400,stale-while-revalidate=8640",
       },
+      {
+        files: "build/**",
+        cacheControl: "public,max-age=31536000,immutable",
+      },
+      { files: "**/*.zip", contentType: "application/zip" },
     ],
   });
 });

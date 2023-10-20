@@ -1141,7 +1141,7 @@ function handler(event) {
           destinationBucketName: bucket.bucketName,
           concurrency: assets?._uploadConcurrency,
           textEncoding: assets?.textEncoding ?? "utf-8",
-          fileOptions: getS3FileOptions(copy).reverse(),
+          fileOptions: getS3FileOptions(copy),
           replaceValues: getS3ContentReplaceValues(),
         },
       });

@@ -191,7 +191,7 @@ export async function batchProcessor(props: ProcessorEvent) {
   // Prepare upload commands
   const commands = [];
   const filesUploaded: string[] = [];
-  for (const fileOption of fileOptions) {
+  for (const fileOption of fileOptions.reverse()) {
     console.log("> upload options", fileOption);
     const files = globSync(fileOption.files, {
       cwd: contentsDir,

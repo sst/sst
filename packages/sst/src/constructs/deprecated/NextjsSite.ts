@@ -911,7 +911,7 @@ export class NextjsSite extends Construct implements SSTConstruct {
             files: "/_next/static/**",
             cacheControl: "public,max-age=31536000,immutable",
           },
-        ].reverse(),
+        ],
         replaceValues: this.getS3ContentReplaceValues(),
       },
     });

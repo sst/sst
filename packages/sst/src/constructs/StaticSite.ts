@@ -731,7 +731,7 @@ interface ImportMeta {
             cacheControl: "max-age=31536000,public,immutable",
           },
           ...(this.props.assets?.fileOptions || []),
-        ].reverse(),
+        ],
         replaceValues: this.getS3ContentReplaceValues(),
       },
     });
