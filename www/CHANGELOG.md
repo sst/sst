@@ -1,5 +1,11 @@
 # @serverless-stack/docs
 
+## 2.8.0
+
+### Minor Changes
+
+- [#3432](https://github.com/sst/sst/pull/3432) [`8e655cfb9`](https://github.com/sst/sst/commit/8e655cfb926e271275e45fdb3ea02c617db4e933) Thanks [@fwang](https://github.com/fwang)! - Sites: add `assets` option to allow customizing static file options
+
 ## 2.7.1
 
 ### Patch Changes
