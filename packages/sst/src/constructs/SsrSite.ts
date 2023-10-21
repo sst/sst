@@ -1,7 +1,7 @@
 import path from "path";
 import url from "url";
 import fs from "fs";
-import glob from "glob";
+import { globSync } from "glob";
 import crypto from "crypto";
 import spawn from "cross-spawn";
 import { execSync } from "child_process";
@@ -58,7 +58,6 @@ import {
   FunctionEventType as CfFunctionEventType,
   ErrorResponse,
 } from "aws-cdk-lib/aws-cloudfront";
-import { AwsCliLayer } from "aws-cdk-lib/lambda-layer-awscli";
 import {
   S3Origin,
   HttpOrigin,
@@ -276,6 +275,98 @@ export interface SsrSiteProps {
      */
     url?: string;
   };
+  assets?: {
+    /**
+     * Character encoding for text based assets uploaded to S3 (ex: html, css, js, etc.). If "none" is specified, no charset will be returned in header.
+     * @default utf-8
+     * @example
+     * ```js
+     * assets: {
+     *   textEncoding: "iso-8859-1"
+     * }
+     * ```
+     */
+    textEncoding?: "utf-8" | "iso-8859-1" | "windows-1252" | "ascii" | "none";
+    /**
+     * The strategy to use for invalidating the CDN cache. By default, the CDN cache will invalidate on changes any cached file, but this could become slow on very large projects.
+     * - "never" - No invalidation will be performed.
+     * - "all" - All files will be invalidated when any file changes. (Default, requires checking file content which will increase deployment time)
+     * - "versioned" - Only versioned files will be invalidated when versioned files change.
+     * - "always" - All files are invalidated on every deployment.
+     * @default all
+     * @example
+     * ```js
+     * assets: {
+     *   cdnInvalidationStrategy: "versioned"
+     * }
+     * ```
+     */
+    cdnInvalidationStrategy?: "never" | "all" | "versioned" | "always";
+    /**
+     * The TTL for versioned files (ex: `main-1234.css`) in the CDN and browser cache. Ignored when `versionedFilesCacheHeader` is specified.
+     * @default 1 year
+     * @example
+     * ```js
+     * assets: {
+     *   versionedFilesTTL: "30 days"
+     * }
+     * ```
+     */
+    versionedFilesTTL?: number | Duration;
+    /**
+     * The header to use for versioned files (ex: `main-1234.css`) in the CDN cache. When specified, the `versionedFilesTTL` option is ignored.
+     * @default public,max-age=31536000,immutable
+     * @example
+     * ```js
+     * assets: {
+     *   versionedFilesCacheHeader: "public,max-age=31536000,immutable"
+     * }
+     * ```
+     */
+    versionedFilesCacheHeader?: string;
+    /**
+     * The TTL for non-versioned files (ex: `index.html`) in the CDN cache. Ignored when `nonVersionedFilesCacheHeader` is specified.
+     * @default 1 day
+     * @example
+     * ```js
+     * assets: {
+     *   nonVersionedFilesTTL: "4 hours"
+     * }
+     * ```
+     */
+    nonVersionedFilesTTL?: number | Duration;
+    /**
+     * The header to use for non-versioned files (ex: `index.html`) in the CDN cache. When specified, the `nonVersionedFilesTTL` option is ignored.
+     * @default public,max-age=0,s-maxage=86400,stale-while-revalidate=8640
+     * @example
+     * ```js
+     * assets: {
+     *   nonVersionedFilesCacheHeader: "public,max-age=0,no-cache"
+     * }
+     * ```
+     */
+    nonVersionedFilesCacheHeader?: string;
+    /**
+     * List of file options to specify cache control and content type for cached files. These file options are appended to the default file options so it's possible to override the default file options by specifying an overlapping file pattern.
+     * @example
+     * ```js
+     * assets: {
+     *   fileOptions: [
+     *     {
+     *       files: "**\/*.zip",
+     *       cacheControl: "private,no-cache,no-store,must-revalidate",
+     *       contentType: "application/zip",
+     *     },
+     *   ],
+     * }
+     * ```
+     */
+    fileOptions?: SsrSiteFileOptions[];
+    /**
+     * @internal
+     */
+    _uploadConcurrency?: number;
+  };
   /**
    * While deploying, SST waits for the CloudFront cache invalidation process to finish. This ensures that the new content will be served once the deploy command finishes. However, this process can sometimes take more than 5 mins. For non-prod environments it might make sense to pass in `false`. That'll skip waiting for the cache to invalidate and speed up the deploy process.
    * @default false
@@ -335,60 +426,6 @@ export interface SsrSiteProps {
     > &
       Pick<FunctionProps, "copyFiles">;
   };
-  /**
-   * Pass in a list of file options to customize cache control and content type specific files.
-   *
-   * @default
-   * Versioned files cached for 1 year at the CDN and brower level.
-   * Unversioned files cached for 1 year at the CDN level, but not at the browser level.
-   * ```js
-   * fileOptions: [
-   *   {
-   *     exclude: "*",
-   *     include: "{versioned_directory}/*",
-   *     cacheControl: "public,max-age=31536000,immutable",
-   *   },
-   *   {
-   *     exclude: "*",
-   *     include: "[{non_versioned_file1}, {non_versioned_file2}, ...]",
-   *     cacheControl: "public,max-age=0,s-maxage=31536000,must-revalidate",
-   *   },
-   *   {
-   *     exclude: "*",
-   *     include: "[{non_versioned_dir_1}/*, {non_versioned_dir_2}/*, ...]",
-   *     cacheControl: "public,max-age=0,s-maxage=31536000,must-revalidate",
-   *   },
-   * ]
-   * ```
-   *
-   * @example
-   * ```js
-   * fileOptions: [
-   *   {
-   *     exclude: "*",
-   *     include: "{versioned_directory}/*.css",
-   *     cacheControl: "public,max-age=31536000,immutable",
-   *     contentType: "text/css; charset=UTF-8",
-   *   },
-   *   {
-   *     exclude: "*",
-   *     include: "{versioned_directory}/*.js",
-   *     cacheControl: "public,max-age=31536000,immutable",
-   *   },
-   *   {
-   *     exclude: "*",
-   *     include: "[{non_versioned_file1}, {non_versioned_file2}, ...]",
-   *     cacheControl: "public,max-age=0,s-maxage=31536000,must-revalidate",
-   *   },
-   *   {
-   *     exclude: "*",
-   *     include: "[{non_versioned_dir_1}/*, {non_versioned_dir_2}/*, ...]",
-   *     cacheControl: "public,max-age=0,s-maxage=31536000,must-revalidate",
-   *   },
-   * ]
-   * ```
-   */
-  fileOptions?: SsrSiteFileOptions[];
 }
 
 export type SsrSiteNormalizedProps = SsrSiteProps & {
@@ -448,13 +485,13 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
       edge,
       regional,
       dev,
+      assets,
       nodejs,
       permissions,
       environment,
       bind,
       customDomain,
       waitForInvalidation,
-      fileOptions,
       warm,
       cdk,
     } = props;
@@ -463,6 +500,7 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
 
     validateSiteExists();
     validateTimeout();
+    validateDeprecatedFileOptions();
     writeTypesFile(typesPath);
 
     useSites().add(stack.stackName, id, this.constructor.name, props);
@@ -477,7 +515,6 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
 
     let s3DeployCRs: CustomResource[] = [];
     let ssrFunctions: SsrFunction[] = [];
-    let singletonAwsCliLayer: AwsCliLayer;
     let singletonUrlSigner: EdgeFunction;
     let singletonCachePolicy: CachePolicy;
     let singletonOriginRequestPolicy: IOriginRequestPolicy;
@@ -494,7 +531,7 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
     const edgeFunctions = createEdgeFunctions();
     const origins = createOrigins();
     const distribution = createCloudFrontDistribution();
-    distribution.createInvalidation(plan.buildId ?? generateBuildId());
+    createDistributionInvalidation();
 
     // Create Warmer
     createWarmer();
@@ -512,7 +549,7 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
 
     function validateSiteExists() {
       if (!fs.existsSync(sitePath)) {
-        throw new Error(`No site found at "${path.resolve(sitePath)}"`);
+        throw new VisibleError(`No site found at "${path.resolve(sitePath)}"`);
       }
     }
 
@@ -523,10 +560,19 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
           : toCdkDuration(timeout).toSeconds();
       const limit = edge ? 30 : 180;
       if (num > limit) {
-        throw new Error(
+        throw new VisibleError(
           edge
-            ? `Timeout must be less than or equal to 30 seconds when the "edge" flag is enabled.`
-            : `Timeout must be less than or equal to 180 seconds.`
+            ? `In the "${id}" construct, timeout must be less than or equal to 30 seconds when the "edge" flag is enabled.`
+            : `In the "${id}" construct, timeout must be less than or equal to 180 seconds.`
+        );
+      }
+    }
+
+    function validateDeprecatedFileOptions() {
+      // @ts-expect-error
+      if (props.fileOptions) {
+        throw new VisibleError(
+          `In the "${id}" construct, the "fileOptions" property has been replaced by "assets.fileOptions". More details on upgrading - https://docs.sst.dev/upgrade-guide#upgrade-to-v2310`
         );
       }
     }
@@ -874,9 +920,7 @@ function handler(event) {
       });
 
       const assets = createS3OriginAssets(props.copy);
-      const assetFileOptions =
-        fileOptions || createS3OriginAssetFileOptions(props.copy);
-      const s3deployCR = createS3OriginDeployment(assets, assetFileOptions);
+      const s3deployCR = createS3OriginDeployment(props.copy, assets);
       s3DeployCRs.push(s3deployCR);
 
       return s3Origin;
@@ -1061,99 +1105,49 @@ function handler(event) {
       return assets;
     }
 
-    function createS3OriginAssetFileOptions(copy: S3OriginConfig["copy"]) {
-      const fileOptions = [];
-
-      for (const files of copy) {
-        if (!files.cached) continue;
-
-        const filesPath = path.join(sitePath, files.from);
-
-        for (const item of fs.readdirSync(filesPath)) {
-          const itemPath = path.join(filesPath, item);
-          const isDir = fs.statSync(itemPath).isDirectory();
-          fileOptions.push({
-            exclude: "*",
-            include: path.posix.join(files.to, item, isDir ? "*" : ""),
-            cacheControl:
-              item === files.versionedSubDir
-                ? // Versioned files will be cached for 1 year (immutable) both at
-                  // the CDN and browser level.
-                  "public,max-age=31536000,immutable"
-                : // Un-versioned files will be cached for 1 year at the CDN level.
-                  // But not at the browser level. CDN cache will be invalidated on deploy.
-                  "public,max-age=0,s-maxage=31536000,must-revalidate",
-          });
-        }
-      }
-
-      return fileOptions;
-    }
-
     function createS3OriginDeployment(
-      assets: Asset[],
-      fileOptions: SsrSiteFileOptions[]
+      copy: S3OriginConfig["copy"],
+      s3Assets: Asset[]
     ): CustomResource {
-      // Create a Lambda function that will be doing the uploading
-      const uploader = new CdkFunction(self, "S3Uploader", {
-        code: Code.fromAsset(
-          path.join(__dirname, "../support/base-site-custom-resource")
-        ),
-        layers: [useAwsCliLayer()],
-        runtime: Runtime.PYTHON_3_11,
-        handler: "s3-upload.handler",
-        timeout: CdkDuration.minutes(15),
-        memorySize: 1024,
+      const policy = new Policy(self, "S3UploaderPolicy", {
+        statements: [
+          new PolicyStatement({
+            effect: Effect.ALLOW,
+            actions: ["lambda:InvokeFunction"],
+            resources: [stack.customResourceHandler.functionArn],
+          }),
+          new PolicyStatement({
+            effect: Effect.ALLOW,
+            actions: ["s3:ListBucket", "s3:PutObject", "s3:DeleteObject"],
+            resources: [bucket.bucketArn, `${bucket.bucketArn}/*`],
+          }),
+          new PolicyStatement({
+            effect: Effect.ALLOW,
+            actions: ["s3:GetObject"],
+            resources: [`${s3Assets[0].bucket.bucketArn}/*`],
+          }),
+        ],
       });
-      bucket.grantReadWrite(uploader);
-      assets.forEach((asset) => asset.grantRead(uploader));
+      stack.customResourceHandler.role?.attachInlinePolicy(policy);
 
-      // Create the custom resource function
-      const handler = new CdkFunction(self, "S3Handler", {
-        code: Code.fromAsset(
-          path.join(__dirname, "../support/base-site-custom-resource")
-        ),
-        layers: [useAwsCliLayer()],
-        runtime: Runtime.PYTHON_3_11,
-        handler: "s3-handler.handler",
-        timeout: CdkDuration.minutes(15),
-        memorySize: 1024,
-        environment: {
-          UPLOADER_FUNCTION_NAME: uploader.functionName,
-        },
-      });
-      bucket.grantReadWrite(handler);
-      uploader.grantInvoke(handler);
-
-      // Create custom resource
-      return new CustomResource(self, "S3Deployment", {
-        serviceToken: handler.functionArn,
-        resourceType: "Custom::SSTBucketDeployment",
+      const resource = new CustomResource(self, "S3Uploader", {
+        serviceToken: stack.customResourceHandler.functionArn,
+        resourceType: "Custom::S3Uploader",
         properties: {
-          Sources: assets.map((asset) => ({
-            BucketName: asset.s3BucketName,
-            ObjectKey: asset.s3ObjectKey,
+          sources: s3Assets.map((s3Asset) => ({
+            bucketName: s3Asset.s3BucketName,
+            objectKey: s3Asset.s3ObjectKey,
           })),
-          DestinationBucketName: bucket.bucketName,
-          FileOptions: (fileOptions || []).map(
-            ({ exclude, include, cacheControl, contentType }) => {
-              if (typeof exclude === "string") {
-                exclude = [exclude];
-              }
-              if (typeof include === "string") {
-                include = [include];
-              }
-              return [
-                ...exclude.map((per) => ["--exclude", per]),
-                ...include.map((per) => ["--include", per]),
-                ["--cache-control", cacheControl],
-                contentType ? ["--content-type", contentType] : [],
-              ].flat();
-            }
-          ),
-          ReplaceValues: getS3ContentReplaceValues(),
+          destinationBucketName: bucket.bucketName,
+          concurrency: assets?._uploadConcurrency,
+          textEncoding: assets?.textEncoding ?? "utf-8",
+          fileOptions: getS3FileOptions(copy),
+          replaceValues: getS3ContentReplaceValues(),
         },
       });
+      resource.node.addDependency(policy);
+
+      return resource;
     }
 
     function useFunctionUrlSigningFunction() {
@@ -1193,10 +1187,52 @@ function handler(event) {
       return singletonOriginRequestPolicy;
     }
 
-    function useAwsCliLayer() {
-      singletonAwsCliLayer =
-        singletonAwsCliLayer ?? new AwsCliLayer(self, "AwsCliLayer");
-      return singletonAwsCliLayer;
+    function getS3FileOptions(copy: S3OriginConfig["copy"]) {
+      const fileOptions: SsrSiteFileOptions[] = [];
+
+      const nonVersionedFilesTTL =
+        typeof assets?.nonVersionedFilesTTL === "number"
+          ? assets.nonVersionedFilesTTL
+          : toCdkDuration(assets?.nonVersionedFilesTTL ?? "1 day").toSeconds();
+      const staleWhileRevalidateTTL = Math.max(
+        Math.floor(nonVersionedFilesTTL / 10),
+        30
+      );
+      const versionedFilesTTL =
+        typeof assets?.versionedFilesTTL === "number"
+          ? assets.versionedFilesTTL
+          : toCdkDuration(assets?.versionedFilesTTL ?? "365 days").toSeconds();
+
+      copy.forEach(({ cached, to, versionedSubDir }) => {
+        if (!cached) return;
+
+        // Create a default file option for: unversioned files
+        fileOptions.push({
+          files: "**",
+          ignore: versionedSubDir
+            ? path.posix.join(to, versionedSubDir, "**")
+            : undefined,
+          cacheControl:
+            assets?.nonVersionedFilesCacheHeader ??
+            `public,max-age=0,s-maxage=${nonVersionedFilesTTL},stale-while-revalidate=${staleWhileRevalidateTTL}`,
+        });
+
+        // Create a default file option for: versioned files
+        if (versionedSubDir) {
+          fileOptions.push({
+            files: path.posix.join(to, versionedSubDir, "**"),
+            cacheControl:
+              assets?.versionedFilesCacheHeader ??
+              `public,max-age=${versionedFilesTTL},immutable`,
+          });
+        }
+      });
+
+      if (assets?.fileOptions) {
+        fileOptions.push(...assets.fileOptions);
+      }
+
+      return fileOptions;
     }
 
     function getS3ContentReplaceValues() {
@@ -1227,35 +1263,82 @@ function handler(event) {
       return replaceValues;
     }
 
-    function generateBuildId(): string {
+    function createDistributionInvalidation() {
+      const cdnInvalidationStrategy = assets?.cdnInvalidationStrategy ?? "all";
+      if (cdnInvalidationStrategy === "never") return;
+      if (plan.buildId) {
+        distribution.createInvalidation(plan.buildId);
+        return;
+      }
+      if (cdnInvalidationStrategy === "always") {
+        const buildId =
+          Date.now().toString(16) + Math.random().toString(16).slice(2);
+        distribution.createInvalidation(buildId);
+        return;
+      }
+
       // We will generate a hash based on the contents of the S3 files with cache enabled.
       // This will be used to determine if we need to invalidate our CloudFront cache.
       const s3Origin = Object.values(plan.origins).find(
         (origin) => origin.type === "s3"
       );
-      if (s3Origin?.type !== "s3") return "unchanged";
-      const cachedS3Files = s3Origin.copy.find((item) => item.cached);
-      if (!cachedS3Files) return "unchanged";
+      if (s3Origin?.type !== "s3") return;
+      const cachedS3Files = s3Origin.copy.filter((file) => file.cached);
+      if (cachedS3Files.length === 0) return;
 
-      // The below options are needed to support following symlinks when building zip files:
-      // - nodir: This will prevent symlinks themselves from being copied into the zip.
-      // - follow: This will follow symlinks and copy the files within.
-      const globOptions = {
-        dot: true,
-        nodir: true,
-        follow: true,
-        cwd: path.resolve(sitePath, cachedS3Files.from),
-      };
-      const files = glob.sync("**", globOptions);
-      const hash = crypto.createHash("sha1");
-      for (const file of files) {
-        hash.update(file);
+      // Build invalidation paths
+      const invalidationPaths: string[] = [];
+      if (cdnInvalidationStrategy === "versioned") {
+        cachedS3Files.forEach((item) => {
+          if (!item.versionedSubDir) return;
+          invalidationPaths.push(
+            path.posix.join("/", item.to, item.versionedSubDir, "*")
+          );
+        });
       }
+      if (invalidationPaths.length === 0) invalidationPaths.push("/*");
+
+      // Build build ID
+      const hash = crypto.createHash("md5");
+
+      cachedS3Files.forEach((item) => {
+        // The below options are needed to support following symlinks when building zip files:
+        // - nodir: This will prevent symlinks themselves from being copied into the zip.
+        // - follow: This will follow symlinks and copy the files within.
+
+        // For versioned files, use file path for digest since file version in name should change on content change
+        if (item.versionedSubDir) {
+          globSync("**", {
+            dot: true,
+            nodir: true,
+            follow: true,
+            cwd: path.resolve(sitePath, item.from, item.versionedSubDir),
+          }).forEach((filePath) => hash.update(filePath));
+        }
+
+        // For non-versioned files, use file content for digest
+        if (cdnInvalidationStrategy === "all") {
+          globSync("**", {
+            ignore: item.versionedSubDir
+              ? [path.posix.join(item.versionedSubDir, "**")]
+              : undefined,
+            dot: true,
+            nodir: true,
+            follow: true,
+            cwd: path.resolve(sitePath, item.from),
+          }).forEach((filePath) =>
+            hash.update(
+              fs.readFileSync(path.resolve(sitePath, item.from, filePath))
+            )
+          );
+        }
+      });
+
       const buildId = hash.digest("hex");
 
       Logger.debug(`Generated build ID ${buildId}`);
 
-      return buildId;
+      distribution.createInvalidation(buildId, invalidationPaths);
     }
   }
 

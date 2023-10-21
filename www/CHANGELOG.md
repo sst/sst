@@ -1,5 +1,17 @@
 # @serverless-stack/docs
 
+## 2.8.0
+
+### Minor Changes
+
+- [#3432](https://github.com/sst/sst/pull/3432) [`8e655cfb9`](https://github.com/sst/sst/commit/8e655cfb926e271275e45fdb3ea02c617db4e933) Thanks [@fwang](https://github.com/fwang)! - Sites: add `assets` option to allow customizing static file options
+
+## 2.7.1
+
+### Patch Changes
+
+- [#3407](https://github.com/sst/sst/pull/3407) [`220ef51d7`](https://github.com/sst/sst/commit/220ef51d7211fab2505236afe4ac2bae8a2289cb) Thanks [@dkershner6](https://github.com/dkershner6)! - NextjsSite: expose a static function to create server cache policy
+
 ## 2.7.0
 
 ### Minor Changes

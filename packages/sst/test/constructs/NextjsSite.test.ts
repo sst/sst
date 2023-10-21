@@ -1,3 +1,5 @@
+import * as fs from "fs";
+import * as path from "path";
 import { test, expect, beforeAll, vi } from "vitest";
 import { execSync } from "child_process";
 import {
@@ -18,10 +20,13 @@ import { Stack, NextjsSite, NextjsSiteProps } from "../../dist/constructs";
 const sitePath = "test/constructs/nextjs-site";
 
 beforeAll(async () => {
-  // ℹ️ Uncomment the below to iterate faster on tests in vitest watch mode;
-  // if (fs.pathExistsSync(path.join(sitePath, "node_modules"))) {
-  //   return;
-  // }
+  // Set `SKIP_BUILD` to iterate faster on tests in vitest watch mode;
+  if (
+    process.env.SKIP_BUILD &&
+    fs.existsSync(path.join(sitePath, "node_modules"))
+  ) {
+    return;
+  }
 
   // Install Next.js app dependencies
   execSync("npm install", {
@@ -197,4 +202,11 @@ test("cdk.revalidation.vpc: set", async () => {
     Description: "Next.js revalidator",
     VpcConfig: ANY,
   });
+});
+
+test("buildCloudWatchRouteName", async () => {
+  expect(NextjsSite._test.buildCloudWatchRouteName("/api")).toEqual("/api");
+  expect(NextjsSite._test.buildCloudWatchRouteName("/api/[id]")).toEqual(
+    "/api/id"
+  );
 });

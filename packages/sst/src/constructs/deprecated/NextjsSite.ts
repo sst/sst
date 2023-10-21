@@ -19,6 +19,7 @@ import {
   CompositePrincipal,
   ServicePrincipal,
   ManagedPolicy,
+  Policy,
 } from "aws-cdk-lib/aws-iam";
 import * as sqs from "aws-cdk-lib/aws-sqs";
 import * as logs from "aws-cdk-lib/aws-logs";
@@ -854,89 +855,69 @@ export class NextjsSite extends Construct implements SSTConstruct {
   }
 
   private createS3Deployment(): CustomResource {
-    // Create a Lambda function that will be doing the uploading
-    const uploader = new lambda.Function(this, "S3Uploader", {
-      code: lambda.Code.fromAsset(
-        path.join(__dirname, "../../support/base-site-custom-resource")
-      ),
-      layers: [this.awsCliLayer],
-      runtime: lambda.Runtime.PYTHON_3_7,
-      handler: "s3-upload.handler",
-      timeout: Duration.minutes(15),
-      memorySize: 1024,
+    const stack = Stack.of(this) as Stack;
+    const policy = new Policy(this, "S3UploaderPolicy", {
+      statements: [
+        new PolicyStatement({
+          effect: Effect.ALLOW,
+          actions: ["lambda:InvokeFunction"],
+          resources: [stack.customResourceHandler.functionArn],
+        }),
+        new PolicyStatement({
+          effect: Effect.ALLOW,
+          actions: ["s3:ListBucket", "s3:PutObject", "s3:DeleteObject"],
+          resources: [
+            this.cdk.bucket.bucketArn,
+            `${this.cdk.bucket.bucketArn}/*`,
+          ],
+        }),
+        new PolicyStatement({
+          effect: Effect.ALLOW,
+          actions: ["s3:GetObject"],
+          resources: [`${this.assets[0].bucket.bucketArn}/*`],
+        }),
+      ],
     });
-    this.cdk.bucket.grantReadWrite(uploader);
-    this.assets.forEach((asset) => asset.grantRead(uploader));
+    stack.customResourceHandler.role?.attachInlinePolicy(policy);
 
-    // Create the custom resource function
-    const handler = new lambda.Function(this, "S3Handler", {
-      code: lambda.Code.fromAsset(
-        path.join(__dirname, "../../support/base-site-custom-resource")
-      ),
-      layers: [this.awsCliLayer],
-      runtime: lambda.Runtime.PYTHON_3_7,
-      handler: "s3-handler.handler",
-      timeout: Duration.minutes(15),
-      memorySize: 1024,
-      environment: {
-        UPLOADER_FUNCTION_NAME: uploader.functionName,
-      },
-    });
-    this.cdk.bucket.grantReadWrite(handler);
-    uploader.grantInvoke(handler);
-
-    // Create custom resource
-    const fileOptions = [
-      {
-        exclude: "*",
-        include: "public/*",
-        cacheControl: "public,max-age=31536000,must-revalidate",
-      },
-      {
-        exclude: "*",
-        include: "static/*",
-        cacheControl: "public,max-age=31536000,must-revalidate",
-      },
-      {
-        exclude: "*",
-        include: "static-pages/*",
-        cacheControl: "public,max-age=0,s-maxage=2678400,must-revalidate",
-      },
-      {
-        exclude: "*",
-        include: "_next/data/*",
-        cacheControl: "public,max-age=0,s-maxage=2678400,must-revalidate",
-      },
-      {
-        exclude: "*",
-        include: "_next/static/*",
-        cacheControl: "public,max-age=31536000,immutable",
-      },
-    ];
-    return new CustomResource(this, "S3Deployment", {
-      serviceToken: handler.functionArn,
-      resourceType: "Custom::SSTBucketDeployment",
+    const resource = new CustomResource(this, "S3Uploader", {
+      serviceToken: stack.customResourceHandler.functionArn,
+      resourceType: "Custom::S3Uploader",
       properties: {
-        Sources: this.assets.map((asset) => ({
-          BucketName: asset.s3BucketName,
-          ObjectKey: asset.s3ObjectKey,
+        sources: this.assets.map((asset) => ({
+          bucketName: asset.s3BucketName,
+          objectKey: asset.s3ObjectKey,
         })),
-        DestinationBucketName: this.cdk.bucket.bucketName,
-        FileOptions: (fileOptions || []).map(
-          ({ exclude, include, cacheControl }) => {
-            return [
-              "--exclude",
-              exclude,
-              "--include",
-              include,
-              "--cache-control",
-              cacheControl,
-            ];
-          }
-        ),
-        ReplaceValues: this.getS3ContentReplaceValues(),
+        destinationBucketName: this.cdk.bucket.bucketName,
+        textEncoding: "UTF-8",
+        fileOptions: [
+          {
+            files: "/public/**",
+            cacheControl: "public,max-age=31536000,must-revalidate",
+          },
+          {
+            files: "/static/**",
+            cacheControl: "public,max-age=31536000,must-revalidate",
+          },
+          {
+            files: "/static-pages/**",
+            cacheControl: "public,max-age=0,s-maxage=2678400,must-revalidate",
+          },
+          {
+            files: "/_next/data/**",
+            cacheControl: "public,max-age=0,s-maxage=2678400,must-revalidate",
+          },
+          {
+            files: "/_next/static/**",
+            cacheControl: "public,max-age=31536000,immutable",
+          },
+        ],
+        replaceValues: this.getS3ContentReplaceValues(),
       },
     });
+    resource.node.addDependency(policy);
+
+    return resource;
   }
 
   /////////////////////

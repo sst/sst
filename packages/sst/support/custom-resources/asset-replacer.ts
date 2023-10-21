@@ -9,9 +9,10 @@ import {
   GetObjectCommand,
   PutObjectCommand,
 } from "@aws-sdk/client-s3";
+import { sdkLogger } from "./util.js";
 import type { BaseSiteReplaceProps } from "../../src/constructs/BaseSite";
 
-const s3 = new S3Client({ logger: console });
+const s3 = new S3Client({ logger: sdkLogger });
 const zipPath = path.join(os.tmpdir(), "asset.zip");
 
 export async function AssetReplacer(cfnRequest: any) {

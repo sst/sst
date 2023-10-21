@@ -7,9 +7,9 @@ import {
 } from "aws-cdk-lib/aws-cloudfront";
 
 export interface BaseSiteFileOptions {
-  exclude: string | string[];
-  include: string | string[];
-  cacheControl: string;
+  files: string | string[];
+  ignore?: string | string[];
+  cacheControl?: string;
   contentType?: string;
 }
 

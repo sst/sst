@@ -3,8 +3,9 @@ import {
   CreateInvalidationCommand,
   waitUntilInvalidationCompleted,
 } from "@aws-sdk/client-cloudfront";
+import { sdkLogger } from "./util.js";
 
-const cf = new CloudFrontClient({ logger: console });
+const cf = new CloudFrontClient({ logger: sdkLogger });
 
 export async function CloudFrontInvalidator(cfnRequest: any) {
   switch (cfnRequest.RequestType) {

@@ -1,8 +1,8 @@
 {
-  "extends": "@tsconfig/node16/tsconfig.json",
+  "extends": "@tsconfig/node18/tsconfig.json",
   "compilerOptions": {
     "declaration": true,
-    "module": "NodeNext",
+    "module": "nodenext",
     "target": "esnext",
     "moduleResolution": "nodenext",
     "outDir": "./dist",

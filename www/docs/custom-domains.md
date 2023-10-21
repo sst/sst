@@ -48,8 +48,8 @@ Once set, you can output the URLs using `customDomainUrl`. Both for the [fronten
 
 ```ts {2,3}
 stack.addOutputs({
-  Url: site.customDomainUrl || site.url,
-  Url: api.customDomainUrl || api.url,
+  Site: site.customDomainUrl || site.url,
+  API: api.customDomainUrl || api.url,
 });
 ```
 
@@ -85,7 +85,16 @@ new NextjsSite(stack, "site", {
 });
 ```
 
-Note that we didn't have to do that for the API example above because behind the scenes the `Api` construct defaults to the hosted zone for the root domain.
+Note that we didn't have to do that for the API example above because behind the scenes the `Api` construct defaults to the hosted zone for the domain one level higher. For example, if `customDomain` is set to `dev.api.my-app.com`, it defaults to the hosted zone `api.my-app.com`. To use the `my-app.com` hosted zone:
+
+```ts {4}
+new Api(stack, "api", {
+  customDomain: {
+    domainName: "dev.api.my-app.com",
+    hostedZone: "my-app.com",
+  },
+});
+```
 
 ---
 
