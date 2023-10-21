@@ -383,12 +383,29 @@ export class NextjsSite extends SsrSite {
     );
 
     if (fs.existsSync(dynamodbProviderPath)) {
+      let revalidationInsertMemorySize = 128;
+      try {
+        const prerenderManifest: {version: number; routes: Record<string, unknown>} = JSON.parse(
+          fs
+            .readFileSync(path.join(sitePath, ".next", "prerender-manifest.json"))
+            .toString()
+        );
+
+        const prerenderedRouteCount = Object.keys(prerenderManifest?.routes ?? {});
+
+        // Provision 128MB of memory for every 2,000 prerendered routes, 1GB per 16,000, up to 10GB
+        revalidationInsertMemorySize = Math.min(10240, Math.max(128, Math.ceil(prerenderedRouteCount.length / 2000) * 128));
+      } catch (e) {
+        console.warn("Failed to calculate the correct RevalidationInsertFunction memorySize using prerender-manifest.json, defaulting to 128MB", e);
+      }
+
       const insertFn = new CdkFunction(this, "RevalidationInsertFunction", {
         description: "Next.js revalidation data insert",
         handler: "index.handler",
         code: Code.fromAsset(dynamodbProviderPath),
         runtime: Runtime.NODEJS_18_X,
         timeout: CdkDuration.minutes(15),
+        memorySize: revalidationInsertMemorySize,
         initialPolicy: [
           new PolicyStatement({
             actions: [
