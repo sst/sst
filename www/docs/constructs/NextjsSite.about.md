@@ -272,6 +272,10 @@ With per-route logging, the resources page shows a breakdown of all routes. Clic
 
 ![Next.js per route logging](/img/nextjssite/per-route-logging.png)
 
+:::info
+Starting the next minor release, "per-route" will become the default logging behavior.
+:::
+
 ---
 
 ## Sourcemap
