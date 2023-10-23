@@ -3,19 +3,30 @@ import {
   CreateInvalidationCommand,
   waitUntilInvalidationCompleted,
 } from "@aws-sdk/client-cloudfront";
-import { sdkLogger } from "./util.js";
+import { useAWSClient } from "./util.js";
 
-const cf = new CloudFrontClient({ logger: sdkLogger });
+interface Props {
+  distributionId: string;
+  paths: string[];
+  wait: "true" | "false";
+}
 
+const cf = useAWSClient(CloudFrontClient);
+
+// CloudFront allows you to specify up to 3,000 paths in a single invalidation
 // https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/cloudfront-limits.html#limits-invalidations
-const limitFile = 3000;
-const limitWildcard = 15;
+const FILE_LIMIT = 3000;
+const WILDCARD_LIMIT = 15;
 
 export async function CloudFrontInvalidator(cfnRequest: any) {
   switch (cfnRequest.RequestType) {
     case "Create":
     case "Update":
-      await invalidate(cfnRequest);
+      const props = cfnRequest.ResourceProperties as unknown as Props;
+      const ids = await invalidate(props);
+      if (props.wait === "true") {
+        await waitForInvalidation(props, ids);
+      }
       break;
     case "Delete":
       break;
@@ -24,47 +35,38 @@ export async function CloudFrontInvalidator(cfnRequest: any) {
   }
 }
 
-async function invalidate(cfnRequest: any) {
-  const { distributionId, paths, wait } = cfnRequest.ResourceProperties;
+async function invalidate(props: Props) {
+  const { distributionId, paths } = props;
 
+  // Split paths into files and wildcard paths
   const pathsFile: string[] = [];
   const pathsWildcard: string[] = [];
-  for (let i = 0; i < paths.length; i++) {
-    if (paths[i].trim().endsWith("*")) {
-      pathsWildcard.push(paths[i]);
+  for (const path of paths) {
+    if (path.trim().endsWith("*")) {
+      pathsWildcard.push(path);
     } else {
-      pathsFile.push(paths[i]);
+      pathsFile.push(path);
     }
   }
 
   const stepsCount: number = Math.max(
-    Math.ceil(pathsFile.length / limitFile),
-    Math.ceil(pathsWildcard.length / limitWildcard)
+    Math.ceil(pathsFile.length / FILE_LIMIT),
+    Math.ceil(pathsWildcard.length / WILDCARD_LIMIT)
   );
 
   const invalidationIds: string[] = [];
   for (let i = 0; i < stepsCount; i++) {
-    const stepPaths: string[] = [];
-    stepPaths.push(...pathsFile.slice(i * limitFile, (i + 1) * limitFile));
-    stepPaths.push(
-      ...pathsWildcard.slice(i * limitWildcard, (i + 1) * limitWildcard)
-    );
-
+    const stepPaths = [
+      ...pathsFile.slice(i * FILE_LIMIT, (i + 1) * FILE_LIMIT),
+      ...pathsWildcard.slice(i * WILDCARD_LIMIT, (i + 1) * WILDCARD_LIMIT),
+    ];
     invalidationIds.push(await invalidateChunk(distributionId, stepPaths));
-
-    // https://github.com/aws/aws-sdk-js/issues/3983#issuecomment-1617270477
-    if (i < stepsCount - 1) {
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-    }
   }
-
-  if (wait === "true") {
-    await waitForInvalidation(distributionId, invalidationIds);
-  }
+  return invalidationIds;
 }
 
 async function invalidateChunk(distributionId: string, paths: string[]) {
-  console.log("invalidate chunk: " + paths);
+  console.log("invalidating chunk", paths);
 
   const result = await cf.send(
     new CreateInvalidationCommand({
@@ -78,22 +80,21 @@ async function invalidateChunk(distributionId: string, paths: string[]) {
       },
     })
   );
+  const invalidationId = result.Invalidation?.Id;
 
-  if (!result.Invalidation?.Id) {
+  if (!invalidationId) {
     throw new Error("Invalidation ID not found");
   }
 
-  console.log("invalidateChunk return: " + result.Invalidation.Id);
-  return result.Invalidation.Id;
+  console.log("> invalidation id", invalidationId);
+  return invalidationId;
 }
 
-async function waitForInvalidation(
-  distributionId: string,
-  invalidationIds: string[]
-) {
-  console.log("invalidationIds: " + invalidationIds);
-  for (let i = 0; i < invalidationIds.length; i++) {
-    console.log("waiting invalidation: " + invalidationIds[i]);
+async function waitForInvalidation(props: Props, invalidationIds: string[]) {
+  const { distributionId } = props;
+  console.log("waiting for invalidations", invalidationIds);
+  for (const invalidationId of invalidationIds) {
+    console.log("> invalidation", invalidationId);
     try {
       await waitUntilInvalidationCompleted(
         {
@@ -102,7 +103,7 @@ async function waitForInvalidation(
         },
         {
           DistributionId: distributionId,
-          Id: invalidationIds[i],
+          Id: invalidationId,
         }
       );
     } catch (e) {

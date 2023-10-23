@@ -226,7 +226,7 @@ export class Distribution extends Construct {
           Date.now().toString(16) + Math.random().toString(16).slice(2),
         distributionId: this.distribution.distributionId,
         paths: [...new Set(paths ?? ["/*"])],
-        waitForInvalidation: wait ?? false,
+        wait: wait ?? false,
       },
     });
     resource.node.addDependency(policy);
