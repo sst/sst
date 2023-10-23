@@ -1,5 +1,29 @@
 # @serverless-stack/cli2
 
+## 2.31.0
+
+### Minor Changes
+
+- [#3432](https://github.com/sst/sst/pull/3432) [`8e655cfb9`](https://github.com/sst/sst/commit/8e655cfb926e271275e45fdb3ea02c617db4e933) Thanks [@fwang](https://github.com/fwang)! - Sites: add `assets` option to allow customizing static file options
+
+### Patch Changes
+
+- [`5613c727a`](https://github.com/sst/sst/commit/5613c727a967f95daba0e23447d504552b8edc13) Thanks [@fwang](https://github.com/fwang)! - NextjsSite: finalize per-route logging
+
+## 2.30.4
+
+### Patch Changes
+
+- [#3431](https://github.com/sst/sst/pull/3431) [`b3abbfd19`](https://github.com/sst/sst/commit/b3abbfd19318e0e1ab94f590c2e5ed4619d5fe51) Thanks [@fwang](https://github.com/fwang)! - NextjsSite: add beta option for per-route logging [wip]
+
+## 2.30.3
+
+### Patch Changes
+
+- [`48c432320`](https://github.com/sst/sst/commit/48c4323201afd729ee9bbc662b3f4448a4fc190b) Thanks [@thdxr](https://github.com/thdxr)! - cli: rollback clearing dist folder on every synth
+
+- [#3426](https://github.com/sst/sst/pull/3426) [`bd4986a8c`](https://github.com/sst/sst/commit/bd4986a8c22ea2ee1121191ad2fb940ba16ec341) Thanks [@fwang](https://github.com/fwang)! - Update CDK to v2.101.1
+
 ## 2.30.2
 
 ### Patch Changes

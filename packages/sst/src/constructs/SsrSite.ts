@@ -1,7 +1,7 @@
 import path from "path";
 import url from "url";
 import fs from "fs";
-import glob from "glob";
+import { globSync } from "glob";
 import crypto from "crypto";
 import spawn from "cross-spawn";
 import { execSync } from "child_process";
@@ -58,7 +58,6 @@ import {
   FunctionEventType as CfFunctionEventType,
   ErrorResponse,
 } from "aws-cdk-lib/aws-cloudfront";
-import { AwsCliLayer } from "aws-cdk-lib/lambda-layer-awscli";
 import {
   S3Origin,
   HttpOrigin,
@@ -79,8 +78,6 @@ import { SsrFunction, SsrFunctionProps } from "./SsrFunction.js";
 import { EdgeFunction, EdgeFunctionProps } from "./EdgeFunction.js";
 import {
   BaseSiteFileOptions,
-  BaseSiteFileOptionsFilter,
-  BaseSiteFileOptionsDeprecated,
   BaseSiteReplaceProps,
   BaseSiteCdkDistributionProps,
   getBuildCmdEnvironment,
@@ -131,12 +128,7 @@ type OriginsMap = Record<string, S3Origin | HttpOrigin | OriginGroup>;
 export type Plan = ReturnType<SsrSite["validatePlan"]>;
 export interface SsrSiteNodeJSProps extends NodeJSProps {}
 export interface SsrDomainProps extends DistributionDomainProps {}
-export interface SsrSiteFileOptionsFilter extends BaseSiteFileOptionsFilter {}
-export interface SsrSiteFileOptions extends BaseSiteFileOptions {
-  filters: SsrSiteFileOptionsFilter[];
-}
-export interface SsrSiteFileOptionsDeprecated
-  extends BaseSiteFileOptionsDeprecated {}
+export interface SsrSiteFileOptions extends BaseSiteFileOptions {}
 export interface SsrSiteReplaceProps extends BaseSiteReplaceProps {}
 export interface SsrCdkDistributionProps extends BaseSiteCdkDistributionProps {}
 export interface SsrSiteProps {
@@ -283,18 +275,18 @@ export interface SsrSiteProps {
      */
     url?: string;
   };
-  cache?: {
+  assets?: {
     /**
-     * Character encoding for text based assets stored in the S3 cache (ex: html, css, js, etc.). If "none" is specified, no charset will be returned in header.
+     * Character encoding for text based assets uploaded to S3 (ex: html, css, js, etc.). If "none" is specified, no charset will be returned in header.
      * @default utf-8
      * @example
      * ```js
-     * cache: {
-     *  textEncoding: "iso-8859-1"
+     * assets: {
+     *   textEncoding: "iso-8859-1"
      * }
      * ```
      */
-    textEncoding?: "UTF-8" | "ISO-8859-1" | "Windows-1252" | "ASCII" | "none";
+    textEncoding?: "utf-8" | "iso-8859-1" | "windows-1252" | "ascii" | "none";
     /**
      * The strategy to use for invalidating the CDN cache. By default, the CDN cache will invalidate on changes any cached file, but this could become slow on very large projects.
      * - "never" - No invalidation will be performed.
@@ -304,7 +296,7 @@ export interface SsrSiteProps {
      * @default all
      * @example
      * ```js
-     * cache: {
+     * assets: {
      *   cdnInvalidationStrategy: "versioned"
      * }
      * ```
@@ -315,8 +307,8 @@ export interface SsrSiteProps {
      * @default 1 year
      * @example
      * ```js
-     * cache: {
-     *  versionedFilesTTL: "30 days"
+     * assets: {
+     *   versionedFilesTTL: "30 days"
      * }
      * ```
      */
@@ -326,7 +318,7 @@ export interface SsrSiteProps {
      * @default public,max-age=31536000,immutable
      * @example
      * ```js
-     * cache: {
+     * assets: {
      *   versionedFilesCacheHeader: "public,max-age=31536000,immutable"
      * }
      * ```
@@ -337,8 +329,8 @@ export interface SsrSiteProps {
      * @default 1 day
      * @example
      * ```js
-     * cache: {
-     *  nonVersionedFilesTTL: "4 hours"
+     * assets: {
+     *   nonVersionedFilesTTL: "4 hours"
      * }
      * ```
      */
@@ -348,7 +340,7 @@ export interface SsrSiteProps {
      * @default public,max-age=0,s-maxage=86400,stale-while-revalidate=8640
      * @example
      * ```js
-     * cache: {
+     * assets: {
      *   nonVersionedFilesCacheHeader: "public,max-age=0,no-cache"
      * }
      * ```
@@ -358,10 +350,10 @@ export interface SsrSiteProps {
      * List of file options to specify cache control and content type for cached files. These file options are appended to the default file options so it's possible to override the default file options by specifying an overlapping file pattern.
      * @example
      * ```js
-     * cache: {
+     * assets: {
      *   fileOptions: [
      *     {
-     *       filters: [ { exclude: "*" }, { include: "*.zip" } ],
+     *       files: "**\/*.zip",
      *       cacheControl: "private,no-cache,no-store,must-revalidate",
      *       contentType: "application/zip",
      *     },
@@ -370,6 +362,10 @@ export interface SsrSiteProps {
      * ```
      */
     fileOptions?: SsrSiteFileOptions[];
+    /**
+     * @internal
+     */
+    _uploadConcurrency?: number;
   };
   /**
    * Allows you to define custom default paths for CloudFront invalidation
@@ -434,59 +430,6 @@ export interface SsrSiteProps {
     > &
       Pick<FunctionProps, "copyFiles">;
   };
-  /**
-   * Pass in a list of file options to customize cache control and content type specific files. Specifying file options will bypass all default file options and only use the ones specified. Most configurations within the `cache` prop will be ignored.
-   * @deprecated Use `cache.fileOptions` instead. Note that the `cache.fileOptions` are appended to default file options, not a replacement as this prop was.
-   * @default
-   * Versioned files cached for 1 year at the CDN and browser level.
-   * Nonversioned files cached for 1 day at the CDN level, but not at the browser level.
-   * ```js
-   * fileOptions: [
-   *   {
-   *     exclude: "*",
-   *     include: "{versioned_directory}/*",
-   *     cacheControl: "public,max-age=31536000,immutable",
-   *   },
-   *   {
-   *     exclude: "*",
-   *     include: "[{non_versioned_file1}, {non_versioned_file2}, ...]",
-   *     cacheControl: "public,max-age=0,s-maxage=31536000,must-revalidate",
-   *   },
-   *   {
-   *     exclude: "*",
-   *     include: "[{non_versioned_dir_1}/*, {non_versioned_dir_2}/*, ...]",
-   *     cacheControl: "public,max-age=0,s-maxage=31536000,must-revalidate",
-   *   },
-   * ]
-   * ```
-   *
-   * @example
-   * ```js
-   * fileOptions: [
-   *   {
-   *     exclude: "*",
-   *     include: "{versioned_directory}/*.css",
-   *     cacheControl: "public,max-age=31536000,immutable",
-   *     contentType: "text/css; charset=UTF-8",
-   *   },
-   *   {
-   *     exclude: "*",
-   *     include: "{versioned_directory}/*.js",
-   *     cacheControl: "public,max-age=31536000,immutable",
-   *   },
-   *   {
-   *     exclude: "*",
-   *     include: "[{non_versioned_file1}, {non_versioned_file2}, ...]",
-   *     cacheControl: "public,max-age=0,s-maxage=31536000,must-revalidate",
-   *   },
-   *   {
-   *     exclude: "*",
-   *     include: "[{non_versioned_dir_1}/*, {non_versioned_dir_2}/*, ...]",
-   *     cacheControl: "public,max-age=0,s-maxage=31536000,must-revalidate",
-   *   },
-   * ]
-   */
-  fileOptions?: SsrSiteFileOptionsDeprecated[];
 }
 
 export type SsrSiteNormalizedProps = SsrSiteProps & {
@@ -546,7 +489,7 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
       edge,
       regional,
       dev,
-      cache,
+      assets,
       nodejs,
       permissions,
       environment,
@@ -554,7 +497,6 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
       customDomain,
       defaultInvalidationPaths,
       waitForInvalidation,
-      fileOptions,
       warm,
       cdk,
     } = props;
@@ -563,6 +505,7 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
 
     validateSiteExists();
     validateTimeout();
+    validateDeprecatedFileOptions();
     writeTypesFile(typesPath);
 
     useSites().add(stack.stackName, id, this.constructor.name, props);
@@ -577,7 +520,6 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
 
     let s3DeployCRs: CustomResource[] = [];
     let ssrFunctions: SsrFunction[] = [];
-    let singletonAwsCliLayer: AwsCliLayer;
     let singletonUrlSigner: EdgeFunction;
     let singletonCachePolicy: CachePolicy;
     let singletonOriginRequestPolicy: IOriginRequestPolicy;
@@ -612,7 +554,7 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
 
     function validateSiteExists() {
       if (!fs.existsSync(sitePath)) {
-        throw new Error(`No site found at "${path.resolve(sitePath)}"`);
+        throw new VisibleError(`No site found at "${path.resolve(sitePath)}"`);
       }
     }
 
@@ -623,10 +565,19 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
           : toCdkDuration(timeout).toSeconds();
       const limit = edge ? 30 : 180;
       if (num > limit) {
-        throw new Error(
+        throw new VisibleError(
           edge
-            ? `Timeout must be less than or equal to 30 seconds when the "edge" flag is enabled.`
-            : `Timeout must be less than or equal to 180 seconds.`
+            ? `In the "${id}" construct, timeout must be less than or equal to 30 seconds when the "edge" flag is enabled.`
+            : `In the "${id}" construct, timeout must be less than or equal to 180 seconds.`
+        );
+      }
+    }
+
+    function validateDeprecatedFileOptions() {
+      // @ts-expect-error
+      if (props.fileOptions) {
+        throw new VisibleError(
+          `In the "${id}" construct, the "fileOptions" property has been replaced by "assets.fileOptions". More details on upgrading - https://docs.sst.dev/upgrade-guide#upgrade-to-v2310`
         );
       }
     }
@@ -975,9 +926,7 @@ function handler(event) {
       });
 
       const assets = createS3OriginAssets(props.copy);
-      const assetFileOptions =
-        fileOptions || createS3OriginAssetFileOptions(props.copy, cache);
-      const s3deployCR = createS3OriginDeployment(assets, assetFileOptions);
+      const s3deployCR = createS3OriginDeployment(props.copy, assets);
       s3DeployCRs.push(s3deployCR);
 
       return s3Origin;
@@ -1162,238 +1111,49 @@ function handler(event) {
       return assets;
     }
 
-    function createS3OriginAssetFileOptions(
-      copy: S3OriginConfig["copy"],
-      cache: SsrSiteProps["cache"]
-    ) {
-      const fileOptions: SsrSiteFileOptions[] = [];
-
-      const textEncoding = cache?.textEncoding ?? "UTF-8";
-      const nonVersionedFilesTTL =
-        typeof cache?.nonVersionedFilesTTL === "number"
-          ? cache.nonVersionedFilesTTL
-          : toCdkDuration(cache?.nonVersionedFilesTTL ?? "1 day").toSeconds();
-      const staleWhileRevalidateTTL = Math.max(
-        Math.floor(nonVersionedFilesTTL / 10),
-        30
-      );
-      const nonVersionedFilesCacheHeader =
-        cache?.nonVersionedFilesCacheHeader ??
-        `public,max-age=0,s-maxage=${nonVersionedFilesTTL},stale-while-revalidate=${staleWhileRevalidateTTL}`;
-
-      const versionedFilesTTL =
-        typeof cache?.versionedFilesTTL === "number"
-          ? cache.versionedFilesTTL
-          : toCdkDuration(cache?.versionedFilesTTL ?? "365 days").toSeconds();
-      const versionedFilesCacheHeader =
-        cache?.versionedFilesCacheHeader ??
-        `public,max-age=${versionedFilesTTL},immutable`;
-
-      const commonWebFileExtensions: Record<
-        string,
-        { mime: string; isText: boolean }
-      > = {
-        txt: { mime: "text/plain", isText: true },
-        htm: { mime: "text/html", isText: true },
-        html: { mime: "text/html", isText: true },
-        xhtml: { mime: "application/xhtml+xml", isText: true },
-        css: { mime: "text/css", isText: true },
-        js: { mime: "text/javascript", isText: true },
-        mjs: { mime: "text/javascript", isText: true },
-        apng: { mime: "image/apng", isText: false },
-        avif: { mime: "image/avif", isText: false },
-        gif: { mime: "image/gif", isText: false },
-        jpeg: { mime: "image/jpeg", isText: false },
-        jpg: { mime: "image/jpeg", isText: false },
-        png: { mime: "image/png", isText: false },
-        svg: { mime: "image/svg+xml", isText: true },
-        bmp: { mime: "image/bmp", isText: false },
-        tiff: { mime: "image/tiff", isText: false },
-        webp: { mime: "image/webp", isText: false },
-        ico: { mime: "image/vnd.microsoft.icon", isText: false },
-        eot: { mime: "application/vnd.ms-fontobject", isText: false },
-        ttf: { mime: "font/ttf", isText: false },
-        otf: { mime: "font/otf", isText: false },
-        woff: { mime: "font/woff", isText: false },
-        woff2: { mime: "font/woff2", isText: false },
-        json: { mime: "application/json", isText: true },
-        jsonld: { mime: "application/ld+json", isText: true },
-        xml: { mime: "application/xml", isText: true },
-        pdf: { mime: "application/pdf", isText: false },
-        zip: { mime: "application/zip", isText: false },
-      };
-
-      copy.forEach((files) => {
-        if (!files.cached) return;
-
-        for (const [extension, contentType] of Object.entries(
-          commonWebFileExtensions
-        )) {
-          // Create a file option for: common extension + unversioned files
-          fileOptions.push({
-            filters: [
-              { exclude: "*" },
-              { include: `${path.posix.join(files.to, "*")}.${extension}` },
-              ...(files.versionedSubDir
-                ? [
-                    {
-                      exclude: path.posix.join(
-                        files.to,
-                        files.versionedSubDir,
-                        "*"
-                      ),
-                    },
-                  ]
-                : []),
-            ],
-            cacheControl: nonVersionedFilesCacheHeader,
-            contentType: `${contentType.mime}${
-              contentType.isText && textEncoding !== "none"
-                ? `;charset=${textEncoding}`
-                : ""
-            }`,
-          });
-
-          // Create a file option for: common extension + versioned files
-          if (files.versionedSubDir) {
-            fileOptions.push({
-              filters: [
-                { exclude: "*" },
-                {
-                  include: path.posix.join(
-                    files.to,
-                    files.versionedSubDir,
-                    `*.${extension}`
-                  ),
-                },
-              ],
-              cacheControl: versionedFilesCacheHeader,
-              contentType: `${contentType.mime}${
-                contentType.isText && textEncoding !== "none"
-                  ? `;charset=${textEncoding}`
-                  : ""
-              }`,
-            });
-          }
-        }
-
-        // Create a file option for: other extensions + unversioned files
-        fileOptions.push({
-          filters: [
-            { include: "*" },
-            ...(files.versionedSubDir
-              ? [
-                  {
-                    exclude: path.posix.join(
-                      files.to,
-                      files.versionedSubDir,
-                      "*"
-                    ),
-                  },
-                ]
-              : []),
-            ...Object.entries(commonWebFileExtensions).map(([ext]) => ({
-              exclude: `*.${ext}`,
-            })),
-          ],
-          cacheControl: nonVersionedFilesCacheHeader,
-        });
-
-        // Create a file option for: other extensions + versioned files
-        if (files.versionedSubDir) {
-          fileOptions.push({
-            filters: [
-              {
-                include: path.posix.join(files.to, files.versionedSubDir, "*"),
-              },
-              ...Object.entries(commonWebFileExtensions).map(([ext]) => ({
-                exclude: `*.${ext}`,
-              })),
-            ],
-            cacheControl: versionedFilesCacheHeader,
-          });
-        }
-      });
-
-      if (cache?.fileOptions) {
-        fileOptions.push(...cache.fileOptions);
-      }
-
-      return fileOptions;
-    }
-
     function createS3OriginDeployment(
-      assets: Asset[],
-      fileOptions: SsrSiteFileOptions[] | SsrSiteFileOptionsDeprecated[]
+      copy: S3OriginConfig["copy"],
+      s3Assets: Asset[]
     ): CustomResource {
-      // Create a Lambda function that will be doing the uploading
-      const uploader = new CdkFunction(self, "S3Uploader", {
-        code: Code.fromAsset(
-          path.join(__dirname, "../support/base-site-custom-resource")
-        ),
-        layers: [useAwsCliLayer()],
-        runtime: Runtime.PYTHON_3_11,
-        handler: "s3-upload.handler",
-        timeout: CdkDuration.minutes(15),
-        memorySize: 1024,
-      });
-      bucket.grantReadWrite(uploader);
-      assets.forEach((asset) => asset.grantRead(uploader));
-
-      // Create the custom resource function
-      const handler = new CdkFunction(self, "S3Handler", {
-        code: Code.fromAsset(
-          path.join(__dirname, "../support/base-site-custom-resource")
-        ),
-        layers: [useAwsCliLayer()],
-        runtime: Runtime.PYTHON_3_11,
-        handler: "s3-handler.handler",
-        timeout: CdkDuration.minutes(15),
-        memorySize: 1024,
-        environment: {
-          UPLOADER_FUNCTION_NAME: uploader.functionName,
-        },
-      });
-      bucket.grantReadWrite(handler);
-      uploader.grantInvoke(handler);
-
-      // Create custom resource
-      return new CustomResource(self, "S3Deployment", {
-        serviceToken: handler.functionArn,
-        resourceType: "Custom::SSTBucketDeployment",
-        properties: {
-          Sources: assets.map((asset) => ({
-            BucketName: asset.s3BucketName,
-            ObjectKey: asset.s3ObjectKey,
-          })),
-          DestinationBucketName: bucket.bucketName,
-          FileOptions: (fileOptions || []).map((o) => {
-            const { filters, cacheControl, contentType, contentEncoding } =
-              o as SsrSiteFileOptions;
-            const { include, exclude } = o as SsrSiteFileOptionsDeprecated;
-            return [
-              ...(typeof exclude === "string" ? [exclude] : exclude ?? [])
-                .map((entry) => ["--exclude", entry])
-                .flat(2),
-              ...(typeof include === "string" ? [include] : include ?? [])
-                .map((entry) => ["--include", entry])
-                .flat(2),
-              ...(filters || [])
-                .map((filter) =>
-                  Object.entries(filter).map(([key, value]) => [
-                    `--${key}`,
-                    value,
-                  ])
-                )
-                .flat(2),
-              cacheControl ? ["--cache-control", cacheControl] : [],
-              contentType ? ["--content-type", contentType] : [],
-              contentEncoding ? ["--content-encoding", contentEncoding] : [],
-            ].flat();
+      const policy = new Policy(self, "S3UploaderPolicy", {
+        statements: [
+          new PolicyStatement({
+            effect: Effect.ALLOW,
+            actions: ["lambda:InvokeFunction"],
+            resources: [stack.customResourceHandler.functionArn],
           }),
-          ReplaceValues: getS3ContentReplaceValues(),
+          new PolicyStatement({
+            effect: Effect.ALLOW,
+            actions: ["s3:ListBucket", "s3:PutObject", "s3:DeleteObject"],
+            resources: [bucket.bucketArn, `${bucket.bucketArn}/*`],
+          }),
+          new PolicyStatement({
+            effect: Effect.ALLOW,
+            actions: ["s3:GetObject"],
+            resources: [`${s3Assets[0].bucket.bucketArn}/*`],
+          }),
+        ],
+      });
+      stack.customResourceHandler.role?.attachInlinePolicy(policy);
+
+      const resource = new CustomResource(self, "S3Uploader", {
+        serviceToken: stack.customResourceHandler.functionArn,
+        resourceType: "Custom::S3Uploader",
+        properties: {
+          sources: s3Assets.map((s3Asset) => ({
+            bucketName: s3Asset.s3BucketName,
+            objectKey: s3Asset.s3ObjectKey,
+          })),
+          destinationBucketName: bucket.bucketName,
+          concurrency: assets?._uploadConcurrency,
+          textEncoding: assets?.textEncoding ?? "utf-8",
+          fileOptions: getS3FileOptions(copy),
+          replaceValues: getS3ContentReplaceValues(),
         },
       });
+      resource.node.addDependency(policy);
+
+      return resource;
     }
 
     function useFunctionUrlSigningFunction() {
@@ -1433,10 +1193,52 @@ function handler(event) {
       return singletonOriginRequestPolicy;
     }
 
-    function useAwsCliLayer() {
-      singletonAwsCliLayer =
-        singletonAwsCliLayer ?? new AwsCliLayer(self, "AwsCliLayer");
-      return singletonAwsCliLayer;
+    function getS3FileOptions(copy: S3OriginConfig["copy"]) {
+      const fileOptions: SsrSiteFileOptions[] = [];
+
+      const nonVersionedFilesTTL =
+        typeof assets?.nonVersionedFilesTTL === "number"
+          ? assets.nonVersionedFilesTTL
+          : toCdkDuration(assets?.nonVersionedFilesTTL ?? "1 day").toSeconds();
+      const staleWhileRevalidateTTL = Math.max(
+        Math.floor(nonVersionedFilesTTL / 10),
+        30
+      );
+      const versionedFilesTTL =
+        typeof assets?.versionedFilesTTL === "number"
+          ? assets.versionedFilesTTL
+          : toCdkDuration(assets?.versionedFilesTTL ?? "365 days").toSeconds();
+
+      copy.forEach(({ cached, to, versionedSubDir }) => {
+        if (!cached) return;
+
+        // Create a default file option for: unversioned files
+        fileOptions.push({
+          files: "**",
+          ignore: versionedSubDir
+            ? path.posix.join(to, versionedSubDir, "**")
+            : undefined,
+          cacheControl:
+            assets?.nonVersionedFilesCacheHeader ??
+            `public,max-age=0,s-maxage=${nonVersionedFilesTTL},stale-while-revalidate=${staleWhileRevalidateTTL}`,
+        });
+
+        // Create a default file option for: versioned files
+        if (versionedSubDir) {
+          fileOptions.push({
+            files: path.posix.join(to, versionedSubDir, "**"),
+            cacheControl:
+              assets?.versionedFilesCacheHeader ??
+              `public,max-age=${versionedFilesTTL},immutable`,
+          });
+        }
+      });
+
+      if (assets?.fileOptions) {
+        fileOptions.push(...assets.fileOptions);
+      }
+
+      return fileOptions;
     }
 
     function getS3ContentReplaceValues() {
@@ -1468,7 +1270,7 @@ function handler(event) {
     }
 
     function createDistributionInvalidation() {
-      const cdnInvalidationStrategy = cache?.cdnInvalidationStrategy ?? "all";
+      const cdnInvalidationStrategy = assets?.cdnInvalidationStrategy ?? "all";
       if (cdnInvalidationStrategy === "never") return;
       if (plan.buildId) {
         distribution.createInvalidation(plan.buildId);
@@ -1508,37 +1310,32 @@ function handler(event) {
         // The below options are needed to support following symlinks when building zip files:
         // - nodir: This will prevent symlinks themselves from being copied into the zip.
         // - follow: This will follow symlinks and copy the files within.
-        const globOptions: glob.IOptions = {
-          dot: true,
-          nodir: true,
-          follow: true,
-          cwd: path.resolve(sitePath, item.from),
-        };
 
         // For versioned files, use file path for digest since file version in name should change on content change
         if (item.versionedSubDir) {
-          glob
-            .sync("**", {
-              ...globOptions,
-              cwd: path.resolve(sitePath, item.from, item.versionedSubDir),
-            })
-            .forEach((filePath) => hash.update(filePath));
+          globSync("**", {
+            dot: true,
+            nodir: true,
+            follow: true,
+            cwd: path.resolve(sitePath, item.from, item.versionedSubDir),
+          }).forEach((filePath) => hash.update(filePath));
         }
 
         // For non-versioned files, use file content for digest
         if (cdnInvalidationStrategy === "all") {
-          glob
-            .sync("**", {
-              ...globOptions,
-              ignore: item.versionedSubDir
-                ? [path.posix.join(item.versionedSubDir, "**")]
-                : undefined,
-            })
-            .forEach((filePath) =>
-              hash.update(
-                fs.readFileSync(path.resolve(sitePath, item.from, filePath))
-              )
-            );
+          globSync("**", {
+            ignore: item.versionedSubDir
+              ? [path.posix.join(item.versionedSubDir, "**")]
+              : undefined,
+            dot: true,
+            nodir: true,
+            follow: true,
+            cwd: path.resolve(sitePath, item.from),
+          }).forEach((filePath) =>
+            hash.update(
+              fs.readFileSync(path.resolve(sitePath, item.from, filePath))
+            )
+          );
         }
       });
 

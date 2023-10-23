@@ -3,8 +3,9 @@ import {
   CreateInvalidationCommand,
   waitUntilInvalidationCompleted,
 } from "@aws-sdk/client-cloudfront";
+import { sdkLogger } from "./util.js";
 
-const cf = new CloudFrontClient({ logger: console });
+const cf = new CloudFrontClient({ logger: sdkLogger });
 
 // https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/cloudfront-limits.html#limits-invalidations
 const limitFile = 3000;
