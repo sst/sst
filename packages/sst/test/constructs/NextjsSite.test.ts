@@ -204,15 +204,6 @@ test("cdk.revalidation.vpc: set", async () => {
   });
 });
 
-test("defaultInvalidationPaths: custom invalidation paths", async () => {
-  const { stack } = await createSite({
-    defaultInvalidationPaths: ["/path1", "/path2"],
-  });
-  hasResource(stack, "Custom::CloudFrontInvalidator", {
-    paths: ["/path1", "/path2"],
-  });
-});
-
 test("buildCloudWatchRouteName", async () => {
   expect(NextjsSite._test.buildCloudWatchRouteName("/api")).toEqual("/api");
   expect(NextjsSite._test.buildCloudWatchRouteName("/api/[id]")).toEqual(

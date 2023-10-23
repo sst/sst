@@ -288,21 +288,6 @@ export interface SsrSiteProps {
      */
     textEncoding?: "utf-8" | "iso-8859-1" | "windows-1252" | "ascii" | "none";
     /**
-     * The strategy to use for invalidating the CDN cache. By default, the CDN cache will invalidate on changes any cached file, but this could become slow on very large projects.
-     * - "never" - No invalidation will be performed.
-     * - "all" - All files will be invalidated when any file changes. (Default, requires checking file content which will increase deployment time)
-     * - "versioned" - Only versioned files will be invalidated when versioned files change.
-     * - "always" - All files are invalidated on every deployment.
-     * @default all
-     * @example
-     * ```js
-     * assets: {
-     *   cdnInvalidationStrategy: "versioned"
-     * }
-     * ```
-     */
-    cdnInvalidationStrategy?: "never" | "all" | "versioned" | "always";
-    /**
      * The TTL for versioned files (ex: `main-1234.css`) in the CDN and browser cache. Ignored when `versionedFilesCacheHeader` is specified.
      * @default 1 year
      * @example
@@ -367,13 +352,45 @@ export interface SsrSiteProps {
      */
     _uploadConcurrency?: number;
   };
-  /**
-   * Allows you to define custom default paths for CloudFront invalidation
-   */
-  defaultInvalidationPaths?: string[];
+  invalidation?: {
+    /**
+     * While deploying, SST waits for the CloudFront cache invalidation process to finish. This ensures that the new content will be served once the deploy command finishes. However, this process can sometimes take more than 5 mins. For non-prod environments it might make sense to pass in `false`. That'll skip waiting for the cache to invalidate and speed up the deploy process.
+     * @default false
+     * @example
+     * ```js
+     * invalidation: {
+     *   wait: true,
+     * }
+     * ```
+     */
+    wait?: boolean;
+    /**
+     * The paths to invalidate. There are three built-in options:
+     * - "none" - No invalidation will be performed.
+     * - "all" - All files will be invalidated when any file changes.
+     * - "versioned" - Only versioned files will be invalidated when versioned files change.
+     * Alternatively you can pass in an array of paths to invalidate.
+     * @default "all"
+     * @example
+     * Disable invalidation:
+     * ```js
+     * invalidation: {
+     *   paths: "none",
+     * }
+     * ```
+     * Invalidate "index.html" and all files under the "products" route:
+     * ```js
+     * invalidation: {
+     *   paths: ["/index.html", "/products/*"],
+     * }
+     * ```
+     */
+    paths?: "none" | "all" | "versioned" | string[];
+  };
   /**
    * While deploying, SST waits for the CloudFront cache invalidation process to finish. This ensures that the new content will be served once the deploy command finishes. However, this process can sometimes take more than 5 mins. For non-prod environments it might make sense to pass in `false`. That'll skip waiting for the cache to invalidate and speed up the deploy process.
    * @default false
+   * @deprecated Use `invalidation.wait` instead.
    */
   waitForInvalidation?: boolean;
   cdk?: {
@@ -432,13 +449,19 @@ export interface SsrSiteProps {
   };
 }
 
+type SsrSiteInvalidationNormalizedProps = Exclude<
+  SsrSiteProps["invalidation"],
+  undefined
+>;
 export type SsrSiteNormalizedProps = SsrSiteProps & {
   path: Exclude<SsrSiteProps["path"], undefined>;
   typesPath: Exclude<SsrSiteProps["typesPath"], undefined>;
   runtime: Exclude<SsrSiteProps["runtime"], undefined>;
   timeout: Exclude<SsrSiteProps["timeout"], undefined>;
   memorySize: Exclude<SsrSiteProps["memorySize"], undefined>;
-  waitForInvalidation: Exclude<SsrSiteProps["waitForInvalidation"], undefined>;
+  invalidation: Exclude<SsrSiteProps["invalidation"], undefined> & {
+    paths: Exclude<SsrSiteInvalidationNormalizedProps["paths"], undefined>;
+  };
 };
 
 /**
@@ -467,11 +490,15 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
     const props: SsrSiteNormalizedProps = {
       path: ".",
       typesPath: ".",
-      waitForInvalidation: false,
       runtime: "nodejs18.x",
       timeout: "10 seconds",
       memorySize: "1024 MB",
       ...rawProps,
+      invalidation: {
+        wait: rawProps?.waitForInvalidation,
+        paths: "all",
+        ...rawProps?.invalidation,
+      },
     };
     this.id = id;
     this.props = props;
@@ -495,8 +522,7 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
       environment,
       bind,
       customDomain,
-      defaultInvalidationPaths,
-      waitForInvalidation,
+      invalidation,
       warm,
       cdk,
     } = props;
@@ -744,8 +770,6 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
       const distribution = new Distribution(self, "CDN", {
         scopeOverride: self,
         customDomain,
-        defaultInvalidationPaths,
-        waitForInvalidation,
         cdk: {
           distribution: {
             // these values can be overwritten
@@ -1270,18 +1294,7 @@ function handler(event) {
     }
 
     function createDistributionInvalidation() {
-      const cdnInvalidationStrategy = assets?.cdnInvalidationStrategy ?? "all";
-      if (cdnInvalidationStrategy === "never") return;
-      if (plan.buildId) {
-        distribution.createInvalidation(plan.buildId);
-        return;
-      }
-      if (cdnInvalidationStrategy === "always") {
-        const buildId =
-          Date.now().toString(16) + Math.random().toString(16).slice(2);
-        distribution.createInvalidation(buildId);
-        return;
-      }
+      const paths = invalidation.paths;
 
       // We will generate a hash based on the contents of the S3 files with cache enabled.
       // This will be used to determine if we need to invalidate our CloudFront cache.
@@ -1294,61 +1307,68 @@ function handler(event) {
 
       // Build invalidation paths
       const invalidationPaths: string[] = [];
-      if (cdnInvalidationStrategy === "versioned") {
+      if (paths === "none") {
+      } else if (paths === "all") {
+        invalidationPaths.push("/*");
+      } else if (paths === "versioned") {
         cachedS3Files.forEach((item) => {
           if (!item.versionedSubDir) return;
           invalidationPaths.push(
             path.posix.join("/", item.to, item.versionedSubDir, "*")
           );
         });
+      } else {
+        invalidationPaths.push(...paths);
       }
+      if (invalidationPaths.length === 0) return;
 
       // Build build ID
-      const hash = crypto.createHash("md5");
+      let invalidationBuildId: string;
+      if (plan.buildId) {
+        invalidationBuildId = plan.buildId;
+      } else {
+        const hash = crypto.createHash("md5");
 
-      cachedS3Files.forEach((item) => {
-        // The below options are needed to support following symlinks when building zip files:
-        // - nodir: This will prevent symlinks themselves from being copied into the zip.
-        // - follow: This will follow symlinks and copy the files within.
+        cachedS3Files.forEach((item) => {
+          // The below options are needed to support following symlinks when building zip files:
+          // - nodir: This will prevent symlinks themselves from being copied into the zip.
+          // - follow: This will follow symlinks and copy the files within.
 
-        // For versioned files, use file path for digest since file version in name should change on content change
-        if (item.versionedSubDir) {
-          globSync("**", {
-            dot: true,
-            nodir: true,
-            follow: true,
-            cwd: path.resolve(sitePath, item.from, item.versionedSubDir),
-          }).forEach((filePath) => hash.update(filePath));
-        }
+          // For versioned files, use file path for digest since file version in name should change on content change
+          if (item.versionedSubDir) {
+            globSync("**", {
+              dot: true,
+              nodir: true,
+              follow: true,
+              cwd: path.resolve(sitePath, item.from, item.versionedSubDir),
+            }).forEach((filePath) => hash.update(filePath));
+          }
 
-        // For non-versioned files, use file content for digest
-        if (cdnInvalidationStrategy === "all") {
-          globSync("**", {
-            ignore: item.versionedSubDir
-              ? [path.posix.join(item.versionedSubDir, "**")]
-              : undefined,
-            dot: true,
-            nodir: true,
-            follow: true,
-            cwd: path.resolve(sitePath, item.from),
-          }).forEach((filePath) =>
-            hash.update(
-              fs.readFileSync(path.resolve(sitePath, item.from, filePath))
-            )
-          );
-        }
+          // For non-versioned files, use file content for digest
+          if (paths !== "versioned") {
+            globSync("**", {
+              ignore: item.versionedSubDir
+                ? [path.posix.join(item.versionedSubDir, "**")]
+                : undefined,
+              dot: true,
+              nodir: true,
+              follow: true,
+              cwd: path.resolve(sitePath, item.from),
+            }).forEach((filePath) =>
+              hash.update(
+                fs.readFileSync(path.resolve(sitePath, item.from, filePath))
+              )
+            );
+          }
+        });
+        invalidationBuildId = hash.digest("hex");
+        Logger.debug(`Generated build ID ${invalidationBuildId}`);
+      }
+      distribution.createInvalidation({
+        version: invalidationBuildId,
+        paths: invalidationPaths,
+        wait: invalidation.wait,
       });
-
-      const buildId = hash.digest("hex");
-
-      Logger.debug(`Generated build ID ${buildId}`);
-
-      distribution.createInvalidation(
-        buildId,
-        invalidationPaths.length > 0
-          ? invalidationPaths
-          : undefined,
-      );
     }
   }
 

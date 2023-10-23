@@ -25,8 +25,7 @@ export async function CloudFrontInvalidator(cfnRequest: any) {
 }
 
 async function invalidate(cfnRequest: any) {
-  const { distributionId, paths, waitForInvalidation } =
-    cfnRequest.ResourceProperties;
+  const { distributionId, paths, wait } = cfnRequest.ResourceProperties;
 
   const pathsFile: string[] = [];
   const pathsWildcard: string[] = [];
@@ -59,8 +58,8 @@ async function invalidate(cfnRequest: any) {
     }
   }
 
-  if (waitForInvalidation === "true") {
-    await wait(distributionId, invalidationIds);
+  if (wait === "true") {
+    await waitForInvalidation(distributionId, invalidationIds);
   }
 }
 
@@ -88,7 +87,10 @@ async function invalidateChunk(distributionId: string, paths: string[]) {
   return result.Invalidation.Id;
 }
 
-async function wait(distributionId: string, invalidationIds: string[]) {
+async function waitForInvalidation(
+  distributionId: string,
+  invalidationIds: string[]
+) {
   console.log("invalidationIds: " + invalidationIds);
   for (let i = 0; i < invalidationIds.length; i++) {
     console.log("waiting invalidation: " + invalidationIds[i]);

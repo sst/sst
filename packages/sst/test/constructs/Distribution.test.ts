@@ -480,21 +480,23 @@ test("createInvalidation called", async () => {
   });
 });
 
-test("createInvalidation called with buildId", async () => {
+test("createInvalidation called with version", async () => {
   const { distribution, stack } = await createDistribution();
-  distribution.createInvalidation("abc");
+  distribution.createInvalidation({
+    version: "abc",
+  });
   countResources(stack, "Custom::CloudFrontInvalidator", 1);
   hasResource(stack, "Custom::CloudFrontInvalidator", {
-    buildId: "abc",
+    version: "abc",
     paths: ["/*"],
   });
 });
 
 test("createInvalidation called with custom paths", async () => {
-  const { distribution, stack } = await createDistribution({
-    defaultInvalidationPaths: ["/path1", "/path2*"],
+  const { distribution, stack } = await createDistribution();
+  distribution.createInvalidation({
+    paths: ["/path1", "/path2*"],
   });
-  distribution.createInvalidation();
   countResources(stack, "Custom::CloudFrontInvalidator", 1);
   hasResource(stack, "Custom::CloudFrontInvalidator", {
     paths: ["/path1", "/path2*"],
@@ -502,10 +504,10 @@ test("createInvalidation called with custom paths", async () => {
 });
 
 test("createInvalidation called with duplicated paths", async () => {
-  const { distribution, stack } = await createDistribution({
-    defaultInvalidationPaths: ["/path1", "/path1"],
+  const { distribution, stack } = await createDistribution();
+  distribution.createInvalidation({
+    paths: ["/path1", "/path1"],
   });
-  distribution.createInvalidation();
   countResources(stack, "Custom::CloudFrontInvalidator", 1);
   hasResource(stack, "Custom::CloudFrontInvalidator", {
     paths: ["/path1"],
