@@ -153,6 +153,16 @@ const createApigHandler = (build) => {
   const requestHandler = createNodeRequestHandler(build, process.env.NODE_ENV);
 
   return async (event) => {
+    if (event.type === "warmer") {
+      return {
+        statusCode: 200,
+        headers: {},
+        cookies: [],
+        body: JSON.stringify({ message: "warmed" }),
+        isBase64Encoded: false,
+      };
+    }
+
     const request = convertApigRequestToNode(event);
     const response = await requestHandler(request);
     return convertNodeResponseToApig(response);
