@@ -4,36 +4,34 @@ import path from "path";
 import { sdkLogger } from "./util.js";
 
 interface Props {
-  functions: [string, string][];
-  bootstrap: string;
-  bucket: string;
   app: string;
   stage: string;
+  srcBucket: string;
+  tarBucket: string;
+  sourcemaps: [string, string][];
 }
 
 const s3 = new S3Client({ logger: sdkLogger });
-export async function FunctionSourcemapUploader(
-  cfnRequest: CdkCustomResourceEvent
-) {
+export async function SourcemapUploader(cfnRequest: CdkCustomResourceEvent) {
   switch (cfnRequest.RequestType) {
     case "Create":
     case "Update":
       const old = (
         cfnRequest.RequestType === "Update"
-          ? Object.fromEntries(cfnRequest.OldResourceProperties.functions)
+          ? Object.fromEntries(cfnRequest.OldResourceProperties.sourcemaps)
           : {}
-      ) as Props["functions"];
+      ) as Props["sourcemaps"];
       const next = cfnRequest.ResourceProperties as unknown as Props;
-      for (const [arn, key] of cfnRequest.ResourceProperties.functions) {
-        if (old[arn] === key) continue;
+      for (const [tarKey, srcKey] of cfnRequest.ResourceProperties.sourcemaps) {
+        if (old[tarKey] === srcKey) continue;
         await s3.send(
           new CopyObjectCommand({
-            Bucket: cfnRequest.ResourceProperties.bootstrap,
+            Bucket: next.tarBucket,
             ContentType: "application/json",
-            CopySource: `/${next.bucket}/${key}`,
+            CopySource: `/${next.srcBucket}/${srcKey}`,
             ContentEncoding: "gzip",
-            Key: `sourcemap/${next.app}/${next.stage}/${arn}/${
-              path.parse(key).base
+            Key: `sourcemap/${next.app}/${next.stage}/${tarKey}/${
+              path.parse(srcKey).base
             }`,
           })
         );

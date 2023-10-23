@@ -1,6 +1,8 @@
 import fs from "fs";
 import path from "path";
+import zlib from "zlib";
 import crypto from "crypto";
+import { globSync } from "glob";
 import { Construct } from "constructs";
 import {
   Duration as CdkDuration,
@@ -33,6 +35,9 @@ import { VisibleError } from "../error.js";
 import { CachePolicyProps } from "aws-cdk-lib/aws-cloudfront";
 import { SsrFunction, SsrFunctionProps } from "./SsrFunction.js";
 import { EdgeFunctionProps } from "./EdgeFunction.js";
+import { Asset } from "aws-cdk-lib/aws-s3-assets";
+import { useFunctions } from "./Function.js";
+import { useDeferredTasks } from "./deferred_task.js";
 
 export interface NextjsSiteProps extends Omit<SsrSiteProps, "nodejs"> {
   /**
@@ -162,7 +167,21 @@ type NextjsSiteNormalizedProps = NextjsSiteProps & SsrSiteNormalizedProps;
  */
 export class NextjsSite extends SsrSite {
   declare props: NextjsSiteNormalizedProps;
-  private routes?: { route: string; regex: string; logGroupPath: string }[];
+  private _routes?: {
+    route: string;
+    regex: string;
+    logGroupPath: string;
+    sourcemapPath?: string;
+    sourcemapKey?: string;
+  }[];
+  private routesManifest?: {
+    dynamicRoutes: { page: string; regex: string }[];
+    staticRoutes: { page: string; regex: string }[];
+    dataRoutes?: { page: string; dataRouteRegex: string }[];
+  };
+  private appPathRoutesManifest?: Record<string, string>;
+  private appPathsManifest?: Record<string, string>;
+  private pagesManifest?: Record<string, string>;
 
   constructor(scope: Construct, id: string, props?: NextjsSiteProps) {
     const streaming = props?.experimental?.streaming ?? false;
@@ -190,6 +209,7 @@ export class NextjsSite extends SsrSite {
 
     if (this.isPerRouteLoggingEnabled()) {
       this.disableDefaultLogging();
+      this.uploadSourcemaps();
     }
 
     if (!disableIncrementalCache) {
@@ -223,6 +243,7 @@ export class NextjsSite extends SsrSite {
         CACHE_BUCKET_REGION: Stack.of(this).region,
       },
     });
+    this.removeSourcemaps();
     return this.validatePlan({
       cloudFrontFunctions: {
         serverCfFunction: {
@@ -482,7 +503,10 @@ export class NextjsSite extends SsrSite {
     if (this.isPerRouteLoggingEnabled()) {
       injections.push(`
       const routeData = ${JSON.stringify(
-        this.useRoutes()
+        this.useRoutes().map(({ regex, logGroupPath }) => ({
+          regex,
+          logGroupPath,
+        }))
       )}.find(({ regex }) => event.rawPath.match(new RegExp(regex)));
       if (routeData) {
         console.log("::sst::" + JSON.stringify({
@@ -530,50 +554,69 @@ export class NextjsSite extends SsrSite {
     };
   }
 
-  private useRoutes() {
-    if (this.routes) return this.routes;
-
-    const id = this.node.id;
+  private removeSourcemaps() {
     const { path: sitePath } = this.props;
+    const files = globSync("**/*.js.map", {
+      cwd: path.join(sitePath, ".open-next", "server-function"),
+      nodir: true,
+      dot: true,
+    });
+    for (const file of files) {
+      fs.rmSync(path.join(sitePath, ".open-next", "server-function", file));
+    }
+  }
+
+  private useRoutes() {
+    if (this._routes) return this._routes;
+
+    const routesManifest = this.useRoutesManifest();
+
+    this._routes = [
+      ...[...routesManifest.dynamicRoutes, ...routesManifest.staticRoutes]
+        .map(({ page, regex }) => {
+          const cwRoute = NextjsSite.buildCloudWatchRouteName(page);
+          const cwHash = NextjsSite.buildCloudWatchRouteHash(page);
+          const sourcemapPath =
+            this.getSourcemapForAppRoute(page) ||
+            this.getSourcemapForPagesRoute(page);
+          return {
+            route: page,
+            regex,
+            logGroupPath: `/${cwHash}${cwRoute}`,
+            sourcemapPath: sourcemapPath,
+            sourcemapKey: cwHash,
+          };
+        })
+        .sort((a, b) => a.route.localeCompare(b.route)),
+      ...(routesManifest.dataRoutes || [])
+        .map(({ page, dataRouteRegex }) => {
+          const routeDisplayName = page.endsWith("/")
+            ? `/_next/data/BUILD_ID${page}index.json`
+            : `/_next/data/BUILD_ID${page}.json`;
+          const cwRoute = NextjsSite.buildCloudWatchRouteName(routeDisplayName);
+          const cwHash = NextjsSite.buildCloudWatchRouteHash(page);
+          return {
+            route: routeDisplayName,
+            regex: dataRouteRegex,
+            logGroupPath: `/${cwHash}${cwRoute}`,
+          };
+        })
+        .sort((a, b) => a.route.localeCompare(b.route)),
+    ];
+    return this._routes;
+  }
+
+  private useRoutesManifest() {
+    if (this.routesManifest) return this.routesManifest;
+
+    const { path: sitePath } = this.props;
+    const id = this.node.id;
     try {
-      const content: {
-        dynamicRoutes: { page: string; regex: string }[];
-        staticRoutes: { page: string; regex: string }[];
-        dataRoutes?: { page: string; dataRouteRegex: string }[];
-      } = JSON.parse(
-        fs
-          .readFileSync(path.join(sitePath, ".next/routes-manifest.json"))
-          .toString()
-      );
-      this.routes = [
-        ...[...content.dynamicRoutes, ...content.staticRoutes]
-          .map(({ page, regex }) => {
-            const cwRoute = NextjsSite.buildCloudWatchRouteName(page);
-            const cwHash = NextjsSite.buildCloudWatchRouteHash(page);
-            return {
-              route: page,
-              regex,
-              logGroupPath: `/${cwHash}${cwRoute}`,
-            };
-          })
-          .sort((a, b) => a.route.localeCompare(b.route)),
-        ...(content.dataRoutes || [])
-          .map(({ page, dataRouteRegex }) => {
-            const routeDisplayName = page.endsWith("/")
-              ? `/_next/data/BUILD_ID${page}index.json`
-              : `/_next/data/BUILD_ID${page}.json`;
-            const cwRoute =
-              NextjsSite.buildCloudWatchRouteName(routeDisplayName);
-            const cwHash = NextjsSite.buildCloudWatchRouteHash(`data:${page}`);
-            return {
-              route: routeDisplayName,
-              regex: dataRouteRegex,
-              logGroupPath: `/${cwHash}${cwRoute}`,
-            };
-          })
-          .sort((a, b) => a.route.localeCompare(b.route)),
-      ];
-      return this.routes;
+      const content = fs
+        .readFileSync(path.join(sitePath, ".next/routes-manifest.json"))
+        .toString();
+      this.routesManifest = JSON.parse(content);
+      return this.routesManifest!;
     } catch (e) {
       console.error(e);
       throw new VisibleError(
@@ -582,9 +625,132 @@ export class NextjsSite extends SsrSite {
     }
   }
 
+  private useAppPathRoutesManifest() {
+    if (this.appPathRoutesManifest) return this.appPathRoutesManifest;
+
+    const { path: sitePath } = this.props;
+    try {
+      const content = fs
+        .readFileSync(
+          path.join(sitePath, ".next/app-path-routes-manifest.json")
+        )
+        .toString();
+      this.appPathRoutesManifest = JSON.parse(content);
+      return this.appPathRoutesManifest!;
+    } catch (e) {
+      return {};
+    }
+  }
+
+  private useAppPathsManifest() {
+    if (this.appPathsManifest) return this.appPathsManifest;
+
+    const { path: sitePath } = this.props;
+    try {
+      const content = fs
+        .readFileSync(
+          path.join(sitePath, ".next/server/app-paths-manifest.json")
+        )
+        .toString();
+      this.appPathsManifest = JSON.parse(content);
+      return this.appPathsManifest!;
+    } catch (e) {
+      return {};
+    }
+  }
+
+  private usePagesManifest() {
+    if (this.pagesManifest) return this.pagesManifest;
+
+    const { path: sitePath } = this.props;
+    try {
+      const content = fs
+        .readFileSync(path.join(sitePath, ".next/server/pages-manifest.json"))
+        .toString();
+      this.pagesManifest = JSON.parse(content);
+      return this.pagesManifest!;
+    } catch (e) {
+      return {};
+    }
+  }
+
   private getBuildId() {
     const { path: sitePath } = this.props;
     return fs.readFileSync(path.join(sitePath, ".next/BUILD_ID")).toString();
+  }
+
+  private getSourcemapForAppRoute(page: string) {
+    const { path: sitePath } = this.props;
+
+    // Step 1: look up in "appPathRoutesManifest" to find the key with
+    //         value equal to the page
+    // {
+    //   "/_not-found": "/_not-found",
+    //   "/about/page": "/about",
+    //   "/about/profile/page": "/about/profile",
+    //   "/page": "/",
+    //   "/favicon.ico/route": "/favicon.ico"
+    // }
+    const appPathRoutesManifest = this.useAppPathRoutesManifest();
+    const appPathRoute = Object.keys(appPathRoutesManifest).find(
+      (key) => appPathRoutesManifest[key] === page
+    );
+    if (!appPathRoute) return;
+
+    // Step 2: look up in "appPathsManifest" to find the file with key equal
+    //         to the page
+    // {
+    //   "/_not-found": "app/_not-found.js",
+    //   "/about/page": "app/about/page.js",
+    //   "/about/profile/page": "app/about/profile/page.js",
+    //   "/page": "app/page.js",
+    //   "/favicon.ico/route": "app/favicon.ico/route.js"
+    // }
+    const appPathsManifest = this.useAppPathsManifest();
+    const filePath = appPathsManifest[appPathRoute];
+    if (!filePath) return;
+
+    // Step 3: check the .map file exists
+    const sourcemapPath = path.join(
+      sitePath,
+      ".next",
+      "server",
+      `${filePath}.map`
+    );
+    if (!fs.existsSync(sourcemapPath)) return;
+
+    return sourcemapPath;
+  }
+
+  private getSourcemapForPagesRoute(page: string) {
+    const { path: sitePath } = this.props;
+
+    // Step 1: look up in "pathsManifest" to find the file with key equal
+    //         to the page
+    // {
+    //   "/_app": "pages/_app.js",
+    //   "/_error": "pages/_error.js",
+    //   "/404": "pages/404.html",
+    //   "/api/hello": "pages/api/hello.js",
+    //   "/api/auth/[...nextauth]": "pages/api/auth/[...nextauth].js",
+    //   "/api/next-auth-restricted": "pages/api/next-auth-restricted.js",
+    //   "/": "pages/index.js",
+    //   "/ssr": "pages/ssr.js"
+    // }
+    const pagesManifest = this.usePagesManifest();
+    const filePath = pagesManifest[page];
+    if (!filePath) return;
+
+    // Step 2: check the .map file exists
+    const sourcemapPath = path.join(
+      sitePath,
+      ".next",
+      "server",
+      `${filePath}.map`
+    );
+    if (!fs.existsSync(sourcemapPath)) return;
+
+    return sourcemapPath;
   }
 
   private isPerRouteLoggingEnabled() {
@@ -618,6 +784,31 @@ export class NextjsSite extends SsrSite {
       ],
     });
     server.role?.attachInlinePolicy(policy);
+  }
+
+  private uploadSourcemaps() {
+    const stack = Stack.of(this);
+    const server = this.serverFunction as SsrFunction;
+
+    this.useRoutes().forEach(({ sourcemapPath, sourcemapKey }) => {
+      if (!sourcemapPath || !sourcemapKey) return;
+
+      useDeferredTasks().add(async () => {
+        // zip sourcemap
+        const zipPath = `${sourcemapPath}.gz.zip`;
+        const data = await fs.promises.readFile(sourcemapPath);
+        await fs.promises.writeFile(zipPath, zlib.gzipSync(data));
+        const asset = new Asset(this, `Sourcemap-${sourcemapKey}`, {
+          path: zipPath,
+        });
+
+        useFunctions().sourcemaps.add(stack.stackName, {
+          srcBucket: asset.bucket,
+          srcKey: asset.s3ObjectKey,
+          tarKey: path.join(server.functionArn, sourcemapKey),
+        });
+      });
+    });
   }
 
   private static buildCloudWatchRouteName(route: string) {

@@ -4,7 +4,7 @@ import { CloudFrontInvalidator } from "./cloudfront-invalidator.js";
 import { ApiGatewayCloudWatchRole } from "./apigateway-cloudwatch-role.js";
 import { FunctionInvoker } from "./function-invoker.js";
 import { log, wrapper } from "./util.js";
-import { FunctionSourcemapUploader } from "./function-sourcemap-uploader.js";
+import { SourcemapUploader } from "./sourcemap-uploader.js";
 import { S3Uploader, batchProcessor } from "./s3-uploader.js";
 
 export interface BaseProcessorEvent {
@@ -36,8 +36,8 @@ const customResourceEventHandler = wrapper(async (cfnRequest: any) => {
     case "Custom::FunctionInvoker":
       await FunctionInvoker(cfnRequest);
       break;
-    case "Custom::FunctionSourcemapUploader":
-      await FunctionSourcemapUploader(cfnRequest);
+    case "Custom::SourcemapUploader":
+      await SourcemapUploader(cfnRequest);
       break;
     case "Custom::S3Uploader":
       await S3Uploader(cfnRequest);
