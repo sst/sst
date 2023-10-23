@@ -280,7 +280,7 @@ Starting the next minor release, "per-route" will become the default logging beh
 
 ## Sourcemap
 
-Since Next.js uses webpack to compile your code, stack trace line numbers might not match. Turning on sourcemap when building your Next.js app can fix this. Then, use the sourcemap to decode the stack trace in your log.
+Next.js uses webpack to bundle your code, so the stack trace line numbers might not match. Turning on sourcemap when building your Next.js app can fix this.
 
 To turn on sourcemap, update your Next.js config:
 
@@ -293,13 +293,13 @@ const nextConfig = {
 };
 ```
 
-Now when your Next.js app builds, it will produce sourcemap files alongside your code.
+Now when your Next.js app builds, it'll generate the sourcemap files alongside your code. SST uploads these files to the [bootstrap bucket](../advanced/bootstrapping.md).
 
-![Next.js sourcemap files](/img/nextjssite/per-route-logging.png)
+:::info
+The sourcemap files are not added to the server bundle, keeping the function size small.
+:::
 
-SST uploads these files to the [bootstrap bucket](../advanced/bootstrapping.md) for stack trace decoding. These files won't be in the server bundle, ensuring a compact function size.
-
-With sourcemap active, the SST Console will display the error source with its context.
+With sourcemap active, the [SST Console](../console.md) will display the error source with the right context.
 
 ![Next.js error stack trace](/img/nextjssite/error-stack-trace.png)
 
