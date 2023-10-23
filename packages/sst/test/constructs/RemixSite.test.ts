@@ -624,26 +624,6 @@ test("fileOptions (deprecated): defined", async () => {
     });
   }).rejects.toThrow(/property has been replaced/);
 });
-test("assets.cdnInvalidationStrategy: undefined", async () => {
-  const { site, stack } = await createSite({
-    // @ts-expect-error: "sstTest" is not exposed in props
-    sstTest: true,
-  });
-  countResources(stack, "Custom::CloudFrontInvalidator", 1);
-  hasResource(stack, "Custom::CloudFrontInvalidator", {
-    paths: ["/*"],
-  });
-});
-test("assets.cdnInvalidationStrategy: never", async () => {
-  const { site, stack } = await createSite({
-    // @ts-expect-error: "sstTest" is not exposed in props
-    sstTest: true,
-    assets: {
-      cdnInvalidationStrategy: "never",
-    },
-  });
-  countResources(stack, "Custom::CloudFrontInvalidator", 0);
-});
 
 test("warm: undefined", async () => {
   const { stack } = await createSite({
@@ -729,6 +709,37 @@ test("regional.enableServerUrlIamAuth: true", async () => {
       }),
     }),
   });
+});
+
+test("invalidation.paths: undefined", async () => {
+  const { site, stack } = await createSite({
+    // @ts-expect-error: "sstTest" is not exposed in props
+    sstTest: true,
+  });
+  countResources(stack, "Custom::CloudFrontInvalidator", 1);
+  hasResource(stack, "Custom::CloudFrontInvalidator", {
+    paths: ["/*"],
+  });
+});
+test("invalidation.paths: custom invalidation paths", async () => {
+  const { stack } = await createSite({
+    invalidation: {
+      paths: ["/path1", "/path2"],
+    },
+  });
+  hasResource(stack, "Custom::CloudFrontInvalidator", {
+    paths: ["/path1", "/path2"],
+  });
+});
+test("invalidation.paths: none", async () => {
+  const { site, stack } = await createSite({
+    // @ts-expect-error: "sstTest" is not exposed in props
+    sstTest: true,
+    invalidation: {
+      paths: "none",
+    },
+  });
+  countResources(stack, "Custom::CloudFrontInvalidator", 0);
 });
 
 test("cdk.serverCachePolicy undefined", async () => {
