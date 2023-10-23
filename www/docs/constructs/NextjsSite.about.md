@@ -257,6 +257,50 @@ This cost estimate is based on the `us-east-1` region pricing and does not consi
 
 ---
 
+## Logging
+
+By default, routes for the app server function log to a common AWS CloudWatch log group. However, you can configure each route to log to its own group:
+
+```js
+new NextjsSite(stack, "Site", {
+  path: "my-next-app/",
+  logging: "per-route",
+});
+```
+
+With per-route logging, the resources page shows a breakdown of all routes. Click on any route to see its logs.
+
+![Next.js per route logging](/img/nextjssite/per-route-logging.png)
+
+---
+
+## Sourcemap
+
+Since Next.js uses webpack to compile your code, stack trace line numbers might not match. Turning on sourcemap when building your Next.js app can fix this. Then, use the sourcemap to decode the stack trace in your log.
+
+To turn on sourcemap, update your Next.js config:
+
+```diff title="next.config.js"
+const nextConfig = {
++ webpack: (config) => {
++   config.devtool = "source-map";
++   return config;
++ },
+};
+```
+
+Now when your Next.js app builds, it will produce sourcemap files alongside your code.
+
+![Next.js sourcemap files](/img/nextjssite/per-route-logging.png)
+
+SST uploads these files to the [bootstrap bucket](../advanced/bootstrapping.md) for stack trace decoding. These files won't be in the server bundle, ensuring a compact function size.
+
+With sourcemap active, the SST Console will display the error source with its context.
+
+![Next.js error stack trace](/img/nextjssite/error-stack-trace.png)
+
+---
+
 ## Examples
 
 ### Configuring custom domains
