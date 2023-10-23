@@ -1,5 +1,13 @@
 # @serverless-stack/cli2
 
+## 2.32.0
+
+### Minor Changes
+
+- [#3428](https://github.com/sst/sst/pull/3428) [`2b6528ec3`](https://github.com/sst/sst/commit/2b6528ec307ad8f3708941bbaa12812d94ed5d2d) Thanks [@bitpavel](https://github.com/bitpavel)! - SsrSite: add `invalidation` prop to customize CloudFront invalidation
+
+- [#3439](https://github.com/sst/sst/pull/3439) [`88ce024a8`](https://github.com/sst/sst/commit/88ce024a8276c54e68b0acdff5886bd84ee4453e) Thanks [@fwang](https://github.com/fwang)! - NextjsSite: upload sourcemaps to bootstrap bucket
+
 ## 2.31.0
 
 ### Minor Changes
