@@ -1122,7 +1122,7 @@ test("resolvers: is datasource props: datasource is FunctionDefinition", async (
   });
 });
 
-test.only("addResolvers(): same stack", async () => {
+test("addResolvers(): same stack", async () => {
   const stack = new Stack(await createApp(), "stack");
   const api = new AppSyncApi(stack, "Api", {
     schema: "test/constructs/appsync/schema.graphql",
@@ -1138,7 +1138,7 @@ test.only("addResolvers(): same stack", async () => {
   countResources(stack, "AWS::AppSync::Resolver", 3);
 });
 
-test.only("addResolvers(): different stack", async () => {
+test("addResolvers(): different stack", async () => {
   const app = await createApp();
   const stackA = new Stack(app, "stackA");
   const stackB = new Stack(app, "stackB");
