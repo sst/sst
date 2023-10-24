@@ -887,7 +887,7 @@ export class Function extends CDKFunction implements SSTConstruct {
                 ...(props.container?.buildArgs
                   ? { buildArgs: props.container.buildArgs }
                   : {}),
-                exclude: [".sst"],
+                exclude: [".sst/dist", ".sst/artifacts"],
                 ignoreMode: IgnoreMode.GLOB,
               }),
               handler: CDKHandler.FROM_IMAGE,
