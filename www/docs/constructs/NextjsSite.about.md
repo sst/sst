@@ -295,6 +295,8 @@ const nextConfig = {
 
 Now when your Next.js app builds, it'll generate the sourcemap files alongside your code. SST uploads these files to the [bootstrap bucket](../advanced/bootstrapping.md).
 
+![Next.js sourcemap files](/img/nextjssite/sourcemap-files.png)
+
 :::info
 The sourcemap files are not added to the server bundle, keeping the function size small.
 :::
