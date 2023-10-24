@@ -1,8 +1,7 @@
 import type { AstroAdapter, AstroIntegration } from "astro";
-import type { ResponseMode } from "../lib/types.js";
 import { BuildMeta, IntegrationConfig } from "../lib/build-meta.js";
 
-const PACKAGE_NAME = "astro-sst/lambda";
+const PACKAGE_NAME = "astro-sst/static";
 
 function getAdapter(): AstroAdapter {
   return {
@@ -40,6 +39,12 @@ export default function createIntegration({
     name: PACKAGE_NAME,
     hooks: {
       "astro:config:done": ({ config, setAdapter }) => {
+        if (config.output !== "static") {
+          throw new Error(
+            `Only static output is supported by '${PACKAGE_NAME}'. Use the 'astro-sst/lambda' or 'astro-sst/edge' integrations instead.`
+          );
+        }
+
         BuildMeta.setAstroConfig(config);
         setAdapter(getAdapter());
       },

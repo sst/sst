@@ -51,7 +51,7 @@ export default function createIntegration({
       "astro:config:done": ({ config, setAdapter }) => {
         if (config.output === "static") {
           throw new Error(
-            `Static output is not supported by ${PACKAGE_NAME}. Use the 'astro-sst/static' integration instead.`
+            `Static output is not supported by '${PACKAGE_NAME}'. Use the 'astro-sst/static' integration instead.`
           );
         }
 
