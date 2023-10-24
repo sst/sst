@@ -697,7 +697,7 @@ new AppSyncApi(stack, "GraphqlApi", {
 
 Configure the internally created CDK `GraphqlApi` instance.
 
-```js {6-11}
+```js
 import * as appsync from "aws-cdk-lib/aws-appsync";
 
 new AppSyncApi(stack, "GraphqlApi", {
@@ -735,6 +735,40 @@ new AppSyncApi(stack, "GraphqlApi", {
 });
 ```
 
+#### Sharing an API across stacks
+
+You can create the AppSyncApi construct in one stack, and add resolvers in other stacks. To do this, return the API from your stack function.
+
+```ts title="stacks/MainStack.ts"
+import { AppSyncApi, StackContext } from "sst/constructs";
+
+export function MainStack({ stack }: StackContext) {
+  const api = new AppSyncApi(stack, "GraphqlApi", {
+    schema: "graphql/schema.graphql",
+    resolvers: {
+      "Query listNotes": "src/list.main",
+      "Mutation createNote": "src/create.main",
+    },
+  });
+
+  return { api };
+}
+```
+
+Then in another stack, utilize `use` to import the first stack's API. Finally, call `addResolvers`. Note that the AppSync resolver and data source resources for the added resolvers will be created in `AnotherStack`.
+
+```ts title="stacks/AnotherStack.ts"
+import { StackContext, use } from "sst/constructs";
+import { MainStack } from "./MainStack";
+
+export function AnotherStack({ stack }: StackContext) {
+  const { api } = use(MainStack);
+  api.addResolvers(stack, {
+    "Query getNoteById": "src/get.main",
+  });
+}
+```
+
 ### Batching GraphQL Resolvers (N+1)
 
 Using naive GraphQL resolvers may result in what the GraphQL community calls the "N+1 Problem", which occurs when the system makes too many upstream requests for a given query.
@@ -749,7 +783,7 @@ Create a function that uses a mapping template to create a "BatchInvoke" typed r
 
 Here, we set up the resolvers for fetching companies and offices on their own, then we configure the batch resolver for fetching `Company.offices`, but in batch mode.
 
-```js {7-10}
+```js
 const createBatchResolver = (fn: FunctionDefinition): AppSyncApiResolverProps => {
     return {
         function: fn,
