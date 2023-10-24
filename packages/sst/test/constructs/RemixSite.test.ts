@@ -935,6 +935,40 @@ test("cdk.distribution.defaultBehavior additional functionAssociations", async (
     }),
   });
 });
+test("cdk.viewerProtocolPolicy: default", async () => {
+  const { site, stack } = await createSite();
+  hasResource(stack, "AWS::CloudFront::Distribution", {
+    DistributionConfig: objectLike({
+      CacheBehaviors: arrayWith([
+        objectLike({
+          ViewerProtocolPolicy: "redirect-to-https",
+        }),
+      ]),
+      DefaultCacheBehavior: objectLike({
+        ViewerProtocolPolicy: "redirect-to-https",
+      }),
+    }),
+  });
+});
+test("cdk.viewerProtocolPolicy: defined", async () => {
+  const { site, stack } = await createSite({
+    cdk: {
+      viewerProtocolPolicy: ViewerProtocolPolicy.HTTPS_ONLY,
+    },
+  });
+  hasResource(stack, "AWS::CloudFront::Distribution", {
+    DistributionConfig: objectLike({
+      CacheBehaviors: arrayWith([
+        objectLike({
+          ViewerProtocolPolicy: "https-only",
+        }),
+      ]),
+      DefaultCacheBehavior: objectLike({
+        ViewerProtocolPolicy: "https-only",
+      }),
+    }),
+  });
+});
 
 test("cdk.server.logRetention", async () => {
   const { site, stack } = await createSite({
