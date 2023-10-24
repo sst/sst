@@ -278,7 +278,7 @@ export class AstroSite extends SsrSite {
               if (isStatic) {
                 plan.errorResponses?.push({
                   httpStatus: 403,
-                  responsePagePath: prerender ? "/404.html" : "/404",
+                  responsePagePath: "/404.html",
                   responseHttpStatus: 404,
                 });
               }
