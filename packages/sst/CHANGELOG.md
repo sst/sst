@@ -1,5 +1,15 @@
 # @serverless-stack/cli2
 
+## 2.32.1
+
+### Patch Changes
+
+- [`68ed1d280`](https://github.com/sst/sst/commit/68ed1d280144ff3e4d83f29444b62fb9c4fc305d) Thanks [@fwang](https://github.com/fwang)! - Service: do not exclude `.sst/types` for docker build
+
+- [#3435](https://github.com/sst/sst/pull/3435) [`8a7e6beb3`](https://github.com/sst/sst/commit/8a7e6beb35af06616769038d297b7ee0e7432f8c) Thanks [@alexabidri](https://github.com/alexabidri)! - SsrSite: allow customize "cdk.viewerProtocolPolicy"
+
+- [`988093b7a`](https://github.com/sst/sst/commit/988093b7aa35e7f1cf82c3b9ca9ee624cac966cf) Thanks [@fwang](https://github.com/fwang)! - AppSyncApi: respect scope for lazily added resolvers and data sources
+
 ## 2.32.0
 
 ### Minor Changes
