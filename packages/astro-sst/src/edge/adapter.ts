@@ -37,6 +37,12 @@ export default function createIntegration(): AstroIntegration {
     name: PACKAGE_NAME,
     hooks: {
       "astro:config:done": ({ config, setAdapter }) => {
+        if (config.output === "static") {
+          throw new Error(
+            `Static output is not supported by ${PACKAGE_NAME}. Use the 'astro-sst/static' integration instead.`
+          );
+        }
+
         BuildMeta.setAstroConfig(config);
         setAdapter(getAdapter());
       },

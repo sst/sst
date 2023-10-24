@@ -4,42 +4,33 @@ import { BuildMeta, IntegrationConfig } from "../lib/build-meta.js";
 
 const PACKAGE_NAME = "astro-sst/lambda";
 
-function getAdapter({
-  responseMode,
-}: {
-  responseMode: ResponseMode;
-}): AstroAdapter {
+function getAdapter(): AstroAdapter {
   return {
     name: PACKAGE_NAME,
-    serverEntrypoint: `${PACKAGE_NAME}/entrypoint`,
-    args: { responseMode },
-    exports: ["handler"],
     adapterFeatures: {
       edgeMiddleware: false,
       functionPerRoute: false,
     },
     supportedAstroFeatures: {
-      staticOutput: "unsupported",
-      hybridOutput: "stable",
-      serverOutput: "stable",
+      staticOutput: "stable",
+      hybridOutput: "unsupported",
+      serverOutput: "unsupported",
       assets: {
-        supportKind: "experimental",
-        isSharpCompatible: true,
-        isSquooshCompatible: true,
+        supportKind: "unsupported",
+        isSharpCompatible: false,
+        isSquooshCompatible: false,
       },
     },
   };
 }
 
 export default function createIntegration({
-  responseMode,
   serverRoutes,
 }: {
-  responseMode?: ResponseMode;
   serverRoutes?: string[];
 } = {}): AstroIntegration {
   const integrationConfig: IntegrationConfig = {
-    responseMode: responseMode ?? "buffer",
+    responseMode: "buffer",
     serverRoutes: serverRoutes ?? [],
   };
 
@@ -49,18 +40,8 @@ export default function createIntegration({
     name: PACKAGE_NAME,
     hooks: {
       "astro:config:done": ({ config, setAdapter }) => {
-        if (config.output === "static") {
-          throw new Error(
-            `Static output is not supported by ${PACKAGE_NAME}. Use the 'astro-sst/static' integration instead.`
-          );
-        }
-
         BuildMeta.setAstroConfig(config);
-        setAdapter(
-          getAdapter({
-            responseMode: integrationConfig.responseMode,
-          })
-        );
+        setAdapter(getAdapter());
       },
       "astro:build:done": async (buildResults) => {
         BuildMeta.setBuildResults(buildResults);

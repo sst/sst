@@ -105,13 +105,16 @@ export class BuildMeta {
 
   private static getSerializableRoute(
     route: RouteData,
-    trailingSlash: TrailingSlash
+    trailingSlash: TrailingSlash,
+    outputMode: OutputMode
   ): SerializableRoute {
+    const isStatic = outputMode === "static";
     return {
       route: route.route + (trailingSlash === "always" ? "/" : ""),
       type: route.type,
       pattern: route.pattern.toString(),
-      prerender: route.type !== "redirect" ? route.prerender : undefined,
+      prerender:
+        route.type !== "redirect" ? isStatic || route.prerender : undefined,
       redirectPath:
         typeof route.redirectRoute !== "undefined"
           ? BuildMeta.getRedirectPath(route.redirectRoute, trailingSlash)
@@ -155,7 +158,11 @@ export class BuildMeta {
     const routes = this.buildResults.routes
       .map((route) => {
         const routeSet = [
-          this.getSerializableRoute(route, this.astroConfig.trailingSlash),
+          this.getSerializableRoute(
+            route,
+            this.astroConfig.trailingSlash,
+            this.astroConfig.output
+          ),
         ];
 
         if (route.type === "page" && route.route !== "/") {
@@ -198,6 +205,19 @@ export class BuildMeta {
       routes,
       serverRoutes: this.integrationConfig.serverRoutes,
     } satisfies BuildMetaConfig;
+
+    /**
+     * For some reason the Astro integration system sets the following values
+     * as if the site was configured for server deployment even when it's
+     * actually configured for static. For this reason, we need to override these
+     * values as best we can.
+     **/
+    if (this.astroConfig.output === "static") {
+      buildMeta.clientBuildOutputDir = join(
+        buildMeta.clientBuildOutputDir,
+        "../"
+      );
+    }
 
     await writeFile(outputPath, JSON.stringify(buildMeta));
   }
