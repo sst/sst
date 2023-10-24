@@ -945,9 +945,9 @@ export class Function extends CDKFunction implements SSTConstruct {
           });
           await fs.rm(result.sourcemap);
           useFunctions().sourcemaps.add(stack.stackName, {
-            bucket: asset.bucket,
-            key: asset.s3ObjectKey,
-            func: this,
+            srcBucket: asset.bucket,
+            srcKey: asset.s3ObjectKey,
+            tarKey: this.functionArn,
           });
         }
 
@@ -1329,9 +1329,9 @@ export class Function extends CDKFunction implements SSTConstruct {
 export const useFunctions = createAppContext(() => {
   const functions: Record<string, FunctionProps> = {};
   type Sourcemap = {
-    bucket: IBucket;
-    key: string;
-    func: Function;
+    srcBucket: IBucket;
+    srcKey: string;
+    tarKey: string;
   };
   const sourcemaps: Record<string, Sourcemap[]> = {};
 

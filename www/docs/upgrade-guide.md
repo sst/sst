@@ -16,9 +16,22 @@ To view the latest release and all historical releases, <a href={`${config.githu
 
 ---
 
-## Upgrade to v2.30.1
+## Upgrade to v2.32.0
 
-`NextjsSite`, `AstroSite`, `RemixSite`, `SvelteKitSite`, and `SolidStartSite` now support enhanced cache options with the `cache` prop. **Replace `fileOptions` with `cache.fileOptions`, as `fileOptions` is deprecated.**
+`NextjsSite`, `AstroSite`, `RemixSite`, `SvelteKitSite`, `SolidStartSite`, and `StaticSite` now support enhanced cache invalidation options with the `invalidation` prop. **Replace `waitForInvalidation` with `invalidation.wait`, as `waitForInvalidation` is deprecated.**
+
+```diff
+new NextjsSite(stack, "Site", {
+- waitForInvalidation: true,
++ invalidation: {
++   wait: true,
++ },
+});
+```
+
+## Upgrade to v2.31.0
+
+`NextjsSite`, `AstroSite`, `RemixSite`, `SvelteKitSite`, `SolidStartSite`, and `StaticSite` now support enhanced file options with the `assets` prop. **Replace `fileOptions` with `assets.fileOptions`, as `fileOptions` is deprecated.**
 
 ```diff
 new NextjsSite(stack, "Site", {
@@ -29,10 +42,10 @@ new NextjsSite(stack, "Site", {
 -     cacheControl: "public,max-age=31536000,immutable",
 -   },
 - ],
-+ cache: {
++ assets: {
 +   fileOptions: [
 +     {
-+       filters: [{ exclude: "*", include: "*.zip" }],
++       files: "**/*.zip",
 +       cacheControl: "public,max-age=31536000,immutable",
 +     },
 +   ],

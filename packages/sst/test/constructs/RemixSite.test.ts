@@ -28,6 +28,7 @@ import * as route53 from "aws-cdk-lib/aws-route53";
 import { RetentionDays } from "aws-cdk-lib/aws-logs";
 import { Api, Stack, RemixSite } from "../../dist/constructs/";
 import { SsrSiteProps } from "../../dist/constructs/SsrSite";
+import { CacheControl } from "aws-cdk-lib/aws-codepipeline-actions/index.js";
 
 const sitePath = "test/constructs/remix-site";
 
@@ -83,7 +84,7 @@ test("default", async () => {
   expect(site.cdk!.distribution.distributionDomainName).toBeDefined();
   expect(site.cdk!.certificate).toBeUndefined();
   countResources(stack, "AWS::S3::Bucket", 1);
-  countResources(stack, "AWS::Lambda::Function", 5);
+  countResources(stack, "AWS::Lambda::Function", 3);
   countResources(stack, "AWS::CloudFront::Distribution", 1);
   hasResource(stack, "AWS::CloudFront::Distribution", {
     DistributionConfig: {
@@ -174,18 +175,18 @@ test("default", async () => {
   });
   countResources(stack, "AWS::Route53::RecordSet", 0);
   countResources(stack, "AWS::Route53::HostedZone", 0);
-  countResources(stack, "Custom::SSTBucketDeployment", 1);
-  hasResource(stack, "Custom::SSTBucketDeployment", {
+  countResources(stack, "Custom::S3Uploader", 1);
+  hasResource(stack, "Custom::S3Uploader", {
     ServiceToken: {
-      "Fn::GetAtt": ["SiteS3Handler5F76C26E", "Arn"],
+      "Fn::GetAtt": ["CustomResourceHandlerE8FB56BA", "Arn"],
     },
-    Sources: [
+    sources: [
       {
-        BucketName: ANY,
-        ObjectKey: ANY,
+        bucketName: ANY,
+        objectKey: ANY,
       },
     ],
-    DestinationBucketName: {
+    destinationBucketName: {
       Ref: "SiteS3Bucket43E5BB2F",
     },
   });
@@ -318,7 +319,7 @@ test("edge: true", async () => {
   expect(site.cdk!.distribution.distributionDomainName).toBeDefined();
   expect(site.cdk!.certificate).toBeUndefined();
   countResources(stack, "AWS::S3::Bucket", 1);
-  countResources(stack, "AWS::Lambda::Function", 6);
+  countResources(stack, "AWS::Lambda::Function", 4);
   countResources(stack, "AWS::CloudFront::Distribution", 1);
   hasResource(stack, "AWS::CloudFront::Distribution", {
     DistributionConfig: {
@@ -406,18 +407,18 @@ test("edge: true", async () => {
   });
   countResources(stack, "AWS::Route53::RecordSet", 0);
   countResources(stack, "AWS::Route53::HostedZone", 0);
-  countResources(stack, "Custom::SSTBucketDeployment", 1);
-  hasResource(stack, "Custom::SSTBucketDeployment", {
+  countResources(stack, "Custom::S3Uploader", 1);
+  hasResource(stack, "Custom::S3Uploader", {
     ServiceToken: {
-      "Fn::GetAtt": ["SiteS3Handler5F76C26E", "Arn"],
+      "Fn::GetAtt": ["CustomResourceHandlerE8FB56BA", "Arn"],
     },
-    Sources: [
+    sources: [
       {
-        BucketName: ANY,
-        ObjectKey: ANY,
+        bucketName: ANY,
+        objectKey: ANY,
       },
     ],
-    DestinationBucketName: {
+    destinationBucketName: {
       Ref: "SiteS3Bucket43E5BB2F",
     },
   });
@@ -533,7 +534,7 @@ test("timeout too alrge for regional", async () => {
       sstTest: true,
       timeout: 1000,
     });
-  }).rejects.toThrow(/Timeout must be less than or equal to 180 seconds/);
+  }).rejects.toThrow(/timeout must be less than or equal to 180 seconds/);
 });
 test("timeout too alrge for edge", async () => {
   expect(async () => {
@@ -543,124 +544,85 @@ test("timeout too alrge for edge", async () => {
       edge: true,
       timeout: 1000,
     });
-  }).rejects.toThrow(/Timeout must be less than or equal to 30 seconds/);
+  }).rejects.toThrow(/timeout must be less than or equal to 30 seconds/);
 });
 
-test("cache.fileOptions: undefined", async () => {
+test("assets.fileOptions: undefined", async () => {
   const { site, stack } = await createSite({
     // @ts-expect-error: "sstTest" is not exposed in props
     sstTest: true,
   });
-  const bucketDeploymentResource = Object.values(
-    getResources(stack, "Custom::SSTBucketDeployment")
-  )[0];
-  expect(bucketDeploymentResource.Properties.FileOptions.length).toEqual(58);
-  hasResource(stack, "Custom::SSTBucketDeployment", {
+  hasResource(stack, "Custom::S3Uploader", {
     ServiceToken: {
-      "Fn::GetAtt": ["SiteS3Handler5F76C26E", "Arn"],
+      "Fn::GetAtt": ["CustomResourceHandlerE8FB56BA", "Arn"],
     },
-    Sources: [
+    sources: [
       {
-        BucketName: ANY,
-        ObjectKey: ANY,
+        bucketName: ANY,
+        objectKey: ANY,
       },
     ],
-    DestinationBucketName: {
+    destinationBucketName: {
       Ref: "SiteS3Bucket43E5BB2F",
     },
-    FileOptions: arrayWith([
-      [
-        "--exclude",
-        "*",
-        "--include",
-        "*.txt",
-        "--exclude",
-        "build/*",
-        "--cache-control",
-        "public,max-age=0,s-maxage=86400,stale-while-revalidate=8640",
-        "--content-type",
-        "text/plain;charset=UTF-8",
-      ],
-      [
-        "--exclude",
-        "*",
-        "--include",
-        "build/*.txt",
-        "--cache-control",
-        "public,max-age=31536000,immutable",
-        "--content-type",
-        "text/plain;charset=UTF-8",
-      ],
-    ]),
+    fileOptions: [
+      {
+        files: "**",
+        ignore: "build/**",
+        cacheControl:
+          "public,max-age=0,s-maxage=86400,stale-while-revalidate=8640",
+      },
+      {
+        files: "build/**",
+        cacheControl: "public,max-age=31536000,immutable",
+      },
+    ],
   });
 });
-test("cache.fileOptions: defined", async () => {
+test("assets.fileOptions: defined", async () => {
   const { site, stack } = await createSite({
     // @ts-expect-error: "sstTest" is not exposed in props
     sstTest: true,
-    cache: {
+    assets: {
       fileOptions: [
         {
-          filters: [{ exclude: "*" }, { include: "*.zip" }],
+          files: "**/*.zip",
+          contentType: "application/zip",
         },
       ],
     },
   });
-  const bucketDeploymentResource = Object.values(
-    getResources(stack, "Custom::SSTBucketDeployment")
-  )[0];
-  expect(bucketDeploymentResource.Properties.FileOptions.length).toEqual(59);
-  hasResource(stack, "Custom::SSTBucketDeployment", {
-    FileOptions: arrayWith([["--exclude", "*", "--include", "*.zip"]]),
+  hasResource(stack, "Custom::S3Uploader", {
+    fileOptions: [
+      {
+        files: "**",
+        ignore: "build/**",
+        cacheControl:
+          "public,max-age=0,s-maxage=86400,stale-while-revalidate=8640",
+      },
+      {
+        files: "build/**",
+        cacheControl: "public,max-age=31536000,immutable",
+      },
+      { files: "**/*.zip", contentType: "application/zip" },
+    ],
   });
 });
 test("fileOptions (deprecated): defined", async () => {
-  const { site, stack } = await createSite({
-    // @ts-expect-error: "sstTest" is not exposed in props
-    sstTest: true,
-    fileOptions: [
-      {
-        exclude: "*",
-        include: "build/*",
-        cacheControl: "public,max-age=31536000,immutable",
-        contentType: "text/html; charset=utf-8",
-      },
-    ],
-  });
-  hasResource(stack, "Custom::SSTBucketDeployment", {
-    FileOptions: [
-      [
-        "--exclude",
-        "*",
-        "--include",
-        "build/*",
-        "--cache-control",
-        "public,max-age=31536000,immutable",
-        "--content-type",
-        "text/html; charset=utf-8",
+  expect(async () => {
+    await createSite({
+      // @ts-expect-error: "sstTest" is not exposed in props
+      sstTest: true,
+      fileOptions: [
+        {
+          exclude: "*",
+          include: "build/*",
+          cacheControl: "public,max-age=31536000,immutable",
+          contentType: "text/html; charset=utf-8",
+        },
       ],
-    ],
-  });
-});
-test("cache.cdnInvalidationStrategy: undefined", async () => {
-  const { site, stack } = await createSite({
-    // @ts-expect-error: "sstTest" is not exposed in props
-    sstTest: true,
-  });
-  countResources(stack, "Custom::CloudFrontInvalidator", 1);
-  hasResource(stack, "Custom::CloudFrontInvalidator", {
-    paths: ["/*"],
-  });
-});
-test("cache.cdnInvalidationStrategy: never", async () => {
-  const { site, stack } = await createSite({
-    // @ts-expect-error: "sstTest" is not exposed in props
-    sstTest: true,
-    cache: {
-      cdnInvalidationStrategy: "never",
-    },
-  });
-  countResources(stack, "Custom::CloudFrontInvalidator", 0);
+    });
+  }).rejects.toThrow(/property has been replaced/);
 });
 
 test("warm: undefined", async () => {
@@ -747,6 +709,37 @@ test("regional.enableServerUrlIamAuth: true", async () => {
       }),
     }),
   });
+});
+
+test("invalidation.paths: undefined", async () => {
+  const { site, stack } = await createSite({
+    // @ts-expect-error: "sstTest" is not exposed in props
+    sstTest: true,
+  });
+  countResources(stack, "Custom::CloudFrontInvalidator", 1);
+  hasResource(stack, "Custom::CloudFrontInvalidator", {
+    paths: ["/*"],
+  });
+});
+test("invalidation.paths: custom invalidation paths", async () => {
+  const { stack } = await createSite({
+    invalidation: {
+      paths: ["/path1", "/path2"],
+    },
+  });
+  hasResource(stack, "Custom::CloudFrontInvalidator", {
+    paths: ["/path1", "/path2"],
+  });
+});
+test("invalidation.paths: none", async () => {
+  const { site, stack } = await createSite({
+    // @ts-expect-error: "sstTest" is not exposed in props
+    sstTest: true,
+    invalidation: {
+      paths: "none",
+    },
+  });
+  countResources(stack, "Custom::CloudFrontInvalidator", 0);
 });
 
 test("cdk.serverCachePolicy undefined", async () => {
@@ -888,8 +881,8 @@ test("cdk.bucket is construct", async () => {
       ],
     }),
   });
-  hasResource(stack, "Custom::SSTBucketDeployment", {
-    DestinationBucketName: "my-bucket",
+  hasResource(stack, "Custom::S3Uploader", {
+    destinationBucketName: "my-bucket",
   });
 });
 
@@ -974,7 +967,7 @@ test("sst deploy inactive stack", async () => {
   expect(site.customDomainUrl).toBeUndefined();
   expect(site.cdk).toBeUndefined();
   countResources(stack, "AWS::CloudFront::Distribution", 0);
-  countResources(stack, "Custom::SSTBucketDeployment", 0);
+  countResources(stack, "Custom::S3Uploader", 0);
   countResources(stack, "Custom::CloudFrontInvalidator", 0);
 });
 
@@ -989,7 +982,7 @@ test("sst dev: dev.url undefined", async () => {
   expect(site.customDomainUrl).toBeUndefined();
   expect(site.cdk).toBeUndefined();
   countResources(stack, "AWS::CloudFront::Distribution", 0);
-  countResources(stack, "Custom::SSTBucketDeployment", 0);
+  countResources(stack, "Custom::S3Uploader", 0);
   countResources(stack, "Custom::CloudFrontInvalidator", 0);
 });
 test("sst dev: dev.url string", async () => {
@@ -1031,7 +1024,7 @@ test("sst remove", async () => {
   expect(site.customDomainUrl).toBeUndefined();
   expect(site.cdk).toBeUndefined();
   countResources(stack, "AWS::CloudFront::Distribution", 0);
-  countResources(stack, "Custom::SSTBucketDeployment", 0);
+  countResources(stack, "Custom::S3Uploader", 0);
   countResources(stack, "Custom::CloudFrontInvalidator", 0);
 });
 

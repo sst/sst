@@ -424,22 +424,24 @@ new StaticSite(stack, "frontend", {
   buildOutput: "build",
   buildCommand: "npm run build",
   errorPage: "redirect_to_index_page",
-  fileOptions: [
-    {
-      filters: [{ exclude: "*" }, { include: "*.html" }],
-      cacheControl: "max-age=0,no-cache,no-store,must-revalidate",
-    },
-    {
-      filters: [{ exclude: "*" }, { include: "*.js" }, { include: "*.css" }],
-      cacheControl: "max-age=31536000,public,immutable",
-    },
-  ],
+  assets: {
+    fileOptions: [
+      {
+        files: "**",
+        cacheControl: "max-age=0,no-cache,no-store,must-revalidate",
+      },
+      {
+        files: ["**/*.js", "**/*.css"],
+        cacheControl: "max-age=31536000,public,immutable",
+      },
+    ],
+  }
 });
 ```
 
-This configures all the `.html` files to not be cached by the browser, while the `.js` and `.css` files to be cached forever.
+This configures the `.js` and `.css` files to be cached forever, while the `.html` and other files to not be cached by the browser.
 
-Note that the file filters are applied in order and filters later in the array will take precedence over filters earlier in the array. In the above example, all files are first excluded, and then only the specific files are re-added using the `include` filter. For further details on wildcard and the matching logic please refer 
+Note that the file options later in the array will take precedence over those earlier in the array.
 
 ### Content type
 
@@ -451,24 +453,15 @@ new StaticSite(stack, "frontend", {
   buildOutput: "build",
   buildCommand: "npm run build",
   errorPage: "redirect_to_index_page",
-  fileOptions: [
-    {
-      filters: [{ exclude: "*" }, { include: "*.html" }],
-      cacheControl: "max-age=0,no-cache,no-store,must-revalidate",
-    },
-    {
-      filters: [{ exclude: "*" }, { include: "*.js" }, { include: "*.css" }],
-      cacheControl: "max-age=31536000,public,immutable",
-    },
-    {
-      filters: [
-        { exclude: "*" }, 
-        { include: ".well-known/site-association-json" },
-      ],
-      cacheControl: "max-age=31536000,public,immutable",
-      contentType: "application/json",
-    },
-  ],
+  assets: {
+    fileOptions: [
+      {
+        files: "**/a-json-file-without-extension",
+        cacheControl: "max-age=31536000,public,immutable",
+        contentType: "application/json",
+      },
+    ],
+  }
 });
 ```
 
