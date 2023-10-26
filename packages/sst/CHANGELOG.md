@@ -1,5 +1,15 @@
 # @serverless-stack/cli2
 
+## 2.32.2
+
+### Patch Changes
+
+- [`390b7d5d5`](https://github.com/sst/sst/commit/390b7d5d5fa13a10ec9f45e50af78f95cf37cc75) Thanks [@thdxr](https://github.com/thdxr)! - cli: dispose context object for node builds
+
+- [#3445](https://github.com/sst/sst/pull/3445) [`f3a378f66`](https://github.com/sst/sst/commit/f3a378f66076f996fdd6fbd274bd313caa98ea4f) Thanks [@fwang](https://github.com/fwang)! - Job: fix job type shows "never"
+
+- [`db7d815f9`](https://github.com/sst/sst/commit/db7d815f9ead81a9ceec79ddb1d3003b21f56f71) Thanks [@fwang](https://github.com/fwang)! - create-sst: fix react dependency
+
 ## 2.32.1
 
 ### Patch Changes
