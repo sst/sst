@@ -154,13 +154,7 @@ const createApigHandler = (build) => {
 
   return async (event) => {
     if (event.type === "warmer") {
-      return {
-        statusCode: 200,
-        headers: {},
-        cookies: [],
-        body: JSON.stringify({ message: "warmed" }),
-        isBase64Encoded: false,
-      };
+      return formatWarmerResponse(event);
     }
 
     const request = convertApigRequestToNode(event);
@@ -168,5 +162,13 @@ const createApigHandler = (build) => {
     return convertNodeResponseToApig(response);
   };
 };
+
+function formatWarmerResponse(event) {
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      resolve({ serverId });
+    }, event.delay);
+  });
+}
 
 export const handler = createApigHandler(remixServerBuild);
