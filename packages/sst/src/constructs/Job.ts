@@ -526,7 +526,7 @@ export class Job extends Construct implements SSTConstruct {
               : Platform.custom("linux/amd64"),
           file: container?.file,
           buildArgs: container?.buildArgs,
-          exclude: [".sst"],
+          exclude: [".sst/dist", ".sst/artifacts"],
           ignoreMode: IgnoreMode.GLOB,
         });
         image.repository?.grantPull(this.job.role!);

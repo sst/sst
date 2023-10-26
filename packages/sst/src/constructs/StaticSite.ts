@@ -178,7 +178,7 @@ export interface StaticSiteProps {
    * @example
    * ```js
    * new StaticSite(stack, "frontend", {
-   *  purge: false
+   *  purgeFiles: false
    * });
    * ```
    */

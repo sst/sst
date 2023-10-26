@@ -1196,7 +1196,7 @@ export class Service extends Construct implements SSTConstruct {
         architecture === "arm64" ? Platform.LINUX_ARM64 : Platform.LINUX_AMD64,
       file: dockerfile,
       buildArgs: build?.buildArgs,
-      exclude: [".sst"],
+      exclude: [".sst/dist", ".sst/artifacts"],
       ignoreMode: IgnoreMode.GLOB,
     });
     const cfnTask = taskDefinition.node.defaultChild as CfnTaskDefinition;

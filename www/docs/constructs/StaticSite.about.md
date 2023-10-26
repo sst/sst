@@ -501,12 +501,14 @@ new StaticSite(stack, "frontend", {
 
 Configure the internally created CDK `Distribution` instance.
 
-```js {4-6}
+```js
+import { HttpVersion } from "aws-cdk-lib/aws-cloudfront";
+
 new StaticSite(stack, "frontend", {
   path: "path/to/site",
   cdk: {
     distribution: {
-      comment: "Distribution for my React website",
+      httpVersion: HttpVersion.HTTP3,
     },
   },
 });

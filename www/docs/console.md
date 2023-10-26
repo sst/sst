@@ -418,7 +418,7 @@ The SST Console pricing is based on the number of times the Lambda functions in 
 A couple of things to note.
 
 - These are calculated for a given workspace on a monthly basis.
-- There's also a soft limit for [Issues](#limits) on all accounts.
+- There's also a [soft limit](#limits) for [Issues](#issues) on all accounts.
 - For volume pricing, feel free to <a href={`mailto:${config.email}`}>contact us</a>.
 
 ---

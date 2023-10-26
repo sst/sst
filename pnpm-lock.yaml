@@ -449,7 +449,7 @@ importers:
         version: 9.0.16
       ink:
         specifier: ^4.0.0
-        version: 4.0.0(@types/react@17.0.52)(react@18.2.0)
+        version: 4.0.0(@types/react@18.0.28)(react@18.2.0)
       ink-spinner:
         specifier: ^5.0.0
         version: 5.0.0(ink@4.0.0)(react@18.2.0)
@@ -472,7 +472,7 @@ importers:
         specifier: ^6.1.2
         version: 6.1.2
       react:
-        specifier: 18.2.0
+        specifier: ^18.0.0
         version: 18.2.0
       remeda:
         specifier: ^1.3.0
@@ -557,8 +557,8 @@ importers:
         specifier: ^18.11.9
         version: 18.11.9
       '@types/react':
-        specifier: ^17.0.33
-        version: 17.0.52
+        specifier: ^18.0.28
+        version: 18.0.28
       '@types/uuid':
         specifier: ^8.3.4
         version: 8.3.4
@@ -572,7 +572,7 @@ importers:
         specifier: ^5.3.1
         version: 5.3.1
       astro-sst:
-        specifier: 2.32.0
+        specifier: 2.32.2
         version: link:../astro-sst
       async:
         specifier: ^3.2.4
@@ -7791,7 +7791,7 @@ packages:
       react-dom: '*'
     dependencies:
       '@docusaurus/types': 2.0.0-beta.18
-      '@types/react': 17.0.52
+      '@types/react': 18.0.28
       '@types/react-router-config': 5.0.6
       '@types/react-router-dom': 5.3.3
       react: 17.0.2
@@ -8145,7 +8145,7 @@ packages:
     peerDependencies:
       react: '*'
     dependencies:
-      '@types/react': 17.0.52
+      '@types/react': 18.0.28
       prop-types: 15.8.1
       react: 17.0.2
     dev: false
@@ -8301,7 +8301,7 @@ packages:
       react-dom: ^16.8.4 || ^17.0.0
     dependencies:
       '@types/history': 4.7.11
-      '@types/react': 17.0.52
+      '@types/react': 18.0.28
       commander: 5.1.0
       joi: 17.7.0
       react: 17.0.2
@@ -8503,7 +8503,7 @@ packages:
       '@emotion/memoize': 0.8.0
       '@emotion/unitless': 0.8.0
       '@emotion/utils': 1.2.0
-      csstype: 3.1.1
+      csstype: 3.1.2
     dev: false
 
   /@emotion/sheet@1.2.1:
@@ -9436,7 +9436,7 @@ packages:
     resolution: {integrity: sha512-uzYeElL3w7SeNMuQpXiFlBhTT+JyaNMCwDfjKkrzugEcYrf5n52PHqncNdQPUtR42hJh8V9FsqyEDbDxkeNjJQ==}
     dependencies:
       '@babel/runtime': 7.21.0
-      csstype: 3.1.1
+      csstype: 3.1.2
     dev: false
 
   /@radix-ui/primitive@0.1.0:
@@ -11575,7 +11575,7 @@ packages:
   /@types/hoist-non-react-statics@3.3.1:
     resolution: {integrity: sha512-iMIqiko6ooLrTh1joXodJK5X9xeEALT1kM5G3ZLhD3hszxBdIEd5C75U834D9mLcINgD4OyZf5uQXjkuYydWvA==}
     dependencies:
-      '@types/react': 17.0.52
+      '@types/react': 18.0.28
       hoist-non-react-statics: 3.3.2
     dev: false
 
@@ -11712,7 +11712,7 @@ packages:
     resolution: {integrity: sha512-7FkurKcS1k0FHZEtdbbgN8Oc6b+stGSfZYjQGicofJ0j4U0qIn/jaSvnP2pLwZKiai3/17xqqxkkrxTgN8UNbQ==}
     dependencies:
       '@types/hoist-non-react-statics': 3.3.1
-      '@types/react': 17.0.52
+      '@types/react': 18.0.28
       hoist-non-react-statics: 3.3.2
       redux: 4.2.0
     dev: false
@@ -11721,7 +11721,7 @@ packages:
     resolution: {integrity: sha512-db1mx37a1EJDf1XeX8jJN7R3PZABmJQXR8r28yUjVMFSjkmnQo6X6pOEEmNl+Tp2gYQOGPdYbFIipBtdElZ3Yg==}
     dependencies:
       '@types/history': 4.7.11
-      '@types/react': 17.0.52
+      '@types/react': 18.0.28
       '@types/react-router': 5.1.19
     dev: false
 
@@ -11729,7 +11729,7 @@ packages:
     resolution: {integrity: sha512-kpqnYK4wcdm5UaWI3fLcELopqLrHgLqNsdpHauzlQktfkHL3npOSwtj1Uz9oKBAzs7lFtVkV8j83voAz2D8fhw==}
     dependencies:
       '@types/history': 4.7.11
-      '@types/react': 17.0.52
+      '@types/react': 18.0.28
       '@types/react-router': 5.1.19
     dev: false
 
@@ -11737,11 +11737,18 @@ packages:
     resolution: {integrity: sha512-Fv/5kb2STAEMT3wHzdKQK2z8xKq38EDIGVrutYLmQVVLe+4orDFquU52hQrULnEHinMKv9FSA6lf9+uNT1ITtA==}
     dependencies:
       '@types/history': 4.7.11
-      '@types/react': 17.0.52
+      '@types/react': 18.0.28
     dev: false
 
   /@types/react@17.0.52:
     resolution: {integrity: sha512-vwk8QqVODi0VaZZpDXQCmEmiOuyjEFPY7Ttaw5vjM112LOq37yz1CDJGrRJwA1fYEq4Iitd5rnjd1yWAc/bT+A==}
+    dependencies:
+      '@types/prop-types': 15.7.6
+      '@types/scheduler': 0.16.3
+      csstype: 3.1.2
+
+  /@types/react@18.0.28:
+    resolution: {integrity: sha512-RD0ivG1kEztNBdoAK7lekI9M+azSnitIn85h4iOiaLjaTrMjzslhaqCGaI4IyCJ1RljWiLCEu4jyrLLgqxBTew==}
     dependencies:
       '@types/prop-types': 15.7.6
       '@types/scheduler': 0.16.3
@@ -14506,10 +14513,6 @@ packages:
       css-tree: 1.1.3
     dev: false
 
-  /csstype@3.1.1:
-    resolution: {integrity: sha512-DJR/VvkAvSZW9bTouZue2sSxDwdTN92uHjqeKVm+0dAqdfNykRzQ95tay8aXMBAAPpUiq4Qcug2L7neoRh2Egw==}
-    dev: false
-
   /csstype@3.1.2:
     resolution: {integrity: sha512-I7K1Uu0MBPzaFKg4nI5Q7Vs2t+3gWWW648spaF+Rg7pI9ds18Ugn+lvg4SHczUdKlHI5LWBXyqfS8+DufyBsgQ==}
 
@@ -17204,11 +17207,11 @@ packages:
       react: '>=18.0.0'
     dependencies:
       cli-spinners: 2.7.0
-      ink: 4.0.0(@types/react@17.0.52)(react@18.2.0)
+      ink: 4.0.0(@types/react@18.0.28)(react@18.2.0)
       react: 18.2.0
     dev: false
 
-  /ink@4.0.0(@types/react@17.0.52)(react@18.2.0):
+  /ink@4.0.0(@types/react@18.0.28)(react@18.2.0):
     resolution: {integrity: sha512-PmYgFfkTJYAxK+8pkvDghOTTLY5rAa58s7aLCd5lsiWBWxEil2f5VCjWP1I/7uLmgZDver/wXmVzF4sJhZvSIw==}
     engines: {node: '>=14.16'}
     peerDependencies:
@@ -17221,7 +17224,7 @@ packages:
       react-devtools-core:
         optional: true
     dependencies:
-      '@types/react': 17.0.52
+      '@types/react': 18.0.28
       ansi-escapes: 6.1.0
       auto-bind: 5.0.1
       chalk: 5.2.0

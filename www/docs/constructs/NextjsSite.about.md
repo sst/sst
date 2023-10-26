@@ -481,7 +481,7 @@ new NextjsSite(stack, "Site", {
 
 Note that VPC is only supported when deploying to a [single region](#single-region-vs-edge).
 
-```js {12-17}
+```js
 import { Vpc, SubnetType } from "aws-cdk-lib/aws-ec2";
 
 // Create a VPC
@@ -510,7 +510,7 @@ new NextjsSite(stack, "Site", {
 
 #### Configuring log retention
 
-```js {6-8}
+```js
 import { RetentionDays } from "aws-cdk-lib/aws-logs";
 
 new NextjsSite(stack, "Site", {
@@ -525,7 +525,7 @@ new NextjsSite(stack, "Site", {
 
 #### Using an existing S3 Bucket
 
-```js {6}
+```js
 import { Bucket } from "aws-cdk-lib/aws-s3";
 
 new NextjsSite(stack, "Site", {
@@ -575,6 +575,21 @@ new NextjsSite(stack, "Site", {
   path: "my-next-app/",
   cdk: {
     responseHeadersPolicy: ResponseHeadersPolicy.CORS_ALLOW_ALL_ORIGINS,
+  },
+});
+```
+
+#### Enabling HTTP/3 support
+
+```js
+import { HttpVersion } from "aws-cdk-lib/aws-cloudfront";
+
+new NextjsSite(stack, "Site", {
+  path: "my-next-app/",
+  cdk: {
+    distribution: {
+      httpVersion: HttpVersion.HTTP3,
+    },
   },
 });
 ```

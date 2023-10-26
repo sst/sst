@@ -1,5 +1,11 @@
 # @serverless-stack/docs
 
+## 2.8.1
+
+### Patch Changes
+
+- [`988093b7a`](https://github.com/sst/sst/commit/988093b7aa35e7f1cf82c3b9ca9ee624cac966cf) Thanks [@fwang](https://github.com/fwang)! - AppSyncApi: respect scope for lazily added resolvers and data sources
+
 ## 2.8.0
 
 ### Minor Changes
