@@ -3,4 +3,4 @@
 "sst": patch
 ---
 
-Add static generation support for Astro
+AstroSite: add static generation support
