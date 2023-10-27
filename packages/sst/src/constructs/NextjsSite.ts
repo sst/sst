@@ -425,8 +425,8 @@ export class NextjsSite extends SsrSite {
 
         const prerenderedRouteCount = Object.keys(prerenderManifest?.routes ?? {});
 
-        // Provision 128MB of memory for every 5,000 prerendered routes, 1GB per 50,000, up to 10GB
-        revalidationInsertMemorySize = Math.min(10240, Math.max(128, Math.ceil(prerenderedRouteCount.length / 5000) * 128));
+        // Provision 128MB of memory for every 4,000 prerendered routes, 1GB per 40,000, up to 10GB. This tends to use ~70% of the memory provisioned when testing.
+        revalidationInsertMemorySize = Math.min(10240, Math.max(128, Math.ceil(prerenderedRouteCount.length / 4000) * 128));
       } catch (e) {
         console.warn("Failed to calculate the correct RevalidationInsertFunction memorySize using prerender-manifest.json, defaulting to 128MB", e);
       }
