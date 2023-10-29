@@ -1092,11 +1092,15 @@ export class Service extends Construct implements SSTConstruct {
   }
 
   private addEnvironmentForService(name: string, value: string): void {
-    this.container.addEnvironment(name, value);
+    if (!this.doNotDeploy){
+      this.container.addEnvironment(name, value);
+    }
   }
 
   private attachPermissionsForService(permissions: Permissions): void {
-    attachPermissionsToRole(this.taskDefinition.taskRole as Role, permissions);
+    if (!this.doNotDeploy){
+      attachPermissionsToRole(this.taskDefinition.taskRole as Role, permissions);
+    }
   }
 
   /////////////////////
