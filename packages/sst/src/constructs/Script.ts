@@ -68,8 +68,7 @@ export interface ScriptProps {
     function?: FunctionProps;
   };
   /**
-   * Creates the function that runs when the Script is created.
-   *
+   * Specifies the function to be run once when the Script construct is created.
    * @example
    * ```js
    * new Script(stack, "Api", {
@@ -79,8 +78,11 @@ export interface ScriptProps {
    */
   onCreate?: FunctionDefinition;
   /**
-   * Creates the function that runs on every deploy after the Script is created
+   * Specifies the function to be run each time the Script construct is redeployed. If a version is provided,
+   * the function is only executed when the version changes.
    *
+   * Note that the `onUpdate` function is not run during the initial creation of the Script construct.
+   * For initial creation, use `onCreate`.
    * @example
    * ```js
    * new Script(stack, "Api", {
@@ -90,8 +92,8 @@ export interface ScriptProps {
    */
   onUpdate?: FunctionDefinition;
   /**
-   * Create the function that runs when the Script is deleted from the stack.
-   *
+   * Specifies the function to be run once when the Script construct is deleted from the stack or
+   * when the entire stack is removed from the app.
    * @example
    * ```js
    * new Script(stack, "Api", {

@@ -538,7 +538,6 @@ type ServiceNormalizedProps = ServiceProps & {
   memory: Exclude<ServiceProps["memory"], undefined>;
   port: Exclude<ServiceProps["port"], undefined>;
   logRetention: Exclude<ServiceProps["logRetention"], undefined>;
-  waitForInvalidation: Exclude<ServiceProps["waitForInvalidation"], undefined>;
 };
 
 /**
@@ -577,7 +576,6 @@ export class Service extends Construct implements SSTConstruct {
       memory: props?.memory || "0.5 GB",
       port: props?.port || 3000,
       logRetention: props?.logRetention || "infinite",
-      waitForInvalidation: false,
       ...props,
     };
     this.doNotDeploy =
@@ -1198,7 +1196,7 @@ export class Service extends Construct implements SSTConstruct {
         architecture === "arm64" ? Platform.LINUX_ARM64 : Platform.LINUX_AMD64,
       file: dockerfile,
       buildArgs: build?.buildArgs,
-      exclude: [".sst"],
+      exclude: [".sst/dist", ".sst/artifacts"],
       ignoreMode: IgnoreMode.GLOB,
     });
     const cfnTask = taskDefinition.node.defaultChild as CfnTaskDefinition;

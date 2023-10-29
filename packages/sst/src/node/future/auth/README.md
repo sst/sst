@@ -1,6 +1,6 @@
 ## Auth
 
-This is a preview of the next version of SST Auth which aims to be more compliant with the oauth specification.
+This is a preview of the next version of SST Auth which aims to be more compliant with the oauth specification. You can see real-world usage of it here: https://github.com/sst/console/blob/dev/packages/functions/src/auth.ts
 
 
 ### Using the construct
@@ -34,6 +34,16 @@ const api = new Api(stack, "api", {
 })
 ```
 
+`packages/functions/src/sessions.ts`
+```js
+// define session types
+export const sessions = createSessionBuilder<{
+  user: {
+    userID: string
+  }
+}>()
+```
+
 `packages/functions/src/auth.handler`
 ```js
 import {
@@ -42,20 +52,11 @@ import {
   createSessionBuilder,
 } from "sst/node/future/auth";
 import { Config } from "sst/node/config";
+import { sessions } from "./sessions"
 
-// define session types
-export const sessions = createSessionBuilder<{
-  user: {
-    userID: string
-  }
-}>()
 
 export const handler = AuthHandler({
   sessions,
-  clients: async () => ({
-    // This allows local clients to redirect back to localhost
-    local: "http://localhost",
-  }),
   providers: {
     github: GithubAdapter({
       scope: "read:user user:email",
@@ -63,33 +64,21 @@ export const handler = AuthHandler({
       clientSecret: Config.GITHUB_CLIENT_SECRET,
     }),
   },
-  async onAuthorize() {
-    // any code you want to run when auth begins
-  },
-  async onSuccess(input, response) {
-    let user: User.Info | undefined = undefined
-
-    if (input.provider === "github") {
-      const user = // lookup or create user
-      return response.session({
-        type: "user",
-        properties: {
-          userID: user.userID,
-        },
-      })
-    }
-
-    throw new Error("Unknown provider")
-
-  },
-  // This callback needs some work, not spec compliant currently
-  async onError() {
-    return {
-      statusCode: 400,
-      headers: {
-        "Content-Type": "text/plain",
+  callbacks: {
+    auth: {
+      async success(input, response) {
+        let user: User.Info | undefined = undefined
+        if (input.provider === "github") {
+          const user = // lookup or create user
+          return response.session({
+            type: "user",
+            properties: {
+              userID: user.userID,
+            },
+          })
+        }
+        throw new Error("Unknown provider")
       },
-      body: "Auth failed",
     }
   },
 })
@@ -177,7 +166,7 @@ Make sure the auth construct is bound to your API like in the example above. The
 
 ```js
 import { ApiHandler } from "sst/node/api"
-import { sessions } from "../auth-handler"
+import { sessions } from "../sessions"
 
 export const handler = ApiHandler(() => {
   const session = sesssions.use()

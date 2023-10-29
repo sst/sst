@@ -113,15 +113,6 @@ export interface DistributionProps {
    * ```
    */
   customDomain?: string | DistributionDomainProps;
-  /**
-   * The SSR function is deployed to Lambda in a single region. Alternatively, you can enable this option to deploy to Lambda@Edge.
-   * @default false
-   */
-  /**
-   * While deploying, SST waits for the CloudFront cache invalidation process to finish. This ensures that the new content will be served once the deploy command finishes. However, this process can sometimes take more than 5 mins. For non-prod environments it might make sense to pass in `false`. That'll skip waiting for the cache to invalidate and speed up the deploy process.
-   * @default false
-   */
-  waitForInvalidation?: boolean;
   scopeOverride?: IConstruct;
   cdk: {
     distribution: CdkDistributionProps | IDistribution;
@@ -202,7 +193,12 @@ export class Distribution extends Construct {
     };
   }
 
-  public createInvalidation(buildId?: string) {
+  public createInvalidation(props?: {
+    version?: string;
+    paths?: string[];
+    wait?: boolean;
+  }) {
+    const { version, paths, wait } = props ?? {};
     const stack = Stack.of(this) as Stack;
 
     const policy = new Policy(this.scope, "CloudFrontInvalidatorPolicy", {
@@ -225,10 +221,12 @@ export class Distribution extends Construct {
       serviceToken: stack.customResourceHandler.functionArn,
       resourceType: "Custom::CloudFrontInvalidator",
       properties: {
-        buildId: buildId || Date.now().toString(),
+        version:
+          version ||
+          Date.now().toString(16) + Math.random().toString(16).slice(2),
         distributionId: this.distribution.distributionId,
-        paths: ["/*"],
-        waitForInvalidation: this.props.waitForInvalidation,
+        paths: [...new Set(paths ?? ["/*"])],
+        wait: wait ?? false,
       },
     });
     resource.node.addDependency(policy);

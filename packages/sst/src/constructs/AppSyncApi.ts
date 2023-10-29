@@ -15,6 +15,7 @@ const { mergeTypeDefs } = await weakImport("@graphql-tools/merge");
 import { Construct } from "constructs";
 
 import { App } from "./App.js";
+import { Stack } from "./Stack.js";
 import { Table } from "./Table.js";
 import { RDS } from "./RDS.js";
 import * as appSyncApiDomain from "./util/appSyncApiDomain.js";
@@ -44,6 +45,12 @@ import {
   ResolverProps,
   SchemaFile,
   Definition,
+  LambdaDataSource,
+  DynamoDbDataSource,
+  RdsDataSource,
+  OpenSearchDataSource,
+  HttpDataSource,
+  NoneDataSource,
 } from "aws-cdk-lib/aws-appsync";
 import { ICertificate } from "aws-cdk-lib/aws-certificatemanager";
 import { IDomain } from "aws-cdk-lib/aws-opensearchservice";
@@ -849,68 +856,109 @@ export class AppSyncApi extends Construct implements SSTConstruct {
         this.props.defaults?.function,
         `Cannot define defaults.function when a Function is passed in to the "${dsKey} data source`
       );
-      dataSource = this.cdk.graphqlApi.addLambdaDataSource(dsKey, lambda);
+      dataSource = this.isSameStack(scope)
+        ? this.cdk.graphqlApi.addLambdaDataSource(dsKey, lambda)
+        : new LambdaDataSource(scope, dsKey, {
+            api: this.cdk.graphqlApi,
+            lambdaFunction: lambda,
+          });
     }
     // DynamoDb ds
     else if (dsValue.type === "dynamodb") {
-      dataSource = this.cdk.graphqlApi.addDynamoDbDataSource(
-        dsKey,
-        dsValue.table
-          ? dsValue.table.cdk.table
-          : dsValue.cdk?.dataSource?.table!,
-        {
-          name: dsValue.name,
-          description: dsValue.description,
-        }
-      );
+      const dsTable = dsValue.table
+        ? dsValue.table.cdk.table
+        : dsValue.cdk?.dataSource?.table!;
+      const dsOptions = {
+        name: dsValue.name,
+        description: dsValue.description,
+      };
+      dataSource = this.isSameStack(scope)
+        ? this.cdk.graphqlApi.addDynamoDbDataSource(dsKey, dsTable, dsOptions)
+        : new DynamoDbDataSource(scope, dsKey, {
+            api: this.cdk.graphqlApi,
+            table: dsTable,
+            ...dsOptions,
+          });
     }
     // RDS ds
     else if (dsValue.type === "rds") {
-      dataSource = this.cdk.graphqlApi.addRdsDataSource(
-        dsKey,
-        dsValue.rds
-          ? dsValue.rds.cdk.cluster
-          : dsValue.cdk?.dataSource?.serverlessCluster!,
-        dsValue.rds
-          ? dsValue.rds.cdk.cluster.secret!
-          : dsValue.cdk?.dataSource?.secretStore!,
-        dsValue.rds
-          ? dsValue.databaseName || dsValue.rds.defaultDatabaseName
-          : dsValue.cdk?.dataSource?.databaseName,
-        {
-          name: dsValue.name,
-          description: dsValue.description,
-        }
-      );
+      const dsCluster = dsValue.rds
+        ? dsValue.rds.cdk.cluster
+        : dsValue.cdk?.dataSource?.serverlessCluster!;
+      const dsSecret = dsValue.rds
+        ? dsValue.rds.cdk.cluster.secret!
+        : dsValue.cdk?.dataSource?.secretStore!;
+      const dsDatabaseName = dsValue.rds
+        ? dsValue.databaseName || dsValue.rds.defaultDatabaseName
+        : dsValue.cdk?.dataSource?.databaseName;
+      const dsOptions = {
+        name: dsValue.name,
+        description: dsValue.description,
+      };
+      dataSource = this.isSameStack(scope)
+        ? this.cdk.graphqlApi.addRdsDataSource(
+            dsKey,
+            dsCluster,
+            dsSecret,
+            dsDatabaseName,
+            dsOptions
+          )
+        : new RdsDataSource(scope, dsKey, {
+            api: this.cdk.graphqlApi,
+            serverlessCluster: dsCluster,
+            secretStore: dsSecret,
+            databaseName: dsDatabaseName,
+            ...dsOptions,
+          });
     }
     // OpenSearch ds
     else if (dsValue.type === "open_search") {
-      dataSource = this.cdk.graphqlApi.addOpenSearchDataSource(
-        dsKey,
-        dsValue.cdk?.dataSource?.domain!,
-        {
-          name: dsValue.name,
-          description: dsValue.description,
-        }
-      );
+      const dsOptions = {
+        name: dsValue.name,
+        description: dsValue.description,
+      };
+      dataSource = this.isSameStack(scope)
+        ? this.cdk.graphqlApi.addOpenSearchDataSource(
+            dsKey,
+            dsValue.cdk?.dataSource?.domain!,
+            dsOptions
+          )
+        : new OpenSearchDataSource(scope, dsKey, {
+            api: this.cdk.graphqlApi,
+            domain: dsValue.cdk?.dataSource?.domain!,
+            ...dsOptions,
+          });
     }
     // Http ds
     else if (dsValue.type === "http") {
-      dataSource = this.cdk.graphqlApi.addHttpDataSource(
-        dsKey,
-        dsValue.endpoint,
-        {
-          name: dsValue.name,
-          description: dsValue.description,
-        }
-      );
+      const dsOptions = {
+        name: dsValue.name,
+        description: dsValue.description,
+      };
+      dataSource = this.isSameStack(scope)
+        ? this.cdk.graphqlApi.addHttpDataSource(
+            dsKey,
+            dsValue.endpoint,
+            dsOptions
+          )
+        : new HttpDataSource(scope, dsKey, {
+            api: this.cdk.graphqlApi,
+            endpoint: dsValue.endpoint,
+            ...dsOptions,
+          });
     }
     // Http ds
     else if (dsValue.type === "none") {
-      dataSource = this.cdk.graphqlApi.addNoneDataSource(dsKey, {
+      const dsOptions = {
         name: dsValue.name,
         description: dsValue.description,
-      });
+      };
+      dataSource = this.isSameStack(scope)
+        ? this.cdk.graphqlApi.addNoneDataSource(dsKey, dsOptions)
+        : new NoneDataSource(scope, dsKey, {
+            api: this.cdk.graphqlApi,
+            ...dsOptions,
+          });
     }
     // Lambda ds
     else {
@@ -921,10 +969,17 @@ export class AppSyncApi extends Construct implements SSTConstruct {
         this.props.defaults?.function,
         `Cannot define defaults.function when a Function is passed in to the "${dsKey} data source`
       );
-      dataSource = this.cdk.graphqlApi.addLambdaDataSource(dsKey, lambda, {
+      const dsOptions = {
         name: dsValue.name,
         description: dsValue.description,
-      });
+      };
+      dataSource = this.isSameStack(scope)
+        ? this.cdk.graphqlApi.addLambdaDataSource(dsKey, lambda, dsOptions)
+        : new LambdaDataSource(scope, dsKey, {
+            api: this.cdk.graphqlApi,
+            lambdaFunction: lambda,
+            ...dsOptions,
+          });
     }
     this.dataSourcesByDsKey[dsKey] = dataSource;
 
@@ -991,10 +1046,12 @@ export class AppSyncApi extends Construct implements SSTConstruct {
         `Cannot define defaults.function when a Function is passed in to the "${resKey} resolver`
       );
       dataSourceKey = this.buildDataSourceKey(typeName, fieldName);
-      dataSource = this.cdk.graphqlApi.addLambdaDataSource(
-        dataSourceKey,
-        lambda
-      );
+      dataSource = this.isSameStack(scope)
+        ? this.cdk.graphqlApi.addLambdaDataSource(dataSourceKey, lambda)
+        : new LambdaDataSource(scope, dataSourceKey, {
+            api: this.cdk.graphqlApi,
+            lambdaFunction: lambda,
+          });
       resolverProps = {
         requestMappingTemplate: this.buildMappingTemplate(
           resValue.requestMapping
@@ -1033,10 +1090,12 @@ export class AppSyncApi extends Construct implements SSTConstruct {
         `Cannot define defaults.function when a Function is passed in to the "${resKey} resolver`
       );
       dataSourceKey = this.buildDataSourceKey(typeName, fieldName);
-      dataSource = this.cdk.graphqlApi.addLambdaDataSource(
-        dataSourceKey,
-        lambda
-      );
+      dataSource = this.isSameStack(scope)
+        ? this.cdk.graphqlApi.addLambdaDataSource(dataSourceKey, lambda)
+        : new LambdaDataSource(scope, dataSourceKey, {
+            api: this.cdk.graphqlApi,
+            lambdaFunction: lambda,
+          });
       resolverProps = {};
     }
 
@@ -1056,15 +1115,20 @@ export class AppSyncApi extends Construct implements SSTConstruct {
     ///////////////////
     // Create resolver
     ///////////////////
-    const resolver = this.cdk.graphqlApi.createResolver(
-      `${typeName}${fieldName}Resolver`,
-      {
-        dataSource,
-        typeName,
-        fieldName,
-        ...resolverProps,
-      }
-    );
+    const resolver = this.isSameStack(scope)
+      ? this.cdk.graphqlApi.createResolver(`${typeName}${fieldName}Resolver`, {
+          dataSource,
+          typeName,
+          fieldName,
+          ...resolverProps,
+        })
+      : new Resolver(scope, `${typeName}${fieldName}Resolver`, {
+          api: this.cdk.graphqlApi,
+          dataSource,
+          typeName,
+          fieldName,
+          ...resolverProps,
+        });
     this.resolversByResKey[resKey] = resolver;
 
     return lambda;
@@ -1097,7 +1161,11 @@ export class AppSyncApi extends Construct implements SSTConstruct {
     );
   }
 
-  private buildDataSourceKey(typeName: string, fieldName: string): string {
+  private buildDataSourceKey(typeName: string, fieldName: string) {
     return `LambdaDS_${typeName}_${fieldName}`;
+  }
+
+  private isSameStack(scope: Construct) {
+    return Stack.of(this) === Stack.of(scope);
   }
 }

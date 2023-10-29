@@ -16,10 +16,20 @@ export const types = (program: Program) =>
       try {
         const project = useProject();
         const [_metafile, sstConfig] = await Stacks.load(project.paths.config);
-        await Stacks.synth({
-          fn: sstConfig.stacks,
+        // Note: do not run synth which requires AWS credentials. B/c generating
+        //       types is usually done inside CI pipelines. And credentials
+        //       might not be available. ie.
+        //  await Stacks.synth({
+        //    fn: sstConfig.stacks,
+        //    mode: "remove",
+        //  });
+        const app = new App({
           mode: "remove",
+          stage: project.config.stage,
+          name: project.config.name,
+          region: project.config.region,
         });
+        sstConfig.stacks(app);
         Colors.line(
           Colors.success(`✔ `),
           `Types generated in ${path.resolve(project.paths.out, "types")}`

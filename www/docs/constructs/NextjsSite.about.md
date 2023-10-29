@@ -257,6 +257,56 @@ This cost estimate is based on the `us-east-1` region pricing and does not consi
 
 ---
 
+## Logging
+
+By default, routes for the app server function log to a common AWS CloudWatch log group. However, you can configure each route to log to its own group:
+
+```js
+new NextjsSite(stack, "Site", {
+  path: "my-next-app/",
+  logging: "per-route",
+});
+```
+
+With per-route logging, the resources page shows a breakdown of all routes. Click on any route to see its logs.
+
+![Next.js per route logging](/img/nextjssite/per-route-logging.png)
+
+:::info
+Starting the next minor release, "per-route" will become the default logging behavior.
+:::
+
+---
+
+## Sourcemap
+
+Next.js uses webpack to bundle your code, so the stack trace line numbers might not match. Turning on sourcemap when building your Next.js app can fix this.
+
+To turn on sourcemap, update your Next.js config:
+
+```diff title="next.config.js"
+const nextConfig = {
++ webpack: (config) => {
++   config.devtool = "source-map";
++   return config;
++ },
+};
+```
+
+Now when your Next.js app builds, it'll generate the sourcemap files alongside your code. SST uploads these files to the [bootstrap bucket](../advanced/bootstrapping.md).
+
+![Next.js sourcemap files](/img/nextjssite/sourcemap-files.png)
+
+:::info
+The sourcemap files are not added to the server bundle, keeping the function size small.
+:::
+
+With sourcemap active, the [SST Console](../console.md) will display the error source with the right context.
+
+![Next.js error stack trace](/img/nextjssite/error-stack-trace.png)
+
+---
+
 ## Examples
 
 ### Configuring custom domains
@@ -431,7 +481,7 @@ new NextjsSite(stack, "Site", {
 
 Note that VPC is only supported when deploying to a [single region](#single-region-vs-edge).
 
-```js {12-17}
+```js
 import { Vpc, SubnetType } from "aws-cdk-lib/aws-ec2";
 
 // Create a VPC
@@ -460,7 +510,7 @@ new NextjsSite(stack, "Site", {
 
 #### Configuring log retention
 
-```js {6-8}
+```js
 import { RetentionDays } from "aws-cdk-lib/aws-logs";
 
 new NextjsSite(stack, "Site", {
@@ -475,7 +525,7 @@ new NextjsSite(stack, "Site", {
 
 #### Using an existing S3 Bucket
 
-```js {6}
+```js
 import { Bucket } from "aws-cdk-lib/aws-s3";
 
 new NextjsSite(stack, "Site", {
@@ -499,16 +549,7 @@ import {
   CacheCookieBehavior,
 } from "aws-cdk-lib/aws-cloudfront";
 
-const serverCachePolicy = new CachePolicy(stack, "ServerCache", {
-  queryStringBehavior: CacheQueryStringBehavior.all(),
-  headerBehavior: CacheHeaderBehavior.none(),
-  cookieBehavior: CacheCookieBehavior.all(),
-  defaultTtl: Duration.days(0),
-  maxTtl: Duration.days(365),
-  minTtl: Duration.days(0),
-  enableAcceptEncodingBrotli: true,
-  enableAcceptEncodingGzip: true,
-});
+const serverCachePolicy = new CachePolicy(stack, "ServerCache", NextjsSite.buildDefaultServerCachePolicyProps());
 
 new NextjsSite(stack, "Site1", {
   path: "my-next-app/",
@@ -534,6 +575,21 @@ new NextjsSite(stack, "Site", {
   path: "my-next-app/",
   cdk: {
     responseHeadersPolicy: ResponseHeadersPolicy.CORS_ALLOW_ALL_ORIGINS,
+  },
+});
+```
+
+#### Enabling HTTP/3 support
+
+```js
+import { HttpVersion } from "aws-cdk-lib/aws-cloudfront";
+
+new NextjsSite(stack, "Site", {
+  path: "my-next-app/",
+  cdk: {
+    distribution: {
+      httpVersion: HttpVersion.HTTP3,
+    },
   },
 });
 ```

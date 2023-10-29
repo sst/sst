@@ -16,9 +16,46 @@ To view the latest release and all historical releases, <a href={`${config.githu
 
 ---
 
+## Upgrade to v2.32.0
+
+`NextjsSite`, `AstroSite`, `RemixSite`, `SvelteKitSite`, `SolidStartSite`, and `StaticSite` now support enhanced cache invalidation options with the `invalidation` prop. **Replace `waitForInvalidation` with `invalidation.wait`, as `waitForInvalidation` is deprecated.**
+
+```diff
+new NextjsSite(stack, "Site", {
+- waitForInvalidation: true,
++ invalidation: {
++   wait: true,
++ },
+});
+```
+
+## Upgrade to v2.31.0
+
+`NextjsSite`, `AstroSite`, `RemixSite`, `SvelteKitSite`, `SolidStartSite`, and `StaticSite` now support enhanced file options with the `assets` prop. **Replace `fileOptions` with `assets.fileOptions`, as `fileOptions` is deprecated.**
+
+```diff
+new NextjsSite(stack, "Site", {
+- fileOptions: [
+-   {
+-     exclude: "*",
+-     include: "*.zip",
+-     cacheControl: "public,max-age=31536000,immutable",
+-   },
+- ],
++ assets: {
++   fileOptions: [
++     {
++       files: "**/*.zip",
++       cacheControl: "public,max-age=31536000,immutable",
++     },
++   ],
++ },
+});
+```
+
 ## Upgrade to v2.27.0
 
-[AstroSite](constructs/AstroSite.md) has been re-architectured to support deploying Astro sites in a "hybrid" mode, coupled with other SSR improvements. sites should operate seamlessly, as the update is largely backward compatible. However, if your Astro app contains non-GET routes, such us form submissions, logins, or API endpoints, you'll need to specify them manually:
+[AstroSite](constructs/AstroSite.md) has been re-architectured to support deploying Astro sites in a "hybrid" mode, coupled with other SSR improvements. sites should operate seamlessly, as the update is largely backward compatible. However, **if your Astro app contains non-GET routes**, such us form submissions, logins, or API endpoints, you'll need to **specify them manually**:
 
 ```diff
 new AstroSite(stack, "Site", {

@@ -825,13 +825,13 @@ By default, `Api` creates 1 [`IAM role`](https://docs.aws.amazon.com/cdk/api/v1/
 
 Use `attachPermissionsToRole` to grant IAM permissions for the role.
 
-```js {21-25}
-import * as iam from "aws-cdk-lib/aws-iam";
+```js {22-26}
+import { Role, ServicePrincipal } as iam from "aws-cdk-lib/aws-iam";
 import { attachPermissionsToRole } from "sst/constructs";
 
 // Create an IAM role
-const role = new iam.Role(stack, "ApiRole", {
-  assumedBy: new iam.ServicePrincipal("lambda.amazonaws.com"),
+const role = new Role(stack, "ApiRole", {
+  assumedBy: new ServicePrincipal("lambda.amazonaws.com"),
   managedPolicies: [
     {
       managedPolicyArn:

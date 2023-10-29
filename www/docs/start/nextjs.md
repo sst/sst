@@ -51,7 +51,7 @@ pnpm create next-app
 </TabItem>
 </MultiPackagerCode>
 
-Now initialize SST in your project root.
+Now initialize SST in the root of your new Next.js project.
 
 <MultiPackagerCode>
 <TabItem value="npm">

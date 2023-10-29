@@ -360,39 +360,31 @@ export class App extends CDKApp {
           const functions = useFunctions();
           const sourcemaps = functions.sourcemaps.forStack(child.stackName);
           if (sourcemaps.length) {
-            const policy = new Policy(
-              child,
-              "FunctionSourcemapUploaderPolicy",
-              {
-                statements: [
-                  new PolicyStatement({
-                    effect: Effect.ALLOW,
-                    actions: ["s3:GetObject", "s3:PutObject"],
-                    resources: [
-                      sourcemaps[0].bucket.bucketArn + "/*",
-                      `arn:${child.partition}:s3:::${bootstrap.bucket}/*`,
-                    ],
-                  }),
-                ],
-              }
-            );
+            const policy = new Policy(child, "SourcemapUploaderPolicy", {
+              statements: [
+                new PolicyStatement({
+                  effect: Effect.ALLOW,
+                  actions: ["s3:GetObject", "s3:PutObject"],
+                  resources: [
+                    sourcemaps[0].srcBucket.bucketArn + "/*",
+                    `arn:${child.partition}:s3:::${bootstrap.bucket}/*`,
+                  ],
+                }),
+              ],
+            });
             child.customResourceHandler.role?.attachInlinePolicy(policy);
 
-            const resource = new CustomResource(
-              child,
-              "FunctionSourcemapUploader",
-              {
-                serviceToken: child.customResourceHandler.functionArn,
-                resourceType: "Custom::FunctionSourcemapUploader",
-                properties: {
-                  app: this.name,
-                  stage: this.stage,
-                  bootstrap: bootstrap.bucket,
-                  bucket: sourcemaps[0].bucket.bucketName,
-                  functions: sourcemaps.map((s) => [s.func.functionArn, s.key]),
-                },
-              }
-            );
+            const resource = new CustomResource(child, "SourcemapUploader", {
+              serviceToken: child.customResourceHandler.functionArn,
+              resourceType: "Custom::SourcemapUploader",
+              properties: {
+                app: this.name,
+                stage: this.stage,
+                tarBucket: bootstrap.bucket,
+                srcBucket: sourcemaps[0].srcBucket.bucketName,
+                sourcemaps: sourcemaps.map((s) => [s.tarKey, s.srcKey]),
+              },
+            });
             resource.node.addDependency(policy);
           }
         }

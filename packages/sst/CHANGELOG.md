@@ -1,5 +1,91 @@
 # @serverless-stack/cli2
 
+## 2.32.3
+
+### Patch Changes
+
+- [#3444](https://github.com/sst/sst/pull/3444) [`ac26313e3`](https://github.com/sst/sst/commit/ac26313e3b86e7d1e3c4887d740679ad292d51aa) Thanks [@bayssmekanique](https://github.com/bayssmekanique)! - AstroSite: add static generation support
+
+## 2.32.2
+
+### Patch Changes
+
+- [`390b7d5d5`](https://github.com/sst/sst/commit/390b7d5d5fa13a10ec9f45e50af78f95cf37cc75) Thanks [@thdxr](https://github.com/thdxr)! - cli: dispose context object for node builds
+
+- [#3445](https://github.com/sst/sst/pull/3445) [`f3a378f66`](https://github.com/sst/sst/commit/f3a378f66076f996fdd6fbd274bd313caa98ea4f) Thanks [@fwang](https://github.com/fwang)! - Job: fix job type shows "never"
+
+- [`db7d815f9`](https://github.com/sst/sst/commit/db7d815f9ead81a9ceec79ddb1d3003b21f56f71) Thanks [@fwang](https://github.com/fwang)! - create-sst: fix react dependency
+
+## 2.32.1
+
+### Patch Changes
+
+- [`68ed1d280`](https://github.com/sst/sst/commit/68ed1d280144ff3e4d83f29444b62fb9c4fc305d) Thanks [@fwang](https://github.com/fwang)! - Service: do not exclude `.sst/types` for docker build
+
+- [#3435](https://github.com/sst/sst/pull/3435) [`8a7e6beb3`](https://github.com/sst/sst/commit/8a7e6beb35af06616769038d297b7ee0e7432f8c) Thanks [@alexabidri](https://github.com/alexabidri)! - SsrSite: allow customize "cdk.viewerProtocolPolicy"
+
+- [`988093b7a`](https://github.com/sst/sst/commit/988093b7aa35e7f1cf82c3b9ca9ee624cac966cf) Thanks [@fwang](https://github.com/fwang)! - AppSyncApi: respect scope for lazily added resolvers and data sources
+
+## 2.32.0
+
+### Minor Changes
+
+- [#3428](https://github.com/sst/sst/pull/3428) [`2b6528ec3`](https://github.com/sst/sst/commit/2b6528ec307ad8f3708941bbaa12812d94ed5d2d) Thanks [@bitpavel](https://github.com/bitpavel)! - SsrSite: add `invalidation` prop to customize CloudFront invalidation
+
+- [#3439](https://github.com/sst/sst/pull/3439) [`88ce024a8`](https://github.com/sst/sst/commit/88ce024a8276c54e68b0acdff5886bd84ee4453e) Thanks [@fwang](https://github.com/fwang)! - NextjsSite: upload sourcemaps to bootstrap bucket
+
+## 2.31.0
+
+### Minor Changes
+
+- [#3432](https://github.com/sst/sst/pull/3432) [`8e655cfb9`](https://github.com/sst/sst/commit/8e655cfb926e271275e45fdb3ea02c617db4e933) Thanks [@fwang](https://github.com/fwang)! - Sites: add `assets` option to allow customizing static file options
+
+### Patch Changes
+
+- [`5613c727a`](https://github.com/sst/sst/commit/5613c727a967f95daba0e23447d504552b8edc13) Thanks [@fwang](https://github.com/fwang)! - NextjsSite: finalize per-route logging
+
+## 2.30.4
+
+### Patch Changes
+
+- [#3431](https://github.com/sst/sst/pull/3431) [`b3abbfd19`](https://github.com/sst/sst/commit/b3abbfd19318e0e1ab94f590c2e5ed4619d5fe51) Thanks [@fwang](https://github.com/fwang)! - NextjsSite: add beta option for per-route logging [wip]
+
+## 2.30.3
+
+### Patch Changes
+
+- [`48c432320`](https://github.com/sst/sst/commit/48c4323201afd729ee9bbc662b3f4448a4fc190b) Thanks [@thdxr](https://github.com/thdxr)! - cli: rollback clearing dist folder on every synth
+
+- [#3426](https://github.com/sst/sst/pull/3426) [`bd4986a8c`](https://github.com/sst/sst/commit/bd4986a8c22ea2ee1121191ad2fb940ba16ec341) Thanks [@fwang](https://github.com/fwang)! - Update CDK to v2.101.1
+
+## 2.30.2
+
+### Patch Changes
+
+- [`7bb494883`](https://github.com/sst/sst/commit/7bb49488353a3035e109b0aa834ba4ccfeb08a57) Thanks [@fwang](https://github.com/fwang)! - NextjsSite: add `openNextVersion` to specify the OpenNext version for building the Next.js site
+
+## 2.30.1
+
+### Patch Changes
+
+- [`73943d36d`](https://github.com/sst/sst/commit/73943d36df2f2dfb0e37ff2a85fdaed92f76dad9) Thanks [@thdxr](https://github.com/thdxr)! - cli: prevent concurrent synth
+
+## 2.30.0
+
+### Minor Changes
+
+- [#3392](https://github.com/sst/sst/pull/3392) [`c823382f8`](https://github.com/sst/sst/commit/c823382f886c4a4b5f8a3e8c96ced6b9db80e271) Thanks [@bayssmekanique](https://github.com/bayssmekanique)! - SsrSite: improve cache deployment behavior and invalidation strategy
+
+### Patch Changes
+
+- [`c76d0fa05`](https://github.com/sst/sst/commit/c76d0fa05ad78ef5d880b38d99905113e0c84ac4) Thanks [@fwang](https://github.com/fwang)! - sst types: do not require AWS credentials to generate types
+
+- [#3422](https://github.com/sst/sst/pull/3422) [`8f9c4900b`](https://github.com/sst/sst/commit/8f9c4900be577fe2f2080fb7c9e6a44df41a649c) Thanks [@fwang](https://github.com/fwang)! - NextjsSite: fix edge import order
+
+- [#3411](https://github.com/sst/sst/pull/3411) [`9b719087b`](https://github.com/sst/sst/commit/9b719087b3d31e71e875ccae4452ed7b1b041dfa) Thanks [@fwang](https://github.com/fwang)! - NextjsSite: fix wrapper function for streaming
+
+- [#3407](https://github.com/sst/sst/pull/3407) [`220ef51d7`](https://github.com/sst/sst/commit/220ef51d7211fab2505236afe4ac2bae8a2289cb) Thanks [@dkershner6](https://github.com/dkershner6)! - NextjsSite: expose a static function to create server cache policy
+
 ## 2.29.2
 
 ### Patch Changes

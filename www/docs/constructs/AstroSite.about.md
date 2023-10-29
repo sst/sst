@@ -520,7 +520,7 @@ import { Certificate } from "aws-cdk-lib/aws-certificatemanager";
 
 new AstroSite(stack, "Site", {
   path: "my-astro-app/",
-  cutomDomain: {
+  customDomain: {
     isExternalDomain: true,
     domainName: "my-app.com",
     cdk: {

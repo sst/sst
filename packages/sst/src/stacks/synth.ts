@@ -6,6 +6,7 @@ import * as contextproviders from "sst-aws-cdk/lib/context-providers/index.js";
 import path from "path";
 import { VisibleError } from "../error.js";
 import fs from "fs/promises";
+import { Semaphore } from "../util/semaphore.js";
 
 interface SynthOptions {
   buildDir?: string;
@@ -17,6 +18,7 @@ interface SynthOptions {
   isActiveStack?: (stackName: string) => boolean;
 }
 
+const sem = new Semaphore(1);
 export async function synth(opts: SynthOptions) {
   Logger.debug("Synthesizing stacks...");
   const { App } = await import("../constructs/App.js");
@@ -26,11 +28,13 @@ export async function synth(opts: SynthOptions) {
 
   const cwd = process.cwd();
   process.chdir(project.paths.root);
+  const unlock = await sem.lock();
   try {
     return await synthInRoot();
   } catch (e) {
     throw e;
   } finally {
+    unlock();
     process.chdir(cwd);
   }
 
@@ -41,18 +45,8 @@ export async function synth(opts: SynthOptions) {
       buildDir: opts.buildDir || path.join(project.paths.out, "dist"),
     };
 
-    await fs.rm(opts.buildDir!, { recursive: true, force: true });
-    await fs.mkdir(opts.buildDir!, { recursive: true });
-
-    /*
-  console.log(JSON.stringify(cfg.context));
-  const executable = new CloudExecutable({
-    sdkProvider: await useAWSProvider(),
-    configuration: cfg,
-    synthesizer: async () => app.synth() as any
-  });
-  const { assembly } = await executable.synthesize(true);
-  */
+    // await fs.rm(opts.buildDir!, { recursive: true, force: true });
+    // await fs.mkdir(opts.buildDir!, { recursive: true });
     const cfg = new Configuration();
     await cfg.load();
     let previous = new Set<string>();

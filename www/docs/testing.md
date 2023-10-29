@@ -195,6 +195,9 @@ it("point-in-time recovery is enabled", async () => {
   // Create the Database stack
   app.stack(Database);
 
+  // Wait for resources to finalize
+  await app.finish();
+
   // Get the CloudFormation template of the stack
   const stack = getStack(Database);
   const template = Template.fromStack(stack);
@@ -207,6 +210,8 @@ it("point-in-time recovery is enabled", async () => {
   });
 });
 ```
+
+Note that `app` performs several tasks asynchronously, including building the function code and container images. It then modifies the template. To ensure you are testing against the finalized resources, call `await app.finish()` before running any tests.
 
 The `aws-cdk-lib/assertions` import is a CDK helper library that makes it easy to test against AWS resources created inside a stack. In the test above, we are checking if there is a DynamoDB table created with `PointInTimeRecoveryEnabled` set to `true`.
 

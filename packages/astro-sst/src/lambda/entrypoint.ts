@@ -51,15 +51,15 @@ export function createExports(
 
     // Process request
     const response = await app.render(request, routeData);
-    debug("response", response);
 
     // Stream response back to Cloudfront
-    await convertTo({
+    const result = await convertTo({
       type: internalEvent.type,
       response,
       responseStream,
-      cookies: Array.from(app.setCookieHeaders(response))
+      cookies: Array.from(app.setCookieHeaders(response)),
     });
+    debug("result", result);
   }
 
   async function bufferHandler(event: APIGatewayProxyEventV2) {
@@ -83,14 +83,15 @@ export function createExports(
 
     // Process request
     const response = await app.render(request, routeData);
-    debug("response", response);
 
     // Buffer response back to Cloudfront
-    return await convertTo({
+    const result = await convertTo({
       type: internalEvent.type,
       response,
-      cookies: Array.from(app.setCookieHeaders(response))
+      cookies: Array.from(app.setCookieHeaders(response)),
     });
+    debug("result", result);
+    return result;
   }
 
   return {

@@ -182,7 +182,7 @@ test("job is CronJobProps", async () => {
     Targets: [
       {
         Arn: {
-          "Fn::GetAtt": ["CronJob6D181881", "Arn"],
+          "Fn::GetAtt": ["CronJobCron59433AFD", "Arn"],
         },
         Id: "Target0",
         Input: '"abc"',
@@ -220,7 +220,7 @@ test("attachPermissions", async () => {
       ],
       Version: "2012-10-17",
     },
-    PolicyName: "CronJobServiceRoleDefaultPolicy283E5BD2",
+    PolicyName: "CronJobCronServiceRoleDefaultPolicy92B6B510",
   });
 });
 
@@ -240,6 +240,6 @@ test("bind", async () => {
       ],
       Version: "2012-10-17",
     },
-    PolicyName: "CronJobServiceRoleDefaultPolicy283E5BD2",
+    PolicyName: "CronJobCronServiceRoleDefaultPolicy92B6B510",
   });
 });

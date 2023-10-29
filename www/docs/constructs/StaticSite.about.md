@@ -424,24 +424,24 @@ new StaticSite(stack, "frontend", {
   buildOutput: "build",
   buildCommand: "npm run build",
   errorPage: "redirect_to_index_page",
-  fileOptions: [
-    {
-      exclude: "*",
-      include: "*.html",
-      cacheControl: "max-age=0,no-cache,no-store,must-revalidate",
-    },
-    {
-      exclude: "*",
-      include: ["*.js", "*.css"],
-      cacheControl: "max-age=31536000,public,immutable",
-    },
-  ],
+  assets: {
+    fileOptions: [
+      {
+        files: "**",
+        cacheControl: "max-age=0,no-cache,no-store,must-revalidate",
+      },
+      {
+        files: ["**/*.js", "**/*.css"],
+        cacheControl: "max-age=31536000,public,immutable",
+      },
+    ],
+  }
 });
 ```
 
-This configures all the `.html` files to not be cached by the browser, while the `.js` and `.css` files to be cached forever.
+This configures the `.js` and `.css` files to be cached forever, while the `.html` and other files to not be cached by the browser.
 
-Note that, you need to specify the `exclude: "*"` along with the `include` option. It allows you to pick the files you want, while excluding everything else.
+Note that the file options later in the array will take precedence over those earlier in the array.
 
 ### Content type
 
@@ -453,24 +453,15 @@ new StaticSite(stack, "frontend", {
   buildOutput: "build",
   buildCommand: "npm run build",
   errorPage: "redirect_to_index_page",
-  fileOptions: [
-    {
-      exclude: "*",
-      include: "*.html",
-      cacheControl: "max-age=0,no-cache,no-store,must-revalidate",
-    },
-    {
-      exclude: "*",
-      include: ["*.js", "*.css"],
-      cacheControl: "max-age=31536000,public,immutable",
-    },
-    {
-      exclude: "*",
-      include: ".well-known/site-association-json",
-      cacheControl: "max-age=31536000,public,immutable",
-      contentType: "application/json",
-    },
-  ],
+  assets: {
+    fileOptions: [
+      {
+        files: "**/a-json-file-without-extension",
+        cacheControl: "max-age=31536000,public,immutable",
+        contentType: "application/json",
+      },
+    ],
+  }
 });
 ```
 
@@ -510,12 +501,14 @@ new StaticSite(stack, "frontend", {
 
 Configure the internally created CDK `Distribution` instance.
 
-```js {4-6}
+```js
+import { HttpVersion } from "aws-cdk-lib/aws-cloudfront";
+
 new StaticSite(stack, "frontend", {
   path: "path/to/site",
   cdk: {
     distribution: {
-      comment: "Distribution for my React website",
+      httpVersion: HttpVersion.HTTP3,
     },
   },
 });

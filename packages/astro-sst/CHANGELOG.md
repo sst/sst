@@ -1,5 +1,33 @@
 # astro-sst
 
+## 2.32.3
+
+### Patch Changes
+
+- [#3444](https://github.com/sst/sst/pull/3444) [`ac26313e3`](https://github.com/sst/sst/commit/ac26313e3b86e7d1e3c4887d740679ad292d51aa) Thanks [@bayssmekanique](https://github.com/bayssmekanique)! - AstroSite: add static generation support
+
+## 2.32.2
+
+## 2.32.1
+
+## 2.32.0
+
+## 2.31.0
+
+## 2.30.4
+
+## 2.30.3
+
+## 2.30.2
+
+## 2.30.1
+
+## 2.30.0
+
+### Patch Changes
+
+- [#3420](https://github.com/sst/sst/pull/3420) [`c8a3509ff`](https://github.com/sst/sst/commit/c8a3509ff51d851170003e94ebd4bdf280e5f8d5) Thanks [@bayssmekanique](https://github.com/bayssmekanique)! - AstroSite: Fixed invalid format for set-cookie headers in server response
+
 ## 2.29.2
 
 ## 2.29.1

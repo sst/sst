@@ -9,6 +9,7 @@ import { Runtime } from "aws-cdk-lib/aws-lambda";
 import { bundle } from "./pythonBundling.js";
 import os from "os";
 import url from "url";
+import fs from "fs/promises";
 
 const RUNTIME_MAP: Record<string, Runtime> = {
   "python2.7": Runtime.PYTHON_2_7,
@@ -99,20 +100,23 @@ export const usePythonHandler = (): RuntimeHandler => {
           errors: [`Could not find src for ${input.props.handler}`],
         };
 
-      bundle({
-        installCommands: input.props.python?.installCommands,
-        entry: src,
-        runtime: RUNTIME_MAP[input.props.runtime!],
-        architecture: input.props.architecture,
-        outputPathSuffix: ".",
-        out: input.out,
-      });
-      /*
+      if (input.props.python?.noDocker !== true) {
+        bundle({
+          installCommands: input.props.python?.installCommands,
+          entry: src,
+          runtime: RUNTIME_MAP[input.props.runtime!],
+          architecture: input.props.architecture,
+          outputPathSuffix: ".",
+          out: input.out,
+        });
+      }
+
       await fs.cp(src, input.out, {
         recursive: true,
         filter: (src) => !src.includes(".sst"),
       });
 
+      /*
       if (await existsAsync(path.join(src, "Pipfile"))) {
         await execAsync("pipenv requirements > requirements.txt", {
           cwd: input.out,

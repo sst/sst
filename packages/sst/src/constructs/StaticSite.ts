@@ -4,12 +4,7 @@ import fs from "fs";
 import crypto from "crypto";
 import { execSync } from "child_process";
 import { Construct } from "constructs";
-import {
-  Token,
-  Duration,
-  RemovalPolicy,
-  CustomResource,
-} from "aws-cdk-lib/core";
+import { Token, RemovalPolicy, CustomResource } from "aws-cdk-lib/core";
 import {
   BlockPublicAccess,
   Bucket,
@@ -17,7 +12,6 @@ import {
   IBucket,
 } from "aws-cdk-lib/aws-s3";
 import { Asset } from "aws-cdk-lib/aws-s3-assets";
-import { Code, Function, Runtime } from "aws-cdk-lib/aws-lambda";
 import {
   BehaviorOptions,
   IDistribution,
@@ -27,8 +21,6 @@ import {
   ViewerProtocolPolicy,
 } from "aws-cdk-lib/aws-cloudfront";
 import { S3Origin } from "aws-cdk-lib/aws-cloudfront-origins";
-import { AwsCliLayer } from "aws-cdk-lib/lambda-layer-awscli";
-
 import { App } from "./App.js";
 import { Stack } from "./Stack.js";
 import { Distribution, DistributionDomainProps } from "./Distribution.js";
@@ -49,6 +41,8 @@ import {
 import { gray } from "colorette";
 import { useProject } from "../project.js";
 import { createAppContext } from "./context.js";
+import { Effect, Policy, PolicyStatement } from "aws-cdk-lib/aws-iam";
+import { VisibleError } from "../error.js";
 
 const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
 
@@ -114,37 +108,6 @@ export interface StaticSiteProps {
    * ```
    */
   buildOutput?: string;
-  /**
-   * Pass in a list of file options to configure cache control for different files. Behind the scenes, the `StaticSite` construct uses a combination of the `s3 cp` and `s3 sync` commands to upload the website content to the S3 bucket. An `s3 cp` command is run for each file option block, and the options are passed in as the command options.
-   *
-   * @default No cache control for HTML files, and a 1 year cache control for JS/CSS files.
-   * ```js
-   * [
-   *   {
-   *     exclude: "*",
-   *     include: "*.html",
-   *     cacheControl: "max-age=0,no-cache,no-store,must-revalidate",
-   *   },
-   *   {
-   *     exclude: "*",
-   *     include: ["*.js", "*.css"],
-   *     cacheControl: "max-age=31536000,public,immutable",
-   *   },
-   * ]
-   * ```
-   * @example
-   * ```js
-   * new StaticSite(stack, "Site", {
-   *   buildOutput: "dist",
-   *   fileOptions: [{
-   *     exclude: "*",
-   *     include: "*.js",
-   *     cacheControl: "max-age=31536000,public,immutable",
-   *   }]
-   * });
-   * ```
-   */
-  fileOptions?: StaticSiteFileOptions[];
   /**
    * Pass in a list of placeholder values to be replaced in the website content. For example, the follow configuration:
    *
@@ -215,11 +178,55 @@ export interface StaticSiteProps {
    * @example
    * ```js
    * new StaticSite(stack, "frontend", {
-   *  purge: false
+   *  purgeFiles: false
    * });
    * ```
    */
   purgeFiles?: boolean;
+  assets?: {
+    /**
+     * Character encoding for text based assets uploaded to S3 (ex: html, css, js, etc.). If "none" is specified, no charset will be returned in header.
+     * @default utf-8
+     * @example
+     * ```js
+     * assets: {
+     *   textEncoding: "iso-8859-1"
+     * }
+     * ```
+     */
+    textEncoding?: "utf-8" | "iso-8859-1" | "windows-1252" | "ascii" | "none";
+    /**
+     * Pass in a list of file options to configure cache control for different files. Behind the scenes, the `StaticSite` construct uses a combination of the `s3 cp` and `s3 sync` commands to upload the website content to the S3 bucket. An `s3 cp` command is run for each file option block, and the options are passed in as the command options.
+     * @default No cache control for HTML files, and a 1 year cache control for JS/CSS files.
+     * ```js
+     * assets: {
+     *   fileOptions: [
+     *     {
+     *       files: "**",
+     *       cacheControl: "max-age=0,no-cache,no-store,must-revalidate",
+     *     },
+     *     {
+     *       files: "**\/*.{js,css}",
+     *       cacheControl: "max-age=31536000,public,immutable",
+     *     },
+     *   ],
+     * }
+     * ```
+     * @example
+     * ```js
+     * assets: {
+     *   fileOptions: [
+     *     {
+     *       files: "**\/*.zip",
+     *       cacheControl: "private,no-cache,no-store,must-revalidate",
+     *       contentType: "application/zip",
+     *     },
+     *   ],
+     * }
+     * ```
+     */
+    fileOptions?: StaticSiteFileOptions[];
+  };
   dev?: {
     /**
      * When running `sst dev, site is not deployed. This is to ensure `sst dev` can start up quickly.
@@ -353,13 +360,13 @@ export class StaticSite extends Construct implements SSTConstruct {
     this.id = id;
     this.props = {
       path: ".",
-      waitForInvalidation: false,
       ...props,
     };
 
     this.doNotDeploy =
       !stack.isActive || (app.mode === "dev" && !this.props.dev?.deploy);
 
+    this.validateDeprecatedFileOptions();
     this.generateViteTypes();
     useSites().add(stack.stackName, id, this.props);
 
@@ -377,18 +384,15 @@ export class StaticSite extends Construct implements SSTConstruct {
       this.buildApp();
 
       // Create S3 Deployment
-      const cliLayer = new AwsCliLayer(this, "AwsCliLayer");
       const assets = this.createS3Assets();
       const filenamesAsset = this.bundleFilenamesAsset();
-      const s3deployCR = this.createS3Deployment(
-        cliLayer,
-        assets,
-        filenamesAsset
-      );
+      const s3deployCR = this.createS3Deployment(assets, filenamesAsset);
       this.distribution.node.addDependency(s3deployCR);
 
       // Invalidate CloudFront
-      this.distribution.createInvalidation(this.generateInvalidationId(assets));
+      this.distribution.createInvalidation({
+        version: this.generateInvalidationId(assets),
+      });
     });
 
     app.registerTypes(this);
@@ -473,6 +477,15 @@ export class StaticSite extends Construct implements SSTConstruct {
         ],
       },
     };
+  }
+
+  private validateDeprecatedFileOptions() {
+    // @ts-expect-error
+    if (this.props.fileOptions) {
+      throw new VisibleError(
+        `In the "${this.node.id}" construct, the "fileOptions" property has been replaced by "assets.fileOptions". More details on upgrading - https://docs.sst.dev/upgrade-guide#upgrade-to-v2310`
+      );
+    }
   }
 
   private generateViteTypes() {
@@ -670,88 +683,62 @@ interface ImportMeta {
   }
 
   private createS3Deployment(
-    cliLayer: AwsCliLayer,
     assets: Asset[],
     filenamesAsset?: Asset
   ): CustomResource {
-    const fileOptions: StaticSiteFileOptions[] = this.props.fileOptions || [
-      {
-        exclude: "*",
-        include: "*.html",
-        cacheControl: "max-age=0,no-cache,no-store,must-revalidate",
-      },
-      {
-        exclude: "*",
-        include: ["*.js", "*.css"],
-        cacheControl: "max-age=31536000,public,immutable",
-      },
-    ];
-
-    // Create a Lambda function that will be doing the uploading
-    const uploader = new Function(this, "S3Uploader", {
-      code: Code.fromAsset(
-        path.join(__dirname, "../support/base-site-custom-resource")
-      ),
-      layers: [cliLayer],
-      runtime: Runtime.PYTHON_3_11,
-      handler: "s3-upload.handler",
-      timeout: Duration.minutes(15),
-      memorySize: 1024,
+    const stack = Stack.of(this) as Stack;
+    const policy = new Policy(this, "S3UploaderPolicy", {
+      statements: [
+        new PolicyStatement({
+          effect: Effect.ALLOW,
+          actions: ["lambda:InvokeFunction"],
+          resources: [stack.customResourceHandler.functionArn],
+        }),
+        new PolicyStatement({
+          effect: Effect.ALLOW,
+          actions: ["s3:ListBucket", "s3:PutObject", "s3:DeleteObject"],
+          resources: [this.bucket.bucketArn, `${this.bucket.bucketArn}/*`],
+        }),
+        new PolicyStatement({
+          effect: Effect.ALLOW,
+          actions: ["s3:GetObject"],
+          resources: [`${assets[0].bucket.bucketArn}/*`],
+        }),
+      ],
     });
-    this.bucket.grantReadWrite(uploader);
-    assets.forEach((asset) => asset.grantRead(uploader));
+    stack.customResourceHandler.role?.attachInlinePolicy(policy);
 
-    // Create the custom resource function
-    const handler = new Function(this, "S3Handler", {
-      code: Code.fromAsset(
-        path.join(__dirname, "../support/base-site-custom-resource")
-      ),
-      layers: [cliLayer],
-      runtime: Runtime.PYTHON_3_11,
-      handler: "s3-handler.handler",
-      timeout: Duration.minutes(15),
-      memorySize: 1024,
-      environment: {
-        UPLOADER_FUNCTION_NAME: uploader.functionName,
-      },
-    });
-    this.bucket.grantReadWrite(handler);
-    filenamesAsset?.grantRead(handler);
-    uploader.grantInvoke(handler);
-
-    // Create custom resource
-    return new CustomResource(this, "S3Deployment", {
-      serviceToken: handler.functionArn,
-      resourceType: "Custom::SSTBucketDeployment",
+    const resource = new CustomResource(this, "S3Uploader", {
+      serviceToken: stack.customResourceHandler.functionArn,
+      resourceType: "Custom::S3Uploader",
       properties: {
-        Sources: assets.map((asset) => ({
-          BucketName: asset.s3BucketName,
-          ObjectKey: asset.s3ObjectKey,
+        sources: assets.map((asset) => ({
+          bucketName: asset.s3BucketName,
+          objectKey: asset.s3ObjectKey,
         })),
-        DestinationBucketName: this.bucket.bucketName,
-        Filenames: filenamesAsset && {
-          BucketName: filenamesAsset.s3BucketName,
-          ObjectKey: filenamesAsset.s3ObjectKey,
+        destinationBucketName: this.bucket.bucketName,
+        filenames: filenamesAsset && {
+          bucketName: filenamesAsset.s3BucketName,
+          objectKey: filenamesAsset.s3ObjectKey,
         },
-        FileOptions: (fileOptions || []).map(
-          ({ exclude, include, cacheControl, contentType }) => {
-            if (typeof exclude === "string") {
-              exclude = [exclude];
-            }
-            if (typeof include === "string") {
-              include = [include];
-            }
-            return [
-              ...exclude.map((per) => ["--exclude", per]),
-              ...include.map((per) => ["--include", per]),
-              ["--cache-control", cacheControl],
-              contentType ? ["--content-type", contentType] : [],
-            ].flat();
-          }
-        ),
-        ReplaceValues: this.getS3ContentReplaceValues(),
+        textEncoding: this.props.assets?.textEncoding ?? "utf-8",
+        fileOptions: [
+          {
+            files: "**",
+            cacheControl: "max-age=0,no-cache,no-store,must-revalidate",
+          },
+          {
+            files: ["**/*.js", "**/*.css"],
+            cacheControl: "max-age=31536000,public,immutable",
+          },
+          ...(this.props.assets?.fileOptions || []),
+        ],
+        replaceValues: this.getS3ContentReplaceValues(),
       },
     });
+    resource.node.addDependency(policy);
+
+    return resource;
   }
 
   /////////////////////
