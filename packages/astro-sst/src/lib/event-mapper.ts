@@ -370,24 +370,24 @@ function convertToCfResult({
   return response;
 }
 
-function normalizeApigV2Headers(event: APIGatewayProxyEventV2) {
-  const { headers: rawHeaders, cookies } = event;
-
-  const headers: Record<string, string> = {};
+function normalizeApigV2Headers({ headers, cookies }: APIGatewayProxyEventV2) {
+  const combinedHeaders: Record<string, string> = {};
 
   if (Array.isArray(cookies)) {
-    headers["cookie"] = cookies.join("; ");
+    combinedHeaders["cookie"] = cookies.join("; ");
   }
 
-  for (const [key, value] of Object.entries(rawHeaders || {})) {
-    headers[key.toLowerCase()] = value!;
+  for (const [key, value] of Object.entries(headers ?? {})) {
+    combinedHeaders[key.toLowerCase()] = value!;
   }
 
-  return headers;
+  return combinedHeaders;
 }
 
-function normalizeApigV2Body(event: APIGatewayProxyEventV2): Buffer {
-  const { body, isBase64Encoded } = event;
+function normalizeApigV2Body({
+  body,
+  isBase64Encoded,
+}: APIGatewayProxyEventV2): Buffer {
   if (Buffer.isBuffer(body)) {
     return body;
   } else if (typeof body === "string") {
@@ -398,61 +398,63 @@ function normalizeApigV2Body(event: APIGatewayProxyEventV2): Buffer {
   return Buffer.from("", "utf8");
 }
 
-function normalizeApigV1QueryParams(event: APIGatewayProxyEvent) {
+function normalizeApigV1QueryParams({
+  multiValueQueryStringParameters,
+  queryStringParameters,
+}: APIGatewayProxyEvent) {
   const params = new URLSearchParams();
-  if (event.multiValueQueryStringParameters) {
-    for (const [key, value] of Object.entries(
-      event.multiValueQueryStringParameters
-    )) {
-      if (value !== undefined) {
-        for (const v of value) {
-          params.append(key, v);
-        }
+  for (const [key, value] of Object.entries(
+    multiValueQueryStringParameters ?? {}
+  )) {
+    if (value !== undefined) {
+      for (const v of value) {
+        params.append(key, v);
       }
     }
   }
-  if (event.queryStringParameters) {
-    for (const [key, value] of Object.entries(event.queryStringParameters)) {
-      if (value !== undefined) {
-        params.append(key, value);
-      }
+  for (const [key, value] of Object.entries(queryStringParameters ?? {})) {
+    if (value !== undefined) {
+      params.append(key, value);
     }
   }
   const value = params.toString();
   return value ?? "";
 }
 
-function normalizeApigV1Headers(event: APIGatewayProxyEvent) {
-  event.multiValueHeaders;
-  const headers: Record<string, string> = {};
+function normalizeApigV1Headers({
+  multiValueHeaders,
+  headers,
+}: APIGatewayProxyEvent) {
+  const combinedHeaders: Record<string, string> = {};
 
-  for (const [key, values] of Object.entries(event.multiValueHeaders)) {
+  for (const [key, values] of Object.entries(multiValueHeaders ?? {})) {
     if (values) {
-      headers[key.toLowerCase()] = values.join(",");
+      combinedHeaders[key.toLowerCase()] = values.join(",");
     }
   }
-  for (const [key, value] of Object.entries(event.headers)) {
+  for (const [key, value] of Object.entries(headers ?? {})) {
     if (value) {
-      headers[key.toLowerCase()] = value;
+      combinedHeaders[key.toLowerCase()] = value;
     }
   }
 
-  return headers;
+  return combinedHeaders;
 }
 
 function normalizeCfHeaders(event: CloudFrontRequestEvent) {
-  const headers: Record<string, string> = {};
+  const combinedHeaders: Record<string, string> = {};
 
-  const rawHeaders = event.Records[0].cf.request.headers;
-  for (const [key, values] of Object.entries(rawHeaders)) {
+  for (const [key, values] of Object.entries(
+    event.Records[0].cf.request.headers
+  )) {
     for (const { value } of values) {
       if (value) {
-        headers[key.toLowerCase()] = value;
+        combinedHeaders[key.toLowerCase()] = value;
       }
     }
   }
 
-  return headers;
+  return combinedHeaders;
 }
 
 function stringifyCookies(cookies: Cookie[]) {
