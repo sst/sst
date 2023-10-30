@@ -582,12 +582,7 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
 
     this.bucket = bucket;
     this.distribution = distribution;
-    this.serverFunction =
-      ssrFunctions.length > 0
-        ? ssrFunctions[0]
-        : Object.values(edgeFunctions).length > 0
-        ? Object.values(edgeFunctions)[0]
-        : undefined;
+    this.serverFunction = ssrFunctions[0] ?? Object.values(edgeFunctions)[0];
 
     app.registerTypes(this);
 
