@@ -1,5 +1,11 @@
 # astro-sst
 
+## 2.32.3
+
+### Patch Changes
+
+- [#3444](https://github.com/sst/sst/pull/3444) [`ac26313e3`](https://github.com/sst/sst/commit/ac26313e3b86e7d1e3c4887d740679ad292d51aa) Thanks [@bayssmekanique](https://github.com/bayssmekanique)! - AstroSite: add static generation support
+
 ## 2.32.2
 
 ## 2.32.1

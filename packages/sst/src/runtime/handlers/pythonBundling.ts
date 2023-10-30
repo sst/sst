@@ -132,11 +132,6 @@ export function bundle(options: BundlingOptions & { out: string }) {
   if (hasDeps || hasInstallCommands) {
     image.cp(`${BUNDLER_DEPENDENCIES_CACHE}/.`, outputPath);
   }
-
-  // Copy source code to the bundle.
-  fs.cpSync(entry, outputPath, {
-    recursive: true,
-  });
 }
 
 /**
