@@ -52,24 +52,18 @@ function getAdapter({
       };
 }
 
-export default function createIntegration({
-  deploymentStrategy,
-  responseMode,
-  serverRoutes,
-}: EntrypointParameters = {}): AstroIntegration {
+export default function createIntegration(entrypointParameters: EntrypointParameters = {}): AstroIntegration {
   const integrationConfig: IntegrationConfig = {
-    deploymentStrategy: deploymentStrategy ?? "regional",
-    responseMode: responseMode ?? "buffer",
-    serverRoutes: serverRoutes ?? [],
+    deploymentStrategy: entrypointParameters.deploymentStrategy ?? "regional",
+    responseMode: entrypointParameters.responseMode ?? "buffer",
+    serverRoutes: entrypointParameters.serverRoutes ?? [],
   };
 
-  if (deploymentStrategy !== "regional" && responseMode === "stream") {
+  if (integrationConfig.deploymentStrategy !== "regional" && integrationConfig.responseMode === "stream") {
     throw new Error(
-      `Deployment strategy ${deploymentStrategy} does not support streaming responses. Use 'buffer' response mode.`
+      `Deployment strategy ${integrationConfig.deploymentStrategy} does not support streaming responses. Use 'buffer' response mode.`
     );
   }
-
-  BuildMeta.setIntegrationConfig(integrationConfig);
 
   return {
     name: PACKAGE_NAME,
@@ -80,11 +74,11 @@ export default function createIntegration({
           config.output === "static"
         ) {
           // If the user has not specified an output, we will allow the Astro config to override default deployment strategy.
-          if (typeof deploymentStrategy === "undefined") {
+          if (typeof entrypointParameters.deploymentStrategy === "undefined") {
             integrationConfig.deploymentStrategy = "static";
           } else {
             console.log(
-              `[astro-sst] Overriding output to 'server' to support ${deploymentStrategy} deployment.`
+              `[astro-sst] Overriding output to 'server' to support ${integrationConfig.deploymentStrategy} deployment.`
             );
             updateConfig({
               output: "server",
@@ -97,12 +91,14 @@ export default function createIntegration({
           config.output !== "static"
         ) {
           console.log(
-            `[astro-sst] Overriding output to 'static' to support ${deploymentStrategy} deployment.`
+            `[astro-sst] Overriding output to 'static' to support ${integrationConfig.deploymentStrategy} deployment.`
           );
           updateConfig({
             output: "static",
           });
         }
+
+        BuildMeta.setIntegrationConfig(integrationConfig);
       },
       "astro:config:done": ({ config, setAdapter }) => {
         BuildMeta.setAstroConfig(config);
