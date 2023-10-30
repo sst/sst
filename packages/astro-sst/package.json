@@ -19,7 +19,7 @@
   ],
   "bugs": "https://github.com/sst/sst/issues",
   "exports": {
-    "./": "./dist/adapter.js",
+    ".": "./dist/adapter.js",
     "./entrypoint": "./dist/entrypoint.js",
     "./edge": "./dist/edge/adapter.js",
     "./lambda": "./dist/lambda/adapter.js",
