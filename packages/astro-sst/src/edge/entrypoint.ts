@@ -32,21 +32,15 @@ export function createExports(manifest: SSRManifest) {
 
     // Process request
     const response = await app.render(request);
-    debug("response", response);
 
-    return await convertTo({
+    const convertedResponse = await convertTo({
       type: internalEvent.type,
       response,
-      cookies: app.setCookieHeaders
-        ? (() => {
-            const cookies: string[] = [];
-            for (const header of app.setCookieHeaders(response)) {
-              cookies.push(header);
-            }
-            return cookies;
-          })()
-        : undefined,
+      cookies: Array.from(app.setCookieHeaders(response)),
     });
+
+    debug("response", convertedResponse);
+    return convertedResponse;
   }
 
   return { handler };

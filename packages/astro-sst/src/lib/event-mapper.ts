@@ -142,10 +142,14 @@ export async function convertTo({
   cookies: appCookies,
 }: InternalResultInput) {
   // Parse headers (except cookies)
-  const headers: { [key: string]: string } = Object.fromEntries(
+  const headers: { [key: string]: string } = Array.from(
     response.headers.entries()
-  );
-  Object.assign(headers, { "set-cookie": undefined });
+  )
+    .filter(([key]) => key !== "set-cookie")
+    .reduce((headers, [key, value]) => {
+      headers[key] = value;
+      return headers;
+    }, {} as { [key: string]: string });
 
   // Parse cookies
   const cookies = parse(
@@ -200,7 +204,9 @@ function convertToApigV1Result({
   cookies,
 }: InternalResult): APIGatewayProxyResult {
   const multiValueHeaders: Record<string, string[]> = {};
-  multiValueHeaders["set-cookie"] = stringifyCookies(cookies);
+  if (cookies.length > 0) {
+    multiValueHeaders["set-cookie"] = stringifyCookies(cookies);
+  }
 
   const response: APIGatewayProxyResult = {
     statusCode,
@@ -223,7 +229,7 @@ function convertToApigV2Result({
   const response: APIGatewayProxyResultV2 = {
     statusCode,
     headers,
-    cookies: stringifyCookies(cookies),
+    cookies: cookies.length > 0 ? stringifyCookies(cookies) : undefined,
     body,
     isBase64Encoded,
   };
@@ -245,11 +251,11 @@ function convertToApigV2StreamingResult({
 
   const metadata = {
     statusCode,
-    headers: {
-      ...headers,
-      "set-cookie": stringifyCookies(cookies).join(", "),
-    },
+    headers,
   };
+  if (cookies.length > 0) {
+    metadata.headers["set-cookie"] = stringifyCookies(cookies).join(", ");
+  }
   responseStream = awslambda.HttpResponseStream.from(responseStream, metadata);
 
   if (!body) {
