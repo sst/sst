@@ -502,7 +502,7 @@ export class EdgeFunction extends Construct {
         FunctionBucket: lambdaBucket.getAttString("BucketName"),
         FunctionParams: {
           Description: `${this.node.id} handler`,
-          Handler: handler,
+          Handler: path.posix.join(...handler.split(path.sep)),
           Code: {
             S3Bucket: assetBucket,
             S3Key: assetKey,
