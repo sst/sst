@@ -76,6 +76,23 @@ export default function createIntegration({
     hooks: {
       "astro:config:setup": ({ config, updateConfig }) => {
         if (
+          integrationConfig.deploymentStrategy !== "static" &&
+          config.output === "static"
+        ) {
+          // If the user has not specified an output, we will allow the Astro config to override default deployment strategy.
+          if (typeof deploymentStrategy === "undefined") {
+            integrationConfig.deploymentStrategy = "static";
+          } else {
+            console.log(
+              `[astro-sst] Overriding output to 'server' to support ${deploymentStrategy} deployment.`
+            );
+            updateConfig({
+              output: "server",
+            });
+          }
+        }
+
+        if (
           integrationConfig.deploymentStrategy === "static" &&
           config.output !== "static"
         ) {
@@ -84,17 +101,6 @@ export default function createIntegration({
           );
           updateConfig({
             output: "static",
-          });
-        }
-        if (
-          integrationConfig.deploymentStrategy !== "static" &&
-          config.output === "static"
-        ) {
-          console.log(
-            `[astro-sst] Overriding output to 'server' to support ${deploymentStrategy} deployment.`
-          );
-          updateConfig({
-            output: "server",
           });
         }
       },
