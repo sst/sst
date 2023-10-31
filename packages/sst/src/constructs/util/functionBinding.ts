@@ -40,6 +40,12 @@ export interface FunctionBindingProps {
         type: "site_url";
         value: string;
       }
+    | {
+        // used for future/auth as we need to pass in the auth_id with a
+        // specific environment name
+        type: "auth_id";
+        value: string;
+      }
   >;
 }
 
@@ -56,6 +62,8 @@ export function bindEnvironment(c: SSTConstruct) {
         environment[envName] = placeholderSecretValue();
       } else if (variable.type === "secret_reference") {
         environment[envName] = placeholderSecretReferenceValue(variable.secret);
+      } else if (variable.type === "auth_id") {
+        environment["AUTH_ID"] = variable.value;
       }
     });
   }
