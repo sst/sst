@@ -147,6 +147,7 @@ export class Auth extends Construct implements SSTConstruct {
             "ssm:GetParameter",
             "ssm:PutParameter",
             "ssm:DeleteParameter",
+            "ssm:DeleteParameters",
           ],
           resources: [
             `arn:${stack.partition}:ssm:${stack.region}:${stack.account}:parameter/*`,
