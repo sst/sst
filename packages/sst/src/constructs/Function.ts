@@ -555,22 +555,22 @@ export interface PythonProps {
   installCommands?: string[];
 
   /**
-   * This options skips the python bundle step. If you set this flag to true, you must ensure
+   * This options skips the Python bundle step. If you set this flag to `true`, you must ensure
    * that either:
    *
-   * 1. your python build does not require dependencies
-   * 2. you have already installed production dependencies before running `sst deploy`.
+   * 1. Your Python build does not require dependencies.
+   * 2. Or, you've already installed production dependencies before running `sst deploy`.
    *
    * One solution to accomplish this is to pre-compile your production dependencies to some
-   * temporary directory, using pip's `--platform` argument to ensure python pre-built wheels are
-   * used and that your builds match your target lambda runtime, and use SST's `copyFiles`
+   * temporary directory, using pip's `--platform` argument to ensure Python pre-built wheels are
+   * used and that your builds match your target Lambda runtime, and use SST's `copyFiles`
    * option to make sure these dependencies make it into your final deployment build.
    *
-   * This can also help speed up python lambdas which do not have external dependencies. By
+   * This can also help speed up Python Lambdas which do not have external dependencies. By
    * default, SST will still run a docker file that is essentially a no-op if you have no
    * dependencies. This option will bypass that step, even if you have a `Pipfile`, a `poetry.toml`,
    * a `pyproject.toml`, or a `requirements.txt` (which would normally trigger an all-dependencies
-   * docker build).
+   * Docker build).
    *
    * Enabling this option implies that you have accounted for all of the above and are handling
    * your own build processes, and you are doing this for the sake of build optimization.
