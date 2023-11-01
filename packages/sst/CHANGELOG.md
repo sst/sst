@@ -1,5 +1,15 @@
 # @serverless-stack/cli2
 
+## 2.33.2
+
+### Patch Changes
+
+- [`8b802f118`](https://github.com/sst/sst/commit/8b802f118a78a296d43b229811e26ae60e13f616) Thanks [@fwang](https://github.com/fwang)! - Service: fix sst bind fails to bind resources
+
+- [`1705badf0`](https://github.com/sst/sst/commit/1705badf09675f802347e31fbc6b763ab87defa0) Thanks [@fwang](https://github.com/fwang)! - Bootstrap: allow overriding bucket name
+
+- [`6511a17a6`](https://github.com/sst/sst/commit/6511a17a626beb2e2d21f84e480d8769100365e6) Thanks [@fwang](https://github.com/fwang)! - Service: support configuring ALB subnets
+
 ## 2.33.1
 
 ### Patch Changes
