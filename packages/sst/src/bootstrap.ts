@@ -236,6 +236,7 @@ export async function bootstrapSST(cdkBucket: string) {
         bucketArn: `arn:${stack.partition}:s3:::${cdkBucket}`,
       }
     : new Bucket(stack, region!, {
+        bucketName: bootstrap?.bucketName,
         encryption: BucketEncryption.S3_MANAGED,
         removalPolicy: RemovalPolicy.DESTROY,
         autoDeleteObjects: true,
