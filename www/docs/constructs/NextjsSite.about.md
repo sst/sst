@@ -593,3 +593,17 @@ new NextjsSite(stack, "Site", {
   },
 });
 ```
+
+## Common Issues
+
+### Next.js app built twice
+
+When running `sst build` or `sst deploy`, you might notice the Next.js app building twice. This often occurs if you've configured custom domains or VPC within your `NextjsSite` construct or elsewhere in your app.
+
+SST (AWS CDK) may need to look up specific details from the AWS account where the app is deployed. For instance, SST looks up the Route 53 hosted zone data for a custom domain; and fetches AWS region details when referencing an existing VPC. SST stores these details in `cdk.context.json`.
+
+If `cdk.context.json` file is absent, SST builds the app, generates the `cdk.context.json` file, and then builds again.
+
+To avoid building the Next.js app twice, ensure the `cdk.context.json` file is committed to your git repository.
+
+Likewise, if the app builds twice in your CI environment, commit any modifications to `cdk.context.json`.
