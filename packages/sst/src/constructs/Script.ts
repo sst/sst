@@ -28,7 +28,7 @@ export interface ScriptProps {
    * import { Script } from "sst/constructs";
    *
    * new Script(stack, "Script", {
-   *   onCreate: "src/script.create",
+   *   onCreate: "src/function.create",
    *   params: {
    *     hello: "world",
    *   },
@@ -44,7 +44,7 @@ export interface ScriptProps {
    * import { Script } from "sst/constructs";
    *
    * new Script(stack, "Script", {
-   *   onUpdate: "src/function.handler",
+   *   onUpdate: "src/function.update",
    *   version: "v17",
    * });
    * ```
@@ -72,7 +72,7 @@ export interface ScriptProps {
    * @example
    * ```js
    * new Script(stack, "Api", {
-   *   onCreate: "src/function.handler",
+   *   onCreate: "src/function.create",
    * })
    * ```
    */
@@ -85,7 +85,7 @@ export interface ScriptProps {
    * @example
    * ```js
    * new Script(stack, "Api", {
-   *   onUpdate: "src/function.handler",
+   *   onUpdate: "src/function.update",
    * })
    * ```
    */
@@ -95,7 +95,7 @@ export interface ScriptProps {
    * @example
    * ```js
    * new Script(stack, "Api", {
-   *   onDelete: "src/function.handler",
+   *   onDelete: "src/function.delete",
    * })
    * ```
    */
