@@ -1,5 +1,17 @@
 # @serverless-stack/cli2
 
+## 2.33.0
+
+### Minor Changes
+
+- [#3434](https://github.com/sst/sst/pull/3434) [`3d72f1c79`](https://github.com/sst/sst/commit/3d72f1c796737c3ed7d0ad47e63c25f752d96f7e) Thanks [@rubythulhu](https://github.com/rubythulhu)! - Adds support for bypassing docker build for python (via an optional flag), and moves python file-copy processes to a place that can be async.
+
+### Patch Changes
+
+- [`fc0a18d1b`](https://github.com/sst/sst/commit/fc0a18d1b18321326be96fc1cbb17ed8a9d72f5f) Thanks [@thdxr](https://github.com/thdxr)! - deps: bump aws iot package
+
+- [#3417](https://github.com/sst/sst/pull/3417) [`2e2d425dc`](https://github.com/sst/sst/commit/2e2d425dc29cb78ebab63cf31c00ec00af0ddec2) Thanks [@michaelgmcd](https://github.com/michaelgmcd)! - fix: add delete parameters permissions to AuthKeys role
+
 ## 2.32.3
 
 ### Patch Changes
