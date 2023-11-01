@@ -344,6 +344,26 @@ new Service(stack, "MyService", {
 
 ### Configuring Application Load Balancer
 
+Here's an example of configuring the Application Load Balancer subnets.
+
+```js
+import { SubnetType, Vpc } from "aws-cdk-lib/aws-ec2";
+
+new Service(stack, "MyService", {
+  path: "./service",
+  cdk: {
+    applicationLoadBalancer: {
+      vpcSubnets: { subnetType: SubnetType.PUBLIC }
+    },
+    vpc: Vpc.fromLookup(stack, "VPC", {
+      vpcId: "vpc-xxxxxxxxxx",
+    }),
+  },
+});
+```
+
+### Configuring Application Load Balancer Target
+
 Here's an example of configuring the Application Load Balancer health check.
 
 ```js

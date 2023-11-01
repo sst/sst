@@ -68,6 +68,7 @@ import { LogGroup, LogRetention, RetentionDays } from "aws-cdk-lib/aws-logs";
 import { Platform } from "aws-cdk-lib/aws-ecr-assets";
 import {
   ApplicationLoadBalancer,
+  ApplicationLoadBalancerProps,
   ApplicationTargetGroup,
   ApplicationTargetGroupProps,
 } from "aws-cdk-lib/aws-elasticloadbalancingv2";
@@ -461,7 +462,9 @@ export interface ServiceProps {
      * }
      * ```
      */
-    applicationLoadBalancer?: boolean;
+    applicationLoadBalancer?:
+      | boolean
+      | Omit<ApplicationLoadBalancerProps, "vpc">;
     /**
      * Customize the Application Load Balancer's target group.
      * @default true
@@ -942,6 +945,9 @@ export class Service extends Construct implements SSTConstruct {
     const alb = new ApplicationLoadBalancer(this, "LoadBalancer", {
       vpc,
       internetFacing: true,
+      ...(cdk?.applicationLoadBalancer === true
+        ? {}
+        : cdk?.applicationLoadBalancer),
     });
     const listener = alb.addListener("Listener", { port: 80 });
     const target = listener.addTargets("TargetGroup", {
