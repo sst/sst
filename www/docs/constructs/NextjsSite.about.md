@@ -257,6 +257,56 @@ This cost estimate is based on the `us-east-1` region pricing and does not consi
 
 ---
 
+## Logging
+
+By default, routes for the app server function log to a common AWS CloudWatch log group. However, you can configure each route to log to its own group:
+
+```js
+new NextjsSite(stack, "Site", {
+  path: "my-next-app/",
+  logging: "per-route",
+});
+```
+
+With per-route logging, the resources page shows a breakdown of all routes. Click on any route to see its logs.
+
+![Next.js per route logging](/img/nextjssite/per-route-logging.png)
+
+:::info
+Starting the next minor release, "per-route" will become the default logging behavior.
+:::
+
+---
+
+## Sourcemap
+
+Next.js uses webpack to bundle your code, so the stack trace line numbers might not match. Turning on sourcemap when building your Next.js app can fix this.
+
+To turn on sourcemap, update your Next.js config:
+
+```diff title="next.config.js"
+const nextConfig = {
++ webpack: (config) => {
++   config.devtool = "source-map";
++   return config;
++ },
+};
+```
+
+Now when your Next.js app builds, it'll generate the sourcemap files alongside your code. SST uploads these files to the [bootstrap bucket](../advanced/bootstrapping.md).
+
+![Next.js sourcemap files](/img/nextjssite/sourcemap-files.png)
+
+:::info
+The sourcemap files are not added to the server bundle, keeping the function size small.
+:::
+
+With sourcemap active, the [SST Console](../console.md) will display the error source with the right context.
+
+![Next.js error stack trace](/img/nextjssite/error-stack-trace.png)
+
+---
+
 ## Examples
 
 ### Configuring custom domains
@@ -431,7 +481,7 @@ new NextjsSite(stack, "Site", {
 
 Note that VPC is only supported when deploying to a [single region](#single-region-vs-edge).
 
-```js {12-17}
+```js
 import { Vpc, SubnetType } from "aws-cdk-lib/aws-ec2";
 
 // Create a VPC
@@ -460,7 +510,7 @@ new NextjsSite(stack, "Site", {
 
 #### Configuring log retention
 
-```js {6-8}
+```js
 import { RetentionDays } from "aws-cdk-lib/aws-logs";
 
 new NextjsSite(stack, "Site", {
@@ -475,7 +525,7 @@ new NextjsSite(stack, "Site", {
 
 #### Using an existing S3 Bucket
 
-```js {6}
+```js
 import { Bucket } from "aws-cdk-lib/aws-s3";
 
 new NextjsSite(stack, "Site", {
@@ -528,3 +578,32 @@ new NextjsSite(stack, "Site", {
   },
 });
 ```
+
+#### Enabling HTTP/3 support
+
+```js
+import { HttpVersion } from "aws-cdk-lib/aws-cloudfront";
+
+new NextjsSite(stack, "Site", {
+  path: "my-next-app/",
+  cdk: {
+    distribution: {
+      httpVersion: HttpVersion.HTTP3,
+    },
+  },
+});
+```
+
+## Common Issues
+
+### Next.js app built twice
+
+When running `sst build` or `sst deploy`, you might notice the Next.js app building twice. This often occurs if you've configured custom domains or VPC within your `NextjsSite` construct or elsewhere in your app.
+
+SST (AWS CDK) may need to look up specific details from the AWS account where the app is deployed. For instance, SST looks up the Route 53 hosted zone data for a custom domain; and fetches AWS region details when referencing an existing VPC. SST stores these details in `cdk.context.json`.
+
+If `cdk.context.json` file is absent, SST builds the app, generates the `cdk.context.json` file, and then builds again.
+
+To avoid building the Next.js app twice, ensure the `cdk.context.json` file is committed to your git repository.
+
+Likewise, if the app builds twice in your CI environment, commit any modifications to `cdk.context.json`.

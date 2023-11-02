@@ -2,11 +2,9 @@ import { createProxy, getVariables2 } from "../util/index.js";
 import { InvokeCommand, LambdaClient } from "@aws-sdk/client-lambda";
 const lambda = new LambdaClient({});
 
-export interface JobResources {}
-
 export interface JobTypes {}
 
-export type JobRunProps<T extends keyof JobResources> = {
+export type JobRunProps<T extends keyof JobTypes> = {
   payload?: JobTypes[T];
 };
 
@@ -14,7 +12,7 @@ export type JobRunProps<T extends keyof JobResources> = {
 //       instead of defining the type inline in `createProxy`. In the
 //       latter case, the type is not available in the client.
 export type JobType = {
-  [T in keyof JobResources]: ReturnType<typeof JobControl<T>>;
+  [T in keyof JobTypes]: ReturnType<typeof JobControl<T>>;
 };
 
 export const Job = /* @__PURE__ */ (() => {
@@ -22,12 +20,12 @@ export const Job = /* @__PURE__ */ (() => {
   const vars = getVariables2("Job");
   Object.keys(vars).forEach((name) => {
     // @ts-expect-error
-    result[name] = JobControl(name as keyof JobResources, vars[name]);
+    result[name] = JobControl(name as keyof JobTypes, vars[name]);
   });
   return result;
 })();
 
-function JobControl<Name extends keyof JobResources>(
+function JobControl<Name extends keyof JobTypes>(
   name: Name,
   vars: Record<string, string>
 ) {
@@ -88,11 +86,11 @@ function JobControl<Name extends keyof JobResources>(
  * })
  * ```
  */
-export function JobHandler<C extends keyof JobResources>(
+export function JobHandler<C extends keyof JobTypes>(
   name: C,
   cb: (payload: JobTypes[C]) => void
 ) {
   return function handler(event: any) {
-    return cb(event as JobTypes[keyof JobResources]);
+    return cb(event as JobTypes[keyof JobTypes]);
   };
 }

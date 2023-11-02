@@ -553,6 +553,29 @@ export interface PythonProps {
    * ```
    */
   installCommands?: string[];
+
+  /**
+   * This options skips the Python bundle step. If you set this flag to `true`, you must ensure
+   * that either:
+   *
+   * 1. Your Python build does not require dependencies.
+   * 2. Or, you've already installed production dependencies before running `sst deploy`.
+   *
+   * One solution to accomplish this is to pre-compile your production dependencies to some
+   * temporary directory, using pip's `--platform` argument to ensure Python pre-built wheels are
+   * used and that your builds match your target Lambda runtime, and use SST's `copyFiles`
+   * option to make sure these dependencies make it into your final deployment build.
+   *
+   * This can also help speed up Python Lambdas which do not have external dependencies. By
+   * default, SST will still run a docker file that is essentially a no-op if you have no
+   * dependencies. This option will bypass that step, even if you have a `Pipfile`, a `poetry.toml`,
+   * a `pyproject.toml`, or a `requirements.txt` (which would normally trigger an all-dependencies
+   * Docker build).
+   *
+   * Enabling this option implies that you have accounted for all of the above and are handling
+   * your own build processes, and you are doing this for the sake of build optimization.
+   */
+  noDocker?: boolean;
 }
 
 /**
@@ -887,7 +910,7 @@ export class Function extends CDKFunction implements SSTConstruct {
                 ...(props.container?.buildArgs
                   ? { buildArgs: props.container.buildArgs }
                   : {}),
-                exclude: [".sst"],
+                exclude: [".sst/dist", ".sst/artifacts"],
                 ignoreMode: IgnoreMode.GLOB,
               }),
               handler: CDKHandler.FROM_IMAGE,
@@ -945,9 +968,9 @@ export class Function extends CDKFunction implements SSTConstruct {
           });
           await fs.rm(result.sourcemap);
           useFunctions().sourcemaps.add(stack.stackName, {
-            bucket: asset.bucket,
-            key: asset.s3ObjectKey,
-            func: this,
+            srcBucket: asset.bucket,
+            srcKey: asset.s3ObjectKey,
+            tarKey: this.functionArn,
           });
         }
 
@@ -1329,9 +1352,9 @@ export class Function extends CDKFunction implements SSTConstruct {
 export const useFunctions = createAppContext(() => {
   const functions: Record<string, FunctionProps> = {};
   type Sourcemap = {
-    bucket: IBucket;
-    key: string;
-    func: Function;
+    srcBucket: IBucket;
+    srcKey: string;
+    tarKey: string;
   };
   const sourcemaps: Record<string, Sourcemap[]> = {};
 

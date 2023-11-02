@@ -1,5 +1,67 @@
 # @serverless-stack/cli2
 
+## 2.33.2
+
+### Patch Changes
+
+- [`8b802f118`](https://github.com/sst/sst/commit/8b802f118a78a296d43b229811e26ae60e13f616) Thanks [@fwang](https://github.com/fwang)! - Service: fix sst bind fails to bind resources
+
+- [`1705badf0`](https://github.com/sst/sst/commit/1705badf09675f802347e31fbc6b763ab87defa0) Thanks [@fwang](https://github.com/fwang)! - Bootstrap: allow overriding bucket name
+
+- [`6511a17a6`](https://github.com/sst/sst/commit/6511a17a626beb2e2d21f84e480d8769100365e6) Thanks [@fwang](https://github.com/fwang)! - Service: support configuring ALB subnets
+
+## 2.33.1
+
+### Patch Changes
+
+- [`b38634d9c`](https://github.com/sst/sst/commit/b38634d9c9e44d66c251c489725499afb019e4cc) Thanks [@thdxr](https://github.com/thdxr)! - internal: try to fix changeset publishing issue
+
+## 2.33.0
+
+### Minor Changes
+
+- [#3434](https://github.com/sst/sst/pull/3434) [`3d72f1c79`](https://github.com/sst/sst/commit/3d72f1c796737c3ed7d0ad47e63c25f752d96f7e) Thanks [@rubythulhu](https://github.com/rubythulhu)! - Adds support for bypassing docker build for python (via an optional flag), and moves python file-copy processes to a place that can be async.
+
+### Patch Changes
+
+- [`fc0a18d1b`](https://github.com/sst/sst/commit/fc0a18d1b18321326be96fc1cbb17ed8a9d72f5f) Thanks [@thdxr](https://github.com/thdxr)! - deps: bump aws iot package
+
+- [#3417](https://github.com/sst/sst/pull/3417) [`2e2d425dc`](https://github.com/sst/sst/commit/2e2d425dc29cb78ebab63cf31c00ec00af0ddec2) Thanks [@michaelgmcd](https://github.com/michaelgmcd)! - fix: add delete parameters permissions to AuthKeys role
+
+## 2.32.3
+
+### Patch Changes
+
+- [#3444](https://github.com/sst/sst/pull/3444) [`ac26313e3`](https://github.com/sst/sst/commit/ac26313e3b86e7d1e3c4887d740679ad292d51aa) Thanks [@bayssmekanique](https://github.com/bayssmekanique)! - AstroSite: add static generation support
+
+## 2.32.2
+
+### Patch Changes
+
+- [`390b7d5d5`](https://github.com/sst/sst/commit/390b7d5d5fa13a10ec9f45e50af78f95cf37cc75) Thanks [@thdxr](https://github.com/thdxr)! - cli: dispose context object for node builds
+
+- [#3445](https://github.com/sst/sst/pull/3445) [`f3a378f66`](https://github.com/sst/sst/commit/f3a378f66076f996fdd6fbd274bd313caa98ea4f) Thanks [@fwang](https://github.com/fwang)! - Job: fix job type shows "never"
+
+- [`db7d815f9`](https://github.com/sst/sst/commit/db7d815f9ead81a9ceec79ddb1d3003b21f56f71) Thanks [@fwang](https://github.com/fwang)! - create-sst: fix react dependency
+
+## 2.32.1
+
+### Patch Changes
+
+- [`68ed1d280`](https://github.com/sst/sst/commit/68ed1d280144ff3e4d83f29444b62fb9c4fc305d) Thanks [@fwang](https://github.com/fwang)! - Service: do not exclude `.sst/types` for docker build
+
+- [#3435](https://github.com/sst/sst/pull/3435) [`8a7e6beb3`](https://github.com/sst/sst/commit/8a7e6beb35af06616769038d297b7ee0e7432f8c) Thanks [@alexabidri](https://github.com/alexabidri)! - SsrSite: allow customize "cdk.viewerProtocolPolicy"
+
+- [`988093b7a`](https://github.com/sst/sst/commit/988093b7aa35e7f1cf82c3b9ca9ee624cac966cf) Thanks [@fwang](https://github.com/fwang)! - AppSyncApi: respect scope for lazily added resolvers and data sources
+
+## 2.32.0
+
+### Minor Changes
+
+- [#3428](https://github.com/sst/sst/pull/3428) [`2b6528ec3`](https://github.com/sst/sst/commit/2b6528ec307ad8f3708941bbaa12812d94ed5d2d) Thanks [@bitpavel](https://github.com/bitpavel)! - SsrSite: add `invalidation` prop to customize CloudFront invalidation
+
+- [#3439](https://github.com/sst/sst/pull/3439) [`88ce024a8`](https://github.com/sst/sst/commit/88ce024a8276c54e68b0acdff5886bd84ee4453e) Thanks [@fwang](https://github.com/fwang)! - NextjsSite: upload sourcemaps to bootstrap bucket
+
 ## 2.31.0
 
 ### Minor Changes

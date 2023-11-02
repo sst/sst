@@ -248,15 +248,18 @@ const site = new NextjsSite(stack, "site", {
 });
 
 // Create A and AAAA records for the alternate domain names
-const recordProps = {
-  recordName: "bar.my-app.com",
-  zone: hostedZone,
-  target: route53.RecordTarget.fromAlias(
-    new route53Targets.CloudFrontTarget(site.cdk.distribution)
-  ),
-};
-new route53.ARecord(stack, "AlternateARecord", recordProps);
-new route53.AaaaRecord(stack, "AlternateAAAARecord", recordProps);
+// Note: CloudFront distribution is not created when running `sst dev`.
+if (site.cdk?.distribution) {
+  const recordProps = {
+    recordName: "bar.my-app.com",
+    zone: hostedZone,
+    target: route53.RecordTarget.fromAlias(
+      new route53Targets.CloudFrontTarget(site.cdk.distribution)
+    ),
+  };
+  new route53.ARecord(stack, "AlternateARecord", recordProps);
+  new route53.AaaaRecord(stack, "AlternateAAAARecord", recordProps);
+}
 ```
 
 ---

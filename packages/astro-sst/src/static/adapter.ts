@@ -1,21 +1,19 @@
 import type { AstroAdapter, AstroIntegration } from "astro";
-import { BuildMeta, IntegrationConfig } from "../lib/build-meta";
+import { BuildMeta, IntegrationConfig } from "../lib/build-meta.js";
 
-const PACKAGE_NAME = "astro-sst/edge";
+const PACKAGE_NAME = "astro-sst/static";
 
 function getAdapter(): AstroAdapter {
   return {
     name: PACKAGE_NAME,
-    serverEntrypoint: `${PACKAGE_NAME}/entrypoint`,
-    exports: ["handler"],
     adapterFeatures: {
       edgeMiddleware: false,
       functionPerRoute: false,
     },
     supportedAstroFeatures: {
-      staticOutput: "unsupported",
+      staticOutput: "stable",
       hybridOutput: "unsupported",
-      serverOutput: "stable",
+      serverOutput: "unsupported",
       assets: {
         supportKind: "unsupported",
         isSharpCompatible: false,
@@ -25,10 +23,14 @@ function getAdapter(): AstroAdapter {
   };
 }
 
-export default function createIntegration(): AstroIntegration {
+export default function createIntegration({
+  serverRoutes,
+}: {
+  serverRoutes?: string[];
+} = {}): AstroIntegration {
   const integrationConfig: IntegrationConfig = {
     responseMode: "buffer",
-    serverRoutes: [],
+    serverRoutes: serverRoutes ?? [],
   };
 
   BuildMeta.setIntegrationConfig(integrationConfig);
@@ -37,9 +39,9 @@ export default function createIntegration(): AstroIntegration {
     name: PACKAGE_NAME,
     hooks: {
       "astro:config:done": ({ config, setAdapter }) => {
-        if (config.output === "static") {
+        if (config.output !== "static") {
           throw new Error(
-            `Static output is not supported by '${PACKAGE_NAME}'. Use the 'astro-sst/static' integration instead.`
+            `Only static output is supported by '${PACKAGE_NAME}'. Use the 'astro-sst/lambda' or 'astro-sst/edge' integrations instead.`
           );
         }
 

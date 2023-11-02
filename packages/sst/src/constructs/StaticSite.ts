@@ -178,7 +178,7 @@ export interface StaticSiteProps {
    * @example
    * ```js
    * new StaticSite(stack, "frontend", {
-   *  purge: false
+   *  purgeFiles: false
    * });
    * ```
    */
@@ -360,7 +360,6 @@ export class StaticSite extends Construct implements SSTConstruct {
     this.id = id;
     this.props = {
       path: ".",
-      waitForInvalidation: false,
       ...props,
     };
 
@@ -391,7 +390,9 @@ export class StaticSite extends Construct implements SSTConstruct {
       this.distribution.node.addDependency(s3deployCR);
 
       // Invalidate CloudFront
-      this.distribution.createInvalidation(this.generateInvalidationId(assets));
+      this.distribution.createInvalidation({
+        version: this.generateInvalidationId(assets),
+      });
     });
 
     app.registerTypes(this);

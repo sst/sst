@@ -32,10 +32,6 @@ const lambdaDefaultPolicy = {
   Resource: "*",
 };
 
-///////////////////
-// Test Constructor
-///////////////////
-
 test("constructor: cdk.graphqlApi is props", async () => {
   const stack = new Stack(await createApp(), "stack");
   new AppSyncApi(stack, "Api", {
@@ -1126,9 +1122,41 @@ test("resolvers: is datasource props: datasource is FunctionDefinition", async (
   });
 });
 
-///////////////////
-// Test Methods
-///////////////////
+test("addResolvers(): same stack", async () => {
+  const stack = new Stack(await createApp(), "stack");
+  const api = new AppSyncApi(stack, "Api", {
+    schema: "test/constructs/appsync/schema.graphql",
+    resolvers: {
+      "Query notes": "test/lambda.handler",
+      "Query notes2": "test/lambda.handler",
+    },
+  });
+  api.addResolvers(stack, {
+    "Query notes3": "test/lambda.handler",
+  });
+  countResources(stack, "AWS::AppSync::DataSource", 3);
+  countResources(stack, "AWS::AppSync::Resolver", 3);
+});
+
+test("addResolvers(): different stack", async () => {
+  const app = await createApp();
+  const stackA = new Stack(app, "stackA");
+  const stackB = new Stack(app, "stackB");
+  const api = new AppSyncApi(stackA, "Api", {
+    schema: "test/constructs/appsync/schema.graphql",
+    resolvers: {
+      "Query notes": "test/lambda.handler",
+      "Query notes2": "test/lambda.handler",
+    },
+  });
+  api.addResolvers(stackB, {
+    "Query notes3": "test/lambda.handler",
+  });
+  countResources(stackA, "AWS::AppSync::DataSource", 2);
+  countResources(stackA, "AWS::AppSync::Resolver", 2);
+  countResources(stackB, "AWS::AppSync::DataSource", 1);
+  countResources(stackB, "AWS::AppSync::Resolver", 1);
+});
 
 test("getDataSource-datasource-key", async () => {
   const stack = new Stack(await createApp(), "stack");
@@ -1385,7 +1413,7 @@ test("bind-after-addResolvers", async () => {
   const app = await createApp();
   const stackA = new Stack(app, "stackA");
   const stackB = new Stack(app, "stackB");
-  const bucket = new Bucket(stackB, "bucket");
+  const bucket = new Bucket(stackA, "bucket");
   const api = new AppSyncApi(stackA, "Api", {
     schema: "test/constructs/appsync/schema.graphql",
     resolvers: {

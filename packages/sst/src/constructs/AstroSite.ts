@@ -133,6 +133,8 @@ export class AstroSite extends SsrSite {
       join(sitePath, "dist", BUILD_META_FILE_NAME)
     );
 
+    const isStatic = buildMeta.outputMode === "static";
+
     const serverConfig = {
       description: "Server handler for Astro",
       handler: join(sitePath, "dist", "server", "entry.handler"),
@@ -216,41 +218,49 @@ export class AstroSite extends SsrSite {
         )
       );
     } else {
-      plan.origins.regionalServer = {
-        type: "function",
-        constructId: "ServerFunction",
-        function: serverConfig,
-        streaming: buildMeta.responseMode === "stream",
-      };
-
-      plan.origins.fallthroughServer = {
-        type: "group",
-        primaryOriginName: "staticsServer",
-        fallbackOriginName: "regionalServer",
-        fallbackStatusCodes: [403, 404],
-      };
-
-      plan.behaviors.push(
-        {
-          cacheType: "server",
-          cfFunction: "serverCfFunction",
-          origin: "fallthroughServer",
-          allowedMethods: AllowedMethods.ALLOW_GET_HEAD_OPTIONS,
-        },
-        {
+      if (isStatic) {
+        plan.behaviors.push({
           cacheType: "static",
-          pattern: `${buildMeta.clientBuildVersionedSubDir}/*`,
+          cfFunction: "serverCfFunction",
           origin: "staticsServer",
-        },
-        ...(buildMeta.serverRoutes ?? regional?.serverRoutes ?? []).map(
-          (route) =>
-            ({
-              cacheType: "server",
-              pattern: route,
-              origin: "regionalServer",
-            } as const)
-        )
-      );
+        });
+      } else {
+        plan.origins.regionalServer = {
+          type: "function",
+          constructId: "ServerFunction",
+          function: serverConfig,
+          streaming: buildMeta.responseMode === "stream",
+        };
+
+        plan.origins.fallthroughServer = {
+          type: "group",
+          primaryOriginName: "staticsServer",
+          fallbackOriginName: "regionalServer",
+          fallbackStatusCodes: [403, 404],
+        };
+
+        plan.behaviors.push(
+          {
+            cacheType: "server",
+            cfFunction: "serverCfFunction",
+            origin: "fallthroughServer",
+            allowedMethods: AllowedMethods.ALLOW_GET_HEAD_OPTIONS,
+          },
+          {
+            cacheType: "static",
+            pattern: `${buildMeta.clientBuildVersionedSubDir}/*`,
+            origin: "staticsServer",
+          },
+          ...(buildMeta.serverRoutes ?? regional?.serverRoutes ?? []).map(
+            (route) =>
+              ({
+                cacheType: "server",
+                pattern: route,
+                origin: "regionalServer",
+              } as const)
+          )
+        );
+      }
 
       buildMeta.routes
         .filter(
@@ -265,6 +275,13 @@ export class AstroSite extends SsrSite {
                 responsePagePath: prerender ? "/404.html" : "/404",
                 responseHttpStatus: 404,
               });
+              if (isStatic) {
+                plan.errorResponses?.push({
+                  httpStatus: 403,
+                  responsePagePath: "/404.html",
+                  responseHttpStatus: 404,
+                });
+              }
               break;
             case "/500":
             case "/500/":

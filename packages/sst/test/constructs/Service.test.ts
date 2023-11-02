@@ -45,6 +45,7 @@ test("default", async () => {
   expect(service.cdk?.taskDefinition).toBeDefined();
   expect(service.cdk?.distribution?.distributionId).toBeDefined();
   expect(service.cdk?.distribution?.distributionDomainName).toBeDefined();
+  expect(service.cdk?.applicationLoadBalancer).toBeDefined();
   expect(service.cdk?.certificate).toBeUndefined();
   countResources(stack, "AWS::EC2::VPC", 1);
   hasResource(stack, "AWS::EC2::VPC", {
@@ -558,7 +559,7 @@ test("cdk.cloudfrontDistribution is props", async () => {
   });
 });
 
-test("cdk.applicationLoadBalancer", async () => {
+test("cdk.applicationLoadBalancer is false", async () => {
   const { stack, service } = await createService({
     cdk: {
       applicationLoadBalancer: false,
@@ -575,6 +576,25 @@ test("cdk.applicationLoadBalancer", async () => {
   expect(service.cdk?.fargateService).toBeDefined();
   expect(service.cdk?.taskDefinition).toBeDefined();
   expect(service.cdk?.distribution).toBeUndefined();
+  expect(service.cdk?.applicationLoadBalancer).toBeUndefined();
+});
+test("cdk.applicationLoadBalancer is props", async () => {
+  const { stack, service } = await createService({
+    cdk: {
+      applicationLoadBalancer: {
+        http2Enabled: false,
+      },
+    },
+  });
+  expect(service.cdk?.applicationLoadBalancer).toBeDefined();
+  hasResource(stack, "AWS::ElasticLoadBalancingV2::LoadBalancer", {
+    LoadBalancerAttributes: arrayWith([
+      {
+        Key: "routing.http2.enabled",
+        Value: "false",
+      },
+    ]),
+  });
 });
 test("cdk.applicationLoadBalancerTargetGroup", async () => {
   const { service, stack } = await createService({
@@ -612,21 +632,6 @@ test("cdk.applicationLoadBalancerTargetGroup: ALB disabled", async () => {
   );
 });
 
-test("sst remove", async () => {
-  const app = await createApp({ mode: "remove" });
-  const stack = new Stack(app, "stack");
-  const service = new Service(stack, "Service", {
-    path: servicePath,
-  });
-  await app.finish();
-  expect(service.url).toBeUndefined();
-  expect(service.customDomainUrl).toBeUndefined();
-  expect(service.cdk).toBeUndefined();
-  countResources(stack, "AWS::ECS::Cluster", 0);
-  countResources(stack, "AWS::CloudFront::Distribution", 0);
-  countResources(stack, "Custom::CloudFrontInvalidator", 0);
-});
-
 test("sst deploy inactive stack", async () => {
   const app = await createApp({
     mode: "deploy",
@@ -661,7 +666,6 @@ test("sst dev: dev.url undefined", async () => {
   countResources(stack, "AWS::CloudFront::Distribution", 0);
   countResources(stack, "Custom::CloudFrontInvalidator", 0);
 });
-
 test("sst dev: dev.url string", async () => {
   const app = await createApp({ mode: "dev" });
   const stack = new Stack(app, "stack");
@@ -674,7 +678,6 @@ test("sst dev: dev.url string", async () => {
   await app.finish();
   expect(service.url).toBe("localhost:3000");
 });
-
 test("sst dev: disablePlaceholder true", async () => {
   const app = await createApp({ mode: "dev" });
   const stack = new Stack(app, "stack");

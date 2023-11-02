@@ -418,7 +418,8 @@ The SST Console pricing is based on the number of times the Lambda functions in 
 A couple of things to note.
 
 - These are calculated for a given workspace on a monthly basis.
-- There's also a soft limit for [Issues](#limits) on all accounts.
+- This does not apply to [local stages](#pricing-faq), they'll be free forever.
+- There's also a [soft limit](#limits) for [Issues](#issues) on all accounts.
 - For volume pricing, feel free to <a href={`mailto:${config.email}`}>contact us</a>.
 
 ---
@@ -540,10 +541,11 @@ The Old Console has separate tabs or _explorers_ for managing the different part
 
 - Can I access the local stages if I'm above the free tier?
 
-  If you go above the free tier in your _production_ stages, you **can still access your local stages**. You'll just need to add your billing information to access the _production_ ones.
+  If you go above the free tier in your _production_ stages, you **can still access your local stages**. Just make sure you have `sst dev` running locally, otherwise the Console won't be able to detect that it's a local stage.
 
 - My invocation volume is far higher than the listed tiers. Are there any other options?
 
   Feel free to <a href={`mailto:${config.email}`}>contact us</a> and we can figure out a pricing plan that works for you.
 
 If you have any further questions, feel free to ask us on Discord or <a href={`mailto:${config.email}`}>send us an email</a>.
+
