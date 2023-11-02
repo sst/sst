@@ -565,6 +565,7 @@ export class Service extends Construct implements SSTConstruct {
   private taskDefinition?: FargateTaskDefinition;
   private service?: FargateService;
   private distribution?: Distribution;
+  private alb?: ApplicationLoadBalancer;
 
   constructor(scope: Construct, id: string, props?: ServiceProps) {
     super(scope, id);
@@ -601,6 +602,7 @@ export class Service extends Construct implements SSTConstruct {
       this.createService(vpc);
     const { alb, target } = this.createLoadBalancer(vpc, service);
     this.createAutoScaling(service, target);
+    this.alb = alb;
 
     // Create Distribution
     this.distribution = this.createDistribution(alb);
@@ -683,6 +685,7 @@ export class Service extends Construct implements SSTConstruct {
       fargateService: this.service,
       taskDefinition: this.taskDefinition,
       distribution: this.distribution?.cdk.distribution,
+      applicationLoadBalancer: this.alb,
       hostedZone: this.distribution?.cdk.hostedZone,
       certificate: this.distribution?.cdk.certificate,
     };
