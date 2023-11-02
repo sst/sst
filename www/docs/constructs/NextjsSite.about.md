@@ -526,12 +526,21 @@ new NextjsSite(stack, "Site", {
 #### Using an existing S3 Bucket
 
 ```js
+import * as cloudfront from "aws-cdk-lib/aws-cloudfront";
 import { Bucket } from "aws-cdk-lib/aws-s3";
 
 new NextjsSite(stack, "Site", {
   path: "my-next-app/",
   cdk: {
     bucket: Bucket.fromBucketName(stack, "Bucket", "my-bucket"),
+    // Below only required for non-public buckets
+    s3Origin: {
+      originAccessIdentity: cloudfront.OriginAccessIdentity.fromOriginAccessIdentityId(
+        stack,
+        "OriginAccessIdentity",
+        "ABCDEFGHIJKLMN"
+      ),
+    },
   },
 });
 ```

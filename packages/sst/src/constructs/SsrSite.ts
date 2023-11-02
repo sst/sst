@@ -60,6 +60,7 @@ import {
 } from "aws-cdk-lib/aws-cloudfront";
 import {
   S3Origin,
+  S3OriginProps,
   HttpOrigin,
   OriginGroup,
 } from "aws-cdk-lib/aws-cloudfront-origins";
@@ -407,6 +408,12 @@ export interface SsrSiteProps {
      * create the CDK `Distribution` internally.
      */
     distribution?: SsrCdkDistributionProps;
+    /**
+     * Override the S3 Origin properties passed into any s3 Origin created by aws-cdk-lib/aws-cloudfront-origins.S3Origin.
+     * 
+     * This enables a shared (external) bucket to be properly secured with a bucket policy without giving public access to the bucket.
+     */
+    s3Origin?: S3OriginProps;
     /**
      * Override the CloudFront cache policy properties for responses from the
      * server rendering Lambda.
@@ -962,6 +969,7 @@ function handler(event) {
     function createS3Origin(props: S3OriginConfig) {
       const s3Origin = new S3Origin(bucket, {
         originPath: "/" + (props.originPath ?? ""),
+        ...(cdk?.s3Origin ?? {})
       });
 
       const assets = createS3OriginAssets(props.copy);
