@@ -1,5 +1,33 @@
 # @serverless-stack/cli2
 
+## 2.33.2
+
+### Patch Changes
+
+- [`8b802f118`](https://github.com/sst/sst/commit/8b802f118a78a296d43b229811e26ae60e13f616) Thanks [@fwang](https://github.com/fwang)! - Service: fix sst bind fails to bind resources
+
+- [`1705badf0`](https://github.com/sst/sst/commit/1705badf09675f802347e31fbc6b763ab87defa0) Thanks [@fwang](https://github.com/fwang)! - Bootstrap: allow overriding bucket name
+
+- [`6511a17a6`](https://github.com/sst/sst/commit/6511a17a626beb2e2d21f84e480d8769100365e6) Thanks [@fwang](https://github.com/fwang)! - Service: support configuring ALB subnets
+
+## 2.33.1
+
+### Patch Changes
+
+- [`b38634d9c`](https://github.com/sst/sst/commit/b38634d9c9e44d66c251c489725499afb019e4cc) Thanks [@thdxr](https://github.com/thdxr)! - internal: try to fix changeset publishing issue
+
+## 2.33.0
+
+### Minor Changes
+
+- [#3434](https://github.com/sst/sst/pull/3434) [`3d72f1c79`](https://github.com/sst/sst/commit/3d72f1c796737c3ed7d0ad47e63c25f752d96f7e) Thanks [@rubythulhu](https://github.com/rubythulhu)! - Adds support for bypassing docker build for python (via an optional flag), and moves python file-copy processes to a place that can be async.
+
+### Patch Changes
+
+- [`fc0a18d1b`](https://github.com/sst/sst/commit/fc0a18d1b18321326be96fc1cbb17ed8a9d72f5f) Thanks [@thdxr](https://github.com/thdxr)! - deps: bump aws iot package
+
+- [#3417](https://github.com/sst/sst/pull/3417) [`2e2d425dc`](https://github.com/sst/sst/commit/2e2d425dc29cb78ebab63cf31c00ec00af0ddec2) Thanks [@michaelgmcd](https://github.com/michaelgmcd)! - fix: add delete parameters permissions to AuthKeys role
+
 ## 2.32.3
 
 ### Patch Changes

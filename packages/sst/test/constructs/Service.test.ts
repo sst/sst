@@ -558,7 +558,7 @@ test("cdk.cloudfrontDistribution is props", async () => {
   });
 });
 
-test("cdk.applicationLoadBalancer", async () => {
+test("cdk.applicationLoadBalancer is false", async () => {
   const { stack, service } = await createService({
     cdk: {
       applicationLoadBalancer: false,
@@ -575,6 +575,23 @@ test("cdk.applicationLoadBalancer", async () => {
   expect(service.cdk?.fargateService).toBeDefined();
   expect(service.cdk?.taskDefinition).toBeDefined();
   expect(service.cdk?.distribution).toBeUndefined();
+});
+test("cdk.applicationLoadBalancer is props", async () => {
+  const { stack, service } = await createService({
+    cdk: {
+      applicationLoadBalancer: {
+        http2Enabled: false,
+      },
+    },
+  });
+  hasResource(stack, "AWS::ElasticLoadBalancingV2::LoadBalancer", {
+    LoadBalancerAttributes: arrayWith([
+      {
+        Key: "routing.http2.enabled",
+        Value: "false",
+      },
+    ]),
+  });
 });
 test("cdk.applicationLoadBalancerTargetGroup", async () => {
   const { service, stack } = await createService({

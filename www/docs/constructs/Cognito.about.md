@@ -266,10 +266,10 @@ import { UserPool, UserPoolClient } from "aws-cdk-lib/aws-cognito";
 
 new Cognito(stack, "Auth", {
   cdk: {
-    userPool: UserPool.fromUserPoolId(stack, "IUserPool", "pool-id"),
+    userPool: UserPool.fromUserPoolId(stack, "UserPool", "pool-id"),
     userPoolClient: UserPoolClient.fromUserPoolClientId(
       stack,
-      "IUserPoolClient",
+      "UserPoolClient",
       "pool-client-id"
     ),
   },
