@@ -61,7 +61,10 @@ jobs:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: View outputs
-        run: env
+        run: |
+          echo ${{steps.changesets.outputs.hasChangesets}}
+          echo ${{steps.changesets.outputs.published}}
+          echo ${{steps.changesets.outputs.publishedPackages}}
 
       - name: Aggregate
         id: aggregate
