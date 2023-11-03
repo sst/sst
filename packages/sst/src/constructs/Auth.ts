@@ -94,7 +94,6 @@ export class Auth extends Construct implements SSTConstruct {
       "login" in props ||
       "triggers" in props ||
       "identityPoolFederation" in props ||
-      "cdk" in props
     ) {
       throw new Error(
         `It looks like you may be passing in Cognito props to the Auth construct. The Auth construct was renamed to Cognito in version 1.10.0`
