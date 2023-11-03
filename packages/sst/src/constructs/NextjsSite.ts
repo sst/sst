@@ -38,6 +38,7 @@ import { EdgeFunctionProps } from "./EdgeFunction.js";
 import { Asset } from "aws-cdk-lib/aws-s3-assets";
 import { useFunctions } from "./Function.js";
 import { useDeferredTasks } from "./deferred_task.js";
+import { Logger } from "../logger.js";
 
 export interface NextjsSiteProps extends Omit<SsrSiteProps, "nodejs"> {
   /**
@@ -182,6 +183,10 @@ export class NextjsSite extends SsrSite {
   private appPathRoutesManifest?: Record<string, string>;
   private appPathsManifest?: Record<string, string>;
   private pagesManifest?: Record<string, string>;
+  private prerenderManifest?: {
+    version: number;
+    routes: Record<string, unknown>;
+  };
 
   constructor(scope: Construct, id: string, props?: NextjsSiteProps) {
     const streaming = props?.experimental?.streaming ?? false;
@@ -436,12 +441,23 @@ export class NextjsSite extends SsrSite {
     );
 
     if (fs.existsSync(dynamodbProviderPath)) {
+      // Provision 128MB of memory for every 4,000 prerendered routes,
+      // 1GB per 40,000, up to 10GB. This tends to use ~70% of the memory
+      // provisioned when testing.
+      const prerenderedRouteCount = Object.keys(
+        this.usePrerenderManifest()?.routes ?? {}
+      ).length;
+
       const insertFn = new CdkFunction(this, "RevalidationInsertFunction", {
         description: "Next.js revalidation data insert",
         handler: "index.handler",
         code: Code.fromAsset(dynamodbProviderPath),
         runtime: Runtime.NODEJS_18_X,
         timeout: CdkDuration.minutes(15),
+        memorySize: Math.min(
+          10240,
+          Math.max(128, Math.ceil(prerenderedRouteCount / 4000) * 128)
+        ),
         initialPolicy: [
           new PolicyStatement({
             actions: [
@@ -671,6 +687,21 @@ export class NextjsSite extends SsrSite {
       return this.pagesManifest!;
     } catch (e) {
       return {};
+    }
+  }
+
+  private usePrerenderManifest() {
+    if (this.prerenderManifest) return this.prerenderManifest;
+
+    const { path: sitePath } = this.props;
+    try {
+      const content = fs
+        .readFileSync(path.join(sitePath, ".next/prerender-manifest.json"))
+        .toString();
+      this.prerenderManifest = JSON.parse(content);
+      return this.prerenderManifest!;
+    } catch (e) {
+      Logger.debug("Failed to load prerender-manifest.json", e);
     }
   }
 
