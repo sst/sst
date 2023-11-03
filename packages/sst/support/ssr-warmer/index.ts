@@ -5,7 +5,7 @@ const lambda = new LambdaClient({});
 const FUNCTION_NAME = process.env.FUNCTION_NAME!;
 const CONCURRENCY = parseInt(process.env.CONCURRENCY!);
 
-function generateUniqueId() {
+export function generateUniqueId() {
   return Math.random().toString(36).slice(2, 8);
 }
 

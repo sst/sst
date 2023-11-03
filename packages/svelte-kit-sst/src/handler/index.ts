@@ -13,6 +13,10 @@ import type {
   APIGatewayProxyEvent,
   CloudFrontRequestEvent,
 } from "aws-lambda";
+import type {
+  WarmerEvent, WarmerResponse
+} from "../../../sst/support/ssr-warmer"
+import { generateUniqueId } from "../../../sst/support/ssr-warmer"
 import { InternalEvent, convertFrom, convertTo } from "./event-mapper.js";
 import { debug } from "./logger.js";
 import { isBinaryContentType } from "./binary.js";
@@ -22,10 +26,16 @@ installPolyfills();
 const app: ServerType = new Server(manifest);
 await app.init({ env: process.env as Record<string, string> });
 
+const serverId = `server-${generateUniqueId()}`;
+
 export async function handler(
-  event: APIGatewayProxyEventV2 | CloudFrontRequestEvent | APIGatewayProxyEvent
-) {
+  event: APIGatewayProxyEventV2 | CloudFrontRequestEvent | APIGatewayProxyEvent | WarmerEvent
+): Promise<any> {
   debug("event", event);
+  // Handler warmer
+  if ("type" in event) {
+    return formatWarmerResponse(event);
+  }
 
   // Parse Lambda event
   const internalEvent = convertFrom(event);
@@ -134,5 +144,13 @@ function formatAPIGatewayPrerenderedResponse(
     },
     isBase64Encoded: false,
     body: fs.readFileSync(path.join("prerendered", filePath), "utf8"),
+  });
+}
+
+function formatWarmerResponse(event: WarmerEvent) {
+  return new Promise<WarmerResponse>((resolve) => {
+    setTimeout(() => {
+      resolve({ serverId } satisfies WarmerResponse);
+    }, event.delay);
   });
 }
