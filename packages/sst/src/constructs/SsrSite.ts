@@ -124,7 +124,6 @@ type OriginGroupConfig = {
   fallbackStatusCodes?: number[];
 };
 type OriginsMap = Record<string, S3Origin | HttpOrigin | OriginGroup>;
-type DeploymentStrategy = "regional" | "edge" | "static";
 
 export type Plan = ReturnType<SsrSite["validatePlan"]>;
 export interface SsrSiteNodeJSProps extends NodeJSProps {}
@@ -491,7 +490,7 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
   protected bucket: Bucket;
   protected serverFunction?: EdgeFunction | SsrFunction;
   private serverFunctionForDev?: SsrFunction;
-  private deploymentStrategy?: DeploymentStrategy;
+  private edge?: boolean;
   private distribution: Distribution;
 
   constructor(scope: Construct, id: string, rawProps?: SsrSiteProps) {
@@ -566,9 +565,6 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
     buildApp();
     const plan = this.plan(bucket);
 
-    // Determine deployment strategy
-    const deploymentStrategy = plan.deploymentStrategy ?? "regional";
-
     // Create CloudFront
     const cfFunctions = createCloudFrontFunctions();
     const edgeFunctions = createEdgeFunctions();
@@ -582,7 +578,7 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
     this.bucket = bucket;
     this.distribution = distribution;
     this.serverFunction = ssrFunctions[0] ?? Object.values(edgeFunctions)[0];
-    this.deploymentStrategy = deploymentStrategy;
+    this.edge = plan.edge;
 
     app.registerTypes(this);
 
@@ -597,10 +593,10 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
         typeof timeout === "number"
           ? timeout
           : toCdkDuration(timeout).toSeconds();
-      const limit = deploymentStrategy === "edge" ? 30 : 180;
+      const limit = plan.edge ? 30 : 180;
       if (num > limit) {
         throw new VisibleError(
-          deploymentStrategy === "edge"
+          plan.edge
             ? `In the "${id}" construct, timeout must be less than or equal to 30 seconds when deploying to the edge.`
             : `In the "${id}" construct, timeout must be less than or equal to 180 seconds.`
         );
@@ -719,7 +715,7 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
       //       need to handle warming multiple functions.
       if (!warm) return;
 
-      if (warm && deploymentStrategy === "edge") {
+      if (warm && plan.edge) {
         throw new VisibleError(
           `In the "${id}" Site, warming is currently supported only for the regional mode.`
         );
@@ -1464,7 +1460,7 @@ function handler(event) {
         runtime: this.props.runtime,
         customDomainUrl: this.customDomainUrl,
         url: this.url,
-        deploymentStrategy: this.deploymentStrategy,
+        edge: this.edge,
         server: (this.serverFunctionForDev || this.serverFunction)
           ?.functionArn!,
         secrets: (this.props.bind || [])
@@ -1528,7 +1524,7 @@ function handler(event) {
     cloudFrontFunctions?: CloudFrontFunctions;
     edgeFunctions?: EdgeFunctions;
     origins: Origins;
-    deploymentStrategy?: DeploymentStrategy;
+    edge: boolean;
     behaviors: {
       cacheType: "server" | "static";
       pattern?: string;

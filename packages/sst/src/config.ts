@@ -218,10 +218,10 @@ export namespace Config {
     );
     const siteDataEdge = siteData
       .filter((c) => c.data.mode === "deployed")
-      .filter((c) => c.data.deploymentStrategy === "edge");
+      .filter((c) => c.data.edge);
     const siteDataRegional = siteData
       .filter((c) => c.data.mode === "deployed")
-      .filter((c) => c.data.deploymentStrategy !== "regional");
+      .filter((c) => !c.data.edge);
     const regionalSiteArns = siteData.map((s) => s.data.server);
     const functionData = Object.values(metadata)
       .flat()

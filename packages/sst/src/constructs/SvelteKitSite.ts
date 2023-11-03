@@ -5,7 +5,7 @@ import { Construct } from "constructs";
 
 export interface SvelteKitSiteProps extends SsrSiteProps {
   /**
-   * The SSR function is deployed to Lambda in a single region. Alternatively, you can enable this option to deploy to Lambda@Edge.
+   * The server function is deployed to Lambda in a single region. Alternatively, you can enable this option to deploy to Lambda@Edge.
    * @default false
    */
   edge?: boolean;
@@ -26,10 +26,12 @@ type SvelteKitSiteNormalizedProps = SvelteKitSiteProps & SsrSiteNormalizedProps;
  */
 export class SvelteKitSite extends SsrSite {
   declare props: SvelteKitSiteNormalizedProps;
-  protected typesPath = "src";
 
   constructor(scope: Construct, id: string, props?: SvelteKitSiteProps) {
-    super(scope, id, props);
+    super(scope, id, {
+      ...props,
+      typesPath: props?.typesPath ?? "src",
+    });
   }
 
   protected plan() {
@@ -63,7 +65,7 @@ export class SvelteKitSite extends SsrSite {
     };
 
     return this.validatePlan({
-      deploymentStrategy: edge ? "edge" : "regional",
+      edge: edge ?? false,
       buildId: JSON.parse(
         fs
           .readFileSync(path.join(sitePath, clientDir, "_app/version.json"))

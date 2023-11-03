@@ -62,7 +62,7 @@ export interface NextjsSiteProps extends Omit<SsrSiteProps, "nodejs"> {
    */
   logging?: "combined" | "per-route";
   /**
-   * The SSR function is deployed to Lambda in a single region. Alternatively, you can enable this option to deploy to Lambda@Edge.
+   * The server function is deployed to Lambda in a single region. Alternatively, you can enable this option to deploy to Lambda@Edge.
    * @default false
    */
   edge?: boolean;
@@ -255,7 +255,7 @@ export class NextjsSite extends SsrSite {
     });
     this.removeSourcemaps();
     return this.validatePlan({
-      deploymentStrategy: edge ? "edge" : "regional",
+      edge: edge ?? false,
       cloudFrontFunctions: {
         serverCfFunction: {
           constructId: "CloudFrontFunction",

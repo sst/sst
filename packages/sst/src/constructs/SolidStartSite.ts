@@ -5,13 +5,14 @@ import { Construct } from "constructs";
 
 export interface SolidStartSiteProps extends SsrSiteProps {
   /**
-   * The SSR function is deployed to Lambda in a single region. Alternatively, you can enable this option to deploy to Lambda@Edge.
+   * The server function is deployed to Lambda in a single region. Alternatively, you can enable this option to deploy to Lambda@Edge.
    * @default false
    */
   edge?: boolean;
 }
 
-type SolidStartSiteNormalizedProps = SolidStartSiteProps & SsrSiteNormalizedProps;
+type SolidStartSiteNormalizedProps = SolidStartSiteProps &
+  SsrSiteNormalizedProps;
 
 /**
  * The `SolidStartSite` construct is a higher level CDK construct that makes it easy to create a SolidStart app.
@@ -27,10 +28,6 @@ type SolidStartSiteNormalizedProps = SolidStartSiteProps & SsrSiteNormalizedProp
 export class SolidStartSite extends SsrSite {
   declare props: SolidStartSiteNormalizedProps;
 
-  constructor(scope: Construct, id: string, props?: SolidStartSiteProps) {
-    super(scope, id, props);
-  }
-
   protected plan() {
     const { path: sitePath, edge } = this.props;
     const serverConfig = {
@@ -39,7 +36,7 @@ export class SolidStartSite extends SsrSite {
     };
 
     return this.validatePlan({
-      deploymentStrategy: edge ? "edge" : "regional",
+      edge: edge ?? false,
       cloudFrontFunctions: {
         serverCfFunction: {
           constructId: "CloudFrontFunction",

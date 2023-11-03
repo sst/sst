@@ -20,7 +20,7 @@ type RemixConfig = {
 
 export interface RemixSiteProps extends SsrSiteProps {
   /**
-   * The SSR function is deployed to Lambda in a single region. Alternatively, you can enable this option to deploy to Lambda@Edge.
+   * The server function is deployed to Lambda in a single region. Alternatively, you can enable this option to deploy to Lambda@Edge.
    * @default false
    */
   edge?: boolean;
@@ -44,10 +44,6 @@ type RemixSiteNormalizedProps = RemixSiteProps & SsrSiteNormalizedProps;
 export class RemixSite extends SsrSite {
   declare props: RemixSiteNormalizedProps;
 
-  constructor(scope: Construct, id: string, props?: RemixSiteProps) {
-    super(scope, id, props);
-  }
-
   protected plan() {
     const { path: sitePath, edge } = this.props;
 
@@ -67,7 +63,7 @@ export class RemixSite extends SsrSite {
     };
 
     return this.validatePlan({
-      deploymentStrategy: edge ? "edge" : "regional",
+      edge: edge ?? false,
       cloudFrontFunctions: {
         serverCfFunction: {
           constructId: "CloudFrontFunction",

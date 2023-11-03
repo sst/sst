@@ -101,7 +101,7 @@ export class AstroSite extends SsrSite {
     );
 
     const isStatic = buildMeta.outputMode === "static";
-    const isEdge = buildMeta.deploymentStrategy === "edge";
+    const edge = buildMeta.deploymentStrategy === "edge";
 
     const serverConfig = {
       description: "Server handler for Astro",
@@ -109,7 +109,7 @@ export class AstroSite extends SsrSite {
     };
 
     const plan: Plan = {
-      deploymentStrategy: buildMeta.deploymentStrategy,
+      edge,
       cloudFrontFunctions: {
         serverCfFunction: {
           constructId: "CloudFrontFunction",
@@ -136,7 +136,7 @@ export class AstroSite extends SsrSite {
       errorResponses: [],
     };
 
-    if (isEdge) {
+    if (edge) {
       plan.edgeFunctions = {
         edgeServer: {
           constructId: "Server",
