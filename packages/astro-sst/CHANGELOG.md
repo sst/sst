@@ -1,5 +1,7 @@
 # astro-sst
 
+## 2.34.1
+
 ## 2.34.0
 
 ### Minor Changes
