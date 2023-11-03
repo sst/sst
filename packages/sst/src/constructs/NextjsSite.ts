@@ -61,6 +61,11 @@ export interface NextjsSiteProps extends Omit<SsrSiteProps, "nodejs"> {
    * ```
    */
   logging?: "combined" | "per-route";
+  /**
+   * The server function is deployed to Lambda in a single region. Alternatively, you can enable this option to deploy to Lambda@Edge.
+   * @default false
+   */
+  edge?: boolean;
   imageOptimization?: {
     /**
      * The amount of memory in MB allocated for image optimization function.
@@ -250,6 +255,7 @@ export class NextjsSite extends SsrSite {
     });
     this.removeSourcemaps();
     return this.validatePlan({
+      edge: edge ?? false,
       cloudFrontFunctions: {
         serverCfFunction: {
           constructId: "CloudFrontFunction",

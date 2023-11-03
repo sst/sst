@@ -1,10 +1,13 @@
 import type { SSRManifest } from "astro";
-import type { APIGatewayProxyEventV2 } from "aws-lambda";
-import type { ResponseMode, ResponseStream } from "../lib/types";
+import type {
+  APIGatewayProxyEventV2,
+  CloudFrontRequestEvent,
+} from "aws-lambda";
+import type { ResponseMode, ResponseStream } from "./lib/types";
 import { NodeApp } from "astro/app/node";
 import { polyfill } from "@astrojs/webapi";
-import { InternalEvent, convertFrom, convertTo } from "../lib/event-mapper.js";
-import { debug } from "../lib/logger.js";
+import { InternalEvent, convertFrom, convertTo } from "./lib/event-mapper.js";
+import { debug } from "./lib/logger.js";
 
 polyfill(globalThis, {
   exclude: "window document",
@@ -19,7 +22,7 @@ function createRequest(internalEvent: InternalEvent) {
       ? undefined
       : internalEvent.body,
   };
-  debug("request", requestUrl, requestProps);
+  debug("request", { requestUrl, requestProps });
   return new Request(requestUrl, requestProps);
 }
 
@@ -28,8 +31,8 @@ export function createExports(
   { responseMode }: { responseMode: ResponseMode }
 ) {
   debug("handlerInit", { responseMode });
-  const useStreaming = responseMode === "stream";
-  const app = new NodeApp(manifest, useStreaming);
+  const isStreaming = responseMode === "stream";
+  const app = new NodeApp(manifest);
 
   async function streamHandler(
     event: APIGatewayProxyEventV2,
@@ -53,16 +56,19 @@ export function createExports(
     const response = await app.render(request, routeData);
 
     // Stream response back to Cloudfront
-    const result = await convertTo({
+    const convertedResponse = await convertTo({
       type: internalEvent.type,
       response,
       responseStream,
       cookies: Array.from(app.setCookieHeaders(response)),
     });
-    debug("result", result);
+
+    debug("response", convertedResponse);
   }
 
-  async function bufferHandler(event: APIGatewayProxyEventV2) {
+  async function bufferHandler(
+    event: APIGatewayProxyEventV2 | CloudFrontRequestEvent
+  ) {
     debug("event", event);
 
     // Parse Lambda event
@@ -85,18 +91,19 @@ export function createExports(
     const response = await app.render(request, routeData);
 
     // Buffer response back to Cloudfront
-    const result = await convertTo({
+    const convertedResponse = await convertTo({
       type: internalEvent.type,
       response,
       cookies: Array.from(app.setCookieHeaders(response)),
     });
-    debug("result", result);
-    return result;
+
+    debug("response", convertedResponse);
+    return convertedResponse;
   }
 
   return {
     // https://docs.aws.amazon.com/lambda/latest/dg/configuration-response-streaming.html
-    handler: useStreaming
+    handler: isStreaming
       ? awslambda.streamifyResponse(streamHandler)
       : bufferHandler,
   };

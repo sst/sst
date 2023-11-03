@@ -1,6 +1,18 @@
 import fs from "fs";
 import path from "path";
-import { SsrSite } from "./SsrSite.js";
+import { SsrSite, SsrSiteNormalizedProps, SsrSiteProps } from "./SsrSite.js";
+import { Construct } from "constructs";
+
+export interface SolidStartSiteProps extends SsrSiteProps {
+  /**
+   * The server function is deployed to Lambda in a single region. Alternatively, you can enable this option to deploy to Lambda@Edge.
+   * @default false
+   */
+  edge?: boolean;
+}
+
+type SolidStartSiteNormalizedProps = SolidStartSiteProps &
+  SsrSiteNormalizedProps;
 
 /**
  * The `SolidStartSite` construct is a higher level CDK construct that makes it easy to create a SolidStart app.
@@ -14,6 +26,8 @@ import { SsrSite } from "./SsrSite.js";
  * ```
  */
 export class SolidStartSite extends SsrSite {
+  declare props: SolidStartSiteNormalizedProps;
+
   protected plan() {
     const { path: sitePath, edge } = this.props;
     const serverConfig = {
@@ -22,6 +36,7 @@ export class SolidStartSite extends SsrSite {
     };
 
     return this.validatePlan({
+      edge: edge ?? false,
       cloudFrontFunctions: {
         serverCfFunction: {
           constructId: "CloudFrontFunction",

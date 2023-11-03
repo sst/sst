@@ -1,10 +1,10 @@
 # astro-sst
 
-This adapter allows Astro to deploy your SSR site to [AWS](https://aws.amazon.com/).
+This adapter allows Astro to deploy your SSR or static site to [AWS](https://aws.amazon.com/).
 
 ## Installation
 
-Add the AWS adapter to enable SSR in your Astro project with the following `astro add` command. This will install the adapter and make the appropriate changes to your `astro.config.mjs` file in one step.
+Add the AWS adapter to enable SST in your Astro project with the following `astro add` command. This will install the adapter and make the appropriate changes to your `astro.config.mjs` file in one step.
 
 ```sh
 # Using NPM
@@ -27,7 +27,7 @@ If you prefer to install the adapter manually instead, complete the following tw
 
    ```js title="astro.config.mjs" ins={2, 5-6}
    import { defineConfig } from "astro/config";
-   import aws from "astro-sst/lambda";
+   import aws from "astro-sst";
 
    export default defineConfig({
      output: "server",
@@ -35,16 +35,66 @@ If you prefer to install the adapter manually instead, complete the following tw
    });
    ```
 
-### Targets
+### Deployment Strategies
 
-You can deploy to different targets:
+You can utilize different deployment depending on your needs:
 
-- `edge`: SSR inside a [Lambda@Edge function](https://aws.amazon.com/lambda/edge/).
-- `lambda`: SSR inside a [Lambda function](https://aws.amazon.com/lambda/) (supports streaming).
+- `regional`: SSR inside a [Lambda function](https://aws.amazon.com/lambda/) with [CloudFront](https://aws.amazon.com/cloudfront/) cached assets. (_default_)
+- `edge`: SSR inside a [Lambda@Edge function](https://aws.amazon.com/lambda/edge/) with [CloudFront](https://aws.amazon.com/cloudfront/) cached assets.
+- `static`: SSG assets deployed to [S3](https://aws.amazon.com/s3/) with [CloudFront](https://aws.amazon.com/cloudfront/) cached assets.
 
 You can change where to target by changing the import:
 
-```js
-import aws from "astro-sst/lambda";
-import aws from "astro-sst/edge";
+```js title="astro.config.mjs" ins={2, 5-6}
+import { defineConfig } from "astro/config";
+import aws from "astro-sst";
+
+export default defineConfig({
+  output: "server",
+  adapter: aws({
+    deploymentStrategy: "edge",
+  }),
+});
+```
+
+### Response Mode
+
+When utilizing `regional` deployment strategy, you can choose how responses are handled:
+
+- `buffer`: Responses are buffered and sent as a single response. (_default_)
+- `stream`: Responses are streamed as they are generated.
+
+```js title="astro.config.mjs" ins={2, 5-6}
+import { defineConfig } from "astro/config";
+import aws from "astro-sst";
+
+export default defineConfig({
+  output: "server",
+  adapter: aws({
+    deploymentStrategy: "regional",
+    responseMode: "stream",
+  }),
+});
+```
+
+### Server Routes
+
+When utilizing `regional` deployment strategy, server routes should be defined for any routes utilizing non-`GET` methods:
+
+```js title="astro.config.mjs" ins={2, 5-6}
+import { defineConfig } from "astro/config";
+import aws from "astro-sst";
+
+export default defineConfig({
+  output: "server",
+  adapter: aws({
+    deploymentStrategy: "regional",
+    serverRoutes: [
+      "feedback", // Feedback page which requires POST method
+      "login",    // Login page which requires POST method
+      "user/*",   // Directory of user routes which are all SSR
+      "api/*",    // Directory of API endpoints which require all methods
+    ],
+  }),
+});
 ```
