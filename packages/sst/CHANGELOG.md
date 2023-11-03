@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.34.1
+
+### Patch Changes
+
+- [`b2f8a6dca`](https://github.com/sst/sst/commit/b2f8a6dca70db23ea71ef867054bc870fd63c5bb) Thanks [@thdxr](https://github.com/thdxr)! - test changeset
+
 ## 2.34.0
 
 ### Minor Changes
