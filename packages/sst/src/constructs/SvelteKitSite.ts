@@ -1,6 +1,17 @@
 import fs from "fs";
 import path from "path";
-import { SsrSite } from "./SsrSite.js";
+import { SsrSite, SsrSiteNormalizedProps, SsrSiteProps } from "./SsrSite.js";
+import { Construct } from "constructs";
+
+export interface SvelteKitSiteProps extends SsrSiteProps {
+  /**
+   * The SSR function is deployed to Lambda in a single region. Alternatively, you can enable this option to deploy to Lambda@Edge.
+   * @default false
+   */
+  edge?: boolean;
+}
+
+type SvelteKitSiteNormalizedProps = SvelteKitSiteProps & SsrSiteNormalizedProps;
 
 /**
  * The `SvelteKitSite` construct is a higher level CDK construct that makes it easy to create a SvelteKit app.
@@ -14,7 +25,12 @@ import { SsrSite } from "./SsrSite.js";
  * ```
  */
 export class SvelteKitSite extends SsrSite {
+  declare props: SvelteKitSiteNormalizedProps;
   protected typesPath = "src";
+
+  constructor(scope: Construct, id: string, props?: SvelteKitSiteProps) {
+    super(scope, id, props);
+  }
 
   protected plan() {
     const { path: sitePath, edge } = this.props;
@@ -47,6 +63,7 @@ export class SvelteKitSite extends SsrSite {
     };
 
     return this.validatePlan({
+      deploymentStrategy: edge ? "edge" : "regional",
       buildId: JSON.parse(
         fs
           .readFileSync(path.join(sitePath, clientDir, "_app/version.json"))

@@ -94,7 +94,7 @@ export class AstroSite extends SsrSite {
   }
 
   protected plan() {
-    const { path: sitePath, edge } = this.props;
+    const { path: sitePath } = this.props;
 
     const buildMeta = AstroSite.getBuildMeta(
       join(sitePath, "dist", BUILD_META_FILE_NAME)
@@ -103,24 +103,13 @@ export class AstroSite extends SsrSite {
     const isStatic = buildMeta.outputMode === "static";
     const isEdge = buildMeta.deploymentStrategy === "edge";
 
-    if (isEdge && !edge) {
-      throw new Error(
-        `Conflict between edge deployment strategy and 'edge' option. Set the 'edge' option to true.`
-      );
-    }
-
-    if (!isEdge && edge === true) {
-      throw new Error(
-        `Conflict between regional deployment strategy and 'edge' option. Either remove the 'edge' option or set it to false.`
-      );
-    }
-
     const serverConfig = {
       description: "Server handler for Astro",
       handler: join(sitePath, "dist", "server", "entry.handler"),
     };
 
     const plan: Plan = {
+      deploymentStrategy: buildMeta.deploymentStrategy,
       cloudFrontFunctions: {
         serverCfFunction: {
           constructId: "CloudFrontFunction",
