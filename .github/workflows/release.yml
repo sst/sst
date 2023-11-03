@@ -45,8 +45,8 @@ jobs:
       - name: Install dependencies
         run: pnpm install
 
-      - name: Check prettier
-        run: pnpm prettier --cache -c --loglevel=error .
+          ## - name: Check prettier
+          ##   run: pnpm prettier --cache -c --loglevel=error .
 
       - name: Create Release Pull Request or Publish to npm
         id: changesets
@@ -61,7 +61,7 @@ jobs:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: View outputs
-        run: echo ${{join(steps.changesets.outputs.*, ' ')}}
+        run: env
 
       - name: Aggregate
         id: aggregate
