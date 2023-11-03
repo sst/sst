@@ -538,7 +538,6 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
     this.doNotDeploy = !stack.isActive || (app.mode === "dev" && !dev?.deploy);
 
     validateSiteExists();
-    validateTimeout();
     validateDeprecatedFileOptions();
     writeTypesFile(typesPath);
 
@@ -564,6 +563,7 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
     // Build app
     buildApp();
     const plan = this.plan(bucket);
+    validateTimeout();
 
     // Create CloudFront
     const cfFunctions = createCloudFrontFunctions();
