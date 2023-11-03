@@ -1,5 +1,23 @@
 # @serverless-stack/cli2
 
+## 2.33.4
+
+### Patch Changes
+
+- [`cebd982db`](https://github.com/sst/sst/commit/cebd982db95c3baaae638d79d8909744ae057fab) Thanks [@thdxr](https://github.com/thdxr)! - test release
+
+## 2.33.3
+
+### Patch Changes
+
+- [`b02173721`](https://github.com/sst/sst/commit/b021737212d762862f29725f79c78145de66cd5f) Thanks [@thdxr](https://github.com/thdxr)! - cli: link console to exact app/stage
+
+- [`c68a1a36e`](https://github.com/sst/sst/commit/c68a1a36e5390de723a4238f10f6c7c60f74b59f) Thanks [@fwang](https://github.com/fwang)! - Cli: remove sst connect command
+
+- [#3454](https://github.com/sst/sst/pull/3454) [`0948f0131`](https://github.com/sst/sst/commit/0948f0131be7189863640baa12bd1ef58b5bd644) Thanks [@suil](https://github.com/suil)! - Service: expose application load balancer
+
+- [#3456](https://github.com/sst/sst/pull/3456) [`fe4ac3a98`](https://github.com/sst/sst/commit/fe4ac3a98d9c905ce5cf787884d99c3ff3bce913) Thanks [@bayssmekanique](https://github.com/bayssmekanique)! - AstroSite: fix Edge Function handler path for windows
+
 ## 2.33.2
 
 ### Patch Changes
