@@ -32,6 +32,7 @@ export interface ConfigOptions {
   bootstrap?: {
     useCdkBucket?: boolean;
     stackName?: string;
+    bucketName?: string;
     tags?: Record<string, string>;
   };
   cdk?: {

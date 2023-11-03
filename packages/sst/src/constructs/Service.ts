@@ -68,6 +68,7 @@ import { LogGroup, LogRetention, RetentionDays } from "aws-cdk-lib/aws-logs";
 import { Platform } from "aws-cdk-lib/aws-ecr-assets";
 import {
   ApplicationLoadBalancer,
+  ApplicationLoadBalancerProps,
   ApplicationTargetGroup,
   ApplicationTargetGroupProps,
 } from "aws-cdk-lib/aws-elasticloadbalancingv2";
@@ -461,7 +462,9 @@ export interface ServiceProps {
      * }
      * ```
      */
-    applicationLoadBalancer?: boolean;
+    applicationLoadBalancer?:
+      | boolean
+      | Omit<ApplicationLoadBalancerProps, "vpc">;
     /**
      * Customize the Application Load Balancer's target group.
      * @default true
@@ -556,12 +559,13 @@ export class Service extends Construct implements SSTConstruct {
   private props: ServiceNormalizedProps;
   private doNotDeploy: boolean;
   private devFunction?: Function;
-  private vpc: IVpc;
-  private cluster: Cluster;
-  private container: ContainerDefinition;
-  private taskDefinition: FargateTaskDefinition;
-  private service: FargateService;
+  private vpc?: IVpc;
+  private cluster?: Cluster;
+  private container?: ContainerDefinition;
+  private taskDefinition?: FargateTaskDefinition;
+  private service?: FargateService;
   private distribution?: Distribution;
+  private alb?: ApplicationLoadBalancer;
 
   constructor(scope: Construct, id: string, props?: ServiceProps) {
     super(scope, id);
@@ -587,12 +591,6 @@ export class Service extends Construct implements SSTConstruct {
     useServices().add(stack.stackName, id, this.props);
 
     if (this.doNotDeploy) {
-      // @ts-expect-error
-      this.vpc = this.cluster = null;
-      // @ts-expect-error
-      this.service = this.container = this.taskDefinition = null;
-      // @ts-expect-error
-      this.distribution = null;
       this.devFunction = this.createDevFunction();
       app.registerTypes(this);
       return;
@@ -604,6 +602,7 @@ export class Service extends Construct implements SSTConstruct {
       this.createService(vpc);
     const { alb, target } = this.createLoadBalancer(vpc, service);
     this.createAutoScaling(service, target);
+    this.alb = alb;
 
     // Create Distribution
     this.distribution = this.createDistribution(alb);
@@ -686,6 +685,7 @@ export class Service extends Construct implements SSTConstruct {
       fargateService: this.service,
       taskDefinition: this.taskDefinition,
       distribution: this.distribution?.cdk.distribution,
+      applicationLoadBalancer: this.alb,
       hostedZone: this.distribution?.cdk.hostedZone,
       certificate: this.distribution?.cdk.certificate,
     };
@@ -948,6 +948,9 @@ export class Service extends Construct implements SSTConstruct {
     const alb = new ApplicationLoadBalancer(this, "LoadBalancer", {
       vpc,
       internetFacing: true,
+      ...(cdk?.applicationLoadBalancer === true
+        ? {}
+        : cdk?.applicationLoadBalancer),
     });
     const listener = alb.addListener("Listener", { port: 80 });
     const target = listener.addTargets("TargetGroup", {
@@ -1092,10 +1095,11 @@ export class Service extends Construct implements SSTConstruct {
   }
 
   private addEnvironmentForService(name: string, value: string): void {
-    this.container.addEnvironment(name, value);
+    this.container?.addEnvironment(name, value);
   }
 
   private attachPermissionsForService(permissions: Permissions): void {
+    if (!this.taskDefinition) return;
     attachPermissionsToRole(this.taskDefinition.taskRole as Role, permissions);
   }
 

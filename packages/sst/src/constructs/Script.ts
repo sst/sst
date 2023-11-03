@@ -28,7 +28,7 @@ export interface ScriptProps {
    * import { Script } from "sst/constructs";
    *
    * new Script(stack, "Script", {
-   *   onCreate: "src/script.create",
+   *   onCreate: "src/function.create",
    *   params: {
    *     hello: "world",
    *   },
@@ -37,14 +37,14 @@ export interface ScriptProps {
    */
   params?: Record<string, any>;
   /**
-   * By default, the script runs during each deployment. If a version is provided, the script will only run when the version changes.
+   * By default, the `onUpdate` function runs during each deployment. If a version is provided, it will only run when the version changes.
    *
    * @example
    * ```js
    * import { Script } from "sst/constructs";
    *
    * new Script(stack, "Script", {
-   *   onCreate: "src/script.create",
+   *   onUpdate: "src/function.update",
    *   version: "v17",
    * });
    * ```
@@ -68,36 +68,34 @@ export interface ScriptProps {
     function?: FunctionProps;
   };
   /**
-   * Specifies the function to be run once when the Script construct is created.
+   * Specifies the function to be run once when the Script construct is added to the stack or when the entire stack is deployed for the first time.
    * @example
    * ```js
    * new Script(stack, "Api", {
-   *   onCreate: "src/function.handler",
+   *   onCreate: "src/function.create",
    * })
    * ```
    */
   onCreate?: FunctionDefinition;
   /**
-   * Specifies the function to be run each time the Script construct is redeployed. If a version is provided,
-   * the function is only executed when the version changes.
+   * Specifies the function to be run each time the Script construct is redeployed. If a version is provided, the function is only executed when the version changes.
    *
    * Note that the `onUpdate` function is not run during the initial creation of the Script construct.
    * For initial creation, use `onCreate`.
    * @example
    * ```js
    * new Script(stack, "Api", {
-   *   onUpdate: "src/function.handler",
+   *   onUpdate: "src/function.update",
    * })
    * ```
    */
   onUpdate?: FunctionDefinition;
   /**
-   * Specifies the function to be run once when the Script construct is deleted from the stack or
-   * when the entire stack is removed from the app.
+   * Specifies the function to be run once when the Script construct is deleted from the stack or when the entire stack is removed from the app.
    * @example
    * ```js
    * new Script(stack, "Api", {
-   *   onDelete: "src/function.handler",
+   *   onDelete: "src/function.delete",
    * })
    * ```
    */

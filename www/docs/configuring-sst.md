@@ -83,6 +83,7 @@ Here's the full list of config options that can be returned:
   - **`disableParameterizedStackNameCheck`** Disable the check for stack names to be parameterized with the stage name.
   - **`disableAppModeCheck`** Disables the confirmation prompt when switching between `sst deploy` and `sst dev` deployment modes. If set to `true`, the prompt will be suppressed when changing modes.
 - **`bootstrap`**
+  - **`bucketName`** The name to use for the SST bootstrap bucket
   - **`stackName`** The name to use for the SST bootstrap stack
   - **`tags`** Tags to use for the SST bootstrap stack
   - **`useCdkBucket`** Use the S3 bucket created by the CDK bootstrap process instead of creating a new one
