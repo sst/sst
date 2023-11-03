@@ -6,4 +6,3 @@ cp packages/sst/package.json packages/sst/dist/package.json
 sed -i.bak -e '2,5d' packages/sst/dist/package.json
 cp packages/sst/README.md packages/sst/dist/README.md
 pnpm -r publish --no-git-checks
-pnpm changeset publish

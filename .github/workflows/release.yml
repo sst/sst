@@ -73,7 +73,7 @@ jobs:
           node ./.changeset/aggregate.mjs
 
       - name: Create Release
-        if: steps.changesets.outputs.published == 'true'
+        # if: steps.changesets.outputs.published == 'true'
         uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
