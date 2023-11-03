@@ -53,7 +53,7 @@ jobs:
         # https://github.com/changesets/action
         uses: changesets/action@v1
         with:
-          createGithubReleases: false
+          createGithubReleases: true
           version: pnpm run version
           publish: pnpm run release
         env:
@@ -65,7 +65,7 @@ jobs:
 
       - name: Aggregate
         id: aggregate
-        # if: steps.changesets.outputs.published == 'true'
+        if: steps.changesets.outputs.published == 'true'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
@@ -73,7 +73,7 @@ jobs:
           node ./.changeset/aggregate.mjs
 
       - name: Create Release
-        # if: steps.changesets.outputs.published == 'true'
+        if: steps.changesets.outputs.published == 'true'
         uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
