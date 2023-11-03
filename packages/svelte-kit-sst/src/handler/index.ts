@@ -30,7 +30,7 @@ const serverId = `server-${generateUniqueId()}`;
 
 export async function handler(
   event: APIGatewayProxyEventV2 | CloudFrontRequestEvent | APIGatewayProxyEvent | WarmerEvent
-): Promise<any> {
+) {
   debug("event", event);
   // Handler warmer
   if ("type" in event) {
