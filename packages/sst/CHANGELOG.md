@@ -1,5 +1,19 @@
 # @serverless-stack/cli2
 
+## 2.34.0
+
+### Minor Changes
+
+- [#3458](https://github.com/sst/sst/pull/3458) [`3c12694c9`](https://github.com/sst/sst/commit/3c12694c990ff2ffd64f6736a6ac5546d708ba43) Thanks [@bayssmekanique](https://github.com/bayssmekanique)! - AstroSite: infer edge deployment from astro-sst adapter
+
+### Patch Changes
+
+- [#3436](https://github.com/sst/sst/pull/3436) [`5f09d4305`](https://github.com/sst/sst/commit/5f09d430528f8c1edbe6002a72015f432b3b69b4) Thanks [@dkershner6](https://github.com/dkershner6)! - NextjsSite: Dynamic RevalidationInsertFunction provisioning based on prerender-manifest size
+
+- [`91af56670`](https://github.com/sst/sst/commit/91af56670cfb8d86085703f61757f178c4226448) Thanks [@fwang](https://github.com/fwang)! - NextjsSite: update to OpenNext 2.3.0
+
+- [#3458](https://github.com/sst/sst/pull/3458) [`3c12694c9`](https://github.com/sst/sst/commit/3c12694c990ff2ffd64f6736a6ac5546d708ba43) Thanks [@bayssmekanique](https://github.com/bayssmekanique)! - astro-sst: unify regional and edge adapters
+
 ## 2.33.4
 
 ### Patch Changes
