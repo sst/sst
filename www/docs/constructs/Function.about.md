@@ -129,7 +129,9 @@ SST checks for a file with a `.ts`, `.tsx`, `.js`, or `.jsx` extension.
 
 Path to the entry point and handler function relative to the root. Uses the format, `path/to/file.function`. Where the first part is the path to the file, followed by the name of the function that's exported in that file. Note that you do not need a `.py` in the file path, just the name without the extension followed by the name of the handler function.
 
-IMPORTANT: It is also necessary to have a `requirements.txt` (or `Pipfile` or `poetry.lock`) for the python handler to know it is dealing with Python code.
+:::info
+It is also necessary to have a `requirements.txt` (or `Pipfile` or `poetry.lock`) for the Python handler to know it is dealing with Python code.
+:::
 
 ```
 new Function(stack, "PythonHelloWorld", {
