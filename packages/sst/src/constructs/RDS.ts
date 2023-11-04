@@ -45,6 +45,7 @@ export interface RDSProps {
   engine:
     | "mysql5.6"
     | "mysql5.7"
+    | "mysql8.0"
     | "postgresql11.13"
     | "postgresql11.16"
     | "postgresql13.9";
@@ -425,6 +426,10 @@ export class RDS extends Construct implements SSTConstruct {
     } else if (engine === "mysql5.7") {
       return DatabaseClusterEngine.auroraMysql({
         version: AuroraMysqlEngineVersion.VER_2_07_1,
+      });
+    } else if (engine === "mysql8.0") {
+      return DatabaseClusterEngine.auroraMysql({
+        version: AuroraMysqlEngineVersion.VER_3_05_0,
       });
     } else if (engine === "postgresql11.13") {
       return DatabaseClusterEngine.auroraPostgres({
