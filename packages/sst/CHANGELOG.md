@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.34.5
+
+### Patch Changes
+
+- [`a52f7247b`](https://github.com/sst/sst/commit/a52f7247b9c8564348bc9f91c3a2d290a95f32a2) Thanks [@thdxr](https://github.com/thdxr)! - function: splitting should always output .mjs
+
 ## 2.34.4
 
 ### Patch Changes
