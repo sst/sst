@@ -1,4 +1,4 @@
-import { patch, extend, extract, install } from "create-sst";
+import { patch, append, extract, install } from "create-sst";
 
 export default [
   extract(),
@@ -11,5 +11,11 @@ export default [
     operations: [
       { op: "add", path: "/scripts/dev", value: "sst bind next dev" },
     ],
+  }),
+  append({
+    file: ".gitignore",
+    string: ["", "", "# sst", ".sst", "", "# open-next", ".open-next"].join(
+      "\n"
+    ),
   }),
 ];

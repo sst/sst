@@ -572,7 +572,7 @@ importers:
         specifier: ^5.3.1
         version: 5.3.1
       astro-sst:
-        specifier: workspace:*
+        specifier: 2.34.3
         version: link:../astro-sst
       async:
         specifier: ^3.2.4
