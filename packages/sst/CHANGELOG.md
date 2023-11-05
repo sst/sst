@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.34.6
+
+### Patch Changes
+
+- [`cf125d460`](https://github.com/sst/sst/commit/cf125d4600def99dd7653e87bbbc77dab41fb97e) Thanks [@fwang](https://github.com/fwang)! - StaticSite: fix nested files not uploaded on Windows
+
 ## 2.34.5
 
 ### Patch Changes
