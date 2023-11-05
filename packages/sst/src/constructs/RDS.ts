@@ -429,7 +429,7 @@ export class RDS extends Construct implements SSTConstruct {
       });
     } else if (engine === "mysql8.0") {
       return DatabaseClusterEngine.auroraMysql({
-        version: AuroraMysqlEngineVersion.VER_3_05_0,
+        version: AuroraMysqlEngineVersion.VER_3_04_0,
       });
     } else if (engine === "postgresql11.13") {
       return DatabaseClusterEngine.auroraPostgres({
