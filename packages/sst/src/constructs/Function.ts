@@ -527,6 +527,20 @@ export interface NodeJSProps {
    * ```
    */
   sourcemap?: boolean;
+
+  /**
+   * If enabled, modules that are dynamically imported will be bundled as their own files with common dependencies placed in shared chunks. This can help drastically reduce cold starts as your function grows in size.
+   *
+   * @default false
+   *
+   * @example
+   * ```js
+   * nodejs: {
+   *   splitting: true
+   * }
+   * ```
+   */
+  splitting?: boolean;
 }
 
 /**

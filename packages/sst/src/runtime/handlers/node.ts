@@ -158,6 +158,7 @@ export const useNodeHandler = (): RuntimeHandler => {
           keepNames: true,
           bundle: true,
           logLevel: "silent",
+          splitting: nodejs.splitting,
           metafile: true,
           ...(isESM
             ? {
@@ -183,7 +184,8 @@ export const useNodeHandler = (): RuntimeHandler => {
                     }
                   : undefined,
               }),
-          outfile: target,
+          outfile: !nodejs.splitting ? target : undefined,
+          outdir: nodejs.splitting ? path.dirname(target) : undefined,
           // always generate sourcemaps in local
           // never generate sourcemaps if explicitly false
           // otherwise generate sourcemaps
