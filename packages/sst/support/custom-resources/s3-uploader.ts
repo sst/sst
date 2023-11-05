@@ -262,6 +262,7 @@ function getContentType(filename: string, textEncoding: string) {
     [".xml"]: { mime: "application/xml", isText: true },
     [".pdf"]: { mime: "application/pdf", isText: false },
     [".zip"]: { mime: "application/zip", isText: false },
+    [".wasm"]: {  mime: "application/wasm", isText: false },
   };
   const extensionData = extensions[ext as keyof typeof extensions];
   const mime = extensionData?.mime ?? "application/octet-stream";
