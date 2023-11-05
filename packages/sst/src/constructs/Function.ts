@@ -764,7 +764,7 @@ export class Function extends CDKFunction implements SSTConstruct {
       .forEach((per) => {
         props = Function.mergeProps(per, props);
       });
-    props.runtime = props.runtime || "nodejs16.x";
+    props.runtime = props.runtime || "nodejs18.x";
     if (props.runtime === "go1.x") useWarning().add("go.deprecated");
 
     // Set defaults
