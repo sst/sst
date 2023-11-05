@@ -525,15 +525,6 @@ interface ImportMeta {
   private buildApp() {
     const { path: sitePath, buildCommand } = this.props;
 
-    // validate site path exists
-    if (!fs.existsSync(sitePath)) {
-      throw new Error(
-        `No path found at "${path.resolve(sitePath)}" for the "${
-          this.node.id
-        }" StaticSite.`
-      );
-    }
-
     // build
     if (buildCommand) {
       try {
@@ -551,6 +542,15 @@ interface ImportMeta {
           `There was a problem building the "${this.node.id}" StaticSite.`
         );
       }
+    }
+
+    // validate site path exists
+    if (!fs.existsSync(sitePath)) {
+      throw new Error(
+        `No path found at "${path.resolve(sitePath)}" for the "${
+          this.node.id
+        }" StaticSite.`
+      );
     }
   }
 
