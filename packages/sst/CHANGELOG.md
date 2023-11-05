@@ -1,5 +1,13 @@
 # @serverless-stack/cli2
 
+## 2.34.4
+
+### Patch Changes
+
+- [`9da56a1c5`](https://github.com/sst/sst/commit/9da56a1c5222886a52d84e60a1742db9644de6b9) Thanks [@thdxr](https://github.com/thdxr)! - function: expose splitting option
+
+- [#3480](https://github.com/sst/sst/pull/3480) [`fc3dd92a6`](https://github.com/sst/sst/commit/fc3dd92a6f116b42f60196fd8a3ce8a2d04a9c85) Thanks [@jackschu](https://github.com/jackschu)! - Auth: Prevent throwing on CDK id
+
 ## 2.34.3
 
 ### Patch Changes

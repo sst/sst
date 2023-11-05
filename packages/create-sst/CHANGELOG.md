@@ -1,5 +1,11 @@
 # create-sst
 
+## 2.34.4
+
+### Patch Changes
+
+- [`0d185ec85`](https://github.com/sst/sst/commit/0d185ec8539bdfea634ab544aa9cef9d1c1dd3d8) Thanks [@fwang](https://github.com/fwang)! - create-sst: add ".sst" and ".open-next" to ".gitignore"
+
 ## 2.34.3
 
 ## 2.34.2
