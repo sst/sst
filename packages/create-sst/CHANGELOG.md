@@ -1,5 +1,25 @@
 # create-sst
 
+## 2.34.3
+
+## 2.34.2
+
+## 2.34.1
+
+## 2.34.0
+
+### Minor Changes
+
+- [#3458](https://github.com/sst/sst/pull/3458) [`3c12694c9`](https://github.com/sst/sst/commit/3c12694c990ff2ffd64f6736a6ac5546d708ba43) Thanks [@bayssmekanique](https://github.com/bayssmekanique)! - AstroSite: infer edge deployment from astro-sst adapter
+
+### Patch Changes
+
+- [#3458](https://github.com/sst/sst/pull/3458) [`3c12694c9`](https://github.com/sst/sst/commit/3c12694c990ff2ffd64f6736a6ac5546d708ba43) Thanks [@bayssmekanique](https://github.com/bayssmekanique)! - astro-sst: unify regional and edge adapters
+
+## 2.33.4
+
+## 2.33.3
+
 ## 2.33.2
 
 ## 2.33.1

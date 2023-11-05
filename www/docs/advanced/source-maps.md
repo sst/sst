@@ -15,7 +15,7 @@ new Function(stack, "MyFunction", {
   environment: {
     NODE_OPTIONS: "--enable-source-maps",
   },
-  bundle: {
+  nodejs: {
     sourcemap: true,
   },
 });
@@ -33,7 +33,7 @@ export default {
       environment: {
         NODE_OPTIONS: "--enable-source-maps",
       },
-      bundle: {
+      nodejs: {
         sourcemap: true,
       },
     });

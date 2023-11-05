@@ -41,7 +41,7 @@ SST gives you the full power of AWS. Making it easy to add any feature to your p
 
 ### Collaborate with your team
 
-Finally, you can `git push` to deploy using [_**Seed**_](https://seed.run), a service built by the team behind SST. And you can work on your apps together with your team with automatic preview environments.
+Finally, you can `git push` to deploy using [_**SEED**_](https://seed.run), a service built by the team behind SST. And you can work on your apps together with your team with automatic preview environments.
 
 ---
 
