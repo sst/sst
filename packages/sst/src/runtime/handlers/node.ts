@@ -160,6 +160,7 @@ export const useNodeHandler = (): RuntimeHandler => {
           logLevel: "silent",
           splitting: nodejs.splitting,
           metafile: true,
+          outExtension: nodejs.splitting ? { ".js": ".mjs" } : undefined,
           ...(isESM
             ? {
                 format: "esm",
