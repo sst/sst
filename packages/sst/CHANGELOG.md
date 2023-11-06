@@ -1,5 +1,17 @@
 # @serverless-stack/cli2
 
+## 2.35.0
+
+### Minor Changes
+
+- [#3484](https://github.com/sst/sst/pull/3484) [`74564805c`](https://github.com/sst/sst/commit/74564805c47a0887fc1123937739538c32928fab) Thanks [@adityavm](https://github.com/adityavm)! - Function: update default runtime to Node.js 18
+
+### Patch Changes
+
+- [`ffa4b0fe9`](https://github.com/sst/sst/commit/ffa4b0fe95e3527ef590f9b8a23e095fdaa227a2) Thanks [@fwang](https://github.com/fwang)! - AstroSite: support server function sourcemap
+
+- [`7e94c96b0`](https://github.com/sst/sst/commit/7e94c96b067df47cec439d5c44adbb5fc6e5e90a) Thanks [@fwang](https://github.com/fwang)! - Sites: invalidate cache after S3 uploader completes
+
 ## 2.34.7
 
 ### Patch Changes
