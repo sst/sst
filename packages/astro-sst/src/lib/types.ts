@@ -1,29 +1,5 @@
-import { APIGatewayProxyEventV2, Callback, Context } from "aws-lambda";
-import { Writable } from "stream";
-
-declare global {
-  const awslambda: {
-    streamifyResponse(handler: RequestHandler): RequestHandler;
-    HttpResponseStream: {
-      from(
-        underlyingStream: ResponseStream,
-        metadata: {
-          statusCode: number;
-          headers?: Record<string, string>;
-        }
-      ): ResponseStream;
-    };
-  };
-
-  interface CompressionStream {
-    readonly readable: ReadableStream;
-    readonly writable: WritableStream;
-  }
-  const CompressionStream: {
-    prototype: CompressionStream;
-    new (format: "gzip" | "deflate"): CompressionStream;
-  };
-}
+import type { APIGatewayProxyEventV2, Callback, Context } from "aws-lambda";
+import type { Writable } from "stream";
 
 export interface ResponseStream extends Writable {
   getBufferedData(): Buffer;
