@@ -197,8 +197,9 @@ export class Distribution extends Construct {
     version?: string;
     paths?: string[];
     wait?: boolean;
+    dependsOn?: IConstruct[];
   }) {
-    const { version, paths, wait } = props ?? {};
+    const { version, paths, wait, dependsOn } = props ?? {};
     const stack = Stack.of(this) as Stack;
 
     const policy = new Policy(this.scope, "CloudFrontInvalidatorPolicy", {
@@ -230,6 +231,7 @@ export class Distribution extends Construct {
       },
     });
     resource.node.addDependency(policy);
+    dependsOn?.forEach((c) => resource.node.addDependency(c));
 
     return resource;
   }

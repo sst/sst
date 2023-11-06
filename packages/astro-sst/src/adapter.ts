@@ -127,6 +127,17 @@ export default function createIntegration(
           });
         }
 
+        // Enable sourcemaps
+        updateConfig({
+          vite: {
+            ...config.vite,
+            build: {
+              ...config.vite?.build,
+              sourcemap: true,
+            },
+          },
+        });
+
         BuildMeta.setIntegrationConfig(integrationConfig);
       },
       "astro:config:done": ({ config, setAdapter }) => {
