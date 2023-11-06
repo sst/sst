@@ -1,5 +1,11 @@
 # astro-sst
 
+## 2.35.0
+
+### Patch Changes
+
+- [`ffa4b0fe9`](https://github.com/sst/sst/commit/ffa4b0fe95e3527ef590f9b8a23e095fdaa227a2) Thanks [@fwang](https://github.com/fwang)! - AstroSite: support server function sourcemap
+
 ## 2.34.7
 
 ## 2.34.6
