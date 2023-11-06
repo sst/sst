@@ -32,9 +32,9 @@ function getAdapter({
       hybridOutput: "stable",
       serverOutput: "stable",
       assets: {
-        supportKind: "stable",
+        supportKind: isRegional ? "stable" : "unsupported",
         isSharpCompatible: isRegional,
-        isSquooshCompatible: isRegional,
+        isSquooshCompatible: false,
       },
     },
   };
@@ -52,14 +52,19 @@ function getAdapter({
       };
 }
 
-export default function createIntegration(entrypointParameters: EntrypointParameters = {}): AstroIntegration {
+export default function createIntegration(
+  entrypointParameters: EntrypointParameters = {}
+): AstroIntegration {
   const integrationConfig: IntegrationConfig = {
     deploymentStrategy: entrypointParameters.deploymentStrategy ?? "regional",
     responseMode: entrypointParameters.responseMode ?? "buffer",
     serverRoutes: entrypointParameters.serverRoutes ?? [],
   };
 
-  if (integrationConfig.deploymentStrategy !== "regional" && integrationConfig.responseMode === "stream") {
+  if (
+    integrationConfig.deploymentStrategy !== "regional" &&
+    integrationConfig.responseMode === "stream"
+  ) {
     throw new Error(
       `Deployment strategy ${integrationConfig.deploymentStrategy} does not support streaming responses. Use 'buffer' response mode.`
     );
@@ -83,6 +88,7 @@ export default function createIntegration(entrypointParameters: EntrypointParame
             updateConfig({
               output: "server",
             });
+            config.output = "server";
           }
         }
 
@@ -95,6 +101,29 @@ export default function createIntegration(entrypointParameters: EntrypointParame
           );
           updateConfig({
             output: "static",
+          });
+          config.output = "static";
+        }
+
+        if (
+          config.output !== "static" &&
+          config.image.service.entrypoint.endsWith("sharp") &&
+          config.image.remotePatterns.length === 0 &&
+          config.image.domains.length === 0 &&
+          typeof config.site === "string"
+        ) {
+          const siteUrl = new URL(config.site);
+          updateConfig({
+            image: {
+              remotePatterns: [
+                {
+                  protocol: siteUrl.protocol,
+                  hostname: siteUrl.hostname,
+                  port: siteUrl.port,
+                  path: `${config.build.assets}/**`,
+                },
+              ],
+            },
           });
         }
 

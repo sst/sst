@@ -8,7 +8,10 @@ import {
   SsrSiteProps,
 } from "./SsrSite.js";
 import { AllowedMethods } from "aws-cdk-lib/aws-cloudfront";
+import { aws_lambda } from "aws-cdk-lib";
 import { Construct } from "constructs";
+import { SsrFunctionProps } from "./SsrFunction.js";
+import { createRequire } from "module";
 
 const BUILD_META_FILE_NAME: BuildMetaFileName = "sst.buildMeta.json";
 
@@ -103,7 +106,7 @@ export class AstroSite extends SsrSite {
     const isStatic = buildMeta.outputMode === "static";
     const edge = buildMeta.deploymentStrategy === "edge";
 
-    const serverConfig = {
+    let serverConfig: SsrFunctionProps = {
       description: "Server handler for Astro",
       handler: join(sitePath, "dist", "server", "entry.handler"),
     };
@@ -174,6 +177,56 @@ export class AstroSite extends SsrSite {
           origin: "staticsServer",
         });
       } else {
+        if (buildMeta.imageService === "sharp") {
+          const pathToSharpLayerZip = createRequire(import.meta.url).resolve(
+            "astro-sst/layers/sharp"
+          );
+
+          if (!existsSync(pathToSharpLayerZip)) {
+            throw new Error(
+              `Could not find sharp layer zip at ${pathToSharpLayerZip}. Update your 'astro-sst' package version and rebuild your Astro site.`
+            );
+          }
+
+          (plan.cloudFrontFunctions!.imageServiceCfFunction = {
+            constructId: "ImageServiceCloudFrontFunction",
+            injections: [this.useCloudFrontFunctionHostHeaderInjection()],
+          }),
+            plan.behaviors.push({
+              cacheType: "server",
+              pattern: "_image",
+              cfFunction: "imageServiceCfFunction",
+              origin: "regionalServer",
+              allowedMethods: AllowedMethods.ALLOW_GET_HEAD_OPTIONS,
+            });
+
+          serverConfig = {
+            ...serverConfig,
+            nodejs: {
+              esbuild: {
+                external: ["sharp"],
+              },
+            },
+            layers: [
+              new aws_lambda.LayerVersion(this, "sharp", {
+                /**
+                 * This is a prebuilt layer for sharp.
+                 * Source: https://github.com/pH200/sharp-layer
+                 */
+                code: aws_lambda.Code.fromAsset(pathToSharpLayerZip),
+                compatibleRuntimes: [
+                  aws_lambda.Runtime.NODEJS_16_X,
+                  aws_lambda.Runtime.NODEJS_18_X,
+                ],
+                compatibleArchitectures: [
+                  aws_lambda.Architecture.ARM_64,
+                  aws_lambda.Architecture.X86_64,
+                ],
+              }),
+            ],
+          };
+        }
+
         plan.origins.regionalServer = {
           type: "function",
           constructId: "ServerFunction",

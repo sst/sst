@@ -25,7 +25,8 @@
     "./lambda": "./dist/lambda/adapter.js",
     "./static": "./dist/static/adapter.js",
     "./build-meta": "./dist/lib/build-meta.js",
-    "./package.json": "./package.json"
+    "./package.json": "./package.json",
+    "./layers/sharp": "./layers/sharp_v0.32.6.zip"
   },
   "typesVersions": {
     "*": {
