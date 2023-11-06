@@ -52,14 +52,19 @@ function getAdapter({
       };
 }
 
-export default function createIntegration(entrypointParameters: EntrypointParameters = {}): AstroIntegration {
+export default function createIntegration(
+  entrypointParameters: EntrypointParameters = {}
+): AstroIntegration {
   const integrationConfig: IntegrationConfig = {
     deploymentStrategy: entrypointParameters.deploymentStrategy ?? "regional",
     responseMode: entrypointParameters.responseMode ?? "buffer",
     serverRoutes: entrypointParameters.serverRoutes ?? [],
   };
 
-  if (integrationConfig.deploymentStrategy !== "regional" && integrationConfig.responseMode === "stream") {
+  if (
+    integrationConfig.deploymentStrategy !== "regional" &&
+    integrationConfig.responseMode === "stream"
+  ) {
     throw new Error(
       `Deployment strategy ${integrationConfig.deploymentStrategy} does not support streaming responses. Use 'buffer' response mode.`
     );
@@ -97,6 +102,17 @@ export default function createIntegration(entrypointParameters: EntrypointParame
             output: "static",
           });
         }
+
+        // Enable sourcemaps
+        updateConfig({
+          vite: {
+            ...config.vite,
+            build: {
+              ...config.vite?.build,
+              sourcemap: true,
+            },
+          },
+        });
 
         BuildMeta.setIntegrationConfig(integrationConfig);
       },

@@ -1,5 +1,7 @@
 import url from "url";
 import path from "path";
+import zlib from "zlib";
+import fs from "fs/promises";
 import spawn from "cross-spawn";
 import { Construct } from "constructs";
 import {
@@ -48,6 +50,7 @@ import { Permissions, attachPermissionsToRole } from "./util/permission.js";
 import { Size, toCdkSize } from "./util/size.js";
 import { Duration, toCdkDuration } from "./util/duration.js";
 import { useDeferredTasks } from "./deferred_task.js";
+import { Asset } from "aws-cdk-lib/aws-s3-assets";
 const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
 
 export interface SsrFunctionProps
@@ -275,19 +278,35 @@ export class SsrFunction extends Construct implements SSTConstruct {
       copyFiles: this.props.copyFiles,
     });
 
-    // Build function
-    const bundle = await useRuntimeHandlers().build(this.node.addr, "deploy");
+    // build function
+    const result = await useRuntimeHandlers().build(this.node.addr, "deploy");
 
     // create wrapper that calls the handler
-    if (bundle.type === "error")
+    if (result.type === "error")
       throw new Error(
         [
           `There was a problem bundling the SSR function for the "${this.node.id}" Site.`,
-          ...bundle.errors,
+          ...result.errors,
         ].join("\n")
       );
 
-    return AssetCode.fromAsset(bundle.out);
+    // upload sourcemap
+    const stack = Stack.of(this) as Stack;
+    if (result.sourcemap) {
+      const data = await fs.readFile(result.sourcemap);
+      await fs.writeFile(result.sourcemap, zlib.gzipSync(data));
+      const asset = new Asset(this, "Sourcemap", {
+        path: result.sourcemap,
+      });
+      await fs.rm(result.sourcemap);
+      useFunctions().sourcemaps.add(stack.stackName, {
+        srcBucket: asset.bucket,
+        srcKey: asset.s3ObjectKey,
+        tarKey: this.functionArn,
+      });
+    }
+
+    return AssetCode.fromAsset(result.out);
   }
 
   private async buildAssetFromBundle(bundle: string) {
