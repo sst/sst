@@ -187,7 +187,7 @@ export class App extends CDKApp {
    * @example
    * ```js
    * app.setDefaultFunctionProps({
-   *   runtime: "nodejs12.x",
+   *   runtime: "nodejs16.x",
    *   timeout: 30
    * })
    * ```
