@@ -1374,6 +1374,7 @@ function handler(event) {
         version: invalidationBuildId,
         paths: invalidationPaths,
         wait: invalidation.wait,
+        dependsOn: s3DeployCRs,
       });
     }
   }
