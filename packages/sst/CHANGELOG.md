@@ -1,5 +1,15 @@
 # @serverless-stack/cli2
 
+## 2.34.7
+
+### Patch Changes
+
+- [#3475](https://github.com/sst/sst/pull/3475) [`acbe1615f`](https://github.com/sst/sst/commit/acbe1615f130f3271e83725c7d7970ffe9a15aeb) Thanks [@BradDobson2](https://github.com/BradDobson2)! - AppSyncApi: improve multiple schema functionality
+
+- [#3482](https://github.com/sst/sst/pull/3482) [`07bd1b296`](https://github.com/sst/sst/commit/07bd1b296e9e6fbe946fc3154b9fb348955707c6) Thanks [@kelvinCJJ](https://github.com/kelvinCJJ)! - RDS: add support for MySQL 8.0
+
+- [#3463](https://github.com/sst/sst/pull/3463) [`9238c1d37`](https://github.com/sst/sst/commit/9238c1d37d494d4b4152a49a40d29a3622932ac5) Thanks [@wpoynter](https://github.com/wpoynter)! - StaticSite: set correct content type for wasm files
+
 ## 2.34.6
 
 ### Patch Changes
