@@ -738,6 +738,6 @@ export class Job extends Construct implements SSTConstruct {
 
   private convertJobRuntimeToFunctionRuntime() {
     const { runtime } = this.props;
-    return runtime === "container" ? "container" : "nodejs16.x";
+    return runtime === "container" ? "container" : "nodejs18.x";
   }
 }
