@@ -127,14 +127,16 @@ export default function createIntegration(
           });
         }
 
-        // Enable sourcemaps
-        updateConfig({
-          vite: {
-            build: {
-              sourcemap: true,
+        if (config.output !== "static") {
+          // Enable sourcemaps for SSR builds.
+          updateConfig({
+            vite: {
+              build: {
+                sourcemap: true,
+              },
             },
-          },
-        });
+          });
+        }
 
         BuildMeta.setIntegrationConfig(integrationConfig);
       },
