@@ -462,21 +462,12 @@ new RemixSite(stack, "Site", {
 #### Using an existing S3 Bucket
 
 ```js {5-7}
-import * as cloudfront from "aws-cdk-lib/aws-cloudfront";
 import * as s3 from "aws-cdk-lib/aws-s3";
 
 new RemixSite(stack, "Site", {
   path: "my-remix-app/",
   cdk: {
     bucket: s3.Bucket.fromBucketName(stack, "Bucket", "my-bucket"),
-    // Below only required for non-public buckets
-    s3Origin: {
-      originAccessIdentity: cloudfront.OriginAccessIdentity.fromOriginAccessIdentityId(
-        stack,
-        "OriginAccessIdentity",
-        "ABCDEFGHIJKLMN"
-      ),
-    },
   },
 });
 ```
