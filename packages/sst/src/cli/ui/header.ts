@@ -20,7 +20,7 @@ export async function printHeader(input: { console?: boolean; hint?: string }) {
     const local = await useLocalServerConfig();
     Colors.line(
       `${Colors.primary(` `)}  ${Colors.bold("Console:")} ${Colors.link(
-        local.url
+        local.url + `/local/${project.config.name}/${project.config.stage}`
       )}`
     );
   }
