@@ -970,6 +970,25 @@ test("cdk.viewerProtocolPolicy: defined", async () => {
   });
 });
 
+test("cdk.s3Origin: defined", async () => {
+  const { site, stack } = await createSite({
+    cdk: {
+      s3Origin: {
+        originPath: "/foo",
+      },
+    },
+  });
+  hasResource(stack, "AWS::CloudFront::Distribution", {
+    DistributionConfig: objectLike({
+      Origins: arrayWith([
+        objectLike({
+          OriginPath: "/foo",
+        }),
+      ]),
+    }),
+  });
+});
+
 test("cdk.server.logRetention", async () => {
   const { site, stack } = await createSite({
     cdk: {

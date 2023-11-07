@@ -60,6 +60,7 @@ import {
 } from "aws-cdk-lib/aws-cloudfront";
 import {
   S3Origin,
+  S3OriginProps,
   HttpOrigin,
   OriginGroup,
 } from "aws-cdk-lib/aws-cloudfront-origins";
@@ -403,6 +404,20 @@ export interface SsrSiteProps {
      */
     distribution?: SsrCdkDistributionProps;
     /**
+     * Override the CloudFront S3 origin properties.
+     * @example
+     * ```js
+     * import { OriginAccessIdenty } from "aws-cdk-lib/aws-cloudfront";
+     *
+     * cdk: {
+     *   s3Origin: {
+     *     originAccessIdentity: OriginAccessIdentity.fromOriginAccessIdentityId(stack, "OriginAccessIdentity", "XXXXXXXX" ),
+     *   },
+     * }
+     * ```
+     */
+    s3Origin?: S3OriginProps;
+    /**
      * Override the CloudFront cache policy properties for responses from the
      * server rendering Lambda.
      *
@@ -414,12 +429,12 @@ export interface SsrSiteProps {
      *
      * ```js
      * serverCachePolicy: new CachePolicy(this, "ServerCache", {
-     *   queryStringBehavior: CacheQueryStringBehavior.all()
-     *   headerBehavior: CacheHeaderBehavior.none()
-     *   cookieBehavior: CacheCookieBehavior.none()
-     *   defaultTtl: Duration.days(0)
-     *   maxTtl: Duration.days(365)
-     *   minTtl: Duration.days(0)
+     *   queryStringBehavior: CacheQueryStringBehavior.all(),
+     *   headerBehavior: CacheHeaderBehavior.none(),
+     *   cookieBehavior: CacheCookieBehavior.none(),
+     *   defaultTtl: Duration.days(0),
+     *   maxTtl: Duration.days(365),
+     *   minTtl: Duration.days(0),
      * })
      * ```
      */
@@ -953,6 +968,7 @@ function handler(event) {
     function createS3Origin(props: S3OriginConfig) {
       const s3Origin = new S3Origin(bucket, {
         originPath: "/" + (props.originPath ?? ""),
+        ...(cdk?.s3Origin ?? {}),
       });
 
       const assets = createS3OriginAssets(props.copy);
