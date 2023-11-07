@@ -120,25 +120,6 @@ By default, the Astro app server is deployed to a single region defined in your 
 
 You can enable edge like this:
 
-```ts title="sst.config.ts"
-import { AstroSite, StackContext } from "sst/constructs";
-
-export default function MyStack({ stack }: StackContext) {
-  // ... existing constructs
-
-  // Create the Astro site
-  const site = new AstroSite(stack, "Site", {
-    path: "my-astro-app/",
-    edge: true,
-  });
-
-  // Add the site's URL to stack output
-  stack.addOutputs({
-    URL: site.url,
-  });
-}
-```
-
 ```js title="astro.config.mjs"
 import { defineConfig } from "astro/config";
 import aws from "astro-sst";
@@ -161,7 +142,7 @@ We recommend you to deploy to a single region when unsure.
 
 Due to the [CloudFront limit of 25 path pattern per distribution](https://docs.sst.dev/known-issues#cloudfront-cachebehaviors-limit-exceeded), it's impractical to create one path for each route in your Astro app. To work around this limitation, all routes are first checked against the S3 cache before being directed to the Lambda function for server rendering. This method utilizes the CloudFront origin group, with the S3 bucket serving as the primary origin and the server function as the failover origin. Note that the origin group can only support `GET`, `HEAD`, and `OPTIONS` request methods. To support other request methods, you should specify the route patterns in the `astro.config.mjs` file as the `serverRoutes` parameter on the adapter registration method (ie `aws({serverRoutes: []})`).
 
-```js {3-10}
+```js
 export default defineConfig({
   adapter: aws({
     serverRoutes: [
@@ -182,7 +163,7 @@ Route patterns are case sensitive. And the following wildcard characters can be 
 
 Astro natively supports [streaming](https://docs.astro.build/en/guides/server-side-rendering/#streaming), allowing a page to be broken down into chunks. These chunks can be sent over the network in sequential order and then incrementally rendered in the browser. This process can significantly enhances page performance and allow larger responses sizes than buffered responses, but there is a slight performance overhead. To enable streaming, set the `responseMode` property on the adapter registration method within the `astro.config.mjs` to `stream`. The default response mode is `buffer` which will wait for the entire response to be generated before sending it to the client.
 
-```js {3-10}
+```js title="astro.config.mjs"
 export default defineConfig({
   adapter: aws({
     responseMode: "stream"
@@ -588,16 +569,27 @@ new AstroSite(stack, "Site", {
 
 #### Using an existing S3 Bucket
 
-```js {6}
-import * as s3 from "aws-cdk-lib/aws-s3";
+```js
+import { Bucket } from "aws-cdk-lib/aws-s3";
+import { OriginAccessIdentity } from "aws-cdk-lib/aws-cloudfront";
 
 new AstroSite(stack, "Site", {
   path: "my-astro-app/",
   cdk: {
-    bucket: s3.Bucket.fromBucketName(stack, "Bucket", "my-bucket"),
+    bucket: Bucket.fromBucketName(stack, "Bucket", "my-bucket"),
+    // Required for non-public buckets
+    s3Origin: {
+      originAccessIdentity: OriginAccessIdentity.fromOriginAccessIdentityId(
+        stack,
+        "OriginAccessIdentity",
+        "XXXXXXXX"
+      ),
+    },    
   },
 });
 ```
+
+Setting the `originAccessIdentity` prop enables an imported bucket to be properly secured with a bucket policy without giving public access to the bucket.
 
 #### Reusing CloudFront cache policies
 

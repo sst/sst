@@ -527,14 +527,25 @@ new NextjsSite(stack, "Site", {
 
 ```js
 import { Bucket } from "aws-cdk-lib/aws-s3";
+import { OriginAccessIdentity } from "aws-cdk-lib/aws-cloudfront";
 
 new NextjsSite(stack, "Site", {
   path: "my-next-app/",
   cdk: {
     bucket: Bucket.fromBucketName(stack, "Bucket", "my-bucket"),
+    // Required for non-public buckets
+    s3Origin: {
+      originAccessIdentity: OriginAccessIdentity.fromOriginAccessIdentityId(
+        stack,
+        "OriginAccessIdentity",
+        "XXXXXXXX"
+      ),
+    },    
   },
 });
 ```
+
+Setting the `originAccessIdentity` prop enables an imported bucket to be properly secured with a bucket policy without giving public access to the bucket.
 
 #### Reusing CloudFront cache policies
 
