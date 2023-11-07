@@ -54,10 +54,14 @@ import { Asset } from "aws-cdk-lib/aws-s3-assets";
 const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
 
 export interface SsrFunctionProps
-  extends Omit<FunctionOptions, "memorySize" | "timeout" | "runtime"> {
+  extends Omit<
+    FunctionOptions,
+    "memorySize" | "timeout" | "runtime" | "architecture"
+  > {
   bundle?: string;
   handler: string;
   runtime?: "nodejs14.x" | "nodejs16.x" | "nodejs18.x";
+  architecture?: "arm_64" | "x86_64" | Architecture;
   timeout?: number | Duration;
   memorySize?: number | Size;
   permissions?: Permissions;
@@ -181,7 +185,12 @@ export class SsrFunction extends Construct implements SSTConstruct {
           : runtime === "nodejs16.x"
           ? Runtime.NODEJS_16_X
           : Runtime.NODEJS_18_X,
-      architecture: architecture || Architecture.ARM_64,
+      architecture:
+        architecture instanceof Architecture
+          ? architecture
+          : architecture === "x86_64"
+          ? Architecture.X86_64
+          : Architecture.ARM_64,
       memorySize:
         typeof memorySize === "string"
           ? toCdkSize(memorySize).toMebibytes()

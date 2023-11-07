@@ -213,6 +213,18 @@ export interface SsrSiteProps {
    */
   runtime?: "nodejs14.x" | "nodejs16.x" | "nodejs18.x";
   /**
+   * The instruction set [architecture](https://docs.aws.amazon.com/lambda/latest/dg/foundation-arch.html) for the SSR function.
+   *
+   * Note that this value is ignored for edge deployments as only x86 is supported.
+   *
+   * @default arm_64
+   * @example
+   * ```js
+   * architecture: "x86_64",
+   * ```
+   */
+  architecture?: "x86_64" | "arm_64";
+  /**
    * Used to configure nodejs function properties
    */
   nodejs?: SsrSiteNodeJSProps;
@@ -480,6 +492,7 @@ export type SsrSiteNormalizedProps = SsrSiteProps & {
   path: Exclude<SsrSiteProps["path"], undefined>;
   typesPath: Exclude<SsrSiteProps["typesPath"], undefined>;
   runtime: Exclude<SsrSiteProps["runtime"], undefined>;
+  architecture: Exclude<SsrSiteProps["architecture"], undefined>;
   timeout: Exclude<SsrSiteProps["timeout"], undefined>;
   memorySize: Exclude<SsrSiteProps["memorySize"], undefined>;
   invalidation: Exclude<SsrSiteProps["invalidation"], undefined> & {
@@ -515,6 +528,7 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
       path: ".",
       typesPath: ".",
       runtime: "nodejs18.x",
+      architecture: "arm_64",
       timeout: "10 seconds",
       memorySize: "1024 MB",
       ...rawProps,
@@ -535,6 +549,7 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
       typesPath,
       buildCommand,
       runtime,
+      architecture,
       timeout,
       memorySize,
       regional,
@@ -981,6 +996,7 @@ function handler(event) {
     function createFunctionOrigin(props: FunctionOriginConfig) {
       const fn = new SsrFunction(self, props.constructId, {
         runtime,
+        architecture,
         timeout,
         memorySize,
         bind,

@@ -97,7 +97,7 @@ export class AstroSite extends SsrSite {
   }
 
   protected plan() {
-    const { path: sitePath } = this.props;
+    const { path: sitePath, architecture } = this.props;
 
     const buildMeta = AstroSite.getBuildMeta(
       join(sitePath, "dist", BUILD_META_FILE_NAME)
@@ -179,7 +179,7 @@ export class AstroSite extends SsrSite {
       } else {
         if (buildMeta.imageService === "sharp") {
           const pathToSharpLayerZip = createRequire(import.meta.url).resolve(
-            "astro-sst/layers/sharp"
+            `astro-sst/layers/sharp/${architecture}`
           );
 
           if (!existsSync(pathToSharpLayerZip)) {
@@ -202,6 +202,7 @@ export class AstroSite extends SsrSite {
 
           serverConfig = {
             ...serverConfig,
+            architecture,
             nodejs: {
               esbuild: {
                 external: ["sharp"],
@@ -219,8 +220,9 @@ export class AstroSite extends SsrSite {
                   aws_lambda.Runtime.NODEJS_18_X,
                 ],
                 compatibleArchitectures: [
-                  aws_lambda.Architecture.ARM_64,
-                  aws_lambda.Architecture.X86_64,
+                  architecture === "arm_64"
+                    ? aws_lambda.Architecture.ARM_64
+                    : aws_lambda.Architecture.X86_64,
                 ],
               }),
             ],
