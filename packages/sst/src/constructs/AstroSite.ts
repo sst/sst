@@ -12,36 +12,6 @@ import { Construct } from "constructs";
 
 const BUILD_META_FILE_NAME: BuildMetaFileName = "sst.buildMeta.json";
 
-export interface AstroSiteProps extends SsrSiteProps {
-  regional?: SsrSiteProps["regional"] & {
-    /**
-     * List all routes that will be handling non-GET requests. For example, routes like form submissions, logins, and API endpoints.
-     *
-     * Route patterns are case sensitive. And the following wildcard characters can be used:
-     *   - "*" matches 0 or more characters.
-     *   - "?" matches exactly 1 character.
-     *
-     * Matched routes will be handled directly by the server function.
-     * @deprecated Define `serverRoutes` in `astro.config.mjs` instead.
-     * @default true
-     * @example
-     * ```js
-     * regional: {
-     *   serverRoutes: [
-     *     "feedback", // Feedback page which requires POST method
-     *     "login",    // Login page which requires POST method
-     *     "user/*",   // Directory of user routes which are all SSR
-     *     "api/*"     // Directory of API endpoints which require all methods
-     *   ]
-     * }
-     * ```
-     */
-    serverRoutes?: string[];
-  };
-}
-
-type AstroSiteNormalizedProps = AstroSiteProps & SsrSiteNormalizedProps;
-
 /**
  * The `AstroSite` construct is a higher level CDK construct that makes it easy to create a Astro app.
  * @example
@@ -54,15 +24,12 @@ type AstroSiteNormalizedProps = AstroSiteProps & SsrSiteNormalizedProps;
  * ```
  */
 export class AstroSite extends SsrSite {
-  declare props: AstroSiteNormalizedProps;
+  declare props: SsrSiteNormalizedProps;
 
-  constructor(scope: Construct, id: string, props?: AstroSiteProps) {
+  constructor(scope: Construct, id: string, props?: SsrSiteProps) {
     super(scope, id, {
       ...props,
       typesPath: props?.typesPath ?? "src",
-      regional: {
-        ...props?.regional,
-      },
     });
   }
 
@@ -127,13 +94,14 @@ export class AstroSite extends SsrSite {
   }
 
   protected plan() {
-    const { path: sitePath, edge, regional } = this.props;
+    const { path: sitePath } = this.props;
 
     const buildMeta = AstroSite.getBuildMeta(
       join(sitePath, "dist", BUILD_META_FILE_NAME)
     );
 
     const isStatic = buildMeta.outputMode === "static";
+    const edge = buildMeta.deploymentStrategy === "edge";
 
     const serverConfig = {
       description: "Server handler for Astro",
@@ -141,12 +109,13 @@ export class AstroSite extends SsrSite {
     };
 
     const plan: Plan = {
+      edge,
       cloudFrontFunctions: {
         serverCfFunction: {
           constructId: "CloudFrontFunction",
           injections: [
             this.useCloudFrontFunctionHostHeaderInjection(),
-            ...(!edge ? [AstroSite.getCFRoutingFunction(buildMeta)] : []),
+            AstroSite.getCFRoutingFunction(buildMeta),
           ],
         },
       },
@@ -177,26 +146,6 @@ export class AstroSite extends SsrSite {
           },
         },
       };
-      plan.behaviors.push(
-        {
-          cacheType: "server",
-          cfFunction: "serverCfFunction",
-          edgeFunction: "edgeServer",
-          origin: "staticsServer",
-        },
-        ...readdirSync(join(sitePath, buildMeta.clientBuildOutputDir)).map(
-          (item) =>
-            ({
-              cacheType: "static",
-              pattern: statSync(
-                join(sitePath, buildMeta.clientBuildOutputDir, item)
-              ).isDirectory()
-                ? `${item}/*`
-                : item,
-              origin: "staticsServer",
-            } as const)
-        )
-      );
       plan.behaviors.push(
         {
           cacheType: "server",
@@ -251,7 +200,7 @@ export class AstroSite extends SsrSite {
             pattern: `${buildMeta.clientBuildVersionedSubDir}/*`,
             origin: "staticsServer",
           },
-          ...(buildMeta.serverRoutes ?? regional?.serverRoutes ?? []).map(
+          ...buildMeta.serverRoutes?.map(
             (route) =>
               ({
                 cacheType: "server",

@@ -186,11 +186,6 @@ export interface SsrSiteProps {
    */
   customDomain?: string | SsrDomainProps;
   /**
-   * The SSR function is deployed to Lambda in a single region. Alternatively, you can enable this option to deploy to Lambda@Edge.
-   * @default false
-   */
-  edge?: boolean;
-  /**
    * The execution timeout in seconds for SSR function.
    * @default 10 seconds
    * @example
@@ -502,6 +497,7 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
   protected bucket: Bucket;
   protected serverFunction?: EdgeFunction | SsrFunction;
   private serverFunctionForDev?: SsrFunction;
+  private edge?: boolean;
   private distribution: Distribution;
 
   constructor(scope: Construct, id: string, rawProps?: SsrSiteProps) {
@@ -533,7 +529,6 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
       runtime,
       timeout,
       memorySize,
-      edge,
       regional,
       dev,
       assets,
@@ -550,7 +545,6 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
     this.doNotDeploy = !stack.isActive || (app.mode === "dev" && !dev?.deploy);
 
     validateSiteExists();
-    validateTimeout();
     validateDeprecatedFileOptions();
     writeTypesFile(typesPath);
 
@@ -576,6 +570,7 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
     // Build app
     buildApp();
     const plan = this.plan(bucket);
+    validateTimeout();
 
     // Create CloudFront
     const cfFunctions = createCloudFrontFunctions();
@@ -589,12 +584,8 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
 
     this.bucket = bucket;
     this.distribution = distribution;
-    this.serverFunction =
-      ssrFunctions.length > 0
-        ? ssrFunctions[0]
-        : Object.values(edgeFunctions).length > 0
-        ? Object.values(edgeFunctions)[0]
-        : undefined;
+    this.serverFunction = ssrFunctions[0] ?? Object.values(edgeFunctions)[0];
+    this.edge = plan.edge;
 
     app.registerTypes(this);
 
@@ -609,11 +600,11 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
         typeof timeout === "number"
           ? timeout
           : toCdkDuration(timeout).toSeconds();
-      const limit = edge ? 30 : 180;
+      const limit = plan.edge ? 30 : 180;
       if (num > limit) {
         throw new VisibleError(
-          edge
-            ? `In the "${id}" construct, timeout must be less than or equal to 30 seconds when the "edge" flag is enabled.`
+          plan.edge
+            ? `In the "${id}" construct, timeout must be less than or equal to 30 seconds when deploying to the edge.`
             : `In the "${id}" construct, timeout must be less than or equal to 180 seconds.`
         );
       }
@@ -731,7 +722,7 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
       //       need to handle warming multiple functions.
       if (!warm) return;
 
-      if (warm && edge) {
+      if (warm && plan.edge) {
         throw new VisibleError(
           `In the "${id}" Site, warming is currently supported only for the regional mode.`
         );
@@ -1391,6 +1382,7 @@ function handler(event) {
         version: invalidationBuildId,
         paths: invalidationPaths,
         wait: invalidation.wait,
+        dependsOn: s3DeployCRs,
       });
     }
   }
@@ -1477,7 +1469,7 @@ function handler(event) {
         runtime: this.props.runtime,
         customDomainUrl: this.customDomainUrl,
         url: this.url,
-        edge: this.props.edge,
+        edge: this.edge,
         server: (this.serverFunctionForDev || this.serverFunction)
           ?.functionArn!,
         secrets: (this.props.bind || [])
@@ -1541,6 +1533,7 @@ function handler(event) {
     cloudFrontFunctions?: CloudFrontFunctions;
     edgeFunctions?: EdgeFunctions;
     origins: Origins;
+    edge: boolean;
     behaviors: {
       cacheType: "server" | "static";
       pattern?: string;

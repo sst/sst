@@ -64,6 +64,19 @@ export function str_replace(opts) {
 
 /**
  * @param {{
+ *   file: string,
+ *   string: string,
+ * }} opts
+ */
+export function append(opts) {
+  return /** @type {const} */ ({
+    type: "append",
+    ...opts,
+  });
+}
+
+/**
+ * @param {{
  *  packages: string[],
  *  path?: string,
  *  dev?: boolean
@@ -100,7 +113,7 @@ export function extend(path) {
 }
 
 /**
- * @typedef {ReturnType<typeof remove> | ReturnType<typeof patch> | ReturnType<typeof str_replace> | ReturnType<typeof install> | ReturnType<typeof extract> | ReturnType<typeof extend> | ReturnType<typeof cmd> | ReturnType<typeof magicast>} Step
+ * @typedef {ReturnType<typeof remove> | ReturnType<typeof patch> | ReturnType<typeof str_replace> | ReturnType<typeof append> | ReturnType<typeof install> | ReturnType<typeof extract> | ReturnType<typeof extend> | ReturnType<typeof cmd> | ReturnType<typeof magicast>} Step
  */
 
 /**
@@ -173,6 +186,16 @@ export async function execute(opts) {
           file,
           contents.replace(step.pattern, step.replacement)
         );
+        break;
+      }
+      case "append": {
+        const file = path.join(opts.destination, step.file);
+        try {
+          const contents = await fs.readFile(file, "utf8");
+          await fs.writeFile(file, `${contents.trimEnd()}${step.string}`);
+        } catch (e) {
+          if (e.code !== "ENOENT") throw e;
+        }
         break;
       }
       case "cmd": {

@@ -1,8 +1,8 @@
 The `AstroSite` construct is a higher level CDK construct that makes it easy to create an Astro app. It provides a simple way to build and deploy the app to AWS:
 
-- It supports both `server` and `hybrid` modes.
+- It supports `static`, `server`, and `hybrid` modes.
 - The client assets are deployed to an S3 Bucket, and served out from a CloudFront CDN for fast content delivery.
-- The app server is deployed to Lambda. You can deploy to Lambda@Edge instead if the `edge` flag is enabled. Read more about [Single region vs Edge](#single-region-vs-edge).
+- The app server is deployed to either Lambda for `regional` or Lambda@Edge for `edge` deployments. Read more about [Single region vs Edge](#single-region-vs-edge).
 - It enables you to [configure custom domains](#custom-domains) for the website URL.
 - It also enable you to [automatically set the environment variables](#environment-variables) for your Astro app directly from the outputs in your SST app.
 - It provides a simple interface to [grant permissions](#using-aws-services) for your app to access AWS resources.
@@ -54,16 +54,6 @@ The `AstroSite` construct is a higher level CDK construct that makes it easy to 
    ```
 
    This will install the adapter and make the appropriate changes to your `astro.config.mjs` file in one step.
-
-   :::info
-   If you are deploying the `AstroSite` in the `edge` mode, import the adapter from the `astro-sst/edge` package in your `astro.config.mjs` file.
-
-   ```diff
-   - import aws from "astro-sst/lambda";
-   + import aws from "astro-sst/edge";
-   ```
-
-   :::
 
 4. Also add the `sst bind` command to your Astro app's `package.json`. `sst bind` enables you to [automatically set the environment variables](#environment-variables) for your Astro app directly from the outputs in your SST app.
 
@@ -130,14 +120,19 @@ By default, the Astro app server is deployed to a single region defined in your 
 
 You can enable edge like this:
 
-```ts
-const site = new AstroSite(stack, "Site", {
-  path: "my-astro-app/",
-  edge: true,
+```js title="astro.config.mjs"
+import { defineConfig } from "astro/config";
+import aws from "astro-sst";
+
+export default defineConfig({
+  output: "server",
+  adapter: aws({
+    deploymentStrategy: "edge",
+  }),
 });
 ```
 
-Note that, in the case you have a centralized database, Edge locations are often far away from your database. If you are quering your database in your loaders/actions, you might experience much longer latency when deployed to the edge.
+Note that, in the case you have a centralized database, Edge locations are often far away from your database. If you are querying your database in your loaders/actions, you might experience much longer latency when deployed to the edge.
 
 :::info
 We recommend you to deploy to a single region when unsure.
@@ -147,7 +142,7 @@ We recommend you to deploy to a single region when unsure.
 
 Due to the [CloudFront limit of 25 path pattern per distribution](https://docs.sst.dev/known-issues#cloudfront-cachebehaviors-limit-exceeded), it's impractical to create one path for each route in your Astro app. To work around this limitation, all routes are first checked against the S3 cache before being directed to the Lambda function for server rendering. This method utilizes the CloudFront origin group, with the S3 bucket serving as the primary origin and the server function as the failover origin. Note that the origin group can only support `GET`, `HEAD`, and `OPTIONS` request methods. To support other request methods, you should specify the route patterns in the `astro.config.mjs` file as the `serverRoutes` parameter on the adapter registration method (ie `aws({serverRoutes: []})`).
 
-```js {3-10}
+```js
 export default defineConfig({
   adapter: aws({
     serverRoutes: [
@@ -168,7 +163,7 @@ Route patterns are case sensitive. And the following wildcard characters can be 
 
 Astro natively supports [streaming](https://docs.astro.build/en/guides/server-side-rendering/#streaming), allowing a page to be broken down into chunks. These chunks can be sent over the network in sequential order and then incrementally rendered in the browser. This process can significantly enhances page performance and allow larger responses sizes than buffered responses, but there is a slight performance overhead. To enable streaming, set the `responseMode` property on the adapter registration method within the `astro.config.mjs` to `stream`. The default response mode is `buffer` which will wait for the entire response to be generated before sending it to the client.
 
-```js {3-10}
+```js title="astro.config.mjs"
 export default defineConfig({
   adapter: aws({
     responseMode: "stream"

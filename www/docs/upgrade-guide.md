@@ -16,6 +16,40 @@ To view the latest release and all historical releases, <a href={`${config.githu
 
 ---
 
+## Upgrade to v2.35.0
+
+**The default runtime for functions has been updated from `nodejs16.x` to `nodejs18.x`** in response to AWS Lambda's deprecation announcement for the Node.js 16 runtime. To continue using Node.js 16, specify `nodejs16.x` as the default `runtime`.
+
+```diff
+app.setDefaultFunctionProps({
++ runtime: "nodejs16.x",
+});.
+```
+
+## Upgrade to v2.34.0
+
+`AstroSite` now infers the `edge` mode from the `astro-sst` adapter. **Remove the `edge` prop from `AstroSite`.**
+
+```diff
+new AstroSite(stack, "Site", {
+- edge: true,
+});
+```
+
+And **set the deployment strategy to `edge` in `astro.config.js`**
+
+```diff
+- import aws from "astro-sst/edge";
++ import aws from "astro-sst";
+
+export default defineConfig({
+  output: "server",
+  adapter: aws({
++   deploymentStrategy: "edge",
+  }),
+});
+```
+
 ## Upgrade to v2.32.0
 
 `NextjsSite`, `AstroSite`, `RemixSite`, `SvelteKitSite`, `SolidStartSite`, and `StaticSite` now support enhanced cache invalidation options with the `invalidation` prop. **Replace `waitForInvalidation` with `invalidation.wait`, as `waitForInvalidation` is deprecated.**

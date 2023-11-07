@@ -64,7 +64,6 @@ const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 const supportedRuntimes = {
   container: CDKRuntime.FROM_IMAGE,
   rust: CDKRuntime.PROVIDED_AL2,
-  "nodejs12.x": CDKRuntime.NODEJS_12_X,
   "nodejs14.x": CDKRuntime.NODEJS_14_X,
   "nodejs16.x": CDKRuntime.NODEJS_16_X,
   "nodejs18.x": CDKRuntime.NODEJS_18_X,
@@ -196,12 +195,12 @@ export interface FunctionProps
   handler?: string;
   /**
    * The runtime environment for the function.
-   * @default "nodejs16.x"
+   * @default "nodejs18.x"
    * @example
    * ```js
    * new Function(stack, "Function", {
    *   handler: "function.handler",
-   *   runtime: "nodejs18.x",
+   *   runtime: "nodejs16.x",
    * })
    *```
    */
@@ -527,6 +526,20 @@ export interface NodeJSProps {
    * ```
    */
   sourcemap?: boolean;
+
+  /**
+   * If enabled, modules that are dynamically imported will be bundled as their own files with common dependencies placed in shared chunks. This can help drastically reduce cold starts as your function grows in size.
+   *
+   * @default false
+   *
+   * @example
+   * ```js
+   * nodejs: {
+   *   splitting: true
+   * }
+   * ```
+   */
+  splitting?: boolean;
 }
 
 /**
@@ -764,7 +777,7 @@ export class Function extends CDKFunction implements SSTConstruct {
       .forEach((per) => {
         props = Function.mergeProps(per, props);
       });
-    props.runtime = props.runtime || "nodejs16.x";
+    props.runtime = props.runtime || "nodejs18.x";
     if (props.runtime === "go1.x") useWarning().add("go.deprecated");
 
     // Set defaults
@@ -818,7 +831,7 @@ export class Function extends CDKFunction implements SSTConstruct {
       });
     }
     // Handle local development (ie. sst start)
-    // - set runtime to nodejs12.x for non-Node runtimes (b/c the stub is in Node)
+    // - set runtime to nodejs for non-Node runtimes (b/c the stub is in Node)
     // - set retry to 0. When the debugger is disconnected, the Cron construct
     //   will still try to periodically invoke the Lambda, and the requests would
     //   fail and retry. So when launching `sst start`, a couple of retry requests

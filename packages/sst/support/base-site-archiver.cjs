@@ -24,7 +24,7 @@ let output;
 let archive;
 let totalSize;
 const statuses = [];
-const allFiles = [];
+const allFilesInPosix = [];
 
 generateZips().catch(() => {
   process.exit(1);
@@ -69,7 +69,7 @@ function generateZips() {
         });
 
         totalSize += filesize;
-        allFiles.push(file);
+        allFilesInPosix.push(file.split(path.sep).join(path.posix.sep));
       }
     }
 
@@ -77,7 +77,7 @@ function generateZips() {
 
     // Create a filenames file
     const filenamesPath = path.join(ZIP_PATH, `filenames`);
-    await fs.writeFile(filenamesPath, allFiles.join("\n"));
+    await fs.writeFile(filenamesPath, allFilesInPosix.join("\n"));
 
     async function openZip() {
       const partId = statuses.length;

@@ -392,6 +392,8 @@ export class StaticSite extends Construct implements SSTConstruct {
       // Invalidate CloudFront
       this.distribution.createInvalidation({
         version: this.generateInvalidationId(assets),
+        wait: this.props.waitForInvalidation,
+        dependsOn: [s3deployCR],
       });
     });
 

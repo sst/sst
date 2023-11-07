@@ -3,9 +3,10 @@ import url from "url";
 import path from "path";
 import { createRequire } from "module";
 const require = createRequire(import.meta.url);
-import { SsrSite } from "./SsrSite.js";
+import { SsrSite, SsrSiteNormalizedProps, SsrSiteProps } from "./SsrSite.js";
 import { VisibleError } from "../error.js";
 import { useWarning } from "./util/warning.js";
+import { Construct } from "constructs";
 
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 
@@ -16,6 +17,16 @@ type RemixConfig = {
   serverPlatform: string;
   server?: string;
 };
+
+export interface RemixSiteProps extends SsrSiteProps {
+  /**
+   * The server function is deployed to Lambda in a single region. Alternatively, you can enable this option to deploy to Lambda@Edge.
+   * @default false
+   */
+  edge?: boolean;
+}
+
+type RemixSiteNormalizedProps = RemixSiteProps & SsrSiteNormalizedProps;
 
 /**
  * The `RemixSite` construct is a higher level CDK construct that makes it easy to create a Remix app.
@@ -31,6 +42,8 @@ type RemixConfig = {
  * ```
  */
 export class RemixSite extends SsrSite {
+  declare props: RemixSiteNormalizedProps;
+
   protected plan() {
     const { path: sitePath, edge } = this.props;
 
@@ -50,6 +63,7 @@ export class RemixSite extends SsrSite {
     };
 
     return this.validatePlan({
+      edge: edge ?? false,
       cloudFrontFunctions: {
         serverCfFunction: {
           constructId: "CloudFrontFunction",

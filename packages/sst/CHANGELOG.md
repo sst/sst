@@ -1,5 +1,79 @@
 # @serverless-stack/cli2
 
+## 2.35.0
+
+### Minor Changes
+
+- [#3484](https://github.com/sst/sst/pull/3484) [`74564805c`](https://github.com/sst/sst/commit/74564805c47a0887fc1123937739538c32928fab) Thanks [@adityavm](https://github.com/adityavm)! - Function: update default runtime to Node.js 18
+
+### Patch Changes
+
+- [`ffa4b0fe9`](https://github.com/sst/sst/commit/ffa4b0fe95e3527ef590f9b8a23e095fdaa227a2) Thanks [@fwang](https://github.com/fwang)! - AstroSite: support server function sourcemap
+
+- [`7e94c96b0`](https://github.com/sst/sst/commit/7e94c96b067df47cec439d5c44adbb5fc6e5e90a) Thanks [@fwang](https://github.com/fwang)! - Sites: invalidate cache after S3 uploader completes
+
+## 2.34.7
+
+### Patch Changes
+
+- [#3475](https://github.com/sst/sst/pull/3475) [`acbe1615f`](https://github.com/sst/sst/commit/acbe1615f130f3271e83725c7d7970ffe9a15aeb) Thanks [@BradDobson2](https://github.com/BradDobson2)! - AppSyncApi: improve multiple schema functionality
+
+- [#3482](https://github.com/sst/sst/pull/3482) [`07bd1b296`](https://github.com/sst/sst/commit/07bd1b296e9e6fbe946fc3154b9fb348955707c6) Thanks [@kelvinCJJ](https://github.com/kelvinCJJ)! - RDS: add support for MySQL 8.0
+
+- [#3463](https://github.com/sst/sst/pull/3463) [`9238c1d37`](https://github.com/sst/sst/commit/9238c1d37d494d4b4152a49a40d29a3622932ac5) Thanks [@wpoynter](https://github.com/wpoynter)! - StaticSite: set correct content type for wasm files
+
+## 2.34.6
+
+### Patch Changes
+
+- [`cf125d460`](https://github.com/sst/sst/commit/cf125d4600def99dd7653e87bbbc77dab41fb97e) Thanks [@fwang](https://github.com/fwang)! - StaticSite: fix nested files not uploaded on Windows
+
+## 2.34.5
+
+### Patch Changes
+
+- [`a52f7247b`](https://github.com/sst/sst/commit/a52f7247b9c8564348bc9f91c3a2d290a95f32a2) Thanks [@thdxr](https://github.com/thdxr)! - function: splitting should always output .mjs
+
+## 2.34.4
+
+### Patch Changes
+
+- [`9da56a1c5`](https://github.com/sst/sst/commit/9da56a1c5222886a52d84e60a1742db9644de6b9) Thanks [@thdxr](https://github.com/thdxr)! - function: expose splitting option
+
+- [#3480](https://github.com/sst/sst/pull/3480) [`fc3dd92a6`](https://github.com/sst/sst/commit/fc3dd92a6f116b42f60196fd8a3ce8a2d04a9c85) Thanks [@jackschu](https://github.com/jackschu)! - Auth: Prevent throwing on CDK id
+
+## 2.34.3
+
+### Patch Changes
+
+- [`1e861b0c7`](https://github.com/sst/sst/commit/1e861b0c797e751c4ec3b2c65780430de9f6f700) Thanks [@thdxr](https://github.com/thdxr)! - test changeset
+
+## 2.34.2
+
+### Patch Changes
+
+- [`4599a0f62`](https://github.com/sst/sst/commit/4599a0f62d203cc1711b7b23ec4aa24bd46434d6) Thanks [@thdxr](https://github.com/thdxr)! - test changeset
+
+## 2.34.1
+
+### Patch Changes
+
+- [`b2f8a6dca`](https://github.com/sst/sst/commit/b2f8a6dca70db23ea71ef867054bc870fd63c5bb) Thanks [@thdxr](https://github.com/thdxr)! - test changeset
+
+## 2.34.0
+
+### Minor Changes
+
+- [#3458](https://github.com/sst/sst/pull/3458) [`3c12694c9`](https://github.com/sst/sst/commit/3c12694c990ff2ffd64f6736a6ac5546d708ba43) Thanks [@bayssmekanique](https://github.com/bayssmekanique)! - AstroSite: infer edge deployment from astro-sst adapter
+
+### Patch Changes
+
+- [#3436](https://github.com/sst/sst/pull/3436) [`5f09d4305`](https://github.com/sst/sst/commit/5f09d430528f8c1edbe6002a72015f432b3b69b4) Thanks [@dkershner6](https://github.com/dkershner6)! - NextjsSite: Dynamic RevalidationInsertFunction provisioning based on prerender-manifest size
+
+- [`91af56670`](https://github.com/sst/sst/commit/91af56670cfb8d86085703f61757f178c4226448) Thanks [@fwang](https://github.com/fwang)! - NextjsSite: update to OpenNext 2.3.0
+
+- [#3458](https://github.com/sst/sst/pull/3458) [`3c12694c9`](https://github.com/sst/sst/commit/3c12694c990ff2ffd64f6736a6ac5546d708ba43) Thanks [@bayssmekanique](https://github.com/bayssmekanique)! - astro-sst: unify regional and edge adapters
+
 ## 2.33.4
 
 ### Patch Changes

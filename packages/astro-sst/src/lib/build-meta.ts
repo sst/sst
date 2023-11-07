@@ -8,6 +8,7 @@ import { join, relative } from "path";
 import { writeFile } from "fs/promises";
 import { fileURLToPath, parse } from "url";
 import type {
+  DeploymentStrategy,
   OutputMode,
   PageResolution,
   ResponseMode,
@@ -36,8 +37,9 @@ type SerializableRoute = {
 
 export type BuildMetaConfig = {
   domainName?: string;
-  outputMode: OutputMode;
+  deploymentStrategy: DeploymentStrategy;
   responseMode: ResponseMode;
+  outputMode: OutputMode;
   pageResolution: PageResolution;
   trailingSlash: TrailingSlash;
   serverBuildOutputFile: string;
@@ -55,6 +57,7 @@ export type BuildMetaConfig = {
 };
 
 export type IntegrationConfig = {
+  deploymentStrategy: DeploymentStrategy;
   responseMode: ResponseMode;
   serverRoutes: string[];
 };
@@ -189,8 +192,9 @@ export class BuildMeta {
 
     const buildMeta = {
       domainName: this.domainName ?? undefined,
-      outputMode: this.astroConfig.output,
+      deploymentStrategy: this.integrationConfig.deploymentStrategy,
       responseMode: this.integrationConfig.responseMode,
+      outputMode: this.astroConfig.output,
       pageResolution: this.astroConfig.build.format,
       trailingSlash: this.astroConfig.trailingSlash,
       serverBuildOutputFile: join(

@@ -1,6 +1,7 @@
 import fs from "fs";
 import url from "url";
 import path from "path";
+import zlib from "zlib";
 import crypto from "crypto";
 import spawn from "cross-spawn";
 import { Construct, IConstruct } from "constructs";
@@ -196,24 +197,40 @@ export class EdgeFunction extends Construct {
     });
 
     // Build function
-    const bundle = await useRuntimeHandlers().build(this.node.addr, "deploy");
+    const result = await useRuntimeHandlers().build(this.node.addr, "deploy");
 
     // create wrapper that calls the handler
-    if (bundle.type === "error")
+    if (result.type === "error")
       throw new Error(
         [
           `There was a problem bundling the SSR function for the "${this.scope.node.id}" Site.`,
-          ...bundle.errors,
+          ...result.errors,
         ].join("\n")
       );
 
+    // upload sourcemap
+    const stack = Stack.of(this) as Stack;
+    if (result.sourcemap) {
+      const data = await fs.promises.readFile(result.sourcemap);
+      await fs.promises.writeFile(result.sourcemap, zlib.gzipSync(data));
+      const asset = new Asset(this, "Sourcemap", {
+        path: result.sourcemap,
+      });
+      await fs.promises.rm(result.sourcemap);
+      useFunctions().sourcemaps.add(stack.stackName, {
+        srcBucket: asset.bucket,
+        srcKey: asset.s3ObjectKey,
+        tarKey: this.functionArn,
+      });
+    }
+
     const asset = new Asset(this.scope, `FunctionAsset`, {
-      path: bundle.out,
+      path: result.out,
     });
 
     // Get handler filename
     const isESM = (nodejs?.format || "esm") === "esm";
-    const parsed = path.parse(bundle.handler);
+    const parsed = path.parse(result.handler);
     const handlerFilename = `${parsed.dir}/${parsed.name}${
       isESM ? ".mjs" : ".cjs"
     }`;

@@ -644,7 +644,9 @@ export class Service extends Construct implements SSTConstruct {
       }
 
       // Invalidate CloudFront
-      this.distribution?.createInvalidation();
+      this.distribution?.createInvalidation({
+        wait: this.props.waitForInvalidation,
+      });
     });
 
     app.registerTypes(this);

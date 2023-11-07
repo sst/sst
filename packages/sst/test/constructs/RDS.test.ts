@@ -279,6 +279,19 @@ test("engine mysql5.7", async () => {
   });
 });
 
+test("engine mysql8.0", async () => {
+  const stack = new Stack(await createApp(), "stack");
+  new RDS(stack, "Cluster", {
+    engine: "mysql8.0",
+    defaultDatabaseName: "acme",
+  });
+  hasResource(stack, "AWS::RDS::DBCluster", {
+    Engine: "aurora-mysql",
+    EngineMode: "serverless",
+    EngineVersion: "8.0.mysql_aurora.3.04.0",
+  });
+});
+
 test("scaling default", async () => {
   const stack = new Stack(await createApp(), "stack");
   new RDS(stack, "Cluster", {

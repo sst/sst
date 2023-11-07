@@ -43,7 +43,7 @@ jobs:
             ${{ runner.os }}-pnpm-store-
 
       - name: Install dependencies
-        run: pnpm install
+        run: pnpm install --frozen-lockfile=false
 
       - name: Check prettier
         run: pnpm prettier --cache -c --loglevel=error .
@@ -53,7 +53,7 @@ jobs:
         # https://github.com/changesets/action
         uses: changesets/action@v1
         with:
-          createGithubReleases: true
+          createGithubReleases: false
           version: pnpm run version
           publish: pnpm run release
         env:
@@ -61,7 +61,10 @@ jobs:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: View outputs
-        run: echo ${{join(steps.changesets.outputs.*, ' ')}}
+        run: |
+          echo ${{steps.changesets.outputs.hasChangesets}}
+          echo ${{steps.changesets.outputs.published}}
+          echo ${{steps.changesets.outputs.publishedPackages}}
 
       - name: Aggregate
         id: aggregate

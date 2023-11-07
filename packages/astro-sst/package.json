@@ -1,7 +1,7 @@
 {
   "name": "astro-sst",
-  "description": "Adapter for Astro apps to work on AWS Lambda and AWS Lambda@Edge.",
-  "version": "2.33.4",
+  "description": "Adapter that allows Astro to deploy your site to AWS utilizing SST.",
+  "version": "2.35.0",
   "type": "module",
   "license": "MIT",
   "author": {
@@ -19,16 +19,19 @@
   ],
   "bugs": "https://github.com/sst/sst/issues",
   "exports": {
+    ".": "./dist/adapter.js",
+    "./entrypoint": "./dist/entrypoint.js",
     "./edge": "./dist/edge/adapter.js",
-    "./edge/entrypoint": "./dist/edge/entrypoint.js",
     "./lambda": "./dist/lambda/adapter.js",
-    "./lambda/entrypoint": "./dist/lambda/entrypoint.js",
     "./static": "./dist/static/adapter.js",
     "./build-meta": "./dist/lib/build-meta.js",
     "./package.json": "./package.json"
   },
   "typesVersions": {
     "*": {
+      "*": [
+        "dist/adapter.d.ts"
+      ],
       "edge": [
         "dist/edge/adapter.d.ts"
       ],

@@ -9,7 +9,7 @@ export async function weakImport(pkg: string) {
   }
 }
 
-const { print, buildSchema } = await weakImport("graphql");
+const { print } = await weakImport("graphql");
 const { mergeTypeDefs } = await weakImport("@graphql-tools/merge");
 
 import { Construct } from "constructs";
@@ -794,9 +794,7 @@ export class AppSyncApi extends Construct implements SSTConstruct {
         }
         // merge schema files
         const mergedSchema = mergeTypeDefs(
-          schema
-            .map((file) => fs.readFileSync(file).toString())
-            .map(buildSchema)
+          schema.map((file) => fs.readFileSync(file).toString())
         );
         const filePath = path.join(
           useProject().paths.out,

@@ -71,7 +71,7 @@ export async function load(input: string, shallow?: boolean) {
                 filename: "sst.config.ts",
                 plugins: [ts],
               });
-              babel.traverse(ast, {
+              babel.traverse(ast!, {
                 ObjectMethod(path) {
                   const { key } = path.node;
                   if ("name" in key && key.name === "stacks") {
