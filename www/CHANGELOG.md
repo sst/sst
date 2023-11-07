@@ -1,5 +1,11 @@
 # @serverless-stack/docs
 
+## 2.9.1
+
+### Patch Changes
+
+- [#3470](https://github.com/sst/sst/pull/3470) [`d8406f775`](https://github.com/sst/sst/commit/d8406f7753ebe09e19da2cac70285908cc360717) Thanks [@dkershner6](https://github.com/dkershner6)! - SsrSite: support customizing S3 origin props
+
 ## 2.9.0
 
 ### Minor Changes

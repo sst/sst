@@ -27,7 +27,7 @@ import {
 import * as route53 from "aws-cdk-lib/aws-route53";
 import { RetentionDays } from "aws-cdk-lib/aws-logs";
 import { Api, Stack, RemixSite } from "../../dist/constructs/";
-import { SsrSiteProps } from "../../dist/constructs/SsrSite";
+import { RemixSiteProps } from "../../dist/constructs/RemixSite";
 import { CacheControl } from "aws-cdk-lib/aws-codepipeline-actions/index.js";
 
 const sitePath = "test/constructs/remix-site";
@@ -54,7 +54,7 @@ beforeAll(async () => {
 });
 
 async function createSite(
-  props?: SsrSiteProps | ((stack: Stack) => SsrSiteProps)
+  props?: RemixSiteProps | ((stack: Stack) => RemixSiteProps)
 ) {
   const app = await createApp();
   const stack = new Stack(app, "stack");

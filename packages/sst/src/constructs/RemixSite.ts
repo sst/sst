@@ -44,6 +44,10 @@ type RemixSiteNormalizedProps = RemixSiteProps & SsrSiteNormalizedProps;
 export class RemixSite extends SsrSite {
   declare props: RemixSiteNormalizedProps;
 
+  constructor(scope: Construct, id: string, props?: RemixSiteProps) {
+    super(scope, id, props);
+  }
+
   protected plan() {
     const { path: sitePath, edge } = this.props;
 

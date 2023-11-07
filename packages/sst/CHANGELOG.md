@@ -1,5 +1,13 @@
 # @serverless-stack/cli2
 
+## 2.35.1
+
+### Patch Changes
+
+- [#3470](https://github.com/sst/sst/pull/3470) [`d8406f775`](https://github.com/sst/sst/commit/d8406f7753ebe09e19da2cac70285908cc360717) Thanks [@dkershner6](https://github.com/dkershner6)! - SsrSite: support customizing S3 origin props
+
+- [`33d05c006`](https://github.com/sst/sst/commit/33d05c0060d40f3ee30f7afe6e6d5f438b3683e8) Thanks [@fwang](https://github.com/fwang)! - SsrSite: fix constructor props types
+
 ## 2.35.0
 
 ### Minor Changes
