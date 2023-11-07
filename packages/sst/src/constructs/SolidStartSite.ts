@@ -28,6 +28,10 @@ type SolidStartSiteNormalizedProps = SolidStartSiteProps &
 export class SolidStartSite extends SsrSite {
   declare props: SolidStartSiteNormalizedProps;
 
+  constructor(scope: Construct, id: string, props?: SolidStartSiteProps) {
+    super(scope, id, props);
+  }
+
   protected plan() {
     const { path: sitePath, edge } = this.props;
     const serverConfig = {
