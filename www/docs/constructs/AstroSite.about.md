@@ -569,25 +569,27 @@ new AstroSite(stack, "Site", {
 
 #### Using an existing S3 Bucket
 
-```js {6}
-import * as cloudfront from "aws-cdk-lib/aws-cloudfront";
-import * as s3 from "aws-cdk-lib/aws-s3";
+```js
+import { Bucket } from "aws-cdk-lib/aws-s3";
+import { OriginAccessIdentity } from "aws-cdk-lib/aws-cloudfront";
 
 new AstroSite(stack, "Site", {
   path: "my-astro-app/",
   cdk: {
-    bucket: s3.Bucket.fromBucketName(stack, "Bucket", "my-bucket"),
-    // Below only required for non-public buckets
+    bucket: Bucket.fromBucketName(stack, "Bucket", "my-bucket"),
+    // Required for non-public buckets
     s3Origin: {
-      originAccessIdentity: cloudfront.OriginAccessIdentity.fromOriginAccessIdentityId(
+      originAccessIdentity: OriginAccessIdentity.fromOriginAccessIdentityId(
         stack,
         "OriginAccessIdentity",
-        "ABCDEFGHIJKLMN"
+        "XXXXXXXX"
       ),
     },    
   },
 });
 ```
+
+Note that setting the `originAccessIdentity` prop enables an imported bucket to be properly secured with a bucket policy without giving public access to the bucket.
 
 #### Reusing CloudFront cache policies
 
