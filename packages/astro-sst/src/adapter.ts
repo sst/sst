@@ -120,7 +120,7 @@ export default function createIntegration(
                   protocol: siteUrl.protocol,
                   hostname: siteUrl.hostname,
                   port: siteUrl.port,
-                  path: `${config.build.assets}/**`,
+                  pathname: `${config.build.assets}/**`,
                 },
               ],
             },
