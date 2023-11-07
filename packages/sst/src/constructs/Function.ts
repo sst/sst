@@ -1379,7 +1379,11 @@ export const useFunctions = createAppContext(() => {
         arr.push(source);
       },
       forStack(stack: string) {
-        return sourcemaps[stack] || [];
+        return (sourcemaps[stack] || []).sort((a,b) => {
+          if (a.srcKey > b.srcKey) return 1;
+          if (a.srcKey < b.srcKey) return -1;
+          return 0;
+        });
       },
     },
     fromID(id: string) {
