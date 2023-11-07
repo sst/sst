@@ -610,7 +610,7 @@ new SvelteKitSite(stack, "Site", {
 });
 ```
 
-Note that setting the `originAccessIdentity` prop enables an imported bucket to be properly secured with a bucket policy without giving public access to the bucket.
+Setting the `originAccessIdentity` prop enables an imported bucket to be properly secured with a bucket policy without giving public access to the bucket.
 
 #### Reusing CloudFront cache policies
 
