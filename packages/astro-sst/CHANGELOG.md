@@ -1,5 +1,11 @@
 # astro-sst
 
+## 2.35.1
+
+### Patch Changes
+
+- [#3498](https://github.com/sst/sst/pull/3498) [`97bc385e2`](https://github.com/sst/sst/commit/97bc385e2a56953c8511e034bc91bbd3360663a1) Thanks [@bayssmekanique](https://github.com/bayssmekanique)! - AstroSite: fixes bug with config override causing issues with MDX plugin
+
 ## 2.35.0
 
 ### Patch Changes
