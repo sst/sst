@@ -32,8 +32,8 @@ function getAdapter({
       hybridOutput: "stable",
       serverOutput: "stable",
       assets: {
-        supportKind: isRegional ? "stable" : "unsupported",
-        isSharpCompatible: isRegional,
+        supportKind: "stable",
+        isSharpCompatible: true,
         isSquooshCompatible: false,
       },
     },
