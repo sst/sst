@@ -259,30 +259,34 @@ This cost estimate is based on the `us-east-1` region pricing and does not consi
 
 ## Logging
 
-By default, routes for the app server function log to a common AWS CloudWatch log group. However, you can configure each route to log to its own group:
+By default, Lambda sends all logs to the same AWS CloudWatch log group. This makes it hard to find the request you are looking for.
 
-```js
+Starting v2.36.0, logs for individual routes are sent to separate log groups. The log group names are prefixed with `/sst/lambda`, followed by the app server function name, a hash of the route, and ends with route path in a readable format.
+
+```
+/sst/lambda/prod-app-MyNextSite-serverFunction6DFA6F1B-TiNQRV8IhGAu/979bddc4/about
+```
+
+With per-route logging, the [SST Console](../console.md) will display all routes within the resources page. To access logs for a specific route, simply select the route from the list.
+
+![Next.js per-route logging](/img/nextjssite/per-route-logging.png)
+
+You can opt-out of this by logging all routes to a single log group by setting the `logging` prop to `combined`.
+
+```diff
 new NextjsSite(stack, "Site", {
   path: "my-next-app/",
-  logging: "per-route",
++ logging: "combined",
 });
 ```
 
-With per-route logging, the resources page shows a breakdown of all routes. Click on any route to see its logs.
-
-![Next.js per route logging](/img/nextjssite/per-route-logging.png)
-
-:::info
-Starting the next minor release, "per-route" will become the default logging behavior.
-:::
-
 ---
 
-## Sourcemap
+## Sourcemaps
 
-Next.js uses webpack to bundle your code, so the stack trace line numbers might not match. Turning on sourcemap when building your Next.js app can fix this.
+Next.js uses Webpack to bundle your code, so the stack trace line numbers might not match. Turning on sourcemaps when building your Next.js app can fix this.
 
-To turn on sourcemap, update your Next.js config:
+To enable sourcemaps, make sure you are not disabling [`per-route` logging](#logging). Then update your Next.js config:
 
 ```diff title="next.config.js"
 const nextConfig = {
@@ -301,7 +305,7 @@ Now when your Next.js app builds, it'll generate the sourcemap files alongside y
 The sourcemap files are not added to the server bundle, keeping the function size small.
 :::
 
-With sourcemap active, the [SST Console](../console.md) will display the error source with the right context.
+With sourcemaps active, the [SST Console](../console.md) will display the errors with the right context.
 
 ![Next.js error stack trace](/img/nextjssite/error-stack-trace.png)
 
