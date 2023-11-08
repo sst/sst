@@ -283,6 +283,12 @@ export class SsrFunction extends Construct implements SSTConstruct {
     useFunctions().add(this.node.addr, {
       handler: this.props.handler,
       runtime: this.props.runtime,
+      architecture:
+        this.props.architecture instanceof Architecture
+          ? Architecture.X86_64
+            ? "x86_64"
+            : "arm_64"
+          : this.props.architecture,
       nodejs: this.props.nodejs,
       copyFiles: this.props.copyFiles,
     });
