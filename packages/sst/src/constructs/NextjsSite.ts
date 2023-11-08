@@ -149,7 +149,7 @@ export interface NextjsSiteProps extends Omit<SsrSiteProps, "nodejs"> {
 }
 
 const LAYER_VERSION = "2";
-const DEFAULT_OPEN_NEXT_VERSION = "2.3.0";
+const DEFAULT_OPEN_NEXT_VERSION = "2.3.1";
 const DEFAULT_CACHE_POLICY_ALLOWED_HEADERS = [
   "accept",
   "rsc",
