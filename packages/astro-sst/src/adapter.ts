@@ -16,7 +16,6 @@ function getAdapter({
   responseMode: ResponseMode;
 }): AstroAdapter {
   const isStatic = deploymentStrategy === "static";
-  const isRegional = deploymentStrategy === "regional";
 
   const baseConfig: AstroAdapter = {
     name: PACKAGE_NAME,

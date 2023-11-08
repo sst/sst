@@ -8,10 +8,8 @@ import {
   SsrSiteProps,
 } from "./SsrSite.js";
 import { AllowedMethods } from "aws-cdk-lib/aws-cloudfront";
-import { aws_lambda } from "aws-cdk-lib";
 import { Construct } from "constructs";
 import { SsrFunctionProps } from "./SsrFunction.js";
-import { createRequire } from "module";
 
 const BUILD_META_FILE_NAME: BuildMetaFileName = "sst.buildMeta.json";
 
