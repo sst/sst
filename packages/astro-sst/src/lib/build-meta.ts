@@ -4,11 +4,6 @@ import type {
   RouteType,
   ValidRedirectStatus,
 } from "astro";
-import {
-  sharpImageService,
-  squooshImageService,
-  passthroughImageService,
-} from "astro/config";
 import { join, relative } from "path";
 import { writeFile } from "fs/promises";
 import { fileURLToPath, parse } from "url";
@@ -40,8 +35,6 @@ type SerializableRoute = {
   redirectStatus?: ValidRedirectStatus;
 };
 
-type ImageService = "sharp" | "squoosh" | "no-op" | "unknown";
-
 export type BuildMetaConfig = {
   domainName?: string;
   deploymentStrategy: DeploymentStrategy;
@@ -52,7 +45,6 @@ export type BuildMetaConfig = {
   serverBuildOutputFile: string;
   clientBuildOutputDir: string;
   clientBuildVersionedSubDir: string;
-  imageService: ImageService;
   serverRoutes: string[];
   routes: Array<{
     route: string;
@@ -112,18 +104,6 @@ export class BuildMeta {
     ) {
       return parse(this.astroConfig.site).hostname ?? undefined;
     }
-  }
-
-  private static get imageService(): ImageService {
-    switch (this.astroConfig.image.service.entrypoint) {
-      case sharpImageService().entrypoint:
-        return "sharp";
-      case squooshImageService().entrypoint:
-        return "squoosh";
-      case passthroughImageService().entrypoint:
-        return "no-op";
-    }
-    return "unknown";
   }
 
   private static getSerializableRoute(
@@ -217,7 +197,6 @@ export class BuildMeta {
       outputMode: this.astroConfig.output,
       pageResolution: this.astroConfig.build.format,
       trailingSlash: this.astroConfig.trailingSlash,
-      imageService: this.imageService,
       serverBuildOutputFile: join(
         relative(rootDir, fileURLToPath(this.astroConfig.build.server)),
         this.astroConfig.build.serverEntry

@@ -177,56 +177,14 @@ export class AstroSite extends SsrSite {
           origin: "staticsServer",
         });
       } else {
-        if (buildMeta.imageService === "sharp") {
-          const pathToSharpLayerZip = createRequire(import.meta.url).resolve(
-            `astro-sst/layers/sharp/${architecture}`
-          );
+        serverConfig = {
+          ...serverConfig,
+          architecture,
+        };
 
-          if (!existsSync(pathToSharpLayerZip)) {
-            throw new Error(
-              `Could not find sharp layer zip at ${pathToSharpLayerZip}. Update your 'astro-sst' package version and rebuild your Astro site.`
-            );
-          }
-
-          (plan.cloudFrontFunctions!.imageServiceCfFunction = {
-            constructId: "ImageServiceCloudFrontFunction",
-            injections: [this.useCloudFrontFunctionHostHeaderInjection()],
-          }),
-            plan.behaviors.push({
-              cacheType: "server",
-              pattern: "_image",
-              cfFunction: "imageServiceCfFunction",
-              origin: "regionalServer",
-              allowedMethods: AllowedMethods.ALLOW_GET_HEAD_OPTIONS,
-            });
-
-          serverConfig = {
-            ...serverConfig,
-            architecture,
-            nodejs: {
-              esbuild: {
-                external: ["sharp"],
-              },
-            },
-            layers: [
-              new aws_lambda.LayerVersion(this, "sharp", {
-                /**
-                 * This is a prebuilt layer for sharp.
-                 * Source: https://github.com/pH200/sharp-layer
-                 */
-                code: aws_lambda.Code.fromAsset(pathToSharpLayerZip),
-                compatibleRuntimes: [
-                  aws_lambda.Runtime.NODEJS_16_X,
-                  aws_lambda.Runtime.NODEJS_18_X,
-                ],
-                compatibleArchitectures: [
-                  architecture === "arm_64"
-                    ? aws_lambda.Architecture.ARM_64
-                    : aws_lambda.Architecture.X86_64,
-                ],
-              }),
-            ],
-          };
+        plan.cloudFrontFunctions!.imageServiceCfFunction = {
+          constructId: "ImageServiceCloudFrontFunction",
+          injections: [this.useCloudFrontFunctionHostHeaderInjection()],
         }
 
         plan.origins.regionalServer = {
@@ -254,6 +212,13 @@ export class AstroSite extends SsrSite {
             cacheType: "static",
             pattern: `${buildMeta.clientBuildVersionedSubDir}/*`,
             origin: "staticsServer",
+          },
+          {
+            cacheType: "server",
+            pattern: "_image",
+            cfFunction: "imageServiceCfFunction",
+            origin: "regionalServer",
+            allowedMethods: AllowedMethods.ALLOW_GET_HEAD_OPTIONS,
           },
           ...buildMeta.serverRoutes?.map(
             (route) =>
