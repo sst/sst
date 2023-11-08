@@ -1,5 +1,15 @@
 # @serverless-stack/cli2
 
+## 2.36.0
+
+### Minor Changes
+
+- [`131589451`](https://github.com/sst/sst/commit/131589451cd9915caf5f14048bcb25b9ca8e8f64) Thanks [@fwang](https://github.com/fwang)! - NextjsSite: enable per-route logging by default
+
+### Patch Changes
+
+- [`36eaf03c3`](https://github.com/sst/sst/commit/36eaf03c3aad450a2d3473c05d7cccdf3de4f1ab) Thanks [@fwang](https://github.com/fwang)! - NextjsSite: update to OpenNext 2.3.1
+
 ## 2.35.1
 
 ### Patch Changes
