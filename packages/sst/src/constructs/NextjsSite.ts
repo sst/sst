@@ -54,10 +54,10 @@ export interface NextjsSiteProps extends Omit<SsrSiteProps, "nodejs"> {
    * How the logs are stored in CloudWatch
    * - "combined" - Logs from all routes are stored in the same log group.
    * - "per-route" - Logs from each route are stored in a separate log group.
-   * @default "combined"
+   * @default "per-route"
    * @example
    * ```js
-   * logging: "per-route",
+   * logging: "combined",
    * ```
    */
   logging?: "combined" | "per-route";
@@ -193,12 +193,19 @@ export class NextjsSite extends SsrSite {
     routes: Record<string, unknown>;
   };
 
-  constructor(scope: Construct, id: string, props?: NextjsSiteProps) {
-    const streaming = props?.experimental?.streaming ?? false;
-    const disableDynamoDBCache =
-      props?.experimental?.disableDynamoDBCache ?? false;
-    const disableIncrementalCache =
-      props?.experimental?.disableIncrementalCache ?? false;
+  constructor(scope: Construct, id: string, rawProps?: NextjsSiteProps) {
+    const props = {
+      logging: rawProps?.logging ?? "per-route",
+      experimental: {
+        streaming: rawProps?.experimental?.streaming ?? false,
+        disableDynamoDBCache:
+          rawProps?.experimental?.disableDynamoDBCache ?? false,
+        disableIncrementalCache:
+          rawProps?.experimental?.disableIncrementalCache ?? false,
+        ...rawProps?.experimental,
+      },
+      ...rawProps,
+    };
 
     super(scope, id, {
       buildCommand: [
@@ -206,11 +213,11 @@ export class NextjsSite extends SsrSite {
         "--yes",
         `open-next@${props?.openNextVersion ?? DEFAULT_OPEN_NEXT_VERSION}`,
         "build",
-        ...(streaming ? ["--streaming"] : []),
-        ...(disableDynamoDBCache
+        ...(props.experimental.streaming ? ["--streaming"] : []),
+        ...(props.experimental.disableDynamoDBCache
           ? ["--dangerously-disable-dynamodb-cache"]
           : []),
-        ...(disableIncrementalCache
+        ...(props.experimental.disableIncrementalCache
           ? ["--dangerously-disable-incremental-cache"]
           : []),
       ].join(" "),
@@ -222,9 +229,9 @@ export class NextjsSite extends SsrSite {
       this.uploadSourcemaps();
     }
 
-    if (!disableIncrementalCache) {
+    if (!props.experimental.disableIncrementalCache) {
       this.createRevalidationQueue();
-      if (!disableDynamoDBCache) {
+      if (!props.experimental.disableDynamoDBCache) {
         this.createRevalidationTable();
       }
     }
@@ -799,8 +806,6 @@ export class NextjsSite extends SsrSite {
   }
 
   private disableDefaultLogging() {
-    // Note: keep default logs enabled
-    return;
     const stack = Stack.of(this);
     const server = this.serverFunction as SsrFunction;
 

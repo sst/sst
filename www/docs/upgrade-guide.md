@@ -16,6 +16,16 @@ To view the latest release and all historical releases, <a href={`${config.githu
 
 ---
 
+## Upgrade to v2.36.0
+
+`NextjsSite` now sends logs for individual routes to separate log groups. To continue using a single log group, **set `logging` to `combined`**.
+
+```diff
+new NextjsSite(stack, "Site", {
++ logging: "combined",
+});
+```
+
 ## Upgrade to v2.35.0
 
 **The default runtime for functions has been updated from `nodejs16.x` to `nodejs18.x`** in response to AWS Lambda's deprecation announcement for the Node.js 16 runtime. To continue using Node.js 16, specify `nodejs16.x` as the default `runtime`.
