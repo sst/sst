@@ -187,6 +187,7 @@ export class EdgeFunction extends Construct {
 
     useFunctions().add(this.node.addr, {
       ...this.props,
+      architecture: "x86_64",
       nodejs: {
         ...nodejs,
         banner: [
