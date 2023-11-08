@@ -200,6 +200,7 @@ export async function useLocalServer(opts: Opts) {
         properties: {
           app: project.config.name,
           stage: project.config.stage,
+          region: project.config.region,
         },
       })
     );
