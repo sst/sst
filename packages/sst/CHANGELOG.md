@@ -1,5 +1,13 @@
 # @serverless-stack/cli2
 
+## 2.36.1
+
+### Patch Changes
+
+- [`dd01a3075`](https://github.com/sst/sst/commit/dd01a30755b360be406f276ce5c16b1ee51cad53) Thanks [@fwang](https://github.com/fwang)! - Function: track sourcemap enabled in metadata
+
+- [`eb0fb1498`](https://github.com/sst/sst/commit/eb0fb1498a2cefdc956b9684b6f2bd8765ef9fe5) Thanks [@thdxr](https://github.com/thdxr)! - cli: region
+
 ## 2.36.0
 
 ### Minor Changes
