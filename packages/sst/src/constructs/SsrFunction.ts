@@ -79,6 +79,7 @@ export class SsrFunction extends Construct implements SSTConstruct {
   public function: CdkFunction;
   private assetReplacer: CustomResource;
   private assetReplacerPolicy: Policy;
+  private missingSourcemap?: boolean;
   private props: SsrFunctionProps & {
     timeout: Exclude<SsrFunctionProps["timeout"], undefined>;
     memorySize: Exclude<SsrFunctionProps["memorySize"], undefined>;
@@ -155,6 +156,10 @@ export class SsrFunction extends Construct implements SSTConstruct {
 
   public attachPermissions(permissions: Permissions) {
     attachPermissionsToRole(this.function.role as Role, permissions);
+  }
+
+  public _overrideMissingSourcemap() {
+    this.missingSourcemap = true;
   }
 
   private createFunction(assetBucket: string, assetKey: string) {
@@ -305,6 +310,7 @@ export class SsrFunction extends Construct implements SSTConstruct {
         tarKey: this.functionArn,
       });
     }
+    this.missingSourcemap = !result.sourcemap;
 
     return AssetCode.fromAsset(result.out);
   }
@@ -367,6 +373,7 @@ export class SsrFunction extends Construct implements SSTConstruct {
         arn: this.functionArn,
         runtime: this.props.runtime,
         handler: this.props.handler,
+        missingSourcemap: this.missingSourcemap === true ? true : undefined,
         localId: this.node.addr,
         secrets: [] as string[],
       },

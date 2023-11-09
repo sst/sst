@@ -761,6 +761,7 @@ export class Function extends CDKFunction implements SSTConstruct {
   public readonly _isLiveDevEnabled: boolean;
   /** @internal */
   public readonly _doNotAllowOthersToBind?: boolean;
+  private missingSourcemap?: boolean;
   private functionUrl?: FunctionUrl;
   private props: FunctionProps;
   private allBindings: SSTConstruct[] = [];
@@ -986,6 +987,7 @@ export class Function extends CDKFunction implements SSTConstruct {
             tarKey: this.functionArn,
           });
         }
+        this.missingSourcemap = !result.sourcemap;
 
         // Update code
         const cfnFunction = this.node.defaultChild as CfnFunction;
@@ -1120,6 +1122,7 @@ export class Function extends CDKFunction implements SSTConstruct {
         arn: this.functionArn,
         runtime: this.props.runtime,
         handler: this.props.handler,
+        missingSourcemap: this.missingSourcemap === true ? true : undefined,
         localId: this.node.addr,
         secrets: this.allBindings
           .filter((c) => c instanceof Secret)
