@@ -282,7 +282,7 @@ new NextjsSite(stack, "Site", {
 
 ---
 
-## Sourcemaps
+## Source maps
 
 Next.js uses Webpack to bundle your code, so the stack trace line numbers might not match. Turning on sourcemaps when building your Next.js app can fix this.
 

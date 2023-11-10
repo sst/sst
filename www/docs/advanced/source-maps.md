@@ -1,13 +1,40 @@
 ---
 title: Source Maps
-description: "Enabling source maps for Lambda functions in SST."
+description: "Enabling source maps for your frontend and Lambda functions in SST."
 ---
 
-For Lambda functions with Node.js runtimes, SST will automatically generate source maps. The source maps are not used by default as it affects the startup time for Lambda functions. This is because the source maps files can be quite large.
+Enabling source maps for your frontend and Lambda functions in SST is straightforward and enhances error debugging.
 
-## Enable source maps
+## Local Development
 
-You can enable the use of source maps by setting `--enable-source-maps` in the `NODE_OPTIONS` environment variable.
+In [Live Lambda Dev](../live-lambda-development.md), source maps are enabled by default. Generated `.map` files are placed alongside their corresponding source files. Functions are invoked with the `--enable-source-maps` flag, ensuring error stack traces display accurate line numbers.
+
+## Deployment
+
+During deployment, SST automatically generates source maps for Node.js Lambda functions, including the frontend server functions. These maps are not included in the function bundle by default to minimize Lambda startup times, given their potentially large size.
+
+We'll explore several methods to enable source maps.
+
+### SST Console
+
+Source maps work out of the box in the SST Console. They allow the Console to accurately identify the source of errors in functions or frontend code, showing the relevant source context. Support is available for:
+
+- **Functions**: Enabled by default for Node.js runtimes.
+- **AstroSite**: Starting with v2.35.0, source maps are enabled by default. [Learn more](../constructs/AstroSite.md#source-maps)
+- **NextjsSite**: Starting with v2.36.0, source maps are supported. [Instructions for enabling them in Next.js apps](../constructs/NextjsSite.md#source-maps) can be found here.
+- Other frameworks: Support for other frontend frameworks is coming soon.
+
+With active source maps, errors in your frontend server functions are displayed with accurate context.
+
+![Next.js error stack trace](/img/nextjssite/error-stack-trace.png)
+
+:::info
+Sourcemap files are not included in the function bundle to keep the function size small.
+:::
+
+### CloudWatch Console
+
+Activate source maps in the CloudWatch Console by setting `--enable-source-maps` in the `NODE_OPTIONS` environment variable.
 
 ```js {4,6-8}
 new Function(stack, "MyFunction", {
@@ -21,7 +48,7 @@ new Function(stack, "MyFunction", {
 });
 ```
 
-Alternatively, you can also enable source maps for all the functions in your app.
+Alternatively, enable source maps for all the functions in your app.
 
 ```js title="sst.config.ts" {8,10-12}
 export default {
@@ -43,7 +70,7 @@ export default {
 } satisfies SSTConfig;
 ```
 
-## Upload source maps to Sentry
+### Sentry
 
 To use source maps in Sentry or any similar error logging service, you should upload them directly. Avoid including them in your Lambda function packages, as that would affect cold start times.
 

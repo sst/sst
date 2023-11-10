@@ -300,22 +300,6 @@ For SST to deploy and manage your applications, it requires certain IAM permissi
                   "aws:ResourceTag/sst:app": "false"
               }
           }
-      },
-      {
-          "Sid": "AllowSSTConsoleInvokeLambda",
-          "Effect": "Allow",
-          "Action": [
-              "lambda:GetFunction",
-              "lambda:InvokeFunction"
-          ],
-          "Resource": [
-              "arn:aws:lambda:us-east-1:112233445566:function:*"
-          ],
-          "Condition": {
-              "Null": {
-                  "aws:ResourceTag/sst:app": "false"
-              }
-          }
       }
     ]
 }
@@ -590,28 +574,3 @@ The SST CLI command also makes AWS SDK calls to your AWS account. Here are the I
       }
   }
   ```
-### 4. Permissions required by SST Console
-
-[SST Console](../console.md) is a web based dashboard to manage your SST apps. The Console lets you view real-time logs, invoke functions, replay invocations, make queries, run migrations, view uploaded files, query your GraphQL APIs, and more!
-
-Permissions required to use the Console depends on the resources deployed in your application. You can selectively grant permissions based on the Console features being used.
-
-For example, to allow SST Console to [invoke and replay Lambda invocations](../console.md#logs), you need the following permissions:
-
-```json
-{
-    "Effect": "Allow",
-    "Action": [
-        "lambda:GetFunction",
-        "lambda:InvokeFunction"
-    ],
-    "Resource": [
-        "arn:aws:lambda:us-east-1:112233445566:function:*"
-    ],
-    "Condition": {
-        "Null": {
-            "aws:ResourceTag/sst:app": "false"
-        }
-    }
-}
-```

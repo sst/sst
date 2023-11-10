@@ -382,6 +382,20 @@ This cost estimate is based on the `us-east-1` region pricing and does not consi
 
 ---
 
+## Source maps
+
+Starting v2.35.0, sourcemaps are enabled by default in the [`astro-sst` adapter](https://www.npmjs.com/package/astro-sst). When your Astro app builds, it'll generate the sourcemap files alongside your code. SST uploads these files to the [bootstrap bucket](../advanced/bootstrapping.md).
+
+:::info
+The sourcemap files are not added to the server bundle, keeping the function size small.
+:::
+
+With sourcemaps active, the [SST Console](../console.md) will display the errors with the right context.
+
+![Astro error stack trace](/img/astrosite/error-stack-trace.png)
+
+---
+
 ## Examples
 
 ### Configuring custom domains

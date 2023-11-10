@@ -135,9 +135,9 @@ There are a couple of different modes for the logs view.
 
 ---
 
-#### Recent
+#### Past
 
-By default, the Console will scan and pull the recent logs of a function. This is useful for cases where you've just seen an error and you want to pull up the logs for it. 
+By default, the Console will scan and pull the past logs of a function. This is useful for cases where you've just seen an error and you want to pull up the logs for it. 
 
 ---
 
@@ -147,15 +147,9 @@ In _Live_ mode, you'll see the logs come in live for the function.
 
 ---
 
-#### Time interval presets
+#### Jump to...
 
-There are a couple preset time intervals like _5min ago_, _15min ago_, _1hr ago_, etc. These pull up the logs between now and the time range selected.
-
----
-
-#### Custom time interval
-
-You can also specify a time interval using the _Specify a time_ option.
+You also have the ability to specify a time, allowing you to access logs from before the set time.
 
 ---
 
@@ -164,6 +158,10 @@ You can also specify a time interval using the _Specify a time_ option.
 The SST Console will automatically show you any errors in your Lambda functions in real-time.
 
 ![SST Console issues](/img/console/sst-console-issues.png)
+
+And notify you through Slack or email.
+
+![SST Console issues alert](/img/console/sst-console-issues-alert.png)
 
 With Issues, there is:
 
@@ -298,8 +296,8 @@ Permissions for the SST Console fall into two categories: read and write.
   | Purpose                                | AWS IAM Action                   |
   |----------------------------------------|----------------------------------|
   | Fetch stack outputs                    | `cloudformation:DescribeStacks`  |
-  | Retrieve function runtime and size     | `lambda:GetFunctionCommand`      |
-  | Access stack metadata                  | `s3:GetObject`<br/>`s3:ListObjectsV2`|
+  | Retrieve function runtime and size     | `lambda:GetFunction`      |
+  | Access stack metadata                  | `ec2:DescribeRegions`<br/>`s3:GetObject`<br/>`s3:ListBucket`|
   | Display function logs                  | `logs:DescribeLogStreams`<br/>`logs:FilterLogEvents`<br/>`logs:GetLogEvents`<br/>`logs:StartQuery`|
   | Monitor invocation usage               | `cloudwatch:GetMetricData`       |
 
@@ -312,7 +310,8 @@ Permissions for the SST Console fall into two categories: read and write.
   | Forward bootstrap bucket events to event bus     | `s3:PutBucketNotification`                                      |
   | Send events to SST Console                       | `events:PutRule`<br/>`events:PutTargets`                           |
   | Grant event bus access for SST Console           | `iam:CreateRole`<br/>`iam:DeleteRole`<br/>`iam:DeleteRolePolicy`<br/>`iam:PassRole`<br/>`iam:PutRolePolicy` |
-  | Invok Lambda functions or replaying invocations  | `lambda:InvokeFunction` |
+  | Enable Issues to subscribe logs                  | `logs:CreateLogGroup`<br/>`logs:PutSubscriptionFilter` |
+  | Invoke Lambda functions and replay invocations   | `lambda:InvokeFunction` |
 
 ---
 
@@ -374,6 +373,16 @@ To customize IAM permissions for the CloudFormation stack:
     +                 ],
     +                 "Resource": {
     +                   "Fn::Sub": "arn:aws:iam::${AWS::AccountId}:role/SSTConsolePublisher*"
+    +                 }
+    +               },
+    +               {
+    +                 "Effect": "Allow",
+    +                 "Action": [
+    +                   "logs:CreateLogGroup",
+    +                   "logs:PutSubscriptionFilter"
+    +                 ],
+    +                 "Resource": {
+    +                   "Fn::Sub": "arn:aws:logs:*:${AWS::AccountId}:log-group:*"
     +                 }
     +               },
     +               {
