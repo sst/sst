@@ -194,6 +194,10 @@ export interface WebSocketApiFunctionRouteProps {
    *The function definition used to create the function for this route.
    */
   function: FunctionDefinition;
+  /**
+   *Enables two-way mode for this route.
+   */
+  returnResponse?: boolean;
 }
 
 /**
@@ -690,6 +694,7 @@ export class WebSocketApi extends Construct implements SSTConstruct {
         lambda
       ),
       authorizer: routeKey === "$connect" ? authorizer : undefined,
+      returnResponse: !Fn.isInlineDefinition(routeValue) && !!routeValue.returnResponse,
     });
 
     ///////////////////
