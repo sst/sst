@@ -5,15 +5,21 @@ description: "Enabling source maps for your frontend and Lambda functions in SST
 
 Enabling source maps for your frontend and Lambda functions in SST is straightforward and enhances error debugging.
 
+---
+
 ## Local Development
 
 In [Live Lambda Dev](../live-lambda-development.md), source maps are enabled by default. Generated `.map` files are placed alongside their corresponding source files. Functions are invoked with the `--enable-source-maps` flag, ensuring error stack traces display accurate line numbers.
+
+---
 
 ## Deployment
 
 During deployment, SST automatically generates source maps for Node.js Lambda functions, including the frontend server functions. These maps are not included in the function bundle by default to minimize Lambda startup times, given their potentially large size.
 
 We'll explore several methods to enable source maps.
+
+---
 
 ### SST Console
 
@@ -31,6 +37,8 @@ With active source maps, errors in your frontend server functions are displayed 
 :::info
 Sourcemap files are not included in the function bundle to keep the function size small.
 :::
+
+---
 
 ### CloudWatch Console
 
@@ -69,6 +77,8 @@ export default {
   },
 } satisfies SSTConfig;
 ```
+
+---
 
 ### Sentry
 
