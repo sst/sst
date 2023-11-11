@@ -332,15 +332,19 @@ export class App extends CDKApp {
     this.isFinished = true;
     const { config, paths } = useProject();
     Auth.injectConfig();
-    this.buildConstructsMetadata();
     this.ensureUniqueConstructIds();
 
     // Run deferred tasks
-    // - after codegen b/c some frontend frameworks (ie. Next.js apps) runs
+    // - After codegen b/c some frontend frameworks (ie. Next.js apps) runs
     //   type checking in the build step
-    // - before remove govcloud unsupported resource properties b/c deferred
+    // - Before remove govcloud unsupported resource properties b/c deferred
     //   tasks may add govcloud unsupported resource properties
     await useDeferredTasks().run();
+
+    // Build constructs metadata after running deferred tasks
+    // - Metadata for Functions needs to know if sourcemaps are enabled, which
+    //   is not known until after build
+    this.buildConstructsMetadata();
 
     this.createBindingSsmParameters();
     this.removeGovCloudUnsupportedResourceProperties();

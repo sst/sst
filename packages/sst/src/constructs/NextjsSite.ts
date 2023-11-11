@@ -224,6 +224,8 @@ export class NextjsSite extends SsrSite {
       ...props,
     });
 
+    this.handleMissingSourcemap();
+
     if (this.isPerRouteLoggingEnabled()) {
       this.disableDefaultLogging();
       this.uploadSourcemaps();
@@ -803,6 +805,17 @@ export class NextjsSite extends SsrSite {
       !this.props.edge &&
       this.props.logging === "per-route"
     );
+  }
+
+  private handleMissingSourcemap() {
+    if (this.doNotDeploy || this.props.edge) return;
+
+    const hasMissingSourcemap = this.useRoutes().every(
+      ({ sourcemapPath, sourcemapKey }) => !sourcemapPath || !sourcemapKey
+    );
+    if (!hasMissingSourcemap) return;
+
+    (this.serverFunction as SsrFunction)._overrideMissingSourcemap();
   }
 
   private disableDefaultLogging() {
