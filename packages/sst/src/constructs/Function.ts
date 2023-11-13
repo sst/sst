@@ -982,9 +982,7 @@ export class Function extends CDKFunction implements SSTConstruct {
           });
           await fs.rm(result.sourcemap);
           useFunctions().sourcemaps.add(stack.stackName, {
-            sortKey: props.handler,
-            srcBucket: asset.bucket,
-            srcKey: asset.s3ObjectKey,
+            asset,
             tarKey: this.functionArn,
           });
         }
@@ -1369,13 +1367,10 @@ export class Function extends CDKFunction implements SSTConstruct {
 export const useFunctions = createAppContext(() => {
   const functions: Record<string, FunctionProps> = {};
   type Sourcemap = {
-    srcBucket: IBucket;
-    srcKey: string;
+    asset: Asset;
     tarKey: string;
-    sortKey: string;
   };
   const sourcemaps: Record<string, Sourcemap[]> = {};
-
   return {
     sourcemaps: {
       add(stack: string, source: Sourcemap) {
@@ -1385,8 +1380,8 @@ export const useFunctions = createAppContext(() => {
       },
       forStack(stack: string) {
         return (sourcemaps[stack] || []).sort((a, b) => {
-          if (a.sortKey > b.sortKey) return 1;
-          if (a.sortKey < b.sortKey) return -1;
+          if (a.asset.node.path > b.asset.node.path) return 1;
+          if (a.asset.node.path < b.asset.node.path) return -1;
           return 0;
         });
       },

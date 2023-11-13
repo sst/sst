@@ -218,8 +218,7 @@ export class EdgeFunction extends Construct {
       });
       await fs.promises.rm(result.sourcemap);
       useFunctions().sourcemaps.add(stack.stackName, {
-        srcBucket: asset.bucket,
-        srcKey: asset.s3ObjectKey,
+        asset,
         tarKey: this.functionArn,
       });
     }

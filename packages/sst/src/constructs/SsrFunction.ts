@@ -305,8 +305,7 @@ export class SsrFunction extends Construct implements SSTConstruct {
       });
       await fs.rm(result.sourcemap);
       useFunctions().sourcemaps.add(stack.stackName, {
-        srcBucket: asset.bucket,
-        srcKey: asset.s3ObjectKey,
+        asset,
         tarKey: this.functionArn,
       });
     }

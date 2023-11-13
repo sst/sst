@@ -858,8 +858,7 @@ export class NextjsSite extends SsrSite {
         });
 
         useFunctions().sourcemaps.add(stack.stackName, {
-          srcBucket: asset.bucket,
-          srcKey: asset.s3ObjectKey,
+          asset,
           tarKey: path.join(server.functionArn, sourcemapKey),
         });
       });
