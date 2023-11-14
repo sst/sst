@@ -156,7 +156,5 @@ export function EventHandler<Events extends Event>(
       attempts: event.attempts ?? 0,
     });
   };
-  fn._events = _events;
-  fn.cb = cb;
-  return fn;
+  return Object.assign(fn, { _events, cb });
 }
