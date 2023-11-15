@@ -101,6 +101,7 @@ export interface NextjsSiteProps extends Omit<SsrSiteProps, "nodejs"> {
      * experimental: {
      *   disableIncrementalCache: true,
      * }
+     * ```
      */
     disableIncrementalCache?: boolean;
     /**
