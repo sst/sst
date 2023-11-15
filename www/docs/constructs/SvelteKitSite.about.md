@@ -193,7 +193,9 @@ new SvelteKitSite(stack, "Site", {
 Then you can access the API's URL in your server code:
 
 ```ts
-const data = await db(import.meta.env.API_URL);
+import { env } from '$env/dynamic/private';
+
+console.log(env.API_URL);
 ```
 
 Note that, in SvelteKit, only environment variables prefixed with `PUBLIC_` are available in your browser code. [Read more about using environment variables](https://learn.svelte.dev/tutorial/env-static-public).
@@ -207,6 +209,14 @@ new SvelteKitSite(stack, "Site", {
     PUBLIC_API_URL: api.url,
   },
 });
+```
+
+And on the client side access it using.
+
+```ts
+import { env } from '$env/dynamic/public';
+
+console.log(env.PUBLIC_API_URL);
 ```
 
 Let's take look at what is happening behind the scene.
