@@ -1,7 +1,10 @@
 package js
 
 import (
-	"log"
+	"bufio"
+	"fmt"
+	"log/slog"
+	"math/rand"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -9,8 +12,26 @@ import (
 	esbuild "github.com/evanw/esbuild/pkg/api"
 )
 
-func Eval(tmpDir string, code string) ([]byte, error) {
-	outfile := filepath.Join(tmpDir, "out.mjs")
+type EvalOptions struct {
+	Dir  string
+	Code string
+	Env  []string
+}
+
+type EvalResult struct {
+	Out *bufio.Scanner
+	Err *bufio.Scanner
+
+	cmd  *exec.Cmd
+	file string
+}
+
+func Eval(input EvalOptions) (*EvalResult, error) {
+	outfile := filepath.Join(input.Dir,
+		"eval",
+		fmt.Sprintf("eval-%x.mjs", rand.Int()),
+	)
+	slog.Info("esbuild building")
 	esbuild.Build(esbuild.BuildOptions{
 		Banner: map[string]string{
 			"js": `
@@ -22,13 +43,13 @@ func Eval(tmpDir string, code string) ([]byte, error) {
 		},
 		External: []string{
 			"@pulumi/pulumi",
-			// "@pulumi/aws",
+			"@pulumi/aws",
 		},
 		Format:   esbuild.FormatESModule,
 		Platform: esbuild.PlatformNode,
 		Stdin: &esbuild.StdinOptions{
-			Contents:   code,
-			ResolveDir: tmpDir,
+			Contents:   input.Code,
+			ResolveDir: input.Dir,
 			Sourcefile: "eval.ts",
 			Loader:     esbuild.LoaderTS,
 		},
@@ -36,17 +57,36 @@ func Eval(tmpDir string, code string) ([]byte, error) {
 		Write:   true,
 		Bundle:  true,
 	})
+	slog.Info("esbuild built")
 	cmd := exec.Command("node", outfile)
-	cmd.Env = append(
-		os.Environ(),
-		"PULUMI_CONFIG_PASSPHRASE=",
-	)
-	cmd.Dir = tmpDir
-	cmd.Stderr = os.Stderr
-	output, err := cmd.Output()
-	log.Println(string(output))
+	cmd.Env = append(os.Environ(), input.Env...)
+
+	stdout, err := cmd.StdoutPipe()
 	if err != nil {
 		return nil, err
 	}
-	return output, nil
+	outScanner := bufio.NewScanner(stdout)
+
+	stderr, err := cmd.StderrPipe()
+	if err != nil {
+		return nil, err
+	}
+	errScanner := bufio.NewScanner(stderr)
+
+	return &EvalResult{
+		Out:  outScanner,
+		Err:  errScanner,
+		cmd:  cmd,
+		file: outfile,
+	}, nil
+}
+
+func (e *EvalResult) Start() error {
+	return e.cmd.Start()
+}
+
+func (e *EvalResult) Wait() error {
+	err := e.cmd.Wait()
+	os.Remove(e.file)
+	return err
 }

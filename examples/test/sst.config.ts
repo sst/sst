@@ -7,7 +7,7 @@ export default {
       profile: "sst-dev",
     };
   },
-  run() {
-    const bucket = new aws.s3.Bucket("my-bucket");
+  async run() {
+    const a = new aws.s3.Bucket("my-bucket", {});
   },
 };

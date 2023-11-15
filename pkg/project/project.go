@@ -5,18 +5,19 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"strings"
 
-	"github.com/sst/v10/internal/util/fs"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/sst/v10/internal/fs"
 	"github.com/sst/v10/pkg/js"
 )
 
 type Project struct {
-	root    string
-	config  string
-	name    string
-	profile string
-	stage   string
+	root        string
+	config      string
+	name        string
+	profile     string
+	stage       string
+	credentials *aws.Credentials
 }
 
 func New() (*Project, error) {
@@ -49,31 +50,52 @@ func New() (*Project, error) {
 		}
 	}
 
-	evaled, err := js.Eval(tmp, fmt.Sprintf(`
+	eval, err := js.Eval(
+		js.EvalOptions{
+			Dir: tmp,
+			Code: fmt.Sprintf(`
     import mod from '%s';
-    console.log(JSON.stringify(mod.config()))
-  `, cfgPath))
+    console.log(JSON.stringify(mod.config()))`,
+				cfgPath),
+		},
+	)
 	if err != nil {
 		return nil, err
 	}
 
-	parsed := struct {
-		Name    string `json:"name"`
-		Profile string `json:"profile"`
-		Stage   string `json:"stage"`
-	}{}
-	err = json.Unmarshal(evaled, &parsed)
+	eval.Start()
+
+	for eval.Out.Scan() {
+		line := eval.Out.Bytes()
+		parsed := struct {
+			Name    string `json:"name"`
+			Profile string `json:"profile"`
+			Stage   string `json:"stage"`
+		}{}
+		err = json.Unmarshal(line, &parsed)
+		if err != nil {
+			return nil, err
+		}
+		proj.name = parsed.Name
+		if proj.name == "" {
+			return nil, fmt.Errorf("Project name is required")
+		}
+		proj.profile = parsed.Profile
+		proj.stage = parsed.Stage
+		break
+	}
+
+	err = eval.Wait()
 	if err != nil {
 		return nil, err
 	}
-	proj.name = parsed.Name
-	if proj.name == "" {
-		return nil, fmt.Errorf("Project name is required")
-	}
-	proj.profile = parsed.Profile
-	proj.stage = parsed.Stage
 
 	return proj, nil
+}
+
+func (p *Project) getPath(path ...string) string {
+	paths := append([]string{p.PathTemp()}, path...)
+	return filepath.Join(paths...)
 }
 
 func (p *Project) PathTemp() string {
@@ -98,29 +120,4 @@ func (p *Project) Profile() string {
 
 func (p *Project) Stage() string {
 	return p.stage
-}
-
-func (p *Project) StageSet(input string) {
-	p.stage = input
-}
-
-func (p *Project) stagePersonalPath() string {
-	return filepath.Join(p.PathTemp(), "stage")
-}
-
-func (p *Project) StagePersonalLoad() {
-	data, err := os.ReadFile(p.stagePersonalPath())
-	if err != nil {
-		return
-	}
-	p.stage = strings.TrimSpace(string(data))
-}
-
-func (p *Project) StagePersonalSet(input string) error {
-	err := os.WriteFile(p.stagePersonalPath(), []byte(strings.TrimSpace(input)), 0644)
-	if err != nil {
-		return err
-	}
-	p.stage = input
-	return nil
 }
