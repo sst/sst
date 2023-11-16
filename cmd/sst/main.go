@@ -12,8 +12,8 @@ import (
 func main() {
 
 	app := &cli.App{
-		Name:  "ion",
-		Usage: "wtf is this",
+		Name:  "sst",
+		Usage: "deplay anything",
 		Flags: []cli.Flag{
 			&cli.BoolFlag{
 				Name: "verbose",
