@@ -8,13 +8,13 @@ builds:
       - linux
       - windows
       - darwin
-    main: ./cmd/ion
+    main: ./cmd/sst
 
 archives:
   - format: tar.gz
     # this name template makes the OS and Arch compatible with the results of uname.
     name_template: >-
-      ion-
+      sst-
       {{- title .Os }}-
       {{- if eq .Arch "amd64" }}x86_64
       {{- else if eq .Arch "386" }}i386
