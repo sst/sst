@@ -67,15 +67,17 @@ func Eval(input EvalOptions) (*EvalResult, error) {
 	}
 	outScanner := bufio.NewScanner(stdout)
 
-	stderr, err := cmd.StderrPipe()
-	if err != nil {
-		return nil, err
-	}
-	errScanner := bufio.NewScanner(stderr)
+	cmd.Stderr = os.Stderr
+	/*
+		stderr, err := cmd.StderrPipe()
+		if err != nil {
+			return nil, err
+		}
+		errScanner := bufio.NewScanner(stderr)
+	*/
 
 	return &EvalResult{
 		Out:  outScanner,
-		Err:  errScanner,
 		cmd:  cmd,
 		file: outfile,
 	}, nil
