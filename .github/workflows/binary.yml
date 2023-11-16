@@ -2,9 +2,8 @@ name: binary
 
 on:
   push:
-    # run only against tags
-    tags:
-      - '*'
+    branches:
+      - dev
 
 
 concurrency: ${{ github.workflow }}-${{ github.ref }}
