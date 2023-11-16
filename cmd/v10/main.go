@@ -123,7 +123,10 @@ func initProject() (*project.Project, error) {
 
 	missingDeps := p.CheckDeps()
 	if len(missingDeps) > 0 {
-		p.InstallDeps(missingDeps)
+		err = p.InstallDeps(missingDeps)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return p, nil

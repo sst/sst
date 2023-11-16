@@ -2,6 +2,7 @@ package project
 
 import (
 	"encoding/json"
+	"fmt"
 	"log/slog"
 	"os"
 	"os/exec"
@@ -40,11 +41,16 @@ func (p *Project) CheckDeps() map[string]bool {
 	return result
 }
 
-func (p *Project) InstallDeps(input map[string]bool) {
+func (p *Project) InstallDeps(input map[string]bool) error {
 	for k := range input {
-		slog.Info("installing", "dep", k)
+		slog.Info("installing", "dep", k, "to", p.PathTemp())
 		cmd := exec.Command("npm", "install", "--save", k+"@"+VERSIONS[k])
 		cmd.Dir = p.PathTemp()
-		cmd.Run()
+		output, err := cmd.CombinedOutput()
+		if err != nil {
+			fmt.Print(string(output))
+			return err
+		}
 	}
+	return nil
 }
