@@ -38,6 +38,12 @@ aurs:
       - sst
     conflicts:
       - sst
+brews:
+  - name: sst
+    repository:
+      owner: sst
+      name: homebrew-tap
+
 changelog:
   sort: asc
   filters:
