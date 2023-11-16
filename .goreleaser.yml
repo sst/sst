@@ -34,6 +34,10 @@ aurs:
     description: "Deploy anything"
     private_key: '{{ .Env.AUR_KEY }}'
     git_url: 'ssh://aur@aur.archlinux.org/sst-bin.git'
+    provides:
+      - sst
+    conflicts:
+      - sst
 changelog:
   sort: asc
   filters:
