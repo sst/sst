@@ -30,6 +30,7 @@ snapshot:
   name_template: "{{ incpatch .Version }}-next"
 aurs:
   - homepage: "https://github.com/sst/ion"
+    name: sst-bin
     description: "Deploy anything"
     private_key: '{{ .Env.AUR_KEY }}'
     git_url: 'ssh://aur@aur.archlinux.org/sst-bin.git'
