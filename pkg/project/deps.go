@@ -2,7 +2,6 @@ package project
 
 import (
 	"encoding/json"
-	"fmt"
 	"log/slog"
 	"os"
 	"os/exec"
