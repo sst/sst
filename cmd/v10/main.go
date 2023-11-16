@@ -6,7 +6,6 @@ import (
 	"os"
 
 	"github.com/sst/v10/pkg/project"
-	"github.com/sst/v10/pkg/stack"
 	cli "github.com/urfave/cli/v2"
 )
 
@@ -42,7 +41,7 @@ func main() {
 					if err != nil {
 						return err
 					}
-					stack.Deploy(p)
+					p.Stack.Deploy()
 					return nil
 				},
 			},
@@ -55,7 +54,7 @@ func main() {
 					if err != nil {
 						return err
 					}
-					stack.Remove(p)
+					p.Stack.Remove()
 					return nil
 				},
 			},
@@ -68,7 +67,7 @@ func main() {
 					if err != nil {
 						return err
 					}
-					stack.Cancel(p)
+					p.Stack.Cancel()
 					return nil
 				},
 			},
@@ -109,8 +108,16 @@ func initProject() (*project.Project, error) {
 	}
 	slog.Info("using", "stage", p.Stage())
 
-	_, err = p.GetAwsCredentials()
+	_, err = p.AWS.Config()
 	if err != nil {
+		return nil, err
+	}
+
+	if _, err = p.Bootstrap.Bucket(); err != nil {
+		return nil, err
+	}
+
+	if err := p.Stack.Login(); err != nil {
 		return nil, err
 	}
 

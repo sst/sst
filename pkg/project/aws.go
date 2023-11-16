@@ -3,30 +3,58 @@ package project
 import (
 	"context"
 	"log/slog"
+	"sync"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
 )
 
-func (p *Project) GetAwsCredentials() (*aws.Credentials, error) {
-	if p.credentials != nil && !p.credentials.Expired() {
-		return p.credentials, nil
+type projectAws struct {
+	project *Project
+	cfg     aws.Config
+	sync.Once
+}
+
+func (p *projectAws) Credentials() (*aws.Credentials, error) {
+	cfg, err := p.Config()
+	if err != nil {
+		return nil, err
 	}
-	slog.Info("using", "profile", p.Profile())
 	ctx := context.Background()
-	slog.Info("getting aws credentials")
-	cfg, err := config.LoadDefaultConfig(
-		ctx,
-		config.WithSharedConfigProfile(p.Profile()),
-	)
+	creds, err := cfg.Credentials.Retrieve(ctx)
 	if err != nil {
 		return nil, err
 	}
-	credentials, err := cfg.Credentials.Retrieve(ctx)
+	return &creds, nil
+}
+
+func (p *projectAws) Config() (aws.Config, error) {
+	var err error
+
+	p.Do(func() {
+		slog.Info("using", "profile", p.project.Profile())
+		ctx := context.Background()
+		slog.Info("getting aws credentials")
+		cfg, e := config.LoadDefaultConfig(
+			ctx,
+			config.WithSharedConfigProfile(p.project.Profile()),
+		)
+		if e != nil {
+			err = e
+			return
+		}
+		_, e = cfg.Credentials.Retrieve(ctx)
+		if e != nil {
+			err = e
+			return
+		}
+		slog.Info("credentials found")
+		p.cfg = cfg
+	})
+
 	if err != nil {
-		return nil, err
+		return aws.Config{}, err
 	}
-	p.credentials = &credentials
-	slog.Info("credentials found")
-	return &credentials, nil
+
+	return p.cfg, nil
 }

@@ -6,18 +6,20 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/sst/v10/internal/fs"
 	"github.com/sst/v10/pkg/js"
 )
 
 type Project struct {
-	root        string
-	config      string
-	name        string
-	profile     string
-	stage       string
-	credentials *aws.Credentials
+	root    string
+	config  string
+	name    string
+	profile string
+	stage   string
+
+	AWS       *projectAws
+	Bootstrap *bootstrap
+	Stack     *stack
 }
 
 func New() (*Project, error) {
@@ -36,6 +38,15 @@ func New() (*Project, error) {
 	proj := &Project{
 		root:   rootPath,
 		config: cfgPath,
+	}
+	proj.AWS = &projectAws{
+		project: proj,
+	}
+	proj.Bootstrap = &bootstrap{
+		project: proj,
+	}
+	proj.Stack = &stack{
+		project: proj,
 	}
 	tmp := proj.PathTemp()
 
