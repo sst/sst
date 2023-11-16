@@ -46,9 +46,10 @@ func (p *Project) InstallDeps(input map[string]bool) error {
 		slog.Info("installing", "dep", k, "to", p.PathTemp())
 		cmd := exec.Command("npm", "install", "--save", k+"@"+VERSIONS[k])
 		cmd.Dir = p.PathTemp()
-		output, err := cmd.CombinedOutput()
+		cmd.Stderr = os.Stderr
+		cmd.Stdout = os.Stdout
+		err := cmd.Run()
 		if err != nil {
-			fmt.Print(string(output))
 			return err
 		}
 	}
