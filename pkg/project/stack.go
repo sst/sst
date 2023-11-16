@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/sst/v10/pkg/js"
+	"github.com/sst/ion/pkg/js"
 )
 
 type stack struct {

@@ -6,8 +6,8 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/sst/v10/internal/fs"
-	"github.com/sst/v10/pkg/js"
+	"github.com/sst/ion/internal/fs"
+	"github.com/sst/ion/pkg/js"
 )
 
 type Project struct {

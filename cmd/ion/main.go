@@ -5,14 +5,14 @@ import (
 	"log/slog"
 	"os"
 
-	"github.com/sst/v10/pkg/project"
+	"github.com/sst/ion/pkg/project"
 	cli "github.com/urfave/cli/v2"
 )
 
 func main() {
 
 	app := &cli.App{
-		Name:  "v10",
+		Name:  "ion",
 		Usage: "wtf is this",
 		Flags: []cli.Flag{
 			&cli.BoolFlag{
