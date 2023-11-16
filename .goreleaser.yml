@@ -28,6 +28,11 @@ checksum:
   name_template: 'checksums.txt'
 snapshot:
   name_template: "{{ incpatch .Version }}-next"
+aurs:
+  - homepage: "https://github.com/sst/ion"
+    description: "Deploy anything"
+    private_key: '{{ .Env.AUR_KEY }}'
+    git_url: 'ssh://aur@aur.archlinux.org/sst-bin.git'
 changelog:
   sort: asc
   filters:
