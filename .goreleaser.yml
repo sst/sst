@@ -1,3 +1,4 @@
+project_name: sst
 before:
   hooks:
     - go mod tidy
@@ -10,37 +11,31 @@ builds:
       - darwin
     main: ./cmd/sst
 
-archives:
-  - format: tar.gz
-    # this name template makes the OS and Arch compatible with the results of uname.
-    name_template: >-
-      sst-
-      {{- title .Os }}-
-      {{- if eq .Arch "amd64" }}x86_64
-      {{- else if eq .Arch "386" }}i386
-      {{- else }}{{ .Arch }}{{ end }}
-      {{- if .Arm }}v{{ .Arm }}{{ end }}
-    # use zip for windows archives
-    format_overrides:
-    - goos: windows
-      format: zip
+      # archives:
+      #   - format: tar.gz
+      #     # this name template makes the OS and Arch compatible with the results of uname.
+      #     name_template: >-
+      #       sst-
+      #       {{- title .Os }}-
+      #       {{- if eq .Arch "amd64" }}x86_64
+      #       {{- else if eq .Arch "386" }}i386
+      #       {{- else }}{{ .Arch }}{{ end }}
+      #       {{- if .Arm }}v{{ .Arm }}{{ end }}
+      #     # use zip for windows archives
+      #     format_overrides:
+      #     - goos: windows
+      #       format: zip
 checksum:
   name_template: 'checksums.txt'
 snapshot:
   name_template: "{{ incpatch .Version }}-next"
 aurs:
   - homepage: "https://github.com/sst/ion"
-    name: sst-bin
     description: "Deploy anything"
     private_key: '{{ .Env.AUR_KEY }}'
     git_url: 'ssh://aur@aur.archlinux.org/sst-bin.git'
-    provides:
-      - sst
-    conflicts:
-      - sst
 brews:
-  - name: sst
-    repository:
+  - repository:
       owner: sst
       name: homebrew-tap
 
