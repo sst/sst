@@ -16,7 +16,9 @@ archives:
     # this name template makes the OS and Arch compatible with the results of uname.
     name_template: >-
       sst-
-      {{- title .Os }}-
+      {{- if eq .Os "darwin" }}mac-
+      {{- else if eq .Os "windows" }}windows-
+      {{- else if eq .Os "linux" }}linux-{{end}}
       {{- if eq .Arch "amd64" }}x86_64
       {{- else if eq .Arch "386" }}i386
       {{- else }}{{ .Arch }}{{ end }}
