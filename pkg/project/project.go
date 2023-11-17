@@ -104,6 +104,27 @@ func New() (*Project, error) {
 	return proj, nil
 }
 
+func Create() error {
+	if _, err := os.Stat("sst.config.ts"); err == nil {
+		return fmt.Errorf("sst.config.ts already exists")
+	}
+
+	return os.WriteFile("sst.config.ts", []byte(`
+/// <reference path="./.sst/types/global.d.ts" />
+
+export default {
+  config() {
+    return {
+      name: "myapp"
+    };
+  },
+  async run() {
+    const a = new aws.s3.Bucket("my-bucket", {});
+  },
+};
+`), 0644)
+}
+
 func (p *Project) getPath(path ...string) string {
 	paths := append([]string{p.PathTemp()}, path...)
 	return filepath.Join(paths...)

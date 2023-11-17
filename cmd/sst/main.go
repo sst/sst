@@ -59,6 +59,19 @@ func main() {
 				},
 			},
 			{
+				Name:  "create",
+				Usage: "Create",
+				Flags: []cli.Flag{},
+				Action: func(cli *cli.Context) error {
+					err := project.Create()
+					if err != nil {
+						return err
+					}
+
+					return err
+				},
+			},
+			{
 				Name:  "cancel",
 				Usage: "Cancel",
 				Flags: []cli.Flag{},
@@ -118,6 +131,10 @@ func initProject() (*project.Project, error) {
 	}
 
 	if err := p.Stack.Login(); err != nil {
+		return nil, err
+	}
+
+	if err := p.GenerateTypes(); err != nil {
 		return nil, err
 	}
 

@@ -1,4 +1,4 @@
-/// <reference path="./.sst/types/index.d.ts" />
+/// <reference path="./.sst/types/global.d.ts" />
 
 export default {
   config() {
@@ -9,5 +9,8 @@ export default {
   },
   async run() {
     const a = new aws.s3.Bucket("my-bucket", {});
+    return {
+      url: util.interpolate`https://${a.bucketDomainName}`,
+    };
   },
 };

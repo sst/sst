@@ -76,7 +76,9 @@ func (s *stack) Login() error {
 func (s *stack) runtime() string {
 	return fmt.Sprintf(`
     import * as aws from "@pulumi/aws";
+    import * as util from "@pulumi/pulumi";
     globalThis.aws = aws
+    globalThis.util = util
     import { LocalWorkspace } from "@pulumi/pulumi/automation/index.js";
 
     import mod from '%s';
