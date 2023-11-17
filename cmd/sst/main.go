@@ -15,7 +15,7 @@ func main() {
 
 	app := &cli.App{
 		Name:  "sst",
-		Usage: "deplay anything",
+		Usage: "deploy anything",
 		Flags: []cli.Flag{
 			&cli.BoolFlag{
 				Name: "verbose",
