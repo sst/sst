@@ -32,7 +32,7 @@ func Eval(input EvalOptions) (*EvalResult, error) {
 		fmt.Sprintf("eval-%x.mjs", rand.Int()),
 	)
 	slog.Info("esbuild building")
-	esbuild.Build(esbuild.BuildOptions{
+	result := esbuild.Build(esbuild.BuildOptions{
 		Banner: map[string]string{
 			"js": `
         import { createRequire as topLevelCreateRequire } from 'module';
@@ -57,6 +57,10 @@ func Eval(input EvalOptions) (*EvalResult, error) {
 		Write:   true,
 		Bundle:  true,
 	})
+	if len(result.Errors) > 0 {
+		slog.Error("esbuild errors", "errors", result.Errors)
+		return nil, fmt.Errorf("esbuild errors: %v", result.Errors)
+	}
 	slog.Info("esbuild built")
 	cmd := exec.Command("node", outfile)
 	cmd.Env = append(os.Environ(), input.Env...)
