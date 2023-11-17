@@ -112,6 +112,8 @@ func (s *stack) Deploy() error {
       %v
       await stack.up({
         onOutput: console.log,
+        logVerbosity: 3,
+        debug: true,
       })
     `, s.runtime()),
 		Env: env,
@@ -125,7 +127,7 @@ func (s *stack) Deploy() error {
 	}
 
 	for cmd.Out.Scan() {
-		line := strings.TrimSpace(cmd.Out.Text())
+		line := (cmd.Out.Text())
 		if line == "" {
 			continue
 		}
@@ -149,6 +151,8 @@ func (s *stack) Cancel() error {
       %v
       await stack.cancel({
         onOutput: console.log,
+        logVerbosity: 3,
+        debug: true,
       })
     `, s.runtime()),
 		Env: env,
@@ -186,6 +190,8 @@ func (s *stack) Remove() error {
       %v
       await stack.destroy({
         onOutput: console.log,
+        debug: true,
+        logVerbosity: 5,
       })
     `, s.runtime()),
 		Env: env,
