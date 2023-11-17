@@ -34,6 +34,12 @@ aurs:
     description: "Deploy anything"
     private_key: '{{ .Env.AUR_KEY }}'
     git_url: 'ssh://aur@aur.archlinux.org/sst-bin.git'
+    package: |-
+      # bin
+      install -Dm755 ./sst "${pkgdir}/usr/bin/mybin"
+      pulumi plugin install resource aws
+    depends:
+      - pulumi
 brews:
   - repository:
       owner: sst
