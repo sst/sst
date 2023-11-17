@@ -5,6 +5,8 @@ import (
 	"log/slog"
 	"os"
 
+	"github.com/fatih/color"
+	"github.com/sst/ion/pkg/global"
 	"github.com/sst/ion/pkg/project"
 	cli "github.com/urfave/cli/v2"
 )
@@ -29,6 +31,15 @@ func main() {
 					Level: level,
 				})),
 			)
+
+			if global.NeedsPlugins() {
+				fmt.Println("new installation, installing dependencies...")
+				err := global.InstallPlugins()
+				if err != nil {
+					return err
+				}
+			}
+			fmt.Println(color.CyanString("SST ❍ ION  "), color.HiBlackString("ready!"))
 			return nil
 		},
 		Commands: []*cli.Command{

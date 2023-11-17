@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/sst/ion/pkg/global"
 	"github.com/sst/ion/pkg/js"
 )
 
@@ -21,14 +22,9 @@ func (s *stack) Login() error {
 	if err != nil {
 		return err
 	}
-	home, err := os.UserHomeDir()
-	if err != nil {
-		return err
-	}
 
 	credentialsPath := filepath.Join(
-		home,
-		".pulumi",
+		global.ConfigDir(),
 		"credentials.json",
 	)
 	data, err := os.ReadFile(credentialsPath)
@@ -97,6 +93,7 @@ func (s *stack) env() ([]string, error) {
 		return nil, err
 	}
 	return []string{
+		"PULUMI_HOME=" + global.ConfigDir(),
 		"PULUMI_CONFIG_PASSPHRASE=",
 		"AWS_ACCESS_KEY_ID=" + credentials.AccessKeyID,
 		"AWS_SECRET_ACCESS_KEY=" + credentials.SecretAccessKey,
