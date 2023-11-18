@@ -64,7 +64,6 @@ const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 const supportedRuntimes = {
   container: CDKRuntime.FROM_IMAGE,
   rust: CDKRuntime.PROVIDED_AL2,
-  "nodejs14.x": CDKRuntime.NODEJS_14_X,
   "nodejs16.x": CDKRuntime.NODEJS_16_X,
   "nodejs18.x": CDKRuntime.NODEJS_18_X,
   "python3.7": CDKRuntime.PYTHON_3_7,
@@ -200,7 +199,7 @@ export interface FunctionProps
    * ```js
    * new Function(stack, "Function", {
    *   handler: "function.handler",
-   *   runtime: "nodejs16.x",
+   *   runtime: "nodejs18.x",
    * })
    *```
    */
@@ -820,7 +819,7 @@ export class Function extends CDKFunction implements SSTConstruct {
         code: Code.fromInline("export function placeholder() {}"),
         handler: "index.placeholder",
         functionName,
-        runtime: CDKRuntime.NODEJS_16_X,
+        runtime: CDKRuntime.NODEJS_18_X,
         memorySize,
         ephemeralStorageSize: diskSize,
         timeout,
@@ -934,7 +933,7 @@ export class Function extends CDKFunction implements SSTConstruct {
           : {
               code: Code.fromInline("export function placeholder() {}"),
               handler: "index.placeholder",
-              runtime: CDKRuntime.NODEJS_16_X,
+              runtime: CDKRuntime.NODEJS_18_X,
               layers: Function.buildLayers(scope, id, props),
             }),
         architecture,

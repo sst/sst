@@ -29,7 +29,7 @@ export function getOrCreateBucket(scope: Construct): CustomResource {
       path.join(__dirname, "../../support/edge-function")
     ),
     handler: "s3-bucket.handler",
-    runtime: lambda.Runtime.NODEJS_16_X,
+    runtime: lambda.Runtime.NODEJS_18_X,
     timeout: Duration.minutes(15),
     memorySize: 1024,
     initialPolicy: [
@@ -73,7 +73,7 @@ export function createFunction(
         path.join(__dirname, "../../support/edge-function")
       ),
       handler: "edge-lambda.handler",
-      runtime: lambda.Runtime.NODEJS_16_X,
+      runtime: lambda.Runtime.NODEJS_18_X,
       timeout: Duration.minutes(15),
       memorySize: 1024,
       initialPolicy: [
@@ -121,7 +121,7 @@ export function createVersion(
         path.join(__dirname, "../../support/edge-function")
       ),
       handler: "edge-lambda-version.handler",
-      runtime: lambda.Runtime.NODEJS_16_X,
+      runtime: lambda.Runtime.NODEJS_18_X,
       timeout: Duration.minutes(15),
       memorySize: 1024,
       initialPolicy: [
