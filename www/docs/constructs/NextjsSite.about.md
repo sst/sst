@@ -291,7 +291,9 @@ To enable sourcemaps, make sure you are not disabling [`per-route` logging](#log
 ```diff title="next.config.js"
 const nextConfig = {
 + webpack: (config) => {
-+   config.devtool = "source-map";
++   if (!options.dev) {
++     config.devtool = "source-map";
++   }
 +   return config;
 + },
 };
