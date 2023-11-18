@@ -20,7 +20,7 @@
   "devDependencies": {
     "sst": "^2.26.8",
     "astro-sst": "^2.26.8",
-    "aws-cdk-lib": "2.91.0",
+    "aws-cdk-lib": "2.110.0",
     "constructs": "10.2.69"
   }
 }

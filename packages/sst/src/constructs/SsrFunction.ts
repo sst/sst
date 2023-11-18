@@ -16,7 +16,7 @@ import { RetentionDays } from "aws-cdk-lib/aws-logs";
 import {
   Architecture,
   AssetCode,
-  Runtime,
+  Runtime as CDKRuntime,
   CfnFunction,
   Code,
   FunctionOptions,
@@ -53,11 +53,20 @@ import { useDeferredTasks } from "./deferred_task.js";
 import { Asset } from "aws-cdk-lib/aws-s3-assets";
 const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
 
+const supportedSsrFunctionRuntimes = {
+  'nodejs14.x': CDKRuntime.NODEJS_14_X,
+  'nodejs16.x': CDKRuntime.NODEJS_16_X,
+  'nodejs18.x': CDKRuntime.NODEJS_18_X,
+  'nodejs20.x': CDKRuntime.NODEJS_20_X,
+};
+
+export type SsrFunctionRuntime = keyof typeof supportedSsrFunctionRuntimes;
+
 export interface SsrFunctionProps
   extends Omit<FunctionOptions, "memorySize" | "timeout" | "runtime"> {
   bundle?: string;
   handler: string;
-  runtime?: "nodejs14.x" | "nodejs16.x" | "nodejs18.x";
+  runtime?: SsrFunctionRuntime;
   timeout?: number | Duration;
   memorySize?: number | Size;
   permissions?: Permissions;
@@ -171,7 +180,6 @@ export class SsrFunction extends Construct implements SSTConstruct {
       handler,
       logRetention,
     } = this.props;
-
     return new CdkFunction(this, `ServerFunction`, {
       ...this.props,
       handler: handler.split(path.sep).join(path.posix.sep),
@@ -182,10 +190,10 @@ export class SsrFunction extends Construct implements SSTConstruct {
       ),
       runtime:
         runtime === "nodejs14.x"
-          ? Runtime.NODEJS_14_X
+          ? CDKRuntime.NODEJS_14_X
           : runtime === "nodejs16.x"
-          ? Runtime.NODEJS_16_X
-          : Runtime.NODEJS_18_X,
+          ? CDKRuntime.NODEJS_16_X
+          : CDKRuntime.NODEJS_18_X,
       architecture: architecture || Architecture.ARM_64,
       memorySize:
         typeof memorySize === "string"

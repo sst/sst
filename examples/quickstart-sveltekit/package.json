@@ -18,7 +18,7 @@
     "@sveltejs/adapter-auto": "^2.1.0",
     "@sveltejs/kit": "^1.25.1",
     "@types/cookie": "^0.5.2",
-    "aws-cdk-lib": "2.91.0",
+    "aws-cdk-lib": "2.110.0",
     "constructs": "10.2.69",
     "sst": "^2.26.8",
     "svelte": "^4.2.1",

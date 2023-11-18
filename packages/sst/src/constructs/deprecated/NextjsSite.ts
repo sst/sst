@@ -59,6 +59,15 @@ import { createAppContext } from "../context.js";
 
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 
+const supportedNextjsRuntimes = {
+  'nodejs14.x': lambda.Runtime.NODEJS_14_X,
+  'nodejs16.x': lambda.Runtime.NODEJS_16_X,
+  'nodejs18.x': lambda.Runtime.NODEJS_18_X,
+  'nodejs20.x': lambda.Runtime.NODEJS_20_X,
+};
+
+export type NextjsRuntime = keyof typeof supportedNextjsRuntimes;
+
 export interface NextjsDomainProps extends DistributionDomainProps {}
 export interface NextjsCdkDistributionProps
   extends BaseSiteCdkDistributionProps {}
@@ -130,7 +139,7 @@ export interface NextjsSiteProps {
        * })
        *```
        */
-      runtime?: "nodejs14.x" | "nodejs16.x" | "nodejs18.x";
+      runtime?: NextjsRuntime;
     };
   };
   /**

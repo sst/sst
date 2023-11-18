@@ -10,7 +10,7 @@
   "type": "module",
   "devDependencies": {
     "@types/node": "^20.7.1",
-    "aws-cdk-lib": "2.91.0",
+    "aws-cdk-lib": "2.110.0",
     "constructs": "10.2.69",
     "esbuild": "^0.19.3",
     "postcss": "^8.4.30",

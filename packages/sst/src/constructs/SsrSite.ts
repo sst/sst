@@ -32,7 +32,7 @@ import {
 import {
   Function as CdkFunction,
   Code,
-  Runtime,
+  Runtime as CDKRuntime,
   FunctionUrlAuthType,
   FunctionProps as CdkFunctionProps,
   InvokeMode,
@@ -95,6 +95,15 @@ import { VisibleError } from "../error.js";
 import { RetentionDays } from "aws-cdk-lib/aws-logs";
 
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
+
+const supportedSsrSiteRuntimes = {
+  'nodejs14.x': CDKRuntime.NODEJS_14_X,
+  'nodejs16.x': CDKRuntime.NODEJS_16_X,
+  'nodejs18.x': CDKRuntime.NODEJS_18_X,
+  'nodejs20.x': CDKRuntime.NODEJS_20_X,
+};
+
+export type SsrSiteRuntime = keyof typeof supportedSsrSiteRuntimes;
 
 type CloudFrontFunctionConfig = { constructId: string; injections: string[] };
 type EdgeFunctionConfig = { constructId: string; function: EdgeFunctionProps };
@@ -211,7 +220,7 @@ export interface SsrSiteProps {
    * runtime: "nodejs16.x",
    * ```
    */
-  runtime?: "nodejs14.x" | "nodejs16.x" | "nodejs18.x";
+  runtime?: SsrSiteRuntime;
   /**
    * Used to configure nodejs function properties
    */
@@ -745,7 +754,7 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
           plan.warmerConfig?.function ??
             path.join(__dirname, "../support/ssr-warmer")
         ),
-        runtime: Runtime.NODEJS_18_X,
+        runtime: CDKRuntime.NODEJS_18_X,
         handler: "index.handler",
         timeout: CdkDuration.minutes(15),
         memorySize: 128,

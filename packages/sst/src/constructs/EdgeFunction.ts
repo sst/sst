@@ -19,7 +19,7 @@ import {
   Version,
   IVersion,
   Code,
-  Runtime,
+  Runtime as CDKRuntime,
   Function as CdkFunction,
   IFunction as CdkIFunction,
 } from "aws-cdk-lib/aws-lambda";
@@ -51,10 +51,19 @@ import { Permissions, attachPermissionsToRole } from "./util/permission.js";
 import { useDeferredTasks } from "./deferred_task.js";
 const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
 
+const supportedEdgeRuntimes = {
+  'nodejs14.x': CDKRuntime.NODEJS_14_X,
+  'nodejs16.x': CDKRuntime.NODEJS_16_X,
+  'nodejs18.x': CDKRuntime.NODEJS_18_X,
+  'nodejs20.x': CDKRuntime.NODEJS_20_X,
+};
+
+export type EdgeRuntime = keyof typeof supportedEdgeRuntimes;
+
 export interface EdgeFunctionProps {
   bundle?: string;
   handler: string;
-  runtime?: "nodejs14.x" | "nodejs16.x" | "nodejs18.x";
+  runtime?: EdgeRuntime;
   timeout?: number | Duration;
   memorySize?: number | Size;
   permissions?: Permissions;
@@ -451,7 +460,7 @@ export class EdgeFunction extends Construct {
     const provider = new CdkFunction(stack, providerId, {
       code: Code.fromAsset(path.join(__dirname, "../support/edge-function")),
       handler: "s3-bucket.handler",
-      runtime: Runtime.NODEJS_16_X,
+      runtime: CDKRuntime.NODEJS_16_X,
       timeout: CdkDuration.minutes(15),
       memorySize: 1024,
       initialPolicy: [
@@ -493,7 +502,7 @@ export class EdgeFunction extends Construct {
       provider = new CdkFunction(stack, providerId, {
         code: Code.fromAsset(path.join(__dirname, "../support/edge-function")),
         handler: "edge-lambda.handler",
-        runtime: Runtime.NODEJS_16_X,
+        runtime: CDKRuntime.NODEJS_16_X,
         timeout: CdkDuration.minutes(15),
         memorySize: 1024,
         initialPolicy: [
@@ -525,10 +534,10 @@ export class EdgeFunction extends Construct {
           },
           Runtime:
             runtime === "nodejs14.x"
-              ? Runtime.NODEJS_14_X.name
+              ? CDKRuntime.NODEJS_14_X.name
               : runtime === "nodejs16.x"
-              ? Runtime.NODEJS_16_X.name
-              : Runtime.NODEJS_18_X.name,
+              ? CDKRuntime.NODEJS_16_X.name
+              : CDKRuntime.NODEJS_18_X.name,
           MemorySize:
             typeof memorySize === "string"
               ? toCdkSize(memorySize).toMebibytes()
@@ -564,7 +573,7 @@ export class EdgeFunction extends Construct {
       provider = new CdkFunction(stack, providerId, {
         code: Code.fromAsset(path.join(__dirname, "../support/edge-function")),
         handler: "edge-lambda-version.handler",
-        runtime: Runtime.NODEJS_16_X,
+        runtime: CDKRuntime.NODEJS_16_X,
         timeout: CdkDuration.minutes(15),
         memorySize: 1024,
         initialPolicy: [

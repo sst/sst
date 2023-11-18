@@ -231,6 +231,19 @@ test("runtime: nodejs18.x", async () => {
   });
 });
 
+test("runtime: nodejs20.x", async () => {
+  const app = await createApp();
+  const stack = new Stack(app, "stack");
+  new Function(stack, "Function", {
+    handler: "test/constructs/lambda.handler",
+    runtime: "nodejs20.x",
+  });
+  await app.finish();
+  hasResource(stack, "AWS::Lambda::Function", {
+    Runtime: "nodejs20.x",
+  });
+});
+
 test("runtime: container", async () => {
   const app = await createApp();
   const stack = new Stack(app, "stack");
