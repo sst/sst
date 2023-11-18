@@ -484,6 +484,17 @@ export class EdgeFunction extends Construct {
     return resource;
   }
 
+  private normalizeRuntime(runtime?: EdgeRuntime): CDKRuntime {
+    if (runtime === "nodejs14.x") {
+      return CDKRuntime.NODEJS_14_X;
+    } else if (runtime === "nodejs16.x") {
+      return CDKRuntime.NODEJS_16_X;
+    } else if (runtime === "nodejs20.x") {
+      return CDKRuntime.NODEJS_20_X;
+    }
+    return CDKRuntime.NODEJS_18_X;
+  }
+
   private createFunctionInUsEast1(
     assetBucket: string,
     assetKey: string,
@@ -532,12 +543,7 @@ export class EdgeFunction extends Construct {
             S3Bucket: assetBucket,
             S3Key: assetKey,
           },
-          Runtime:
-            runtime === "nodejs14.x"
-              ? CDKRuntime.NODEJS_14_X.name
-              : runtime === "nodejs16.x"
-              ? CDKRuntime.NODEJS_16_X.name
-              : CDKRuntime.NODEJS_18_X.name,
+          Runtime: this.normalizeRuntime(runtime),
           MemorySize:
             typeof memorySize === "string"
               ? toCdkSize(memorySize).toMebibytes()

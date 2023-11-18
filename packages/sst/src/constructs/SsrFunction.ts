@@ -171,6 +171,17 @@ export class SsrFunction extends Construct implements SSTConstruct {
     this.missingSourcemap = true;
   }
 
+  private normalizeRuntime(runtime?: SsrFunctionRuntime): CDKRuntime {
+    if (runtime === "nodejs14.x") {
+      return CDKRuntime.NODEJS_14_X;
+    } else if (runtime === "nodejs16.x") {
+      return CDKRuntime.NODEJS_16_X;
+    } else if (runtime === "nodejs20.x") {
+      return CDKRuntime.NODEJS_20_X;
+    }
+    return CDKRuntime.NODEJS_18_X;
+  }
+
   private createFunction(assetBucket: string, assetKey: string) {
     const {
       architecture,
@@ -188,12 +199,7 @@ export class SsrFunction extends Construct implements SSTConstruct {
         Bucket.fromBucketName(this, "IServerFunctionBucket", assetBucket),
         assetKey
       ),
-      runtime:
-        runtime === "nodejs14.x"
-          ? CDKRuntime.NODEJS_14_X
-          : runtime === "nodejs16.x"
-          ? CDKRuntime.NODEJS_16_X
-          : CDKRuntime.NODEJS_18_X,
+      runtime: this.normalizeRuntime(runtime),
       architecture: architecture || Architecture.ARM_64,
       memorySize:
         typeof memorySize === "string"

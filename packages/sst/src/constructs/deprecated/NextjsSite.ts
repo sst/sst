@@ -1501,11 +1501,13 @@ export class NextjsSite extends Construct implements SSTConstruct {
     return replaceValues;
   }
 
-  private normalizeRuntime(runtime?: string): lambda.Runtime {
+  private normalizeRuntime(runtime?: NextjsRuntime): lambda.Runtime {
     if (runtime === "nodejs14.x") {
       return lambda.Runtime.NODEJS_14_X;
     } else if (runtime === "nodejs16.x") {
       return lambda.Runtime.NODEJS_16_X;
+    } else if (runtime === "nodejs20.x") {
+      return lambda.Runtime.NODEJS_20_X;
     }
     return lambda.Runtime.NODEJS_18_X;
   }
