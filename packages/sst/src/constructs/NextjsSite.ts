@@ -50,6 +50,18 @@ export interface NextjsSiteProps extends Omit<SsrSiteProps, "nodejs"> {
    * ```
    */
   openNextVersion?: string;
+
+  /**
+   * Specify a custom build output path for cases when running OpenNext from
+   * a monorepo with decentralized build output. 
+   * @default ""
+   * @example
+   * ```js
+   * buildOutputPath: "dist/apps/example-app"
+   * ```
+   */
+  buildOutputPath?: string;
+
   /**
    * How the logs are stored in CloudWatch
    * - "combined" - Logs from all routes are stored in the same log group.
@@ -197,6 +209,7 @@ export class NextjsSite extends SsrSite {
   constructor(scope: Construct, id: string, rawProps?: NextjsSiteProps) {
     const props = {
       logging: rawProps?.logging ?? "per-route",
+      buildOutputPath: rawProps?.buildOutputPath ?? false,
       experimental: {
         streaming: rawProps?.experimental?.streaming ?? false,
         disableDynamoDBCache:
@@ -214,6 +227,7 @@ export class NextjsSite extends SsrSite {
         "--yes",
         `open-next@${props?.openNextVersion ?? DEFAULT_OPEN_NEXT_VERSION}`,
         "build",
+        ...(props.buildOutputPath ? ["--build-output-path", props.buildOutputPath] : []),
         ...(props.experimental.streaming ? ["--streaming"] : []),
         ...(props.experimental.disableDynamoDBCache
           ? ["--dangerously-disable-dynamodb-cache"]
