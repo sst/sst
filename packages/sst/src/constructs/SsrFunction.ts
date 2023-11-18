@@ -172,14 +172,15 @@ export class SsrFunction extends Construct implements SSTConstruct {
   }
 
   private normalizeRuntime(runtime?: SsrFunctionRuntime): CDKRuntime {
-    if (runtime === "nodejs14.x") {
-      return CDKRuntime.NODEJS_14_X;
-    } else if (runtime === "nodejs16.x") {
-      return CDKRuntime.NODEJS_16_X;
-    } else if (runtime === "nodejs20.x") {
-      return CDKRuntime.NODEJS_20_X;
+    switch (runtime) {
+      case "nodejs14.x":
+      case "nodejs16.x":
+      case "nodejs18.x":
+      case "nodejs20.x":
+        return supportedSsrFunctionRuntimes[runtime];
+      default:
+        return supportedSsrFunctionRuntimes['nodejs18.x'];
     }
-    return CDKRuntime.NODEJS_18_X;
   }
 
   private createFunction(assetBucket: string, assetKey: string) {

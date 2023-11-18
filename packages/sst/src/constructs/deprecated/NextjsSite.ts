@@ -1502,14 +1502,15 @@ export class NextjsSite extends Construct implements SSTConstruct {
   }
 
   private normalizeRuntime(runtime?: NextjsRuntime): lambda.Runtime {
-    if (runtime === "nodejs14.x") {
-      return lambda.Runtime.NODEJS_14_X;
-    } else if (runtime === "nodejs16.x") {
-      return lambda.Runtime.NODEJS_16_X;
-    } else if (runtime === "nodejs20.x") {
-      return lambda.Runtime.NODEJS_20_X;
+    switch (runtime) {
+      case "nodejs14.x":
+      case "nodejs16.x":
+      case "nodejs18.x":
+      case "nodejs20.x":
+        return supportedNextjsRuntimes[runtime];
+      default:
+        return supportedNextjsRuntimes['nodejs18.x'];
     }
-    return lambda.Runtime.NODEJS_18_X;
   }
 }
 
