@@ -16,6 +16,7 @@ type Project struct {
 	name    string
 	profile string
 	stage   string
+	process *js.Process
 
 	AWS       *projectAws
 	Bootstrap *bootstrap
@@ -32,12 +33,19 @@ func New() (*Project, error) {
 	if err != nil {
 		return nil, err
 	}
-
 	rootPath := filepath.Dir(cfgPath)
 
+	process, err := js.Start(
+		rootPath,
+	)
+	if err != nil {
+		return nil, err
+	}
+
 	proj := &Project{
-		root:   rootPath,
-		config: cfgPath,
+		root:    rootPath,
+		config:  cfgPath,
+		process: process,
 	}
 	proj.AWS = &projectAws{
 		project: proj,
@@ -61,7 +69,7 @@ func New() (*Project, error) {
 		}
 	}
 
-	eval, err := js.Eval(
+	err = process.Eval(
 		js.EvalOptions{
 			Dir: tmp,
 			Code: fmt.Sprintf(`
@@ -74,16 +82,17 @@ func New() (*Project, error) {
 		return nil, err
 	}
 
-	eval.Start()
-
-	for eval.Out.Scan() {
-		line := eval.Out.Bytes()
+	for {
+		done, line := process.Scan()
+		if done {
+			break
+		}
 		parsed := struct {
 			Name    string `json:"name"`
 			Profile string `json:"profile"`
 			Stage   string `json:"stage"`
 		}{}
-		err = json.Unmarshal(line, &parsed)
+		err = json.Unmarshal([]byte(line), &parsed)
 		if err != nil {
 			return nil, err
 		}
@@ -93,12 +102,6 @@ func New() (*Project, error) {
 		}
 		proj.profile = parsed.Profile
 		proj.stage = parsed.Stage
-		break
-	}
-
-	err = eval.Wait()
-	if err != nil {
-		return nil, err
 	}
 
 	return proj, nil

@@ -12,7 +12,6 @@ import (
 )
 
 func main() {
-
 	app := &cli.App{
 		Name:  "sst",
 		Usage: "deploy anything",
@@ -138,10 +137,6 @@ func initProject() (*project.Project, error) {
 	}
 
 	if _, err = p.Bootstrap.Bucket(); err != nil {
-		return nil, err
-	}
-
-	if err := p.Stack.Login(); err != nil {
 		return nil, err
 	}
 

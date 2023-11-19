@@ -3,9 +3,6 @@ package project
 import (
 	"encoding/json"
 	"fmt"
-	"log/slog"
-	"os"
-	"path/filepath"
 	"strings"
 
 	"github.com/sst/ion/pkg/global"
@@ -16,204 +13,104 @@ type stack struct {
 	project *Project
 }
 
-func (s *stack) Login() error {
-	slog.Info("logging in")
-	bucket, err := s.project.Bootstrap.Bucket()
+func (s *stack) runtime() (string, error) {
+	credentials, err := s.project.AWS.Credentials()
 	if err != nil {
-		return err
+		return "", err
 	}
-
-	credentialsPath := filepath.Join(
-		global.ConfigDir(),
-		"credentials.json",
-	)
-	data, err := os.ReadFile(credentialsPath)
-
+	bootstrap, err := s.project.Bootstrap.Bucket()
 	if err != nil {
-		data = []byte("{}")
+		return "", err
 	}
-	var parsed struct {
-		Current  string `json:"current"`
-		Accounts map[string]interface{}
-	}
-	err = json.Unmarshal(data, &parsed)
-	if err != nil {
-		return err
-	}
-	full := fmt.Sprintf("s3://%v", bucket)
-	parsed.Current = full
-	if parsed.Accounts == nil {
-		parsed.Accounts = map[string]interface{}{}
-	}
-	parsed.Accounts[full] = map[string]interface{}{
-		"lastValidatedAt": "2021-08-31T18:00:00.000Z",
-	}
-
-	data, err = json.Marshal(parsed)
-	if err != nil {
-		return err
-	}
-	err = os.MkdirAll(filepath.Dir(credentialsPath), 0755)
-	if err != nil {
-		return err
-	}
-	err = os.WriteFile(
-		credentialsPath,
-		data,
-		0644,
-	)
-	if err != nil {
-		return err
-	}
-	slog.Info("logged into", "bucket", full)
-	return nil
-}
-
-func (s *stack) runtime() string {
 	return fmt.Sprintf(`
-    import * as aws from "@pulumi/aws";
-    import * as util from "@pulumi/pulumi";
-    globalThis.aws = aws
-    globalThis.util = util
     import { LocalWorkspace } from "@pulumi/pulumi/automation/index.js";
-
     import mod from '%s';
+
     const stack = await LocalWorkspace.createOrSelectStack({
       program: mod.run,
       projectName: "%s",
       stackName: "%s",
+    }, {
+      pulumiHome: "%s",
+      projectSettings: {
+        name: "%v",
+        runtime: "nodejs",
+        backend: {
+          url: "%v"
+        },
+      },
+      envVars: {
+        PULUMI_CONFIG_PASSPHRASE: "",
+        PULUMI_EXPERIMENTAL: "1",
+        PULUMI_SKIP_CHECKPOINTS: "true",
+        AWS_ACCESS_KEY_ID: "%s",
+        AWS_SECRET_ACCESS_KEY: "%s",
+        AWS_SESSION_TOKEN: "%s",
+      }
     })
-  `, s.project.PathConfig(), s.project.Name(), s.project.Stage(),
-	)
+  `,
+		s.project.PathConfig(),
+		s.project.Name(),
+		s.project.Stage(),
+		global.ConfigDir(),
+		s.project.Name(),
+		"s3://"+bootstrap,
+		credentials.AccessKeyID, credentials.SecretAccessKey, credentials.SessionToken,
+	), nil
 }
 
-func (s *stack) env() ([]string, error) {
-	credentials, err := s.project.AWS.Credentials()
+func (s *stack) run(cmd string) error {
+	stack, err := s.runtime()
 	if err != nil {
-		return nil, err
+		return err
 	}
-	return []string{
-		"PULUMI_HOME=" + global.ConfigDir(),
-		"PULUMI_CONFIG_PASSPHRASE=",
-		"AWS_ACCESS_KEY_ID=" + credentials.AccessKeyID,
-		"AWS_SECRET_ACCESS_KEY=" + credentials.SecretAccessKey,
-		"AWS_SESSION_TOKEN=" + credentials.SessionToken,
-	}, nil
+	err = s.project.process.Eval(js.EvalOptions{
+		Dir: s.project.PathTemp(),
+		Code: fmt.Sprintf(`
+      %v
+      await stack.%v({
+        onOutput: console.log,
+        onEvent: (evt) => console.log("~e" + JSON.stringify(evt)),
+      })
+    `, stack, cmd),
+	})
+	if err != nil {
+		return err
+	}
+
+	for {
+		done, line := s.project.process.Scan()
+		if done {
+			break
+		}
+		if line == "" {
+			continue
+		}
+		if strings.HasPrefix(line, "~e") {
+			var evt map[string]interface{}
+			err := json.Unmarshal([]byte(line[2:]), &evt)
+			if err != nil {
+				continue
+			}
+
+			// pretty, _ := json.MarshalIndent(evt, "", "  ")
+			// fmt.Println(string(pretty))
+			continue
+		}
+		fmt.Println(line)
+	}
+
+	return nil
 }
 
 func (s *stack) Deploy() error {
-	env, err := s.env()
-	if err != nil {
-		return err
-	}
-	cmd, err := js.Eval(js.EvalOptions{
-		Dir: s.project.PathTemp(),
-		Code: fmt.Sprintf(`
-      %v
-      await stack.up({
-        onOutput: console.log,
-        logVerbosity: 3,
-        debug: true,
-      })
-    `, s.runtime()),
-		Env: env,
-	})
-	if err != nil {
-		return err
-	}
-	err = cmd.Start()
-	if err != nil {
-		return err
-	}
-
-	for cmd.Out.Scan() {
-		line := (cmd.Out.Text())
-		if line == "" {
-			continue
-		}
-
-		fmt.Println(line)
-	}
-
-	cmd.Wait()
-
-	return nil
+	return s.run("up")
 }
 
 func (s *stack) Cancel() error {
-	env, err := s.env()
-	if err != nil {
-		return err
-	}
-	cmd, err := js.Eval(js.EvalOptions{
-		Dir: s.project.PathTemp(),
-		Code: fmt.Sprintf(`
-      %v
-      await stack.cancel({
-        onOutput: console.log,
-        logVerbosity: 3,
-        debug: true,
-      })
-    `, s.runtime()),
-		Env: env,
-	})
-	if err != nil {
-		return err
-	}
-	err = cmd.Start()
-	if err != nil {
-		return err
-	}
-
-	for cmd.Out.Scan() {
-		line := strings.TrimSpace(cmd.Out.Text())
-		if line == "" {
-			continue
-		}
-
-		fmt.Println(line)
-	}
-
-	cmd.Wait()
-
-	return nil
+	return s.run("cancel")
 }
 
 func (s *stack) Remove() error {
-	env, err := s.env()
-	if err != nil {
-		return err
-	}
-	cmd, err := js.Eval(js.EvalOptions{
-		Dir: s.project.PathTemp(),
-		Code: fmt.Sprintf(`
-      %v
-      await stack.destroy({
-        onOutput: console.log,
-        debug: true,
-        logVerbosity: 5,
-      })
-    `, s.runtime()),
-		Env: env,
-	})
-	if err != nil {
-		return err
-	}
-	err = cmd.Start()
-	if err != nil {
-		return err
-	}
-
-	for cmd.Out.Scan() {
-		line := strings.TrimSpace(cmd.Out.Text())
-		if line == "" {
-			continue
-		}
-
-		fmt.Println(line)
-	}
-
-	cmd.Wait()
-
-	return nil
+	return s.run("destroy")
 }
