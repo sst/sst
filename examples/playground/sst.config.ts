@@ -30,8 +30,7 @@ export default {
 
         const _this = this;
 
-        // TODO uncomment build
-        //buildApp();
+        buildApp();
         const access = createCloudFrontOriginAccessIdentity();
         const bucket = createS3Bucket();
         uploadS3Assets();
