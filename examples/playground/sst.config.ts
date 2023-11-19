@@ -12,8 +12,13 @@ export default {
     };
   },
   async run() {
+    interface SsrSiteProps extends util.ComponentResourceOptions {
+      path: string;
+    }
+
     class SsrSite extends util.ComponentResource {
-      constructor(name, opts) {
+      public readonly distribution: aws.cloudfront.Distribution;
+      constructor(name: string, opts: SsrSiteProps) {
         super("pkg:index:SsrSite", name, {}, opts);
 
         const { path: sitePath } = opts;
@@ -21,10 +26,13 @@ export default {
         // TODO
         // - setup custom domain
         // - upload assets
+        // - create a dynamic provider
 
-        console.log("= 111111 =");
-        buildApp();
-        console.log("= 222222 =");
+        const _this = this;
+
+        // TODO uncomment build
+        //buildApp();
+        const access = createCloudFrontOriginAccessIdentity();
         const bucket = createS3Bucket();
         uploadS3Assets();
         createRevalidationQueue();
@@ -32,14 +40,15 @@ export default {
         const serverOrigin = createServerOrigin();
         const imageFunction = createImageFunction();
         const imageOrigin = createImageOrigin();
-        const access = createCloudFrontOriginAccessIdentity();
         const cfFunction = createCloudFrontFunctions();
         const s3Origin = createS3Origin();
         const distribution = createCloudFrontDistribution();
         createDistributionInvalidation();
 
+        this.distribution = distribution;
+
         function uploadS3Assets() {
-          const addFolderContents = (siteDir, prefix) => {
+          const addFolderContents = (siteDir: string, prefix: string) => {
             for (let item of fs.readdirSync(siteDir)) {
               let filePath = path.join(siteDir, item);
               let isDir = fs.lstatSync(filePath).isDirectory();
@@ -56,7 +65,7 @@ export default {
 
               let object = new aws.s3.BucketObject(itemPath, {
                 bucket: bucket.bucket,
-                source: new util.asset.FileAsset(filePath), // use FileAsset to point to a file
+                source: new pulumi.asset.FileAsset(filePath), // use FileAsset to point to a file
                 contentType: getContentType(filePath, "UTF-8"),
                 cacheControl:
                   "public,max-age=0,s-maxage=86400,stale-while-revalidate=8640",
@@ -90,7 +99,7 @@ export default {
           return request;
         }`,
             },
-            { parent: this }
+            { parent: _this }
           );
         }
 
@@ -98,8 +107,10 @@ export default {
           return {
             domainName: bucket.bucketRegionalDomainName,
             originId: "s3OriginId",
-            originAccessControlId: access.id,
-            originPath: "_assets",
+            originPath: "/_assets",
+            s3OriginConfig: {
+              originAccessIdentity: access.cloudfrontAccessIdentityPath,
+            },
           };
         }
 
@@ -111,7 +122,7 @@ export default {
 
           return {
             originId: "serverOriginId",
-            domainName: url.functionUrl,
+            domainName: url.functionUrl.apply((url) => new URL(url).host),
             customOriginConfig: {
               httpPort: 80,
               httpsPort: 443,
@@ -130,7 +141,7 @@ export default {
 
           return {
             originId: "imageOriginId",
-            domainName: url.functionUrl,
+            domainName: url.functionUrl.apply((url) => new URL(url).host),
             customOriginConfig: {
               httpPort: 80,
               httpsPort: 443,
@@ -156,7 +167,7 @@ export default {
                 enableAcceptEncodingBrotli: true,
                 enableAcceptEncodingGzip: true,
                 headersConfig: {
-                  headerBehavior: "white-list",
+                  headerBehavior: "whitelist",
                   headers: {
                     items: [
                       "accept",
@@ -275,7 +286,7 @@ export default {
               },
               ...fs
                 .readdirSync(path.join(sitePath, ".open-next/assets"))
-                .map((item) => ({
+                .map((item: any) => ({
                   pathPattern: fs
                     .statSync(path.join(sitePath, ".open-next/assets", item))
                     .isDirectory()
@@ -295,7 +306,7 @@ export default {
                   ],
                 })),
             ],
-            enabled: false,
+            enabled: true,
             restrictions: {
               geoRestriction: {
                 restrictionType: "none",
@@ -304,12 +315,13 @@ export default {
             viewerCertificate: {
               cloudfrontDefaultCertificate: true,
             },
+            waitForDeployment: false,
           });
         }
 
         function createDistributionInvalidation() {
           //new command.local.Command("invalidate", {
-          //  create: util.interpolate`aws cloudfront create-invalidation --distribution-id ${distribution.id} --paths index.html`
+          //  create: pulumi.interpolate`aws cloudfront create-invalidation --distribution-id ${distribution.id} --paths index.html`
           //  environment: {
           //    ETAG: indexFile.etag
           //  }
@@ -319,19 +331,39 @@ export default {
         }
 
         function createS3Bucket() {
-          return new aws.s3.BucketV2(
+          const bucket = new aws.s3.BucketV2(
             `${name}-bucket`,
-            {
-              //      serverSideEncryptionConfiguration: {
-              //        rule: {
-              //          applyServerSideEncryptionByDefault: {
-              //            sseAlgorithm: "AES256",
-              //          },
-              //        },
-              //      },
-            },
-            { parent: this }
+            {},
+            { parent: _this }
           );
+          new aws.s3.BucketPublicAccessBlock("exampleBucketPublicAccessBlock", {
+            bucket: bucket.id,
+            blockPublicAcls: true,
+            blockPublicPolicy: true,
+            ignorePublicAcls: true,
+            restrictPublicBuckets: true,
+          });
+          const policyDocument = aws.iam.getPolicyDocumentOutput({
+            statements: [
+              {
+                principals: [
+                  {
+                    type: "CanonicalUser",
+                    identifiers: [access.s3CanonicalUserId],
+                  },
+                ],
+                actions: ["s3:GetObject"],
+                resources: [util.interpolate`${bucket.arn}/*`],
+              },
+            ],
+          });
+          new aws.s3.BucketPolicy("allowAccessFromAnotherAccountBucketPolicy", {
+            bucket: bucket.id,
+            policy: policyDocument.apply(
+              (policyDocument) => policyDocument.json
+            ),
+          });
+          return bucket;
         }
 
         function buildApp() {
@@ -372,16 +404,17 @@ export default {
                 ),
               },
             ],
+            managedPolicyArns: [
+              "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+            ],
           });
 
           return new aws.lambda.Function(`${name}-server`, {
             description: "Next.js server",
             handler: "index.handler",
-            code: new util.asset.AssetArchive({
-              ".": new util.asset.FileArchive(
-                path.join(sitePath, ".open-next", "server-function")
-              ),
-            }),
+            code: new util.asset.FileArchive(
+              path.join(sitePath, ".open-next", "server-function")
+            ),
             runtime: "nodejs18.x",
             timeout: 30,
             role: serverRole.arn,
@@ -419,17 +452,18 @@ export default {
                   ),
                 },
               ],
+              managedPolicyArns: [
+                "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
             }
           );
 
-          return new aws.lambda.Function(`${name}-server`, {
+          return new aws.lambda.Function(`${name}-image`, {
             description: "Next.js server",
             handler: "index.handler",
-            code: new util.asset.AssetArchive({
-              ".": new util.asset.FileArchive(
-                path.join(sitePath, ".open-next", "image-optimization-function")
-              ),
-            }),
+            code: new util.asset.FileArchive(
+              path.join(sitePath, ".open-next", "image-optimization-function")
+            ),
             runtime: "nodejs18.x",
             memorySize: 1536,
             architectures: ["arm64"],
@@ -463,7 +497,7 @@ export default {
                       .getPolicyDocument({
                         statements: [
                           {
-                            actions: ["sqs:SendMessage"],
+                            actions: ["sqs:*"],
                             resources: [arn],
                           },
                         ],
@@ -472,15 +506,18 @@ export default {
                   ),
                 },
               ],
+              managedPolicyArns: [
+                "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
             }
           );
           const consumer = new aws.lambda.Function(
             `${name}-revalidation-consumer`,
             {
               handler: "index.handler",
-              code: new util.asset.AssetArchive({
-                ".": new util.asset.FileArchive("./src"),
-              }),
+              code: new util.asset.FileArchive(
+                path.join(sitePath, ".open-next", "revalidation-function")
+              ),
               runtime: "nodejs18.x",
               timeout: 30,
               role: consumerRole.arn,
@@ -499,12 +536,13 @@ export default {
     const site = new SsrSite("web", {
       path: "web",
     });
+
+    console.log("111111", site.distribution.domainName);
+    site.distribution.domainName.apply((domainName) =>
+      console.log("222222", domainName)
+    );
   },
 };
-
-export interface SsrSiteProps {
-  path: string;
-}
 
 function getContentType(filename: string, textEncoding: string) {
   const ext = filename.endsWith(".well-known/site-association-json")
