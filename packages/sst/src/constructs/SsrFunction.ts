@@ -16,7 +16,7 @@ import { RetentionDays } from "aws-cdk-lib/aws-logs";
 import {
   Architecture,
   AssetCode,
-  Runtime as CDKRuntime,
+  Runtime as CdkRuntime,
   CfnFunction,
   Code,
   FunctionOptions,
@@ -54,10 +54,10 @@ import { Asset } from "aws-cdk-lib/aws-s3-assets";
 const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
 
 const supportedSsrFunctionRuntimes = {
-  'nodejs14.x': CDKRuntime.NODEJS_14_X,
-  'nodejs16.x': CDKRuntime.NODEJS_16_X,
-  'nodejs18.x': CDKRuntime.NODEJS_18_X,
-  'nodejs20.x': CDKRuntime.NODEJS_20_X,
+  'nodejs14.x': CdkRuntime.NODEJS_14_X,
+  'nodejs16.x': CdkRuntime.NODEJS_16_X,
+  'nodejs18.x': CdkRuntime.NODEJS_18_X,
+  'nodejs20.x': CdkRuntime.NODEJS_20_X,
 };
 
 export type SsrFunctionRuntime = keyof typeof supportedSsrFunctionRuntimes;
@@ -171,7 +171,7 @@ export class SsrFunction extends Construct implements SSTConstruct {
     this.missingSourcemap = true;
   }
 
-  private normalizeRuntime(runtime?: SsrFunctionRuntime): CDKRuntime {
+  private normalizeRuntime(runtime?: SsrFunctionRuntime): CdkRuntime {
     switch (runtime) {
       case "nodejs14.x":
       case "nodejs16.x":

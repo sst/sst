@@ -19,7 +19,7 @@ import {
   Version,
   IVersion,
   Code,
-  Runtime as CDKRuntime,
+  Runtime as CdkRuntime,
   Function as CdkFunction,
   IFunction as CdkIFunction,
 } from "aws-cdk-lib/aws-lambda";
@@ -52,10 +52,10 @@ import { useDeferredTasks } from "./deferred_task.js";
 const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
 
 const supportedEdgeRuntimes = {
-  'nodejs14.x': CDKRuntime.NODEJS_14_X,
-  'nodejs16.x': CDKRuntime.NODEJS_16_X,
-  'nodejs18.x': CDKRuntime.NODEJS_18_X,
-  'nodejs20.x': CDKRuntime.NODEJS_20_X,
+  'nodejs14.x': CdkRuntime.NODEJS_14_X,
+  'nodejs16.x': CdkRuntime.NODEJS_16_X,
+  'nodejs18.x': CdkRuntime.NODEJS_18_X,
+  'nodejs20.x': CdkRuntime.NODEJS_20_X,
 };
 
 export type EdgeRuntime = keyof typeof supportedEdgeRuntimes;
@@ -460,7 +460,7 @@ export class EdgeFunction extends Construct {
     const provider = new CdkFunction(stack, providerId, {
       code: Code.fromAsset(path.join(__dirname, "../support/edge-function")),
       handler: "s3-bucket.handler",
-      runtime: CDKRuntime.NODEJS_16_X,
+      runtime: CdkRuntime.NODEJS_16_X,
       timeout: CdkDuration.minutes(15),
       memorySize: 1024,
       initialPolicy: [
@@ -484,7 +484,7 @@ export class EdgeFunction extends Construct {
     return resource;
   }
 
-  private normalizeRuntime(runtime?: EdgeRuntime): CDKRuntime {
+  private normalizeRuntime(runtime?: EdgeRuntime): CdkRuntime {
     switch (runtime) {
       case "nodejs14.x":
       case "nodejs16.x":
@@ -514,7 +514,7 @@ export class EdgeFunction extends Construct {
       provider = new CdkFunction(stack, providerId, {
         code: Code.fromAsset(path.join(__dirname, "../support/edge-function")),
         handler: "edge-lambda.handler",
-        runtime: CDKRuntime.NODEJS_16_X,
+        runtime: CdkRuntime.NODEJS_16_X,
         timeout: CdkDuration.minutes(15),
         memorySize: 1024,
         initialPolicy: [
@@ -580,7 +580,7 @@ export class EdgeFunction extends Construct {
       provider = new CdkFunction(stack, providerId, {
         code: Code.fromAsset(path.join(__dirname, "../support/edge-function")),
         handler: "edge-lambda-version.handler",
-        runtime: CDKRuntime.NODEJS_16_X,
+        runtime: CdkRuntime.NODEJS_16_X,
         timeout: CdkDuration.minutes(15),
         memorySize: 1024,
         initialPolicy: [
