@@ -11,7 +11,7 @@ export default {
   async run() {
     const a = new aws.s3.Bucket("my-bucket", {
       tags: {
-        foo: "123123",
+        foo: "12",
       },
     });
     return {

@@ -7,10 +7,12 @@ import (
 	"os"
 	"time"
 
+	"github.com/briandowns/spinner"
 	"github.com/fatih/color"
 	"github.com/pulumi/pulumi/sdk/v3/go/common/apitype"
 	"github.com/sst/ion/pkg/global"
 	"github.com/sst/ion/pkg/project"
+
 	cli "github.com/urfave/cli/v2"
 )
 
@@ -41,7 +43,7 @@ func main() {
 					return err
 				}
 			}
-			fmt.Println(color.CyanString("SST ❍ ION  "), color.HiBlackString("ready!"))
+			fmt.Println(color.CyanString("SST ❍ Ion  "), color.HiBlackString("ready!"))
 			return nil
 		},
 		Commands: []*cli.Command{
@@ -54,45 +56,74 @@ func main() {
 					if err != nil {
 						return err
 					}
-					fmt.Println("Deploying")
+					printHeader(p)
+
+					s := spinner.New(spinner.CharSets[14], 100*time.Millisecond)
+					s.Suffix = "  Deploying..."
+					s.Start()
 					events, err := p.Stack.Deploy()
 					if err != nil {
 						return err
 					}
 
 					timing := make(map[string]time.Time)
+					outputs := make(map[string]interface{})
 					for evt := range events {
+						s.Disable()
 						if evt.ResourcePreEvent != nil {
+							if evt.ResourcePreEvent.Metadata.Type == "pulumi:pulumi:Stack" {
+								continue
+							}
 							if evt.ResourcePreEvent.Metadata.Op == apitype.OpSame {
-								fmt.Println("Not updating", evt.ResourcePreEvent.Metadata.Old.URN)
+								color.New(color.FgHiBlack).Print("|  ")
+								color.New(color.FgHiBlack).Println("Skipping ", evt.ResourcePreEvent.Metadata.URN)
 								continue
 							}
 
 							timing[evt.ResourcePreEvent.Metadata.URN] = time.Now()
 							if evt.ResourcePreEvent.Metadata.Op == apitype.OpCreate {
-								fmt.Println("Creating", evt.ResourcePreEvent.Metadata.URN)
+								color.New(color.FgYellow).Print("|  ")
+								color.New(color.FgHiBlack).Println("Creating ", evt.ResourcePreEvent.Metadata.URN)
 								continue
 							}
 
 							if evt.ResourcePreEvent.Metadata.Op == apitype.OpUpdate {
-								fmt.Println("Updating", evt.ResourcePreEvent.Metadata.URN)
+								color.New(color.FgYellow).Print("|  ")
+								color.New(color.FgHiBlack).Println("Updating ", evt.ResourcePreEvent.Metadata.URN)
 								continue
 							}
 						}
 
 						if evt.ResOutputsEvent != nil {
+							if evt.ResOutputsEvent.Metadata.Type == "pulumi:pulumi:Stack" {
+								outputs = evt.ResOutputsEvent.Metadata.New.Outputs
+								continue
+							}
 							if evt.ResOutputsEvent.Metadata.Op == apitype.OpSame {
 								continue
 							}
 							duration := time.Since(timing[evt.ResOutputsEvent.Metadata.URN]).Milliseconds()
 							if evt.ResOutputsEvent.Metadata.Op == apitype.OpCreate {
-								fmt.Println("Created", evt.ResOutputsEvent.Metadata.URN, "in", duration, "ms")
+								color.New(color.FgGreen).Print("|  ")
+								color.New(color.FgHiBlack).Println("Created ", evt.ResOutputsEvent.Metadata.URN, " in ", duration, "ms")
 							}
 							if evt.ResOutputsEvent.Metadata.Op == apitype.OpUpdate {
-								fmt.Println("Updated", evt.ResOutputsEvent.Metadata.URN, "in", duration, "ms")
+								color.New(color.Bold, color.FgGreen).Print("|  ")
+								color.New(color.FgHiBlack).Println("Updated ", evt.ResOutputsEvent.Metadata.URN, " in ", duration, "ms")
 							}
 						}
+						s.Enable()
 					}
+					s.Stop()
+					color.New(color.FgGreen, color.Bold).Print("\n✔")
+					color.New(color.FgWhite, color.Bold).Println("  Deployed:")
+					for k, v := range outputs {
+						color.New(color.FgHiBlack).Print("   ")
+						color.New(color.FgWhite, color.Bold).Print(k)
+						color.New(color.FgHiBlack).Print(" = ")
+						color.New(color.FgWhite).Println(v)
+					}
+
 					return nil
 				},
 			},
@@ -212,4 +243,20 @@ func initProject() (*project.Project, error) {
 	}
 
 	return p, nil
+}
+
+func printHeader(p *project.Project) {
+	fmt.Println()
+	color.New(color.FgCyan, color.Bold).Print("➜  ")
+
+	color.New(color.FgWhite, color.Bold).Print("App:     ")
+	color.New(color.FgHiBlack).Println(p.Name())
+
+	color.New(color.FgWhite, color.Bold).Print("   Stage:   ")
+	color.New(color.FgHiBlack).Println(p.Stage())
+
+	color.New(color.FgWhite, color.Bold).Print("   Region:  ")
+	color.New(color.FgHiBlack).Println(p.Region())
+
+	fmt.Println()
 }

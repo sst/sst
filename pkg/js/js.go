@@ -56,7 +56,7 @@ const LOOP = `
       try {
         const result = await import(msg.module)
       } finally {
-        await fs.rm(msg.module)
+        // await fs.rm(msg.module)
         console.log("~d")
       }
     }
