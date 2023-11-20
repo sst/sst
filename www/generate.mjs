@@ -187,7 +187,7 @@ async function run(json) {
 
     // get the construct class object in file
     const construct = file.children?.find((c) => c.kindString === "Class");
-    if (!construct) {
+    if (!construct || file.name !== "Function") {
       console.log("Skipping", file.name);
       continue;
     }
@@ -292,6 +292,7 @@ async function run(json) {
       .filter((c) => c.kindString === "Interface")
       .filter((c) => !c.comment?.modifierTags?.includes("@internal"))
       .forEach((c) => {
+        if (c.name === "FunctionHooks") console.log("function hooks");
         const hoisted = c.name === `${file.name}Props` ? props : lines;
         hoisted.push(`## ${c.name}`);
         hoisted.push(...(c.comment?.summary || []).map((e) => e.text));
@@ -359,9 +360,9 @@ function renderType(file, files, prefix, parameter) {
   ) {
     const sig = parameter.declaration.signatures[0];
     if (sig.kind === ReflectionKind.CallSignature) {
-      return `${sig.parameters
+      return `(${sig.parameters
         .map((p) => renderType(file, files, prefix, p.type))
-        .join(", ")} => ${renderType(file, files, prefix, sig.type)}`;
+        .join(", ")}) => ${renderType(file, files, prefix, sig.type)}`;
     }
   }
   if (parameter.type === "reflection" && prefix) {
@@ -432,8 +433,9 @@ function renderType(file, files, prefix, parameter) {
     const ref = files
       .flatMap((x) => x.children || [])
       .find((c) => c.id === id && c.kindString === "Type alias");
-    if (ref?.kindString === "Type alias")
+    if (ref?.kindString === "Type alias") {
       return renderType(file, files, prefix, ref.type);
+    }
 
     const link = (() => {
       // Do not show link for "SSTConstruct" param type
@@ -480,23 +482,22 @@ function renderProperties(file, files, properties, prefix, onlyPublic) {
   })) {
     const signature = property.getSignature || property;
     const nextPrefix = [prefix, property.name].filter((x) => x).join(".");
-    if (signature.type?.type !== "reflection")
-      lines.push(`### ${nextPrefix}${signature.flags.isOptional ? "?" : ""}\n`);
+    lines.push(`### ${nextPrefix}${signature.flags.isOptional ? "?" : ""}\n`);
+
     lines.push(
-      (signature.type?.type === "reflection" ? "" : "_Type_ : ") +
-        renderType(file, files, nextPrefix, signature.type) +
-        "\n"
+      "_Type_ : " + renderType(file, files, nextPrefix, signature.type) + "\n"
     );
-    if (signature.comment) {
-      const def = signature.comment.modifierTags?.find(
-        (x) => x.tag === "@default"
-      );
+    const comment =
+      signature.comment ||
+      signature.type?.declaration?.signatures?.[0]?.comment;
+    if (comment) {
+      const def = comment.modifierTags?.find((x) => x.tag === "@default");
       if (def)
         lines.push(
           `_Default_ : <span class="mono">${def.content[0].text.trim()}</span>\n`
         );
-      lines.push(...(signature.comment.summary || []).map((e) => e.text));
-      const tags = signature.comment.blockTags || [];
+      lines.push(...(comment.summary || []).map((e) => e.text));
+      const tags = comment.blockTags || [];
       const examples = tags.filter((x) => x.tag === "@example");
       if (examples.length) {
         lines.push(
