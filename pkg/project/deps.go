@@ -5,6 +5,7 @@ import (
 	"log/slog"
 	"os"
 	"os/exec"
+	"path/filepath"
 )
 
 var VERSIONS = map[string]string{
@@ -41,6 +42,17 @@ func (p *Project) CheckDeps() map[string]bool {
 }
 
 func (p *Project) InstallDeps(input map[string]bool) error {
+	err := os.WriteFile(
+		filepath.Join(
+			p.PathTemp(),
+			"package.json",
+		),
+		[]byte(`{}`),
+		0644,
+	)
+	if err != nil {
+		return err
+	}
 	for k := range input {
 		slog.Info("installing", "dep", k, "to", p.PathTemp())
 		cmd := exec.Command("npm", "install", "--save", k+"@"+VERSIONS[k])

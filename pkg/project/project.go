@@ -15,6 +15,7 @@ type Project struct {
 	config  string
 	name    string
 	profile string
+	region  string
 	stage   string
 	process *js.Process
 
@@ -91,17 +92,24 @@ func New() (*Project, error) {
 			Name    string `json:"name"`
 			Profile string `json:"profile"`
 			Stage   string `json:"stage"`
+			Region  string `json:"region"`
 		}{}
 		err = json.Unmarshal([]byte(line), &parsed)
 		if err != nil {
 			return nil, err
 		}
 		proj.name = parsed.Name
+		proj.profile = parsed.Profile
+		proj.stage = parsed.Stage
+		proj.region = parsed.Region
+
 		if proj.name == "" {
 			return nil, fmt.Errorf("Project name is required")
 		}
-		proj.profile = parsed.Profile
-		proj.stage = parsed.Stage
+
+		if proj.region == "" {
+			return nil, fmt.Errorf("Region is required")
+		}
 	}
 
 	return proj, nil
@@ -147,6 +155,10 @@ func (p *Project) PathConfig() string {
 
 func (p *Project) Name() string {
 	return p.name
+}
+
+func (p *Project) Region() string {
+	return p.region
 }
 
 func (p *Project) Profile() string {

@@ -4,11 +4,16 @@ export default {
   config() {
     return {
       name: "test",
+      region: "us-east-1",
       profile: "sst-dev",
     };
   },
   async run() {
-    const a = new aws.s3.Bucket("my-bucket", {});
+    const a = new aws.s3.Bucket("my-bucket", {
+      tags: {
+        foo: "123123",
+      },
+    });
     return {
       url: util.interpolate`https://${a.bucketDomainName}`,
     };

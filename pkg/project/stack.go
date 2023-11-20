@@ -3,8 +3,10 @@ package project
 import (
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"strings"
 
+	"github.com/pulumi/pulumi/sdk/v3/go/common/apitype"
 	"github.com/sst/ion/pkg/global"
 	"github.com/sst/ion/pkg/js"
 )
@@ -26,12 +28,24 @@ func (s *stack) runtime() (string, error) {
     import { LocalWorkspace } from "@pulumi/pulumi/automation/index.js";
     import mod from '%s';
 
+    import * as _aws from "@pulumi/aws";
+    import * as _util from "@pulumi/pulumi";
+    globalThis.aws = _aws
+    globalThis.util = _util
+    globalThis.sst = {
+      region: "%s",
+      bootstrap: {
+        bucket: "%s"
+      }
+    }
+
     const stack = await LocalWorkspace.createOrSelectStack({
       program: mod.run,
       projectName: "%s",
       stackName: "%s",
     }, {
       pulumiHome: "%s",
+      workDir: "%s",
       projectSettings: {
         name: "%v",
         runtime: "nodejs",
@@ -50,67 +64,79 @@ func (s *stack) runtime() (string, error) {
     })
   `,
 		s.project.PathConfig(),
+		s.project.Region(),
+		bootstrap,
 		s.project.Name(),
 		s.project.Stage(),
 		global.ConfigDir(),
+		s.project.PathRoot(),
 		s.project.Name(),
 		"s3://"+bootstrap,
 		credentials.AccessKeyID, credentials.SecretAccessKey, credentials.SessionToken,
 	), nil
 }
 
-func (s *stack) run(cmd string) error {
+type StackEventStream = chan apitype.EngineEvent
+
+func (s *stack) run(cmd string) (StackEventStream, error) {
 	stack, err := s.runtime()
 	if err != nil {
-		return err
+		return nil, err
 	}
 	err = s.project.process.Eval(js.EvalOptions{
 		Dir: s.project.PathTemp(),
 		Code: fmt.Sprintf(`
       %v
       await stack.%v({
-        onOutput: console.log,
-        onEvent: (evt) => console.log("~e" + JSON.stringify(evt)),
+        // onOutput: (line) => console.log(new Date().toISOString(), line),
+        onEvent: (evt) => {
+          console.log("~e" + JSON.stringify(evt))
+          // console.log(JSON.stringify(evt, null, 4))
+        },
       })
     `, stack, cmd),
 	})
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	for {
-		done, line := s.project.process.Scan()
-		if done {
-			break
-		}
-		if line == "" {
-			continue
-		}
-		if strings.HasPrefix(line, "~e") {
-			var evt map[string]interface{}
-			err := json.Unmarshal([]byte(line[2:]), &evt)
-			if err != nil {
+	out := make(StackEventStream)
+	go func() {
+		for {
+			done, line := s.project.process.Scan()
+			if done {
+				break
+			}
+			if line == "" {
 				continue
 			}
+			if strings.HasPrefix(line, "~e") {
+				var evt apitype.EngineEvent
+				err := json.Unmarshal([]byte(line[2:]), &evt)
+				if err != nil {
+					continue
+				}
+				slog.Info("stack event", "event", line[2:])
+				out <- evt
 
-			// pretty, _ := json.MarshalIndent(evt, "", "  ")
-			// fmt.Println(string(pretty))
-			continue
+				continue
+			}
+			fmt.Println(line)
 		}
-		fmt.Println(line)
-	}
+		close(out)
+	}()
 
-	return nil
+	return out, nil
 }
 
-func (s *stack) Deploy() error {
+func (s *stack) Deploy() (StackEventStream, error) {
 	return s.run("up")
 }
 
-func (s *stack) Cancel() error {
+func (s *stack) Cancel() (StackEventStream, error) {
 	return s.run("cancel")
 }
 
-func (s *stack) Remove() error {
+func (s *stack) Remove() (StackEventStream, error) {
 	return s.run("destroy")
 }

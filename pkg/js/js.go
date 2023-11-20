@@ -55,9 +55,9 @@ const LOOP = `
     if (msg.type === "eval") {
       try {
         const result = await import(msg.module)
-        console.log("~d")
       } finally {
-        // await fs.rm(msg.module)
+        await fs.rm(msg.module)
+        console.log("~d")
       }
     }
   })
@@ -148,10 +148,6 @@ func (p *Process) Eval(input EvalOptions) error {
         const require = topLevelCreateRequire(import.meta.url);
         import { fileURLToPath as topLevelFileUrlToPath, URL as topLevelURL } from "url"
         const __dirname = topLevelFileUrlToPath(new topLevelURL(".", import.meta.url))
-        import * as aws from "@pulumi/aws";
-        import * as util from "@pulumi/pulumi";
-        globalThis.aws = aws
-        globalThis.util = util
       `,
 		},
 		External: []string{
@@ -195,79 +191,4 @@ func (p *Process) Eval(input EvalOptions) error {
 	}
 
 	return nil
-}
-
-func Eval(input EvalOptions) (*EvalResult, error) {
-	outfile := filepath.Join(input.Dir,
-		"eval",
-		fmt.Sprintf("eval-%x.mjs", rand.Int()),
-	)
-	slog.Info("esbuild building")
-	result := esbuild.Build(esbuild.BuildOptions{
-		Banner: map[string]string{
-			"js": `
-        import { createRequire as topLevelCreateRequire } from 'module';
-        const require = topLevelCreateRequire(import.meta.url);
-        import { fileURLToPath as topLevelFileUrlToPath, URL as topLevelURL } from "url"
-        const __dirname = topLevelFileUrlToPath(new topLevelURL(".", import.meta.url))
-        import * as aws from "@pulumi/aws";
-        import * as util from "@pulumi/pulumi";
-        globalThis.aws = aws
-        globalThis.util = util
-      `,
-		},
-		External: []string{
-			"@pulumi/pulumi",
-			"@pulumi/aws",
-		},
-		Format:   esbuild.FormatESModule,
-		Platform: esbuild.PlatformNode,
-		Stdin: &esbuild.StdinOptions{
-			Contents:   input.Code,
-			ResolveDir: input.Dir,
-			Sourcefile: "eval.ts",
-			Loader:     esbuild.LoaderTS,
-		},
-		Outfile: outfile,
-		Write:   true,
-		Bundle:  true,
-	})
-	if len(result.Errors) > 0 {
-		slog.Error("esbuild errors", "errors", result.Errors)
-		return nil, fmt.Errorf("esbuild errors: %v", result.Errors)
-	}
-	slog.Info("esbuild built")
-	cmd := exec.Command("node", outfile)
-	cmd.Env = append(os.Environ(), input.Env...)
-
-	stdout, err := cmd.StdoutPipe()
-	if err != nil {
-		return nil, err
-	}
-	outScanner := bufio.NewScanner(stdout)
-
-	cmd.Stderr = os.Stderr
-	/*
-		stderr, err := cmd.StderrPipe()
-		if err != nil {
-			return nil, err
-		}
-		errScanner := bufio.NewScanner(stderr)
-	*/
-
-	return &EvalResult{
-		Out:  outScanner,
-		cmd:  cmd,
-		file: outfile,
-	}, nil
-}
-
-func (e *EvalResult) Start() error {
-	return e.cmd.Start()
-}
-
-func (e *EvalResult) Wait() error {
-	err := e.cmd.Wait()
-	os.Remove(e.file)
-	return err
 }

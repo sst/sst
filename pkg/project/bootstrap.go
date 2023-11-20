@@ -42,7 +42,7 @@ func (b *bootstrap) Bucket() (string, error) {
 		})
 
 		if result != nil && result.Parameter.Value != nil {
-			slog.Info("found existing bootstrap bucket")
+			slog.Info("found existing bootstrap bucket", "bucket", *result.Parameter.Value)
 			b.bucket = *result.Parameter.Value
 			return
 		}
@@ -50,7 +50,7 @@ func (b *bootstrap) Bucket() (string, error) {
 		if err != nil {
 			var pnf *types.ParameterNotFound
 			if errors.As(err, &pnf) {
-				bucketName := fmt.Sprintf("sst-bootstrap-%v", uuid.New().String())
+				bucketName := fmt.Sprintf("sst-bootstrap-%v-%v", uuid.New().String(), b.project.Region())
 				slog.Info("creating bootstrap bucket", "name", bucketName)
 				s3Client := s3.NewFromConfig(cfg)
 

@@ -2,10 +2,13 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"log/slog"
 	"os"
+	"time"
 
 	"github.com/fatih/color"
+	"github.com/pulumi/pulumi/sdk/v3/go/common/apitype"
 	"github.com/sst/ion/pkg/global"
 	"github.com/sst/ion/pkg/project"
 	cli "github.com/urfave/cli/v2"
@@ -51,7 +54,45 @@ func main() {
 					if err != nil {
 						return err
 					}
-					p.Stack.Deploy()
+					fmt.Println("Deploying")
+					events, err := p.Stack.Deploy()
+					if err != nil {
+						return err
+					}
+
+					timing := make(map[string]time.Time)
+					for evt := range events {
+						if evt.ResourcePreEvent != nil {
+							if evt.ResourcePreEvent.Metadata.Op == apitype.OpSame {
+								fmt.Println("Not updating", evt.ResourcePreEvent.Metadata.Old.URN)
+								continue
+							}
+
+							timing[evt.ResourcePreEvent.Metadata.URN] = time.Now()
+							if evt.ResourcePreEvent.Metadata.Op == apitype.OpCreate {
+								fmt.Println("Creating", evt.ResourcePreEvent.Metadata.URN)
+								continue
+							}
+
+							if evt.ResourcePreEvent.Metadata.Op == apitype.OpUpdate {
+								fmt.Println("Updating", evt.ResourcePreEvent.Metadata.URN)
+								continue
+							}
+						}
+
+						if evt.ResOutputsEvent != nil {
+							if evt.ResOutputsEvent.Metadata.Op == apitype.OpSame {
+								continue
+							}
+							duration := time.Since(timing[evt.ResOutputsEvent.Metadata.URN]).Milliseconds()
+							if evt.ResOutputsEvent.Metadata.Op == apitype.OpCreate {
+								fmt.Println("Created", evt.ResOutputsEvent.Metadata.URN, "in", duration, "ms")
+							}
+							if evt.ResOutputsEvent.Metadata.Op == apitype.OpUpdate {
+								fmt.Println("Updated", evt.ResOutputsEvent.Metadata.URN, "in", duration, "ms")
+							}
+						}
+					}
 					return nil
 				},
 			},
@@ -64,7 +105,16 @@ func main() {
 					if err != nil {
 						return err
 					}
-					p.Stack.Remove()
+					events, err := p.Stack.Remove()
+					if err != nil {
+						return err
+					}
+
+					for evt := range events {
+						if evt.ResourcePreEvent != nil {
+							slog.Info("got op", "op", evt.ResourcePreEvent.Metadata.Op)
+						}
+					}
 					return nil
 				},
 			},
@@ -90,7 +140,16 @@ func main() {
 					if err != nil {
 						return err
 					}
-					p.Stack.Cancel()
+					events, err := p.Stack.Cancel()
+					if err != nil {
+						return err
+					}
+
+					for evt := range events {
+						if evt.ResourcePreEvent != nil {
+							log.Println(evt.ResourcePreEvent)
+						}
+					}
 					return nil
 				},
 			},

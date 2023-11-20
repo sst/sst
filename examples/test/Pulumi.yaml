@@ -1,4 +1,4 @@
-name: nextjs
+name: test
 runtime: nodejs
 backend:
   url: 's3://sst-bootstrap-a4ff42d8-0699-4f7a-be4d-5508d3e16e66-us-east-1'

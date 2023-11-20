@@ -1,12 +1,12 @@
-import * as pulumi from "@pulumi/pulumi";
-import * as aws from "@pulumi/aws";
+// import * as util from "@pulumi/pulumi";
+// import * as aws from "@util/aws";
 import * as fs from "fs";
 import * as path from "path";
 import { execSync } from "child_process";
 
-const BOOTSTRAP_BUCKET = "sst-bootstrap-741cd07d-8541-4576-88da-a2ae4ef7b53c";
+const BOOTSTRAP_BUCKET = "sst-bootstrap-be9f144c-1696-4937-9d70-ebe37bcb1659";
 
-export interface SsrSiteArgs extends pulumi.ComponentResourceOptions {
+export interface SsrSiteArgs extends util.ComponentResourceOptions {
   path: string;
 }
 
@@ -20,12 +20,12 @@ export interface FunctionArgs
   policies: aws.types.input.iam.RoleInlinePolicy[];
 }
 
-class Function extends pulumi.ComponentResource {
-  public readonly name: pulumi.Output<string>;
+class Function extends util.ComponentResource {
+  public readonly name: util.Output<string>;
   constructor(
     name: string,
     args: FunctionArgs,
-    opts?: pulumi.ComponentResourceOptions
+    opts?: util.ComponentResourceOptions,
   ) {
     super("sst:sst:Function", name, args, opts);
 
@@ -42,7 +42,7 @@ class Function extends pulumi.ComponentResource {
           "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
         ],
       },
-      { parent: this }
+      { parent: this },
     );
 
     const file = new aws.s3.BucketObjectv2(
@@ -50,9 +50,9 @@ class Function extends pulumi.ComponentResource {
       {
         key: `${name}-code-${args.bundleHash}.zip`,
         bucket: BOOTSTRAP_BUCKET,
-        source: new pulumi.asset.FileArchive(bundle),
+        source: new util.asset.FileArchive(bundle),
       },
-      { parent: this }
+      { parent: this },
     );
     const fn = new aws.lambda.Function(
       `${name}-function`,
@@ -62,13 +62,13 @@ class Function extends pulumi.ComponentResource {
         role: role.arn,
         ...args,
       },
-      { parent: this }
+      { parent: this },
     );
     this.name = fn.name;
   }
 }
 
-class SsrSite extends pulumi.ComponentResource {
+class SsrSite extends util.ComponentResource {
   public readonly distribution: aws.cloudfront.Distribution;
   constructor(name: string, args: SsrSiteArgs) {
     super("sst:sst:SsrSite", name, args);
@@ -83,7 +83,9 @@ class SsrSite extends pulumi.ComponentResource {
     const _this = this;
 
     // TODO uncomment build
+    const now = Date.now();
     buildApp();
+    console.log(`open-next: ${Date.now() - now}ms`);
     const access = createCloudFrontOriginAccessIdentity();
     const bucket = createS3Bucket();
     uploadS3Assets();
@@ -117,7 +119,7 @@ class SsrSite extends pulumi.ComponentResource {
 
           new aws.s3.BucketObject(itemPath, {
             bucket: bucket.bucket,
-            source: new pulumi.asset.FileAsset(filePath), // use FileAsset to point to a file
+            source: new util.asset.FileAsset(filePath), // use FileAsset to point to a file
             contentType: getContentType(filePath, "UTF-8"),
             cacheControl:
               "public,max-age=0,s-maxage=86400,stale-while-revalidate=8640",
@@ -132,7 +134,7 @@ class SsrSite extends pulumi.ComponentResource {
     function createCloudFrontOriginAccessIdentity() {
       return new aws.cloudfront.OriginAccessIdentity(
         `${name}-origin-access-identity`,
-        {}
+        {},
       );
     }
 
@@ -148,7 +150,7 @@ class SsrSite extends pulumi.ComponentResource {
       return request;
     }`,
         },
-        { parent: _this }
+        { parent: _this },
       );
     }
 
@@ -231,7 +233,7 @@ class SsrSite extends pulumi.ComponentResource {
               queryStringBehavior: "all",
             },
           },
-        }
+        },
       );
 
       return new aws.cloudfront.Distribution(`${name}-distribution`, {
@@ -370,7 +372,7 @@ class SsrSite extends pulumi.ComponentResource {
 
     function createDistributionInvalidation() {
       //new command.local.Command("invalidate", {
-      //  create: pulumi.interpolate`aws cloudfront create-invalidation --distribution-id ${distribution.id} --paths index.html`
+      //  create: util.interpolate`aws cloudfront create-invalidation --distribution-id ${distribution.id} --paths index.html`
       //  environment: {
       //    ETAG: indexFile.etag
       //  }
@@ -383,7 +385,7 @@ class SsrSite extends pulumi.ComponentResource {
       const bucket = new aws.s3.BucketV2(
         `${name}-bucket`,
         {},
-        { parent: _this }
+        { parent: _this },
       );
       new aws.s3.BucketPublicAccessBlock("exampleBucketPublicAccessBlock", {
         bucket: bucket.id,
@@ -398,11 +400,11 @@ class SsrSite extends pulumi.ComponentResource {
             principals: [
               {
                 type: "AWS",
-                identifiers: [pulumi.interpolate`${access.iamArn}`],
+                identifiers: [util.interpolate`${access.iamArn}`],
               },
             ],
             actions: ["s3:GetObject"],
-            resources: [pulumi.interpolate`${bucket.arn}/*`],
+            resources: [util.interpolate`${bucket.arn}/*`],
           },
         ],
       });
@@ -455,7 +457,7 @@ class SsrSite extends pulumi.ComponentResource {
                     },
                   ],
                 })
-                .then((doc) => doc.json)
+                .then((doc) => doc.json),
             ),
           },
         ],
@@ -487,7 +489,7 @@ class SsrSite extends pulumi.ComponentResource {
                     },
                   ],
                 })
-                .then((doc) => doc.json)
+                .then((doc) => doc.json),
             ),
           },
         ],
@@ -499,8 +501,8 @@ class SsrSite extends pulumi.ComponentResource {
       return new aws.lambda.Function(`${name}-image`, {
         description: "Next.js server",
         handler: "index.handler",
-        code: new pulumi.asset.FileArchive(
-          path.join(sitePath, ".open-next", "image-optimization-function")
+        code: new util.asset.FileArchive(
+          path.join(sitePath, ".open-next", "image-optimization-function"),
         ),
         runtime: "nodejs18.x",
         memorySize: 1536,
@@ -540,33 +542,33 @@ class SsrSite extends pulumi.ComponentResource {
                       },
                     ],
                   })
-                  .then((doc) => doc.json)
+                  .then((doc) => doc.json),
               ),
             },
           ],
           managedPolicyArns: [
             "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
           ],
-        }
+        },
       );
       const consumer = new aws.lambda.Function(
         `${name}-revalidation-consumer`,
         {
           handler: "index.handler",
-          code: new pulumi.asset.FileArchive(
-            path.join(sitePath, ".open-next", "revalidation-function")
+          code: new util.asset.FileArchive(
+            path.join(sitePath, ".open-next", "revalidation-function"),
           ),
           runtime: "nodejs18.x",
           timeout: 30,
           role: consumerRole.arn,
-        }
+        },
       );
       new aws.lambda.EventSourceMapping(
         `${name}-revalidation-consumer-event-source`,
         {
           functionName: consumer.name,
           eventSourceArn: queue.arn,
-        }
+        },
       );
     }
   }
@@ -576,7 +578,7 @@ const site = new SsrSite("web", {
 });
 
 // Export the name of the bucket
-export const siteURL = pulumi.interpolate`https://${site.distribution.domainName}`;
+export const siteURL = util.interpolate`https://${site.distribution.domainName}`;
 
 function getContentType(filename: string, textEncoding: string) {
   const ext = filename.endsWith(".well-known/site-association-json")

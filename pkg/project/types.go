@@ -7,12 +7,23 @@ import (
 )
 
 const TYPES_DATA = `
-import type * as _aws from "@pulumi/aws";
-import type * as _util from "@pulumi/pulumi";
+import "@types/node";
+import _util from "@pulumi/pulumi";
+import _aws from "@pulumi/aws";
 
 declare global {
+  // @ts-expect-error
   export const aws: typeof _aws;
+
+  // @ts-expect-error
   export const util: typeof _util;
+
+  export const sst: {
+    region: string
+    bootstrap: {
+      bucket: string
+    }
+  }
 }
 
 `

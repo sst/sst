@@ -38,6 +38,10 @@ func (p *projectAws) Config() (aws.Config, error) {
 		cfg, e := config.LoadDefaultConfig(
 			ctx,
 			config.WithSharedConfigProfile(p.project.Profile()),
+			func(lo *config.LoadOptions) error {
+				lo.Region = p.project.Region()
+				return nil
+			},
 		)
 		if e != nil {
 			err = e
