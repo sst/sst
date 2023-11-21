@@ -8,6 +8,6 @@ export default {
     };
   },
   async run() {
-    const { SSRSite } = await import("./components/NextJSSite");
+    const { SsrSite } = await import("./components/SsrSite.ts");
   },
 };
