@@ -47,6 +47,7 @@ func (s *stack) runtime() (string, error) {
       pulumiHome: "%s",
       workDir: "%s",
       projectSettings: {
+        config: ".sst",
         name: "%v",
         runtime: "nodejs",
         backend: {
