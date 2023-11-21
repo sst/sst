@@ -1,3 +1,6 @@
 .sst
 dist
 node_modules
+
+# osx
+.DS_Store
