@@ -1,5 +1,11 @@
 # create-sst
 
+## 2.36.2
+
+### Patch Changes
+
+- [`4f3762b6b`](https://github.com/sst/sst/commit/4f3762b6b691a872903dacdc3460d1460734a9c3) Thanks [@thdxr](https://github.com/thdxr)! - create-sst: do not force pnpm on nextjs preset
+
 ## 2.36.1
 
 ## 2.36.0
