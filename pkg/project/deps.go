@@ -2,46 +2,54 @@ package project
 
 import (
 	"encoding/json"
+	"fmt"
 	"log/slog"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 )
 
-var VERSIONS = map[string]string{
-	"@pulumi/pulumi": "3.93.0",
-	"@pulumi/aws":    "v6.8.0",
+var VERSIONS = [][]string{
+	{"sst-ion", "0.0.2"},
+	{"@pulumi/aws", "~"},
+	{"@pulumi/pulumi", "~"},
 }
 
-func (p *Project) CheckDeps() map[string]bool {
-	result := map[string]bool{}
+func (p *Project) CheckDeps() bool {
+	versionHints := map[string]string{}
+	for _, item := range VERSIONS {
+		pkg := item[0]
+		version := item[1]
+		slog.Info("checking", "dep", pkg)
 
-	for k, v := range VERSIONS {
-		slog.Info("checking", "dep", k)
-		path := p.getPath("node_modules", k, "package.json")
-		data, err := os.ReadFile(path)
+		if version == "~" {
+			version = versionHints[pkg]
+		}
+		if version == "" {
+			slog.Info("no version for", "dep", pkg)
+			return false
+		}
+		parsed, err := getPackageJson(p, pkg)
 		if err != nil {
-			result[k] = true
+			slog.Info("error getting package.json for", "dep", pkg, "error", err)
+			return false
 		}
 
-		parsed := struct {
-			Version string `json:"version"`
-		}{}
-		err = json.Unmarshal(data, &parsed)
-		if err != nil {
-			result[k] = true
+		slog.Info("checking", "dep", pkg, "version", parsed.Version, "expected", version)
+		if !strings.HasSuffix(parsed.Version, version) {
+			return false
 		}
 
-		slog.Info("dep", "version", parsed.Version, "wanted", v)
-		if parsed.Version != v {
-			result[k] = true
+		if pkg == "sst-ion" {
+			versionHints = parsed.Dependencies
 		}
 	}
 
-	return result
+	return true
 }
 
-func (p *Project) InstallDeps(input map[string]bool) error {
+func (p *Project) InstallDeps() error {
 	err := os.WriteFile(
 		filepath.Join(
 			p.PathTemp(),
@@ -53,9 +61,22 @@ func (p *Project) InstallDeps(input map[string]bool) error {
 	if err != nil {
 		return err
 	}
-	for k := range input {
-		slog.Info("installing", "dep", k, "to", p.PathTemp())
-		cmd := exec.Command("npm", "install", "--save", k+"@"+VERSIONS[k])
+
+	versionHints := map[string]string{}
+	for _, item := range VERSIONS {
+		pkg := item[0]
+		version := item[1]
+		slog.Info("installing", "dep", pkg, "to", p.PathTemp())
+
+		if version == "~" {
+			slog.Info("using version hint", "hints", versionHints[pkg])
+			version = versionHints[pkg]
+		}
+		if version == "" {
+			return fmt.Errorf("no version for %s", pkg)
+		}
+
+		cmd := exec.Command("npm", "install", "--save", pkg+"@"+version)
 		cmd.Dir = p.PathTemp()
 		cmd.Stderr = os.Stderr
 		cmd.Stdout = os.Stdout
@@ -63,6 +84,41 @@ func (p *Project) InstallDeps(input map[string]bool) error {
 		if err != nil {
 			return err
 		}
+
+		if pkg == "sst-ion" {
+			pkg, err := getPackageJson(p, pkg)
+			if err != nil {
+				return err
+			}
+			versionHints = pkg.Dependencies
+		}
 	}
 	return nil
+}
+
+type PackageJson struct {
+	Version      string            `json:"version"`
+	Dependencies map[string]string `json:"dependencies"`
+}
+
+func getPackageJson(proj *Project, pkg string) (*PackageJson, error) {
+	data, err := os.ReadFile(
+		filepath.Join(
+			proj.PathTemp(),
+			"node_modules",
+			pkg,
+			"package.json",
+		),
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	var parsed PackageJson
+	err = json.Unmarshal(data, &parsed)
+	if err != nil {
+		return nil, err
+	}
+	return &parsed, nil
 }

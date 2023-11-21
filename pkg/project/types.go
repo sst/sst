@@ -8,6 +8,8 @@ import (
 
 const TYPES_DATA = `
 import "@types/node";
+import "@pulumi/aws";
+import "@pulumi/pulumi";
 
 declare global {
   // @ts-expect-error
