@@ -75,20 +75,20 @@ func main() {
 								continue
 							}
 							if evt.ResourcePreEvent.Metadata.Op == apitype.OpSame {
-								color.New(color.FgHiBlack).Print("|  ")
+								color.New(color.FgHiBlack, color.Bold).Print("|  ")
 								color.New(color.FgHiBlack).Println("Skipping ", evt.ResourcePreEvent.Metadata.URN)
 								continue
 							}
 
 							timing[evt.ResourcePreEvent.Metadata.URN] = time.Now()
 							if evt.ResourcePreEvent.Metadata.Op == apitype.OpCreate {
-								color.New(color.FgYellow).Print("|  ")
+								color.New(color.FgYellow, color.Bold).Print("|  ")
 								color.New(color.FgHiBlack).Println("Creating ", evt.ResourcePreEvent.Metadata.URN)
 								continue
 							}
 
 							if evt.ResourcePreEvent.Metadata.Op == apitype.OpUpdate {
-								color.New(color.FgYellow).Print("|  ")
+								color.New(color.FgYellow, color.Bold).Print("|  ")
 								color.New(color.FgHiBlack).Println("Updating ", evt.ResourcePreEvent.Metadata.URN)
 								continue
 							}
@@ -104,7 +104,7 @@ func main() {
 							}
 							duration := time.Since(timing[evt.ResOutputsEvent.Metadata.URN]).Milliseconds()
 							if evt.ResOutputsEvent.Metadata.Op == apitype.OpCreate {
-								color.New(color.FgGreen).Print("|  ")
+								color.New(color.FgGreen, color.Bold).Print("|  ")
 								color.New(color.FgHiBlack).Println("Created ", evt.ResOutputsEvent.Metadata.URN, " in ", duration, "ms")
 							}
 							if evt.ResOutputsEvent.Metadata.Op == apitype.OpUpdate {
@@ -119,7 +119,7 @@ func main() {
 					color.New(color.FgWhite, color.Bold).Println("  Deployed:")
 					for k, v := range outputs {
 						color.New(color.FgHiBlack).Print("   ")
-						color.New(color.FgWhite, color.Bold).Print(k)
+						color.New(color.FgWhite).Print(k)
 						color.New(color.FgHiBlack).Print(" = ")
 						color.New(color.FgWhite).Println(v)
 					}

@@ -1,6 +1,7 @@
 .sst
 dist
 node_modules
+Pulumi.*.yaml
 
 # osx
 .DS_Store
