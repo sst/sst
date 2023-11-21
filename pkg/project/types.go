@@ -8,24 +8,21 @@ import (
 
 const TYPES_DATA = `
 import "@types/node";
-import _util from "@pulumi/pulumi";
-import _aws from "@pulumi/aws";
 
 declare global {
   // @ts-expect-error
-  export const aws: typeof _aws;
+  export import aws = require("@pulumi/aws");
 
   // @ts-expect-error
-  export const util: typeof _util;
+  export import util = require("@pulumi/pulumi");
 
   export const sst: {
-    region: string
+    region: string;
     bootstrap: {
-      bucket: string
-    }
-  }
+      bucket: string;
+    };
+  };
 }
-
 `
 
 func (p *Project) GenerateTypes() error {
