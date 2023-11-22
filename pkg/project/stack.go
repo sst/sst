@@ -48,7 +48,13 @@ func (s *stack) runtime() (string, error) {
 	}
 	return fmt.Sprintf(`
     globalThis.app = %v
-    import "./src/runtime"
+    import * as _aws from "@pulumi/aws";
+    import * as _util from "@pulumi/pulumi";
+    import * as _sst from "./src/components"
+
+    globalThis.aws = _aws;
+    globalThis.util = _util;
+    globalThis.sst = _sst;
 
     import { LocalWorkspace } from "@pulumi/pulumi/automation/index.js";
     import mod from '%s';

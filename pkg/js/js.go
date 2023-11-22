@@ -6,19 +6,20 @@ import (
 	"fmt"
 	"io"
 	"log/slog"
-	"math/rand"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"time"
 
 	esbuild "github.com/evanw/esbuild/pkg/api"
 	"github.com/sst/ion/pkg/global"
 )
 
 type EvalOptions struct {
-	Dir  string
-	Code string
-	Env  []string
+	Dir    string
+	Code   string
+	Env    []string
+	Banner string
 }
 
 type EvalResult struct {
@@ -94,14 +95,10 @@ func Start(dir string) (*Process, error) {
 		return nil, err
 	}
 
-	stdErr, err := cmd.StderrPipe()
-	if err != nil {
-		return nil, err
-	}
+	cmd.Stderr = os.Stderr
 
 	scanner := bufio.NewScanner(io.MultiReader(
 		stdOut,
-		stdErr,
 	))
 
 	err = cmd.Start()
@@ -138,18 +135,19 @@ type EvalMessage struct {
 func (p *Process) Eval(input EvalOptions) error {
 	outfile := filepath.Join(input.Dir,
 		"eval",
-		fmt.Sprintf("eval-%x.mjs", rand.Int()),
+		fmt.Sprintf("eval-%x.mjs", time.Now().Unix()),
 	)
 	slog.Info("esbuild building")
 	result := esbuild.Build(esbuild.BuildOptions{
 		Banner: map[string]string{
 			"js": `
-        import { createRequire as topLevelCreateRequire } from 'module';
-        const require = topLevelCreateRequire(import.meta.url);
-        import { fileURLToPath as topLevelFileUrlToPath, URL as topLevelURL } from "url"
-        const __dirname = topLevelFileUrlToPath(new topLevelURL(".", import.meta.url))
-      `,
+import { createRequire as topLevelCreateRequire } from 'module';
+const require = topLevelCreateRequire(import.meta.url);
+import { fileURLToPath as topLevelFileUrlToPath, URL as topLevelURL } from "url"
+const __dirname = topLevelFileUrlToPath(new topLevelURL(".", import.meta.url))
+` + input.Banner,
 		},
+		MainFields: []string{"module", "main"},
 		External: []string{
 			"@pulumi/*",
 			"@aws-sdk/*",
