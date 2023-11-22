@@ -1,3 +1,4 @@
+import pulumi from "@pulumi/pulumi";
 import { FunctionCodeUpdater } from "./function-code-updater";
 
 export interface FunctionArgs
@@ -10,12 +11,12 @@ export interface FunctionArgs
   policies: aws.types.input.iam.RoleInlinePolicy[];
 }
 
-export class Function extends util.ComponentResource {
-  public readonly name: util.Output<string>;
+export class Function extends pulumi.ComponentResource {
+  public readonly name: pulumi.Output<string>;
   constructor(
     name: string,
     args: FunctionArgs,
-    opts?: util.ComponentResourceOptions
+    opts?: pulumi.ComponentResourceOptions
   ) {
     super("sst:sst:Function", name, args, opts);
 
@@ -40,15 +41,15 @@ export class Function extends util.ComponentResource {
       {
         key: `${name}-code-${args.bundleHash}.zip`,
         bucket: app.bootstrap.bucket,
-        source: new util.asset.FileArchive(bundle),
+        source: new pulumi.asset.FileArchive(bundle),
       },
       { parent: this }
     );
     const fn = new aws.lambda.Function(
       `${name}-function`,
       {
-        code: new util.asset.AssetArchive({
-          index: new util.asset.StringAsset("exports.handler = () => {}"),
+        code: new pulumi.asset.AssetArchive({
+          index: new pulumi.asset.StringAsset("exports.handler = () => {}"),
         }),
         role: role.arn,
         ...args,
@@ -56,12 +57,11 @@ export class Function extends util.ComponentResource {
       { parent: this }
     );
 
-    new FunctionCodeUpdater(`${name}-code-updater`);
-    //    new FunctionCodeUpdater(`${name}-code-updater`, {
-    //      functionName: fn.name,
-    //      s3Bucket: file.bucket,
-    //      s3Key: file.key,
-    //    });
+    new FunctionCodeUpdater(`${name}-code-updater`, {
+      functionName: fn.name,
+      s3Bucket: file.bucket,
+      s3Key: file.key,
+    });
 
     this.name = fn.name;
   }

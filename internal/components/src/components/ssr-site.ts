@@ -1,13 +1,14 @@
 import * as fs from "fs";
 import * as path from "path";
 import { execSync } from "child_process";
+import pulumi from "@pulumi/pulumi";
 import { Function } from "./function";
 
-export interface SsrSiteArgs extends util.ComponentResourceOptions {
+export interface SsrSiteArgs extends pulumi.ComponentResourceOptions {
   path: string;
 }
 
-export class SsrSite extends util.ComponentResource {
+export class SsrSite extends pulumi.ComponentResource {
   public readonly distribution: aws.cloudfront.Distribution;
   constructor(name: string, args: SsrSiteArgs) {
     super("sst:sst:SsrSite", name, args);
@@ -74,7 +75,7 @@ export class SsrSite extends util.ComponentResource {
 
           new aws.s3.BucketObject(itemPath, {
             bucket: bucket.bucket,
-            source: new util.asset.FileAsset(filePath), // use FileAsset to point to a file
+            source: new pulumi.asset.FileAsset(filePath), // use FileAsset to point to a file
             contentType: getContentType(filePath, "UTF-8"),
             cacheControl:
               "public,max-age=0,s-maxage=86400,stale-while-revalidate=8640",
@@ -327,7 +328,7 @@ export class SsrSite extends util.ComponentResource {
 
     function createDistributionInvalidation() {
       //new command.local.Command("invalidate", {
-      //  create: util.interpolate`aws cloudfront create-invalidation --distribution-id ${distribution.id} --paths index.html`
+      //  create: pulumi.interpolate`aws cloudfront create-invalidation --distribution-id ${distribution.id} --paths index.html`
       //  environment: {
       //    ETAG: indexFile.etag
       //  }
@@ -355,11 +356,11 @@ export class SsrSite extends util.ComponentResource {
             principals: [
               {
                 type: "AWS",
-                identifiers: [util.interpolate`${access.iamArn}`],
+                identifiers: [pulumi.interpolate`${access.iamArn}`],
               },
             ],
             actions: ["s3:GetObject"],
-            resources: [util.interpolate`${bucket.arn}/*`],
+            resources: [pulumi.interpolate`${bucket.arn}/*`],
           },
         ],
       });
@@ -440,7 +441,7 @@ export class SsrSite extends util.ComponentResource {
       return new aws.lambda.Function(`${name}-image`, {
         description: "Next.js server",
         handler: "index.handler",
-        code: new util.asset.FileArchive(
+        code: new pulumi.asset.FileArchive(
           path.join(sitePath, ".open-next", "image-optimization-function")
         ),
         runtime: "nodejs18.x",
@@ -494,7 +495,7 @@ export class SsrSite extends util.ComponentResource {
         `${name}-revalidation-consumer`,
         {
           handler: "index.handler",
-          code: new util.asset.FileArchive(
+          code: new pulumi.asset.FileArchive(
             path.join(sitePath, ".open-next", "revalidation-function")
           ),
           runtime: "nodejs18.x",
