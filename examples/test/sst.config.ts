@@ -14,6 +14,7 @@ export default {
         foo: "1123",
       },
     });
+
     return {
       url: util.interpolate`https://${a.bucketDomainName}`,
     };

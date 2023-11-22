@@ -1,6 +1,5 @@
 import { SSTConfig } from "sst";
-import { Bucket } from "sst/constructs";
-import { Tags } from "aws-cdk-lib";
+import { CfnBucket } from "aws-cdk-lib/aws-s3";
 
 export default {
   config() {
@@ -12,8 +11,10 @@ export default {
   },
   stacks(app) {
     app.stack(function Default(ctx) {
-      const b = new Bucket(ctx.stack, "MyBucket");
-      Tags.of(b).add("foo", "1000");
+      // const b = new CfnBucket(ctx.stack, "MyBucket");
+      ctx.stack.addOutputs({
+        // url: b.attrDomainName,
+      });
     });
   },
 } satisfies SSTConfig;

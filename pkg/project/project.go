@@ -11,6 +11,7 @@ import (
 )
 
 type Project struct {
+	version string
 	root    string
 	config  string
 	name    string
@@ -24,7 +25,7 @@ type Project struct {
 	Stack     *stack
 }
 
-func New() (*Project, error) {
+func New(version string) (*Project, error) {
 	cwd, err := os.Getwd()
 	if err != nil {
 		return nil, err
@@ -44,6 +45,7 @@ func New() (*Project, error) {
 	}
 
 	proj := &Project{
+		version: version,
 		root:    rootPath,
 		config:  cfgPath,
 		process: process,
@@ -167,4 +169,8 @@ func (p *Project) Profile() string {
 
 func (p *Project) Stage() string {
 	return p.stage
+}
+
+func (p *Project) Version() string {
+	return p.version
 }

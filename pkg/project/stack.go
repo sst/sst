@@ -30,10 +30,15 @@ func (s *stack) runtime() (string, error) {
 
     import * as _aws from "@pulumi/aws";
     import * as _util from "@pulumi/pulumi";
+    import * as _sst from "./src/index"
+
     globalThis.aws = _aws
     globalThis.util = _util
-    globalThis.sst = {
+    globalThis.sst = _sst
+    globalThis.app = {
       region: "%s",
+      stage: "%s",
+      name: "%s",
       bootstrap: {
         bucket: "%s"
       }
@@ -45,9 +50,8 @@ func (s *stack) runtime() (string, error) {
       stackName: "%s",
     }, {
       pulumiHome: "%s",
-      workDir: "%s",
       projectSettings: {
-        config: ".sst",
+        main: "%s",
         name: "%v",
         runtime: "nodejs",
         backend: {
@@ -66,6 +70,8 @@ func (s *stack) runtime() (string, error) {
   `,
 		s.project.PathConfig(),
 		s.project.Region(),
+		s.project.Stage(),
+		s.project.Name(),
 		bootstrap,
 		s.project.Name(),
 		s.project.Stage(),

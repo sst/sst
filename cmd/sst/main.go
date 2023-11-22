@@ -5,6 +5,7 @@ import (
 	"log"
 	"log/slog"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/briandowns/spinner"
@@ -15,6 +16,8 @@ import (
 
 	cli "github.com/urfave/cli/v2"
 )
+
+var version = "dev"
 
 func main() {
 	app := &cli.App{
@@ -43,7 +46,8 @@ func main() {
 					return err
 				}
 			}
-			fmt.Println(color.CyanString("SST ❍ Ion  "), color.HiBlackString("ready!"))
+			color.New(color.FgCyan, color.Bold).Print("SST ❍ Ion " + version + " ")
+			color.New(color.FgHiBlack).Print("ready!\n")
 			return nil
 		},
 		Commands: []*cli.Command{
@@ -69,27 +73,29 @@ func main() {
 					timing := make(map[string]time.Time)
 					outputs := make(map[string]interface{})
 					for evt := range events {
-						s.Disable()
 						if evt.ResourcePreEvent != nil {
 							if evt.ResourcePreEvent.Metadata.Type == "pulumi:pulumi:Stack" {
 								continue
 							}
 							if evt.ResourcePreEvent.Metadata.Op == apitype.OpSame {
+								s.Disable()
 								color.New(color.FgHiBlack, color.Bold).Print("|  ")
-								color.New(color.FgHiBlack).Println("Skipping ", evt.ResourcePreEvent.Metadata.URN)
+								color.New(color.FgHiBlack).Println("Skipping ", prettyResourceName(evt.ResourcePreEvent.Metadata.URN))
 								continue
 							}
 
 							timing[evt.ResourcePreEvent.Metadata.URN] = time.Now()
 							if evt.ResourcePreEvent.Metadata.Op == apitype.OpCreate {
+								s.Disable()
 								color.New(color.FgYellow, color.Bold).Print("|  ")
-								color.New(color.FgHiBlack).Println("Creating ", evt.ResourcePreEvent.Metadata.URN)
+								color.New(color.FgHiBlack).Println("Creating ", prettyResourceName(evt.ResourcePreEvent.Metadata.URN))
 								continue
 							}
 
 							if evt.ResourcePreEvent.Metadata.Op == apitype.OpUpdate {
+								s.Disable()
 								color.New(color.FgYellow, color.Bold).Print("|  ")
-								color.New(color.FgHiBlack).Println("Updating ", evt.ResourcePreEvent.Metadata.URN)
+								color.New(color.FgHiBlack).Println("Updating ", prettyResourceName(evt.ResourcePreEvent.Metadata.URN))
 								continue
 							}
 						}
@@ -104,12 +110,14 @@ func main() {
 							}
 							duration := time.Since(timing[evt.ResOutputsEvent.Metadata.URN]).Milliseconds()
 							if evt.ResOutputsEvent.Metadata.Op == apitype.OpCreate {
+								s.Disable()
 								color.New(color.FgGreen, color.Bold).Print("|  ")
-								color.New(color.FgHiBlack).Println("Created ", evt.ResOutputsEvent.Metadata.URN, " in ", duration, "ms")
+								color.New(color.FgHiBlack).Println("Created  ", prettyResourceName(evt.ResOutputsEvent.Metadata.URN), " in ", duration, "ms")
 							}
 							if evt.ResOutputsEvent.Metadata.Op == apitype.OpUpdate {
+								s.Disable()
 								color.New(color.Bold, color.FgGreen).Print("|  ")
-								color.New(color.FgHiBlack).Println("Updated ", evt.ResOutputsEvent.Metadata.URN, " in ", duration, "ms")
+								color.New(color.FgHiBlack).Println("Updated  ", prettyResourceName(evt.ResOutputsEvent.Metadata.URN), " in ", duration, "ms")
 							}
 						}
 						s.Enable()
@@ -119,8 +127,7 @@ func main() {
 					color.New(color.FgWhite, color.Bold).Println("  Deployed:")
 					for k, v := range outputs {
 						color.New(color.FgHiBlack).Print("   ")
-						color.New(color.FgWhite).Print(k)
-						color.New(color.FgHiBlack).Print(" = ")
+						color.New(color.FgHiBlack, color.Bold).Print(k + ": ")
 						color.New(color.FgWhite).Println(v)
 					}
 
@@ -195,8 +202,8 @@ func main() {
 }
 
 func initProject() (*project.Project, error) {
-	slog.Info("initializing project")
-	p, err := project.New()
+	slog.Info("initializing project", "version", version)
+	p, err := project.New(version)
 	if err != nil {
 		return nil, err
 	}
@@ -219,7 +226,7 @@ func initProject() (*project.Project, error) {
 			}
 		}
 	}
-	slog.Info("using", "stage", p.Stage())
+	slog.Info("loaded cnfig", "app", p.Name(), "stage", p.Stage(), "region", p.Region())
 
 	_, err = p.AWS.Config()
 	if err != nil {
@@ -258,4 +265,13 @@ func printHeader(p *project.Project) {
 	color.New(color.FgHiBlack).Println(p.Region())
 
 	fmt.Println()
+}
+
+func prettyResourceName(input string) string {
+	splits := strings.Split(input, "::")
+	// take last two
+	splits = splits[len(splits)-2:]
+	splits[0] = strings.ReplaceAll(splits[0], "bucket:", "")
+	joined := strings.Join(splits, "::")
+	return joined
 }

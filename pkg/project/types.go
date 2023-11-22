@@ -7,6 +7,7 @@ import (
 )
 
 const TYPES_DATA = `
+import "../src/index";
 import "@types/node";
 import "@pulumi/aws";
 import "@pulumi/pulumi";
@@ -18,7 +19,11 @@ declare global {
   // @ts-expect-error
   export import util = require("@pulumi/pulumi");
 
-  export const sst: {
+  // @ts-expect-error
+  export import sst = require("../src/index");
+
+
+  export const app: {
     region: string;
     bootstrap: {
       bucket: string;

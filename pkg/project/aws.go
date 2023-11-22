@@ -32,9 +32,8 @@ func (p *projectAws) Config() (aws.Config, error) {
 	var err error
 
 	p.Do(func() {
-		slog.Info("using", "profile", p.project.Profile())
+		slog.Info("getting aws credentials", "profile", p.project.Profile())
 		ctx := context.Background()
-		slog.Info("getting aws credentials")
 		cfg, e := config.LoadDefaultConfig(
 			ctx,
 			config.WithSharedConfigProfile(p.project.Profile()),
