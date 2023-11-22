@@ -1,4 +1,4 @@
-/// <reference path="./.sst/types/global.d.ts" />
+/// <reference path="./.sst/src/global.d.ts" />
 
 export default {
   config() {
@@ -9,14 +9,10 @@ export default {
     };
   },
   async run() {
-    const a = new aws.s3.Bucket("my-bucket", {
-      tags: {
-        foo: "1123",
-      },
-    });
-
+    const bucket = new aws.s3.Bucket("my-bucket");
+    new sst.FunctionCodeUpdater("updator");
     return {
-      url: util.interpolate`https://${a.bucketDomainName}`,
+      url: util.interpolate`https://${bucket.bucketDomainName}`,
     };
   },
 };

@@ -24,62 +24,60 @@ func (s *stack) runtime() (string, error) {
 	if err != nil {
 		return "", err
 	}
+	inject := map[string]interface{}{
+		"region": s.project.Region(),
+		"stage":  s.project.Stage(),
+		"name":   s.project.Name(),
+		"paths": map[string]string{
+			"root": s.project.PathRoot(),
+			"temp": s.project.PathTemp(),
+			"home": global.ConfigDir(),
+		},
+		"aws": map[string]string{
+			"AWS_ACCESS_KEY_ID":     credentials.AccessKeyID,
+			"AWS_SECRET_ACCESS_KEY": credentials.SecretAccessKey,
+			"AWS_SESSION_TOKEN":     credentials.SessionToken,
+		},
+		"bootstrap": map[string]string{
+			"bucket": bootstrap,
+		},
+	}
+	injectBytes, err := json.Marshal(inject)
+	if err != nil {
+		return "", err
+	}
 	return fmt.Sprintf(`
+    globalThis.app = %v
+    import "./src/runtime"
+
     import { LocalWorkspace } from "@pulumi/pulumi/automation/index.js";
     import mod from '%s';
 
-    import * as _aws from "@pulumi/aws";
-    import * as _util from "@pulumi/pulumi";
-    import * as _sst from "./src/index"
-
-    globalThis.aws = _aws
-    globalThis.util = _util
-    globalThis.sst = _sst
-    globalThis.app = {
-      region: "%s",
-      stage: "%s",
-      name: "%s",
-      bootstrap: {
-        bucket: "%s"
-      }
-    }
-
-    const stack = await LocalWorkspace.createOrSelectStack({
-      program: mod.run,
-      projectName: "%s",
-      stackName: "%s",
-    }, {
-      pulumiHome: "%s",
-      projectSettings: {
-        main: "%s",
-        name: "%v",
-        runtime: "nodejs",
-        backend: {
-          url: "%v"
+    const stack = await LocalWorkspace.createOrSelectStack(
+      {
+        program: mod.run,
+        projectName: app.name,
+        stackName: app.stage,
+      },
+      {
+        pulumiHome: app.paths.home,
+        projectSettings: {
+          main: app.paths.root,
+          name: app.name,
+          runtime: "nodejs",
+          backend: {
+            url: "s3://" + app.bootstrap.bucket,
+          },
+        },
+        envVars: {
+          PULUMI_CONFIG_PASSPHRASE: "",
+          PULUMI_EXPERIMENTAL: "1",
+          PULUMI_SKIP_CHECKPOINTS: "true",
+          ...app.aws,
         },
       },
-      envVars: {
-        PULUMI_CONFIG_PASSPHRASE: "",
-        PULUMI_EXPERIMENTAL: "1",
-        PULUMI_SKIP_CHECKPOINTS: "true",
-        AWS_ACCESS_KEY_ID: "%s",
-        AWS_SECRET_ACCESS_KEY: "%s",
-        AWS_SESSION_TOKEN: "%s",
-      }
-    })
-  `,
-		s.project.PathConfig(),
-		s.project.Region(),
-		s.project.Stage(),
-		s.project.Name(),
-		bootstrap,
-		s.project.Name(),
-		s.project.Stage(),
-		global.ConfigDir(),
-		s.project.PathRoot(),
-		s.project.Name(),
-		"s3://"+bootstrap,
-		credentials.AccessKeyID, credentials.SecretAccessKey, credentials.SessionToken,
+    );
+  `, string(injectBytes), s.project.PathConfig(),
 	), nil
 }
 
@@ -95,7 +93,7 @@ func (s *stack) run(cmd string) (StackEventStream, error) {
 		Code: fmt.Sprintf(`
       %v
       await stack.%v({
-        // onOutput: (line) => console.log(new Date().toISOString(), line),
+        onOutput: (line) => console.log(new Date().toISOString(), line),
         onEvent: (evt) => {
           console.log("~e" + JSON.stringify(evt))
           // console.log(JSON.stringify(evt, null, 4))

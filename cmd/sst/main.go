@@ -237,10 +237,6 @@ func initProject() (*project.Project, error) {
 		return nil, err
 	}
 
-	if err := p.GenerateTypes(); err != nil {
-		return nil, err
-	}
-
 	if !p.CheckDeps() {
 		err = p.InstallDeps()
 		if err != nil {

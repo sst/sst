@@ -151,8 +151,8 @@ func (p *Process) Eval(input EvalOptions) error {
       `,
 		},
 		External: []string{
-			"@pulumi/pulumi",
-			"@pulumi/aws",
+			"@pulumi/*",
+			"@aws-sdk/*",
 		},
 		Format:   esbuild.FormatESModule,
 		Platform: esbuild.PlatformNode,
