@@ -760,6 +760,34 @@ test("url.cors: allowMethods *", async () => {
   });
 });
 
+test("url.stream: true", async () => {
+  const stack = new Stack(await createApp(), "stack");
+  const fn = new Function(stack, "Function", {
+    handler: "test/lambda.handler",
+    url: {
+      stream: true,
+    },
+  });
+  expect(fn.url).toBeDefined();
+  hasResource(stack, "AWS::Lambda::Url", {
+    InvokeMode: lambda.InvokeMode.RESPONSE_STREAM,
+  });
+});
+
+test("url.stream: false", async () => {
+  const stack = new Stack(await createApp(), "stack");
+  const fn = new Function(stack, "Function", {
+    handler: "test/lambda.handler",
+    url: {
+      stream: false,
+    },
+  });
+  expect(fn.url).toBeDefined();
+  hasResource(stack, "AWS::Lambda::Url", {
+    InvokeMode: lambda.InvokeMode.BUFFERED,
+  });
+});
+
 test("layers: imported from another stack", async () => {
   const app = await createApp();
   const stack1 = new Stack(app, "stack1");
