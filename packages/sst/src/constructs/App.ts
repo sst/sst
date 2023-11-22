@@ -187,7 +187,7 @@ export class App extends CDKApp {
    * @example
    * ```js
    * app.setDefaultFunctionProps({
-   *   runtime: "nodejs16.x",
+   *   runtime: "nodejs18.x",
    *   timeout: 30
    * })
    * ```
@@ -370,7 +370,7 @@ export class App extends CDKApp {
                   effect: Effect.ALLOW,
                   actions: ["s3:GetObject", "s3:PutObject"],
                   resources: [
-                    sourcemaps[0].srcBucket.bucketArn + "/*",
+                    sourcemaps[0].asset.bucket.bucketArn + "/*",
                     `arn:${child.partition}:s3:::${bootstrap.bucket}/*`,
                   ],
                 }),
@@ -385,8 +385,11 @@ export class App extends CDKApp {
                 app: this.name,
                 stage: this.stage,
                 tarBucket: bootstrap.bucket,
-                srcBucket: sourcemaps[0].srcBucket.bucketName,
-                sourcemaps: sourcemaps.map((s) => [s.tarKey, s.srcKey]),
+                srcBucket: sourcemaps[0].asset.bucket.bucketName,
+                sourcemaps: sourcemaps.map((s) => [
+                  s.tarKey,
+                  s.asset.s3ObjectKey,
+                ]),
               },
             });
             resource.node.addDependency(policy);

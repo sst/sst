@@ -9,7 +9,7 @@ This is the SST v0.x Constructs doc. SST v1 is now released. If you are using v1
 The `RDS` construct is a higher level CDK construct that makes it easy to create an [RDS Serverless Cluster](https://aws.amazon.com/rds/). It uses the following defaults:
 
 - Defaults to using the [Serverless v1 On-Demand autoscaling configuration](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/aurora-serverless.html) to make it serverless.
-- Provides a built-in interface for running schema migrations using [Kysely](https://koskimas.github.io/kysely/#migrations).
+- Provides a built-in interface for running schema migrations using [Kysely](https://kysely.dev/docs/migrations).
 - Enables [Data API](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/data-api.html) to allow your Lambda functions to access the database cluster without needing to deploy the functions in a VPC (virtual private cloud).
 - Enables [Backup Snapshot](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/BackupRestoreAurora.html) to make sure that you don't lose your data.
 
@@ -80,7 +80,7 @@ new RDS(this, "Database", {
 });
 ```
 
-The `RDS` construct uses [Kysely](https://kysely-org.github.io/kysely/) to run and manage schema migrations. The `migrations` prop should point to the folder where your migration files are.
+The `RDS` construct uses [Kysely](https://kysely.dev/) to run and manage schema migrations. The `migrations` prop should point to the folder where your migration files are.
 
 On `sst deploy`, all migrations that have not yet been run will be run as a part of the deploy process. The migrations are executed in alphabetical order by their name.
 
@@ -146,7 +146,7 @@ async function down(db) {
 module.exports = { up, down };
 ```
 
-[Read more about writing migrations](https://kysely-org.github.io/kysely/#migrations) over on the Kysely docs.
+[Read more about writing migrations](https://kysely.dev/docs/migrations) over on the Kysely docs.
 
 ### Configuring the RDS cluster
 

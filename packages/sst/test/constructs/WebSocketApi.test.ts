@@ -7,6 +7,7 @@ import {
   hasResource,
   objectLike,
   createApp,
+  printResource,
 } from "./helper";
 import * as acm from "aws-cdk-lib/aws-certificatemanager";
 import * as apig from "@aws-cdk/aws-apigatewayv2-alpha";
@@ -851,6 +852,41 @@ test("routes: route is prop", async () => {
   });
   hasResource(stack, "AWS::Lambda::Function", {
     Handler: "index.placeholder",
+  });
+});
+
+test("routes: route is prop: returnResponse default", async () => {
+  const stack = new Stack(await createApp(), "stack");
+  new WebSocketApi(stack, "Api", {
+    routes: {
+      $connect: {
+        function: {
+          handler: "test/lambda.handler",
+        },
+      },
+    },
+  });
+  printResource(stack, "AWS::ApiGatewayV2::Route");
+  countResourcesLike(stack, "AWS::ApiGatewayV2::Route", 1, {
+    RouteResponseSelectionExpression: ABSENT,
+  });
+});
+
+test("routes: route is prop: returnResponse true", async () => {
+  const stack = new Stack(await createApp(), "stack");
+  new WebSocketApi(stack, "Api", {
+    routes: {
+      $connect: {
+        function: {
+          handler: "test/lambda.handler",
+        },
+        returnResponse: true,
+      },
+    },
+  });
+  printResource(stack, "AWS::ApiGatewayV2::Route");
+  countResourcesLike(stack, "AWS::ApiGatewayV2::Route", 1, {
+    RouteResponseSelectionExpression: "$default",
   });
 });
 

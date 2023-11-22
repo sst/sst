@@ -173,7 +173,7 @@ export function comments(articleID: string) {
 }
 ```
 
-We are using [Kysely](https://kysely-org.github.io/kysely/) to run typesafe queries against our database.
+We are using [Kysely](https://kysely.dev/) to run typesafe queries against our database.
 
 <details>
 <summary>Behind the scenes</summary>

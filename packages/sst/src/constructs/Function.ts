@@ -64,7 +64,6 @@ const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 const supportedRuntimes = {
   container: CDKRuntime.FROM_IMAGE,
   rust: CDKRuntime.PROVIDED_AL2,
-  "nodejs14.x": CDKRuntime.NODEJS_14_X,
   "nodejs16.x": CDKRuntime.NODEJS_16_X,
   "nodejs18.x": CDKRuntime.NODEJS_18_X,
   "python3.7": CDKRuntime.PYTHON_3_7,
@@ -200,7 +199,7 @@ export interface FunctionProps
    * ```js
    * new Function(stack, "Function", {
    *   handler: "function.handler",
-   *   runtime: "nodejs16.x",
+   *   runtime: "nodejs18.x",
    * })
    *```
    */
@@ -820,7 +819,7 @@ export class Function extends CDKFunction implements SSTConstruct {
         code: Code.fromInline("export function placeholder() {}"),
         handler: "index.placeholder",
         functionName,
-        runtime: CDKRuntime.NODEJS_16_X,
+        runtime: CDKRuntime.NODEJS_18_X,
         memorySize,
         ephemeralStorageSize: diskSize,
         timeout,
@@ -934,7 +933,7 @@ export class Function extends CDKFunction implements SSTConstruct {
           : {
               code: Code.fromInline("export function placeholder() {}"),
               handler: "index.placeholder",
-              runtime: CDKRuntime.NODEJS_16_X,
+              runtime: CDKRuntime.NODEJS_18_X,
               layers: Function.buildLayers(scope, id, props),
             }),
         architecture,
@@ -982,8 +981,7 @@ export class Function extends CDKFunction implements SSTConstruct {
           });
           await fs.rm(result.sourcemap);
           useFunctions().sourcemaps.add(stack.stackName, {
-            srcBucket: asset.bucket,
-            srcKey: asset.s3ObjectKey,
+            asset,
             tarKey: this.functionArn,
           });
         }
@@ -1368,12 +1366,10 @@ export class Function extends CDKFunction implements SSTConstruct {
 export const useFunctions = createAppContext(() => {
   const functions: Record<string, FunctionProps> = {};
   type Sourcemap = {
-    srcBucket: IBucket;
-    srcKey: string;
+    asset: Asset;
     tarKey: string;
   };
   const sourcemaps: Record<string, Sourcemap[]> = {};
-
   return {
     sourcemaps: {
       add(stack: string, source: Sourcemap) {
@@ -1382,7 +1378,11 @@ export const useFunctions = createAppContext(() => {
         arr.push(source);
       },
       forStack(stack: string) {
-        return sourcemaps[stack] || [];
+        return (sourcemaps[stack] || []).sort((a, b) => {
+          if (a.asset.node.path > b.asset.node.path) return 1;
+          if (a.asset.node.path < b.asset.node.path) return -1;
+          return 0;
+        });
       },
     },
     fromID(id: string) {

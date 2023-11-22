@@ -211,7 +211,7 @@ export interface SsrSiteProps {
    * runtime: "nodejs16.x",
    * ```
    */
-  runtime?: "nodejs14.x" | "nodejs16.x" | "nodejs18.x";
+  runtime?: "nodejs16.x" | "nodejs18.x";
   /**
    * The instruction set [architecture](https://docs.aws.amazon.com/lambda/latest/dg/foundation-arch.html) for the SSR function.
    *
@@ -1177,7 +1177,7 @@ function handler(event) {
       copy: S3OriginConfig["copy"],
       s3Assets: Asset[]
     ): CustomResource {
-      const policy = new Policy(self, "S3UploaderPolicy", {
+      const policy = new Policy(self, "S3AssetUploaderPolicy", {
         statements: [
           new PolicyStatement({
             effect: Effect.ALLOW,
@@ -1198,7 +1198,7 @@ function handler(event) {
       });
       stack.customResourceHandler.role?.attachInlinePolicy(policy);
 
-      const resource = new CustomResource(self, "S3Uploader", {
+      const resource = new CustomResource(self, "S3AssetUploader", {
         serviceToken: stack.customResourceHandler.functionArn,
         resourceType: "Custom::S3Uploader",
         properties: {

@@ -2508,14 +2508,12 @@ test("fromDefinition-props-inherit", async () => {
       environment: { KEY_A: "a" },
     },
     {
-      runtime: "nodejs16.x",
       memorySize: 512,
       environment: { KEY_B: "b" },
     }
   );
   hasResource(stack, "AWS::Lambda::Function", {
     Handler: "index.placeholder",
-    Runtime: "nodejs16.x",
     MemorySize: 2048,
     Environment: {
       Variables: {
@@ -2545,14 +2543,13 @@ test("fromDefinition-props-inherit-with-app-defaultFunctionProps", async () => {
       environment: { KEY_B: "b" },
     },
     {
-      runtime: "nodejs16.x",
       memorySize: 512,
       environment: { KEY_C: "c" },
     }
   );
+
   hasResource(stack, "AWS::Lambda::Function", {
     Handler: "index.placeholder",
-    Runtime: "nodejs16.x",
     Timeout: 15,
     MemorySize: 2048,
     Environment: {

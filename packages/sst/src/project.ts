@@ -124,7 +124,7 @@ export async function initProject(globals: GlobalOptions) {
     }
 
     throw new VisibleError(
-      "Could not found a configuration file",
+      "Could not find a configuration file",
       "Make sure one of the following exists",
       ...CONFIG_EXTENSIONS.map((x) => `  - sst${x}`)
     );
@@ -262,7 +262,7 @@ async function findRoot() {
   async function find(dir: string): Promise<string> {
     if (dir === "/")
       throw new VisibleError(
-        "Could not found a configuration file",
+        "Could not find a configuration file",
         "Make sure one of the following exists",
         ...CONFIG_EXTENSIONS.map((ext) => `  - sst${ext}`)
       );

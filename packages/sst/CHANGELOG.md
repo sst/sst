@@ -1,5 +1,21 @@
 # @serverless-stack/cli2
 
+## 2.36.2
+
+### Patch Changes
+
+- [`5b88c84ea`](https://github.com/sst/sst/commit/5b88c84ea72bc43f71c700b9dd967b6147464ba8) Thanks [@fwang](https://github.com/fwang)! - Sites: fix S3Uploader resource id thrash with old Python uploader
+
+- [`cbd4510b1`](https://github.com/sst/sst/commit/cbd4510b1f16a141a85597bfbd1ff958f5026edd) Thanks [@fwang](https://github.com/fwang)! - Update runtime to nodejs16.x for custom resources
+
+- [`4cb0b191c`](https://github.com/sst/sst/commit/4cb0b191cc45d2bfe14cb5ba7ad4623d2ed55208) Thanks [@fwang](https://github.com/fwang)! - Function: sort sourcemap by CDK path
+
+- [`baa1e904f`](https://github.com/sst/sst/commit/baa1e904fe38a1c9c1f1081169102a9bca729908) Thanks [@thdxr](https://github.com/thdxr)! - bus: export EventPayload type
+
+- [#3504](https://github.com/sst/sst/pull/3504) [`c7284c8c3`](https://github.com/sst/sst/commit/c7284c8c3cae9d2b38009e27468f862c0bcaa97e) Thanks [@jaydeebee](https://github.com/jaydeebee)! - WebSocketApi: support route returnResponse
+
+- [#3500](https://github.com/sst/sst/pull/3500) [`6a8b100dd`](https://github.com/sst/sst/commit/6a8b100ddbbda6a0177c5559561da013b1b7af9c) Thanks [@rubythulhu](https://github.com/rubythulhu)! - Make sourcemap ordering deterministic
+
 ## 2.36.1
 
 ### Patch Changes

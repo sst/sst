@@ -54,7 +54,7 @@ const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
 export interface EdgeFunctionProps {
   bundle?: string;
   handler: string;
-  runtime?: "nodejs14.x" | "nodejs16.x" | "nodejs18.x";
+  runtime?: "nodejs16.x" | "nodejs18.x";
   timeout?: number | Duration;
   memorySize?: number | Size;
   permissions?: Permissions;
@@ -219,8 +219,7 @@ export class EdgeFunction extends Construct {
       });
       await fs.promises.rm(result.sourcemap);
       useFunctions().sourcemaps.add(stack.stackName, {
-        srcBucket: asset.bucket,
-        srcKey: asset.s3ObjectKey,
+        asset,
         tarKey: this.functionArn,
       });
     }
@@ -453,7 +452,7 @@ export class EdgeFunction extends Construct {
     const provider = new CdkFunction(stack, providerId, {
       code: Code.fromAsset(path.join(__dirname, "../support/edge-function")),
       handler: "s3-bucket.handler",
-      runtime: Runtime.NODEJS_16_X,
+      runtime: Runtime.NODEJS_18_X,
       timeout: CdkDuration.minutes(15),
       memorySize: 1024,
       initialPolicy: [
@@ -495,7 +494,7 @@ export class EdgeFunction extends Construct {
       provider = new CdkFunction(stack, providerId, {
         code: Code.fromAsset(path.join(__dirname, "../support/edge-function")),
         handler: "edge-lambda.handler",
-        runtime: Runtime.NODEJS_16_X,
+        runtime: Runtime.NODEJS_18_X,
         timeout: CdkDuration.minutes(15),
         memorySize: 1024,
         initialPolicy: [
@@ -526,9 +525,7 @@ export class EdgeFunction extends Construct {
             S3Key: assetKey,
           },
           Runtime:
-            runtime === "nodejs14.x"
-              ? Runtime.NODEJS_14_X.name
-              : runtime === "nodejs16.x"
+            runtime === "nodejs16.x"
               ? Runtime.NODEJS_16_X.name
               : Runtime.NODEJS_18_X.name,
           MemorySize:
@@ -566,7 +563,7 @@ export class EdgeFunction extends Construct {
       provider = new CdkFunction(stack, providerId, {
         code: Code.fromAsset(path.join(__dirname, "../support/edge-function")),
         handler: "edge-lambda-version.handler",
-        runtime: Runtime.NODEJS_16_X,
+        runtime: Runtime.NODEJS_18_X,
         timeout: CdkDuration.minutes(15),
         memorySize: 1024,
         initialPolicy: [

@@ -608,7 +608,7 @@ export class EventBus extends Construct implements SSTConstruct {
     });
     this.retrierFn = new lambda.Function(this, `RetrierFunction`, {
       functionName: app.logicalPrefixedName(this.node.id + "Retrier"),
-      runtime: lambda.Runtime.NODEJS_16_X,
+      runtime: lambda.Runtime.NODEJS_18_X,
       timeout: Duration.seconds(30),
       handler: "index.handler",
       code: lambda.Code.fromAsset(
