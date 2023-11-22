@@ -21,8 +21,8 @@ var version = "dev"
 
 func main() {
 	app := &cli.App{
-		Name:  "sst",
-		Usage: "deploy anything",
+		Name:        "sst",
+		Description: "deploy anything",
 		Flags: []cli.Flag{
 			&cli.BoolFlag{
 				Name: "verbose",
@@ -53,7 +53,6 @@ func main() {
 		Commands: []*cli.Command{
 			{
 				Name:  "deploy",
-				Usage: "Deploy",
 				Flags: []cli.Flag{},
 				Action: func(cli *cli.Context) error {
 					p, err := initProject()
@@ -136,7 +135,6 @@ func main() {
 			},
 			{
 				Name:  "remove",
-				Usage: "Remove",
 				Flags: []cli.Flag{},
 				Action: func(cli *cli.Context) error {
 					p, err := initProject()
@@ -157,8 +155,28 @@ func main() {
 				},
 			},
 			{
+				Name:  "refresh",
+				Flags: []cli.Flag{},
+				Action: func(cli *cli.Context) error {
+					p, err := initProject()
+					if err != nil {
+						return err
+					}
+					events, err := p.Stack.Refresh()
+					if err != nil {
+						return err
+					}
+
+					for evt := range events {
+						if evt.ResourcePreEvent != nil {
+							slog.Info("got op", "op", evt.ResourcePreEvent.Metadata.Op)
+						}
+					}
+					return nil
+				},
+			},
+			{
 				Name:  "create",
-				Usage: "Create",
 				Flags: []cli.Flag{},
 				Action: func(cli *cli.Context) error {
 					err := project.Create()
@@ -171,7 +189,6 @@ func main() {
 			},
 			{
 				Name:  "cancel",
-				Usage: "Cancel",
 				Flags: []cli.Flag{},
 				Action: func(cli *cli.Context) error {
 					p, err := initProject()

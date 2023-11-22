@@ -152,3 +152,7 @@ func (s *stack) Cancel() (StackEventStream, error) {
 func (s *stack) Remove() (StackEventStream, error) {
 	return s.run("destroy")
 }
+
+func (s *stack) Refresh() (StackEventStream, error) {
+	return s.run("refresh")
+}

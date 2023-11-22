@@ -6,5 +6,8 @@
     "@aws-sdk/client-sts": "^3.454.0",
     "@pulumi/aws": "5.43.0",
     "@pulumi/pulumi": "3.94.2"
+  },
+  "devDependencies": {
+    "@types/node": "^20.9.4"
   }
 }
