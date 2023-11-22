@@ -54,8 +54,8 @@
     "set-cookie-parser": "^2.6.0"
   },
   "devDependencies": {
-    "@types/aws-lambda": "^8.10.112",
-    "@types/set-cookie-parser": "^2.4.3",
-    "astro": "^3.1.4"
+    "@types/aws-lambda": "^8.10.128",
+    "@types/set-cookie-parser": "^2.4.7",
+    "astro": "^3.6.0"
   }
 }
