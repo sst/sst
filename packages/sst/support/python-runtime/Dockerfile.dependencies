@@ -14,7 +14,8 @@ RUN pip install pipenv poetry==1.5.1
 
 # Install the dependencies in a cacheable layer
 WORKDIR /var/dependencies
-COPY Pipfile* pyproject* poetry* requirements.tx[t] ./
+COPY Pipfile* pyproject* poetry* requirements.tx[t] pip.conf ./
+ENV PIP_CONFIG_FILE=./pip.conf
 
 # Run these command separately
 # Note: "pipenv requirements > requirements.txt" command can fail if the pipenv is using a Python version (ie. Python3.9)
