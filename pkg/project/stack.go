@@ -79,6 +79,7 @@ func (s *stack) runtime() (string, error) {
           PULUMI_CONFIG_PASSPHRASE: "",
           PULUMI_EXPERIMENTAL: "1",
           PULUMI_SKIP_CHECKPOINTS: "true",
+          NODE_PATH: app.paths.temp + "/node_modules",
           ...app.aws,
         },
       },
@@ -99,7 +100,7 @@ func (s *stack) run(cmd string) (StackEventStream, error) {
 		Code: fmt.Sprintf(`
       %v
       await stack.%v({
-        onOutput: (line) => console.log(new Date().toISOString(), line),
+        // onOutput: (line) => console.log(new Date().toISOString(), line),
         onEvent: (evt) => {
           console.log("~e" + JSON.stringify(evt))
           // console.log(JSON.stringify(evt, null, 4))

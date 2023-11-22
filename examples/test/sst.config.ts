@@ -10,7 +10,6 @@ export default {
   },
   async run() {
     const bucket = new aws.s3.Bucket("my-bucket");
-    new sst.FunctionCodeUpdater("updator");
     return {
       url: util.interpolate`https://${bucket.bucketDomainName}`,
     };

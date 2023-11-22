@@ -24,7 +24,7 @@ class Provider implements pulumi.dynamic.ResourceProvider {
         FunctionName: inputs.functionName,
         S3Bucket: inputs.s3Bucket,
         S3Key: inputs.s3Key,
-      })
+      }),
     );
     return { id: "foo" };
   }
@@ -32,7 +32,7 @@ class Provider implements pulumi.dynamic.ResourceProvider {
   async update(
     id: string,
     olds: Inputs,
-    news: Inputs
+    news: Inputs,
   ): Promise<pulumi.dynamic.UpdateResult> {
     const client = new LambdaClient();
     await client.send(
@@ -40,7 +40,7 @@ class Provider implements pulumi.dynamic.ResourceProvider {
         FunctionName: news.functionName,
         S3Bucket: news.s3Bucket,
         S3Key: news.s3Key,
-      })
+      }),
     );
     return {};
   }
@@ -51,7 +51,7 @@ export class FunctionCodeUpdater extends pulumi.dynamic.Resource {
   constructor(
     name: string,
     args: FunctionCodeUpdaterInputs,
-    opts?: pulumi.CustomResourceOptions
+    opts?: pulumi.CustomResourceOptions,
   ) {
     super(new Provider(), name, args, opts);
   }
