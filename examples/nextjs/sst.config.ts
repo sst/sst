@@ -1,4 +1,4 @@
-/// <reference path="./.sst/types/global.d.ts" />
+/// <reference path="./.sst/src/global.d.ts" />
 
 export default {
   config() {
@@ -8,6 +8,12 @@ export default {
     };
   },
   async run() {
-    const { SsrSite } = await import("./components/SsrSite.ts");
+    const site = new sst.SsrSite("web", {
+      path: "web",
+    });
+
+    return {
+      siteURL: util.interpolate`https://${site.distribution.domainName}`,
+    };
   },
 };
