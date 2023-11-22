@@ -24,7 +24,7 @@ export class SsrSite extends pulumi.ComponentResource {
 
     // TODO uncomment build
     const now = Date.now();
-    buildApp();
+    //buildApp();
     console.log(`open-next: ${Date.now() - now}ms`);
     const access = createCloudFrontOriginAccessIdentity();
     const bucket = createS3Bucket();
@@ -90,7 +90,7 @@ export class SsrSite extends pulumi.ComponentResource {
     function createCloudFrontOriginAccessIdentity() {
       return new aws.cloudfront.OriginAccessIdentity(
         `${name}-origin-access-identity`,
-        {},
+        {}
       );
     }
 
@@ -106,7 +106,7 @@ export class SsrSite extends pulumi.ComponentResource {
       return request;
     }`,
         },
-        { parent: _this },
+        { parent: _this }
       );
     }
 
@@ -189,7 +189,7 @@ export class SsrSite extends pulumi.ComponentResource {
               queryStringBehavior: "all",
             },
           },
-        },
+        }
       );
 
       return new aws.cloudfront.Distribution(`${name}-distribution`, {
@@ -341,7 +341,7 @@ export class SsrSite extends pulumi.ComponentResource {
       const bucket = new aws.s3.BucketV2(
         `${name}-bucket`,
         {},
-        { parent: _this },
+        { parent: _this }
       );
       new aws.s3.BucketPublicAccessBlock("exampleBucketPublicAccessBlock", {
         bucket: bucket.id,
@@ -397,7 +397,7 @@ export class SsrSite extends pulumi.ComponentResource {
                     },
                   ],
                 })
-                .then((doc) => doc.json),
+                .then((doc) => doc.json)
             ),
           },
         ],
@@ -429,7 +429,7 @@ export class SsrSite extends pulumi.ComponentResource {
                     },
                   ],
                 })
-                .then((doc) => doc.json),
+                .then((doc) => doc.json)
             ),
           },
         ],
@@ -442,7 +442,7 @@ export class SsrSite extends pulumi.ComponentResource {
         description: "Next.js server",
         handler: "index.handler",
         code: new pulumi.asset.FileArchive(
-          path.join(sitePath, ".open-next", "image-optimization-function"),
+          path.join(sitePath, ".open-next", "image-optimization-function")
         ),
         runtime: "nodejs18.x",
         memorySize: 1536,
@@ -482,33 +482,33 @@ export class SsrSite extends pulumi.ComponentResource {
                       },
                     ],
                   })
-                  .then((doc) => doc.json),
+                  .then((doc) => doc.json)
               ),
             },
           ],
           managedPolicyArns: [
             "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
           ],
-        },
+        }
       );
       const consumer = new aws.lambda.Function(
         `${name}-revalidation-consumer`,
         {
           handler: "index.handler",
           code: new pulumi.asset.FileArchive(
-            path.join(sitePath, ".open-next", "revalidation-function"),
+            path.join(sitePath, ".open-next", "revalidation-function")
           ),
           runtime: "nodejs18.x",
           timeout: 30,
           role: consumerRole.arn,
-        },
+        }
       );
       new aws.lambda.EventSourceMapping(
         `${name}-revalidation-consumer-event-source`,
         {
           functionName: consumer.name,
           eventSourceArn: queue.arn,
-        },
+        }
       );
     }
   }
