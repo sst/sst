@@ -15,9 +15,10 @@ import (
 var urnRegex = regexp.MustCompile(`\/[^:]+`)
 
 type Progress struct {
-	Color color.Attribute
-	Label string
-	URN   string
+	Color   color.Attribute
+	Label   string
+	URN     string
+	Message string
 	time.Duration
 }
 
@@ -38,11 +39,15 @@ func progress(events project.StackEventStream) {
 		if progress.Duration != 0 {
 			color.New(color.FgHiBlack).Printf(" (%s)", progress.Duration)
 		}
+		if progress.Message != "" {
+			color.New(color.FgHiBlack).Print(" ", progress.Message)
+		}
 		fmt.Println()
 		spin.Enable()
 	}
 
 	timing := make(map[string]time.Time)
+	errors := make(map[string]string)
 	outputs := make(map[string]interface{})
 
 	for evt := range events {
@@ -52,11 +57,13 @@ func progress(events project.StackEventStream) {
 			spin.Enable()
 			continue
 		}
+
 		if evt.ResourcePreEvent != nil {
 			timing[evt.ResourcePreEvent.Metadata.URN] = time.Now()
 			if evt.ResourcePreEvent.Metadata.Type == "pulumi:pulumi:Stack" {
 				continue
 			}
+
 			if evt.ResourcePreEvent.Metadata.Op == apitype.OpSame {
 				printProgress(Progress{
 					Color: color.FgHiBlack,
@@ -76,6 +83,16 @@ func progress(events project.StackEventStream) {
 			}
 
 			if evt.ResourcePreEvent.Metadata.Op == apitype.OpUpdate {
+				printProgress(Progress{
+					Color: color.FgYellow,
+					Label: "Updating",
+					URN:   evt.ResourcePreEvent.Metadata.URN,
+				})
+
+				continue
+			}
+
+			if evt.ResourcePreEvent.Metadata.Op == apitype.OpReplace {
 				printProgress(Progress{
 					Color: color.FgYellow,
 					Label: "Updating",
@@ -129,16 +146,46 @@ func progress(events project.StackEventStream) {
 				})
 			}
 		}
+
+		if evt.ResOpFailedEvent != nil {
+		}
+
+		if evt.DiagnosticEvent != nil {
+			if strings.HasPrefix(evt.DiagnosticEvent.Prefix, "error") && evt.DiagnosticEvent.URN != "" {
+				splits := strings.Split(evt.DiagnosticEvent.Message, "\n")
+				splits = strings.Split(splits[1], ":")
+				error := strings.TrimSpace(splits[len(splits)-1])
+				errors[evt.DiagnosticEvent.URN] = error
+				printProgress(Progress{
+					URN:     evt.DiagnosticEvent.URN,
+					Color:   color.FgRed,
+					Label:   "Error   ",
+					Message: error,
+				})
+			}
+		}
 	}
 
 	spin.Stop()
-	color.New(color.FgGreen, color.Bold).Print("\n✔")
-	color.New(color.FgWhite, color.Bold).Println("  Deployed:")
 
-	for k, v := range outputs {
-		color.New(color.FgHiBlack).Print("   ")
-		color.New(color.FgHiBlack, color.Bold).Print(k + ": ")
-		color.New(color.FgWhite).Println(v)
+	if len(errors) == 0 {
+		color.New(color.FgGreen, color.Bold).Print("\n✔")
+		color.New(color.FgWhite, color.Bold).Println("  Deployed:")
+
+		for k, v := range outputs {
+			color.New(color.FgHiBlack).Print("   ")
+			color.New(color.FgHiBlack, color.Bold).Print(k + ": ")
+			color.New(color.FgWhite).Println(v)
+		}
+	} else {
+		color.New(color.FgRed, color.Bold).Print("\n❌")
+		color.New(color.FgWhite, color.Bold).Println(" Failed:")
+
+		for k, v := range errors {
+			color.New(color.FgHiBlack).Print("   ")
+			color.New(color.FgRed, color.Bold).Print(formatURN(k) + ": ")
+			color.New(color.FgWhite).Println(v)
+		}
 	}
 
 }

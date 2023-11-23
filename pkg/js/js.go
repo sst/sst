@@ -137,7 +137,7 @@ type EvalMessage struct {
 func (p *Process) Eval(input EvalOptions) error {
 	outfile := filepath.Join(input.Dir,
 		"eval",
-		fmt.Sprintf("eval-%x.mjs", time.Now().Unix()),
+		fmt.Sprintf("eval-%x.mjs", time.Now().UnixMilli()),
 	)
 	slog.Info("esbuild building")
 	result := esbuild.Build(esbuild.BuildOptions{

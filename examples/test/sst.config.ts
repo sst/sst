@@ -9,7 +9,9 @@ export default {
     };
   },
   async run() {
-    const bucket = new aws.s3.Bucket("my-bucket");
+    const bucket = new aws.s3.Bucket("my-bucket", {
+      bucket: "sst",
+    });
     return {
       url: util.interpolate`https://${bucket.bucketDomainName}`,
     };

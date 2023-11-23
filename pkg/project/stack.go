@@ -77,6 +77,7 @@ func (s *stack) runtime() (string, error) {
         },
         envVars: {
           PULUMI_CONFIG_PASSPHRASE: "",
+          PULUMI_SKIP_UPDATE_CHECK: "true",
           PULUMI_EXPERIMENTAL: "1",
           PULUMI_SKIP_CHECKPOINTS: "true",
           NODE_PATH: app.paths.temp + "/node_modules",
@@ -108,13 +109,16 @@ func (s *stack) run(cmd string) (StackEventStream, error) {
 		Dir: s.project.PathTemp(),
 		Code: fmt.Sprintf(`
       %v
-      await stack.%v({
-        // onOutput: (line) => console.log(new Date().toISOString(), line),
-        onEvent: (evt) => {
-          console.log("~e" + JSON.stringify(evt))
-          // console.log(JSON.stringify(evt, null, 4))
-        },
-      })
+      try {
+        const result = await stack.%v({
+          // onOutput: (line) => console.log(new Date().toISOString(), line),
+          logVerbosity: 0,
+          onEvent: (evt) => {
+            console.log("~e" + JSON.stringify(evt))
+          },
+        })
+      } catch (e) {
+      }
     `, stack, cmd),
 	})
 	if err != nil {

@@ -11,7 +11,9 @@ export default {
   },
   stacks(app) {
     app.stack(function Default(ctx) {
-      // const b = new CfnBucket(ctx.stack, "MyBucket");
+      const b = new CfnBucket(ctx.stack, "MyBucket", {
+        bucketName: "sst",
+      });
       ctx.stack.addOutputs({
         // url: b.attrDomainName,
       });
