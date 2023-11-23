@@ -43,7 +43,8 @@ jobs:
           VERSION=$(jq -r .version $PACKAGE_JSON)
           jq '
             .dependencies += {chalk: .devDependencies.chalk, yaml: .devDependencies.yaml, promptly: .devDependencies.promptly, archiver: .devDependencies.archiver } |
-            .name = "sst-aws-cdk"
+            .name = "sst-aws-cdk" |
+            .version = "$(VERSION)"
           ' $PACKAGE_JSON > tmp.json
           mv tmp.json $PACKAGE_JSON
           cd package
