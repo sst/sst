@@ -7,6 +7,7 @@ import {
   CfnDomainName,
   CfnDomainNameApiAssociation,
 } from "aws-cdk-lib/aws-appsync";
+import { DnsValidatedCertificate } from "../cdk/dns-validated-certificate.js";
 
 export interface CustomDomainProps {
   /**
@@ -192,9 +193,10 @@ function createCertificate(
   domainName: string,
   hostedZone: route53.IHostedZone
 ) {
-  return new acm.Certificate(scope, "Certificate", {
+  return new DnsValidatedCertificate(scope, "Certificate", {
     domainName,
-    validation: acm.CertificateValidation.fromDns(hostedZone),
+    hostedZone,
+    region: "us-east-1",
   });
 }
 
