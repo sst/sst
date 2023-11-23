@@ -44,6 +44,8 @@ brews:
   - repository:
       owner: sst
       name: homebrew-tap
+    dependencies:
+      - name: pulumi/tap/pulumi
 
 changelog:
   sort: asc
