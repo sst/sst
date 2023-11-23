@@ -60,7 +60,11 @@ In your application you can define events. This definition provides validation u
 
 
 ```ts title="packages/core/src/todo.ts"
-import { event } from "./events";
+import { createEventBuilder } from "sst/node/event-bus";
+
+const event = createEventBuilder({
+  bus: "bus",
+});
 
 export const Events = {
   Created: event("todo.created", {
@@ -68,6 +72,11 @@ export const Events = {
   }),
 };
 ```
+
+:::info
+Note that the `"bus"` string passed to the `createEventBuilder` is the same ID as provided in the EventBus construct in MyStack.ts above
+:::
+
 ---
 
 ## Define subscriber
