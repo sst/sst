@@ -9,7 +9,6 @@ import {
 } from "./SsrSite.js";
 import { AllowedMethods } from "aws-cdk-lib/aws-cloudfront";
 import { Construct } from "constructs";
-import { SsrFunctionProps } from "./SsrFunction.js";
 
 const BUILD_META_FILE_NAME: BuildMetaFileName = "sst.buildMeta.json";
 
@@ -95,7 +94,7 @@ export class AstroSite extends SsrSite {
   }
 
   protected plan() {
-    const { path: sitePath, architecture } = this.props;
+    const { path: sitePath } = this.props;
 
     const buildMeta = AstroSite.getBuildMeta(
       join(sitePath, "dist", BUILD_META_FILE_NAME)
@@ -104,7 +103,7 @@ export class AstroSite extends SsrSite {
     const isStatic = buildMeta.outputMode === "static";
     const edge = buildMeta.deploymentStrategy === "edge";
 
-    let serverConfig: SsrFunctionProps = {
+    const serverConfig = {
       description: "Server handler for Astro",
       handler: join(sitePath, "dist", "server", "entry.handler"),
     };
@@ -175,15 +174,10 @@ export class AstroSite extends SsrSite {
           origin: "staticsServer",
         });
       } else {
-        serverConfig = {
-          ...serverConfig,
-          architecture,
-        };
-
         plan.cloudFrontFunctions!.imageServiceCfFunction = {
           constructId: "ImageServiceCloudFrontFunction",
           injections: [this.useCloudFrontFunctionHostHeaderInjection()],
-        }
+        };
 
         plan.origins.regionalServer = {
           type: "function",

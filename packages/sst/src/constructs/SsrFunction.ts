@@ -54,14 +54,10 @@ import { Asset } from "aws-cdk-lib/aws-s3-assets";
 const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
 
 export interface SsrFunctionProps
-  extends Omit<
-    FunctionOptions,
-    "memorySize" | "timeout" | "runtime" | "architecture"
-  > {
+  extends Omit<FunctionOptions, "memorySize" | "timeout" | "runtime"> {
   bundle?: string;
   handler: string;
   runtime?: "nodejs16.x" | "nodejs18.x" | "nodejs20.x";
-  architecture?: "arm_64" | "x86_64" | Architecture;
   timeout?: number | Duration;
   memorySize?: number | Size;
   permissions?: Permissions;
@@ -190,12 +186,7 @@ export class SsrFunction extends Construct implements SSTConstruct {
           : runtime === "nodejs16.x"
           ? Runtime.NODEJS_16_X
           : Runtime.NODEJS_18_X,
-      architecture:
-        architecture instanceof Architecture
-          ? architecture
-          : architecture === "x86_64"
-          ? Architecture.X86_64
-          : Architecture.ARM_64,
+      architecture: architecture || Architecture.ARM_64,
       memorySize:
         typeof memorySize === "string"
           ? toCdkSize(memorySize).toMebibytes()
@@ -289,11 +280,7 @@ export class SsrFunction extends Construct implements SSTConstruct {
       handler: this.props.handler,
       runtime: this.props.runtime,
       architecture:
-        this.props.architecture instanceof Architecture
-          ? Architecture.X86_64
-            ? "x86_64"
-            : "arm_64"
-          : this.props.architecture,
+        this.props.architecture === Architecture.X86_64 ? "x86_64" : "arm_64",
       nodejs: this.props.nodejs,
       copyFiles: this.props.copyFiles,
     });
