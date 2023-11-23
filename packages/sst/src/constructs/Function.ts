@@ -445,18 +445,18 @@ export interface FunctionUrlProps {
    */
   cors?: boolean | FunctionUrlCorsProps;
   /**
-   * If true, the function will stream the payload result
+   * Stream the response payload.
    * @default false
    * * ```js
    * new Function(stack, "Function", {
    *   handler: "src/function.handler",
    *   url: {
-   *     stream: true,
+   *     streaming: true,
    *   },
    * })
    * ```
    */
-  stream?: boolean;
+  streaming?: boolean;
 }
 
 export interface NodeJSProps {
@@ -1170,25 +1170,25 @@ export class Function extends CDKFunction implements SSTConstruct {
 
     let authType;
     let cors;
-    let stream;
+    let streaming;
 
     if (url === true) {
       authType = FunctionUrlAuthType.NONE;
       cors = true;
-      stream = false;
+      streaming = false;
     } else {
       authType =
         url.authorizer === "iam"
           ? FunctionUrlAuthType.AWS_IAM
           : FunctionUrlAuthType.NONE;
       cors = url.cors === undefined ? true : url.cors;
-      stream = url.stream;
+      streaming = url.streaming;
     }
 
     this.functionUrl = this.addFunctionUrl({
       authType,
       cors: functionUrlCors.buildCorsConfig(cors),
-      invokeMode: stream ? InvokeMode.RESPONSE_STREAM : InvokeMode.BUFFERED,
+      invokeMode: streaming ? InvokeMode.RESPONSE_STREAM : InvokeMode.BUFFERED,
     });
   }
 

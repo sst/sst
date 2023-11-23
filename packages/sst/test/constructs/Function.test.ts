@@ -760,12 +760,12 @@ test("url.cors: allowMethods *", async () => {
   });
 });
 
-test("url.stream: true", async () => {
+test("url.streaming: true", async () => {
   const stack = new Stack(await createApp(), "stack");
   const fn = new Function(stack, "Function", {
     handler: "test/lambda.handler",
     url: {
-      stream: true,
+      streaming: true,
     },
   });
   expect(fn.url).toBeDefined();
@@ -774,12 +774,12 @@ test("url.stream: true", async () => {
   });
 });
 
-test("url.stream: false", async () => {
+test("url.streaming: false", async () => {
   const stack = new Stack(await createApp(), "stack");
   const fn = new Function(stack, "Function", {
     handler: "test/lambda.handler",
     url: {
-      stream: false,
+      streaming: false,
     },
   });
   expect(fn.url).toBeDefined();
