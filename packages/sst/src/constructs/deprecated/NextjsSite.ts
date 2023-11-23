@@ -130,7 +130,7 @@ export interface NextjsSiteProps {
        * })
        *```
        */
-      runtime?: "nodejs16.x" | "nodejs18.x";
+      runtime?: "nodejs16.x" | "nodejs18.x" | "nodejs20.x";
     };
   };
   /**
@@ -1493,6 +1493,9 @@ export class NextjsSite extends Construct implements SSTConstruct {
   }
 
   private normalizeRuntime(runtime?: string): lambda.Runtime {
+    if (runtime === "nodejs20.x") {
+      return lambda.Runtime.NODEJS_20_X;
+    }
     if (runtime === "nodejs16.x") {
       return lambda.Runtime.NODEJS_16_X;
     }
