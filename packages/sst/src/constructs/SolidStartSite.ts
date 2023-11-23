@@ -116,4 +116,8 @@ export class SolidStartSite extends SsrSite {
       ...this.getConstructMetadataBase(),
     };
   }
+
+  public getFunctionBinding() {
+    return this.createFunctionBinding('SolidStartSite');
+  }
 }

@@ -253,4 +253,8 @@ export class AstroSite extends SsrSite {
       ...this.getConstructMetadataBase(),
     };
   }
+
+  public getBaseFunctionBindings() {
+    return this.createFunctionBinding('AstroSite');
+  }
 }

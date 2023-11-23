@@ -525,6 +525,10 @@ export class NextjsSite extends SsrSite {
     };
   }
 
+  public getFunctionBinding() {
+    return this.createFunctionBinding('NextjsSite');
+  }
+
   private wrapServerFunction(config: SsrFunctionProps | EdgeFunctionProps) {
     const { path: sitePath, experimental, cdk } = this.props;
     const stack = Stack.of(this);

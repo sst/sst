@@ -6,6 +6,7 @@ import { Config } from "../../config.js";
 
 export interface FunctionBindingProps {
   clientPackage: string;
+  resourceType?: string;
   permissions: Record<string, string[]>;
   variables: Record<
     string,
@@ -105,6 +106,7 @@ export function bindType(c: SSTConstruct) {
 
   return {
     clientPackage: binding.clientPackage,
+    clientType: binding.resourceType || undefined,
     variables: Object.keys(binding.variables),
   };
 }

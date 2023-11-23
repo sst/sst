@@ -615,6 +615,7 @@ export class Table extends Construct implements SSTConstruct {
   public getFunctionBinding(): FunctionBindingProps {
     return {
       clientPackage: "table",
+      resourceType: "Table",
       variables: {
         tableName: {
           type: "plain",

@@ -49,6 +49,7 @@ export class Secret extends Construct implements SSTConstruct {
     const partition = Stack.of(this).partition;
     return {
       clientPackage: "config",
+      resourceType: "Secret",
       variables: {
         value: {
           type: "secret",

@@ -316,6 +316,7 @@ export class RDS extends Construct implements SSTConstruct {
   public getFunctionBinding(): FunctionBindingProps {
     return {
       clientPackage: "rds",
+      resourceType: "RDS",
       variables: {
         clusterArn: {
           type: "plain",

@@ -5,6 +5,7 @@ import { Stack } from "./Stack.js";
 import {
   SSTConstruct,
   SSTConstructMetadata,
+  SST_CONSTRUCT_TYPE,
   isSSTConstruct,
   isStackConstruct,
 } from "./Construct.js";
@@ -293,7 +294,7 @@ export class App extends CDKApp {
       return;
     }
 
-    const className = c.constructor.name;
+    const clientType = binding.clientType || c.constructor.name;
     const id = c.id;
 
     fs.appendFileSync(
@@ -303,7 +304,7 @@ export class App extends CDKApp {
           [
             `import "sst/node/${binding.clientPackage}";`,
             `declare module "sst/node/${binding.clientPackage}" {`,
-            `  export interface ${className}Resources {`,
+            `  export interface ${clientType}Resources {`,
             `    "${id}": string;`,
             `  }`,
             `}`,
@@ -313,7 +314,7 @@ export class App extends CDKApp {
         : [
             `import "sst/node/${binding.clientPackage}";`,
             `declare module "sst/node/${binding.clientPackage}" {`,
-            `  export interface ${className}Resources {`,
+            `  export interface ${clientType}Resources {`,
             `    "${id}": {`,
             ...binding.variables.map((p) => `      ${p}: string;`),
             `    }`,

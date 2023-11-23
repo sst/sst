@@ -2,7 +2,7 @@ import { Construct } from "constructs";
 import * as events from "aws-cdk-lib/aws-events";
 import * as eventsTargets from "aws-cdk-lib/aws-events-targets";
 
-import { getFunctionRef, SSTConstruct } from "./Construct.js";
+import { getFunctionRef, SST_CONSTRUCT_TYPE, SSTConstruct } from "./Construct.js";
 import { App } from "./App.js";
 import {
   Function as Func,

@@ -584,6 +584,7 @@ export class EventBus extends Construct implements SSTConstruct {
   public getFunctionBinding(): FunctionBindingProps {
     return {
       clientPackage: "event-bus",
+      resourceType: "EventBus",
       variables: {
         eventBusName: {
           type: "plain",

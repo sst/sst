@@ -52,6 +52,7 @@ export class Parameter extends Construct implements SSTConstruct {
   public getFunctionBinding(): FunctionBindingProps {
     return {
       clientPackage: "config",
+      resourceType: "Parameter",
       variables: {
         value: {
           type: "plain",

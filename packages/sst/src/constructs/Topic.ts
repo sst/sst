@@ -386,6 +386,7 @@ export class Topic extends Construct implements SSTConstruct {
   public getFunctionBinding(): FunctionBindingProps {
     return {
       clientPackage: "topic",
+      resourceType: "Topic",
       variables: {
         topicArn: {
           type: "plain",

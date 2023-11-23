@@ -480,6 +480,7 @@ export class Bucket extends Construct implements SSTConstruct {
   public getFunctionBinding(): FunctionBindingProps {
     return {
       clientPackage: "bucket",
+      resourceType: "Bucket",
       variables: {
         bucketName: {
           type: "plain",

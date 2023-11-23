@@ -996,6 +996,7 @@ export class Api<
   public getFunctionBinding(): FunctionBindingProps {
     return {
       clientPackage: "api",
+      resourceType: 'Api',
       variables: {
         url: {
           type: "plain",

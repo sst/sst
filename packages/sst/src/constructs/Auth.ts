@@ -150,6 +150,7 @@ export class Auth extends Construct implements SSTConstruct {
     const app = this.node.root as App;
     return {
       clientPackage: "auth",
+      resourceType: "Auth",
       variables: {
         publicKey: {
           type: "secret",

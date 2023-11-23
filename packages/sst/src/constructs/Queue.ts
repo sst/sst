@@ -310,6 +310,7 @@ export class Queue extends Construct implements SSTConstruct {
   public getFunctionBinding(): FunctionBindingProps {
     return {
       clientPackage: "queue",
+      resourceType: "Queue",
       variables: {
         queueUrl: {
           type: "plain",

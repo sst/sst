@@ -479,6 +479,7 @@ export class WebSocketApi extends Construct implements SSTConstruct {
   public getFunctionBinding(): FunctionBindingProps {
     return {
       clientPackage: "websocket-api",
+      resourceType: "WebSocketApi",
       variables: {
         url: {
           type: "plain",

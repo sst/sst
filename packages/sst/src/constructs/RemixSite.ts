@@ -251,4 +251,8 @@ export class RemixSite extends SsrSite {
       ...this.getConstructMetadataBase(),
     };
   }
+
+  public getFunctionBinding() {
+    return this.createFunctionBinding('RemixSite');
+  }
 }

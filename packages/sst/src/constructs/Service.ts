@@ -723,6 +723,7 @@ export class Service extends Construct implements SSTConstruct {
     return this.distribution
       ? {
           clientPackage: "service",
+          resourceType: "Service",
           variables: {
             url: this.doNotDeploy
               ? {

@@ -380,6 +380,7 @@ export class Job extends Construct implements SSTConstruct {
   public getFunctionBinding(): FunctionBindingProps {
     return {
       clientPackage: "job",
+      resourceType: "Job",
       variables: {
         functionName: {
           type: "plain",

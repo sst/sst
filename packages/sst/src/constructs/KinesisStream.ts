@@ -315,6 +315,7 @@ export class KinesisStream extends Construct implements SSTConstruct {
   public getFunctionBinding(): FunctionBindingProps {
     return {
       clientPackage: "kinesis-stream",
+      resourceType: "KinesisStream",
       variables: {
         streamName: {
           type: "plain",

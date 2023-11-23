@@ -456,6 +456,7 @@ export class StaticSite extends Construct implements SSTConstruct {
     const app = this.node.root as App;
     return {
       clientPackage: "site",
+      resourceType: "StaticSite",
       variables: {
         url: this.doNotDeploy
           ? {
@@ -798,7 +799,7 @@ interface ImportMeta {
 function handler(event) {
   var request = event.request;
   var uri = request.uri;
-  
+
   if (uri.startsWith("/.well-known/")) {
     return request;
   }

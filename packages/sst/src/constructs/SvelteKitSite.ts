@@ -162,4 +162,8 @@ export class SvelteKitSite extends SsrSite {
       ...this.getConstructMetadataBase(),
     };
   }
+
+  public getFunctionBinding() {
+    return this.createFunctionBinding('SvelteKitSite');
+  }
 }

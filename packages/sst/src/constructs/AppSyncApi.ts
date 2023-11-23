@@ -754,6 +754,7 @@ export class AppSyncApi extends Construct implements SSTConstruct {
 
     return {
       clientPackage: "api",
+      resourceType: "AppSyncApi",
       variables: {
         url: {
           type: "plain",

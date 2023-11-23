@@ -16,6 +16,7 @@ export interface SSTConstructMetadata<
   local?: L;
 }
 
+
 export interface SSTConstruct extends Construct {
   id: string;
   getConstructMetadata(): SSTConstructMetadata;

@@ -1492,10 +1492,13 @@ function handler(event) {
   >;
 
   /** @internal */
-  public getFunctionBinding(): FunctionBindingProps {
+  public abstract getFunctionBinding(): FunctionBindingProps;
+
+  protected createFunctionBinding(resourceType: string): FunctionBindingProps {
     const app = this.node.root as App;
     return {
       clientPackage: "site",
+      resourceType,
       variables: {
         url: this.doNotDeploy
           ? {
