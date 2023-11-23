@@ -534,19 +534,21 @@ export class NextjsSite extends SsrSite {
     const injections: string[] = [];
     if (this.isPerRouteLoggingEnabled()) {
       injections.push(`
-      const routeData = ${JSON.stringify(
-        this.useRoutes().map(({ regex, logGroupPath }) => ({
-          regex,
-          logGroupPath,
-        }))
-      )}.find(({ regex }) => event.rawPath.match(new RegExp(regex)));
-      if (routeData) {
-        console.log("::sst::" + JSON.stringify({
-          action:"log.split",
-          properties: {
-            logGroupName:"/sst/lambda/" + context.functionName + routeData.logGroupPath,
-          },
-        }));
+      if (event.rawPath) {
+        const routeData = ${JSON.stringify(
+          this.useRoutes().map(({ regex, logGroupPath }) => ({
+            regex,
+            logGroupPath,
+          }))
+        )}.find(({ regex }) => event.rawPath.match(new RegExp(regex)));
+        if (routeData) {
+          console.log("::sst::" + JSON.stringify({
+            action:"log.split",
+            properties: {
+              logGroupName:"/sst/lambda/" + context.functionName + routeData.logGroupPath,
+            },
+          }));
+        }
       }`);
     }
 

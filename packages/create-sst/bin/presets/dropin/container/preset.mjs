@@ -3,7 +3,7 @@ import { patch, append, extract, install } from "create-sst";
 export default [
   extract(),
   install({
-    packages: ["sst", "aws-cdk-lib@2.101.1", "constructs@10.2.69"],
+    packages: ["sst", "aws-cdk-lib@2.110.1", "constructs@10.3.0"],
     dev: true,
   }),
   patch({

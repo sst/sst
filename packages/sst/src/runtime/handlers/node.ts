@@ -142,7 +142,7 @@ export const useNodeHandler = (): RuntimeHandler => {
       const forceExternal = [
         "sharp",
         "pg-native",
-        ...(isESM || input.props.runtime === "nodejs18.x" ? [] : ["aws-sdk"]),
+        ...(isESM || input.props.runtime !== "nodejs16.x" ? [] : ["aws-sdk"]),
       ];
       const { external, ...override } = nodejs.esbuild || {};
       if (!ctx) {
