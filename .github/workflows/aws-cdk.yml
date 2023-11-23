@@ -40,9 +40,9 @@ jobs:
           wget $TAR_FILE -O cdk.tar.gz
           tar -xvf cdk.tar.gz
           PACKAGE_JSON=./package/package.json
-          VERSION=$(jq -r .version $PACKAGE_JSON)
+          VERSION=$(jq -r .version $PACKAGE_JSON)-1
           jq '
-            .dependencies += {chalk: .devDependencies.chalk, yaml: .devDependencies.yaml, promptly: .devDependencies.promptly, archiver: .devDependencies.archiver } |
+            .dependencies += {chalk: .devDependencies.chalk, yaml: .devDependencies.yaml, promptly: .devDependencies.promptly, archiver: .devDependencies.archiver, "fs-extra": .devDependencies["fs-extra"] } |
             .name = "sst-aws-cdk"
           ' $PACKAGE_JSON > tmp.json
           mv tmp.json $PACKAGE_JSON

@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.36.3
+
+### Patch Changes
+
+- [`2a73ed809`](https://github.com/sst/sst/commit/2a73ed809f76faa876235782127e4f1305868f3b) Thanks [@fwang](https://github.com/fwang)! - NextjsSite: fix warming requests error out
+
 ## 2.36.2
 
 ### Patch Changes
