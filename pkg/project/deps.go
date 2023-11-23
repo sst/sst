@@ -32,10 +32,12 @@ func (p *Project) InstallDeps() error {
 		return err
 	}
 
-	if p.version != "dev" {
-		slog.Info("removing node_modules")
-		os.RemoveAll(filepath.Join(p.PathTemp(), "node_modules"))
+	if p.version == "dev" {
+		slog.Info("dev mode skipping node_module install")
+		return nil
 	}
+
+	os.RemoveAll(filepath.Join(p.PathTemp(), "node_modules"))
 
 	cmd := exec.Command("npm", "install")
 	cmd.Dir = p.PathTemp()

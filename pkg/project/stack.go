@@ -88,7 +88,16 @@ func (s *stack) runtime() (string, error) {
 	), nil
 }
 
-type StackEventStream = chan apitype.EngineEvent
+type StackEvent struct {
+	apitype.EngineEvent
+	StdOutEvent *StdOutEvent
+}
+
+type StdOutEvent struct {
+	Text string
+}
+
+type StackEventStream = chan StackEvent
 
 func (s *stack) run(cmd string) (StackEventStream, error) {
 	stack, err := s.runtime()
@@ -123,7 +132,7 @@ func (s *stack) run(cmd string) (StackEventStream, error) {
 				continue
 			}
 			if strings.HasPrefix(line, "~e") {
-				var evt apitype.EngineEvent
+				var evt StackEvent
 				err := json.Unmarshal([]byte(line[2:]), &evt)
 				if err != nil {
 					continue
@@ -133,7 +142,12 @@ func (s *stack) run(cmd string) (StackEventStream, error) {
 
 				continue
 			}
-			fmt.Println(line)
+
+			out <- StackEvent{
+				StdOutEvent: &StdOutEvent{
+					Text: line,
+				},
+			}
 		}
 		close(out)
 	}()

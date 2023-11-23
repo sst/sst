@@ -6,11 +6,8 @@ import (
 	"log/slog"
 	"os"
 	"strings"
-	"time"
 
-	"github.com/briandowns/spinner"
 	"github.com/fatih/color"
-	"github.com/pulumi/pulumi/sdk/v3/go/common/apitype"
 	"github.com/sst/ion/pkg/global"
 	"github.com/sst/ion/pkg/project"
 
@@ -46,7 +43,7 @@ func main() {
 					return err
 				}
 			}
-			color.New(color.FgCyan, color.Bold).Print("SST ❍ Ion " + version + " ")
+			color.New(color.FgCyan, color.Bold).Print("SST ❍ ion " + version + "  ")
 			color.New(color.FgHiBlack).Print("ready!\n")
 			return nil
 		},
@@ -61,74 +58,11 @@ func main() {
 					}
 					printHeader(p)
 
-					s := spinner.New(spinner.CharSets[14], 100*time.Millisecond)
-					s.Suffix = "  Deploying..."
-					s.Start()
 					events, err := p.Stack.Deploy()
 					if err != nil {
 						return err
 					}
-
-					timing := make(map[string]time.Time)
-					outputs := make(map[string]interface{})
-					for evt := range events {
-						if evt.ResourcePreEvent != nil {
-							if evt.ResourcePreEvent.Metadata.Type == "pulumi:pulumi:Stack" {
-								continue
-							}
-							if evt.ResourcePreEvent.Metadata.Op == apitype.OpSame {
-								s.Disable()
-								color.New(color.FgHiBlack, color.Bold).Print("|  ")
-								color.New(color.FgHiBlack).Println("Skipping ", prettyResourceName(evt.ResourcePreEvent.Metadata.URN))
-								continue
-							}
-
-							timing[evt.ResourcePreEvent.Metadata.URN] = time.Now()
-							if evt.ResourcePreEvent.Metadata.Op == apitype.OpCreate {
-								s.Disable()
-								color.New(color.FgYellow, color.Bold).Print("|  ")
-								color.New(color.FgHiBlack).Println("Creating ", prettyResourceName(evt.ResourcePreEvent.Metadata.URN))
-								continue
-							}
-
-							if evt.ResourcePreEvent.Metadata.Op == apitype.OpUpdate {
-								s.Disable()
-								color.New(color.FgYellow, color.Bold).Print("|  ")
-								color.New(color.FgHiBlack).Println("Updating ", prettyResourceName(evt.ResourcePreEvent.Metadata.URN))
-								continue
-							}
-						}
-
-						if evt.ResOutputsEvent != nil {
-							if evt.ResOutputsEvent.Metadata.Type == "pulumi:pulumi:Stack" {
-								outputs = evt.ResOutputsEvent.Metadata.New.Outputs
-								continue
-							}
-							if evt.ResOutputsEvent.Metadata.Op == apitype.OpSame {
-								continue
-							}
-							duration := time.Since(timing[evt.ResOutputsEvent.Metadata.URN]).Milliseconds()
-							if evt.ResOutputsEvent.Metadata.Op == apitype.OpCreate {
-								s.Disable()
-								color.New(color.FgGreen, color.Bold).Print("|  ")
-								color.New(color.FgHiBlack).Println("Created  ", prettyResourceName(evt.ResOutputsEvent.Metadata.URN), " in ", duration, "ms")
-							}
-							if evt.ResOutputsEvent.Metadata.Op == apitype.OpUpdate {
-								s.Disable()
-								color.New(color.Bold, color.FgGreen).Print("|  ")
-								color.New(color.FgHiBlack).Println("Updated  ", prettyResourceName(evt.ResOutputsEvent.Metadata.URN), " in ", duration, "ms")
-							}
-						}
-						s.Enable()
-					}
-					s.Stop()
-					color.New(color.FgGreen, color.Bold).Print("\n✔")
-					color.New(color.FgWhite, color.Bold).Println("  Deployed:")
-					for k, v := range outputs {
-						color.New(color.FgHiBlack).Print("   ")
-						color.New(color.FgHiBlack, color.Bold).Print(k + ": ")
-						color.New(color.FgWhite).Println(v)
-					}
+					progress(events)
 
 					return nil
 				},
@@ -141,10 +75,13 @@ func main() {
 					if err != nil {
 						return err
 					}
+					printHeader(p)
+
 					events, err := p.Stack.Remove()
 					if err != nil {
 						return err
 					}
+					progress(events)
 
 					for evt := range events {
 						if evt.ResourcePreEvent != nil {
@@ -162,6 +99,8 @@ func main() {
 					if err != nil {
 						return err
 					}
+					printHeader(p)
+
 					events, err := p.Stack.Refresh()
 					if err != nil {
 						return err

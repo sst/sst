@@ -25,7 +25,7 @@ export class SsrSite extends pulumi.ComponentResource {
 
     // TODO uncomment build
     const now = Date.now();
-    //buildApp();
+    buildApp();
     console.log(`open-next: ${Date.now() - now}ms`);
     const access = createCloudFrontOriginAccessIdentity();
     const bucket = createS3Bucket();

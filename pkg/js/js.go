@@ -56,8 +56,10 @@ const LOOP = `
     if (msg.type === "eval") {
       try {
         const result = await import(msg.module)
+      } catch(ex) {
+        console.error(ex)
       } finally {
-        // await fs.rm(msg.module)
+        await fs.rm(msg.module)
         console.log("~d")
       }
     }
