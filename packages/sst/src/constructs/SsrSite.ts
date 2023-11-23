@@ -208,10 +208,10 @@ export interface SsrSiteProps {
    * @default nodejs18.x
    * @example
    * ```js
-   * runtime: "nodejs16.x",
+   * runtime: "nodejs20.x",
    * ```
    */
-  runtime?: "nodejs16.x" | "nodejs18.x";
+  runtime?: "nodejs16.x" | "nodejs18.x" | "nodejs20.x";
   /**
    * Used to configure nodejs function properties
    */
