@@ -6,7 +6,7 @@ export default [
     packages: [
       "sst",
       "aws-cdk-lib@2.110.1",
-      "constructs@10.2.69",
+      "constructs@10.3.0",
       "solid-start-sst",
     ],
     dev: true,
