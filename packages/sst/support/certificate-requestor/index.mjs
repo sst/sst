@@ -1,6 +1,9 @@
 "use strict";
 
-const aws = require("aws-sdk");
+import aws from "aws-sdk";
+import https from "https";
+import { URL } from "url";
+import crypto from "crypto";
 
 const defaultSleep = function (ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -33,9 +36,6 @@ let report = function (
   reason
 ) {
   return new Promise((resolve, reject) => {
-    const https = require("https");
-    const { URL } = require("url");
-
     var responseBody = JSON.stringify({
       Status: responseStatus,
       Reason: reason,
@@ -120,7 +120,6 @@ const requestCertificate = async function (
   region,
   route53Endpoint
 ) {
-  const crypto = require("crypto");
   const acm = new aws.ACM({ region });
   const route53 = route53Endpoint
     ? new aws.Route53({ endpoint: route53Endpoint })
@@ -384,7 +383,7 @@ function shouldUpdate(oldParams, newParams, physicalResourceId) {
 /**
  * Main handler, invoked by Lambda
  */
-exports.certificateRequestHandler = async function (event, context) {
+export async function certificateRequestHandler(event, context) {
   var responseData = {};
   var physicalResourceId;
   var certificateArn;
@@ -476,74 +475,74 @@ exports.certificateRequestHandler = async function (event, context) {
       err.message
     );
   }
-};
+}
 
 /**
  * @private
  */
-exports.withReporter = function (reporter) {
+export function withReporter(reporter) {
   report = reporter;
-};
+}
 
 /**
  * @private
  */
-exports.withDefaultResponseURL = function (url) {
+export function withDefaultResponseURL(url) {
   defaultResponseURL = url;
-};
+}
 
 /**
  * @private
  */
-exports.withWaiter = function (w) {
+export function withWaiter(w) {
   waiter = w;
-};
+}
 
 /**
  * @private
  */
-exports.resetWaiter = function () {
+export function resetWaiter() {
   waiter = undefined;
-};
+}
 
 /**
  * @private
  */
-exports.withSleep = function (s) {
+export function withSleep(s) {
   sleep = s;
-};
+}
 
 /**
  * @private
  */
-exports.resetSleep = function () {
+export function resetSleep() {
   sleep = defaultSleep;
-};
+}
 
 /**
  * @private
  */
-exports.withRandom = function (r) {
+export function withRandom(r) {
   random = r;
-};
+}
 
 /**
  * @private
  */
-exports.resetRandom = function () {
+export function resetRandom() {
   random = Math.random;
-};
+}
 
 /**
  * @private
  */
-exports.withMaxAttempts = function (ma) {
+export function withMaxAttempts(ma) {
   maxAttempts = ma;
-};
+}
 
 /**
  * @private
  */
-exports.resetMaxAttempts = function () {
+export function resetMaxAttempts() {
   maxAttempts = 10;
-};
+}

@@ -113,7 +113,7 @@ await Promise.all(
       entryPoints: [
         fs.existsSync(`./support/${dir}/index.ts`)
           ? `./support/${dir}/index.ts`
-          : `./support/${dir}/index.cjs`,
+          : `./support/${dir}/index.mjs`,
       ],
       banner: {
         js: [
