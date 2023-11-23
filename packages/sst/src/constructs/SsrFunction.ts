@@ -60,7 +60,7 @@ export interface SsrFunctionProps
   > {
   bundle?: string;
   handler: string;
-  runtime?: "nodejs16.x" | "nodejs18.x";
+  runtime?: "nodejs16.x" | "nodejs18.x" | "nodejs20.x";
   architecture?: "arm_64" | "x86_64" | Architecture;
   timeout?: number | Duration;
   memorySize?: number | Size;
@@ -185,8 +185,12 @@ export class SsrFunction extends Construct implements SSTConstruct {
         assetKey
       ),
       runtime:
-        runtime === "nodejs16.x" ? Runtime.NODEJS_16_X : Runtime.NODEJS_18_X,
-        architecture:
+        runtime === "nodejs20.x"
+          ? Runtime.NODEJS_20_X
+          : runtime === "nodejs16.x"
+          ? Runtime.NODEJS_16_X
+          : Runtime.NODEJS_18_X,
+      architecture:
         architecture instanceof Architecture
           ? architecture
           : architecture === "x86_64"

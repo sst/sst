@@ -1,5 +1,27 @@
 # @serverless-stack/cli2
 
+## 2.36.4
+
+### Patch Changes
+
+- [#3528](https://github.com/sst/sst/pull/3528) [`4732d21ec`](https://github.com/sst/sst/commit/4732d21eca6ef1911ba2ec970b916f3d2ebf46fd) Thanks [@fwang](https://github.com/fwang)! - Update CDK to 2.110.1
+
+- [`eb0e725eb`](https://github.com/sst/sst/commit/eb0e725ebcc87671a24000bfe36aea887b8a93d8) Thanks [@fwang](https://github.com/fwang)! - Function: add support for Node.js 20 runtime
+
+- [#3522](https://github.com/sst/sst/pull/3522) [`69e4ab7d5`](https://github.com/sst/sst/commit/69e4ab7d5d52daf305ebc8890c5ccd9626f4e092) Thanks [@san4d](https://github.com/san4d)! - Update AWS SDK dependencies to 3.454.0
+
+- [`dff29e502`](https://github.com/sst/sst/commit/dff29e50248797661b661847b6259ccdd627eb60) Thanks [@fwang](https://github.com/fwang)! - Function: add support for Python 3.12 runtime
+
+- [`6bcf40c13`](https://github.com/sst/sst/commit/6bcf40c1399bdc4093d324df52e5f2a939037ef7) Thanks [@fwang](https://github.com/fwang)! - Update constructs to 10.3.0
+
+- [`dff29e502`](https://github.com/sst/sst/commit/dff29e50248797661b661847b6259ccdd627eb60) Thanks [@fwang](https://github.com/fwang)! - Function: add support for Java 21 runtime
+
+## 2.36.3
+
+### Patch Changes
+
+- [`2a73ed809`](https://github.com/sst/sst/commit/2a73ed809f76faa876235782127e4f1305868f3b) Thanks [@fwang](https://github.com/fwang)! - NextjsSite: fix warming requests error out
+
 ## 2.36.2
 
 ### Patch Changes

@@ -44,6 +44,7 @@ import {
   LayerVersion,
   Runtime as CDKRuntime,
   Tracing,
+  InvokeMode,
 } from "aws-cdk-lib/aws-lambda";
 import { RetentionDays } from "aws-cdk-lib/aws-logs";
 import {
@@ -66,16 +67,19 @@ const supportedRuntimes = {
   rust: CDKRuntime.PROVIDED_AL2,
   "nodejs16.x": CDKRuntime.NODEJS_16_X,
   "nodejs18.x": CDKRuntime.NODEJS_18_X,
+  "nodejs20.x": CDKRuntime.NODEJS_20_X,
   "python3.7": CDKRuntime.PYTHON_3_7,
   "python3.8": CDKRuntime.PYTHON_3_8,
   "python3.9": CDKRuntime.PYTHON_3_9,
   "python3.10": CDKRuntime.PYTHON_3_10,
   "python3.11": CDKRuntime.PYTHON_3_11,
+  "python3.12": CDKRuntime.PYTHON_3_12,
   "dotnetcore3.1": CDKRuntime.DOTNET_CORE_3_1,
   dotnet6: CDKRuntime.DOTNET_6,
   java8: CDKRuntime.JAVA_8,
   java11: CDKRuntime.JAVA_11,
   java17: CDKRuntime.JAVA_17,
+  java21: CDKRuntime.JAVA_21,
   "go1.x": CDKRuntime.PROVIDED_AL2,
   go: CDKRuntime.PROVIDED_AL2,
 };
@@ -440,6 +444,19 @@ export interface FunctionUrlProps {
    * ```
    */
   cors?: boolean | FunctionUrlCorsProps;
+  /**
+   * Stream the response payload.
+   * @default false
+   * * ```js
+   * new Function(stack, "Function", {
+   *   handler: "src/function.handler",
+   *   url: {
+   *     streaming: true,
+   *   },
+   * })
+   * ```
+   */
+  streaming?: boolean;
 }
 
 export interface NodeJSProps {
@@ -1153,19 +1170,25 @@ export class Function extends CDKFunction implements SSTConstruct {
 
     let authType;
     let cors;
+    let streaming;
+
     if (url === true) {
       authType = FunctionUrlAuthType.NONE;
       cors = true;
+      streaming = false;
     } else {
       authType =
         url.authorizer === "iam"
           ? FunctionUrlAuthType.AWS_IAM
           : FunctionUrlAuthType.NONE;
       cors = url.cors === undefined ? true : url.cors;
+      streaming = url.streaming;
     }
+
     this.functionUrl = this.addFunctionUrl({
       authType,
       cors: functionUrlCors.buildCorsConfig(cors),
+      invokeMode: streaming ? InvokeMode.RESPONSE_STREAM : InvokeMode.BUFFERED,
     });
   }
 
