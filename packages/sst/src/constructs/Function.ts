@@ -44,6 +44,7 @@ import {
   LayerVersion,
   Runtime as CDKRuntime,
   Tracing,
+  InvokeMode,
 } from "aws-cdk-lib/aws-lambda";
 import { RetentionDays } from "aws-cdk-lib/aws-logs";
 import {
@@ -443,6 +444,19 @@ export interface FunctionUrlProps {
    * ```
    */
   cors?: boolean | FunctionUrlCorsProps;
+  /**
+   * Stream the response payload.
+   * @default false
+   * * ```js
+   * new Function(stack, "Function", {
+   *   handler: "src/function.handler",
+   *   url: {
+   *     streaming: true,
+   *   },
+   * })
+   * ```
+   */
+  streaming?: boolean;
 }
 
 export interface NodeJSProps {
@@ -1156,19 +1170,25 @@ export class Function extends CDKFunction implements SSTConstruct {
 
     let authType;
     let cors;
+    let streaming;
+
     if (url === true) {
       authType = FunctionUrlAuthType.NONE;
       cors = true;
+      streaming = false;
     } else {
       authType =
         url.authorizer === "iam"
           ? FunctionUrlAuthType.AWS_IAM
           : FunctionUrlAuthType.NONE;
       cors = url.cors === undefined ? true : url.cors;
+      streaming = url.streaming;
     }
+
     this.functionUrl = this.addFunctionUrl({
       authType,
       cors: functionUrlCors.buildCorsConfig(cors),
+      invokeMode: streaming ? InvokeMode.RESPONSE_STREAM : InvokeMode.BUFFERED,
     });
   }
 
