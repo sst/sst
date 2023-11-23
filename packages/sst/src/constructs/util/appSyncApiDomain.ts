@@ -2,6 +2,7 @@ import { Token } from "aws-cdk-lib/core";
 import * as route53 from "aws-cdk-lib/aws-route53";
 import * as route53Targets from "aws-cdk-lib/aws-route53-targets";
 import * as acm from "aws-cdk-lib/aws-certificatemanager";
+import { Stack } from "../Stack.js";
 import { AppSyncApi } from "../AppSyncApi.js";
 import {
   CfnDomainName,
@@ -193,11 +194,17 @@ function createCertificate(
   domainName: string,
   hostedZone: route53.IHostedZone
 ) {
-  return new DnsValidatedCertificate(scope, "Certificate", {
-    domainName,
-    hostedZone,
-    region: "us-east-1",
-  });
+  const stack = Stack.of(scope);
+  return stack.region === "us-east-1"
+    ? new acm.Certificate(scope, "Certificate", {
+        domainName,
+        validation: acm.CertificateValidation.fromDns(hostedZone),
+      })
+    : new DnsValidatedCertificate(scope, "Certificate", {
+        domainName,
+        hostedZone,
+        region: "us-east-1",
+      });
 }
 
 function createRecords(
