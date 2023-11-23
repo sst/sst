@@ -38,8 +38,6 @@ aurs:
     git_url: 'ssh://aur@aur.archlinux.org/sst-bin.git'
     package: |-
       install -Dm755 ./sst "${pkgdir}/usr/bin/sst"
-    depends:
-      - pulumi
 brews:
   - repository:
       owner: sst
