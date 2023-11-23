@@ -1,5 +1,13 @@
 # @serverless-stack/cli2
 
+## 2.36.5
+
+### Patch Changes
+
+- [#3519](https://github.com/sst/sst/pull/3519) [`09dcf20e4`](https://github.com/sst/sst/commit/09dcf20e4b6ea69d77cacbe504949d99db48ec85) Thanks [@jaydeebee](https://github.com/jaydeebee)! - dns-validated-certificate: bundle aws-sdk
+
+- [#3520](https://github.com/sst/sst/pull/3520) [`7c45504e3`](https://github.com/sst/sst/commit/7c45504e319a13b2c8f4f583453154ca92e5fb2a) Thanks [@jlanzarotti](https://github.com/jlanzarotti)! - Function: add Lambda URL streaming option
+
 ## 2.36.4
 
 ### Patch Changes
