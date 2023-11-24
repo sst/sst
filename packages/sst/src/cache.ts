@@ -2,7 +2,6 @@ import path from "path";
 import fs from "fs/promises";
 import { useProject } from "./project.js";
 import { Logger } from "./logger.js";
-import { Context } from "./context/context.js";
 import { lazy } from "./util/lazy.js";
 
 export const useCache = lazy(async () => {
