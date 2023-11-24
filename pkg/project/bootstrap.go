@@ -13,6 +13,7 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/aws/aws-sdk-go-v2/service/s3"
+	s3types "github.com/aws/aws-sdk-go-v2/service/s3/types"
 )
 
 type bootstrap struct {
@@ -56,6 +57,9 @@ func (b *bootstrap) Bucket() (string, error) {
 
 				_, err := s3Client.CreateBucket(context.TODO(), &s3.CreateBucketInput{
 					Bucket: aws.String(bucketName),
+					CreateBucketConfiguration: &s3types.CreateBucketConfiguration{
+						LocationConstraint: s3types.BucketLocationConstraint(b.project.Region()),
+					},
 				})
 				if err != nil {
 					createErr = err

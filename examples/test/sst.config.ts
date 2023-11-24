@@ -9,9 +9,20 @@ export default {
     };
   },
   async run() {
-    const bucket = new aws.s3.Bucket("my-bucket", {
-      bucket: "sst",
+    const bucket = new aws.s3.Bucket("my-bucket");
+
+    const west = new aws.Provider("west", {
+      region: "us-west-2",
     });
+
+    new aws.s3.Bucket(
+      "my-bucket-west",
+      {},
+      {
+        provider: west,
+      },
+    );
+
     return {
       url: util.interpolate`https://${bucket.bucketDomainName}`,
     };
