@@ -1,5 +1,13 @@
 # @serverless-stack/cli2
 
+## 2.36.6
+
+### Patch Changes
+
+- [`67e91b64e`](https://github.com/sst/sst/commit/67e91b64e62dfd2d5bc273adbe62cd624c504530) Thanks [@fwang](https://github.com/fwang)! - SsrSite: fix aws-sdk not found in edge lambda
+
+- [`391e8f83e`](https://github.com/sst/sst/commit/391e8f83ea5eda20fc6e8e555d4aa62ba1c0ab71) Thanks [@fwang](https://github.com/fwang)! - SsrSite: handle warmer requests
+
 ## 2.36.5
 
 ### Patch Changes
