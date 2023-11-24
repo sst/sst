@@ -163,8 +163,9 @@ const __dirname = topLevelFileUrlToPath(new topLevelURL(".", import.meta.url))
 			"@pulumi/*",
 			"@aws-sdk/*",
 		},
-		Format:   esbuild.FormatESModule,
-		Platform: esbuild.PlatformNode,
+		Format:    esbuild.FormatESModule,
+		Platform:  esbuild.PlatformNode,
+		Sourcemap: esbuild.SourceMapInline,
 		Stdin: &esbuild.StdinOptions{
 			Contents:   input.Code,
 			ResolveDir: input.Dir,

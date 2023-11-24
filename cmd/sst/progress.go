@@ -193,17 +193,22 @@ func progress(mode ProgressMode, events project.StackEventStream) bool {
 		}
 
 		if evt.DiagnosticEvent != nil {
-			if strings.HasPrefix(evt.DiagnosticEvent.Prefix, "error") && evt.DiagnosticEvent.URN != "" {
-				splits := strings.Split(evt.DiagnosticEvent.Message, "\n")
-				splits = strings.Split(splits[1], ":")
-				error := strings.TrimSpace(splits[len(splits)-1])
-				errors[evt.DiagnosticEvent.URN] = error
-				printProgress(Progress{
-					URN:     evt.DiagnosticEvent.URN,
-					Color:   color.FgRed,
-					Label:   "Error   ",
-					Message: error,
-				})
+			if evt.DiagnosticEvent.Severity == "error" {
+				if evt.DiagnosticEvent.URN != "" {
+					splits := strings.Split(evt.DiagnosticEvent.Message, "\n")
+					splits = strings.Split(splits[1], ":")
+					error := strings.TrimSpace(splits[len(splits)-1])
+					errors[evt.DiagnosticEvent.URN] = error
+					printProgress(Progress{
+						URN:     evt.DiagnosticEvent.URN,
+						Color:   color.FgRed,
+						Label:   "Error",
+						Message: error,
+					})
+					continue
+				}
+
+				errors[fmt.Sprint(len(errors))] = evt.DiagnosticEvent.Message
 			}
 		}
 	}
@@ -230,7 +235,9 @@ func progress(mode ProgressMode, events project.StackEventStream) bool {
 
 		for k, v := range errors {
 			color.New(color.FgHiBlack).Print("   ")
-			color.New(color.FgRed, color.Bold).Print(formatURN(k) + ": ")
+			if len(k) > 2 {
+				color.New(color.FgRed, color.Bold).Print(formatURN(k) + ": ")
+			}
 			color.New(color.FgWhite).Println(v)
 		}
 		return false

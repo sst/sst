@@ -122,7 +122,7 @@ func (s *stack) run(cmd string) (StackEventStream, error) {
       } catch (e) {
         if (e.name === 'ConcurrentUpdateError') {
           console.log("~j" + JSON.stringify({ConcurrentUpdateEvent: {}}))
-        }
+        } 
       }
     `, stack, cmd),
 	})
