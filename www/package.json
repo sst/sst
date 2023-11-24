@@ -6,7 +6,7 @@
     "docusaurus": "docusaurus",
     "start": "docusaurus start",
     "watch": "node ./generate.mjs watch",
-    "build": "cd ../packages/sst && pnpm run build && cd ../packages/astro-sst && pnpm run build && cd ../../www && node ./generate.mjs build && docusaurus build",
+    "build": "cd ../packages/sst && pnpm run build && cd ../astro-sst && pnpm run build && cd ../../www && node ./generate.mjs build && docusaurus build",
     "swizzle": "docusaurus swizzle",
     "deploy": "docusaurus deploy",
     "serve": "docusaurus serve",
