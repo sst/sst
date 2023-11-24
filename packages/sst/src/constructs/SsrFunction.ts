@@ -66,6 +66,8 @@ export interface SsrFunctionProps
   nodejs?: NodeJSProps;
   copyFiles?: FunctionCopyFilesProps[];
   logRetention?: RetentionDays;
+  streaming?: boolean;
+  injections?: string[];
 }
 
 /////////////////////
@@ -85,6 +87,8 @@ export class SsrFunction extends Construct implements SSTConstruct {
     memorySize: Exclude<SsrFunctionProps["memorySize"], undefined>;
     environment: Exclude<SsrFunctionProps["environment"], undefined>;
     permissions: Exclude<SsrFunctionProps["permissions"], undefined>;
+    streaming: Exclude<SsrFunctionProps["streaming"], undefined>;
+    injections: Exclude<SsrFunctionProps["injections"], undefined>;
   };
 
   constructor(scope: Construct, id: string, props: SsrFunctionProps) {
@@ -94,6 +98,8 @@ export class SsrFunction extends Construct implements SSTConstruct {
     this.props = {
       timeout: 10,
       memorySize: 1024,
+      streaming: false,
+      injections: [],
       ...props,
       environment: props.environment || {},
       permissions: props.permissions || [],
@@ -115,15 +121,15 @@ export class SsrFunction extends Construct implements SSTConstruct {
     this.assetReplacerPolicy = assetReplacerPolicy;
 
     useDeferredTasks().add(async () => {
-      const { bundle } = props;
-      const code = bundle
+      const { bundle } = this.props;
+      const { code, handler } = bundle
         ? await this.buildAssetFromBundle(bundle)
         : await this.buildAssetFromHandler();
       const codeConfig = code.bind(this.function);
       const assetBucket = codeConfig.s3Location?.bucketName!;
       const assetKey = codeConfig.s3Location?.objectKey!;
       this.updateCodeReplacer(assetBucket, assetKey);
-      this.updateFunction(code, assetBucket, assetKey);
+      this.updateFunction(code, assetBucket, assetKey, handler);
     });
 
     const app = this.node.root as App;
@@ -276,11 +282,13 @@ export class SsrFunction extends Construct implements SSTConstruct {
   }
 
   private async buildAssetFromHandler() {
+    const { handler, runtime, nodejs, copyFiles, injections } = this.props;
+
     useFunctions().add(this.node.addr, {
-      handler: this.props.handler,
-      runtime: this.props.runtime,
-      nodejs: this.props.nodejs,
-      copyFiles: this.props.copyFiles,
+      handler,
+      runtime,
+      nodejs,
+      copyFiles,
     });
 
     // build function
@@ -294,6 +302,8 @@ export class SsrFunction extends Construct implements SSTConstruct {
           ...result.errors,
         ].join("\n")
       );
+
+    const newHandler = await this.writeWrapperFile(result.out, result.handler);
 
     // upload sourcemap
     const stack = Stack.of(this) as Stack;
@@ -311,10 +321,13 @@ export class SsrFunction extends Construct implements SSTConstruct {
     }
     this.missingSourcemap = !result.sourcemap;
 
-    return AssetCode.fromAsset(result.out);
+    return { code: AssetCode.fromAsset(result.out), handler: newHandler };
   }
 
   private async buildAssetFromBundle(bundle: string) {
+    const { handler } = this.props;
+    const newHandler = await this.writeWrapperFile(bundle, handler);
+
     // Note: cannot point the bundle to the `.open-next/server-function`
     //       b/c the folder contains node_modules. And pnpm node_modules
     //       contains symlinks. CDK cannot zip symlinks correctly.
@@ -337,7 +350,46 @@ export class SsrFunction extends Construct implements SSTConstruct {
       throw new Error(`There was a problem generating the assets package.`);
     }
 
-    return AssetCode.fromAsset(path.join(outputPath, "server-function.zip"));
+    return {
+      code: AssetCode.fromAsset(path.join(outputPath, "server-function.zip")),
+      handler: newHandler,
+    };
+  }
+
+  private async writeWrapperFile(bundle: string, handler: string) {
+    const { streaming, injections } = this.props;
+    if (injections.length === 0) return handler;
+
+    const {
+      dir: handlerDir,
+      name: oldHandlerName,
+      ext: oldHandlerExt,
+    } = path.posix.parse(handler);
+    const oldHandlerFunction = oldHandlerExt.replace(/^\./, "");
+    const newHandlerName = "server-index";
+    const newHandlerFunction = "handler";
+    await fs.writeFile(
+      path.join(bundle, handlerDir, `${newHandlerName}.mjs`),
+      streaming
+        ? [
+            `export const ${newHandlerFunction} = awslambda.streamifyResponse(async (event, context) => {`,
+            ...injections,
+            `  const { ${oldHandlerFunction}: rawHandler} = await import("./${oldHandlerName}.mjs");`,
+            `  return rawHandler(event, context);`,
+            `});`,
+          ].join("\n")
+        : [
+            `export const ${newHandlerFunction} = async (event, context) => {`,
+            ...injections,
+            `  const { ${oldHandlerFunction}: rawHandler} = await import("./${oldHandlerName}.mjs");`,
+            `  return rawHandler(event, context);`,
+            `};`,
+          ].join("\n")
+    );
+    return path.posix.join(
+      handlerDir,
+      `${newHandlerName}.${newHandlerFunction}`
+    );
   }
 
   private updateCodeReplacer(assetBucket: string, assetKey: string) {
@@ -355,8 +407,14 @@ export class SsrFunction extends Construct implements SSTConstruct {
     );
   }
 
-  private updateFunction(code: Code, assetBucket: string, assetKey: string) {
+  private updateFunction(
+    code: Code,
+    assetBucket: string,
+    assetKey: string,
+    handler: string
+  ) {
     const cfnFunction = this.function.node.defaultChild as CfnFunction;
+    cfnFunction.handler = handler;
     cfnFunction.code = {
       s3Bucket: assetBucket,
       s3Key: assetKey,
