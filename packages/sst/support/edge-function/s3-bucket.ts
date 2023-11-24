@@ -1,6 +1,4 @@
-import { createRequire } from "module";
-const require = createRequire(import.meta.url);
-const AWS = require("aws-sdk");
+import AWS from "aws-sdk";
 AWS.config.logger = console;
 
 import { log } from "./util.js";
