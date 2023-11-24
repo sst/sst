@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"log/slog"
 	"os"
 	"strings"
@@ -62,7 +61,7 @@ func main() {
 					if err != nil {
 						return err
 					}
-					progress(events)
+					progress(ProgressModeDeploy, events)
 
 					return nil
 				},
@@ -81,7 +80,7 @@ func main() {
 					if err != nil {
 						return err
 					}
-					progress(events)
+					progress(ProgressModeRemove, events)
 
 					for evt := range events {
 						if evt.ResourcePreEvent != nil {
@@ -105,6 +104,7 @@ func main() {
 					if err != nil {
 						return err
 					}
+					progress(ProgressModeRefresh, events)
 
 					for evt := range events {
 						if evt.ResourcePreEvent != nil {
@@ -134,14 +134,17 @@ func main() {
 					if err != nil {
 						return err
 					}
+					printHeader(p)
+
 					events, err := p.Stack.Cancel()
 					if err != nil {
 						return err
 					}
+					progress(ProgressModeCancel, events)
 
 					for evt := range events {
 						if evt.ResourcePreEvent != nil {
-							log.Println(evt.ResourcePreEvent)
+							slog.Info("got op", "op", evt.ResourcePreEvent.Metadata.Op)
 						}
 					}
 					return nil

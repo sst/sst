@@ -76,8 +76,8 @@ func New(version string) (*Project, error) {
 		js.EvalOptions{
 			Dir: tmp,
 			Code: fmt.Sprintf(`
-    import mod from '%s';
-    console.log(JSON.stringify(mod.config()))`,
+import mod from '%s';
+console.log("~j" + JSON.stringify(mod.config()))`,
 				cfgPath),
 		},
 	)
@@ -86,10 +86,16 @@ func New(version string) (*Project, error) {
 	}
 
 	for {
-		done, line := process.Scan()
-		if done {
+		cmd, line := process.Scan()
+
+		if cmd == js.CommandDone {
 			break
 		}
+
+		if cmd != js.CommandJSON {
+			continue
+		}
+
 		parsed := struct {
 			Name    string `json:"name"`
 			Profile string `json:"profile"`
@@ -123,7 +129,7 @@ func Create() error {
 	}
 
 	return os.WriteFile("sst.config.ts", []byte(`
-/// <reference path="./.sst/types/global.d.ts" />
+/// <reference path="./.sst/src/global.d.ts" />
 
 export default {
   config() {

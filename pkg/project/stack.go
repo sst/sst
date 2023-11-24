@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"log/slog"
-	"strings"
 
 	"github.com/pulumi/pulumi/sdk/v3/go/common/apitype"
 	"github.com/sst/ion/pkg/global"
@@ -91,12 +90,15 @@ func (s *stack) runtime() (string, error) {
 
 type StackEvent struct {
 	apitype.EngineEvent
-	StdOutEvent *StdOutEvent
+	StdOutEvent           *StdOutEvent
+	ConcurrentUpdateEvent *ConcurrentUpdateEvent
 }
 
 type StdOutEvent struct {
 	Text string
 }
+
+type ConcurrentUpdateEvent struct{}
 
 type StackEventStream = chan StackEvent
 
@@ -114,10 +116,13 @@ func (s *stack) run(cmd string) (StackEventStream, error) {
           // onOutput: (line) => console.log(new Date().toISOString(), line),
           logVerbosity: 0,
           onEvent: (evt) => {
-            console.log("~e" + JSON.stringify(evt))
+            console.log("~j" + JSON.stringify(evt))
           },
         })
       } catch (e) {
+        if (e.name === 'ConcurrentUpdateError') {
+          console.log("~j" + JSON.stringify({ConcurrentUpdateEvent: {}}))
+        }
       }
     `, stack, cmd),
 	})
@@ -128,29 +133,31 @@ func (s *stack) run(cmd string) (StackEventStream, error) {
 	out := make(StackEventStream)
 	go func() {
 		for {
-			done, line := s.project.process.Scan()
-			if done {
+			cmd, line := s.project.process.Scan()
+			if cmd == js.CommandDone {
 				break
 			}
-			if line == "" {
-				continue
-			}
-			if strings.HasPrefix(line, "~e") {
+
+			if cmd == js.CommandJSON {
 				var evt StackEvent
-				err := json.Unmarshal([]byte(line[2:]), &evt)
+				err := json.Unmarshal([]byte(line), &evt)
 				if err != nil {
 					continue
 				}
-				slog.Info("stack event", "event", line[2:])
+				slog.Info("stack event", "event", line)
 				out <- evt
 
-				continue
 			}
 
-			out <- StackEvent{
-				StdOutEvent: &StdOutEvent{
-					Text: line,
-				},
+			if cmd == js.CommandStdOut {
+				if line == "" {
+					continue
+				}
+				out <- StackEvent{
+					StdOutEvent: &StdOutEvent{
+						Text: line,
+					},
+				}
 			}
 		}
 		close(out)

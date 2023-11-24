@@ -22,10 +22,31 @@ type Progress struct {
 	time.Duration
 }
 
-func progress(events project.StackEventStream) {
+type ProgressMode string
+
+const (
+	ProgressModeDeploy  ProgressMode = "deploy"
+	ProgressModeRemove  ProgressMode = "remove"
+	ProgressModeCancel  ProgressMode = "cancel"
+	ProgressModeRefresh ProgressMode = "refresh"
+)
+
+func progress(mode ProgressMode, events project.StackEventStream) bool {
 	spin := spinner.New(spinner.CharSets[14], 100*time.Millisecond)
-	spin.Suffix = "  Deploying..."
+	if mode == ProgressModeRemove {
+		spin.Suffix = "  Removing..."
+	}
+	if mode == ProgressModeDeploy {
+		spin.Suffix = "  Deploying..."
+	}
+	if mode == ProgressModeCancel {
+		spin.Suffix = "  Cancelling..."
+	}
+	if mode == ProgressModeRefresh {
+		spin.Suffix = "  Refreshing..."
+	}
 	spin.Start()
+	defer spin.Stop()
 
 	formatURN := func(urn string) string {
 		splits := strings.Split(urn, "::")[2:]
@@ -35,7 +56,7 @@ func progress(events project.StackEventStream) {
 	printProgress := func(progress Progress) {
 		spin.Disable()
 		color.New(progress.Color, color.Bold).Print("|  ")
-		color.New(color.FgHiBlack).Print(progress.Label, " ", formatURN(progress.URN))
+		color.New(color.FgHiBlack).Print(fmt.Sprintf("%-10s", progress.Label), " ", formatURN(progress.URN))
 		if progress.Duration != 0 {
 			color.New(color.FgHiBlack).Printf(" (%s)", progress.Duration)
 		}
@@ -51,6 +72,12 @@ func progress(events project.StackEventStream) {
 	outputs := make(map[string]interface{})
 
 	for evt := range events {
+		if evt.ConcurrentUpdateEvent != nil {
+			spin.Disable()
+			fmt.Println("Concurrent update detected, run `sst cancel` to delete lock file and retry.")
+			return false
+		}
+
 		if evt.StdOutEvent != nil {
 			spin.Disable()
 			fmt.Println(evt.StdOutEvent.Text)
@@ -67,7 +94,7 @@ func progress(events project.StackEventStream) {
 			if evt.ResourcePreEvent.Metadata.Op == apitype.OpSame {
 				printProgress(Progress{
 					Color: color.FgHiBlack,
-					Label: "Skipped ",
+					Label: "Skipped",
 					URN:   evt.ResourcePreEvent.Metadata.URN,
 				})
 				continue
@@ -110,6 +137,15 @@ func progress(events project.StackEventStream) {
 				})
 				continue
 			}
+
+			if evt.ResourcePreEvent.Metadata.Op == apitype.OpRefresh {
+				printProgress(Progress{
+					Color: color.FgYellow,
+					Label: "Refreshing",
+					URN:   evt.ResourcePreEvent.Metadata.URN,
+				})
+				continue
+			}
 		}
 
 		if evt.ResOutputsEvent != nil {
@@ -117,14 +153,20 @@ func progress(events project.StackEventStream) {
 				outputs = evt.ResOutputsEvent.Metadata.New.Outputs
 				continue
 			}
-			if evt.ResOutputsEvent.Metadata.Op == apitype.OpSame {
+			duration := time.Since(timing[evt.ResOutputsEvent.Metadata.URN]).Round(time.Millisecond)
+			if evt.ResOutputsEvent.Metadata.Op == apitype.OpSame && mode == ProgressModeRefresh {
+				printProgress(Progress{
+					Color:    color.FgGreen,
+					Label:    "Refreshed",
+					URN:      evt.ResOutputsEvent.Metadata.URN,
+					Duration: duration,
+				})
 				continue
 			}
-			duration := time.Since(timing[evt.ResOutputsEvent.Metadata.URN]).Round(time.Millisecond)
 			if evt.ResOutputsEvent.Metadata.Op == apitype.OpCreate {
 				printProgress(Progress{
 					Color:    color.FgGreen,
-					Label:    "Created ",
+					Label:    "Created",
 					URN:      evt.ResOutputsEvent.Metadata.URN,
 					Duration: duration,
 				})
@@ -132,7 +174,7 @@ func progress(events project.StackEventStream) {
 			if evt.ResOutputsEvent.Metadata.Op == apitype.OpUpdate {
 				printProgress(Progress{
 					Color:    color.FgGreen,
-					Label:    "Updated ",
+					Label:    "Updated",
 					URN:      evt.ResOutputsEvent.Metadata.URN,
 					Duration: duration,
 				})
@@ -140,7 +182,7 @@ func progress(events project.StackEventStream) {
 			if evt.ResOutputsEvent.Metadata.Op == apitype.OpDelete {
 				printProgress(Progress{
 					Color:    color.FgRed,
-					Label:    "Deleted ",
+					Label:    "Deleted",
 					URN:      evt.ResOutputsEvent.Metadata.URN,
 					Duration: duration,
 				})
@@ -170,13 +212,18 @@ func progress(events project.StackEventStream) {
 
 	if len(errors) == 0 {
 		color.New(color.FgGreen, color.Bold).Print("\n✔")
-		color.New(color.FgWhite, color.Bold).Println("  Deployed:")
 
-		for k, v := range outputs {
-			color.New(color.FgHiBlack).Print("   ")
-			color.New(color.FgHiBlack, color.Bold).Print(k + ": ")
-			color.New(color.FgWhite).Println(v)
+		if len(outputs) > 0 {
+			color.New(color.FgWhite, color.Bold).Println("  Complete:")
+			for k, v := range outputs {
+				color.New(color.FgHiBlack).Print("   ")
+				color.New(color.FgHiBlack, color.Bold).Print(k + ": ")
+				color.New(color.FgWhite).Println(v)
+			}
+		} else {
+			color.New(color.FgWhite, color.Bold).Println("  Complete")
 		}
+		return true
 	} else {
 		color.New(color.FgRed, color.Bold).Print("\n❌")
 		color.New(color.FgWhite, color.Bold).Println(" Failed:")
@@ -186,6 +233,6 @@ func progress(events project.StackEventStream) {
 			color.New(color.FgRed, color.Bold).Print(formatURN(k) + ": ")
 			color.New(color.FgWhite).Println(v)
 		}
+		return false
 	}
-
 }

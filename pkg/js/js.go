@@ -9,6 +9,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 	"time"
 
 	esbuild "github.com/evanw/esbuild/pkg/api"
@@ -36,11 +37,13 @@ type Process struct {
 	Out *bufio.Scanner
 }
 
-var Command = struct {
-	Done string
-}{
-	Done: "~d",
-}
+type Command = string
+
+const (
+	CommandDone   Command = "~d"
+	CommandJSON   Command = "~j"
+	CommandStdOut Command = ""
+)
 
 const LOOP = `
   import readline from "readline"
@@ -115,15 +118,21 @@ func Start(dir string) (*Process, error) {
 	}, nil
 }
 
-func (p *Process) Scan() (bool, string) {
+func (p *Process) Scan() (Command, string) {
 	for p.Out.Scan() {
 		line := p.Out.Text()
-		if line == Command.Done {
+
+		if line == CommandDone {
 			break
 		}
-		return false, line
+
+		if strings.HasPrefix(line, CommandJSON) {
+			return CommandJSON, line[len(CommandJSON):]
+		}
+
+		return CommandStdOut, line
 	}
-	return true, ""
+	return CommandDone, ""
 }
 
 type Message struct {
