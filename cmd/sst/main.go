@@ -210,13 +210,13 @@ func printHeader(p *project.Project) {
 	fmt.Println()
 	color.New(color.FgCyan, color.Bold).Print("➜  ")
 
-	color.New(color.FgWhite, color.Bold).Print("App:     ")
+	color.New(color.FgWhite, color.Bold).Printf("%-12s", "App:")
 	color.New(color.FgHiBlack).Println(p.Name())
 
-	color.New(color.FgWhite, color.Bold).Print("   Stage:   ")
+	color.New(color.FgWhite, color.Bold).Printf("   %-12s", "Stage:")
 	color.New(color.FgHiBlack).Println(p.Stage())
 
-	color.New(color.FgWhite, color.Bold).Print("   Region:  ")
+	color.New(color.FgWhite, color.Bold).Printf("   %-12s", "Region:")
 	color.New(color.FgHiBlack).Println(p.Region())
 
 	fmt.Println()

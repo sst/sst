@@ -56,7 +56,7 @@ func progress(mode ProgressMode, events project.StackEventStream) bool {
 	printProgress := func(progress Progress) {
 		spin.Disable()
 		color.New(progress.Color, color.Bold).Print("|  ")
-		color.New(color.FgHiBlack).Print(fmt.Sprintf("%-10s", progress.Label), " ", formatURN(progress.URN))
+		color.New(color.FgHiBlack).Print(fmt.Sprintf("%-11s", progress.Label), " ", formatURN(progress.URN))
 		if progress.Duration != 0 {
 			color.New(color.FgHiBlack).Printf(" (%s)", progress.Duration)
 		}
