@@ -282,7 +282,7 @@ And that's it. We have a simple Next.js app that uploads files to S3 and runs a 
 
 ## 4. Deploy to prod
 
-Let's end with deploying our app to production.
+Let's deploy our app to production.
 
 <MultiPackagerCode>
 <TabItem value="npm">
@@ -308,15 +308,17 @@ pnpm sst deploy --stage prod
 </TabItem>
 </MultiPackagerCode>
 
-:::note
-The `sst deploy` command internally uses OpenNext to build your app.
-:::
-
-![Next.js app deployed to AWS with SST](/img/start/nextjs-app-deployed-to-aws-with-sst.png)
-
 :::info
 [View the source](https://github.com/sst/sst/tree/master/examples/quickstart-nextjs) for this example on GitHub.
 :::
+
+---
+
+## 5. Manage in prod
+
+You can use the [SST Console](console.md) to view logs and issues in prod. **<a href={config.console}>Create a free account</a>** and connect it to AWS.
+
+![Next.js app in the SST Console](/img/start/nextjs-app-in-the-sst-console.png)
 
 ---
 

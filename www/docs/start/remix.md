@@ -306,11 +306,17 @@ pnpm sst deploy --stage prod
 </TabItem>
 </MultiPackagerCode>
 
-![Remix app deployed to AWS with SST](/img/start/remix-app-deployed-to-aws-with-sst.png)
-
 :::info
 [View the source](https://github.com/sst/sst/tree/master/examples/quickstart-remix) for this example on GitHub.
 :::
+
+---
+
+## 5. Manage in prod
+
+You can use the [SST Console](console.md) to view logs and issues in prod. **<a href={config.console}>Create a free account</a>** and connect it to AWS.
+
+![Remix app in the SST Console](/img/start/remix-app-in-the-sst-console.png)
 
 ---
 

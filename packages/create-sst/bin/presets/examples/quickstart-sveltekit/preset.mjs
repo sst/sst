@@ -18,7 +18,7 @@ export default [
       "svelte-kit-sst",
       "tslib",
       "typescript",
-      "vite",
+      "vite@4.5.0",
     ],
     dev: true,
   }),

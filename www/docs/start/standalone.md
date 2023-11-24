@@ -234,11 +234,17 @@ pnpm sst deploy --stage prod
 </TabItem>
 </MultiPackagerCode>
 
-![Standalone SST app deployed to AWS](/img/start/standalone-sst-app-deployed-to-aws.png)
-
 :::info
 [View the source](https://github.com/sst/sst/tree/master/examples/quickstart-standalone) for this example on GitHub.
 :::
+
+---
+
+## 5. Manage in prod
+
+You can use the [SST Console](console.md) to view logs and issues in prod. **<a href={config.console}>Create a free account</a>** and connect it to AWS.
+
+![SST app in the SST Console](/img/start/sst-app-in-the-sst-console.png)
 
 ---
 
