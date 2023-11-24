@@ -68,7 +68,11 @@ func progress(mode ProgressMode, events project.StackEventStream) bool {
 	}
 
 	timing := make(map[string]time.Time)
-	errors := make(map[string]string)
+	type errorStatus struct {
+		Error string
+		URN   string
+	}
+	errors := []errorStatus{}
 	outputs := make(map[string]interface{})
 
 	for evt := range events {
@@ -198,7 +202,10 @@ func progress(mode ProgressMode, events project.StackEventStream) bool {
 					splits := strings.Split(evt.DiagnosticEvent.Message, "\n")
 					splits = strings.Split(splits[1], ":")
 					error := strings.TrimSpace(splits[len(splits)-1])
-					errors[evt.DiagnosticEvent.URN] = error
+					errors = append(errors, errorStatus{
+						Error: error,
+						URN:   evt.DiagnosticEvent.URN,
+					})
 					printProgress(Progress{
 						URN:     evt.DiagnosticEvent.URN,
 						Color:   color.FgRed,
@@ -208,7 +215,23 @@ func progress(mode ProgressMode, events project.StackEventStream) bool {
 					continue
 				}
 
-				errors[fmt.Sprint(len(errors))] = evt.DiagnosticEvent.Message
+				lines := strings.Split(evt.DiagnosticEvent.Message, "\n")
+				out := []string{}
+				for _, line := range lines {
+					trimmed := strings.TrimSpace(line)
+					if trimmed == "" {
+						continue
+					}
+					if strings.HasPrefix(trimmed, "at") {
+						trimmed = "   " + trimmed
+					}
+					out = append(out, trimmed)
+				}
+				if len(out) > 1 {
+					errors = append(errors, errorStatus{
+						Error: strings.Join(out, "\n"),
+					})
+				}
 			}
 		}
 	}
@@ -233,12 +256,12 @@ func progress(mode ProgressMode, events project.StackEventStream) bool {
 		color.New(color.FgRed, color.Bold).Print("\n❌")
 		color.New(color.FgWhite, color.Bold).Println(" Failed:")
 
-		for k, v := range errors {
+		for _, status := range errors {
 			color.New(color.FgHiBlack).Print("   ")
-			if len(k) > 2 {
-				color.New(color.FgRed, color.Bold).Print(formatURN(k) + ": ")
+			if status.URN != "" {
+				color.New(color.FgRed, color.Bold).Print(formatURN(status.URN) + ": ")
 			}
-			color.New(color.FgWhite).Println(v)
+			color.New(color.FgWhite).Println(strings.TrimSpace(status.Error))
 		}
 		return false
 	}

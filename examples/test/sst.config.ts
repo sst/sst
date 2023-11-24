@@ -10,6 +10,7 @@ export default {
   },
   async run() {
     const bucket = new aws.s3.Bucket("my-bucket");
+    throw new Error("test");
 
     const west = new aws.Provider("west", {
       region: "us-west-2",
