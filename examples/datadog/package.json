@@ -12,12 +12,12 @@
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
-    "sst": "^2.26.8",
-    "aws-cdk-lib": "2.95.1",
-    "constructs": "10.2.69",
-    "typescript": "^5.2.2",
+    "sst": "^2.36.5",
+    "aws-cdk-lib": "2.110.1",
+    "constructs": "10.3.0",
+    "typescript": "^5.3.2",
     "@tsconfig/node18": "^18.2.2",
-    "datadog-cdk-constructs-v2": "^1.8.0"
+    "datadog-cdk-constructs-v2": "^1.9.0"
   },
   "workspaces": [
     "packages/*"
