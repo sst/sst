@@ -36,6 +36,7 @@ func (s *stack) runtime() (string, error) {
 			"AWS_ACCESS_KEY_ID":     credentials.AccessKeyID,
 			"AWS_SECRET_ACCESS_KEY": credentials.SecretAccessKey,
 			"AWS_SESSION_TOKEN":     credentials.SessionToken,
+			"AWS_DEFAULT_REGION":    s.project.Region(),
 		},
 		"bootstrap": map[string]string{
 			"bucket": bootstrap,
