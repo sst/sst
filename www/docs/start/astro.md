@@ -304,11 +304,17 @@ pnpm sst deploy --stage prod
 </TabItem>
 </MultiPackagerCode>
 
-![Astro site deployed to AWS with SST](/img/start/astro-site-deployed-to-aws-with-sst.png)
-
 :::info
 [View the source](https://github.com/sst/sst/tree/master/examples/quickstart-astro) for this example on GitHub.
 :::
+
+---
+
+## 5. Manage in prod
+
+You can use the [SST Console](console.md) to view logs and issues in prod. **<a href={config.console}>Create a free account</a>** and connect it to AWS.
+
+![Astro site in the SST Console](/img/start/astro-site-in-the-sst-console.png)
 
 ---
 

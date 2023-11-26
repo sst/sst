@@ -1,5 +1,21 @@
 # @serverless-stack/cli2
 
+## 2.36.6
+
+### Patch Changes
+
+- [`67e91b64e`](https://github.com/sst/sst/commit/67e91b64e62dfd2d5bc273adbe62cd624c504530) Thanks [@fwang](https://github.com/fwang)! - SsrSite: fix aws-sdk not found in edge lambda
+
+- [`391e8f83e`](https://github.com/sst/sst/commit/391e8f83ea5eda20fc6e8e555d4aa62ba1c0ab71) Thanks [@fwang](https://github.com/fwang)! - SsrSite: handle warmer requests
+
+## 2.36.5
+
+### Patch Changes
+
+- [#3519](https://github.com/sst/sst/pull/3519) [`09dcf20e4`](https://github.com/sst/sst/commit/09dcf20e4b6ea69d77cacbe504949d99db48ec85) Thanks [@jaydeebee](https://github.com/jaydeebee)! - dns-validated-certificate: bundle aws-sdk
+
+- [#3520](https://github.com/sst/sst/pull/3520) [`7c45504e3`](https://github.com/sst/sst/commit/7c45504e319a13b2c8f4f583453154ca92e5fb2a) Thanks [@jlanzarotti](https://github.com/jlanzarotti)! - Function: add Lambda URL streaming option
+
 ## 2.36.4
 
 ### Patch Changes

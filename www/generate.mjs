@@ -187,7 +187,7 @@ async function run(json) {
 
     // get the construct class object in file
     const construct = file.children?.find((c) => c.kindString === "Class");
-    if (!construct || file.name !== "Function") {
+    if (!construct) {
       console.log("Skipping", file.name);
       continue;
     }
@@ -487,6 +487,7 @@ function renderProperties(file, files, properties, prefix, onlyPublic) {
     lines.push(
       "_Type_ : " + renderType(file, files, nextPrefix, signature.type) + "\n"
     );
+    console.log(JSON.stringify({ signature }, null, 2));
     const comment =
       signature.comment ||
       signature.type?.declaration?.signatures?.[0]?.comment;
