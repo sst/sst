@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.36.7
+
+### Patch Changes
+
+- [`cb7e85c69`](https://github.com/sst/sst/commit/cb7e85c6983c09f844bd868aa0b63b6e13a087ce) Thanks [@thdxr](https://github.com/thdxr)! - util: fix data loader issue
+
 ## 2.36.6
 
 ### Patch Changes
