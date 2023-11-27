@@ -51,15 +51,20 @@ func (b *bootstrap) Bucket() (string, error) {
 		if err != nil {
 			var pnf *types.ParameterNotFound
 			if errors.As(err, &pnf) {
-				bucketName := fmt.Sprintf("sst-bootstrap-%v-%v", uuid.New().String(), b.project.Region())
+				region := b.project.Region()
+				bucketName := fmt.Sprintf("sst-bootstrap-%v-%v", uuid.New().String(), region)
 				slog.Info("creating bootstrap bucket", "name", bucketName)
 				s3Client := s3.NewFromConfig(cfg)
 
+				var config *s3types.CreateBucketConfiguration = nil
+				if region != "us-east-1" {
+					config = &s3types.CreateBucketConfiguration{
+						LocationConstraint: s3types.BucketLocationConstraint(region),
+					}
+				}
 				_, err := s3Client.CreateBucket(context.TODO(), &s3.CreateBucketInput{
-					Bucket: aws.String(bucketName),
-					CreateBucketConfiguration: &s3types.CreateBucketConfiguration{
-						LocationConstraint: s3types.BucketLocationConstraint(b.project.Region()),
-					},
+					Bucket:                    aws.String(bucketName),
+					CreateBucketConfiguration: config,
 				})
 				if err != nil {
 					createErr = err
