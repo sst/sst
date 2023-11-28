@@ -71,6 +71,14 @@ func (b *bootstrap) Bucket() (string, error) {
 					return
 				}
 
+				_, err = s3Client.PutBucketNotificationConfiguration(context.TODO(), &s3.PutBucketNotificationConfigurationInput{
+					Bucket: aws.String(bucketName),
+				})
+				if err != nil {
+					createErr = err
+					return
+				}
+
 				_, err = ssmClient.PutParameter(
 					ctx,
 					&ssm.PutParameterInput{
