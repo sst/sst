@@ -200,7 +200,11 @@ You can see these errors in the Issues tab. Once you've fixed these issues, you 
 
 #### Error detection
 
-Issues reports Lambda function failures. In addition, for Node.js it reports errors that are logged using `console.error`.
+Issues reports Lambda function failures. In addition, for Node.js it reports errors that are logged using `console.error(new Error("my-error"))`.
+
+:::note
+For the Console to automatically report your errors, you need to pass in an error object with the `console.error` call, like so — `console.error(new Error("my-error"))`.
+:::
 
 ---
 
