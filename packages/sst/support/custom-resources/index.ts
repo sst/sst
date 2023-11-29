@@ -18,7 +18,8 @@ export const handler = (event: any) => {
 };
 
 const customResourceEventHandler = wrapper(async (cfnRequest: any) => {
-  log("Handling custom resource event", cfnRequest);
+  const { ResponseURL, ...other } = cfnRequest;
+  log("Handling custom resource event", other);
 
   switch (cfnRequest.ResourceType) {
     case "Custom::AuthKeys":
