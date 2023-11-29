@@ -2,14 +2,16 @@
   "$schema": "https://json.schemastore.org/package.json",
   "name": "sst",
   "dependencies": {
-    "@aws-sdk/client-cloudfront": "^3.458.0",
-    "@aws-sdk/client-lambda": "^3.454.0",
-    "@aws-sdk/client-sts": "^3.454.0",
+    "@aws-sdk/client-cloudfront": "3.458.0",
+    "@aws-sdk/client-lambda": "3.454.0",
+    "@aws-sdk/client-ssm": "3.454.0",
+    "@aws-sdk/client-s3": "3.454.0",
+    "@aws-sdk/client-sts": "3.454.0",
     "@pulumi/aws": "5.43.0",
     "@pulumi/pulumi": "3.94.2",
-    "esbuild": "^0.19.7",
-    "glob": "^10.3.10",
-    "@types/node": "^20.9.4"
+    "esbuild": "0.19.7",
+    "glob": "10.3.10",
+    "@types/node": "20.9.4"
   },
   "devDependencies": {
     "@tsconfig/node18": "^18.2.2"
