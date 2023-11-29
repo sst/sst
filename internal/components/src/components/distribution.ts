@@ -2,6 +2,7 @@ import pulumi from "@pulumi/pulumi";
 import * as aws from "@pulumi/aws";
 import { DnsValidatedCertificate } from "./dns-validated-certificate";
 import { HttpsRedirect } from "./https-redirect";
+import { normalize } from "path";
 
 /**
  * The customDomain for this website. SST supports domains that are hosted either on [Route 53](https://aws.amazon.com/route53/) or externally.
@@ -93,7 +94,8 @@ export class Distribution extends pulumi.ComponentResource {
   constructor(name: string, args: DistributionArgs) {
     super("sst:sst:Distribution", name, args);
 
-    const { distribution: distributionArgs, customDomain } = args;
+    const { distribution: distributionArgs } = args;
+    const customDomain = normalizeCustomDomain();
 
     validateCloudFrontDistributionSettings();
 
@@ -105,9 +107,19 @@ export class Distribution extends pulumi.ComponentResource {
 
     this.distribution = distribution;
 
-    function validateCloudFrontDistributionSettings() {
-      const { cdk } = this.props;
+    function normalizeCustomDomain() {
+      if (!args.customDomain) return;
 
+      return pulumi
+        .output([args.customDomain])
+        .apply(([customDomain]) =>
+          typeof customDomain === "string"
+            ? { domainName: customDomain, aliases: [], redirects: [] }
+            : { aliases: [], redirects: [], ...customDomain }
+        );
+    }
+
+    function validateCloudFrontDistributionSettings() {
       if (distributionArgs.viewerCertificate) {
         throw new Error(
           `Do not configure the "distribution.certificate". Use the "customDomain" to configure the domain certificate.`
@@ -147,27 +159,26 @@ export class Distribution extends pulumi.ComponentResource {
     function createCertificate() {
       if (!customDomain || !zoneId) return;
 
-      return pulumi.all([customDomain]).apply(
-        ([customDomain]) =>
-          new DnsValidatedCertificate("certificate", {
-            domainName:
-              typeof customDomain === "string"
-                ? customDomain
-                : customDomain.domainName,
-            alternativeNames:
-              typeof customDomain === "string"
-                ? []
-                : customDomain.aliases ?? [],
-            zoneId,
-            region: "us-east-1",
-          })
-      );
+      return new DnsValidatedCertificate("certificate", {
+        domainName: customDomain.domainName,
+        alternativeNames: customDomain.aliases,
+        zoneId,
+        region: "us-east-1",
+      });
     }
 
     function createDistribution() {
+      const aliases = customDomain
+        ? pulumi
+            .all([customDomain])
+            .apply(([customDomain]) => [
+              customDomain.domainName,
+              ...customDomain.aliases,
+            ])
+        : [];
       return new aws.cloudfront.Distribution("distribution", {
         ...distributionArgs,
-        aliases: buildDistributionAliases(),
+        aliases,
         viewerCertificate: certificate
           ? {
               acmCertificateArn: certificate.certificateArn,
@@ -179,61 +190,45 @@ export class Distribution extends pulumi.ComponentResource {
       });
     }
 
-    function buildDistributionAliases() {
-      if (!customDomain) return [];
-
-      return pulumi
-        .all([customDomain])
-        .apply(([customDomain]) =>
-          typeof customDomain === "string"
-            ? [customDomain]
-            : [customDomain.domainName, ...(customDomain.aliases || [])]
-        );
-    }
-
     function createRoute53Records(): void {
       if (!customDomain || !zoneId) {
         return;
       }
 
       // Create DNS record
-      const recordNames =
-        typeof customDomain === "string"
-          ? [customDomain]
-          : [customDomain.domainName, ...(customDomain.aliases || [])];
-      for (const name of recordNames) {
-        for (const type of ["A", "AAAA"]) {
-          new aws.route53.Record(`record-${name}-${type}`, {
-            name,
-            zoneId,
-            type,
-            aliases: [
-              {
-                name: distribution.domainName,
-                zoneId: distribution.hostedZoneId,
-                evaluateTargetHealth: true,
-              },
-            ],
-          });
+      pulumi.all([customDomain]).apply(([customDomain]) => {
+        for (const name of [customDomain.domainName, ...customDomain.aliases]) {
+          for (const type of ["A", "AAAA"]) {
+            new aws.route53.Record(`record-${name}-${type}`, {
+              name,
+              zoneId,
+              type,
+              aliases: [
+                {
+                  name: distribution.domainName,
+                  zoneId: distribution.hostedZoneId,
+                  evaluateTargetHealth: true,
+                },
+              ],
+            });
+          }
         }
-      }
+      });
     }
 
     function createRedirects(): void {
-      if (
-        !zoneId ||
-        !customDomain ||
-        typeof customDomain === "string" ||
-        !customDomain.redirects ||
-        (customDomain.redirects ?? []).length === 0
-      ) {
+      if (!zoneId || !customDomain) {
         return;
       }
 
-      new HttpsRedirect("redirect", {
-        zoneId,
-        sourceDomains: customDomain.redirects,
-        targetDomain: customDomain.domainName,
+      pulumi.all([customDomain]).apply(([customDomain]) => {
+        if (customDomain.redirects.length === 0) return;
+
+        new HttpsRedirect("redirect", {
+          zoneId,
+          sourceDomains: customDomain.redirects,
+          targetDomain: customDomain.domainName,
+        });
       });
     }
   }

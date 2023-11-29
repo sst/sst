@@ -14,18 +14,34 @@ export class HandlerFunction extends Function {
     args: HandlerFunctionArgs,
     opts?: pulumi.ComponentResourceOptions
   ) {
-    // TODO - pulumi: what if `build` needs to return 2 values?
-    //const handler = build(args);
-    //const { out, handler, sourcemap } = build(args);
-    const output = pulumi.all([args]).apply(([args]) => build(args));
+    const result = pulumi.all([args]).apply(async ([args]) => {
+      const result = await build(name, args);
+      if (result.type === "error") {
+        throw new Error(
+          [`Failed to build function "${args.handler}"`, ...result.errors].join(
+            "\n"
+          )
+        );
+      }
 
-    super(name, { ...args, bundle: out, bundleHash: calculateHash() }, opts);
-
-    async function calculateHash() {
-      const content = await fs.readFile(path.join(out, handler), "utf8");
+      const content = await fs.readFile(
+        path.join(result.out, result.handler),
+        "utf8"
+      );
       const hash = crypto.createHash("sha256");
       hash.update(content);
-      return hash.digest("hex");
-    }
+      const bundleHash = hash.digest("hex");
+
+      return {
+        ...result,
+        bundleHash,
+      };
+    });
+
+    super(
+      name,
+      { ...args, bundle: result.out, bundleHash: result.bundleHash },
+      opts
+    );
   }
 }

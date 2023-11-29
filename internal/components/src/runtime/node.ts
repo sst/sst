@@ -6,10 +6,13 @@ import pulumi from "@pulumi/pulumi";
 import { existsAsync, findAbove } from "../util/fs.js";
 import { HandlerFunctionArgs } from "../components/handler-function.js";
 
-export async function build(input: pulumi.Unwrap<HandlerFunctionArgs>) {
+export async function build(
+  name: string,
+  input: pulumi.Unwrap<HandlerFunctionArgs>
+) {
   // TODO * - pulumi: should `input.name` be passed in a `string` or `Input<string>`?
   // - where should `.apply` be called?
-  const out = path.join(app.paths.temp, input.name);
+  const out = path.join(app.paths.temp, name);
   await fs.rm(out, { recursive: true, force: true });
   await fs.mkdir(out, { recursive: true });
 
