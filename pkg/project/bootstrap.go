@@ -52,7 +52,7 @@ func (b *bootstrap) Bucket() (string, error) {
 			var pnf *types.ParameterNotFound
 			if errors.As(err, &pnf) {
 				region := b.project.Region()
-				bucketName := fmt.Sprintf("sst-bootstrap-%v-%v", uuid.New().String(), region)
+				bucketName := fmt.Sprintf("sst-bootstrap-%v", uuid.New().String())
 				slog.Info("creating bootstrap bucket", "name", bucketName)
 				s3Client := s3.NewFromConfig(cfg)
 

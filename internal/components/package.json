@@ -8,9 +8,10 @@
     "@pulumi/aws": "5.43.0",
     "@pulumi/pulumi": "3.94.2",
     "esbuild": "^0.19.7",
-    "glob": "^10.3.10"
+    "glob": "^10.3.10",
+    "@types/node": "^20.9.4"
   },
   "devDependencies": {
-    "@types/node": "^20.9.4"
+    "@tsconfig/node18": "^18.2.2"
   }
 }

@@ -12,10 +12,11 @@ export default {
     const bucket = new aws.s3.Bucket("my-bucket");
     throw new Error("test");
 
+    type t = aws.cloudfront.DistributionArgs["origins"];
+
     const west = new aws.Provider("west", {
       region: "us-west-2",
     });
-
     new aws.s3.Bucket(
       "my-bucket-west",
       {},
