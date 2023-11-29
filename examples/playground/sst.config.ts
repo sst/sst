@@ -23,11 +23,6 @@ export default {
 
         const { path: sitePath } = opts;
 
-        // TODO
-        // - setup custom domain
-        // - upload assets
-        // - create a dynamic provider
-
         const _this = this;
 
         buildApp();

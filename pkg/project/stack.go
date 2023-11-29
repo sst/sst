@@ -24,7 +24,6 @@ func (s *stack) runtime() (string, error) {
 		return "", err
 	}
 	inject := map[string]interface{}{
-		"region": s.project.Region(),
 		"stage":  s.project.Stage(),
 		"name":   s.project.Name(),
 		"paths": map[string]string{
@@ -33,6 +32,7 @@ func (s *stack) runtime() (string, error) {
 			"home": global.ConfigDir(),
 		},
 		"aws": map[string]string{
+			"region": s.project.Region(),
 			"AWS_ACCESS_KEY_ID":     credentials.AccessKeyID,
 			"AWS_SECRET_ACCESS_KEY": credentials.SecretAccessKey,
 			"AWS_SESSION_TOKEN":     credentials.SessionToken,

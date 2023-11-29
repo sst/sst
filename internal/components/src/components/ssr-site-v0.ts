@@ -1,74 +1,15 @@
-// import * as util from "@pulumi/pulumi";
-// import * as aws from "@util/aws";
 import * as fs from "fs";
 import * as path from "path";
 import { execSync } from "child_process";
+import pulumi from "@pulumi/pulumi";
+import * as aws from "@pulumi/aws";
+import { Function } from "./function";
 
-const BOOTSTRAP_BUCKET = "sst-bootstrap-be9f144c-1696-4937-9d70-ebe37bcb1659";
-
-export interface SsrSiteArgs extends util.ComponentResourceOptions {
+export interface SsrSiteArgs extends pulumi.ComponentResourceOptions {
   path: string;
 }
 
-export interface FunctionArgs
-  extends Omit<
-    aws.lambda.FunctionArgs,
-    "code" | "s3Bucket" | "s3Key" | "role"
-  > {
-  bundle: string;
-  bundleHash: string;
-  policies: aws.types.input.iam.RoleInlinePolicy[];
-}
-
-class Function extends util.ComponentResource {
-  public readonly name: util.Output<string>;
-  constructor(
-    name: string,
-    args: FunctionArgs,
-    opts?: util.ComponentResourceOptions
-  ) {
-    super("sst:sst:Function", name, args, opts);
-
-    const { bundle, policies } = args;
-
-    const role = new aws.iam.Role(
-      `${name}-role`,
-      {
-        assumeRolePolicy: aws.iam.assumeRolePolicyForPrincipal({
-          Service: "lambda.amazonaws.com",
-        }),
-        inlinePolicies: policies,
-        managedPolicyArns: [
-          "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
-        ],
-      },
-      { parent: this }
-    );
-
-    const file = new aws.s3.BucketObjectv2(
-      `${name}-code`,
-      {
-        key: `${name}-code-${args.bundleHash}.zip`,
-        bucket: BOOTSTRAP_BUCKET,
-        source: new util.asset.FileArchive(bundle),
-      },
-      { parent: this }
-    );
-    const fn = new aws.lambda.Function(
-      `${name}-function`,
-      {
-        s3Bucket: file.bucket,
-        s3Key: file.key,
-        role: role.arn,
-        ...args,
-      },
-      { parent: this }
-    );
-    this.name = fn.name;
-  }
-}
-
-class SsrSite extends util.ComponentResource {
+export class SsrSite extends pulumi.ComponentResource {
   public readonly distribution: aws.cloudfront.Distribution;
   constructor(name: string, args: SsrSiteArgs) {
     super("sst:sst:SsrSite", name, args);
@@ -95,6 +36,22 @@ class SsrSite extends util.ComponentResource {
 
     this.distribution = distribution;
 
+    function buildApp() {
+      try {
+        execSync("npx --yes open-next@latest build", {
+          cwd: sitePath,
+          stdio: "inherit",
+          env: {
+            SST: "1",
+            ...process.env,
+            //...getBuildCmdEnvironment(environment),
+          },
+        });
+      } catch (e) {
+        throw new Error(`There was a problem building the "${name}" site.`);
+      }
+    }
+
     function uploadS3Assets() {
       const addFolderContents = (siteDir: string, prefix: string) => {
         for (let item of fs.readdirSync(siteDir)) {
@@ -113,7 +70,7 @@ class SsrSite extends util.ComponentResource {
 
           new aws.s3.BucketObject(itemPath, {
             bucket: bucket.bucket,
-            source: new util.asset.FileAsset(filePath), // use FileAsset to point to a file
+            source: new pulumi.asset.FileAsset(filePath), // use FileAsset to point to a file
             contentType: getContentType(filePath, "UTF-8"),
             cacheControl:
               "public,max-age=0,s-maxage=86400,stale-while-revalidate=8640",
@@ -366,7 +323,7 @@ class SsrSite extends util.ComponentResource {
 
     function createDistributionInvalidation() {
       //new command.local.Command("invalidate", {
-      //  create: util.interpolate`aws cloudfront create-invalidation --distribution-id ${distribution.id} --paths index.html`
+      //  create: pulumi.interpolate`aws cloudfront create-invalidation --distribution-id ${distribution.id} --paths index.html`
       //  environment: {
       //    ETAG: indexFile.etag
       //  }
@@ -394,11 +351,11 @@ class SsrSite extends util.ComponentResource {
             principals: [
               {
                 type: "AWS",
-                identifiers: [util.interpolate`${access.iamArn}`],
+                identifiers: [pulumi.interpolate`${access.iamArn}`],
               },
             ],
             actions: ["s3:GetObject"],
-            resources: [util.interpolate`${bucket.arn}/*`],
+            resources: [pulumi.interpolate`${bucket.arn}/*`],
           },
         ],
       });
@@ -407,22 +364,6 @@ class SsrSite extends util.ComponentResource {
         policy: policyDocument.apply((policyDocument) => policyDocument.json),
       });
       return bucket;
-    }
-
-    function buildApp() {
-      try {
-        execSync("npx --yes open-next@latest build", {
-          cwd: sitePath,
-          stdio: "inherit",
-          env: {
-            SST: "1",
-            ...process.env,
-            //...getBuildCmdEnvironment(environment),
-          },
-        });
-      } catch (e) {
-        throw new Error(`There was a problem building the "${name}" site.`);
-      }
     }
 
     function createServerFunction() {
@@ -494,7 +435,7 @@ class SsrSite extends util.ComponentResource {
       return new aws.lambda.Function(`${name}-image`, {
         description: "Next.js server",
         handler: "index.handler",
-        code: new util.asset.FileArchive(
+        code: new pulumi.asset.FileArchive(
           path.join(sitePath, ".open-next", "image-optimization-function")
         ),
         runtime: "nodejs18.x",
@@ -548,7 +489,7 @@ class SsrSite extends util.ComponentResource {
         `${name}-revalidation-consumer`,
         {
           handler: "index.handler",
-          code: new util.asset.FileArchive(
+          code: new pulumi.asset.FileArchive(
             path.join(sitePath, ".open-next", "revalidation-function")
           ),
           runtime: "nodejs18.x",
@@ -566,12 +507,6 @@ class SsrSite extends util.ComponentResource {
     }
   }
 }
-const site = new SsrSite("web", {
-  path: "web",
-});
-
-// Export the name of the bucket
-export const siteURL = util.interpolate`https://${site.distribution.domainName}`;
 
 function getContentType(filename: string, textEncoding: string) {
   const ext = filename.endsWith(".well-known/site-association-json")

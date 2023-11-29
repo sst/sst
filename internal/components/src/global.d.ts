@@ -14,7 +14,6 @@ declare global {
   export import sst = require("./components/index");
 
   export const app: {
-    region: string;
     stage: string;
     name: string;
     mode: "deploy" | "remove";
@@ -27,6 +26,7 @@ declare global {
       AWS_ACCESS_KEY_ID: string;
       AWS_SECRET_ACCESS_KEY: string;
       AWS_SESSION_TOKEN: string;
+      region: aws.Region;
     };
     bootstrap: {
       bucket: string;
