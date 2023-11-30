@@ -62,8 +62,11 @@ export interface DistributionDomainArgs {
   //hostedZoneId?: string;
 }
 
-export interface DistributionArgs {
-  distribution: aws.cloudfront.DistributionArgs;
+export interface DistributionArgs
+  extends Omit<
+    aws.cloudfront.DistributionArgs,
+    "viewerCertificate" | "aliases"
+  > {
   /**
    * The customDomain for this website. SST supports domains that are hosted
    * either on [Route 53](https://aws.amazon.com/route53/) or externally.
@@ -98,7 +101,6 @@ export class Distribution extends pulumi.ComponentResource {
   ) {
     super("sst:sst:Distribution", name, args, opts);
 
-    const { distribution: distributionArgs } = args;
     const customDomain = normalizeCustomDomain();
 
     validateCloudFrontDistributionSettings();
@@ -127,12 +129,12 @@ export class Distribution extends pulumi.ComponentResource {
     }
 
     function validateCloudFrontDistributionSettings() {
-      if (distributionArgs.viewerCertificate) {
+      if ((args as aws.cloudfront.DistributionArgs).viewerCertificate) {
         throw new Error(
           `Do not configure the "distribution.certificate". Use the "customDomain" to configure the domain certificate.`
         );
       }
-      if (distributionArgs.aliases) {
+      if ((args as aws.cloudfront.DistributionArgs).aliases) {
         throw new Error(
           `Do not configure the "distribution.aliases". Use the "customDomain" to configure the domain name.`
         );
@@ -170,7 +172,7 @@ export class Distribution extends pulumi.ComponentResource {
             ])
         : [];
       return new aws.cloudfront.Distribution("distribution", {
-        ...distributionArgs,
+        ...args,
         aliases,
         viewerCertificate: certificate
           ? {

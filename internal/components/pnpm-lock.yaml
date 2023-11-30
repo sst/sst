@@ -40,6 +40,9 @@ devDependencies:
   '@tsconfig/node18':
     specifier: ^18.2.2
     version: 18.2.2
+  typescript:
+    specifier: ^5.3.2
+    version: 5.3.2
 
 packages:
 
@@ -3132,6 +3135,12 @@ packages:
     engines: {node: '>=4.2.0'}
     hasBin: true
     dev: false
+
+  /typescript@5.3.2:
+    resolution: {integrity: sha512-6l+RyNy7oAHDfxC4FzSJcz9vnjTKxrLpDG5M2Vu4SHRVNg6xzqZp6LYSR9zjqQTu8DU/f5xwxUdADOkbrIX2gQ==}
+    engines: {node: '>=14.17'}
+    hasBin: true
+    dev: true
 
   /unbox-primitive@1.0.2:
     resolution: {integrity: sha512-61pPlCD9h51VoreyJ0BReideM3MDKMKnh6+V9L08331ipq6Q8OFXZYiqP6n/tbHx4s5I9uRhcye6BrbkizkBDw==}
