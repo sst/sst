@@ -12,41 +12,33 @@ export class HandlerFunction extends Function {
   constructor(
     name: string,
     args: HandlerFunctionArgs,
-    opts?: pulumi.ComponentResourceOptions
+    opts?: pulumi.ComponentResourceOptions,
   ) {
-    const result = pulumi.all([args]).apply(async ([args]) => {
-      const result = await build(name, args);
-      if (result.type === "error") {
-        throw new Error(
-          [`Failed to build function "${args.handler}"`, ...result.errors].join(
-            "\n"
-          )
-        );
-      }
-
+    const buildResult = pulumi.all([args]).apply(([args]) => build(name, args));
+    const successful = buildResult.apply((result) => {
+      if (result.type === "error") throw new Error(result.errors.join("\n"));
+      return result;
+    });
+    const hash = successful.apply(async (result) => {
       const content = await fs.readFile(
         path.join(result.out, result.handler),
-        "utf8"
+        "utf8",
       );
       const hash = crypto.createHash("sha256");
       hash.update(content);
       const bundleHash = hash.digest("hex");
-
-      return {
-        ...result,
-        bundleHash,
-      };
+      return bundleHash;
     });
 
     super(
       name,
       {
         ...args,
-        handler: result.handler,
-        bundle: result.out,
-        bundleHash: result.bundleHash,
+        handler: successful.handler,
+        bundle: successful.out,
+        bundleHash: hash,
       },
-      opts
+      opts,
     );
   }
 }
