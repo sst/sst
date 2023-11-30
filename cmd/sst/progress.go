@@ -199,18 +199,21 @@ func progress(mode ProgressMode, events project.StackEventStream) bool {
 		if evt.DiagnosticEvent != nil {
 			if evt.DiagnosticEvent.Severity == "error" {
 				if evt.DiagnosticEvent.URN != "" {
-					splits := strings.Split(evt.DiagnosticEvent.Message, "\n")
-					splits = strings.Split(splits[1], ":")
-					error := strings.TrimSpace(splits[len(splits)-1])
+					msg := evt.DiagnosticEvent.Message
+					lines := strings.Split(evt.DiagnosticEvent.Message, "\n")
+					if len(lines) > 2 {
+						lines = strings.Split(lines[1], ":")
+						msg = strings.TrimSpace(lines[len(lines)-1])
+					}
 					errors = append(errors, errorStatus{
-						Error: error,
+						Error: msg,
 						URN:   evt.DiagnosticEvent.URN,
 					})
 					printProgress(Progress{
 						URN:     evt.DiagnosticEvent.URN,
 						Color:   color.FgRed,
 						Label:   "Error",
-						Message: error,
+						Message: msg,
 					})
 					continue
 				}

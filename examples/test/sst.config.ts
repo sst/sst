@@ -9,21 +9,9 @@ export default {
     };
   },
   async run() {
-    const bucket = new aws.s3.Bucket("my-bucket");
-    throw new Error("test");
-
-    type t = aws.cloudfront.DistributionArgs["origins"];
-
-    const west = new aws.Provider("west", {
-      region: "us-west-2",
+    const bucket = new aws.s3.Bucket("my-bucket", {
+      bucket: "foo",
     });
-    new aws.s3.Bucket(
-      "my-bucket-west",
-      {},
-      {
-        provider: west,
-      },
-    );
 
     return {
       url: util.interpolate`https://${bucket.bucketDomainName}`,
