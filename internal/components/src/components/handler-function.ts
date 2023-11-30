@@ -1,7 +1,7 @@
 import fs from "fs/promises";
 import path from "path";
-import { Function, FunctionArgs } from "./function";
-import { build } from "../runtime/node";
+import { Function, FunctionArgs } from "./function.js";
+import { build } from "../runtime/node.js";
 import crypto from "crypto";
 import pulumi from "@pulumi/pulumi";
 
@@ -40,7 +40,12 @@ export class HandlerFunction extends Function {
 
     super(
       name,
-      { ...args, bundle: result.out, bundleHash: result.bundleHash },
+      {
+        ...args,
+        handler: result.handler,
+        bundle: result.out,
+        bundleHash: result.bundleHash,
+      },
       opts
     );
   }

@@ -4,8 +4,9 @@ import crypto from "crypto";
 import { globSync } from "glob";
 import type { Loader, BuildOptions } from "esbuild";
 import pulumi from "@pulumi/pulumi";
-import { FunctionCodeUpdater } from "./function-code-updater";
-import { AWS } from "./helpers/aws";
+import * as aws from "@pulumi/aws";
+import { FunctionCodeUpdater } from "./function-code-updater.js";
+import { AWS } from "./helpers/aws.js";
 
 export interface FunctionNodeJSArgs {
   /**
@@ -114,8 +115,8 @@ export interface FunctionArgs
   bundle: pulumi.Input<string>;
   bundleHash?: pulumi.Input<string>;
   handler: pulumi.Input<string>;
-  environment?: Record<string, pulumi.Input<string>>;
-  policies?: aws.types.input.iam.RoleInlinePolicy[];
+  environment?: pulumi.Input<Record<string, pulumi.Input<string>>>;
+  policies?: pulumi.Input<aws.types.input.iam.RoleInlinePolicy[]>;
   streaming?: pulumi.Input<boolean>;
   injections?: pulumi.Input<string[]>;
   region?: aws.Region;
@@ -242,7 +243,6 @@ export class Function extends pulumi.ComponentResource {
     }
 
     function createBucketObject() {
-      // TODO test it should fail without using pulumi.interpolate?
       return new aws.s3.BucketObjectv2(
         `${name}-code`,
         {

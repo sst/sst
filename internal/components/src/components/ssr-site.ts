@@ -6,25 +6,24 @@ import crypto from "crypto";
 import { execSync } from "child_process";
 import pulumi from "@pulumi/pulumi";
 import * as aws from "@pulumi/aws";
-import { Distribution, DistributionDomainArgs } from "./distribution";
-import { Function, FunctionArgs, FunctionNodeJSArgs } from "./function";
-import { Size } from "./util/size";
-import { Duration, toSeconds } from "./util/duration";
-import { DistributionInvalidation } from "./distribution-invalidation";
+import { Distribution, DistributionDomainArgs } from "./distribution.js";
+import { Function, FunctionArgs, FunctionNodeJSArgs } from "./function.js";
+import { Duration, toSeconds } from "./util/duration.js";
+import { DistributionInvalidation } from "./distribution-invalidation.js";
 
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 
 type CloudFrontFunctionConfig = { injections: string[] };
-type EdgeFunctionConfig = { function: FunctionArgs };
+type EdgeFunctionConfig = { function: pulumi.Unwrap<FunctionArgs> };
 type FunctionOriginConfig = {
   type: "function";
-  function: FunctionArgs;
+  function: pulumi.Unwrap<FunctionArgs>;
   injections?: string[];
   streaming?: boolean;
 };
 type ImageOptimizationFunctionOriginConfig = {
   type: "image-optimization-function";
-  function: FunctionArgs;
+  function: pulumi.Unwrap<FunctionArgs>;
 };
 type S3OriginConfig = {
   type: "s3";
@@ -40,11 +39,10 @@ type OriginGroupConfig = {
   type: "group";
   primaryOriginName: string;
   fallbackOriginName: string;
-  fallbackStatusCodes?: number[];
+  fallbackStatusCodes: number[];
 };
-type OriginsMap = Record<string, aws.types.input.cloudfront.DistributionOrigin>;
 
-export type Plan = ReturnType<SsrSite["validatePlan"]>;
+export type Plan = ReturnType<typeof validatePlan>;
 export interface SsrDomainArgs extends DistributionDomainArgs {}
 export interface SsrSiteFileOptions {
   files: string | string[];
@@ -64,17 +62,18 @@ export interface SsrSiteArgs {
    * })
    * ```
    */
+  // TODO implement bind
   //bind?: SSTConstruct[];
   /**
    * Path to the directory where the app is located.
    * @default "."
    */
-  path?: string;
+  path?: pulumi.Input<string>;
   /**
    * Path relative to the app location where the type definitions are located.
    * @default "."
    */
-  typesPath?: string;
+  typesPath?: pulumi.Input<string>;
   /**
    * The command for building the website
    * @default `npm run build`
@@ -83,7 +82,7 @@ export interface SsrSiteArgs {
    * buildCommand: "yarn build",
    * ```
    */
-  buildCommand?: string;
+  buildCommand?: pulumi.Input<string>;
   /**
    * The customDomain for this website. SST supports domains that are hosted
    * either on [Route 53](https://aws.amazon.com/route53/) or externally.
@@ -104,7 +103,7 @@ export interface SsrSiteArgs {
    * },
    * ```
    */
-  customDomain?: string | SsrDomainArgs;
+  customDomain?: pulumi.Input<string | SsrDomainArgs>;
   /**
    * Attaches the given list of permissions to the SSR function. Configuring this property is equivalent to calling `attachPermissions()` after the site is created.
    * @example
@@ -112,7 +111,8 @@ export interface SsrSiteArgs {
    * permissions: ["ses"]
    * ```
    */
-  permissions?: Permissions;
+  // TODO implement permissions
+  //permissions?: pulumi.Input<Permissions>;
   /**
    * An object with the key being the environment variable name.
    *
@@ -124,36 +124,37 @@ export interface SsrSiteArgs {
    * },
    * ```
    */
-  environment?: Record<string, string>;
+  environment?: pulumi.Input<Record<string, pulumi.Input<string>>>;
   /**
    * The number of server functions to keep warm. This option is only supported for the regional mode.
    * @default Server function is not kept warm
    */
-  warm?: number;
-  dev?: {
-    /**
-     * When running `sst dev`, site is not deployed. This is to ensure `sst dev` can start up quickly.
-     * @default false
-     * @example
-     * ```js
-     * dev: {
-     *   deploy: true
-     * }
-     * ```
-     */
-    deploy?: boolean;
-    /**
-     * The local site URL when running `sst dev`.
-     * @example
-     * ```js
-     * dev: {
-     *   url: "http://localhost:3000"
-     * }
-     * ```
-     */
-    url?: string;
-  };
-  assets?: {
+  warm?: pulumi.Input<number>;
+  // TODO implement `sst dev`
+  //dev?: {
+  //  /**
+  //   * When running `sst dev`, site is not deployed. This is to ensure `sst dev` can start up quickly.
+  //   * @default false
+  //   * @example
+  //   * ```js
+  //   * dev: {
+  //   *   deploy: true
+  //   * }
+  //   * ```
+  //   */
+  //  deploy?: boolean;
+  //  /**
+  //   * The local site URL when running `sst dev`.
+  //   * @example
+  //   * ```js
+  //   * dev: {
+  //   *   url: "http://localhost:3000"
+  //   * }
+  //   * ```
+  //   */
+  //  url?: string;
+  //};
+  assets?: pulumi.Input<{
     /**
      * Character encoding for text based assets uploaded to S3 (ex: html, css, js, etc.). If "none" is specified, no charset will be returned in header.
      * @default utf-8
@@ -164,7 +165,9 @@ export interface SsrSiteArgs {
      * }
      * ```
      */
-    textEncoding?: "utf-8" | "iso-8859-1" | "windows-1252" | "ascii" | "none";
+    textEncoding?: pulumi.Input<
+      "utf-8" | "iso-8859-1" | "windows-1252" | "ascii" | "none"
+    >;
     /**
      * The TTL for versioned files (ex: `main-1234.css`) in the CDN and browser cache. Ignored when `versionedFilesCacheHeader` is specified.
      * @default 1 year
@@ -175,7 +178,7 @@ export interface SsrSiteArgs {
      * }
      * ```
      */
-    versionedFilesTTL?: number | Duration;
+    versionedFilesTTL?: pulumi.Input<number | Duration>;
     /**
      * The header to use for versioned files (ex: `main-1234.css`) in the CDN cache. When specified, the `versionedFilesTTL` option is ignored.
      * @default public,max-age=31536000,immutable
@@ -186,7 +189,7 @@ export interface SsrSiteArgs {
      * }
      * ```
      */
-    versionedFilesCacheHeader?: string;
+    versionedFilesCacheHeader?: pulumi.Input<string>;
     /**
      * The TTL for non-versioned files (ex: `index.html`) in the CDN cache. Ignored when `nonVersionedFilesCacheHeader` is specified.
      * @default 1 day
@@ -197,7 +200,7 @@ export interface SsrSiteArgs {
      * }
      * ```
      */
-    nonVersionedFilesTTL?: number | Duration;
+    nonVersionedFilesTTL?: pulumi.Input<number | Duration>;
     /**
      * The header to use for non-versioned files (ex: `index.html`) in the CDN cache. When specified, the `nonVersionedFilesTTL` option is ignored.
      * @default public,max-age=0,s-maxage=86400,stale-while-revalidate=8640
@@ -208,7 +211,7 @@ export interface SsrSiteArgs {
      * }
      * ```
      */
-    nonVersionedFilesCacheHeader?: string;
+    nonVersionedFilesCacheHeader?: pulumi.Input<string>;
     /**
      * List of file options to specify cache control and content type for cached files. These file options are appended to the default file options so it's possible to override the default file options by specifying an overlapping file pattern.
      * @example
@@ -224,13 +227,9 @@ export interface SsrSiteArgs {
      * }
      * ```
      */
-    fileOptions?: SsrSiteFileOptions[];
-    /**
-     * @internal
-     */
-    _uploadConcurrency?: number;
-  };
-  invalidation?: {
+    fileOptions?: pulumi.Input<SsrSiteFileOptions[]>;
+  }>;
+  invalidation?: pulumi.Input<{
     /**
      * While deploying, SST waits for the CloudFront cache invalidation process to finish. This ensures that the new content will be served once the deploy command finishes. However, this process can sometimes take more than 5 mins. For non-prod environments it might make sense to pass in `false`. That'll skip waiting for the cache to invalidate and speed up the deploy process.
      * @default false
@@ -241,7 +240,7 @@ export interface SsrSiteArgs {
      * }
      * ```
      */
-    wait?: boolean;
+    wait?: pulumi.Input<boolean>;
     /**
      * The paths to invalidate. There are three built-in options:
      * - "none" - No invalidation will be performed.
@@ -263,123 +262,73 @@ export interface SsrSiteArgs {
      * }
      * ```
      */
-    paths?: "none" | "all" | "versioned" | string[];
-  };
+    paths?: pulumi.Input<"none" | "all" | "versioned" | string[]>;
+  }>;
 }
 
-/**
- * The `SsrSite` construct is a higher level CDK construct that makes it easy to create modern web apps with Server Side Rendering capabilities.
- * @example
- * Deploys an Astro app in the `web` directory.
- *
- * ```js
- * new SsrSite(stack, "site", {
- *   path: "web",
- * });
- * ```
- */
-export abstract class SsrSite extends pulumi.ComponentResource {
-  protected args: ReturnType<SsrSite["normalizeArgs"]>;
-  public readonly id: string;
-  protected doNotDeploy: boolean;
-  protected edge: boolean;
-  protected bucket: aws.s3.BucketV2;
-  protected serverFunction?: Function;
-  //private serverFunctionForDev?: Function;
-  private distribution: Distribution;
+export function prepare(args: SsrSiteArgs) {
+  const sitePath = normalizeSitePath();
+  const invalidation = normalizeInvalidation();
+  writeTypesFile();
 
-  normalizeArgs(rawArgs: SsrSiteArgs) {
-    return {
-      path: ".",
-      typesPath: ".",
-      ...rawArgs,
-      invalidation: {
-        paths: "all",
-        ...rawArgs?.invalidation,
-      },
-    };
-  }
+  const doNotDeploy = pulumi.output(false);
+  //const doNotDeploy = app.mode === "dev" && !dev?.deploy;
+  return { sitePath, invalidation, doNotDeploy };
 
-  constructor(name: string, rawArgs: SsrSiteArgs) {
-    super("sst:sst:SsrSite", name, rawArgs);
+  function normalizeSitePath() {
+    return pulumi.all([args.path]).apply(([sitePath]) => {
+      if (!sitePath) return ".";
 
-    const self = this;
-    this.args = this.normalizeArgs(rawArgs);
-    const {
-      path: sitePath,
-      typesPath,
-      buildCommand,
-      dev,
-      assets,
-      permissions,
-      environment,
-      customDomain,
-      invalidation,
-      warm,
-    } = this.args;
-
-    //this.doNotDeploy = app.mode === "dev" && !dev?.deploy;
-
-    validateSiteExists();
-    writeTypesFile(typesPath);
-
-    //if (this.doNotDeploy) {
-    //  // @ts-expect-error
-    //  this.bucket = this.distribution = null;
-    //  this.serverFunctionForDev = createServerFunctionForDev();
-    //  app.registerTypes(this);
-    //  return;
-    //}
-
-    const ssrFunctions: Function[] = [];
-    let singletonCachePolicy: aws.cloudfront.CachePolicy;
-
-    buildApp();
-
-    const access = createCloudFrontOriginAccessIdentity();
-    const bucket = createS3Bucket();
-    const plan = this.plan(bucket);
-    uploadAssets();
-    const cfFunctions = createCloudFrontFunctions();
-    const edgeFunctions = createEdgeFunctions();
-    const origins = buildOrigins();
-    const originGroups = buildOriginGroups();
-    const distribution = createCloudFrontDistribution();
-    allowServerFunctionInvalidateDistribution();
-    createDistributionInvalidation();
-    createWarmer();
-
-    this.bucket = bucket;
-    this.distribution = distribution;
-    this.serverFunction = ssrFunctions[0] ?? Object.values(edgeFunctions)[0];
-    this.edge = plan.edge;
-
-    //app.registerTypes(this);
-
-    function validateSiteExists() {
       if (!fs.existsSync(sitePath)) {
         throw new Error(`No site found at "${path.resolve(sitePath)}"`);
       }
-    }
+      return sitePath;
+    });
+  }
 
-    function writeTypesFile(typesPath: string) {
-      const filePath = path.resolve(sitePath, typesPath, "sst-env.d.ts");
+  function normalizeInvalidation() {
+    return pulumi.all([args.invalidation]).apply(([invalidation]) => {
+      return invalidation
+        ? { paths: "all", wait: false, ...invalidation }
+        : { paths: "all", wait: false };
+    });
+  }
 
-      // Do not override the types file if it already exists
-      if (fs.existsSync(filePath)) return;
+  function writeTypesFile() {
+    return pulumi
+      .all([sitePath, args.typesPath])
+      .apply(([sitePath, typesPath]) => {
+        const filePath = path.resolve(
+          sitePath,
+          typesPath || ".",
+          "sst-env.d.ts"
+        );
 
-      const relPathToSstTypesFile = path.join(
-        path.relative(path.dirname(filePath), app.paths.root),
-        ".sst/types/index.ts"
-      );
-      fs.writeFileSync(
-        filePath,
-        `/// <reference path="${relPathToSstTypesFile}" />`
-      );
-    }
+        // Do not override the types file if it already exists
+        if (fs.existsSync(filePath)) return;
 
-    function buildApp() {
-      const defaultCommand = "npm run build";
+        const relPathToSstTypesFile = path.join(
+          path.relative(path.dirname(filePath), app.paths.root),
+          ".sst/types/index.ts"
+        );
+        fs.writeFileSync(
+          filePath,
+          `/// <reference path="${relPathToSstTypesFile}" />`
+        );
+      });
+  }
+}
+export function buildApp(
+  name: string,
+  args: SsrSiteArgs,
+  sitePath: pulumi.Output<string>,
+  buildCommand: pulumi.Output<string>
+) {
+  const defaultCommand = "npm run build";
+
+  return pulumi
+    .all([sitePath, buildCommand, args.environment])
+    .apply(([sitePath, buildCommand, environment]) => {
       const cmd = buildCommand || defaultCommand;
 
       if (cmd === defaultCommand) {
@@ -412,75 +361,525 @@ export abstract class SsrSite extends pulumi.ComponentResource {
       } catch (e) {
         throw new Error(`There was a problem building the "${name}" site.`);
       }
-    }
 
-    function createCloudFrontOriginAccessIdentity() {
-      return new aws.cloudfront.OriginAccessIdentity(
-        `${name}-origin-access-identity`,
-        {}
-      );
-    }
+      return sitePath;
+    });
+}
 
-    function createS3Bucket() {
-      // TODO add "enforceSSL: true"
-      const bucket = new aws.s3.BucketV2(`${name}-bucket`, {
-        forceDestroy: true,
-      });
-      new aws.s3.BucketPublicAccessBlock(`${name}-bucket-public-access-block`, {
-        bucket: bucket.id,
-        blockPublicAcls: true,
-        blockPublicPolicy: true,
-        ignorePublicAcls: true,
-        restrictPublicBuckets: true,
-      });
-      // allow access from another account bucket policy
-      const policyDocument = aws.iam.getPolicyDocumentOutput({
-        statements: [
-          {
-            principals: [
+export function createBucket(name: string) {
+  const access = createCloudFrontOriginAccessIdentity();
+  const bucket = createS3Bucket();
+  return { access, bucket };
+
+  function createCloudFrontOriginAccessIdentity() {
+    return new aws.cloudfront.OriginAccessIdentity(
+      `${name}-origin-access-identity`,
+      {}
+    );
+  }
+
+  function createS3Bucket() {
+    // TODO add "enforceSSL: true"
+    const bucket = new aws.s3.BucketV2(`${name}-bucket`, {
+      forceDestroy: true,
+    });
+    new aws.s3.BucketPublicAccessBlock(`${name}-bucket-public-access-block`, {
+      bucket: bucket.id,
+      blockPublicAcls: true,
+      blockPublicPolicy: true,
+      ignorePublicAcls: true,
+      restrictPublicBuckets: true,
+    });
+    // allow access from another account bucket policy
+    const policyDocument = aws.iam.getPolicyDocumentOutput({
+      statements: [
+        {
+          principals: [
+            {
+              type: "AWS",
+              identifiers: [access.iamArn],
+            },
+          ],
+          actions: ["s3:GetObject"],
+          resources: [pulumi.interpolate`${bucket.arn}/*`],
+        },
+      ],
+    });
+    new aws.s3.BucketPolicy(`${name}-bucket-policy`, {
+      bucket: bucket.id,
+      policy: policyDocument.json,
+    });
+    return bucket;
+  }
+}
+
+export function createServersAndDistribution(
+  name: string,
+  args: SsrSiteArgs,
+  sitePath: pulumi.Output<string>,
+  access: aws.cloudfront.OriginAccessIdentity,
+  bucket: aws.s3.BucketV2,
+  plan: Plan
+) {
+  const ssrFunctions: Function[] = [];
+  let singletonCachePolicy: aws.cloudfront.CachePolicy;
+
+  const uploadedObjects = uploadAssets();
+  const cfFunctions = createCloudFrontFunctions();
+  const edgeFunctions = createEdgeFunctions();
+  const origins = buildOrigins();
+  const originGroups = buildOriginGroups();
+  const distribution = createCloudFrontDistribution();
+  allowServerFunctionInvalidateDistribution();
+  createDistributionInvalidation();
+  createWarmer();
+
+  return { distribution, ssrFunctions, edgeFunctions };
+
+  function uploadAssets() {
+    return pulumi
+      .all([args.assets, plan.origins])
+      .apply(([assets, origins]) => {
+        const uploadedObjects: aws.s3.BucketObject[] = [];
+
+        // Define content headers
+        const nonVersionedFilesTTL =
+          typeof assets?.nonVersionedFilesTTL === "number"
+            ? assets.nonVersionedFilesTTL
+            : toSeconds(assets?.nonVersionedFilesTTL ?? "1 day");
+        const staleWhileRevalidateTTL = Math.max(
+          Math.floor(nonVersionedFilesTTL / 10),
+          30
+        );
+        const versionedFilesTTL =
+          typeof assets?.versionedFilesTTL === "number"
+            ? assets.versionedFilesTTL
+            : toSeconds(assets?.versionedFilesTTL ?? "365 days");
+
+        // Handle each S3 origin
+        Object.values(origins).forEach((origin) => {
+          if (origin.type !== "s3") return;
+
+          // Handle each copy source
+          origin.copy.forEach(({ from, to, versionedSubDir }) => {
+            // Build fileOptions
+            const fileOptions: SsrSiteFileOptions[] = [
+              // unversioned files
               {
-                type: "AWS",
-                identifiers: [access.iamArn],
+                files: "**",
+                ignore: versionedSubDir
+                  ? path.posix.join(to, versionedSubDir, "**")
+                  : undefined,
+                cacheControl:
+                  assets?.nonVersionedFilesCacheHeader ??
+                  `public,max-age=0,s-maxage=${nonVersionedFilesTTL},stale-while-revalidate=${staleWhileRevalidateTTL}`,
               },
-            ],
-            actions: ["s3:GetObject"],
-            resources: [pulumi.interpolate`${bucket.arn}/*`],
+              // versioned files
+              ...(versionedSubDir
+                ? [
+                    {
+                      files: path.posix.join(to, versionedSubDir, "**"),
+                      cacheControl:
+                        assets?.versionedFilesCacheHeader ??
+                        `public,max-age=${versionedFilesTTL},immutable`,
+                    },
+                  ]
+                : []),
+              ...(assets?.fileOptions ?? []),
+            ];
+
+            // Upload files based on fileOptions
+            const filesUploaded: string[] = [];
+            for (const fileOption of fileOptions.reverse()) {
+              const files = globSync(fileOption.files, {
+                cwd: from,
+                nodir: true,
+                dot: true,
+                ignore: fileOption.ignore,
+              }).filter((file) => !filesUploaded.includes(file));
+
+              for (const file of files) {
+                uploadedObjects.push(
+                  new aws.s3.BucketObject(file, {
+                    bucket: bucket.bucket,
+                    source: new pulumi.asset.FileAsset(file),
+                    contentType: getContentType(file, "UTF-8"),
+                    cacheControl: fileOption.cacheControl,
+                  })
+                );
+              }
+              filesUploaded.push(...files);
+            }
+          });
+        });
+
+        return uploadedObjects;
+      });
+  }
+
+  function createCloudFrontFunctions() {
+    const functions: Record<string, aws.cloudfront.Function> = {};
+
+    Object.entries(plan.cloudFrontFunctions ?? {}).forEach(
+      ([name, { injections }]) => {
+        functions[name] = new aws.cloudfront.Function(name, {
+          runtime: "cloudfront-js-1.0",
+          code: pulumi.all([injections]).apply(
+            ([injections]) => `
+function handler(event) {
+  var request = event.request;
+  ${injections.join("\n")}
+  return request;
+}`
+          ),
+        });
+      }
+    );
+    return functions;
+  }
+
+  function createEdgeFunctions() {
+    const functions: Record<string, Function> = {};
+
+    Object.entries(plan.edgeFunctions ?? {}).forEach(
+      ([name, { function: props }]) => {
+        const fn = new Function(name, {
+          runtime: "nodejs18.x",
+          timeout: 20,
+          memorySize: 1024,
+          ...props,
+          nodejs: {
+            format: "esm" as const,
+            ...props.nodejs,
           },
+          environment: pulumi
+            .all([args.environment])
+            .apply(([environment]) => ({
+              ...environment,
+              ...props.environment,
+            })),
+          publish: true,
+          region: "us-east-1",
+          policies: pulumi.all([props.policies]).apply(([policies]) => [
+            {
+              name: "s3",
+              policy: bucket.arn.apply((arn) =>
+                aws.iam
+                  .getPolicyDocument({
+                    statements: [
+                      {
+                        actions: ["s3:*"],
+                        resources: [arn],
+                      },
+                    ],
+                  })
+                  .then((doc) => doc.json)
+              ),
+            },
+            ...(policies || []),
+          ]),
+        });
+
+        functions[name] = fn;
+      }
+    );
+    return functions;
+  }
+
+  function buildOrigins() {
+    const origins: Record<
+      string,
+      aws.types.input.cloudfront.DistributionOrigin
+    > = {};
+
+    Object.entries(plan.origins ?? {}).forEach(([name, props]) => {
+      switch (props.type) {
+        case "s3":
+          origins[name] = buildS3Origin(name, props);
+          break;
+        case "function":
+          origins[name] = buildFunctionOrigin(name, props);
+          break;
+        case "image-optimization-function":
+          origins[name] = buildImageOptimizationFunctionOrigin(name, props);
+          break;
+      }
+    });
+
+    return origins;
+  }
+
+  function buildOriginGroups() {
+    const originGroups: Record<
+      string,
+      aws.types.input.cloudfront.DistributionOriginGroup
+    > = {};
+
+    Object.entries(plan.origins ?? {}).forEach(([name, props]) => {
+      if (props.type === "group") {
+        originGroups[name] = {
+          originId: name,
+          failoverCriteria: {
+            statusCodes: props.fallbackStatusCodes,
+          },
+          members: [
+            { originId: props.primaryOriginName },
+            { originId: props.fallbackOriginName },
+          ],
+        };
+      }
+    });
+
+    return originGroups;
+  }
+
+  function buildS3Origin(name: string, props: S3OriginConfig) {
+    return {
+      originId: name,
+      domainName: bucket.bucketRegionalDomainName,
+      originPath: "/" + (props.originPath ?? ""),
+      s3OriginConfig: {
+        originAccessIdentity: access.cloudfrontAccessIdentityPath,
+      },
+    };
+  }
+
+  function buildFunctionOrigin(name: string, props: FunctionOriginConfig) {
+    const fn = new Function(name, {
+      runtime: "nodejs18.x",
+      timeout: 20,
+      memorySize: 1024,
+      ...props.function,
+      nodejs: {
+        format: "esm" as const,
+        ...props.function.nodejs,
+      },
+      environment: pulumi.all([args.environment]).apply(([environment]) => ({
+        ...environment,
+        ...props.function.environment,
+      })),
+      streaming: props.streaming,
+      injections: pulumi
+        .all([props.injections])
+        .apply(([injections]) => [
+          ...(args.warm ? [useServerFunctionWarmingInjection()] : []),
+          ...(injections || []),
+        ]),
+      policies: [
+        {
+          name: "s3",
+          policy: bucket.arn.apply((arn) =>
+            aws.iam
+              .getPolicyDocument({
+                statements: [
+                  {
+                    actions: ["s3:*"],
+                    resources: [arn],
+                  },
+                ],
+              })
+              .then((doc) => doc.json)
+          ),
+        },
+      ],
+    });
+    ssrFunctions.push(fn);
+
+    const url = new aws.lambda.FunctionUrl(`${name}-url`, {
+      authorizationType: "NONE",
+      functionName: fn.aws.function.name,
+      invokeMode: props.streaming ? "RESPONSE_STREAM" : "BUFFERED",
+    });
+
+    return {
+      originId: name,
+      domainName: url.functionUrl.apply((url) => new URL(url).host),
+      customOriginConfig: {
+        httpPort: 80,
+        httpsPort: 443,
+        originProtocolPolicy: "https-only",
+        originReadTimeout: 20,
+        originSslProtocols: ["TLSv1.2"],
+      },
+    };
+  }
+
+  function buildImageOptimizationFunctionOrigin(
+    name: string,
+    props: ImageOptimizationFunctionOriginConfig
+  ) {
+    const fn = new Function(name, {
+      // TODO implement function log retention
+      //logRetention: RetentionDays.THREE_DAYS,
+      timeout: 25,
+      policies: [
+        {
+          name: "s3",
+          policy: bucket.arn.apply((arn) =>
+            aws.iam
+              .getPolicyDocument({
+                statements: [
+                  {
+                    actions: ["s3:GetObject"],
+                    resources: [`${arn}/*`],
+                  },
+                ],
+              })
+              .then((doc) => doc.json)
+          ),
+        },
+      ],
+      ...props.function,
+    });
+
+    const url = new aws.lambda.FunctionUrl(`${name}-url`, {
+      authorizationType: "NONE",
+      functionName: fn.aws.function.name,
+    });
+
+    return {
+      originId: name,
+      domainName: url.functionUrl.apply((url) => new URL(url).host),
+      customOriginConfig: {
+        httpPort: 80,
+        httpsPort: 443,
+        originProtocolPolicy: "https-only",
+        originReadTimeout: 20,
+        originSslProtocols: ["TLSv1.2"],
+      },
+    };
+  }
+
+  function buildBehavior(behavior: Plan["behaviors"][number]) {
+    const edgeFunction = edgeFunctions[behavior.edgeFunction || ""];
+    const cfFunction = cfFunctions[behavior.cfFunction || ""];
+
+    if (behavior.cacheType === "static") {
+      return {
+        targetOriginId: behavior.origin,
+        viewerProtocolPolicy: "redirect-to-https",
+        allowedMethods: behavior.allowedMethods ?? ["GET", "HEAD", "OPTIONS"],
+        cachedMethods: ["GET", "HEAD"],
+        compress: true,
+        // CloudFront's managed CachingOptimized policy
+        cachePolicyId: "658327ea-f89d-4fab-a63d-7e88639e58f6",
+        functionAssociations: cfFunction
+          ? [
+              {
+                eventType: "viewer-request",
+                functionArn: cfFunction.arn,
+              },
+            ]
+          : [],
+      };
+    } else if (behavior.cacheType === "server") {
+      return {
+        targetOriginId: behavior.origin,
+        viewerProtocolPolicy: "redirect-to-https",
+        allowedMethods: behavior.allowedMethods ?? [
+          "DELETE",
+          "GET",
+          "HEAD",
+          "OPTIONS",
+          "PATCH",
+          "POST",
+          "PUT",
         ],
-      });
-      new aws.s3.BucketPolicy(`${name}-bucket-policy`, {
-        bucket: bucket.id,
-        policy: policyDocument.json,
-      });
-      return bucket;
+        cachedMethods: ["GET", "HEAD"],
+        compress: true,
+        cachePolicyId: useServerBehaviorCachePolicy().id,
+        // CloudFront's Managed-AllViewerExceptHostHeader policy
+        originRequestPolicyId: "b689b0a8-53d0-40ab-baf2-68738e2966ac",
+        functionAssociations: cfFunction
+          ? [
+              {
+                eventType: "viewer-request",
+                functionArn: cfFunction.arn,
+              },
+            ]
+          : [],
+        lambdaFunctionAssociations: edgeFunction
+          ? [
+              {
+                includeBody: true,
+                eventType: "origin-request",
+                lambdaArn: edgeFunction.aws.function.qualifiedArn,
+              },
+            ]
+          : [],
+      };
     }
 
-    function createServerFunctionForDev() {
-      //const role = new Role(self, "ServerFunctionRole", {
-      //  assumedBy: new CompositePrincipal(
-      //    new AccountPrincipal(app.account),
-      //    new ServicePrincipal("lambda.amazonaws.com")
-      //  ),
-      //  maxSessionDuration: CdkDuration.hours(12),
-      //});
-      //return new SsrFunction(self, `ServerFunction`, {
-      //  description: "Server handler placeholder",
-      //  bundle: path.join(__dirname, "../support/ssr-site-function-stub"),
-      //  handler: "index.handler",
-      //  runtime,
-      //  memorySize,
-      //  timeout,
-      //  role,
-      //  bind,
-      //  environment,
-      //  permissions,
-      //  // note: do not need to set vpc and layers settings b/c this function is not being used
-      //});
-    }
+    throw new Error(`Invalid behavior type in the "${name}" site.`);
+  }
 
-    function createCloudFrontDistribution() {
-      const distribution = new Distribution("distribution", {
-        customDomain,
+  function useServerBehaviorCachePolicy() {
+    singletonCachePolicy =
+      singletonCachePolicy ??
+      new aws.cloudfront.CachePolicy("cache-policy", {
+        comment: "SST server response cache policy",
+        defaultTtl: 0,
+        maxTtl: 365,
+        minTtl: 0,
+        parametersInCacheKeyAndForwardedToOrigin: {
+          cookiesConfig: {
+            cookieBehavior: "none",
+          },
+          headersConfig: {
+            headerBehavior: "whitelist",
+            headers: {
+              items: plan.cachePolicyAllowedHeaders || [],
+            },
+          },
+          queryStringsConfig: {
+            queryStringBehavior: "all",
+          },
+          enableAcceptEncodingBrotli: true,
+          enableAcceptEncodingGzip: true,
+        },
+      });
+    return singletonCachePolicy;
+  }
+
+  function useServerFunctionWarmingInjection() {
+    return `
+if (event.type === "warmer") {
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      resolve({ serverId: "server-" + Math.random().toString(36).slice(2, 8) });
+    }, event.delay);
+  });
+}`;
+  }
+
+  function createServerFunctionForDev() {
+    //const role = new Role(self, "ServerFunctionRole", {
+    //  assumedBy: new CompositePrincipal(
+    //    new AccountPrincipal(app.account),
+    //    new ServicePrincipal("lambda.amazonaws.com")
+    //  ),
+    //  maxSessionDuration: CdkDuration.hours(12),
+    //});
+    //return new SsrFunction(self, `ServerFunction`, {
+    //  description: "Server handler placeholder",
+    //  bundle: path.join(__dirname, "../support/ssr-site-function-stub"),
+    //  handler: "index.handler",
+    //  runtime,
+    //  memorySize,
+    //  timeout,
+    //  role,
+    //  bind,
+    //  environment,
+    //  permissions,
+    //  // note: do not need to set vpc and layers settings b/c this function is not being used
+    //});
+  }
+
+  function createCloudFrontDistribution() {
+    return new Distribution(
+      "distribution",
+      {
+        customDomain: args.customDomain,
         distribution: {
           origins: Object.values(origins),
           originGroups: Object.values(originGroups),
@@ -512,16 +911,15 @@ export abstract class SsrSite extends pulumi.ComponentResource {
           },
           waitForDeployment: false,
         },
-      });
-      // TODO create distribution after s3 upload finishes
-      //s3DeployCRs.forEach((cr) => distribution.node.addDependency(cr));
+      },
+      // create distribution after s3 upload finishes
+      { dependsOn: uploadedObjects }
+    );
+  }
 
-      return distribution;
-    }
-
-    function allowServerFunctionInvalidateDistribution() {
-      const policy = new aws.iam.Policy(`invalidation-policy`, {
-        policy: pulumi.interpolate`{
+  function allowServerFunctionInvalidateDistribution() {
+    const policy = new aws.iam.Policy(`invalidation-policy`, {
+      policy: pulumi.interpolate`{
             "Version": "2012-10-17",
             "Statement": [
               {
@@ -531,770 +929,265 @@ export abstract class SsrSite extends pulumi.ComponentResource {
               }
             ]
           }`,
-      });
+    });
 
-      for (const fn of [...ssrFunctions, ...Object.values(edgeFunctions)]) {
-        new aws.iam.RolePolicyAttachment(
-          `invalidation-policy-${fn.aws.function.name}`,
-          {
-            policyArn: policy.arn,
-            role: fn.aws.function.role,
-          }
+    for (const fn of [...ssrFunctions, ...Object.values(edgeFunctions)]) {
+      new aws.iam.RolePolicyAttachment(
+        `invalidation-policy-${fn.aws.function.name}`,
+        {
+          policyArn: policy.arn,
+          role: fn.aws.function.role,
+        }
+      );
+    }
+  }
+
+  function createWarmer() {
+    // note: Currently all sites have a single server function. When we add
+    //       support for multiple server functions (ie. route splitting), we
+    //       need to handle warming multiple functions.
+    if (!args.warm) return;
+
+    if (args.warm && plan.edge) {
+      throw new Error(
+        `In the "${name}" Site, warming is currently supported only for the regional mode.`
+      );
+    }
+
+    if (ssrFunctions.length === 0) return;
+
+    // Create warmer function
+    const warmer = new Function("warmer", {
+      description: `${name} warmer`,
+      bundle: path.join(__dirname, "../support/ssr-warmer"),
+      runtime: "nodejs20.x",
+      handler: "index.handler",
+      timeout: 900,
+      memorySize: 128,
+      environment: {
+        // TODO - SST design: output: how to reference the function inside Function
+        //   looks weird to acces `function.function.name`
+        FUNCTION_NAME: ssrFunctions[0].aws.function.name,
+        CONCURRENCY: pulumi.all([args.warm]).apply(([warm]) => warm.toString()),
+      },
+      policies: [
+        {
+          name: "invoke-server",
+          policy: ssrFunctions[0].aws.function.arn.apply((arn) =>
+            aws.iam
+              .getPolicyDocument({
+                statements: [
+                  {
+                    actions: ["lambda:InvokeFunction"],
+                    resources: [arn],
+                  },
+                ],
+              })
+              .then((doc) => doc.json)
+          ),
+        },
+      ],
+    });
+
+    // Create cron job
+    const schedule = new aws.cloudwatch.EventRule("warmer-rule", {
+      description: `${name} warmer`,
+      scheduleExpression: "rate(5 minutes)",
+    });
+    new aws.cloudwatch.EventTarget("warmer-target", {
+      rule: schedule.name,
+      arn: warmer.aws.function.arn,
+      retryPolicy: {
+        maximumRetryAttempts: 0,
+      },
+    });
+
+    // Prewarm on deploy
+    new aws.lambda.Invocation("warmer-prewarm", {
+      functionName: warmer.aws.function.name,
+      triggers: {
+        version: Date.now().toString(),
+      },
+      input: JSON.stringify({}),
+    });
+  }
+
+  function createDistributionInvalidation() {
+    pulumi
+      .all([sitePath, args.invalidation, plan])
+      .apply(([sitePath, invalidation, plan]) => {
+        // We will generate a hash based on the contents of the S3 files with cache enabled.
+        // This will be used to determine if we need to invalidate our CloudFront cache.
+        const s3Origin = Object.values(plan.origins).find(
+          (origin) => origin.type === "s3"
         );
-      }
-    }
+        if (s3Origin?.type !== "s3") return;
+        const cachedS3Files = s3Origin.copy.filter((file) => file.cached);
+        if (cachedS3Files.length === 0) return;
 
-    function uploadAssets() {
-      const nonVersionedFilesTTL =
-        typeof assets?.nonVersionedFilesTTL === "number"
-          ? assets.nonVersionedFilesTTL
-          : toSeconds(assets?.nonVersionedFilesTTL ?? "1 day");
-      const staleWhileRevalidateTTL = Math.max(
-        Math.floor(nonVersionedFilesTTL / 10),
-        30
-      );
-      const versionedFilesTTL =
-        typeof assets?.versionedFilesTTL === "number"
-          ? assets.versionedFilesTTL
-          : toSeconds(assets?.versionedFilesTTL ?? "365 days");
-
-      // Handle each S3 origin
-      Object.values(plan.origins ?? {}).forEach((origin) => {
-        if (origin.type !== "s3") return;
-
-        // Handle each copy source
-        origin.copy.forEach(({ from, to, cached, versionedSubDir }) => {
-          // Build fileOptions
-          const fileOptions: SsrSiteFileOptions[] = [];
-          // create a default file option for: unversioned files
-          fileOptions.push({
-            files: "**",
-            ignore: versionedSubDir
-              ? path.posix.join(to, versionedSubDir, "**")
-              : undefined,
-            cacheControl:
-              assets?.nonVersionedFilesCacheHeader ??
-              `public,max-age=0,s-maxage=${nonVersionedFilesTTL},stale-while-revalidate=${staleWhileRevalidateTTL}`,
-          });
-
-          // create a default file option for: versioned files
-          if (versionedSubDir) {
-            fileOptions.push({
-              files: path.posix.join(to, versionedSubDir, "**"),
-              cacheControl:
-                assets?.versionedFilesCacheHeader ??
-                `public,max-age=${versionedFilesTTL},immutable`,
-            });
-          }
-          fileOptions.push(...(assets?.fileOptions ?? []));
-
-          // Upload files based on fileOptions
-          const filesUploaded: string[] = [];
-          for (const fileOption of fileOptions.reverse()) {
-            const files = globSync(fileOption.files, {
-              cwd: from,
-              nodir: true,
-              dot: true,
-              ignore: fileOption.ignore,
-            }).filter((file) => !filesUploaded.includes(file));
-
-            for (const file of files) {
-              new aws.s3.BucketObject(file, {
-                bucket: bucket.bucket,
-                source: new pulumi.asset.FileAsset(file),
-                contentType: getContentType(file, "UTF-8"),
-                cacheControl: fileOption.cacheControl,
-              });
-            }
-            filesUploaded.push(...files);
-          }
-        });
-      });
-    }
-
-    function createCloudFrontFunctions() {
-      const functions: Record<string, aws.cloudfront.Function> = {};
-
-      Object.entries(plan.cloudFrontFunctions ?? {}).forEach(
-        ([name, { injections }]) => {
-          functions[name] = new aws.cloudfront.Function(name, {
-            runtime: "cloudfront-js-1.0",
-            code: `
-function handler(event) {
-  var request = event.request;
-  ${injections.join("\n")}
-  return request;
-}`,
-          });
-        }
-      );
-      return functions;
-    }
-
-    function createEdgeFunctions() {
-      const functions: Record<string, Function> = {};
-
-      Object.entries(plan.edgeFunctions ?? {}).forEach(
-        ([name, { function: props }]) => {
-          const fn = new Function(name, {
-            runtime: "nodejs18.x",
-            timeout: 20,
-            memorySize: 1024,
-            ...props,
-            nodejs: {
-              format: "esm" as const,
-              ...props.nodejs,
-              esbuild: {
-                ...props.nodejs?.esbuild,
-              },
-            },
-            environment: {
-              ...environment,
-              ...props.environment,
-            },
-            publish: true,
-            region: "us-east-1",
-            policies: [
-              {
-                name: "s3",
-                policy: bucket.arn.apply((arn) =>
-                  aws.iam
-                    .getPolicyDocument({
-                      statements: [
-                        {
-                          actions: ["s3:*"],
-                          resources: [arn],
-                        },
-                      ],
-                    })
-                    .then((doc) => doc.json)
-                ),
-              },
-            ],
-          });
-
-          functions[name] = fn;
-        }
-      );
-      return functions;
-    }
-
-    function createWarmer() {
-      // note: Currently all sites have a single server function. When we add
-      //       support for multiple server functions (ie. route splitting), we
-      //       need to handle warming multiple functions.
-      if (!warm) return;
-
-      if (warm && plan.edge) {
-        throw new Error(
-          `In the "${name}" Site, warming is currently supported only for the regional mode.`
-        );
-      }
-
-      if (ssrFunctions.length === 0) return;
-
-      // Create warmer function
-      const warmer = new Function("warmer", {
-        description: `${name} warmer`,
-        bundle: path.join(__dirname, "../support/ssr-warmer"),
-        runtime: "nodejs20.x",
-        handler: "index.handler",
-        timeout: 900,
-        memorySize: 128,
-        environment: {
-          // TODO - SST design: output: how to reference the function inside Function
-          //   looks weird to acces `function.function.name`
-          FUNCTION_NAME: ssrFunctions[0].aws.function.name,
-          CONCURRENCY: warm.toString(),
-        },
-        policies: [
-          {
-            name: "invoke-server",
-            policy: ssrFunctions[0].aws.function.arn.apply((arn) =>
-              aws.iam
-                .getPolicyDocument({
-                  statements: [
-                    {
-                      actions: ["lambda:InvokeFunction"],
-                      resources: [arn],
-                    },
-                  ],
-                })
-                .then((doc) => doc.json)
-            ),
-          },
-        ],
-      });
-
-      // Create cron job
-      const schedule = new aws.cloudwatch.EventRule("warmer-rule", {
-        description: `${name} warmer`,
-        scheduleExpression: "rate(5 minutes)",
-      });
-      new aws.cloudwatch.EventTarget("warmer-target", {
-        rule: schedule.name,
-        arn: warmer.aws.function.arn,
-        retryPolicy: {
-          maximumRetryAttempts: 0,
-        },
-      });
-
-      // Prewarm on deploy
-      new aws.lambda.Invocation("warmer-prewarm", {
-        functionName: warmer.aws.function.name,
-        triggers: {
-          version: Date.now().toString(),
-        },
-        input: JSON.stringify({}),
-      });
-    }
-
-    function buildOrigins() {
-      const origins: OriginsMap = {};
-
-      Object.entries(plan.origins ?? {}).forEach(([name, props]) => {
-        switch (props.type) {
-          case "s3":
-            origins[name] = buildS3Origin(name, props);
-            break;
-          case "function":
-            origins[name] = buildFunctionOrigin(name, props);
-            break;
-          case "image-optimization-function":
-            origins[name] = buildImageOptimizationFunctionOrigin(name, props);
-            break;
-        }
-      });
-
-      return origins;
-    }
-
-    function buildOriginGroups() {
-      const originGroups: OriginsMap = {};
-
-      Object.entries(plan.origins ?? {}).forEach(([name, props]) => {
-        if (props.type === "group") {
-          originGroups[name] = {
-            originId: name,
-            failoverCriteria: {
-              statusCodes: props.fallbackStatusCodes,
-            },
-            members: [props.primaryOriginName, props.fallbackOriginName],
-          };
-        }
-      });
-
-      return originGroups;
-    }
-
-    function buildS3Origin(name: string, props: S3OriginConfig) {
-      return {
-        originId: name,
-        domainName: bucket.bucketRegionalDomainName,
-        originPath: "/" + (props.originPath ?? ""),
-        s3OriginConfig: {
-          originAccessIdentity: access.cloudfrontAccessIdentityPath,
-        },
-      };
-    }
-
-    function buildFunctionOrigin(name: string, props: FunctionOriginConfig) {
-      const fn = new Function(name, {
-        runtime: "nodejs18.x",
-        timeout: 20,
-        memorySize: 1024,
-        ...props.function,
-        nodejs: {
-          format: "esm" as const,
-          ...props.function.nodejs,
-          esbuild: {
-            ...props.function.nodejs?.esbuild,
-          },
-        },
-        environment: {
-          ...environment,
-          ...props.function.environment,
-        },
-        streaming: props.streaming,
-        injections: [
-          ...(warm ? [useServerFunctionWarmingInjection()] : []),
-          ...(props.injections || []),
-        ],
-        policies: [
-          {
-            name: "s3",
-            policy: bucket.arn.apply((arn) =>
-              aws.iam
-                .getPolicyDocument({
-                  statements: [
-                    {
-                      actions: ["s3:*"],
-                      resources: [arn],
-                    },
-                  ],
-                })
-                .then((doc) => doc.json)
-            ),
-          },
-        ],
-      });
-      ssrFunctions.push(fn);
-
-      const url = new aws.lambda.FunctionUrl(`${name}-url`, {
-        authorizationType: "NONE",
-        functionName: fn.aws.function.name,
-        invokeMode: props.streaming ? "RESPONSE_STREAM" : "BUFFERED",
-      });
-
-      return {
-        originId: name,
-        domainName: url.functionUrl.apply((url) => new URL(url).host),
-        customOriginConfig: {
-          httpPort: 80,
-          httpsPort: 443,
-          originProtocolPolicy: "https-only",
-          originReadTimeout: 20,
-          originSslProtocols: ["TLSv1.2"],
-        },
-      };
-    }
-
-    function buildImageOptimizationFunctionOrigin(
-      name: string,
-      props: ImageOptimizationFunctionOriginConfig
-    ) {
-      const fn = new Function(name, {
-        // TODO implement function log retention
-        //logRetention: RetentionDays.THREE_DAYS,
-        timeout: 25,
-        policies: [
-          {
-            name: "s3",
-            policy: bucket.arn.apply((arn) =>
-              aws.iam
-                .getPolicyDocument({
-                  statements: [
-                    {
-                      actions: ["s3:GetObject"],
-                      resources: [`${arn}/*`],
-                    },
-                  ],
-                })
-                .then((doc) => doc.json)
-            ),
-          },
-        ],
-        ...props.function,
-      });
-
-      const url = new aws.lambda.FunctionUrl(`${name}-url`, {
-        authorizationType: "NONE",
-        functionName: fn.aws.function.name,
-      });
-
-      return {
-        originId: name,
-        domainName: url.functionUrl.apply((url) => new URL(url).host),
-        customOriginConfig: {
-          httpPort: 80,
-          httpsPort: 443,
-          originProtocolPolicy: "https-only",
-          originReadTimeout: 20,
-          originSslProtocols: ["TLSv1.2"],
-        },
-      };
-    }
-
-    function buildBehavior(
-      behavior: ReturnType<typeof self.validatePlan>["behaviors"][number]
-    ) {
-      const edgeFunction = edgeFunctions[behavior.edgeFunction || ""];
-      const cfFunction = cfFunctions[behavior.cfFunction || ""];
-
-      if (behavior.cacheType === "static") {
-        return {
-          targetOriginId: behavior.origin,
-          viewerProtocolPolicy: "redirect-to-https",
-          allowedMethods: behavior.allowedMethods ?? ["GET", "HEAD", "OPTIONS"],
-          cachedMethods: ["GET", "HEAD"],
-          compress: true,
-          // CloudFront's managed CachingOptimized policy
-          cachePolicyId: "658327ea-f89d-4fab-a63d-7e88639e58f6",
-          functionAssociations: cfFunction
-            ? [
-                {
-                  eventType: "viewer-request",
-                  functionArn: cfFunction.arn,
-                },
-              ]
-            : [],
-        };
-      } else if (behavior.cacheType === "server") {
-        return {
-          targetOriginId: behavior.origin,
-          viewerProtocolPolicy: "redirect-to-https",
-          allowedMethods: behavior.allowedMethods ?? [
-            "DELETE",
-            "GET",
-            "HEAD",
-            "OPTIONS",
-            "PATCH",
-            "POST",
-            "PUT",
-          ],
-          cachedMethods: ["GET", "HEAD"],
-          compress: true,
-          cachePolicyId: useServerBehaviorCachePolicy().id,
-          // CloudFront's Managed-AllViewerExceptHostHeader policy
-          originRequestPolicyId: "b689b0a8-53d0-40ab-baf2-68738e2966ac",
-          functionAssociations: cfFunction
-            ? [
-                {
-                  eventType: "viewer-request",
-                  functionArn: cfFunction.arn,
-                },
-              ]
-            : [],
-          lambdaFunctionAssociations: edgeFunction
-            ? [
-                {
-                  includeBody: true,
-                  eventType: "origin-request",
-                  lambdaArn: edgeFunction.aws.function.qualifiedArn,
-                },
-              ]
-            : [],
-        };
-      }
-
-      throw new Error(`Invalid behavior type in the "${name}" site.`);
-    }
-
-    function useServerBehaviorCachePolicy() {
-      singletonCachePolicy =
-        singletonCachePolicy ??
-        new aws.cloudfront.CachePolicy("cache-policy", {
-          comment: "SST server response cache policy",
-          defaultTtl: 0,
-          maxTtl: 365,
-          minTtl: 0,
-          parametersInCacheKeyAndForwardedToOrigin: {
-            cookiesConfig: {
-              cookieBehavior: "none",
-            },
-            headersConfig: {
-              headerBehavior: "whitelist",
-              headers: {
-                items: plan.cachePolicyAllowedHeaders || [],
-              },
-            },
-            queryStringsConfig: {
-              queryStringBehavior: "all",
-            },
-            enableAcceptEncodingBrotli: true,
-            enableAcceptEncodingGzip: true,
-          },
-        });
-      return singletonCachePolicy;
-    }
-
-    function useServerFunctionWarmingInjection() {
-      return `
-if (event.type === "warmer") {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve({ serverId: "server-" + Math.random().toString(36).slice(2, 8) });
-    }, event.delay);
-  });
-}`;
-    }
-
-    function createDistributionInvalidation() {
-      const paths = invalidation.paths;
-
-      // We will generate a hash based on the contents of the S3 files with cache enabled.
-      // This will be used to determine if we need to invalidate our CloudFront cache.
-      const s3Origin = Object.values(plan.origins).find(
-        (origin) => origin.type === "s3"
-      );
-      if (s3Origin?.type !== "s3") return;
-      const cachedS3Files = s3Origin.copy.filter((file) => file.cached);
-      if (cachedS3Files.length === 0) return;
-
-      // Build invalidation paths
-      const invalidationPaths: string[] = [];
-      if (paths === "none") {
-      } else if (paths === "all") {
-        invalidationPaths.push("/*");
-      } else if (paths === "versioned") {
-        cachedS3Files.forEach((item) => {
-          if (!item.versionedSubDir) return;
-          invalidationPaths.push(
-            path.posix.join("/", item.to, item.versionedSubDir, "*")
-          );
-        });
-      } else {
-        invalidationPaths.push(...paths);
-      }
-      if (invalidationPaths.length === 0) return;
-
-      // Build build ID
-      let invalidationBuildId: string;
-      if (plan.buildId) {
-        invalidationBuildId = plan.buildId;
-      } else {
-        const hash = crypto.createHash("md5");
-
-        cachedS3Files.forEach((item) => {
-          // The below options are needed to support following symlinks when building zip files:
-          // - nodir: This will prevent symlinks themselves from being copied into the zip.
-          // - follow: This will follow symlinks and copy the files within.
-
-          // For versioned files, use file path for digest since file version in name should change on content change
-          if (item.versionedSubDir) {
-            globSync("**", {
-              dot: true,
-              nodir: true,
-              follow: true,
-              cwd: path.resolve(sitePath, item.from, item.versionedSubDir),
-            }).forEach((filePath) => hash.update(filePath));
-          }
-
-          // For non-versioned files, use file content for digest
-          if (paths !== "versioned") {
-            globSync("**", {
-              ignore: item.versionedSubDir
-                ? [path.posix.join(item.versionedSubDir, "**")]
-                : undefined,
-              dot: true,
-              nodir: true,
-              follow: true,
-              cwd: path.resolve(sitePath, item.from),
-            }).forEach((filePath) =>
-              hash.update(
-                fs.readFileSync(path.resolve(sitePath, item.from, filePath))
-              )
+        // Build invalidation paths
+        const invalidationPaths: string[] = [];
+        if (invalidation?.paths === "none") {
+        } else if (invalidation?.paths === "all") {
+          invalidationPaths.push("/*");
+        } else if (invalidation?.paths === "versioned") {
+          cachedS3Files.forEach((item) => {
+            if (!item.versionedSubDir) return;
+            invalidationPaths.push(
+              path.posix.join("/", item.to, item.versionedSubDir, "*")
             );
-          }
+          });
+        } else {
+          invalidationPaths.push(...(invalidation?.paths || []));
+        }
+        if (invalidationPaths.length === 0) return;
+
+        // Build build ID
+        let invalidationBuildId: string;
+        if (plan.buildId) {
+          invalidationBuildId = plan.buildId;
+        } else {
+          const hash = crypto.createHash("md5");
+
+          cachedS3Files.forEach((item) => {
+            // The below options are needed to support following symlinks when building zip files:
+            // - nodir: This will prevent symlinks themselves from being copied into the zip.
+            // - follow: This will follow symlinks and copy the files within.
+
+            // For versioned files, use file path for digest since file version in name should change on content change
+            if (item.versionedSubDir) {
+              globSync("**", {
+                dot: true,
+                nodir: true,
+                follow: true,
+                cwd: path.resolve(sitePath, item.from, item.versionedSubDir),
+              }).forEach((filePath) => hash.update(filePath));
+            }
+
+            // For non-versioned files, use file content for digest
+            if (invalidation?.paths !== "versioned") {
+              globSync("**", {
+                ignore: item.versionedSubDir
+                  ? [path.posix.join(item.versionedSubDir, "**")]
+                  : undefined,
+                dot: true,
+                nodir: true,
+                follow: true,
+                cwd: path.resolve(sitePath, item.from),
+              }).forEach((filePath) =>
+                hash.update(
+                  fs.readFileSync(path.resolve(sitePath, item.from, filePath))
+                )
+              );
+            }
+          });
+          invalidationBuildId = hash.digest("hex");
+          console.debug(`Generated build ID ${invalidationBuildId}`);
+        }
+
+        new DistributionInvalidation("invalidation", {
+          distributionId: distribution.aws.distribution.id,
+          paths: invalidationPaths,
+          wait: invalidation?.wait,
+          version: invalidationBuildId,
         });
-        invalidationBuildId = hash.digest("hex");
-        console.debug(`Generated build ID ${invalidationBuildId}`);
-      }
-
-      new DistributionInvalidation("invalidation", {
-        distributionId: distribution.aws.distribution.id,
-        paths: invalidationPaths,
-        wait: invalidation.wait,
-        version: invalidationBuildId,
       });
-    }
   }
 
-  /**
-   * The CloudFront URL of the website.
-   */
-  public get url() {
-    //if (this.doNotDeploy) return this.props.dev?.url;
-    return this.distribution.url;
-  }
+  function getContentType(filename: string, textEncoding: string) {
+    const ext = filename.endsWith(".well-known/site-association-json")
+      ? ".json"
+      : path.extname(filename);
 
-  /**
-   * If the custom domain is enabled, this is the URL of the website with the
-   * custom domain.
-   */
-  public get customDomainUrl() {
-    if (this.doNotDeploy) return;
-
-    return this.distribution.customDomainUrl;
-  }
-
-  /**
-   * The internally created CDK resources.
-   */
-  public get aws() {
-    if (this.doNotDeploy) return;
-
-    return {
-      function: this.serverFunction?.aws.function,
-      bucket: this.bucket,
-      distribution: this.distribution,
-      //hostedZone: this.distribution.cdk.hostedZone,
-      //certificate: this.distribution.cdk.certificate,
+    const extensions = {
+      [".txt"]: { mime: "text/plain", isText: true },
+      [".htm"]: { mime: "text/html", isText: true },
+      [".html"]: { mime: "text/html", isText: true },
+      [".xhtml"]: { mime: "application/xhtml+xml", isText: true },
+      [".css"]: { mime: "text/css", isText: true },
+      [".js"]: { mime: "text/javascript", isText: true },
+      [".mjs"]: { mime: "text/javascript", isText: true },
+      [".apng"]: { mime: "image/apng", isText: false },
+      [".avif"]: { mime: "image/avif", isText: false },
+      [".gif"]: { mime: "image/gif", isText: false },
+      [".jpeg"]: { mime: "image/jpeg", isText: false },
+      [".jpg"]: { mime: "image/jpeg", isText: false },
+      [".png"]: { mime: "image/png", isText: false },
+      [".svg"]: { mime: "image/svg+xml", isText: true },
+      [".bmp"]: { mime: "image/bmp", isText: false },
+      [".tiff"]: { mime: "image/tiff", isText: false },
+      [".webp"]: { mime: "image/webp", isText: false },
+      [".ico"]: { mime: "image/vnd.microsoft.icon", isText: false },
+      [".eot"]: { mime: "application/vnd.ms-fontobject", isText: false },
+      [".ttf"]: { mime: "font/ttf", isText: false },
+      [".otf"]: { mime: "font/otf", isText: false },
+      [".woff"]: { mime: "font/woff", isText: false },
+      [".woff2"]: { mime: "font/woff2", isText: false },
+      [".json"]: { mime: "application/json", isText: true },
+      [".jsonld"]: { mime: "application/ld+json", isText: true },
+      [".xml"]: { mime: "application/xml", isText: true },
+      [".pdf"]: { mime: "application/pdf", isText: false },
+      [".zip"]: { mime: "application/zip", isText: false },
+      [".wasm"]: { mime: "application/wasm", isText: false },
     };
-  }
-
-  /////////////////////
-  // Public Methods
-  /////////////////////
-
-  /**
-   * Attaches the given list of permissions to allow the server side
-   * rendering framework to access other AWS resources.
-   *
-   * @example
-   * ```js
-   * site.attachPermissions(["sns"]);
-   * ```
-   */
-  //public attachPermissions(permissions: Permissions): void {
-  //  const server = this.serverFunction || this.serverFunctionForDev;
-  //  attachPermissionsToRole(server?.role as Role, permissions);
-  //}
-
-  // TODO implement metadata
-  ///** @internal */
-  //protected getConstructMetadataBase() {
-  //  return {
-  //    data: {
-  //      mode: this.doNotDeploy
-  //        ? ("placeholder" as const)
-  //        : ("deployed" as const),
-  //      path: this.props.path,
-  //      runtime: this.props.runtime,
-  //      customDomainUrl: this.customDomainUrl,
-  //      url: this.url,
-  //      edge: this.edge,
-  //      server: (this.serverFunctionForDev || this.serverFunction)
-  //        ?.functionArn!,
-  //      secrets: (this.props.bind || [])
-  //        .filter((c) => c instanceof Secret)
-  //        .map((c) => (c as Secret).name),
-  //    },
-  //  };
-  //}
-
-  //public abstract getConstructMetadata(): ReturnType<
-  //  SSTConstruct["getConstructMetadata"]
-  //>;
-
-  ///** @internal */
-  //public getFunctionBinding(): FunctionBindingProps {
-  //  const app = this.node.root as App;
-  //  return {
-  //    clientPackage: "site",
-  //    variables: {
-  //      url: this.doNotDeploy
-  //        ? {
-  //            type: "plain",
-  //            value: this.props.dev?.url ?? "localhost",
-  //          }
-  //        : {
-  //            // Do not set real value b/c we don't want to make the Lambda function
-  //            // depend on the Site. B/c often the site depends on the Api, causing
-  //            // a CloudFormation circular dependency if the Api and the Site belong
-  //            // to different stacks.
-  //            type: "site_url",
-  //            value: this.customDomainUrl || this.url!,
-  //          },
-  //    },
-  //    permissions: {
-  //      "ssm:GetParameters": [
-  //        `arn:${Stack.of(this).partition}:ssm:${app.region}:${
-  //          app.account
-  //        }:parameter${getParameterPath(this, "url")}`,
-  //      ],
-  //    },
-  //  };
-  //}
-
-  protected useCloudFrontFunctionHostHeaderInjection() {
-    return `request.headers["x-forwarded-host"] = request.headers.host;`;
-  }
-
-  protected abstract plan(
-    bucket: aws.s3.BucketV2
-  ): ReturnType<typeof this.validatePlan>;
-
-  protected validatePlan<
-    CloudFrontFunctions extends Record<string, CloudFrontFunctionConfig>,
-    EdgeFunctions extends Record<string, EdgeFunctionConfig>,
-    Origins extends Record<
-      string,
-      | FunctionOriginConfig
-      | ImageOptimizationFunctionOriginConfig
-      | S3OriginConfig
-      | OriginGroupConfig
-    >
-  >(input: {
-    cloudFrontFunctions?: CloudFrontFunctions;
-    edgeFunctions?: EdgeFunctions;
-    origins: Origins;
-    edge: boolean;
-    behaviors: {
-      cacheType: "server" | "static";
-      pattern?: string;
-      origin: keyof Origins;
-      allowedMethods?: (
-        | "DELETE"
-        | "GET"
-        | "HEAD"
-        | "OPTIONS"
-        | "PATCH"
-        | "POST"
-        | "PUT"
-      )[];
-      cfFunction?: keyof CloudFrontFunctions;
-      edgeFunction?: keyof EdgeFunctions;
-    }[];
-    // TODO - pulumi: use inferred types
-    //errorResponses?: aws.cloudfront.DistributionArgs["customErrorResponses"];
-    errorResponses?: {
-      errorCode: number;
-      responseCode?: number;
-      responsePagePath?: string;
-    };
-    cachePolicyAllowedHeaders?: string[];
-    buildId?: string;
-    warmerConfig?: {
-      function: string;
-      schedule?: string;
-    };
-  }) {
-    return input;
+    const extensionData = extensions[ext as keyof typeof extensions];
+    const mime = extensionData?.mime ?? "application/octet-stream";
+    const charset =
+      extensionData?.isText && textEncoding !== "none"
+        ? `;charset=${textEncoding}`
+        : "";
+    return `${mime}${charset}`;
   }
 }
 
-function getContentType(filename: string, textEncoding: string) {
-  const ext = filename.endsWith(".well-known/site-association-json")
-    ? ".json"
-    : path.extname(filename);
+export function useCloudFrontFunctionHostHeaderInjection() {
+  return `request.headers["x-forwarded-host"] = request.headers.host;`;
+}
 
-  const extensions = {
-    [".txt"]: { mime: "text/plain", isText: true },
-    [".htm"]: { mime: "text/html", isText: true },
-    [".html"]: { mime: "text/html", isText: true },
-    [".xhtml"]: { mime: "application/xhtml+xml", isText: true },
-    [".css"]: { mime: "text/css", isText: true },
-    [".js"]: { mime: "text/javascript", isText: true },
-    [".mjs"]: { mime: "text/javascript", isText: true },
-    [".apng"]: { mime: "image/apng", isText: false },
-    [".avif"]: { mime: "image/avif", isText: false },
-    [".gif"]: { mime: "image/gif", isText: false },
-    [".jpeg"]: { mime: "image/jpeg", isText: false },
-    [".jpg"]: { mime: "image/jpeg", isText: false },
-    [".png"]: { mime: "image/png", isText: false },
-    [".svg"]: { mime: "image/svg+xml", isText: true },
-    [".bmp"]: { mime: "image/bmp", isText: false },
-    [".tiff"]: { mime: "image/tiff", isText: false },
-    [".webp"]: { mime: "image/webp", isText: false },
-    [".ico"]: { mime: "image/vnd.microsoft.icon", isText: false },
-    [".eot"]: { mime: "application/vnd.ms-fontobject", isText: false },
-    [".ttf"]: { mime: "font/ttf", isText: false },
-    [".otf"]: { mime: "font/otf", isText: false },
-    [".woff"]: { mime: "font/woff", isText: false },
-    [".woff2"]: { mime: "font/woff2", isText: false },
-    [".json"]: { mime: "application/json", isText: true },
-    [".jsonld"]: { mime: "application/ld+json", isText: true },
-    [".xml"]: { mime: "application/xml", isText: true },
-    [".pdf"]: { mime: "application/pdf", isText: false },
-    [".zip"]: { mime: "application/zip", isText: false },
-    [".wasm"]: { mime: "application/wasm", isText: false },
+export function validatePlan<
+  CloudFrontFunctions extends Record<string, CloudFrontFunctionConfig>,
+  EdgeFunctions extends Record<string, EdgeFunctionConfig>,
+  Origins extends Record<
+    string,
+    | FunctionOriginConfig
+    | ImageOptimizationFunctionOriginConfig
+    | S3OriginConfig
+    | OriginGroupConfig
+  >
+>(input: {
+  cloudFrontFunctions?: CloudFrontFunctions;
+  edgeFunctions?: EdgeFunctions;
+  origins: Origins;
+  edge: boolean;
+  behaviors: {
+    cacheType: "server" | "static";
+    pattern?: string;
+    origin: keyof Origins;
+    allowedMethods?: (
+      | "DELETE"
+      | "GET"
+      | "HEAD"
+      | "OPTIONS"
+      | "PATCH"
+      | "POST"
+      | "PUT"
+    )[];
+    cfFunction?: keyof CloudFrontFunctions;
+    edgeFunction?: keyof EdgeFunctions;
+  }[];
+  // TODO - pulumi: use inferred types
+  //errorResponses?: aws.cloudfront.DistributionArgs["customErrorResponses"];
+  errorResponses?: {
+    errorCode: number;
+    responseCode?: number;
+    responsePagePath?: string;
   };
-  const extensionData = extensions[ext as keyof typeof extensions];
-  const mime = extensionData?.mime ?? "application/octet-stream";
-  const charset =
-    extensionData?.isText && textEncoding !== "none"
-      ? `;charset=${textEncoding}`
-      : "";
-  return `${mime}${charset}`;
+  cachePolicyAllowedHeaders?: string[];
+  buildId?: string;
+  warmerConfig?: {
+    function: string;
+    schedule?: string;
+  };
+}) {
+  return input;
 }

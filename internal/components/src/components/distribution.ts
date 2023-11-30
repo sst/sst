@@ -1,8 +1,7 @@
 import pulumi from "@pulumi/pulumi";
 import * as aws from "@pulumi/aws";
-import { DnsValidatedCertificate } from "./dns-validated-certificate";
-import { HttpsRedirect } from "./https-redirect";
-import { normalize } from "path";
+import { DnsValidatedCertificate } from "./dns-validated-certificate.js";
+import { HttpsRedirect } from "./https-redirect.js";
 
 /**
  * The customDomain for this website. SST supports domains that are hosted either on [Route 53](https://aws.amazon.com/route53/) or externally.
@@ -90,9 +89,14 @@ export interface DistributionArgs {
 
 export class Distribution extends pulumi.ComponentResource {
   private distribution: aws.cloudfront.Distribution;
+  private _customDomainUrl?: pulumi.Output<string>;
 
-  constructor(name: string, args: DistributionArgs) {
-    super("sst:sst:Distribution", name, args);
+  constructor(
+    name: string,
+    args: DistributionArgs,
+    opts?: pulumi.ComponentResourceOptions
+  ) {
+    super("sst:sst:Distribution", name, args, opts);
 
     const { distribution: distributionArgs } = args;
     const customDomain = normalizeCustomDomain();
@@ -106,6 +110,9 @@ export class Distribution extends pulumi.ComponentResource {
     createRedirects();
 
     this.distribution = distribution;
+    this._customDomainUrl = customDomain?.domainName
+      ? pulumi.interpolate`https://${customDomain.domainName}`
+      : undefined;
 
     function normalizeCustomDomain() {
       if (!args.customDomain) return;
@@ -133,27 +140,13 @@ export class Distribution extends pulumi.ComponentResource {
     }
 
     function lookupHostedZoneId() {
-      const { customDomain } = this.props;
-
       if (!customDomain) return;
 
-      let zoneName;
-      if (typeof customDomain === "string") {
-        zoneName = customDomain;
-      } else if (typeof customDomain.hostedZone === "string") {
-        zoneName = customDomain.hostedZone;
-      } else if (
-        typeof customDomain.domainName === "string" &&
-        !customDomain.isExternalDomain
-      ) {
-        zoneName = customDomain.domainName;
-      } else {
-        return;
-      }
-
-      return aws.route53
-        .getZone({ name: zoneName })
-        .then((zone) => zone.zoneId);
+      return pulumi.all([customDomain]).apply(async ([customDomain]) => {
+        const zoneName = customDomain.hostedZone ?? customDomain.domainName;
+        const zone = await aws.route53.getZone({ name: zoneName });
+        return zone.zoneId;
+      });
     }
 
     function createCertificate() {
@@ -245,10 +238,7 @@ export class Distribution extends pulumi.ComponentResource {
    * custom domain.
    */
   public get customDomainUrl() {
-    return (
-      this.distribution.aliases[0] &&
-      pulumi.interpolate`https://${this.distribution.aliases[0]}`
-    );
+    return this._customDomainUrl;
   }
 
   public get aws() {

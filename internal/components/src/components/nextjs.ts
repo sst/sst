@@ -1,13 +1,21 @@
 import fs from "fs";
 import path from "path";
-import zlib from "zlib";
 import crypto from "crypto";
 import { globSync } from "glob";
 import pulumi from "@pulumi/pulumi";
 import * as aws from "@pulumi/aws";
 import { Size, toMBs } from "./util/size.js";
 import { Function } from "./function.js";
-import { SsrSite, SsrSiteArgs } from "./ssr-site.js";
+import {
+  SsrSiteArgs,
+  buildApp,
+  createBucket,
+  createServersAndDistribution,
+  prepare,
+  useCloudFrontFunctionHostHeaderInjection,
+  validatePlan,
+} from "./ssr-site.js";
+import { Distribution } from "./distribution.js";
 
 const LAYER_VERSION = "2";
 const DEFAULT_OPEN_NEXT_VERSION = "2.3.1";
@@ -108,518 +116,330 @@ export interface NextjsArgs extends SsrSiteArgs {
  * });
  * ```
  */
-export class Nextjs extends SsrSite {
-  declare args: ReturnType<Nextjs["normalizeArgs"]>;
-  private _routes?: {
-    route: string;
-    regex: string;
-    logGroupPath: string;
-    sourcemapPath?: string;
-    sourcemapKey?: string;
-  }[];
-  private routesManifest?: {
-    dynamicRoutes: { page: string; regex: string }[];
-    staticRoutes: { page: string; regex: string }[];
-    dataRoutes?: { page: string; dataRouteRegex: string }[];
-  };
-  private appPathRoutesManifest?: Record<string, string>;
-  private appPathsManifest?: Record<string, string>;
-  private pagesManifest?: Record<string, string>;
-  private prerenderManifest?: {
-    version: number;
-    routes: Record<string, unknown>;
-  };
+export class Nextjs extends pulumi.ComponentResource {
+  private doNotDeploy: pulumi.Output<boolean>;
+  private edge: pulumi.Output<boolean>;
+  private bucket: aws.s3.BucketV2;
+  private serverFunction?: Function;
+  //private serverFunctionForDev?: Function;
+  private distribution: Distribution;
 
-  // TODO - SST design: the child class need to inject code in between
-  //                    parent's constructor
-  // TODO - SST design: how to type this.args
-  normalizeArgs(rawArgs: NextjsArgs) {
-    return super.normalizeArgs(rawArgs);
-  }
+  constructor(
+    name: string,
+    args?: NextjsArgs,
+    opts?: pulumi.ComponentResourceOptions
+  ) {
+    super("sst:sst:Nextjs", name, args, opts);
 
-  constructor(name: string, rawArgs?: NextjsArgs) {
-    const props = {
-      logging: rawArgs?.logging ?? "per-route",
-      experimental: {
-        streaming: rawArgs?.experimental?.streaming ?? false,
-        disableDynamoDBCache:
-          rawArgs?.experimental?.disableDynamoDBCache ?? false,
-        disableIncrementalCache:
-          rawArgs?.experimental?.disableIncrementalCache ?? false,
-        ...rawArgs?.experimental,
-      },
-      ...rawArgs,
-    };
+    const logging = normalizeLogging();
+    const experimental = normalizeExperimental();
+    const buildCommand = normalizeBuildCommand();
+    const { sitePath, invalidation, doNotDeploy } = prepare(args || {});
+    //if (doNotDeploy) {
+    //  // @ts-expect-error
+    //  this.bucket = this.distribution = null;
+    //  this.serverFunctionForDev = createServerFunctionForDev();
+    //  app.registerTypes(this);
+    //  return;
+    //}
 
-    super(name, {
-      buildCommand: [
-        "npx",
-        "--yes",
-        `open-next@${props?.openNextVersion ?? DEFAULT_OPEN_NEXT_VERSION}`,
-        "build",
-        ...(props.experimental.streaming ? ["--streaming"] : []),
-        ...(props.experimental.disableDynamoDBCache
-          ? ["--dangerously-disable-dynamodb-cache"]
-          : []),
-        ...(props.experimental.disableIncrementalCache
-          ? ["--dangerously-disable-incremental-cache"]
-          : []),
-      ].join(" "),
-      ...props,
-    });
+    let _routes: pulumi.Output<
+      {
+        route: string;
+        regex: string;
+        logGroupPath: string;
+        sourcemapPath?: string;
+        sourcemapKey?: string;
+      }[]
+    >;
+    let routesManifest: pulumi.Output<{
+      dynamicRoutes: { page: string; regex: string }[];
+      staticRoutes: { page: string; regex: string }[];
+      dataRoutes?: { page: string; dataRouteRegex: string }[];
+    }>;
+    let appPathRoutesManifest: pulumi.Output<Record<string, string>>;
+    let appPathsManifest: pulumi.Output<Record<string, string>>;
+    let pagesManifest: pulumi.Output<Record<string, string>>;
+    let prerenderManifest: pulumi.Output<{
+      version: number;
+      routes: Record<string, unknown>;
+    }>;
 
-    this.handleMissingSourcemap();
+    const outputPath = buildApp(name, args || {}, sitePath, buildCommand);
+    const { access, bucket } = createBucket(name);
+    const plan = buildPlan(bucket);
+    removeSourcemaps(); // TODO set dependency
 
-    if (this.isPerRouteLoggingEnabled()) {
-      this.disableDefaultLogging();
-      this.uploadSourcemaps();
-    }
+    const revalidationQueue = createRevalidationQueue();
+    //if (!experimental.disableDynamoDBCache) {
+    //  createRevalidationTable();
+    //}
 
-    if (!props.experimental.disableIncrementalCache) {
-      this.createRevalidationQueue();
-      if (!props.experimental.disableDynamoDBCache) {
-        this.createRevalidationTable();
-      }
-    }
-  }
-
-  protected plan(bucket: aws.s3.Bucket) {
-    const { path: sitePath, edge, experimental, imageOptimization } = this.args;
-    const serverConfig = {
-      description: "Next.js server",
-      bundle: path.join(sitePath, ".open-next", "server-function"),
-      handler: "index.handler",
-      environment: {
-        CACHE_BUCKET_NAME: bucket.bucket,
-        CACHE_BUCKET_KEY_PREFIX: "_cache",
-        CACHE_BUCKET_REGION: app.region,
-      },
-      layers: this.isPerRouteLoggingEnabled()
-        ? [
-            aws.lambda.LayerVersion.get(
-              "sst-extension",
-              `arn:aws:lambda:${app.region}:226609089145:layer:sst-extension-arm64:${LAYER_VERSION}`
-              //              cdk?.server?.architecture?.name === Architecture.X86_64.name
-              //                ? `arn:aws:lambda:${stack.region}:226609089145:layer:sst-extension-amd64:${LAYER_VERSION}`
-              //                : `arn:aws:lambda:${stack.region}:226609089145:layer:sst-extension-arm64:${LAYER_VERSION}`
-            ),
-          ]
-        : undefined,
-    };
-    this.removeSourcemaps();
-    return this.validatePlan({
-      edge: edge ?? false,
-      cloudFrontFunctions: {
-        serverCfFunction: {
-          constructId: "CloudFrontFunction",
-          injections: [this.useCloudFrontFunctionHostHeaderInjection()],
-        },
-      },
-      edgeFunctions: edge
-        ? { edgeServer: { function: serverConfig } }
-        : undefined,
-      origins: {
-        ...(edge
-          ? {}
-          : {
-              regionalServer: {
-                type: "function",
-                function: serverConfig,
-                streaming: experimental?.streaming,
-                injections: this.isPerRouteLoggingEnabled()
-                  ? [this.useServerFunctionPerRouteLoggingInjection()]
-                  : [],
-              },
-            }),
-        imageOptimizer: {
-          type: "image-optimization-function",
-          function: {
-            description: "Next.js image optimizer",
-            handler: "index.handler",
-            bundle: path.join(
-              sitePath,
-              ".open-next",
-              "image-optimization-function"
-            ),
-            runtime: "nodejs18.x",
-            architectures: ["arm64"],
-            environment: {
-              BUCKET_NAME: bucket.bucket,
-              BUCKET_KEY_PREFIX: "_assets",
-            },
-            memorySize: imageOptimization?.memorySize
-              ? typeof imageOptimization.memorySize === "string"
-                ? toMBs(imageOptimization.memorySize)
-                : imageOptimization.memorySize
-              : 1536,
-          },
-        },
-        s3: {
-          type: "s3",
-          originPath: "_assets",
-          copy: [
-            {
-              from: ".open-next/assets",
-              to: "_assets",
-              cached: true,
-              versionedSubDir: "_next",
-            },
-            { from: ".open-next/cache", to: "_cache", cached: false },
-          ],
-        },
-      },
-      behaviors: [
-        ...(edge
-          ? [
-              {
-                cacheType: "server",
-                cfFunction: "serverCfFunction",
-                edgeFunction: "edgeServer",
-                origin: "s3",
-              } as const,
-              {
-                cacheType: "server",
-                pattern: "api/*",
-                cfFunction: "serverCfFunction",
-                edgeFunction: "edgeServer",
-                origin: "s3",
-              } as const,
-              {
-                cacheType: "server",
-                pattern: "_next/data/*",
-                cfFunction: "serverCfFunction",
-                edgeFunction: "edgeServer",
-                origin: "s3",
-              } as const,
-            ]
-          : [
-              {
-                cacheType: "server",
-                cfFunction: "serverCfFunction",
-                origin: "regionalServer",
-              } as const,
-              {
-                cacheType: "server",
-                pattern: "api/*",
-                cfFunction: "serverCfFunction",
-                origin: "regionalServer",
-              } as const,
-              {
-                cacheType: "server",
-                pattern: "_next/data/*",
-                cfFunction: "serverCfFunction",
-                origin: "regionalServer",
-              } as const,
-            ]),
-        {
-          cacheType: "server",
-          pattern: "_next/image*",
-          cfFunction: "serverCfFunction",
-          origin: "imageOptimizer",
-        },
-        // create 1 behaviour for each top level asset file/folder
-        ...fs.readdirSync(path.join(sitePath, ".open-next/assets")).map(
-          (item) =>
-            ({
-              cacheType: "static",
-              pattern: fs
-                .statSync(path.join(sitePath, ".open-next/assets", item))
-                .isDirectory()
-                ? `${item}/*`
-                : item,
-              origin: "s3",
-            } as const)
-        ),
-      ],
-      cachePolicyAllowedHeaders: DEFAULT_CACHE_POLICY_ALLOWED_HEADERS,
-      buildId: this.getBuildId(),
-      warmerConfig: {
-        function: path.join(sitePath, ".open-next", "warmer-function"),
-      },
-    });
-  }
-
-  private createRevalidationQueue() {
-    if (!this.serverFunction) return;
-
-    const server = this.serverFunction;
-
-    const queue = new aws.sqs.Queue("revalidation-queue", {
-      fifoQueue: true,
-      receiveWaitTimeSeconds: 20,
-    });
-    const consumer = new Function("revalidation-consumer", {
-      description: "Next.js revalidator",
-      handler: "index.handler",
-      bundle: path.join(this.args.path, ".open-next", "revalidation-function"),
-      runtime: "nodejs18.x",
-      timeout: 30,
-    });
-    new aws.lambda.EventSourceMapping(`revalidation-consumer-event-source`, {
-      functionName: consumer.aws.function.name,
-      eventSourceArn: queue.arn,
-      batchSize: 5,
-    });
-
-    // Allow server to send messages to the queue
-    server.addEnvironment("REVALIDATION_QUEUE_URL", queue.queueUrl);
-    server.addEnvironment("REVALIDATION_QUEUE_REGION", Stack.of(this).region);
-    queue.grantSendMessages(server.role!);
-  }
-
-  private createRevalidationTable() {
-    if (!this.serverFunction) return;
-
-    const { path: sitePath } = this.args;
-    const server = this.serverFunction;
-
-    const table = new aws.dynamodb.Table("revalidation-table", {
-      attributes: [
-        { name: "tag", type: "S" },
-        { name: "path", type: "S" },
-        { name: "revalidatedAt", type: "N" },
-      ],
-      hashKey: "tag",
-      rangeKey: "path",
-      pointInTimeRecovery: {
-        enabled: true,
-      },
-      billingMode: "PAY_PER_REQUEST",
-      globalSecondaryIndexes: [
-        {
-          name: "revalidate",
-          hashKey: "path",
-          rangeKey: "revalidatedAt",
-          projectionType: "ALL",
-        },
-      ],
-    });
-
-    server?.addEnvironment("CACHE_DYNAMO_TABLE", table.tableName);
-    table.grantReadWriteData(server.role!);
-
-    const dynamodbProviderPath = path.join(
-      sitePath,
-      ".open-next",
-      "dynamodb-provider"
-    );
-
-    if (fs.existsSync(dynamodbProviderPath)) {
-      // Provision 128MB of memory for every 4,000 prerendered routes,
-      // 1GB per 40,000, up to 10GB. This tends to use ~70% of the memory
-      // provisioned when testing.
-      const prerenderedRouteCount = Object.keys(
-        this.usePrerenderManifest()?.routes ?? {}
-      ).length;
-
-      const insertFn = new Function("revalidation-table-seed", {
-        description: "Next.js revalidation data insert",
-        handler: "index.handler",
-        bundle: dynamodbProviderPath,
-        runtime: "nodejs18.x",
-        timeout: 900,
-        memorySize: Math.min(
-          10240,
-          Math.max(128, Math.ceil(prerenderedRouteCount / 4000) * 128)
-        ),
-        policies: [
-          {
-            name: "dynamodb",
-            policy: table.arn.apply((arn) =>
-              aws.iam
-                .getPolicyDocument({
-                  statements: [
-                    {
-                      actions: [
-                        "dynamodb:BatchWriteItem",
-                        "dynamodb:PutItem",
-                        "dynamodb:DescribeTable",
-                      ],
-                      resources: [arn],
-                    },
-                  ],
-                })
-                .then((doc) => doc.json)
-            ),
-          },
-        ],
-        environment: {
-          CACHE_DYNAMO_TABLE: table.name,
-        },
-      });
-
-      new aws.lambda.Invocation("revalidation-table-seed-invocation", {
-        functionName: insertFn.aws.function.name,
-        triggers: {
-          version: Date.now().toString(),
-        },
-        input: JSON.stringify({}),
-      });
-    }
-  }
-
-  //public getConstructMetadata() {
-  //  const metadata = this.getConstructMetadataBase();
-  //  return {
-  //    ...metadata,
-  //    type: "NextjsSite" as const,
-  //    data: {
-  //      ...metadata.data,
-  //      routes: this.isPerRouteLoggingEnabled()
-  //        ? {
-  //            logGroupPrefix: `/sst/lambda/${
-  //              (this.serverFunction as SsrFunction).functionName
-  //            }`,
-  //            data: this.useRoutes().map(({ route, logGroupPath }) => ({
-  //              route,
-  //              logGroupPath,
-  //            })),
-  //          }
-  //        : undefined,
-  //    },
-  //  };
-  //}
-
-  private removeSourcemaps() {
-    const { path: sitePath } = this.args;
-    const files = globSync("**/*.js.map", {
-      cwd: path.join(sitePath, ".open-next", "server-function"),
-      nodir: true,
-      dot: true,
-    });
-    for (const file of files) {
-      fs.rmSync(path.join(sitePath, ".open-next", "server-function", file));
-    }
-  }
-
-  private useRoutes() {
-    if (this._routes) return this._routes;
-
-    const routesManifest = this.useRoutesManifest();
-
-    this._routes = [
-      ...[...routesManifest.dynamicRoutes, ...routesManifest.staticRoutes]
-        .map(({ page, regex }) => {
-          const cwRoute = Nextjs.buildCloudWatchRouteName(page);
-          const cwHash = Nextjs.buildCloudWatchRouteHash(page);
-          const sourcemapPath =
-            this.getSourcemapForAppRoute(page) ||
-            this.getSourcemapForPagesRoute(page);
-          return {
-            route: page,
-            regex,
-            logGroupPath: `/${cwHash}${cwRoute}`,
-            sourcemapPath: sourcemapPath,
-            sourcemapKey: cwHash,
-          };
-        })
-        .sort((a, b) => a.route.localeCompare(b.route)),
-      ...(routesManifest.dataRoutes || [])
-        .map(({ page, dataRouteRegex }) => {
-          const routeDisplayName = page.endsWith("/")
-            ? `/_next/data/BUILD_ID${page}index.json`
-            : `/_next/data/BUILD_ID${page}.json`;
-          const cwRoute = Nextjs.buildCloudWatchRouteName(routeDisplayName);
-          const cwHash = Nextjs.buildCloudWatchRouteHash(page);
-          return {
-            route: routeDisplayName,
-            regex: dataRouteRegex,
-            logGroupPath: `/${cwHash}${cwRoute}`,
-          };
-        })
-        .sort((a, b) => a.route.localeCompare(b.route)),
-    ];
-    return this._routes;
-  }
-
-  private useRoutesManifest() {
-    if (this.routesManifest) return this.routesManifest;
-
-    const { path: sitePath } = this.props;
-    const id = this.node.id;
-    try {
-      const content = fs
-        .readFileSync(path.join(sitePath, ".next/routes-manifest.json"))
-        .toString();
-      this.routesManifest = JSON.parse(content);
-      return this.routesManifest!;
-    } catch (e) {
-      console.error(e);
-      throw new VisibleError(
-        `Failed to read routes data from ".next/routes-manifest.json" for the "${id}" site.`
+    const { distribution, ssrFunctions, edgeFunctions } =
+      createServersAndDistribution(
+        name,
+        args || {},
+        sitePath,
+        access,
+        bucket,
+        plan
       );
+    const serverFunction = ssrFunctions[0] ?? Object.values(edgeFunctions)[0];
+
+    handleMissingSourcemap(); // TODO implement
+
+    if (isPerRouteLoggingEnabled()) {
+      disableDefaultLogging();
+      uploadSourcemaps();
     }
-  }
 
-  private useAppPathRoutesManifest() {
-    if (this.appPathRoutesManifest) return this.appPathRoutesManifest;
+    this.doNotDeploy = doNotDeploy;
+    this.bucket = bucket;
+    this.distribution = distribution;
+    this.serverFunction = serverFunction;
+    this.edge = plan.edge;
 
-    const { path: sitePath } = this.props;
-    try {
-      const content = fs
-        .readFileSync(
-          path.join(sitePath, ".next/app-path-routes-manifest.json")
-        )
-        .toString();
-      this.appPathRoutesManifest = JSON.parse(content);
-      return this.appPathRoutesManifest!;
-    } catch (e) {
-      return {};
+    //app.registerTypes(this);
+
+    function normalizeLogging() {
+      return pulumi
+        .all([args?.logging])
+        .apply(([logging]) => logging ?? "per-route");
     }
-  }
 
-  private useAppPathsManifest() {
-    if (this.appPathsManifest) return this.appPathsManifest;
-
-    const { path: sitePath } = this.props;
-    try {
-      const content = fs
-        .readFileSync(
-          path.join(sitePath, ".next/server/app-paths-manifest.json")
-        )
-        .toString();
-      this.appPathsManifest = JSON.parse(content);
-      return this.appPathsManifest!;
-    } catch (e) {
-      return {};
+    function normalizeExperimental() {
+      return pulumi.all([args?.experimental]).apply(([experimental]) => ({
+        streaming: experimental?.streaming ?? false,
+        disableDynamoDBCache: experimental?.disableDynamoDBCache ?? false,
+        disableIncrementalCache: experimental?.disableIncrementalCache ?? false,
+        ...experimental,
+      }));
     }
-  }
 
-  private usePagesManifest() {
-    if (this.pagesManifest) return this.pagesManifest;
-
-    const { path: sitePath } = this.args;
-    try {
-      const content = fs
-        .readFileSync(path.join(sitePath, ".next/server/pages-manifest.json"))
-        .toString();
-      this.pagesManifest = JSON.parse(content);
-      return this.pagesManifest!;
-    } catch (e) {
-      return {};
+    function normalizeBuildCommand() {
+      return pulumi
+        .all([args?.buildCommand])
+        .apply(
+          ([buildCommand]) =>
+            buildCommand ??
+            [
+              "npx",
+              "--yes",
+              `open-next@${args?.openNextVersion ?? DEFAULT_OPEN_NEXT_VERSION}`,
+              "build",
+              ...(experimental.streaming ? ["--streaming"] : []),
+              ...(experimental.disableDynamoDBCache
+                ? ["--dangerously-disable-dynamodb-cache"]
+                : []),
+              ...(experimental.disableIncrementalCache
+                ? ["--dangerously-disable-incremental-cache"]
+                : []),
+            ].join(" ")
+        );
     }
-  }
 
-  private usePrerenderManifest() {
-    if (this.prerenderManifest) return this.prerenderManifest;
+    function buildPlan(bucket: aws.s3.BucketV2) {
+      return pulumi
+        .all([
+          sitePath,
+          outputPath,
+          args?.edge,
+          args?.imageOptimization,
+          bucket.bucket,
+          useRoutes(),
+          revalidationQueue,
+        ])
+        .apply(
+          ([
+            sitePath,
+            outputPath,
+            edge,
+            imageOptimization,
+            bucketName,
+            routes,
+            revalidationQueue,
+          ]) => {
+            const serverConfig = {
+              description: "Next.js server",
+              bundle: path.join(sitePath, ".open-next", "server-function"),
+              handler: "index.handler",
+              environment: {
+                CACHE_BUCKET_NAME: bucketName,
+                CACHE_BUCKET_KEY_PREFIX: "_cache",
+                CACHE_BUCKET_REGION: app.aws.region,
+                REVALIDATION_QUEUE_URL: revalidationQueue?.url,
+                REVALIDATION_QUEUE_REGION: app.aws.region,
+              },
+              policies: [
+                ...(revalidationQueue
+                  ? [
+                      {
+                        name: "revalidation-queue",
+                        policy: JSON.stringify({
+                          statements: [
+                            {
+                              actions: [
+                                "sqs:SendMessage",
+                                "sqs:GetQueueAttributes",
+                                "sqs:GetQueueUrl",
+                              ],
+                              resources: [revalidationQueue.arn],
+                            },
+                          ],
+                        }),
+                      },
+                    ]
+                  : []),
+              ],
+              layers: isPerRouteLoggingEnabled()
+                ? [
+                    `arn:aws:lambda:${app.aws.region}:226609089145:layer:sst-extension-arm64:${LAYER_VERSION}`,
+                    //              cdk?.server?.architecture?.name === Architecture.X86_64.name
+                    //                ? `arn:aws:lambda:${stack.region}:226609089145:layer:sst-extension-amd64:${LAYER_VERSION}`
+                    //                : `arn:aws:lambda:${stack.region}:226609089145:layer:sst-extension-arm64:${LAYER_VERSION}`
+                  ]
+                : undefined,
+            };
 
-    const { path: sitePath } = this.args;
-    try {
-      const content = fs
-        .readFileSync(path.join(sitePath, ".next/prerender-manifest.json"))
-        .toString();
-      this.prerenderManifest = JSON.parse(content);
-      return this.prerenderManifest!;
-    } catch (e) {
-      Logger.debug("Failed to load prerender-manifest.json", e);
-    }
-  }
+            return validatePlan({
+              edge: edge ?? false,
+              cloudFrontFunctions: {
+                serverCfFunction: {
+                  injections: [useCloudFrontFunctionHostHeaderInjection()],
+                },
+              },
+              edgeFunctions: edge
+                ? { edgeServer: { function: serverConfig } }
+                : undefined,
+              origins: {
+                ...(edge
+                  ? {}
+                  : {
+                      regionalServer: {
+                        type: "function",
+                        function: serverConfig,
+                        streaming: experimental?.streaming,
+                        injections: isPerRouteLoggingEnabled()
+                          ? [useServerFunctionPerRouteLoggingInjection()]
+                          : [],
+                      },
+                    }),
+                imageOptimizer: {
+                  type: "image-optimization-function",
+                  function: {
+                    description: "Next.js image optimizer",
+                    handler: "index.handler",
+                    bundle: path.join(
+                      sitePath,
+                      ".open-next",
+                      "image-optimization-function"
+                    ),
+                    runtime: "nodejs18.x",
+                    architectures: ["arm64"],
+                    environment: {
+                      BUCKET_NAME: bucket.bucket,
+                      BUCKET_KEY_PREFIX: "_assets",
+                    },
+                    memorySize: imageOptimization?.memorySize
+                      ? typeof imageOptimization.memorySize === "string"
+                        ? toMBs(imageOptimization.memorySize)
+                        : imageOptimization.memorySize
+                      : 1536,
+                  },
+                },
+                s3: {
+                  type: "s3",
+                  originPath: "_assets",
+                  copy: [
+                    {
+                      from: ".open-next/assets",
+                      to: "_assets",
+                      cached: true,
+                      versionedSubDir: "_next",
+                    },
+                    { from: ".open-next/cache", to: "_cache", cached: false },
+                  ],
+                },
+              },
+              behaviors: [
+                ...(edge
+                  ? [
+                      {
+                        cacheType: "server",
+                        cfFunction: "serverCfFunction",
+                        edgeFunction: "edgeServer",
+                        origin: "s3",
+                      } as const,
+                      {
+                        cacheType: "server",
+                        pattern: "api/*",
+                        cfFunction: "serverCfFunction",
+                        edgeFunction: "edgeServer",
+                        origin: "s3",
+                      } as const,
+                      {
+                        cacheType: "server",
+                        pattern: "_next/data/*",
+                        cfFunction: "serverCfFunction",
+                        edgeFunction: "edgeServer",
+                        origin: "s3",
+                      } as const,
+                    ]
+                  : [
+                      {
+                        cacheType: "server",
+                        cfFunction: "serverCfFunction",
+                        origin: "regionalServer",
+                      } as const,
+                      {
+                        cacheType: "server",
+                        pattern: "api/*",
+                        cfFunction: "serverCfFunction",
+                        origin: "regionalServer",
+                      } as const,
+                      {
+                        cacheType: "server",
+                        pattern: "_next/data/*",
+                        cfFunction: "serverCfFunction",
+                        origin: "regionalServer",
+                      } as const,
+                    ]),
+                {
+                  cacheType: "server",
+                  pattern: "_next/image*",
+                  cfFunction: "serverCfFunction",
+                  origin: "imageOptimizer",
+                },
+                // create 1 behaviour for each top level asset file/folder
+                ...fs.readdirSync(path.join(sitePath, ".open-next/assets")).map(
+                  (item) =>
+                    ({
+                      cacheType: "static",
+                      pattern: fs
+                        .statSync(
+                          path.join(sitePath, ".open-next/assets", item)
+                        )
+                        .isDirectory()
+                        ? `${item}/*`
+                        : item,
+                      origin: "s3",
+                    } as const)
+                ),
+              ],
+              cachePolicyAllowedHeaders: DEFAULT_CACHE_POLICY_ALLOWED_HEADERS,
+              buildId: fs
+                .readFileSync(path.join(outputPath, ".next/BUILD_ID"))
+                .toString(),
+              warmerConfig: {
+                function: path.join(sitePath, ".open-next", "warmer-function"),
+              },
+            });
 
-  private useServerFunctionPerRouteLoggingInjection() {
-    return `
+            function useServerFunctionPerRouteLoggingInjection() {
+              return `
 if (event.rawPath) {
   const routeData = ${JSON.stringify(
-    this.useRoutes().map(({ regex, logGroupPath }) => ({
+    routes.map(({ regex, logGroupPath }) => ({
       regex,
       logGroupPath,
     }))
@@ -633,111 +453,372 @@ if (event.rawPath) {
     }));
   }
 }`;
-  }
+            }
+          }
+        );
+    }
 
-  private getBuildId() {
-    const { path: sitePath } = this.args;
-    return fs.readFileSync(path.join(sitePath, ".next/BUILD_ID")).toString();
-  }
+    function createRevalidationQueue() {
+      return pulumi.all([experimental]).apply(([experimental]) => {
+        if (!serverFunction) return;
+        if (experimental.disableIncrementalCache) return;
 
-  private getSourcemapForAppRoute(page: string) {
-    const { path: sitePath } = this.args;
+        const queue = new aws.sqs.Queue("revalidation-queue", {
+          fifoQueue: true,
+          receiveWaitTimeSeconds: 20,
+        });
+        const consumer = new Function("revalidation-consumer", {
+          description: "Next.js revalidator",
+          handler: "index.handler",
+          bundle: sitePath.apply((sitePath) =>
+            path.join(sitePath, ".open-next", "revalidation-function")
+          ),
+          runtime: "nodejs18.x",
+          timeout: 30,
+        });
+        new aws.lambda.EventSourceMapping(
+          `revalidation-consumer-event-source`,
+          {
+            functionName: consumer.aws.function.name,
+            eventSourceArn: queue.arn,
+            batchSize: 5,
+          }
+        );
+        return queue;
+      });
+    }
 
-    // Step 1: look up in "appPathRoutesManifest" to find the key with
-    //         value equal to the page
-    // {
-    //   "/_not-found": "/_not-found",
-    //   "/about/page": "/about",
-    //   "/about/profile/page": "/about/profile",
-    //   "/page": "/",
-    //   "/favicon.ico/route": "/favicon.ico"
-    // }
-    const appPathRoutesManifest = this.useAppPathRoutesManifest();
-    const appPathRoute = Object.keys(appPathRoutesManifest).find(
-      (key) => appPathRoutesManifest[key] === page
-    );
-    if (!appPathRoute) return;
+    function createRevalidationTable() {
+      //if (!this.serverFunction) return;
+      //const { path: sitePath } = this.args;
+      //const table = new aws.dynamodb.Table("revalidation-table", {
+      //  attributes: [
+      //    { name: "tag", type: "S" },
+      //    { name: "path", type: "S" },
+      //    { name: "revalidatedAt", type: "N" },
+      //  ],
+      //  hashKey: "tag",
+      //  rangeKey: "path",
+      //  pointInTimeRecovery: {
+      //    enabled: true,
+      //  },
+      //  billingMode: "PAY_PER_REQUEST",
+      //  globalSecondaryIndexes: [
+      //    {
+      //      name: "revalidate",
+      //      hashKey: "path",
+      //      rangeKey: "revalidatedAt",
+      //      projectionType: "ALL",
+      //    },
+      //  ],
+      //});
+      //serverFunction?.addEnvironment("CACHE_DYNAMO_TABLE", table.tableName);
+      //table.grantReadWriteData(serverFunction.role!);
+      //const dynamodbProviderPath = path.join(
+      //  sitePath,
+      //  ".open-next",
+      //  "dynamodb-provider"
+      //);
+      //if (fs.existsSync(dynamodbProviderPath)) {
+      //  // Provision 128MB of memory for every 4,000 prerendered routes,
+      //  // 1GB per 40,000, up to 10GB. This tends to use ~70% of the memory
+      //  // provisioned when testing.
+      //  const prerenderedRouteCount = Object.keys(
+      //    usePrerenderManifest()?.routes ?? {}
+      //  ).length;
+      //  const insertFn = new Function("revalidation-table-seed", {
+      //    description: "Next.js revalidation data insert",
+      //    handler: "index.handler",
+      //    bundle: dynamodbProviderPath,
+      //    runtime: "nodejs18.x",
+      //    timeout: 900,
+      //    memorySize: Math.min(
+      //      10240,
+      //      Math.max(128, Math.ceil(prerenderedRouteCount / 4000) * 128)
+      //    ),
+      //    policies: [
+      //      {
+      //        name: "dynamodb",
+      //        policy: table.arn.apply((arn) =>
+      //          aws.iam
+      //            .getPolicyDocument({
+      //              statements: [
+      //                {
+      //                  actions: [
+      //                    "dynamodb:BatchWriteItem",
+      //                    "dynamodb:PutItem",
+      //                    "dynamodb:DescribeTable",
+      //                  ],
+      //                  resources: [arn],
+      //                },
+      //              ],
+      //            })
+      //            .then((doc) => doc.json)
+      //        ),
+      //      },
+      //    ],
+      //    environment: {
+      //      CACHE_DYNAMO_TABLE: table.name,
+      //    },
+      //  });
+      //  new aws.lambda.Invocation("revalidation-table-seed-invocation", {
+      //    functionName: insertFn.aws.function.name,
+      //    triggers: {
+      //      version: Date.now().toString(),
+      //    },
+      //    input: JSON.stringify({}),
+      //  });
+      //}
+    }
 
-    // Step 2: look up in "appPathsManifest" to find the file with key equal
-    //         to the page
-    // {
-    //   "/_not-found": "app/_not-found.js",
-    //   "/about/page": "app/about/page.js",
-    //   "/about/profile/page": "app/about/profile/page.js",
-    //   "/page": "app/page.js",
-    //   "/favicon.ico/route": "app/favicon.ico/route.js"
-    // }
-    const appPathsManifest = this.useAppPathsManifest();
-    const filePath = appPathsManifest[appPathRoute];
-    if (!filePath) return;
+    function removeSourcemaps() {
+      return pulumi.all([sitePath]).apply(([sitePath]) => {
+        const files = globSync("**/*.js.map", {
+          cwd: path.join(sitePath, ".open-next", "server-function"),
+          nodir: true,
+          dot: true,
+        });
+        for (const file of files) {
+          fs.rmSync(path.join(sitePath, ".open-next", "server-function", file));
+        }
+      });
+    }
 
-    // Step 3: check the .map file exists
-    const sourcemapPath = path.join(
-      sitePath,
-      ".next",
-      "server",
-      `${filePath}.map`
-    );
-    if (!fs.existsSync(sourcemapPath)) return;
+    function useRoutes() {
+      if (_routes) return _routes;
 
-    return sourcemapPath;
-  }
+      _routes = pulumi
+        .all([
+          sitePath,
+          useRoutesManifest(),
+          useAppPathRoutesManifest(),
+          useAppPathsManifest(),
+        ])
+        .apply(
+          ([
+            sitePath,
+            routesManifest,
+            appPathRoutesManifest,
+            appPathsManifest,
+          ]) => {
+            return [
+              ...[
+                ...routesManifest.dynamicRoutes,
+                ...routesManifest.staticRoutes,
+              ]
+                .map(({ page, regex }) => {
+                  const cwRoute = buildCloudWatchRouteName(page);
+                  const cwHash = buildCloudWatchRouteHash(page);
+                  const sourcemapPath =
+                    getSourcemapForAppRoute(page) ||
+                    getSourcemapForPagesRoute(page);
+                  return {
+                    route: page,
+                    regex,
+                    logGroupPath: `/${cwHash}${cwRoute}`,
+                    sourcemapPath: sourcemapPath,
+                    sourcemapKey: cwHash,
+                  };
+                })
+                .sort((a, b) => a.route.localeCompare(b.route)),
+              ...(routesManifest.dataRoutes || [])
+                .map(({ page, dataRouteRegex }) => {
+                  const routeDisplayName = page.endsWith("/")
+                    ? `/_next/data/BUILD_ID${page}index.json`
+                    : `/_next/data/BUILD_ID${page}.json`;
+                  const cwRoute = buildCloudWatchRouteName(routeDisplayName);
+                  const cwHash = buildCloudWatchRouteHash(page);
+                  return {
+                    route: routeDisplayName,
+                    regex: dataRouteRegex,
+                    logGroupPath: `/${cwHash}${cwRoute}`,
+                  };
+                })
+                .sort((a, b) => a.route.localeCompare(b.route)),
+            ];
 
-  private getSourcemapForPagesRoute(page: string) {
-    const { path: sitePath } = this.props;
+            function getSourcemapForAppRoute(page: string) {
+              // Step 1: look up in "appPathRoutesManifest" to find the key with
+              //         value equal to the page
+              // {
+              //   "/_not-found": "/_not-found",
+              //   "/about/page": "/about",
+              //   "/about/profile/page": "/about/profile",
+              //   "/page": "/",
+              //   "/favicon.ico/route": "/favicon.ico"
+              // }
+              const appPathRoute = Object.keys(appPathRoutesManifest).find(
+                (key) => appPathRoutesManifest[key] === page
+              );
+              if (!appPathRoute) return;
 
-    // Step 1: look up in "pathsManifest" to find the file with key equal
-    //         to the page
-    // {
-    //   "/_app": "pages/_app.js",
-    //   "/_error": "pages/_error.js",
-    //   "/404": "pages/404.html",
-    //   "/api/hello": "pages/api/hello.js",
-    //   "/api/auth/[...nextauth]": "pages/api/auth/[...nextauth].js",
-    //   "/api/next-auth-restricted": "pages/api/next-auth-restricted.js",
-    //   "/": "pages/index.js",
-    //   "/ssr": "pages/ssr.js"
-    // }
-    const pagesManifest = this.usePagesManifest();
-    const filePath = pagesManifest[page];
-    if (!filePath) return;
+              // Step 2: look up in "appPathsManifest" to find the file with key equal
+              //         to the page
+              // {
+              //   "/_not-found": "app/_not-found.js",
+              //   "/about/page": "app/about/page.js",
+              //   "/about/profile/page": "app/about/profile/page.js",
+              //   "/page": "app/page.js",
+              //   "/favicon.ico/route": "app/favicon.ico/route.js"
+              // }
+              const filePath = appPathsManifest[appPathRoute];
+              if (!filePath) return;
 
-    // Step 2: check the .map file exists
-    const sourcemapPath = path.join(
-      sitePath,
-      ".next",
-      "server",
-      `${filePath}.map`
-    );
-    if (!fs.existsSync(sourcemapPath)) return;
+              // Step 3: check the .map file exists
+              const sourcemapPath = path.join(
+                sitePath,
+                ".next",
+                "server",
+                `${filePath}.map`
+              );
+              if (!fs.existsSync(sourcemapPath)) return;
 
-    return sourcemapPath;
-  }
+              return sourcemapPath;
+            }
 
-  private isPerRouteLoggingEnabled() {
-    return (
-      !this.doNotDeploy && !this.args.edge && this.args.logging === "per-route"
-    );
-  }
+            function getSourcemapForPagesRoute(page: string) {
+              // Step 1: look up in "pathsManifest" to find the file with key equal
+              //         to the page
+              // {
+              //   "/_app": "pages/_app.js",
+              //   "/_error": "pages/_error.js",
+              //   "/404": "pages/404.html",
+              //   "/api/hello": "pages/api/hello.js",
+              //   "/api/auth/[...nextauth]": "pages/api/auth/[...nextauth].js",
+              //   "/api/next-auth-restricted": "pages/api/next-auth-restricted.js",
+              //   "/": "pages/index.js",
+              //   "/ssr": "pages/ssr.js"
+              // }
+              const pagesManifest = usePagesManifest();
+              const filePath = pagesManifest[page];
+              if (!filePath) return;
 
-  private handleMissingSourcemap() {
-    if (this.doNotDeploy || this.args.edge) return;
+              // Step 2: check the .map file exists
+              const sourcemapPath = path.join(
+                sitePath,
+                ".next",
+                "server",
+                `${filePath}.map`
+              );
+              if (!fs.existsSync(sourcemapPath)) return;
 
-    const hasMissingSourcemap = this.useRoutes().every(
-      ({ sourcemapPath, sourcemapKey }) => !sourcemapPath || !sourcemapKey
-    );
-    if (!hasMissingSourcemap) return;
+              return sourcemapPath;
+            }
+          }
+        );
 
-    // TODO set correct missing sourcemap value
-    //(this.serverFunction as SsrFunction)._overrideMissingSourcemap();
-  }
+      return _routes;
+    }
 
-  private disableDefaultLogging() {
-    if (!this.serverFunction) return;
+    function useRoutesManifest() {
+      if (routesManifest) return routesManifest;
 
-    // TODO create log group and reference log group arn
-    const policy = new aws.iam.Policy(`disable-logging-policy`, {
-      policy: pulumi.interpolate`{
+      return pulumi.all([sitePath]).apply(([sitePath]) => {
+        try {
+          const content = fs
+            .readFileSync(path.join(sitePath, ".next/routes-manifest.json"))
+            .toString();
+          routesManifest = JSON.parse(content);
+          return routesManifest!;
+        } catch (e) {
+          console.error(e);
+          throw new Error(
+            `Failed to read routes data from ".next/routes-manifest.json" for the "${name}" site.`
+          );
+        }
+      });
+    }
+
+    function useAppPathRoutesManifest() {
+      if (appPathRoutesManifest) return appPathRoutesManifest;
+
+      appPathRoutesManifest = pulumi.all([sitePath]).apply(([sitePath]) => {
+        try {
+          const content = fs
+            .readFileSync(
+              path.join(sitePath, ".next/app-path-routes-manifest.json")
+            )
+            .toString();
+          return JSON.parse(content) as Record<string, string>;
+        } catch (e) {
+          return {};
+        }
+      });
+      return appPathRoutesManifest;
+    }
+
+    function useAppPathsManifest() {
+      if (appPathsManifest) return appPathsManifest;
+
+      appPathsManifest = pulumi.all([sitePath]).apply(([sitePath]) => {
+        try {
+          const content = fs
+            .readFileSync(
+              path.join(sitePath, ".next/server/app-paths-manifest.json")
+            )
+            .toString();
+          return JSON.parse(content) as Record<string, string>;
+        } catch (e) {
+          return {};
+        }
+      });
+      return appPathsManifest!;
+    }
+
+    function usePagesManifest() {
+      if (pagesManifest) return pagesManifest;
+
+      pagesManifest = pulumi.all([sitePath]).apply(([sitePath]) => {
+        try {
+          const content = fs
+            .readFileSync(
+              path.join(sitePath, ".next/server/pages-manifest.json")
+            )
+            .toString();
+          return JSON.parse(content) as Record<string, string>;
+        } catch (e) {
+          return {};
+        }
+      });
+      return pagesManifest;
+    }
+
+    function usePrerenderManifest() {
+      if (prerenderManifest) return prerenderManifest;
+
+      return pulumi.all([sitePath]).apply(([sitePath]) => {
+        try {
+          const content = fs
+            .readFileSync(path.join(sitePath, ".next/prerender-manifest.json"))
+            .toString();
+          prerenderManifest = JSON.parse(content);
+          return prerenderManifest!;
+        } catch (e) {
+          console.debug("Failed to load prerender-manifest.json", e);
+        }
+      });
+    }
+
+    function isPerRouteLoggingEnabled() {
+      return !doNotDeploy && !args?.edge && args?.logging === "per-route";
+    }
+
+    function handleMissingSourcemap() {
+      //if (doNotDeploy || this.args.edge) return;
+      //const hasMissingSourcemap = useRoutes().every(
+      //  ({ sourcemapPath, sourcemapKey }) => !sourcemapPath || !sourcemapKey
+      //);
+      //if (!hasMissingSourcemap) return;
+      //// TODO set correct missing sourcemap value
+      ////(this.serverFunction as SsrFunction)._overrideMissingSourcemap();
+    }
+
+    function disableDefaultLogging() {
+      if (!serverFunction) return;
+
+      // TODO create log group and reference log group arn
+      const policy = new aws.iam.Policy(`disable-logging-policy`, {
+        policy: pulumi.interpolate`{
             "Version": "2012-10-17",
             "Statement": [
               {
@@ -748,46 +829,171 @@ if (event.rawPath) {
                 ],
                 "Effect": "Deny",
                 "Resources": [
-                  "arn:aws:logs:${app.aws.region}:${app.account}:log-group:/aws/lambda/${this.serverFunction?.aws.function.name}",
-                  "arn:aws:logs:${app.aws.region}:${app.account}:log-group:/aws/lambda/${this.serverFunction?.aws.function.name}:*",
+                  "arn:aws:logs:${app.aws.region}:*:log-group:/aws/lambda/${serverFunction?.aws.function.name}",
+                  "arn:aws:logs:${app.aws.region}:*:log-group:/aws/lambda/${serverFunction?.aws.function.name}:*",
                 ],
               }
             ]
           }`,
-    });
-    new aws.iam.RolePolicyAttachment(`disable-logging-policy-attachment`, {
-      policyArn: policy.arn,
-      role: this.serverFunction.aws.function.role,
-    });
-  }
-
-  private uploadSourcemaps() {
-    if (!this.serverFunction) return;
-
-    this.useRoutes().forEach(({ sourcemapPath, sourcemapKey }) => {
-      if (!sourcemapPath || !sourcemapKey) return;
-
-      new aws.s3.BucketObject(sourcemapKey, {
-        bucket: app.bootstrap.bucket,
-        source: new pulumi.asset.FileAsset(sourcemapPath),
-        key: this.serverFunction!.aws.function.arn.apply((arn) =>
-          path.join(arn, sourcemapKey)
-        ),
       });
-    });
+      new aws.iam.RolePolicyAttachment(`disable-logging-policy-attachment`, {
+        policyArn: policy.arn,
+        role: serverFunction.aws.function.role,
+      });
+    }
+
+    function uploadSourcemaps() {
+      if (!serverFunction) return;
+
+      pulumi.all([useRoutes()]).apply(([routes]) => {
+        routes.forEach(({ sourcemapPath, sourcemapKey }) => {
+          if (!sourcemapPath || !sourcemapKey) return;
+
+          new aws.s3.BucketObject(sourcemapKey, {
+            bucket: app.bootstrap.bucket,
+            source: new pulumi.asset.FileAsset(sourcemapPath),
+            key: serverFunction!.aws.function.arn.apply((arn) =>
+              path.join(arn, sourcemapKey)
+            ),
+          });
+        });
+      });
+    }
+
+    function buildCloudWatchRouteName(route: string) {
+      return route.replace(/[^a-zA-Z0-9_\-/.#]/g, "");
+    }
+
+    function buildCloudWatchRouteHash(route: string) {
+      const hash = crypto.createHash("sha256");
+      hash.update(route);
+      return hash.digest("hex").substring(0, 8);
+    }
   }
 
-  private static buildCloudWatchRouteName(route: string) {
-    return route.replace(/[^a-zA-Z0-9_\-/.#]/g, "");
+  /**
+   * The CloudFront URL of the website.
+   */
+  public get url() {
+    //if (this.doNotDeploy) return this.props.dev?.url;
+    return this.distribution.url;
   }
 
-  private static buildCloudWatchRouteHash(route: string) {
-    const hash = crypto.createHash("sha256");
-    hash.update(route);
-    return hash.digest("hex").substring(0, 8);
+  /**
+   * If the custom domain is enabled, this is the URL of the website with the
+   * custom domain.
+   */
+  public get customDomainUrl() {
+    if (this.doNotDeploy) return;
+
+    return this.distribution.customDomainUrl;
   }
 
-  public static _test = {
-    buildCloudWatchRouteName: Nextjs.buildCloudWatchRouteName,
-  };
+  /**
+   * The internally created CDK resources.
+   */
+  public get aws() {
+    if (this.doNotDeploy) return;
+
+    return {
+      function: this.serverFunction?.aws.function,
+      bucket: this.bucket,
+      distribution: this.distribution,
+      //hostedZone: this.distribution.cdk.hostedZone,
+      //certificate: this.distribution.cdk.certificate,
+    };
+  }
+
+  /**
+   * Attaches the given list of permissions to allow the server side
+   * rendering framework to access other AWS resources.
+   *
+   * @example
+   * ```js
+   * site.attachPermissions(["sns"]);
+   * ```
+   */
+  public attachPermissions(): void {
+    //public attachPermissions(permissions: Permissions): void {
+    //  const server = this.serverFunction || this.serverFunctionForDev;
+    //  attachPermissionsToRole(server?.role as Role, permissions);
+    //}
+  }
+
+  ///** @internal */
+  public getFunctionBinding() {
+    // TODO implement binding
+    //public getFunctionBinding(): FunctionBindingProps {
+    //  const app = this.node.root as App;
+    //  return {
+    //    clientPackage: "site",
+    //    variables: {
+    //      url: this.doNotDeploy
+    //        ? {
+    //            type: "plain",
+    //            value: this.props.dev?.url ?? "localhost",
+    //          }
+    //        : {
+    //            // Do not set real value b/c we don't want to make the Lambda function
+    //            // depend on the Site. B/c often the site depends on the Api, causing
+    //            // a CloudFormation circular dependency if the Api and the Site belong
+    //            // to different stacks.
+    //            type: "site_url",
+    //            value: this.customDomainUrl || this.url!,
+    //          },
+    //    },
+    //    permissions: {
+    //      "ssm:GetParameters": [
+    //        `arn:${Stack.of(this).partition}:ssm:${app.region}:${
+    //          app.account
+    //        }:parameter${getParameterPath(this, "url")}`,
+    //      ],
+    //    },
+    //  };
+  }
+
+  /** @internal */
+  private getConstructMetadataBase() {
+    //  return {
+    //    data: {
+    //      mode: this.doNotDeploy
+    //        ? ("placeholder" as const)
+    //        : ("deployed" as const),
+    //      path: this.props.path,
+    //      runtime: this.props.runtime,
+    //      customDomainUrl: this.customDomainUrl,
+    //      url: this.url,
+    //      edge: this.edge,
+    //      server: (this.serverFunctionForDev || this.serverFunction)
+    //        ?.functionArn!,
+    //      secrets: (this.props.bind || [])
+    //        .filter((c) => c instanceof Secret)
+    //        .map((c) => (c as Secret).name),
+    //    },
+    //  };
+  }
+
+  /** @internal */
+  public getConstructMetadata() {
+    // TODO implement metadata
+    //  const metadata = this.getConstructMetadataBase();
+    //  return {
+    //    ...metadata,
+    //    type: "NextjsSite" as const,
+    //    data: {
+    //      ...metadata.data,
+    //      routes: isPerRouteLoggingEnabled()
+    //        ? {
+    //            logGroupPrefix: `/sst/lambda/${
+    //              (this.serverFunction as SsrFunction).functionName
+    //            }`,
+    //            data: this.useRoutes().map(({ route, logGroupPath }) => ({
+    //              route,
+    //              logGroupPath,
+    //            })),
+    //          }
+    //        : undefined,
+    //    },
+    //  };
+  }
 }

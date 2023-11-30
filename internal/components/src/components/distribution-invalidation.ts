@@ -13,9 +13,6 @@ const WILDCARD_LIMIT = 15;
 export interface DistributionInvalidationInputs {
   distributionId: pulumi.Input<string>;
   paths?: pulumi.Input<string[]>;
-  paths2: pulumi.Input<{
-    foo: pulumi.Input<string[]>;
-  }>;
   wait?: pulumi.Input<boolean>;
   version?: pulumi.Input<string>;
 }

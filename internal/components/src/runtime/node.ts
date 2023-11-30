@@ -159,7 +159,7 @@ export async function build(
       if (installPackages.includes("sharp")) {
         cmd.push(
           "--platform=linux",
-          input.architectures?.includes["arm_64"]
+          input.architectures?.includes("arm_64")
             ? "--arch=arm64"
             : "--arch=x64"
         );
