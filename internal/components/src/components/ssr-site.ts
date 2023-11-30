@@ -416,30 +416,29 @@ export function createBucket(name: string) {
 export function createServersAndDistribution(
   name: string,
   args: SsrSiteArgs,
-  sitePath: pulumi.Output<string>,
+  outputPath: pulumi.Output<string>,
   access: aws.cloudfront.OriginAccessIdentity,
   bucket: aws.s3.BucketV2,
-  plan: Plan
+  plan: pulumi.Input<Plan>
 ) {
-  const ssrFunctions: Function[] = [];
-  let singletonCachePolicy: aws.cloudfront.CachePolicy;
+  return pulumi.all([plan]).apply(([plan]) => {
+    const ssrFunctions: Function[] = [];
+    let singletonCachePolicy: aws.cloudfront.CachePolicy;
 
-  const uploadedObjects = uploadAssets();
-  const cfFunctions = createCloudFrontFunctions();
-  const edgeFunctions = createEdgeFunctions();
-  const origins = buildOrigins();
-  const originGroups = buildOriginGroups();
-  const distribution = createCloudFrontDistribution();
-  allowServerFunctionInvalidateDistribution();
-  createDistributionInvalidation();
-  createWarmer();
+    const uploadedObjects = uploadAssets();
+    const cfFunctions = createCloudFrontFunctions();
+    const edgeFunctions = createEdgeFunctions();
+    const origins = buildOrigins();
+    const originGroups = buildOriginGroups();
+    const distribution = createCloudFrontDistribution();
+    allowServerFunctionInvalidateDistribution();
+    createDistributionInvalidation();
+    createWarmer();
 
-  return { distribution, ssrFunctions, edgeFunctions };
+    return { distribution, ssrFunctions, edgeFunctions };
 
-  function uploadAssets() {
-    return pulumi
-      .all([args.assets, plan.origins])
-      .apply(([assets, origins]) => {
+    function uploadAssets() {
+      return pulumi.all([args.assets]).apply(([assets]) => {
         const uploadedObjects: aws.s3.BucketObject[] = [];
 
         // Define content headers
@@ -457,7 +456,7 @@ export function createServersAndDistribution(
             : toSeconds(assets?.versionedFilesTTL ?? "365 days");
 
         // Handle each S3 origin
-        Object.values(origins).forEach((origin) => {
+        Object.values(plan.origins).forEach((origin) => {
           if (origin.type !== "s3") return;
 
           // Handle each copy source
@@ -515,334 +514,334 @@ export function createServersAndDistribution(
 
         return uploadedObjects;
       });
-  }
+    }
 
-  function createCloudFrontFunctions() {
-    const functions: Record<string, aws.cloudfront.Function> = {};
+    function createCloudFrontFunctions() {
+      const functions: Record<string, aws.cloudfront.Function> = {};
 
-    Object.entries(plan.cloudFrontFunctions ?? {}).forEach(
-      ([name, { injections }]) => {
-        functions[name] = new aws.cloudfront.Function(name, {
-          runtime: "cloudfront-js-1.0",
-          code: pulumi.all([injections]).apply(
-            ([injections]) => `
+      Object.entries(plan.cloudFrontFunctions ?? {}).forEach(
+        ([name, { injections }]) => {
+          functions[name] = new aws.cloudfront.Function(name, {
+            runtime: "cloudfront-js-1.0",
+            code: pulumi.all([injections]).apply(
+              ([injections]) => `
 function handler(event) {
   var request = event.request;
   ${injections.join("\n")}
   return request;
 }`
-          ),
-        });
-      }
-    );
-    return functions;
-  }
+            ),
+          });
+        }
+      );
+      return functions;
+    }
 
-  function createEdgeFunctions() {
-    const functions: Record<string, Function> = {};
+    function createEdgeFunctions() {
+      const functions: Record<string, Function> = {};
 
-    Object.entries(plan.edgeFunctions ?? {}).forEach(
-      ([name, { function: props }]) => {
-        const fn = new Function(name, {
-          runtime: "nodejs18.x",
-          timeout: 20,
-          memorySize: 1024,
-          ...props,
-          nodejs: {
-            format: "esm" as const,
-            ...props.nodejs,
-          },
-          environment: pulumi
-            .all([args.environment])
-            .apply(([environment]) => ({
-              ...environment,
-              ...props.environment,
-            })),
-          publish: true,
-          region: "us-east-1",
-          policies: pulumi.all([props.policies]).apply(([policies]) => [
-            {
-              name: "s3",
-              policy: bucket.arn.apply((arn) =>
-                aws.iam
-                  .getPolicyDocument({
-                    statements: [
-                      {
-                        actions: ["s3:*"],
-                        resources: [arn],
-                      },
-                    ],
-                  })
-                  .then((doc) => doc.json)
-              ),
+      Object.entries(plan.edgeFunctions ?? {}).forEach(
+        ([name, { function: props }]) => {
+          const fn = new Function(name, {
+            runtime: "nodejs18.x",
+            timeout: 20,
+            memorySize: 1024,
+            ...props,
+            nodejs: {
+              format: "esm" as const,
+              ...props.nodejs,
             },
-            ...(policies || []),
-          ]),
-        });
+            environment: pulumi
+              .all([args.environment])
+              .apply(([environment]) => ({
+                ...environment,
+                ...props.environment,
+              })),
+            publish: true,
+            region: "us-east-1",
+            policies: pulumi.all([props.policies]).apply(([policies]) => [
+              {
+                name: "s3",
+                policy: bucket.arn.apply((arn) =>
+                  aws.iam
+                    .getPolicyDocument({
+                      statements: [
+                        {
+                          actions: ["s3:*"],
+                          resources: [arn],
+                        },
+                      ],
+                    })
+                    .then((doc) => doc.json)
+                ),
+              },
+              ...(policies || []),
+            ]),
+          });
 
-        functions[name] = fn;
-      }
-    );
-    return functions;
-  }
+          functions[name] = fn;
+        }
+      );
+      return functions;
+    }
 
-  function buildOrigins() {
-    const origins: Record<
-      string,
-      aws.types.input.cloudfront.DistributionOrigin
-    > = {};
+    function buildOrigins() {
+      const origins: Record<
+        string,
+        aws.types.input.cloudfront.DistributionOrigin
+      > = {};
 
-    Object.entries(plan.origins ?? {}).forEach(([name, props]) => {
-      switch (props.type) {
-        case "s3":
-          origins[name] = buildS3Origin(name, props);
-          break;
-        case "function":
-          origins[name] = buildFunctionOrigin(name, props);
-          break;
-        case "image-optimization-function":
-          origins[name] = buildImageOptimizationFunctionOrigin(name, props);
-          break;
-      }
-    });
+      Object.entries(plan.origins ?? {}).forEach(([name, props]) => {
+        switch (props.type) {
+          case "s3":
+            origins[name] = buildS3Origin(name, props);
+            break;
+          case "function":
+            origins[name] = buildFunctionOrigin(name, props);
+            break;
+          case "image-optimization-function":
+            origins[name] = buildImageOptimizationFunctionOrigin(name, props);
+            break;
+        }
+      });
 
-    return origins;
-  }
+      return origins;
+    }
 
-  function buildOriginGroups() {
-    const originGroups: Record<
-      string,
-      aws.types.input.cloudfront.DistributionOriginGroup
-    > = {};
+    function buildOriginGroups() {
+      const originGroups: Record<
+        string,
+        aws.types.input.cloudfront.DistributionOriginGroup
+      > = {};
 
-    Object.entries(plan.origins ?? {}).forEach(([name, props]) => {
-      if (props.type === "group") {
-        originGroups[name] = {
-          originId: name,
-          failoverCriteria: {
-            statusCodes: props.fallbackStatusCodes,
-          },
-          members: [
-            { originId: props.primaryOriginName },
-            { originId: props.fallbackOriginName },
-          ],
-        };
-      }
-    });
+      Object.entries(plan.origins ?? {}).forEach(([name, props]) => {
+        if (props.type === "group") {
+          originGroups[name] = {
+            originId: name,
+            failoverCriteria: {
+              statusCodes: props.fallbackStatusCodes,
+            },
+            members: [
+              { originId: props.primaryOriginName },
+              { originId: props.fallbackOriginName },
+            ],
+          };
+        }
+      });
 
-    return originGroups;
-  }
+      return originGroups;
+    }
 
-  function buildS3Origin(name: string, props: S3OriginConfig) {
-    return {
-      originId: name,
-      domainName: bucket.bucketRegionalDomainName,
-      originPath: "/" + (props.originPath ?? ""),
-      s3OriginConfig: {
-        originAccessIdentity: access.cloudfrontAccessIdentityPath,
-      },
-    };
-  }
-
-  function buildFunctionOrigin(name: string, props: FunctionOriginConfig) {
-    const fn = new Function(name, {
-      runtime: "nodejs18.x",
-      timeout: 20,
-      memorySize: 1024,
-      ...props.function,
-      nodejs: {
-        format: "esm" as const,
-        ...props.function.nodejs,
-      },
-      environment: pulumi.all([args.environment]).apply(([environment]) => ({
-        ...environment,
-        ...props.function.environment,
-      })),
-      streaming: props.streaming,
-      injections: pulumi
-        .all([props.injections])
-        .apply(([injections]) => [
-          ...(args.warm ? [useServerFunctionWarmingInjection()] : []),
-          ...(injections || []),
-        ]),
-      policies: [
-        {
-          name: "s3",
-          policy: bucket.arn.apply((arn) =>
-            aws.iam
-              .getPolicyDocument({
-                statements: [
-                  {
-                    actions: ["s3:*"],
-                    resources: [arn],
-                  },
-                ],
-              })
-              .then((doc) => doc.json)
-          ),
-        },
-      ],
-    });
-    ssrFunctions.push(fn);
-
-    const url = new aws.lambda.FunctionUrl(`${name}-url`, {
-      authorizationType: "NONE",
-      functionName: fn.aws.function.name,
-      invokeMode: props.streaming ? "RESPONSE_STREAM" : "BUFFERED",
-    });
-
-    return {
-      originId: name,
-      domainName: url.functionUrl.apply((url) => new URL(url).host),
-      customOriginConfig: {
-        httpPort: 80,
-        httpsPort: 443,
-        originProtocolPolicy: "https-only",
-        originReadTimeout: 20,
-        originSslProtocols: ["TLSv1.2"],
-      },
-    };
-  }
-
-  function buildImageOptimizationFunctionOrigin(
-    name: string,
-    props: ImageOptimizationFunctionOriginConfig
-  ) {
-    const fn = new Function(name, {
-      // TODO implement function log retention
-      //logRetention: RetentionDays.THREE_DAYS,
-      timeout: 25,
-      policies: [
-        {
-          name: "s3",
-          policy: bucket.arn.apply((arn) =>
-            aws.iam
-              .getPolicyDocument({
-                statements: [
-                  {
-                    actions: ["s3:GetObject"],
-                    resources: [`${arn}/*`],
-                  },
-                ],
-              })
-              .then((doc) => doc.json)
-          ),
-        },
-      ],
-      ...props.function,
-    });
-
-    const url = new aws.lambda.FunctionUrl(`${name}-url`, {
-      authorizationType: "NONE",
-      functionName: fn.aws.function.name,
-    });
-
-    return {
-      originId: name,
-      domainName: url.functionUrl.apply((url) => new URL(url).host),
-      customOriginConfig: {
-        httpPort: 80,
-        httpsPort: 443,
-        originProtocolPolicy: "https-only",
-        originReadTimeout: 20,
-        originSslProtocols: ["TLSv1.2"],
-      },
-    };
-  }
-
-  function buildBehavior(behavior: Plan["behaviors"][number]) {
-    const edgeFunction = edgeFunctions[behavior.edgeFunction || ""];
-    const cfFunction = cfFunctions[behavior.cfFunction || ""];
-
-    if (behavior.cacheType === "static") {
+    function buildS3Origin(name: string, props: S3OriginConfig) {
       return {
-        targetOriginId: behavior.origin,
-        viewerProtocolPolicy: "redirect-to-https",
-        allowedMethods: behavior.allowedMethods ?? ["GET", "HEAD", "OPTIONS"],
-        cachedMethods: ["GET", "HEAD"],
-        compress: true,
-        // CloudFront's managed CachingOptimized policy
-        cachePolicyId: "658327ea-f89d-4fab-a63d-7e88639e58f6",
-        functionAssociations: cfFunction
-          ? [
-              {
-                eventType: "viewer-request",
-                functionArn: cfFunction.arn,
-              },
-            ]
-          : [],
-      };
-    } else if (behavior.cacheType === "server") {
-      return {
-        targetOriginId: behavior.origin,
-        viewerProtocolPolicy: "redirect-to-https",
-        allowedMethods: behavior.allowedMethods ?? [
-          "DELETE",
-          "GET",
-          "HEAD",
-          "OPTIONS",
-          "PATCH",
-          "POST",
-          "PUT",
-        ],
-        cachedMethods: ["GET", "HEAD"],
-        compress: true,
-        cachePolicyId: useServerBehaviorCachePolicy().id,
-        // CloudFront's Managed-AllViewerExceptHostHeader policy
-        originRequestPolicyId: "b689b0a8-53d0-40ab-baf2-68738e2966ac",
-        functionAssociations: cfFunction
-          ? [
-              {
-                eventType: "viewer-request",
-                functionArn: cfFunction.arn,
-              },
-            ]
-          : [],
-        lambdaFunctionAssociations: edgeFunction
-          ? [
-              {
-                includeBody: true,
-                eventType: "origin-request",
-                lambdaArn: edgeFunction.aws.function.qualifiedArn,
-              },
-            ]
-          : [],
+        originId: name,
+        domainName: bucket.bucketRegionalDomainName,
+        originPath: "/" + (props.originPath ?? ""),
+        s3OriginConfig: {
+          originAccessIdentity: access.cloudfrontAccessIdentityPath,
+        },
       };
     }
 
-    throw new Error(`Invalid behavior type in the "${name}" site.`);
-  }
-
-  function useServerBehaviorCachePolicy() {
-    singletonCachePolicy =
-      singletonCachePolicy ??
-      new aws.cloudfront.CachePolicy("cache-policy", {
-        comment: "SST server response cache policy",
-        defaultTtl: 0,
-        maxTtl: 365,
-        minTtl: 0,
-        parametersInCacheKeyAndForwardedToOrigin: {
-          cookiesConfig: {
-            cookieBehavior: "none",
-          },
-          headersConfig: {
-            headerBehavior: "whitelist",
-            headers: {
-              items: plan.cachePolicyAllowedHeaders || [],
-            },
-          },
-          queryStringsConfig: {
-            queryStringBehavior: "all",
-          },
-          enableAcceptEncodingBrotli: true,
-          enableAcceptEncodingGzip: true,
+    function buildFunctionOrigin(name: string, props: FunctionOriginConfig) {
+      const fn = new Function(name, {
+        runtime: "nodejs18.x",
+        timeout: 20,
+        memorySize: 1024,
+        ...props.function,
+        nodejs: {
+          format: "esm" as const,
+          ...props.function.nodejs,
         },
+        environment: pulumi.all([args.environment]).apply(([environment]) => ({
+          ...environment,
+          ...props.function.environment,
+        })),
+        streaming: props.streaming,
+        injections: pulumi
+          .all([props.injections])
+          .apply(([injections]) => [
+            ...(args.warm ? [useServerFunctionWarmingInjection()] : []),
+            ...(injections || []),
+          ]),
+        policies: [
+          {
+            name: "s3",
+            policy: bucket.arn.apply((arn) =>
+              aws.iam
+                .getPolicyDocument({
+                  statements: [
+                    {
+                      actions: ["s3:*"],
+                      resources: [arn],
+                    },
+                  ],
+                })
+                .then((doc) => doc.json)
+            ),
+          },
+        ],
       });
-    return singletonCachePolicy;
-  }
+      ssrFunctions.push(fn);
 
-  function useServerFunctionWarmingInjection() {
-    return `
+      const url = new aws.lambda.FunctionUrl(`${name}-url`, {
+        authorizationType: "NONE",
+        functionName: fn.aws.function.name,
+        invokeMode: props.streaming ? "RESPONSE_STREAM" : "BUFFERED",
+      });
+
+      return {
+        originId: name,
+        domainName: url.functionUrl.apply((url) => new URL(url).host),
+        customOriginConfig: {
+          httpPort: 80,
+          httpsPort: 443,
+          originProtocolPolicy: "https-only",
+          originReadTimeout: 20,
+          originSslProtocols: ["TLSv1.2"],
+        },
+      };
+    }
+
+    function buildImageOptimizationFunctionOrigin(
+      name: string,
+      props: ImageOptimizationFunctionOriginConfig
+    ) {
+      const fn = new Function(name, {
+        // TODO implement function log retention
+        //logRetention: RetentionDays.THREE_DAYS,
+        timeout: 25,
+        policies: [
+          {
+            name: "s3",
+            policy: bucket.arn.apply((arn) =>
+              aws.iam
+                .getPolicyDocument({
+                  statements: [
+                    {
+                      actions: ["s3:GetObject"],
+                      resources: [`${arn}/*`],
+                    },
+                  ],
+                })
+                .then((doc) => doc.json)
+            ),
+          },
+        ],
+        ...props.function,
+      });
+
+      const url = new aws.lambda.FunctionUrl(`${name}-url`, {
+        authorizationType: "NONE",
+        functionName: fn.aws.function.name,
+      });
+
+      return {
+        originId: name,
+        domainName: url.functionUrl.apply((url) => new URL(url).host),
+        customOriginConfig: {
+          httpPort: 80,
+          httpsPort: 443,
+          originProtocolPolicy: "https-only",
+          originReadTimeout: 20,
+          originSslProtocols: ["TLSv1.2"],
+        },
+      };
+    }
+
+    function buildBehavior(behavior: Plan["behaviors"][number]) {
+      const edgeFunction = edgeFunctions[behavior.edgeFunction || ""];
+      const cfFunction = cfFunctions[behavior.cfFunction || ""];
+
+      if (behavior.cacheType === "static") {
+        return {
+          targetOriginId: behavior.origin,
+          viewerProtocolPolicy: "redirect-to-https",
+          allowedMethods: behavior.allowedMethods ?? ["GET", "HEAD", "OPTIONS"],
+          cachedMethods: ["GET", "HEAD"],
+          compress: true,
+          // CloudFront's managed CachingOptimized policy
+          cachePolicyId: "658327ea-f89d-4fab-a63d-7e88639e58f6",
+          functionAssociations: cfFunction
+            ? [
+                {
+                  eventType: "viewer-request",
+                  functionArn: cfFunction.arn,
+                },
+              ]
+            : [],
+        };
+      } else if (behavior.cacheType === "server") {
+        return {
+          targetOriginId: behavior.origin,
+          viewerProtocolPolicy: "redirect-to-https",
+          allowedMethods: behavior.allowedMethods ?? [
+            "DELETE",
+            "GET",
+            "HEAD",
+            "OPTIONS",
+            "PATCH",
+            "POST",
+            "PUT",
+          ],
+          cachedMethods: ["GET", "HEAD"],
+          compress: true,
+          cachePolicyId: useServerBehaviorCachePolicy().id,
+          // CloudFront's Managed-AllViewerExceptHostHeader policy
+          originRequestPolicyId: "b689b0a8-53d0-40ab-baf2-68738e2966ac",
+          functionAssociations: cfFunction
+            ? [
+                {
+                  eventType: "viewer-request",
+                  functionArn: cfFunction.arn,
+                },
+              ]
+            : [],
+          lambdaFunctionAssociations: edgeFunction
+            ? [
+                {
+                  includeBody: true,
+                  eventType: "origin-request",
+                  lambdaArn: edgeFunction.aws.function.qualifiedArn,
+                },
+              ]
+            : [],
+        };
+      }
+
+      throw new Error(`Invalid behavior type in the "${name}" site.`);
+    }
+
+    function useServerBehaviorCachePolicy() {
+      singletonCachePolicy =
+        singletonCachePolicy ??
+        new aws.cloudfront.CachePolicy("cache-policy", {
+          comment: "SST server response cache policy",
+          defaultTtl: 0,
+          maxTtl: 365,
+          minTtl: 0,
+          parametersInCacheKeyAndForwardedToOrigin: {
+            cookiesConfig: {
+              cookieBehavior: "none",
+            },
+            headersConfig: {
+              headerBehavior: "whitelist",
+              headers: {
+                items: plan.cachePolicyAllowedHeaders || [],
+              },
+            },
+            queryStringsConfig: {
+              queryStringBehavior: "all",
+            },
+            enableAcceptEncodingBrotli: true,
+            enableAcceptEncodingGzip: true,
+          },
+        });
+      return singletonCachePolicy;
+    }
+
+    function useServerFunctionWarmingInjection() {
+      return `
 if (event.type === "warmer") {
   return new Promise((resolve) => {
     setTimeout(() => {
@@ -850,76 +849,76 @@ if (event.type === "warmer") {
     }, event.delay);
   });
 }`;
-  }
+    }
 
-  function createServerFunctionForDev() {
-    //const role = new Role(self, "ServerFunctionRole", {
-    //  assumedBy: new CompositePrincipal(
-    //    new AccountPrincipal(app.account),
-    //    new ServicePrincipal("lambda.amazonaws.com")
-    //  ),
-    //  maxSessionDuration: CdkDuration.hours(12),
-    //});
-    //return new SsrFunction(self, `ServerFunction`, {
-    //  description: "Server handler placeholder",
-    //  bundle: path.join(__dirname, "../support/ssr-site-function-stub"),
-    //  handler: "index.handler",
-    //  runtime,
-    //  memorySize,
-    //  timeout,
-    //  role,
-    //  bind,
-    //  environment,
-    //  permissions,
-    //  // note: do not need to set vpc and layers settings b/c this function is not being used
-    //});
-  }
+    function createServerFunctionForDev() {
+      //const role = new Role(self, "ServerFunctionRole", {
+      //  assumedBy: new CompositePrincipal(
+      //    new AccountPrincipal(app.account),
+      //    new ServicePrincipal("lambda.amazonaws.com")
+      //  ),
+      //  maxSessionDuration: CdkDuration.hours(12),
+      //});
+      //return new SsrFunction(self, `ServerFunction`, {
+      //  description: "Server handler placeholder",
+      //  bundle: path.join(__dirname, "../support/ssr-site-function-stub"),
+      //  handler: "index.handler",
+      //  runtime,
+      //  memorySize,
+      //  timeout,
+      //  role,
+      //  bind,
+      //  environment,
+      //  permissions,
+      //  // note: do not need to set vpc and layers settings b/c this function is not being used
+      //});
+    }
 
-  function createCloudFrontDistribution() {
-    return new Distribution(
-      "distribution",
-      {
-        customDomain: args.customDomain,
-        distribution: {
-          origins: Object.values(origins),
-          originGroups: Object.values(originGroups),
-          defaultRootObject: "",
-          defaultCacheBehavior: buildBehavior(
-            plan.behaviors.find((behavior) => !behavior.pattern)!
-          ),
-          orderedCacheBehaviors: plan.behaviors
-            .filter((behavior) => behavior.pattern)
-            .map((behavior) => ({
-              pathPattern: behavior.pattern!,
-              ...buildBehavior(behavior),
-            })),
-          customErrorResponses: [
-            {
-              errorCode: 404,
-              responseCode: 200,
-              responsePagePath: "/404.html",
+    function createCloudFrontDistribution() {
+      return new Distribution(
+        "distribution",
+        {
+          customDomain: args.customDomain,
+          distribution: {
+            origins: Object.values(origins),
+            originGroups: Object.values(originGroups),
+            defaultRootObject: "",
+            defaultCacheBehavior: buildBehavior(
+              plan.behaviors.find((behavior) => !behavior.pattern)!
+            ),
+            orderedCacheBehaviors: plan.behaviors
+              .filter((behavior) => behavior.pattern)
+              .map((behavior) => ({
+                pathPattern: behavior.pattern!,
+                ...buildBehavior(behavior),
+              })),
+            customErrorResponses: [
+              {
+                errorCode: 404,
+                responseCode: 200,
+                responsePagePath: "/404.html",
+              },
+            ],
+            enabled: true,
+            restrictions: {
+              geoRestriction: {
+                restrictionType: "none",
+              },
             },
-          ],
-          enabled: true,
-          restrictions: {
-            geoRestriction: {
-              restrictionType: "none",
+            viewerCertificate: {
+              cloudfrontDefaultCertificate: true,
             },
+            waitForDeployment: false,
           },
-          viewerCertificate: {
-            cloudfrontDefaultCertificate: true,
-          },
-          waitForDeployment: false,
         },
-      },
-      // create distribution after s3 upload finishes
-      { dependsOn: uploadedObjects }
-    );
-  }
+        // create distribution after s3 upload finishes
+        { dependsOn: uploadedObjects }
+      );
+    }
 
-  function allowServerFunctionInvalidateDistribution() {
-    const policy = new aws.iam.Policy(`invalidation-policy`, {
-      policy: pulumi.interpolate`{
+    function allowServerFunctionInvalidateDistribution() {
+      const policy = new aws.iam.Policy(`invalidation-policy`, {
+        policy: pulumi.interpolate`{
             "Version": "2012-10-17",
             "Statement": [
               {
@@ -929,215 +928,224 @@ if (event.type === "warmer") {
               }
             ]
           }`,
-    });
-
-    for (const fn of [...ssrFunctions, ...Object.values(edgeFunctions)]) {
-      new aws.iam.RolePolicyAttachment(
-        `invalidation-policy-${fn.aws.function.name}`,
-        {
-          policyArn: policy.arn,
-          role: fn.aws.function.role,
-        }
-      );
-    }
-  }
-
-  function createWarmer() {
-    // note: Currently all sites have a single server function. When we add
-    //       support for multiple server functions (ie. route splitting), we
-    //       need to handle warming multiple functions.
-    if (!args.warm) return;
-
-    if (args.warm && plan.edge) {
-      throw new Error(
-        `In the "${name}" Site, warming is currently supported only for the regional mode.`
-      );
-    }
-
-    if (ssrFunctions.length === 0) return;
-
-    // Create warmer function
-    const warmer = new Function("warmer", {
-      description: `${name} warmer`,
-      bundle: path.join(__dirname, "../support/ssr-warmer"),
-      runtime: "nodejs20.x",
-      handler: "index.handler",
-      timeout: 900,
-      memorySize: 128,
-      environment: {
-        // TODO - SST design: output: how to reference the function inside Function
-        //   looks weird to acces `function.function.name`
-        FUNCTION_NAME: ssrFunctions[0].aws.function.name,
-        CONCURRENCY: pulumi.all([args.warm]).apply(([warm]) => warm.toString()),
-      },
-      policies: [
-        {
-          name: "invoke-server",
-          policy: ssrFunctions[0].aws.function.arn.apply((arn) =>
-            aws.iam
-              .getPolicyDocument({
-                statements: [
-                  {
-                    actions: ["lambda:InvokeFunction"],
-                    resources: [arn],
-                  },
-                ],
-              })
-              .then((doc) => doc.json)
-          ),
-        },
-      ],
-    });
-
-    // Create cron job
-    const schedule = new aws.cloudwatch.EventRule("warmer-rule", {
-      description: `${name} warmer`,
-      scheduleExpression: "rate(5 minutes)",
-    });
-    new aws.cloudwatch.EventTarget("warmer-target", {
-      rule: schedule.name,
-      arn: warmer.aws.function.arn,
-      retryPolicy: {
-        maximumRetryAttempts: 0,
-      },
-    });
-
-    // Prewarm on deploy
-    new aws.lambda.Invocation("warmer-prewarm", {
-      functionName: warmer.aws.function.name,
-      triggers: {
-        version: Date.now().toString(),
-      },
-      input: JSON.stringify({}),
-    });
-  }
-
-  function createDistributionInvalidation() {
-    pulumi
-      .all([sitePath, args.invalidation, plan])
-      .apply(([sitePath, invalidation, plan]) => {
-        // We will generate a hash based on the contents of the S3 files with cache enabled.
-        // This will be used to determine if we need to invalidate our CloudFront cache.
-        const s3Origin = Object.values(plan.origins).find(
-          (origin) => origin.type === "s3"
-        );
-        if (s3Origin?.type !== "s3") return;
-        const cachedS3Files = s3Origin.copy.filter((file) => file.cached);
-        if (cachedS3Files.length === 0) return;
-
-        // Build invalidation paths
-        const invalidationPaths: string[] = [];
-        if (invalidation?.paths === "none") {
-        } else if (invalidation?.paths === "all") {
-          invalidationPaths.push("/*");
-        } else if (invalidation?.paths === "versioned") {
-          cachedS3Files.forEach((item) => {
-            if (!item.versionedSubDir) return;
-            invalidationPaths.push(
-              path.posix.join("/", item.to, item.versionedSubDir, "*")
-            );
-          });
-        } else {
-          invalidationPaths.push(...(invalidation?.paths || []));
-        }
-        if (invalidationPaths.length === 0) return;
-
-        // Build build ID
-        let invalidationBuildId: string;
-        if (plan.buildId) {
-          invalidationBuildId = plan.buildId;
-        } else {
-          const hash = crypto.createHash("md5");
-
-          cachedS3Files.forEach((item) => {
-            // The below options are needed to support following symlinks when building zip files:
-            // - nodir: This will prevent symlinks themselves from being copied into the zip.
-            // - follow: This will follow symlinks and copy the files within.
-
-            // For versioned files, use file path for digest since file version in name should change on content change
-            if (item.versionedSubDir) {
-              globSync("**", {
-                dot: true,
-                nodir: true,
-                follow: true,
-                cwd: path.resolve(sitePath, item.from, item.versionedSubDir),
-              }).forEach((filePath) => hash.update(filePath));
-            }
-
-            // For non-versioned files, use file content for digest
-            if (invalidation?.paths !== "versioned") {
-              globSync("**", {
-                ignore: item.versionedSubDir
-                  ? [path.posix.join(item.versionedSubDir, "**")]
-                  : undefined,
-                dot: true,
-                nodir: true,
-                follow: true,
-                cwd: path.resolve(sitePath, item.from),
-              }).forEach((filePath) =>
-                hash.update(
-                  fs.readFileSync(path.resolve(sitePath, item.from, filePath))
-                )
-              );
-            }
-          });
-          invalidationBuildId = hash.digest("hex");
-          console.debug(`Generated build ID ${invalidationBuildId}`);
-        }
-
-        new DistributionInvalidation("invalidation", {
-          distributionId: distribution.aws.distribution.id,
-          paths: invalidationPaths,
-          wait: invalidation?.wait,
-          version: invalidationBuildId,
-        });
       });
-  }
 
-  function getContentType(filename: string, textEncoding: string) {
-    const ext = filename.endsWith(".well-known/site-association-json")
-      ? ".json"
-      : path.extname(filename);
+      for (const fn of [...ssrFunctions, ...Object.values(edgeFunctions)]) {
+        new aws.iam.RolePolicyAttachment(
+          `invalidation-policy-${fn.aws.function.name}`,
+          {
+            policyArn: policy.arn,
+            role: fn.aws.function.role,
+          }
+        );
+      }
+    }
 
-    const extensions = {
-      [".txt"]: { mime: "text/plain", isText: true },
-      [".htm"]: { mime: "text/html", isText: true },
-      [".html"]: { mime: "text/html", isText: true },
-      [".xhtml"]: { mime: "application/xhtml+xml", isText: true },
-      [".css"]: { mime: "text/css", isText: true },
-      [".js"]: { mime: "text/javascript", isText: true },
-      [".mjs"]: { mime: "text/javascript", isText: true },
-      [".apng"]: { mime: "image/apng", isText: false },
-      [".avif"]: { mime: "image/avif", isText: false },
-      [".gif"]: { mime: "image/gif", isText: false },
-      [".jpeg"]: { mime: "image/jpeg", isText: false },
-      [".jpg"]: { mime: "image/jpeg", isText: false },
-      [".png"]: { mime: "image/png", isText: false },
-      [".svg"]: { mime: "image/svg+xml", isText: true },
-      [".bmp"]: { mime: "image/bmp", isText: false },
-      [".tiff"]: { mime: "image/tiff", isText: false },
-      [".webp"]: { mime: "image/webp", isText: false },
-      [".ico"]: { mime: "image/vnd.microsoft.icon", isText: false },
-      [".eot"]: { mime: "application/vnd.ms-fontobject", isText: false },
-      [".ttf"]: { mime: "font/ttf", isText: false },
-      [".otf"]: { mime: "font/otf", isText: false },
-      [".woff"]: { mime: "font/woff", isText: false },
-      [".woff2"]: { mime: "font/woff2", isText: false },
-      [".json"]: { mime: "application/json", isText: true },
-      [".jsonld"]: { mime: "application/ld+json", isText: true },
-      [".xml"]: { mime: "application/xml", isText: true },
-      [".pdf"]: { mime: "application/pdf", isText: false },
-      [".zip"]: { mime: "application/zip", isText: false },
-      [".wasm"]: { mime: "application/wasm", isText: false },
-    };
-    const extensionData = extensions[ext as keyof typeof extensions];
-    const mime = extensionData?.mime ?? "application/octet-stream";
-    const charset =
-      extensionData?.isText && textEncoding !== "none"
-        ? `;charset=${textEncoding}`
-        : "";
-    return `${mime}${charset}`;
-  }
+    function createWarmer() {
+      // note: Currently all sites have a single server function. When we add
+      //       support for multiple server functions (ie. route splitting), we
+      //       need to handle warming multiple functions.
+      if (!args.warm) return;
+
+      if (args.warm && plan.edge) {
+        throw new Error(
+          `In the "${name}" Site, warming is currently supported only for the regional mode.`
+        );
+      }
+
+      if (ssrFunctions.length === 0) return;
+
+      // Create warmer function
+      const warmer = new Function("warmer", {
+        description: `${name} warmer`,
+        bundle: path.join(__dirname, "../support/ssr-warmer"),
+        runtime: "nodejs20.x",
+        handler: "index.handler",
+        timeout: 900,
+        memorySize: 128,
+        environment: {
+          // TODO - SST design: output: how to reference the function inside Function
+          //   looks weird to acces `function.function.name`
+          FUNCTION_NAME: ssrFunctions[0].aws.function.name,
+          CONCURRENCY: pulumi
+            .all([args.warm])
+            .apply(([warm]) => warm.toString()),
+        },
+        policies: [
+          {
+            name: "invoke-server",
+            policy: ssrFunctions[0].aws.function.arn.apply((arn) =>
+              aws.iam
+                .getPolicyDocument({
+                  statements: [
+                    {
+                      actions: ["lambda:InvokeFunction"],
+                      resources: [arn],
+                    },
+                  ],
+                })
+                .then((doc) => doc.json)
+            ),
+          },
+        ],
+      });
+
+      // Create cron job
+      const schedule = new aws.cloudwatch.EventRule("warmer-rule", {
+        description: `${name} warmer`,
+        scheduleExpression: "rate(5 minutes)",
+      });
+      new aws.cloudwatch.EventTarget("warmer-target", {
+        rule: schedule.name,
+        arn: warmer.aws.function.arn,
+        retryPolicy: {
+          maximumRetryAttempts: 0,
+        },
+      });
+
+      // Prewarm on deploy
+      new aws.lambda.Invocation("warmer-prewarm", {
+        functionName: warmer.aws.function.name,
+        triggers: {
+          version: Date.now().toString(),
+        },
+        input: JSON.stringify({}),
+      });
+    }
+
+    function createDistributionInvalidation() {
+      pulumi
+        .all([outputPath, args.invalidation])
+        .apply(([outputPath, invalidation]) => {
+          // We will generate a hash based on the contents of the S3 files with cache enabled.
+          // This will be used to determine if we need to invalidate our CloudFront cache.
+          const s3Origin = Object.values(plan.origins).find(
+            (origin) => origin.type === "s3"
+          );
+          if (s3Origin?.type !== "s3") return;
+          const cachedS3Files = s3Origin.copy.filter((file) => file.cached);
+          if (cachedS3Files.length === 0) return;
+
+          // Build invalidation paths
+          const invalidationPaths: string[] = [];
+          if (invalidation?.paths === "none") {
+          } else if (invalidation?.paths === "all") {
+            invalidationPaths.push("/*");
+          } else if (invalidation?.paths === "versioned") {
+            cachedS3Files.forEach((item) => {
+              if (!item.versionedSubDir) return;
+              invalidationPaths.push(
+                path.posix.join("/", item.to, item.versionedSubDir, "*")
+              );
+            });
+          } else {
+            invalidationPaths.push(...(invalidation?.paths || []));
+          }
+          if (invalidationPaths.length === 0) return;
+
+          // Build build ID
+          let invalidationBuildId: string;
+          if (plan.buildId) {
+            invalidationBuildId = plan.buildId;
+          } else {
+            const hash = crypto.createHash("md5");
+
+            cachedS3Files.forEach((item) => {
+              // The below options are needed to support following symlinks when building zip files:
+              // - nodir: This will prevent symlinks themselves from being copied into the zip.
+              // - follow: This will follow symlinks and copy the files within.
+
+              // For versioned files, use file path for digest since file version in name should change on content change
+              if (item.versionedSubDir) {
+                globSync("**", {
+                  dot: true,
+                  nodir: true,
+                  follow: true,
+                  cwd: path.resolve(
+                    outputPath,
+                    item.from,
+                    item.versionedSubDir
+                  ),
+                }).forEach((filePath) => hash.update(filePath));
+              }
+
+              // For non-versioned files, use file content for digest
+              if (invalidation?.paths !== "versioned") {
+                globSync("**", {
+                  ignore: item.versionedSubDir
+                    ? [path.posix.join(item.versionedSubDir, "**")]
+                    : undefined,
+                  dot: true,
+                  nodir: true,
+                  follow: true,
+                  cwd: path.resolve(outputPath, item.from),
+                }).forEach((filePath) =>
+                  hash.update(
+                    fs.readFileSync(
+                      path.resolve(outputPath, item.from, filePath)
+                    )
+                  )
+                );
+              }
+            });
+            invalidationBuildId = hash.digest("hex");
+            console.debug(`Generated build ID ${invalidationBuildId}`);
+          }
+
+          new DistributionInvalidation("invalidation", {
+            distributionId: distribution.aws.distribution.id,
+            paths: invalidationPaths,
+            wait: invalidation?.wait,
+            version: invalidationBuildId,
+          });
+        });
+    }
+
+    function getContentType(filename: string, textEncoding: string) {
+      const ext = filename.endsWith(".well-known/site-association-json")
+        ? ".json"
+        : path.extname(filename);
+
+      const extensions = {
+        [".txt"]: { mime: "text/plain", isText: true },
+        [".htm"]: { mime: "text/html", isText: true },
+        [".html"]: { mime: "text/html", isText: true },
+        [".xhtml"]: { mime: "application/xhtml+xml", isText: true },
+        [".css"]: { mime: "text/css", isText: true },
+        [".js"]: { mime: "text/javascript", isText: true },
+        [".mjs"]: { mime: "text/javascript", isText: true },
+        [".apng"]: { mime: "image/apng", isText: false },
+        [".avif"]: { mime: "image/avif", isText: false },
+        [".gif"]: { mime: "image/gif", isText: false },
+        [".jpeg"]: { mime: "image/jpeg", isText: false },
+        [".jpg"]: { mime: "image/jpeg", isText: false },
+        [".png"]: { mime: "image/png", isText: false },
+        [".svg"]: { mime: "image/svg+xml", isText: true },
+        [".bmp"]: { mime: "image/bmp", isText: false },
+        [".tiff"]: { mime: "image/tiff", isText: false },
+        [".webp"]: { mime: "image/webp", isText: false },
+        [".ico"]: { mime: "image/vnd.microsoft.icon", isText: false },
+        [".eot"]: { mime: "application/vnd.ms-fontobject", isText: false },
+        [".ttf"]: { mime: "font/ttf", isText: false },
+        [".otf"]: { mime: "font/otf", isText: false },
+        [".woff"]: { mime: "font/woff", isText: false },
+        [".woff2"]: { mime: "font/woff2", isText: false },
+        [".json"]: { mime: "application/json", isText: true },
+        [".jsonld"]: { mime: "application/ld+json", isText: true },
+        [".xml"]: { mime: "application/xml", isText: true },
+        [".pdf"]: { mime: "application/pdf", isText: false },
+        [".zip"]: { mime: "application/zip", isText: false },
+        [".wasm"]: { mime: "application/wasm", isText: false },
+      };
+      const extensionData = extensions[ext as keyof typeof extensions];
+      const mime = extensionData?.mime ?? "application/octet-stream";
+      const charset =
+        extensionData?.isText && textEncoding !== "none"
+          ? `;charset=${textEncoding}`
+          : "";
+      return `${mime}${charset}`;
+    }
+  });
 }
 
 export function useCloudFrontFunctionHostHeaderInjection() {

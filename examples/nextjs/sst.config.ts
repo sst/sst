@@ -8,12 +8,12 @@ export default {
     };
   },
   async run() {
-    const site = new sst.SsrSite("web", {
+    const site = new sst.Nextjs("web", {
       path: "web",
     });
 
     return {
-      siteURL: util.interpolate`https://${site.distribution.domainName}`,
+      siteURL: util.interpolate`https://${site.customDomainUrl}`,
     };
   },
 };

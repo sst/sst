@@ -179,7 +179,7 @@ export class Nextjs extends pulumi.ComponentResource {
       createServersAndDistribution(
         name,
         args || {},
-        sitePath,
+        outputPath,
         access,
         bucket,
         plan
@@ -195,8 +195,8 @@ export class Nextjs extends pulumi.ComponentResource {
 
     this.doNotDeploy = doNotDeploy;
     this.bucket = bucket;
-    this.distribution = distribution;
-    this.serverFunction = serverFunction;
+    this.distribution = distribution as unknown as Distribution;
+    this.serverFunction = serverFunction as unknown as Function;
     this.edge = plan.edge;
 
     //app.registerTypes(this);
@@ -241,34 +241,38 @@ export class Nextjs extends pulumi.ComponentResource {
     function buildPlan(bucket: aws.s3.BucketV2) {
       return pulumi
         .all([
-          sitePath,
           outputPath,
           args?.edge,
+          args?.experimental,
           args?.imageOptimization,
           bucket.bucket,
           useRoutes(),
-          revalidationQueue,
+          revalidationQueue.apply((queue) => queue?.url),
+          revalidationQueue.apply((queue) => queue?.arn),
         ])
         .apply(
           ([
-            sitePath,
             outputPath,
             edge,
+            experimental,
             imageOptimization,
             bucketName,
             routes,
-            revalidationQueue,
+            revalidationQueueUrl,
+            revalidationQueueArn,
           ]) => {
             const serverConfig = {
               description: "Next.js server",
-              bundle: path.join(sitePath, ".open-next", "server-function"),
+              bundle: path.join(outputPath, ".open-next", "server-function"),
               handler: "index.handler",
               environment: {
                 CACHE_BUCKET_NAME: bucketName,
                 CACHE_BUCKET_KEY_PREFIX: "_cache",
                 CACHE_BUCKET_REGION: app.aws.region,
-                REVALIDATION_QUEUE_URL: revalidationQueue?.url,
-                REVALIDATION_QUEUE_REGION: app.aws.region,
+                ...(revalidationQueueUrl && {
+                  REVALIDATION_QUEUE_URL: revalidationQueueUrl,
+                  REVALIDATION_QUEUE_REGION: app.aws.region,
+                }),
               },
               policies: [
                 ...(revalidationQueue
@@ -283,7 +287,7 @@ export class Nextjs extends pulumi.ComponentResource {
                                 "sqs:GetQueueAttributes",
                                 "sqs:GetQueueUrl",
                               ],
-                              resources: [revalidationQueue.arn],
+                              resources: [revalidationQueueArn],
                             },
                           ],
                         }),
@@ -330,14 +334,14 @@ export class Nextjs extends pulumi.ComponentResource {
                     description: "Next.js image optimizer",
                     handler: "index.handler",
                     bundle: path.join(
-                      sitePath,
+                      outputPath,
                       ".open-next",
                       "image-optimization-function"
                     ),
                     runtime: "nodejs18.x",
                     architectures: ["arm64"],
                     environment: {
-                      BUCKET_NAME: bucket.bucket,
+                      BUCKET_NAME: bucketName,
                       BUCKET_KEY_PREFIX: "_assets",
                     },
                     memorySize: imageOptimization?.memorySize
@@ -411,27 +415,33 @@ export class Nextjs extends pulumi.ComponentResource {
                   origin: "imageOptimizer",
                 },
                 // create 1 behaviour for each top level asset file/folder
-                ...fs.readdirSync(path.join(sitePath, ".open-next/assets")).map(
-                  (item) =>
-                    ({
-                      cacheType: "static",
-                      pattern: fs
-                        .statSync(
-                          path.join(sitePath, ".open-next/assets", item)
-                        )
-                        .isDirectory()
-                        ? `${item}/*`
-                        : item,
-                      origin: "s3",
-                    } as const)
-                ),
+                ...fs
+                  .readdirSync(path.join(outputPath, ".open-next/assets"))
+                  .map(
+                    (item) =>
+                      ({
+                        cacheType: "static",
+                        pattern: fs
+                          .statSync(
+                            path.join(outputPath, ".open-next/assets", item)
+                          )
+                          .isDirectory()
+                          ? `${item}/*`
+                          : item,
+                        origin: "s3",
+                      } as const)
+                  ),
               ],
               cachePolicyAllowedHeaders: DEFAULT_CACHE_POLICY_ALLOWED_HEADERS,
               buildId: fs
                 .readFileSync(path.join(outputPath, ".next/BUILD_ID"))
                 .toString(),
               warmerConfig: {
-                function: path.join(sitePath, ".open-next", "warmer-function"),
+                function: path.join(
+                  outputPath,
+                  ".open-next",
+                  "warmer-function"
+                ),
               },
             });
 
@@ -470,8 +480,8 @@ if (event.rawPath) {
         const consumer = new Function("revalidation-consumer", {
           description: "Next.js revalidator",
           handler: "index.handler",
-          bundle: sitePath.apply((sitePath) =>
-            path.join(sitePath, ".open-next", "revalidation-function")
+          bundle: outputPath.apply((outputPath) =>
+            path.join(outputPath, ".open-next", "revalidation-function")
           ),
           runtime: "nodejs18.x",
           timeout: 30,
@@ -572,14 +582,16 @@ if (event.rawPath) {
     }
 
     function removeSourcemaps() {
-      return pulumi.all([sitePath]).apply(([sitePath]) => {
+      return pulumi.all([outputPath]).apply(([outputPath]) => {
         const files = globSync("**/*.js.map", {
-          cwd: path.join(sitePath, ".open-next", "server-function"),
+          cwd: path.join(outputPath, ".open-next", "server-function"),
           nodir: true,
           dot: true,
         });
         for (const file of files) {
-          fs.rmSync(path.join(sitePath, ".open-next", "server-function", file));
+          fs.rmSync(
+            path.join(outputPath, ".open-next", "server-function", file)
+          );
         }
       });
     }
@@ -589,14 +601,14 @@ if (event.rawPath) {
 
       _routes = pulumi
         .all([
-          sitePath,
+          outputPath,
           useRoutesManifest(),
           useAppPathRoutesManifest(),
           useAppPathsManifest(),
         ])
         .apply(
           ([
-            sitePath,
+            outputPath,
             routesManifest,
             appPathRoutesManifest,
             appPathsManifest,
@@ -666,7 +678,7 @@ if (event.rawPath) {
 
               // Step 3: check the .map file exists
               const sourcemapPath = path.join(
-                sitePath,
+                outputPath,
                 ".next",
                 "server",
                 `${filePath}.map`
@@ -695,7 +707,7 @@ if (event.rawPath) {
 
               // Step 2: check the .map file exists
               const sourcemapPath = path.join(
-                sitePath,
+                outputPath,
                 ".next",
                 "server",
                 `${filePath}.map`
@@ -713,10 +725,10 @@ if (event.rawPath) {
     function useRoutesManifest() {
       if (routesManifest) return routesManifest;
 
-      return pulumi.all([sitePath]).apply(([sitePath]) => {
+      return pulumi.all([outputPath]).apply(([outputPath]) => {
         try {
           const content = fs
-            .readFileSync(path.join(sitePath, ".next/routes-manifest.json"))
+            .readFileSync(path.join(outputPath, ".next/routes-manifest.json"))
             .toString();
           routesManifest = JSON.parse(content);
           return routesManifest!;
@@ -732,11 +744,11 @@ if (event.rawPath) {
     function useAppPathRoutesManifest() {
       if (appPathRoutesManifest) return appPathRoutesManifest;
 
-      appPathRoutesManifest = pulumi.all([sitePath]).apply(([sitePath]) => {
+      appPathRoutesManifest = pulumi.all([outputPath]).apply(([outputPath]) => {
         try {
           const content = fs
             .readFileSync(
-              path.join(sitePath, ".next/app-path-routes-manifest.json")
+              path.join(outputPath, ".next/app-path-routes-manifest.json")
             )
             .toString();
           return JSON.parse(content) as Record<string, string>;
@@ -750,11 +762,11 @@ if (event.rawPath) {
     function useAppPathsManifest() {
       if (appPathsManifest) return appPathsManifest;
 
-      appPathsManifest = pulumi.all([sitePath]).apply(([sitePath]) => {
+      appPathsManifest = pulumi.all([outputPath]).apply(([outputPath]) => {
         try {
           const content = fs
             .readFileSync(
-              path.join(sitePath, ".next/server/app-paths-manifest.json")
+              path.join(outputPath, ".next/server/app-paths-manifest.json")
             )
             .toString();
           return JSON.parse(content) as Record<string, string>;
@@ -768,11 +780,11 @@ if (event.rawPath) {
     function usePagesManifest() {
       if (pagesManifest) return pagesManifest;
 
-      pagesManifest = pulumi.all([sitePath]).apply(([sitePath]) => {
+      pagesManifest = pulumi.all([outputPath]).apply(([outputPath]) => {
         try {
           const content = fs
             .readFileSync(
-              path.join(sitePath, ".next/server/pages-manifest.json")
+              path.join(outputPath, ".next/server/pages-manifest.json")
             )
             .toString();
           return JSON.parse(content) as Record<string, string>;
@@ -786,10 +798,12 @@ if (event.rawPath) {
     function usePrerenderManifest() {
       if (prerenderManifest) return prerenderManifest;
 
-      return pulumi.all([sitePath]).apply(([sitePath]) => {
+      return pulumi.all([outputPath]).apply(([outputPath]) => {
         try {
           const content = fs
-            .readFileSync(path.join(sitePath, ".next/prerender-manifest.json"))
+            .readFileSync(
+              path.join(outputPath, ".next/prerender-manifest.json")
+            )
             .toString();
           prerenderManifest = JSON.parse(content);
           return prerenderManifest!;
