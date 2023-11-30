@@ -46,12 +46,7 @@ import {
   getReferencedSecrets,
 } from "./util/functionBinding.js";
 import { useProject } from "../project.js";
-import {
-  ISecurityGroup,
-  IVpc,
-  SubnetSelection,
-  Vpc,
-} from "aws-cdk-lib/aws-ec2";
+import { IVpc, Vpc } from "aws-cdk-lib/aws-ec2";
 import {
   AwsLogDriver,
   CfnTaskDefinition,
@@ -178,6 +173,18 @@ const supportedMemories = {
   },
 };
 
+type Enumerate<
+  N extends number,
+  Acc extends number[] = []
+> = Acc["length"] extends N
+  ? Acc[number]
+  : Enumerate<N, [...Acc, Acc["length"]]>;
+
+type IntRange<F extends number, T extends number> = Exclude<
+  Enumerate<T>,
+  Enumerate<F>
+>;
+
 export interface ServiceDomainProps extends DistributionDomainProps {}
 export interface ServiceCdkDistributionProps
   extends Omit<DistributionProps, "defaultBehavior"> {}
@@ -228,6 +235,16 @@ export interface ServiceProps {
    *```
    */
   memory?: `${number} GB`;
+  /**
+   * The amount of ephemeral storage allocated, in GB.
+   * @default 20
+   * @example
+   * ```js
+   * {
+   *   storage: 100,
+   * }
+   */
+  storage?: IntRange<20, 201>;
   /**
    * The port number on the container.
    * @default 3000
@@ -875,7 +892,8 @@ export class Service extends Construct implements SSTConstruct {
   }
 
   private createService(vpc: IVpc) {
-    const { architecture, cpu, memory, port, logRetention, cdk } = this.props;
+    const { architecture, cpu, memory, storage, port, logRetention, cdk } =
+      this.props;
     const app = this.node.root as App;
     const clusterName = app.logicalPrefixedName(this.node.id);
 
@@ -896,6 +914,7 @@ export class Service extends Construct implements SSTConstruct {
     const taskDefinition = new FargateTaskDefinition(this, `TaskDefinition`, {
       // @ts-ignore
       memoryLimitMiB: supportedMemories[cpu][memory],
+      ephemeralStorageGiB: storage,
       cpu: supportedCpus[cpu],
       runtimePlatform: {
         cpuArchitecture:

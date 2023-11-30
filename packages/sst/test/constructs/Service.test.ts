@@ -250,6 +250,19 @@ test("memory invalid", async () => {
   }).rejects.toThrow(/only the following "memory" settings/);
 });
 
+test("storage undefined", async () => {
+  const { stack } = await createService({});
+  hasResource(stack, "AWS::ECS::TaskDefinition", {
+    ephemeralStorage: ABSENT,
+  });
+});
+test("storage defined", async () => {
+  const { stack } = await createService({ storage: 21 });
+  hasResource(stack, "AWS::ECS::TaskDefinition", {
+    ephemeralStorage: objectLike({ sizeInGiB: 21 }),
+  });
+});
+
 test("port undefined", async () => {
   const { stack } = await createService({});
   hasResource(stack, "AWS::ECS::TaskDefinition", {
