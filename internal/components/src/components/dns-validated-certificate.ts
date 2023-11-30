@@ -36,7 +36,7 @@ export class DnsValidatedCertificate extends pulumi.ComponentResource {
 
     const { domainName, alternativeNames, zoneId, region } = args;
 
-    const provider = new aws.Provider("provider", {
+    const provider = new aws.Provider(`${name}-provider`, {
       // TODO test we don't need values
       //accessKey: app.aws.AWS_ACCESS_KEY_ID,
       //secretKey: app.aws.AWS_SECRET_ACCESS_KEY,
@@ -45,7 +45,7 @@ export class DnsValidatedCertificate extends pulumi.ComponentResource {
     });
 
     const certificate = new aws.acm.Certificate(
-      "certificate",
+      `${name}-certificate`,
       {
         domainName,
         validationMethod: "DNS",
@@ -56,21 +56,24 @@ export class DnsValidatedCertificate extends pulumi.ComponentResource {
 
     const records: aws.route53.Record[] = [];
     certificate.domainValidationOptions.apply((options) => {
-      options.forEach((option, i) => {
+      options.forEach((option) => {
         records.push(
-          new aws.route53.Record(`validation-record-${i}`, {
-            name: option.resourceRecordName,
-            zoneId,
-            type: option.resourceRecordType,
-            records: [option.resourceRecordValue],
-            ttl: 60,
-          })
+          new aws.route53.Record(
+            `${name}-record-${option.resourceRecordName}`,
+            {
+              name: option.resourceRecordName,
+              zoneId,
+              type: option.resourceRecordType,
+              records: [option.resourceRecordValue],
+              ttl: 60,
+            }
+          )
         );
       });
     });
 
     const certificateValidation = new aws.acm.CertificateValidation(
-      "certificate-validation",
+      `${name}-validation`,
       {
         certificateArn: certificate.arn,
         validationRecordFqdns: records.map((record) => record.fqdn),

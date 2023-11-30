@@ -3,7 +3,7 @@
   "name": "sst",
   "type": "module",
   "scripts": {
-    "dev": "tsc -w"
+    "dev": "tsc --watch --noEmit"
   },
   "dependencies": {
     "@aws-sdk/client-cloudfront": "3.458.0",

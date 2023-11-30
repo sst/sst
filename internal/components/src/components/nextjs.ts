@@ -127,7 +127,7 @@ export class Nextjs extends pulumi.ComponentResource {
   constructor(
     name: string,
     args?: NextjsArgs,
-    opts?: pulumi.ComponentResourceOptions,
+    opts?: pulumi.ComponentResourceOptions
   ) {
     super("sst:sst:Nextjs", name, args, opts);
 
@@ -169,7 +169,9 @@ export class Nextjs extends pulumi.ComponentResource {
     const { access, bucket } = createBucket(name);
     const revalidationQueue = createRevalidationQueue();
     const plan = buildPlan(bucket);
-    removeSourcemaps(); // TODO set dependency
+    // TODO set dependency
+    // TODO ensure sourcemaps are removed in function code
+    removeSourcemaps();
 
     //if (!experimental.disableDynamoDBCache) {
     //  createRevalidationTable();
@@ -182,7 +184,7 @@ export class Nextjs extends pulumi.ComponentResource {
         outputPath,
         access,
         bucket,
-        plan,
+        plan
       );
     const serverFunction = ssrFunctions[0] ?? Object.values(edgeFunctions)[0];
 
@@ -234,7 +236,7 @@ export class Nextjs extends pulumi.ComponentResource {
               ...(experimental.disableIncrementalCache
                 ? ["--dangerously-disable-incremental-cache"]
                 : []),
-            ].join(" "),
+            ].join(" ")
         );
     }
 
@@ -336,7 +338,7 @@ export class Nextjs extends pulumi.ComponentResource {
                     bundle: path.join(
                       outputPath,
                       ".open-next",
-                      "image-optimization-function",
+                      "image-optimization-function"
                     ),
                     runtime: "nodejs18.x",
                     architectures: ["arm64"],
@@ -423,13 +425,13 @@ export class Nextjs extends pulumi.ComponentResource {
                         cacheType: "static",
                         pattern: fs
                           .statSync(
-                            path.join(outputPath, ".open-next/assets", item),
+                            path.join(outputPath, ".open-next/assets", item)
                           )
                           .isDirectory()
                           ? `${item}/*`
                           : item,
                         origin: "s3",
-                      }) as const,
+                      } as const)
                   ),
               ],
               cachePolicyAllowedHeaders: DEFAULT_CACHE_POLICY_ALLOWED_HEADERS,
@@ -440,7 +442,7 @@ export class Nextjs extends pulumi.ComponentResource {
                 function: path.join(
                   outputPath,
                   ".open-next",
-                  "warmer-function",
+                  "warmer-function"
                 ),
               },
             });
@@ -452,7 +454,7 @@ if (event.rawPath) {
     routes.map(({ regex, logGroupPath }) => ({
       regex,
       logGroupPath,
-    })),
+    }))
   )}.find(({ regex }) => event.rawPath.match(new RegExp(regex)));
   if (routeData) {
     console.log("::sst::" + JSON.stringify({
@@ -464,7 +466,7 @@ if (event.rawPath) {
   }
 }`;
             }
-          },
+          }
         );
     }
 
@@ -473,27 +475,24 @@ if (event.rawPath) {
         if (!serverFunction) return;
         if (experimental.disableIncrementalCache) return;
 
-        const queue = new aws.sqs.Queue("revalidation-queue", {
+        const queue = new aws.sqs.Queue(`${name}-revalidation-queue`, {
           fifoQueue: true,
           receiveWaitTimeSeconds: 20,
         });
-        const consumer = new Function("revalidation-consumer", {
+        const consumer = new Function(`${name}-revalidation-consumer`, {
           description: "Next.js revalidator",
           handler: "index.handler",
           bundle: outputPath.apply((outputPath) =>
-            path.join(outputPath, ".open-next", "revalidation-function"),
+            path.join(outputPath, ".open-next", "revalidation-function")
           ),
           runtime: "nodejs18.x",
           timeout: 30,
         });
-        new aws.lambda.EventSourceMapping(
-          `revalidation-consumer-event-source`,
-          {
-            functionName: consumer.aws.function.name,
-            eventSourceArn: queue.arn,
-            batchSize: 5,
-          },
-        );
+        new aws.lambda.EventSourceMapping(`${name}-revalidation-event-source`, {
+          functionName: consumer.aws.function.name,
+          eventSourceArn: queue.arn,
+          batchSize: 5,
+        });
         return queue;
       });
     }
@@ -501,7 +500,7 @@ if (event.rawPath) {
     function createRevalidationTable() {
       //if (!this.serverFunction) return;
       //const { path: sitePath } = this.args;
-      //const table = new aws.dynamodb.Table("revalidation-table", {
+      //const table = new aws.dynamodb.Table(`${name}-revalidation-table`, {
       //  attributes: [
       //    { name: "tag", type: "S" },
       //    { name: "path", type: "S" },
@@ -536,7 +535,7 @@ if (event.rawPath) {
       //  const prerenderedRouteCount = Object.keys(
       //    usePrerenderManifest()?.routes ?? {}
       //  ).length;
-      //  const insertFn = new Function("revalidation-table-seed", {
+      //  const insertFn = new Function(`${name}-revalidation-table-seed`, {
       //    description: "Next.js revalidation data insert",
       //    handler: "index.handler",
       //    bundle: dynamodbProviderPath,
@@ -571,7 +570,7 @@ if (event.rawPath) {
       //      CACHE_DYNAMO_TABLE: table.name,
       //    },
       //  });
-      //  new aws.lambda.Invocation("revalidation-table-seed-invocation", {
+      //  new aws.lambda.Invocation(`${name}-revalidation-table-seed-invocation`, {
       //    functionName: insertFn.aws.function.name,
       //    triggers: {
       //      version: Date.now().toString(),
@@ -590,7 +589,7 @@ if (event.rawPath) {
         });
         for (const file of files) {
           fs.rmSync(
-            path.join(outputPath, ".open-next", "server-function", file),
+            path.join(outputPath, ".open-next", "server-function", file)
           );
         }
       });
@@ -660,7 +659,7 @@ if (event.rawPath) {
               //   "/favicon.ico/route": "/favicon.ico"
               // }
               const appPathRoute = Object.keys(appPathRoutesManifest).find(
-                (key) => appPathRoutesManifest[key] === page,
+                (key) => appPathRoutesManifest[key] === page
               );
               if (!appPathRoute) return;
 
@@ -681,7 +680,7 @@ if (event.rawPath) {
                 outputPath,
                 ".next",
                 "server",
-                `${filePath}.map`,
+                `${filePath}.map`
               );
               if (!fs.existsSync(sourcemapPath)) return;
 
@@ -710,13 +709,13 @@ if (event.rawPath) {
                 outputPath,
                 ".next",
                 "server",
-                `${filePath}.map`,
+                `${filePath}.map`
               );
               if (!fs.existsSync(sourcemapPath)) return;
 
               return sourcemapPath;
             }
-          },
+          }
         );
 
       return _routes;
@@ -735,7 +734,7 @@ if (event.rawPath) {
         } catch (e) {
           console.error(e);
           throw new Error(
-            `Failed to read routes data from ".next/routes-manifest.json" for the "${name}" site.`,
+            `Failed to read routes data from ".next/routes-manifest.json" for the "${name}" site.`
           );
         }
       });
@@ -748,7 +747,7 @@ if (event.rawPath) {
         try {
           const content = fs
             .readFileSync(
-              path.join(outputPath, ".next/app-path-routes-manifest.json"),
+              path.join(outputPath, ".next/app-path-routes-manifest.json")
             )
             .toString();
           return JSON.parse(content) as Record<string, string>;
@@ -766,7 +765,7 @@ if (event.rawPath) {
         try {
           const content = fs
             .readFileSync(
-              path.join(outputPath, ".next/server/app-paths-manifest.json"),
+              path.join(outputPath, ".next/server/app-paths-manifest.json")
             )
             .toString();
           return JSON.parse(content) as Record<string, string>;
@@ -784,7 +783,7 @@ if (event.rawPath) {
         try {
           const content = fs
             .readFileSync(
-              path.join(outputPath, ".next/server/pages-manifest.json"),
+              path.join(outputPath, ".next/server/pages-manifest.json")
             )
             .toString();
           return JSON.parse(content) as Record<string, string>;
@@ -802,7 +801,7 @@ if (event.rawPath) {
         try {
           const content = fs
             .readFileSync(
-              path.join(outputPath, ".next/prerender-manifest.json"),
+              path.join(outputPath, ".next/prerender-manifest.json")
             )
             .toString();
           prerenderManifest = JSON.parse(content);
@@ -831,7 +830,7 @@ if (event.rawPath) {
       if (!serverFunction) return;
 
       // TODO create log group and reference log group arn
-      const policy = new aws.iam.Policy(`disable-logging-policy`, {
+      const policy = new aws.iam.Policy(`${name}-disable-logging-policy`, {
         policy: pulumi.interpolate`{
             "Version": "2012-10-17",
             "Statement": [
@@ -850,10 +849,13 @@ if (event.rawPath) {
             ]
           }`,
       });
-      new aws.iam.RolePolicyAttachment(`disable-logging-policy-attachment`, {
-        policyArn: policy.arn,
-        role: serverFunction.aws.function.role,
-      });
+      new aws.iam.RolePolicyAttachment(
+        `${name}-disable-logging-policy-attachment`,
+        {
+          policyArn: policy.arn,
+          role: serverFunction.aws.function.role,
+        }
+      );
     }
 
     function uploadSourcemaps() {
@@ -863,11 +865,11 @@ if (event.rawPath) {
         routes.forEach(({ sourcemapPath, sourcemapKey }) => {
           if (!sourcemapPath || !sourcemapKey) return;
 
-          new aws.s3.BucketObject(sourcemapKey, {
+          new aws.s3.BucketObject(`${name}-sourcemap-${sourcemapKey}`, {
             bucket: app.bootstrap.bucket,
             source: new pulumi.asset.FileAsset(sourcemapPath),
             key: serverFunction!.aws.function.arn.apply((arn) =>
-              path.join(arn, sourcemapKey),
+              path.join(arn, sourcemapKey)
             ),
           });
         });

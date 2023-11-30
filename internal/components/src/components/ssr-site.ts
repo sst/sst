@@ -497,7 +497,7 @@ export function createServersAndDistribution(
 
               for (const file of files) {
                 uploadedObjects.push(
-                  new aws.s3.BucketObject(file, {
+                  new aws.s3.BucketObject(`${name}-asset-${from}-${file}`, {
                     bucket: bucket.bucket,
                     source: new pulumi.asset.FileAsset(file),
                     contentType: getContentType(file, "UTF-8"),
@@ -518,18 +518,21 @@ export function createServersAndDistribution(
       const functions: Record<string, aws.cloudfront.Function> = {};
 
       Object.entries(plan.cloudFrontFunctions ?? {}).forEach(
-        ([name, { injections }]) => {
-          functions[name] = new aws.cloudfront.Function(name, {
-            runtime: "cloudfront-js-1.0",
-            code: pulumi.all([injections]).apply(
-              ([injections]) => `
+        ([fnName, { injections }]) => {
+          functions[fnName] = new aws.cloudfront.Function(
+            `${name}-cloudfront-function-${fnName}`,
+            {
+              runtime: "cloudfront-js-1.0",
+              code: pulumi.all([injections]).apply(
+                ([injections]) => `
 function handler(event) {
   var request = event.request;
   ${injections.join("\n")}
   return request;
 }`
-            ),
-          });
+              ),
+            }
+          );
         }
       );
       return functions;
@@ -539,8 +542,8 @@ function handler(event) {
       const functions: Record<string, Function> = {};
 
       Object.entries(plan.edgeFunctions ?? {}).forEach(
-        ([name, { function: props }]) => {
-          const fn = new Function(name, {
+        ([fnName, { function: props }]) => {
+          const fn = new Function(`${name}-edge-function-${fnName}`, {
             runtime: "nodejs18.x",
             timeout: 20,
             memorySize: 1024,
@@ -577,7 +580,7 @@ function handler(event) {
             ]),
           });
 
-          functions[name] = fn;
+          functions[fnName] = fn;
         }
       );
       return functions;
@@ -641,8 +644,8 @@ function handler(event) {
       };
     }
 
-    function buildFunctionOrigin(name: string, props: FunctionOriginConfig) {
-      const fn = new Function(name, {
+    function buildFunctionOrigin(fnName: string, props: FunctionOriginConfig) {
+      const fn = new Function(`${name}-server-function-${fnName}`, {
         runtime: "nodejs18.x",
         timeout: 20,
         memorySize: 1024,
@@ -682,14 +685,17 @@ function handler(event) {
       });
       ssrFunctions.push(fn);
 
-      const url = new aws.lambda.FunctionUrl(`${name}-url`, {
-        authorizationType: "NONE",
-        functionName: fn.aws.function.name,
-        invokeMode: props.streaming ? "RESPONSE_STREAM" : "BUFFERED",
-      });
+      const url = new aws.lambda.FunctionUrl(
+        `${name}-server-function-${fnName}-url`,
+        {
+          authorizationType: "NONE",
+          functionName: fn.aws.function.name,
+          invokeMode: props.streaming ? "RESPONSE_STREAM" : "BUFFERED",
+        }
+      );
 
       return {
-        originId: name,
+        originId: fnName,
         domainName: url.functionUrl.apply((url) => new URL(url).host),
         customOriginConfig: {
           httpPort: 80,
@@ -702,10 +708,10 @@ function handler(event) {
     }
 
     function buildImageOptimizationFunctionOrigin(
-      name: string,
+      fnName: string,
       props: ImageOptimizationFunctionOriginConfig
     ) {
-      const fn = new Function(name, {
+      const fn = new Function(`${name}-image-function-${fnName}`, {
         // TODO implement function log retention
         //logRetention: RetentionDays.THREE_DAYS,
         timeout: 25,
@@ -729,13 +735,16 @@ function handler(event) {
         ...props.function,
       });
 
-      const url = new aws.lambda.FunctionUrl(`${name}-url`, {
-        authorizationType: "NONE",
-        functionName: fn.aws.function.name,
-      });
+      const url = new aws.lambda.FunctionUrl(
+        `${name}-image-function-${fnName}-url`,
+        {
+          authorizationType: "NONE",
+          functionName: fn.aws.function.name,
+        }
+      );
 
       return {
-        originId: name,
+        originId: fnName,
         domainName: url.functionUrl.apply((url) => new URL(url).host),
         customOriginConfig: {
           httpPort: 80,
@@ -813,7 +822,7 @@ function handler(event) {
     function useServerBehaviorCachePolicy() {
       singletonCachePolicy =
         singletonCachePolicy ??
-        new aws.cloudfront.CachePolicy("cache-policy", {
+        new aws.cloudfront.CachePolicy(`${name}-server-cache-policy`, {
           comment: "SST server response cache policy",
           defaultTtl: 0,
           maxTtl: 365,
@@ -850,14 +859,14 @@ if (event.type === "warmer") {
     }
 
     function createServerFunctionForDev() {
-      //const role = new Role(self, "ServerFunctionRole", {
+      //const role = new Role(self, `${name}-dev-server-role`, {
       //  assumedBy: new CompositePrincipal(
       //    new AccountPrincipal(app.account),
       //    new ServicePrincipal("lambda.amazonaws.com")
       //  ),
       //  maxSessionDuration: CdkDuration.hours(12),
       //});
-      //return new SsrFunction(self, `ServerFunction`, {
+      //return new SsrFunction(self, `${name}-dev-server-function`, {
       //  description: "Server handler placeholder",
       //  bundle: path.join(__dirname, "../support/ssr-site-function-stub"),
       //  handler: "index.handler",
@@ -874,7 +883,7 @@ if (event.type === "warmer") {
 
     function createCloudFrontDistribution() {
       return new Distribution(
-        "distribution",
+        `${name}-distribution`,
         {
           customDomain: args.customDomain,
           origins: Object.values(origins),
@@ -910,7 +919,7 @@ if (event.type === "warmer") {
     }
 
     function allowServerFunctionInvalidateDistribution() {
-      const policy = new aws.iam.Policy(`invalidation-policy`, {
+      const policy = new aws.iam.Policy(`${name}-invalidation-policy`, {
         policy: pulumi.interpolate`{
             "Version": "2012-10-17",
             "Statement": [
@@ -925,7 +934,7 @@ if (event.type === "warmer") {
 
       for (const fn of [...ssrFunctions, ...Object.values(edgeFunctions)]) {
         new aws.iam.RolePolicyAttachment(
-          `invalidation-policy-${fn.aws.function.name}`,
+          `${name}-invalidation-policy-attachment-${fn.aws.function.name}`,
           {
             policyArn: policy.arn,
             role: fn.aws.function.role,
@@ -949,7 +958,7 @@ if (event.type === "warmer") {
       if (ssrFunctions.length === 0) return;
 
       // Create warmer function
-      const warmer = new Function("warmer", {
+      const warmer = new Function(`${name}-warmer-function`, {
         description: `${name} warmer`,
         bundle: path.join(__dirname, "../support/ssr-warmer"),
         runtime: "nodejs20.x",
@@ -984,11 +993,11 @@ if (event.type === "warmer") {
       });
 
       // Create cron job
-      const schedule = new aws.cloudwatch.EventRule("warmer-rule", {
+      const schedule = new aws.cloudwatch.EventRule(`${name}-warmer-rule`, {
         description: `${name} warmer`,
         scheduleExpression: "rate(5 minutes)",
       });
-      new aws.cloudwatch.EventTarget("warmer-target", {
+      new aws.cloudwatch.EventTarget(`${name}-warmer-target`, {
         rule: schedule.name,
         arn: warmer.aws.function.arn,
         retryPolicy: {
@@ -997,7 +1006,7 @@ if (event.type === "warmer") {
       });
 
       // Prewarm on deploy
-      new aws.lambda.Invocation("warmer-prewarm", {
+      new aws.lambda.Invocation(`${name}-warmer-invoke`, {
         functionName: warmer.aws.function.name,
         triggers: {
           version: Date.now().toString(),
@@ -1085,7 +1094,7 @@ if (event.type === "warmer") {
             console.debug(`Generated build ID ${invalidationBuildId}`);
           }
 
-          new DistributionInvalidation("invalidation", {
+          new DistributionInvalidation(`${name}-invalidation`, {
             distributionId: distribution.aws.distribution.id,
             paths: invalidationPaths,
             wait: invalidation?.wait,

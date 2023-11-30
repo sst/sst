@@ -154,7 +154,7 @@ export class Function extends pulumi.ComponentResource {
       ...args,
     };
 
-    const provider = new aws.Provider("provider", {
+    const provider = new aws.Provider(`${name}-provider`, {
       // TODO test these are not required
       //accessKey: app.aws.AWS_ACCESS_KEY_ID,
       //secretKey: app.aws.AWS_SECRET_ACCESS_KEY,

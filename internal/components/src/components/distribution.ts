@@ -154,7 +154,7 @@ export class Distribution extends pulumi.ComponentResource {
     function createCertificate() {
       if (!customDomain || !zoneId) return;
 
-      return new DnsValidatedCertificate("certificate", {
+      return new DnsValidatedCertificate(`${name}-certificate`, {
         domainName: customDomain.domainName,
         alternativeNames: customDomain.aliases,
         zoneId,
@@ -171,7 +171,7 @@ export class Distribution extends pulumi.ComponentResource {
               ...customDomain.aliases,
             ])
         : [];
-      return new aws.cloudfront.Distribution("distribution", {
+      return new aws.cloudfront.Distribution(`${name}-distribution`, {
         ...args,
         aliases,
         viewerCertificate: certificate
@@ -192,10 +192,13 @@ export class Distribution extends pulumi.ComponentResource {
 
       // Create DNS record
       pulumi.all([customDomain]).apply(([customDomain]) => {
-        for (const name of [customDomain.domainName, ...customDomain.aliases]) {
+        for (const recordName of [
+          customDomain.domainName,
+          ...customDomain.aliases,
+        ]) {
           for (const type of ["A", "AAAA"]) {
-            new aws.route53.Record(`record-${name}-${type}`, {
-              name,
+            new aws.route53.Record(`${name}-record-${recordName}-${type}`, {
+              name: recordName,
               zoneId,
               type,
               aliases: [
@@ -219,7 +222,7 @@ export class Distribution extends pulumi.ComponentResource {
       pulumi.all([customDomain]).apply(([customDomain]) => {
         if (customDomain.redirects.length === 0) return;
 
-        new HttpsRedirect("redirect", {
+        new HttpsRedirect(`${name}-redirect`, {
           zoneId,
           sourceDomains: customDomain.redirects,
           targetDomain: customDomain.domainName,

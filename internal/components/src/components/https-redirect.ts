@@ -43,19 +43,19 @@ export class HttpsRedirect extends pulumi.ComponentResource {
 
     const { zoneId, targetDomain, sourceDomains } = args;
 
-    const certificate = new DnsValidatedCertificate("certificate", {
+    const certificate = new DnsValidatedCertificate(`${name}-certificate`, {
       domainName: sourceDomains[0],
       alternativeNames: sourceDomains.slice(1),
       zoneId,
       region: "us-east-1",
     });
 
-    const bucket = new aws.s3.BucketV2("bucket", {
+    const bucket = new aws.s3.BucketV2(`${name}-bucket`, {
       forceDestroy: true,
     });
 
     const bucketWebsite = new aws.s3.BucketWebsiteConfigurationV2(
-      "bucket-website",
+      `${name}-bucket-website`,
       {
         bucket: bucket.id,
         redirectAllRequestsTo: {
@@ -65,7 +65,7 @@ export class HttpsRedirect extends pulumi.ComponentResource {
       }
     );
 
-    new aws.s3.BucketPublicAccessBlock("bucket-public-access-block", {
+    new aws.s3.BucketPublicAccessBlock(`${name}-bucket-public-access-block`, {
       bucket: bucket.id,
       blockPublicAcls: true,
       blockPublicPolicy: true,
@@ -73,39 +73,42 @@ export class HttpsRedirect extends pulumi.ComponentResource {
       restrictPublicBuckets: true,
     });
 
-    const distribution = new aws.cloudfront.Distribution("distribution", {
-      enabled: true,
-      waitForDeployment: false,
-      aliases: sourceDomains,
-      restrictions: {
-        geoRestriction: {
-          restrictionType: "none",
+    const distribution = new aws.cloudfront.Distribution(
+      `${name}-distribution`,
+      {
+        enabled: true,
+        waitForDeployment: false,
+        aliases: sourceDomains,
+        restrictions: {
+          geoRestriction: {
+            restrictionType: "none",
+          },
         },
-      },
-      comment: `Redirect to ${targetDomain} from ${sourceDomains.join(", ")}`,
-      priceClass: "PriceClass_All",
-      viewerCertificate: {
-        acmCertificateArn: certificate.certificateArn,
-        sslSupportMethod: "sni-only",
-      },
-      defaultCacheBehavior: {
-        allowedMethods: ["GET", "HEAD", "OPTIONS"],
-        targetOriginId: "s3Origin",
-        viewerProtocolPolicy: "redirect-to-https",
-        cachedMethods: ["GET", "HEAD"],
-      },
-      origins: [
-        {
-          originId: "s3Origin",
-          domainName: bucketWebsite.websiteDomain,
+        comment: `Redirect to ${targetDomain} from ${sourceDomains.join(", ")}`,
+        priceClass: "PriceClass_All",
+        viewerCertificate: {
+          acmCertificateArn: certificate.certificateArn,
+          sslSupportMethod: "sni-only",
         },
-      ],
-    });
+        defaultCacheBehavior: {
+          allowedMethods: ["GET", "HEAD", "OPTIONS"],
+          targetOriginId: "s3Origin",
+          viewerProtocolPolicy: "redirect-to-https",
+          cachedMethods: ["GET", "HEAD"],
+        },
+        origins: [
+          {
+            originId: "s3Origin",
+            domainName: bucketWebsite.websiteDomain,
+          },
+        ],
+      }
+    );
 
-    for (const name of sourceDomains) {
+    for (const recordName of sourceDomains) {
       for (const type of ["A", "AAAA"]) {
-        new aws.route53.Record(`record-${name}-${type}`, {
-          name,
+        new aws.route53.Record(`${name}-record-${recordName}-${type}`, {
+          name: recordName,
           zoneId,
           type,
           aliases: [
