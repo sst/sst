@@ -700,7 +700,9 @@ if (event.rawPath) {
   }
 
   private usePagePreviewBypassRequestHeaderInjection() {
-    return 'if(request.cookies["__prerender_bypass"]) { request.headers["x-prerender-bypass"] = { value: "true" }; }';
+    return `if (request.cookies["__prerender_bypass"]) { 
+  request.headers["x-prerender-bypass"] = { value: "true" }; 
+}';`;
   }
 
   private getBuildId() {
