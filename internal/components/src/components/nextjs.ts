@@ -134,7 +134,7 @@ export class Nextjs extends pulumi.ComponentResource {
     const logging = normalizeLogging();
     const experimental = normalizeExperimental();
     const buildCommand = normalizeBuildCommand();
-    const { sitePath, invalidation, doNotDeploy } = prepare(args || {});
+    const { sitePath, doNotDeploy } = prepare(args || {});
     //if (doNotDeploy) {
     //  // @ts-expect-error
     //  this.bucket = this.distribution = null;

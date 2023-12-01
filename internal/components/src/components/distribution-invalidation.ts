@@ -27,7 +27,7 @@ interface Inputs {
 class Provider implements pulumi.dynamic.ResourceProvider {
   async create(inputs: Inputs): Promise<pulumi.dynamic.CreateResult> {
     await this.handle(inputs);
-    return { id: "invalidation" };
+    return { id: "invalidation", outs: inputs };
   }
 
   async update(
@@ -36,7 +36,7 @@ class Provider implements pulumi.dynamic.ResourceProvider {
     news: Inputs
   ): Promise<pulumi.dynamic.UpdateResult> {
     await this.handle(news);
-    return {};
+    return { outs: news };
   }
 
   async handle(inputs: Inputs) {
@@ -150,7 +150,7 @@ export class DistributionInvalidation extends pulumi.dynamic.Resource {
         ...args,
         paths: pulumi
           .all([args.paths])
-          .apply((paths) => [...new Set(paths ?? ["/*"])]),
+          .apply(([paths]) => [...new Set(paths ?? ["/*"])]),
         wait: args.wait || false,
         version:
           args.version ||

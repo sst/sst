@@ -266,12 +266,11 @@ export interface SsrSiteArgs {
 
 export function prepare(args: SsrSiteArgs) {
   const sitePath = normalizeSitePath();
-  const invalidation = normalizeInvalidation();
   writeTypesFile();
 
   const doNotDeploy = pulumi.output(false);
   //const doNotDeploy = app.mode === "dev" && !dev?.deploy;
-  return { sitePath, invalidation, doNotDeploy };
+  return { sitePath, doNotDeploy };
 
   function normalizeSitePath() {
     return pulumi.all([args.path]).apply(([sitePath]) => {
@@ -281,14 +280,6 @@ export function prepare(args: SsrSiteArgs) {
         throw new Error(`No site found at "${path.resolve(sitePath)}"`);
       }
       return sitePath;
-    });
-  }
-
-  function normalizeInvalidation() {
-    return pulumi.all([args.invalidation]).apply(([invalidation]) => {
-      return invalidation
-        ? { paths: "all", wait: false, ...invalidation }
-        : { paths: "all", wait: false };
     });
   }
 
@@ -346,6 +337,7 @@ export function buildApp(
 
       // Run build
       console.debug(`Running "${cmd}" script`);
+      // TODO revert
       try {
         execSync(cmd, {
           cwd: sitePath,
@@ -926,20 +918,22 @@ if (event.type === "warmer") {
               {
                 "Action": "cloudfront:CreateInvalidation",
                 "Effect": "Allow",
-                "Resource": "${distribution.aws.distribution.arn}",
+                "Resource": "${distribution.aws.distribution.arn}"
               }
             ]
           }`,
       });
 
       for (const fn of [...ssrFunctions, ...Object.values(edgeFunctions)]) {
-        new aws.iam.RolePolicyAttachment(
-          `${name}-invalidation-policy-attachment-${fn.aws.function.name}`,
-          {
-            policyArn: policy.arn,
-            role: fn.aws.function.role,
-          }
-        );
+        fn.aws.function.name.apply((functionName) => {
+          new aws.iam.RolePolicyAttachment(
+            `${name}-invalidation-policy-attachment-${functionName}`,
+            {
+              policyArn: policy.arn,
+              role: fn.aws.role.name,
+            }
+          );
+        });
       }
     }
 
@@ -1031,7 +1025,10 @@ if (event.type === "warmer") {
           // Build invalidation paths
           const invalidationPaths: string[] = [];
           if (invalidation?.paths === "none") {
-          } else if (invalidation?.paths === "all") {
+          } else if (
+            invalidation?.paths === "all" ||
+            invalidation?.paths === undefined
+          ) {
             invalidationPaths.push("/*");
           } else if (invalidation?.paths === "versioned") {
             cachedS3Files.forEach((item) => {

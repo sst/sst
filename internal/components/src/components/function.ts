@@ -1,7 +1,8 @@
-import fs from "fs/promises";
+import fs from "fs";
 import path from "path";
 import crypto from "crypto";
 import { globSync } from "glob";
+import archiver from "archiver";
 import type { Loader, BuildOptions } from "esbuild";
 import pulumi from "@pulumi/pulumi";
 import * as aws from "@pulumi/aws";
@@ -165,6 +166,7 @@ export class Function extends pulumi.ComponentResource {
     const bundleHash = bundleHashRaw ?? calculateHash(bundle);
     const newHandler = wrapHandler();
     const role = createRole();
+    const zipFile = zipBundleFolder();
     const file = createBucketObject();
     const fn = createFunction();
     updateFunctionCode();
@@ -184,7 +186,9 @@ export class Function extends pulumi.ComponentResource {
         });
 
         for (const filePath of filePaths) {
-          hash.update(await fs.readFile(path.resolve(bundle, filePath)));
+          hash.update(
+            await fs.promises.readFile(path.resolve(bundle, filePath))
+          );
         }
 
         return hash.digest("hex");
@@ -205,7 +209,7 @@ export class Function extends pulumi.ComponentResource {
           const oldHandlerFunction = oldHandlerExt.replace(/^\./, "");
           const newHandlerName = "server-index";
           const newHandlerFunction = "handler";
-          await fs.writeFile(
+          await fs.promises.writeFile(
             path.join(bundle, handlerDir, `${newHandlerName}.mjs`),
             streaming
               ? [
@@ -242,17 +246,47 @@ export class Function extends pulumi.ComponentResource {
       });
     }
 
+    function zipBundleFolder() {
+      // Note: cannot point the bundle to the `.open-next/server-function`
+      //       b/c the folder contains node_modules. And pnpm node_modules
+      //       contains symlinks. Pulumi cannot zip symlinks correctly.
+      //       We will zip the folder ourselves.
+      return pulumi.all([bundle]).apply(async ([bundle]) => {
+        const zipPath = path.resolve(app.paths.temp, name, "code.zip");
+        await fs.promises.mkdir(path.dirname(zipPath), {
+          recursive: true,
+        });
+
+        await new Promise(async (resolve, reject) => {
+          const ws = fs.createWriteStream(zipPath);
+          const archive = archiver("zip");
+          archive.on("warning", reject);
+          archive.on("error", reject);
+          // archive has been finalized and the output file descriptor has closed, resolve promise
+          // this has to be done before calling `finalize` since the events may fire immediately after.
+          // see https://www.npmjs.com/package/archiver
+          ws.once("close", () => {
+            resolve(zipPath);
+          });
+          archive.pipe(ws);
+
+          archive.glob("**", { cwd: bundle, dot: true });
+          await archive.finalize();
+        });
+
+        return zipPath;
+      });
+    }
+
     function createBucketObject() {
       return new aws.s3.BucketObjectv2(
         `${name}-code`,
         {
           key: pulumi.interpolate`${name}-code-${bundleHash}.zip`,
-          // TODO - CLI fix: access bootstrap bucket in another region
-          //bucket: app.bootstrap.bucket,
           bucket: AWS.bootstrap.forRegion(region || app.aws.region),
           source: pulumi
-            .all([bundle])
-            .apply(([bundle]) => new pulumi.asset.FileArchive(bundle)),
+            .all([zipFile])
+            .apply(([zipFile]) => new pulumi.asset.FileArchive(zipFile)),
         },
         {
           provider,
@@ -279,15 +313,12 @@ export class Function extends pulumi.ComponentResource {
     }
 
     function updateFunctionCode() {
-      new FunctionCodeUpdater(
-        `${name}-code-updater`,
-        {
-          functionName: fn.name,
-          s3Bucket: file.bucket,
-          s3Key: file.key,
-        },
-        { provider }
-      );
+      new FunctionCodeUpdater(`${name}-code-updater`, {
+        functionName: fn.name,
+        s3Bucket: file.bucket,
+        s3Key: file.key,
+        region,
+      });
     }
   }
 
