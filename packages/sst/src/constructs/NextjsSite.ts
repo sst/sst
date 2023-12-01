@@ -156,6 +156,7 @@ const DEFAULT_CACHE_POLICY_ALLOWED_HEADERS = [
   "next-router-prefetch",
   "next-router-state-tree",
   "next-url",
+  "x-prerender-bypass",
 ];
 
 type NextjsSiteNormalizedProps = NextjsSiteProps & SsrSiteNormalizedProps;
@@ -281,7 +282,10 @@ export class NextjsSite extends SsrSite {
       cloudFrontFunctions: {
         serverCfFunction: {
           constructId: "CloudFrontFunction",
-          injections: [this.useCloudFrontFunctionHostHeaderInjection()],
+          injections: [
+            this.useCloudFrontFunctionHostHeaderInjection(),
+            this.usePagePreviewBypassRequestHeaderInjection(),
+          ],
         },
       },
       edgeFunctions: edge
@@ -693,6 +697,10 @@ if (event.rawPath) {
     }));
   }
 }`;
+  }
+
+  private usePagePreviewBypassRequestHeaderInjection() {
+    return 'if(request.cookies["__prerender_bypass"]) { request.headers["x-prerender-bypass"] = { value: "true" }; }';
   }
 
   private getBuildId() {
