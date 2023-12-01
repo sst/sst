@@ -121,6 +121,7 @@ export const useIOT = lazy(async () => {
     secretKey: creds.secretAccessKey,
     sessionToken: creds.sessionToken,
     reconnectPeriod: 1,
+    keepalive: 60,
   });
   const PREFIX = `/sst/${project.config.name}/${project.config.stage}`;
   device.subscribe(`${PREFIX}/events`, { qos: 1 });
