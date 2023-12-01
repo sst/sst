@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.36.8
+
+### Patch Changes
+
+- [`c17c1cf92`](https://github.com/sst/sst/commit/c17c1cf92bdf5ebd7d9ece32077cd1c55b12a4c0) Thanks [@thdxr](https://github.com/thdxr)! - astro: compress function
+
 ## 2.36.7
 
 ### Patch Changes
