@@ -33,7 +33,7 @@ export const AppleAdapter =
       const callback = "https://" + useDomainName() + "/callback";
       console.log("callback", callback);
 
-      const client = new config.issuer.Client({
+      const client = new issuer.Client({
         client_id: config.clientID,
         client_secret: config.clientSecret,
         redirect_uris: [callback],
@@ -95,7 +95,7 @@ export const AppleAdapter =
         const code_verifier = useCookie("auth_code_verifier");
         const state = useCookie("auth_state");
         const tokenset = await client[
-          config.issuer.metadata.userinfo_endpoint
+          issuer.metadata.userinfo_endpoint
             ? "callback"
             : "oauthCallback"
         ](callback, params, {
