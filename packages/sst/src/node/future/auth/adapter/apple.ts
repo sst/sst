@@ -17,13 +17,9 @@ const querystring = require('querystring');
 // userinfo_endpoint are not included in the response.
 // await Issuer.discover("https://appleid.apple.com/.well-known/openid-configuration/");
 
-const issuer = new Issuer({
-  issuer: "https://appleid.apple.com",
-  authorization_endpoint: "https://appleid.apple.com/auth/authorize/",
-  jwks_uri: "https://appleid.apple.com/auth/keys",
-  token_endpoint: "https://appleid.apple.com/auth/token",
-  userinfo_endpoint: "https://appleid.apple.com/auth/token",
-});
+const issuer = await Issuer.discover(
+  "https://appleid.apple.com/.well-known/openid-configuration"
+)
 
 export const AppleAdapter =
   /* @__PURE__ */
@@ -83,22 +79,10 @@ export const AppleAdapter =
           const body = useBody()
           params = querystring.parse(body)
         }
-        else {
-          params = useQueryParams();
-        }
-        if (params.error) {
-          return {
-            type: "error",
-            error: new OauthError(params.error),
-          };
-        }
+       
         const code_verifier = useCookie("auth_code_verifier");
         const state = useCookie("auth_state");
-        const tokenset = await client[
-          issuer.metadata.userinfo_endpoint
-            ? "callback"
-            : "oauthCallback"
-        ](callback, params, {
+        const tokenset = await client["callback"](callback, params, {
           code_verifier,
           state,
         });
