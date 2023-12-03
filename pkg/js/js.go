@@ -62,7 +62,7 @@ const LOOP = `
       } catch(ex) {
         console.error(ex)
       } finally {
-        await fs.rm(msg.module)
+        // await fs.rm(msg.module)
         console.log("~d")
       }
     }
@@ -162,6 +162,9 @@ const __dirname = topLevelFileUrlToPath(new topLevelURL(".", import.meta.url))
 		External: []string{
 			"@pulumi/*",
 			"@aws-sdk/*",
+			"esbuild",
+			"archiver",
+			"glob",
 		},
 		Format:    esbuild.FormatESModule,
 		Platform:  esbuild.PlatformNode,

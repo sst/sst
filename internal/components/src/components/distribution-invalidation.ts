@@ -27,24 +27,26 @@ interface Inputs {
 class Provider implements pulumi.dynamic.ResourceProvider {
   async create(inputs: Inputs): Promise<pulumi.dynamic.CreateResult> {
     await this.handle(inputs);
-    return { id: "invalidation", outs: inputs };
+    return { id: "invalidation", outs: {} };
   }
 
   async update(
     id: string,
     olds: Inputs,
-    news: Inputs
+    news: Inputs,
   ): Promise<pulumi.dynamic.UpdateResult> {
     await this.handle(news);
-    return { outs: news };
+    return { outs: {} };
   }
 
   async handle(inputs: Inputs) {
     const client = new CloudFrontClient();
     const ids = await this.invalidate(client, inputs);
+    console.log("deciding to wait");
     if (inputs.wait) {
       await this.waitForInvalidation(client, inputs, ids);
     }
+    console.log("done waiting");
   }
 
   async invalidate(client: CloudFrontClient, inputs: Inputs) {
@@ -63,7 +65,7 @@ class Provider implements pulumi.dynamic.ResourceProvider {
 
     const stepsCount: number = Math.max(
       Math.ceil(pathsFile.length / FILE_LIMIT),
-      Math.ceil(pathsWildcard.length / WILDCARD_LIMIT)
+      Math.ceil(pathsWildcard.length / WILDCARD_LIMIT),
     );
 
     const invalidationIds: string[] = [];
@@ -73,7 +75,7 @@ class Provider implements pulumi.dynamic.ResourceProvider {
         ...pathsWildcard.slice(i * WILDCARD_LIMIT, (i + 1) * WILDCARD_LIMIT),
       ];
       invalidationIds.push(
-        await this.invalidateChunk(client, distributionId, stepPaths)
+        await this.invalidateChunk(client, distributionId, stepPaths),
       );
     }
     return invalidationIds;
@@ -82,7 +84,7 @@ class Provider implements pulumi.dynamic.ResourceProvider {
   async invalidateChunk(
     client: CloudFrontClient,
     distributionId: string,
-    paths: string[]
+    paths: string[],
   ) {
     console.log("invalidating chunk", paths);
 
@@ -96,7 +98,7 @@ class Provider implements pulumi.dynamic.ResourceProvider {
             Items: paths,
           },
         },
-      })
+      }),
     );
     const invalidationId = result.Invalidation?.Id;
 
@@ -111,13 +113,14 @@ class Provider implements pulumi.dynamic.ResourceProvider {
   async waitForInvalidation(
     client: CloudFrontClient,
     inputs: Inputs,
-    invalidationIds: string[]
+    invalidationIds: string[],
   ) {
     const { distributionId } = inputs;
     console.log("waiting for invalidations", invalidationIds);
     for (const invalidationId of invalidationIds) {
       console.log("> invalidation", invalidationId);
       try {
+        console.log("starting wait", waitUntilInvalidationCompleted);
         await waitUntilInvalidationCompleted(
           {
             client: client,
@@ -126,9 +129,11 @@ class Provider implements pulumi.dynamic.ResourceProvider {
           {
             DistributionId: distributionId,
             Id: invalidationId,
-          }
+          },
         );
+        console.log("done waiting for invalidation");
       } catch (e) {
+        throw e;
         // supress errors
         console.error(e);
       }
@@ -141,7 +146,7 @@ export class DistributionInvalidation extends pulumi.dynamic.Resource {
   constructor(
     name: string,
     args: DistributionInvalidationInputs,
-    opts?: pulumi.CustomResourceOptions
+    opts?: pulumi.CustomResourceOptions,
   ) {
     super(
       new Provider(),
@@ -156,7 +161,7 @@ export class DistributionInvalidation extends pulumi.dynamic.Resource {
           args.version ||
           Date.now().toString(16) + Math.random().toString(16).slice(2),
       },
-      opts
+      opts,
     );
   }
 }

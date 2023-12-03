@@ -135,7 +135,7 @@ export class Function extends pulumi.ComponentResource {
   constructor(
     name: string,
     args: FunctionArgs,
-    opts?: pulumi.ComponentResourceOptions
+    opts?: pulumi.ComponentResourceOptions,
   ) {
     super("sst:sst:Function", name, args, opts);
 
@@ -187,7 +187,7 @@ export class Function extends pulumi.ComponentResource {
 
         for (const filePath of filePaths) {
           hash.update(
-            await fs.promises.readFile(path.resolve(bundle, filePath))
+            await fs.promises.readFile(path.resolve(bundle, filePath)),
           );
         }
 
@@ -225,11 +225,11 @@ export class Function extends pulumi.ComponentResource {
                   `  const { ${oldHandlerFunction}: rawHandler} = await import("./${oldHandlerName}.mjs");`,
                   `  return rawHandler(event, context);`,
                   `};`,
-                ].join("\n")
+                ].join("\n"),
           );
           return path.posix.join(
             handlerDir,
-            `${newHandlerName}.${newHandlerFunction}`
+            `${newHandlerName}.${newHandlerFunction}`,
           );
         });
     }
@@ -290,7 +290,7 @@ export class Function extends pulumi.ComponentResource {
         },
         {
           provider,
-        }
+        },
       );
     }
 
@@ -308,7 +308,7 @@ export class Function extends pulumi.ComponentResource {
             variables: environment,
           },
         },
-        { provider }
+        { provider },
       );
     }
 

@@ -12,7 +12,9 @@ require (
 	github.com/fatih/color v1.16.0
 	github.com/google/uuid v1.4.0
 	github.com/pulumi/pulumi/sdk/v3 v3.94.2
+	github.com/twitchtv/twirp v8.1.3+incompatible
 	github.com/urfave/cli/v2 v2.25.7
+	google.golang.org/protobuf v1.31.0
 )
 
 require (

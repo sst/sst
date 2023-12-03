@@ -24,15 +24,15 @@ func (s *stack) runtime() (string, error) {
 		return "", err
 	}
 	inject := map[string]interface{}{
-		"stage":  s.project.Stage(),
-		"name":   s.project.Name(),
+		"stage": s.project.Stage(),
+		"name":  s.project.Name(),
 		"paths": map[string]string{
 			"root": s.project.PathRoot(),
 			"temp": s.project.PathTemp(),
 			"home": global.ConfigDir(),
 		},
 		"aws": map[string]string{
-			"region": s.project.Region(),
+			"region":                s.project.Region(),
 			"AWS_ACCESS_KEY_ID":     credentials.AccessKeyID,
 			"AWS_SECRET_ACCESS_KEY": credentials.SecretAccessKey,
 			"AWS_SESSION_TOKEN":     credentials.SessionToken,
@@ -114,12 +114,13 @@ func (s *stack) run(cmd string) (StackEventStream, error) {
       %v
       try {
         const result = await stack.%v({
-          // onOutput: (line) => console.log(new Date().toISOString(), line),
+          onOutput: (line) => console.log(line),
           logVerbosity: 0,
           onEvent: (evt) => {
             console.log("~j" + JSON.stringify(evt))
           },
         })
+        console.log("DONE")
       } catch (e) {
         if (e.name === 'ConcurrentUpdateError') {
           console.log("~j" + JSON.stringify({ConcurrentUpdateEvent: {}}))
