@@ -195,6 +195,10 @@ export class Auth extends Construct implements SSTConstruct {
           type: "plain",
           value: this.url,
         },
+        authId: {
+          type: "auth_id",
+          value: this.id,
+        },
       },
       permissions: {},
     };
