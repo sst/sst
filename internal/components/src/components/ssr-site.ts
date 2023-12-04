@@ -1093,7 +1093,7 @@ if (event.type === "warmer") {
           new DistributionInvalidation(`${name}-invalidation`, {
             distributionId: distribution.aws.distribution.id,
             paths: invalidationPaths,
-            wait: invalidation?.wait,
+            wait: true,
             version: invalidationBuildId,
           });
         });

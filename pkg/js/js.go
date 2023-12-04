@@ -62,7 +62,7 @@ const LOOP = `
       } catch(ex) {
         console.error(ex)
       } finally {
-        await fs.rm(msg.module)
+        // await fs.rm(msg.module)
         console.log("~d")
       }
     }
@@ -105,6 +105,9 @@ func Start(dir string) (*Process, error) {
 	scanner := bufio.NewScanner(io.MultiReader(
 		stdOut,
 	))
+	const maxCapacity = 1024 * 1024 // 1 MB
+	buf := make([]byte, maxCapacity)
+	scanner.Buffer(buf, maxCapacity)
 
 	err = cmd.Start()
 	if err != nil {
@@ -132,6 +135,10 @@ func (p *Process) Scan() (Command, string) {
 
 		return CommandStdOut, line
 	}
+	err := p.Out.Err()
+	if err != nil {
+		panic(err)
+	}
 	return CommandDone, ""
 }
 
@@ -146,7 +153,7 @@ type EvalMessage struct {
 func (p *Process) Eval(input EvalOptions) error {
 	outfile := filepath.Join(input.Dir,
 		"eval",
-		fmt.Sprintf("eval-%x.mjs", time.Now().UnixMilli()),
+		fmt.Sprintf("eval-%v.mjs", time.Now().UnixMilli()),
 	)
 	slog.Info("esbuild building")
 	result := esbuild.Build(esbuild.BuildOptions{
@@ -162,6 +169,9 @@ const __dirname = topLevelFileUrlToPath(new topLevelURL(".", import.meta.url))
 		External: []string{
 			"@pulumi/*",
 			"@aws-sdk/*",
+			"esbuild",
+			"archiver",
+			"glob",
 		},
 		Format:    esbuild.FormatESModule,
 		Platform:  esbuild.PlatformNode,

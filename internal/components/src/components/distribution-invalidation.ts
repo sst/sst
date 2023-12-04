@@ -27,7 +27,7 @@ interface Inputs {
 class Provider implements pulumi.dynamic.ResourceProvider {
   async create(inputs: Inputs): Promise<pulumi.dynamic.CreateResult> {
     await this.handle(inputs);
-    return { id: "invalidation", outs: inputs };
+    return { id: "invalidation", outs: {} };
   }
 
   async update(
@@ -36,15 +36,15 @@ class Provider implements pulumi.dynamic.ResourceProvider {
     news: Inputs
   ): Promise<pulumi.dynamic.UpdateResult> {
     await this.handle(news);
-    return { outs: news };
+    return { outs: {} };
   }
 
   async handle(inputs: Inputs) {
     const client = new CloudFrontClient();
     const ids = await this.invalidate(client, inputs);
-    //if (inputs.wait) {
-    //  await this.waitForInvalidation(client, inputs, ids);
-    //}
+    if (inputs.wait) {
+      await this.waitForInvalidation(client, inputs, ids);
+    }
   }
 
   async invalidate(client: CloudFrontClient, inputs: Inputs) {
@@ -108,32 +108,31 @@ class Provider implements pulumi.dynamic.ResourceProvider {
     return invalidationId;
   }
 
-  // async waitForInvalidation(
-  //   client: CloudFrontClient,
-  //   inputs: Inputs,
-  //   invalidationIds: string[]
-  // ) {
-  //   const { distributionId } = inputs;
-  //   console.log("waiting for invalidations", invalidationIds);
-  //   for (const invalidationId of invalidationIds) {
-  //     console.log("> invalidation", invalidationId);
-  //     try {
-  //       await waitUntilInvalidationCompleted(
-  //         {
-  //           client: client,
-  //           maxWaitTime: 600,
-  //         },
-  //         {
-  //           DistributionId: distributionId,
-  //           Id: invalidationId,
-  //         }
-  //       );
-  //     } catch (e) {
-  //       // supress errors
-  //       console.error(e);
-  //     }
-  //   }
-  // }
+  async waitForInvalidation(
+    client: CloudFrontClient,
+    inputs: Inputs,
+    invalidationIds: string[]
+  ) {
+    const { distributionId } = inputs;
+    for (const invalidationId of invalidationIds) {
+      console.log("> invalidation", invalidationId);
+      try {
+        await waitUntilInvalidationCompleted(
+          {
+            client: client,
+            maxWaitTime: 600,
+          },
+          {
+            DistributionId: distributionId,
+            Id: invalidationId,
+          }
+        );
+      } catch (e) {
+        // supress errors
+        console.error(e);
+      }
+    }
+  }
 }
 
 export class DistributionInvalidation extends pulumi.dynamic.Resource {
