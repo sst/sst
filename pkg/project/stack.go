@@ -114,13 +114,12 @@ func (s *stack) run(cmd string) (StackEventStream, error) {
       %v
       try {
         const result = await stack.%v({
-          onOutput: (line) => console.log(line),
-          logVerbosity: 0,
+          // onOutput: (line) => console.log(line),
+          logVerbosity: 11,
           onEvent: (evt) => {
             console.log("~j" + JSON.stringify(evt))
           },
         })
-        console.log("DONE")
       } catch (e) {
         if (e.name === 'ConcurrentUpdateError') {
           console.log("~j" + JSON.stringify({ConcurrentUpdateEvent: {}}))
