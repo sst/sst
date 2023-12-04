@@ -2,7 +2,7 @@ import { patch, install, extend, extract, cmd, str_replace } from "create-sst";
 export default [
   extend("presets/base/monorepo"),
   cmd({
-    cmd: "npx create-next-app@latest web --ts --no-eslint --no-src-dir --no-app --no-experimental-app --import-alias '@/*'",
+    cmd: "npx --silent create-next-app@latest web --ts --no-eslint --no-src-dir --no-tailwind --no-app --no-experimental-app --import-alias '@/*'",
     cwd: "packages",
   }),
   patch({
