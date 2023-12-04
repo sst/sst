@@ -411,7 +411,7 @@ export function createServersAndDistribution(
   bucket: aws.s3.BucketV2,
   plan: pulumi.Input<Plan>
 ) {
-  return pulumi.all([plan]).apply(([plan]) => {
+  return pulumi.all([outputPath, plan]).apply(([outputPath, plan]) => {
     const ssrFunctions: Function[] = [];
     let singletonCachePolicy: aws.cloudfront.CachePolicy;
 
@@ -457,7 +457,7 @@ export function createServersAndDistribution(
               {
                 files: "**",
                 ignore: versionedSubDir
-                  ? path.posix.join(to, versionedSubDir, "**")
+                  ? path.posix.join(versionedSubDir, "**")
                   : undefined,
                 cacheControl:
                   assets?.nonVersionedFilesCacheHeader ??
@@ -467,7 +467,7 @@ export function createServersAndDistribution(
               ...(versionedSubDir
                 ? [
                     {
-                      files: path.posix.join(to, versionedSubDir, "**"),
+                      files: path.posix.join(versionedSubDir, "**"),
                       cacheControl:
                         assets?.versionedFilesCacheHeader ??
                         `public,max-age=${versionedFilesTTL},immutable`,
@@ -481,7 +481,7 @@ export function createServersAndDistribution(
             const filesUploaded: string[] = [];
             for (const fileOption of fileOptions.reverse()) {
               const files = globSync(fileOption.files, {
-                cwd: from,
+                cwd: path.resolve(outputPath, from),
                 nodir: true,
                 dot: true,
                 ignore: fileOption.ignore,
@@ -491,7 +491,10 @@ export function createServersAndDistribution(
                 uploadedObjects.push(
                   new aws.s3.BucketObject(`${name}-asset-${from}-${file}`, {
                     bucket: bucket.bucket,
-                    source: new pulumi.asset.FileAsset(file),
+                    source: new pulumi.asset.FileAsset(
+                      path.resolve(outputPath, from, file)
+                    ),
+                    key: path.posix.join(to, file),
                     contentType: getContentType(file, "UTF-8"),
                     cacheControl: fileOption.cacheControl,
                   })
@@ -674,21 +677,17 @@ function handler(event) {
             ),
           },
         ],
+        url: true,
       });
       ssrFunctions.push(fn);
 
-      const url = new aws.lambda.FunctionUrl(
-        `${name}-server-function-${fnName}-url`,
-        {
-          authorizationType: "NONE",
-          functionName: fn.aws.function.name,
-          invokeMode: props.streaming ? "RESPONSE_STREAM" : "BUFFERED",
-        }
-      );
-
       return {
         originId: fnName,
-        domainName: url.functionUrl.apply((url) => new URL(url).host),
+        // TODO remove
+        //domainName: fn.url.apply((url) => new URL(url).host),
+        domainName: fn.url.apply((url) =>
+          url!.apply((url) => new URL(url).host)
+        ),
         customOriginConfig: {
           httpPort: 80,
           httpsPort: 443,

@@ -4,20 +4,20 @@ export default {
   config() {
     return {
       name: "nextjs",
-      //name: "updater",
       region: "us-east-1",
     };
   },
   async run() {
-    //    new sst.FunctionCodeUpdater("updater", {
-    //      functionName: "foo",
-    //      s3Bucket: "xxxxx",
-    //      s3Key: "yyyyy",
-    //    });
-
     const site = new sst.Nextjs("web", {
       path: "web",
     });
+
+    //new sst.DistributionInvalidation(`invalidation`, {
+    //  distributionId: "ESWUVI5JLK5EA",
+    //  paths: ["/*"],
+    //  wait: false,
+    //  version: Date.now().toString(16),
+    //});
 
     return {
       siteURL: site.url,

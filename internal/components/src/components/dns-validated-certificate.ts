@@ -37,10 +37,6 @@ export class DnsValidatedCertificate extends pulumi.ComponentResource {
     const { domainName, alternativeNames, zoneId, region } = args;
 
     const provider = new aws.Provider(`${name}-provider`, {
-      // TODO test we don't need values
-      //accessKey: app.aws.AWS_ACCESS_KEY_ID,
-      //secretKey: app.aws.AWS_SECRET_ACCESS_KEY,
-      //token: app.aws.AWS_SESSION_TOKEN,
       region: region || app.aws.region,
     });
 

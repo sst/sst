@@ -134,6 +134,7 @@ export class Nextjs extends pulumi.ComponentResource {
     const logging = normalizeLogging();
     const experimental = normalizeExperimental();
     const buildCommand = normalizeBuildCommand();
+    buildCommand.apply((buildCommand) => console.log(buildCommand));
     const { sitePath, doNotDeploy } = prepare(args || {});
     //if (doNotDeploy) {
     //  // @ts-expect-error
@@ -220,9 +221,9 @@ export class Nextjs extends pulumi.ComponentResource {
 
     function normalizeBuildCommand() {
       return pulumi
-        .all([args?.buildCommand])
+        .all([args?.buildCommand, experimental])
         .apply(
-          ([buildCommand]) =>
+          ([buildCommand, experimental]) =>
             buildCommand ??
             [
               "npx",
