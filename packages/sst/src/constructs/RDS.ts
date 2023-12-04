@@ -605,6 +605,7 @@ export class RDS extends Construct implements SSTConstruct {
       nodir: true,
       follow: true,
       cwd: migrations,
+      ignore: ["**/node_modules/**"],
     });
 
     // Calculate hash of all files content
