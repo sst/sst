@@ -230,7 +230,7 @@ export interface ServiceProps {
    * @example
    * ```js
    * {
-   *   storage: 100 GB,
+   *   storage: "100 GB",
    * }
    */
   storage?: `${number} GB`;
