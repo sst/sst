@@ -115,7 +115,7 @@ You may also configure the [amount of ephemeral storage allocated to the task](h
 ```js
 new Service(stack, "MyService", {
   path: "./service",
-  storage: 100,
+  storage: "100 GB",
 });
 ```
 
