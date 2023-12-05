@@ -1,4 +1,4 @@
-import { createProxy } from '../../util/index.js';
+import { createProxy } from "../../util/index.js";
 
 export interface AuthResources {}
 
