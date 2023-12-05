@@ -50,7 +50,7 @@ export class AstroSite extends SsrSite {
     const serializedRoutes = routes.map((route) => ({
       rt: route.route,
       pt: new RegExp(route.pattern),
-      t: route.type,
+      t: route.type[1],
       pr: route.prerender === true ? true : undefined,
       rp: route.redirectPath,
       rs: route.redirectStatus,
@@ -65,10 +65,10 @@ export class AstroSite extends SsrSite {
     }
 
     return `
-  var routes = ${objectToString(serializedRoutes)}
+  var routes = [${serializedRoutes.map(objectToString).join(", ")}]
   var match = routes.find((route) => route.pt.test(request.uri));
   if (match) {
-    if (match.t === "redirect") {
+    if (match.t === "r") {
       var redirectPath = match.rp;
       match.pt.exec(request.uri)?.forEach((match, index) => {
         redirectPath = redirectPath.replace(\`\\\${\${index}}\`, match)
@@ -77,7 +77,7 @@ export class AstroSite extends SsrSite {
         statusCode: match.rs || 308,
         headers: { location: { value: redirectPath } },
       };
-    } else if (match.t === "page" && match.pr) {
+    } else if (match.t === "p" && match.pr) {
       ${
         pageResolution === "file"
           ? `request.uri = request.uri === "/" ? "/index.html" : request.uri.replace(/\\/?$/, ".html");`
