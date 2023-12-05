@@ -1,4 +1,4 @@
-import { createProxy } from "../../util/index.js";
+import { createProxy } from '../../util/index.js';
 
 export interface AuthResources {}
 
@@ -13,6 +13,7 @@ export * from "./adapter/microsoft.js";
 export * from "./adapter/oauth.js";
 export * from "./adapter/spotify.js";
 export * from "./adapter/code.js";
+export * from "./adapter/apple.js";
 
 export type { Adapter } from "./adapter/adapter.js";
 
