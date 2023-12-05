@@ -57,6 +57,7 @@ export class AstroSite extends SsrSite {
     }));
     function objectToString(obj: any) {
       return `{ ${Object.entries(obj)
+        .filter(([_, value]) => value !== undefined)
         .map(
           ([key, value]) =>
             `${key}: ${typeof value === "string" ? `'${value}'` : value}`
@@ -70,7 +71,7 @@ export class AstroSite extends SsrSite {
   if (match) {
     if (match.t === "r") {
       var redirectPath = match.rp;
-      match.pt.exec(request.uri)?.forEach((match, index) => {
+      (match.pt.exec(request.uri) || []).forEach((match, index) => {
         redirectPath = redirectPath.replace(\`\\\${\${index}}\`, match)
       });
       return {
