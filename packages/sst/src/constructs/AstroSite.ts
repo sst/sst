@@ -49,20 +49,28 @@ export class AstroSite extends SsrSite {
   }: BuildMetaConfig) {
     const serializedRoutes = routes.map((route) => ({
       rt: route.route,
-      pt: route.pattern,
+      pt: new RegExp(route.pattern),
       t: route.type,
       pr: route.prerender === true ? true : undefined,
       rp: route.redirectPath,
       rs: route.redirectStatus,
     }));
+    function objectToString(obj: any) {
+      return `{ ${Object.entries(obj)
+        .map(
+          ([key, value]) =>
+            `${key}: ${typeof value === "string" ? `'${value}'` : value}`
+        )
+        .join(", ")} }`;
+    }
 
     return `
-  var routes = ${JSON.stringify(serializedRoutes)}
-  var match = routes.find((route) => new RegExp(route.pt).test(request.uri));
+  var routes = ${objectToString(serializedRoutes)}
+  var match = routes.find((route) => route.pt.test(request.uri));
   if (match) {
     if (match.t === "redirect") {
       var redirectPath = match.rp;
-      new RegExp(match.pt).exec(request.uri)?.forEach((match, index) => {
+      match.pt.exec(request.uri)?.forEach((match, index) => {
         redirectPath = redirectPath.replace(\`\\\${\${index}}\`, match)
       });
       return {
