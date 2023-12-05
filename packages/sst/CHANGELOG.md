@@ -1,5 +1,26 @@
 # @serverless-stack/cli2
 
+## 2.37.0
+
+### Minor Changes
+
+- [#3539](https://github.com/sst/sst/pull/3539) [`4533f9f11`](https://github.com/sst/sst/commit/4533f9f11ad87aeee51580784017d3fddec6a36a) Thanks [@berenddeboer](https://github.com/berenddeboer)! - refactor: skip logging ResponseURL as this contains an IAM access id
+
+### Patch Changes
+
+- [#3461](https://github.com/sst/sst/pull/3461) [`8da51f1b4`](https://github.com/sst/sst/commit/8da51f1b444f2449565a90816d45f5911ab567bc) Thanks [@justindra](https://github.com/justindra)! - fix future/auth to allow session.use using binding on other apis
+
+- [#3533](https://github.com/sst/sst/pull/3533) [`d4bc8e532`](https://github.com/sst/sst/commit/d4bc8e532810cdc8737b747e97ad08bf6de4c0b5) Thanks [@KONFeature](https://github.com/KONFeature)! - Remove unused import of `context/context.ts`
+  Replace export of `context.ts` by `context2.ts` in sst/src/context
+  Remove unused file `context/context.ts`
+  This will fix caching issue encountered by anyone using / building custom hooks
+
+- [#3547](https://github.com/sst/sst/pull/3547) [`b6e433325`](https://github.com/sst/sst/commit/b6e4333258293d54edbdb17df09cdc1e66f1f98e) Thanks [@TheUncharted](https://github.com/TheUncharted)! - Add AppleAdapter for future auth
+
+- [`f78f408a6`](https://github.com/sst/sst/commit/f78f408a6f9bc6392bb85b6d0e6ae1c05eaee7ad) Thanks [@thdxr](https://github.com/thdxr)! - astrosite: inline regex
+
+- [#3540](https://github.com/sst/sst/pull/3540) [`0f60b635c`](https://github.com/sst/sst/commit/0f60b635c0dbc8fe31c41b5bdee547916228f6c3) Thanks [@zvictor](https://github.com/zvictor)! - fix EISDIR error
+
 ## 2.36.8
 
 ### Patch Changes
