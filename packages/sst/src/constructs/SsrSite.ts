@@ -98,20 +98,20 @@ import { transformSync } from "esbuild";
 
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 
-type CloudFrontFunctionConfig = { constructId: string; injections: string[] };
-type EdgeFunctionConfig = { constructId: string; function: EdgeFunctionProps };
-type FunctionOriginConfig = {
+export type CloudFrontFunctionConfig = { constructId: string; injections: string[] };
+export type EdgeFunctionConfig = { constructId: string; function: EdgeFunctionProps };
+export type FunctionOriginConfig = {
   type: "function";
   constructId: string;
   function: SsrFunctionProps;
   injections?: string[];
   streaming?: boolean;
 };
-type ImageOptimizationFunctionOriginConfig = {
+export type ImageOptimizationFunctionOriginConfig = {
   type: "image-optimization-function";
   function: CdkFunctionProps;
 };
-type S3OriginConfig = {
+export type S3OriginConfig = {
   type: "s3";
   originPath?: string;
   copy: {
@@ -121,7 +121,7 @@ type S3OriginConfig = {
     versionedSubDir?: string;
   }[];
 };
-type OriginGroupConfig = {
+export type OriginGroupConfig = {
   type: "group";
   primaryOriginName: string;
   fallbackOriginName: string;
@@ -516,6 +516,7 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
   protected doNotDeploy: boolean;
   protected bucket: Bucket;
   protected serverFunction?: EdgeFunction | SsrFunction;
+  protected serverFunctions: (SsrFunction | EdgeFunction)[] = [];
   private serverFunctionForDev?: SsrFunction;
   private edge?: boolean;
   private distribution: Distribution;
@@ -605,6 +606,7 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
 
     this.bucket = bucket;
     this.distribution = distribution;
+    this.serverFunctions = [...ssrFunctions, ...Object.values(edgeFunctions)];
     this.serverFunction = ssrFunctions[0] ?? Object.values(edgeFunctions)[0];
     this.edge = plan.edge;
 
@@ -1515,6 +1517,7 @@ function handler(event) {
   protected getConstructMetadataBase() {
     return {
       data: {
+        edge: this.edge,
         mode: this.doNotDeploy
           ? ("placeholder" as const)
           : ("deployed" as const),
@@ -1522,7 +1525,7 @@ function handler(event) {
         runtime: this.props.runtime,
         customDomainUrl: this.customDomainUrl,
         url: this.url,
-        edge: this.edge,
+        // edge: this.edge,
         server: (this.serverFunctionForDev || this.serverFunction)
           ?.functionArn!,
         secrets: (this.props.bind || [])

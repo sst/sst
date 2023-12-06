@@ -26,8 +26,8 @@ import { Provider } from "aws-cdk-lib/custom-resources";
 import { Queue } from "aws-cdk-lib/aws-sqs";
 import { SqsEventSource } from "aws-cdk-lib/aws-lambda-event-sources";
 import { Stack } from "./Stack.js";
-import { SsrSite, SsrSiteNormalizedProps, SsrSiteProps } from "./SsrSite.js";
-import { Size, toCdkSize } from "./util/size.js";
+import { EdgeFunctionConfig, FunctionOriginConfig, SsrSite, SsrSiteNormalizedProps, SsrSiteProps } from "./SsrSite.js";
+import { Size} from "./util/size.js";
 import { Bucket } from "aws-cdk-lib/aws-s3";
 import { Effect, Policy, PolicyStatement } from "aws-cdk-lib/aws-iam";
 import { RetentionDays } from "aws-cdk-lib/aws-logs";
@@ -37,7 +37,67 @@ import { SsrFunction } from "./SsrFunction.js";
 import { Asset } from "aws-cdk-lib/aws-s3-assets";
 import { useFunctions } from "./Function.js";
 import { useDeferredTasks } from "./deferred_task.js";
-import { Logger } from "../logger.js";
+import { Logger } from "../logger.js";type BaseFunction = {
+  handler: string;
+  bundle: string;
+};
+
+type OpenNextFunctionOrigin = {
+  type: "function";
+  streaming?: boolean;
+} & BaseFunction;
+
+type OpenNextECSOrigin = {
+  type: "ecs";
+  bundle: string;
+  dockerfile: string;
+};
+
+type OpenNextS3Origin = {
+  type: "s3";
+  originPath: string;
+  copy: {
+    from: string;
+    to: string;
+    cached: boolean;
+    versionedSubDir?: string;
+  }[];
+};
+
+type OpenNextOrigins =
+  | OpenNextFunctionOrigin
+  | OpenNextECSOrigin
+  | OpenNextS3Origin;
+
+type BaseOrigins<T extends Record<string, OpenNextOrigins>> = {
+  s3: OpenNextS3Origin;
+  default: OpenNextFunctionOrigin | OpenNextECSOrigin;
+  imageOptimizer: OpenNextFunctionOrigin | OpenNextECSOrigin;
+} & T;
+
+type IEdgeFunctions<T extends Record<string, BaseFunction>> = {
+  middleware?: BaseFunction
+} & T;
+
+interface OpenNextOutput<
+  Origins extends BaseOrigins<Record<string, OpenNextOrigins>> = BaseOrigins<{}>,
+  EdgeFunctions extends IEdgeFunctions<Record<string, BaseFunction>> = IEdgeFunctions<{}>
+> {
+  edgeFunctions: EdgeFunctions;
+  origins: Origins;
+  behaviors: {
+    pattern: string;
+    origin?: keyof Origins;
+    edgeFunction?: keyof EdgeFunctions;
+  }[];
+  additionalProps?: {
+    disableIncrementalCache?: boolean;
+    disableTagCache?: boolean;
+    initializationFunction?: BaseFunction;
+    warmer?: BaseFunction;
+    revalidationFunction?: BaseFunction;
+  };
+}
 
 export interface NextjsSiteProps extends Omit<SsrSiteProps, "nodejs"> {
   /**
@@ -77,56 +137,6 @@ export interface NextjsSiteProps extends Omit<SsrSiteProps, "nodejs"> {
      * ```
      */
     memorySize?: number | Size;
-  };
-  openNext?: {
-    /**
-     * Specify a custom build output path for cases when running OpenNext from
-     * a monorepo with decentralized build output. This is passed to the
-     * `--build-output-path` flag of OpenNext.
-     * @default Default build output path
-     * @example
-     * ```js
-     * buildOutputPath: "dist/apps/example-app"
-     * ```
-     */
-    buildOutputPath?: string;
-  };
-  experimental?: {
-    /**
-     * Enable streaming. Currently an experimental feature in OpenNext.
-     * @default false
-     * @example
-     * ```js
-     * experimental: {
-     *   streaming: true,
-     * }
-     * ```
-     */
-    streaming?: boolean;
-    /**
-     * Disabling incremental cache will cause the entire page to be revalidated on each request. This can result in ISR and SSG pages to be in an inconsistent state. Specify this option if you are using SSR pages only.
-     *
-     * Note that it is possible to disable incremental cache while leaving on-demand revalidation enabled.
-     * @default false
-     * @example
-     * ```js
-     * experimental: {
-     *   disableIncrementalCache: true,
-     * }
-     * ```
-     */
-    disableIncrementalCache?: boolean;
-    /**
-     * Disabling DynamoDB cache will cause on-demand revalidation by path (`revalidatePath`) and by cache tag (`revalidateTag`) to fail silently.
-     * @default false
-     * @example
-     * ```js
-     * experimental: {
-     *   disableDynamoDBCache: true,
-     * }
-     * ```
-     */
-    disableDynamoDBCache?: boolean;
   };
   cdk?: SsrSiteProps["cdk"] & {
     revalidation?: Pick<FunctionProps, "vpc" | "vpcSubnets">;
@@ -173,7 +183,9 @@ const DEFAULT_CACHE_POLICY_ALLOWED_HEADERS = [
   "x-prerender-revalidate"
 ];
 
-type NextjsSiteNormalizedProps = NextjsSiteProps & SsrSiteNormalizedProps;
+type NextjsSiteNormalizedProps = NextjsSiteProps & SsrSiteNormalizedProps & {
+  openNextOutput: OpenNextOutput;
+};
 
 /**
  * The `NextjsSite` construct is a higher level CDK construct that makes it easy to create a Next.js app.
@@ -209,17 +221,24 @@ export class NextjsSite extends SsrSite {
   };
 
   constructor(scope: Construct, id: string, rawProps?: NextjsSiteProps) {
+
+    const { path: sitePath } = rawProps ?? {};
+    const openNextOutputPath = path.join(sitePath ?? ".", ".open-next", "open-next.output.json");
+    if (!fs.existsSync(openNextOutputPath)) {
+      throw new VisibleError(
+        `Failed to load ".open-next/output.json" for the "${id}" site.`
+      );
+    }
+    // TODO: add typings for open-next.output.json
+    const openNextOutput = JSON.parse(
+      fs.readFileSync(openNextOutputPath).toString()
+    ) as OpenNextOutput;
+
     const props = {
-      logging: rawProps?.logging ?? "per-route",
-      experimental: {
-        streaming: rawProps?.experimental?.streaming ?? false,
-        disableDynamoDBCache:
-          rawProps?.experimental?.disableDynamoDBCache ?? false,
-        disableIncrementalCache:
-          rawProps?.experimental?.disableIncrementalCache ?? false,
-        ...rawProps?.experimental,
-      },
+      // Default to combined for now until i figure out how to implement per-route logging
+      logging: rawProps?.logging ?? "combined",
       ...rawProps,
+      openNextOutput
     };
 
     super(scope, id, {
@@ -228,30 +247,24 @@ export class NextjsSite extends SsrSite {
         "--yes",
         `open-next@${props?.openNextVersion ?? DEFAULT_OPEN_NEXT_VERSION}`,
         "build",
-        ...(props.openNext?.buildOutputPath
-          ? ["--build-output-path", props.openNext.buildOutputPath]
-          : []),
-        ...(props.experimental.streaming ? ["--streaming"] : []),
-        ...(props.experimental.disableDynamoDBCache
-          ? ["--dangerously-disable-dynamodb-cache"]
-          : []),
-        ...(props.experimental.disableIncrementalCache
-          ? ["--dangerously-disable-incremental-cache"]
-          : []),
       ].join(" "),
       ...props,
     });
 
+    const disableIncrementalCache = openNextOutput.additionalProps?.disableIncrementalCache ?? false;
+    const disableTagCache = openNextOutput.additionalProps?.disableTagCache ?? false;
+
     this.handleMissingSourcemap();
 
+    // TODO: see how to implement that
     if (this.isPerRouteLoggingEnabled()) {
       //this.disableDefaultLogging();
       this.uploadSourcemaps();
     }
 
-    if (!props.experimental.disableIncrementalCache) {
+    if (!disableIncrementalCache) {
       this.createRevalidationQueue();
-      if (!props.experimental.disableDynamoDBCache) {
+      if (!disableTagCache) {
         this.createRevalidationTable();
       }
     }
@@ -263,39 +276,78 @@ export class NextjsSite extends SsrSite {
     );
   }
 
-  protected plan(bucket: Bucket) {
-    const {
-      path: sitePath,
-      edge,
-      experimental,
-      imageOptimization,
-      cdk,
-    } = this.props;
-    const stack = Stack.of(this);
-    const serverConfig = {
-      description: "Next.js server",
-      bundle: path.join(sitePath, ".open-next", "server-function"),
-      handler: "index.handler",
+  private createFunctionOrigin(fn: OpenNextFunctionOrigin, key: string, bucket: Bucket) : FunctionOriginConfig {
+    const { path: sitePath } = this.props;
+    const baseServerConfig = {
+      description: "Next.js Server",
       environment: {
         CACHE_BUCKET_NAME: bucket.bucketName,
         CACHE_BUCKET_KEY_PREFIX: "_cache",
         CACHE_BUCKET_REGION: Stack.of(this).region,
       },
-      layers: this.isPerRouteLoggingEnabled()
-        ? [
-            LayerVersion.fromLayerVersionArn(
-              this,
-              "SSTExtension",
-              cdk?.server?.architecture?.name === Architecture.X86_64.name
-                ? `arn:aws:lambda:${stack.region}:226609089145:layer:sst-extension-amd64:${LAYER_VERSION}`
-                : `arn:aws:lambda:${stack.region}:226609089145:layer:sst-extension-arm64:${LAYER_VERSION}`
-            ),
-          ]
-        : undefined,
-    };
-    this.removeSourcemaps();
+    }
+    return {
+      type: "function" as const,
+      constructId: `${key}ServerFunction`,
+      function: {
+        ...baseServerConfig,
+        handler: fn.handler,
+        bundle: path.join(sitePath, fn.bundle),
+        runtime: "nodejs18.x" as const,
+        architecture: Architecture.ARM_64,
+        memorySize: 1024,
+        permissions: [
+          "s3"
+        ]
+      },
+      streaming: fn.streaming,
+      injections: []
+    }
+  }
+
+  private createEdgeOrigin(fn: BaseFunction, key: string, bucket: Bucket) : EdgeFunctionConfig {
+    const { path: sitePath } = this.props;
+    return {
+      constructId: `${key}EdgeFunction`,
+      function: {
+        handler: fn.handler,
+        bundle: path.join(sitePath, fn.bundle),
+        runtime: "nodejs18.x" as const,
+        memorySize: 1024,
+        permissions: [
+          "s3"
+        ]
+      },
+    }
+  }
+
+  protected plan(bucket: Bucket) {
+    const {
+      path: sitePath,
+      openNextOutput
+    } = this.props;
+
+    const imageOpt = openNextOutput.origins.imageOptimizer as OpenNextFunctionOrigin;
+    const defaultFn = openNextOutput.origins.default as OpenNextFunctionOrigin;
+    const remainingFns = Object.entries(openNextOutput.origins).filter(([key, value]) => {
+      const result = key !== "imageOptimizer" && key !== "default" && key !== "s3";
+      console.log(key, result);
+      return result;
+    }) as [string, OpenNextFunctionOrigin][];
+
+    const remainingOrigins = remainingFns.reduce((acc, [key, value]) => {
+      acc = {...acc, [key]: this.createFunctionOrigin(value, key, bucket)};
+      return acc;
+    }
+    , {} as Record<string, FunctionOriginConfig>)
+
+    const edgeFunctions = Object.entries(openNextOutput.edgeFunctions).reduce((acc, [key, value]) => {
+      return {...acc, [key]: this.createEdgeOrigin(value, key, bucket)};
+    }, {} as Record<string, EdgeFunctionConfig>);
+
+
     return this.validatePlan({
-      edge: edge ?? false,
+      edge: false,
       cloudFrontFunctions: {
         serverCfFunction: {
           constructId: "CloudFrontFunction",
@@ -305,149 +357,50 @@ export class NextjsSite extends SsrSite {
           ],
         },
       },
-      edgeFunctions: edge
-        ? {
-            edgeServer: {
-              constructId: "ServerFunction",
-              function: serverConfig,
-            },
-          }
-        : undefined,
+      edgeFunctions,
       origins: {
-        ...(edge
-          ? {}
-          : {
-              regionalServer: {
-                type: "function",
-                constructId: "ServerFunction",
-                function: serverConfig,
-                streaming: experimental?.streaming,
-                injections: this.isPerRouteLoggingEnabled()
-                  ? [this.useServerFunctionPerRouteLoggingInjection()]
-                  : [],
-              },
-            }),
+        s3: openNextOutput.origins.s3,
         imageOptimizer: {
           type: "image-optimization-function",
-          constructId: "ImageFunction",
           function: {
-            description: "Next.js image optimizer",
-            handler: "index.handler",
-            code: Code.fromAsset(
-              path.join(sitePath, ".open-next/image-optimization-function")
-            ),
+            description: "Next.js Image Optimization Function",
+            handler: imageOpt.handler,
+            code: Code.fromAsset(path.join(sitePath, imageOpt.bundle)),
             runtime: Runtime.NODEJS_18_X,
             architecture: Architecture.ARM_64,
             environment: {
               BUCKET_NAME: bucket.bucketName,
               BUCKET_KEY_PREFIX: "_assets",
-            },
-            memorySize: imageOptimization?.memorySize
-              ? typeof imageOptimization.memorySize === "string"
-                ? toCdkSize(imageOptimization.memorySize).toMebibytes()
-                : imageOptimization.memorySize
-              : 1536,
-          },
+            }, 
+            permissions: [
+              "s3"
+            ],
+            memorySize: 1536,
+          }
         },
-        s3: {
-          type: "s3",
-          originPath: "_assets",
-          copy: [
-            {
-              from: ".open-next/assets",
-              to: "_assets",
-              cached: true,
-              versionedSubDir: "_next",
-            },
-            { from: ".open-next/cache", to: "_cache", cached: false },
-          ],
-        },
+        default: this.createFunctionOrigin(defaultFn, "default", bucket),
+        ...remainingOrigins,
+
       },
-      behaviors: [
-        ...(edge
-          ? [
-              {
-                cacheType: "server",
-                cfFunction: "serverCfFunction",
-                edgeFunction: "edgeServer",
-                origin: "s3",
-              } as const,
-              {
-                cacheType: "server",
-                pattern: this.prefixPattern("api/*"),
-                cfFunction: "serverCfFunction",
-                edgeFunction: "edgeServer",
-                origin: "s3",
-              } as const,
-              {
-                cacheType: "server",
-                pattern: this.prefixPattern("_next/data/*"),
-                cfFunction: "serverCfFunction",
-                edgeFunction: "edgeServer",
-                origin: "s3",
-              } as const,
-            ]
-          : [
-              {
-                cacheType: "server",
-                cfFunction: "serverCfFunction",
-                origin: "regionalServer",
-              } as const,
-              {
-                cacheType: "server",
-                pattern: this.prefixPattern("api/*"),
-                cfFunction: "serverCfFunction",
-                origin: "regionalServer",
-              } as const,
-              {
-                cacheType: "server",
-                pattern: this.prefixPattern("_next/data/*"),
-                cfFunction: "serverCfFunction",
-                origin: "regionalServer",
-              } as const,
-            ]),
-        {
-          cacheType: "server",
-          pattern: this.prefixPattern("_next/image*"),
+      //@ts-expect-error TODO: find a way to fix this typing issue
+      behaviors: openNextOutput.behaviors.map((behavior) => {
+        return {
+          pattern: behavior.pattern === "*" ? undefined: behavior.pattern,
+          origin: behavior.origin ?? "",
+          cacheType: behavior.origin === "s3" ? "static" : "server" as const,
           cfFunction: "serverCfFunction",
-          origin: "imageOptimizer",
-        },
-        // create 1 behaviour for each top level asset file/folder
-        ...fs.readdirSync(path.join(sitePath, ".open-next/assets")).map(
-          (item) =>
-            ({
-              cacheType: "static",
-              pattern: this.prefixPattern(
-                fs
-                  .statSync(path.join(sitePath, ".open-next/assets", item))
-                  .isDirectory()
-                  ? `${item}/*`
-                  : item
-              ),
-              origin: "s3",
-            } as const)
-        ),
-      ],
-      serverCachePolicy: {
-        allowedHeaders: DEFAULT_CACHE_POLICY_ALLOWED_HEADERS,
-      },
+          edgeFunction: behavior.edgeFunction ?? "",
+        };
+      }),
+      cachePolicyAllowedHeaders: DEFAULT_CACHE_POLICY_ALLOWED_HEADERS,
       buildId: this.getBuildId(),
     });
-  }
-
-  private prefixPattern(pattern: string): string {
-    // Prefix CloudFront distribution behavior path patterns with `basePath` if configured
-    const { basePath } = this.useRoutesManifest();
-    return basePath && basePath.length > 0
-      ? `${basePath.slice(1)}/${pattern}`
-      : pattern;
   }
 
   private createRevalidationQueue() {
     if (!this.serverFunction) return;
 
     const { cdk } = this.props;
-    const server = this.serverFunction;
 
     const queue = new Queue(this, "RevalidationQueue", {
       fifo: true,
@@ -465,17 +418,18 @@ export class NextjsSite extends SsrSite {
     });
     consumer.addEventSource(new SqsEventSource(queue, { batchSize: 5 }));
 
-    // Allow server to send messages to the queue
-    server.addEnvironment("REVALIDATION_QUEUE_URL", queue.queueUrl);
-    server.addEnvironment("REVALIDATION_QUEUE_REGION", Stack.of(this).region);
-    queue.grantSendMessages(server.role!);
+    this.serverFunctions.forEach((server) => {
+      // Allow server to send messages to the queue
+      server.addEnvironment("REVALIDATION_QUEUE_URL", queue.queueUrl);
+      server.addEnvironment("REVALIDATION_QUEUE_REGION", Stack.of(this).region);
+      queue.grantSendMessages(server.role!);
+    })
   }
 
   private createRevalidationTable() {
     if (!this.serverFunction) return;
 
     const { path: sitePath } = this.props;
-    const server = this.serverFunction;
 
     const table = new Table(this, "RevalidationTable", {
       partitionKey: { name: "tag", type: AttributeType.STRING },
@@ -492,8 +446,10 @@ export class NextjsSite extends SsrSite {
       removalPolicy: RemovalPolicy.DESTROY,
     });
 
-    server?.addEnvironment("CACHE_DYNAMO_TABLE", table.tableName);
-    table.grantReadWriteData(server.role!);
+    this.serverFunctions.forEach((server) => {
+      server?.addEnvironment("CACHE_DYNAMO_TABLE", table.tableName);
+      table.grantReadWriteData(server.role!);
+    })
 
     const dynamodbProviderPath = path.join(
       sitePath,
