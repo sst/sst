@@ -488,7 +488,7 @@ export class Function extends ComponentResource {
 
         return new aws.lambda.FunctionUrl(`${name}-url`, {
           functionName: fn.name,
-          authorizationType: url.authorization,
+          authorizationType: url.authorization.toUpperCase(),
           invokeMode: streaming.apply((streaming) =>
             streaming ? "RESPONSE_STREAM" : "BUFFERED"
           ),
