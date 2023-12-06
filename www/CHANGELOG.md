@@ -1,5 +1,11 @@
 # @serverless-stack/docs
 
+## 2.9.2
+
+### Patch Changes
+
+- [#3542](https://github.com/sst/sst/pull/3542) [`bafb2a05c`](https://github.com/sst/sst/commit/bafb2a05cf1734437b32aa0713fc7edd4fc24f10) Thanks [@omikader](https://github.com/omikader)! - Service: support configuration of ephemeral storage
+
 ## 2.9.1
 
 ### Patch Changes

@@ -16,7 +16,6 @@ function getAdapter({
   responseMode: ResponseMode;
 }): AstroAdapter {
   const isStatic = deploymentStrategy === "static";
-  const isRegional = deploymentStrategy === "regional";
 
   const baseConfig: AstroAdapter = {
     name: PACKAGE_NAME,
@@ -33,8 +32,8 @@ function getAdapter({
       serverOutput: "stable",
       assets: {
         supportKind: "stable",
-        isSharpCompatible: isRegional,
-        isSquooshCompatible: isRegional,
+        isSharpCompatible: true,
+        isSquooshCompatible: false,
       },
     },
   };
@@ -88,6 +87,7 @@ export default function createIntegration(
             updateConfig({
               output: "server",
             });
+            config.output = "server";
           }
         }
 
@@ -101,16 +101,41 @@ export default function createIntegration(
           updateConfig({
             output: "static",
           });
+          config.output = "static";
         }
 
-        // Enable sourcemaps
-        updateConfig({
-          vite: {
-            build: {
-              sourcemap: true,
+        if (
+          config.output !== "static" &&
+          config.image.service.entrypoint.endsWith("sharp") &&
+          config.image.remotePatterns.length === 0 &&
+          config.image.domains.length === 0 &&
+          typeof config.site === "string"
+        ) {
+          const siteUrl = new URL(config.site);
+          updateConfig({
+            image: {
+              remotePatterns: [
+                {
+                  protocol: siteUrl.protocol,
+                  hostname: siteUrl.hostname,
+                  port: siteUrl.port,
+                  pathname: `${config.build.assets}/**`,
+                },
+              ],
             },
-          },
-        });
+          });
+        }
+
+        if (config.output !== "static") {
+          // Enable sourcemaps for SSR builds.
+          updateConfig({
+            vite: {
+              build: {
+                sourcemap: true,
+              },
+            },
+          });
+        }
 
         BuildMeta.setIntegrationConfig(integrationConfig);
       },

@@ -110,6 +110,15 @@ new Service(stack, "MyService", {
 });
 ```
 
+You may also configure the [amount of ephemeral storage allocated to the task](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/fargate-task-storage.html). The default is 20 GB. To configure it, do the following:
+
+```js
+new Service(stack, "MyService", {
+  path: "./service",
+  storage: "100 GB",
+});
+```
+
 ---
 
 ## Auto-scaling
