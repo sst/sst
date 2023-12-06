@@ -47,7 +47,7 @@ export function createExports(
     const request = createRequest(internalEvent);
 
     // Handle page not found
-    const routeData = app.match(request, { matchNotFound: true });
+    const routeData = app.match(request);
     if (!routeData) {
       return streamError(404, "Not found", responseStream);
     }
@@ -78,7 +78,7 @@ export function createExports(
     const request = createRequest(internalEvent);
 
     // Handle page not found
-    const routeData = app.match(request, { matchNotFound: true });
+    const routeData = app.match(request);
     if (!routeData) {
       console.error("Not found");
       return convertTo({
