@@ -119,13 +119,16 @@ export class Distribution extends pulumi.ComponentResource {
     function normalizeCustomDomain() {
       if (!args.customDomain) return;
 
-      return pulumi
-        .output([args.customDomain])
-        .apply(([customDomain]) =>
-          typeof customDomain === "string"
-            ? { domainName: customDomain, aliases: [], redirects: [] }
-            : { aliases: [], redirects: [], ...customDomain }
-        );
+      return pulumi.output([args.customDomain]).apply(([customDomain]) => {
+        if (typeof customDomain === "string") {
+          return { domainName: customDomain, aliases: [], redirects: [] };
+        }
+
+        if (!customDomain.domainName) {
+          throw new Error(`Missing "domainName" for customDomain.`);
+        }
+        return { aliases: [], redirects: [], ...customDomain };
+      });
     }
 
     function validateCloudFrontDistributionSettings() {

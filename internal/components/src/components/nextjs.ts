@@ -488,6 +488,19 @@ if (event.rawPath) {
           ),
           runtime: "nodejs18.x",
           timeout: 30,
+          policies: [
+            {
+              name: "sqs",
+              policy: JSON.stringify({
+                statements: [
+                  {
+                    actions: ["sqs:ReceiveMessage"],
+                    resources: [queue.arn],
+                  },
+                ],
+              }),
+            },
+          ],
         });
         new aws.lambda.EventSourceMapping(`${name}-revalidation-event-source`, {
           functionName: consumer.aws.function.name,

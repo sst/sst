@@ -266,10 +266,10 @@ export class Function extends ComponentResource {
 
     const provider = new aws.Provider(`${name}-provider`, { region });
 
-    const bundleHash = args.bundleHash ?? calculateHash();
     const newHandler = wrapHandler();
     const role = createRole();
-    const zipFile = zipBundleFolder();
+    const zipPath = zipBundleFolder();
+    const bundleHash = args.bundleHash ?? calculateHash();
     const file = createBucketObject();
     const fn = createFunction();
     updateFunctionCode();
@@ -334,22 +334,9 @@ export class Function extends ComponentResource {
     }
 
     function calculateHash() {
-      return output(args.bundle).apply(async (bundle) => {
+      return zipPath.apply(async (zipPath) => {
         const hash = crypto.createHash("sha256");
-        const filePaths = globSync("**", {
-          ignore: "**/node_modules/**",
-          dot: true,
-          nodir: true,
-          follow: true,
-          cwd: bundle,
-        });
-
-        for (const filePath of filePaths) {
-          hash.update(
-            await fs.promises.readFile(path.resolve(bundle, filePath))
-          );
-        }
-
+        hash.update(await fs.promises.readFile(zipPath));
         return hash.digest("hex");
       });
     }
@@ -442,12 +429,8 @@ export class Function extends ComponentResource {
         `${name}-code`,
         {
           key: interpolate`${name}-code-${bundleHash}.zip`,
-          bucket: output(region).apply((region) =>
-            AWS.bootstrap.forRegion(region)
-          ),
-          source: output(zipFile).apply(
-            (zipFile) => new asset.FileArchive(zipFile)
-          ),
+          bucket: region.apply((region) => AWS.bootstrap.forRegion(region)),
+          source: zipPath.apply((zipPath) => new asset.FileArchive(zipPath)),
         },
         {
           provider,

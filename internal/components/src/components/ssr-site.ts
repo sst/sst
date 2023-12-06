@@ -699,9 +699,10 @@ function handler(event) {
       props: ImageOptimizationFunctionOriginConfig
     ) {
       const fn = new Function(`${name}-image-function-${fnName}`, {
-        // TODO implement function log retention
-        //logRetention: RetentionDays.THREE_DAYS,
         timeout: 25,
+        logging: {
+          retention: "3 days",
+        },
         policies: [
           {
             name: "s3",
@@ -1082,7 +1083,6 @@ if (event.type === "warmer") {
           new DistributionInvalidation(`${name}-invalidation`, {
             distributionId: distribution.aws.distribution.id,
             paths: invalidationPaths,
-            wait: true,
             version: invalidationBuildId,
           });
         });

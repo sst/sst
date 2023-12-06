@@ -12,10 +12,14 @@ export default {
       runtime: "nodejs18.x",
       bundle: "bundled-function",
       handler: "index.handler",
+      url: true,
+      logging: {
+        retention: "1 day",
+      },
     });
 
     return {
-      //siteURL: site.url,
+      siteURL: site.url,
     };
   },
 };
