@@ -515,7 +515,7 @@ export class Function extends ComponentResource {
   }
 
   public get url() {
-    return this.fnUrl.apply((url) => url?.functionUrl);
+    return this.fnUrl.apply((url) => url?.functionUrl ?? output(undefined));
   }
 
   /** @internal */

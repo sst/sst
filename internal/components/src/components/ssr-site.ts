@@ -683,11 +683,7 @@ function handler(event) {
 
       return {
         originId: fnName,
-        // TODO remove
-        //domainName: fn.url.apply((url) => new URL(url).host),
-        domainName: fn.url.apply((url) =>
-          url!.apply((url) => new URL(url).host)
-        ),
+        domainName: fn.url.apply((url) => new URL(url!).host),
         customOriginConfig: {
           httpPort: 80,
           httpsPort: 443,
@@ -724,19 +720,12 @@ function handler(event) {
           },
         ],
         ...props.function,
+        url: true,
       });
-
-      const url = new aws.lambda.FunctionUrl(
-        `${name}-image-function-${fnName}-url`,
-        {
-          authorizationType: "NONE",
-          functionName: fn.aws.function.name,
-        }
-      );
 
       return {
         originId: fnName,
-        domainName: url.functionUrl.apply((url) => new URL(url).host),
+        domainName: fn.url.apply((url) => new URL(url!).host),
         customOriginConfig: {
           httpPort: 80,
           httpsPort: 443,
