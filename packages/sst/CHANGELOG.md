@@ -1,5 +1,17 @@
 # @serverless-stack/cli2
 
+## 2.37.1
+
+### Patch Changes
+
+- [#3493](https://github.com/sst/sst/pull/3493) [`d5d31fdda`](https://github.com/sst/sst/commit/d5d31fddae14a2948a9b8da4b9894044eeaa6b78) Thanks [@bayssmekanique](https://github.com/bayssmekanique)! - AstroSite: add sharp image processing
+
+- [#3542](https://github.com/sst/sst/pull/3542) [`bafb2a05c`](https://github.com/sst/sst/commit/bafb2a05cf1734437b32aa0713fc7edd4fc24f10) Thanks [@omikader](https://github.com/omikader)! - Service: support configuration of ephemeral storage
+
+- [#3556](https://github.com/sst/sst/pull/3556) [`4b795b815`](https://github.com/sst/sst/commit/4b795b8156f722a57c7dc81e3522e13dd1d9de78) Thanks [@TheUncharted](https://github.com/TheUncharted)! - Add Apple adapter to index file
+
+- [`ce2944150`](https://github.com/sst/sst/commit/ce2944150ee2c920646c8ca1f5edbe13ad449b21) Thanks [@fwang](https://github.com/fwang)! - Sites: check missing domainName in customDomain
+
 ## 2.37.0
 
 ### Minor Changes
