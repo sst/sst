@@ -239,13 +239,11 @@ You can also use the `sst bind` to run any scripts.
 
 ### `sst types`
 
-Generates your app resource types in `.sst/types`. This offers a faster way to generate the types without building the assets for your functions and sites.
+Generates the types for your app's resource in `.sst/types`. This is faster than running a full `sst build` because it generate the types without building the assets for your functions and sites. Supports [global options](#global-options).
 
 ```bash
 npx sst types [options]
 ```
-
-Supports [global options](#global-options)
 
 ---
 

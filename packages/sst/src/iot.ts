@@ -1,5 +1,4 @@
 import { IoTClient, DescribeEndpointCommand } from "@aws-sdk/client-iot";
-import { Context } from "./context/context.js";
 import { useAWSClient, useAWSCredentials } from "./credentials.js";
 import { VisibleError } from "./error.js";
 

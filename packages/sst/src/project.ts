@@ -5,7 +5,6 @@ import path from "path";
 import url from "url";
 import os from "os";
 import { Logger } from "./logger.js";
-import { Context } from "./context/context.js";
 import { VisibleError } from "./error.js";
 import { blue } from "colorette";
 import dotenv from "dotenv";

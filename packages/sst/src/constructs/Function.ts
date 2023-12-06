@@ -777,6 +777,8 @@ export class Function extends CDKFunction implements SSTConstruct {
   public readonly _isLiveDevEnabled: boolean;
   /** @internal */
   public readonly _doNotAllowOthersToBind?: boolean;
+  /** @internal */
+  public _overrideMetadataHandler?: string;
   private missingSourcemap?: boolean;
   private functionUrl?: FunctionUrl;
   private props: FunctionProps;
@@ -1136,7 +1138,7 @@ export class Function extends CDKFunction implements SSTConstruct {
       data: {
         arn: this.functionArn,
         runtime: this.props.runtime,
-        handler: this.props.handler,
+        handler: this._overrideMetadataHandler ?? this.props.handler,
         missingSourcemap: this.missingSourcemap === true ? true : undefined,
         localId: this.node.addr,
         secrets: this.allBindings

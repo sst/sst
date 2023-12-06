@@ -87,7 +87,7 @@ To work on your app locally with SST:
    If you need to run the your app inside Docker locally, pass the environment variables set by `sst bind` into the docker container.
 
    ```bash
-   sst bind "env | grep SST_ > .env.tmp && docker run --env-file .env.tmp my-image"
+   sst bind "env | grep -E 'SST_|AWS_' > .env.tmp && docker run --env-file .env.tmp my-image"
    ```
 
    This sequence fetches variables starting with SST_, saving them to the `.env.tmp` file, which is then used in the Docker run.
@@ -107,6 +107,15 @@ new Service(stack, "MyService", {
   path: "./service",
   cpu: "2 vCPU",
   memory: "8 GB",
+});
+```
+
+You may also configure the [amount of ephemeral storage allocated to the task](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/fargate-task-storage.html). The default is 20 GB. To configure it, do the following:
+
+```js
+new Service(stack, "MyService", {
+  path: "./service",
+  storage: "100 GB",
 });
 ```
 
@@ -321,7 +330,7 @@ new Service(stack, "MyService", {
 
 ### Configuring Service Container
 
-Here's an example of configuring the Fargate container health check.
+Here's an example of configuring the Fargate container health check. Make sure the `curl` command exists inside the container.
 
 ```js
 import { Duration } from "aws-cdk-lib/core";

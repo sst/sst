@@ -47,42 +47,38 @@ export class AstroSite extends SsrSite {
     routes,
     pageResolution,
   }: BuildMetaConfig) {
-    const serializedRoutes =
-      "[\n" +
-      routes
-        .map((route) => {
-          return `    {route: "${route.route}", pattern: ${
-            route.pattern
-          }, type: "${route.type}", ${
-            typeof route.prerender !== "undefined"
-              ? `prerender: ${route.prerender}, `
-              : ``
-          }${
-            route.redirectPath ? `redirectPath: "${route.redirectPath}", ` : ""
-          }${
-            route.redirectStatus
-              ? `redirectStatus: ${route.redirectStatus}`
-              : ""
-          } }`;
-        })
-        .join(",\n") +
-      "\n  ]";
+    const serializedRoutes = routes.map((route) => ({
+      rt: route.route,
+      pt: new RegExp(route.pattern),
+      t: route.type[1],
+      pr: route.prerender === true ? true : undefined,
+      rp: route.redirectPath,
+      rs: route.redirectStatus,
+    }));
+    function objectToString(obj: any) {
+      return `{ ${Object.entries(obj)
+        .filter(([_, value]) => value !== undefined)
+        .map(
+          ([key, value]) =>
+            `${key}: ${typeof value === "string" ? `'${value}'` : value}`
+        )
+        .join(", ")} }`;
+    }
 
-    return `  // AstroSite CF Routing Function
-  var astroRoutes = ${serializedRoutes};
-  var matchedRoute = astroRoutes.find((route) => route.pattern.test(request.uri));
-  if (matchedRoute) {
-    if (matchedRoute.type === "redirect") {
-      var redirectPath = matchedRoute.redirectPath;
-      matchedRoute.pattern.exec(request.uri).forEach((match, index) => {
-        redirectPath = redirectPath.replace(\`\\\${\${index}}\`, match);
+    return `
+  var routes = [${serializedRoutes.map(objectToString).join(", ")}]
+  var match = routes.find((route) => route.pt.test(request.uri));
+  if (match) {
+    if (match.t === "r") {
+      var redirectPath = match.rp;
+      (match.pt.exec(request.uri) || []).forEach((match, index) => {
+        redirectPath = redirectPath.replace(\`\\\${\${index}}\`, match)
       });
-      var statusCode = matchedRoute.redirectStatus || 308;
       return {
-        statusCode,
+        statusCode: match.rs || 308,
         headers: { location: { value: redirectPath } },
       };
-    } else if (matchedRoute.type === "page" && matchedRoute.prerender) {
+    } else if (match.t === "p" && match.pr) {
       ${
         pageResolution === "file"
           ? `request.uri = request.uri === "/" ? "/index.html" : request.uri.replace(/\\/?$/, ".html");`
@@ -90,7 +86,7 @@ export class AstroSite extends SsrSite {
       }
     }
   }
-  // End AstroSite CF Routing Function`;
+`;
   }
 
   protected plan() {
