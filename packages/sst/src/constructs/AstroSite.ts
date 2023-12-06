@@ -170,6 +170,11 @@ export class AstroSite extends SsrSite {
           origin: "staticsServer",
         });
       } else {
+        plan.cloudFrontFunctions!.imageServiceCfFunction = {
+          constructId: "ImageServiceCloudFrontFunction",
+          injections: [this.useCloudFrontFunctionHostHeaderInjection()],
+        };
+
         plan.origins.regionalServer = {
           type: "function",
           constructId: "ServerFunction",
@@ -195,6 +200,13 @@ export class AstroSite extends SsrSite {
             cacheType: "static",
             pattern: `${buildMeta.clientBuildVersionedSubDir}/*`,
             origin: "staticsServer",
+          },
+          {
+            cacheType: "server",
+            pattern: "_image",
+            cfFunction: "imageServiceCfFunction",
+            origin: "regionalServer",
+            allowedMethods: AllowedMethods.ALLOW_GET_HEAD_OPTIONS,
           },
           ...buildMeta.serverRoutes?.map(
             (route) =>

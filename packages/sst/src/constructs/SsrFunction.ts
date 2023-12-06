@@ -100,6 +100,7 @@ export class SsrFunction extends Construct implements SSTConstruct {
       memorySize: 1024,
       streaming: false,
       injections: [],
+      architecture: Architecture.ARM_64,
       ...props,
       environment: props.environment || {},
       permissions: props.permissions || [],
@@ -192,7 +193,7 @@ export class SsrFunction extends Construct implements SSTConstruct {
           : runtime === "nodejs16.x"
           ? Runtime.NODEJS_16_X
           : Runtime.NODEJS_18_X,
-      architecture: architecture || Architecture.ARM_64,
+      architecture,
       memorySize:
         typeof memorySize === "string"
           ? toCdkSize(memorySize).toMebibytes()
@@ -282,12 +283,14 @@ export class SsrFunction extends Construct implements SSTConstruct {
   }
 
   private async buildAssetFromHandler() {
-    const { handler, runtime, nodejs, copyFiles, injections } = this.props;
+    const { handler, runtime, nodejs, copyFiles, architecture: enumArchitecture } = this.props;
+    const architecture = enumArchitecture === Architecture.X86_64 ? "x86_64" : "arm_64"
 
     useFunctions().add(this.node.addr, {
       handler,
       runtime,
       nodejs,
+      architecture,
       copyFiles,
     });
 
