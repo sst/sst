@@ -49,27 +49,36 @@ export class AstroSite extends SsrSite {
   }: BuildMetaConfig) {
     const serializedRoutes = routes.map((route) => ({
       rt: route.route,
-      pt: route.pattern,
-      t: route.type,
+      pt: new RegExp(route.pattern),
+      t: route.type[1],
       pr: route.prerender === true ? true : undefined,
       rp: route.redirectPath,
       rs: route.redirectStatus,
     }));
+    function objectToString(obj: any) {
+      return `{ ${Object.entries(obj)
+        .filter(([_, value]) => value !== undefined)
+        .map(
+          ([key, value]) =>
+            `${key}: ${typeof value === "string" ? `'${value}'` : value}`
+        )
+        .join(", ")} }`;
+    }
 
     return `
-  var routes = ${JSON.stringify(serializedRoutes)}
-  var match = routes.find((route) => new RegExp(route.pt).test(request.uri));
+  var routes = [${serializedRoutes.map(objectToString).join(", ")}]
+  var match = routes.find((route) => route.pt.test(request.uri));
   if (match) {
-    if (match.t === "redirect") {
+    if (match.t === "r") {
       var redirectPath = match.rp;
-      new RegExp(match.pt).exec(request.uri)?.forEach((match, index) => {
+      (match.pt.exec(request.uri) || []).forEach((match, index) => {
         redirectPath = redirectPath.replace(\`\\\${\${index}}\`, match)
       });
       return {
         statusCode: match.rs || 308,
         headers: { location: { value: redirectPath } },
       };
-    } else if (match.t === "page" && match.pr) {
+    } else if (match.t === "p" && match.pr) {
       ${
         pageResolution === "file"
           ? `request.uri = request.uri === "/" ? "/index.html" : request.uri.replace(/\\/?$/, ".html");`
