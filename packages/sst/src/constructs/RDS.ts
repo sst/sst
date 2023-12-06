@@ -553,6 +553,8 @@ export class RDS extends Construct implements SSTConstruct {
       },
       _doNotAllowOthersToBind: true,
     });
+    this.migratorFunction._overrideMetadataHandler =
+      "rds-migrator/index.handler";
   }
 
   private createMigrationCustomResource(migrations: string) {
