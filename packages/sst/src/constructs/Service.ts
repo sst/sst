@@ -232,6 +232,7 @@ export interface ServiceProps {
    * {
    *   storage: "100 GB",
    * }
+   * ```
    */
   storage?: `${number} GB`;
   /**
