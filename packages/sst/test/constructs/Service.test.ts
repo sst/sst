@@ -253,19 +253,30 @@ test("memory invalid", async () => {
 test("storage undefined", async () => {
   const { stack } = await createService({});
   hasResource(stack, "AWS::ECS::TaskDefinition", {
-    ephemeralStorage: ABSENT,
+    EphemeralStorage: ABSENT,
+  });
+});
+test("storage default 20", async () => {
+  const { stack } = await createService({ storage: "20 GB" });
+  hasResource(stack, "AWS::ECS::TaskDefinition", {
+    EphemeralStorage: ABSENT,
   });
 });
 test("storage defined", async () => {
   const { stack } = await createService({ storage: "100 GB" });
   hasResource(stack, "AWS::ECS::TaskDefinition", {
-    ephemeralStorage: objectLike({ sizeInGiB: 100 }),
+    EphemeralStorage: objectLike({ SizeInGiB: 100 }),
   });
 });
-test("storage invalid", async () => {
+test("storage invalid too small", async () => {
   expect(async () => {
     await createService({ storage: "201 GB" });
-  }).rejects.toThrow(/the maximum supported value for storage/);
+  }).rejects.toThrow(/the supported value for storage/);
+});
+test("storage invalid too large", async () => {
+  expect(async () => {
+    await createService({ storage: "19 GB" });
+  }).rejects.toThrow(/the supported value for storage/);
 });
 
 test("port undefined", async () => {

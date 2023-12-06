@@ -3,4 +3,4 @@
 "@sst/docs": patch
 ---
 
-feat(service): support configuration of ephemeral storage
+Service: support configuration of ephemeral storage

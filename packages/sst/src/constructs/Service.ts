@@ -872,9 +872,9 @@ export class Service extends Construct implements SSTConstruct {
     }
 
     const storageInGiB = toCdkSize(storage).toGibibytes();
-    if (storageInGiB > 200) {
+    if (storageInGiB < 20 || storageInGiB > 200) {
       throw new VisibleError(
-        `In the "${this.node.id}" Service, the maximum supported value for storage is "200 GB"`
+        `In the "${this.node.id}" Service, the supported value for storage is between "20 GB" and "200 GB"`
       );
     }
   }
@@ -910,11 +910,15 @@ export class Service extends Construct implements SSTConstruct {
       vpc,
     });
 
+    const ephemeralStorageGiB = toCdkSize(storage).toGibibytes();
     const taskDefinition = new FargateTaskDefinition(this, `TaskDefinition`, {
-      // @ts-ignore
+      // @ts-expect-error
       memoryLimitMiB: supportedMemories[cpu][memory],
       cpu: supportedCpus[cpu],
-      ephemeralStorageGiB: toCdkSize(storage).toGibibytes(),
+      // note: the minimum allowed value by CloudFormation is 21, set to
+      //       undefined to set to the default value of 20
+      ephemeralStorageGiB:
+        ephemeralStorageGiB === 20 ? undefined : ephemeralStorageGiB,
       runtimePlatform: {
         cpuArchitecture:
           architecture === "arm64"
