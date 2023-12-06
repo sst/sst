@@ -2,7 +2,16 @@ import fs from "fs";
 import path from "path";
 import crypto from "crypto";
 import { globSync } from "glob";
-import pulumi from "@pulumi/pulumi";
+import {
+  ComponentResource,
+  ComponentResourceOptions,
+  Output,
+  all,
+  asset,
+  interpolate,
+  jsonStringify,
+  output,
+} from "@pulumi/pulumi";
 import * as aws from "@pulumi/aws";
 import { Size, toMBs } from "./util/size.js";
 import { Function } from "./function.js";
@@ -116,9 +125,9 @@ export interface NextjsArgs extends SsrSiteArgs {
  * });
  * ```
  */
-export class Nextjs extends pulumi.ComponentResource {
-  private doNotDeploy: pulumi.Output<boolean>;
-  private edge: pulumi.Output<boolean>;
+export class Nextjs extends ComponentResource {
+  private doNotDeploy: Output<boolean>;
+  private edge: Output<boolean>;
   private bucket: aws.s3.BucketV2;
   private serverFunction?: Function;
   //private serverFunctionForDev?: Function;
@@ -127,7 +136,7 @@ export class Nextjs extends pulumi.ComponentResource {
   constructor(
     name: string,
     args?: NextjsArgs,
-    opts?: pulumi.ComponentResourceOptions
+    opts?: ComponentResourceOptions
   ) {
     super("sst:sst:Nextjs", name, args, opts);
 
@@ -144,7 +153,7 @@ export class Nextjs extends pulumi.ComponentResource {
     //  return;
     //}
 
-    let _routes: pulumi.Output<
+    let _routes: Output<
       {
         route: string;
         regex: string;
@@ -153,15 +162,15 @@ export class Nextjs extends pulumi.ComponentResource {
         sourcemapKey?: string;
       }[]
     >;
-    let routesManifest: pulumi.Output<{
+    let routesManifest: Output<{
       dynamicRoutes: { page: string; regex: string }[];
       staticRoutes: { page: string; regex: string }[];
       dataRoutes?: { page: string; dataRouteRegex: string }[];
     }>;
-    let appPathRoutesManifest: pulumi.Output<Record<string, string>>;
-    let appPathsManifest: pulumi.Output<Record<string, string>>;
-    let pagesManifest: pulumi.Output<Record<string, string>>;
-    let prerenderManifest: pulumi.Output<{
+    let appPathRoutesManifest: Output<Record<string, string>>;
+    let appPathsManifest: Output<Record<string, string>>;
+    let pagesManifest: Output<Record<string, string>>;
+    let prerenderManifest: Output<{
       version: number;
       routes: Record<string, unknown>;
     }>;
@@ -205,13 +214,11 @@ export class Nextjs extends pulumi.ComponentResource {
     //app.registerTypes(this);
 
     function normalizeLogging() {
-      return pulumi
-        .all([args?.logging])
-        .apply(([logging]) => logging ?? "per-route");
+      return output(args?.logging).apply((logging) => logging ?? "per-route");
     }
 
     function normalizeExperimental() {
-      return pulumi.all([args?.experimental]).apply(([experimental]) => ({
+      return output(args?.experimental).apply((experimental) => ({
         streaming: experimental?.streaming ?? false,
         disableDynamoDBCache: experimental?.disableDynamoDBCache ?? false,
         disableIncrementalCache: experimental?.disableIncrementalCache ?? false,
@@ -220,236 +227,226 @@ export class Nextjs extends pulumi.ComponentResource {
     }
 
     function normalizeBuildCommand() {
-      return pulumi
-        .all([args?.buildCommand, experimental])
-        .apply(
-          ([buildCommand, experimental]) =>
-            buildCommand ??
-            [
-              "npx",
-              "--yes",
-              `open-next@${args?.openNextVersion ?? DEFAULT_OPEN_NEXT_VERSION}`,
-              "build",
-              ...(experimental.streaming ? ["--streaming"] : []),
-              ...(experimental.disableDynamoDBCache
-                ? ["--dangerously-disable-dynamodb-cache"]
-                : []),
-              ...(experimental.disableIncrementalCache
-                ? ["--dangerously-disable-incremental-cache"]
-                : []),
-            ].join(" ")
-        );
+      return all([args?.buildCommand, experimental]).apply(
+        ([buildCommand, experimental]) =>
+          buildCommand ??
+          [
+            "npx",
+            "--yes",
+            `open-next@${args?.openNextVersion ?? DEFAULT_OPEN_NEXT_VERSION}`,
+            "build",
+            ...(experimental.streaming ? ["--streaming"] : []),
+            ...(experimental.disableDynamoDBCache
+              ? ["--dangerously-disable-dynamodb-cache"]
+              : []),
+            ...(experimental.disableIncrementalCache
+              ? ["--dangerously-disable-incremental-cache"]
+              : []),
+          ].join(" ")
+      );
     }
 
     function buildPlan(bucket: aws.s3.BucketV2) {
-      return pulumi
-        .all([
+      return all([
+        outputPath,
+        args?.edge,
+        args?.experimental,
+        args?.imageOptimization,
+        bucket.bucket,
+        useRoutes(),
+        revalidationQueue.apply((queue) => queue?.url),
+        revalidationQueue.apply((queue) => queue?.arn),
+      ]).apply(
+        ([
           outputPath,
-          args?.edge,
-          args?.experimental,
-          args?.imageOptimization,
-          bucket.bucket,
-          useRoutes(),
-          revalidationQueue.apply((queue) => queue?.url),
-          revalidationQueue.apply((queue) => queue?.arn),
-        ])
-        .apply(
-          ([
-            outputPath,
-            edge,
-            experimental,
-            imageOptimization,
-            bucketName,
-            routes,
-            revalidationQueueUrl,
-            revalidationQueueArn,
-          ]) => {
-            const serverConfig = {
-              description: "Next.js server",
-              bundle: path.join(outputPath, ".open-next", "server-function"),
-              handler: "index.handler",
-              environment: {
-                CACHE_BUCKET_NAME: bucketName,
-                CACHE_BUCKET_KEY_PREFIX: "_cache",
-                CACHE_BUCKET_REGION: app.aws.region,
-                ...(revalidationQueueUrl && {
-                  REVALIDATION_QUEUE_URL: revalidationQueueUrl,
-                  REVALIDATION_QUEUE_REGION: app.aws.region,
-                }),
-              },
-              policies: [
-                ...(revalidationQueue
-                  ? [
-                      {
-                        name: "revalidation-queue",
-                        policy: JSON.stringify({
-                          statements: [
-                            {
-                              actions: [
-                                "sqs:SendMessage",
-                                "sqs:GetQueueAttributes",
-                                "sqs:GetQueueUrl",
-                              ],
-                              resources: [revalidationQueueArn],
-                            },
-                          ],
-                        }),
-                      },
-                    ]
-                  : []),
-              ],
-              layers: isPerRouteLoggingEnabled()
+          edge,
+          experimental,
+          imageOptimization,
+          bucketName,
+          routes,
+          revalidationQueueUrl,
+          revalidationQueueArn,
+        ]) => {
+          const serverConfig = {
+            description: "Next.js server",
+            bundle: path.join(outputPath, ".open-next", "server-function"),
+            handler: "index.handler",
+            environment: {
+              CACHE_BUCKET_NAME: bucketName,
+              CACHE_BUCKET_KEY_PREFIX: "_cache",
+              CACHE_BUCKET_REGION: app.aws.region,
+              ...(revalidationQueueUrl && {
+                REVALIDATION_QUEUE_URL: revalidationQueueUrl,
+                REVALIDATION_QUEUE_REGION: app.aws.region,
+              }),
+            },
+            policies: [
+              ...(revalidationQueue
                 ? [
-                    `arn:aws:lambda:${app.aws.region}:226609089145:layer:sst-extension-arm64:${LAYER_VERSION}`,
-                    //              cdk?.server?.architecture?.name === Architecture.X86_64.name
-                    //                ? `arn:aws:lambda:${stack.region}:226609089145:layer:sst-extension-amd64:${LAYER_VERSION}`
-                    //                : `arn:aws:lambda:${stack.region}:226609089145:layer:sst-extension-arm64:${LAYER_VERSION}`
-                  ]
-                : undefined,
-            };
-
-            return validatePlan({
-              edge: edge ?? false,
-              cloudFrontFunctions: {
-                serverCfFunction: {
-                  injections: [useCloudFrontFunctionHostHeaderInjection()],
-                },
-              },
-              edgeFunctions: edge
-                ? { edgeServer: { function: serverConfig } }
-                : undefined,
-              origins: {
-                ...(edge
-                  ? {}
-                  : {
-                      regionalServer: {
-                        type: "function",
-                        function: serverConfig,
-                        streaming: experimental?.streaming,
-                        injections: isPerRouteLoggingEnabled()
-                          ? [useServerFunctionPerRouteLoggingInjection()]
-                          : [],
-                      },
-                    }),
-                imageOptimizer: {
-                  type: "image-optimization-function",
-                  function: {
-                    description: "Next.js image optimizer",
-                    handler: "index.handler",
-                    bundle: path.join(
-                      outputPath,
-                      ".open-next",
-                      "image-optimization-function"
-                    ),
-                    runtime: "nodejs18.x",
-                    architectures: ["arm64"],
-                    environment: {
-                      BUCKET_NAME: bucketName,
-                      BUCKET_KEY_PREFIX: "_assets",
-                    },
-                    memorySize: imageOptimization?.memorySize
-                      ? typeof imageOptimization.memorySize === "string"
-                        ? toMBs(imageOptimization.memorySize)
-                        : imageOptimization.memorySize
-                      : 1536,
-                  },
-                },
-                s3: {
-                  type: "s3",
-                  originPath: "_assets",
-                  copy: [
                     {
-                      from: ".open-next/assets",
-                      to: "_assets",
-                      cached: true,
-                      versionedSubDir: "_next",
+                      name: "revalidation-queue",
+                      policy: JSON.stringify({
+                        statements: [
+                          {
+                            actions: [
+                              "sqs:SendMessage",
+                              "sqs:GetQueueAttributes",
+                              "sqs:GetQueueUrl",
+                            ],
+                            resources: [revalidationQueueArn],
+                          },
+                        ],
+                      }),
                     },
-                    { from: ".open-next/cache", to: "_cache", cached: false },
-                  ],
-                },
-              },
-              behaviors: [
-                ...(edge
-                  ? [
-                      {
-                        cacheType: "server",
-                        cfFunction: "serverCfFunction",
-                        edgeFunction: "edgeServer",
-                        origin: "s3",
-                      } as const,
-                      {
-                        cacheType: "server",
-                        pattern: "api/*",
-                        cfFunction: "serverCfFunction",
-                        edgeFunction: "edgeServer",
-                        origin: "s3",
-                      } as const,
-                      {
-                        cacheType: "server",
-                        pattern: "_next/data/*",
-                        cfFunction: "serverCfFunction",
-                        edgeFunction: "edgeServer",
-                        origin: "s3",
-                      } as const,
-                    ]
-                  : [
-                      {
-                        cacheType: "server",
-                        cfFunction: "serverCfFunction",
-                        origin: "regionalServer",
-                      } as const,
-                      {
-                        cacheType: "server",
-                        pattern: "api/*",
-                        cfFunction: "serverCfFunction",
-                        origin: "regionalServer",
-                      } as const,
-                      {
-                        cacheType: "server",
-                        pattern: "_next/data/*",
-                        cfFunction: "serverCfFunction",
-                        origin: "regionalServer",
-                      } as const,
-                    ]),
-                {
-                  cacheType: "server",
-                  pattern: "_next/image*",
-                  cfFunction: "serverCfFunction",
-                  origin: "imageOptimizer",
-                },
-                // create 1 behaviour for each top level asset file/folder
-                ...fs
-                  .readdirSync(path.join(outputPath, ".open-next/assets"))
-                  .map(
-                    (item) =>
-                      ({
-                        cacheType: "static",
-                        pattern: fs
-                          .statSync(
-                            path.join(outputPath, ".open-next/assets", item)
-                          )
-                          .isDirectory()
-                          ? `${item}/*`
-                          : item,
-                        origin: "s3",
-                      } as const)
-                  ),
-              ],
-              cachePolicyAllowedHeaders: DEFAULT_CACHE_POLICY_ALLOWED_HEADERS,
-              buildId: fs
-                .readFileSync(path.join(outputPath, ".next/BUILD_ID"))
-                .toString(),
-              warmerConfig: {
-                function: path.join(
-                  outputPath,
-                  ".open-next",
-                  "warmer-function"
-                ),
-              },
-            });
+                  ]
+                : []),
+            ],
+            layers: isPerRouteLoggingEnabled()
+              ? [
+                  `arn:aws:lambda:${app.aws.region}:226609089145:layer:sst-extension-arm64:${LAYER_VERSION}`,
+                  //              cdk?.server?.architecture?.name === Architecture.X86_64.name
+                  //                ? `arn:aws:lambda:${stack.region}:226609089145:layer:sst-extension-amd64:${LAYER_VERSION}`
+                  //                : `arn:aws:lambda:${stack.region}:226609089145:layer:sst-extension-arm64:${LAYER_VERSION}`
+                ]
+              : undefined,
+          };
 
-            function useServerFunctionPerRouteLoggingInjection() {
-              return `
+          return validatePlan({
+            edge: edge ?? false,
+            cloudFrontFunctions: {
+              serverCfFunction: {
+                injections: [useCloudFrontFunctionHostHeaderInjection()],
+              },
+            },
+            edgeFunctions: edge
+              ? { edgeServer: { function: serverConfig } }
+              : undefined,
+            origins: {
+              ...(edge
+                ? {}
+                : {
+                    regionalServer: {
+                      type: "function",
+                      function: serverConfig,
+                      streaming: experimental?.streaming,
+                      injections: isPerRouteLoggingEnabled()
+                        ? [useServerFunctionPerRouteLoggingInjection()]
+                        : [],
+                    },
+                  }),
+              imageOptimizer: {
+                type: "image-optimization-function",
+                function: {
+                  description: "Next.js image optimizer",
+                  handler: "index.handler",
+                  bundle: path.join(
+                    outputPath,
+                    ".open-next",
+                    "image-optimization-function"
+                  ),
+                  runtime: "nodejs18.x",
+                  architectures: ["arm64"],
+                  environment: {
+                    BUCKET_NAME: bucketName,
+                    BUCKET_KEY_PREFIX: "_assets",
+                  },
+                  memorySize: imageOptimization?.memorySize
+                    ? typeof imageOptimization.memorySize === "string"
+                      ? toMBs(imageOptimization.memorySize)
+                      : imageOptimization.memorySize
+                    : 1536,
+                },
+              },
+              s3: {
+                type: "s3",
+                originPath: "_assets",
+                copy: [
+                  {
+                    from: ".open-next/assets",
+                    to: "_assets",
+                    cached: true,
+                    versionedSubDir: "_next",
+                  },
+                  { from: ".open-next/cache", to: "_cache", cached: false },
+                ],
+              },
+            },
+            behaviors: [
+              ...(edge
+                ? [
+                    {
+                      cacheType: "server",
+                      cfFunction: "serverCfFunction",
+                      edgeFunction: "edgeServer",
+                      origin: "s3",
+                    } as const,
+                    {
+                      cacheType: "server",
+                      pattern: "api/*",
+                      cfFunction: "serverCfFunction",
+                      edgeFunction: "edgeServer",
+                      origin: "s3",
+                    } as const,
+                    {
+                      cacheType: "server",
+                      pattern: "_next/data/*",
+                      cfFunction: "serverCfFunction",
+                      edgeFunction: "edgeServer",
+                      origin: "s3",
+                    } as const,
+                  ]
+                : [
+                    {
+                      cacheType: "server",
+                      cfFunction: "serverCfFunction",
+                      origin: "regionalServer",
+                    } as const,
+                    {
+                      cacheType: "server",
+                      pattern: "api/*",
+                      cfFunction: "serverCfFunction",
+                      origin: "regionalServer",
+                    } as const,
+                    {
+                      cacheType: "server",
+                      pattern: "_next/data/*",
+                      cfFunction: "serverCfFunction",
+                      origin: "regionalServer",
+                    } as const,
+                  ]),
+              {
+                cacheType: "server",
+                pattern: "_next/image*",
+                cfFunction: "serverCfFunction",
+                origin: "imageOptimizer",
+              },
+              // create 1 behaviour for each top level asset file/folder
+              ...fs.readdirSync(path.join(outputPath, ".open-next/assets")).map(
+                (item) =>
+                  ({
+                    cacheType: "static",
+                    pattern: fs
+                      .statSync(
+                        path.join(outputPath, ".open-next/assets", item)
+                      )
+                      .isDirectory()
+                      ? `${item}/*`
+                      : item,
+                    origin: "s3",
+                  } as const)
+              ),
+            ],
+            cachePolicyAllowedHeaders: DEFAULT_CACHE_POLICY_ALLOWED_HEADERS,
+            buildId: fs
+              .readFileSync(path.join(outputPath, ".next/BUILD_ID"))
+              .toString(),
+            warmerConfig: {
+              function: path.join(outputPath, ".open-next", "warmer-function"),
+            },
+          });
+
+          function useServerFunctionPerRouteLoggingInjection() {
+            return `
 if (event.rawPath) {
   const routeData = ${JSON.stringify(
     routes.map(({ regex, logGroupPath }) => ({
@@ -466,13 +463,13 @@ if (event.rawPath) {
     }));
   }
 }`;
-            }
           }
-        );
+        }
+      );
     }
 
     function createRevalidationQueue() {
-      return pulumi.all([experimental]).apply(([experimental]) => {
+      return experimental.apply((experimental) => {
         if (!serverFunction) return;
         if (experimental.disableIncrementalCache) return;
 
@@ -491,14 +488,24 @@ if (event.rawPath) {
           policies: [
             {
               name: "sqs",
-              policy: JSON.stringify({
-                statements: [
-                  {
-                    actions: ["sqs:ReceiveMessage"],
-                    resources: [queue.arn],
-                  },
-                ],
-              }),
+              policy: queue.arn.apply((arn) =>
+                aws.iam
+                  .getPolicyDocument({
+                    statements: [
+                      {
+                        actions: [
+                          "sqs:ChangeMessageVisibility",
+                          "sqs:DeleteMessage",
+                          "sqs:GetQueueAttributes",
+                          "sqs:GetQueueUrl",
+                          "sqs:ReceiveMessage",
+                        ],
+                        resources: [arn],
+                      },
+                    ],
+                  })
+                  .then((doc) => doc.json)
+              ),
             },
           ],
         });
@@ -595,7 +602,7 @@ if (event.rawPath) {
     }
 
     function removeSourcemaps() {
-      return pulumi.all([outputPath]).apply(([outputPath]) => {
+      return outputPath.apply((outputPath) => {
         const files = globSync("**/*.js.map", {
           cwd: path.join(outputPath, ".open-next", "server-function"),
           nodir: true,
@@ -612,125 +619,120 @@ if (event.rawPath) {
     function useRoutes() {
       if (_routes) return _routes;
 
-      _routes = pulumi
-        .all([
+      _routes = all([
+        outputPath,
+        useRoutesManifest(),
+        useAppPathRoutesManifest(),
+        useAppPathsManifest(),
+      ]).apply(
+        ([
           outputPath,
-          useRoutesManifest(),
-          useAppPathRoutesManifest(),
-          useAppPathsManifest(),
-        ])
-        .apply(
-          ([
-            outputPath,
-            routesManifest,
-            appPathRoutesManifest,
-            appPathsManifest,
-          ]) => {
-            return [
-              ...[
-                ...routesManifest.dynamicRoutes,
-                ...routesManifest.staticRoutes,
-              ]
-                .map(({ page, regex }) => {
-                  const cwRoute = buildCloudWatchRouteName(page);
-                  const cwHash = buildCloudWatchRouteHash(page);
-                  const sourcemapPath =
-                    getSourcemapForAppRoute(page) ||
-                    getSourcemapForPagesRoute(page);
-                  return {
-                    route: page,
-                    regex,
-                    logGroupPath: `/${cwHash}${cwRoute}`,
-                    sourcemapPath: sourcemapPath,
-                    sourcemapKey: cwHash,
-                  };
-                })
-                .sort((a, b) => a.route.localeCompare(b.route)),
-              ...(routesManifest.dataRoutes || [])
-                .map(({ page, dataRouteRegex }) => {
-                  const routeDisplayName = page.endsWith("/")
-                    ? `/_next/data/BUILD_ID${page}index.json`
-                    : `/_next/data/BUILD_ID${page}.json`;
-                  const cwRoute = buildCloudWatchRouteName(routeDisplayName);
-                  const cwHash = buildCloudWatchRouteHash(page);
-                  return {
-                    route: routeDisplayName,
-                    regex: dataRouteRegex,
-                    logGroupPath: `/${cwHash}${cwRoute}`,
-                  };
-                })
-                .sort((a, b) => a.route.localeCompare(b.route)),
-            ];
+          routesManifest,
+          appPathRoutesManifest,
+          appPathsManifest,
+        ]) => {
+          return [
+            ...[...routesManifest.dynamicRoutes, ...routesManifest.staticRoutes]
+              .map(({ page, regex }) => {
+                const cwRoute = buildCloudWatchRouteName(page);
+                const cwHash = buildCloudWatchRouteHash(page);
+                const sourcemapPath =
+                  getSourcemapForAppRoute(page) ||
+                  getSourcemapForPagesRoute(page);
+                return {
+                  route: page,
+                  regex,
+                  logGroupPath: `/${cwHash}${cwRoute}`,
+                  sourcemapPath: sourcemapPath,
+                  sourcemapKey: cwHash,
+                };
+              })
+              .sort((a, b) => a.route.localeCompare(b.route)),
+            ...(routesManifest.dataRoutes || [])
+              .map(({ page, dataRouteRegex }) => {
+                const routeDisplayName = page.endsWith("/")
+                  ? `/_next/data/BUILD_ID${page}index.json`
+                  : `/_next/data/BUILD_ID${page}.json`;
+                const cwRoute = buildCloudWatchRouteName(routeDisplayName);
+                const cwHash = buildCloudWatchRouteHash(page);
+                return {
+                  route: routeDisplayName,
+                  regex: dataRouteRegex,
+                  logGroupPath: `/${cwHash}${cwRoute}`,
+                };
+              })
+              .sort((a, b) => a.route.localeCompare(b.route)),
+          ];
 
-            function getSourcemapForAppRoute(page: string) {
-              // Step 1: look up in "appPathRoutesManifest" to find the key with
-              //         value equal to the page
-              // {
-              //   "/_not-found": "/_not-found",
-              //   "/about/page": "/about",
-              //   "/about/profile/page": "/about/profile",
-              //   "/page": "/",
-              //   "/favicon.ico/route": "/favicon.ico"
-              // }
-              const appPathRoute = Object.keys(appPathRoutesManifest).find(
-                (key) => appPathRoutesManifest[key] === page
-              );
-              if (!appPathRoute) return;
+          function getSourcemapForAppRoute(page: string) {
+            // Step 1: look up in "appPathRoutesManifest" to find the key with
+            //         value equal to the page
+            // {
+            //   "/_not-found": "/_not-found",
+            //   "/about/page": "/about",
+            //   "/about/profile/page": "/about/profile",
+            //   "/page": "/",
+            //   "/favicon.ico/route": "/favicon.ico"
+            // }
+            const appPathRoute = Object.keys(appPathRoutesManifest).find(
+              (key) => appPathRoutesManifest[key] === page
+            );
+            if (!appPathRoute) return;
 
-              // Step 2: look up in "appPathsManifest" to find the file with key equal
-              //         to the page
-              // {
-              //   "/_not-found": "app/_not-found.js",
-              //   "/about/page": "app/about/page.js",
-              //   "/about/profile/page": "app/about/profile/page.js",
-              //   "/page": "app/page.js",
-              //   "/favicon.ico/route": "app/favicon.ico/route.js"
-              // }
-              const filePath = appPathsManifest[appPathRoute];
-              if (!filePath) return;
+            // Step 2: look up in "appPathsManifest" to find the file with key equal
+            //         to the page
+            // {
+            //   "/_not-found": "app/_not-found.js",
+            //   "/about/page": "app/about/page.js",
+            //   "/about/profile/page": "app/about/profile/page.js",
+            //   "/page": "app/page.js",
+            //   "/favicon.ico/route": "app/favicon.ico/route.js"
+            // }
+            const filePath = appPathsManifest[appPathRoute];
+            if (!filePath) return;
 
-              // Step 3: check the .map file exists
-              const sourcemapPath = path.join(
-                outputPath,
-                ".next",
-                "server",
-                `${filePath}.map`
-              );
-              if (!fs.existsSync(sourcemapPath)) return;
+            // Step 3: check the .map file exists
+            const sourcemapPath = path.join(
+              outputPath,
+              ".next",
+              "server",
+              `${filePath}.map`
+            );
+            if (!fs.existsSync(sourcemapPath)) return;
 
-              return sourcemapPath;
-            }
-
-            function getSourcemapForPagesRoute(page: string) {
-              // Step 1: look up in "pathsManifest" to find the file with key equal
-              //         to the page
-              // {
-              //   "/_app": "pages/_app.js",
-              //   "/_error": "pages/_error.js",
-              //   "/404": "pages/404.html",
-              //   "/api/hello": "pages/api/hello.js",
-              //   "/api/auth/[...nextauth]": "pages/api/auth/[...nextauth].js",
-              //   "/api/next-auth-restricted": "pages/api/next-auth-restricted.js",
-              //   "/": "pages/index.js",
-              //   "/ssr": "pages/ssr.js"
-              // }
-              const pagesManifest = usePagesManifest();
-              const filePath = pagesManifest[page];
-              if (!filePath) return;
-
-              // Step 2: check the .map file exists
-              const sourcemapPath = path.join(
-                outputPath,
-                ".next",
-                "server",
-                `${filePath}.map`
-              );
-              if (!fs.existsSync(sourcemapPath)) return;
-
-              return sourcemapPath;
-            }
+            return sourcemapPath;
           }
-        );
+
+          function getSourcemapForPagesRoute(page: string) {
+            // Step 1: look up in "pathsManifest" to find the file with key equal
+            //         to the page
+            // {
+            //   "/_app": "pages/_app.js",
+            //   "/_error": "pages/_error.js",
+            //   "/404": "pages/404.html",
+            //   "/api/hello": "pages/api/hello.js",
+            //   "/api/auth/[...nextauth]": "pages/api/auth/[...nextauth].js",
+            //   "/api/next-auth-restricted": "pages/api/next-auth-restricted.js",
+            //   "/": "pages/index.js",
+            //   "/ssr": "pages/ssr.js"
+            // }
+            const pagesManifest = usePagesManifest();
+            const filePath = pagesManifest[page];
+            if (!filePath) return;
+
+            // Step 2: check the .map file exists
+            const sourcemapPath = path.join(
+              outputPath,
+              ".next",
+              "server",
+              `${filePath}.map`
+            );
+            if (!fs.existsSync(sourcemapPath)) return;
+
+            return sourcemapPath;
+          }
+        }
+      );
 
       return _routes;
     }
@@ -738,7 +740,7 @@ if (event.rawPath) {
     function useRoutesManifest() {
       if (routesManifest) return routesManifest;
 
-      return pulumi.all([outputPath]).apply(([outputPath]) => {
+      return outputPath.apply((outputPath) => {
         try {
           const content = fs
             .readFileSync(path.join(outputPath, ".next/routes-manifest.json"))
@@ -757,7 +759,7 @@ if (event.rawPath) {
     function useAppPathRoutesManifest() {
       if (appPathRoutesManifest) return appPathRoutesManifest;
 
-      appPathRoutesManifest = pulumi.all([outputPath]).apply(([outputPath]) => {
+      appPathRoutesManifest = outputPath.apply((outputPath) => {
         try {
           const content = fs
             .readFileSync(
@@ -775,7 +777,7 @@ if (event.rawPath) {
     function useAppPathsManifest() {
       if (appPathsManifest) return appPathsManifest;
 
-      appPathsManifest = pulumi.all([outputPath]).apply(([outputPath]) => {
+      appPathsManifest = outputPath.apply((outputPath) => {
         try {
           const content = fs
             .readFileSync(
@@ -793,7 +795,7 @@ if (event.rawPath) {
     function usePagesManifest() {
       if (pagesManifest) return pagesManifest;
 
-      pagesManifest = pulumi.all([outputPath]).apply(([outputPath]) => {
+      pagesManifest = outputPath.apply((outputPath) => {
         try {
           const content = fs
             .readFileSync(
@@ -811,7 +813,7 @@ if (event.rawPath) {
     function usePrerenderManifest() {
       if (prerenderManifest) return prerenderManifest;
 
-      return pulumi.all([outputPath]).apply(([outputPath]) => {
+      return outputPath.apply((outputPath) => {
         try {
           const content = fs
             .readFileSync(
@@ -845,7 +847,7 @@ if (event.rawPath) {
 
       // TODO create log group and reference log group arn
       const policy = new aws.iam.Policy(`${name}-disable-logging-policy`, {
-        policy: pulumi.interpolate`{
+        policy: interpolate`{
             "Version": "2012-10-17",
             "Statement": [
               {
@@ -875,13 +877,13 @@ if (event.rawPath) {
     function uploadSourcemaps() {
       if (!serverFunction) return;
 
-      pulumi.all([useRoutes()]).apply(([routes]) => {
+      useRoutes().apply((routes) => {
         routes.forEach(({ sourcemapPath, sourcemapKey }) => {
           if (!sourcemapPath || !sourcemapKey) return;
 
           new aws.s3.BucketObject(`${name}-sourcemap-${sourcemapKey}`, {
             bucket: app.bootstrap.bucket,
-            source: new pulumi.asset.FileAsset(sourcemapPath),
+            source: new asset.FileAsset(sourcemapPath),
             key: serverFunction!.aws.function.arn.apply((arn) =>
               path.join(arn, sourcemapKey)
             ),
