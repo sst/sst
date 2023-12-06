@@ -1,5 +1,11 @@
 # astro-sst
 
+## 2.37.2
+
+### Patch Changes
+
+- [#3559](https://github.com/sst/sst/pull/3559) [`4d7d69d4e`](https://github.com/sst/sst/commit/4d7d69d4e8ce1f98ea307d0db49721f4b5d27a90) Thanks [@bayssmekanique](https://github.com/bayssmekanique)! - astro-sst: support Starlight
+
 ## 2.37.1
 
 ### Patch Changes
