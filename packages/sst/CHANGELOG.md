@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.38.0
+
+### Minor Changes
+
+- [`428810411`](https://github.com/sst/sst/commit/428810411332775d64a051d6a65ddae8fd54c258) Thanks [@fwang](https://github.com/fwang)! - Service: require port to be set
+
 ## 2.37.2
 
 ## 2.37.1

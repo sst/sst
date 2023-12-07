@@ -1,5 +1,11 @@
 # @serverless-stack/docs
 
+## 2.10.0
+
+### Minor Changes
+
+- [`428810411`](https://github.com/sst/sst/commit/428810411332775d64a051d6a65ddae8fd54c258) Thanks [@fwang](https://github.com/fwang)! - Service: require port to be set
+
 ## 2.9.2
 
 ### Patch Changes
