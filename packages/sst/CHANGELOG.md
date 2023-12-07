@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.38.3
+
+### Patch Changes
+
+- [`50fff51f5`](https://github.com/sst/sst/commit/50fff51f5095ce78969c85059bebf091fe7860c7) Thanks [@thdxr](https://github.com/thdxr)! - AstroSite: fix duplicate cf function
+
 ## 2.38.2
 
 ### Patch Changes
