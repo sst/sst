@@ -43,50 +43,49 @@ export class AstroSite extends SsrSite {
     return JSON.parse(readFileSync(filePath, "utf-8")) as BuildMetaConfig;
   }
 
+  /**
+   * The purpose of the `getCFRoutingFunction` method is to generate a CloudFront function that mimics functionality often offered by
+   * full featured web servers. This function will perform redirects and rewrites based on the routes defined by the Astro build.
+   * 
+   * This has been optimized as much as the current implementation allows. The next step in optimization would be to break
+   * the routes list into a btree based on the route pattern. This would allow for a much faster lookup of the route that matches.
+   */
   private static getCFRoutingFunction({
     routes,
     pageResolution,
   }: BuildMetaConfig) {
-    const serializedRoutes = routes.map((route) => ({
-      rt: route.route,
-      pt: new RegExp(route.pattern),
-      t: route.type[1],
-      pr: route.prerender === true ? true : undefined,
-      rp: route.redirectPath,
-      rs: route.redirectStatus,
-    }));
-    function objectToString(obj: any) {
-      return `{ ${Object.entries(obj)
-        .filter(([_, value]) => value !== undefined)
-        .map(
-          ([key, value]) =>
-            `${key}: ${typeof value === "string" ? `'${value}'` : value}`
-        )
-        .join(", ")} }`;
-    }
+    const serializedRoutes =
+      "[" +
+      routes
+        .map((route) => {
+          if (
+            route.type === "redirect" ||
+            (route.type === "page" && route.prerender === true)
+          ) {
+            return `{p:${route.pattern}${
+              route.type === "page"
+                ? `,t:0`
+                : route.type === "redirect"
+                ? `,t:1`
+                : ""
+            }${route.prerender === true ? `,r:1` : ``}${
+              route.redirectPath ? `,h:"${route.redirectPath}"` : ""
+            }${
+              route.redirectStatus && route.redirectStatus !== 308
+                ? `,s:${route.redirectStatus}`
+                : ""
+            }}`;
+          }
+        })
+        .filter(compressedRoute => compressedRoute)
+        .join(",") +
+      "]";
 
-    return `
-  var routes = [${serializedRoutes.map(objectToString).join(", ")}]
-  var match = routes.find((route) => route.pt.test(request.uri));
-  if (match) {
-    if (match.t === "r") {
-      var redirectPath = match.rp;
-      (match.pt.exec(request.uri) || []).forEach((match, index) => {
-        redirectPath = redirectPath.replace(\`\\\${\${index}}\`, match)
-      });
-      return {
-        statusCode: match.rs || 308,
-        headers: { location: { value: redirectPath } },
-      };
-    } else if (match.t === "p" && match.pr) {
-      ${
+    return `var x = ${serializedRoutes}.find((y)=>y.p.test(request.uri));if(x){if(x.t===1){var w=x.h;x.p.exec(request.uri).forEach((k,l)=>{w=w.replace(\`\\\${\${l}}\`,k);});return {statusCode:x.s||308,headers:{location:{value:w}},};}else if(x.t===0&&x.r){${
         pageResolution === "file"
-          ? `request.uri = request.uri === "/" ? "/index.html" : request.uri.replace(/\\/?$/, ".html");`
-          : `request.uri = request.uri.replace(/\\/?$/, "/index.html");`
-      }
-    }
-  }
-`;
+          ? `request.uri=request.uri==="/"?"/index.html":request.uri.replace(/\\/?$/,".html");`
+          : `request.uri=request.uri.replace(/\\/?$/,"/index.html");`
+      }}}`;
   }
 
   protected plan() {
