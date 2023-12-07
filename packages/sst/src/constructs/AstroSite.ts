@@ -212,6 +212,7 @@ export class AstroSite extends SsrSite {
             (route) =>
               ({
                 cacheType: "server",
+                cfFunction: "serverCfFunction",
                 pattern: route,
                 origin: "regionalServer",
               } as const)
