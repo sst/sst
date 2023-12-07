@@ -16,6 +16,7 @@ import { Service } from "sst/constructs";
 
 new Service(stack, "MyService", {
   path: "./service",
+  port: 3000,
 });
 ```
 
@@ -105,6 +106,7 @@ Fargate [supports a variety of CPU and memory combinations](https://docs.aws.ama
 ```js
 new Service(stack, "MyService", {
   path: "./service",
+  port: 3000,
   cpu: "2 vCPU",
   memory: "8 GB",
 });
@@ -115,6 +117,7 @@ You may also configure the [amount of ephemeral storage allocated to the task](h
 ```js
 new Service(stack, "MyService", {
   path: "./service",
+  port: 3000,
   storage: "100 GB",
 });
 ```
@@ -137,6 +140,7 @@ To configure it:
 ```js
 new Service(stack, "MyService", {
   path: "./service",
+  port: 3000,
   scaling: {
     minContainers: 4,
     maxContainers: 16,
@@ -156,6 +160,7 @@ You can configure the service with a custom domain hosted either on [Route 53](h
 ```js {3}
 new Service(stack, "MyService", {
   path: "./service",
+  port: 3000,
   customDomain: "my-app.com",
 });
 ```
@@ -167,6 +172,7 @@ You can also configure an alias domain to point to the main domain. For instance
 ```js {5}
 new Service(stack, "MyServiceSite", {
   path: "./service",
+  port: 3000,
   customDomain: {
     domainName: "my-app.com",
     domainAlias: "www.my-app.com",
@@ -185,6 +191,7 @@ const bucket = new Bucket(stack, "Uploads");
 
 new Service(stack, "MyService", {
   path: "./service",
+  port: 3000,
   bind: [bucket],
 });
 ```
@@ -208,6 +215,7 @@ If you don't want your service to be publicly accessible, create a private servi
 ```ts
 new Service(stack, "MyService", {
   path: "./service",
+  port: 3000,
   cdk: {
     applicationLoadBalancer: false,
     cloudfrontDistribution: false,
@@ -234,6 +242,7 @@ The generated `.nixpacks` directory should be added to your `.gitignore` file.
 ```js
 new Service(stack, "MyService", {
   path: "./service",
+  port: 3000,
 });
 ```
 
@@ -242,6 +251,7 @@ new Service(stack, "MyService", {
 ```js
 new Service(stack, "MyService", {
   path: "./service",
+  port: 3000,
   file: "path/to/Dockerfile.prod",
 });
 ```
@@ -252,6 +262,7 @@ new Service(stack, "MyService", {
 import { ContainerImage } from "aws-cdk-lib/aws-ecs";
 
 const service = new Service(stack, "MyService", {
+  port: 3000,
   cdk: {
     container: {
       image: ContainerImage.fromRegistry(
@@ -274,6 +285,7 @@ Here's an example of passing build args to the docker build command.
 ```js {4-6}
 new Service(stack, "MyService", {
   path: "./service",
+  port: 3000,
   build: {
     buildArgs: {
       FOO: "bar"
@@ -289,6 +301,7 @@ The Service construct creates a CloudWatch log group to store the logs. By defau
 ```js
 new Service(stack, "MyService", {
   path: "./service",
+  port: 3000,
   logRetention: "one_week",
 });
 ```
@@ -320,6 +333,7 @@ Here's an example of configuring the circuit breaker for the Fargate service.
 ```js
 new Service(stack, "MyService", {
   path: "./service",
+  port: 3000,
   cdk: {
     fargateService: {
       circuitBreaker: { rollback: true },
@@ -337,6 +351,7 @@ import { Duration } from "aws-cdk-lib/core";
 
 new Service(stack, "MyService", {
   path: "./service",
+  port: 3000,
   cdk: {
     container: {
       healthCheck: {
@@ -360,6 +375,7 @@ import { SubnetType, Vpc } from "aws-cdk-lib/aws-ec2";
 
 new Service(stack, "MyService", {
   path: "./service",
+  port: 3000,
   cdk: {
     applicationLoadBalancer: {
       vpcSubnets: { subnetType: SubnetType.PUBLIC }
@@ -380,6 +396,7 @@ import { Duration } from "aws-cdk-lib/core";
 
 new Service(stack, "MyService", {
   path: "./service",
+  port: 3000,
   cdk: {
     applicationLoadBalancerTargetGroup: {
       healthCheck: {
@@ -398,6 +415,7 @@ import { Vpc } from "aws-cdk-lib/aws-ec2";
 
 new Service(stack, "MyService", {
   path: "./service",
+  port: 3000,
   cdk: {
     vpc: Vpc.fromLookup(stack, "VPC", {
       vpcId: "vpc-xxxxxxxxxx",
