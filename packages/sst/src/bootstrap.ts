@@ -30,7 +30,6 @@ import {
 } from "aws-cdk-lib/aws-s3";
 import { useProject } from "./project.js";
 import { createSpinner } from "./cli/spinner.js";
-import { Context } from "./context/context.js";
 import {
   useAWSClient,
   useAWSCredentials,

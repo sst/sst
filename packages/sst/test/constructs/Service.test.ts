@@ -19,12 +19,15 @@ import { HttpVersion } from "aws-cdk-lib/aws-cloudfront";
 const servicePath = "test/constructs/service";
 
 async function createService(
-  props?: ServiceProps | ((stack: Stack) => ServiceProps)
+  props?:
+    | (Omit<ServiceProps, "port"> & { port?: number })
+    | ((stack: Stack) => Omit<ServiceProps, "port"> & { port?: number })
 ) {
   const app = await createApp();
   const stack = new Stack(app, "stack");
   const service = new Service(stack, "Service", {
     path: servicePath,
+    port: 3000,
     ...(typeof props === "function" ? props(stack) : props),
   });
   await app.finish();
@@ -250,16 +253,35 @@ test("memory invalid", async () => {
   }).rejects.toThrow(/only the following "memory" settings/);
 });
 
-test("port undefined", async () => {
+test("storage undefined", async () => {
   const { stack } = await createService({});
   hasResource(stack, "AWS::ECS::TaskDefinition", {
-    ContainerDefinitions: [
-      objectLike({
-        PortMappings: [{ ContainerPort: 3000, Protocol: "tcp" }],
-      }),
-    ],
+    EphemeralStorage: ABSENT,
   });
 });
+test("storage default 20", async () => {
+  const { stack } = await createService({ storage: "20 GB" });
+  hasResource(stack, "AWS::ECS::TaskDefinition", {
+    EphemeralStorage: ABSENT,
+  });
+});
+test("storage defined", async () => {
+  const { stack } = await createService({ storage: "100 GB" });
+  hasResource(stack, "AWS::ECS::TaskDefinition", {
+    EphemeralStorage: objectLike({ SizeInGiB: 100 }),
+  });
+});
+test("storage invalid too large", async () => {
+  expect(async () => {
+    await createService({ storage: "201 GB" });
+  }).rejects.toThrow(/the supported value for storage/);
+});
+test("storage invalid too small", async () => {
+  expect(async () => {
+    await createService({ storage: "19 GB" });
+  }).rejects.toThrow(/the supported value for storage/);
+});
+
 test("port defined", async () => {
   const { service, stack } = await createService({
     port: 8080,
@@ -642,6 +664,7 @@ test("sst deploy inactive stack", async () => {
   const stack = new Stack(app, "stack");
   const service = new Service(stack, "Service", {
     path: servicePath,
+    port: 3000,
   });
   await app.finish();
   expect(service.url).toBeUndefined();
@@ -657,6 +680,7 @@ test("sst dev: dev.url undefined", async () => {
   const stack = new Stack(app, "stack");
   const service = new Service(stack, "Service", {
     path: servicePath,
+    port: 3000,
   });
   await app.finish();
   expect(service.url).toBeUndefined();
@@ -671,6 +695,7 @@ test("sst dev: dev.url string", async () => {
   const stack = new Stack(app, "stack");
   const service = new Service(stack, "Service", {
     path: servicePath,
+    port: 3000,
     dev: {
       url: "localhost:3000",
     },
@@ -683,6 +708,7 @@ test("sst dev: disablePlaceholder true", async () => {
   const stack = new Stack(app, "stack");
   const service = new Service(stack, "Service", {
     path: servicePath,
+    port: 3000,
     dev: {
       deploy: true,
     },
@@ -699,6 +725,7 @@ test("sst remove", async () => {
   const stack = new Stack(app, "stack");
   const service = new Service(stack, "Service", {
     path: servicePath,
+    port: 3000,
   });
   await app.finish();
   expect(service.url).toBeUndefined();

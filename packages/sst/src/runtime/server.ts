@@ -1,4 +1,3 @@
-import { Context } from "../context/context.js";
 import express from "express";
 import { Events, useBus } from "../bus.js";
 import { Logger } from "../logger.js";

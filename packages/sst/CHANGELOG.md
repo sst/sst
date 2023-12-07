@@ -1,5 +1,52 @@
 # @serverless-stack/cli2
 
+## 2.38.0
+
+### Minor Changes
+
+- [`428810411`](https://github.com/sst/sst/commit/428810411332775d64a051d6a65ddae8fd54c258) Thanks [@fwang](https://github.com/fwang)! - Service: require port to be set
+
+## 2.37.2
+
+## 2.37.1
+
+### Patch Changes
+
+- [#3493](https://github.com/sst/sst/pull/3493) [`d5d31fdda`](https://github.com/sst/sst/commit/d5d31fddae14a2948a9b8da4b9894044eeaa6b78) Thanks [@bayssmekanique](https://github.com/bayssmekanique)! - AstroSite: add sharp image processing
+
+- [#3542](https://github.com/sst/sst/pull/3542) [`bafb2a05c`](https://github.com/sst/sst/commit/bafb2a05cf1734437b32aa0713fc7edd4fc24f10) Thanks [@omikader](https://github.com/omikader)! - Service: support configuration of ephemeral storage
+
+- [#3556](https://github.com/sst/sst/pull/3556) [`4b795b815`](https://github.com/sst/sst/commit/4b795b8156f722a57c7dc81e3522e13dd1d9de78) Thanks [@TheUncharted](https://github.com/TheUncharted)! - Add Apple adapter to index file
+
+- [`ce2944150`](https://github.com/sst/sst/commit/ce2944150ee2c920646c8ca1f5edbe13ad449b21) Thanks [@fwang](https://github.com/fwang)! - Sites: check missing domainName in customDomain
+
+## 2.37.0
+
+### Minor Changes
+
+- [#3539](https://github.com/sst/sst/pull/3539) [`4533f9f11`](https://github.com/sst/sst/commit/4533f9f11ad87aeee51580784017d3fddec6a36a) Thanks [@berenddeboer](https://github.com/berenddeboer)! - refactor: skip logging ResponseURL as this contains an IAM access id
+
+### Patch Changes
+
+- [#3461](https://github.com/sst/sst/pull/3461) [`8da51f1b4`](https://github.com/sst/sst/commit/8da51f1b444f2449565a90816d45f5911ab567bc) Thanks [@justindra](https://github.com/justindra)! - fix future/auth to allow session.use using binding on other apis
+
+- [#3533](https://github.com/sst/sst/pull/3533) [`d4bc8e532`](https://github.com/sst/sst/commit/d4bc8e532810cdc8737b747e97ad08bf6de4c0b5) Thanks [@KONFeature](https://github.com/KONFeature)! - Remove unused import of `context/context.ts`
+  Replace export of `context.ts` by `context2.ts` in sst/src/context
+  Remove unused file `context/context.ts`
+  This will fix caching issue encountered by anyone using / building custom hooks
+
+- [#3547](https://github.com/sst/sst/pull/3547) [`b6e433325`](https://github.com/sst/sst/commit/b6e4333258293d54edbdb17df09cdc1e66f1f98e) Thanks [@TheUncharted](https://github.com/TheUncharted)! - Add AppleAdapter for future auth
+
+- [`f78f408a6`](https://github.com/sst/sst/commit/f78f408a6f9bc6392bb85b6d0e6ae1c05eaee7ad) Thanks [@thdxr](https://github.com/thdxr)! - astrosite: inline regex
+
+- [#3540](https://github.com/sst/sst/pull/3540) [`0f60b635c`](https://github.com/sst/sst/commit/0f60b635c0dbc8fe31c41b5bdee547916228f6c3) Thanks [@zvictor](https://github.com/zvictor)! - fix EISDIR error
+
+## 2.36.8
+
+### Patch Changes
+
+- [`c17c1cf92`](https://github.com/sst/sst/commit/c17c1cf92bdf5ebd7d9ece32077cd1c55b12a4c0) Thanks [@thdxr](https://github.com/thdxr)! - astro: compress function
+
 ## 2.36.7
 
 ### Patch Changes

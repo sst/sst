@@ -1,6 +1,5 @@
 import { useBus } from "../../../bus.js";
 import { RDSMetadata } from "../../../constructs/Metadata.js";
-import { Context } from "../../../context/context.js";
 import {
   RDSDataClient,
   ExecuteStatementCommand,

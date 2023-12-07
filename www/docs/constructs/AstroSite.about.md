@@ -676,6 +676,75 @@ if (!app.local) {
 }
 ```
 
+#### Using an image processing layer like Sharp
+
+By default, Astro deployments relying on the [Sharp](https://sharp.pixelplumbing.com/) library use a bundled version of the library. This bundle is very large which can cause the startup time of the SSR Lambda function to be slower. Utilizing a [Lambda layer](https://docs.aws.amazon.com/lambda/latest/dg/chapter-layers.html) can help reduce the size of the SSR Lambda function and improve startup time.
+
+To use a Lambda layer, you must first create or download a layer containing the Sharp library, and place the layer directory or ZIP in your project.
+Recommended pre-built Sharp layer repositories: [ph200/sharp-layer](https://github.com/pH200/sharp-layer), [Umkus/lambda-layer-sharp](https://github.com/Umkus/lambda-layer-sharp)
+
+```
+// Example directory structure with full Sharp layer
+my-sst-app
+├─ sst.config.ts
+├─ astro.config.mjs
+├─ src
+├─ layers
+│  └─ sharp
+│     └─ nodejs
+│        └─ node_modules
+│           └─ sharp
+```
+
+or
+
+```
+// Example directory structure with Sharp layer ZIP
+my-sst-app
+├─ sst.config.ts
+├─ astro.config.mjs
+├─ src
+├─ layers
+│  └─ sharp.zip
+```
+
+Then, you can specify the layer in the `sst.config.ts` file, and ensure the library is excluded from the code bundle.
+
+```ts
+import { aws_lambda } from 'aws-cdk-lib'
+import { AstroSite } from 'sst/constructs'
+
+const site = new AstroSite(stack, "Site", {
+  path: "my-astro-app/",
+  memorySize: '1024 MB',
+  nodejs: {
+    esbuild: {
+      external: ['sharp'] // Ensures Sharp is excluded from the code bundle.
+    }
+  },
+  cdk: {
+    server: {
+      layers: [
+        new aws_lambda.LayerVersion(this, 'sharp', {
+          /**
+           * This is a prebuilt layer for sharp.
+           * Source: https://github.com/pH200/sharp-layer
+           */
+          code: aws_lambda.Code.fromAsset('./layers/sharp.zip'),
+          compatibleRuntimes: [aws_lambda.Runtime.NODEJS_18_X],
+          compatibleArchitectures: [aws_lambda.Architecture.ARM_64]
+        })
+      ]
+    },
+  },
+});
+
+```
+
+:::note
+Lambda layers are not supported by Lambda@Edge, so `edge` deployments should continue to the use the bundled version of Sharp.
+:::
+
 ## Common Errors
 
 ### CloudFront 403 Error - The request could not be satisfied.
