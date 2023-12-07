@@ -492,7 +492,7 @@ function renderProperties(file, files, properties, prefix, onlyPublic) {
       signature.comment ||
       signature.type?.declaration?.signatures?.[0]?.comment;
     if (comment) {
-      const def = comment.modifierTags?.find((x) => x.tag === "@default");
+      const def = comment.blockTags?.find((x) => x.tag === "@default");
       if (def)
         lines.push(
           `_Default_ : <span class="mono">${def.content[0].text.trim()}</span>\n`
