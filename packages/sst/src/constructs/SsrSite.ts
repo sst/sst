@@ -523,7 +523,8 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
   protected doNotDeploy: boolean;
   protected bucket: Bucket;
   protected serverFunction?: EdgeFunction | SsrFunction | SsrContainer;
-  protected serverFunctions: (SsrFunction | EdgeFunction | SsrContainer)[] = [];
+  protected serverFunctions: (SsrFunction | SsrContainer)[] = [];
+  protected edgeFunctions: Record<string, EdgeFunction> = {};
   private serverFunctionForDev?: SsrFunction;
   private edge?: boolean;
   private distribution: Distribution;
@@ -613,7 +614,8 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
 
     this.bucket = bucket;
     this.distribution = distribution;
-    this.serverFunctions = [...ssrFunctions, ...Object.values(edgeFunctions)];
+    this.serverFunctions = [...ssrFunctions];
+    this.edgeFunctions = { ...edgeFunctions };
     this.serverFunction = ssrFunctions[0] ?? Object.values(edgeFunctions)[0];
     this.edge = plan.edge;
 
@@ -1009,7 +1011,7 @@ function handler(event) {
     function createContainerOrigin(props: ContainerOriginConfig) {
       const container = new SsrContainer(self, props.constructId, {
         memory: "1 GB",
-        bind, 
+        bind: [], 
         permissions,
         ...props.container,
         environment: {

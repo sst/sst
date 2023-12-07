@@ -13,9 +13,10 @@ import {
   Code,
   Runtime,
   Function as CdkFunction,
-  FunctionProps,
+  FunctionProps as CdkFunctionProps,
   Architecture,
   LayerVersion,
+  IFunction,
 } from "aws-cdk-lib/aws-lambda";
 import {
   AttributeType,
@@ -35,9 +36,10 @@ import { VisibleError } from "../error.js";
 import { CachePolicyProps } from "aws-cdk-lib/aws-cloudfront";
 import { SsrFunction } from "./SsrFunction.js";
 import { Asset } from "aws-cdk-lib/aws-s3-assets";
-import { useFunctions } from "./Function.js";
+import { useFunctions, FunctionProps } from "./Function.js";
 import { useDeferredTasks } from "./deferred_task.js";
-import { Logger } from "../logger.js";type BaseFunction = {
+import { Logger } from "../logger.js";import { SsrContainer, SsrContainerProps } from "./SsrContainer.js";
+type BaseFunction = {
   handler: string;
   bundle: string;
 };
@@ -99,7 +101,43 @@ interface OpenNextOutput<
   };
 }
 
-export interface NextjsSiteProps extends Omit<SsrSiteProps, "nodejs"> {
+// Just a subset of the original OpenNextConfig, only needed for properly typing
+interface OpenNextFnProps<Override extends {
+  generateDockerfile?: boolean;
+} = {}> {
+  override?: Override;
+  placement?: "global" | "regional";
+}
+interface OpenNextConfig<SplittedFn extends Record<string, OpenNextFnProps> = Record<string, OpenNextFnProps>> {
+  default: OpenNextFnProps;
+  functions?: SplittedFn;
+  middleware?: {
+    external: true;
+  }
+}
+
+type InterpolatedCdkProp<T extends OpenNextFnProps> = T extends { override: { generateDockerfile: true } } ?  
+  ContainerOriginConfig['container']: 
+  Omit<FunctionOriginConfig['function'], "handler" | "bundle">;
+
+type InterpolatedCdkProps<T extends OpenNextConfig> = {
+  [K in keyof T['functions']]?: T['functions'] extends Record<string, OpenNextFnProps> ? InterpolatedCdkProp<T['functions'][K]> : never
+} & {
+  default?: InterpolatedCdkProp<T['default']>;
+  middleware?: InterpolatedCdkProp<{}>;
+}
+
+type InterpolatedCdkOutput<T extends OpenNextFnProps> = T extends { override: { generateDockerfile: true } } ?
+  SsrContainer["cdk"] :
+  CdkFunction
+
+type InterpolatedCdkOutputs<T extends OpenNextConfig> = {
+  [K in keyof T["functions"]]: T['functions'] extends Record<string, OpenNextFnProps> ? InterpolatedCdkOutput<T["functions"][K]> : never
+} & {
+  default: InterpolatedCdkOutput<T["default"]>;
+}
+
+export interface NextjsSiteProps<ONConfig extends OpenNextConfig> extends Omit<SsrSiteProps, "nodejs"> {
   /**
    * OpenNext version for building the Next.js site.
    * @default Latest OpenNext version
@@ -139,7 +177,7 @@ export interface NextjsSiteProps extends Omit<SsrSiteProps, "nodejs"> {
     memorySize?: number | Size;
   };
   cdk?: SsrSiteProps["cdk"] & {
-    revalidation?: Pick<FunctionProps, "vpc" | "vpcSubnets">;
+    revalidation?: Pick<CdkFunctionProps, "vpc" | "vpcSubnets">;
     /**
      * Override the CloudFront cache policy properties for responses from the
      * server rendering Lambda.
@@ -168,6 +206,9 @@ export interface NextjsSiteProps extends Omit<SsrSiteProps, "nodejs"> {
      * ```
      */
     serverCachePolicy?: NonNullable<SsrSiteProps["cdk"]>["serverCachePolicy"];
+    
+    servers?: InterpolatedCdkProps<ONConfig>;
+
   };
 }
 
@@ -183,7 +224,7 @@ const DEFAULT_CACHE_POLICY_ALLOWED_HEADERS = [
   "x-prerender-revalidate"
 ];
 
-type NextjsSiteNormalizedProps = NextjsSiteProps & SsrSiteNormalizedProps
+type NextjsSiteNormalizedProps<ONConfig extends OpenNextConfig> = NextjsSiteProps<ONConfig> & SsrSiteNormalizedProps
 
 /**
  * The `NextjsSite` construct is a higher level CDK construct that makes it easy to create a Next.js app.
@@ -196,14 +237,14 @@ type NextjsSiteNormalizedProps = NextjsSiteProps & SsrSiteNormalizedProps
  * });
  * ```
  */
-export class NextjsSite extends SsrSite {
-  declare props: NextjsSiteNormalizedProps;
-  private _routes?: ({
+export class NextjsSite<ONConfig extends OpenNextConfig = OpenNextConfig> extends SsrSite {
+  declare props: NextjsSiteNormalizedProps<ONConfig>;
+  private _routes?: {
     route: string;
     logGroupPath: string;
     sourcemapPath?: string;
     sourcemapKey?: string;
-  } & ({ regexMatch: string } | { prefixMatch: string }))[];
+  } & ({ regexMatch: string } | { prefixMatch: string })[];
   private routesManifest?: {
     basePath: string;
     dynamicRoutes: { page: string; regex: string }[];
@@ -219,10 +260,7 @@ export class NextjsSite extends SsrSite {
   };
   private openNextOutput?: OpenNextOutput;
 
-  constructor(scope: Construct, id: string, rawProps?: NextjsSiteProps) {
-
-    const { path: sitePath } = rawProps ?? {};
-
+  constructor(scope: Construct, id: string, rawProps?: NextjsSiteProps<ONConfig>) {
     const props = {
       // Default to combined for now until i figure out how to implement per-route logging
       logging: rawProps?.logging ?? "combined",
@@ -264,8 +302,20 @@ export class NextjsSite extends SsrSite {
     );
   }
 
+  public get regionalServersCdk() {
+    if (this.doNotDeploy) return;
+    const regionalServers = this.serverFunctions.reduce((acc, server) => {
+      return {...acc, [
+        server.function ?
+        server.id.replace("ServerFunction", "") :
+        server.id.replace("ServerContainer", "")
+      ] : server.function ?? server.cdk};
+    }, {} as InterpolatedCdkOutputs<ONConfig>)
+    return regionalServers
+  }
+
   private createFunctionOrigin(fn: OpenNextFunctionOrigin, key: string, bucket: Bucket) : FunctionOriginConfig {
-    const { path: sitePath } = this.props;
+    const { path: sitePath, environment, cdk } = this.props;
     const baseServerConfig = {
       description: "Next.js Server",
       environment: {
@@ -274,6 +324,8 @@ export class NextjsSite extends SsrSite {
         CACHE_BUCKET_REGION: Stack.of(this).region,
       },
     }
+    //@ts-expect-error
+    const functionCdkOverrides = (cdk?.servers?.[key] ?? {}) as InterpolatedCdkProp<{}>;
     return {
       type: "function" as const,
       constructId: `${key}ServerFunction`,
@@ -284,9 +336,11 @@ export class NextjsSite extends SsrSite {
         runtime: "nodejs18.x" as const,
         architecture: Architecture.ARM_64,
         memorySize: 1024,
-        permissions: [
-          "s3"
-        ]
+        environment: {
+          ...environment,
+          ...baseServerConfig.environment,
+        },
+        ...functionCdkOverrides,
       },
       streaming: fn.streaming,
       injections: []
@@ -294,7 +348,7 @@ export class NextjsSite extends SsrSite {
   }
 
   private createEcsOrigin(ecs: OpenNextECSOrigin, key: string, bucket: Bucket): ContainerOriginConfig {
-    const { path: sitePath } = this.props;
+    const {cdk, environment } = this.props;
     const baseServerConfig = {
       environment: {
         CACHE_BUCKET_NAME: bucket.bucketName,
@@ -302,6 +356,8 @@ export class NextjsSite extends SsrSite {
         CACHE_BUCKET_REGION: Stack.of(this).region,
       },
     }
+    //@ts-expect-error
+    const containerCdkOverrides = (cdk?.servers?.[key] ?? {}) as unknown as SsrContainerProps;
     return {
       type: "container" as const,
       constructId: `${key}ServerContainer`,
@@ -315,14 +371,19 @@ export class NextjsSite extends SsrSite {
             }
           }
         },
-        ...baseServerConfig,
+        ...containerCdkOverrides,
+        environment: {
+          ...environment,
+          ...baseServerConfig.environment,
+          ...containerCdkOverrides.environment
+        },
       },
       
     }
   }
 
   private createEdgeOrigin(fn: BaseFunction, key: string, bucket: Bucket) : EdgeFunctionConfig {
-    const { path: sitePath } = this.props;
+    const { path: sitePath, cdk, environment } = this.props;
     const baseServerConfig = {
       environment: {
         CACHE_BUCKET_NAME: bucket.bucketName,
@@ -330,6 +391,8 @@ export class NextjsSite extends SsrSite {
         CACHE_BUCKET_REGION: Stack.of(this).region,
       },
     }
+    //@ts-expect-error
+    const fnCdkOverrides = (cdk?.servers?.[key] ?? {}) as InterpolatedCdkProp<{}>;
     return {
       constructId: `${key}EdgeFunction`,
       function: {
@@ -337,10 +400,12 @@ export class NextjsSite extends SsrSite {
         bundle: path.join(sitePath, fn.bundle),
         runtime: "nodejs18.x" as const,
         memorySize: 1024,
-        permissions: [
-          "s3"
-        ],
-        ...baseServerConfig,
+        environment: {
+          ...environment,
+          ...baseServerConfig.environment,
+          ...fnCdkOverrides.environment
+        },
+        ...fnCdkOverrides,
       },
     }
   }
@@ -356,7 +421,6 @@ export class NextjsSite extends SsrSite {
         `Failed to load ".open-next/output.json" for the "${this.id}" site.`
       );
     }
-    // TODO: add typings for open-next.output.json
     const openNextOutput = JSON.parse(
       fs.readFileSync(openNextOutputPath).toString()
     ) as OpenNextOutput;
@@ -550,7 +614,7 @@ export class NextjsSite extends SsrSite {
               logGroupPrefix: `/sst/lambda/${
                 (this.serverFunction as SsrFunction).functionName
               }`,
-              data: this.useRoutes().map(({ route, logGroupPath }) => ({
+              data: this.useRoutes()?.map(({ route, logGroupPath }) => ({
                 route,
                 logGroupPath,
               })),
