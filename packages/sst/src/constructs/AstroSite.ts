@@ -115,7 +115,7 @@ export class AstroSite extends SsrSite {
           ],
         },
         serverCfFunctionHostOnly: {
-          constructId: "CloudFrontFunction",
+          constructId: "CloudFrontFunctionHostOnly",
           injections: [this.useCloudFrontFunctionHostHeaderInjection()],
         },
       },
