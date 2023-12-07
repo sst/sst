@@ -57,6 +57,7 @@ import {
   FunctionCode as CfFunctionCode,
   FunctionEventType as CfFunctionEventType,
   ErrorResponse,
+  OriginProtocolPolicy,
 } from "aws-cdk-lib/aws-cloudfront";
 import {
   S3Origin,
@@ -94,6 +95,7 @@ import {
 import { useProject } from "../project.js";
 import { VisibleError } from "../error.js";
 import { RetentionDays } from "aws-cdk-lib/aws-logs";
+import { SsrContainer, SsrContainerProps } from "./SsrContainer.js";
 import { transformSync } from "esbuild";
 
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
@@ -107,6 +109,11 @@ export type FunctionOriginConfig = {
   injections?: string[];
   streaming?: boolean;
 };
+export type ContainerOriginConfig = {
+  type: "container";
+  constructId: string;
+  container: SsrContainerProps;
+}
 export type ImageOptimizationFunctionOriginConfig = {
   type: "image-optimization-function";
   function: CdkFunctionProps;
@@ -515,8 +522,8 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
   protected props: SsrSiteNormalizedProps;
   protected doNotDeploy: boolean;
   protected bucket: Bucket;
-  protected serverFunction?: EdgeFunction | SsrFunction;
-  protected serverFunctions: (SsrFunction | EdgeFunction)[] = [];
+  protected serverFunction?: EdgeFunction | SsrFunction | SsrContainer;
+  protected serverFunctions: (SsrFunction | EdgeFunction | SsrContainer)[] = [];
   private serverFunctionForDev?: SsrFunction;
   private edge?: boolean;
   private distribution: Distribution;
@@ -580,7 +587,7 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
     }
 
     let s3DeployCRs: CustomResource[] = [];
-    let ssrFunctions: SsrFunction[] = [];
+    let ssrFunctions: (SsrFunction | SsrContainer)[] = [];
     let singletonUrlSigner: EdgeFunction;
     let singletonCachePolicy: CachePolicy;
     let singletonOriginRequestPolicy: IOriginRequestPolicy;
@@ -770,7 +777,7 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
           CONCURRENCY: warm.toString(),
         },
       });
-      ssrFunctions[0].grantInvoke(warmer);
+      (ssrFunctions[0] as SsrFunction).grantInvoke(warmer);
 
       // Create cron job
       new Rule(self, "WarmerRule", {
@@ -999,6 +1006,28 @@ function handler(event) {
       return s3Origin;
     }
 
+    function createContainerOrigin(props: ContainerOriginConfig) {
+      const container = new SsrContainer(self, props.constructId, {
+        memory: "1 GB",
+        bind, 
+        permissions,
+        ...props.container,
+        environment: {
+          ...environment,
+          ...props.container.environment,
+        }
+      })
+      console.log('Creating container ', container)
+      ssrFunctions.push(container);
+
+      bucket.grantReadWrite(container?.role!);
+
+      return new HttpOrigin(container.cdk?.applicationLoadBalancer?.loadBalancerDnsName!, {
+        protocolPolicy: OriginProtocolPolicy.HTTP_ONLY,
+        readTimeout: CdkDuration.seconds(60),
+      })
+    }
+
     function createFunctionOrigin(props: FunctionOriginConfig) {
       const fn = new SsrFunction(self, props.constructId, {
         runtime,
@@ -1111,6 +1140,9 @@ function handler(event) {
             break;
           case "function":
             origins[name] = createFunctionOrigin(props);
+            break;
+          case "container": 
+            origins[name] = createContainerOrigin(props);
             break;
           case "image-optimization-function":
             origins[name] = createImageOptimizationFunctionOrigin(props);
@@ -1585,6 +1617,7 @@ function handler(event) {
       | ImageOptimizationFunctionOriginConfig
       | S3OriginConfig
       | OriginGroupConfig
+      | ContainerOriginConfig
     >
   >(input: {
     cloudFrontFunctions?: CloudFrontFunctions;

@@ -26,7 +26,7 @@ import { Provider } from "aws-cdk-lib/custom-resources";
 import { Queue } from "aws-cdk-lib/aws-sqs";
 import { SqsEventSource } from "aws-cdk-lib/aws-lambda-event-sources";
 import { Stack } from "./Stack.js";
-import { EdgeFunctionConfig, FunctionOriginConfig, SsrSite, SsrSiteNormalizedProps, SsrSiteProps } from "./SsrSite.js";
+import { ContainerOriginConfig, EdgeFunctionConfig, FunctionOriginConfig, SsrSite, SsrSiteNormalizedProps, SsrSiteProps } from "./SsrSite.js";
 import { Size} from "./util/size.js";
 import { Bucket } from "aws-cdk-lib/aws-s3";
 import { Effect, Policy, PolicyStatement } from "aws-cdk-lib/aws-iam";
@@ -183,9 +183,7 @@ const DEFAULT_CACHE_POLICY_ALLOWED_HEADERS = [
   "x-prerender-revalidate"
 ];
 
-type NextjsSiteNormalizedProps = NextjsSiteProps & SsrSiteNormalizedProps & {
-  openNextOutput: OpenNextOutput;
-};
+type NextjsSiteNormalizedProps = NextjsSiteProps & SsrSiteNormalizedProps
 
 /**
  * The `NextjsSite` construct is a higher level CDK construct that makes it easy to create a Next.js app.
@@ -219,26 +217,16 @@ export class NextjsSite extends SsrSite {
     version: number;
     routes: Record<string, unknown>;
   };
+  private openNextOutput?: OpenNextOutput;
 
   constructor(scope: Construct, id: string, rawProps?: NextjsSiteProps) {
 
     const { path: sitePath } = rawProps ?? {};
-    const openNextOutputPath = path.join(sitePath ?? ".", ".open-next", "open-next.output.json");
-    if (!fs.existsSync(openNextOutputPath)) {
-      throw new VisibleError(
-        `Failed to load ".open-next/output.json" for the "${id}" site.`
-      );
-    }
-    // TODO: add typings for open-next.output.json
-    const openNextOutput = JSON.parse(
-      fs.readFileSync(openNextOutputPath).toString()
-    ) as OpenNextOutput;
 
     const props = {
       // Default to combined for now until i figure out how to implement per-route logging
       logging: rawProps?.logging ?? "combined",
       ...rawProps,
-      openNextOutput
     };
 
     super(scope, id, {
@@ -251,8 +239,8 @@ export class NextjsSite extends SsrSite {
       ...props,
     });
 
-    const disableIncrementalCache = openNextOutput.additionalProps?.disableIncrementalCache ?? false;
-    const disableTagCache = openNextOutput.additionalProps?.disableTagCache ?? false;
+    const disableIncrementalCache = this.openNextOutput?.additionalProps?.disableIncrementalCache ?? false;
+    const disableTagCache = this.openNextOutput?.additionalProps?.disableTagCache ?? false;
 
     this.handleMissingSourcemap();
 
@@ -305,8 +293,43 @@ export class NextjsSite extends SsrSite {
     }
   }
 
+  private createEcsOrigin(ecs: OpenNextECSOrigin, key: string, bucket: Bucket): ContainerOriginConfig {
+    const { path: sitePath } = this.props;
+    const baseServerConfig = {
+      environment: {
+        CACHE_BUCKET_NAME: bucket.bucketName,
+        CACHE_BUCKET_KEY_PREFIX: "_cache",
+        CACHE_BUCKET_REGION: Stack.of(this).region,
+      },
+    }
+    return {
+      type: "container" as const,
+      constructId: `${key}ServerContainer`,
+      container: {
+        memory: "1 GB",
+        path: ecs.bundle,
+        cdk: {
+          "applicationLoadBalancerTargetGroup": {
+            healthCheck: {
+              path: "/__health"
+            }
+          }
+        },
+        ...baseServerConfig,
+      },
+      
+    }
+  }
+
   private createEdgeOrigin(fn: BaseFunction, key: string, bucket: Bucket) : EdgeFunctionConfig {
     const { path: sitePath } = this.props;
+    const baseServerConfig = {
+      environment: {
+        CACHE_BUCKET_NAME: bucket.bucketName,
+        CACHE_BUCKET_KEY_PREFIX: "_cache",
+        CACHE_BUCKET_REGION: Stack.of(this).region,
+      },
+    }
     return {
       constructId: `${key}EdgeFunction`,
       function: {
@@ -316,30 +339,41 @@ export class NextjsSite extends SsrSite {
         memorySize: 1024,
         permissions: [
           "s3"
-        ]
+        ],
+        ...baseServerConfig,
       },
     }
   }
 
   protected plan(bucket: Bucket) {
     const {
-      path: sitePath,
-      openNextOutput
+      path: sitePath
     } = this.props;
 
+    const openNextOutputPath = path.join(sitePath ?? ".", ".open-next", "open-next.output.json");
+    if (!fs.existsSync(openNextOutputPath)) {
+      throw new VisibleError(
+        `Failed to load ".open-next/output.json" for the "${this.id}" site.`
+      );
+    }
+    // TODO: add typings for open-next.output.json
+    const openNextOutput = JSON.parse(
+      fs.readFileSync(openNextOutputPath).toString()
+    ) as OpenNextOutput;
+
     const imageOpt = openNextOutput.origins.imageOptimizer as OpenNextFunctionOrigin;
-    const defaultFn = openNextOutput.origins.default as OpenNextFunctionOrigin;
+    const defaultFn = openNextOutput.origins.default;
     const remainingFns = Object.entries(openNextOutput.origins).filter(([key, value]) => {
       const result = key !== "imageOptimizer" && key !== "default" && key !== "s3";
-      console.log(key, result);
       return result;
-    }) as [string, OpenNextFunctionOrigin][];
+    }) as [string, OpenNextFunctionOrigin | OpenNextECSOrigin][];
 
     const remainingOrigins = remainingFns.reduce((acc, [key, value]) => {
-      acc = {...acc, [key]: this.createFunctionOrigin(value, key, bucket)};
+      acc = {...acc, [key]: 
+        value.type === "ecs" ? this.createEcsOrigin(value, key, bucket) : this.createFunctionOrigin(value, key, bucket)};
       return acc;
     }
-    , {} as Record<string, FunctionOriginConfig>)
+    , {} as Record<string, FunctionOriginConfig | ContainerOriginConfig>)
 
     const edgeFunctions = Object.entries(openNextOutput.edgeFunctions).reduce((acc, [key, value]) => {
       return {...acc, [key]: this.createEdgeOrigin(value, key, bucket)};
@@ -378,7 +412,7 @@ export class NextjsSite extends SsrSite {
             memorySize: 1536,
           }
         },
-        default: this.createFunctionOrigin(defaultFn, "default", bucket),
+        default: defaultFn.type === "ecs" ? this.createEcsOrigin(defaultFn, "default", bucket) : this.createFunctionOrigin(defaultFn, "default", bucket),
         ...remainingOrigins,
 
       },
@@ -526,6 +560,7 @@ export class NextjsSite extends SsrSite {
     };
   }
 
+  // Should be useless now since we copy only the necessary files
   private removeSourcemaps() {
     const { path: sitePath } = this.props;
     const files = globSync("**/*.js.map", {
