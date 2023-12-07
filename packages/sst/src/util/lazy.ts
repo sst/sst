@@ -3,7 +3,7 @@ export function lazy<T>(callback: () => T) {
   let result: T;
 
   return () => {
-    if (!loaded) {
+    if (!loaded || process.env.SST_RESET_LAZY) {
       result = callback();
       loaded = true;
     }
