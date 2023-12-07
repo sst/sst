@@ -157,7 +157,7 @@ new Service(stack, "MyService", {
 
 You can configure the service with a custom domain hosted either on [Route 53](https://aws.amazon.com/route53/) or [externally](#configuring-externally-hosted-domain).
 
-```js {3}
+```js
 new Service(stack, "MyService", {
   path: "./service",
   port: 3000,
@@ -169,7 +169,7 @@ Note that visitors to `http://` will be redirected to `https://`.
 
 You can also configure an alias domain to point to the main domain. For instance, to set up `www.my-app.com` to redirect to `my-app.com`:
 
-```js {5}
+```js
 new Service(stack, "MyServiceSite", {
   path: "./service",
   port: 3000,
@@ -186,7 +186,7 @@ new Service(stack, "MyServiceSite", {
 
 SST makes it very easy for your `Service` construct to access other resources in your AWS account. If you have an S3 bucket created using the [`Bucket`](../constructs/Bucket.md) construct, you can bind it to your app.
 
-```ts {5}
+```ts
 const bucket = new Bucket(stack, "Uploads");
 
 new Service(stack, "MyService", {
@@ -198,7 +198,7 @@ new Service(stack, "MyService", {
 
 This will attach the necessary IAM permissions and allow your app to access the bucket via the typesafe [`sst/node`](../clients/index.md) client.
 
-```ts {4}
+```ts
 import { Bucket } from "sst/node/bucket";
 
 console.log(Bucket.Uploads.bucketName);
@@ -282,7 +282,7 @@ service.cdk?.taskDefinition.executionRole?.addManagedPolicy({
 
 Here's an example of passing build args to the docker build command.
 
-```js {4-6}
+```js
 new Service(stack, "MyService", {
   path: "./service",
   port: 3000,
