@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.38.1
+
+### Patch Changes
+
+- [`12baa36d5`](https://github.com/sst/sst/commit/12baa36d5d233c62726fcc7a1b88d2e7b7585203) Thanks [@thdxr](https://github.com/thdxr)! - AstroSite: include cf function for server routes
+
 ## 2.38.0
 
 ### Minor Changes
