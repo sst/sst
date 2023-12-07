@@ -1,15 +1,11 @@
-
+import querystring from 'node:querystring';
 import { generators, Issuer } from 'openid-client';
 
-import {
-    useBody, useCookie, useDomainName, usePathParam, useQueryParams, useResponse
-} from '../../../api/index.js';
+import { useBody, useCookie, useDomainName, usePathParam, useResponse } from '../../../api/index.js';
 import { Adapter } from './adapter.js';
-import { OauthConfig, OauthError } from './oauth.js';
+import { OauthConfig } from './oauth.js';
 
-const querystring = require('querystring');
-
-// This adapter support the OAuth flow with the response_mode "form_post" for now. 
+// This adapter support the OAuth flow with the response_mode "form_post" for now.
 // More details about the flow:
 // https://developer.apple.com/documentation/devicemanagement/user_enrollment/onboarding_users_with_account_sign-in/implementing_the_oauth2_authentication_user-enrollment_flow
 //
@@ -74,12 +70,14 @@ export const AppleAdapter =
       }
 
       if (step === "callback") {
-        let params
+        let params = {}
         if (config && config.params && config.params.response_mode === "form_post") {
           const body = useBody()
-          params = querystring.parse(body)
+          if (typeof body === "string") {
+            params = querystring.parse(body)
+          }
         }
-       
+
         const code_verifier = useCookie("auth_code_verifier");
         const state = useCookie("auth_state");
         const tokenset = await client["callback"](callback, params, {
