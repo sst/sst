@@ -58,24 +58,19 @@ export class AstroSite extends SsrSite {
       "[" +
       routes
         .map((route) => {
-          if (
-            route.type === "redirect" ||
-            (route.type === "page" && route.prerender === true)
-          ) {
-            return `{p:${route.pattern}${
-              route.type === "page"
-                ? `,t:0`
-                : route.type === "redirect"
-                ? `,t:1`
-                : ""
-            }${route.prerender === true ? `,r:1` : ``}${
-              route.redirectPath ? `,h:"${route.redirectPath}"` : ""
-            }${
-              route.redirectStatus && route.redirectStatus !== 308
-                ? `,s:${route.redirectStatus}`
-                : ""
-            }}`;
-          }
+          return `{p:${route.pattern}${
+            route.type === "page"
+              ? `,t:0`
+              : route.type === "redirect"
+              ? `,t:1`
+              : ""
+          }${route.prerender === true ? `,r:1` : ``}${
+            route.redirectPath ? `,h:"${route.redirectPath}"` : ""
+          }${
+            route.redirectStatus && route.redirectStatus !== 308
+              ? `,s:${route.redirectStatus}`
+              : ""
+          }}`;
         })
         .filter((compressedRoute) => compressedRoute)
         .join(",") +
