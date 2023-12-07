@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.38.2
+
+### Patch Changes
+
+- [`e2457c9b7`](https://github.com/sst/sst/commit/e2457c9b79d67d18d4faf504d0402a63dd95b016) Thanks [@thdxr](https://github.com/thdxr)! - AstroSite: create host only cf function for server routes
+
 ## 2.38.1
 
 ### Patch Changes
