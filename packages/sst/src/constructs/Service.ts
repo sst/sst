@@ -185,6 +185,16 @@ export interface ServiceProps {
    */
   path?: string;
   /**
+   * The port number on the container.
+   * @example
+   * ```js
+   * {
+   *   port: 8000,
+   * }
+   *```
+   */
+  port: number;
+  /**
    * Path to Dockerfile relative to the defined "path".
    * @default "Dockerfile"
    */
@@ -235,17 +245,6 @@ export interface ServiceProps {
    * ```
    */
   storage?: `${number} GB`;
-  /**
-   * The port number on the container.
-   * @default 3000
-   * @example
-   * ```js
-   * {
-   *   port: 8000,
-   * }
-   *```
-   */
-  port?: number;
   scaling?: {
     /**
      * The minimum capacity for the cluster.
@@ -547,7 +546,6 @@ type ServiceNormalizedProps = ServiceProps & {
   path: Exclude<ServiceProps["path"], undefined>;
   memory: Exclude<ServiceProps["memory"], undefined>;
   storage: Exclude<ServiceProps["storage"], undefined>;
-  port: Exclude<ServiceProps["port"], undefined>;
   logRetention: Exclude<ServiceProps["logRetention"], undefined>;
 };
 
@@ -575,7 +573,7 @@ export class Service extends Construct implements SSTConstruct {
   private distribution?: Distribution;
   private alb?: ApplicationLoadBalancer;
 
-  constructor(scope: Construct, id: string, props?: ServiceProps) {
+  constructor(scope: Construct, id: string, props: ServiceProps) {
     super(scope, id);
 
     const app = scope.node.root as App;
@@ -587,7 +585,6 @@ export class Service extends Construct implements SSTConstruct {
       cpu: props?.cpu || "0.25 vCPU",
       memory: props?.memory || "0.5 GB",
       storage: props?.storage || "20 GB",
-      port: props?.port || 3000,
       logRetention: props?.logRetention || "infinite",
       ...props,
     };
