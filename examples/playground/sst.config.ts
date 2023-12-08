@@ -31,16 +31,16 @@ export default {
 
     const bucket = new aws.s3.Bucket("web");
 
-    const site = new sst.Function("web", {
-      runtime: "nodejs18.x",
-      bundle: "bundled-function",
-      handler: "index.handler",
-      url: true,
-      //bind: bucket,
-    });
+    //const site = new sst.Function("web", {
+    //  runtime: "nodejs18.x",
+    //  bundle: "bundled-function",
+    //  handler: "index.handler",
+    //  url: true,
+    //  //bind: bucket,
+    //});
 
     return {
-      siteURL: site.url,
+      //siteURL: site.url,
     };
   },
 };

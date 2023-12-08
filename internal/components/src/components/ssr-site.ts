@@ -367,7 +367,7 @@ export function createBucket(parent: ComponentResource, name: string) {
       {
         forceDestroy: true,
       },
-      { parent }
+      { parent, retainOnDelete: false }
     );
     new aws.s3.BucketPublicAccessBlock(
       `${name}-bucket-public-access-block`,

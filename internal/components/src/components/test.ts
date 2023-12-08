@@ -7,7 +7,6 @@ await LocalWorkspace.createOrSelectStack(
     stackName: app.stage,
   },
   {
-
     projectSettings: {
       config: {
         "aws:defaultTags": {
@@ -16,9 +15,12 @@ await LocalWorkspace.createOrSelectStack(
           "x-sst-stage": app.stage,
         },
       },
-    }
+      runtime: {
+        options: {
+        }
+      }
+    },
     stackSettings: {
-
     }
   }
 );

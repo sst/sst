@@ -62,7 +62,26 @@ func (s *stack) runtime() (string, error) {
 
     const stack = await LocalWorkspace.createOrSelectStack(
       {
-        program: mod.run,
+        program: () => {
+			    util.runtime.registerStackTransformation((args) => {
+			      if (
+			        app.removalPolicy === "retain-all" ||
+			        (app.removalPolicy === "retain" &&
+			          [
+			            "aws:s3/bucket:Bucket",
+			            "aws:dynamodb/table:Table",
+			          ].includes(args.type))
+			      ) {
+			        return {
+			          props: args.props,
+			          opts: util.mergeOptions({ retainOnDelete: true }, args.opts),
+			        };
+			      }
+			      return undefined;
+			    });
+
+					return mod.run();
+				},
         projectName: app.name,
         stackName: app.stage,
       },
