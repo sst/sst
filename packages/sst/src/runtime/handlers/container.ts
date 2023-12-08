@@ -8,6 +8,7 @@ import { isChild } from "../../util/fs.js";
 import { execAsync } from "../../util/process.js";
 import { useFunctions } from "../../constructs/Function.js";
 import { lazy } from "../../util/lazy.js";
+import { isWSL, getInternalHost } from "../../util/wsl.js";
 
 export const useContainerHandler = (): RuntimeHandler => {
   const containers = new Map<string, string>();
@@ -72,7 +73,10 @@ export const useContainerHandler = (): RuntimeHandler => {
       {
         cmd: fn?.container?.cmd,
         envs: {
-          AWS_LAMBDA_RUNTIME_API: `host.docker.internal:${server.port}/${input.workerID}`,
+          //AWS_LAMBDA_RUNTIME_API: `host.docker.internal:${server.port}/${input.workerID}`,
+          AWS_LAMBDA_RUNTIME_API: `${
+            isWSL() ? getInternalHost() : "host.docker.internal"
+          }:${server.port}/${input.workerID}`,
         },
       },
       () => {
