@@ -1,14 +1,15 @@
-import pulumi from "@pulumi/pulumi";
+import { CustomResourceOptions, Input, dynamic } from "@pulumi/pulumi";
 import {
   LambdaClient,
   UpdateFunctionCodeCommand,
 } from "@aws-sdk/client-lambda";
+import { useAWSClient } from "./helpers/aws-client";
 
 export interface FunctionCodeUpdaterInputs {
-  s3Bucket: pulumi.Input<string>;
-  s3Key: pulumi.Input<string>;
-  functionName: pulumi.Input<string>;
-  region?: pulumi.Input<aws.Region>;
+  s3Bucket: Input<string>;
+  s3Key: Input<string>;
+  functionName: Input<string>;
+  region?: Input<aws.Region>;
 }
 
 interface Inputs {
@@ -18,9 +19,9 @@ interface Inputs {
   region?: aws.Region;
 }
 
-class Provider implements pulumi.dynamic.ResourceProvider {
-  async create(inputs: Inputs): Promise<pulumi.dynamic.CreateResult> {
-    const client = new LambdaClient({ region: inputs.region });
+class Provider implements dynamic.ResourceProvider {
+  async create(inputs: Inputs): Promise<dynamic.CreateResult> {
+    const client = useAWSClient(LambdaClient, inputs.region);
     await client.send(
       new UpdateFunctionCodeCommand({
         FunctionName: inputs.functionName,
@@ -35,8 +36,8 @@ class Provider implements pulumi.dynamic.ResourceProvider {
     id: string,
     olds: Inputs,
     news: Inputs
-  ): Promise<pulumi.dynamic.UpdateResult> {
-    const client = new LambdaClient({ region: news.region });
+  ): Promise<dynamic.UpdateResult> {
+    const client = useAWSClient(LambdaClient, news.region);
     await client.send(
       new UpdateFunctionCodeCommand({
         FunctionName: news.functionName,
@@ -48,11 +49,11 @@ class Provider implements pulumi.dynamic.ResourceProvider {
   }
 }
 
-export class FunctionCodeUpdater extends pulumi.dynamic.Resource {
+export class FunctionCodeUpdater extends dynamic.Resource {
   constructor(
     name: string,
     args: FunctionCodeUpdaterInputs,
-    opts?: pulumi.CustomResourceOptions
+    opts?: CustomResourceOptions
   ) {
     super(new Provider(), name, args, opts);
   }

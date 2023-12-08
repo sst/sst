@@ -3,7 +3,7 @@ import path from "path";
 import { Function, FunctionArgs } from "./function.js";
 import { build } from "../runtime/node.js";
 import crypto from "crypto";
-import pulumi from "@pulumi/pulumi";
+import { ComponentResourceOptions, output } from "@pulumi/pulumi";
 
 export interface HandlerFunctionArgs
   extends Omit<FunctionArgs, "bundle" | "bundleHash"> {}
@@ -12,9 +12,9 @@ export class HandlerFunction extends Function {
   constructor(
     name: string,
     args: HandlerFunctionArgs,
-    opts?: pulumi.ComponentResourceOptions,
+    opts?: ComponentResourceOptions
   ) {
-    const buildResult = pulumi.all([args]).apply(([args]) => build(name, args));
+    const buildResult = output(args).apply((args) => build(name, args));
     const successful = buildResult.apply((result) => {
       if (result.type === "error") throw new Error(result.errors.join("\n"));
       return result;
@@ -22,7 +22,7 @@ export class HandlerFunction extends Function {
     const hash = successful.apply(async (result) => {
       const content = await fs.readFile(
         path.join(result.out, result.handler),
-        "utf8",
+        "utf8"
       );
       const hash = crypto.createHash("sha256");
       hash.update(content);
@@ -38,7 +38,7 @@ export class HandlerFunction extends Function {
         bundle: successful.out,
         bundleHash: hash,
       },
-      opts,
+      opts
     );
   }
 }

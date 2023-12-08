@@ -1,9 +1,10 @@
-import pulumi from "@pulumi/pulumi";
+import { CustomResourceOptions, Input, dynamic, output } from "@pulumi/pulumi";
 import {
   CloudFrontClient,
   CreateInvalidationCommand,
   waitUntilInvalidationCompleted,
 } from "@aws-sdk/client-cloudfront";
+import { useAWSClient } from "./helpers/aws-client";
 
 // CloudFront allows you to specify up to 3,000 paths in a single invalidation
 // https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/cloudfront-limits.html#limits-invalidations
@@ -11,10 +12,10 @@ const FILE_LIMIT = 3000;
 const WILDCARD_LIMIT = 15;
 
 export interface DistributionInvalidationInputs {
-  distributionId: pulumi.Input<string>;
-  paths?: pulumi.Input<string[]>;
-  wait?: pulumi.Input<boolean>;
-  version?: pulumi.Input<string>;
+  distributionId: Input<string>;
+  paths?: Input<string[]>;
+  wait?: Input<boolean>;
+  version?: Input<string>;
 }
 
 interface Inputs {
@@ -24,8 +25,8 @@ interface Inputs {
   version: string;
 }
 
-class Provider implements pulumi.dynamic.ResourceProvider {
-  async create(inputs: Inputs): Promise<pulumi.dynamic.CreateResult> {
+class Provider implements dynamic.ResourceProvider {
+  async create(inputs: Inputs): Promise<dynamic.CreateResult> {
     await this.handle(inputs);
     return { id: "invalidation", outs: {} };
   }
@@ -34,13 +35,13 @@ class Provider implements pulumi.dynamic.ResourceProvider {
     id: string,
     olds: Inputs,
     news: Inputs
-  ): Promise<pulumi.dynamic.UpdateResult> {
+  ): Promise<dynamic.UpdateResult> {
     await this.handle(news);
     return { outs: {} };
   }
 
   async handle(inputs: Inputs) {
-    const client = new CloudFrontClient();
+    const client = useAWSClient(CloudFrontClient);
     const ids = await this.invalidate(client, inputs);
     if (inputs.wait) {
       await this.waitForInvalidation(client, inputs, ids);
@@ -119,7 +120,7 @@ class Provider implements pulumi.dynamic.ResourceProvider {
       try {
         await waitUntilInvalidationCompleted(
           {
-            client: client,
+            client,
             maxWaitTime: 600,
           },
           {
@@ -135,21 +136,20 @@ class Provider implements pulumi.dynamic.ResourceProvider {
   }
 }
 
-export class DistributionInvalidation extends pulumi.dynamic.Resource {
-  account!: pulumi.Output<string>;
+export class DistributionInvalidation extends dynamic.Resource {
   constructor(
     name: string,
     args: DistributionInvalidationInputs,
-    opts?: pulumi.CustomResourceOptions
+    opts?: CustomResourceOptions
   ) {
     super(
       new Provider(),
       name,
       {
         ...args,
-        paths: pulumi
-          .all([args.paths])
-          .apply(([paths]) => [...new Set(paths ?? ["/*"])]),
+        paths: output(args.paths).apply((paths) => [
+          ...new Set(paths ?? ["/*"]),
+        ]),
         wait: args.wait || false,
         version:
           args.version ||

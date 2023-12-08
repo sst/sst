@@ -1,4 +1,10 @@
-import pulumi from "@pulumi/pulumi";
+import {
+  ComponentResource,
+  ComponentResourceOptions,
+  Input,
+  all,
+  output,
+} from "@pulumi/pulumi";
 import * as aws from "@pulumi/aws";
 import { DnsValidatedCertificate } from "./dns-validated-certificate";
 
@@ -16,75 +22,97 @@ export interface HttpsRedirectArgs {
    * and its subdomains (acme.example.com, zenith.example.com).
    *
    */
-  readonly zoneId: pulumi.Input<string>;
+  readonly zoneId: Input<string>;
 
   /**
    * The redirect target fully qualified domain name (FQDN). An alias record
    * will be created that points to your CloudFront distribution. Root domain
    * or sub-domain can be supplied.
    */
-  readonly targetDomain: string;
+  readonly targetDomain: Input<string>;
 
   /**
    * The domain names that will redirect to `targetDomain`
    *
    * @default - the domain name of the hosted zone
    */
-  readonly sourceDomains: string[];
+  readonly sourceDomains: Input<string[]>;
 }
 
 /**
  * Allows creating a domainA -> domainB redirect using CloudFront and S3.
  * You can specify multiple domains to be redirected.
  */
-export class HttpsRedirect extends pulumi.ComponentResource {
-  constructor(name: string, args: HttpsRedirectArgs) {
-    super("sst:sst:HttpsRedirect", name, args);
+export class HttpsRedirect extends ComponentResource {
+  constructor(
+    name: string,
+    args: HttpsRedirectArgs,
+    opts?: ComponentResourceOptions
+  ) {
+    super("sst:sst:HttpsRedirect", name, args, opts);
 
-    const { zoneId, targetDomain, sourceDomains } = args;
+    const parent = this;
 
-    const certificate = new DnsValidatedCertificate(`${name}-certificate`, {
-      domainName: sourceDomains[0],
-      alternativeNames: sourceDomains.slice(1),
-      zoneId,
-      region: "us-east-1",
-    });
+    const certificate = new DnsValidatedCertificate(
+      `${name}-certificate`,
+      {
+        domainName: output(args.sourceDomains).apply((domains) => domains[0]),
+        alternativeNames: output(args.sourceDomains).apply((domains) =>
+          domains.slice(1)
+        ),
+        zoneId: args.zoneId,
+        region: "us-east-1",
+      },
+      { parent }
+    );
 
-    const bucket = new aws.s3.BucketV2(`${name}-bucket`, {
-      forceDestroy: true,
-    });
+    const bucket = new aws.s3.BucketV2(
+      `${name}-bucket`,
+      {
+        forceDestroy: true,
+      },
+      { parent }
+    );
 
     const bucketWebsite = new aws.s3.BucketWebsiteConfigurationV2(
       `${name}-bucket-website`,
       {
         bucket: bucket.id,
         redirectAllRequestsTo: {
-          hostName: targetDomain,
+          hostName: args.targetDomain,
           protocol: "https",
         },
-      }
+      },
+      { parent }
     );
 
-    new aws.s3.BucketPublicAccessBlock(`${name}-bucket-public-access-block`, {
-      bucket: bucket.id,
-      blockPublicAcls: true,
-      blockPublicPolicy: true,
-      ignorePublicAcls: true,
-      restrictPublicBuckets: true,
-    });
+    new aws.s3.BucketPublicAccessBlock(
+      `${name}-bucket-public-access-block`,
+      {
+        bucket: bucket.id,
+        blockPublicAcls: true,
+        blockPublicPolicy: true,
+        ignorePublicAcls: true,
+        restrictPublicBuckets: true,
+      },
+      { parent }
+    );
 
     const distribution = new aws.cloudfront.Distribution(
       `${name}-distribution`,
       {
         enabled: true,
         waitForDeployment: false,
-        aliases: sourceDomains,
+        aliases: args.sourceDomains,
         restrictions: {
           geoRestriction: {
             restrictionType: "none",
           },
         },
-        comment: `Redirect to ${targetDomain} from ${sourceDomains.join(", ")}`,
+        comment: all([args.targetDomain, args.sourceDomains]).apply(
+          ([targetDomain, sourceDomains]) =>
+            `Redirect to ${targetDomain} from ${sourceDomains.join(", ")}`
+        ),
         priceClass: "PriceClass_All",
         viewerCertificate: {
           acmCertificateArn: certificate.certificateArn,
@@ -102,24 +130,31 @@ export class HttpsRedirect extends pulumi.ComponentResource {
             domainName: bucketWebsite.websiteDomain,
           },
         ],
-      }
+      },
+      { parent }
     );
 
-    for (const recordName of sourceDomains) {
-      for (const type of ["A", "AAAA"]) {
-        new aws.route53.Record(`${name}-record-${recordName}-${type}`, {
-          name: recordName,
-          zoneId,
-          type,
-          aliases: [
+    output(args.sourceDomains).apply((sourceDomains) => {
+      for (const recordName of sourceDomains) {
+        for (const type of ["A", "AAAA"]) {
+          new aws.route53.Record(
+            `${name}-record-${recordName}-${type}`,
             {
-              name: distribution.domainName,
-              zoneId: distribution.hostedZoneId,
-              evaluateTargetHealth: true,
+              name: recordName,
+              zoneId: args.zoneId,
+              type,
+              aliases: [
+                {
+                  name: distribution.domainName,
+                  zoneId: distribution.hostedZoneId,
+                  evaluateTargetHealth: true,
+                },
+              ],
             },
-          ],
-        });
+            { parent }
+          );
+        }
       }
-    }
+    });
   }
 }

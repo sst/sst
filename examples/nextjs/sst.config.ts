@@ -21,8 +21,8 @@ export default {
 
     return {
       siteURL: site.url,
-      bucketName: site.aws?.bucket.bucket,
-      distributionID: site.aws?.distribution.aws.distribution.id,
+      bucketName: site.nodes?.bucket.bucket,
+      distributionID: site.nodes?.distribution.nodes.distribution.id,
     };
   },
 };

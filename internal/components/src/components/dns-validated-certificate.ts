@@ -1,4 +1,9 @@
-import pulumi from "@pulumi/pulumi";
+import {
+  Input,
+  Output,
+  ComponentResource,
+  ComponentResourceOptions,
+} from "@pulumi/pulumi";
 import * as aws from "@pulumi/aws";
 
 /**
@@ -8,16 +13,16 @@ export interface DnsValidatedCertificateArgs {
   /**
    * The fully qualified domain name in the certificate.
    */
-  domainName: pulumi.Input<string>;
+  domainName: Input<string>;
   /**
    * Route 53 Hosted Zone used to perform DNS validation of the request.  The zone
    * must be authoritative for the domain name specified in the Certificate Request.
    */
-  zoneId: pulumi.Input<string>;
+  zoneId: Input<string>;
   /**
    * Set of domains that should be SANs in the issued certificate
    */
-  alternativeNames?: pulumi.Input<string[]>;
+  alternativeNames?: Input<string[]>;
   /**
    * AWS region that will host the certificate. This is needed especially
    * for certificates used for CloudFront distributions, which require the region
@@ -28,11 +33,15 @@ export interface DnsValidatedCertificateArgs {
   region?: aws.Region;
 }
 
-export class DnsValidatedCertificate extends pulumi.ComponentResource {
-  public certificateArn: pulumi.Output<string>;
+export class DnsValidatedCertificate extends ComponentResource {
+  public certificateArn: Output<string>;
 
-  constructor(name: string, args: DnsValidatedCertificateArgs) {
-    super("sst:sst:Certificate", name, args);
+  constructor(
+    name: string,
+    args: DnsValidatedCertificateArgs,
+    opts?: ComponentResourceOptions
+  ) {
+    super("sst:sst:Certificate", name, args, opts);
 
     const { domainName, alternativeNames, zoneId, region } = args;
 

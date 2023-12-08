@@ -4,7 +4,16 @@ import fs from "fs";
 import { globSync } from "glob";
 import crypto from "crypto";
 import { execSync } from "child_process";
-import pulumi from "@pulumi/pulumi";
+import {
+  Input,
+  Output,
+  Unwrap,
+  asset,
+  output,
+  all,
+  interpolate,
+  ComponentResource,
+} from "@pulumi/pulumi";
 import * as aws from "@pulumi/aws";
 import { Distribution, DistributionDomainArgs } from "./distribution.js";
 import { Function, FunctionArgs, FunctionNodeJSArgs } from "./function.js";
@@ -12,16 +21,16 @@ import { Duration, toSeconds } from "./util/duration.js";
 import { DistributionInvalidation } from "./distribution-invalidation.js";
 
 type CloudFrontFunctionConfig = { injections: string[] };
-type EdgeFunctionConfig = { function: pulumi.Unwrap<FunctionArgs> };
+type EdgeFunctionConfig = { function: Unwrap<FunctionArgs> };
 type FunctionOriginConfig = {
   type: "function";
-  function: pulumi.Unwrap<FunctionArgs>;
+  function: Unwrap<FunctionArgs>;
   injections?: string[];
   streaming?: boolean;
 };
 type ImageOptimizationFunctionOriginConfig = {
   type: "image-optimization-function";
-  function: pulumi.Unwrap<FunctionArgs>;
+  function: Unwrap<FunctionArgs>;
 };
 type S3OriginConfig = {
   type: "s3";
@@ -50,28 +59,15 @@ export interface SsrSiteFileOptions {
 }
 export interface SsrSiteArgs {
   /**
-   * Bind resources for the function
-   *
-   * @example
-   * ```js
-   * new Function(stack, "Function", {
-   *   handler: "src/function.handler",
-   *   bind: [STRIPE_KEY, bucket],
-   * })
-   * ```
-   */
-  // TODO implement bind
-  //bind?: SSTConstruct[];
-  /**
    * Path to the directory where the app is located.
    * @default "."
    */
-  path?: pulumi.Input<string>;
+  path?: Input<string>;
   /**
    * Path relative to the app location where the type definitions are located.
    * @default "."
    */
-  typesPath?: pulumi.Input<string>;
+  typesPath?: Input<string>;
   /**
    * The command for building the website
    * @default `npm run build`
@@ -80,7 +76,7 @@ export interface SsrSiteArgs {
    * buildCommand: "yarn build",
    * ```
    */
-  buildCommand?: pulumi.Input<string>;
+  buildCommand?: Input<string>;
   /**
    * The customDomain for this website. SST supports domains that are hosted
    * either on [Route 53](https://aws.amazon.com/route53/) or externally.
@@ -101,7 +97,7 @@ export interface SsrSiteArgs {
    * },
    * ```
    */
-  customDomain?: pulumi.Input<string | SsrDomainArgs>;
+  customDomain?: Input<string | SsrDomainArgs>;
   /**
    * Attaches the given list of permissions to the SSR function. Configuring this property is equivalent to calling `attachPermissions()` after the site is created.
    * @example
@@ -110,7 +106,7 @@ export interface SsrSiteArgs {
    * ```
    */
   // TODO implement permissions
-  //permissions?: pulumi.Input<Permissions>;
+  //permissions?: Input<Permissions>;
   /**
    * An object with the key being the environment variable name.
    *
@@ -122,12 +118,12 @@ export interface SsrSiteArgs {
    * },
    * ```
    */
-  environment?: pulumi.Input<Record<string, pulumi.Input<string>>>;
+  environment?: Input<Record<string, Input<string>>>;
   /**
    * The number of server functions to keep warm. This option is only supported for the regional mode.
    * @default Server function is not kept warm
    */
-  warm?: pulumi.Input<number>;
+  warm?: Input<number>;
   // TODO implement `sst dev`
   //dev?: {
   //  /**
@@ -152,7 +148,7 @@ export interface SsrSiteArgs {
   //   */
   //  url?: string;
   //};
-  assets?: pulumi.Input<{
+  assets?: Input<{
     /**
      * Character encoding for text based assets uploaded to S3 (ex: html, css, js, etc.). If "none" is specified, no charset will be returned in header.
      * @default utf-8
@@ -163,7 +159,7 @@ export interface SsrSiteArgs {
      * }
      * ```
      */
-    textEncoding?: pulumi.Input<
+    textEncoding?: Input<
       "utf-8" | "iso-8859-1" | "windows-1252" | "ascii" | "none"
     >;
     /**
@@ -176,7 +172,7 @@ export interface SsrSiteArgs {
      * }
      * ```
      */
-    versionedFilesTTL?: pulumi.Input<number | Duration>;
+    versionedFilesTTL?: Input<number | Duration>;
     /**
      * The header to use for versioned files (ex: `main-1234.css`) in the CDN cache. When specified, the `versionedFilesTTL` option is ignored.
      * @default public,max-age=31536000,immutable
@@ -187,7 +183,7 @@ export interface SsrSiteArgs {
      * }
      * ```
      */
-    versionedFilesCacheHeader?: pulumi.Input<string>;
+    versionedFilesCacheHeader?: Input<string>;
     /**
      * The TTL for non-versioned files (ex: `index.html`) in the CDN cache. Ignored when `nonVersionedFilesCacheHeader` is specified.
      * @default 1 day
@@ -198,7 +194,7 @@ export interface SsrSiteArgs {
      * }
      * ```
      */
-    nonVersionedFilesTTL?: pulumi.Input<number | Duration>;
+    nonVersionedFilesTTL?: Input<number | Duration>;
     /**
      * The header to use for non-versioned files (ex: `index.html`) in the CDN cache. When specified, the `nonVersionedFilesTTL` option is ignored.
      * @default public,max-age=0,s-maxage=86400,stale-while-revalidate=8640
@@ -209,7 +205,7 @@ export interface SsrSiteArgs {
      * }
      * ```
      */
-    nonVersionedFilesCacheHeader?: pulumi.Input<string>;
+    nonVersionedFilesCacheHeader?: Input<string>;
     /**
      * List of file options to specify cache control and content type for cached files. These file options are appended to the default file options so it's possible to override the default file options by specifying an overlapping file pattern.
      * @example
@@ -225,9 +221,9 @@ export interface SsrSiteArgs {
      * }
      * ```
      */
-    fileOptions?: pulumi.Input<SsrSiteFileOptions[]>;
+    fileOptions?: Input<SsrSiteFileOptions[]>;
   }>;
-  invalidation?: pulumi.Input<{
+  invalidation?: Input<{
     /**
      * While deploying, SST waits for the CloudFront cache invalidation process to finish. This ensures that the new content will be served once the deploy command finishes. However, this process can sometimes take more than 5 mins. For non-prod environments it might make sense to pass in `false`. That'll skip waiting for the cache to invalidate and speed up the deploy process.
      * @default false
@@ -238,7 +234,7 @@ export interface SsrSiteArgs {
      * }
      * ```
      */
-    wait?: pulumi.Input<boolean>;
+    wait?: Input<boolean>;
     /**
      * The paths to invalidate. There are three built-in options:
      * - "none" - No invalidation will be performed.
@@ -260,7 +256,7 @@ export interface SsrSiteArgs {
      * }
      * ```
      */
-    paths?: pulumi.Input<"none" | "all" | "versioned" | string[]>;
+    paths?: Input<"none" | "all" | "versioned" | string[]>;
   }>;
 }
 
@@ -268,12 +264,12 @@ export function prepare(args: SsrSiteArgs) {
   const sitePath = normalizeSitePath();
   writeTypesFile();
 
-  const doNotDeploy = pulumi.output(false);
+  const doNotDeploy = output(false);
   //const doNotDeploy = app.mode === "dev" && !dev?.deploy;
   return { sitePath, doNotDeploy };
 
   function normalizeSitePath() {
-    return pulumi.all([args.path]).apply(([sitePath]) => {
+    return output(args.path).apply((sitePath) => {
       if (!sitePath) return ".";
 
       if (!fs.existsSync(sitePath)) {
@@ -284,40 +280,33 @@ export function prepare(args: SsrSiteArgs) {
   }
 
   function writeTypesFile() {
-    return pulumi
-      .all([sitePath, args.typesPath])
-      .apply(([sitePath, typesPath]) => {
-        const filePath = path.resolve(
-          sitePath,
-          typesPath || ".",
-          "sst-env.d.ts"
-        );
+    return all([sitePath, args.typesPath]).apply(([sitePath, typesPath]) => {
+      const filePath = path.resolve(sitePath, typesPath || ".", "sst-env.d.ts");
 
-        // Do not override the types file if it already exists
-        if (fs.existsSync(filePath)) return;
+      // Do not override the types file if it already exists
+      if (fs.existsSync(filePath)) return;
 
-        const relPathToSstTypesFile = path.join(
-          path.relative(path.dirname(filePath), app.paths.root),
-          ".sst/types/index.ts"
-        );
-        fs.writeFileSync(
-          filePath,
-          `/// <reference path="${relPathToSstTypesFile}" />`
-        );
-      });
+      const relPathToSstTypesFile = path.join(
+        path.relative(path.dirname(filePath), app.paths.root),
+        ".sst/types/index.ts"
+      );
+      fs.writeFileSync(
+        filePath,
+        `/// <reference path="${relPathToSstTypesFile}" />`
+      );
+    });
   }
 }
 export function buildApp(
   name: string,
   args: SsrSiteArgs,
-  sitePath: pulumi.Output<string>,
-  buildCommand: pulumi.Output<string>
+  sitePath: Output<string>,
+  buildCommand: Output<string>
 ) {
   const defaultCommand = "npm run build";
 
-  return pulumi
-    .all([sitePath, buildCommand, args.environment])
-    .apply(([sitePath, buildCommand, environment]) => {
+  return all([sitePath, buildCommand, args.environment]).apply(
+    ([sitePath, buildCommand, environment]) => {
       const cmd = buildCommand || defaultCommand;
 
       if (cmd === defaultCommand) {
@@ -353,10 +342,11 @@ export function buildApp(
       }
 
       return sitePath;
-    });
+    }
+  );
 }
 
-export function createBucket(name: string) {
+export function createBucket(parent: ComponentResource, name: string) {
   const access = createCloudFrontOriginAccessIdentity();
   const bucket = createS3Bucket();
   return { access, bucket };
@@ -364,22 +354,31 @@ export function createBucket(name: string) {
   function createCloudFrontOriginAccessIdentity() {
     return new aws.cloudfront.OriginAccessIdentity(
       `${name}-origin-access-identity`,
-      {}
+      {},
+      { parent }
     );
   }
 
   function createS3Bucket() {
     // TODO add "enforceSSL: true"
-    const bucket = new aws.s3.BucketV2(`${name}-bucket`, {
-      forceDestroy: true,
-    });
-    new aws.s3.BucketPublicAccessBlock(`${name}-bucket-public-access-block`, {
-      bucket: bucket.id,
-      blockPublicAcls: true,
-      blockPublicPolicy: true,
-      ignorePublicAcls: true,
-      restrictPublicBuckets: true,
-    });
+    const bucket = new aws.s3.BucketV2(
+      `${name}-bucket`,
+      {
+        forceDestroy: true,
+      },
+      { parent }
+    );
+    new aws.s3.BucketPublicAccessBlock(
+      `${name}-bucket-public-access-block`,
+      {
+        bucket: bucket.id,
+        blockPublicAcls: true,
+        blockPublicPolicy: true,
+        ignorePublicAcls: true,
+        restrictPublicBuckets: true,
+      },
+      { parent }
+    );
     // allow access from another account bucket policy
     const policyDocument = aws.iam.getPolicyDocumentOutput({
       statements: [
@@ -391,27 +390,32 @@ export function createBucket(name: string) {
             },
           ],
           actions: ["s3:GetObject"],
-          resources: [pulumi.interpolate`${bucket.arn}/*`],
+          resources: [interpolate`${bucket.arn}/*`],
         },
       ],
     });
-    new aws.s3.BucketPolicy(`${name}-bucket-policy`, {
-      bucket: bucket.id,
-      policy: policyDocument.json,
-    });
+    new aws.s3.BucketPolicy(
+      `${name}-bucket-policy`,
+      {
+        bucket: bucket.id,
+        policy: policyDocument.json,
+      },
+      { parent }
+    );
     return bucket;
   }
 }
 
 export function createServersAndDistribution(
+  parent: ComponentResource,
   name: string,
   args: SsrSiteArgs,
-  outputPath: pulumi.Output<string>,
+  outputPath: Output<string>,
   access: aws.cloudfront.OriginAccessIdentity,
   bucket: aws.s3.BucketV2,
-  plan: pulumi.Input<Plan>
+  plan: Input<Plan>
 ) {
-  return pulumi.all([outputPath, plan]).apply(([outputPath, plan]) => {
+  return all([outputPath, plan]).apply(([outputPath, plan]) => {
     const ssrFunctions: Function[] = [];
     let singletonCachePolicy: aws.cloudfront.CachePolicy;
 
@@ -428,7 +432,7 @@ export function createServersAndDistribution(
     return { distribution, ssrFunctions, edgeFunctions };
 
     function uploadAssets() {
-      return pulumi.all([args.assets]).apply(([assets]) => {
+      return output(args.assets).apply((assets) => {
         const uploadedObjects: aws.s3.BucketObject[] = [];
 
         // Define content headers
@@ -489,15 +493,19 @@ export function createServersAndDistribution(
 
               for (const file of files) {
                 uploadedObjects.push(
-                  new aws.s3.BucketObject(`${name}-asset-${from}-${file}`, {
-                    bucket: bucket.bucket,
-                    source: new pulumi.asset.FileAsset(
-                      path.resolve(outputPath, from, file)
-                    ),
-                    key: path.posix.join(to, file),
-                    contentType: getContentType(file, "UTF-8"),
-                    cacheControl: fileOption.cacheControl,
-                  })
+                  new aws.s3.BucketObject(
+                    `${name}-asset-${from}-${file}`,
+                    {
+                      bucket: bucket.bucket,
+                      source: new asset.FileAsset(
+                        path.resolve(outputPath, from, file)
+                      ),
+                      key: path.posix.join(to, file),
+                      contentType: getContentType(file, "UTF-8"),
+                      cacheControl: fileOption.cacheControl,
+                    },
+                    { parent }
+                  )
                 );
               }
               filesUploaded.push(...files);
@@ -518,15 +526,14 @@ export function createServersAndDistribution(
             `${name}-cloudfront-function-${fnName}`,
             {
               runtime: "cloudfront-js-1.0",
-              code: pulumi.all([injections]).apply(
-                ([injections]) => `
+              code: `
 function handler(event) {
   var request = event.request;
   ${injections.join("\n")}
   return request;
-}`
-              ),
-            }
+}`,
+            },
+            { parent }
           );
         }
       );
@@ -536,44 +543,55 @@ function handler(event) {
     function createEdgeFunctions() {
       const functions: Record<string, Function> = {};
 
+      const provider = new aws.Provider(
+        `${name}-edge-provider`,
+        {
+          region: "us-east-1",
+        },
+        { parent }
+      );
+
       Object.entries(plan.edgeFunctions ?? {}).forEach(
         ([fnName, { function: props }]) => {
-          const fn = new Function(`${name}-edge-function-${fnName}`, {
-            runtime: "nodejs18.x",
-            timeout: 20,
-            memorySize: 1024,
-            ...props,
-            nodejs: {
-              format: "esm" as const,
-              ...props.nodejs,
-            },
-            environment: pulumi
-              .all([args.environment])
-              .apply(([environment]) => ({
+          const fn = new Function(
+            `${name}-edge-function-${fnName}`,
+            {
+              runtime: "nodejs18.x",
+              timeout: "20 seconds",
+              memory: "1024 MB",
+              ...props,
+              nodejs: {
+                format: "esm" as const,
+                ...props.nodejs,
+              },
+              environment: output(args.environment).apply((environment) => ({
                 ...environment,
                 ...props.environment,
               })),
-            publish: true,
-            region: "us-east-1",
-            policies: pulumi.all([props.policies]).apply(([policies]) => [
-              {
-                name: "s3",
-                policy: bucket.arn.apply((arn) =>
-                  aws.iam
-                    .getPolicyDocument({
-                      statements: [
-                        {
-                          actions: ["s3:*"],
-                          resources: [arn],
-                        },
-                      ],
-                    })
-                    .then((doc) => doc.json)
-                ),
+              policies: output(props.policies).apply((policies) => [
+                {
+                  name: "s3",
+                  policy: bucket.arn.apply((arn) =>
+                    aws.iam
+                      .getPolicyDocument({
+                        statements: [
+                          {
+                            actions: ["s3:*"],
+                            resources: [arn],
+                          },
+                        ],
+                      })
+                      .then((doc) => doc.json)
+                  ),
+                },
+                ...(policies || []),
+              ]),
+              nodes: {
+                function: { publish: true },
               },
-              ...(policies || []),
-            ]),
-          });
+            },
+            { provider, parent }
+          );
 
           functions[fnName] = fn;
         }
@@ -640,45 +658,47 @@ function handler(event) {
     }
 
     function buildFunctionOrigin(fnName: string, props: FunctionOriginConfig) {
-      const fn = new Function(`${name}-server-function-${fnName}`, {
-        runtime: "nodejs18.x",
-        timeout: 20,
-        memorySize: 1024,
-        ...props.function,
-        nodejs: {
-          format: "esm" as const,
-          ...props.function.nodejs,
-        },
-        environment: pulumi.all([args.environment]).apply(([environment]) => ({
-          ...environment,
-          ...props.function.environment,
-        })),
-        streaming: props.streaming,
-        injections: pulumi
-          .all([props.injections])
-          .apply(([injections]) => [
+      const fn = new Function(
+        `${name}-server-function-${fnName}`,
+        {
+          runtime: "nodejs18.x",
+          timeout: "20 seconds",
+          memory: "1024 MB",
+          ...props.function,
+          nodejs: {
+            format: "esm" as const,
+            ...props.function.nodejs,
+          },
+          environment: output(args.environment).apply((environment) => ({
+            ...environment,
+            ...props.function.environment,
+          })),
+          streaming: props.streaming,
+          injections: output(props.injections).apply((injections) => [
             ...(args.warm ? [useServerFunctionWarmingInjection()] : []),
             ...(injections || []),
           ]),
-        policies: [
-          {
-            name: "s3",
-            policy: bucket.arn.apply((arn) =>
-              aws.iam
-                .getPolicyDocument({
-                  statements: [
-                    {
-                      actions: ["s3:*"],
-                      resources: [arn],
-                    },
-                  ],
-                })
-                .then((doc) => doc.json)
-            ),
-          },
-        ],
-        url: true,
-      });
+          policies: [
+            {
+              name: "s3",
+              policy: bucket.arn.apply((arn) =>
+                aws.iam
+                  .getPolicyDocument({
+                    statements: [
+                      {
+                        actions: ["s3:*"],
+                        resources: [arn],
+                      },
+                    ],
+                  })
+                  .then((doc) => doc.json)
+              ),
+            },
+          ],
+          url: true,
+        },
+        { parent }
+      );
       ssrFunctions.push(fn);
 
       return {
@@ -698,31 +718,35 @@ function handler(event) {
       fnName: string,
       props: ImageOptimizationFunctionOriginConfig
     ) {
-      const fn = new Function(`${name}-image-function-${fnName}`, {
-        timeout: 25,
-        logging: {
-          retention: "3 days",
-        },
-        policies: [
-          {
-            name: "s3",
-            policy: bucket.arn.apply((arn) =>
-              aws.iam
-                .getPolicyDocument({
-                  statements: [
-                    {
-                      actions: ["s3:GetObject"],
-                      resources: [`${arn}/*`],
-                    },
-                  ],
-                })
-                .then((doc) => doc.json)
-            ),
+      const fn = new Function(
+        `${name}-image-function-${fnName}`,
+        {
+          timeout: "25 seconds",
+          logging: {
+            retention: "3 days",
           },
-        ],
-        ...props.function,
-        url: true,
-      });
+          policies: [
+            {
+              name: "s3",
+              policy: bucket.arn.apply((arn) =>
+                aws.iam
+                  .getPolicyDocument({
+                    statements: [
+                      {
+                        actions: ["s3:GetObject"],
+                        resources: [`${arn}/*`],
+                      },
+                    ],
+                  })
+                  .then((doc) => doc.json)
+              ),
+            },
+          ],
+          ...props.function,
+          url: true,
+        },
+        { parent }
+      );
 
       return {
         originId: fnName,
@@ -790,7 +814,7 @@ function handler(event) {
                 {
                   includeBody: true,
                   eventType: "origin-request",
-                  lambdaArn: edgeFunction.aws.function.qualifiedArn,
+                  lambdaArn: edgeFunction.nodes.function.qualifiedArn,
                 },
               ]
             : [],
@@ -803,28 +827,32 @@ function handler(event) {
     function useServerBehaviorCachePolicy() {
       singletonCachePolicy =
         singletonCachePolicy ??
-        new aws.cloudfront.CachePolicy(`${name}-server-cache-policy`, {
-          comment: "SST server response cache policy",
-          defaultTtl: 0,
-          maxTtl: 365,
-          minTtl: 0,
-          parametersInCacheKeyAndForwardedToOrigin: {
-            cookiesConfig: {
-              cookieBehavior: "none",
-            },
-            headersConfig: {
-              headerBehavior: "whitelist",
-              headers: {
-                items: plan.cachePolicyAllowedHeaders || [],
+        new aws.cloudfront.CachePolicy(
+          `${name}-server-cache-policy`,
+          {
+            comment: "SST server response cache policy",
+            defaultTtl: 0,
+            maxTtl: 365,
+            minTtl: 0,
+            parametersInCacheKeyAndForwardedToOrigin: {
+              cookiesConfig: {
+                cookieBehavior: "none",
               },
+              headersConfig: {
+                headerBehavior: "whitelist",
+                headers: {
+                  items: plan.cachePolicyAllowedHeaders || [],
+                },
+              },
+              queryStringsConfig: {
+                queryStringBehavior: "all",
+              },
+              enableAcceptEncodingBrotli: true,
+              enableAcceptEncodingGzip: true,
             },
-            queryStringsConfig: {
-              queryStringBehavior: "all",
-            },
-            enableAcceptEncodingBrotli: true,
-            enableAcceptEncodingGzip: true,
           },
-        });
+          { parent }
+        );
       return singletonCachePolicy;
     }
 
@@ -846,7 +874,7 @@ if (event.type === "warmer") {
       //    new ServicePrincipal("lambda.amazonaws.com")
       //  ),
       //  maxSessionDuration: CdkDuration.hours(12),
-      //});
+      //}, {parent});
       //return new SsrFunction(self, `${name}-dev-server-function`, {
       //  description: "Server handler placeholder",
       //  bundle: path.join(__dirname, "../support/ssr-site-function-stub"),
@@ -859,7 +887,7 @@ if (event.type === "warmer") {
       //  environment,
       //  permissions,
       //  // note: do not need to set vpc and layers settings b/c this function is not being used
-      //});
+      //}, {parent});
     }
 
     function createCloudFrontDistribution() {
@@ -867,62 +895,71 @@ if (event.type === "warmer") {
         `${name}-distribution`,
         {
           customDomain: args.customDomain,
-          origins: Object.values(origins),
-          originGroups: Object.values(originGroups),
-          defaultRootObject: "",
-          defaultCacheBehavior: buildBehavior(
-            plan.behaviors.find((behavior) => !behavior.pattern)!
-          ),
-          orderedCacheBehaviors: plan.behaviors
-            .filter((behavior) => behavior.pattern)
-            .map((behavior) => ({
-              pathPattern: behavior.pattern!,
-              ...buildBehavior(behavior),
-            })),
-          customErrorResponses: [
-            {
-              errorCode: 404,
-              responseCode: 200,
-              responsePagePath: "/404.html",
-            },
-          ],
-          enabled: true,
-          restrictions: {
-            geoRestriction: {
-              restrictionType: "none",
+          nodes: {
+            distribution: {
+              origins: Object.values(origins),
+              originGroups: Object.values(originGroups),
+              defaultRootObject: "",
+              defaultCacheBehavior: buildBehavior(
+                plan.behaviors.find((behavior) => !behavior.pattern)!
+              ),
+              orderedCacheBehaviors: plan.behaviors
+                .filter((behavior) => behavior.pattern)
+                .map((behavior) => ({
+                  pathPattern: behavior.pattern!,
+                  ...buildBehavior(behavior),
+                })),
+              customErrorResponses: [
+                {
+                  errorCode: 404,
+                  responseCode: 200,
+                  responsePagePath: "/404.html",
+                },
+              ],
+              enabled: true,
+              restrictions: {
+                geoRestriction: {
+                  restrictionType: "none",
+                },
+              },
+              waitForDeployment: false,
             },
           },
-          waitForDeployment: false,
         },
         // create distribution after s3 upload finishes
-        { dependsOn: uploadedObjects }
+        { dependsOn: uploadedObjects, parent }
       );
     }
 
     function allowServerFunctionInvalidateDistribution() {
-      const policy = new aws.iam.Policy(`${name}-invalidation-policy`, {
-        policy: pulumi.interpolate`{
+      const policy = new aws.iam.Policy(
+        `${name}-invalidation-policy`,
+        {
+          policy: interpolate`{
             "Version": "2012-10-17",
             "Statement": [
               {
                 "Action": "cloudfront:CreateInvalidation",
                 "Effect": "Allow",
-                "Resource": "${distribution.aws.distribution.arn}"
+                "Resource": "${distribution.nodes.distribution.arn}"
               }
             ]
           }`,
-      });
+        },
+        { parent }
+      );
 
       for (const fn of [...ssrFunctions, ...Object.values(edgeFunctions)]) {
-        fn.aws.function.name.apply((functionName) => {
+        fn.nodes.function.name.apply((functionName) => {
           new aws.iam.RolePolicyAttachment(
             `${name}-invalidation-policy-attachment-${functionName}`,
             {
               policyArn: policy.arn,
-              role: fn.aws.role.name,
+              role: fn.nodes.role.name,
             }
           );
-        });
+        }),
+          { parent };
       }
     }
 
@@ -941,67 +978,80 @@ if (event.type === "warmer") {
       if (ssrFunctions.length === 0) return;
 
       // Create warmer function
-      const warmer = new Function(`${name}-warmer-function`, {
-        description: `${name} warmer`,
-        bundle: path.join(__dirname, "../support/ssr-warmer"),
-        runtime: "nodejs20.x",
-        handler: "index.handler",
-        timeout: 900,
-        memorySize: 128,
-        environment: {
-          // TODO - SST design: output: how to reference the function inside Function
-          //   looks weird to acces `function.function.name`
-          FUNCTION_NAME: ssrFunctions[0].aws.function.name,
-          CONCURRENCY: pulumi
-            .all([args.warm])
-            .apply(([warm]) => warm.toString()),
-        },
-        policies: [
-          {
-            name: "invoke-server",
-            policy: ssrFunctions[0].aws.function.arn.apply((arn) =>
-              aws.iam
-                .getPolicyDocument({
-                  statements: [
-                    {
-                      actions: ["lambda:InvokeFunction"],
-                      resources: [arn],
-                    },
-                  ],
-                })
-                .then((doc) => doc.json)
-            ),
+      const warmer = new Function(
+        `${name}-warmer-function`,
+        {
+          description: `${name} warmer`,
+          bundle: path.join(__dirname, "../support/ssr-warmer"),
+          runtime: "nodejs20.x",
+          handler: "index.handler",
+          timeout: "900 seconds",
+          memory: "128 MB",
+          environment: {
+            // TODO - SST design: output: how to reference the function inside Function
+            //   looks weird to acces `function.function.name`
+            FUNCTION_NAME: ssrFunctions[0].nodes.function.name,
+            CONCURRENCY: output(args.warm).apply((warm) => warm.toString()),
           },
-        ],
-      });
+          policies: [
+            {
+              name: "invoke-server",
+              policy: ssrFunctions[0].nodes.function.arn.apply((arn) =>
+                aws.iam
+                  .getPolicyDocument({
+                    statements: [
+                      {
+                        actions: ["lambda:InvokeFunction"],
+                        resources: [arn],
+                      },
+                    ],
+                  })
+                  .then((doc) => doc.json)
+              ),
+            },
+          ],
+        },
+        { parent }
+      );
 
       // Create cron job
-      const schedule = new aws.cloudwatch.EventRule(`${name}-warmer-rule`, {
-        description: `${name} warmer`,
-        scheduleExpression: "rate(5 minutes)",
-      });
-      new aws.cloudwatch.EventTarget(`${name}-warmer-target`, {
-        rule: schedule.name,
-        arn: warmer.aws.function.arn,
-        retryPolicy: {
-          maximumRetryAttempts: 0,
+      const schedule = new aws.cloudwatch.EventRule(
+        `${name}-warmer-rule`,
+        {
+          description: `${name} warmer`,
+          scheduleExpression: "rate(5 minutes)",
         },
-      });
+        { parent }
+      );
+      new aws.cloudwatch.EventTarget(
+        `${name}-warmer-target`,
+        {
+          rule: schedule.name,
+          arn: warmer.nodes.function.arn,
+          retryPolicy: {
+            maximumRetryAttempts: 0,
+          },
+        },
+        { parent }
+      );
 
       // Prewarm on deploy
-      new aws.lambda.Invocation(`${name}-warmer-invoke`, {
-        functionName: warmer.aws.function.name,
-        triggers: {
-          version: Date.now().toString(),
+      new aws.lambda.Invocation(
+        `${name}-warmer-invoke`,
+        {
+          functionName: warmer.nodes.function.name,
+          triggers: {
+            version: Date.now().toString(),
+          },
+          input: JSON.stringify({}),
         },
-        input: JSON.stringify({}),
-      });
+        { parent }
+      );
     }
 
     function createDistributionInvalidation() {
-      pulumi
-        .all([outputPath, args.invalidation])
-        .apply(([outputPath, invalidation]) => {
+      all([outputPath, args.invalidation]).apply(
+        ([outputPath, invalidation]) => {
           // We will generate a hash based on the contents of the S3 files with cache enabled.
           // This will be used to determine if we need to invalidate our CloudFront cache.
           const s3Origin = Object.values(plan.origins).find(
@@ -1081,11 +1131,13 @@ if (event.type === "warmer") {
           }
 
           new DistributionInvalidation(`${name}-invalidation`, {
-            distributionId: distribution.aws.distribution.id,
+            distributionId: distribution.nodes.distribution.id,
             paths: invalidationPaths,
             version: invalidationBuildId,
-          });
-        });
+          }),
+            { parent };
+        }
+      );
     }
 
     function getContentType(filename: string, textEncoding: string) {

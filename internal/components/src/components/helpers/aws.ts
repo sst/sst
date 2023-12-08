@@ -27,7 +27,7 @@ export const AWS = {
             .send(
               new GetParameterCommand({
                 Name: `/sst/bootstrap`,
-              }),
+              })
             )
             .catch((err) => {
               if (err instanceof ParameterNotFound) return;
@@ -40,14 +40,14 @@ export const AWS = {
           await s3.send(
             new CreateBucketCommand({
               Bucket: name,
-            }),
+            })
           );
           await ssm.send(
             new PutParameterCommand({
               Name: `/sst/bootstrap`,
               Value: name,
               Type: "String",
-            }),
+            })
           );
           return name;
         })();

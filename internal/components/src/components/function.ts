@@ -1,7 +1,6 @@
 import fs from "fs";
-import path from "path";
+import path, { normalize } from "path";
 import crypto from "crypto";
-import { globSync } from "glob";
 import archiver from "archiver";
 import type { Loader, BuildOptions } from "esbuild";
 import {
@@ -17,7 +16,9 @@ import {
 import * as aws from "@pulumi/aws";
 import { FunctionCodeUpdater } from "./function-code-updater.js";
 import { AWS } from "./helpers/aws.js";
-import { Duration } from "./util/duration.js";
+import { LogGroup } from "./log-group.js";
+import { Duration, toSeconds } from "./util/duration.js";
+import { Size, toMBs } from "./util/size.js";
 
 const RETENTION = {
   "1 day": 1,
@@ -42,7 +43,7 @@ const RETENTION = {
   "8 years": 2922,
   "9 years": 3288,
   "10 years": 3653,
-  infinite: 0,
+  forever: 0,
 };
 
 export interface FunctionNodeJSArgs {
@@ -144,6 +145,24 @@ export interface FunctionNodeJSArgs {
   splitting?: Input<boolean>;
 }
 
+export interface FunctionUrlCorsArgs
+  extends Omit<
+    aws.types.input.lambda.FunctionUrlCors,
+    "allowMethods" | "maxAge"
+  > {
+  /**
+   * The HTTP methods that are allowed when calling the function URL. For example: `["GET", "POST", "DELETE"]`, or the wildcard character (`["*"]`).
+   */
+  allowMethods?: Input<
+    Input<
+      "*" | "DELETE" | "GET" | "HEAD" | "OPTIONS" | "PATCH" | "POST" | "PUT"
+    >[]
+  >;
+  /**
+   * The maximum amount of time, in seconds, that web browsers can cache results of a preflight request. By default, this is set to `0`, which means that the browser doesn't cache results. The maximum value is `86400`.
+   */
+  maxAge?: Input<Duration>;
+}
 export interface FunctionUrlArgs {
   /**
    * The authorization for the function URL
@@ -181,14 +200,14 @@ export interface FunctionUrlArgs {
    * }
    * ```
    */
-  cors?: Input<boolean | aws.types.input.lambda.FunctionUrlCors>;
+  cors?: Input<boolean | FunctionUrlCorsArgs>;
 }
 
 export interface FunctionLoggingArgs {
   /**
    * The duration function logs are kept in CloudWatch Logs.
    *
-   * When updating this property, unsetting it doesn't retain the logs indefinitely. Explicitly set the value to "infinite".
+   * When updating this property, unsetting it doesn't retain the logs indefinitely. Explicitly set the value to "forever".
    * @default Logs retained indefinitely
    * @example
    * ```js
@@ -202,19 +221,19 @@ export interface FunctionLoggingArgs {
   retention?: Input<keyof typeof RETENTION>;
 }
 
-export interface FunctionArgs
-  extends Omit<
-    aws.lambda.FunctionArgs,
-    "handler" | "code" | "s3Bucket" | "s3Key" | "role" | "environment"
-  > {
+export interface FunctionArgs {
+  description?: Input<string>;
+  runtime?: Input<"nodejs18.x" | "nodejs20.x">;
   bundle: Input<string>;
   bundleHash?: Input<string>;
   handler: Input<string>;
+  timeout?: Input<Duration>;
+  memory?: Input<Size>;
   environment?: Input<Record<string, Input<string>>>;
   policies?: Input<aws.types.input.iam.RoleInlinePolicy[]>;
+  bind?: Input<ComponentResource>;
   streaming?: Input<boolean>;
   injections?: Input<string[]>;
-  region?: Input<aws.Region>;
   logging?: Input<FunctionLoggingArgs>;
   /**
    * Enable function URLs, a dedicated endpoint for your Lambda function.
@@ -242,10 +261,13 @@ export interface FunctionArgs
    * Used to configure nodejs function properties
    */
   nodejs?: Input<FunctionNodeJSArgs>;
+  nodes?: {
+    function?: Omit<aws.lambda.FunctionArgs, "role">;
+  };
 }
 
 export class Function extends ComponentResource {
-  private function: aws.lambda.Function;
+  private function: Output<aws.lambda.Function>;
   private role: aws.iam.Role;
   private fnUrl: Output<aws.lambda.FunctionUrl | undefined>;
   private missingSourcemap?: boolean;
@@ -257,22 +279,26 @@ export class Function extends ComponentResource {
   ) {
     super("sst:sst:Function", name, args, opts);
 
+    const parent = this;
+    const region = normalizeRegion();
     const injections = normalizeInjections();
+    const runtime = normalizeRuntime();
+    const timeout = normalizeTimeout();
+    const memory = normalizeMemory();
     const environment = normalizeEnvironment();
     const streaming = normalizeStreaming();
-    const region = normalizeRegion();
     const logging = normalizeLogging();
     const url = normalizeUrl();
 
-    const provider = new aws.Provider(`${name}-provider`, { region });
-
+    const bindInjection = bind();
     const newHandler = wrapHandler();
     const role = createRole();
     const zipPath = zipBundleFolder();
     const bundleHash = args.bundleHash ?? calculateHash();
     const file = createBucketObject();
-    const fn = createFunction();
-    updateFunctionCode();
+    const fnRaw = createFunction();
+    const fn = updateFunctionCode();
+
     createLogGroup();
     const fnUrl = createUrl();
 
@@ -280,8 +306,26 @@ export class Function extends ComponentResource {
     this.role = role;
     this.fnUrl = fnUrl;
 
+    function normalizeRegion() {
+      return output((opts?.provider as aws.Provider)?.region).apply(
+        (region) => region ?? app.aws.region
+      );
+    }
+
     function normalizeInjections() {
       return output(args.injections).apply((injections) => injections ?? []);
+    }
+
+    function normalizeRuntime() {
+      return output(args.runtime).apply((v) => v ?? "nodejs18.x");
+    }
+
+    function normalizeTimeout() {
+      return output(args.timeout).apply((timeout) => timeout ?? "20 seconds");
+    }
+
+    function normalizeMemory() {
+      return output(args.memory).apply((memory) => memory ?? "1024 MB");
     }
 
     function normalizeEnvironment() {
@@ -292,44 +336,42 @@ export class Function extends ComponentResource {
       return output(args.streaming).apply((streaming) => streaming ?? false);
     }
 
-    function normalizeRegion() {
-      return output(args.region).apply((region) => region ?? app.aws.region);
-    }
-
     function normalizeLogging() {
       return output(args.logging).apply((logging) => ({
         ...logging,
-        retention: logging?.retention ?? "infinite",
+        retention: logging?.retention ?? "forever",
       }));
     }
 
     function normalizeUrl() {
       return output(args.url).apply((url) => {
         if (url === false || url === undefined) return;
+        if (url === true) {
+          url = {};
+        }
 
+        // normalize authorization
         const defaultAuthorization = "none" as const;
+        const authorization = url.authorization ?? defaultAuthorization;
+
+        // normalize cors
         const defaultCors: aws.types.input.lambda.FunctionUrlCors = {
           allowHeaders: ["*"],
           allowMethods: ["*"],
           allowOrigins: ["*"],
         };
+        const cors =
+          url.cors === false
+            ? {}
+            : url.cors === true || url.cors === undefined
+            ? defaultCors
+            : {
+                ...defaultCors,
+                ...url.cors,
+                maxAge: url.cors.maxAge && toSeconds(url.cors.maxAge),
+              };
 
-        if (url === true) {
-          return { authorization: defaultAuthorization, cors: defaultCors };
-        }
-
-        return {
-          authorization: url.authorization ?? defaultAuthorization,
-          cors:
-            url.cors === false
-              ? {}
-              : url.cors === true
-              ? defaultCors
-              : {
-                  ...defaultCors,
-                  ...url.cors,
-                },
-        };
+        return { authorization, cors };
       });
     }
 
@@ -341,10 +383,37 @@ export class Function extends ComponentResource {
       });
     }
 
+    function bind() {
+      if (!args.bind) return;
+
+      return output(args.bind).apply(async (component) => {
+        const outputs = Object.entries(component).filter(
+          ([key]) => !key.startsWith("__")
+        );
+        const keys = outputs.map(([key]) => key);
+        const values = outputs.map(([_, value]) => value);
+
+        return all(values).apply((values) => {
+          const acc: Record<string, any> = {};
+          keys.forEach((key, index) => {
+            acc[key] = values[index];
+          });
+          // @ts-expect-error
+          return `globalThis.${component.__name}=${JSON.stringify(acc)}`;
+        });
+      });
+    }
+
     function wrapHandler() {
-      return all([args.handler, args.bundle, injections]).apply(
-        async ([handler, bundle, injections]) => {
-          if (injections.length === 0) return handler;
+      return all([
+        args.handler,
+        args.bundle,
+        streaming,
+        injections,
+        bindInjection,
+      ]).apply(
+        async ([handler, bundle, streaming, injections, bindInjection]) => {
+          if (injections.length === 0 && !bindInjection) return handler;
 
           const {
             dir: handlerDir,
@@ -365,6 +434,7 @@ export class Function extends ComponentResource {
                   `});`,
                 ].join("\n")
               : [
+                  `${bindInjection ?? ""};`,
                   `export const ${newHandlerFunction} = async (event, context) => {`,
                   ...injections,
                   `  const { ${oldHandlerFunction}: rawHandler} = await import("./${oldHandlerName}.mjs");`,
@@ -381,15 +451,19 @@ export class Function extends ComponentResource {
     }
 
     function createRole() {
-      return new aws.iam.Role(`${name}-role`, {
-        assumeRolePolicy: aws.iam.assumeRolePolicyForPrincipal({
-          Service: "lambda.amazonaws.com",
-        }),
-        inlinePolicies: args.policies,
-        managedPolicyArns: [
-          "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
-        ],
-      });
+      return new aws.iam.Role(
+        `${name}-role`,
+        {
+          assumeRolePolicy: aws.iam.assumeRolePolicyForPrincipal({
+            Service: "lambda.amazonaws.com",
+          }),
+          inlinePolicies: args.policies,
+          managedPolicyArns: [
+            "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+          ],
+        },
+        { parent }
+      );
     }
 
     function zipBundleFolder() {
@@ -432,9 +506,7 @@ export class Function extends ComponentResource {
           bucket: region.apply((region) => AWS.bootstrap.forRegion(region)),
           source: zipPath.apply((zipPath) => new asset.FileArchive(zipPath)),
         },
-        {
-          provider,
-        }
+        { parent }
       );
     }
 
@@ -442,55 +514,75 @@ export class Function extends ComponentResource {
       return new aws.lambda.Function(
         `${name}-function`,
         {
+          description: args.description,
           code: new asset.AssetArchive({
             index: new asset.StringAsset("exports.handler = () => {}"),
           }),
-          role: role.arn,
-          ...args,
           handler: newHandler,
+          role: role.arn,
+          runtime,
+          timeout: timeout.apply((timeout) => toSeconds(timeout)),
+          memorySize: memory.apply((memory) => toMBs(memory)),
           environment: {
             variables: environment,
           },
+          ...args.nodes?.function,
         },
-        { provider }
+        { parent }
       );
     }
 
     function createLogGroup() {
-      new aws.cloudwatch.LogGroup(`${name}-log-group`, {
-        name: interpolate`/aws/lambda/${fn.name}`,
-        retentionInDays: logging.apply(
-          (logging) => RETENTION[logging.retention]
-        ),
-      });
+      new LogGroup(
+        `${name}-log-group`,
+        {
+          logGroupName: interpolate`/aws/lambda/${fn.name}`,
+          retentionInDays: logging.apply(
+            (logging) => RETENTION[logging.retention]
+          ),
+          region,
+        },
+        { parent }
+      );
     }
 
     function createUrl() {
       return url.apply((url) => {
         if (url === undefined) return;
 
-        return new aws.lambda.FunctionUrl(`${name}-url`, {
-          functionName: fn.name,
-          authorizationType: url.authorization.toUpperCase(),
-          invokeMode: streaming.apply((streaming) =>
-            streaming ? "RESPONSE_STREAM" : "BUFFERED"
-          ),
-          cors: url.cors,
-        });
+        return new aws.lambda.FunctionUrl(
+          `${name}-url`,
+          {
+            functionName: fn.name,
+            authorizationType: url.authorization.toUpperCase(),
+            invokeMode: streaming.apply((streaming) =>
+              streaming ? "RESPONSE_STREAM" : "BUFFERED"
+            ),
+            cors: url.cors,
+          },
+          { parent }
+        );
       });
     }
 
     function updateFunctionCode() {
-      new FunctionCodeUpdater(`${name}-code-updater`, {
-        functionName: fn.name,
-        s3Bucket: file.bucket,
-        s3Key: file.key,
-        region,
+      return output([fnRaw]).apply(([fnRaw]) => {
+        new FunctionCodeUpdater(
+          `${name}-code-updater`,
+          {
+            functionName: fnRaw.name,
+            s3Bucket: file.bucket,
+            s3Key: file.key,
+            region,
+          },
+          { parent }
+        );
+        return fnRaw;
       });
     }
   }
 
-  public get aws() {
+  public get nodes() {
     return {
       function: this.function,
       role: this.role,

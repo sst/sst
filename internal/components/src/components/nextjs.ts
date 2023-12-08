@@ -9,7 +9,6 @@ import {
   all,
   asset,
   interpolate,
-  jsonStringify,
   output,
 } from "@pulumi/pulumi";
 import * as aws from "@pulumi/aws";
@@ -140,6 +139,7 @@ export class Nextjs extends ComponentResource {
   ) {
     super("sst:sst:Nextjs", name, args, opts);
 
+    const parent = this;
     const logging = normalizeLogging();
     const experimental = normalizeExperimental();
     const buildCommand = normalizeBuildCommand();
@@ -176,7 +176,7 @@ export class Nextjs extends ComponentResource {
     }>;
 
     const outputPath = buildApp(name, args || {}, sitePath, buildCommand);
-    const { access, bucket } = createBucket(name);
+    const { access, bucket } = createBucket(parent, name);
     const revalidationQueue = createRevalidationQueue();
     const plan = buildPlan(bucket);
     // TODO set dependency
@@ -189,6 +189,7 @@ export class Nextjs extends ComponentResource {
 
     const { distribution, ssrFunctions, edgeFunctions } =
       createServersAndDistribution(
+        parent,
         name,
         args || {},
         outputPath,
@@ -473,47 +474,59 @@ if (event.rawPath) {
         if (!serverFunction) return;
         if (experimental.disableIncrementalCache) return;
 
-        const queue = new aws.sqs.Queue(`${name}-revalidation-queue`, {
-          fifoQueue: true,
-          receiveWaitTimeSeconds: 20,
-        });
-        const consumer = new Function(`${name}-revalidation-consumer`, {
-          description: "Next.js revalidator",
-          handler: "index.handler",
-          bundle: outputPath.apply((outputPath) =>
-            path.join(outputPath, ".open-next", "revalidation-function")
-          ),
-          runtime: "nodejs18.x",
-          timeout: 30,
-          policies: [
-            {
-              name: "sqs",
-              policy: queue.arn.apply((arn) =>
-                aws.iam
-                  .getPolicyDocument({
-                    statements: [
-                      {
-                        actions: [
-                          "sqs:ChangeMessageVisibility",
-                          "sqs:DeleteMessage",
-                          "sqs:GetQueueAttributes",
-                          "sqs:GetQueueUrl",
-                          "sqs:ReceiveMessage",
-                        ],
-                        resources: [arn],
-                      },
-                    ],
-                  })
-                  .then((doc) => doc.json)
-              ),
-            },
-          ],
-        });
-        new aws.lambda.EventSourceMapping(`${name}-revalidation-event-source`, {
-          functionName: consumer.aws.function.name,
-          eventSourceArn: queue.arn,
-          batchSize: 5,
-        });
+        const queue = new aws.sqs.Queue(
+          `${name}-revalidation-queue`,
+          {
+            fifoQueue: true,
+            receiveWaitTimeSeconds: 20,
+          },
+          { parent }
+        );
+        const consumer = new Function(
+          `${name}-revalidation-consumer`,
+          {
+            description: "Next.js revalidator",
+            handler: "index.handler",
+            bundle: outputPath.apply((outputPath) =>
+              path.join(outputPath, ".open-next", "revalidation-function")
+            ),
+            runtime: "nodejs18.x",
+            timeout: "30 seconds",
+            policies: [
+              {
+                name: "sqs",
+                policy: queue.arn.apply((arn) =>
+                  aws.iam
+                    .getPolicyDocument({
+                      statements: [
+                        {
+                          actions: [
+                            "sqs:ChangeMessageVisibility",
+                            "sqs:DeleteMessage",
+                            "sqs:GetQueueAttributes",
+                            "sqs:GetQueueUrl",
+                            "sqs:ReceiveMessage",
+                          ],
+                          resources: [arn],
+                        },
+                      ],
+                    })
+                    .then((doc) => doc.json)
+                ),
+              },
+            ],
+          },
+          { parent }
+        );
+        new aws.lambda.EventSourceMapping(
+          `${name}-revalidation-event-source`,
+          {
+            functionName: consumer.nodes.function.name,
+            eventSourceArn: queue.arn,
+            batchSize: 5,
+          },
+          { parent }
+        );
         return queue;
       });
     }
@@ -541,7 +554,7 @@ if (event.rawPath) {
       //      projectionType: "ALL",
       //    },
       //  ],
-      //});
+      //}, {parent});
       //serverFunction?.addEnvironment("CACHE_DYNAMO_TABLE", table.tableName);
       //table.grantReadWriteData(serverFunction.role!);
       //const dynamodbProviderPath = path.join(
@@ -590,14 +603,14 @@ if (event.rawPath) {
       //    environment: {
       //      CACHE_DYNAMO_TABLE: table.name,
       //    },
-      //  });
+      //  }, {parent});
       //  new aws.lambda.Invocation(`${name}-revalidation-table-seed-invocation`, {
       //    functionName: insertFn.aws.function.name,
       //    triggers: {
       //      version: Date.now().toString(),
       //    },
       //    input: JSON.stringify({}),
-      //  });
+      //  }, {parent});
       //}
     }
 
@@ -846,8 +859,10 @@ if (event.rawPath) {
       if (!serverFunction) return;
 
       // TODO create log group and reference log group arn
-      const policy = new aws.iam.Policy(`${name}-disable-logging-policy`, {
-        policy: interpolate`{
+      const policy = new aws.iam.Policy(
+        `${name}-disable-logging-policy`,
+        {
+          policy: interpolate`{
             "Version": "2012-10-17",
             "Statement": [
               {
@@ -858,19 +873,22 @@ if (event.rawPath) {
                 ],
                 "Effect": "Deny",
                 "Resources": [
-                  "arn:aws:logs:${app.aws.region}:*:log-group:/aws/lambda/${serverFunction?.aws.function.name}",
-                  "arn:aws:logs:${app.aws.region}:*:log-group:/aws/lambda/${serverFunction?.aws.function.name}:*",
+                  "arn:aws:logs:${app.aws.region}:*:log-group:/aws/lambda/${serverFunction?.nodes.function.name}",
+                  "arn:aws:logs:${app.aws.region}:*:log-group:/aws/lambda/${serverFunction?.nodes.function.name}:*",
                 ],
               }
             ]
           }`,
-      });
+        },
+        { parent }
+      );
       new aws.iam.RolePolicyAttachment(
         `${name}-disable-logging-policy-attachment`,
         {
           policyArn: policy.arn,
-          role: serverFunction.aws.function.role,
-        }
+          role: serverFunction.nodes.function.role,
+        },
+        { parent }
       );
     }
 
@@ -881,13 +899,17 @@ if (event.rawPath) {
         routes.forEach(({ sourcemapPath, sourcemapKey }) => {
           if (!sourcemapPath || !sourcemapKey) return;
 
-          new aws.s3.BucketObject(`${name}-sourcemap-${sourcemapKey}`, {
-            bucket: app.bootstrap.bucket,
-            source: new asset.FileAsset(sourcemapPath),
-            key: serverFunction!.aws.function.arn.apply((arn) =>
-              path.join(arn, sourcemapKey)
-            ),
-          });
+          new aws.s3.BucketObject(
+            `${name}-sourcemap-${sourcemapKey}`,
+            {
+              bucket: app.bootstrap.bucket,
+              source: new asset.FileAsset(sourcemapPath),
+              key: serverFunction!.nodes.function.arn.apply((arn) =>
+                path.join(arn, sourcemapKey)
+              ),
+            },
+            { parent }
+          );
         });
       });
     }
@@ -924,11 +946,11 @@ if (event.rawPath) {
   /**
    * The internally created CDK resources.
    */
-  public get aws() {
+  public get nodes() {
     if (this.doNotDeploy) return;
 
     return {
-      function: this.serverFunction?.aws.function,
+      function: this.serverFunction?.nodes.function,
       bucket: this.bucket,
       distribution: this.distribution,
       //hostedZone: this.distribution.cdk.hostedZone,
