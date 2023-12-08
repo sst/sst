@@ -18,6 +18,7 @@ type Progress struct {
 	Color   color.Attribute
 	Label   string
 	URN     string
+	Final   bool
 	Message string
 	time.Duration
 }
@@ -33,6 +34,7 @@ const (
 
 func progress(mode ProgressMode, events project.StackEventStream) bool {
 	spin := spinner.New(spinner.CharSets[14], 100*time.Millisecond)
+	pending := map[string]string{}
 	if mode == ProgressModeRemove {
 		spin.Suffix = "  Removing..."
 	}
@@ -55,6 +57,17 @@ func progress(mode ProgressMode, events project.StackEventStream) bool {
 
 	printProgress := func(progress Progress) {
 		spin.Disable()
+		defer spin.Enable()
+		if progress.Final && false {
+			pending[progress.URN] =
+				color.New(color.FgWhite).Sprintf("   %-11s %v", progress.Label, formatURN(progress.URN))
+			suffix := "  Deploying...\n"
+			for _, item := range pending {
+				suffix += item + "\n"
+			}
+			spin.Suffix = strings.TrimRight(suffix, "\n")
+			return
+		}
 		color.New(progress.Color, color.Bold).Print("|  ")
 		color.New(color.FgHiBlack).Print(fmt.Sprintf("%-11s", progress.Label), " ", formatURN(progress.URN))
 		if progress.Duration != 0 {
@@ -64,7 +77,6 @@ func progress(mode ProgressMode, events project.StackEventStream) bool {
 			color.New(color.FgHiBlack).Print(" ", progress.Message)
 		}
 		fmt.Println()
-		spin.Enable()
 	}
 
 	timing := make(map[string]time.Time)
@@ -99,6 +111,7 @@ func progress(mode ProgressMode, events project.StackEventStream) bool {
 				printProgress(Progress{
 					Color: color.FgHiBlack,
 					Label: "Skipped",
+					Final: true,
 					URN:   evt.ResourcePreEvent.Metadata.URN,
 				})
 				continue
@@ -110,6 +123,7 @@ func progress(mode ProgressMode, events project.StackEventStream) bool {
 					Label: "Creating",
 					URN:   evt.ResourcePreEvent.Metadata.URN,
 				})
+				pending[evt.ResourcePreEvent.Metadata.URN] = "  Creating    " + formatURN(evt.ResourcePreEvent.Metadata.URN)
 				continue
 			}
 
@@ -119,6 +133,7 @@ func progress(mode ProgressMode, events project.StackEventStream) bool {
 					Label: "Updating",
 					URN:   evt.ResourcePreEvent.Metadata.URN,
 				})
+				pending[evt.ResourcePreEvent.Metadata.URN] = "  Creating    " + formatURN(evt.ResourcePreEvent.Metadata.URN)
 
 				continue
 			}
@@ -162,34 +177,42 @@ func progress(mode ProgressMode, events project.StackEventStream) bool {
 				printProgress(Progress{
 					Color:    color.FgGreen,
 					Label:    "Refreshed",
+					Final:    true,
 					URN:      evt.ResOutputsEvent.Metadata.URN,
 					Duration: duration,
 				})
+				delete(pending, evt.ResOutputsEvent.Metadata.URN)
 				continue
 			}
 			if evt.ResOutputsEvent.Metadata.Op == apitype.OpCreate {
 				printProgress(Progress{
 					Color:    color.FgGreen,
 					Label:    "Created",
+					Final:    true,
 					URN:      evt.ResOutputsEvent.Metadata.URN,
 					Duration: duration,
 				})
+				delete(pending, evt.ResOutputsEvent.Metadata.URN)
 			}
 			if evt.ResOutputsEvent.Metadata.Op == apitype.OpUpdate {
 				printProgress(Progress{
 					Color:    color.FgGreen,
 					Label:    "Updated",
+					Final:    true,
 					URN:      evt.ResOutputsEvent.Metadata.URN,
 					Duration: duration,
 				})
+				delete(pending, evt.ResOutputsEvent.Metadata.URN)
 			}
 			if evt.ResOutputsEvent.Metadata.Op == apitype.OpDelete {
 				printProgress(Progress{
 					Color:    color.FgRed,
 					Label:    "Deleted",
+					Final:    true,
 					URN:      evt.ResOutputsEvent.Metadata.URN,
 					Duration: duration,
 				})
+				delete(pending, evt.ResOutputsEvent.Metadata.URN)
 			}
 		}
 
@@ -212,6 +235,7 @@ func progress(mode ProgressMode, events project.StackEventStream) bool {
 					printProgress(Progress{
 						URN:     evt.DiagnosticEvent.URN,
 						Color:   color.FgRed,
+						Final:   true,
 						Label:   "Error",
 						Message: msg,
 					})

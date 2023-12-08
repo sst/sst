@@ -87,7 +87,7 @@ func Start(dir string) (*Process, error) {
 	if err != nil {
 		return nil, err
 	}
-	cmd := exec.Command("node", "--input-type=module", "-e", LOOP)
+	cmd := exec.Command("node", "--no-warnings", "--input-type=module", "-e", LOOP)
 	cmd.Dir = dir
 
 	stdIn, err := cmd.StdinPipe()
