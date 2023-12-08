@@ -47,32 +47,31 @@ export class AstroSite extends SsrSite {
   private static getCFRoutingFunction({ routes, pageResolution }: BuildMetaConfig) {
     const stringifiedFlatTree = getStringifiedRouteTree(routes);
   
-    return `var routeData = ${stringifiedFlatTree};
-    var findMatch = (path, routeData) => {
-      var match = routeData.find((route) => route[0].test(path));
-      return match && Array.isArray(match[1]) ? findMatch(path, match[1]) : match;
-    };
+    return `  var routeData = ${stringifiedFlatTree};
+  var findMatch = (path, routeData) => {
+    var match = routeData.find((route) => route[0].test(path));
+    return match && Array.isArray(match[1]) ? findMatch(path, match[1]) : match;
+  };
     
-    var matchedRoute = findMatch(request.uri, routeData);
-    if (matchedRoute) {
-      if (!matchedRoute[1]) {
-        ${
-          pageResolution === "file"
-            ? `request.uri = request.uri === "/" ? "/index.html" : request.uri.replace(/\\/?$/, ".html");`
-            : `request.uri = request.uri.replace(/\\/?$/, "/index.html");`
-        }
-      } else {
-        var redirectPath = matchedRoute[2];
-        matchedRoute[0].exec(request.uri).forEach((match, index) => {
-          redirectPath = redirectPath.replace(\`\\\${\${index}}\`, match);
-        });
-        return {
-          statusCode: matchedRoute[3] || 308,
-          headers: { location: { value: redirectPath } },
-        };
+  var matchedRoute = findMatch(request.uri, routeData);
+  if (matchedRoute) {
+    if (!matchedRoute[1]) {
+      ${
+        pageResolution === "file"
+          ? `request.uri = request.uri === "/" ? "/index.html" : request.uri.replace(/\\/?$/, ".html");`
+          : `request.uri = request.uri.replace(/\\/?$/, "/index.html");`
       }
+    } else {
+      var redirectPath = matchedRoute[2];
+      matchedRoute[0].exec(request.uri).forEach((match, index) => {
+        redirectPath = redirectPath.replace(\`\\\${\${index}}\`, match);
+      });
+      return {
+        statusCode: matchedRoute[3] || 308,
+        headers: { location: { value: redirectPath } },
+      };
     }
-    `;
+  }`;
   }
 
   protected plan() {
