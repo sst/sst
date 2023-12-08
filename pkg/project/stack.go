@@ -26,6 +26,7 @@ func (s *stack) runtime() (string, error) {
 	inject := map[string]interface{}{
 		"stage": s.project.Stage(),
 		"name":  s.project.Name(),
+		"removalPolicy": s.project.RemovalPolicy(),
 		"paths": map[string]string{
 			"root": s.project.PathRoot(),
 			"temp": s.project.PathTemp(),

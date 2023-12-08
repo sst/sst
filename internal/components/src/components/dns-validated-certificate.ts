@@ -5,6 +5,7 @@ import {
   ComponentResourceOptions,
 } from "@pulumi/pulumi";
 import * as aws from "@pulumi/aws";
+import { Certificate, CertificateValidation } from "@pulumi/aws/acm";
 
 /**
  * Properties to create a DNS validated certificate managed by AWS Certificate Manager.
@@ -34,7 +35,7 @@ export interface DnsValidatedCertificateArgs {
 }
 
 export class DnsValidatedCertificate extends ComponentResource {
-  public certificateArn: Output<string>;
+  public certificateValidation: CertificateValidation;
 
   constructor(
     name: string,
@@ -43,11 +44,8 @@ export class DnsValidatedCertificate extends ComponentResource {
   ) {
     super("sst:sst:Certificate", name, args, opts);
 
+    const parent = this;
     const { domainName, alternativeNames, zoneId, region } = args;
-
-    const provider = new aws.Provider(`${name}-provider`, {
-      region: region || app.aws.region,
-    });
 
     const certificate = new aws.acm.Certificate(
       `${name}-certificate`,
@@ -56,7 +54,7 @@ export class DnsValidatedCertificate extends ComponentResource {
         validationMethod: "DNS",
         subjectAlternativeNames: alternativeNames ?? [],
       },
-      { provider }
+      { parent }
     );
 
     const records: aws.route53.Record[] = [];
@@ -71,7 +69,8 @@ export class DnsValidatedCertificate extends ComponentResource {
               type: option.resourceRecordType,
               records: [option.resourceRecordValue],
               ttl: 60,
-            }
+            },
+            { parent }
           )
         );
       });
@@ -83,9 +82,13 @@ export class DnsValidatedCertificate extends ComponentResource {
         certificateArn: certificate.arn,
         validationRecordFqdns: records.map((record) => record.fqdn),
       },
-      { provider }
+      { parent }
     );
 
-    this.certificateArn = certificateValidation.certificateArn;
+    this.certificateValidation = certificateValidation;
+  }
+
+  public get certificateArn() {
+    return this.certificateValidation.certificateArn;
   }
 }

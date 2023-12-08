@@ -31,20 +31,13 @@ export default {
 
     const bucket = new aws.s3.Bucket("web");
 
-    const provider = new aws.Provider(`${app.name}-provider`, {
-      region: "us-west-1",
+    const site = new sst.Function("web", {
+      runtime: "nodejs18.x",
+      bundle: "bundled-function",
+      handler: "index.handler",
+      url: true,
+      //bind: bucket,
     });
-    const site = new sst.Function(
-      "web",
-      {
-        runtime: "nodejs18.x",
-        bundle: "bundled-function",
-        handler: "index.handler",
-        url: true,
-        //bind: bucket,
-      },
-      { provider }
-    );
 
     return {
       siteURL: site.url,

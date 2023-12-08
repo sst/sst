@@ -18,6 +18,7 @@ type Project struct {
 	profile string
 	region  string
 	stage   string
+	removalPolicy string
 	process *js.Process
 
 	AWS       *projectAws
@@ -101,6 +102,7 @@ console.log("~j" + JSON.stringify(mod.config()))`,
 			Profile string `json:"profile"`
 			Stage   string `json:"stage"`
 			Region  string `json:"region"`
+			RemovalPolicy  string `json:"removalPolicy"`
 		}{}
 		err = json.Unmarshal([]byte(line), &parsed)
 		if err != nil {
@@ -110,6 +112,7 @@ console.log("~j" + JSON.stringify(mod.config()))`,
 		proj.profile = parsed.Profile
 		proj.stage = parsed.Stage
 		proj.region = parsed.Region
+		proj.removalPolicy = parsed.RemovalPolicy
 
 		if proj.name == "" {
 			return nil, fmt.Errorf("Project name is required")
@@ -117,6 +120,13 @@ console.log("~j" + JSON.stringify(mod.config()))`,
 
 		if proj.region == "" {
 			return nil, fmt.Errorf("Region is required")
+		}
+
+		if (proj.removalPolicy == "") {
+			proj.removalPolicy = "retain"
+		}
+		if (proj.removalPolicy != "remove" && proj.removalPolicy != "retain" && proj.removalPolicy != "retain-all") {
+			return nil, fmt.Errorf("RemovalPolicy must be one of: remove, retain, retain-all")
 		}
 	}
 
@@ -171,6 +181,10 @@ func (p *Project) Region() string {
 
 func (p *Project) Profile() string {
 	return p.profile
+}
+
+func (p *Project) RemovalPolicy() string {
+	return p.removalPolicy
 }
 
 func (p *Project) Stage() string {

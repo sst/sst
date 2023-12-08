@@ -174,15 +174,20 @@ export class Distribution extends ComponentResource {
     function createCertificate() {
       if (!customDomain || !zoneId) return;
 
+      // Certificates used for CloudFront distributions are required to be
+      // created in the us-east-1 region
+      const provider = new aws.Provider(`${name}-useast1-provider`, {
+        region: "us-east-1",
+      });
+
       return new DnsValidatedCertificate(
         `${name}-certificate`,
         {
           domainName: customDomain.domainName,
           alternativeNames: customDomain.aliases,
           zoneId,
-          region: "us-east-1",
         },
-        { parent }
+        { parent, provider }
       );
     }
 

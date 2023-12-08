@@ -17,6 +17,7 @@ declare global {
     stage: string;
     name: string;
     mode: "deploy" | "remove";
+    removalPolicy: "remove" | "retain" | "retain-all";
     paths: {
       root: string;
       temp: string;
