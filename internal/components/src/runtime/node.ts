@@ -45,11 +45,7 @@ export async function build(
     .join(path.posix.sep);
 
   // Rebuilt using existing esbuild context
-  const forceExternal = [
-    "sharp",
-    "pg-native",
-    ...(isESM || input.runtime !== "nodejs16.x" ? [] : ["aws-sdk"]),
-  ];
+  const forceExternal = ["sharp", "pg-native"];
   const { external, ...override } = nodejs.esbuild || {};
   const options: BuildOptions = {
     entryPoints: [file],
@@ -108,7 +104,6 @@ export async function build(
     const installPackages = [
       ...(nodejs.install || []),
       ...forceExternal
-        .filter((pkg) => pkg !== "aws-sdk")
         .filter((pkg) => !external?.includes(pkg))
         .filter((pkg) =>
           Object.values(result.metafile?.inputs || {}).some(({ imports }) =>
@@ -157,7 +152,7 @@ export async function build(
       if (installPackages.includes("sharp")) {
         cmd.push(
           "--platform=linux",
-          input.architectures?.includes("arm_64")
+          input.nodes?.function?.architectures?.includes("arm_64")
             ? "--arch=arm64"
             : "--arch=x64"
         );

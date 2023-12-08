@@ -5,7 +5,7 @@ import {
   ComponentResourceOptions,
 } from "@pulumi/pulumi";
 import * as aws from "@pulumi/aws";
-import { Certificate, CertificateValidation } from "@pulumi/aws/acm";
+import { CertificateValidation } from "@pulumi/aws/acm";
 
 /**
  * Properties to create a DNS validated certificate managed by AWS Certificate Manager.

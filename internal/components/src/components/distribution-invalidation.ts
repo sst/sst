@@ -4,7 +4,7 @@ import {
   CreateInvalidationCommand,
   waitUntilInvalidationCompleted,
 } from "@aws-sdk/client-cloudfront";
-import { useAWSClient } from "./helpers/aws-client";
+import { AWS } from "./helpers/aws.js";
 
 // CloudFront allows you to specify up to 3,000 paths in a single invalidation
 // https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/cloudfront-limits.html#limits-invalidations
@@ -41,7 +41,7 @@ class Provider implements dynamic.ResourceProvider {
   }
 
   async handle(inputs: Inputs) {
-    const client = useAWSClient(CloudFrontClient);
+    const client = AWS.useClient(CloudFrontClient);
     const ids = await this.invalidate(client, inputs);
     if (inputs.wait) {
       await this.waitForInvalidation(client, inputs, ids);

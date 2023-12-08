@@ -6,7 +6,7 @@ import {
   PutRetentionPolicyCommand,
   DeleteRetentionPolicyCommand,
 } from "@aws-sdk/client-cloudwatch-logs";
-import { useAWSClient } from "./helpers/aws-client";
+import { AWS } from "./helpers/aws.js";
 
 export interface LogGroupInputs {
   logGroupName: Input<string>;
@@ -42,7 +42,7 @@ class Provider implements dynamic.ResourceProvider {
   }
 
   async createLogGroup(inputs: Inputs) {
-    const client = useAWSClient(CloudWatchLogsClient, inputs.region);
+    const client = AWS.useClient(CloudWatchLogsClient, inputs.region);
     try {
       await client.send(
         new CreateLogGroupCommand({ logGroupName: inputs.logGroupName })
@@ -54,7 +54,7 @@ class Provider implements dynamic.ResourceProvider {
   }
 
   async deleteLogGroup(inputs: Inputs) {
-    const client = useAWSClient(CloudWatchLogsClient, inputs.region);
+    const client = AWS.useClient(CloudWatchLogsClient, inputs.region);
     try {
       await client.send(
         new DeleteLogGroupCommand({ logGroupName: inputs.logGroupName })
@@ -66,7 +66,7 @@ class Provider implements dynamic.ResourceProvider {
   }
 
   async setRetentionPolicy(inputs: Inputs) {
-    const client = useAWSClient(CloudWatchLogsClient, inputs.region);
+    const client = AWS.useClient(CloudWatchLogsClient, inputs.region);
     const logGroupName = inputs.logGroupName;
     const retentionInDays = inputs.retentionInDays;
     if (retentionInDays === 0) {

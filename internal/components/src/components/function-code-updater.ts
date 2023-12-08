@@ -3,7 +3,7 @@ import {
   LambdaClient,
   UpdateFunctionCodeCommand,
 } from "@aws-sdk/client-lambda";
-import { useAWSClient } from "./helpers/aws-client";
+import { AWS } from "./helpers/aws.js";
 
 export interface FunctionCodeUpdaterInputs {
   s3Bucket: Input<string>;
@@ -21,7 +21,7 @@ interface Inputs {
 
 class Provider implements dynamic.ResourceProvider {
   async create(inputs: Inputs): Promise<dynamic.CreateResult> {
-    const client = useAWSClient(LambdaClient, inputs.region);
+    const client = AWS.useClient(LambdaClient, inputs.region);
     await client.send(
       new UpdateFunctionCodeCommand({
         FunctionName: inputs.functionName,
@@ -37,7 +37,7 @@ class Provider implements dynamic.ResourceProvider {
     olds: Inputs,
     news: Inputs
   ): Promise<dynamic.UpdateResult> {
-    const client = useAWSClient(LambdaClient, news.region);
+    const client = AWS.useClient(LambdaClient, news.region);
     await client.send(
       new UpdateFunctionCodeCommand({
         FunctionName: news.functionName,

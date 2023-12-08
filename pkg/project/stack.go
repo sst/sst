@@ -75,6 +75,16 @@ func (s *stack) runtime() (string, error) {
           backend: {
             url: "s3://" + app.bootstrap.bucket,
           },
+					config: {
+						"aws:defaultTags": {
+							value: {
+								tags: {
+									"sst:app": app.name,
+									"sst:stage": app.stage,
+								},
+							}
+						},
+					},
         },
         envVars: {
           PULUMI_CONFIG_PASSPHRASE: "",

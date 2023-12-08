@@ -19,6 +19,7 @@ import { Distribution, DistributionDomainArgs } from "./distribution.js";
 import { Function, FunctionArgs, FunctionNodeJSArgs } from "./function.js";
 import { Duration, toSeconds } from "./util/duration.js";
 import { DistributionInvalidation } from "./distribution-invalidation.js";
+import { AWS } from "./helpers/aws.js";
 
 type CloudFrontFunctionConfig = { injections: string[] };
 type EdgeFunctionConfig = { function: Unwrap<FunctionArgs> };
@@ -543,14 +544,6 @@ function handler(event) {
     function createEdgeFunctions() {
       const functions: Record<string, Function> = {};
 
-      const provider = new aws.Provider(
-        `${name}-edge-provider`,
-        {
-          region: "us-east-1",
-        },
-        { parent }
-      );
-
       Object.entries(plan.edgeFunctions ?? {}).forEach(
         ([fnName, { function: props }]) => {
           const fn = new Function(
@@ -590,7 +583,7 @@ function handler(event) {
                 function: { publish: true },
               },
             },
-            { provider, parent }
+            { provider: AWS.useProvider("us-east-1"), parent }
           );
 
           functions[fnName] = fn;

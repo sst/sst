@@ -9,6 +9,7 @@ import {
 import * as aws from "@pulumi/aws";
 import { DnsValidatedCertificate } from "./dns-validated-certificate.js";
 import { HttpsRedirect } from "./https-redirect.js";
+import { AWS } from "./helpers/aws.js";
 
 export interface DistributionDomainArgs {
   /**
@@ -176,10 +177,6 @@ export class Distribution extends ComponentResource {
 
       // Certificates used for CloudFront distributions are required to be
       // created in the us-east-1 region
-      const provider = new aws.Provider(`${name}-useast1-provider`, {
-        region: "us-east-1",
-      });
-
       return new DnsValidatedCertificate(
         `${name}-certificate`,
         {
@@ -187,7 +184,7 @@ export class Distribution extends ComponentResource {
           alternativeNames: customDomain.aliases,
           zoneId,
         },
-        { parent, provider }
+        { parent, provider: AWS.useProvider("us-east-1") }
       );
     }
 

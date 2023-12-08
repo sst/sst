@@ -1,5 +1,5 @@
 import fs from "fs";
-import path, { normalize } from "path";
+import path from "path";
 import crypto from "crypto";
 import archiver from "archiver";
 import type { Loader, BuildOptions } from "esbuild";
