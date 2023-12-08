@@ -9,6 +9,7 @@ import {
 } from "./SsrSite.js";
 import { AllowedMethods } from "aws-cdk-lib/aws-cloudfront";
 import { Construct } from "constructs";
+import { getStringifiedRouteTree } from "./util/astroRouteCompressor.js";
 
 const BUILD_META_FILE_NAME: BuildMetaFileName = "sst.buildMeta.json";
 
@@ -42,45 +43,36 @@ export class AstroSite extends SsrSite {
 
     return JSON.parse(readFileSync(filePath, "utf-8")) as BuildMetaConfig;
   }
-
-  /**
-   * The purpose of the `getCFRoutingFunction` method is to generate a CloudFront function that mimics functionality often offered by
-   * full featured web servers. This function will perform redirects and rewrites based on the routes defined by the Astro build.
-   *
-   * This has been optimized as much as the current implementation allows. The next step in optimization would be to break
-   * the routes list into a btree based on the route pattern. This would allow for a much faster lookup of the route that matches.
-   */
-  private static getCFRoutingFunction({
-    routes,
-    pageResolution,
-  }: BuildMetaConfig) {
-    const serializedRoutes =
-      "[" +
-      routes
-        .map((route) => {
-          return `{p:${route.pattern}${
-            route.type === "page"
-              ? `,t:0`
-              : route.type === "redirect"
-              ? `,t:1`
-              : ""
-          }${route.prerender === true ? `,r:1` : ``}${
-            route.redirectPath ? `,h:"${route.redirectPath}"` : ""
-          }${
-            route.redirectStatus && route.redirectStatus !== 308
-              ? `,s:${route.redirectStatus}`
-              : ""
-          }}`;
-        })
-        .filter((compressedRoute) => compressedRoute)
-        .join(",") +
-      "]";
-
-    return `var x = ${serializedRoutes}.find((y)=>y.p.test(request.uri));if(x){if(x.t===1){var w=x.h;x.p.exec(request.uri).forEach((k,l)=>{w=w.replace(\`\\\${\${l}}\`,k);});return {statusCode:x.s||308,headers:{location:{value:w}},};}else if(x.t===0&&x.r){${
-      pageResolution === "file"
-        ? `request.uri=request.uri==="/"?"/index.html":request.uri.replace(/\\/?$/,".html");`
-        : `request.uri=request.uri.replace(/\\/?$/,"/index.html");`
-    }}}`;
+  
+  private static getCFRoutingFunction({ routes, pageResolution }: BuildMetaConfig) {
+    const stringifiedFlatTree = getStringifiedRouteTree(routes);
+  
+    return `var routeData = ${stringifiedFlatTree};
+    var findMatch = (path, routeData) => {
+      var match = routeData.find((route) => route[0].test(path));
+      return match && Array.isArray(match[1]) ? findMatch(path, match[1]) : match;
+    };
+    
+    var matchedRoute = findMatch(request.uri, routeData);
+    if (matchedRoute) {
+      if (!matchedRoute[1]) {
+        ${
+          pageResolution === "file"
+            ? `request.uri = request.uri === "/" ? "/index.html" : request.uri.replace(/\\/?$/, ".html");`
+            : `request.uri = request.uri.replace(/\\/?$/, "/index.html");`
+        }
+      } else {
+        var redirectPath = matchedRoute[2];
+        matchedRoute[0].exec(request.uri).forEach((match, index) => {
+          redirectPath = redirectPath.replace(\`\\\${\${index}}\`, match);
+        });
+        return {
+          statusCode: matchedRoute[3] || 308,
+          headers: { location: { value: redirectPath } },
+        };
+      }
+    }
+    `;
   }
 
   protected plan() {
