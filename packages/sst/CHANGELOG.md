@@ -1,5 +1,23 @@
 # @serverless-stack/cli2
 
+## 2.38.3
+
+### Patch Changes
+
+- [`50fff51f5`](https://github.com/sst/sst/commit/50fff51f5095ce78969c85059bebf091fe7860c7) Thanks [@thdxr](https://github.com/thdxr)! - AstroSite: fix duplicate cf function
+
+## 2.38.2
+
+### Patch Changes
+
+- [`e2457c9b7`](https://github.com/sst/sst/commit/e2457c9b79d67d18d4faf504d0402a63dd95b016) Thanks [@thdxr](https://github.com/thdxr)! - AstroSite: create host only cf function for server routes
+
+## 2.38.1
+
+### Patch Changes
+
+- [`12baa36d5`](https://github.com/sst/sst/commit/12baa36d5d233c62726fcc7a1b88d2e7b7585203) Thanks [@thdxr](https://github.com/thdxr)! - AstroSite: include cf function for server routes
+
 ## 2.38.0
 
 ### Minor Changes

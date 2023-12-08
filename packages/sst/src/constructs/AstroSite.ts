@@ -99,6 +99,10 @@ export class AstroSite extends SsrSite {
             AstroSite.getCFRoutingFunction(buildMeta),
           ],
         },
+        serverCfFunctionHostOnly: {
+          constructId: "CloudFrontFunctionHostOnly",
+          injections: [this.useCloudFrontFunctionHostHeaderInjection()],
+        },
       },
       origins: {
         staticsServer: {
@@ -197,6 +201,7 @@ export class AstroSite extends SsrSite {
             (route) =>
               ({
                 cacheType: "server",
+                cfFunction: "serverCfFunctionHostOnly",
                 pattern: route,
                 origin: "regionalServer",
               } as const)
