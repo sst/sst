@@ -93,7 +93,7 @@ import {
 import { useProject } from "../project.js";
 import { VisibleError } from "../error.js";
 import { RetentionDays } from "aws-cdk-lib/aws-logs";
-import { minifySync } from "@swc/core";
+import { transformSync } from "esbuild";
 
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 
@@ -924,8 +924,11 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
   var request = event.request;
   ${injections.join("\n")}
   return request;
-}`
-          const minifiedCode = minifySync(rawCode, { compress: true, mangle: true })
+}`;
+          const minifiedCode = transformSync(rawCode, {
+            minify: true,
+            target: "es5",
+          });
           functions[name] = new CfFunction(self, constructId, {
             code: CfFunctionCode.fromInline(minifiedCode.code),
           });
