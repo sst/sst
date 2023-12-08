@@ -73,7 +73,6 @@ export const useContainerHandler = (): RuntimeHandler => {
       {
         cmd: fn?.container?.cmd,
         envs: {
-          //AWS_LAMBDA_RUNTIME_API: `host.docker.internal:${server.port}/${input.workerID}`,
           AWS_LAMBDA_RUNTIME_API: `${
             isWSL() ? getInternalHost() : "host.docker.internal"
           }:${server.port}/${input.workerID}`,
