@@ -6,8 +6,9 @@ type TreeNode = {
 };
 
 type FlattenedRoute =
-  | [string]
-  | [string, 1, string | undefined, number | undefined];
+  | [string] // Page with prerendering
+  | [string, 1] // Endpoint with prerendering
+  | [string, 2, string | undefined, number | undefined]; // Redirect
 type FlattenedRouteTree = Array<FlattenedRoute | [string, FlattenedRouteTree]>;
 
 function buildRouteTree(routes: BuildMetaConfig["routes"], level = 0) {
@@ -33,10 +34,7 @@ function buildRouteTree(routes: BuildMetaConfig["routes"], level = 0) {
 
   for (const [key, branch] of Object.entries(routeTree.branches)) {
     if (
-      !branch.nodes.some(
-        (node) =>
-          (node.type === "page" && node.prerender) || node.type === "redirect"
-      )
+      !branch.nodes.some((node) => node.prerender || node.type === "redirect")
     ) {
       delete routeTree.branches[key];
     } else if (branch.nodes.length > 1) {
@@ -55,10 +53,13 @@ export function flattenRouteTree(tree: TreeNode, parentKey = "") {
       const node = branch.nodes[0];
       if (node.type === "page") {
         flatTree.push([node.pattern]);
+      }
+      if (node.type === "endpoint") {
+        flatTree.push([node.pattern, 1]);
       } else if (node.type === "redirect") {
         flatTree.push([
           node.pattern,
-          1,
+          2,
           node.redirectPath,
           node.redirectStatus,
         ]);
@@ -79,8 +80,10 @@ function stringifyFlattenedRouteTree(tree: FlattenedRouteTree): string {
       }
       if (typeof tuple[1] === "undefined") {
         return `[${tuple[0]}]`;
+      } else if (tuple[1] === 1) {
+        return `[${tuple[0]},1]`;
       }
-      return `[${tuple[0]},1,"${tuple[2]}"${tuple[3] ? `,${tuple[3]}` : ""}]`;
+      return `[${tuple[0]},2,"${tuple[2]}"${tuple[3] ? `,${tuple[3]}` : ""}]`;
     })
     .join(",")}]`;
 }

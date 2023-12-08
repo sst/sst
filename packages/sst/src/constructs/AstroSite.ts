@@ -61,7 +61,7 @@ export class AstroSite extends SsrSite {
           ? `request.uri = request.uri === "/" ? "/index.html" : request.uri.replace(/\\/?$/, ".html");`
           : `request.uri = request.uri.replace(/\\/?$/, "/index.html");`
       }
-    } else {
+    } else if (matchedRoute[1] === 2) {
       var redirectPath = matchedRoute[2];
       matchedRoute[0].exec(request.uri).forEach((match, index) => {
         redirectPath = redirectPath.replace(\`\\\${\${index}}\`, match);
