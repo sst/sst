@@ -139,7 +139,7 @@ export const useIOT = lazy(async () => {
   });
 
   device.on("reconnect", () => {
-    Logger.debug("IoT reconnected");
+    Logger.debug("IoT reconnecting...");
   });
 
   device.on("message", (_topic, buffer: Buffer) => {
