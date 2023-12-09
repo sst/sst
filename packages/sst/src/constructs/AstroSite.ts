@@ -43,11 +43,13 @@ export class AstroSite extends SsrSite {
 
     return JSON.parse(readFileSync(filePath, "utf-8")) as BuildMetaConfig;
   }
-  
-  private static getCFRoutingFunction({ routes, pageResolution }: BuildMetaConfig) {
-    const stringifiedFlatTree = getStringifiedRouteTree(routes);
-  
-    return `  var routeData = ${stringifiedFlatTree};
+
+  private static getCFRoutingFunction({
+    routes,
+    pageResolution,
+  }: BuildMetaConfig) {
+    return `
+  var routeData = ${getStringifiedRouteTree(routes)};
   var findMatch = (path, routeData) => {
     var match = routeData.find((route) => route[0].test(path));
     return match && Array.isArray(match[1]) ? findMatch(path, match[1]) : match;

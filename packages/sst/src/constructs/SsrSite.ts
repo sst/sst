@@ -920,7 +920,8 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
 
       Object.entries(plan.cloudFrontFunctions ?? {}).forEach(
         ([name, { constructId, injections }]) => {
-          const rawCode = `function handler(event) {
+          const rawCode = `
+function handler(event) {
   var request = event.request;
   ${injections.join("\n")}
   return request;
