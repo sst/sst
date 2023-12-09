@@ -21,6 +21,8 @@ type EvalOptions struct {
 	Code   string
 	Env    []string
 	Banner string
+	Inject []string
+	Define map[string]string
 }
 
 type EvalResult struct {
@@ -173,6 +175,7 @@ const __dirname = topLevelFileUrlToPath(new topLevelURL(".", import.meta.url))
 			"archiver",
 			"glob",
 		},
+		KeepNames: true,
 		Format:    esbuild.FormatESModule,
 		Platform:  esbuild.PlatformNode,
 		Sourcemap: esbuild.SourceMapInline,
@@ -182,6 +185,8 @@ const __dirname = topLevelFileUrlToPath(new topLevelURL(".", import.meta.url))
 			Sourcefile: "eval.ts",
 			Loader:     esbuild.LoaderTS,
 		},
+		Define:  input.Define,
+		Inject:  input.Inject,
 		Outfile: outfile,
 		Write:   true,
 		Bundle:  true,

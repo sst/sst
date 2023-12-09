@@ -11,15 +11,15 @@ import (
 )
 
 type Project struct {
-	version string
-	root    string
-	config  string
-	name    string
-	profile string
-	region  string
-	stage   string
+	version       string
+	root          string
+	config        string
+	name          string
+	profile       string
+	region        string
+	stage         string
 	removalPolicy string
-	process *js.Process
+	process       *js.Process
 
 	AWS       *projectAws
 	Bootstrap *bootstrap
@@ -98,11 +98,11 @@ console.log("~j" + JSON.stringify(mod.config()))`,
 		}
 
 		parsed := struct {
-			Name    string `json:"name"`
-			Profile string `json:"profile"`
-			Stage   string `json:"stage"`
-			Region  string `json:"region"`
-			RemovalPolicy  string `json:"removalPolicy"`
+			Name          string `json:"name"`
+			Profile       string `json:"profile"`
+			Stage         string `json:"stage"`
+			Region        string `json:"region"`
+			RemovalPolicy string `json:"removalPolicy"`
 		}{}
 		err = json.Unmarshal([]byte(line), &parsed)
 		if err != nil {
@@ -122,10 +122,10 @@ console.log("~j" + JSON.stringify(mod.config()))`,
 			return nil, fmt.Errorf("Region is required")
 		}
 
-		if (proj.removalPolicy == "") {
+		if proj.removalPolicy == "" {
 			proj.removalPolicy = "retain"
 		}
-		if (proj.removalPolicy != "remove" && proj.removalPolicy != "retain" && proj.removalPolicy != "retain-all") {
+		if proj.removalPolicy != "remove" && proj.removalPolicy != "retain" && proj.removalPolicy != "retain-all" {
 			return nil, fmt.Errorf("RemovalPolicy must be one of: remove, retain, retain-all")
 		}
 	}

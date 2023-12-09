@@ -16,6 +16,7 @@ declare global {
   export const app: {
     stage: string;
     name: string;
+    command: string;
     mode: "deploy" | "remove";
     removalPolicy: "remove" | "retain" | "retain-all";
     paths: {

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log/slog"
+	"path/filepath"
 
 	"github.com/pulumi/pulumi/sdk/v3/go/common/apitype"
 	"github.com/sst/ion/pkg/global"
@@ -15,47 +16,7 @@ type stack struct {
 }
 
 func (s *stack) runtime() (string, error) {
-	credentials, err := s.project.AWS.Credentials()
-	if err != nil {
-		return "", err
-	}
-	bootstrap, err := s.project.Bootstrap.Bucket()
-	if err != nil {
-		return "", err
-	}
-	inject := map[string]interface{}{
-		"stage": s.project.Stage(),
-		"name":  s.project.Name(),
-		"removalPolicy": s.project.RemovalPolicy(),
-		"paths": map[string]string{
-			"root": s.project.PathRoot(),
-			"temp": s.project.PathTemp(),
-			"home": global.ConfigDir(),
-		},
-		"aws": map[string]string{
-			"region":                s.project.Region(),
-			"AWS_ACCESS_KEY_ID":     credentials.AccessKeyID,
-			"AWS_SECRET_ACCESS_KEY": credentials.SecretAccessKey,
-			"AWS_SESSION_TOKEN":     credentials.SessionToken,
-			"AWS_DEFAULT_REGION":    s.project.Region(),
-		},
-		"bootstrap": map[string]string{
-			"bucket": bootstrap,
-		},
-	}
-	injectBytes, err := json.Marshal(inject)
-	if err != nil {
-		return "", err
-	}
 	return fmt.Sprintf(`
-    globalThis.app = %v
-    import * as _aws from "@pulumi/aws";
-    import * as _util from "@pulumi/pulumi";
-    import * as _sst from "./src/components"
-
-    globalThis.aws = _aws;
-    globalThis.util = _util;
-    globalThis.sst = _sst;
 
     import { LocalWorkspace } from "@pulumi/pulumi/automation/index.js";
     import mod from '%s';
@@ -115,7 +76,7 @@ func (s *stack) runtime() (string, error) {
         },
       },
     );
-  `, string(injectBytes), s.project.PathConfig(),
+  `, s.project.PathConfig(),
 	), nil
 }
 
@@ -134,28 +95,55 @@ type ConcurrentUpdateEvent struct{}
 type StackEventStream = chan StackEvent
 
 func (s *stack) run(cmd string) (StackEventStream, error) {
-	stack, err := s.runtime()
+	credentials, err := s.project.AWS.Credentials()
+	if err != nil {
+		return nil, err
+	}
+	bootstrap, err := s.project.Bootstrap.Bucket()
+	if err != nil {
+		return nil, err
+	}
+	app := map[string]interface{}{
+		"stage":         s.project.Stage(),
+		"name":          s.project.Name(),
+		"removalPolicy": s.project.RemovalPolicy(),
+		"command":       cmd,
+		"paths": map[string]string{
+			"root": s.project.PathRoot(),
+			"temp": s.project.PathTemp(),
+			"home": global.ConfigDir(),
+		},
+		"aws": map[string]string{
+			"region":                s.project.Region(),
+			"AWS_ACCESS_KEY_ID":     credentials.AccessKeyID,
+			"AWS_SECRET_ACCESS_KEY": credentials.SecretAccessKey,
+			"AWS_SESSION_TOKEN":     credentials.SessionToken,
+			"AWS_DEFAULT_REGION":    s.project.Region(),
+		},
+		"bootstrap": map[string]string{
+			"bucket": bootstrap,
+		},
+	}
+	appBytes, err := json.Marshal(app)
 	if err != nil {
 		return nil, err
 	}
 	err = s.project.process.Eval(js.EvalOptions{
 		Dir: s.project.PathTemp(),
+		Inject: []string{
+			filepath.Join(s.project.PathTemp(), "src/shim.js"),
+		},
+		Define: map[string]string{
+			"app": string(appBytes),
+		},
 		Code: fmt.Sprintf(`
-      %v
-      try {
-        const result = await stack.%v({
-          // onOutput: (line) => console.log(line),
-          logVerbosity: 11,
-          onEvent: (evt) => {
-            console.log("~j" + JSON.stringify(evt))
-          },
-        })
-      } catch (e) {
-        if (e.name === 'ConcurrentUpdateError') {
-          console.log("~j" + JSON.stringify({ConcurrentUpdateEvent: {}}))
-        } 
-      }
-    `, stack, cmd),
+      import { run } from "%v";
+      import mod from "%v";
+      await run(mod.run)
+    `,
+			filepath.Join(s.project.PathTemp(), "src/auto/run.ts"),
+			s.project.PathConfig(),
+		),
 	})
 	if err != nil {
 		return nil, err
