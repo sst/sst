@@ -1,5 +1,15 @@
 # @serverless-stack/cli2
 
+## 2.38.4
+
+### Patch Changes
+
+- [#3575](https://github.com/sst/sst/pull/3575) [`5bbfb70c9`](https://github.com/sst/sst/commit/5bbfb70c9df6bd9f912bc05997d9cf7fc93cc1ec) Thanks [@bayssmekanique](https://github.com/bayssmekanique)! - SsrSite: pin bundled sharp version until deployment issues resolved
+
+- [#3572](https://github.com/sst/sst/pull/3572) [`86df9a351`](https://github.com/sst/sst/commit/86df9a3516c612737225237b63c9fda40ba429aa) Thanks [@bayssmekanique](https://github.com/bayssmekanique)! - AstroSite: optimize CF function
+
+- [#3572](https://github.com/sst/sst/pull/3572) [`86df9a351`](https://github.com/sst/sst/commit/86df9a3516c612737225237b63c9fda40ba429aa) Thanks [@bayssmekanique](https://github.com/bayssmekanique)! - SsrSite: minify CF functions
+
 ## 2.38.3
 
 ### Patch Changes
