@@ -163,14 +163,14 @@ new WebSocketApi(stack, "Api", {
 #### Mapping multiple APIs to the same domain
 
 ```js {11-13}
-const coreApi = new HttpApi(stack, "HttpApi", {
+const coreApi = new WebSocketApi(stack, "CoreApi", {
   customDomain: {
     domainName: "api.domain.com",
     path: "core",
   },
 });
 
-new WebSocketApi(stack, "WebSocketApi", {
+new WebSocketApi(stack, "ChatApi", {
   customDomain: {
     path: "chat",
     cdk: {
@@ -179,6 +179,8 @@ new WebSocketApi(stack, "WebSocketApi", {
   },
 });
 ```
+
+Note that you can't map `WebSocketApis` to the same domain name as an `Api` or `ApiGatewayV1Api` construct. [Read more about AWS API Gateway custom domain name restrictions.](https://docs.aws.amazon.com/apigateway/latest/developerguide/websocket-api-mappings.html#websocket-api-mappings-restrictions)
 
 #### Importing an existing API Gateway custom domain
 

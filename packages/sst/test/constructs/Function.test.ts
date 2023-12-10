@@ -218,16 +218,16 @@ test("copyFiles nonexistent", async () => {
   }).rejects.toThrow(/no such file/);
 });
 
-test("runtime: nodejs18.x", async () => {
+test("runtime: nodejs20.x", async () => {
   const app = await createApp();
   const stack = new Stack(app, "stack");
   new Function(stack, "Function", {
     handler: "test/constructs/lambda.handler",
-    runtime: "nodejs18.x",
+    runtime: "nodejs20.x",
   });
   await app.finish();
   hasResource(stack, "AWS::Lambda::Function", {
-    Runtime: "nodejs18.x",
+    Runtime: "nodejs20.x",
   });
 });
 
@@ -757,6 +757,34 @@ test("url.cors: allowMethods *", async () => {
     Cors: {
       AllowMethods: ["*"],
     },
+  });
+});
+
+test("url.streaming: true", async () => {
+  const stack = new Stack(await createApp(), "stack");
+  const fn = new Function(stack, "Function", {
+    handler: "test/lambda.handler",
+    url: {
+      streaming: true,
+    },
+  });
+  expect(fn.url).toBeDefined();
+  hasResource(stack, "AWS::Lambda::Url", {
+    InvokeMode: lambda.InvokeMode.RESPONSE_STREAM,
+  });
+});
+
+test("url.streaming: false", async () => {
+  const stack = new Stack(await createApp(), "stack");
+  const fn = new Function(stack, "Function", {
+    handler: "test/lambda.handler",
+    url: {
+      streaming: false,
+    },
+  });
+  expect(fn.url).toBeDefined();
+  hasResource(stack, "AWS::Lambda::Url", {
+    InvokeMode: lambda.InvokeMode.BUFFERED,
   });
 });
 
@@ -2508,14 +2536,12 @@ test("fromDefinition-props-inherit", async () => {
       environment: { KEY_A: "a" },
     },
     {
-      runtime: "nodejs16.x",
       memorySize: 512,
       environment: { KEY_B: "b" },
     }
   );
   hasResource(stack, "AWS::Lambda::Function", {
     Handler: "index.placeholder",
-    Runtime: "nodejs16.x",
     MemorySize: 2048,
     Environment: {
       Variables: {
@@ -2545,14 +2571,13 @@ test("fromDefinition-props-inherit-with-app-defaultFunctionProps", async () => {
       environment: { KEY_B: "b" },
     },
     {
-      runtime: "nodejs16.x",
       memorySize: 512,
       environment: { KEY_C: "c" },
     }
   );
+
   hasResource(stack, "AWS::Lambda::Function", {
     Handler: "index.placeholder",
-    Runtime: "nodejs16.x",
     Timeout: 15,
     MemorySize: 2048,
     Environment: {

@@ -9,7 +9,6 @@ import {
   ListObjectsV2Command,
 } from "@aws-sdk/client-s3";
 import { useCache } from "../cache.js";
-import { Context } from "../context/context.js";
 import { useBus } from "../bus.js";
 import { Logger } from "../logger.js";
 import { useProject } from "../project.js";

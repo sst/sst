@@ -6,7 +6,6 @@ import {
   PutObjectCommand,
   DeleteObjectCommand,
 } from "@aws-sdk/client-s3";
-import { Context } from "../context/context.js";
 import { Logger } from "../logger.js";
 import { useProject } from "../project.js";
 import { lazy } from "../util/lazy.js";

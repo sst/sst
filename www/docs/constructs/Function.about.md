@@ -344,6 +344,17 @@ new Function(stack, "MyFunction", {
 });
 ```
 
+#### Enabling streaming
+
+```js
+new Function(stack, "MyFunction", {
+  handler: "src/lambda.handler",
+  url: {
+    streaming: true,
+  },
+});
+```
+
 ### Advanced examples
 
 #### Configuring a Dead Letter Queue

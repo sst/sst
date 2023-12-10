@@ -9,7 +9,6 @@ import {
   Serializer,
   Transformer,
 } from "kysely-codegen";
-import { Context } from "../../../context/context.js";
 import { useBus } from "../../../bus.js";
 import { FunctionMetadata, RDSMetadata } from "../../../constructs/Metadata.js";
 import { Logger } from "../../../logger.js";

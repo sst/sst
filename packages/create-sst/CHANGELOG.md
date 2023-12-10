@@ -1,5 +1,45 @@
 # create-sst
 
+## 2.38.4
+
+## 2.38.3
+
+## 2.38.2
+
+## 2.38.1
+
+## 2.38.0
+
+## 2.37.2
+
+## 2.37.1
+
+## 2.37.0
+
+## 2.36.8
+
+## 2.36.7
+
+## 2.36.6
+
+## 2.36.5
+
+## 2.36.4
+
+### Patch Changes
+
+- [#3528](https://github.com/sst/sst/pull/3528) [`4732d21ec`](https://github.com/sst/sst/commit/4732d21eca6ef1911ba2ec970b916f3d2ebf46fd) Thanks [@fwang](https://github.com/fwang)! - Update CDK to 2.110.1
+
+- [`6bcf40c13`](https://github.com/sst/sst/commit/6bcf40c1399bdc4093d324df52e5f2a939037ef7) Thanks [@fwang](https://github.com/fwang)! - Update constructs to 10.3.0
+
+## 2.36.3
+
+## 2.36.2
+
+### Patch Changes
+
+- [`4f3762b6b`](https://github.com/sst/sst/commit/4f3762b6b691a872903dacdc3460d1460734a9c3) Thanks [@thdxr](https://github.com/thdxr)! - create-sst: do not force pnpm on nextjs preset
+
 ## 2.36.1
 
 ## 2.36.0

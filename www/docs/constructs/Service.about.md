@@ -16,6 +16,7 @@ import { Service } from "sst/constructs";
 
 new Service(stack, "MyService", {
   path: "./service",
+  port: 3000,
 });
 ```
 
@@ -87,7 +88,7 @@ To work on your app locally with SST:
    If you need to run the your app inside Docker locally, pass the environment variables set by `sst bind` into the docker container.
 
    ```bash
-   sst bind "env | grep SST_ > .env.tmp && docker run --env-file .env.tmp my-image"
+   sst bind "env | grep -E 'SST_|AWS_' > .env.tmp && docker run --env-file .env.tmp my-image"
    ```
 
    This sequence fetches variables starting with SST_, saving them to the `.env.tmp` file, which is then used in the Docker run.
@@ -105,8 +106,19 @@ Fargate [supports a variety of CPU and memory combinations](https://docs.aws.ama
 ```js
 new Service(stack, "MyService", {
   path: "./service",
+  port: 3000,
   cpu: "2 vCPU",
   memory: "8 GB",
+});
+```
+
+You may also configure the [amount of ephemeral storage allocated to the task](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/fargate-task-storage.html). The default is 20 GB. To configure it, do the following:
+
+```js
+new Service(stack, "MyService", {
+  path: "./service",
+  port: 3000,
+  storage: "100 GB",
 });
 ```
 
@@ -128,6 +140,7 @@ To configure it:
 ```js
 new Service(stack, "MyService", {
   path: "./service",
+  port: 3000,
   scaling: {
     minContainers: 4,
     maxContainers: 16,
@@ -144,9 +157,10 @@ new Service(stack, "MyService", {
 
 You can configure the service with a custom domain hosted either on [Route 53](https://aws.amazon.com/route53/) or [externally](#configuring-externally-hosted-domain).
 
-```js {3}
+```js
 new Service(stack, "MyService", {
   path: "./service",
+  port: 3000,
   customDomain: "my-app.com",
 });
 ```
@@ -155,9 +169,10 @@ Note that visitors to `http://` will be redirected to `https://`.
 
 You can also configure an alias domain to point to the main domain. For instance, to set up `www.my-app.com` to redirect to `my-app.com`:
 
-```js {5}
+```js
 new Service(stack, "MyServiceSite", {
   path: "./service",
+  port: 3000,
   customDomain: {
     domainName: "my-app.com",
     domainAlias: "www.my-app.com",
@@ -171,18 +186,19 @@ new Service(stack, "MyServiceSite", {
 
 SST makes it very easy for your `Service` construct to access other resources in your AWS account. If you have an S3 bucket created using the [`Bucket`](../constructs/Bucket.md) construct, you can bind it to your app.
 
-```ts {5}
+```ts
 const bucket = new Bucket(stack, "Uploads");
 
 new Service(stack, "MyService", {
   path: "./service",
+  port: 3000,
   bind: [bucket],
 });
 ```
 
 This will attach the necessary IAM permissions and allow your app to access the bucket via the typesafe [`sst/node`](../clients/index.md) client.
 
-```ts {4}
+```ts
 import { Bucket } from "sst/node/bucket";
 
 console.log(Bucket.Uploads.bucketName);
@@ -199,6 +215,7 @@ If you don't want your service to be publicly accessible, create a private servi
 ```ts
 new Service(stack, "MyService", {
   path: "./service",
+  port: 3000,
   cdk: {
     applicationLoadBalancer: false,
     cloudfrontDistribution: false,
@@ -225,6 +242,7 @@ The generated `.nixpacks` directory should be added to your `.gitignore` file.
 ```js
 new Service(stack, "MyService", {
   path: "./service",
+  port: 3000,
 });
 ```
 
@@ -233,6 +251,7 @@ new Service(stack, "MyService", {
 ```js
 new Service(stack, "MyService", {
   path: "./service",
+  port: 3000,
   file: "path/to/Dockerfile.prod",
 });
 ```
@@ -243,6 +262,7 @@ new Service(stack, "MyService", {
 import { ContainerImage } from "aws-cdk-lib/aws-ecs";
 
 const service = new Service(stack, "MyService", {
+  port: 3000,
   cdk: {
     container: {
       image: ContainerImage.fromRegistry(
@@ -262,9 +282,10 @@ service.cdk?.taskDefinition.executionRole?.addManagedPolicy({
 
 Here's an example of passing build args to the docker build command.
 
-```js {4-6}
+```js
 new Service(stack, "MyService", {
   path: "./service",
+  port: 3000,
   build: {
     buildArgs: {
       FOO: "bar"
@@ -280,6 +301,7 @@ The Service construct creates a CloudWatch log group to store the logs. By defau
 ```js
 new Service(stack, "MyService", {
   path: "./service",
+  port: 3000,
   logRetention: "one_week",
 });
 ```
@@ -311,6 +333,7 @@ Here's an example of configuring the circuit breaker for the Fargate service.
 ```js
 new Service(stack, "MyService", {
   path: "./service",
+  port: 3000,
   cdk: {
     fargateService: {
       circuitBreaker: { rollback: true },
@@ -321,13 +344,14 @@ new Service(stack, "MyService", {
 
 ### Configuring Service Container
 
-Here's an example of configuring the Fargate container health check.
+Here's an example of configuring the Fargate container health check. Make sure the `curl` command exists inside the container.
 
 ```js
 import { Duration } from "aws-cdk-lib/core";
 
 new Service(stack, "MyService", {
   path: "./service",
+  port: 3000,
   cdk: {
     container: {
       healthCheck: {
@@ -351,6 +375,7 @@ import { SubnetType, Vpc } from "aws-cdk-lib/aws-ec2";
 
 new Service(stack, "MyService", {
   path: "./service",
+  port: 3000,
   cdk: {
     applicationLoadBalancer: {
       vpcSubnets: { subnetType: SubnetType.PUBLIC }
@@ -371,6 +396,7 @@ import { Duration } from "aws-cdk-lib/core";
 
 new Service(stack, "MyService", {
   path: "./service",
+  port: 3000,
   cdk: {
     applicationLoadBalancerTargetGroup: {
       healthCheck: {
@@ -389,6 +415,7 @@ import { Vpc } from "aws-cdk-lib/aws-ec2";
 
 new Service(stack, "MyService", {
   path: "./service",
+  port: 3000,
   cdk: {
     vpc: Vpc.fromLookup(stack, "VPC", {
       vpcId: "vpc-xxxxxxxxxx",

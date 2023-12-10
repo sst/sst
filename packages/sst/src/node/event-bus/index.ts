@@ -129,7 +129,7 @@ type Event = {
   };
 };
 
-type EventPayload<E extends Event> = {
+export type EventPayload<E extends Event> = {
   type: E["type"];
   properties: E["shape"]["properties"];
   metadata: undefined extends E["shape"]["metadata"]

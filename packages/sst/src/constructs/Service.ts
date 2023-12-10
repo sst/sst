@@ -46,12 +46,7 @@ import {
   getReferencedSecrets,
 } from "./util/functionBinding.js";
 import { useProject } from "../project.js";
-import {
-  ISecurityGroup,
-  IVpc,
-  SubnetSelection,
-  Vpc,
-} from "aws-cdk-lib/aws-ec2";
+import { IVpc, Vpc } from "aws-cdk-lib/aws-ec2";
 import {
   AwsLogDriver,
   CfnTaskDefinition,
@@ -73,6 +68,7 @@ import {
   ApplicationTargetGroupProps,
 } from "aws-cdk-lib/aws-elasticloadbalancingv2";
 import { createAppContext } from "./context.js";
+import { toCdkSize } from "./index.js";
 
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 const NIXPACKS_IMAGE_NAME = "sst-nixpacks";
@@ -189,6 +185,16 @@ export interface ServiceProps {
    */
   path?: string;
   /**
+   * The port number on the container.
+   * @example
+   * ```js
+   * {
+   *   port: 8000,
+   * }
+   *```
+   */
+  port: number;
+  /**
    * Path to Dockerfile relative to the defined "path".
    * @default "Dockerfile"
    */
@@ -229,16 +235,16 @@ export interface ServiceProps {
    */
   memory?: `${number} GB`;
   /**
-   * The port number on the container.
-   * @default 3000
+   * The amount of ephemeral storage allocated, in GB.
+   * @default "20 GB"
    * @example
    * ```js
    * {
-   *   port: 8000,
+   *   storage: "100 GB",
    * }
-   *```
+   * ```
    */
-  port?: number;
+  storage?: `${number} GB`;
   scaling?: {
     /**
      * The minimum capacity for the cluster.
@@ -539,7 +545,7 @@ type ServiceNormalizedProps = ServiceProps & {
   cpu: Exclude<ServiceProps["cpu"], undefined>;
   path: Exclude<ServiceProps["path"], undefined>;
   memory: Exclude<ServiceProps["memory"], undefined>;
-  port: Exclude<ServiceProps["port"], undefined>;
+  storage: Exclude<ServiceProps["storage"], undefined>;
   logRetention: Exclude<ServiceProps["logRetention"], undefined>;
 };
 
@@ -567,7 +573,7 @@ export class Service extends Construct implements SSTConstruct {
   private distribution?: Distribution;
   private alb?: ApplicationLoadBalancer;
 
-  constructor(scope: Construct, id: string, props?: ServiceProps) {
+  constructor(scope: Construct, id: string, props: ServiceProps) {
     super(scope, id);
 
     const app = scope.node.root as App;
@@ -578,7 +584,7 @@ export class Service extends Construct implements SSTConstruct {
       architecture: props?.architecture || "x86_64",
       cpu: props?.cpu || "0.25 vCPU",
       memory: props?.memory || "0.5 GB",
-      port: props?.port || 3000,
+      storage: props?.storage || "20 GB",
       logRetention: props?.logRetention || "infinite",
       ...props,
     };
@@ -586,7 +592,7 @@ export class Service extends Construct implements SSTConstruct {
       !stack.isActive || (app.mode === "dev" && !this.props.dev?.deploy);
 
     this.validateServiceExists();
-    this.validateMemoryAndCpu();
+    this.validateMemoryCpuAndStorage();
 
     useServices().add(stack.stackName, id, this.props);
 
@@ -839,8 +845,8 @@ export class Service extends Construct implements SSTConstruct {
     }
   }
 
-  private validateMemoryAndCpu() {
-    const { memory, cpu } = this.props;
+  private validateMemoryCpuAndStorage() {
+    const { memory, cpu, storage } = this.props;
     if (!supportedCpus[cpu]) {
       throw new VisibleError(
         `In the "${
@@ -861,6 +867,13 @@ export class Service extends Construct implements SSTConstruct {
         ).join(", ")}`
       );
     }
+
+    const storageInGiB = toCdkSize(storage).toGibibytes();
+    if (storageInGiB < 20 || storageInGiB > 200) {
+      throw new VisibleError(
+        `In the "${this.node.id}" Service, the supported value for storage is between "20 GB" and "200 GB"`
+      );
+    }
   }
 
   private createVpc() {
@@ -875,7 +888,8 @@ export class Service extends Construct implements SSTConstruct {
   }
 
   private createService(vpc: IVpc) {
-    const { architecture, cpu, memory, port, logRetention, cdk } = this.props;
+    const { architecture, cpu, memory, storage, port, logRetention, cdk } =
+      this.props;
     const app = this.node.root as App;
     const clusterName = app.logicalPrefixedName(this.node.id);
 
@@ -893,10 +907,15 @@ export class Service extends Construct implements SSTConstruct {
       vpc,
     });
 
+    const ephemeralStorageGiB = toCdkSize(storage).toGibibytes();
     const taskDefinition = new FargateTaskDefinition(this, `TaskDefinition`, {
-      // @ts-ignore
+      // @ts-expect-error
       memoryLimitMiB: supportedMemories[cpu][memory],
       cpu: supportedCpus[cpu],
+      // note: the minimum allowed value by CloudFormation is 21, set to
+      //       undefined to set to the default value of 20
+      ephemeralStorageGiB:
+        ephemeralStorageGiB === 20 ? undefined : ephemeralStorageGiB,
       runtimePlatform: {
         cpuArchitecture:
           architecture === "arm64"

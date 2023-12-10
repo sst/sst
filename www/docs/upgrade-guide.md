@@ -16,6 +16,16 @@ To view the latest release and all historical releases, <a href={`${config.githu
 
 ---
 
+## Upgrade to v2.38.0
+
+`Service` now requires `port` to be set. If previously unset, **set the `port` to 3000.**
+
+```diff
+new Service(stack, "Site", {
++ port: 3000,
+});
+```
+
 ## Upgrade to v2.36.0
 
 `NextjsSite` now sends logs for individual routes to separate log groups. To continue using a single log group, **set `logging` to `combined`**.

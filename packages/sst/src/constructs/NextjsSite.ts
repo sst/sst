@@ -33,8 +33,7 @@ import { Effect, Policy, PolicyStatement } from "aws-cdk-lib/aws-iam";
 import { RetentionDays } from "aws-cdk-lib/aws-logs";
 import { VisibleError } from "../error.js";
 import { CachePolicyProps } from "aws-cdk-lib/aws-cloudfront";
-import { SsrFunction, SsrFunctionProps } from "./SsrFunction.js";
-import { EdgeFunctionProps } from "./EdgeFunction.js";
+import { SsrFunction } from "./SsrFunction.js";
 import { Asset } from "aws-cdk-lib/aws-s3-assets";
 import { useFunctions } from "./Function.js";
 import { useDeferredTasks } from "./deferred_task.js";
@@ -266,8 +265,10 @@ export class NextjsSite extends SsrSite {
       edge,
       experimental,
       imageOptimization,
+      cdk,
     } = this.props;
-    const serverConfig = this.wrapServerFunction({
+    const stack = Stack.of(this);
+    const serverConfig = {
       description: "Next.js server",
       bundle: path.join(sitePath, ".open-next", "server-function"),
       handler: "index.handler",
@@ -276,7 +277,18 @@ export class NextjsSite extends SsrSite {
         CACHE_BUCKET_KEY_PREFIX: "_cache",
         CACHE_BUCKET_REGION: Stack.of(this).region,
       },
-    });
+      layers: this.isPerRouteLoggingEnabled()
+        ? [
+            LayerVersion.fromLayerVersionArn(
+              this,
+              "SSTExtension",
+              cdk?.server?.architecture?.name === Architecture.X86_64.name
+                ? `arn:aws:lambda:${stack.region}:226609089145:layer:sst-extension-amd64:${LAYER_VERSION}`
+                : `arn:aws:lambda:${stack.region}:226609089145:layer:sst-extension-arm64:${LAYER_VERSION}`
+            ),
+          ]
+        : undefined,
+    };
     this.removeSourcemaps();
     return this.validatePlan({
       edge: edge ?? false,
@@ -303,6 +315,9 @@ export class NextjsSite extends SsrSite {
                 constructId: "ServerFunction",
                 function: serverConfig,
                 streaming: experimental?.streaming,
+                injections: this.isPerRouteLoggingEnabled()
+                  ? [this.useServerFunctionPerRouteLoggingInjection()]
+                  : [],
               },
             }),
         imageOptimizer: {
@@ -539,67 +554,6 @@ export class NextjsSite extends SsrSite {
     };
   }
 
-  private wrapServerFunction(config: SsrFunctionProps | EdgeFunctionProps) {
-    const { path: sitePath, experimental, cdk } = this.props;
-    const stack = Stack.of(this);
-    const wrapperName = "nextjssite-index";
-    const serverPath = path.join(sitePath, ".open-next", "server-function");
-
-    const injections: string[] = [];
-    if (this.isPerRouteLoggingEnabled()) {
-      injections.push(`
-      const routeData = ${JSON.stringify(
-        this.useRoutes().map(({ regex, logGroupPath }) => ({
-          regex,
-          logGroupPath,
-        }))
-      )}.find(({ regex }) => event.rawPath.match(new RegExp(regex)));
-      if (routeData) {
-        console.log("::sst::" + JSON.stringify({
-          action:"log.split",
-          properties: {
-            logGroupName:"/sst/lambda/" + context.functionName + routeData.logGroupPath,
-          },
-        }));
-      }`);
-    }
-
-    fs.writeFileSync(
-      path.join(serverPath, `${wrapperName}.mjs`),
-      experimental?.streaming
-        ? [
-            `export const handler = awslambda.streamifyResponse(async (event, context) => {`,
-            ...injections,
-            `  const { handler: rawHandler} = await import("./index.mjs");`,
-            `  return rawHandler(event, context);`,
-            `});`,
-          ].join("\n")
-        : [
-            `export const handler = async (event, context) => {`,
-            ...injections,
-            `  const { handler: rawHandler} = await import("./index.mjs");`,
-            `  return rawHandler(event, context);`,
-            `};`,
-          ].join("\n")
-    );
-
-    return {
-      ...config,
-      layers: this.isPerRouteLoggingEnabled()
-        ? [
-            LayerVersion.fromLayerVersionArn(
-              this,
-              "SSTExtension",
-              cdk?.server?.architecture?.name === Architecture.X86_64.name
-                ? `arn:aws:lambda:${stack.region}:226609089145:layer:sst-extension-amd64:${LAYER_VERSION}`
-                : `arn:aws:lambda:${stack.region}:226609089145:layer:sst-extension-arm64:${LAYER_VERSION}`
-            ),
-          ]
-        : undefined,
-      handler: `${wrapperName}.handler`,
-    };
-  }
-
   private removeSourcemaps() {
     const { path: sitePath } = this.props;
     const files = globSync("**/*.js.map", {
@@ -733,6 +687,26 @@ export class NextjsSite extends SsrSite {
     } catch (e) {
       Logger.debug("Failed to load prerender-manifest.json", e);
     }
+  }
+
+  private useServerFunctionPerRouteLoggingInjection() {
+    return `
+if (event.rawPath) {
+  const routeData = ${JSON.stringify(
+    this.useRoutes().map(({ regex, logGroupPath }) => ({
+      regex,
+      logGroupPath,
+    }))
+  )}.find(({ regex }) => event.rawPath.match(new RegExp(regex)));
+  if (routeData) {
+    console.log("::sst::" + JSON.stringify({
+      action:"log.split",
+      properties: {
+        logGroupName:"/sst/lambda/" + context.functionName + routeData.logGroupPath,
+      },
+    }));
+  }
+}`;
   }
 
   private getBuildId() {

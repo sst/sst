@@ -1,5 +1,4 @@
 import { IoTClient, DescribeEndpointCommand } from "@aws-sdk/client-iot";
-import { Context } from "./context/context.js";
 import { useAWSClient, useAWSCredentials } from "./credentials.js";
 import { VisibleError } from "./error.js";
 
@@ -140,7 +139,7 @@ export const useIOT = lazy(async () => {
   });
 
   device.on("reconnect", () => {
-    Logger.debug("IoT reconnected");
+    Logger.debug("IoT reconnecting...");
   });
 
   device.on("message", (_topic, buffer: Buffer) => {

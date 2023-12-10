@@ -30,7 +30,6 @@ import {
 } from "aws-cdk-lib/aws-s3";
 import { useProject } from "./project.js";
 import { createSpinner } from "./cli/spinner.js";
-import { Context } from "./context/context.js";
 import {
   useAWSClient,
   useAWSCredentials,
@@ -261,7 +260,7 @@ export async function bootstrapSST(cdkBucket: string) {
     ),
     handler: "index.handler",
     runtime: region?.startsWith("us-gov-")
-      ? Runtime.NODEJS_16_X
+      ? Runtime.NODEJS_18_X
       : Runtime.NODEJS_18_X,
     environment: {
       BUCKET_NAME: bucket.bucketName,

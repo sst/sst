@@ -190,6 +190,21 @@ export class BuildMeta {
       })
       .flat();
 
+    if (this.astroConfig.output === "static") {
+      const lastAssetIndex = routes.reduce(
+        (acc, { route }, index) =>
+          route.startsWith(`/${this.astroConfig.build.assets}`) ? index : acc,
+        -1
+      );
+
+      routes.splice(lastAssetIndex + 1, 0, {
+        route: `/${this.astroConfig.build.assets}/[...slug]`,
+        type: "endpoint",
+        pattern: `/^\\/${this.astroConfig.build.assets}\\/.*?\\/?$/`,
+        prerender: true,
+      });
+    }
+
     const buildMeta = {
       domainName: this.domainName ?? undefined,
       deploymentStrategy: this.integrationConfig.deploymentStrategy,

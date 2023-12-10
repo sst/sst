@@ -1,5 +1,140 @@
 # @serverless-stack/cli2
 
+## 2.38.4
+
+### Patch Changes
+
+- [#3575](https://github.com/sst/sst/pull/3575) [`5bbfb70c9`](https://github.com/sst/sst/commit/5bbfb70c9df6bd9f912bc05997d9cf7fc93cc1ec) Thanks [@bayssmekanique](https://github.com/bayssmekanique)! - SsrSite: pin bundled sharp version until deployment issues resolved
+
+- [#3572](https://github.com/sst/sst/pull/3572) [`86df9a351`](https://github.com/sst/sst/commit/86df9a3516c612737225237b63c9fda40ba429aa) Thanks [@bayssmekanique](https://github.com/bayssmekanique)! - AstroSite: optimize CF function
+
+- [#3572](https://github.com/sst/sst/pull/3572) [`86df9a351`](https://github.com/sst/sst/commit/86df9a3516c612737225237b63c9fda40ba429aa) Thanks [@bayssmekanique](https://github.com/bayssmekanique)! - SsrSite: minify CF functions
+
+## 2.38.3
+
+### Patch Changes
+
+- [`50fff51f5`](https://github.com/sst/sst/commit/50fff51f5095ce78969c85059bebf091fe7860c7) Thanks [@thdxr](https://github.com/thdxr)! - AstroSite: fix duplicate cf function
+
+## 2.38.2
+
+### Patch Changes
+
+- [`e2457c9b7`](https://github.com/sst/sst/commit/e2457c9b79d67d18d4faf504d0402a63dd95b016) Thanks [@thdxr](https://github.com/thdxr)! - AstroSite: create host only cf function for server routes
+
+## 2.38.1
+
+### Patch Changes
+
+- [`12baa36d5`](https://github.com/sst/sst/commit/12baa36d5d233c62726fcc7a1b88d2e7b7585203) Thanks [@thdxr](https://github.com/thdxr)! - AstroSite: include cf function for server routes
+
+## 2.38.0
+
+### Minor Changes
+
+- [`428810411`](https://github.com/sst/sst/commit/428810411332775d64a051d6a65ddae8fd54c258) Thanks [@fwang](https://github.com/fwang)! - Service: require port to be set
+
+## 2.37.2
+
+## 2.37.1
+
+### Patch Changes
+
+- [#3493](https://github.com/sst/sst/pull/3493) [`d5d31fdda`](https://github.com/sst/sst/commit/d5d31fddae14a2948a9b8da4b9894044eeaa6b78) Thanks [@bayssmekanique](https://github.com/bayssmekanique)! - AstroSite: add sharp image processing
+
+- [#3542](https://github.com/sst/sst/pull/3542) [`bafb2a05c`](https://github.com/sst/sst/commit/bafb2a05cf1734437b32aa0713fc7edd4fc24f10) Thanks [@omikader](https://github.com/omikader)! - Service: support configuration of ephemeral storage
+
+- [#3556](https://github.com/sst/sst/pull/3556) [`4b795b815`](https://github.com/sst/sst/commit/4b795b8156f722a57c7dc81e3522e13dd1d9de78) Thanks [@TheUncharted](https://github.com/TheUncharted)! - Add Apple adapter to index file
+
+- [`ce2944150`](https://github.com/sst/sst/commit/ce2944150ee2c920646c8ca1f5edbe13ad449b21) Thanks [@fwang](https://github.com/fwang)! - Sites: check missing domainName in customDomain
+
+## 2.37.0
+
+### Minor Changes
+
+- [#3539](https://github.com/sst/sst/pull/3539) [`4533f9f11`](https://github.com/sst/sst/commit/4533f9f11ad87aeee51580784017d3fddec6a36a) Thanks [@berenddeboer](https://github.com/berenddeboer)! - refactor: skip logging ResponseURL as this contains an IAM access id
+
+### Patch Changes
+
+- [#3461](https://github.com/sst/sst/pull/3461) [`8da51f1b4`](https://github.com/sst/sst/commit/8da51f1b444f2449565a90816d45f5911ab567bc) Thanks [@justindra](https://github.com/justindra)! - fix future/auth to allow session.use using binding on other apis
+
+- [#3533](https://github.com/sst/sst/pull/3533) [`d4bc8e532`](https://github.com/sst/sst/commit/d4bc8e532810cdc8737b747e97ad08bf6de4c0b5) Thanks [@KONFeature](https://github.com/KONFeature)! - Remove unused import of `context/context.ts`
+  Replace export of `context.ts` by `context2.ts` in sst/src/context
+  Remove unused file `context/context.ts`
+  This will fix caching issue encountered by anyone using / building custom hooks
+
+- [#3547](https://github.com/sst/sst/pull/3547) [`b6e433325`](https://github.com/sst/sst/commit/b6e4333258293d54edbdb17df09cdc1e66f1f98e) Thanks [@TheUncharted](https://github.com/TheUncharted)! - Add AppleAdapter for future auth
+
+- [`f78f408a6`](https://github.com/sst/sst/commit/f78f408a6f9bc6392bb85b6d0e6ae1c05eaee7ad) Thanks [@thdxr](https://github.com/thdxr)! - astrosite: inline regex
+
+- [#3540](https://github.com/sst/sst/pull/3540) [`0f60b635c`](https://github.com/sst/sst/commit/0f60b635c0dbc8fe31c41b5bdee547916228f6c3) Thanks [@zvictor](https://github.com/zvictor)! - fix EISDIR error
+
+## 2.36.8
+
+### Patch Changes
+
+- [`c17c1cf92`](https://github.com/sst/sst/commit/c17c1cf92bdf5ebd7d9ece32077cd1c55b12a4c0) Thanks [@thdxr](https://github.com/thdxr)! - astro: compress function
+
+## 2.36.7
+
+### Patch Changes
+
+- [`cb7e85c69`](https://github.com/sst/sst/commit/cb7e85c6983c09f844bd868aa0b63b6e13a087ce) Thanks [@thdxr](https://github.com/thdxr)! - util: fix data loader issue
+
+## 2.36.6
+
+### Patch Changes
+
+- [`67e91b64e`](https://github.com/sst/sst/commit/67e91b64e62dfd2d5bc273adbe62cd624c504530) Thanks [@fwang](https://github.com/fwang)! - SsrSite: fix aws-sdk not found in edge lambda
+
+- [`391e8f83e`](https://github.com/sst/sst/commit/391e8f83ea5eda20fc6e8e555d4aa62ba1c0ab71) Thanks [@fwang](https://github.com/fwang)! - SsrSite: handle warmer requests
+
+## 2.36.5
+
+### Patch Changes
+
+- [#3519](https://github.com/sst/sst/pull/3519) [`09dcf20e4`](https://github.com/sst/sst/commit/09dcf20e4b6ea69d77cacbe504949d99db48ec85) Thanks [@jaydeebee](https://github.com/jaydeebee)! - dns-validated-certificate: bundle aws-sdk
+
+- [#3520](https://github.com/sst/sst/pull/3520) [`7c45504e3`](https://github.com/sst/sst/commit/7c45504e319a13b2c8f4f583453154ca92e5fb2a) Thanks [@jlanzarotti](https://github.com/jlanzarotti)! - Function: add Lambda URL streaming option
+
+## 2.36.4
+
+### Patch Changes
+
+- [#3528](https://github.com/sst/sst/pull/3528) [`4732d21ec`](https://github.com/sst/sst/commit/4732d21eca6ef1911ba2ec970b916f3d2ebf46fd) Thanks [@fwang](https://github.com/fwang)! - Update CDK to 2.110.1
+
+- [`eb0e725eb`](https://github.com/sst/sst/commit/eb0e725ebcc87671a24000bfe36aea887b8a93d8) Thanks [@fwang](https://github.com/fwang)! - Function: add support for Node.js 20 runtime
+
+- [#3522](https://github.com/sst/sst/pull/3522) [`69e4ab7d5`](https://github.com/sst/sst/commit/69e4ab7d5d52daf305ebc8890c5ccd9626f4e092) Thanks [@san4d](https://github.com/san4d)! - Update AWS SDK dependencies to 3.454.0
+
+- [`dff29e502`](https://github.com/sst/sst/commit/dff29e50248797661b661847b6259ccdd627eb60) Thanks [@fwang](https://github.com/fwang)! - Function: add support for Python 3.12 runtime
+
+- [`6bcf40c13`](https://github.com/sst/sst/commit/6bcf40c1399bdc4093d324df52e5f2a939037ef7) Thanks [@fwang](https://github.com/fwang)! - Update constructs to 10.3.0
+
+- [`dff29e502`](https://github.com/sst/sst/commit/dff29e50248797661b661847b6259ccdd627eb60) Thanks [@fwang](https://github.com/fwang)! - Function: add support for Java 21 runtime
+
+## 2.36.3
+
+### Patch Changes
+
+- [`2a73ed809`](https://github.com/sst/sst/commit/2a73ed809f76faa876235782127e4f1305868f3b) Thanks [@fwang](https://github.com/fwang)! - NextjsSite: fix warming requests error out
+
+## 2.36.2
+
+### Patch Changes
+
+- [`5b88c84ea`](https://github.com/sst/sst/commit/5b88c84ea72bc43f71c700b9dd967b6147464ba8) Thanks [@fwang](https://github.com/fwang)! - Sites: fix S3Uploader resource id thrash with old Python uploader
+
+- [`cbd4510b1`](https://github.com/sst/sst/commit/cbd4510b1f16a141a85597bfbd1ff958f5026edd) Thanks [@fwang](https://github.com/fwang)! - Update runtime to nodejs16.x for custom resources
+
+- [`4cb0b191c`](https://github.com/sst/sst/commit/4cb0b191cc45d2bfe14cb5ba7ad4623d2ed55208) Thanks [@fwang](https://github.com/fwang)! - Function: sort sourcemap by CDK path
+
+- [`baa1e904f`](https://github.com/sst/sst/commit/baa1e904fe38a1c9c1f1081169102a9bca729908) Thanks [@thdxr](https://github.com/thdxr)! - bus: export EventPayload type
+
+- [#3504](https://github.com/sst/sst/pull/3504) [`c7284c8c3`](https://github.com/sst/sst/commit/c7284c8c3cae9d2b38009e27468f862c0bcaa97e) Thanks [@jaydeebee](https://github.com/jaydeebee)! - WebSocketApi: support route returnResponse
+
+- [#3500](https://github.com/sst/sst/pull/3500) [`6a8b100dd`](https://github.com/sst/sst/commit/6a8b100ddbbda6a0177c5559561da013b1b7af9c) Thanks [@rubythulhu](https://github.com/rubythulhu)! - Make sourcemap ordering deterministic
+
 ## 2.36.1
 
 ### Patch Changes
