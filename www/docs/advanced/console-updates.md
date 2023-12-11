@@ -14,7 +14,7 @@ Changelog for all notable SST Console updates.
 
 ---
 
-## Remove accounts & workspaces
+## Remove workspaces
 
 **Released Dec 8, 2023**
 
