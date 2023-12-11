@@ -1,3 +1,5 @@
+import process from "process";
+import { release, networkInterfaces, NetworkInterfaceInfo } from "os";
 import http from "http";
 import { spawn } from "child_process";
 import { RuntimeHandler, StartWorkerInput } from "../handlers.js";
@@ -8,7 +10,6 @@ import { isChild } from "../../util/fs.js";
 import { execAsync } from "../../util/process.js";
 import { useFunctions } from "../../constructs/Function.js";
 import { lazy } from "../../util/lazy.js";
-import { isWSL, getInternalHost } from "../../util/wsl.js";
 
 export const useContainerHandler = (): RuntimeHandler => {
   const containers = new Map<string, string>();
@@ -68,14 +69,13 @@ export const useContainerHandler = (): RuntimeHandler => {
     const server = await useRuntimeServerConfig();
     const workers = await useRuntimeWorkers();
     const fn = useFunctions().fromID(input.functionID);
+    const host = isWSL() ? getInternalHost() : "host.docker.internal";
     dockerRun(
       input,
       {
         cmd: fn?.container?.cmd,
         envs: {
-          AWS_LAMBDA_RUNTIME_API: `${
-            isWSL() ? getInternalHost() : "host.docker.internal"
-          }:${server.port}/${input.workerID}`,
+          AWS_LAMBDA_RUNTIME_API: `${host}:${server.port}/${input.workerID}`,
         },
       },
       () => {
@@ -317,3 +317,16 @@ export const useContainerHandler = (): RuntimeHandler => {
     },
   };
 };
+
+function isWSL() {
+  return (
+    process.platform == "linux" && release().toLowerCase().includes("microsoft")
+  );
+}
+
+function getInternalHost() {
+  const host = ([] as Array<NetworkInterfaceInfo | undefined>)
+    .concat(...Object.values(networkInterfaces()))
+    .find((x) => !x?.internal && x?.family === "IPv4")?.address;
+  return host ?? "host.docker.internal";
+}
