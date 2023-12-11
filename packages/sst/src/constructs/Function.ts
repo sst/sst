@@ -872,6 +872,7 @@ export class Function extends CDKFunction implements SSTConstruct {
         ...props,
         ...(props.runtime === "container"
           ? {
+              description: "SST Live Lambda handler",
               code: Code.fromAssetImage(
                 path.resolve(__dirname, "../support/bridge"),
                 {
@@ -885,11 +886,12 @@ export class Function extends CDKFunction implements SSTConstruct {
               layers: undefined,
             }
           : {
+              description: "SST Live Lambda handler",
               runtime: CDKRuntime.NODEJS_18_X,
               code: Code.fromAsset(
                 path.resolve(__dirname, "../support/bridge")
               ),
-              handler: "bridge.handler",
+              handler: "live-lambda.handler",
               layers: [],
             }),
         architecture,
