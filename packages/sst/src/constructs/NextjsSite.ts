@@ -28,7 +28,7 @@ import { Queue } from "aws-cdk-lib/aws-sqs";
 import { SqsEventSource } from "aws-cdk-lib/aws-lambda-event-sources";
 import { Stack } from "./Stack.js";
 import { ContainerOriginConfig, EdgeFunctionConfig, FunctionOriginConfig, SsrSite, SsrSiteNormalizedProps, SsrSiteProps } from "./SsrSite.js";
-import { Size} from "./util/size.js";
+import { Size } from "./util/size.js";
 import { Bucket } from "aws-cdk-lib/aws-s3";
 import { Effect, Policy, PolicyStatement } from "aws-cdk-lib/aws-iam";
 import { RetentionDays } from "aws-cdk-lib/aws-logs";
@@ -38,7 +38,7 @@ import { SsrFunction } from "./SsrFunction.js";
 import { Asset } from "aws-cdk-lib/aws-s3-assets";
 import { useFunctions, FunctionProps } from "./Function.js";
 import { useDeferredTasks } from "./deferred_task.js";
-import { Logger } from "../logger.js";import { SsrContainer, SsrContainerProps } from "./SsrContainer.js";
+import { Logger } from "../logger.js"; import { SsrContainer, SsrContainerProps } from "./SsrContainer.js";
 type BaseFunction = {
   handler: string;
   bundle: string;
@@ -116,9 +116,9 @@ interface OpenNextConfig<SplittedFn extends Record<string, OpenNextFnProps> = Re
   }
 }
 
-type InterpolatedCdkProp<T extends OpenNextFnProps> = T extends { override: { generateDockerfile: true } } ?  
-  ContainerOriginConfig['container']: 
-  Omit<FunctionOriginConfig['function'], "handler" | "bundle">;
+type InterpolatedCdkProp<T extends OpenNextFnProps> = T extends { override: { generateDockerfile: true } } ?
+  ContainerOriginConfig['container'] :
+  Omit<FunctionOriginConfig['function'], "handler" | "bundle"> & { warm?: number };
 
 type InterpolatedCdkProps<T extends OpenNextConfig> = {
   [K in keyof T['functions']]?: T['functions'] extends Record<string, OpenNextFnProps> ? InterpolatedCdkProp<T['functions'][K]> : never
@@ -206,7 +206,7 @@ export interface NextjsSiteProps<ONConfig extends OpenNextConfig> extends Omit<S
      * ```
      */
     serverCachePolicy?: NonNullable<SsrSiteProps["cdk"]>["serverCachePolicy"];
-    
+
     servers?: InterpolatedCdkProps<ONConfig>;
 
   };
@@ -305,16 +305,18 @@ export class NextjsSite<ONConfig extends OpenNextConfig = OpenNextConfig> extend
   public get regionalServersCdk() {
     if (this.doNotDeploy) return;
     const regionalServers = this.serverFunctions.reduce((acc, server) => {
-      return {...acc, [
-        server.function ?
-        server.id.replace("ServerFunction", "") :
-        server.id.replace("ServerContainer", "")
-      ] : server.function ?? server.cdk};
+      return {
+        ...acc, [
+          server.function ?
+            server.id.replace("ServerFunction", "") :
+            server.id.replace("ServerContainer", "")
+        ]: server.function ?? server.cdk
+      };
     }, {} as InterpolatedCdkOutputs<ONConfig>)
     return regionalServers
   }
 
-  private createFunctionOrigin(fn: OpenNextFunctionOrigin, key: string, bucket: Bucket) : FunctionOriginConfig {
+  private createFunctionOrigin(fn: OpenNextFunctionOrigin, key: string, bucket: Bucket): FunctionOriginConfig {
     const { path: sitePath, environment, cdk } = this.props;
     const baseServerConfig = {
       description: "Next.js Server",
@@ -335,7 +337,7 @@ export class NextjsSite<ONConfig extends OpenNextConfig = OpenNextConfig> extend
         bundle: path.join(sitePath, fn.bundle),
         runtime: "nodejs18.x" as const,
         architecture: Architecture.ARM_64,
-        memorySize: 1024,
+        memorySize: 1536,
         environment: {
           ...environment,
           ...baseServerConfig.environment,
@@ -343,12 +345,13 @@ export class NextjsSite<ONConfig extends OpenNextConfig = OpenNextConfig> extend
         ...functionCdkOverrides,
       },
       streaming: fn.streaming,
-      injections: []
+      injections: [],
+      warm: functionCdkOverrides.warm,
     }
   }
 
   private createEcsOrigin(ecs: OpenNextECSOrigin, key: string, bucket: Bucket): ContainerOriginConfig {
-    const {cdk, environment } = this.props;
+    const { cdk, environment } = this.props;
     const baseServerConfig = {
       environment: {
         CACHE_BUCKET_NAME: bucket.bucketName,
@@ -378,11 +381,11 @@ export class NextjsSite<ONConfig extends OpenNextConfig = OpenNextConfig> extend
           ...containerCdkOverrides.environment
         },
       },
-      
+
     }
   }
 
-  private createEdgeOrigin(fn: BaseFunction, key: string, bucket: Bucket) : EdgeFunctionConfig {
+  private createEdgeOrigin(fn: BaseFunction, key: string, bucket: Bucket): EdgeFunctionConfig {
     const { path: sitePath, cdk, environment } = this.props;
     const baseServerConfig = {
       environment: {
@@ -433,14 +436,16 @@ export class NextjsSite<ONConfig extends OpenNextConfig = OpenNextConfig> extend
     }) as [string, OpenNextFunctionOrigin | OpenNextECSOrigin][];
 
     const remainingOrigins = remainingFns.reduce((acc, [key, value]) => {
-      acc = {...acc, [key]: 
-        value.type === "ecs" ? this.createEcsOrigin(value, key, bucket) : this.createFunctionOrigin(value, key, bucket)};
+      acc = {
+        ...acc, [key]:
+          value.type === "ecs" ? this.createEcsOrigin(value, key, bucket) : this.createFunctionOrigin(value, key, bucket)
+      };
       return acc;
     }
-    , {} as Record<string, FunctionOriginConfig | ContainerOriginConfig>)
+      , {} as Record<string, FunctionOriginConfig | ContainerOriginConfig>)
 
     const edgeFunctions = Object.entries(openNextOutput.edgeFunctions).reduce((acc, [key, value]) => {
-      return {...acc, [key]: this.createEdgeOrigin(value, key, bucket)};
+      return { ...acc, [key]: this.createEdgeOrigin(value, key, bucket) };
     }, {} as Record<string, EdgeFunctionConfig>);
 
 
@@ -469,7 +474,7 @@ export class NextjsSite<ONConfig extends OpenNextConfig = OpenNextConfig> extend
             environment: {
               BUCKET_NAME: bucket.bucketName,
               BUCKET_KEY_PREFIX: "_assets",
-            }, 
+            },
             permissions: [
               "s3"
             ],
@@ -483,7 +488,7 @@ export class NextjsSite<ONConfig extends OpenNextConfig = OpenNextConfig> extend
       //@ts-expect-error TODO: find a way to fix this typing issue
       behaviors: openNextOutput.behaviors.map((behavior) => {
         return {
-          pattern: behavior.pattern === "*" ? undefined: behavior.pattern,
+          pattern: behavior.pattern === "*" ? undefined : behavior.pattern,
           origin: behavior.origin ?? "",
           cacheType: behavior.origin === "s3" ? "static" : "server" as const,
           cfFunction: "serverCfFunction",
@@ -492,6 +497,9 @@ export class NextjsSite<ONConfig extends OpenNextConfig = OpenNextConfig> extend
       }),
       cachePolicyAllowedHeaders: DEFAULT_CACHE_POLICY_ALLOWED_HEADERS,
       buildId: this.getBuildId(),
+      warmerConfig: openNextOutput.additionalProps?.warmer ? {
+        function: openNextOutput.additionalProps.warmer.bundle,
+      } : undefined,
     });
   }
 
@@ -611,14 +619,13 @@ export class NextjsSite<ONConfig extends OpenNextConfig = OpenNextConfig> extend
         ...metadata.data,
         routes: this.isPerRouteLoggingEnabled()
           ? {
-              logGroupPrefix: `/sst/lambda/${
-                (this.serverFunction as SsrFunction).functionName
+            logGroupPrefix: `/sst/lambda/${(this.serverFunction as SsrFunction).functionName
               }`,
-              data: this.useRoutes()?.map(({ route, logGroupPath }) => ({
-                route,
-                logGroupPath,
-              })),
-            }
+            data: this.useRoutes().map(({ route, logGroupPath }) => ({
+              route,
+              logGroupPath,
+            })),
+          }
           : undefined,
       },
     };
