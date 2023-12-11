@@ -14,6 +14,14 @@ Changelog for all notable SST Console updates.
 
 ---
 
+## Remove accounts & workspaces
+
+**Released Dec 8, 2023**
+
+You can now remove connected AWS accounts from your workspace and remove your workspaces as well.
+
+---
+
 ## Local logs tab
 
 **Released Sep 21, 2023**
