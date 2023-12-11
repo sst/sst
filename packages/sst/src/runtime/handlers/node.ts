@@ -110,7 +110,8 @@ export const useNodeHandler = (): RuntimeHandler => {
         !relative.startsWith("..") && !path.isAbsolute(input.props.handler!)
           ? relative
           : "",
-        parsed.name + extension
+        // Lambda handler can only contain 1 dot separating the file name and function name
+        parsed.name.replace(".", "-") + extension
       );
       const handler = path
         .relative(input.out, target.replace(extension, parsed.ext))
