@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.38.7
+
+### Patch Changes
+
+- [`69b41b9f7`](https://github.com/sst/sst/commit/69b41b9f7e1ffdda5fa31b4d762b8825b30f2a35) Thanks [@thdxr](https://github.com/thdxr)! - internal: add back old context implementation
+
 ## 2.38.6
 
 ### Patch Changes
