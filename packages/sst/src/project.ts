@@ -131,9 +131,9 @@ export async function initProject(globals: GlobalOptions) {
 
   const config = await Promise.resolve(sstConfig.config(globals));
   const stage =
-    process.env.SST_STAGE ||
     globals.stage ||
     config.stage ||
+    process.env.SST_STAGE ||
     (await usePersonalStage(out)) ||
     (await promptPersonalStage(out));
   // Set stage to SST_STAGE so that if SST spawned processes are aware
