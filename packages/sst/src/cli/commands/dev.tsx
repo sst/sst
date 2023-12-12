@@ -1,5 +1,6 @@
 import type { CloudAssembly } from "aws-cdk-lib/cx-api";
 import type { Program } from "../program.js";
+import { VisibleError } from "../../error.js";
 
 export const dev = (program: Program) =>
   program.command(
@@ -30,6 +31,7 @@ export const dev = (program: Program) =>
       const { getCiInfo } = await import("../ci-info.js");
       const { useMetadataCache } = await import("../../stacks/metadata.js");
       const { lazy } = await import("../../util/lazy.js");
+      const { useIOT, isSupported } = await import("../../iot.js");
 
       try {
         if (args._[0] === "start") {
@@ -43,6 +45,12 @@ export const dev = (program: Program) =>
         }
 
         const project = useProject();
+
+        if (!isSupported()) {
+          throw new VisibleError(
+            `Live Lambda is not currently supported in the "${project.config.region}" region. To fix this, you can pick an alternative region just for your local environment - https://docs.sst.dev/live-lambda-development#supported-regions`
+          );
+        }
 
         const useFunctionLogger = lazy(async () => {
           const { useFunctions } = await import("../../constructs/Function.js");
@@ -398,7 +406,7 @@ export const dev = (program: Program) =>
 
         const useDisconnector = lazy(async () => {
           const bus = useBus();
-          const iot = await import("../../iot.js").then((mod) => mod.useIOT());
+          const iot = await useIOT();
 
           bus.subscribe("cli.dev", async (evt) => {
             const topic = `${iot.prefix}/events`;

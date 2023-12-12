@@ -171,7 +171,7 @@ Live Lambda is supported in regions where AWS IoT is available. [Here is a list 
 
 Note that the supported regions is relevant only during dev mode (ie. `sst dev`). Your app can be deployed to any AWS region (ie. `sst deploy`).
 
-For instance, if deploying to a region without AWS IoT support, like Europe Milan (`eu-south-1`), select an alternative region for `sst dev`, such as Europe London (`eu-west-2`).
+For instance, if deploying to a region without AWS IoT support, like Europe Milan (`eu-south-2`), select an alternative region for `sst dev`, such as Europe London (`eu-west-2`).
 
 ---
 

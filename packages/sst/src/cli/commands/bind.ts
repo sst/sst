@@ -43,7 +43,7 @@ export const bind = (program: Program) =>
         const { useProject } = await import("../../project.js");
         const { Stacks } = await import("../../stacks/index.js");
         const { useBus } = await import("../../bus.js");
-        const { useIOT } = await import("../../iot.js");
+        const { useIOT, isSupported } = await import("../../iot.js");
         const { Colors } = await import("../colors.js");
         const { Logger } = await import("../../logger.js");
         const [
@@ -82,7 +82,9 @@ export const bind = (program: Program) =>
             );
           }
 
-          useIOT();
+          if (isSupported()) {
+            useIOT();
+          }
           const bus = useBus();
           const project = useProject();
           let p: ReturnType<typeof spawn> | undefined;
