@@ -1,5 +1,13 @@
 # @serverless-stack/cli2
 
+## 2.38.6
+
+### Patch Changes
+
+- [#3554](https://github.com/sst/sst/pull/3554) [`7d2f92b0d`](https://github.com/sst/sst/commit/7d2f92b0d77f14041ddc0ecc85db81c4bdfb1e4e) Thanks [@justindra](https://github.com/justindra)! - Calling init project does not replace stage if it was called previously
+
+- [#3566](https://github.com/sst/sst/pull/3566) [`491ffbfb6`](https://github.com/sst/sst/commit/491ffbfb64f0d55a1573ac535b636f8b176df1e1) Thanks [@oyed](https://github.com/oyed)! - fix: cjs being thrown in to provider
+
 ## 2.38.5
 
 ### Patch Changes
