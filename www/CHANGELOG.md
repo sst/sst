@@ -1,5 +1,11 @@
 # @serverless-stack/docs
 
+## 2.10.1
+
+### Patch Changes
+
+- [`b8a22b459`](https://github.com/sst/sst/commit/b8a22b459117c9210a04ee5467a9d977305a302c) Thanks [@fwang](https://github.com/fwang)! - sst dev: detect regions without AWS IoT support
+
 ## 2.10.0
 
 ### Minor Changes

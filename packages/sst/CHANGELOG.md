@@ -1,5 +1,17 @@
 # @serverless-stack/cli2
 
+## 2.38.5
+
+### Patch Changes
+
+- [`36bf1b86d`](https://github.com/sst/sst/commit/36bf1b86d285fe742579a7c9bad3179e5b5df1e1) Thanks [@fwang](https://github.com/fwang)! - Function: use descriptive copy for description and handler name
+
+- [#3574](https://github.com/sst/sst/pull/3574) [`bc30b03af`](https://github.com/sst/sst/commit/bc30b03aff7fdc40b615b1cc422cede28b5100f8) Thanks [@dylanirion](https://github.com/dylanirion)! - Container: fix docker host not resolved in wsl environment
+
+- [`b8a22b459`](https://github.com/sst/sst/commit/b8a22b459117c9210a04ee5467a9d977305a302c) Thanks [@fwang](https://github.com/fwang)! - sst dev: detect regions without AWS IoT support
+
+- [`fc4871967`](https://github.com/sst/sst/commit/fc4871967bb5ee608500e728077b55b3e141338e) Thanks [@fwang](https://github.com/fwang)! - Function: support dot in handler filename
+
 ## 2.38.4
 
 ### Patch Changes
