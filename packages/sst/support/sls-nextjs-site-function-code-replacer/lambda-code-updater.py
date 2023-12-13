@@ -144,7 +144,7 @@ def cfn_send(event, context, responseStatus, responseData={}, physicalResourceId
 
     headers = {
         'content-type' : '',
-        'content-length' : str(len(body))
+        'content-length' : str(len(body.encode('utf-8')))
     }
 
     try:
