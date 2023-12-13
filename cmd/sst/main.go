@@ -162,14 +162,28 @@ func main() {
 
 func initProject() (*project.Project, error) {
 	slog.Info("initializing project", "version", version)
-	p, err := project.New(version)
+
+	cfgPath, err := project.Discover()
 	if err != nil {
 		return nil, err
 	}
 
-	if p.Stage() == "" {
+	if !project.CheckDeps(version, cfgPath) {
+		err = project.InstallDeps(version, cfgPath)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	p, err := project.New(version, cfgPath)
+	if err != nil {
+		return nil, err
+	}
+
+	app := p.App()
+	if app.Stage == "" {
 		p.LoadPersonalStage()
-		if p.Stage() == "" {
+		if app.Stage == "" {
 			for {
 				var stage string
 				fmt.Print("Enter a stage name for your personal stage: ")
@@ -185,39 +199,21 @@ func initProject() (*project.Project, error) {
 			}
 		}
 	}
-	slog.Info("loaded cnfig", "app", p.Name(), "stage", p.Stage(), "region", p.Region())
-
-	_, err = p.AWS.Config()
-	if err != nil {
-		return nil, err
-	}
-
-	if _, err = p.Bootstrap.Bucket(); err != nil {
-		return nil, err
-	}
-
-	if !p.CheckDeps() {
-		err = p.InstallDeps()
-		if err != nil {
-			return nil, err
-		}
-	}
+	slog.Info("loaded config", "app", app.Name, "stage", app.Stage)
 
 	return p, nil
 }
 
 func printHeader(p *project.Project) {
+	app := p.App()
 	fmt.Println()
 	color.New(color.FgCyan, color.Bold).Print("➜  ")
 
 	color.New(color.FgWhite, color.Bold).Printf("%-12s", "App:")
-	color.New(color.FgHiBlack).Println(p.Name())
+	color.New(color.FgHiBlack).Println(app.Name)
 
 	color.New(color.FgWhite, color.Bold).Printf("   %-12s", "Stage:")
-	color.New(color.FgHiBlack).Println(p.Stage())
-
-	color.New(color.FgWhite, color.Bold).Printf("   %-12s", "Region:")
-	color.New(color.FgHiBlack).Println(p.Region())
+	color.New(color.FgHiBlack).Println(app.Stage)
 
 	fmt.Println()
 }

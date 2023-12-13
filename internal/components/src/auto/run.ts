@@ -8,8 +8,8 @@ export async function run(program: PulumiFn) {
       program: async () => {
         runtime.registerStackTransformation((args) => {
           if (
-            app.removalPolicy === "retain-all" ||
-            (app.removalPolicy === "retain" &&
+            $app.removalPolicy === "retain-all" ||
+            ($app.removalPolicy === "retain" &&
               ["aws:s3/bucket:Bucket", "aws:dynamodb/table:Table"].includes(
                 args.type,
               ))
@@ -24,43 +24,47 @@ export async function run(program: PulumiFn) {
 
         return program();
       },
-      projectName: app.name,
-      stackName: app.stage,
+      projectName: $app.name,
+      stackName: $app.stage,
     },
     {
-      pulumiHome: app.paths.home,
+      pulumiHome: $cli.paths.home,
       projectSettings: {
-        main: app.paths.root,
-        name: app.name,
+        main: $cli.paths.root,
+        name: $app.name,
         runtime: "nodejs",
         backend: {
-          url: "s3://" + app.bootstrap.bucket,
+          url: "s3://" + $cli.backend,
         },
-        config: JSON.stringify({
-          "aws:defaultTags": {
-            value: {
-              tags: {
-                "sst:app": app.name,
-                "sst:stage": app.stage,
-              },
-            },
-          },
-        }),
       },
       envVars: {
         PULUMI_CONFIG_PASSPHRASE: "",
         PULUMI_SKIP_UPDATE_CHECK: "true",
         PULUMI_EXPERIMENTAL: "1",
         PULUMI_SKIP_CHECKPOINTS: "true",
-        NODE_PATH: app.paths.temp + "/node_modules",
-        ...app.aws,
+        NODE_PATH: $cli.paths.work + "/node_modules",
+        ...$cli.env,
       },
     },
   );
 
+  for (const [provider, args] of Object.entries($app.providers || {})) {
+    for (const [key, value] of Object.entries(args)) {
+      stack.setConfig(provider + ":" + key, { value });
+    }
+  }
+  stack.setConfig("aws:defaultTags", {
+    value: JSON.stringify({
+      tags: {
+        ...$app.providers?.aws?.defaultTags,
+        "sst:app": $app.name,
+        "sst:stage": $app.stage,
+      },
+    }),
+  });
+
   try {
-    const result = await stack[app.command as "up"]({
-      logVerbosity: 11,
+    await stack[$cli.command as "up"]({
       onEvent: (evt) => {
         console.log("~j" + JSON.stringify(evt));
       },

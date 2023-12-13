@@ -4,38 +4,54 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"path"
 	"path/filepath"
 
 	"github.com/sst/ion/internal/fs"
 	"github.com/sst/ion/pkg/js"
+	"github.com/sst/ion/pkg/project/provider"
 )
 
-type Project struct {
-	version       string
-	root          string
-	config        string
-	name          string
-	profile       string
-	region        string
-	stage         string
-	removalPolicy string
-	process       *js.Process
-
-	AWS       *projectAws
-	Bootstrap *bootstrap
-	Stack     *stack
+type App struct {
+	Name          string                       `json:"name"`
+	Stage         string                       `json:"stage"`
+	RemovalPolicy string                       `json:"removalPolicy"`
+	Providers     map[string]map[string]string `json:"providers"`
 }
 
-func New(version string) (*Project, error) {
+type Project struct {
+	version string
+	root    string
+	process *js.Process
+	app     *App
+	backend string
+	env     map[string]string
+
+	Stack *stack
+}
+
+func Discover() (string, error) {
 	cwd, err := os.Getwd()
 	if err != nil {
-		return nil, err
+		return "", err
 	}
-
 	cfgPath, err := fs.FindUp(cwd, "sst.config.ts")
 	if err != nil {
-		return nil, err
+		return "", err
 	}
+	return cfgPath, nil
+}
+
+func resolveWorkDir(cfgPath string) string {
+	return path.Join(filepath.Dir(cfgPath), ".sst")
+}
+
+type ProjctConfig struct {
+	Version string
+	Stage   string
+}
+
+func New(version, cfgPath string) (*Project, error) {
 	rootPath := filepath.Dir(cfgPath)
 
 	process, err := js.Start(
@@ -48,14 +64,7 @@ func New(version string) (*Project, error) {
 	proj := &Project{
 		version: version,
 		root:    rootPath,
-		config:  cfgPath,
 		process: process,
-	}
-	proj.AWS = &projectAws{
-		project: proj,
-	}
-	proj.Bootstrap = &bootstrap{
-		project: proj,
 	}
 	proj.Stack = &stack{
 		project: proj,
@@ -78,7 +87,7 @@ func New(version string) (*Project, error) {
 			Dir: tmp,
 			Code: fmt.Sprintf(`
 import mod from '%s';
-console.log("~j" + JSON.stringify(mod.config()))`,
+console.log("~j" + JSON.stringify(mod.app()))`,
 				cfgPath),
 		},
 	)
@@ -97,37 +106,41 @@ console.log("~j" + JSON.stringify(mod.config()))`,
 			continue
 		}
 
-		parsed := struct {
-			Name          string `json:"name"`
-			Profile       string `json:"profile"`
-			Stage         string `json:"stage"`
-			Region        string `json:"region"`
-			RemovalPolicy string `json:"removalPolicy"`
-		}{}
+		var parsed App
 		err = json.Unmarshal([]byte(line), &parsed)
 		if err != nil {
 			return nil, err
 		}
-		proj.name = parsed.Name
-		proj.profile = parsed.Profile
-		proj.stage = parsed.Stage
-		proj.region = parsed.Region
-		proj.removalPolicy = parsed.RemovalPolicy
+		proj.app = &parsed
 
-		if proj.name == "" {
+		if proj.app.Name == "" {
 			return nil, fmt.Errorf("Project name is required")
 		}
 
-		if proj.region == "" {
-			return nil, fmt.Errorf("Region is required")
+		if proj.app.RemovalPolicy == "" {
+			proj.app.RemovalPolicy = "retain"
 		}
 
-		if proj.removalPolicy == "" {
-			proj.removalPolicy = "retain"
-		}
-		if proj.removalPolicy != "remove" && proj.removalPolicy != "retain" && proj.removalPolicy != "retain-all" {
+		if proj.app.RemovalPolicy != "remove" && proj.app.RemovalPolicy != "retain" && proj.app.RemovalPolicy != "retain-all" {
 			return nil, fmt.Errorf("RemovalPolicy must be one of: remove, retain, retain-all")
 		}
+	}
+
+	aws := proj.app.Providers["aws"]
+	if aws == nil {
+		aws = map[string]string{}
+		proj.app.Providers["aws"] = aws
+	}
+	prov := &provider.AwsProvider{}
+	backend, env, err := prov.Backend(aws)
+	if err != nil {
+		return nil, err
+	}
+	proj.env = env
+	proj.backend = backend
+	err = prov.Init(aws)
+	if err != nil {
+		return nil, err
 	}
 
 	return proj, nil
@@ -163,34 +176,18 @@ func (p *Project) PathTemp() string {
 	return filepath.Join(p.root, ".sst")
 }
 
+func (p *Project) Backend() string {
+	return p.backend
+}
+
 func (p *Project) PathRoot() string {
 	return p.root
 }
 
-func (p *Project) PathConfig() string {
-	return p.config
-}
-
-func (p *Project) Name() string {
-	return p.name
-}
-
-func (p *Project) Region() string {
-	return p.region
-}
-
-func (p *Project) Profile() string {
-	return p.profile
-}
-
-func (p *Project) RemovalPolicy() string {
-	return p.removalPolicy
-}
-
-func (p *Project) Stage() string {
-	return p.stage
-}
-
 func (p *Project) Version() string {
 	return p.version
+}
+
+func (p *Project) App() *App {
+	return p.app
 }
