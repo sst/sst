@@ -8,16 +8,16 @@
     "migrate": "sst bind tsx ./src/migrator.ts"
   },
   "devDependencies": {
-    "vitest": "^0.34.6",
-    "@types/node": "^20.9.5",
-    "sst": "^2.36.5",
-    "tsx": "^4.4.0"
+    "vitest": "^1.0.4",
+    "@types/node": "^20.10.4",
+    "sst": "^2.38.7",
+    "tsx": "^4.6.2"
   },
   "dependencies": {
     "ulid": "^2.3.0",
     "kysely": "0.25.0",
     "kysely-data-api": "^0.2.1",
-    "aws-sdk": "^2.1502.0",
-    "@aws-sdk/client-rds-data": "^3.454.0"
+    "aws-sdk": "^2.1517.0",
+    "@aws-sdk/client-rds-data": "^3.470.0"
   }
 }
