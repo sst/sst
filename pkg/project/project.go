@@ -113,6 +113,10 @@ console.log("~j" + JSON.stringify(mod.app()))`,
 		}
 		proj.app = &parsed
 
+		if proj.app.Providers == nil {
+			proj.app.Providers = map[string]map[string]string{}
+		}
+
 		if proj.app.Name == "" {
 			return nil, fmt.Errorf("Project name is required")
 		}

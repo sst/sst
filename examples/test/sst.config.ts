@@ -6,12 +6,6 @@ export default $config({
       name: "test",
       region: "us-east-1",
       removalPolicy: "remove",
-      providers: {
-        aws: {
-          region: "us-east-1",
-          profile: "sst-dev",
-        },
-      },
     };
   },
   async run() {
