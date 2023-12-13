@@ -104,6 +104,9 @@ func progress(mode ProgressMode, events project.StackEventStream) bool {
 	outputs := make(map[string]interface{})
 
 	for evt := range events {
+		if evt.SummaryEvent != nil {
+			spin.Suffix = "  Finalizing..."
+		}
 		if evt.ConcurrentUpdateEvent != nil {
 			spin.Disable()
 			fmt.Println("Concurrent update detected, run `sst cancel` to delete lock file and retry.")

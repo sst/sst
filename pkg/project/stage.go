@@ -15,7 +15,7 @@ func (p *Project) LoadPersonalStage() {
 	if err != nil {
 		return
 	}
-	p.stage = strings.TrimSpace(string(data))
+	p.app.Stage = strings.TrimSpace(string(data))
 }
 
 func (p *Project) SetPersonalStage(input string) error {
@@ -23,6 +23,6 @@ func (p *Project) SetPersonalStage(input string) error {
 	if err != nil {
 		return err
 	}
-	p.stage = input
+	p.app.Stage = input
 	return nil
 }

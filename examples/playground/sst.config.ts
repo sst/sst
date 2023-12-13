@@ -1,12 +1,14 @@
 /// <reference path="./.sst/src/global.d.ts" />
 
-import { randomBytes } from "node:crypto";
-
-export default {
-  config() {
+export default $config({
+  app() {
     return {
       name: "playground",
-      region: "us-east-1",
+      providers: {
+        aws: {
+          region: "us-east-1",
+        },
+      },
       removalPolicy: "remove",
     };
   },
@@ -46,7 +48,7 @@ export default {
       //siteURL: site.url,
     };
   },
-};
+});
 
 //const randomprovider: util.dynamic.ResourceProvider = {
 //  async create(inputs) {

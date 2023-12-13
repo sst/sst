@@ -10,37 +10,36 @@ import (
 	"github.com/sst/ion/internal/components"
 )
 
-func (p *Project) CheckDeps() bool {
-	if p.version == "dev" {
+func CheckDeps(version, cfgPath string) bool {
+	if version == "dev" {
 		return false
 	}
-
 	slog.Info("checking dependencies")
-	contents, err := os.ReadFile(filepath.Join(p.PathTemp(), "version"))
+	contents, err := os.ReadFile(filepath.Join(resolveWorkDir(cfgPath), "version"))
 	if err != nil {
 		return false
 	}
-
-	return string(contents) == p.version
+	return string(contents) == version
 }
 
-func (p *Project) InstallDeps() error {
+func InstallDeps(version, cfgPath string) error {
 	slog.Info("installing dependencies")
 
-	err := components.CopyTo(".", p.PathTemp())
+	workingDir := resolveWorkDir(cfgPath)
+	err := components.CopyTo(".", workingDir)
 	if err != nil {
 		return err
 	}
 
-	if p.version == "dev" {
+	if version == "dev" {
 		slog.Info("dev mode skipping node_module install")
 		return nil
 	}
 
-	os.RemoveAll(filepath.Join(p.PathTemp(), "node_modules"))
+	os.RemoveAll(filepath.Join(workingDir, "node_modules"))
 
 	cmd := exec.Command("npm", "install")
-	cmd.Dir = p.PathTemp()
+	cmd.Dir = workingDir
 	cmd.Stderr = os.Stderr
 	cmd.Stdout = os.Stdout
 
@@ -49,7 +48,7 @@ func (p *Project) InstallDeps() error {
 		return err
 	}
 
-	return os.WriteFile(filepath.Join(p.PathTemp(), "version"), []byte(p.version), 0644)
+	return os.WriteFile(filepath.Join(workingDir, "version"), []byte(version), 0644)
 }
 
 type PackageJson struct {

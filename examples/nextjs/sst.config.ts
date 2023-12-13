@@ -1,10 +1,14 @@
 /// <reference path="./.sst/src/global.d.ts" />
 
-export default {
-  config() {
+export default $config({
+  app() {
     return {
       name: "nextjs",
-      region: "us-east-1",
+      providers: {
+        aws: {
+          region: "us-east-1",
+        },
+      },
     };
   },
   async run() {
@@ -25,4 +29,4 @@ export default {
       distributionID: site.nodes?.distribution.nodes.distribution.id,
     };
   },
-};
+});

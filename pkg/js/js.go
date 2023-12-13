@@ -185,7 +185,7 @@ const __dirname = topLevelFileUrlToPath(new topLevelURL(".", import.meta.url))
 			Loader:     esbuild.LoaderTS,
 		},
 		Define:  input.Define,
-		Inject:  input.Inject,
+		Inject:  append(input.Inject, filepath.Join(input.Dir, "src", "shim.js")),
 		Outfile: outfile,
 		Write:   true,
 		Bundle:  true,
