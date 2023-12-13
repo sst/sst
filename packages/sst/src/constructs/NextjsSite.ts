@@ -8,6 +8,7 @@ import {
   Duration as CdkDuration,
   RemovalPolicy,
   CustomResource,
+  Fn,
 } from "aws-cdk-lib/core";
 import {
   Code,
@@ -238,7 +239,9 @@ type NextjsSiteNormalizedProps<ONConfig extends OpenNextConfig> = NextjsSiteProp
  * ```
  */
 export class NextjsSite<ONConfig extends OpenNextConfig = OpenNextConfig> extends SsrSite {
-  declare props: NextjsSiteNormalizedProps<ONConfig>;
+  declare props: NextjsSiteNormalizedProps<ONConfig> & {
+    openNextOutput: OpenNextOutput
+  }
   private _routes?: {
     route: string;
     logGroupPath: string;
@@ -276,6 +279,7 @@ export class NextjsSite<ONConfig extends OpenNextConfig = OpenNextConfig> extend
       ].join(" "),
       ...props,
     });
+    this.openNextOutput = this.props.openNextOutput;
 
     const disableIncrementalCache = this.openNextOutput?.additionalProps?.disableIncrementalCache ?? false;
     const disableTagCache = this.openNextOutput?.additionalProps?.disableTagCache ?? false;
@@ -286,6 +290,11 @@ export class NextjsSite<ONConfig extends OpenNextConfig = OpenNextConfig> extend
     if (this.isPerRouteLoggingEnabled()) {
       //this.disableDefaultLogging();
       this.uploadSourcemaps();
+    }
+    
+
+    if(this.openNextOutput?.edgeFunctions?.middleware) {
+      this.setMiddlewareEnv();
     }
 
     if (!disableIncrementalCache) {
@@ -427,7 +436,6 @@ export class NextjsSite<ONConfig extends OpenNextConfig = OpenNextConfig> extend
     const openNextOutput = JSON.parse(
       fs.readFileSync(openNextOutputPath).toString()
     ) as OpenNextOutput;
-
     const imageOpt = openNextOutput.origins.imageOptimizer as OpenNextFunctionOrigin;
     const defaultFn = openNextOutput.origins.default;
     const remainingFns = Object.entries(openNextOutput.origins).filter(([key, value]) => {
@@ -500,7 +508,29 @@ export class NextjsSite<ONConfig extends OpenNextConfig = OpenNextConfig> extend
       warmerConfig: openNextOutput.additionalProps?.warmer ? {
         function: openNextOutput.additionalProps.warmer.bundle,
       } : undefined,
+      additionalProps: {
+        openNextOutput: openNextOutput,
+      }
     });
+  }
+
+  private setMiddlewareEnv() {
+    const origins = this.serverFunctions.reduce((acc, server) => {
+      return {
+        ...acc, 
+        [server.function ?
+          server.id.replace("ServerFunction", "") :
+          server.id.replace("ServerContainer", "")
+        ]: 
+        {
+          host: server.function ? Fn.parseDomainName(server.fnUrl?.url ?? "") : server.cdk?.applicationLoadBalancer?.loadBalancerDnsName ?? "",
+          port: 443,
+          protocol: "https",
+        }
+      }
+    }, {} as Record<string, {host: string, port: number, protocol: string}>)
+    console.log(origins)
+    this.edgeFunctions?.middleware?.addEnvironment('OPEN_NEXT_ORIGIN', Fn.toJsonString(origins))
   }
 
   private createRevalidationQueue() {

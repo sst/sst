@@ -250,7 +250,7 @@ export interface SsrSiteProps {
   /**
    * The number of server functions to keep warm. This option is only supported for the regional mode.
    * @deprecated should be set by function
-   * @default Server function is not kept warm
+   * @default server function is not kept warm
    */
   warm?: number;
   regional?: {
@@ -603,6 +603,7 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
     buildApp();
     const plan = this.plan(bucket);
     transformPlan();
+    this.props = { ...props, ...plan.additionalProps };
     validateTimeout();
 
     // Create CloudFront
@@ -1651,6 +1652,11 @@ function handler(event) {
       allowedHeaders?: string[];
     };
     buildId?: string;
+    warmerConfig?: {
+      function: string;
+      schedule?: Schedule;
+    };
+    additionalProps?: Record<string, any>;
   }) {
     return input;
   }
