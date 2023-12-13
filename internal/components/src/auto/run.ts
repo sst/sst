@@ -11,7 +11,7 @@ export async function run(program: PulumiFn) {
             app.removalPolicy === "retain-all" ||
             (app.removalPolicy === "retain" &&
               ["aws:s3/bucket:Bucket", "aws:dynamodb/table:Table"].includes(
-                args.type,
+                args.type
               ))
           ) {
             return {
@@ -55,7 +55,7 @@ export async function run(program: PulumiFn) {
         NODE_PATH: app.paths.temp + "/node_modules",
         ...app.aws,
       },
-    },
+    }
   );
 
   try {

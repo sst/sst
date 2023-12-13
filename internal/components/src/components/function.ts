@@ -14,9 +14,9 @@ import {
   interpolate,
 } from "@pulumi/pulumi";
 import * as aws from "@pulumi/aws";
-import { FunctionCodeUpdater } from "./function-code-updater.js";
+import { FunctionCodeUpdater } from "./providers/function-code-updater.js";
 import { AWS } from "./helpers/aws.js";
-import { LogGroup } from "./log-group.js";
+import { LogGroup } from "./providers/log-group.js";
 import { Duration, toSeconds } from "./util/duration.js";
 import { Size, toMBs } from "./util/size.js";
 

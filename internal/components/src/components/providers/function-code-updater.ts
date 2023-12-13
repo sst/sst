@@ -3,7 +3,7 @@ import {
   LambdaClient,
   UpdateFunctionCodeCommand,
 } from "@aws-sdk/client-lambda";
-import { AWS } from "./helpers/aws.js";
+import { AWS } from "../helpers/aws.js";
 
 export interface FunctionCodeUpdaterInputs {
   s3Bucket: Input<string>;
@@ -55,6 +55,6 @@ export class FunctionCodeUpdater extends dynamic.Resource {
     args: FunctionCodeUpdaterInputs,
     opts?: CustomResourceOptions
   ) {
-    super(new Provider(), name, args, opts);
+    super(new Provider(), `${name}-sst.FunctionCodeUpdater`, args, opts);
   }
 }

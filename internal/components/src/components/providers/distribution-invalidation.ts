@@ -4,7 +4,7 @@ import {
   CreateInvalidationCommand,
   waitUntilInvalidationCompleted,
 } from "@aws-sdk/client-cloudfront";
-import { AWS } from "./helpers/aws.js";
+import { AWS } from "../helpers/aws.js";
 
 // CloudFront allows you to specify up to 3,000 paths in a single invalidation
 // https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/cloudfront-limits.html#limits-invalidations
@@ -144,7 +144,7 @@ export class DistributionInvalidation extends dynamic.Resource {
   ) {
     super(
       new Provider(),
-      name,
+      `${name}-sst.DistributionInvalidation`,
       {
         ...args,
         paths: output(args.paths).apply((paths) => [

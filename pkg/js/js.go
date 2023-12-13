@@ -175,7 +175,6 @@ const __dirname = topLevelFileUrlToPath(new topLevelURL(".", import.meta.url))
 			"archiver",
 			"glob",
 		},
-		KeepNames: true,
 		Format:    esbuild.FormatESModule,
 		Platform:  esbuild.PlatformNode,
 		Sourcemap: esbuild.SourceMapInline,

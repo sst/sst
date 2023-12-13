@@ -12,8 +12,6 @@ import (
 	"github.com/sst/ion/pkg/project"
 )
 
-var urnRegex = regexp.MustCompile(`\/[^:]+`)
-
 type Progress struct {
 	Color   color.Attribute
 	Label   string
@@ -52,7 +50,25 @@ func progress(mode ProgressMode, events project.StackEventStream) bool {
 
 	formatURN := func(urn string) string {
 		splits := strings.Split(urn, "::")[2:]
-		return urnRegex.ReplaceAllString(splits[0], "") + "::" + splits[1]
+		urn0 := splits[0]
+		resourceName0 := splits[1]
+		// convert aws:s3/bucket:Bucket to aws:s3:Bucket
+		urn1 := regexp.MustCompile(`\/[^:]+`).ReplaceAllString(urn0, "")
+		// convert sst:sst:Nextjs to sst:Nextjs
+		urn2 := regexp.MustCompile(`sst:sst:`).ReplaceAllString(urn1, "sst:")
+		// convert pulumi-nodejs:dynamic:Resource to sst:xxxx
+		urn3 := urn2
+		resourceName1 := resourceName0
+		resourceType := regexp.MustCompile(`\.sst\.(.+)$`).FindStringSubmatch(resourceName0)
+		if regexp.MustCompile(`pulumi-nodejs:dynamic:Resource$`).MatchString(urn2) &&
+		len(resourceType) > 1 {
+			urn3 = regexp.MustCompile(`pulumi-nodejs:dynamic:Resource$`).ReplaceAllString(urn2, resourceType[1])
+			resourceName1 = regexp.MustCompile(`\.sst\..+$`).ReplaceAllString(resourceName0, "")
+		}
+		urn4 := regexp.MustCompile(`\$`).ReplaceAllString(urn3, " → ")
+		// convert Nextjs$aws:s3:Bucket to Nextjs → aws:s3:Bucket
+		urn5 := regexp.MustCompile(`\$`).ReplaceAllString(urn4, " → ")
+		return urn5 + " → " + resourceName1
 	}
 
 	printProgress := func(progress Progress) {

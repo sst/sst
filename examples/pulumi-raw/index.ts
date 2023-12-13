@@ -1,11 +1,17 @@
+import { randomBytes } from "node:crypto";
 import * as pulumi from "@pulumi/pulumi";
-import * as aws from "@pulumi/aws";
-import * as awsx from "@pulumi/awsx";
-import { DistributionInvalidation } from "./distribution-invalidation";
 
-new DistributionInvalidation(`invalidation`, {
-  distributionId: "ESWUVI5JLK5EA",
-  paths: ["/*"],
-  wait: false,
-  version: Date.now().toString(16),
-});
+const randomprovider: pulumi.dynamic.ResourceProvider = {
+  async create(inputs) {
+    return { id: randomBytes(16).toString("hex"), outs: {} };
+  },
+};
+
+class Random extends pulumi.dynamic.Resource {
+  constructor(name: string, opts?: pulumi.CustomResourceOptions) {
+    super(randomprovider, name, {}, opts);
+  }
+}
+
+//const bucket = new aws.s3.Bucket("web");
+new Random("web");

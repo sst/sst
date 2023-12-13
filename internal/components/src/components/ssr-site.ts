@@ -18,7 +18,7 @@ import * as aws from "@pulumi/aws";
 import { Distribution, DistributionDomainArgs } from "./distribution.js";
 import { Function, FunctionArgs, FunctionNodeJSArgs } from "./function.js";
 import { Duration, toSeconds } from "./util/duration.js";
-import { DistributionInvalidation } from "./distribution-invalidation.js";
+import { DistributionInvalidation } from "./providers/distribution-invalidation.js";
 import { AWS } from "./helpers/aws.js";
 
 type CloudFrontFunctionConfig = { injections: string[] };
@@ -299,7 +299,7 @@ export function prepare(args: SsrSiteArgs) {
   }
 }
 export function buildApp(
-  name: string,
+  displayName: string,
   args: SsrSiteArgs,
   sitePath: Output<string>,
   buildCommand: Output<string>
@@ -325,9 +325,11 @@ export function buildApp(
         }
       }
 
+      // TODO REMOVE
+      if (process.env.SKIP) return sitePath;
+
       // Run build
       console.debug(`Running "${cmd}" script`);
-      // TODO revert
       try {
         execSync(cmd, {
           cwd: sitePath,
@@ -339,7 +341,9 @@ export function buildApp(
           },
         });
       } catch (e) {
-        throw new Error(`There was a problem building the "${name}" site.`);
+        throw new Error(
+          `There was a problem building the "${displayName}" site.`
+        );
       }
 
       return sitePath;
@@ -1123,12 +1127,15 @@ if (event.type === "warmer") {
             console.debug(`Generated build ID ${invalidationBuildId}`);
           }
 
-          new DistributionInvalidation(`${name}-invalidation`, {
-            distributionId: distribution.nodes.distribution.id,
-            paths: invalidationPaths,
-            version: invalidationBuildId,
-          }),
-            { parent };
+          new DistributionInvalidation(
+            `${name}-invalidation`,
+            {
+              distributionId: distribution.nodes.distribution.id,
+              paths: invalidationPaths,
+              version: invalidationBuildId,
+            },
+            { parent }
+          );
         }
       );
     }

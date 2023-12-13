@@ -137,6 +137,8 @@ export class Nextjs extends ComponentResource {
     args?: NextjsArgs,
     opts?: ComponentResourceOptions
   ) {
+    const displayName = name;
+    name = `${app.name}-${app.stage}-${name}`;
     super("sst:sst:Nextjs", name, args, opts);
 
     const parent = this;
@@ -175,7 +177,12 @@ export class Nextjs extends ComponentResource {
       routes: Record<string, unknown>;
     }>;
 
-    const outputPath = buildApp(name, args || {}, sitePath, buildCommand);
+    const outputPath = buildApp(
+      displayName,
+      args || {},
+      sitePath,
+      buildCommand
+    );
     const { access, bucket } = createBucket(parent, name);
     const revalidationQueue = createRevalidationQueue();
     const plan = buildPlan(bucket);
@@ -763,7 +770,7 @@ if (event.rawPath) {
         } catch (e) {
           console.error(e);
           throw new Error(
-            `Failed to read routes data from ".next/routes-manifest.json" for the "${name}" site.`
+            `Failed to read routes data from ".next/routes-manifest.json" for the "${displayName}" site.`
           );
         }
       });

@@ -6,7 +6,7 @@ import {
   PutRetentionPolicyCommand,
   DeleteRetentionPolicyCommand,
 } from "@aws-sdk/client-cloudwatch-logs";
-import { AWS } from "./helpers/aws.js";
+import { AWS } from "../helpers/aws.js";
 
 export interface LogGroupInputs {
   logGroupName: Input<string>;
@@ -85,6 +85,6 @@ export class LogGroup extends dynamic.Resource {
     args: LogGroupInputs,
     opts?: CustomResourceOptions
   ) {
-    super(new Provider(), name, args, opts);
+    super(new Provider(), `${name}-sst.LogGroup`, args, opts);
   }
 }

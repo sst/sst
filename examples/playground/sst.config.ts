@@ -1,10 +1,13 @@
 /// <reference path="./.sst/src/global.d.ts" />
 
+import { randomBytes } from "node:crypto";
+
 export default {
   config() {
     return {
       name: "playground",
       region: "us-east-1",
+      removalPolicy: "remove",
     };
   },
   async run() {
@@ -44,3 +47,15 @@ export default {
     };
   },
 };
+
+//const randomprovider: util.dynamic.ResourceProvider = {
+//  async create(inputs) {
+//    return { id: randomBytes(16).toString("hex"), outs: {} };
+//  },
+//};
+//class Random extends util.dynamic.Resource {
+//  constructor(name: string, opts?: util.CustomResourceOptions) {
+//    super(randomprovider, name, {}, opts);
+//  }
+//}
+//new Random("web");
