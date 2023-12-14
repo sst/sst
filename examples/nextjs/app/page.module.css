@@ -227,7 +227,3 @@
     transform: rotate(0deg);
   }
 }
-
-* {
-  transition: 1s all;
-}

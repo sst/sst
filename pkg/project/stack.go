@@ -56,6 +56,7 @@ func (s *stack) run(cmd string) (StackEventStream, error) {
 			"$app": string(appBytes),
 			"$cli": string(cliBytes),
 		},
+		Inject: []string{filepath.Join(s.project.PathTemp(), "src/shim/run.js")},
 		Code: fmt.Sprintf(`
       import { run } from "%v";
       import mod from "%v/sst.config.ts";

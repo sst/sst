@@ -112,6 +112,7 @@ func (a *AwsProvider) Backend(provider map[string]string) (string, map[string]st
 }
 
 func (a *AwsProvider) Init(provider map[string]string) (err error) {
+	// return nil
 	cfg, err := a.resolveConfig(provider)
 	if err != nil {
 		return err
@@ -121,9 +122,19 @@ func (a *AwsProvider) Init(provider map[string]string) (err error) {
 		return err
 	}
 	delete(provider, "profile")
-	provider["accessKey"] = creds.AccessKeyID
-	provider["secretKey"] = creds.SecretAccessKey
-	provider["token"] = creds.SessionToken
+	if creds.AccessKeyID != "" {
+		provider["accessKey"] = creds.AccessKeyID
+	}
+
+	if creds.SecretAccessKey != "" {
+		provider["secretKey"] = creds.SecretAccessKey
+	}
+	if creds.SessionToken != "" {
+		provider["token"] = creds.SessionToken
+	}
+	if cfg.Region != "" {
+		provider["region"] = cfg.Region
+	}
 
 	return err
 }

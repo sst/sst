@@ -22,9 +22,11 @@ declare global {
 
   export const $app: Simplify<
     Readonly<
-      App & {
-        stage: string;
-      }
+      Omit<App, "providers"> &
+        Simplify<{
+          stage: string;
+          providers: App["providers"];
+        }>
     >
   >;
 }

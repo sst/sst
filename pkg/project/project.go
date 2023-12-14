@@ -84,7 +84,8 @@ func New(version, cfgPath string) (*Project, error) {
 
 	err = process.Eval(
 		js.EvalOptions{
-			Dir: tmp,
+			Dir:    tmp,
+			Inject: []string{filepath.Join(tmp, "src/shim/boot.js")},
 			Code: fmt.Sprintf(`
 import mod from '%s';
 console.log("~j" + JSON.stringify(mod.app()))`,
