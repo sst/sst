@@ -3,6 +3,23 @@ import { runtime } from "@pulumi/pulumi";
 import { PulumiFn } from "@pulumi/pulumi/automation";
 
 export async function run(program: PulumiFn) {
+  const config: Record<string, { value: string }> = {};
+  for (const [provider, args] of Object.entries($app.providers || {})) {
+    for (const [key, value] of Object.entries(args)) {
+      config[provider + ":" + key] = { value };
+    }
+  }
+
+  config["aws:defaultTags"] = {
+    value: JSON.stringify({
+      tags: {
+        ...$app.providers?.aws?.defaultTags,
+        "sst:app": $app.name,
+        "sst:stage": $app.stage,
+      },
+    }),
+  };
+
   const stack = await LocalWorkspace.createOrSelectStack(
     {
       program: async () => {
@@ -47,21 +64,7 @@ export async function run(program: PulumiFn) {
       },
     },
   );
-
-  for (const [provider, args] of Object.entries($app.providers || {})) {
-    for (const [key, value] of Object.entries(args)) {
-      stack.setConfig(provider + ":" + key, { value });
-    }
-  }
-  stack.setConfig("aws:defaultTags", {
-    value: JSON.stringify({
-      tags: {
-        ...$app.providers?.aws?.defaultTags,
-        "sst:app": $app.name,
-        "sst:stage": $app.stage,
-      },
-    }),
-  });
+  await stack.setAllConfig(config);
 
   try {
     await stack[$cli.command as "up"]({
