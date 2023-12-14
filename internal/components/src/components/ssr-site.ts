@@ -288,7 +288,7 @@ export function prepare(args: SsrSiteArgs) {
       if (fs.existsSync(filePath)) return;
 
       const relPathToSstTypesFile = path.join(
-        path.relative(path.dirname(filePath), app.paths.root),
+        path.relative(path.dirname(filePath), $cli.paths.root),
         ".sst/types/index.ts"
       );
       fs.writeFileSync(
@@ -299,7 +299,7 @@ export function prepare(args: SsrSiteArgs) {
   }
 }
 export function buildApp(
-  displayName: string,
+  name: string,
   args: SsrSiteArgs,
   sitePath: Output<string>,
   buildCommand: Output<string>
@@ -341,9 +341,7 @@ export function buildApp(
           },
         });
       } catch (e) {
-        throw new Error(
-          `There was a problem building the "${displayName}" site.`
-        );
+        throw new Error(`There was a problem building the "${name}" site.`);
       }
 
       return sitePath;

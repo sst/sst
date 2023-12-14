@@ -27,9 +27,11 @@ export async function run(program: PulumiFn) {
           if (
             $app.removalPolicy === "retain-all" ||
             ($app.removalPolicy === "retain" &&
-              ["aws:s3/bucket:Bucket", "aws:dynamodb/table:Table"].includes(
-                args.type,
-              ))
+              [
+                "aws:s3/bucket:Bucket",
+                "aws:s3/bucketV2:BucketV2",
+                "aws:dynamodb/table:Table",
+              ].includes(args.type))
           ) {
             return {
               props: args.props,
@@ -62,7 +64,7 @@ export async function run(program: PulumiFn) {
         NODE_PATH: $cli.paths.work + "/node_modules",
         ...$cli.env,
       },
-    },
+    }
   );
   await stack.setAllConfig(config);
 

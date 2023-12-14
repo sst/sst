@@ -307,9 +307,10 @@ export class Function extends ComponentResource {
     this.fnUrl = fnUrl;
 
     function normalizeRegion() {
-      return output((opts?.provider as aws.Provider)?.region).apply(
-        (region) => region ?? app.aws.region
-      );
+      return all([
+        $app.providers?.aws?.region!,
+        (opts?.provider as aws.Provider)?.region,
+      ]).apply(([appRegion, region]) => region ?? appRegion);
     }
 
     function normalizeInjections() {
@@ -472,7 +473,7 @@ export class Function extends ComponentResource {
       //       contains symlinks. Pulumi cannot zip symlinks correctly.
       //       We will zip the folder ourselves.
       return output(args.bundle).apply(async (bundle) => {
-        const zipPath = path.resolve(app.paths.temp, name, "code.zip");
+        const zipPath = path.resolve($cli.paths.work, name, "code.zip");
         await fs.promises.mkdir(path.dirname(zipPath), {
           recursive: true,
         });

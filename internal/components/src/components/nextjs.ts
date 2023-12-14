@@ -24,6 +24,7 @@ import {
   validatePlan,
 } from "./ssr-site.js";
 import { Distribution } from "./distribution.js";
+import { AWS } from "./helpers/aws.js";
 
 const LAYER_VERSION = "2";
 const DEFAULT_OPEN_NEXT_VERSION = "2.3.1";
@@ -137,9 +138,76 @@ export class Nextjs extends ComponentResource {
     args?: NextjsArgs,
     opts?: ComponentResourceOptions
   ) {
-    const displayName = name;
-    name = `${app.name}-${app.stage}-${name}`;
-    super("sst:sst:Nextjs", name, args, opts);
+    super("sst:sst:Nextjs", name, args, {
+      transformations: [
+        (args) => {
+          // Ensure "parent" is set
+          if (args.type !== "sst:sst:Nextjs" && !args.opts.parent) {
+            throw new Error(
+              `In "${name}" component, parent of "${args.name}" (${args.type}) is not set`
+            );
+          }
+
+          // Ensure names are prefixed with parent's name
+          if (
+            args.type !== "sst:sst:Nextjs" &&
+            // @ts-expect-error
+            !args.name.startsWith(args.opts.parent!.__name)
+          ) {
+            throw new Error(
+              `In "${name}" component, the name of "${args.name}" (${args.type}) is not prefixed with parent's name`
+            );
+          }
+
+          // Ensure physical names are prefixed with app/stage
+          if (args.type.startsWith("sst:sst:")) return undefined;
+          if (args.type === "pulumi-nodejs:dynamic:Resource") return undefined;
+          const prefix = `${$app.name}-${$app.stage}-${args.name}-`
+            .substring(0, 38)
+            .replace(/[^-]$/, "-");
+
+          let overrides;
+          switch (args.type) {
+            case "aws:s3/bucket:Bucket":
+            case "aws:s3/bucketV2:BucketV2":
+              overrides = { bucketPrefix: prefix };
+              break;
+            case "aws:cloudwatch/eventRule:EventRule":
+            case "aws:iam/role:Role":
+            case "aws:iam/policy:Policy":
+            case "aws:sqs/queue:Queue":
+              overrides = { namePrefix: prefix };
+              break;
+            case "aws:iam/rolePolicyAttachment:RolePolicyAttachment":
+            case "aws:cloudfront/cachePolicy:CachePolicy":
+            case "aws:cloudfront/distribution:Distribution":
+            case "aws:cloudfront/function:Function":
+            case "aws:cloudfront/originAccessIdentity:OriginAccessIdentity":
+            case "aws:cloudwatch/eventRule:EventRule":
+            case "aws:cloudwatch/eventTarget:EventTarget":
+            case "aws:lambda/eventSourceMapping:EventSourceMapping":
+            case "aws:lambda/function:Function":
+            case "aws:lambda/functionUrl:FunctionUrl":
+            case "aws:lambda/invocation:Invocation":
+            case "aws:route53/record:Record":
+            case "aws:s3/bucketObject:BucketObject":
+            case "aws:s3/bucketObjectv2:BucketObjectv2":
+            case "aws:s3/bucketPolicy:BucketPolicy":
+            case "aws:s3/bucketPublicAccessBlock:BucketPublicAccessBlock":
+              break;
+            default:
+              throw new Error(
+                `In "${name}" component, the physical name of "${args.name}" (${args.type}) is not prefixed`
+              );
+          }
+          return {
+            props: { ...args.props, ...overrides },
+            opts: args.opts,
+          };
+        },
+      ],
+      ...opts,
+    });
 
     const parent = this;
     const logging = normalizeLogging();
@@ -177,12 +245,7 @@ export class Nextjs extends ComponentResource {
       routes: Record<string, unknown>;
     }>;
 
-    const outputPath = buildApp(
-      displayName,
-      args || {},
-      sitePath,
-      buildCommand
-    );
+    const outputPath = buildApp(name, args || {}, sitePath, buildCommand);
     const { access, bucket } = createBucket(parent, name);
     const revalidationQueue = createRevalidationQueue();
     const plan = buildPlan(bucket);
@@ -255,206 +318,214 @@ export class Nextjs extends ComponentResource {
     }
 
     function buildPlan(bucket: aws.s3.BucketV2) {
-      return all([
-        outputPath,
-        args?.edge,
-        args?.experimental,
-        args?.imageOptimization,
-        bucket.bucket,
-        useRoutes(),
-        revalidationQueue.apply((queue) => queue?.url),
-        revalidationQueue.apply((queue) => queue?.arn),
-      ]).apply(
-        ([
-          outputPath,
-          edge,
-          experimental,
-          imageOptimization,
-          bucketName,
-          routes,
-          revalidationQueueUrl,
-          revalidationQueueArn,
-        ]) => {
-          const serverConfig = {
-            description: "Next.js server",
-            bundle: path.join(outputPath, ".open-next", "server-function"),
-            handler: "index.handler",
-            environment: {
-              CACHE_BUCKET_NAME: bucketName,
-              CACHE_BUCKET_KEY_PREFIX: "_cache",
-              CACHE_BUCKET_REGION: app.aws.region,
-              ...(revalidationQueueUrl && {
-                REVALIDATION_QUEUE_URL: revalidationQueueUrl,
-                REVALIDATION_QUEUE_REGION: app.aws.region,
-              }),
-            },
-            policies: [
-              ...(revalidationQueue
-                ? [
-                    {
-                      name: "revalidation-queue",
-                      policy: JSON.stringify({
-                        statements: [
-                          {
-                            actions: [
-                              "sqs:SendMessage",
-                              "sqs:GetQueueAttributes",
-                              "sqs:GetQueueUrl",
-                            ],
-                            resources: [revalidationQueueArn],
-                          },
-                        ],
-                      }),
-                    },
-                  ]
-                : []),
-            ],
-            layers: isPerRouteLoggingEnabled()
-              ? [
-                  `arn:aws:lambda:${app.aws.region}:226609089145:layer:sst-extension-arm64:${LAYER_VERSION}`,
-                  //              cdk?.server?.architecture?.name === Architecture.X86_64.name
-                  //                ? `arn:aws:lambda:${stack.region}:226609089145:layer:sst-extension-amd64:${LAYER_VERSION}`
-                  //                : `arn:aws:lambda:${stack.region}:226609089145:layer:sst-extension-arm64:${LAYER_VERSION}`
-                ]
-              : undefined,
-          };
-
-          return validatePlan({
-            edge: edge ?? false,
-            cloudFrontFunctions: {
-              serverCfFunction: {
-                injections: [useCloudFrontFunctionHostHeaderInjection()],
+      return all([outputPath]).apply(([outputPath]) =>
+        all([
+          $app.providers?.aws?.region!,
+          args?.edge,
+          args?.experimental,
+          args?.imageOptimization,
+          bucket.bucket,
+          useRoutes(),
+          revalidationQueue.apply((queue) => queue?.url),
+          revalidationQueue.apply((queue) => queue?.arn),
+        ]).apply(
+          ([
+            region,
+            edge,
+            experimental,
+            imageOptimization,
+            bucketName,
+            routes,
+            revalidationQueueUrl,
+            revalidationQueueArn,
+          ]) => {
+            const serverConfig = {
+              description: "Next.js server",
+              bundle: path.join(outputPath, ".open-next", "server-function"),
+              handler: "index.handler",
+              environment: {
+                CACHE_BUCKET_NAME: bucketName,
+                CACHE_BUCKET_KEY_PREFIX: "_cache",
+                CACHE_BUCKET_REGION: region,
+                ...(revalidationQueueUrl && {
+                  REVALIDATION_QUEUE_URL: revalidationQueueUrl,
+                  REVALIDATION_QUEUE_REGION: region,
+                }),
               },
-            },
-            edgeFunctions: edge
-              ? { edgeServer: { function: serverConfig } }
-              : undefined,
-            origins: {
-              ...(edge
-                ? {}
-                : {
-                    regionalServer: {
-                      type: "function",
-                      function: serverConfig,
-                      streaming: experimental?.streaming,
-                      injections: isPerRouteLoggingEnabled()
-                        ? [useServerFunctionPerRouteLoggingInjection()]
-                        : [],
-                    },
-                  }),
-              imageOptimizer: {
-                type: "image-optimization-function",
-                function: {
-                  description: "Next.js image optimizer",
-                  handler: "index.handler",
-                  bundle: path.join(
-                    outputPath,
-                    ".open-next",
-                    "image-optimization-function"
-                  ),
-                  runtime: "nodejs18.x",
-                  architectures: ["arm64"],
-                  environment: {
-                    BUCKET_NAME: bucketName,
-                    BUCKET_KEY_PREFIX: "_assets",
-                  },
-                  memorySize: imageOptimization?.memorySize
-                    ? typeof imageOptimization.memorySize === "string"
-                      ? toMBs(imageOptimization.memorySize)
-                      : imageOptimization.memorySize
-                    : 1536,
+              policies: [
+                ...(revalidationQueue
+                  ? [
+                      {
+                        name: "revalidation-queue",
+                        policy: JSON.stringify({
+                          statements: [
+                            {
+                              actions: [
+                                "sqs:SendMessage",
+                                "sqs:GetQueueAttributes",
+                                "sqs:GetQueueUrl",
+                              ],
+                              resources: [revalidationQueueArn],
+                            },
+                          ],
+                        }),
+                      },
+                    ]
+                  : []),
+              ],
+              layers: isPerRouteLoggingEnabled()
+                ? [
+                    `arn:aws:lambda:${$app.providers?.aws
+                      ?.region!}:226609089145:layer:sst-extension-arm64:${LAYER_VERSION}`,
+                    //              cdk?.server?.architecture?.name === Architecture.X86_64.name
+                    //                ? `arn:aws:lambda:${stack.region}:226609089145:layer:sst-extension-amd64:${LAYER_VERSION}`
+                    //                : `arn:aws:lambda:${stack.region}:226609089145:layer:sst-extension-arm64:${LAYER_VERSION}`
+                  ]
+                : undefined,
+            };
+
+            return validatePlan({
+              edge: edge ?? false,
+              cloudFrontFunctions: {
+                serverCfFunction: {
+                  injections: [useCloudFrontFunctionHostHeaderInjection()],
                 },
               },
-              s3: {
-                type: "s3",
-                originPath: "_assets",
-                copy: [
-                  {
-                    from: ".open-next/assets",
-                    to: "_assets",
-                    cached: true,
-                    versionedSubDir: "_next",
+              edgeFunctions: edge
+                ? { edgeServer: { function: serverConfig } }
+                : undefined,
+              origins: {
+                ...(edge
+                  ? {}
+                  : {
+                      regionalServer: {
+                        type: "function",
+                        function: serverConfig,
+                        streaming: experimental?.streaming,
+                        injections: isPerRouteLoggingEnabled()
+                          ? [useServerFunctionPerRouteLoggingInjection()]
+                          : [],
+                      },
+                    }),
+                imageOptimizer: {
+                  type: "image-optimization-function",
+                  function: {
+                    description: "Next.js image optimizer",
+                    handler: "index.handler",
+                    bundle: path.join(
+                      outputPath,
+                      ".open-next",
+                      "image-optimization-function"
+                    ),
+                    runtime: "nodejs18.x",
+                    architectures: ["arm64"],
+                    environment: {
+                      BUCKET_NAME: bucketName,
+                      BUCKET_KEY_PREFIX: "_assets",
+                    },
+                    memorySize: imageOptimization?.memorySize
+                      ? typeof imageOptimization.memorySize === "string"
+                        ? toMBs(imageOptimization.memorySize)
+                        : imageOptimization.memorySize
+                      : 1536,
                   },
-                  { from: ".open-next/cache", to: "_cache", cached: false },
-                ],
+                },
+                s3: {
+                  type: "s3",
+                  originPath: "_assets",
+                  copy: [
+                    {
+                      from: ".open-next/assets",
+                      to: "_assets",
+                      cached: true,
+                      versionedSubDir: "_next",
+                    },
+                    { from: ".open-next/cache", to: "_cache", cached: false },
+                  ],
+                },
               },
-            },
-            behaviors: [
-              ...(edge
-                ? [
-                    {
-                      cacheType: "server",
-                      cfFunction: "serverCfFunction",
-                      edgeFunction: "edgeServer",
-                      origin: "s3",
-                    } as const,
-                    {
-                      cacheType: "server",
-                      pattern: "api/*",
-                      cfFunction: "serverCfFunction",
-                      edgeFunction: "edgeServer",
-                      origin: "s3",
-                    } as const,
-                    {
-                      cacheType: "server",
-                      pattern: "_next/data/*",
-                      cfFunction: "serverCfFunction",
-                      edgeFunction: "edgeServer",
-                      origin: "s3",
-                    } as const,
-                  ]
-                : [
-                    {
-                      cacheType: "server",
-                      cfFunction: "serverCfFunction",
-                      origin: "regionalServer",
-                    } as const,
-                    {
-                      cacheType: "server",
-                      pattern: "api/*",
-                      cfFunction: "serverCfFunction",
-                      origin: "regionalServer",
-                    } as const,
-                    {
-                      cacheType: "server",
-                      pattern: "_next/data/*",
-                      cfFunction: "serverCfFunction",
-                      origin: "regionalServer",
-                    } as const,
-                  ]),
-              {
-                cacheType: "server",
-                pattern: "_next/image*",
-                cfFunction: "serverCfFunction",
-                origin: "imageOptimizer",
+              behaviors: [
+                ...(edge
+                  ? [
+                      {
+                        cacheType: "server",
+                        cfFunction: "serverCfFunction",
+                        edgeFunction: "edgeServer",
+                        origin: "s3",
+                      } as const,
+                      {
+                        cacheType: "server",
+                        pattern: "api/*",
+                        cfFunction: "serverCfFunction",
+                        edgeFunction: "edgeServer",
+                        origin: "s3",
+                      } as const,
+                      {
+                        cacheType: "server",
+                        pattern: "_next/data/*",
+                        cfFunction: "serverCfFunction",
+                        edgeFunction: "edgeServer",
+                        origin: "s3",
+                      } as const,
+                    ]
+                  : [
+                      {
+                        cacheType: "server",
+                        cfFunction: "serverCfFunction",
+                        origin: "regionalServer",
+                      } as const,
+                      {
+                        cacheType: "server",
+                        pattern: "api/*",
+                        cfFunction: "serverCfFunction",
+                        origin: "regionalServer",
+                      } as const,
+                      {
+                        cacheType: "server",
+                        pattern: "_next/data/*",
+                        cfFunction: "serverCfFunction",
+                        origin: "regionalServer",
+                      } as const,
+                    ]),
+                {
+                  cacheType: "server",
+                  pattern: "_next/image*",
+                  cfFunction: "serverCfFunction",
+                  origin: "imageOptimizer",
+                },
+                // create 1 behaviour for each top level asset file/folder
+                ...fs
+                  .readdirSync(path.join(outputPath, ".open-next/assets"))
+                  .map(
+                    (item) =>
+                      ({
+                        cacheType: "static",
+                        pattern: fs
+                          .statSync(
+                            path.join(outputPath, ".open-next/assets", item)
+                          )
+                          .isDirectory()
+                          ? `${item}/*`
+                          : item,
+                        origin: "s3",
+                      } as const)
+                  ),
+              ],
+              cachePolicyAllowedHeaders: DEFAULT_CACHE_POLICY_ALLOWED_HEADERS,
+              buildId: fs
+                .readFileSync(path.join(outputPath, ".next/BUILD_ID"))
+                .toString(),
+              warmerConfig: {
+                function: path.join(
+                  outputPath,
+                  ".open-next",
+                  "warmer-function"
+                ),
               },
-              // create 1 behaviour for each top level asset file/folder
-              ...fs.readdirSync(path.join(outputPath, ".open-next/assets")).map(
-                (item) =>
-                  ({
-                    cacheType: "static",
-                    pattern: fs
-                      .statSync(
-                        path.join(outputPath, ".open-next/assets", item)
-                      )
-                      .isDirectory()
-                      ? `${item}/*`
-                      : item,
-                    origin: "s3",
-                  } as const)
-              ),
-            ],
-            cachePolicyAllowedHeaders: DEFAULT_CACHE_POLICY_ALLOWED_HEADERS,
-            buildId: fs
-              .readFileSync(path.join(outputPath, ".next/BUILD_ID"))
-              .toString(),
-            warmerConfig: {
-              function: path.join(outputPath, ".open-next", "warmer-function"),
-            },
-          });
+            });
 
-          function useServerFunctionPerRouteLoggingInjection() {
-            return `
+            function useServerFunctionPerRouteLoggingInjection() {
+              return `
 if (event.rawPath) {
   const routeData = ${JSON.stringify(
     routes.map(({ regex, logGroupPath }) => ({
@@ -471,8 +542,9 @@ if (event.rawPath) {
     }));
   }
 }`;
+            }
           }
-        }
+        )
       );
     }
 
@@ -770,7 +842,7 @@ if (event.rawPath) {
         } catch (e) {
           console.error(e);
           throw new Error(
-            `Failed to read routes data from ".next/routes-manifest.json" for the "${displayName}" site.`
+            `Failed to read routes data from ".next/routes-manifest.json" for the "${name}" site.`
           );
         }
       });
@@ -880,8 +952,14 @@ if (event.rawPath) {
                 ],
                 "Effect": "Deny",
                 "Resources": [
-                  "arn:aws:logs:${app.aws.region}:*:log-group:/aws/lambda/${serverFunction?.nodes.function.name}",
-                  "arn:aws:logs:${app.aws.region}:*:log-group:/aws/lambda/${serverFunction?.nodes.function.name}:*",
+                  "arn:aws:logs:${$app.providers?.aws
+                    ?.region!}:*:log-group:/aws/lambda/${
+            serverFunction?.nodes.function.name
+          }",
+                  "arn:aws:logs:${$app.providers?.aws
+                    ?.region!}:*:log-group:/aws/lambda/${
+            serverFunction?.nodes.function.name
+          }:*",
                 ],
               }
             ]
@@ -909,7 +987,9 @@ if (event.rawPath) {
           new aws.s3.BucketObject(
             `${name}-sourcemap-${sourcemapKey}`,
             {
-              bucket: app.bootstrap.bucket,
+              bucket: output($app.providers?.aws?.region!).apply((region) =>
+                AWS.bootstrap.forRegion(region)
+              ),
               source: new asset.FileAsset(sourcemapPath),
               key: serverFunction!.nodes.function.arn.apply((arn) =>
                 path.join(arn, sourcemapKey)
