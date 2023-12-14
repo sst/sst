@@ -164,6 +164,16 @@ func progress(mode ProgressMode, events project.StackEventStream) bool {
 				continue
 			}
 
+			if evt.ResourcePreEvent.Metadata.Op == apitype.OpReplace {
+				printProgress(Progress{
+					Color: color.FgYellow,
+					Label: "Creating",
+					URN:   evt.ResourcePreEvent.Metadata.URN,
+				})
+
+				continue
+			}
+
 			if evt.ResourcePreEvent.Metadata.Op == apitype.OpDelete {
 				printProgress(Progress{
 					Color: color.FgYellow,
@@ -226,10 +236,19 @@ func progress(mode ProgressMode, events project.StackEventStream) bool {
 					Duration: duration,
 				})
 			}
+			if evt.ResOutputsEvent.Metadata.Op == apitype.OpDeleteReplaced {
+				printProgress(Progress{
+					Color:    color.FgRed,
+					Label:    "Deleted",
+					Final:    true,
+					URN:      evt.ResOutputsEvent.Metadata.URN,
+					Duration: duration,
+				})
+			}
 			if evt.ResOutputsEvent.Metadata.Op == apitype.OpReplace {
 				printProgress(Progress{
 					Color:    color.FgGreen,
-					Label:    "Replaced",
+					Label:    "Created",
 					Final:    true,
 					URN:      evt.ResOutputsEvent.Metadata.URN,
 					Duration: duration,
