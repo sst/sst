@@ -154,7 +154,7 @@ func progress(mode ProgressMode, events project.StackEventStream) bool {
 				continue
 			}
 
-			if evt.ResourcePreEvent.Metadata.Op == apitype.OpReplace {
+			if evt.ResourcePreEvent.Metadata.Op == apitype.OpDeleteReplaced {
 				printProgress(Progress{
 					Color: color.FgYellow,
 					Label: "Replacing",
