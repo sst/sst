@@ -52,6 +52,7 @@ import {
   Size as CDKSize,
   Duration as CDKDuration,
   IgnoreMode,
+  DockerCacheOption,
 } from "aws-cdk-lib/core";
 import { Effect, PolicyStatement, Role } from "aws-cdk-lib/aws-iam";
 import { StringParameter } from "aws-cdk-lib/aws-ssm";
@@ -88,6 +89,11 @@ export type Runtime = keyof typeof supportedRuntimes;
 export type FunctionInlineDefinition = string | Function;
 export type FunctionDefinition = string | Function | FunctionProps;
 export interface FunctionUrlCorsProps extends functionUrlCors.CorsProps {}
+
+export type DockerCacheOptions = {
+  cacheFrom: Array<DockerCacheOption>,
+  cacheTo: DockerCacheOption,
+}
 
 export interface FunctionHooks {
   /**
@@ -605,6 +611,23 @@ export interface PythonProps {
    * your own build processes, and you are doing this for the sake of build optimization.
    */
   noDocker?: boolean;
+
+  /**
+   * This option sets the cache settings used when building the docker image for bundling the function
+   *
+   * This, like the `noDocker` option can also speed up building Python Lambdas, but doesn't require manually
+   * accounting for installing dependencies and the like.
+   *
+   * @example
+   * ```js
+   * python: {
+   *   dockerCacheOptions: {
+   *     cacheFrom: [{type: "gha"}],
+   *     cacheTo: {type: "gha"},
+   *   }
+   * }
+   */
+  dockerCacheOptions?: DockerCacheOptions
 }
 
 /**

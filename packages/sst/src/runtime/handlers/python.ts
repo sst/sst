@@ -107,6 +107,7 @@ export const usePythonHandler = (): RuntimeHandler => {
           architecture: input.props.architecture,
           outputPathSuffix: ".",
           out: input.out,
+          dockerCacheOptions: input.props.python.dockerCacheOptions
         });
       }
 

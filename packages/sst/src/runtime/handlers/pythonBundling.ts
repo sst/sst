@@ -85,6 +85,8 @@ export interface BundlingOptions {
   readonly assetHash?: string;
 
   readonly installCommands?: string[];
+
+  readonly dockerCacheOptions?: FunctionProps["python"]["dockerCacheOptions"]
 }
 
 /**
@@ -124,6 +126,8 @@ export function bundle(options: BundlingOptions & { out: string }) {
         (architecture == "arm_64" ? ":latest-arm64" : "")
     },
     file: dockerfile,
+    cacheFrom: options.dockerCacheOptions?.cacheFrom,
+    cacheTo: options.dockerCacheOptions?.cacheTo,
   });
 
   const outputPath = path.join(options.out, outputPathSuffix);
