@@ -61,7 +61,7 @@ func progress(mode ProgressMode, events project.StackEventStream) bool {
 		resourceName1 := resourceName0
 		resourceType := regexp.MustCompile(`\.sst\.(.+)$`).FindStringSubmatch(resourceName0)
 		if regexp.MustCompile(`pulumi-nodejs:dynamic:Resource$`).MatchString(urn2) &&
-		len(resourceType) > 1 {
+			len(resourceType) > 1 {
 			urn3 = regexp.MustCompile(`pulumi-nodejs:dynamic:Resource$`).ReplaceAllString(urn2, resourceType[1])
 			resourceName1 = regexp.MustCompile(`\.sst\..+$`).ReplaceAllString(resourceName0, "")
 		}
@@ -142,7 +142,6 @@ func progress(mode ProgressMode, events project.StackEventStream) bool {
 					Label: "Creating",
 					URN:   evt.ResourcePreEvent.Metadata.URN,
 				})
-				pending[evt.ResourcePreEvent.Metadata.URN] = "  Creating    " + formatURN(evt.ResourcePreEvent.Metadata.URN)
 				continue
 			}
 
@@ -152,15 +151,13 @@ func progress(mode ProgressMode, events project.StackEventStream) bool {
 					Label: "Updating",
 					URN:   evt.ResourcePreEvent.Metadata.URN,
 				})
-				pending[evt.ResourcePreEvent.Metadata.URN] = "  Creating    " + formatURN(evt.ResourcePreEvent.Metadata.URN)
-
 				continue
 			}
 
 			if evt.ResourcePreEvent.Metadata.Op == apitype.OpReplace {
 				printProgress(Progress{
 					Color: color.FgYellow,
-					Label: "Updating",
+					Label: "Replacing",
 					URN:   evt.ResourcePreEvent.Metadata.URN,
 				})
 
@@ -200,7 +197,6 @@ func progress(mode ProgressMode, events project.StackEventStream) bool {
 					URN:      evt.ResOutputsEvent.Metadata.URN,
 					Duration: duration,
 				})
-				delete(pending, evt.ResOutputsEvent.Metadata.URN)
 				continue
 			}
 			if evt.ResOutputsEvent.Metadata.Op == apitype.OpCreate {
@@ -211,7 +207,6 @@ func progress(mode ProgressMode, events project.StackEventStream) bool {
 					URN:      evt.ResOutputsEvent.Metadata.URN,
 					Duration: duration,
 				})
-				delete(pending, evt.ResOutputsEvent.Metadata.URN)
 			}
 			if evt.ResOutputsEvent.Metadata.Op == apitype.OpUpdate {
 				printProgress(Progress{
@@ -221,7 +216,6 @@ func progress(mode ProgressMode, events project.StackEventStream) bool {
 					URN:      evt.ResOutputsEvent.Metadata.URN,
 					Duration: duration,
 				})
-				delete(pending, evt.ResOutputsEvent.Metadata.URN)
 			}
 			if evt.ResOutputsEvent.Metadata.Op == apitype.OpDelete {
 				printProgress(Progress{
@@ -231,7 +225,15 @@ func progress(mode ProgressMode, events project.StackEventStream) bool {
 					URN:      evt.ResOutputsEvent.Metadata.URN,
 					Duration: duration,
 				})
-				delete(pending, evt.ResOutputsEvent.Metadata.URN)
+			}
+			if evt.ResOutputsEvent.Metadata.Op == apitype.OpReplace {
+				printProgress(Progress{
+					Color:    color.FgGreen,
+					Label:    "Replaced",
+					Final:    true,
+					URN:      evt.ResOutputsEvent.Metadata.URN,
+					Duration: duration,
+				})
 			}
 		}
 
