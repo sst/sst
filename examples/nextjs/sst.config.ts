@@ -12,9 +12,7 @@ export default $config({
     };
   },
   async run() {
-    const site = new sst.Nextjs("web", {
-      path: "web",
-    });
+    const site = new sst.Nextjs("web");
 
     //new sst.DistributionInvalidation(`invalidation`, {
     //  distributionId: "ESWUVI5JLK5EA",
