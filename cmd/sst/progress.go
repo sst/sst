@@ -71,8 +71,14 @@ func progress(mode ProgressMode, events project.StackEventStream) bool {
 		return urn5 + " → " + resourceName1
 	}
 
+	dedupe := map[string]bool{}
 	printProgress := func(progress Progress) {
 		spin.Disable()
+		dedupeKey := progress.URN + progress.Label
+		if dedupe[dedupeKey] {
+			return
+		}
+		dedupe[dedupeKey] = true
 		defer spin.Enable()
 		if progress.Final && false {
 			pending[progress.URN] =
@@ -154,10 +160,20 @@ func progress(mode ProgressMode, events project.StackEventStream) bool {
 				continue
 			}
 
+			if evt.ResourcePreEvent.Metadata.Op == apitype.OpCreateReplacement {
+				printProgress(Progress{
+					Color: color.FgYellow,
+					Label: "Creating",
+					URN:   evt.ResourcePreEvent.Metadata.URN,
+				})
+
+				continue
+			}
+
 			if evt.ResourcePreEvent.Metadata.Op == apitype.OpDeleteReplaced {
 				printProgress(Progress{
 					Color: color.FgYellow,
-					Label: "Replacing",
+					Label: "Deleting",
 					URN:   evt.ResourcePreEvent.Metadata.URN,
 				})
 
@@ -240,6 +256,15 @@ func progress(mode ProgressMode, events project.StackEventStream) bool {
 				printProgress(Progress{
 					Color:    color.FgRed,
 					Label:    "Deleted",
+					Final:    true,
+					URN:      evt.ResOutputsEvent.Metadata.URN,
+					Duration: duration,
+				})
+			}
+			if evt.ResOutputsEvent.Metadata.Op == apitype.OpCreateReplacement {
+				printProgress(Progress{
+					Color:    color.FgGreen,
+					Label:    "Created",
 					Final:    true,
 					URN:      evt.ResOutputsEvent.Metadata.URN,
 					Duration: duration,

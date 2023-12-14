@@ -14,11 +14,8 @@ export default $config({
     };
   },
   async run() {
-    const b = new aws.s3.Bucket("bucket", {
-      bucket: "ioasdjiqwjoidqwjdoioasjdo",
+    const q = new aws.sqs.Queue("queue", {
+      namePrefix: "d",
     });
-    return {
-      bucket: b.bucket,
-    };
   },
 });
