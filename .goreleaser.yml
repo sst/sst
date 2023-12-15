@@ -44,6 +44,16 @@ brews:
       name: homebrew-tap
     dependencies:
       - name: pulumi/tap/pulumi
+nfpms:
+  - maintainer: sst
+    description: the sst cli
+    formats:
+      - deb
+      - rpm
+    file_name_template: >-
+      {{ .ProjectName }}_{{ .Version }}_
+      {{- if eq .Os "darwin" }}macOS
+      {{- else }}{{ .Os }}{{ end }}_{{ .Arch }}
 
 changelog:
   sort: asc
