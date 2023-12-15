@@ -45,11 +45,17 @@ func main() {
 					return err
 				}
 			}
-			color.New(color.FgCyan, color.Bold).Print("SST ❍ ion " + version + "  ")
-			color.New(color.FgHiBlack).Print("ready!\n")
 			return nil
 		},
 		Commands: []*cli.Command{
+			{
+				Name:  "version",
+				Flags: []cli.Flag{},
+				Action: func(cli *cli.Context) error {
+					fmt.Printf("ion.%s\n", version)
+					return nil
+				},
+			},
 			{
 				Name:  "deploy",
 				Flags: []cli.Flag{},
@@ -212,6 +218,8 @@ func initProject(cli *cli.Context) (*project.Project, error) {
 }
 
 func printHeader(p *project.Project) {
+	color.New(color.FgCyan, color.Bold).Print("SST ❍ ion " + version + "  ")
+	color.New(color.FgHiBlack).Print("ready!\n")
 	app := p.App()
 	fmt.Println()
 	color.New(color.FgCyan, color.Bold).Print("➜  ")
