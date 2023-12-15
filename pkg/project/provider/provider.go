@@ -50,6 +50,7 @@ func (e *LockExistsError) Error() string {
 }
 
 func (a *AwsProvider) Url() string {
+	return fmt.Sprintf("s3://%v", a.bucket)
 	return fmt.Sprintf("file://%v", a.workdir)
 }
 

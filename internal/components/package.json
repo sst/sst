@@ -3,7 +3,8 @@
   "name": "sst",
   "type": "module",
   "scripts": {
-    "dev": "tsc --watch --noEmit"
+    "dev": "tsc --watch --noEmit",
+    "postinstall": "patch-package"
   },
   "dependencies": {
     "@aws-sdk/client-cloudfront": "3.458.0",
@@ -13,16 +14,24 @@
     "@aws-sdk/client-ssm": "3.454.0",
     "@aws-sdk/client-sts": "3.454.0",
     "@aws-sdk/middleware-retry": "^3.374.0",
+    "@grpc/grpc-js": "1.9.6",
+    "@logdna/tail-file": "^2.0.6",
     "@pulumi/aws": "5.43.0",
     "@pulumi/pulumi": "3.94.2",
     "@types/node": "20.9.4",
     "archiver": "^6.0.1",
     "esbuild": "0.19.7",
-    "glob": "10.3.10"
+    "glob": "10.3.10",
+    "patch-package": "^8.0.0"
   },
   "devDependencies": {
     "@tsconfig/node18": "^18.2.2",
     "@types/archiver": "^6.0.2",
     "typescript": "^5.3.2"
+  },
+  "pnpm": {
+    "patchedDependencies": {
+      "@pulumi/pulumi@3.94.2": "patches/@pulumi__pulumi@3.94.2.patch"
+    }
   }
 }

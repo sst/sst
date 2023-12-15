@@ -72,6 +72,7 @@ export async function run(program: PulumiFn) {
       onEvent: (evt) => {
         console.log("~j" + JSON.stringify(evt));
       },
+      logVerbosity: 11,
     });
   } catch (e: any) {
     if (e.name === "ConcurrentUpdateError") {
