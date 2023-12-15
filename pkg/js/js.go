@@ -76,12 +76,16 @@ const LOOP = `
 `
 
 func Start(dir string) (*Process, error) {
+	err := os.RemoveAll(filepath.Join(dir, "eval"))
+	if err != nil {
+		return nil, err
+	}
 	loopPath :=
 		filepath.Join(
 			global.ConfigDir(),
 			"loop.mjs",
 		)
-	err := os.WriteFile(
+	err = os.WriteFile(
 		loopPath,
 		[]byte(LOOP),
 		0644,
