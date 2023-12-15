@@ -58,8 +58,8 @@ scoop:
   bucket:
     owner: sst
     name: scoop-bucket
-  homepage: "https://github.com/planetscale/cli"
-  description: "The PlanetScale CLI"
+  homepage: "https://github.com/sst/ion"
+  description: "sst cli"
   license: Apache 2.0
 
 changelog:
