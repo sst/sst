@@ -553,6 +553,8 @@ export class RDS extends Construct implements SSTConstruct {
       },
       _doNotAllowOthersToBind: true,
     });
+    this.migratorFunction._overrideMetadataHandler =
+      "rds-migrator/index.handler";
   }
 
   private createMigrationCustomResource(migrations: string) {
@@ -605,6 +607,7 @@ export class RDS extends Construct implements SSTConstruct {
       nodir: true,
       follow: true,
       cwd: migrations,
+      ignore: ["**/node_modules/**"],
     });
 
     // Calculate hash of all files content

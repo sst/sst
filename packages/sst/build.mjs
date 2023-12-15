@@ -1,7 +1,7 @@
 import esbuild from "esbuild";
-import fs from "fs/promises";
+import fs from "fs";
 
-const pkg = await fs.readFile("package.json").then(JSON.parse);
+const pkg = JSON.parse(fs.readFileSync("package.json"));
 
 // support/nodejs-runtime
 await esbuild.build({
@@ -29,16 +29,16 @@ await esbuild.build({
   platform: "node",
   target: "esnext",
   format: "esm",
-  entryPoints: ["./support/bridge/bridge.ts"],
+  entryPoints: ["./support/bridge/live-lambda.ts"],
   banner: {
     js: [
       `import { createRequire as topLevelCreateRequire } from 'module';`,
       `const require = topLevelCreateRequire(import.meta.url);`,
     ].join(""),
   },
-  outfile: "./dist/support/bridge/bridge.mjs",
+  outfile: "./dist/support/bridge/live-lambda.mjs",
 });
-fs.cp(`support/bridge/Dockerfile`, `dist/support/bridge/Dockerfile`);
+fs.cpSync(`support/bridge/Dockerfile`, `dist/support/bridge/Dockerfile`);
 
 // support/event-bus-retrier
 await esbuild.build({
@@ -98,6 +98,7 @@ await esbuild.build({
 await Promise.all(
   [
     "bootstrap-metadata-function",
+    "certificate-requestor",
     "custom-resources",
     "job-manager",
     "script-function",
@@ -109,7 +110,11 @@ await Promise.all(
       platform: "node",
       target: "esnext",
       format: "esm",
-      entryPoints: [`./support/${dir}/index.ts`],
+      entryPoints: [
+        fs.existsSync(`./support/${dir}/index.ts`)
+          ? `./support/${dir}/index.ts`
+          : `./support/${dir}/index.mjs`,
+      ],
       banner: {
         js: [
           `import { createRequire as topLevelCreateRequire } from 'module';`,
@@ -157,11 +162,10 @@ await Promise.all(
     "java-runtime",
     "dotnet31-bootstrap",
     "dotnet6-bootstrap",
-    "certificate-requestor",
     "nixpacks",
     "service-dev-function",
   ].map((dir) =>
-    fs.cp(`support/${dir}`, `dist/support/${dir}`, {
+    fs.cpSync(`support/${dir}`, `dist/support/${dir}`, {
       recursive: true,
     })
   )

@@ -3,7 +3,7 @@ import type {
   APIGatewayProxyEventV2,
   CloudFrontRequestEvent,
 } from "aws-lambda";
-import type { ResponseMode, ResponseStream } from "./lib/types";
+import type { RequestHandler, ResponseMode, ResponseStream } from "./lib/types";
 import { NodeApp } from "astro/app/node";
 import { polyfill } from "@astrojs/webapi";
 import { InternalEvent, convertFrom, convertTo } from "./lib/event-mapper.js";
@@ -12,6 +12,21 @@ import { debug } from "./lib/logger.js";
 polyfill(globalThis, {
   exclude: "window document",
 });
+
+declare global {
+  const awslambda: {
+    streamifyResponse(handler: RequestHandler): RequestHandler;
+    HttpResponseStream: {
+      from(
+        underlyingStream: ResponseStream,
+        metadata: {
+          statusCode: number;
+          headers?: Record<string, string>;
+        }
+      ): ResponseStream;
+    };
+  };
+}
 
 function createRequest(internalEvent: InternalEvent) {
   const requestUrl = internalEvent.url;
@@ -47,7 +62,7 @@ export function createExports(
     const request = createRequest(internalEvent);
 
     // Handle page not found
-    const routeData = app.match(request, { matchNotFound: true });
+    const routeData = app.match(request);
     if (!routeData) {
       return streamError(404, "Not found", responseStream);
     }
@@ -78,7 +93,7 @@ export function createExports(
     const request = createRequest(internalEvent);
 
     // Handle page not found
-    const routeData = app.match(request, { matchNotFound: true });
+    const routeData = app.match(request);
     if (!routeData) {
       console.error("Not found");
       return convertTo({

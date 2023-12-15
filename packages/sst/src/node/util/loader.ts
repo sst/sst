@@ -18,10 +18,11 @@ export function createLoader<Key, Value>(
   async function run() {
     const batch = current;
     if (!batch) return;
-    const result = await batchFn(batch.keys);
-    for (let i = 0; i < result.length; i++) {
-      batch.promises[i](result[i]);
-    }
+    batchFn(batch.keys).then((result) => {
+      for (let i = 0; i < result.length; i++) {
+        batch.promises[i](result[i]);
+      }
+    });
     current = undefined;
   }
 

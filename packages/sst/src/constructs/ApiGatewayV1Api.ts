@@ -199,7 +199,7 @@ export interface ApiGatewayV1ApiProps<
      */
     id?: string;
     /**
-     * Override the internally created rest api
+     * Override the internally created REST API.
      *
      * @example
      * ```js
@@ -236,9 +236,12 @@ export interface ApiGatewayV1ApiProps<
      * ```
      *
      * API Gateway REST API is structured in a tree structure:
-     * - Each path part is a separate API Gateway resource object.
-     * - And a path part is a child resource of the preceding part.
-     * So the part path /notes, is a child resource of the root resource /. And /notes/{noteId} is a child resource of /notes. If /notes has been created in the imported API, you have to import it before creating the /notes/{noteId} child route.
+     *
+     * - Each path part is a separate API Gateway resource object
+     * - And a path part is a child resource of the preceding part
+     *
+     * So the part path `/notes`, is a child resource of the root resource `/`. And `/notes/{noteId}` is a child resource of `/notes`.
+     * If `/notes` has been created in the imported API, you have to import it before creating the `/notes/{noteId}` child route.
      */
     importedPaths?: { [path: string]: string };
   };

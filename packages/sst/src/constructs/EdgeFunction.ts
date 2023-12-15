@@ -54,7 +54,7 @@ const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
 export interface EdgeFunctionProps {
   bundle?: string;
   handler: string;
-  runtime?: "nodejs16.x" | "nodejs18.x";
+  runtime?: "nodejs16.x" | "nodejs18.x" | "nodejs20.x";
   timeout?: number | Duration;
   memorySize?: number | Size;
   permissions?: Permissions;
@@ -187,6 +187,7 @@ export class EdgeFunction extends Construct {
 
     useFunctions().add(this.node.addr, {
       ...this.props,
+      architecture: "x86_64",
       nodejs: {
         ...nodejs,
         banner: [
@@ -524,7 +525,9 @@ export class EdgeFunction extends Construct {
             S3Key: assetKey,
           },
           Runtime:
-            runtime === "nodejs16.x"
+            runtime === "nodejs20.x"
+              ? Runtime.NODEJS_20_X.name
+              : runtime === "nodejs16.x"
               ? Runtime.NODEJS_16_X.name
               : Runtime.NODEJS_18_X.name,
           MemorySize:

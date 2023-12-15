@@ -93,6 +93,7 @@ import {
 import { useProject } from "../project.js";
 import { VisibleError } from "../error.js";
 import { RetentionDays } from "aws-cdk-lib/aws-logs";
+import { transformSync } from "esbuild";
 
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 
@@ -102,6 +103,7 @@ type FunctionOriginConfig = {
   type: "function";
   constructId: string;
   function: SsrFunctionProps;
+  injections?: string[];
   streaming?: boolean;
 };
 type ImageOptimizationFunctionOriginConfig = {
@@ -208,10 +210,10 @@ export interface SsrSiteProps {
    * @default nodejs18.x
    * @example
    * ```js
-   * runtime: "nodejs16.x",
+   * runtime: "nodejs20.x",
    * ```
    */
-  runtime?: "nodejs16.x" | "nodejs18.x";
+  runtime?: "nodejs16.x" | "nodejs18.x" | "nodejs20.x";
   /**
    * Used to configure nodejs function properties
    */
@@ -918,13 +920,18 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
 
       Object.entries(plan.cloudFrontFunctions ?? {}).forEach(
         ([name, { constructId, injections }]) => {
-          functions[name] = new CfFunction(self, constructId, {
-            code: CfFunctionCode.fromInline(`
+          const rawCode = `
 function handler(event) {
   var request = event.request;
   ${injections.join("\n")}
   return request;
-}`),
+}`;
+          const minifiedCode = transformSync(rawCode, {
+            minify: true,
+            target: "es5",
+          });
+          functions[name] = new CfFunction(self, constructId, {
+            code: CfFunctionCode.fromInline(minifiedCode.code),
           });
         }
       );
@@ -1000,6 +1007,11 @@ function handler(event) {
           ...props.function.environment,
         },
         ...cdk?.server,
+        streaming: props.streaming,
+        injections: [
+          ...(warm ? [useServerFunctionWarmingInjection()] : []),
+          ...(props.injections || []),
+        ],
       });
       ssrFunctions.push(fn);
 
@@ -1237,6 +1249,17 @@ function handler(event) {
           "b689b0a8-53d0-40ab-baf2-68738e2966ac"
         );
       return singletonOriginRequestPolicy;
+    }
+
+    function useServerFunctionWarmingInjection() {
+      return `
+if (event.type === "warmer") {
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      resolve({ serverId: "server-" + Math.random().toString(36).slice(2, 8) });
+    }, event.delay);
+  });
+}`;
     }
 
     function getS3FileOptions(copy: S3OriginConfig["copy"]) {

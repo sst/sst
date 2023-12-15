@@ -1,12 +1,12 @@
 {
   "name": "@sst/docs",
-  "version": "2.9.1",
+  "version": "2.10.1",
   "private": true,
   "scripts": {
     "docusaurus": "docusaurus",
     "start": "docusaurus start",
     "watch": "node ./generate.mjs watch",
-    "build": "cd ../packages/sst && pnpm run build && cd ../../www && node ./generate.mjs build && docusaurus build",
+    "build": "cd ../packages/sst && pnpm run build && cd ../astro-sst && pnpm run build && cd ../../www && node ./generate.mjs build && docusaurus build",
     "swizzle": "docusaurus swizzle",
     "deploy": "docusaurus deploy",
     "serve": "docusaurus serve",

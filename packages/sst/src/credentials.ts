@@ -1,4 +1,3 @@
-import { Context } from "./context/context.js";
 import { fromNodeProviderChain } from "@aws-sdk/credential-providers";
 import { GetCallerIdentityCommand, STSClient } from "@aws-sdk/client-sts";
 import { Logger } from "./logger.js";
@@ -69,10 +68,25 @@ export function useAWSClient<C extends any>(
   const [project, credentials] = [useProject(), useAWSCredentialsProvider()];
   const printNoInternet = (() => {
     let lastPrinted = 0;
-    return () => {
+    return (message: string) => {
+      const isIotUnreachable = message.includes(
+        `iot.${project.config.region}.amazonaws.com`
+      );
       const now = Date.now();
       if (now - lastPrinted > 5000) {
-        console.log("Waiting for internet connection...");
+        if (isIotUnreachable) {
+          console.log("\nConnecting to Live Lambda...");
+          if (lastPrinted === 0) {
+            console.log("");
+            console.log("Connecting to Live Lambda is taking long:");
+            console.log("  - Check if your machine is able to connect to AWS.");
+            console.log(
+              "  - Or, if you're connecting to a new AWS account for the first time, give it 10 minutes."
+            );
+          }
+        } else {
+          console.log("\nWaiting for internet connection...");
+        }
         lastPrinted = now;
       }
     };
@@ -84,7 +98,7 @@ export function useAWSClient<C extends any>(
       retryDecider: (e: any) => {
         // Handle no internet connection => retry
         if (e.code === "ENOTFOUND") {
-          printNoInternet();
+          printNoInternet(e.message);
           return true;
         }
 

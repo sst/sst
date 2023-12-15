@@ -1,5 +1,23 @@
 # @serverless-stack/docs
 
+## 2.10.1
+
+### Patch Changes
+
+- [`b8a22b459`](https://github.com/sst/sst/commit/b8a22b459117c9210a04ee5467a9d977305a302c) Thanks [@fwang](https://github.com/fwang)! - sst dev: detect regions without AWS IoT support
+
+## 2.10.0
+
+### Minor Changes
+
+- [`428810411`](https://github.com/sst/sst/commit/428810411332775d64a051d6a65ddae8fd54c258) Thanks [@fwang](https://github.com/fwang)! - Service: require port to be set
+
+## 2.9.2
+
+### Patch Changes
+
+- [#3542](https://github.com/sst/sst/pull/3542) [`bafb2a05c`](https://github.com/sst/sst/commit/bafb2a05cf1734437b32aa0713fc7edd4fc24f10) Thanks [@omikader](https://github.com/omikader)! - Service: support configuration of ephemeral storage
+
 ## 2.9.1
 
 ### Patch Changes

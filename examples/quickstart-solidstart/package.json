@@ -9,25 +9,25 @@
   },
   "type": "module",
   "devDependencies": {
-    "@types/node": "^20.7.1",
+    "@types/node": "^20.10.4",
     "aws-cdk-lib": "2.91.0",
     "constructs": "10.2.69",
-    "esbuild": "^0.19.3",
-    "postcss": "^8.4.30",
-    "solid-start-node": "^0.3.6",
-    "solid-start-sst": "^2.26.8",
-    "sst": "^2.26.8",
-    "typescript": "^5.2.2",
-    "vite": "^4.4.9"
+    "esbuild": "^0.19.9",
+    "postcss": "^8.4.32",
+    "solid-start-node": "^0.3.10",
+    "solid-start-sst": "^2.38.7",
+    "sst": "^2.38.7",
+    "typescript": "^5.3.3",
+    "vite": "4.5.0"
   },
   "dependencies": {
-    "@aws-sdk/client-s3": "^3.421.0",
-    "@aws-sdk/s3-request-presigner": "^3.421.0",
-    "@solidjs/meta": "^0.28.6",
-    "@solidjs/router": "^0.8.3",
-    "solid-js": "^1.7.12",
-    "solid-start": "^0.3.6",
-    "undici": "^5.25.2"
+    "@aws-sdk/client-s3": "^3.472.0",
+    "@aws-sdk/s3-request-presigner": "^3.472.0",
+    "@solidjs/meta": "^0.29.1",
+    "@solidjs/router": "0.8.2",
+    "solid-js": "^1.8.7",
+    "solid-start": "^0.3.10",
+    "undici": "^6.0.1"
   },
   "engines": {
     "node": ">=16.8"

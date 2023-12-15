@@ -1,6 +1,6 @@
 ---
 title: Monitoring
-description: "Learn how to use services like Datadog, Sentry, Epsagon, and Lumigo to monitor the Lambda functions in your SST app in production."
+description: "Learn how to use services like Datadog, Sentry, and Lumigo to monitor the Lambda functions in your SST app in production."
 ---
 
 import config from "../../config";
@@ -413,52 +413,4 @@ export default {
     }
   },
 } satisfies SSTConfig;
-```
-
----
-
-## Epsagon
-
-:::caution
-
-Epsagon is undergoing some changes after the acquisition by Cisco. We recommend using one of the other monitoring services.
-
-:::
-
-[Epsagon](https://epsagon.com) is an end-to-end [Application Monitoring Service](https://epsagon.com/) and can monitor the full lifecycle of your serverless requests.
-
-The Epsagon docs on [using a Lambda Layer](https://docs.epsagon.com/docs/getting-started/monitoring-applications/aws-lambda-layer) are incorrect. You'll need to install the Epsagon agent for your Lambda functions.
-
-<MultiPackagerCode>
-<TabItem value="npm">
-
-```bash
-npm install --save-dev epsagon
-```
-
-</TabItem>
-<TabItem value="yarn">
-
-```bash
-yarn add --dev epsagon
-```
-
-</TabItem>
-<TabItem value="pnpm">
-
-```bash
-pnpm add --save-dev epsagon
-```
-
-</TabItem>
-</MultiPackagerCode>
-
-And wrap your Lambda functions with their tracing wrapper.
-
-```js title="packages/functions/src/foo.js"
-const handler = epsagon.lambdaWrapper(function (event, context) {
-  // Lambda code
-});
-
-export { handler };
 ```

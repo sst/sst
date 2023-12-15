@@ -12,13 +12,12 @@ import url from "url";
 import fs from "fs/promises";
 
 const RUNTIME_MAP: Record<string, Runtime> = {
-  "python2.7": Runtime.PYTHON_2_7,
-  "python3.6": Runtime.PYTHON_3_6,
   "python3.7": Runtime.PYTHON_3_7,
   "python3.8": Runtime.PYTHON_3_8,
   "python3.9": Runtime.PYTHON_3_9,
   "python3.10": Runtime.PYTHON_3_10,
   "python3.11": Runtime.PYTHON_3_11,
+  "python3.12": Runtime.PYTHON_3_12,
 };
 
 export const usePythonHandler = (): RuntimeHandler => {

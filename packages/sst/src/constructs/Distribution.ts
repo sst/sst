@@ -20,6 +20,7 @@ import { Stack } from "./Stack.js";
 import { isCDKConstruct } from "./Construct.js";
 import { HttpsRedirect } from "./cdk/website-redirect.js";
 import { DnsValidatedCertificate } from "./cdk/dns-validated-certificate.js";
+import { VisibleError } from "../error.js";
 
 /**
  * The customDomain for this website. SST supports domains that are hosted either on [Route 53](https://aws.amazon.com/route53/) or externally.
@@ -241,12 +242,12 @@ export class Distribution extends Construct {
     if (!cdk?.distribution) return;
 
     if ((cdk.distribution as CdkDistributionProps).certificate) {
-      throw new Error(
+      throw new VisibleError(
         `Do not configure the "cfDistribution.certificate". Use the "customDomain" to configure the domain certificate.`
       );
     }
     if ((cdk.distribution as CdkDistributionProps).domainNames) {
-      throw new Error(
+      throw new VisibleError(
         `Do not configure the "cfDistribution.domainNames". Use the "customDomain" to configure the domain name.`
       );
     }
@@ -263,19 +264,23 @@ export class Distribution extends Construct {
       return;
     }
 
+    if (!customDomain.domainName) {
+      throw new VisibleError(`Missing "domainName" for customDomain.`);
+    }
+
     if (customDomain.isExternalDomain === true) {
       if (!customDomain.cdk?.certificate) {
-        throw new Error(
+        throw new VisibleError(
           `A valid certificate is required when "isExternalDomain" is set to "true".`
         );
       }
       if (customDomain.domainAlias) {
-        throw new Error(
+        throw new VisibleError(
           `Domain alias is only supported for domains hosted on Amazon Route 53. Do not set the "customDomain.domainAlias" when "isExternalDomain" is enabled.`
         );
       }
       if (customDomain.hostedZone) {
-        throw new Error(
+        throw new VisibleError(
           `Hosted zones can only be configured for domains hosted on Amazon Route 53. Do not set the "customDomain.hostedZone" when "isExternalDomain" is enabled.`
         );
       }
@@ -384,7 +389,7 @@ export class Distribution extends Construct {
       domainNames.push(customDomain.domainName);
       if (customDomain.alternateNames) {
         if (!customDomain.cdk?.certificate)
-          throw new Error(
+          throw new VisibleError(
             "Certificates for alternate domains cannot be automatically created. Please specify certificate to use"
           );
         domainNames.push(...customDomain.alternateNames);

@@ -1,5 +1,49 @@
 # astro-sst
 
+## 2.38.7
+
+## 2.38.6
+
+## 2.38.5
+
+## 2.38.4
+
+## 2.38.3
+
+## 2.38.2
+
+## 2.38.1
+
+## 2.38.0
+
+## 2.37.2
+
+### Patch Changes
+
+- [#3559](https://github.com/sst/sst/pull/3559) [`4d7d69d4e`](https://github.com/sst/sst/commit/4d7d69d4e8ce1f98ea307d0db49721f4b5d27a90) Thanks [@bayssmekanique](https://github.com/bayssmekanique)! - astro-sst: support Starlight
+
+## 2.37.1
+
+### Patch Changes
+
+- [#3493](https://github.com/sst/sst/pull/3493) [`d5d31fdda`](https://github.com/sst/sst/commit/d5d31fddae14a2948a9b8da4b9894044eeaa6b78) Thanks [@bayssmekanique](https://github.com/bayssmekanique)! - AstroSite: add sharp image processing
+
+- [#3560](https://github.com/sst/sst/pull/3560) [`0229f9892`](https://github.com/sst/sst/commit/0229f9892f984aab31b407128ab381cf1295e153) Thanks [@bayssmekanique](https://github.com/bayssmekanique)! - astro-sst: update to Astro v4
+
+## 2.37.0
+
+## 2.36.8
+
+## 2.36.7
+
+## 2.36.6
+
+## 2.36.5
+
+## 2.36.4
+
+## 2.36.3
+
 ## 2.36.2
 
 ## 2.36.1

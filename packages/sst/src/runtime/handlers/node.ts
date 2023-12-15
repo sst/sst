@@ -110,7 +110,8 @@ export const useNodeHandler = (): RuntimeHandler => {
         !relative.startsWith("..") && !path.isAbsolute(input.props.handler!)
           ? relative
           : "",
-        parsed.name + extension
+        // Lambda handler can only contain 1 dot separating the file name and function name
+        parsed.name.replace(".", "-") + extension
       );
       const handler = path
         .relative(input.out, target.replace(extension, parsed.ext))
@@ -142,7 +143,7 @@ export const useNodeHandler = (): RuntimeHandler => {
       const forceExternal = [
         "sharp",
         "pg-native",
-        ...(isESM || input.props.runtime === "nodejs18.x" ? [] : ["aws-sdk"]),
+        ...(isESM || input.props.runtime !== "nodejs16.x" ? [] : ["aws-sdk"]),
       ];
       const { external, ...override } = nodejs.esbuild || {};
       if (!ctx) {
@@ -256,12 +257,31 @@ export const useNodeHandler = (): RuntimeHandler => {
           );
           const cmd = ["npm install"];
           if (installPackages.includes("sharp")) {
+            /**
+             * TODO: This is a workaround for issues that sharp v0.33.0 has
+             * with cross platform builds. This can be removed once sharp
+             * releases a new version with the fix.
+             */
             cmd.push(
               "--platform=linux",
+              "--omit=dev",
+              "--no-optional",
               input.props.architecture === "arm_64"
                 ? "--arch=arm64"
-                : "--arch=x64"
+                : "--arch=x64",
+              "--force sharp@0.32.6"
             );
+            /**
+             * Once the above issue is resolved, the code below can be used.
+             */
+            // cmd.push(
+            //   "--platform=linux",
+            //   "--omit=dev",
+            //   "--no-optional",
+            //   ...input.props.architecture === "arm_64"
+            //     ? ["--arch=arm64", "--force @img/sharp-linux-arm64"]
+            //     : ["--arch=x64", "--force @img/sharp-linux-x64"],
+            // );
           }
           await new Promise<void>((resolve, reject) => {
             exec(cmd.join(" "), { cwd: input.out }, (error) => {

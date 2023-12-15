@@ -4,12 +4,12 @@
   "type": "module",
   "dependencies": {
     "wonka": "^6.3.4",
-    "urql": "^4.0.5",
+    "urql": "^4.0.6",
     "graphql": "^16.8.1",
     "react": "^18.2.0"
   },
   "devDependencies": {
     "@genql/cli": "^6.2.1",
-    "@types/react": "^18.2.23"
+    "@types/react": "^18.2.44"
   }
 }

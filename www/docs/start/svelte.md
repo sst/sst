@@ -308,11 +308,18 @@ pnpm sst deploy --stage prod
 </TabItem>
 </MultiPackagerCode>
 
-![SvelteKit app deployed to AWS with SST](/img/start/sveltekit-app-deployed-to-aws-with-sst.png)
-
 :::info
 [View the source](https://github.com/sst/sst/tree/master/examples/quickstart-sveltekit) for this example on GitHub.
 :::
+
+---
+
+## 5. Manage in prod
+
+You can use the [SST Console](console.md) to view logs and issues in prod. **<a href={config.console}>Create a free account</a>** and connect it to AWS.
+
+![SvelteKit site in the SST Console](/img/start/sveltekit-site-in-the-sst-console.png)
+
 
 ---
 

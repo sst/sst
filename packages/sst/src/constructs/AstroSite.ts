@@ -9,6 +9,7 @@ import {
 } from "./SsrSite.js";
 import { AllowedMethods } from "aws-cdk-lib/aws-cloudfront";
 import { Construct } from "constructs";
+import { getStringifiedRouteTree } from "./util/astroRouteCompressor.js";
 
 const BUILD_META_FILE_NAME: BuildMetaFileName = "sst.buildMeta.json";
 
@@ -47,50 +48,32 @@ export class AstroSite extends SsrSite {
     routes,
     pageResolution,
   }: BuildMetaConfig) {
-    const serializedRoutes =
-      "[\n" +
-      routes
-        .map((route) => {
-          return `    {route: "${route.route}", pattern: ${
-            route.pattern
-          }, type: "${route.type}", ${
-            typeof route.prerender !== "undefined"
-              ? `prerender: ${route.prerender}, `
-              : ``
-          }${
-            route.redirectPath ? `redirectPath: "${route.redirectPath}", ` : ""
-          }${
-            route.redirectStatus
-              ? `redirectStatus: ${route.redirectStatus}`
-              : ""
-          } }`;
-        })
-        .join(",\n") +
-      "\n  ]";
-
-    return `  // AstroSite CF Routing Function
-  var astroRoutes = ${serializedRoutes};
-  var matchedRoute = astroRoutes.find((route) => route.pattern.test(request.uri));
+    return `
+  var routeData = ${getStringifiedRouteTree(routes)};
+  var findMatch = (path, routeData) => {
+    var match = routeData.find((route) => route[0].test(path));
+    return match && Array.isArray(match[1]) ? findMatch(path, match[1]) : match;
+  };
+    
+  var matchedRoute = findMatch(request.uri, routeData);
   if (matchedRoute) {
-    if (matchedRoute.type === "redirect") {
-      var redirectPath = matchedRoute.redirectPath;
-      matchedRoute.pattern.exec(request.uri).forEach((match, index) => {
-        redirectPath = redirectPath.replace(\`\\\${\${index}}\`, match);
-      });
-      var statusCode = matchedRoute.redirectStatus || 308;
-      return {
-        statusCode,
-        headers: { location: { value: redirectPath } },
-      };
-    } else if (matchedRoute.type === "page" && matchedRoute.prerender) {
+    if (!matchedRoute[1]) {
       ${
         pageResolution === "file"
           ? `request.uri = request.uri === "/" ? "/index.html" : request.uri.replace(/\\/?$/, ".html");`
           : `request.uri = request.uri.replace(/\\/?$/, "/index.html");`
       }
+    } else if (matchedRoute[1] === 2) {
+      var redirectPath = matchedRoute[2];
+      matchedRoute[0].exec(request.uri).forEach((match, index) => {
+        redirectPath = redirectPath.replace(\`\\\${\${index}}\`, match);
+      });
+      return {
+        statusCode: matchedRoute[3] || 308,
+        headers: { location: { value: redirectPath } },
+      };
     }
-  }
-  // End AstroSite CF Routing Function`;
+  }`;
   }
 
   protected plan() {
@@ -117,6 +100,10 @@ export class AstroSite extends SsrSite {
             this.useCloudFrontFunctionHostHeaderInjection(),
             AstroSite.getCFRoutingFunction(buildMeta),
           ],
+        },
+        serverCfFunctionHostOnly: {
+          constructId: "CloudFrontFunctionHostOnly",
+          injections: [this.useCloudFrontFunctionHostHeaderInjection()],
         },
       },
       origins: {
@@ -174,6 +161,11 @@ export class AstroSite extends SsrSite {
           origin: "staticsServer",
         });
       } else {
+        plan.cloudFrontFunctions!.imageServiceCfFunction = {
+          constructId: "ImageServiceCloudFrontFunction",
+          injections: [this.useCloudFrontFunctionHostHeaderInjection()],
+        };
+
         plan.origins.regionalServer = {
           type: "function",
           constructId: "ServerFunction",
@@ -200,10 +192,18 @@ export class AstroSite extends SsrSite {
             pattern: `${buildMeta.clientBuildVersionedSubDir}/*`,
             origin: "staticsServer",
           },
+          {
+            cacheType: "server",
+            pattern: "_image",
+            cfFunction: "imageServiceCfFunction",
+            origin: "regionalServer",
+            allowedMethods: AllowedMethods.ALLOW_GET_HEAD_OPTIONS,
+          },
           ...buildMeta.serverRoutes?.map(
             (route) =>
               ({
                 cacheType: "server",
+                cfFunction: "serverCfFunctionHostOnly",
                 pattern: route,
                 origin: "regionalServer",
               } as const)

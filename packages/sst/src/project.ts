@@ -5,7 +5,6 @@ import path from "path";
 import url from "url";
 import os from "os";
 import { Logger } from "./logger.js";
-import { Context } from "./context/context.js";
 import { VisibleError } from "./error.js";
 import { blue } from "colorette";
 import dotenv from "dotenv";
@@ -124,7 +123,7 @@ export async function initProject(globals: GlobalOptions) {
     }
 
     throw new VisibleError(
-      "Could not found a configuration file",
+      "Could not find a configuration file",
       "Make sure one of the following exists",
       ...CONFIG_EXTENSIONS.map((x) => `  - sst${x}`)
     );
@@ -132,9 +131,9 @@ export async function initProject(globals: GlobalOptions) {
 
   const config = await Promise.resolve(sstConfig.config(globals));
   const stage =
-    process.env.SST_STAGE ||
     globals.stage ||
     config.stage ||
+    process.env.SST_STAGE ||
     (await usePersonalStage(out)) ||
     (await promptPersonalStage(out));
   // Set stage to SST_STAGE so that if SST spawned processes are aware
@@ -262,7 +261,7 @@ async function findRoot() {
   async function find(dir: string): Promise<string> {
     if (dir === "/")
       throw new VisibleError(
-        "Could not found a configuration file",
+        "Could not find a configuration file",
         "Make sure one of the following exists",
         ...CONFIG_EXTENSIONS.map((ext) => `  - sst${ext}`)
       );
