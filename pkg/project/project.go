@@ -24,7 +24,7 @@ type Project struct {
 	root    string
 	process *js.Process
 	app     *App
-	backend string
+	backend provider.Backend
 	env     map[string]string
 
 	Stack *stack
@@ -137,13 +137,8 @@ console.log("~j" + JSON.stringify(mod.app()))`,
 		proj.app.Providers["aws"] = aws
 	}
 	prov := &provider.AwsProvider{}
-	backend, env, err := prov.Backend(aws)
-	if err != nil {
-		return nil, err
-	}
-	proj.env = env
-	proj.backend = backend
-	err = prov.Init(aws)
+	proj.backend = prov
+	err = prov.Init(tmp, aws)
 	if err != nil {
 		return nil, err
 	}
@@ -179,10 +174,6 @@ func (p *Project) getPath(path ...string) string {
 
 func (p *Project) PathTemp() string {
 	return filepath.Join(p.root, ".sst")
-}
-
-func (p *Project) Backend() string {
-	return p.backend
 }
 
 func (p *Project) PathRoot() string {

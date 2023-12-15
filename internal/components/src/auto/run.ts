@@ -53,7 +53,7 @@ export async function run(program: PulumiFn) {
         name: $app.name,
         runtime: "nodejs",
         backend: {
-          url: "s3://" + $cli.backend,
+          url: $cli.backend,
         },
       },
       envVars: {
@@ -64,9 +64,8 @@ export async function run(program: PulumiFn) {
         NODE_PATH: $cli.paths.work + "/node_modules",
         ...$cli.env,
       },
-    }
+    },
   );
-  await stack.setAllConfig(config);
 
   try {
     await stack[$cli.command as "up"]({
