@@ -6,7 +6,6 @@
 
 ```
 brew install sst/tap/sst
-
 ```
 To upgrade to the latest version:
 
@@ -18,7 +17,7 @@ brew upgrade sst
 
 `sst` is available as downloadable binaries from the [releases](https://github.com/sst/ion/releases/latest) page. Download the .deb or .rpm from the [releases](https://github.com/sst/ion/releases/latest) page and install with `sudo dpkg -i` and `sudo rpm -i` respectively.
 
-[Arch](https://aur.archlinux.org/packages/sst-bin)
+For arch linux it's available in the [aur](https://aur.archlinux.org/packages/sst-bin)
 
 #### Windows
 
