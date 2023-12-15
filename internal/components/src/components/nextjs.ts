@@ -27,6 +27,7 @@ import { Distribution } from "./distribution.js";
 import { AWS } from "./helpers/aws.js";
 import { toPascalCase } from "../util/string.js";
 import { prefixName } from "./helpers/naming.js";
+import { Bucket } from "./bucket.js";
 
 const LAYER_VERSION = "2";
 const DEFAULT_OPEN_NEXT_VERSION = "2.3.1";
@@ -130,7 +131,7 @@ export interface NextjsArgs extends SsrSiteArgs {
 export class Nextjs extends ComponentResource {
   private doNotDeploy: Output<boolean>;
   private edge: Output<boolean>;
-  private bucket: aws.s3.BucketV2;
+  private bucket: Bucket;
   private serverFunction?: Function;
   //private serverFunctionForDev?: Function;
   private distribution: Distribution;
@@ -164,6 +165,7 @@ export class Nextjs extends ComponentResource {
           // Ensure physical names are prefixed with app/stage
           if (args.type.startsWith("sst:sst:")) return undefined;
           if (args.type === "pulumi-nodejs:dynamic:Resource") return undefined;
+          if (args.type === "random:index/randomId:RandomId") return undefined;
 
           let overrides;
           switch (args.type) {
@@ -171,8 +173,15 @@ export class Nextjs extends ComponentResource {
             case "aws:iam/role:Role":
             case "aws:cloudwatch/eventRule:EventRule":
             case "aws:lambda/function:Function":
-            case "aws:sqs/queue:Queue":
               overrides = { name: prefixName(args.name) };
+              break;
+            case "aws:sqs/queue:Queue":
+              const suffix = output(args.props.fifoQueue).apply((fifo) =>
+                fifo ? ".fifo" : ""
+              );
+              overrides = {
+                name: interpolate`${prefixName(args.name)}${suffix}`,
+              };
               break;
             case "aws:s3/bucketV2:BucketV2":
             case "aws:iam/rolePolicyAttachment:RolePolicyAttachment":
@@ -313,14 +322,14 @@ export class Nextjs extends ComponentResource {
       );
     }
 
-    function buildPlan(bucket: aws.s3.BucketV2) {
+    function buildPlan(bucket: Bucket) {
       return all([outputPath]).apply(([outputPath]) =>
         all([
           $app.providers?.aws?.region!,
           args?.edge,
           args?.experimental,
           args?.imageOptimization,
-          bucket.bucket,
+          bucket.name,
           useRoutes(),
           revalidationQueue.apply((queue) => queue?.url),
           revalidationQueue.apply((queue) => queue?.arn),

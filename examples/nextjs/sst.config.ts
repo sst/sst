@@ -4,7 +4,7 @@ export default $config({
   app(input) {
     return {
       name: "nextjs",
-      removalPolicy: input.stage === "production" ? "retain" : "remove",
+      removalPolicy: input?.stage === "production" ? "retain" : "remove",
       providers: {
         aws: {
           region: "us-east-1",

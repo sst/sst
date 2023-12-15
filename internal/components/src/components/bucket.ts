@@ -1,14 +1,11 @@
 import {
   Input,
-  Output,
   ComponentResource,
   ComponentResourceOptions,
   output,
 } from "@pulumi/pulumi";
 import * as aws from "@pulumi/aws";
 import { RandomId } from "@pulumi/random";
-import { CertificateValidation } from "@pulumi/aws/acm";
-import { toPascalCase } from "../util/string";
 import { prefixName, randomDecToSuffix } from "./helpers/naming";
 
 /**
@@ -39,7 +36,7 @@ export class Bucket extends ComponentResource {
       `${name}Bucket`,
       {
         bucket: randomId.dec.apply((dec) =>
-          prefixName(name, randomDecToSuffix(dec))
+          prefixName(name.toLowerCase(), `-${randomDecToSuffix(dec)}`)
         ),
         ...args.nodes?.bucket,
       },
@@ -69,5 +66,15 @@ export class Bucket extends ComponentResource {
 
   public get name() {
     return this.bucket.bucket;
+  }
+
+  public get arn() {
+    return this.bucket.arn;
+  }
+
+  public get nodes() {
+    return {
+      bucket: this.bucket,
+    };
   }
 }

@@ -1,5 +1,5 @@
 export function prefixName(name: string, suffix?: string) {
-  const suffixStr = suffix ? `-${suffix}` : ``;
+  const suffixStr = suffix ?? "";
 
   const prefixedName = (() => {
     const L = 64 - suffixStr.length;

@@ -407,7 +407,7 @@ export function createServersAndDistribution(
   args: SsrSiteArgs,
   outputPath: Output<string>,
   access: aws.cloudfront.OriginAccessIdentity,
-  bucket: aws.s3.BucketV2,
+  bucket: Bucket,
   plan: Input<Plan>
 ) {
   return all([outputPath, plan]).apply(([outputPath, plan]) => {
@@ -491,7 +491,7 @@ export function createServersAndDistribution(
                   new aws.s3.BucketObject(
                     `${name}Asset${toPascalCase(from)}${toPascalCase(file)}`,
                     {
-                      bucket: bucket.bucket,
+                      bucket: bucket.name,
                       source: new asset.FileAsset(
                         path.resolve(outputPath, from, file)
                       ),
@@ -636,7 +636,7 @@ function handler(event) {
     function buildS3Origin(name: string, props: S3OriginConfig) {
       return {
         originId: name,
-        domainName: bucket.bucketRegionalDomainName,
+        domainName: bucket.nodes.bucket.bucketRegionalDomainName,
         originPath: "/" + (props.originPath ?? ""),
         s3OriginConfig: {
           originAccessIdentity: access.cloudfrontAccessIdentityPath,

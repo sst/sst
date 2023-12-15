@@ -39,9 +39,17 @@ export async function run(program: PulumiFn) {
   };
 
   const validateNamesTransform = (args: util.ResourceTransformationArgs) => {
-    if (!args.name.match(/^[A-Z][a-zA-Z0-9]*$/)) {
+    let normalizedName = args.name;
+    if (args.type === "pulumi-nodejs:dynamic:Resource") {
+      const parts = args.name.split(".");
+      if (parts.length === 3 && parts[1] === "sst") {
+        normalizedName = parts[0];
+      }
+    }
+
+    if (!normalizedName.match(/^[A-Z][a-zA-Z0-9]*$/)) {
       throw new Error(
-        `Invalid component name "${args.name}". Component names must start with an uppercase letter and contain only alphanumeric characters.`
+        `Invalid component name "${normalizedName}". Component names must start with an uppercase letter and contain only alphanumeric characters.`
       );
     }
 
@@ -77,7 +85,7 @@ export async function run(program: PulumiFn) {
         NODE_PATH: $cli.paths.work + "/node_modules",
         ...$cli.env,
       },
-    },
+    }
   );
 
   try {
