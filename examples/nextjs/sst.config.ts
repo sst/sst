@@ -1,7 +1,7 @@
 /// <reference path="./.sst/src/global.d.ts" />
 
 export default $config({
-  app() {
+  app(input) {
     return {
       name: "nextjs",
       providers: {

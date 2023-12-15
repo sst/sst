@@ -23,6 +23,9 @@ func main() {
 			&cli.BoolFlag{
 				Name: "verbose",
 			},
+			&cli.StringFlag{
+				Name: "stage",
+			},
 		},
 		Before: func(c *cli.Context) error {
 			level := slog.LevelWarn
@@ -51,7 +54,7 @@ func main() {
 				Name:  "deploy",
 				Flags: []cli.Flag{},
 				Action: func(cli *cli.Context) error {
-					p, err := initProject()
+					p, err := initProject(cli)
 					if err != nil {
 						return err
 					}
@@ -70,7 +73,7 @@ func main() {
 				Name:  "remove",
 				Flags: []cli.Flag{},
 				Action: func(cli *cli.Context) error {
-					p, err := initProject()
+					p, err := initProject(cli)
 					if err != nil {
 						return err
 					}
@@ -94,7 +97,7 @@ func main() {
 				Name:  "refresh",
 				Flags: []cli.Flag{},
 				Action: func(cli *cli.Context) error {
-					p, err := initProject()
+					p, err := initProject(cli)
 					if err != nil {
 						return err
 					}
@@ -130,7 +133,7 @@ func main() {
 				Name:  "cancel",
 				Flags: []cli.Flag{},
 				Action: func(cli *cli.Context) error {
-					p, err := initProject()
+					p, err := initProject(cli)
 					if err != nil {
 						return err
 					}
@@ -160,7 +163,7 @@ func main() {
 
 }
 
-func initProject() (*project.Project, error) {
+func initProject(cli *cli.Context) (*project.Project, error) {
 	slog.Info("initializing project", "version", version)
 
 	cfgPath, err := project.Discover()
@@ -175,7 +178,11 @@ func initProject() (*project.Project, error) {
 		}
 	}
 
-	p, err := project.New(version, cfgPath)
+	p, err := project.New(&project.ProjectConfig{
+		Version: version,
+		Stage:   cli.String("stage"),
+		Config:  cfgPath,
+	})
 	if err != nil {
 		return nil, err
 	}

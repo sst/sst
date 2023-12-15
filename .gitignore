@@ -6,3 +6,6 @@ Pulumi.yaml
 
 # osx
 .DS_Store
+
+# Local Netlify folder
+.netlify

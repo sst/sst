@@ -46,13 +46,14 @@ func resolveWorkDir(cfgPath string) string {
 	return path.Join(filepath.Dir(cfgPath), ".sst")
 }
 
-type ProjctConfig struct {
+type ProjectConfig struct {
 	Version string
 	Stage   string
+	Config  string
 }
 
-func New(version, cfgPath string) (*Project, error) {
-	rootPath := filepath.Dir(cfgPath)
+func New(input *ProjectConfig) (*Project, error) {
+	rootPath := filepath.Dir(input.Config)
 
 	process, err := js.Start(
 		rootPath,
@@ -62,7 +63,7 @@ func New(version, cfgPath string) (*Project, error) {
 	}
 
 	proj := &Project{
-		version: version,
+		version: input.Version,
 		root:    rootPath,
 		process: process,
 	}
@@ -82,14 +83,21 @@ func New(version, cfgPath string) (*Project, error) {
 		}
 	}
 
+	inputBytes, err := json.Marshal(map[string]string{
+		"stage": input.Stage,
+	})
 	err = process.Eval(
 		js.EvalOptions{
-			Dir:    tmp,
-			Inject: []string{filepath.Join(tmp, "src/shim/boot.js")},
+			Dir: tmp, Inject: []string{filepath.Join(tmp, "src/shim/boot.js")},
+			Define: map[string]string{
+				"$input": string(inputBytes),
+			},
 			Code: fmt.Sprintf(`
 import mod from '%s';
-console.log("~j" + JSON.stringify(mod.app()))`,
-				cfgPath),
+console.log("~j" + JSON.stringify(mod.app({
+  stage: $input.stage || undefined,
+})))`,
+				input.Config),
 		},
 	)
 	if err != nil {
@@ -104,6 +112,7 @@ console.log("~j" + JSON.stringify(mod.app()))`,
 		}
 
 		if cmd != js.CommandJSON {
+			fmt.Println(line)
 			continue
 		}
 
@@ -113,6 +122,7 @@ console.log("~j" + JSON.stringify(mod.app()))`,
 			return nil, err
 		}
 		proj.app = &parsed
+		proj.app.Stage = input.Stage
 
 		if proj.app.Providers == nil {
 			proj.app.Providers = map[string]map[string]string{}
