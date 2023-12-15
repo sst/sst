@@ -53,7 +53,7 @@ nfpms:
     file_name_template: >-
       {{ .ProjectName }}-
       {{- if eq .Os "darwin" }}mac
-      {{- else }}{{ .Os }}{{ end }}_{{ .Arch }}
+      {{- else }}{{ .Os }}{{ end }}-{{ .Arch }}
 
 changelog:
   sort: asc
