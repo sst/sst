@@ -80,7 +80,7 @@ func progress(mode ProgressMode, events project.StackEventStream) bool {
 		}
 		dedupe[dedupeKey] = true
 		defer spin.Enable()
-		if progress.Final && false {
+		if !progress.Final && false {
 			pending[progress.URN] =
 				color.New(color.FgWhite).Sprintf("   %-11s %v", progress.Label, formatURN(progress.URN))
 			suffix := "  Deploying...\n"
@@ -90,6 +90,7 @@ func progress(mode ProgressMode, events project.StackEventStream) bool {
 			spin.Suffix = strings.TrimRight(suffix, "\n")
 			return
 		}
+
 		color.New(progress.Color, color.Bold).Print("|  ")
 		color.New(color.FgHiBlack).Print(fmt.Sprintf("%-11s", progress.Label), " ", formatURN(progress.URN))
 		if progress.Duration != 0 {

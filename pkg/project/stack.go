@@ -30,20 +30,44 @@ type ConcurrentUpdateEvent struct{}
 type StackEventStream = chan StackEvent
 
 func (s *stack) run(cmd string) (StackEventStream, error) {
-	// credentials, err := s.project.AWS.Credentials()
-	// if err != nil {
-	// 	return nil, err
-	// }
 	slog.Info("running stack command", "cmd", cmd)
+
+	if cmd == "cancel" {
+		err := s.project.backend.Cancel(s.project.app.Name, s.project.app.Stage)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	/*
+		err := s.project.backend.Lock(s.project.app.Name, s.project.app.Stage)
+		if err != nil {
+			if errors.Is(err, &provider.LockExistsError{}) {
+				out := make(chan StackEvent, 1)
+				out <- StackEvent{
+					ConcurrentUpdateEvent: &ConcurrentUpdateEvent{},
+				}
+				close(out)
+				return out, nil
+			}
+			return nil, err
+		}
+	*/
+
+	env, err := s.project.backend.Env()
+	if err != nil {
+		return nil, err
+	}
+
 	cli := map[string]interface{}{
 		"command": cmd,
-		"backend": s.project.Backend(),
+		"backend": s.project.backend.Url(),
 		"paths": map[string]string{
 			"home": global.ConfigDir(),
 			"root": s.project.PathRoot(),
 			"work": s.project.PathTemp(),
 		},
-		"env": s.project.env,
+		"env": env,
 	}
 	cliBytes, err := json.Marshal(cli)
 	appBytes, err := json.Marshal(s.project.App())
@@ -100,6 +124,10 @@ func (s *stack) run(cmd string) (StackEventStream, error) {
 				}
 			}
 		}
+		// err := s.project.backend.Unlock(s.project.app.Name, s.project.app.Stage)
+		// if err != nil {
+		// 	panic(err)
+		// }
 		close(out)
 	}()
 

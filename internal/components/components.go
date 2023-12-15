@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 )
 
-//go:embed src/* package.json
+//go:embed src/* patches/* package.json
 var files embed.FS
 
 func CopyTo(srcDir, destDir string) error {
