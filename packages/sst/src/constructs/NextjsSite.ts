@@ -252,6 +252,7 @@ export class NextjsSite extends SsrSite {
       experimental,
       imageOptimization,
       cdk,
+      disableServerFunction,
     } = this.props;
     const stack = Stack.of(this);
     const serverConfig = {
@@ -278,7 +279,7 @@ export class NextjsSite extends SsrSite {
     this.removeSourcemaps();
     return this.validatePlan({
       edge: edge ?? false,
-      cloudFrontFunctions: {
+      cloudFrontFunctions: disableServerFunction ? undefined : {
         serverCfFunction: {
           constructId: "CloudFrontFunction",
           injections: [this.useCloudFrontFunctionHostHeaderInjection()],
