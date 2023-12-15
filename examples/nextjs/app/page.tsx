@@ -9,7 +9,7 @@ export default function Home() {
         <p>
           Get started by editing&nbsp;
           <code className={styles.code}>app/page.tsx</code>
-          <div>{headers().get("host")}-{Date.now()}</div>
+          <div>cool {headers().get("host")}-{Date.now()}</div>
         </p>
         <div>
           <a

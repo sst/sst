@@ -44,6 +44,23 @@ brews:
       name: homebrew-tap
     dependencies:
       - name: pulumi/tap/pulumi
+nfpms:
+  - maintainer: sst
+    description: the sst cli
+    formats:
+      - deb
+      - rpm
+    file_name_template: >-
+      {{ .ProjectName }}-
+      {{- if eq .Os "darwin" }}mac
+      {{- else }}{{ .Os }}{{ end }}-{{ .Arch }}
+scoop:
+  bucket:
+    owner: sst
+    name: scoop-bucket
+  homepage: "https://github.com/sst/ion"
+  description: "sst cli"
+  license: Apache 2.0
 
 changelog:
   sort: asc
