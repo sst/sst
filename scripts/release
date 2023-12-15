@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Get the latest Git tag
-latest_tag=$(git describe --tags `git rev-list --tags --max-count=1`)
+latest_tag=$(git tag --sort=committerdate | grep -E '[0-9]' | tail -1)
 
 # If there is no tag, exit the script
 if [ -z "$latest_tag" ]; then
