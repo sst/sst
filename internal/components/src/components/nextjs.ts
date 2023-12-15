@@ -25,6 +25,8 @@ import {
 } from "./ssr-site.js";
 import { Distribution } from "./distribution.js";
 import { AWS } from "./helpers/aws.js";
+import { toPascalCase } from "../util/string.js";
+import { prefixName } from "./helpers/naming.js";
 
 const LAYER_VERSION = "2";
 const DEFAULT_OPEN_NEXT_VERSION = "2.3.1";
@@ -120,7 +122,7 @@ export interface NextjsArgs extends SsrSiteArgs {
  * Deploys a Next.js app in the `my-next-app` directory.
  *
  * ```js
- * new Nextjs(stack, "web", {
+ * new Nextjs(stack, "Web", {
  *   path: "my-next-app/",
  * });
  * ```
@@ -162,22 +164,17 @@ export class Nextjs extends ComponentResource {
           // Ensure physical names are prefixed with app/stage
           if (args.type.startsWith("sst:sst:")) return undefined;
           if (args.type === "pulumi-nodejs:dynamic:Resource") return undefined;
-          const prefix = `${$app.name}-${$app.stage}-${args.name}-`
-            .substring(0, 38)
-            .replace(/[^-]$/, "-");
 
           let overrides;
           switch (args.type) {
-            case "aws:s3/bucket:Bucket":
-            case "aws:s3/bucketV2:BucketV2":
-              overrides = { bucketPrefix: prefix };
-              break;
-            case "aws:cloudwatch/eventRule:EventRule":
-            case "aws:iam/role:Role":
             case "aws:iam/policy:Policy":
+            case "aws:iam/role:Role":
+            case "aws:cloudwatch/eventRule:EventRule":
+            case "aws:lambda/function:Function":
             case "aws:sqs/queue:Queue":
-              overrides = { namePrefix: prefix };
+              overrides = { name: prefixName(args.name) };
               break;
+            case "aws:s3/bucketV2:BucketV2":
             case "aws:iam/rolePolicyAttachment:RolePolicyAttachment":
             case "aws:cloudfront/cachePolicy:CachePolicy":
             case "aws:cloudfront/distribution:Distribution":
@@ -186,7 +183,6 @@ export class Nextjs extends ComponentResource {
             case "aws:cloudwatch/eventRule:EventRule":
             case "aws:cloudwatch/eventTarget:EventTarget":
             case "aws:lambda/eventSourceMapping:EventSourceMapping":
-            case "aws:lambda/function:Function":
             case "aws:lambda/functionUrl:FunctionUrl":
             case "aws:lambda/invocation:Invocation":
             case "aws:route53/record:Record":
@@ -554,7 +550,7 @@ if (event.rawPath) {
         if (experimental.disableIncrementalCache) return;
 
         const queue = new aws.sqs.Queue(
-          `${name}-revalidation-queue`,
+          `${name}RevalidationQueue`,
           {
             fifoQueue: true,
             receiveWaitTimeSeconds: 20,
@@ -562,7 +558,7 @@ if (event.rawPath) {
           { parent }
         );
         const consumer = new Function(
-          `${name}-revalidation-consumer`,
+          `${name}RevalidationConsumer`,
           {
             description: "Next.js revalidator",
             handler: "index.handler",
@@ -598,7 +594,7 @@ if (event.rawPath) {
           { parent }
         );
         new aws.lambda.EventSourceMapping(
-          `${name}-revalidation-event-source`,
+          `${name}RevalidationEventSource`,
           {
             functionName: consumer.nodes.function.name,
             eventSourceArn: queue.arn,
@@ -613,7 +609,7 @@ if (event.rawPath) {
     function createRevalidationTable() {
       //if (!this.serverFunction) return;
       //const { path: sitePath } = this.args;
-      //const table = new aws.dynamodb.Table(`${name}-revalidation-table`, {
+      //const table = new aws.dynamodb.Table(`${name}RevalidationTable`, {
       //  attributes: [
       //    { name: "tag", type: "S" },
       //    { name: "path", type: "S" },
@@ -648,7 +644,7 @@ if (event.rawPath) {
       //  const prerenderedRouteCount = Object.keys(
       //    usePrerenderManifest()?.routes ?? {}
       //  ).length;
-      //  const insertFn = new Function(`${name}-revalidation-table-seed`, {
+      //  const insertFn = new Function(`${name}RevalidationTableSeeder`, {
       //    description: "Next.js revalidation data insert",
       //    handler: "index.handler",
       //    bundle: dynamodbProviderPath,
@@ -683,7 +679,7 @@ if (event.rawPath) {
       //      CACHE_DYNAMO_TABLE: table.name,
       //    },
       //  }, {parent});
-      //  new aws.lambda.Invocation(`${name}-revalidation-table-seed-invocation`, {
+      //  new aws.lambda.Invocation(`${name}RevalidationTableSeed`, {
       //    functionName: insertFn.aws.function.name,
       //    triggers: {
       //      version: Date.now().toString(),
@@ -939,7 +935,7 @@ if (event.rawPath) {
 
       // TODO create log group and reference log group arn
       const policy = new aws.iam.Policy(
-        `${name}-disable-logging-policy`,
+        `${name}DisableLoggingPolicy`,
         {
           policy: interpolate`{
             "Version": "2012-10-17",
@@ -968,7 +964,7 @@ if (event.rawPath) {
         { parent }
       );
       new aws.iam.RolePolicyAttachment(
-        `${name}-disable-logging-policy-attachment`,
+        `${name}DisableLoggingPolicyAttachment`,
         {
           policyArn: policy.arn,
           role: serverFunction.nodes.function.role,
@@ -985,7 +981,7 @@ if (event.rawPath) {
           if (!sourcemapPath || !sourcemapKey) return;
 
           new aws.s3.BucketObject(
-            `${name}-sourcemap-${sourcemapKey}`,
+            `${name}Sourcemap${toPascalCase(sourcemapKey)}`,
             {
               bucket: output($app.providers?.aws?.region!).apply((region) =>
                 AWS.bootstrap.forRegion(region)

@@ -15,6 +15,7 @@
     "@aws-sdk/middleware-retry": "^3.374.0",
     "@pulumi/aws": "5.43.0",
     "@pulumi/pulumi": "3.94.2",
+    "@pulumi/random": "^4.15.0",
     "@types/node": "20.9.4",
     "archiver": "^6.0.1",
     "esbuild": "0.19.7",

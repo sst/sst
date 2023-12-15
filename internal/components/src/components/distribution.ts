@@ -10,6 +10,7 @@ import * as aws from "@pulumi/aws";
 import { DnsValidatedCertificate } from "./dns-validated-certificate.js";
 import { HttpsRedirect } from "./https-redirect.js";
 import { AWS } from "./helpers/aws.js";
+import { toPascalCase } from "../util/string.js";
 
 export interface DistributionDomainArgs {
   /**
@@ -178,7 +179,7 @@ export class Distribution extends ComponentResource {
       // Certificates used for CloudFront distributions are required to be
       // created in the us-east-1 region
       return new DnsValidatedCertificate(
-        `${name}-certificate`,
+        `${name}Certificate`,
         {
           domainName: customDomain.domainName,
           alternativeNames: customDomain.aliases,
@@ -196,7 +197,7 @@ export class Distribution extends ComponentResource {
           ])
         : [];
       return new aws.cloudfront.Distribution(
-        `${name}-distribution`,
+        `${name}Distribution`,
         {
           aliases,
           viewerCertificate: certificate
@@ -226,7 +227,7 @@ export class Distribution extends ComponentResource {
         ]) {
           for (const type of ["A", "AAAA"]) {
             new aws.route53.Record(
-              `${name}-record-${recordName}-${type}`,
+              `${name}${type}Record${toPascalCase(recordName)}`,
               {
                 name: recordName,
                 zoneId,
@@ -255,7 +256,7 @@ export class Distribution extends ComponentResource {
         if (customDomain.redirects.length === 0) return;
 
         new HttpsRedirect(
-          `${name}-redirect`,
+          `${name}Redirect`,
           {
             zoneId,
             sourceDomains: customDomain.redirects,

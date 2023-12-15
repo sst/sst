@@ -6,6 +6,7 @@ import {
 } from "@pulumi/pulumi";
 import * as aws from "@pulumi/aws";
 import { CertificateValidation } from "@pulumi/aws/acm";
+import { toPascalCase } from "../util/string";
 
 /**
  * Properties to create a DNS validated certificate managed by AWS Certificate Manager.
@@ -24,14 +25,6 @@ export interface DnsValidatedCertificateArgs {
    * Set of domains that should be SANs in the issued certificate
    */
   alternativeNames?: Input<string[]>;
-  /**
-   * AWS region that will host the certificate. This is needed especially
-   * for certificates used for CloudFront distributions, which require the region
-   * to be us-east-1.
-   *
-   * @default the region the stack is deployed in.
-   */
-  region?: aws.Region;
 }
 
 export class DnsValidatedCertificate extends ComponentResource {
@@ -45,10 +38,10 @@ export class DnsValidatedCertificate extends ComponentResource {
     super("sst:sst:Certificate", name, args, opts);
 
     const parent = this;
-    const { domainName, alternativeNames, zoneId, region } = args;
+    const { domainName, alternativeNames, zoneId } = args;
 
     const certificate = new aws.acm.Certificate(
-      `${name}-certificate`,
+      `${name}Certificate`,
       {
         domainName,
         validationMethod: "DNS",
@@ -62,7 +55,7 @@ export class DnsValidatedCertificate extends ComponentResource {
       options.forEach((option) => {
         records.push(
           new aws.route53.Record(
-            `${name}-record-${option.resourceRecordName}`,
+            `${name}Record${toPascalCase(option.resourceRecordName)}`,
             {
               name: option.resourceRecordName,
               zoneId,
@@ -77,7 +70,7 @@ export class DnsValidatedCertificate extends ComponentResource {
     });
 
     const certificateValidation = new aws.acm.CertificateValidation(
-      `${name}-validation`,
+      `${name}Validation`,
       {
         certificateArn: certificate.arn,
         validationRecordFqdns: records.map((record) => record.fqdn),

@@ -7,6 +7,8 @@ import {
 } from "@pulumi/pulumi";
 import * as aws from "@pulumi/aws";
 import { DnsValidatedCertificate } from "./dns-validated-certificate";
+import { toPascalCase } from "../util/string";
+import { Bucket } from "./bucket";
 
 /**
  * Properties to configure an HTTPS Redirect
@@ -54,30 +56,30 @@ export class HttpsRedirect extends ComponentResource {
     const parent = this;
 
     const certificate = new DnsValidatedCertificate(
-      `${name}-certificate`,
+      `${name}Certificate`,
       {
         domainName: output(args.sourceDomains).apply((domains) => domains[0]),
         alternativeNames: output(args.sourceDomains).apply((domains) =>
           domains.slice(1)
         ),
         zoneId: args.zoneId,
-        region: "us-east-1",
       },
       { parent }
     );
 
-    const bucket = new aws.s3.BucketV2(
-      `${name}-bucket`,
+    const bucket = new Bucket(
+      `${name}Bucket`,
       {
-        forceDestroy: true,
+        blockPublicAccess: true,
+        nodes: { bucket: { forceDestroy: true } },
       },
       { parent }
     );
 
     const bucketWebsite = new aws.s3.BucketWebsiteConfigurationV2(
-      `${name}-bucket-website`,
+      `${name}BucketWebsite`,
       {
-        bucket: bucket.id,
+        bucket: bucket.name,
         redirectAllRequestsTo: {
           hostName: args.targetDomain,
           protocol: "https",
@@ -86,20 +88,8 @@ export class HttpsRedirect extends ComponentResource {
       { parent }
     );
 
-    new aws.s3.BucketPublicAccessBlock(
-      `${name}-bucket-public-access-block`,
-      {
-        bucket: bucket.id,
-        blockPublicAcls: true,
-        blockPublicPolicy: true,
-        ignorePublicAcls: true,
-        restrictPublicBuckets: true,
-      },
-      { parent }
-    );
-
     const distribution = new aws.cloudfront.Distribution(
-      `${name}-distribution`,
+      `${name}Distribution`,
       {
         enabled: true,
         waitForDeployment: false,
@@ -138,7 +128,7 @@ export class HttpsRedirect extends ComponentResource {
       for (const recordName of sourceDomains) {
         for (const type of ["A", "AAAA"]) {
           new aws.route53.Record(
-            `${name}-record-${recordName}-${type}`,
+            `${name}${type}Record${toPascalCase(recordName)}`,
             {
               name: recordName,
               zoneId: args.zoneId,

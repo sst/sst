@@ -1,9 +1,10 @@
 /// <reference path="./.sst/src/global.d.ts" />
 
 export default $config({
-  app() {
+  app(input) {
     return {
       name: "nextjs",
+      removalPolicy: input.stage === "production" ? "retain" : "remove",
       providers: {
         aws: {
           region: "us-east-1",
@@ -12,7 +13,7 @@ export default $config({
     };
   },
   async run() {
-    const site = new sst.Nextjs("web");
+    const site = new sst.Nextjs("Web");
 
     //new sst.DistributionInvalidation(`invalidation`, {
     //  distributionId: "ESWUVI5JLK5EA",

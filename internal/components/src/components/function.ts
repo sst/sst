@@ -453,7 +453,7 @@ export class Function extends ComponentResource {
 
     function createRole() {
       return new aws.iam.Role(
-        `${name}-role`,
+        `${name}Role`,
         {
           assumeRolePolicy: aws.iam.assumeRolePolicyForPrincipal({
             Service: "lambda.amazonaws.com",
@@ -501,7 +501,7 @@ export class Function extends ComponentResource {
 
     function createBucketObject() {
       return new aws.s3.BucketObjectv2(
-        `${name}-code`,
+        `${name}Code`,
         {
           key: interpolate`${name}-code-${bundleHash}.zip`,
           bucket: region.apply((region) => AWS.bootstrap.forRegion(region)),
@@ -513,7 +513,7 @@ export class Function extends ComponentResource {
 
     function createFunction() {
       return new aws.lambda.Function(
-        `${name}-function`,
+        `${name}Function`,
         {
           description: args.description,
           code: new asset.AssetArchive({
@@ -535,7 +535,7 @@ export class Function extends ComponentResource {
 
     function createLogGroup() {
       new LogGroup(
-        `${name}-log-group`,
+        `${name}LogGroup`,
         {
           logGroupName: interpolate`/aws/lambda/${fn.name}`,
           retentionInDays: logging.apply(
@@ -552,7 +552,7 @@ export class Function extends ComponentResource {
         if (url === undefined) return;
 
         return new aws.lambda.FunctionUrl(
-          `${name}-url`,
+          `${name}Url`,
           {
             functionName: fn.name,
             authorizationType: url.authorization.toUpperCase(),
@@ -569,7 +569,7 @@ export class Function extends ComponentResource {
     function updateFunctionCode() {
       return output([fnRaw]).apply(([fnRaw]) => {
         new FunctionCodeUpdater(
-          `${name}-code-updater`,
+          `${name}CodeUpdater`,
           {
             functionName: fnRaw.name,
             s3Bucket: file.bucket,

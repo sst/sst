@@ -85,6 +85,6 @@ export class LogGroup extends dynamic.Resource {
     args: LogGroupInputs,
     opts?: CustomResourceOptions
   ) {
-    super(new Provider(), `${name}-sst.LogGroup`, args, opts);
+    super(new Provider(), `${name}.LogGroup`, args, opts);
   }
 }

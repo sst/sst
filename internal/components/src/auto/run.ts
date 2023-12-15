@@ -20,26 +20,39 @@ export async function run(program: PulumiFn) {
     }),
   };
 
+  const removalPolicyTransform = (args: util.ResourceTransformationArgs) => {
+    if (
+      $app.removalPolicy === "retain-all" ||
+      ($app.removalPolicy === "retain" &&
+        [
+          "aws:s3/bucket:Bucket",
+          "aws:s3/bucketV2:BucketV2",
+          "aws:dynamodb/table:Table",
+        ].includes(args.type))
+    ) {
+      return {
+        props: args.props,
+        opts: util.mergeOptions({ retainOnDelete: true }, args.opts),
+      };
+    }
+    return undefined;
+  };
+
+  const validateNamesTransform = (args: util.ResourceTransformationArgs) => {
+    if (!args.name.match(/^[A-Z][a-zA-Z0-9]*$/)) {
+      throw new Error(
+        `Invalid component name "${args.name}". Component names must start with an uppercase letter and contain only alphanumeric characters.`
+      );
+    }
+
+    return undefined;
+  };
+
   const stack = await LocalWorkspace.createOrSelectStack(
     {
       program: async () => {
-        runtime.registerStackTransformation((args) => {
-          if (
-            $app.removalPolicy === "retain-all" ||
-            ($app.removalPolicy === "retain" &&
-              [
-                "aws:s3/bucket:Bucket",
-                "aws:s3/bucketV2:BucketV2",
-                "aws:dynamodb/table:Table",
-              ].includes(args.type))
-          ) {
-            return {
-              props: args.props,
-              opts: util.mergeOptions({ retainOnDelete: true }, args.opts),
-            };
-          }
-          return undefined;
-        });
+        runtime.registerStackTransformation(removalPolicyTransform);
+        runtime.registerStackTransformation(validateNamesTransform);
 
         return program();
       },

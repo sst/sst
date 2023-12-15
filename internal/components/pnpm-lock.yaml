@@ -32,6 +32,9 @@ dependencies:
   '@pulumi/pulumi':
     specifier: 3.94.2
     version: 3.94.2
+  '@pulumi/random':
+    specifier: ^4.15.0
+    version: 4.15.0
   '@types/node':
     specifier: 20.9.4
     version: 20.9.4
@@ -1820,6 +1823,14 @@ packages:
 
   /@pulumi/query@0.3.0:
     resolution: {integrity: sha512-xfo+yLRM2zVjVEA4p23IjQWzyWl1ZhWOGobsBqRpIarzLvwNH/RAGaoehdxlhx4X92302DrpdIFgTICMN4P38w==}
+    dev: false
+
+  /@pulumi/random@4.15.0:
+    resolution: {integrity: sha512-srBGpSBBAsww3DA393vYF2J7pxur1sUg70zmsEoiI7mCv2iEOMI3S9RCbzPgSuJPUm0awU71D2jbSYH4PNJFBw==}
+    dependencies:
+      '@pulumi/pulumi': 3.94.2
+    transitivePeerDependencies:
+      - supports-color
     dev: false
 
   /@smithy/abort-controller@2.0.14:

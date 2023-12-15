@@ -144,7 +144,7 @@ export class DistributionInvalidation extends dynamic.Resource {
   ) {
     super(
       new Provider(),
-      `${name}-sst.DistributionInvalidation`,
+      `${name}.DistributionInvalidation`,
       {
         ...args,
         paths: output(args.paths).apply((paths) => [

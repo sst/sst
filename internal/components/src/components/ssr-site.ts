@@ -20,6 +20,8 @@ import { Function, FunctionArgs, FunctionNodeJSArgs } from "./function.js";
 import { Duration, toSeconds } from "./util/duration.js";
 import { DistributionInvalidation } from "./providers/distribution-invalidation.js";
 import { AWS } from "./helpers/aws.js";
+import { toPascalCase } from "../util/string.js";
+import { Bucket } from "./bucket.js";
 
 type CloudFrontFunctionConfig = { injections: string[] };
 type EdgeFunctionConfig = { function: Unwrap<FunctionArgs> };
@@ -356,7 +358,7 @@ export function createBucket(parent: ComponentResource, name: string) {
 
   function createCloudFrontOriginAccessIdentity() {
     return new aws.cloudfront.OriginAccessIdentity(
-      `${name}-origin-access-identity`,
+      `${name}OriginAccessIdentity`,
       {},
       { parent }
     );
@@ -364,23 +366,13 @@ export function createBucket(parent: ComponentResource, name: string) {
 
   function createS3Bucket() {
     // TODO add "enforceSSL: true"
-    const bucket = new aws.s3.BucketV2(
-      `${name}-bucket`,
+    const bucket = new Bucket(
+      `${name}Bucket`,
       {
-        forceDestroy: true,
+        blockPublicAccess: true,
+        nodes: { bucket: { forceDestroy: true } },
       },
       { parent, retainOnDelete: false }
-    );
-    new aws.s3.BucketPublicAccessBlock(
-      `${name}-bucket-public-access-block`,
-      {
-        bucket: bucket.id,
-        blockPublicAcls: true,
-        blockPublicPolicy: true,
-        ignorePublicAcls: true,
-        restrictPublicBuckets: true,
-      },
-      { parent }
     );
     // allow access from another account bucket policy
     const policyDocument = aws.iam.getPolicyDocumentOutput({
@@ -398,9 +390,9 @@ export function createBucket(parent: ComponentResource, name: string) {
       ],
     });
     new aws.s3.BucketPolicy(
-      `${name}-bucket-policy`,
+      `${name}BucketPolicy`,
       {
-        bucket: bucket.id,
+        bucket: bucket.name,
         policy: policyDocument.json,
       },
       { parent }
@@ -497,7 +489,7 @@ export function createServersAndDistribution(
               for (const file of files) {
                 uploadedObjects.push(
                   new aws.s3.BucketObject(
-                    `${name}-asset-${from}-${file}`,
+                    `${name}Asset${toPascalCase(from)}${toPascalCase(file)}`,
                     {
                       bucket: bucket.bucket,
                       source: new asset.FileAsset(
@@ -526,7 +518,7 @@ export function createServersAndDistribution(
       Object.entries(plan.cloudFrontFunctions ?? {}).forEach(
         ([fnName, { injections }]) => {
           functions[fnName] = new aws.cloudfront.Function(
-            `${name}-cloudfront-function-${fnName}`,
+            `${name}CloudfrontFunction${toPascalCase(fnName)}`,
             {
               runtime: "cloudfront-js-1.0",
               code: `
@@ -549,7 +541,7 @@ function handler(event) {
       Object.entries(plan.edgeFunctions ?? {}).forEach(
         ([fnName, { function: props }]) => {
           const fn = new Function(
-            `${name}-edge-function-${fnName}`,
+            `${name}EdgeFunction${toPascalCase(fnName)}`,
             {
               runtime: "nodejs18.x",
               timeout: "20 seconds",
@@ -654,7 +646,7 @@ function handler(event) {
 
     function buildFunctionOrigin(fnName: string, props: FunctionOriginConfig) {
       const fn = new Function(
-        `${name}-server-function-${fnName}`,
+        `${name}ServerFunction${toPascalCase(fnName)}`,
         {
           runtime: "nodejs18.x",
           timeout: "20 seconds",
@@ -714,7 +706,7 @@ function handler(event) {
       props: ImageOptimizationFunctionOriginConfig
     ) {
       const fn = new Function(
-        `${name}-image-function-${fnName}`,
+        `${name}ImageFunction${toPascalCase(fnName)}`,
         {
           timeout: "25 seconds",
           logging: {
@@ -823,7 +815,7 @@ function handler(event) {
       singletonCachePolicy =
         singletonCachePolicy ??
         new aws.cloudfront.CachePolicy(
-          `${name}-server-cache-policy`,
+          `${name}ServerCachePolicy`,
           {
             comment: "SST server response cache policy",
             defaultTtl: 0,
@@ -863,14 +855,14 @@ if (event.type === "warmer") {
     }
 
     function createServerFunctionForDev() {
-      //const role = new Role(self, `${name}-dev-server-role`, {
+      //const role = new Role(self, `${name}DevServerRole`, {
       //  assumedBy: new CompositePrincipal(
       //    new AccountPrincipal(app.account),
       //    new ServicePrincipal("lambda.amazonaws.com")
       //  ),
       //  maxSessionDuration: CdkDuration.hours(12),
       //}, {parent});
-      //return new SsrFunction(self, `${name}-dev-server-function`, {
+      //return new SsrFunction(self, `${name}DevServerFunction`, {
       //  description: "Server handler placeholder",
       //  bundle: path.join(__dirname, "../support/ssr-site-function-stub"),
       //  handler: "index.handler",
@@ -887,7 +879,7 @@ if (event.type === "warmer") {
 
     function createCloudFrontDistribution() {
       return new Distribution(
-        `${name}-distribution`,
+        `${name}Distribution`,
         {
           customDomain: args.customDomain,
           nodes: {
@@ -928,7 +920,7 @@ if (event.type === "warmer") {
 
     function allowServerFunctionInvalidateDistribution() {
       const policy = new aws.iam.Policy(
-        `${name}-invalidation-policy`,
+        `${name}InvalidationPolicy`,
         {
           policy: interpolate`{
             "Version": "2012-10-17",
@@ -947,7 +939,7 @@ if (event.type === "warmer") {
       for (const fn of [...ssrFunctions, ...Object.values(edgeFunctions)]) {
         fn.nodes.function.name.apply((functionName) => {
           new aws.iam.RolePolicyAttachment(
-            `${name}-invalidation-policy-attachment-${functionName}`,
+            `${name}InvalidationPolicyAttachment${toPascalCase(functionName)}`,
             {
               policyArn: policy.arn,
               role: fn.nodes.role.name,
@@ -974,7 +966,7 @@ if (event.type === "warmer") {
 
       // Create warmer function
       const warmer = new Function(
-        `${name}-warmer-function`,
+        `${name}WarmerFunction`,
         {
           description: `${name} warmer`,
           bundle: path.join(__dirname, "../support/ssr-warmer"),
@@ -1011,7 +1003,7 @@ if (event.type === "warmer") {
 
       // Create cron job
       const schedule = new aws.cloudwatch.EventRule(
-        `${name}-warmer-rule`,
+        `${name}WarmerRule`,
         {
           description: `${name} warmer`,
           scheduleExpression: "rate(5 minutes)",
@@ -1019,7 +1011,7 @@ if (event.type === "warmer") {
         { parent }
       );
       new aws.cloudwatch.EventTarget(
-        `${name}-warmer-target`,
+        `${name}WarmerTarget`,
         {
           rule: schedule.name,
           arn: warmer.nodes.function.arn,
@@ -1032,7 +1024,7 @@ if (event.type === "warmer") {
 
       // Prewarm on deploy
       new aws.lambda.Invocation(
-        `${name}-warmer-invoke`,
+        `${name}WarmerInvoke`,
         {
           functionName: warmer.nodes.function.name,
           triggers: {
@@ -1126,7 +1118,7 @@ if (event.type === "warmer") {
           }
 
           new DistributionInvalidation(
-            `${name}-invalidation`,
+            `${name}Invalidation`,
             {
               distributionId: distribution.nodes.distribution.id,
               paths: invalidationPaths,
