@@ -54,6 +54,13 @@ nfpms:
       {{ .ProjectName }}-
       {{- if eq .Os "darwin" }}mac
       {{- else }}{{ .Os }}{{ end }}-{{ .Arch }}
+scoop:
+  bucket:
+    owner: sst
+    name: scoop-bucket
+  homepage: "https://github.com/planetscale/cli"
+  description: "The PlanetScale CLI"
+  license: Apache 2.0
 
 changelog:
   sort: asc
