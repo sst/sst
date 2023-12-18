@@ -14,6 +14,6 @@ export default $config({
     };
   },
   async run() {
-    const item = new aws.s3.Bucket("item");
+    const item = new aws.s3.Bucket("Item");
   },
 });

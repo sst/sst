@@ -2,6 +2,7 @@ package project
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log/slog"
 	"path/filepath"
@@ -9,6 +10,7 @@ import (
 	"github.com/pulumi/pulumi/sdk/v3/go/common/apitype"
 	"github.com/sst/ion/pkg/global"
 	"github.com/sst/ion/pkg/js"
+	"github.com/sst/ion/pkg/project/provider"
 )
 
 type stack struct {
@@ -39,20 +41,18 @@ func (s *stack) run(cmd string) (StackEventStream, error) {
 		}
 	}
 
-	/*
-		err := s.project.backend.Lock(s.project.app.Name, s.project.app.Stage)
-		if err != nil {
-			if errors.Is(err, &provider.LockExistsError{}) {
-				out := make(chan StackEvent, 1)
-				out <- StackEvent{
-					ConcurrentUpdateEvent: &ConcurrentUpdateEvent{},
-				}
-				close(out)
-				return out, nil
+	err := s.project.backend.Lock(s.project.app.Name, s.project.app.Stage)
+	if err != nil {
+		if errors.Is(err, &provider.LockExistsError{}) {
+			out := make(chan StackEvent, 1)
+			out <- StackEvent{
+				ConcurrentUpdateEvent: &ConcurrentUpdateEvent{},
 			}
-			return nil, err
+			close(out)
+			return out, nil
 		}
-	*/
+		return nil, err
+	}
 
 	env, err := s.project.backend.Env()
 	if err != nil {
@@ -96,6 +96,9 @@ func (s *stack) run(cmd string) (StackEventStream, error) {
 
 	out := make(StackEventStream)
 	go func() {
+		defer close(out)
+		defer s.project.backend.Unlock(s.project.app.Name, s.project.app.Stage)
+
 		for {
 			cmd, line := p.Scan()
 			if cmd == js.CommandDone {
@@ -124,11 +127,6 @@ func (s *stack) run(cmd string) (StackEventStream, error) {
 				}
 			}
 		}
-		// err := s.project.backend.Unlock(s.project.app.Name, s.project.app.Stage)
-		// if err != nil {
-		// 	panic(err)
-		// }
-		close(out)
 	}()
 
 	return out, nil
