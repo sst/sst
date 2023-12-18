@@ -283,7 +283,6 @@ func progress(mode ProgressMode, events project.StackEventStream) bool {
 		}
 
 		if evt.ResOpFailedEvent != nil {
-			fmt.Println(evt.ResOpFailedEvent)
 		}
 
 		if evt.DiagnosticEvent != nil {

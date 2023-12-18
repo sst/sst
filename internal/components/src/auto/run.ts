@@ -49,7 +49,7 @@ export async function run(program: PulumiFn) {
 
     if (!normalizedName.match(/^[A-Z][a-zA-Z0-9]*$/)) {
       throw new Error(
-        `Invalid component name "${normalizedName}". Component names must start with an uppercase letter and contain only alphanumeric characters.`
+        `Invalid component name "${normalizedName}". Component names must start with an uppercase letter and contain only alphanumeric characters.`,
       );
     }
 
@@ -85,7 +85,7 @@ export async function run(program: PulumiFn) {
         NODE_PATH: $cli.paths.work + "/node_modules",
         ...$cli.env,
       },
-    }
+    },
   );
 
   try {
