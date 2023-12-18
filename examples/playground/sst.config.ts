@@ -15,8 +15,17 @@ export default $config({
     };
   },
   async run() {
-    const bucket = new sst.Bucket("Web");
+    const bucket = new sst.Bucket("Web", {
+      nodes: {
+        bucket: {
+          forceDestroy: false,
+        },
+      },
+    });
 
+    return {
+      bucket: bucket.name,
+    };
     const files = [
       "_app-3e6c03fb96512a92.js",
       "_buildManifest.js",
