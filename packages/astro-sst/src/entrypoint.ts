@@ -68,7 +68,7 @@ export function createExports(
     }
 
     // Process request
-    const response = await app.render(request, routeData);
+    const response = await app.render(request, { routeData });
 
     // Stream response back to Cloudfront
     const convertedResponse = await convertTo({
@@ -103,7 +103,7 @@ export function createExports(
     }
 
     // Process request
-    const response = await app.render(request, routeData);
+    const response = await app.render(request, { routeData });
 
     // Buffer response back to Cloudfront
     const convertedResponse = await convertTo({
