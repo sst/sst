@@ -276,7 +276,7 @@ export class Function extends Component {
   constructor(
     name: string,
     args: FunctionArgs,
-    opts?: ComponentResourceOptions,
+    opts?: ComponentResourceOptions
   ) {
     super("sst:sst:Function", name, args, opts);
 
@@ -366,12 +366,12 @@ export class Function extends Component {
           url.cors === false
             ? {}
             : url.cors === true || url.cors === undefined
-              ? defaultCors
-              : {
-                  ...defaultCors,
-                  ...url.cors,
-                  maxAge: url.cors.maxAge && toSeconds(url.cors.maxAge),
-                };
+            ? defaultCors
+            : {
+                ...defaultCors,
+                ...url.cors,
+                maxAge: url.cors.maxAge && toSeconds(url.cors.maxAge),
+              };
 
         return { authorization, cors };
       });
@@ -390,7 +390,7 @@ export class Function extends Component {
 
       return output(args.bind).apply(async (component) => {
         const outputs = Object.entries(component).filter(
-          ([key]) => !key.startsWith("__"),
+          ([key]) => !key.startsWith("__")
         );
         const keys = outputs.map(([key]) => key);
         const values = outputs.map(([_, value]) => value);
@@ -442,13 +442,13 @@ export class Function extends Component {
                   `  const { ${oldHandlerFunction}: rawHandler} = await import("./${oldHandlerName}.mjs");`,
                   `  return rawHandler(event, context);`,
                   `};`,
-                ].join("\n"),
+                ].join("\n")
           );
           return path.posix.join(
             handlerDir,
-            `${newHandlerName}.${newHandlerFunction}`,
+            `${newHandlerName}.${newHandlerFunction}`
           );
-        },
+        }
       );
     }
 
@@ -464,7 +464,7 @@ export class Function extends Component {
             "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
           ],
         },
-        { parent },
+        { parent }
       );
     }
 
@@ -474,7 +474,12 @@ export class Function extends Component {
       //       contains symlinks. Pulumi cannot zip symlinks correctly.
       //       We will zip the folder ourselves.
       return output(args.bundle).apply(async (bundle) => {
-        const zipPath = path.resolve($cli.paths.work, name, "code.zip");
+        const zipPath = path.resolve(
+          $cli.paths.work,
+          "artifacts",
+          name,
+          "code.zip"
+        );
         await fs.promises.mkdir(path.dirname(zipPath), {
           recursive: true,
         });
@@ -492,9 +497,19 @@ export class Function extends Component {
           });
           archive.pipe(ws);
 
-          archive.glob("**", { cwd: bundle, dot: true });
+          // set the date to 0 so that the zip file is deterministic
+          archive.glob("**", { cwd: bundle, dot: true }, { date: new Date(0) });
           await archive.finalize();
         });
+
+        // TODO remove
+        if (zipPath.includes("WebImageFunctionImageOptimizer")) {
+          const content = await fs.promises.readFile(zipPath);
+          const hash = crypto.createHash("sha256");
+          hash.update(content);
+          console.log(hash.digest("hex"));
+          throw "stop";
+        }
 
         return zipPath;
       });
@@ -504,11 +519,11 @@ export class Function extends Component {
       return new aws.s3.BucketObjectv2(
         `${name}Code`,
         {
-          key: interpolate`${name}-code-${bundleHash}.zip`,
+          key: interpolate`assets/${name}-code-${bundleHash}.zip`,
           bucket: region.apply((region) => AWS.bootstrap.forRegion(region)),
           source: zipPath.apply((zipPath) => new asset.FileArchive(zipPath)),
         },
-        { parent },
+        { parent }
       );
     }
 
@@ -530,7 +545,7 @@ export class Function extends Component {
           },
           ...args.nodes?.function,
         },
-        { parent },
+        { parent }
       );
     }
 
@@ -540,11 +555,11 @@ export class Function extends Component {
         {
           logGroupName: interpolate`/aws/lambda/${fn.name}`,
           retentionInDays: logging.apply(
-            (logging) => RETENTION[logging.retention],
+            (logging) => RETENTION[logging.retention]
           ),
           region,
         },
-        { parent },
+        { parent }
       );
     }
 
@@ -558,11 +573,11 @@ export class Function extends Component {
             functionName: fn.name,
             authorizationType: url.authorization.toUpperCase(),
             invokeMode: streaming.apply((streaming) =>
-              streaming ? "RESPONSE_STREAM" : "BUFFERED",
+              streaming ? "RESPONSE_STREAM" : "BUFFERED"
             ),
             cors: url.cors,
           },
-          { parent },
+          { parent }
         );
       });
     }
@@ -577,7 +592,7 @@ export class Function extends Component {
             s3Key: file.key,
             region,
           },
-          { parent },
+          { parent }
         );
         return fnRaw;
       });

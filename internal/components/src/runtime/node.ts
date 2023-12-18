@@ -10,7 +10,7 @@ export async function build(
   name: string,
   input: pulumi.Unwrap<HandlerFunctionArgs>
 ) {
-  const out = path.join($cli.paths.work, name);
+  const out = path.join($cli.paths.work, "artifacts", name);
   await fs.rm(out, { recursive: true, force: true });
   await fs.mkdir(out, { recursive: true });
 
