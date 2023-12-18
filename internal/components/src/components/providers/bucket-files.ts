@@ -1,4 +1,4 @@
-import { fs } from "../helpers/node.js";
+import fs from "fs";
 import path from "path";
 import { CustomResourceOptions, Input, dynamic } from "@pulumi/pulumi";
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
@@ -25,7 +25,7 @@ class Provider implements dynamic.ResourceProvider {
   async update(
     id: string,
     olds: Inputs,
-    news: Inputs
+    news: Inputs,
   ): Promise<dynamic.UpdateResult> {
     await this.upload(news);
     return { outs: news };
@@ -42,9 +42,9 @@ class Provider implements dynamic.ResourceProvider {
             Body: await fs.promises.readFile(path.resolve(inputs.dir, file)),
             //CacheControl: command.cacheControl,
             ContentType: getContentType(file, "UTF-8"),
-          })
-        )
-      )
+          }),
+        ),
+      ),
     );
   }
 }
@@ -53,7 +53,7 @@ export class BucketFiles extends dynamic.Resource {
   constructor(
     name: string,
     args: BucketFilesInputs,
-    opts?: CustomResourceOptions
+    opts?: CustomResourceOptions,
   ) {
     super(new Provider(), `${name}.sst.BucketFiles`, args, opts);
   }

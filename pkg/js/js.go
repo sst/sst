@@ -62,7 +62,7 @@ const LOOP = `
       try {
         const result = await import(msg.module)
       } catch(ex) {
-        console.error(ex)
+        console.log(ex)
       } finally {
         // await fs.rm(msg.module)
         console.log("~d")
@@ -219,4 +219,83 @@ const __dirname = topLevelFileUrlToPath(new topLevelURL(".", import.meta.url))
 	}
 
 	return nil
+}
+
+func Eval(input EvalOptions) (*Process, error) {
+	outfile := filepath.Join(input.Dir,
+		"eval",
+		fmt.Sprintf("eval-%v.mjs", time.Now().UnixMilli()),
+	)
+	slog.Info("esbuild building")
+	result := esbuild.Build(esbuild.BuildOptions{
+		Banner: map[string]string{
+			"js": `
+import { createRequire as topLevelCreateRequire } from 'module';
+const require = topLevelCreateRequire(import.meta.url);
+import { fileURLToPath as topLevelFileUrlToPath, URL as topLevelURL } from "url"
+const __dirname = topLevelFileUrlToPath(new topLevelURL(".", import.meta.url))
+` + input.Banner,
+		},
+		MainFields: []string{"module", "main"},
+		External: []string{
+			"@pulumi/*",
+			"@aws-sdk/*",
+			"esbuild",
+			"archiver",
+			"glob",
+		},
+		Format:    esbuild.FormatESModule,
+		Platform:  esbuild.PlatformNode,
+		Sourcemap: esbuild.SourceMapInline,
+		Stdin: &esbuild.StdinOptions{
+			Contents:   input.Code,
+			ResolveDir: input.Dir,
+			Sourcefile: "eval.ts",
+			Loader:     esbuild.LoaderTS,
+		},
+		Define:  input.Define,
+		Inject:  input.Inject,
+		Outfile: outfile,
+		Write:   true,
+		Bundle:  true,
+	})
+	if len(result.Errors) > 0 {
+		slog.Error("esbuild errors", "errors", result.Errors)
+		return nil, fmt.Errorf("esbuild errors: %v", result.Errors)
+	}
+	slog.Info("esbuild built")
+
+	slog.Info("sending eval message", "module", outfile)
+
+	cmd := exec.Command("node", "--no-warnings", outfile)
+
+	stdIn, err := cmd.StdinPipe()
+	if err != nil {
+		return nil, err
+	}
+
+	stdOut, err := cmd.StdoutPipe()
+	if err != nil {
+		return nil, err
+	}
+
+	cmd.Stderr = os.Stderr
+
+	scanner := bufio.NewScanner(io.MultiReader(
+		stdOut,
+	))
+	const maxCapacity = 1024 * 1024 // 1 MB
+	buf := make([]byte, maxCapacity)
+	scanner.Buffer(buf, maxCapacity)
+
+	err = cmd.Start()
+	if err != nil {
+		return nil, err
+	}
+
+	return &Process{
+		cmd: cmd,
+		in:  stdIn,
+		Out: scanner,
+	}, nil
 }

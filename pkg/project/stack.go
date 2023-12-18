@@ -74,7 +74,7 @@ func (s *stack) run(cmd string) (StackEventStream, error) {
 	if err != nil {
 		return nil, err
 	}
-	err = s.project.process.Eval(js.EvalOptions{
+	p, err := js.Eval(js.EvalOptions{
 		Dir: s.project.PathTemp(),
 		Define: map[string]string{
 			"$app": string(appBytes),
@@ -97,7 +97,7 @@ func (s *stack) run(cmd string) (StackEventStream, error) {
 	out := make(StackEventStream)
 	go func() {
 		for {
-			cmd, line := s.project.process.Scan()
+			cmd, line := p.Scan()
 			if cmd == js.CommandDone {
 				break
 			}
