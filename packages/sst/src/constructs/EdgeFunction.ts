@@ -39,7 +39,11 @@ import { SSTConstruct } from "./Construct.js";
 import { App } from "./App.js";
 import { Stack } from "./Stack.js";
 import { Secret } from "./Config.js";
-import { useFunctions, NodeJSProps, FunctionCopyFilesProps } from "./Function.js";
+import {
+  useFunctions,
+  NodeJSProps,
+  FunctionCopyFilesProps,
+} from "./Function.js";
 import {
   bindEnvironment,
   bindPermissions,
@@ -196,7 +200,7 @@ export class EdgeFunction extends Construct {
           nodejs?.banner || "",
         ].join("\n"),
       },
-      copyFiles
+      copyFiles,
     });
 
     // Build function
