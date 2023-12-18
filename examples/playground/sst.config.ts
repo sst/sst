@@ -22,7 +22,11 @@ export default $config({
         },
       },
     });
-    throw "stop";
+
+    new sst.Function("Function", {
+      bundle: "bundled-function",
+      handler: "index.handler",
+    });
     return;
 
     //return {
