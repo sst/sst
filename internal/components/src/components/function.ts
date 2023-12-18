@@ -1,4 +1,5 @@
-import fs from "fs";
+//import fs from "fs";
+import { fs } from "./helpers/node.js";
 import path from "path";
 import crypto from "crypto";
 import archiver from "archiver";

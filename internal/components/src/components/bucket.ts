@@ -25,7 +25,11 @@ export interface BucketArgs {
 export class Bucket extends ComponentResource {
   public bucket: aws.s3.BucketV2;
 
-  constructor(name: string, args: BucketArgs, opts?: ComponentResourceOptions) {
+  constructor(
+    name: string,
+    args?: BucketArgs,
+    opts?: ComponentResourceOptions
+  ) {
     super("sst:sst:Bucket", name, args, opts);
 
     const parent = this;
@@ -38,15 +42,16 @@ export class Bucket extends ComponentResource {
         bucket: randomId.dec.apply((dec) =>
           prefixName(name.toLowerCase(), `-${randomDecToSuffix(dec)}`)
         ),
-        ...args.nodes?.bucket,
+        forceDestroy: true,
+        ...args?.nodes?.bucket,
       },
       {
         parent,
       }
     );
 
-    output(args.blockPublicAccess).apply((blockPublicAccess) => {
-      if (blockPublicAccess) return;
+    output(args?.blockPublicAccess).apply((blockPublicAccess) => {
+      if (!blockPublicAccess) return;
 
       new aws.s3.BucketPublicAccessBlock(
         `${name}PublicAccessBlock`,

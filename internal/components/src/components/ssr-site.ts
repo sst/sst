@@ -1,6 +1,6 @@
 import path from "path";
-import url from "url";
-import fs from "fs";
+//import fs from "fs";
+import { fs } from "./helpers/node.js";
 import { globSync } from "glob";
 import crypto from "crypto";
 import { execSync } from "child_process";
@@ -370,7 +370,6 @@ export function createBucket(parent: ComponentResource, name: string) {
       `${name}Bucket`,
       {
         blockPublicAccess: true,
-        nodes: { bucket: { forceDestroy: true } },
       },
       { parent, retainOnDelete: false }
     );
@@ -428,7 +427,7 @@ export function createServersAndDistribution(
 
     function uploadAssets() {
       return output(args.assets).apply((assets) => {
-        const uploadedObjects: aws.s3.BucketObject[] = [];
+        const uploadedObjects: aws.s3.BucketObjectv2[] = [];
 
         // Define content headers
         const nonVersionedFilesTTL =
@@ -488,7 +487,7 @@ export function createServersAndDistribution(
 
               for (const file of files) {
                 uploadedObjects.push(
-                  new aws.s3.BucketObject(
+                  new aws.s3.BucketObjectv2(
                     `${name}Asset${toPascalCase(from)}${toPascalCase(file)}`,
                     {
                       bucket: bucket.name,

@@ -71,7 +71,6 @@ export class HttpsRedirect extends ComponentResource {
       `${name}Bucket`,
       {
         blockPublicAccess: true,
-        nodes: { bucket: { forceDestroy: true } },
       },
       { parent }
     );
