@@ -39,7 +39,7 @@ import { SSTConstruct } from "./Construct.js";
 import { App } from "./App.js";
 import { Stack } from "./Stack.js";
 import { Secret } from "./Config.js";
-import { useFunctions, NodeJSProps } from "./Function.js";
+import { useFunctions, NodeJSProps, FunctionCopyFilesProps } from "./Function.js";
 import {
   bindEnvironment,
   bindPermissions,
@@ -61,6 +61,7 @@ export interface EdgeFunctionProps {
   environment?: Record<string, string>;
   bind?: SSTConstruct[];
   nodejs?: NodeJSProps;
+  copyFiles?: FunctionCopyFilesProps[];
   scopeOverride?: IConstruct;
 }
 
@@ -98,10 +99,10 @@ export class EdgeFunction extends Construct {
     this.scope = props.scopeOverride || this;
 
     this.props = {
-      ...props,
       runtime: "nodejs18.x",
       timeout: 10,
       memorySize: 1024,
+      ...props,
       environment: props.environment || {},
       permissions: props.permissions || [],
     };
@@ -183,7 +184,7 @@ export class EdgeFunction extends Construct {
   }
 
   private async buildAssetFromHandler() {
-    const { nodejs } = this.props;
+    const { nodejs, copyFiles } = this.props;
 
     useFunctions().add(this.node.addr, {
       ...this.props,
@@ -195,6 +196,7 @@ export class EdgeFunction extends Construct {
           nodejs?.banner || "",
         ].join("\n"),
       },
+      copyFiles
     });
 
     // Build function
