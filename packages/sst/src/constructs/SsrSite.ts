@@ -963,6 +963,7 @@ function handler(event) {
               ...environment,
               ...props.environment,
             },
+            ...cdk?.server,
           });
 
           bucket.grantReadWrite(fn.role!);
