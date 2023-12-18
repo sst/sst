@@ -9,6 +9,7 @@ import {
 } from "./SsrSite.js";
 import { AllowedMethods } from "aws-cdk-lib/aws-cloudfront";
 import { Construct } from "constructs";
+import { getStringifiedRouteTree } from "./util/astroRouteCompressor.js";
 
 const BUILD_META_FILE_NAME: BuildMetaFileName = "sst.buildMeta.json";
 
@@ -47,46 +48,32 @@ export class AstroSite extends SsrSite {
     routes,
     pageResolution,
   }: BuildMetaConfig) {
-    const serializedRoutes = routes.map((route) => ({
-      rt: route.route,
-      pt: new RegExp(route.pattern),
-      t: route.type[1],
-      pr: route.prerender === true ? true : undefined,
-      rp: route.redirectPath,
-      rs: route.redirectStatus,
-    }));
-    function objectToString(obj: any) {
-      return `{ ${Object.entries(obj)
-        .filter(([_, value]) => value !== undefined)
-        .map(
-          ([key, value]) =>
-            `${key}: ${typeof value === "string" ? `'${value}'` : value}`
-        )
-        .join(", ")} }`;
-    }
-
     return `
-  var routes = [${serializedRoutes.map(objectToString).join(", ")}]
-  var match = routes.find((route) => route.pt.test(request.uri));
-  if (match) {
-    if (match.t === "r") {
-      var redirectPath = match.rp;
-      (match.pt.exec(request.uri) || []).forEach((match, index) => {
-        redirectPath = redirectPath.replace(\`\\\${\${index}}\`, match)
-      });
-      return {
-        statusCode: match.rs || 308,
-        headers: { location: { value: redirectPath } },
-      };
-    } else if (match.t === "p" && match.pr) {
+  var routeData = ${getStringifiedRouteTree(routes)};
+  var findMatch = (path, routeData) => {
+    var match = routeData.find((route) => route[0].test(path));
+    return match && Array.isArray(match[1]) ? findMatch(path, match[1]) : match;
+  };
+    
+  var matchedRoute = findMatch(request.uri, routeData);
+  if (matchedRoute) {
+    if (!matchedRoute[1]) {
       ${
         pageResolution === "file"
           ? `request.uri = request.uri === "/" ? "/index.html" : request.uri.replace(/\\/?$/, ".html");`
           : `request.uri = request.uri.replace(/\\/?$/, "/index.html");`
       }
+    } else if (matchedRoute[1] === 2) {
+      var redirectPath = matchedRoute[2];
+      matchedRoute[0].exec(request.uri).forEach((match, index) => {
+        redirectPath = redirectPath.replace(\`\\\${\${index}}\`, match);
+      });
+      return {
+        statusCode: matchedRoute[3] || 308,
+        headers: { location: { value: redirectPath } },
+      };
     }
-  }
-`;
+  }`;
   }
 
   protected plan() {
@@ -113,6 +100,10 @@ export class AstroSite extends SsrSite {
             this.useCloudFrontFunctionHostHeaderInjection(),
             AstroSite.getCFRoutingFunction(buildMeta),
           ],
+        },
+        serverCfFunctionHostOnly: {
+          constructId: "CloudFrontFunctionHostOnly",
+          injections: [this.useCloudFrontFunctionHostHeaderInjection()],
         },
       },
       origins: {
@@ -212,6 +203,7 @@ export class AstroSite extends SsrSite {
             (route) =>
               ({
                 cacheType: "server",
+                cfFunction: "serverCfFunctionHostOnly",
                 pattern: route,
                 origin: "regionalServer",
               } as const)

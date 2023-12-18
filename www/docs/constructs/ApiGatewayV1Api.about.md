@@ -569,10 +569,12 @@ Usage plans allow configuring who can access the API, and setting throttling lim
 ```js
 const api = new ApiGatewayV1Api(stack, "Api", {
   routes: {
-    "GET /notes": "src/list.main",
-    cdk: {
-      method: {
-        apiKeyRequired: true,
+    "GET /notes": {
+      function: "src/list.main",
+      cdk: {
+        method: {
+          apiKeyRequired: true,
+        },
       },
     },
   },

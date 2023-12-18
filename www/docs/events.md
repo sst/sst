@@ -53,6 +53,16 @@ const bus = new EventBus(stack, "bus", {
 This configuration will retry all subscriber errors up to 10 times (with exponential backoff). You can also configure this on a per susbcriber basis.
 :::
 
+The template also creates an `event.ts` which creates an `event` function that can be used to define events.
+
+```ts title="/packages/core/src/event.ts"
+import { createEventBuilder } from "sst/node/event-bus";
+
+export const event = createEventBuilder({
+  bus: "bus",
+});
+```
+
 ---
 ## Define events
 
@@ -60,7 +70,7 @@ In your application you can define events. This definition provides validation u
 
 
 ```ts title="packages/core/src/todo.ts"
-import { event } from "./events";
+import { event } from "./event";
 
 export const Events = {
   Created: event("todo.created", {

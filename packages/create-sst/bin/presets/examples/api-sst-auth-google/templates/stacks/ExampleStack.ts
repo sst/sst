@@ -17,8 +17,7 @@ export function ExampleStack({ stack }: StackContext) {
       },
     },
     routes: {
-      "GET /": "packages/functions/src/auth.ts",
-      "GET /session": "packages/functions/src/session.ts",
+      "GET /session": "packages/functions/src/session.handler",
     },
   });
 

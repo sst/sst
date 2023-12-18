@@ -1,5 +1,59 @@
 # @serverless-stack/cli2
 
+## 2.38.7
+
+### Patch Changes
+
+- [`69b41b9f7`](https://github.com/sst/sst/commit/69b41b9f7e1ffdda5fa31b4d762b8825b30f2a35) Thanks [@thdxr](https://github.com/thdxr)! - internal: add back old context implementation
+
+## 2.38.6
+
+### Patch Changes
+
+- [#3554](https://github.com/sst/sst/pull/3554) [`7d2f92b0d`](https://github.com/sst/sst/commit/7d2f92b0d77f14041ddc0ecc85db81c4bdfb1e4e) Thanks [@justindra](https://github.com/justindra)! - Calling init project does not replace stage if it was called previously
+
+- [#3566](https://github.com/sst/sst/pull/3566) [`491ffbfb6`](https://github.com/sst/sst/commit/491ffbfb64f0d55a1573ac535b636f8b176df1e1) Thanks [@oyed](https://github.com/oyed)! - fix: cjs being thrown in to provider
+
+## 2.38.5
+
+### Patch Changes
+
+- [`36bf1b86d`](https://github.com/sst/sst/commit/36bf1b86d285fe742579a7c9bad3179e5b5df1e1) Thanks [@fwang](https://github.com/fwang)! - Function: use descriptive copy for description and handler name
+
+- [#3574](https://github.com/sst/sst/pull/3574) [`bc30b03af`](https://github.com/sst/sst/commit/bc30b03aff7fdc40b615b1cc422cede28b5100f8) Thanks [@dylanirion](https://github.com/dylanirion)! - Container: fix docker host not resolved in wsl environment
+
+- [`b8a22b459`](https://github.com/sst/sst/commit/b8a22b459117c9210a04ee5467a9d977305a302c) Thanks [@fwang](https://github.com/fwang)! - sst dev: detect regions without AWS IoT support
+
+- [`fc4871967`](https://github.com/sst/sst/commit/fc4871967bb5ee608500e728077b55b3e141338e) Thanks [@fwang](https://github.com/fwang)! - Function: support dot in handler filename
+
+## 2.38.4
+
+### Patch Changes
+
+- [#3575](https://github.com/sst/sst/pull/3575) [`5bbfb70c9`](https://github.com/sst/sst/commit/5bbfb70c9df6bd9f912bc05997d9cf7fc93cc1ec) Thanks [@bayssmekanique](https://github.com/bayssmekanique)! - SsrSite: pin bundled sharp version until deployment issues resolved
+
+- [#3572](https://github.com/sst/sst/pull/3572) [`86df9a351`](https://github.com/sst/sst/commit/86df9a3516c612737225237b63c9fda40ba429aa) Thanks [@bayssmekanique](https://github.com/bayssmekanique)! - AstroSite: optimize CF function
+
+- [#3572](https://github.com/sst/sst/pull/3572) [`86df9a351`](https://github.com/sst/sst/commit/86df9a3516c612737225237b63c9fda40ba429aa) Thanks [@bayssmekanique](https://github.com/bayssmekanique)! - SsrSite: minify CF functions
+
+## 2.38.3
+
+### Patch Changes
+
+- [`50fff51f5`](https://github.com/sst/sst/commit/50fff51f5095ce78969c85059bebf091fe7860c7) Thanks [@thdxr](https://github.com/thdxr)! - AstroSite: fix duplicate cf function
+
+## 2.38.2
+
+### Patch Changes
+
+- [`e2457c9b7`](https://github.com/sst/sst/commit/e2457c9b79d67d18d4faf504d0402a63dd95b016) Thanks [@thdxr](https://github.com/thdxr)! - AstroSite: create host only cf function for server routes
+
+## 2.38.1
+
+### Patch Changes
+
+- [`12baa36d5`](https://github.com/sst/sst/commit/12baa36d5d233c62726fcc7a1b88d2e7b7585203) Thanks [@thdxr](https://github.com/thdxr)! - AstroSite: include cf function for server routes
+
 ## 2.38.0
 
 ### Minor Changes
