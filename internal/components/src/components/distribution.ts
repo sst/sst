@@ -1,7 +1,6 @@
 import {
   Input,
   Output,
-  ComponentResource,
   ComponentResourceOptions,
   output,
   interpolate,
@@ -11,6 +10,7 @@ import { DnsValidatedCertificate } from "./dns-validated-certificate.js";
 import { HttpsRedirect } from "./https-redirect.js";
 import { AWS } from "./helpers/aws.js";
 import { toPascalCase } from "../util/string.js";
+import { Component } from "./component.js";
 
 export interface DistributionDomainArgs {
   /**
@@ -98,7 +98,7 @@ export interface DistributionArgs {
   };
 }
 
-export class Distribution extends ComponentResource {
+export class Distribution extends Component {
   private distribution: aws.cloudfront.Distribution;
   private _customDomainUrl?: Output<string>;
 

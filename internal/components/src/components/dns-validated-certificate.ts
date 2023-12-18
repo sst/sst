@@ -1,12 +1,8 @@
-import {
-  Input,
-  Output,
-  ComponentResource,
-  ComponentResourceOptions,
-} from "@pulumi/pulumi";
+import { Input, ComponentResourceOptions } from "@pulumi/pulumi";
 import * as aws from "@pulumi/aws";
 import { CertificateValidation } from "@pulumi/aws/acm";
 import { toPascalCase } from "../util/string";
+import { Component } from "./component";
 
 /**
  * Properties to create a DNS validated certificate managed by AWS Certificate Manager.
@@ -27,7 +23,7 @@ export interface DnsValidatedCertificateArgs {
   alternativeNames?: Input<string[]>;
 }
 
-export class DnsValidatedCertificate extends ComponentResource {
+export class DnsValidatedCertificate extends Component {
   public certificateValidation: CertificateValidation;
 
   constructor(

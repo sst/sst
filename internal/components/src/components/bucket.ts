@@ -1,12 +1,8 @@
-import {
-  Input,
-  ComponentResource,
-  ComponentResourceOptions,
-  output,
-} from "@pulumi/pulumi";
+import { Input, ComponentResourceOptions, output } from "@pulumi/pulumi";
 import * as aws from "@pulumi/aws";
 import { RandomId } from "@pulumi/random";
 import { prefixName, randomDecToSuffix } from "./helpers/naming";
+import { Component } from "./component";
 
 /**
  * Properties to create a DNS validated certificate managed by AWS Certificate Manager.
@@ -22,7 +18,7 @@ export interface BucketArgs {
   };
 }
 
-export class Bucket extends ComponentResource {
+export class Bucket extends Component {
   public bucket: aws.s3.BucketV2;
 
   constructor(

@@ -1,14 +1,9 @@
-import {
-  ComponentResource,
-  ComponentResourceOptions,
-  Input,
-  all,
-  output,
-} from "@pulumi/pulumi";
+import { ComponentResourceOptions, Input, all, output } from "@pulumi/pulumi";
 import * as aws from "@pulumi/aws";
 import { DnsValidatedCertificate } from "./dns-validated-certificate";
 import { toPascalCase } from "../util/string";
 import { Bucket } from "./bucket";
+import { Component } from "./component";
 
 /**
  * Properties to configure an HTTPS Redirect
@@ -45,7 +40,7 @@ export interface HttpsRedirectArgs {
  * Allows creating a domainA -> domainB redirect using CloudFront and S3.
  * You can specify multiple domains to be redirected.
  */
-export class HttpsRedirect extends ComponentResource {
+export class HttpsRedirect extends Component {
   constructor(
     name: string,
     args: HttpsRedirectArgs,

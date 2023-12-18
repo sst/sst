@@ -20,6 +20,7 @@ import { AWS } from "./helpers/aws.js";
 import { LogGroup } from "./providers/log-group.js";
 import { Duration, toSeconds } from "./util/duration.js";
 import { Size, toMBs } from "./util/size.js";
+import { Component } from "./component.js";
 
 const RETENTION = {
   "1 day": 1,
@@ -267,7 +268,7 @@ export interface FunctionArgs {
   };
 }
 
-export class Function extends ComponentResource {
+export class Function extends Component {
   private function: Output<aws.lambda.Function>;
   private role: aws.iam.Role;
   private fnUrl: Output<aws.lambda.FunctionUrl | undefined>;
