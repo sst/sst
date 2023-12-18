@@ -502,15 +502,6 @@ export class Function extends Component {
           await archive.finalize();
         });
 
-        // TODO remove
-        if (zipPath.includes("WebImageFunctionImageOptimizer")) {
-          const content = await fs.promises.readFile(zipPath);
-          const hash = crypto.createHash("sha256");
-          hash.update(content);
-          console.log(hash.digest("hex"));
-          throw "stop";
-        }
-
         return zipPath;
       });
     }
