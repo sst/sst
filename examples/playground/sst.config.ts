@@ -5,7 +5,7 @@ import path from "path";
 export default $config({
   app() {
     return {
-      name: process.env.BULK ? "bulk" : "playground",
+      name: "playground",
       providers: {
         aws: {
           region: "us-east-1",
@@ -22,10 +22,12 @@ export default $config({
         },
       },
     });
+    throw "stop";
+    return;
 
-    return {
-      bucket: bucket.name,
-    };
+    //return {
+    //  bucket: bucket.name,
+    //};
     const files = [
       "_app-3e6c03fb96512a92.js",
       "_buildManifest.js",
@@ -77,5 +79,8 @@ export default $config({
         );
       });
     }
+    return {
+      bucket: bucket.name,
+    };
   },
 });
