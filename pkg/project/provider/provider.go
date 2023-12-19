@@ -85,6 +85,20 @@ func (a *AwsProvider) Lock(app string, stage string) error {
 	})
 
 	if err == nil {
+		err := os.RemoveAll(
+			filepath.Join(
+				a.workdir,
+				".pulumi",
+			),
+		)
+		if err != nil {
+			return err
+		}
+
+		err = os.MkdirAll(filepath.Dir(a.localStateFor(app, stage)), 0755)
+		if err != nil {
+			return err
+		}
 		file, err := os.Create(a.localStateFor(app, stage))
 		if err != nil {
 			return err
@@ -93,6 +107,7 @@ func (a *AwsProvider) Lock(app string, stage string) error {
 		if _, err := io.Copy(file, result.Body); err != nil {
 			return err
 		}
+
 	}
 
 	return nil

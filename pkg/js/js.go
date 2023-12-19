@@ -148,6 +148,10 @@ func (p *Process) Scan() (Command, string) {
 	return CommandDone, ""
 }
 
+func (p *Process) Kill() error {
+	return p.cmd.Process.Signal(os.Interrupt)
+}
+
 type Message struct {
 }
 

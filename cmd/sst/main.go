@@ -1,12 +1,15 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log/slog"
 	"os"
+	"os/signal"
 	"strings"
 
 	"github.com/fatih/color"
+	"github.com/sst/ion/cmd/sst/ui"
 	"github.com/sst/ion/pkg/global"
 	"github.com/sst/ion/pkg/project"
 
@@ -64,14 +67,27 @@ func main() {
 					if err != nil {
 						return err
 					}
-					printHeader(p)
+					ui := ui.New(ui.ProgressModeDeploy)
+					ui.Header(version, p)
 
-					events, err := p.Stack.Deploy()
+					interruptChannel := make(chan os.Signal, 1)
+					signal.Notify(interruptChannel, os.Interrupt)
+
+					ctx, cancel := context.WithCancel(cli.Context)
+					go func() {
+						<-interruptChannel
+						ui.Interrupt()
+						cancel()
+					}()
+
+					err = p.Stack.Run(ctx, &project.StackInput{
+						Command: "up",
+						OnEvent: ui.Trigger,
+					})
 					if err != nil {
 						return err
 					}
-					progress(ProgressModeDeploy, events)
-
+					ui.Finish()
 					return nil
 				},
 			},
@@ -83,19 +99,27 @@ func main() {
 					if err != nil {
 						return err
 					}
-					printHeader(p)
+					ui := ui.New(ui.ProgressModeRemove)
+					ui.Header(version, p)
 
-					events, err := p.Stack.Remove()
+					interruptChannel := make(chan os.Signal, 1)
+					signal.Notify(interruptChannel, os.Interrupt)
+
+					ctx, cancel := context.WithCancel(cli.Context)
+					go func() {
+						<-interruptChannel
+						ui.Interrupt()
+						cancel()
+					}()
+
+					err = p.Stack.Run(ctx, &project.StackInput{
+						Command: "destroy",
+						OnEvent: ui.Trigger,
+					})
 					if err != nil {
 						return err
 					}
-					progress(ProgressModeRemove, events)
-
-					for evt := range events {
-						if evt.ResourcePreEvent != nil {
-							slog.Info("got op", "op", evt.ResourcePreEvent.Metadata.Op)
-						}
-					}
+					ui.Finish()
 					return nil
 				},
 			},
@@ -107,19 +131,47 @@ func main() {
 					if err != nil {
 						return err
 					}
-					printHeader(p)
+					ui := ui.New(ui.ProgressModeRefresh)
+					ui.Header(version, p)
 
-					events, err := p.Stack.Refresh()
+					interruptChannel := make(chan os.Signal, 1)
+					signal.Notify(interruptChannel, os.Interrupt)
+
+					ctx, cancel := context.WithCancel(cli.Context)
+					go func() {
+						<-interruptChannel
+						ui.Interrupt()
+						cancel()
+					}()
+
+					err = p.Stack.Run(ctx, &project.StackInput{
+						Command: "refresh",
+						OnEvent: ui.Trigger,
+					})
 					if err != nil {
 						return err
 					}
-					progress(ProgressModeRefresh, events)
-
-					for evt := range events {
-						if evt.ResourcePreEvent != nil {
-							slog.Info("got op", "op", evt.ResourcePreEvent.Metadata.Op)
-						}
+					ui.Finish()
+					return nil
+				},
+			},
+			{
+				Name:  "cancel",
+				Flags: []cli.Flag{},
+				Action: func(cli *cli.Context) error {
+					p, err := initProject(cli)
+					if err != nil {
+						return err
 					}
+					printHeader(p)
+
+					err = p.Stack.Cancel()
+					if err != nil {
+						return err
+					}
+
+					fmt.Println("Cancelled any pending deploys")
+
 					return nil
 				},
 			},
@@ -135,36 +187,12 @@ func main() {
 					return err
 				},
 			},
-			{
-				Name:  "cancel",
-				Flags: []cli.Flag{},
-				Action: func(cli *cli.Context) error {
-					p, err := initProject(cli)
-					if err != nil {
-						return err
-					}
-					printHeader(p)
-
-					events, err := p.Stack.Cancel()
-					if err != nil {
-						return err
-					}
-					progress(ProgressModeCancel, events)
-
-					for evt := range events {
-						if evt.ResourcePreEvent != nil {
-							slog.Info("got op", "op", evt.ResourcePreEvent.Metadata.Op)
-						}
-					}
-					return nil
-				},
-			},
 		},
 	}
 
 	err := app.Run(os.Args)
 	if err != nil {
-		panic(err)
+		fmt.Println(err.Error())
 	}
 
 }

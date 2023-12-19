@@ -1,6 +1,7 @@
 package project
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -23,44 +24,44 @@ type StackEvent struct {
 	ConcurrentUpdateEvent *ConcurrentUpdateEvent
 }
 
+type StackInput struct {
+	OnEvent func(event *StackEvent)
+	Command string
+}
+
 type StdOutEvent struct {
 	Text string
 }
 
 type ConcurrentUpdateEvent struct{}
 
+type ConcurrentUpdateError struct{}
+
+func (e *ConcurrentUpdateError) Error() string {
+	return "Concurrent update"
+}
+
 type StackEventStream = chan StackEvent
 
-func (s *stack) run(cmd string) (StackEventStream, error) {
-	slog.Info("running stack command", "cmd", cmd)
-
-	if cmd == "cancel" {
-		err := s.project.backend.Cancel(s.project.app.Name, s.project.app.Stage)
-		if err != nil {
-			return nil, err
-		}
-	}
+func (s *stack) Run(ctx context.Context, input *StackInput) error {
+	slog.Info("running stack command", "cmd", input.Command)
 
 	err := s.project.backend.Lock(s.project.app.Name, s.project.app.Stage)
 	if err != nil {
 		if errors.Is(err, &provider.LockExistsError{}) {
-			out := make(chan StackEvent, 1)
-			out <- StackEvent{
-				ConcurrentUpdateEvent: &ConcurrentUpdateEvent{},
-			}
-			close(out)
-			return out, nil
+			return &ConcurrentUpdateError{}
 		}
-		return nil, err
+		return err
 	}
+	defer s.project.backend.Unlock(s.project.app.Name, s.project.app.Stage)
 
 	env, err := s.project.backend.Env()
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	cli := map[string]interface{}{
-		"command": cmd,
+		"command": input.Command,
 		"backend": s.project.backend.Url(),
 		"paths": map[string]string{
 			"home": global.ConfigDir(),
@@ -72,7 +73,7 @@ func (s *stack) run(cmd string) (StackEventStream, error) {
 	cliBytes, err := json.Marshal(cli)
 	appBytes, err := json.Marshal(s.project.App())
 	if err != nil {
-		return nil, err
+		return err
 	}
 	p, err := js.Eval(js.EvalOptions{
 		Dir: s.project.PathTemp(),
@@ -91,18 +92,18 @@ func (s *stack) run(cmd string) (StackEventStream, error) {
 		),
 	})
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	out := make(StackEventStream)
-	go func() {
-		defer close(out)
-		defer s.project.backend.Unlock(s.project.app.Name, s.project.app.Stage)
-
-		for {
+	for {
+		select {
+		case <-ctx.Done():
+			p.Kill()
+			return nil
+		default:
 			cmd, line := p.Scan()
 			if cmd == js.CommandDone {
-				break
+				return nil
 			}
 
 			if cmd == js.CommandJSON {
@@ -111,39 +112,27 @@ func (s *stack) run(cmd string) (StackEventStream, error) {
 				if err != nil {
 					continue
 				}
+				if evt.ConcurrentUpdateEvent != nil {
+					return &ConcurrentUpdateError{}
+				}
 				slog.Info("stack event", "event", line)
-				out <- evt
-
+				input.OnEvent(&evt)
 			}
 
 			if cmd == js.CommandStdOut {
 				if line == "" {
 					continue
 				}
-				out <- StackEvent{
+				input.OnEvent(&StackEvent{
 					StdOutEvent: &StdOutEvent{
 						Text: line,
 					},
-				}
+				})
 			}
 		}
-	}()
-
-	return out, nil
+	}
 }
 
-func (s *stack) Deploy() (StackEventStream, error) {
-	return s.run("up")
-}
-
-func (s *stack) Cancel() (StackEventStream, error) {
-	return s.run("cancel")
-}
-
-func (s *stack) Remove() (StackEventStream, error) {
-	return s.run("destroy")
-}
-
-func (s *stack) Refresh() (StackEventStream, error) {
-	return s.run("refresh")
+func (s *stack) Cancel() error {
+	return s.project.backend.Cancel(s.project.app.Name, s.project.app.Stage)
 }
