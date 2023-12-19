@@ -30,7 +30,7 @@ class Provider implements dynamic.ResourceProvider {
   async update(
     id: string,
     olds: Inputs,
-    news: Inputs,
+    news: Inputs
   ): Promise<dynamic.UpdateResult> {
     await this.createLogGroup(news);
     await this.setRetentionPolicy(news);
@@ -42,10 +42,12 @@ class Provider implements dynamic.ResourceProvider {
   }
 
   async createLogGroup(inputs: Inputs) {
-    const client = AWS.useClient(CloudWatchLogsClient, inputs.region);
+    const client = AWS.useClient(CloudWatchLogsClient, {
+      region: inputs.region,
+    });
     try {
       await client.send(
-        new CreateLogGroupCommand({ logGroupName: inputs.logGroupName }),
+        new CreateLogGroupCommand({ logGroupName: inputs.logGroupName })
       );
     } catch (error: any) {
       if (error.name === "ResourceAlreadyExistsException") return;
@@ -54,10 +56,12 @@ class Provider implements dynamic.ResourceProvider {
   }
 
   async deleteLogGroup(inputs: Inputs) {
-    const client = AWS.useClient(CloudWatchLogsClient, inputs.region);
+    const client = AWS.useClient(CloudWatchLogsClient, {
+      region: inputs.region,
+    });
     try {
       await client.send(
-        new DeleteLogGroupCommand({ logGroupName: inputs.logGroupName }),
+        new DeleteLogGroupCommand({ logGroupName: inputs.logGroupName })
       );
     } catch (error: any) {
       if (error.name === "ResourceNotFoundException") return;
@@ -66,14 +70,16 @@ class Provider implements dynamic.ResourceProvider {
   }
 
   async setRetentionPolicy(inputs: Inputs) {
-    const client = AWS.useClient(CloudWatchLogsClient, inputs.region);
+    const client = AWS.useClient(CloudWatchLogsClient, {
+      region: inputs.region,
+    });
     const logGroupName = inputs.logGroupName;
     const retentionInDays = inputs.retentionInDays;
     if (retentionInDays === 0) {
       await client.send(new DeleteRetentionPolicyCommand({ logGroupName }));
     } else {
       await client.send(
-        new PutRetentionPolicyCommand({ logGroupName, retentionInDays }),
+        new PutRetentionPolicyCommand({ logGroupName, retentionInDays })
       );
     }
   }
@@ -83,7 +89,7 @@ export class LogGroup extends dynamic.Resource {
   constructor(
     name: string,
     args: LogGroupInputs,
-    opts?: CustomResourceOptions,
+    opts?: CustomResourceOptions
   ) {
     super(new Provider(), `${name}.sst.LogGroup`, args, opts);
   }

@@ -16,6 +16,11 @@ import { sanitizeToPascalCase } from "./naming";
 const useProviderCache = lazy(() => new Map<string, aws.Provider>());
 const useClientCache = lazy(() => new Map<string, any>());
 
+type ClientOptions = {
+  region?: string;
+  retrableErrors?: string[];
+};
+
 export const AWS = {
   bootstrap: {
     forRegion(region: string) {
@@ -35,7 +40,7 @@ export const AWS = {
             .send(
               new GetParameterCommand({
                 Name: `/sst/bootstrap`,
-              }),
+              })
             )
             .catch((err) => {
               if (err instanceof ParameterNotFound) return;
@@ -48,14 +53,14 @@ export const AWS = {
           await s3.send(
             new CreateBucketCommand({
               Bucket: name,
-            }),
+            })
           );
           await ssm.send(
             new PutParameterCommand({
               Name: `/sst/bootstrap`,
               Value: name,
               Type: "String",
-            }),
+            })
           );
           return name;
         })();
@@ -86,7 +91,7 @@ export const AWS = {
   },
   useClient: <C extends any>(
     client: new (config: any) => C,
-    region?: string,
+    opts?: ClientOptions
   ) => {
     const cache = useClientCache();
     const existing = cache.get(client.name);
@@ -103,7 +108,7 @@ export const AWS = {
       };
     })();
     const result = new client({
-      region,
+      region: opts?.region,
       retryStrategy: new StandardRetryStrategy(async () => 10000, {
         retryDecider: (e: any) => {
           // Handle no internet connection => retry
