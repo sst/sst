@@ -44,7 +44,6 @@ func New(mode ProgressMode) *UI {
 		timing:  map[string]time.Time{},
 		outputs: map[string]interface{}{},
 	}
-	result.spinner.Start()
 	if mode == ProgressModeRemove {
 		result.spinner.Suffix = "  Removing..."
 	}
@@ -324,6 +323,7 @@ func (u *UI) Header(version string, p *project.Project) {
 	color.New(color.FgHiBlack).Println(app.Stage)
 
 	fmt.Println()
+	u.spinner.Start()
 }
 
 func formatURN(urn string) string {
