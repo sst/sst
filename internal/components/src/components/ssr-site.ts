@@ -81,7 +81,7 @@ export interface SsrSiteArgs {
    */
   buildCommand?: Input<string>;
   /**
-   * The customDomain for this website. SST supports domains that are hosted
+   * The domain for this website. SST supports domains that are hosted
    * either on [Route 53](https://aws.amazon.com/route53/) or externally.
    *
    * Note that you can also migrate externally hosted domains to Route 53 by
@@ -89,18 +89,18 @@ export interface SsrSiteArgs {
    *
    * @example
    * ```js
-   * customDomain: "domain.com",
+   * domain: "domain.com",
    * ```
    *
    * ```js
-   * customDomain: {
+   * domain: {
    *   domainName: "domain.com",
    *   redirects: ["www.domain.com"],
    *   hostedZone: "domain.com"
    * },
    * ```
    */
-  customDomain?: Input<string | SsrDomainArgs>;
+  domain?: Input<string | SsrDomainArgs>;
   /**
    * Attaches the given list of permissions to the SSR function. Configuring this property is equivalent to calling `attachPermissions()` after the site is created.
    * @example
@@ -933,7 +933,7 @@ if (event.type === "warmer") {
       return new Distribution(
         `${name}Distribution`,
         {
-          customDomain: args.customDomain,
+          domain: args.domain,
           nodes: {
             distribution: {
               origins: Object.values(origins),

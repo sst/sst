@@ -14,10 +14,10 @@ export default $config({
   },
   async run() {
     const site = new sst.Nextjs("Web", {
-      //customDomain: {
-      //  domainName: "ion-next.sst.sh",
-      //  hostedZone: "sst.sh",
-      //},
+      domain: {
+        domainName: "ion-next.sst.sh",
+        hostedZone: "sst.sh",
+      },
     });
 
     //new sst.DistributionInvalidation(`invalidation`, {

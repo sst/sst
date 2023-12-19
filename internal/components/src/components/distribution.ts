@@ -25,7 +25,7 @@ export interface DistributionDomainArgs {
    * @default no redirects configured
    * @example
    * ```js
-   * customDomain: {
+   * domain: {
    *   domainName: "domain.com",
    *   redirects: ["www.domain.com"],
    * }
@@ -37,7 +37,7 @@ export interface DistributionDomainArgs {
    * @default no aliases configured
    * @example
    * ```js
-   * customDomain: {
+   * domain: {
    *   domainName: "app1.domain.com",
    *   aliases: ["app2.domain.com"],
    * }
@@ -50,7 +50,7 @@ export interface DistributionDomainArgs {
    * @default same as the `domainName`
    * @example
    * ```js
-   * customDomain: {
+   * domain: {
    *   domainName: "app.domain.com",
    *   hostedZone: "domain.com",
    * }
@@ -63,7 +63,7 @@ export interface DistributionDomainArgs {
    * Do not set both "hostedZone" and "hostedZoneId".
    * @example
    * ```js
-   * customDomain: {
+   * domain: {
    *   domainName: "domain.com",
    *   hostedZoneId: "Z2FDTNDATAQYW2",
    * }
@@ -74,7 +74,7 @@ export interface DistributionDomainArgs {
 
 export interface DistributionArgs {
   /**
-   * The customDomain for this website. SST supports domains that are hosted
+   * The domain for this website. SST supports domains that are hosted
    * either on [Route 53](https://aws.amazon.com/route53/) or externally.
    *
    * Note that you can also migrate externally hosted domains to Route 53 by
@@ -82,17 +82,17 @@ export interface DistributionArgs {
    *
    * @example
    * ```js
-   * customDomain: "domain.com",
+   * domain: "domain.com",
    * ```
    *
    * ```js
-   * customDomain: {
+   * domain: {
    *   domainName: "domain.com",
    *   redirects: ["www.domain.com"],
    * },
    * ```
    */
-  customDomain?: Input<string | DistributionDomainArgs>;
+  domain?: Input<string | DistributionDomainArgs>;
   nodes: {
     distribution: Omit<aws.cloudfront.DistributionArgs, "viewerCertificate">;
   };
@@ -100,17 +100,17 @@ export interface DistributionArgs {
 
 export class Distribution extends Component {
   private distribution: aws.cloudfront.Distribution;
-  private _customDomainUrl?: Output<string>;
+  private _domainUrl?: Output<string>;
 
   constructor(
     name: string,
     args: DistributionArgs,
-    opts?: ComponentResourceOptions,
+    opts?: ComponentResourceOptions
   ) {
     super("sst:sst:Distribution", name, args, opts);
     const parent = this;
 
-    const customDomain = normalizeCustomDomain();
+    const domain = normalizeDomain();
 
     validateDistributionSettings();
 
@@ -121,25 +121,25 @@ export class Distribution extends Component {
     createRedirects();
 
     this.distribution = distribution;
-    this._customDomainUrl = customDomain?.domainName
-      ? interpolate`https://${customDomain.domainName}`
+    this._domainUrl = domain?.domainName
+      ? interpolate`https://${domain.domainName}`
       : undefined;
 
-    function normalizeCustomDomain() {
-      if (!args.customDomain) return;
+    function normalizeDomain() {
+      if (!args.domain) return;
 
-      return output(args.customDomain).apply((customDomain) => {
-        if (typeof customDomain === "string") {
-          return { domainName: customDomain, aliases: [], redirects: [] };
+      return output(args.domain).apply((domain) => {
+        if (typeof domain === "string") {
+          return { domainName: domain, aliases: [], redirects: [] };
         }
 
-        if (!customDomain.domainName) {
-          throw new Error(`Missing "domainName" for customDomain.`);
+        if (!domain.domainName) {
+          throw new Error(`Missing "domainName" for domain.`);
         }
-        if (customDomain.hostedZone && customDomain.hostedZoneId) {
+        if (domain.hostedZone && domain.hostedZoneId) {
           throw new Error(`Do not set both "hostedZone" and "hostedZoneId".`);
         }
-        return { aliases: [], redirects: [], ...customDomain };
+        return { aliases: [], redirects: [], ...domain };
       });
     }
 
@@ -149,51 +149,51 @@ export class Distribution extends Component {
           .viewerCertificate
       ) {
         throw new Error(
-          `Do not configure the "distribution.certificate". Use the "customDomain" to configure the domain certificate.`,
+          `Do not configure the "distribution.certificate". Use the "domain" to configure the domain certificate.`
         );
       }
       if (
         (args.nodes.distribution as aws.cloudfront.DistributionArgs).aliases
       ) {
         throw new Error(
-          `Do not configure the "distribution.aliases". Use the "customDomain" to configure the domain name.`,
+          `Do not configure the "distribution.aliases". Use the "domain" to configure the domain name.`
         );
       }
     }
 
     function lookupHostedZoneId() {
-      if (!customDomain) return;
+      if (!domain) return;
 
-      return customDomain.apply(async (customDomain) => {
-        if (customDomain.hostedZoneId) return customDomain.hostedZoneId;
+      return domain.apply(async (domain) => {
+        if (domain.hostedZoneId) return domain.hostedZoneId;
 
-        const zoneName = customDomain.hostedZone ?? customDomain.domainName;
+        const zoneName = domain.hostedZone ?? domain.domainName;
         const zone = await aws.route53.getZone({ name: zoneName });
         return zone.zoneId;
       });
     }
 
     function createCertificate() {
-      if (!customDomain || !zoneId) return;
+      if (!domain || !zoneId) return;
 
       // Certificates used for CloudFront distributions are required to be
       // created in the us-east-1 region
       return new DnsValidatedCertificate(
         `${name}Certificate`,
         {
-          domainName: customDomain.domainName,
-          alternativeNames: customDomain.aliases,
+          domainName: domain.domainName,
+          alternativeNames: domain.aliases,
           zoneId,
         },
-        { parent, provider: AWS.useProvider("us-east-1") },
+        { parent, provider: AWS.useProvider("us-east-1") }
       );
     }
 
     function createDistribution() {
-      const aliases = customDomain
-        ? output(customDomain).apply((customDomain) => [
-            customDomain.domainName,
-            ...customDomain.aliases,
+      const aliases = domain
+        ? output(domain).apply((domain) => [
+            domain.domainName,
+            ...domain.aliases,
           ])
         : [];
       return new aws.cloudfront.Distribution(
@@ -210,21 +210,18 @@ export class Distribution extends Component {
               },
           ...args.nodes.distribution,
         },
-        { parent },
+        { parent }
       );
     }
 
     function createRoute53Records(): void {
-      if (!customDomain || !zoneId) {
+      if (!domain || !zoneId) {
         return;
       }
 
       // Create DNS record
-      output(customDomain).apply((customDomain) => {
-        for (const recordName of [
-          customDomain.domainName,
-          ...customDomain.aliases,
-        ]) {
+      output(domain).apply((domain) => {
+        for (const recordName of [domain.domainName, ...domain.aliases]) {
           for (const type of ["A", "AAAA"]) {
             new aws.route53.Record(
               `${name}${type}Record${sanitizeToPascalCase(recordName)}`,
@@ -240,7 +237,7 @@ export class Distribution extends Component {
                   },
                 ],
               },
-              { parent },
+              { parent }
             );
           }
         }
@@ -248,21 +245,21 @@ export class Distribution extends Component {
     }
 
     function createRedirects(): void {
-      if (!zoneId || !customDomain) {
+      if (!zoneId || !domain) {
         return;
       }
 
-      output(customDomain).apply((customDomain) => {
-        if (customDomain.redirects.length === 0) return;
+      output(domain).apply((domain) => {
+        if (domain.redirects.length === 0) return;
 
         new HttpsRedirect(
           `${name}Redirect`,
           {
             zoneId,
-            sourceDomains: customDomain.redirects,
-            targetDomain: customDomain.domainName,
+            sourceDomains: domain.redirects,
+            targetDomain: domain.domainName,
           },
-          { parent },
+          { parent }
         );
       });
     }
@@ -279,8 +276,8 @@ export class Distribution extends Component {
    * If the custom domain is enabled, this is the URL of the website with the
    * custom domain.
    */
-  public get customDomainUrl() {
-    return this._customDomainUrl;
+  public get domainUrl() {
+    return this._domainUrl;
   }
 
   public get nodes() {
