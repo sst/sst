@@ -6,6 +6,8 @@ import (
 	"log/slog"
 	"os"
 	"os/signal"
+	"os/user"
+	"strings"
 
 	"github.com/sst/ion/cmd/sst/ui"
 	"github.com/sst/ion/pkg/global"
@@ -225,22 +227,39 @@ func initProject(cli *cli.Context) (*project.Project, error) {
 	if app.Stage == "" {
 		p.LoadPersonalStage()
 		if app.Stage == "" {
-			for {
-				var stage string
-				fmt.Print("Enter a stage name for your personal stage: ")
-				_, err := fmt.Scanln(&stage)
-				if err != nil {
-					continue
+			var stage string
+			stage = guessStage()
+			if stage == "" {
+				for {
+					fmt.Print("Enter a stage name for your personal stage: ")
+					_, err := fmt.Scanln(&stage)
+					if err != nil {
+						continue
+					}
+					if stage == "" {
+						continue
+					}
+					break
 				}
-				if stage == "" {
-					continue
-				}
-				p.SetPersonalStage(stage)
-				break
 			}
+			p.SetPersonalStage(stage)
 		}
 	}
 	slog.Info("loaded config", "app", app.Name, "stage", app.Stage)
 
 	return p, nil
+}
+
+func guessStage() string {
+	u, err := user.Current()
+	if err != nil {
+		return ""
+	}
+	stage := strings.ToLower(u.Username)
+
+	if stage == "root" || stage == "admin" || stage == "prod" || stage == "dev" || stage == "production" {
+		return ""
+	}
+
+	return stage
 }
