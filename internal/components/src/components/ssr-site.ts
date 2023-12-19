@@ -487,7 +487,7 @@ export function createServersAndDistribution(
               for (const file of files) {
                 uploadedObjects.push(
                   new aws.s3.BucketObjectv2(
-                    `${name}Asset${toPascalCase(from)}${toPascalCase(file)}`,
+                    `${name}Asset${sanitizeToPascalCase(from)}${sanitizeToPascalCase(file)}`,
                     {
                       bucket: bucket.name,
                       source: new asset.FileAsset(
@@ -497,7 +497,7 @@ export function createServersAndDistribution(
                       contentType: getContentType(file, "UTF-8"),
                       cacheControl: fileOption.cacheControl,
                     },
-                    { parent },
+                    { parent, retainOnDelete: true },
                   ),
                 );
               }

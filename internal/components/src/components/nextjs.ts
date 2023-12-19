@@ -915,7 +915,7 @@ if (event.rawPath) {
         routes.forEach(({ sourcemapPath, sourcemapKey }) => {
           if (!sourcemapPath || !sourcemapKey) return;
 
-          new aws.s3.BucketObject(
+          new aws.s3.BucketObjectv2(
             `${name}Sourcemap${sanitizeToPascalCase(sourcemapKey)}`,
             {
               bucket: output($app.providers?.aws?.region!).apply((region) =>
@@ -926,7 +926,7 @@ if (event.rawPath) {
                 path.posix.join("sourcemaps", arn, sourcemapKey),
               ),
             },
-            { parent },
+            { parent, retainOnDelete: true },
           );
         });
       });

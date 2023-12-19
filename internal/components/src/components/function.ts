@@ -514,7 +514,7 @@ export class Function extends Component {
           bucket: region.apply((region) => AWS.bootstrap.forRegion(region)),
           source: zipPath.apply((zipPath) => new asset.FileArchive(zipPath)),
         },
-        { parent },
+        { parent, retainOnDelete: true },
       );
     }
 
