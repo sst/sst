@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/signal"
 	"os/user"
+	"path/filepath"
 	"strings"
 
 	"github.com/sst/ion/cmd/sst/ui"
@@ -18,6 +19,14 @@ import (
 )
 
 var version = "dev"
+
+var logFile = (func() *os.File {
+	logFile, err := os.CreateTemp("", "sst-*.log")
+	if err != nil {
+		panic(err)
+	}
+	return logFile
+})()
 
 func main() {
 	app := &cli.App{
@@ -32,20 +41,7 @@ func main() {
 			},
 		},
 		Before: func(c *cli.Context) error {
-			logFile, err := os.CreateTemp("", "sst-*.log")
-			if err != nil {
-				return err
-			}
-			writers := []io.Writer{logFile}
-			writer := io.MultiWriter(writers...)
-			if c.Bool("verbose") {
-				writers = append(writers, os.Stderr)
-			}
-			slog.SetDefault(
-				slog.New(slog.NewTextHandler(writer, &slog.HandlerOptions{
-					Level: slog.LevelInfo,
-				})),
-			)
+			configureLog(c)
 
 			if global.NeedsPlugins() {
 				fmt.Println("new installation, installing dependencies...")
@@ -200,7 +196,7 @@ func main() {
 
 	err := app.Run(os.Args)
 	if err != nil {
-		fmt.Println(err.Error())
+		panic(err)
 	}
 
 }
@@ -229,6 +225,21 @@ func initProject(cli *cli.Context) (*project.Project, error) {
 		return nil, err
 	}
 
+	_, err = logFile.Seek(0, 0)
+	if err != nil {
+		return nil, err
+	}
+	nextLogFile, err := os.Create(filepath.Join(p.PathTemp(), "sst.log"))
+	if err != nil {
+		return nil, err
+	}
+	_, err = io.Copy(nextLogFile, logFile)
+	if err != nil {
+		return nil, err
+	}
+	logFile = nextLogFile
+	configureLog(cli)
+
 	app := p.App()
 	if app.Stage == "" {
 		p.LoadPersonalStage()
@@ -254,6 +265,19 @@ func initProject(cli *cli.Context) (*project.Project, error) {
 	slog.Info("loaded config", "app", app.Name, "stage", app.Stage)
 
 	return p, nil
+}
+
+func configureLog(cli *cli.Context) {
+	writers := []io.Writer{logFile}
+	if cli.Bool("verbose") {
+		writers = append(writers, os.Stderr)
+	}
+	writer := io.MultiWriter(writers...)
+	slog.SetDefault(
+		slog.New(slog.NewTextHandler(writer, &slog.HandlerOptions{
+			Level: slog.LevelInfo,
+		})),
+	)
 }
 
 func guessStage() string {
