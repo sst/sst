@@ -274,7 +274,6 @@ func (u *UI) Interrupt() {
 }
 
 func (u *UI) Finish() {
-	u.spinner.Stop()
 	if len(u.errors) == 0 && u.complete {
 		color.New(color.FgGreen, color.Bold).Print("\n✔")
 
@@ -307,6 +306,10 @@ func (u *UI) Finish() {
 		}
 		color.New(color.FgWhite).Println(strings.TrimSpace(status.Error))
 	}
+}
+
+func (u *UI) Destroy() {
+	u.spinner.Disable()
 }
 
 func (u *UI) Header(version string, p *project.Project) {

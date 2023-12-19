@@ -38,7 +38,7 @@ type ConcurrentUpdateEvent struct{}
 type ConcurrentUpdateError struct{}
 
 func (e *ConcurrentUpdateError) Error() string {
-	return "Concurrent update"
+	return "Concurrent update detected, run `sst cancel` to delete lock file and retry."
 }
 
 type StackEventStream = chan StackEvent

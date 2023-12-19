@@ -6,9 +6,7 @@ import (
 	"log/slog"
 	"os"
 	"os/signal"
-	"strings"
 
-	"github.com/fatih/color"
 	"github.com/sst/ion/cmd/sst/ui"
 	"github.com/sst/ion/pkg/global"
 	"github.com/sst/ion/pkg/project"
@@ -68,6 +66,7 @@ func main() {
 						return err
 					}
 					ui := ui.New(ui.ProgressModeDeploy)
+					defer ui.Destroy()
 					ui.Header(version, p)
 
 					interruptChannel := make(chan os.Signal, 1)
@@ -100,6 +99,7 @@ func main() {
 						return err
 					}
 					ui := ui.New(ui.ProgressModeRemove)
+					defer ui.Destroy()
 					ui.Header(version, p)
 
 					interruptChannel := make(chan os.Signal, 1)
@@ -132,6 +132,7 @@ func main() {
 						return err
 					}
 					ui := ui.New(ui.ProgressModeRefresh)
+					defer ui.Destroy()
 					ui.Header(version, p)
 
 					interruptChannel := make(chan os.Signal, 1)
@@ -144,15 +145,10 @@ func main() {
 						cancel()
 					}()
 
-					err = p.Stack.Run(ctx, &project.StackInput{
+					return p.Stack.Run(ctx, &project.StackInput{
 						Command: "refresh",
 						OnEvent: ui.Trigger,
 					})
-					if err != nil {
-						return err
-					}
-					ui.Finish()
-					return nil
 				},
 			},
 			{
@@ -163,14 +159,13 @@ func main() {
 					if err != nil {
 						return err
 					}
-					printHeader(p)
 
 					err = p.Stack.Cancel()
 					if err != nil {
 						return err
 					}
 
-					fmt.Println("Cancelled any pending deploys")
+					fmt.Println("Cancelled any pending deploys for", p.App().Name, "/", p.App().Stage)
 
 					return nil
 				},
@@ -243,29 +238,4 @@ func initProject(cli *cli.Context) (*project.Project, error) {
 	slog.Info("loaded config", "app", app.Name, "stage", app.Stage)
 
 	return p, nil
-}
-
-func printHeader(p *project.Project) {
-	color.New(color.FgCyan, color.Bold).Print("SST ❍ ion " + version + "  ")
-	color.New(color.FgHiBlack).Print("ready!\n")
-	app := p.App()
-	fmt.Println()
-	color.New(color.FgCyan, color.Bold).Print("➜  ")
-
-	color.New(color.FgWhite, color.Bold).Printf("%-12s", "App:")
-	color.New(color.FgHiBlack).Println(app.Name)
-
-	color.New(color.FgWhite, color.Bold).Printf("   %-12s", "Stage:")
-	color.New(color.FgHiBlack).Println(app.Stage)
-
-	fmt.Println()
-}
-
-func prettyResourceName(input string) string {
-	splits := strings.Split(input, "::")
-	// take last two
-	splits = splits[len(splits)-2:]
-	splits[0] = strings.ReplaceAll(splits[0], "bucket:", "")
-	joined := strings.Join(splits, "::")
-	return joined
 }
