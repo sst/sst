@@ -30,7 +30,7 @@ class Provider implements dynamic.ResourceProvider {
   async update(
     id: string,
     olds: Inputs,
-    news: Inputs
+    news: Inputs,
   ): Promise<dynamic.UpdateResult> {
     await this.createLogGroup(news);
     await this.setRetentionPolicy(news);
@@ -45,7 +45,7 @@ class Provider implements dynamic.ResourceProvider {
     const client = AWS.useClient(CloudWatchLogsClient, inputs.region);
     try {
       await client.send(
-        new CreateLogGroupCommand({ logGroupName: inputs.logGroupName })
+        new CreateLogGroupCommand({ logGroupName: inputs.logGroupName }),
       );
     } catch (error: any) {
       if (error.name === "ResourceAlreadyExistsException") return;
@@ -57,7 +57,7 @@ class Provider implements dynamic.ResourceProvider {
     const client = AWS.useClient(CloudWatchLogsClient, inputs.region);
     try {
       await client.send(
-        new DeleteLogGroupCommand({ logGroupName: inputs.logGroupName })
+        new DeleteLogGroupCommand({ logGroupName: inputs.logGroupName }),
       );
     } catch (error: any) {
       if (error.name === "ResourceNotFoundException") return;
@@ -73,7 +73,7 @@ class Provider implements dynamic.ResourceProvider {
       await client.send(new DeleteRetentionPolicyCommand({ logGroupName }));
     } else {
       await client.send(
-        new PutRetentionPolicyCommand({ logGroupName, retentionInDays })
+        new PutRetentionPolicyCommand({ logGroupName, retentionInDays }),
       );
     }
   }
@@ -83,7 +83,7 @@ export class LogGroup extends dynamic.Resource {
   constructor(
     name: string,
     args: LogGroupInputs,
-    opts?: CustomResourceOptions
+    opts?: CustomResourceOptions,
   ) {
     super(new Provider(), `${name}.sst.LogGroup`, args, opts);
   }

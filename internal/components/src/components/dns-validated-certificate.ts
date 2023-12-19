@@ -29,7 +29,7 @@ export class DnsValidatedCertificate extends Component {
   constructor(
     name: string,
     args: DnsValidatedCertificateArgs,
-    opts?: ComponentResourceOptions
+    opts?: ComponentResourceOptions,
   ) {
     super("sst:sst:Certificate", name, args, opts);
 
@@ -43,7 +43,7 @@ export class DnsValidatedCertificate extends Component {
         validationMethod: "DNS",
         subjectAlternativeNames: alternativeNames ?? [],
       },
-      { parent }
+      { parent },
     );
 
     const records = certificate.domainValidationOptions.apply((options) =>
@@ -71,7 +71,7 @@ export class DnsValidatedCertificate extends Component {
           records.map((record) => record.fqdn)
         ),
       },
-      { parent }
+      { parent },
     );
 
     this.certificateValidation = certificateValidation;

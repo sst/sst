@@ -12,7 +12,7 @@ export class HandlerFunction extends Function {
   constructor(
     name: string,
     args: HandlerFunctionArgs,
-    opts?: ComponentResourceOptions
+    opts?: ComponentResourceOptions,
   ) {
     const buildResult = output(args).apply((args) => build(name, args));
     const successful = buildResult.apply((result) => {
@@ -22,7 +22,7 @@ export class HandlerFunction extends Function {
     const hash = successful.apply(async (result) => {
       const content = await fs.readFile(
         path.join(result.out, result.handler),
-        "utf8"
+        "utf8",
       );
       const hash = crypto.createHash("sha256");
       hash.update(content);
@@ -38,7 +38,7 @@ export class HandlerFunction extends Function {
         bundle: successful.out,
         bundleHash: hash,
       },
-      opts
+      opts,
     );
   }
 }

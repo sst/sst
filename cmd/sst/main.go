@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"io"
 	"log/slog"
 	"os"
 	"os/signal"
@@ -31,13 +32,18 @@ func main() {
 			},
 		},
 		Before: func(c *cli.Context) error {
-			level := slog.LevelWarn
+			logFile, err := os.CreateTemp("", "sst-*.log")
+			if err != nil {
+				return err
+			}
+			writers := []io.Writer{logFile}
+			writer := io.MultiWriter(writers...)
 			if c.Bool("verbose") {
-				level = slog.LevelInfo
+				writers = append(writers, os.Stderr)
 			}
 			slog.SetDefault(
-				slog.New(slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{
-					Level: level,
+				slog.New(slog.NewTextHandler(writer, &slog.HandlerOptions{
+					Level: slog.LevelInfo,
 				})),
 			)
 

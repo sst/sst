@@ -44,7 +44,7 @@ export class HttpsRedirect extends Component {
   constructor(
     name: string,
     args: HttpsRedirectArgs,
-    opts?: ComponentResourceOptions
+    opts?: ComponentResourceOptions,
   ) {
     super("sst:sst:HttpsRedirect", name, args, opts);
 
@@ -55,11 +55,11 @@ export class HttpsRedirect extends Component {
       {
         domainName: output(args.sourceDomains).apply((domains) => domains[0]),
         alternativeNames: output(args.sourceDomains).apply((domains) =>
-          domains.slice(1)
+          domains.slice(1),
         ),
         zoneId: args.zoneId,
       },
-      { parent }
+      { parent },
     );
 
     const bucket = new Bucket(
@@ -67,7 +67,7 @@ export class HttpsRedirect extends Component {
       {
         blockPublicAccess: true,
       },
-      { parent }
+      { parent },
     );
 
     const bucketWebsite = new aws.s3.BucketWebsiteConfigurationV2(
@@ -79,7 +79,7 @@ export class HttpsRedirect extends Component {
           protocol: "https",
         },
       },
-      { parent }
+      { parent },
     );
 
     const distribution = new aws.cloudfront.Distribution(
@@ -95,7 +95,7 @@ export class HttpsRedirect extends Component {
         },
         comment: all([args.targetDomain, args.sourceDomains]).apply(
           ([targetDomain, sourceDomains]) =>
-            `Redirect to ${targetDomain} from ${sourceDomains.join(", ")}`
+            `Redirect to ${targetDomain} from ${sourceDomains.join(", ")}`,
         ),
         priceClass: "PriceClass_All",
         viewerCertificate: {
@@ -115,7 +115,7 @@ export class HttpsRedirect extends Component {
           },
         ],
       },
-      { parent }
+      { parent },
     );
 
     output(args.sourceDomains).apply((sourceDomains) => {
@@ -135,7 +135,7 @@ export class HttpsRedirect extends Component {
                 },
               ],
             },
-            { parent }
+            { parent },
           );
         }
       }

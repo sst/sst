@@ -24,7 +24,7 @@ export class Bucket extends Component {
   constructor(
     name: string,
     args?: BucketArgs,
-    opts?: ComponentResourceOptions
+    opts?: ComponentResourceOptions,
   ) {
     super("sst:sst:Bucket", name, args, opts);
 
@@ -36,14 +36,14 @@ export class Bucket extends Component {
       `${name}Bucket`,
       {
         bucket: randomId.dec.apply((dec) =>
-          prefixName(name.toLowerCase(), `-${randomDecToSuffix(dec)}`)
+          prefixName(name.toLowerCase(), `-${randomDecToSuffix(dec)}`),
         ),
         forceDestroy: true,
         ...args?.nodes?.bucket,
       },
       {
         parent,
-      }
+      },
     );
 
     output(args?.blockPublicAccess).apply((blockPublicAccess) => {
@@ -58,7 +58,7 @@ export class Bucket extends Component {
           ignorePublicAcls: true,
           restrictPublicBuckets: true,
         },
-        { parent }
+        { parent },
       );
     });
 

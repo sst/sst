@@ -105,7 +105,7 @@ export class Distribution extends Component {
   constructor(
     name: string,
     args: DistributionArgs,
-    opts?: ComponentResourceOptions
+    opts?: ComponentResourceOptions,
   ) {
     super("sst:sst:Distribution", name, args, opts);
     const parent = this;
@@ -149,14 +149,14 @@ export class Distribution extends Component {
           .viewerCertificate
       ) {
         throw new Error(
-          `Do not configure the "distribution.certificate". Use the "customDomain" to configure the domain certificate.`
+          `Do not configure the "distribution.certificate". Use the "customDomain" to configure the domain certificate.`,
         );
       }
       if (
         (args.nodes.distribution as aws.cloudfront.DistributionArgs).aliases
       ) {
         throw new Error(
-          `Do not configure the "distribution.aliases". Use the "customDomain" to configure the domain name.`
+          `Do not configure the "distribution.aliases". Use the "customDomain" to configure the domain name.`,
         );
       }
     }
@@ -185,7 +185,7 @@ export class Distribution extends Component {
           alternativeNames: customDomain.aliases,
           zoneId,
         },
-        { parent, provider: AWS.useProvider("us-east-1") }
+        { parent, provider: AWS.useProvider("us-east-1") },
       );
     }
 
@@ -210,7 +210,7 @@ export class Distribution extends Component {
               },
           ...args.nodes.distribution,
         },
-        { parent }
+        { parent },
       );
     }
 
@@ -240,7 +240,7 @@ export class Distribution extends Component {
                   },
                 ],
               },
-              { parent }
+              { parent },
             );
           }
         }
@@ -262,7 +262,7 @@ export class Distribution extends Component {
             sourceDomains: customDomain.redirects,
             targetDomain: customDomain.domainName,
           },
-          { parent }
+          { parent },
         );
       });
     }
