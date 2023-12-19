@@ -2,13 +2,9 @@ import {
   ComponentResource,
   ComponentResourceOptions,
   Inputs,
-  Output,
-  all,
-  asset,
   interpolate,
   output,
 } from "@pulumi/pulumi";
-import { toPascalCase } from "../util/string.js";
 import { prefixName } from "./helpers/naming.js";
 
 export class Component extends ComponentResource {
@@ -60,7 +56,8 @@ export class Component extends ComponentResource {
                 name: interpolate`${prefixName(args.name)}${suffix}`,
               };
               break;
-            case "aws:s3/bucketV2:BucketV2":
+            case "aws:acm/certificate:Certificate":
+            case "aws:acm/certificateValidation:CertificateValidation":
             case "aws:iam/rolePolicyAttachment:RolePolicyAttachment":
             case "aws:cloudfront/cachePolicy:CachePolicy":
             case "aws:cloudfront/distribution:Distribution":
@@ -76,6 +73,7 @@ export class Component extends ComponentResource {
             case "aws:s3/bucketObjectv2:BucketObjectv2":
             case "aws:s3/bucketPolicy:BucketPolicy":
             case "aws:s3/bucketPublicAccessBlock:BucketPublicAccessBlock":
+            case "aws:s3/bucketV2:BucketV2":
               break;
             default:
               throw new Error(

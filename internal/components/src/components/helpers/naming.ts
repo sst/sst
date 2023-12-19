@@ -1,3 +1,8 @@
+export function sanitizeToPascalCase(str: string) {
+  const strNorm = str.replace(/[^a-zA-Z0-9]/g, "");
+  return strNorm.charAt(0).toUpperCase() + strNorm.slice(1);
+}
+
 export function prefixName(name: string, suffix?: string) {
   const suffixStr = suffix ?? "";
 
@@ -30,9 +35,15 @@ export function prefixName(name: string, suffix?: string) {
 }
 
 export function randomDecToSuffix(dec: string) {
-  let suffix = parseInt(dec).toString(36);
-  while (suffix.length < 6) {
-    suffix = "a" + suffix;
+  return numberToLowercaseAlphaString(parseInt(dec), 8).padStart(8, "s");
+}
+
+function numberToLowercaseAlphaString(num: number, len: number) {
+  let result = "";
+  while (num > 0 && result.length < len) {
+    let remainder = (num - 1) % 26;
+    result = String.fromCharCode(97 + remainder) + result;
+    num = Math.floor((num - 1) / 26);
   }
-  return suffix;
+  return result;
 }

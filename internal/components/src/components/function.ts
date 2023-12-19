@@ -501,7 +501,6 @@ export class Function extends Component {
           archive.glob("**", { cwd: bundle, dot: true }, { date: new Date(0) });
           await archive.finalize();
         });
-        throw "stop";
 
         return zipPath;
       });

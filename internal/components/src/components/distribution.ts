@@ -9,8 +9,8 @@ import * as aws from "@pulumi/aws";
 import { DnsValidatedCertificate } from "./dns-validated-certificate.js";
 import { HttpsRedirect } from "./https-redirect.js";
 import { AWS } from "./helpers/aws.js";
-import { toPascalCase } from "../util/string.js";
 import { Component } from "./component.js";
+import { sanitizeToPascalCase } from "./helpers/naming.js";
 
 export interface DistributionDomainArgs {
   /**
@@ -227,7 +227,7 @@ export class Distribution extends Component {
         ]) {
           for (const type of ["A", "AAAA"]) {
             new aws.route53.Record(
-              `${name}${type}Record${toPascalCase(recordName)}`,
+              `${name}${type}Record${sanitizeToPascalCase(recordName)}`,
               {
                 name: recordName,
                 zoneId,

@@ -1,8 +1,8 @@
 import { Input, ComponentResourceOptions } from "@pulumi/pulumi";
 import * as aws from "@pulumi/aws";
 import { CertificateValidation } from "@pulumi/aws/acm";
-import { toPascalCase } from "../util/string";
 import { Component } from "./component";
+import { sanitizeToPascalCase } from "./helpers/naming";
 
 /**
  * Properties to create a DNS validated certificate managed by AWS Certificate Manager.
@@ -46,12 +46,11 @@ export class DnsValidatedCertificate extends Component {
       { parent }
     );
 
-    const records: aws.route53.Record[] = [];
-    certificate.domainValidationOptions.apply((options) => {
-      options.forEach((option) => {
-        records.push(
+    const records = certificate.domainValidationOptions.apply((options) =>
+      options.map(
+        (option) =>
           new aws.route53.Record(
-            `${name}Record${toPascalCase(option.resourceRecordName)}`,
+            `${name}Record${sanitizeToPascalCase(option.resourceRecordName)}`,
             {
               name: option.resourceRecordName,
               zoneId,
@@ -61,15 +60,16 @@ export class DnsValidatedCertificate extends Component {
             },
             { parent }
           )
-        );
-      });
-    });
+      )
+    );
 
     const certificateValidation = new aws.acm.CertificateValidation(
       `${name}Validation`,
       {
         certificateArn: certificate.arn,
-        validationRecordFqdns: records.map((record) => record.fqdn),
+        validationRecordFqdns: records.apply((records) =>
+          records.map((record) => record.fqdn)
+        ),
       },
       { parent }
     );

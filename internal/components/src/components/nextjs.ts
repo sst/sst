@@ -24,10 +24,9 @@ import {
 } from "./ssr-site.js";
 import { Distribution } from "./distribution.js";
 import { AWS } from "./helpers/aws.js";
-import { toPascalCase } from "../util/string.js";
-import { prefixName } from "./helpers/naming.js";
 import { Bucket } from "./bucket.js";
 import { Component } from "./component.js";
+import { sanitizeToPascalCase } from "./helpers/naming.js";
 
 const LAYER_VERSION = "2";
 const DEFAULT_OPEN_NEXT_VERSION = "2.3.1";
@@ -919,7 +918,7 @@ if (event.rawPath) {
           if (!sourcemapPath || !sourcemapKey) return;
 
           new aws.s3.BucketObject(
-            `${name}Sourcemap${toPascalCase(sourcemapKey)}`,
+            `${name}Sourcemap${sanitizeToPascalCase(sourcemapKey)}`,
             {
               bucket: output($app.providers?.aws?.region!).apply((region) =>
                 AWS.bootstrap.forRegion(region)
