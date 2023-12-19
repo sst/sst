@@ -16,7 +16,7 @@ export class Component extends ComponentResource {
     type: string,
     name: string,
     args?: Inputs,
-    opts?: ComponentResourceOptions
+    opts?: ComponentResourceOptions,
   ) {
     super(type, name, args, {
       transformations: [
@@ -24,7 +24,7 @@ export class Component extends ComponentResource {
           // Ensure "parent" is set
           if (args.type !== type && !args.opts.parent) {
             throw new Error(
-              `In "${name}" component, parent of "${args.name}" (${args.type}) is not set`
+              `In "${name}" component, parent of "${args.name}" (${args.type}) is not set`,
             );
           }
 
@@ -35,7 +35,7 @@ export class Component extends ComponentResource {
             !args.name.startsWith(args.opts.parent!.__name)
           ) {
             throw new Error(
-              `In "${name}" component, the name of "${args.name}" (${args.type}) is not prefixed with parent's name`
+              `In "${name}" component, the name of "${args.name}" (${args.type}) is not prefixed with parent's name`,
             );
           }
 
@@ -54,7 +54,7 @@ export class Component extends ComponentResource {
               break;
             case "aws:sqs/queue:Queue":
               const suffix = output(args.props.fifoQueue).apply((fifo) =>
-                fifo ? ".fifo" : ""
+                fifo ? ".fifo" : "",
               );
               overrides = {
                 name: interpolate`${prefixName(args.name)}${suffix}`,
@@ -79,7 +79,7 @@ export class Component extends ComponentResource {
               break;
             default:
               throw new Error(
-                `In "${name}" component, the physical name of "${args.name}" (${args.type}) is not prefixed`
+                `In "${name}" component, the physical name of "${args.name}" (${args.type}) is not prefixed`,
               );
           }
           return {

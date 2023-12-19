@@ -29,7 +29,7 @@ export class DnsValidatedCertificate extends Component {
   constructor(
     name: string,
     args: DnsValidatedCertificateArgs,
-    opts?: ComponentResourceOptions
+    opts?: ComponentResourceOptions,
   ) {
     super("sst:sst:Certificate", name, args, opts);
 
@@ -43,7 +43,7 @@ export class DnsValidatedCertificate extends Component {
         validationMethod: "DNS",
         subjectAlternativeNames: alternativeNames ?? [],
       },
-      { parent }
+      { parent },
     );
 
     const records: aws.route53.Record[] = [];
@@ -59,8 +59,8 @@ export class DnsValidatedCertificate extends Component {
               records: [option.resourceRecordValue],
               ttl: 60,
             },
-            { parent }
-          )
+            { parent },
+          ),
         );
       });
     });
@@ -71,7 +71,7 @@ export class DnsValidatedCertificate extends Component {
         certificateArn: certificate.arn,
         validationRecordFqdns: records.map((record) => record.fqdn),
       },
-      { parent }
+      { parent },
     );
 
     this.certificateValidation = certificateValidation;

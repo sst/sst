@@ -3,7 +3,7 @@ import path from "path";
 
 export async function findAbove(
   dir: string,
-  target: string
+  target: string,
 ): Promise<string | undefined> {
   if (dir === "/") return undefined;
   if (await existsAsync(path.join(dir, target))) return dir;
@@ -37,7 +37,7 @@ export async function findBelow(dir: string, target: string) {
 export function isChild(parent: string, child: string) {
   const relative = path.relative(parent, child);
   return Boolean(
-    relative && !relative.startsWith("..") && !path.isAbsolute(relative)
+    relative && !relative.startsWith("..") && !path.isAbsolute(relative),
   );
 }
 

@@ -27,7 +27,7 @@ class Provider implements dynamic.ResourceProvider {
         FunctionName: inputs.functionName,
         S3Bucket: inputs.s3Bucket,
         S3Key: inputs.s3Key,
-      })
+      }),
     );
     return { id: inputs.functionName, outs: inputs };
   }
@@ -35,7 +35,7 @@ class Provider implements dynamic.ResourceProvider {
   async update(
     id: string,
     olds: Inputs,
-    news: Inputs
+    news: Inputs,
   ): Promise<dynamic.UpdateResult> {
     const client = AWS.useClient(LambdaClient, news.region);
     await client.send(
@@ -43,7 +43,7 @@ class Provider implements dynamic.ResourceProvider {
         FunctionName: news.functionName,
         S3Bucket: news.s3Bucket,
         S3Key: news.s3Key,
-      })
+      }),
     );
     return { outs: news };
   }
@@ -53,7 +53,7 @@ export class FunctionCodeUpdater extends dynamic.Resource {
   constructor(
     name: string,
     args: FunctionCodeUpdaterInputs,
-    opts?: CustomResourceOptions
+    opts?: CustomResourceOptions,
   ) {
     super(new Provider(), `${name}.sst.FunctionCodeUpdater`, args, opts);
   }
