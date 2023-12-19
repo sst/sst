@@ -81,7 +81,7 @@ export async function run(program: PulumiFn) {
         PULUMI_CONFIG_PASSPHRASE: "",
         PULUMI_SKIP_UPDATE_CHECK: "true",
         PULUMI_EXPERIMENTAL: "1",
-        PULUMI_SKIP_CHECKPOINTS: "true",
+        // PULUMI_SKIP_CHECKPOINTS: "true",
         NODE_PATH: $cli.paths.work + "/node_modules",
         ...$cli.env,
       },
@@ -93,6 +93,7 @@ export async function run(program: PulumiFn) {
       onEvent: (evt) => {
         console.log("~j" + JSON.stringify(evt));
       },
+      // onOutput: console.log,
       logVerbosity: 11,
     });
   } catch (e: any) {

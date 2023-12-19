@@ -164,7 +164,7 @@ export class Distribution extends Component {
     function lookupHostedZoneId() {
       if (!customDomain) return;
 
-      return output(customDomain).apply(async (customDomain) => {
+      return customDomain.apply(async (customDomain) => {
         if (customDomain.hostedZoneId) return customDomain.hostedZoneId;
 
         const zoneName = customDomain.hostedZone ?? customDomain.domainName;

@@ -1,4 +1,4 @@
-import { Input, ComponentResourceOptions } from "@pulumi/pulumi";
+import { Input, ComponentResourceOptions, output } from "@pulumi/pulumi";
 import * as aws from "@pulumi/aws";
 import { CertificateValidation } from "@pulumi/aws/acm";
 import { Component } from "./component";
@@ -36,31 +36,32 @@ export class DnsValidatedCertificate extends Component {
     const parent = this;
     const { domainName, alternativeNames, zoneId } = args;
 
-    const certificate = new aws.acm.Certificate(
-      `${name}Certificate`,
-      {
-        domainName,
-        validationMethod: "DNS",
-        subjectAlternativeNames: alternativeNames ?? [],
-      },
-      { parent },
-    );
+    const certificate = output(zoneId).apply((zoneId) => {
+      return new aws.acm.Certificate(
+        `${name}Certificateeee`,
+        {
+          domainName,
+          validationMethod: "DNS",
+          subjectAlternativeNames: alternativeNames ?? [],
+        },
+        { parent },
+      );
+    });
 
     const records = certificate.domainValidationOptions.apply((options) =>
-      options.map(
-        (option) =>
-          new aws.route53.Record(
-            `${name}Record${sanitizeToPascalCase(option.resourceRecordName)}`,
-            {
-              name: option.resourceRecordName,
-              zoneId,
-              type: option.resourceRecordType,
-              records: [option.resourceRecordValue],
-              ttl: 60,
-            },
-            { parent }
-          )
-      )
+      options.map((option) => {
+        return new aws.route53.Record(
+          `${name}Record${sanitizeToPascalCase(option.resourceRecordName)}`,
+          {
+            name: option.resourceRecordName,
+            zoneId,
+            type: option.resourceRecordType,
+            records: [option.resourceRecordValue],
+            ttl: 60,
+          },
+          { parent },
+        );
+      }),
     );
 
     const certificateValidation = new aws.acm.CertificateValidation(
@@ -68,7 +69,7 @@ export class DnsValidatedCertificate extends Component {
       {
         certificateArn: certificate.arn,
         validationRecordFqdns: records.apply((records) =>
-          records.map((record) => record.fqdn)
+          records.map((record) => record.fqdn),
         ),
       },
       { parent },
