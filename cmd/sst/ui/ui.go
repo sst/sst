@@ -274,6 +274,7 @@ func (u *UI) Interrupt() {
 }
 
 func (u *UI) Finish() {
+	u.spinner.Disable()
 	if len(u.errors) == 0 && u.complete {
 		color.New(color.FgGreen, color.Bold).Print("\n✔")
 

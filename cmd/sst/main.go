@@ -145,10 +145,15 @@ func main() {
 						cancel()
 					}()
 
-					return p.Stack.Run(ctx, &project.StackInput{
+					err = p.Stack.Run(ctx, &project.StackInput{
 						Command: "refresh",
 						OnEvent: ui.Trigger,
 					})
+					if err != nil {
+						return err
+					}
+					ui.Finish()
+					return nil
 				},
 			},
 			{
