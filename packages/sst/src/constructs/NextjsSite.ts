@@ -45,7 +45,7 @@ export interface NextjsSiteProps extends Omit<SsrSiteProps, "nodejs"> {
    * @default Latest OpenNext version
    * @example
    * ```js
-   * openNextVersion: "2.2.4",
+   * openNextVersion: "2.3.3",
    * ```
    */
   openNextVersion?: string;
@@ -149,7 +149,7 @@ export interface NextjsSiteProps extends Omit<SsrSiteProps, "nodejs"> {
 }
 
 const LAYER_VERSION = "2";
-const DEFAULT_OPEN_NEXT_VERSION = "2.3.1";
+const DEFAULT_OPEN_NEXT_VERSION = "2.3.3";
 const DEFAULT_CACHE_POLICY_ALLOWED_HEADERS = [
   "accept",
   "rsc",
@@ -265,14 +265,14 @@ export class NextjsSite extends SsrSite {
       },
       layers: this.isPerRouteLoggingEnabled()
         ? [
-            LayerVersion.fromLayerVersionArn(
-              this,
-              "SSTExtension",
-              cdk?.server?.architecture?.name === Architecture.X86_64.name
-                ? `arn:aws:lambda:${stack.region}:226609089145:layer:sst-extension-amd64:${LAYER_VERSION}`
-                : `arn:aws:lambda:${stack.region}:226609089145:layer:sst-extension-arm64:${LAYER_VERSION}`
-            ),
-          ]
+          LayerVersion.fromLayerVersionArn(
+            this,
+            "SSTExtension",
+            cdk?.server?.architecture?.name === Architecture.X86_64.name
+              ? `arn:aws:lambda:${stack.region}:226609089145:layer:sst-extension-amd64:${LAYER_VERSION}`
+              : `arn:aws:lambda:${stack.region}:226609089145:layer:sst-extension-arm64:${LAYER_VERSION}`
+          ),
+        ]
         : undefined,
     };
     this.removeSourcemaps();
@@ -286,26 +286,26 @@ export class NextjsSite extends SsrSite {
       },
       edgeFunctions: edge
         ? {
-            edgeServer: {
-              constructId: "ServerFunction",
-              function: serverConfig,
-            },
-          }
+          edgeServer: {
+            constructId: "ServerFunction",
+            function: serverConfig,
+          },
+        }
         : undefined,
       origins: {
         ...(edge
           ? {}
           : {
-              regionalServer: {
-                type: "function",
-                constructId: "ServerFunction",
-                function: serverConfig,
-                streaming: experimental?.streaming,
-                injections: this.isPerRouteLoggingEnabled()
-                  ? [this.useServerFunctionPerRouteLoggingInjection()]
-                  : [],
-              },
-            }),
+            regionalServer: {
+              type: "function",
+              constructId: "ServerFunction",
+              function: serverConfig,
+              streaming: experimental?.streaming,
+              injections: this.isPerRouteLoggingEnabled()
+                ? [this.useServerFunctionPerRouteLoggingInjection()]
+                : [],
+            },
+          }),
         imageOptimizer: {
           type: "image-optimization-function",
           constructId: "ImageFunction",
@@ -345,46 +345,46 @@ export class NextjsSite extends SsrSite {
       behaviors: [
         ...(edge
           ? [
-              {
-                cacheType: "server",
-                cfFunction: "serverCfFunction",
-                edgeFunction: "edgeServer",
-                origin: "s3",
-              } as const,
-              {
-                cacheType: "server",
-                pattern: "api/*",
-                cfFunction: "serverCfFunction",
-                edgeFunction: "edgeServer",
-                origin: "s3",
-              } as const,
-              {
-                cacheType: "server",
-                pattern: "_next/data/*",
-                cfFunction: "serverCfFunction",
-                edgeFunction: "edgeServer",
-                origin: "s3",
-              } as const,
-            ]
+            {
+              cacheType: "server",
+              cfFunction: "serverCfFunction",
+              edgeFunction: "edgeServer",
+              origin: "s3",
+            } as const,
+            {
+              cacheType: "server",
+              pattern: "api/*",
+              cfFunction: "serverCfFunction",
+              edgeFunction: "edgeServer",
+              origin: "s3",
+            } as const,
+            {
+              cacheType: "server",
+              pattern: "_next/data/*",
+              cfFunction: "serverCfFunction",
+              edgeFunction: "edgeServer",
+              origin: "s3",
+            } as const,
+          ]
           : [
-              {
-                cacheType: "server",
-                cfFunction: "serverCfFunction",
-                origin: "regionalServer",
-              } as const,
-              {
-                cacheType: "server",
-                pattern: "api/*",
-                cfFunction: "serverCfFunction",
-                origin: "regionalServer",
-              } as const,
-              {
-                cacheType: "server",
-                pattern: "_next/data/*",
-                cfFunction: "serverCfFunction",
-                origin: "regionalServer",
-              } as const,
-            ]),
+            {
+              cacheType: "server",
+              cfFunction: "serverCfFunction",
+              origin: "regionalServer",
+            } as const,
+            {
+              cacheType: "server",
+              pattern: "api/*",
+              cfFunction: "serverCfFunction",
+              origin: "regionalServer",
+            } as const,
+            {
+              cacheType: "server",
+              pattern: "_next/data/*",
+              cfFunction: "serverCfFunction",
+              origin: "regionalServer",
+            } as const,
+          ]),
         {
           cacheType: "server",
           pattern: "_next/image*",
@@ -394,15 +394,15 @@ export class NextjsSite extends SsrSite {
         // create 1 behaviour for each top level asset file/folder
         ...fs.readdirSync(path.join(sitePath, ".open-next/assets")).map(
           (item) =>
-            ({
-              cacheType: "static",
-              pattern: fs
-                .statSync(path.join(sitePath, ".open-next/assets", item))
-                .isDirectory()
-                ? `${item}/*`
-                : item,
-              origin: "s3",
-            } as const)
+          ({
+            cacheType: "static",
+            pattern: fs
+              .statSync(path.join(sitePath, ".open-next/assets", item))
+              .isDirectory()
+              ? `${item}/*`
+              : item,
+            origin: "s3",
+          } as const)
         ),
       ],
       cachePolicyAllowedHeaders: DEFAULT_CACHE_POLICY_ALLOWED_HEADERS,
@@ -527,14 +527,13 @@ export class NextjsSite extends SsrSite {
         ...metadata.data,
         routes: this.isPerRouteLoggingEnabled()
           ? {
-              logGroupPrefix: `/sst/lambda/${
-                (this.serverFunction as SsrFunction).functionName
+            logGroupPrefix: `/sst/lambda/${(this.serverFunction as SsrFunction).functionName
               }`,
-              data: this.useRoutes().map(({ route, logGroupPath }) => ({
-                route,
-                logGroupPath,
-              })),
-            }
+            data: this.useRoutes().map(({ route, logGroupPath }) => ({
+              route,
+              logGroupPath,
+            })),
+          }
           : undefined,
       },
     };
@@ -679,11 +678,11 @@ export class NextjsSite extends SsrSite {
     return `
 if (event.rawPath) {
   const routeData = ${JSON.stringify(
-    this.useRoutes().map(({ regex, logGroupPath }) => ({
-      regex,
-      logGroupPath,
-    }))
-  )}.find(({ regex }) => event.rawPath.match(new RegExp(regex)));
+      this.useRoutes().map(({ regex, logGroupPath }) => ({
+        regex,
+        logGroupPath,
+      }))
+    )}.find(({ regex }) => event.rawPath.match(new RegExp(regex)));
   if (routeData) {
     console.log("::sst::" + JSON.stringify({
       action:"log.split",
