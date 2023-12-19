@@ -20,6 +20,7 @@ import { Duration, toSeconds } from "./util/duration.js";
 import { DistributionInvalidation } from "./providers/distribution-invalidation.js";
 import { AWS } from "./helpers/aws.js";
 import { Bucket } from "./bucket.js";
+import { BucketFile } from "./index.js";
 import { sanitizeToPascalCase } from "./helpers/naming.js";
 
 type CloudFrontFunctionConfig = { injections: string[] };
@@ -412,7 +413,7 @@ export function createServersAndDistribution(
     const ssrFunctions: Function[] = [];
     let singletonCachePolicy: aws.cloudfront.CachePolicy;
 
-    const uploadedObjects = uploadAssets();
+    const bucketFile = uploadAssets();
     const cfFunctions = createCloudFrontFunctions();
     const edgeFunctions = createEdgeFunctions();
     const origins = buildOrigins();
@@ -425,9 +426,7 @@ export function createServersAndDistribution(
     return { distribution, ssrFunctions, edgeFunctions };
 
     function uploadAssets() {
-      return output(args.assets).apply((assets) => {
-        const uploadedObjects: aws.s3.BucketObjectv2[] = [];
-
+      return output(args.assets).apply(async (assets) => {
         // Define content headers
         const nonVersionedFilesTTL =
           typeof assets?.nonVersionedFilesTTL === "number"
@@ -442,29 +441,31 @@ export function createServersAndDistribution(
             ? assets.versionedFilesTTL
             : toSeconds(assets?.versionedFilesTTL ?? "365 days");
 
+        const bucketFiles: BucketFile[] = [];
+
         // Handle each S3 origin
-        Object.values(plan.origins).forEach((origin) => {
-          if (origin.type !== "s3") return;
+        for (const origin of Object.values(plan.origins)) {
+          if (origin.type !== "s3") continue;
 
           // Handle each copy source
-          origin.copy.forEach(({ from, to, versionedSubDir }) => {
+          for (const copy of origin.copy) {
             // Build fileOptions
             const fileOptions: SsrSiteFileOptions[] = [
               // unversioned files
               {
                 files: "**",
-                ignore: versionedSubDir
-                  ? path.posix.join(versionedSubDir, "**")
+                ignore: copy.versionedSubDir
+                  ? path.posix.join(copy.versionedSubDir, "**")
                   : undefined,
                 cacheControl:
                   assets?.nonVersionedFilesCacheHeader ??
                   `public,max-age=0,s-maxage=${nonVersionedFilesTTL},stale-while-revalidate=${staleWhileRevalidateTTL}`,
               },
               // versioned files
-              ...(versionedSubDir
+              ...(copy.versionedSubDir
                 ? [
                     {
-                      files: path.posix.join(versionedSubDir, "**"),
+                      files: path.posix.join(copy.versionedSubDir, "**"),
                       cacheControl:
                         assets?.versionedFilesCacheHeader ??
                         `public,max-age=${versionedFilesTTL},immutable`,
@@ -478,36 +479,89 @@ export function createServersAndDistribution(
             const filesUploaded: string[] = [];
             for (const fileOption of fileOptions.reverse()) {
               const files = globSync(fileOption.files, {
-                cwd: path.resolve(outputPath, from),
+                cwd: path.resolve(outputPath, copy.from),
                 nodir: true,
                 dot: true,
                 ignore: fileOption.ignore,
               }).filter((file) => !filesUploaded.includes(file));
 
-              for (const file of files) {
-                uploadedObjects.push(
-                  new aws.s3.BucketObjectv2(
-                    `${name}Asset${sanitizeToPascalCase(from)}${sanitizeToPascalCase(file)}`,
-                    {
-                      bucket: bucket.name,
-                      source: new asset.FileAsset(
-                        path.resolve(outputPath, from, file),
-                      ),
-                      key: path.posix.join(to, file),
-                      contentType: getContentType(file, "UTF-8"),
+              bucketFiles.push(
+                ...(await Promise.all(
+                  files.map(async (file) => {
+                    const source = path.resolve(outputPath, copy.from, file);
+                    const content = await fs.promises.readFile(source);
+                    const hash = crypto
+                      .createHash("sha256")
+                      .update(content)
+                      .digest("hex");
+                    return {
+                      source,
+                      key: path.posix.join(copy.to, file),
+                      hash,
                       cacheControl: fileOption.cacheControl,
-                    },
-                    { parent, retainOnDelete: true },
-                  ),
-                );
-              }
+                      contentType: getContentType(file, "UTF-8"),
+                    };
+                  })
+                ))
+              );
               filesUploaded.push(...files);
             }
-          });
-        });
+          }
+        }
 
-        return uploadedObjects;
+        return new sst.BucketFiles(
+          `${name}Assets`,
+          {
+            bucketName: bucket.name,
+            files: bucketFiles,
+          },
+          { parent }
+        );
       });
+    }
+
+    function getContentType(filename: string, textEncoding: string) {
+      const ext = filename.endsWith(".well-known/site-association-json")
+        ? ".json"
+        : path.extname(filename);
+      const extensions = {
+        [".txt"]: { mime: "text/plain", isText: true },
+        [".htm"]: { mime: "text/html", isText: true },
+        [".html"]: { mime: "text/html", isText: true },
+        [".xhtml"]: { mime: "application/xhtml+xml", isText: true },
+        [".css"]: { mime: "text/css", isText: true },
+        [".js"]: { mime: "text/javascript", isText: true },
+        [".mjs"]: { mime: "text/javascript", isText: true },
+        [".apng"]: { mime: "image/apng", isText: false },
+        [".avif"]: { mime: "image/avif", isText: false },
+        [".gif"]: { mime: "image/gif", isText: false },
+        [".jpeg"]: { mime: "image/jpeg", isText: false },
+        [".jpg"]: { mime: "image/jpeg", isText: false },
+        [".png"]: { mime: "image/png", isText: false },
+        [".svg"]: { mime: "image/svg+xml", isText: true },
+        [".bmp"]: { mime: "image/bmp", isText: false },
+        [".tiff"]: { mime: "image/tiff", isText: false },
+        [".webp"]: { mime: "image/webp", isText: false },
+        [".ico"]: { mime: "image/vnd.microsoft.icon", isText: false },
+        [".eot"]: { mime: "application/vnd.ms-fontobject", isText: false },
+        [".ttf"]: { mime: "font/ttf", isText: false },
+        [".otf"]: { mime: "font/otf", isText: false },
+        [".woff"]: { mime: "font/woff", isText: false },
+        [".woff2"]: { mime: "font/woff2", isText: false },
+        [".json"]: { mime: "application/json", isText: true },
+        [".jsonld"]: { mime: "application/ld+json", isText: true },
+        [".xml"]: { mime: "application/xml", isText: true },
+        [".pdf"]: { mime: "application/pdf", isText: false },
+        [".zip"]: { mime: "application/zip", isText: false },
+        [".wasm"]: { mime: "application/wasm", isText: false },
+      };
+      const extensionData = extensions[ext as keyof typeof extensions];
+      const mime = extensionData?.mime ?? "application/octet-stream";
+      const charset =
+        extensionData?.isText && textEncoding !== "none"
+          ? `;charset=${textEncoding}`
+          : "";
+      return `${mime}${charset}`;
     }
 
     function createCloudFrontFunctions() {
@@ -912,7 +966,7 @@ if (event.type === "warmer") {
           },
         },
         // create distribution after s3 upload finishes
-        { dependsOn: uploadedObjects, parent },
+        { dependsOn: bucketFile, parent }
       );
     }
 
@@ -1129,51 +1183,6 @@ if (event.type === "warmer") {
         }
       );
     }
-
-    function getContentType(filename: string, textEncoding: string) {
-      const ext = filename.endsWith(".well-known/site-association-json")
-        ? ".json"
-        : path.extname(filename);
-
-      const extensions = {
-        [".txt"]: { mime: "text/plain", isText: true },
-        [".htm"]: { mime: "text/html", isText: true },
-        [".html"]: { mime: "text/html", isText: true },
-        [".xhtml"]: { mime: "application/xhtml+xml", isText: true },
-        [".css"]: { mime: "text/css", isText: true },
-        [".js"]: { mime: "text/javascript", isText: true },
-        [".mjs"]: { mime: "text/javascript", isText: true },
-        [".apng"]: { mime: "image/apng", isText: false },
-        [".avif"]: { mime: "image/avif", isText: false },
-        [".gif"]: { mime: "image/gif", isText: false },
-        [".jpeg"]: { mime: "image/jpeg", isText: false },
-        [".jpg"]: { mime: "image/jpeg", isText: false },
-        [".png"]: { mime: "image/png", isText: false },
-        [".svg"]: { mime: "image/svg+xml", isText: true },
-        [".bmp"]: { mime: "image/bmp", isText: false },
-        [".tiff"]: { mime: "image/tiff", isText: false },
-        [".webp"]: { mime: "image/webp", isText: false },
-        [".ico"]: { mime: "image/vnd.microsoft.icon", isText: false },
-        [".eot"]: { mime: "application/vnd.ms-fontobject", isText: false },
-        [".ttf"]: { mime: "font/ttf", isText: false },
-        [".otf"]: { mime: "font/otf", isText: false },
-        [".woff"]: { mime: "font/woff", isText: false },
-        [".woff2"]: { mime: "font/woff2", isText: false },
-        [".json"]: { mime: "application/json", isText: true },
-        [".jsonld"]: { mime: "application/ld+json", isText: true },
-        [".xml"]: { mime: "application/xml", isText: true },
-        [".pdf"]: { mime: "application/pdf", isText: false },
-        [".zip"]: { mime: "application/zip", isText: false },
-        [".wasm"]: { mime: "application/wasm", isText: false },
-      };
-      const extensionData = extensions[ext as keyof typeof extensions];
-      const mime = extensionData?.mime ?? "application/octet-stream";
-      const charset =
-        extensionData?.isText && textEncoding !== "none"
-          ? `;charset=${textEncoding}`
-          : "";
-      return `${mime}${charset}`;
-    }
   });
 }
 
@@ -1190,7 +1199,7 @@ export function validatePlan<
     | ImageOptimizationFunctionOriginConfig
     | S3OriginConfig
     | OriginGroupConfig
-  >
+  >,
 >(input: {
   cloudFrontFunctions?: CloudFrontFunctions;
   edgeFunctions?: EdgeFunctions;

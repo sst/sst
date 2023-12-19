@@ -13,7 +13,12 @@ export default $config({
     };
   },
   async run() {
-    const site = new sst.Nextjs("Web");
+    const site = new sst.Nextjs("Web", {
+      //customDomain: {
+      //  domainName: "ion-next.sst.sh",
+      //  hostedZone: "sst.sh",
+      //},
+    });
 
     //new sst.DistributionInvalidation(`invalidation`, {
     //  distributionId: "ESWUVI5JLK5EA",
