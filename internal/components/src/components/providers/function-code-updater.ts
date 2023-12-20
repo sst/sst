@@ -37,7 +37,6 @@ class Provider implements dynamic.ResourceProvider {
     olds: Inputs,
     news: Inputs
   ): Promise<dynamic.UpdateResult> {
-    console.log("~j" + JSON.stringify({ foo: "bar" }));
     const client = AWS.useClient(LambdaClient, {
       region: news.region,
       retrableErrors: [

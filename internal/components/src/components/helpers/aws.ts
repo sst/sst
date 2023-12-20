@@ -126,6 +126,7 @@ export const AWS = {
               "OperationAbortedException",
               "TimeoutError",
               "NetworkingError",
+              ...(opts.retrableErrors ?? []),
             ].includes(e.name)
           ) {
             return true;

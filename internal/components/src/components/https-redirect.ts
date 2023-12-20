@@ -1,9 +1,9 @@
 import { ComponentResourceOptions, Input, all, output } from "@pulumi/pulumi";
 import * as aws from "@pulumi/aws";
 import { DnsValidatedCertificate } from "./dns-validated-certificate";
-import { toPascalCase } from "../util/string";
 import { Bucket } from "./bucket";
 import { Component } from "./component";
+import { sanitizeToPascalCase } from "./helpers/naming";
 
 /**
  * Properties to configure an HTTPS Redirect
@@ -44,7 +44,7 @@ export class HttpsRedirect extends Component {
   constructor(
     name: string,
     args: HttpsRedirectArgs,
-    opts?: ComponentResourceOptions,
+    opts?: ComponentResourceOptions
   ) {
     super("sst:sst:HttpsRedirect", name, args, opts);
 
@@ -55,11 +55,11 @@ export class HttpsRedirect extends Component {
       {
         domainName: output(args.sourceDomains).apply((domains) => domains[0]),
         alternativeNames: output(args.sourceDomains).apply((domains) =>
-          domains.slice(1),
+          domains.slice(1)
         ),
         zoneId: args.zoneId,
       },
-      { parent },
+      { parent }
     );
 
     const bucket = new Bucket(
@@ -67,7 +67,7 @@ export class HttpsRedirect extends Component {
       {
         blockPublicAccess: true,
       },
-      { parent },
+      { parent }
     );
 
     const bucketWebsite = new aws.s3.BucketWebsiteConfigurationV2(
@@ -79,7 +79,7 @@ export class HttpsRedirect extends Component {
           protocol: "https",
         },
       },
-      { parent },
+      { parent }
     );
 
     const distribution = new aws.cloudfront.Distribution(
@@ -95,7 +95,7 @@ export class HttpsRedirect extends Component {
         },
         comment: all([args.targetDomain, args.sourceDomains]).apply(
           ([targetDomain, sourceDomains]) =>
-            `Redirect to ${targetDomain} from ${sourceDomains.join(", ")}`,
+            `Redirect to ${targetDomain} from ${sourceDomains.join(", ")}`
         ),
         priceClass: "PriceClass_All",
         viewerCertificate: {
@@ -107,22 +107,32 @@ export class HttpsRedirect extends Component {
           targetOriginId: "s3Origin",
           viewerProtocolPolicy: "redirect-to-https",
           cachedMethods: ["GET", "HEAD"],
+          forwardedValues: {
+            cookies: { forward: "none" },
+            queryString: false,
+          },
         },
         origins: [
           {
             originId: "s3Origin",
-            domainName: bucketWebsite.websiteDomain,
+            domainName: bucketWebsite.websiteEndpoint,
+            customOriginConfig: {
+              httpPort: 80,
+              httpsPort: 443,
+              originProtocolPolicy: "https-only",
+              originSslProtocols: ["TLSv1.2"],
+            },
           },
         ],
       },
-      { parent },
+      { parent }
     );
 
     output(args.sourceDomains).apply((sourceDomains) => {
       for (const recordName of sourceDomains) {
         for (const type of ["A", "AAAA"]) {
           new aws.route53.Record(
-            `${name}${type}Record${toPascalCase(recordName)}`,
+            `${name}${type}Record${sanitizeToPascalCase(recordName)}`,
             {
               name: recordName,
               zoneId: args.zoneId,
@@ -135,7 +145,7 @@ export class HttpsRedirect extends Component {
                 },
               ],
             },
-            { parent },
+            { parent }
           );
         }
       }
