@@ -15,76 +15,70 @@ export default $config({
     };
   },
   async run() {
-    const bucket = new sst.Bucket("Web", {
-      nodes: {
-        bucket: {
-          forceDestroy: false,
+    const zoneId = util.output("foo").apply(async (domain) => {
+      const zone = await aws.route53.getZone({ name: "ion-next.sst.sh" });
+      return zone.zoneId;
+    });
+
+    const certificate = util.output(zoneId).apply((zoneId) => {
+      return new aws.acm.Certificate(`Certificate`, {
+        domainName: "ion-next.sst.sh",
+        validationMethod: "DNS",
+        subjectAlternativeNames: [],
+      });
+    });
+
+    const certificateValidation = new aws.acm.CertificateValidation(
+      `Validation`,
+      {
+        certificateArn: certificate.arn,
+        validationRecordFqdns: [],
+      }
+    );
+
+    new aws.cloudfront.Distribution(`Distribution`, {
+      aliases: [],
+      viewerCertificate: {
+        acmCertificateArn: certificateValidation.certificateArn,
+        sslSupportMethod: "sni-only",
+      },
+      origins: [
+        {
+          originId: "function",
+          domainName: "https://function.sst.sh",
+          customOriginConfig: {
+            httpPort: 80,
+            httpsPort: 443,
+            originProtocolPolicy: "https-only",
+            originReadTimeout: 20,
+            originSslProtocols: ["TLSv1.2"],
+          },
+        },
+      ],
+      defaultRootObject: "",
+      defaultCacheBehavior: {
+        targetOriginId: "function",
+        viewerProtocolPolicy: "redirect-to-https",
+        allowedMethods: ["GET", "HEAD", "OPTIONS"],
+        cachedMethods: ["GET", "HEAD"],
+        compress: true,
+        cachePolicyId: "658327ea-f89d-4fab-a63d-7e88639e58f6",
+        functionAssociations: [],
+      },
+      customErrorResponses: [
+        {
+          errorCode: 404,
+          responseCode: 200,
+          responsePagePath: "/404.html",
+        },
+      ],
+      enabled: true,
+      restrictions: {
+        geoRestriction: {
+          restrictionType: "none",
         },
       },
+      waitForDeployment: false,
     });
-
-    new sst.Function("Function", {
-      bundle: "bundled-function",
-      handler: "index.handler",
-    });
-    return;
-
-    //return {
-    //  bucket: bucket.name,
-    //};
-    const files = [
-      "_app-3e6c03fb96512a92.js",
-      "_buildManifest.js",
-      "_error-4fcb4dc62cb2bc0a.js",
-      "_not-found-82a8529a57099a07.js",
-      "_ssgManifest.js",
-      "05a31a2ca4975f99-s.woff2",
-      "46-7622317cc9c65f71.js",
-      "51ed15f9841b9f9d-s.woff2",
-      "54ffe052-b8a09c19b93b1bcd.js",
-      "989-a01d5eb74b1baa9f.js",
-      "513657b02c5c193f-s.woff2",
-      "a3d073f013d3bc87.css",
-      "BUILD_ID",
-      "c9a5bc6a7c948fb0-s.p.woff2",
-      "d6b16ce4a6175f26-s.woff2",
-      "ec159349637c90ad-s.woff2",
-      "ed4d508feb2dc8fd.css",
-      "favicon.ico",
-      "fd4db3eb5472fc27-s.woff2",
-      "framework-a0dc7b86feec60d5.js",
-      "layout-acc10c21c6762f77.js",
-      "main-472dbb649e94a60d.js",
-      "main-app-c597735a81573f13.js",
-      "next.svg",
-      "page-b3bdeea8851422fd.js",
-      "polyfills-c67a75d1b6f99dc8.js",
-      "vercel.svg",
-      "webpack-e6edcd8ebd35b832.js",
-    ];
-
-    if (process.env.BULK) {
-      new sst.BucketFiles(`Files`, {
-        bucketName: bucket.name,
-        dir: path.resolve("assets"),
-        files: files,
-      });
-    } else {
-      files.forEach((file) => {
-        new aws.s3.BucketObjectv2(
-          `File` +
-            file.replace(/[^a-zA-Z0-9]/g, "").toUpperCase() +
-            Date.now().toString(16),
-          {
-            bucket: bucket.name,
-            source: new util.asset.FileAsset(path.resolve("assets", file)),
-            key: path.posix.join(file),
-          }
-        );
-      });
-    }
-    return {
-      bucket: bucket.name,
-    };
   },
 });
