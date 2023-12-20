@@ -40,8 +40,8 @@ func InstallDeps(version, cfgPath string) error {
 
 	cmd := exec.Command("npm", "install")
 	cmd.Dir = workingDir
-	cmd.Stderr = os.Stderr
-	cmd.Stdout = os.Stdout
+	// cmd.Stderr = os.Stderr
+	// cmd.Stdout = os.Stdout
 
 	err = cmd.Run()
 	if err != nil {

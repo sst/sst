@@ -8,9 +8,11 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.42.2
 	github.com/aws/aws-sdk-go-v2/service/ssm v1.42.2
 	github.com/briandowns/spinner v1.23.0
+	github.com/evanphx/json-patch/v5 v5.7.0
 	github.com/evanw/esbuild v0.19.5
 	github.com/fatih/color v1.16.0
 	github.com/google/uuid v1.4.0
+	github.com/manifoldco/promptui v0.9.0
 	github.com/pulumi/pulumi/sdk/v3 v3.94.2
 	github.com/twitchtv/twirp v8.1.3+incompatible
 	github.com/urfave/cli/v2 v2.25.7
@@ -45,6 +47,7 @@ require (
 	github.com/charmbracelet/bubbletea v0.24.2 // indirect
 	github.com/charmbracelet/lipgloss v0.7.1 // indirect
 	github.com/cheggaaa/pb v1.0.29 // indirect
+	github.com/chzyer/readline v0.0.0-20180603132655-2972be24d48e // indirect
 	github.com/cloudflare/circl v1.3.3 // indirect
 	github.com/containerd/console v1.0.4-0.20230313162750-1ae8d489ac81 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.2 // indirect

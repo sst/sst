@@ -335,7 +335,7 @@ func progress(mode ProgressMode, events project.StackEventStream) bool {
 		color.New(color.FgGreen, color.Bold).Print("\n✔")
 
 		if len(outputs) > 0 {
-			color.New(color.FgWhite, color.Bold).Println("  Complete:")
+			color.New(color.FgWhite, color.Bold).Println("  Complete")
 			for k, v := range outputs {
 				color.New(color.FgHiBlack).Print("   ")
 				color.New(color.FgHiBlack, color.Bold).Print(k + ": ")

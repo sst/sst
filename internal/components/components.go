@@ -3,12 +3,17 @@ package components
 import (
 	"embed"
 	"io"
+	"io/fs"
+	"log/slog"
 	"os"
 	"path/filepath"
 )
 
 //go:embed src/* patches/* package.json
 var files embed.FS
+
+//go:embed templates/*
+var Templates embed.FS
 
 func CopyTo(srcDir, destDir string) error {
 	// Create the destination directory if it doesn't exist
@@ -53,4 +58,14 @@ func CopyTo(srcDir, destDir string) error {
 	}
 
 	return nil
+}
+
+func CopyTemplate(template string, destDir string) {
+	fs.WalkDir(files, filepath.Join("src", "templates", template), func(path string, d fs.DirEntry, err error) error {
+		if d.IsDir() {
+			return nil
+		}
+		slog.Info("copying template", "path", path)
+		return nil
+	})
 }

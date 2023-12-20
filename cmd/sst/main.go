@@ -10,6 +10,11 @@ import (
 	"os/user"
 	"path/filepath"
 	"strings"
+	"time"
+
+	"github.com/briandowns/spinner"
+	"github.com/fatih/color"
+	"github.com/manifoldco/promptui"
 
 	"github.com/sst/ion/cmd/sst/ui"
 	"github.com/sst/ion/pkg/global"
@@ -183,12 +188,58 @@ func main() {
 				Name:  "create",
 				Flags: []cli.Flag{},
 				Action: func(cli *cli.Context) error {
-					err := project.Create()
+
+					if _, err := os.Stat("sst.config.ts"); err == nil {
+						color.New(color.FgRed, color.Bold).Print("❌")
+						color.New(color.FgWhite, color.Bold).Println(" sst.config.ts already exists")
+						return nil
+					}
+
+					template := "vanilla"
+
+					if _, err := os.Stat("next.config.js"); err == nil {
+						p := promptui.Select{
+							Label:        "Next.js detected, would you like to use the Next.js template?",
+							HideSelected: true,
+							Items:        []string{"Yes", "No"},
+							HideHelp:     true,
+						}
+						_, result, err := p.Run()
+						if err != nil {
+							return err
+						}
+
+						if result == "Yes" {
+							template = "nextjs"
+						}
+					}
+
+					err := project.Create(template)
 					if err != nil {
 						return err
 					}
 
-					return err
+					cfgPath, err := project.Discover()
+					if err != nil {
+						return err
+					}
+
+					spin := spinner.New(spinner.CharSets[14], 100*time.Millisecond)
+					spin.Suffix = "  Installing dependencies..."
+					spin.Start()
+					if !project.CheckDeps(version, cfgPath) {
+						err = project.InstallDeps(version, cfgPath)
+						if err != nil {
+							return err
+						}
+					}
+					spin.Stop()
+
+					color.New(color.FgGreen, color.Bold).Print("✔")
+					color.New(color.FgWhite, color.Bold).Println("  Created new project with '", template, "' template")
+
+					return nil
+
 				},
 			},
 		},
@@ -209,12 +260,16 @@ func initProject(cli *cli.Context) (*project.Project, error) {
 		return nil, err
 	}
 
+	spin := spinner.New(spinner.CharSets[14], 100*time.Millisecond)
+	spin.Suffix = "  Installing dependencies..."
+	spin.Start()
 	if !project.CheckDeps(version, cfgPath) {
 		err = project.InstallDeps(version, cfgPath)
 		if err != nil {
 			return nil, err
 		}
 	}
+	spin.Stop()
 
 	p, err := project.New(&project.ProjectConfig{
 		Version: version,
