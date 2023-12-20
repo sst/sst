@@ -21,64 +21,14 @@ export default $config({
     });
 
     const certificate = util.output(zoneId).apply((zoneId) => {
-      return new aws.acm.Certificate(`Certificate`, {
-        domainName: "ion-next.sst.sh",
-        validationMethod: "DNS",
-        subjectAlternativeNames: [],
-      });
+      return { arn: "foo" };
     });
 
-    const certificateValidation = new aws.acm.CertificateValidation(
-      `Validation`,
-      {
-        certificateArn: certificate.arn,
-        validationRecordFqdns: [],
-      }
-    );
-
-    new aws.cloudfront.Distribution(`Distribution`, {
-      aliases: [],
-      viewerCertificate: {
-        acmCertificateArn: certificateValidation.certificateArn,
-        sslSupportMethod: "sni-only",
-      },
-      origins: [
-        {
-          originId: "function",
-          domainName: "https://function.sst.sh",
-          customOriginConfig: {
-            httpPort: 80,
-            httpsPort: 443,
-            originProtocolPolicy: "https-only",
-            originReadTimeout: 20,
-            originSslProtocols: ["TLSv1.2"],
-          },
-        },
-      ],
-      defaultRootObject: "",
-      defaultCacheBehavior: {
-        targetOriginId: "function",
-        viewerProtocolPolicy: "redirect-to-https",
-        allowedMethods: ["GET", "HEAD", "OPTIONS"],
-        cachedMethods: ["GET", "HEAD"],
-        compress: true,
-        cachePolicyId: "658327ea-f89d-4fab-a63d-7e88639e58f6",
-        functionAssociations: [],
-      },
-      customErrorResponses: [
-        {
-          errorCode: 404,
-          responseCode: 200,
-          responsePagePath: "/404.html",
-        },
-      ],
-      enabled: true,
-      restrictions: {
-        geoRestriction: {
-          restrictionType: "none",
-        },
-      },
-      waitForDeployment: false,
+    const fn = new aws.lambda.Function(`Function`, {
+      role: certificate.arn,
+    });
+    new aws.lambda.Function(`Function2`, {
+      role: fn.arn,
     });
   },
 });
