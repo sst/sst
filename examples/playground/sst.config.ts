@@ -1,6 +1,6 @@
 /// <reference path="./.sst/src/global.d.ts" />
 
-import path from "path";
+import * as pulumi from "@pulumi/pulumi";
 
 export default $config({
   app() {
@@ -15,18 +15,19 @@ export default $config({
     };
   },
   async run() {
-    const zoneId = util.output("foo").apply(async (domain) => {
-      const zone = await aws.route53.getZone({ name: "ion-next.sst.sh" });
-      return zone.zoneId;
-    });
+    // Observations:
+    // 1. Has to be related to await aws.route53.getZone because if I replace that
+    //    with a component error, the error is caught right away.
+    // 2. Only happens when there are 2 components in the chain
 
-    const certificate = util.output(zoneId).apply((zoneId) => {
-      return { arn: "foo" };
+    const zoneId = pulumi.output("foo").apply(async (domain) => {
+      throw new Error("hi");
     });
 
     const fn = new aws.lambda.Function(`Function`, {
-      role: certificate.arn,
+      role: zoneId,
     });
+
     new aws.lambda.Function(`Function2`, {
       role: fn.arn,
     });
