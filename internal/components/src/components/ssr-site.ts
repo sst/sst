@@ -14,7 +14,7 @@ import {
   ComponentResource,
 } from "@pulumi/pulumi";
 import * as aws from "@pulumi/aws";
-import { Distribution, DistributionDomainArgs } from "./distribution.js";
+import { Cdn, CdnDomainArgs } from "./cdn.js";
 import { Function, FunctionArgs, FunctionNodeJSArgs } from "./function.js";
 import { Duration, toSeconds } from "./util/duration.js";
 import { DistributionInvalidation } from "./providers/distribution-invalidation.js";
@@ -53,7 +53,7 @@ type OriginGroupConfig = {
 };
 
 export type Plan = ReturnType<typeof validatePlan>;
-export interface SsrDomainArgs extends DistributionDomainArgs {}
+export interface SsrDomainArgs extends CdnDomainArgs {}
 export interface SsrSiteFileOptions {
   files: string | string[];
   ignore?: string | string[];
@@ -930,8 +930,8 @@ if (event.type === "warmer") {
     }
 
     function createCloudFrontDistribution() {
-      return new Distribution(
-        `${name}Distribution`,
+      return new Cdn(
+        `${name}Cdn`,
         {
           domain: args.domain,
           nodes: {

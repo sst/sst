@@ -54,8 +54,8 @@ func progress(mode ProgressMode, events project.StackEventStream) bool {
 		resourceName0 := splits[1]
 		// convert aws:s3/bucket:Bucket to aws:s3:Bucket
 		urn1 := regexp.MustCompile(`\/[^:]+`).ReplaceAllString(urn0, "")
-		// convert sst:sst:Nextjs to sst:Nextjs
-		urn2 := regexp.MustCompile(`sst:sst:`).ReplaceAllString(urn1, "sst:")
+		// convert sst:sst:Nextjs to Nextjs
+		urn2 := regexp.MustCompile(`sst:sst:`).ReplaceAllString(urn1, "")
 		// convert pulumi-nodejs:dynamic:Resource to sst:xxxx
 		urn3 := urn2
 		resourceName1 := resourceName0

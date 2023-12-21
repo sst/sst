@@ -13,7 +13,7 @@ import { Component } from "./component.js";
 import { sanitizeToPascalCase } from "./helpers/naming.js";
 import { HostedZoneLookup } from "./providers/hosted-zone-lookup.js";
 
-export interface DistributionDomainArgs {
+export interface CdnDomainArgs {
   /**
    * The domain to be assigned to the website URL (ie. domain.com).
    *
@@ -73,7 +73,7 @@ export interface DistributionDomainArgs {
   hostedZoneId?: Input<string>;
 }
 
-export interface DistributionArgs {
+export interface CdnArgs {
   /**
    * The domain for this website. SST supports domains that are hosted
    * either on [Route 53](https://aws.amazon.com/route53/) or externally.
@@ -93,22 +93,18 @@ export interface DistributionArgs {
    * },
    * ```
    */
-  domain?: Input<string | DistributionDomainArgs>;
+  domain?: Input<string | CdnDomainArgs>;
   nodes: {
     distribution: Omit<aws.cloudfront.DistributionArgs, "viewerCertificate">;
   };
 }
 
-export class Distribution extends Component {
+export class Cdn extends Component {
   private distribution: aws.cloudfront.Distribution;
   private _domainUrl?: Output<string>;
 
-  constructor(
-    name: string,
-    args: DistributionArgs,
-    opts?: ComponentResourceOptions
-  ) {
-    super("sst:sst:Distribution", name, args, opts);
+  constructor(name: string, args: CdnArgs, opts?: ComponentResourceOptions) {
+    super("sst:sst:CDN", name, args, opts);
     const parent = this;
 
     const domain = normalizeDomain();
@@ -116,7 +112,7 @@ export class Distribution extends Component {
     validateDistributionSettings();
 
     const zoneId = lookupHostedZoneId();
-    const certificate = createCertificate();
+    const certificate = createSsl();
     const distribution = createDistribution();
     createRoute53Records();
     createRedirects();
@@ -165,26 +161,51 @@ export class Distribution extends Component {
     function lookupHostedZoneId() {
       if (!domain) return;
 
-      return domain.apply((domain) => {
-        if (domain.hostedZoneId) return output(domain.hostedZoneId);
+      return domain.apply(async (domain) => {
+        if (domain.hostedZoneId) return domain.hostedZoneId;
+        const domainName = domain.hostedZone ?? domain.domainName;
 
-        return new HostedZoneLookup(
-          `${name}HostedZoneLookup`,
-          {
-            domain: domain.hostedZone ?? domain.domainName,
-          },
-          { parent }
-        ).zoneId;
+        // Split domainName by "." and try to find the longest matching zone
+        // ie. for "my.app.domain.com"
+        //     try "my.app.domain.com", "app.domain.com", "domain.com
+        const parts = domainName.split(".");
+        for (let i = 0; i <= parts.length - 2; i++) {
+          try {
+            const zone = await aws.route53.getZone({
+              name: parts.slice(i).join("."),
+            });
+            return zone.zoneId;
+          } catch (e) {
+            if (e.message.includes("no matching Route53Zone found")) {
+              continue;
+            }
+            throw e;
+          }
+        }
+
+        throw new Error(`Could not find hosted zone for domain ${domain}`);
       });
+
+      //      return domain.apply((domain) => {
+      //        if (domain.hostedZoneId) return output(domain.hostedZoneId);
+      //
+      //        return new HostedZoneLookup(
+      //          `${name}HostedZoneLookup`,
+      //          {
+      //            domain: domain.hostedZone ?? domain.domainName,
+      //          },
+      //          { parent }
+      //        ).zoneId;
+      //      });
     }
 
-    function createCertificate() {
+    function createSsl() {
       if (!domain || !zoneId) return;
 
       // Certificates used for CloudFront distributions are required to be
       // created in the us-east-1 region
       return new DnsValidatedCertificate(
-        `${name}Certificate`,
+        `${name}Ssl`,
         {
           domainName: domain.domainName,
           alternativeNames: domain.aliases,

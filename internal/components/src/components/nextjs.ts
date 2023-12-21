@@ -22,7 +22,7 @@ import {
   useCloudFrontFunctionHostHeaderInjection,
   validatePlan,
 } from "./ssr-site.js";
-import { Distribution } from "./distribution.js";
+import { Cdn } from "./cdn.js";
 import { AWS } from "./helpers/aws.js";
 import { Bucket } from "./bucket.js";
 import { Component } from "./component.js";
@@ -130,10 +130,10 @@ export interface NextjsArgs extends SsrSiteArgs {
 export class Nextjs extends Component {
   private doNotDeploy: Output<boolean>;
   private edge: Output<boolean>;
-  private bucket: Bucket;
-  private serverFunction?: Function;
+  private cdn: Cdn;
+  private assets: Bucket;
+  private server?: Function;
   //private serverFunctionForDev?: Function;
-  private distribution: Distribution;
 
   constructor(
     name: string,
@@ -210,9 +210,9 @@ export class Nextjs extends Component {
     }
 
     this.doNotDeploy = doNotDeploy;
-    this.bucket = bucket;
-    this.distribution = distribution as unknown as Distribution;
-    this.serverFunction = serverFunction as unknown as Function;
+    this.assets = bucket;
+    this.cdn = distribution as unknown as Cdn;
+    this.server = serverFunction as unknown as Function;
     this.edge = plan.edge;
 
     //app.registerTypes(this);
@@ -948,7 +948,7 @@ if (event.rawPath) {
    */
   public get url() {
     //if (this.doNotDeploy) return this.props.dev?.url;
-    return this.distribution.url;
+    return this.cdn.url;
   }
 
   /**
@@ -958,7 +958,7 @@ if (event.rawPath) {
   public get domainUrl() {
     if (this.doNotDeploy) return;
 
-    return this.distribution.domainUrl;
+    return this.cdn.domainUrl;
   }
 
   /**
@@ -968,11 +968,9 @@ if (event.rawPath) {
     if (this.doNotDeploy) return;
 
     return {
-      function: this.serverFunction?.nodes.function,
-      bucket: this.bucket,
-      distribution: this.distribution,
-      //hostedZone: this.distribution.cdk.hostedZone,
-      //certificate: this.distribution.cdk.certificate,
+      server: this.server,
+      assets: this.assets,
+      cdn: this.cdn,
     };
   }
 
@@ -987,7 +985,7 @@ if (event.rawPath) {
    */
   public attachPermissions(): void {
     //public attachPermissions(permissions: Permissions): void {
-    //  const server = this.serverFunction || this.serverFunctionForDev;
+    //  const server = this.server || this.serverFunctionForDev;
     //  attachPermissionsToRole(server?.role as Role, permissions);
     //}
   }
@@ -1036,7 +1034,7 @@ if (event.rawPath) {
     //      domainUrl: this.domainUrl,
     //      url: this.url,
     //      edge: this.edge,
-    //      server: (this.serverFunctionForDev || this.serverFunction)
+    //      server: (this.serverFunctionForDev || this.server)
     //        ?.functionArn!,
     //      secrets: (this.props.bind || [])
     //        .filter((c) => c instanceof Secret)
@@ -1057,7 +1055,7 @@ if (event.rawPath) {
     //      routes: isPerRouteLoggingEnabled()
     //        ? {
     //            logGroupPrefix: `/sst/lambda/${
-    //              (this.serverFunction as SsrFunction).functionName
+    //              (this.server as SsrFunction).functionName
     //            }`,
     //            data: this.useRoutes().map(({ route, logGroupPath }) => ({
     //              route,

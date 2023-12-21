@@ -51,7 +51,7 @@ export class HttpsRedirect extends Component {
     const parent = this;
 
     const certificate = new DnsValidatedCertificate(
-      `${name}Certificate`,
+      `${name}Ssl`,
       {
         domainName: output(args.sourceDomains).apply((domains) => domains[0]),
         alternativeNames: output(args.sourceDomains).apply((domains) =>
