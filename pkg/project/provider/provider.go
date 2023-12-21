@@ -128,6 +128,12 @@ func (a *AwsProvider) remoteLockFor(app string, stage string) string {
 func (a *AwsProvider) Unlock(app string, stage string) error {
 	slog.Info("unlocking", "app", app, "stage", stage)
 	s3Client := s3.NewFromConfig(a.config)
+	defer func() {
+		s3Client.DeleteObject(context.TODO(), &s3.DeleteObjectInput{
+			Bucket: aws.String(a.bucket),
+			Key:    aws.String(a.remoteLockFor(app, stage)),
+		})
+	}()
 
 	file, err := os.Open(a.localStateFor(app, stage))
 	if err != nil {
@@ -139,14 +145,6 @@ func (a *AwsProvider) Unlock(app string, stage string) error {
 		Bucket: aws.String(a.bucket),
 		Key:    aws.String(a.remoteStateFor(app, stage)),
 		Body:   file,
-	})
-	if err != nil {
-		return err
-	}
-
-	_, err = s3Client.DeleteObject(context.TODO(), &s3.DeleteObjectInput{
-		Bucket: aws.String(a.bucket),
-		Key:    aws.String(a.remoteLockFor(app, stage)),
 	})
 	if err != nil {
 		return err

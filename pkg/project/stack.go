@@ -13,7 +13,10 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/pulumi/pulumi/sdk/v3/go/common/apitype"
+	"github.com/pulumi/pulumi/sdk/v3/go/auto"
+	"github.com/pulumi/pulumi/sdk/v3/go/auto/events"
+	"github.com/pulumi/pulumi/sdk/v3/go/common/tokens"
+	"github.com/pulumi/pulumi/sdk/v3/go/common/workspace"
 	"github.com/sst/ion/pkg/global"
 	"github.com/sst/ion/pkg/js"
 	"github.com/sst/ion/pkg/project/provider"
@@ -24,7 +27,7 @@ type stack struct {
 }
 
 type StackEvent struct {
-	apitype.EngineEvent
+	events.EngineEvent
 	StdOutEvent           *StdOutEvent
 	ConcurrentUpdateEvent *ConcurrentUpdateEvent
 }
@@ -50,17 +53,6 @@ type StackEventStream = chan StackEvent
 
 func (s *stack) Run(ctx context.Context, input *StackInput) error {
 	slog.Info("running stack command", "cmd", input.Command)
-
-	err := s.project.backend.Lock(s.project.app.Name, s.project.app.Stage)
-	if err != nil {
-		if errors.Is(err, &provider.LockExistsError{}) {
-			return &ConcurrentUpdateError{}
-		}
-		return err
-	}
-	defer func() {
-		s.project.backend.Unlock(s.project.app.Name, s.project.app.Stage)
-	}()
 
 	env, err := s.project.backend.Env()
 	if err != nil {
@@ -92,7 +84,8 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 		Code: fmt.Sprintf(`
       import { run } from "%v";
       import mod from "%v/sst.config.ts";
-      await run(mod.run)
+      const result = await run(mod.run)
+      export default result
     `,
 			filepath.Join(s.project.PathTemp(), "src/auto/run.ts"),
 			s.project.PathRoot(),
@@ -102,13 +95,80 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 		return err
 	}
 
-	{
-		cmd := exec.Command("pulumi", "stack", "init", s.project.App().Stage)
-		cmd.Dir = s.project.PathTemp()
-		cmd.Env = append(os.Environ(), "PULUMI_CONFIG_PASSPHRASE=")
-		cmd.Start()
-		cmd.Wait()
+	ws, err := auto.NewLocalWorkspace(ctx,
+		auto.WorkDir(s.project.PathTemp()),
+		auto.PulumiHome(global.ConfigDir()),
+		auto.Project(workspace.Project{
+			Name:    tokens.PackageName(s.project.App().Name),
+			Runtime: workspace.NewProjectRuntimeInfo("nodejs", nil),
+			Backend: &workspace.ProjectBackend{
+				URL: s.project.backend.Url(),
+			},
+			Main: outfile,
+		}),
+		auto.EnvVars(
+			map[string]string{
+				"PULUMI_CONFIG_PASSPHRASE": "",
+			},
+		),
+	)
+	if err != nil {
+		return err
 	}
+	stack, err := auto.UpsertStack(ctx,
+		s.project.app.Stage,
+		ws,
+	)
+	if err != nil {
+		return err
+	}
+	config := auto.ConfigMap{}
+	for provider, args := range s.project.app.Providers {
+		for key, value := range args {
+			config[fmt.Sprintf("%v:%v", provider, key)] = auto.ConfigValue{Value: value}
+		}
+	}
+	err = stack.SetAllConfig(ctx, config)
+	if err != nil {
+		return err
+	}
+
+	err = s.project.backend.Lock(s.project.app.Name, s.project.app.Stage)
+	if err != nil {
+		if errors.Is(err, &provider.LockExistsError{}) {
+			return &ConcurrentUpdateError{}
+		}
+		return err
+	}
+	defer func() {
+		s.project.backend.Unlock(s.project.app.Name, s.project.app.Stage)
+	}()
+
+	if err != nil {
+		return err
+	}
+
+	/*
+		stream := make(chan events.EngineEvent)
+		switch input.Command {
+		case "up":
+			result, err := stack.Up(ctx,
+				optup.ProgressStreams(),
+				optup.EventStreams(stream),
+			)
+
+			for event := range stream {
+				input.OnEvent(&StackEvent{
+					EngineEvent: event,
+				})
+			}
+			fmt.Println(result, err)
+		case "refresh":
+			result, err := stack.Refresh(ctx)
+			fmt.Println(result, err)
+		}
+	*/
+
 	cmd := exec.Command("pulumi", input.Command, "-s", s.project.App().Stage, "--non-interactive", "--yes", "--skip-preview", "--event-log", "events.log")
 	cmd.Env = append(
 		os.Environ(),
@@ -117,31 +177,17 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 		"PULUMI_DEBUG_COMMANDS=1",
 		"PULUMI_HOME="+global.ConfigDir(),
 	)
-	for key, value := range env {
-		cmd.Env = append(cmd.Env, fmt.Sprintf("%v=%v", key, value))
-	}
+	/*
+		for key, value := range env {
+			cmd.Env = append(cmd.Env, fmt.Sprintf("%v=%v", key, value))
+		}
+	*/
 	cmd.Dir = s.project.PathTemp()
-
-	os.WriteFile(
-		filepath.Join(s.project.PathTemp(), "Pulumi.yaml"),
-		[]byte(fmt.Sprintf(`main: %v
-name: %v
-runtime: nodejs
-backend:
-  url: '%v'`,
-			outfile,
-			s.project.App().Name,
-			s.project.backend.Url(),
-		),
-		),
-		0644,
-	)
-
-	os.WriteFile(
-		filepath.Join(s.project.PathTemp(), "Pulumi."+s.project.App().Stage+".yaml"),
-		[]byte("encryptionsalt: v1:BRbPRVzMgq0=:v1:hAPqMfsL0nWiYfTV:0hhwOnAGE7+xpHdpLmSN9GQE89/qmA=="),
-		0644,
-	)
+	// os.WriteFile(
+	// 	filepath.Join(s.project.PathTemp(), "Pulumi."+s.project.App().Stage+".yaml"),
+	// 	[]byte("encryptionsalt: v1:BRbPRVzMgq0=:v1:hAPqMfsL0nWiYfTV:0hhwOnAGE7+xpHdpLmSN9GQE89/qmA=="),
+	// 	0644,
+	// )
 
 	f, err := os.Create(filepath.Join(s.project.PathTemp(), "events.log"))
 	if err != nil {
