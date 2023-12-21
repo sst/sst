@@ -232,7 +232,7 @@ func (u *UI) Trigger(evt *project.StackEvent) {
 				lines := strings.Split(evt.DiagnosticEvent.Message, "\n")
 				if len(lines) > 2 {
 					lines = strings.Split(lines[1], ":")
-					msg = strings.TrimSpace(lines[len(lines)-1])
+					msg = strings.TrimRight(lines[len(lines)-1], "\n")
 				}
 				u.errors = append(u.errors, errorStatus{
 					Error: msg,

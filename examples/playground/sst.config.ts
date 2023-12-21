@@ -16,9 +16,10 @@ export default $config({
   },
   async run() {
     return {
-      //...testThrowInApply(),
+      // testThrowInApply(),
       ...testProviderOutput(),
       //...testHostedZoneLookup(),
+      output: "output",
     };
   },
 });
@@ -34,14 +35,11 @@ function testProviderOutput() {
     public readonly num!: pulumi.Output<string>;
 
     constructor(name: string, opts?: pulumi.CustomResourceOptions) {
-      super(randomprovider, name, { num: undefined }, opts);
+      super(randomprovider, name, {}, opts);
     }
   }
   const random = new Random("Random");
-  console.log(random);
-  return {
-    output: random.num,
-  };
+  return random.num;
 }
 
 function testHostedZoneLookup() {
@@ -72,4 +70,6 @@ function testThrowInApply() {
   new aws.lambda.Function(`Function2`, {
     role: fn.arn,
   });
+
+  return {};
 }

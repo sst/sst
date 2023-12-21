@@ -1,20 +1,18 @@
 package project
 
 import (
-	"bufio"
 	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
 	"log/slog"
-	"os"
-	"os/exec"
 	"path/filepath"
-	"time"
 
 	"github.com/pulumi/pulumi/sdk/v3/go/auto"
 	"github.com/pulumi/pulumi/sdk/v3/go/auto/events"
+	"github.com/pulumi/pulumi/sdk/v3/go/auto/optdestroy"
+	"github.com/pulumi/pulumi/sdk/v3/go/auto/optrefresh"
+	"github.com/pulumi/pulumi/sdk/v3/go/auto/optup"
 	"github.com/pulumi/pulumi/sdk/v3/go/common/tokens"
 	"github.com/pulumi/pulumi/sdk/v3/go/common/workspace"
 	"github.com/sst/ion/pkg/global"
@@ -94,6 +92,7 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 	if err != nil {
 		return err
 	}
+	slog.Info("built code")
 
 	ws, err := auto.NewLocalWorkspace(ctx,
 		auto.WorkDir(s.project.PathTemp()),
@@ -115,6 +114,8 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 	if err != nil {
 		return err
 	}
+	slog.Info("built workspace")
+
 	stack, err := auto.UpsertStack(ctx,
 		s.project.app.Stage,
 		ws,
@@ -122,6 +123,8 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 	if err != nil {
 		return err
 	}
+	slog.Info("built stack")
+
 	config := auto.ConfigMap{}
 	for provider, args := range s.project.app.Providers {
 		for key, value := range args {
@@ -132,6 +135,7 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 	if err != nil {
 		return err
 	}
+	slog.Info("built config")
 
 	err = s.project.backend.Lock(s.project.app.Name, s.project.app.Stage)
 	if err != nil {
@@ -148,141 +152,39 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 		return err
 	}
 
-	/*
-		stream := make(chan events.EngineEvent)
-		switch input.Command {
-		case "up":
-			result, err := stack.Up(ctx,
-				optup.ProgressStreams(),
-				optup.EventStreams(stream),
-			)
-
-			for event := range stream {
-				input.OnEvent(&StackEvent{
-					EngineEvent: event,
-				})
-			}
-			fmt.Println(result, err)
-		case "refresh":
-			result, err := stack.Refresh(ctx)
-			fmt.Println(result, err)
-		}
-	*/
-
-	cmd := exec.Command("pulumi", input.Command, "-s", s.project.App().Stage, "--non-interactive", "--yes", "--skip-preview", "--event-log", "events.log")
-	cmd.Env = append(
-		os.Environ(),
-		"PULUMI_DEBUG_COMMANDS=1",
-		"PULUMI_CONFIG_PASSPHRASE=",
-		"PULUMI_DEBUG_COMMANDS=1",
-		"PULUMI_HOME="+global.ConfigDir(),
-	)
-	/*
-		for key, value := range env {
-			cmd.Env = append(cmd.Env, fmt.Sprintf("%v=%v", key, value))
-		}
-	*/
-	cmd.Dir = s.project.PathTemp()
-	// os.WriteFile(
-	// 	filepath.Join(s.project.PathTemp(), "Pulumi."+s.project.App().Stage+".yaml"),
-	// 	[]byte("encryptionsalt: v1:BRbPRVzMgq0=:v1:hAPqMfsL0nWiYfTV:0hhwOnAGE7+xpHdpLmSN9GQE89/qmA=="),
-	// 	0644,
-	// )
-
-	f, err := os.Create(filepath.Join(s.project.PathTemp(), "events.log"))
-	if err != nil {
-		return err
-	}
-	f.Close()
-
-	// cmd.Stdout = os.Stdout
-	// cmd.Stderr = os.Stderr
-	cmd.Start()
-	go cmd.Wait()
-
-	// Open the file
-	file, err := os.Open(
-		filepath.Join(s.project.PathTemp(), "events.log"),
-	)
-	if err != nil {
-		return err
-	}
-	defer file.Close()
-
-	// Create a reader
-	reader := bufio.NewReader(file)
-
-	// Continuously read the file
-	for {
-		select {
-		case <-ctx.Done():
-			cmd.Process.Kill()
-			return nil
-		default:
-			line, err := reader.ReadString('\n')
-
-			if err != nil {
-				if err == io.EOF {
-					if cmd.ProcessState != nil && cmd.ProcessState.Exited() {
-						return nil
-					}
-					// Wait before trying to read again
-					time.Sleep(100 * time.Millisecond)
-					continue
-				}
-				return err
-			}
-
-			var evt StackEvent
-			err = json.Unmarshal([]byte(line), &evt)
-			if err != nil {
-				continue
-			}
-			slog.Info("stack event", "event", line)
-			input.OnEvent(&evt)
-			slog.Info("stack event", "event", evt)
-		}
-	}
-	return nil
-
-	/*
+	stream := make(chan events.EngineEvent)
+	go func() {
 		for {
 			select {
 			case <-ctx.Done():
-				p.Kill()
-				return nil
-			default:
-				cmd, line := p.Scan()
-				if cmd == js.CommandDone {
-					return nil
-				}
-
-				if cmd == js.CommandJSON {
-					var evt StackEvent
-					err := json.Unmarshal([]byte(line), &evt)
-					if err != nil {
-						continue
-					}
-					if evt.ConcurrentUpdateEvent != nil {
-						return &ConcurrentUpdateError{}
-					}
-					slog.Info("stack event", "event", line)
-					input.OnEvent(&evt)
-				}
-
-				if cmd == js.CommandStdOut {
-					if line == "" {
-						continue
-					}
-					input.OnEvent(&StackEvent{
-						StdOutEvent: &StdOutEvent{
-							Text: line,
-						},
-					})
-				}
+				return
+			case event := <-stream:
+				input.OnEvent(&StackEvent{EngineEvent: event})
 			}
 		}
-	*/
+	}()
+
+	slog.Info("running stack command", "cmd", input.Command)
+	switch input.Command {
+	case "up":
+		stack.Up(ctx,
+			optup.ProgressStreams(),
+			optup.EventStreams(stream),
+		)
+
+	case "destroy":
+		stack.Destroy(ctx,
+			optdestroy.ProgressStreams(),
+			optdestroy.EventStreams(stream),
+		)
+
+	case "refresh":
+		stack.Refresh(ctx,
+			optrefresh.ProgressStreams(),
+			optrefresh.EventStreams(stream),
+		)
+	}
+	return nil
 }
 
 func (s *stack) Cancel() error {

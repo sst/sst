@@ -9,7 +9,7 @@ import (
 	"path/filepath"
 )
 
-//go:embed src/* patches/* package.json
+//go:embed src/* package.json
 var files embed.FS
 
 //go:embed templates/*

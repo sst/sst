@@ -42,7 +42,8 @@ export async function run(program: PulumiFn) {
     },
   );
 
-  return await program();
+  const results = await program();
+  return results;
 
   // const stack = await LocalWorkspace.createOrSelectStack(
   //   {
