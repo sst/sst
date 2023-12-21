@@ -214,6 +214,9 @@ export class Nextjs extends Component {
     this.cdn = distribution as unknown as Cdn;
     this.server = serverFunction as unknown as Function;
     this.edge = plan.edge;
+    this.registerOutputs({
+      _hint: this.cdn.url,
+    });
 
     //app.registerTypes(this);
 

@@ -27,8 +27,10 @@ type UI struct {
 	dedupe   map[string]bool
 	timing   map[string]time.Time
 	outputs  map[string]interface{}
+	hints    map[string]string
 	errors   []errorStatus
 	complete bool
+	footer   string
 }
 
 type errorStatus struct {
@@ -39,6 +41,7 @@ type errorStatus struct {
 func New(mode ProgressMode) *UI {
 	result := &UI{
 		spinner: spinner.New(spinner.CharSets[14], 100*time.Millisecond),
+		hints:   map[string]string{},
 		pending: map[string]string{},
 		dedupe:  map[string]bool{},
 		timing:  map[string]time.Time{},
@@ -155,6 +158,15 @@ func (u *UI) Trigger(evt *project.StackEvent) {
 			u.outputs = evt.ResOutputsEvent.Metadata.New.Outputs
 			return
 		}
+
+		if hint, ok := evt.ResOutputsEvent.Metadata.New.Outputs["_hint"]; ok {
+			u.hints[evt.ResOutputsEvent.Metadata.URN] = hint.(string)
+		}
+
+		if evt.ResOutputsEvent.Metadata.Type == "sst:sst:Nextjs" {
+			u.footer = "🎉 Congrats on your new site! (DNS could take a few mins)"
+		}
+
 		duration := time.Since(u.timing[evt.ResOutputsEvent.Metadata.URN]).Round(time.Millisecond)
 		if evt.ResOutputsEvent.Metadata.Op == apitype.OpSame && u.mode == ProgressModeRefresh {
 			u.printProgress(Progress{
@@ -283,16 +295,24 @@ func (u *UI) Finish() {
 	u.spinner.Disable()
 	if len(u.errors) == 0 && u.complete {
 		color.New(color.FgGreen, color.Bold).Print("\n✔")
-
+		color.New(color.FgWhite, color.Bold).Println("  Complete")
+		for k, v := range u.hints {
+			splits := strings.Split(k, "::")
+			color.New(color.FgHiBlack).Print("   ")
+			color.New(color.FgHiBlack, color.Bold).Print(splits[len(splits)-1] + ": ")
+			color.New(color.FgWhite).Println(v)
+		}
 		if len(u.outputs) > 0 {
-			color.New(color.FgWhite, color.Bold).Println("  Complete:")
+			color.New(color.FgHiBlack).Println("   ---")
 			for k, v := range u.outputs {
 				color.New(color.FgHiBlack).Print("   ")
 				color.New(color.FgHiBlack, color.Bold).Print(k + ": ")
 				color.New(color.FgWhite).Println(v)
 			}
-		} else {
-			color.New(color.FgWhite, color.Bold).Println("  Complete")
+		}
+		if u.footer != "" {
+			fmt.Println()
+			fmt.Println(u.footer)
 		}
 		return
 	}
