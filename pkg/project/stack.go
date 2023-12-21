@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"os"
 	"path/filepath"
 
 	"github.com/pulumi/pulumi/sdk/v3/go/auto"
@@ -153,6 +154,11 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 	}
 
 	stream := make(chan events.EngineEvent)
+	eventlog, err := os.Create(filepath.Join(s.project.PathTemp(), "event.log"))
+	if err != nil {
+		return err
+	}
+	defer eventlog.Close()
 	go func() {
 		for {
 			select {
@@ -160,6 +166,12 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 				return
 			case event := <-stream:
 				input.OnEvent(&StackEvent{EngineEvent: event})
+				bytes, err := json.Marshal(event)
+				if err != nil {
+					return
+				}
+				eventlog.Write(bytes)
+				eventlog.WriteString("\n")
 			}
 		}
 	}()
