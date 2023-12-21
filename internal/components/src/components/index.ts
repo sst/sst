@@ -4,4 +4,5 @@ export * from "./nextjs.js";
 export * from "./providers/bucket-files.js";
 export * from "./providers/distribution-invalidation.js";
 export * from "./providers/function-code-updater.js";
+export * from "./providers/hosted-zone-lookup.js";
 export * from "./providers/log-group.js";

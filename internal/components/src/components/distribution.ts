@@ -11,6 +11,7 @@ import { HttpsRedirect } from "./https-redirect.js";
 import { AWS } from "./helpers/aws.js";
 import { Component } from "./component.js";
 import { sanitizeToPascalCase } from "./helpers/naming.js";
+import { HostedZoneLookup } from "./providers/hosted-zone-lookup.js";
 
 export interface DistributionDomainArgs {
   /**
@@ -164,12 +165,16 @@ export class Distribution extends Component {
     function lookupHostedZoneId() {
       if (!domain) return;
 
-      return domain.apply(async (domain) => {
-        if (domain.hostedZoneId) return domain.hostedZoneId;
+      return domain.apply((domain) => {
+        if (domain.hostedZoneId) return output(domain.hostedZoneId);
 
-        const zoneName = domain.hostedZone ?? domain.domainName;
-        const zone = await aws.route53.getZone({ name: zoneName });
-        return zone.zoneId;
+        return new HostedZoneLookup(
+          `${name}HostedZoneLookup`,
+          {
+            domain: domain.hostedZone ?? domain.domainName,
+          },
+          { parent }
+        ).zoneId;
       });
     }
 
@@ -190,16 +195,15 @@ export class Distribution extends Component {
     }
 
     function createDistribution() {
-      const aliases = domain
-        ? output(domain).apply((domain) => [
-            domain.domainName,
-            ...domain.aliases,
-          ])
-        : [];
       return new aws.cloudfront.Distribution(
         `${name}Distribution`,
         {
-          aliases,
+          aliases: domain
+            ? output(domain).apply((domain) => [
+                domain.domainName,
+                ...domain.aliases,
+              ])
+            : [],
           viewerCertificate: certificate
             ? {
                 acmCertificateArn: certificate.certificateArn,

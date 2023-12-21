@@ -367,7 +367,7 @@ export function createBucket(parent: ComponentResource, name: string) {
   function createS3Bucket() {
     // TODO add "enforceSSL: true"
     const bucket = new Bucket(
-      `${name}Bucket`,
+      `${name}Assets`,
       {
         blockPublicAccess: true,
       },
@@ -389,7 +389,7 @@ export function createBucket(parent: ComponentResource, name: string) {
       ],
     });
     new aws.s3.BucketPolicy(
-      `${name}BucketPolicy`,
+      `${name}AssetsPolicy`,
       {
         bucket: bucket.name,
         policy: policyDocument.json,
@@ -510,7 +510,7 @@ export function createServersAndDistribution(
         }
 
         return new sst.BucketFiles(
-          `${name}Assets`,
+          `${name}AssetFiles`,
           {
             bucketName: bucket.name,
             files: bucketFiles,
@@ -593,7 +593,7 @@ function handler(event) {
       Object.entries(plan.edgeFunctions ?? {}).forEach(
         ([fnName, { function: props }]) => {
           const fn = new Function(
-            `${name}EdgeFunction${sanitizeToPascalCase(fnName)}`,
+            `${name}Edge${sanitizeToPascalCase(fnName)}`,
             {
               runtime: "nodejs18.x",
               timeout: "20 seconds",
@@ -698,7 +698,7 @@ function handler(event) {
 
     function buildFunctionOrigin(fnName: string, props: FunctionOriginConfig) {
       const fn = new Function(
-        `${name}ServerFunction${sanitizeToPascalCase(fnName)}`,
+        `${name}${sanitizeToPascalCase(fnName)}`,
         {
           runtime: "nodejs18.x",
           timeout: "20 seconds",
@@ -758,7 +758,7 @@ function handler(event) {
       props: ImageOptimizationFunctionOriginConfig
     ) {
       const fn = new Function(
-        `${name}ImageFunction${sanitizeToPascalCase(fnName)}`,
+        `${name}${sanitizeToPascalCase(fnName)}`,
         {
           timeout: "25 seconds",
           logging: {
@@ -972,7 +972,7 @@ if (event.type === "warmer") {
 
     function allowServerFunctionInvalidateDistribution() {
       const policy = new aws.iam.Policy(
-        `${name}InvalidationPolicy`,
+        `${name}ServerInvalidationPolicy`,
         {
           policy: interpolate`{
             "Version": "2012-10-17",
@@ -991,7 +991,7 @@ if (event.type === "warmer") {
       for (const fn of [...ssrFunctions, ...Object.values(edgeFunctions)]) {
         fn.nodes.function.name.apply((functionName) => {
           new aws.iam.RolePolicyAttachment(
-            `${name}InvalidationPolicyAttachment${sanitizeToPascalCase(
+            `${name}ServerInvalidationPolicyAttachment${sanitizeToPascalCase(
               functionName
             )}`,
             {
@@ -1020,7 +1020,7 @@ if (event.type === "warmer") {
 
       // Create warmer function
       const warmer = new Function(
-        `${name}WarmerFunction`,
+        `${name}Warmer`,
         {
           description: `${name} warmer`,
           bundle: path.join(__dirname, "../support/ssr-warmer"),
@@ -1078,7 +1078,7 @@ if (event.type === "warmer") {
 
       // Prewarm on deploy
       new aws.lambda.Invocation(
-        `${name}WarmerInvoke`,
+        `${name}Prewarm`,
         {
           functionName: warmer.nodes.function.name,
           triggers: {

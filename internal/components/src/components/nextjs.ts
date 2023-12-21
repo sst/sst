@@ -122,7 +122,7 @@ export interface NextjsArgs extends SsrSiteArgs {
  * Deploys a Next.js app in the `my-next-app` directory.
  *
  * ```js
- * new Nextjs(stack, "Web", {
+ * new Nextjs("Web", {
  *   path: "my-next-app/",
  * });
  * ```
@@ -325,13 +325,13 @@ export class Nextjs extends Component {
                 },
               },
               edgeFunctions: edge
-                ? { edgeServer: { function: serverConfig } }
+                ? { server: { function: serverConfig } }
                 : undefined,
               origins: {
                 ...(edge
                   ? {}
                   : {
-                      regionalServer: {
+                      server: {
                         type: "function",
                         function: serverConfig,
                         streaming: experimental?.streaming,
@@ -383,21 +383,21 @@ export class Nextjs extends Component {
                       {
                         cacheType: "server",
                         cfFunction: "serverCfFunction",
-                        edgeFunction: "edgeServer",
+                        edgeFunction: "server",
                         origin: "s3",
                       } as const,
                       {
                         cacheType: "server",
                         pattern: "api/*",
                         cfFunction: "serverCfFunction",
-                        edgeFunction: "edgeServer",
+                        edgeFunction: "server",
                         origin: "s3",
                       } as const,
                       {
                         cacheType: "server",
                         pattern: "_next/data/*",
                         cfFunction: "serverCfFunction",
-                        edgeFunction: "edgeServer",
+                        edgeFunction: "server",
                         origin: "s3",
                       } as const,
                     ]
@@ -405,19 +405,19 @@ export class Nextjs extends Component {
                       {
                         cacheType: "server",
                         cfFunction: "serverCfFunction",
-                        origin: "regionalServer",
+                        origin: "server",
                       } as const,
                       {
                         cacheType: "server",
                         pattern: "api/*",
                         cfFunction: "serverCfFunction",
-                        origin: "regionalServer",
+                        origin: "server",
                       } as const,
                       {
                         cacheType: "server",
                         pattern: "_next/data/*",
                         cfFunction: "serverCfFunction",
-                        origin: "regionalServer",
+                        origin: "server",
                       } as const,
                     ]),
                 {
@@ -495,7 +495,7 @@ if (event.rawPath) {
           { parent }
         );
         const consumer = new Function(
-          `${name}RevalidationConsumer`,
+          `${name}Revalidator`,
           {
             description: "Next.js revalidator",
             handler: "index.handler",
@@ -531,7 +531,7 @@ if (event.rawPath) {
           { parent }
         );
         new aws.lambda.EventSourceMapping(
-          `${name}RevalidationEventSource`,
+          `${name}RevalidatorEventSource`,
           {
             functionName: consumer.nodes.function.name,
             eventSourceArn: queue.arn,

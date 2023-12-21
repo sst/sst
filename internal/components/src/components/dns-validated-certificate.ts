@@ -29,7 +29,7 @@ export class DnsValidatedCertificate extends Component {
   constructor(
     name: string,
     args: DnsValidatedCertificateArgs,
-    opts?: ComponentResourceOptions,
+    opts?: ComponentResourceOptions
   ) {
     super("sst:sst:Certificate", name, args, opts);
 
@@ -38,13 +38,13 @@ export class DnsValidatedCertificate extends Component {
 
     const certificate = output(zoneId).apply((zoneId) => {
       return new aws.acm.Certificate(
-        `${name}Certificateeee`,
+        `${name}Certificate`,
         {
           domainName,
           validationMethod: "DNS",
           subjectAlternativeNames: alternativeNames ?? [],
         },
-        { parent },
+        { parent }
       );
     });
 
@@ -59,9 +59,9 @@ export class DnsValidatedCertificate extends Component {
             records: [option.resourceRecordValue],
             ttl: 60,
           },
-          { parent },
+          { parent }
         );
-      }),
+      })
     );
 
     const certificateValidation = new aws.acm.CertificateValidation(
@@ -69,10 +69,10 @@ export class DnsValidatedCertificate extends Component {
       {
         certificateArn: certificate.arn,
         validationRecordFqdns: records.apply((records) =>
-          records.map((record) => record.fqdn),
+          records.map((record) => record.fqdn)
         ),
       },
-      { parent },
+      { parent }
     );
 
     this.certificateValidation = certificateValidation;
