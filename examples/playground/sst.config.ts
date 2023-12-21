@@ -15,6 +15,7 @@ export default $config({
     };
   },
   async run() {
+    console.log("hey!");
     // Observations:
     // 1. Has to be related to await aws.route53.getZone because if I replace that
     //    with a component error, the error is caught right away.

@@ -85,7 +85,7 @@ class Provider implements dynamic.ResourceProvider {
     distributionId: string,
     paths: string[],
   ) {
-    console.log("invalidating chunk", paths);
+    console.debug("invalidating chunk", paths);
 
     const result = await client.send(
       new CreateInvalidationCommand({

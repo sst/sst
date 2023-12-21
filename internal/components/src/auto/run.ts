@@ -3,6 +3,9 @@ import { runtime } from "@pulumi/pulumi";
 import { PulumiFn } from "@pulumi/pulumi/automation";
 
 export async function run(program: PulumiFn) {
+  process.chdir($cli.paths.root);
+  await program();
+  return;
   const config: Record<string, { value: string }> = {};
   for (const [provider, args] of Object.entries($app.providers || {})) {
     for (const [key, value] of Object.entries(args)) {
@@ -93,8 +96,9 @@ export async function run(program: PulumiFn) {
       onEvent: (evt) => {
         console.log("~j" + JSON.stringify(evt));
       },
-      // onOutput: console.log,
-      logVerbosity: 11,
+      onOutput: console.log,
+      logToStdErr: true,
+      logVerbosity: 100,
     });
   } catch (e: any) {
     if (e.name === "ConcurrentUpdateError") {
