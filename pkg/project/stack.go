@@ -184,9 +184,6 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 			optup.ErrorProgressStreams(),
 			optup.EventStreams(stream),
 		)
-		if err != nil {
-			return err
-		}
 
 	case "destroy":
 		stack.Destroy(ctx,
