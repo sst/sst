@@ -39,6 +39,7 @@ export class Component extends ComponentResource {
             case "aws:iam/role:Role":
             case "aws:cloudwatch/eventRule:EventRule":
             case "aws:lambda/function:Function":
+            case "aws:dynamodb/table:Table":
               overrides = { name: prefixName(args.name) };
               break;
             case "aws:sqs/queue:Queue":

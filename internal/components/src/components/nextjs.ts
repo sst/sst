@@ -181,14 +181,12 @@ export class Nextjs extends Component {
     const outputPath = buildApp(name, args || {}, sitePath, buildCommand);
     const { access, bucket } = createBucket(parent, name);
     const revalidationQueue = createRevalidationQueue();
+    const revalidationTable = createRevalidationTable();
+
     const plan = buildPlan(bucket);
     // TODO set dependency
     // TODO ensure sourcemaps are removed in function code
     removeSourcemaps();
-
-    //if (!experimental.disableDynamoDBCache) {
-    //  createRevalidationTable();
-    //}
 
     const { distribution, ssrFunctions, edgeFunctions } =
       createServersAndDistribution(
@@ -254,26 +252,24 @@ export class Nextjs extends Component {
     }
 
     function buildPlan(bucket: Bucket) {
-      return all([outputPath]).apply(([outputPath]) =>
+      return all([
+        outputPath,
+        $app.providers?.aws?.region!,
+        args?.edge,
+        args?.experimental,
+        args?.imageOptimization,
+      ]).apply(([outputPath, region, edge, experimental, imageOptimization]) =>
         all([
-          $app.providers?.aws?.region!,
-          args?.edge,
-          args?.experimental,
-          args?.imageOptimization,
           bucket.name,
           useRoutes(),
-          revalidationQueue.apply((queue) => queue?.url),
-          revalidationQueue.apply((queue) => queue?.arn),
+          revalidationQueue.apply((q) => ({ url: q?.url, arn: q?.arn })),
+          revalidationTable.apply((t) => ({ name: t?.name, arn: t?.arn })),
         ]).apply(
           ([
-            region,
-            edge,
-            experimental,
-            imageOptimization,
             bucketName,
             routes,
-            revalidationQueueUrl,
-            revalidationQueueArn,
+            { url: revalidationQueueUrl, arn: revalidationQueueArn },
+            { name: revalidationTableName, arn: revalidationTableArn },
           ]) => {
             const serverConfig = {
               description: "Next.js server",
@@ -287,9 +283,12 @@ export class Nextjs extends Component {
                   REVALIDATION_QUEUE_URL: revalidationQueueUrl,
                   REVALIDATION_QUEUE_REGION: region,
                 }),
+                ...(revalidationTableName && {
+                  CACHE_DYNAMO_TABLE: revalidationTableName,
+                }),
               },
               policies: [
-                ...(revalidationQueue
+                ...(revalidationQueueArn
                   ? [
                       {
                         name: "revalidation-queue",
@@ -302,6 +301,37 @@ export class Nextjs extends Component {
                                 "sqs:GetQueueUrl",
                               ],
                               resources: [revalidationQueueArn],
+                            },
+                          ],
+                        }),
+                      },
+                    ]
+                  : []),
+                ...(revalidationTableArn
+                  ? [
+                      {
+                        name: "revalidation-table",
+                        policy: JSON.stringify({
+                          statements: [
+                            {
+                              actions: [
+                                "dynamodb:BatchGetItem",
+                                "dynamodb:GetRecords",
+                                "dynamodb:GetShardIterator",
+                                "dynamodb:Query",
+                                "dynamodb:GetItem",
+                                "dynamodb:Scan",
+                                "dynamodb:ConditionCheckItem",
+                                "dynamodb:BatchWriteItem",
+                                "dynamodb:PutItem",
+                                "dynamodb:UpdateItem",
+                                "dynamodb:DeleteItem",
+                                "dynamodb:DescribeTable",
+                              ],
+                              resources: [
+                                revalidationTableArn,
+                                `${revalidationTableArn}/*`,
+                              ],
                             },
                           ],
                         }),
@@ -547,86 +577,103 @@ if (event.rawPath) {
     }
 
     function createRevalidationTable() {
-      //if (!this.serverFunction) return;
-      //const { path: sitePath } = this.args;
-      //const table = new aws.dynamodb.Table(`${name}RevalidationTable`, {
-      //  attributes: [
-      //    { name: "tag", type: "S" },
-      //    { name: "path", type: "S" },
-      //    { name: "revalidatedAt", type: "N" },
-      //  ],
-      //  hashKey: "tag",
-      //  rangeKey: "path",
-      //  pointInTimeRecovery: {
-      //    enabled: true,
-      //  },
-      //  billingMode: "PAY_PER_REQUEST",
-      //  globalSecondaryIndexes: [
-      //    {
-      //      name: "revalidate",
-      //      hashKey: "path",
-      //      rangeKey: "revalidatedAt",
-      //      projectionType: "ALL",
-      //    },
-      //  ],
-      //}, {parent});
-      //serverFunction?.addEnvironment("CACHE_DYNAMO_TABLE", table.tableName);
-      //table.grantReadWriteData(serverFunction.role!);
-      //const dynamodbProviderPath = path.join(
-      //  sitePath,
-      //  ".open-next",
-      //  "dynamodb-provider"
-      //);
-      //if (fs.existsSync(dynamodbProviderPath)) {
-      //  // Provision 128MB of memory for every 4,000 prerendered routes,
-      //  // 1GB per 40,000, up to 10GB. This tends to use ~70% of the memory
-      //  // provisioned when testing.
-      //  const prerenderedRouteCount = Object.keys(
-      //    usePrerenderManifest()?.routes ?? {}
-      //  ).length;
-      //  const insertFn = new Function(`${name}RevalidationTableSeeder`, {
-      //    description: "Next.js revalidation data insert",
-      //    handler: "index.handler",
-      //    bundle: dynamodbProviderPath,
-      //    runtime: "nodejs18.x",
-      //    timeout: 900,
-      //    memorySize: Math.min(
-      //      10240,
-      //      Math.max(128, Math.ceil(prerenderedRouteCount / 4000) * 128)
-      //    ),
-      //    policies: [
-      //      {
-      //        name: "dynamodb",
-      //        policy: table.arn.apply((arn) =>
-      //          aws.iam
-      //            .getPolicyDocument({
-      //              statements: [
-      //                {
-      //                  actions: [
-      //                    "dynamodb:BatchWriteItem",
-      //                    "dynamodb:PutItem",
-      //                    "dynamodb:DescribeTable",
-      //                  ],
-      //                  resources: [arn],
-      //                },
-      //              ],
-      //            })
-      //            .then((doc) => doc.json)
-      //        ),
-      //      },
-      //    ],
-      //    environment: {
-      //      CACHE_DYNAMO_TABLE: table.name,
-      //    },
-      //  }, {parent});
-      //  new aws.lambda.Invocation(`${name}RevalidationTableSeed`, {
-      //    functionName: insertFn.aws.function.name,
-      //    triggers: {
-      //      version: Date.now().toString(),
-      //    },
-      //    input: JSON.stringify({}),
-      //  }, {parent});
-      //}
+      return all([experimental, outputPath]).apply(
+        ([experimental, outputPath]) => {
+          if (!serverFunction) return;
+          if (experimental.disableDynamoDBCache) return;
+
+          const table = new aws.dynamodb.Table(
+            `${name}RevalidationTable`,
+            {
+              attributes: [
+                { name: "tag", type: "S" },
+                { name: "path", type: "S" },
+                { name: "revalidatedAt", type: "N" },
+              ],
+              hashKey: "tag",
+              rangeKey: "path",
+              pointInTimeRecovery: {
+                enabled: true,
+              },
+              billingMode: "PAY_PER_REQUEST",
+              globalSecondaryIndexes: [
+                {
+                  name: "revalidate",
+                  hashKey: "path",
+                  rangeKey: "revalidatedAt",
+                  projectionType: "ALL",
+                },
+              ],
+            },
+            { parent }
+          );
+
+          const dynamodbProviderPath = path.join(
+            outputPath,
+            ".open-next",
+            "dynamodb-provider"
+          );
+          if (fs.existsSync(dynamodbProviderPath)) {
+            // Provision 128MB of memory for every 4,000 prerendered routes,
+            // 1GB per 40,000, up to 10GB. This tends to use ~70% of the memory
+            // provisioned when testing.
+            const prerenderedRouteCount = Object.keys(
+              usePrerenderManifest()?.routes ?? {}
+            ).length;
+            const seedFn = new Function(
+              `${name}RevalidationSeeder`,
+              {
+                description: "Next.js revalidation data seeder",
+                handler: "index.handler",
+                bundle: dynamodbProviderPath,
+                runtime: "nodejs18.x",
+                timeout: "900 seconds",
+                memory: `${Math.min(
+                  10240,
+                  Math.max(128, Math.ceil(prerenderedRouteCount / 4000) * 128)
+                )} MB`,
+                policies: [
+                  {
+                    name: "dynamodb",
+                    policy: table.arn.apply((arn) =>
+                      aws.iam
+                        .getPolicyDocument({
+                          statements: [
+                            {
+                              actions: [
+                                "dynamodb:BatchWriteItem",
+                                "dynamodb:PutItem",
+                                "dynamodb:DescribeTable",
+                              ],
+                              resources: [arn],
+                            },
+                          ],
+                        })
+                        .then((doc) => doc.json)
+                    ),
+                  },
+                ],
+                environment: {
+                  CACHE_DYNAMO_TABLE: table.name,
+                },
+              },
+              { parent }
+            );
+            new aws.lambda.Invocation(
+              `${name}RevalidationSeed`,
+              {
+                functionName: seedFn.nodes.function.name,
+                triggers: {
+                  version: Date.now().toString(),
+                },
+                input: JSON.stringify({}),
+              },
+              { parent }
+            );
+          }
+          return table;
+        }
+      );
     }
 
     function removeSourcemaps() {
