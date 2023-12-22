@@ -192,7 +192,7 @@ func (a *AwsProvider) Init(workdir string, args map[string]string) (err error) {
 		return err
 	}
 	if cfg.Region == "" {
-		return util.NewReadableError("No region found in AWS config")
+		cfg.Region = "us-east-1"
 	}
 	a.config = cfg
 
