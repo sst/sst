@@ -20,11 +20,23 @@ export async function run(program: PulumiFn) {
         };
       }
       return undefined;
-    },
+    }
   );
   runtime.registerStackTransformation(
     (args: util.ResourceTransformationArgs) => {
       let normalizedName = args.name;
+
+      if (args.type === "pulumi:providers:aws") {
+        const parts = args.name.split(".");
+        if (
+          parts.length === 3 &&
+          parts[0] === "AwsProvider" &&
+          parts[1] === "sst"
+        ) {
+          normalizedName = parts[0];
+        }
+      }
+
       if (args.type === "pulumi-nodejs:dynamic:Resource") {
         const parts = args.name.split(".");
         if (parts.length === 3 && parts[1] === "sst") {
@@ -34,12 +46,12 @@ export async function run(program: PulumiFn) {
 
       if (!normalizedName.match(/^[A-Z][a-zA-Z0-9]*$/)) {
         throw new Error(
-          `Invalid component name "${normalizedName}". Component names must start with an uppercase letter and contain only alphanumeric characters.`,
+          `Invalid component name "${normalizedName}". Component names must start with an uppercase letter and contain only alphanumeric characters.`
         );
       }
 
       return undefined;
-    },
+    }
   );
 
   const results = await program();

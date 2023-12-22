@@ -84,15 +84,12 @@ export const AWS = {
     const existing = cache.get(region);
     if (existing) return existing;
 
-    const provider = new aws.Provider(
-      `AWSProvider${sanitizeToPascalCase(region)}`,
-      {
-        region,
-        defaultTags: {
-          tags: output(aws.getDefaultTags()).apply((result) => result.tags),
-        },
-      }
-    );
+    const provider = new aws.Provider(`AwsProvider.sst.${region}`, {
+      region,
+      defaultTags: {
+        tags: output(aws.getDefaultTags()).apply((result) => result.tags),
+      },
+    });
     cache.set(region, provider);
     return provider;
   },

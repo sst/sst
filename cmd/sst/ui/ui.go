@@ -370,9 +370,13 @@ func formatURN(urn string) string {
 	urn2 := regexp.MustCompile(`\/[^:]+`).ReplaceAllString(urn1, "")
 	// convert non:sst:Component$aws:s3:Bucket to non:sst:Component → aws:s3:Bucket
 	urn3 := regexp.MustCompile(`\$`).ReplaceAllString(urn2, " → ")
+	// convert pulumi:providers:aws to AWS Provider
+	urn4 := regexp.MustCompile(`pulumi:providers:aws`).ReplaceAllString(urn3, "AWS Provider")
+	// convert AwsProvider.sst.us-east-1 to Region us-east-1
+	resourceName1 := regexp.MustCompile(`AwsProvider\.sst\.(.+)$`).ReplaceAllString(resourceName0, "Region $1")
 	// convert WebServerCodeUpdater.sst.FunctionCodeUpdater to FunctionCodeUpdater
-	resourceName1 := regexp.MustCompile(`([^\.]+)\.sst\..*$`).ReplaceAllString(resourceName0, "$1")
-	return urn3 + " → " + resourceName1
+	resourceName2 := regexp.MustCompile(`([^\.]+)\.sst\..*$`).ReplaceAllString(resourceName1, "$1")
+	return urn4 + " → " + resourceName2
 }
 
 type Progress struct {

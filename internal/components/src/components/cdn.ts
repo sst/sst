@@ -161,31 +161,6 @@ export class Cdn extends Component {
     function lookupHostedZoneId() {
       if (!domain) return;
 
-      //return domain.apply(async (domain) => {
-      //  if (domain.hostedZoneId) return domain.hostedZoneId;
-      //  const domainName = domain.hostedZone ?? domain.domainName;
-
-      //  // Split domainName by "." and try to find the longest matching zone
-      //  // ie. for "my.app.domain.com"
-      //  //     try "my.app.domain.com", "app.domain.com", "domain.com
-      //  const parts = domainName.split(".");
-      //  for (let i = 0; i <= parts.length - 2; i++) {
-      //    try {
-      //      const zone = await aws.route53.getZone({
-      //        name: parts.slice(i).join("."),
-      //      });
-      //      return zone.zoneId;
-      //    } catch (e) {
-      //      if (e.message.includes("no matching Route53Zone found")) {
-      //        continue;
-      //      }
-      //      throw e;
-      //    }
-      //  }
-
-      //  throw new Error(`Could not find hosted zone for domain ${domain}`);
-      //});
-
       return domain.apply((domain) => {
         if (domain.hostedZoneId) return output(domain.hostedZoneId);
 

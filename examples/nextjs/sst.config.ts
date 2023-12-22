@@ -8,9 +8,7 @@ export default $config({
     };
   },
   async run() {
-    const site = new sst.Nextjs("Web", {
-      domain: "ion-next.sst.st",
-    });
+    const site = new sst.Nextjs("Web");
 
     return {
       siteURL: site.url,

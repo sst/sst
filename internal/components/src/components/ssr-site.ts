@@ -1221,13 +1221,7 @@ export function validatePlan<
     cfFunction?: keyof CloudFrontFunctions;
     edgeFunction?: keyof EdgeFunctions;
   }[];
-  // TODO - pulumi: use inferred types
-  //errorResponses?: aws.cloudfront.DistributionArgs["customErrorResponses"];
-  errorResponses?: {
-    errorCode: number;
-    responseCode?: number;
-    responsePagePath?: string;
-  };
+  errorResponses?: aws.types.input.cloudfront.DistributionCustomErrorResponse;
   cachePolicyAllowedHeaders?: string[];
   buildId?: string;
   warmerConfig?: {
