@@ -17,6 +17,7 @@ import (
 	"github.com/manifoldco/promptui"
 
 	"github.com/sst/ion/cmd/sst/ui"
+	"github.com/sst/ion/internal/util"
 	"github.com/sst/ion/pkg/global"
 	"github.com/sst/ion/pkg/project"
 
@@ -260,7 +261,11 @@ func main() {
 
 	err := app.Run(os.Args)
 	if err != nil {
-		panic(err)
+		if err, ok := err.(*util.ReadableError); ok {
+			fmt.Println(err.Message)
+		} else {
+			panic(err)
+		}
 	}
 
 }

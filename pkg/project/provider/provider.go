@@ -191,6 +191,9 @@ func (a *AwsProvider) Init(workdir string, args map[string]string) (err error) {
 	if err != nil {
 		return err
 	}
+	if cfg.Region == "" {
+		return util.NewReadableError("No region found in AWS config")
+	}
 	a.config = cfg
 
 	bucket, err := a.resolveBucket()

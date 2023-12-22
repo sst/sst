@@ -13,3 +13,15 @@ func RandomString(length int) string {
 	}
 	return string(b)
 }
+
+type ReadableError struct {
+	Message string
+}
+
+func NewReadableError(message string) *ReadableError {
+	return &ReadableError{Message: message}
+}
+
+func (e *ReadableError) Error() string {
+	return e.Message
+}

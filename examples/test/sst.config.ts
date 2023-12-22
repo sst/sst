@@ -4,7 +4,6 @@ export default $config({
   app(input) {
     return {
       name: "test",
-      region: "us-east-1",
       removalPolicy: "remove",
       providers: {
         aws: {
