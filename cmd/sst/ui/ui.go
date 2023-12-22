@@ -163,8 +163,8 @@ func (u *UI) Trigger(evt *project.StackEvent) {
 			u.hints[evt.ResOutputsEvent.Metadata.URN] = hint.(string)
 		}
 
-		if evt.ResOutputsEvent.Metadata.Type == "sst:sst:Nextjs" {
-			u.footer = "🎉 Congrats on your new site! (DNS could take a few mins)"
+		if evt.ResOutputsEvent.Metadata.Type == "sst:sst:Nextjs" && evt.ResOutputsEvent.Metadata.Op == apitype.OpCreate {
+			u.footer = "🎉 Congrats on your new site!" + color.New(color.FgHiBlack).Sprintf(" (DNS could take a few mins)")
 		}
 
 		duration := time.Since(u.timing[evt.ResOutputsEvent.Metadata.URN]).Round(time.Millisecond)
