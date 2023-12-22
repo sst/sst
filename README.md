@@ -27,6 +27,8 @@ To upgrade to the latest version:
 brew upgrade sst
 ```
 
+You might have to run `brew update` before upgrading.
+
 #### Linux
 
 `sst` is available as downloadable binaries from the [releases](https://github.com/sst/ion/releases/latest) page. Download the .deb or .rpm from the [releases](https://github.com/sst/ion/releases/latest) page and install with `sudo dpkg -i` and `sudo rpm -i` respectively.
