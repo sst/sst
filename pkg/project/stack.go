@@ -181,6 +181,7 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 	case "up":
 		_, err = stack.Up(ctx,
 			optup.ProgressStreams(),
+			optup.ErrorProgressStreams(),
 			optup.EventStreams(stream),
 		)
 		if err != nil {
@@ -190,12 +191,14 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 	case "destroy":
 		stack.Destroy(ctx,
 			optdestroy.ProgressStreams(),
+			optdestroy.ErrorProgressStreams(),
 			optdestroy.EventStreams(stream),
 		)
 
 	case "refresh":
 		stack.Refresh(ctx,
 			optrefresh.ProgressStreams(),
+			optrefresh.ErrorProgressStreams(),
 			optrefresh.EventStreams(stream),
 		)
 	}
