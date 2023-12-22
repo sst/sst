@@ -237,16 +237,16 @@ func main() {
 						return err
 					}
 
-					spin := spinner.New(spinner.CharSets[14], 100*time.Millisecond)
-					spin.Suffix = "  Installing dependencies..."
-					spin.Start()
 					if !project.CheckDeps(version, cfgPath) {
+						spin := spinner.New(spinner.CharSets[14], 100*time.Millisecond)
+						spin.Suffix = "  Installing dependencies..."
+						spin.Start()
 						err = project.InstallDeps(version, cfgPath)
+						spin.Stop()
 						if err != nil {
 							return err
 						}
 					}
-					spin.Stop()
 
 					color.New(color.FgGreen, color.Bold).Print("✔")
 					color.New(color.FgWhite, color.Bold).Println("  Created new project with '", template, "' template")
