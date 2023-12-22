@@ -260,16 +260,16 @@ func initProject(cli *cli.Context) (*project.Project, error) {
 		return nil, err
 	}
 
-	spin := spinner.New(spinner.CharSets[14], 100*time.Millisecond)
-	spin.Suffix = "  Installing dependencies..."
-	spin.Start()
 	if !project.CheckDeps(version, cfgPath) {
+		spin := spinner.New(spinner.CharSets[14], 100*time.Millisecond)
+		spin.Suffix = "  Installing dependencies..."
+		spin.Start()
 		err = project.InstallDeps(version, cfgPath)
 		if err != nil {
 			return nil, err
 		}
+		spin.Stop()
 	}
-	spin.Stop()
 
 	p, err := project.New(&project.ProjectConfig{
 		Version: version,
