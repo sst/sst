@@ -261,8 +261,8 @@ func main() {
 
 	err := app.Run(os.Args)
 	if err != nil {
-		if err, ok := err.(*util.ReadableError); ok {
-			fmt.Println(err.Message)
+		if readableErr, ok := err.(*util.ReadableError); ok {
+			fmt.Println(readableErr.Message)
 		} else {
 			panic(err)
 		}
