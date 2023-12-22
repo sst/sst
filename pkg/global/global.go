@@ -42,8 +42,12 @@ func InstallPlugins() error {
 }
 
 func NeedsPulumi() bool {
-	os.Setenv("PATH", os.Getenv("PATH")+":~/.pulumi/bin")
-	_, err := exec.LookPath("pulumi")
+	home, err := os.UserHomeDir()
+	if err != nil {
+		panic(err)
+	}
+	os.Setenv("PATH", os.Getenv("PATH")+":"+home+"/.pulumi/bin")
+	_, err = exec.LookPath("pulumi")
 	if err != nil {
 		return true
 	}
