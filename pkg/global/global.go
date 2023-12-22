@@ -58,5 +58,6 @@ func InstallPulumi() error {
 
 	cmd := `curl -fsSL https://get.pulumi.com | sh`
 	_, err := exec.Command("bash", "-c", cmd).CombinedOutput()
+	os.Setenv("PATH", os.Getenv("PATH")+":~/.pulumi/bin")
 	return err
 }
