@@ -305,7 +305,9 @@ func (u *UI) Finish() {
 			color.New(color.FgWhite).Println(v)
 		}
 		if len(u.outputs) > 0 {
-			color.New(color.FgHiBlack).Println("   ---")
+			if len(u.hints) > 0 {
+				color.New(color.FgHiBlack).Println("   ---")
+			}
 			for k, v := range u.outputs {
 				color.New(color.FgHiBlack).Print("   ")
 				color.New(color.FgHiBlack, color.Bold).Print(k + ": ")
