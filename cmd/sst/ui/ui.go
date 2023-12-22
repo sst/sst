@@ -246,10 +246,10 @@ func (u *UI) Trigger(evt *project.StackEvent) {
 				lines := strings.Split(evt.DiagnosticEvent.Message, "\n")
 				if len(lines) > 2 {
 					lines = strings.Split(lines[1], ":")
-					msg = strings.TrimRight(lines[len(lines)-1], "\n")
+					msg = strings.TrimSpace(lines[len(lines)-1])
 				}
 				u.errors = append(u.errors, errorStatus{
-					Error: msg,
+					Error: "   " + msg,
 					URN:   evt.DiagnosticEvent.URN,
 				})
 				u.printProgress(Progress{
@@ -269,9 +269,10 @@ func (u *UI) Trigger(evt *project.StackEvent) {
 				if trimmed == "" {
 					continue
 				}
-				if strings.HasPrefix(trimmed, "at") {
-					trimmed = "   " + trimmed
+				if strings.HasPrefix(trimmed, "Running program") {
+					continue
 				}
+				trimmed = "   " + trimmed
 				out = append(out, trimmed)
 			}
 			if len(out) > 1 {
@@ -328,14 +329,13 @@ func (u *UI) Finish() {
 	}
 
 	color.New(color.FgRed, color.Bold).Print("\n❌")
-	color.New(color.FgWhite, color.Bold).Println(" Failed:")
+	color.New(color.FgWhite, color.Bold).Println(" Failed")
 
 	for _, status := range u.errors {
-		color.New(color.FgHiBlack).Print("   ")
 		if status.URN != "" {
-			color.New(color.FgRed, color.Bold).Print(formatURN(status.URN) + ": ")
+			color.New(color.FgRed, color.Bold).Println("   " + formatURN(status.URN))
 		}
-		color.New(color.FgWhite).Println(strings.TrimSpace(status.Error))
+		color.New(color.FgWhite).Println(status.Error)
 	}
 }
 

@@ -14,7 +14,14 @@ export default $config({
     };
   },
   async run() {
-    const item = new sst.Bucket("Item", {});
+    const item = new sst.Bucket("Item2", {
+      nodes: {
+        bucket: {
+          bucket: "foo",
+        },
+      },
+    });
+    // throw new Error("lol");
 
     return {
       bucket: item.nodes.bucket.bucket,
