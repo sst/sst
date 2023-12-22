@@ -3,7 +3,7 @@ package util
 import "crypto/rand"
 
 func RandomString(length int) string {
-	const charset = "abcdefhiklmnorstuvwxz"
+	const charset = "abcdefhkmnorstuvwxz"
 	b := make([]byte, length)
 	if _, err := rand.Read(b); err != nil {
 		panic(err)
