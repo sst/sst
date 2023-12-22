@@ -42,8 +42,6 @@ brews:
   - repository:
       owner: sst
       name: homebrew-tap
-    dependencies:
-      - name: pulumi/tap/pulumi
 nfpms:
   - maintainer: sst
     description: the sst cli
