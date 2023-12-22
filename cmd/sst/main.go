@@ -48,13 +48,26 @@ func main() {
 		Before: func(c *cli.Context) error {
 			configureLog(c)
 
+			spin := spinner.New(spinner.CharSets[14], 100*time.Millisecond)
+			spin.Suffix = "  First run, setting up environment..."
+
+			if global.NeedsPulumi() {
+				spin.Start()
+				err := global.InstallPulumi()
+				if err != nil {
+					return err
+				}
+			}
+
 			if global.NeedsPlugins() {
-				fmt.Println("new installation, installing dependencies...")
 				err := global.InstallPlugins()
 				if err != nil {
 					return err
 				}
 			}
+
+			spin.Stop()
+
 			return nil
 		},
 		Commands: []*cli.Command{

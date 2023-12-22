@@ -5,6 +5,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 )
 
 var configDir = (func() string {
@@ -38,4 +39,24 @@ func InstallPlugins() error {
 	cmd := exec.Command("pulumi", "plugin", "install", "resource", "aws")
 	cmd.Env = append(os.Environ(), "PULUMI_HOME="+configDir)
 	return cmd.Run()
+}
+
+func NeedsPulumi() bool {
+	_, err := exec.LookPath("pulumi")
+	if err != nil {
+		return true
+	}
+	return false
+}
+
+func InstallPulumi() error {
+	if runtime.GOOS == "windows" {
+		psCommand := `"%SystemRoot%\System32\WindowsPowerShell\v1.0\powershell.exe" -NoProfile -InputFormat None -ExecutionPolicy Bypass -Command "[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; iex ((New-Object System.Net.WebClient).DownloadString('https://get.pulumi.com/install.ps1'))" && SET "PATH=%PATH%;%USERPROFILE%\.pulumi\bin"`
+		_, err := exec.Command("cmd", "/C", psCommand).CombinedOutput()
+		return err
+	}
+
+	cmd := `curl -fsSL https://get.pulumi.com | sh`
+	_, err := exec.Command("bash", "-c", cmd).CombinedOutput()
+	return err
 }
