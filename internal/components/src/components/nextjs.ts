@@ -213,7 +213,9 @@ export class Nextjs extends Component {
     this.server = serverFunction as unknown as Function;
     this.edge = plan.edge;
     this.registerOutputs({
-      _hint: this.cdn.domainUrl || this.cdn.url,
+      _hint: all([this.cdn.domainUrl, this.cdn.url]).apply(
+        ([domainUrl, url]) => domainUrl || url
+      ),
     });
 
     //app.registerTypes(this);
@@ -920,7 +922,6 @@ if (event.rawPath) {
     function disableDefaultLogging() {
       if (!serverFunction) return;
 
-      // TODO create log group and reference log group arn
       const policy = new aws.iam.Policy(
         `${name}DisableLoggingPolicy`,
         {
@@ -935,12 +936,8 @@ if (event.rawPath) {
                 ],
                 "Effect": "Deny",
                 "Resources": [
-                  "arn:aws:logs:${$app.providers?.aws
-                    ?.region!}:*:log-group:/aws/lambda/${serverFunction?.nodes
-                    .function.name}",
-                  "arn:aws:logs:${$app.providers?.aws
-                    ?.region!}:*:log-group:/aws/lambda/${serverFunction?.nodes
-                    .function.name}:*",
+                  "${serverFunction.nodes.logGroup.logGroupArn}",
+                  "${serverFunction.nodes.logGroup.logGroupArn}:*",
                 ],
               }
             ]
