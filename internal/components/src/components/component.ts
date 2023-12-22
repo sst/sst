@@ -17,13 +17,6 @@ export class Component extends ComponentResource {
     super(type, name, args, {
       transformations: [
         (args) => {
-          // Ensure "parent" is set
-          if (args.type !== type && !args.opts.parent) {
-            throw new Error(
-              `In "${name}" component, parent of "${args.name}" (${args.type}) is not set`
-            );
-          }
-
           // Ensure names are prefixed with parent's name
           if (
             args.type !== type &&

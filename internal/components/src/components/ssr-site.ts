@@ -997,10 +997,10 @@ if (event.type === "warmer") {
             {
               policyArn: policy.arn,
               role: fn.nodes.role.name,
-            }
+            },
+            { parent }
           );
-        }),
-          { parent };
+        });
       }
     }
 

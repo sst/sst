@@ -362,23 +362,15 @@ func formatURN(urn string) string {
 	splits := strings.Split(urn, "::")[2:]
 	urn0 := splits[0]
 	resourceName0 := splits[1]
+	// convert sst:sst:Nextjs$aws:s3/bucket:Bucket::Files to Nextjs → Files
+	urn1 := regexp.MustCompile(`sst:sst:([^$]+).*$`).ReplaceAllString(urn0, "$1")
 	// convert aws:s3/bucket:Bucket to aws:s3:Bucket
-	urn1 := regexp.MustCompile(`\/[^:]+`).ReplaceAllString(urn0, "")
-	// convert sst:sst:Nextjs to sst:Nextjs
-	urn2 := regexp.MustCompile(`sst:sst:`).ReplaceAllString(urn1, "sst:")
-	// convert pulumi-nodejs:dynamic:Resource to sst:xxxx
-	urn3 := urn2
-	resourceName1 := resourceName0
-	resourceType := regexp.MustCompile(`\.sst\.(.+)$`).FindStringSubmatch(resourceName0)
-	if regexp.MustCompile(`pulumi-nodejs:dynamic:Resource$`).MatchString(urn2) &&
-		len(resourceType) > 1 {
-		urn3 = regexp.MustCompile(`pulumi-nodejs:dynamic:Resource$`).ReplaceAllString(urn2, resourceType[1])
-		resourceName1 = regexp.MustCompile(`\.sst\..+$`).ReplaceAllString(resourceName0, "")
-	}
-	urn4 := regexp.MustCompile(`\$`).ReplaceAllString(urn3, " → ")
-	// convert Nextjs$aws:s3:Bucket to Nextjs → aws:s3:Bucket
-	urn5 := regexp.MustCompile(`\$`).ReplaceAllString(urn4, " → ")
-	return urn5 + " → " + resourceName1
+	urn2 := regexp.MustCompile(`\/[^:]+`).ReplaceAllString(urn1, "")
+	// convert non:sst:Component$aws:s3:Bucket to non:sst:Component → aws:s3:Bucket
+	urn3 := regexp.MustCompile(`\$`).ReplaceAllString(urn2, " → ")
+	// convert WebServerCodeUpdater.sst.FunctionCodeUpdater to FunctionCodeUpdater
+	resourceName1 := regexp.MustCompile(`([^\.]+)\.sst\..*$`).ReplaceAllString(resourceName0, "$1")
+	return urn3 + " → " + resourceName1
 }
 
 type Progress struct {
