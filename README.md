@@ -7,6 +7,7 @@
 ```
 brew install sst/tap/sst
 ```
+
 To upgrade to the latest version:
 
 ```
@@ -37,3 +38,56 @@ scoop update sst
 #### Manually
 
 Download the pre-compiled binaries from the [releases](https://github.com/sst/ion/releases/latest) page and copy to the desired location.
+
+## Quick start
+
+1. Create a new Next.js app.
+
+   ```bash
+   npx create-next-app@latest
+   ```
+
+2. Initialize SST in the root of your Next.js app.
+
+   ```bash
+   cd my-app
+   sst create
+   ```
+
+3. Deploy!
+
+   ```bash
+   sst deploy
+   ```
+
+## Custom domains
+
+You can configure the app with a custom domain hosted either on [Route 53](https://aws.amazon.com/route53/).
+
+```js {3}
+new Nextjs("Web", {
+  domain: "my-app.com",
+});
+```
+
+You can setup `www.my-app.com` redirect to `my-app.com`.
+
+```js {3}
+new Nextjs("Web", {
+  domain: {
+    domainName: "my-app.com",
+    redirects: ["www.my-app.com"],
+  },
+});
+```
+
+Or you can have `www.my-app.com` serve out the same site without redirecting.
+
+```js {3}
+new Nextjs("Web", {
+  domain: {
+    domainName: "my-app.com",
+    aliases: ["www.my-app.com"],
+  },
+});
+```

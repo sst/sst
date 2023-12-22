@@ -1029,8 +1029,6 @@ if (event.type === "warmer") {
           timeout: "900 seconds",
           memory: "128 MB",
           environment: {
-            // TODO - SST design: output: how to reference the function inside Function
-            //   looks weird to acces `function.function.name`
             FUNCTION_NAME: ssrFunctions[0].nodes.function.name,
             CONCURRENCY: output(args.warm).apply((warm) => warm.toString()),
           },
