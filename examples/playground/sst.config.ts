@@ -25,6 +25,10 @@ export default $config({
 });
 
 function testProviderOutput() {
+  interface Random {
+    num: number;
+  }
+
   const randomprovider: pulumi.dynamic.ResourceProvider = {
     async create(inputs) {
       return { id: "foo", outs: { num: "foo" } };
@@ -32,14 +36,12 @@ function testProviderOutput() {
   };
 
   class Random extends pulumi.dynamic.Resource {
-    public readonly num!: pulumi.Output<string>;
-
     constructor(name: string, opts?: pulumi.CustomResourceOptions) {
-      super(randomprovider, name, {}, opts);
+      super(randomprovider, name, { num: undefined }, opts);
     }
   }
   const random = new Random("Random");
-  return random.num;
+  return { r: random.num, r2: "hi" };
 }
 
 function testHostedZoneLookup() {

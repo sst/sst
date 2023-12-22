@@ -14,15 +14,10 @@ interface Inputs {
   domain: string;
 }
 
-interface Outputs {
-  zoneId: string;
-}
-
 class Provider implements dynamic.ResourceProvider {
   async create(inputs: Inputs): Promise<dynamic.CreateResult> {
     const zoneId = await this.lookup(inputs.domain);
-    const outs: Outputs = { zoneId };
-    return { id: zoneId, outs };
+    return { id: zoneId, outs: { zoneId } };
   }
 
   async update(
@@ -31,8 +26,7 @@ class Provider implements dynamic.ResourceProvider {
     news: Inputs
   ): Promise<dynamic.UpdateResult> {
     const zoneId = await this.lookup(news.domain);
-    const outs: Outputs = { zoneId };
-    return { outs };
+    return { outs: { zoneId } };
   }
 
   async lookup(domain: string) {
@@ -64,9 +58,11 @@ class Provider implements dynamic.ResourceProvider {
   }
 }
 
-export class HostedZoneLookup extends dynamic.Resource {
-  public readonly zoneId!: Output<string>;
+export interface HostedZoneLookup {
+  zoneId: Output<string>;
+}
 
+export class HostedZoneLookup extends dynamic.Resource {
   constructor(
     name: string,
     args: HostedZoneLookupInputs,
