@@ -51,6 +51,7 @@ func NeedsPulumi() bool {
 }
 
 func InstallPulumi() error {
+	slog.Info("installing pulumi")
 	if runtime.GOOS == "windows" {
 		psCommand := `"%SystemRoot%\System32\WindowsPowerShell\v1.0\powershell.exe" -NoProfile -InputFormat None -ExecutionPolicy Bypass -Command "[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; iex ((New-Object System.Net.WebClient).DownloadString('https://get.pulumi.com/install.ps1'))" && SET "PATH=%PATH%;%USERPROFILE%\.pulumi\bin"`
 		_, err := exec.Command("cmd", "/C", psCommand).CombinedOutput()
