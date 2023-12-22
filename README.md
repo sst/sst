@@ -1,3 +1,16 @@
+# ❍
+
+[SST](https://sst.dev) ❍ Ion is an experimental new engine. It's based on a streaming deploy architecture and has a few big advantages.
+
+- **10x faster** deploys
+- Native **multi-region** support
+- No more cyclical dependencies
+- No stacks or stack resource limits
+- No CDK or npm package conflicts
+- Native support for **non-AWS** providers
+
+_Note: Ion is currently in alpha and only supports deploying Next.js sites and L1 AWS resources. We'll be sharing docs and technical details soon._
+
 ## Installation
 
 #### macOS
@@ -54,13 +67,15 @@ Download the pre-compiled binaries from the [releases](https://github.com/sst/io
    sst create
    ```
 
+   This creates an `sst.config.ts` in your project root.
+
 3. Deploy!
 
    ```bash
    sst deploy
    ```
 
-## Custom domains
+### Custom domains
 
 You can configure the app with a custom domain hosted either on [Route 53](https://aws.amazon.com/route53/).
 
@@ -91,3 +106,7 @@ new Nextjs("Web", {
   },
 });
 ```
+
+---
+
+Join the `#ion` channel in our [Discord](https://sst.dev/discord) to learn more and contribute.
