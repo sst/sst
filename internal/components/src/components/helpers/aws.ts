@@ -1,4 +1,3 @@
-import crypto from "crypto";
 const bootstrapBuckets: Record<string, Promise<string>> = {};
 import {
   SSMClient,
@@ -11,7 +10,7 @@ import { StandardRetryStrategy } from "@aws-sdk/middleware-retry";
 export type {} from "@smithy/types";
 import { output } from "@pulumi/pulumi";
 import { lazy } from "../../util/lazy";
-import { sanitizeToPascalCase } from "./naming";
+import { HASH_CHARS, hashNumberToString, sanitizeToPascalCase } from "./naming";
 
 const useProviderCache = lazy(() => new Map<string, aws.Provider>());
 const useClientCache = lazy(() => new Map<string, any>());
@@ -49,7 +48,15 @@ export const AWS = {
 
           if (result?.Parameter?.Value) return result.Parameter.Value;
 
-          const name = `sst-bootstrap-${crypto.randomUUID()}`;
+          // Generate a bootstrap bucket suffix number
+          const suffixLength = 12;
+          const minNumber = Math.pow(HASH_CHARS.length, suffixLength);
+          const numberSuffix =
+            Math.floor(Math.random() * minNumber) + minNumber;
+          const name = `sst-bootstrap-${hashNumberToString(
+            numberSuffix,
+            suffixLength
+          )}`;
           await s3.send(
             new CreateBucketCommand({
               Bucket: name,

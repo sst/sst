@@ -1,7 +1,7 @@
 import { Input, ComponentResourceOptions, output } from "@pulumi/pulumi";
 import * as aws from "@pulumi/aws";
 import { RandomId } from "@pulumi/random";
-import { prefixName, randomDecToSuffix } from "./helpers/naming";
+import { prefixName, hashNumberToString } from "./helpers/naming";
 import { Component } from "./component";
 
 /**
@@ -36,7 +36,10 @@ export class Bucket extends Component {
       `${name}Bucket`,
       {
         bucket: randomId.dec.apply((dec) =>
-          prefixName(name.toLowerCase(), `-${randomDecToSuffix(dec)}`)
+          prefixName(
+            name.toLowerCase(),
+            `-${hashNumberToString(parseInt(dec), 8)}`
+          )
         ),
         forceDestroy: true,
         ...args?.nodes?.bucket,

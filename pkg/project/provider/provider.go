@@ -240,7 +240,7 @@ func (a *AwsProvider) resolveBucket() (string, error) {
 		var pnf *ssmTypes.ParameterNotFound
 		if errors.As(err, &pnf) {
 			region := a.config.Region
-			bucketName := fmt.Sprintf("sst-bootstrap-%v", util.RandomString(12))
+			bucketName := fmt.Sprintf("sst--%v", util.RandomString(12))
 			slog.Info("creating bootstrap bucket", "name", bucketName)
 			s3Client := s3.NewFromConfig(a.config)
 

@@ -25,7 +25,7 @@ export function prefixName(name: string, suffix?: string) {
 
     const stageTruncated = $app.stage.substring(
       0,
-      Math.max(8, L - nameLen - 1),
+      Math.max(8, L - nameLen - 1)
     );
     const nameTruncated = name.substring(0, L - stageTruncated.length - 1);
     return `${nameTruncated}-${stageTruncated}`;
@@ -34,16 +34,21 @@ export function prefixName(name: string, suffix?: string) {
   return `${prefixedName}${suffixStr}`;
 }
 
-export function randomDecToSuffix(dec: string) {
-  return numberToLowercaseAlphaString(parseInt(dec), 8).padStart(8, "s");
+export function hashNumberToString(number: number, length: number) {
+  const charLength = HASH_CHARS.length;
+  let hash = "";
+  while (number > 0) {
+    hash = HASH_CHARS[number % charLength] + hash;
+    number = Math.floor(number / charLength);
+  }
+
+  // Padding with 's'
+  hash = hash.slice(0, length);
+  while (hash.length < length) {
+    hash = "s" + hash;
+  }
+
+  return hash;
 }
 
-function numberToLowercaseAlphaString(num: number, len: number) {
-  let result = "";
-  while (num > 0 && result.length < len) {
-    let remainder = (num - 1) % 26;
-    result = String.fromCharCode(97 + remainder) + result;
-    num = Math.floor((num - 1) / 26);
-  }
-  return result;
-}
+export const HASH_CHARS = "abcdefhkmnorstuvwxz";
