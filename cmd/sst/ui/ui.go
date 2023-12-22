@@ -159,8 +159,10 @@ func (u *UI) Trigger(evt *project.StackEvent) {
 			return
 		}
 
-		if hint, ok := evt.ResOutputsEvent.Metadata.New.Outputs["_hint"]; ok {
-			u.hints[evt.ResOutputsEvent.Metadata.URN] = hint.(string)
+		if evt.ResOutputsEvent.Metadata.New != nil {
+			if hint, ok := evt.ResOutputsEvent.Metadata.New.Outputs["_hint"]; ok {
+				u.hints[evt.ResOutputsEvent.Metadata.URN] = hint.(string)
+			}
 		}
 
 		if evt.ResOutputsEvent.Metadata.Type == "sst:sst:Nextjs" && evt.ResOutputsEvent.Metadata.Op == apitype.OpCreate {

@@ -14,7 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/ssm"
-	"github.com/google/uuid"
+	"github.com/sst/ion/internal/util"
 
 	s3types "github.com/aws/aws-sdk-go-v2/service/s3/types"
 	ssmTypes "github.com/aws/aws-sdk-go-v2/service/ssm/types"
@@ -240,7 +240,7 @@ func (a *AwsProvider) resolveBucket() (string, error) {
 		var pnf *ssmTypes.ParameterNotFound
 		if errors.As(err, &pnf) {
 			region := a.config.Region
-			bucketName := fmt.Sprintf("sst-bootstrap-%v", uuid.New().String())
+			bucketName := fmt.Sprintf("sst-bootstrap-%v", util.RandomString(12))
 			slog.Info("creating bootstrap bucket", "name", bucketName)
 			s3Client := s3.NewFromConfig(a.config)
 

@@ -179,10 +179,13 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 	slog.Info("running stack command", "cmd", input.Command)
 	switch input.Command {
 	case "up":
-		stack.Up(ctx,
+		_, err = stack.Up(ctx,
 			optup.ProgressStreams(),
 			optup.EventStreams(stream),
 		)
+		if err != nil {
+			return err
+		}
 
 	case "destroy":
 		stack.Destroy(ctx,
@@ -196,6 +199,7 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 			optrefresh.EventStreams(stream),
 		)
 	}
+
 	return nil
 }
 
