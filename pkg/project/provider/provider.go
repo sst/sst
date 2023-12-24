@@ -299,6 +299,7 @@ func (a *AwsProvider) resolveConfig() (aws.Config, error) {
 			}
 			if a.args["region"] != "" {
 				lo.Region = a.args["region"]
+				lo.DefaultRegion = "us-east-1"
 			}
 			return nil
 		},
