@@ -1,4 +1,4 @@
-import { CustomResourceOptions, Input, dynamic } from "@pulumi/pulumi";
+import { CustomResourceOptions, Input, Output, dynamic } from "@pulumi/pulumi";
 import {
   CloudWatchLogsClient,
   CreateLogGroupCommand,
@@ -11,7 +11,7 @@ import { AWS } from "../helpers/aws.js";
 export interface LogGroupInputs {
   logGroupName: Input<string>;
   retentionInDays: Input<number>;
-  region?: Input<aws.Region>;
+  region: Input<aws.Region>;
 }
 
 interface Inputs {
@@ -24,7 +24,13 @@ class Provider implements dynamic.ResourceProvider {
   async create(inputs: Inputs): Promise<dynamic.CreateResult> {
     await this.createLogGroup(inputs);
     await this.setRetentionPolicy(inputs);
-    return { id: inputs.logGroupName, outs: inputs };
+    return {
+      id: inputs.logGroupName,
+      outs: {
+        logGroupArn: `arn:aws:logs:${inputs.region}:*:log-group:${inputs.logGroupName}`,
+        logGroupName: inputs.logGroupName,
+      },
+    };
   }
 
   async update(
@@ -34,7 +40,12 @@ class Provider implements dynamic.ResourceProvider {
   ): Promise<dynamic.UpdateResult> {
     await this.createLogGroup(news);
     await this.setRetentionPolicy(news);
-    return { outs: news };
+    return {
+      outs: {
+        logGroupArn: `arn:aws:logs:${news.region}:*:log-group:${news.logGroupName}`,
+        logGroupName: news.logGroupName,
+      },
+    };
   }
 
   async delete(id: string, props: Inputs) {
@@ -85,12 +96,22 @@ class Provider implements dynamic.ResourceProvider {
   }
 }
 
+export interface LogGroup {
+  logGroupArn: Output<string>;
+  logGroupName: Output<string>;
+}
+
 export class LogGroup extends dynamic.Resource {
   constructor(
     name: string,
     args: LogGroupInputs,
     opts?: CustomResourceOptions
   ) {
-    super(new Provider(), `${name}.sst.LogGroup`, args, opts);
+    super(
+      new Provider(),
+      `${name}.sst.LogGroup`,
+      { ...args, logGroupArn: undefined },
+      opts
+    );
   }
 }

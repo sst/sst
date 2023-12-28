@@ -9,14 +9,21 @@ export interface FunctionCodeUpdaterInputs {
   s3Bucket: Input<string>;
   s3Key: Input<string>;
   functionName: Input<string>;
-  region?: Input<aws.Region>;
+  /**
+   * This is to ensure the function code is re-updated when the function's
+   * configuration changes. Without this, the function code might get reverted
+   * back to the placeholder code.
+   */
+  functionLastModified: Input<string>;
+  region: Input<aws.Region>;
 }
 
 interface Inputs {
   s3Bucket: string;
   s3Key: string;
   functionName: string;
-  region?: aws.Region;
+  functionLastModified: string;
+  region: aws.Region;
 }
 
 class Provider implements dynamic.ResourceProvider {
@@ -29,7 +36,7 @@ class Provider implements dynamic.ResourceProvider {
         S3Key: inputs.s3Key,
       })
     );
-    return { id: inputs.functionName, outs: inputs };
+    return { id: inputs.functionName, outs: {} };
   }
 
   async update(
@@ -51,7 +58,7 @@ class Provider implements dynamic.ResourceProvider {
         S3Key: news.s3Key,
       })
     );
-    return { outs: news };
+    return { outs: {} };
   }
 }
 

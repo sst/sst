@@ -295,14 +295,15 @@ export class Nextjs extends Component {
                       {
                         name: "revalidation-queue",
                         policy: JSON.stringify({
-                          statements: [
+                          Statement: [
                             {
-                              actions: [
+                              Effect: "Allow",
+                              Action: [
                                 "sqs:SendMessage",
                                 "sqs:GetQueueAttributes",
                                 "sqs:GetQueueUrl",
                               ],
-                              resources: [revalidationQueueArn],
+                              Resource: [revalidationQueueArn],
                             },
                           ],
                         }),
@@ -314,9 +315,10 @@ export class Nextjs extends Component {
                       {
                         name: "revalidation-table",
                         policy: JSON.stringify({
-                          statements: [
+                          Statement: [
                             {
-                              actions: [
+                              Effect: "Allow",
+                              Action: [
                                 "dynamodb:BatchGetItem",
                                 "dynamodb:GetRecords",
                                 "dynamodb:GetShardIterator",
@@ -330,7 +332,7 @@ export class Nextjs extends Component {
                                 "dynamodb:DeleteItem",
                                 "dynamodb:DescribeTable",
                               ],
-                              resources: [
+                              Resource: [
                                 revalidationTableArn,
                                 `${revalidationTableArn}/*`,
                               ],
@@ -386,7 +388,7 @@ export class Nextjs extends Component {
                       "image-optimization-function"
                     ),
                     runtime: "nodejs18.x",
-                    architectures: ["arm64"],
+                    architecture: "arm64",
                     environment: {
                       BUCKET_NAME: bucketName,
                       BUCKET_KEY_PREFIX: "_assets",

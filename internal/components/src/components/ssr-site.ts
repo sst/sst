@@ -609,14 +609,14 @@ function handler(event) {
               })),
               policies: output(props.policies).apply((policies) => [
                 {
-                  name: "s3",
+                  name: "assets",
                   policy: bucket.arn.apply((arn) =>
                     aws.iam
                       .getPolicyDocument({
                         statements: [
                           {
                             actions: ["s3:*"],
-                            resources: [arn],
+                            resources: [arn, `${arn}/*`],
                           },
                         ],
                       })
@@ -719,20 +719,21 @@ function handler(event) {
           ]),
           policies: [
             {
-              name: "s3",
+              name: "assets",
               policy: bucket.arn.apply((arn) =>
                 aws.iam
                   .getPolicyDocument({
                     statements: [
                       {
                         actions: ["s3:*"],
-                        resources: [arn],
+                        resources: [arn, `${arn}/*`],
                       },
                     ],
                   })
                   .then((doc) => doc.json)
               ),
             },
+            ...(props.function.policies || []),
           ],
           url: true,
         },

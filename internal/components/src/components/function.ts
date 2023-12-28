@@ -236,6 +236,7 @@ export interface FunctionArgs {
   streaming?: Input<boolean>;
   injections?: Input<string[]>;
   logging?: Input<FunctionLoggingArgs>;
+  architecture?: Input<"x86_64" | "arm64">;
   /**
    * Enable function URLs, a dedicated endpoint for your Lambda function.
    * @default Disabled
@@ -270,13 +271,14 @@ export interface FunctionArgs {
 export class Function extends Component {
   private function: Output<aws.lambda.Function>;
   private role: aws.iam.Role;
+  private logGroup: LogGroup;
   private fnUrl: Output<aws.lambda.FunctionUrl | undefined>;
   private missingSourcemap?: boolean;
 
   constructor(
     name: string,
     args: FunctionArgs,
-    opts?: ComponentResourceOptions,
+    opts?: ComponentResourceOptions
   ) {
     super("sst:sst:Function", name, args, opts);
 
@@ -286,6 +288,7 @@ export class Function extends Component {
     const runtime = normalizeRuntime();
     const timeout = normalizeTimeout();
     const memory = normalizeMemory();
+    const architectures = normalizeArchitectures();
     const environment = normalizeEnvironment();
     const streaming = normalizeStreaming();
     const logging = normalizeLogging();
@@ -300,12 +303,13 @@ export class Function extends Component {
     const fnRaw = createFunction();
     const fn = updateFunctionCode();
 
-    createLogGroup();
+    const logGroup = createLogGroup();
     const fnUrl = createUrl();
 
     this.function = fn;
     this.role = role;
     this.fnUrl = fnUrl;
+    this.logGroup = logGroup;
 
     function normalizeRegion() {
       return all([
@@ -328,6 +332,12 @@ export class Function extends Component {
 
     function normalizeMemory() {
       return output(args.memory).apply((memory) => memory ?? "1024 MB");
+    }
+
+    function normalizeArchitectures() {
+      return output(args.architecture).apply((arc) =>
+        arc === "arm64" ? ["arm64"] : ["x86_64"]
+      );
     }
 
     function normalizeEnvironment() {
@@ -390,7 +400,7 @@ export class Function extends Component {
 
       return output(args.bind).apply(async (component) => {
         const outputs = Object.entries(component).filter(
-          ([key]) => !key.startsWith("__"),
+          ([key]) => !key.startsWith("__")
         );
         const keys = outputs.map(([key]) => key);
         const values = outputs.map(([_, value]) => value);
@@ -442,13 +452,13 @@ export class Function extends Component {
                   `  const { ${oldHandlerFunction}: rawHandler} = await import("./${oldHandlerName}.mjs");`,
                   `  return rawHandler(event, context);`,
                   `};`,
-                ].join("\n"),
+                ].join("\n")
           );
           return path.posix.join(
             handlerDir,
-            `${newHandlerName}.${newHandlerFunction}`,
+            `${newHandlerName}.${newHandlerFunction}`
           );
-        },
+        }
       );
     }
 
@@ -464,7 +474,7 @@ export class Function extends Component {
             "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
           ],
         },
-        { parent },
+        { parent }
       );
     }
 
@@ -478,7 +488,7 @@ export class Function extends Component {
           $cli.paths.work,
           "artifacts",
           name,
-          "code.zip",
+          "code.zip"
         );
         await fs.promises.mkdir(path.dirname(zipPath), {
           recursive: true,
@@ -514,7 +524,7 @@ export class Function extends Component {
           bucket: region.apply((region) => AWS.bootstrap.forRegion(region)),
           source: zipPath.apply((zipPath) => new asset.FileArchive(zipPath)),
         },
-        { parent, retainOnDelete: true },
+        { parent, retainOnDelete: true }
       );
     }
 
@@ -534,23 +544,24 @@ export class Function extends Component {
           environment: {
             variables: environment,
           },
+          architectures,
           ...args.nodes?.function,
         },
-        { parent },
+        { parent }
       );
     }
 
     function createLogGroup() {
-      new LogGroup(
+      return new LogGroup(
         `${name}LogGroup`,
         {
           logGroupName: interpolate`/aws/lambda/${fn.name}`,
           retentionInDays: logging.apply(
-            (logging) => RETENTION[logging.retention],
+            (logging) => RETENTION[logging.retention]
           ),
           region,
         },
-        { parent },
+        { parent }
       );
     }
 
@@ -564,11 +575,11 @@ export class Function extends Component {
             functionName: fn.name,
             authorizationType: url.authorization.toUpperCase(),
             invokeMode: streaming.apply((streaming) =>
-              streaming ? "RESPONSE_STREAM" : "BUFFERED",
+              streaming ? "RESPONSE_STREAM" : "BUFFERED"
             ),
             cors: url.cors,
           },
-          { parent },
+          { parent }
         );
       });
     }
@@ -581,9 +592,10 @@ export class Function extends Component {
             functionName: fnRaw.name,
             s3Bucket: file.bucket,
             s3Key: file.key,
+            functionLastModified: fnRaw.lastModified,
             region,
           },
-          { parent },
+          { parent }
         );
         return fnRaw;
       });
@@ -594,6 +606,7 @@ export class Function extends Component {
     return {
       function: this.function,
       role: this.role,
+      logGroup: this.logGroup,
     };
   }
 
