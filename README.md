@@ -79,7 +79,7 @@ Download the pre-compiled binaries from the [releases](https://github.com/sst/io
 
 ### Custom domains
 
-You can configure the app with a custom domain hosted either on [Route 53](https://aws.amazon.com/route53/).
+You can configure the app with a custom domain hosted on [Route 53](https://aws.amazon.com/route53/).
 
 ```js {3}
 new Nextjs("Web", {
