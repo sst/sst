@@ -29,7 +29,7 @@ export function createEventBuilder<
   Bus extends keyof typeof EventBus,
   MetadataFunction extends () => any,
   Validator extends (schema: any) => (input: any) => any,
-  MetadataSchema extends Parameters<Validator>[0]
+  MetadataSchema extends Parameters<Validator>[0] | undefined
 >(input: {
   bus: Bus;
   metadata?: MetadataSchema;
@@ -48,6 +48,7 @@ export function createEventBuilder<
       ? (properties: Parsed["in"]) => Promise<PutEventsCommandOutput>
       : (
           properties: Parsed["in"],
+          // @ts-expect-error
           metadata: inferParser<MetadataSchema>["in"]
         ) => Promise<void>;
     const validate = validator(schema);
