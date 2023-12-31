@@ -12,7 +12,7 @@ import {
   PutEventsRequestEntry,
 } from "@aws-sdk/client-eventbridge";
 import { EventBridgeEvent } from "aws-lambda";
-import { ZodAny, ZodObject, ZodRawShape, z } from "zod";
+import { ZodAny, ZodObject, ZodRawShape, ZodSchema, z } from "zod";
 import { useLoader } from "../util/loader.js";
 import { Config } from "../config/index.js";
 
@@ -25,35 +25,33 @@ import { Config } from "../config/index.js";
  */
 export { PutEventsCommandOutput };
 
-const client = new EventBridgeClient({});
-
 export function createEventBuilder<
   Bus extends keyof typeof EventBus,
-  MetadataShape extends ZodRawShape | undefined,
-  MetadataFunction extends () => any
->(props: {
+  MetadataFunction extends () => any,
+  Validator extends (schema: any) => (input: any) => any,
+  MetadataSchema extends Parameters<Validator>[0]
+>(input: {
   bus: Bus;
-  metadata?: MetadataShape;
+  metadata?: MetadataSchema;
   metadataFn?: MetadataFunction;
+  validator: Validator;
 }) {
-  return function createEvent<
+  const client = new EventBridgeClient({});
+  const validator = input.validator;
+  const metadataValidator = input.metadata ? validator(input.metadata) : null;
+  return function event<
     Type extends string,
-    Shape extends ZodRawShape,
-    Properties = z.infer<ZodObject<Shape, "strip", ZodAny>>
-  >(type: Type, properties: Shape) {
-    type Publish = undefined extends MetadataShape
-      ? (properties: Properties) => Promise<PutEventsCommandOutput>
+    Schema extends Parameters<Validator>[0]
+  >(type: Type, schema: Schema) {
+    type Parsed = inferParser<Schema>;
+    type Publish = undefined extends MetadataSchema
+      ? (properties: Parsed["in"]) => Promise<PutEventsCommandOutput>
       : (
-          properties: Properties,
-          metadata: z.infer<
-            ZodObject<Exclude<MetadataShape, undefined>, "strip", ZodAny>
-          >
+          properties: Parsed["in"],
+          metadata: inferParser<MetadataSchema>["in"]
         ) => Promise<void>;
-    const propertiesSchema = z.object(properties);
-    const metadataSchema = props.metadata
-      ? z.object(props.metadata)
-      : undefined;
-    const publish = async (properties: any, metadata: any) => {
+    const validate = validator(schema);
+    async function publish(properties: any, metadata: any) {
       const result = await useLoader(
         "sst.bus.publish",
         async (input: PutEventsRequestEntry[]) => {
@@ -88,53 +86,108 @@ export function createEventBuilder<
         // @ts-expect-error
         Source: Config.APP,
         Detail: JSON.stringify({
-          properties: propertiesSchema.parse(properties),
+          properties: validate(properties),
           metadata: (() => {
-            if (metadataSchema) {
-              return metadataSchema.parse(metadata);
+            if (metadataValidator) {
+              return metadataValidator(metadata);
             }
 
-            if (props.metadataFn) {
-              return props.metadataFn();
+            if (input.metadataFn) {
+              return input.metadataFn();
             }
           })(),
         }),
         DetailType: type,
       });
       return result;
-    };
-
+    }
     return {
       publish: publish as Publish,
       type,
-      shape: {
-        metadata: {} as Parameters<Publish>[1],
-        properties: {} as Properties,
-        metadataFn: {} as ReturnType<MetadataFunction>,
-      },
+      $input: {} as Parsed["in"],
+      $output: {} as Parsed["out"],
+      $metadata: {} as ReturnType<MetadataFunction>,
     };
   };
 }
+
+export function ZodValidator<Schema extends ZodSchema>(
+  schema: Schema
+): (input: z.input<Schema>) => z.output<Schema> {
+  return (input) => {
+    return schema.parse(input);
+  };
+}
+
+// Taken from tRPC
+export type ParserZodEsque<TInput, TParsedInput> = {
+  _input: TInput;
+  _output: TParsedInput;
+};
+
+export type ParserValibotEsque<TInput, TParsedInput> = {
+  _types?: {
+    input: TInput;
+    output: TParsedInput;
+  };
+};
+
+export type ParserMyZodEsque<TInput> = {
+  parse: (input: any) => TInput;
+};
+
+export type ParserSuperstructEsque<TInput> = {
+  create: (input: unknown) => TInput;
+};
+
+export type ParserCustomValidatorEsque<TInput> = (
+  input: unknown
+) => Promise<TInput> | TInput;
+
+export type ParserYupEsque<TInput> = {
+  validateSync: (input: unknown) => TInput;
+};
+
+export type ParserScaleEsque<TInput> = {
+  assert(value: unknown): asserts value is TInput;
+};
+
+export type ParserWithoutInput<TInput> =
+  | ParserCustomValidatorEsque<TInput>
+  | ParserMyZodEsque<TInput>
+  | ParserScaleEsque<TInput>
+  | ParserSuperstructEsque<TInput>
+  | ParserYupEsque<TInput>;
+
+export type ParserWithInputOutput<TInput, TParsedInput> =
+  | ParserZodEsque<TInput, TParsedInput>
+  | ParserValibotEsque<TInput, TParsedInput>;
+
+export type Parser = ParserWithInputOutput<any, any> | ParserWithoutInput<any>;
+
+export type inferParser<TParser extends Parser> =
+  TParser extends ParserWithInputOutput<infer $TIn, infer $TOut>
+    ? {
+        in: $TIn;
+        out: $TOut;
+      }
+    : TParser extends ParserWithoutInput<infer $InOut>
+    ? {
+        in: $InOut;
+        out: $InOut;
+      }
+    : never;
 
 export type inferEvent<T extends { shape: ZodObject<any> }> = z.infer<
   T["shape"]
 >;
 
-type Event = {
-  type: string;
-  shape: {
-    properties: any;
-    metadata: any;
-    metadataFn: any;
-  };
-};
+type Event = ReturnType<ReturnType<typeof createEventBuilder>>;
 
-export type EventPayload<E extends Event> = {
+type EventPayload<E extends Event> = {
   type: E["type"];
-  properties: E["shape"]["properties"];
-  metadata: undefined extends E["shape"]["metadata"]
-    ? E["shape"]["metadataFn"]
-    : E["shape"]["metadata"];
+  properties: E["$output"];
+  metadata: E["$metadata"];
   attempts: number;
 };
 

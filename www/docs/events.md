@@ -56,10 +56,11 @@ This configuration will retry all subscriber errors up to 10 times (with exponen
 The template also creates an `event.ts` which creates an `event` function that can be used to define events.
 
 ```ts title="/packages/core/src/event.ts"
-import { createEventBuilder } from "sst/node/event-bus";
+import { createEventBuilder, ZodValidator } from "sst/node/event-bus";
 
 export const event = createEventBuilder({
   bus: "bus",
+  validator: ZodValidator
 });
 ```
 
@@ -73,9 +74,9 @@ In your application you can define events. This definition provides validation u
 import { event } from "./event";
 
 export const Events = {
-  Created: event("todo.created", {
+  Created: event("todo.created", z.object({
     id: z.string(),
-  }),
+  })),
 };
 ```
 ---
