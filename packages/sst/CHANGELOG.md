@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.39.2
+
+### Patch Changes
+
+- [`9f709ed0c`](https://github.com/sst/sst/commit/9f709ed0c8f0e093f498bb5e2fa85f0f76596509) Thanks [@thdxr](https://github.com/thdxr)! - event: fix expect error
+
 ## 2.39.1
 
 ### Patch Changes
