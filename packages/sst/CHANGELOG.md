@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.39.1
+
+### Patch Changes
+
+- [`49ef014f3`](https://github.com/sst/sst/commit/49ef014f325cc0969fad3b2c717e64da6cf885dc) Thanks [@thdxr](https://github.com/thdxr)! - event: type error fix
+
 ## 2.39.0
 
 ### Minor Changes
