@@ -83,7 +83,7 @@ export function createEventBuilder<
         }
       )({
         // @ts-expect-error
-        EventBusName: EventBus[props.bus].eventBusName,
+        EventBusName: EventBus[input.bus].eventBusName,
         // @ts-expect-error
         Source: Config.APP,
         Detail: JSON.stringify({
