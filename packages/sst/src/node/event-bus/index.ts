@@ -182,7 +182,11 @@ export type inferEvent<T extends { shape: ZodObject<any> }> = z.infer<
   T["shape"]
 >;
 
-type Event = ReturnType<ReturnType<typeof createEventBuilder>>;
+type Event = {
+  type: string;
+  $output: any;
+  $metadata: any;
+};
 
 type EventPayload<E extends Event> = {
   type: E["type"];
