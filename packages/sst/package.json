@@ -5,7 +5,7 @@
   },
   "sideEffects": false,
   "name": "sst",
-  "version": "2.38.7",
+  "version": "2.39.2",
   "bin": {
     "sst": "cli/sst.js"
   },
@@ -63,6 +63,7 @@
     "@babel/generator": "^7.20.5",
     "@babel/plugin-syntax-typescript": "^7.21.4",
     "@smithy/signature-v4": "^2.0.16",
+    "@smithy/util-endpoints": "1.0.5",
     "@trpc/server": "9.16.0",
     "adm-zip": "^0.5.10",
     "aws-cdk-lib": "2.110.1",
@@ -130,7 +131,7 @@
     "@types/ws": "^8.5.3",
     "@types/yargs": "^17.0.13",
     "archiver": "^5.3.1",
-    "astro-sst": "2.38.7",
+    "astro-sst": "2.39.2",
     "async": "^3.2.4",
     "tsx": "^3.12.1",
     "typescript": "^5.2.2",

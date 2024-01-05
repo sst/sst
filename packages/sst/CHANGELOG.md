@@ -1,5 +1,62 @@
 # @serverless-stack/cli2
 
+## 2.39.2
+
+### Patch Changes
+
+- [`9f709ed0c`](https://github.com/sst/sst/commit/9f709ed0c8f0e093f498bb5e2fa85f0f76596509) Thanks [@thdxr](https://github.com/thdxr)! - event: fix expect error
+
+## 2.39.1
+
+### Patch Changes
+
+- [`49ef014f3`](https://github.com/sst/sst/commit/49ef014f325cc0969fad3b2c717e64da6cf885dc) Thanks [@thdxr](https://github.com/thdxr)! - event: type error fix
+
+## 2.39.0
+
+### Minor Changes
+
+- [`af704d761`](https://github.com/sst/sst/commit/af704d761cef39e0327064d16e46ac60f9741c7b) Thanks [@thdxr](https://github.com/thdxr)! - There is a slight breaking change in this release if you are using SST Events with `createEventBuilder()` - you should receive type errors for all the issues. We now support specifying any validation library so will need to configure that.
+
+  To continue using Zod you can specify the validator like so
+
+  ```
+  import { createEventBuilder, ZodValidator } from "sst/node/event-bus"
+  const event = createEventBuilder({
+    bus: "MyBus",
+    validator: ZodValidator
+  })
+  ```
+
+  Additionally we no longer assume you are passing in a zod object as the schema.
+  You'll have to update code from:
+
+  ```
+  const MyEvent = event("my.event", {
+    foo: z.string(),
+  })
+  ```
+
+  to this:
+
+  ```
+  const MyEvent = event("my.event", z.object({
+    foo: z.string(),
+  }))
+  ```
+
+  This also allows you to specify non-objects as the event properties. Additionally, if you were using advanced inference the `shape` field has been replaced with `typeof MyEvent.$input`, `typeof MyEvent.$output`, and `typeof MyEvent.$metadata`
+
+### Patch Changes
+
+- [`ceed328d5`](https://github.com/sst/sst/commit/ceed328d57721bdb214c6293b592c4aaabb649a2) Thanks [@fwang](https://github.com/fwang)! - Job: expose codebuild project via cdk
+
+- [#3590](https://github.com/sst/sst/pull/3590) [`7e859e629`](https://github.com/sst/sst/commit/7e859e629209857c74a9a1c2a3f7fa8ab6853dd8) Thanks [@bayssmekanique](https://github.com/bayssmekanique)! - EdgeFunction: fixes copyFile prop to actually copy files to deployed handler function.
+
+- [#3545](https://github.com/sst/sst/pull/3545) [`366ffedaa`](https://github.com/sst/sst/commit/366ffedaaa06aab93a032274a34bc87a24ce94c9) Thanks [@coronapl](https://github.com/coronapl)! - IoT: Fix connection closed after 5 minutes
+
+- [#3588](https://github.com/sst/sst/pull/3588) [`b82790482`](https://github.com/sst/sst/commit/b827904824948669ae49d6b1e159e48b6c43b8b8) Thanks [@bayssmekanique](https://github.com/bayssmekanique)! - SsrSite: fixes function bundler to match deployment target on bundled dependencies.
+
 ## 2.38.7
 
 ### Patch Changes
