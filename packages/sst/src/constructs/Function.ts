@@ -506,12 +506,12 @@ export interface NodeJSProps {
   /**
    * Enable or disable minification
    *
-   * @default true
+   * @default false
    *
    * @example
    * ```js
    * nodejs: {
-   *   minify: false
+   *   minify: true
    * }
    * ```
    */
