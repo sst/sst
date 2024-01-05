@@ -368,9 +368,7 @@ export function createBucket(parent: ComponentResource, name: string) {
     // TODO add "enforceSSL: true"
     const bucket = new Bucket(
       `${name}Assets`,
-      {
-        blockPublicAccess: true,
-      },
+      {},
       { parent, retainOnDelete: false }
     );
     // allow access from another account bucket policy

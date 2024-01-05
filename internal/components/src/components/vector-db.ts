@@ -37,7 +37,7 @@ export class VectorDb extends Component {
     });
 
     function createDB() {
-      return new Postgres(`${name}DB`, {}, { parent });
+      return new Postgres(`${name}Database`, {}, { parent });
     }
 
     function createDBTable() {

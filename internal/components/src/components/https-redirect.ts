@@ -62,13 +62,7 @@ export class HttpsRedirect extends Component {
       { parent }
     );
 
-    const bucket = new Bucket(
-      `${name}Bucket`,
-      {
-        blockPublicAccess: true,
-      },
-      { parent }
-    );
+    const bucket = new Bucket(`${name}Bucket`, {}, { parent });
 
     const bucketWebsite = new aws.s3.BucketWebsiteConfigurationV2(
       `${name}BucketWebsite`,

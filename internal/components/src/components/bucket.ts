@@ -10,7 +10,7 @@ import { Component } from "./component";
 export interface BucketArgs {
   /**
    * Whether the bucket should block public access
-   * @default - false
+   * @default - true
    */
   blockPublicAccess?: Input<boolean>;
   nodes?: {
@@ -29,6 +29,7 @@ export class Bucket extends Component {
     super("sst:sst:Bucket", name, args, opts);
 
     const parent = this;
+    const blockPublicAccess = normalizeBlockPublicAccess();
 
     const randomId = new RandomId(`${name}Id`, { byteLength: 6 }, { parent });
 
@@ -49,7 +50,7 @@ export class Bucket extends Component {
       }
     );
 
-    output(args?.blockPublicAccess).apply((blockPublicAccess) => {
+    output(blockPublicAccess).apply((blockPublicAccess) => {
       if (!blockPublicAccess) return;
 
       new aws.s3.BucketPublicAccessBlock(
@@ -66,6 +67,10 @@ export class Bucket extends Component {
     });
 
     this.bucket = bucket;
+
+    function normalizeBlockPublicAccess() {
+      return output(args?.blockPublicAccess).apply((v) => v ?? true);
+    }
   }
 
   public get name() {
