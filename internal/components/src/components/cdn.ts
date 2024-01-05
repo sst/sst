@@ -8,7 +8,7 @@ import {
 import * as aws from "@pulumi/aws";
 import { DnsValidatedCertificate } from "./dns-validated-certificate.js";
 import { HttpsRedirect } from "./https-redirect.js";
-import { AWS } from "./helpers/aws.js";
+import { useProvider } from "./helpers/aws/provider.js";
 import { Component } from "./component.js";
 import { sanitizeToPascalCase } from "./helpers/naming.js";
 import { HostedZoneLookup } from "./providers/hosted-zone-lookup.js";
@@ -186,7 +186,7 @@ export class Cdn extends Component {
           alternativeNames: domain.aliases,
           zoneId,
         },
-        { parent, provider: AWS.useProvider("us-east-1") }
+        { parent, provider: useProvider("us-east-1") }
       );
     }
 

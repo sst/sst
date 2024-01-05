@@ -4,7 +4,7 @@ import {
   ListHostedZonesCommand,
   ListHostedZonesCommandOutput,
 } from "@aws-sdk/client-route-53";
-import { AWS } from "../helpers/aws.js";
+import { useClient } from "../helpers/aws/client.js";
 
 export interface HostedZoneLookupInputs {
   domain: Input<string>;
@@ -30,7 +30,7 @@ class Provider implements dynamic.ResourceProvider {
   }
 
   async lookup(domain: string) {
-    const client = AWS.useClient(Route53Client);
+    const client = useClient(Route53Client);
 
     // Get all hosted zones in the account
     const zones: ListHostedZonesCommandOutput["HostedZones"] = [];

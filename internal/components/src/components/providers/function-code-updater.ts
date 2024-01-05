@@ -3,7 +3,7 @@ import {
   LambdaClient,
   UpdateFunctionCodeCommand,
 } from "@aws-sdk/client-lambda";
-import { AWS } from "../helpers/aws.js";
+import { useClient } from "../helpers/aws/client.js";
 
 export interface FunctionCodeUpdaterInputs {
   s3Bucket: Input<string>;
@@ -28,7 +28,13 @@ interface Inputs {
 
 class Provider implements dynamic.ResourceProvider {
   async create(inputs: Inputs): Promise<dynamic.CreateResult> {
-    const client = AWS.useClient(LambdaClient, { region: inputs.region });
+    const client = useClient(LambdaClient, {
+      region: inputs.region,
+      retrableErrors: [
+        // Lambda is not ready to accept updates right after creation
+        "ServiceException",
+      ],
+    });
     await client.send(
       new UpdateFunctionCodeCommand({
         FunctionName: inputs.functionName,
@@ -44,7 +50,7 @@ class Provider implements dynamic.ResourceProvider {
     olds: Inputs,
     news: Inputs
   ): Promise<dynamic.UpdateResult> {
-    const client = AWS.useClient(LambdaClient, {
+    const client = useClient(LambdaClient, {
       region: news.region,
       retrableErrors: [
         // Lambda is not ready to accept updates right after creation

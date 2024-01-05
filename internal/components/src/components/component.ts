@@ -42,6 +42,16 @@ export class Component extends ComponentResource {
             case "aws:dynamodb/table:Table":
               overrides = { name: prefixName(args.name) };
               break;
+            case "aws:rds/cluster:Cluster":
+              overrides = {
+                clusterIdentifier: prefixName(args.name).toLocaleLowerCase(),
+              };
+              break;
+            case "aws:rds/clusterInstance:ClusterInstance":
+              overrides = {
+                identifier: prefixName(args.name).toLocaleLowerCase(),
+              };
+              break;
             case "aws:sqs/queue:Queue":
               const suffix = output(args.props.fifoQueue).apply((fifo) =>
                 fifo ? ".fifo" : ""

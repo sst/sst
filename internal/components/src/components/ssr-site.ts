@@ -18,7 +18,7 @@ import { Cdn, CdnDomainArgs } from "./cdn.js";
 import { Function, FunctionArgs, FunctionNodeJSArgs } from "./function.js";
 import { Duration, toSeconds } from "./util/duration.js";
 import { DistributionInvalidation } from "./providers/distribution-invalidation.js";
-import { AWS } from "./helpers/aws.js";
+import { useProvider } from "./helpers/aws/provider.js";
 import { Bucket } from "./bucket.js";
 import { BucketFile } from "./index.js";
 import { sanitizeToPascalCase } from "./helpers/naming.js";
@@ -629,7 +629,7 @@ function handler(event) {
                 function: { publish: true },
               },
             },
-            { provider: AWS.useProvider("us-east-1"), parent }
+            { provider: useProvider("us-east-1"), parent }
           );
 
           functions[fnName] = fn;

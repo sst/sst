@@ -23,7 +23,7 @@ import {
   validatePlan,
 } from "./ssr-site.js";
 import { Cdn } from "./cdn.js";
-import { AWS } from "./helpers/aws.js";
+import { bootstrap } from "./helpers/aws/bootstrap.js";
 import { Bucket } from "./bucket.js";
 import { Component } from "./component.js";
 import { sanitizeToPascalCase } from "./helpers/naming.js";
@@ -968,7 +968,7 @@ if (event.rawPath) {
             `${name}Sourcemap${sanitizeToPascalCase(sourcemapKey)}`,
             {
               bucket: output($app.providers?.aws?.region!).apply((region) =>
-                AWS.bootstrap.forRegion(region)
+                bootstrap.forRegion(region)
               ),
               source: new asset.FileAsset(sourcemapPath),
               key: serverFunction!.nodes.function.arn.apply((arn) =>

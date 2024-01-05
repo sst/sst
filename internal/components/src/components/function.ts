@@ -15,7 +15,7 @@ import {
 } from "@pulumi/pulumi";
 import * as aws from "@pulumi/aws";
 import { FunctionCodeUpdater } from "./providers/function-code-updater.js";
-import { AWS } from "./helpers/aws.js";
+import { bootstrap } from "./helpers/aws/bootstrap.js";
 import { LogGroup } from "./providers/log-group.js";
 import { Duration, toSeconds } from "./util/duration.js";
 import { Size, toMBs } from "./util/size.js";
@@ -61,7 +61,6 @@ export interface FunctionNodeJSArgs {
    * ```
    */
   loader?: Input<Record<string, Loader>>;
-
   /**
    * Packages that will be excluded from the bundle and installed into node_modules instead. Useful for dependencies that cannot be bundled, like those with binary dependencies.
    *
@@ -73,7 +72,6 @@ export interface FunctionNodeJSArgs {
    * ```
    */
   install?: Input<string[]>;
-
   /**
    * Use this to insert an arbitrary string at the beginning of generated JavaScript and CSS files.
    *
@@ -85,12 +83,10 @@ export interface FunctionNodeJSArgs {
    * ```
    */
   banner?: Input<string>;
-
   /**
    * This allows you to customize esbuild config.
    */
   esbuild?: Input<BuildOptions>;
-
   /**
    * Enable or disable minification
    *
@@ -130,7 +126,6 @@ export interface FunctionNodeJSArgs {
    * ```
    */
   sourcemap?: Input<boolean>;
-
   /**
    * If enabled, modules that are dynamically imported will be bundled as their own files with common dependencies placed in shared chunks. This can help drastically reduce cold starts as your function grows in size.
    *
@@ -226,7 +221,6 @@ export interface FunctionArgs {
   description?: Input<string>;
   runtime?: Input<"nodejs18.x" | "nodejs20.x">;
   bundle: Input<string>;
-  bundleHash?: Input<string>;
   handler: Input<string>;
   timeout?: Input<Duration>;
   memory?: Input<Size>;
@@ -298,7 +292,7 @@ export class Function extends Component {
     const newHandler = wrapHandler();
     const role = createRole();
     const zipPath = zipBundleFolder();
-    const bundleHash = args.bundleHash ?? calculateHash();
+    const bundleHash = calculateHash();
     const file = createBucketObject();
     const fnRaw = createFunction();
     const fn = updateFunctionCode();
@@ -521,7 +515,7 @@ export class Function extends Component {
         `${name}Code`,
         {
           key: interpolate`assets/${name}-code-${bundleHash}.zip`,
-          bucket: region.apply((region) => AWS.bootstrap.forRegion(region)),
+          bucket: region.apply((region) => bootstrap.forRegion(region)),
           source: zipPath.apply((zipPath) => new asset.FileArchive(zipPath)),
         },
         { parent, retainOnDelete: true }
