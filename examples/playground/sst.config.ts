@@ -15,6 +15,18 @@ export default $config({
     };
   },
   async run() {
-    new sst.VectorDb("VectorDB", {});
+    const cron = new sst.Cron("Nightly", {
+      schedule: "rate(1 minute)",
+      job: {
+        function: {
+          bundle: "bundled-function",
+          handler: "index.handler",
+        },
+      },
+    });
+
+    return {
+      cronHandlerArn: cron.nodes.job.nodes.function.name,
+    };
   },
 });

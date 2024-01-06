@@ -20,7 +20,7 @@ import { Duration, toSeconds } from "./util/duration.js";
 import { DistributionInvalidation } from "./providers/distribution-invalidation.js";
 import { useProvider } from "./helpers/aws/provider.js";
 import { Bucket } from "./bucket.js";
-import { BucketFile } from "./index.js";
+import { BucketFile, BucketFiles } from "./providers/bucket-files.js";
 import { sanitizeToPascalCase } from "./helpers/naming.js";
 
 type CloudFrontFunctionConfig = { injections: string[] };
@@ -507,7 +507,7 @@ export function createServersAndDistribution(
           }
         }
 
-        return new sst.BucketFiles(
+        return new BucketFiles(
           `${name}AssetFiles`,
           {
             bucketName: bucket.name,
