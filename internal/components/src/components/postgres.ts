@@ -6,11 +6,27 @@ export interface PostgresScalingArgs {
   /**
    * The minimum number of Aurora capacity units (ACUs) for a DB instance in an Aurora Serverless v2 cluster.
    * @default - 0.5
+   * @example
+   * ```js
+   * {
+   *   scaling: {
+   *     min: 2
+   *   }
+   * }
+   * ```
    */
   min?: Input<number>;
   /**
    * The maximum number of Aurora capacity units (ACUs) for a DB instance in an Aurora Serverless v2 cluster.
    * @default - 4
+   * @example
+   * ```js
+   * {
+   *   scaling: {
+   *     max: 128
+   *   }
+   * }
+   * ```
    */
   max?: Input<number>;
 }
@@ -19,16 +35,27 @@ export interface PostgresArgs {
   /**
    * Enging version of the RDS cluster
    * @default - 15.5
+   * @example
+   * ```js
+   * {
+   *   version: "13.9"
+   * }
+   * ```
    */
   version?: Input<string>;
   /**
-   * Default database name
-   * @default - default
+   * Name of a database which is automatically created inside the cluster.
+   * @default - Database is not created
+   * @example
+   * ```js
+   * {
+   *   databaseName: "app"
+   * }
+   * ```
    */
   databaseName?: Input<string>;
   /**
    * Aurora Serverless v2 scaling configuration
-   * @default - default
    */
   scaling?: Input<PostgresScalingArgs>;
   nodes?: {};
