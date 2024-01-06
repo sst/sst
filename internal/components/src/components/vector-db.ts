@@ -1,10 +1,9 @@
+import path from "path";
 import { ComponentResourceOptions, jsonStringify } from "@pulumi/pulumi";
 import { Component } from "./component.js";
 import { Postgres } from "./postgres.js";
 import { PostgresTable } from "./providers/postgres-table.js";
 import { Function } from "./function.js";
-import path from "path";
-import { HandlerFunction } from "./handler-function.js";
 
 const DEFAULT_DATABASE = $app.stage;
 const DEFAULT_TABLE = "embeddings";
@@ -57,7 +56,7 @@ export class VectorDb extends Component {
     }
 
     function createHandler() {
-      return new HandlerFunction(
+      return new Function(
         `${name}Handler`,
         {
           handler: path.resolve(

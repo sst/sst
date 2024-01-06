@@ -4,12 +4,9 @@ import { exec } from "child_process";
 import esbuild, { BuildOptions, BuildResult } from "esbuild";
 import pulumi from "@pulumi/pulumi";
 import { existsAsync, findAbove } from "../util/fs.js";
-import { HandlerFunctionArgs } from "../components/handler-function.js";
+import { FunctionArgs } from "../components/function.js";
 
-export async function build(
-  name: string,
-  input: pulumi.Unwrap<HandlerFunctionArgs>
-) {
+export async function build(name: string, input: pulumi.Unwrap<FunctionArgs>) {
   const out = path.join($cli.paths.work, "artifacts", `${name}-src`);
   const sourcemapOut = path.join($cli.paths.work, "artifacts", `${name}-map`);
   await fs.rm(out, { recursive: true, force: true });

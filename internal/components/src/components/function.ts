@@ -14,6 +14,7 @@ import {
   interpolate,
 } from "@pulumi/pulumi";
 import * as aws from "@pulumi/aws";
+import { build } from "../runtime/node.js";
 import { FunctionCodeUpdater } from "./providers/function-code-updater.js";
 import { bootstrap } from "./helpers/aws/bootstrap.js";
 import { LogGroup } from "./providers/log-group.js";
@@ -218,18 +219,148 @@ export interface FunctionLoggingArgs {
 }
 
 export interface FunctionArgs {
+  /**
+   * A description for the function.
+   * @default No description
+   * @example
+   * ```js
+   * {
+   *   description: "Handler function for my nightly cron job."
+   * }
+   * ```
+   */
   description?: Input<string>;
+  /**
+   * The runtime environment for the function.
+   * @default nodejs18.x
+   * @example
+   * ```js
+   * {
+   *   runtime: "nodejs20.x"
+   * }
+   * ```
+   */
   runtime?: Input<"nodejs18.x" | "nodejs20.x">;
-  bundle: Input<string>;
+  /**
+   * Path to the source code directory for the function.
+   * Use `bundle` only when the function code is ready to be deployed to Lambda.
+   * Typically, omit `bundle`. If omitted, the handler file is bundled with esbuild, using its output directory as the bundle folder.
+   * @default Path to the esbuild output directory
+   * @example
+   * ```js
+   * {
+   *   bundle: "packages/functions/src",
+   *   handler: "index.handler"
+   * }
+   * ```
+   */
+  bundle?: Input<string>;
+  /**
+   * Path to the handler for the function.
+   * - If `bundle` is specified, the handler is relative to the bundle folder.
+   * - If `bundle` is not specified, the handler is relative to the root of your SST application.
+   * @example
+   * ```js
+   * {
+   *   handler: "packages/functions/src/index.handler"
+   * }
+   * ```
+   */
   handler: Input<string>;
+  /**
+   * The amount of time that Lambda allows a function to run before stopping it.
+   * @default 20 seconds
+   * @example
+   * ```js
+   * {
+   *   timeout: "900 seconds"
+   * }
+   * ```
+   */
   timeout?: Input<Duration>;
+  /**
+   * The amount of memory allocated for the function.
+   * @default 1024 MB
+   * @example
+   * ```js
+   * {
+   *   memory: "10240 MB"
+   * }
+   * ```
+   */
   memory?: Input<Size>;
+  /**
+   * Key-value pairs that Lambda makes available for the function at runtime.
+   * @default No environment variables
+   * @example
+   * ```js
+   * {
+   *   environment: {
+   *     DEBUG: "true"
+   *   }
+   * }
+   * ```
+   */
   environment?: Input<Record<string, Input<string>>>;
+  /**
+   * Initial IAM policy statements to add to the created Lambda Role.
+   * @default No policies
+   * @example
+   * ```js
+   * {
+   *   policies: [
+   *     {
+   *       name: "s3",
+   *       policy: {
+   *         Version: "2012-10-17",
+   *         Statement: [
+   *           {
+   *             Effect: "Allow",
+   *             Action: ["s3:*"],
+   *             Resource: ["arn:aws:s3:::*"],
+   *           },
+   *         ],
+   *       },
+   *     },
+   *   ],
+   * }
+   * ```
+   */
   policies?: Input<aws.types.input.iam.RoleInlinePolicy[]>;
+  /**
+   * @internal
+   */
   bind?: Input<ComponentResource>;
+  /**
+   * Whether to enable streaming for the function.
+   * @default false
+   * @example
+   * ```js
+   * {
+   *   streaming: true
+   * }
+   * ```
+   */
   streaming?: Input<boolean>;
+  /**
+   * @internal
+   */
   injections?: Input<string[]>;
+  /**
+   * Configure function logging
+   * @default Logs retained indefinitely
+   */
   logging?: Input<FunctionLoggingArgs>;
+  /**
+   * The system architectures for the function.
+   * @default x86_64
+   * @example
+   * ```js
+   * {
+   *   architecture: "arm64"
+   * }
+   * ```
+   */
   architecture?: Input<"x86_64" | "arm64">;
   /**
    * Enable function URLs, a dedicated endpoint for your Lambda function.
@@ -288,6 +419,7 @@ export class Function extends Component {
     const logging = normalizeLogging();
     const url = normalizeUrl();
 
+    const { bundle, handler } = buildHandler();
     const bindInjection = bind();
     const newHandler = wrapHandler();
     const role = createRole();
@@ -389,6 +521,25 @@ export class Function extends Component {
       });
     }
 
+    function buildHandler() {
+      if (args.bundle) {
+        return {
+          bundle: output(args.bundle),
+          handler: output(args.handler),
+        };
+      }
+
+      const buildResult = output(args).apply(async (args) => {
+        const result = await build(name, args);
+        if (result.type === "error") throw new Error(result.errors.join("\n"));
+        return result;
+      });
+      return {
+        handler: buildResult.handler,
+        bundle: buildResult.out,
+      };
+    }
+
     function bind() {
       if (!args.bind) return;
 
@@ -411,13 +562,7 @@ export class Function extends Component {
     }
 
     function wrapHandler() {
-      return all([
-        args.handler,
-        args.bundle,
-        streaming,
-        injections,
-        bindInjection,
-      ]).apply(
+      return all([handler, bundle, streaming, injections, bindInjection]).apply(
         async ([handler, bundle, streaming, injections, bindInjection]) => {
           if (injections.length === 0 && !bindInjection) return handler;
 
@@ -477,7 +622,7 @@ export class Function extends Component {
       //       b/c the folder contains node_modules. And pnpm node_modules
       //       contains symlinks. Pulumi cannot zip symlinks correctly.
       //       We will zip the folder ourselves.
-      return output(args.bundle).apply(async (bundle) => {
+      return bundle.apply(async (bundle) => {
         const zipPath = path.resolve(
           $cli.paths.work,
           "artifacts",
