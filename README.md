@@ -69,9 +69,11 @@ Download the pre-compiled binaries from the [releases](https://github.com/sst/io
    sst create
    ```
 
-   This creates an `sst.config.ts` in your project root.
+   - This creates an `sst.config.ts` in your project root.
+   - `sst.config.ts` is automatically added to the the `exclude` array in `tsconfig.json` to prevent TypeScript from trying to type-check it when building your app
+   - You should also add `/.sst` and `/.open-next` to your `.gitignore` file.
 
-3. Deploy!
+3. Deploy! Ensure you have AWS credentials setup and run:
 
    ```bash
    sst deploy
