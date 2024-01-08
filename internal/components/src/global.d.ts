@@ -1,6 +1,7 @@
 import "@types/node";
 import "@pulumi/aws";
 import "@pulumi/pulumi";
+import "@pulumi/cloudflare";
 import "./components/index";
 import { $config, App } from "./config";
 
@@ -11,6 +12,9 @@ type Simplify<T> = {
 declare global {
   // @ts-expect-error
   export import aws = require("@pulumi/aws");
+
+  // @ts-expect-error
+  export import cloudflare = require("@pulumi/cloudflare");
 
   // @ts-expect-error
   export import util = require("@pulumi/pulumi");

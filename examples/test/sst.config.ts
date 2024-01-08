@@ -13,17 +13,24 @@ export default $config({
     };
   },
   async run() {
-    const item = new sst.Bucket("Item2", {
-      nodes: {
-        bucket: {
-          bucket: "foo",
-        },
-      },
+    const ws = new cloudflare.WorkerScript("WorkerScript", {
+      module: true,
+      name: "my_worker",
+      content: `
+        export default {
+          async fetch(request) {
+            return new Response("Hello, world!");
+          }
+        }
+      `,
+      accountId: "15d29c8639fd3733b1b5486a2acfd968",
     });
-    // throw new Error("lol");
 
-    return {
-      bucket: item.nodes.bucket.bucket,
-    };
+    /*
+    new cloudflare.WorkerRoute("WorkerRoute", {
+      scriptName: ws.name,
+      pattern: "*",
+    })
+    */
   },
 });

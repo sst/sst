@@ -38,7 +38,19 @@ func InstallPlugins() error {
 	slog.Info("installing plugins")
 	cmd := exec.Command("pulumi", "plugin", "install", "resource", "aws")
 	cmd.Env = append(os.Environ(), "PULUMI_HOME="+configDir)
-	return cmd.Run()
+	err := cmd.Run()
+	if err != nil {
+		return err
+	}
+
+	cmd = exec.Command("pulumi", "plugin", "install", "resource", "cloudflare")
+	cmd.Env = append(os.Environ(), "PULUMI_HOME="+configDir)
+	err = cmd.Run()
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func NeedsPulumi() bool {
