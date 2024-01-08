@@ -50,8 +50,16 @@ func (e *ConcurrentUpdateError) Error() string {
 
 type StackEventStream = chan StackEvent
 
-func (s *stack) Run(ctx context.Context, input *StackInput) error {
+func (s *stack) Run(ctx context.Context, input *StackInput) (err error) {
 	slog.Info("running stack command", "cmd", input.Command)
+
+	err = s.lock()
+	if err != nil {
+		return err
+	}
+	defer func() {
+		err = s.unlock()
+	}()
 
 	env, err := s.project.backend.Env()
 	if err != nil {
@@ -69,7 +77,7 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 		"env": env,
 	}
 	cliBytes, err := json.Marshal(cli)
-	appBytes, err := json.Marshal(s.project.App())
+	appBytes, err := json.Marshal(s.project.app)
 	if err != nil {
 		return err
 	}
@@ -99,7 +107,7 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 		auto.WorkDir(s.project.PathTemp()),
 		auto.PulumiHome(global.ConfigDir()),
 		auto.Project(workspace.Project{
-			Name:    tokens.PackageName(s.project.App().Name),
+			Name:    tokens.PackageName(s.project.app.Name),
 			Runtime: workspace.NewProjectRuntimeInfo("nodejs", nil),
 			Backend: &workspace.ProjectBackend{
 				URL: s.project.backend.Url(),
@@ -129,25 +137,18 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 	config := auto.ConfigMap{}
 	for provider, args := range s.project.app.Providers {
 		for key, value := range args {
-			config[fmt.Sprintf("%v:%v", provider, key)] = auto.ConfigValue{Value: value}
+			if provider == "cloudflare" && key == "accountId" {
+				continue
+			}
+			config[fmt.Sprintf("%v:%v", provider, key)] = auto.ConfigValue{Value: value, Secret: true}
 		}
 	}
+	slog.Info("built config", "config", config)
 	err = stack.SetAllConfig(ctx, config)
 	if err != nil {
 		return err
 	}
 	slog.Info("built config")
-
-	err = s.project.backend.Lock(s.project.app.Name, s.project.app.Stage)
-	if err != nil {
-		if errors.Is(err, &provider.LockExistsError{}) {
-			return &ConcurrentUpdateError{}
-		}
-		return err
-	}
-	defer func() {
-		s.project.backend.Unlock(s.project.app.Name, s.project.app.Stage)
-	}()
 
 	if err != nil {
 		return err
@@ -199,6 +200,63 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 			optrefresh.EventStreams(stream),
 		)
 	}
+
+	return nil
+}
+
+func (s *stack) lock() error {
+	pulumiDir := filepath.Join(s.project.PathTemp(), ".pulumi")
+	err := os.RemoveAll(
+		pulumiDir,
+	)
+	if err != nil {
+		return err
+	}
+
+	appDir := filepath.Join(pulumiDir, "stacks", s.project.app.Name)
+	err = os.MkdirAll(appDir, 0755)
+	if err != nil {
+		return err
+	}
+
+	file, err := os.Create(
+		filepath.Join(appDir, fmt.Sprintf("%v.json", s.project.app.Stage)),
+	)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	slog.Info("locking", "app", s.project.app.Name, "stage", s.project.app.Stage)
+	err = s.project.backend.Lock(s.project.app.Name, s.project.app.Stage, file)
+	if err != nil {
+		if errors.Is(err, &provider.LockExistsError{}) {
+			return &ConcurrentUpdateError{}
+		}
+		return err
+	}
+	slog.Info("locked")
+
+	return nil
+}
+
+func (s *stack) unlock() error {
+	pulumiDir := filepath.Join(s.project.PathTemp(), ".pulumi")
+
+	file, err := os.Open(
+		filepath.Join(pulumiDir, "stacks", s.project.app.Name, fmt.Sprintf("%v.json", s.project.app.Stage)),
+	)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	slog.Info("unlocking", "app", s.project.app.Name, "stage", s.project.app.Stage)
+	err = s.project.backend.Unlock(s.project.app.Name, s.project.app.Stage, file)
+	if err != nil {
+		return err
+	}
+	slog.Info("unlocked")
 
 	return nil
 }

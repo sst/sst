@@ -20,12 +20,13 @@ type App struct {
 }
 
 type Project struct {
-	version string
-	root    string
-	process *js.Process
-	app     *App
-	backend provider.Backend
-	env     map[string]string
+	version   string
+	root      string
+	process   *js.Process
+	app       *App
+	backend   provider.Backend
+	providers map[string]provider.Provider
+	env       map[string]string
 
 	Stack *stack
 }
@@ -141,14 +142,34 @@ console.log("~j" + JSON.stringify(mod.app({
 		}
 	}
 
-	aws := proj.app.Providers["aws"]
-	if aws == nil {
-		aws = map[string]string{}
-		proj.app.Providers["aws"] = aws
+	if _, ok := proj.app.Providers["aws"]; !ok {
+		proj.app.Providers["aws"] = map[string]string{}
 	}
-	prov := &provider.AwsProvider{}
-	proj.backend = prov
-	err = prov.Init(tmp, aws)
+
+	proj.providers = map[string]provider.Provider{}
+	for name, args := range proj.app.Providers {
+		var p provider.Provider
+
+		if name == "aws" {
+			p = &provider.AwsProvider{}
+		}
+
+		if name == "cloudflare" {
+			p = &provider.CloudflareProvider{}
+		}
+
+		if p == nil {
+			continue
+		}
+
+		err = p.Init(tmp, args)
+		if err != nil {
+			return nil, err
+		}
+		proj.providers[name] = p
+	}
+
+	proj.backend = proj.providers["aws"].(provider.Backend)
 	if err != nil {
 		return nil, err
 	}

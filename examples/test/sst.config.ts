@@ -9,6 +9,9 @@ export default $config({
         aws: {
           profile: "sst-dev",
         },
+        cloudflare: {
+          accountId: "15d29c8639fd3733b1b5486a2acfd968",
+        },
       },
     };
   },
@@ -23,7 +26,7 @@ export default $config({
           }
         }
       `,
-      accountId: "15d29c8639fd3733b1b5486a2acfd968",
+      accountId: $app.providers?.cloudflare?.accountId!,
     });
 
     /*
