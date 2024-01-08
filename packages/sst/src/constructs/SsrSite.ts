@@ -1067,6 +1067,7 @@ function handler(event) {
           }),
         ],
         ...props.function,
+        ...cdk?.server,
       });
 
       const fnUrl = fn.addFunctionUrl({
