@@ -76,7 +76,7 @@ Once your app updates, you'll notice the logs being printed out every minute in 
 
 ## Cron schedule
 
-There are a couple of ways to specify the schedule of a cron jon.
+There are a couple of ways to specify the schedule of a cron job.
 
 ---
 
