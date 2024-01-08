@@ -284,7 +284,7 @@ func (u *UI) Trigger(evt *project.StackEvent) {
 
 		if evt.DiagnosticEvent.Severity == "info" {
 			u.spinner.Disable()
-			fmt.Println(strings.TrimSpace(evt.DiagnosticEvent.Message))
+			fmt.Println(strings.TrimRight(evt.DiagnosticEvent.Message, " "))
 			u.spinner.Enable()
 		}
 	}
