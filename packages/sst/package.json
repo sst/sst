@@ -35,9 +35,9 @@
   },
   "homepage": "https://sst.dev",
   "dependencies": {
-    "@aws-cdk/aws-apigatewayv2-alpha": "^2.118.0-alpha.0",
-    "@aws-cdk/aws-apigatewayv2-authorizers-alpha": "^2.118.0-alpha.0",
-    "@aws-cdk/aws-apigatewayv2-integrations-alpha": "^2.118.0-alpha.0",
+    "@aws-cdk/aws-apigatewayv2-alpha": "^2.114.1-alpha.0",
+    "@aws-cdk/aws-apigatewayv2-authorizers-alpha": "^2.114.1-alpha.0",
+    "@aws-cdk/aws-apigatewayv2-integrations-alpha": "^2.114.1-alpha.0",
     "@aws-cdk/cloud-assembly-schema": "2.118.0",
     "@aws-cdk/cloudformation-diff": "2.118.0",
     "@aws-cdk/cx-api": "2.118.0",
