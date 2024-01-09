@@ -416,6 +416,9 @@ export class NextjsSite extends SsrSite {
     });
   }
 
+  /**
+   * Prefix CF behavior path patterns with `basePath` if configured in next.config
+   */
   private pathPattern(pattern: string): string {
     const { basePath } = this.routesManifest || {};
     return basePath && basePath.length > 0
