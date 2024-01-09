@@ -1,6 +1,5 @@
 # ❍
 
-[SST](https://sst.dev) ❍ Ion is an experimental new engine. It's based on a streaming deploy architecture and has a few big advantages.
 
 - **10x faster** deploys
 - Native **multi-region** support
@@ -40,8 +39,8 @@ For arch linux it's available in the [aur](https://aur.archlinux.org/packages/ss
 `sst` is available via [scoop](https://scoop.sh/), and as a downloadable binary from the [releases](https://github.com/sst/ion/releases/latest) page:
 
 ```
-scoop bucket add sst https://github.com/planetscale/scoop-bucket.git
-scoop install sst mysql
+scoop bucket add sst https://github.com/sst/scoop-bucket.git
+scoop install sst
 ```
 
 To upgrade to the latest version:
