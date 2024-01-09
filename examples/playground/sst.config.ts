@@ -10,23 +10,19 @@ export default $config({
         aws: {
           region: "us-east-1",
         },
+        cloudflare: {
+          accountId: "24beb0945bae6b37c2b147db108c6ec8",
+        },
       },
       removalPolicy: "remove",
     };
   },
   async run() {
-    const cron = new sst.Cron("Nightly", {
-      schedule: "rate(1 minute)",
-      job: {
-        function: {
-          bundle: "bundled-function",
-          handler: "index.handler",
-        },
-      },
+    const worker = new sst.Worker("Page", {
+      handler: "worker/index.ts",
+      devUrl: true,
     });
 
-    return {
-      cronHandlerArn: cron.nodes.job.nodes.function.name,
-    };
+    return { url: worker.devUrl };
   },
 });

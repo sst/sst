@@ -42,6 +42,9 @@ export class Component extends ComponentResource {
             case "aws:dynamodb/table:Table":
               overrides = { name: prefixName(args.name) };
               break;
+            case "cloudflare:index/workerScript:WorkerScript":
+              overrides = { name: prefixName(args.name).toLocaleLowerCase() };
+              break;
             case "aws:rds/cluster:Cluster":
               overrides = {
                 clusterIdentifier: prefixName(args.name).toLocaleLowerCase(),

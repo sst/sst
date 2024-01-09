@@ -3,8 +3,9 @@ import fs from "fs/promises";
 import { exec } from "child_process";
 import esbuild, { BuildOptions, BuildResult } from "esbuild";
 import pulumi from "@pulumi/pulumi";
-import { existsAsync, findAbove } from "../util/fs.js";
+import { findAbove } from "../util/fs.js";
 import { FunctionArgs } from "../components/function.js";
+import fsSync from "fs";
 
 export async function build(name: string, input: pulumi.Unwrap<FunctionArgs>) {
   const out = path.join($cli.paths.work, "artifacts", `${name}-src`);
@@ -16,9 +17,7 @@ export async function build(name: string, input: pulumi.Unwrap<FunctionArgs>) {
   const parsed = path.parse(input.handler!);
   const file = [".ts", ".tsx", ".mts", ".cts", ".js", ".jsx", ".mjs", ".cjs"]
     .map((ext) => path.join(parsed.dir, parsed.name + ext))
-    .find((file) => {
-      return existsAsync(file);
-    })!;
+    .find((file) => fsSync.existsSync(file))!;
   if (!file)
     return {
       type: "error" as const,
