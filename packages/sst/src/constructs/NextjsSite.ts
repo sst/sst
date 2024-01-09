@@ -181,6 +181,7 @@ export class NextjsSite extends SsrSite {
     sourcemapKey?: string;
   }[];
   private routesManifest?: {
+    basePath: string;
     dynamicRoutes: { page: string; regex: string }[];
     staticRoutes: { page: string; regex: string }[];
     dataRoutes?: { page: string; dataRouteRegex: string }[];
@@ -353,14 +354,14 @@ export class NextjsSite extends SsrSite {
               } as const,
               {
                 cacheType: "server",
-                pattern: "api/*",
+                pattern: this.pathPattern("api/*"),
                 cfFunction: "serverCfFunction",
                 edgeFunction: "edgeServer",
                 origin: "s3",
               } as const,
               {
                 cacheType: "server",
-                pattern: "_next/data/*",
+                pattern: this.pathPattern("_next/data/*"),
                 cfFunction: "serverCfFunction",
                 edgeFunction: "edgeServer",
                 origin: "s3",
@@ -374,20 +375,20 @@ export class NextjsSite extends SsrSite {
               } as const,
               {
                 cacheType: "server",
-                pattern: "api/*",
+                pattern: this.pathPattern("api/*"),
                 cfFunction: "serverCfFunction",
                 origin: "regionalServer",
               } as const,
               {
                 cacheType: "server",
-                pattern: "_next/data/*",
+                pattern: this.pathPattern("_next/data/*"),
                 cfFunction: "serverCfFunction",
                 origin: "regionalServer",
               } as const,
             ]),
         {
           cacheType: "server",
-          pattern: "_next/image*",
+          pattern: this.pathPattern("_next/image*"),
           cfFunction: "serverCfFunction",
           origin: "imageOptimizer",
         },
@@ -396,11 +397,13 @@ export class NextjsSite extends SsrSite {
           (item) =>
             ({
               cacheType: "static",
-              pattern: fs
-                .statSync(path.join(sitePath, ".open-next/assets", item))
-                .isDirectory()
-                ? `${item}/*`
-                : item,
+              pattern: this.pathPattern(
+                fs
+                  .statSync(path.join(sitePath, ".open-next/assets", item))
+                  .isDirectory()
+                  ? `${item}/*`
+                  : item
+              ),
               origin: "s3",
             } as const)
         ),
@@ -411,6 +414,13 @@ export class NextjsSite extends SsrSite {
         function: path.join(sitePath, ".open-next", "warmer-function"),
       },
     });
+  }
+
+  private pathPattern(pattern: string): string {
+    const { basePath } = this.routesManifest || {};
+    return basePath && basePath.length > 0
+      ? `${basePath.slice(1)}/${pattern}`
+      : pattern;
   }
 
   private createRevalidationQueue() {
