@@ -41,8 +41,14 @@ interface Secret {
 
 export namespace Config {
   export const PREFIX = {
-    STAGE: useProject().config.ssmPrefix,
-    FALLBACK: `/sst/${useProject().config.name}/${FALLBACK_STAGE}/`,
+    get STAGE() {
+      const project = useProject();
+      return project.config.ssmPrefix;
+    },
+    get FALLBACK() {
+      const project = useProject();
+      return `/sst/${project.config.name}/${FALLBACK_STAGE}/`;
+    },
   };
 
   export async function parameters() {
