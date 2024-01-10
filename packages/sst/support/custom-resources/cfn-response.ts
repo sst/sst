@@ -53,7 +53,7 @@ export async function submitResponse(
       method: "PUT",
       headers: {
         "content-type": "",
-        "content-length": Buffer.byteLength(responseBody.length, "utf-8"),
+        "content-length": Buffer.byteLength(responseBody, "utf8"),
       },
     },
     responseBody

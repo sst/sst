@@ -54,7 +54,7 @@ let report = function (
       method: "PUT",
       headers: {
         "Content-Type": "",
-        "Content-Length": Buffer.byteLength(responseBody.length, "utf-8"),
+        "Content-Length": Buffer.byteLength(responseBody, "utf8"),
       },
     };
 
