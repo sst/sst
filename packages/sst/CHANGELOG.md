@@ -1,5 +1,17 @@
 # @serverless-stack/cli2
 
+## 2.39.3
+
+### Patch Changes
+
+- [`4bf0d9ceb`](https://github.com/sst/sst/commit/4bf0d9cebacc2561ff8cd5a25adda2795375b233) Thanks [@fwang](https://github.com/fwang)! - Function: experimental support for prefetching secrets
+
+- [#3602](https://github.com/sst/sst/pull/3602) [`d45f36cd3`](https://github.com/sst/sst/commit/d45f36cd31898799f9ceb8797b8bcbb31e68af89) Thanks [@bayssmekanique](https://github.com/bayssmekanique)! - Astro: fix greedy routes bug
+
+- [#3584](https://github.com/sst/sst/pull/3584) [`5201a37f0`](https://github.com/sst/sst/commit/5201a37f0e1f512920e56dfe1043855dd1a763b9) Thanks [@auvred](https://github.com/auvred)! - Properly calculate content-length for cfn custom resource responses
+
+- [`e099dcc7e`](https://github.com/sst/sst/commit/e099dcc7e1be22add7b49fd805c4ccbc92dd6d7c) Thanks [@thdxr](https://github.com/thdxr)! - workaround breaking change in aws-sdk v3
+
 ## 2.39.2
 
 ### Patch Changes
