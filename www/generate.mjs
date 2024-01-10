@@ -18,6 +18,7 @@ const CDK_DOCS_MAP = {
   Stack: "",
   StackProps: "",
   CfnOutputProps: "",
+  Project: "aws_codebuild",
   IVpc: "aws_ec2",
   ISecurityGroup: "aws_ec2",
   SubnetSelection: "aws_ec2",
@@ -487,7 +488,6 @@ function renderProperties(file, files, properties, prefix, onlyPublic) {
     lines.push(
       "_Type_ : " + renderType(file, files, nextPrefix, signature.type) + "\n"
     );
-    console.log(JSON.stringify({ signature }, null, 2));
     const comment =
       signature.comment ||
       signature.type?.declaration?.signatures?.[0]?.comment;
