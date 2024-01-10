@@ -11,6 +11,7 @@ interface Variable {
   propName: string;
 }
 
+type AllVariables = Record<string, Record<string, Record<string, string>>>;
 // Example:
 // {
 //   Bucket: {
@@ -19,11 +20,7 @@ interface Variable {
 //     }
 //   }
 // }
-let allVariables: Record<string, Record<string, Record<string, string>>> = {};
-// NOTE: in some setups, top level await must be assigned to a variable,
-//       otherwise it would throw a top level await error.
-//       https://discord.com/channels/983865673656705025/1089184080534446110
-const _placeholder = await parseEnvironment();
+const allVariables = await parseEnvironment();
 
 export function createProxy<T extends object>(constructName: string) {
   const result = new Proxy<T>({} as any, {
@@ -61,7 +58,8 @@ export function getVariables2(constructName: string) {
   return allVariables[constructName] || {};
 }
 
-async function parseEnvironment() {
+export async function parseEnvironment() {
+  const variablesAcc: AllVariables = {};
   const variablesFromSsm: Variable[] = [];
   const variablesFromSecret: [Variable, string][] = [];
 
@@ -84,25 +82,28 @@ async function parseEnvironment() {
       } else if (value.startsWith("__FETCH_FROM_SECRET__:")) {
         variablesFromSecret.push([variable, value!.split(":")[1]]);
       } else {
-        storeVariable(variable, value);
+        storeVariable(variablesAcc, variable, value);
       }
     });
 
   // Fetch values from SSM
-  await fetchValuesFromSSM(variablesFromSsm);
+  await fetchValuesFromSSM(variablesAcc, variablesFromSsm);
 
   // Fetch values from Secrets
   variablesFromSecret.forEach(([variable, secretName]) => {
-    const value = allVariables["Secret"]?.[secretName]?.value;
+    const value = variablesAcc["Secret"]?.[secretName]?.value;
     if (value) {
-      storeVariable(variable, value);
+      storeVariable(variablesAcc, variable, value);
     }
   });
 
-  return allVariables;
+  return variablesAcc;
 }
 
-async function fetchValuesFromSSM(variablesFromSsm: Variable[]) {
+async function fetchValuesFromSSM(
+  variablesAcc: AllVariables,
+  variablesFromSsm: Variable[]
+) {
   // Get all env vars that need to be fetched from SSM
   const ssmPaths = variablesFromSsm.map((variable) => buildSsmPath(variable));
   if (ssmPaths.length === 0) return;
@@ -111,7 +112,7 @@ async function fetchValuesFromSSM(variablesFromSsm: Variable[]) {
   const results = await loadSecrets(ssmPaths);
   results.validParams.forEach((item) => {
     const variable = parseSsmPath(item.Name!);
-    storeVariable(variable, item.Value!);
+    storeVariable(variablesAcc, variable, item.Value!);
   });
 
   // Get all fallback values to be fetched
@@ -125,7 +126,7 @@ async function fetchValuesFromSSM(variablesFromSsm: Variable[]) {
   const fallbackResults = await loadSecrets(ssmFallbackPaths);
   fallbackResults.validParams.forEach((item) => {
     const variable = parseSsmFallbackPath(item.Name!);
-    storeVariable(variable, item.Value!);
+    storeVariable(variablesAcc, variable, item.Value!);
   });
 
   // Throw error if any values are missing
@@ -213,11 +214,15 @@ function ssmPrefix() {
   return process.env.SST_SSM_PREFIX || "";
 }
 
-function storeVariable(variable: Variable, value: string) {
+function storeVariable(
+  variablesAcc: AllVariables,
+  variable: Variable,
+  value: string
+) {
   const { constructId: id, constructName: c, propName: prop } = variable;
-  allVariables[c] = allVariables[c] || {};
-  allVariables[c][id] = allVariables[c][id] || {};
-  allVariables[c][id][prop] = value;
+  variablesAcc[c] = variablesAcc[c] || {};
+  variablesAcc[c][id] = variablesAcc[c][id] || {};
+  variablesAcc[c][id][prop] = value;
 }
 
 function buildMissingBuiltInEnvError() {

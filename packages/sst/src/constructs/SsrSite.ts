@@ -249,6 +249,11 @@ export interface SsrSiteProps {
      * @default false
      */
     enableServerUrlIamAuth?: boolean;
+    /**
+     * Prefetches bound secret values and injects them into the function's environment variables.
+     * @default false
+     */
+    prefetchSecrets?: boolean;
   };
   dev?: {
     /**
@@ -1013,6 +1018,7 @@ function handler(event) {
           ...(warm ? [useServerFunctionWarmingInjection()] : []),
           ...(props.injections || []),
         ],
+        prefetchSecrets: regional?.prefetchSecrets,
       });
       ssrFunctions.push(fn);
 
@@ -1507,6 +1513,7 @@ if (event.type === "warmer") {
         secrets: (this.props.bind || [])
           .filter((c) => c instanceof Secret)
           .map((c) => (c as Secret).name),
+        prefetchSecrets: this.props.regional?.prefetchSecrets,
       },
     };
   }
