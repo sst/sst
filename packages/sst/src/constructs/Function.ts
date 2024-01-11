@@ -52,14 +52,16 @@ import {
   Size as CDKSize,
   Duration as CDKDuration,
   IgnoreMode,
+  CustomResource,
 } from "aws-cdk-lib/core";
-import { Effect, PolicyStatement, Role } from "aws-cdk-lib/aws-iam";
+import { Effect, Policy, PolicyStatement, Role } from "aws-cdk-lib/aws-iam";
 import { StringParameter } from "aws-cdk-lib/aws-ssm";
 import { Platform } from "aws-cdk-lib/aws-ecr-assets";
 import { useBootstrap } from "../bootstrap.js";
 import { Colors } from "../cli/colors.js";
 import { IBucket } from "aws-cdk-lib/aws-s3";
 import { Asset } from "aws-cdk-lib/aws-s3-assets";
+import { Config } from "../config.js";
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 
 const supportedRuntimes = {
@@ -372,6 +374,19 @@ export interface FunctionProps
    *
    */
   disableCloudWatchLogs?: boolean;
+  /**
+   * Prefetches bound secret values and injects them into the function's environment variables.
+   * @default false
+   * @example
+   * ```js
+   * new Function(stack, "Function", {
+   *   handler: "src/function.handler",
+   *   prefetchSecrets: true
+   * })
+   * ```
+   *
+   */
+  prefetchSecrets?: boolean;
   /**
    * The duration function logs are kept in CloudWatch Logs.
    *
@@ -1059,6 +1074,7 @@ export class Function extends CDKFunction implements SSTConstruct {
 
     this.disableCloudWatchLogs();
     this.createUrl();
+    this.createSecretPrefetcher();
 
     this._isLiveDevEnabled = isLiveDevEnabled;
     useFunctions().add(this.node.addr, props);
@@ -1146,6 +1162,7 @@ export class Function extends CDKFunction implements SSTConstruct {
         secrets: this.allBindings
           .filter((c) => c instanceof Secret)
           .map((c) => (c as Secret).name),
+        prefetchSecrets: this.props.prefetchSecrets,
       },
     };
   }
@@ -1194,6 +1211,42 @@ export class Function extends CDKFunction implements SSTConstruct {
       cors: functionUrlCors.buildCorsConfig(cors),
       invokeMode: streaming ? InvokeMode.RESPONSE_STREAM : InvokeMode.BUFFERED,
     });
+  }
+
+  private createSecretPrefetcher() {
+    const { prefetchSecrets } = this.props;
+    if (!prefetchSecrets) return;
+
+    const stack = Stack.of(this) as Stack;
+
+    // Create custom resource to prewarm on deploy
+    const policy = new Policy(this, "SecretPrefetcherPolicy", {
+      statements: [
+        new PolicyStatement({
+          effect: Effect.ALLOW,
+          actions: ["lambda:GetFunction", "lambda:UpdateFunctionConfiguration"],
+          resources: [this.functionArn],
+        }),
+        new PolicyStatement({
+          effect: Effect.ALLOW,
+          actions: ["ssm:GetParameters"],
+          resources: [
+            `arn:${stack.partition}:ssm:${stack.region}:${stack.account}:parameter${Config.PREFIX.STAGE}*`,
+            `arn:${stack.partition}:ssm:${stack.region}:${stack.account}:parameter${Config.PREFIX.FALLBACK}*`,
+          ],
+        }),
+      ],
+    });
+    stack.customResourceHandler.role?.attachInlinePolicy(policy);
+    const resource = new CustomResource(this, "SecretPrefetcher", {
+      serviceToken: stack.customResourceHandler.functionArn,
+      resourceType: "Custom::SecretPrefetcher",
+      properties: {
+        version: Date.now().toString(),
+        functionName: this.functionName,
+      },
+    });
+    resource.node.addDependency(policy);
   }
 
   private disableCloudWatchLogs() {
