@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.39.4
+
+### Patch Changes
+
+- [`d47ea4e18`](https://github.com/sst/sst/commit/d47ea4e188abcb6b91ec91c189d320376fd8c40b) Thanks [@thdxr](https://github.com/thdxr)! - ion: resource linking
+
 ## 2.39.3
 
 ### Patch Changes
