@@ -18,9 +18,10 @@ type Backend interface {
 	Lock(app string, stage string, out *os.File) error
 	Unlock(app string, stage string, in *os.File) error
 	Cancel(app string, stage string) error
+	Env() (map[string]string, error)
+
 	ListSecrets(app string, stage string) (io.Reader, error)
 	SetSecrets(app string, stage string, data io.Reader) error
-	Env() (map[string]string, error)
 
 	setPassphrase(app string, stage string, passphrase string) error
 	getPassphrase(app string, stage string) (string, error)

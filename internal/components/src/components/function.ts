@@ -12,7 +12,6 @@ import {
   output,
   all,
   interpolate,
-  jsonStringify,
 } from "@pulumi/pulumi";
 import * as aws from "@pulumi/aws";
 import { build } from "../runtime/node.js";
@@ -593,13 +592,12 @@ export class Function extends Component {
           for (const injection of injections) {
             all([injection]).apply(([value]) => {
               registerLinkType({
-                path: ".sst/types.generated.d.ts",
                 type: value.type,
                 name: value.name,
               });
             });
           }
-          return jsonStringify(injections);
+          return injections;
         });
     }
 

@@ -48,6 +48,6 @@ export async function run(program: PulumiFn) {
     },
   );
 
-  initializeLinkRegistry();
+  await initializeLinkRegistry();
   return await program();
 }

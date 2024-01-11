@@ -172,7 +172,7 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 			if provider == "cloudflare" && key == "accountId" {
 				continue
 			}
-			config[fmt.Sprintf("%v:%v", provider, key)] = auto.ConfigValue{Value: value, Secret: true}
+			config[fmt.Sprintf("%v:%v", provider, key)] = auto.ConfigValue{Value: value}
 		}
 	}
 	err = stack.SetAllConfig(ctx, config)

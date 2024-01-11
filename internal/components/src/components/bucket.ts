@@ -25,7 +25,7 @@ export interface BucketArgs {
   };
 }
 
-export class Bucket extends Component implements Linkable {
+export class Bucket extends Component implements Linkable, AWSLinkable {
   public bucket: aws.s3.BucketV2;
 
   constructor(
@@ -101,5 +101,9 @@ export class Bucket extends Component implements Linkable {
         bucketName,
       })),
     };
+  }
+
+  public getSSTAWSPermissions(): string[] {
+    return ["s3:*"];
   }
 }

@@ -10,7 +10,10 @@ import fsSync from "fs";
 export async function build(
   name: string,
   input: pulumi.Unwrap<FunctionArgs> & {
-    links?: string;
+    links?: {
+      name: string;
+      value: string;
+    }[];
   },
 ) {
   const out = path.join($cli.paths.work, "artifacts", `${name}-src`);
@@ -51,6 +54,9 @@ export async function build(
   // Rebuilt using existing esbuild context
   const forceExternal = ["sharp", "pg-native"];
   const { external, ...override } = nodejs.esbuild || {};
+  const links = Object.fromEntries(
+    input.links?.map((item) => [item.name, item.value]) || [],
+  );
   const options: BuildOptions = {
     entryPoints: [path.resolve(file)],
     platform: "node",
@@ -62,7 +68,7 @@ export async function build(
     loader: nodejs.loader,
     keepNames: true,
     define: {
-      SST_LINKS: input.links || "[]",
+      $SST_LINKS: JSON.stringify(links),
     },
     bundle: true,
     logLevel: "silent",

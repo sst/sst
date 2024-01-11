@@ -1,6 +1,10 @@
-/// <reference types="../.sst/types.generated.d.ts" />
+/// <reference path="../.sst/types.generated.ts" />
+
+import { Resource } from "sst";
 
 export function handler() {
-  console.log(Resource.FOO);
-  return "Hello World";
+  return {
+    statusCode: 200,
+    body: JSON.stringify(Resource.StripeKey),
+  };
 }

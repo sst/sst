@@ -17,7 +17,8 @@ export default $config({
   },
   async run() {
     const bucket = new sst.Bucket("MyBucket");
-    const secret = new sst.Secret("FOO");
+    const queue = new aws.sqs.Queue("MyQueue");
+    const secret = new sst.Secret("StripeKey");
     const fn = new sst.Function("MyFunction", {
       url: true,
       link: [secret],

@@ -23,28 +23,30 @@ export function isAWSLinkable(obj: any): obj is AWSLinkable {
   return "getSSTAWSPermissions" in obj;
 }
 
+const DEFAULT_TYPE_PATH = ".sst/types.generated.ts";
 interface TypeRegistration {
-  path: string;
+  path?: string;
   name: string;
   type: any;
 }
 const files = new Map<string, Record<string, string>>();
-export function initializeLinkRegistry() {
+export async function initializeLinkRegistry() {
   files.clear();
 }
 
 export async function registerLinkType(reg: TypeRegistration) {
-  let file = files.get(reg.path);
+  const path = reg.path ?? DEFAULT_TYPE_PATH;
+  let file = files.get(path);
   if (!file) {
     file = {};
-    files.set(reg.path, file);
+    files.set(path, file);
   }
   file[reg.name] = reg.type;
   await fs.promises.writeFile(
-    reg.path,
+    path,
     [
-      `declare global {`,
-      `  export const Resource: {`,
+      `declare module "sst/resource" {`,
+      `  export interface Resource {`,
       ...Object.entries(file).map(([key, value]) => `    ${key}: ${value};`),
       `    [key: string]: any`,
       `  }`,
