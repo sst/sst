@@ -96,13 +96,41 @@ export function bindParameters(c: SSTConstruct) {
   });
 }
 
-export function bindPermissions(c: SSTConstruct) {
-  const binding = c.getFunctionBinding();
-  if (!binding) {
-    return {};
-  }
+/**
+ * Bind permissions to a construct
+ * @param c the construct to bind permissions to
+ * @param overrides Any permissions that we want to override
+ * @returns a record set of permissions
+ */
+export function bindPermissions(c: SSTConstruct, overrides?: string[]) {
+  const bindingPermission = c.getFunctionBinding()?.permissions || {};
 
-  return c.getFunctionBinding()?.permissions || {};
+  // No overriding required, then just return the permissions
+  if (!overrides || !overrides.length) return bindingPermission;
+
+  const newPermissions: Record<string, string[]> = {};
+
+  // Add any binding permission resources that is not being overridden
+  Object.entries(bindingPermission).forEach(([action, resources]) => {
+    const [service] = action.split(":");
+
+    if (overrides.findIndex((val) => val.startsWith(service)) === -1) {
+      newPermissions[action] = resources;
+    }
+  });
+
+  // Add all the new permissions
+  overrides.forEach((action) => {
+    // Get the resources for this action from the bindingPermissions
+    const [_, resources] = Object.entries(bindingPermission).find(
+      ([bindingAction]) => bindingAction.startsWith(action.split(":")[0])
+    ) || [null, null];
+    if (resources) {
+      newPermissions[action] = resources;
+    }
+  });
+
+  return newPermissions;
 }
 
 export function bindType(c: SSTConstruct) {

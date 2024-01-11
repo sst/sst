@@ -54,7 +54,13 @@ import {
   IgnoreMode,
   CustomResource,
 } from "aws-cdk-lib/core";
-import { Effect, Policy, PolicyStatement, Role } from "aws-cdk-lib/aws-iam";
+import {
+  Effect,
+  Policy,
+  PolicyStatement,
+  PolicyStatementProps,
+  Role,
+} from "aws-cdk-lib/aws-iam";
 import { StringParameter } from "aws-cdk-lib/aws-ssm";
 import { Platform } from "aws-cdk-lib/aws-ecr-assets";
 import { useBootstrap } from "../bootstrap.js";
@@ -301,10 +307,11 @@ export interface FunctionProps
    * ```js
    * new Function(stack, "Function", {
    *   handler: "src/function.handler",
-   *   bind: [STRIPE_KEY, bucket],
+   *   bind: [STRIPE_KEY, [bucket, { permissions: ["s3:GetObject"] }]],
    * })
    * ```
    */
+  // bind?: (SSTConstruct | [SSTConstruct, { permissions: string[] }])[];
   bind?: SSTConstruct[];
   /**
    * Attaches the given list of permissions to the function. Configuring this property is equivalent to calling `attachPermissions()` after the function is created.
@@ -1094,17 +1101,31 @@ export class Function extends CDKFunction implements SSTConstruct {
    *
    * @example
    * ```js
-   * fn.bind([STRIPE_KEY, bucket]);
+   * fn.bind([STRIPE_KEY, [bucket, { permissions: ["s3:GetObject"] }]]);
    * ```
    */
-  public bind(constructs: SSTConstruct[]): void {
-    // Get referenced secrets
-    const referencedSecrets: Secret[] = [];
-    constructs.forEach((c) =>
-      referencedSecrets.push(...getReferencedSecrets(c))
+  public bind(
+    constructsProp: (SSTConstruct | [SSTConstruct, { permissions: string[] }])[]
+  ): void {
+    // Set up so that all constructs has an empty overrides for permissions
+    const cWithOverrides: {
+      construct: SSTConstruct;
+      permissions: string[];
+    }[] = constructsProp.map((val) =>
+      val instanceof Array
+        ? { construct: val[0], permissions: val[1].permissions }
+        : { construct: val, permissions: [] }
     );
 
-    [...constructs, ...referencedSecrets].forEach((c) => {
+    // Get referenced secrets
+    const referencedSecrets: Secret[] = [];
+    cWithOverrides.forEach((c) =>
+      referencedSecrets.push(...getReferencedSecrets(c.construct))
+    );
+
+    [...cWithOverrides, ...referencedSecrets].forEach((p) => {
+      const c = p instanceof Secret ? p : p.construct;
+      const permissionsOverride = p instanceof Secret ? [] : p.permissions;
       // Bind environment
       const env = bindEnvironment(c);
       Object.entries(env).forEach(([key, value]) =>
@@ -1112,7 +1133,7 @@ export class Function extends CDKFunction implements SSTConstruct {
       );
 
       // Bind permissions
-      const permissions = bindPermissions(c);
+      const permissions = bindPermissions(c, permissionsOverride);
       Object.entries(permissions).forEach(([action, resources]) =>
         this.attachPermissions([
           new PolicyStatement({
@@ -1124,7 +1145,10 @@ export class Function extends CDKFunction implements SSTConstruct {
       );
     });
 
-    this.allBindings.push(...constructs, ...referencedSecrets);
+    this.allBindings.push(
+      ...cWithOverrides.map((val) => val.construct),
+      ...referencedSecrets
+    );
   }
 
   /**
