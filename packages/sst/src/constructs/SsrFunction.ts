@@ -37,15 +37,12 @@ import {
   NodeJSProps,
   FunctionCopyFilesProps,
 } from "./Function.js";
-import { Secret } from "./Config.js";
 import { App } from "./App.js";
 import { Stack } from "./Stack.js";
 import { SSTConstruct } from "./Construct.js";
 import {
   ResourceBindingProp,
-  bindEnvironment,
-  bindPermissions,
-  getReferencedSecrets,
+  getBindingConfiguration,
 } from "./util/functionBinding.js";
 import { Permissions, attachPermissionsToRole } from "./util/permission.js";
 import { Size, toCdkSize } from "./util/size.js";
@@ -64,7 +61,7 @@ export interface SsrFunctionProps
   memorySize?: number | Size;
   permissions?: Permissions;
   environment?: Record<string, string>;
-  bind?: SSTConstruct[];
+  bind?: ResourceBindingProp;
   nodejs?: NodeJSProps;
   copyFiles?: FunctionCopyFilesProps[];
   logRetention?: RetentionDays;
@@ -286,7 +283,7 @@ export class SsrFunction extends Construct implements SSTConstruct {
     resource.node.addDependency(policy);
   }
 
-  private bind(constructsProp: ResourceBindingProp): void {
+  private bind(constructs: ResourceBindingProp): void {
     const app = this.node.root as App;
     this.function.addEnvironment("SST_APP", app.name);
     this.function.addEnvironment("SST_STAGE", app.stage);
@@ -295,43 +292,15 @@ export class SsrFunction extends Construct implements SSTConstruct {
       useProject().config.ssmPrefix
     );
 
-    // Set up so that all constructs has an empty overrides for permissions
-    const cWithOverrides: {
-      construct: SSTConstruct;
-      permissions: string[];
-    }[] = constructsProp.map((val) =>
-      val instanceof Array
-        ? { construct: val[0], permissions: val[1].permissions }
-        : { construct: val, permissions: [] }
+    const { environments, permissions } = getBindingConfiguration(constructs);
+
+    // Bind environments
+    Object.entries(environments).forEach(([key, value]) =>
+      this.function.addEnvironment(key, value)
     );
 
-    // Get referenced secrets
-    const referencedSecrets: Secret[] = [];
-    cWithOverrides.forEach((c) =>
-      referencedSecrets.push(...getReferencedSecrets(c.construct))
-    );
-
-    [...cWithOverrides, ...referencedSecrets].forEach((p) => {
-      const c = p instanceof Secret ? p : p.construct;
-      const permissionsOverride = p instanceof Secret ? [] : p.permissions;
-      // Bind environment
-      const env = bindEnvironment(c);
-      Object.entries(env).forEach(([key, value]) =>
-        this.function.addEnvironment(key, value)
-      );
-
-      // Bind permissions
-      const permissions = bindPermissions(c, permissionsOverride);
-      Object.entries(permissions).forEach(([action, resources]) =>
-        this.attachPermissions([
-          new PolicyStatement({
-            actions: [action],
-            effect: Effect.ALLOW,
-            resources,
-          }),
-        ])
-      );
-    });
+    // Bind permissions
+    permissions.forEach((p) => this.attachPermissions([p]));
   }
 
   private async buildAssetFromHandler() {

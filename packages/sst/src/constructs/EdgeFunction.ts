@@ -35,10 +35,8 @@ import {
 import { useProject } from "../project.js";
 import { useRuntimeHandlers } from "../runtime/handlers.js";
 import { BaseSiteReplaceProps } from "./BaseSite.js";
-import { SSTConstruct } from "./Construct.js";
 import { App } from "./App.js";
 import { Stack } from "./Stack.js";
-import { Secret } from "./Config.js";
 import {
   useFunctions,
   NodeJSProps,
@@ -46,9 +44,7 @@ import {
 } from "./Function.js";
 import {
   ResourceBindingProp,
-  bindEnvironment,
-  bindPermissions,
-  getReferencedSecrets,
+  getBindingConfiguration,
 } from "./util/functionBinding.js";
 import { Size, toCdkSize } from "./util/size.js";
 import { Duration, toCdkDuration } from "./util/duration.js";
@@ -304,7 +300,7 @@ export class EdgeFunction extends Construct {
     return { handlerFilename, asset };
   }
 
-  private bind(constructsProp: ResourceBindingProp): void {
+  private bind(constructs: ResourceBindingProp): void {
     const app = this.node.root as App;
     this.bindingEnvs = {
       SST_APP: app.name,
@@ -313,46 +309,18 @@ export class EdgeFunction extends Construct {
       SST_SSM_PREFIX: useProject().config.ssmPrefix,
     };
 
-    // Set up so that all constructs has an empty overrides for permissions
-    const cWithOverrides: {
-      construct: SSTConstruct;
-      permissions: string[];
-    }[] = constructsProp.map((val) =>
-      val instanceof Array
-        ? { construct: val[0], permissions: val[1].permissions }
-        : { construct: val, permissions: [] }
-    );
+    const { environments, permissions } = getBindingConfiguration(constructs);
 
-    // Get referenced secrets
-    const referencedSecrets: Secret[] = [];
-    cWithOverrides.forEach((c) =>
-      referencedSecrets.push(...getReferencedSecrets(c.construct))
-    );
+    // Bind environment
+    this.bindingEnvs = {
+      ...this.bindingEnvs,
+      ...environments,
+    };
 
-    [...cWithOverrides, ...referencedSecrets].forEach((p) => {
-      const c = p instanceof Secret ? p : p.construct;
-      const permissionsOverride = p instanceof Secret ? [] : p.permissions;
-
-      // Bind environment
-      this.bindingEnvs = {
-        ...this.bindingEnvs,
-        ...bindEnvironment(c),
-      };
-
-      // Bind permissions
-      if (this.props.permissions !== "*") {
-        this.props.permissions.push(
-          ...Object.entries(bindPermissions(c, permissionsOverride)).map(
-            ([action, resources]) =>
-              new PolicyStatement({
-                actions: [action],
-                effect: Effect.ALLOW,
-                resources,
-              })
-          )
-        );
-      }
-    });
+    // Bind permissions
+    if (this.props.permissions !== "*") {
+      this.props.permissions.push(...permissions);
+    }
   }
 
   private createCodeReplacer(

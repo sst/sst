@@ -10,8 +10,6 @@ import { Construct } from "constructs";
 import { Duration as CdkDuration, IgnoreMode } from "aws-cdk-lib/core";
 import {
   Role,
-  Effect,
-  PolicyStatement,
   AccountPrincipal,
   ServicePrincipal,
   CompositePrincipal,
@@ -41,10 +39,8 @@ import { Permissions, attachPermissionsToRole } from "./util/permission.js";
 import {
   FunctionBindingProps,
   ResourceBindingProp,
-  bindEnvironment,
-  bindPermissions,
+  getBindingConfiguration,
   getParameterPath,
-  getReferencedSecrets,
 } from "./util/functionBinding.js";
 import { useProject } from "../project.js";
 import { IVpc, Vpc } from "aws-cdk-lib/aws-ec2";
@@ -327,7 +323,7 @@ export interface ServiceProps {
    * }
    * ```
    */
-  bind?: SSTConstruct[];
+  bind?: ResourceBindingProp;
   /**
    * The customDomain for this service. SST supports domains that are hosted
    * either on [Route 53](https://aws.amazon.com/route53/) or externally.
@@ -1088,44 +1084,16 @@ export class Service extends Construct implements SSTConstruct {
     });
   }
 
-  private bindForService(constructsProp: ResourceBindingProp): void {
-    // Set up so that all constructs has an empty overrides for permissions
-    const cWithOverrides: {
-      construct: SSTConstruct;
-      permissions: string[];
-    }[] = constructsProp.map((val) =>
-      val instanceof Array
-        ? { construct: val[0], permissions: val[1].permissions }
-        : { construct: val, permissions: [] }
+  private bindForService(constructs: ResourceBindingProp): void {
+    const { environments, permissions } = getBindingConfiguration(constructs);
+
+    // Bind environments
+    Object.entries(environments).forEach(([key, value]) =>
+      this.addEnvironmentForService(key, value)
     );
 
-    // Get referenced secrets
-    const referencedSecrets: Secret[] = [];
-    cWithOverrides.forEach((c) =>
-      referencedSecrets.push(...getReferencedSecrets(c.construct))
-    );
-
-    [...cWithOverrides, ...referencedSecrets].forEach((p) => {
-      const c = p instanceof Secret ? p : p.construct;
-      const permissionsOverride = p instanceof Secret ? [] : p.permissions;
-      // Bind environment
-      const env = bindEnvironment(c);
-      Object.entries(env).forEach(([key, value]) =>
-        this.addEnvironmentForService(key, value)
-      );
-
-      // Bind permissions
-      const permissions = bindPermissions(c, permissionsOverride);
-      Object.entries(permissions).forEach(([action, resources]) =>
-        this.attachPermissionsForService([
-          new PolicyStatement({
-            actions: [action],
-            effect: Effect.ALLOW,
-            resources,
-          }),
-        ])
-      );
-    });
+    // Bind permissions
+    permissions.forEach((p) => this.attachPermissionsForService([p]));
   }
 
   private addEnvironmentForService(name: string, value: string): void {

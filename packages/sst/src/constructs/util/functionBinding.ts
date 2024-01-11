@@ -1,3 +1,4 @@
+import { Effect, PolicyStatement } from "aws-cdk-lib/aws-iam";
 import * as ssm from "aws-cdk-lib/aws-ssm";
 import { SSTConstruct } from "../Construct.js";
 import { App } from "../App.js";
@@ -200,4 +201,57 @@ export function placeholderSecretValue() {
 
 export function placeholderSecretReferenceValue(secret: Secret) {
   return "__FETCH_FROM_SECRET__:" + secret.name;
+}
+
+export function getBindingConfiguration(constructsProp: ResourceBindingProp) {
+  const res: {
+    environments: Record<string, string>;
+    permissions: PolicyStatement[];
+    constructs: SSTConstruct[];
+  } = {
+    environments: {},
+    permissions: [],
+    constructs: [],
+  };
+  // Set up so that all constructs has an empty overrides for permissions
+  const cWithOverrides: {
+    construct: SSTConstruct;
+    permissions: string[];
+  }[] = constructsProp.map((val) =>
+    val instanceof Array
+      ? { construct: val[0], permissions: val[1].permissions }
+      : { construct: val, permissions: [] }
+  );
+
+  // Get referenced secrets
+  const referencedSecrets: Secret[] = [];
+  cWithOverrides.forEach((c) =>
+    referencedSecrets.push(...getReferencedSecrets(c.construct))
+  );
+
+  [...cWithOverrides, ...referencedSecrets].forEach((p) => {
+    const c = p instanceof Secret ? p : p.construct;
+    const permissionsOverride = p instanceof Secret ? [] : p.permissions;
+    // Bind environment
+    res.environments = bindEnvironment(c);
+
+    // Bind permissions
+    const permissions = bindPermissions(c, permissionsOverride);
+    Object.entries(permissions).forEach(([action, resources]) =>
+      res.permissions.push(
+        new PolicyStatement({
+          actions: [action],
+          effect: Effect.ALLOW,
+          resources,
+        })
+      )
+    );
+  });
+
+  res.constructs = [
+    ...cWithOverrides.map((val) => val.construct),
+    ...referencedSecrets,
+  ];
+
+  return res;
 }
