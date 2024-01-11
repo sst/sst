@@ -176,6 +176,27 @@ The IAM policy statement looks like:
 }
 ```
 
+To restrict the permissions, you can add a list of permissions that you would like enabled. For example, to only allow certain actions for the bucket, you can do the following.
+
+```ts
+site.bind([bucket], { permissions: ["s3:GetObject", "s3:ListObjects"] });
+```
+
+The IAM policy statement would then look like:
+
+```yml
+{
+  "Action": "s3:GetObject",
+  "Resource": ["arn:aws:s3:::{BUCKET_NAME}", "arn:aws:s3:::{BUCKET_NAME}/*"],
+  "Effect": "Allow",
+},
+{
+  "Action": "s3:ListObjects",
+  "Resource": ["arn:aws:s3:::{BUCKET_NAME}", "arn:aws:s3:::{BUCKET_NAME}/*"],
+  "Effect": "Allow",
+}
+```
+
 </details>
 
 ---
