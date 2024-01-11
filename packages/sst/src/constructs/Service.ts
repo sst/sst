@@ -40,6 +40,7 @@ import { useDeferredTasks } from "./deferred_task.js";
 import { Permissions, attachPermissionsToRole } from "./util/permission.js";
 import {
   FunctionBindingProps,
+  ResourceBindingProp,
   bindEnvironment,
   bindPermissions,
   getParameterPath,
@@ -1087,14 +1088,26 @@ export class Service extends Construct implements SSTConstruct {
     });
   }
 
-  private bindForService(constructs: SSTConstruct[]): void {
-    // Get referenced secrets
-    const referencedSecrets: Secret[] = [];
-    constructs.forEach((c) =>
-      referencedSecrets.push(...getReferencedSecrets(c))
+  private bindForService(constructsProp: ResourceBindingProp): void {
+    // Set up so that all constructs has an empty overrides for permissions
+    const cWithOverrides: {
+      construct: SSTConstruct;
+      permissions: string[];
+    }[] = constructsProp.map((val) =>
+      val instanceof Array
+        ? { construct: val[0], permissions: val[1].permissions }
+        : { construct: val, permissions: [] }
     );
 
-    [...constructs, ...referencedSecrets].forEach((c) => {
+    // Get referenced secrets
+    const referencedSecrets: Secret[] = [];
+    cWithOverrides.forEach((c) =>
+      referencedSecrets.push(...getReferencedSecrets(c.construct))
+    );
+
+    [...cWithOverrides, ...referencedSecrets].forEach((p) => {
+      const c = p instanceof Secret ? p : p.construct;
+      const permissionsOverride = p instanceof Secret ? [] : p.permissions;
       // Bind environment
       const env = bindEnvironment(c);
       Object.entries(env).forEach(([key, value]) =>
@@ -1102,7 +1115,7 @@ export class Service extends Construct implements SSTConstruct {
       );
 
       // Bind permissions
-      const permissions = bindPermissions(c);
+      const permissions = bindPermissions(c, permissionsOverride);
       Object.entries(permissions).forEach(([action, resources]) =>
         this.attachPermissionsForService([
           new PolicyStatement({

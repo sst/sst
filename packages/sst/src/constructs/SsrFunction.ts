@@ -42,6 +42,7 @@ import { App } from "./App.js";
 import { Stack } from "./Stack.js";
 import { SSTConstruct } from "./Construct.js";
 import {
+  ResourceBindingProp,
   bindEnvironment,
   bindPermissions,
   getReferencedSecrets,
@@ -285,7 +286,7 @@ export class SsrFunction extends Construct implements SSTConstruct {
     resource.node.addDependency(policy);
   }
 
-  private bind(constructs: SSTConstruct[]): void {
+  private bind(constructsProp: ResourceBindingProp): void {
     const app = this.node.root as App;
     this.function.addEnvironment("SST_APP", app.name);
     this.function.addEnvironment("SST_STAGE", app.stage);
@@ -294,13 +295,25 @@ export class SsrFunction extends Construct implements SSTConstruct {
       useProject().config.ssmPrefix
     );
 
-    // Get referenced secrets
-    const referencedSecrets: Secret[] = [];
-    constructs.forEach((c) =>
-      referencedSecrets.push(...getReferencedSecrets(c))
+    // Set up so that all constructs has an empty overrides for permissions
+    const cWithOverrides: {
+      construct: SSTConstruct;
+      permissions: string[];
+    }[] = constructsProp.map((val) =>
+      val instanceof Array
+        ? { construct: val[0], permissions: val[1].permissions }
+        : { construct: val, permissions: [] }
     );
 
-    [...constructs, ...referencedSecrets].forEach((c) => {
+    // Get referenced secrets
+    const referencedSecrets: Secret[] = [];
+    cWithOverrides.forEach((c) =>
+      referencedSecrets.push(...getReferencedSecrets(c.construct))
+    );
+
+    [...cWithOverrides, ...referencedSecrets].forEach((p) => {
+      const c = p instanceof Secret ? p : p.construct;
+      const permissionsOverride = p instanceof Secret ? [] : p.permissions;
       // Bind environment
       const env = bindEnvironment(c);
       Object.entries(env).forEach(([key, value]) =>
@@ -308,7 +321,7 @@ export class SsrFunction extends Construct implements SSTConstruct {
       );
 
       // Bind permissions
-      const permissions = bindPermissions(c);
+      const permissions = bindPermissions(c, permissionsOverride);
       Object.entries(permissions).forEach(([action, resources]) =>
         this.attachPermissions([
           new PolicyStatement({
