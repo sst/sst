@@ -433,6 +433,12 @@ export class Job extends Construct implements SSTConstruct {
     this.addEnvironmentForCodeBuild(name, value);
   }
 
+  public get cdk() {
+    return {
+      codeBuildProject: this.job,
+    };
+  }
+
   private createCodeBuildJob(): Project {
     const { cdk, runtime, handler, memorySize, timeout, container } =
       this.props;
