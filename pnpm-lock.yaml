@@ -575,7 +575,7 @@ importers:
         specifier: ^5.3.1
         version: 5.3.1
       astro-sst:
-        specifier: 2.39.2
+        specifier: 2.39.3
         version: link:../astro-sst
       async:
         specifier: ^3.2.4
