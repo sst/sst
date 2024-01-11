@@ -45,9 +45,7 @@ export async function registerLinkType(reg: TypeRegistration) {
     [
       `declare global {`,
       `  export const Resource: {`,
-      `    ${Object.entries(file)
-        .map(([key, value]) => `${key}: ${value}`)
-        .join(",\n")}`,
+      ...Object.entries(file).map(([key, value]) => `    ${key}: ${value};`),
       `    [key: string]: any`,
       `  }`,
       `}`,
