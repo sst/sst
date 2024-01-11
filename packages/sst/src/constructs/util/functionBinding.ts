@@ -49,6 +49,11 @@ export interface FunctionBindingProps {
   >;
 }
 
+export type ResourceBindingProp = (
+  | SSTConstruct
+  | [SSTConstruct, { permissions: string[] }]
+)[];
+
 export function bindEnvironment(c: SSTConstruct) {
   const binding = c.getFunctionBinding();
 

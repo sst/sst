@@ -16,6 +16,7 @@ import { Size, toCdkSize } from "./util/size.js";
 import { Duration, toCdkDuration } from "./util/duration.js";
 import {
   FunctionBindingProps,
+  ResourceBindingProp,
   bindEnvironment,
   bindPermissions,
   getReferencedSecrets,
@@ -54,18 +55,11 @@ import {
   IgnoreMode,
   CustomResource,
 } from "aws-cdk-lib/core";
-import {
-  Effect,
-  Policy,
-  PolicyStatement,
-  PolicyStatementProps,
-  Role,
-} from "aws-cdk-lib/aws-iam";
+import { Effect, Policy, PolicyStatement, Role } from "aws-cdk-lib/aws-iam";
 import { StringParameter } from "aws-cdk-lib/aws-ssm";
 import { Platform } from "aws-cdk-lib/aws-ecr-assets";
 import { useBootstrap } from "../bootstrap.js";
 import { Colors } from "../cli/colors.js";
-import { IBucket } from "aws-cdk-lib/aws-s3";
 import { Asset } from "aws-cdk-lib/aws-s3-assets";
 import { Config } from "../config.js";
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
@@ -311,8 +305,7 @@ export interface FunctionProps
    * })
    * ```
    */
-  // bind?: (SSTConstruct | [SSTConstruct, { permissions: string[] }])[];
-  bind?: SSTConstruct[];
+  bind?: ResourceBindingProp;
   /**
    * Attaches the given list of permissions to the function. Configuring this property is equivalent to calling `attachPermissions()` after the function is created.
    *
@@ -1104,9 +1097,7 @@ export class Function extends CDKFunction implements SSTConstruct {
    * fn.bind([STRIPE_KEY, [bucket, { permissions: ["s3:GetObject"] }]]);
    * ```
    */
-  public bind(
-    constructsProp: (SSTConstruct | [SSTConstruct, { permissions: string[] }])[]
-  ): void {
+  public bind(constructsProp: ResourceBindingProp): void {
     // Set up so that all constructs has an empty overrides for permissions
     const cWithOverrides: {
       construct: SSTConstruct;

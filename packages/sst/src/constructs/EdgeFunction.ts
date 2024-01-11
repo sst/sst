@@ -45,6 +45,7 @@ import {
   FunctionCopyFilesProps,
 } from "./Function.js";
 import {
+  ResourceBindingProp,
   bindEnvironment,
   bindPermissions,
   getReferencedSecrets,
@@ -63,7 +64,7 @@ export interface EdgeFunctionProps {
   memorySize?: number | Size;
   permissions?: Permissions;
   environment?: Record<string, string>;
-  bind?: SSTConstruct[];
+  bind?: ResourceBindingProp;
   nodejs?: NodeJSProps;
   copyFiles?: FunctionCopyFilesProps[];
   scopeOverride?: IConstruct;
@@ -303,7 +304,7 @@ export class EdgeFunction extends Construct {
     return { handlerFilename, asset };
   }
 
-  private bind(constructs: SSTConstruct[]): void {
+  private bind(constructsProp: ResourceBindingProp): void {
     const app = this.node.root as App;
     this.bindingEnvs = {
       SST_APP: app.name,
@@ -312,13 +313,26 @@ export class EdgeFunction extends Construct {
       SST_SSM_PREFIX: useProject().config.ssmPrefix,
     };
 
-    // Get referenced secrets
-    const referencedSecrets: Secret[] = [];
-    constructs.forEach((c) =>
-      referencedSecrets.push(...getReferencedSecrets(c))
+    // Set up so that all constructs has an empty overrides for permissions
+    const cWithOverrides: {
+      construct: SSTConstruct;
+      permissions: string[];
+    }[] = constructsProp.map((val) =>
+      val instanceof Array
+        ? { construct: val[0], permissions: val[1].permissions }
+        : { construct: val, permissions: [] }
     );
 
-    [...constructs, ...referencedSecrets].forEach((c) => {
+    // Get referenced secrets
+    const referencedSecrets: Secret[] = [];
+    cWithOverrides.forEach((c) =>
+      referencedSecrets.push(...getReferencedSecrets(c.construct))
+    );
+
+    [...cWithOverrides, ...referencedSecrets].forEach((p) => {
+      const c = p instanceof Secret ? p : p.construct;
+      const permissionsOverride = p instanceof Secret ? [] : p.permissions;
+
       // Bind environment
       this.bindingEnvs = {
         ...this.bindingEnvs,
@@ -328,7 +342,7 @@ export class EdgeFunction extends Construct {
       // Bind permissions
       if (this.props.permissions !== "*") {
         this.props.permissions.push(
-          ...Object.entries(bindPermissions(c)).map(
+          ...Object.entries(bindPermissions(c, permissionsOverride)).map(
             ([action, resources]) =>
               new PolicyStatement({
                 actions: [action],
