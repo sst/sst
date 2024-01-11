@@ -27,27 +27,5 @@ export default $config({
     return {
       url: fn.url,
     };
-
-    // const secret = new sst.Secret("MY_SECRET");
-
-    // const ws = new cloudflare.WorkerScript("WorkerScript", {
-    //   link: [db],
-    //   module: true,
-    //   name: "my_worker",
-    //   content: `
-    //     export default {
-    //       async fetch(request) {
-    //         return new Response("Hello, world!");
-    //       }
-    //     }
-    //   `,
-    //   accountId: $app.providers?.cloudflare?.accountId!,
-    // });
-
-    // import { Resource } from "sst";
-
-    // new S3GetCommand({
-    //   bucketName: Resource.MyBucket.bucketName,
-    // });
   },
 });

@@ -593,7 +593,7 @@ export class Function extends Component {
           for (const injection of injections) {
             all([injection]).apply(([value]) => {
               registerLinkType({
-                path: "types.d.ts",
+                path: ".sst/types.generated.d.ts",
                 type: value.type,
                 name: value.name,
               });

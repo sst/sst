@@ -48,6 +48,7 @@ export async function registerLinkType(reg: TypeRegistration) {
       `    ${Object.entries(file)
         .map(([key, value]) => `${key}: ${value}`)
         .join(",\n")}`,
+      `    [key: string]: any`,
       `  }`,
       `}`,
       `export {}`,
