@@ -4,6 +4,7 @@
   "compilerOptions": {
     "module": "ESNext",
     "moduleResolution": "Bundler",
-    "isolatedModules": true
+    "isolatedModules": true,
+    "downlevelIteration": true,
   }
 }

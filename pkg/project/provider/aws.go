@@ -1,6 +1,7 @@
 package provider
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
@@ -8,6 +9,7 @@ import (
 	"log/slog"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -21,23 +23,32 @@ import (
 )
 
 type AwsProvider struct {
-	workdir     string
 	args        map[string]string
 	config      aws.Config
 	bucket      string
 	credentials sync.Once
 }
 
-func (a *AwsProvider) Url() string {
-	// return fmt.Sprintf("s3://%v", a.bucket)
-	return fmt.Sprintf("file://%v", a.workdir)
+func (a *AwsProvider) Env() (map[string]string, error) {
+	creds, err := a.config.Credentials.Retrieve(context.Background())
+	if err != nil {
+		return nil, err
+	}
+
+	env := map[string]string{}
+	env["AWS_ACCESS_KEY_ID"] = creds.AccessKeyID
+	env["AWS_SECRET_ACCESS_KEY"] = creds.SecretAccessKey
+	env["AWS_SESSION_TOKEN"] = creds.SessionToken
+	env["AWS_DEFAULT_REGION"] = a.config.Region
+
+	return env, nil
 }
 
 func (a *AwsProvider) Lock(app string, stage string, out *os.File) error {
 	slog.Info("locking", "app", app, "stage", stage)
 	s3Client := s3.NewFromConfig(a.config)
 
-	lockKey := a.remoteLockFor(app, stage)
+	lockKey := a.pathForLock(app, stage)
 	_, err := s3Client.GetObject(context.TODO(), &s3.GetObjectInput{
 		Bucket: aws.String(a.bucket),
 		Key:    aws.String(lockKey),
@@ -60,10 +71,15 @@ func (a *AwsProvider) Lock(app string, stage string, out *os.File) error {
 	slog.Info("syncing old state")
 	result, err := s3Client.GetObject(context.TODO(), &s3.GetObjectInput{
 		Bucket: aws.String(a.bucket),
-		Key:    aws.String(a.remoteStateFor(app, stage)),
+		Key:    aws.String(a.pathForState(app, stage)),
 	})
 
 	if err != nil {
+		var nsk *s3types.NoSuchKey
+		if errors.As(err, &nsk) {
+			_, err := io.Copy(out, bytes.NewReader([]byte("{}")))
+			return err
+		}
 		return err
 	}
 
@@ -74,28 +90,36 @@ func (a *AwsProvider) Lock(app string, stage string, out *os.File) error {
 	return nil
 }
 
-func (a *AwsProvider) remoteStateFor(app string, stage string) string {
+func (a *AwsProvider) pathForSecrets(app string, stage string) string {
+	return filepath.Join("state", "secrets", app, fmt.Sprintf("%v.json", stage))
+}
+
+func (a *AwsProvider) pathForState(app string, stage string) string {
 	return filepath.Join("state", "data", app, fmt.Sprintf("%v.json", stage))
 }
 
-func (a *AwsProvider) remoteLockFor(app string, stage string) string {
+func (a *AwsProvider) pathForLock(app string, stage string) string {
 	return filepath.Join("state", "lock", app, fmt.Sprintf("%v.json", stage))
 }
 
+func (a *AwsProvider) pathForPassphrase(app string, stage string) string {
+	return "/" + strings.Join([]string{"sst", "passphrase", app, stage}, "/")
+}
+
 func (a *AwsProvider) Unlock(app string, stage string, in *os.File) error {
-	slog.Info("unlocking", "app", app, "stage", stage)
 	s3Client := s3.NewFromConfig(a.config)
 	defer func() {
 		s3Client.DeleteObject(context.TODO(), &s3.DeleteObjectInput{
 			Bucket: aws.String(a.bucket),
-			Key:    aws.String(a.remoteLockFor(app, stage)),
+			Key:    aws.String(a.pathForLock(app, stage)),
 		})
 	}()
 
 	_, err := s3Client.PutObject(context.TODO(), &s3.PutObjectInput{
-		Bucket: aws.String(a.bucket),
-		Key:    aws.String(a.remoteStateFor(app, stage)),
-		Body:   in,
+		Bucket:      aws.String(a.bucket),
+		Key:         aws.String(a.pathForState(app, stage)),
+		ContentType: aws.String("application/json"),
+		Body:        in,
 	})
 	if err != nil {
 		return err
@@ -110,7 +134,7 @@ func (a *AwsProvider) Cancel(app string, stage string) error {
 
 	_, err := s3Client.DeleteObject(context.TODO(), &s3.DeleteObjectInput{
 		Bucket: aws.String(a.bucket),
-		Key:    aws.String(a.remoteLockFor(app, stage)),
+		Key:    aws.String(a.pathForLock(app, stage)),
 	})
 	if err != nil {
 		return err
@@ -119,24 +143,8 @@ func (a *AwsProvider) Cancel(app string, stage string) error {
 	return nil
 }
 
-func (a *AwsProvider) Env() (map[string]string, error) {
-	creds, err := a.config.Credentials.Retrieve(context.Background())
-	if err != nil {
-		return nil, err
-	}
-
-	env := map[string]string{}
-	env["AWS_ACCESS_KEY_ID"] = creds.AccessKeyID
-	env["AWS_SECRET_ACCESS_KEY"] = creds.SecretAccessKey
-	env["AWS_SESSION_TOKEN"] = creds.SessionToken
-	env["AWS_DEFAULT_REGION"] = a.config.Region
-
-	return env, nil
-}
-
-func (a *AwsProvider) Init(workdir string, args map[string]string) (err error) {
+func (a *AwsProvider) Init(args map[string]string) (err error) {
 	a.args = args
-	a.workdir = workdir
 
 	cfg, err := a.resolveConfig()
 	if err != nil {
@@ -264,4 +272,70 @@ func (a *AwsProvider) resolveConfig() (aws.Config, error) {
 	}
 	slog.Info("credentials found")
 	return cfg, nil
+}
+
+func (a *AwsProvider) ListSecrets(app string, stage string) (io.Reader, error) {
+	s3Client := s3.NewFromConfig(a.config)
+
+	slog.Info("reading secrets", "path", a.pathForSecrets(app, stage))
+	result, err := s3Client.GetObject(context.TODO(), &s3.GetObjectInput{
+		Bucket: aws.String(a.bucket),
+		Key:    aws.String(a.pathForSecrets(app, stage)),
+	})
+
+	if err != nil {
+		var nsk *s3types.NoSuchKey
+		if errors.As(err, &nsk) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return result.Body, nil
+}
+
+func (a *AwsProvider) SetSecrets(app string, stage string, data io.Reader) error {
+	s3Client := s3.NewFromConfig(a.config)
+
+	slog.Info("writing secrets", "path", a.pathForSecrets(app, stage))
+	_, err := s3Client.PutObject(context.TODO(), &s3.PutObjectInput{
+		Bucket:      aws.String(a.bucket),
+		Key:         aws.String(a.pathForSecrets(app, stage)),
+		Body:        data,
+		ContentType: aws.String("application/json"),
+	})
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (a *AwsProvider) getPassphrase(app string, stage string) (string, error) {
+	ssmClient := ssm.NewFromConfig(a.config)
+
+	result, err := ssmClient.GetParameter(context.TODO(), &ssm.GetParameterInput{
+		Name:           aws.String(a.pathForPassphrase(app, stage)),
+		WithDecryption: aws.Bool(true),
+	})
+	if err != nil {
+		pnf := &ssmTypes.ParameterNotFound{}
+		if errors.As(err, &pnf) {
+			return "", nil
+		}
+
+		return "", err
+	}
+	return *result.Parameter.Value, nil
+}
+
+func (a *AwsProvider) setPassphrase(app, stage, passphrase string) error {
+	ssmClient := ssm.NewFromConfig(a.config)
+
+	_, err := ssmClient.PutParameter(context.TODO(), &ssm.PutParameterInput{
+		Name:      aws.String(a.pathForPassphrase(app, stage)),
+		Type:      ssmTypes.ParameterTypeSecureString,
+		Value:     aws.String(passphrase),
+		Overwrite: aws.Bool(false),
+	})
+	return err
 }

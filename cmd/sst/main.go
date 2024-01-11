@@ -20,6 +20,7 @@ import (
 	"github.com/sst/ion/internal/util"
 	"github.com/sst/ion/pkg/global"
 	"github.com/sst/ion/pkg/project"
+	"github.com/sst/ion/pkg/project/provider"
 
 	cli "github.com/urfave/cli/v2"
 )
@@ -82,6 +83,57 @@ func main() {
 				},
 			},
 			{
+				Name: "secrets",
+				Subcommands: []*cli.Command{
+					{
+						Name:      "set",
+						ArgsUsage: "[key] [value]",
+						Action: func(cli *cli.Context) error {
+							p, err := initProject(cli)
+							if err != nil {
+								return err
+							}
+							if cli.Args().Len() != 2 {
+								return fmt.Errorf("key and value required")
+							}
+
+							key := cli.Args().Get(0)
+							value := cli.Args().Get(1)
+							backend := p.Backend()
+							secrets, err := provider.ListSecrets(backend, p.App().Name, p.App().Stage)
+							if err != nil {
+								return err
+							}
+							secrets[key] = value
+							err = provider.SetSecrets(backend, p.App().Name, p.App().Stage, secrets)
+							if err != nil {
+								return err
+							}
+							fmt.Println("Secret set")
+							return nil
+						},
+					},
+					{
+						Name: "list",
+						Action: func(cli *cli.Context) error {
+							p, err := initProject(cli)
+							if err != nil {
+								return err
+							}
+							backend := p.Backend()
+							secrets, err := provider.ListSecrets(backend, p.App().Name, p.App().Stage)
+							if err != nil {
+								return err
+							}
+							for key, value := range secrets {
+								fmt.Println(key, "=", value)
+							}
+							return nil
+						},
+					},
+				},
+			},
+			{
 				Name:  "deploy",
 				Flags: []cli.Flag{},
 				Action: func(cli *cli.Context) error {
@@ -102,7 +154,6 @@ func main() {
 						ui.Interrupt()
 						cancel()
 					}()
-
 					err = p.Stack.Run(ctx, &project.StackInput{
 						Command: "up",
 						OnEvent: ui.Trigger,

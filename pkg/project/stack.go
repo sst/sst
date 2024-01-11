@@ -19,6 +19,7 @@ import (
 	"github.com/sst/ion/pkg/global"
 	"github.com/sst/ion/pkg/js"
 	"github.com/sst/ion/pkg/project/provider"
+	"golang.org/x/sync/errgroup"
 )
 
 type stack struct {
@@ -50,25 +51,55 @@ func (e *ConcurrentUpdateError) Error() string {
 
 type StackEventStream = chan StackEvent
 
-func (s *stack) Run(ctx context.Context, input *StackInput) (err error) {
+func (s *stack) Run(ctx context.Context, input *StackInput) error {
 	slog.Info("running stack command", "cmd", input.Command)
 
-	err = s.lock()
+	err := s.lock()
 	if err != nil {
 		return err
 	}
 	defer func() {
-		err = s.unlock()
+		s.unlock()
 	}()
 
-	env, err := s.project.backend.Env()
-	if err != nil {
+	tasks, _ := errgroup.WithContext(ctx)
+	secrets := map[string]string{}
+	passphrase := ""
+
+	tasks.Go(func() error {
+		secrets, err = provider.ListSecrets(s.project.backend, s.project.app.Name, s.project.app.Stage)
+		if err != nil {
+			return fmt.Errorf("failed to list secrets: %w", err)
+		}
+		return nil
+	})
+
+	if os.Getenv("SST_DISABLE_PASSPHRASE") != "true" {
+		tasks.Go(func() error {
+			passphrase, err = provider.Passphrase(s.project.backend, s.project.app.Name, s.project.app.Stage)
+			if err != nil {
+				return fmt.Errorf("failed to get passphrase: %w", err)
+			}
+			return nil
+		})
+	}
+
+	if err := tasks.Wait(); err != nil {
 		return err
 	}
 
+	// env, err := s.project.backend.Env()
+	// if err != nil {
+	// 	return err
+	// }
+	env := map[string]string{}
+	for key, value := range secrets {
+		env["SST_SECRET_"+key] = value
+	}
+	env["PULUMI_CONFIG_PASSPHRASE"] = passphrase
+
 	cli := map[string]interface{}{
 		"command": input.Command,
-		"backend": s.project.backend.Url(),
 		"paths": map[string]string{
 			"home": global.ConfigDir(),
 			"root": s.project.PathRoot(),
@@ -77,6 +108,9 @@ func (s *stack) Run(ctx context.Context, input *StackInput) (err error) {
 		"env": env,
 	}
 	cliBytes, err := json.Marshal(cli)
+	if err != nil {
+		return err
+	}
 	appBytes, err := json.Marshal(s.project.app)
 	if err != nil {
 		return err
@@ -110,14 +144,12 @@ func (s *stack) Run(ctx context.Context, input *StackInput) (err error) {
 			Name:    tokens.PackageName(s.project.app.Name),
 			Runtime: workspace.NewProjectRuntimeInfo("nodejs", nil),
 			Backend: &workspace.ProjectBackend{
-				URL: s.project.backend.Url(),
+				URL: fmt.Sprintf("file://%v", s.project.PathTemp()),
 			},
 			Main: outfile,
 		}),
 		auto.EnvVars(
-			map[string]string{
-				"PULUMI_CONFIG_PASSPHRASE": "",
-			},
+			env,
 		),
 	)
 	if err != nil {
@@ -143,7 +175,6 @@ func (s *stack) Run(ctx context.Context, input *StackInput) (err error) {
 			config[fmt.Sprintf("%v:%v", provider, key)] = auto.ConfigValue{Value: value, Secret: true}
 		}
 	}
-	slog.Info("built config", "config", config)
 	err = stack.SetAllConfig(ctx, config)
 	if err != nil {
 		return err
@@ -180,7 +211,7 @@ func (s *stack) Run(ctx context.Context, input *StackInput) (err error) {
 	slog.Info("running stack command", "cmd", input.Command)
 	switch input.Command {
 	case "up":
-		_, err = stack.Up(ctx,
+		stack.Up(ctx,
 			optup.ProgressStreams(),
 			optup.ErrorProgressStreams(),
 			optup.EventStreams(stream),
@@ -223,7 +254,7 @@ func (s *stack) lock() error {
 		filepath.Join(appDir, fmt.Sprintf("%v.json", s.project.app.Stage)),
 	)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to create local state: %w", err)
 	}
 	defer file.Close()
 

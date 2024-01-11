@@ -1,8 +1,15 @@
-import { Input, ComponentResourceOptions, output } from "@pulumi/pulumi";
+import {
+  Input,
+  ComponentResourceOptions,
+  output,
+  Output,
+  all,
+} from "@pulumi/pulumi";
 import * as aws from "@pulumi/aws";
 import { RandomId } from "@pulumi/random";
 import { prefixName, hashNumberToString } from "./helpers/naming";
 import { Component } from "./component";
+import { AWSLinkable, Link, Linkable } from "./link";
 
 /**
  * Properties to create a DNS validated certificate managed by AWS Certificate Manager.
@@ -18,13 +25,13 @@ export interface BucketArgs {
   };
 }
 
-export class Bucket extends Component {
+export class Bucket extends Component implements Linkable {
   public bucket: aws.s3.BucketV2;
 
   constructor(
     name: string,
     args?: BucketArgs,
-    opts?: ComponentResourceOptions
+    opts?: ComponentResourceOptions,
   ) {
     super("sst:sst:Bucket", name, args, opts);
 
@@ -39,15 +46,15 @@ export class Bucket extends Component {
         bucket: randomId.dec.apply((dec) =>
           prefixName(
             name.toLowerCase(),
-            `-${hashNumberToString(parseInt(dec), 8)}`
-          )
+            `-${hashNumberToString(parseInt(dec), 8)}`,
+          ),
         ),
         forceDestroy: true,
         ...args?.nodes?.bucket,
       },
       {
         parent,
-      }
+      },
     );
 
     output(blockPublicAccess).apply((blockPublicAccess) => {
@@ -62,7 +69,7 @@ export class Bucket extends Component {
           ignorePublicAcls: true,
           restrictPublicBuckets: true,
         },
-        { parent }
+        { parent },
       );
     });
 
@@ -84,6 +91,15 @@ export class Bucket extends Component {
   public get nodes() {
     return {
       bucket: this.bucket,
+    };
+  }
+
+  public getSSTLink(): Link {
+    return {
+      type: `{ bucketName: string }`,
+      value: all([this.name]).apply(([bucketName]) => ({
+        bucketName,
+      })),
     };
   }
 }

@@ -1,4 +1,4 @@
-export declare global {
+declare global {
   export const $cli: {
     command: string;
     paths: {
@@ -7,6 +7,7 @@ export declare global {
       work: string;
     };
     backend: string;
-    env: Record<string, string>;
   };
 }
+
+export const {};

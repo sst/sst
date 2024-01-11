@@ -3,7 +3,7 @@ import "@pulumi/aws";
 import "@pulumi/pulumi";
 import "@pulumi/cloudflare";
 import "./components/index";
-import { $config, App } from "./config";
+import { $config as config, App } from "./config";
 
 type Simplify<T> = {
   [K in keyof T]: T[K];
@@ -22,7 +22,7 @@ declare global {
   // @ts-expect-error
   export import sst = require("./components/index");
 
-  export { $config } from "./config";
+  export const $config: typeof config;
 
   export const $app: Simplify<
     Readonly<

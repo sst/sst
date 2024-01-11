@@ -162,7 +162,7 @@ console.log("~j" + JSON.stringify(mod.app({
 			continue
 		}
 
-		err = p.Init(tmp, args)
+		err = p.Init(args)
 		if err != nil {
 			return nil, err
 		}
@@ -196,4 +196,8 @@ func (p *Project) Version() string {
 
 func (p *Project) App() *App {
 	return p.app
+}
+
+func (p *Project) Backend() provider.Backend {
+	return p.backend
 }

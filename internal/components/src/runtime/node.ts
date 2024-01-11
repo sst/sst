@@ -7,7 +7,12 @@ import { findAbove } from "../util/fs.js";
 import { FunctionArgs } from "../components/function.js";
 import fsSync from "fs";
 
-export async function build(name: string, input: pulumi.Unwrap<FunctionArgs>) {
+export async function build(
+  name: string,
+  input: pulumi.Unwrap<FunctionArgs> & {
+    links?: string;
+  },
+) {
   const out = path.join($cli.paths.work, "artifacts", `${name}-src`);
   const sourcemapOut = path.join($cli.paths.work, "artifacts", `${name}-map`);
   await fs.rm(out, { recursive: true, force: true });
@@ -36,7 +41,7 @@ export async function build(name: string, input: pulumi.Unwrap<FunctionArgs>) {
       ? relative
       : "",
     // Lambda handler can only contain 1 dot separating the file name and function name
-    parsed.name.replace(".", "-") + extension
+    parsed.name.replace(".", "-") + extension,
   );
   const handler = path
     .relative(out, target.replace(extension, parsed.ext))
@@ -47,7 +52,7 @@ export async function build(name: string, input: pulumi.Unwrap<FunctionArgs>) {
   const forceExternal = ["sharp", "pg-native"];
   const { external, ...override } = nodejs.esbuild || {};
   const options: BuildOptions = {
-    entryPoints: [file],
+    entryPoints: [path.resolve(file)],
     platform: "node",
     external: [
       ...forceExternal,
@@ -56,6 +61,9 @@ export async function build(name: string, input: pulumi.Unwrap<FunctionArgs>) {
     ],
     loader: nodejs.loader,
     keepNames: true,
+    define: {
+      SST_LINKS: input.links || "[]",
+    },
     bundle: true,
     logLevel: "silent",
     splitting: nodejs.splitting,
@@ -106,8 +114,8 @@ export async function build(name: string, input: pulumi.Unwrap<FunctionArgs>) {
         .filter((pkg) => !external?.includes(pkg))
         .filter((pkg) =>
           Object.values(result.metafile?.inputs || {}).some(({ imports }) =>
-            imports.some(({ path }) => path === pkg)
-          )
+            imports.some(({ path }) => path === pkg),
+          ),
         ),
     ];
 
@@ -119,9 +127,9 @@ export async function build(name: string, input: pulumi.Unwrap<FunctionArgs>) {
           .filter(({ path }) => path.includes("sst/constructs"))
           .forEach(({ path }) => {
             warnings.push(
-              `You are importing from "${path}" in "${inputPath}". Did you mean to import from "sst/node"?`
+              `You are importing from "${path}" in "${inputPath}". Did you mean to import from "sst/node"?`,
             );
-          })
+          }),
     );
 
     if (installPackages) {
@@ -137,15 +145,15 @@ export async function build(name: string, input: pulumi.Unwrap<FunctionArgs>) {
       const json = JSON.parse(
         await fs
           .readFile(path.join(src, "package.json"))
-          .then((x) => x.toString())
+          .then((x) => x.toString()),
       );
       await fs.writeFile(
         path.join(out, "package.json"),
         JSON.stringify({
           dependencies: Object.fromEntries(
-            installPackages.map((x) => [x, json.dependencies?.[x] || "*"])
+            installPackages.map((x) => [x, json.dependencies?.[x] || "*"]),
           ),
-        })
+        }),
       );
       const cmd = ["npm install"];
       if (installPackages.includes("sharp")) {
@@ -153,7 +161,7 @@ export async function build(name: string, input: pulumi.Unwrap<FunctionArgs>) {
           "--platform=linux",
           input.nodes?.function?.architectures?.includes("arm_64")
             ? "--arch=arm64"
-            : "--arch=x64"
+            : "--arch=x64",
         );
       }
       await new Promise<void>((resolve, reject) => {
@@ -172,7 +180,7 @@ export async function build(name: string, input: pulumi.Unwrap<FunctionArgs>) {
       if (nodejs.sourcemap) return;
 
       const map = Object.keys(result.metafile?.outputs || {}).find((item) =>
-        item.endsWith(".map")
+        item.endsWith(".map"),
       );
       if (!map) return;
 

@@ -1,8 +1,10 @@
 import { PulumiFn } from "@pulumi/pulumi/automation";
 import { runtime } from "@pulumi/pulumi";
+import { initializeLinkRegistry } from "../components/link";
 
 export async function run(program: PulumiFn) {
   process.chdir($cli.paths.root);
+
   runtime.registerStackTransformation(
     (args: util.ResourceTransformationArgs) => {
       if (
@@ -20,8 +22,9 @@ export async function run(program: PulumiFn) {
         };
       }
       return undefined;
-    }
+    },
   );
+
   runtime.registerStackTransformation(
     (args: util.ResourceTransformationArgs) => {
       let normalizedName = args.name;
@@ -37,61 +40,14 @@ export async function run(program: PulumiFn) {
 
       if (!normalizedName.match(/^[A-Z][a-zA-Z0-9]*$/)) {
         throw new Error(
-          `Invalid component name "${normalizedName}". Component names must start with an uppercase letter and contain only alphanumeric characters.`
+          `Invalid component name "${normalizedName}". Component names must start with an uppercase letter and contain only alphanumeric characters.`,
         );
       }
 
       return undefined;
-    }
+    },
   );
 
-  const results = await program();
-  return results;
-
-  // const stack = await LocalWorkspace.createOrSelectStack(
-  //   {
-  //     program: async () => {
-  //       runtime.registerStackTransformation(removalPolicyTransform);
-  //       runtime.registerStackTransformation(validateNamesTransform);
-
-  //       return program();
-  //     },
-  //     projectName: $app.name,
-  //     stackName: $app.stage,
-  //   },
-  //   {
-  //     pulumiHome: $cli.paths.home,
-  //     projectSettings: {
-  //       main: $cli.paths.root,
-  //       name: $app.name,
-  //       runtime: "nodejs",
-  //       backend: {
-  //         url: $cli.backend,
-  //       },
-  //     },
-  //     envVars: {
-  //       PULUMI_CONFIG_PASSPHRASE: "",
-  //       PULUMI_SKIP_UPDATE_CHECK: "true",
-  //       PULUMI_EXPERIMENTAL: "1",
-  //       // PULUMI_SKIP_CHECKPOINTS: "true",
-  //       NODE_PATH: $cli.paths.work + "/node_modules",
-  //       ...$cli.env,
-  //     },
-  //   },
-  // );
-
-  // try {
-  //   await stack[$cli.command as "up"]({
-  //     onEvent: (evt) => {
-  //       console.log("~j" + JSON.stringify(evt));
-  //     },
-  //     onOutput: console.log,
-  //     logToStdErr: true,
-  //     logVerbosity: 100,
-  //   });
-  // } catch (e: any) {
-  //   if (e.name === "ConcurrentUpdateError") {
-  //     console.log("~j" + JSON.stringify({ ConcurrentUpdateEvent: {} }));
-  //   }
-  // }
+  initializeLinkRegistry();
+  return await program();
 }

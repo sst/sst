@@ -16,24 +16,38 @@ export default $config({
     };
   },
   async run() {
-    const ws = new cloudflare.WorkerScript("WorkerScript", {
-      module: true,
-      name: "my_worker",
-      content: `
-        export default {
-          async fetch(request) {
-            return new Response("Hello, world!");
-          }
-        }
-      `,
-      accountId: $app.providers?.cloudflare?.accountId!,
+    const bucket = new sst.Bucket("MyBucket");
+    const secret = new sst.Secret("FOO");
+    const fn = new sst.Function("MyFunction", {
+      url: true,
+      link: [secret],
+      handler: "./src/index.handler",
     });
 
-    /*
-    new cloudflare.WorkerRoute("WorkerRoute", {
-      scriptName: ws.name,
-      pattern: "*",
-    })
-    */
+    return {
+      url: fn.url,
+    };
+
+    // const secret = new sst.Secret("MY_SECRET");
+
+    // const ws = new cloudflare.WorkerScript("WorkerScript", {
+    //   link: [db],
+    //   module: true,
+    //   name: "my_worker",
+    //   content: `
+    //     export default {
+    //       async fetch(request) {
+    //         return new Response("Hello, world!");
+    //       }
+    //     }
+    //   `,
+    //   accountId: $app.providers?.cloudflare?.accountId!,
+    // });
+
+    // import { Resource } from "sst";
+
+    // new S3GetCommand({
+    //   bucketName: Resource.MyBucket.bucketName,
+    // });
   },
 });

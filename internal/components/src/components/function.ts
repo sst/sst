@@ -12,6 +12,7 @@ import {
   output,
   all,
   interpolate,
+  jsonStringify,
 } from "@pulumi/pulumi";
 import * as aws from "@pulumi/aws";
 import { build } from "../runtime/node.js";
@@ -21,6 +22,8 @@ import { LogGroup } from "./providers/log-group.js";
 import { Duration, toSeconds } from "./util/duration.js";
 import { Size, toMBs } from "./util/size.js";
 import { Component } from "./component.js";
+import { Linkable, isLinkable, registerLinkType } from "./link.js";
+import { VisibleError } from "./error.js";
 
 const RETENTION = {
   "1 day": 1,
@@ -331,6 +334,8 @@ export interface FunctionArgs {
    * @internal
    */
   bind?: Input<ComponentResource>;
+
+  link?: Input<Linkable[]>;
   /**
    * Whether to enable streaming for the function.
    * @default false
@@ -403,7 +408,7 @@ export class Function extends Component {
   constructor(
     name: string,
     args: FunctionArgs,
-    opts?: ComponentResourceOptions
+    opts?: ComponentResourceOptions,
   ) {
     super("sst:sst:Function", name, args, opts);
 
@@ -419,6 +424,7 @@ export class Function extends Component {
     const logging = normalizeLogging();
     const url = normalizeUrl();
 
+    const linkInjection = link();
     const { bundle, handler } = buildHandler();
     const bindInjection = bind();
     const newHandler = wrapHandler();
@@ -462,7 +468,7 @@ export class Function extends Component {
 
     function normalizeArchitectures() {
       return output(args.architecture).apply((arc) =>
-        arc === "arm64" ? ["arm64"] : ["x86_64"]
+        arc === "arm64" ? ["arm64"] : ["x86_64"],
       );
     }
 
@@ -529,11 +535,17 @@ export class Function extends Component {
         };
       }
 
-      const buildResult = output(args).apply(async (args) => {
-        const result = await build(name, args);
-        if (result.type === "error") throw new Error(result.errors.join("\n"));
-        return result;
-      });
+      const buildResult = all([args, linkInjection]).apply(
+        async ([args, linkInjection]) => {
+          const result = await build(name, {
+            ...args,
+            links: linkInjection,
+          });
+          if (result.type === "error")
+            throw new Error(result.errors.join("\n"));
+          return result;
+        },
+      );
       return {
         handler: buildResult.handler,
         bundle: buildResult.out,
@@ -545,7 +557,7 @@ export class Function extends Component {
 
       return output(args.bind).apply(async (component) => {
         const outputs = Object.entries(component).filter(
-          ([key]) => !key.startsWith("__")
+          ([key]) => !key.startsWith("__"),
         );
         const keys = outputs.map(([key]) => key);
         const values = outputs.map(([_, value]) => value);
@@ -561,10 +573,41 @@ export class Function extends Component {
       });
     }
 
+    function link() {
+      if (!args.link) return;
+      return output(args.link)
+        .apply((links) =>
+          links.map((l) => {
+            if (isLinkable(l)) {
+              const link = l.getSSTLink();
+              return {
+                name: l.urn.apply((x) => x.split("::").at(-1)!),
+                value: link.value,
+                type: link.type,
+              };
+            }
+            throw new VisibleError(`${l} is not a linkable component`);
+          }),
+        )
+        .apply((injections) => {
+          for (const injection of injections) {
+            all([injection]).apply(([value]) => {
+              registerLinkType({
+                path: "types.d.ts",
+                type: value.type,
+                name: value.name,
+              });
+            });
+          }
+          return jsonStringify(injections);
+        });
+    }
+
     function wrapHandler() {
       return all([handler, bundle, streaming, injections, bindInjection]).apply(
         async ([handler, bundle, streaming, injections, bindInjection]) => {
-          if (injections.length === 0 && !bindInjection) return handler;
+          if (injections.length === 0 && !bindInjection && !linkInjection)
+            return handler;
 
           const {
             dir: handlerDir,
@@ -591,13 +634,13 @@ export class Function extends Component {
                   `  const { ${oldHandlerFunction}: rawHandler} = await import("./${oldHandlerName}.mjs");`,
                   `  return rawHandler(event, context);`,
                   `};`,
-                ].join("\n")
+                ].join("\n"),
           );
           return path.posix.join(
             handlerDir,
-            `${newHandlerName}.${newHandlerFunction}`
+            `${newHandlerName}.${newHandlerFunction}`,
           );
-        }
+        },
       );
     }
 
@@ -613,7 +656,7 @@ export class Function extends Component {
             "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
           ],
         },
-        { parent }
+        { parent },
       );
     }
 
@@ -627,7 +670,7 @@ export class Function extends Component {
           $cli.paths.work,
           "artifacts",
           name,
-          "code.zip"
+          "code.zip",
         );
         await fs.promises.mkdir(path.dirname(zipPath), {
           recursive: true,
@@ -663,7 +706,7 @@ export class Function extends Component {
           bucket: region.apply((region) => bootstrap.forRegion(region)),
           source: zipPath.apply((zipPath) => new asset.FileArchive(zipPath)),
         },
-        { parent, retainOnDelete: true }
+        { parent, retainOnDelete: true },
       );
     }
 
@@ -686,7 +729,7 @@ export class Function extends Component {
           architectures,
           ...args.nodes?.function,
         },
-        { parent }
+        { parent },
       );
     }
 
@@ -696,11 +739,11 @@ export class Function extends Component {
         {
           logGroupName: interpolate`/aws/lambda/${fn.name}`,
           retentionInDays: logging.apply(
-            (logging) => RETENTION[logging.retention]
+            (logging) => RETENTION[logging.retention],
           ),
           region,
         },
-        { parent }
+        { parent },
       );
     }
 
@@ -714,11 +757,11 @@ export class Function extends Component {
             functionName: fn.name,
             authorizationType: url.authorization.toUpperCase(),
             invokeMode: streaming.apply((streaming) =>
-              streaming ? "RESPONSE_STREAM" : "BUFFERED"
+              streaming ? "RESPONSE_STREAM" : "BUFFERED",
             ),
             cors: url.cors,
           },
-          { parent }
+          { parent },
         );
       });
     }
@@ -734,7 +777,7 @@ export class Function extends Component {
             functionLastModified: fnRaw.lastModified,
             region,
           },
-          { parent }
+          { parent },
         );
         return fnRaw;
       });
