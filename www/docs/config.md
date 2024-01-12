@@ -313,6 +313,10 @@ Config.STAGE;
 
 The [`sst/node`](clients/index.md) package only supports Node.js functions. For other runtimes, SST supports loading environment variables using [dotenv](https://github.com/motdotla/dotenv).
 
+:::note
+If you are using Python, check out [this community contributed snippet](https://gist.github.com/abhimskywalker/f78a353a18c8246f9c0b20c110903a45) on using Config in your functions.
+:::
+
 ---
 
 ### dotenv
