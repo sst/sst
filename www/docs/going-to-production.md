@@ -137,7 +137,7 @@ To setup OpenID Connect manually:
           - name: Git clone the repository
             uses: actions/checkout@v3
           - name: Configure AWS credentials
-            uses: aws-actions/configure-aws-credentials@v2
+            uses: aws-actions/configure-aws-credentials@v3
             with:
               role-to-assume: arn:aws:iam::1234567890:role/GitHub
               role-duration-seconds: 3600 #adjust as needed for your build time
