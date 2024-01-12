@@ -45,7 +45,7 @@ export async function registerLinkType(reg: TypeRegistration) {
   await fs.promises.writeFile(
     path,
     [
-      `declare module "sst/resource" {`,
+      `declare module "sst" {`,
       `  export interface Resource {`,
       ...Object.entries(file).map(([key, value]) => `    ${key}: ${value};`),
       `    [key: string]: any`,

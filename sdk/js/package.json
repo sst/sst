@@ -2,7 +2,8 @@
   "$schema": "https://json.schemastore.org/package.json",
   "name": "sst",
   "type": "module",
-  "version": "3.0.1-6",
+  "version": "3.0.1-7",
+  "main": "./dist/index.js",
   "exports": {
     ".": "./dist/index.js",
     "./*": "./dist/*.js"

@@ -1,5 +1,6 @@
 {
-  "dependencies": {
-    "sst": "3.0.1-6"
+  "type": "module",
+  "devDependencies": {
+    "sst": "3.0.1-7"
   }
 }

@@ -26,7 +26,7 @@ export async function build(name: string, input: pulumi.Unwrap<WorkerArgs>) {
     !relative.startsWith("..") && !path.isAbsolute(input.handler!)
       ? relative
       : "",
-    isESM ? "index.mjs" : "index.cjs"
+    isESM ? "index.mjs" : "index.cjs",
   );
 
   // Rebuilt using existing esbuild context
@@ -37,6 +37,9 @@ export async function build(name: string, input: pulumi.Unwrap<WorkerArgs>) {
     keepNames: true,
     bundle: true,
     logLevel: "silent",
+    define: {
+      $SST_LINKS: JSON.stringify({}),
+    },
     metafile: true,
     ...(isESM
       ? {
@@ -69,7 +72,7 @@ export async function build(name: string, input: pulumi.Unwrap<WorkerArgs>) {
       if (nodejs.sourcemap) return;
 
       const map = Object.keys(result.metafile?.outputs || {}).find((item) =>
-        item.endsWith(".map")
+        item.endsWith(".map"),
       );
       if (!map) return;
 
