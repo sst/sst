@@ -334,7 +334,7 @@ export interface FunctionArgs {
    */
   bind?: Input<ComponentResource>;
 
-  link?: Input<Linkable[]>;
+  link?: Input<any[]>;
   /**
    * Whether to enable streaming for the function.
    * @default false

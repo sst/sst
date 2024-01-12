@@ -1,8 +1,8 @@
-import { Output } from "@pulumi/pulumi";
+import { Input, Output, output } from "@pulumi/pulumi";
 import fs from "node:fs";
 
 export interface Link {
-  value: Output<any>;
+  value: Input<any>;
   type: string;
 }
 
@@ -54,4 +54,11 @@ export async function registerLinkType(reg: TypeRegistration) {
       `export {}`,
     ].join("\n"),
   );
+}
+
+export function makeLinkable<T>(
+  obj: { new (...args: any[]): T },
+  cb: (this: T) => Link,
+) {
+  obj.prototype.getSSTLink = cb;
 }
