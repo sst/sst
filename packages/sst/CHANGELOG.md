@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.39.5
+
+### Patch Changes
+
+- [`daec2ff64`](https://github.com/sst/sst/commit/daec2ff64b275475302e52c236f9073f27f10c94) Thanks [@fwang](https://github.com/fwang)! - Revert adding @smithy/util-endpoints
+
 ## 2.39.4
 
 ### Patch Changes
