@@ -541,27 +541,16 @@ if (event.rawPath) {
             ),
             runtime: "nodejs18.x",
             timeout: "30 seconds",
-            policies: [
+            permissions: [
               {
-                name: "sqs",
-                policy: queue.arn.apply((arn) =>
-                  aws.iam
-                    .getPolicyDocument({
-                      statements: [
-                        {
-                          actions: [
-                            "sqs:ChangeMessageVisibility",
-                            "sqs:DeleteMessage",
-                            "sqs:GetQueueAttributes",
-                            "sqs:GetQueueUrl",
-                            "sqs:ReceiveMessage",
-                          ],
-                          resources: [arn],
-                        },
-                      ],
-                    })
-                    .then((doc) => doc.json)
-                ),
+                actions: [
+                  "sqs:ChangeMessageVisibility",
+                  "sqs:DeleteMessage",
+                  "sqs:GetQueueAttributes",
+                  "sqs:GetQueueUrl",
+                  "sqs:ReceiveMessage",
+                ],
+                resources: [queue.arn],
               },
             ],
           },
@@ -581,8 +570,8 @@ if (event.rawPath) {
     }
 
     function createRevalidationTable() {
-      return all([experimental, outputPath]).apply(
-        ([experimental, outputPath]) => {
+      return all([experimental, outputPath, usePrerenderManifest()]).apply(
+        ([experimental, outputPath, prerenderManifest]) => {
           if (!serverFunction) return;
           if (experimental.disableDynamoDBCache) return;
 
@@ -622,7 +611,7 @@ if (event.rawPath) {
             // 1GB per 40,000, up to 10GB. This tends to use ~70% of the memory
             // provisioned when testing.
             const prerenderedRouteCount = Object.keys(
-              usePrerenderManifest()?.routes ?? {}
+              prerenderManifest?.routes ?? {}
             ).length;
             const seedFn = new Function(
               `${name}RevalidationSeeder`,
@@ -636,25 +625,14 @@ if (event.rawPath) {
                   10240,
                   Math.max(128, Math.ceil(prerenderedRouteCount / 4000) * 128)
                 )} MB`,
-                policies: [
+                permissions: [
                   {
-                    name: "dynamodb",
-                    policy: table.arn.apply((arn) =>
-                      aws.iam
-                        .getPolicyDocument({
-                          statements: [
-                            {
-                              actions: [
-                                "dynamodb:BatchWriteItem",
-                                "dynamodb:PutItem",
-                                "dynamodb:DescribeTable",
-                              ],
-                              resources: [arn],
-                            },
-                          ],
-                        })
-                        .then((doc) => doc.json)
-                    ),
+                    actions: [
+                      "dynamodb:BatchWriteItem",
+                      "dynamodb:PutItem",
+                      "dynamodb:DescribeTable",
+                    ],
+                    resources: [table.arn],
                   },
                 ],
                 environment: {

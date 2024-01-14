@@ -1,5 +1,6 @@
 import { Input, Output, output } from "@pulumi/pulumi";
 import fs from "node:fs";
+import { FunctionPermissionArgs } from "./function.js";
 
 export interface Link {
   value: Input<any>;
@@ -16,7 +17,7 @@ export function isLinkable(obj: any): obj is Linkable {
 }
 
 export interface AWSLinkable {
-  getSSTAWSPermissions(): string[];
+  getSSTAWSPermissions(): FunctionPermissionArgs;
 }
 
 export function isAWSLinkable(obj: any): obj is AWSLinkable {
@@ -52,13 +53,13 @@ export async function registerLinkType(reg: TypeRegistration) {
       `  }`,
       `}`,
       `export {}`,
-    ].join("\n"),
+    ].join("\n")
   );
 }
 
 export function makeLinkable<T>(
   obj: { new (...args: any[]): T },
-  cb: (this: T) => Link,
+  cb: (this: T) => Link
 ) {
   obj.prototype.getSSTLink = cb;
 }

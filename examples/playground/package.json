@@ -2,6 +2,7 @@
   "name": "playground",
   "version": "1.0.0",
   "description": "",
+  "type": "module",
   "main": "index.js",
   "scripts": {
     "deploy": "go run ../../cmd/sst deploy",
@@ -11,7 +12,7 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "dependencies": {
-    "sst": "^2.36.8"
+  "devDependencies": {
+    "sst": "3.0.1-7"
   }
 }

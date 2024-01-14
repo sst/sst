@@ -10,6 +10,7 @@
   },
   "scripts": {
     "build": "tsc",
+    "dev": "tsc -w",
     "release": "pnpm build && pnpm version prerelease && pnpm publish --no-git-checks --tag=ion --access=public"
   },
   "devDependencies": {
@@ -19,5 +20,8 @@
   },
   "files": [
     "dist"
-  ]
+  ],
+  "dependencies": {
+    "@aws-sdk/client-lambda": "3.478.0"
+  }
 }

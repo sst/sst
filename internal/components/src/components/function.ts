@@ -12,6 +12,7 @@ import {
   output,
   all,
   interpolate,
+  jsonStringify,
 } from "@pulumi/pulumi";
 import * as aws from "@pulumi/aws";
 import { build } from "../runtime/node.js";
@@ -21,7 +22,12 @@ import { LogGroup } from "./providers/log-group.js";
 import { Duration, toSeconds } from "./util/duration.js";
 import { Size, toMBs } from "./util/size.js";
 import { Component } from "./component.js";
-import { Linkable, isLinkable, registerLinkType } from "./link.js";
+import {
+  Linkable,
+  isAWSLinkable,
+  isLinkable,
+  registerLinkType,
+} from "./link.js";
 import { VisibleError } from "./error.js";
 
 const RETENTION = {
@@ -49,6 +55,22 @@ const RETENTION = {
   "10 years": 3653,
   forever: 0,
 };
+
+export interface FunctionPermissionArgs {
+  actions: string[];
+  resources: Output<string>[];
+}
+
+export interface FunctionCopyFilesArgs {
+  /**
+   * Source path relative to sst.config.ts
+   */
+  from: Input<string>;
+  /**
+   * Destination path relative to function root in bundle
+   */
+  to?: Input<string>;
+}
 
 export interface FunctionNodeJSArgs {
   /**
@@ -306,34 +328,31 @@ export interface FunctionArgs {
   environment?: Input<Record<string, Input<string>>>;
   /**
    * Initial IAM policy statements to add to the created Lambda Role.
-   * @default No policies
+   * @default No permissions
    * @example
    * ```js
    * {
-   *   policies: [
+   *   permissions: [
    *     {
-   *       name: "s3",
-   *       policy: {
-   *         Version: "2012-10-17",
-   *         Statement: [
-   *           {
-   *             Effect: "Allow",
-   *             Action: ["s3:*"],
-   *             Resource: ["arn:aws:s3:::*"],
-   *           },
-   *         ],
-   *       },
+   *       Effect: "Allow",
+   *       Action: ["s3:*"],
+   *       Resource: ["arn:aws:s3:::*"],
    *     },
-   *   ],
+   *   ]
    * }
    * ```
    */
-  policies?: Input<aws.types.input.iam.RoleInlinePolicy[]>;
+  permissions?: Input<FunctionPermissionArgs[]>;
   /**
-   * @internal
+   * Link resources for the function
+   *
+   * @example
+   * ```js
+   * {
+   *   link: [myBucket, stripeKey],
+   * }
+   * ```
    */
-  bind?: Input<ComponentResource>;
-
   link?: Input<any[]>;
   /**
    * Whether to enable streaming for the function.
@@ -392,6 +411,17 @@ export interface FunctionArgs {
    * Used to configure nodejs function properties
    */
   nodejs?: Input<FunctionNodeJSArgs>;
+  /**
+   * Used to configure additional files to copy into the function bundle
+   *
+   * @example
+   * ```js
+   * {
+   *   copyFiles: [{ from: "src/index.js" }]
+   * }
+   *```
+   */
+  copyFiles?: Input<FunctionCopyFilesArgs[]>;
   nodes?: {
     function?: Omit<aws.lambda.FunctionArgs, "role">;
   };
@@ -399,7 +429,7 @@ export interface FunctionArgs {
 
 export class Function extends Component {
   private function: Output<aws.lambda.Function>;
-  private role: aws.iam.Role;
+  private role: Output<aws.iam.Role>;
   private logGroup: LogGroup;
   private fnUrl: Output<aws.lambda.FunctionUrl | undefined>;
   private missingSourcemap?: boolean;
@@ -407,7 +437,7 @@ export class Function extends Component {
   constructor(
     name: string,
     args: FunctionArgs,
-    opts?: ComponentResourceOptions,
+    opts?: ComponentResourceOptions
   ) {
     super("sst:sst:Function", name, args, opts);
 
@@ -424,9 +454,9 @@ export class Function extends Component {
     const url = normalizeUrl();
 
     const linkInjection = link();
-    const { bundle, handler } = buildHandler();
-    const bindInjection = bind();
-    const newHandler = wrapHandler();
+    const { bundle: bundle0, handler: handler0 } = buildHandler();
+    const bundle = copyFiles();
+    const handler = wrapHandler();
     const role = createRole();
     const zipPath = zipBundleFolder();
     const bundleHash = calculateHash();
@@ -467,7 +497,7 @@ export class Function extends Component {
 
     function normalizeArchitectures() {
       return output(args.architecture).apply((arc) =>
-        arc === "arm64" ? ["arm64"] : ["x86_64"],
+        arc === "arm64" ? ["arm64"] : ["x86_64"]
       );
     }
 
@@ -543,7 +573,7 @@ export class Function extends Component {
           if (result.type === "error")
             throw new Error(result.errors.join("\n"));
           return result;
-        },
+        }
       );
       return {
         handler: buildResult.handler,
@@ -551,25 +581,37 @@ export class Function extends Component {
       };
     }
 
-    function bind() {
-      if (!args.bind) return;
-
-      return output(args.bind).apply(async (component) => {
-        const outputs = Object.entries(component).filter(
-          ([key]) => !key.startsWith("__"),
-        );
-        const keys = outputs.map(([key]) => key);
-        const values = outputs.map(([_, value]) => value);
-
-        return all(values).apply((values) => {
-          const acc: Record<string, any> = {};
-          keys.forEach((key, index) => {
-            acc[key] = values[index];
-          });
-          // @ts-expect-error
-          return `globalThis.${component.__name}=${JSON.stringify(acc)}`;
-        });
-      });
+    function copyFiles() {
+      return all([args.copyFiles ?? [], bundle0]).apply(
+        async ([copyFiles, bundle]) => {
+          await Promise.all(
+            copyFiles.map(async (entry) => {
+              const fromPath = path.join($cli.paths.root, entry.from);
+              const to = entry.to || entry.from;
+              if (path.isAbsolute(to))
+                throw new VisibleError(
+                  `Copy destination path "${to}" must be relative`
+                );
+              const toPath = path.join(bundle, to);
+              // TODO handle start
+              //if ($app. mode === "deploy")
+              await fs.promises.cp(fromPath, toPath, {
+                recursive: true,
+              });
+              //if (mode === "start") {
+              //  try {
+              //    const dir = path.dirname(toPath);
+              //    await fs.mkdir(dir, { recursive: true });
+              //    await fs.symlink(fromPath, toPath);
+              //  } catch (ex) {
+              //    Logger.debug("Failed to symlink", fromPath, toPath, ex);
+              //  }
+              //}
+            })
+          );
+          return bundle;
+        }
+      );
     }
 
     function link() {
@@ -586,7 +628,7 @@ export class Function extends Component {
               };
             }
             throw new VisibleError(`${l} is not a linkable component`);
-          }),
+          })
         )
         .apply((injections) => {
           for (const injection of injections) {
@@ -602,10 +644,9 @@ export class Function extends Component {
     }
 
     function wrapHandler() {
-      return all([handler, bundle, streaming, injections, bindInjection]).apply(
-        async ([handler, bundle, streaming, injections, bindInjection]) => {
-          if (injections.length === 0 && !bindInjection && !linkInjection)
-            return handler;
+      return all([handler0, bundle, streaming, injections]).apply(
+        async ([handler, bundle, streaming, injections]) => {
+          if (injections.length === 0 && !linkInjection) return handler;
 
           const {
             dir: handlerDir,
@@ -626,35 +667,59 @@ export class Function extends Component {
                   `});`,
                 ].join("\n")
               : [
-                  `${bindInjection ?? ""};`,
+                  //`${bindInjection ?? ""};`,
                   `export const ${newHandlerFunction} = async (event, context) => {`,
                   ...injections,
                   `  const { ${oldHandlerFunction}: rawHandler} = await import("./${oldHandlerName}.mjs");`,
                   `  return rawHandler(event, context);`,
                   `};`,
-                ].join("\n"),
+                ].join("\n")
           );
           return path.posix.join(
             handlerDir,
-            `${newHandlerName}.${newHandlerFunction}`,
+            `${newHandlerName}.${newHandlerFunction}`
           );
-        },
+        }
       );
     }
 
     function createRole() {
-      return new aws.iam.Role(
-        `${name}Role`,
-        {
-          assumeRolePolicy: aws.iam.assumeRolePolicyForPrincipal({
-            Service: "lambda.amazonaws.com",
-          }),
-          inlinePolicies: args.policies,
-          managedPolicyArns: [
-            "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
-          ],
-        },
-        { parent },
+      const linkPermissions = output(args.link ?? []).apply((links) =>
+        links.flatMap((l) => {
+          if (!isAWSLinkable(l)) return [];
+          return [l.getSSTAWSPermissions()];
+        })
+      );
+
+      return all([args.permissions || [], linkPermissions]).apply(
+        ([argsPermissions, linkPermissions]) => {
+          return new aws.iam.Role(
+            `${name}Role`,
+            {
+              assumeRolePolicy: aws.iam.assumeRolePolicyForPrincipal({
+                Service: "lambda.amazonaws.com",
+              }),
+              inlinePolicies: [
+                {
+                  name: "inline",
+                  policy: jsonStringify({
+                    Statement: [...argsPermissions, ...linkPermissions].map(
+                      (permission) => ({
+                        Effect: "Allow",
+                        Action: permission.actions,
+                        Resource: permission.resources,
+                      })
+                    ),
+                  }),
+                },
+              ],
+              managedPolicyArns: [
+                "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            },
+            { parent }
+          );
+        }
       );
     }
 
@@ -668,7 +733,7 @@ export class Function extends Component {
           $cli.paths.work,
           "artifacts",
           name,
-          "code.zip",
+          "code.zip"
         );
         await fs.promises.mkdir(path.dirname(zipPath), {
           recursive: true,
@@ -704,7 +769,7 @@ export class Function extends Component {
           bucket: region.apply((region) => bootstrap.forRegion(region)),
           source: zipPath.apply((zipPath) => new asset.FileArchive(zipPath)),
         },
-        { parent, retainOnDelete: true },
+        { parent, retainOnDelete: true }
       );
     }
 
@@ -716,7 +781,7 @@ export class Function extends Component {
           code: new asset.AssetArchive({
             index: new asset.StringAsset("exports.handler = () => {}"),
           }),
-          handler: newHandler,
+          handler,
           role: role.arn,
           runtime,
           timeout: timeout.apply((timeout) => toSeconds(timeout)),
@@ -727,7 +792,7 @@ export class Function extends Component {
           architectures,
           ...args.nodes?.function,
         },
-        { parent },
+        { parent }
       );
     }
 
@@ -737,11 +802,11 @@ export class Function extends Component {
         {
           logGroupName: interpolate`/aws/lambda/${fn.name}`,
           retentionInDays: logging.apply(
-            (logging) => RETENTION[logging.retention],
+            (logging) => RETENTION[logging.retention]
           ),
           region,
         },
-        { parent },
+        { parent }
       );
     }
 
@@ -755,11 +820,11 @@ export class Function extends Component {
             functionName: fn.name,
             authorizationType: url.authorization.toUpperCase(),
             invokeMode: streaming.apply((streaming) =>
-              streaming ? "RESPONSE_STREAM" : "BUFFERED",
+              streaming ? "RESPONSE_STREAM" : "BUFFERED"
             ),
             cors: url.cors,
           },
-          { parent },
+          { parent }
         );
       });
     }
@@ -775,7 +840,7 @@ export class Function extends Component {
             functionLastModified: fnRaw.lastModified,
             region,
           },
-          { parent },
+          { parent }
         );
         return fnRaw;
       });

@@ -10,6 +10,7 @@ export interface PostgresTableInputs {
   secretArn: Input<string>;
   databaseName: Input<string>;
   tableName: Input<string>;
+  vectorSize: Input<number>;
 }
 
 interface Inputs {
@@ -17,6 +18,7 @@ interface Inputs {
   secretArn: string;
   databaseName: string;
   tableName: string;
+  vectorSize: number;
 }
 
 class Provider implements dynamic.ResourceProvider {
@@ -112,8 +114,7 @@ class Provider implements dynamic.ResourceProvider {
           database: inputs.databaseName,
           sql: `create table ${inputs.tableName} (
             id bigserial primary key,
-            embedding vector(1536),
-            content text,
+            embedding vector(${inputs.vectorSize}),
             metadata jsonb
           );`,
         })
@@ -163,12 +164,12 @@ class Provider implements dynamic.ResourceProvider {
   }
 }
 
-export class PostgresTable extends dynamic.Resource {
+export class EmbeddingsTable extends dynamic.Resource {
   constructor(
     name: string,
     args: PostgresTableInputs,
     opts?: CustomResourceOptions
   ) {
-    super(new Provider(), `${name}.sst.PostgresTable`, args, opts);
+    super(new Provider(), `${name}.sst.EmbeddingsTable`, args, opts);
   }
 }

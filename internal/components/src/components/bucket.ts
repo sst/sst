@@ -4,12 +4,14 @@ import {
   output,
   Output,
   all,
+  interpolate,
 } from "@pulumi/pulumi";
 import * as aws from "@pulumi/aws";
 import { RandomId } from "@pulumi/random";
 import { prefixName, hashNumberToString } from "./helpers/naming";
 import { Component } from "./component";
 import { AWSLinkable, Link, Linkable } from "./link";
+import { FunctionPermissionArgs } from ".";
 
 /**
  * Properties to create a DNS validated certificate managed by AWS Certificate Manager.
@@ -31,7 +33,7 @@ export class Bucket extends Component implements Linkable, AWSLinkable {
   constructor(
     name: string,
     args?: BucketArgs,
-    opts?: ComponentResourceOptions,
+    opts?: ComponentResourceOptions
   ) {
     super("sst:sst:Bucket", name, args, opts);
 
@@ -46,15 +48,15 @@ export class Bucket extends Component implements Linkable, AWSLinkable {
         bucket: randomId.dec.apply((dec) =>
           prefixName(
             name.toLowerCase(),
-            `-${hashNumberToString(parseInt(dec), 8)}`,
-          ),
+            `-${hashNumberToString(parseInt(dec), 8)}`
+          )
         ),
         forceDestroy: true,
         ...args?.nodes?.bucket,
       },
       {
         parent,
-      },
+      }
     );
 
     output(blockPublicAccess).apply((blockPublicAccess) => {
@@ -69,7 +71,7 @@ export class Bucket extends Component implements Linkable, AWSLinkable {
           ignorePublicAcls: true,
           restrictPublicBuckets: true,
         },
-        { parent },
+        { parent }
       );
     });
 
@@ -97,13 +99,16 @@ export class Bucket extends Component implements Linkable, AWSLinkable {
   public getSSTLink(): Link {
     return {
       type: `{ bucketName: string }`,
-      value: all([this.name]).apply(([bucketName]) => ({
-        bucketName,
-      })),
+      value: {
+        bucketName: this.name,
+      },
     };
   }
 
-  public getSSTAWSPermissions(): string[] {
-    return ["s3:*"];
+  public getSSTAWSPermissions(): FunctionPermissionArgs {
+    return {
+      actions: ["s3:*"],
+      resources: [this.bucket.arn, interpolate`${this.bucket.arn}/*`],
+    };
   }
 }
