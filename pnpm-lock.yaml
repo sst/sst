@@ -375,6 +375,9 @@ importers:
       '@smithy/signature-v4':
         specifier: ^2.0.16
         version: 2.0.16
+      '@smithy/util-endpoints':
+        specifier: 1.0.5
+        version: 1.0.5
       '@trpc/server':
         specifier: 9.16.0
         version: 9.16.0
@@ -572,7 +575,7 @@ importers:
         specifier: ^5.3.1
         version: 5.3.1
       astro-sst:
-        specifier: 2.39.4
+        specifier: 2.39.5
         version: link:../astro-sst
       async:
         specifier: ^3.2.4
@@ -10730,7 +10733,7 @@ packages:
     dependencies:
       '@smithy/config-resolver': 2.0.5
       '@smithy/credential-provider-imds': 2.0.7
-      '@smithy/node-config-provider': 2.0.7
+      '@smithy/node-config-provider': 2.1.6
       '@smithy/property-provider': 2.0.6
       '@smithy/types': 2.6.0
       tslib: 2.6.2
