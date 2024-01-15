@@ -63,3 +63,10 @@ export function makeLinkable<T>(
 ) {
   obj.prototype.getSSTLink = cb;
 }
+
+export function makeAWSLinkable<T>(
+  obj: { new (...args: any[]): T },
+  cb: (this: T) => FunctionPermissionArgs
+) {
+  obj.prototype.getSSTAWSPermissions = cb;
+}

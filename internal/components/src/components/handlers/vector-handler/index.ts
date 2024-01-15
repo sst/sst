@@ -8,15 +8,8 @@ import {
 } from "@aws-sdk/client-bedrock-runtime";
 import { useClient } from "../../helpers/aws/client";
 
-const {
-  CLUSTER_ARN,
-  SECRET_ARN,
-  EMBEDDING_MODEL_ID,
-  DATABASE_NAME,
-  TABLE_NAME,
-} = process.env;
-
 export type IngestEvent = {
+  externalId: string;
   text: string;
   image?: string;
   metadata: any;
@@ -29,14 +22,24 @@ export type RetrieveEvent = {
   count?: number;
 };
 
+export type RemoveEvent = {
+  externalId: string;
+};
+
+const {
+  CLUSTER_ARN,
+  SECRET_ARN,
+  EMBEDDING_MODEL_ID,
+  DATABASE_NAME,
+  TABLE_NAME,
+} = process.env;
+
 export async function ingest(event: IngestEvent) {
-  console.log(event);
   const embedding = await generateEmbedding(event.text, event.image);
   const metadata = JSON.stringify(event.metadata);
-  await storeEmbedding(metadata, embedding);
+  await storeEmbedding(metadata, embedding, event.externalId);
 }
 export async function retrieve(event: RetrieveEvent) {
-  console.log(event);
   const embedding = await generateEmbedding(event.prompt);
   const metadata = JSON.stringify(event.metadata);
   const result = await queryEmbeddings(
@@ -48,6 +51,9 @@ export async function retrieve(event: RetrieveEvent) {
   return {
     results: result,
   };
+}
+export async function remove(event: RemoveEvent) {
+  await removeEmbedding(event.externalId);
 }
 
 async function generateEmbedding(text: string, image?: string) {
@@ -66,19 +72,31 @@ async function generateEmbedding(text: string, image?: string) {
   return payload.embedding;
 }
 
-async function storeEmbedding(metadata: string, embedding: number[]) {
+async function storeEmbedding(
+  metadata: string,
+  embedding: number[],
+  externalId: string
+) {
   await useClient(RDSDataClient).send(
     new ExecuteStatementCommand({
       resourceArn: CLUSTER_ARN,
       secretArn: SECRET_ARN,
       database: DATABASE_NAME,
-      sql: `INSERT INTO ${TABLE_NAME} (embedding, metadata)
-                VALUES (ARRAY[${embedding.join(",")}], :metadata)`,
+      sql: `INSERT INTO ${TABLE_NAME} (embedding, metadata, external_id)
+              VALUES (ARRAY[${embedding.join(",")}], :metadata, :external_id)
+              ON CONFLICT (external_id) DO UPDATE
+              SET embedding = ARRAY[${embedding.join(
+                ","
+              )}], metadata = :metadata`,
       parameters: [
         {
           name: "metadata",
           value: { stringValue: metadata },
           typeHint: "JSON",
+        },
+        {
+          name: "external_id",
+          value: { stringValue: externalId },
         },
       ],
     })
@@ -116,4 +134,21 @@ async function queryEmbeddings(
     metadata: JSON.parse(record[1].stringValue!),
     score: 1 - record[2].doubleValue!,
   }));
+}
+
+async function removeEmbedding(externalId: string) {
+  await useClient(RDSDataClient).send(
+    new ExecuteStatementCommand({
+      resourceArn: CLUSTER_ARN,
+      secretArn: SECRET_ARN,
+      database: DATABASE_NAME,
+      sql: `DELETE FROM ${TABLE_NAME} WHERE external_id = :external_id`,
+      parameters: [
+        {
+          name: "external_id",
+          value: { stringValue: externalId },
+        },
+      ],
+    })
+  );
 }

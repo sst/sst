@@ -12,16 +12,23 @@ import { prefixName, hashNumberToString } from "./helpers/naming";
 import { Component } from "./component";
 import { AWSLinkable, Link, Linkable } from "./link";
 import { FunctionPermissionArgs } from ".";
+import { create } from "domain";
 
 /**
  * Properties to create a DNS validated certificate managed by AWS Certificate Manager.
  */
 export interface BucketArgs {
   /**
-   * Whether the bucket should block public access
-   * @default - true
+   * Enable public access to the files in the bucket
+   * @default false
+   * @example
+   * ```js
+   * {
+   *   public: true
+   * }
+   * ```
    */
-  blockPublicAccess?: Input<boolean>;
+  public?: Input<boolean>;
   nodes?: {
     bucket?: aws.s3.BucketV2Args;
   };
@@ -38,47 +45,76 @@ export class Bucket extends Component implements Linkable, AWSLinkable {
     super("sst:sst:Bucket", name, args, opts);
 
     const parent = this;
-    const blockPublicAccess = normalizeBlockPublicAccess();
+    const publicAccess = normalizePublicAccess();
 
-    const randomId = new RandomId(`${name}Id`, { byteLength: 6 }, { parent });
-
-    const bucket = new aws.s3.BucketV2(
-      `${name}Bucket`,
-      {
-        bucket: randomId.dec.apply((dec) =>
-          prefixName(
-            name.toLowerCase(),
-            `-${hashNumberToString(parseInt(dec), 8)}`
-          )
-        ),
-        forceDestroy: true,
-        ...args?.nodes?.bucket,
-      },
-      {
-        parent,
-      }
-    );
-
-    output(blockPublicAccess).apply((blockPublicAccess) => {
-      if (!blockPublicAccess) return;
-
-      new aws.s3.BucketPublicAccessBlock(
-        `${name}PublicAccessBlock`,
-        {
-          bucket: bucket.bucket,
-          blockPublicAcls: true,
-          blockPublicPolicy: true,
-          ignorePublicAcls: true,
-          restrictPublicBuckets: true,
-        },
-        { parent }
-      );
-    });
+    const bucket = createBucket();
+    createPublicAccess();
 
     this.bucket = bucket;
 
-    function normalizeBlockPublicAccess() {
-      return output(args?.blockPublicAccess).apply((v) => v ?? true);
+    function createBucket() {
+      const randomId = new RandomId(`${name}Id`, { byteLength: 6 }, { parent });
+
+      return new aws.s3.BucketV2(
+        `${name}Bucket`,
+        {
+          bucket: randomId.dec.apply((dec) =>
+            prefixName(
+              name.toLowerCase(),
+              `-${hashNumberToString(parseInt(dec), 8)}`
+            )
+          ),
+          forceDestroy: true,
+          ...args?.nodes?.bucket,
+        },
+        {
+          parent,
+        }
+      );
+    }
+
+    function createPublicAccess() {
+      publicAccess.apply((publicAccess) => {
+        const publicAccessBlock = new aws.s3.BucketPublicAccessBlock(
+          `${name}PublicAccessBlock`,
+          {
+            bucket: bucket.bucket,
+            blockPublicAcls: true,
+            blockPublicPolicy: !publicAccess,
+            ignorePublicAcls: true,
+            restrictPublicBuckets: !publicAccess,
+          },
+          { parent }
+        );
+
+        if (!publicAccess) return;
+
+        new aws.s3.BucketPolicy(
+          `${name}Policy`,
+          {
+            bucket: bucket.bucket,
+            policy: aws.iam.getPolicyDocumentOutput({
+              statements: [
+                {
+                  principals: [
+                    {
+                      type: "*",
+                      identifiers: ["*"],
+                    },
+                  ],
+                  actions: ["s3:GetObject"],
+                  resources: [$util.interpolate`${bucket.arn}/*`],
+                },
+              ],
+            }).json,
+          },
+          { parent, dependsOn: publicAccessBlock }
+        );
+      });
+    }
+
+    function normalizePublicAccess() {
+      return output(args?.public).apply((v) => v ?? false);
     }
   }
 

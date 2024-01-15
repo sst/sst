@@ -27,6 +27,7 @@ export interface VectorArgs {
 export class Vector extends Component implements Linkable, AWSLinkable {
   private ingestHandler: Function;
   private retrieveHandler: Function;
+  private removeHandler: Function;
 
   constructor(
     name: string,
@@ -45,9 +46,11 @@ export class Vector extends Component implements Linkable, AWSLinkable {
     createDBTable();
     const ingestHandler = createIngestHandler();
     const retrieveHandler = createRetrieveHandler();
+    const removeHandler = createRemoveHandler();
 
     this.ingestHandler = ingestHandler;
     this.retrieveHandler = retrieveHandler;
+    this.removeHandler = removeHandler;
 
     function normalizeModel() {
       return output(args?.model).apply(
@@ -99,15 +102,7 @@ export class Vector extends Component implements Linkable, AWSLinkable {
         {
           description:
             "Vector handler for ingesting data and generating embeddings",
-          handler: path.resolve(
-            __dirname,
-            "..",
-            "src",
-            "components",
-            "functions",
-            "vector-handler",
-            "index.ingest"
-          ),
+          handler: buildHandlerPath("ingest"),
           environment: buildHandlerEnvironment(),
           permissions: buildHandlerPermissions(),
         },
@@ -120,19 +115,36 @@ export class Vector extends Component implements Linkable, AWSLinkable {
         `${name}Retriever`,
         {
           description: "Vector handler for retrieving related embeddings",
-          handler: path.resolve(
-            __dirname,
-            "..",
-            "src",
-            "components",
-            "functions",
-            "vector-handler",
-            "index.retrieve"
-          ),
+          handler: buildHandlerPath("retrieve"),
           environment: buildHandlerEnvironment(),
           permissions: buildHandlerPermissions(),
         },
         { parent }
+      );
+    }
+
+    function createRemoveHandler() {
+      return new Function(
+        `${name}Remover`,
+        {
+          description: "Vector handler for removing embeddings",
+          handler: buildHandlerPath("remove"),
+          environment: buildHandlerEnvironment(),
+          permissions: buildHandlerPermissions(),
+        },
+        { parent }
+      );
+    }
+
+    function buildHandlerPath(functionName: string) {
+      return path.resolve(
+        __dirname,
+        "..",
+        "src",
+        "components",
+        "handlers",
+        "vector-handler",
+        `index.${functionName}`
       );
     }
 
@@ -172,6 +184,7 @@ export class Vector extends Component implements Linkable, AWSLinkable {
       value: {
         ingestorFunctionName: this.ingestHandler.nodes.function.name,
         retrieverFunctionName: this.retrieveHandler.nodes.function.name,
+        removerFunctionName: this.removeHandler.nodes.function.name,
       },
     };
   }
@@ -182,6 +195,7 @@ export class Vector extends Component implements Linkable, AWSLinkable {
       resources: [
         this.ingestHandler.nodes.function.arn,
         this.retrieveHandler.nodes.function.arn,
+        this.removeHandler.nodes.function.arn,
       ],
     };
   }

@@ -1,6 +1,10 @@
 import { PulumiFn } from "@pulumi/pulumi/automation";
-import { runtime } from "@pulumi/pulumi";
-import { initializeLinkRegistry } from "../components/link";
+import { interpolate, runtime } from "@pulumi/pulumi";
+import {
+  initializeLinkRegistry,
+  makeLinkable,
+  makeAWSLinkable,
+} from "../components/link";
 
 export async function run(program: PulumiFn) {
   process.chdir($cli.paths.root);
@@ -22,7 +26,7 @@ export async function run(program: PulumiFn) {
         };
       }
       return undefined;
-    },
+    }
   );
 
   runtime.registerStackTransformation(
@@ -40,14 +44,27 @@ export async function run(program: PulumiFn) {
 
       if (!normalizedName.match(/^[A-Z][a-zA-Z0-9]*$/)) {
         throw new Error(
-          `Invalid component name "${normalizedName}". Component names must start with an uppercase letter and contain only alphanumeric characters.`,
+          `Invalid component name "${normalizedName}". Component names must start with an uppercase letter and contain only alphanumeric characters.`
         );
       }
 
       return undefined;
-    },
+    }
   );
 
   await initializeLinkRegistry();
+  makeLinkable(aws.dynamodb.Table, function () {
+    return {
+      type: `{ tableName: string }`,
+      value: { tableName: this.name },
+    };
+  });
+  makeAWSLinkable(aws.dynamodb.Table, function () {
+    return {
+      actions: ["dynamodb:*"],
+      resources: [this.arn, interpolate`${this.arn}/*`],
+    };
+  });
+
   return await program();
 }
