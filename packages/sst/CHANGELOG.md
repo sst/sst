@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.39.6
+
+### Patch Changes
+
+- [`ff3abe365`](https://github.com/sst/sst/commit/ff3abe36516b0e110978390178fe9c17fbac294e) Thanks [@thdxr](https://github.com/thdxr)! - fix: removed broken ion code
+
 ## 2.39.5
 
 ### Patch Changes
