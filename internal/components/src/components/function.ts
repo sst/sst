@@ -23,6 +23,7 @@ import { Duration, toSeconds } from "./util/duration.js";
 import { Size, toMBs } from "./util/size.js";
 import { Component } from "./component.js";
 import {
+  AWSLinkable,
   Linkable,
   isAWSLinkable,
   isLinkable,
@@ -58,7 +59,7 @@ const RETENTION = {
 
 export interface FunctionPermissionArgs {
   actions: string[];
-  resources: Output<string>[];
+  resources: Input<string>[];
 }
 
 export interface FunctionCopyFilesArgs {
@@ -334,9 +335,8 @@ export interface FunctionArgs {
    * {
    *   permissions: [
    *     {
-   *       Effect: "Allow",
-   *       Action: ["s3:*"],
-   *       Resource: ["arn:aws:s3:::*"],
+   *       actions: ["s3:*"],
+   *       resources: ["arn:aws:s3:::*"],
    *     },
    *   ]
    * }
@@ -344,7 +344,8 @@ export interface FunctionArgs {
    */
   permissions?: Input<FunctionPermissionArgs[]>;
   /**
-   * Link resources for the function
+   * Link resources to the function.
+   * This will grant the function permissions to access the linked resources at runtime.
    *
    * @example
    * ```js
@@ -427,7 +428,7 @@ export interface FunctionArgs {
   };
 }
 
-export class Function extends Component {
+export class Function extends Component implements Linkable, AWSLinkable {
   private function: Output<aws.lambda.Function>;
   private role: Output<aws.iam.Role>;
   private logGroup: LogGroup;
@@ -857,6 +858,22 @@ export class Function extends Component {
 
   public get url() {
     return this.fnUrl.apply((url) => url?.functionUrl ?? output(undefined));
+  }
+
+  public getSSTLink(): Link {
+    return {
+      type: `{ functionName: string }`,
+      value: {
+        functionName: this.function.name,
+      },
+    };
+  }
+
+  public getSSTAWSPermissions(): FunctionPermissionArgs {
+    return {
+      actions: ["lambda:InvokeFunction"],
+      resources: [this.function.arn],
+    };
   }
 
   /** @internal */

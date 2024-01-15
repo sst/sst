@@ -15,7 +15,12 @@ import {
 } from "@pulumi/pulumi";
 import * as aws from "@pulumi/aws";
 import { Cdn, CdnDomainArgs } from "./cdn.js";
-import { Function, FunctionArgs, FunctionNodeJSArgs } from "./function.js";
+import {
+  Function,
+  FunctionArgs,
+  FunctionNodeJSArgs,
+  FunctionPermissionArgs,
+} from "./function.js";
 import { Duration, toSeconds } from "./util/duration.js";
 import { DistributionInvalidation } from "./providers/distribution-invalidation.js";
 import { useProvider } from "./helpers/aws/provider.js";
@@ -102,14 +107,31 @@ export interface SsrSiteArgs {
    */
   domain?: Input<string | SsrDomainArgs>;
   /**
-   * Attaches the given list of permissions to the SSR function. Configuring this property is equivalent to calling `attachPermissions()` after the site is created.
+   * Attaches the given list of permissions to the SSR function.
+   * @default No permissions
    * @example
    * ```js
-   * permissions: ["ses"]
+   * permissions: [
+   *   {
+   *     actions: ["s3:*"],
+   *     resources: ["arn:aws:s3:::*"],
+   *   },
+   * ]
    * ```
    */
-  // TODO implement permissions
-  //permissions?: Input<Permissions>;
+  permissions?: Input<FunctionPermissionArgs[]>;
+  /**
+   * Link resources to the SSR function.
+   * This will grant the site permissions to access the linked resources at runtime.
+   *
+   * @example
+   * ```js
+   * {
+   *   link: [myBucket, stripeKey],
+   * }
+   * ```
+   */
+  link?: Input<any[]>;
   /**
    * An object with the key being the environment variable name.
    *
@@ -605,23 +627,10 @@ function handler(event) {
                 ...environment,
                 ...props.environment,
               })),
-              policies: output(props.policies).apply((policies) => [
-                {
-                  name: "assets",
-                  policy: bucket.arn.apply((arn) =>
-                    aws.iam
-                      .getPolicyDocument({
-                        statements: [
-                          {
-                            actions: ["s3:*"],
-                            resources: [arn, `${arn}/*`],
-                          },
-                        ],
-                      })
-                      .then((doc) => doc.json)
-                  ),
-                },
-                ...(policies || []),
+              link: output(args.link).apply((link) => [
+                bucket,
+                ...(props.link ?? []),
+                ...(link ?? []),
               ]),
               nodes: {
                 function: { publish: true },
@@ -715,24 +724,11 @@ function handler(event) {
             ...(args.warm ? [useServerFunctionWarmingInjection()] : []),
             ...(injections || []),
           ]),
-          policies: [
-            {
-              name: "assets",
-              policy: bucket.arn.apply((arn) =>
-                aws.iam
-                  .getPolicyDocument({
-                    statements: [
-                      {
-                        actions: ["s3:*"],
-                        resources: [arn, `${arn}/*`],
-                      },
-                    ],
-                  })
-                  .then((doc) => doc.json)
-              ),
-            },
-            ...(props.function.policies || []),
-          ],
+          link: output(args.link).apply((link) => [
+            bucket,
+            ...(props.function.link ?? []),
+            ...(link ?? []),
+          ]),
           url: true,
         },
         { parent }
@@ -763,21 +759,10 @@ function handler(event) {
           logging: {
             retention: "3 days",
           },
-          policies: [
+          permissions: [
             {
-              name: "s3",
-              policy: bucket.arn.apply((arn) =>
-                aws.iam
-                  .getPolicyDocument({
-                    statements: [
-                      {
-                        actions: ["s3:GetObject"],
-                        resources: [`${arn}/*`],
-                      },
-                    ],
-                  })
-                  .then((doc) => doc.json)
-              ),
+              actions: ["s3:GetObject"],
+              resources: [interpolate`${bucket.arn}/*`],
             },
           ],
           ...props.function,
@@ -1031,23 +1016,7 @@ if (event.type === "warmer") {
             FUNCTION_NAME: ssrFunctions[0].nodes.function.name,
             CONCURRENCY: output(args.warm).apply((warm) => warm.toString()),
           },
-          policies: [
-            {
-              name: "invoke-server",
-              policy: ssrFunctions[0].nodes.function.arn.apply((arn) =>
-                aws.iam
-                  .getPolicyDocument({
-                    statements: [
-                      {
-                        actions: ["lambda:InvokeFunction"],
-                        resources: [arn],
-                      },
-                    ],
-                  })
-                  .then((doc) => doc.json)
-              ),
-            },
-          ],
+          link: [ssrFunctions[0]],
         },
         { parent }
       );

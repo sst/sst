@@ -12,7 +12,6 @@ import { prefixName, hashNumberToString } from "./helpers/naming";
 import { Component } from "./component";
 import { AWSLinkable, Link, Linkable } from "./link";
 import { FunctionPermissionArgs } from ".";
-import { create } from "domain";
 
 /**
  * Properties to create a DNS validated certificate managed by AWS Certificate Manager.
