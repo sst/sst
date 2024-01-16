@@ -137,8 +137,7 @@ class Provider implements dynamic.ResourceProvider {
           resourceArn: inputs.clusterArn,
           secretArn: inputs.secretArn,
           database: inputs.databaseName,
-          sql: `create index on ${inputs.tableName} using ivfflat (embedding vector_cosine_ops)
-            with (lists = 100);`,
+          sql: `create index on ${inputs.tableName} using hnsw (embedding vector_cosine_ops);`,
         })
       );
     } catch (error: any) {
