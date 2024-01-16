@@ -14,7 +14,7 @@ import (
 	"os/user"
 	"path/filepath"
 	"strings"
-	"syscall"
+	//"syscall"
 	"time"
 
 	"github.com/briandowns/spinner"

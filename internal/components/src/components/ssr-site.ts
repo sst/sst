@@ -351,7 +351,7 @@ export function buildApp(
       }
 
       // TODO REMOVE
-      if (process.env.SKIP) return sitePath;
+      if (process.env.SKIP) return output(sitePath);
 
       // Build link environment variables to inject
       const linkData = buildLinkableData(links || []);
@@ -364,7 +364,7 @@ export function buildApp(
       });
 
       // Run build
-      linkEnvs.apply((linkEnvs) => {
+      return linkEnvs.apply((linkEnvs) => {
         console.debug(`Running "${cmd}" script`);
         try {
           execSync(cmd, {
@@ -380,9 +380,9 @@ export function buildApp(
         } catch (e) {
           throw new Error(`There was a problem building the "${name}" site.`);
         }
-      });
 
-      return sitePath;
+        return sitePath;
+      });
     }
   );
 }
