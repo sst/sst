@@ -196,9 +196,9 @@ func main() {
 						}
 						cmd := exec.Command(currentExecutable)
 						cmd.Env = os.Environ()
-						cmd.SysProcAttr = &syscall.SysProcAttr{
-							Setsid: true,
-						}
+						//cmd.SysProcAttr = &syscall.SysProcAttr{
+						//	Setsid: true,
+						//}
 						cmd.Args = append(cmd.Args, "--stage", stage, "server")
 						cmd.Stdout = os.Stdout
 						cmd.Stderr = os.Stderr
