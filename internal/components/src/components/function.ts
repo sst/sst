@@ -642,17 +642,13 @@ export class Function extends Component implements Linkable, AWSLinkable {
           if (!hasUserInjections && !hasLinkInjections) return { handler };
 
           const linkInjection = hasLinkInjections
-            ? `process.env = {
-            ...${JSON.stringify(
-              Object.fromEntries(
-                linkData.map((item) => [
-                  `SST_RESOURCE_${item.name}`,
-                  item.value,
+            ? linkData
+                .map((item) => [
+                  `process.env.SST_RESOURCE_${item.name} = ${JSON.stringify(
+                    JSON.stringify(item.value)
+                  )};\n`,
                 ])
-              )
-            )},
-            ...process.env,
-          };`
+                .join("")
             : "";
 
           const {

@@ -8,8 +8,10 @@ export const Resource = new Proxy(
   {},
   {
     get(target, prop: string) {
-      if (process.env[prop]) {
-        return process.env[prop];
+      // Read from environment first
+      const envName = `SST_RESOURCE_${prop}`;
+      if (process.env[envName]) {
+        return JSON.parse(process.env[envName]!);
       }
       if (prop in $SST_LINKS) {
         return $SST_LINKS[prop];
