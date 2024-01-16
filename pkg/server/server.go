@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/fsnotify/fsnotify"
 	"github.com/sst/ion/pkg/project"
@@ -45,12 +46,20 @@ func New(p *project.Project) (*Server, error) {
 			p.PathConfig(): true,
 		},
 	}
+	return result, nil
+}
+
+func (s *Server) Start(parentContext context.Context) error {
+	timer := time.NewTimer(5 * time.Minute)
+	timer.Stop()
+
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		timer.Stop()
 		w.Header().Add("content-type", "application/x-ndjson")
 		w.WriteHeader(http.StatusOK)
 		events := make(chan *project.StackEvent)
-		result.subscribers = append(result.subscribers, events)
+		s.subscribers = append(s.subscribers, events)
 		slog.Info("subscribed", "addr", r.RemoteAddr)
 		flusher, _ := w.(http.Flusher)
 		ctx := r.Context()
@@ -68,32 +77,31 @@ func New(p *project.Project) (*Server, error) {
 			}
 		}
 
-		for i := 0; i < len(result.subscribers); i++ {
-			if result.subscribers[i] == events {
-				result.subscribers = append(result.subscribers[:i], result.subscribers[i+1:]...)
+		for i := 0; i < len(s.subscribers); i++ {
+			if s.subscribers[i] == events {
+				s.subscribers = append(s.subscribers[:i], s.subscribers[i+1:]...)
 				break
 			}
+		}
+		if len(s.subscribers) == 0 {
+			timer.Reset(5 * time.Minute)
 		}
 		slog.Info("done", "addr", r.RemoteAddr)
 	})
 
-	result.server = &http.Server{
+	s.server = &http.Server{
 		Handler: mux,
 	}
 
 	port, err := findAvailablePort()
 	if err != nil {
-		return nil, err
+		return err
 	}
 	port = 44149
-	result.server.Addr = fmt.Sprintf("0.0.0.0:%d", port)
-	slog.Info("server", "addr", result.server.Addr)
-	return result, nil
-}
-
-func (s *Server) Start(ctx context.Context) error {
+	s.server.Addr = fmt.Sprintf("0.0.0.0:%d", port)
+	slog.Info("server", "addr", s.server.Addr)
 	serverFile := resolveServerFile(s.project.PathConfig(), s.project.App().Stage)
-	err := os.WriteFile(
+	err = os.WriteFile(
 		serverFile,
 		[]byte(s.server.Addr),
 		0644,
@@ -111,6 +119,9 @@ func (s *Server) Start(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
+
+	ctx, cancel := context.WithCancel(parentContext)
+	defer cancel()
 
 	go s.server.ListenAndServe()
 	defer s.server.Shutdown(ctx)
@@ -141,6 +152,8 @@ func (s *Server) Start(ctx context.Context) error {
 				if _, ok := s.watchedFiles[event.Name]; ok {
 					break loop
 				}
+			case <-timer.C:
+				cancel()
 			case <-ctx.Done():
 				return nil
 			}

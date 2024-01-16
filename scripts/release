@@ -1,5 +1,7 @@
 #!/bin/bash
 
+git fetch --force --tags
+
 # Get the latest Git tag
 latest_tag=$(git tag --sort=committerdate | grep -E '[0-9]' | tail -1)
 

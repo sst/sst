@@ -30,7 +30,7 @@ export default $config({
 
     const fn = new sst.Function("MyFunction", {
       url: true,
-      link: [secret],
+      link: [secret, bucket],
       handler: "./src/index.handler",
     });
 
