@@ -53,7 +53,7 @@ func Passphrase(backend Backend, app, stage string) (string, error) {
 		if err != nil {
 			return "", err
 		}
-		passphrase := base64.StdEncoding.EncodeToString(bytes)
+		passphrase = base64.StdEncoding.EncodeToString(bytes)
 		err = backend.setPassphrase(app, stage, passphrase)
 		if err != nil {
 			return "", err
