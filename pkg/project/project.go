@@ -22,6 +22,7 @@ type App struct {
 type Project struct {
 	version   string
 	root      string
+	config    string
 	process   *js.Process
 	app       *App
 	backend   provider.Backend
@@ -40,10 +41,14 @@ func Discover() (string, error) {
 	if err != nil {
 		return "", err
 	}
+	err = os.MkdirAll(ResolveWorkingDir(cfgPath), 0755)
+	if err != nil {
+		return "", err
+	}
 	return cfgPath, nil
 }
 
-func resolveWorkDir(cfgPath string) string {
+func ResolveWorkingDir(cfgPath string) string {
 	return path.Join(filepath.Dir(cfgPath), ".sst")
 }
 
@@ -67,11 +72,12 @@ func New(input *ProjectConfig) (*Project, error) {
 		version: input.Version,
 		root:    rootPath,
 		process: process,
+		config:  input.Config,
 	}
 	proj.Stack = &stack{
 		project: proj,
 	}
-	tmp := proj.PathTemp()
+	tmp := proj.PathWorkingDir()
 
 	_, err = os.Stat(tmp)
 	if err != nil {
@@ -178,16 +184,20 @@ console.log("~j" + JSON.stringify(mod.app({
 }
 
 func (p *Project) getPath(path ...string) string {
-	paths := append([]string{p.PathTemp()}, path...)
+	paths := append([]string{p.PathWorkingDir()}, path...)
 	return filepath.Join(paths...)
 }
 
-func (p *Project) PathTemp() string {
+func (p *Project) PathWorkingDir() string {
 	return filepath.Join(p.root, ".sst")
 }
 
 func (p *Project) PathRoot() string {
 	return p.root
+}
+
+func (p *Project) PathConfig() string {
+	return p.config
 }
 
 func (p *Project) Version() string {

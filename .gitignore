@@ -9,3 +9,4 @@ Pulumi.yaml
 
 # Local Netlify folder
 .netlify
+.env

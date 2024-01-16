@@ -225,7 +225,7 @@ const __dirname = topLevelFileUrlToPath(new topLevelURL(".", import.meta.url))
 	return nil
 }
 
-func Eval(input EvalOptions) (string, error) {
+func Build(input EvalOptions) (esbuild.BuildResult, error) {
 	outfile := filepath.Join(input.Dir,
 		"eval",
 		fmt.Sprintf("eval-%v.mjs", time.Now().UnixMilli()),
@@ -257,52 +257,18 @@ const __dirname = topLevelFileUrlToPath(new topLevelURL(".", import.meta.url))
 			Sourcefile: "eval.ts",
 			Loader:     esbuild.LoaderTS,
 		},
-		Define:  input.Define,
-		Inject:  input.Inject,
-		Outfile: outfile,
-		Write:   true,
-		Bundle:  true,
+		Define:   input.Define,
+		Inject:   input.Inject,
+		Outfile:  outfile,
+		Write:    true,
+		Bundle:   true,
+		Metafile: true,
 	})
 	if len(result.Errors) > 0 {
 		slog.Error("esbuild errors", "errors", result.Errors)
-		return "", fmt.Errorf("esbuild errors: %v", result.Errors)
+		return result, fmt.Errorf("esbuild errors: %v", result.Errors)
 	}
-	slog.Info("esbuild built")
+	slog.Info("esbuild built", "outfile", outfile)
 
-	slog.Info("sending eval message", "module", outfile)
-	return outfile, nil
-
-	/*
-		cmd := exec.Command("node", "--no-warnings", outfile)
-
-		stdIn, err := cmd.StdinPipe()
-		if err != nil {
-			return nil, err
-		}
-
-		stdOut, err := cmd.StdoutPipe()
-		if err != nil {
-			return nil, err
-		}
-
-		cmd.Stderr = os.Stderr
-
-		scanner := bufio.NewScanner(io.MultiReader(
-			stdOut,
-		))
-		const maxCapacity = 1024 * 1024 // 1 MB
-		buf := make([]byte, maxCapacity)
-		scanner.Buffer(buf, maxCapacity)
-
-		err = cmd.Start()
-		if err != nil {
-			return nil, err
-		}
-
-		return &Process{
-			cmd: cmd,
-			in:  stdIn,
-			Out: scanner,
-		}, nil
-	*/
+	return result, nil
 }

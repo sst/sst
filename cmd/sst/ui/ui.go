@@ -360,6 +360,10 @@ func (u *UI) Header(version string, p *project.Project) {
 	u.spinner.Start()
 }
 
+func (u *UI) Start() {
+	u.spinner.Start()
+}
+
 func formatURN(urn string) string {
 	splits := strings.Split(urn, "::")[2:]
 	urn0 := splits[0]

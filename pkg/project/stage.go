@@ -6,23 +6,25 @@ import (
 	"strings"
 )
 
-func (p *Project) pathPersonalStage() string {
-	return filepath.Join(p.PathTemp(), "stage")
+func resolveStageFile(cfgPath string) string {
+	return filepath.Join(
+		ResolveWorkingDir(cfgPath),
+		"stage",
+	)
 }
 
-func (p *Project) LoadPersonalStage() {
-	data, err := os.ReadFile(p.pathPersonalStage())
+func LoadPersonalStage(cfgPath string) string {
+	data, err := os.ReadFile(resolveStageFile(cfgPath))
 	if err != nil {
-		return
+		return ""
 	}
-	p.app.Stage = strings.TrimSpace(string(data))
+	return strings.TrimSpace(string(data))
 }
 
-func (p *Project) SetPersonalStage(input string) error {
-	err := os.WriteFile(p.pathPersonalStage(), []byte(strings.TrimSpace(input)), 0644)
+func SetPersonalStage(cfgPath string, stage string) error {
+	err := os.WriteFile(resolveStageFile(cfgPath), []byte(strings.TrimSpace(stage)), 0644)
 	if err != nil {
 		return err
 	}
-	p.app.Stage = input
 	return nil
 }

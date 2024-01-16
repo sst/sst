@@ -23,7 +23,8 @@ import (
 )
 
 type stack struct {
-	project *Project
+	project    *Project
+	passphrase string
 }
 
 type StackEvent struct {
@@ -34,6 +35,7 @@ type StackEvent struct {
 
 type StackInput struct {
 	OnEvent func(event *StackEvent)
+	OnFiles func(files []string)
 	Command string
 }
 
@@ -58,13 +60,11 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 	if err != nil {
 		return err
 	}
-	defer func() {
-		s.unlock()
-	}()
+	defer s.unlock()
 
 	tasks, _ := errgroup.WithContext(ctx)
 	secrets := map[string]string{}
-	passphrase := ""
+	passphrase := s.passphrase
 
 	tasks.Go(func() error {
 		secrets, err = provider.ListSecrets(s.project.backend, s.project.app.Name, s.project.app.Stage)
@@ -74,12 +74,13 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 		return nil
 	})
 
-	if os.Getenv("SST_DISABLE_PASSPHRASE") != "true" {
+	if os.Getenv("SST_DISABLE_PASSPHRASE") != "true" && passphrase == "" {
 		tasks.Go(func() error {
 			passphrase, err = provider.Passphrase(s.project.backend, s.project.app.Name, s.project.app.Stage)
 			if err != nil {
 				return fmt.Errorf("failed to get passphrase: %w", err)
 			}
+			s.passphrase = passphrase
 			return nil
 		})
 	}
@@ -103,7 +104,7 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 		"paths": map[string]string{
 			"home": global.ConfigDir(),
 			"root": s.project.PathRoot(),
-			"work": s.project.PathTemp(),
+			"work": s.project.PathWorkingDir(),
 		},
 		"env": env,
 	}
@@ -115,36 +116,53 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 	if err != nil {
 		return err
 	}
-	outfile, err := js.Eval(js.EvalOptions{
-		Dir: s.project.PathTemp(),
+	buildResult, err := js.Build(js.EvalOptions{
+		Dir: s.project.PathWorkingDir(),
 		Define: map[string]string{
 			"$app": string(appBytes),
 			"$cli": string(cliBytes),
 		},
-		Inject: []string{filepath.Join(s.project.PathTemp(), "src/shim/run.js")},
+		Inject: []string{filepath.Join(s.project.PathWorkingDir(), "src/shim/run.js")},
 		Code: fmt.Sprintf(`
       import { run } from "%v";
       import mod from "%v/sst.config.ts";
       const result = await run(mod.run)
       export default result
     `,
-			filepath.Join(s.project.PathTemp(), "src/auto/run.ts"),
+			filepath.Join(s.project.PathWorkingDir(), "src/auto/run.ts"),
 			s.project.PathRoot(),
 		),
 	})
 	if err != nil {
 		return err
 	}
-	slog.Info("built code")
+	outfile := buildResult.OutputFiles[0].Path
+
+	if input.OnFiles != nil {
+		var meta = map[string]interface{}{}
+		err := json.Unmarshal([]byte(buildResult.Metafile), &meta)
+		if err != nil {
+			return err
+		}
+		files := []string{}
+		for key := range meta["inputs"].(map[string]interface{}) {
+			absPath, err := filepath.Abs(key)
+			if err != nil {
+				continue
+			}
+			files = append(files, absPath)
+		}
+		input.OnFiles(files)
+	}
 
 	ws, err := auto.NewLocalWorkspace(ctx,
-		auto.WorkDir(s.project.PathTemp()),
+		auto.WorkDir(s.project.PathWorkingDir()),
 		auto.PulumiHome(global.ConfigDir()),
 		auto.Project(workspace.Project{
 			Name:    tokens.PackageName(s.project.app.Name),
 			Runtime: workspace.NewProjectRuntimeInfo("nodejs", nil),
 			Backend: &workspace.ProjectBackend{
-				URL: fmt.Sprintf("file://%v", s.project.PathTemp()),
+				URL: fmt.Sprintf("file://%v", s.project.PathWorkingDir()),
 			},
 			Main: outfile,
 		}),
@@ -186,17 +204,21 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 	}
 
 	stream := make(chan events.EngineEvent)
-	eventlog, err := os.Create(filepath.Join(s.project.PathTemp(), "event.log"))
+	eventlog, err := os.Create(filepath.Join(s.project.PathWorkingDir(), "event.log"))
 	if err != nil {
 		return err
 	}
 	defer eventlog.Close()
 	go func() {
+	loop:
 		for {
 			select {
 			case <-ctx.Done():
 				return
-			case event := <-stream:
+			case event, ok := <-stream:
+				if !ok {
+					break loop
+				}
 				input.OnEvent(&StackEvent{EngineEvent: event})
 				bytes, err := json.Marshal(event)
 				if err != nil {
@@ -232,11 +254,12 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 		)
 	}
 
+	slog.Info("done running stack command")
 	return nil
 }
 
 func (s *stack) lock() error {
-	pulumiDir := filepath.Join(s.project.PathTemp(), ".pulumi")
+	pulumiDir := filepath.Join(s.project.PathWorkingDir(), ".pulumi")
 	err := os.RemoveAll(
 		pulumiDir,
 	)
@@ -272,17 +295,18 @@ func (s *stack) lock() error {
 }
 
 func (s *stack) unlock() error {
-	pulumiDir := filepath.Join(s.project.PathTemp(), ".pulumi")
+	pulumiDir := filepath.Join(s.project.PathWorkingDir(), ".pulumi")
 
+	stateFile := filepath.Join(pulumiDir, "stacks", s.project.app.Name, fmt.Sprintf("%v.json", s.project.app.Stage))
 	file, err := os.Open(
-		filepath.Join(pulumiDir, "stacks", s.project.app.Name, fmt.Sprintf("%v.json", s.project.app.Stage)),
+		stateFile,
 	)
 	if err != nil {
 		return err
 	}
 	defer file.Close()
 
-	slog.Info("unlocking", "app", s.project.app.Name, "stage", s.project.app.Stage)
+	slog.Info("unlocking", "app", s.project.app.Name, "stage", s.project.app.Stage, "state", stateFile)
 	err = s.project.backend.Unlock(s.project.app.Name, s.project.app.Stage, file)
 	if err != nil {
 		return err

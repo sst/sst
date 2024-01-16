@@ -15,7 +15,7 @@ func CheckDeps(version, cfgPath string) bool {
 		return false
 	}
 	slog.Info("checking dependencies")
-	contents, err := os.ReadFile(filepath.Join(resolveWorkDir(cfgPath), "version"))
+	contents, err := os.ReadFile(filepath.Join(ResolveWorkingDir(cfgPath), "version"))
 	if err != nil {
 		return false
 	}
@@ -25,7 +25,7 @@ func CheckDeps(version, cfgPath string) bool {
 func InstallDeps(version, cfgPath string) error {
 	slog.Info("installing dependencies")
 
-	workingDir := resolveWorkDir(cfgPath)
+	workingDir := ResolveWorkingDir(cfgPath)
 	err := components.CopyTo(".", workingDir)
 	if err != nil {
 		return err
@@ -59,7 +59,7 @@ type PackageJson struct {
 func getPackageJson(proj *Project, pkg string) (*PackageJson, error) {
 	data, err := os.ReadFile(
 		filepath.Join(
-			proj.PathTemp(),
+			proj.PathWorkingDir(),
 			"node_modules",
 			pkg,
 			"package.json",

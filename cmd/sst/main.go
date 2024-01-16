@@ -1,26 +1,33 @@
 package main
 
 import (
+	"bufio"
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 	"log/slog"
+	"net/http"
 	"os"
+	"os/exec"
 	"os/signal"
 	"os/user"
 	"path/filepath"
 	"strings"
+	"syscall"
 	"time"
 
 	"github.com/briandowns/spinner"
 	"github.com/fatih/color"
 	"github.com/manifoldco/promptui"
 
+	"github.com/joho/godotenv"
 	"github.com/sst/ion/cmd/sst/ui"
 	"github.com/sst/ion/internal/util"
 	"github.com/sst/ion/pkg/global"
 	"github.com/sst/ion/pkg/project"
 	"github.com/sst/ion/pkg/project/provider"
+	"github.com/sst/ion/pkg/server"
 
 	cli "github.com/urfave/cli/v2"
 )
@@ -36,6 +43,8 @@ var logFile = (func() *os.File {
 })()
 
 func main() {
+	godotenv.Load()
+
 	app := &cli.App{
 		Name:        "sst",
 		Description: "deploy anything",
@@ -131,6 +140,117 @@ func main() {
 							return nil
 						},
 					},
+				},
+			},
+			{
+				Name:  "server",
+				Flags: []cli.Flag{},
+				Action: func(cli *cli.Context) error {
+					project, err := initProject(cli)
+					if err != nil {
+						return err
+					}
+
+					server, err := server.New(project)
+					if err != nil {
+						return err
+					}
+					interruptChannel := make(chan os.Signal, 1)
+					signal.Notify(interruptChannel, os.Interrupt)
+
+					ctx, cancel := context.WithCancel(cli.Context)
+					go func() {
+						<-interruptChannel
+						cancel()
+					}()
+					err = server.Start(ctx)
+					if err != nil {
+						return err
+					}
+					return nil
+				},
+			},
+			{
+				Name:  "dev",
+				Flags: []cli.Flag{},
+				Action: func(cli *cli.Context) error {
+					cfgPath, err := project.Discover()
+					if err != nil {
+						return err
+					}
+					stage, err := getStage(cli, cfgPath)
+					if err != nil {
+						return err
+					}
+
+					addr, err := server.FindExisting(cfgPath, stage)
+					if err != nil {
+						return err
+					}
+
+					if addr == "" {
+						slog.Info("no existing server found, starting new one")
+						currentExecutable, err := os.Executable()
+						if err != nil {
+							return err
+						}
+						cmd := exec.Command(currentExecutable)
+						cmd.Env = os.Environ()
+						cmd.SysProcAttr = &syscall.SysProcAttr{
+							Setsid: true,
+						}
+						cmd.Args = append(cmd.Args, "--stage", stage, "server")
+						cmd.Stdout = os.Stdout
+						cmd.Stderr = os.Stderr
+						if err := cmd.Start(); err != nil {
+							return err
+						}
+
+						slog.Info("waiting for server to start")
+						for {
+							addr, _ = server.FindExisting(cfgPath, stage)
+							if addr != "" {
+								break
+							}
+							time.Sleep(100 * time.Millisecond)
+						}
+					}
+
+					resp, err := http.Get("http://" + addr + "/")
+					if err != nil {
+						return err
+					}
+					defer resp.Body.Close()
+
+					reader := bufio.NewReader(resp.Body)
+					var u *ui.UI
+					// ui.Header(version, nil)
+					for {
+						line, err := reader.ReadBytes('\n')
+						if err != nil {
+							if err.Error() != "EOF" {
+								break
+							}
+						}
+						event := project.StackEvent{}
+						json.Unmarshal(line, &event)
+						if event.PreludeEvent != nil {
+							u = ui.New(ui.ProgressModeDeploy)
+							u.Start()
+							continue
+						}
+
+						if event.CancelEvent != nil {
+							u.Finish()
+							u.Destroy()
+							fmt.Println()
+							continue
+						}
+						u.Trigger(&event)
+					}
+
+					fmt.Println("Address: ", addr)
+					return nil
 				},
 			},
 			{
@@ -322,10 +442,44 @@ func main() {
 
 }
 
+func getStage(cli *cli.Context, cfgPath string) (string, error) {
+	stage := cli.String("stage")
+	if stage == "" {
+		stage = project.LoadPersonalStage(cfgPath)
+		if stage == "" {
+			stage = guessStage()
+			if stage == "" {
+				for {
+					fmt.Print("Enter a stage name for your personal stage: ")
+					_, err := fmt.Scanln(&stage)
+					if err != nil {
+						continue
+					}
+					if stage == "" {
+						continue
+					}
+					break
+				}
+			}
+			err := project.SetPersonalStage(cfgPath, stage)
+			if err != nil {
+				return "", err
+			}
+		}
+	}
+	godotenv.Load(fmt.Sprintf(".env.%s", stage))
+	return stage, nil
+}
+
 func initProject(cli *cli.Context) (*project.Project, error) {
 	slog.Info("initializing project", "version", version)
 
 	cfgPath, err := project.Discover()
+	if err != nil {
+		return nil, err
+	}
+
+	stage, err := getStage(cli, cfgPath)
 	if err != nil {
 		return nil, err
 	}
@@ -343,7 +497,7 @@ func initProject(cli *cli.Context) (*project.Project, error) {
 
 	p, err := project.New(&project.ProjectConfig{
 		Version: version,
-		Stage:   cli.String("stage"),
+		Stage:   stage,
 		Config:  cfgPath,
 	})
 	if err != nil {
@@ -354,7 +508,7 @@ func initProject(cli *cli.Context) (*project.Project, error) {
 	if err != nil {
 		return nil, err
 	}
-	nextLogFile, err := os.Create(filepath.Join(p.PathTemp(), "sst.log"))
+	nextLogFile, err := os.Create(filepath.Join(p.PathWorkingDir(), "sst.log"))
 	if err != nil {
 		return nil, err
 	}
@@ -366,27 +520,6 @@ func initProject(cli *cli.Context) (*project.Project, error) {
 	configureLog(cli)
 
 	app := p.App()
-	if app.Stage == "" {
-		p.LoadPersonalStage()
-		if app.Stage == "" {
-			var stage string
-			stage = guessStage()
-			if stage == "" {
-				for {
-					fmt.Print("Enter a stage name for your personal stage: ")
-					_, err := fmt.Scanln(&stage)
-					if err != nil {
-						continue
-					}
-					if stage == "" {
-						continue
-					}
-					break
-				}
-			}
-			p.SetPersonalStage(stage)
-		}
-	}
 	slog.Info("loaded config", "app", app.Name, "stage", app.Stage)
 
 	return p, nil

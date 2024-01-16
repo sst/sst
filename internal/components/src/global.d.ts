@@ -27,7 +27,6 @@ declare global {
   export const $linkable: typeof import("./components/link").makeLinkable;
 
   export const $output: typeof util.output;
-  export const $apply: typeof util.apply;
   export const $all: typeof util.all;
   export const $interpolate: typeof util.interpolate;
 
