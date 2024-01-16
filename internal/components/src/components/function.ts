@@ -24,6 +24,7 @@ import { Size, toMBs } from "./util/size.js";
 import { Component } from "./component.js";
 import {
   AWSLinkable,
+  Link,
   Linkable,
   isAWSLinkable,
   isLinkable,
@@ -453,11 +454,11 @@ export class Function extends Component implements Linkable, AWSLinkable {
     const streaming = normalizeStreaming();
     const logging = normalizeLogging();
     const url = normalizeUrl();
+    const copyFiles = normalizeCopyFiles();
 
-    const linkInjection = link();
-    const { bundle: bundle0, handler: handler0 } = buildHandler();
-    const bundle = copyFiles();
-    const handler = wrapHandler();
+    const linkData = link();
+    const { bundle, handler: handler0 } = buildHandler();
+    const { handler, wrapper } = buildHandlerWrapper();
     const role = createRole();
     const zipPath = zipBundleFolder();
     const bundleHash = calculateHash();
@@ -549,6 +550,26 @@ export class Function extends Component implements Linkable, AWSLinkable {
       });
     }
 
+    function normalizeCopyFiles() {
+      return output(args.copyFiles ?? []).apply((copyFiles) =>
+        Promise.all(
+          copyFiles.map(async (entry) => {
+            const from = path.join($cli.paths.root, entry.from);
+            const to = entry.to || entry.from;
+            if (path.isAbsolute(to))
+              throw new VisibleError(
+                `Copy destination path "${to}" must be relative`
+              );
+
+            const stats = await fs.promises.stat(from);
+            const isDir = stats.isDirectory();
+
+            return { from, to, isDir };
+          })
+        )
+      );
+    }
+
     function calculateHash() {
       return zipPath.apply(async (zipPath) => {
         const hash = crypto.createHash("sha256");
@@ -557,66 +578,8 @@ export class Function extends Component implements Linkable, AWSLinkable {
       });
     }
 
-    function buildHandler() {
-      if (args.bundle) {
-        return {
-          bundle: output(args.bundle),
-          handler: output(args.handler),
-        };
-      }
-
-      const buildResult = all([args, linkInjection]).apply(
-        async ([args, linkInjection]) => {
-          const result = await build(name, {
-            ...args,
-            links: linkInjection,
-          });
-          if (result.type === "error")
-            throw new Error(result.errors.join("\n"));
-          return result;
-        }
-      );
-      return {
-        handler: buildResult.handler,
-        bundle: buildResult.out,
-      };
-    }
-
-    function copyFiles() {
-      return all([args.copyFiles ?? [], bundle0]).apply(
-        async ([copyFiles, bundle]) => {
-          await Promise.all(
-            copyFiles.map(async (entry) => {
-              const fromPath = path.join($cli.paths.root, entry.from);
-              const to = entry.to || entry.from;
-              if (path.isAbsolute(to))
-                throw new VisibleError(
-                  `Copy destination path "${to}" must be relative`
-                );
-              const toPath = path.join(bundle, to);
-              // TODO handle start
-              //if ($app. mode === "deploy")
-              await fs.promises.cp(fromPath, toPath, {
-                recursive: true,
-              });
-              //if (mode === "start") {
-              //  try {
-              //    const dir = path.dirname(toPath);
-              //    await fs.mkdir(dir, { recursive: true });
-              //    await fs.symlink(fromPath, toPath);
-              //  } catch (ex) {
-              //    Logger.debug("Failed to symlink", fromPath, toPath, ex);
-              //  }
-              //}
-            })
-          );
-          return bundle;
-        }
-      );
-    }
-
     function link() {
-      if (!args.link) return;
+      if (!args.link) return [];
       return output(args.link)
         .apply((links) =>
           links.map((l) => {
@@ -631,23 +594,66 @@ export class Function extends Component implements Linkable, AWSLinkable {
             throw new VisibleError(`${l} is not a linkable component`);
           })
         )
-        .apply((injections) => {
-          for (const injection of injections) {
-            all([injection]).apply(([value]) => {
+        .apply((data) => {
+          for (const datum of data) {
+            all([datum]).apply(([value]) => {
               registerLinkType({
                 type: value.type,
                 name: value.name,
               });
             });
           }
-          return injections;
+          return data;
         });
     }
 
-    function wrapHandler() {
-      return all([handler0, bundle, streaming, injections]).apply(
-        async ([handler, bundle, streaming, injections]) => {
-          if (injections.length === 0 && !linkInjection) return handler;
+    function buildHandler() {
+      if (args.bundle) {
+        return {
+          bundle: output(args.bundle),
+          handler: output(args.handler),
+        };
+      }
+
+      const buildResult = all([args, linkData]).apply(
+        async ([args, linkData]) => {
+          const result = await build(name, {
+            ...args,
+            links: linkData,
+          });
+          if (result.type === "error")
+            throw new Error(result.errors.join("\n"));
+          return result;
+        }
+      );
+      return {
+        handler: buildResult.handler,
+        bundle: buildResult.out,
+      };
+    }
+
+    function buildHandlerWrapper() {
+      const ret = all([handler0, linkData, streaming, injections]).apply(
+        async ([handler, linkData, streaming, injections]) => {
+          const hasUserInjections = injections.length > 0;
+          // already injected via esbuild when bundle is undefined
+          const hasLinkInjections = args.bundle && linkData.length > 0;
+
+          if (!hasUserInjections && !hasLinkInjections) return { handler };
+
+          const linkInjection = hasLinkInjections
+            ? `process.env = {
+            ...${JSON.stringify(
+              Object.fromEntries(
+                linkData.map((item) => [
+                  `SST_RESOURCE_${item.name}`,
+                  item.value,
+                ])
+              )
+            )},
+            ...process.env,
+          };`
+            : "";
 
           const {
             dir: handlerDir,
@@ -657,31 +663,39 @@ export class Function extends Component implements Linkable, AWSLinkable {
           const oldHandlerFunction = oldHandlerExt.replace(/^\./, "");
           const newHandlerName = "server-index";
           const newHandlerFunction = "handler";
-          await fs.promises.writeFile(
-            path.join(bundle, handlerDir, `${newHandlerName}.mjs`),
-            streaming
-              ? [
-                  `export const ${newHandlerFunction} = awslambda.streamifyResponse(async (event, context) => {`,
-                  ...injections,
-                  `  const { ${oldHandlerFunction}: rawHandler} = await import("./${oldHandlerName}.mjs");`,
-                  `  return rawHandler(event, context);`,
-                  `});`,
-                ].join("\n")
-              : [
-                  //`${bindInjection ?? ""};`,
-                  `export const ${newHandlerFunction} = async (event, context) => {`,
-                  ...injections,
-                  `  const { ${oldHandlerFunction}: rawHandler} = await import("./${oldHandlerName}.mjs");`,
-                  `  return rawHandler(event, context);`,
-                  `};`,
-                ].join("\n")
-          );
-          return path.posix.join(
-            handlerDir,
-            `${newHandlerName}.${newHandlerFunction}`
-          );
+          return {
+            handler: path.posix.join(
+              handlerDir,
+              `${newHandlerName}.${newHandlerFunction}`
+            ),
+            wrapper: {
+              dir: handlerDir,
+              name: `${newHandlerName}.mjs`,
+              content: streaming
+                ? [
+                    linkInjection,
+                    `export const ${newHandlerFunction} = awslambda.streamifyResponse(async (event, context) => {`,
+                    ...injections,
+                    `  const { ${oldHandlerFunction}: rawHandler} = await import("./${oldHandlerName}.mjs");`,
+                    `  return rawHandler(event, context);`,
+                    `});`,
+                  ].join("\n")
+                : [
+                    linkInjection,
+                    `export const ${newHandlerFunction} = async (event, context) => {`,
+                    ...injections,
+                    `  const { ${oldHandlerFunction}: rawHandler} = await import("./${oldHandlerName}.mjs");`,
+                    `  return rawHandler(event, context);`,
+                    `};`,
+                  ].join("\n"),
+            },
+          };
         }
       );
+      return {
+        handler: ret.handler,
+        wrapper: ret.wrapper,
+      };
     }
 
     function createRole() {
@@ -729,37 +743,71 @@ export class Function extends Component implements Linkable, AWSLinkable {
       //       b/c the folder contains node_modules. And pnpm node_modules
       //       contains symlinks. Pulumi cannot zip symlinks correctly.
       //       We will zip the folder ourselves.
-      return bundle.apply(async (bundle) => {
-        const zipPath = path.resolve(
-          $cli.paths.work,
-          "artifacts",
-          name,
-          "code.zip"
-        );
-        await fs.promises.mkdir(path.dirname(zipPath), {
-          recursive: true,
-        });
-
-        await new Promise(async (resolve, reject) => {
-          const ws = fs.createWriteStream(zipPath);
-          const archive = archiver("zip");
-          archive.on("warning", reject);
-          archive.on("error", reject);
-          // archive has been finalized and the output file descriptor has closed, resolve promise
-          // this has to be done before calling `finalize` since the events may fire immediately after.
-          // see https://www.npmjs.com/package/archiver
-          ws.once("close", () => {
-            resolve(zipPath);
+      return all([bundle, wrapper, copyFiles]).apply(
+        async ([bundle, wrapper, copyFiles]) => {
+          const zipPath = path.resolve(
+            $cli.paths.work,
+            "artifacts",
+            name,
+            "code.zip"
+          );
+          await fs.promises.mkdir(path.dirname(zipPath), {
+            recursive: true,
           });
-          archive.pipe(ws);
 
-          // set the date to 0 so that the zip file is deterministic
-          archive.glob("**", { cwd: bundle, dot: true }, { date: new Date(0) });
-          await archive.finalize();
-        });
+          await new Promise(async (resolve, reject) => {
+            const ws = fs.createWriteStream(zipPath);
+            const archive = archiver("zip");
+            archive.on("warning", reject);
+            archive.on("error", reject);
+            // archive has been finalized and the output file descriptor has closed, resolve promise
+            // this has to be done before calling `finalize` since the events may fire immediately after.
+            // see https://www.npmjs.com/package/archiver
+            ws.once("close", () => {
+              resolve(zipPath);
+            });
+            archive.pipe(ws);
 
-        return zipPath;
-      });
+            // set the date to 0 so that the zip file is deterministic
+            archive.glob(
+              "**",
+              { cwd: bundle, dot: true },
+              { date: new Date(0) }
+            );
+
+            // Add handler wrapper into the zip
+            if (wrapper) {
+              archive.append(wrapper.content, {
+                name: wrapper.name,
+                date: new Date(0),
+              });
+            }
+
+            // Add copyFiles into the zip
+            copyFiles.forEach(async (entry) => {
+              //if ($app. mode === "deploy")
+              entry.isDir
+                ? archive.directory(entry.from, entry.to, { date: new Date(0) })
+                : archive.file(entry.from, {
+                    name: entry.to,
+                    date: new Date(0),
+                  });
+              //if (mode === "start") {
+              //  try {
+              //    const dir = path.dirname(toPath);
+              //    await fs.mkdir(dir, { recursive: true });
+              //    await fs.symlink(fromPath, toPath);
+              //  } catch (ex) {
+              //    Logger.debug("Failed to symlink", fromPath, toPath, ex);
+              //  }
+              //}
+            });
+            await archive.finalize();
+          });
+
+          return zipPath;
+        }
+      );
     }
 
     function createBucketObject() {

@@ -1,7 +1,5 @@
 /// <reference path="./.sst/src/global.d.ts" />
 
-import * as pulumi from "@pulumi/pulumi";
-
 export default $config({
   app() {
     return {
@@ -50,6 +48,13 @@ export default $config({
       url: true,
     });
 
-    return { seeder: seeder.url, app: app.url };
+    const abc = new sst.Function("ABC", {
+      bundle: "functions/bundled-example",
+      handler: "index.handler",
+      link: [vector],
+      url: true,
+    });
+
+    return { seeder: seeder.url, app: app.url, abc: abc.url };
   },
 });

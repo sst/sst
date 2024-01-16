@@ -1,5 +1,0 @@
-globalThis.web={"urn":"urn:pulumi:frank::playground::aws:s3/bucket:Bucket::web","id":"web-860c28b","accelerationStatus":"","acl":"private","arn":"arn:aws:s3:::web-860c28b","bucket":"web-860c28b","corsRules":[],"forceDestroy":false,"grants":[],"hostedZoneId":"Z3AQBSTGFYJSTF","lifecycleRules":[],"loggings":[],"objectLockConfiguration":null,"replicationConfiguration":null,"requestPayer":"BucketOwner","serverSideEncryptionConfiguration":{"rule":{"applyServerSideEncryptionByDefault":{"kmsMasterKeyId":"","sseAlgorithm":"AES256"},"bucketKeyEnabled":false}},"tags":{},"versioning":{"enabled":false,"mfaDelete":false},"website":null,"bucketDomainName":"web-860c28b.s3.amazonaws.com","bucketRegionalDomainName":"web-860c28b.s3.amazonaws.com","region":"us-east-1","tagsAll":{}};
-export const handler = async (event, context) => {
-  const { handler: rawHandler} = await import("./index.mjs");
-  return rawHandler(event, context);
-};
