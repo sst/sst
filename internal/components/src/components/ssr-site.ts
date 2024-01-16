@@ -27,6 +27,7 @@ import { useProvider } from "./helpers/aws/provider.js";
 import { Bucket } from "./bucket.js";
 import { BucketFile, BucketFiles } from "./providers/bucket-files.js";
 import { sanitizeToPascalCase } from "./helpers/naming.js";
+import { buildLinkableData } from "./link.js";
 
 type CloudFrontFunctionConfig = { injections: string[] };
 type EdgeFunctionConfig = { function: Unwrap<FunctionArgs> };
@@ -330,12 +331,12 @@ export function buildApp(
 ) {
   const defaultCommand = "npm run build";
 
-  return all([sitePath, buildCommand, args.environment]).apply(
-    ([sitePath, buildCommand, environment]) => {
+  return all([sitePath, buildCommand, args.link, args.environment]).apply(
+    ([sitePath, buildCommand, links, environment]) => {
       const cmd = buildCommand || defaultCommand;
 
+      // Ensure that the site has a build script defined
       if (cmd === defaultCommand) {
-        // Ensure that the site has a build script defined
         if (!fs.existsSync(path.join(sitePath, "package.json"))) {
           throw new Error(`No package.json found at "${sitePath}".`);
         }
@@ -352,21 +353,34 @@ export function buildApp(
       // TODO REMOVE
       if (process.env.SKIP) return sitePath;
 
+      // Build link environment variables to inject
+      const linkData = buildLinkableData(links || []);
+      const linkEnvs = output(linkData).apply((linkData) => {
+        const envs: Record<string, string> = {};
+        for (const datum of linkData) {
+          envs[`SST_RESOURCE_${datum.name}`] = JSON.stringify(datum.value);
+        }
+        return envs;
+      });
+
       // Run build
-      console.debug(`Running "${cmd}" script`);
-      try {
-        execSync(cmd, {
-          cwd: sitePath,
-          stdio: "inherit",
-          env: {
-            SST: "1",
-            ...process.env,
-            ...environment,
-          },
-        });
-      } catch (e) {
-        throw new Error(`There was a problem building the "${name}" site.`);
-      }
+      linkEnvs.apply((linkEnvs) => {
+        console.debug(`Running "${cmd}" script`);
+        try {
+          execSync(cmd, {
+            cwd: sitePath,
+            stdio: "inherit",
+            env: {
+              SST: "1",
+              ...process.env,
+              ...environment,
+              ...linkEnvs,
+            },
+          });
+        } catch (e) {
+          throw new Error(`There was a problem building the "${name}" site.`);
+        }
+      });
 
       return sitePath;
     }

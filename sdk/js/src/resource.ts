@@ -11,7 +11,9 @@ export const Resource = new Proxy(
       if (process.env[envName]) {
         return JSON.parse(process.env[envName]!);
       }
+      // @ts-expect-error
       if (prop in globalThis.$SST_LINKS) {
+        // @ts-expect-error
         return globalThis.$SST_LINKS[prop];
       }
       throw new Error(`"${prop}" is not linked`);

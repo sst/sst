@@ -1,6 +1,7 @@
 import { Input, Output, output } from "@pulumi/pulumi";
 import fs from "node:fs";
 import { FunctionPermissionArgs } from "./function.js";
+import { VisibleError } from "./error.js";
 
 export interface Link {
   value: Input<any>;
@@ -23,6 +24,24 @@ export interface AWSLinkable {
 export function isAWSLinkable(obj: any): obj is AWSLinkable {
   return "getSSTAWSPermissions" in obj;
 }
+
+export function buildLinkableData(links: Link[]) {
+  return links.map((l) => {
+    if (isLinkable(l)) {
+      const link = l.getSSTLink();
+      return {
+        name: l.urn.apply((x) => x.split("::").at(-1)!),
+        value: link.value,
+        type: link.type,
+      };
+    }
+    throw new VisibleError(`${l} is not a linkable component`);
+  });
+}
+
+///////////////////////////////////
+// Functions for type generation //
+///////////////////////////////////
 
 const DEFAULT_TYPE_PATH = ".sst/types.generated.ts";
 interface TypeRegistration {
@@ -56,6 +75,10 @@ export async function registerLinkType(reg: TypeRegistration) {
     ].join("\n")
   );
 }
+
+//////////////////////////////////////////////////////
+// Functions for making non SST components linkable //
+//////////////////////////////////////////////////////
 
 export function makeLinkable<T>(
   obj: { new (...args: any[]): T },

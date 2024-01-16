@@ -8,6 +8,7 @@ export default $config({
     };
   },
   async run() {
+    const StripeKey = new sst.Secret("StripeKey");
     const site = new sst.Nextjs("Web", {
       //domain: "ion-next.sst.sh",
       //      domain: {
@@ -16,6 +17,7 @@ export default $config({
       //        redirects: ["www.ion-next.sst.sh"],
       //        hostedZone: "sst.sh",
       //      },
+      link: [StripeKey],
     });
 
     return {

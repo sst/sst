@@ -26,6 +26,7 @@ import {
   AWSLinkable,
   Link,
   Linkable,
+  buildLinkableData,
   isAWSLinkable,
   isLinkable,
   registerLinkType,
@@ -580,31 +581,18 @@ export class Function extends Component implements Linkable, AWSLinkable {
 
     function link() {
       if (!args.link) return [];
-      return output(args.link)
-        .apply((links) =>
-          links.map((l) => {
-            if (isLinkable(l)) {
-              const link = l.getSSTLink();
-              return {
-                name: l.urn.apply((x) => x.split("::").at(-1)!),
-                value: link.value,
-                type: link.type,
-              };
-            }
-            throw new VisibleError(`${l} is not a linkable component`);
-          })
-        )
-        .apply((data) => {
-          for (const datum of data) {
-            all([datum]).apply(([value]) => {
-              registerLinkType({
-                type: value.type,
-                name: value.name,
-              });
+      return output(args.link).apply((links) => {
+        const linkData = buildLinkableData(links);
+        for (const datum of linkData) {
+          all([datum]).apply(([value]) => {
+            registerLinkType({
+              type: value.type,
+              name: value.name,
             });
-          }
-          return data;
-        });
+          });
+        }
+        return linkData;
+      });
     }
 
     function buildHandler() {
