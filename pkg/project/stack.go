@@ -209,6 +209,7 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 		return err
 	}
 	defer eventlog.Close()
+
 	go func() {
 	loop:
 		for {

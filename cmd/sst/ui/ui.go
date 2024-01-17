@@ -241,45 +241,17 @@ func (u *UI) Trigger(evt *project.StackEvent) {
 
 	if evt.DiagnosticEvent != nil {
 		if evt.DiagnosticEvent.Severity == "error" {
-			if evt.DiagnosticEvent.URN != "" {
-				msg := evt.DiagnosticEvent.Message
-				lines := strings.Split(evt.DiagnosticEvent.Message, "\n")
-				if len(lines) > 2 {
-					lines = strings.Split(lines[1], ":")
-					msg = strings.TrimSpace(lines[len(lines)-1])
-				}
-				u.errors = append(u.errors, errorStatus{
-					Error: "   " + msg,
-					URN:   evt.DiagnosticEvent.URN,
-				})
-				u.printProgress(Progress{
-					URN:     evt.DiagnosticEvent.URN,
-					Color:   color.FgRed,
-					Final:   true,
-					Label:   "Error",
-					Message: msg,
-				})
-				return
-			}
-
-			lines := strings.Split(evt.DiagnosticEvent.Message, "\n")
-			out := []string{}
-			for _, line := range lines {
-				trimmed := strings.TrimSpace(line)
-				if trimmed == "" {
-					continue
-				}
-				if strings.HasPrefix(trimmed, "Running program") {
-					continue
-				}
-				trimmed = "   " + trimmed
-				out = append(out, trimmed)
-			}
-			if len(out) > 1 {
-				u.errors = append(u.errors, errorStatus{
-					Error: strings.Join(out, "\n"),
-				})
-			}
+			msg := strings.TrimSpace(evt.DiagnosticEvent.Message)
+			u.printProgress(Progress{
+				URN:     evt.DiagnosticEvent.URN,
+				Color:   color.FgRed,
+				Final:   true,
+				Label:   "Error",
+				Message: msg,
+			})
+			u.errors = append(u.errors, errorStatus{
+				Error: msg,
+			})
 		}
 
 		if evt.DiagnosticEvent.Severity == "info" {
@@ -365,6 +337,9 @@ func (u *UI) Start() {
 }
 
 func formatURN(urn string) string {
+	if urn == "" {
+		return ""
+	}
 	splits := strings.Split(urn, "::")[2:]
 	urn0 := splits[0]
 	resourceName0 := splits[1]
