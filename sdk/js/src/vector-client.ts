@@ -7,17 +7,8 @@ import { Resource } from "./resource.js";
 
 export type IngestEvent = {
   /**
-   * The external ID of the event.
-   * If the external ID already exists, the embedding and metadata will be updated.
-   * @example
-   * ```js
-   * {
-   *   externalId: "37043bc3-2166-437d-bbf8-a2238d7a5796"
-   * }
-   */
-  externalId: string;
-  /**
    * The text used to generate the embedding vector.
+   * At least one of `text` or `image` must be provided.
    * @example
    * ```js
    * {
@@ -25,9 +16,10 @@ export type IngestEvent = {
    * }
    * ```
    */
-  text: string;
+  text?: string;
   /**
    * The base64 representation of the image used to generate the embedding vector.
+   * At least one of `text` or `image` must be provided.
    * @example
    * ```js
    * {
@@ -37,14 +29,15 @@ export type IngestEvent = {
    */
   image?: string;
   /**
-   * Additional metadata for the event in JSON format.
-   * This metadata will be used to filter the retrieval of events.
+   * Metadata for the event in JSON format.
+   * This metadata will be used to filter when retrieving and removing embeddings.
    * @example
    * ```js
    * {
    *   metadata: {
-   *     key1: "value1",
-   *     key2: "value2"
+   *     type: "movie",
+   *     id: "movie-123",
+   *     name: "Spiderman",
    *   }
    * }
    * ```
@@ -54,18 +47,30 @@ export type IngestEvent = {
 
 export type RetrieveEvent = {
   /**
-   * The prompt used to retrieve events.
+   * The text prompt used to retrieve embeddings.
+   * At least one of `text` or `image` must be provided.
    * @example
    * ```js
    * {
-   *   prompt: "This is an example text.",
+   *   text: "This is an example text.",
    * }
    * ```
    */
-  prompt: string;
+  text?: string;
   /**
-   * The metadata used to filter the retrieval of events.
-   * Only events with metadata that match the provided fields will be returned.
+   * The base64 representation of the image prompt used to retrive embeddings.
+   * At least one of `text` or `image` must be provided.
+   * @example
+   * ```js
+   * {
+   *   image: await fs.readFile("./file.jpg").toString("base64"),
+   * }
+   * ```
+   */
+  image?: string;
+  /**
+   * The metadata used to filter the retrieval of embeddings.
+   * Only embeddings with metadata that match the provided fields will be returned.
    * @example
    * ```js
    * {
@@ -75,13 +80,14 @@ export type RetrieveEvent = {
    *   }
    * }
    * ```
-   * This will match event with metadata:
+   * This will match the embedding with metadata:
    *  {
    *    type: "movie",
    *    name: "Spiderman",
    *    release: "2001",
    *  }
-   * But this will not match event with metadata:
+   *
+   * But not the embedding with metadata:
    *  {
    *    type: "book",
    *    name: "Spiderman",
@@ -90,11 +96,11 @@ export type RetrieveEvent = {
    */
   metadata: any;
   /**
-   * The threshold of similarity between the prompt and the retrieved events.
-   * Only events with a similarity score higher than the threshold will be returned.
+   * The threshold of similarity between the prompt and the retrieved embeddings.
+   * Only embeddings with a similarity score higher than the threshold will be returned.
    * Expected value is between 0 and 1.
-   * - 0 means the prompt and the retrieved events are completely different.
-   * - 1 means the prompt and the retrieved events are identical.
+   * - 0 means the prompt and the retrieved embeddings are completely different.
+   * - 1 means the prompt and the retrieved embeddings are identical.
    * @default 0
    * @example
    * ```js
@@ -119,14 +125,25 @@ export type RetrieveEvent = {
 
 export type RemoveEvent = {
   /**
-   * The external ID of the event to remove.
+   * The metadata used to filter the removal of embeddings.
+   * Only embeddings with metadata that match the provided fields will be removed.
    * @example
+   * To remove embeddings for movie with id "movie-123":
    * ```js
    * {
-   *   externalId: "37043bc3-2166-437d-bbf8-a2238d7a5796"
+   *   metadata: {
+   *     id: "movie-123",
+   *   }
    * }
+   * ```
+   * To remove embeddings for all movies:
+   *  {
+   *   metadata: {
+   *    type: "movie",
+   *   }
+   *  }
    */
-  externalId: string;
+  metadata: any;
 };
 
 const lambda = new LambdaClient();
@@ -154,7 +171,7 @@ export const VectorClient = (name: string) => {
       return parsePayload(ret, "Failed to retrieve from the vector db");
     },
 
-    delete: async (event: RemoveEvent) => {
+    remove: async (event: RemoveEvent) => {
       const ret = await lambda.send(
         new InvokeCommand({
           FunctionName: Resource[name].removerFunctionName,

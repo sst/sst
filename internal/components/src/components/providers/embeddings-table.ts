@@ -29,7 +29,6 @@ class Provider implements dynamic.ResourceProvider {
     await this.createTable(inputs);
     await this.createEmbeddingIndex(inputs);
     await this.createMetadataIndex(inputs);
-    await this.createExternalIdIndex(inputs);
     return {
       id: inputs.tableName,
       outs: {},
@@ -47,7 +46,6 @@ class Provider implements dynamic.ResourceProvider {
     await this.createTable(news);
     await this.createEmbeddingIndex(news);
     await this.createMetadataIndex(news);
-    await this.createExternalIdIndex(news);
     return {
       outs: {},
     };
@@ -117,8 +115,7 @@ class Provider implements dynamic.ResourceProvider {
           sql: `create table ${inputs.tableName} (
             id bigserial primary key,
             embedding vector(${inputs.vectorSize}),
-            metadata jsonb,
-            external_id varchar(255) unique
+            metadata jsonb
           );`,
         })
       );
@@ -156,24 +153,6 @@ class Provider implements dynamic.ResourceProvider {
           secretArn: inputs.secretArn,
           database: inputs.databaseName,
           sql: `create index on ${inputs.tableName} using gin (metadata);`,
-        })
-      );
-    } catch (error: any) {
-      // ERROR: relation "embeddings" already exists; SQLState: 42P07
-      if (error.message.endsWith("SQLState: 42P07")) return;
-      throw error;
-    }
-  }
-
-  async createExternalIdIndex(inputs: Inputs) {
-    const client = useClient(RDSDataClient);
-    try {
-      await client.send(
-        new ExecuteStatementCommand({
-          resourceArn: inputs.clusterArn,
-          secretArn: inputs.secretArn,
-          database: inputs.databaseName,
-          sql: `create unique index on ${inputs.tableName} (external_id);`,
         })
       );
     } catch (error: any) {

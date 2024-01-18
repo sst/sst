@@ -49,7 +49,6 @@ export const seeder = async () => {
   for (const tag of tags) {
     console.log("ingesting tag", tag.id);
     await client.ingest({
-      externalId: tag.id,
       text: tag.text,
       metadata: { type: "tag", id: tag.id },
     });
@@ -62,7 +61,6 @@ export const seeder = async () => {
     const image = imageBuffer.toString("base64");
 
     await client.ingest({
-      externalId: movie.id,
       text: movie.summary,
       image,
       metadata: { type: "movie", id: movie.id },
@@ -76,10 +74,8 @@ export const seeder = async () => {
 };
 
 export const app = async (event) => {
-  const prompt = event.queryStringParameters?.prompt;
-
   const ret = await client.retrieve({
-    prompt,
+    text: event.queryStringParameters?.text,
     metadata: { type: "movie" },
   });
 
