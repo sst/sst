@@ -67,7 +67,7 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 	passphrase := s.passphrase
 
 	tasks.Go(func() error {
-		secrets, err = provider.ListSecrets(s.project.backend, s.project.app.Name, s.project.app.Stage)
+		secrets, err = provider.GetSecrets(s.project.backend, s.project.app.Name, s.project.app.Stage)
 		if err != nil {
 			return fmt.Errorf("failed to list secrets: %w", err)
 		}
@@ -232,6 +232,16 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 	}()
 
 	slog.Info("running stack command", "cmd", input.Command)
+	defer func() {
+		outputs, _ := stack.Outputs(ctx)
+		links, ok := outputs["_links"]
+		if !ok {
+			return
+		}
+		err := provider.PutLinks(s.project.backend, s.project.app.Name, s.project.app.Stage, links.Value.(map[string]interface{}))
+		if err != nil {
+		}
+	}()
 	switch input.Command {
 	case "up":
 		_, err = stack.Up(ctx,

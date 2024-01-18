@@ -90,8 +90,8 @@ func (a *AwsProvider) Lock(app string, stage string, out *os.File) error {
 	return nil
 }
 
-func (a *AwsProvider) pathForSecrets(app string, stage string) string {
-	return filepath.Join("state", "secrets", app, fmt.Sprintf("%v.json", stage))
+func (a *AwsProvider) pathForData(key, app, stage string) string {
+	return filepath.Join("state", key, app, fmt.Sprintf("%v.json", stage))
 }
 
 func (a *AwsProvider) pathForState(app string, stage string) string {
@@ -274,13 +274,12 @@ func (a *AwsProvider) resolveConfig() (aws.Config, error) {
 	return cfg, nil
 }
 
-func (a *AwsProvider) ListSecrets(app string, stage string) (io.Reader, error) {
+func (a *AwsProvider) getData(key, app, stage string) (io.Reader, error) {
 	s3Client := s3.NewFromConfig(a.config)
 
-	slog.Info("reading secrets", "path", a.pathForSecrets(app, stage))
 	result, err := s3Client.GetObject(context.TODO(), &s3.GetObjectInput{
 		Bucket: aws.String(a.bucket),
-		Key:    aws.String(a.pathForSecrets(app, stage)),
+		Key:    aws.String(a.pathForData(key, app, stage)),
 	})
 
 	if err != nil {
@@ -293,13 +292,12 @@ func (a *AwsProvider) ListSecrets(app string, stage string) (io.Reader, error) {
 	return result.Body, nil
 }
 
-func (a *AwsProvider) SetSecrets(app string, stage string, data io.Reader) error {
+func (a *AwsProvider) putData(key, app, stage string, data io.Reader) error {
 	s3Client := s3.NewFromConfig(a.config)
 
-	slog.Info("writing secrets", "path", a.pathForSecrets(app, stage))
 	_, err := s3Client.PutObject(context.TODO(), &s3.PutObjectInput{
 		Bucket:      aws.String(a.bucket),
-		Key:         aws.String(a.pathForSecrets(app, stage)),
+		Key:         aws.String(a.pathForData(key, app, stage)),
 		Body:        data,
 		ContentType: aws.String("application/json"),
 	})

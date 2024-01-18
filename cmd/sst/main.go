@@ -109,12 +109,12 @@ func main() {
 							key := cli.Args().Get(0)
 							value := cli.Args().Get(1)
 							backend := p.Backend()
-							secrets, err := provider.ListSecrets(backend, p.App().Name, p.App().Stage)
+							secrets, err := provider.GetSecrets(backend, p.App().Name, p.App().Stage)
 							if err != nil {
 								return err
 							}
 							secrets[key] = value
-							err = provider.SetSecrets(backend, p.App().Name, p.App().Stage, secrets)
+							err = provider.PutSecrets(backend, p.App().Name, p.App().Stage, secrets)
 							if err != nil {
 								return err
 							}
@@ -130,7 +130,7 @@ func main() {
 								return err
 							}
 							backend := p.Backend()
-							secrets, err := provider.ListSecrets(backend, p.App().Name, p.App().Stage)
+							secrets, err := provider.GetSecrets(backend, p.App().Name, p.App().Stage)
 							if err != nil {
 								return err
 							}
@@ -140,6 +140,44 @@ func main() {
 							return nil
 						},
 					},
+				},
+			},
+			{
+				Name:  "link",
+				Flags: []cli.Flag{},
+				Action: func(cli *cli.Context) error {
+					p, err := initProject(cli)
+					if err != nil {
+						return err
+					}
+					backend := p.Backend()
+					links, err := provider.GetLinks(backend, p.App().Name, p.App().Stage)
+					if err != nil {
+						return err
+					}
+					fmt.Println(links)
+					fmt.Println(cli.Args())
+					args := cli.Args().Slice()
+					cmd := exec.Command(
+						args[0],
+						args[1:]...,
+					)
+					cmd.Env = append(cmd.Env,
+						os.Environ()...,
+					)
+
+					for resource, value := range links {
+						jsonValue, err := json.Marshal(value)
+						if err != nil {
+							return err
+						}
+
+						envVar := fmt.Sprintf("SST_RESOURCE_%s=%s", resource, jsonValue)
+						cmd.Env = append(cmd.Env, envVar)
+					}
+					cmd.Stdout = os.Stdout
+					cmd.Stderr = os.Stderr
+					return cmd.Run()
 				},
 			},
 			{
