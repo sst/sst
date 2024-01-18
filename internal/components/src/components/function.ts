@@ -741,7 +741,11 @@ export class Function extends Component implements Linkable, AWSLinkable {
 
           await new Promise(async (resolve, reject) => {
             const ws = fs.createWriteStream(zipPath);
-            const archive = archiver("zip");
+            const archive = archiver("zip", {
+              // Ensure deterministic zip file hashes
+              // https://github.com/archiverjs/node-archiver/issues/397#issuecomment-554327338
+              statConcurrency: 1,
+            });
             archive.on("warning", reject);
             archive.on("error", reject);
             // archive has been finalized and the output file descriptor has closed, resolve promise
