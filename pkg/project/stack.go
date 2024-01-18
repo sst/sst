@@ -8,6 +8,7 @@ import (
 	"log/slog"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/pulumi/pulumi/sdk/v3/go/auto"
 	"github.com/pulumi/pulumi/sdk/v3/go/auto/events"
@@ -89,11 +90,18 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 		return err
 	}
 
-	// env, err := s.project.backend.Env()
-	// if err != nil {
-	// 	return err
-	// }
-	env := map[string]string{}
+	env, err := s.project.backend.Env()
+	if err != nil {
+		return err
+	}
+	for _, value := range os.Environ() {
+		pair := strings.SplitN(value, "=", 2)
+		if len(pair) == 2 {
+			env[pair[0]] = pair[1]
+		}
+	}
+
+	// env := map[string]string{}
 	for key, value := range secrets {
 		env["SST_SECRET_"+key] = value
 	}

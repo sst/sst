@@ -155,8 +155,6 @@ func main() {
 					if err != nil {
 						return err
 					}
-					fmt.Println(links)
-					fmt.Println(cli.Args())
 					args := cli.Args().Slice()
 					cmd := exec.Command(
 						args[0],

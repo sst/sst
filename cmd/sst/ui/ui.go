@@ -259,6 +259,12 @@ func (u *UI) Trigger(evt *project.StackEvent) {
 			fmt.Println(strings.TrimRight(evt.DiagnosticEvent.Message, " \n"))
 			u.spinner.Enable()
 		}
+
+		if evt.DiagnosticEvent.Severity == "info#err" {
+			u.spinner.Disable()
+			fmt.Println(strings.TrimRight(evt.DiagnosticEvent.Message, " \n"))
+			u.spinner.Enable()
+		}
 	}
 }
 

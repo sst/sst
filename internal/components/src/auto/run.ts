@@ -71,16 +71,16 @@ export async function run(program: PulumiFn) {
   const links: Record<string, any> = {};
   runtime.registerStackTransformation((args) => {
     const resource = args.resource;
-    if (isLinkable(resource)) {
-      process.nextTick(() => {
+    process.nextTick(() => {
+      if (isLinkable(resource)) {
         const link = resource.getSSTLink();
         links[args.name] = link.value;
-      });
-      return {
-        opts: args.opts,
-        props: args.props,
-      };
-    }
+      }
+    });
+    return {
+      opts: args.opts,
+      props: args.props,
+    };
   });
 
   const outputs = (await program()) || {};
