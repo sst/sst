@@ -5,17 +5,7 @@ import {
 } from "@aws-sdk/client-lambda";
 import { Resource } from "./resource.js";
 
-type Model =
-  | "amazon.titan-embed-text-v1"
-  | "amazon.titan-embed-image-v1"
-  | "text-embedding-ada-002";
-
 export type IngestEvent = {
-  /**
-   * The embedding model to use for generating vectors
-   * @default Titan Multimodal Embeddings G1
-   */
-  model?: Model;
   /**
    * The text used to generate the embedding vector.
    * At least one of `text` or `image` must be provided.
@@ -56,11 +46,6 @@ export type IngestEvent = {
 };
 
 export type RetrieveEvent = {
-  /**
-   * The embedding model to use for generating vectors
-   * @default Titan Multimodal Embeddings G1
-   */
-  model?: Model;
   /**
    * The text prompt used to retrieve embeddings.
    * At least one of `text` or `image` must be provided.

@@ -10,6 +10,7 @@ export interface PostgresTableInputs {
   secretArn: Input<string>;
   databaseName: Input<string>;
   tableName: Input<string>;
+  vectorSize: Input<number>;
 }
 
 interface Inputs {
@@ -17,6 +18,7 @@ interface Inputs {
   secretArn: string;
   databaseName: string;
   tableName: string;
+  vectorSize: number;
 }
 
 class Provider implements dynamic.ResourceProvider {
@@ -41,6 +43,9 @@ class Provider implements dynamic.ResourceProvider {
     await this.createDatabase(news);
     await this.enablePgvectorExtension(news);
     await this.enablePgtrgmExtension(news);
+    if (olds.vectorSize !== news.vectorSize) {
+      await this.removeTable(news);
+    }
     await this.createTable(news);
     await this.createEmbeddingIndex(news);
     await this.createMetadataIndex(news);
@@ -112,8 +117,7 @@ class Provider implements dynamic.ResourceProvider {
           database: inputs.databaseName,
           sql: `create table ${inputs.tableName} (
             id bigserial primary key,
-            model char(5),
-            embedding vector(1536),
+            embedding vector(${inputs.vectorSize}),
             metadata jsonb
           );`,
         })
@@ -123,6 +127,17 @@ class Provider implements dynamic.ResourceProvider {
       if (error.message.endsWith("SQLState: 42P07")) return;
       throw error;
     }
+  }
+
+  async removeTable(inputs: Inputs) {
+    await useClient(RDSDataClient).send(
+      new ExecuteStatementCommand({
+        resourceArn: inputs.clusterArn,
+        secretArn: inputs.secretArn,
+        database: inputs.databaseName,
+        sql: `drop table if exists ${inputs.tableName};`,
+      })
+    );
   }
 
   async createEmbeddingIndex(inputs: Inputs) {

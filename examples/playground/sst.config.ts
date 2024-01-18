@@ -17,6 +17,8 @@ export default $config({
   },
   async run() {
     const vector = new sst.Vector("MyVectorDB", {
+      model: "text-embedding-ada-002",
+      //model: "amazon.titan-embed-image-v1",
       openAiApiKey: new sst.Secret("OpenAiApiKey").value,
     });
 

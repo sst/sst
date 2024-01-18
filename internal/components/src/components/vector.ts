@@ -1,12 +1,30 @@
 import path from "path";
-import { ComponentResourceOptions, Input, interpolate } from "@pulumi/pulumi";
+import {
+  ComponentResourceOptions,
+  Input,
+  all,
+  interpolate,
+  output,
+} from "@pulumi/pulumi";
 import { Component } from "./component.js";
 import { Postgres } from "./postgres.js";
 import { EmbeddingsTable } from "./providers/embeddings-table.js";
 import { Function, FunctionPermissionArgs } from "./function.js";
 import { AWSLinkable, Link, Linkable } from "./link.js";
+import { VisibleError } from "./error.js";
+
+const ModelInfo = {
+  "amazon.titan-embed-text-v1": { provider: "bedrock" as const, size: 1536 },
+  "amazon.titan-embed-image-v1": { provider: "bedrock" as const, size: 1024 },
+  "text-embedding-ada-002": { provider: "openai" as const, size: 1536 },
+};
 
 export interface VectorArgs {
+  /**
+   * The embedding model to use for generating vectors
+   * @default Titan Multimodal Embeddings G1
+   */
+  model?: Input<keyof typeof ModelInfo>;
   /**
    * Specifies the  OpenAI API key
    *.This key is required for datar ingestoig and retrieal usvin an OpenAI modelg.
@@ -36,6 +54,9 @@ export class Vector extends Component implements Linkable, AWSLinkable {
     super("sst:sst:Vector", name, args, opts);
 
     const parent = this;
+    const model = normalizeModel();
+    const vectorSize = normalizeVectorSize();
+    const openAiApiKey = normalizeOpenAiApiKey();
     const databaseName = normalizeDatabaseName();
     const tableName = normalizeTableName();
 
@@ -48,6 +69,29 @@ export class Vector extends Component implements Linkable, AWSLinkable {
     this.ingestHandler = ingestHandler;
     this.retrieveHandler = retrieveHandler;
     this.removeHandler = removeHandler;
+
+    function normalizeModel() {
+      return output(args?.model).apply((model) => {
+        if (model && !ModelInfo[model])
+          throw new Error(`Invalid model: ${model}`);
+        return model ?? "amazon.titan-embed-image-v1";
+      });
+    }
+
+    function normalizeOpenAiApiKey() {
+      return all([model, args?.openAiApiKey]).apply(([model, openAiApiKey]) => {
+        if (ModelInfo[model].provider === "openai" && !openAiApiKey) {
+          throw new VisibleError(
+            `Please pass in the OPENAI_API_KEY via environment variable to use the ${model} model. You can get your API keys here: https://platform.openai.com/api-keys`
+          );
+        }
+        return openAiApiKey;
+      });
+    }
+
+    function normalizeVectorSize() {
+      return model.apply((model) => ModelInfo[model].size);
+    }
 
     function normalizeDatabaseName() {
       return $app.stage;
@@ -71,6 +115,7 @@ export class Vector extends Component implements Linkable, AWSLinkable {
             secretArn: postgres.nodes.cluster.masterUserSecrets[0].secretArn,
             databaseName,
             tableName,
+            vectorSize,
           },
           { parent }
         );
@@ -130,13 +175,15 @@ export class Vector extends Component implements Linkable, AWSLinkable {
     }
 
     function buildHandlerEnvironment() {
-      return {
+      return all([model, openAiApiKey]).apply(([model, openAiApiKey]) => ({
         CLUSTER_ARN: postgres.nodes.cluster.arn,
         SECRET_ARN: postgres.nodes.cluster.masterUserSecrets[0].secretArn,
         DATABASE_NAME: databaseName,
         TABLE_NAME: tableName,
-        ...(args?.openAiApiKey ? { OPENAI_API_KEY: args.openAiApiKey } : {}),
-      };
+        MODEL: model,
+        MODEL_PROVIDER: ModelInfo[model].provider,
+        ...(openAiApiKey ? { OPENAI_API_KEY: openAiApiKey } : {}),
+      }));
     }
 
     function buildHandlerPermissions() {
