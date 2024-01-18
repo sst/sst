@@ -5,7 +5,17 @@ import {
 } from "@aws-sdk/client-lambda";
 import { Resource } from "./resource.js";
 
+type Model =
+  | "amazon.titan-embed-text-v1"
+  | "amazon.titan-embed-image-v1"
+  | "text-embedding-ada-002";
+
 export type IngestEvent = {
+  /**
+   * The embedding model to use for generating vectors
+   * @default Titan Multimodal Embeddings G1
+   */
+  model?: Model;
   /**
    * The text used to generate the embedding vector.
    * At least one of `text` or `image` must be provided.
@@ -47,6 +57,11 @@ export type IngestEvent = {
 
 export type RetrieveEvent = {
   /**
+   * The embedding model to use for generating vectors
+   * @default Titan Multimodal Embeddings G1
+   */
+  model?: Model;
+  /**
    * The text prompt used to retrieve embeddings.
    * At least one of `text` or `image` must be provided.
    * @example
@@ -74,9 +89,9 @@ export type RetrieveEvent = {
    * @example
    * ```js
    * {
-   *   metadata: {
+   *   include: {
    *     type: "movie",
-   *     name: "Spiderman",
+   *     release: "2001",
    *   }
    * }
    * ```
@@ -91,10 +106,39 @@ export type RetrieveEvent = {
    *  {
    *    type: "book",
    *    name: "Spiderman",
-   *    release: "1962",
+   *    release: "2001",
    *  }
    */
-  metadata: any;
+  include: any;
+  /**
+   * Exclude embeddings with metadata that match the provided fields.
+   * @example
+   * ```js
+   * {
+   *   include: {
+   *     type: "movie",
+   *     release: "2001",
+   *   },
+   *   exclude: {
+   *     name: "Spiderman",
+   *   }
+   * }
+   * ```
+   * This will match the embedding with metadata:
+   *  {
+   *    type: "movie",
+   *    name: "A Beautiful Mind",
+   *    release: "2001",
+   *  }
+   *
+   * But not the embedding with metadata:
+   *  {
+   *    type: "book",
+   *    name: "Spiderman",
+   *    release: "2001",
+   *  }
+   */
+  exclude?: any;
   /**
    * The threshold of similarity between the prompt and the retrieved embeddings.
    * Only embeddings with a similarity score higher than the threshold will be returned.
@@ -131,19 +175,19 @@ export type RemoveEvent = {
    * To remove embeddings for movie with id "movie-123":
    * ```js
    * {
-   *   metadata: {
+   *   include: {
    *     id: "movie-123",
    *   }
    * }
    * ```
    * To remove embeddings for all movies:
    *  {
-   *   metadata: {
+   *   include: {
    *    type: "movie",
    *   }
    *  }
    */
-  metadata: any;
+  include: any;
 };
 
 const lambda = new LambdaClient();

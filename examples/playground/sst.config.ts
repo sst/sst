@@ -17,8 +17,7 @@ export default $config({
   },
   async run() {
     const vector = new sst.Vector("MyVectorDB", {
-      //model: "amazon.titan-embed-image-v1",
-      model: "text-embedding-ada-002",
+      openAiApiKey: new sst.Secret("OpenAiApiKey").value,
     });
 
     const seeder = new sst.Function("Seeder", {
@@ -42,6 +41,8 @@ export default $config({
       ],
       url: true,
     });
+
+    const bucket = new sst.Bucket("MyBucket");
 
     const app = new sst.Function("MyApp", {
       handler: "functions/vector-example/index.app",

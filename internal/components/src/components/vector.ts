@@ -1,29 +1,26 @@
 import path from "path";
-import {
-  ComponentResourceOptions,
-  Input,
-  interpolate,
-  output,
-} from "@pulumi/pulumi";
+import { ComponentResourceOptions, Input, interpolate } from "@pulumi/pulumi";
 import { Component } from "./component.js";
 import { Postgres } from "./postgres.js";
 import { EmbeddingsTable } from "./providers/embeddings-table.js";
 import { Function, FunctionPermissionArgs } from "./function.js";
 import { AWSLinkable, Link, Linkable } from "./link.js";
-import { VisibleError } from "./error.js";
-
-const ModelInfo = {
-  "amazon.titan-embed-text-v1": { provider: "bedrock" as const, size: 1536 },
-  "amazon.titan-embed-image-v1": { provider: "bedrock" as const, size: 1024 },
-  "text-embedding-ada-002": { provider: "openai" as const, size: 1536 },
-};
 
 export interface VectorArgs {
   /**
-   * The embedding model to use for generating vectors
-   * @default Titan Multimodal Embeddings G1
+   * Specifies the  OpenAI API key
+   *.This key is required for datar ingestoig and retrieal usvin an OpenAI modelg.
+   * @default OpenAI API key is not set
+   * @example
+   * ```js
+   * const OPENAI_API_KEY = new sst.Secret("OPENAI_API_KEY");
+   *
+   * {
+   *   openAiApiKey: OPENAI_API_KEY.value,
+   * }
+   * ```
    */
-  model?: Input<keyof typeof ModelInfo>;
+  openAiApiKey?: Input<string>;
 }
 
 export class Vector extends Component implements Linkable, AWSLinkable {
@@ -39,8 +36,6 @@ export class Vector extends Component implements Linkable, AWSLinkable {
     super("sst:sst:Vector", name, args, opts);
 
     const parent = this;
-    const model = normalizeModel();
-    const vectorSize = normalizeVectorSize();
     const databaseName = normalizeDatabaseName();
     const tableName = normalizeTableName();
 
@@ -53,26 +48,6 @@ export class Vector extends Component implements Linkable, AWSLinkable {
     this.ingestHandler = ingestHandler;
     this.retrieveHandler = retrieveHandler;
     this.removeHandler = removeHandler;
-
-    function normalizeModel() {
-      return output(args?.model).apply((model) => {
-        model = model ?? "amazon.titan-embed-image-v1";
-        if (!ModelInfo[model]) throw new Error(`Invalid model: ${model}`);
-        if (
-          ModelInfo[model].provider === "openai" &&
-          !process.env.OPENAI_API_KEY
-        ) {
-          throw new VisibleError(
-            `Please pass in the OPENAI_API_KEY via environment variable to use the ${model} model. You can get your API keys here: https://platform.openai.com/api-keys`
-          );
-        }
-        return model;
-      });
-    }
-
-    function normalizeVectorSize() {
-      return model.apply((model) => ModelInfo[model].size);
-    }
 
     function normalizeDatabaseName() {
       return $app.stage;
@@ -96,7 +71,6 @@ export class Vector extends Component implements Linkable, AWSLinkable {
             secretArn: postgres.nodes.cluster.masterUserSecrets[0].secretArn,
             databaseName,
             tableName,
-            vectorSize,
           },
           { parent }
         );
@@ -156,17 +130,13 @@ export class Vector extends Component implements Linkable, AWSLinkable {
     }
 
     function buildHandlerEnvironment() {
-      return model.apply((model) => ({
+      return {
         CLUSTER_ARN: postgres.nodes.cluster.arn,
         SECRET_ARN: postgres.nodes.cluster.masterUserSecrets[0].secretArn,
-        MODEL: model,
         DATABASE_NAME: databaseName,
         TABLE_NAME: tableName,
-        MODEL_PROVIDER: ModelInfo[model].provider,
-        ...(ModelInfo[model].provider === "openai"
-          ? { OPENAI_API_KEY: process.env.OPENAI_API_KEY }
-          : {}),
-      }));
+        ...(args?.openAiApiKey ? { OPENAI_API_KEY: args.openAiApiKey } : {}),
+      };
     }
 
     function buildHandlerPermissions() {
@@ -174,7 +144,7 @@ export class Vector extends Component implements Linkable, AWSLinkable {
         {
           actions: ["bedrock:InvokeModel"],
           resources: [
-            interpolate`arn:aws:bedrock:us-east-1::foundation-model/${model}`,
+            interpolate`arn:aws:bedrock:us-east-1::foundation-model/*`,
           ],
         },
         {
@@ -191,7 +161,7 @@ export class Vector extends Component implements Linkable, AWSLinkable {
 
   public getSSTLink(): Link {
     return {
-      type: `{ ingestorFunctionName: string, retrieverFunctionName: string }`,
+      type: `{ ingestorFunctionName: string, retrieverFunctionName: string, removerFunctionName: string }`,
       value: {
         ingestorFunctionName: this.ingestHandler.nodes.function.name,
         retrieverFunctionName: this.retrieveHandler.nodes.function.name,
