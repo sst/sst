@@ -43,6 +43,9 @@ class Provider implements dynamic.ResourceProvider {
     await this.createDatabase(news);
     await this.enablePgvectorExtension(news);
     await this.enablePgtrgmExtension(news);
+    if (olds.vectorSize !== news.vectorSize) {
+      await this.removeTable(news);
+    }
     await this.createTable(news);
     await this.createEmbeddingIndex(news);
     await this.createMetadataIndex(news);
@@ -126,10 +129,20 @@ class Provider implements dynamic.ResourceProvider {
     }
   }
 
+  async removeTable(inputs: Inputs) {
+    await useClient(RDSDataClient).send(
+      new ExecuteStatementCommand({
+        resourceArn: inputs.clusterArn,
+        secretArn: inputs.secretArn,
+        database: inputs.databaseName,
+        sql: `drop table if exists ${inputs.tableName};`,
+      })
+    );
+  }
+
   async createEmbeddingIndex(inputs: Inputs) {
-    const client = useClient(RDSDataClient);
     try {
-      await client.send(
+      await useClient(RDSDataClient).send(
         new ExecuteStatementCommand({
           resourceArn: inputs.clusterArn,
           secretArn: inputs.secretArn,
@@ -145,9 +158,8 @@ class Provider implements dynamic.ResourceProvider {
   }
 
   async createMetadataIndex(inputs: Inputs) {
-    const client = useClient(RDSDataClient);
     try {
-      await client.send(
+      await useClient(RDSDataClient).send(
         new ExecuteStatementCommand({
           resourceArn: inputs.clusterArn,
           secretArn: inputs.secretArn,

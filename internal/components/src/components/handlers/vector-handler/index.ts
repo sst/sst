@@ -6,6 +6,7 @@ import {
   BedrockRuntimeClient,
   InvokeModelCommand,
 } from "@aws-sdk/client-bedrock-runtime";
+import { OpenAI } from "openai";
 import { useClient } from "../../helpers/aws/client";
 
 export type IngestEvent = {
@@ -29,9 +30,12 @@ export type RemoveEvent = {
 const {
   CLUSTER_ARN,
   SECRET_ARN,
-  EMBEDDING_MODEL_ID,
   DATABASE_NAME,
   TABLE_NAME,
+  MODEL,
+  MODEL_PROVIDER,
+  // modal provider dependent (optional)
+  OPENAI_API_KEY,
 } = process.env;
 
 export async function ingest(event: IngestEvent) {
@@ -58,13 +62,30 @@ export async function remove(event: RemoveEvent) {
 }
 
 async function generateEmbedding(text?: string, image?: string) {
+  if (MODEL_PROVIDER === "openai") {
+    return await generateEmbeddingOpenAI(text!);
+  }
+  return await generateEmbeddingBedrock(text, image);
+}
+
+async function generateEmbeddingOpenAI(text: string) {
+  const openAi = new OpenAI({ apiKey: OPENAI_API_KEY });
+  const embeddingResponse = await openAi.embeddings.create({
+    model: "text-embedding-ada-002",
+    input: text,
+    encoding_format: "float",
+  });
+  return embeddingResponse.data[0].embedding;
+}
+
+async function generateEmbeddingBedrock(text?: string, image?: string) {
   const ret = await useClient(BedrockRuntimeClient).send(
     new InvokeModelCommand({
       body: JSON.stringify({
         inputText: text,
         inputImage: image,
       }),
-      modelId: EMBEDDING_MODEL_ID,
+      modelId: MODEL,
       contentType: "application/json",
       accept: "*/*",
     })

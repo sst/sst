@@ -10,10 +10,12 @@ import { Postgres } from "./postgres.js";
 import { EmbeddingsTable } from "./providers/embeddings-table.js";
 import { Function, FunctionPermissionArgs } from "./function.js";
 import { AWSLinkable, Link, Linkable } from "./link.js";
+import { VisibleError } from "./error.js";
 
-const VectorSizeMapping = {
-  "amazon.titan-embed-text-v1": 1536,
-  "amazon.titan-embed-image-v1": 1024,
+const ModelInfo = {
+  "amazon.titan-embed-text-v1": { provider: "bedrock" as const, size: 1536 },
+  "amazon.titan-embed-image-v1": { provider: "bedrock" as const, size: 1024 },
+  "text-embedding-ada-002": { provider: "openai" as const, size: 1536 },
 };
 
 export interface VectorArgs {
@@ -21,7 +23,7 @@ export interface VectorArgs {
    * The embedding model to use for generating vectors
    * @default Titan Multimodal Embeddings G1
    */
-  model?: Input<"amazon.titan-embed-text-v1" | "amazon.titan-embed-image-v1">;
+  model?: Input<keyof typeof ModelInfo>;
 }
 
 export class Vector extends Component implements Linkable, AWSLinkable {
@@ -53,18 +55,23 @@ export class Vector extends Component implements Linkable, AWSLinkable {
     this.removeHandler = removeHandler;
 
     function normalizeModel() {
-      return output(args?.model).apply(
-        (model) => model ?? "amazon.titan-embed-image-v1"
-      );
+      return output(args?.model).apply((model) => {
+        model = model ?? "amazon.titan-embed-image-v1";
+        if (!ModelInfo[model]) throw new Error(`Invalid model: ${model}`);
+        if (
+          ModelInfo[model].provider === "openai" &&
+          !process.env.OPENAI_API_KEY
+        ) {
+          throw new VisibleError(
+            `Please pass in the OPENAI_API_KEY via environment variable to use the ${model} model. You can get your API keys here: https://platform.openai.com/api-keys`
+          );
+        }
+        return model;
+      });
     }
 
     function normalizeVectorSize() {
-      return model.apply((model) => {
-        if (!(model in VectorSizeMapping)) {
-          throw new Error(`Invalid model: ${model}`);
-        }
-        return VectorSizeMapping[model];
-      });
+      return model.apply((model) => ModelInfo[model].size);
     }
 
     function normalizeDatabaseName() {
@@ -149,13 +156,17 @@ export class Vector extends Component implements Linkable, AWSLinkable {
     }
 
     function buildHandlerEnvironment() {
-      return {
+      return model.apply((model) => ({
         CLUSTER_ARN: postgres.nodes.cluster.arn,
         SECRET_ARN: postgres.nodes.cluster.masterUserSecrets[0].secretArn,
-        EMBEDDING_MODEL_ID: model,
+        MODEL: model,
         DATABASE_NAME: databaseName,
         TABLE_NAME: tableName,
-      };
+        MODEL_PROVIDER: ModelInfo[model].provider,
+        ...(ModelInfo[model].provider === "openai"
+          ? { OPENAI_API_KEY: process.env.OPENAI_API_KEY }
+          : {}),
+      }));
     }
 
     function buildHandlerPermissions() {

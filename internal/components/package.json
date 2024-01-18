@@ -24,7 +24,8 @@
     "@types/node": "^20.10.5",
     "archiver": "6.0.1",
     "esbuild": "0.19.10",
-    "glob": "10.3.10"
+    "glob": "10.3.10",
+    "openai": "4.24.7"
   },
   "devDependencies": {
     "@tsconfig/node18": "18.2.2",

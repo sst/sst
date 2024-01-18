@@ -17,7 +17,8 @@ export default $config({
   },
   async run() {
     const vector = new sst.Vector("MyVectorDB", {
-      model: "amazon.titan-embed-image-v1",
+      //model: "amazon.titan-embed-image-v1",
+      model: "text-embedding-ada-002",
     });
 
     const seeder = new sst.Function("Seeder", {
@@ -48,13 +49,6 @@ export default $config({
       url: true,
     });
 
-    const abc = new sst.Function("ABC", {
-      bundle: "functions/bundled-example",
-      handler: "index.handler",
-      link: [vector],
-      url: true,
-    });
-
-    return { seeder: seeder.url, app: app.url, abc: abc.url };
+    return { seeder: seeder.url, app: app.url };
   },
 });
