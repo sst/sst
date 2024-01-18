@@ -3,6 +3,7 @@ import {
   initializeLinkRegistry,
   makeLinkable,
   makeAWSLinkable,
+  isLinkable,
 } from "../components/link";
 import {
   ResourceTransformationArgs,
@@ -67,5 +68,22 @@ export async function run(program: PulumiFn) {
     };
   });
 
-  return await program();
+  const links: Record<string, any> = {};
+  runtime.registerStackTransformation((args) => {
+    const resource = args.resource;
+    if (isLinkable(resource)) {
+      process.nextTick(() => {
+        const link = resource.getSSTLink();
+        links[args.name] = link.value;
+      });
+      return {
+        opts: args.opts,
+        props: args.props,
+      };
+    }
+  });
+
+  const outputs = (await program()) || {};
+  outputs._links = links;
+  return outputs;
 }

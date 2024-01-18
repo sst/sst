@@ -277,6 +277,7 @@ func (u *UI) Finish() {
 			color.New(color.FgHiBlack, color.Bold).Print(splits[len(splits)-1] + ": ")
 			color.New(color.FgWhite).Println(v)
 		}
+		delete(u.outputs, "_links")
 		if len(u.outputs) > 0 {
 			if len(u.hints) > 0 {
 				color.New(color.FgHiBlack).Println("   ---")

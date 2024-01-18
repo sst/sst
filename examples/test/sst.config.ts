@@ -25,13 +25,6 @@ export default $config({
       };
     });
 
-    const bucket = new sst.Bucket("MyBucket", {
-      nodes: {
-        bucket: {
-          bucket: "test",
-        },
-      },
-    });
     const secret = new sst.Secret("StripeKey");
 
     const fn = new sst.Function("MyFunction", {
