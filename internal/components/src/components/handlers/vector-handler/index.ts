@@ -131,7 +131,7 @@ async function queryEmbeddings(
       resourceArn: CLUSTER_ARN,
       secretArn: SECRET_ARN,
       database: DATABASE_NAME,
-      sql: `SELECT id, metadata, ${score} AS score FROM ${TABLE_NAME}
+      sql: `SELECT metadata, ${score} AS score FROM ${TABLE_NAME}
                 WHERE ${score} < ${1 - threshold}
                 AND metadata @> :include
                 ${exclude ? "AND NOT metadata @> :exclude" : ""}
@@ -156,9 +156,8 @@ async function queryEmbeddings(
     })
   );
   return ret.records?.map((record) => ({
-    id: record[0].stringValue,
-    metadata: JSON.parse(record[1].stringValue!),
-    score: 1 - record[2].doubleValue!,
+    metadata: JSON.parse(record[0].stringValue!),
+    score: 1 - record[1].doubleValue!,
   }));
 }
 

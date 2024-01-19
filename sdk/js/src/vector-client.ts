@@ -42,7 +42,7 @@ export type IngestEvent = {
    * }
    * ```
    */
-  metadata: any;
+  metadata: Record<string, any>;
 };
 
 export type RetrieveEvent = {
@@ -94,7 +94,7 @@ export type RetrieveEvent = {
    *    release: "2001",
    *  }
    */
-  include: any;
+  include: Record<string, any>;
   /**
    * Exclude embeddings with metadata that match the provided fields.
    * @example
@@ -123,7 +123,7 @@ export type RetrieveEvent = {
    *    release: "2001",
    *  }
    */
-  exclude?: any;
+  exclude?: Record<string, any>;
   /**
    * The threshold of similarity between the prompt and the retrieved embeddings.
    * Only embeddings with a similarity score higher than the threshold will be returned.
@@ -172,7 +172,18 @@ export type RemoveEvent = {
    *   }
    *  }
    */
-  include: any;
+  include: Record<string, any>;
+};
+
+type RetriveResponse = {
+  /**
+   * Metadata for the event in JSON format that was provided when ingesting the embedding.
+   */
+  metadata: Record<string, any>;
+  /**
+   * The similarity score between the prompt and the retrieved embedding.
+   */
+  score: number;
 };
 
 const lambda = new LambdaClient();
@@ -187,7 +198,7 @@ export const VectorClient = (name: string) => {
         })
       );
 
-      return parsePayload(ret, "Failed to ingest into the vector db");
+      parsePayload(ret, "Failed to ingest into the vector db");
     },
 
     retrieve: async (event: RetrieveEvent) => {
@@ -197,7 +208,10 @@ export const VectorClient = (name: string) => {
           Payload: JSON.stringify(event),
         })
       );
-      return parsePayload(ret, "Failed to retrieve from the vector db");
+      return parsePayload<RetriveResponse>(
+        ret,
+        "Failed to retrieve from the vector db"
+      );
     },
 
     remove: async (event: RemoveEvent) => {
@@ -207,12 +221,12 @@ export const VectorClient = (name: string) => {
           Payload: JSON.stringify(event),
         })
       );
-      return parsePayload(ret, "Failed to remove from the vector db");
+      parsePayload(ret, "Failed to remove from the vector db");
     },
   };
 };
 
-function parsePayload(output: InvokeCommandOutput, message: string) {
+function parsePayload<T>(output: InvokeCommandOutput, message: string): T {
   const payload = JSON.parse(Buffer.from(output.Payload!).toString());
 
   // Set cause to the payload so that it can be logged in CloudWatch
