@@ -278,7 +278,7 @@ export class NextjsSite extends SsrSite {
     this.removeSourcemaps();
     return this.validatePlan({
       edge: edge ?? false,
-      cloudFrontFunctions: {
+      cloudFrontFunctions: cdk.disableCloudFrontFunctions ? undefined : {
         serverCfFunction: {
           constructId: "CloudFrontFunction",
           injections: [this.useCloudFrontFunctionHostHeaderInjection()],

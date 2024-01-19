@@ -464,6 +464,17 @@ export interface SsrSiteProps {
      * ```
      */
     viewerProtocolPolicy?: ViewerProtocolPolicy;
+    /**
+     * Disable the CloudFront functions that are used to implement SSR.
+     * @default
+     * By default, the CloudFront functions are enabled for host header injection.
+     * @example
+     * ```js
+     * cdk: {
+     *  disableCloudFrontFunctions: true,
+     * }
+     */
+    disableCloudFrontFunctions?: boolean;
     server?: Pick<
       CdkFunctionProps,
       | "layers"
