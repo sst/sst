@@ -621,61 +621,73 @@ export class Function extends Component implements Linkable, AWSLinkable {
     }
 
     function buildHandlerWrapper() {
-      const ret = all([handler0, linkData, streaming, injections]).apply(
-        async ([handler, linkData, streaming, injections]) => {
-          const hasUserInjections = injections.length > 0;
-          // already injected via esbuild when bundle is undefined
-          const hasLinkInjections = args.bundle && linkData.length > 0;
+      const ret = all([
+        bundle,
+        handler0,
+        linkData,
+        streaming,
+        injections,
+      ]).apply(async ([bundle, handler, linkData, streaming, injections]) => {
+        const hasUserInjections = injections.length > 0;
+        // already injected via esbuild when bundle is undefined
+        const hasLinkInjections = args.bundle && linkData.length > 0;
 
-          if (!hasUserInjections && !hasLinkInjections) return { handler };
+        if (!hasUserInjections && !hasLinkInjections) return { handler };
 
-          const linkInjection = hasLinkInjections
-            ? linkData
-                .map((item) => [
-                  `process.env.SST_RESOURCE_${item.name} = ${JSON.stringify(
-                    JSON.stringify(item.value)
-                  )};\n`,
-                ])
-                .join("")
-            : "";
+        const linkInjection = hasLinkInjections
+          ? linkData
+              .map((item) => [
+                `process.env.SST_RESOURCE_${item.name} = ${JSON.stringify(
+                  JSON.stringify(item.value)
+                )};\n`,
+              ])
+              .join("")
+          : "";
 
-          const {
+        const parsed = path.posix.parse(handler);
+        const handlerDir = parsed.dir;
+        const oldHandlerFileName = parsed.name;
+        const oldHandlerFunction = parsed.ext.replace(/^\./, "");
+        const newHandlerFileName = "server-index";
+        const newHandlerFunction = "handler";
+
+        // Validate handler file exists
+        const newHandlerFileExt = [".js", ".mjs", ".cjs"].find((ext) =>
+          fs.existsSync(path.join(bundle, handlerDir, oldHandlerFileName + ext))
+        );
+        if (!newHandlerFileExt)
+          throw new VisibleError(
+            `Could not find file for handler "${handler}"`
+          );
+
+        return {
+          handler: path.posix.join(
+            handlerDir,
+            `${newHandlerFileName}.${newHandlerFunction}`
+          ),
+          wrapper: {
             dir: handlerDir,
-            name: oldHandlerName,
-            ext: oldHandlerExt,
-          } = path.posix.parse(handler);
-          const oldHandlerFunction = oldHandlerExt.replace(/^\./, "");
-          const newHandlerName = "server-index";
-          const newHandlerFunction = "handler";
-          return {
-            handler: path.posix.join(
-              handlerDir,
-              `${newHandlerName}.${newHandlerFunction}`
-            ),
-            wrapper: {
-              dir: handlerDir,
-              name: `${newHandlerName}.mjs`,
-              content: streaming
-                ? [
-                    linkInjection,
-                    `export const ${newHandlerFunction} = awslambda.streamifyResponse(async (event, context) => {`,
-                    ...injections,
-                    `  const { ${oldHandlerFunction}: rawHandler} = await import("./${oldHandlerName}.mjs");`,
-                    `  return rawHandler(event, context);`,
-                    `});`,
-                  ].join("\n")
-                : [
-                    linkInjection,
-                    `export const ${newHandlerFunction} = async (event, context) => {`,
-                    ...injections,
-                    `  const { ${oldHandlerFunction}: rawHandler} = await import("./${oldHandlerName}.mjs");`,
-                    `  return rawHandler(event, context);`,
-                    `};`,
-                  ].join("\n"),
-            },
-          };
-        }
-      );
+            name: `${newHandlerFileName}.mjs`,
+            content: streaming
+              ? [
+                  linkInjection,
+                  `export const ${newHandlerFunction} = awslambda.streamifyResponse(async (event, context) => {`,
+                  ...injections,
+                  `  const { ${oldHandlerFunction}: rawHandler} = await import("./${oldHandlerFileName}${newHandlerFileExt}");`,
+                  `  return rawHandler(event, context);`,
+                  `});`,
+                ].join("\n")
+              : [
+                  linkInjection,
+                  `export const ${newHandlerFunction} = async (event, context) => {`,
+                  ...injections,
+                  `  const { ${oldHandlerFunction}: rawHandler} = await import("./${oldHandlerFileName}${newHandlerFileExt}");`,
+                  `  return rawHandler(event, context);`,
+                  `};`,
+                ].join("\n"),
+          },
+        };
+      });
       return {
         handler: ret.handler,
         wrapper: ret.wrapper,
