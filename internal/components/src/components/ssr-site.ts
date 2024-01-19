@@ -314,7 +314,7 @@ export function prepare(args: SsrSiteArgs) {
 
       const relPathToSstTypesFile = path.join(
         path.relative(path.dirname(filePath), $cli.paths.root),
-        ".sst/types/index.ts"
+        ".sst/types.generated.ts"
       );
       fs.writeFileSync(
         filePath,
