@@ -1,5 +1,11 @@
 # create-sst
 
+## 2.39.7
+
+### Patch Changes
+
+- [`2bba12c7b`](https://github.com/sst/sst/commit/2bba12c7b031f13f70bcbb03499f434db3cc554e) Thanks [@thdxr](https://github.com/thdxr)! - preset: fix events
+
 ## 2.39.6
 
 ## 2.39.5
