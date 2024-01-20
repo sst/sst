@@ -596,8 +596,8 @@ export class Job extends Construct implements SSTConstruct {
       const image = LinuxBuildImage.fromDockerRegistry(
         // ARM images can be found here https://hub.docker.com/r/amazon/aws-lambda-nodejs
         architecture === "arm_64"
-          ? "amazon/aws-lambda-nodejs:16.2023.07.13.14"
-          : "amazon/aws-lambda-nodejs:16"
+          ? "amazon/aws-lambda-nodejs:18.2023.12.14.13"
+          : "amazon/aws-lambda-nodejs:18"
       );
       project.environment = {
         ...project.environment,
