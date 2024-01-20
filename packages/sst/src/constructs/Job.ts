@@ -593,21 +593,21 @@ export class Job extends Construct implements SSTConstruct {
       const code = AssetCode.fromAsset(result.out);
       const codeConfig = code.bind(this);
       const project = this.job.node.defaultChild as CfnProject;
-      const images = {
+      const dockerImageMap = {
         arm_64: {
           "nodejs16.x": "amazon/aws-lambda-nodejs:16.2023.07.13.14",
           "nodejs18.x": "amazon/aws-lambda-nodejs:18.2023.12.14.13",
           "nodejs20.x": "amazon/aws-lambda-nodejs:20.2023.12.14.13"
         },
         x86_64: {
-          "nodejs18.x": "amazon/aws-lambda-nodejs:18",
           "nodejs16.x": "amazon/aws-lambda-nodejs:16",
+          "nodejs18.x": "amazon/aws-lambda-nodejs:18",
           "nodejs20.x": "amazon/aws-lambda-nodejs:20"
         }
       }
       const image = LinuxBuildImage.fromDockerRegistry(
         // ARM images can be found here https://hub.docker.com/r/amazon/aws-lambda-nodejs
-        images[architecture || "x86_64"][runtime || "nodejs18.x"]
+        dockerImageMap[architecture || "x86_64"][runtime || "nodejs18.x"]
       );
       project.environment = {
         ...project.environment,
