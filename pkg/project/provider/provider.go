@@ -14,7 +14,6 @@ import (
 )
 
 type Backend interface {
-	Init(provider map[string]string) error
 	Lock(app string, stage string, out *os.File) error
 	Unlock(app string, stage string, in *os.File) error
 	Cancel(app string, stage string) error
@@ -28,7 +27,7 @@ type Backend interface {
 }
 
 type Provider interface {
-	Init(provider map[string]string) error
+	Init(app string, stage string, provider map[string]string) error
 }
 
 const SSM_NAME_BUCKET = "/sst/bootstrap"

@@ -168,7 +168,7 @@ console.log("~j" + JSON.stringify(mod.app({
 			continue
 		}
 
-		err = p.Init(args)
+		err = p.Init(proj.app.Name, proj.app.Stage, args)
 		if err != nil {
 			return nil, err
 		}
