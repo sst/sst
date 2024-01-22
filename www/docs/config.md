@@ -108,6 +108,10 @@ We use the [`sst secrets`](packages/sst.md#sst-secrets) CLI.
 
 Now you can access the secret and parameter in your Next.js app.
 
+:::tip
+Note that the Config client import is not from sst/construct
+:::
+
 ```ts title="packages/web/pages/index.tsx" {1,4}
 import { Config } from "sst/node/config";
 
