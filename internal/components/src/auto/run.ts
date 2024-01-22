@@ -11,6 +11,7 @@ import {
   mergeOptions,
   runtime,
 } from "@pulumi/pulumi";
+import { Hint } from "./hint";
 
 export async function run(program: PulumiFn) {
   process.chdir($cli.paths.root);
@@ -47,7 +48,7 @@ export async function run(program: PulumiFn) {
 
     if (!normalizedName.match(/^[A-Z][a-zA-Z0-9]*$/)) {
       throw new Error(
-        `Invalid component name "${normalizedName}". Component names must start with an uppercase letter and contain only alphanumeric characters.`
+        `Invalid component name "${normalizedName}". Component names must start with an uppercase letter and contain only alphanumeric characters.`,
       );
     }
 
@@ -77,7 +78,7 @@ export async function run(program: PulumiFn) {
         // SST components and non-SST components that are linkable.
         if (links[args.name]) {
           throw new Error(
-            `Invalid component name "${normalizedName}". Component names must start with an uppercase letter and contain only alphanumeric characters.`
+            `Invalid component name "${normalizedName}". Component names must start with an uppercase letter and contain only alphanumeric characters.`,
           );
         }
 
@@ -91,7 +92,9 @@ export async function run(program: PulumiFn) {
     };
   });
 
+  Hint.reset();
   const outputs = (await program()) || {};
   outputs._links = links;
+  outputs._hints = Hint.list();
   return outputs;
 }

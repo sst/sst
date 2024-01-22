@@ -12,8 +12,13 @@ dependencies:
     specifier: ^4.3.3
     version: 4.3.3
   sst:
+<<<<<<< HEAD
     specifier: 3.0.1-13
     version: link:../../sdk/js
+=======
+    specifier: 3.0.1-16
+    version: 3.0.1-16
+>>>>>>> 59356c2 (sync)
 
 packages:
 
@@ -28,6 +33,17 @@ packages:
       strnum: 1.0.5
     dev: false
 
+<<<<<<< HEAD
+=======
+  /sst@3.0.1-16:
+    resolution: {integrity: sha512-1/oBG+3PFGzK9n6KkApr9Ik/qE4aVUFCfQJPl0o/oS/zRz78wisBKU8iHPOA2wsyy9XXTxBs0Qh4UbURBdkPhg==}
+    dependencies:
+      '@aws-sdk/client-lambda': 3.478.0
+    transitivePeerDependencies:
+      - aws-crt
+    dev: false
+
+>>>>>>> 59356c2 (sync)
   /strnum@1.0.5:
     resolution: {integrity: sha512-J8bbNyKKXl5qYcR36TIO8W3mVGVHrmmxsd5PAItGkmyzwJvybiw2IVq5nqd0i4LSNSkB/sx9VHllbfFdr9k1JA==}
     dev: false

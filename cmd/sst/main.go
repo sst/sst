@@ -20,6 +20,7 @@ import (
 	"github.com/briandowns/spinner"
 	"github.com/fatih/color"
 	"github.com/manifoldco/promptui"
+	"github.com/muesli/termenv"
 
 	"github.com/joho/godotenv"
 	"github.com/sst/ion/cmd/sst/ui"
@@ -44,6 +45,8 @@ var logFile = (func() *os.File {
 
 func main() {
 	godotenv.Load()
+	interruptChannel := make(chan os.Signal, 1)
+	signal.Notify(interruptChannel, os.Interrupt)
 
 	app := &cli.App{
 		Name:        "sst",
@@ -210,10 +213,17 @@ func main() {
 				Name:  "dev",
 				Flags: []cli.Flag{},
 				Action: func(cli *cli.Context) error {
+					args := cli.Args().Slice()
+					hasTarget := len(args) > 0
+
+					screen := termenv.NewOutput(os.Stdout)
+					isAlt := false
+
 					cfgPath, err := project.Discover()
 					if err != nil {
 						return err
 					}
+
 					stage, err := getStage(cli, cfgPath)
 					if err != nil {
 						return err
@@ -241,6 +251,10 @@ func main() {
 						if err := cmd.Start(); err != nil {
 							return err
 						}
+						cmdExited := make(chan error, 1)
+						go func() {
+							cmdExited <- cmd.Wait()
+						}()
 
 						slog.Info("waiting for server to start")
 						for {
@@ -248,8 +262,39 @@ func main() {
 							if addr != "" {
 								break
 							}
-							time.Sleep(100 * time.Millisecond)
+
+							select {
+							case <-cmdExited:
+								return nil
+							case <-time.After(100 * time.Millisecond):
+								break
+							}
 						}
+					}
+
+					if hasTarget {
+						go func() {
+							cmd := exec.Command(
+								args[0],
+								args[1:]...,
+							)
+							out, _ := cmd.StdoutPipe()
+							scanner := bufio.NewScanner(out)
+							cmd.Start()
+
+							for {
+								for scanner.Scan() {
+									for {
+										if isAlt {
+											time.Sleep(100 * time.Millisecond)
+											continue
+										}
+										break
+									}
+									fmt.Println(scanner.Text())
+								}
+							}
+						}()
 					}
 
 					resp, err := http.Get("http://" + addr + "/")
@@ -260,32 +305,68 @@ func main() {
 
 					reader := bufio.NewReader(resp.Body)
 					var u *ui.UI
-					// ui.Header(version, nil)
+					u = ui.New(ui.ProgressModeDeploy)
+					deployedOnce := false
+				loop:
 					for {
-						line, err := reader.ReadBytes('\n')
-						if err != nil {
-							if err.Error() != "EOF" {
-								break
+						select {
+						case <-interruptChannel:
+							break loop
+						default:
+							line, err := reader.ReadBytes('\n')
+							if err != nil {
+								if err.Error() != "EOF" {
+									break
+								}
 							}
-						}
-						event := project.StackEvent{}
-						json.Unmarshal(line, &event)
-						if event.PreludeEvent != nil {
-							u = ui.New(ui.ProgressModeDeploy)
-							u.Start()
-							continue
-						}
+							event := server.Event{}
+							json.Unmarshal(line, &event)
+							if event.ConnectedEvent != nil {
+								screen.AltScreen()
+								screen.ClearScreen()
+								isAlt = true
+								u.Header(
+									version,
+									event.ConnectedEvent.App,
+									event.ConnectedEvent.Stage,
+								)
+								continue
+							}
 
-						if event.CancelEvent != nil {
-							u.Finish()
-							u.Destroy()
-							fmt.Println()
-							continue
+							if event.PreludeEvent != nil {
+								screen.AltScreen()
+								isAlt = true
+								if deployedOnce {
+									screen.ClearScreen()
+								}
+								u = ui.New(ui.ProgressModeDeploy)
+								u.Changes()
+								u.Start()
+								continue
+							}
+
+							if event.CancelEvent != nil {
+								u.Finish()
+								u.Destroy()
+								fmt.Println()
+								if !deployedOnce {
+									deployedOnce = true
+									isAlt = false
+									screen.ExitAltScreen()
+									continue
+								}
+
+								color.New(color.FgYellow, color.Bold).Print("~")
+								color.New(color.FgWhite, color.Bold).Println("  Press enter to return...")
+								bufio.NewReader(os.Stdin).ReadBytes('\n')
+								screen.ExitAltScreen()
+								isAlt = false
+								continue
+							}
+							u.Trigger(&event.StackEvent)
 						}
-						u.Trigger(&event)
 					}
 
-					fmt.Println("Address: ", addr)
 					return nil
 				},
 			},
@@ -299,10 +380,7 @@ func main() {
 					}
 					ui := ui.New(ui.ProgressModeDeploy)
 					defer ui.Destroy()
-					ui.Header(version, p)
-
-					interruptChannel := make(chan os.Signal, 1)
-					signal.Notify(interruptChannel, os.Interrupt)
+					ui.Header(version, p.App().Name, p.App().Stage)
 
 					ctx, cancel := context.WithCancel(cli.Context)
 					go func() {
@@ -331,7 +409,7 @@ func main() {
 					}
 					ui := ui.New(ui.ProgressModeRemove)
 					defer ui.Destroy()
-					ui.Header(version, p)
+					ui.Header(version, p.App().Name, p.App().Stage)
 
 					interruptChannel := make(chan os.Signal, 1)
 					signal.Notify(interruptChannel, os.Interrupt)
@@ -364,7 +442,7 @@ func main() {
 					}
 					ui := ui.New(ui.ProgressModeRefresh)
 					defer ui.Destroy()
-					ui.Header(version, p)
+					ui.Header(version, p.App().Name, p.App().Stage)
 
 					interruptChannel := make(chan os.Signal, 1)
 					signal.Notify(interruptChannel, os.Interrupt)

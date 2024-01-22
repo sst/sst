@@ -32,6 +32,7 @@ type StackEvent struct {
 	events.EngineEvent
 	StdOutEvent           *StdOutEvent
 	ConcurrentUpdateEvent *ConcurrentUpdateEvent
+	OutputsEvent          auto.OutputMap
 }
 
 type StackInput struct {
@@ -242,11 +243,13 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 	slog.Info("running stack command", "cmd", input.Command)
 	defer func() {
 		outputs, _ := stack.Outputs(ctx)
+		input.OnEvent(&StackEvent{OutputsEvent: outputs})
 		links, ok := outputs["_links"]
 		if !ok {
 			return
 		}
-		err := provider.PutLinks(s.project.backend, s.project.app.Name, s.project.app.Stage, links.Value.(map[string]interface{}))
+		value := links.Value.(map[string]interface{})
+		err := provider.PutLinks(s.project.backend, s.project.app.Name, s.project.app.Stage, value)
 		if err != nil {
 		}
 	}()

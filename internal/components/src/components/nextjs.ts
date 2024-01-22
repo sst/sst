@@ -9,6 +9,7 @@ import {
   asset,
   interpolate,
   output,
+  unsecret,
 } from "@pulumi/pulumi";
 import * as aws from "@pulumi/aws";
 import { Size, toMBs } from "./util/size.js";
@@ -27,6 +28,7 @@ import { bootstrap } from "./helpers/aws/bootstrap.js";
 import { Bucket } from "./bucket.js";
 import { Component } from "./component.js";
 import { sanitizeToPascalCase } from "./helpers/naming.js";
+import { Hint } from "../auto/hint.js";
 
 const LAYER_VERSION = "2";
 const DEFAULT_OPEN_NEXT_VERSION = "2.3.1";
@@ -138,7 +140,7 @@ export class Nextjs extends Component {
   constructor(
     name: string,
     args?: NextjsArgs,
-    opts?: ComponentResourceOptions
+    opts?: ComponentResourceOptions,
   ) {
     super("sst:sst:Nextjs", name, args, opts);
 
@@ -196,7 +198,7 @@ export class Nextjs extends Component {
         outputPath,
         access,
         bucket,
-        plan
+        plan,
       );
     const serverFunction = ssrFunctions[0] ?? Object.values(edgeFunctions)[0];
 
@@ -212,15 +214,13 @@ export class Nextjs extends Component {
     this.cdn = distribution as unknown as Cdn;
     this.server = serverFunction as unknown as Function;
     this.edge = plan.edge;
-    this.registerOutputs({
-      _hint: all([this.cdn.domainUrl, this.cdn.url]).apply(
-        ([domainUrl, url]) => {
-          // TODO remove
-          console.log({ domainUrl, url });
-          return domainUrl ?? url;
-        }
-      ),
-    });
+    Hint.register(
+      this.urn,
+      all([this.cdn.domainUrl, this.cdn.url]).apply(([domainUrl, url]) => {
+        // TODO remove
+        return domainUrl ?? url;
+      }),
+    );
 
     //app.registerTypes(this);
 
@@ -253,7 +253,7 @@ export class Nextjs extends Component {
             ...(experimental.disableIncrementalCache
               ? ["--dangerously-disable-incremental-cache"]
               : []),
-          ].join(" ")
+          ].join(" "),
       );
     }
 
@@ -389,7 +389,7 @@ export class Nextjs extends Component {
                     bundle: path.join(
                       outputPath,
                       ".open-next",
-                      "image-optimization-function"
+                      "image-optimization-function",
                     ),
                     runtime: "nodejs18.x",
                     architecture: "arm64",
@@ -476,13 +476,13 @@ export class Nextjs extends Component {
                         cacheType: "static",
                         pattern: fs
                           .statSync(
-                            path.join(outputPath, ".open-next/assets", item)
+                            path.join(outputPath, ".open-next/assets", item),
                           )
                           .isDirectory()
                           ? `${item}/*`
                           : item,
                         origin: "s3",
-                      }) as const
+                      }) as const,
                   ),
               ],
               cachePolicyAllowedHeaders: DEFAULT_CACHE_POLICY_ALLOWED_HEADERS,
@@ -493,7 +493,7 @@ export class Nextjs extends Component {
                 function: path.join(
                   outputPath,
                   ".open-next",
-                  "warmer-function"
+                  "warmer-function",
                 ),
               },
             });
@@ -505,7 +505,7 @@ if (event.rawPath) {
     routes.map(({ regex, logGroupPath }) => ({
       regex,
       logGroupPath,
-    }))
+    })),
   )}.find(({ regex }) => event.rawPath.match(new RegExp(regex)));
   if (routeData) {
     console.log("::sst::" + JSON.stringify({
@@ -517,8 +517,8 @@ if (event.rawPath) {
   }
 }`;
             }
-          }
-        )
+          },
+        ),
       );
     }
 
@@ -533,7 +533,7 @@ if (event.rawPath) {
             fifoQueue: true,
             receiveWaitTimeSeconds: 20,
           },
-          { parent }
+          { parent },
         );
         const consumer = new Function(
           `${name}Revalidator`,
@@ -541,7 +541,7 @@ if (event.rawPath) {
             description: "Next.js revalidator",
             handler: "index.handler",
             bundle: outputPath.apply((outputPath) =>
-              path.join(outputPath, ".open-next", "revalidation-function")
+              path.join(outputPath, ".open-next", "revalidation-function"),
             ),
             runtime: "nodejs18.x",
             timeout: "30 seconds",
@@ -558,7 +558,7 @@ if (event.rawPath) {
               },
             ],
           },
-          { parent }
+          { parent },
         );
         new aws.lambda.EventSourceMapping(
           `${name}RevalidatorEventSource`,
@@ -567,7 +567,7 @@ if (event.rawPath) {
             eventSourceArn: queue.arn,
             batchSize: 5,
           },
-          { parent }
+          { parent },
         );
         return queue;
       });
@@ -602,20 +602,20 @@ if (event.rawPath) {
                 },
               ],
             },
-            { parent }
+            { parent },
           );
 
           const dynamodbProviderPath = path.join(
             outputPath,
             ".open-next",
-            "dynamodb-provider"
+            "dynamodb-provider",
           );
           if (fs.existsSync(dynamodbProviderPath)) {
             // Provision 128MB of memory for every 4,000 prerendered routes,
             // 1GB per 40,000, up to 10GB. This tends to use ~70% of the memory
             // provisioned when testing.
             const prerenderedRouteCount = Object.keys(
-              prerenderManifest?.routes ?? {}
+              prerenderManifest?.routes ?? {},
             ).length;
             const seedFn = new Function(
               `${name}RevalidationSeeder`,
@@ -627,7 +627,7 @@ if (event.rawPath) {
                 timeout: "900 seconds",
                 memory: `${Math.min(
                   10240,
-                  Math.max(128, Math.ceil(prerenderedRouteCount / 4000) * 128)
+                  Math.max(128, Math.ceil(prerenderedRouteCount / 4000) * 128),
                 )} MB`,
                 permissions: [
                   {
@@ -643,7 +643,7 @@ if (event.rawPath) {
                   CACHE_DYNAMO_TABLE: table.name,
                 },
               },
-              { parent }
+              { parent },
             );
             new aws.lambda.Invocation(
               `${name}RevalidationSeed`,
@@ -654,11 +654,11 @@ if (event.rawPath) {
                 },
                 input: JSON.stringify({}),
               },
-              { parent }
+              { parent },
             );
           }
           return table;
-        }
+        },
       );
     }
 
@@ -671,7 +671,7 @@ if (event.rawPath) {
         });
         for (const file of files) {
           fs.rmSync(
-            path.join(outputPath, ".open-next", "server-function", file)
+            path.join(outputPath, ".open-next", "server-function", file),
           );
         }
       });
@@ -736,7 +736,7 @@ if (event.rawPath) {
             //   "/favicon.ico/route": "/favicon.ico"
             // }
             const appPathRoute = Object.keys(appPathRoutesManifest).find(
-              (key) => appPathRoutesManifest[key] === page
+              (key) => appPathRoutesManifest[key] === page,
             );
             if (!appPathRoute) return;
 
@@ -757,7 +757,7 @@ if (event.rawPath) {
               outputPath,
               ".next",
               "server",
-              `${filePath}.map`
+              `${filePath}.map`,
             );
             if (!fs.existsSync(sourcemapPath)) return;
 
@@ -786,13 +786,13 @@ if (event.rawPath) {
               outputPath,
               ".next",
               "server",
-              `${filePath}.map`
+              `${filePath}.map`,
             );
             if (!fs.existsSync(sourcemapPath)) return;
 
             return sourcemapPath;
           }
-        }
+        },
       );
 
       return _routes;
@@ -811,7 +811,7 @@ if (event.rawPath) {
         } catch (e) {
           console.error(e);
           throw new Error(
-            `Failed to read routes data from ".next/routes-manifest.json" for the "${name}" site.`
+            `Failed to read routes data from ".next/routes-manifest.json" for the "${name}" site.`,
           );
         }
       });
@@ -824,7 +824,7 @@ if (event.rawPath) {
         try {
           const content = fs
             .readFileSync(
-              path.join(outputPath, ".next/app-path-routes-manifest.json")
+              path.join(outputPath, ".next/app-path-routes-manifest.json"),
             )
             .toString();
           return JSON.parse(content) as Record<string, string>;
@@ -842,7 +842,7 @@ if (event.rawPath) {
         try {
           const content = fs
             .readFileSync(
-              path.join(outputPath, ".next/server/app-paths-manifest.json")
+              path.join(outputPath, ".next/server/app-paths-manifest.json"),
             )
             .toString();
           return JSON.parse(content) as Record<string, string>;
@@ -860,7 +860,7 @@ if (event.rawPath) {
         try {
           const content = fs
             .readFileSync(
-              path.join(outputPath, ".next/server/pages-manifest.json")
+              path.join(outputPath, ".next/server/pages-manifest.json"),
             )
             .toString();
           return JSON.parse(content) as Record<string, string>;
@@ -878,7 +878,7 @@ if (event.rawPath) {
         try {
           const content = fs
             .readFileSync(
-              path.join(outputPath, ".next/prerender-manifest.json")
+              path.join(outputPath, ".next/prerender-manifest.json"),
             )
             .toString();
           prerenderManifest = JSON.parse(content);
@@ -927,7 +927,7 @@ if (event.rawPath) {
             ]
           }`,
         },
-        { parent }
+        { parent },
       );
       new aws.iam.RolePolicyAttachment(
         `${name}DisableLoggingPolicyAttachment`,
@@ -935,7 +935,7 @@ if (event.rawPath) {
           policyArn: policy.arn,
           role: serverFunction.nodes.function.role,
         },
-        { parent }
+        { parent },
       );
     }
 
@@ -950,14 +950,14 @@ if (event.rawPath) {
             `${name}Sourcemap${sanitizeToPascalCase(sourcemapKey)}`,
             {
               bucket: output($app.providers?.aws?.region!).apply((region) =>
-                bootstrap.forRegion(region)
+                bootstrap.forRegion(region),
               ),
               source: new asset.FileAsset(sourcemapPath),
               key: serverFunction!.nodes.function.arn.apply((arn) =>
-                path.posix.join("sourcemaps", arn, sourcemapKey)
+                path.posix.join("sourcemaps", arn, sourcemapKey),
               ),
             },
-            { parent, retainOnDelete: true }
+            { parent, retainOnDelete: true },
           );
         });
       });

@@ -2,12 +2,14 @@ package ui
 
 import (
 	"fmt"
+	"log/slog"
 	"regexp"
 	"strings"
 	"time"
 
 	"github.com/briandowns/spinner"
 	"github.com/fatih/color"
+	"github.com/pulumi/pulumi/sdk/v3/go/auto"
 	"github.com/pulumi/pulumi/sdk/v3/go/common/apitype"
 	"github.com/sst/ion/pkg/project"
 )
@@ -21,16 +23,17 @@ const (
 )
 
 type UI struct {
-	spinner  *spinner.Spinner
-	mode     ProgressMode
-	pending  map[string]string
-	dedupe   map[string]bool
-	timing   map[string]time.Time
-	outputs  map[string]interface{}
-	hints    map[string]string
-	errors   []errorStatus
-	complete bool
-	footer   string
+	spinner     *spinner.Spinner
+	mode        ProgressMode
+	hasProgress bool
+	pending     map[string]string
+	dedupe      map[string]bool
+	timing      map[string]time.Time
+	outputs     auto.OutputMap
+	hints       map[string]string
+	errors      []errorStatus
+	complete    bool
+	footer      string
 }
 
 type errorStatus struct {
@@ -40,12 +43,14 @@ type errorStatus struct {
 
 func New(mode ProgressMode) *UI {
 	result := &UI{
-		spinner: spinner.New(spinner.CharSets[14], 100*time.Millisecond),
-		hints:   map[string]string{},
-		pending: map[string]string{},
-		dedupe:  map[string]bool{},
-		timing:  map[string]time.Time{},
-		outputs: map[string]interface{}{},
+		spinner:     spinner.New(spinner.CharSets[14], 100*time.Millisecond),
+		mode:        mode,
+		hasProgress: false,
+		hints:       map[string]string{},
+		pending:     map[string]string{},
+		dedupe:      map[string]bool{},
+		timing:      map[string]time.Time{},
+		outputs:     auto.OutputMap{},
 	}
 	if mode == ProgressModeRemove {
 		result.spinner.Suffix = "  Removing..."
@@ -154,14 +159,19 @@ func (u *UI) Trigger(evt *project.StackEvent) {
 	}
 
 	if evt.ResOutputsEvent != nil {
-		if evt.ResOutputsEvent.Metadata.Type == "pulumi:pulumi:Stack" && evt.ResOutputsEvent.Metadata.Op != apitype.OpDelete {
-			u.outputs = evt.ResOutputsEvent.Metadata.New.Outputs
-			return
-		}
+		// if evt.ResOutputsEvent.Metadata.Type == "pulumi:pulumi:Stack" && evt.ResOutputsEvent.Metadata.Op != apitype.OpDelete {
+		// 	u.outputs = evt.ResOutputsEvent.Metadata.New.Outputs
+		// 	return
+		// }
 
 		if evt.ResOutputsEvent.Metadata.New != nil {
 			if hint, ok := evt.ResOutputsEvent.Metadata.New.Outputs["_hint"]; ok {
-				u.hints[evt.ResOutputsEvent.Metadata.URN] = hint.(string)
+				stringHint, ok := hint.(string)
+				if ok {
+					u.hints[evt.ResOutputsEvent.Metadata.URN] = stringHint
+				} else {
+					slog.Info("hint is not a string", "hint", hint)
+				}
 			}
 		}
 
@@ -266,6 +276,10 @@ func (u *UI) Trigger(evt *project.StackEvent) {
 			u.spinner.Enable()
 		}
 	}
+
+	if evt.OutputsEvent != nil {
+		u.outputs = evt.OutputsEvent
+	}
 }
 
 func (u *UI) Interrupt() {
@@ -274,24 +288,31 @@ func (u *UI) Interrupt() {
 
 func (u *UI) Finish() {
 	u.spinner.Disable()
+	if u.hasProgress {
+		fmt.Println()
+	}
 	if len(u.errors) == 0 && u.complete {
-		color.New(color.FgGreen, color.Bold).Print("\n✔")
+		color.New(color.FgGreen, color.Bold).Print("✔")
 		color.New(color.FgWhite, color.Bold).Println("  Complete")
-		for k, v := range u.hints {
-			splits := strings.Split(k, "::")
-			color.New(color.FgHiBlack).Print("   ")
-			color.New(color.FgHiBlack, color.Bold).Print(splits[len(splits)-1] + ": ")
-			color.New(color.FgWhite).Println(v)
+		hints, hasHints := u.outputs["_hints"]
+		if hasHints {
+			for k, v := range hints.Value.(map[string]interface{}) {
+				splits := strings.Split(k, "::")
+				color.New(color.FgHiBlack).Print("   ")
+				color.New(color.FgHiBlack, color.Bold).Print(splits[len(splits)-1] + ": ")
+				color.New(color.FgWhite).Println(v)
+			}
 		}
 		delete(u.outputs, "_links")
+		delete(u.outputs, "_hints")
 		if len(u.outputs) > 0 {
-			if len(u.hints) > 0 {
+			if hasHints && len(hints.Value.(map[string]interface{})) > 0 {
 				color.New(color.FgHiBlack).Println("   ---")
 			}
 			for k, v := range u.outputs {
 				color.New(color.FgHiBlack).Print("   ")
 				color.New(color.FgHiBlack, color.Bold).Print(k + ": ")
-				color.New(color.FgWhite).Println(v)
+				color.New(color.FgWhite).Println(v.Value)
 			}
 		}
 		if u.footer != "" {
@@ -322,21 +343,25 @@ func (u *UI) Destroy() {
 	u.spinner.Disable()
 }
 
-func (u *UI) Header(version string, p *project.Project) {
+func (u *UI) Header(version, app, stage string) {
 	color.New(color.FgCyan, color.Bold).Print("SST ❍ ion " + version + "  ")
-	color.New(color.FgHiBlack).Print("ready!\n")
-	app := p.App()
+	color.New(color.FgHiBlack).Print("ready!")
+	fmt.Println()
 	fmt.Println()
 	color.New(color.FgCyan, color.Bold).Print("➜  ")
 
 	color.New(color.FgWhite, color.Bold).Printf("%-12s", "App:")
-	color.New(color.FgHiBlack).Println(app.Name)
+	color.New(color.FgHiBlack).Println(app)
 
 	color.New(color.FgWhite, color.Bold).Printf("   %-12s", "Stage:")
-	color.New(color.FgHiBlack).Println(app.Stage)
-
+	color.New(color.FgHiBlack).Println(stage)
 	fmt.Println()
-	u.spinner.Start()
+}
+
+func (u *UI) Changes() {
+	color.New(color.FgYellow, color.Bold).Print("~")
+	color.New(color.FgWhite, color.Bold).Println("  Deploying changes")
+	fmt.Println()
 }
 
 func (u *UI) Start() {
@@ -376,12 +401,12 @@ type Progress struct {
 
 func (u *UI) printProgress(progress Progress) {
 	u.spinner.Disable()
+	defer u.spinner.Enable()
 	dedupeKey := progress.URN + progress.Label
 	if u.dedupe[dedupeKey] {
 		return
 	}
 	u.dedupe[dedupeKey] = true
-	defer u.spinner.Enable()
 	if !progress.Final && false {
 		u.pending[progress.URN] =
 			color.New(color.FgWhite).Sprintf("   %-11s %v", progress.Label, formatURN(progress.URN))
@@ -402,4 +427,5 @@ func (u *UI) printProgress(progress Progress) {
 		color.New(color.FgHiBlack).Print(" ", progress.Message)
 	}
 	fmt.Println()
+	u.hasProgress = true
 }

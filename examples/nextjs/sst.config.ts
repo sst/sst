@@ -22,6 +22,7 @@ export default $config({
 
     return {
       siteURL: site.url,
+      value: StripeKey.value,
     };
   },
 });

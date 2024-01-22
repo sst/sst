@@ -19,7 +19,17 @@ type Server struct {
 	server       *http.Server
 	project      *project.Project
 	watchedFiles map[string]bool
-	subscribers  []chan *project.StackEvent
+	subscribers  []chan *Event
+}
+
+type Event struct {
+	project.StackEvent
+	ConnectedEvent *ConnectedEvent `json:"connectedEvent,omitempty"`
+}
+
+type ConnectedEvent struct {
+	App   string
+	Stage string
 }
 
 func resolveServerFile(cfgPath, stage string) string {
@@ -41,7 +51,7 @@ func FindExisting(cfgPath, stage string) (string, error) {
 func New(p *project.Project) (*Server, error) {
 	result := &Server{
 		project:     p,
-		subscribers: []chan *project.StackEvent{},
+		subscribers: []chan *Event{},
 		watchedFiles: map[string]bool{
 			p.PathConfig(): true,
 		},
@@ -59,11 +69,19 @@ func (s *Server) Start(parentContext context.Context) error {
 		timer.Stop()
 		w.Header().Add("content-type", "application/x-ndjson")
 		w.WriteHeader(http.StatusOK)
-		events := make(chan *project.StackEvent)
+		events := make(chan *Event)
 		s.subscribers = append(s.subscribers, events)
 		slog.Info("subscribed", "addr", r.RemoteAddr)
 		flusher, _ := w.(http.Flusher)
 		ctx := r.Context()
+		go func() {
+			events <- &Event{
+				ConnectedEvent: &ConnectedEvent{
+					App:   s.project.App().Name,
+					Stage: s.project.App().Stage,
+				},
+			}
+		}()
 	loop:
 		for {
 			select {
@@ -129,7 +147,7 @@ func (s *Server) Start(parentContext context.Context) error {
 			Command: "up",
 			OnEvent: func(event *project.StackEvent) {
 				for _, subscriber := range s.subscribers {
-					subscriber <- event
+					subscriber <- &Event{StackEvent: *event}
 				}
 			},
 			OnFiles: func(files []string) {
