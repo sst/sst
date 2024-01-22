@@ -47,7 +47,7 @@ export async function run(program: PulumiFn) {
 
     if (!normalizedName.match(/^[A-Z][a-zA-Z0-9]*$/)) {
       throw new Error(
-        `Invalid component name "${normalizedName}". Component names must start with an uppercase letter and contain only alphanumeric characters.`,
+        `Invalid component name "${normalizedName}". Component names must start with an uppercase letter and contain only alphanumeric characters.`
       );
     }
 
@@ -73,6 +73,14 @@ export async function run(program: PulumiFn) {
     const resource = args.resource;
     process.nextTick(() => {
       if (isLinkable(resource)) {
+        // Ensure linkable resources have unique names. This includes all
+        // SST components and non-SST components that are linkable.
+        if (links[args.name]) {
+          throw new Error(
+            `Invalid component name "${normalizedName}". Component names must start with an uppercase letter and contain only alphanumeric characters.`
+          );
+        }
+
         const link = resource.getSSTLink();
         links[args.name] = link.value;
       }

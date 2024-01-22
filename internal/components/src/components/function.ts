@@ -28,7 +28,6 @@ import {
   Linkable,
   buildLinkableData,
   isAWSLinkable,
-  isLinkable,
   registerLinkType,
 } from "./link.js";
 import { VisibleError } from "./error.js";
@@ -457,7 +456,8 @@ export class Function extends Component implements Linkable, AWSLinkable {
     const url = normalizeUrl();
     const copyFiles = normalizeCopyFiles();
 
-    const linkData = link();
+    const linkData = buildLinkData();
+    const linkPermissions = buildLinkPermissions();
     const { bundle, handler: handler0 } = buildHandler();
     const { handler, wrapper } = buildHandlerWrapper();
     const role = createRole();
@@ -579,7 +579,7 @@ export class Function extends Component implements Linkable, AWSLinkable {
       });
     }
 
-    function link() {
+    function buildLinkData() {
       if (!args.link) return [];
       return output(args.link).apply((links) => {
         const linkData = buildLinkableData(links);
@@ -593,6 +593,15 @@ export class Function extends Component implements Linkable, AWSLinkable {
         }
         return linkData;
       });
+    }
+
+    function buildLinkPermissions() {
+      return output(args.link ?? []).apply((links) =>
+        links.flatMap((l) => {
+          if (!isAWSLinkable(l)) return [];
+          return [l.getSSTAWSPermissions()];
+        })
+      );
     }
 
     function buildHandler() {
@@ -695,13 +704,6 @@ export class Function extends Component implements Linkable, AWSLinkable {
     }
 
     function createRole() {
-      const linkPermissions = output(args.link ?? []).apply((links) =>
-        links.flatMap((l) => {
-          if (!isAWSLinkable(l)) return [];
-          return [l.getSSTAWSPermissions()];
-        })
-      );
-
       return all([args.permissions || [], linkPermissions]).apply(
         ([argsPermissions, linkPermissions]) => {
           return new aws.iam.Role(
@@ -715,10 +717,10 @@ export class Function extends Component implements Linkable, AWSLinkable {
                   name: "inline",
                   policy: jsonStringify({
                     Statement: [...argsPermissions, ...linkPermissions].map(
-                      (permission) => ({
+                      (p) => ({
                         Effect: "Allow",
-                        Action: permission.actions,
-                        Resource: permission.resources,
+                        Action: p.actions,
+                        Resource: p.resources,
                       })
                     ),
                   }),

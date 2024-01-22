@@ -6,7 +6,7 @@ export const handler = async (evt) => {
     body: JSON.stringify(
       {
         evt,
-        resources: { MyVectorDB: Resource.MyVectorDB },
+        resources: Resource.MyBucket,
       },
       null,
       2

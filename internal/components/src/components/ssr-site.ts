@@ -970,7 +970,7 @@ if (event.type === "warmer") {
 
     function allowServerFunctionInvalidateDistribution() {
       const policy = new aws.iam.Policy(
-        `${name}ServerInvalidationPolicy`,
+        `${name}InvalidationPolicy`,
         {
           policy: interpolate`{
             "Version": "2012-10-17",
@@ -988,10 +988,14 @@ if (event.type === "warmer") {
 
       for (const fn of [...ssrFunctions, ...Object.values(edgeFunctions)]) {
         fn.nodes.function.name.apply((functionName) => {
+          const uniqueHash = crypto
+            .createHash("md5")
+            .update(functionName)
+            .digest("hex")
+            .substring(0, 4);
+
           new aws.iam.RolePolicyAttachment(
-            `${name}ServerInvalidationPolicyAttachment${sanitizeToPascalCase(
-              functionName
-            )}`,
+            `${name}InvalidationPolicyAttachment${uniqueHash}`,
             {
               policyArn: policy.arn,
               role: fn.nodes.role.name,

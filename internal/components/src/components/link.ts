@@ -73,7 +73,7 @@ export async function registerLinkType(reg: TypeRegistration) {
       `  }`,
       `}`,
       `export {}`,
-    ].join("\n"),
+    ].join("\n")
   );
 }
 
@@ -83,14 +83,14 @@ export async function registerLinkType(reg: TypeRegistration) {
 
 export function makeLinkable<T>(
   obj: { new (...args: any[]): T },
-  cb: (this: T) => Link,
+  cb: (this: T) => Link
 ) {
   obj.prototype.getSSTLink = cb;
 }
 
 export function makeAWSLinkable<T>(
   obj: { new (...args: any[]): T },
-  cb: (this: T) => FunctionPermissionArgs,
+  cb: (this: T) => FunctionPermissionArgs
 ) {
   obj.prototype.getSSTAWSPermissions = cb;
 }

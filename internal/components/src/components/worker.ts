@@ -4,11 +4,15 @@ import {
   ComponentResourceOptions,
   output,
   Output,
+  all,
+  jsonStringify,
 } from "@pulumi/pulumi";
 import type { Loader, BuildOptions } from "esbuild";
 import { build } from "../runtime/cloudflare.js";
 import { Component } from "./component";
 import { WorkersDevUrl } from "./providers/workers-dev-url";
+import { buildLinkableData, isAWSLinkable, registerLinkType } from "./link.js";
+import { iam } from "@pulumi/aws";
 
 export interface WorkerNodeJSArgs {
   /**
@@ -106,6 +110,18 @@ export interface WorkerArgs {
    * Used to configure nodejs function properties
    */
   nodejs?: Input<WorkerNodeJSArgs>;
+  /**
+   * Link resources to the function.
+   * This will grant the function permissions to access the linked resources at runtime.
+   *
+   * @example
+   * ```js
+   * {
+   *   link: [myBucket, stripeKey],
+   * }
+   * ```
+   */
+  link?: Input<any[]>;
 }
 
 export class Worker extends Component {
@@ -117,8 +133,10 @@ export class Worker extends Component {
 
     const parent = this;
 
-    const nDevUrl = normalizeDevUrl();
+    const devUrlEnabled = normalizeDevUrl();
 
+    const linkData = buildLinkData();
+    const iamCredentials = createAwsCredentials();
     const handler = buildHandler();
     const script = createScript();
     const workersDevUrl = createWorkersDevUrl();
@@ -130,21 +148,78 @@ export class Worker extends Component {
       return output(args.devUrl).apply((v) => v ?? false);
     }
 
-    function buildHandler() {
-      const buildResult = output(args).apply(async (args) => {
-        const result = await build(name, args);
-        if (result.type === "error") {
-          console.log(result);
-          throw new Error(result.errors.join("\n"));
+    function buildLinkData() {
+      if (!args.link) return [];
+      return output(args.link).apply((links) => {
+        const linkData = buildLinkableData(links);
+        for (const datum of linkData) {
+          all([datum]).apply(([value]) => {
+            registerLinkType({
+              type: value.type,
+              name: value.name,
+            });
+          });
         }
-        return result;
+        return linkData;
       });
+    }
+
+    function createAwsCredentials() {
+      return output(args.link ?? []).apply((links) => {
+        const permissions = links.flatMap((l) => {
+          if (!isAWSLinkable(l)) return [];
+          return [l.getSSTAWSPermissions()];
+        });
+
+        if (permissions.length === 0) return;
+
+        const user = new aws.iam.User(
+          `${name}AwsUser`,
+          { forceDestroy: true },
+          { parent }
+        );
+
+        new aws.iam.UserPolicy(
+          `${name}AwsPolicy`,
+          {
+            user: user.name,
+            policy: jsonStringify({
+              Statement: permissions.map((p) => ({
+                Effect: "Allow",
+                Action: p.actions,
+                Resource: p.resources,
+              })),
+            }),
+          },
+          { parent }
+        );
+
+        const keys = new aws.iam.AccessKey(
+          `${name}AwsCredentials`,
+          { user: user.name },
+          { parent }
+        );
+
+        return keys;
+      });
+    }
+
+    function buildHandler() {
+      const buildResult = all([args, linkData]).apply(
+        async ([args, linkData]) => {
+          const result = await build(name, { ...args, links: linkData });
+          if (result.type === "error") {
+            throw new Error(result.errors.join("\n"));
+          }
+          return result;
+        }
+      );
       return buildResult.handler;
     }
 
     function createScript() {
-      return output(handler).apply(
-        async (handler) =>
+      return all([handler, iamCredentials]).apply(
+        async ([handler, iamCredentials]) =>
           new cloudflare.WorkerScript(
             `${name}Script`,
             {
@@ -152,6 +227,22 @@ export class Worker extends Component {
               accountId: $app.providers?.cloudflare?.accountId!,
               content: (await fs.readFile(handler)).toString(),
               module: true,
+              plainTextBindings: iamCredentials
+                ? [
+                    {
+                      name: "AWS_ACCESS_KEY_ID",
+                      text: iamCredentials.id,
+                    },
+                  ]
+                : [],
+              secretTextBindings: iamCredentials
+                ? [
+                    {
+                      name: "AWS_SECRET_ACCESS_KEY",
+                      text: iamCredentials.secret,
+                    },
+                  ]
+                : [],
             },
             { parent }
           )
@@ -164,7 +255,7 @@ export class Worker extends Component {
         {
           accountId: $app.providers?.cloudflare?.accountId!,
           scriptName: script.name,
-          enabled: nDevUrl,
+          enabled: devUrlEnabled,
         },
         { parent }
       );

@@ -37,6 +37,8 @@ export class Component extends ComponentResource {
           switch (args.type) {
             case "aws:iam/policy:Policy":
             case "aws:iam/role:Role":
+            case "aws:iam/user:User":
+            case "aws:iam/userPolicy:UserPolicy":
             case "aws:cloudwatch/eventRule:EventRule":
             case "aws:lambda/function:Function":
             case "aws:dynamodb/table:Table":
@@ -65,6 +67,7 @@ export class Component extends ComponentResource {
               break;
             case "aws:acm/certificate:Certificate":
             case "aws:acm/certificateValidation:CertificateValidation":
+            case "aws:iam/accessKey:AccessKey":
             case "aws:iam/rolePolicyAttachment:RolePolicyAttachment":
             case "aws:cloudfront/cachePolicy:CachePolicy":
             case "aws:cloudfront/distribution:Distribution":

@@ -3,9 +3,17 @@ import fs from "fs/promises";
 import esbuild, { BuildOptions, BuildResult } from "esbuild";
 import pulumi from "@pulumi/pulumi";
 import { WorkerArgs } from "../components/worker.js";
-import { existsAsync, findAbove } from "../util/fs.js";
+import { existsAsync } from "../util/fs.js";
 
-export async function build(name: string, input: pulumi.Unwrap<WorkerArgs>) {
+export async function build(
+  name: string,
+  input: pulumi.Unwrap<WorkerArgs> & {
+    links?: {
+      name: string;
+      value: string;
+    }[];
+  }
+) {
   const out = path.join($cli.paths.work, "artifacts", `${name}-src`);
   const sourcemapOut = path.join($cli.paths.work, "artifacts", `${name}-map`);
   await fs.rm(out, { recursive: true, force: true });
@@ -26,10 +34,13 @@ export async function build(name: string, input: pulumi.Unwrap<WorkerArgs>) {
     !relative.startsWith("..") && !path.isAbsolute(input.handler!)
       ? relative
       : "",
-    isESM ? "index.mjs" : "index.cjs",
+    isESM ? "index.mjs" : "index.cjs"
   );
 
   // Rebuilt using existing esbuild context
+  const links = Object.fromEntries(
+    input.links?.map((item) => [item.name, item.value]) || []
+  );
   const options: BuildOptions = {
     entryPoints: [path.resolve(input.handler)],
     platform: "node",
@@ -46,12 +57,26 @@ export async function build(name: string, input: pulumi.Unwrap<WorkerArgs>) {
           format: "esm",
           target: "esnext",
           mainFields: ["module", "main"],
-          banner: nodejs.banner ? { js: nodejs.banner } : undefined,
+          banner: nodejs.banner
+            ? {
+                js: [
+                  `globalThis.$SST_LINKS = ${JSON.stringify(links)};`,
+                  nodejs.banner || "",
+                ].join("\n"),
+              }
+            : undefined,
         }
       : {
           format: "cjs",
           target: "node14",
-          banner: nodejs.banner ? { js: nodejs.banner } : undefined,
+          banner: nodejs.banner
+            ? {
+                js: [
+                  `globalThis.$SST_LINKS = ${JSON.stringify(links)};`,
+                  nodejs.banner || "",
+                ].join("\n"),
+              }
+            : undefined,
         }),
     outfile: target,
     // always generate sourcemaps in local
@@ -72,7 +97,7 @@ export async function build(name: string, input: pulumi.Unwrap<WorkerArgs>) {
       if (nodejs.sourcemap) return;
 
       const map = Object.keys(result.metafile?.outputs || {}).find((item) =>
-        item.endsWith(".map"),
+        item.endsWith(".map")
       );
       if (!map) return;
 
