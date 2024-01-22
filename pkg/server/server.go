@@ -51,7 +51,8 @@ func New(p *project.Project) (*Server, error) {
 
 func (s *Server) Start(parentContext context.Context) error {
 	timer := time.NewTimer(5 * time.Minute)
-	timer.Stop()
+	ctx, cancel := context.WithCancel(parentContext)
+	defer cancel()
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
@@ -84,7 +85,7 @@ func (s *Server) Start(parentContext context.Context) error {
 			}
 		}
 		if len(s.subscribers) == 0 {
-			timer.Reset(5 * time.Minute)
+			cancel()
 		}
 		slog.Info("done", "addr", r.RemoteAddr)
 	})
@@ -119,9 +120,6 @@ func (s *Server) Start(parentContext context.Context) error {
 	if err != nil {
 		return err
 	}
-
-	ctx, cancel := context.WithCancel(parentContext)
-	defer cancel()
 
 	go s.server.ListenAndServe()
 	defer s.server.Shutdown(ctx)
