@@ -7,4 +7,10 @@ settings:
 devDependencies:
   sst:
     specifier: 3.0.1-7
-    version: link:../../sdk/js
+    version: 3.0.1-7
+
+packages:
+
+  /sst@3.0.1-7:
+    resolution: {integrity: sha512-MWEGbcpsrzQAXnN0HzS3zeDmm4afDNPgnZfsh6nC4Hp8Kp5k1V5LiBSHgOy15Ro490jKV6/WY39kUR2BEdrQWg==}
+    dev: true
