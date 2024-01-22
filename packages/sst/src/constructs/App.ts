@@ -268,8 +268,8 @@ export class App extends CDKApp {
     fs.appendFileSync(
       `${typesPath}/index.ts`,
       [
-        `import "sst/node/config";`,
-        `declare module "sst/node/config" {`,
+        `import "@prenetics/sst/node/config";`,
+        `declare module "@prenetics/sst/node/config" {`,
         `  export interface ConfigTypes {`,
         `    APP: string;`,
         `    STAGE: string;`,
@@ -301,8 +301,8 @@ export class App extends CDKApp {
       (binding.variables[0] === "."
         ? // Case: variable does not have properties, ie. Secrets and Parameters
           [
-            `import "sst/node/${binding.clientPackage}";`,
-            `declare module "sst/node/${binding.clientPackage}" {`,
+            `import "@prenetics/sst/node/${binding.clientPackage}";`,
+            `declare module "@prenetics/sst/node/${binding.clientPackage}" {`,
             `  export interface ${className}Resources {`,
             `    "${id}": string;`,
             `  }`,
@@ -311,8 +311,8 @@ export class App extends CDKApp {
             ``,
           ]
         : [
-            `import "sst/node/${binding.clientPackage}";`,
-            `declare module "sst/node/${binding.clientPackage}" {`,
+            `import "@prenetics/sst/node/${binding.clientPackage}";`,
+            `declare module "@prenetics/sst/node/${binding.clientPackage}" {`,
             `  export interface ${className}Resources {`,
             `    "${id}": {`,
             ...binding.variables.map((p) => `      ${p}: string;`),

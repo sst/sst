@@ -278,12 +278,7 @@ export class NextjsSite extends SsrSite {
     this.removeSourcemaps();
     return this.validatePlan({
       edge: edge ?? false,
-      cloudFrontFunctions: {
-        serverCfFunction: {
-          constructId: "CloudFrontFunction",
-          injections: [this.useCloudFrontFunctionHostHeaderInjection()],
-        },
-      },
+      cloudFrontFunctions: undefined,
       edgeFunctions: edge
         ? {
             edgeServer: {

@@ -1,10 +1,11 @@
 {
   "publishConfig": {
+    "@prenetics:registry": "https://npm.pkg.github.com",
     "directory": "dist",
     "access": "public"
   },
   "sideEffects": false,
-  "name": "sst",
+  "name": "@prenetics/sst",
   "version": "2.39.7",
   "bin": {
     "sst": "cli/sst.js"
@@ -20,7 +21,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/sst/sst.git",
+    "url": "git+https://github.com/@prenetics/sst.git",
     "directory": "packages/cli"
   },
   "exports": {
