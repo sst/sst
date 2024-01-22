@@ -9,7 +9,6 @@ import {
   asset,
   interpolate,
   output,
-  unsecret,
 } from "@pulumi/pulumi";
 import * as aws from "@pulumi/aws";
 import { Size, toMBs } from "./util/size.js";
@@ -28,7 +27,7 @@ import { bootstrap } from "./helpers/aws/bootstrap.js";
 import { Bucket } from "./bucket.js";
 import { Component } from "./component.js";
 import { sanitizeToPascalCase } from "./helpers/naming.js";
-import { Hint } from "../auto/hint.js";
+import { Hint } from "./hint.js";
 
 const LAYER_VERSION = "2";
 const DEFAULT_OPEN_NEXT_VERSION = "2.3.1";

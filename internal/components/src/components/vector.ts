@@ -10,7 +10,7 @@ import { Component } from "./component.js";
 import { Postgres } from "./postgres.js";
 import { EmbeddingsTable } from "./providers/embeddings-table.js";
 import { Function, FunctionPermissionArgs } from "./function.js";
-import { AWSLinkable, Link, Linkable } from "./link.js";
+import { Link } from "./link.js";
 import { VisibleError } from "./error.js";
 
 const ModelInfo = {
@@ -41,7 +41,10 @@ export interface VectorArgs {
   openAiApiKey?: Input<string>;
 }
 
-export class Vector extends Component implements Linkable, AWSLinkable {
+export class Vector
+  extends Component
+  implements Link.Linkable, Link.AWS.Linkable
+{
   private ingestHandler: Function;
   private retrieveHandler: Function;
   private removeHandler: Function;
@@ -49,7 +52,7 @@ export class Vector extends Component implements Linkable, AWSLinkable {
   constructor(
     name: string,
     args?: VectorArgs,
-    opts?: ComponentResourceOptions
+    opts?: ComponentResourceOptions,
   ) {
     super("sst:sst:Vector", name, args, opts);
 
@@ -82,7 +85,7 @@ export class Vector extends Component implements Linkable, AWSLinkable {
       return all([model, args?.openAiApiKey]).apply(([model, openAiApiKey]) => {
         if (ModelInfo[model].provider === "openai" && !openAiApiKey) {
           throw new VisibleError(
-            `Please pass in the OPENAI_API_KEY via environment variable to use the ${model} model. You can get your API keys here: https://platform.openai.com/api-keys`
+            `Please pass in the OPENAI_API_KEY via environment variable to use the ${model} model. You can get your API keys here: https://platform.openai.com/api-keys`,
           );
         }
         return openAiApiKey;
@@ -117,7 +120,7 @@ export class Vector extends Component implements Linkable, AWSLinkable {
             tableName,
             vectorSize,
           },
-          { parent }
+          { parent },
         );
       });
     }
@@ -132,7 +135,7 @@ export class Vector extends Component implements Linkable, AWSLinkable {
           environment: buildHandlerEnvironment(),
           permissions: buildHandlerPermissions(),
         },
-        { parent }
+        { parent },
       );
     }
 
@@ -145,7 +148,7 @@ export class Vector extends Component implements Linkable, AWSLinkable {
           environment: buildHandlerEnvironment(),
           permissions: buildHandlerPermissions(),
         },
-        { parent }
+        { parent },
       );
     }
 
@@ -158,7 +161,7 @@ export class Vector extends Component implements Linkable, AWSLinkable {
           environment: buildHandlerEnvironment(),
           permissions: buildHandlerPermissions(),
         },
-        { parent }
+        { parent },
       );
     }
 
@@ -170,7 +173,7 @@ export class Vector extends Component implements Linkable, AWSLinkable {
         "components",
         "handlers",
         "vector-handler",
-        `index.${functionName}`
+        `index.${functionName}`,
       );
     }
 
@@ -206,7 +209,7 @@ export class Vector extends Component implements Linkable, AWSLinkable {
     }
   }
 
-  public getSSTLink(): Link {
+  public getSSTLink(): Link.Definition {
     return {
       type: `{ ingestorFunctionName: string, retrieverFunctionName: string, removerFunctionName: string }`,
       value: {

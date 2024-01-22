@@ -26,6 +26,7 @@ export default $config({
     });
 
     const secret = new sst.Secret("StripeKey");
+    const queue = new aws.sqs.Queue("MyQueue");
 
     const fn = new sst.Function("MyFunction", {
       url: true,

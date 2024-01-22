@@ -7,7 +7,6 @@ import {
   Input,
   Output,
   Unwrap,
-  asset,
   output,
   all,
   interpolate,
@@ -15,19 +14,14 @@ import {
 } from "@pulumi/pulumi";
 import * as aws from "@pulumi/aws";
 import { Cdn, CdnDomainArgs } from "./cdn.js";
-import {
-  Function,
-  FunctionArgs,
-  FunctionNodeJSArgs,
-  FunctionPermissionArgs,
-} from "./function.js";
+import { Function, FunctionArgs, FunctionPermissionArgs } from "./function.js";
 import { Duration, toSeconds } from "./util/duration.js";
 import { DistributionInvalidation } from "./providers/distribution-invalidation.js";
 import { useProvider } from "./helpers/aws/provider.js";
 import { Bucket } from "./bucket.js";
 import { BucketFile, BucketFiles } from "./providers/bucket-files.js";
 import { sanitizeToPascalCase } from "./helpers/naming.js";
-import { buildLinkableData } from "./link.js";
+import { Link } from "./link.js";
 
 type CloudFrontFunctionConfig = { injections: string[] };
 type EdgeFunctionConfig = { function: Unwrap<FunctionArgs> };
@@ -314,11 +308,11 @@ export function prepare(args: SsrSiteArgs) {
 
       const relPathToSstTypesFile = path.join(
         path.relative(path.dirname(filePath), $cli.paths.root),
-        ".sst/types.generated.ts"
+        ".sst/types.generated.ts",
       );
       fs.writeFileSync(
         filePath,
-        `/// <reference path="${relPathToSstTypesFile}" />`
+        `/// <reference path="${relPathToSstTypesFile}" />`,
       );
     });
   }
@@ -327,7 +321,7 @@ export function buildApp(
   name: string,
   args: SsrSiteArgs,
   sitePath: Output<string>,
-  buildCommand: Output<string>
+  buildCommand: Output<string>,
 ) {
   const defaultCommand = "npm run build";
 
@@ -341,11 +335,11 @@ export function buildApp(
           throw new Error(`No package.json found at "${sitePath}".`);
         }
         const packageJson = JSON.parse(
-          fs.readFileSync(path.join(sitePath, "package.json")).toString()
+          fs.readFileSync(path.join(sitePath, "package.json")).toString(),
         );
         if (!packageJson.scripts || !packageJson.scripts.build) {
           throw new Error(
-            `No "build" script found within package.json in "${sitePath}".`
+            `No "build" script found within package.json in "${sitePath}".`,
           );
         }
       }
@@ -354,7 +348,7 @@ export function buildApp(
       if (process.env.SKIP) return output(sitePath);
 
       // Build link environment variables to inject
-      const linkData = buildLinkableData(links || []);
+      const linkData = Link.build(links || []);
       const linkEnvs = output(linkData).apply((linkData) => {
         const envs: Record<string, string> = {};
         for (const datum of linkData) {
@@ -383,7 +377,7 @@ export function buildApp(
 
         return sitePath;
       });
-    }
+    },
   );
 }
 
@@ -396,7 +390,7 @@ export function createBucket(parent: ComponentResource, name: string) {
     return new aws.cloudfront.OriginAccessIdentity(
       `${name}OriginAccessIdentity`,
       {},
-      { parent }
+      { parent },
     );
   }
 
@@ -405,7 +399,7 @@ export function createBucket(parent: ComponentResource, name: string) {
     const bucket = new Bucket(
       `${name}Assets`,
       {},
-      { parent, retainOnDelete: false }
+      { parent, retainOnDelete: false },
     );
     // allow access from another account bucket policy
     const policyDocument = aws.iam.getPolicyDocumentOutput({
@@ -428,7 +422,7 @@ export function createBucket(parent: ComponentResource, name: string) {
         bucket: bucket.name,
         policy: policyDocument.json,
       },
-      { parent }
+      { parent },
     );
     return bucket;
   }
@@ -441,7 +435,7 @@ export function createServersAndDistribution(
   outputPath: Output<string>,
   access: aws.cloudfront.OriginAccessIdentity,
   bucket: Bucket,
-  plan: Input<Plan>
+  plan: Input<Plan>,
 ) {
   return all([outputPath, plan]).apply(([outputPath, plan]) => {
     const ssrFunctions: Function[] = [];
@@ -468,7 +462,7 @@ export function createServersAndDistribution(
             : toSeconds(assets?.nonVersionedFilesTTL ?? "1 day");
         const staleWhileRevalidateTTL = Math.max(
           Math.floor(nonVersionedFilesTTL / 10),
-          30
+          30,
         );
         const versionedFilesTTL =
           typeof assets?.versionedFilesTTL === "number"
@@ -535,8 +529,8 @@ export function createServersAndDistribution(
                       cacheControl: fileOption.cacheControl,
                       contentType: getContentType(file, "UTF-8"),
                     };
-                  })
-                ))
+                  }),
+                )),
               );
               filesUploaded.push(...files);
             }
@@ -549,7 +543,7 @@ export function createServersAndDistribution(
             bucketName: bucket.name,
             files: bucketFiles,
           },
-          { parent }
+          { parent },
         );
       });
     }
@@ -614,9 +608,9 @@ function handler(event) {
   return request;
 }`,
             },
-            { parent }
+            { parent },
           );
-        }
+        },
       );
       return functions;
     }
@@ -650,11 +644,11 @@ function handler(event) {
                 function: { publish: true },
               },
             },
-            { provider: useProvider("us-east-1"), parent }
+            { provider: useProvider("us-east-1"), parent },
           );
 
           functions[fnName] = fn;
-        }
+        },
       );
       return functions;
     }
@@ -745,7 +739,7 @@ function handler(event) {
           ]),
           url: true,
         },
-        { parent }
+        { parent },
       );
       ssrFunctions.push(fn);
 
@@ -764,7 +758,7 @@ function handler(event) {
 
     function buildImageOptimizationFunctionOrigin(
       fnName: string,
-      props: ImageOptimizationFunctionOriginConfig
+      props: ImageOptimizationFunctionOriginConfig,
     ) {
       const fn = new Function(
         `${name}${sanitizeToPascalCase(fnName)}`,
@@ -782,7 +776,7 @@ function handler(event) {
           ...props.function,
           url: true,
         },
-        { parent }
+        { parent },
       );
 
       return {
@@ -888,7 +882,7 @@ function handler(event) {
               enableAcceptEncodingGzip: true,
             },
           },
-          { parent }
+          { parent },
         );
       return singletonCachePolicy;
     }
@@ -938,7 +932,7 @@ if (event.type === "warmer") {
               originGroups: Object.values(originGroups),
               defaultRootObject: "",
               defaultCacheBehavior: buildBehavior(
-                plan.behaviors.find((behavior) => !behavior.pattern)!
+                plan.behaviors.find((behavior) => !behavior.pattern)!,
               ),
               orderedCacheBehaviors: plan.behaviors
                 .filter((behavior) => behavior.pattern)
@@ -964,7 +958,7 @@ if (event.type === "warmer") {
           },
         },
         // create distribution after s3 upload finishes
-        { dependsOn: bucketFile, parent }
+        { dependsOn: bucketFile, parent },
       );
     }
 
@@ -983,7 +977,7 @@ if (event.type === "warmer") {
             ]
           }`,
         },
-        { parent }
+        { parent },
       );
 
       for (const fn of [...ssrFunctions, ...Object.values(edgeFunctions)]) {
@@ -1000,7 +994,7 @@ if (event.type === "warmer") {
               policyArn: policy.arn,
               role: fn.nodes.role.name,
             },
-            { parent }
+            { parent },
           );
         });
       }
@@ -1014,7 +1008,7 @@ if (event.type === "warmer") {
 
       if (args.warm && plan.edge) {
         throw new Error(
-          `In the "${name}" Site, warming is currently supported only for the regional mode.`
+          `In the "${name}" Site, warming is currently supported only for the regional mode.`,
         );
       }
 
@@ -1036,7 +1030,7 @@ if (event.type === "warmer") {
           },
           link: [ssrFunctions[0]],
         },
-        { parent }
+        { parent },
       );
 
       // Create cron job
@@ -1046,7 +1040,7 @@ if (event.type === "warmer") {
           description: `${name} warmer`,
           scheduleExpression: "rate(5 minutes)",
         },
-        { parent }
+        { parent },
       );
       new aws.cloudwatch.EventTarget(
         `${name}WarmerTarget`,
@@ -1057,7 +1051,7 @@ if (event.type === "warmer") {
             maximumRetryAttempts: 0,
           },
         },
-        { parent }
+        { parent },
       );
 
       // Prewarm on deploy
@@ -1070,7 +1064,7 @@ if (event.type === "warmer") {
           },
           input: JSON.stringify({}),
         },
-        { parent }
+        { parent },
       );
     }
 
@@ -1080,7 +1074,7 @@ if (event.type === "warmer") {
           // We will generate a hash based on the contents of the S3 files with cache enabled.
           // This will be used to determine if we need to invalidate our CloudFront cache.
           const s3Origin = Object.values(plan.origins).find(
-            (origin) => origin.type === "s3"
+            (origin) => origin.type === "s3",
           );
           if (s3Origin?.type !== "s3") return;
           const cachedS3Files = s3Origin.copy.filter((file) => file.cached);
@@ -1098,7 +1092,7 @@ if (event.type === "warmer") {
             cachedS3Files.forEach((item) => {
               if (!item.versionedSubDir) return;
               invalidationPaths.push(
-                path.posix.join("/", item.to, item.versionedSubDir, "*")
+                path.posix.join("/", item.to, item.versionedSubDir, "*"),
               );
             });
           } else {
@@ -1127,7 +1121,7 @@ if (event.type === "warmer") {
                   cwd: path.resolve(
                     outputPath,
                     item.from,
-                    item.versionedSubDir
+                    item.versionedSubDir,
                   ),
                 }).forEach((filePath) => hash.update(filePath));
               }
@@ -1145,9 +1139,9 @@ if (event.type === "warmer") {
                 }).forEach((filePath) =>
                   hash.update(
                     fs.readFileSync(
-                      path.resolve(outputPath, item.from, filePath)
-                    )
-                  )
+                      path.resolve(outputPath, item.from, filePath),
+                    ),
+                  ),
                 );
               }
             });
@@ -1162,9 +1156,9 @@ if (event.type === "warmer") {
               paths: invalidationPaths,
               version: invalidationBuildId,
             },
-            { parent }
+            { parent },
           );
-        }
+        },
       );
     }
   });

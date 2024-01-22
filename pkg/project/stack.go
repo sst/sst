@@ -244,12 +244,19 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 	defer func() {
 		outputs, _ := stack.Outputs(ctx)
 		input.OnEvent(&StackEvent{OutputsEvent: outputs})
-		links, ok := outputs["_links"]
+		linksOutput, ok := outputs["_links"]
 		if !ok {
 			return
 		}
-		value := links.Value.(map[string]interface{})
-		err := provider.PutLinks(s.project.backend, s.project.app.Name, s.project.app.Stage, value)
+		links := linksOutput.Value.(map[string]interface{})
+		typesFile, _ := os.Create(filepath.Join(s.project.PathWorkingDir(), "types.generated.ts"))
+		defer typesFile.Close()
+		typesFile.WriteString(`declare module "sst" {` + "\n")
+		typesFile.WriteString("  export interface Resource " + inferTypes(links, "  ") + "\n")
+		typesFile.WriteString("}" + "\n")
+		typesFile.WriteString("export {}")
+
+		err := provider.PutLinks(s.project.backend, s.project.app.Name, s.project.app.Stage, links)
 		if err != nil {
 		}
 	}()

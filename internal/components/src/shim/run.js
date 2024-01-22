@@ -2,12 +2,13 @@ import * as aws from "@pulumi/aws";
 import * as cloudflare from "@pulumi/cloudflare";
 import * as util from "@pulumi/pulumi";
 import * as sst from "../components/";
-import { makeLinkable } from "../components/link";
+import { Link } from "../components/link";
 import { $config } from "../config";
 
 const $secrets = JSON.parse(process.env.SST_SECRETS || "{}");
 const { output, apply, all, interpolate } = util;
 
+const makeLinkable = Link.makeLinkable;
 export {
   makeLinkable as "$linkable",
   output as "$output",

@@ -6,7 +6,6 @@ import type { Loader, BuildOptions } from "esbuild";
 import {
   Input,
   Output,
-  ComponentResource,
   ComponentResourceOptions,
   asset,
   output,
@@ -22,14 +21,7 @@ import { LogGroup } from "./providers/log-group.js";
 import { Duration, toSeconds } from "./util/duration.js";
 import { Size, toMBs } from "./util/size.js";
 import { Component } from "./component.js";
-import {
-  AWSLinkable,
-  Link,
-  Linkable,
-  buildLinkableData,
-  isAWSLinkable,
-  registerLinkType,
-} from "./link.js";
+import { Link } from "./link.js";
 import { VisibleError } from "./error.js";
 
 const RETENTION = {
@@ -429,7 +421,10 @@ export interface FunctionArgs {
   };
 }
 
-export class Function extends Component implements Linkable, AWSLinkable {
+export class Function
+  extends Component
+  implements Link.Linkable, Link.AWS.Linkable
+{
   private function: Output<aws.lambda.Function>;
   private role: Output<aws.iam.Role>;
   private logGroup: LogGroup;
@@ -439,7 +434,7 @@ export class Function extends Component implements Linkable, AWSLinkable {
   constructor(
     name: string,
     args: FunctionArgs,
-    opts?: ComponentResourceOptions
+    opts?: ComponentResourceOptions,
   ) {
     super("sst:sst:Function", name, args, opts);
 
@@ -500,7 +495,7 @@ export class Function extends Component implements Linkable, AWSLinkable {
 
     function normalizeArchitectures() {
       return output(args.architecture).apply((arc) =>
-        arc === "arm64" ? ["arm64"] : ["x86_64"]
+        arc === "arm64" ? ["arm64"] : ["x86_64"],
       );
     }
 
@@ -559,15 +554,15 @@ export class Function extends Component implements Linkable, AWSLinkable {
             const to = entry.to || entry.from;
             if (path.isAbsolute(to))
               throw new VisibleError(
-                `Copy destination path "${to}" must be relative`
+                `Copy destination path "${to}" must be relative`,
               );
 
             const stats = await fs.promises.stat(from);
             const isDir = stats.isDirectory();
 
             return { from, to, isDir };
-          })
-        )
+          }),
+        ),
       );
     }
 
@@ -582,15 +577,7 @@ export class Function extends Component implements Linkable, AWSLinkable {
     function buildLinkData() {
       if (!args.link) return [];
       return output(args.link).apply((links) => {
-        const linkData = buildLinkableData(links);
-        for (const datum of linkData) {
-          all([datum]).apply(([value]) => {
-            registerLinkType({
-              type: value.type,
-              name: value.name,
-            });
-          });
-        }
+        const linkData = Link.build(links);
         return linkData;
       });
     }
@@ -598,9 +585,9 @@ export class Function extends Component implements Linkable, AWSLinkable {
     function buildLinkPermissions() {
       return output(args.link ?? []).apply((links) =>
         links.flatMap((l) => {
-          if (!isAWSLinkable(l)) return [];
+          if (!Link.AWS.isLinkable(l)) return [];
           return [l.getSSTAWSPermissions()];
-        })
+        }),
       );
     }
 
@@ -621,7 +608,7 @@ export class Function extends Component implements Linkable, AWSLinkable {
           if (result.type === "error")
             throw new Error(result.errors.join("\n"));
           return result;
-        }
+        },
       );
       return {
         handler: buildResult.handler,
@@ -647,7 +634,7 @@ export class Function extends Component implements Linkable, AWSLinkable {
           ? linkData
               .map((item) => [
                 `process.env.SST_RESOURCE_${item.name} = ${JSON.stringify(
-                  JSON.stringify(item.value)
+                  JSON.stringify(item.value),
                 )};\n`,
               ])
               .join("")
@@ -662,17 +649,19 @@ export class Function extends Component implements Linkable, AWSLinkable {
 
         // Validate handler file exists
         const newHandlerFileExt = [".js", ".mjs", ".cjs"].find((ext) =>
-          fs.existsSync(path.join(bundle, handlerDir, oldHandlerFileName + ext))
+          fs.existsSync(
+            path.join(bundle, handlerDir, oldHandlerFileName + ext),
+          ),
         );
         if (!newHandlerFileExt)
           throw new VisibleError(
-            `Could not find file for handler "${handler}"`
+            `Could not find file for handler "${handler}"`,
           );
 
         return {
           handler: path.posix.join(
             handlerDir,
-            `${newHandlerFileName}.${newHandlerFunction}`
+            `${newHandlerFileName}.${newHandlerFunction}`,
           ),
           wrapper: {
             dir: handlerDir,
@@ -721,7 +710,7 @@ export class Function extends Component implements Linkable, AWSLinkable {
                         Effect: "Allow",
                         Action: p.actions,
                         Resource: p.resources,
-                      })
+                      }),
                     ),
                   }),
                 },
@@ -730,9 +719,9 @@ export class Function extends Component implements Linkable, AWSLinkable {
                 "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
               ],
             },
-            { parent }
+            { parent },
           );
-        }
+        },
       );
     }
 
@@ -747,7 +736,7 @@ export class Function extends Component implements Linkable, AWSLinkable {
             $cli.paths.work,
             "artifacts",
             name,
-            "code.zip"
+            "code.zip",
           );
           await fs.promises.mkdir(path.dirname(zipPath), {
             recursive: true,
@@ -774,7 +763,7 @@ export class Function extends Component implements Linkable, AWSLinkable {
             archive.glob(
               "**",
               { cwd: bundle, dot: true },
-              { date: new Date(0) }
+              { date: new Date(0) },
             );
 
             // Add handler wrapper into the zip
@@ -808,7 +797,7 @@ export class Function extends Component implements Linkable, AWSLinkable {
           });
 
           return zipPath;
-        }
+        },
       );
     }
 
@@ -820,7 +809,7 @@ export class Function extends Component implements Linkable, AWSLinkable {
           bucket: region.apply((region) => bootstrap.forRegion(region)),
           source: zipPath.apply((zipPath) => new asset.FileArchive(zipPath)),
         },
-        { parent, retainOnDelete: true }
+        { parent, retainOnDelete: true },
       );
     }
 
@@ -843,7 +832,7 @@ export class Function extends Component implements Linkable, AWSLinkable {
           architectures,
           ...args.nodes?.function,
         },
-        { parent }
+        { parent },
       );
     }
 
@@ -853,11 +842,11 @@ export class Function extends Component implements Linkable, AWSLinkable {
         {
           logGroupName: interpolate`/aws/lambda/${fn.name}`,
           retentionInDays: logging.apply(
-            (logging) => RETENTION[logging.retention]
+            (logging) => RETENTION[logging.retention],
           ),
           region,
         },
-        { parent }
+        { parent },
       );
     }
 
@@ -871,11 +860,11 @@ export class Function extends Component implements Linkable, AWSLinkable {
             functionName: fn.name,
             authorizationType: url.authorization.toUpperCase(),
             invokeMode: streaming.apply((streaming) =>
-              streaming ? "RESPONSE_STREAM" : "BUFFERED"
+              streaming ? "RESPONSE_STREAM" : "BUFFERED",
             ),
             cors: url.cors,
           },
-          { parent }
+          { parent },
         );
       });
     }
@@ -891,7 +880,7 @@ export class Function extends Component implements Linkable, AWSLinkable {
             functionLastModified: fnRaw.lastModified,
             region,
           },
-          { parent }
+          { parent },
         );
         return fnRaw;
       });
@@ -910,7 +899,7 @@ export class Function extends Component implements Linkable, AWSLinkable {
     return this.fnUrl.apply((url) => url?.functionUrl ?? output(undefined));
   }
 
-  public getSSTLink(): Link {
+  public getSSTLink(): Link.Definition {
     return {
       type: `{ functionName: string }`,
       value: {

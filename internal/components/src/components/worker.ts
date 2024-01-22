@@ -11,7 +11,7 @@ import type { Loader, BuildOptions } from "esbuild";
 import { build } from "../runtime/cloudflare.js";
 import { Component } from "./component";
 import { WorkersDevUrl } from "./providers/workers-dev-url";
-import { buildLinkableData, isAWSLinkable, registerLinkType } from "./link.js";
+import { Link } from "./link.js";
 
 export interface WorkerNodeJSArgs {
   /**
@@ -137,15 +137,7 @@ export class Worker extends Component {
     function buildLinkData() {
       if (!args.link) return [];
       return output(args.link).apply((links) => {
-        const linkData = buildLinkableData(links);
-        for (const datum of linkData) {
-          all([datum]).apply(([value]) => {
-            registerLinkType({
-              type: value.type,
-              name: value.name,
-            });
-          });
-        }
+        const linkData = Link.build(links);
         return linkData;
       });
     }
@@ -153,7 +145,7 @@ export class Worker extends Component {
     function createAwsCredentials() {
       return output(args.link ?? []).apply((links) => {
         const permissions = links.flatMap((l) => {
-          if (!isAWSLinkable(l)) return [];
+          if (!Link.AWS.isLinkable(l)) return [];
           return [l.getSSTAWSPermissions()];
         });
 

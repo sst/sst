@@ -1,17 +1,17 @@
 import { VisibleError } from "./error";
-import { ComponentResource, Input, all, output, secret } from "@pulumi/pulumi";
-import { Link, Linkable } from "./link";
+import { output, secret } from "@pulumi/pulumi";
+import { Link } from "./link";
 import { Component } from "./component";
 
 export class SecretMissingError extends VisibleError {
   constructor(public readonly secretName: string) {
     super(
-      `Set a value for ${secretName} with \`sst secrets set ${secretName} <value>\``
+      `Set a value for ${secretName} with \`sst secrets set ${secretName} <value>\``,
     );
   }
 }
 
-export class Secret extends Component implements Linkable {
+export class Secret extends Component implements Link.Linkable {
   private _value: string;
   private _name: string;
   private _placeholder?: string;
@@ -23,7 +23,7 @@ export class Secret extends Component implements Linkable {
       {
         placeholder,
       },
-      {}
+      {},
     );
     this._name = name;
     this._placeholder = placeholder;
@@ -46,7 +46,7 @@ export class Secret extends Component implements Linkable {
     return output(this._placeholder);
   }
 
-  public getSSTLink(): Link {
+  public getSSTLink(): Link.Definition {
     return {
       type: "string",
       value: this.value,
