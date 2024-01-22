@@ -3,6 +3,7 @@ package provider
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -143,7 +144,7 @@ func (a *AwsProvider) Cancel(app string, stage string) error {
 	return nil
 }
 
-func (a *AwsProvider) Init(args map[string]string) (err error) {
+func (a *AwsProvider) Init(app string, stage string, args map[string]string) (err error) {
 	a.args = args
 
 	cfg, err := a.resolveConfig()
@@ -179,6 +180,17 @@ func (a *AwsProvider) Init(args map[string]string) (err error) {
 	if cfg.Region != "" {
 		args["region"] = cfg.Region
 	}
+
+	tags, err := json.Marshal(map[string]interface{}{
+		"tags": map[string]string{
+			"sst:app":   app,
+			"sst:stage": stage,
+		},
+	})
+	if err != nil {
+		return err
+	}
+	args["defaultTags"] = string(tags)
 
 	return err
 }
