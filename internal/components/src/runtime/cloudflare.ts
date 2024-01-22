@@ -27,14 +27,13 @@ export async function build(
     };
 
   const nodejs = input.nodejs || {};
-  const isESM = (nodejs.format || "esm") === "esm";
   const relative = path.relative($cli.paths.root, path.resolve(input.handler));
   const target = path.join(
     out,
     !relative.startsWith("..") && !path.isAbsolute(input.handler!)
       ? relative
       : "",
-    isESM ? "index.mjs" : "index.cjs"
+    "index.mjs"
   );
 
   // Rebuilt using existing esbuild context
@@ -52,32 +51,15 @@ export async function build(
       $SST_LINKS: JSON.stringify({}),
     },
     metafile: true,
-    ...(isESM
-      ? {
-          format: "esm",
-          target: "esnext",
-          mainFields: ["module", "main"],
-          banner: nodejs.banner
-            ? {
-                js: [
-                  `globalThis.$SST_LINKS = ${JSON.stringify(links)};`,
-                  nodejs.banner || "",
-                ].join("\n"),
-              }
-            : undefined,
-        }
-      : {
-          format: "cjs",
-          target: "node14",
-          banner: nodejs.banner
-            ? {
-                js: [
-                  `globalThis.$SST_LINKS = ${JSON.stringify(links)};`,
-                  nodejs.banner || "",
-                ].join("\n"),
-              }
-            : undefined,
-        }),
+    format: "esm",
+    target: "esnext",
+    mainFields: ["module", "main"],
+    banner: {
+      js: [
+        `globalThis.$SST_LINKS = ${JSON.stringify(links)};`,
+        nodejs.banner || "",
+      ].join("\n"),
+    },
     outfile: target,
     // always generate sourcemaps in local
     // never generate sourcemaps if explicitly false

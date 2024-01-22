@@ -1,4 +1,4 @@
-/// <reference path="./.sst/src/global.d.ts" />
+// <reference path="./.sst/src/global.d.ts" />
 
 export default $config({
   app(input) {
@@ -13,9 +13,13 @@ export default $config({
     };
   },
   async run() {
+    const bucket = new sst.Bucket("MyBucket");
     const worker = new sst.Worker("MyApp", {
       handler: "src/index.ts",
+      link: [bucket],
       devUrl: true,
     });
+
+    return { app: worker.devUrl };
   },
 });

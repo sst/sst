@@ -17,31 +17,20 @@ export default $config({
   },
   async run() {
     //return runVectorExample();
-    return runCloudflareExample();
 
-    //const bucket = new sst.Bucket("MyApp");
-    //const app = new sst.Function("MyApp", {
-    //  bundle: "functions/bundled-example",
-    //  handler: "index.handler",
-    //  link: [bucket],
-    //  url: true,
-    //});
+    const bucket = new sst.Bucket("MyBucket");
+    const app = new sst.Function("MyApp", {
+      bundle: "functions/bundled-example",
+      handler: "index.handler",
+      link: [bucket],
+      url: true,
+    });
 
     return {
       app: app.url,
     };
   },
 });
-
-function runCloudflareExample() {
-  const bucket = new sst.Bucket("MyBucket");
-  const worker = new sst.Worker("MyApp", {
-    handler: "functions/worker-example/index.ts",
-    link: [bucket],
-    devUrl: true,
-  });
-  return { app: worker.devUrl };
-}
 
 function runVectorExample() {
   const vector = new sst.Vector("MyVectorDB", {
