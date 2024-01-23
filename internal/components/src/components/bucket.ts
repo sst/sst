@@ -3,6 +3,7 @@ import {
   ComponentResourceOptions,
   output,
   interpolate,
+  jsonStringify,
 } from "@pulumi/pulumi";
 import * as aws from "@pulumi/aws";
 import { RandomId } from "@pulumi/random";
@@ -26,8 +27,9 @@ export interface BucketArgs {
    * ```
    */
   public?: Input<boolean>;
-  nodes?: {
-    bucket?: aws.s3.BucketV2Args;
+  transform?: {
+    bucket?: (args: aws.s3.BucketV2Args) => void;
+    bucketPolicy?: (args: aws.s3.BucketPolicyArgs) => void;
   };
 }
 
@@ -40,7 +42,7 @@ export class Bucket
   constructor(
     name: string,
     args?: BucketArgs,
-    opts?: ComponentResourceOptions,
+    opts?: ComponentResourceOptions
   ) {
     super("sst:sst:Bucket", name, args, opts);
 
@@ -48,34 +50,37 @@ export class Bucket
     const publicAccess = normalizePublicAccess();
 
     const bucket = createBucket();
-    createPublicAccess();
+    const publicAccessBlock = createPublicAccess();
+    createBucketPolicy();
 
     this.bucket = bucket;
 
     function createBucket() {
-      const randomId = new RandomId(`${name}Id`, { byteLength: 6 }, { parent });
+      const input: aws.s3.BucketV2Args = {
+        forceDestroy: true,
+      };
+      args?.transform?.bucket?.(input);
 
-      return new aws.s3.BucketV2(
-        `${name}Bucket`,
-        {
-          bucket: randomId.dec.apply((dec) =>
-            prefixName(
-              name.toLowerCase(),
-              `-${hashNumberToString(parseInt(dec), 8)}`,
-            ),
-          ),
-          forceDestroy: true,
-          ...args?.nodes?.bucket,
-        },
-        {
-          parent,
-        },
-      );
+      if (!input.bucket) {
+        const randomId = new RandomId(
+          `${name}Id`,
+          { byteLength: 6 },
+          { parent }
+        );
+        input.bucket = randomId.dec.apply((dec) =>
+          prefixName(
+            name.toLowerCase(),
+            `-${hashNumberToString(parseInt(dec), 8)}`
+          )
+        );
+      }
+
+      return new aws.s3.BucketV2(`${name}Bucket`, input, { parent });
     }
 
     function createPublicAccess() {
-      publicAccess.apply((publicAccess) => {
-        const publicAccessBlock = new aws.s3.BucketPublicAccessBlock(
+      return publicAccess.apply((publicAccess) => {
+        return new aws.s3.BucketPublicAccessBlock(
           `${name}PublicAccessBlock`,
           {
             bucket: bucket.bucket,
@@ -84,32 +89,34 @@ export class Bucket
             ignorePublicAcls: true,
             restrictPublicBuckets: !publicAccess,
           },
-          { parent },
+          { parent }
         );
+      });
+    }
 
+    function createBucketPolicy() {
+      return publicAccess.apply((publicAccess) => {
         if (!publicAccess) return;
 
-        new aws.s3.BucketPolicy(
-          `${name}Policy`,
-          {
-            bucket: bucket.bucket,
-            policy: aws.iam.getPolicyDocumentOutput({
-              statements: [
-                {
-                  principals: [
-                    {
-                      type: "*",
-                      identifiers: ["*"],
-                    },
-                  ],
-                  actions: ["s3:GetObject"],
-                  resources: [$util.interpolate`${bucket.arn}/*`],
-                },
-              ],
-            }).json,
-          },
-          { parent, dependsOn: publicAccessBlock },
-        );
+        const input = {
+          bucket: bucket.bucket,
+          policy: jsonStringify({
+            Statement: [
+              {
+                Principal: "*",
+                Effect: "Allow",
+                Action: ["s3:GetObject"],
+                Resource: [$util.interpolate`${bucket.arn}/*`],
+              },
+            ],
+          }),
+        };
+        args?.transform?.bucketPolicy?.(input);
+
+        new aws.s3.BucketPolicy(`${name}Policy`, input, {
+          parent,
+          dependsOn: publicAccessBlock,
+        });
       });
     }
 
