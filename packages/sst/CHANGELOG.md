@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.39.8
+
+### Patch Changes
+
+- [`b29ce15fa`](https://github.com/sst/sst/commit/b29ce15fa94305cc50e4a40b95476cf8bd316bca) Thanks [@fwang](https://github.com/fwang)! - SsrSite: support customization via "cdk.transform" prop
+
 ## 2.39.7
 
 ### Patch Changes
