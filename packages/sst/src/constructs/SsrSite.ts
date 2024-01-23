@@ -476,6 +476,9 @@ export interface SsrSiteProps {
       | "logRetention"
     > &
       Pick<FunctionProps, "copyFiles">;
+    /**
+     * @hidden Need to fix tsdoc generation to support the `Plan` type
+     */
     transform?: (args: Plan) => void;
   };
 }
