@@ -7,6 +7,22 @@ import {
 } from "@pulumi/pulumi";
 import { prefixName } from "./helpers/naming.js";
 
+export type Transform<T> = T | ((args: T) => void);
+export function transform<T extends object>(
+  transform: Transform<T> | undefined,
+  args: T
+) {
+  // Case: transform is a function
+  if (typeof transform === "function") {
+    transform(args);
+    return args;
+  }
+
+  // Case: no transform
+  // Case: transform is an argument
+  return { ...args, ...transform };
+}
+
 export class Component extends ComponentResource {
   constructor(
     type: string,

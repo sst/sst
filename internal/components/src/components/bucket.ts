@@ -8,7 +8,7 @@ import {
 import * as aws from "@pulumi/aws";
 import { RandomId } from "@pulumi/random";
 import { prefixName, hashNumberToString } from "./helpers/naming";
-import { Component } from "./component";
+import { Component, Transform, transform } from "./component";
 import { Link } from "./link";
 import { FunctionPermissionArgs } from ".";
 
@@ -28,8 +28,8 @@ export interface BucketArgs {
    */
   public?: Input<boolean>;
   transform?: {
-    bucket?: (args: aws.s3.BucketV2Args) => void;
-    bucketPolicy?: (args: aws.s3.BucketPolicyArgs) => void;
+    bucket?: Transform<aws.s3.BucketV2Args>;
+    bucketPolicy?: Transform<aws.s3.BucketPolicyArgs>;
   };
 }
 
@@ -56,10 +56,9 @@ export class Bucket
     this.bucket = bucket;
 
     function createBucket() {
-      const input: aws.s3.BucketV2Args = {
+      const input = transform(args?.transform?.bucket, {
         forceDestroy: true,
-      };
-      args?.transform?.bucket?.(input);
+      });
 
       if (!input.bucket) {
         const randomId = new RandomId(
@@ -98,25 +97,26 @@ export class Bucket
       return publicAccess.apply((publicAccess) => {
         if (!publicAccess) return;
 
-        const input = {
-          bucket: bucket.bucket,
-          policy: jsonStringify({
-            Statement: [
-              {
-                Principal: "*",
-                Effect: "Allow",
-                Action: ["s3:GetObject"],
-                Resource: [$util.interpolate`${bucket.arn}/*`],
-              },
-            ],
+        new aws.s3.BucketPolicy(
+          `${name}Policy`,
+          transform(args?.transform?.bucketPolicy, {
+            bucket: bucket.bucket,
+            policy: jsonStringify({
+              Statement: [
+                {
+                  Principal: "*",
+                  Effect: "Allow",
+                  Action: ["s3:GetObject"],
+                  Resource: [$util.interpolate`${bucket.arn}/*`],
+                },
+              ],
+            }),
           }),
-        };
-        args?.transform?.bucketPolicy?.(input);
-
-        new aws.s3.BucketPolicy(`${name}Policy`, input, {
-          parent,
-          dependsOn: publicAccessBlock,
-        });
+          {
+            parent,
+            dependsOn: publicAccessBlock,
+          }
+        );
       });
     }
 
