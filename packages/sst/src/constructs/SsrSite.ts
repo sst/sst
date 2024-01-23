@@ -476,6 +476,7 @@ export interface SsrSiteProps {
       | "logRetention"
     > &
       Pick<FunctionProps, "copyFiles">;
+    transform?: (args: Plan) => void;
   };
 }
 
@@ -585,6 +586,7 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
     // Build app
     buildApp();
     const plan = this.plan(bucket);
+    transformPlan();
     validateTimeout();
 
     // Create CloudFront
@@ -705,6 +707,10 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
         enforceSSL: true,
         ...cdk?.bucket,
       });
+    }
+
+    function transformPlan() {
+      cdk?.transform?.(plan);
     }
 
     function createServerFunctionForDev() {
@@ -1235,7 +1241,7 @@ function handler(event) {
     }
 
     function useServerBehaviorCachePolicy() {
-      const allowedHeaders = plan.cachePolicyAllowedHeaders || [];
+      const allowedHeaders = plan.serverCachePolicy?.allowedHeaders ?? [];
       singletonCachePolicy =
         singletonCachePolicy ??
         new CachePolicy(
@@ -1582,7 +1588,9 @@ if (event.type === "warmer") {
       edgeFunction?: keyof EdgeFunctions;
     }[];
     errorResponses?: ErrorResponse[];
-    cachePolicyAllowedHeaders?: string[];
+    serverCachePolicy?: {
+      allowedHeaders?: string[];
+    };
     buildId?: string;
     warmerConfig?: {
       function: string;
