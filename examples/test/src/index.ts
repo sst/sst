@@ -1,8 +1,8 @@
 import { Resource } from "sst";
 
-export function handler() {
+export async function handler() {
   return {
     statusCode: 200,
-    body: JSON.stringify(Resource.StripeKey),
+    body: Resource.MyQueue.url,
   };
 }

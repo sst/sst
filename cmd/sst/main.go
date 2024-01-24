@@ -1,26 +1,25 @@
 package main
 
 import (
-	"bufio"
 	"context"
 	"encoding/json"
 	"fmt"
 	"io"
 	"log/slog"
-	"net/http"
 	"os"
 	"os/exec"
 	"os/signal"
 	"os/user"
 	"path/filepath"
 	"strings"
+	"sync"
+
 	//"syscall"
 	"time"
 
 	"github.com/briandowns/spinner"
 	"github.com/fatih/color"
 	"github.com/manifoldco/promptui"
-	"github.com/muesli/termenv"
 
 	"github.com/joho/godotenv"
 	"github.com/sst/ion/cmd/sst/ui"
@@ -47,6 +46,11 @@ func main() {
 	godotenv.Load()
 	interruptChannel := make(chan os.Signal, 1)
 	signal.Notify(interruptChannel, os.Interrupt)
+	ctx, cancel := context.WithCancel(context.Background())
+	go func() {
+		<-interruptChannel
+		cancel()
+	}()
 
 	app := &cli.App{
 		Name:        "sst",
@@ -197,11 +201,6 @@ func main() {
 					interruptChannel := make(chan os.Signal, 1)
 					signal.Notify(interruptChannel, os.Interrupt)
 
-					ctx, cancel := context.WithCancel(cli.Context)
-					go func() {
-						<-interruptChannel
-						cancel()
-					}()
 					err = server.Start(ctx)
 					if err != nil {
 						return err
@@ -216,9 +215,6 @@ func main() {
 					args := cli.Args().Slice()
 					hasTarget := len(args) > 0
 
-					screen := termenv.NewOutput(os.Stdout)
-					isAlt := false
-
 					cfgPath, err := project.Discover()
 					if err != nil {
 						return err
@@ -229,142 +225,68 @@ func main() {
 						return err
 					}
 
-					addr, err := server.FindExisting(cfgPath, stage)
-					if err != nil {
-						return err
-					}
-
-					if addr == "" {
-						slog.Info("no existing server found, starting new one")
-						currentExecutable, err := os.Executable()
-						if err != nil {
-							return err
-						}
-						cmd := exec.Command(currentExecutable)
-						cmd.Env = os.Environ()
-						//cmd.SysProcAttr = &syscall.SysProcAttr{
-						//	Setsid: true,
-						//}
-						cmd.Args = append(cmd.Args, "--stage", stage, "server")
-						cmd.Stdout = os.Stdout
-						cmd.Stderr = os.Stderr
-						if err := cmd.Start(); err != nil {
-							return err
-						}
-						cmdExited := make(chan error, 1)
-						go func() {
-							cmdExited <- cmd.Wait()
-						}()
-
-						slog.Info("waiting for server to start")
-						for {
-							addr, _ = server.FindExisting(cfgPath, stage)
-							if addr != "" {
-								break
-							}
-
-							select {
-							case <-cmdExited:
-								return nil
-							case <-time.After(100 * time.Millisecond):
-								break
-							}
-						}
-					}
+					deployWaiter := sync.WaitGroup{}
+					deployWaiter.Add(1)
 
 					if hasTarget {
 						go func() {
-							cmd := exec.Command(
+							deployWaiter.Wait()
+							cmd := exec.CommandContext(
+								ctx,
 								args[0],
 								args[1:]...,
 							)
-							out, _ := cmd.StdoutPipe()
-							scanner := bufio.NewScanner(out)
+							cmd.Stdin = os.Stdin
+							cmd.Stdout = os.Stdout
+							cmd.Stderr = os.Stderr
 							cmd.Start()
-
-							for {
-								for scanner.Scan() {
-									for {
-										if isAlt {
-											time.Sleep(100 * time.Millisecond)
-											continue
-										}
-										break
-									}
-									fmt.Println(scanner.Text())
-								}
-							}
+							cmd.Wait()
+							cancel()
 						}()
 					}
 
-					resp, err := http.Get("http://" + addr + "/")
+					state := &server.State{}
+					u := ui.New(ui.ProgressModeDev)
+					err = server.Connect(cli.Context, server.ConnectInput{
+						CfgPath: cfgPath,
+						Stage:   stage,
+						OnEvent: func(event server.Event) {
+							if state.Deployed == false || !hasTarget {
+								defer u.Trigger(&event.StackEvent)
+								if event.StackEvent.PreludeEvent != nil {
+									u.Reset()
+									u.Start()
+									u.Changes()
+								}
+							}
+
+							if event.CompleteEvent != nil {
+								if state.Deployed == false {
+									if !event.CompleteEvent.Finished || len(event.CompleteEvent.Errors) > 0 {
+										cancel()
+									}
+								}
+							}
+
+							if event.StateEvent != nil {
+								next := event.StateEvent.State
+								if state.App == "" {
+									u.Header(
+										version,
+										next.App,
+										next.Stage,
+									)
+								}
+								if !state.Deployed && next.Deployed && hasTarget {
+									deployWaiter.Done()
+								}
+								state = event.StateEvent.State
+							}
+						},
+					})
+
 					if err != nil {
 						return err
-					}
-					defer resp.Body.Close()
-
-					reader := bufio.NewReader(resp.Body)
-					var u *ui.UI
-					u = ui.New(ui.ProgressModeDeploy)
-					deployedOnce := false
-				loop:
-					for {
-						select {
-						case <-interruptChannel:
-							break loop
-						default:
-							line, err := reader.ReadBytes('\n')
-							if err != nil {
-								if err.Error() != "EOF" {
-									break
-								}
-							}
-							event := server.Event{}
-							json.Unmarshal(line, &event)
-							if event.ConnectedEvent != nil {
-								screen.AltScreen()
-								screen.ClearScreen()
-								isAlt = true
-								u.Header(
-									version,
-									event.ConnectedEvent.App,
-									event.ConnectedEvent.Stage,
-								)
-								continue
-							}
-
-							if event.PreludeEvent != nil {
-								screen.AltScreen()
-								isAlt = true
-								if deployedOnce {
-									screen.ClearScreen()
-								}
-								u = ui.New(ui.ProgressModeDeploy)
-								u.Changes()
-								u.Start()
-								continue
-							}
-
-							if event.CancelEvent != nil {
-								u.Finish()
-								u.Destroy()
-								fmt.Println()
-								if !deployedOnce {
-									deployedOnce = true
-									isAlt = false
-									screen.ExitAltScreen()
-									continue
-								}
-
-								color.New(color.FgYellow, color.Bold).Print("~")
-								color.New(color.FgWhite, color.Bold).Println("  Press enter to return...")
-								bufio.NewReader(os.Stdin).ReadBytes('\n')
-								screen.ExitAltScreen()
-								isAlt = false
-								continue
-							}
-							u.Trigger(&event.StackEvent)
-						}
 					}
 
 					return nil
@@ -388,6 +310,7 @@ func main() {
 						ui.Interrupt()
 						cancel()
 					}()
+					ui.Start()
 					err = p.Stack.Run(ctx, &project.StackInput{
 						Command: "up",
 						OnEvent: ui.Trigger,
@@ -395,7 +318,6 @@ func main() {
 					if err != nil {
 						return err
 					}
-					ui.Finish()
 					return nil
 				},
 			},
@@ -428,7 +350,6 @@ func main() {
 					if err != nil {
 						return err
 					}
-					ui.Finish()
 					return nil
 				},
 			},
@@ -461,7 +382,6 @@ func main() {
 					if err != nil {
 						return err
 					}
-					ui.Finish()
 					return nil
 				},
 			},
@@ -545,7 +465,7 @@ func main() {
 		},
 	}
 
-	err := app.Run(os.Args)
+	err := app.RunContext(ctx, os.Args)
 	if err != nil {
 		if readableErr, ok := err.(*util.ReadableError); ok {
 			fmt.Println(readableErr.Message)

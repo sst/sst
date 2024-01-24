@@ -1,6 +1,6 @@
 {
   "type": "module",
   "devDependencies": {
-    "sst": "3.0.1-7"
+    "sst": "3.0.1-16"
   }
 }

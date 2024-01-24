@@ -20,23 +20,29 @@ type Server struct {
 	project      *project.Project
 	watchedFiles map[string]bool
 	subscribers  []chan *Event
+	state        *State
+}
+
+type State struct {
+	App      string
+	Stage    string
+	Deployed bool
 }
 
 type Event struct {
 	project.StackEvent
-	ConnectedEvent *ConnectedEvent `json:"connectedEvent,omitempty"`
+	StateEvent *StateEvent `json:"stateEvent,omitempty"`
 }
 
-type ConnectedEvent struct {
-	App   string
-	Stage string
+type StateEvent struct {
+	State *State `json:"state"`
 }
 
 func resolveServerFile(cfgPath, stage string) string {
 	return filepath.Join(project.ResolveWorkingDir(cfgPath), stage+".server")
 }
 
-func FindExisting(cfgPath, stage string) (string, error) {
+func findExisting(cfgPath, stage string) (string, error) {
 	path := resolveServerFile(cfgPath, stage)
 	contents, err := os.ReadFile(path)
 	if err != nil {
@@ -48,12 +54,20 @@ func FindExisting(cfgPath, stage string) (string, error) {
 	return string(contents), nil
 }
 
+func cleanupExisting(cfgPath, stage string) error {
+	return os.Remove(resolveServerFile(cfgPath, stage))
+}
+
 func New(p *project.Project) (*Server, error) {
 	result := &Server{
 		project:     p,
 		subscribers: []chan *Event{},
 		watchedFiles: map[string]bool{
 			p.PathConfig(): true,
+		},
+		state: &State{
+			App:   p.App().Name,
+			Stage: p.App().Stage,
 		},
 	}
 	return result, nil
@@ -76,9 +90,8 @@ func (s *Server) Start(parentContext context.Context) error {
 		ctx := r.Context()
 		go func() {
 			events <- &Event{
-				ConnectedEvent: &ConnectedEvent{
-					App:   s.project.App().Name,
-					Stage: s.project.App().Stage,
+				StateEvent: &StateEvent{
+					State: s.state,
 				},
 			}
 		}()
@@ -145,10 +158,9 @@ func (s *Server) Start(parentContext context.Context) error {
 	for {
 		s.project.Stack.Run(ctx, &project.StackInput{
 			Command: "up",
+			Dev:     true,
 			OnEvent: func(event *project.StackEvent) {
-				for _, subscriber := range s.subscribers {
-					subscriber <- &Event{StackEvent: *event}
-				}
+				s.broadcast(&Event{StackEvent: *event})
 			},
 			OnFiles: func(files []string) {
 				for _, file := range files {
@@ -157,6 +169,16 @@ func (s *Server) Start(parentContext context.Context) error {
 			},
 		})
 
+		s.state.Deployed = true
+		s.broadcast(&Event{
+			StateEvent: &StateEvent{
+				State: s.state,
+			},
+		})
+
+		defer func() {
+			slog.Info("stopping server")
+		}()
 	loop:
 		for {
 			select {
@@ -177,15 +199,19 @@ func (s *Server) Start(parentContext context.Context) error {
 	}
 }
 
+func (s *Server) broadcast(event *Event) {
+	for _, subscriber := range s.subscribers {
+		subscriber <- event
+	}
+}
+
 func findAvailablePort() (int, error) {
-	// Try to bind to a random available port
 	listener, err := net.Listen("tcp", "localhost:0")
 	if err != nil {
 		return 0, err
 	}
 	defer listener.Close()
 
-	// Get the actual address that was bound (including the port)
 	addr := listener.Addr().(*net.TCPAddr)
 	return addr.Port, nil
 }

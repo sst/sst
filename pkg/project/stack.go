@@ -32,13 +32,14 @@ type StackEvent struct {
 	events.EngineEvent
 	StdOutEvent           *StdOutEvent
 	ConcurrentUpdateEvent *ConcurrentUpdateEvent
-	OutputsEvent          auto.OutputMap
+	CompleteEvent         *CompleteEvent
 }
 
 type StackInput struct {
 	OnEvent func(event *StackEvent)
 	OnFiles func(files []string)
 	Command string
+	Dev     bool
 }
 
 type StdOutEvent struct {
@@ -48,6 +49,19 @@ type StdOutEvent struct {
 type ConcurrentUpdateEvent struct{}
 
 type ConcurrentUpdateError struct{}
+
+type CompleteEvent struct {
+	Links    map[string]interface{}
+	Outputs  map[string]interface{}
+	Hints    map[string]string
+	Errors   []Error
+	Finished bool
+}
+
+type Error struct {
+	Message string
+	URN     string
+}
 
 func (e *ConcurrentUpdateError) Error() string {
 	return "Concurrent update detected, run `sst cancel` to delete lock file and retry."
@@ -110,6 +124,7 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 
 	cli := map[string]interface{}{
 		"command": input.Command,
+		"dev":     input.Dev,
 		"paths": map[string]string{
 			"home": global.ConfigDir(),
 			"root": s.project.PathRoot(),
@@ -130,6 +145,7 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 		Define: map[string]string{
 			"$app": string(appBytes),
 			"$cli": string(cliBytes),
+			"$dev": fmt.Sprintf("%v", input.Dev),
 		},
 		Inject: []string{filepath.Join(s.project.PathWorkingDir(), "src/shim/run.js")},
 		Code: fmt.Sprintf(`
@@ -219,17 +235,36 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 	}
 	defer eventlog.Close()
 
+	complete := &CompleteEvent{
+		Links:    map[string]interface{}{},
+		Hints:    map[string]string{},
+		Outputs:  map[string]interface{}{},
+		Errors:   []Error{},
+		Finished: false,
+	}
+
 	go func() {
-	loop:
 		for {
 			select {
 			case <-ctx.Done():
 				return
 			case event, ok := <-stream:
 				if !ok {
-					break loop
+					return
 				}
 				input.OnEvent(&StackEvent{EngineEvent: event})
+
+				if event.DiagnosticEvent != nil && event.DiagnosticEvent.Severity == "error" {
+					complete.Errors = append(complete.Errors, Error{
+						Message: event.DiagnosticEvent.Message,
+						URN:     event.DiagnosticEvent.URN,
+					})
+				}
+
+				if event.SummaryEvent != nil {
+					complete.Finished = true
+				}
+
 				bytes, err := json.Marshal(event)
 				if err != nil {
 					return
@@ -240,26 +275,45 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 		}
 	}()
 
-	slog.Info("running stack command", "cmd", input.Command)
 	defer func() {
-		outputs, _ := stack.Outputs(ctx)
-		input.OnEvent(&StackEvent{OutputsEvent: outputs})
-		linksOutput, ok := outputs["_links"]
-		if !ok {
-			return
-		}
-		links := linksOutput.Value.(map[string]interface{})
-		typesFile, _ := os.Create(filepath.Join(s.project.PathWorkingDir(), "types.generated.ts"))
-		defer typesFile.Close()
-		typesFile.WriteString(`declare module "sst" {` + "\n")
-		typesFile.WriteString("  export interface Resource " + inferTypes(links, "  ") + "\n")
-		typesFile.WriteString("}" + "\n")
-		typesFile.WriteString("export {}")
+		defer input.OnEvent(&StackEvent{CompleteEvent: complete})
 
-		err := provider.PutLinks(s.project.backend, s.project.app.Name, s.project.app.Stage, links)
-		if err != nil {
+		outputs, _ := stack.Outputs(ctx)
+
+		linksOutput, ok := outputs["_links"]
+		if ok {
+			links := linksOutput.Value.(map[string]interface{})
+			for key, value := range links {
+				complete.Links[key] = value
+			}
+			typesFile, _ := os.Create(filepath.Join(s.project.PathWorkingDir(), "types.generated.ts"))
+			defer typesFile.Close()
+			typesFile.WriteString(`declare module "sst" {` + "\n")
+			typesFile.WriteString("  export interface Resource " + inferTypes(links, "  ") + "\n")
+			typesFile.WriteString("}" + "\n")
+			typesFile.WriteString("export {}")
+			provider.PutLinks(s.project.backend, s.project.app.Name, s.project.app.Stage, links)
+		}
+		delete(outputs, "_links")
+
+		hintsOutput, ok := outputs["_hints"]
+		if ok {
+			hints := hintsOutput.Value.(map[string]interface{})
+			for key, value := range hints {
+				str, ok := value.(string)
+				if ok {
+					complete.Hints[key] = str
+				}
+			}
+		}
+		delete(outputs, "_hints")
+
+		for key, value := range outputs {
+			complete.Outputs[key] = value.Value
 		}
 	}()
+
+	slog.Info("running stack command", "cmd", input.Command)
 	switch input.Command {
 	case "up":
 		_, err = stack.Up(ctx,

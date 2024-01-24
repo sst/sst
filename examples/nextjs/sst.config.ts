@@ -19,10 +19,5 @@ export default $config({
       //      },
       link: [StripeKey],
     });
-
-    return {
-      siteURL: site.url,
-      value: StripeKey.value,
-    };
   },
 });

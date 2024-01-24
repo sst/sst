@@ -39,4 +39,6 @@ declare global {
         }>
     >
   >;
+
+  export const $dev: boolean;
 }

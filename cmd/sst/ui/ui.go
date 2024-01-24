@@ -9,7 +9,6 @@ import (
 
 	"github.com/briandowns/spinner"
 	"github.com/fatih/color"
-	"github.com/pulumi/pulumi/sdk/v3/go/auto"
 	"github.com/pulumi/pulumi/sdk/v3/go/common/apitype"
 	"github.com/sst/ion/pkg/project"
 )
@@ -17,6 +16,7 @@ import (
 type ProgressMode string
 
 const (
+	ProgressModeDev     ProgressMode = "dev"
 	ProgressModeDeploy  ProgressMode = "deploy"
 	ProgressModeRemove  ProgressMode = "remove"
 	ProgressModeRefresh ProgressMode = "refresh"
@@ -29,46 +29,30 @@ type UI struct {
 	pending     map[string]string
 	dedupe      map[string]bool
 	timing      map[string]time.Time
-	outputs     auto.OutputMap
 	hints       map[string]string
-	errors      []errorStatus
-	complete    bool
 	footer      string
-}
-
-type errorStatus struct {
-	Error string
-	URN   string
 }
 
 func New(mode ProgressMode) *UI {
 	result := &UI{
-		spinner:     spinner.New(spinner.CharSets[14], 100*time.Millisecond),
-		mode:        mode,
-		hasProgress: false,
-		hints:       map[string]string{},
-		pending:     map[string]string{},
-		dedupe:      map[string]bool{},
-		timing:      map[string]time.Time{},
-		outputs:     auto.OutputMap{},
+		spinner: spinner.New(spinner.CharSets[14], 100*time.Millisecond),
+		mode:    mode,
 	}
-	if mode == ProgressModeRemove {
-		result.spinner.Suffix = "  Removing..."
-	}
-	if mode == ProgressModeDeploy {
-		result.spinner.Suffix = "  Deploying..."
-	}
-	if mode == ProgressModeRefresh {
-		result.spinner.Suffix = "  Refreshing..."
-	}
-
+	result.Reset()
 	return result
+}
+
+func (u *UI) Reset() {
+	u.hasProgress = false
+	u.hints = map[string]string{}
+	u.pending = map[string]string{}
+	u.dedupe = map[string]bool{}
+	u.timing = map[string]time.Time{}
 }
 
 func (u *UI) Trigger(evt *project.StackEvent) {
 	if evt.SummaryEvent != nil {
 		u.spinner.Suffix = "  Finalizing..."
-		u.complete = true
 	}
 
 	if evt.StdOutEvent != nil {
@@ -259,9 +243,6 @@ func (u *UI) Trigger(evt *project.StackEvent) {
 				Label:   "Error",
 				Message: msg,
 			})
-			u.errors = append(u.errors, errorStatus{
-				Error: msg,
-			})
 		}
 
 		if evt.DiagnosticEvent.Severity == "info" {
@@ -277,66 +258,60 @@ func (u *UI) Trigger(evt *project.StackEvent) {
 		}
 	}
 
-	if evt.OutputsEvent != nil {
-		u.outputs = evt.OutputsEvent
+	if evt.CompleteEvent != nil {
+		u.spinner.Disable()
+		defer fmt.Println()
+		if u.hasProgress {
+			fmt.Println()
+		}
+		if len(evt.CompleteEvent.Errors) == 0 && evt.CompleteEvent.Finished {
+			color.New(color.FgGreen, color.Bold).Print("✔")
+			color.New(color.FgWhite, color.Bold).Println("  Complete")
+			if len(evt.CompleteEvent.Hints) > 0 {
+				for k, v := range evt.CompleteEvent.Hints {
+					splits := strings.Split(k, "::")
+					color.New(color.FgHiBlack).Print("   ")
+					color.New(color.FgHiBlack, color.Bold).Print(splits[len(splits)-1] + ": ")
+					color.New(color.FgWhite).Println(v)
+				}
+			}
+			if len(evt.CompleteEvent.Outputs) > 0 {
+				if len(evt.CompleteEvent.Hints) > 0 {
+					color.New(color.FgHiBlack).Println("   ---")
+				}
+				for k, v := range evt.CompleteEvent.Outputs {
+					color.New(color.FgHiBlack).Print("   ")
+					color.New(color.FgHiBlack, color.Bold).Print(k + ": ")
+					color.New(color.FgWhite).Println(v)
+				}
+			}
+			if u.footer != "" {
+				fmt.Println()
+				fmt.Println(u.footer)
+			}
+			return
+		}
+
+		if len(evt.CompleteEvent.Errors) == 0 && !evt.CompleteEvent.Finished {
+			color.New(color.FgRed, color.Bold).Print("\n❌")
+			color.New(color.FgWhite, color.Bold).Println(" Interrupted")
+			return
+		}
+
+		color.New(color.FgRed, color.Bold).Print("\n❌")
+		color.New(color.FgWhite, color.Bold).Println(" Failed")
+
+		for _, status := range evt.CompleteEvent.Errors {
+			if status.URN != "" {
+				color.New(color.FgRed, color.Bold).Println("   " + formatURN(status.URN))
+			}
+			color.New(color.FgWhite).Println(status.Message)
+		}
 	}
 }
 
 func (u *UI) Interrupt() {
 	u.spinner.Suffix = "  Interrupting..."
-}
-
-func (u *UI) Finish() {
-	u.spinner.Disable()
-	if u.hasProgress {
-		fmt.Println()
-	}
-	if len(u.errors) == 0 && u.complete {
-		color.New(color.FgGreen, color.Bold).Print("✔")
-		color.New(color.FgWhite, color.Bold).Println("  Complete")
-		hints, hasHints := u.outputs["_hints"]
-		if hasHints {
-			for k, v := range hints.Value.(map[string]interface{}) {
-				splits := strings.Split(k, "::")
-				color.New(color.FgHiBlack).Print("   ")
-				color.New(color.FgHiBlack, color.Bold).Print(splits[len(splits)-1] + ": ")
-				color.New(color.FgWhite).Println(v)
-			}
-		}
-		delete(u.outputs, "_links")
-		delete(u.outputs, "_hints")
-		if len(u.outputs) > 0 {
-			if hasHints && len(hints.Value.(map[string]interface{})) > 0 {
-				color.New(color.FgHiBlack).Println("   ---")
-			}
-			for k, v := range u.outputs {
-				color.New(color.FgHiBlack).Print("   ")
-				color.New(color.FgHiBlack, color.Bold).Print(k + ": ")
-				color.New(color.FgWhite).Println(v.Value)
-			}
-		}
-		if u.footer != "" {
-			fmt.Println()
-			fmt.Println(u.footer)
-		}
-		return
-	}
-
-	if len(u.errors) == 0 && !u.complete {
-		color.New(color.FgRed, color.Bold).Print("\n❌")
-		color.New(color.FgWhite, color.Bold).Println(" Interrupted")
-		return
-	}
-
-	color.New(color.FgRed, color.Bold).Print("\n❌")
-	color.New(color.FgWhite, color.Bold).Println(" Failed")
-
-	for _, status := range u.errors {
-		if status.URN != "" {
-			color.New(color.FgRed, color.Bold).Println("   " + formatURN(status.URN))
-		}
-		color.New(color.FgWhite).Println(status.Error)
-	}
 }
 
 func (u *UI) Destroy() {
@@ -366,6 +341,18 @@ func (u *UI) Changes() {
 
 func (u *UI) Start() {
 	u.spinner.Start()
+	if u.mode == ProgressModeRemove {
+		u.spinner.Suffix = "  Removing..."
+	}
+	if u.mode == ProgressModeDev {
+		u.spinner.Suffix = "  Deploying..."
+	}
+	if u.mode == ProgressModeDeploy {
+		u.spinner.Suffix = "  Deploying..."
+	}
+	if u.mode == ProgressModeRefresh {
+		u.spinner.Suffix = "  Refreshing..."
+	}
 }
 
 func formatURN(urn string) string {
