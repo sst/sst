@@ -421,10 +421,10 @@ export class SsrFunction extends Construct implements SSTConstruct {
       path.join(bundle, handlerDir, `${newHandlerName}.mjs`),
       streaming
         ? [
-            `export const ${newHandlerFunction} = awslambda.streamifyResponse(async (event, context) => {`,
+            `export const ${newHandlerFunction} = awslambda.streamifyResponse(async (event, responseStream, context) => {`,
             ...injections,
             `  const { ${oldHandlerFunction}: rawHandler} = await import("./${oldHandlerName}.mjs");`,
-            `  return rawHandler(event, context);`,
+            `  return rawHandler(event, responseStream);`,
             `});`,
           ].join("\n")
         : [

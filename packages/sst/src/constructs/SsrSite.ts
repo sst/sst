@@ -757,10 +757,7 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
       // Create warmer function
       const warmer = new CdkFunction(self, "WarmerFunction", {
         description: "SSR warmer",
-        code: Code.fromAsset(
-          plan.warmerConfig?.function ??
-            path.join(__dirname, "../support/ssr-warmer")
-        ),
+        code: Code.fromAsset(path.join(__dirname, "../support/ssr-warmer")),
         runtime: Runtime.NODEJS_18_X,
         handler: "index.handler",
         timeout: CdkDuration.minutes(15),
@@ -774,8 +771,7 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
 
       // Create cron job
       new Rule(self, "WarmerRule", {
-        schedule:
-          plan.warmerConfig?.schedule ?? Schedule.rate(CdkDuration.minutes(5)),
+        schedule: Schedule.rate(CdkDuration.minutes(5)),
         targets: [new LambdaFunction(warmer, { retryAttempts: 0 })],
       });
 
@@ -1024,7 +1020,7 @@ function handler(event) {
         ...cdk?.server,
         streaming: props.streaming,
         injections: [
-          ...(warm ? [useServerFunctionWarmingInjection()] : []),
+          ...(warm ? [useServerFunctionWarmingInjection(props.streaming)] : []),
           ...(props.injections || []),
         ],
         prefetchSecrets: regional?.prefetchSecrets,
@@ -1267,15 +1263,24 @@ function handler(event) {
       return singletonOriginRequestPolicy;
     }
 
-    function useServerFunctionWarmingInjection() {
-      return `
-if (event.type === "warmer") {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve({ serverId: "server-" + Math.random().toString(36).slice(2, 8) });
-    }, event.delay);
-  });
-}`;
+    function useServerFunctionWarmingInjection(streaming?: boolean) {
+      return [
+        `if (event.type === "warmer") {`,
+        `  const p = new Promise((resolve) => {`,
+        `    setTimeout(() => {`,
+        `      resolve({ serverId: "server-" + Math.random().toString(36).slice(2, 8) });`,
+        `    }, event.delay);`,
+        `  });`,
+        ...(streaming
+          ? [
+              `  const response = await p;`,
+              `  responseStream.write(JSON.stringify(response));`,
+              `  responseStream.end();`,
+              `  return;`,
+            ]
+          : [`  return p;`]),
+        `}`,
+      ].join("\n");
     }
 
     function getS3FileOptions(copy: S3OriginConfig["copy"]) {
@@ -1595,10 +1600,6 @@ if (event.type === "warmer") {
       allowedHeaders?: string[];
     };
     buildId?: string;
-    warmerConfig?: {
-      function: string;
-      schedule?: Schedule;
-    };
   }) {
     return input;
   }

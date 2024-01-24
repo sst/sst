@@ -409,9 +409,6 @@ export class NextjsSite extends SsrSite {
         allowedHeaders: DEFAULT_CACHE_POLICY_ALLOWED_HEADERS,
       },
       buildId: this.getBuildId(),
-      warmerConfig: {
-        function: path.join(sitePath, ".open-next", "warmer-function"),
-      },
     });
   }
 
