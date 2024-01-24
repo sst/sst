@@ -78,6 +78,19 @@ export interface NextjsSiteProps extends Omit<SsrSiteProps, "nodejs"> {
      */
     memorySize?: number | Size;
   };
+  openNext?: {
+    /**
+     * Specify a custom build output path for cases when running OpenNext from
+     * a monorepo with decentralized build output. This is passed to the
+     * `--build-output-path` flag of OpenNext.
+     * @default Default build output path
+     * @example
+     * ```js
+     * buildOutputPath: "dist/apps/example-app"
+     * ```
+     */
+    buildOutputPath?: string;
+  };
   experimental?: {
     /**
      * Enable streaming. Currently an experimental feature in OpenNext.
@@ -213,6 +226,9 @@ export class NextjsSite extends SsrSite {
         "--yes",
         `open-next@${props?.openNextVersion ?? DEFAULT_OPEN_NEXT_VERSION}`,
         "build",
+        ...(props.openNext?.buildOutputPath
+          ? ["--build-output-path", props.openNext.buildOutputPath]
+          : []),
         ...(props.experimental.streaming ? ["--streaming"] : []),
         ...(props.experimental.disableDynamoDBCache
           ? ["--dangerously-disable-dynamodb-cache"]
