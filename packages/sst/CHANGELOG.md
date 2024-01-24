@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.39.9
+
+### Patch Changes
+
+- [`83d013b35`](https://github.com/sst/sst/commit/83d013b354ac9bf40031642b09c9ae0e18e007e2) Thanks [@fwang](https://github.com/fwang)! - NextjsSite: fix warming when streaming is enabled
+
 ## 2.39.8
 
 ### Patch Changes
