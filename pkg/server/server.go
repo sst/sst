@@ -21,21 +21,23 @@ type Server struct {
 	watchedFiles map[string]bool
 	subscribers  []chan *Event
 	state        *State
+	lastEvent    *Event
 }
 
 type State struct {
 	App      string
 	Stage    string
+	Links    map[string]interface{}
 	Deployed bool
 }
 
 type Event struct {
 	project.StackEvent
-	StateEvent *StateEvent `json:"stateEvent,omitempty"`
+	StateEvent *StateEvent
 }
 
 type StateEvent struct {
-	State *State `json:"state"`
+	State *State
 }
 
 func resolveServerFile(cfgPath, stage string) string {
@@ -93,6 +95,9 @@ func (s *Server) Start(parentContext context.Context) error {
 				StateEvent: &StateEvent{
 					State: s.state,
 				},
+			}
+			if s.lastEvent != nil {
+				events <- s.lastEvent
 			}
 		}()
 	loop:
@@ -161,18 +166,22 @@ func (s *Server) Start(parentContext context.Context) error {
 			Dev:     true,
 			OnEvent: func(event *project.StackEvent) {
 				s.broadcast(&Event{StackEvent: *event})
+
+				if event.CompleteEvent != nil {
+					s.lastEvent = &Event{StackEvent: *event}
+					s.state.Links = event.CompleteEvent.Links
+					s.state.Deployed = true
+					s.broadcast(&Event{
+						StateEvent: &StateEvent{
+							State: s.state,
+						},
+					})
+				}
 			},
 			OnFiles: func(files []string) {
 				for _, file := range files {
 					s.watchedFiles[file] = true
 				}
-			},
-		})
-
-		s.state.Deployed = true
-		s.broadcast(&Event{
-			StateEvent: &StateEvent{
-				State: s.state,
 			},
 		})
 

@@ -50,8 +50,10 @@ type ConcurrentUpdateEvent struct{}
 
 type ConcurrentUpdateError struct{}
 
+type Links map[string]interface{}
+
 type CompleteEvent struct {
-	Links    map[string]interface{}
+	Links    Links
 	Outputs  map[string]interface{}
 	Hints    map[string]string
 	Errors   []Error

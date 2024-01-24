@@ -11,8 +11,8 @@ import (
 	"os/signal"
 	"os/user"
 	"path/filepath"
+	"reflect"
 	"strings"
-	"sync"
 
 	//"syscall"
 	"time"
@@ -225,25 +225,65 @@ func main() {
 						return err
 					}
 
-					deployWaiter := sync.WaitGroup{}
-					deployWaiter.Add(1)
+					restartTarget := make(chan project.Links)
+					runOnce := false
+					go func() {
+						if !hasTarget {
+							return
+						}
+						links := <-restartTarget
 
-					if hasTarget {
-						go func() {
-							deployWaiter.Wait()
-							cmd := exec.CommandContext(
-								ctx,
+						for {
+							cmd := exec.Command(
 								args[0],
 								args[1:]...,
 							)
+
+							cmd.Env = append(cmd.Env,
+								os.Environ()...,
+							)
+
+							for resource, value := range links {
+								jsonValue, _ := json.Marshal(value)
+								envVar := fmt.Sprintf("SST_RESOURCE_%s=%s", resource, jsonValue)
+								cmd.Env = append(cmd.Env, envVar)
+							}
+
 							cmd.Stdin = os.Stdin
 							cmd.Stdout = os.Stdout
 							cmd.Stderr = os.Stderr
 							cmd.Start()
-							cmd.Wait()
-							cancel()
-						}()
-					}
+							runOnce = true
+							processExit := make(chan interface{})
+
+							go func() {
+								cmd.Wait()
+								processExit <- true
+							}()
+
+						loop:
+							for {
+								select {
+								case <-ctx.Done():
+									cmd.Process.Signal(os.Interrupt)
+									return
+								case <-processExit:
+									cancel()
+								case nextLinks := <-restartTarget:
+									for key, value := range nextLinks {
+										oldValue := links[key]
+										if !reflect.DeepEqual(oldValue, value) {
+											cmd.Process.Signal(os.Interrupt)
+											cmd.Wait()
+											fmt.Println("Restarting...")
+											break loop
+										}
+									}
+									continue
+								}
+							}
+						}
+					}()
 
 					state := &server.State{}
 					u := ui.New(ui.ProgressModeDev)
@@ -251,7 +291,7 @@ func main() {
 						CfgPath: cfgPath,
 						Stage:   stage,
 						OnEvent: func(event server.Event) {
-							if state.Deployed == false || !hasTarget {
+							if !hasTarget || !runOnce {
 								defer u.Trigger(&event.StackEvent)
 								if event.StackEvent.PreludeEvent != nil {
 									u.Reset()
@@ -260,27 +300,36 @@ func main() {
 								}
 							}
 
+							if event.PreludeEvent != nil && hasTarget && state.Deployed {
+								fmt.Println()
+								fmt.Println("🔥 SST is deploying, run sst dev to view progress 🔥")
+								return
+							}
+
 							if event.CompleteEvent != nil {
-								if state.Deployed == false {
-									if !event.CompleteEvent.Finished || len(event.CompleteEvent.Errors) > 0 {
+								if hasTarget {
+									if !runOnce && (!event.CompleteEvent.Finished || len(event.CompleteEvent.Errors) > 0) {
 										cancel()
+										return
 									}
+
+									restartTarget <- event.CompleteEvent.Links
 								}
 							}
 
 							if event.StateEvent != nil {
 								next := event.StateEvent.State
-								if state.App == "" {
+								defer func() {
+									state = next
+								}()
+
+								if state.App == "" && next.App != "" {
 									u.Header(
 										version,
 										next.App,
 										next.Stage,
 									)
 								}
-								if !state.Deployed && next.Deployed && hasTarget {
-									deployWaiter.Done()
-								}
-								state = event.StateEvent.State
 							}
 						},
 					})
