@@ -49,18 +49,6 @@ export interface NextjsSiteProps extends Omit<SsrSiteProps, "nodejs"> {
    * ```
    */
   openNextVersion?: string;
-
-  /**
-   * Specify a custom build output path for cases when running OpenNext from
-   * a monorepo with decentralized build output. 
-   * @default ""
-   * @example
-   * ```js
-   * buildOutputPath: "dist/apps/example-app"
-   * ```
-   */
-  buildOutputPath?: string;
-
   /**
    * How the logs are stored in CloudWatch
    * - "combined" - Logs from all routes are stored in the same log group.
@@ -89,6 +77,19 @@ export interface NextjsSiteProps extends Omit<SsrSiteProps, "nodejs"> {
      * ```
      */
     memorySize?: number | Size;
+  };
+  openNext?: {
+    /**
+     * Specify a custom build output path for cases when running OpenNext from
+     * a monorepo with decentralized build output. This is passed to the
+     * `--build-output-path` flag of OpenNext.
+     * @default Default build output path
+     * @example
+     * ```js
+     * buildOutputPath: "dist/apps/example-app"
+     * ```
+     */
+    buildOutputPath?: string;
   };
   experimental?: {
     /**
@@ -208,7 +209,6 @@ export class NextjsSite extends SsrSite {
   constructor(scope: Construct, id: string, rawProps?: NextjsSiteProps) {
     const props = {
       logging: rawProps?.logging ?? "per-route",
-      buildOutputPath: rawProps?.buildOutputPath ?? false,
       experimental: {
         streaming: rawProps?.experimental?.streaming ?? false,
         disableDynamoDBCache:
@@ -226,7 +226,9 @@ export class NextjsSite extends SsrSite {
         "--yes",
         `open-next@${props?.openNextVersion ?? DEFAULT_OPEN_NEXT_VERSION}`,
         "build",
-        ...(props.buildOutputPath ? ["--build-output-path", props.buildOutputPath] : []),
+        ...(props.openNext?.buildOutputPath
+          ? ["--build-output-path", props.openNext.buildOutputPath]
+          : []),
         ...(props.experimental.streaming ? ["--streaming"] : []),
         ...(props.experimental.disableDynamoDBCache
           ? ["--dangerously-disable-dynamodb-cache"]

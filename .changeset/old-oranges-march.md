@@ -1,5 +1,5 @@
 ---
-"sst": minor
+"sst": patch
 ---
 
-sst/NextjsSite: new option to specify custom build output path
+NextjsSite: new option to specify custom build output path
