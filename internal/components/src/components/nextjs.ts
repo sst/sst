@@ -159,13 +159,12 @@ export class Nextjs extends Component {
     //}
 
     let _routes: Output<
-      {
+      ({
         route: string;
-        regex: string;
         logGroupPath: string;
         sourcemapPath?: string;
         sourcemapKey?: string;
-      }[]
+      } & ({ regexMatch: string } | { prefixMatch: string }))[]
     >;
     let routesManifest: Output<{
       dynamicRoutes: { page: string; regex: string }[];
@@ -205,7 +204,7 @@ export class Nextjs extends Component {
     handleMissingSourcemap(); // TODO implement
 
     if (isPerRouteLoggingEnabled()) {
-      disableDefaultLogging();
+      //disableDefaultLogging();
       uploadSourcemaps();
     }
 
@@ -479,11 +478,17 @@ export class Nextjs extends Component {
               return `
 if (event.rawPath) {
   const routeData = ${JSON.stringify(
-    routes.map(({ regex, logGroupPath }) => ({
-      regex,
+    // @ts-expect-error
+    routes.map(({ regexMatch, prefixMatch, logGroupPath }) => ({
+      regex: regexMatch,
+      prefix: prefixMatch,
       logGroupPath,
     }))
-  )}.find(({ regex }) => event.rawPath.match(new RegExp(regex)));
+  )}.find(({ regex, prefix }) => {
+    if (regex) return event.rawPath.match(new RegExp(regex));
+    if (prefix) return event.rawPath === prefix || (event.rawPath === prefix + "/");
+    return false;
+  });
   if (routeData) {
     console.log("::sst::" + JSON.stringify({
       action:"log.split",
@@ -669,37 +674,69 @@ if (event.rawPath) {
           appPathRoutesManifest,
           appPathsManifest,
         ]) => {
+          const dynamicAndStaticRoutes = [
+            ...routesManifest.dynamicRoutes,
+            ...routesManifest.staticRoutes,
+          ].map(({ page, regex }) => {
+            const cwRoute = buildCloudWatchRouteName(page);
+            const cwHash = buildCloudWatchRouteHash(page);
+            const sourcemapPath =
+              getSourcemapForAppRoute(page) || getSourcemapForPagesRoute(page);
+            return {
+              route: page,
+              regexMatch: regex,
+              logGroupPath: `/${cwHash}${cwRoute}`,
+              sourcemapPath: sourcemapPath,
+              sourcemapKey: cwHash,
+            };
+          });
+
+          // Some app routes are not in the routes manifest, so we need to add them
+          // ie. app/api/route.ts => IS NOT in the routes manifest
+          //     app/items/[slug]/route.ts => IS in the routes manifest (dynamicRoutes)
+          const appRoutes = Object.values(appPathRoutesManifest)
+            .filter(
+              (page) =>
+                routesManifest.dynamicRoutes.every(
+                  (route) => route.page !== page
+                ) &&
+                routesManifest.staticRoutes.every(
+                  (route) => route.page !== page
+                )
+            )
+            .map((page) => {
+              const cwRoute = buildCloudWatchRouteName(page);
+              const cwHash = buildCloudWatchRouteHash(page);
+              const sourcemapPath = getSourcemapForAppRoute(page);
+              return {
+                route: page,
+                prefixMatch: page,
+                logGroupPath: `/${cwHash}${cwRoute}`,
+                sourcemapPath: sourcemapPath,
+                sourcemapKey: cwHash,
+              };
+            });
+
+          const dataRoutes = (routesManifest.dataRoutes || []).map(
+            ({ page, dataRouteRegex }) => {
+              const routeDisplayName = page.endsWith("/")
+                ? `/_next/data/BUILD_ID${page}index.json`
+                : `/_next/data/BUILD_ID${page}.json`;
+              const cwRoute = buildCloudWatchRouteName(routeDisplayName);
+              const cwHash = buildCloudWatchRouteHash(page);
+              return {
+                route: routeDisplayName,
+                regexMatch: dataRouteRegex,
+                logGroupPath: `/${cwHash}${cwRoute}`,
+              };
+            }
+          );
+
           return [
-            ...[...routesManifest.dynamicRoutes, ...routesManifest.staticRoutes]
-              .map(({ page, regex }) => {
-                const cwRoute = buildCloudWatchRouteName(page);
-                const cwHash = buildCloudWatchRouteHash(page);
-                const sourcemapPath =
-                  getSourcemapForAppRoute(page) ||
-                  getSourcemapForPagesRoute(page);
-                return {
-                  route: page,
-                  regex,
-                  logGroupPath: `/${cwHash}${cwRoute}`,
-                  sourcemapPath: sourcemapPath,
-                  sourcemapKey: cwHash,
-                };
-              })
-              .sort((a, b) => a.route.localeCompare(b.route)),
-            ...(routesManifest.dataRoutes || [])
-              .map(({ page, dataRouteRegex }) => {
-                const routeDisplayName = page.endsWith("/")
-                  ? `/_next/data/BUILD_ID${page}index.json`
-                  : `/_next/data/BUILD_ID${page}.json`;
-                const cwRoute = buildCloudWatchRouteName(routeDisplayName);
-                const cwHash = buildCloudWatchRouteHash(page);
-                return {
-                  route: routeDisplayName,
-                  regex: dataRouteRegex,
-                  logGroupPath: `/${cwHash}${cwRoute}`,
-                };
-              })
-              .sort((a, b) => a.route.localeCompare(b.route)),
+            ...[...dynamicAndStaticRoutes, ...appRoutes].sort((a, b) =>
+              a.route.localeCompare(b.route)
+            ),
+            ...dataRoutes.sort((a, b) => a.route.localeCompare(b.route)),
           ];
 
           function getSourcemapForAppRoute(page: string) {
@@ -795,6 +832,16 @@ if (event.rawPath) {
     }
 
     function useAppPathRoutesManifest() {
+      // Example
+      // {
+      //   "/_not-found": "/_not-found",
+      //   "/page": "/",
+      //   "/favicon.ico/route": "/favicon.ico",
+      //   "/api/route": "/api",                    <- app/api/route.js
+      //   "/api/sub/route": "/api/sub",            <- app/api/sub/route.js
+      //   "/items/[slug]/route": "/items/[slug]"   <- app/items/[slug]/route.js
+      // }
+
       if (appPathRoutesManifest) return appPathRoutesManifest;
 
       appPathRoutesManifest = outputPath.apply((outputPath) => {
