@@ -1,5 +1,15 @@
 # @serverless-stack/cli2
 
+## 2.39.10
+
+### Patch Changes
+
+- [#3630](https://github.com/sst/sst/pull/3630) [`953a1ac70`](https://github.com/sst/sst/commit/953a1ac7026d242c04b7ef3220236a2119ae0599) Thanks [@mathisobadia](https://github.com/mathisobadia)! - Job: Allow setting nodejs version of container image
+
+- [`c8ac970af`](https://github.com/sst/sst/commit/c8ac970af8634f0304af87066a622396dd04a3cb) Thanks [@fwang](https://github.com/fwang)! - Bootstrap: bump version to trigger CDK custom resource runtime update
+
+- [#3516](https://github.com/sst/sst/pull/3516) [`0d9cf1172`](https://github.com/sst/sst/commit/0d9cf1172638b3f92634982bac4155a04d5995de) Thanks [@morficus](https://github.com/morficus)! - NextjsSite: new option to specify custom build output path
+
 ## 2.39.9
 
 ### Patch Changes
