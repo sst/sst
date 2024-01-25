@@ -14,6 +14,7 @@ import * as aws from "@pulumi/aws";
 import { Size, toMBs } from "./util/size.js";
 import { Function } from "./function.js";
 import {
+  Plan,
   SsrSiteArgs,
   buildApp,
   createBucket,
@@ -25,7 +26,7 @@ import {
 import { Cdn } from "./cdn.js";
 import { bootstrap } from "./helpers/aws/bootstrap.js";
 import { Bucket } from "./bucket.js";
-import { Component } from "./component.js";
+import { Component, transform } from "./component.js";
 import { sanitizeToPascalCase } from "./helpers/naming.js";
 import { Hint } from "./hint.js";
 
@@ -72,11 +73,11 @@ export interface NextjsArgs extends SsrSiteArgs {
      * @example
      * ```js
      * imageOptimization: {
-     *   memorySize: "512 MB",
+     *   memory: "512 MB",
      * }
      * ```
      */
-    memorySize?: number | Size;
+    memory?: Size;
   };
   experimental?: {
     /**
@@ -139,7 +140,7 @@ export class Nextjs extends Component {
   constructor(
     name: string,
     args?: NextjsArgs,
-    opts?: ComponentResourceOptions,
+    opts?: ComponentResourceOptions
   ) {
     super("sst:sst:Nextjs", name, args, opts);
 
@@ -197,7 +198,7 @@ export class Nextjs extends Component {
         outputPath,
         access,
         bucket,
-        plan,
+        plan
       );
     const serverFunction = ssrFunctions[0] ?? Object.values(edgeFunctions)[0];
 
@@ -218,7 +219,7 @@ export class Nextjs extends Component {
       all([this.cdn.domainUrl, this.cdn.url]).apply(([domainUrl, url]) => {
         // TODO remove
         return domainUrl ?? url;
-      }),
+      })
     );
 
     //app.registerTypes(this);
@@ -252,7 +253,7 @@ export class Nextjs extends Component {
             ...(experimental.disableIncrementalCache
               ? ["--dangerously-disable-incremental-cache"]
               : []),
-          ].join(" "),
+          ].join(" ")
       );
     }
 
@@ -296,52 +297,36 @@ export class Nextjs extends Component {
                 ...(revalidationQueueArn
                   ? [
                       {
-                        name: "revalidation-queue",
-                        policy: JSON.stringify({
-                          Statement: [
-                            {
-                              Effect: "Allow",
-                              Action: [
-                                "sqs:SendMessage",
-                                "sqs:GetQueueAttributes",
-                                "sqs:GetQueueUrl",
-                              ],
-                              Resource: [revalidationQueueArn],
-                            },
-                          ],
-                        }),
+                        actions: [
+                          "sqs:SendMessage",
+                          "sqs:GetQueueAttributes",
+                          "sqs:GetQueueUrl",
+                        ],
+                        resources: [revalidationQueueArn],
                       },
                     ]
                   : []),
                 ...(revalidationTableArn
                   ? [
                       {
-                        name: "revalidation-table",
-                        policy: JSON.stringify({
-                          Statement: [
-                            {
-                              Effect: "Allow",
-                              Action: [
-                                "dynamodb:BatchGetItem",
-                                "dynamodb:GetRecords",
-                                "dynamodb:GetShardIterator",
-                                "dynamodb:Query",
-                                "dynamodb:GetItem",
-                                "dynamodb:Scan",
-                                "dynamodb:ConditionCheckItem",
-                                "dynamodb:BatchWriteItem",
-                                "dynamodb:PutItem",
-                                "dynamodb:UpdateItem",
-                                "dynamodb:DeleteItem",
-                                "dynamodb:DescribeTable",
-                              ],
-                              Resource: [
-                                revalidationTableArn,
-                                `${revalidationTableArn}/*`,
-                              ],
-                            },
-                          ],
-                        }),
+                        actions: [
+                          "dynamodb:BatchGetItem",
+                          "dynamodb:GetRecords",
+                          "dynamodb:GetShardIterator",
+                          "dynamodb:Query",
+                          "dynamodb:GetItem",
+                          "dynamodb:Scan",
+                          "dynamodb:ConditionCheckItem",
+                          "dynamodb:BatchWriteItem",
+                          "dynamodb:PutItem",
+                          "dynamodb:UpdateItem",
+                          "dynamodb:DeleteItem",
+                          "dynamodb:DescribeTable",
+                        ],
+                        resources: [
+                          revalidationTableArn,
+                          `${revalidationTableArn}/*`,
+                        ],
                       },
                     ]
                   : []),
@@ -357,145 +342,138 @@ export class Nextjs extends Component {
                 : undefined,
             };
 
-            return validatePlan({
-              edge: edge ?? false,
-              cloudFrontFunctions: {
-                serverCfFunction: {
-                  injections: [useCloudFrontFunctionHostHeaderInjection()],
-                },
-              },
-              edgeFunctions: edge
-                ? { server: { function: serverConfig } }
-                : undefined,
-              origins: {
-                ...(edge
-                  ? {}
-                  : {
-                      server: {
-                        type: "function",
-                        function: serverConfig,
-                        streaming: experimental?.streaming,
-                        injections: isPerRouteLoggingEnabled()
-                          ? [useServerFunctionPerRouteLoggingInjection()]
-                          : [],
-                      },
-                    }),
-                imageOptimizer: {
-                  type: "image-optimization-function",
-                  function: {
-                    description: "Next.js image optimizer",
-                    handler: "index.handler",
-                    bundle: path.join(
-                      outputPath,
-                      ".open-next",
-                      "image-optimization-function",
-                    ),
-                    runtime: "nodejs18.x",
-                    architecture: "arm64",
-                    environment: {
-                      BUCKET_NAME: bucketName,
-                      BUCKET_KEY_PREFIX: "_assets",
-                    },
-                    memorySize: imageOptimization?.memorySize
-                      ? typeof imageOptimization.memorySize === "string"
-                        ? toMBs(imageOptimization.memorySize)
-                        : imageOptimization.memorySize
-                      : 1536,
+            return validatePlan(
+              transform(args?.transform?.plan, {
+                edge: edge ?? false,
+                cloudFrontFunctions: {
+                  serverCfFunction: {
+                    injections: [useCloudFrontFunctionHostHeaderInjection()],
                   },
                 },
-                s3: {
-                  type: "s3",
-                  originPath: "_assets",
-                  copy: [
-                    {
-                      from: ".open-next/assets",
-                      to: "_assets",
-                      cached: true,
-                      versionedSubDir: "_next",
+                edgeFunctions: edge
+                  ? { server: { function: serverConfig } }
+                  : undefined,
+                origins: {
+                  ...(edge
+                    ? {}
+                    : {
+                        server: {
+                          type: "function",
+                          function: serverConfig,
+                          streaming: experimental?.streaming,
+                          injections: isPerRouteLoggingEnabled()
+                            ? [useServerFunctionPerRouteLoggingInjection()]
+                            : [],
+                        },
+                      }),
+                  imageOptimizer: {
+                    type: "image-optimization-function",
+                    function: {
+                      description: "Next.js image optimizer",
+                      handler: "index.handler",
+                      bundle: path.join(
+                        outputPath,
+                        ".open-next",
+                        "image-optimization-function"
+                      ),
+                      runtime: "nodejs18.x",
+                      architecture: "arm64",
+                      environment: {
+                        BUCKET_NAME: bucketName,
+                        BUCKET_KEY_PREFIX: "_assets",
+                      },
+                      memory: imageOptimization?.memory ?? "1536 MB",
                     },
-                    { from: ".open-next/cache", to: "_cache", cached: false },
-                  ],
+                  },
+                  s3: {
+                    type: "s3",
+                    originPath: "_assets",
+                    copy: [
+                      {
+                        from: ".open-next/assets",
+                        to: "_assets",
+                        cached: true,
+                        versionedSubDir: "_next",
+                      },
+                      { from: ".open-next/cache", to: "_cache", cached: false },
+                    ],
+                  },
                 },
-              },
-              behaviors: [
-                ...(edge
-                  ? [
-                      {
-                        cacheType: "server",
-                        cfFunction: "serverCfFunction",
-                        edgeFunction: "server",
-                        origin: "s3",
-                      } as const,
-                      {
-                        cacheType: "server",
-                        pattern: "api/*",
-                        cfFunction: "serverCfFunction",
-                        edgeFunction: "server",
-                        origin: "s3",
-                      } as const,
-                      {
-                        cacheType: "server",
-                        pattern: "_next/data/*",
-                        cfFunction: "serverCfFunction",
-                        edgeFunction: "server",
-                        origin: "s3",
-                      } as const,
-                    ]
-                  : [
-                      {
-                        cacheType: "server",
-                        cfFunction: "serverCfFunction",
-                        origin: "server",
-                      } as const,
-                      {
-                        cacheType: "server",
-                        pattern: "api/*",
-                        cfFunction: "serverCfFunction",
-                        origin: "server",
-                      } as const,
-                      {
-                        cacheType: "server",
-                        pattern: "_next/data/*",
-                        cfFunction: "serverCfFunction",
-                        origin: "server",
-                      } as const,
-                    ]),
-                {
-                  cacheType: "server",
-                  pattern: "_next/image*",
-                  cfFunction: "serverCfFunction",
-                  origin: "imageOptimizer",
+                behaviors: [
+                  ...(edge
+                    ? [
+                        {
+                          cacheType: "server",
+                          cfFunction: "serverCfFunction",
+                          edgeFunction: "server",
+                          origin: "s3",
+                        } as const,
+                        {
+                          cacheType: "server",
+                          pattern: "api/*",
+                          cfFunction: "serverCfFunction",
+                          edgeFunction: "server",
+                          origin: "s3",
+                        } as const,
+                        {
+                          cacheType: "server",
+                          pattern: "_next/data/*",
+                          cfFunction: "serverCfFunction",
+                          edgeFunction: "server",
+                          origin: "s3",
+                        } as const,
+                      ]
+                    : [
+                        {
+                          cacheType: "server",
+                          cfFunction: "serverCfFunction",
+                          origin: "server",
+                        } as const,
+                        {
+                          cacheType: "server",
+                          pattern: "api/*",
+                          cfFunction: "serverCfFunction",
+                          origin: "server",
+                        } as const,
+                        {
+                          cacheType: "server",
+                          pattern: "_next/data/*",
+                          cfFunction: "serverCfFunction",
+                          origin: "server",
+                        } as const,
+                      ]),
+                  {
+                    cacheType: "server",
+                    pattern: "_next/image*",
+                    cfFunction: "serverCfFunction",
+                    origin: "imageOptimizer",
+                  },
+                  // create 1 behaviour for each top level asset file/folder
+                  ...fs
+                    .readdirSync(path.join(outputPath, ".open-next/assets"))
+                    .map(
+                      (item) =>
+                        ({
+                          cacheType: "static",
+                          pattern: fs
+                            .statSync(
+                              path.join(outputPath, ".open-next/assets", item)
+                            )
+                            .isDirectory()
+                            ? `${item}/*`
+                            : item,
+                          origin: "s3",
+                        }) as const
+                    ),
+                ],
+                serverCachePolicy: {
+                  allowedHeaders: DEFAULT_CACHE_POLICY_ALLOWED_HEADERS,
                 },
-                // create 1 behaviour for each top level asset file/folder
-                ...fs
-                  .readdirSync(path.join(outputPath, ".open-next/assets"))
-                  .map(
-                    (item) =>
-                      ({
-                        cacheType: "static",
-                        pattern: fs
-                          .statSync(
-                            path.join(outputPath, ".open-next/assets", item),
-                          )
-                          .isDirectory()
-                          ? `${item}/*`
-                          : item,
-                        origin: "s3",
-                      }) as const,
-                  ),
-              ],
-              cachePolicyAllowedHeaders: DEFAULT_CACHE_POLICY_ALLOWED_HEADERS,
-              buildId: fs
-                .readFileSync(path.join(outputPath, ".next/BUILD_ID"))
-                .toString(),
-              warmerConfig: {
-                function: path.join(
-                  outputPath,
-                  ".open-next",
-                  "warmer-function",
-                ),
-              },
-            });
+                buildId: fs
+                  .readFileSync(path.join(outputPath, ".next/BUILD_ID"))
+                  .toString(),
+              })
+            );
 
             function useServerFunctionPerRouteLoggingInjection() {
               return `
@@ -504,7 +482,7 @@ if (event.rawPath) {
     routes.map(({ regex, logGroupPath }) => ({
       regex,
       logGroupPath,
-    })),
+    }))
   )}.find(({ regex }) => event.rawPath.match(new RegExp(regex)));
   if (routeData) {
     console.log("::sst::" + JSON.stringify({
@@ -516,8 +494,8 @@ if (event.rawPath) {
   }
 }`;
             }
-          },
-        ),
+          }
+        )
       );
     }
 
@@ -532,7 +510,7 @@ if (event.rawPath) {
             fifoQueue: true,
             receiveWaitTimeSeconds: 20,
           },
-          { parent },
+          { parent }
         );
         const consumer = new Function(
           `${name}Revalidator`,
@@ -540,7 +518,7 @@ if (event.rawPath) {
             description: "Next.js revalidator",
             handler: "index.handler",
             bundle: outputPath.apply((outputPath) =>
-              path.join(outputPath, ".open-next", "revalidation-function"),
+              path.join(outputPath, ".open-next", "revalidation-function")
             ),
             runtime: "nodejs18.x",
             timeout: "30 seconds",
@@ -557,7 +535,7 @@ if (event.rawPath) {
               },
             ],
           },
-          { parent },
+          { parent }
         );
         new aws.lambda.EventSourceMapping(
           `${name}RevalidatorEventSource`,
@@ -566,7 +544,7 @@ if (event.rawPath) {
             eventSourceArn: queue.arn,
             batchSize: 5,
           },
-          { parent },
+          { parent }
         );
         return queue;
       });
@@ -601,20 +579,20 @@ if (event.rawPath) {
                 },
               ],
             },
-            { parent },
+            { parent }
           );
 
           const dynamodbProviderPath = path.join(
             outputPath,
             ".open-next",
-            "dynamodb-provider",
+            "dynamodb-provider"
           );
           if (fs.existsSync(dynamodbProviderPath)) {
             // Provision 128MB of memory for every 4,000 prerendered routes,
             // 1GB per 40,000, up to 10GB. This tends to use ~70% of the memory
             // provisioned when testing.
             const prerenderedRouteCount = Object.keys(
-              prerenderManifest?.routes ?? {},
+              prerenderManifest?.routes ?? {}
             ).length;
             const seedFn = new Function(
               `${name}RevalidationSeeder`,
@@ -626,7 +604,7 @@ if (event.rawPath) {
                 timeout: "900 seconds",
                 memory: `${Math.min(
                   10240,
-                  Math.max(128, Math.ceil(prerenderedRouteCount / 4000) * 128),
+                  Math.max(128, Math.ceil(prerenderedRouteCount / 4000) * 128)
                 )} MB`,
                 permissions: [
                   {
@@ -642,7 +620,7 @@ if (event.rawPath) {
                   CACHE_DYNAMO_TABLE: table.name,
                 },
               },
-              { parent },
+              { parent }
             );
             new aws.lambda.Invocation(
               `${name}RevalidationSeed`,
@@ -653,11 +631,11 @@ if (event.rawPath) {
                 },
                 input: JSON.stringify({}),
               },
-              { parent },
+              { parent }
             );
           }
           return table;
-        },
+        }
       );
     }
 
@@ -670,7 +648,7 @@ if (event.rawPath) {
         });
         for (const file of files) {
           fs.rmSync(
-            path.join(outputPath, ".open-next", "server-function", file),
+            path.join(outputPath, ".open-next", "server-function", file)
           );
         }
       });
@@ -735,7 +713,7 @@ if (event.rawPath) {
             //   "/favicon.ico/route": "/favicon.ico"
             // }
             const appPathRoute = Object.keys(appPathRoutesManifest).find(
-              (key) => appPathRoutesManifest[key] === page,
+              (key) => appPathRoutesManifest[key] === page
             );
             if (!appPathRoute) return;
 
@@ -756,7 +734,7 @@ if (event.rawPath) {
               outputPath,
               ".next",
               "server",
-              `${filePath}.map`,
+              `${filePath}.map`
             );
             if (!fs.existsSync(sourcemapPath)) return;
 
@@ -785,13 +763,13 @@ if (event.rawPath) {
               outputPath,
               ".next",
               "server",
-              `${filePath}.map`,
+              `${filePath}.map`
             );
             if (!fs.existsSync(sourcemapPath)) return;
 
             return sourcemapPath;
           }
-        },
+        }
       );
 
       return _routes;
@@ -810,7 +788,7 @@ if (event.rawPath) {
         } catch (e) {
           console.error(e);
           throw new Error(
-            `Failed to read routes data from ".next/routes-manifest.json" for the "${name}" site.`,
+            `Failed to read routes data from ".next/routes-manifest.json" for the "${name}" site.`
           );
         }
       });
@@ -823,7 +801,7 @@ if (event.rawPath) {
         try {
           const content = fs
             .readFileSync(
-              path.join(outputPath, ".next/app-path-routes-manifest.json"),
+              path.join(outputPath, ".next/app-path-routes-manifest.json")
             )
             .toString();
           return JSON.parse(content) as Record<string, string>;
@@ -841,7 +819,7 @@ if (event.rawPath) {
         try {
           const content = fs
             .readFileSync(
-              path.join(outputPath, ".next/server/app-paths-manifest.json"),
+              path.join(outputPath, ".next/server/app-paths-manifest.json")
             )
             .toString();
           return JSON.parse(content) as Record<string, string>;
@@ -859,7 +837,7 @@ if (event.rawPath) {
         try {
           const content = fs
             .readFileSync(
-              path.join(outputPath, ".next/server/pages-manifest.json"),
+              path.join(outputPath, ".next/server/pages-manifest.json")
             )
             .toString();
           return JSON.parse(content) as Record<string, string>;
@@ -877,7 +855,7 @@ if (event.rawPath) {
         try {
           const content = fs
             .readFileSync(
-              path.join(outputPath, ".next/prerender-manifest.json"),
+              path.join(outputPath, ".next/prerender-manifest.json")
             )
             .toString();
           prerenderManifest = JSON.parse(content);
@@ -926,7 +904,7 @@ if (event.rawPath) {
             ]
           }`,
         },
-        { parent },
+        { parent }
       );
       new aws.iam.RolePolicyAttachment(
         `${name}DisableLoggingPolicyAttachment`,
@@ -934,7 +912,7 @@ if (event.rawPath) {
           policyArn: policy.arn,
           role: serverFunction.nodes.function.role,
         },
-        { parent },
+        { parent }
       );
     }
 
@@ -949,14 +927,14 @@ if (event.rawPath) {
             `${name}Sourcemap${sanitizeToPascalCase(sourcemapKey)}`,
             {
               bucket: output($app.providers?.aws?.region!).apply((region) =>
-                bootstrap.forRegion(region),
+                bootstrap.forRegion(region)
               ),
               source: new asset.FileAsset(sourcemapPath),
               key: serverFunction!.nodes.function.arn.apply((arn) =>
-                path.posix.join("sourcemaps", arn, sourcemapKey),
+                path.posix.join("sourcemaps", arn, sourcemapKey)
               ),
             },
-            { parent, retainOnDelete: true },
+            { parent, retainOnDelete: true }
           );
         });
       });

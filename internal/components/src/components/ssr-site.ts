@@ -22,6 +22,7 @@ import { Bucket } from "./bucket.js";
 import { BucketFile, BucketFiles } from "./providers/bucket-files.js";
 import { sanitizeToPascalCase } from "./helpers/naming.js";
 import { Link } from "./link.js";
+import { Transform } from "./component.js";
 
 type CloudFrontFunctionConfig = { injections: string[] };
 type EdgeFunctionConfig = { function: Unwrap<FunctionArgs> };
@@ -278,6 +279,9 @@ export interface SsrSiteArgs {
      */
     paths?: Input<"none" | "all" | "versioned" | string[]>;
   }>;
+  transform?: {
+    plan?: Transform<Plan>;
+  };
 }
 
 export function prepare(args: SsrSiteArgs) {
@@ -729,7 +733,9 @@ function handler(event) {
           })),
           streaming: props.streaming,
           injections: output(props.injections).apply((injections) => [
-            ...(args.warm ? [useServerFunctionWarmingInjection()] : []),
+            ...(args.warm
+              ? [useServerFunctionWarmingInjection(props.streaming)]
+              : []),
             ...(injections || []),
           ]),
           link: output(args.link).apply((link) => [
@@ -872,7 +878,7 @@ function handler(event) {
               headersConfig: {
                 headerBehavior: "whitelist",
                 headers: {
-                  items: plan.cachePolicyAllowedHeaders || [],
+                  items: plan.serverCachePolicy?.allowedHeaders ?? [],
                 },
               },
               queryStringsConfig: {
@@ -887,15 +893,24 @@ function handler(event) {
       return singletonCachePolicy;
     }
 
-    function useServerFunctionWarmingInjection() {
-      return `
-if (event.type === "warmer") {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve({ serverId: "server-" + Math.random().toString(36).slice(2, 8) });
-    }, event.delay);
-  });
-}`;
+    function useServerFunctionWarmingInjection(streaming?: boolean) {
+      return [
+        `if (event.type === "warmer") {`,
+        `  const p = new Promise((resolve) => {`,
+        `    setTimeout(() => {`,
+        `      resolve({ serverId: "server-" + Math.random().toString(36).slice(2, 8) });`,
+        `    }, event.delay);`,
+        `  });`,
+        ...(streaming
+          ? [
+              `  const response = await p;`,
+              `  responseStream.write(JSON.stringify(response));`,
+              `  responseStream.end();`,
+              `  return;`,
+            ]
+          : [`  return p;`]),
+        `}`,
+      ].join("\n");
     }
 
     function createServerFunctionForDev() {
@@ -1019,7 +1034,15 @@ if (event.type === "warmer") {
         `${name}Warmer`,
         {
           description: `${name} warmer`,
-          bundle: path.join(__dirname, "../support/ssr-warmer"),
+          bundle: path.join(
+            __dirname,
+            "..",
+            "src",
+            "components",
+            "handlers",
+            "ssr-warmer",
+            "index.handler"
+          ),
           runtime: "nodejs20.x",
           handler: "index.handler",
           timeout: "900 seconds",
@@ -1200,7 +1223,9 @@ export function validatePlan<
     edgeFunction?: keyof EdgeFunctions;
   }[];
   errorResponses?: aws.types.input.cloudfront.DistributionCustomErrorResponse;
-  cachePolicyAllowedHeaders?: string[];
+  serverCachePolicy?: {
+    allowedHeaders?: string[];
+  };
   buildId?: string;
   warmerConfig?: {
     function: string;
