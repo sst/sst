@@ -23,6 +23,7 @@ import { Size, toMBs } from "./util/size.js";
 import { Component } from "./component.js";
 import { Link } from "./link.js";
 import { VisibleError } from "./error.js";
+import { Warp } from "./warp.js";
 
 const RETENTION = {
   "1 day": 1,
@@ -465,6 +466,17 @@ export class Function
     const logGroup = createLogGroup();
     const fnUrl = createUrl();
 
+    if ($dev) {
+      Warp.register({
+        functionID: name,
+        links: output(linkData).apply((input) =>
+          input.map((item) => item.name),
+        ),
+        runtime,
+        properties: all([args.nodejs]).apply(([nodejs]) => nodejs || {}),
+      });
+    }
+
     this.function = fn;
     this.role = role;
     this.fnUrl = fnUrl;
@@ -500,7 +512,11 @@ export class Function
     }
 
     function normalizeEnvironment() {
-      return output(args.environment).apply((environment) => environment ?? {});
+      return output(args.environment).apply((environment) => {
+        const result = environment ?? {};
+        if ($dev) result.SST_FUNCTION_ID = name;
+        return result;
+      });
     }
 
     function normalizeStreaming() {
@@ -575,7 +591,7 @@ export class Function
     }
 
     function buildLinkData() {
-      if (!args.link) return [];
+      if (!args.link) return output([]);
       return output(args.link).apply((links) => {
         const linkData = Link.build(links);
         return linkData;

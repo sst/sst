@@ -300,7 +300,7 @@ func main() {
 								}
 							}
 
-							if event.PreludeEvent != nil && hasTarget && state.Deployed {
+							if event.PreludeEvent != nil && hasTarget && runOnce {
 								fmt.Println()
 								fmt.Println("🔥 SST is deploying, run sst dev to view progress 🔥")
 								return

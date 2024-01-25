@@ -52,8 +52,18 @@ type ConcurrentUpdateError struct{}
 
 type Links map[string]interface{}
 
+type WarpDefinition struct {
+	FunctionID string                 `json:"functionID"`
+	Runtime    string                 `json:"runtime"`
+	Properties map[string]interface{} `json:"properties"`
+	Links      []string               `json:"links"`
+}
+
+type Warps map[string]WarpDefinition
+
 type CompleteEvent struct {
 	Links    Links
+	Warps    Warps
 	Outputs  map[string]interface{}
 	Hints    map[string]string
 	Errors   []Error
@@ -238,7 +248,8 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 	defer eventlog.Close()
 
 	complete := &CompleteEvent{
-		Links:    map[string]interface{}{},
+		Links:    Links{},
+		Warps:    Warps{},
 		Hints:    map[string]string{},
 		Outputs:  map[string]interface{}{},
 		Errors:   []Error{},
@@ -278,6 +289,7 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 	}()
 
 	defer func() {
+		slog.Info("stack command complete")
 		defer input.OnEvent(&StackEvent{CompleteEvent: complete})
 
 		outputs, _ := stack.Outputs(ctx)
@@ -309,6 +321,18 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 			}
 		}
 		delete(outputs, "_hints")
+
+		warpsOutput, ok := outputs["_warps"]
+		if ok {
+			warps := warpsOutput.Value.(map[string]interface{})
+			for key, value := range warps {
+				data, _ := json.Marshal(value)
+				var definition WarpDefinition
+				json.Unmarshal(data, &definition)
+				complete.Warps[key] = definition
+			}
+		}
+		delete(outputs, "_warps")
 
 		for key, value := range outputs {
 			complete.Outputs[key] = value.Value
