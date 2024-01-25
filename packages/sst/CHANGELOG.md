@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.39.11
+
+### Patch Changes
+
+- [`4f2302921`](https://github.com/sst/sst/commit/4f23029218869fc25a7ec9c49cfe44349c07ced7) Thanks [@fwang](https://github.com/fwang)! - NextjsSite: support per-route logging for Route Handlers
+
 ## 2.39.10
 
 ### Patch Changes
