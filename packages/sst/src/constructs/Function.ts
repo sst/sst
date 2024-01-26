@@ -948,22 +948,9 @@ export class Function extends CDKFunction implements SSTConstruct {
         ...props,
         ...(props.runtime === "container"
           ? {
-              code: Code.fromAssetImage(props.handler!, {
-                ...(architecture?.dockerPlatform
-                  ? { platform: Platform.custom(architecture.dockerPlatform) }
-                  : {}),
-                ...(props.container?.cmd ? { cmd: props.container.cmd } : {}),
-                ...(props.container?.file
-                  ? { file: props.container.file }
-                  : {}),
-                ...(props.container?.buildArgs
-                  ? { buildArgs: props.container.buildArgs }
-                  : {}),
-                exclude: [".sst/dist", ".sst/artifacts"],
-                ignoreMode: IgnoreMode.GLOB,
-              }),
-              handler: CDKHandler.FROM_IMAGE,
-              runtime: CDKRuntime.FROM_IMAGE,
+              code: Code.fromInline("export function placeholder() {}"),
+              handler: "index.placeholder",
+              runtime: CDKRuntime.NODEJS_18_X,
               layers: undefined,
             }
           : {
@@ -989,8 +976,6 @@ export class Function extends CDKFunction implements SSTConstruct {
             `➜  Building the container image for the "${this.node.id}" function...`
           );
 
-        const project = useProject();
-
         // Build function
         const result = await useRuntimeHandlers().build(
           this.node.addr,
@@ -1006,9 +991,33 @@ export class Function extends CDKFunction implements SSTConstruct {
           );
         }
 
-        // No need to update code if runtime is container
-        if (props.runtime === "container") return;
+        // Update function code for container
+        const cfnFunction = this.node.defaultChild as CfnFunction;
+        if (props.runtime === "container") {
+          const code = Code.fromAssetImage(props.handler!, {
+            ...(architecture?.dockerPlatform
+              ? { platform: Platform.custom(architecture.dockerPlatform) }
+              : {}),
+            ...(props.container?.cmd ? { cmd: props.container.cmd } : {}),
+            ...(props.container?.file ? { file: props.container.file } : {}),
+            ...(props.container?.buildArgs
+              ? { buildArgs: props.container.buildArgs }
+              : {}),
+            exclude: [".sst/dist", ".sst/artifacts"],
+            ignoreMode: IgnoreMode.GLOB,
+          });
+          const codeConfig = code.bind(this);
+          cfnFunction.packageType = "Image";
+          cfnFunction.code = {
+            imageUri: codeConfig.image?.imageUri,
+          };
+          delete cfnFunction.runtime;
+          delete cfnFunction.handler;
+          code.bindToResource(cfnFunction);
+          return;
+        }
 
+        // Update function code for non-container
         if (result.sourcemap) {
           const data = await fs.readFile(result.sourcemap);
           await fs.writeFile(result.sourcemap, zlib.gzipSync(data));
@@ -1024,7 +1033,6 @@ export class Function extends CDKFunction implements SSTConstruct {
         this.missingSourcemap = !result.sourcemap;
 
         // Update code
-        const cfnFunction = this.node.defaultChild as CfnFunction;
         const code = AssetCode.fromAsset(result.out);
         const codeConfig = code.bind(this);
 
