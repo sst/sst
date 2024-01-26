@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.39.12
+
+### Patch Changes
+
+- [`ecba06be8`](https://github.com/sst/sst/commit/ecba06be80e99a8b064cf65718b6a188537e640e) Thanks [@fwang](https://github.com/fwang)! - Function: fix build hook run after CDK creates artifacts folder for container runtime
+
 ## 2.39.11
 
 ### Patch Changes
