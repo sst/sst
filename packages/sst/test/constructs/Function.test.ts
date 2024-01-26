@@ -249,15 +249,16 @@ test("runtime: container", async () => {
 test("runtime: container: invalid file", async () => {
   const app = await createApp();
   const stack = new Stack(app, "stack");
-  expect(() => {
-    new Function(stack, "Function", {
-      runtime: "container",
-      handler: "test/constructs/container-function",
-      container: {
-        file: "Dockerfile.garbage",
-      },
-    });
-  }).toThrow(/Cannot find file/);
+  new Function(stack, "Function", {
+    runtime: "container",
+    handler: "test/constructs/container-function",
+    container: {
+      file: "Dockerfile.garbage",
+    },
+  });
+  await expect(async () => {
+    await app.finish();
+  }).rejects.toThrow(/no such file/);
 });
 
 test("runtime: invalid", async () => {
