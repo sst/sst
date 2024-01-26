@@ -78,7 +78,7 @@ new Table(stack, "Notes", {
 
 Enable DynamoDB Streams and add consumers.
 
-```js {6-10}
+```js {7-10}
 new Table(stack, "Notes", {
   fields: {
     noteId: "string",
