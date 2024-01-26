@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.39.13
+
+### Patch Changes
+
+- [`b4a826ae3`](https://github.com/sst/sst/commit/b4a826ae312bed164365c561cfbfa221092373a2) Thanks [@fwang](https://github.com/fwang)! - SsrSite: handle s3 upload rate limit error
+
 ## 2.39.12
 
 ### Patch Changes
