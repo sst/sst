@@ -1,9 +1,10 @@
 import { ComponentResourceOptions, Input, all, output } from "@pulumi/pulumi";
 import * as aws from "@pulumi/aws";
-import { DnsValidatedCertificate } from "./dns-validated-certificate";
-import { Bucket } from "./bucket";
-import { Component } from "./component";
-import { sanitizeToPascalCase } from "./helpers/naming";
+import { DnsValidatedCertificate } from "./dns-validated-certificate.js";
+import { Bucket } from "./bucket.js";
+import { Component } from "./component.js";
+import { sanitizeToPascalCase } from "./helpers/naming.js";
+import { useProvider } from "./helpers/aws/provider.js";
 
 /**
  * Properties to configure an HTTPS Redirect
@@ -59,7 +60,7 @@ export class HttpsRedirect extends Component {
         ),
         zoneId: args.zoneId,
       },
-      { parent }
+      { parent, provider: useProvider("us-east-1") }
     );
 
     const bucket = new Bucket(`${name}Bucket`, {}, { parent });
