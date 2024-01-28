@@ -52,6 +52,7 @@ import {
   Size as CDKSize,
   Duration as CDKDuration,
   IgnoreMode,
+  DockerCacheOption,
   CustomResource,
 } from "aws-cdk-lib/core";
 import { Effect, Policy, PolicyStatement, Role } from "aws-cdk-lib/aws-iam";
@@ -90,6 +91,28 @@ export type Runtime = keyof typeof supportedRuntimes;
 export type FunctionInlineDefinition = string | Function;
 export type FunctionDefinition = string | Function | FunctionProps;
 export interface FunctionUrlCorsProps extends functionUrlCors.CorsProps {}
+export interface FunctionDockerBuildCacheProps extends DockerCacheOption {}
+
+export interface FunctionDockerBuildProps {
+  /**
+   * Cache from options to pass to the `docker build` command.
+   * @default - no cache from args are passed
+   * @example
+   * ```js
+   * cacheFrom: [{type: "gha"}],
+   * ```
+   */
+  cacheFrom?: FunctionDockerBuildCacheProps[];
+  /**
+   * Cache to options to pass to the `docker build` command.
+   * @default - no cache to args are passed
+   * @example
+   * ```js
+   * cacheTo: {type: "gha"},
+   * ```
+   */
+  cacheTo?: FunctionDockerBuildCacheProps;
+}
 
 export interface FunctionHooks {
   /**
@@ -620,6 +643,11 @@ export interface PythonProps {
    * your own build processes, and you are doing this for the sake of build optimization.
    */
   noDocker?: boolean;
+
+  /**
+   * Build options to pass to the docker build command.
+   */
+  dockerBuild?: FunctionDockerBuildProps;
 }
 
 /**
