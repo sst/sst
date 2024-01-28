@@ -5,7 +5,10 @@ import fs from "fs";
 import url from "url";
 import path from "path";
 import { Runtime } from "aws-cdk-lib/aws-lambda";
-import { FunctionProps } from "../../constructs/Function.js";
+import {
+  FunctionDockerBuildProps,
+  FunctionProps,
+} from "../../constructs/Function.js";
 
 import { AssetHashType, DockerImage, FileSystem } from "aws-cdk-lib/core";
 const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
@@ -86,14 +89,15 @@ export interface BundlingOptions {
 
   readonly installCommands?: string[];
 
-  readonly dockerCacheOptions?: FunctionProps["python"]["dockerCacheOptions"]
+  readonly dockerBuild?: FunctionDockerBuildProps;
 }
 
 /**
  * Produce bundled Lambda asset code
  */
 export function bundle(options: BundlingOptions & { out: string }) {
-  const { entry, runtime, architecture, outputPathSuffix, installCommands } = options;
+  const { entry, runtime, architecture, outputPathSuffix, installCommands } =
+    options;
 
   const stagedir = FileSystem.mkdtemp("python-bundling-");
   const hasDeps = stageDependencies(entry, stagedir);
@@ -123,11 +127,11 @@ export function bundle(options: BundlingOptions & { out: string }) {
       IMAGE:
         runtime.bundlingImage.image +
         // the default x86_64 doesn't need to be set explicitly
-        (architecture == "arm_64" ? ":latest-arm64" : "")
+        (architecture == "arm_64" ? ":latest-arm64" : ""),
     },
     file: dockerfile,
-    cacheFrom: options.dockerCacheOptions?.cacheFrom,
-    cacheTo: options.dockerCacheOptions?.cacheTo,
+    cacheFrom: options.dockerBuild?.cacheFrom,
+    cacheTo: options.dockerBuild?.cacheTo,
   });
 
   const outputPath = path.join(options.out, outputPathSuffix);

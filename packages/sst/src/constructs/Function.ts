@@ -91,10 +91,27 @@ export type Runtime = keyof typeof supportedRuntimes;
 export type FunctionInlineDefinition = string | Function;
 export type FunctionDefinition = string | Function | FunctionProps;
 export interface FunctionUrlCorsProps extends functionUrlCors.CorsProps {}
+export interface FunctionDockerBuildCacheProps extends DockerCacheOption {}
 
-export type DockerCacheOptions = {
-  cacheFrom: Array<DockerCacheOption>,
-  cacheTo: DockerCacheOption,
+export interface FunctionDockerBuildProps {
+  /**
+   * Cache from options to pass to the `docker build` command.
+   * @default - no cache from args are passed
+   * @example
+   * ```js
+   * cacheFrom: [{type: "gha"}],
+   * ```
+   */
+  cacheFrom?: FunctionDockerBuildCacheProps[];
+  /**
+   * Cache to options to pass to the `docker build` command.
+   * @default - no cache to args are passed
+   * @example
+   * ```js
+   * cacheTo: {type: "gha"},
+   * ```
+   */
+  cacheTo?: FunctionDockerBuildCacheProps;
 }
 
 export interface FunctionHooks {
@@ -628,21 +645,9 @@ export interface PythonProps {
   noDocker?: boolean;
 
   /**
-   * This option sets the cache settings used when building the docker image for bundling the function
-   *
-   * This, like the `noDocker` option can also speed up building Python Lambdas, but doesn't require manually
-   * accounting for installing dependencies and the like.
-   *
-   * @example
-   * ```js
-   * python: {
-   *   dockerCacheOptions: {
-   *     cacheFrom: [{type: "gha"}],
-   *     cacheTo: {type: "gha"},
-   *   }
-   * }
+   * Build options to pass to the docker build command.
    */
-  dockerCacheOptions?: DockerCacheOptions
+  dockerBuild?: FunctionDockerBuildProps;
 }
 
 /**

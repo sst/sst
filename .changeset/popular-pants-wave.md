@@ -2,4 +2,4 @@
 "sst": patch
 ---
 
-Feat: Add cache options for python bundling
+Function: Add cache options for python bundling
