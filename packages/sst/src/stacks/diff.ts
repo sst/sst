@@ -5,12 +5,12 @@ export async function diff(
   stack: CloudFormationStackArtifact,
   oldTemplate: any
 ) {
-  const { diffTemplate, formatDifferences, TemplateDiff } = await import(
+  const { fullDiff, formatDifferences, TemplateDiff } = await import(
     "@aws-cdk/cloudformation-diff"
   );
 
   // Generate diff
-  const diff = diffTemplate(oldTemplate, stack.template);
+  const diff = fullDiff(oldTemplate, stack.template);
   if (diff.isEmpty) {
     return { count: 0 };
   }

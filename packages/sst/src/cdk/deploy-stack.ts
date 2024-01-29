@@ -1,14 +1,15 @@
 import * as cxapi from "@aws-cdk/cx-api";
 import type { CloudFormation } from "aws-sdk";
-import fs from "fs/promises";
 import * as uuid from "uuid";
+import {
+  TemplateBodyParameter,
+  makeBodyParameter,
+} from "sst-aws-cdk/lib/api/util/template-body-parameter.js";
 import { addMetadataAssetsToManifest } from "sst-aws-cdk/lib/assets.js";
 import { Tag } from "sst-aws-cdk/lib/cdk-toolkit.js";
-import { debug, error, print } from "sst-aws-cdk/lib/logging.js";
-import { toYAML } from "sst-aws-cdk/lib/serialize.js";
+import { debug, print, warning } from "sst-aws-cdk/lib/logging.js";
 import { AssetManifestBuilder } from "sst-aws-cdk/lib/util/asset-manifest-builder.js";
 import { publishAssets } from "sst-aws-cdk/lib/util/asset-publishing.js";
-import { contentHash } from "sst-aws-cdk/lib/util/content-hash.js";
 import { ISDK, SdkProvider } from "sst-aws-cdk/lib/api/aws-auth/index.js";
 import { EnvironmentResources } from "sst-aws-cdk/lib/api/environment-resources.js";
 import { CfnEvaluationException } from "sst-aws-cdk/lib/api/evaluate-cloudformation-template.js";
@@ -31,11 +32,6 @@ import {
 } from "sst-aws-cdk/lib/api/util/cloudformation/stack-activity-monitor.js";
 import { blue } from "colorette";
 import { callWithRetry } from "./util.js";
-
-type TemplateBodyParameter = {
-  TemplateBody?: string;
-  TemplateURL?: string;
-};
 
 export interface DeployStackResult {
   readonly noOp: boolean;
@@ -247,8 +243,6 @@ export interface ChangeSetDeploymentMethod {
    */
   readonly changeSetName?: string;
 }
-
-const LARGE_TEMPLATE_SIZE_KB = 50;
 
 export async function deployStack(
   options: DeployStackOptions
@@ -470,6 +464,19 @@ class FullCloudFormationDeployment {
           })
           .promise();
       }
+
+      if (this.options.force) {
+        warning(
+          [
+            "You used the --force flag, but CloudFormation reported that the deployment would not make any changes.",
+            "According to CloudFormation, all resources are already up-to-date with the state in your CDK app.",
+            "",
+            "You cannot use the --force flag to get rid of changes you made in the console. Try using",
+            "CloudFormation drift detection instead: https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-stack-drift.html",
+          ].join("\n")
+        );
+      }
+
       return {
         noOp: true,
         outputs: this.cloudFormationStack.outputs,
@@ -601,19 +608,30 @@ class FullCloudFormationDeployment {
     const startTime = new Date();
 
     if (this.update) {
-      await this.cfn
-        .updateStack({
-          StackName: this.stackName,
-          ClientRequestToken: `update${this.uuid}`,
-          ...this.commonPrepareOptions(),
-          ...this.commonExecuteOptions(),
-        })
-        .promise();
-
-      if (this.options.noMonitor) return;
-      const ret = await this.monitorDeployment(startTime, undefined);
       await this.updateTerminationProtection();
-      return ret;
+
+      try {
+        await this.cfn
+          .updateStack({
+            StackName: this.stackName,
+            ClientRequestToken: `update${this.uuid}`,
+            ...this.commonPrepareOptions(),
+            ...this.commonExecuteOptions(),
+          })
+          .promise();
+      } catch (err: any) {
+        if (err.message === "No updates are to be performed.") {
+          debug("No updates are to be performed for stack %s", this.stackName);
+          return {
+            noOp: true,
+            outputs: this.cloudFormationStack.outputs,
+            stackArn: this.cloudFormationStack.stackId,
+          };
+        }
+        throw err;
+      }
+
+      return this.monitorDeployment(startTime, undefined);
     } else {
       // Take advantage of the fact that we can set termination protection during create
       const terminationProtection =
@@ -715,123 +733,6 @@ class FullCloudFormationDeployment {
       ...(shouldDisableRollback ? { DisableRollback: true } : undefined),
     };
   }
-}
-
-/**
- * Prepares the body parameter for +CreateChangeSet+.
- *
- * If the template is small enough to be inlined into the API call, just return
- * it immediately.
- *
- * Otherwise, add it to the asset manifest to get uploaded to the staging
- * bucket and return its coordinates. If there is no staging bucket, an error
- * is thrown.
- *
- * @param stack     the synthesized stack that provides the CloudFormation template
- * @param toolkitInfo information about the toolkit stack
- */
-export async function makeBodyParameter(
-  stack: cxapi.CloudFormationStackArtifact,
-  resolvedEnvironment: cxapi.Environment,
-  assetManifest: AssetManifestBuilder,
-  resources: EnvironmentResources,
-  sdk: ISDK,
-  overrideTemplate?: any
-): Promise<TemplateBodyParameter> {
-  // If the template has already been uploaded to S3, just use it from there.
-  if (stack.stackTemplateAssetObjectUrl && !overrideTemplate) {
-    return {
-      TemplateURL: restUrlFromManifest(
-        stack.stackTemplateAssetObjectUrl,
-        resolvedEnvironment,
-        sdk
-      ),
-    };
-  }
-
-  // Otherwise, pass via API call (if small) or upload here (if large)
-  const templateJson = toYAML(overrideTemplate ?? stack.template);
-
-  if (templateJson.length <= LARGE_TEMPLATE_SIZE_KB * 1024) {
-    return { TemplateBody: templateJson };
-  }
-
-  const toolkitInfo = await resources.lookupToolkit();
-  if (!toolkitInfo.found) {
-    error(
-      `The template for stack "${stack.displayName}" is ${Math.round(
-        templateJson.length / 1024
-      )}KiB. ` +
-        `Templates larger than ${LARGE_TEMPLATE_SIZE_KB}KiB must be uploaded to S3.\n` +
-        "Run the following command in order to setup an S3 bucket in this environment, and then re-deploy:\n\n",
-      blue(`\t$ cdk bootstrap ${resolvedEnvironment.name}\n`)
-    );
-
-    throw new Error(
-      'Template too large to deploy ("cdk bootstrap" is required)'
-    );
-  }
-
-  const templateHash = contentHash(templateJson);
-  const key = `cdk/${stack.id}/${templateHash}.yml`;
-
-  let templateFile = stack.templateFile;
-  if (overrideTemplate) {
-    // Add a variant of this template
-    templateFile = `${stack.templateFile}-${templateHash}.yaml`;
-    await fs.writeFile(templateFile, templateJson, { encoding: "utf-8" });
-  }
-
-  assetManifest.addFileAsset(
-    templateHash,
-    {
-      path: templateFile,
-    },
-    {
-      bucketName: toolkitInfo.bucketName,
-      objectKey: key,
-    }
-  );
-
-  const templateURL = `${toolkitInfo.bucketUrl}/${key}`;
-  debug("Storing template in S3 at:", templateURL);
-  return { TemplateURL: templateURL };
-}
-
-/**
- * Prepare a body parameter for CFN, performing the upload
- *
- * Return it as-is if it is small enough to pass in the API call,
- * upload to S3 and return the coordinates if it is not.
- */
-export async function makeBodyParameterAndUpload(
-  stack: cxapi.CloudFormationStackArtifact,
-  resolvedEnvironment: cxapi.Environment,
-  resources: EnvironmentResources,
-  sdkProvider: SdkProvider,
-  sdk: ISDK,
-  overrideTemplate?: any
-): Promise<TemplateBodyParameter> {
-  // We don't have access to the actual asset manifest here, so pretend that the
-  // stack doesn't have a pre-published URL.
-  const forceUploadStack = Object.create(stack, {
-    stackTemplateAssetObjectUrl: { value: undefined },
-  });
-
-  const builder = new AssetManifestBuilder();
-  const bodyparam = await makeBodyParameter(
-    forceUploadStack,
-    resolvedEnvironment,
-    builder,
-    resources,
-    sdk,
-    overrideTemplate
-  );
-  const manifest = builder.toManifest(stack.assembly.directory);
-  await publishAssets(manifest, sdkProvider, resolvedEnvironment, {
-    quiet: true,
-  });
-  return bodyparam;
 }
 
 export interface DestroyStackOptions {
@@ -995,48 +896,6 @@ function compareTags(a: Tag[], b: Tag[]): boolean {
   }
 
   return true;
-}
-
-/**
- * Format an S3 URL in the manifest for use with CloudFormation
- *
- * Replaces environment placeholders (which this field may contain),
- * and reformats s3://.../... urls into S3 REST URLs (which CloudFormation
- * expects)
- */
-function restUrlFromManifest(
-  url: string,
-  environment: cxapi.Environment,
-  sdk: ISDK
-): string {
-  const doNotUseMarker = "**DONOTUSE**";
-  // This URL may contain placeholders, so still substitute those.
-  url = cxapi.EnvironmentPlaceholders.replace(url, {
-    accountId: environment.account,
-    region: environment.region,
-    partition: doNotUseMarker,
-  });
-
-  // Yes, this is extremely crude, but we don't actually need this so I'm not inclined to spend
-  // a lot of effort trying to thread the right value to this location.
-  if (url.indexOf(doNotUseMarker) > -1) {
-    throw new Error(
-      "Cannot use '${AWS::Partition}' in the 'stackTemplateAssetObjectUrl' field"
-    );
-  }
-
-  const s3Url = url.match(/s3:\/\/([^/]+)\/(.*)$/);
-  if (!s3Url) {
-    return url;
-  }
-
-  // We need to pass an 'https://s3.REGION.amazonaws.com[.cn]/bucket/object' URL to CloudFormation, but we
-  // got an 's3://bucket/object' URL instead. Construct the rest API URL here.
-  const bucketName = s3Url[1];
-  const objectKey = s3Url[2];
-
-  const urlSuffix: string = sdk.getEndpointSuffix(environment.region);
-  return `https://s3.${environment.region}.${urlSuffix}/${bucketName}/${objectKey}`;
 }
 
 function suffixWithErrors(msg: string, errors?: string[]) {

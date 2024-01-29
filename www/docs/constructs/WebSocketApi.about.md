@@ -185,7 +185,7 @@ Note that you can't map `WebSocketApis` to the same domain name as an `Api` or `
 #### Importing an existing API Gateway custom domain
 
 ```js {6-12}
-import { DomainName } from "@aws-cdk/aws-apigatewayv2-alpha";
+import { DomainName } from "aws-cdk-lib/aws-apigatewayv2";
 
 new WebSocketApi(stack, "Api", {
   customDomain: {

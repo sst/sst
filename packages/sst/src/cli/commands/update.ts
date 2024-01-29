@@ -124,7 +124,7 @@ export const update = (program: Program) =>
                     return;
                   }
                   return metadata.dependencies[
-                    "@aws-cdk/aws-apigatewayv2-alpha"
+                    "@aws-cdk/aws-lambda-python-alpha"
                   ];
                 }
               })();
