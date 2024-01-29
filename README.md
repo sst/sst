@@ -8,6 +8,8 @@
 - No CDK or npm package conflicts
 - Native support for **non-AWS** providers
 
+[Read the full announcement here](https://sst.dev/blog/moving-away-from-cdk.html).
+
 _Note: Ion is currently in alpha and only supports deploying Next.js sites and L1 AWS resources. We'll be sharing docs and technical details soon._
 
 ## Installation
