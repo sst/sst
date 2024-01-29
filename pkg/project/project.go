@@ -26,7 +26,7 @@ type Project struct {
 	process   *js.Process
 	app       *App
 	backend   provider.Backend
-	providers map[string]provider.Provider
+	Providers map[string]provider.Provider
 	env       map[string]string
 
 	Stack *stack
@@ -50,6 +50,10 @@ func Discover() (string, error) {
 
 func ResolveWorkingDir(cfgPath string) string {
 	return path.Join(filepath.Dir(cfgPath), ".sst")
+}
+
+func ResolvePlatformDir(cfgPath string) string {
+	return path.Join(ResolveWorkingDir(cfgPath), "platform")
 }
 
 type ProjectConfig struct {
@@ -95,7 +99,7 @@ func New(input *ProjectConfig) (*Project, error) {
 	})
 	err = process.Eval(
 		js.EvalOptions{
-			Dir: tmp, Inject: []string{filepath.Join(tmp, "src/shim/boot.js")},
+			Dir: tmp, Inject: []string{filepath.Join(tmp, "platform/src/shim/boot.js")},
 			Define: map[string]string{
 				"$input": string(inputBytes),
 			},
@@ -152,7 +156,7 @@ console.log("~j" + JSON.stringify(mod.app({
 		proj.app.Providers["aws"] = map[string]string{}
 	}
 
-	proj.providers = map[string]provider.Provider{}
+	proj.Providers = map[string]provider.Provider{}
 	for name, args := range proj.app.Providers {
 		var p provider.Provider
 
@@ -172,10 +176,10 @@ console.log("~j" + JSON.stringify(mod.app({
 		if err != nil {
 			return nil, err
 		}
-		proj.providers[name] = p
+		proj.Providers[name] = p
 	}
 
-	proj.backend = proj.providers["aws"].(provider.Backend)
+	proj.backend = proj.Providers["aws"].(provider.Backend)
 	if err != nil {
 		return nil, err
 	}
@@ -190,6 +194,10 @@ func (p *Project) getPath(path ...string) string {
 
 func (p *Project) PathWorkingDir() string {
 	return filepath.Join(p.root, ".sst")
+}
+
+func (p *Project) PathPlatformDir() string {
+	return filepath.Join(p.PathWorkingDir(), "platform")
 }
 
 func (p *Project) PathRoot() string {

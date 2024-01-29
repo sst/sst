@@ -25,3 +25,5 @@ func NewReadableError(message string) *ReadableError {
 func (e *ReadableError) Error() string {
 	return e.Message
 }
+
+type CleanupFunc func() error

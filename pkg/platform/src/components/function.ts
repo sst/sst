@@ -466,16 +466,25 @@ export class Function
     const logGroup = createLogGroup();
     const fnUrl = createUrl();
 
+    const links = output(linkData).apply((input) =>
+      input.map((item) => item.name),
+    );
+
     if ($dev) {
       Warp.register({
         functionID: name,
-        links: output(linkData).apply((input) =>
-          input.map((item) => item.name),
-        ),
+        links,
         runtime,
         properties: all([args.nodejs]).apply(([nodejs]) => nodejs || {}),
       });
     }
+
+    all([args.handler, args.bundle, links]).apply(
+      ([handler, bundle, rawLinks]) => {
+        if (!rawLinks.length) return;
+        Link.Receiver.register(bundle || handler, links);
+      },
+    );
 
     this.function = fn;
     this.role = role;
@@ -608,6 +617,24 @@ export class Function
     }
 
     function buildHandler() {
+      if ($dev) {
+        return all([]).apply(async () => {
+          const result = await build(name, {
+            handler: path.join(
+              $cli.paths.work,
+              "src",
+              "functions",
+              "bridge",
+              "index.ts",
+            ),
+          });
+          return {
+            handler: result.handler,
+            bundle: result.out,
+          };
+        });
+      }
+
       if (args.bundle) {
         return {
           bundle: output(args.bundle),

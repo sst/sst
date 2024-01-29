@@ -3,20 +3,28 @@ package provider
 import (
 	"bytes"
 	"context"
+	"crypto/tls"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
 	"log/slog"
+	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/signer/v4"
 	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/service/iot"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/ssm"
+	MQTT "github.com/eclipse/paho.mqtt.golang"
 	"github.com/sst/ion/internal/util"
 
 	s3types "github.com/aws/aws-sdk-go-v2/service/s3/types"
@@ -348,4 +356,98 @@ func (a *AwsProvider) setPassphrase(app, stage, passphrase string) error {
 		Overwrite: aws.Bool(false),
 	})
 	return err
+}
+
+type fragment struct {
+	ID    string `json:"id"`
+	Index int    `json:"index"`
+	Count int    `json:"count"`
+	Data  string `json:"data"`
+}
+
+func (a *AwsProvider) Dev(ctx context.Context, app, stage string, events chan string) (util.CleanupFunc, error) {
+	expire := time.Hour * 24
+	from := time.Now()
+
+	slog.Info("getting endpoint")
+	iotClient := iot.NewFromConfig(a.config)
+	endpointResp, err := iotClient.DescribeEndpoint(ctx, &iot.DescribeEndpointInput{})
+	if err != nil {
+		return nil, err
+	}
+
+	originalURL, err := url.Parse(fmt.Sprintf("wss://%s/mqtt?X-Amz-Expires=%s", *endpointResp.EndpointAddress, strconv.FormatInt(int64(expire/time.Second), 10)))
+	if err != nil {
+		return nil, err
+	}
+	slog.Info("found endpoint endpoint", "url", originalURL.String())
+
+	creds, err := a.config.Credentials.Retrieve(context.Background())
+	if err != nil {
+		return nil, err
+	}
+	sessionToken := creds.SessionToken
+	creds.SessionToken = ""
+
+	signer := v4.NewSigner()
+	req := &http.Request{
+		Method: "GET",
+		URL:    originalURL,
+	}
+
+	presignedURL, _, err := signer.PresignHTTP(ctx, creds, req, "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855", "iotdevicegateway", a.config.Region, from)
+	if err != nil {
+		return nil, err
+	}
+	slog.Info("signed request", "url", presignedURL)
+	if sessionToken != "" {
+		presignedURL += "&X-Amz-Security-Token=" + url.QueryEscape(sessionToken)
+	}
+
+	opts := MQTT.NewClientOptions().AddBroker(presignedURL).SetClientID("mqtt-client-id").SetTLSConfig(&tls.Config{
+		InsecureSkipVerify: true,
+	})
+
+	mqttClient := MQTT.NewClient(opts)
+	if token := mqttClient.Connect(); token.Wait() && token.Error() != nil {
+		return nil, token.Error()
+	}
+
+	fragments := map[string]map[int]fragment{}
+	if token := mqttClient.Subscribe("/sst/#", 0, func(c MQTT.Client, m MQTT.Message) {
+		slog.Info("received message", "topic", m.Topic())
+
+		var f fragment
+		err := json.Unmarshal(m.Payload(), &f)
+		if err != nil {
+			slog.Error("error unmarshalling payload", err)
+			return
+		}
+
+		all := fragments[f.ID]
+		if all == nil {
+			all = map[int]fragment{}
+			fragments[f.ID] = all
+		}
+		all[f.Index] = f
+		if len(all) == f.Count {
+			data := ""
+			for _, item := range all {
+				data += item.Data
+			}
+			events <- data
+			return
+		}
+		fragments[f.ID] = all
+	}); token.Wait() && token.Error() != nil {
+		return nil, token.Error()
+	}
+
+	slog.Info("connected to iot")
+
+	return func() error {
+		slog.Info("cleaning up iot")
+		mqttClient.Disconnect(250)
+		return nil
+	}, nil
 }

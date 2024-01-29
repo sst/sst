@@ -5,11 +5,12 @@ import (
 	"log/slog"
 	"sync"
 
+	"github.com/sst/ion/internal/util"
 	"github.com/sst/ion/pkg/project"
 	"github.com/sst/ion/pkg/server/bus"
 )
 
-func startDeployer(ctx context.Context, p *project.Project) (CleanupFunc, error) {
+func startDeployer(ctx context.Context, p *project.Project) (util.CleanupFunc, error) {
 	trigger := make(chan any)
 	mutex := sync.RWMutex{}
 	watchedFiles := make(map[string]bool)

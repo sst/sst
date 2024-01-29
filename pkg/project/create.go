@@ -13,8 +13,7 @@ import (
 	"text/template"
 
 	jsonpatch "github.com/evanphx/json-patch/v5"
-
-	"github.com/sst/ion/internal/components"
+	"github.com/sst/ion/pkg/platform"
 )
 
 type step struct {
@@ -46,7 +45,7 @@ func Create(templateName string) error {
 	directoryName := strings.ToLower(filepath.Base(currentDirectory))
 	slog.Info("creating project", "name", directoryName)
 
-	presetBytes, err := components.Templates.ReadFile(filepath.Join("templates", templateName, "preset.json"))
+	presetBytes, err := platform.Templates.ReadFile(filepath.Join("templates", templateName, "preset.json"))
 	if err != nil {
 		return err
 	}
@@ -96,12 +95,12 @@ func Create(templateName string) error {
 			break
 
 		case "copy":
-			err = fs.WalkDir(components.Templates, filepath.Join("templates", templateName, "files"), func(path string, d fs.DirEntry, err error) error {
+			err = fs.WalkDir(platform.Templates, filepath.Join("templates", templateName, "files"), func(path string, d fs.DirEntry, err error) error {
 				if d.IsDir() {
 					return nil
 				}
 
-				src, err := components.Templates.ReadFile(path)
+				src, err := platform.Templates.ReadFile(path)
 				if err != nil {
 					return err
 				}

@@ -71,5 +71,6 @@ export async function run(program: PulumiFn) {
   outputs._links = Link.list();
   outputs._hints = Hint.list();
   outputs._warps = Warp.list();
+  outputs._receivers = Link.Receiver.list();
   return outputs;
 }

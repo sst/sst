@@ -16,8 +16,6 @@ import (
 	"github.com/sst/ion/pkg/server/bus"
 )
 
-type CleanupFunc func() error
-
 type Server struct {
 	server       *http.Server
 	project      *project.Project
@@ -144,10 +142,30 @@ func (s *Server) Start(parentContext context.Context) error {
 	go s.server.ListenAndServe()
 	defer s.server.Shutdown(ctx)
 
-	fileWatcher, _ := startFileWatcher(ctx, s.project.PathRoot())
+	dev, err := startDev(ctx, s.project)
+	if err != nil {
+		return err
+	}
+	defer dev()
+
+	for _, provider := range s.project.Providers {
+		cleanup, err := startProviderDev(ctx, s.project, provider)
+		if err != nil {
+			return err
+		}
+		defer cleanup()
+	}
+
+	fileWatcher, err := startFileWatcher(ctx, s.project.PathRoot())
+	if err != nil {
+		return err
+	}
 	defer fileWatcher()
 
 	deployer, _ := startDeployer(ctx, s.project)
+	if err != nil {
+		return err
+	}
 	defer deployer()
 
 	bus.Subscribe(ctx, func(event *project.StackEvent) {

@@ -16,6 +16,7 @@ func Publish[T Event](event T) {
 	mutex.RLock()
 	defer mutex.RUnlock()
 	t := reflect.TypeOf(event)
+	slog.Info("publishing", "type", t)
 
 	subscribers, ok := subscribers[t]
 	if !ok {
@@ -24,7 +25,6 @@ func Publish[T Event](event T) {
 	for _, subscriber := range subscribers {
 		subscriber.(func(T))(event)
 	}
-	slog.Info("published", "type", t)
 }
 
 func Subscribe[T Event](ctx context.Context, fn func(T)) {
@@ -42,6 +42,8 @@ func Subscribe[T Event](ctx context.Context, fn func(T)) {
 	slog.Info("subscribed", "type", t)
 	go func() {
 		<-ctx.Done()
+		mutex.Lock()
+		defer mutex.Unlock()
 		subscribers[t] = append(s[:index], s[index+1:]...)
 	}()
 }

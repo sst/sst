@@ -60,6 +60,11 @@ func Connect(ctx context.Context, input ConnectInput) error {
 				break
 			}
 		}
+		err = cmd.Process.Release()
+		if err != nil {
+			return err
+		}
+
 	}
 
 	resp, err := http.Get("http://" + addr + "/")

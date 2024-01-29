@@ -5,6 +5,7 @@ import (
 	"log/slog"
 
 	"github.com/fsnotify/fsnotify"
+	"github.com/sst/ion/internal/util"
 	"github.com/sst/ion/pkg/server/bus"
 )
 
@@ -12,7 +13,7 @@ type FileChangedEvent struct {
 	Path string
 }
 
-func startFileWatcher(ctx context.Context, root string) (CleanupFunc, error) {
+func startFileWatcher(ctx context.Context, root string) (util.CleanupFunc, error) {
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
 		return nil, err

@@ -17,7 +17,6 @@ export default $config({
       //        redirects: ["www.ion-next.sst.sh"],
       //        hostedZone: "sst.sh",
       //      },
-      link: [StripeKey],
     });
   },
 });

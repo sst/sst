@@ -82,4 +82,15 @@ export module Link {
       obj.prototype.getSSTAWSPermissions = cb;
     }
   }
+
+  export module Receiver {
+    let receivers: Record<string, Input<string[]>> = {};
+    export function register(directory: string, links: Input<string[]>) {
+      receivers[directory] = links;
+    }
+
+    export function list() {
+      return receivers;
+    }
+  }
 }

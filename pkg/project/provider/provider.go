@@ -2,6 +2,7 @@ package provider
 
 import (
 	"bytes"
+	"context"
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/rand"
@@ -10,24 +11,26 @@ import (
 	"io"
 	"os"
 
+	"github.com/sst/ion/internal/util"
 	"golang.org/x/exp/slog"
 )
 
 type Backend interface {
-	Lock(app string, stage string, out *os.File) error
-	Unlock(app string, stage string, in *os.File) error
-	Cancel(app string, stage string) error
+	Lock(app, stage string, out *os.File) error
+	Unlock(app, stage string, in *os.File) error
+	Cancel(app, stage string) error
 	Env() (map[string]string, error)
 
-	getData(key string, app string, stage string) (io.Reader, error)
-	putData(key string, app string, stage string, data io.Reader) error
+	getData(key, app, stage string) (io.Reader, error)
+	putData(key, app, stage string, data io.Reader) error
 
-	setPassphrase(app string, stage string, passphrase string) error
-	getPassphrase(app string, stage string) (string, error)
+	setPassphrase(app, stage string, passphrase string) error
+	getPassphrase(app, stage string) (string, error)
 }
 
 type Provider interface {
-	Init(app string, stage string, provider map[string]string) error
+	Init(app, stage string, provider map[string]string) error
+	Dev(ctx context.Context, app, stage string, events chan string) (util.CleanupFunc, error)
 }
 
 const SSM_NAME_BUCKET = "/sst/bootstrap"

@@ -5,6 +5,7 @@ declare global {
       home: string;
       root: string;
       work: string;
+      platform: string;
     };
     backend: string;
   };

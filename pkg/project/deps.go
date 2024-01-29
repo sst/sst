@@ -7,7 +7,7 @@ import (
 	"os/exec"
 	"path/filepath"
 
-	"github.com/sst/ion/internal/components"
+	"github.com/sst/ion/pkg/platform"
 )
 
 func CheckDeps(version, cfgPath string) bool {
@@ -25,8 +25,8 @@ func CheckDeps(version, cfgPath string) bool {
 func InstallDeps(version, cfgPath string) error {
 	slog.Info("installing dependencies")
 
-	workingDir := ResolveWorkingDir(cfgPath)
-	err := components.CopyTo(".", workingDir)
+	platformDir := ResolvePlatformDir(cfgPath)
+	err := platform.CopyTo(".", platformDir)
 	if err != nil {
 		return err
 	}
@@ -36,10 +36,10 @@ func InstallDeps(version, cfgPath string) error {
 		return nil
 	}
 
-	os.RemoveAll(filepath.Join(workingDir, "node_modules"))
+	os.RemoveAll(filepath.Join(platformDir, "node_modules"))
 
 	cmd := exec.Command("npm", "install")
-	cmd.Dir = workingDir
+	cmd.Dir = platformDir
 	// cmd.Stderr = os.Stderr
 	// cmd.Stdout = os.Stdout
 
@@ -48,7 +48,7 @@ func InstallDeps(version, cfgPath string) error {
 		return err
 	}
 
-	return os.WriteFile(filepath.Join(workingDir, "version"), []byte(version), 0644)
+	return os.WriteFile(filepath.Join(platformDir, "version"), []byte(version), 0644)
 }
 
 type PackageJson struct {

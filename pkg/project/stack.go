@@ -138,9 +138,10 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 		"command": input.Command,
 		"dev":     input.Dev,
 		"paths": map[string]string{
-			"home": global.ConfigDir(),
-			"root": s.project.PathRoot(),
-			"work": s.project.PathWorkingDir(),
+			"home":     global.ConfigDir(),
+			"root":     s.project.PathRoot(),
+			"work":     s.project.PathWorkingDir(),
+			"platform": s.project.PathPlatformDir(),
 		},
 		"env": env,
 	}
@@ -153,20 +154,20 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 		return err
 	}
 	buildResult, err := js.Build(js.EvalOptions{
-		Dir: s.project.PathWorkingDir(),
+		Dir: s.project.PathPlatformDir(),
 		Define: map[string]string{
 			"$app": string(appBytes),
 			"$cli": string(cliBytes),
 			"$dev": fmt.Sprintf("%v", input.Dev),
 		},
-		Inject: []string{filepath.Join(s.project.PathWorkingDir(), "src/shim/run.js")},
+		Inject: []string{filepath.Join(s.project.PathWorkingDir(), "platform/src/shim/run.js")},
 		Code: fmt.Sprintf(`
       import { run } from "%v";
       import mod from "%v/sst.config.ts";
       const result = await run(mod.run)
       export default result
     `,
-			filepath.Join(s.project.PathWorkingDir(), "src/auto/run.ts"),
+			filepath.Join(s.project.PathWorkingDir(), "platform/src/auto/run.ts"),
 			s.project.PathRoot(),
 		),
 	})
