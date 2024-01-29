@@ -193,7 +193,7 @@ function StackItem(props: { stack: StackInfo }) {
           .map((r) => (
             <Function
               key={c.addr + r.route}
-              to={`${r.fn!.stack}/${r.fn!.node}`}
+              to={`${stack.info.StackName}/${r.fn!.node}`}
             >
               <Stack space="sm">
                 <FunctionName>{r.route}</FunctionName>
