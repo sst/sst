@@ -55,7 +55,7 @@ export async function retrieve(event: RetrieveEvent) {
     exclude,
     embedding,
     event.threshold ?? 0,
-    event.count ?? 10
+    event.count ?? 10,
   );
   return {
     results: result,
@@ -93,7 +93,7 @@ async function generateEmbeddingBedrock(text?: string, image?: string) {
       modelId: MODEL,
       contentType: "application/json",
       accept: "*/*",
-    })
+    }),
   );
   const payload = JSON.parse(Buffer.from(ret.body.buffer).toString());
   return payload.embedding;
@@ -114,7 +114,7 @@ async function storeEmbedding(metadata: string, embedding: number[]) {
           typeHint: "JSON",
         },
       ],
-    })
+    }),
   );
 }
 
@@ -123,7 +123,7 @@ async function queryEmbeddings(
   exclude: string | undefined,
   embedding: number[],
   threshold: number,
-  count: number
+  count: number,
 ) {
   const score = `embedding <=> (ARRAY[${embedding.join(",")}])::vector`;
   const ret = await useClient(RDSDataClient).send(
@@ -153,7 +153,7 @@ async function queryEmbeddings(
             ]
           : []),
       ],
-    })
+    }),
   );
   return ret.records?.map((record) => ({
     metadata: JSON.parse(record[0].stringValue!),
@@ -175,6 +175,6 @@ async function removeEmbedding(include: string) {
           typeHint: "JSON",
         },
       ],
-    })
+    }),
   );
 }
