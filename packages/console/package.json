@@ -1,7 +1,7 @@
 {
   "name": "@sst/console",
   "private": true,
-  "version": "2.39.13",
+  "version": "2.40.0",
   "scripts": {
     "dev": "vite",
     "typecheck": "tsc --noEmit",

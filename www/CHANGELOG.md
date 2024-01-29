@@ -1,5 +1,11 @@
 # @serverless-stack/docs
 
+## 2.11.0
+
+### Minor Changes
+
+- [#3644](https://github.com/sst/sst/pull/3644) [`1ca805d26`](https://github.com/sst/sst/commit/1ca805d2673f25dd8790422ac1154fb3da26c91c) Thanks [@fwang](https://github.com/fwang)! - Update CDK to v2.124.0
+
 ## 2.10.1
 
 ### Patch Changes
