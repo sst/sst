@@ -1,5 +1,15 @@
 # @serverless-stack/cli2
 
+## 2.40.0
+
+### Minor Changes
+
+- [#3644](https://github.com/sst/sst/pull/3644) [`1ca805d26`](https://github.com/sst/sst/commit/1ca805d2673f25dd8790422ac1154fb3da26c91c) Thanks [@fwang](https://github.com/fwang)! - Update CDK to v2.124.0
+
+### Patch Changes
+
+- [#3586](https://github.com/sst/sst/pull/3586) [`729e5fe15`](https://github.com/sst/sst/commit/729e5fe158a01ce38da2ebbf92c214b05242367a) Thanks [@BLucky-gh](https://github.com/BLucky-gh)! - Function: Add cache options for python bundling
+
 ## 2.39.13
 
 ### Patch Changes
