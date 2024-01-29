@@ -28,8 +28,10 @@
     "openai": "4.24.7"
   },
   "devDependencies": {
+    "@aws-sdk/client-iot": "^3.501.0",
     "@tsconfig/node18": "18.2.2",
     "@types/archiver": "6.0.2",
+    "aws-iot-device-sdk": "^2.2.13",
     "prettier": "3.1.1",
     "typescript": "5.3.3"
   }

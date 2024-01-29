@@ -1,4 +1,4 @@
-// <reference path="./.sst/src/global.d.ts" />
+// <reference path="./.sst/platform/src/global.d.ts" />
 
 export default $config({
   app(input) {

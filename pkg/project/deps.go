@@ -38,7 +38,7 @@ func InstallDeps(version, cfgPath string) error {
 
 	os.RemoveAll(filepath.Join(platformDir, "node_modules"))
 
-	cmd := exec.Command("npm", "install")
+	cmd := exec.Command("npm", "install", "--omit=dev")
 	cmd.Dir = platformDir
 	// cmd.Stderr = os.Stderr
 	// cmd.Stdout = os.Stdout
