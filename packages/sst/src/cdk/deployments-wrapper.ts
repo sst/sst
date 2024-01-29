@@ -14,11 +14,12 @@ import { addMetadataAssetsToManifest } from "sst-aws-cdk/lib/assets.js";
 import { publishAssets } from "sst-aws-cdk/lib/util/asset-publishing.js";
 import { SdkProvider } from "sst-aws-cdk/lib/api/aws-auth/sdk-provider.js";
 import { AssetManifestBuilder } from "sst-aws-cdk/lib/util/asset-manifest-builder.js";
+import { makeBodyParameter } from "sst-aws-cdk/lib/api/util/template-body-parameter.js";
 import {
   Deployments,
   DeployStackOptions as PublishStackAssetsOptions,
 } from "./deployments.js";
-import { makeBodyParameter, DeployStackOptions } from "./deploy-stack.js";
+import { DeployStackOptions } from "./deploy-stack.js";
 import { lazy } from "../util/lazy.js";
 
 export async function publishDeployAssets(

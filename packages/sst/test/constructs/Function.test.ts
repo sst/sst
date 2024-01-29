@@ -19,7 +19,7 @@ import * as ec2 from "aws-cdk-lib/aws-ec2";
 import * as iam from "aws-cdk-lib/aws-iam";
 import * as sns from "aws-cdk-lib/aws-sns";
 import * as lambda from "aws-cdk-lib/aws-lambda";
-import * as apig from "@aws-cdk/aws-apigatewayv2-alpha";
+import * as apig from "aws-cdk-lib/aws-apigatewayv2";
 import {
   Api,
   WebSocketApi,

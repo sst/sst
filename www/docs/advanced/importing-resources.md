@@ -38,7 +38,7 @@ new Api(stack, "Api", {
 ### Adding routes to an existing HTTP API
 
 ```js {5-7}
-import { HttpApi } from '@aws-cdk/aws-apigatewayv2-alpha';
+import { HttpApi } from 'aws-cdk-lib/aws-apigatewayv2';
 
 new Api(stack, "Api", {
   cdk: {

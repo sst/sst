@@ -1,7 +1,10 @@
 import { Construct } from "constructs";
 import * as logs from "aws-cdk-lib/aws-logs";
-import * as cfnApig from "aws-cdk-lib/aws-apigatewayv2";
-import * as apig from "@aws-cdk/aws-apigatewayv2-alpha";
+import {
+  CfnStage,
+  WebSocketStage,
+  HttpStage,
+} from "aws-cdk-lib/aws-apigatewayv2";
 import { App } from "../App.js";
 
 export interface AccessLogProps {
@@ -54,14 +57,14 @@ const defaultWebSocketFields = [
 export function buildAccessLogData(
   scope: Construct,
   accessLog: boolean | string | AccessLogProps | undefined,
-  apiStage: apig.WebSocketStage | apig.HttpStage,
+  apiStage: WebSocketStage | HttpStage,
   isDefaultStage: boolean
 ): logs.LogGroup | undefined {
   if (accessLog === false) {
     return;
   }
 
-  const isWebSocketApi = apiStage instanceof apig.WebSocketStage;
+  const isWebSocketApi = apiStage instanceof WebSocketStage;
 
   // note: Access log configuration is not supported by L2 constructs as of CDK v1.85.0. We
   //       need to define it at L1 construct level.
@@ -107,7 +110,7 @@ export function buildAccessLogData(
   }
 
   // set access log settings
-  const cfnStage = apiStage.node.defaultChild as cfnApig.CfnStage;
+  const cfnStage = apiStage.node.defaultChild as CfnStage;
   cfnStage.accessLogSettings = { format, destinationArn };
 
   return logGroup;
