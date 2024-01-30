@@ -1,5 +1,11 @@
 # astro-sst
 
+## 2.40.1
+
+### Patch Changes
+
+- [#3647](https://github.com/sst/sst/pull/3647) [`92a8de72a`](https://github.com/sst/sst/commit/92a8de72ac1b793cf016e7cd5471a033548a1e6c) Thanks [@bayssmekanique](https://github.com/bayssmekanique)! - Astro: add client address property
+
 ## 2.40.0
 
 ## 2.39.13
