@@ -5,9 +5,12 @@ import crypto from "crypto";
 import { event } from "./event";
 
 export const Events = {
-  Created: event("todo.created", {
-    id: z.string(),
-  }),
+  Created: event(
+    "todo.created",
+    z.object({
+      id: z.string(),
+    })
+  ),
 };
 
 export async function create() {

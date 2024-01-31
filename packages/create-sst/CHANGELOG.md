@@ -1,5 +1,45 @@
 # create-sst
 
+## 2.40.1
+
+## 2.40.0
+
+### Minor Changes
+
+- [#3644](https://github.com/sst/sst/pull/3644) [`1ca805d26`](https://github.com/sst/sst/commit/1ca805d2673f25dd8790422ac1154fb3da26c91c) Thanks [@fwang](https://github.com/fwang)! - Update CDK to v2.124.0
+
+## 2.39.13
+
+## 2.39.12
+
+## 2.39.11
+
+## 2.39.10
+
+## 2.39.9
+
+## 2.39.8
+
+## 2.39.7
+
+### Patch Changes
+
+- [`2bba12c7b`](https://github.com/sst/sst/commit/2bba12c7b031f13f70bcbb03499f434db3cc554e) Thanks [@thdxr](https://github.com/thdxr)! - preset: fix events
+
+## 2.39.6
+
+## 2.39.5
+
+## 2.39.4
+
+## 2.39.3
+
+## 2.39.2
+
+## 2.39.1
+
+## 2.39.0
+
 ## 2.38.7
 
 ## 2.38.6

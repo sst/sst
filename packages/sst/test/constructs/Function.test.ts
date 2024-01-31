@@ -19,7 +19,7 @@ import * as ec2 from "aws-cdk-lib/aws-ec2";
 import * as iam from "aws-cdk-lib/aws-iam";
 import * as sns from "aws-cdk-lib/aws-sns";
 import * as lambda from "aws-cdk-lib/aws-lambda";
-import * as apig from "@aws-cdk/aws-apigatewayv2-alpha";
+import * as apig from "aws-cdk-lib/aws-apigatewayv2";
 import {
   Api,
   WebSocketApi,
@@ -249,15 +249,16 @@ test("runtime: container", async () => {
 test("runtime: container: invalid file", async () => {
   const app = await createApp();
   const stack = new Stack(app, "stack");
-  expect(() => {
-    new Function(stack, "Function", {
-      runtime: "container",
-      handler: "test/constructs/container-function",
-      container: {
-        file: "Dockerfile.garbage",
-      },
-    });
-  }).toThrow(/Cannot find file/);
+  new Function(stack, "Function", {
+    runtime: "container",
+    handler: "test/constructs/container-function",
+    container: {
+      file: "Dockerfile.garbage",
+    },
+  });
+  await expect(async () => {
+    await app.finish();
+  }).rejects.toThrow(/no such file/);
 });
 
 test("runtime: invalid", async () => {

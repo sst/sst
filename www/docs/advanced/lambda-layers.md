@@ -39,7 +39,9 @@ Say you wanted to use the [sharp package](https://www.npmjs.com/package/sharp) i
    new sst.Function(stack, "Function", {
      handler: "src/lambda.main",
      nodejs: {
-       install: ["sharp"],
+       esbuild: {
+        external: ["sharp"],
+       },
      },
      layers: [
        new lambda.LayerVersion(stack, "MyLayer", {
@@ -77,7 +79,9 @@ Say you wanted to use the [chrome-aws-lambda-layer](https://github.com/shelfio/c
    new sst.Function(stack, "Function", {
      handler: "src/lambda.main",
      nodejs: {
-       install: ["chrome-aws-lambda"],
+       esbuild: {
+        external: ["chrome-aws-lambda"],
+       },
      },
      layers: [
        lambda.LayerVersion.fromLayerVersionArn(stack, "ChromeLayer", layerArn),

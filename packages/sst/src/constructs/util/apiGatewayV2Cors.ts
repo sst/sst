@@ -1,4 +1,7 @@
-import * as apig from "@aws-cdk/aws-apigatewayv2-alpha";
+import {
+  CorsHttpMethod,
+  CorsPreflightOptions,
+} from "aws-cdk-lib/aws-apigatewayv2";
 import { Duration, toCdkDuration } from "./duration.js";
 
 export interface CorsProps {
@@ -34,7 +37,7 @@ export interface CorsProps {
    * allowMethods: ["GET", "POST"]
    * ```
    */
-  allowMethods?: (keyof typeof apig.CorsHttpMethod)[];
+  allowMethods?: (keyof typeof CorsHttpMethod)[];
   /**
    * The collection of allowed origins.
    * @default Allow all origins.
@@ -68,7 +71,7 @@ export interface CorsProps {
 
 export function buildCorsConfig(
   cors?: boolean | CorsProps
-): apig.CorsPreflightOptions | undefined {
+): CorsPreflightOptions | undefined {
   // Handle cors: false
   if (cors === false) {
     return;
@@ -84,8 +87,7 @@ export function buildCorsConfig(
     allowCredentials: cors.allowCredentials || false,
     allowHeaders: cors.allowHeaders || ["*"],
     allowMethods: (cors.allowMethods || ["ANY"]).map(
-      (method) =>
-        apig.CorsHttpMethod[method as keyof typeof apig.CorsHttpMethod]
+      (method) => CorsHttpMethod[method as keyof typeof CorsHttpMethod]
     ),
     allowOrigins: cors.allowOrigins || ["*"],
     exposeHeaders: cors.exposeHeaders,

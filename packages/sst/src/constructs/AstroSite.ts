@@ -57,7 +57,7 @@ export class AstroSite extends SsrSite {
     
   var matchedRoute = findMatch(request.uri, routeData);
   if (matchedRoute) {
-    if (!matchedRoute[1]) {
+    if (!matchedRoute[1] && !/^.*\\.[^\\/]+$/.test(request.uri)) {
       ${
         pageResolution === "file"
           ? `request.uri = request.uri === "/" ? "/index.html" : request.uri.replace(/\\/?$/, ".html");`

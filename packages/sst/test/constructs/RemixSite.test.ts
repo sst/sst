@@ -28,7 +28,6 @@ import * as route53 from "aws-cdk-lib/aws-route53";
 import { RetentionDays } from "aws-cdk-lib/aws-logs";
 import { Api, Stack, RemixSite } from "../../dist/constructs/";
 import { RemixSiteProps } from "../../dist/constructs/RemixSite";
-import { CacheControl } from "aws-cdk-lib/aws-codepipeline-actions/index.js";
 
 const sitePath = "test/constructs/remix-site";
 
@@ -1002,6 +1001,27 @@ test("cdk.server.logRetention", async () => {
   hasResource(stack, "Custom::LogRetention", {
     RetentionInDays: 30,
   });
+});
+
+test("cdk.transform: undefined", async () => {
+  const { site, stack } = await createSite({
+    // @ts-expect-error: "sstTest" is not exposed in props
+    sstTest: true,
+  });
+  countResources(stack, "AWS::CloudFront::Function", 2);
+});
+
+test("cdk.transform", async () => {
+  const { site, stack } = await createSite({
+    cdk: {
+      transform: (plan) => {
+        delete plan.cloudFrontFunctions;
+      },
+    },
+    // @ts-expect-error: "sstTest" is not exposed in props
+    sstTest: true,
+  });
+  countResources(stack, "AWS::CloudFront::Function", 0);
 });
 
 test("sst deploy inactive stack", async () => {
