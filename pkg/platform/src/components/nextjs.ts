@@ -14,7 +14,6 @@ import * as aws from "@pulumi/aws";
 import { Size, toMBs } from "./util/size.js";
 import { Function } from "./function.js";
 import {
-  Plan,
   SsrSiteArgs,
   buildApp,
   createBucket,
@@ -119,10 +118,8 @@ export interface NextjsArgs extends SsrSiteArgs {
 }
 
 /**
- * The `Nextjs` construct is a higher level CDK construct that makes it easy to create a Next.js app.
+ * The `Nextjs` component makes it easy to create a Next.js app.
  * @example
- * Deploys a Next.js app in the `my-next-app` directory.
- *
  * ```js
  * new Nextjs("Web", {
  *   path: "my-next-app/",
@@ -215,10 +212,9 @@ export class Nextjs extends Component {
     this.edge = plan.edge;
     Hint.register(
       this.urn,
-      all([this.cdn.domainUrl, this.cdn.url]).apply(([domainUrl, url]) => {
-        // TODO remove
-        return domainUrl ?? url;
-      })
+      all([this.cdn.domainUrl, this.cdn.url]).apply(
+        ([domainUrl, url]) => domainUrl ?? url
+      )
     );
 
     //app.registerTypes(this);
@@ -1027,54 +1023,6 @@ if (event.rawPath) {
       assets: this.assets,
       cdn: this.cdn,
     };
-  }
-
-  /**
-   * Attaches the given list of permissions to allow the server side
-   * rendering framework to access other AWS resources.
-   *
-   * @example
-   * ```js
-   * site.attachPermissions(["sns"]);
-   * ```
-   */
-  public attachPermissions(): void {
-    //public attachPermissions(permissions: Permissions): void {
-    //  const server = this.server || this.serverFunctionForDev;
-    //  attachPermissionsToRole(server?.role as Role, permissions);
-    //}
-  }
-
-  ///** @internal */
-  public getFunctionBinding() {
-    // TODO implement binding
-    //public getFunctionBinding(): FunctionBindingProps {
-    //  const app = this.node.root as App;
-    //  return {
-    //    clientPackage: "site",
-    //    variables: {
-    //      url: this.doNotDeploy
-    //        ? {
-    //            type: "plain",
-    //            value: this.props.dev?.url ?? "localhost",
-    //          }
-    //        : {
-    //            // Do not set real value b/c we don't want to make the Lambda function
-    //            // depend on the Site. B/c often the site depends on the Api, causing
-    //            // a CloudFormation circular dependency if the Api and the Site belong
-    //            // to different stacks.
-    //            type: "site_url",
-    //            value: this.domainUrl || this.url!,
-    //          },
-    //    },
-    //    permissions: {
-    //      "ssm:GetParameters": [
-    //        `arn:${Stack.of(this).partition}:ssm:${app.region}:${
-    //          app.account
-    //        }:parameter${getParameterPath(this, "url")}`,
-    //      ],
-    //    },
-    //  };
   }
 
   /** @internal */

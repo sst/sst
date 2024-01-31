@@ -325,7 +325,7 @@ export function buildApp(
   name: string,
   args: SsrSiteArgs,
   sitePath: Output<string>,
-  buildCommand: Output<string>
+  buildCommand?: Output<string>
 ) {
   const defaultCommand = "npm run build";
 
@@ -1222,7 +1222,7 @@ export function validatePlan<
     cfFunction?: keyof CloudFrontFunctions;
     edgeFunction?: keyof EdgeFunctions;
   }[];
-  errorResponses?: aws.types.input.cloudfront.DistributionCustomErrorResponse;
+  errorResponses?: aws.types.input.cloudfront.DistributionCustomErrorResponse[];
   serverCachePolicy?: {
     allowedHeaders?: string[];
   };
