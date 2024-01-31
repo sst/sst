@@ -44,6 +44,8 @@ type RemixSiteNormalizedProps = RemixSiteProps & SsrSiteNormalizedProps;
 export class RemixSite extends SsrSite {
   declare props: RemixSiteNormalizedProps;
 
+  private usingVite = false;
+
   constructor(scope: Construct, id: string, props?: RemixSiteProps) {
     super(scope, id, props);
   }
@@ -51,10 +53,13 @@ export class RemixSite extends SsrSite {
   protected plan() {
     const { path: sitePath, edge } = this.props;
 
-    const { handler, inject } = this.createServerLambdaBundle(
-      edge ? "edge-server.js" : "regional-server.js"
-    );
     const format = this.getServerModuleFormat();
+    const [edgeServerJs, regionalServerJs] = this.usingVite
+      ? ["edge-server-vite.js", "regional-server-vite.js"]
+      : ["edge-server.js", "regional-server.js"];
+    const { handler, inject } = this.createServerLambdaBundle(
+      edge ? edgeServerJs : regionalServerJs
+    );
     const serverConfig = {
       description: "Server handler for Remix",
       handler,
@@ -65,6 +70,13 @@ export class RemixSite extends SsrSite {
         },
       },
     };
+
+    // The path for all files that need to be in the "/" directory (static assets)
+    // is different when using Vite. These will be located in the "build/client"
+    // path of the output. It will be the "public" folder when using remix config.
+    const publicAssetsPath = this.usingVite
+      ? path.join("build", "client")
+      : "public";
 
     return this.validatePlan({
       edge: edge ?? false,
@@ -107,10 +119,10 @@ export class RemixSite extends SsrSite {
           type: "s3",
           copy: [
             {
-              from: "public",
+              from: publicAssetsPath,
               to: "",
               cached: true,
-              versionedSubDir: "build",
+              versionedSubDir: this.usingVite ? undefined : "build",
             },
           ],
         },
@@ -129,12 +141,12 @@ export class RemixSite extends SsrSite {
               origin: "regionalServer",
             },
         // create 1 behaviour for each top level asset file/folder
-        ...fs.readdirSync(path.join(sitePath, "public")).map(
+        ...fs.readdirSync(path.join(sitePath, publicAssetsPath)).map(
           (item) =>
             ({
               cacheType: "static",
               pattern: fs
-                .statSync(path.join(sitePath, "public", item))
+                .statSync(path.join(sitePath, publicAssetsPath, item))
                 .isDirectory()
                 ? `${item}/*`
                 : item,
@@ -147,6 +159,15 @@ export class RemixSite extends SsrSite {
   }
   protected getServerModuleFormat(): "cjs" | "esm" {
     const { path: sitePath } = this.props;
+
+    // Remix has two possible config formats: "remix.config.js" or "vite.config.ts/js".
+    // If using the vite format, we can short circuit the logic and just return ESM.
+    const viteConfigTsPath = path.resolve(sitePath, "vite.config.ts");
+    const viteConfigJsPath = path.resolve(sitePath, "vite.config.js");
+    if (fs.existsSync(viteConfigTsPath) || fs.existsSync(viteConfigJsPath)) {
+      this.usingVite = true;
+      return "esm";
+    }
 
     // Validate config path
     const configPath = path.resolve(sitePath, "remix.config.js");
@@ -229,8 +250,8 @@ export class RemixSite extends SsrSite {
     // Copy the Remix polyfil to the server build directory
     //
     // Note: We need to ensure that the polyfills are injected above other code that
-    // will depend on them. Importing them within the top of the lambda code
-    // doesn't appear to guarantee this, we therefore leverage ESBUild's
+    // will depend on them when not using Vite. Importing them within the top of the
+    // lambda code doesn't appear to guarantee this, we therefore leverage ESBUild's
     // `inject` option to ensure that the polyfills are injected at the top of
     // the bundle.
     const polyfillDest = path.join(buildPath, "polyfill.js");
@@ -241,7 +262,7 @@ export class RemixSite extends SsrSite {
 
     return {
       handler: path.join(buildPath, "server.handler"),
-      inject: [polyfillDest],
+      inject: this.usingVite ? [] : [polyfillDest],
     };
   }
 
