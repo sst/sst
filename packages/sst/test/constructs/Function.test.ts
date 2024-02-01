@@ -246,6 +246,28 @@ test("runtime: container", async () => {
   });
 });
 
+test("runtime: container: props", async () => {
+  const app = await createApp();
+  const stack = new Stack(app, "stack");
+  new Function(stack, "Function", {
+    runtime: "container",
+    handler: "test/constructs/container-function",    
+    container: {
+      file: "Dockerfile.garbage",
+      buildSsh: 'default',
+      cacheFrom: [{type: 'inline'}, {type: 'local', params: {src: '.', mode: 'max'}}],
+      cacheTo: {type: 'inline'},
+    },
+  });
+  await app.finish();
+  hasResource(stack, "AWS::Lambda::Function", {
+    Code: objectLike({
+      ImageUri: ANY,
+    }),
+  });
+});
+
+
 test("runtime: container: invalid file", async () => {
   const app = await createApp();
   const stack = new Stack(app, "stack");
