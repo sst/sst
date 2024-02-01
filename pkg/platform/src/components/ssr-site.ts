@@ -719,6 +719,7 @@ function handler(event) {
       const fn = new Function(
         `${name}${sanitizeToPascalCase(fnName)}`,
         {
+          description: `${name} server`,
           runtime: "nodejs18.x",
           timeout: "20 seconds",
           memory: "1024 MB",
@@ -948,6 +949,7 @@ function handler(event) {
           domain: args.domain,
           nodes: {
             distribution: {
+              comment: `${name} app`,
               origins: Object.values(origins),
               originGroups: Object.values(originGroups),
               defaultRootObject: "",
@@ -1232,10 +1234,6 @@ export function validatePlan<
     allowedHeaders?: string[];
   };
   buildId?: string;
-  warmerConfig?: {
-    function: string;
-    schedule?: string;
-  };
 }) {
   return input;
 }

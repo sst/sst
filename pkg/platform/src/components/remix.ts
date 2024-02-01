@@ -101,7 +101,6 @@ export class Remix extends Component {
           edge ? "edge-server.js" : "regional-server.js"
         );
         const serverConfig = {
-          description: "Server handler for Remix",
           handler,
           nodejs: {
             esbuild: {

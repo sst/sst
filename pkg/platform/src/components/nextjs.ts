@@ -273,7 +273,6 @@ export class Nextjs extends Component {
             { name: revalidationTableName, arn: revalidationTableArn },
           ]) => {
             const serverConfig = {
-              description: "Next.js server",
               bundle: path.join(outputPath, ".open-next", "server-function"),
               handler: "index.handler",
               environment: {
@@ -364,7 +363,7 @@ export class Nextjs extends Component {
                   imageOptimizer: {
                     type: "image-optimization-function",
                     function: {
-                      description: "Next.js image optimizer",
+                      description: `${name} image optimizer`,
                       handler: "index.handler",
                       bundle: path.join(
                         outputPath,
@@ -516,7 +515,7 @@ if (event.rawPath) {
         const consumer = new Function(
           `${name}Revalidator`,
           {
-            description: "Next.js revalidator",
+            description: `${name} ISR revalidator`,
             handler: "index.handler",
             bundle: outputPath.apply((outputPath) =>
               path.join(outputPath, ".open-next", "revalidation-function")
@@ -598,7 +597,7 @@ if (event.rawPath) {
             const seedFn = new Function(
               `${name}RevalidationSeeder`,
               {
-                description: "Next.js revalidation data seeder",
+                description: `${name} ISR revalidation data seeder`,
                 handler: "index.handler",
                 bundle: dynamodbProviderPath,
                 runtime: "nodejs18.x",

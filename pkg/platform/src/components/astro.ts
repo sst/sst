@@ -99,7 +99,6 @@ export class Astro extends Component {
           const isStatic = buildMeta.outputMode === "static";
           const edge = buildMeta.deploymentStrategy === "edge";
           const serverConfig = {
-            description: "Astro server",
             handler: path.join(outputPath, "dist", "server", "entry.handler"),
           };
           const plan: Plan = {
