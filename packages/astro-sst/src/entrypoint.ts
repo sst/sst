@@ -1,5 +1,5 @@
-import type { RouteData, SSRManifest } from "astro";
-import { ASTRO_VERSION } from "astro/dist/core/constants";
+import type { SSRManifest } from "astro";
+import { version as ASTRO_VERSION } from "astro/package.json";
 import type {
   APIGatewayProxyEventV2,
   CloudFrontRequestEvent,
