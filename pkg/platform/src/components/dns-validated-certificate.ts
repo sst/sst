@@ -1,6 +1,5 @@
 import { Input, ComponentResourceOptions, output } from "@pulumi/pulumi";
 import * as aws from "@pulumi/aws";
-import { CertificateValidation } from "@pulumi/aws/acm";
 import { Component } from "./component";
 import { sanitizeToPascalCase } from "./helpers/naming";
 
@@ -24,7 +23,7 @@ export interface DnsValidatedCertificateArgs {
 }
 
 export class DnsValidatedCertificate extends Component {
-  public certificateValidation: CertificateValidation;
+  public certificateValidation: aws.acm.CertificateValidation;
 
   constructor(
     name: string,

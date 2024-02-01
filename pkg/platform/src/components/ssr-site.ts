@@ -973,7 +973,7 @@ function handler(event) {
                   restrictionType: "none",
                 },
               },
-              waitForDeployment: false,
+              waitForDeployment: !$dev,
             },
           },
         },

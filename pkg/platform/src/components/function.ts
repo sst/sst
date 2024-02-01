@@ -435,7 +435,7 @@ export class Function
   constructor(
     name: string,
     args: FunctionArgs,
-    opts?: ComponentResourceOptions,
+    opts?: ComponentResourceOptions
   ) {
     super("sst:sst:Function", name, args, opts);
 
@@ -467,7 +467,7 @@ export class Function
     const fnUrl = createUrl();
 
     const links = output(linkData).apply((input) =>
-      input.map((item) => item.name),
+      input.map((item) => item.name)
     );
 
     if ($dev) {
@@ -483,7 +483,7 @@ export class Function
       ([handler, bundle, rawLinks]) => {
         if (!rawLinks.length) return;
         Link.Receiver.register(bundle || handler, links);
-      },
+      }
     );
 
     this.function = fn;
@@ -516,7 +516,7 @@ export class Function
 
     function normalizeArchitectures() {
       return output(args.architecture).apply((arc) =>
-        arc === "arm64" ? ["arm64"] : ["x86_64"],
+        arc === "arm64" ? ["arm64"] : ["x86_64"]
       );
     }
 
@@ -579,15 +579,15 @@ export class Function
             const to = entry.to || entry.from;
             if (path.isAbsolute(to))
               throw new VisibleError(
-                `Copy destination path "${to}" must be relative`,
+                `Copy destination path "${to}" must be relative`
               );
 
             const stats = await fs.promises.stat(from);
             const isDir = stats.isDirectory();
 
             return { from, to, isDir };
-          }),
-        ),
+          })
+        )
       );
     }
 
@@ -612,7 +612,7 @@ export class Function
         links.flatMap((l) => {
           if (!Link.AWS.isLinkable(l)) return [];
           return [l.getSSTAWSPermissions()];
-        }),
+        })
       );
     }
 
@@ -625,7 +625,7 @@ export class Function
               "src",
               "functions",
               "bridge",
-              "index.ts",
+              "index.ts"
             ),
           });
           return {
@@ -651,7 +651,7 @@ export class Function
           if (result.type === "error")
             throw new Error(result.errors.join("\n"));
           return result;
-        },
+        }
       );
       return {
         handler: buildResult.handler,
@@ -677,7 +677,7 @@ export class Function
           ? linkData
               .map((item) => [
                 `process.env.SST_RESOURCE_${item.name} = ${JSON.stringify(
-                  JSON.stringify(item.value),
+                  JSON.stringify(item.value)
                 )};\n`,
               ])
               .join("")
@@ -692,19 +692,17 @@ export class Function
 
         // Validate handler file exists
         const newHandlerFileExt = [".js", ".mjs", ".cjs"].find((ext) =>
-          fs.existsSync(
-            path.join(bundle, handlerDir, oldHandlerFileName + ext),
-          ),
+          fs.existsSync(path.join(bundle, handlerDir, oldHandlerFileName + ext))
         );
         if (!newHandlerFileExt)
           throw new VisibleError(
-            `Could not find file for handler "${handler}"`,
+            `Could not find file for handler "${handler}"`
           );
 
         return {
           handler: path.posix.join(
             handlerDir,
-            `${newHandlerFileName}.${newHandlerFunction}`,
+            `${newHandlerFileName}.${newHandlerFunction}`
           ),
           wrapper: {
             dir: handlerDir,
@@ -753,7 +751,7 @@ export class Function
                         Effect: "Allow",
                         Action: p.actions,
                         Resource: p.resources,
-                      }),
+                      })
                     ),
                   }),
                 },
@@ -762,9 +760,9 @@ export class Function
                 "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
               ],
             },
-            { parent },
+            { parent }
           );
-        },
+        }
       );
     }
 
@@ -779,7 +777,7 @@ export class Function
             $cli.paths.work,
             "artifacts",
             name,
-            "code.zip",
+            "code.zip"
           );
           await fs.promises.mkdir(path.dirname(zipPath), {
             recursive: true,
@@ -806,7 +804,7 @@ export class Function
             archive.glob(
               "**",
               { cwd: bundle, dot: true },
-              { date: new Date(0) },
+              { date: new Date(0) }
             );
 
             // Add handler wrapper into the zip
@@ -819,6 +817,7 @@ export class Function
 
             // Add copyFiles into the zip
             copyFiles.forEach(async (entry) => {
+              // TODO
               //if ($app. mode === "deploy")
               entry.isDir
                 ? archive.directory(entry.from, entry.to, { date: new Date(0) })
@@ -840,7 +839,7 @@ export class Function
           });
 
           return zipPath;
-        },
+        }
       );
     }
 
@@ -852,7 +851,7 @@ export class Function
           bucket: region.apply((region) => bootstrap.forRegion(region)),
           source: zipPath.apply((zipPath) => new asset.FileArchive(zipPath)),
         },
-        { parent, retainOnDelete: true },
+        { parent, retainOnDelete: true }
       );
     }
 
@@ -875,7 +874,7 @@ export class Function
           architectures,
           ...args.nodes?.function,
         },
-        { parent },
+        { parent }
       );
     }
 
@@ -885,11 +884,11 @@ export class Function
         {
           logGroupName: interpolate`/aws/lambda/${fn.name}`,
           retentionInDays: logging.apply(
-            (logging) => RETENTION[logging.retention],
+            (logging) => RETENTION[logging.retention]
           ),
           region,
         },
-        { parent },
+        { parent }
       );
     }
 
@@ -903,11 +902,11 @@ export class Function
             functionName: fn.name,
             authorizationType: url.authorization.toUpperCase(),
             invokeMode: streaming.apply((streaming) =>
-              streaming ? "RESPONSE_STREAM" : "BUFFERED",
+              streaming ? "RESPONSE_STREAM" : "BUFFERED"
             ),
             cors: url.cors,
           },
-          { parent },
+          { parent }
         );
       });
     }
@@ -923,7 +922,7 @@ export class Function
             functionLastModified: fnRaw.lastModified,
             region,
           },
-          { parent },
+          { parent }
         );
         return fnRaw;
       });

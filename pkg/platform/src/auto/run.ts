@@ -1,4 +1,3 @@
-import { PulumiFn } from "@pulumi/pulumi/automation";
 import { Link } from "../components/link";
 import { Hint } from "../components/hint";
 import { Warp } from "../components/warp";
@@ -7,9 +6,10 @@ import {
   interpolate,
   mergeOptions,
   runtime,
+  automation,
 } from "@pulumi/pulumi";
 
-export async function run(program: PulumiFn) {
+export async function run(program: automation.PulumiFn) {
   process.chdir($cli.paths.root);
 
   runtime.registerStackTransformation((args: ResourceTransformationArgs) => {
@@ -44,7 +44,7 @@ export async function run(program: PulumiFn) {
 
     if (!normalizedName.match(/^[A-Z][a-zA-Z0-9]*$/)) {
       throw new Error(
-        `Invalid component name "${normalizedName}". Component names must start with an uppercase letter and contain only alphanumeric characters.`,
+        `Invalid component name "${normalizedName}". Component names must start with an uppercase letter and contain only alphanumeric characters.`
       );
     }
 

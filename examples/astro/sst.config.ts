@@ -8,7 +8,6 @@ export default $config({
     };
   },
   async run() {
-    //const StripeKey = new sst.Secret("StripeKey");
-    //new sst.Astro("Web", {});
+    new sst.Astro("Web");
   },
 });
