@@ -7,7 +7,11 @@ import { existsAsync } from "../util/fs.js";
 import { Colors } from "../cli/colors.js";
 
 import { Construct } from "constructs";
-import { Duration as CdkDuration, IgnoreMode } from "aws-cdk-lib/core";
+import {
+  Duration as CdkDuration,
+  DockerCacheOption,
+  IgnoreMode,
+} from "aws-cdk-lib/core";
 import {
   Role,
   Effect,
@@ -177,6 +181,7 @@ const supportedMemories = {
 export interface ServiceDomainProps extends DistributionDomainProps {}
 export interface ServiceCdkDistributionProps
   extends Omit<DistributionProps, "defaultBehavior"> {}
+export interface ServiceContainerCacheProps extends DockerCacheOption {}
 
 export interface ServiceProps {
   /**
@@ -414,6 +419,42 @@ export interface ServiceProps {
      * ```
      */
     buildArgs?: Record<string, string>;
+    /**
+     * SSH agent socket or keys to pass to the docker build command.
+     * Docker BuildKit must be enabled to use the ssh flag
+     * @default No --ssh flag is passed to the build command
+     * @example
+     * ```js
+     * container: {
+     *   buildSsh: "default"
+     * }
+     * ```
+     */
+    buildSsh?: string;
+    /**
+     * Cache from options to pass to the docker build command.
+     * [DockerCacheOption](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_ecr_assets.DockerCacheOption.html)[].
+     * @default No cache from options are passed to the build command
+     * @example
+     * ```js
+     * container: {
+     *   cacheFrom: [{ type: 'registry', params: { ref: 'ghcr.io/myorg/myimage:cache' }}],
+     * }
+     * ```
+     */
+    cacheFrom?: ServiceContainerCacheProps[];
+    /**
+     * Cache to options to pass to the docker build command.
+     * [DockerCacheOption](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_ecr_assets.DockerCacheOption.html)[].
+     * @default No cache to options are passed to the build command
+     * @example
+     * ```js
+     * container: {
+     *   cacheTo: { type: 'registry', params: { ref: 'ghcr.io/myorg/myimage:cache', mode: 'max', compression: 'zstd' }},
+     * }
+     * ```
+     */
+    cacheTo?: ServiceContainerCacheProps;
   };
   dev?: {
     /**
@@ -1196,6 +1237,31 @@ export class Service extends Construct implements SSTConstruct {
           ...Object.entries(build?.buildArgs || {}).map(
             ([k, v]) => `--build-arg ${k}=${v}`
           ),
+          ...(build?.buildSsh ? [`-ssh ${build.buildSsh}`] : []),
+          (build?.cacheFrom || []).map(
+            (v) =>
+              "--cache-from " +
+              [
+                `type=${v.type}`,
+                ...(v.params
+                  ? Object.entries(v.params).map(([pk, pv]) => `${pk}=${pv}`)
+                  : []),
+              ].join(",")
+          ),
+          ...(build?.cacheTo
+            ? [
+                "--cache-to " +
+                  [
+                    `type=${build?.cacheTo.type}`,
+                    ...(build?.cacheTo?.params
+                      ? Object.entries(build?.cacheTo?.params).map(
+                          ([pk, pv]) => `${pk}=${pv}`
+                        )
+                      : []
+                    ).join(","),
+                  ],
+              ]
+            : []),
           this.props.path,
         ].join(" "),
         {
@@ -1221,6 +1287,9 @@ export class Service extends Construct implements SSTConstruct {
         architecture === "arm64" ? Platform.LINUX_ARM64 : Platform.LINUX_AMD64,
       file: dockerfile,
       buildArgs: build?.buildArgs,
+      buildSsh: build?.buildSsh,
+      cacheFrom: build?.cacheFrom,
+      cacheTo: build?.cacheTo,
       exclude: [".sst/dist", ".sst/artifacts"],
       ignoreMode: IgnoreMode.GLOB,
     });

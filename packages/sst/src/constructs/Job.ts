@@ -2,7 +2,11 @@ import url from "url";
 import path from "path";
 import fs from "fs/promises";
 import { Construct } from "constructs";
-import { Duration as CdkDuration, IgnoreMode } from "aws-cdk-lib/core";
+import {
+  Duration as CdkDuration,
+  DockerCacheOption,
+  IgnoreMode,
+} from "aws-cdk-lib/core";
 import { Platform } from "aws-cdk-lib/aws-ecr-assets";
 import { PolicyStatement, Role, Effect } from "aws-cdk-lib/aws-iam";
 import {
@@ -48,6 +52,7 @@ const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 
 export type JobMemorySize = "3 GB" | "7 GB" | "15 GB" | "145 GB";
 export interface JobNodeJSProps extends NodeJSProps {}
+export interface JobContainerCacheProps extends DockerCacheOption {}
 export interface JobContainerProps {
   /**
    * Specify or override the CMD on the Docker image.
@@ -82,6 +87,42 @@ export interface JobContainerProps {
    * ```
    */
   buildArgs?: Record<string, string>;
+  /**
+   * SSH agent socket or keys to pass to the docker build command.
+   * Docker BuildKit must be enabled to use the ssh flag
+   * @default No --ssh flag is passed to the build command
+   * @example
+   * ```js
+   * container: {
+   *   buildSsh: "default"
+   * }
+   * ```
+   */
+  buildSsh?: string;
+  /**
+   * Cache from options to pass to the docker build command.
+   * [DockerCacheOption](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_ecr_assets.DockerCacheOption.html)[].
+   * @default No cache from options are passed to the build command
+   * @example
+   * ```js
+   * container: {
+   *   cacheFrom: [{ type: 'registry', params: { ref: 'ghcr.io/myorg/myimage:cache' }}],
+   * }
+   * ```
+   */
+  cacheFrom?: JobContainerCacheProps[];
+  /**
+   * Cache to options to pass to the docker build command.
+   * [DockerCacheOption](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_ecr_assets.DockerCacheOption.html)[].
+   * @default No cache to options are passed to the build command
+   * @example
+   * ```js
+   * container: {
+   *   cacheTo: { type: 'registry', params: { ref: 'ghcr.io/myorg/myimage:cache', mode: 'max', compression: 'zstd' }},
+   * }
+   * ```
+   */
+  cacheTo?: JobContainerCacheProps;
 }
 
 export interface JobProps {
@@ -532,6 +573,9 @@ export class Job extends Construct implements SSTConstruct {
               : Platform.custom("linux/amd64"),
           file: container?.file,
           buildArgs: container?.buildArgs,
+          buildSsh: container?.buildSsh,
+          cacheFrom: container?.cacheFrom,
+          cacheTo: container?.cacheTo,
           exclude: [".sst/dist", ".sst/artifacts"],
           ignoreMode: IgnoreMode.GLOB,
         });

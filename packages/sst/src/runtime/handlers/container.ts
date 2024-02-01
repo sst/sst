@@ -259,6 +259,35 @@ export const useContainerHandler = (): RuntimeHandler => {
               ...Object.entries(input.props.container?.buildArgs || {}).map(
                 ([k, v]) => `--build-arg ${k}=${v}`
               ),
+              ...(input.props.container?.buildSsh
+                ? [`-ssh ${input.props.container.buildSsh}`]
+                : []),
+              (input.props.container?.cacheFrom || []).map(
+                (v) =>
+                  "--cache-from " +
+                  [
+                    `type=${v.type}`,
+                    ...(v.params
+                      ? Object.entries(v.params).map(
+                          ([pk, pv]) => `${pk}=${pv}`
+                        )
+                      : []),
+                  ].join(",")
+              ),
+              ...(input.props.container?.cacheTo
+                ? [
+                    "--cache-to " +
+                      [
+                        `type=${input.props.container?.cacheTo.type}`,
+                        ...(input.props.container?.cacheTo?.params
+                          ? Object.entries(
+                              input.props.container?.cacheTo?.params
+                            ).map(([pk, pv]) => `${pk}=${pv}`)
+                          : []
+                        ).join(","),
+                      ],
+                  ]
+                : []),
               `.`,
             ].join(" "),
             {
@@ -292,6 +321,35 @@ export const useContainerHandler = (): RuntimeHandler => {
               ...Object.entries(input.props.container?.buildArgs || {}).map(
                 ([k, v]) => `--build-arg ${k}=${v}`
               ),
+              ...(input.props.container?.buildSsh
+                ? [`-ssh ${input.props.container.buildSsh}`]
+                : []),
+              (input.props.container?.cacheFrom || []).map(
+                (v) =>
+                  "--cache-from " +
+                  [
+                    `type=${v.type}`,
+                    ...(v.params
+                      ? Object.entries(v.params).map(
+                          ([pk, pv]) => `${pk}=${pv}`
+                        )
+                      : []),
+                  ].join(",")
+              ),
+              ...(input.props.container?.cacheTo
+                ? [
+                    "--cache-to " +
+                      [
+                        `type=${input.props.container?.cacheTo.type}`,
+                        ...(input.props.container?.cacheTo?.params
+                          ? Object.entries(
+                              input.props.container?.cacheTo?.params
+                            ).map(([pk, pv]) => `${pk}=${pv}`)
+                          : []
+                        ).join(","),
+                      ],
+                  ]
+                : []),
               `--platform ${platform}`,
               `.`,
             ].join(" "),
