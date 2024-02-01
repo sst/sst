@@ -11,7 +11,7 @@ import { InternalEvent, convertFrom, convertTo } from "./lib/event-mapper.js";
 import { debug } from "./lib/logger.js";
 import { RenderOptions } from "astro/app";
 
-const astroMajorVersion = parseInt(ASTRO_VERSION.split(".")[0]);
+const astroMajorVersion = parseInt(ASTRO_VERSION.split(".")[0] ?? 0);
 
 polyfill(globalThis, {
   exclude: "window document",
