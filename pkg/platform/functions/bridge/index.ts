@@ -10,7 +10,7 @@ import {
 const s3 = new S3Client({});
 const client = new IoTClient({});
 const response = await client.send(
-  new DescribeEndpointCommand({ endpointType: "iot:Data-ATS" })
+  new DescribeEndpointCommand({ endpointType: "iot:Data-ATS" }),
 );
 const endpoint = response.endpointAddress;
 
@@ -52,8 +52,8 @@ const ENVIRONMENT_IGNORE: Record<string, true> = {
 
 const ENVIRONMENT = Object.fromEntries(
   Object.entries(process.env).filter(
-    ([key, _]) => ENVIRONMENT_IGNORE[key] !== true
-  )
+    ([key, _]) => ENVIRONMENT_IGNORE[key] !== true,
+  ),
 );
 
 const device = new iot.device({
@@ -65,6 +65,9 @@ const device = new iot.device({
 device.on("error", console.log);
 device.on("connect", console.log);
 device.subscribe(`${PREFIX}/events/${workerID}`, {
+  qos: 1,
+});
+device.subscribe(`${PREFIX}`, {
   qos: 1,
 });
 
@@ -104,7 +107,7 @@ device.on("message", async (_topic, buffer: Buffer) => {
         new GetObjectCommand({
           Key: evt.properties.key,
           Bucket: evt.properties.bucket,
-        })
+        }),
       );
       const str = await result.Body!.transformToString();
       onMessage(JSON.parse(str));
@@ -112,7 +115,7 @@ device.on("message", async (_topic, buffer: Buffer) => {
         new DeleteObjectCommand({
           Key: evt.properties.key,
           Bucket: evt.properties.bucket,
-        })
+        }),
       );
       return;
     }
@@ -187,4 +190,3 @@ function encode(input: any) {
     data: part,
   }));
 }
-

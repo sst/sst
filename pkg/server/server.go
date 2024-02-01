@@ -13,7 +13,9 @@ import (
 	"time"
 
 	"github.com/sst/ion/pkg/project"
+	"github.com/sst/ion/pkg/project/provider"
 	"github.com/sst/ion/pkg/server/bus"
+	"github.com/sst/ion/pkg/server/dev/aws"
 )
 
 type Server struct {
@@ -84,6 +86,7 @@ func (s *Server) Start(parentContext context.Context) error {
 	mux := http.NewServeMux()
 
 	var count int64
+
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		atomic.AddInt64(&count, 1)
 		defer atomic.AddInt64(&count, -1)
@@ -142,18 +145,15 @@ func (s *Server) Start(parentContext context.Context) error {
 	go s.server.ListenAndServe()
 	defer s.server.Shutdown(ctx)
 
-	dev, err := startDev(ctx, s.project)
-	if err != nil {
-		return err
-	}
-	defer dev()
-
-	for _, provider := range s.project.Providers {
-		cleanup, err := startProviderDev(ctx, s.project, provider)
-		if err != nil {
-			return err
+	for _, p := range s.project.Providers {
+		switch casted := p.(type) {
+		case *provider.AwsProvider:
+			cleanup, err := aws.Start(ctx, mux, casted)
+			if err != nil {
+				return err
+			}
+			defer cleanup()
 		}
-		defer cleanup()
 	}
 
 	fileWatcher, err := startFileWatcher(ctx, s.project.PathRoot())

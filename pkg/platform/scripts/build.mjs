@@ -7,12 +7,12 @@ await esbuild.build({
   platform: "node",
   target: "esnext",
   format: "esm",
-  entryPoints: ["./support/bridge/live-lambda.ts"],
+  entryPoints: ["./functions/bridge/index.ts"],
   banner: {
     js: [
       `import { createRequire as topLevelCreateRequire } from 'module';`,
       `const require = topLevelCreateRequire(import.meta.url);`,
     ].join(""),
   },
-  outfile: "./dist/support/bridge/live-lambda.mjs",
+  outfile: "./dist/bridge/index.mjs",
 });

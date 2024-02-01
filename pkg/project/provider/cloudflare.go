@@ -13,7 +13,7 @@ func (c *CloudflareProvider) Init(app string, stage string, args map[string]stri
 	return nil
 }
 
-func (a *CloudflareProvider) Dev(ctx context.Context, app, stage string, events chan string) (util.CleanupFunc, error) {
+func (a *CloudflareProvider) Dev(ctx context.Context, app, stage string, t *DevTransport) (util.CleanupFunc, error) {
 	return func() error {
 		return nil
 	}, nil

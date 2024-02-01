@@ -32,6 +32,9 @@ export default $config({
       url: true,
       link: [secret, queue],
       handler: "./src/index.handler",
+      environment: {
+        FOO: "2",
+      },
     });
 
     return {

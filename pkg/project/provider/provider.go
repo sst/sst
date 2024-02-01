@@ -2,7 +2,6 @@ package provider
 
 import (
 	"bytes"
-	"context"
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/rand"
@@ -11,7 +10,6 @@ import (
 	"io"
 	"os"
 
-	"github.com/sst/ion/internal/util"
 	"golang.org/x/exp/slog"
 )
 
@@ -28,9 +26,31 @@ type Backend interface {
 	getPassphrase(app, stage string) (string, error)
 }
 
+type DevTransport struct {
+	In  chan string
+	Out chan string
+}
+
+type DevEvent struct {
+	*io.PipeReader
+}
+
+func (dt *DevTransport) Publish(input interface{}) error {
+	jsonBytes, err := json.Marshal(input)
+	if err != nil {
+		return err
+	}
+	dt.Out <- string(jsonBytes)
+	return nil
+}
+
 type Provider interface {
 	Init(app, stage string, provider map[string]string) error
-	Dev(ctx context.Context, app, stage string, events chan string) (util.CleanupFunc, error)
+}
+
+type DevSession interface {
+	Cleanup() error
+	Publish(json string) error
 }
 
 const SSM_NAME_BUCKET = "/sst/bootstrap"

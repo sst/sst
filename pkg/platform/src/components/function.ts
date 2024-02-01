@@ -503,6 +503,9 @@ export class Function
     }
 
     function normalizeRuntime() {
+      if ($dev) {
+        return "provided.al2023";
+      }
       return output(args.runtime).apply((v) => v ?? "nodejs18.x");
     }
 
@@ -618,21 +621,10 @@ export class Function
 
     function buildHandler() {
       if ($dev) {
-        return all([]).apply(async () => {
-          const result = await build(name, {
-            handler: path.join(
-              $cli.paths.work,
-              "src",
-              "functions",
-              "bridge",
-              "index.ts"
-            ),
-          });
-          return {
-            handler: result.handler,
-            bundle: result.out,
-          };
-        });
+        return {
+          handler: "bootstrap",
+          bundle: path.join($cli.paths.platform, "dist", "bridge"),
+        };
       }
 
       if (args.bundle) {
@@ -746,6 +738,7 @@ export class Function
                 {
                   name: "inline",
                   policy: jsonStringify({
+<<<<<<< HEAD
                     Statement: [...argsPermissions, ...linkPermissions].map(
                       (p) => ({
                         Effect: "Allow",
@@ -753,6 +746,24 @@ export class Function
                         Resource: p.resources,
                       })
                     ),
+=======
+                    Statement: [
+                      ...argsPermissions,
+                      ...linkPermissions,
+                      ...($dev
+                        ? [
+                            {
+                              actions: ["iot:*"],
+                              resources: ["*"],
+                            },
+                          ]
+                        : []),
+                    ].map((p) => ({
+                      Effect: "Allow",
+                      Action: p.actions,
+                      Resource: p.resources,
+                    })),
+>>>>>>> 7971549 (live lambda progress)
                   }),
                 },
               ],
@@ -804,7 +815,11 @@ export class Function
             archive.glob(
               "**",
               { cwd: bundle, dot: true },
+<<<<<<< HEAD
               { date: new Date(0) }
+=======
+              { date: new Date(0), mode: 0o777 },
+>>>>>>> 7971549 (live lambda progress)
             );
 
             // Add handler wrapper into the zip
