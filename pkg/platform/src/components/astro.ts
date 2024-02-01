@@ -40,7 +40,11 @@ export class Astro extends Component {
   private server?: Function;
   //private serverFunctionForDev?: Function;
 
-  constructor(name: string, args?: AstroArgs, opts?: ComponentResourceOptions) {
+  constructor(
+    name: string,
+    args: AstroArgs = {},
+    opts?: ComponentResourceOptions
+  ) {
     super("sst:sst:Astro", name, args, opts);
 
     args = {
@@ -61,7 +65,7 @@ export class Astro extends Component {
     const outputPath = buildApp(name, args, sitePath);
     const { access, bucket } = createBucket(parent, name);
 
-    const plan = buildPlan(bucket);
+    const plan = buildPlan();
 
     const { distribution, ssrFunctions, edgeFunctions } =
       createServersAndDistribution(
@@ -89,176 +93,174 @@ export class Astro extends Component {
 
     //app.registerTypes(this);
 
-    function buildPlan(bucket: Bucket) {
-      return all([
-        $app.providers?.aws?.region!,
-        bucket.name,
-        outputPath,
-        getBuildMeta(),
-      ]).apply(([region, bucketName, outputPath, buildMeta]) => {
-        const isStatic = buildMeta.outputMode === "static";
-        const edge = buildMeta.deploymentStrategy === "edge";
-        const serverConfig = {
-          description: "Astro server",
-          handler: path.join(outputPath, "dist", "server", "entry.handler"),
-        };
-        const plan: Plan = {
-          edge,
-          cloudFrontFunctions: {
-            serverCfFunction: {
-              injections: [
-                useCloudFrontFunctionHostHeaderInjection(),
-                useCloudFrontRoutingInjection(buildMeta),
-              ],
-            },
-            serverCfFunctionHostOnly: {
-              injections: [useCloudFrontFunctionHostHeaderInjection()],
-            },
-          },
-          origins: {
-            staticsServer: {
-              type: "s3" as const,
-              copy: [
-                {
-                  from: buildMeta.clientBuildOutputDir,
-                  to: "",
-                  cached: true,
-                  versionedSubDir: buildMeta.clientBuildVersionedSubDir,
-                },
-              ],
-            },
-          },
-          behaviors: [],
-          errorResponses: [],
-        };
-
-        if (edge) {
-          plan.edgeFunctions = {
-            edgeServer: {
-              function: serverConfig,
-            },
+    function buildPlan() {
+      return all([outputPath, getBuildMeta()]).apply(
+        ([outputPath, buildMeta]) => {
+          const isStatic = buildMeta.outputMode === "static";
+          const edge = buildMeta.deploymentStrategy === "edge";
+          const serverConfig = {
+            description: "Astro server",
+            handler: path.join(outputPath, "dist", "server", "entry.handler"),
           };
-          plan.behaviors.push(
-            {
-              cacheType: "server",
-              cfFunction: "serverCfFunction",
-              edgeFunction: "edgeServer",
-              origin: "staticsServer",
+          const plan: Plan = {
+            edge,
+            cloudFrontFunctions: {
+              serverCfFunction: {
+                injections: [
+                  useCloudFrontFunctionHostHeaderInjection(),
+                  useCloudFrontRoutingInjection(buildMeta),
+                ],
+              },
+              serverCfFunctionHostOnly: {
+                injections: [useCloudFrontFunctionHostHeaderInjection()],
+              },
             },
-            ...fs
-              .readdirSync(
-                path.join(outputPath, buildMeta.clientBuildOutputDir)
-              )
-              .map(
-                (item) =>
-                  ({
-                    cacheType: "static",
-                    pattern: fs
-                      .statSync(
-                        path.join(
-                          outputPath,
-                          buildMeta.clientBuildOutputDir,
-                          item
-                        )
-                      )
-                      .isDirectory()
-                      ? `${item}/*`
-                      : item,
-                    origin: "staticsServer",
-                  }) as const
-              )
-          );
-        } else {
-          if (isStatic) {
-            plan.behaviors.push({
-              cacheType: "static",
-              cfFunction: "serverCfFunction",
-              origin: "staticsServer",
-            });
-          } else {
-            plan.cloudFrontFunctions!.imageServiceCfFunction = {
-              injections: [useCloudFrontFunctionHostHeaderInjection()],
-            };
+            origins: {
+              staticsServer: {
+                type: "s3" as const,
+                copy: [
+                  {
+                    from: buildMeta.clientBuildOutputDir,
+                    to: "",
+                    cached: true,
+                    versionedSubDir: buildMeta.clientBuildVersionedSubDir,
+                  },
+                ],
+              },
+            },
+            behaviors: [],
+            errorResponses: [],
+          };
 
-            plan.origins.regionalServer = {
-              type: "function",
-              function: serverConfig,
-              streaming: buildMeta.responseMode === "stream",
+          if (edge) {
+            plan.edgeFunctions = {
+              edgeServer: {
+                function: serverConfig,
+              },
             };
-
-            plan.origins.fallthroughServer = {
-              type: "group",
-              primaryOriginName: "staticsServer",
-              fallbackOriginName: "regionalServer",
-              fallbackStatusCodes: [403, 404],
-            };
-
             plan.behaviors.push(
               {
                 cacheType: "server",
                 cfFunction: "serverCfFunction",
-                origin: "fallthroughServer",
-                allowedMethods: ["GET", "HEAD", "OPTIONS"],
-              },
-              {
-                cacheType: "static",
-                pattern: `${buildMeta.clientBuildVersionedSubDir}/*`,
+                edgeFunction: "edgeServer",
                 origin: "staticsServer",
               },
-              {
-                cacheType: "server",
-                pattern: "_image",
-                cfFunction: "imageServiceCfFunction",
-                origin: "regionalServer",
-                allowedMethods: ["GET", "HEAD", "OPTIONS"],
-              },
-              ...buildMeta.serverRoutes?.map(
-                (route) =>
-                  ({
-                    cacheType: "server",
-                    cfFunction: "serverCfFunctionHostOnly",
-                    pattern: route,
-                    origin: "regionalServer",
-                  }) as const
-              )
+              ...fs
+                .readdirSync(
+                  path.join(outputPath, buildMeta.clientBuildOutputDir)
+                )
+                .map(
+                  (item) =>
+                    ({
+                      cacheType: "static",
+                      pattern: fs
+                        .statSync(
+                          path.join(
+                            outputPath,
+                            buildMeta.clientBuildOutputDir,
+                            item
+                          )
+                        )
+                        .isDirectory()
+                        ? `${item}/*`
+                        : item,
+                      origin: "staticsServer",
+                    }) as const
+                )
             );
-          }
+          } else {
+            if (isStatic) {
+              plan.behaviors.push({
+                cacheType: "static",
+                cfFunction: "serverCfFunction",
+                origin: "staticsServer",
+              });
+            } else {
+              plan.cloudFrontFunctions!.imageServiceCfFunction = {
+                injections: [useCloudFrontFunctionHostHeaderInjection()],
+              };
 
-          buildMeta.routes
-            .filter(
-              ({ type, route }) => type === "page" && /^\/\d{3}\/?$/.test(route)
-            )
-            .forEach(({ route, prerender }) => {
-              switch (route) {
-                case "/404":
-                case "/404/":
-                  plan.errorResponses?.push({
-                    errorCode: 404,
-                    responsePagePath: prerender ? "/404.html" : "/404",
-                    responseCode: 404,
-                  });
-                  if (isStatic) {
+              plan.origins.regionalServer = {
+                type: "function",
+                function: serverConfig,
+                streaming: buildMeta.responseMode === "stream",
+              };
+
+              plan.origins.fallthroughServer = {
+                type: "group",
+                primaryOriginName: "staticsServer",
+                fallbackOriginName: "regionalServer",
+                fallbackStatusCodes: [403, 404],
+              };
+
+              plan.behaviors.push(
+                {
+                  cacheType: "server",
+                  cfFunction: "serverCfFunction",
+                  origin: "fallthroughServer",
+                  allowedMethods: ["GET", "HEAD", "OPTIONS"],
+                },
+                {
+                  cacheType: "static",
+                  pattern: `${buildMeta.clientBuildVersionedSubDir}/*`,
+                  origin: "staticsServer",
+                },
+                {
+                  cacheType: "server",
+                  pattern: "_image",
+                  cfFunction: "imageServiceCfFunction",
+                  origin: "regionalServer",
+                  allowedMethods: ["GET", "HEAD", "OPTIONS"],
+                },
+                ...buildMeta.serverRoutes?.map(
+                  (route) =>
+                    ({
+                      cacheType: "server",
+                      cfFunction: "serverCfFunctionHostOnly",
+                      pattern: route,
+                      origin: "regionalServer",
+                    }) as const
+                )
+              );
+            }
+
+            buildMeta.routes
+              .filter(
+                ({ type, route }) =>
+                  type === "page" && /^\/\d{3}\/?$/.test(route)
+              )
+              .forEach(({ route, prerender }) => {
+                switch (route) {
+                  case "/404":
+                  case "/404/":
                     plan.errorResponses?.push({
-                      errorCode: 403,
-                      responsePagePath: "/404.html",
+                      errorCode: 404,
+                      responsePagePath: prerender ? "/404.html" : "/404",
                       responseCode: 404,
                     });
-                  }
-                  break;
-                case "/500":
-                case "/500/":
-                  plan.errorResponses?.push({
-                    errorCode: 500,
-                    responsePagePath: prerender ? "/500.html" : "/500",
-                    responseCode: 500,
-                  });
-                  break;
-              }
-            });
-        }
+                    if (isStatic) {
+                      plan.errorResponses?.push({
+                        errorCode: 403,
+                        responsePagePath: "/404.html",
+                        responseCode: 404,
+                      });
+                    }
+                    break;
+                  case "/500":
+                  case "/500/":
+                    plan.errorResponses?.push({
+                      errorCode: 500,
+                      responsePagePath: prerender ? "/500.html" : "/500",
+                      responseCode: 500,
+                    });
+                    break;
+                }
+              });
+          }
 
-        return validatePlan(transform(args?.transform?.plan, plan));
-      });
+          return validatePlan(transform(args?.transform?.plan, plan));
+        }
+      );
     }
 
     function getBuildMeta() {

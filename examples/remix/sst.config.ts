@@ -3,12 +3,11 @@
 export default $config({
   app(input) {
     return {
-      name: "astro",
+      name: "remix",
       removalPolicy: input?.stage === "production" ? "retain" : "remove",
     };
   },
   async run() {
-    //const StripeKey = new sst.Secret("StripeKey");
-    //new sst.Astro("Web", {});
+    new sst.Remix("Web", {});
   },
 });

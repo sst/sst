@@ -708,7 +708,7 @@ function handler(event) {
       return {
         originId: name,
         domainName: bucket.nodes.bucket.bucketRegionalDomainName,
-        originPath: "/" + (props.originPath ?? ""),
+        originPath: props.originPath ? `/${props.originPath}` : "",
         s3OriginConfig: {
           originAccessIdentity: access.cloudfrontAccessIdentityPath,
         },
@@ -875,12 +875,17 @@ function handler(event) {
               cookiesConfig: {
                 cookieBehavior: "none",
               },
-              headersConfig: {
-                headerBehavior: "whitelist",
-                headers: {
-                  items: plan.serverCachePolicy?.allowedHeaders ?? [],
-                },
-              },
+              headersConfig:
+                (plan.serverCachePolicy?.allowedHeaders ?? []).length > 0
+                  ? {
+                      headerBehavior: "whitelist",
+                      headers: {
+                        items: plan.serverCachePolicy?.allowedHeaders,
+                      },
+                    }
+                  : {
+                      headerBehavior: "none",
+                    },
               queryStringsConfig: {
                 queryStringBehavior: "all",
               },

@@ -8,3 +8,4 @@ export * from "./secret.js";
 
 export * from "./astro.js";
 export * from "./nextjs.js";
+export * from "./remix.js";
