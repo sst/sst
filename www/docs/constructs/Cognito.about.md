@@ -162,7 +162,7 @@ const auth = new Cognito(stack, "Auth", {
   },
 });
 
-auth.attachPermissionsForTriggers("preAuthentication", ["s3"]);
+auth.attachPermissionsForTrigger("preAuthentication", ["s3"]);
 ```
 
 Here we are referring to the trigger using the trigger key, `preAuthentication`.

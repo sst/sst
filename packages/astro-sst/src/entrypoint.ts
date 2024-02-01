@@ -8,6 +8,7 @@ import { NodeApp } from "astro/app/node";
 import { polyfill } from "@astrojs/webapi";
 import { InternalEvent, convertFrom, convertTo } from "./lib/event-mapper.js";
 import { debug } from "./lib/logger.js";
+import { RenderOptions } from "astro/app";
 
 polyfill(globalThis, {
   exclude: "window document",
@@ -37,7 +38,6 @@ function createRequest(internalEvent: InternalEvent) {
       ? undefined
       : internalEvent.body,
   };
-  debug("request", { requestUrl, requestProps });
   return new Request(requestUrl, requestProps);
 }
 
@@ -45,7 +45,7 @@ export function createExports(
   manifest: SSRManifest,
   { responseMode }: { responseMode: ResponseMode }
 ) {
-  debug("handlerInit", { responseMode });
+  debug("handlerInit", responseMode);
   const isStreaming = responseMode === "stream";
   const app = new NodeApp(manifest);
 
@@ -67,8 +67,15 @@ export function createExports(
       return streamError(404, "Not found", responseStream);
     }
 
+    const renderOptions: RenderOptions = {
+      routeData,
+      clientAddress: internalEvent.headers['x-forwarded-for'] || internalEvent.remoteAddress,
+    }
+
+    debug("renderOptions", renderOptions);
+
     // Process request
-    const response = await app.render(request, routeData);
+    const response = await app.render(request, renderOptions);
 
     // Stream response back to Cloudfront
     const convertedResponse = await convertTo({
@@ -102,8 +109,15 @@ export function createExports(
       });
     }
 
+    const renderOptions: RenderOptions = {
+      routeData,
+      clientAddress: internalEvent.headers['x-forwarded-for'] || internalEvent.remoteAddress,
+    }
+
+    debug("renderOptions", renderOptions);
+
     // Process request
-    const response = await app.render(request, routeData);
+    const response = await app.render(request, renderOptions);
 
     // Buffer response back to Cloudfront
     const convertedResponse = await convertTo({

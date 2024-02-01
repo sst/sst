@@ -108,6 +108,7 @@ We use the [`sst secrets`](packages/sst.md#sst-secrets) CLI.
 
 Now you can access the secret and parameter in your Next.js app.
 
+
 ```ts title="packages/web/pages/index.tsx" {1,4}
 import { Config } from "sst/node/config";
 
@@ -119,7 +120,7 @@ export async function getServerSideProps() {
 ```
 
 :::tip
-Since we are dealing with sensitive info, Config is only supported in the frontend's server side functions.
+The Config client is imported from `sst/node/config`, not `sst/constructs`.
 :::
 
 ---
@@ -312,6 +313,10 @@ Config.STAGE;
 ## Other options
 
 The [`sst/node`](clients/index.md) package only supports Node.js functions. For other runtimes, SST supports loading environment variables using [dotenv](https://github.com/motdotla/dotenv).
+
+:::note
+If you are using Python, check out [this community contributed snippet](https://gist.github.com/abhimskywalker/f78a353a18c8246f9c0b20c110903a45) on using Config in your functions.
+:::
 
 ---
 

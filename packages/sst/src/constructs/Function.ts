@@ -52,14 +52,17 @@ import {
   Size as CDKSize,
   Duration as CDKDuration,
   IgnoreMode,
+  DockerCacheOption,
+  CustomResource,
 } from "aws-cdk-lib/core";
-import { Effect, PolicyStatement, Role } from "aws-cdk-lib/aws-iam";
+import { Effect, Policy, PolicyStatement, Role } from "aws-cdk-lib/aws-iam";
 import { StringParameter } from "aws-cdk-lib/aws-ssm";
 import { Platform } from "aws-cdk-lib/aws-ecr-assets";
 import { useBootstrap } from "../bootstrap.js";
 import { Colors } from "../cli/colors.js";
 import { IBucket } from "aws-cdk-lib/aws-s3";
 import { Asset } from "aws-cdk-lib/aws-s3-assets";
+import { Config } from "../config.js";
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 
 const supportedRuntimes = {
@@ -88,6 +91,28 @@ export type Runtime = keyof typeof supportedRuntimes;
 export type FunctionInlineDefinition = string | Function;
 export type FunctionDefinition = string | Function | FunctionProps;
 export interface FunctionUrlCorsProps extends functionUrlCors.CorsProps {}
+export interface FunctionDockerBuildCacheProps extends DockerCacheOption {}
+
+export interface FunctionDockerBuildProps {
+  /**
+   * Cache from options to pass to the `docker build` command.
+   * @default - no cache from args are passed
+   * @example
+   * ```js
+   * cacheFrom: [{type: "gha"}],
+   * ```
+   */
+  cacheFrom?: FunctionDockerBuildCacheProps[];
+  /**
+   * Cache to options to pass to the `docker build` command.
+   * @default - no cache to args are passed
+   * @example
+   * ```js
+   * cacheTo: {type: "gha"},
+   * ```
+   */
+  cacheTo?: FunctionDockerBuildCacheProps;
+}
 
 export interface FunctionHooks {
   /**
@@ -373,6 +398,19 @@ export interface FunctionProps
    */
   disableCloudWatchLogs?: boolean;
   /**
+   * Prefetches bound secret values and injects them into the function's environment variables.
+   * @default false
+   * @example
+   * ```js
+   * new Function(stack, "Function", {
+   *   handler: "src/function.handler",
+   *   prefetchSecrets: true
+   * })
+   * ```
+   *
+   */
+  prefetchSecrets?: boolean;
+  /**
    * The duration function logs are kept in CloudWatch Logs.
    *
    * When updating this property, unsetting it doesn't retain the logs indefinitely. Explicitly set the value to "infinite".
@@ -506,12 +544,12 @@ export interface NodeJSProps {
   /**
    * Enable or disable minification
    *
-   * @default true
+   * @default false
    *
    * @example
    * ```js
    * nodejs: {
-   *   minify: false
+   *   minify: true
    * }
    * ```
    */
@@ -605,6 +643,11 @@ export interface PythonProps {
    * your own build processes, and you are doing this for the sake of build optimization.
    */
   noDocker?: boolean;
+
+  /**
+   * Build options to pass to the docker build command.
+   */
+  dockerBuild?: FunctionDockerBuildProps;
 }
 
 /**
@@ -933,22 +976,9 @@ export class Function extends CDKFunction implements SSTConstruct {
         ...props,
         ...(props.runtime === "container"
           ? {
-              code: Code.fromAssetImage(props.handler!, {
-                ...(architecture?.dockerPlatform
-                  ? { platform: Platform.custom(architecture.dockerPlatform) }
-                  : {}),
-                ...(props.container?.cmd ? { cmd: props.container.cmd } : {}),
-                ...(props.container?.file
-                  ? { file: props.container.file }
-                  : {}),
-                ...(props.container?.buildArgs
-                  ? { buildArgs: props.container.buildArgs }
-                  : {}),
-                exclude: [".sst/dist", ".sst/artifacts"],
-                ignoreMode: IgnoreMode.GLOB,
-              }),
-              handler: CDKHandler.FROM_IMAGE,
-              runtime: CDKRuntime.FROM_IMAGE,
+              code: Code.fromInline("export function placeholder() {}"),
+              handler: "index.placeholder",
+              runtime: CDKRuntime.NODEJS_18_X,
               layers: undefined,
             }
           : {
@@ -974,8 +1004,6 @@ export class Function extends CDKFunction implements SSTConstruct {
             `➜  Building the container image for the "${this.node.id}" function...`
           );
 
-        const project = useProject();
-
         // Build function
         const result = await useRuntimeHandlers().build(
           this.node.addr,
@@ -991,9 +1019,33 @@ export class Function extends CDKFunction implements SSTConstruct {
           );
         }
 
-        // No need to update code if runtime is container
-        if (props.runtime === "container") return;
+        // Update function code for container
+        const cfnFunction = this.node.defaultChild as CfnFunction;
+        if (props.runtime === "container") {
+          const code = Code.fromAssetImage(props.handler!, {
+            ...(architecture?.dockerPlatform
+              ? { platform: Platform.custom(architecture.dockerPlatform) }
+              : {}),
+            ...(props.container?.cmd ? { cmd: props.container.cmd } : {}),
+            ...(props.container?.file ? { file: props.container.file } : {}),
+            ...(props.container?.buildArgs
+              ? { buildArgs: props.container.buildArgs }
+              : {}),
+            exclude: [".sst/dist", ".sst/artifacts"],
+            ignoreMode: IgnoreMode.GLOB,
+          });
+          const codeConfig = code.bind(this);
+          cfnFunction.packageType = "Image";
+          cfnFunction.code = {
+            imageUri: codeConfig.image?.imageUri,
+          };
+          delete cfnFunction.runtime;
+          delete cfnFunction.handler;
+          code.bindToResource(cfnFunction);
+          return;
+        }
 
+        // Update function code for non-container
         if (result.sourcemap) {
           const data = await fs.readFile(result.sourcemap);
           await fs.writeFile(result.sourcemap, zlib.gzipSync(data));
@@ -1009,7 +1061,6 @@ export class Function extends CDKFunction implements SSTConstruct {
         this.missingSourcemap = !result.sourcemap;
 
         // Update code
-        const cfnFunction = this.node.defaultChild as CfnFunction;
         const code = AssetCode.fromAsset(result.out);
         const codeConfig = code.bind(this);
 
@@ -1059,6 +1110,7 @@ export class Function extends CDKFunction implements SSTConstruct {
 
     this.disableCloudWatchLogs();
     this.createUrl();
+    this.createSecretPrefetcher();
 
     this._isLiveDevEnabled = isLiveDevEnabled;
     useFunctions().add(this.node.addr, props);
@@ -1146,6 +1198,7 @@ export class Function extends CDKFunction implements SSTConstruct {
         secrets: this.allBindings
           .filter((c) => c instanceof Secret)
           .map((c) => (c as Secret).name),
+        prefetchSecrets: this.props.prefetchSecrets,
       },
     };
   }
@@ -1194,6 +1247,42 @@ export class Function extends CDKFunction implements SSTConstruct {
       cors: functionUrlCors.buildCorsConfig(cors),
       invokeMode: streaming ? InvokeMode.RESPONSE_STREAM : InvokeMode.BUFFERED,
     });
+  }
+
+  private createSecretPrefetcher() {
+    const { prefetchSecrets } = this.props;
+    if (!prefetchSecrets) return;
+
+    const stack = Stack.of(this) as Stack;
+
+    // Create custom resource to prewarm on deploy
+    const policy = new Policy(this, "SecretPrefetcherPolicy", {
+      statements: [
+        new PolicyStatement({
+          effect: Effect.ALLOW,
+          actions: ["lambda:GetFunction", "lambda:UpdateFunctionConfiguration"],
+          resources: [this.functionArn],
+        }),
+        new PolicyStatement({
+          effect: Effect.ALLOW,
+          actions: ["ssm:GetParameters"],
+          resources: [
+            `arn:${stack.partition}:ssm:${stack.region}:${stack.account}:parameter${Config.PREFIX.STAGE}*`,
+            `arn:${stack.partition}:ssm:${stack.region}:${stack.account}:parameter${Config.PREFIX.FALLBACK}*`,
+          ],
+        }),
+      ],
+    });
+    stack.customResourceHandler.role?.attachInlinePolicy(policy);
+    const resource = new CustomResource(this, "SecretPrefetcher", {
+      serviceToken: stack.customResourceHandler.functionArn,
+      resourceType: "Custom::SecretPrefetcher",
+      properties: {
+        version: Date.now().toString(),
+        functionName: this.functionName,
+      },
+    });
+    resource.node.addDependency(policy);
   }
 
   private disableCloudWatchLogs() {

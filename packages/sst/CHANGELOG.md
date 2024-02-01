@@ -1,5 +1,150 @@
 # @serverless-stack/cli2
 
+## 2.40.1
+
+## 2.40.0
+
+### Minor Changes
+
+- [#3644](https://github.com/sst/sst/pull/3644) [`1ca805d26`](https://github.com/sst/sst/commit/1ca805d2673f25dd8790422ac1154fb3da26c91c) Thanks [@fwang](https://github.com/fwang)! - Update CDK to v2.124.0
+
+### Patch Changes
+
+- [#3586](https://github.com/sst/sst/pull/3586) [`729e5fe15`](https://github.com/sst/sst/commit/729e5fe158a01ce38da2ebbf92c214b05242367a) Thanks [@BLucky-gh](https://github.com/BLucky-gh)! - Function: Add cache options for python bundling
+
+## 2.39.13
+
+### Patch Changes
+
+- [`b4a826ae3`](https://github.com/sst/sst/commit/b4a826ae312bed164365c561cfbfa221092373a2) Thanks [@fwang](https://github.com/fwang)! - SsrSite: handle s3 upload rate limit error
+
+## 2.39.12
+
+### Patch Changes
+
+- [`ecba06be8`](https://github.com/sst/sst/commit/ecba06be80e99a8b064cf65718b6a188537e640e) Thanks [@fwang](https://github.com/fwang)! - Function: fix build hook run after CDK creates artifacts folder for container runtime
+
+## 2.39.11
+
+### Patch Changes
+
+- [`4f2302921`](https://github.com/sst/sst/commit/4f23029218869fc25a7ec9c49cfe44349c07ced7) Thanks [@fwang](https://github.com/fwang)! - NextjsSite: support per-route logging for Route Handlers
+
+## 2.39.10
+
+### Patch Changes
+
+- [#3630](https://github.com/sst/sst/pull/3630) [`953a1ac70`](https://github.com/sst/sst/commit/953a1ac7026d242c04b7ef3220236a2119ae0599) Thanks [@mathisobadia](https://github.com/mathisobadia)! - Job: Allow setting nodejs version of container image
+
+- [`c8ac970af`](https://github.com/sst/sst/commit/c8ac970af8634f0304af87066a622396dd04a3cb) Thanks [@fwang](https://github.com/fwang)! - Bootstrap: bump version to trigger CDK custom resource runtime update
+
+- [#3516](https://github.com/sst/sst/pull/3516) [`0d9cf1172`](https://github.com/sst/sst/commit/0d9cf1172638b3f92634982bac4155a04d5995de) Thanks [@morficus](https://github.com/morficus)! - NextjsSite: new option to specify custom build output path
+
+## 2.39.9
+
+### Patch Changes
+
+- [`83d013b35`](https://github.com/sst/sst/commit/83d013b354ac9bf40031642b09c9ae0e18e007e2) Thanks [@fwang](https://github.com/fwang)! - NextjsSite: fix warming when streaming is enabled
+
+## 2.39.8
+
+### Patch Changes
+
+- [`b29ce15fa`](https://github.com/sst/sst/commit/b29ce15fa94305cc50e4a40b95476cf8bd316bca) Thanks [@fwang](https://github.com/fwang)! - SsrSite: support customization via "cdk.transform" prop
+
+## 2.39.7
+
+### Patch Changes
+
+- [`cfb9f5814`](https://github.com/sst/sst/commit/cfb9f5814c828c26339ca0bb68f3f896e2375ff6) Thanks [@fwang](https://github.com/fwang)! - Revert adding @smithy/util-endpoints
+
+## 2.39.6
+
+### Patch Changes
+
+- [`ff3abe365`](https://github.com/sst/sst/commit/ff3abe36516b0e110978390178fe9c17fbac294e) Thanks [@thdxr](https://github.com/thdxr)! - fix: removed broken ion code
+
+## 2.39.5
+
+### Patch Changes
+
+- [`daec2ff64`](https://github.com/sst/sst/commit/daec2ff64b275475302e52c236f9073f27f10c94) Thanks [@fwang](https://github.com/fwang)! - Revert adding @smithy/util-endpoints
+
+## 2.39.4
+
+### Patch Changes
+
+- [`d47ea4e18`](https://github.com/sst/sst/commit/d47ea4e188abcb6b91ec91c189d320376fd8c40b) Thanks [@thdxr](https://github.com/thdxr)! - ion: resource linking
+
+## 2.39.3
+
+### Patch Changes
+
+- [`4bf0d9ceb`](https://github.com/sst/sst/commit/4bf0d9cebacc2561ff8cd5a25adda2795375b233) Thanks [@fwang](https://github.com/fwang)! - Function: experimental support for prefetching secrets
+
+- [#3602](https://github.com/sst/sst/pull/3602) [`d45f36cd3`](https://github.com/sst/sst/commit/d45f36cd31898799f9ceb8797b8bcbb31e68af89) Thanks [@bayssmekanique](https://github.com/bayssmekanique)! - Astro: fix greedy routes bug
+
+- [#3584](https://github.com/sst/sst/pull/3584) [`5201a37f0`](https://github.com/sst/sst/commit/5201a37f0e1f512920e56dfe1043855dd1a763b9) Thanks [@auvred](https://github.com/auvred)! - Properly calculate content-length for cfn custom resource responses
+
+- [`e099dcc7e`](https://github.com/sst/sst/commit/e099dcc7e1be22add7b49fd805c4ccbc92dd6d7c) Thanks [@thdxr](https://github.com/thdxr)! - workaround breaking change in aws-sdk v3
+
+## 2.39.2
+
+### Patch Changes
+
+- [`9f709ed0c`](https://github.com/sst/sst/commit/9f709ed0c8f0e093f498bb5e2fa85f0f76596509) Thanks [@thdxr](https://github.com/thdxr)! - event: fix expect error
+
+## 2.39.1
+
+### Patch Changes
+
+- [`49ef014f3`](https://github.com/sst/sst/commit/49ef014f325cc0969fad3b2c717e64da6cf885dc) Thanks [@thdxr](https://github.com/thdxr)! - event: type error fix
+
+## 2.39.0
+
+### Minor Changes
+
+- [`af704d761`](https://github.com/sst/sst/commit/af704d761cef39e0327064d16e46ac60f9741c7b) Thanks [@thdxr](https://github.com/thdxr)! - There is a slight breaking change in this release if you are using SST Events with `createEventBuilder()` - you should receive type errors for all the issues. We now support specifying any validation library so will need to configure that.
+
+  To continue using Zod you can specify the validator like so
+
+  ```
+  import { createEventBuilder, ZodValidator } from "sst/node/event-bus"
+  const event = createEventBuilder({
+    bus: "MyBus",
+    validator: ZodValidator
+  })
+  ```
+
+  Additionally we no longer assume you are passing in a zod object as the schema.
+  You'll have to update code from:
+
+  ```
+  const MyEvent = event("my.event", {
+    foo: z.string(),
+  })
+  ```
+
+  to this:
+
+  ```
+  const MyEvent = event("my.event", z.object({
+    foo: z.string(),
+  }))
+  ```
+
+  This also allows you to specify non-objects as the event properties. Additionally, if you were using advanced inference the `shape` field has been replaced with `typeof MyEvent.$input`, `typeof MyEvent.$output`, and `typeof MyEvent.$metadata`
+
+### Patch Changes
+
+- [`ceed328d5`](https://github.com/sst/sst/commit/ceed328d57721bdb214c6293b592c4aaabb649a2) Thanks [@fwang](https://github.com/fwang)! - Job: expose codebuild project via cdk
+
+- [#3590](https://github.com/sst/sst/pull/3590) [`7e859e629`](https://github.com/sst/sst/commit/7e859e629209857c74a9a1c2a3f7fa8ab6853dd8) Thanks [@bayssmekanique](https://github.com/bayssmekanique)! - EdgeFunction: fixes copyFile prop to actually copy files to deployed handler function.
+
+- [#3545](https://github.com/sst/sst/pull/3545) [`366ffedaa`](https://github.com/sst/sst/commit/366ffedaaa06aab93a032274a34bc87a24ce94c9) Thanks [@coronapl](https://github.com/coronapl)! - IoT: Fix connection closed after 5 minutes
+
+- [#3588](https://github.com/sst/sst/pull/3588) [`b82790482`](https://github.com/sst/sst/commit/b827904824948669ae49d6b1e159e48b6c43b8b8) Thanks [@bayssmekanique](https://github.com/bayssmekanique)! - SsrSite: fixes function bundler to match deployment target on bundled dependencies.
+
 ## 2.38.7
 
 ### Patch Changes

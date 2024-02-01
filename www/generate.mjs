@@ -18,6 +18,7 @@ const CDK_DOCS_MAP = {
   Stack: "",
   StackProps: "",
   CfnOutputProps: "",
+  Project: "aws_codebuild",
   IVpc: "aws_ec2",
   ISecurityGroup: "aws_ec2",
   SubnetSelection: "aws_ec2",
@@ -69,6 +70,7 @@ const CDK_DOCS_MAP = {
   IEventBus: "aws_events",
   CronOptions: "aws_events",
   EventBusProps: "aws_events",
+  Schedule: "aws_events",
   SqsQueueProps: "aws_events_targets",
   LambdaFunctionProps: "aws_events_targets",
   IStream: "aws_kinesis",
@@ -101,8 +103,10 @@ const CDK_DOCS_MAP = {
   IDistribution: "aws_cloudfront",
   IOriginRequestPolicy: "aws_cloudfront",
   AddBehaviorOptions: "aws_cloudfront",
+  AllowedMethods: "aws_cloudfront",
   CachePolicyProps: "aws_cloudfront",
   Distribution: "aws_cloudfront",
+  ErrorResponse: "aws_cloudfront",
   IResponseHeadersPolicy: "aws_cloudfront",
   S3OriginProps: "aws_cloudfront",
   OriginRequestPolicyProps: "aws_cloudfront",
@@ -487,7 +491,6 @@ function renderProperties(file, files, properties, prefix, onlyPublic) {
     lines.push(
       "_Type_ : " + renderType(file, files, nextPrefix, signature.type) + "\n"
     );
-    console.log(JSON.stringify({ signature }, null, 2));
     const comment =
       signature.comment ||
       signature.type?.declaration?.signatures?.[0]?.comment;

@@ -25,6 +25,9 @@ export const objectLike = Match.objectLike;
 export const stringLikeRegexp = Match.stringLikeRegexp;
 
 export async function createApp(props?: Partial<AppDeployProps>) {
+  // Suppress warnings about deprecated CDK props.
+  process.env.JSII_DEPRECATED = "quiet";
+
   const root = path.join(os.tmpdir(), "sst", crypto.randomUUID());
   await fs.mkdir(root, { recursive: true });
   await fs.mkdir(path.join(root, ".sst"), { recursive: true });

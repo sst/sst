@@ -41,8 +41,14 @@ export const set = (program: Program) =>
         const restarting = createSpinner(
           ` Reloading all resources using ${blue(args.name)}...`
         ).start();
-        const { edgeSites, sites, placeholderSites, functions } =
-          await Config.restart([args.name]);
+        const {
+          edgeSites,
+          sites,
+          placeholderSites,
+          functions,
+          sitesWithPrefetch,
+          functionsWithPrefetch,
+        } = await Config.restart([args.name]);
         restarting.stop().clear();
 
         const siteCount = sites.length + placeholderSites.length;
@@ -63,12 +69,19 @@ export const set = (program: Program) =>
               : `Reloaded ${functionCount} functions`
           );
         }
-        edgeSites.forEach(({ id, type }) => {
+        [...edgeSites, ...sitesWithPrefetch].forEach(({ id, type }) => {
           Colors.line(
             Colors.primary(`➜ `),
             `Redeploy the "${id}" ${type} to use the new secret`
           );
         });
+
+        if (functionsWithPrefetch.length > 0) {
+          Colors.line(
+            Colors.primary(`➜ `),
+            `Redeploy the functions with "prefetchSecret" enabled to use the new secret`
+          );
+        }
 
         await exit();
       } catch (e: any) {

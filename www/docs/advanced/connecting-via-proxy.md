@@ -19,7 +19,7 @@ npm install --save-dev global-agent
 To configure HTTPS proxy, set one of the following environment variables:
 -  GLOBAL_AGENT_HTTPS_PROXY
 -  https_proxy
--  HTTP_PROXY
+-  HTTPS_PROXY
 
 ```bash
 GLOBAL_AGENT_HTTPS_PROXY='https://127.0.0.1:8001'
