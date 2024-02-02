@@ -1041,15 +1041,7 @@ function handler(event) {
         `${name}Warmer`,
         {
           description: `${name} warmer`,
-          bundle: path.join(
-            __dirname,
-            "..",
-            "src",
-            "components",
-            "handlers",
-            "ssr-warmer",
-            "index.handler"
-          ),
+          bundle: path.join($cli.paths.platform, "dist", "ssr-warmer"),
           runtime: "nodejs20.x",
           handler: "index.handler",
           timeout: "900 seconds",

@@ -129,9 +129,9 @@ export class Vector
       return new Function(
         `${name}Ingestor`,
         {
-          description:
-            "Vector handler for ingesting data and generating embeddings",
-          handler: buildHandlerPath("ingest"),
+          description: `${name} ingest handler`,
+          bundle: buildBundlePath(),
+          handler: "index.ingest",
           environment: buildHandlerEnvironment(),
           permissions: buildHandlerPermissions(),
         },
@@ -143,8 +143,9 @@ export class Vector
       return new Function(
         `${name}Retriever`,
         {
-          description: "Vector handler for retrieving related embeddings",
-          handler: buildHandlerPath("retrieve"),
+          description: `${name} retrieve handler`,
+          bundle: buildBundlePath(),
+          handler: "index.retrieve",
           environment: buildHandlerEnvironment(),
           permissions: buildHandlerPermissions(),
         },
@@ -156,8 +157,9 @@ export class Vector
       return new Function(
         `${name}Remover`,
         {
-          description: "Vector handler for removing embeddings",
-          handler: buildHandlerPath("remove"),
+          description: `${name} remove handler`,
+          bundle: buildBundlePath(),
+          handler: "index.remove",
           environment: buildHandlerEnvironment(),
           permissions: buildHandlerPermissions(),
         },
@@ -165,16 +167,8 @@ export class Vector
       );
     }
 
-    function buildHandlerPath(functionName: string) {
-      return path.resolve(
-        __dirname,
-        "..",
-        "src",
-        "components",
-        "handlers",
-        "vector-handler",
-        `index.${functionName}`
-      );
+    function buildBundlePath() {
+      return path.join($cli.paths.platform, "dist", "vector-handler");
     }
 
     function buildHandlerEnvironment() {

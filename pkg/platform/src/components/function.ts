@@ -738,15 +738,6 @@ export class Function
                 {
                   name: "inline",
                   policy: jsonStringify({
-<<<<<<< HEAD
-                    Statement: [...argsPermissions, ...linkPermissions].map(
-                      (p) => ({
-                        Effect: "Allow",
-                        Action: p.actions,
-                        Resource: p.resources,
-                      })
-                    ),
-=======
                     Statement: [
                       ...argsPermissions,
                       ...linkPermissions,
@@ -763,7 +754,6 @@ export class Function
                       Action: p.actions,
                       Resource: p.resources,
                     })),
->>>>>>> 7971549 (live lambda progress)
                   }),
                 },
               ],
@@ -815,11 +805,7 @@ export class Function
             archive.glob(
               "**",
               { cwd: bundle, dot: true },
-<<<<<<< HEAD
-              { date: new Date(0) }
-=======
-              { date: new Date(0), mode: 0o777 },
->>>>>>> 7971549 (live lambda progress)
+              { date: new Date(0), mode: 0o777 }
             );
 
             // Add handler wrapper into the zip

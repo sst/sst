@@ -96,18 +96,10 @@ export class Remix extends Component {
 
     function buildPlan() {
       return all([outputPath, edge]).apply(([outputPath, edge]) => {
-        const { handler, inject } = createServerLambdaBundle(
+        const serverConfig = createServerLambdaBundle(
           outputPath,
-          edge ? "edge-server.js" : "regional-server.js"
+          edge ? "edge-server.mjs" : "regional-server.mjs"
         );
-        const serverConfig = {
-          handler,
-          nodejs: {
-            esbuild: {
-              inject,
-            },
-          },
-        };
 
         return validatePlan(
           transform(args?.transform?.plan, {
@@ -210,16 +202,8 @@ export class Remix extends Component {
 
       // Copy the server lambda handler
       fs.copyFileSync(
-        path.resolve(
-          __dirname,
-          "..",
-          "src",
-          "components",
-          "handlers",
-          "remix-server",
-          wrapperFile
-        ),
-        path.join(buildPath, "server.js")
+        path.join($cli.paths.platform, "dist", "remix-server", wrapperFile),
+        path.join(buildPath, "server.mjs")
       );
 
       // Copy the Remix polyfil to the server build directory
@@ -229,23 +213,19 @@ export class Remix extends Component {
       // doesn't appear to guarantee this, we therefore leverage ESBUild's
       // `inject` option to ensure that the polyfills are injected at the top of
       // the bundle.
-      const polyfillDest = path.join(buildPath, "polyfill.js");
+      const polyfillDest = path.join(buildPath, "polyfill.mjs");
       fs.copyFileSync(
-        path.resolve(
-          __dirname,
-          "..",
-          "src",
-          "components",
-          "handlers",
-          "remix-server",
-          "polyfill.js"
-        ),
+        path.join($cli.paths.platform, "dist", "remix-server", "polyfill.mjs"),
         polyfillDest
       );
 
       return {
         handler: path.join(buildPath, "server.handler"),
-        inject: [polyfillDest],
+        nodejs: {
+          esbuild: {
+            inject: [polyfillDest],
+          },
+        },
       };
     }
   }
