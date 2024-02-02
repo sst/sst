@@ -10,7 +10,6 @@ import { RandomId } from "@pulumi/random";
 import { prefixName, hashNumberToString } from "./helpers/naming";
 import { Component, Transform, transform } from "./component";
 import { Link } from "./link";
-import { FunctionPermissionArgs } from ".";
 
 /**
  * Properties to create a DNS validated certificate managed by AWS Certificate Manager.

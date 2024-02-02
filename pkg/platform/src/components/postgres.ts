@@ -5,7 +5,7 @@ import {
   Output,
 } from "@pulumi/pulumi";
 import * as aws from "@pulumi/aws";
-import { Component } from "./component";
+import { Component, Transform, transform } from "./component";
 import { Link } from "./link";
 
 export interface PostgresScalingArgs {
@@ -64,7 +64,10 @@ export interface PostgresArgs {
    * Aurora Serverless v2 scaling configuration
    */
   scaling?: Input<PostgresScalingArgs>;
-  nodes?: {};
+  transform?: {
+    cluster?: Transform<aws.rds.ClusterArgs>;
+    instance?: Transform<aws.rds.ClusterInstanceArgs>;
+  };
 }
 
 export class Postgres
@@ -112,7 +115,7 @@ export class Postgres
     function createCluster() {
       return new aws.rds.Cluster(
         `${name}Cluster`,
-        {
+        transform(args?.transform?.cluster, {
           engine: aws.rds.EngineType.AuroraPostgresql,
           engineMode: "provisioned",
           engineVersion: version,
@@ -122,7 +125,7 @@ export class Postgres
           serverlessv2ScalingConfiguration: scaling,
           skipFinalSnapshot: true,
           enableHttpEndpoint: true,
-        },
+        }),
         {
           parent,
         }
@@ -132,12 +135,12 @@ export class Postgres
     function createInstance() {
       return new aws.rds.ClusterInstance(
         `${name}Instance`,
-        {
+        transform(args?.transform?.instance, {
           clusterIdentifier: cluster.id,
           instanceClass: "db.serverless",
           engine: aws.rds.EngineType.AuroraPostgresql,
           engineVersion: cluster.engineVersion,
-        },
+        }),
         {
           parent,
         }

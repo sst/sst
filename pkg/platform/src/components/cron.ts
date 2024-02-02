@@ -5,7 +5,7 @@ import {
   Output,
 } from "@pulumi/pulumi";
 import * as aws from "@pulumi/aws";
-import { Component } from "./component";
+import { Component, Transform, transform } from "./component";
 import { Function, FunctionArgs } from ".";
 
 export interface CronJobProps {
@@ -22,12 +22,6 @@ export interface CronJobProps {
    * ```
    */
   function: Input<string | FunctionArgs>;
-  nodes?: {
-    target: Pick<
-      aws.cloudwatch.EventTargetArgs,
-      "deadLetterConfig" | "retryPolicy"
-    >;
-  };
 }
 
 export interface CronArgs {
@@ -74,10 +68,16 @@ export interface CronArgs {
    * ```
    */
   schedule: Input<`rate(${string})` | `cron(${string})`>;
+  transform?: {
+    rule?: Transform<aws.cloudwatch.EventRuleArgs>;
+    target?: Transform<aws.cloudwatch.EventTargetArgs>;
+  };
 }
 
 export class Cron extends Component {
   private fn: Output<Function>;
+  private rule: aws.cloudwatch.EventRule;
+  private target: aws.cloudwatch.EventTarget;
 
   constructor(name: string, args: CronArgs, opts?: ComponentResourceOptions) {
     super("sst:sst:Cron", name, args, opts);
@@ -90,6 +90,8 @@ export class Cron extends Component {
     createPermission();
 
     this.fn = fn;
+    this.rule = rule;
+    this.target = target;
 
     function createFunction() {
       return output(args.job).apply((job) => {
@@ -106,25 +108,22 @@ export class Cron extends Component {
     function createRule() {
       return new aws.cloudwatch.EventRule(
         `${name}Rule`,
-        {
+        transform(args.transform?.rule, {
           scheduleExpression: args.schedule,
-        },
+        }),
         { parent }
       );
     }
 
     function createTarget() {
-      return output(args.job).apply((job) => {
-        return new aws.cloudwatch.EventTarget(
-          `${name}Target`,
-          {
-            arn: fn.nodes.function.arn,
-            rule: rule.name,
-            ...(typeof job === "string" ? {} : job.nodes?.target),
-          },
-          { parent }
-        );
-      });
+      return new aws.cloudwatch.EventTarget(
+        `${name}Target`,
+        transform(args.transform?.target, {
+          arn: fn.nodes.function.arn,
+          rule: rule.name,
+        }),
+        { parent }
+      );
     }
 
     function createPermission() {
@@ -144,6 +143,8 @@ export class Cron extends Component {
   public get nodes() {
     return {
       job: this.fn,
+      rule: this.rule,
+      target: this.target,
     };
   }
 }

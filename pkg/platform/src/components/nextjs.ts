@@ -152,7 +152,6 @@ export class Nextjs extends Component implements Link.Linkable {
     //  // @ts-expect-error
     //  this.bucket = this.distribution = null;
     //  this.serverFunctionForDev = createServerFunctionForDev();
-    //  app.registerTypes(this);
     //  return;
     //}
 
@@ -217,8 +216,6 @@ export class Nextjs extends Component implements Link.Linkable {
         ([domainUrl, url]) => domainUrl ?? url
       )
     );
-
-    //app.registerTypes(this);
 
     function normalizeLogging() {
       return output(args?.logging).apply((logging) => logging ?? "per-route");
@@ -1010,19 +1007,6 @@ if (event.rawPath) {
     if (this.doNotDeploy) return;
 
     return this.cdn.domainUrl;
-  }
-
-  /**
-   * The internally created CDK resources.
-   */
-  public get nodes() {
-    if (this.doNotDeploy) return;
-
-    return {
-      server: this.server,
-      assets: this.assets,
-      cdn: this.cdn,
-    };
   }
 
   public getSSTLink() {

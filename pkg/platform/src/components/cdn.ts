@@ -9,7 +9,7 @@ import * as aws from "@pulumi/aws";
 import { DnsValidatedCertificate } from "./dns-validated-certificate.js";
 import { HttpsRedirect } from "./https-redirect.js";
 import { useProvider } from "./helpers/aws/provider.js";
-import { Component } from "./component.js";
+import { Component, Transform, transform } from "./component.js";
 import { sanitizeToPascalCase } from "./helpers/naming.js";
 import { HostedZoneLookup } from "./providers/hosted-zone-lookup.js";
 
@@ -94,8 +94,8 @@ export interface CdnArgs {
    * ```
    */
   domain?: Input<string | CdnDomainArgs>;
-  nodes: {
-    distribution: Omit<aws.cloudfront.DistributionArgs, "viewerCertificate">;
+  transform: {
+    distribution: Transform<aws.cloudfront.DistributionArgs>;
   };
 }
 
@@ -108,8 +108,6 @@ export class Cdn extends Component {
     const parent = this;
 
     const domain = normalizeDomain();
-
-    validateDistributionSettings();
 
     const zoneId = lookupHostedZoneId();
     const certificate = createSsl();
@@ -138,24 +136,6 @@ export class Cdn extends Component {
         }
         return { aliases: [], redirects: [], ...domain };
       });
-    }
-
-    function validateDistributionSettings() {
-      if (
-        (args.nodes.distribution as aws.cloudfront.DistributionArgs)
-          .viewerCertificate
-      ) {
-        throw new Error(
-          `Do not configure the "distribution.certificate". Use the "domain" to configure the domain certificate.`
-        );
-      }
-      if (
-        (args.nodes.distribution as aws.cloudfront.DistributionArgs).aliases
-      ) {
-        throw new Error(
-          `Do not configure the "distribution.aliases". Use the "domain" to configure the domain name.`
-        );
-      }
     }
 
     function lookupHostedZoneId() {
@@ -193,7 +173,20 @@ export class Cdn extends Component {
     function createDistribution() {
       return new aws.cloudfront.Distribution(
         `${name}Distribution`,
-        {
+        transform(args.transform.distribution, {
+          defaultCacheBehavior: {
+            allowedMethods: [],
+            cachedMethods: [],
+            targetOriginId: "placeholder",
+            viewerProtocolPolicy: "redirect-to-https",
+          },
+          enabled: true,
+          origins: [],
+          restrictions: {
+            geoRestriction: {
+              restrictionType: "none",
+            },
+          },
           aliases: domain
             ? output(domain).apply((domain) => [
                 domain.domainName,
@@ -208,8 +201,7 @@ export class Cdn extends Component {
             : {
                 cloudfrontDefaultCertificate: true,
               },
-          ...args.nodes.distribution,
-        },
+        }),
         { parent }
       );
     }

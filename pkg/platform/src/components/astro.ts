@@ -329,19 +329,6 @@ export class Astro extends Component implements Link.Linkable {
     return this.cdn.domainUrl;
   }
 
-  /**
-   * The internally created CDK resources.
-   */
-  public get nodes() {
-    if (this.doNotDeploy) return;
-
-    return {
-      server: this.server,
-      assets: this.assets,
-      cdn: this.cdn,
-    };
-  }
-
   public getSSTLink() {
     return {
       type: `{ url: string; }`,

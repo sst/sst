@@ -20,7 +20,7 @@ import { bootstrap } from "./helpers/aws/bootstrap.js";
 import { LogGroup } from "./providers/log-group.js";
 import { Duration, toSeconds } from "./util/duration.js";
 import { Size, toMBs } from "./util/size.js";
-import { Component } from "./component.js";
+import { Component, Transform, transform } from "./component.js";
 import { Link } from "./link.js";
 import { VisibleError } from "./error.js";
 import { Warp } from "./warp.js";
@@ -417,8 +417,8 @@ export interface FunctionArgs {
    *```
    */
   copyFiles?: Input<FunctionCopyFilesArgs[]>;
-  nodes?: {
-    function?: Omit<aws.lambda.FunctionArgs, "role">;
+  transform?: {
+    function?: Transform<aws.lambda.FunctionArgs>;
   };
 }
 
@@ -859,7 +859,7 @@ export class Function
     function createFunction() {
       return new aws.lambda.Function(
         `${name}Function`,
-        {
+        transform(args.transform?.function, {
           description: args.description,
           code: new asset.AssetArchive({
             index: new asset.StringAsset("exports.handler = () => {}"),
@@ -873,8 +873,7 @@ export class Function
             variables: environment,
           },
           architectures,
-          ...args.nodes?.function,
-        },
+        }),
         { parent }
       );
     }

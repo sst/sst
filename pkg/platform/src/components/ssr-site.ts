@@ -644,8 +644,8 @@ function handler(event) {
                 ...(props.link ?? []),
                 ...(link ?? []),
               ]),
-              nodes: {
-                function: { publish: true },
+              transform: {
+                function: (args) => ({ ...args, publish: true }),
               },
             },
             { provider: useProvider("us-east-1"), parent }
@@ -947,8 +947,9 @@ function handler(event) {
         `${name}Cdn`,
         {
           domain: args.domain,
-          nodes: {
-            distribution: {
+          transform: {
+            distribution: (distribution) => ({
+              ...distribution,
               comment: `${name} app`,
               origins: Object.values(origins),
               originGroups: Object.values(originGroups),
@@ -969,14 +970,8 @@ function handler(event) {
                   responsePagePath: "/404.html",
                 },
               ],
-              enabled: true,
-              restrictions: {
-                geoRestriction: {
-                  restrictionType: "none",
-                },
-              },
               waitForDeployment: !$dev,
-            },
+            }),
           },
         },
         // create distribution after s3 upload finishes

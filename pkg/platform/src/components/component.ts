@@ -7,15 +7,15 @@ import {
 } from "@pulumi/pulumi";
 import { prefixName } from "./helpers/naming.js";
 
-export type Transform<T> = T | ((args: T) => void);
+export type Transform<T> = T | ((args: T) => void | T);
 export function transform<T extends object>(
   transform: Transform<T> | undefined,
   args: T
 ) {
   // Case: transform is a function
   if (typeof transform === "function") {
-    transform(args);
-    return args;
+    const ret = transform(args);
+    return ret ?? args;
   }
 
   // Case: no transform
