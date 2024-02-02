@@ -486,6 +486,12 @@ export class Function
       }
     );
 
+    this.registerOutputs({
+      _metadata: {
+        handler: args.handler,
+      },
+    });
+
     this.function = fn;
     this.role = role;
     this.fnUrl = fnUrl;

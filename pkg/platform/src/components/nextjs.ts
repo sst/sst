@@ -216,6 +216,14 @@ export class Nextjs extends Component implements Link.Linkable {
         ([domainUrl, url]) => domainUrl ?? url
       )
     );
+    this.registerOutputs({
+      _metadata: {
+        mode: $dev ? "placeholder" : "deployed",
+        path: sitePath,
+        customDomainUrl: this.cdn.domainUrl,
+        edge: this.edge,
+      },
+    });
 
     function normalizeLogging() {
       return output(args?.logging).apply((logging) => logging ?? "per-route");

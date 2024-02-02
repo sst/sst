@@ -76,7 +76,7 @@ export class Postgres
 {
   private cluster: aws.rds.Cluster;
   private instance: aws.rds.ClusterInstance;
-  private databaseName: Output<string | undefined>;
+  private databaseName: Output<string>;
 
   constructor(
     name: string,
@@ -109,7 +109,7 @@ export class Postgres
     }
 
     function normalizeDatabaseName() {
-      return output(args?.databaseName).apply((name) => name);
+      return output(args?.databaseName).apply((name) => name ?? $app.name);
     }
 
     function createCluster() {
@@ -119,7 +119,7 @@ export class Postgres
           engine: aws.rds.EngineType.AuroraPostgresql,
           engineMode: "provisioned",
           engineVersion: version,
-          databaseName: args?.databaseName,
+          databaseName,
           masterUsername: "postgres",
           manageMasterUserPassword: true,
           serverlessv2ScalingConfiguration: scaling,
@@ -157,7 +157,7 @@ export class Postgres
 
   public getSSTLink() {
     return {
-      type: `{ clusterArn: string; secretArn: string; databaseName?: string }`,
+      type: `{ clusterArn: string; secretArn: string; databaseName: string }`,
       value: {
         clusterArn: this.cluster.arn,
         secretArn: this.cluster.masterUserSecrets[0].secretArn,

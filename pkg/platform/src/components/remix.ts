@@ -56,7 +56,6 @@ export class Remix extends Component implements Link.Linkable {
     //  // @ts-expect-error
     //  this.bucket = this.distribution = null;
     //  this.serverFunctionForDev = createServerFunctionForDev();
-    //  app.registerTypes(this);
     //  return;
     //}
 
@@ -88,8 +87,14 @@ export class Remix extends Component implements Link.Linkable {
         ([domainUrl, url]) => domainUrl ?? url
       )
     );
-
-    //app.registerTypes(this);
+    this.registerOutputs({
+      _metadata: {
+        mode: $dev ? "placeholder" : "deployed",
+        path: sitePath,
+        customDomainUrl: this.cdn.domainUrl,
+        edge: this.edge,
+      },
+    });
 
     function normalizeEdge() {
       return output(args?.edge).apply((edge) => edge ?? false);
