@@ -614,7 +614,7 @@ export class Function
       return output(args.link ?? []).apply((links) =>
         links.flatMap((l) => {
           if (!Link.AWS.isLinkable(l)) return [];
-          return [l.getSSTAWSPermissions()];
+          return l.getSSTAWSPermissions();
         })
       );
     }
@@ -951,11 +951,13 @@ export class Function
     };
   }
 
-  public getSSTAWSPermissions(): FunctionPermissionArgs {
-    return {
-      actions: ["lambda:InvokeFunction"],
-      resources: [this.function.arn],
-    };
+  public getSSTAWSPermissions() {
+    return [
+      {
+        actions: ["lambda:InvokeFunction"],
+        resources: [this.function.arn],
+      },
+    ];
   }
 
   /** @internal */

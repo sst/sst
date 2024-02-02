@@ -57,7 +57,7 @@ export module Link {
 
   export function makeLinkable<T>(
     obj: { new (...args: any[]): T },
-    cb: (this: T) => Definition,
+    cb: (this: T) => Definition
   ) {
     obj.prototype.getSSTLink = cb;
   }
@@ -68,7 +68,7 @@ export module Link {
 
   export module AWS {
     export interface Linkable {
-      getSSTAWSPermissions(): FunctionPermissionArgs;
+      getSSTAWSPermissions(): FunctionPermissionArgs[];
     }
 
     export function isLinkable(obj: any): obj is Linkable {
@@ -77,7 +77,7 @@ export module Link {
 
     export function makeLinkable<T>(
       obj: { new (...args: any[]): T },
-      cb: (this: T) => FunctionPermissionArgs,
+      cb: (this: T) => FunctionPermissionArgs[]
     ) {
       obj.prototype.getSSTAWSPermissions = cb;
     }

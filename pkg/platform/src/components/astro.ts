@@ -18,6 +18,7 @@ import { Bucket } from "./bucket.js";
 import { Component, transform } from "./component.js";
 import { Hint } from "./hint.js";
 import { getStringifiedRouteTree } from "./util/astroRouteCompressor.js";
+import { Link } from "./link.js";
 
 export interface AstroArgs extends SsrSiteArgs {}
 
@@ -32,7 +33,7 @@ const BUILD_META_FILE_NAME: BuildMetaFileName = "sst.buildMeta.json";
  * });
  * ```
  */
-export class Astro extends Component {
+export class Astro extends Component implements Link.Linkable {
   private doNotDeploy: Output<boolean>;
   private edge: Output<boolean>;
   private cdn: Cdn;
@@ -338,6 +339,15 @@ export class Astro extends Component {
       server: this.server,
       assets: this.assets,
       cdn: this.cdn,
+    };
+  }
+
+  public getSSTLink() {
+    return {
+      type: `{ url: string; }`,
+      value: {
+        url: this.url,
+      },
     };
   }
 

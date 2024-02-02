@@ -1,6 +1,12 @@
-import { Input, ComponentResourceOptions, output } from "@pulumi/pulumi";
+import {
+  Input,
+  ComponentResourceOptions,
+  output,
+  Output,
+} from "@pulumi/pulumi";
 import * as aws from "@pulumi/aws";
 import { Component } from "./component";
+import { Link } from "./link";
 
 export interface PostgresScalingArgs {
   /**
@@ -61,9 +67,13 @@ export interface PostgresArgs {
   nodes?: {};
 }
 
-export class Postgres extends Component {
+export class Postgres
+  extends Component
+  implements Link.Linkable, Link.AWS.Linkable
+{
   private cluster: aws.rds.Cluster;
   private instance: aws.rds.ClusterInstance;
+  private databaseName: Output<string | undefined>;
 
   constructor(
     name: string,
@@ -75,12 +85,14 @@ export class Postgres extends Component {
     const parent = this;
     const scaling = normalizeScaling();
     const version = normalizeVersion();
+    const databaseName = normalizeDatabaseName();
 
     const cluster = createCluster();
     const instance = createInstance();
 
     this.cluster = cluster;
     this.instance = instance;
+    this.databaseName = databaseName;
 
     function normalizeScaling() {
       return output(args?.scaling).apply((scaling) => ({
@@ -91,6 +103,10 @@ export class Postgres extends Component {
 
     function normalizeVersion() {
       return output(args?.version).apply((version) => version ?? "15.5");
+    }
+
+    function normalizeDatabaseName() {
+      return output(args?.databaseName).apply((name) => name);
     }
 
     function createCluster() {
@@ -134,5 +150,29 @@ export class Postgres extends Component {
       cluster: this.cluster,
       instance: this.instance,
     };
+  }
+
+  public getSSTLink() {
+    return {
+      type: `{ clusterArn: string; secretArn: string; databaseName?: string }`,
+      value: {
+        clusterArn: this.cluster.arn,
+        secretArn: this.cluster.masterUserSecrets[0].secretArn,
+        databaseName: this.databaseName,
+      },
+    };
+  }
+
+  public getSSTAWSPermissions() {
+    return [
+      {
+        actions: ["secretsmanager:GetSecretValue"],
+        resources: [this.cluster.masterUserSecrets[0].secretArn],
+      },
+      {
+        actions: ["rds-data:ExecuteStatement"],
+        resources: [this.cluster.arn],
+      },
+    ];
   }
 }

@@ -15,6 +15,7 @@ import { Cdn } from "./cdn.js";
 import { Bucket } from "./bucket.js";
 import { Component, transform } from "./component.js";
 import { Hint } from "./hint.js";
+import { Link } from "./link.js";
 
 export interface RemixArgs extends SsrSiteArgs {
   /**
@@ -33,7 +34,7 @@ export interface RemixArgs extends SsrSiteArgs {
  * });
  * ```
  */
-export class Remix extends Component {
+export class Remix extends Component implements Link.Linkable {
   private doNotDeploy: Output<boolean>;
   private edge: Output<boolean>;
   private cdn: Cdn;
@@ -258,6 +259,15 @@ export class Remix extends Component {
       server: this.server,
       assets: this.assets,
       cdn: this.cdn,
+    };
+  }
+
+  public getSSTLink() {
+    return {
+      type: `{ url: string; }`,
+      value: {
+        url: this.url,
+      },
     };
   }
 

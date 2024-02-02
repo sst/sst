@@ -148,10 +148,12 @@ export class Bucket
     };
   }
 
-  public getSSTAWSPermissions(): FunctionPermissionArgs {
-    return {
-      actions: ["s3:*"],
-      resources: [this.bucket.arn, interpolate`${this.bucket.arn}/*`],
-    };
+  public getSSTAWSPermissions() {
+    return [
+      {
+        actions: ["s3:*"],
+        resources: [this.bucket.arn, interpolate`${this.bucket.arn}/*`],
+      },
+    ];
   }
 }

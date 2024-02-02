@@ -146,7 +146,7 @@ export class Worker extends Component {
       return output(args.link ?? []).apply((links) => {
         const permissions = links.flatMap((l) => {
           if (!Link.AWS.isLinkable(l)) return [];
-          return [l.getSSTAWSPermissions()];
+          return l.getSSTAWSPermissions();
         });
 
         if (permissions.length === 0) return;
@@ -154,7 +154,7 @@ export class Worker extends Component {
         const user = new aws.iam.User(
           `${name}AwsUser`,
           { forceDestroy: true },
-          { parent },
+          { parent }
         );
 
         new aws.iam.UserPolicy(
@@ -169,13 +169,13 @@ export class Worker extends Component {
               })),
             }),
           },
-          { parent },
+          { parent }
         );
 
         const keys = new aws.iam.AccessKey(
           `${name}AwsCredentials`,
           { user: user.name },
-          { parent },
+          { parent }
         );
 
         return keys;
@@ -190,7 +190,7 @@ export class Worker extends Component {
             throw new Error(result.errors.join("\n"));
           }
           return result;
-        },
+        }
       );
       return buildResult.handler;
     }
@@ -224,8 +224,8 @@ export class Worker extends Component {
                   ]
                 : [],
             },
-            { parent },
-          ),
+            { parent }
+          )
       );
     }
 
@@ -237,14 +237,14 @@ export class Worker extends Component {
           scriptName: script.name,
           enabled: devUrlEnabled,
         },
-        { parent },
+        { parent }
       );
     }
   }
 
   public get devUrl() {
     return this.workersDevUrl.url.apply((url) =>
-      url ? `https://${url}` : url,
+      url ? `https://${url}` : url
     );
   }
 

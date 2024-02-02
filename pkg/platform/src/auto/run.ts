@@ -58,10 +58,12 @@ export async function run(program: automation.PulumiFn) {
     };
   });
   Link.AWS.makeLinkable(aws.dynamodb.Table, function () {
-    return {
-      actions: ["dynamodb:*"],
-      resources: [this.arn, interpolate`${this.arn}/*`],
-    };
+    return [
+      {
+        actions: ["dynamodb:*"],
+        resources: [this.arn, interpolate`${this.arn}/*`],
+      },
+    ];
   });
 
   Hint.reset();

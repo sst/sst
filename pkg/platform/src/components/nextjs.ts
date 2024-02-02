@@ -28,6 +28,7 @@ import { Bucket } from "./bucket.js";
 import { Component, transform } from "./component.js";
 import { sanitizeToPascalCase } from "./helpers/naming.js";
 import { Hint } from "./hint.js";
+import { Link } from "./link.js";
 
 const LAYER_VERSION = "2";
 const DEFAULT_OPEN_NEXT_VERSION = "2.3.1";
@@ -126,7 +127,7 @@ export interface NextjsArgs extends SsrSiteArgs {
  * });
  * ```
  */
-export class Nextjs extends Component {
+export class Nextjs extends Component implements Link.Linkable {
   private doNotDeploy: Output<boolean>;
   private edge: Output<boolean>;
   private cdn: Cdn;
@@ -1021,6 +1022,15 @@ if (event.rawPath) {
       server: this.server,
       assets: this.assets,
       cdn: this.cdn,
+    };
+  }
+
+  public getSSTLink() {
+    return {
+      type: `{ url: string; }`,
+      value: {
+        url: this.url,
+      },
     };
   }
 

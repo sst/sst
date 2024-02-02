@@ -214,14 +214,16 @@ export class Vector
     };
   }
 
-  public getSSTAWSPermissions(): FunctionPermissionArgs {
-    return {
-      actions: ["lambda:InvokeFunction"],
-      resources: [
-        this.ingestHandler.nodes.function.arn,
-        this.retrieveHandler.nodes.function.arn,
-        this.removeHandler.nodes.function.arn,
-      ],
-    };
+  public getSSTAWSPermissions() {
+    return [
+      {
+        actions: ["lambda:InvokeFunction"],
+        resources: [
+          this.ingestHandler.nodes.function.arn,
+          this.retrieveHandler.nodes.function.arn,
+          this.removeHandler.nodes.function.arn,
+        ],
+      },
+    ];
   }
 }
