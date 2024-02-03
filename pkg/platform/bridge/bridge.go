@@ -5,6 +5,7 @@ import (
 	"crypto/rand"
 	"crypto/tls"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"io"
 	"log/slog"
@@ -19,10 +20,14 @@ import (
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/iot"
 	MQTT "github.com/eclipse/paho.mqtt.golang"
-	"github.com/sst/ion/pkg/server/dev/aws"
+	"github.com/sst/ion/pkg/server/dev/aws/iot_writer"
 )
 
 var version = "0.0.1"
+var LAMBDA_RUNTIME_API = os.Getenv("AWS_LAMBDA_RUNTIME_API")
+var SST_APP = os.Getenv("SST_APP")
+var SST_STAGE = os.Getenv("SST_STAGE")
+var SST_FUNCTION_ID = os.Getenv("SST_FUNCTION_ID")
 
 func main() {
 	err := run()
@@ -86,17 +91,24 @@ func run() error {
 		return token.Error()
 	}
 
-	if token := mqttClient.Publish("/ion/init", 1, false, "init"); token.Wait() && token.Error() != nil {
+	prefix := fmt.Sprintf("ion/%s/%s/%s", SST_APP, SST_STAGE, clientID)
+	slog.Info("prefix", "prefix", prefix)
+
+	initPayload, err := json.Marshal(map[string]interface{}{"functionID": SST_FUNCTION_ID})
+	if err != nil {
+		return err
+	}
+
+	if token := mqttClient.Publish(prefix+"/init", 1, false, initPayload); token.Wait() && token.Error() != nil {
 		return token.Error()
 	}
 
-	writer := aws.NewIoTWriter(mqttClient, "/ion/response")
+	writer := iot_writer.New(mqttClient, prefix+"/response")
 
-	lambdaRuntimeAPI := os.Getenv("AWS_LAMBDA_RUNTIME_API")
-	slog.Info("get lambda runtime api", "url", lambdaRuntimeAPI)
+	slog.Info("get lambda runtime api", "url", LAMBDA_RUNTIME_API)
 	var conn net.Conn
 
-	if token := mqttClient.Subscribe("/ion/request", 1, func(c MQTT.Client, m MQTT.Message) {
+	if token := mqttClient.Subscribe(prefix+"/request", 1, func(c MQTT.Client, m MQTT.Message) {
 		payload := m.Payload()
 		topic := m.Topic()
 		slog.Info("received message", "topic", topic, "payload", string(payload))
@@ -105,18 +117,28 @@ func run() error {
 				return
 			}
 			conn.Write(payload)
-			slog.Info("written")
+			slog.Info("wrote request")
+		}()
+	}); token.Wait() && token.Error() != nil {
+		return token.Error()
+	}
+
+	if token := mqttClient.Subscribe(prefix+"/reboot", 1, func(c MQTT.Client, m MQTT.Message) {
+		go func() {
+			if token := mqttClient.Publish(prefix+"/init", 1, false, initPayload); token.Wait() && token.Error() != nil {
+				return
+			}
 		}()
 	}); token.Wait() && token.Error() != nil {
 		return token.Error()
 	}
 
 	for {
-		conn, err = net.Dial("tcp", lambdaRuntimeAPI)
+		conn, err = net.Dial("tcp", LAMBDA_RUNTIME_API)
 		if err != nil {
 			break
 		}
-		slog.Info("proxy ready")
+		slog.Info("waiting for response")
 		io.Copy(writer, conn)
 		writer.Flush()
 	}

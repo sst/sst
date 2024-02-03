@@ -87,7 +87,7 @@ func (s *Server) Start(parentContext context.Context) error {
 
 	var count int64
 
-	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/stream", func(w http.ResponseWriter, r *http.Request) {
 		atomic.AddInt64(&count, 1)
 		defer atomic.AddInt64(&count, -1)
 		timer.Stop()
@@ -148,7 +148,9 @@ func (s *Server) Start(parentContext context.Context) error {
 	for _, p := range s.project.Providers {
 		switch casted := p.(type) {
 		case *provider.AwsProvider:
-			cleanup, err := aws.Start(ctx, mux, casted)
+			cleanup, err := aws.Start(ctx, mux, casted,
+				s.project,
+			)
 			if err != nil {
 				return err
 			}

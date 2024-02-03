@@ -14,7 +14,7 @@ export async function build(
       name: string;
       value: string;
     }[];
-  }
+  },
 ) {
   const out = path.join($cli.paths.work, "artifacts", `${name}-src`);
   const sourcemapOut = path.join($cli.paths.work, "artifacts", `${name}-map`);
@@ -44,7 +44,7 @@ export async function build(
       ? relative
       : "",
     // Lambda handler can only contain 1 dot separating the file name and function name
-    parsed.name.replace(".", "-") + extension
+    parsed.name.replace(".", "-") + extension,
   );
   const handler = path
     .relative(out, target.replace(extension, parsed.ext))
@@ -55,7 +55,7 @@ export async function build(
   const forceExternal = ["sharp", "pg-native"];
   const { external, ...override } = nodejs.esbuild || {};
   const links = Object.fromEntries(
-    input.links?.map((item) => [item.name, item.value]) || []
+    input.links?.map((item) => [item.name, item.value]) || [],
   );
   const options: BuildOptions = {
     entryPoints: [path.resolve(file)],
@@ -121,8 +121,8 @@ export async function build(
         .filter((pkg) => !external?.includes(pkg))
         .filter((pkg) =>
           Object.values(result.metafile?.inputs || {}).some(({ imports }) =>
-            imports.some(({ path }) => path === pkg)
-          )
+            imports.some(({ path }) => path === pkg),
+          ),
         ),
     ];
 
@@ -134,9 +134,9 @@ export async function build(
           .filter(({ path }) => path.includes("sst/constructs"))
           .forEach(({ path }) => {
             warnings.push(
-              `You are importing from "${path}" in "${inputPath}". Did you mean to import from "sst/node"?`
+              `You are importing from "${path}" in "${inputPath}". Did you mean to import from "sst/node"?`,
             );
-          })
+          }),
     );
 
     if (installPackages) {
@@ -152,15 +152,15 @@ export async function build(
       const json = JSON.parse(
         await fs
           .readFile(path.join(src, "package.json"))
-          .then((x) => x.toString())
+          .then((x) => x.toString()),
       );
       await fs.writeFile(
         path.join(out, "package.json"),
         JSON.stringify({
           dependencies: Object.fromEntries(
-            installPackages.map((x) => [x, json.dependencies?.[x] || "*"])
+            installPackages.map((x) => [x, json.dependencies?.[x] || "*"]),
           ),
-        })
+        }),
       );
       const cmd = ["npm install"];
       if (installPackages.includes("sharp")) {
@@ -168,7 +168,7 @@ export async function build(
           "--platform=linux",
           input.nodes?.function?.architectures?.includes("arm_64")
             ? "--arch=arm64"
-            : "--arch=x64"
+            : "--arch=x64",
         );
       }
       await new Promise<void>((resolve, reject) => {
@@ -187,7 +187,7 @@ export async function build(
       if (nodejs.sourcemap) return;
 
       const map = Object.keys(result.metafile?.outputs || {}).find((item) =>
-        item.endsWith(".map")
+        item.endsWith(".map"),
       );
       if (!map) return;
 

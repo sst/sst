@@ -3,6 +3,9 @@ package server
 import (
 	"context"
 	"log/slog"
+	"os"
+	"path/filepath"
+	"strings"
 
 	"github.com/fsnotify/fsnotify"
 	"github.com/sst/ion/internal/util"
@@ -18,10 +21,29 @@ func startFileWatcher(ctx context.Context, root string) (util.CleanupFunc, error
 	if err != nil {
 		return nil, err
 	}
-	err = watcher.Add(root)
+	err = watcher.AddWith(root)
 	if err != nil {
 		return nil, err
 	}
+	ignoreSubstrings := []string{".sst", "node_modules"}
+
+	err = filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		if info.IsDir() {
+			for _, substring := range ignoreSubstrings {
+				if strings.Contains(path, substring) {
+					return nil
+				}
+			}
+			err = watcher.Add(path)
+			if err != nil {
+				return err
+			}
+		}
+		return nil
+	})
 
 	go func() {
 		for {

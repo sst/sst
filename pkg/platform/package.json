@@ -32,6 +32,7 @@
     "@aws-sdk/client-iot": "^3.501.0",
     "@tsconfig/node18": "18.2.2",
     "@types/archiver": "6.0.2",
+    "@types/aws-lambda": "^8.10.133",
     "aws-iot-device-sdk": "^2.2.13",
     "openai": "4.24.7",
     "prettier": "3.1.1",
