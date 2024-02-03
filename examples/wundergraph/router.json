@@ -1,0 +1,312 @@
+{
+  "engineConfig": {
+    "defaultFlushInterval": "500",
+    "datasourceConfigurations": [
+      {
+        "kind": "GRAPHQL",
+        "rootNodes": [
+          { "typeName": "Query", "fieldNames": ["productTypes"] },
+          { "typeName": "Employee", "fieldNames": ["id", "products", "notes"] },
+          { "typeName": "Consultancy", "fieldNames": ["upc", "name"] },
+          {
+            "typeName": "Cosmo",
+            "fieldNames": ["upc", "name", "repositoryURL"]
+          }
+        ],
+        "childNodes": [
+          { "typeName": "Documentation", "fieldNames": ["url", "urls"] }
+        ],
+        "overrideFieldPathFromAlias": true,
+        "customGraphql": {
+          "fetch": {
+            "url": {
+              "staticVariableContent": "https://product-api.fly.dev/graphql"
+            },
+            "method": "POST",
+            "body": {},
+            "baseUrl": {},
+            "path": {}
+          },
+          "subscription": {
+            "enabled": true,
+            "url": {},
+            "protocol": "GRAPHQL_SUBSCRIPTION_PROTOCOL_WS"
+          },
+          "federation": {
+            "enabled": true,
+            "serviceSdl": "schema {\n  query: Queries\n}\n\ntype Queries {\n  productTypes: [Products!]!\n}\n\nenum ProductName {\n  CONSULTANCY\n  COSMO\n  ENGINE\n  FINANCE\n  HUMAN_RESOURCES\n  MARKETING\n  SDK\n}\n\ntype Employee @key(fields: \"id\") {\n  id: Int!\n  products: [ProductName!]!\n  notes: String! @override(from: \"employees\")\n}\n\nunion Products = Consultancy | Cosmo | Documentation\n\ntype Consultancy @key(fields: \"upc\") {\n  upc: ID!\n  name: ProductName!\n}\n\ntype Cosmo @key(fields: \"upc\") {\n  upc: ID!\n  name: ProductName!\n  repositoryURL: String!\n}\n\ntype Documentation {\n  url(product: ProductName!): String!\n  urls(products: [ProductName!]!): [String!]!\n}"
+          },
+          "upstreamSchema": {
+            "key": "28d075e54f235ecd9400d345641679ba46d44720"
+          }
+        },
+        "requestTimeoutSeconds": "10",
+        "id": "a6357085-294c-443a-a658-d0a0e18b5ee3",
+        "keys": [
+          { "typeName": "Employee", "selectionSet": "id" },
+          { "typeName": "Consultancy", "selectionSet": "upc" },
+          { "typeName": "Cosmo", "selectionSet": "upc" }
+        ]
+      },
+      {
+        "kind": "GRAPHQL",
+        "rootNodes": [
+          { "typeName": "Query", "fieldNames": ["findEmployees"] },
+          { "typeName": "Employee", "fieldNames": ["details", "id"] }
+        ],
+        "childNodes": [
+          { "typeName": "Animal", "fieldNames": ["class", "gender"] },
+          { "typeName": "Pet", "fieldNames": ["class", "gender", "name"] },
+          {
+            "typeName": "Alligator",
+            "fieldNames": ["class", "dangerous", "gender", "name"]
+          },
+          {
+            "typeName": "Cat",
+            "fieldNames": ["class", "gender", "name", "type"]
+          },
+          {
+            "typeName": "Dog",
+            "fieldNames": ["breed", "class", "gender", "name"]
+          },
+          { "typeName": "Mouse", "fieldNames": ["class", "gender", "name"] },
+          { "typeName": "Pony", "fieldNames": ["class", "gender", "name"] },
+          {
+            "typeName": "Details",
+            "fieldNames": [
+              "forename",
+              "surname",
+              "hasChildren",
+              "maritalStatus",
+              "nationality",
+              "pets"
+            ]
+          }
+        ],
+        "overrideFieldPathFromAlias": true,
+        "customGraphql": {
+          "fetch": {
+            "url": {
+              "staticVariableContent": "https://family-api.fly.dev/graphql"
+            },
+            "method": "POST",
+            "body": {},
+            "baseUrl": {},
+            "path": {}
+          },
+          "subscription": {
+            "enabled": true,
+            "url": {},
+            "protocol": "GRAPHQL_SUBSCRIPTION_PROTOCOL_WS"
+          },
+          "federation": {
+            "enabled": true,
+            "serviceSdl": "type Query {\n  findEmployees(criteria: SearchInput): [Employee!]!\n}\n\nenum Class {\n  FISH\n  MAMMAL\n  REPTILE\n}\n\nenum Gender {\n  FEMALE\n  MALE\n  UNKNOWN\n}\n\ninterface Animal {\n  class: Class!\n  gender: Gender!\n}\n\ninterface Pet implements Animal {\n  class: Class!\n  gender: Gender!\n  name: String!\n}\n\nenum CatType {\n  HOME\n  STREET\n}\n\ntype Alligator implements Pet & Animal {\n  class: Class!\n  dangerous: String!\n  gender: Gender!\n  name: String!\n}\n\ntype Cat implements Pet & Animal {\n  class: Class!\n  gender: Gender!\n  name: String!\n  type: CatType!\n}\n\nenum DogBreed {\n  GOLDEN_RETRIEVER\n  POODLE\n  ROTTWEILER\n  YORKSHIRE_TERRIER\n}\n\ntype Dog implements Pet & Animal {\n  breed: DogBreed!\n  class: Class!\n  gender: Gender!\n  name: String!\n}\n\ntype Mouse implements Pet & Animal {\n  class: Class!\n  gender: Gender!\n  name: String!\n}\n\ntype Pony implements Pet & Animal {\n  class: Class!\n  gender: Gender!\n  name: String!\n}\n\nenum MaritalStatus {\n  ENGAGED\n  MARRIED\n}\n\nenum Nationality {\n  AMERICAN\n  DUTCH\n  ENGLISH\n  GERMAN\n  INDIAN\n  SPANISH\n  UKRAINIAN\n}\n\ntype Details  {\n  forename: String! @shareable\n  surname: String! @shareable\n  hasChildren: Boolean!\n  maritalStatus: MaritalStatus\n  nationality: Nationality!\n  pets: [Pet]\n}\n\ntype Employee @key(fields: \"id\") {\n  details: Details @shareable\n  id: Int!\n}\n\ninput SearchInput {\n  hasPets: Boolean\n  nationality: Nationality\n  nested: NestedSearchInput\n}\n\ninput NestedSearchInput {\n  maritalStatus: MaritalStatus\n  hasChildren: Boolean\n}"
+          },
+          "upstreamSchema": {
+            "key": "8db3c709c4ebcc8bfea331fbfdbefdb300b18d2d"
+          }
+        },
+        "requestTimeoutSeconds": "10",
+        "id": "8fb1f8e6-04dc-4480-b6a6-5109b59f4b6d",
+        "keys": [{ "typeName": "Employee", "selectionSet": "id" }]
+      },
+      {
+        "kind": "GRAPHQL",
+        "rootNodes": [
+          { "typeName": "Employee", "fieldNames": ["id", "hobbies"] },
+          { "typeName": "SDK", "fieldNames": ["upc", "clientLanguages"] }
+        ],
+        "childNodes": [
+          { "typeName": "Exercise", "fieldNames": ["category"] },
+          { "typeName": "Experience", "fieldNames": ["yearsOfExperience"] },
+          {
+            "typeName": "Flying",
+            "fieldNames": ["planeModels", "yearsOfExperience"]
+          },
+          {
+            "typeName": "Gaming",
+            "fieldNames": ["genres", "name", "yearsOfExperience"]
+          },
+          { "typeName": "Other", "fieldNames": ["name"] },
+          { "typeName": "Programming", "fieldNames": ["languages"] },
+          { "typeName": "Travelling", "fieldNames": ["countriesLived"] }
+        ],
+        "overrideFieldPathFromAlias": true,
+        "customGraphql": {
+          "fetch": {
+            "url": {
+              "staticVariableContent": "https://hobbies-api.fly.dev/graphql"
+            },
+            "method": "POST",
+            "body": {},
+            "baseUrl": {},
+            "path": {}
+          },
+          "subscription": {
+            "enabled": true,
+            "url": {},
+            "protocol": "GRAPHQL_SUBSCRIPTION_PROTOCOL_WS"
+          },
+          "federation": {
+            "enabled": true,
+            "serviceSdl": "enum ExerciseType {\n  CALISTHENICS\n  HIKING\n  SPORT\n  STRENGTH_TRAINING\n}\n\ntype Exercise {\n  category: ExerciseType!\n}\n\ninterface Experience {\n  yearsOfExperience: Float!\n}\n\ntype Flying implements Experience {\n  planeModels: [String!]!\n  yearsOfExperience: Float!\n}\n\nenum GameGenre {\n  ADVENTURE\n  BOARD\n  FPS\n  CARD\n  RPG\n  ROGUELITE\n  SIMULATION\n  STRATEGY\n}\n\ntype Gaming implements Experience {\n  genres: [GameGenre!]!\n  name: String!\n  yearsOfExperience: Float!\n}\n\ntype Other {\n  name: String!\n}\n\nenum ProgrammingLanguage {\n  CSHARP\n  GO\n  RUST\n  TYPESCRIPT\n}\n\ntype Programming {\n  languages: [ProgrammingLanguage!]!\n}\n\nenum Country {\n  AMERICA\n  ENGLAND\n  GERMANY\n  INDONESIA\n  KOREA\n  NETHERLANDS\n  PORTUGAL\n  SERBIA\n  SPAIN\n  TAIWAN\n  THAILAND\n}\n\ntype Travelling {\n  countriesLived: [Country!]!\n}\n\nunion Hobby = Exercise | Flying | Gaming | Programming | Travelling | Other\n\ntype Employee @key(fields: \"id\") {\n  id: Int!\n  hobbies: [Hobby!]!\n}\n\ntype SDK @key(fields: \"upc\") {\n  upc: ID!\n  clientLanguages: [ProgrammingLanguage!]!\n}"
+          },
+          "upstreamSchema": {
+            "key": "9424607e5cb88b2944cfa4b9793d2447652731e8"
+          }
+        },
+        "requestTimeoutSeconds": "10",
+        "id": "dea1e48a-5b09-4d48-b10d-dcb5663cf582",
+        "keys": [
+          { "typeName": "Employee", "selectionSet": "id" },
+          { "typeName": "SDK", "selectionSet": "upc" }
+        ]
+      },
+      {
+        "kind": "GRAPHQL",
+        "rootNodes": [
+          {
+            "typeName": "Query",
+            "fieldNames": ["employee", "employees", "products", "teammates"]
+          },
+          { "typeName": "Mutation", "fieldNames": ["updateEmployeeTag"] },
+          { "typeName": "Subscription", "fieldNames": ["currentTime"] },
+          {
+            "typeName": "Employee",
+            "fieldNames": ["details", "id", "tag", "role", "updatedAt"]
+          },
+          { "typeName": "Consultancy", "fieldNames": ["upc", "lead"] },
+          { "typeName": "Cosmo", "fieldNames": ["upc", "engineers", "lead"] },
+          { "typeName": "SDK", "fieldNames": ["upc", "engineers", "owner"] }
+        ],
+        "childNodes": [
+          { "typeName": "RoleType", "fieldNames": ["departments", "title"] },
+          { "typeName": "Identifiable", "fieldNames": ["id"] },
+          {
+            "typeName": "Engineer",
+            "fieldNames": ["departments", "engineerType", "title"]
+          },
+          { "typeName": "Marketer", "fieldNames": ["departments", "title"] },
+          {
+            "typeName": "Operator",
+            "fieldNames": ["departments", "operatorType", "title"]
+          },
+          {
+            "typeName": "Details",
+            "fieldNames": ["forename", "location", "surname"]
+          },
+          { "typeName": "Time", "fieldNames": ["unixTime", "timeStamp"] },
+          { "typeName": "IProduct", "fieldNames": ["upc", "engineers"] }
+        ],
+        "overrideFieldPathFromAlias": true,
+        "customGraphql": {
+          "fetch": {
+            "url": {
+              "staticVariableContent": "https://employees-api.fly.dev/graphql"
+            },
+            "method": "POST",
+            "body": {},
+            "baseUrl": {},
+            "path": {}
+          },
+          "subscription": {
+            "enabled": true,
+            "url": {},
+            "protocol": "GRAPHQL_SUBSCRIPTION_PROTOCOL_WS"
+          },
+          "federation": {
+            "enabled": true,
+            "serviceSdl": "type Query {\n  employee(id: Int!): Employee\n  employees: [Employee!]!\n  products: [Products!]!\n  teammates(team: Department!): [Employee!]!\n}\n\ntype Mutation {\n  updateEmployeeTag(id: Int!, tag: String!): Employee\n}\n\ntype Subscription {\n  \"\"\"\n  `currentTime` will return a stream of `Time` objects.\n  \"\"\"\n  currentTime: Time!\n}\n\nenum Department {\n  ENGINEERING\n  MARKETING\n  OPERATIONS\n}\n\ninterface RoleType {\n  departments: [Department!]!\n  title: [String!]!\n}\n\nenum EngineerType {\n  BACKEND\n  FRONTEND\n  FULLSTACK\n}\n\ninterface Identifiable {\n  id: Int!\n}\n\ntype Engineer implements RoleType {\n  departments: [Department!]!\n  engineerType: EngineerType!\n  title: [String!]!\n}\n\ntype Marketer implements RoleType {\n  departments: [Department!]!\n  title: [String!]!\n}\n\nenum OperationType {\n  FINANCE\n  HUMAN_RESOURCES\n}\n\ntype Operator implements RoleType {\n  departments: [Department!]!\n  operatorType: [OperationType!]!\n  title: [String!]!\n}\n\nenum Country {\n  AMERICA\n  ENGLAND\n  GERMANY\n  INDIA\n  NETHERLANDS\n  PORTUGAL\n  SPAIN\n  UKRAINE\n}\n\ntype Details @shareable {\n  forename: String!\n  location: Country!\n  surname: String!\n}\n\ntype Employee implements Identifiable @key(fields: \"id\") {\n  details: Details! @shareable\n  id: Int!\n  tag: String!\n  role: RoleType!\n  notes: String\n  updatedAt: String!\n}\n\ntype Time {\n  unixTime: Int!\n  timeStamp: String!\n}\n\nunion Products = Consultancy | Cosmo | SDK\n\ninterface IProduct {\n  upc: ID!\n  engineers: [Employee!]!\n}\n\ntype Consultancy @key(fields: \"upc\") {\n  upc: ID!\n  lead: Employee!\n}\n\ntype Cosmo implements IProduct @key(fields: \"upc\") {\n  upc: ID!\n  engineers: [Employee!]!\n  lead: Employee!\n}\n\ntype SDK implements IProduct @key(fields: \"upc\") {\n  upc: ID!\n  engineers: [Employee!]!\n  owner: Employee!\n}\n"
+          },
+          "upstreamSchema": {
+            "key": "3ff225598d21485cbe809f9a750b57bdfcaf5010"
+          }
+        },
+        "requestTimeoutSeconds": "10",
+        "id": "a06cbefa-1f19-4e3f-9b9c-74bf3688d1d9",
+        "keys": [
+          { "typeName": "Employee", "selectionSet": "id" },
+          { "typeName": "Consultancy", "selectionSet": "upc" },
+          { "typeName": "Cosmo", "selectionSet": "upc" },
+          { "typeName": "SDK", "selectionSet": "upc" }
+        ]
+      }
+    ],
+    "fieldConfigurations": [
+      {
+        "typeName": "Query",
+        "fieldName": "findEmployees",
+        "argumentsConfiguration": [
+          { "name": "criteria", "sourceType": "FIELD_ARGUMENT" }
+        ]
+      },
+      {
+        "typeName": "Query",
+        "fieldName": "employee",
+        "argumentsConfiguration": [
+          { "name": "id", "sourceType": "FIELD_ARGUMENT" }
+        ]
+      },
+      {
+        "typeName": "Query",
+        "fieldName": "teammates",
+        "argumentsConfiguration": [
+          { "name": "team", "sourceType": "FIELD_ARGUMENT" }
+        ]
+      },
+      {
+        "typeName": "Documentation",
+        "fieldName": "url",
+        "argumentsConfiguration": [
+          { "name": "product", "sourceType": "FIELD_ARGUMENT" }
+        ]
+      },
+      {
+        "typeName": "Documentation",
+        "fieldName": "urls",
+        "argumentsConfiguration": [
+          { "name": "products", "sourceType": "FIELD_ARGUMENT" }
+        ]
+      },
+      {
+        "typeName": "Mutation",
+        "fieldName": "updateEmployeeTag",
+        "argumentsConfiguration": [
+          { "name": "id", "sourceType": "FIELD_ARGUMENT" },
+          { "name": "tag", "sourceType": "FIELD_ARGUMENT" }
+        ]
+      }
+    ],
+    "graphqlSchema": "directive @tag(name: String!) repeatable on ARGUMENT_DEFINITION | ENUM | ENUM_VALUE | FIELD_DEFINITION | INPUT_FIELD_DEFINITION | INPUT_OBJECT | INTERFACE | OBJECT | SCALAR | UNION\n\ndirective @inaccessible on ARGUMENT_DEFINITION | ENUM | ENUM_VALUE | FIELD_DEFINITION | INPUT_FIELD_DEFINITION | INPUT_OBJECT | INTERFACE | OBJECT | SCALAR | UNION\n\nunion Products = Consultancy | Cosmo | Documentation | SDK\n\ninterface Animal {\n  class: Class!\n  gender: Gender!\n}\n\ninterface Experience {\n  yearsOfExperience: Float!\n}\n\nunion Hobby = Exercise | Flying | Gaming | Programming | Travelling | Other\n\ninterface RoleType {\n  departments: [Department!]!\n  title: [String!]!\n}\n\ninterface Identifiable {\n  id: Int!\n}\n\ninterface IProduct {\n  upc: ID!\n  engineers: [Employee!]!\n}\n\ntype Query {\n  productTypes: [Products!]!\n  findEmployees(criteria: SearchInput): [Employee!]!\n  employee(id: Int!): Employee\n  employees: [Employee!]!\n  products: [Products!]!\n  teammates(team: Department!): [Employee!]!\n}\n\nenum ProductName {\n  CONSULTANCY\n  COSMO\n  ENGINE\n  FINANCE\n  HUMAN_RESOURCES\n  MARKETING\n  SDK\n}\n\ntype Consultancy {\n  upc: ID!\n  name: ProductName!\n  lead: Employee!\n}\n\ntype Documentation {\n  url(product: ProductName!): String!\n  urls(products: [ProductName!]!): [String!]!\n}\n\nenum Class {\n  FISH\n  MAMMAL\n  REPTILE\n}\n\nenum Gender {\n  FEMALE\n  MALE\n  UNKNOWN\n}\n\nenum CatType {\n  HOME\n  STREET\n}\n\nenum DogBreed {\n  GOLDEN_RETRIEVER\n  POODLE\n  ROTTWEILER\n  YORKSHIRE_TERRIER\n}\n\nenum MaritalStatus {\n  ENGAGED\n  MARRIED\n}\n\nenum Nationality {\n  AMERICAN\n  DUTCH\n  ENGLISH\n  GERMAN\n  INDIAN\n  SPANISH\n  UKRAINIAN\n}\n\ntype Details {\n  forename: String!\n  surname: String!\n  hasChildren: Boolean!\n  maritalStatus: MaritalStatus\n  nationality: Nationality!\n  pets: [Pet]\n  location: Country!\n}\n\ninput SearchInput {\n  hasPets: Boolean\n  nationality: Nationality\n  nested: NestedSearchInput\n}\n\ninput NestedSearchInput {\n  maritalStatus: MaritalStatus\n  hasChildren: Boolean\n}\n\nenum ExerciseType {\n  CALISTHENICS\n  HIKING\n  SPORT\n  STRENGTH_TRAINING\n}\n\ntype Exercise {\n  category: ExerciseType!\n}\n\nenum GameGenre {\n  ADVENTURE\n  BOARD\n  FPS\n  CARD\n  RPG\n  ROGUELITE\n  SIMULATION\n  STRATEGY\n}\n\ntype Other {\n  name: String!\n}\n\nenum ProgrammingLanguage {\n  CSHARP\n  GO\n  RUST\n  TYPESCRIPT\n}\n\ntype Programming {\n  languages: [ProgrammingLanguage!]!\n}\n\nenum Country {\n  AMERICA\n  ENGLAND\n  GERMANY\n  INDONESIA\n  KOREA\n  NETHERLANDS\n  PORTUGAL\n  SERBIA\n  SPAIN\n  TAIWAN\n  THAILAND\n  INDIA\n  UKRAINE\n}\n\ntype Travelling {\n  countriesLived: [Country!]!\n}\n\ntype Mutation {\n  updateEmployeeTag(id: Int!, tag: String!): Employee\n}\n\ntype Subscription {\n  \"\"\"`currentTime` will return a stream of `Time` objects.\"\"\"\n  currentTime: Time!\n}\n\nenum Department {\n  ENGINEERING\n  MARKETING\n  OPERATIONS\n}\n\nenum EngineerType {\n  BACKEND\n  FRONTEND\n  FULLSTACK\n}\n\nenum OperationType {\n  FINANCE\n  HUMAN_RESOURCES\n}\n\ntype Time {\n  unixTime: Int!\n  timeStamp: String!\n}\n\ninterface Pet implements Animal {\n  class: Class!\n  gender: Gender!\n  name: String!\n}\n\ntype Employee implements Identifiable {\n  id: Int!\n  products: [ProductName!]!\n  notes: String!\n  details: Details\n  hobbies: [Hobby!]!\n  tag: String!\n  role: RoleType!\n  updatedAt: String!\n}\n\ntype Cosmo implements IProduct {\n  upc: ID!\n  name: ProductName!\n  repositoryURL: String!\n  engineers: [Employee!]!\n  lead: Employee!\n}\n\ntype Alligator implements Pet & Animal {\n  class: Class!\n  dangerous: String!\n  gender: Gender!\n  name: String!\n}\n\ntype Cat implements Pet & Animal {\n  class: Class!\n  gender: Gender!\n  name: String!\n  type: CatType!\n}\n\ntype Dog implements Pet & Animal {\n  breed: DogBreed!\n  class: Class!\n  gender: Gender!\n  name: String!\n}\n\ntype Mouse implements Pet & Animal {\n  class: Class!\n  gender: Gender!\n  name: String!\n}\n\ntype Pony implements Pet & Animal {\n  class: Class!\n  gender: Gender!\n  name: String!\n}\n\ntype Flying implements Experience {\n  planeModels: [String!]!\n  yearsOfExperience: Float!\n}\n\ntype Gaming implements Experience {\n  genres: [GameGenre!]!\n  name: String!\n  yearsOfExperience: Float!\n}\n\ntype SDK implements IProduct {\n  upc: ID!\n  clientLanguages: [ProgrammingLanguage!]!\n  engineers: [Employee!]!\n  owner: Employee!\n}\n\ntype Engineer implements RoleType {\n  departments: [Department!]!\n  engineerType: EngineerType!\n  title: [String!]!\n}\n\ntype Marketer implements RoleType {\n  departments: [Department!]!\n  title: [String!]!\n}\n\ntype Operator implements RoleType {\n  departments: [Department!]!\n  operatorType: [OperationType!]!\n  title: [String!]!\n}",
+    "stringStorage": {
+      "28d075e54f235ecd9400d345641679ba46d44720": "schema {\n  query: Queries\n}\n\ndirective @composeDirective(name: String!) repeatable on SCHEMA\n\ndirective @eventsPublish(sourceID: String, topic: String!) on FIELD_DEFINITION\n\ndirective @eventsRequest(sourceID: String, topic: String!) on FIELD_DEFINITION\n\ndirective @eventsSubscribe(sourceID: String, topic: String!) on FIELD_DEFINITION\n\ndirective @extends on INTERFACE | OBJECT\n\ndirective @external on FIELD_DEFINITION | OBJECT\n\ndirective @inaccessible on ARGUMENT_DEFINITION | ENUM | ENUM_VALUE | FIELD_DEFINITION | INPUT_FIELD_DEFINITION | INPUT_OBJECT | INTERFACE | OBJECT | SCALAR | UNION\n\ndirective @interfaceObject on OBJECT\n\ndirective @key(fields: openfed__FieldSet!, resolvable: Boolean = true) repeatable on INTERFACE | OBJECT\n\ndirective @link(as: String, for: String, import: [String], url: String!) repeatable on SCHEMA\n\ndirective @override(from: String!) on FIELD_DEFINITION\n\ndirective @provides(fields: openfed__FieldSet!) on FIELD_DEFINITION\n\ndirective @requires(fields: openfed__FieldSet!) on FIELD_DEFINITION\n\ndirective @shareable on FIELD_DEFINITION | OBJECT\n\ndirective @tag(name: String!) repeatable on ARGUMENT_DEFINITION | ENUM | ENUM_VALUE | FIELD_DEFINITION | INPUT_FIELD_DEFINITION | INPUT_OBJECT | INTERFACE | OBJECT | SCALAR | UNION\n\ntype Consultancy @key(fields: \"upc\") {\n  name: ProductName!\n  upc: ID!\n}\n\ntype Cosmo @key(fields: \"upc\") {\n  name: ProductName!\n  repositoryURL: String!\n  upc: ID!\n}\n\ntype Documentation {\n  url(product: ProductName!): String!\n  urls(products: [ProductName!]!): [String!]!\n}\n\ntype Employee @key(fields: \"id\") {\n  id: Int!\n  notes: String! @override(from: \"employees\")\n  products: [ProductName!]!\n}\n\nenum ProductName {\n  CONSULTANCY\n  COSMO\n  ENGINE\n  FINANCE\n  HUMAN_RESOURCES\n  MARKETING\n  SDK\n}\n\nunion Products = Consultancy | Cosmo | Documentation\n\ntype Queries {\n  productTypes: [Products!]!\n}\n\nscalar openfed__FieldSet",
+      "3ff225598d21485cbe809f9a750b57bdfcaf5010": "schema {\n  query: Query\n  mutation: Mutation\n  subscription: Subscription\n}\n\ndirective @composeDirective(name: String!) repeatable on SCHEMA\n\ndirective @eventsPublish(sourceID: String, topic: String!) on FIELD_DEFINITION\n\ndirective @eventsRequest(sourceID: String, topic: String!) on FIELD_DEFINITION\n\ndirective @eventsSubscribe(sourceID: String, topic: String!) on FIELD_DEFINITION\n\ndirective @extends on INTERFACE | OBJECT\n\ndirective @external on FIELD_DEFINITION | OBJECT\n\ndirective @inaccessible on ARGUMENT_DEFINITION | ENUM | ENUM_VALUE | FIELD_DEFINITION | INPUT_FIELD_DEFINITION | INPUT_OBJECT | INTERFACE | OBJECT | SCALAR | UNION\n\ndirective @interfaceObject on OBJECT\n\ndirective @key(fields: openfed__FieldSet!, resolvable: Boolean = true) repeatable on INTERFACE | OBJECT\n\ndirective @link(as: String, for: String, import: [String], url: String!) repeatable on SCHEMA\n\ndirective @override(from: String!) on FIELD_DEFINITION\n\ndirective @provides(fields: openfed__FieldSet!) on FIELD_DEFINITION\n\ndirective @requires(fields: openfed__FieldSet!) on FIELD_DEFINITION\n\ndirective @shareable on FIELD_DEFINITION | OBJECT\n\ndirective @tag(name: String!) repeatable on ARGUMENT_DEFINITION | ENUM | ENUM_VALUE | FIELD_DEFINITION | INPUT_FIELD_DEFINITION | INPUT_OBJECT | INTERFACE | OBJECT | SCALAR | UNION\n\ntype Consultancy @key(fields: \"upc\") {\n  lead: Employee!\n  upc: ID!\n}\n\ntype Cosmo implements IProduct @key(fields: \"upc\") {\n  engineers: [Employee!]!\n  lead: Employee!\n  upc: ID!\n}\n\nenum Country {\n  AMERICA\n  ENGLAND\n  GERMANY\n  INDIA\n  NETHERLANDS\n  PORTUGAL\n  SPAIN\n  UKRAINE\n}\n\nenum Department {\n  ENGINEERING\n  MARKETING\n  OPERATIONS\n}\n\ntype Details @shareable {\n  forename: String!\n  location: Country!\n  surname: String!\n}\n\ntype Employee implements Identifiable @key(fields: \"id\") {\n  details: Details! @shareable\n  id: Int!\n  notes: String\n  role: RoleType!\n  tag: String!\n  updatedAt: String!\n}\n\ntype Engineer implements RoleType {\n  departments: [Department!]!\n  engineerType: EngineerType!\n  title: [String!]!\n}\n\nenum EngineerType {\n  BACKEND\n  FRONTEND\n  FULLSTACK\n}\n\ninterface IProduct {\n  engineers: [Employee!]!\n  upc: ID!\n}\n\ninterface Identifiable {\n  id: Int!\n}\n\ntype Marketer implements RoleType {\n  departments: [Department!]!\n  title: [String!]!\n}\n\ntype Mutation {\n  updateEmployeeTag(id: Int!, tag: String!): Employee\n}\n\nenum OperationType {\n  FINANCE\n  HUMAN_RESOURCES\n}\n\ntype Operator implements RoleType {\n  departments: [Department!]!\n  operatorType: [OperationType!]!\n  title: [String!]!\n}\n\nunion Products = Consultancy | Cosmo | SDK\n\ntype Query {\n  employee(id: Int!): Employee\n  employees: [Employee!]!\n  products: [Products!]!\n  teammates(team: Department!): [Employee!]!\n}\n\ninterface RoleType {\n  departments: [Department!]!\n  title: [String!]!\n}\n\ntype SDK implements IProduct @key(fields: \"upc\") {\n  engineers: [Employee!]!\n  owner: Employee!\n  upc: ID!\n}\n\ntype Subscription {\n  \"\"\"`currentTime` will return a stream of `Time` objects.\"\"\"\n  currentTime: Time!\n}\n\ntype Time {\n  timeStamp: String!\n  unixTime: Int!\n}\n\nscalar openfed__FieldSet",
+      "8db3c709c4ebcc8bfea331fbfdbefdb300b18d2d": "schema {\n  query: Query\n}\n\ndirective @composeDirective(name: String!) repeatable on SCHEMA\n\ndirective @eventsPublish(sourceID: String, topic: String!) on FIELD_DEFINITION\n\ndirective @eventsRequest(sourceID: String, topic: String!) on FIELD_DEFINITION\n\ndirective @eventsSubscribe(sourceID: String, topic: String!) on FIELD_DEFINITION\n\ndirective @extends on INTERFACE | OBJECT\n\ndirective @external on FIELD_DEFINITION | OBJECT\n\ndirective @inaccessible on ARGUMENT_DEFINITION | ENUM | ENUM_VALUE | FIELD_DEFINITION | INPUT_FIELD_DEFINITION | INPUT_OBJECT | INTERFACE | OBJECT | SCALAR | UNION\n\ndirective @interfaceObject on OBJECT\n\ndirective @key(fields: openfed__FieldSet!, resolvable: Boolean = true) repeatable on INTERFACE | OBJECT\n\ndirective @link(as: String, for: String, import: [String], url: String!) repeatable on SCHEMA\n\ndirective @override(from: String!) on FIELD_DEFINITION\n\ndirective @provides(fields: openfed__FieldSet!) on FIELD_DEFINITION\n\ndirective @requires(fields: openfed__FieldSet!) on FIELD_DEFINITION\n\ndirective @shareable on FIELD_DEFINITION | OBJECT\n\ndirective @tag(name: String!) repeatable on ARGUMENT_DEFINITION | ENUM | ENUM_VALUE | FIELD_DEFINITION | INPUT_FIELD_DEFINITION | INPUT_OBJECT | INTERFACE | OBJECT | SCALAR | UNION\n\ntype Alligator implements Animal & Pet {\n  class: Class!\n  dangerous: String!\n  gender: Gender!\n  name: String!\n}\n\ninterface Animal {\n  class: Class!\n  gender: Gender!\n}\n\ntype Cat implements Animal & Pet {\n  class: Class!\n  gender: Gender!\n  name: String!\n  type: CatType!\n}\n\nenum CatType {\n  HOME\n  STREET\n}\n\nenum Class {\n  FISH\n  MAMMAL\n  REPTILE\n}\n\ntype Details {\n  forename: String! @shareable\n  hasChildren: Boolean!\n  maritalStatus: MaritalStatus\n  nationality: Nationality!\n  pets: [Pet]\n  surname: String! @shareable\n}\n\ntype Dog implements Animal & Pet {\n  breed: DogBreed!\n  class: Class!\n  gender: Gender!\n  name: String!\n}\n\nenum DogBreed {\n  GOLDEN_RETRIEVER\n  POODLE\n  ROTTWEILER\n  YORKSHIRE_TERRIER\n}\n\ntype Employee @key(fields: \"id\") {\n  details: Details @shareable\n  id: Int!\n}\n\nenum Gender {\n  FEMALE\n  MALE\n  UNKNOWN\n}\n\nenum MaritalStatus {\n  ENGAGED\n  MARRIED\n}\n\ntype Mouse implements Animal & Pet {\n  class: Class!\n  gender: Gender!\n  name: String!\n}\n\nenum Nationality {\n  AMERICAN\n  DUTCH\n  ENGLISH\n  GERMAN\n  INDIAN\n  SPANISH\n  UKRAINIAN\n}\n\ninput NestedSearchInput {\n  hasChildren: Boolean\n  maritalStatus: MaritalStatus\n}\n\ninterface Pet implements Animal {\n  class: Class!\n  gender: Gender!\n  name: String!\n}\n\ntype Pony implements Animal & Pet {\n  class: Class!\n  gender: Gender!\n  name: String!\n}\n\ntype Query {\n  findEmployees(criteria: SearchInput): [Employee!]!\n}\n\ninput SearchInput {\n  hasPets: Boolean\n  nationality: Nationality\n  nested: NestedSearchInput\n}\n\nscalar openfed__FieldSet",
+      "9424607e5cb88b2944cfa4b9793d2447652731e8": "directive @eventsPublish(sourceID: String, topic: String!) on FIELD_DEFINITION\n\ndirective @eventsRequest(sourceID: String, topic: String!) on FIELD_DEFINITION\n\ndirective @eventsSubscribe(sourceID: String, topic: String!) on FIELD_DEFINITION\n\ndirective @extends on INTERFACE | OBJECT\n\ndirective @external on FIELD_DEFINITION | OBJECT\n\ndirective @key(fields: openfed__FieldSet!, resolvable: Boolean = true) repeatable on INTERFACE | OBJECT\n\ndirective @provides(fields: openfed__FieldSet!) on FIELD_DEFINITION\n\ndirective @requires(fields: openfed__FieldSet!) on FIELD_DEFINITION\n\ndirective @tag(name: String!) repeatable on ARGUMENT_DEFINITION | ENUM | ENUM_VALUE | FIELD_DEFINITION | INPUT_FIELD_DEFINITION | INPUT_OBJECT | INTERFACE | OBJECT | SCALAR | UNION\n\nenum Country {\n  AMERICA\n  ENGLAND\n  GERMANY\n  INDONESIA\n  KOREA\n  NETHERLANDS\n  PORTUGAL\n  SERBIA\n  SPAIN\n  TAIWAN\n  THAILAND\n}\n\ntype Employee @key(fields: \"id\") {\n  hobbies: [Hobby!]!\n  id: Int!\n}\n\ntype Exercise {\n  category: ExerciseType!\n}\n\nenum ExerciseType {\n  CALISTHENICS\n  HIKING\n  SPORT\n  STRENGTH_TRAINING\n}\n\ninterface Experience {\n  yearsOfExperience: Float!\n}\n\ntype Flying implements Experience {\n  planeModels: [String!]!\n  yearsOfExperience: Float!\n}\n\nenum GameGenre {\n  ADVENTURE\n  BOARD\n  CARD\n  FPS\n  ROGUELITE\n  RPG\n  SIMULATION\n  STRATEGY\n}\n\ntype Gaming implements Experience {\n  genres: [GameGenre!]!\n  name: String!\n  yearsOfExperience: Float!\n}\n\nunion Hobby = Exercise | Flying | Gaming | Other | Programming | Travelling\n\ntype Other {\n  name: String!\n}\n\ntype Programming {\n  languages: [ProgrammingLanguage!]!\n}\n\nenum ProgrammingLanguage {\n  CSHARP\n  GO\n  RUST\n  TYPESCRIPT\n}\n\ntype SDK @key(fields: \"upc\") {\n  clientLanguages: [ProgrammingLanguage!]!\n  upc: ID!\n}\n\ntype Travelling {\n  countriesLived: [Country!]!\n}\n\nscalar openfed__FieldSet"
+    }
+  },
+  "version": "1f14e1ca-1945-4406-bfd1-b381db9a9ca0",
+  "subgraphs": [
+    {
+      "id": "a6357085-294c-443a-a658-d0a0e18b5ee3",
+      "name": "products",
+      "routingUrl": "https://product-api.fly.dev/graphql"
+    },
+    {
+      "id": "8fb1f8e6-04dc-4480-b6a6-5109b59f4b6d",
+      "name": "family",
+      "routingUrl": "https://family-api.fly.dev/graphql"
+    },
+    {
+      "id": "dea1e48a-5b09-4d48-b10d-dcb5663cf582",
+      "name": "hobbies",
+      "routingUrl": "https://hobbies-api.fly.dev/graphql"
+    },
+    {
+      "id": "a06cbefa-1f19-4e3f-9b9c-74bf3688d1d9",
+      "name": "employees",
+      "routingUrl": "https://employees-api.fly.dev/graphql"
+    }
+  ]
+}

@@ -67,7 +67,7 @@ func Connect(ctx context.Context, input ConnectInput) error {
 
 	}
 
-	resp, err := http.Get("http://" + addr + "/")
+	resp, err := http.Get("http://" + addr + "/stream")
 	if err != nil {
 		cleanupExisting(input.CfgPath, input.Stage)
 		return Connect(ctx, input)

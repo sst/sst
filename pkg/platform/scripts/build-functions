@@ -1,0 +1,3 @@
+#!/bin/sh
+
+bun build ./functions/nodejs-runtime/index.ts --target=node --outdir ./dist/nodejs-runtime/

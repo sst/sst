@@ -35,8 +35,8 @@ await Promise.all(
         ].join(""),
       },
       outfile: `./dist/${file}/index.mjs`,
-    })
-  )
+    }),
+  ),
 );
 
 // Do not require transpile
@@ -44,6 +44,6 @@ await Promise.all(
   ["remix-server"].map((dir) =>
     fs.cp(`./functions/${dir}`, `./dist/${dir}`, {
       recursive: true,
-    })
-  )
+    }),
+  ),
 );

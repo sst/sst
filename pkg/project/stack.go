@@ -53,10 +53,12 @@ type ConcurrentUpdateError struct{}
 type Links map[string]interface{}
 
 type WarpDefinition struct {
-	FunctionID string                 `json:"functionID"`
-	Runtime    string                 `json:"runtime"`
-	Properties map[string]interface{} `json:"properties"`
-	Links      []string               `json:"links"`
+	FunctionID string          `json:"functionID"`
+	Runtime    string          `json:"runtime"`
+	Handler    string          `json:"handler"`
+	Bundle     string          `json:"bundle"`
+	Properties json.RawMessage `json:"properties"`
+	Links      []string        `json:"links"`
 }
 
 type Warps map[string]WarpDefinition

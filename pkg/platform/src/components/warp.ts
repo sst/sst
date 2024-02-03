@@ -5,6 +5,8 @@ export module Warp {
     functionID: string;
     runtime: Input<string>;
     properties: Input<any>;
+    handler: Input<string>;
+    bundle?: Input<string>;
     links: Input<string[]>;
   }
   let warps: Record<string, Definition> = {};

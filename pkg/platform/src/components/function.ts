@@ -259,7 +259,7 @@ export interface FunctionArgs {
    * }
    * ```
    */
-  runtime?: Input<"nodejs18.x" | "nodejs20.x">;
+  runtime?: Input<"nodejs18.x" | "nodejs20.x" | "provided.al2023">;
   /**
    * Path to the source code directory for the function.
    * Use `bundle` only when the function code is ready to be deployed to Lambda.
@@ -435,7 +435,7 @@ export class Function
   constructor(
     name: string,
     args: FunctionArgs,
-    opts?: ComponentResourceOptions
+    opts?: ComponentResourceOptions,
   ) {
     super("sst:sst:Function", name, args, opts);
 
@@ -467,14 +467,16 @@ export class Function
     const fnUrl = createUrl();
 
     const links = output(linkData).apply((input) =>
-      input.map((item) => item.name)
+      input.map((item) => item.name),
     );
 
     if ($dev) {
       Warp.register({
         functionID: name,
         links,
-        runtime,
+        handler: args.handler,
+        bundle: args.bundle,
+        runtime: output(args.runtime).apply((v) => v ?? "nodejs18.x"),
         properties: all([args.nodejs]).apply(([nodejs]) => nodejs || {}),
       });
     }
@@ -483,7 +485,7 @@ export class Function
       ([handler, bundle, rawLinks]) => {
         if (!rawLinks.length) return;
         Link.Receiver.register(bundle || handler, links);
-      }
+      },
     );
 
     this.registerOutputs({
@@ -525,14 +527,18 @@ export class Function
 
     function normalizeArchitectures() {
       return output(args.architecture).apply((arc) =>
-        arc === "arm64" ? ["arm64"] : ["x86_64"]
+        arc === "arm64" ? ["arm64"] : ["x86_64"],
       );
     }
 
     function normalizeEnvironment() {
       return output(args.environment).apply((environment) => {
         const result = environment ?? {};
-        if ($dev) result.SST_FUNCTION_ID = name;
+        if ($dev) {
+          result.SST_FUNCTION_ID = name;
+          result.SST_APP = $app.name;
+          result.SST_STAGE = $app.stage;
+        }
         return result;
       });
     }
@@ -588,15 +594,15 @@ export class Function
             const to = entry.to || entry.from;
             if (path.isAbsolute(to))
               throw new VisibleError(
-                `Copy destination path "${to}" must be relative`
+                `Copy destination path "${to}" must be relative`,
               );
 
             const stats = await fs.promises.stat(from);
             const isDir = stats.isDirectory();
 
             return { from, to, isDir };
-          })
-        )
+          }),
+        ),
       );
     }
 
@@ -621,7 +627,7 @@ export class Function
         links.flatMap((l) => {
           if (!Link.AWS.isLinkable(l)) return [];
           return l.getSSTAWSPermissions();
-        })
+        }),
       );
     }
 
@@ -649,7 +655,7 @@ export class Function
           if (result.type === "error")
             throw new Error(result.errors.join("\n"));
           return result;
-        }
+        },
       );
       return {
         handler: buildResult.handler,
@@ -675,7 +681,7 @@ export class Function
           ? linkData
               .map((item) => [
                 `process.env.SST_RESOURCE_${item.name} = ${JSON.stringify(
-                  JSON.stringify(item.value)
+                  JSON.stringify(item.value),
                 )};\n`,
               ])
               .join("")
@@ -690,17 +696,19 @@ export class Function
 
         // Validate handler file exists
         const newHandlerFileExt = [".js", ".mjs", ".cjs"].find((ext) =>
-          fs.existsSync(path.join(bundle, handlerDir, oldHandlerFileName + ext))
+          fs.existsSync(
+            path.join(bundle, handlerDir, oldHandlerFileName + ext),
+          ),
         );
         if (!newHandlerFileExt)
           throw new VisibleError(
-            `Could not find file for handler "${handler}"`
+            `Could not find file for handler "${handler}"`,
           );
 
         return {
           handler: path.posix.join(
             handlerDir,
-            `${newHandlerFileName}.${newHandlerFunction}`
+            `${newHandlerFileName}.${newHandlerFunction}`,
           ),
           wrapper: {
             dir: handlerDir,
@@ -767,9 +775,9 @@ export class Function
                 "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
               ],
             },
-            { parent }
+            { parent },
           );
-        }
+        },
       );
     }
 
@@ -784,7 +792,7 @@ export class Function
             $cli.paths.work,
             "artifacts",
             name,
-            "code.zip"
+            "code.zip",
           );
           await fs.promises.mkdir(path.dirname(zipPath), {
             recursive: true,
@@ -811,7 +819,7 @@ export class Function
             archive.glob(
               "**",
               { cwd: bundle, dot: true },
-              { date: new Date(0), mode: 0o777 }
+              { date: new Date(0), mode: 0o777 },
             );
 
             // Add handler wrapper into the zip
@@ -846,7 +854,7 @@ export class Function
           });
 
           return zipPath;
-        }
+        },
       );
     }
 
@@ -858,7 +866,7 @@ export class Function
           bucket: region.apply((region) => bootstrap.forRegion(region)),
           source: zipPath.apply((zipPath) => new asset.FileArchive(zipPath)),
         },
-        { parent, retainOnDelete: true }
+        { parent, retainOnDelete: true },
       );
     }
 
@@ -880,7 +888,7 @@ export class Function
           },
           architectures,
         }),
-        { parent }
+        { parent },
       );
     }
 
@@ -890,11 +898,11 @@ export class Function
         {
           logGroupName: interpolate`/aws/lambda/${fn.name}`,
           retentionInDays: logging.apply(
-            (logging) => RETENTION[logging.retention]
+            (logging) => RETENTION[logging.retention],
           ),
           region,
         },
-        { parent }
+        { parent },
       );
     }
 
@@ -908,11 +916,11 @@ export class Function
             functionName: fn.name,
             authorizationType: url.authorization.toUpperCase(),
             invokeMode: streaming.apply((streaming) =>
-              streaming ? "RESPONSE_STREAM" : "BUFFERED"
+              streaming ? "RESPONSE_STREAM" : "BUFFERED",
             ),
             cors: url.cors,
           },
-          { parent }
+          { parent },
         );
       });
     }
@@ -928,7 +936,7 @@ export class Function
             functionLastModified: fnRaw.lastModified,
             region,
           },
-          { parent }
+          { parent },
         );
         return fnRaw;
       });

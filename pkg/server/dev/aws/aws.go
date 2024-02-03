@@ -5,20 +5,26 @@ import (
 	"crypto/rand"
 	"crypto/tls"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"io"
 	"log/slog"
 	"net/http"
 	"net/url"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 
-	"github.com/aws/aws-sdk-go-v2/aws/signer/v4"
+	v4 "github.com/aws/aws-sdk-go-v2/aws/signer/v4"
 	"github.com/aws/aws-sdk-go-v2/service/iot"
 	MQTT "github.com/eclipse/paho.mqtt.golang"
 	"github.com/sst/ion/internal/util"
+	"github.com/sst/ion/pkg/project"
 	"github.com/sst/ion/pkg/project/provider"
+	"github.com/sst/ion/pkg/runtime"
+	"github.com/sst/ion/pkg/server/bus"
+	"github.com/sst/ion/pkg/server/dev/aws/iot_writer"
 )
 
 type fragment struct {
@@ -32,6 +38,7 @@ func Start(
 	ctx context.Context,
 	mux *http.ServeMux,
 	aws *provider.AwsProvider,
+	p *project.Project,
 ) (util.CleanupFunc, error) {
 	expire := time.Hour * 24
 	from := time.Now()
@@ -72,10 +79,8 @@ func Start(
 		presignedURL += "&X-Amz-Security-Token=" + url.QueryEscape(sessionToken)
 	}
 
-	clientID := hex.EncodeToString(func(b []byte) []byte { _, _ = rand.Read(b); return b }(make([]byte, 16)))
-	slog.Info("connecting to iot", "clientID", clientID)
 	opts := MQTT.NewClientOptions().AddBroker(presignedURL).SetClientID(
-		clientID,
+		hex.EncodeToString(func(b []byte) []byte { _, _ = rand.Read(b); return b }(make([]byte, 16))),
 	).SetTLSConfig(&tls.Config{
 		InsecureSkipVerify: true,
 	})
@@ -87,12 +92,15 @@ func Start(
 
 	var pending sync.Map
 
-	if token := mqttClient.Subscribe("/ion/response", 1, func(c MQTT.Client, m MQTT.Message) {
+	prefix := fmt.Sprintf("ion/%s/%s", p.App().Name, p.App().Stage)
+	if token := mqttClient.Subscribe(prefix+"/+/response", 1, func(c MQTT.Client, m MQTT.Message) {
 		slog.Info("received message", "topic", m.Topic())
+		clientID := strings.Split(m.Topic(), "/")[3]
 		payload := m.Payload()
 		go func() {
-			write, ok := pending.Load("ok")
+			write, ok := pending.Load(clientID)
 			if !ok {
+				mqttClient.Publish(prefix+"/"+clientID+"/reboot", 1, false, []byte("reboot"))
 				return
 			}
 			casted := write.(*io.PipeWriter)
@@ -103,15 +111,66 @@ func Start(
 		return nil, token.Error()
 	}
 
-	if token := mqttClient.Subscribe("/ion/init", 1, func(c MQTT.Client, m MQTT.Message) {
+	var lastComplete *project.CompleteEvent
+
+	bus.Subscribe(ctx, func(event *project.StackEvent) {
+		if event.CompleteEvent != nil {
+			lastComplete = event.CompleteEvent
+		}
+	})
+
+	if token := mqttClient.Subscribe(prefix+"/+/init", 1, func(c MQTT.Client, m MQTT.Message) {
+		slog.Info("received message", "topic", m.Topic())
+		bytes := m.Payload()
+		workerID := strings.Split(m.Topic(), "/")[3]
 		go func() {
-			slog.Info("received message", "topic", m.Topic())
-			resp, err := http.Get("http://localhost:44149/runtime/invocation/next")
+			if lastComplete == nil {
+				return
+			}
+			var payload struct {
+				FunctionID string `json:"functionID"`
+			}
+			err := json.Unmarshal(bytes, &payload)
 			if err != nil {
 				return
 			}
-			slog.Info("got response", "status", resp.Status)
-			defer resp.Body.Close()
+			slog.Info("got init", "functionID", payload.FunctionID)
+			warp, ok := lastComplete.Warps[payload.FunctionID]
+			if !ok {
+				return
+			}
+			runtime.Build(ctx, &runtime.BuildInput{
+				WarpDefinition: warp,
+				Project:        p,
+				Dev:            true,
+			})
+			runtime.Run(ctx, &runtime.RunInput{
+				WarpDefinition: warp,
+				Project:        p,
+				WorkerID:       workerID,
+				Dev:            true,
+			})
+			// cmd := exec.Command("node", ".sst/platform/dist/nodejs-runtime/index.js", "src/index.handler")
+			// cmd.Stdout = os.Stdout
+			// cmd.Stderr = os.Stderr
+			// cmd.Env = append(os.Environ(), "AWS_LAMBDA_RUNTIME_API=localhost:44149/lambda/"+clientID)
+			// cmd.Run()
+			/*
+				for {
+					resp, err := http.Get("http://localhost:44149/lambda/" + clientID + "/runtime/invocation/next")
+					if err != nil {
+						continue
+					}
+					requestID := resp.Header.Get("Lambda-Runtime-Aws-Request-Id")
+					defer resp.Body.Close()
+
+					_, err = http.Post("http://localhost:44149/lambda/"+clientID+"/runtime/invocation/"+requestID+"/response", "text/plain", bytes.NewBufferString(`{"statusCode": 200, "body": "ok"}`))
+					if err != nil {
+						continue
+					}
+					slog.Info("posted response", "requestID", requestID)
+				}
+			*/
 		}()
 	}); token.Wait() && token.Error() != nil {
 		return nil, token.Error()
@@ -119,15 +178,19 @@ func Start(
 
 	slog.Info("connected to iot")
 
-	writer := NewIoTWriter(mqttClient, "/ion/request")
-
-	mux.HandleFunc(`/runtime`, func(w http.ResponseWriter, r *http.Request) {
-		slog.Info("runtime", "path", r.URL.Path)
+	mux.HandleFunc(`/lambda/`, func(w http.ResponseWriter, r *http.Request) {
+		path := strings.Split(r.URL.Path, "/")
+		slog.Info("lambda request", "path", path)
+		clientID := path[2]
+		writer := iot_writer.New(mqttClient, prefix+"/"+clientID+"/request")
 		read, write := io.Pipe()
-		pending.Store("ok", write)
+		pending.Store(clientID, write)
 
-		writer.Write([]byte(r.Method + " /2018-06-01" + r.URL.Path + " HTTP/1.1\r\n"))
+		writer.Write([]byte(r.Method + " /2018-06-01/" + strings.Join(path[3:], "/") + " HTTP/1.1\r\n"))
 		for name, headers := range r.Header {
+			if name == "Connection" {
+				continue
+			}
 			for _, h := range headers {
 				fmt.Fprintf(writer, "%v: %v\r\n", name, h)
 			}
@@ -136,10 +199,10 @@ func Start(
 		fmt.Fprint(writer, "Host: 127.0.0.1\r\n")
 		_, err := fmt.Fprint(writer, "\r\n")
 
-		// if req.Body != nil {
-		// 	io.Copy(writer, req.Body)
-		// 	req.Body.Close()
-		// }
+		if r.ContentLength > 0 {
+			io.Copy(writer, r.Body)
+			r.Body.Close()
+		}
 		writer.Flush()
 
 		hijacker, ok := w.(http.Hijacker)
@@ -155,10 +218,12 @@ func Start(
 		}
 		defer conn.Close()
 
+		slog.Info("waiting for response", "clientID", clientID)
 		_, err = io.Copy(conn, read)
 		if err != nil {
 			fmt.Println("Error writing to the connection:", err)
 		}
+		slog.Info("done with response", "clientID", clientID)
 	})
 
 	return func() error {

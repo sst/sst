@@ -1,4 +1,4 @@
-package aws
+package iot_writer
 
 import (
 	"log/slog"
@@ -6,7 +6,7 @@ import (
 	MQTT "github.com/eclipse/paho.mqtt.golang"
 )
 
-const BUFFER_SIZE = 1024 * 4
+const BUFFER_SIZE = 1024 * 100
 
 type IoTWriter struct {
 	topic  string
@@ -14,7 +14,7 @@ type IoTWriter struct {
 	buffer []byte // buffer to accumulate data
 }
 
-func NewIoTWriter(client MQTT.Client, topic string) *IoTWriter {
+func New(client MQTT.Client, topic string) *IoTWriter {
 	return &IoTWriter{
 		client: client,
 		buffer: make([]byte, 0, BUFFER_SIZE),
@@ -43,7 +43,6 @@ func (iw *IoTWriter) Write(p []byte) (int, error) {
 		// If the buffer is full, write the chunk
 		if len(iw.buffer) == BUFFER_SIZE {
 			token := iw.client.Publish(iw.topic, 1, false, iw.buffer)
-			slog.Info("waiting")
 			token.Wait()
 			if err := token.Error(); err != nil {
 				return totalWritten, err
@@ -57,7 +56,6 @@ func (iw *IoTWriter) Write(p []byte) (int, error) {
 }
 
 func (iw *IoTWriter) Flush() error {
-	slog.Info("flushing buffer", "topic", iw.topic)
 	if len(iw.buffer) > 0 {
 		token := iw.client.Publish(iw.topic, 1, false, iw.buffer)
 		token.Wait()

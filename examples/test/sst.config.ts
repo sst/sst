@@ -33,7 +33,7 @@ export default $config({
       link: [secret, queue],
       handler: "./src/index.handler",
       environment: {
-        FOO: "2",
+        // FOO: Math.random().toString(),
       },
     });
 
