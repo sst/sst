@@ -37,6 +37,8 @@ describe("Bucket", function () {
   });
 
   describe("#constructor", () => {
+    // TODO
+    // - how to get all components in the stack?
     //it("parent set on children", () => {
     //  new Promise((done) => {
     //    const bucket = new Bucket("MyBucket", { public: true });
