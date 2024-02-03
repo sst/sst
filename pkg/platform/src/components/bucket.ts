@@ -4,6 +4,7 @@ import {
   output,
   interpolate,
   jsonStringify,
+  Output,
 } from "@pulumi/pulumi";
 import * as aws from "@pulumi/aws";
 import { RandomId } from "@pulumi/random";
@@ -36,7 +37,7 @@ export class Bucket
   extends Component
   implements Link.Linkable, Link.AWS.Linkable
 {
-  public bucket: aws.s3.BucketV2;
+  private bucket: aws.s3.BucketV2;
 
   constructor(
     name: string,
