@@ -147,7 +147,7 @@ export class Nextjs extends Component implements Link.Linkable {
     const experimental = normalizeExperimental();
     const buildCommand = normalizeBuildCommand();
     buildCommand.apply((buildCommand) => console.log(buildCommand));
-    const { sitePath, doNotDeploy } = prepare(args || {});
+    const { sitePath, doNotDeploy, region } = prepare(args ?? {}, opts);
     //if (doNotDeploy) {
     //  // @ts-expect-error
     //  this.bucket = this.distribution = null;
@@ -261,7 +261,7 @@ export class Nextjs extends Component implements Link.Linkable {
     function buildPlan(bucket: Bucket) {
       return all([
         outputPath,
-        $app.providers?.aws?.region!,
+        region,
         args?.edge,
         args?.experimental,
         args?.imageOptimization,
@@ -333,8 +333,7 @@ export class Nextjs extends Component implements Link.Linkable {
               ],
               layers: isPerRouteLoggingEnabled()
                 ? [
-                    `arn:aws:lambda:${$app.providers?.aws
-                      ?.region!}:226609089145:layer:sst-extension-arm64:${LAYER_VERSION}`,
+                    `arn:aws:lambda:${region}:226609089145:layer:sst-extension-arm64:${LAYER_VERSION}`,
                     //              cdk?.server?.architecture?.name === Architecture.X86_64.name
                     //                ? `arn:aws:lambda:${stack.region}:226609089145:layer:sst-extension-amd64:${LAYER_VERSION}`
                     //                : `arn:aws:lambda:${stack.region}:226609089145:layer:sst-extension-arm64:${LAYER_VERSION}`
@@ -974,9 +973,7 @@ if (event.rawPath) {
           new aws.s3.BucketObjectv2(
             `${name}Sourcemap${sanitizeToPascalCase(sourcemapKey)}`,
             {
-              bucket: output($app.providers?.aws?.region!).apply((region) =>
-                bootstrap.forRegion(region)
-              ),
+              bucket: region.apply((region) => bootstrap.forRegion(region)),
               source: new asset.FileAsset(sourcemapPath),
               key: serverFunction!.nodes.function.arn.apply((arn) =>
                 path.posix.join("sourcemaps", arn, sourcemapKey)

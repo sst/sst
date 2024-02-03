@@ -54,7 +54,7 @@ export class Astro extends Component implements Link.Linkable {
     };
 
     const parent = this;
-    const { sitePath, doNotDeploy } = prepare(args);
+    const { sitePath, doNotDeploy } = prepare(args, opts);
     //if (doNotDeploy) {
     //  // @ts-expect-error
     //  this.bucket = this.distribution = null;

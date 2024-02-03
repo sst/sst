@@ -11,6 +11,7 @@ import {
   all,
   interpolate,
   ComponentResource,
+  ComponentResourceOptions,
 } from "@pulumi/pulumi";
 import * as aws from "@pulumi/aws";
 import { Cdn, CdnDomainArgs } from "./cdn.js";
@@ -284,13 +285,15 @@ export interface SsrSiteArgs {
   };
 }
 
-export function prepare(args: SsrSiteArgs) {
+export function prepare(args: SsrSiteArgs, opts?: ComponentResourceOptions) {
   const sitePath = normalizeSitePath();
+  const region = normalizeRegion();
+  checkSupportedRegion();
   writeTypesFile();
 
   const doNotDeploy = output(false);
   //const doNotDeploy = app.mode === "dev" && !dev?.deploy;
-  return { sitePath, doNotDeploy };
+  return { sitePath, doNotDeploy, region };
 
   function normalizeSitePath() {
     return output(args.path).apply((sitePath) => {
@@ -300,6 +303,32 @@ export function prepare(args: SsrSiteArgs) {
         throw new Error(`No site found at "${path.resolve(sitePath)}"`);
       }
       return sitePath;
+    });
+  }
+
+  function normalizeRegion() {
+    return all([
+      $app.providers?.aws?.region!,
+      (opts?.provider as aws.Provider)?.region,
+    ]).apply(([appRegion, region]) => region ?? appRegion);
+  }
+
+  function checkSupportedRegion() {
+    region.apply((region) => {
+      if (
+        ![
+          "ap-south-2",
+          "ap-southeast-4",
+          "eu-south-2",
+          "eu-central-2",
+          "il-central-1",
+          "me-central-1",
+        ].includes(region)
+      )
+        return;
+      throw new Error(
+        `Region ${region} is not currently supported. Please use a different region.`
+      );
     });
   }
 

@@ -51,7 +51,7 @@ export class Remix extends Component implements Link.Linkable {
 
     const parent = this;
     const edge = normalizeEdge();
-    const { sitePath, doNotDeploy } = prepare(args);
+    const { sitePath, doNotDeploy } = prepare(args, opts);
     //if (doNotDeploy) {
     //  // @ts-expect-error
     //  this.bucket = this.distribution = null;
