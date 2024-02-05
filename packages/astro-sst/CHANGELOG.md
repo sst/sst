@@ -1,5 +1,11 @@
 # astro-sst
 
+## 2.40.2
+
+### Patch Changes
+
+- [#3591](https://github.com/sst/sst/pull/3591) [`988fb7843`](https://github.com/sst/sst/commit/988fb7843562749a4503e0c730b29a4868eeb984) Thanks [@bayssmekanique](https://github.com/bayssmekanique)! - AstroSite: update render call to remove deprecation notice in logs.
+
 ## 2.40.1
 
 ### Patch Changes
