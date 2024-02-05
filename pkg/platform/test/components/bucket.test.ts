@@ -1,8 +1,8 @@
-/// <reference path="../../src/global.d.ts" />
-
 import { describe, beforeAll, it, expect } from "vitest";
+import "../../src/global.d.ts";
 import * as pulumi from "@pulumi/pulumi";
 
+// @ts-ignore
 global.$app = {
   name: "app",
   stage: "test",

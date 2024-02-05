@@ -11,7 +11,7 @@ import { HASH_CHARS, hashNumberToString } from "../naming";
 
 export const bootstrap = {
   forRegion(region: string) {
-    if (bootstrapBuckets[region]) {
+    if (region in bootstrapBuckets) {
       return bootstrapBuckets[region]!;
     }
 
@@ -27,7 +27,7 @@ export const bootstrap = {
           .send(
             new GetParameterCommand({
               Name: `/sst/bootstrap`,
-            }),
+            })
           )
           .catch((err) => {
             if (err instanceof ParameterNotFound) return;
@@ -42,19 +42,19 @@ export const bootstrap = {
         const numberSuffix = Math.floor(Math.random() * minNumber) + minNumber;
         const name = `sst-bootstrap-${hashNumberToString(
           numberSuffix,
-          suffixLength,
+          suffixLength
         )}`;
         await s3.send(
           new CreateBucketCommand({
             Bucket: name,
-          }),
+          })
         );
         await ssm.send(
           new PutParameterCommand({
             Name: `/sst/bootstrap`,
             Value: name,
             Type: "String",
-          }),
+          })
         );
         return name;
       })();

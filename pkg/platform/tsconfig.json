@@ -5,6 +5,7 @@
     "module": "ESNext",
     "moduleResolution": "Bundler",
     "isolatedModules": true,
-    "downlevelIteration": true,
-  }
+    "downlevelIteration": true
+  },
+  "exclude": ["templates"]
 }

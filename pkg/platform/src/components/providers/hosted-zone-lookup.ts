@@ -39,7 +39,7 @@ class Provider implements dynamic.ResourceProvider {
       const res = await client.send(
         new ListHostedZonesCommand({ Marker: nextMarker })
       );
-      zones.push(...res.HostedZones);
+      zones.push(...(res.HostedZones || []));
       nextMarker = res.NextMarker;
     } while (nextMarker);
 
@@ -49,7 +49,7 @@ class Provider implements dynamic.ResourceProvider {
     const parts = domain.split(".");
     for (let i = 0; i <= parts.length - 2; i++) {
       const zone = zones.find((z) => z.Name === parts.slice(i).join(".") + ".");
-      if (zone) {
+      if (zone?.Id) {
         return zone.Id.replace("/hostedzone/", "");
       }
     }

@@ -90,13 +90,15 @@ while (true) {
           0,
         ),
       // If identity is null, we want to mimick AWS behavior and return undefined
-      identity:
-        JSON.parse(result.headers.get("lambda-runtime-cognito-identity")) ??
-        undefined,
+      identity: (() => {
+        const header = result.headers.get("lambda-runtime-cognito-identity");
+        return header ? JSON.parse(header) : undefined;
+      })(),
       /// If clientContext is null, we want to mimick AWS behavior and return undefined
-      clientContext:
-        JSON.parse(result.headers.get("lambda-runtime-client-context")) ??
-        undefined,
+      clientContext: (() => {
+        const header = result.headers.get("lambda-runtime-client-context");
+        return header ? JSON.parse(header) : undefined;
+      })(),
       functionName: process.env.AWS_LAMBDA_FUNCTION_NAME!,
       functionVersion: process.env.AWS_LAMBDA_FUNCTION_VERSION!,
       memoryLimitInMB: process.env.AWS_LAMBDA_FUNCTION_MEMORY_SIZE!,
