@@ -204,7 +204,7 @@ export function EventHandler<Events extends Event>(
     }[Events["type"]]
   ) => Promise<void>
 ) {
-  return async (
+  const fn = async (
     event: EventBridgeEvent<string, any> & { attempts?: number }
   ) => {
     await cb({
@@ -214,4 +214,5 @@ export function EventHandler<Events extends Event>(
       attempts: event.attempts ?? 0,
     });
   };
+  return Object.assign(fn, { _events, cb });
 }
