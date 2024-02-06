@@ -14,6 +14,24 @@ import (
 )
 
 type NodeRuntime struct {
+	contexts map[string]esbuild.BuildContext
+	results  map[string]esbuild.BuildResult
+}
+
+func newNodeRuntime() *NodeRuntime {
+	return &NodeRuntime{
+		contexts: map[string]esbuild.BuildContext{},
+		results:  map[string]esbuild.BuildResult{},
+	}
+}
+
+type NodeWorker struct {
+	cmd *exec.Cmd
+}
+
+func (w *NodeWorker) Stop() {
+	w.cmd.Process.Signal(os.Interrupt)
+	w.cmd.Wait()
 }
 
 type NodeProperties struct {
@@ -29,16 +47,16 @@ type NodeProperties struct {
 
 var NODE_EXTENSIONS = []string{".ts", ".tsx", ".mts", ".cts", ".js", ".jsx", ".mjs", ".cjs"}
 
-func (r *NodeRuntime) Build(ctx context.Context, input *BuildInput) error {
+func (r *NodeRuntime) Build(ctx context.Context, input *BuildInput) (*BuildOutput, error) {
 	var properties NodeProperties
 	err := json.Unmarshal(input.Properties, &properties)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	file, ok := r.getFile(input)
 	if !ok {
-		return fmt.Errorf("Handler not found: %v", input.Handler)
+		return nil, fmt.Errorf("Handler not found: %v", input.Handler)
 	}
 	filepath.Rel(input.Project.PathRoot(), file)
 
@@ -52,7 +70,7 @@ func (r *NodeRuntime) Build(ctx context.Context, input *BuildInput) error {
 
 	rel, err := filepath.Rel(input.Project.PathRoot(), file)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	target := filepath.Join(input.Out(), strings.ReplaceAll(rel, filepath.Ext(rel), extension))
 	slog.Info("building", "from", file, "to", target)
@@ -95,22 +113,36 @@ func (r *NodeRuntime) Build(ctx context.Context, input *BuildInput) error {
 		options.Format = esbuild.FormatCommonJS
 		options.Target = esbuild.ESNext
 	}
-	result := esbuild.Build(options)
+
+	buildContext, ok := r.contexts[input.FunctionID]
+	if !ok {
+		buildContext, _ = esbuild.Context(options)
+		r.contexts[input.FunctionID] = buildContext
+	}
+
+	result := buildContext.Rebuild()
+	r.results[input.FunctionID] = result
+
 	for _, error := range result.Errors {
 		slog.Error("esbuild error", "error", error)
 	}
 	for _, warning := range result.Warnings {
 		slog.Error("esbuild error", "error", warning)
 	}
-	return nil
+	return &BuildOutput{
+		Handler: input.Handler,
+	}, nil
 }
 
-func (r *NodeRuntime) Run(ctx context.Context, input *RunInput) error {
-	cmd := exec.CommandContext(ctx, "node", ".sst/platform/dist/nodejs-runtime/index.js", "src/index.handler")
+func (r *NodeRuntime) Run(ctx context.Context, input *RunInput) (Worker, error) {
+	cmd := exec.CommandContext(ctx, "node", ".sst/platform/dist/nodejs-runtime/index.js", filepath.Join(input.Build.Out, input.Build.Handler), input.WorkerID)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	cmd.Env = append(os.Environ(), "AWS_LAMBDA_RUNTIME_API=localhost:44149/lambda/"+input.WorkerID)
-	return cmd.Run()
+	cmd.Start()
+	return &NodeWorker{
+		cmd,
+	}, nil
 }
 
 func (r *NodeRuntime) Match(runtime string) bool {
@@ -127,4 +159,28 @@ func (r *NodeRuntime) getFile(input *BuildInput) (string, bool) {
 		}
 	}
 	return "", false
+}
+
+func (r *NodeRuntime) ShouldRebuild(functionID string, file string) bool {
+	result, ok := r.results[functionID]
+	if !ok {
+		return false
+	}
+
+	var meta = map[string]interface{}{}
+	err := json.Unmarshal([]byte(result.Metafile), &meta)
+	if err != nil {
+		return false
+	}
+	for key := range meta["inputs"].(map[string]interface{}) {
+		absPath, err := filepath.Abs(key)
+		if err != nil {
+			continue
+		}
+		if absPath == file {
+			return true
+		}
+	}
+
+	return false
 }

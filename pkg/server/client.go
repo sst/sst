@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"context"
 	"encoding/json"
+	"fmt"
 	"log/slog"
 	"net/http"
 	"os"
@@ -69,6 +70,7 @@ func Connect(ctx context.Context, input ConnectInput) error {
 
 	resp, err := http.Get("http://" + addr + "/stream")
 	if err != nil {
+		fmt.Println(err)
 		cleanupExisting(input.CfgPath, input.Stage)
 		return Connect(ctx, input)
 	}

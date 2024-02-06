@@ -1,4 +1,4 @@
-package server
+package watcher
 
 import (
 	"context"
@@ -16,7 +16,7 @@ type FileChangedEvent struct {
 	Path string
 }
 
-func startFileWatcher(ctx context.Context, root string) (util.CleanupFunc, error) {
+func Start(ctx context.Context, root string) (util.CleanupFunc, error) {
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
 		return nil, err

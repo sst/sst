@@ -12,6 +12,7 @@ import (
 	"path/filepath"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
@@ -99,6 +100,10 @@ func (a *AwsProvider) pathForState(app string, stage string) string {
 	return filepath.Join("state", "data", app, fmt.Sprintf("%v.json", stage))
 }
 
+func (a *AwsProvider) pathForBackup(app string, stage string) string {
+	return filepath.Join("state", "backup", app, stage, fmt.Sprintf("%v.json", time.Now().UnixMilli()))
+}
+
 func (a *AwsProvider) pathForLock(app string, stage string) string {
 	return filepath.Join("state", "lock", app, fmt.Sprintf("%v.json", stage))
 }
@@ -116,7 +121,13 @@ func (a *AwsProvider) Unlock(app string, stage string, in *os.File) error {
 		})
 	}()
 
-	_, err := s3Client.PutObject(context.TODO(), &s3.PutObjectInput{
+	_, err := s3Client.CopyObject(context.TODO(), &s3.CopyObjectInput{
+		CopySource: aws.String(a.bucket + "/" + a.pathForState(app, stage)),
+		Bucket:     aws.String(a.bucket),
+		Key:        aws.String(a.pathForBackup(app, stage)),
+	})
+
+	_, err = s3Client.PutObject(context.TODO(), &s3.PutObjectInput{
 		Bucket:      aws.String(a.bucket),
 		Key:         aws.String(a.pathForState(app, stage)),
 		ContentType: aws.String("application/json"),

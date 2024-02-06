@@ -25,6 +25,7 @@ import (
 	"github.com/sst/ion/pkg/runtime"
 	"github.com/sst/ion/pkg/server/bus"
 	"github.com/sst/ion/pkg/server/dev/aws/iot_writer"
+	"github.com/sst/ion/pkg/server/dev/watcher"
 )
 
 type fragment struct {
@@ -79,11 +80,28 @@ func Start(
 		presignedURL += "&X-Amz-Security-Token=" + url.QueryEscape(sessionToken)
 	}
 
-	opts := MQTT.NewClientOptions().AddBroker(presignedURL).SetClientID(
-		hex.EncodeToString(func(b []byte) []byte { _, _ = rand.Read(b); return b }(make([]byte, 16))),
-	).SetTLSConfig(&tls.Config{
-		InsecureSkipVerify: true,
-	})
+	opts := MQTT.
+		NewClientOptions().
+		AddBroker(presignedURL).
+		SetClientID(
+			hex.EncodeToString(func(b []byte) []byte { _, _ = rand.Read(b); return b }(make([]byte, 16))),
+		).
+		SetTLSConfig(&tls.Config{
+			InsecureSkipVerify: true,
+		}).
+		SetCleanSession(false).
+		SetAutoReconnect(true).
+		SetConnectionLostHandler(func(c MQTT.Client, err error) {
+			slog.Info("mqtt connection lost")
+		}).
+		SetReconnectingHandler(func(c MQTT.Client, co *MQTT.ClientOptions) {
+			slog.Info("mqtt reconnecting")
+		}).
+		SetOnConnectHandler(func(c MQTT.Client) {
+			slog.Info("mqtt connected")
+		}).
+		SetKeepAlive(time.Second * 1200).
+		SetPingTimeout(time.Second * 60)
 
 	mqttClient := MQTT.NewClient(opts)
 	if token := mqttClient.Connect(); token.Wait() && token.Error() != nil {
@@ -94,13 +112,14 @@ func Start(
 
 	prefix := fmt.Sprintf("ion/%s/%s", p.App().Name, p.App().Stage)
 	if token := mqttClient.Subscribe(prefix+"/+/response", 1, func(c MQTT.Client, m MQTT.Message) {
-		slog.Info("received message", "topic", m.Topic())
-		clientID := strings.Split(m.Topic(), "/")[3]
+		slog.Info("iot", "topic", m.Topic())
+		workerID := strings.Split(m.Topic(), "/")[3]
 		payload := m.Payload()
 		go func() {
-			write, ok := pending.Load(clientID)
+			write, ok := pending.Load(workerID)
 			if !ok {
-				mqttClient.Publish(prefix+"/"+clientID+"/reboot", 1, false, []byte("reboot"))
+				slog.Info("asking for reboot", "workerID", workerID)
+				mqttClient.Publish(prefix+"/"+workerID+"/reboot", 1, false, []byte("reboot"))
 				return
 			}
 			casted := write.(*io.PipeWriter)
@@ -111,80 +130,142 @@ func Start(
 		return nil, token.Error()
 	}
 
-	var lastComplete *project.CompleteEvent
+	type WorkerInfo struct {
+		FunctionID string
+		Worker     runtime.Worker
+		Env        []string
+	}
+
+	completeChan := make(chan *project.CompleteEvent, 1000)
+	initChan := make(chan MQTT.Message, 1000)
+	shutdownChan := make(chan MQTT.Message, 1000)
+	fileChan := make(chan *watcher.FileChangedEvent, 1000)
 
 	bus.Subscribe(ctx, func(event *project.StackEvent) {
 		if event.CompleteEvent != nil {
-			lastComplete = event.CompleteEvent
+			completeChan <- event.CompleteEvent
 		}
 	})
 
-	if token := mqttClient.Subscribe(prefix+"/+/init", 1, func(c MQTT.Client, m MQTT.Message) {
-		slog.Info("received message", "topic", m.Topic())
-		bytes := m.Payload()
-		workerID := strings.Split(m.Topic(), "/")[3]
-		go func() {
-			if lastComplete == nil {
-				return
-			}
-			var payload struct {
-				FunctionID string `json:"functionID"`
-			}
-			err := json.Unmarshal(bytes, &payload)
-			if err != nil {
-				return
-			}
-			slog.Info("got init", "functionID", payload.FunctionID)
-			warp, ok := lastComplete.Warps[payload.FunctionID]
-			if !ok {
-				return
-			}
-			runtime.Build(ctx, &runtime.BuildInput{
-				WarpDefinition: warp,
-				Project:        p,
-				Dev:            true,
-			})
-			runtime.Run(ctx, &runtime.RunInput{
-				WarpDefinition: warp,
-				Project:        p,
-				WorkerID:       workerID,
-				Dev:            true,
-			})
-			// cmd := exec.Command("node", ".sst/platform/dist/nodejs-runtime/index.js", "src/index.handler")
-			// cmd.Stdout = os.Stdout
-			// cmd.Stderr = os.Stderr
-			// cmd.Env = append(os.Environ(), "AWS_LAMBDA_RUNTIME_API=localhost:44149/lambda/"+clientID)
-			// cmd.Run()
-			/*
-				for {
-					resp, err := http.Get("http://localhost:44149/lambda/" + clientID + "/runtime/invocation/next")
-					if err != nil {
-						continue
-					}
-					requestID := resp.Header.Get("Lambda-Runtime-Aws-Request-Id")
-					defer resp.Body.Close()
+	bus.Subscribe(ctx, func(event *watcher.FileChangedEvent) {
+		fileChan <- event
+	})
 
-					_, err = http.Post("http://localhost:44149/lambda/"+clientID+"/runtime/invocation/"+requestID+"/response", "text/plain", bytes.NewBufferString(`{"statusCode": 200, "body": "ok"}`))
-					if err != nil {
-						continue
-					}
-					slog.Info("posted response", "requestID", requestID)
-				}
-			*/
-		}()
+	if token := mqttClient.Subscribe(prefix+"/+/init", 1, func(c MQTT.Client, m MQTT.Message) {
+		slog.Info("iot", "topic", m.Topic())
+		initChan <- m
+	}); token.Wait() && token.Error() != nil {
+		return nil, token.Error()
+	}
+
+	if token := mqttClient.Subscribe(prefix+"/+/shutdown", 1, func(c MQTT.Client, m MQTT.Message) {
+		slog.Info("iot", "topic", m.Topic())
+		shutdownChan <- m
 	}); token.Wait() && token.Error() != nil {
 		return nil, token.Error()
 	}
 
 	slog.Info("connected to iot")
 
+	go func() {
+		complete := <-completeChan
+		workers := map[string]*WorkerInfo{}
+		builds := map[string]*runtime.BuildOutput{}
+
+		run := func(functionID string, workerID string) {
+			build := builds[functionID]
+			warp := complete.Warps[functionID]
+			if build == nil {
+				build, _ = runtime.Build(ctx, &runtime.BuildInput{
+					WarpDefinition: warp,
+					Project:        p,
+					Dev:            true,
+				})
+				builds[functionID] = build
+			}
+			worker, _ := runtime.Run(ctx, &runtime.RunInput{
+				WorkerID:   workerID,
+				Runtime:    warp.Runtime,
+				FunctionID: functionID,
+				Build:      build,
+			})
+			workers[workerID] = &WorkerInfo{
+				FunctionID: functionID,
+				Worker:     worker,
+			}
+		}
+
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case complete = <-completeChan:
+				break
+			case m := <-initChan:
+				bytes := m.Payload()
+				workerID := strings.Split(m.Topic(), "/")[3]
+				existingWorker, exists := workers[workerID]
+				if exists {
+					existingWorker.Worker.Stop()
+				}
+				var payload struct {
+					FunctionID string   `json:"functionID"`
+					Env        []string `json:"env"`
+				}
+				err := json.Unmarshal(bytes, &payload)
+				if err != nil {
+					continue
+				}
+				run(payload.FunctionID, workerID)
+				break
+
+			case m := <-shutdownChan:
+				workerID := strings.Split(m.Topic(), "/")[3]
+				info, ok := workers[workerID]
+				if !ok {
+					continue
+				}
+				info.Worker.Stop()
+				delete(workers, workerID)
+			case event := <-fileChan:
+				functions := map[string]bool{}
+				for workerID, info := range workers {
+					warp, ok := complete.Warps[info.FunctionID]
+					if !ok {
+						continue
+					}
+					if runtime.ShouldRebuild(warp.Runtime, warp.FunctionID, event.Path) {
+						slog.Info("rebuilding", "workerID", workerID, "functionID", info.FunctionID)
+						info.Worker.Stop()
+						delete(builds, info.FunctionID)
+						functions[info.FunctionID] = true
+					}
+				}
+
+				for workerID, info := range workers {
+					if functions[info.FunctionID] {
+						slog.Info("restarting", "workerID", workerID, "functionID", info.FunctionID)
+						run(info.FunctionID, workerID)
+					}
+				}
+			}
+		}
+
+	}()
+
+	clientLock := util.NewKeyLock()
+
 	mux.HandleFunc(`/lambda/`, func(w http.ResponseWriter, r *http.Request) {
 		path := strings.Split(r.URL.Path, "/")
 		slog.Info("lambda request", "path", path)
-		clientID := path[2]
-		writer := iot_writer.New(mqttClient, prefix+"/"+clientID+"/request")
+		workerID := path[2]
+		clientLock.Lock(workerID)
+		slog.Info("lambda lock", "workerID", workerID)
+		defer clientLock.Unlock(workerID)
+		writer := iot_writer.New(mqttClient, prefix+"/"+workerID+"/request")
 		read, write := io.Pipe()
-		pending.Store(clientID, write)
+		pending.Store(workerID, write)
+		defer pending.Delete(workerID)
 
 		writer.Write([]byte(r.Method + " /2018-06-01/" + strings.Join(path[3:], "/") + " HTTP/1.1\r\n"))
 		for name, headers := range r.Header {
@@ -201,7 +282,6 @@ func Start(
 
 		if r.ContentLength > 0 {
 			io.Copy(writer, r.Body)
-			r.Body.Close()
 		}
 		writer.Flush()
 
@@ -211,19 +291,34 @@ func Start(
 			return
 		}
 
-		conn, _, err := hijacker.Hijack()
+		conn, bufrw, err := hijacker.Hijack()
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 		defer conn.Close()
 
-		slog.Info("waiting for response", "clientID", clientID)
-		_, err = io.Copy(conn, read)
-		if err != nil {
-			fmt.Println("Error writing to the connection:", err)
-		}
-		slog.Info("done with response", "clientID", clientID)
+		slog.Info("lambda waiting for response", "workerID", workerID)
+
+		done := make(chan struct{})
+		go func() {
+			_, err = io.Copy(conn, read)
+			if err != nil {
+				fmt.Println("Error writing to the connection:", err)
+			}
+			done <- struct{}{}
+		}()
+
+		go func() {
+			_, err := bufrw.Read(make([]byte, 1024))
+			if err != nil {
+				done <- struct{}{}
+				slog.Info("lambda disconnected", "workerID", workerID)
+			}
+		}()
+
+		<-done
+		slog.Info("lambda sent response", "workerID", workerID)
 	})
 
 	return func() error {

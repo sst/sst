@@ -8,6 +8,7 @@ import (
 	"github.com/sst/ion/internal/util"
 	"github.com/sst/ion/pkg/project"
 	"github.com/sst/ion/pkg/server/bus"
+	"github.com/sst/ion/pkg/server/dev/watcher"
 )
 
 func startDeployer(ctx context.Context, p *project.Project) (util.CleanupFunc, error) {
@@ -15,7 +16,7 @@ func startDeployer(ctx context.Context, p *project.Project) (util.CleanupFunc, e
 	mutex := sync.RWMutex{}
 	watchedFiles := make(map[string]bool)
 
-	bus.Subscribe(ctx, func(event *FileChangedEvent) {
+	bus.Subscribe(ctx, func(event *watcher.FileChangedEvent) {
 		mutex.Lock()
 		defer mutex.Unlock()
 		if _, ok := watchedFiles[event.Path]; ok {

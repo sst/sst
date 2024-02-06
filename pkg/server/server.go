@@ -16,6 +16,7 @@ import (
 	"github.com/sst/ion/pkg/project/provider"
 	"github.com/sst/ion/pkg/server/bus"
 	"github.com/sst/ion/pkg/server/dev/aws"
+	"github.com/sst/ion/pkg/server/dev/watcher"
 )
 
 type Server struct {
@@ -131,19 +132,6 @@ func (s *Server) Start(parentContext context.Context) error {
 	port = 44149
 	s.server.Addr = fmt.Sprintf("0.0.0.0:%d", port)
 	slog.Info("server", "addr", s.server.Addr)
-	serverFile := resolveServerFile(s.project.PathConfig(), s.project.App().Stage)
-	err = os.WriteFile(
-		serverFile,
-		[]byte(s.server.Addr),
-		0644,
-	)
-	if err != nil {
-		return err
-	}
-	defer os.Remove(serverFile)
-
-	go s.server.ListenAndServe()
-	defer s.server.Shutdown(ctx)
 
 	for _, p := range s.project.Providers {
 		switch casted := p.(type) {
@@ -158,7 +146,20 @@ func (s *Server) Start(parentContext context.Context) error {
 		}
 	}
 
-	fileWatcher, err := startFileWatcher(ctx, s.project.PathRoot())
+	go s.server.ListenAndServe()
+	defer s.server.Shutdown(ctx)
+	serverFile := resolveServerFile(s.project.PathConfig(), s.project.App().Stage)
+	err = os.WriteFile(
+		serverFile,
+		[]byte(s.server.Addr),
+		0644,
+	)
+	if err != nil {
+		return err
+	}
+	defer os.Remove(serverFile)
+
+	fileWatcher, err := watcher.Start(ctx, s.project.PathRoot())
 	if err != nil {
 		return err
 	}

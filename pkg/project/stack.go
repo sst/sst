@@ -336,6 +336,7 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 			}
 		}
 		delete(outputs, "_warps")
+		delete(outputs, "_receivers")
 
 		for key, value := range outputs {
 			complete.Outputs[key] = value.Value
