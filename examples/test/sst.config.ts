@@ -16,6 +16,9 @@ export default $config({
     const fn = new sst.Function("MyFunction", {
       url: true,
       handler: "./src/index.handler",
+      environment: {
+        foo: "1",
+      },
     });
 
     return {

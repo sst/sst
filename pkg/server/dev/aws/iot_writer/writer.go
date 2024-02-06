@@ -2,16 +2,18 @@ package iot_writer
 
 import (
 	"log/slog"
+	"time"
 
 	MQTT "github.com/eclipse/paho.mqtt.golang"
 )
 
-const BUFFER_SIZE = 1024 * 100
+const BUFFER_SIZE = 1024 * 3
 
 type IoTWriter struct {
 	topic  string
 	client MQTT.Client
 	buffer []byte // buffer to accumulate data
+	last   time.Time
 }
 
 func New(client MQTT.Client, topic string) *IoTWriter {
@@ -19,11 +21,11 @@ func New(client MQTT.Client, topic string) *IoTWriter {
 		client: client,
 		buffer: make([]byte, 0, BUFFER_SIZE),
 		topic:  topic,
+		last:   time.Now(),
 	}
 }
 
 func (iw *IoTWriter) Write(p []byte) (int, error) {
-	slog.Info("writing to topic", "topic", iw.topic, "data", string(p))
 	totalWritten := 0
 
 	for len(p) > 0 {
@@ -42,13 +44,7 @@ func (iw *IoTWriter) Write(p []byte) (int, error) {
 
 		// If the buffer is full, write the chunk
 		if len(iw.buffer) == BUFFER_SIZE {
-			token := iw.client.Publish(iw.topic, 1, false, iw.buffer)
-			token.Wait()
-			if err := token.Error(); err != nil {
-				return totalWritten, err
-			}
-			// Clear the buffer
-			iw.buffer = iw.buffer[:0]
+			iw.Flush()
 		}
 	}
 
@@ -57,11 +53,12 @@ func (iw *IoTWriter) Write(p []byte) (int, error) {
 
 func (iw *IoTWriter) Flush() error {
 	if len(iw.buffer) > 0 {
+		slog.Info("writing to topic", "topic", iw.topic, "data", string(iw.buffer))
 		token := iw.client.Publish(iw.topic, 1, false, iw.buffer)
-		token.Wait()
-		if err := token.Error(); err != nil {
-			return err
+		if token.Wait() && token.Error() != nil {
+			return token.Error()
 		}
+		iw.last = time.Now()
 		iw.buffer = iw.buffer[:0]
 	}
 	return nil

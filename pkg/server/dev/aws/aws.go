@@ -228,6 +228,7 @@ func Start(
 				info.Worker.Stop()
 				delete(workers, workerID)
 			case event := <-fileChan:
+				start := time.Now()
 				functions := map[string]bool{}
 				for workerID, info := range workers {
 					warp, ok := complete.Warps[info.FunctionID]
@@ -248,6 +249,7 @@ func Start(
 						run(info.FunctionID, workerID)
 					}
 				}
+				fmt.Println("file change took", time.Since(start).Milliseconds())
 			}
 		}
 
