@@ -1,0 +1,20 @@
+{
+  "name": "www",
+  "version": "1.0.0",
+  "description": "",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "build": "tsx generate.ts"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@tsconfig/node18": "18.2.2",
+    "@types/node": "^20.10.5",
+    "tsx": "^4.7.0",
+    "typedoc": "0.25.7",
+    "typescript": "5.3.3"
+  }
+}

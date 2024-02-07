@@ -52,7 +52,7 @@ export class Vector
   constructor(
     name: string,
     args?: VectorArgs,
-    opts?: ComponentResourceOptions
+    opts?: ComponentResourceOptions,
   ) {
     super("sst:sst:Vector", name, args, opts);
 
@@ -85,7 +85,7 @@ export class Vector
       return all([model, args?.openAiApiKey]).apply(([model, openAiApiKey]) => {
         if (ModelInfo[model].provider === "openai" && !openAiApiKey) {
           throw new VisibleError(
-            `Please pass in the OPENAI_API_KEY via environment variable to use the ${model} model. You can get your API keys here: https://platform.openai.com/api-keys`
+            `Please pass in the OPENAI_API_KEY via environment variable to use the ${model} model. You can get your API keys here: https://platform.openai.com/api-keys`,
           );
         }
         return openAiApiKey;
@@ -120,7 +120,7 @@ export class Vector
             tableName,
             vectorSize,
           },
-          { parent }
+          { parent },
         );
       });
     }
@@ -135,7 +135,7 @@ export class Vector
           environment: buildHandlerEnvironment(),
           permissions: buildHandlerPermissions(),
         },
-        { parent }
+        { parent },
       );
     }
 
@@ -149,7 +149,7 @@ export class Vector
           environment: buildHandlerEnvironment(),
           permissions: buildHandlerPermissions(),
         },
-        { parent }
+        { parent },
       );
     }
 
@@ -163,7 +163,7 @@ export class Vector
           environment: buildHandlerEnvironment(),
           permissions: buildHandlerPermissions(),
         },
-        { parent }
+        { parent },
       );
     }
 
@@ -203,6 +203,7 @@ export class Vector
     }
   }
 
+  /** @internal */
   public getSSTLink(): Link.Definition {
     return {
       type: `{ ingestorFunctionName: string, retrieverFunctionName: string, removerFunctionName: string }`,
@@ -214,6 +215,7 @@ export class Vector
     };
   }
 
+  /** @internal */
   public getSSTAWSPermissions() {
     return [
       {

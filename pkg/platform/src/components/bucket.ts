@@ -13,12 +13,12 @@ import { Component, Transform, transform } from "./component";
 import { Link } from "./link";
 
 /**
- * Properties to create a DNS validated certificate managed by AWS Certificate Manager.
+ * Arguments for creating a `Bucket` component.
  */
 export interface BucketArgs {
   /**
    * Enable public access to the files in the bucket
-   * @default false
+   * @default `false` - Files are not publicly accessible
    * @example
    * ```js
    * {
@@ -33,6 +33,24 @@ export interface BucketArgs {
   };
 }
 
+/**
+ * The `Bucket` component is a higher level component that makes it easy to create an AWS S3 Bucket.
+ *
+ * @example
+ *
+ * #### Using the minimal config
+ * ```ts
+ * new sst.Bucket("MyBucket");
+ * ```
+ *
+ * #### Enabling public read access
+ * This allows anyone to read files in the bucket. This is useful for hosting public files.
+ * ```ts
+ * new sst.Bucket("MyBucket", {
+ *   public: true,
+ * });
+ * ```
+ */
 export class Bucket
   extends Component
   implements Link.Linkable, Link.AWS.Linkable
@@ -42,7 +60,7 @@ export class Bucket
   constructor(
     name: string,
     args?: BucketArgs,
-    opts?: ComponentResourceOptions
+    opts?: ComponentResourceOptions,
   ) {
     super("sst:sst:Bucket", name, args, opts);
 
@@ -64,13 +82,13 @@ export class Bucket
         const randomId = new RandomId(
           `${name}Id`,
           { byteLength: 6 },
-          { parent }
+          { parent },
         );
         input.bucket = randomId.dec.apply((dec) =>
           prefixName(
             name.toLowerCase(),
-            `-${hashNumberToString(parseInt(dec), 8)}`
-          )
+            `-${hashNumberToString(parseInt(dec), 8)}`,
+          ),
         );
       }
 
@@ -88,7 +106,7 @@ export class Bucket
             ignorePublicAcls: true,
             restrictPublicBuckets: !publicAccess,
           },
-          { parent }
+          { parent },
         );
       });
     }
@@ -115,7 +133,7 @@ export class Bucket
           {
             parent,
             dependsOn: publicAccessBlock,
-          }
+          },
         );
       });
     }
@@ -125,20 +143,30 @@ export class Bucket
     }
   }
 
+  /**
+   * The S3 bucket name.
+   */
   public get name() {
     return this.bucket.bucket;
   }
 
+  /**
+   * The S3 bucket arn.
+   */
   public get arn() {
     return this.bucket.arn;
   }
 
+  /**
+   * The underlying AWS resources.
+   */
   public get nodes() {
     return {
       bucket: this.bucket,
     };
   }
 
+  /** @internal */
   public getSSTLink() {
     return {
       type: `{ bucketName: string }`,
@@ -148,6 +176,7 @@ export class Bucket
     };
   }
 
+  /** @internal */
   public getSSTAWSPermissions() {
     return [
       {

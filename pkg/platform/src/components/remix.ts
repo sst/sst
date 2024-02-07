@@ -45,7 +45,7 @@ export class Remix extends Component implements Link.Linkable {
   constructor(
     name: string,
     args: RemixArgs = {},
-    opts?: ComponentResourceOptions
+    opts?: ComponentResourceOptions,
   ) {
     super("sst:sst:Remix", name, args, opts);
 
@@ -72,7 +72,7 @@ export class Remix extends Component implements Link.Linkable {
         outputPath,
         access,
         bucket,
-        plan
+        plan,
       );
     const serverFunction = ssrFunctions[0] ?? Object.values(edgeFunctions)[0];
 
@@ -84,8 +84,8 @@ export class Remix extends Component implements Link.Linkable {
     Hint.register(
       this.urn,
       all([this.cdn.domainUrl, this.cdn.url]).apply(
-        ([domainUrl, url]) => domainUrl ?? url
-      )
+        ([domainUrl, url]) => domainUrl ?? url,
+      ),
     );
     this.registerOutputs({
       _metadata: {
@@ -104,7 +104,7 @@ export class Remix extends Component implements Link.Linkable {
       return all([outputPath, edge]).apply(([outputPath, edge]) => {
         const serverConfig = createServerLambdaBundle(
           outputPath,
-          edge ? "edge-server.mjs" : "regional-server.mjs"
+          edge ? "edge-server.mjs" : "regional-server.mjs",
         );
 
         return validatePlan(
@@ -175,10 +175,10 @@ export class Remix extends Component implements Link.Linkable {
                       : item,
                     cfFunction: "staticCfFunction",
                     origin: "s3",
-                  }) as const
+                  }) as const,
               ),
             ],
-          })
+          }),
         );
       });
     }
@@ -209,7 +209,7 @@ export class Remix extends Component implements Link.Linkable {
       // Copy the server lambda handler
       fs.copyFileSync(
         path.join($cli.paths.platform, "dist", "remix-server", wrapperFile),
-        path.join(buildPath, "server.mjs")
+        path.join(buildPath, "server.mjs"),
       );
 
       // Copy the Remix polyfil to the server build directory
@@ -222,7 +222,7 @@ export class Remix extends Component implements Link.Linkable {
       const polyfillDest = path.join(buildPath, "polyfill.mjs");
       fs.copyFileSync(
         path.join($cli.paths.platform, "dist", "remix-server", "polyfill.mjs"),
-        polyfillDest
+        polyfillDest,
       );
 
       return {
@@ -254,6 +254,7 @@ export class Remix extends Component implements Link.Linkable {
     return this.cdn.domainUrl;
   }
 
+  /** @internal */
   public getSSTLink() {
     return {
       type: `{ url: string; }`,
@@ -261,50 +262,5 @@ export class Remix extends Component implements Link.Linkable {
         url: this.url,
       },
     };
-  }
-
-  /** @internal */
-  private getConstructMetadataBase() {
-    //  return {
-    //    data: {
-    //      mode: this.doNotDeploy
-    //        ? ("placeholder" as const)
-    //        : ("deployed" as const),
-    //      path: this.props.path,
-    //      runtime: this.props.runtime,
-    //      domainUrl: this.domainUrl,
-    //      url: this.url,
-    //      edge: this.edge,
-    //      server: (this.serverFunctionForDev || this.server)
-    //        ?.functionArn!,
-    //      secrets: (this.props.bind || [])
-    //        .filter((c) => c instanceof Secret)
-    //        .map((c) => (c as Secret).name),
-    //    },
-    //  };
-  }
-
-  /** @internal */
-  public getConstructMetadata() {
-    // TODO implement metadata
-    //  const metadata = this.getConstructMetadataBase();
-    //  return {
-    //    ...metadata,
-    //    type: "AstroSite" as const,
-    //    data: {
-    //      ...metadata.data,
-    //      routes: isPerRouteLoggingEnabled()
-    //        ? {
-    //            logGroupPrefix: `/sst/lambda/${
-    //              (this.server as SsrFunction).functionName
-    //            }`,
-    //            data: this.useRoutes().map(({ route, logGroupPath }) => ({
-    //              route,
-    //              logGroupPath,
-    //            })),
-    //          }
-    //        : undefined,
-    //    },
-    //  };
   }
 }

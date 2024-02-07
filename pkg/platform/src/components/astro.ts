@@ -44,7 +44,7 @@ export class Astro extends Component implements Link.Linkable {
   constructor(
     name: string,
     args: AstroArgs = {},
-    opts?: ComponentResourceOptions
+    opts?: ComponentResourceOptions,
   ) {
     super("sst:sst:Astro", name, args, opts);
 
@@ -75,7 +75,7 @@ export class Astro extends Component implements Link.Linkable {
         outputPath,
         access,
         bucket,
-        plan
+        plan,
       );
     const serverFunction = ssrFunctions[0] ?? Object.values(edgeFunctions)[0];
 
@@ -87,8 +87,8 @@ export class Astro extends Component implements Link.Linkable {
     Hint.register(
       this.urn,
       all([this.cdn.domainUrl, this.cdn.url]).apply(
-        ([domainUrl, url]) => domainUrl ?? url
-      )
+        ([domainUrl, url]) => domainUrl ?? url,
+      ),
     );
     this.registerOutputs({
       _metadata: {
@@ -152,7 +152,7 @@ export class Astro extends Component implements Link.Linkable {
               },
               ...fs
                 .readdirSync(
-                  path.join(outputPath, buildMeta.clientBuildOutputDir)
+                  path.join(outputPath, buildMeta.clientBuildOutputDir),
                 )
                 .map(
                   (item) =>
@@ -163,15 +163,15 @@ export class Astro extends Component implements Link.Linkable {
                           path.join(
                             outputPath,
                             buildMeta.clientBuildOutputDir,
-                            item
-                          )
+                            item,
+                          ),
                         )
                         .isDirectory()
                         ? `${item}/*`
                         : item,
                       origin: "staticsServer",
-                    }) as const
-                )
+                    }) as const,
+                ),
             );
           } else {
             if (isStatic) {
@@ -224,15 +224,15 @@ export class Astro extends Component implements Link.Linkable {
                       cfFunction: "serverCfFunctionHostOnly",
                       pattern: route,
                       origin: "regionalServer",
-                    }) as const
-                )
+                    }) as const,
+                ),
               );
             }
 
             buildMeta.routes
               .filter(
                 ({ type, route }) =>
-                  type === "page" && /^\/\d{3}\/?$/.test(route)
+                  type === "page" && /^\/\d{3}\/?$/.test(route),
               )
               .forEach(({ route, prerender }) => {
                 switch (route) {
@@ -264,7 +264,7 @@ export class Astro extends Component implements Link.Linkable {
           }
 
           return validatePlan(transform(args?.transform?.plan, plan));
-        }
+        },
       );
     }
 
@@ -274,11 +274,11 @@ export class Astro extends Component implements Link.Linkable {
 
         if (!fs.existsSync(filePath)) {
           throw new Error(
-            `Could not find build meta file at ${filePath}. Update your 'astro-sst' package version and rebuild your Astro site.`
+            `Could not find build meta file at ${filePath}. Update your 'astro-sst' package version and rebuild your Astro site.`,
           );
         }
         return JSON.parse(
-          fs.readFileSync(filePath, "utf-8")
+          fs.readFileSync(filePath, "utf-8"),
         ) as BuildMetaConfig;
       });
     }
@@ -334,6 +334,7 @@ export class Astro extends Component implements Link.Linkable {
     return this.cdn.domainUrl;
   }
 
+  /** @internal */
   public getSSTLink() {
     return {
       type: `{ url: string; }`,
@@ -341,50 +342,5 @@ export class Astro extends Component implements Link.Linkable {
         url: this.url,
       },
     };
-  }
-
-  /** @internal */
-  private getConstructMetadataBase() {
-    //  return {
-    //    data: {
-    //      mode: this.doNotDeploy
-    //        ? ("placeholder" as const)
-    //        : ("deployed" as const),
-    //      path: this.props.path,
-    //      runtime: this.props.runtime,
-    //      domainUrl: this.domainUrl,
-    //      url: this.url,
-    //      edge: this.edge,
-    //      server: (this.serverFunctionForDev || this.server)
-    //        ?.functionArn!,
-    //      secrets: (this.props.bind || [])
-    //        .filter((c) => c instanceof Secret)
-    //        .map((c) => (c as Secret).name),
-    //    },
-    //  };
-  }
-
-  /** @internal */
-  public getConstructMetadata() {
-    // TODO implement metadata
-    //  const metadata = this.getConstructMetadataBase();
-    //  return {
-    //    ...metadata,
-    //    type: "AstroSite" as const,
-    //    data: {
-    //      ...metadata.data,
-    //      routes: isPerRouteLoggingEnabled()
-    //        ? {
-    //            logGroupPrefix: `/sst/lambda/${
-    //              (this.server as SsrFunction).functionName
-    //            }`,
-    //            data: this.useRoutes().map(({ route, logGroupPath }) => ({
-    //              route,
-    //              logGroupPath,
-    //            })),
-    //          }
-    //        : undefined,
-    //    },
-    //  };
   }
 }

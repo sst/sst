@@ -68,6 +68,7 @@ export interface FunctionCopyFilesArgs {
 }
 
 export interface FunctionNodeJSArgs {
+  // TODO exclude
   /**
    * Configure additional esbuild loaders for other file extensions
    *
@@ -422,6 +423,18 @@ export interface FunctionArgs {
   };
 }
 
+/**
+ * The `Function` component is a higher level component that makes it easy to create an AWS Lambda Function.
+ *
+ * @example
+ *
+ * #### Using the minimal config
+ * ```ts
+ * new sst.Function("MyFunction", {
+ *   handler: "src/lambda.handler",
+ * });
+ * ```
+ */
 export class Function
   extends Component
   implements Link.Linkable, Link.AWS.Linkable
@@ -955,6 +968,7 @@ export class Function
     return this.fnUrl.apply((url) => url?.functionUrl ?? output(undefined));
   }
 
+  /** @internal */
   public getSSTLink(): Link.Definition {
     return {
       type: `{ functionName: string }`,
@@ -964,6 +978,7 @@ export class Function
     };
   }
 
+  /** @internal */
   public getSSTAWSPermissions() {
     return [
       {
@@ -971,20 +986,5 @@ export class Function
         resources: [this.function.arn],
       },
     ];
-  }
-
-  /** @internal */
-  public getConstructMetadata() {
-    return {
-      type: "Function" as const,
-      data: {
-        arn: this.function.arn,
-        runtime: this.function.runtime,
-        handler: this.function.handler,
-        missingSourcemap: this.missingSourcemap === true ? true : undefined,
-        localId: this.urn,
-        secrets: [] as string[],
-      },
-    };
   }
 }

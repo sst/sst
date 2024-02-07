@@ -46,6 +46,7 @@ export class Secret extends Component implements Link.Linkable {
     return output(this._placeholder);
   }
 
+  /** @internal */
   public getSSTLink(): Link.Definition {
     return {
       type: "string",

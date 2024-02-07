@@ -138,7 +138,7 @@ export class Nextjs extends Component implements Link.Linkable {
   constructor(
     name: string,
     args?: NextjsArgs,
-    opts?: ComponentResourceOptions
+    opts?: ComponentResourceOptions,
   ) {
     super("sst:sst:Nextjs", name, args, opts);
 
@@ -194,7 +194,7 @@ export class Nextjs extends Component implements Link.Linkable {
         outputPath,
         access,
         bucket,
-        plan
+        plan,
       );
     const serverFunction = ssrFunctions[0] ?? Object.values(edgeFunctions)[0];
 
@@ -213,8 +213,8 @@ export class Nextjs extends Component implements Link.Linkable {
     Hint.register(
       this.urn,
       all([this.cdn.domainUrl, this.cdn.url]).apply(
-        ([domainUrl, url]) => domainUrl ?? url
-      )
+        ([domainUrl, url]) => domainUrl ?? url,
+      ),
     );
     this.registerOutputs({
       _metadata: {
@@ -254,7 +254,7 @@ export class Nextjs extends Component implements Link.Linkable {
             ...(experimental.disableIncrementalCache
               ? ["--dangerously-disable-incremental-cache"]
               : []),
-          ].join(" ")
+          ].join(" "),
       );
     }
 
@@ -373,7 +373,7 @@ export class Nextjs extends Component implements Link.Linkable {
                       bundle: path.join(
                         outputPath,
                         ".open-next",
-                        "image-optimization-function"
+                        "image-optimization-function",
                       ),
                       runtime: "nodejs18.x",
                       architecture: "arm64",
@@ -456,13 +456,13 @@ export class Nextjs extends Component implements Link.Linkable {
                           cacheType: "static",
                           pattern: fs
                             .statSync(
-                              path.join(outputPath, ".open-next/assets", item)
+                              path.join(outputPath, ".open-next/assets", item),
                             )
                             .isDirectory()
                             ? `${item}/*`
                             : item,
                           origin: "s3",
-                        }) as const
+                        }) as const,
                     ),
                 ],
                 serverCachePolicy: {
@@ -471,7 +471,7 @@ export class Nextjs extends Component implements Link.Linkable {
                 buildId: fs
                   .readFileSync(path.join(outputPath, ".next/BUILD_ID"))
                   .toString(),
-              })
+              }),
             );
 
             function useServerFunctionPerRouteLoggingInjection() {
@@ -483,7 +483,7 @@ if (event.rawPath) {
       regex: regexMatch,
       prefix: prefixMatch,
       logGroupPath,
-    }))
+    })),
   )}.find(({ regex, prefix }) => {
     if (regex) return event.rawPath.match(new RegExp(regex));
     if (prefix) return event.rawPath === prefix || (event.rawPath === prefix + "/");
@@ -499,8 +499,8 @@ if (event.rawPath) {
   }
 }`;
             }
-          }
-        )
+          },
+        ),
       );
     }
 
@@ -515,7 +515,7 @@ if (event.rawPath) {
             fifoQueue: true,
             receiveWaitTimeSeconds: 20,
           },
-          { parent }
+          { parent },
         );
         const consumer = new Function(
           `${name}Revalidator`,
@@ -523,7 +523,7 @@ if (event.rawPath) {
             description: `${name} ISR revalidator`,
             handler: "index.handler",
             bundle: outputPath.apply((outputPath) =>
-              path.join(outputPath, ".open-next", "revalidation-function")
+              path.join(outputPath, ".open-next", "revalidation-function"),
             ),
             runtime: "nodejs18.x",
             timeout: "30 seconds",
@@ -540,7 +540,7 @@ if (event.rawPath) {
               },
             ],
           },
-          { parent }
+          { parent },
         );
         new aws.lambda.EventSourceMapping(
           `${name}RevalidatorEventSource`,
@@ -549,7 +549,7 @@ if (event.rawPath) {
             eventSourceArn: queue.arn,
             batchSize: 5,
           },
-          { parent }
+          { parent },
         );
         return queue;
       });
@@ -584,20 +584,20 @@ if (event.rawPath) {
                 },
               ],
             },
-            { parent }
+            { parent },
           );
 
           const dynamodbProviderPath = path.join(
             outputPath,
             ".open-next",
-            "dynamodb-provider"
+            "dynamodb-provider",
           );
           if (fs.existsSync(dynamodbProviderPath)) {
             // Provision 128MB of memory for every 4,000 prerendered routes,
             // 1GB per 40,000, up to 10GB. This tends to use ~70% of the memory
             // provisioned when testing.
             const prerenderedRouteCount = Object.keys(
-              prerenderManifest?.routes ?? {}
+              prerenderManifest?.routes ?? {},
             ).length;
             const seedFn = new Function(
               `${name}RevalidationSeeder`,
@@ -609,7 +609,7 @@ if (event.rawPath) {
                 timeout: "900 seconds",
                 memory: `${Math.min(
                   10240,
-                  Math.max(128, Math.ceil(prerenderedRouteCount / 4000) * 128)
+                  Math.max(128, Math.ceil(prerenderedRouteCount / 4000) * 128),
                 )} MB`,
                 permissions: [
                   {
@@ -625,7 +625,7 @@ if (event.rawPath) {
                   CACHE_DYNAMO_TABLE: table.name,
                 },
               },
-              { parent }
+              { parent },
             );
             new aws.lambda.Invocation(
               `${name}RevalidationSeed`,
@@ -636,11 +636,11 @@ if (event.rawPath) {
                 },
                 input: JSON.stringify({}),
               },
-              { parent }
+              { parent },
             );
           }
           return table;
-        }
+        },
       );
     }
 
@@ -653,7 +653,7 @@ if (event.rawPath) {
         });
         for (const file of files) {
           fs.rmSync(
-            path.join(outputPath, ".open-next", "server-function", file)
+            path.join(outputPath, ".open-next", "server-function", file),
           );
         }
       });
@@ -698,11 +698,11 @@ if (event.rawPath) {
             .filter(
               (page) =>
                 routesManifest.dynamicRoutes.every(
-                  (route) => route.page !== page
+                  (route) => route.page !== page,
                 ) &&
                 routesManifest.staticRoutes.every(
-                  (route) => route.page !== page
-                )
+                  (route) => route.page !== page,
+                ),
             )
             .map((page) => {
               const cwRoute = buildCloudWatchRouteName(page);
@@ -729,12 +729,12 @@ if (event.rawPath) {
                 regexMatch: dataRouteRegex,
                 logGroupPath: `/${cwHash}${cwRoute}`,
               };
-            }
+            },
           );
 
           return [
             ...[...dynamicAndStaticRoutes, ...appRoutes].sort((a, b) =>
-              a.route.localeCompare(b.route)
+              a.route.localeCompare(b.route),
             ),
             ...dataRoutes.sort((a, b) => a.route.localeCompare(b.route)),
           ];
@@ -750,7 +750,7 @@ if (event.rawPath) {
             //   "/favicon.ico/route": "/favicon.ico"
             // }
             const appPathRoute = Object.keys(appPathRoutesManifest).find(
-              (key) => appPathRoutesManifest[key] === page
+              (key) => appPathRoutesManifest[key] === page,
             );
             if (!appPathRoute) return;
 
@@ -771,7 +771,7 @@ if (event.rawPath) {
               outputPath,
               ".next",
               "server",
-              `${filePath}.map`
+              `${filePath}.map`,
             );
             if (!fs.existsSync(sourcemapPath)) return;
 
@@ -800,13 +800,13 @@ if (event.rawPath) {
               outputPath,
               ".next",
               "server",
-              `${filePath}.map`
+              `${filePath}.map`,
             );
             if (!fs.existsSync(sourcemapPath)) return;
 
             return sourcemapPath;
           }
-        }
+        },
       );
 
       return _routes;
@@ -825,7 +825,7 @@ if (event.rawPath) {
         } catch (e) {
           console.error(e);
           throw new Error(
-            `Failed to read routes data from ".next/routes-manifest.json" for the "${name}" site.`
+            `Failed to read routes data from ".next/routes-manifest.json" for the "${name}" site.`,
           );
         }
       });
@@ -848,7 +848,7 @@ if (event.rawPath) {
         try {
           const content = fs
             .readFileSync(
-              path.join(outputPath, ".next/app-path-routes-manifest.json")
+              path.join(outputPath, ".next/app-path-routes-manifest.json"),
             )
             .toString();
           return JSON.parse(content) as Record<string, string>;
@@ -866,7 +866,7 @@ if (event.rawPath) {
         try {
           const content = fs
             .readFileSync(
-              path.join(outputPath, ".next/server/app-paths-manifest.json")
+              path.join(outputPath, ".next/server/app-paths-manifest.json"),
             )
             .toString();
           return JSON.parse(content) as Record<string, string>;
@@ -884,7 +884,7 @@ if (event.rawPath) {
         try {
           const content = fs
             .readFileSync(
-              path.join(outputPath, ".next/server/pages-manifest.json")
+              path.join(outputPath, ".next/server/pages-manifest.json"),
             )
             .toString();
           return JSON.parse(content) as Record<string, string>;
@@ -902,7 +902,7 @@ if (event.rawPath) {
         try {
           const content = fs
             .readFileSync(
-              path.join(outputPath, ".next/prerender-manifest.json")
+              path.join(outputPath, ".next/prerender-manifest.json"),
             )
             .toString();
           prerenderManifest = JSON.parse(content);
@@ -951,7 +951,7 @@ if (event.rawPath) {
             ]
           }`,
         },
-        { parent }
+        { parent },
       );
       new aws.iam.RolePolicyAttachment(
         `${name}DisableLoggingPolicyAttachment`,
@@ -959,7 +959,7 @@ if (event.rawPath) {
           policyArn: policy.arn,
           role: serverFunction.nodes.function.role,
         },
-        { parent }
+        { parent },
       );
     }
 
@@ -976,10 +976,10 @@ if (event.rawPath) {
               bucket: region.apply((region) => bootstrap.forRegion(region)),
               source: new asset.FileAsset(sourcemapPath),
               key: serverFunction!.nodes.function.arn.apply((arn) =>
-                path.posix.join("sourcemaps", arn, sourcemapKey)
+                path.posix.join("sourcemaps", arn, sourcemapKey),
               ),
             },
-            { parent, retainOnDelete: true }
+            { parent, retainOnDelete: true },
           );
         });
       });
@@ -1014,6 +1014,7 @@ if (event.rawPath) {
     return this.cdn.domainUrl;
   }
 
+  /** @internal */
   public getSSTLink() {
     return {
       type: `{ url: string; }`,
@@ -1021,50 +1022,5 @@ if (event.rawPath) {
         url: this.url,
       },
     };
-  }
-
-  /** @internal */
-  private getConstructMetadataBase() {
-    //  return {
-    //    data: {
-    //      mode: this.doNotDeploy
-    //        ? ("placeholder" as const)
-    //        : ("deployed" as const),
-    //      path: this.props.path,
-    //      runtime: this.props.runtime,
-    //      domainUrl: this.domainUrl,
-    //      url: this.url,
-    //      edge: this.edge,
-    //      server: (this.serverFunctionForDev || this.server)
-    //        ?.functionArn!,
-    //      secrets: (this.props.bind || [])
-    //        .filter((c) => c instanceof Secret)
-    //        .map((c) => (c as Secret).name),
-    //    },
-    //  };
-  }
-
-  /** @internal */
-  public getConstructMetadata() {
-    // TODO implement metadata
-    //  const metadata = this.getConstructMetadataBase();
-    //  return {
-    //    ...metadata,
-    //    type: "NextjsSite" as const,
-    //    data: {
-    //      ...metadata.data,
-    //      routes: isPerRouteLoggingEnabled()
-    //        ? {
-    //            logGroupPrefix: `/sst/lambda/${
-    //              (this.server as SsrFunction).functionName
-    //            }`,
-    //            data: this.useRoutes().map(({ route, logGroupPath }) => ({
-    //              route,
-    //              logGroupPath,
-    //            })),
-    //          }
-    //        : undefined,
-    //    },
-    //  };
   }
 }

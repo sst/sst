@@ -81,7 +81,7 @@ export class Postgres
   constructor(
     name: string,
     args?: PostgresArgs,
-    opts?: ComponentResourceOptions
+    opts?: ComponentResourceOptions,
   ) {
     super("sst:sst:Postgres", name, args, opts);
 
@@ -128,7 +128,7 @@ export class Postgres
         }),
         {
           parent,
-        }
+        },
       );
     }
 
@@ -143,7 +143,7 @@ export class Postgres
         }),
         {
           parent,
-        }
+        },
       );
     }
   }
@@ -155,6 +155,7 @@ export class Postgres
     };
   }
 
+  /** @internal */
   public getSSTLink() {
     return {
       type: `{ clusterArn: string; secretArn: string; databaseName: string }`,
@@ -166,6 +167,7 @@ export class Postgres
     };
   }
 
+  /** @internal */
   public getSSTAWSPermissions() {
     return [
       {
