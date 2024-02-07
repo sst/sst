@@ -231,7 +231,7 @@ func (a *AwsProvider) resolveBuckets() (*awsBootstrapData, error) {
 
 	region := a.config.Region
 	rand := util.RandomString(12)
-	assetName := fmt.Sprintf("sst-assets-%v", rand)
+	assetName := fmt.Sprintf("sst-asset-%v", rand)
 	stateName := fmt.Sprintf("sst-state-%v", rand)
 	slog.Info("creating bootstrap bucket", "name", assetName)
 	s3Client := s3.NewFromConfig(a.config)
