@@ -87,7 +87,7 @@ func Passphrase(backend Backend, app, stage string) (string, error) {
 
 func GetLinks(backend Backend, app, stage string) (map[string]interface{}, error) {
 	data := map[string]interface{}{}
-	err := getData(backend, "links", app, stage, &data)
+	err := getData(backend, "link", app, stage, &data)
 	if err != nil {
 		return nil, err
 	}
@@ -99,12 +99,12 @@ func PutLinks(backend Backend, app, stage string, data map[string]interface{}) e
 	if data == nil || len(data) == 0 {
 		return nil
 	}
-	return putData(backend, "links", app, stage, data)
+	return putData(backend, "link", app, stage, data)
 }
 
 func GetSecrets(backend Backend, app, stage string) (map[string]string, error) {
 	data := map[string]string{}
-	err := getData(backend, "secrets", app, stage, &data)
+	err := getData(backend, "secret", app, stage, &data)
 	if err != nil {
 		return nil, err
 	}
@@ -116,7 +116,7 @@ func PutSecrets(backend Backend, app, stage string, data map[string]string) erro
 	if data == nil || len(data) == 0 {
 		return nil
 	}
-	return putData(backend, "secrets", app, stage, data)
+	return putData(backend, "secret", app, stage, data)
 }
 
 func putData(backend Backend, key, app, stage string, data interface{}) error {
