@@ -2,7 +2,7 @@ project_name: sst
 before:
   hooks:
     - go mod tidy
-    - GOOS=linux go build -o pkg/platform/dist/bridge/bootstrap pkg/platform/bridge
+    - go build -o pkg/platform/dist/bridge/bootstrap pkg/platform/bridge
 builds:
   - env:
       - CGO_ENABLED=0
