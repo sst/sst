@@ -12,7 +12,6 @@ import (
 	"path/filepath"
 	"strings"
 	"sync"
-	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
@@ -27,7 +26,7 @@ import (
 type AwsProvider struct {
 	args        map[string]string
 	config      aws.Config
-	bucket      string
+	bootstrap   *awsBootstrapData
 	credentials sync.Once
 }
 
@@ -52,7 +51,7 @@ func (a *AwsProvider) Lock(app string, stage string, out *os.File) error {
 
 	lockKey := a.pathForLock(app, stage)
 	_, err := s3Client.GetObject(context.TODO(), &s3.GetObjectInput{
-		Bucket: aws.String(a.bucket),
+		Bucket: aws.String(a.bootstrap.State),
 		Key:    aws.String(lockKey),
 	})
 
@@ -63,7 +62,7 @@ func (a *AwsProvider) Lock(app string, stage string, out *os.File) error {
 
 	slog.Info("writing lock")
 	_, err = s3Client.PutObject(context.TODO(), &s3.PutObjectInput{
-		Bucket: aws.String(a.bucket),
+		Bucket: aws.String(a.bootstrap.State),
 		Key:    aws.String(lockKey),
 	})
 	if err != nil {
@@ -72,7 +71,7 @@ func (a *AwsProvider) Lock(app string, stage string, out *os.File) error {
 
 	slog.Info("syncing old state")
 	result, err := s3Client.GetObject(context.TODO(), &s3.GetObjectInput{
-		Bucket: aws.String(a.bucket),
+		Bucket: aws.String(a.bootstrap.State),
 		Key:    aws.String(a.pathForState(app, stage)),
 	})
 
@@ -93,19 +92,15 @@ func (a *AwsProvider) Lock(app string, stage string, out *os.File) error {
 }
 
 func (a *AwsProvider) pathForData(key, app, stage string) string {
-	return filepath.Join("state", key, app, fmt.Sprintf("%v.json", stage))
+	return filepath.Join(key, app, fmt.Sprintf("%v.json", stage))
 }
 
 func (a *AwsProvider) pathForState(app string, stage string) string {
-	return filepath.Join("state", "data", app, fmt.Sprintf("%v.json", stage))
-}
-
-func (a *AwsProvider) pathForBackup(app string, stage string) string {
-	return filepath.Join("state", "backup", app, stage, fmt.Sprintf("%v.json", time.Now().UnixMilli()))
+	return filepath.Join("app", app, fmt.Sprintf("%v.json", stage))
 }
 
 func (a *AwsProvider) pathForLock(app string, stage string) string {
-	return filepath.Join("state", "lock", app, fmt.Sprintf("%v.json", stage))
+	return filepath.Join("lock", app, fmt.Sprintf("%v.json", stage))
 }
 
 func (a *AwsProvider) pathForPassphrase(app string, stage string) string {
@@ -116,19 +111,13 @@ func (a *AwsProvider) Unlock(app string, stage string, in *os.File) error {
 	s3Client := s3.NewFromConfig(a.config)
 	defer func() {
 		s3Client.DeleteObject(context.TODO(), &s3.DeleteObjectInput{
-			Bucket: aws.String(a.bucket),
+			Bucket: aws.String(a.bootstrap.State),
 			Key:    aws.String(a.pathForLock(app, stage)),
 		})
 	}()
 
-	_, err := s3Client.CopyObject(context.TODO(), &s3.CopyObjectInput{
-		CopySource: aws.String(a.bucket + "/" + a.pathForState(app, stage)),
-		Bucket:     aws.String(a.bucket),
-		Key:        aws.String(a.pathForBackup(app, stage)),
-	})
-
-	_, err = s3Client.PutObject(context.TODO(), &s3.PutObjectInput{
-		Bucket:      aws.String(a.bucket),
+	_, err := s3Client.PutObject(context.TODO(), &s3.PutObjectInput{
+		Bucket:      aws.String(a.bootstrap.State),
 		Key:         aws.String(a.pathForState(app, stage)),
 		ContentType: aws.String("application/json"),
 		Body:        in,
@@ -145,7 +134,7 @@ func (a *AwsProvider) Cancel(app string, stage string) error {
 	s3Client := s3.NewFromConfig(a.config)
 
 	_, err := s3Client.DeleteObject(context.TODO(), &s3.DeleteObjectInput{
-		Bucket: aws.String(a.bucket),
+		Bucket: aws.String(a.bootstrap.State),
 		Key:    aws.String(a.pathForLock(app, stage)),
 	})
 	if err != nil {
@@ -154,6 +143,8 @@ func (a *AwsProvider) Cancel(app string, stage string) error {
 
 	return nil
 }
+
+const BOOTSTRAP_VERSION = 1
 
 func (a *AwsProvider) Init(app string, stage string, args map[string]string) (err error) {
 	a.args = args
@@ -167,11 +158,11 @@ func (a *AwsProvider) Init(app string, stage string, args map[string]string) (er
 	}
 	a.config = cfg
 
-	bucket, err := a.resolveBucket()
+	bootstrap, err := a.resolveBuckets()
 	if err != nil {
 		return err
 	}
-	a.bucket = bucket
+	a.bootstrap = bootstrap
 
 	creds, err := cfg.Credentials.Retrieve(context.TODO())
 	if err != nil {
@@ -206,69 +197,106 @@ func (a *AwsProvider) Init(app string, stage string, args map[string]string) (er
 	return err
 }
 
-func (a *AwsProvider) resolveBucket() (string, error) {
+type awsBootstrapData struct {
+	Version int    `json:"version"`
+	Asset   string `json:"asset"`
+	State   string `json:"state"`
+}
+
+func (a *AwsProvider) resolveBuckets() (*awsBootstrapData, error) {
 	ctx := context.TODO()
 
 	ssmClient := ssm.NewFromConfig(a.config)
-	slog.Info("fetching bootstrap bucket")
+	slog.Info("fetching bootstrap")
 	result, err := ssmClient.GetParameter(ctx, &ssm.GetParameterInput{
-		Name:           aws.String(SSM_NAME_BUCKET),
+		Name:           aws.String(SSM_NAME_BOOTSTRAP),
 		WithDecryption: aws.Bool(false),
 	})
 
 	if result != nil && result.Parameter.Value != nil {
-		slog.Info("found existing bootstrap bucket", "bucket", *result.Parameter.Value)
-		return *result.Parameter.Value, nil
+		slog.Info("found existing bootstrap", "data", *result.Parameter.Value)
+		var bootstrapData awsBootstrapData
+		err = json.Unmarshal([]byte(*result.Parameter.Value), &bootstrapData)
+		if err != nil {
+			return nil, err
+		}
+		return &bootstrapData, nil
 	}
-
 	if err != nil {
 		var pnf *ssmTypes.ParameterNotFound
-		if errors.As(err, &pnf) {
-			region := a.config.Region
-			bucketName := fmt.Sprintf("sst--%v", util.RandomString(12))
-			slog.Info("creating bootstrap bucket", "name", bucketName)
-			s3Client := s3.NewFromConfig(a.config)
-
-			var config *s3types.CreateBucketConfiguration = nil
-			if region != "us-east-1" {
-				config = &s3types.CreateBucketConfiguration{
-					LocationConstraint: s3types.BucketLocationConstraint(region),
-				}
-			}
-			_, err := s3Client.CreateBucket(context.TODO(), &s3.CreateBucketInput{
-				Bucket:                    aws.String(bucketName),
-				CreateBucketConfiguration: config,
-			})
-			if err != nil {
-				return "", err
-			}
-
-			_, err = s3Client.PutBucketNotificationConfiguration(context.TODO(), &s3.PutBucketNotificationConfigurationInput{
-				Bucket:                    aws.String(bucketName),
-				NotificationConfiguration: &s3types.NotificationConfiguration{},
-			})
-			if err != nil {
-				return "", err
-			}
-
-			_, err = ssmClient.PutParameter(
-				ctx,
-				&ssm.PutParameterInput{
-					Name:  aws.String(SSM_NAME_BUCKET),
-					Type:  ssmTypes.ParameterTypeString,
-					Value: aws.String(bucketName),
-				},
-			)
-			if err != nil {
-				return "", err
-			}
-
-			return bucketName, nil
+		if !errors.As(err, &pnf) {
+			return nil, err
 		}
-		return "", err
 	}
 
-	panic("unreachable")
+	region := a.config.Region
+	rand := util.RandomString(12)
+	assetName := fmt.Sprintf("sst-assets-%v", rand)
+	stateName := fmt.Sprintf("sst-state-%v", rand)
+	slog.Info("creating bootstrap bucket", "name", assetName)
+	s3Client := s3.NewFromConfig(a.config)
+
+	var config *s3types.CreateBucketConfiguration = nil
+	if region != "us-east-1" {
+		config = &s3types.CreateBucketConfiguration{
+			LocationConstraint: s3types.BucketLocationConstraint(region),
+		}
+	}
+	_, err = s3Client.CreateBucket(context.TODO(), &s3.CreateBucketInput{
+		Bucket:                    aws.String(assetName),
+		CreateBucketConfiguration: config,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = s3Client.PutBucketNotificationConfiguration(context.TODO(), &s3.PutBucketNotificationConfigurationInput{
+		Bucket:                    aws.String(assetName),
+		NotificationConfiguration: &s3types.NotificationConfiguration{},
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = s3Client.CreateBucket(context.TODO(), &s3.CreateBucketInput{
+		Bucket:                    aws.String(stateName),
+		CreateBucketConfiguration: config,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = s3Client.PutBucketVersioning(context.TODO(), &s3.PutBucketVersioningInput{
+		Bucket: aws.String(stateName),
+		VersioningConfiguration: &s3types.VersioningConfiguration{
+			Status: s3types.BucketVersioningStatusEnabled,
+		},
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	bootstrapData := &awsBootstrapData{
+		Version: BOOTSTRAP_VERSION,
+		Asset:   assetName,
+		State:   stateName,
+	}
+
+	data, err := json.Marshal(bootstrapData)
+
+	_, err = ssmClient.PutParameter(
+		ctx,
+		&ssm.PutParameterInput{
+			Name:  aws.String(SSM_NAME_BOOTSTRAP),
+			Type:  ssmTypes.ParameterTypeString,
+			Value: aws.String(string(data)),
+		},
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	return bootstrapData, nil
 }
 
 func (a *AwsProvider) resolveConfig() (aws.Config, error) {
@@ -301,7 +329,7 @@ func (a *AwsProvider) getData(key, app, stage string) (io.Reader, error) {
 	s3Client := s3.NewFromConfig(a.config)
 
 	result, err := s3Client.GetObject(context.TODO(), &s3.GetObjectInput{
-		Bucket: aws.String(a.bucket),
+		Bucket: aws.String(a.bootstrap.State),
 		Key:    aws.String(a.pathForData(key, app, stage)),
 	})
 
@@ -319,7 +347,7 @@ func (a *AwsProvider) putData(key, app, stage string, data io.Reader) error {
 	s3Client := s3.NewFromConfig(a.config)
 
 	_, err := s3Client.PutObject(context.TODO(), &s3.PutObjectInput{
-		Bucket:      aws.String(a.bucket),
+		Bucket:      aws.String(a.bootstrap.State),
 		Key:         aws.String(a.pathForData(key, app, stage)),
 		Body:        data,
 		ContentType: aws.String("application/json"),

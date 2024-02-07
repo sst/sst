@@ -53,7 +53,7 @@ type DevSession interface {
 	Publish(json string) error
 }
 
-const SSM_NAME_BUCKET = "/sst/bootstrap"
+const SSM_NAME_BOOTSTRAP = "/sst/bootstrap"
 
 type LockExistsError struct{}
 

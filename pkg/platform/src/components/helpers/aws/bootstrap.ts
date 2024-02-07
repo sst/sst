@@ -1,16 +1,29 @@
-const bootstrapBuckets: Record<string, Promise<string>> = {};
 import {
   SSMClient,
   GetParameterCommand,
   ParameterNotFound,
   PutParameterCommand,
 } from "@aws-sdk/client-ssm";
-import { S3Client, CreateBucketCommand } from "@aws-sdk/client-s3";
+import {
+  S3Client,
+  CreateBucketCommand,
+  PutBucketVersioningCommand,
+} from "@aws-sdk/client-s3";
 export type {} from "@smithy/types";
 import { HASH_CHARS, hashNumberToString } from "../naming";
 
+const VERSION = 1;
+
+interface BootstrapData {
+  version: number;
+  asset: string;
+  state: string;
+}
+
+const bootstrapBuckets: Record<string, Promise<BootstrapData>> = {};
+
 export const bootstrap = {
-  forRegion(region: string) {
+  forRegion(region: string): Promise<BootstrapData> {
     if (region in bootstrapBuckets) {
       return bootstrapBuckets[region]!;
     }
@@ -27,36 +40,58 @@ export const bootstrap = {
           .send(
             new GetParameterCommand({
               Name: `/sst/bootstrap`,
-            })
+            }),
           )
           .catch((err) => {
             if (err instanceof ParameterNotFound) return;
             throw err;
           });
 
-        if (result?.Parameter?.Value) return result.Parameter.Value;
+        if (result?.Parameter?.Value) {
+          try {
+            const parsed = JSON.parse(result.Parameter.Value);
+            return parsed;
+          } catch (ex) {}
+        }
 
         // Generate a bootstrap bucket suffix number
         const suffixLength = 12;
         const minNumber = Math.pow(HASH_CHARS.length, suffixLength);
         const numberSuffix = Math.floor(Math.random() * minNumber) + minNumber;
-        const name = `sst-bootstrap-${hashNumberToString(
-          numberSuffix,
-          suffixLength
-        )}`;
+        const rand = hashNumberToString(numberSuffix, suffixLength);
+        const asset = `sst-asset-${rand}`;
+        const state = `sst-state-${rand}`;
+        const data = {
+          asset,
+          state,
+          version: VERSION,
+        };
         await s3.send(
           new CreateBucketCommand({
-            Bucket: name,
-          })
+            Bucket: asset,
+          }),
+        );
+        await s3.send(
+          new CreateBucketCommand({
+            Bucket: state,
+          }),
+        );
+        await s3.send(
+          new PutBucketVersioningCommand({
+            Bucket: asset,
+            VersioningConfiguration: {
+              Status: "Enabled",
+            },
+          }),
         );
         await ssm.send(
           new PutParameterCommand({
             Name: `/sst/bootstrap`,
-            Value: name,
+            Value: JSON.stringify(data),
             Type: "String",
-          })
+          }),
         );
-        return name;
+        return asset;
       })();
 
       return (bootstrapBuckets[region] = bucket);

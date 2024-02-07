@@ -876,7 +876,9 @@ export class Function
         `${name}Code`,
         {
           key: interpolate`assets/${name}-code-${bundleHash}.zip`,
-          bucket: region.apply((region) => bootstrap.forRegion(region)),
+          bucket: region.apply((region) =>
+            bootstrap.forRegion(region).then((d) => d.asset),
+          ),
           source: zipPath.apply((zipPath) => new asset.FileArchive(zipPath)),
         },
         { parent, retainOnDelete: true },

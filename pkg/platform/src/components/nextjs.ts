@@ -973,7 +973,9 @@ if (event.rawPath) {
           new aws.s3.BucketObjectv2(
             `${name}Sourcemap${sanitizeToPascalCase(sourcemapKey)}`,
             {
-              bucket: region.apply((region) => bootstrap.forRegion(region)),
+              bucket: region.apply((region) =>
+                bootstrap.forRegion(region).then((b) => b.asset),
+              ),
               source: new asset.FileAsset(sourcemapPath),
               key: serverFunction!.nodes.function.arn.apply((arn) =>
                 path.posix.join("sourcemaps", arn, sourcemapKey),
