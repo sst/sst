@@ -7,7 +7,7 @@ import (
 	MQTT "github.com/eclipse/paho.mqtt.golang"
 )
 
-const BUFFER_SIZE = 1024 * 3
+const BUFFER_SIZE = 1024 * 100
 
 type IoTWriter struct {
 	topic  string
@@ -53,7 +53,7 @@ func (iw *IoTWriter) Write(p []byte) (int, error) {
 
 func (iw *IoTWriter) Flush() error {
 	if len(iw.buffer) > 0 {
-		slog.Info("writing to topic", "topic", iw.topic, "data", string(iw.buffer))
+		slog.Info("writing to topic", "topic", iw.topic, "data", len(iw.buffer))
 		token := iw.client.Publish(iw.topic, 1, false, iw.buffer)
 		if token.Wait() && token.Error() != nil {
 			return token.Error()

@@ -96,6 +96,10 @@ func run() error {
 		SetTLSConfig(&tls.Config{
 			InsecureSkipVerify: true,
 		}).
+		SetWebsocketOptions(&MQTT.WebsocketOptions{
+			ReadBufferSize:  1024 * 1000,
+			WriteBufferSize: 1024 * 1000,
+		}).
 		SetCleanSession(false).
 		SetAutoReconnect(false).
 		SetConnectionLostHandler(func(c MQTT.Client, err error) {

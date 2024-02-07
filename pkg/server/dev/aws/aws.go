@@ -89,10 +89,14 @@ func Start(
 		SetTLSConfig(&tls.Config{
 			InsecureSkipVerify: true,
 		}).
+		SetWebsocketOptions(&MQTT.WebsocketOptions{
+			ReadBufferSize:  1024 * 1000,
+			WriteBufferSize: 1024 * 1000,
+		}).
 		SetCleanSession(false).
 		SetAutoReconnect(true).
 		SetConnectionLostHandler(func(c MQTT.Client, err error) {
-			slog.Info("mqtt connection lost")
+			slog.Info("mqtt connection lost", "error", err)
 		}).
 		SetReconnectingHandler(func(c MQTT.Client, co *MQTT.ClientOptions) {
 			slog.Info("mqtt reconnecting")
