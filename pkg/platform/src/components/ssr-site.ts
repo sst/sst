@@ -24,9 +24,6 @@ import { BucketFile, BucketFiles } from "./providers/bucket-files.js";
 import { sanitizeToPascalCase } from "./helpers/naming.js";
 import { Link } from "./link.js";
 import { Transform } from "./component.js";
-type Prettify<T> = {
-  [K in keyof T]: T[K];
-} & {};
 
 type CloudFrontFunctionConfig = { injections: string[] };
 type EdgeFunctionConfig = { function: Unwrap<FunctionArgs> };
