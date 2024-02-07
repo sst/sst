@@ -260,11 +260,11 @@ export const useContainerHandler = (): RuntimeHandler => {
                 ([k, v]) => `--build-arg ${k}=${v}`
               ),
               ...(input.props.container?.buildSsh
-                ? [`-ssh ${input.props.container.buildSsh}`]
+                ? [`--ssh ${input.props.container.buildSsh}`]
                 : []),
-              (input.props.container?.cacheFrom || []).map(
+              ...(input.props.container?.cacheFrom || []).map(
                 (v) =>
-                  "--cache-from " +
+                  "--cache-from=" +
                   [
                     `type=${v.type}`,
                     ...(v.params
@@ -276,7 +276,7 @@ export const useContainerHandler = (): RuntimeHandler => {
               ),
               ...(input.props.container?.cacheTo
                 ? [
-                    "--cache-to " +
+                    "--cache-to=" +
                       [
                         `type=${input.props.container?.cacheTo.type}`,
                         ...(input.props.container?.cacheTo?.params
@@ -322,11 +322,11 @@ export const useContainerHandler = (): RuntimeHandler => {
                 ([k, v]) => `--build-arg ${k}=${v}`
               ),
               ...(input.props.container?.buildSsh
-                ? [`-ssh ${input.props.container.buildSsh}`]
+                ? [`--ssh ${input.props.container.buildSsh}`]
                 : []),
-              (input.props.container?.cacheFrom || []).map(
+              ...(input.props.container?.cacheFrom || []).map(
                 (v) =>
-                  "--cache-from " +
+                  "--cache-from=" +
                   [
                     `type=${v.type}`,
                     ...(v.params
@@ -338,7 +338,7 @@ export const useContainerHandler = (): RuntimeHandler => {
               ),
               ...(input.props.container?.cacheTo
                 ? [
-                    "--cache-to " +
+                    "--cache-to=" +
                       [
                         `type=${input.props.container?.cacheTo.type}`,
                         ...(input.props.container?.cacheTo?.params

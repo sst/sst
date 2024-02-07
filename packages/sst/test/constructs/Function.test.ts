@@ -253,8 +253,6 @@ test("runtime: container: props", async () => {
     runtime: "container",
     handler: "test/constructs/container-function",    
     container: {
-      file: "Dockerfile.garbage",
-      buildSsh: 'default',
       cacheFrom: [{type: 'inline'}, {type: 'local', params: {src: '.', mode: 'max'}}],
       cacheTo: {type: 'inline'},
     },

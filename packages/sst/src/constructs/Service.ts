@@ -1237,10 +1237,10 @@ export class Service extends Construct implements SSTConstruct {
           ...Object.entries(build?.buildArgs || {}).map(
             ([k, v]) => `--build-arg ${k}=${v}`
           ),
-          ...(build?.buildSsh ? [`-ssh ${build.buildSsh}`] : []),
-          (build?.cacheFrom || []).map(
+          ...(build?.buildSsh ? [`--ssh ${build.buildSsh}`] : []),
+          ...(build?.cacheFrom || []).map(
             (v) =>
-              "--cache-from " +
+              "--cache-from=" +
               [
                 `type=${v.type}`,
                 ...(v.params
