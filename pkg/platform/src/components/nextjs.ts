@@ -118,12 +118,6 @@ export interface NextjsArgs extends SsrSiteArgs {
   };
 }
 
-const args: NextjsArgs = {};
-
-/*
- * domain: string | SsrSiteDomainArgs;
- */
-
 /**
  * The `Nextjs` component makes it easy to create a Next.js app.
  * @example

@@ -42,21 +42,3 @@ declare global {
 
   export const $dev: boolean;
 }
-
-type Prettify<T> = {
-  [K in keyof T]: T[K];
-} & {};
-
-type A = {
-  /**
-   * Hello
-   * @default "world"
-   */
-  foo: string;
-};
-
-type B = {
-  bar: string;
-};
-
-type C = Prettify<A & B>;
