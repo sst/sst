@@ -75,7 +75,7 @@ The `RemixSite` construct is a higher level CDK construct that makes it easy to 
 4. Add the `RemixSite` construct to an existing stack in your SST app. You can also create a new stack for the app.
 
    ```ts
-   import { RemixSite, StackContext } as sst from "sst/constructs";
+   import { RemixSite, StackContext } from "sst/constructs";
 
    export default function MyStack({ stack }: StackContext) {
 
