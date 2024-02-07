@@ -42,6 +42,7 @@ type RunInput struct {
 	WorkerID   string
 	Runtime    string
 	Build      *BuildOutput
+	Env        []string
 }
 
 var runtimes = []Runtime{

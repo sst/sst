@@ -174,6 +174,7 @@ func Start(
 	go func() {
 		complete := <-completeChan
 		workers := map[string]*WorkerInfo{}
+		workerEnv := map[string][]string{}
 		builds := map[string]*runtime.BuildOutput{}
 
 		run := func(functionID string, workerID string) {
@@ -192,6 +193,7 @@ func Start(
 				Runtime:    warp.Runtime,
 				FunctionID: functionID,
 				Build:      build,
+				Env:        workerEnv[workerID],
 			})
 			workers[workerID] = &WorkerInfo{
 				FunctionID: functionID,
@@ -220,6 +222,7 @@ func Start(
 				if err != nil {
 					continue
 				}
+				workerEnv[workerID] = payload.Env
 				run(payload.FunctionID, workerID)
 				break
 
@@ -231,6 +234,7 @@ func Start(
 				}
 				info.Worker.Stop()
 				delete(workers, workerID)
+				delete(workerEnv, workerID)
 			case event := <-fileChan:
 				start := time.Now()
 				functions := map[string]bool{}

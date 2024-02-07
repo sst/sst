@@ -136,9 +136,7 @@ func (r *NodeRuntime) Build(ctx context.Context, input *BuildInput) (*BuildOutpu
 
 func (r *NodeRuntime) Run(ctx context.Context, input *RunInput) (Worker, error) {
 	cmd := exec.CommandContext(ctx, "node", ".sst/platform/dist/nodejs-runtime/index.js", filepath.Join(input.Build.Out, input.Build.Handler), input.WorkerID)
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	cmd.Env = append(os.Environ(), "AWS_LAMBDA_RUNTIME_API=localhost:44149/lambda/"+input.WorkerID)
+	cmd.Env = append(input.Env, "AWS_LAMBDA_RUNTIME_API=localhost:44149/lambda/"+input.WorkerID)
 	cmd.Start()
 	return &NodeWorker{
 		cmd,

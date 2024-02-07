@@ -13,6 +13,7 @@ import (
 	"os"
 	"os/signal"
 	"strconv"
+	"strings"
 	"sync"
 	"syscall"
 	"time"
@@ -29,6 +30,38 @@ var LAMBDA_RUNTIME_API = os.Getenv("AWS_LAMBDA_RUNTIME_API")
 var SST_APP = os.Getenv("SST_APP")
 var SST_STAGE = os.Getenv("SST_STAGE")
 var SST_FUNCTION_ID = os.Getenv("SST_FUNCTION_ID")
+
+var ENV_BLACKLIST = map[string]bool{
+	"SST_DEBUG_ENDPOINT":              true,
+	"SST_DEBUG_SRC_HANDLER":           true,
+	"SST_DEBUG_SRC_PATH":              true,
+	"AWS_LAMBDA_FUNCTION_MEMORY_SIZE": true,
+	"AWS_LAMBDA_LOG_GROUP_NAME":       true,
+	"AWS_LAMBDA_LOG_STREAM_NAME":      true,
+	"LD_LIBRARY_PATH":                 true,
+	"LAMBDA_TASK_ROOT":                true,
+	"AWS_LAMBDA_RUNTIME_API":          true,
+	"AWS_EXECUTION_ENV":               true,
+	"AWS_XRAY_DAEMON_ADDRESS":         true,
+	"AWS_LAMBDA_INITIALIZATION_TYPE":  true,
+	"PATH":                            true,
+	"PWD":                             true,
+	"LAMBDA_RUNTIME_DIR":              true,
+	"LANG":                            true,
+	"NODE_PATH":                       true,
+	"TZ":                              true,
+	"SHLVL":                           true,
+	"AWS_XRAY_DAEMON_PORT":            true,
+	"AWS_XRAY_CONTEXT_MISSING":        true,
+	"_HANDLER":                        true,
+	"_LAMBDA_CONSOLE_SOCKET":          true,
+	"_LAMBDA_CONTROL_SOCKET":          true,
+	"_LAMBDA_LOG_FD":                  true,
+	"_LAMBDA_RUNTIME_LOAD_TIME":       true,
+	"_LAMBDA_SB_ID":                   true,
+	"_LAMBDA_SERVER_PORT":             true,
+	"_LAMBDA_SHARED_MEM_FD":           true,
+}
 
 func main() {
 	err := run()
@@ -173,7 +206,15 @@ func run() error {
 		return token.Error()
 	}
 
-	initPayload, err := json.Marshal(map[string]interface{}{"functionID": SST_FUNCTION_ID, "env": os.Environ()})
+	env := []string{}
+	for _, e := range os.Environ() {
+		key := strings.Split(e, "=")[0]
+		if _, ok := ENV_BLACKLIST[key]; ok {
+			continue
+		}
+		env = append(env, e)
+	}
+	initPayload, err := json.Marshal(map[string]interface{}{"functionID": SST_FUNCTION_ID, "env": env})
 	if err != nil {
 		return err
 	}
@@ -193,13 +234,13 @@ func run() error {
 	}
 
 	sigs := make(chan os.Signal)
-	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
+	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM, syscall.SIGKILL)
 
 	select {
-	case <-ctx.Done():
-		break
 	case <-sigs:
 		cancel()
+		break
+	case <-ctx.Done():
 		break
 	}
 

@@ -17,7 +17,7 @@ export default $config({
       url: true,
       handler: "./src/index.handler",
       environment: {
-        foo: "1",
+        HELLO: "not lame",
       },
     });
 

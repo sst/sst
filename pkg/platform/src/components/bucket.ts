@@ -125,7 +125,7 @@ export class Bucket
                   Principal: "*",
                   Effect: "Allow",
                   Action: ["s3:GetObject"],
-                  Resource: [$util.interpolate`${bucket.arn}/*`],
+                  Resource: [interpolate`${bucket.arn}/*`],
                 },
               ],
             }),
