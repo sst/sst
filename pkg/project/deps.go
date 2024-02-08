@@ -31,7 +31,7 @@ func InstallDeps(version, cfgPath string) error {
 		return err
 	}
 
-	if version == "dev" {
+	if version == "dev" && false {
 		slog.Info("dev mode skipping node_module install")
 		return nil
 	}
@@ -40,8 +40,8 @@ func InstallDeps(version, cfgPath string) error {
 
 	cmd := exec.Command("npm", "install", "--omit=dev")
 	cmd.Dir = platformDir
-	// cmd.Stderr = os.Stderr
-	// cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	cmd.Stdout = os.Stdout
 
 	err = cmd.Run()
 	if err != nil {
