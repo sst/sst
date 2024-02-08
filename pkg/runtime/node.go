@@ -32,6 +32,9 @@ type NodeWorker struct {
 
 func (w *NodeWorker) Stop() {
 	w.cmd.Process.Signal(os.Interrupt)
+}
+
+func (w *NodeWorker) Done() {
 	w.cmd.Wait()
 }
 

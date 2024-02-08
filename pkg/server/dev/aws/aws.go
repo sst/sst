@@ -136,6 +136,7 @@ func Start(
 
 	type WorkerInfo struct {
 		FunctionID string
+		WorkerID   string
 		Worker     runtime.Worker
 		Env        []string
 	}
@@ -144,6 +145,7 @@ func Start(
 	initChan := make(chan MQTT.Message, 1000)
 	shutdownChan := make(chan MQTT.Message, 1000)
 	fileChan := make(chan *watcher.FileChangedEvent, 1000)
+	workerShutdown := make(chan *WorkerInfo, 1000)
 
 	bus.Subscribe(ctx, func(event *project.StackEvent) {
 		if event.CompleteEvent != nil {
@@ -195,16 +197,33 @@ func Start(
 				Build:      build,
 				Env:        workerEnv[workerID],
 			})
-			workers[workerID] = &WorkerInfo{
+			info := &WorkerInfo{
 				FunctionID: functionID,
 				Worker:     worker,
+				WorkerID:   workerID,
 			}
+			go func() {
+				worker.Done()
+				workerShutdown <- info
+			}()
+			workers[workerID] = info
 		}
 
 		for {
 			select {
 			case <-ctx.Done():
 				return
+			case info := <-workerShutdown:
+				slog.Info("worker died", "workerID", info.WorkerID)
+				existing, ok := workers[info.WorkerID]
+				if !ok {
+					continue
+				}
+				// only delete if a new worker hasn't already been started
+				if existing == info {
+					delete(workers, info.WorkerID)
+				}
+				break
 			case complete = <-completeChan:
 				break
 			case m := <-initChan:

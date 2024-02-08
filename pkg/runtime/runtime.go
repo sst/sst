@@ -19,6 +19,7 @@ type Runtime interface {
 
 type Worker interface {
 	Stop()
+	Done()
 }
 
 type BuildInput struct {
