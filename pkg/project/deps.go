@@ -15,7 +15,7 @@ func CheckDeps(version, cfgPath string) bool {
 		return false
 	}
 	slog.Info("checking dependencies")
-	contents, err := os.ReadFile(filepath.Join(ResolveWorkingDir(cfgPath), "version"))
+	contents, err := os.ReadFile(filepath.Join(ResolvePlatformDir(cfgPath), "version"))
 	if err != nil {
 		return false
 	}

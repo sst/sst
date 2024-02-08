@@ -27,7 +27,8 @@
     "archiver": "6.0.1",
     "astro-sst": "^2.40.1",
     "esbuild": "0.19.10",
-    "glob": "10.3.10"
+    "glob": "10.3.10",
+    "typescript": "5.3.3"
   },
   "devDependencies": {
     "@aws-sdk/client-iot": "^3.501.0",
@@ -37,7 +38,6 @@
     "aws-iot-device-sdk": "^2.2.13",
     "openai": "4.24.7",
     "prettier": "3.1.1",
-    "typescript": "5.3.3",
     "vitest": "^1.2.2"
   }
 }
