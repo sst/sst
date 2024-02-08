@@ -32,9 +32,6 @@ func Connect(ctx context.Context, input ConnectInput) error {
 		}
 		cmd := exec.Command(currentExecutable)
 		cmd.Env = os.Environ()
-		// cmd.SysProcAttr = &syscall.SysProcAttr{
-		// 	Setsid: true,
-		// }
 		cmd.Args = append(cmd.Args, "--stage", input.Stage, "server")
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
