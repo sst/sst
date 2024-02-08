@@ -77,6 +77,14 @@ func main() {
 				}
 			}
 
+			if global.NeedsBun() {
+				spin.Start()
+				err := global.InstallBun()
+				if err != nil {
+					return err
+				}
+			}
+
 			if global.NeedsPlugins() {
 				spin.Start()
 				err := global.InstallPlugins()

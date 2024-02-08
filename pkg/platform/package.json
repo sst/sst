@@ -7,6 +7,10 @@
     "test": "vitest run",
     "dev": "tsc --watch --noEmit"
   },
+  "trustedDependencies": [
+    "esbuild",
+    "protobufjs"
+  ],
   "dependencies": {
     "@aws-sdk/client-bedrock-runtime": "3.478.0",
     "@aws-sdk/client-cloudfront": "3.478.0",
