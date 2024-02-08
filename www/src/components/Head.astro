@@ -4,6 +4,7 @@ import type { Props } from '@astrojs/starlight/props'
 import Default from '@astrojs/starlight/components/Head.astro'
 import config from '../../config';
 
+const  slug = Astro.props.entry.slug;
 const { title } = Astro.props.entry.data;
 
 const encodedTitle = encodeURIComponent(
@@ -11,14 +12,16 @@ const encodedTitle = encodeURIComponent(
       // Convert to ASCII
       encodeURIComponent(
         // Truncate to fit S3's max key size
-        title.substring(0, 700)
+        slug === "" ? config.description : title.substring(0, 700)
       )
     )
   );
 
 // Get the URL of the generated image for the current page using its
 // ID and replace the file extension with `.png`.
-const ogImageUrl = `${config.socialCard}/ion/${encodedTitle}.png`;
+const ogImageUrl = slug === ""
+  ? `${config.socialCard}/ion-lander/${encodedTitle}.png`
+  : `${config.socialCard}/ion/${encodedTitle}.png`;
 ---
 
 <Default {...Astro.props}><slot /></Default>
