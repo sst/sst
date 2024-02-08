@@ -1,0 +1,90 @@
+/**
+ * Segments
+ */
+.sl-markdown-content div.segment + div.segment:not(:where(.not-content *)) {
+  margin-top: 3.5rem;
+}
+.sl-markdown-content div.segment:not(:last-child):after {
+  content: '';
+  display: block;
+  height: 1px;
+  background: var(--divider-color);
+  margin-top: 3.5rem;
+}
+/**
+ * Sections
+ */
+.sl-markdown-content section.tsdoc :is(h4) + :not(a, strong, em, del, span, input, code, :where(.not-content *)) {
+  margin-top: 1rem;
+}
+.sl-markdown-content section.tsdoc :not(h4, a, strong, em, del, span, input, code) + :not(a, strong, em, del, span, input, code, :where(.not-content *, .starlight-aside *)) {
+  margin-top: 0.5rem;
+}
+.sl-markdown-content section.tsdoc :not(h4, a, strong, em, del, span, input, code) + :is(.starlight-aside, .expressive-code),
+.sl-markdown-content section.tsdoc :is(.starlight-aside, .expressive-code) + :not(h4, a, strong, em, del, span, input, code) {
+  margin-top: 0.625rem;
+}
+.sl-markdown-content section.tsdoc.signature,
+.sl-markdown-content section.tsdoc.signature + section.tsdoc {
+  margin-top: 2rem;
+}
+
+/**
+ * Headings
+ */
+.sl-markdown-content section.tsdoc h4:not(:where(.not-content *)) {
+  font-size: var(--sl-text-h5); 
+}
+/* Return */
+.sl-markdown-content section.tsdoc.inline p:first-child strong:not(:where(.not-content *)) {
+  margin-right: var(--tsdoc-key-margin-right);
+  font-family: var(--__sl-font-headings);
+  letter-spacing: -0.5px;
+  font-weight: 500;
+  font-size: var(--sl-text-h5); 
+  color: var(--sl-color-white);
+}
+
+/**
+ * Keys & Values
+ */
+.sl-markdown-content section.tsdoc code.key:before,
+.sl-markdown-content section.tsdoc code.type:before,
+.sl-markdown-content section.tsdoc code.method:before,
+.sl-markdown-content section.tsdoc code.symbol:before,
+.sl-markdown-content section.tsdoc code.primitive:before,
+.sl-markdown-content section.tsdoc code.key:after,
+.sl-markdown-content section.tsdoc code.type:after,
+.sl-markdown-content section.tsdoc code.method:after,
+.sl-markdown-content section.tsdoc code.symbol:after,
+.sl-markdown-content section.tsdoc code.primitive:after {
+  content: '';
+}
+.sl-markdown-content section.tsdoc code.key {
+  margin-right: var(--tsdoc-key-margin-right);
+}
+.sl-markdown-content section.tsdoc code.key,
+.sl-markdown-content section.tsdoc code.type,
+.sl-markdown-content section.tsdoc code.symbol,
+.sl-markdown-content section.tsdoc code.primitive {
+  font-size: var(--sl-text-code);
+}
+.sl-markdown-content section.tsdoc code.key,
+.sl-markdown-content section.tsdoc code.primitive {
+  color: var(--color-text);
+}
+.sl-markdown-content section.tsdoc code.symbol {
+  color: var(--color-text-secondary);
+}
+.sl-markdown-content section.tsdoc code.type,
+.sl-markdown-content section.tsdoc code.symbol,
+.sl-markdown-content section.tsdoc code.primitive {
+  font-weight: 400;
+}
+.sl-markdown-content section.tsdoc code.primitive {
+  font-style: italic;
+}
+
+.sl-markdown-content section.tsdoc span.dimmed {
+  color: var(--color-text-secondary);
+}

@@ -1,0 +1,99 @@
+---
+title: TSDoc
+description: A page to test all the TSDoc cases
+---
+
+import Segment from '../../../components/tsdoc/Segment.astro';
+import Section from '../../../components/tsdoc/Section.astro';
+import InlineSection from '../../../components/tsdoc/InlineSection.astro';
+
+Returns a locale object for the specified definition with `locale.format` and `locale.formatPrefix` methods.
+
+This section has more from about the `FormatSpecifier`.
+
+---
+
+## Constructor
+
+<Segment>
+<Section type="signature">
+```ts
+new FormatSpecifier(specifier, addend?): FormatSpecifier
+```
+</Section>
+
+<Section type="parameters">
+#### Parameters
+
+- <p><code class="key">specifier</code> [<code class="type">FormatSpecifierObject</code>](#FormatSpecifierObject)</p>
+
+  A specifier object.
+
+
+- <p><code class="key">addend?</code> <code class="primitive">number</code><code class="symbol"> | </code><code class="primitive">string</code><code class="symbol"> & </code><code class="primitive">boolean</code></p>
+
+  A number to add.
+</Section>
+
+<InlineSection>
+**Returns** [<code class="type">FormatSpecifier</code>](#FormatSpecifier)<code class="symbol">[]</code><code class="symbol"> | </code><code class="primitive">null</code>
+</InlineSection>
+
+An instance of this class; given the specified specifier object.
+
+Returning an object with exposed fields that correspond to the format specification mini-language and a `toString` method that reconstructs the specifier.
+
+:::note
+You can also add notes. By specifying the ZipFile property within the Code property, specify `index.function_name` as the handler.
+:::
+
+Here's a simple example.
+
+```ts
+new FormatSpecifier("param1");
+```
+
+Here's a more complicated example.
+
+```ts
+new FormatSpecifier("param1", "param2", "param3");
+```
+
+For more info [refer to our other docs](/).
+</Segment>
+
+## Methods
+
+<Segment>
+### noop
+
+<Section type="signature">
+```ts
+noop(): void
+```
+</Section>
+
+This function doesn't do anything.
+</Segment>
+
+## Properties
+
+<Segment>
+### architecture?
+
+<InlineSection>
+**Type** <code class="primitive">x86_64</code><code class="symbol"> | </code><code class="primitive">arm_64</code>
+</InlineSection>
+
+<InlineSection>
+**Default** Uses x86 by default `x86_64`
+</InlineSection>
+
+The CPU architecture of the lambda function.
+
+```ts
+new Function(stack, "Function", {
+  architecture: "arm_64",
+})
+```
+</Segment>

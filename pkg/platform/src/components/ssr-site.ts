@@ -4,7 +4,6 @@ import { globSync } from "glob";
 import crypto from "crypto";
 import { execSync } from "child_process";
 import {
-  Input,
   Output,
   Unwrap,
   output,
@@ -23,7 +22,8 @@ import { Bucket } from "./bucket.js";
 import { BucketFile, BucketFiles } from "./providers/bucket-files.js";
 import { sanitizeToPascalCase } from "./helpers/naming.js";
 import { Link } from "./link.js";
-import { Transform } from "./component.js";
+import type { Prettify, Transform } from "./component.js";
+import type { Input } from "./input.js";
 
 type CloudFrontFunctionConfig = { injections: string[] };
 type EdgeFunctionConfig = { function: Unwrap<FunctionArgs> };
@@ -53,10 +53,6 @@ type OriginGroupConfig = {
   fallbackOriginName: string;
   fallbackStatusCodes: number[];
 };
-
-type Prettify<T> = {
-  [K in keyof T]: T[K];
-} & {};
 
 export type Plan = ReturnType<typeof validatePlan>;
 export interface SsrSiteFileOptions {
@@ -246,7 +242,7 @@ export interface SsrSiteArgs {
      * }
      * ```
      */
-    fileOptions?: Input<SsrSiteFileOptions[]>;
+    fileOptions?: Input<Prettify<SsrSiteFileOptions>[]>;
   }>;
   invalidation?: Input<{
     /**

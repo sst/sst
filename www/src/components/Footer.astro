@@ -1,0 +1,67 @@
+---
+import type { Props } from '@astrojs/starlight/props';
+import { Icon } from '@astrojs/starlight/components';
+import config from '../../config';
+
+const { editUrl, template, lastUpdated } = Astro.props.entry.data;
+---
+
+{
+  template === "docs" && (
+    <footer>
+      <div class="meta sl-flex">
+        <div>
+          <a href={editUrl} class="sl-flex">
+            <Icon name="pencil" size="1em" />
+            Edit this page on GitHub
+          </a>
+          <a href={config.discord} class="sl-flex">
+            <Icon name="discord" size="1em" />
+            Need help? Join us on Discord
+          </a>
+        </div>
+        <p>
+          Last updated —{' '}
+          { lastUpdated && (
+          <time datetime={lastUpdated.toISOString()}>
+            {lastUpdated.toLocaleDateString(lang, { dateStyle: 'medium', timeZone: 'UTC' })}
+          </time>
+          )}
+        </p>
+      </div>
+    </footer>
+ )
+}
+
+<style>
+  footer {
+    margin-top: 3rem;
+    border-top: 1px solid var(--divider-color);
+  }
+	.meta {
+		gap: 0.75rem 3rem;
+		justify-content: space-between;
+		flex-wrap: wrap;
+		margin-block: 3rem 1.5rem;
+		font-size: var(--sl-text-sm);
+	}
+  a, p {
+    padding-block: 0.125rem;
+  }
+	a {
+		gap: 0.4375rem;
+		align-items: center;
+		text-decoration: none;
+		color: var(--color-text);
+    font-size: var(--sl-text-sm);
+	}
+	a svg {
+    opacity: var(--icon-opacity);
+  }
+	a:hover {
+    color: var(--sl-color-text-accent);
+	}
+  p {
+    color: var(--color-text-dimmed);
+  }
+</style>

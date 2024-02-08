@@ -1,17 +1,26 @@
 {
   "name": "www",
-  "version": "1.0.0",
-  "description": "",
   "type": "module",
-  "main": "index.js",
+  "version": "0.0.1",
   "scripts": {
-    "build": "tsx generate.ts"
+    "dev": "astro dev",
+    "start": "astro dev",
+    "build": "tsx generate.ts && astro check && astro build",
+    "preview": "astro preview",
+    "astro": "astro",
+    "generate": "tsx generate.ts"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "dependencies": {
+    "@astrojs/sitemap": "^3.0.5",
+    "@astrojs/starlight": "^0.14.0",
+    "@fontsource-variable/roboto-mono": "^5.0.17",
+    "@fontsource-variable/rubik": "^5.0.20",
+    "@fontsource/ibm-plex-mono": "^5.0.8",
+    "astro": "^3.2.3",
+    "js-base64": "^3.7.6",
+    "sharp": "^0.32.5"
+  },
   "devDependencies": {
-    "@tsconfig/node18": "18.2.2",
     "@types/node": "^20.10.5",
     "tsx": "^4.7.0",
     "typedoc": "0.25.7",

@@ -69,7 +69,7 @@
 									"fileName": "src/components/bucket.ts",
 									"line": 60,
 									"character": 2,
-									"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/bucket.ts#L60"
+									"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/bucket.ts#L60"
 								}
 							],
 							"signatures": [
@@ -84,7 +84,7 @@
 											"fileName": "src/components/bucket.ts",
 											"line": 60,
 											"character": 2,
-											"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/bucket.ts#L60"
+											"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/bucket.ts#L60"
 										}
 									],
 									"parameters": [
@@ -165,7 +165,7 @@
 									"fileName": "src/components/bucket.ts",
 									"line": 58,
 									"character": 10,
-									"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/bucket.ts#L58"
+									"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/bucket.ts#L58"
 								}
 							],
 							"type": {
@@ -241,7 +241,7 @@
 									"fileName": "src/components/bucket.ts",
 									"line": 156,
 									"character": 13,
-									"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/bucket.ts#L156"
+									"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/bucket.ts#L156"
 								}
 							],
 							"getSignature": {
@@ -263,7 +263,7 @@
 										"fileName": "src/components/bucket.ts",
 										"line": 156,
 										"character": 13,
-										"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/bucket.ts#L156"
+										"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/bucket.ts#L156"
 									}
 								],
 								"type": {
@@ -296,7 +296,7 @@
 									"fileName": "src/components/bucket.ts",
 									"line": 149,
 									"character": 13,
-									"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/bucket.ts#L149"
+									"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/bucket.ts#L149"
 								}
 							],
 							"getSignature": {
@@ -318,7 +318,7 @@
 										"fileName": "src/components/bucket.ts",
 										"line": 149,
 										"character": 13,
-										"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/bucket.ts#L149"
+										"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/bucket.ts#L149"
 									}
 								],
 								"type": {
@@ -351,7 +351,7 @@
 									"fileName": "src/components/bucket.ts",
 									"line": 163,
 									"character": 13,
-									"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/bucket.ts#L163"
+									"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/bucket.ts#L163"
 								}
 							],
 							"getSignature": {
@@ -373,7 +373,7 @@
 										"fileName": "src/components/bucket.ts",
 										"line": 163,
 										"character": 13,
-										"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/bucket.ts#L163"
+										"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/bucket.ts#L163"
 									}
 								],
 								"type": {
@@ -396,7 +396,7 @@
 														"fileName": "src/components/bucket.ts",
 														"line": 165,
 														"character": 6,
-														"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/bucket.ts#L165"
+														"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/bucket.ts#L165"
 													}
 												],
 												"type": {
@@ -424,7 +424,7 @@
 												"fileName": "src/components/bucket.ts",
 												"line": 164,
 												"character": 11,
-												"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/bucket.ts#L164"
+												"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/bucket.ts#L164"
 											}
 										]
 									}
@@ -605,7 +605,7 @@
 									"fileName": "src/components/bucket.ts",
 									"line": 180,
 									"character": 9,
-									"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/bucket.ts#L180"
+									"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/bucket.ts#L180"
 								}
 							],
 							"signatures": [
@@ -626,7 +626,7 @@
 											"fileName": "src/components/bucket.ts",
 											"line": 180,
 											"character": 9,
-											"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/bucket.ts#L180"
+											"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/bucket.ts#L180"
 										}
 									],
 									"type": {
@@ -651,7 +651,7 @@
 																"fileName": "src/components/bucket.ts",
 																"line": 183,
 																"character": 8,
-																"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/bucket.ts#L183"
+																"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/bucket.ts#L183"
 															}
 														],
 														"type": {
@@ -674,7 +674,7 @@
 																"fileName": "src/components/bucket.ts",
 																"line": 184,
 																"character": 8,
-																"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/bucket.ts#L184"
+																"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/bucket.ts#L184"
 															}
 														],
 														"type": {
@@ -712,7 +712,7 @@
 														"fileName": "src/components/bucket.ts",
 														"line": 182,
 														"character": 6,
-														"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/bucket.ts#L182"
+														"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/bucket.ts#L182"
 													}
 												]
 											}
@@ -744,7 +744,7 @@
 									"fileName": "src/components/bucket.ts",
 									"line": 170,
 									"character": 9,
-									"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/bucket.ts#L170"
+									"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/bucket.ts#L170"
 								}
 							],
 							"signatures": [
@@ -765,7 +765,7 @@
 											"fileName": "src/components/bucket.ts",
 											"line": 170,
 											"character": 9,
-											"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/bucket.ts#L170"
+											"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/bucket.ts#L170"
 										}
 									],
 									"type": {
@@ -788,7 +788,7 @@
 															"fileName": "src/components/bucket.ts",
 															"line": 172,
 															"character": 6,
-															"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/bucket.ts#L172"
+															"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/bucket.ts#L172"
 														}
 													],
 													"type": {
@@ -808,7 +808,7 @@
 															"fileName": "src/components/bucket.ts",
 															"line": 173,
 															"character": 6,
-															"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/bucket.ts#L173"
+															"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/bucket.ts#L173"
 														}
 													],
 													"type": {
@@ -831,7 +831,7 @@
 																			"fileName": "src/components/bucket.ts",
 																			"line": 174,
 																			"character": 8,
-																			"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/bucket.ts#L174"
+																			"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/bucket.ts#L174"
 																		}
 																	],
 																	"type": {
@@ -865,7 +865,7 @@
 																	"fileName": "src/components/bucket.ts",
 																	"line": 173,
 																	"character": 13,
-																	"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/bucket.ts#L173"
+																	"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/bucket.ts#L173"
 																}
 															]
 														}
@@ -887,7 +887,7 @@
 													"fileName": "src/components/bucket.ts",
 													"line": 171,
 													"character": 11,
-													"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/bucket.ts#L171"
+													"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/bucket.ts#L171"
 												}
 											]
 										}
@@ -1261,7 +1261,7 @@
 							"fileName": "src/components/bucket.ts",
 							"line": 54,
 							"character": 13,
-							"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/bucket.ts#L54"
+							"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/bucket.ts#L54"
 						}
 					],
 					"extendedTypes": [
@@ -1341,12 +1341,12 @@
 										"tag": "@default",
 										"content": [
 											{
-												"kind": "code",
-												"text": "`false`"
+												"kind": "text",
+												"text": "Files are not publicly accessible "
 											},
 											{
-												"kind": "text",
-												"text": " - Files are not publicly accessible"
+												"kind": "code",
+												"text": "`false`"
 											}
 										]
 									},
@@ -1366,7 +1366,7 @@
 									"fileName": "src/components/bucket.ts",
 									"line": 29,
 									"character": 2,
-									"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/bucket.ts#L29"
+									"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/bucket.ts#L29"
 								}
 							],
 							"type": {
@@ -1398,7 +1398,7 @@
 									"fileName": "src/components/bucket.ts",
 									"line": 30,
 									"character": 2,
-									"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/bucket.ts#L30"
+									"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/bucket.ts#L30"
 								}
 							],
 							"type": {
@@ -1423,7 +1423,7 @@
 													"fileName": "src/components/bucket.ts",
 													"line": 31,
 													"character": 4,
-													"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/bucket.ts#L31"
+													"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/bucket.ts#L31"
 												}
 											],
 											"type": {
@@ -1460,7 +1460,7 @@
 													"fileName": "src/components/bucket.ts",
 													"line": 32,
 													"character": 4,
-													"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/bucket.ts#L32"
+													"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/bucket.ts#L32"
 												}
 											],
 											"type": {
@@ -1499,7 +1499,7 @@
 											"fileName": "src/components/bucket.ts",
 											"line": 30,
 											"character": 14,
-											"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/bucket.ts#L30"
+											"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/bucket.ts#L30"
 										}
 									]
 								}
@@ -1520,7 +1520,7 @@
 							"fileName": "src/components/bucket.ts",
 							"line": 18,
 							"character": 17,
-							"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/bucket.ts#L18"
+							"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/bucket.ts#L18"
 						}
 					]
 				}
@@ -1544,7 +1544,7 @@
 					"fileName": "src/components/bucket.ts",
 					"line": 1,
 					"character": 0,
-					"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/bucket.ts#L1"
+					"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/bucket.ts#L1"
 				}
 			]
 		},
@@ -1602,9 +1602,9 @@
 							"sources": [
 								{
 									"fileName": "src/components/function.ts",
-									"line": 447,
+									"line": 448,
 									"character": 2,
-									"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/function.ts#L447"
+									"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/function.ts#L448"
 								}
 							],
 							"signatures": [
@@ -1617,9 +1617,9 @@
 									"sources": [
 										{
 											"fileName": "src/components/function.ts",
-											"line": 447,
+											"line": 448,
 											"character": 2,
-											"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/function.ts#L447"
+											"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/function.ts#L448"
 										}
 									],
 									"parameters": [
@@ -1696,9 +1696,9 @@
 							"sources": [
 								{
 									"fileName": "src/components/function.ts",
-									"line": 444,
+									"line": 445,
 									"character": 10,
-									"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/function.ts#L444"
+									"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/function.ts#L445"
 								}
 							],
 							"type": {
@@ -1742,9 +1742,9 @@
 							"sources": [
 								{
 									"fileName": "src/components/function.ts",
-									"line": 441,
+									"line": 442,
 									"character": 10,
-									"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/function.ts#L441"
+									"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/function.ts#L442"
 								}
 							],
 							"type": {
@@ -1779,9 +1779,9 @@
 							"sources": [
 								{
 									"fileName": "src/components/function.ts",
-									"line": 443,
+									"line": 444,
 									"character": 10,
-									"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/function.ts#L443"
+									"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/function.ts#L444"
 								}
 							],
 							"type": {
@@ -1806,9 +1806,9 @@
 							"sources": [
 								{
 									"fileName": "src/components/function.ts",
-									"line": 445,
+									"line": 446,
 									"character": 10,
-									"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/function.ts#L445"
+									"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/function.ts#L446"
 								}
 							],
 							"type": {
@@ -1827,9 +1827,9 @@
 							"sources": [
 								{
 									"fileName": "src/components/function.ts",
-									"line": 442,
+									"line": 443,
 									"character": 10,
-									"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/function.ts#L442"
+									"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/function.ts#L443"
 								}
 							],
 							"type": {
@@ -1914,9 +1914,9 @@
 							"sources": [
 								{
 									"fileName": "src/components/function.ts",
-									"line": 958,
+									"line": 959,
 									"character": 13,
-									"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/function.ts#L958"
+									"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/function.ts#L959"
 								}
 							],
 							"getSignature": {
@@ -1928,9 +1928,9 @@
 								"sources": [
 									{
 										"fileName": "src/components/function.ts",
-										"line": 958,
+										"line": 959,
 										"character": 13,
-										"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/function.ts#L958"
+										"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/function.ts#L959"
 									}
 								],
 								"type": {
@@ -1951,9 +1951,9 @@
 												"sources": [
 													{
 														"fileName": "src/components/function.ts",
-														"line": 960,
+														"line": 961,
 														"character": 6,
-														"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/function.ts#L960"
+														"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/function.ts#L961"
 													}
 												],
 												"type": {
@@ -1987,9 +1987,9 @@
 												"sources": [
 													{
 														"fileName": "src/components/function.ts",
-														"line": 962,
+														"line": 963,
 														"character": 6,
-														"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/function.ts#L962"
+														"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/function.ts#L963"
 													}
 												],
 												"type": {
@@ -2012,9 +2012,9 @@
 												"sources": [
 													{
 														"fileName": "src/components/function.ts",
-														"line": 961,
+														"line": 962,
 														"character": 6,
-														"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/function.ts#L961"
+														"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/function.ts#L962"
 													}
 												],
 												"type": {
@@ -2053,9 +2053,9 @@
 										"sources": [
 											{
 												"fileName": "src/components/function.ts",
-												"line": 959,
+												"line": 960,
 												"character": 11,
-												"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/function.ts#L959"
+												"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/function.ts#L960"
 											}
 										]
 									}
@@ -2073,9 +2073,9 @@
 							"sources": [
 								{
 									"fileName": "src/components/function.ts",
-									"line": 966,
+									"line": 967,
 									"character": 13,
-									"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/function.ts#L966"
+									"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/function.ts#L967"
 								}
 							],
 							"getSignature": {
@@ -2087,9 +2087,9 @@
 								"sources": [
 									{
 										"fileName": "src/components/function.ts",
-										"line": 966,
+										"line": 967,
 										"character": 13,
-										"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/function.ts#L966"
+										"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/function.ts#L967"
 									}
 								],
 								"type": {
@@ -2290,9 +2290,9 @@
 							"sources": [
 								{
 									"fileName": "src/components/function.ts",
-									"line": 981,
+									"line": 982,
 									"character": 9,
-									"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/function.ts#L981"
+									"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/function.ts#L982"
 								}
 							],
 							"signatures": [
@@ -2311,9 +2311,9 @@
 									"sources": [
 										{
 											"fileName": "src/components/function.ts",
-											"line": 981,
+											"line": 982,
 											"character": 9,
-											"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/function.ts#L981"
+											"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/function.ts#L982"
 										}
 									],
 									"type": {
@@ -2336,9 +2336,9 @@
 														"sources": [
 															{
 																"fileName": "src/components/function.ts",
-																"line": 984,
+																"line": 985,
 																"character": 8,
-																"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/function.ts#L984"
+																"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/function.ts#L985"
 															}
 														],
 														"type": {
@@ -2359,9 +2359,9 @@
 														"sources": [
 															{
 																"fileName": "src/components/function.ts",
-																"line": 985,
+																"line": 986,
 																"character": 8,
-																"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/function.ts#L985"
+																"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/function.ts#L986"
 															}
 														],
 														"type": {
@@ -2397,9 +2397,9 @@
 												"sources": [
 													{
 														"fileName": "src/components/function.ts",
-														"line": 983,
+														"line": 984,
 														"character": 6,
-														"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/function.ts#L983"
+														"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/function.ts#L984"
 													}
 												]
 											}
@@ -2429,9 +2429,9 @@
 							"sources": [
 								{
 									"fileName": "src/components/function.ts",
-									"line": 971,
+									"line": 972,
 									"character": 9,
-									"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/function.ts#L971"
+									"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/function.ts#L972"
 								}
 							],
 							"signatures": [
@@ -2450,9 +2450,9 @@
 									"sources": [
 										{
 											"fileName": "src/components/function.ts",
-											"line": 971,
+											"line": 972,
 											"character": 9,
-											"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/function.ts#L971"
+											"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/function.ts#L972"
 										}
 									],
 									"type": {
@@ -2835,9 +2835,9 @@
 					"sources": [
 						{
 							"fileName": "src/components/function.ts",
-							"line": 437,
+							"line": 438,
 							"character": 13,
-							"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/function.ts#L437"
+							"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/function.ts#L438"
 						}
 					],
 					"extendedTypes": [
@@ -2920,9 +2920,9 @@
 							"sources": [
 								{
 									"fileName": "src/components/function.ts",
-									"line": 382,
+									"line": 383,
 									"character": 2,
-									"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/function.ts#L382"
+									"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/function.ts#L383"
 								}
 							],
 							"type": {
@@ -2937,11 +2937,11 @@
 										"types": [
 											{
 												"type": "literal",
-												"value": "arm64"
+												"value": "x86_64"
 											},
 											{
 												"type": "literal",
-												"value": "x86_64"
+												"value": "arm64"
 											}
 										]
 									}
@@ -3005,9 +3005,9 @@
 							"sources": [
 								{
 									"fileName": "src/components/function.ts",
-									"line": 276,
+									"line": 277,
 									"character": 2,
-									"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/function.ts#L276"
+									"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/function.ts#L277"
 								}
 							],
 							"type": {
@@ -3056,9 +3056,9 @@
 							"sources": [
 								{
 									"fileName": "src/components/function.ts",
-									"line": 419,
+									"line": 420,
 									"character": 2,
-									"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/function.ts#L419"
+									"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/function.ts#L420"
 								}
 							],
 							"type": {
@@ -3121,9 +3121,9 @@
 							"sources": [
 								{
 									"fileName": "src/components/function.ts",
-									"line": 251,
+									"line": 252,
 									"character": 2,
-									"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/function.ts#L251"
+									"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/function.ts#L252"
 								}
 							],
 							"type": {
@@ -3181,9 +3181,9 @@
 							"sources": [
 								{
 									"fileName": "src/components/function.ts",
-									"line": 323,
+									"line": 324,
 									"character": 2,
-									"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/function.ts#L323"
+									"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/function.ts#L324"
 								}
 							],
 							"type": {
@@ -3272,9 +3272,9 @@
 							"sources": [
 								{
 									"fileName": "src/components/function.ts",
-									"line": 288,
+									"line": 289,
 									"character": 2,
-									"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/function.ts#L288"
+									"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/function.ts#L289"
 								}
 							],
 							"type": {
@@ -3310,9 +3310,9 @@
 							"sources": [
 								{
 									"fileName": "src/components/function.ts",
-									"line": 366,
+									"line": 367,
 									"character": 2,
-									"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/function.ts#L366"
+									"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/function.ts#L367"
 								}
 							],
 							"type": {
@@ -3364,9 +3364,9 @@
 							"sources": [
 								{
 									"fileName": "src/components/function.ts",
-									"line": 351,
+									"line": 352,
 									"character": 2,
-									"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/function.ts#L351"
+									"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/function.ts#L352"
 								}
 							],
 							"type": {
@@ -3418,9 +3418,9 @@
 							"sources": [
 								{
 									"fileName": "src/components/function.ts",
-									"line": 371,
+									"line": 372,
 									"character": 2,
-									"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/function.ts#L371"
+									"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/function.ts#L372"
 								}
 							],
 							"type": {
@@ -3480,9 +3480,9 @@
 							"sources": [
 								{
 									"fileName": "src/components/function.ts",
-									"line": 310,
+									"line": 311,
 									"character": 2,
-									"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/function.ts#L310"
+									"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/function.ts#L311"
 								}
 							],
 							"type": {
@@ -3547,9 +3547,9 @@
 							"sources": [
 								{
 									"fileName": "src/components/function.ts",
-									"line": 408,
+									"line": 409,
 									"character": 2,
-									"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/function.ts#L408"
+									"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/function.ts#L409"
 								}
 							],
 							"type": {
@@ -3609,9 +3609,9 @@
 							"sources": [
 								{
 									"fileName": "src/components/function.ts",
-									"line": 339,
+									"line": 340,
 									"character": 2,
-									"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/function.ts#L339"
+									"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/function.ts#L340"
 								}
 							],
 							"type": {
@@ -3674,9 +3674,9 @@
 							"sources": [
 								{
 									"fileName": "src/components/function.ts",
-									"line": 262,
+									"line": 263,
 									"character": 2,
-									"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/function.ts#L262"
+									"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/function.ts#L263"
 								}
 							],
 							"type": {
@@ -3747,9 +3747,9 @@
 							"sources": [
 								{
 									"fileName": "src/components/function.ts",
-									"line": 362,
+									"line": 363,
 									"character": 2,
-									"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/function.ts#L362"
+									"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/function.ts#L363"
 								}
 							],
 							"type": {
@@ -3807,9 +3807,9 @@
 							"sources": [
 								{
 									"fileName": "src/components/function.ts",
-									"line": 299,
+									"line": 300,
 									"character": 2,
-									"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/function.ts#L299"
+									"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/function.ts#L300"
 								}
 							],
 							"type": {
@@ -3944,9 +3944,9 @@
 							"sources": [
 								{
 									"fileName": "src/components/function.ts",
-									"line": 420,
+									"line": 421,
 									"character": 2,
-									"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/function.ts#L420"
+									"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/function.ts#L421"
 								}
 							],
 							"type": {
@@ -3969,9 +3969,9 @@
 											"sources": [
 												{
 													"fileName": "src/components/function.ts",
-													"line": 421,
+													"line": 422,
 													"character": 4,
-													"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/function.ts#L421"
+													"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/function.ts#L422"
 												}
 											],
 											"type": {
@@ -4007,9 +4007,9 @@
 									"sources": [
 										{
 											"fileName": "src/components/function.ts",
-											"line": 420,
+											"line": 421,
 											"character": 14,
-											"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/function.ts#L420"
+											"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/function.ts#L421"
 										}
 									]
 								}
@@ -4062,9 +4062,9 @@
 							"sources": [
 								{
 									"fileName": "src/components/function.ts",
-									"line": 404,
+									"line": 405,
 									"character": 2,
-									"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/function.ts#L404"
+									"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/function.ts#L405"
 								}
 							],
 							"type": {
@@ -4122,9 +4122,9 @@
 					"sources": [
 						{
 							"fileName": "src/components/function.ts",
-							"line": 240,
+							"line": 241,
 							"character": 17,
-							"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/function.ts#L240"
+							"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/function.ts#L241"
 						}
 					]
 				},
@@ -4154,7 +4154,7 @@
 									"fileName": "src/components/function.ts",
 									"line": 63,
 									"character": 2,
-									"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/function.ts#L63"
+									"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/function.ts#L63"
 								}
 							],
 							"type": {
@@ -4194,7 +4194,7 @@
 									"fileName": "src/components/function.ts",
 									"line": 67,
 									"character": 2,
-									"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/function.ts#L67"
+									"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/function.ts#L67"
 								}
 							],
 							"type": {
@@ -4228,7 +4228,7 @@
 							"fileName": "src/components/function.ts",
 							"line": 59,
 							"character": 17,
-							"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/function.ts#L59"
+							"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/function.ts#L59"
 						}
 					]
 				},
@@ -4278,9 +4278,9 @@
 							"sources": [
 								{
 									"fileName": "src/components/function.ts",
-									"line": 237,
+									"line": 238,
 									"character": 2,
-									"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/function.ts#L237"
+									"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/function.ts#L238"
 								}
 							],
 							"type": {
@@ -4404,9 +4404,9 @@
 					"sources": [
 						{
 							"fileName": "src/components/function.ts",
-							"line": 222,
+							"line": 223,
 							"character": 17,
-							"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/function.ts#L222"
+							"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/function.ts#L223"
 						}
 					]
 				},
@@ -4447,9 +4447,9 @@
 							"sources": [
 								{
 									"fileName": "src/components/function.ts",
-									"line": 105,
+									"line": 106,
 									"character": 2,
-									"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/function.ts#L105"
+									"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/function.ts#L106"
 								}
 							],
 							"type": {
@@ -4487,9 +4487,9 @@
 							"sources": [
 								{
 									"fileName": "src/components/function.ts",
-									"line": 109,
+									"line": 110,
 									"character": 2,
-									"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/function.ts#L109"
+									"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/function.ts#L110"
 								}
 							],
 							"type": {
@@ -4552,9 +4552,9 @@
 							"sources": [
 								{
 									"fileName": "src/components/function.ts",
-									"line": 135,
+									"line": 136,
 									"character": 2,
-									"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/function.ts#L135"
+									"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/function.ts#L136"
 								}
 							],
 							"type": {
@@ -4612,9 +4612,9 @@
 							"sources": [
 								{
 									"fileName": "src/components/function.ts",
-									"line": 94,
+									"line": 95,
 									"character": 2,
-									"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/function.ts#L94"
+									"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/function.ts#L95"
 								}
 							],
 							"type": {
@@ -4666,9 +4666,9 @@
 							"sources": [
 								{
 									"fileName": "src/components/function.ts",
-									"line": 83,
+									"line": 84,
 									"character": 2,
-									"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/function.ts#L83"
+									"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/function.ts#L84"
 								}
 							],
 							"type": {
@@ -4746,9 +4746,9 @@
 							"sources": [
 								{
 									"fileName": "src/components/function.ts",
-									"line": 122,
+									"line": 123,
 									"character": 2,
-									"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/function.ts#L122"
+									"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/function.ts#L123"
 								}
 							],
 							"type": {
@@ -4806,9 +4806,9 @@
 							"sources": [
 								{
 									"fileName": "src/components/function.ts",
-									"line": 148,
+									"line": 149,
 									"character": 2,
-									"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/function.ts#L148"
+									"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/function.ts#L149"
 								}
 							],
 							"type": {
@@ -4866,9 +4866,9 @@
 							"sources": [
 								{
 									"fileName": "src/components/function.ts",
-									"line": 161,
+									"line": 162,
 									"character": 2,
-									"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/function.ts#L161"
+									"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/function.ts#L162"
 								}
 							],
 							"type": {
@@ -4908,7 +4908,7 @@
 							"fileName": "src/components/function.ts",
 							"line": 70,
 							"character": 17,
-							"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/function.ts#L70"
+							"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/function.ts#L70"
 						}
 					]
 				},
@@ -4930,7 +4930,7 @@
 									"fileName": "src/components/function.ts",
 									"line": 55,
 									"character": 2,
-									"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/function.ts#L55"
+									"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/function.ts#L55"
 								}
 							],
 							"type": {
@@ -4952,7 +4952,7 @@
 									"fileName": "src/components/function.ts",
 									"line": 56,
 									"character": 2,
-									"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/function.ts#L56"
+									"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/function.ts#L56"
 								}
 							],
 							"type": {
@@ -4989,7 +4989,7 @@
 							"fileName": "src/components/function.ts",
 							"line": 54,
 							"character": 17,
-							"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/function.ts#L54"
+							"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/function.ts#L54"
 						}
 					]
 				},
@@ -5039,9 +5039,9 @@
 							"sources": [
 								{
 									"fileName": "src/components/function.ts",
-									"line": 195,
+									"line": 196,
 									"character": 2,
-									"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/function.ts#L195"
+									"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/function.ts#L196"
 								}
 							],
 							"type": {
@@ -5116,9 +5116,9 @@
 							"sources": [
 								{
 									"fileName": "src/components/function.ts",
-									"line": 219,
+									"line": 220,
 									"character": 2,
-									"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/function.ts#L219"
+									"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/function.ts#L220"
 								}
 							],
 							"type": {
@@ -5161,9 +5161,9 @@
 					"sources": [
 						{
 							"fileName": "src/components/function.ts",
-							"line": 182,
+							"line": 183,
 							"character": 17,
-							"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/function.ts#L182"
+							"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/function.ts#L183"
 						}
 					]
 				},
@@ -5329,9 +5329,9 @@
 							"sources": [
 								{
 									"fileName": "src/components/function.ts",
-									"line": 172,
+									"line": 173,
 									"character": 2,
-									"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/function.ts#L172"
+									"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/function.ts#L173"
 								}
 							],
 							"type": {
@@ -5355,10 +5355,6 @@
 													"types": [
 														{
 															"type": "literal",
-															"value": "POST"
-														},
-														{
-															"type": "literal",
 															"value": "*"
 														},
 														{
@@ -5380,6 +5376,10 @@
 														{
 															"type": "literal",
 															"value": "PATCH"
+														},
+														{
+															"type": "literal",
+															"value": "POST"
 														},
 														{
 															"type": "literal",
@@ -5566,9 +5566,9 @@
 							"sources": [
 								{
 									"fileName": "src/components/function.ts",
-									"line": 180,
+									"line": 181,
 									"character": 2,
-									"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/function.ts#L180"
+									"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/function.ts#L181"
 								}
 							],
 							"type": {
@@ -5709,9 +5709,9 @@
 					"sources": [
 						{
 							"fileName": "src/components/function.ts",
-							"line": 164,
+							"line": 165,
 							"character": 17,
-							"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/function.ts#L164"
+							"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/function.ts#L165"
 						}
 					],
 					"extendedTypes": [
@@ -5777,7 +5777,7 @@
 					"fileName": "src/components/function.ts",
 					"line": 1,
 					"character": 0,
-					"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/function.ts#L1"
+					"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/function.ts#L1"
 				}
 			]
 		},
@@ -5789,7 +5789,7 @@
 			"flags": {},
 			"children": [
 				{
-					"id": 199,
+					"id": 204,
 					"name": "Nextjs",
 					"variant": "declaration",
 					"kind": 128,
@@ -5823,7 +5823,7 @@
 					},
 					"children": [
 						{
-							"id": 203,
+							"id": 208,
 							"name": "constructor",
 							"variant": "declaration",
 							"kind": 512,
@@ -5831,14 +5831,14 @@
 							"sources": [
 								{
 									"fileName": "src/components/nextjs.ts",
-									"line": 138,
+									"line": 139,
 									"character": 2,
-									"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/nextjs.ts#L138"
+									"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/nextjs.ts#L139"
 								}
 							],
 							"signatures": [
 								{
-									"id": 204,
+									"id": 209,
 									"name": "new Nextjs",
 									"variant": "signature",
 									"kind": 16384,
@@ -5846,14 +5846,14 @@
 									"sources": [
 										{
 											"fileName": "src/components/nextjs.ts",
-											"line": 138,
+											"line": 139,
 											"character": 2,
-											"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/nextjs.ts#L138"
+											"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/nextjs.ts#L139"
 										}
 									],
 									"parameters": [
 										{
-											"id": 205,
+											"id": 210,
 											"name": "name",
 											"variant": "param",
 											"kind": 32768,
@@ -5864,7 +5864,7 @@
 											}
 										},
 										{
-											"id": 206,
+											"id": 211,
 											"name": "args",
 											"variant": "param",
 											"kind": 32768,
@@ -5879,7 +5879,7 @@
 											}
 										},
 										{
-											"id": 207,
+											"id": 212,
 											"name": "opts",
 											"variant": "param",
 											"kind": 32768,
@@ -5899,7 +5899,7 @@
 									],
 									"type": {
 										"type": "reference",
-										"target": 199,
+										"target": 204,
 										"name": "Nextjs",
 										"package": "sst"
 									},
@@ -5917,7 +5917,7 @@
 							}
 						},
 						{
-							"id": 211,
+							"id": 216,
 							"name": "assets",
 							"variant": "declaration",
 							"kind": 1024,
@@ -5927,9 +5927,9 @@
 							"sources": [
 								{
 									"fileName": "src/components/nextjs.ts",
-									"line": 134,
+									"line": 135,
 									"character": 10,
-									"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/nextjs.ts#L134"
+									"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/nextjs.ts#L135"
 								}
 							],
 							"type": {
@@ -5940,7 +5940,7 @@
 							}
 						},
 						{
-							"id": 210,
+							"id": 215,
 							"name": "cdn",
 							"variant": "declaration",
 							"kind": 1024,
@@ -5950,9 +5950,9 @@
 							"sources": [
 								{
 									"fileName": "src/components/nextjs.ts",
-									"line": 133,
+									"line": 134,
 									"character": 10,
-									"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/nextjs.ts#L133"
+									"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/nextjs.ts#L134"
 								}
 							],
 							"type": {
@@ -5966,40 +5966,8 @@
 							}
 						},
 						{
-							"id": 208,
+							"id": 213,
 							"name": "doNotDeploy",
-							"variant": "declaration",
-							"kind": 1024,
-							"flags": {
-								"isPrivate": true
-							},
-							"sources": [
-								{
-									"fileName": "src/components/nextjs.ts",
-									"line": 131,
-									"character": 10,
-									"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/nextjs.ts#L131"
-								}
-							],
-							"type": {
-								"type": "reference",
-								"target": {
-									"sourceFileName": "../pkg/platform/node_modules/@pulumi/pulumi/output.d.ts",
-									"qualifiedName": "OutputInstance"
-								},
-								"typeArguments": [
-									{
-										"type": "intrinsic",
-										"name": "boolean"
-									}
-								],
-								"name": "OutputInstance",
-								"package": "@pulumi/pulumi"
-							}
-						},
-						{
-							"id": 209,
-							"name": "edge",
 							"variant": "declaration",
 							"kind": 1024,
 							"flags": {
@@ -6010,7 +5978,7 @@
 									"fileName": "src/components/nextjs.ts",
 									"line": 132,
 									"character": 10,
-									"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/nextjs.ts#L132"
+									"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/nextjs.ts#L132"
 								}
 							],
 							"type": {
@@ -6030,7 +5998,39 @@
 							}
 						},
 						{
-							"id": 212,
+							"id": 214,
+							"name": "edge",
+							"variant": "declaration",
+							"kind": 1024,
+							"flags": {
+								"isPrivate": true
+							},
+							"sources": [
+								{
+									"fileName": "src/components/nextjs.ts",
+									"line": 133,
+									"character": 10,
+									"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/nextjs.ts#L133"
+								}
+							],
+							"type": {
+								"type": "reference",
+								"target": {
+									"sourceFileName": "../pkg/platform/node_modules/@pulumi/pulumi/output.d.ts",
+									"qualifiedName": "OutputInstance"
+								},
+								"typeArguments": [
+									{
+										"type": "intrinsic",
+										"name": "boolean"
+									}
+								],
+								"name": "OutputInstance",
+								"package": "@pulumi/pulumi"
+							}
+						},
+						{
+							"id": 217,
 							"name": "server",
 							"variant": "declaration",
 							"kind": 1024,
@@ -6041,9 +6041,9 @@
 							"sources": [
 								{
 									"fileName": "src/components/nextjs.ts",
-									"line": 135,
+									"line": 136,
 									"character": 10,
-									"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/nextjs.ts#L135"
+									"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/nextjs.ts#L136"
 								}
 							],
 							"type": {
@@ -6054,7 +6054,7 @@
 							}
 						},
 						{
-							"id": 232,
+							"id": 237,
 							"name": "urn",
 							"variant": "declaration",
 							"kind": 1024,
@@ -6104,7 +6104,7 @@
 							}
 						},
 						{
-							"id": 215,
+							"id": 220,
 							"name": "domainUrl",
 							"variant": "declaration",
 							"kind": 262144,
@@ -6114,13 +6114,13 @@
 							"sources": [
 								{
 									"fileName": "src/components/nextjs.ts",
-									"line": 1011,
+									"line": 1012,
 									"character": 13,
-									"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/nextjs.ts#L1011"
+									"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/nextjs.ts#L1012"
 								}
 							],
 							"getSignature": {
-								"id": 216,
+								"id": 221,
 								"name": "domainUrl",
 								"variant": "signature",
 								"kind": 524288,
@@ -6136,9 +6136,9 @@
 								"sources": [
 									{
 										"fileName": "src/components/nextjs.ts",
-										"line": 1011,
+										"line": 1012,
 										"character": 13,
-										"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/nextjs.ts#L1011"
+										"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/nextjs.ts#L1012"
 									}
 								],
 								"type": {
@@ -6168,7 +6168,7 @@
 							}
 						},
 						{
-							"id": 213,
+							"id": 218,
 							"name": "url",
 							"variant": "declaration",
 							"kind": 262144,
@@ -6178,13 +6178,13 @@
 							"sources": [
 								{
 									"fileName": "src/components/nextjs.ts",
-									"line": 1002,
+									"line": 1003,
 									"character": 13,
-									"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/nextjs.ts#L1002"
+									"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/nextjs.ts#L1003"
 								}
 							],
 							"getSignature": {
-								"id": 214,
+								"id": 219,
 								"name": "url",
 								"variant": "signature",
 								"kind": 524288,
@@ -6200,9 +6200,9 @@
 								"sources": [
 									{
 										"fileName": "src/components/nextjs.ts",
-										"line": 1002,
+										"line": 1003,
 										"character": 13,
-										"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/nextjs.ts#L1002"
+										"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/nextjs.ts#L1003"
 									}
 								],
 								"type": {
@@ -6223,7 +6223,7 @@
 							}
 						},
 						{
-							"id": 227,
+							"id": 232,
 							"name": "getData",
 							"variant": "declaration",
 							"kind": 2048,
@@ -6240,7 +6240,7 @@
 							],
 							"signatures": [
 								{
-									"id": 228,
+									"id": 233,
 									"name": "getData",
 									"variant": "signature",
 									"kind": 4096,
@@ -6307,7 +6307,7 @@
 							}
 						},
 						{
-							"id": 233,
+							"id": 238,
 							"name": "getProvider",
 							"variant": "declaration",
 							"kind": 2048,
@@ -6323,7 +6323,7 @@
 							],
 							"signatures": [
 								{
-									"id": 234,
+									"id": 239,
 									"name": "getProvider",
 									"variant": "signature",
 									"kind": 4096,
@@ -6339,7 +6339,7 @@
 									],
 									"parameters": [
 										{
-											"id": 235,
+											"id": 240,
 											"name": "moduleMember",
 											"variant": "param",
 											"kind": 32768,
@@ -6384,7 +6384,7 @@
 							}
 						},
 						{
-							"id": 217,
+							"id": 222,
 							"name": "getSSTLink",
 							"variant": "declaration",
 							"kind": 2048,
@@ -6394,14 +6394,14 @@
 							"sources": [
 								{
 									"fileName": "src/components/nextjs.ts",
-									"line": 1018,
+									"line": 1019,
 									"character": 9,
-									"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/nextjs.ts#L1018"
+									"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/nextjs.ts#L1019"
 								}
 							],
 							"signatures": [
 								{
-									"id": 218,
+									"id": 223,
 									"name": "getSSTLink",
 									"variant": "signature",
 									"kind": 4096,
@@ -6415,22 +6415,22 @@
 									"sources": [
 										{
 											"fileName": "src/components/nextjs.ts",
-											"line": 1018,
+											"line": 1019,
 											"character": 9,
-											"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/nextjs.ts#L1018"
+											"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/nextjs.ts#L1019"
 										}
 									],
 									"type": {
 										"type": "reflection",
 										"declaration": {
-											"id": 219,
+											"id": 224,
 											"name": "__type",
 											"variant": "declaration",
 											"kind": 65536,
 											"flags": {},
 											"children": [
 												{
-													"id": 220,
+													"id": 225,
 													"name": "type",
 													"variant": "declaration",
 													"kind": 1024,
@@ -6438,9 +6438,9 @@
 													"sources": [
 														{
 															"fileName": "src/components/nextjs.ts",
-															"line": 1020,
+															"line": 1021,
 															"character": 6,
-															"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/nextjs.ts#L1020"
+															"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/nextjs.ts#L1021"
 														}
 													],
 													"type": {
@@ -6450,7 +6450,7 @@
 													"defaultValue": "..."
 												},
 												{
-													"id": 221,
+													"id": 226,
 													"name": "value",
 													"variant": "declaration",
 													"kind": 1024,
@@ -6458,22 +6458,22 @@
 													"sources": [
 														{
 															"fileName": "src/components/nextjs.ts",
-															"line": 1021,
+															"line": 1022,
 															"character": 6,
-															"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/nextjs.ts#L1021"
+															"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/nextjs.ts#L1022"
 														}
 													],
 													"type": {
 														"type": "reflection",
 														"declaration": {
-															"id": 222,
+															"id": 227,
 															"name": "__type",
 															"variant": "declaration",
 															"kind": 65536,
 															"flags": {},
 															"children": [
 																{
-																	"id": 223,
+																	"id": 228,
 																	"name": "url",
 																	"variant": "declaration",
 																	"kind": 1024,
@@ -6481,9 +6481,9 @@
 																	"sources": [
 																		{
 																			"fileName": "src/components/nextjs.ts",
-																			"line": 1022,
+																			"line": 1023,
 																			"character": 8,
-																			"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/nextjs.ts#L1022"
+																			"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/nextjs.ts#L1023"
 																		}
 																	],
 																	"type": {
@@ -6508,16 +6508,16 @@
 																{
 																	"title": "Properties",
 																	"children": [
-																		223
+																		228
 																	]
 																}
 															],
 															"sources": [
 																{
 																	"fileName": "src/components/nextjs.ts",
-																	"line": 1021,
+																	"line": 1022,
 																	"character": 13,
-																	"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/nextjs.ts#L1021"
+																	"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/nextjs.ts#L1022"
 																}
 															]
 														}
@@ -6529,17 +6529,17 @@
 												{
 													"title": "Properties",
 													"children": [
-														220,
-														221
+														225,
+														226
 													]
 												}
 											],
 											"sources": [
 												{
 													"fileName": "src/components/nextjs.ts",
-													"line": 1019,
+													"line": 1020,
 													"character": 11,
-													"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/nextjs.ts#L1019"
+													"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/nextjs.ts#L1020"
 												}
 											]
 										}
@@ -6558,7 +6558,7 @@
 							}
 						},
 						{
-							"id": 224,
+							"id": 229,
 							"name": "initialize",
 							"variant": "declaration",
 							"kind": 2048,
@@ -6575,7 +6575,7 @@
 							],
 							"signatures": [
 								{
-									"id": 225,
+									"id": 230,
 									"name": "initialize",
 									"variant": "signature",
 									"kind": 4096,
@@ -6607,7 +6607,7 @@
 									],
 									"parameters": [
 										{
-											"id": 226,
+											"id": 231,
 											"name": "args",
 											"variant": "param",
 											"kind": 32768,
@@ -6654,7 +6654,7 @@
 							}
 						},
 						{
-							"id": 229,
+							"id": 234,
 							"name": "registerOutputs",
 							"variant": "declaration",
 							"kind": 2048,
@@ -6671,7 +6671,7 @@
 							],
 							"signatures": [
 								{
-									"id": 230,
+									"id": 235,
 									"name": "registerOutputs",
 									"variant": "signature",
 									"kind": 4096,
@@ -6703,7 +6703,7 @@
 									],
 									"parameters": [
 										{
-											"id": 231,
+											"id": 236,
 											"name": "outputs",
 											"variant": "param",
 											"kind": 32768,
@@ -6785,7 +6785,7 @@
 							}
 						},
 						{
-							"id": 200,
+							"id": 205,
 							"name": "isInstance",
 							"variant": "declaration",
 							"kind": 2048,
@@ -6802,7 +6802,7 @@
 							],
 							"signatures": [
 								{
-									"id": 201,
+									"id": 206,
 									"name": "isInstance",
 									"variant": "signature",
 									"kind": 4096,
@@ -6826,7 +6826,7 @@
 									],
 									"parameters": [
 										{
-											"id": 202,
+											"id": 207,
 											"name": "obj",
 											"variant": "param",
 											"kind": 32768,
@@ -6877,45 +6877,45 @@
 						{
 							"title": "Constructors",
 							"children": [
-								203
+								208
 							]
 						},
 						{
 							"title": "Properties",
 							"children": [
-								211,
-								210,
-								208,
-								209,
-								212,
-								232
+								216,
+								215,
+								213,
+								214,
+								217,
+								237
 							]
 						},
 						{
 							"title": "Accessors",
 							"children": [
-								215,
-								213
+								220,
+								218
 							]
 						},
 						{
 							"title": "Methods",
 							"children": [
-								227,
-								233,
-								217,
-								224,
+								232,
+								238,
+								222,
 								229,
-								200
+								234,
+								205
 							]
 						}
 					],
 					"sources": [
 						{
 							"fileName": "src/components/nextjs.ts",
-							"line": 130,
+							"line": 131,
 							"character": 13,
-							"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/nextjs.ts#L130"
+							"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/nextjs.ts#L131"
 						}
 					],
 					"extendedTypes": [
@@ -6960,15 +6960,15 @@
 							"sources": [
 								{
 									"fileName": "src/components/ssr-site.ts",
-									"line": 176,
+									"line": 172,
 									"character": 2,
-									"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/ssr-site.ts#L176"
+									"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/ssr-site.ts#L172"
 								}
 							],
 							"type": {
 								"type": "reference",
 								"target": {
-									"sourceFileName": "../pkg/platform/node_modules/@pulumi/pulumi/output.d.ts",
+									"sourceFileName": "../pkg/platform/src/components/input.ts",
 									"qualifiedName": "Input"
 								},
 								"typeArguments": [
@@ -7011,14 +7011,161 @@
 													"sources": [
 														{
 															"fileName": "src/components/ssr-site.ts",
-															"line": 249,
+															"line": 245,
 															"character": 4,
-															"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/ssr-site.ts#L249"
+															"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/ssr-site.ts#L245"
 														}
 													],
 													"type": {
-														"type": "unknown",
-														"name": "Input<SsrSiteFileOptions[]> | undefined"
+														"type": "reference",
+														"target": {
+															"sourceFileName": "../pkg/platform/src/components/input.ts",
+															"qualifiedName": "Input"
+														},
+														"typeArguments": [
+															{
+																"type": "array",
+																"elementType": {
+																	"type": "reflection",
+																	"declaration": {
+																		"id": 174,
+																		"name": "__type",
+																		"variant": "declaration",
+																		"kind": 65536,
+																		"flags": {},
+																		"children": [
+																			{
+																				"id": 177,
+																				"name": "cacheControl",
+																				"variant": "declaration",
+																				"kind": 1024,
+																				"flags": {
+																					"isOptional": true
+																				},
+																				"sources": [
+																					{
+																						"fileName": "src/components/ssr-site.ts",
+																						"line": 61,
+																						"character": 2,
+																						"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/ssr-site.ts#L61"
+																					}
+																				],
+																				"type": {
+																					"type": "intrinsic",
+																					"name": "string"
+																				}
+																			},
+																			{
+																				"id": 178,
+																				"name": "contentType",
+																				"variant": "declaration",
+																				"kind": 1024,
+																				"flags": {
+																					"isOptional": true
+																				},
+																				"sources": [
+																					{
+																						"fileName": "src/components/ssr-site.ts",
+																						"line": 62,
+																						"character": 2,
+																						"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/ssr-site.ts#L62"
+																					}
+																				],
+																				"type": {
+																					"type": "intrinsic",
+																					"name": "string"
+																				}
+																			},
+																			{
+																				"id": 175,
+																				"name": "files",
+																				"variant": "declaration",
+																				"kind": 1024,
+																				"flags": {},
+																				"sources": [
+																					{
+																						"fileName": "src/components/ssr-site.ts",
+																						"line": 59,
+																						"character": 2,
+																						"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/ssr-site.ts#L59"
+																					}
+																				],
+																				"type": {
+																					"type": "union",
+																					"types": [
+																						{
+																							"type": "intrinsic",
+																							"name": "string"
+																						},
+																						{
+																							"type": "array",
+																							"elementType": {
+																								"type": "intrinsic",
+																								"name": "string"
+																							}
+																						}
+																					]
+																				}
+																			},
+																			{
+																				"id": 176,
+																				"name": "ignore",
+																				"variant": "declaration",
+																				"kind": 1024,
+																				"flags": {
+																					"isOptional": true
+																				},
+																				"sources": [
+																					{
+																						"fileName": "src/components/ssr-site.ts",
+																						"line": 60,
+																						"character": 2,
+																						"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/ssr-site.ts#L60"
+																					}
+																				],
+																				"type": {
+																					"type": "union",
+																					"types": [
+																						{
+																							"type": "intrinsic",
+																							"name": "string"
+																						},
+																						{
+																							"type": "array",
+																							"elementType": {
+																								"type": "intrinsic",
+																								"name": "string"
+																							}
+																						}
+																					]
+																				}
+																			}
+																		],
+																		"groups": [
+																			{
+																				"title": "Properties",
+																				"children": [
+																					177,
+																					178,
+																					175,
+																					176
+																				]
+																			}
+																		],
+																		"sources": [
+																			{
+																				"fileName": "src/components/component.ts",
+																				"line": 13,
+																				"character": 26,
+																				"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/component.ts#L13"
+																			}
+																		]
+																	}
+																}
+															}
+														],
+														"name": "Input",
+														"package": "sst"
 													}
 												},
 												{
@@ -7076,14 +7223,25 @@
 													"sources": [
 														{
 															"fileName": "src/components/ssr-site.ts",
-															"line": 233,
+															"line": 229,
 															"character": 4,
-															"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/ssr-site.ts#L233"
+															"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/ssr-site.ts#L229"
 														}
 													],
 													"type": {
-														"type": "unknown",
-														"name": "Input<string> | undefined"
+														"type": "reference",
+														"target": {
+															"sourceFileName": "../pkg/platform/src/components/input.ts",
+															"qualifiedName": "Input"
+														},
+														"typeArguments": [
+															{
+																"type": "intrinsic",
+																"name": "string"
+															}
+														],
+														"name": "Input",
+														"package": "sst"
 													}
 												},
 												{
@@ -7141,14 +7299,134 @@
 													"sources": [
 														{
 															"fileName": "src/components/ssr-site.ts",
-															"line": 222,
+															"line": 218,
 															"character": 4,
-															"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/ssr-site.ts#L222"
+															"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/ssr-site.ts#L218"
 														}
 													],
 													"type": {
-														"type": "unknown",
-														"name": "Input<number | `${number} second` | `${number} seconds` | `${number} minute` | `${number} minutes` | `${number} hour` | `${number} hours` | `${number} day` | `${number} days`> | undefined"
+														"type": "reference",
+														"target": {
+															"sourceFileName": "../pkg/platform/src/components/input.ts",
+															"qualifiedName": "Input"
+														},
+														"typeArguments": [
+															{
+																"type": "union",
+																"types": [
+																	{
+																		"type": "intrinsic",
+																		"name": "number"
+																	},
+																	{
+																		"type": "templateLiteral",
+																		"head": "",
+																		"tail": [
+																			[
+																				{
+																					"type": "intrinsic",
+																					"name": "number"
+																				},
+																				" second"
+																			]
+																		]
+																	},
+																	{
+																		"type": "templateLiteral",
+																		"head": "",
+																		"tail": [
+																			[
+																				{
+																					"type": "intrinsic",
+																					"name": "number"
+																				},
+																				" seconds"
+																			]
+																		]
+																	},
+																	{
+																		"type": "templateLiteral",
+																		"head": "",
+																		"tail": [
+																			[
+																				{
+																					"type": "intrinsic",
+																					"name": "number"
+																				},
+																				" minute"
+																			]
+																		]
+																	},
+																	{
+																		"type": "templateLiteral",
+																		"head": "",
+																		"tail": [
+																			[
+																				{
+																					"type": "intrinsic",
+																					"name": "number"
+																				},
+																				" minutes"
+																			]
+																		]
+																	},
+																	{
+																		"type": "templateLiteral",
+																		"head": "",
+																		"tail": [
+																			[
+																				{
+																					"type": "intrinsic",
+																					"name": "number"
+																				},
+																				" hour"
+																			]
+																		]
+																	},
+																	{
+																		"type": "templateLiteral",
+																		"head": "",
+																		"tail": [
+																			[
+																				{
+																					"type": "intrinsic",
+																					"name": "number"
+																				},
+																				" hours"
+																			]
+																		]
+																	},
+																	{
+																		"type": "templateLiteral",
+																		"head": "",
+																		"tail": [
+																			[
+																				{
+																					"type": "intrinsic",
+																					"name": "number"
+																				},
+																				" day"
+																			]
+																		]
+																	},
+																	{
+																		"type": "templateLiteral",
+																		"head": "",
+																		"tail": [
+																			[
+																				{
+																					"type": "intrinsic",
+																					"name": "number"
+																				},
+																				" days"
+																			]
+																		]
+																	}
+																]
+															}
+														],
+														"name": "Input",
+														"package": "sst"
 													}
 												},
 												{
@@ -7190,14 +7468,46 @@
 													"sources": [
 														{
 															"fileName": "src/components/ssr-site.ts",
-															"line": 187,
+															"line": 183,
 															"character": 4,
-															"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/ssr-site.ts#L187"
+															"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/ssr-site.ts#L183"
 														}
 													],
 													"type": {
-														"type": "unknown",
-														"name": "Input<\"none\" | \"ascii\" | \"utf-8\" | \"iso-8859-1\" | \"windows-1252\"> | undefined"
+														"type": "reference",
+														"target": {
+															"sourceFileName": "../pkg/platform/src/components/input.ts",
+															"qualifiedName": "Input"
+														},
+														"typeArguments": [
+															{
+																"type": "union",
+																"types": [
+																	{
+																		"type": "literal",
+																		"value": "none"
+																	},
+																	{
+																		"type": "literal",
+																		"value": "utf-8"
+																	},
+																	{
+																		"type": "literal",
+																		"value": "iso-8859-1"
+																	},
+																	{
+																		"type": "literal",
+																		"value": "windows-1252"
+																	},
+																	{
+																		"type": "literal",
+																		"value": "ascii"
+																	}
+																]
+															}
+														],
+														"name": "Input",
+														"package": "sst"
 													}
 												},
 												{
@@ -7255,14 +7565,25 @@
 													"sources": [
 														{
 															"fileName": "src/components/ssr-site.ts",
-															"line": 211,
+															"line": 207,
 															"character": 4,
-															"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/ssr-site.ts#L211"
+															"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/ssr-site.ts#L207"
 														}
 													],
 													"type": {
-														"type": "unknown",
-														"name": "Input<string> | undefined"
+														"type": "reference",
+														"target": {
+															"sourceFileName": "../pkg/platform/src/components/input.ts",
+															"qualifiedName": "Input"
+														},
+														"typeArguments": [
+															{
+																"type": "intrinsic",
+																"name": "string"
+															}
+														],
+														"name": "Input",
+														"package": "sst"
 													}
 												},
 												{
@@ -7320,14 +7641,134 @@
 													"sources": [
 														{
 															"fileName": "src/components/ssr-site.ts",
-															"line": 200,
+															"line": 196,
 															"character": 4,
-															"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/ssr-site.ts#L200"
+															"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/ssr-site.ts#L196"
 														}
 													],
 													"type": {
-														"type": "unknown",
-														"name": "Input<number | `${number} second` | `${number} seconds` | `${number} minute` | `${number} minutes` | `${number} hour` | `${number} hours` | `${number} day` | `${number} days`> | undefined"
+														"type": "reference",
+														"target": {
+															"sourceFileName": "../pkg/platform/src/components/input.ts",
+															"qualifiedName": "Input"
+														},
+														"typeArguments": [
+															{
+																"type": "union",
+																"types": [
+																	{
+																		"type": "intrinsic",
+																		"name": "number"
+																	},
+																	{
+																		"type": "templateLiteral",
+																		"head": "",
+																		"tail": [
+																			[
+																				{
+																					"type": "intrinsic",
+																					"name": "number"
+																				},
+																				" second"
+																			]
+																		]
+																	},
+																	{
+																		"type": "templateLiteral",
+																		"head": "",
+																		"tail": [
+																			[
+																				{
+																					"type": "intrinsic",
+																					"name": "number"
+																				},
+																				" seconds"
+																			]
+																		]
+																	},
+																	{
+																		"type": "templateLiteral",
+																		"head": "",
+																		"tail": [
+																			[
+																				{
+																					"type": "intrinsic",
+																					"name": "number"
+																				},
+																				" minute"
+																			]
+																		]
+																	},
+																	{
+																		"type": "templateLiteral",
+																		"head": "",
+																		"tail": [
+																			[
+																				{
+																					"type": "intrinsic",
+																					"name": "number"
+																				},
+																				" minutes"
+																			]
+																		]
+																	},
+																	{
+																		"type": "templateLiteral",
+																		"head": "",
+																		"tail": [
+																			[
+																				{
+																					"type": "intrinsic",
+																					"name": "number"
+																				},
+																				" hour"
+																			]
+																		]
+																	},
+																	{
+																		"type": "templateLiteral",
+																		"head": "",
+																		"tail": [
+																			[
+																				{
+																					"type": "intrinsic",
+																					"name": "number"
+																				},
+																				" hours"
+																			]
+																		]
+																	},
+																	{
+																		"type": "templateLiteral",
+																		"head": "",
+																		"tail": [
+																			[
+																				{
+																					"type": "intrinsic",
+																					"name": "number"
+																				},
+																				" day"
+																			]
+																		]
+																	},
+																	{
+																		"type": "templateLiteral",
+																		"head": "",
+																		"tail": [
+																			[
+																				{
+																					"type": "intrinsic",
+																					"name": "number"
+																				},
+																				" days"
+																			]
+																		]
+																	}
+																]
+															}
+														],
+														"name": "Input",
+														"package": "sst"
 													}
 												}
 											],
@@ -7347,16 +7788,16 @@
 											"sources": [
 												{
 													"fileName": "src/components/ssr-site.ts",
-													"line": 176,
+													"line": 172,
 													"character": 17,
-													"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/ssr-site.ts#L176"
+													"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/ssr-site.ts#L172"
 												}
 											]
 										}
 									}
 								],
 								"name": "Input",
-								"package": "@pulumi/pulumi"
+								"package": "sst"
 							},
 							"inheritedFrom": {
 								"type": "reference",
@@ -7403,15 +7844,15 @@
 							"sources": [
 								{
 									"fileName": "src/components/ssr-site.ts",
-									"line": 87,
+									"line": 83,
 									"character": 2,
-									"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/ssr-site.ts#L87"
+									"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/ssr-site.ts#L83"
 								}
 							],
 							"type": {
 								"type": "reference",
 								"target": {
-									"sourceFileName": "../pkg/platform/node_modules/@pulumi/pulumi/output.d.ts",
+									"sourceFileName": "../pkg/platform/src/components/input.ts",
 									"qualifiedName": "Input"
 								},
 								"typeArguments": [
@@ -7421,7 +7862,7 @@
 									}
 								],
 								"name": "Input",
-								"package": "@pulumi/pulumi"
+								"package": "sst"
 							},
 							"inheritedFrom": {
 								"type": "reference",
@@ -7467,15 +7908,15 @@
 							"sources": [
 								{
 									"fileName": "src/components/ssr-site.ts",
-									"line": 108,
+									"line": 104,
 									"character": 2,
-									"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/ssr-site.ts#L108"
+									"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/ssr-site.ts#L104"
 								}
 							],
 							"type": {
 								"type": "reference",
 								"target": {
-									"sourceFileName": "../pkg/platform/node_modules/@pulumi/pulumi/output.d.ts",
+									"sourceFileName": "../pkg/platform/src/components/input.ts",
 									"qualifiedName": "Input"
 								},
 								"typeArguments": [
@@ -7536,12 +7977,26 @@
 																	"fileName": "src/components/cdn.ts",
 																	"line": 47,
 																	"character": 2,
-																	"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/cdn.ts#L47"
+																	"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/cdn.ts#L47"
 																}
 															],
 															"type": {
-																"type": "unknown",
-																"name": "Input<string[]> | undefined"
+																"type": "reference",
+																"target": {
+																	"sourceFileName": "../pkg/platform/node_modules/@pulumi/pulumi/output.d.ts",
+																	"qualifiedName": "Input"
+																},
+																"typeArguments": [
+																	{
+																		"type": "array",
+																		"elementType": {
+																			"type": "intrinsic",
+																			"name": "string"
+																		}
+																	}
+																],
+																"name": "Input",
+																"package": "@pulumi/pulumi"
 															}
 														},
 														{
@@ -7563,7 +8018,7 @@
 																	"fileName": "src/components/cdn.ts",
 																	"line": 22,
 																	"character": 2,
-																	"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/cdn.ts#L22"
+																	"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/cdn.ts#L22"
 																}
 															],
 															"type": {
@@ -7627,12 +8082,23 @@
 																	"fileName": "src/components/cdn.ts",
 																	"line": 60,
 																	"character": 2,
-																	"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/cdn.ts#L60"
+																	"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/cdn.ts#L60"
 																}
 															],
 															"type": {
-																"type": "unknown",
-																"name": "Input<string> | undefined"
+																"type": "reference",
+																"target": {
+																	"sourceFileName": "../pkg/platform/node_modules/@pulumi/pulumi/output.d.ts",
+																	"qualifiedName": "Input"
+																},
+																"typeArguments": [
+																	{
+																		"type": "intrinsic",
+																		"name": "string"
+																	}
+																],
+																"name": "Input",
+																"package": "@pulumi/pulumi"
 															}
 														},
 														{
@@ -7667,12 +8133,23 @@
 																	"fileName": "src/components/cdn.ts",
 																	"line": 73,
 																	"character": 2,
-																	"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/cdn.ts#L73"
+																	"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/cdn.ts#L73"
 																}
 															],
 															"type": {
-																"type": "unknown",
-																"name": "Input<string> | undefined"
+																"type": "reference",
+																"target": {
+																	"sourceFileName": "../pkg/platform/node_modules/@pulumi/pulumi/output.d.ts",
+																	"qualifiedName": "Input"
+																},
+																"typeArguments": [
+																	{
+																		"type": "intrinsic",
+																		"name": "string"
+																	}
+																],
+																"name": "Input",
+																"package": "@pulumi/pulumi"
 															}
 														},
 														{
@@ -7732,12 +8209,26 @@
 																	"fileName": "src/components/cdn.ts",
 																	"line": 35,
 																	"character": 2,
-																	"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/cdn.ts#L35"
+																	"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/cdn.ts#L35"
 																}
 															],
 															"type": {
-																"type": "unknown",
-																"name": "Input<string[]> | undefined"
+																"type": "reference",
+																"target": {
+																	"sourceFileName": "../pkg/platform/node_modules/@pulumi/pulumi/output.d.ts",
+																	"qualifiedName": "Input"
+																},
+																"typeArguments": [
+																	{
+																		"type": "array",
+																		"elementType": {
+																			"type": "intrinsic",
+																			"name": "string"
+																		}
+																	}
+																],
+																"name": "Input",
+																"package": "@pulumi/pulumi"
 															}
 														}
 													],
@@ -7755,10 +8246,10 @@
 													],
 													"sources": [
 														{
-															"fileName": "src/components/ssr-site.ts",
-															"line": 57,
-															"character": 19,
-															"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/ssr-site.ts#L57"
+															"fileName": "src/components/component.ts",
+															"line": 13,
+															"character": 26,
+															"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/component.ts#L13"
 														}
 													]
 												}
@@ -7767,7 +8258,7 @@
 									}
 								],
 								"name": "Input",
-								"package": "@pulumi/pulumi"
+								"package": "sst"
 							},
 							"inheritedFrom": {
 								"type": "reference",
@@ -7805,9 +8296,9 @@
 							"sources": [
 								{
 									"fileName": "src/components/nextjs.ts",
-									"line": 68,
+									"line": 69,
 									"character": 2,
-									"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/nextjs.ts#L68"
+									"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/nextjs.ts#L69"
 								}
 							],
 							"type": {
@@ -7845,15 +8336,15 @@
 							"sources": [
 								{
 									"fileName": "src/components/ssr-site.ts",
-									"line": 146,
+									"line": 142,
 									"character": 2,
-									"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/ssr-site.ts#L146"
+									"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/ssr-site.ts#L142"
 								}
 							],
 							"type": {
 								"type": "reference",
 								"target": {
-									"sourceFileName": "../pkg/platform/node_modules/@pulumi/pulumi/output.d.ts",
+									"sourceFileName": "../pkg/platform/src/components/input.ts",
 									"qualifiedName": "Input"
 								},
 								"typeArguments": [
@@ -7871,7 +8362,7 @@
 											{
 												"type": "reference",
 												"target": {
-													"sourceFileName": "../pkg/platform/node_modules/@pulumi/pulumi/output.d.ts",
+													"sourceFileName": "../pkg/platform/src/components/input.ts",
 													"qualifiedName": "Input"
 												},
 												"typeArguments": [
@@ -7881,7 +8372,7 @@
 													}
 												],
 												"name": "Input",
-												"package": "@pulumi/pulumi"
+												"package": "sst"
 											}
 										],
 										"name": "Record",
@@ -7889,7 +8380,7 @@
 									}
 								],
 								"name": "Input",
-								"package": "@pulumi/pulumi"
+								"package": "sst"
 							},
 							"inheritedFrom": {
 								"type": "reference",
@@ -7908,9 +8399,9 @@
 							"sources": [
 								{
 									"fileName": "src/components/nextjs.ts",
-									"line": 82,
+									"line": 83,
 									"character": 2,
-									"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/nextjs.ts#L82"
+									"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/nextjs.ts#L83"
 								}
 							],
 							"type": {
@@ -7977,9 +8468,9 @@
 											"sources": [
 												{
 													"fileName": "src/components/nextjs.ts",
-													"line": 117,
+													"line": 118,
 													"character": 4,
-													"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/nextjs.ts#L117"
+													"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/nextjs.ts#L118"
 												}
 											],
 											"type": {
@@ -8026,9 +8517,9 @@
 											"sources": [
 												{
 													"fileName": "src/components/nextjs.ts",
-													"line": 106,
+													"line": 107,
 													"character": 4,
-													"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/nextjs.ts#L106"
+													"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/nextjs.ts#L107"
 												}
 											],
 											"type": {
@@ -8075,9 +8566,9 @@
 											"sources": [
 												{
 													"fileName": "src/components/nextjs.ts",
-													"line": 93,
+													"line": 94,
 													"character": 4,
-													"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/nextjs.ts#L93"
+													"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/nextjs.ts#L94"
 												}
 											],
 											"type": {
@@ -8099,9 +8590,9 @@
 									"sources": [
 										{
 											"fileName": "src/components/nextjs.ts",
-											"line": 82,
+											"line": 83,
 											"character": 17,
-											"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/nextjs.ts#L82"
+											"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/nextjs.ts#L83"
 										}
 									]
 								}
@@ -8118,9 +8609,9 @@
 							"sources": [
 								{
 									"fileName": "src/components/nextjs.ts",
-									"line": 69,
+									"line": 70,
 									"character": 2,
-									"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/nextjs.ts#L69"
+									"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/nextjs.ts#L70"
 								}
 							],
 							"type": {
@@ -8171,9 +8662,9 @@
 											"sources": [
 												{
 													"fileName": "src/components/nextjs.ts",
-													"line": 80,
+													"line": 81,
 													"character": 4,
-													"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/nextjs.ts#L80"
+													"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/nextjs.ts#L81"
 												}
 											],
 											"type": {
@@ -8220,16 +8711,16 @@
 									"sources": [
 										{
 											"fileName": "src/components/nextjs.ts",
-											"line": 69,
+											"line": 70,
 											"character": 22,
-											"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/nextjs.ts#L69"
+											"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/nextjs.ts#L70"
 										}
 									]
 								}
 							}
 						},
 						{
-							"id": 174,
+							"id": 179,
 							"name": "invalidation",
 							"variant": "declaration",
 							"kind": 1024,
@@ -8239,29 +8730,29 @@
 							"sources": [
 								{
 									"fileName": "src/components/ssr-site.ts",
-									"line": 251,
+									"line": 247,
 									"character": 2,
-									"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/ssr-site.ts#L251"
+									"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/ssr-site.ts#L247"
 								}
 							],
 							"type": {
 								"type": "reference",
 								"target": {
-									"sourceFileName": "../pkg/platform/node_modules/@pulumi/pulumi/output.d.ts",
+									"sourceFileName": "../pkg/platform/src/components/input.ts",
 									"qualifiedName": "Input"
 								},
 								"typeArguments": [
 									{
 										"type": "reflection",
 										"declaration": {
-											"id": 175,
+											"id": 180,
 											"name": "__type",
 											"variant": "declaration",
 											"kind": 65536,
 											"flags": {},
 											"children": [
 												{
-													"id": 177,
+													"id": 182,
 													"name": "paths",
 													"variant": "declaration",
 													"kind": 1024,
@@ -8311,18 +8802,49 @@
 													"sources": [
 														{
 															"fileName": "src/components/ssr-site.ts",
-															"line": 284,
+															"line": 280,
 															"character": 4,
-															"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/ssr-site.ts#L284"
+															"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/ssr-site.ts#L280"
 														}
 													],
 													"type": {
-														"type": "unknown",
-														"name": "Input<string[] | \"none\" | \"all\" | \"versioned\"> | undefined"
+														"type": "reference",
+														"target": {
+															"sourceFileName": "../pkg/platform/src/components/input.ts",
+															"qualifiedName": "Input"
+														},
+														"typeArguments": [
+															{
+																"type": "union",
+																"types": [
+																	{
+																		"type": "array",
+																		"elementType": {
+																			"type": "intrinsic",
+																			"name": "string"
+																		}
+																	},
+																	{
+																		"type": "literal",
+																		"value": "none"
+																	},
+																	{
+																		"type": "literal",
+																		"value": "all"
+																	},
+																	{
+																		"type": "literal",
+																		"value": "versioned"
+																	}
+																]
+															}
+														],
+														"name": "Input",
+														"package": "sst"
 													}
 												},
 												{
-													"id": 176,
+													"id": 181,
 													"name": "wait",
 													"variant": "declaration",
 													"kind": 1024,
@@ -8368,14 +8890,25 @@
 													"sources": [
 														{
 															"fileName": "src/components/ssr-site.ts",
-															"line": 262,
+															"line": 258,
 															"character": 4,
-															"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/ssr-site.ts#L262"
+															"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/ssr-site.ts#L258"
 														}
 													],
 													"type": {
-														"type": "unknown",
-														"name": "Input<boolean> | undefined"
+														"type": "reference",
+														"target": {
+															"sourceFileName": "../pkg/platform/src/components/input.ts",
+															"qualifiedName": "Input"
+														},
+														"typeArguments": [
+															{
+																"type": "intrinsic",
+																"name": "boolean"
+															}
+														],
+														"name": "Input",
+														"package": "sst"
 													}
 												}
 											],
@@ -8383,24 +8916,24 @@
 												{
 													"title": "Properties",
 													"children": [
-														177,
-														176
+														182,
+														181
 													]
 												}
 											],
 											"sources": [
 												{
 													"fileName": "src/components/ssr-site.ts",
-													"line": 251,
+													"line": 247,
 													"character": 23,
-													"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/ssr-site.ts#L251"
+													"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/ssr-site.ts#L247"
 												}
 											]
 										}
 									}
 								],
 								"name": "Input",
-								"package": "@pulumi/pulumi"
+								"package": "sst"
 							},
 							"inheritedFrom": {
 								"type": "reference",
@@ -8438,15 +8971,15 @@
 							"sources": [
 								{
 									"fileName": "src/components/ssr-site.ts",
-									"line": 134,
+									"line": 130,
 									"character": 2,
-									"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/ssr-site.ts#L134"
+									"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/ssr-site.ts#L130"
 								}
 							],
 							"type": {
 								"type": "reference",
 								"target": {
-									"sourceFileName": "../pkg/platform/node_modules/@pulumi/pulumi/output.d.ts",
+									"sourceFileName": "../pkg/platform/src/components/input.ts",
 									"qualifiedName": "Input"
 								},
 								"typeArguments": [
@@ -8459,7 +8992,7 @@
 									}
 								],
 								"name": "Input",
-								"package": "@pulumi/pulumi"
+								"package": "sst"
 							},
 							"inheritedFrom": {
 								"type": "reference",
@@ -8506,9 +9039,9 @@
 							"sources": [
 								{
 									"fileName": "src/components/nextjs.ts",
-									"line": 63,
+									"line": 64,
 									"character": 2,
-									"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/nextjs.ts#L63"
+									"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/nextjs.ts#L64"
 								}
 							],
 							"type": {
@@ -8564,9 +9097,9 @@
 							"sources": [
 								{
 									"fileName": "src/components/nextjs.ts",
-									"line": 52,
+									"line": 53,
 									"character": 2,
-									"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/nextjs.ts#L52"
+									"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/nextjs.ts#L53"
 								}
 							],
 							"type": {
@@ -8604,15 +9137,15 @@
 							"sources": [
 								{
 									"fileName": "src/components/ssr-site.ts",
-									"line": 73,
+									"line": 69,
 									"character": 2,
-									"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/ssr-site.ts#L73"
+									"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/ssr-site.ts#L69"
 								}
 							],
 							"type": {
 								"type": "reference",
 								"target": {
-									"sourceFileName": "../pkg/platform/node_modules/@pulumi/pulumi/output.d.ts",
+									"sourceFileName": "../pkg/platform/src/components/input.ts",
 									"qualifiedName": "Input"
 								},
 								"typeArguments": [
@@ -8622,7 +9155,7 @@
 									}
 								],
 								"name": "Input",
-								"package": "@pulumi/pulumi"
+								"package": "sst"
 							},
 							"inheritedFrom": {
 								"type": "reference",
@@ -8669,15 +9202,15 @@
 							"sources": [
 								{
 									"fileName": "src/components/ssr-site.ts",
-									"line": 122,
+									"line": 118,
 									"character": 2,
-									"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/ssr-site.ts#L122"
+									"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/ssr-site.ts#L118"
 								}
 							],
 							"type": {
 								"type": "reference",
 								"target": {
-									"sourceFileName": "../pkg/platform/node_modules/@pulumi/pulumi/output.d.ts",
+									"sourceFileName": "../pkg/platform/src/components/input.ts",
 									"qualifiedName": "Input"
 								},
 								"typeArguments": [
@@ -8692,7 +9225,7 @@
 									}
 								],
 								"name": "Input",
-								"package": "@pulumi/pulumi"
+								"package": "sst"
 							},
 							"inheritedFrom": {
 								"type": "reference",
@@ -8701,7 +9234,7 @@
 							}
 						},
 						{
-							"id": 178,
+							"id": 183,
 							"name": "transform",
 							"variant": "declaration",
 							"kind": 1024,
@@ -8711,22 +9244,22 @@
 							"sources": [
 								{
 									"fileName": "src/components/ssr-site.ts",
-									"line": 286,
+									"line": 282,
 									"character": 2,
-									"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/ssr-site.ts#L286"
+									"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/ssr-site.ts#L282"
 								}
 							],
 							"type": {
 								"type": "reflection",
 								"declaration": {
-									"id": 179,
+									"id": 184,
 									"name": "__type",
 									"variant": "declaration",
 									"kind": 65536,
 									"flags": {},
 									"children": [
 										{
-											"id": 180,
+											"id": 185,
 											"name": "plan",
 											"variant": "declaration",
 											"kind": 1024,
@@ -8736,9 +9269,9 @@
 											"sources": [
 												{
 													"fileName": "src/components/ssr-site.ts",
-													"line": 287,
+													"line": 283,
 													"character": 4,
-													"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/ssr-site.ts#L287"
+													"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/ssr-site.ts#L283"
 												}
 											],
 											"type": {
@@ -8751,14 +9284,14 @@
 													{
 														"type": "reflection",
 														"declaration": {
-															"id": 181,
+															"id": 186,
 															"name": "__type",
 															"variant": "declaration",
 															"kind": 65536,
 															"flags": {},
 															"children": [
 																{
-																	"id": 186,
+																	"id": 191,
 																	"name": "behaviors",
 																	"variant": "declaration",
 																	"kind": 1024,
@@ -8766,9 +9299,9 @@
 																	"sources": [
 																		{
 																			"fileName": "src/components/ssr-site.ts",
-																			"line": 1235,
+																			"line": 1231,
 																			"character": 2,
-																			"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/ssr-site.ts#L1235"
+																			"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/ssr-site.ts#L1231"
 																		}
 																	],
 																	"type": {
@@ -8776,14 +9309,14 @@
 																		"elementType": {
 																			"type": "reflection",
 																			"declaration": {
-																				"id": 187,
+																				"id": 192,
 																				"name": "__type",
 																				"variant": "declaration",
 																				"kind": 65536,
 																				"flags": {},
 																				"children": [
 																					{
-																						"id": 191,
+																						"id": 196,
 																						"name": "allowedMethods",
 																						"variant": "declaration",
 																						"kind": 1024,
@@ -8793,9 +9326,9 @@
 																						"sources": [
 																							{
 																								"fileName": "src/components/ssr-site.ts",
-																								"line": 1239,
+																								"line": 1235,
 																								"character": 4,
-																								"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/ssr-site.ts#L1239"
+																								"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/ssr-site.ts#L1235"
 																							}
 																						],
 																						"type": {
@@ -8803,10 +9336,6 @@
 																							"elementType": {
 																								"type": "union",
 																								"types": [
-																									{
-																										"type": "literal",
-																										"value": "POST"
-																									},
 																									{
 																										"type": "literal",
 																										"value": "DELETE"
@@ -8829,6 +9358,10 @@
 																									},
 																									{
 																										"type": "literal",
+																										"value": "POST"
+																									},
+																									{
+																										"type": "literal",
 																										"value": "PUT"
 																									}
 																								]
@@ -8836,7 +9369,7 @@
 																						}
 																					},
 																					{
-																						"id": 188,
+																						"id": 193,
 																						"name": "cacheType",
 																						"variant": "declaration",
 																						"kind": 1024,
@@ -8844,9 +9377,9 @@
 																						"sources": [
 																							{
 																								"fileName": "src/components/ssr-site.ts",
-																								"line": 1236,
+																								"line": 1232,
 																								"character": 4,
-																								"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/ssr-site.ts#L1236"
+																								"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/ssr-site.ts#L1232"
 																							}
 																						],
 																						"type": {
@@ -8864,7 +9397,7 @@
 																						}
 																					},
 																					{
-																						"id": 192,
+																						"id": 197,
 																						"name": "cfFunction",
 																						"variant": "declaration",
 																						"kind": 1024,
@@ -8874,9 +9407,9 @@
 																						"sources": [
 																							{
 																								"fileName": "src/components/ssr-site.ts",
-																								"line": 1248,
+																								"line": 1244,
 																								"character": 4,
-																								"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/ssr-site.ts#L1248"
+																								"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/ssr-site.ts#L1244"
 																							}
 																						],
 																						"type": {
@@ -8885,7 +9418,7 @@
 																						}
 																					},
 																					{
-																						"id": 193,
+																						"id": 198,
 																						"name": "edgeFunction",
 																						"variant": "declaration",
 																						"kind": 1024,
@@ -8895,9 +9428,9 @@
 																						"sources": [
 																							{
 																								"fileName": "src/components/ssr-site.ts",
-																								"line": 1249,
+																								"line": 1245,
 																								"character": 4,
-																								"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/ssr-site.ts#L1249"
+																								"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/ssr-site.ts#L1245"
 																							}
 																						],
 																						"type": {
@@ -8906,7 +9439,7 @@
 																						}
 																					},
 																					{
-																						"id": 190,
+																						"id": 195,
 																						"name": "origin",
 																						"variant": "declaration",
 																						"kind": 1024,
@@ -8914,9 +9447,9 @@
 																						"sources": [
 																							{
 																								"fileName": "src/components/ssr-site.ts",
-																								"line": 1238,
+																								"line": 1234,
 																								"character": 4,
-																								"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/ssr-site.ts#L1238"
+																								"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/ssr-site.ts#L1234"
 																							}
 																						],
 																						"type": {
@@ -8925,7 +9458,7 @@
 																						}
 																					},
 																					{
-																						"id": 189,
+																						"id": 194,
 																						"name": "pattern",
 																						"variant": "declaration",
 																						"kind": 1024,
@@ -8935,9 +9468,9 @@
 																						"sources": [
 																							{
 																								"fileName": "src/components/ssr-site.ts",
-																								"line": 1237,
+																								"line": 1233,
 																								"character": 4,
-																								"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/ssr-site.ts#L1237"
+																								"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/ssr-site.ts#L1233"
 																							}
 																						],
 																						"type": {
@@ -8950,21 +9483,21 @@
 																					{
 																						"title": "Properties",
 																						"children": [
-																							191,
-																							188,
-																							192,
+																							196,
 																							193,
-																							190,
-																							189
+																							197,
+																							198,
+																							195,
+																							194
 																						]
 																					}
 																				],
 																				"sources": [
 																					{
 																						"fileName": "src/components/ssr-site.ts",
-																						"line": 1235,
+																						"line": 1231,
 																						"character": 13,
-																						"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/ssr-site.ts#L1235"
+																						"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/ssr-site.ts#L1231"
 																					}
 																				]
 																			}
@@ -8972,7 +9505,7 @@
 																	}
 																},
 																{
-																	"id": 198,
+																	"id": 203,
 																	"name": "buildId",
 																	"variant": "declaration",
 																	"kind": 1024,
@@ -8982,9 +9515,9 @@
 																	"sources": [
 																		{
 																			"fileName": "src/components/ssr-site.ts",
-																			"line": 1255,
+																			"line": 1251,
 																			"character": 2,
-																			"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/ssr-site.ts#L1255"
+																			"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/ssr-site.ts#L1251"
 																		}
 																	],
 																	"type": {
@@ -8993,7 +9526,7 @@
 																	}
 																},
 																{
-																	"id": 182,
+																	"id": 187,
 																	"name": "cloudFrontFunctions",
 																	"variant": "declaration",
 																	"kind": 1024,
@@ -9003,9 +9536,9 @@
 																	"sources": [
 																		{
 																			"fileName": "src/components/ssr-site.ts",
-																			"line": 1231,
+																			"line": 1227,
 																			"character": 2,
-																			"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/ssr-site.ts#L1231"
+																			"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/ssr-site.ts#L1227"
 																		}
 																	],
 																	"type": {
@@ -9034,7 +9567,7 @@
 																	}
 																},
 																{
-																	"id": 185,
+																	"id": 190,
 																	"name": "edge",
 																	"variant": "declaration",
 																	"kind": 1024,
@@ -9042,9 +9575,9 @@
 																	"sources": [
 																		{
 																			"fileName": "src/components/ssr-site.ts",
-																			"line": 1234,
+																			"line": 1230,
 																			"character": 2,
-																			"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/ssr-site.ts#L1234"
+																			"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/ssr-site.ts#L1230"
 																		}
 																	],
 																	"type": {
@@ -9053,7 +9586,7 @@
 																	}
 																},
 																{
-																	"id": 183,
+																	"id": 188,
 																	"name": "edgeFunctions",
 																	"variant": "declaration",
 																	"kind": 1024,
@@ -9063,9 +9596,9 @@
 																	"sources": [
 																		{
 																			"fileName": "src/components/ssr-site.ts",
-																			"line": 1232,
+																			"line": 1228,
 																			"character": 2,
-																			"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/ssr-site.ts#L1232"
+																			"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/ssr-site.ts#L1228"
 																		}
 																	],
 																	"type": {
@@ -9094,7 +9627,7 @@
 																	}
 																},
 																{
-																	"id": 194,
+																	"id": 199,
 																	"name": "errorResponses",
 																	"variant": "declaration",
 																	"kind": 1024,
@@ -9104,9 +9637,9 @@
 																	"sources": [
 																		{
 																			"fileName": "src/components/ssr-site.ts",
-																			"line": 1251,
+																			"line": 1247,
 																			"character": 2,
-																			"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/ssr-site.ts#L1251"
+																			"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/ssr-site.ts#L1247"
 																		}
 																	],
 																	"type": {
@@ -9124,7 +9657,7 @@
 																	}
 																},
 																{
-																	"id": 184,
+																	"id": 189,
 																	"name": "origins",
 																	"variant": "declaration",
 																	"kind": 1024,
@@ -9132,9 +9665,9 @@
 																	"sources": [
 																		{
 																			"fileName": "src/components/ssr-site.ts",
-																			"line": 1233,
+																			"line": 1229,
 																			"character": 2,
-																			"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/ssr-site.ts#L1233"
+																			"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/ssr-site.ts#L1229"
 																		}
 																	],
 																	"type": {
@@ -9195,7 +9728,7 @@
 																	}
 																},
 																{
-																	"id": 195,
+																	"id": 200,
 																	"name": "serverCachePolicy",
 																	"variant": "declaration",
 																	"kind": 1024,
@@ -9205,22 +9738,22 @@
 																	"sources": [
 																		{
 																			"fileName": "src/components/ssr-site.ts",
-																			"line": 1252,
+																			"line": 1248,
 																			"character": 2,
-																			"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/ssr-site.ts#L1252"
+																			"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/ssr-site.ts#L1248"
 																		}
 																	],
 																	"type": {
 																		"type": "reflection",
 																		"declaration": {
-																			"id": 196,
+																			"id": 201,
 																			"name": "__type",
 																			"variant": "declaration",
 																			"kind": 65536,
 																			"flags": {},
 																			"children": [
 																				{
-																					"id": 197,
+																					"id": 202,
 																					"name": "allowedHeaders",
 																					"variant": "declaration",
 																					"kind": 1024,
@@ -9230,9 +9763,9 @@
 																					"sources": [
 																						{
 																							"fileName": "src/components/ssr-site.ts",
-																							"line": 1253,
+																							"line": 1249,
 																							"character": 4,
-																							"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/ssr-site.ts#L1253"
+																							"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/ssr-site.ts#L1249"
 																						}
 																					],
 																					"type": {
@@ -9248,16 +9781,16 @@
 																				{
 																					"title": "Properties",
 																					"children": [
-																						197
+																						202
 																					]
 																				}
 																			],
 																			"sources": [
 																				{
 																					"fileName": "src/components/ssr-site.ts",
-																					"line": 1252,
+																					"line": 1248,
 																					"character": 22,
-																					"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/ssr-site.ts#L1252"
+																					"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/ssr-site.ts#L1248"
 																				}
 																			]
 																		}
@@ -9268,23 +9801,23 @@
 																{
 																	"title": "Properties",
 																	"children": [
-																		186,
-																		198,
-																		182,
-																		185,
-																		183,
-																		194,
-																		184,
-																		195
+																		191,
+																		203,
+																		187,
+																		190,
+																		188,
+																		199,
+																		189,
+																		200
 																	]
 																}
 															],
 															"sources": [
 																{
 																	"fileName": "src/components/ssr-site.ts",
-																	"line": 1230,
+																	"line": 1226,
 																	"character": 9,
-																	"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/ssr-site.ts#L1230"
+																	"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/ssr-site.ts#L1226"
 																}
 															]
 														}
@@ -9299,16 +9832,16 @@
 										{
 											"title": "Properties",
 											"children": [
-												180
+												185
 											]
 										}
 									],
 									"sources": [
 										{
 											"fileName": "src/components/ssr-site.ts",
-											"line": 286,
+											"line": 282,
 											"character": 14,
-											"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/ssr-site.ts#L286"
+											"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/ssr-site.ts#L282"
 										}
 									]
 								}
@@ -9349,15 +9882,15 @@
 							"sources": [
 								{
 									"fileName": "src/components/ssr-site.ts",
-									"line": 78,
+									"line": 74,
 									"character": 2,
-									"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/ssr-site.ts#L78"
+									"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/ssr-site.ts#L74"
 								}
 							],
 							"type": {
 								"type": "reference",
 								"target": {
-									"sourceFileName": "../pkg/platform/node_modules/@pulumi/pulumi/output.d.ts",
+									"sourceFileName": "../pkg/platform/src/components/input.ts",
 									"qualifiedName": "Input"
 								},
 								"typeArguments": [
@@ -9367,7 +9900,7 @@
 									}
 								],
 								"name": "Input",
-								"package": "@pulumi/pulumi"
+								"package": "sst"
 							},
 							"inheritedFrom": {
 								"type": "reference",
@@ -9405,15 +9938,15 @@
 							"sources": [
 								{
 									"fileName": "src/components/ssr-site.ts",
-									"line": 151,
+									"line": 147,
 									"character": 2,
-									"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/ssr-site.ts#L151"
+									"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/ssr-site.ts#L147"
 								}
 							],
 							"type": {
 								"type": "reference",
 								"target": {
-									"sourceFileName": "../pkg/platform/node_modules/@pulumi/pulumi/output.d.ts",
+									"sourceFileName": "../pkg/platform/src/components/input.ts",
 									"qualifiedName": "Input"
 								},
 								"typeArguments": [
@@ -9423,7 +9956,7 @@
 									}
 								],
 								"name": "Input",
-								"package": "@pulumi/pulumi"
+								"package": "sst"
 							},
 							"inheritedFrom": {
 								"type": "reference",
@@ -9443,13 +9976,13 @@
 								164,
 								147,
 								144,
-								174,
+								179,
 								163,
 								142,
 								141,
 								152,
 								162,
-								178,
+								183,
 								153,
 								165
 							]
@@ -9458,9 +9991,9 @@
 					"sources": [
 						{
 							"fileName": "src/components/nextjs.ts",
-							"line": 43,
+							"line": 44,
 							"character": 17,
-							"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/nextjs.ts#L43"
+							"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/nextjs.ts#L44"
 						}
 					],
 					"extendedTypes": [
@@ -9480,7 +10013,7 @@
 				{
 					"title": "Classes",
 					"children": [
-						199
+						204
 					]
 				},
 				{
@@ -9495,7 +10028,7 @@
 					"fileName": "src/components/nextjs.ts",
 					"line": 1,
 					"character": 0,
-					"url": "https://github.com/sst/ion/blob/8ea4866/pkg/platform/src/components/nextjs.ts#L1"
+					"url": "https://github.com/sst/ion/blob/664edcb/pkg/platform/src/components/nextjs.ts#L1"
 				}
 			]
 		}
@@ -10355,7 +10888,7 @@
 			"qualifiedName": "SsrSiteArgs.domain"
 		},
 		"156": {
-			"sourceFileName": "../pkg/platform/src/components/ssr-site.ts",
+			"sourceFileName": "../pkg/platform/src/components/component.ts",
 			"qualifiedName": "__type"
 		},
 		"157": {
@@ -10427,250 +10960,270 @@
 			"qualifiedName": "__type.fileOptions"
 		},
 		"174": {
-			"sourceFileName": "../pkg/platform/src/components/ssr-site.ts",
-			"qualifiedName": "SsrSiteArgs.invalidation"
+			"sourceFileName": "../pkg/platform/src/components/component.ts",
+			"qualifiedName": "__type"
 		},
 		"175": {
 			"sourceFileName": "../pkg/platform/src/components/ssr-site.ts",
-			"qualifiedName": "__type"
+			"qualifiedName": "files"
 		},
 		"176": {
 			"sourceFileName": "../pkg/platform/src/components/ssr-site.ts",
-			"qualifiedName": "__type.wait"
+			"qualifiedName": "ignore"
 		},
 		"177": {
 			"sourceFileName": "../pkg/platform/src/components/ssr-site.ts",
-			"qualifiedName": "__type.paths"
+			"qualifiedName": "cacheControl"
 		},
 		"178": {
 			"sourceFileName": "../pkg/platform/src/components/ssr-site.ts",
-			"qualifiedName": "SsrSiteArgs.transform"
+			"qualifiedName": "contentType"
 		},
 		"179": {
 			"sourceFileName": "../pkg/platform/src/components/ssr-site.ts",
-			"qualifiedName": "__type"
+			"qualifiedName": "SsrSiteArgs.invalidation"
 		},
 		"180": {
 			"sourceFileName": "../pkg/platform/src/components/ssr-site.ts",
-			"qualifiedName": "__type.plan"
+			"qualifiedName": "__type"
 		},
 		"181": {
 			"sourceFileName": "../pkg/platform/src/components/ssr-site.ts",
-			"qualifiedName": "__type"
+			"qualifiedName": "__type.wait"
 		},
 		"182": {
 			"sourceFileName": "../pkg/platform/src/components/ssr-site.ts",
-			"qualifiedName": "__type.cloudFrontFunctions"
+			"qualifiedName": "__type.paths"
 		},
 		"183": {
 			"sourceFileName": "../pkg/platform/src/components/ssr-site.ts",
-			"qualifiedName": "__type.edgeFunctions"
+			"qualifiedName": "SsrSiteArgs.transform"
 		},
 		"184": {
 			"sourceFileName": "../pkg/platform/src/components/ssr-site.ts",
-			"qualifiedName": "__type.origins"
+			"qualifiedName": "__type"
 		},
 		"185": {
 			"sourceFileName": "../pkg/platform/src/components/ssr-site.ts",
-			"qualifiedName": "__type.edge"
+			"qualifiedName": "__type.plan"
 		},
 		"186": {
 			"sourceFileName": "../pkg/platform/src/components/ssr-site.ts",
-			"qualifiedName": "__type.behaviors"
+			"qualifiedName": "__type"
 		},
 		"187": {
 			"sourceFileName": "../pkg/platform/src/components/ssr-site.ts",
-			"qualifiedName": "__type"
+			"qualifiedName": "__type.cloudFrontFunctions"
 		},
 		"188": {
 			"sourceFileName": "../pkg/platform/src/components/ssr-site.ts",
-			"qualifiedName": "__type.cacheType"
+			"qualifiedName": "__type.edgeFunctions"
 		},
 		"189": {
 			"sourceFileName": "../pkg/platform/src/components/ssr-site.ts",
-			"qualifiedName": "__type.pattern"
+			"qualifiedName": "__type.origins"
 		},
 		"190": {
 			"sourceFileName": "../pkg/platform/src/components/ssr-site.ts",
-			"qualifiedName": "__type.origin"
+			"qualifiedName": "__type.edge"
 		},
 		"191": {
 			"sourceFileName": "../pkg/platform/src/components/ssr-site.ts",
-			"qualifiedName": "__type.allowedMethods"
+			"qualifiedName": "__type.behaviors"
 		},
 		"192": {
 			"sourceFileName": "../pkg/platform/src/components/ssr-site.ts",
-			"qualifiedName": "__type.cfFunction"
+			"qualifiedName": "__type"
 		},
 		"193": {
 			"sourceFileName": "../pkg/platform/src/components/ssr-site.ts",
-			"qualifiedName": "__type.edgeFunction"
+			"qualifiedName": "__type.cacheType"
 		},
 		"194": {
 			"sourceFileName": "../pkg/platform/src/components/ssr-site.ts",
-			"qualifiedName": "__type.errorResponses"
+			"qualifiedName": "__type.pattern"
 		},
 		"195": {
 			"sourceFileName": "../pkg/platform/src/components/ssr-site.ts",
-			"qualifiedName": "__type.serverCachePolicy"
+			"qualifiedName": "__type.origin"
 		},
 		"196": {
 			"sourceFileName": "../pkg/platform/src/components/ssr-site.ts",
-			"qualifiedName": "__type"
+			"qualifiedName": "__type.allowedMethods"
 		},
 		"197": {
 			"sourceFileName": "../pkg/platform/src/components/ssr-site.ts",
-			"qualifiedName": "__type.allowedHeaders"
+			"qualifiedName": "__type.cfFunction"
 		},
 		"198": {
 			"sourceFileName": "../pkg/platform/src/components/ssr-site.ts",
-			"qualifiedName": "__type.buildId"
+			"qualifiedName": "__type.edgeFunction"
 		},
 		"199": {
-			"sourceFileName": "../pkg/platform/src/components/nextjs.ts",
-			"qualifiedName": "Nextjs"
+			"sourceFileName": "../pkg/platform/src/components/ssr-site.ts",
+			"qualifiedName": "__type.errorResponses"
 		},
 		"200": {
-			"sourceFileName": "../pkg/platform/node_modules/@pulumi/pulumi/resource.d.ts",
-			"qualifiedName": "ComponentResource.isInstance"
+			"sourceFileName": "../pkg/platform/src/components/ssr-site.ts",
+			"qualifiedName": "__type.serverCachePolicy"
 		},
 		"201": {
-			"sourceFileName": "../pkg/platform/node_modules/@pulumi/pulumi/resource.d.ts",
-			"qualifiedName": "ComponentResource.isInstance"
+			"sourceFileName": "../pkg/platform/src/components/ssr-site.ts",
+			"qualifiedName": "__type"
 		},
 		"202": {
-			"sourceFileName": "../pkg/platform/node_modules/@pulumi/pulumi/resource.d.ts",
-			"qualifiedName": "obj"
+			"sourceFileName": "../pkg/platform/src/components/ssr-site.ts",
+			"qualifiedName": "__type.allowedHeaders"
 		},
 		"203": {
-			"sourceFileName": "../pkg/platform/src/components/nextjs.ts",
-			"qualifiedName": "Nextjs.__constructor"
+			"sourceFileName": "../pkg/platform/src/components/ssr-site.ts",
+			"qualifiedName": "__type.buildId"
 		},
 		"204": {
 			"sourceFileName": "../pkg/platform/src/components/nextjs.ts",
 			"qualifiedName": "Nextjs"
 		},
 		"205": {
-			"sourceFileName": "../pkg/platform/src/components/nextjs.ts",
-			"qualifiedName": "name"
+			"sourceFileName": "../pkg/platform/node_modules/@pulumi/pulumi/resource.d.ts",
+			"qualifiedName": "ComponentResource.isInstance"
 		},
 		"206": {
-			"sourceFileName": "../pkg/platform/src/components/nextjs.ts",
-			"qualifiedName": "args"
+			"sourceFileName": "../pkg/platform/node_modules/@pulumi/pulumi/resource.d.ts",
+			"qualifiedName": "ComponentResource.isInstance"
 		},
 		"207": {
-			"sourceFileName": "../pkg/platform/src/components/nextjs.ts",
-			"qualifiedName": "opts"
+			"sourceFileName": "../pkg/platform/node_modules/@pulumi/pulumi/resource.d.ts",
+			"qualifiedName": "obj"
 		},
 		"208": {
 			"sourceFileName": "../pkg/platform/src/components/nextjs.ts",
-			"qualifiedName": "Nextjs.doNotDeploy"
+			"qualifiedName": "Nextjs.__constructor"
 		},
 		"209": {
 			"sourceFileName": "../pkg/platform/src/components/nextjs.ts",
-			"qualifiedName": "Nextjs.edge"
+			"qualifiedName": "Nextjs"
 		},
 		"210": {
 			"sourceFileName": "../pkg/platform/src/components/nextjs.ts",
-			"qualifiedName": "Nextjs.cdn"
+			"qualifiedName": "name"
 		},
 		"211": {
 			"sourceFileName": "../pkg/platform/src/components/nextjs.ts",
-			"qualifiedName": "Nextjs.assets"
+			"qualifiedName": "args"
 		},
 		"212": {
 			"sourceFileName": "../pkg/platform/src/components/nextjs.ts",
-			"qualifiedName": "Nextjs.server"
+			"qualifiedName": "opts"
 		},
 		"213": {
 			"sourceFileName": "../pkg/platform/src/components/nextjs.ts",
-			"qualifiedName": "Nextjs.url"
+			"qualifiedName": "Nextjs.doNotDeploy"
 		},
 		"214": {
 			"sourceFileName": "../pkg/platform/src/components/nextjs.ts",
-			"qualifiedName": "Nextjs.url"
+			"qualifiedName": "Nextjs.edge"
 		},
 		"215": {
 			"sourceFileName": "../pkg/platform/src/components/nextjs.ts",
-			"qualifiedName": "Nextjs.domainUrl"
+			"qualifiedName": "Nextjs.cdn"
 		},
 		"216": {
 			"sourceFileName": "../pkg/platform/src/components/nextjs.ts",
-			"qualifiedName": "Nextjs.domainUrl"
+			"qualifiedName": "Nextjs.assets"
 		},
 		"217": {
 			"sourceFileName": "../pkg/platform/src/components/nextjs.ts",
-			"qualifiedName": "Nextjs.getSSTLink"
+			"qualifiedName": "Nextjs.server"
 		},
 		"218": {
 			"sourceFileName": "../pkg/platform/src/components/nextjs.ts",
-			"qualifiedName": "Nextjs.getSSTLink"
+			"qualifiedName": "Nextjs.url"
 		},
 		"219": {
 			"sourceFileName": "../pkg/platform/src/components/nextjs.ts",
-			"qualifiedName": "__object"
+			"qualifiedName": "Nextjs.url"
 		},
 		"220": {
 			"sourceFileName": "../pkg/platform/src/components/nextjs.ts",
-			"qualifiedName": "__object.type"
+			"qualifiedName": "Nextjs.domainUrl"
 		},
 		"221": {
 			"sourceFileName": "../pkg/platform/src/components/nextjs.ts",
-			"qualifiedName": "__object.value"
+			"qualifiedName": "Nextjs.domainUrl"
 		},
 		"222": {
 			"sourceFileName": "../pkg/platform/src/components/nextjs.ts",
-			"qualifiedName": "__object"
+			"qualifiedName": "Nextjs.getSSTLink"
 		},
 		"223": {
 			"sourceFileName": "../pkg/platform/src/components/nextjs.ts",
-			"qualifiedName": "__object.url"
+			"qualifiedName": "Nextjs.getSSTLink"
 		},
 		"224": {
-			"sourceFileName": "../pkg/platform/node_modules/@pulumi/pulumi/resource.d.ts",
-			"qualifiedName": "ComponentResource.initialize"
+			"sourceFileName": "../pkg/platform/src/components/nextjs.ts",
+			"qualifiedName": "__object"
 		},
 		"225": {
-			"sourceFileName": "../pkg/platform/node_modules/@pulumi/pulumi/resource.d.ts",
-			"qualifiedName": "ComponentResource.initialize"
+			"sourceFileName": "../pkg/platform/src/components/nextjs.ts",
+			"qualifiedName": "__object.type"
 		},
 		"226": {
-			"sourceFileName": "../pkg/platform/node_modules/@pulumi/pulumi/resource.d.ts",
-			"qualifiedName": "args"
+			"sourceFileName": "../pkg/platform/src/components/nextjs.ts",
+			"qualifiedName": "__object.value"
 		},
 		"227": {
-			"sourceFileName": "../pkg/platform/node_modules/@pulumi/pulumi/resource.d.ts",
-			"qualifiedName": "ComponentResource.getData"
+			"sourceFileName": "../pkg/platform/src/components/nextjs.ts",
+			"qualifiedName": "__object"
 		},
 		"228": {
-			"sourceFileName": "../pkg/platform/node_modules/@pulumi/pulumi/resource.d.ts",
-			"qualifiedName": "ComponentResource.getData"
+			"sourceFileName": "../pkg/platform/src/components/nextjs.ts",
+			"qualifiedName": "__object.url"
 		},
 		"229": {
 			"sourceFileName": "../pkg/platform/node_modules/@pulumi/pulumi/resource.d.ts",
-			"qualifiedName": "ComponentResource.registerOutputs"
+			"qualifiedName": "ComponentResource.initialize"
 		},
 		"230": {
 			"sourceFileName": "../pkg/platform/node_modules/@pulumi/pulumi/resource.d.ts",
-			"qualifiedName": "ComponentResource.registerOutputs"
+			"qualifiedName": "ComponentResource.initialize"
 		},
 		"231": {
 			"sourceFileName": "../pkg/platform/node_modules/@pulumi/pulumi/resource.d.ts",
-			"qualifiedName": "outputs"
+			"qualifiedName": "args"
 		},
 		"232": {
 			"sourceFileName": "../pkg/platform/node_modules/@pulumi/pulumi/resource.d.ts",
-			"qualifiedName": "Resource.urn"
+			"qualifiedName": "ComponentResource.getData"
 		},
 		"233": {
 			"sourceFileName": "../pkg/platform/node_modules/@pulumi/pulumi/resource.d.ts",
-			"qualifiedName": "Resource.getProvider"
+			"qualifiedName": "ComponentResource.getData"
 		},
 		"234": {
 			"sourceFileName": "../pkg/platform/node_modules/@pulumi/pulumi/resource.d.ts",
-			"qualifiedName": "Resource.getProvider"
+			"qualifiedName": "ComponentResource.registerOutputs"
 		},
 		"235": {
+			"sourceFileName": "../pkg/platform/node_modules/@pulumi/pulumi/resource.d.ts",
+			"qualifiedName": "ComponentResource.registerOutputs"
+		},
+		"236": {
+			"sourceFileName": "../pkg/platform/node_modules/@pulumi/pulumi/resource.d.ts",
+			"qualifiedName": "outputs"
+		},
+		"237": {
+			"sourceFileName": "../pkg/platform/node_modules/@pulumi/pulumi/resource.d.ts",
+			"qualifiedName": "Resource.urn"
+		},
+		"238": {
+			"sourceFileName": "../pkg/platform/node_modules/@pulumi/pulumi/resource.d.ts",
+			"qualifiedName": "Resource.getProvider"
+		},
+		"239": {
+			"sourceFileName": "../pkg/platform/node_modules/@pulumi/pulumi/resource.d.ts",
+			"qualifiedName": "Resource.getProvider"
+		},
+		"240": {
 			"sourceFileName": "../pkg/platform/node_modules/@pulumi/pulumi/resource.d.ts",
 			"qualifiedName": "moduleMember"
 		}

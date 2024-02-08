@@ -149,7 +149,7 @@ export class Cdn extends Component {
           {
             domain: domain.hostedZone ?? domain.domainName,
           },
-          { parent }
+          { parent },
         ).zoneId;
       });
     }
@@ -166,7 +166,7 @@ export class Cdn extends Component {
           alternativeNames: domain.aliases,
           zoneId,
         },
-        { parent, provider: useProvider("us-east-1") }
+        { parent, provider: useProvider("us-east-1") },
       );
     }
 
@@ -202,7 +202,7 @@ export class Cdn extends Component {
                 cloudfrontDefaultCertificate: true,
               },
         }),
-        { parent }
+        { parent },
       );
     }
 
@@ -229,7 +229,7 @@ export class Cdn extends Component {
                   },
                 ],
               },
-              { parent }
+              { parent },
             );
           }
         }
@@ -251,7 +251,7 @@ export class Cdn extends Component {
             sourceDomains: domain.redirects,
             targetDomain: domain.domainName,
           },
-          { parent }
+          { parent },
         );
       });
     }

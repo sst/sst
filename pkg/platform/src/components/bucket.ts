@@ -18,7 +18,7 @@ import { Link } from "./link";
 export interface BucketArgs {
   /**
    * Enable public access to the files in the bucket
-   * @default `false` - Files are not publicly accessible
+   * @default Files are not publicly accessible `false`
    * @example
    * ```js
    * {

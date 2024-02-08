@@ -1,0 +1,8 @@
+---
+interface Props {
+  type: "signature" | "parameters";
+}
+
+const { type } = Astro.props;
+---
+<section class={`tsdoc ${type}`}><slot /></section>

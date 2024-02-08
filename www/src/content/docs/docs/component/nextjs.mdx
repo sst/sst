@@ -1,0 +1,293 @@
+---
+title: Nextjs
+description: Reference doc for the `Nextjs` component
+---
+
+import Segment from '../../../../components/tsdoc/Segment.astro';
+import Section from '../../../../components/tsdoc/Section.astro';
+import InlineSection from '../../../../components/tsdoc/InlineSection.astro';
+
+The `Nextjs` component makes it easy to create a Next.js app.
+
+## Examples
+
+```js
+new Nextjs("Web", {
+  path: "my-next-app/",
+});
+```
+
+---
+
+## Constructor
+
+<Segment>
+<Section type="signature">
+```ts
+new Nextjs(name, args?, opts?)
+```
+</Section>
+
+<Section type="parameters">
+#### Parameters
+- <p><code class="key">name</code> <code class="primitive">string</code></p>
+- <p><code class="key">args</code> [<code class="type">NextjsArgs</code>](#nextjsargs)</p>
+- <p><code class="key">opts</code> [<code class="type">ComponentResourceOptions</code>](https://www.pulumi.com/docs/concepts/options/)</p>
+</Section>
+</Segment>
+
+## Properties
+
+<Segment>
+### domainUrl
+<InlineSection>
+**Type** <code class="primitive">undefined</code><code class="symbol"> | </code><code class="primitive">Output</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
+</InlineSection>
+If the custom domain is enabled, this is the URL of the website with the
+custom domain.
+</Segment>
+
+<Segment>
+### url
+<InlineSection>
+**Type** <code class="primitive">Output</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
+</InlineSection>
+The CloudFront URL of the website.
+</Segment>
+
+## NextjsArgs
+<Segment>
+### assets?
+
+<InlineSection>
+**Type** [<code class="type">Input</code>](#input)
+</InlineSection>
+</Segment>
+<Segment>
+### buildCommand?
+
+<InlineSection>
+**Type** [<code class="type">Input</code>](#input)
+</InlineSection>
+
+<InlineSection>
+**Default** `npm run build`
+</InlineSection>
+The command for building the website
+```js
+buildCommand: "yarn build",
+```
+</Segment>
+<Segment>
+### domain?
+
+<InlineSection>
+**Type** [<code class="type">Input</code>](#input)
+</InlineSection>
+The domain for this website. SST supports domains that are hosted
+either on [Route 53](https://aws.amazon.com/route53/) or externally.
+
+Note that you can also migrate externally hosted domains to Route 53 by
+[following this guide](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/MigratingDNS.html).
+```js
+domain: "domain.com",
+```
+
+```js
+domain: {
+  domainName: "domain.com",
+  redirects: ["www.domain.com"],
+  hostedZone: "domain.com"
+},
+```
+</Segment>
+<Segment>
+### edge?
+
+<InlineSection>
+**Type** <code class="primitive">boolean</code>
+</InlineSection>
+
+<InlineSection>
+**Default** ```ts
+false
+```
+</InlineSection>
+The server function is deployed to Lambda in a single region. Alternatively, you can enable this option to deploy to Lambda@Edge.
+</Segment>
+<Segment>
+### environment?
+
+<InlineSection>
+**Type** [<code class="type">Input</code>](#input)
+</InlineSection>
+An object with the key being the environment variable name.
+```js
+environment: {
+  API_URL: api.url,
+  USER_POOL_CLIENT: auth.cognitoUserPoolClient.userPoolClientId,
+},
+```
+</Segment>
+<Segment>
+### experimental?
+
+<InlineSection>
+**Type** <code class="type">Object</code>
+- <p><code class="key">disableDynamoDBCache</code> <code class="primitive">boolean</code></p>
+- <p><code class="key">disableIncrementalCache</code> <code class="primitive">boolean</code></p>
+- <p><code class="key">streaming</code> <code class="primitive">boolean</code></p>
+</InlineSection>
+</Segment>
+<Segment>
+### imageOptimization?
+
+<InlineSection>
+**Type** <code class="type">Object</code>
+- <p><code class="key">memory</code> <code class="primitive">number</code> MB<code class="symbol"> | </code><code class="primitive">number</code> GB</p>
+</InlineSection>
+</Segment>
+<Segment>
+### invalidation?
+
+<InlineSection>
+**Type** [<code class="type">Input</code>](#input)
+</InlineSection>
+</Segment>
+<Segment>
+### link?
+
+<InlineSection>
+**Type** [<code class="type">Input</code>](#input)
+</InlineSection>
+Link resources to the SSR function.
+This will grant the site permissions to access the linked resources at runtime.
+```js
+{
+  link: [myBucket, stripeKey],
+}
+```
+</Segment>
+<Segment>
+### logging?
+
+<InlineSection>
+**Type** <code class="primitive">combined</code><code class="symbol"> | </code><code class="primitive">per-route</code>
+</InlineSection>
+
+<InlineSection>
+**Default** ```ts
+"per-route"
+```
+</InlineSection>
+How the logs are stored in CloudWatch
+- "combined" - Logs from all routes are stored in the same log group.
+- "per-route" - Logs from each route are stored in a separate log group.
+```js
+logging: "combined",
+```
+</Segment>
+<Segment>
+### openNextVersion?
+
+<InlineSection>
+**Type** <code class="primitive">string</code>
+</InlineSection>
+
+<InlineSection>
+**Default** ```ts
+Latest OpenNext version
+```
+</InlineSection>
+OpenNext version for building the Next.js site.
+```js
+openNextVersion: "2.2.4",
+```
+</Segment>
+<Segment>
+### path?
+
+<InlineSection>
+**Type** [<code class="type">Input</code>](#input)
+</InlineSection>
+
+<InlineSection>
+**Default** ```ts
+"."
+```
+</InlineSection>
+Path to the directory where the app is located.
+</Segment>
+<Segment>
+### permissions?
+
+<InlineSection>
+**Type** [<code class="type">Input</code>](#input)
+</InlineSection>
+
+<InlineSection>
+**Default** ```ts
+No permissions
+```
+</InlineSection>
+Attaches the given list of permissions to the SSR function.
+```js
+permissions: [
+  {
+    actions: ["s3:*"],
+    resources: ["arn:aws:s3:::*"],
+  },
+]
+```
+</Segment>
+<Segment>
+### transform?
+
+<InlineSection>
+**Type** <code class="type">Object</code>
+- <p><code class="key">plan</code> <code class="type">Transform</code><code class="symbol">&lt;</code><code class="type">Object</code>
+- <p><code class="key">behaviors</code> <code class="type">Object</code>
+- <p><code class="key">allowedMethods</code> <code class="primitive">DELETE</code><code class="symbol"> | </code><code class="primitive">GET</code><code class="symbol"> | </code><code class="primitive">HEAD</code><code class="symbol"> | </code><code class="primitive">OPTIONS</code><code class="symbol"> | </code><code class="primitive">PATCH</code><code class="symbol"> | </code><code class="primitive">POST</code><code class="symbol"> | </code><code class="primitive">PUT</code>[]</p>
+- <p><code class="key">cacheType</code> <code class="primitive">server</code><code class="symbol"> | </code><code class="primitive">static</code></p>
+- <p><code class="key">cfFunction</code> <code class="primitive">string</code></p>
+- <p><code class="key">edgeFunction</code> <code class="primitive">string</code></p>
+- <p><code class="key">origin</code> <code class="primitive">string</code></p>
+- <p><code class="key">pattern</code> <code class="primitive">string</code></p>[]</p>
+- <p><code class="key">buildId</code> <code class="primitive">string</code></p>
+- <p><code class="key">cloudFrontFunctions</code> <code class="type">Record<<code class="primitive">string</code>, [<code class="type">CloudFrontFunctionConfig</code>](#cloudfrontfunctionconfig)></code></p>
+- <p><code class="key">edge</code> <code class="primitive">boolean</code></p>
+- <p><code class="key">edgeFunctions</code> <code class="type">Record<<code class="primitive">string</code>, [<code class="type">EdgeFunctionConfig</code>](#edgefunctionconfig)></code></p>
+- <p><code class="key">errorResponses</code> [<code class="type">DistributionCustomErrorResponse</code>](https://www.pulumi.com/registry/packages/aws/api-docs/s3/distributioncustomerrorresponse/)[]</p>
+- <p><code class="key">origins</code> <code class="type">Record<<code class="primitive">string</code>, [<code class="type">FunctionOriginConfig</code>](#functionoriginconfig)<code class="symbol"> | </code>[<code class="type">ImageOptimizationFunctionOriginConfig</code>](#imageoptimizationfunctionoriginconfig)<code class="symbol"> | </code>[<code class="type">S3OriginConfig</code>](#s3originconfig)<code class="symbol"> | </code>[<code class="type">OriginGroupConfig</code>](#origingroupconfig)></code></p>
+- <p><code class="key">serverCachePolicy</code> <code class="type">Object</code>
+- <p><code class="key">allowedHeaders</code> <code class="primitive">string</code>[]</p></p><code class="symbol">&gt;</code></p>
+</InlineSection>
+</Segment>
+<Segment>
+### typesPath?
+
+<InlineSection>
+**Type** [<code class="type">Input</code>](#input)
+</InlineSection>
+
+<InlineSection>
+**Default** ```ts
+"."
+```
+</InlineSection>
+Path relative to the app location where the type definitions are located.
+</Segment>
+<Segment>
+### warm?
+
+<InlineSection>
+**Type** [<code class="type">Input</code>](#input)
+</InlineSection>
+
+<InlineSection>
+**Default** ```ts
+Server function is not kept warm
+```
+</InlineSection>
+The number of server functions to keep warm. This option is only supported for the regional mode.
+</Segment>

@@ -3,9 +3,9 @@ title: Bucket
 description: Reference doc for the `Bucket` component
 ---
 
-import Segment from '../../../components/tsdoc/Segment.astro';
-import Section from '../../../components/tsdoc/Section.astro';
-import InlineSection from '../../../components/tsdoc/InlineSection.astro';
+import Segment from '../../../../components/tsdoc/Segment.astro';
+import Section from '../../../../components/tsdoc/Section.astro';
+import InlineSection from '../../../../components/tsdoc/InlineSection.astro';
 
 The `Bucket` component is a higher level component that makes it easy to create an AWS S3 Bucket.
 
@@ -38,7 +38,7 @@ new Bucket(name, args?, opts?)
 <Section type="parameters">
 #### Parameters
 - <p><code class="key">name</code> <code class="primitive">string</code></p>
-- <p><code class="key">args</code> [<code class="type">BucketArgs</code>](#BucketArgs)</p>
+- <p><code class="key">args</code> [<code class="type">BucketArgs</code>](#bucketargs)</p>
 - <p><code class="key">opts</code> [<code class="type">ComponentResourceOptions</code>](https://www.pulumi.com/docs/concepts/options/)</p>
 </Section>
 </Segment>
@@ -48,7 +48,7 @@ new Bucket(name, args?, opts?)
 <Segment>
 ### arn
 <InlineSection>
-**Type** <code class="type">Output<<code class="primitive">string</code>></code>
+**Type** <code class="primitive">Output</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
 </InlineSection>
 The S3 bucket arn.
 </Segment>
@@ -56,7 +56,7 @@ The S3 bucket arn.
 <Segment>
 ### name
 <InlineSection>
-**Type** <code class="type">Output<<code class="primitive">string</code>></code>
+**Type** <code class="primitive">Output</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
 </InlineSection>
 The S3 bucket name.
 </Segment>
@@ -77,11 +77,11 @@ Arguments for creating a `Bucket` component.
 ### public?
 
 <InlineSection>
-**Type** <code class="type">Input<<code class="primitive">boolean</code>></code>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">boolean</code><code class="symbol">&gt;</code>
 </InlineSection>
 
 <InlineSection>
-**Default** `false` - Files are not publicly accessible
+**Default** Files are not publicly accessible `false`
 </InlineSection>
 Enable public access to the files in the bucket
 ```js
@@ -95,7 +95,7 @@ Enable public access to the files in the bucket
 
 <InlineSection>
 **Type** <code class="type">Object</code>
-- <p><code class="key">bucket</code> <code class="type">Transform<[<code class="type">BucketV2Args</code>](https://www.pulumi.com/registry/packages/aws/api-docs/s3/bucketv2args/)></code></p>
-- <p><code class="key">bucketPolicy</code> <code class="type">Transform<[<code class="type">BucketPolicyArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/s3/bucketpolicyargs/)></code></p>
+- <p><code class="key">bucket</code> <code class="type">Transform</code><code class="symbol">&lt;</code>[<code class="type">BucketV2Args</code>](https://www.pulumi.com/registry/packages/aws/api-docs/s3/bucketv2args/)<code class="symbol">&gt;</code></p>
+- <p><code class="key">bucketPolicy</code> <code class="type">Transform</code><code class="symbol">&lt;</code>[<code class="type">BucketPolicyArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/s3/bucketpolicyargs/)<code class="symbol">&gt;</code></p>
 </InlineSection>
 </Segment>

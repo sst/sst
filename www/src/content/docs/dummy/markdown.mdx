@@ -1,0 +1,320 @@
+---
+title: Markdown
+description: A page to test all the markdown content test cases
+---
+
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
+
+The more data a web page transfers, the more energy resources it requires. In April 2023, the median web page required a user to download more than 2,000 KB according to data from the HTTP Archive.
+
+Starlight builds pages that are as lightweight as possible. For example, on a first visit, a user will download less than 50 KB of compressed data — just 2.5% of the HTTP archive median. With a good caching strategy, subsequent navigations can download as little as 10 KB.
+
+## Typography
+
+Once you've added a couple of features, SST can help you connect them together. This is great because you won't need to hardcode anything in your app.
+
+### Links
+
+Here are some [links](/), [link-b](/), and [a really really long link to look at](/).
+
+### Paragraph 1
+
+Series' creator Stephen Hillenburg first became fascinated with the ocean as a child and began developing his artistic abilities at a young age. Although these interests would not overlap for some time—the idea of drawing fish seemed boring to him—Hillenburg pursued both during college, majoring in marine biology and minoring in art. After graduating in 1984, he joined the Ocean Institute, an organization in Dana Point, California, dedicated to educating the public about marine science and maritime history.
+
+### Paragraph 2
+
+While Hillenburg was there, his love of the ocean began to influence his artistry. He created a precursor to SpongeBob SquarePants: a comic book titled The Intertidal Zone used by the institute to teach visiting students about the animal life of tide pools.
+
+Lorem Ipsum is a placeholder text commonly used in the design and printing industries. Despite its widespread use, the origins of Lorem Ipsum are somewhat mysterious. Several theories exist about who may have invented the text, but no one knows. Some people believe that the ancient Greeks or Romans created Lorem Ipsum, while others think a printer in the 16th century invented it. Regardless of who created Lorem Ipsum, it has become an essential tool for designers and typesetters worldwide.
+
+#### Sub Heading
+
+A large inspiration to Hillenburg was Ween's 1997 album The Mollusk, which had a nautical and underwater theme. Hillenburg contacted the band shortly after the album's release, explaining the baseline ideas for SpongeBob SquarePants, and also requested a song from the band, which they sent on Christmas Eve. This song was "Loop de Loop", which was used in the episode "Your Shoe's Untied".
+
+Lorem Ipsum is a placeholder text that designers and publishers often use to fill space until the content is ready. It has been used for centuries in the printing industry, and its origins can be traced back to the 16th century when a printer named Aldus Manutius created a type specimen book that included a passage of dummy text. The text was based on the works of Cicero, a Roman philosopher and orator, and it has been used ever since as a standard placeholder text. Despite its long history, the exact origins of Lorem Ipsum are still somewhat unclear.
+
+The text comprises words and phrases that have been scrambled and rearranged, making it appear as if it is real text without any actual meaning. It may not have any particular significance, but it does serve a useful purpose in helping designers to visualize how their designs will look with text in place.
+
+#### Sub Heading
+
+Derek Drymon, who served as creative director for the first three seasons, has said that Hillenburg wanted to surround himself with a "team of young and hungry people."
+
+## Colors
+
+The series features "sky flowers" as a main setting material.
+
+Text can be **bold**, _italic_, or ~~strikethrough~~.
+
+Line normal text color.
+
+<p style="color: var(--color-text-secondary)">Line secondary text color.</p>
+
+<p style="color: var(--color-text-dimmed)">Line dimmed text color.</p>
+
+Normal <span style="color: var(--color-text-secondary)">secondary</span> <span style="color: var(--color-text-dimmed)">dimmed</span>
+
+## Code
+
+Let's test some code.
+
+### Inline
+
+You can specify lines of code inline, `var a = "some variable name";`. And it can be a part of a paragraph as well.
+
+If `every` other `word` is `an` inline `code` block `what` does `that` do `for` us.
+
+Let's **`bold`** **some** words. Also add some links; a [`short`](/) and [`a long one`](/) and a [**`bold`**](/) one.
+
+### Line
+
+```js
+dateformat.i18n = require('./lang/' + l);
+```
+
+### Blocks
+
+```js
+// Javascript code with syntax highlighting.
+var fun = function lang(l) {
+  dateformat.i18n = require('./lang/' + l);
+  return true;
+};
+```
+
+### Frame
+
+Code blocks can be rendered inside a window-like frame.
+
+
+```js title="my-test-file.js"
+console.log('Hello World!');
+```
+
+#### Bash
+
+```bash title="Create a new project"
+npm create sst
+```
+
+#### Bash Without Title
+
+```bash
+npm create sst
+```
+
+### Code Markers
+
+#### Lines
+
+Mark entire lines & line ranges using the `{ }` marker.
+
+```js {2-3}
+function demo() {
+  // This line (#2) and the next one are highlighted
+  return 'This is line #3 of this snippet';
+}
+```
+
+#### Selections
+
+Mark selections of text using the `" "` marker or regular expressions.
+
+```js "Individual terms" /Even.*supported/
+// Individual terms can be highlighted, too
+function demo() {
+  return 'Even regular expressions are supported';
+}
+```
+
+#### Insert Deletes
+
+Mark text or lines as inserted or deleted with `ins` or `del`.
+
+```js "return true;" ins="inserted" del="deleted"
+function demo() {
+  console.log('These are inserted and deleted marker types');
+  // The return statement uses the default marker type
+  return true;
+}
+```
+
+#### Diffs
+
+Combine syntax highlighting with `diff`-like syntax.
+
+```diff lang="js"
+  function thisIsJavaScript() {
+    // This entire block gets highlighted as JavaScript,
+    // and we can still add diff markers to it!
+-   console.log('Old code to be removed')
++   console.log('New and shiny code!')
+  }
+```
+
+## Tabs
+
+You can display a tabbed interface using the `<Tabs>` and `<TabItem>` components. 
+
+<Tabs>
+  <TabItem label="Stars">Sirius, Vega, Betelgeuse</TabItem>
+  <TabItem label="Moons">Io, Europa, Ganymede</TabItem>
+</Tabs>
+
+### Code Blocks
+
+#### With Frame
+
+<Tabs>
+<TabItem label="npm">
+
+```sh
+npm create astro@latest -- --template starlight
+```
+
+</TabItem>
+<TabItem label="pnpm">
+
+```sh
+pnpm create astro --template starlight
+```
+
+</TabItem>
+<TabItem label="Yarn">
+
+```sh
+yarn create astro --template starlight
+```
+
+</TabItem>
+</Tabs>
+
+#### Without Frame
+
+<Tabs>
+<TabItem label="npm">
+
+```
+npm create astro@latest -- --template starlight
+```
+
+</TabItem>
+<TabItem label="pnpm">
+
+```
+pnpm create astro --template starlight
+```
+
+</TabItem>
+<TabItem label="Yarn">
+
+```
+yarn create astro --template starlight
+```
+
+</TabItem>
+</Tabs>
+
+## Lists
+
+### Ordered List
+
+1. First item
+   1. First sub item
+   2. Second sub item
+2. Second item
+3. Third item
+
+#### Paragraph
+
+1. The more data a web page transfers, the more energy resources it requires. In April 2023, the median web page required a user to download more than 2,000 KB according to data from the HTTP Archive.
+2. The more data a web page transfers, the more energy resources it requires. In April 2023, the median web page required a user to download more than 2,000 KB according to data from the HTTP Archive.
+3. The more data a web page transfers, the more energy resources it requires. In April 2023, the median web page required a user to download more than 2,000 KB according to data from the HTTP Archive.
+
+### Unordered List
+
+- First item
+  - First sub item
+  - Second sub item
+- Second item
+- Third item
+
+#### Paragraph
+
+- The more data a web page transfers, the more energy resources it requires. In April 2023, the median web page required a user to download more than 2,000 KB according to data from the HTTP Archive.
+- The more data a web page transfers, the more energy resources it requires. In April 2023, the median web page required a user to download more than 2,000 KB according to data from the HTTP Archive.
+- The more data a web page transfers, the more energy resources it requires. In April 2023, the median web page required a user to download more than 2,000 KB according to data from the HTTP Archive.
+
+## Dividers
+
+Use the `---` to add a divider. It inserts an `<hr>` tag.
+
+---
+
+## Table
+
+| Syntax | Description |
+| ----------- | ----------- |
+| Header | Title |
+| Paragraph | Text |
+| Link | URL |
+
+## Images
+
+![An illustration of planets and stars featuring the word “astro”](https://raw.githubusercontent.com/withastro/docs/main/public/default-og-image.png)
+
+## Headings
+
+You can structure content using a heading. Headings in Markdown are indicated by a number of `#` at the start of the line.
+
+### Heading 3
+
+This is heading 3.
+
+#### Heading 4
+
+This is heading 4.
+
+## Blockquotes
+
+> This is a blockquote, which is commonly used when quoting another person or document.
+>
+> Blockquotes are indicated by a `>` at the start of each line.
+
+## Asides
+
+:::note
+This is a note.
+:::
+
+:::tip
+This is a tip. By specifying the ZipFile property within the Code property, specify `index.function_name` as the handler.
+:::
+
+:::caution
+This is a caution.
+:::
+
+:::danger
+This is a danger.
+:::
+
+### Custom Asides
+
+:::tip[Did you know?]
+Astro helps you build faster websites with [“Islands Architecture”](https://docs.astro.build/en/concepts/islands/).
+:::
+
+## Extra
+
+## Sections
+
+## At The
+
+## Bottom
+
+## For The
+
+## Right Sidebar
+
+## Overflow

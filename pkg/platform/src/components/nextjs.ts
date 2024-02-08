@@ -4,6 +4,7 @@ import crypto from "crypto";
 import { globSync } from "glob";
 import {
   ComponentResourceOptions,
+  Input,
   Output,
   all,
   asset,
@@ -25,7 +26,7 @@ import {
 import { Cdn } from "./cdn.js";
 import { bootstrap } from "./helpers/aws/bootstrap.js";
 import { Bucket } from "./bucket.js";
-import { Component, transform } from "./component.js";
+import { Component, Prettify, transform } from "./component.js";
 import { sanitizeToPascalCase } from "./helpers/naming.js";
 import { Hint } from "./hint.js";
 import { Link } from "./link.js";
