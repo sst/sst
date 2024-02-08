@@ -16,11 +16,11 @@
     "@fontsource-variable/roboto-mono": "^5.0.17",
     "@fontsource-variable/rubik": "^5.0.20",
     "@fontsource/ibm-plex-mono": "^5.0.8",
-    "astro": "^3.2.3",
     "js-base64": "^3.7.6",
     "sharp": "^0.32.5"
   },
   "devDependencies": {
+    "@tsconfig/node20": "^20.1.2",
     "@types/node": "^20.10.5",
     "tsx": "^4.7.0",
     "typedoc": "0.25.7",
