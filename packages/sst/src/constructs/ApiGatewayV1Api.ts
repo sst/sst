@@ -608,7 +608,7 @@ export class ApiGatewayV1Api<
   public get url(): string {
     const app = this.node.root as App;
     return (
-      this.cdk.restApi.url ??
+      (this.cdk.restApi.deploymentStage && this.cdk.restApi.url) ??
       `https://${this.cdk.restApi.restApiId}.execute-api.${app.region}.amazonaws.com/${app.stage}/`
     );
   }

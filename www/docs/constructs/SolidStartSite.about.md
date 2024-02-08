@@ -90,7 +90,7 @@ The `SolidStartSite` construct is a higher level CDK construct that makes it eas
 5. Add the `SolidStartSite` construct to an existing stack in your SST app. You can also create a new stack for the app.
 
    ```ts
-   import { SolidStartSite, StackContext } as sst from "sst/constructs";
+   import { SolidStartSite, StackContext } from "sst/constructs";
 
    export default function MyStack({ stack }: StackContext) {
 

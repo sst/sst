@@ -95,7 +95,7 @@ new Api(stack, "Api", {
 Finally, you can configure the props of the underlying CDK construct that the `Api` construct uses.
 
 ```ts {4-11}
-import { HttpApi } from "@aws-cdk/aws-apigatewayv2-alpha";
+import { HttpApi } from "aws-cdk-lib/aws-apigatewayv2";
 
 new Api(stack, "Api", {
   cdk: {

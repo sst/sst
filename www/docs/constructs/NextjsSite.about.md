@@ -28,7 +28,7 @@ Here's how it works at a high level.
 2. This adds the `NextjsSite` construct to your stacks code.
 
    ```ts {8-10}
-   import { NextjsSite, StackContext } as sst from "sst/constructs";
+   import { NextjsSite, StackContext } from "sst/constructs";
 
    export default function MyStack({ stack }: StackContext) {
 
@@ -290,7 +290,7 @@ To enable sourcemaps, make sure you are not disabling [`per-route` logging](#log
 
 ```diff title="next.config.js"
 const nextConfig = {
-+ webpack: (config) => {
++ webpack: (config, options) => {
 +   if (!options.dev) {
 +     config.devtool = "source-map";
 +   }
@@ -482,6 +482,35 @@ new NextjsSite(stack, "Site", {
 ```
 
 ### Advanced examples
+
+#### Configuring basic auth
+
+The following example demonstrates how to inject code for Basic Authentication validation into CloudFront functions.
+
+```js
+new NextjsSite(stack, "Site", {
+  path: "my-next-app/",
+  cdk: {
+    transform: (plan) => {
+      const username = "admin";
+      const password = "P@ssw0rd!";
+      plan.cloudFrontFunctions.serverCfFunction.injections.push(`
+        var authHeaders = request.headers.authorization;
+        if (!authHeaders || authHeaders.value !== "Basic ${Buffer.from(${username}:${password}).toString('base64')
+      }"}) {
+          statusCode: 401,
+          statusDescription: "Unauthorized",
+          headers: {
+            "www-authenticate": { value: 'Basic realm="Secure Area"' }
+          }
+        }
+      `);
+    },
+  },
+});
+```
+
+Ensure that the username and password variables are set to your desired credentials. This script will intercept incoming requests and check for a valid Basic Authentication header. If the header is missing or incorrect, the response will be a 401 Unauthorized status with a prompt for authentication.
 
 #### Configuring VPC
 

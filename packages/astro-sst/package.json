@@ -1,7 +1,7 @@
 {
   "name": "astro-sst",
   "description": "Adapter that allows Astro to deploy your site to AWS utilizing SST.",
-  "version": "2.39.2",
+  "version": "2.40.2",
   "type": "module",
   "license": "MIT",
   "author": {
@@ -56,6 +56,6 @@
   "devDependencies": {
     "@types/aws-lambda": "^8.10.130",
     "@types/set-cookie-parser": "^2.4.7",
-    "astro": "^4.0.2"
+    "astro": "^4.2.6"
   }
 }

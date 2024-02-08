@@ -1,6 +1,6 @@
 {
   "name": "solid-start-sst",
-  "version": "2.39.2",
+  "version": "2.40.2",
   "description": "Adapter for Solid apps to work on AWS Lambda and AWS Lambda@Edge.",
   "main": "./index.mjs",
   "types": "./index.d.ts",

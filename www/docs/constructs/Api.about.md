@@ -269,7 +269,7 @@ new Api(stack, "Api", {
 You can configure a route to pass the entire request to an AWS service. [Read more about supported AWS services](https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-develop-integrations-aws-services-reference.html).
 
 ```js
-import { HttpIntegrationSubtype, ParameterMapping, MappingValue } from "@aws-cdk/aws-apigatewayv2-alpha";
+import { HttpIntegrationSubtype, ParameterMapping, MappingValue } from "aws-cdk-lib/aws-apigatewayv2";
 
 new Api(stack, "Api", {
   routes: {
@@ -367,7 +367,7 @@ new Api(stack, "PostsApi", {
 #### Importing an existing API Gateway custom domain
 
 ```js {6-12}
-import { DomainName } from "@aws-cdk/aws-apigatewayv2-alpha";
+import { DomainName } from "aws-cdk-lib/aws-apigatewayv2";
 
 new Api(stack, "Api", {
   customDomain: {
@@ -909,7 +909,7 @@ new Api(stack, "Api", {
 Override the internally created CDK `HttpApi` instance.
 
 ```js {4-8}
-import { HttpApi } from "@aws-cdk/aws-apigatewayv2-alpha";
+import { HttpApi } from "aws-cdk-lib/aws-apigatewayv2";
 
 new Api(stack, "Api", {
   cdk: {
