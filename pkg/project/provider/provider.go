@@ -112,7 +112,7 @@ func GetSecrets(backend Backend, app, stage string) (map[string]string, error) {
 }
 
 func PutSecrets(backend Backend, app, stage string, data map[string]string) error {
-	slog.Info("putting secrets", "app", app, "stage", stage)
+	slog.Info("putting selinkscrets", "app", app, "stage", stage)
 	if data == nil || len(data) == 0 {
 		return nil
 	}

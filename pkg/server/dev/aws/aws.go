@@ -191,6 +191,7 @@ func Start(
 				builds[functionID] = build
 			}
 			worker, _ := runtime.Run(ctx, &runtime.RunInput{
+				Project:    p,
 				WorkerID:   workerID,
 				Runtime:    warp.Runtime,
 				FunctionID: functionID,

@@ -29,10 +29,20 @@ export const bootstrap = {
     }
 
     const ssm = new SSMClient({
+      // credentials: {
+      //   accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
+      //   sessionToken: process.env.AWS_SESSION_TOKEN!,
+      //   secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
+      // },
       region,
     });
     const s3 = new S3Client({
       region,
+      // credentials: {
+      //   accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
+      //   sessionToken: process.env.AWS_SESSION_TOKEN!,
+      //   secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
+      // },
     });
     try {
       const bucket = (async () => {

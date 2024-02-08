@@ -39,6 +39,7 @@ type BuildOutput struct {
 }
 
 type RunInput struct {
+	Project    *project.Project
 	FunctionID string
 	WorkerID   string
 	Runtime    string
