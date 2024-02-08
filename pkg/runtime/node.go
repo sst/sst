@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	esbuild "github.com/evanw/esbuild/pkg/api"
+	"github.com/sst/ion/internal/fs"
 )
 
 type NodeRuntime struct {
@@ -129,6 +130,12 @@ func (r *NodeRuntime) Build(ctx context.Context, input *BuildInput) (*BuildOutpu
 	for _, warning := range result.Warnings {
 		slog.Error("esbuild error", "error", warning)
 	}
+
+	nodeModules, err := fs.FindUp(file, "node_modules")
+	if err == nil {
+		os.Symlink(nodeModules, filepath.Join(input.Out(), "node_modules"))
+	}
+
 	return &BuildOutput{
 		Handler: input.Handler,
 	}, nil
