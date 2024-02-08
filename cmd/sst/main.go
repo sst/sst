@@ -339,6 +339,8 @@ func main() {
 									)
 								}
 							}
+
+							u.Event(&event)
 						},
 					})
 

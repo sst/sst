@@ -62,6 +62,7 @@ func GetRuntime(input string) (Runtime, bool) {
 
 func Build(ctx context.Context, input *BuildInput) (*BuildOutput, error) {
 	slog.Info("building function", "runtime", input.Runtime, "functionID", input.FunctionID)
+	defer slog.Info("function built", "runtime", input.Runtime, "functionID", input.FunctionID)
 	runtime, ok := GetRuntime(input.Runtime)
 	if !ok {
 		return nil, fmt.Errorf("Runtime not found: %v", input.Runtime)

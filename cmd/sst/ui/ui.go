@@ -11,6 +11,7 @@ import (
 	"github.com/fatih/color"
 	"github.com/pulumi/pulumi/sdk/v3/go/common/apitype"
 	"github.com/sst/ion/pkg/project"
+	"github.com/sst/ion/pkg/server"
 )
 
 type ProgressMode string
@@ -307,6 +308,29 @@ func (u *UI) Trigger(evt *project.StackEvent) {
 			}
 			color.New(color.FgWhite).Println(status.Message)
 		}
+	}
+}
+
+func (u *UI) Event(evt *server.Event) {
+
+	if evt.FunctionInvokedEvent != nil {
+		if u.spinner.Enabled() {
+			u.spinner.Disable()
+			defer u.spinner.Enable()
+		}
+		color.New(color.FgMagenta, color.Bold).Print("|  ")
+		color.New(color.FgHiBlack).Print(fmt.Sprintf("%-11s", evt.FunctionInvokedEvent.FunctionID), " ", "Invoked")
+		fmt.Println()
+	}
+
+	if evt.FunctionResponseEvent != nil {
+		if u.spinner.Enabled() {
+			u.spinner.Disable()
+			defer u.spinner.Enable()
+		}
+		color.New(color.FgGreen, color.Bold).Print("|  ")
+		color.New(color.FgHiBlack).Print(fmt.Sprintf("%-11s", evt.FunctionResponseEvent.FunctionID), " ", "Success")
+		fmt.Println()
 	}
 }
 

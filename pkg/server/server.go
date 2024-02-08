@@ -35,7 +35,9 @@ type State struct {
 
 type Event struct {
 	project.StackEvent
-	StateEvent *StateEvent
+	StateEvent            *StateEvent
+	FunctionInvokedEvent  *aws.FunctionInvokedEvent
+	FunctionResponseEvent *aws.FunctionResponseEvent
 }
 
 type StateEvent struct {
@@ -82,8 +84,6 @@ func (s *Server) Start(parentContext context.Context) error {
 	ctx, cancel := context.WithCancel(parentContext)
 	defer cancel()
 
-	// warps := project.Warps{}
-
 	mux := http.NewServeMux()
 
 	var count int64
@@ -109,6 +109,16 @@ func (s *Server) Start(parentContext context.Context) error {
 			},
 		})
 		publish(s.lastEvent)
+		bus.Subscribe(ctx, func(event *aws.FunctionInvokedEvent) {
+			publish(&Event{
+				FunctionInvokedEvent: event,
+			})
+		})
+		bus.Subscribe(ctx, func(event *aws.FunctionResponseEvent) {
+			publish(&Event{
+				FunctionResponseEvent: event,
+			})
+		})
 		bus.Subscribe(ctx, func(event *project.StackEvent) {
 			publish(&Event{
 				StackEvent: *event,

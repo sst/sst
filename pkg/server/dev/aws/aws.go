@@ -35,6 +35,16 @@ type fragment struct {
 	Data  string `json:"data"`
 }
 
+type FunctionInvokedEvent struct {
+	FunctionID string
+	WorkerID   string
+}
+
+type FunctionResponseEvent struct {
+	FunctionID string
+	WorkerID   string
+}
+
 func Start(
 	ctx context.Context,
 	mux *http.ServeMux,
@@ -145,7 +155,9 @@ func Start(
 	initChan := make(chan MQTT.Message, 1000)
 	shutdownChan := make(chan MQTT.Message, 1000)
 	fileChan := make(chan *watcher.FileChangedEvent, 1000)
-	workerShutdown := make(chan *WorkerInfo, 1000)
+	workerShutdownChan := make(chan *WorkerInfo, 1000)
+	workerInvokedChan := make(chan string, 1000)
+	workerResponseChan := make(chan string, 1000)
 
 	bus.Subscribe(ctx, func(event *project.StackEvent) {
 		if event.CompleteEvent != nil {
@@ -205,7 +217,7 @@ func Start(
 			}
 			go func() {
 				worker.Done()
-				workerShutdown <- info
+				workerShutdownChan <- info
 			}()
 			workers[workerID] = info
 		}
@@ -214,7 +226,19 @@ func Start(
 			select {
 			case <-ctx.Done():
 				return
-			case info := <-workerShutdown:
+			case workerID := <-workerInvokedChan:
+				info := workers[workerID]
+				bus.Publish(&FunctionInvokedEvent{
+					FunctionID: info.FunctionID,
+					WorkerID:   info.WorkerID,
+				})
+			case workerID := <-workerResponseChan:
+				info := workers[workerID]
+				bus.Publish(&FunctionResponseEvent{
+					FunctionID: info.FunctionID,
+					WorkerID:   info.WorkerID,
+				})
+			case info := <-workerShutdownChan:
 				slog.Info("worker died", "workerID", info.WorkerID)
 				existing, ok := workers[info.WorkerID]
 				if !ok {
@@ -333,6 +357,12 @@ func Start(
 			_, err = io.Copy(conn, read)
 			if err != nil {
 				fmt.Println("Error writing to the connection:", err)
+			}
+			if path[len(path)-1] == "next" {
+				workerInvokedChan <- workerID
+			}
+			if path[len(path)-1] == "response" {
+				workerResponseChan <- workerID
 			}
 			done <- struct{}{}
 		}()

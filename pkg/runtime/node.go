@@ -77,7 +77,6 @@ func (r *NodeRuntime) Build(ctx context.Context, input *BuildInput) (*BuildOutpu
 		return nil, err
 	}
 	target := filepath.Join(input.Out(), strings.ReplaceAll(rel, filepath.Ext(rel), extension))
-	slog.Info("building", "from", file, "to", target)
 
 	options := esbuild.BuildOptions{
 		EntryPoints: []string{file},
