@@ -13,7 +13,9 @@ var configDir = (func() string {
 	if err != nil {
 		panic(err)
 	}
-	return filepath.Join(home, "sst")
+	result := filepath.Join(home, "sst")
+	os.Setenv("PATH", os.Getenv("PATH")+":"+result+"/bin")
+	return result
 }())
 
 func ConfigDir() string {
@@ -77,4 +79,19 @@ func InstallPulumi() error {
 	cmd := `curl -fsSL https://get.pulumi.com | sh`
 	_, err := exec.Command("bash", "-c", cmd).CombinedOutput()
 	return err
+}
+
+func NeedsBun() bool {
+	_, err := exec.LookPath("bun")
+	if err != nil {
+		return true
+	}
+	return false
+}
+
+func InstallBun() error {
+	slog.Info("installing bun")
+	cmd := exec.Command("bash", "-c", `curl -fsSL https://bun.sh/install | bash`)
+	cmd.Env = append(os.Environ(), "BUN_INSTALL="+configDir)
+	return cmd.Run()
 }

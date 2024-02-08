@@ -15,7 +15,7 @@ func CheckDeps(version, cfgPath string) bool {
 		return false
 	}
 	slog.Info("checking dependencies")
-	contents, err := os.ReadFile(filepath.Join(ResolveWorkingDir(cfgPath), "version"))
+	contents, err := os.ReadFile(filepath.Join(ResolvePlatformDir(cfgPath), "version"))
 	if err != nil {
 		return false
 	}
@@ -31,17 +31,15 @@ func InstallDeps(version, cfgPath string) error {
 		return err
 	}
 
-	if version == "dev" {
+	if version == "dev" && false {
 		slog.Info("dev mode skipping node_module install")
 		return nil
 	}
 
 	os.RemoveAll(filepath.Join(platformDir, "node_modules"))
 
-	cmd := exec.Command("npm", "install", "--omit=dev")
+	cmd := exec.Command("bun", "install")
 	cmd.Dir = platformDir
-	// cmd.Stderr = os.Stderr
-	// cmd.Stdout = os.Stdout
 
 	err = cmd.Run()
 	if err != nil {

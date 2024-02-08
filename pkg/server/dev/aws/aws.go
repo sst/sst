@@ -35,6 +35,16 @@ type fragment struct {
 	Data  string `json:"data"`
 }
 
+type FunctionInvokedEvent struct {
+	FunctionID string
+	WorkerID   string
+}
+
+type FunctionResponseEvent struct {
+	FunctionID string
+	WorkerID   string
+}
+
 func Start(
 	ctx context.Context,
 	mux *http.ServeMux,
@@ -136,6 +146,7 @@ func Start(
 
 	type WorkerInfo struct {
 		FunctionID string
+		WorkerID   string
 		Worker     runtime.Worker
 		Env        []string
 	}
@@ -144,6 +155,9 @@ func Start(
 	initChan := make(chan MQTT.Message, 1000)
 	shutdownChan := make(chan MQTT.Message, 1000)
 	fileChan := make(chan *watcher.FileChangedEvent, 1000)
+	workerShutdownChan := make(chan *WorkerInfo, 1000)
+	workerInvokedChan := make(chan string, 1000)
+	workerResponseChan := make(chan string, 1000)
 
 	bus.Subscribe(ctx, func(event *project.StackEvent) {
 		if event.CompleteEvent != nil {
@@ -189,22 +203,52 @@ func Start(
 				builds[functionID] = build
 			}
 			worker, _ := runtime.Run(ctx, &runtime.RunInput{
+				Project:    p,
 				WorkerID:   workerID,
 				Runtime:    warp.Runtime,
 				FunctionID: functionID,
 				Build:      build,
 				Env:        workerEnv[workerID],
 			})
-			workers[workerID] = &WorkerInfo{
+			info := &WorkerInfo{
 				FunctionID: functionID,
 				Worker:     worker,
+				WorkerID:   workerID,
 			}
+			go func() {
+				worker.Done()
+				workerShutdownChan <- info
+			}()
+			workers[workerID] = info
 		}
 
 		for {
 			select {
 			case <-ctx.Done():
 				return
+			case workerID := <-workerInvokedChan:
+				info := workers[workerID]
+				bus.Publish(&FunctionInvokedEvent{
+					FunctionID: info.FunctionID,
+					WorkerID:   info.WorkerID,
+				})
+			case workerID := <-workerResponseChan:
+				info := workers[workerID]
+				bus.Publish(&FunctionResponseEvent{
+					FunctionID: info.FunctionID,
+					WorkerID:   info.WorkerID,
+				})
+			case info := <-workerShutdownChan:
+				slog.Info("worker died", "workerID", info.WorkerID)
+				existing, ok := workers[info.WorkerID]
+				if !ok {
+					continue
+				}
+				// only delete if a new worker hasn't already been started
+				if existing == info {
+					delete(workers, info.WorkerID)
+				}
+				break
 			case complete = <-completeChan:
 				break
 			case m := <-initChan:
@@ -313,6 +357,12 @@ func Start(
 			_, err = io.Copy(conn, read)
 			if err != nil {
 				fmt.Println("Error writing to the connection:", err)
+			}
+			if path[len(path)-1] == "next" {
+				workerInvokedChan <- workerID
+			}
+			if path[len(path)-1] == "response" {
+				workerResponseChan <- workerID
 			}
 			done <- struct{}{}
 		}()

@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	esbuild "github.com/evanw/esbuild/pkg/api"
+	"github.com/sst/ion/internal/fs"
 )
 
 type NodeRuntime struct {
@@ -31,6 +32,9 @@ type NodeWorker struct {
 
 func (w *NodeWorker) Stop() {
 	w.cmd.Process.Signal(os.Interrupt)
+}
+
+func (w *NodeWorker) Done() {
 	w.cmd.Wait()
 }
 
@@ -73,7 +77,6 @@ func (r *NodeRuntime) Build(ctx context.Context, input *BuildInput) (*BuildOutpu
 		return nil, err
 	}
 	target := filepath.Join(input.Out(), strings.ReplaceAll(rel, filepath.Ext(rel), extension))
-	slog.Info("building", "from", file, "to", target)
 
 	options := esbuild.BuildOptions{
 		EntryPoints: []string{file},
@@ -129,14 +132,30 @@ func (r *NodeRuntime) Build(ctx context.Context, input *BuildInput) (*BuildOutpu
 	for _, warning := range result.Warnings {
 		slog.Error("esbuild error", "error", warning)
 	}
+
+	nodeModules, err := fs.FindUp(file, "node_modules")
+	if err == nil {
+		os.Symlink(nodeModules, filepath.Join(input.Out(), "node_modules"))
+	}
+
 	return &BuildOutput{
 		Handler: input.Handler,
 	}, nil
 }
 
 func (r *NodeRuntime) Run(ctx context.Context, input *RunInput) (Worker, error) {
-	cmd := exec.CommandContext(ctx, "node", ".sst/platform/dist/nodejs-runtime/index.js", filepath.Join(input.Build.Out, input.Build.Handler), input.WorkerID)
+	cmd := exec.CommandContext(
+		ctx,
+		"node",
+		filepath.Join(
+			input.Project.PathPlatformDir(),
+			"/dist/nodejs-runtime/index.js",
+		),
+		filepath.Join(input.Build.Out, input.Build.Handler),
+		input.WorkerID,
+	)
 	cmd.Env = append(input.Env, "AWS_LAMBDA_RUNTIME_API=localhost:44149/lambda/"+input.WorkerID)
+	cmd.Dir = input.Build.Out
 	cmd.Start()
 	return &NodeWorker{
 		cmd,
