@@ -3,6 +3,7 @@ package runtime
 import (
 	"context"
 	"fmt"
+	"io"
 	"log/slog"
 	"os"
 	"path/filepath"
@@ -19,7 +20,7 @@ type Runtime interface {
 
 type Worker interface {
 	Stop()
-	Done()
+	Logs() io.ReadCloser
 }
 
 type BuildInput struct {

@@ -1,6 +1,7 @@
 package aws
 
 import (
+	"bufio"
 	"context"
 	"crypto/rand"
 	"crypto/tls"
@@ -48,6 +49,12 @@ type FunctionResponseEvent struct {
 type FunctionBuildEvent struct {
 	FunctionID string
 	Errors     []string
+}
+
+type FunctionLogEvent struct {
+	FunctionID string
+	WorkerID   string
+	Line       string
 }
 
 func Start(
@@ -228,7 +235,16 @@ func Start(
 				WorkerID:   workerID,
 			}
 			go func() {
-				worker.Done()
+				logs := worker.Logs()
+				scanner := bufio.NewScanner(logs)
+				for scanner.Scan() {
+					line := scanner.Text()
+					bus.Publish(&FunctionLogEvent{
+						FunctionID: functionID,
+						WorkerID:   workerID,
+						Line:       line,
+					})
+				}
 				workerShutdownChan <- info
 			}()
 			workers[workerID] = info

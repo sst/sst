@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"log/slog"
 	"os"
 	"os/exec"
@@ -27,15 +28,28 @@ func newNodeRuntime() *NodeRuntime {
 }
 
 type NodeWorker struct {
-	cmd *exec.Cmd
+	stdout io.ReadCloser
+	stderr io.ReadCloser
+	cmd    *exec.Cmd
 }
 
 func (w *NodeWorker) Stop() {
 	w.cmd.Process.Signal(os.Interrupt)
 }
 
-func (w *NodeWorker) Done() {
-	w.cmd.Wait()
+func (w *NodeWorker) Logs() io.ReadCloser {
+	reader, writer := io.Pipe()
+
+	go func() {
+		defer writer.Close()
+		_, _ = io.Copy(writer, w.stdout)
+	}()
+	go func() {
+		defer writer.Close()
+		_, _ = io.Copy(writer, w.stderr)
+	}()
+
+	return reader
 }
 
 type NodeProperties struct {
@@ -161,8 +175,12 @@ func (r *NodeRuntime) Run(ctx context.Context, input *RunInput) (Worker, error) 
 	)
 	cmd.Env = append(input.Env, "AWS_LAMBDA_RUNTIME_API=localhost:44149/lambda/"+input.WorkerID)
 	cmd.Dir = input.Build.Out
+	stdout, _ := cmd.StdoutPipe()
+	stderr, _ := cmd.StderrPipe()
 	cmd.Start()
 	return &NodeWorker{
+		stdout,
+		stderr,
 		cmd,
 	}, nil
 }

@@ -32,12 +32,16 @@ type UI struct {
 	timing      map[string]time.Time
 	hints       map[string]string
 	footer      string
+	colors      map[string]color.Attribute
+	workerTime  map[string]time.Time
 }
 
 func New(mode ProgressMode) *UI {
 	result := &UI{
-		spinner: spinner.New(spinner.CharSets[14], 100*time.Millisecond),
-		mode:    mode,
+		spinner:    spinner.New(spinner.CharSets[14], 100*time.Millisecond),
+		mode:       mode,
+		colors:     map[string]color.Attribute{},
+		workerTime: map[string]time.Time{},
 	}
 	result.Reset()
 	return result
@@ -311,27 +315,49 @@ func (u *UI) Trigger(evt *project.StackEvent) {
 	}
 }
 
-func (u *UI) Event(evt *server.Event) {
+var COLORS = []color.Attribute{
+	color.FgMagenta,
+	color.FgCyan,
+	color.FgGreen,
+	color.FgWhite,
+}
 
+func (u *UI) getColor(input string) color.Attribute {
+	result, ok := u.colors[input]
+	if !ok {
+		result = COLORS[len(u.colors)%len(COLORS)]
+		u.colors[input] = result
+	}
+	return result
+}
+
+func (u *UI) Event(evt *server.Event) {
 	if evt.FunctionInvokedEvent != nil {
-		if u.spinner.Enabled() {
-			u.spinner.Disable()
-			defer u.spinner.Enable()
-		}
-		color.New(color.FgMagenta, color.Bold).Print("|  ")
-		color.New(color.FgHiBlack).Print(fmt.Sprintf("%-11s", evt.FunctionInvokedEvent.FunctionID), " ", "Invoked")
-		fmt.Println()
+		u.workerTime[evt.FunctionInvokedEvent.WorkerID] = time.Now()
+		u.printEvent(u.getColor(evt.FunctionInvokedEvent.WorkerID), color.New(color.FgWhite, color.Bold).Sprintf("%-11s", "Invoked"), evt.FunctionInvokedEvent.FunctionID)
 	}
 
 	if evt.FunctionResponseEvent != nil {
-		if u.spinner.Enabled() {
-			u.spinner.Disable()
-			defer u.spinner.Enable()
-		}
-		color.New(color.FgGreen, color.Bold).Print("|  ")
-		color.New(color.FgHiBlack).Print(fmt.Sprintf("%-11s", evt.FunctionResponseEvent.FunctionID), " ", "Success")
-		fmt.Println()
+		duration := time.Since(u.workerTime[evt.FunctionResponseEvent.WorkerID]).Round(time.Millisecond)
+		formattedDuration := fmt.Sprintf("took %.9s", fmt.Sprintf("+%v", duration))
+		u.printEvent(u.getColor(evt.FunctionResponseEvent.WorkerID), "Done", formattedDuration)
 	}
+
+	if evt.FunctionLogEvent != nil {
+		duration := time.Since(u.workerTime[evt.FunctionLogEvent.WorkerID]).Round(time.Millisecond)
+		formattedDuration := fmt.Sprintf("%.9s", fmt.Sprintf("+%v", duration))
+		u.printEvent(u.getColor(evt.FunctionLogEvent.WorkerID), formattedDuration, evt.FunctionLogEvent.Line)
+	}
+}
+
+func (u *UI) printEvent(barColor color.Attribute, label string, message string) {
+	if u.spinner.Active() {
+		u.spinner.Disable()
+		defer u.spinner.Enable()
+	}
+	color.New(barColor, color.Bold).Print("|  ")
+	color.New(color.FgHiBlack).Print(fmt.Sprintf("%-11s", label), " ", message)
+	fmt.Println()
 }
 
 func (u *UI) Interrupt() {

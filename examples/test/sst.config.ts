@@ -20,8 +20,6 @@ export default $config({
       },
     });
 
-    const bucket: aws.s3.Bucket = new aws.s3.Bucket("MyBucket");
-
     return {
       url: fn.url,
     };
