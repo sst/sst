@@ -45,6 +45,11 @@ type FunctionResponseEvent struct {
 	WorkerID   string
 }
 
+type FunctionBuildEvent struct {
+	FunctionID string
+	Errors     []string
+}
+
 func Start(
 	ctx context.Context,
 	mux *http.ServeMux,
@@ -191,7 +196,7 @@ func Start(
 		workerEnv := map[string][]string{}
 		builds := map[string]*runtime.BuildOutput{}
 
-		run := func(functionID string, workerID string) {
+		run := func(functionID string, workerID string) bool {
 			build := builds[functionID]
 			warp := complete.Warps[functionID]
 			if build == nil {
@@ -200,6 +205,13 @@ func Start(
 					Project:        p,
 					Dev:            true,
 				})
+				bus.Publish(&FunctionBuildEvent{
+					Errors: build.Errors,
+				})
+				if len(build.Errors) > 0 {
+					delete(builds, functionID)
+					return false
+				}
 				builds[functionID] = build
 			}
 			worker, _ := runtime.Run(ctx, &runtime.RunInput{
@@ -220,6 +232,8 @@ func Start(
 				workerShutdownChan <- info
 			}()
 			workers[workerID] = info
+
+			return true
 		}
 
 		for {
@@ -267,7 +281,13 @@ func Start(
 					continue
 				}
 				workerEnv[workerID] = payload.Env
-				run(payload.FunctionID, workerID)
+				if ok := run(payload.FunctionID, workerID); !ok {
+					result, _ := http.Post("http://localhost:44149/lambda/"+workerID+"/runtime/init/error", "application/json", strings.NewReader(`{"errorMessage":"Function failed to build"}`))
+					defer result.Body.Close()
+					body, _ := io.ReadAll(result.Body)
+					slog.Info("error", "body", string(body))
+
+				}
 				break
 
 			case m := <-shutdownChan:

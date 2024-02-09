@@ -125,6 +125,10 @@ func (r *NodeRuntime) Build(ctx context.Context, input *BuildInput) (*BuildOutpu
 
 	result := buildContext.Rebuild()
 	r.results[input.FunctionID] = result
+	errors := []string{}
+	for _, error := range result.Errors {
+		errors = append(errors, error.Text)
+	}
 
 	for _, error := range result.Errors {
 		slog.Error("esbuild error", "error", error)
@@ -140,6 +144,7 @@ func (r *NodeRuntime) Build(ctx context.Context, input *BuildInput) (*BuildOutpu
 
 	return &BuildOutput{
 		Handler: input.Handler,
+		Errors:  errors,
 	}, nil
 }
 

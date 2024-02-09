@@ -1,14 +1,13 @@
-/// <reference path="./.sst/platform/src/global.d.ts" />
+/// <reference path="./.sst/platform/config.d.ts" />
 
 export default $config({
-  app(input) {
+  app() {
     return {
       name: "test",
       removalPolicy: "remove",
       providers: {
-        aws: {
-          profile: "sst-dev",
-        },
+        aws: {},
+        cloudflare: {},
       },
     };
   },
@@ -17,7 +16,7 @@ export default $config({
       url: true,
       handler: "./src/index.handler",
       environment: {
-        HELLO: "why",
+        HELLO: "NICE",
       },
     });
 

@@ -1,6 +1,9 @@
 export async function handler() {
   return {
     statusCode: 200,
-    body: "why",
+    headers: {
+      "Content-Type": "text/plain",
+    },
+    body: "Hello",
   };
 }
