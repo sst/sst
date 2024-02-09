@@ -34,6 +34,7 @@ type UI struct {
 	footer      string
 	colors      map[string]color.Attribute
 	workerTime  map[string]time.Time
+	complete    *project.CompleteEvent
 }
 
 func New(mode ProgressMode) *UI {
@@ -264,6 +265,7 @@ func (u *UI) Trigger(evt *project.StackEvent) {
 	}
 
 	if evt.CompleteEvent != nil {
+		u.complete = evt.CompleteEvent
 		u.spinner.Disable()
 		defer fmt.Println()
 		if u.hasProgress {
@@ -331,10 +333,22 @@ func (u *UI) getColor(input string) color.Attribute {
 	return result
 }
 
+func (u *UI) getFunction(input string) string {
+	if u.complete == nil {
+		return input
+	}
+	for _, resource := range u.complete.Resources {
+		if resource.Type == "sst:sst:Function" && resource.URN.Name() == input {
+			return resource.Outputs["_metadata"].(map[string]interface{})["handler"].(string)
+		}
+	}
+	return ""
+}
+
 func (u *UI) Event(evt *server.Event) {
 	if evt.FunctionInvokedEvent != nil {
 		u.workerTime[evt.FunctionInvokedEvent.WorkerID] = time.Now()
-		u.printEvent(u.getColor(evt.FunctionInvokedEvent.WorkerID), color.New(color.FgWhite, color.Bold).Sprintf("%-11s", "Invoked"), evt.FunctionInvokedEvent.FunctionID)
+		u.printEvent(u.getColor(evt.FunctionInvokedEvent.WorkerID), color.New(color.FgWhite, color.Bold).Sprintf("%-11s", "Invoked"), u.getFunction(evt.FunctionInvokedEvent.FunctionID))
 	}
 
 	if evt.FunctionResponseEvent != nil {

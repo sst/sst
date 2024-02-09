@@ -15,6 +15,7 @@ import (
 	"github.com/pulumi/pulumi/sdk/v3/go/auto/optdestroy"
 	"github.com/pulumi/pulumi/sdk/v3/go/auto/optrefresh"
 	"github.com/pulumi/pulumi/sdk/v3/go/auto/optup"
+	"github.com/pulumi/pulumi/sdk/v3/go/common/apitype"
 	"github.com/pulumi/pulumi/sdk/v3/go/common/tokens"
 	"github.com/pulumi/pulumi/sdk/v3/go/common/workspace"
 	"github.com/sst/ion/pkg/global"
@@ -64,12 +65,13 @@ type WarpDefinition struct {
 type Warps map[string]WarpDefinition
 
 type CompleteEvent struct {
-	Links    Links
-	Warps    Warps
-	Outputs  map[string]interface{}
-	Hints    map[string]string
-	Errors   []Error
-	Finished bool
+	Links     Links
+	Warps     Warps
+	Outputs   map[string]interface{}
+	Hints     map[string]string
+	Errors    []Error
+	Finished  bool
+	Resources []apitype.ResourceV3
 }
 
 type Error struct {
@@ -295,11 +297,14 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 		slog.Info("stack command complete")
 		defer input.OnEvent(&StackEvent{CompleteEvent: complete})
 
-		outputs, _ := stack.Outputs(ctx)
-
+		rawDeploment, _ := stack.Export(ctx)
+		var deployment apitype.DeploymentV3
+		json.Unmarshal(rawDeploment.Deployment, &deployment)
+		outputs := deployment.Resources[0].Outputs
+		complete.Resources = deployment.Resources
 		linksOutput, ok := outputs["_links"]
 		if ok {
-			links := linksOutput.Value.(map[string]interface{})
+			links := linksOutput.(map[string]interface{})
 			for key, value := range links {
 				complete.Links[key] = value
 			}
@@ -315,7 +320,7 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 
 		hintsOutput, ok := outputs["_hints"]
 		if ok {
-			hints := hintsOutput.Value.(map[string]interface{})
+			hints := hintsOutput.(map[string]interface{})
 			for key, value := range hints {
 				str, ok := value.(string)
 				if ok {
@@ -327,7 +332,7 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 
 		warpsOutput, ok := outputs["_warps"]
 		if ok {
-			warps := warpsOutput.Value.(map[string]interface{})
+			warps := warpsOutput.(map[string]interface{})
 			for key, value := range warps {
 				data, _ := json.Marshal(value)
 				var definition WarpDefinition
@@ -339,7 +344,7 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 		delete(outputs, "_receivers")
 
 		for key, value := range outputs {
-			complete.Outputs[key] = value.Value
+			complete.Outputs[key] = value
 		}
 	}()
 
