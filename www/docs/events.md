@@ -50,7 +50,7 @@ const bus = new EventBus(stack, "bus", {
 ```
 
 :::info
-This configuration will retry all subscriber errors up to 10 times (with exponential backoff). You can also configure this on a per susbcriber basis.
+This configuration will retry all subscriber errors up to 10 times (with exponential backoff). You can also configure this on a per subscriber basis.
 :::
 
 The template also creates an `event.ts` which creates an `event` function that can be used to define events.
