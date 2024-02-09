@@ -15,10 +15,10 @@ import {
 } from "./ssr-site.js";
 import { Cdn } from "./cdn.js";
 import { Bucket } from "./bucket.js";
-import { Component, transform } from "./component.js";
-import { Hint } from "./hint.js";
-import { getStringifiedRouteTree } from "./util/astroRouteCompressor.js";
-import { Link } from "./link.js";
+import { Component, transform } from "./../component.js";
+import { Hint } from "./../hint.js";
+import { getStringifiedRouteTree } from "./helpers/astroRouteCompressor.js";
+import { Link } from "../link.js";
 
 export interface AstroArgs extends SsrSiteArgs {}
 

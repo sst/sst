@@ -26,14 +26,14 @@ pulumi.runtime.setMocks(
   },
   "project",
   "stack",
-  false // Sets the flag `dryRun`, which indicates if pulumi is running in preview mode.
+  false, // Sets the flag `dryRun`, which indicates if pulumi is running in preview mode.
 );
 
 describe("Bucket", function () {
-  let Bucket: typeof import("./../../src/components/bucket").Bucket;
+  let Bucket: typeof import("./../../src/components/aws/bucket").Bucket;
 
   beforeAll(async function () {
-    Bucket = (await import("./../../src/components/bucket")).Bucket;
+    Bucket = (await import("./../../src/components/aws/bucket")).Bucket;
   });
 
   describe("#constructor", () => {

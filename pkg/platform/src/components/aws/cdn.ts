@@ -8,9 +8,9 @@ import {
 import * as aws from "@pulumi/aws";
 import { DnsValidatedCertificate } from "./dns-validated-certificate.js";
 import { HttpsRedirect } from "./https-redirect.js";
-import { useProvider } from "./helpers/aws/provider.js";
-import { Component, Transform, transform } from "./component.js";
-import { sanitizeToPascalCase } from "./helpers/naming.js";
+import { useProvider } from "./helpers/provider.js";
+import { Component, Transform, transform } from "../component.js";
+import { sanitizeToPascalCase } from "../naming.js";
 import { HostedZoneLookup } from "./providers/hosted-zone-lookup.js";
 
 export interface CdnDomainArgs {

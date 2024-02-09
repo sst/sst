@@ -3,18 +3,15 @@ package project
 import (
 	"encoding/json"
 	"io"
+	"log/slog"
 	"os"
 	"os/exec"
 	"path/filepath"
 )
 
 func (p *Project) Install() error {
+	slog.Info("installing deps")
 	err := p.writePackageJson()
-	if err != nil {
-		return err
-	}
-
-	err = p.writeTypes()
 	if err != nil {
 		return err
 	}
@@ -24,10 +21,16 @@ func (p *Project) Install() error {
 		return err
 	}
 
+	err = p.writeTypes()
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
 func (p *Project) writePackageJson() error {
+	slog.Info("writing package.json")
 	packageJsonPath := filepath.Join(p.PathPlatformDir(), "package.json")
 	packageJson, err := os.OpenFile(packageJsonPath, os.O_RDWR|os.O_CREATE, 0644)
 	if err != nil {
@@ -50,7 +53,7 @@ func (p *Project) writePackageJson() error {
 	for name, config := range p.app.Providers {
 		version := config["version"]
 		if version == "" {
-			version = "*"
+			version = "latest"
 		}
 		dependencies["@pulumi/"+name] = version
 	}
@@ -75,6 +78,7 @@ func (p *Project) writePackageJson() error {
 }
 
 func (p *Project) writeTypes() error {
+	slog.Info("writing types")
 	typesPath := filepath.Join(p.PathPlatformDir(), "config.d.ts")
 	file, err := os.OpenFile(typesPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
 	if err != nil {
@@ -86,13 +90,14 @@ func (p *Project) writeTypes() error {
 	file.WriteString("\n\n")
 
 	for name := range p.app.Providers {
-		file.WriteString(`import { _` + name + ` } from "@pulumi/` + name + `";` + "\n")
+		file.WriteString(`import _` + name + ` from "@pulumi/` + name + `";` + "\n")
 	}
 
 	file.WriteString("\n\n")
 
 	file.WriteString(`declare global {` + "\n")
 	for name := range p.app.Providers {
+		file.WriteString(`  // @ts-expect-error` + "\n")
 		file.WriteString(`  export import ` + name + ` = _` + name + "\n")
 	}
 	file.WriteString(`}` + "\n")
@@ -101,6 +106,7 @@ func (p *Project) writeTypes() error {
 }
 
 func (p *Project) fetchDeps() error {
+	slog.Info("fetching deps")
 	cmd := exec.Command("bun", "install")
 	cmd.Dir = p.PathPlatformDir()
 

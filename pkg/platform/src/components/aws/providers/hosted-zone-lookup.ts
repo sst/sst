@@ -4,7 +4,7 @@ import {
   ListHostedZonesCommand,
   ListHostedZonesCommandOutput,
 } from "@aws-sdk/client-route-53";
-import { useClient } from "../helpers/aws/client.js";
+import { useClient } from "../helpers/client.js";
 
 export interface HostedZoneLookupInputs {
   domain: Input<string>;
@@ -23,7 +23,7 @@ class Provider implements dynamic.ResourceProvider {
   async update(
     id: string,
     olds: Inputs,
-    news: Inputs
+    news: Inputs,
   ): Promise<dynamic.UpdateResult> {
     const zoneId = await this.lookup(news.domain);
     return { outs: { zoneId } };
@@ -37,7 +37,7 @@ class Provider implements dynamic.ResourceProvider {
     let nextMarker: string | undefined;
     do {
       const res = await client.send(
-        new ListHostedZonesCommand({ Marker: nextMarker })
+        new ListHostedZonesCommand({ Marker: nextMarker }),
       );
       zones.push(...(res.HostedZones || []));
       nextMarker = res.NextMarker;
@@ -66,13 +66,13 @@ export class HostedZoneLookup extends dynamic.Resource {
   constructor(
     name: string,
     args: HostedZoneLookupInputs,
-    opts?: CustomResourceOptions
+    opts?: CustomResourceOptions,
   ) {
     super(
       new Provider(),
       `${name}.sst.HostedZoneLookup`,
       { ...args, zoneId: undefined },
-      opts
+      opts,
     );
   }
 }

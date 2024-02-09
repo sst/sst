@@ -4,7 +4,7 @@ import {
   CreateInvalidationCommand,
   waitUntilInvalidationCompleted,
 } from "@aws-sdk/client-cloudfront";
-import { useClient } from "../helpers/aws/client.js";
+import { useClient } from "../helpers/client.js";
 
 // CloudFront allows you to specify up to 3,000 paths in a single invalidation
 // https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/cloudfront-limits.html#limits-invalidations
@@ -34,7 +34,7 @@ class Provider implements dynamic.ResourceProvider {
   async update(
     id: string,
     olds: Inputs,
-    news: Inputs
+    news: Inputs,
   ): Promise<dynamic.UpdateResult> {
     await this.handle(news);
     return { outs: {} };
@@ -64,7 +64,7 @@ class Provider implements dynamic.ResourceProvider {
 
     const stepsCount: number = Math.max(
       Math.ceil(pathsFile.length / FILE_LIMIT),
-      Math.ceil(pathsWildcard.length / WILDCARD_LIMIT)
+      Math.ceil(pathsWildcard.length / WILDCARD_LIMIT),
     );
 
     const invalidationIds: string[] = [];
@@ -74,7 +74,7 @@ class Provider implements dynamic.ResourceProvider {
         ...pathsWildcard.slice(i * WILDCARD_LIMIT, (i + 1) * WILDCARD_LIMIT),
       ];
       invalidationIds.push(
-        await this.invalidateChunk(client, distributionId, stepPaths)
+        await this.invalidateChunk(client, distributionId, stepPaths),
       );
     }
     return invalidationIds;
@@ -83,7 +83,7 @@ class Provider implements dynamic.ResourceProvider {
   async invalidateChunk(
     client: CloudFrontClient,
     distributionId: string,
-    paths: string[]
+    paths: string[],
   ) {
     const result = await client.send(
       new CreateInvalidationCommand({
@@ -95,7 +95,7 @@ class Provider implements dynamic.ResourceProvider {
             Items: paths,
           },
         },
-      })
+      }),
     );
     const invalidationId = result.Invalidation?.Id;
 
@@ -109,7 +109,7 @@ class Provider implements dynamic.ResourceProvider {
   async waitForInvalidation(
     client: CloudFrontClient,
     inputs: Inputs,
-    invalidationIds: string[]
+    invalidationIds: string[],
   ) {
     const { distributionId } = inputs;
     for (const invalidationId of invalidationIds) {
@@ -122,7 +122,7 @@ class Provider implements dynamic.ResourceProvider {
           {
             DistributionId: distributionId,
             Id: invalidationId,
-          }
+          },
         );
       } catch (e) {
         // supress errors
@@ -136,7 +136,7 @@ export class DistributionInvalidation extends dynamic.Resource {
   constructor(
     name: string,
     args: DistributionInvalidationInputs,
-    opts?: CustomResourceOptions
+    opts?: CustomResourceOptions,
   ) {
     super(
       new Provider(),
@@ -151,7 +151,7 @@ export class DistributionInvalidation extends dynamic.Resource {
           args.version ||
           Date.now().toString(16) + Math.random().toString(16).slice(2),
       },
-      opts
+      opts,
     );
   }
 }

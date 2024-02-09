@@ -2,9 +2,9 @@ import { ComponentResourceOptions, Input, all, output } from "@pulumi/pulumi";
 import * as aws from "@pulumi/aws";
 import { DnsValidatedCertificate } from "./dns-validated-certificate.js";
 import { Bucket } from "./bucket.js";
-import { Component } from "./component.js";
-import { sanitizeToPascalCase } from "./helpers/naming.js";
-import { useProvider } from "./helpers/aws/provider.js";
+import { Component } from "../component.js";
+import { sanitizeToPascalCase } from "../naming.js";
+import { useProvider } from "./helpers/provider.js";
 
 /**
  * Properties to configure an HTTPS Redirect
@@ -45,7 +45,7 @@ export class HttpsRedirect extends Component {
   constructor(
     name: string,
     args: HttpsRedirectArgs,
-    opts?: ComponentResourceOptions
+    opts?: ComponentResourceOptions,
   ) {
     super("sst:sst:HttpsRedirect", name, args, opts);
 
@@ -56,11 +56,11 @@ export class HttpsRedirect extends Component {
       {
         domainName: output(args.sourceDomains).apply((domains) => domains[0]),
         alternativeNames: output(args.sourceDomains).apply((domains) =>
-          domains.slice(1)
+          domains.slice(1),
         ),
         zoneId: args.zoneId,
       },
-      { parent, provider: useProvider("us-east-1") }
+      { parent, provider: useProvider("us-east-1") },
     );
 
     const bucket = new Bucket(`${name}Bucket`, {}, { parent });
@@ -74,7 +74,7 @@ export class HttpsRedirect extends Component {
           protocol: "https",
         },
       },
-      { parent }
+      { parent },
     );
 
     const distribution = new aws.cloudfront.Distribution(
@@ -90,7 +90,7 @@ export class HttpsRedirect extends Component {
         },
         comment: all([args.targetDomain, args.sourceDomains]).apply(
           ([targetDomain, sourceDomains]) =>
-            `Redirect to ${targetDomain} from ${sourceDomains.join(", ")}`
+            `Redirect to ${targetDomain} from ${sourceDomains.join(", ")}`,
         ),
         priceClass: "PriceClass_All",
         viewerCertificate: {
@@ -120,7 +120,7 @@ export class HttpsRedirect extends Component {
           },
         ],
       },
-      { parent }
+      { parent },
     );
 
     output(args.sourceDomains).apply((sourceDomains) => {
@@ -140,7 +140,7 @@ export class HttpsRedirect extends Component {
                 },
               ],
             },
-            { parent }
+            { parent },
           );
         }
       }

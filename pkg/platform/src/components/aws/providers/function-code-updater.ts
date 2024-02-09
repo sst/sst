@@ -3,7 +3,7 @@ import {
   LambdaClient,
   UpdateFunctionCodeCommand,
 } from "@aws-sdk/client-lambda";
-import { useClient } from "../helpers/aws/client.js";
+import { useClient } from "../helpers/client.js";
 
 export interface FunctionCodeUpdaterInputs {
   s3Bucket: Input<string>;
@@ -40,7 +40,7 @@ class Provider implements dynamic.ResourceProvider {
         FunctionName: inputs.functionName,
         S3Bucket: inputs.s3Bucket,
         S3Key: inputs.s3Key,
-      })
+      }),
     );
     return { id: inputs.functionName, outs: {} };
   }
@@ -48,7 +48,7 @@ class Provider implements dynamic.ResourceProvider {
   async update(
     id: string,
     olds: Inputs,
-    news: Inputs
+    news: Inputs,
   ): Promise<dynamic.UpdateResult> {
     const client = useClient(LambdaClient, {
       region: news.region,
@@ -62,7 +62,7 @@ class Provider implements dynamic.ResourceProvider {
         FunctionName: news.functionName,
         S3Bucket: news.s3Bucket,
         S3Key: news.s3Key,
-      })
+      }),
     );
     return { outs: {} };
   }
@@ -72,7 +72,7 @@ export class FunctionCodeUpdater extends dynamic.Resource {
   constructor(
     name: string,
     args: FunctionCodeUpdaterInputs,
-    opts?: CustomResourceOptions
+    opts?: CustomResourceOptions,
   ) {
     super(new Provider(), `${name}.sst.FunctionCodeUpdater`, args, opts);
   }

@@ -5,7 +5,7 @@ import {
   interpolate,
   output,
 } from "@pulumi/pulumi";
-import { prefixName } from "./helpers/naming.js";
+import { prefixName } from "./naming.js";
 
 /**
  * Helper type to inline nested types

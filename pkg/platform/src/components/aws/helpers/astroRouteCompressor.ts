@@ -29,7 +29,7 @@ function buildRouteTree(routes: BuildMetaConfig["routes"], level = 0) {
       tree.branches[routeParts[level]].nodes.push(route);
       return tree;
     },
-    { branches: {}, nodes: [] }
+    { branches: {}, nodes: [] },
   );
 
   for (const [key, branch] of Object.entries(routeTree.branches)) {

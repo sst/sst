@@ -4,7 +4,6 @@ import crypto from "crypto";
 import { globSync } from "glob";
 import {
   ComponentResourceOptions,
-  Input,
   Output,
   all,
   asset,
@@ -12,7 +11,7 @@ import {
   output,
 } from "@pulumi/pulumi";
 import * as aws from "@pulumi/aws";
-import { Size, toMBs } from "./util/size.js";
+import { Size, toMBs } from "../size.js";
 import { Function } from "./function.js";
 import {
   SsrSiteArgs,
@@ -24,12 +23,12 @@ import {
   validatePlan,
 } from "./ssr-site.js";
 import { Cdn } from "./cdn.js";
-import { bootstrap } from "./helpers/aws/bootstrap.js";
+import { bootstrap } from "./helpers/bootstrap.js";
 import { Bucket } from "./bucket.js";
-import { Component, Prettify, transform } from "./component.js";
-import { sanitizeToPascalCase } from "./helpers/naming.js";
-import { Hint } from "./hint.js";
-import { Link } from "./link.js";
+import { Component, transform } from "../component.js";
+import { sanitizeToPascalCase } from "../naming.js";
+import { Hint } from "../hint.js";
+import { Link } from "../link.js";
 
 const LAYER_VERSION = "2";
 const DEFAULT_OPEN_NEXT_VERSION = "2.3.1";

@@ -14,16 +14,16 @@ import {
   jsonStringify,
 } from "@pulumi/pulumi";
 import * as aws from "@pulumi/aws";
-import { build } from "../runtime/node.js";
+import { build } from "../../runtime/node.js";
 import { FunctionCodeUpdater } from "./providers/function-code-updater.js";
-import { bootstrap } from "./helpers/aws/bootstrap.js";
+import { bootstrap } from "./helpers/bootstrap.js";
 import { LogGroup } from "./providers/log-group.js";
-import { Duration, toSeconds } from "./util/duration.js";
-import { Size, toMBs } from "./util/size.js";
-import { Component, Transform, transform } from "./component.js";
-import { Link } from "./link.js";
-import { VisibleError } from "./error.js";
-import { Warp } from "./warp.js";
+import { Duration, toSeconds } from "../duration.js";
+import { Size, toMBs } from "../size.js";
+import { Component, Transform, transform } from "../component.js";
+import { Link } from "../link.js";
+import { VisibleError } from "../error.js";
+import { Warp } from "../warp.js";
 
 const RETENTION = {
   "1 day": 1,

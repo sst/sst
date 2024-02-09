@@ -4,13 +4,12 @@ import {
   output,
   interpolate,
   jsonStringify,
-  Output,
 } from "@pulumi/pulumi";
 import * as aws from "@pulumi/aws";
 import { RandomId } from "@pulumi/random";
-import { prefixName, hashNumberToString } from "./helpers/naming";
-import { Component, Transform, transform } from "./component";
-import { Link } from "./link";
+import { prefixName, hashNumberToString } from "../naming";
+import { Component, Transform, transform } from "../component";
+import { Link } from "../link";
 
 /**
  * Arguments for creating a `Bucket` component.

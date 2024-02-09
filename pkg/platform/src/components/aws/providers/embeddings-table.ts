@@ -3,7 +3,7 @@ import {
   RDSDataClient,
   ExecuteStatementCommand,
 } from "@aws-sdk/client-rds-data";
-import { useClient } from "../helpers/aws/client.js";
+import { useClient } from "../helpers/client.js";
 
 export interface PostgresTableInputs {
   clusterArn: Input<string>;
@@ -38,7 +38,7 @@ class Provider implements dynamic.ResourceProvider {
   async update(
     id: string,
     olds: Inputs,
-    news: Inputs
+    news: Inputs,
   ): Promise<dynamic.UpdateResult> {
     await this.createDatabase(news);
     await this.enablePgvectorExtension(news);
@@ -62,7 +62,7 @@ class Provider implements dynamic.ResourceProvider {
           resourceArn: inputs.clusterArn,
           secretArn: inputs.secretArn,
           sql: `create database ${inputs.databaseName}`,
-        })
+        }),
       );
     } catch (error: any) {
       // ERROR: database "playground_frank" already exists; SQLState: 42P04
@@ -80,7 +80,7 @@ class Provider implements dynamic.ResourceProvider {
           secretArn: inputs.secretArn,
           database: inputs.databaseName,
           sql: `create extension vector;`,
-        })
+        }),
       );
     } catch (error: any) {
       // ERROR: extension "vector" already exists; SQLState: 42710
@@ -98,7 +98,7 @@ class Provider implements dynamic.ResourceProvider {
           secretArn: inputs.secretArn,
           database: inputs.databaseName,
           sql: `create extension pg_trgm;`,
-        })
+        }),
       );
     } catch (error: any) {
       // ERROR: extension "vector" already exists; SQLState: 42710
@@ -120,7 +120,7 @@ class Provider implements dynamic.ResourceProvider {
             embedding vector(${inputs.vectorSize}),
             metadata jsonb
           );`,
-        })
+        }),
       );
     } catch (error: any) {
       // ERROR: relation "embeddings" already exists; SQLState: 42P07
@@ -136,7 +136,7 @@ class Provider implements dynamic.ResourceProvider {
         secretArn: inputs.secretArn,
         database: inputs.databaseName,
         sql: `drop table if exists ${inputs.tableName};`,
-      })
+      }),
     );
   }
 
@@ -148,7 +148,7 @@ class Provider implements dynamic.ResourceProvider {
           secretArn: inputs.secretArn,
           database: inputs.databaseName,
           sql: `create index on ${inputs.tableName} using hnsw (embedding vector_cosine_ops);`,
-        })
+        }),
       );
     } catch (error: any) {
       // ERROR: relation "embeddings" already exists; SQLState: 42P07
@@ -165,7 +165,7 @@ class Provider implements dynamic.ResourceProvider {
           secretArn: inputs.secretArn,
           database: inputs.databaseName,
           sql: `create index on ${inputs.tableName} using gin (metadata);`,
-        })
+        }),
       );
     } catch (error: any) {
       // ERROR: relation "embeddings" already exists; SQLState: 42P07
@@ -179,7 +179,7 @@ export class EmbeddingsTable extends dynamic.Resource {
   constructor(
     name: string,
     args: PostgresTableInputs,
-    opts?: CustomResourceOptions
+    opts?: CustomResourceOptions,
   ) {
     super(new Provider(), `${name}.sst.EmbeddingsTable`, args, opts);
   }

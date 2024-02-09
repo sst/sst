@@ -8,10 +8,10 @@ import {
   jsonStringify,
 } from "@pulumi/pulumi";
 import type { Loader, BuildOptions } from "esbuild";
-import { build } from "../runtime/cloudflare.js";
-import { Component } from "./component";
+import { build } from "../../runtime/cloudflare.js";
+import { Component } from "../component";
 import { WorkersDevUrl } from "./providers/workers-dev-url";
-import { Link } from "./link.js";
+import { Link } from "../link.js";
 
 export interface WorkerNodeJSArgs {
   /**
@@ -154,7 +154,7 @@ export class Worker extends Component {
         const user = new aws.iam.User(
           `${name}AwsUser`,
           { forceDestroy: true },
-          { parent }
+          { parent },
         );
 
         new aws.iam.UserPolicy(
@@ -169,13 +169,13 @@ export class Worker extends Component {
               })),
             }),
           },
-          { parent }
+          { parent },
         );
 
         const keys = new aws.iam.AccessKey(
           `${name}AwsCredentials`,
           { user: user.name },
-          { parent }
+          { parent },
         );
 
         return keys;
@@ -190,7 +190,7 @@ export class Worker extends Component {
             throw new Error(result.errors.join("\n"));
           }
           return result;
-        }
+        },
       );
       return buildResult.handler;
     }
@@ -224,8 +224,8 @@ export class Worker extends Component {
                   ]
                 : [],
             },
-            { parent }
-          )
+            { parent },
+          ),
       );
     }
 
@@ -237,14 +237,14 @@ export class Worker extends Component {
           scriptName: script.name,
           enabled: devUrlEnabled,
         },
-        { parent }
+        { parent },
       );
     }
   }
 
   public get devUrl() {
     return this.workersDevUrl.url.apply((url) =>
-      url ? `https://${url}` : url
+      url ? `https://${url}` : url,
     );
   }
 

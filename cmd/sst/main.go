@@ -233,6 +233,13 @@ func main() {
 						return err
 					}
 
+					if !p.CheckPlatform(version) {
+						err := p.InstallPlatform(version)
+						if err != nil {
+							return err
+						}
+					}
+
 					err = p.Install()
 					if err != nil {
 						return err

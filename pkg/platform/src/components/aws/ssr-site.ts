@@ -4,6 +4,7 @@ import { globSync } from "glob";
 import crypto from "crypto";
 import { execSync } from "child_process";
 import {
+  Input,
   Output,
   Unwrap,
   output,
@@ -15,15 +16,14 @@ import {
 import * as aws from "@pulumi/aws";
 import { Cdn, CdnDomainArgs } from "./cdn.js";
 import { Function, FunctionArgs, FunctionPermissionArgs } from "./function.js";
-import { Duration, toSeconds } from "./util/duration.js";
+import { Duration, toSeconds } from "../duration.js";
 import { DistributionInvalidation } from "./providers/distribution-invalidation.js";
-import { useProvider } from "./helpers/aws/provider.js";
+import { useProvider } from "./helpers/provider.js";
 import { Bucket } from "./bucket.js";
 import { BucketFile, BucketFiles } from "./providers/bucket-files.js";
-import { sanitizeToPascalCase } from "./helpers/naming.js";
-import { Link } from "./link.js";
-import type { Prettify, Transform } from "./component.js";
-import type { Input } from "./input.js";
+import { sanitizeToPascalCase } from "../naming.js";
+import { Link } from "../link.js";
+import { Transform } from "../component.js";
 
 type CloudFrontFunctionConfig = { injections: string[] };
 type EdgeFunctionConfig = { function: Unwrap<FunctionArgs> };
@@ -53,6 +53,10 @@ type OriginGroupConfig = {
   fallbackOriginName: string;
   fallbackStatusCodes: number[];
 };
+
+type Prettify<T> = {
+  [K in keyof T]: T[K];
+} & {};
 
 export type Plan = ReturnType<typeof validatePlan>;
 export interface SsrSiteFileOptions {
@@ -242,7 +246,7 @@ export interface SsrSiteArgs {
      * }
      * ```
      */
-    fileOptions?: Input<Prettify<SsrSiteFileOptions>[]>;
+    fileOptions?: Input<SsrSiteFileOptions[]>;
   }>;
   invalidation?: Input<{
     /**
