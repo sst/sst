@@ -208,9 +208,10 @@ func Start(
 			warp := complete.Warps[functionID]
 			if build == nil {
 				build, _ = runtime.Build(ctx, &runtime.BuildInput{
-					WarpDefinition: warp,
-					Project:        p,
-					Dev:            true,
+					Warp:    warp,
+					Project: p,
+					Dev:     true,
+					Links:   complete.Links,
 				})
 				bus.Publish(&FunctionBuildEvent{
 					Errors: build.Errors,

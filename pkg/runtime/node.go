@@ -67,14 +67,14 @@ var NODE_EXTENSIONS = []string{".ts", ".tsx", ".mts", ".cts", ".js", ".jsx", ".m
 
 func (r *NodeRuntime) Build(ctx context.Context, input *BuildInput) (*BuildOutput, error) {
 	var properties NodeProperties
-	err := json.Unmarshal(input.Properties, &properties)
+	err := json.Unmarshal(input.Warp.Properties, &properties)
 	if err != nil {
 		return nil, err
 	}
 
 	file, ok := r.getFile(input)
 	if !ok {
-		return nil, fmt.Errorf("Handler not found: %v", input.Handler)
+		return nil, fmt.Errorf("Handler not found: %v", input.Warp.Handler)
 	}
 	filepath.Rel(input.Project.PathRoot(), file)
 
@@ -113,6 +113,8 @@ func (r *NodeRuntime) Build(ctx context.Context, input *BuildInput) (*BuildOutpu
 		MinifyIdentifiers: properties.Minify,
 	}
 
+	links, _ := json.Marshal(input.Links)
+
 	if isESM {
 		options.Format = esbuild.FormatESModule
 		options.Target = esbuild.ESNext
@@ -123,6 +125,7 @@ func (r *NodeRuntime) Build(ctx context.Context, input *BuildInput) (*BuildOutpu
 				`const require = topLevelCreateRequire(import.meta.url);`,
 				`import { fileURLToPath as topLevelFileUrlToPath, URL as topLevelURL } from "url"`,
 				`const __dirname = topLevelFileUrlToPath(new topLevelURL(".", import.meta.url))`,
+				`globalThis.$SST_LINKS = ` + string(links) + ";",
 				properties.Banner,
 			}, "\n"),
 		}
@@ -131,14 +134,14 @@ func (r *NodeRuntime) Build(ctx context.Context, input *BuildInput) (*BuildOutpu
 		options.Target = esbuild.ESNext
 	}
 
-	buildContext, ok := r.contexts[input.FunctionID]
+	buildContext, ok := r.contexts[input.Warp.FunctionID]
 	if !ok {
 		buildContext, _ = esbuild.Context(options)
-		r.contexts[input.FunctionID] = buildContext
+		r.contexts[input.Warp.FunctionID] = buildContext
 	}
 
 	result := buildContext.Rebuild()
-	r.results[input.FunctionID] = result
+	r.results[input.Warp.FunctionID] = result
 	errors := []string{}
 	for _, error := range result.Errors {
 		errors = append(errors, error.Text)
@@ -157,7 +160,7 @@ func (r *NodeRuntime) Build(ctx context.Context, input *BuildInput) (*BuildOutpu
 	}
 
 	return &BuildOutput{
-		Handler: input.Handler,
+		Handler: input.Warp.Handler,
 		Errors:  errors,
 	}, nil
 }
@@ -190,8 +193,8 @@ func (r *NodeRuntime) Match(runtime string) bool {
 }
 
 func (r *NodeRuntime) getFile(input *BuildInput) (string, bool) {
-	dir := filepath.Dir(input.Handler)
-	base := strings.Split(filepath.Base(input.Handler), ".")[0]
+	dir := filepath.Dir(input.Warp.Handler)
+	base := strings.Split(filepath.Base(input.Warp.Handler), ".")[0]
 	for _, ext := range NODE_EXTENSIONS {
 		file := filepath.Join(input.Project.PathRoot(), dir, base+ext)
 		if _, err := os.Stat(file); err == nil {

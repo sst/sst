@@ -1,6 +1,6 @@
 import "@types/node";
 import * as util from "@pulumi/pulumi";
-import * as sst from "./components/index";
+import * as _sst from "./components/index";
 import { $config as config, App } from "./config";
 
 type Simplify<T> = {
@@ -9,7 +9,7 @@ type Simplify<T> = {
 
 declare global {
   // @ts-expect-error
-  export import sst = sst;
+  export import sst = _sst;
 
   // @ts-expect-error
   export import $util = util;

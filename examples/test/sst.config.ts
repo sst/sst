@@ -12,8 +12,10 @@ export default $config({
     };
   },
   async run() {
+    const queue = new sst.aws.Bucket("Bucket");
     const fn = new sst.aws.Function("MyFunction", {
       url: true,
+      link: [queue],
       handler: "./src/index.handler",
       environment: {
         HELLO: "NICE",
