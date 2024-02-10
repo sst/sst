@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.40.3
+
+### Patch Changes
+
+- [`e9847fb13`](https://github.com/sst/sst/commit/e9847fb1399ea7e1af0a2bd4130339deabf49a8a) Thanks [@fwang](https://github.com/fwang)! - Cli: fix deploy status event not shown
+
 ## 2.40.2
 
 ## 2.40.1
