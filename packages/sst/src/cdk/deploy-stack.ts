@@ -631,6 +631,7 @@ class FullCloudFormationDeployment {
         throw err;
       }
 
+      if (this.options.noMonitor) return;
       return this.monitorDeployment(startTime, undefined);
     } else {
       // Take advantage of the fact that we can set termination protection during create
