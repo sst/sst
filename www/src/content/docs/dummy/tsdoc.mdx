@@ -12,6 +12,10 @@ Returns a locale object for the specified definition with `locale.format` and `l
 
 This section has more from about the `FormatSpecifier`.
 
+:::note
+You can also add notes. By specifying the ZipFile property within the Code property, specify `index.function_name` as the handler.
+:::
+
 #### Simple Example
 
 Here's a simple example.
@@ -58,14 +62,6 @@ new FormatSpecifier(specifier, addend?): FormatSpecifier
 <InlineSection>
 **Returns** [<code class="type">FormatSpecifier</code>](#FormatSpecifier)<code class="symbol">[]</code><code class="symbol"> | </code><code class="primitive">null</code>
 </InlineSection>
-
-An instance of this class; given the specified specifier object.
-
-Returning an object with exposed fields that correspond to the format specification mini-language and a `toString` method that reconstructs the specifier.
-
-:::note
-You can also add notes. By specifying the ZipFile property within the Code property, specify `index.function_name` as the handler.
-:::
 </Segment>
 
 ## Methods
@@ -107,6 +103,9 @@ This function takes some simple args.
 
 <Segment>
 ### simpleProp?
+
+The CPU architecture of the lambda function.
+
 <InlineSection>
 **Type** <code class="primitive">x86_64</code><code class="symbol"> | </code><code class="primitive">arm_64</code>
 </InlineSection>
@@ -115,7 +114,7 @@ This function takes some simple args.
 **Default** Uses x86 by default `x86_64`
 </InlineSection>
 
-The CPU architecture of the lambda function.
+For example,
 
 ```ts
 new Function(stack, "Function", {
@@ -126,6 +125,8 @@ new Function(stack, "Function", {
 
 <Segment>
 ### objectProp?
+
+The CPU architecture of the lambda function.
 
 <Section type="parameters">
 <InlineSection>
@@ -141,7 +142,30 @@ new Function(stack, "Function", {
 **Default** <code class="primitive">undefined</code>
 </InlineSection>
 
-The CPU architecture of the lambda function.
+```ts
+new Function(stack, "Function", {
+  architecture: "arm_64",
+})
+```
+</Segment>
+
+<Segment>
+### transform?
+
+[Transform](/docs/transform/) how this component is created.
+
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Object</code>
+</InlineSection>
+
+- <p><code class="key">resource1?</code> [<code class="type">FormatSpecifier</code>](#FormatSpecifier)<code class="symbol"> | </code><code class="symbol">(</code><code class="primitive">args</code><code class="symbol">: </code>[<code class="type">FormatSpecifier</code>](#FormatSpecifier)<code class="symbol"> => </code>[<code class="type">FormatSpecifier</code>](#FormatSpecifier)<code class="symbol"> | </code><code class="primitive">void</code><code class="symbol">)</code></p>
+- <p><code class="key">resource1?</code> [<code class="type">FormatSpecifier</code>](#FormatSpecifier)<code class="symbol"> | </code><code class="symbol">(</code><code class="primitive">args</code><code class="symbol">: </code>[<code class="type">FormatSpecifier</code>](#FormatSpecifier)<code class="symbol"> => </code>[<code class="type">FormatSpecifier</code>](#FormatSpecifier)<code class="symbol"> | </code><code class="primitive">void</code><code class="symbol">)</code></p>
+</Section>
+
+<InlineSection>
+**Default** <code class="primitive">undefined</code>
+</InlineSection>
 
 ```ts
 new Function(stack, "Function", {
