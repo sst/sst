@@ -2,30 +2,40 @@
  * Segments
  */
 .sl-markdown-content div.segment + div.segment:not(:where(.not-content *)) {
-  margin-top: 3.5rem;
+  margin-top: 3rem;
 }
 .sl-markdown-content div.segment:not(:last-child):after {
   content: '';
   display: block;
   height: 1px;
   background: var(--divider-color);
-  margin-top: 3.5rem;
+  margin-top: 3rem;
+}
+.sl-markdown-content h2 + div.segment:has(> h3:first-child) {
+  margin-top: 2.5rem;
 }
 /**
  * Sections
  */
-.sl-markdown-content section.tsdoc :is(h4) + :not(a, strong, em, del, span, input, code, :where(.not-content *)) {
-  margin-top: 1rem;
+/* Parameters */
+.sl-markdown-content section.tsdoc.parameters :is(h4, section) + :not(a, strong, em, del, span, input, code, :where(.not-content *)) {
+  /* Headings */
+  margin-top: 0.875rem;
 }
-.sl-markdown-content section.tsdoc :not(h4, a, strong, em, del, span, input, code) + :not(a, strong, em, del, span, input, code, :where(.not-content *, .starlight-aside *)) {
+.sl-markdown-content section.tsdoc.parameters :not(h4, a, strong, em, del, span, input, code) + :not(a, strong, em, del, span, input, code, ul, :where(.not-content *, .starlight-aside *)) {
   margin-top: 0.5rem;
 }
-.sl-markdown-content section.tsdoc :not(h4, a, strong, em, del, span, input, code) + :is(.starlight-aside, .expressive-code),
+.sl-markdown-content section.tsdoc.parameters :not(h4, a, strong, em, del, span, input, code) + :is(.starlight-aside, .expressive-code),
 .sl-markdown-content section.tsdoc :is(.starlight-aside, .expressive-code) + :not(h4, a, strong, em, del, span, input, code) {
   margin-top: 0.625rem;
 }
+/* Signature */
 .sl-markdown-content section.tsdoc.signature,
 .sl-markdown-content section.tsdoc.signature + section.tsdoc {
+  margin-top: 2rem;
+}
+/* About */
+.sl-markdown-content section.tsdoc.about :not(h1, h2, h3, h4, h5, h6) + :is(h4, h5, h6):not(:where(.not-content *)) {
   margin-top: 2rem;
 }
 
@@ -35,7 +45,10 @@
 .sl-markdown-content section.tsdoc h4:not(:where(.not-content *)) {
   font-size: var(--sl-text-h5); 
 }
-/* Return */
+/* Inline */
+.sl-markdown-content section.tsdoc.inline p:first-child {
+  line-height: var(--sl-line-height-headings);
+}
 .sl-markdown-content section.tsdoc.inline p:first-child strong:not(:where(.not-content *)) {
   margin-right: var(--tsdoc-key-margin-right);
   font-family: var(--__sl-font-headings);
@@ -43,6 +56,13 @@
   font-weight: 500;
   font-size: var(--sl-text-h5); 
   color: var(--sl-color-white);
+}
+
+/**
+ * Lists
+ */
+.sl-markdown-content section.tsdoc.parameters li > :last-child:not(li, ul, ol):not(a, strong, em, del, span, input, :where(.not-content *)) {
+  margin-bottom: 0.75rem;
 }
 
 /**
