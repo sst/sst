@@ -8,7 +8,7 @@ import * as aws from "@pulumi/aws";
 import { DnsValidatedCertificate } from "./dns-validated-certificate.js";
 import { HttpsRedirect } from "./https-redirect.js";
 import { useProvider } from "./helpers/provider.js";
-import { Component, Transform, transform } from "../component.js";
+import { Component, Prettify, Transform, transform } from "../component.js";
 import { sanitizeToPascalCase } from "../naming.js";
 import { HostedZoneLookup } from "./providers/hosted-zone-lookup.js";
 import { Input } from "../input.js";
@@ -93,7 +93,7 @@ export interface CdnArgs {
    * },
    * ```
    */
-  domain?: Input<string | CdnDomainArgs>;
+  domain?: Input<string | Prettify<CdnDomainArgs>>;
   transform: {
     distribution: Transform<aws.cloudfront.DistributionArgs>;
   };

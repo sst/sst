@@ -11,6 +11,16 @@ export class SecretMissingError extends VisibleError {
   }
 }
 
+/**
+ * The `Secret` component is a higher level component that makes it easy to create a secret valirable.
+ *
+ * @example
+ *
+ * #### Using the minimal config
+ * ```ts
+ * new sst.aws.Vector("MyVectorDB");
+ * ```
+ */
 export class Secret extends Component implements Link.Linkable {
   private _value: string;
   private _name: string;

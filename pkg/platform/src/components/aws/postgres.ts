@@ -4,35 +4,6 @@ import { Component, Transform, transform } from "../component";
 import { Link } from "../link";
 import { Input } from "../input.js";
 
-export interface PostgresScalingArgs {
-  /**
-   * The minimum number of Aurora capacity units (ACUs) for a DB instance in an Aurora Serverless v2 cluster.
-   * @default - 0.5
-   * @example
-   * ```js
-   * {
-   *   scaling: {
-   *     min: 2
-   *   }
-   * }
-   * ```
-   */
-  min?: Input<number>;
-  /**
-   * The maximum number of Aurora capacity units (ACUs) for a DB instance in an Aurora Serverless v2 cluster.
-   * @default - 4
-   * @example
-   * ```js
-   * {
-   *   scaling: {
-   *     max: 128
-   *   }
-   * }
-   * ```
-   */
-  max?: Input<number>;
-}
-
 export interface PostgresArgs {
   /**
    * Enging version of the RDS cluster
@@ -59,13 +30,48 @@ export interface PostgresArgs {
   /**
    * Aurora Serverless v2 scaling configuration
    */
-  scaling?: Input<PostgresScalingArgs>;
+  scaling?: Input<{
+    /**
+     * The minimum number of Aurora capacity units (ACUs) for a DB instance in an Aurora Serverless v2 cluster.
+     * @default - 0.5
+     * @example
+     * ```js
+     * {
+     *   scaling: {
+     *     min: 2
+     *   }
+     * }
+     * ```
+     */
+    min?: Input<number>;
+    /**
+     * The maximum number of Aurora capacity units (ACUs) for a DB instance in an Aurora Serverless v2 cluster.
+     * @default - 4
+     * @example
+     * ```js
+     * {
+     *   scaling: {
+     *     max: 128
+     *   }
+     * }
+     * ```
+     */
+    max?: Input<number>;
+  }>;
   transform?: {
     cluster?: Transform<aws.rds.ClusterArgs>;
     instance?: Transform<aws.rds.ClusterInstanceArgs>;
   };
 }
 
+/**
+ * The `Postgres` component is a higher level component that makes it easy to create a Vector database powered by RDS Postgres Serverless v2.
+ * @example
+ * #### Using the minimal config
+ * ```js
+ * new sst.aws.Postgres("MyDatabase");
+ * ```
+ */
 export class Postgres
   extends Component
   implements Link.Linkable, Link.AWS.Linkable

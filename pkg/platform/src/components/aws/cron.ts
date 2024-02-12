@@ -1,6 +1,6 @@
 import { ComponentResourceOptions, output, Output } from "@pulumi/pulumi";
 import * as aws from "@pulumi/aws";
-import { Component, Transform, transform } from "../component";
+import { Component, Prettify, Transform, transform } from "../component";
 import { Function, FunctionArgs } from "./function";
 import { Input } from "../input.js";
 
@@ -22,16 +22,15 @@ export interface CronJobProps {
 
 export interface CronArgs {
   /**
-   * Name of a database which is automatically created inside the cluster.
-   * @default - Database is not created
+   * Path to the handler for the cron function.
    * @example
    * ```js
    * {
-   *   job: "packages/functions/src/index.handler"
+   *   job: "src/cron.handler"
    * }
    * ```
    */
-  job: Input<string | CronJobProps>;
+  job: Input<string | Prettify<CronJobProps>>;
   /**
    * The schedule for the cron job.
    *
@@ -70,6 +69,16 @@ export interface CronArgs {
   };
 }
 
+/**
+ * The `Cron` component makes it easy to create a Cron job powered by Event Bus.
+ * @example
+ * #### Using the minimal config
+ * ```js
+ * new sst.aws.Cron("Web", {
+ *   job: "src/cron.handler"
+ * });
+ * ```
+ */
 export class Cron extends Component {
   private fn: Output<Function>;
   private rule: aws.cloudwatch.EventRule;

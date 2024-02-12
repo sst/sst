@@ -1217,14 +1217,17 @@ export function useCloudFrontFunctionHostHeaderInjection() {
 }
 
 export function validatePlan<
-  CloudFrontFunctions extends Record<string, CloudFrontFunctionConfig>,
-  EdgeFunctions extends Record<string, EdgeFunctionConfig>,
+  CloudFrontFunctions extends Record<
+    string,
+    Prettify<CloudFrontFunctionConfig>
+  >,
+  EdgeFunctions extends Record<string, Prettify<EdgeFunctionConfig>>,
   Origins extends Record<
     string,
-    | FunctionOriginConfig
-    | ImageOptimizationFunctionOriginConfig
-    | S3OriginConfig
-    | OriginGroupConfig
+    | Prettify<FunctionOriginConfig>
+    | Prettify<ImageOptimizationFunctionOriginConfig>
+    | Prettify<S3OriginConfig>
+    | Prettify<OriginGroupConfig>
   >,
 >(input: {
   cloudFrontFunctions?: CloudFrontFunctions;

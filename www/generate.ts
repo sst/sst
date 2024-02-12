@@ -42,9 +42,9 @@ async function main() {
     function renderImports() {
       return [
         ``,
-        `import Segment from '../../../../components/tsdoc/Segment.astro';`,
-        `import Section from '../../../../components/tsdoc/Section.astro';`,
-        `import InlineSection from '../../../../components/tsdoc/InlineSection.astro';`,
+        `import Segment from '../../../../../components/tsdoc/Segment.astro';`,
+        `import Section from '../../../../../components/tsdoc/Section.astro';`,
+        `import InlineSection from '../../../../../components/tsdoc/InlineSection.astro';`,
       ];
     }
 
@@ -269,9 +269,15 @@ async function main() {
 
     function renderType(type: TypeDoc.SomeType): string {
       // TODO fix indention for nested types
-      // TODO implement Prettify for all components
+      // TODO render this
+      /**
+       * The domain to be assigned to the website URL (ie. domain.com).
+       *
+       * Supports domains that are hosted either on [Route 53](https://aws.amazon.com/route53/) or externally.
+       */
       // TODO unhandled linking to interfaces in another component
-      // TODO review link `Transform` to transform doc
+      // TODO function link to esbuild `Loader`
+      // TODO link `Transform` to transform doc (add the same line, expand)
       if (type.type === "intrinsic") return renderIntrisicType(type);
       if (type.type === "literal") return renderLiteralType(type);
       if (type.type === "templateLiteral")
@@ -284,14 +290,16 @@ async function main() {
         return renderSstType(type);
       if (type.type === "reference" && type.package === "@pulumi/pulumi")
         return renderPulumiType(type);
-      if (type.type === "reference" && type.package === "@pulumi/aws")
-        return renderPulumiAwsType(type);
+      if (type.type === "reference" && type.package?.startsWith("@pulumi/"))
+        return renderPulumiProviderType(type);
       if (type.type === "reference" && type.package === "esbuild")
         return renderEsbuildType(type);
       if (type.type === "reflection" && type.declaration.children?.length)
         return renderNestedType(type);
 
-      console.error(type);
+      // @ts-expect-error
+      delete type._project;
+      console.log(type);
       throw new Error(`Unsupported type "${type.type}"`);
 
       function renderIntrisicType(type: TypeDoc.Models.IntrinsicType) {
@@ -321,7 +329,7 @@ async function main() {
         //   ]
         // },
         if (
-          type.head !== "" ||
+          typeof type.head !== "string" ||
           type.tail.length !== 1 ||
           type.tail[0].length !== 2 ||
           type.tail[0][0].type !== "intrinsic" ||
@@ -330,7 +338,7 @@ async function main() {
           console.error(type);
           throw new Error(`Unsupported templateLiteral type`);
         }
-        return `<code class="primitive">$\\{${type.tail[0][0].name}\\}${type.tail[0][1]}</code>`;
+        return `<code class="primitive">${type.head}$\\{${type.tail[0][0].name}\\}${type.tail[0][1]}</code>`;
       }
 
       function renderUnionType(type: TypeDoc.Models.UnionType) {
@@ -376,6 +384,9 @@ async function main() {
             `<code class="symbol">&gt;</code>`,
           ].join("");
         }
+        if (type.name === "UnwrappedObject") {
+          return renderType(type.typeArguments?.[0]!);
+        }
         if (type.name === "ComponentResourceOptions") {
           return `[<code class="type">${type.name}</code>](https://www.pulumi.com/docs/concepts/options/)`;
         }
@@ -384,13 +395,13 @@ async function main() {
         throw new Error(`Unsupported @pulumi/pulumi type`);
       }
 
-      function renderPulumiAwsType(type: TypeDoc.Models.ReferenceType) {
+      function renderPulumiProviderType(type: TypeDoc.Models.ReferenceType) {
         const ret = ((type as any)._target.fileName as string).match(
-          "aws/(.*)/(.*).d.ts"
+          "node_modules/@pulumi/([^/]+)/(.+).d.ts"
         )!;
-        const pkg = ret[1].toLocaleLowerCase();
-        const cls = ret[2].toLocaleLowerCase();
-        if (pkg === "types" && cls === "input") {
+        const provider = ret[1].toLocaleLowerCase(); // ie. aws
+        const cls = ret[2].toLocaleLowerCase(); // ie. s3/Bucket
+        if (cls === "types/input") {
           // Input types
           // ie. errorResponses?: aws.types.input.cloudfront.DistributionCustomErrorResponse[];
           //{
@@ -409,20 +420,18 @@ async function main() {
           //  typeArguments: undefined
           //}
           const link = {
-            DistributionCustomErrorResponse: ["cloudfront", "distribution"],
+            DistributionCustomErrorResponse: "cloudfront/distribution",
           }[type.name];
           if (!link) {
             console.error(type);
-            throw new Error(`Unsupported @pulumi/aws input type`);
+            throw new Error(`Unsupported @pulumi provider input type`);
           }
           return `[<code class="type">${
             type.name
-          }</code>](https://www.pulumi.com/registry/packages/aws/api-docs/${
-            link[0]
-          }/${link[1]}/#${type.name.toLowerCase()})`;
-        } else if (pkg === "types") {
+          }</code>](https://www.pulumi.com/registry/packages/${provider}/api-docs/${link}/#${type.name.toLowerCase()})`;
+        } else if (cls.startsWith("types/")) {
           console.error(type);
-          throw new Error(`Unsupported @pulumi/aws type`);
+          throw new Error(`Unsupported @pulumi provider class type`);
         } else {
           // Resource types
           // ie. bucket?: aws.s3.BucketV2;
@@ -442,8 +451,8 @@ async function main() {
           //  typeArguments: []
           //}
         }
-        const hash = `${cls}args` === type.name.toLowerCase() ? `#inputs` : "";
-        return `[<code class="type">${type.name}</code>](https://www.pulumi.com/registry/packages/aws/api-docs/${pkg}/${cls}/${hash})`;
+        const hash = type.name.endsWith("Args") ? `#inputs` : "";
+        return `[<code class="type">${type.name}</code>](https://www.pulumi.com/registry/packages/${provider}/api-docs/${cls}/${hash})`;
       }
 
       function renderEsbuildType(type: TypeDoc.Models.ReferenceType) {
@@ -540,9 +549,22 @@ async function buildDocs() {
       defaultTag: false,
     },
     entryPoints: [
+      "../pkg/platform/src/components/aws/secret.ts",
       "../pkg/platform/src/components/aws/bucket.ts",
+      "../pkg/platform/src/components/aws/cron.ts",
       "../pkg/platform/src/components/aws/function.ts",
+      "../pkg/platform/src/components/aws/postgres.ts",
+      "../pkg/platform/src/components/aws/vector.ts",
+      "../pkg/platform/src/components/aws/astro.ts",
       "../pkg/platform/src/components/aws/nextjs.ts",
+      "../pkg/platform/src/components/aws/remix.ts",
+      //"../pkg/platform/src/components/aws/static-site.ts",
+      //"../pkg/platform/src/components/aws/queue.ts",
+      //"../pkg/platform/src/components/aws/router.ts",
+      //"../pkg/platform/src/components/aws/sns-topic.ts",
+      //"../pkg/platform/src/components/aws/dynamodb-table.ts",
+      //"../pkg/platform/src/components/aws/apigateway-httpapi.ts",
+      "../pkg/platform/src/components/cloudflare/worker.ts",
     ],
     tsconfig: "../pkg/platform/tsconfig.json",
   });

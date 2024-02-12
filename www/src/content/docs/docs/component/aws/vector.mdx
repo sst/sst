@@ -1,0 +1,72 @@
+---
+title: Vector
+description: Reference doc for the `Vector` component
+---
+
+import Segment from '../../../../../components/tsdoc/Segment.astro';
+import Section from '../../../../../components/tsdoc/Section.astro';
+import InlineSection from '../../../../../components/tsdoc/InlineSection.astro';
+
+<Section type="about">
+The `Vector` component is a higher level component that makes it easy to create a Vector database powered by RDS Postgres Serverless v2.
+
+#### Using the minimal config
+```ts
+new sst.aws.Vector("MyVectorDB");
+```
+</Section>
+
+---
+
+## Constructor
+
+<Segment>
+<Section type="signature">
+```ts
+new Vector(name, args?, opts?)
+```
+</Section>
+
+<Section type="parameters">
+#### Parameters
+- <p><code class="key">name</code> <code class="primitive">string</code></p>
+- <p><code class="key">args</code> [<code class="type">VectorArgs</code>](#vectorargs)</p>
+- <p><code class="key">opts</code> [<code class="type">ComponentResourceOptions</code>](https://www.pulumi.com/docs/concepts/options/)</p>
+</Section>
+</Segment>
+
+## VectorArgs
+<Segment>
+### model?
+The embedding model to use for generating vectors
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">amazon.titan-embed-text-v1</code><code class="symbol"> | </code><code class="primitive">amazon.titan-embed-image-v1</code><code class="symbol"> | </code><code class="primitive">text-embedding-ada-002</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+
+<InlineSection>
+**Default** Titan Multimodal Embeddings G1
+</InlineSection>
+</Segment>
+<Segment>
+### openAiApiKey?
+Specifies the  OpenAI API key
+.This key is required for datar ingestoig and retrieal usvin an OpenAI modelg.
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+
+<InlineSection>
+**Default** OpenAI API key is not set
+</InlineSection>
+```js
+const OPENAI_API_KEY = new sst.aws.Secret("OPENAI_API_KEY");
+
+{
+  openAiApiKey: OPENAI_API_KEY.value,
+}
+```
+</Segment>

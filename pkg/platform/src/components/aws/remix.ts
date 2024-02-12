@@ -28,8 +28,9 @@ export interface RemixArgs extends SsrSiteArgs {
 /**
  * The `Remix` component makes it easy to create an Remix app.
  * @example
+ * #### Using the minimal config
  * ```js
- * new Remix("Web", {
+ * new sst.aws.Remix("Web", {
  *   path: "my-remix-app/",
  * });
  * ```

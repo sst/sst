@@ -1,0 +1,132 @@
+---
+title: Postgres
+description: Reference doc for the `Postgres` component
+---
+
+import Segment from '../../../../../components/tsdoc/Segment.astro';
+import Section from '../../../../../components/tsdoc/Section.astro';
+import InlineSection from '../../../../../components/tsdoc/InlineSection.astro';
+
+<Section type="about">
+The `Postgres` component is a higher level component that makes it easy to create a Vector database powered by RDS Postgres Serverless v2.
+
+#### Using the minimal config
+```js
+new sst.aws.Postgres("MyDatabase");
+```
+</Section>
+
+---
+
+## Constructor
+
+<Segment>
+<Section type="signature">
+```ts
+new Postgres(name, args?, opts?)
+```
+</Section>
+
+<Section type="parameters">
+#### Parameters
+- <p><code class="key">name</code> <code class="primitive">string</code></p>
+- <p><code class="key">args</code> [<code class="type">PostgresArgs</code>](#postgresargs)</p>
+- <p><code class="key">opts</code> [<code class="type">ComponentResourceOptions</code>](https://www.pulumi.com/docs/concepts/options/)</p>
+</Section>
+</Segment>
+
+## Properties
+
+<Segment>
+### nodes
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Object</code>
+</InlineSection>
+- <p><code class="key">cluster</code>[<code class="type">Cluster</code>](https://www.pulumi.com/registry/packages/aws/api-docs/rds/cluster/)</p>
+- <p><code class="key">instance</code>[<code class="type">ClusterInstance</code>](https://www.pulumi.com/registry/packages/aws/api-docs/rds/clusterinstance/)</p>
+</Section>
+</Segment>
+
+## PostgresArgs
+<Segment>
+### databaseName?
+Name of a database which is automatically created inside the cluster.
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+
+<InlineSection>
+**Default** - Database is not created
+</InlineSection>
+```js
+{
+  databaseName: "app"
+}
+```
+</Segment>
+<Segment>
+### scaling?
+Aurora Serverless v2 scaling configuration
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Object</code><code class="symbol">&gt;</code>
+</InlineSection>
+- <p><code class="key">max?</code><code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">number</code><code class="symbol">&gt;</code></p>
+
+<InlineSection>
+**Default** - 4
+</InlineSection>
+The maximum number of Aurora capacity units (ACUs) for a DB instance in an Aurora Serverless v2 cluster.
+```js
+{
+  scaling: {
+    max: 128
+  }
+}
+```
+- <p><code class="key">min?</code><code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">number</code><code class="symbol">&gt;</code></p>
+
+<InlineSection>
+**Default** - 0.5
+</InlineSection>
+The minimum number of Aurora capacity units (ACUs) for a DB instance in an Aurora Serverless v2 cluster.
+```js
+{
+  scaling: {
+    min: 2
+  }
+}
+```
+</Section>
+</Segment>
+<Segment>
+### transform?
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Object</code>
+</InlineSection>
+- <p><code class="key">cluster?</code><code class="primitive">Transform</code><code class="symbol">&lt;</code>[<code class="type">ClusterArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/rds/cluster/#inputs)<code class="symbol">&gt;</code></p>
+- <p><code class="key">instance?</code><code class="primitive">Transform</code><code class="symbol">&lt;</code>[<code class="type">ClusterInstanceArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/rds/clusterinstance/#inputs)<code class="symbol">&gt;</code></p>
+</Section>
+</Segment>
+<Segment>
+### version?
+Enging version of the RDS cluster
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+
+<InlineSection>
+**Default** - 15.5
+</InlineSection>
+```js
+{
+  version: "13.9"
+}
+```
+</Segment>

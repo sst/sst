@@ -121,8 +121,9 @@ export interface NextjsArgs extends SsrSiteArgs {
 /**
  * The `Nextjs` component makes it easy to create a Next.js app.
  * @example
+ * #### Using the minimal config
  * ```js
- * new Nextjs("Web", {
+ * new sst.aws.Nextjs("Web", {
  *   path: "my-next-app/",
  * });
  * ```

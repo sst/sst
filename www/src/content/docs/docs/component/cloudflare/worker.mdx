@@ -1,0 +1,157 @@
+---
+title: Worker
+description: Reference doc for the `Worker` component
+---
+
+import Segment from '../../../../../components/tsdoc/Segment.astro';
+import Section from '../../../../../components/tsdoc/Section.astro';
+import InlineSection from '../../../../../components/tsdoc/InlineSection.astro';
+
+<Section type="about">
+The `Worker` component is a higher level component that makes it easy to create a Cloudflare Worker.
+
+#### Using the minimal config
+```ts
+new sst.cloudflare.Worker("MyWorker", {
+  handler: "src/worker.handler",
+});
+```
+</Section>
+
+---
+
+## Constructor
+
+<Segment>
+<Section type="signature">
+```ts
+new Worker(name, args, opts?)
+```
+</Section>
+
+<Section type="parameters">
+#### Parameters
+- <p><code class="key">name</code> <code class="primitive">string</code></p>
+- <p><code class="key">args</code> [<code class="type">WorkerArgs</code>](#workerargs)</p>
+- <p><code class="key">opts</code> [<code class="type">ComponentResourceOptions</code>](https://www.pulumi.com/docs/concepts/options/)</p>
+</Section>
+</Segment>
+
+## Properties
+
+<Segment>
+### devUrl
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Output</code><code class="symbol">&lt;</code><code class="primitive">undefined</code><code class="symbol"> | </code><code class="primitive">string</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+</Segment>
+
+<Segment>
+### nodes
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Object</code>
+</InlineSection>
+- <p><code class="key">worker</code><code class="primitive">Output</code><code class="symbol">&lt;</code>[<code class="type">WorkerScript</code>](https://www.pulumi.com/registry/packages/cloudflare/api-docs/workerscript/)<code class="symbol">&gt;</code></p>
+</Section>
+</Segment>
+
+## WorkerArgs
+<Segment>
+### devUrl?
+Enable dev URLs, a dedicated endpoint for your Worker.
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">boolean</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+
+<InlineSection>
+**Default** Disabled
+</InlineSection>
+```js
+{
+  devUrl: true
+}
+```
+</Segment>
+<Segment>
+### handler
+Path to the handler for the worker.
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+```js
+{
+  handler: "src/worker.handler"
+}
+```
+</Segment>
+<Segment>
+### link?
+Link resources to the function.
+This will grant the function permissions to access the linked resources at runtime.
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">any</code><code class="symbol">[]</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+```js
+{
+  link: [myBucket, stripeKey],
+}
+```
+</Segment>
+<Segment>
+### nodejs?
+Used to configure nodejs function properties
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Object</code><code class="symbol">&gt;</code>
+</InlineSection>
+- <p><code class="key">banner?</code><code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code></p>
+Use this to insert an arbitrary string at the beginning of generated JavaScript and CSS files.
+```js
+nodejs: {
+  banner: "console.log('Function starting')"
+}
+```
+- <p><code class="key">esbuild?</code><code class="primitive">Input</code><code class="symbol">&lt;</code>[<code class="type">BuildOptions</code>](https://esbuild.github.io/api/#build)<code class="symbol">&gt;</code></p>
+This allows you to customize esbuild config.
+- <p><code class="key">loader?</code><code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Record</code><code class="symbol">&lt;</code><code class="primitive">string</code>, [<code class="type">Loader</code>](https://esbuild.github.io/api/#build)<code class="symbol">&gt;</code><code class="symbol">&gt;</code></p>
+Configure additional esbuild loaders for other file extensions
+```js
+nodejs: {
+  loader: {
+   ".png": "file"
+  }
+}
+```
+- <p><code class="key">minify?</code><code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">boolean</code><code class="symbol">&gt;</code></p>
+
+<InlineSection>
+**Default** true
+</InlineSection>
+Enable or disable minification
+```js
+nodejs: {
+  minify: false
+}
+```
+- <p><code class="key">sourcemap?</code><code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">boolean</code><code class="symbol">&gt;</code></p>
+
+<InlineSection>
+**Default** false
+</InlineSection>
+Configure if sourcemaps are generated when the function is bundled for production. Since they increase payload size and potentially cold starts they are not generated by default. They are always generated during local development mode.
+```js
+nodejs: {
+  sourcemap: true
+}
+```
+</Section>
+</Segment>

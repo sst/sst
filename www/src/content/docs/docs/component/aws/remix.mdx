@@ -1,18 +1,19 @@
 ---
-title: Nextjs
-description: Reference doc for the `Nextjs` component
+title: Remix
+description: Reference doc for the `Remix` component
 ---
 
-import Segment from '../../../../components/tsdoc/Segment.astro';
-import Section from '../../../../components/tsdoc/Section.astro';
-import InlineSection from '../../../../components/tsdoc/InlineSection.astro';
+import Segment from '../../../../../components/tsdoc/Segment.astro';
+import Section from '../../../../../components/tsdoc/Section.astro';
+import InlineSection from '../../../../../components/tsdoc/InlineSection.astro';
 
 <Section type="about">
-The `Nextjs` component makes it easy to create a Next.js app.
+The `Remix` component makes it easy to create an Remix app.
 
+#### Using the minimal config
 ```js
-new Nextjs("Web", {
-  path: "my-next-app/",
+new sst.aws.Remix("Web", {
+  path: "my-remix-app/",
 });
 ```
 </Section>
@@ -24,14 +25,14 @@ new Nextjs("Web", {
 <Segment>
 <Section type="signature">
 ```ts
-new Nextjs(name, args?, opts?)
+new Remix(name, args, opts?)
 ```
 </Section>
 
 <Section type="parameters">
 #### Parameters
 - <p><code class="key">name</code> <code class="primitive">string</code></p>
-- <p><code class="key">args</code> [<code class="type">NextjsArgs</code>](#nextjsargs)</p>
+- <p><code class="key">args</code> [<code class="type">RemixArgs</code>](#remixargs)</p>
 - <p><code class="key">opts</code> [<code class="type">ComponentResourceOptions</code>](https://www.pulumi.com/docs/concepts/options/)</p>
 </Section>
 </Segment>
@@ -59,7 +60,7 @@ The CloudFront URL of the website.
 </Section>
 </Segment>
 
-## NextjsArgs
+## RemixArgs
 <Segment>
 ### assets?
 Configure the assets uploaded to S3.
@@ -262,68 +263,6 @@ environment: {
 ```
 </Segment>
 <Segment>
-### experimental?
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">Object</code>
-</InlineSection>
-- <p><code class="key">disableDynamoDBCache?</code><code class="primitive">boolean</code></p>
-
-<InlineSection>
-**Default** false
-</InlineSection>
-Disabling DynamoDB cache will cause on-demand revalidation by path (`revalidatePath`) and by cache tag (`revalidateTag`) to fail silently.
-```js
-experimental: {
-  disableDynamoDBCache: true,
-}
-```
-- <p><code class="key">disableIncrementalCache?</code><code class="primitive">boolean</code></p>
-
-<InlineSection>
-**Default** false
-</InlineSection>
-Disabling incremental cache will cause the entire page to be revalidated on each request. This can result in ISR and SSG pages to be in an inconsistent state. Specify this option if you are using SSR pages only.
-
-Note that it is possible to disable incremental cache while leaving on-demand revalidation enabled.
-```js
-experimental: {
-  disableIncrementalCache: true,
-}
-```
-- <p><code class="key">streaming?</code><code class="primitive">boolean</code></p>
-
-<InlineSection>
-**Default** false
-</InlineSection>
-Enable streaming. Currently an experimental feature in OpenNext.
-```js
-experimental: {
-  streaming: true,
-}
-```
-</Section>
-</Segment>
-<Segment>
-### imageOptimization?
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">Object</code>
-</InlineSection>
-- <p><code class="key">memory?</code><code class="primitive">$\{number\} MB</code><code class="symbol"> | </code><code class="primitive">$\{number\} GB</code></p>
-
-<InlineSection>
-**Default** 1024 MB
-</InlineSection>
-The amount of memory in MB allocated for image optimization function.
-```js
-imageOptimization: {
-  memory: "512 MB",
-}
-```
-</Section>
-</Segment>
-<Segment>
 ### invalidation?
 <Section type="parameters">
 <InlineSection>
@@ -380,40 +319,6 @@ This will grant the site permissions to access the linked resources at runtime.
 ```
 </Segment>
 <Segment>
-### logging?
-How the logs are stored in CloudWatch
-- "combined" - Logs from all routes are stored in the same log group.
-- "per-route" - Logs from each route are stored in a separate log group.
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">combined</code><code class="symbol"> | </code><code class="primitive">per-route</code>
-</InlineSection>
-</Section>
-
-<InlineSection>
-**Default** "per-route"
-</InlineSection>
-```js
-logging: "combined",
-```
-</Segment>
-<Segment>
-### openNextVersion?
-OpenNext version for building the Next.js site.
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">string</code>
-</InlineSection>
-</Section>
-
-<InlineSection>
-**Default** Latest OpenNext version
-</InlineSection>
-```js
-openNextVersion: "2.2.4",
-```
-</Segment>
-<Segment>
 ### path?
 Path to the directory where the app is located.
 <Section type="parameters">
@@ -462,11 +367,30 @@ permissions: [
 - <p><code class="key">plan.behaviors.origin?</code><code class="primitive">string</code></p>
 - <p><code class="key">plan.behaviors.pattern?</code><code class="primitive">string</code></p>
 - <p><code class="key">plan.buildId?</code><code class="primitive">string</code></p>
-- <p><code class="key">plan.cloudFrontFunctions?</code><code class="primitive">Record</code><code class="symbol">&lt;</code><code class="primitive">string</code>, [<code class="type">CloudFrontFunctionConfig</code>](#cloudfrontfunctionconfig)<code class="symbol">&gt;</code></p>
+- <p><code class="key">plan.cloudFrontFunctions?</code><code class="primitive">Record</code><code class="symbol">&lt;</code><code class="primitive">string</code>, <code class="primitive">Object</code><code class="symbol">&gt;</code></p>
+- <p><code class="key">plan.cloudFrontFunctions.injections?</code><code class="primitive">string</code><code class="symbol">[]</code></p>
 - <p><code class="key">plan.edge?</code><code class="primitive">boolean</code></p>
-- <p><code class="key">plan.edgeFunctions?</code><code class="primitive">Record</code><code class="symbol">&lt;</code><code class="primitive">string</code>, [<code class="type">EdgeFunctionConfig</code>](#edgefunctionconfig)<code class="symbol">&gt;</code></p>
+- <p><code class="key">plan.edgeFunctions?</code><code class="primitive">Record</code><code class="symbol">&lt;</code><code class="primitive">string</code>, <code class="primitive">Object</code><code class="symbol">&gt;</code></p>
+- <p><code class="key">plan.edgeFunctions.function?</code>[<code class="type">FunctionArgs</code>](#functionargs)</p>
 - <p><code class="key">plan.errorResponses?</code>[<code class="type">DistributionCustomErrorResponse</code>](https://www.pulumi.com/registry/packages/aws/api-docs/cloudfront/distribution/#distributioncustomerrorresponse)<code class="symbol">[]</code></p>
-- <p><code class="key">plan.origins?</code><code class="primitive">Record</code><code class="symbol">&lt;</code><code class="primitive">string</code>, [<code class="type">FunctionOriginConfig</code>](#functionoriginconfig)<code class="symbol"> | </code>[<code class="type">ImageOptimizationFunctionOriginConfig</code>](#imageoptimizationfunctionoriginconfig)<code class="symbol"> | </code>[<code class="type">S3OriginConfig</code>](#s3originconfig)<code class="symbol"> | </code>[<code class="type">OriginGroupConfig</code>](#origingroupconfig)<code class="symbol">&gt;</code></p>
+- <p><code class="key">plan.origins?</code><code class="primitive">Record</code><code class="symbol">&lt;</code><code class="primitive">string</code>, <code class="primitive">Object</code><code class="symbol"> | </code><code class="primitive">Object</code><code class="symbol"> | </code><code class="primitive">Object</code><code class="symbol"> | </code><code class="primitive">Object</code><code class="symbol">&gt;</code></p>
+- <p><code class="key">plan.origins.function?</code>[<code class="type">FunctionArgs</code>](#functionargs)</p>
+- <p><code class="key">plan.origins.injections?</code><code class="primitive">string</code><code class="symbol">[]</code></p>
+- <p><code class="key">plan.origins.streaming?</code><code class="primitive">boolean</code></p>
+- <p><code class="key">plan.origins.type?</code><code class="primitive">function</code></p>
+- <p><code class="key">plan.origins.function?</code>[<code class="type">FunctionArgs</code>](#functionargs)</p>
+- <p><code class="key">plan.origins.type?</code><code class="primitive">image-optimization-function</code></p>
+- <p><code class="key">plan.origins.copy?</code><code class="primitive">Object</code><code class="symbol">[]</code></p>
+- <p><code class="key">plan.origins.copy.cached?</code><code class="primitive">boolean</code></p>
+- <p><code class="key">plan.origins.copy.from?</code><code class="primitive">string</code></p>
+- <p><code class="key">plan.origins.copy.to?</code><code class="primitive">string</code></p>
+- <p><code class="key">plan.origins.copy.versionedSubDir?</code><code class="primitive">string</code></p>
+- <p><code class="key">plan.origins.originPath?</code><code class="primitive">string</code></p>
+- <p><code class="key">plan.origins.type?</code><code class="primitive">s3</code></p>
+- <p><code class="key">plan.origins.fallbackOriginName?</code><code class="primitive">string</code></p>
+- <p><code class="key">plan.origins.fallbackStatusCodes?</code><code class="primitive">number</code><code class="symbol">[]</code></p>
+- <p><code class="key">plan.origins.primaryOriginName?</code><code class="primitive">string</code></p>
+- <p><code class="key">plan.origins.type?</code><code class="primitive">group</code></p>
 - <p><code class="key">plan.serverCachePolicy?</code><code class="primitive">Object</code></p>
 - <p><code class="key">plan.serverCachePolicy.allowedHeaders?</code><code class="primitive">string</code><code class="symbol">[]</code></p>
 </Section>

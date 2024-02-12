@@ -27,8 +27,9 @@ const BUILD_META_FILE_NAME: BuildMetaFileName = "sst.buildMeta.json";
 /**
  * The `Astro` component makes it easy to create an Astro app.
  * @example
+ * #### Using the minimal config
  * ```js
- * new Astro("Web", {
+ * new sst.aws.Astro("Web", {
  *   path: "my-astro-app/",
  * });
  * ```

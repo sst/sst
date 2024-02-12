@@ -31,7 +31,7 @@ export interface VectorArgs {
    * @default OpenAI API key is not set
    * @example
    * ```js
-   * const OPENAI_API_KEY = new sst.Secret("OPENAI_API_KEY");
+   * const OPENAI_API_KEY = new sst.aws.Secret("OPENAI_API_KEY");
    *
    * {
    *   openAiApiKey: OPENAI_API_KEY.value,
@@ -41,6 +41,16 @@ export interface VectorArgs {
   openAiApiKey?: Input<string>;
 }
 
+/**
+ * The `Vector` component is a higher level component that makes it easy to create a Vector database powered by RDS Postgres Serverless v2.
+ *
+ * @example
+ *
+ * #### Using the minimal config
+ * ```ts
+ * new sst.aws.Vector("MyVectorDB");
+ * ```
+ */
 export class Vector
   extends Component
   implements Link.Linkable, Link.AWS.Linkable
