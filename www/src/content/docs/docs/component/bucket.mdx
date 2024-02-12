@@ -7,10 +7,11 @@ import Segment from '../../../../components/tsdoc/Segment.astro';
 import Section from '../../../../components/tsdoc/Section.astro';
 import InlineSection from '../../../../components/tsdoc/InlineSection.astro';
 
+<Section type="signature">
 The `Bucket` component is a higher level component that makes it easy to create an AWS S3 Bucket.
+</Section>
 
-## Examples
-
+<Section type="signature">
 #### Using the minimal config
 ```ts
 new sst.Bucket("MyBucket");
@@ -23,6 +24,7 @@ new sst.Bucket("MyBucket", {
   public: true,
 });
 ```
+</Section>
 
 ---
 
@@ -64,9 +66,11 @@ The S3 bucket name.
 <Segment>
 ### nodes
 <InlineSection>
-**Type** <code class="type">Object</code>
-- <p><code class="key">bucket</code> [<code class="type">BucketV2</code>](https://www.pulumi.com/registry/packages/aws/api-docs/s3/bucketv2/)</p>
+**Type** <code class="primitive">Object</code>
 </InlineSection>
+<Section type="parameters">
+- <p><code class="key">bucket</code>[<code class="type">BucketV2</code>](https://www.pulumi.com/registry/packages/aws/api-docs/s3/bucketv2/)</p>
+</Section>
 The underlying AWS resources.
 </Segment>
 
@@ -79,10 +83,7 @@ Arguments for creating a `Bucket` component.
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">boolean</code><code class="symbol">&gt;</code>
 </InlineSection>
-
-<InlineSection>
-**Default** Files are not publicly accessible `false`
-</InlineSection>
+<InlineSection>**Default** <code class="primitive">false</code></InlineSection>
 Enable public access to the files in the bucket
 ```js
 {
@@ -94,8 +95,19 @@ Enable public access to the files in the bucket
 ### transform?
 
 <InlineSection>
-**Type** <code class="type">Object</code>
-- <p><code class="key">bucket</code> <code class="type">Transform</code><code class="symbol">&lt;</code>[<code class="type">BucketV2Args</code>](https://www.pulumi.com/registry/packages/aws/api-docs/s3/bucketv2args/)<code class="symbol">&gt;</code></p>
-- <p><code class="key">bucketPolicy</code> <code class="type">Transform</code><code class="symbol">&lt;</code>[<code class="type">BucketPolicyArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/s3/bucketpolicyargs/)<code class="symbol">&gt;</code></p>
+**Type** <code class="primitive">Object</code>
 </InlineSection>
+<Section type="parameters">
+- <p><code class="key">bucket?</code><code class="primitive">Transform</code><code class="symbol">&lt;</code>[<code class="type">BucketV2Args</code>](https://www.pulumi.com/registry/packages/aws/api-docs/s3/bucketv2/#inputs)<code class="symbol">&gt;</code></p>
+
+
+
+- <p><code class="key">bucketPolicy?</code><code class="primitive">Transform</code><code class="symbol">&lt;</code>[<code class="type">BucketPolicyArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/s3/bucketpolicy/#inputs)<code class="symbol">&gt;</code></p>
+
+
+
+</Section>
+
+
+
 </Segment>

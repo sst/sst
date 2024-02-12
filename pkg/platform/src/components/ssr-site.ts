@@ -169,6 +169,9 @@ export interface SsrSiteArgs {
   //   */
   //  url?: string;
   //};
+  /**
+   * Configure the assets uploaded to S3.
+   */
   assets?: Input<{
     /**
      * Character encoding for text based assets uploaded to S3 (ex: html, css, js, etc.). If "none" is specified, no charset will be returned in header.

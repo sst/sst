@@ -1,5 +1,4 @@
 import {
-  Input,
   ComponentResourceOptions,
   output,
   interpolate,
@@ -11,6 +10,7 @@ import { RandomId } from "@pulumi/random";
 import { prefixName, hashNumberToString } from "./helpers/naming";
 import { Component, Transform, transform } from "./component";
 import { Link } from "./link";
+import type { Input } from "./input.js";
 
 /**
  * Arguments for creating a `Bucket` component.
@@ -18,7 +18,7 @@ import { Link } from "./link";
 export interface BucketArgs {
   /**
    * Enable public access to the files in the bucket
-   * @default Files are not publicly accessible `false`
+   * @default `false`
    * @example
    * ```js
    * {
