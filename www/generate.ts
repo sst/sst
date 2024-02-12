@@ -302,6 +302,7 @@ async function main() {
       if (type.type === "reflection" && type.declaration.children?.length)
         return renderNestedType(type);
 
+      console.error(type);
       throw new Error(`Unsupported type "${type.type}"`);
 
       function renderIntrisicType(type: TypeDoc.Models.IntrinsicType) {
@@ -550,9 +551,9 @@ async function buildDocs() {
       defaultTag: false,
     },
     entryPoints: [
-      "../pkg/platform/src/components/bucket.ts",
-      "../pkg/platform/src/components/function.ts",
-      "../pkg/platform/src/components/nextjs.ts",
+      "../pkg/platform/src/components/aws/bucket.ts",
+      "../pkg/platform/src/components/aws/function.ts",
+      "../pkg/platform/src/components/aws/nextjs.ts",
     ],
     tsconfig: "../pkg/platform/tsconfig.json",
   });
