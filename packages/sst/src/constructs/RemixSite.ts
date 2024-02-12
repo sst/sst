@@ -54,11 +54,8 @@ export class RemixSite extends SsrSite {
     const { path: sitePath, edge } = this.props;
 
     const format = this.getServerModuleFormat();
-    const [edgeServerJs, regionalServerJs] = this.usingVite
-      ? ["edge-server-vite.js", "regional-server-vite.js"]
-      : ["edge-server.js", "regional-server.js"];
     const { handler, inject } = this.createServerLambdaBundle(
-      edge ? edgeServerJs : regionalServerJs
+      edge ? "edge-server.js" : "regional-server.js"
     );
     const serverConfig = {
       description: "Server handler for Remix",
@@ -241,10 +238,26 @@ export class RemixSite extends SsrSite {
     const buildPath = path.join(this.props.path, "build");
     fs.mkdirSync(buildPath, { recursive: true });
 
-    // Copy the server lambda handler
-    fs.copyFileSync(
+    // Copy the server lambda handler and pre-append the build injection based
+    // on the config file used.
+    //
+    // Note: When using Vite config, the output build will be "server/index.js"
+    // and when using Remix config it will be `server.js`.
+    const buildInjector = [
+      `// Import the server build that was produced by 'remix build'`,
+      this.usingVite
+        ? `import * as remixServerBuild from "./server/index.js";`
+        : `import * as remixServerBuild from "./server.js";`,
+      ``,
+    ].join("\n");
+    fs.writeFileSync(path.resolve(buildPath, "server.js"), buildInjector);
+    const wrapperFileContents = fs.readFileSync(
       path.resolve(__dirname, `../support/remix-site-function/${wrapperFile}`),
-      path.join(buildPath, "server.js")
+      { encoding: "utf8" }
+    );
+    fs.appendFileSync(
+      path.resolve(buildPath, "server.js"),
+      wrapperFileContents
     );
 
     // Copy the Remix polyfil to the server build directory
@@ -262,7 +275,7 @@ export class RemixSite extends SsrSite {
 
     return {
       handler: path.join(buildPath, "server.handler"),
-      inject: this.usingVite ? [] : [polyfillDest],
+      inject: [polyfillDest],
     };
   }
 
