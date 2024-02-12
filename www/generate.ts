@@ -131,33 +131,36 @@ async function main() {
 
     function renderProperties() {
       const lines: string[] = [];
-      const props = useClassGetters();
-      if (!props?.length) return lines;
+      const properties = useClassGetters();
+      if (!properties?.length) return lines;
 
       lines.push(``, `## Properties`);
 
-      for (const prop of props) {
-        console.debug(` - property ${prop.name}`);
-        lines.push(``, `<Segment>`, `### ${prop.name}`);
-        // type
-        const nestedTypes = useInterfaceNestedTypes(prop.getSignature?.type!);
+      for (const property of properties) {
+        console.debug(` - property ${property.name}`);
         lines.push(
+          ``,
+          `<Segment>`,
+          // name
+          `### ${property.name}`,
+          // description
+          ...(property.getSignature?.comment?.summary
+            ? [renderComment(property.getSignature?.comment?.summary!)]
+            : []),
+          // type
           `<Section type="parameters">`,
           `<InlineSection>`,
-          `**Type** ${renderType(prop.getSignature?.type!)}`,
+          `**Type** ${renderType(property.getSignature?.type!)}`,
           `</InlineSection>`,
-          ...nestedTypes.flatMap(({ prefix, subType }) => [
-            `- <p><code class="key">${prefix}${subType.name}${
-              prop.getSignature?.flags.isOptional ? "?" : ""
-            }</code>${renderType(subType.type!)}</p>`,
-          ]),
-          `</Section>`
+          ...useInterfaceNestedTypes(property.getSignature?.type!).map(
+            ({ prefix, subType }) =>
+              `- <p><code class="key">${prefix}${subType.name}${
+                property.getSignature?.flags.isOptional ? "?" : ""
+              }</code>${renderType(subType.type!)}</p>`
+          ),
+          `</Section>`,
+          `</Segment>`
         );
-        // description
-        if (prop.getSignature?.comment?.summary) {
-          lines.push(renderComment(prop.getSignature?.comment?.summary!));
-        }
-        lines.push(`</Segment>`);
       }
       return lines;
     }
@@ -175,36 +178,38 @@ async function main() {
           lines.push(``, renderComment(int.comment?.summary!));
         }
 
-        // properties
+        // props
         if (!int.children?.length)
           throw new Error(`Interface ${int.name} has no props`);
 
         for (const prop of int.children) {
           console.debug(`   - interface prop ${prop.name}`);
-          lines.push(`<Segment>`);
-          // name
-          lines.push(`### ${prop.name}${prop.flags.isOptional ? "?" : ""}`);
-          // type
-          const nestedTypes = useInterfaceNestedTypes(prop.type!);
           lines.push(
+            `<Segment>`,
+            // prop name
+            `### ${prop.name}${prop.flags.isOptional ? "?" : ""}`,
+            // prop description
+            ...(renderInterfaceDescription(prop) ?? []),
+            // prop type
             `<Section type="parameters">`,
             `<InlineSection>`,
             `**Type** ${renderType(prop.type!)}`,
             `</InlineSection>`,
-            ...nestedTypes.flatMap(({ prefix, subType }) => [
-              `- <p><code class="key">${prefix}${subType.name}${
-                prop.flags.isOptional ? "?" : ""
-              }</code>${renderType(subType.type!)}</p>`,
-              renderInterfaceDefaultTag(subType) ?? "",
-              renderInterfaceDescription(subType) ?? "",
-              renderInterfaceExamples(subType) ?? "",
-            ]),
-            `</Section>`
-          );
-          lines.push(
-            renderInterfaceDefaultTag(prop) ?? "",
-            renderInterfaceDescription(prop) ?? "",
-            renderInterfaceExamples(prop) ?? "",
+            ...useInterfaceNestedTypes(prop.type!).flatMap(
+              ({ prefix, subType }) => [
+                `- <p><code class="key">${prefix}${subType.name}${
+                  prop.flags.isOptional ? "?" : ""
+                }</code>${renderType(subType.type!)}</p>`,
+                ...(renderInterfaceDefaultTag(subType) ?? []),
+                ...(renderInterfaceDescription(subType) ?? []),
+                ...(renderInterfaceExamples(subType) ?? []),
+              ]
+            ),
+            `</Section>`,
+            // prop default value
+            ...(renderInterfaceDefaultTag(prop) ?? []),
+            // prop examples
+            ...(renderInterfaceExamples(prop) ?? []),
             `</Segment>`
           );
         }
@@ -231,14 +236,14 @@ async function main() {
             } as TypeDoc.SomeType)}`
           : `**Default** ${renderComment(defaultTag.content)}`,
         `</InlineSection>`,
-      ].join("");
+      ];
     }
 
     function renderInterfaceDescription(
       prop: TypeDoc.Models.DeclarationReflection
     ) {
       if (!prop.comment?.summary) return;
-      return renderComment(prop.comment?.summary);
+      return [renderComment(prop.comment?.summary)];
     }
 
     function renderInterfaceExamples(
@@ -246,8 +251,7 @@ async function main() {
     ) {
       return prop.comment?.blockTags
         .filter((tag) => tag.tag === "@example")
-        .flatMap((tag) => renderComment(tag.content))
-        .join("");
+        .flatMap((tag) => renderComment(tag.content));
     }
 
     function renderFunctionSignature(

@@ -40,34 +40,34 @@ new Nextjs(name, args?, opts?)
 
 <Segment>
 ### domainUrl
+If the custom domain is enabled, this is the URL of the website with the
+custom domain.
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">undefined</code><code class="symbol"> | </code><code class="primitive">Output</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
-If the custom domain is enabled, this is the URL of the website with the
-custom domain.
 </Segment>
 
 <Segment>
 ### url
+The CloudFront URL of the website.
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Output</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
-The CloudFront URL of the website.
 </Segment>
 
 ## NextjsArgs
 <Segment>
 ### assets?
+Configure the assets uploaded to S3.
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Object</code><code class="symbol">&gt;</code>
 </InlineSection>
 - <p><code class="key">fileOptions?</code><code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Object</code><code class="symbol">[]</code><code class="symbol">&gt;</code></p>
-
 List of file options to specify cache control and content type for cached files. These file options are appended to the default file options so it's possible to override the default file options by specifying an overlapping file pattern.
 ```js
 assets: {
@@ -81,23 +81,14 @@ assets: {
 }
 ```
 - <p><code class="key">fileOptions.cacheControl?</code><code class="primitive">string</code></p>
-
-
-
 - <p><code class="key">fileOptions.contentType?</code><code class="primitive">string</code></p>
-
-
-
 - <p><code class="key">fileOptions.files?</code><code class="primitive">string</code><code class="symbol"> | </code><code class="primitive">string</code><code class="symbol">[]</code></p>
-
-
-
 - <p><code class="key">fileOptions.ignore?</code><code class="primitive">string</code><code class="symbol"> | </code><code class="primitive">string</code><code class="symbol">[]</code></p>
-
-
-
 - <p><code class="key">nonVersionedFilesCacheHeader?</code><code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code></p>
-<InlineSection>**Default** public,max-age=0,s-maxage=86400,stale-while-revalidate=8640</InlineSection>
+
+<InlineSection>
+**Default** public,max-age=0,s-maxage=86400,stale-while-revalidate=8640
+</InlineSection>
 The header to use for non-versioned files (ex: `index.html`) in the CDN cache. When specified, the `nonVersionedFilesTTL` option is ignored.
 ```js
 assets: {
@@ -105,7 +96,10 @@ assets: {
 }
 ```
 - <p><code class="key">nonVersionedFilesTTL?</code><code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">number</code><code class="symbol"> | </code><code class="primitive">$\{number\} second</code><code class="symbol"> | </code><code class="primitive">$\{number\} seconds</code><code class="symbol"> | </code><code class="primitive">$\{number\} minute</code><code class="symbol"> | </code><code class="primitive">$\{number\} minutes</code><code class="symbol"> | </code><code class="primitive">$\{number\} hour</code><code class="symbol"> | </code><code class="primitive">$\{number\} hours</code><code class="symbol"> | </code><code class="primitive">$\{number\} day</code><code class="symbol"> | </code><code class="primitive">$\{number\} days</code><code class="symbol">&gt;</code></p>
-<InlineSection>**Default** 1 day</InlineSection>
+
+<InlineSection>
+**Default** 1 day
+</InlineSection>
 The TTL for non-versioned files (ex: `index.html`) in the CDN cache. Ignored when `nonVersionedFilesCacheHeader` is specified.
 ```js
 assets: {
@@ -113,7 +107,10 @@ assets: {
 }
 ```
 - <p><code class="key">textEncoding?</code><code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">none</code><code class="symbol"> | </code><code class="primitive">utf-8</code><code class="symbol"> | </code><code class="primitive">iso-8859-1</code><code class="symbol"> | </code><code class="primitive">windows-1252</code><code class="symbol"> | </code><code class="primitive">ascii</code><code class="symbol">&gt;</code></p>
-<InlineSection>**Default** utf-8</InlineSection>
+
+<InlineSection>
+**Default** utf-8
+</InlineSection>
 Character encoding for text based assets uploaded to S3 (ex: html, css, js, etc.). If "none" is specified, no charset will be returned in header.
 ```js
 assets: {
@@ -121,7 +118,10 @@ assets: {
 }
 ```
 - <p><code class="key">versionedFilesCacheHeader?</code><code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code></p>
-<InlineSection>**Default** public,max-age=31536000,immutable</InlineSection>
+
+<InlineSection>
+**Default** public,max-age=31536000,immutable
+</InlineSection>
 The header to use for versioned files (ex: `main-1234.css`) in the CDN cache. When specified, the `versionedFilesTTL` option is ignored.
 ```js
 assets: {
@@ -129,7 +129,10 @@ assets: {
 }
 ```
 - <p><code class="key">versionedFilesTTL?</code><code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">number</code><code class="symbol"> | </code><code class="primitive">$\{number\} second</code><code class="symbol"> | </code><code class="primitive">$\{number\} seconds</code><code class="symbol"> | </code><code class="primitive">$\{number\} minute</code><code class="symbol"> | </code><code class="primitive">$\{number\} minutes</code><code class="symbol"> | </code><code class="primitive">$\{number\} hour</code><code class="symbol"> | </code><code class="primitive">$\{number\} hours</code><code class="symbol"> | </code><code class="primitive">$\{number\} day</code><code class="symbol"> | </code><code class="primitive">$\{number\} days</code><code class="symbol">&gt;</code></p>
-<InlineSection>**Default** 1 year</InlineSection>
+
+<InlineSection>
+**Default** 1 year
+</InlineSection>
 The TTL for versioned files (ex: `main-1234.css`) in the CDN and browser cache. Ignored when `versionedFilesCacheHeader` is specified.
 ```js
 assets: {
@@ -137,31 +140,39 @@ assets: {
 }
 ```
 </Section>
-
-Configure the assets uploaded to S3.
-
 </Segment>
 <Segment>
 ### buildCommand?
+The command for building the website
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
-<InlineSection>**Default** <code class="primitive">npm run build</code></InlineSection>
-The command for building the website
+
+<InlineSection>
+**Default** <code class="primitive">npm run build</code>
+</InlineSection>
 ```js
 buildCommand: "yarn build",
 ```
 </Segment>
 <Segment>
 ### domain?
+The domain for this website. SST supports domains that are hosted
+either on [Route 53](https://aws.amazon.com/route53/) or externally.
+
+Note that you can also migrate externally hosted domains to Route 53 by
+[following this guide](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/MigratingDNS.html).
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol"> | </code><code class="primitive">Object</code><code class="symbol">&gt;</code>
 </InlineSection>
 - <p><code class="key">aliases?</code><code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">[]</code><code class="symbol">&gt;</code></p>
-<InlineSection>**Default** no aliases configured</InlineSection>
+
+<InlineSection>
+**Default** no aliases configured
+</InlineSection>
 Specify additional names that should route to the Cloudfront Distribution.
 ```js
 domain: {
@@ -170,13 +181,14 @@ domain: {
 }
 ```
 - <p><code class="key">domainName?</code><code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code></p>
-
 The domain to be assigned to the website URL (ie. domain.com).
 
 Supports domains that are hosted either on [Route 53](https://aws.amazon.com/route53/) or externally.
-
 - <p><code class="key">hostedZone?</code><code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code></p>
-<InlineSection>**Default** same as the `domainName`</InlineSection>
+
+<InlineSection>
+**Default** same as the `domainName`
+</InlineSection>
 Name of the hosted zone in Route 53 that contains the domain. By default, SST will look for a hosted zone matching the domain name that's passed in.
 Do not set both "hostedZone" and "hostedZoneId".
 ```js
@@ -186,7 +198,6 @@ domain: {
 }
 ```
 - <p><code class="key">hostedZoneId?</code><code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code></p>
-
 The 14 letter id of the hosted zone in Route 53 that contains the domain.
 Only set this option if there are multiple hosted zones of the same domain in Route 53.
 Do not set both "hostedZone" and "hostedZoneId".
@@ -197,7 +208,10 @@ domain: {
 }
 ```
 - <p><code class="key">redirects?</code><code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">[]</code><code class="symbol">&gt;</code></p>
-<InlineSection>**Default** no redirects configured</InlineSection>
+
+<InlineSection>
+**Default** no redirects configured
+</InlineSection>
 Alternative domains to be assigned to the website URL. Visitors to the alternative domains will be redirected to the main domain. (ie. `www.domain.com`).
 Use this to create a `www.` version of your domain and redirect visitors to the root domain.
 ```js
@@ -207,12 +221,6 @@ domain: {
 }
 ```
 </Section>
-
-The domain for this website. SST supports domains that are hosted
-either on [Route 53](https://aws.amazon.com/route53/) or externally.
-
-Note that you can also migrate externally hosted domains to Route 53 by
-[following this guide](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/MigratingDNS.html).
 ```js
 domain: "domain.com",
 ```
@@ -227,24 +235,25 @@ domain: {
 </Segment>
 <Segment>
 ### edge?
+The server function is deployed to Lambda in a single region. Alternatively, you can enable this option to deploy to Lambda@Edge.
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">boolean</code>
 </InlineSection>
 </Section>
-<InlineSection>**Default** false</InlineSection>
-The server function is deployed to Lambda in a single region. Alternatively, you can enable this option to deploy to Lambda@Edge.
 
+<InlineSection>
+**Default** false
+</InlineSection>
 </Segment>
 <Segment>
 ### environment?
+An object with the key being the environment variable name.
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Record</code><code class="symbol">&lt;</code><code class="primitive">string</code>, <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code><code class="symbol">&gt;</code><code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
-
-An object with the key being the environment variable name.
 ```js
 environment: {
   API_URL: api.url,
@@ -259,7 +268,10 @@ environment: {
 **Type** <code class="primitive">Object</code>
 </InlineSection>
 - <p><code class="key">disableDynamoDBCache?</code><code class="primitive">boolean</code></p>
-<InlineSection>**Default** false</InlineSection>
+
+<InlineSection>
+**Default** false
+</InlineSection>
 Disabling DynamoDB cache will cause on-demand revalidation by path (`revalidatePath`) and by cache tag (`revalidateTag`) to fail silently.
 ```js
 experimental: {
@@ -267,7 +279,10 @@ experimental: {
 }
 ```
 - <p><code class="key">disableIncrementalCache?</code><code class="primitive">boolean</code></p>
-<InlineSection>**Default** false</InlineSection>
+
+<InlineSection>
+**Default** false
+</InlineSection>
 Disabling incremental cache will cause the entire page to be revalidated on each request. This can result in ISR and SSG pages to be in an inconsistent state. Specify this option if you are using SSR pages only.
 
 Note that it is possible to disable incremental cache while leaving on-demand revalidation enabled.
@@ -277,7 +292,10 @@ experimental: {
 }
 ```
 - <p><code class="key">streaming?</code><code class="primitive">boolean</code></p>
-<InlineSection>**Default** false</InlineSection>
+
+<InlineSection>
+**Default** false
+</InlineSection>
 Enable streaming. Currently an experimental feature in OpenNext.
 ```js
 experimental: {
@@ -285,9 +303,6 @@ experimental: {
 }
 ```
 </Section>
-
-
-
 </Segment>
 <Segment>
 ### imageOptimization?
@@ -296,7 +311,10 @@ experimental: {
 **Type** <code class="primitive">Object</code>
 </InlineSection>
 - <p><code class="key">memory?</code><code class="primitive">$\{number\} MB</code><code class="symbol"> | </code><code class="primitive">$\{number\} GB</code></p>
-<InlineSection>**Default** 1024 MB</InlineSection>
+
+<InlineSection>
+**Default** 1024 MB
+</InlineSection>
 The amount of memory in MB allocated for image optimization function.
 ```js
 imageOptimization: {
@@ -304,9 +322,6 @@ imageOptimization: {
 }
 ```
 </Section>
-
-
-
 </Segment>
 <Segment>
 ### invalidation?
@@ -315,7 +330,10 @@ imageOptimization: {
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Object</code><code class="symbol">&gt;</code>
 </InlineSection>
 - <p><code class="key">paths?</code><code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">[]</code><code class="symbol"> | </code><code class="primitive">none</code><code class="symbol"> | </code><code class="primitive">all</code><code class="symbol"> | </code><code class="primitive">versioned</code><code class="symbol">&gt;</code></p>
-<InlineSection>**Default** "all"</InlineSection>
+
+<InlineSection>
+**Default** "all"
+</InlineSection>
 The paths to invalidate. There are three built-in options:
 - "none" - No invalidation will be performed.
 - "all" - All files will be invalidated when any file changes.
@@ -334,7 +352,10 @@ invalidation: {
 }
 ```
 - <p><code class="key">wait?</code><code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">boolean</code><code class="symbol">&gt;</code></p>
-<InlineSection>**Default** false</InlineSection>
+
+<InlineSection>
+**Default** false
+</InlineSection>
 While deploying, SST waits for the CloudFront cache invalidation process to finish. This ensures that the new content will be served once the deploy command finishes. However, this process can sometimes take more than 5 mins. For non-prod environments it might make sense to pass in `false`. That'll skip waiting for the cache to invalidate and speed up the deploy process.
 ```js
 invalidation: {
@@ -342,20 +363,16 @@ invalidation: {
 }
 ```
 </Section>
-
-
-
 </Segment>
 <Segment>
 ### link?
+Link resources to the SSR function.
+This will grant the site permissions to access the linked resources at runtime.
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">any</code><code class="symbol">[]</code><code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
-
-Link resources to the SSR function.
-This will grant the site permissions to access the linked resources at runtime.
 ```js
 {
   link: [myBucket, stripeKey],
@@ -364,52 +381,63 @@ This will grant the site permissions to access the linked resources at runtime.
 </Segment>
 <Segment>
 ### logging?
+How the logs are stored in CloudWatch
+- "combined" - Logs from all routes are stored in the same log group.
+- "per-route" - Logs from each route are stored in a separate log group.
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">combined</code><code class="symbol"> | </code><code class="primitive">per-route</code>
 </InlineSection>
 </Section>
-<InlineSection>**Default** "per-route"</InlineSection>
-How the logs are stored in CloudWatch
-- "combined" - Logs from all routes are stored in the same log group.
-- "per-route" - Logs from each route are stored in a separate log group.
+
+<InlineSection>
+**Default** "per-route"
+</InlineSection>
 ```js
 logging: "combined",
 ```
 </Segment>
 <Segment>
 ### openNextVersion?
+OpenNext version for building the Next.js site.
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">string</code>
 </InlineSection>
 </Section>
-<InlineSection>**Default** Latest OpenNext version</InlineSection>
-OpenNext version for building the Next.js site.
+
+<InlineSection>
+**Default** Latest OpenNext version
+</InlineSection>
 ```js
 openNextVersion: "2.2.4",
 ```
 </Segment>
 <Segment>
 ### path?
+Path to the directory where the app is located.
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
-<InlineSection>**Default** "."</InlineSection>
-Path to the directory where the app is located.
 
+<InlineSection>
+**Default** "."
+</InlineSection>
 </Segment>
 <Segment>
 ### permissions?
+Attaches the given list of permissions to the SSR function.
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code>[<code class="type">FunctionPermissionArgs</code>](#functionpermissionargs)<code class="symbol">[]</code><code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
-<InlineSection>**Default** No permissions</InlineSection>
-Attaches the given list of permissions to the SSR function.
+
+<InlineSection>
+**Default** No permissions
+</InlineSection>
 ```js
 permissions: [
   {
@@ -426,93 +454,46 @@ permissions: [
 **Type** <code class="primitive">Object</code>
 </InlineSection>
 - <p><code class="key">plan?</code><code class="primitive">Transform</code><code class="symbol">&lt;</code><code class="primitive">Object</code><code class="symbol">&gt;</code></p>
-
-
-
 - <p><code class="key">plan.behaviors?</code><code class="primitive">Object</code><code class="symbol">[]</code></p>
-
-
-
 - <p><code class="key">plan.behaviors.allowedMethods?</code><code class="primitive">DELETE</code><code class="symbol"> | </code><code class="primitive">GET</code><code class="symbol"> | </code><code class="primitive">HEAD</code><code class="symbol"> | </code><code class="primitive">OPTIONS</code><code class="symbol"> | </code><code class="primitive">PATCH</code><code class="symbol"> | </code><code class="primitive">POST</code><code class="symbol"> | </code><code class="primitive">PUT</code><code class="symbol">[]</code></p>
-
-
-
 - <p><code class="key">plan.behaviors.cacheType?</code><code class="primitive">server</code><code class="symbol"> | </code><code class="primitive">static</code></p>
-
-
-
 - <p><code class="key">plan.behaviors.cfFunction?</code><code class="primitive">string</code></p>
-
-
-
 - <p><code class="key">plan.behaviors.edgeFunction?</code><code class="primitive">string</code></p>
-
-
-
 - <p><code class="key">plan.behaviors.origin?</code><code class="primitive">string</code></p>
-
-
-
 - <p><code class="key">plan.behaviors.pattern?</code><code class="primitive">string</code></p>
-
-
-
 - <p><code class="key">plan.buildId?</code><code class="primitive">string</code></p>
-
-
-
 - <p><code class="key">plan.cloudFrontFunctions?</code><code class="primitive">Record</code><code class="symbol">&lt;</code><code class="primitive">string</code>, [<code class="type">CloudFrontFunctionConfig</code>](#cloudfrontfunctionconfig)<code class="symbol">&gt;</code></p>
-
-
-
 - <p><code class="key">plan.edge?</code><code class="primitive">boolean</code></p>
-
-
-
 - <p><code class="key">plan.edgeFunctions?</code><code class="primitive">Record</code><code class="symbol">&lt;</code><code class="primitive">string</code>, [<code class="type">EdgeFunctionConfig</code>](#edgefunctionconfig)<code class="symbol">&gt;</code></p>
-
-
-
 - <p><code class="key">plan.errorResponses?</code>[<code class="type">DistributionCustomErrorResponse</code>](https://www.pulumi.com/registry/packages/aws/api-docs/cloudfront/distribution/#distributioncustomerrorresponse)<code class="symbol">[]</code></p>
-
-
-
 - <p><code class="key">plan.origins?</code><code class="primitive">Record</code><code class="symbol">&lt;</code><code class="primitive">string</code>, [<code class="type">FunctionOriginConfig</code>](#functionoriginconfig)<code class="symbol"> | </code>[<code class="type">ImageOptimizationFunctionOriginConfig</code>](#imageoptimizationfunctionoriginconfig)<code class="symbol"> | </code>[<code class="type">S3OriginConfig</code>](#s3originconfig)<code class="symbol"> | </code>[<code class="type">OriginGroupConfig</code>](#origingroupconfig)<code class="symbol">&gt;</code></p>
-
-
-
 - <p><code class="key">plan.serverCachePolicy?</code><code class="primitive">Object</code></p>
-
-
-
 - <p><code class="key">plan.serverCachePolicy.allowedHeaders?</code><code class="primitive">string</code><code class="symbol">[]</code></p>
-
-
-
 </Section>
-
-
-
 </Segment>
 <Segment>
 ### typesPath?
+Path relative to the app location where the type definitions are located.
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
-<InlineSection>**Default** "."</InlineSection>
-Path relative to the app location where the type definitions are located.
 
+<InlineSection>
+**Default** "."
+</InlineSection>
 </Segment>
 <Segment>
 ### warm?
+The number of server functions to keep warm. This option is only supported for the regional mode.
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">number</code><code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
-<InlineSection>**Default** Server function is not kept warm</InlineSection>
-The number of server functions to keep warm. This option is only supported for the regional mode.
 
+<InlineSection>
+**Default** Server function is not kept warm
+</InlineSection>
 </Segment>

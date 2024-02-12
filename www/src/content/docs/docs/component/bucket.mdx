@@ -47,33 +47,33 @@ new Bucket(name, args?, opts?)
 
 <Segment>
 ### arn
+The S3 bucket arn.
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Output</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
-The S3 bucket arn.
 </Segment>
 
 <Segment>
 ### name
+The S3 bucket name.
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Output</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
-The S3 bucket name.
 </Segment>
 
 <Segment>
 ### nodes
+The underlying AWS resources.
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Object</code>
 </InlineSection>
 - <p><code class="key">bucket</code>[<code class="type">BucketV2</code>](https://www.pulumi.com/registry/packages/aws/api-docs/s3/bucketv2/)</p>
 </Section>
-The underlying AWS resources.
 </Segment>
 
 ## BucketArgs
@@ -81,13 +81,16 @@ The underlying AWS resources.
 Arguments for creating a `Bucket` component.
 <Segment>
 ### public?
+Enable public access to the files in the bucket
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">boolean</code><code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
-<InlineSection>**Default** <code class="primitive">false</code></InlineSection>
-Enable public access to the files in the bucket
+
+<InlineSection>
+**Default** <code class="primitive">false</code>
+</InlineSection>
 ```js
 {
   public: true
@@ -101,15 +104,6 @@ Enable public access to the files in the bucket
 **Type** <code class="primitive">Object</code>
 </InlineSection>
 - <p><code class="key">bucket?</code><code class="primitive">Transform</code><code class="symbol">&lt;</code>[<code class="type">BucketV2Args</code>](https://www.pulumi.com/registry/packages/aws/api-docs/s3/bucketv2/#inputs)<code class="symbol">&gt;</code></p>
-
-
-
 - <p><code class="key">bucketPolicy?</code><code class="primitive">Transform</code><code class="symbol">&lt;</code>[<code class="type">BucketPolicyArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/s3/bucketpolicy/#inputs)<code class="symbol">&gt;</code></p>
-
-
-
 </Section>
-
-
-
 </Segment>
