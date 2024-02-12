@@ -4,4 +4,5 @@ export default {
   discord: "https://sst.dev/discord",
   twitter: "https://x.com/SST_dev",
   socialCard: "https://social-cards.sst.dev",
+  description: "Ion — A new engine for SST",
 };

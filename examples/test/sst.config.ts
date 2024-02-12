@@ -1,23 +1,24 @@
-/// <reference path="./.sst/platform/src/global.d.ts" />
+/// <reference path="./.sst/platform/config.d.ts" />
 
 export default $config({
-  app(input) {
+  app() {
     return {
       name: "test",
       removalPolicy: "remove",
       providers: {
-        aws: {
-          profile: "sst-dev",
-        },
+        aws: {},
+        cloudflare: {},
       },
     };
   },
   async run() {
-    const fn = new sst.Function("MyFunction", {
+    const queue = new sst.aws.Bucket("Bucket");
+    const fn = new sst.aws.Function("MyFunction", {
       url: true,
+      link: [queue],
       handler: "./src/index.handler",
       environment: {
-        HELLO: "why",
+        HELLO: "NICE",
       },
     });
 

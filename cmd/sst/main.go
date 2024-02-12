@@ -217,6 +217,39 @@ func main() {
 				},
 			},
 			{
+				Name:  "install",
+				Flags: []cli.Flag{},
+				Action: func(cli *cli.Context) error {
+					cfgPath, err := project.Discover()
+					if err != nil {
+						return err
+					}
+
+					p, err := project.New(&project.ProjectConfig{
+						Version: version,
+						Config:  cfgPath,
+					})
+					if err != nil {
+						return err
+					}
+
+					if !p.CheckPlatform(version) {
+						err := p.InstallPlatform(version)
+						if err != nil {
+							return err
+						}
+					}
+
+					err = p.Install()
+					if err != nil {
+						return err
+					}
+
+					return nil
+
+				},
+			},
+			{
 				Name:  "dev",
 				Flags: []cli.Flag{},
 				Action: func(cli *cli.Context) error {
@@ -498,21 +531,7 @@ func main() {
 						return err
 					}
 
-					cfgPath, err := project.Discover()
-					if err != nil {
-						return err
-					}
-
-					if !project.CheckDeps(version, cfgPath) {
-						spin := spinner.New(spinner.CharSets[14], 100*time.Millisecond)
-						spin.Suffix = "  Installing dependencies..."
-						spin.Start()
-						err = project.InstallDeps(version, cfgPath)
-						spin.Stop()
-						if err != nil {
-							return err
-						}
-					}
+					initProject(cli)
 
 					color.New(color.FgGreen, color.Bold).Print("✔")
 					color.New(color.FgWhite, color.Bold).Println("  Created new project with '", template, "' template")
@@ -577,17 +596,6 @@ func initProject(cli *cli.Context) (*project.Project, error) {
 		return nil, err
 	}
 
-	if !project.CheckDeps(version, cfgPath) {
-		spin := spinner.New(spinner.CharSets[14], 100*time.Millisecond)
-		spin.Suffix = "  Installing dependencies..."
-		spin.Start()
-		err = project.InstallDeps(version, cfgPath)
-		if err != nil {
-			return nil, err
-		}
-		spin.Stop()
-	}
-
 	p, err := project.New(&project.ProjectConfig{
 		Version: version,
 		Stage:   stage,
@@ -595,6 +603,17 @@ func initProject(cli *cli.Context) (*project.Project, error) {
 	})
 	if err != nil {
 		return nil, err
+	}
+
+	if !p.CheckPlatform(version) {
+		spin := spinner.New(spinner.CharSets[14], 100*time.Millisecond)
+		spin.Suffix = "  Installing dependencies..."
+		spin.Start()
+		err := p.InstallPlatform(version)
+		if err != nil {
+			return nil, err
+		}
+		spin.Stop()
 	}
 
 	_, err = logFile.Seek(0, 0)

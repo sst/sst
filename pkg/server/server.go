@@ -38,6 +38,7 @@ type Event struct {
 	StateEvent            *StateEvent
 	FunctionInvokedEvent  *aws.FunctionInvokedEvent
 	FunctionResponseEvent *aws.FunctionResponseEvent
+	FunctionLogEvent      *aws.FunctionLogEvent
 }
 
 type StateEvent struct {
@@ -119,6 +120,13 @@ func (s *Server) Start(parentContext context.Context) error {
 				FunctionResponseEvent: event,
 			})
 		})
+
+		bus.Subscribe(ctx, func(event *aws.FunctionLogEvent) {
+			publish(&Event{
+				FunctionLogEvent: event,
+			})
+		})
+
 		bus.Subscribe(ctx, func(event *project.StackEvent) {
 			publish(&Event{
 				StackEvent: *event,

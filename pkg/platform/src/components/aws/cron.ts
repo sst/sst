@@ -5,7 +5,7 @@ import {
   Output,
 } from "@pulumi/pulumi";
 import * as aws from "@pulumi/aws";
-import { Component, Transform, transform } from "./component";
+import { Component, Transform, transform } from "../component";
 import { Function, FunctionArgs } from ".";
 
 export interface CronJobProps {
@@ -111,7 +111,7 @@ export class Cron extends Component {
         transform(args.transform?.rule, {
           scheduleExpression: args.schedule,
         }),
-        { parent }
+        { parent },
       );
     }
 
@@ -122,7 +122,7 @@ export class Cron extends Component {
           arn: fn.nodes.function.arn,
           rule: rule.name,
         }),
-        { parent }
+        { parent },
       );
     }
 
@@ -135,7 +135,7 @@ export class Cron extends Component {
           principal: "events.amazonaws.com",
           sourceArn: rule.arn,
         },
-        { parent }
+        { parent },
       );
     }
   }

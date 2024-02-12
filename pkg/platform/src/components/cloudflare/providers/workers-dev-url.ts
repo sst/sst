@@ -1,5 +1,5 @@
 import { CustomResourceOptions, Input, Output, dynamic } from "@pulumi/pulumi";
-import { cfFetch } from "../helpers/cloudflare/fetch.js";
+import { cfFetch } from "../helpers/fetch.js";
 
 export interface WorkersDevUrlInputs {
   accountId: Input<string>;
@@ -24,7 +24,7 @@ class Provider implements dynamic.ResourceProvider {
   async update(
     id: string,
     olds: Inputs,
-    news: Inputs
+    news: Inputs,
   ): Promise<dynamic.UpdateResult> {
     const url = await this.process(news);
     return {
@@ -48,7 +48,7 @@ class Provider implements dynamic.ResourceProvider {
   async getWorkersDevSubdomain(inputs: Inputs) {
     try {
       const ret = await cfFetch<{ subdomain: string }>(
-        `/accounts/${inputs.accountId}/workers/subdomain`
+        `/accounts/${inputs.accountId}/workers/subdomain`,
       );
       return ret.subdomain;
     } catch (error: any) {
@@ -64,7 +64,7 @@ class Provider implements dynamic.ResourceProvider {
         {
           method: "POST",
           body: JSON.stringify({ enabled: inputs.enabled }),
-        }
+        },
       );
       // Add a delay when the subdomain is first created.
       // This is to prevent an issue where a negative cache-hit
@@ -86,13 +86,13 @@ export class WorkersDevUrl extends dynamic.Resource {
   constructor(
     name: string,
     args: WorkersDevUrlInputs,
-    opts?: CustomResourceOptions
+    opts?: CustomResourceOptions,
   ) {
     super(
       new Provider(),
       `${name}.sst.WorkersDevUrl`,
       { ...args, url: undefined },
-      opts
+      opts,
     );
   }
 }

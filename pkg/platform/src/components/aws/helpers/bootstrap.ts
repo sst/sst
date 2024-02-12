@@ -10,7 +10,7 @@ import {
   PutBucketVersioningCommand,
 } from "@aws-sdk/client-s3";
 export type {} from "@smithy/types";
-import { HASH_CHARS, hashNumberToString } from "../naming";
+import { HASH_CHARS, hashNumberToString } from "../../naming";
 
 const VERSION = 1;
 

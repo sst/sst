@@ -1,5 +1,5 @@
 import { Input, Output, runtime } from "@pulumi/pulumi";
-import { FunctionPermissionArgs } from "./function.js";
+import { FunctionPermissionArgs } from "./aws/function.js";
 import { VisibleError } from "./error.js";
 
 export module Link {
@@ -57,7 +57,7 @@ export module Link {
 
   export function makeLinkable<T>(
     obj: { new (...args: any[]): T },
-    cb: (this: T) => Definition
+    cb: (this: T) => Definition,
   ) {
     obj.prototype.getSSTLink = cb;
   }
@@ -77,7 +77,7 @@ export module Link {
 
     export function makeLinkable<T>(
       obj: { new (...args: any[]): T },
-      cb: (this: T) => FunctionPermissionArgs[]
+      cb: (this: T) => FunctionPermissionArgs[],
     ) {
       obj.prototype.getSSTAWSPermissions = cb;
     }

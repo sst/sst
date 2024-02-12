@@ -82,7 +82,7 @@ func New(input *ProjectConfig) (*Project, error) {
 		project: proj,
 	}
 	tmp := proj.PathWorkingDir()
-	platformDir := proj.PathPlatformDir()
+	// platformDir := proj.PathPlatformDir()
 
 	_, err = os.Stat(tmp)
 	if err != nil {
@@ -100,8 +100,10 @@ func New(input *ProjectConfig) (*Project, error) {
 	})
 	err = process.Eval(
 		js.EvalOptions{
-			Dir:    platformDir,
-			Inject: []string{filepath.Join(tmp, "platform/src/shim/boot.js")},
+			Dir: tmp,
+			Banner: `
+      function $config(input) { return input }
+      `,
 			Define: map[string]string{
 				"$input": string(inputBytes),
 			},

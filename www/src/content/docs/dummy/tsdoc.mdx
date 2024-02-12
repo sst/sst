@@ -7,9 +7,29 @@ import Segment from '../../../components/tsdoc/Segment.astro';
 import Section from '../../../components/tsdoc/Section.astro';
 import InlineSection from '../../../components/tsdoc/InlineSection.astro';
 
+<Section type="about">
 Returns a locale object for the specified definition with `locale.format` and `locale.formatPrefix` methods.
 
 This section has more from about the `FormatSpecifier`.
+
+#### Simple Example
+
+Here's a simple example.
+
+```ts
+new FormatSpecifier("param1");
+```
+
+#### Complicated Example
+
+Here's a more complicated example.
+
+```ts
+new FormatSpecifier("param1", "param2", "param3");
+```
+
+For more info [refer to our other docs](/).
+</Section>
 
 ---
 
@@ -46,20 +66,6 @@ Returning an object with exposed fields that correspond to the format specificat
 :::note
 You can also add notes. By specifying the ZipFile property within the Code property, specify `index.function_name` as the handler.
 :::
-
-Here's a simple example.
-
-```ts
-new FormatSpecifier("param1");
-```
-
-Here's a more complicated example.
-
-```ts
-new FormatSpecifier("param1", "param2", "param3");
-```
-
-For more info [refer to our other docs](/).
 </Segment>
 
 ## Methods
@@ -76,17 +82,63 @@ noop(): void
 This function doesn't do anything.
 </Segment>
 
-## Properties
+<Segment>
+### simpleArgs
+
+<Section type="signature">
+```ts
+simpleArgs(true, false ,true): void
+```
+</Section>
+
+This function takes some simple args.
+
+<Section type="parameters">
+#### Parameters
+
+- <p><code class="key">isTrue</code> <code class="primitive">boolean</code></p>
+- <p><code class="key">isFalse?</code> <code class="primitive">boolean</code></p>
+- <p><code class="key">isAny?</code> <code class="primitive">boolean</code></p>
+</Section>
+
+</Segment>
+
+## DummyProps
 
 <Segment>
-### architecture?
-
+### simpleProp?
 <InlineSection>
 **Type** <code class="primitive">x86_64</code><code class="symbol"> | </code><code class="primitive">arm_64</code>
 </InlineSection>
 
 <InlineSection>
 **Default** Uses x86 by default `x86_64`
+</InlineSection>
+
+The CPU architecture of the lambda function.
+
+```ts
+new Function(stack, "Function", {
+  architecture: "arm_64",
+})
+```
+</Segment>
+
+<Segment>
+### objectProp?
+
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Object</code>
+</InlineSection>
+
+- <p><code class="key">isTrue</code> <code class="primitive">boolean</code></p>
+- <p><code class="key">isFalse?</code> <code class="primitive">boolean</code></p>
+- <p><code class="key">isAny?</code> <code class="primitive">boolean</code></p>
+</Section>
+
+<InlineSection>
+**Default** <code class="primitive">undefined</code>
 </InlineSection>
 
 The CPU architecture of the lambda function.

@@ -1,8 +1,7 @@
 import fs from "fs";
-import path from "path";
 import { CustomResourceOptions, Input, dynamic } from "@pulumi/pulumi";
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
-import { useClient } from "../helpers/aws/client.js";
+import { useClient } from "../helpers/client.js";
 
 export interface BucketFile {
   source: string;
@@ -31,12 +30,12 @@ class Provider implements dynamic.ResourceProvider {
   async update(
     id: string,
     olds: Inputs,
-    news: Inputs
+    news: Inputs,
   ): Promise<dynamic.UpdateResult> {
     await this.upload(
       news.bucketName,
       news.files,
-      news.bucketName === olds.bucketName ? olds.files : []
+      news.bucketName === olds.bucketName ? olds.files : [],
     );
     return { outs: news };
   }
@@ -44,7 +43,7 @@ class Provider implements dynamic.ResourceProvider {
   async upload(
     bucketName: string,
     files: BucketFile[],
-    oldFiles: BucketFile[]
+    oldFiles: BucketFile[],
   ) {
     const oldFilesMap = new Map(oldFiles.map((f) => [f.key, f]));
 
@@ -68,9 +67,9 @@ class Provider implements dynamic.ResourceProvider {
             Body: await fs.promises.readFile(file.source),
             CacheControl: file.cacheControl,
             ContentType: file.contentType,
-          })
+          }),
         );
-      })
+      }),
     );
   }
 }
@@ -79,7 +78,7 @@ export class BucketFiles extends dynamic.Resource {
   constructor(
     name: string,
     args: BucketFilesInputs,
-    opts?: CustomResourceOptions
+    opts?: CustomResourceOptions,
   ) {
     super(new Provider(), `${name}.sst.BucketFiles`, args, opts);
   }

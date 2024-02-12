@@ -5,8 +5,8 @@ import {
   Output,
 } from "@pulumi/pulumi";
 import * as aws from "@pulumi/aws";
-import { Component, Transform, transform } from "./component";
-import { Link } from "./link";
+import { Component, Transform, transform } from "../component";
+import { Link } from "../link";
 
 export interface PostgresScalingArgs {
   /**

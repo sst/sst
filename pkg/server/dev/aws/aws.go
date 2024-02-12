@@ -1,6 +1,7 @@
 package aws
 
 import (
+	"bufio"
 	"context"
 	"crypto/rand"
 	"crypto/tls"
@@ -43,6 +44,17 @@ type FunctionInvokedEvent struct {
 type FunctionResponseEvent struct {
 	FunctionID string
 	WorkerID   string
+}
+
+type FunctionBuildEvent struct {
+	FunctionID string
+	Errors     []string
+}
+
+type FunctionLogEvent struct {
+	FunctionID string
+	WorkerID   string
+	Line       string
 }
 
 func Start(
@@ -191,15 +203,23 @@ func Start(
 		workerEnv := map[string][]string{}
 		builds := map[string]*runtime.BuildOutput{}
 
-		run := func(functionID string, workerID string) {
+		run := func(functionID string, workerID string) bool {
 			build := builds[functionID]
 			warp := complete.Warps[functionID]
 			if build == nil {
 				build, _ = runtime.Build(ctx, &runtime.BuildInput{
-					WarpDefinition: warp,
-					Project:        p,
-					Dev:            true,
+					Warp:    warp,
+					Project: p,
+					Dev:     true,
+					Links:   complete.Links,
 				})
+				bus.Publish(&FunctionBuildEvent{
+					Errors: build.Errors,
+				})
+				if len(build.Errors) > 0 {
+					delete(builds, functionID)
+					return false
+				}
 				builds[functionID] = build
 			}
 			worker, _ := runtime.Run(ctx, &runtime.RunInput{
@@ -216,10 +236,21 @@ func Start(
 				WorkerID:   workerID,
 			}
 			go func() {
-				worker.Done()
+				logs := worker.Logs()
+				scanner := bufio.NewScanner(logs)
+				for scanner.Scan() {
+					line := scanner.Text()
+					bus.Publish(&FunctionLogEvent{
+						FunctionID: functionID,
+						WorkerID:   workerID,
+						Line:       line,
+					})
+				}
 				workerShutdownChan <- info
 			}()
 			workers[workerID] = info
+
+			return true
 		}
 
 		for {
@@ -267,7 +298,13 @@ func Start(
 					continue
 				}
 				workerEnv[workerID] = payload.Env
-				run(payload.FunctionID, workerID)
+				if ok := run(payload.FunctionID, workerID); !ok {
+					result, _ := http.Post("http://localhost:44149/lambda/"+workerID+"/runtime/init/error", "application/json", strings.NewReader(`{"errorMessage":"Function failed to build"}`))
+					defer result.Body.Close()
+					body, _ := io.ReadAll(result.Body)
+					slog.Info("error", "body", string(body))
+
+				}
 				break
 
 			case m := <-shutdownChan:

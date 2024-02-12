@@ -6,12 +6,12 @@ import {
   interpolate,
   output,
 } from "@pulumi/pulumi";
-import { Component } from "./component.js";
+import { Component } from "../component.js";
 import { Postgres } from "./postgres.js";
 import { EmbeddingsTable } from "./providers/embeddings-table.js";
-import { Function, FunctionPermissionArgs } from "./function.js";
-import { Link } from "./link.js";
-import { VisibleError } from "./error.js";
+import { Function } from "./function.js";
+import { Link } from "../link.js";
+import { VisibleError } from "../error.js";
 
 const ModelInfo = {
   "amazon.titan-embed-text-v1": { provider: "bedrock" as const, size: 1536 },

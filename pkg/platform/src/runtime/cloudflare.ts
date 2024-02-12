@@ -2,7 +2,7 @@ import path from "path";
 import fs from "fs/promises";
 import esbuild, { BuildOptions, BuildResult } from "esbuild";
 import pulumi from "@pulumi/pulumi";
-import { WorkerArgs } from "../components/worker.js";
+import { WorkerArgs } from "../components/cloudflare//worker.js";
 import { existsAsync } from "../util/fs.js";
 
 export async function build(
@@ -12,7 +12,7 @@ export async function build(
       name: string;
       value: string;
     }[];
-  }
+  },
 ) {
   const out = path.join($cli.paths.work, "artifacts", `${name}-src`);
   const sourcemapOut = path.join($cli.paths.work, "artifacts", `${name}-map`);
@@ -33,12 +33,12 @@ export async function build(
     !relative.startsWith("..") && !path.isAbsolute(input.handler!)
       ? relative
       : "",
-    "index.mjs"
+    "index.mjs",
   );
 
   // Rebuilt using existing esbuild context
   const links = Object.fromEntries(
-    input.links?.map((item) => [item.name, item.value]) || []
+    input.links?.map((item) => [item.name, item.value]) || [],
   );
   const options: BuildOptions = {
     entryPoints: [path.resolve(input.handler)],
@@ -79,7 +79,7 @@ export async function build(
       if (nodejs.sourcemap) return;
 
       const map = Object.keys(result.metafile?.outputs || {}).find((item) =>
-        item.endsWith(".map")
+        item.endsWith(".map"),
       );
       if (!map) return;
 

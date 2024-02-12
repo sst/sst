@@ -25,7 +25,6 @@ const sidebar = [
       { label: "Live Mode", link: "/docs/live-mode/" },
       { label: "Transform", link: "/docs/transform/" },
       { label: "Console", link: "/docs/console/" },
-      { label: "Plugins", link: "/docs/plugins/" },
     ],
   },
   {

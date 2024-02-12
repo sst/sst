@@ -13,9 +13,9 @@ import {
 } from "./ssr-site.js";
 import { Cdn } from "./cdn.js";
 import { Bucket } from "./bucket.js";
-import { Component, transform } from "./component.js";
-import { Hint } from "./hint.js";
-import { Link } from "./link.js";
+import { Component, transform } from "../component.js";
+import { Hint } from "../hint.js";
+import { Link } from "../link.js";
 
 export interface RemixArgs extends SsrSiteArgs {
   /**

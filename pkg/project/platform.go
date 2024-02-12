@@ -10,42 +10,32 @@ import (
 	"github.com/sst/ion/pkg/platform"
 )
 
-func CheckDeps(version, cfgPath string) bool {
+func (p *Project) CheckPlatform(version string) bool {
 	if version == "dev" {
 		return false
 	}
-	slog.Info("checking dependencies")
-	contents, err := os.ReadFile(filepath.Join(ResolvePlatformDir(cfgPath), "version"))
+	slog.Info("checking platform")
+	contents, err := os.ReadFile(filepath.Join(p.PathPlatformDir(), "version"))
 	if err != nil {
 		return false
 	}
 	return string(contents) == version
 }
 
-func InstallDeps(version, cfgPath string) error {
-	slog.Info("installing dependencies")
-
-	platformDir := ResolvePlatformDir(cfgPath)
+func (p *Project) InstallPlatform(version string) error {
+	slog.Info("installing platform")
+	platformDir := p.PathPlatformDir()
+	os.RemoveAll(filepath.Join(platformDir))
 	err := platform.CopyTo(".", platformDir)
 	if err != nil {
 		return err
 	}
-
-	if version == "dev" && false {
-		slog.Info("dev mode skipping node_module install")
-		return nil
-	}
-
-	os.RemoveAll(filepath.Join(platformDir, "node_modules"))
-
 	cmd := exec.Command("bun", "install")
 	cmd.Dir = platformDir
-
 	err = cmd.Run()
 	if err != nil {
 		return err
 	}
-
 	return os.WriteFile(filepath.Join(platformDir, "version"), []byte(version), 0644)
 }
 

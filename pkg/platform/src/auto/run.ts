@@ -9,6 +9,9 @@ import {
   automation,
 } from "@pulumi/pulumi";
 
+import aws from "@pulumi/aws";
+import { VisibleError } from "../components/error";
+
 export async function run(program: automation.PulumiFn) {
   process.chdir($cli.paths.root);
 
@@ -30,7 +33,14 @@ export async function run(program: automation.PulumiFn) {
     return undefined;
   });
 
+  const componentNames = new Set<string>();
   runtime.registerStackTransformation((args: ResourceTransformationArgs) => {
+    if (componentNames.has(args.name)) {
+      throw new VisibleError(
+        `Invalid component name "${args.name}". Component names must be unique.`,
+      );
+    }
+    componentNames.add(args.name);
     let normalizedName = args.name;
     if (
       args.type === "pulumi-nodejs:dynamic:Resource" ||
@@ -44,7 +54,7 @@ export async function run(program: automation.PulumiFn) {
 
     if (!normalizedName.match(/^[A-Z][a-zA-Z0-9]*$/)) {
       throw new Error(
-        `Invalid component name "${normalizedName}". Component names must start with an uppercase letter and contain only alphanumeric characters.`
+        `Invalid component name "${normalizedName}". Component names must start with an uppercase letter and contain only alphanumeric characters.`,
       );
     }
 
