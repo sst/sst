@@ -1,12 +1,8 @@
-import {
-  Input,
-  ComponentResourceOptions,
-  output,
-  Output,
-} from "@pulumi/pulumi";
+import { ComponentResourceOptions, output, Output } from "@pulumi/pulumi";
 import * as aws from "@pulumi/aws";
 import { Component, Transform, transform } from "../component";
 import { Link } from "../link";
+import { Input } from "../input.js";
 
 export interface PostgresScalingArgs {
   /**

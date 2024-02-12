@@ -1,7 +1,8 @@
-import { Input, ComponentResourceOptions, output } from "@pulumi/pulumi";
+import { ComponentResourceOptions, output } from "@pulumi/pulumi";
 import * as aws from "@pulumi/aws";
 import { Component } from "../component";
 import { sanitizeToPascalCase } from "../naming";
+import { Input } from "../input.js";
 
 /**
  * Properties to create a DNS validated certificate managed by AWS Certificate Manager.

@@ -1,5 +1,4 @@
 import {
-  Input,
   Output,
   ComponentResourceOptions,
   output,
@@ -12,6 +11,7 @@ import { useProvider } from "./helpers/provider.js";
 import { Component, Transform, transform } from "../component.js";
 import { sanitizeToPascalCase } from "../naming.js";
 import { HostedZoneLookup } from "./providers/hosted-zone-lookup.js";
+import { Input } from "../input.js";
 
 export interface CdnDomainArgs {
   /**

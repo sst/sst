@@ -53,13 +53,10 @@ async function main() {
       const lines = [];
       const comment = useClassComment();
 
+      lines.push(``, `<Section type="about">`);
+
       // description
-      lines.push(
-        ``,
-        `<Section type="signature">`,
-        renderComment(comment.summary),
-        `</Section>`
-      );
+      lines.push(renderComment(comment.summary));
 
       // examples
       const examples = comment.blockTags.filter(
@@ -68,13 +65,11 @@ async function main() {
       if (examples.length) {
         lines.push(
           ``,
-          `<Section type="signature">`,
-          ...examples.map((example) => renderComment(example.content)),
-          `</Section>`
+          ...examples.map((example) => renderComment(example.content))
         );
       }
 
-      lines.push(``, `---`);
+      lines.push(`</Section>`, ``, `---`);
       return lines;
     }
 
@@ -145,24 +140,19 @@ async function main() {
         console.debug(` - property ${prop.name}`);
         lines.push(``, `<Segment>`, `### ${prop.name}`);
         // type
+        const nestedTypes = useInterfaceNestedTypes(prop.getSignature?.type!);
         lines.push(
+          `<Section type="parameters">`,
           `<InlineSection>`,
           `**Type** ${renderType(prop.getSignature?.type!)}`,
-          `</InlineSection>`
+          `</InlineSection>`,
+          ...nestedTypes.flatMap(({ prefix, subType }) => [
+            `- <p><code class="key">${prefix}${subType.name}${
+              prop.getSignature?.flags.isOptional ? "?" : ""
+            }</code>${renderType(subType.type!)}</p>`,
+          ]),
+          `</Section>`
         );
-        // nested types
-        const nestedTypes = useInterfaceNestedTypes(prop.getSignature?.type!);
-        if (nestedTypes.length) {
-          lines.push(
-            `<Section type="parameters">`,
-            ...nestedTypes.flatMap(({ prefix, subType }) => [
-              `- <p><code class="key">${prefix}${subType.name}${
-                prop.getSignature?.flags.isOptional ? "?" : ""
-              }</code>${renderType(subType.type!)}</p>`,
-            ]),
-            `</Section>`
-          );
-        }
         // description
         if (prop.getSignature?.comment?.summary) {
           lines.push(renderComment(prop.getSignature?.comment?.summary!));
@@ -195,28 +185,22 @@ async function main() {
           // name
           lines.push(`### ${prop.name}${prop.flags.isOptional ? "?" : ""}`);
           // type
+          const nestedTypes = useInterfaceNestedTypes(prop.type!);
           lines.push(
-            ``,
+            `<Section type="parameters">`,
             `<InlineSection>`,
             `**Type** ${renderType(prop.type!)}`,
-            `</InlineSection>`
+            `</InlineSection>`,
+            ...nestedTypes.flatMap(({ prefix, subType }) => [
+              `- <p><code class="key">${prefix}${subType.name}${
+                prop.flags.isOptional ? "?" : ""
+              }</code>${renderType(subType.type!)}</p>`,
+              renderInterfaceDefaultTag(subType) ?? "",
+              renderInterfaceDescription(subType) ?? "",
+              renderInterfaceExamples(subType) ?? "",
+            ]),
+            `</Section>`
           );
-          // nested types
-          const nestedTypes = useInterfaceNestedTypes(prop.type!);
-          if (nestedTypes.length) {
-            lines.push(
-              `<Section type="parameters">`,
-              ...nestedTypes.flatMap(({ prefix, subType }) => [
-                `- <p><code class="key">${prefix}${subType.name}${
-                  prop.flags.isOptional ? "?" : ""
-                }</code>${renderType(subType.type!)}</p>`,
-                renderInterfaceDefaultTag(subType) ?? "",
-                renderInterfaceDescription(subType) ?? "",
-                renderInterfaceExamples(subType) ?? "",
-              ]),
-              `</Section>`
-            );
-          }
           lines.push(
             renderInterfaceDefaultTag(prop) ?? "",
             renderInterfaceDescription(prop) ?? "",
@@ -280,7 +264,8 @@ async function main() {
     }
 
     function renderType(type: TypeDoc.SomeType): string {
-      // TODO unhandled `nodes`
+      // TODO fix indention for nested types
+      // TODO implement Prettify for all components
       // TODO unhandled linking to interfaces in another component
       // TODO review link `Transform` to transform doc
       if (type.type === "intrinsic") return renderIntrisicType(type);

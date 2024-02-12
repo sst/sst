@@ -1,7 +1,6 @@
 import path from "path";
 import {
   ComponentResourceOptions,
-  Input,
   all,
   interpolate,
   output,
@@ -12,6 +11,7 @@ import { EmbeddingsTable } from "./providers/embeddings-table.js";
 import { Function } from "./function.js";
 import { Link } from "../link.js";
 import { VisibleError } from "../error.js";
+import { Input } from "../input.js";
 
 const ModelInfo = {
   "amazon.titan-embed-text-v1": { provider: "bedrock" as const, size: 1536 },

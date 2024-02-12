@@ -1,10 +1,11 @@
-import { ComponentResourceOptions, Input, all, output } from "@pulumi/pulumi";
+import { ComponentResourceOptions, all, output } from "@pulumi/pulumi";
 import * as aws from "@pulumi/aws";
 import { DnsValidatedCertificate } from "./dns-validated-certificate.js";
 import { Bucket } from "./bucket.js";
 import { Component } from "../component.js";
 import { sanitizeToPascalCase } from "../naming.js";
 import { useProvider } from "./helpers/provider.js";
+import { Input } from "../input.js";
 
 /**
  * Properties to configure an HTTPS Redirect
