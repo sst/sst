@@ -240,26 +240,31 @@ async function main() {
           `## ${prop.name[0].toLocaleUpperCase()}${prop.name.slice(1)}Props`
         );
 
-        // description
-        if (prop.comment?.summary) {
-          lines.push(``, renderComment(prop.comment?.summary!));
-        }
-
         // props
         lines.push(
-          `<InlineSection>`,
           ...nestedTypes.flatMap(({ prefix, subType }) => [
-            `- <p><code class="key">${prefix}${subType.name}${
-              prop.flags.isOptional ? "?" : ""
-            }</code>${renderType(subType.type!).replaceAll(
+            `<Segment>`,
+            // prop name
+            `### ${prefix}${subType.name}${
+              subType.flags.isOptional ? "?" : ""
+            }`,
+            // prop type
+            `<Section type="parameters">`,
+            `<InlineSection>`,
+            `**Type** ${renderType(subType.type!).replaceAll(
               "{{_NESTED_TYPE_}}",
               "Object"
-            )}</p>`,
+            )}`,
+            `</InlineSection>`,
+            `</Section>`,
+            // prop default value
             ...(renderInterfaceDefaultTag(subType) ?? []),
+            // prop description
             ...(renderInterfaceDescription(subType) ?? []),
+            // prop examples
             ...(renderInterfaceExamples(subType) ?? []),
-          ]),
-          `</InlineSection>`
+            `</Segment>`,
+          ])
         );
       }
       return lines;
@@ -323,6 +328,7 @@ async function main() {
        *
        * Supports domains that are hosted either on [Route 53](https://aws.amazon.com/route53/) or externally.
        */
+      // TODO use `` default value for all components
       // TODO unhandled linking to interfaces in another component
       // TODO function link to esbuild `Loader`
       // TODO link `Transform` to transform doc (add the same line, expand)

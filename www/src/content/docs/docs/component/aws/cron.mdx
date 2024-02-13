@@ -126,17 +126,39 @@ The function that will be executed when the job runs.
 </Segment>
 
 ## NodesProps
+<Segment>
+### job
+<Section type="parameters">
 <InlineSection>
-- <p><code class="key">job</code><code class="primitive">Output</code><code class="symbol">&lt;</code>[<code class="type">Function</code>](#function)<code class="symbol">&gt;</code></p>
-- <p><code class="key">rule</code>[<code class="type">EventRule</code>](https://www.pulumi.com/registry/packages/aws/api-docs/cloudwatch/eventrule/)</p>
-- <p><code class="key">target</code>[<code class="type">EventTarget</code>](https://www.pulumi.com/registry/packages/aws/api-docs/cloudwatch/eventtarget/)</p>
+**Type** <code class="primitive">Output</code><code class="symbol">&lt;</code>[<code class="type">Function</code>](#function)<code class="symbol">&gt;</code>
 </InlineSection>
+</Section>
+</Segment>
+<Segment>
+### rule
+<Section type="parameters">
+<InlineSection>
+**Type** [<code class="type">EventRule</code>](https://www.pulumi.com/registry/packages/aws/api-docs/cloudwatch/eventrule/)
+</InlineSection>
+</Section>
+</Segment>
+<Segment>
+### target
+<Section type="parameters">
+<InlineSection>
+**Type** [<code class="type">EventTarget</code>](https://www.pulumi.com/registry/packages/aws/api-docs/cloudwatch/eventtarget/)
+</InlineSection>
+</Section>
+</Segment>
 
 ## JobProps
-
-Path to the handler for the cron function.
+<Segment>
+### function
+<Section type="parameters">
 <InlineSection>
-- <p><code class="key">function</code><code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol"> | </code>[<code class="type">FunctionArgs</code>](#functionargs)<code class="symbol">&gt;</code></p>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol"> | </code>[<code class="type">FunctionArgs</code>](#functionargs)<code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
 The function that will be executed when the job runs.
 ```js
 {
@@ -145,10 +167,22 @@ The function that will be executed when the job runs.
   }
 }
 ```
-</InlineSection>
+</Segment>
 
 ## TransformProps
+<Segment>
+### rule?
+<Section type="parameters">
 <InlineSection>
-- <p><code class="key">rule?</code><code class="primitive">Transform</code><code class="symbol">&lt;</code>[<code class="type">EventRuleArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/cloudwatch/eventrule/#inputs)<code class="symbol">&gt;</code></p>
-- <p><code class="key">target?</code><code class="primitive">Transform</code><code class="symbol">&lt;</code>[<code class="type">EventTargetArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/cloudwatch/eventtarget/#inputs)<code class="symbol">&gt;</code></p>
+**Type** <code class="primitive">Transform</code><code class="symbol">&lt;</code>[<code class="type">EventRuleArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/cloudwatch/eventrule/#inputs)<code class="symbol">&gt;</code>
 </InlineSection>
+</Section>
+</Segment>
+<Segment>
+### target?
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Transform</code><code class="symbol">&lt;</code>[<code class="type">EventTargetArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/cloudwatch/eventtarget/#inputs)<code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+</Segment>

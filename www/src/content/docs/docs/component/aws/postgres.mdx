@@ -102,16 +102,31 @@ Enging version of the RDS cluster
 </Segment>
 
 ## NodesProps
+<Segment>
+### cluster
+<Section type="parameters">
 <InlineSection>
-- <p><code class="key">cluster</code>[<code class="type">Cluster</code>](https://www.pulumi.com/registry/packages/aws/api-docs/rds/cluster/)</p>
-- <p><code class="key">instance</code>[<code class="type">ClusterInstance</code>](https://www.pulumi.com/registry/packages/aws/api-docs/rds/clusterinstance/)</p>
+**Type** [<code class="type">Cluster</code>](https://www.pulumi.com/registry/packages/aws/api-docs/rds/cluster/)
 </InlineSection>
+</Section>
+</Segment>
+<Segment>
+### instance
+<Section type="parameters">
+<InlineSection>
+**Type** [<code class="type">ClusterInstance</code>](https://www.pulumi.com/registry/packages/aws/api-docs/rds/clusterinstance/)
+</InlineSection>
+</Section>
+</Segment>
 
 ## ScalingProps
-
-Aurora Serverless v2 scaling configuration
+<Segment>
+### max?
+<Section type="parameters">
 <InlineSection>
-- <p><code class="key">max?</code><code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">number</code><code class="symbol">&gt;</code></p>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">number</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
 
 <InlineSection>
 **Default** - 4
@@ -124,7 +139,14 @@ The maximum number of Aurora capacity units (ACUs) for a DB instance in an Auror
   }
 }
 ```
-- <p><code class="key">min?</code><code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">number</code><code class="symbol">&gt;</code></p>
+</Segment>
+<Segment>
+### min?
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">number</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
 
 <InlineSection>
 **Default** - 0.5
@@ -137,10 +159,22 @@ The minimum number of Aurora capacity units (ACUs) for a DB instance in an Auror
   }
 }
 ```
-</InlineSection>
+</Segment>
 
 ## TransformProps
+<Segment>
+### cluster?
+<Section type="parameters">
 <InlineSection>
-- <p><code class="key">cluster?</code><code class="primitive">Transform</code><code class="symbol">&lt;</code>[<code class="type">ClusterArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/rds/cluster/#inputs)<code class="symbol">&gt;</code></p>
-- <p><code class="key">instance?</code><code class="primitive">Transform</code><code class="symbol">&lt;</code>[<code class="type">ClusterInstanceArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/rds/clusterinstance/#inputs)<code class="symbol">&gt;</code></p>
+**Type** <code class="primitive">Transform</code><code class="symbol">&lt;</code>[<code class="type">ClusterArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/rds/cluster/#inputs)<code class="symbol">&gt;</code>
 </InlineSection>
+</Section>
+</Segment>
+<Segment>
+### instance?
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Transform</code><code class="symbol">&lt;</code>[<code class="type">ClusterInstanceArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/rds/clusterinstance/#inputs)<code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+</Segment>

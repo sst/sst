@@ -116,24 +116,46 @@ Used to configure nodejs function properties
 </Segment>
 
 ## NodesProps
+<Segment>
+### worker
+<Section type="parameters">
 <InlineSection>
-- <p><code class="key">worker</code><code class="primitive">Output</code><code class="symbol">&lt;</code>[<code class="type">WorkerScript</code>](https://www.pulumi.com/registry/packages/cloudflare/api-docs/workerscript/)<code class="symbol">&gt;</code></p>
+**Type** <code class="primitive">Output</code><code class="symbol">&lt;</code>[<code class="type">WorkerScript</code>](https://www.pulumi.com/registry/packages/cloudflare/api-docs/workerscript/)<code class="symbol">&gt;</code>
 </InlineSection>
+</Section>
+</Segment>
 
 ## NodejsProps
-
-Used to configure nodejs function properties
+<Segment>
+### banner?
+<Section type="parameters">
 <InlineSection>
-- <p><code class="key">banner?</code><code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code></p>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
 Use this to insert an arbitrary string at the beginning of generated JavaScript and CSS files.
 ```js
 nodejs: {
   banner: "console.log('Function starting')"
 }
 ```
-- <p><code class="key">esbuild?</code><code class="primitive">Input</code><code class="symbol">&lt;</code>[<code class="type">BuildOptions</code>](https://esbuild.github.io/api/#build)<code class="symbol">&gt;</code></p>
+</Segment>
+<Segment>
+### esbuild?
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code>[<code class="type">BuildOptions</code>](https://esbuild.github.io/api/#build)<code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
 This allows you to customize esbuild config.
-- <p><code class="key">loader?</code><code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Record</code><code class="symbol">&lt;</code><code class="primitive">string</code>, [<code class="type">Loader</code>](https://esbuild.github.io/api/#build)<code class="symbol">&gt;</code><code class="symbol">&gt;</code></p>
+</Segment>
+<Segment>
+### loader?
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Record</code><code class="symbol">&lt;</code><code class="primitive">string</code>, [<code class="type">Loader</code>](https://esbuild.github.io/api/#build)<code class="symbol">&gt;</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
 Configure additional esbuild loaders for other file extensions
 ```js
 nodejs: {
@@ -142,7 +164,14 @@ nodejs: {
   }
 }
 ```
-- <p><code class="key">minify?</code><code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">boolean</code><code class="symbol">&gt;</code></p>
+</Segment>
+<Segment>
+### minify?
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">boolean</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
 
 <InlineSection>
 **Default** true
@@ -153,7 +182,14 @@ nodejs: {
   minify: false
 }
 ```
-- <p><code class="key">sourcemap?</code><code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">boolean</code><code class="symbol">&gt;</code></p>
+</Segment>
+<Segment>
+### sourcemap?
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">boolean</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
 
 <InlineSection>
 **Default** false
@@ -164,4 +200,4 @@ nodejs: {
   sourcemap: true
 }
 ```
-</InlineSection>
+</Segment>

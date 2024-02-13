@@ -218,10 +218,13 @@ The number of server functions to keep warm. This option is only supported for t
 </Segment>
 
 ## AssetsProps
-
-Configure the assets uploaded to S3.
+<Segment>
+### fileOptions?
+<Section type="parameters">
 <InlineSection>
-- <p><code class="key">fileOptions?</code><code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Object</code><code class="symbol">[]</code><code class="symbol">&gt;</code></p>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Object</code><code class="symbol">[]</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
 List of file options to specify cache control and content type for cached files. These file options are appended to the default file options so it's possible to override the default file options by specifying an overlapping file pattern.
 ```js
 assets: {
@@ -234,11 +237,46 @@ assets: {
   ],
 }
 ```
-- <p><code class="key">fileOptions.cacheControl?</code><code class="primitive">string</code></p>
-- <p><code class="key">fileOptions.contentType?</code><code class="primitive">string</code></p>
-- <p><code class="key">fileOptions.files?</code><code class="primitive">string</code><code class="symbol"> | </code><code class="primitive">string</code><code class="symbol">[]</code></p>
-- <p><code class="key">fileOptions.ignore?</code><code class="primitive">string</code><code class="symbol"> | </code><code class="primitive">string</code><code class="symbol">[]</code></p>
-- <p><code class="key">nonVersionedFilesCacheHeader?</code><code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code></p>
+</Segment>
+<Segment>
+### fileOptions.cacheControl?
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">string</code>
+</InlineSection>
+</Section>
+</Segment>
+<Segment>
+### fileOptions.contentType?
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">string</code>
+</InlineSection>
+</Section>
+</Segment>
+<Segment>
+### fileOptions.files
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">string</code><code class="symbol"> | </code><code class="primitive">string</code><code class="symbol">[]</code>
+</InlineSection>
+</Section>
+</Segment>
+<Segment>
+### fileOptions.ignore?
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">string</code><code class="symbol"> | </code><code class="primitive">string</code><code class="symbol">[]</code>
+</InlineSection>
+</Section>
+</Segment>
+<Segment>
+### nonVersionedFilesCacheHeader?
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
 
 <InlineSection>
 **Default** public,max-age=0,s-maxage=86400,stale-while-revalidate=8640
@@ -249,7 +287,14 @@ assets: {
   nonVersionedFilesCacheHeader: "public,max-age=0,no-cache"
 }
 ```
-- <p><code class="key">nonVersionedFilesTTL?</code><code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">number</code><code class="symbol"> | </code><code class="primitive">$\{number\} second</code><code class="symbol"> | </code><code class="primitive">$\{number\} seconds</code><code class="symbol"> | </code><code class="primitive">$\{number\} minute</code><code class="symbol"> | </code><code class="primitive">$\{number\} minutes</code><code class="symbol"> | </code><code class="primitive">$\{number\} hour</code><code class="symbol"> | </code><code class="primitive">$\{number\} hours</code><code class="symbol"> | </code><code class="primitive">$\{number\} day</code><code class="symbol"> | </code><code class="primitive">$\{number\} days</code><code class="symbol">&gt;</code></p>
+</Segment>
+<Segment>
+### nonVersionedFilesTTL?
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">number</code><code class="symbol"> | </code><code class="primitive">$\{number\} second</code><code class="symbol"> | </code><code class="primitive">$\{number\} seconds</code><code class="symbol"> | </code><code class="primitive">$\{number\} minute</code><code class="symbol"> | </code><code class="primitive">$\{number\} minutes</code><code class="symbol"> | </code><code class="primitive">$\{number\} hour</code><code class="symbol"> | </code><code class="primitive">$\{number\} hours</code><code class="symbol"> | </code><code class="primitive">$\{number\} day</code><code class="symbol"> | </code><code class="primitive">$\{number\} days</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
 
 <InlineSection>
 **Default** 1 day
@@ -260,7 +305,14 @@ assets: {
   nonVersionedFilesTTL: "4 hours"
 }
 ```
-- <p><code class="key">textEncoding?</code><code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">none</code><code class="symbol"> | </code><code class="primitive">utf-8</code><code class="symbol"> | </code><code class="primitive">iso-8859-1</code><code class="symbol"> | </code><code class="primitive">windows-1252</code><code class="symbol"> | </code><code class="primitive">ascii</code><code class="symbol">&gt;</code></p>
+</Segment>
+<Segment>
+### textEncoding?
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">none</code><code class="symbol"> | </code><code class="primitive">utf-8</code><code class="symbol"> | </code><code class="primitive">iso-8859-1</code><code class="symbol"> | </code><code class="primitive">windows-1252</code><code class="symbol"> | </code><code class="primitive">ascii</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
 
 <InlineSection>
 **Default** utf-8
@@ -271,7 +323,14 @@ assets: {
   textEncoding: "iso-8859-1"
 }
 ```
-- <p><code class="key">versionedFilesCacheHeader?</code><code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code></p>
+</Segment>
+<Segment>
+### versionedFilesCacheHeader?
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
 
 <InlineSection>
 **Default** public,max-age=31536000,immutable
@@ -282,7 +341,14 @@ assets: {
   versionedFilesCacheHeader: "public,max-age=31536000,immutable"
 }
 ```
-- <p><code class="key">versionedFilesTTL?</code><code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">number</code><code class="symbol"> | </code><code class="primitive">$\{number\} second</code><code class="symbol"> | </code><code class="primitive">$\{number\} seconds</code><code class="symbol"> | </code><code class="primitive">$\{number\} minute</code><code class="symbol"> | </code><code class="primitive">$\{number\} minutes</code><code class="symbol"> | </code><code class="primitive">$\{number\} hour</code><code class="symbol"> | </code><code class="primitive">$\{number\} hours</code><code class="symbol"> | </code><code class="primitive">$\{number\} day</code><code class="symbol"> | </code><code class="primitive">$\{number\} days</code><code class="symbol">&gt;</code></p>
+</Segment>
+<Segment>
+### versionedFilesTTL?
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">number</code><code class="symbol"> | </code><code class="primitive">$\{number\} second</code><code class="symbol"> | </code><code class="primitive">$\{number\} seconds</code><code class="symbol"> | </code><code class="primitive">$\{number\} minute</code><code class="symbol"> | </code><code class="primitive">$\{number\} minutes</code><code class="symbol"> | </code><code class="primitive">$\{number\} hour</code><code class="symbol"> | </code><code class="primitive">$\{number\} hours</code><code class="symbol"> | </code><code class="primitive">$\{number\} day</code><code class="symbol"> | </code><code class="primitive">$\{number\} days</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
 
 <InlineSection>
 **Default** 1 year
@@ -293,17 +359,16 @@ assets: {
   versionedFilesTTL: "30 days"
 }
 ```
-</InlineSection>
+</Segment>
 
 ## DomainProps
-
-The domain for this website. SST supports domains that are hosted
-either on [Route 53](https://aws.amazon.com/route53/) or externally.
-
-Note that you can also migrate externally hosted domains to Route 53 by
-[following this guide](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/MigratingDNS.html).
+<Segment>
+### aliases?
+<Section type="parameters">
 <InlineSection>
-- <p><code class="key">aliases?</code><code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">[]</code><code class="symbol">&gt;</code></p>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">[]</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
 
 <InlineSection>
 **Default** no aliases configured
@@ -315,11 +380,25 @@ domain: {
   aliases: ["app2.domain.com"],
 }
 ```
-- <p><code class="key">domainName?</code><code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code></p>
+</Segment>
+<Segment>
+### domainName
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
 The domain to be assigned to the website URL (ie. domain.com).
 
 Supports domains that are hosted either on [Route 53](https://aws.amazon.com/route53/) or externally.
-- <p><code class="key">hostedZone?</code><code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code></p>
+</Segment>
+<Segment>
+### hostedZone?
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
 
 <InlineSection>
 **Default** same as the `domainName`
@@ -332,7 +411,14 @@ domain: {
   hostedZone: "domain.com",
 }
 ```
-- <p><code class="key">hostedZoneId?</code><code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code></p>
+</Segment>
+<Segment>
+### hostedZoneId?
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
 The 14 letter id of the hosted zone in Route 53 that contains the domain.
 Only set this option if there are multiple hosted zones of the same domain in Route 53.
 Do not set both "hostedZone" and "hostedZoneId".
@@ -342,7 +428,14 @@ domain: {
   hostedZoneId: "Z2FDTNDATAQYW2",
 }
 ```
-- <p><code class="key">redirects?</code><code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">[]</code><code class="symbol">&gt;</code></p>
+</Segment>
+<Segment>
+### redirects?
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">[]</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
 
 <InlineSection>
 **Default** no redirects configured
@@ -355,11 +448,16 @@ domain: {
   redirects: ["www.domain.com"],
 }
 ```
-</InlineSection>
+</Segment>
 
 ## InvalidationProps
+<Segment>
+### paths?
+<Section type="parameters">
 <InlineSection>
-- <p><code class="key">paths?</code><code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">[]</code><code class="symbol"> | </code><code class="primitive">none</code><code class="symbol"> | </code><code class="primitive">all</code><code class="symbol"> | </code><code class="primitive">versioned</code><code class="symbol">&gt;</code></p>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">[]</code><code class="symbol"> | </code><code class="primitive">none</code><code class="symbol"> | </code><code class="primitive">all</code><code class="symbol"> | </code><code class="primitive">versioned</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
 
 <InlineSection>
 **Default** "all"
@@ -381,7 +479,14 @@ invalidation: {
   paths: ["/index.html", "/products/*"],
 }
 ```
-- <p><code class="key">wait?</code><code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">boolean</code><code class="symbol">&gt;</code></p>
+</Segment>
+<Segment>
+### wait?
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">boolean</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
 
 <InlineSection>
 **Default** false
@@ -392,43 +497,286 @@ invalidation: {
   wait: true,
 }
 ```
-</InlineSection>
+</Segment>
 
 ## TransformProps
+<Segment>
+### plan?
+<Section type="parameters">
 <InlineSection>
-- <p><code class="key">plan?</code><code class="primitive">Transform</code><code class="symbol">&lt;</code><code class="primitive">Object</code><code class="symbol">&gt;</code></p>
-- <p><code class="key">plan.behaviors?</code><code class="primitive">Object</code><code class="symbol">[]</code></p>
-- <p><code class="key">plan.behaviors.allowedMethods?</code><code class="primitive">DELETE</code><code class="symbol"> | </code><code class="primitive">GET</code><code class="symbol"> | </code><code class="primitive">HEAD</code><code class="symbol"> | </code><code class="primitive">OPTIONS</code><code class="symbol"> | </code><code class="primitive">PATCH</code><code class="symbol"> | </code><code class="primitive">POST</code><code class="symbol"> | </code><code class="primitive">PUT</code><code class="symbol">[]</code></p>
-- <p><code class="key">plan.behaviors.cacheType?</code><code class="primitive">server</code><code class="symbol"> | </code><code class="primitive">static</code></p>
-- <p><code class="key">plan.behaviors.cfFunction?</code><code class="primitive">string</code></p>
-- <p><code class="key">plan.behaviors.edgeFunction?</code><code class="primitive">string</code></p>
-- <p><code class="key">plan.behaviors.origin?</code><code class="primitive">string</code></p>
-- <p><code class="key">plan.behaviors.pattern?</code><code class="primitive">string</code></p>
-- <p><code class="key">plan.buildId?</code><code class="primitive">string</code></p>
-- <p><code class="key">plan.cloudFrontFunctions?</code><code class="primitive">Record</code><code class="symbol">&lt;</code><code class="primitive">string</code>, <code class="primitive">Object</code><code class="symbol">&gt;</code></p>
-- <p><code class="key">plan.cloudFrontFunctions.injections?</code><code class="primitive">string</code><code class="symbol">[]</code></p>
-- <p><code class="key">plan.edge?</code><code class="primitive">boolean</code></p>
-- <p><code class="key">plan.edgeFunctions?</code><code class="primitive">Record</code><code class="symbol">&lt;</code><code class="primitive">string</code>, <code class="primitive">Object</code><code class="symbol">&gt;</code></p>
-- <p><code class="key">plan.edgeFunctions.function?</code>[<code class="type">FunctionArgs</code>](#functionargs)</p>
-- <p><code class="key">plan.errorResponses?</code>[<code class="type">DistributionCustomErrorResponse</code>](https://www.pulumi.com/registry/packages/aws/api-docs/cloudfront/distribution/#distributioncustomerrorresponse)<code class="symbol">[]</code></p>
-- <p><code class="key">plan.origins?</code><code class="primitive">Record</code><code class="symbol">&lt;</code><code class="primitive">string</code>, <code class="primitive">Object</code><code class="symbol"> | </code><code class="primitive">Object</code><code class="symbol"> | </code><code class="primitive">Object</code><code class="symbol"> | </code><code class="primitive">Object</code><code class="symbol">&gt;</code></p>
-- <p><code class="key">plan.origins.function?</code>[<code class="type">FunctionArgs</code>](#functionargs)</p>
-- <p><code class="key">plan.origins.injections?</code><code class="primitive">string</code><code class="symbol">[]</code></p>
-- <p><code class="key">plan.origins.streaming?</code><code class="primitive">boolean</code></p>
-- <p><code class="key">plan.origins.type?</code><code class="primitive">function</code></p>
-- <p><code class="key">plan.origins.function?</code>[<code class="type">FunctionArgs</code>](#functionargs)</p>
-- <p><code class="key">plan.origins.type?</code><code class="primitive">image-optimization-function</code></p>
-- <p><code class="key">plan.origins.copy?</code><code class="primitive">Object</code><code class="symbol">[]</code></p>
-- <p><code class="key">plan.origins.copy.cached?</code><code class="primitive">boolean</code></p>
-- <p><code class="key">plan.origins.copy.from?</code><code class="primitive">string</code></p>
-- <p><code class="key">plan.origins.copy.to?</code><code class="primitive">string</code></p>
-- <p><code class="key">plan.origins.copy.versionedSubDir?</code><code class="primitive">string</code></p>
-- <p><code class="key">plan.origins.originPath?</code><code class="primitive">string</code></p>
-- <p><code class="key">plan.origins.type?</code><code class="primitive">s3</code></p>
-- <p><code class="key">plan.origins.fallbackOriginName?</code><code class="primitive">string</code></p>
-- <p><code class="key">plan.origins.fallbackStatusCodes?</code><code class="primitive">number</code><code class="symbol">[]</code></p>
-- <p><code class="key">plan.origins.primaryOriginName?</code><code class="primitive">string</code></p>
-- <p><code class="key">plan.origins.type?</code><code class="primitive">group</code></p>
-- <p><code class="key">plan.serverCachePolicy?</code><code class="primitive">Object</code></p>
-- <p><code class="key">plan.serverCachePolicy.allowedHeaders?</code><code class="primitive">string</code><code class="symbol">[]</code></p>
+**Type** <code class="primitive">Transform</code><code class="symbol">&lt;</code><code class="primitive">Object</code><code class="symbol">&gt;</code>
 </InlineSection>
+</Section>
+</Segment>
+<Segment>
+### plan.behaviors
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Object</code><code class="symbol">[]</code>
+</InlineSection>
+</Section>
+</Segment>
+<Segment>
+### plan.behaviors.allowedMethods?
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">DELETE</code><code class="symbol"> | </code><code class="primitive">GET</code><code class="symbol"> | </code><code class="primitive">HEAD</code><code class="symbol"> | </code><code class="primitive">OPTIONS</code><code class="symbol"> | </code><code class="primitive">PATCH</code><code class="symbol"> | </code><code class="primitive">POST</code><code class="symbol"> | </code><code class="primitive">PUT</code><code class="symbol">[]</code>
+</InlineSection>
+</Section>
+</Segment>
+<Segment>
+### plan.behaviors.cacheType
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">server</code><code class="symbol"> | </code><code class="primitive">static</code>
+</InlineSection>
+</Section>
+</Segment>
+<Segment>
+### plan.behaviors.cfFunction?
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">string</code>
+</InlineSection>
+</Section>
+</Segment>
+<Segment>
+### plan.behaviors.edgeFunction?
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">string</code>
+</InlineSection>
+</Section>
+</Segment>
+<Segment>
+### plan.behaviors.origin
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">string</code>
+</InlineSection>
+</Section>
+</Segment>
+<Segment>
+### plan.behaviors.pattern?
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">string</code>
+</InlineSection>
+</Section>
+</Segment>
+<Segment>
+### plan.buildId?
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">string</code>
+</InlineSection>
+</Section>
+</Segment>
+<Segment>
+### plan.cloudFrontFunctions?
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Record</code><code class="symbol">&lt;</code><code class="primitive">string</code>, <code class="primitive">Object</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+</Segment>
+<Segment>
+### plan.cloudFrontFunctions.injections
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">string</code><code class="symbol">[]</code>
+</InlineSection>
+</Section>
+</Segment>
+<Segment>
+### plan.edge
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">boolean</code>
+</InlineSection>
+</Section>
+</Segment>
+<Segment>
+### plan.edgeFunctions?
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Record</code><code class="symbol">&lt;</code><code class="primitive">string</code>, <code class="primitive">Object</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+</Segment>
+<Segment>
+### plan.edgeFunctions.function
+<Section type="parameters">
+<InlineSection>
+**Type** [<code class="type">FunctionArgs</code>](#functionargs)
+</InlineSection>
+</Section>
+</Segment>
+<Segment>
+### plan.errorResponses?
+<Section type="parameters">
+<InlineSection>
+**Type** [<code class="type">DistributionCustomErrorResponse</code>](https://www.pulumi.com/registry/packages/aws/api-docs/cloudfront/distribution/#distributioncustomerrorresponse)<code class="symbol">[]</code>
+</InlineSection>
+</Section>
+</Segment>
+<Segment>
+### plan.origins
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Record</code><code class="symbol">&lt;</code><code class="primitive">string</code>, <code class="primitive">Object</code><code class="symbol"> | </code><code class="primitive">Object</code><code class="symbol"> | </code><code class="primitive">Object</code><code class="symbol"> | </code><code class="primitive">Object</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+</Segment>
+<Segment>
+### plan.origins.function
+<Section type="parameters">
+<InlineSection>
+**Type** [<code class="type">FunctionArgs</code>](#functionargs)
+</InlineSection>
+</Section>
+</Segment>
+<Segment>
+### plan.origins.injections?
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">string</code><code class="symbol">[]</code>
+</InlineSection>
+</Section>
+</Segment>
+<Segment>
+### plan.origins.streaming?
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">boolean</code>
+</InlineSection>
+</Section>
+</Segment>
+<Segment>
+### plan.origins.type
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">function</code>
+</InlineSection>
+</Section>
+</Segment>
+<Segment>
+### plan.origins.function
+<Section type="parameters">
+<InlineSection>
+**Type** [<code class="type">FunctionArgs</code>](#functionargs)
+</InlineSection>
+</Section>
+</Segment>
+<Segment>
+### plan.origins.type
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">image-optimization-function</code>
+</InlineSection>
+</Section>
+</Segment>
+<Segment>
+### plan.origins.copy
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Object</code><code class="symbol">[]</code>
+</InlineSection>
+</Section>
+</Segment>
+<Segment>
+### plan.origins.copy.cached
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">boolean</code>
+</InlineSection>
+</Section>
+</Segment>
+<Segment>
+### plan.origins.copy.from
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">string</code>
+</InlineSection>
+</Section>
+</Segment>
+<Segment>
+### plan.origins.copy.to
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">string</code>
+</InlineSection>
+</Section>
+</Segment>
+<Segment>
+### plan.origins.copy.versionedSubDir?
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">string</code>
+</InlineSection>
+</Section>
+</Segment>
+<Segment>
+### plan.origins.originPath?
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">string</code>
+</InlineSection>
+</Section>
+</Segment>
+<Segment>
+### plan.origins.type
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">s3</code>
+</InlineSection>
+</Section>
+</Segment>
+<Segment>
+### plan.origins.fallbackOriginName
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">string</code>
+</InlineSection>
+</Section>
+</Segment>
+<Segment>
+### plan.origins.fallbackStatusCodes
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">number</code><code class="symbol">[]</code>
+</InlineSection>
+</Section>
+</Segment>
+<Segment>
+### plan.origins.primaryOriginName
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">string</code>
+</InlineSection>
+</Section>
+</Segment>
+<Segment>
+### plan.origins.type
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">group</code>
+</InlineSection>
+</Section>
+</Segment>
+<Segment>
+### plan.serverCachePolicy?
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Object</code>
+</InlineSection>
+</Section>
+</Segment>
+<Segment>
+### plan.serverCachePolicy.allowedHeaders?
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">string</code><code class="symbol">[]</code>
+</InlineSection>
+</Section>
+</Segment>
