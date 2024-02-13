@@ -87,6 +87,9 @@
 .sl-markdown-content .expressive-code .frame:not(.has-title):not(.is-terminal) pre {
   border-color: var(--sl-color-border-code);
 }
+.sl-markdown-content .expressive-code .copy {
+  inset-block-start: calc(1px + var(--ec-uiPadInl) / 2);
+}
 .sl-markdown-content .expressive-code .copy .feedback {
   --tooltip-bg: var(--sl-color-gray-3);
 

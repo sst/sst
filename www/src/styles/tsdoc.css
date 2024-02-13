@@ -18,9 +18,14 @@
  * Sections
  */
 /* Parameters */
-.sl-markdown-content section.tsdoc.parameters :is(h4, section) + :not(a, strong, em, del, span, input, code, :where(.not-content *)) {
-  /* Headings */
+.sl-markdown-content section.tsdoc.parameters h4 + :not(a, strong, em, del, span, input, code, :where(.not-content *)) {
+  /* H4 Heading */
   margin-top: 0.875rem;
+}
+/* TODO: Remove if no object type lists */
+.sl-markdown-content section.tsdoc.parameters section.inline + :not(a, strong, em, del, span, input, code, :where(.not-content *)) {
+  /* Inline Section Heading */
+  margin-top: 0.5625rem;
 }
 .sl-markdown-content section.tsdoc.parameters :not(h4, a, strong, em, del, span, input, code) + :not(a, strong, em, del, span, input, code, ul, :where(.not-content *, .starlight-aside *)) {
   margin-top: 0.5rem;
@@ -47,7 +52,9 @@
 }
 /* Inline */
 .sl-markdown-content section.tsdoc.inline p:first-child {
+  /*
   line-height: var(--sl-line-height-headings);
+  */
 }
 .sl-markdown-content section.tsdoc.inline p:first-child strong:not(:where(.not-content *)) {
   margin-right: var(--tsdoc-key-margin-right);

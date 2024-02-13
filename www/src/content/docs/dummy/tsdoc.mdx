@@ -1,6 +1,7 @@
 ---
 title: TSDoc
 description: A page to test all the TSDoc cases
+pagefind: false
 ---
 
 import Segment from '../../../components/tsdoc/Segment.astro';
@@ -111,7 +112,7 @@ The CPU architecture of the lambda function.
 </InlineSection>
 
 <InlineSection>
-**Default** Uses x86 by default `x86_64`
+**Default** Uses x86 by default `x86_64`. But this description of the default is really long and runs more than one single line.
 </InlineSection>
 
 For example,
@@ -124,9 +125,9 @@ new Function(stack, "Function", {
 </Segment>
 
 <Segment>
-### objectProp?
+### objectPropSimple?
 
-The CPU architecture of the lambda function.
+A prop that takes an object with simple keys.
 
 <Section type="parameters">
 <InlineSection>
@@ -136,6 +137,78 @@ The CPU architecture of the lambda function.
 - <p><code class="key">isTrue</code> <code class="primitive">boolean</code></p>
 - <p><code class="key">isFalse?</code> <code class="primitive">boolean</code></p>
 - <p><code class="key">isAny?</code> <code class="primitive">boolean</code></p>
+</Section>
+
+<InlineSection>
+**Default** <code class="primitive">undefined</code>
+</InlineSection>
+
+```ts
+new Function(stack, "Function", {
+  architecture: "arm_64",
+})
+```
+</Segment>
+
+<Segment>
+### objectPropFull?
+
+A prop that takes an object with full keys.
+
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Object</code>
+</InlineSection>
+
+- <p><code class="key">prop1?</code> <code class="primitive">boolean</code></p>
+
+  <InlineSection>
+  **Default** <code class="primitive">true</code>
+  </InlineSection>
+
+  A simple prop to add.
+
+  ```ts
+  {
+    prop1: true
+  }
+  ```
+
+- <p><code class="key">prop2?</code> <code class="primitive">x86_64</code><code class="symbol"> | </code><code class="primitive">arm_64</code></p>
+
+  <InlineSection>
+  **Default** Uses x86 by default `x86_64`. But this description of the default is really long and runs more than one single line.
+  </InlineSection>
+
+  A complex prop to add with a description that is longer than one line. This matters because 
+
+  A simple example.
+
+  ```ts
+  { prop2: "x86_64" }
+  ```
+
+  A more complicated multi-line example.
+
+  ```ts
+  {
+    prop2: "x86_64"
+  }
+  ```
+
+- <p><code class="key">prop3?</code> [<code class="type">FormatSpecifier</code>](#FormatSpecifier)<code class="symbol">[]</code><code class="symbol"> | </code><code class="primitive">null</code></p>
+
+  <InlineSection>
+  **Default** <code class="primitive">true</code>
+  </InlineSection>
+
+  Just pass something in.
+
+  ```ts
+  {
+    prop2: "x86_64"
+  }
+  ```
 </Section>
 
 <InlineSection>
@@ -166,10 +239,4 @@ new Function(stack, "Function", {
 <InlineSection>
 **Default** <code class="primitive">undefined</code>
 </InlineSection>
-
-```ts
-new Function(stack, "Function", {
-  architecture: "arm_64",
-})
-```
 </Segment>
