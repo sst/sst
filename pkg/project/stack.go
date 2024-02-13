@@ -300,11 +300,12 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 		rawDeploment, _ := stack.Export(ctx)
 		var deployment apitype.DeploymentV3
 		json.Unmarshal(rawDeploment.Deployment, &deployment)
-		outputs := deployment.Resources[0].Outputs
+
+		outputs, _ := stack.Outputs(ctx)
 		complete.Resources = deployment.Resources
 		linksOutput, ok := outputs["_links"]
 		if ok {
-			links := linksOutput.(map[string]interface{})
+			links := linksOutput.Value.(map[string]interface{})
 			for key, value := range links {
 				complete.Links[key] = value
 			}
@@ -320,7 +321,7 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 
 		hintsOutput, ok := outputs["_hints"]
 		if ok {
-			hints := hintsOutput.(map[string]interface{})
+			hints := hintsOutput.Value.(map[string]interface{})
 			for key, value := range hints {
 				str, ok := value.(string)
 				if ok {
@@ -332,7 +333,7 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 
 		warpsOutput, ok := outputs["_warps"]
 		if ok {
-			warps := warpsOutput.(map[string]interface{})
+			warps := warpsOutput.Value.(map[string]interface{})
 			for key, value := range warps {
 				data, _ := json.Marshal(value)
 				var definition WarpDefinition

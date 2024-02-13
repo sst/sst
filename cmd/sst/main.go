@@ -631,6 +631,10 @@ func initProject(cli *cli.Context) (*project.Project, error) {
 	logFile = nextLogFile
 	configureLog(cli)
 
+	if err := p.LoadProviders(); err != nil {
+		return nil, err
+	}
+
 	app := p.App()
 	slog.Info("loaded config", "app", app.Name, "stage", app.Stage)
 

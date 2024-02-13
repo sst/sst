@@ -55,6 +55,7 @@ func (p *Project) writePackageJson() error {
 		if version == "" {
 			version = "latest"
 		}
+		slog.Info("adding dependency", "name", name)
 		dependencies["@pulumi/"+name] = version
 	}
 

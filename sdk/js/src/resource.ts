@@ -14,11 +14,11 @@ export const Resource = new Proxy(
         return JSON.parse(env[envName]!);
       }
       // @ts-expect-error
-      if (prop in globalThis.$SST_LINKS) {
+      if (prop in (globalThis.$SST_LINKS || {})) {
         // @ts-expect-error
         return globalThis.$SST_LINKS[prop];
       }
       throw new Error(`"${prop}" is not linked`);
     },
-  }
+  },
 ) as Resource;

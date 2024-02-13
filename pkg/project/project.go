@@ -156,6 +156,10 @@ console.log("~j" + JSON.stringify(mod.app({
 		}
 	}
 
+	return proj, nil
+}
+
+func (proj *Project) LoadProviders() error {
 	if _, ok := proj.app.Providers["aws"]; !ok {
 		proj.app.Providers["aws"] = map[string]string{}
 	}
@@ -176,19 +180,16 @@ console.log("~j" + JSON.stringify(mod.app({
 			continue
 		}
 
-		err = p.Init(proj.app.Name, proj.app.Stage, args)
+		err := p.Init(proj.app.Name, proj.app.Stage, args)
 		if err != nil {
-			return nil, err
+			return err
 		}
 		proj.Providers[name] = p
 	}
 
 	proj.backend = proj.Providers["aws"].(provider.Backend)
-	if err != nil {
-		return nil, err
-	}
 
-	return proj, nil
+	return nil
 }
 
 func (p *Project) getPath(path ...string) string {
