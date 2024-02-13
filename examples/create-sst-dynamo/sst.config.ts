@@ -6,7 +6,7 @@ import { Database } from "./stacks/Database";
 export default {
   config(_input) {
     return {
-      name: "create-sst-dynamo",
+      name: "@@app",
       region: "us-east-1",
     };
   },

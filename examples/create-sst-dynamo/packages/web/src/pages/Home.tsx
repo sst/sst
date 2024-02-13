@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { Link } from "react-router-dom";
-import { useTypedQuery } from "@create-sst-dynamo/graphql/urql";
+import { useTypedQuery } from "@@@app/graphql/urql";
 import Empty from "../components/Empty";
 import Navbar from "../components/Navbar";
 import Loading from "../components/Loading";

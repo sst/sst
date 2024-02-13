@@ -3,25 +3,19 @@
   "private": true,
   "version": "0.0.0",
   "scripts": {
-    "dev": "sst bind vite",
+    "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview"
   },
   "dependencies": {
     "react": "^18.0.0",
-    "react-dom": "^18.0.0",
-    "react-router-dom": "^6.20.1",
-    "urql": "^4.0.6",
-    "graphql": "^16.8.1",
-    "@create-sst-dynamo/graphql": "0.0.0",
-    "react-icons": "^4.12.0"
+    "react-dom": "^18.0.0"
   },
   "devDependencies": {
     "@types/react": "^18.0.0",
     "@types/react-dom": "^18.0.0",
     "@vitejs/plugin-react": "^1.3.0",
     "typescript": "^4.6.3",
-    "vite": "^2.9.15",
-    "sst": "^2.38.7"
+    "vite": "^2.9.15"
   }
 }
