@@ -63,11 +63,227 @@ The CloudFront URL of the website.
 ## NextjsArgs
 <Segment>
 ### assets?
-Configure the assets uploaded to S3.
 <Section type="parameters">
 <InlineSection>
-**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Object</code><code class="symbol">&gt;</code>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">[AssetsProps](#assetsprops)</code><code class="symbol">&gt;</code>
 </InlineSection>
+</Section>
+Configure the assets uploaded to S3.
+</Segment>
+<Segment>
+### buildCommand?
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+
+<InlineSection>
+**Default** <code class="primitive">npm run build</code>
+</InlineSection>
+The command for building the website
+```js
+buildCommand: "yarn build",
+```
+</Segment>
+<Segment>
+### domain?
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol"> | </code><code class="primitive">[DomainProps](#domainprops)</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+The domain for this website. SST supports domains that are hosted
+either on [Route 53](https://aws.amazon.com/route53/) or externally.
+
+Note that you can also migrate externally hosted domains to Route 53 by
+[following this guide](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/MigratingDNS.html).
+```js
+domain: "domain.com",
+```
+
+```js
+domain: {
+  domainName: "domain.com",
+  redirects: ["www.domain.com"],
+  hostedZone: "domain.com"
+},
+```
+</Segment>
+<Segment>
+### edge?
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">boolean</code>
+</InlineSection>
+</Section>
+
+<InlineSection>
+**Default** false
+</InlineSection>
+The server function is deployed to Lambda in a single region. Alternatively, you can enable this option to deploy to Lambda@Edge.
+</Segment>
+<Segment>
+### environment?
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Record</code><code class="symbol">&lt;</code><code class="primitive">string</code>, <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code><code class="symbol">&gt;</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+An object with the key being the environment variable name.
+```js
+environment: {
+  API_URL: api.url,
+  USER_POOL_CLIENT: auth.cognitoUserPoolClient.userPoolClientId,
+},
+```
+</Segment>
+<Segment>
+### experimental?
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">[ExperimentalProps](#experimentalprops)</code>
+</InlineSection>
+</Section>
+</Segment>
+<Segment>
+### imageOptimization?
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">[ImageOptimizationProps](#imageoptimizationprops)</code>
+</InlineSection>
+</Section>
+</Segment>
+<Segment>
+### invalidation?
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">[InvalidationProps](#invalidationprops)</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+</Segment>
+<Segment>
+### link?
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">any</code><code class="symbol">[]</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+Link resources to the SSR function.
+This will grant the site permissions to access the linked resources at runtime.
+```js
+{
+  link: [myBucket, stripeKey],
+}
+```
+</Segment>
+<Segment>
+### logging?
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">combined</code><code class="symbol"> | </code><code class="primitive">per-route</code>
+</InlineSection>
+</Section>
+
+<InlineSection>
+**Default** "per-route"
+</InlineSection>
+How the logs are stored in CloudWatch
+- "combined" - Logs from all routes are stored in the same log group.
+- "per-route" - Logs from each route are stored in a separate log group.
+```js
+logging: "combined",
+```
+</Segment>
+<Segment>
+### openNextVersion?
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">string</code>
+</InlineSection>
+</Section>
+
+<InlineSection>
+**Default** Latest OpenNext version
+</InlineSection>
+OpenNext version for building the Next.js site.
+```js
+openNextVersion: "2.2.4",
+```
+</Segment>
+<Segment>
+### path?
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+
+<InlineSection>
+**Default** "."
+</InlineSection>
+Path to the directory where the app is located.
+</Segment>
+<Segment>
+### permissions?
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code>[<code class="type">FunctionPermissionArgs</code>](#functionpermissionargs)<code class="symbol">[]</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+
+<InlineSection>
+**Default** No permissions
+</InlineSection>
+Attaches the given list of permissions to the SSR function.
+```js
+permissions: [
+  {
+    actions: ["s3:*"],
+    resources: ["arn:aws:s3:::*"],
+  },
+]
+```
+</Segment>
+<Segment>
+### transform?
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">[TransformProps](#transformprops)</code>
+</InlineSection>
+</Section>
+</Segment>
+<Segment>
+### typesPath?
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+
+<InlineSection>
+**Default** "."
+</InlineSection>
+Path relative to the app location where the type definitions are located.
+</Segment>
+<Segment>
+### warm?
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">number</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+
+<InlineSection>
+**Default** Server function is not kept warm
+</InlineSection>
+The number of server functions to keep warm. This option is only supported for the regional mode.
+</Segment>
+
+## AssetsProps
+
+Configure the assets uploaded to S3.
+<InlineSection>
 - <p><code class="key">fileOptions?</code><code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Object</code><code class="symbol">[]</code><code class="symbol">&gt;</code></p>
 List of file options to specify cache control and content type for cached files. These file options are appended to the default file options so it's possible to override the default file options by specifying an overlapping file pattern.
 ```js
@@ -140,35 +356,16 @@ assets: {
   versionedFilesTTL: "30 days"
 }
 ```
-</Section>
-</Segment>
-<Segment>
-### buildCommand?
-The command for building the website
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
 </InlineSection>
-</Section>
 
-<InlineSection>
-**Default** <code class="primitive">npm run build</code>
-</InlineSection>
-```js
-buildCommand: "yarn build",
-```
-</Segment>
-<Segment>
-### domain?
+## DomainProps
+
 The domain for this website. SST supports domains that are hosted
 either on [Route 53](https://aws.amazon.com/route53/) or externally.
 
 Note that you can also migrate externally hosted domains to Route 53 by
 [following this guide](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/MigratingDNS.html).
-<Section type="parameters">
 <InlineSection>
-**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol"> | </code><code class="primitive">Object</code><code class="symbol">&gt;</code>
-</InlineSection>
 - <p><code class="key">aliases?</code><code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">[]</code><code class="symbol">&gt;</code></p>
 
 <InlineSection>
@@ -221,53 +418,10 @@ domain: {
   redirects: ["www.domain.com"],
 }
 ```
-</Section>
-```js
-domain: "domain.com",
-```
+</InlineSection>
 
-```js
-domain: {
-  domainName: "domain.com",
-  redirects: ["www.domain.com"],
-  hostedZone: "domain.com"
-},
-```
-</Segment>
-<Segment>
-### edge?
-The server function is deployed to Lambda in a single region. Alternatively, you can enable this option to deploy to Lambda@Edge.
-<Section type="parameters">
+## ExperimentalProps
 <InlineSection>
-**Type** <code class="primitive">boolean</code>
-</InlineSection>
-</Section>
-
-<InlineSection>
-**Default** false
-</InlineSection>
-</Segment>
-<Segment>
-### environment?
-An object with the key being the environment variable name.
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Record</code><code class="symbol">&lt;</code><code class="primitive">string</code>, <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code><code class="symbol">&gt;</code><code class="symbol">&gt;</code>
-</InlineSection>
-</Section>
-```js
-environment: {
-  API_URL: api.url,
-  USER_POOL_CLIENT: auth.cognitoUserPoolClient.userPoolClientId,
-},
-```
-</Segment>
-<Segment>
-### experimental?
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">Object</code>
-</InlineSection>
 - <p><code class="key">disableDynamoDBCache?</code><code class="primitive">boolean</code></p>
 
 <InlineSection>
@@ -303,14 +457,10 @@ experimental: {
   streaming: true,
 }
 ```
-</Section>
-</Segment>
-<Segment>
-### imageOptimization?
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">Object</code>
 </InlineSection>
+
+## ImageOptimizationProps
+<InlineSection>
 - <p><code class="key">memory?</code><code class="primitive">$\{number\} MB</code><code class="symbol"> | </code><code class="primitive">$\{number\} GB</code></p>
 
 <InlineSection>
@@ -322,14 +472,10 @@ imageOptimization: {
   memory: "512 MB",
 }
 ```
-</Section>
-</Segment>
-<Segment>
-### invalidation?
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Object</code><code class="symbol">&gt;</code>
 </InlineSection>
+
+## InvalidationProps
+<InlineSection>
 - <p><code class="key">paths?</code><code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">[]</code><code class="symbol"> | </code><code class="primitive">none</code><code class="symbol"> | </code><code class="primitive">all</code><code class="symbol"> | </code><code class="primitive">versioned</code><code class="symbol">&gt;</code></p>
 
 <InlineSection>
@@ -363,97 +509,10 @@ invalidation: {
   wait: true,
 }
 ```
-</Section>
-</Segment>
-<Segment>
-### link?
-Link resources to the SSR function.
-This will grant the site permissions to access the linked resources at runtime.
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">any</code><code class="symbol">[]</code><code class="symbol">&gt;</code>
 </InlineSection>
-</Section>
-```js
-{
-  link: [myBucket, stripeKey],
-}
-```
-</Segment>
-<Segment>
-### logging?
-How the logs are stored in CloudWatch
-- "combined" - Logs from all routes are stored in the same log group.
-- "per-route" - Logs from each route are stored in a separate log group.
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">combined</code><code class="symbol"> | </code><code class="primitive">per-route</code>
-</InlineSection>
-</Section>
 
+## TransformProps
 <InlineSection>
-**Default** "per-route"
-</InlineSection>
-```js
-logging: "combined",
-```
-</Segment>
-<Segment>
-### openNextVersion?
-OpenNext version for building the Next.js site.
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">string</code>
-</InlineSection>
-</Section>
-
-<InlineSection>
-**Default** Latest OpenNext version
-</InlineSection>
-```js
-openNextVersion: "2.2.4",
-```
-</Segment>
-<Segment>
-### path?
-Path to the directory where the app is located.
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
-</InlineSection>
-</Section>
-
-<InlineSection>
-**Default** "."
-</InlineSection>
-</Segment>
-<Segment>
-### permissions?
-Attaches the given list of permissions to the SSR function.
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code>[<code class="type">FunctionPermissionArgs</code>](#functionpermissionargs)<code class="symbol">[]</code><code class="symbol">&gt;</code>
-</InlineSection>
-</Section>
-
-<InlineSection>
-**Default** No permissions
-</InlineSection>
-```js
-permissions: [
-  {
-    actions: ["s3:*"],
-    resources: ["arn:aws:s3:::*"],
-  },
-]
-```
-</Segment>
-<Segment>
-### transform?
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">Object</code>
-</InlineSection>
 - <p><code class="key">plan?</code><code class="primitive">Transform</code><code class="symbol">&lt;</code><code class="primitive">Object</code><code class="symbol">&gt;</code></p>
 - <p><code class="key">plan.behaviors?</code><code class="primitive">Object</code><code class="symbol">[]</code></p>
 - <p><code class="key">plan.behaviors.allowedMethods?</code><code class="primitive">DELETE</code><code class="symbol"> | </code><code class="primitive">GET</code><code class="symbol"> | </code><code class="primitive">HEAD</code><code class="symbol"> | </code><code class="primitive">OPTIONS</code><code class="symbol"> | </code><code class="primitive">PATCH</code><code class="symbol"> | </code><code class="primitive">POST</code><code class="symbol"> | </code><code class="primitive">PUT</code><code class="symbol">[]</code></p>
@@ -489,31 +548,4 @@ permissions: [
 - <p><code class="key">plan.origins.type?</code><code class="primitive">group</code></p>
 - <p><code class="key">plan.serverCachePolicy?</code><code class="primitive">Object</code></p>
 - <p><code class="key">plan.serverCachePolicy.allowedHeaders?</code><code class="primitive">string</code><code class="symbol">[]</code></p>
-</Section>
-</Segment>
-<Segment>
-### typesPath?
-Path relative to the app location where the type definitions are located.
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
 </InlineSection>
-</Section>
-
-<InlineSection>
-**Default** "."
-</InlineSection>
-</Segment>
-<Segment>
-### warm?
-The number of server functions to keep warm. This option is only supported for the regional mode.
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">number</code><code class="symbol">&gt;</code>
-</InlineSection>
-</Section>
-
-<InlineSection>
-**Default** Server function is not kept warm
-</InlineSection>
-</Segment>

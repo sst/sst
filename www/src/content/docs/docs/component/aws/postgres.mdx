@@ -41,17 +41,14 @@ new Postgres(name, args?, opts?)
 ### nodes
 <Section type="parameters">
 <InlineSection>
-**Type** <code class="primitive">Object</code>
+**Type** <code class="primitive">[NodesProps](#nodesprops)</code>
 </InlineSection>
-- <p><code class="key">cluster</code>[<code class="type">Cluster</code>](https://www.pulumi.com/registry/packages/aws/api-docs/rds/cluster/)</p>
-- <p><code class="key">instance</code>[<code class="type">ClusterInstance</code>](https://www.pulumi.com/registry/packages/aws/api-docs/rds/clusterinstance/)</p>
 </Section>
 </Segment>
 
 ## PostgresArgs
 <Segment>
 ### databaseName?
-Name of a database which is automatically created inside the cluster.
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
@@ -61,6 +58,7 @@ Name of a database which is automatically created inside the cluster.
 <InlineSection>
 **Default** - Database is not created
 </InlineSection>
+Name of a database which is automatically created inside the cluster.
 ```js
 {
   databaseName: "app"
@@ -69,11 +67,50 @@ Name of a database which is automatically created inside the cluster.
 </Segment>
 <Segment>
 ### scaling?
-Aurora Serverless v2 scaling configuration
 <Section type="parameters">
 <InlineSection>
-**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Object</code><code class="symbol">&gt;</code>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">[ScalingProps](#scalingprops)</code><code class="symbol">&gt;</code>
 </InlineSection>
+</Section>
+Aurora Serverless v2 scaling configuration
+</Segment>
+<Segment>
+### transform?
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">[TransformProps](#transformprops)</code>
+</InlineSection>
+</Section>
+</Segment>
+<Segment>
+### version?
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+
+<InlineSection>
+**Default** - 15.5
+</InlineSection>
+Enging version of the RDS cluster
+```js
+{
+  version: "13.9"
+}
+```
+</Segment>
+
+## NodesProps
+<InlineSection>
+- <p><code class="key">cluster</code>[<code class="type">Cluster</code>](https://www.pulumi.com/registry/packages/aws/api-docs/rds/cluster/)</p>
+- <p><code class="key">instance</code>[<code class="type">ClusterInstance</code>](https://www.pulumi.com/registry/packages/aws/api-docs/rds/clusterinstance/)</p>
+</InlineSection>
+
+## ScalingProps
+
+Aurora Serverless v2 scaling configuration
+<InlineSection>
 - <p><code class="key">max?</code><code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">number</code><code class="symbol">&gt;</code></p>
 
 <InlineSection>
@@ -100,33 +137,10 @@ The minimum number of Aurora capacity units (ACUs) for a DB instance in an Auror
   }
 }
 ```
-</Section>
-</Segment>
-<Segment>
-### transform?
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">Object</code>
 </InlineSection>
+
+## TransformProps
+<InlineSection>
 - <p><code class="key">cluster?</code><code class="primitive">Transform</code><code class="symbol">&lt;</code>[<code class="type">ClusterArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/rds/cluster/#inputs)<code class="symbol">&gt;</code></p>
 - <p><code class="key">instance?</code><code class="primitive">Transform</code><code class="symbol">&lt;</code>[<code class="type">ClusterInstanceArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/rds/clusterinstance/#inputs)<code class="symbol">&gt;</code></p>
-</Section>
-</Segment>
-<Segment>
-### version?
-Enging version of the RDS cluster
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
 </InlineSection>
-</Section>
-
-<InlineSection>
-**Default** - 15.5
-</InlineSection>
-```js
-{
-  version: "13.9"
-}
-```
-</Segment>

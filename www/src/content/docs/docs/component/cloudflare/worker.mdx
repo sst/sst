@@ -52,16 +52,14 @@ new Worker(name, args, opts?)
 ### nodes
 <Section type="parameters">
 <InlineSection>
-**Type** <code class="primitive">Object</code>
+**Type** <code class="primitive">[NodesProps](#nodesprops)</code>
 </InlineSection>
-- <p><code class="key">worker</code><code class="primitive">Output</code><code class="symbol">&lt;</code>[<code class="type">WorkerScript</code>](https://www.pulumi.com/registry/packages/cloudflare/api-docs/workerscript/)<code class="symbol">&gt;</code></p>
 </Section>
 </Segment>
 
 ## WorkerArgs
 <Segment>
 ### devUrl?
-Enable dev URLs, a dedicated endpoint for your Worker.
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">boolean</code><code class="symbol">&gt;</code>
@@ -71,6 +69,7 @@ Enable dev URLs, a dedicated endpoint for your Worker.
 <InlineSection>
 **Default** Disabled
 </InlineSection>
+Enable dev URLs, a dedicated endpoint for your Worker.
 ```js
 {
   devUrl: true
@@ -79,12 +78,12 @@ Enable dev URLs, a dedicated endpoint for your Worker.
 </Segment>
 <Segment>
 ### handler
-Path to the handler for the worker.
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
+Path to the handler for the worker.
 ```js
 {
   handler: "src/worker.handler"
@@ -93,13 +92,13 @@ Path to the handler for the worker.
 </Segment>
 <Segment>
 ### link?
-Link resources to the function.
-This will grant the function permissions to access the linked resources at runtime.
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">any</code><code class="symbol">[]</code><code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
+Link resources to the function.
+This will grant the function permissions to access the linked resources at runtime.
 ```js
 {
   link: [myBucket, stripeKey],
@@ -108,11 +107,23 @@ This will grant the function permissions to access the linked resources at runti
 </Segment>
 <Segment>
 ### nodejs?
-Used to configure nodejs function properties
 <Section type="parameters">
 <InlineSection>
-**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Object</code><code class="symbol">&gt;</code>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">[NodejsProps](#nodejsprops)</code><code class="symbol">&gt;</code>
 </InlineSection>
+</Section>
+Used to configure nodejs function properties
+</Segment>
+
+## NodesProps
+<InlineSection>
+- <p><code class="key">worker</code><code class="primitive">Output</code><code class="symbol">&lt;</code>[<code class="type">WorkerScript</code>](https://www.pulumi.com/registry/packages/cloudflare/api-docs/workerscript/)<code class="symbol">&gt;</code></p>
+</InlineSection>
+
+## NodejsProps
+
+Used to configure nodejs function properties
+<InlineSection>
 - <p><code class="key">banner?</code><code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code></p>
 Use this to insert an arbitrary string at the beginning of generated JavaScript and CSS files.
 ```js
@@ -153,5 +164,4 @@ nodejs: {
   sourcemap: true
 }
 ```
-</Section>
-</Segment>
+</InlineSection>

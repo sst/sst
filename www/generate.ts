@@ -25,6 +25,7 @@ async function main() {
         renderMethods(),
         renderProperties(),
         renderInterfaces(),
+        renderNestedTypes(),
       ]
         .flat()
         .join("\n")
@@ -132,12 +133,15 @@ async function main() {
     function renderProperties() {
       const lines: string[] = [];
       const properties = useClassGetters();
-      if (!properties?.length) return lines;
+      if (!properties.length) return lines;
 
       lines.push(``, `## Properties`);
 
       for (const property of properties) {
         console.debug(` - property ${property.name}`);
+        const nestedTypeName = `${property.name[0].toLocaleUpperCase()}${property.name.slice(
+          1
+        )}Props`;
         lines.push(
           ``,
           `<Segment>`,
@@ -150,14 +154,11 @@ async function main() {
           // type
           `<Section type="parameters">`,
           `<InlineSection>`,
-          `**Type** ${renderType(property.getSignature?.type!)}`,
+          `**Type** ${renderType(property.getSignature?.type!).replace(
+            "{{_NESTED_TYPE_}}",
+            `[${nestedTypeName}](#${nestedTypeName.toLowerCase()})`
+          )}`,
           `</InlineSection>`,
-          ...useInterfaceNestedTypes(property.getSignature?.type!).map(
-            ({ prefix, subType }) =>
-              `- <p><code class="key">${prefix}${subType.name}${
-                property.getSignature?.flags.isOptional ? "?" : ""
-              }</code>${renderType(subType.type!)}</p>`
-          ),
           `</Section>`,
           `</Segment>`
         );
@@ -184,35 +185,82 @@ async function main() {
 
         for (const prop of int.children) {
           console.debug(`   - interface prop ${prop.name}`);
+          const nestedTypeName = `${prop.name[0].toLocaleUpperCase()}${prop.name.slice(
+            1
+          )}Props`;
           lines.push(
             `<Segment>`,
             // prop name
             `### ${prop.name}${prop.flags.isOptional ? "?" : ""}`,
-            // prop description
-            ...(renderInterfaceDescription(prop) ?? []),
             // prop type
             `<Section type="parameters">`,
             `<InlineSection>`,
-            `**Type** ${renderType(prop.type!)}`,
+            `**Type** ${renderType(prop.type!).replace(
+              "{{_NESTED_TYPE_}}",
+              `[${nestedTypeName}](#${nestedTypeName.toLowerCase()})`
+            )}`,
             `</InlineSection>`,
-            ...useInterfaceNestedTypes(prop.type!).flatMap(
-              ({ prefix, subType }) => [
-                `- <p><code class="key">${prefix}${subType.name}${
-                  prop.flags.isOptional ? "?" : ""
-                }</code>${renderType(subType.type!)}</p>`,
-                ...(renderInterfaceDefaultTag(subType) ?? []),
-                ...(renderInterfaceDescription(subType) ?? []),
-                ...(renderInterfaceExamples(subType) ?? []),
-              ]
-            ),
             `</Section>`,
             // prop default value
             ...(renderInterfaceDefaultTag(prop) ?? []),
+            // prop description
+            ...(renderInterfaceDescription(prop) ?? []),
             // prop examples
             ...(renderInterfaceExamples(prop) ?? []),
             `</Segment>`
           );
         }
+      }
+
+      return lines;
+    }
+
+    function renderNestedTypes() {
+      const lines: string[] = [];
+
+      // properties' nested types
+      useClassGetters().forEach((property) =>
+        renderEach(property.getSignature!)
+      );
+
+      // interfaces' nested types
+      useInterfaces().forEach((int) => int.children?.forEach(renderEach));
+
+      function renderEach(
+        prop:
+          | TypeDoc.Models.DeclarationReflection
+          | TypeDoc.Models.SignatureReflection
+      ) {
+        const nestedTypes = useNestedTypes(prop.type!);
+        if (!nestedTypes.length) return;
+
+        // name
+        lines.push(
+          ``,
+          `## ${prop.name[0].toLocaleUpperCase()}${prop.name.slice(1)}Props`
+        );
+
+        // description
+        if (prop.comment?.summary) {
+          lines.push(``, renderComment(prop.comment?.summary!));
+        }
+
+        // props
+        lines.push(
+          `<InlineSection>`,
+          ...nestedTypes.flatMap(({ prefix, subType }) => [
+            `- <p><code class="key">${prefix}${subType.name}${
+              prop.flags.isOptional ? "?" : ""
+            }</code>${renderType(subType.type!).replaceAll(
+              "{{_NESTED_TYPE_}}",
+              "Object"
+            )}</p>`,
+            ...(renderInterfaceDefaultTag(subType) ?? []),
+            ...(renderInterfaceDescription(subType) ?? []),
+            ...(renderInterfaceExamples(subType) ?? []),
+          ]),
+          `</InlineSection>`
+        );
       }
       return lines;
     }
@@ -295,7 +343,7 @@ async function main() {
       if (type.type === "reference" && type.package === "esbuild")
         return renderEsbuildType(type);
       if (type.type === "reflection" && type.declaration.children?.length)
-        return renderNestedType(type);
+        return renderObjectType(type);
 
       // @ts-expect-error
       delete type._project;
@@ -459,8 +507,8 @@ async function main() {
         return `[<code class="type">${type.name}</code>](https://esbuild.github.io/api/#build)`;
       }
 
-      function renderNestedType(type: TypeDoc.Models.ReflectionType) {
-        return `<code class="primitive">Object</code>`;
+      function renderObjectType(type: TypeDoc.Models.ReflectionType) {
+        return `<code class="primitive">{{_NESTED_TYPE_}}</code>`;
       }
     }
 
@@ -501,7 +549,7 @@ async function main() {
     }
 
     function useClassGetters() {
-      return useClass().children?.filter(
+      return (useClass().children ?? []).filter(
         (c) => c.kind === TypeDoc.ReflectionKind.Accessor && c.flags.isPublic
       );
     }
@@ -512,26 +560,21 @@ async function main() {
       );
     }
 
-    function useInterfaceNestedTypes(
+    function useNestedTypes(
       type: TypeDoc.SomeType
     ): { prefix: string; subType: TypeDoc.Models.DeclarationReflection }[] {
       if (type.type === "union")
-        return type.types.flatMap((t) => useInterfaceNestedTypes(t));
-      if (type.type === "array")
-        return useInterfaceNestedTypes(type.elementType);
+        return type.types.flatMap((t) => useNestedTypes(t));
+      if (type.type === "array") return useNestedTypes(type.elementType);
       if (type.type === "reference")
-        return (type.typeArguments ?? []).flatMap((t) =>
-          useInterfaceNestedTypes(t)
-        );
+        return (type.typeArguments ?? []).flatMap((t) => useNestedTypes(t));
       if (type.type === "reflection")
         return type.declaration.children!.flatMap((child) => [
           { prefix: "", subType: child },
-          ...useInterfaceNestedTypes(child.type!).map(
-            ({ prefix, subType }) => ({
-              prefix: `${child.name}.${prefix}`,
-              subType,
-            })
-          ),
+          ...useNestedTypes(child.type!).map(({ prefix, subType }) => ({
+            prefix: `${child.name}.${prefix}`,
+            subType,
+          })),
         ]);
 
       return [];

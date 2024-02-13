@@ -70,9 +70,8 @@ The S3 bucket name.
 The underlying AWS resources.
 <Section type="parameters">
 <InlineSection>
-**Type** <code class="primitive">Object</code>
+**Type** <code class="primitive">[NodesProps](#nodesprops)</code>
 </InlineSection>
-- <p><code class="key">bucket</code>[<code class="type">BucketV2</code>](https://www.pulumi.com/registry/packages/aws/api-docs/s3/bucketv2/)</p>
 </Section>
 </Segment>
 
@@ -81,7 +80,6 @@ The underlying AWS resources.
 Arguments for creating a `Bucket` component.
 <Segment>
 ### public?
-Enable public access to the files in the bucket
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">boolean</code><code class="symbol">&gt;</code>
@@ -91,6 +89,7 @@ Enable public access to the files in the bucket
 <InlineSection>
 **Default** <code class="primitive">false</code>
 </InlineSection>
+Enable public access to the files in the bucket
 ```js
 {
   public: true
@@ -101,9 +100,20 @@ Enable public access to the files in the bucket
 ### transform?
 <Section type="parameters">
 <InlineSection>
-**Type** <code class="primitive">Object</code>
+**Type** <code class="primitive">[TransformProps](#transformprops)</code>
 </InlineSection>
-- <p><code class="key">bucket?</code><code class="primitive">Transform</code><code class="symbol">&lt;</code>[<code class="type">BucketV2Args</code>](https://www.pulumi.com/registry/packages/aws/api-docs/s3/bucketv2/#inputs)<code class="symbol">&gt;</code></p>
-- <p><code class="key">bucketPolicy?</code><code class="primitive">Transform</code><code class="symbol">&lt;</code>[<code class="type">BucketPolicyArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/s3/bucketpolicy/#inputs)<code class="symbol">&gt;</code></p>
 </Section>
 </Segment>
+
+## NodesProps
+
+The underlying AWS resources.
+<InlineSection>
+- <p><code class="key">bucket</code>[<code class="type">BucketV2</code>](https://www.pulumi.com/registry/packages/aws/api-docs/s3/bucketv2/)</p>
+</InlineSection>
+
+## TransformProps
+<InlineSection>
+- <p><code class="key">bucket?</code><code class="primitive">Transform</code><code class="symbol">&lt;</code>[<code class="type">BucketV2Args</code>](https://www.pulumi.com/registry/packages/aws/api-docs/s3/bucketv2/#inputs)<code class="symbol">&gt;</code></p>
+- <p><code class="key">bucketPolicy?</code><code class="primitive">Transform</code><code class="symbol">&lt;</code>[<code class="type">BucketPolicyArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/s3/bucketpolicy/#inputs)<code class="symbol">&gt;</code></p>
+</InlineSection>
