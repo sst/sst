@@ -85,6 +85,8 @@ const supportedRuntimes = {
   java21: CDKRuntime.JAVA_21,
   "go1.x": CDKRuntime.PROVIDED_AL2,
   go: CDKRuntime.PROVIDED_AL2,
+  "provider.AL2023": CDKRuntime.PROVIDED_AL2023,
+  "llrt.experimental": CDKRuntime.PROVIDED_AL2023,
 };
 
 export type Runtime = keyof typeof supportedRuntimes;
@@ -1082,6 +1084,15 @@ export class Function extends CDKFunction implements SSTConstruct {
           props.java?.experimentalUseProvidedRuntime
         ) {
           cfnFunction.runtime = props.java?.experimentalUseProvidedRuntime;
+        } else if (props.runtime?.startsWith("llrt")) {
+          cfnFunction.runtime = CDKRuntime.PROVIDED_AL2023.toString();
+          const isArm64 = architecture === Architecture.ARM_64;
+          const llrtLayer = new LayerVersion(this, "llrt", {
+            code: Code.fromAsset(path.resolve(__dirname, `../../support/llrt-layers/llrt-lambda-${isArm64 ? "arm64" : "x86"}.zip`)),
+            compatibleRuntimes: [CDKRuntime.PROVIDED_AL2023],
+            compatibleArchitectures: [architecture],
+          })
+          props.layers?.unshift(llrtLayer)
         }
       });
     }
@@ -1304,7 +1315,7 @@ export class Function extends CDKFunction implements SSTConstruct {
 
   private isNodeRuntime() {
     const { runtime } = this.props;
-    return runtime!.startsWith("nodejs");
+    return runtime!.startsWith("nodejs") || runtime!.startsWith("llrt");
   }
 
   static validateHandlerSet(id: string, props: FunctionProps) {

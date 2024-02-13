@@ -40,7 +40,8 @@ export const useNodeHandler = (): RuntimeHandler => {
         .join(path.posix.sep);
       return Boolean(cache.result.metafile?.inputs[relative]);
     },
-    canHandle: (input) => input.startsWith("nodejs"),
+    canHandle: (input) =>
+      input.startsWith("nodejs") || input.startsWith("llrt"),
     startWorker: async (input) => {
       const workers = await useRuntimeWorkers();
       new Promise(async () => {
@@ -98,6 +99,7 @@ export const useNodeHandler = (): RuntimeHandler => {
 
       const nodejs = input.props.nodejs || {};
       const isESM = (nodejs.format || "esm") === "esm";
+      const isLlrt = input.props.runtime?.startsWith("llrt");
 
       const relative = path.relative(
         project.paths.root,
@@ -144,6 +146,7 @@ export const useNodeHandler = (): RuntimeHandler => {
         "sharp",
         "pg-native",
         ...(isESM || input.props.runtime !== "nodejs16.x" ? [] : ["aws-sdk"]),
+        ...(isLlrt ? ["aws-sdk", "@smithy", "@uuid"] : []),
       ];
       const { external, ...override } = nodejs.esbuild || {};
       if (!ctx) {
@@ -165,7 +168,7 @@ export const useNodeHandler = (): RuntimeHandler => {
           ...(isESM
             ? {
                 format: "esm",
-                target: "esnext",
+                target: isLlrt ? "es2022" : "esnext",
                 mainFields: ["module", "main"],
                 banner: {
                   js: [
