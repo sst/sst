@@ -15,16 +15,6 @@ import type { Input } from "../input";
  * Arguments for creating a `Bucket` component.
  */
 export interface BucketArgs {
-  /**
-   * Enable public access to the files in the bucket
-   * @default `false`
-   * @example
-   * ```js
-   * {
-   *   public: true
-   * }
-   * ```
-   */
   public?: Input<boolean>;
   /**
    * [Transform](/docs/transform/) how this component is created.

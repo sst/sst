@@ -3,7 +3,6 @@ import * as jose from "jose";
 import { SessionBuilder } from "./session.js";
 import { Hono } from "hono/tiny";
 import { Context } from "hono";
-import { Resource } from "../resource.js";
 import { deleteCookie, getCookie, setCookie } from "hono/cookie";
 
 interface OnSuccessResponder<T extends { type: any; properties: any }> {
@@ -88,7 +87,6 @@ export function AuthHandler<
     };
   };
 }) {
-  const auth = Resource[process.env.AUTH_ID!];
   const app = new Hono();
 
   if (!input.callbacks.auth.error) {
@@ -102,14 +100,19 @@ export function AuthHandler<
     };
   }
 
+  console.log(process.env.AUTH_PRIVATE_KEY!);
+  console.log(process.env.AUTH_PUBLIC_KEY!);
   const options: Omit<AdapterOptions<any>, "name"> = {
     signing: {
-      privateKey: jose.importPKCS8(auth.privateKey, "RS512"),
-      publicKey: jose.importSPKI(auth.publicKey, "RS512"),
+      privateKey: jose.importPKCS8(process.env.AUTH_PRIVATE_KEY!, "RS512"),
+      publicKey: jose.importSPKI(process.env.AUTH_PUBLIC_KEY!, "RS512"),
     },
     encryption: {
-      privateKey: jose.importPKCS8(auth.privateKey, "RSA-OAEP-512"),
-      publicKey: jose.importSPKI(auth.publicKey, "RSA-OAEP-512"),
+      privateKey: jose.importPKCS8(
+        process.env.AUTH_PRIVATE_KEY!,
+        "RSA-OAEP-512",
+      ),
+      publicKey: jose.importSPKI(process.env.AUTH_PUBLIC_KEY!, "RSA-OAEP-512"),
     },
     algorithm: "RS512",
     async success(ctx: Context, properties: any) {
@@ -187,6 +190,7 @@ export function AuthHandler<
   };
 
   app.get("/token", async (c) => {
+    console.log("token request");
     const form = await c.req.formData();
     if (form.get("grant_type") !== "authorization_code") {
       c.status(400);
@@ -218,6 +222,7 @@ export function AuthHandler<
 
   app.use("/:provider/authorize", async (c, next) => {
     const provider = c.req.param("provider");
+    console.log("authorize request for", provider);
     const response_type =
       c.req.query("response_type") || getCookie(c, "response_type");
     const redirect_uri =
@@ -258,6 +263,9 @@ export function AuthHandler<
     app.route(`/${name}`, route);
   }
 
+  app.all("/*", async (c, next) => {
+    return c.notFound();
+  });
   console.log(app.routes);
 
   return app;

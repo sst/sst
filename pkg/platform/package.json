@@ -26,6 +26,7 @@
     "@pulumi/cloudflare": "5.17.0",
     "@pulumi/pulumi": "3.98.0",
     "@pulumi/random": "4.15.0",
+    "@pulumi/tls": "^5.0.1",
     "@smithy/smithy-client": "2.1.18",
     "@types/node": "^20.10.5",
     "archiver": "6.0.1",

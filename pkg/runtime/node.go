@@ -10,6 +10,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"sync"
 
 	esbuild "github.com/evanw/esbuild/pkg/api"
 	"github.com/sst/ion/internal/fs"
@@ -40,13 +41,20 @@ func (w *NodeWorker) Stop() {
 func (w *NodeWorker) Logs() io.ReadCloser {
 	reader, writer := io.Pipe()
 
+	var wg sync.WaitGroup
+	wg.Add(2)
 	go func() {
-		defer writer.Close()
+		defer wg.Done()
 		_, _ = io.Copy(writer, w.stdout)
 	}()
 	go func() {
-		defer writer.Close()
+		defer wg.Done()
 		_, _ = io.Copy(writer, w.stderr)
+	}()
+
+	go func() {
+		wg.Wait()
+		defer writer.Close()
 	}()
 
 	return reader
@@ -177,6 +185,7 @@ func (r *NodeRuntime) Run(ctx context.Context, input *RunInput) (Worker, error) 
 		input.WorkerID,
 	)
 	cmd.Env = append(input.Env, "AWS_LAMBDA_RUNTIME_API=localhost:44149/lambda/"+input.WorkerID)
+	slog.Info("starting worker", "env", cmd.Env)
 	cmd.Dir = input.Build.Out
 	stdout, _ := cmd.StdoutPipe()
 	stderr, _ := cmd.StderrPipe()

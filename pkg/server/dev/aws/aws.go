@@ -303,7 +303,6 @@ func Start(
 					defer result.Body.Close()
 					body, _ := io.ReadAll(result.Body)
 					slog.Info("error", "body", string(body))
-
 				}
 				break
 

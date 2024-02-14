@@ -1,3 +1,4 @@
+export * from "./auth.js";
 export * from "./bucket.js";
 export * from "./cron.js";
 export * from "./function.js";

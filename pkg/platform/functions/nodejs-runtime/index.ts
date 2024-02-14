@@ -15,35 +15,6 @@ const file = [".js", ".jsx", ".mjs", ".cjs"]
   })!;
 
 let fn: any;
-
-try {
-  const { href } = url.pathToFileURL(file);
-  const mod = await import(href);
-  const handler = parsed.ext.substring(1);
-  fn = mod[handler];
-  if (!fn) {
-    throw new Error(
-      `Function "${handler}" not found in "${handler}". Found ${Object.keys(
-        mod,
-      ).join(", ")}`,
-    );
-  }
-  // if (!mod) mod = require(file);
-} catch (ex: any) {
-  await fetch(AWS_LAMBDA_RUNTIME_API + `/runtime/init/error`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      errorType: "Error",
-      errorMessage: ex.message,
-      trace: ex.stack?.split("\n"),
-    }),
-  });
-  process.exit(1);
-}
-
 let timeout: NodeJS.Timeout | undefined;
 let request: any;
 let response: any;
@@ -51,8 +22,9 @@ let context: LambdaContext;
 
 async function error(ex: any) {
   await fetch(
-    AWS_LAMBDA_RUNTIME_API +
-      `/runtime/invocation/${context.awsRequestId}/error`,
+    AWS_LAMBDA_RUNTIME_API + !context
+      ? `/runtime/init/error`
+      : `/runtime/invocation/${context.awsRequestId}/error`,
     {
       method: "POST",
       headers: {
@@ -67,6 +39,25 @@ async function error(ex: any) {
   );
 }
 process.on("unhandledRejection", error);
+process.on("uncaughtException", error);
+try {
+  const { href } = url.pathToFileURL(file);
+  const mod = await import(href);
+  const handler = parsed.ext.substring(1);
+  fn = mod[handler];
+  if (!fn) {
+    throw new Error(
+      `Function "${handler}" not found in "${handler}". Found ${Object.keys(
+        mod,
+      ).join(", ")}`,
+    );
+  }
+  // if (!mod) mod = require(file);
+} catch (ex: any) {
+  error(ex);
+  process.exit(1);
+}
+
 while (true) {
   if (timeout) clearTimeout(timeout);
   timeout = setTimeout(

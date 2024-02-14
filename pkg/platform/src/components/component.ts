@@ -52,7 +52,7 @@ export class Component extends ComponentResource {
           }
 
           // Ensure physical names are prefixed with app/stage
-          if (args.type.startsWith("sst:sst:")) return undefined;
+          if (args.type.startsWith("sst:")) return undefined;
           if (args.type === "pulumi-nodejs:dynamic:Resource") return undefined;
           if (args.type === "random:index/randomId:RandomId") return undefined;
 
