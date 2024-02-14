@@ -9,7 +9,7 @@ export function LinkAdapter(config: {
       const token = await new jose.SignJWT(c.req.query())
         .setProtectedHeader({ alg: ctx.algorithm })
         .setExpirationTime("10m")
-        .sign(await ctx.privateKey);
+        .sign(await ctx.signing.privateKey);
 
       const url = new URL(new URL(c.req.url).origin);
       url.pathname = `/${ctx.name}/callback`;
@@ -27,7 +27,7 @@ export function LinkAdapter(config: {
     routes.get("/callback", async (c) => {
       const token = c.req.query("token");
       if (!token) throw new Error("Missing token parameter");
-      const verified = await jose.jwtVerify(token, await ctx.publicKey);
+      const verified = await jose.jwtVerify(token, await ctx.signing.publicKey);
       const resp = await ctx.success(c, { claims: verified.payload as any });
       return resp;
     });
