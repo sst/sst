@@ -54,10 +54,13 @@ new Worker(name, args, opts?)
 <InlineSection>
 **Type** <code class="primitive">Object</code>
 </InlineSection>
+- <p>[<code class="key">worker</code>](#nodes.worker)</p>
 </Section>
 </Segment>
 <Segment>
-#### nodes.worker
+<InlineSection>
+#### <code class="symbol">nodes.</code>worker
+</InlineSection>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Output</code><code class="symbol">&lt;</code>[<code class="type">WorkerScript</code>](https://www.pulumi.com/registry/packages/cloudflare/api-docs/workerscript/)<code class="symbol">&gt;</code>
@@ -68,7 +71,6 @@ new Worker(name, args, opts?)
 ## WorkerArgs
 <Segment>
 ### devUrl?
-Enable dev URLs, a dedicated endpoint for your Worker.
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">boolean</code><code class="symbol">&gt;</code>
@@ -78,6 +80,7 @@ Enable dev URLs, a dedicated endpoint for your Worker.
 <InlineSection>
 **Default** Disabled `false`
 </InlineSection>
+Enable dev URLs, a dedicated endpoint for your Worker.
 ```js
 {
   devUrl: true
@@ -86,12 +89,12 @@ Enable dev URLs, a dedicated endpoint for your Worker.
 </Segment>
 <Segment>
 ### handler
-Path to the handler for the worker.
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
+Path to the handler for the worker.
 ```js
 {
   handler: "src/worker.handler"
@@ -100,13 +103,13 @@ Path to the handler for the worker.
 </Segment>
 <Segment>
 ### link?
-Link resources to the function.
-This will grant the function permissions to access the linked resources at runtime.
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">any</code><code class="symbol">[]</code><code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
+Link resources to the function.
+This will grant the function permissions to access the linked resources at runtime.
 ```js
 {
   link: [myBucket, stripeKey],
@@ -115,21 +118,28 @@ This will grant the function permissions to access the linked resources at runti
 </Segment>
 <Segment>
 ### nodejs?
-Used to configure nodejs function properties
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Object</code><code class="symbol">&gt;</code>
 </InlineSection>
+- <p>[<code class="key">banner</code>](#nodejs.banner)</p>
+- <p>[<code class="key">esbuild</code>](#nodejs.esbuild)</p>
+- <p>[<code class="key">loader</code>](#nodejs.loader)</p>
+- <p>[<code class="key">minify</code>](#nodejs.minify)</p>
+- <p>[<code class="key">sourcemap</code>](#nodejs.sourcemap)</p>
 </Section>
+Used to configure nodejs function properties
 </Segment>
 <Segment>
-#### nodejs.banner?
-Use this to insert an arbitrary string at the beginning of generated JavaScript and CSS files.
+<InlineSection>
+#### <code class="symbol">nodejs.</code>banner?
+</InlineSection>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
+Use this to insert an arbitrary string at the beginning of generated JavaScript and CSS files.
 ```js
 nodejs: {
   banner: "console.log('Function starting')"
@@ -137,22 +147,26 @@ nodejs: {
 ```
 </Segment>
 <Segment>
-#### nodejs.esbuild?
-This allows you to customize esbuild config.
+<InlineSection>
+#### <code class="symbol">nodejs.</code>esbuild?
+</InlineSection>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code>[<code class="type">BuildOptions</code>](https://esbuild.github.io/api/#build)<code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
+This allows you to customize esbuild config.
 </Segment>
 <Segment>
-#### nodejs.loader?
-Configure additional esbuild loaders for other file extensions
+<InlineSection>
+#### <code class="symbol">nodejs.</code>loader?
+</InlineSection>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Record</code><code class="symbol">&lt;</code><code class="primitive">string</code>, [<code class="type">Loader</code>](https://esbuild.github.io/api/#loader)<code class="symbol">&gt;</code><code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
+Configure additional esbuild loaders for other file extensions
 ```js
 nodejs: {
   loader: {
@@ -162,8 +176,9 @@ nodejs: {
 ```
 </Segment>
 <Segment>
-#### nodejs.minify?
-Enable or disable minification
+<InlineSection>
+#### <code class="symbol">nodejs.</code>minify?
+</InlineSection>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">boolean</code><code class="symbol">&gt;</code>
@@ -173,6 +188,7 @@ Enable or disable minification
 <InlineSection>
 **Default** <code class="primitive">true</code>
 </InlineSection>
+Enable or disable minification
 ```js
 nodejs: {
   minify: false
@@ -180,8 +196,9 @@ nodejs: {
 ```
 </Segment>
 <Segment>
-#### nodejs.sourcemap?
-Configure if sourcemaps are generated when the function is bundled for production. Since they increase payload size and potentially cold starts they are not generated by default. They are always generated during local development mode.
+<InlineSection>
+#### <code class="symbol">nodejs.</code>sourcemap?
+</InlineSection>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">boolean</code><code class="symbol">&gt;</code>
@@ -191,6 +208,7 @@ Configure if sourcemaps are generated when the function is bundled for productio
 <InlineSection>
 **Default** <code class="primitive">false</code>
 </InlineSection>
+Configure if sourcemaps are generated when the function is bundled for production. Since they increase payload size and potentially cold starts they are not generated by default. They are always generated during local development mode.
 ```js
 nodejs: {
   sourcemap: true

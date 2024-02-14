@@ -52,7 +52,13 @@ const RETENTION = {
 };
 
 export type FunctionPermissionArgs = {
+  /**
+   * IAM actions to allow to perform on the resources.
+   */
   actions: string[];
+  /**
+   * The Amazon Resource Name (ARN) of the resources to allow actions on.
+   */
   resources: Input<string>[];
 };
 
@@ -167,15 +173,41 @@ export interface FunctionArgs {
    */
   environment?: Input<Record<string, Input<string>>>;
   /**
-   * Initial IAM policy statements to add to the created Lambda Role.
+   * Permissions and the resources that the function needs to access.
+   * The permissions are use to create the function's IAM role.
    * @default No permissions
    * @example
+   * Allow function to read and write to the S3 bucket `my-bucket`.
+   * ```js
+   * {
+   *   permissions: [
+   *     {
+   *       actions: ["s3:GetObject", "s3:PutObject"],
+   *       resources: ["arn:aws:s3:::my-bucket/*"],
+   *     },
+   *   ]
+   * }
+   * ```
+   *
+   * Allow function to perform all actions on the S3 bucket `my-bucket`.
    * ```js
    * {
    *   permissions: [
    *     {
    *       actions: ["s3:*"],
-   *       resources: ["arn:aws:s3:::*"],
+   *       resources: ["arn:aws:s3:::my-bucket/*"],
+   *     },
+   *   ]
+   * }
+   * ```
+   *
+   * Granting function permissions to access all resources.
+   * ```js
+   * {
+   *   permissions: [
+   *     {
+   *       actions: ["*"],
+   *       resources: ["*"],
    *     },
    *   ]
    * }

@@ -14,7 +14,7 @@ import {
 } from "@pulumi/pulumi";
 import * as aws from "@pulumi/aws";
 import { Cdn, CdnDomainArgs } from "./cdn.js";
-import { Function, FunctionArgs, FunctionPermissionArgs } from "./function.js";
+import { Function, FunctionArgs } from "./function.js";
 import { Duration, toSeconds } from "../duration.js";
 import { DistributionInvalidation } from "./providers/distribution-invalidation.js";
 import { useProvider } from "./helpers/provider.js";
@@ -108,11 +108,11 @@ export interface SsrSiteArgs {
    *   {
    *     actions: ["s3:*"],
    *     resources: ["arn:aws:s3:::*"],
-   *   },
+   *   }
    * ]
    * ```
    */
-  permissions?: Input<Prettify<FunctionPermissionArgs>[]>;
+  permissions?: FunctionArgs["permissions"];
   /**
    * Link resources to the SSR function.
    * This will grant the site permissions to access the linked resources at runtime.
@@ -1234,10 +1234,6 @@ export function validatePlan<
   edgeFunctions?: EdgeFunctions;
   /**
    * Each origin can be either an S3, server, image optimization, or group origin.
-   * - S3 origin: configure the `.s3` property
-   * - Lambda URL origin: configure the `.server` property
-   * - Image optimization origin: configure the `.imageOptimization` property
-   * - Group fail-over origin: configure the `.group` property
    */
   origins: Origins;
   edge: boolean;

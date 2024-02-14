@@ -41,43 +41,55 @@ new Remix(name, args, opts?)
 
 <Segment>
 ### domainUrl
-If the custom domain is enabled, this is the URL of the website with the
-custom domain.
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">undefined</code><code class="symbol"> | </code><code class="primitive">Output</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
+If the custom domain is enabled, this is the URL of the website with the
+custom domain.
 </Segment>
 
 <Segment>
 ### url
-The CloudFront URL of the website.
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Output</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
+The CloudFront URL of the website.
 </Segment>
 
 ## RemixArgs
 <Segment>
 ### assets?
-Configure the assets uploaded to S3.
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Object</code><code class="symbol">&gt;</code>
 </InlineSection>
+- <p>[<code class="key">fileOptions</code>](#assets.fileOptions)</p>
+- <p>[<code class="key">nonVersionedFilesCacheHeader</code>](#assets.nonVersionedFilesCacheHeader)</p>
+- <p>[<code class="key">nonVersionedFilesTTL</code>](#assets.nonVersionedFilesTTL)</p>
+- <p>[<code class="key">textEncoding</code>](#assets.textEncoding)</p>
+- <p>[<code class="key">versionedFilesCacheHeader</code>](#assets.versionedFilesCacheHeader)</p>
+- <p>[<code class="key">versionedFilesTTL</code>](#assets.versionedFilesTTL)</p>
 </Section>
+Configure the assets uploaded to S3.
 </Segment>
 <Segment>
-#### assets.fileOptions?
-List of file options to specify cache control and content type for cached files. These file options are appended to the default file options so it's possible to override the default file options by specifying an overlapping file pattern.
+<InlineSection>
+#### <code class="symbol">assets.</code>fileOptions?
+</InlineSection>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Object</code><code class="symbol">[]</code><code class="symbol">&gt;</code>
 </InlineSection>
+- <p>[<code class="key">cacheControl</code>](#fileOptions[].cacheControl)</p>
+- <p>[<code class="key">contentType</code>](#fileOptions[].contentType)</p>
+- <p>[<code class="key">files</code>](#fileOptions[].files)</p>
+- <p>[<code class="key">ignore</code>](#fileOptions[].ignore)</p>
 </Section>
+List of file options to specify cache control and content type for cached files. These file options are appended to the default file options so it's possible to override the default file options by specifying an overlapping file pattern.
 ```js
 assets: {
   fileOptions: [
@@ -91,7 +103,9 @@ assets: {
 ```
 </Segment>
 <Segment>
-#### assets.fileOptions[].cacheControl?
+<InlineSection>
+#### <code class="symbol">assets.fileOptions[].</code>cacheControl?
+</InlineSection>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">string</code>
@@ -99,7 +113,9 @@ assets: {
 </Section>
 </Segment>
 <Segment>
-#### assets.fileOptions[].contentType?
+<InlineSection>
+#### <code class="symbol">assets.fileOptions[].</code>contentType?
+</InlineSection>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">string</code>
@@ -107,7 +123,9 @@ assets: {
 </Section>
 </Segment>
 <Segment>
-#### assets.fileOptions[].files
+<InlineSection>
+#### <code class="symbol">assets.fileOptions[].</code>files
+</InlineSection>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">string</code><code class="symbol"> | </code><code class="primitive">string</code><code class="symbol">[]</code>
@@ -115,7 +133,9 @@ assets: {
 </Section>
 </Segment>
 <Segment>
-#### assets.fileOptions[].ignore?
+<InlineSection>
+#### <code class="symbol">assets.fileOptions[].</code>ignore?
+</InlineSection>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">string</code><code class="symbol"> | </code><code class="primitive">string</code><code class="symbol">[]</code>
@@ -123,8 +143,9 @@ assets: {
 </Section>
 </Segment>
 <Segment>
-#### assets.nonVersionedFilesCacheHeader?
-The header to use for non-versioned files (ex: `index.html`) in the CDN cache. When specified, the `nonVersionedFilesTTL` option is ignored.
+<InlineSection>
+#### <code class="symbol">assets.</code>nonVersionedFilesCacheHeader?
+</InlineSection>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
@@ -134,6 +155,7 @@ The header to use for non-versioned files (ex: `index.html`) in the CDN cache. W
 <InlineSection>
 **Default** <code class="primitive">public,max-age=0,s-maxage=86400,stale-while-revalidate=8640</code>
 </InlineSection>
+The header to use for non-versioned files (ex: `index.html`) in the CDN cache. When specified, the `nonVersionedFilesTTL` option is ignored.
 ```js
 assets: {
   nonVersionedFilesCacheHeader: "public,max-age=0,no-cache"
@@ -141,8 +163,9 @@ assets: {
 ```
 </Segment>
 <Segment>
-#### assets.nonVersionedFilesTTL?
-The TTL for non-versioned files (ex: `index.html`) in the CDN cache. Ignored when `nonVersionedFilesCacheHeader` is specified.
+<InlineSection>
+#### <code class="symbol">assets.</code>nonVersionedFilesTTL?
+</InlineSection>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">number</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">$\{number\} second</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">$\{number\} seconds</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">$\{number\} minute</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">$\{number\} minutes</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">$\{number\} hour</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">$\{number\} hours</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">$\{number\} day</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">$\{number\} days</code><code class="symbol">&rdquo;</code><code class="symbol">&gt;</code>
@@ -152,6 +175,7 @@ The TTL for non-versioned files (ex: `index.html`) in the CDN cache. Ignored whe
 <InlineSection>
 **Default** <code class="primitive">1 day</code>
 </InlineSection>
+The TTL for non-versioned files (ex: `index.html`) in the CDN cache. Ignored when `nonVersionedFilesCacheHeader` is specified.
 ```js
 assets: {
   nonVersionedFilesTTL: "4 hours"
@@ -159,8 +183,9 @@ assets: {
 ```
 </Segment>
 <Segment>
-#### assets.textEncoding?
-Character encoding for text based assets uploaded to S3 (ex: html, css, js, etc.). If "none" is specified, no charset will be returned in header.
+<InlineSection>
+#### <code class="symbol">assets.</code>textEncoding?
+</InlineSection>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="symbol">&ldquo;</code><code class="primitive">none</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">utf-8</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">iso-8859-1</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">windows-1252</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">ascii</code><code class="symbol">&rdquo;</code><code class="symbol">&gt;</code>
@@ -170,6 +195,7 @@ Character encoding for text based assets uploaded to S3 (ex: html, css, js, etc.
 <InlineSection>
 **Default** <code class="primitive">utf-8</code>
 </InlineSection>
+Character encoding for text based assets uploaded to S3 (ex: html, css, js, etc.). If "none" is specified, no charset will be returned in header.
 ```js
 assets: {
   textEncoding: "iso-8859-1"
@@ -177,8 +203,9 @@ assets: {
 ```
 </Segment>
 <Segment>
-#### assets.versionedFilesCacheHeader?
-The header to use for versioned files (ex: `main-1234.css`) in the CDN cache. When specified, the `versionedFilesTTL` option is ignored.
+<InlineSection>
+#### <code class="symbol">assets.</code>versionedFilesCacheHeader?
+</InlineSection>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
@@ -188,6 +215,7 @@ The header to use for versioned files (ex: `main-1234.css`) in the CDN cache. Wh
 <InlineSection>
 **Default** <code class="primitive">public,max-age=31536000,immutable</code>
 </InlineSection>
+The header to use for versioned files (ex: `main-1234.css`) in the CDN cache. When specified, the `versionedFilesTTL` option is ignored.
 ```js
 assets: {
   versionedFilesCacheHeader: "public,max-age=31536000,immutable"
@@ -195,8 +223,9 @@ assets: {
 ```
 </Segment>
 <Segment>
-#### assets.versionedFilesTTL?
-The TTL for versioned files (ex: `main-1234.css`) in the CDN and browser cache. Ignored when `versionedFilesCacheHeader` is specified.
+<InlineSection>
+#### <code class="symbol">assets.</code>versionedFilesTTL?
+</InlineSection>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">number</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">$\{number\} second</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">$\{number\} seconds</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">$\{number\} minute</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">$\{number\} minutes</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">$\{number\} hour</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">$\{number\} hours</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">$\{number\} day</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">$\{number\} days</code><code class="symbol">&rdquo;</code><code class="symbol">&gt;</code>
@@ -206,6 +235,7 @@ The TTL for versioned files (ex: `main-1234.css`) in the CDN and browser cache. 
 <InlineSection>
 **Default** <code class="primitive">1 year</code>
 </InlineSection>
+The TTL for versioned files (ex: `main-1234.css`) in the CDN and browser cache. Ignored when `versionedFilesCacheHeader` is specified.
 ```js
 assets: {
   versionedFilesTTL: "30 days"
@@ -214,7 +244,6 @@ assets: {
 </Segment>
 <Segment>
 ### buildCommand?
-The command for building the website
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
@@ -224,22 +253,28 @@ The command for building the website
 <InlineSection>
 **Default** <code class="primitive">npm run build</code>
 </InlineSection>
+The command for building the website
 ```js
 buildCommand: "yarn build",
 ```
 </Segment>
 <Segment>
 ### domain?
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol"> | </code><code class="primitive">Object</code><code class="symbol">&gt;</code>
+</InlineSection>
+- <p>[<code class="key">aliases</code>](#domain.aliases)</p>
+- <p>[<code class="key">domainName</code>](#domain.domainName)</p>
+- <p>[<code class="key">hostedZone</code>](#domain.hostedZone)</p>
+- <p>[<code class="key">hostedZoneId</code>](#domain.hostedZoneId)</p>
+- <p>[<code class="key">redirects</code>](#domain.redirects)</p>
+</Section>
 The domain for this website. SST supports domains that are hosted
 either on [Route 53](https://aws.amazon.com/route53/) or externally.
 
 Note that you can also migrate externally hosted domains to Route 53 by
 [following this guide](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/MigratingDNS.html).
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol"> | </code><code class="primitive">Object</code><code class="symbol">&gt;</code>
-</InlineSection>
-</Section>
 ```js
 domain: "domain.com",
 ```
@@ -253,8 +288,9 @@ domain: {
 ```
 </Segment>
 <Segment>
-#### domain.aliases?
-Specify additional names that should route to the Cloudfront Distribution.
+<InlineSection>
+#### <code class="symbol">domain.</code>aliases?
+</InlineSection>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">[]</code><code class="symbol">&gt;</code>
@@ -264,6 +300,7 @@ Specify additional names that should route to the Cloudfront Distribution.
 <InlineSection>
 **Default** No aliases configured
 </InlineSection>
+Specify additional names that should route to the Cloudfront Distribution.
 ```js
 domain: {
   domainName: "app1.domain.com",
@@ -272,20 +309,22 @@ domain: {
 ```
 </Segment>
 <Segment>
-#### domain.domainName
-The domain to be assigned to the website URL (ie. domain.com).
-
-Supports domains that are hosted either on [Route 53](https://aws.amazon.com/route53/) or externally.
+<InlineSection>
+#### <code class="symbol">domain.</code>domainName
+</InlineSection>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
+The domain to be assigned to the website URL (ie. domain.com).
+
+Supports domains that are hosted either on [Route 53](https://aws.amazon.com/route53/) or externally.
 </Segment>
 <Segment>
-#### domain.hostedZone?
-Name of the hosted zone in Route 53 that contains the domain. By default, SST will look for a hosted zone matching the domain name that's passed in.
-Do not set both "hostedZone" and "hostedZoneId".
+<InlineSection>
+#### <code class="symbol">domain.</code>hostedZone?
+</InlineSection>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
@@ -295,6 +334,8 @@ Do not set both "hostedZone" and "hostedZoneId".
 <InlineSection>
 **Default** Same as the `domainName`
 </InlineSection>
+Name of the hosted zone in Route 53 that contains the domain. By default, SST will look for a hosted zone matching the domain name that's passed in.
+Do not set both "hostedZone" and "hostedZoneId".
 ```js
 domain: {
   domainName: "app.domain.com",
@@ -303,15 +344,17 @@ domain: {
 ```
 </Segment>
 <Segment>
-#### domain.hostedZoneId?
-The 14 letter id of the hosted zone in Route 53 that contains the domain.
-Only set this option if there are multiple hosted zones of the same domain in Route 53.
-Do not set both "hostedZone" and "hostedZoneId".
+<InlineSection>
+#### <code class="symbol">domain.</code>hostedZoneId?
+</InlineSection>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
+The 14 letter id of the hosted zone in Route 53 that contains the domain.
+Only set this option if there are multiple hosted zones of the same domain in Route 53.
+Do not set both "hostedZone" and "hostedZoneId".
 ```js
 domain: {
   domainName: "domain.com",
@@ -320,9 +363,9 @@ domain: {
 ```
 </Segment>
 <Segment>
-#### domain.redirects?
-Alternative domains to be assigned to the website URL. Visitors to the alternative domains will be redirected to the main domain. (ie. `www.domain.com`).
-Use this to create a `www.` version of your domain and redirect visitors to the root domain.
+<InlineSection>
+#### <code class="symbol">domain.</code>redirects?
+</InlineSection>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">[]</code><code class="symbol">&gt;</code>
@@ -332,6 +375,8 @@ Use this to create a `www.` version of your domain and redirect visitors to the 
 <InlineSection>
 **Default** No redirects configured
 </InlineSection>
+Alternative domains to be assigned to the website URL. Visitors to the alternative domains will be redirected to the main domain. (ie. `www.domain.com`).
+Use this to create a `www.` version of your domain and redirect visitors to the root domain.
 ```js
 domain: {
   domainName: "domain.com",
@@ -341,7 +386,6 @@ domain: {
 </Segment>
 <Segment>
 ### edge?
-The server function is deployed to Lambda in a single region. Alternatively, you can enable this option to deploy to Lambda@Edge.
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">boolean</code>
@@ -351,15 +395,16 @@ The server function is deployed to Lambda in a single region. Alternatively, you
 <InlineSection>
 **Default** <code class="primitive">false</code>
 </InlineSection>
+The server function is deployed to Lambda in a single region. Alternatively, you can enable this option to deploy to Lambda@Edge.
 </Segment>
 <Segment>
 ### environment?
-An object with the key being the environment variable name.
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Record</code><code class="symbol">&lt;</code><code class="primitive">string</code>, <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code><code class="symbol">&gt;</code><code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
+An object with the key being the environment variable name.
 ```js
 environment: {
   API_URL: api.url,
@@ -373,15 +418,14 @@ environment: {
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Object</code><code class="symbol">&gt;</code>
 </InlineSection>
+- <p>[<code class="key">paths</code>](#invalidation.paths)</p>
+- <p>[<code class="key">wait</code>](#invalidation.wait)</p>
 </Section>
 </Segment>
 <Segment>
-#### invalidation.paths?
-The paths to invalidate. There are three built-in options:
-- "none" - No invalidation will be performed.
-- "all" - All files will be invalidated when any file changes.
-- "versioned" - Only versioned files will be invalidated when versioned files change.
-Alternatively you can pass in an array of paths to invalidate.
+<InlineSection>
+#### <code class="symbol">invalidation.</code>paths?
+</InlineSection>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">[]</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">none</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">all</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">versioned</code><code class="symbol">&rdquo;</code><code class="symbol">&gt;</code>
@@ -391,6 +435,11 @@ Alternatively you can pass in an array of paths to invalidate.
 <InlineSection>
 **Default** <code class="primitive">all</code>
 </InlineSection>
+The paths to invalidate. There are three built-in options:
+- "none" - No invalidation will be performed.
+- "all" - All files will be invalidated when any file changes.
+- "versioned" - Only versioned files will be invalidated when versioned files change.
+Alternatively you can pass in an array of paths to invalidate.
 Disable invalidation:
 ```js
 invalidation: {
@@ -405,8 +454,9 @@ invalidation: {
 ```
 </Segment>
 <Segment>
-#### invalidation.wait?
-While deploying, SST waits for the CloudFront cache invalidation process to finish. This ensures that the new content will be served once the deploy command finishes. However, this process can sometimes take more than 5 mins. For non-prod environments it might make sense to pass in `false`. That'll skip waiting for the cache to invalidate and speed up the deploy process.
+<InlineSection>
+#### <code class="symbol">invalidation.</code>wait?
+</InlineSection>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">boolean</code><code class="symbol">&gt;</code>
@@ -416,6 +466,7 @@ While deploying, SST waits for the CloudFront cache invalidation process to fini
 <InlineSection>
 **Default** <code class="primitive">false</code>
 </InlineSection>
+While deploying, SST waits for the CloudFront cache invalidation process to finish. This ensures that the new content will be served once the deploy command finishes. However, this process can sometimes take more than 5 mins. For non-prod environments it might make sense to pass in `false`. That'll skip waiting for the cache to invalidate and speed up the deploy process.
 ```js
 invalidation: {
   wait: true,
@@ -424,13 +475,13 @@ invalidation: {
 </Segment>
 <Segment>
 ### link?
-Link resources to the SSR function.
-This will grant the site permissions to access the linked resources at runtime.
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">any</code><code class="symbol">[]</code><code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
+Link resources to the SSR function.
+This will grant the site permissions to access the linked resources at runtime.
 ```js
 {
   link: [myBucket, stripeKey],
@@ -439,7 +490,6 @@ This will grant the site permissions to access the linked resources at runtime.
 </Segment>
 <Segment>
 ### path?
-Path to the directory where the app is located.
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
@@ -449,71 +499,101 @@ Path to the directory where the app is located.
 <InlineSection>
 **Default** <code class="primitive">.</code>
 </InlineSection>
+Path to the directory where the app is located.
 </Segment>
 <Segment>
 ### permissions?
-Attaches the given list of permissions to the SSR function.
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Object</code><code class="symbol">[]</code><code class="symbol">&gt;</code>
 </InlineSection>
+- <p>[<code class="key">actions</code>](#permissions[].actions)</p>
+- <p>[<code class="key">resources</code>](#permissions[].resources)</p>
 </Section>
 
 <InlineSection>
 **Default** No permissions
 </InlineSection>
+Attaches the given list of permissions to the SSR function.
 ```js
 permissions: [
   {
     actions: ["s3:*"],
     resources: ["arn:aws:s3:::*"],
-  },
+  }
 ]
 ```
 </Segment>
 <Segment>
-#### permissions[].actions
+<InlineSection>
+#### <code class="symbol">permissions[].</code>actions
+</InlineSection>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">string</code><code class="symbol">[]</code>
 </InlineSection>
 </Section>
+IAM actions to allow to perform on the resources.
 </Segment>
 <Segment>
-#### permissions[].resources
+<InlineSection>
+#### <code class="symbol">permissions[].</code>resources
+</InlineSection>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code><code class="symbol">[]</code>
 </InlineSection>
 </Section>
+The Amazon Resource Name (ARN) of the resources to allow actions on.
 </Segment>
 <Segment>
 ### transform?
-[Transform](/docs/transform/) how this component is created.
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Object</code>
 </InlineSection>
+- <p>[<code class="key">plan</code>](#transform.plan)</p>
 </Section>
+[Transform](/docs/transform/) how this component is created.
 </Segment>
 <Segment>
-#### transform.plan?
+<InlineSection>
+#### <code class="symbol">transform.</code>plan?
+</InlineSection>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Transform</code><code class="symbol">&lt;</code><code class="primitive">Object</code><code class="symbol">&gt;</code>
 </InlineSection>
+- <p>[<code class="key">behaviors</code>](#plan.behaviors)</p>
+- <p>[<code class="key">buildId</code>](#plan.buildId)</p>
+- <p>[<code class="key">cloudFrontFunctions</code>](#plan.cloudFrontFunctions)</p>
+- <p>[<code class="key">edge</code>](#plan.edge)</p>
+- <p>[<code class="key">edgeFunctions</code>](#plan.edgeFunctions)</p>
+- <p>[<code class="key">errorResponses</code>](#plan.errorResponses)</p>
+- <p>[<code class="key">origins</code>](#plan.origins)</p>
+- <p>[<code class="key">serverCachePolicy</code>](#plan.serverCachePolicy)</p>
 </Section>
 </Segment>
 <Segment>
-#### transform.plan.behaviors
+<InlineSection>
+#### <code class="symbol">transform.plan.</code>behaviors
+</InlineSection>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Object</code><code class="symbol">[]</code>
 </InlineSection>
+- <p>[<code class="key">allowedMethods</code>](#behaviors[].allowedMethods)</p>
+- <p>[<code class="key">cacheType</code>](#behaviors[].cacheType)</p>
+- <p>[<code class="key">cfFunction</code>](#behaviors[].cfFunction)</p>
+- <p>[<code class="key">edgeFunction</code>](#behaviors[].edgeFunction)</p>
+- <p>[<code class="key">origin</code>](#behaviors[].origin)</p>
+- <p>[<code class="key">pattern</code>](#behaviors[].pattern)</p>
 </Section>
 </Segment>
 <Segment>
-#### transform.plan.behaviors[].allowedMethods?
+<InlineSection>
+#### <code class="symbol">transform.plan.behaviors[].</code>allowedMethods?
+</InlineSection>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="symbol">&ldquo;</code><code class="primitive">DELETE</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">GET</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">HEAD</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">OPTIONS</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">PATCH</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">POST</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">PUT</code><code class="symbol">&rdquo;</code><code class="symbol">[]</code>
@@ -521,7 +601,9 @@ permissions: [
 </Section>
 </Segment>
 <Segment>
-#### transform.plan.behaviors[].cacheType
+<InlineSection>
+#### <code class="symbol">transform.plan.behaviors[].</code>cacheType
+</InlineSection>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="symbol">&ldquo;</code><code class="primitive">server</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">static</code><code class="symbol">&rdquo;</code>
@@ -529,7 +611,9 @@ permissions: [
 </Section>
 </Segment>
 <Segment>
-#### transform.plan.behaviors[].cfFunction?
+<InlineSection>
+#### <code class="symbol">transform.plan.behaviors[].</code>cfFunction?
+</InlineSection>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">string</code>
@@ -537,7 +621,9 @@ permissions: [
 </Section>
 </Segment>
 <Segment>
-#### transform.plan.behaviors[].edgeFunction?
+<InlineSection>
+#### <code class="symbol">transform.plan.behaviors[].</code>edgeFunction?
+</InlineSection>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">string</code>
@@ -545,7 +631,9 @@ permissions: [
 </Section>
 </Segment>
 <Segment>
-#### transform.plan.behaviors[].origin
+<InlineSection>
+#### <code class="symbol">transform.plan.behaviors[].</code>origin
+</InlineSection>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">string</code>
@@ -553,7 +641,9 @@ permissions: [
 </Section>
 </Segment>
 <Segment>
-#### transform.plan.behaviors[].pattern?
+<InlineSection>
+#### <code class="symbol">transform.plan.behaviors[].</code>pattern?
+</InlineSection>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">string</code>
@@ -561,7 +651,9 @@ permissions: [
 </Section>
 </Segment>
 <Segment>
-#### transform.plan.buildId?
+<InlineSection>
+#### <code class="symbol">transform.plan.</code>buildId?
+</InlineSection>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">string</code>
@@ -569,15 +661,20 @@ permissions: [
 </Section>
 </Segment>
 <Segment>
-#### transform.plan.cloudFrontFunctions?
+<InlineSection>
+#### <code class="symbol">transform.plan.</code>cloudFrontFunctions?
+</InlineSection>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Record</code><code class="symbol">&lt;</code><code class="primitive">string</code>, <code class="primitive">Object</code><code class="symbol">&gt;</code>
 </InlineSection>
+- <p>[<code class="key">injections</code>](#cloudFrontFunctions[].injections)</p>
 </Section>
 </Segment>
 <Segment>
-#### transform.plan.cloudFrontFunctions[].injections
+<InlineSection>
+#### <code class="symbol">transform.plan.cloudFrontFunctions[].</code>injections
+</InlineSection>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">string</code><code class="symbol">[]</code>
@@ -585,7 +682,9 @@ permissions: [
 </Section>
 </Segment>
 <Segment>
-#### transform.plan.edge
+<InlineSection>
+#### <code class="symbol">transform.plan.</code>edge
+</InlineSection>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">boolean</code>
@@ -593,15 +692,20 @@ permissions: [
 </Section>
 </Segment>
 <Segment>
-#### transform.plan.edgeFunctions?
+<InlineSection>
+#### <code class="symbol">transform.plan.</code>edgeFunctions?
+</InlineSection>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Record</code><code class="symbol">&lt;</code><code class="primitive">string</code>, <code class="primitive">Object</code><code class="symbol">&gt;</code>
 </InlineSection>
+- <p>[<code class="key">function</code>](#edgeFunctions[].function)</p>
 </Section>
 </Segment>
 <Segment>
-#### transform.plan.edgeFunctions[].function
+<InlineSection>
+#### <code class="symbol">transform.plan.edgeFunctions[].</code>function
+</InlineSection>
 <Section type="parameters">
 <InlineSection>
 **Type** [<code class="type">FunctionArgs</code>](function/#functionargs)
@@ -609,7 +713,9 @@ permissions: [
 </Section>
 </Segment>
 <Segment>
-#### transform.plan.errorResponses?
+<InlineSection>
+#### <code class="symbol">transform.plan.</code>errorResponses?
+</InlineSection>
 <Section type="parameters">
 <InlineSection>
 **Type** [<code class="type">DistributionCustomErrorResponse</code>](https://www.pulumi.com/registry/packages/aws/api-docs/cloudfront/distribution/#distributioncustomerrorresponse)<code class="symbol">[]</code>
@@ -617,28 +723,37 @@ permissions: [
 </Section>
 </Segment>
 <Segment>
-#### transform.plan.origins
-Each origin can be either an S3, server, image optimization, or group origin.
-- S3 origin: configure the `.s3` property
-- Lambda URL origin: configure the `.server` property
-- Image optimization origin: configure the `.imageOptimization` property
-- Group fail-over origin: configure the `.group` property
+<InlineSection>
+#### <code class="symbol">transform.plan.</code>origins
+</InlineSection>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Record</code><code class="symbol">&lt;</code><code class="primitive">string</code>, <code class="primitive">Object</code><code class="symbol">&gt;</code>
 </InlineSection>
+- <p>[<code class="key">group</code>](#origins[].group)</p>
+- <p>[<code class="key">imageOptimization</code>](#origins[].imageOptimization)</p>
+- <p>[<code class="key">s3</code>](#origins[].s3)</p>
+- <p>[<code class="key">server</code>](#origins[].server)</p>
 </Section>
+Each origin can be either an S3, server, image optimization, or group origin.
 </Segment>
 <Segment>
-#### transform.plan.origins[].group?
+<InlineSection>
+#### <code class="symbol">transform.plan.origins[].</code>group?
+</InlineSection>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Object</code>
 </InlineSection>
+- <p>[<code class="key">fallbackOriginName</code>](#group.fallbackOriginName)</p>
+- <p>[<code class="key">fallbackStatusCodes</code>](#group.fallbackStatusCodes)</p>
+- <p>[<code class="key">primaryOriginName</code>](#group.primaryOriginName)</p>
 </Section>
 </Segment>
 <Segment>
-#### transform.plan.origins[].group.fallbackOriginName
+<InlineSection>
+#### <code class="symbol">transform.plan.origins[].group.</code>fallbackOriginName
+</InlineSection>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">string</code>
@@ -646,7 +761,9 @@ Each origin can be either an S3, server, image optimization, or group origin.
 </Section>
 </Segment>
 <Segment>
-#### transform.plan.origins[].group.fallbackStatusCodes
+<InlineSection>
+#### <code class="symbol">transform.plan.origins[].group.</code>fallbackStatusCodes
+</InlineSection>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">number</code><code class="symbol">[]</code>
@@ -654,7 +771,9 @@ Each origin can be either an S3, server, image optimization, or group origin.
 </Section>
 </Segment>
 <Segment>
-#### transform.plan.origins[].group.primaryOriginName
+<InlineSection>
+#### <code class="symbol">transform.plan.origins[].group.</code>primaryOriginName
+</InlineSection>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">string</code>
@@ -662,15 +781,20 @@ Each origin can be either an S3, server, image optimization, or group origin.
 </Section>
 </Segment>
 <Segment>
-#### transform.plan.origins[].imageOptimization?
+<InlineSection>
+#### <code class="symbol">transform.plan.origins[].</code>imageOptimization?
+</InlineSection>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Object</code>
 </InlineSection>
+- <p>[<code class="key">function</code>](#imageOptimization.function)</p>
 </Section>
 </Segment>
 <Segment>
-#### transform.plan.origins[].imageOptimization.function
+<InlineSection>
+#### <code class="symbol">transform.plan.origins[].imageOptimization.</code>function
+</InlineSection>
 <Section type="parameters">
 <InlineSection>
 **Type** [<code class="type">FunctionArgs</code>](function/#functionargs)
@@ -678,23 +802,35 @@ Each origin can be either an S3, server, image optimization, or group origin.
 </Section>
 </Segment>
 <Segment>
-#### transform.plan.origins[].s3?
+<InlineSection>
+#### <code class="symbol">transform.plan.origins[].</code>s3?
+</InlineSection>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Object</code>
 </InlineSection>
+- <p>[<code class="key">copy</code>](#s3.copy)</p>
+- <p>[<code class="key">originPath</code>](#s3.originPath)</p>
 </Section>
 </Segment>
 <Segment>
-#### transform.plan.origins[].s3.copy
+<InlineSection>
+#### <code class="symbol">transform.plan.origins[].s3.</code>copy
+</InlineSection>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Object</code><code class="symbol">[]</code>
 </InlineSection>
+- <p>[<code class="key">cached</code>](#copy[].cached)</p>
+- <p>[<code class="key">from</code>](#copy[].from)</p>
+- <p>[<code class="key">to</code>](#copy[].to)</p>
+- <p>[<code class="key">versionedSubDir</code>](#copy[].versionedSubDir)</p>
 </Section>
 </Segment>
 <Segment>
-#### transform.plan.origins[].s3.copy[].cached
+<InlineSection>
+#### <code class="symbol">transform.plan.origins[].s3.copy[].</code>cached
+</InlineSection>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">boolean</code>
@@ -702,7 +838,9 @@ Each origin can be either an S3, server, image optimization, or group origin.
 </Section>
 </Segment>
 <Segment>
-#### transform.plan.origins[].s3.copy[].from
+<InlineSection>
+#### <code class="symbol">transform.plan.origins[].s3.copy[].</code>from
+</InlineSection>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">string</code>
@@ -710,7 +848,9 @@ Each origin can be either an S3, server, image optimization, or group origin.
 </Section>
 </Segment>
 <Segment>
-#### transform.plan.origins[].s3.copy[].to
+<InlineSection>
+#### <code class="symbol">transform.plan.origins[].s3.copy[].</code>to
+</InlineSection>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">string</code>
@@ -718,7 +858,9 @@ Each origin can be either an S3, server, image optimization, or group origin.
 </Section>
 </Segment>
 <Segment>
-#### transform.plan.origins[].s3.copy[].versionedSubDir?
+<InlineSection>
+#### <code class="symbol">transform.plan.origins[].s3.copy[].</code>versionedSubDir?
+</InlineSection>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">string</code>
@@ -726,7 +868,9 @@ Each origin can be either an S3, server, image optimization, or group origin.
 </Section>
 </Segment>
 <Segment>
-#### transform.plan.origins[].s3.originPath?
+<InlineSection>
+#### <code class="symbol">transform.plan.origins[].s3.</code>originPath?
+</InlineSection>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">string</code>
@@ -734,15 +878,22 @@ Each origin can be either an S3, server, image optimization, or group origin.
 </Section>
 </Segment>
 <Segment>
-#### transform.plan.origins[].server?
+<InlineSection>
+#### <code class="symbol">transform.plan.origins[].</code>server?
+</InlineSection>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Object</code>
 </InlineSection>
+- <p>[<code class="key">function</code>](#server.function)</p>
+- <p>[<code class="key">injections</code>](#server.injections)</p>
+- <p>[<code class="key">streaming</code>](#server.streaming)</p>
 </Section>
 </Segment>
 <Segment>
-#### transform.plan.origins[].server.function
+<InlineSection>
+#### <code class="symbol">transform.plan.origins[].server.</code>function
+</InlineSection>
 <Section type="parameters">
 <InlineSection>
 **Type** [<code class="type">FunctionArgs</code>](function/#functionargs)
@@ -750,7 +901,9 @@ Each origin can be either an S3, server, image optimization, or group origin.
 </Section>
 </Segment>
 <Segment>
-#### transform.plan.origins[].server.injections?
+<InlineSection>
+#### <code class="symbol">transform.plan.origins[].server.</code>injections?
+</InlineSection>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">string</code><code class="symbol">[]</code>
@@ -758,7 +911,9 @@ Each origin can be either an S3, server, image optimization, or group origin.
 </Section>
 </Segment>
 <Segment>
-#### transform.plan.origins[].server.streaming?
+<InlineSection>
+#### <code class="symbol">transform.plan.origins[].server.</code>streaming?
+</InlineSection>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">boolean</code>
@@ -766,15 +921,20 @@ Each origin can be either an S3, server, image optimization, or group origin.
 </Section>
 </Segment>
 <Segment>
-#### transform.plan.serverCachePolicy?
+<InlineSection>
+#### <code class="symbol">transform.plan.</code>serverCachePolicy?
+</InlineSection>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Object</code>
 </InlineSection>
+- <p>[<code class="key">allowedHeaders</code>](#serverCachePolicy.allowedHeaders)</p>
 </Section>
 </Segment>
 <Segment>
-#### transform.plan.serverCachePolicy.allowedHeaders?
+<InlineSection>
+#### <code class="symbol">transform.plan.serverCachePolicy.</code>allowedHeaders?
+</InlineSection>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">string</code><code class="symbol">[]</code>
@@ -783,7 +943,6 @@ Each origin can be either an S3, server, image optimization, or group origin.
 </Segment>
 <Segment>
 ### typesPath?
-Path relative to the app location where the type definitions are located.
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
@@ -793,10 +952,10 @@ Path relative to the app location where the type definitions are located.
 <InlineSection>
 **Default** <code class="primitive">.</code>
 </InlineSection>
+Path relative to the app location where the type definitions are located.
 </Segment>
 <Segment>
 ### warm?
-The number of server functions to keep warm. This option is only supported for the regional mode.
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">number</code><code class="symbol">&gt;</code>
@@ -806,4 +965,5 @@ The number of server functions to keep warm. This option is only supported for t
 <InlineSection>
 **Default** Server function is not kept warm
 </InlineSection>
+The number of server functions to keep warm. This option is only supported for the regional mode.
 </Segment>

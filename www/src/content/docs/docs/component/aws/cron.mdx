@@ -45,10 +45,15 @@ new Cron(name, args, opts?)
 <InlineSection>
 **Type** <code class="primitive">Object</code>
 </InlineSection>
+- <p>[<code class="key">job</code>](#nodes.job)</p>
+- <p>[<code class="key">rule</code>](#nodes.rule)</p>
+- <p>[<code class="key">target</code>](#nodes.target)</p>
 </Section>
 </Segment>
 <Segment>
-#### nodes.job
+<InlineSection>
+#### <code class="symbol">nodes.</code>job
+</InlineSection>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Output</code><code class="symbol">&lt;</code>[<code class="type">Function</code>](function/)<code class="symbol">&gt;</code>
@@ -56,7 +61,9 @@ new Cron(name, args, opts?)
 </Section>
 </Segment>
 <Segment>
-#### nodes.rule
+<InlineSection>
+#### <code class="symbol">nodes.</code>rule
+</InlineSection>
 <Section type="parameters">
 <InlineSection>
 **Type** [<code class="type">EventRule</code>](https://www.pulumi.com/registry/packages/aws/api-docs/cloudwatch/eventrule/)
@@ -64,7 +71,9 @@ new Cron(name, args, opts?)
 </Section>
 </Segment>
 <Segment>
-#### nodes.target
+<InlineSection>
+#### <code class="symbol">nodes.</code>target
+</InlineSection>
 <Section type="parameters">
 <InlineSection>
 **Type** [<code class="type">EventTarget</code>](https://www.pulumi.com/registry/packages/aws/api-docs/cloudwatch/eventtarget/)
@@ -75,12 +84,13 @@ new Cron(name, args, opts?)
 ## CronArgs
 <Segment>
 ### job
-Path to the handler for the cron function.
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol"> | </code><code class="primitive">Object</code><code class="symbol">&gt;</code>
 </InlineSection>
+- <p>[<code class="key">function</code>](#job.function)</p>
 </Section>
+Path to the handler for the cron function.
 ```js
 {
   job: "src/cron.handler"
@@ -88,13 +98,15 @@ Path to the handler for the cron function.
 ```
 </Segment>
 <Segment>
-#### job.function
-The function that will be executed when the job runs.
+<InlineSection>
+#### <code class="symbol">job.</code>function
+</InlineSection>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol"> | </code>[<code class="type">FunctionArgs</code>](function/#functionargs)<code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
+The function that will be executed when the job runs.
 ```js
 {
   job: {
@@ -105,6 +117,11 @@ The function that will be executed when the job runs.
 </Segment>
 <Segment>
 ### schedule
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="symbol">&ldquo;</code><code class="primitive">rate($\{string\})</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">cron($\{string\})</code><code class="symbol">&rdquo;</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
 The schedule for the cron job.
 
 The string format takes a [rate expression](https://docs.aws.amazon.com/lambda/latest/dg/services-cloudwatchevents-expressions.html).
@@ -122,11 +139,6 @@ Or as a [cron expression](https://docs.aws.amazon.com/eventbridge/latest/usergui
 ```txt
 cron(15 10 * * ? *)    // 10:15 AM (UTC) every day.
 ```
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="symbol">&ldquo;</code><code class="primitive">rate($\{string\})</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">cron($\{string\})</code><code class="symbol">&rdquo;</code><code class="symbol">&gt;</code>
-</InlineSection>
-</Section>
 ```js
 {
   schedule: "rate(5 minutes)",
@@ -140,15 +152,19 @@ cron(15 10 * * ? *)    // 10:15 AM (UTC) every day.
 </Segment>
 <Segment>
 ### transform?
-[Transform](/docs/transform/) how this component is created.
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Object</code>
 </InlineSection>
+- <p>[<code class="key">rule</code>](#transform.rule)</p>
+- <p>[<code class="key">target</code>](#transform.target)</p>
 </Section>
+[Transform](/docs/transform/) how this component is created.
 </Segment>
 <Segment>
-#### transform.rule?
+<InlineSection>
+#### <code class="symbol">transform.</code>rule?
+</InlineSection>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Transform</code><code class="symbol">&lt;</code>[<code class="type">EventRuleArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/cloudwatch/eventrule/#inputs)<code class="symbol">&gt;</code>
@@ -156,7 +172,9 @@ cron(15 10 * * ? *)    // 10:15 AM (UTC) every day.
 </Section>
 </Segment>
 <Segment>
-#### transform.target?
+<InlineSection>
+#### <code class="symbol">transform.</code>target?
+</InlineSection>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Transform</code><code class="symbol">&lt;</code>[<code class="type">EventTargetArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/cloudwatch/eventtarget/#inputs)<code class="symbol">&gt;</code>
@@ -167,12 +185,12 @@ cron(15 10 * * ? *)    // 10:15 AM (UTC) every day.
 ## CronJobProps
 <Segment>
 ### function
-The function that will be executed when the job runs.
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol"> | </code>[<code class="type">FunctionArgs</code>](function/#functionargs)<code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
+The function that will be executed when the job runs.
 ```js
 {
   job: {

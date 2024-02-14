@@ -27,7 +27,6 @@ async function main() {
         renderMethods(),
         renderProperties(),
         renderInterfaces(),
-        //renderNestedTypes(),
       ]
         .flat()
         .join("\n")
@@ -148,25 +147,30 @@ async function main() {
           ``,
           `<Segment>`,
           `### ${renderName(g)}`,
-          ...(renderDescription(g.getSignature!) ?? []),
-          // type
           `<Section type="parameters">`,
           `<InlineSection>`,
-          `**Type** ${renderType(g.getSignature?.type!)}`,
+          `**Type** ${renderType(g.getSignature!.type!)}`,
           `</InlineSection>`,
+          ...renderNestedTypeList(g.getSignature!),
           `</Section>`,
+          ...(renderDescription(g.getSignature!) ?? []),
           `</Segment>`,
           // nested props (ie. `.nodes`)
-          ...useNestedTypes(g.getSignature?.type!, g.name).flatMap(
+          ...useNestedTypes(g.getSignature!.type!, g.name).flatMap(
             ({ prefix, subType }) => [
               `<Segment>`,
-              `#### ${prefix}.${renderName(subType)}`,
-              ...(renderDescription(subType) ?? []),
+              `<InlineSection>`,
+              `#### <code class="symbol">${prefix}.</code>${renderName(
+                subType
+              )}`,
+              `</InlineSection>`,
               `<Section type="parameters">`,
               `<InlineSection>`,
               `**Type** ${renderType(subType.type!)}`,
               `</InlineSection>`,
+              ...renderNestedTypeList(subType),
               `</Section>`,
+              ...(renderDescription(subType) ?? []),
               `</Segment>`,
             ]
           )
@@ -198,33 +202,38 @@ async function main() {
           lines.push(
             `<Segment>`,
             `### ${renderName(prop)}`,
+            `<Section type="parameters">`,
+            `<InlineSection>`,
+            `**Type** ${renderType(prop.type!)}`,
+            `</InlineSection>`,
+            ...renderNestedTypeList(prop),
+            `</Section>`,
+            ...(renderDefaultTag(prop) ?? []),
             ...(renderDescription(prop) ?? []),
             // link to Transform doc
             ...(int.name === `${useClassName()}Args` &&
             prop.name === "transform"
               ? ["[Transform](/docs/transform/) how this component is created."]
               : []),
-            // prop type
-            `<Section type="parameters">`,
-            `<InlineSection>`,
-            `**Type** ${renderType(prop.type!)}`,
-            `</InlineSection>`,
-            `</Section>`,
-            ...(renderDefaultTag(prop) ?? []),
             ...(renderExamples(prop) ?? []),
             `</Segment>`,
             // nested props (ie. `.domain`, `.transform`)
             ...useNestedTypes(prop.type!, prop.name).flatMap(
               ({ prefix, subType }) => [
                 `<Segment>`,
-                `#### ${prefix}.${renderName(subType)}`,
-                ...(renderDescription(subType) ?? []),
+                `<InlineSection>`,
+                `#### <code class="symbol">${prefix}.</code>${renderName(
+                  subType
+                )}`,
+                `</InlineSection>`,
                 `<Section type="parameters">`,
                 `<InlineSection>`,
                 `**Type** ${renderType(subType.type!)}`,
                 `</InlineSection>`,
+                ...renderNestedTypeList(subType),
                 `</Section>`,
                 ...(renderDefaultTag(subType) ?? []),
+                ...(renderDescription(subType) ?? []),
                 ...(renderExamples(subType) ?? []),
                 `</Segment>`,
               ]
@@ -232,61 +241,6 @@ async function main() {
           );
         }
       }
-
-      return lines;
-    }
-
-    function renderNestedTypes() {
-      const lines: string[] = [];
-
-      // interfaces' nested types
-      useInterfaces().forEach((int) =>
-        int.children?.forEach((prop) => {
-          const nestedTypes = useNestedTypes(prop.type!);
-          if (!nestedTypes.length) return;
-
-          // `.transform` is rendered inline
-          if (
-            int.name === `${useClassName()}Args` &&
-            prop.name === "transform"
-          ) {
-            // render `plan` as a standalone arg => lift plan to the top level
-            if (nestedTypes[0].subType.name === "plan") {
-              lines.push(``, `## PlanArgs`);
-              nestedTypes.shift(); // remove `plan`
-              nestedTypes.forEach((t) => {
-                t.prefix = t.prefix.replace(/^plan\./, "");
-              });
-            }
-            // other `transform`'s nested types are rendered inline => skip
-            else {
-              return;
-            }
-          } else {
-            // name
-            lines.push(``, `## ${toPascalCase(prop.name)}Args`);
-          }
-
-          // props
-          lines.push(
-            ...nestedTypes.flatMap(({ prefix, subType }) => [
-              `<Segment>`,
-              // prop name
-              `#### ${prefix}${renderName(subType)}`,
-              // prop type
-              `<Section type="parameters">`,
-              `<InlineSection>`,
-              `**Type** ${renderType(subType.type!)}`,
-              `</InlineSection>`,
-              `</Section>`,
-              ...(renderDefaultTag(subType) ?? []),
-              ...(renderDescription(subType) ?? []),
-              ...(renderExamples(subType) ?? []),
-              `</Segment>`,
-            ])
-          );
-        })
-      );
 
       return lines;
     }
@@ -322,6 +276,19 @@ async function main() {
           : `**Default** ${renderComment(defaultTag.content)}`,
         `</InlineSection>`,
       ];
+    }
+
+    function renderNestedTypeList(
+      prop:
+        | TypeDoc.Models.DeclarationReflection
+        | TypeDoc.Models.SignatureReflection
+    ) {
+      return useNestedTypes(prop.type!)
+        .filter(({ prefix }) => prefix === "" || prefix === "[]")
+        .map(
+          ({ prefix, subType }) =>
+            `- <p>[<code class="key">${subType.name}</code>](#${prop.name}${prefix}.${subType.name})</p>`
+        );
     }
 
     function renderExamples(prop: TypeDoc.Models.DeclarationReflection) {
