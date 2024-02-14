@@ -11,6 +11,7 @@ import {
 import { Adapter } from "./adapter.js";
 
 export function LinkAdapter(config: {
+  expiresInMinutes?: number;
   onLink: (
     link: string,
     claims: Record<string, any>
@@ -21,8 +22,9 @@ export function LinkAdapter(config: {
     const key = Config[process.env.AUTH_ID + "PrivateKey"];
     // @ts-expect-error
     const publicKey = Config[process.env.AUTH_ID + "PublicKey"];
+    const { expiresInMinutes = 10 } = config;
     const signer = createSigner({
-      expiresIn: 1000 * 60 * 10,
+      expiresIn: 1000 * 60 * expiresInMinutes,
       key,
       algorithm: "RS512",
     });
