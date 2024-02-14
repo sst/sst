@@ -1,18 +1,15 @@
 import { Adapter } from "./adapter.js";
-import { Resource } from "../../resource.js";
 import * as jose from "jose";
 
-export function LinkAdapter<
-  T extends Record<string, string> = Record<string, string>,
->(config: { onLink: (link: string, claims: T) => Promise<Response> }) {
+export function LinkAdapter(config: {
+  onLink: (link: string, claims: Record<string, any>) => Promise<Response>;
+}) {
   return function (routes, ctx) {
-    const { privateKey, publicKey } = Resource[process.env.AUTH_ID!];
-
     routes.get("/authorize", async (c) => {
       const token = await new jose.SignJWT(c.req.query())
-        .setProtectedHeader({ alg: "RS512" })
+        .setProtectedHeader({ alg: ctx.algorithm })
         .setExpirationTime("10m")
-        .sign(await jose.importPKCS8(privateKey, "RS512"));
+        .sign(await ctx.signing.privateKey);
 
       const url = new URL(new URL(c.req.url).origin);
       url.pathname = `/${ctx.name}/callback`;
@@ -22,7 +19,7 @@ export function LinkAdapter<
       url.searchParams.set("token", token);
       const resp = ctx.forward(
         c,
-        await config.onLink(url.toString(), c.req.query() as T),
+        await config.onLink(url.toString(), c.req.query()),
       );
       return resp;
     });
@@ -30,12 +27,9 @@ export function LinkAdapter<
     routes.get("/callback", async (c) => {
       const token = c.req.query("token");
       if (!token) throw new Error("Missing token parameter");
-      const verified = await jose.jwtVerify(
-        token,
-        await jose.importSPKI(publicKey, "RS512"),
-      );
-      const resp = await ctx.success(c, verified.payload as any);
+      const verified = await jose.jwtVerify(token, await ctx.signing.publicKey);
+      const resp = await ctx.success(c, { claims: verified.payload as any });
       return resp;
     });
-  } as Adapter<T>;
+  } satisfies Adapter<{ claims: Record<string, string> }>;
 }

@@ -1,12 +1,6 @@
-import { generators, Issuer } from "openid-client";
-import {
-  useCookie,
-  useDomainName,
-  useFormData,
-  usePathParam,
-  useResponse,
-} from "../../../api/index.js";
+import { BaseClient, generators, Issuer, TokenSet } from "openid-client";
 import { Adapter } from "./adapter.js";
+import { getCookie } from "hono/cookie";
 
 export interface OidcBasicConfig {
   /**
@@ -25,17 +19,14 @@ export interface OidcConfig extends OidcBasicConfig {
 }
 
 export const OidcAdapter = /* @__PURE__ */ (config: OidcConfig) => {
-  return async function () {
-    const step = usePathParam("step");
-    const callback = "https://" + useDomainName() + "/callback";
-
-    const client = new config.issuer.Client({
-      client_id: config.clientID,
-      redirect_uris: [callback],
-      response_types: ["id_token"],
-    });
-
-    if (step === "authorize" || step === "connect") {
+  return async function (routes, ctx) {
+    routes.get("/authorize", async (c) => {
+      const callback = c.req.url.replace(/authorize$/, "callback");
+      const client = new config.issuer.Client({
+        client_id: config.clientID,
+        redirect_uris: [callback],
+        response_types: ["id_token"],
+      });
       const nonce = generators.nonce();
       const state = generators.state();
       const url = client.authorizationUrl({
@@ -45,50 +36,40 @@ export const OidcAdapter = /* @__PURE__ */ (config: OidcConfig) => {
         state,
         prompt: config.prompt,
       });
+      ctx.cookie(c, "auth_nonce", nonce, 60 * 10);
+      ctx.cookie(c, "auth_state", state, 60 * 10);
+      return c.redirect(url);
+    });
 
-      useResponse().cookies(
+    routes.post("/callback", async (c) => {
+      const callback = c.req.url.replace(/authorize$/, "callback");
+      const client = new config.issuer.Client({
+        client_id: config.clientID,
+        redirect_uris: [callback],
+        response_types: ["id_token"],
+      });
+
+      const form = await c.req.formData();
+      const nonce = getCookie(c, "auth_nonce");
+      const state = getCookie(c, "auth_state");
+      const tokenset = await client.callback(
+        callback,
+        Object.fromEntries(form),
         {
-          auth_nonce: nonce,
-          auth_state: state,
-        },
-        {
-          httpOnly: true,
-          secure: true,
-          maxAge: 60 * 10,
-          sameSite: "None",
+          nonce,
+          state,
         },
       );
-      return {
-        type: "step",
-        properties: {
-          statusCode: 302,
-          headers: {
-            location: url,
-          },
-        },
-      };
-    }
 
-    if (step === "callback") {
-      const form = useFormData();
-      if (!form) throw new Error("Missing body");
-      const params = Object.fromEntries(form.entries());
-      const nonce = useCookie("auth_nonce");
-      const state = useCookie("auth_state");
-      const tokenset = await client.callback(callback, params, {
-        nonce,
-        state,
+      return ctx.success(c, {
+        tokenset,
+        client,
       });
-      const x = {
-        type: "success" as const,
-        properties: {
-          tokenset,
-          client,
-        },
-      };
-      return x;
-    }
+    });
 
     throw new Error("Invalid auth request");
-  } satisfies Adapter;
+  } satisfies Adapter<{
+    tokenset: TokenSet;
+    client: BaseClient;
+  }>;
 };
