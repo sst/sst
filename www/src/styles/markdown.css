@@ -237,7 +237,7 @@
 .sl-markdown-content ol:not(:where(.not-content *)) > li,
 .sl-markdown-content ul:not(:where(.not-content *)) > li {
   position: relative;
-  padding-left: 2rem;
+  padding-left: 1.75rem;
 }
 .sl-markdown-content li:not(:where(.not-content *)) > ol,
 .sl-markdown-content li:not(:where(.not-content *)) > ul,
@@ -250,7 +250,7 @@
 .sl-markdown-content ul:not(:where(.not-content *)) > li:before {
   content: "";
   position: absolute;
-  left: 4px;
+  left: 2px;
   top: 13px;
   width: 12px;
   height: 2px;

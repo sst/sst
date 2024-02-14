@@ -6,6 +6,7 @@ pagefind: false
 
 import Segment from '../../../components/tsdoc/Segment.astro';
 import Section from '../../../components/tsdoc/Section.astro';
+import NestedTitle from '../../../components/tsdoc/NestedTitle.astro';
 import InlineSection from '../../../components/tsdoc/InlineSection.astro';
 
 <Section type="about">
@@ -199,7 +200,7 @@ The ARN of the resource.
 <Segment>
 ### objectProp
 
-The underlying AWS resources.
+A simple object prop.
 
 <Section type="parameters">
 <InlineSection>
@@ -209,7 +210,78 @@ The underlying AWS resources.
 - <p><code class="key">resource1</code> <code class="primitive">string</code></p>
 - <p><code class="key">resource2</code> [<code class="type">FormatSpecifier</code>](#FormatSpecifier)</p>
 </Section>
+</Segment>
 
+<Segment>
+### objectPropNested
+
+A nested object prop.
+
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Object</code>
+</InlineSection>
+- <p>[<code class="key">resource1</code>](#) <code class="primitive">Output</code><code class="symbol">&lt;</code><code class="primitive">Object</code><code class="symbol">&gt;</code></p>
+  - <p>[<code class="key">objectKey1</code>](#) <code class="primitive">Object</code></p>
+    - <p>[<code class="key">objectKey11</code>](#) <code class="primitive">Object</code><code class="symbol">[]</code></p>
+      - <p>[<code class="key">key111</code>](#) <code class="primitive">boolean</code></p>
+      - <p>[<code class="key">objectKey112</code>](#) <code class="primitive">Object</code></p>
+        - <p>[<code class="key">key1111</code>](#) <code class="primitive">string</code></p>
+        - <p>[<code class="key">key1112</code>](#) <code class="primitive">string</code></p>
+  - <p>[<code class="key">key2</code>](#) <code class="primitive">boolean</code></p>
+- <p>[<code class="key">resource2</code>](#) [<code class="type">FormatSpecifier</code>](#FormatSpecifier)</p>
+</Section>
+
+</Segment>
+
+<Segment>
+#### resource1
+
+A simple object prop.
+
+<InlineSection>
+**Type** <code class="primitive">Output</code><code class="symbol">&lt;</code><code class="primitive">Object</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Segment>
+
+<Segment>
+<NestedTitle id="1" Tag="h4" parent="resource1.">objectKey1</NestedTitle>
+
+A simple object prop.
+
+<InlineSection>
+**Type** <code class="primitive">Object</code>
+</InlineSection>
+</Segment>
+
+<Segment>
+<NestedTitle id="2" Tag="h5" parent="resource1.objectKey1.">objectKey11</NestedTitle>
+
+A simple object prop.
+
+<InlineSection>
+**Type** <code class="primitive">Object</code><code class="symbol">[]</code>
+</InlineSection>
+</Segment>
+
+<Segment>
+<NestedTitle id="3" Tag="h5" parent="resource1.objectKey1.objectKey11[].">objectKey112</NestedTitle>
+
+A simple object prop.
+
+<InlineSection>
+**Type** <code class="primitive">Object</code>
+</InlineSection>
+</Segment>
+
+<Segment>
+<NestedTitle id="4" Tag="h5" parent="resource1.objectKey1.objectKey11[].objectKey112.">key1111</NestedTitle>
+
+A simple prop.
+
+<InlineSection>
+**Type** <code class="primitive">string</code>
+</InlineSection>
 </Segment>
 
 ## DummyArgs

@@ -69,6 +69,15 @@
 }
 
 /**
+ * Nested Title
+ */
+.sl-markdown-content div.segment :is(h4, h5).nested span.parent {
+  font-weight: 400;
+  font-family: var(--__sl-font-mono);
+  color: var(--color-text-secondary);
+}
+
+/**
  * Keys & Values
  */
 .sl-markdown-content section.tsdoc code.key:before,
@@ -95,6 +104,10 @@
 .sl-markdown-content section.tsdoc code.key,
 .sl-markdown-content section.tsdoc code.primitive {
   color: var(--color-text);
+}
+.sl-markdown-content section.tsdoc a > code.key,
+.sl-markdown-content section.tsdoc a > code.primitive {
+  color: var(--sl-color-text-accent);
 }
 .sl-markdown-content section.tsdoc code.symbol {
   color: var(--color-text-secondary);
