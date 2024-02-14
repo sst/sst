@@ -33,7 +33,7 @@ export interface HttpsRedirectArgs {
   /**
    * The domain names that will redirect to `targetDomain`
    *
-   * @default - the domain name of the hosted zone
+   * @default Domain name of the hosted zone
    */
   readonly sourceDomains: Input<string[]>;
 }

@@ -123,15 +123,16 @@ export class Astro extends Component implements Link.Linkable {
             },
             origins: {
               staticsServer: {
-                type: "s3" as const,
-                copy: [
-                  {
-                    from: buildMeta.clientBuildOutputDir,
-                    to: "",
-                    cached: true,
-                    versionedSubDir: buildMeta.clientBuildVersionedSubDir,
-                  },
-                ],
+                s3: {
+                  copy: [
+                    {
+                      from: buildMeta.clientBuildOutputDir,
+                      to: "",
+                      cached: true,
+                      versionedSubDir: buildMeta.clientBuildVersionedSubDir,
+                    },
+                  ],
+                },
               },
             },
             behaviors: [],
@@ -187,16 +188,18 @@ export class Astro extends Component implements Link.Linkable {
               };
 
               plan.origins.regionalServer = {
-                type: "function",
-                function: serverConfig,
-                streaming: buildMeta.responseMode === "stream",
+                server: {
+                  function: serverConfig,
+                  streaming: buildMeta.responseMode === "stream",
+                },
               };
 
               plan.origins.fallthroughServer = {
-                type: "group",
-                primaryOriginName: "staticsServer",
-                fallbackOriginName: "regionalServer",
-                fallbackStatusCodes: [403, 404],
+                group: {
+                  primaryOriginName: "staticsServer",
+                  fallbackOriginName: "regionalServer",
+                  fallbackStatusCodes: [403, 404],
+                },
               };
 
               plan.behaviors.push(

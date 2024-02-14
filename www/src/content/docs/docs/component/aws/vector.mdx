@@ -38,19 +38,21 @@ new Vector(name, args?, opts?)
 ## VectorArgs
 <Segment>
 ### model?
+The embedding model to use for generating vectors
 <Section type="parameters">
 <InlineSection>
-**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">amazon.titan-embed-text-v1</code><code class="symbol"> | </code><code class="primitive">amazon.titan-embed-image-v1</code><code class="symbol"> | </code><code class="primitive">text-embedding-ada-002</code><code class="symbol">&gt;</code>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="symbol">&ldquo;</code><code class="primitive">amazon.titan-embed-text-v1</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">amazon.titan-embed-image-v1</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">text-embedding-ada-002</code><code class="symbol">&rdquo;</code><code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
 
 <InlineSection>
 **Default** Titan Multimodal Embeddings G1
 </InlineSection>
-The embedding model to use for generating vectors
 </Segment>
 <Segment>
 ### openAiApiKey?
+Specifies the  OpenAI API key
+.This key is required for datar ingestoig and retrieal usvin an OpenAI modelg.
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
@@ -60,8 +62,6 @@ The embedding model to use for generating vectors
 <InlineSection>
 **Default** OpenAI API key is not set
 </InlineSection>
-Specifies the  OpenAI API key
-.This key is required for datar ingestoig and retrieal usvin an OpenAI modelg.
 ```js
 const OPENAI_API_KEY = new sst.aws.Secret("OPENAI_API_KEY");
 

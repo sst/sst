@@ -40,10 +40,44 @@ new Function(name, args, opts?)
 ## Properties
 
 <Segment>
+### arn
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Output</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+</Segment>
+
+<Segment>
+### logGroupArn
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Output</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+</Segment>
+
+<Segment>
 ### nodes
 <Section type="parameters">
 <InlineSection>
-**Type** <code class="primitive">[NodesProps](#nodesprops)</code>
+**Type** <code class="primitive">Object</code>
+</InlineSection>
+</Section>
+</Segment>
+<Segment>
+#### nodes.function
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Output</code><code class="symbol">&lt;</code>[<code class="type">Function</code>](https://www.pulumi.com/registry/packages/aws/api-docs/lambda/function/)<code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+</Segment>
+<Segment>
+#### nodes.role
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Output</code><code class="symbol">&lt;</code>[<code class="type">Role</code>](https://www.pulumi.com/registry/packages/aws/api-docs/iam/role/)<code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
 </Segment>
@@ -60,16 +94,16 @@ new Function(name, args, opts?)
 ## FunctionArgs
 <Segment>
 ### architecture?
+The system architectures for the function.
 <Section type="parameters">
 <InlineSection>
-**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">x86_64</code><code class="symbol"> | </code><code class="primitive">arm64</code><code class="symbol">&gt;</code>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="symbol">&ldquo;</code><code class="primitive">x86_64</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">arm64</code><code class="symbol">&rdquo;</code><code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
 
 <InlineSection>
 **Default** <code class="primitive">x86_64</code>
 </InlineSection>
-The system architectures for the function.
 ```js
 {
   architecture: "arm64"
@@ -78,6 +112,9 @@ The system architectures for the function.
 </Segment>
 <Segment>
 ### bundle?
+Path to the source code directory for the function.
+Use `bundle` only when the function code is ready to be deployed to Lambda.
+Typically, omit `bundle`. If omitted, the handler file is bundled with esbuild, using its output directory as the bundle folder.
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
@@ -87,9 +124,6 @@ The system architectures for the function.
 <InlineSection>
 **Default** Path to the esbuild output directory
 </InlineSection>
-Path to the source code directory for the function.
-Use `bundle` only when the function code is ready to be deployed to Lambda.
-Typically, omit `bundle`. If omitted, the handler file is bundled with esbuild, using its output directory as the bundle folder.
 ```js
 {
   bundle: "packages/functions/src",
@@ -99,12 +133,12 @@ Typically, omit `bundle`. If omitted, the handler file is bundled with esbuild, 
 </Segment>
 <Segment>
 ### copyFiles?
+Used to configure additional files to copy into the function bundle
 <Section type="parameters">
 <InlineSection>
-**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">[CopyFilesProps](#copyfilesprops)</code><code class="symbol">[]</code><code class="symbol">&gt;</code>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Object</code><code class="symbol">[]</code><code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
-Used to configure additional files to copy into the function bundle
 ```js
 {
   copyFiles: [{ from: "src/index.js" }]
@@ -112,7 +146,26 @@ Used to configure additional files to copy into the function bundle
 ```
 </Segment>
 <Segment>
+#### copyFiles[].from
+Source path relative to sst.config.ts
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+</Segment>
+<Segment>
+#### copyFiles[].to?
+Destination path relative to function root in bundle
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+</Segment>
+<Segment>
 ### description?
+A description for the function.
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
@@ -122,7 +175,6 @@ Used to configure additional files to copy into the function bundle
 <InlineSection>
 **Default** No description
 </InlineSection>
-A description for the function.
 ```js
 {
   description: "Handler function for my nightly cron job."
@@ -131,6 +183,7 @@ A description for the function.
 </Segment>
 <Segment>
 ### environment?
+Key-value pairs that Lambda makes available for the function at runtime.
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Record</code><code class="symbol">&lt;</code><code class="primitive">string</code>, <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code><code class="symbol">&gt;</code><code class="symbol">&gt;</code>
@@ -140,7 +193,6 @@ A description for the function.
 <InlineSection>
 **Default** No environment variables
 </InlineSection>
-Key-value pairs that Lambda makes available for the function at runtime.
 ```js
 {
   environment: {
@@ -151,12 +203,12 @@ Key-value pairs that Lambda makes available for the function at runtime.
 </Segment>
 <Segment>
 ### handler
+Path to the handler for the function.
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
-Path to the handler for the function.
 When `bundle` is specified, the handler is relative to the bundle folder.
 ```js
 {
@@ -173,22 +225,22 @@ When `bundle` is not specified, the handler is relative to the root of your SST 
 </Segment>
 <Segment>
 ### injections?
+
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">[]</code><code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
-
 </Segment>
 <Segment>
 ### link?
+Link resources to the function.
+This will grant the function permissions to access the linked resources at runtime.
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">any</code><code class="symbol">[]</code><code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
-Link resources to the function.
-This will grant the function permissions to access the linked resources at runtime.
 ```js
 {
   link: [myBucket, stripeKey],
@@ -197,29 +249,49 @@ This will grant the function permissions to access the linked resources at runti
 </Segment>
 <Segment>
 ### logging?
+Configure function logging
 <Section type="parameters">
 <InlineSection>
-**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">[LoggingProps](#loggingprops)</code><code class="symbol">&gt;</code>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Object</code><code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
 
 <InlineSection>
 **Default** Logs retained indefinitely
 </InlineSection>
-Configure function logging
+```js
+{
+  logging: {
+    retention: "1 week"
+  }
+}
+```
+</Segment>
+<Segment>
+#### logging.retention?
+The duration function logs are kept in CloudWatch Logs.
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="symbol">&ldquo;</code><code class="primitive">1 day</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">3 days</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">5 days</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">1 week</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">2 weeks</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">1 month</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">2 months</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">3 months</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">4 months</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">5 months</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">6 months</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">1 year</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">13 months</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">18 months</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">2 years</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">3 years</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">5 years</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">6 years</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">7 years</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">8 years</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">9 years</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">10 years</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">forever</code><code class="symbol">&rdquo;</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+
+<InlineSection>
+**Default** <code class="primitive">forever</code>
+</InlineSection>
 </Segment>
 <Segment>
 ### memory?
+The amount of memory allocated for the function.
 <Section type="parameters">
 <InlineSection>
-**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">$\{number\} MB</code><code class="symbol"> | </code><code class="primitive">$\{number\} GB</code><code class="symbol">&gt;</code>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="symbol">&ldquo;</code><code class="primitive">$\{number\} MB</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">$\{number\} GB</code><code class="symbol">&rdquo;</code><code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
 
 <InlineSection>
 **Default** <code class="primitive">1024 MB</code>
 </InlineSection>
-The amount of memory allocated for the function.
 ```js
 {
   memory: "10240 MB"
@@ -228,25 +300,150 @@ The amount of memory allocated for the function.
 </Segment>
 <Segment>
 ### nodejs?
+Used to configure nodejs function properties
 <Section type="parameters">
 <InlineSection>
-**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">[NodejsProps](#nodejsprops)</code><code class="symbol">&gt;</code>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Object</code><code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
-Used to configure nodejs function properties
+</Segment>
+<Segment>
+#### nodejs.banner?
+Use this to insert an arbitrary string at the beginning of generated JavaScript and CSS files.
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+```js
+nodejs: {
+  banner: "console.log('Function starting')"
+}
+```
+</Segment>
+<Segment>
+#### nodejs.esbuild?
+This allows you to customize esbuild config.
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code>[<code class="type">BuildOptions</code>](https://esbuild.github.io/api/#build)<code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+</Segment>
+<Segment>
+#### nodejs.format?
+Configure format
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="symbol">&ldquo;</code><code class="primitive">cjs</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">esm</code><code class="symbol">&rdquo;</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+
+<InlineSection>
+**Default** <code class="primitive">esm</code>
+</InlineSection>
+```js
+nodejs: {
+  format: "cjs"
+}
+```
+</Segment>
+<Segment>
+#### nodejs.install?
+Packages that will be excluded from the bundle and installed into node_modules instead. Useful for dependencies that cannot be bundled, like those with binary dependencies.
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">[]</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+```js
+nodejs: {
+  install: ["pg"]
+}
+```
+</Segment>
+<Segment>
+#### nodejs.loader?
+Configure additional esbuild loaders for other file extensions
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Record</code><code class="symbol">&lt;</code><code class="primitive">string</code>, [<code class="type">Loader</code>](https://esbuild.github.io/api/#loader)<code class="symbol">&gt;</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+```js
+nodejs: {
+  loader: {
+   ".png": "file"
+  }
+}
+```
+</Segment>
+<Segment>
+#### nodejs.minify?
+Enable or disable minification
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">boolean</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+
+<InlineSection>
+**Default** <code class="primitive">true</code>
+</InlineSection>
+```js
+nodejs: {
+  minify: false
+}
+```
+</Segment>
+<Segment>
+#### nodejs.sourcemap?
+Configure if sourcemaps are generated when the function is bundled for production. Since they increase payload size and potentially cold starts they are not generated by default. They are always generated during local development mode.
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">boolean</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+
+<InlineSection>
+**Default** <code class="primitive">false</code>
+</InlineSection>
+```js
+nodejs: {
+  sourcemap: true
+}
+```
+</Segment>
+<Segment>
+#### nodejs.splitting?
+If enabled, modules that are dynamically imported will be bundled as their own files with common dependencies placed in shared chunks. This can help drastically reduce cold starts as your function grows in size.
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">boolean</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+
+<InlineSection>
+**Default** <code class="primitive">false</code>
+</InlineSection>
+```js
+nodejs: {
+  splitting: true
+}
+```
 </Segment>
 <Segment>
 ### permissions?
+Initial IAM policy statements to add to the created Lambda Role.
 <Section type="parameters">
 <InlineSection>
-**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">[PermissionsProps](#permissionsprops)</code><code class="symbol">[]</code><code class="symbol">&gt;</code>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Object</code><code class="symbol">[]</code><code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
 
 <InlineSection>
 **Default** No permissions
 </InlineSection>
-Initial IAM policy statements to add to the created Lambda Role.
 ```js
 {
   permissions: [
@@ -259,17 +456,33 @@ Initial IAM policy statements to add to the created Lambda Role.
 ```
 </Segment>
 <Segment>
-### runtime?
+#### permissions[].actions
 <Section type="parameters">
 <InlineSection>
-**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">nodejs18.x</code><code class="symbol"> | </code><code class="primitive">nodejs20.x</code><code class="symbol"> | </code><code class="primitive">provided.al2023</code><code class="symbol">&gt;</code>
+**Type** <code class="primitive">string</code><code class="symbol">[]</code>
+</InlineSection>
+</Section>
+</Segment>
+<Segment>
+#### permissions[].resources
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code><code class="symbol">[]</code>
+</InlineSection>
+</Section>
+</Segment>
+<Segment>
+### runtime?
+The runtime environment for the function.
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="symbol">&ldquo;</code><code class="primitive">nodejs18.x</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">nodejs20.x</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">provided.al2023</code><code class="symbol">&rdquo;</code><code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
 
 <InlineSection>
 **Default** <code class="primitive">nodejs18.x</code>
 </InlineSection>
-The runtime environment for the function.
 ```js
 {
   runtime: "nodejs20.x"
@@ -278,6 +491,7 @@ The runtime environment for the function.
 </Segment>
 <Segment>
 ### streaming?
+Whether to enable streaming for the function.
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">boolean</code><code class="symbol">&gt;</code>
@@ -287,7 +501,6 @@ The runtime environment for the function.
 <InlineSection>
 **Default** <code class="primitive">false</code>
 </InlineSection>
-Whether to enable streaming for the function.
 ```js
 {
   streaming: true
@@ -296,16 +509,16 @@ Whether to enable streaming for the function.
 </Segment>
 <Segment>
 ### timeout?
+The amount of time that Lambda allows a function to run before stopping it.
 <Section type="parameters">
 <InlineSection>
-**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">$\{number\} second</code><code class="symbol"> | </code><code class="primitive">$\{number\} seconds</code><code class="symbol"> | </code><code class="primitive">$\{number\} minute</code><code class="symbol"> | </code><code class="primitive">$\{number\} minutes</code><code class="symbol"> | </code><code class="primitive">$\{number\} hour</code><code class="symbol"> | </code><code class="primitive">$\{number\} hours</code><code class="symbol"> | </code><code class="primitive">$\{number\} day</code><code class="symbol"> | </code><code class="primitive">$\{number\} days</code><code class="symbol">&gt;</code>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="symbol">&ldquo;</code><code class="primitive">$\{number\} second</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">$\{number\} seconds</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">$\{number\} minute</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">$\{number\} minutes</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">$\{number\} hour</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">$\{number\} hours</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">$\{number\} day</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">$\{number\} days</code><code class="symbol">&rdquo;</code><code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
 
 <InlineSection>
 **Default** <code class="primitive">20 seconds</code>
 </InlineSection>
-The amount of time that Lambda allows a function to run before stopping it.
 ```js
 {
   timeout: "900 seconds"
@@ -314,24 +527,33 @@ The amount of time that Lambda allows a function to run before stopping it.
 </Segment>
 <Segment>
 ### transform?
+[Transform](/docs/transform/) how this component is created.
 <Section type="parameters">
 <InlineSection>
-**Type** <code class="primitive">[TransformProps](#transformprops)</code>
+**Type** <code class="primitive">Object</code>
+</InlineSection>
+</Section>
+</Segment>
+<Segment>
+#### transform.function?
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Transform</code><code class="symbol">&lt;</code>[<code class="type">FunctionArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/lambda/function/#inputs)<code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
 </Segment>
 <Segment>
 ### url?
+Enable function URLs, a dedicated endpoint for your Lambda function.
 <Section type="parameters">
 <InlineSection>
-**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">boolean</code><code class="symbol"> | </code><code class="primitive">[UrlProps](#urlprops)</code><code class="symbol">&gt;</code>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">boolean</code><code class="symbol"> | </code><code class="primitive">Object</code><code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
 
 <InlineSection>
-**Default** Disabled
+**Default** Disabled `false`
 </InlineSection>
-Enable function URLs, a dedicated endpoint for your Lambda function.
 ```js
 {
   url: true
@@ -349,261 +571,18 @@ Enable function URLs, a dedicated endpoint for your Lambda function.
 }
 ```
 </Segment>
-
-## FunctionPermissionArgs
 <Segment>
-### actions
+#### url.authorization?
+The authorization for the function URL
 <Section type="parameters">
 <InlineSection>
-**Type** <code class="primitive">string</code><code class="symbol">[]</code>
-</InlineSection>
-</Section>
-</Segment>
-<Segment>
-### resources
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code><code class="symbol">[]</code>
-</InlineSection>
-</Section>
-</Segment>
-
-## NodesProps
-<Segment>
-### function
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">Output</code><code class="symbol">&lt;</code>[<code class="type">Function</code>](https://www.pulumi.com/registry/packages/aws/api-docs/lambda/function/)<code class="symbol">&gt;</code>
-</InlineSection>
-</Section>
-</Segment>
-<Segment>
-### logGroup
-<Section type="parameters">
-<InlineSection>
-**Type** [<code class="type">LogGroup</code>](#loggroup)
-</InlineSection>
-</Section>
-</Segment>
-<Segment>
-### role
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">Output</code><code class="symbol">&lt;</code>[<code class="type">Role</code>](https://www.pulumi.com/registry/packages/aws/api-docs/iam/role/)<code class="symbol">&gt;</code>
-</InlineSection>
-</Section>
-</Segment>
-
-## CopyFilesProps
-<Segment>
-### from
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
-</InlineSection>
-</Section>
-Source path relative to sst.config.ts
-</Segment>
-<Segment>
-### to?
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
-</InlineSection>
-</Section>
-Destination path relative to function root in bundle
-</Segment>
-
-## LoggingProps
-<Segment>
-### retention?
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">1 day</code><code class="symbol"> | </code><code class="primitive">3 days</code><code class="symbol"> | </code><code class="primitive">5 days</code><code class="symbol"> | </code><code class="primitive">1 week</code><code class="symbol"> | </code><code class="primitive">2 weeks</code><code class="symbol"> | </code><code class="primitive">1 month</code><code class="symbol"> | </code><code class="primitive">2 months</code><code class="symbol"> | </code><code class="primitive">3 months</code><code class="symbol"> | </code><code class="primitive">4 months</code><code class="symbol"> | </code><code class="primitive">5 months</code><code class="symbol"> | </code><code class="primitive">6 months</code><code class="symbol"> | </code><code class="primitive">1 year</code><code class="symbol"> | </code><code class="primitive">13 months</code><code class="symbol"> | </code><code class="primitive">18 months</code><code class="symbol"> | </code><code class="primitive">2 years</code><code class="symbol"> | </code><code class="primitive">3 years</code><code class="symbol"> | </code><code class="primitive">5 years</code><code class="symbol"> | </code><code class="primitive">6 years</code><code class="symbol"> | </code><code class="primitive">7 years</code><code class="symbol"> | </code><code class="primitive">8 years</code><code class="symbol"> | </code><code class="primitive">9 years</code><code class="symbol"> | </code><code class="primitive">10 years</code><code class="symbol"> | </code><code class="primitive">forever</code><code class="symbol">&gt;</code>
-</InlineSection>
-</Section>
-
-<InlineSection>
-**Default** <code class="primitive">forever</code>
-</InlineSection>
-The duration function logs are kept in CloudWatch Logs.
-```js
-{
-  logging: {
-    retention: "1 week"
-  }
-}
-```
-</Segment>
-
-## NodejsProps
-<Segment>
-### banner?
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
-</InlineSection>
-</Section>
-Use this to insert an arbitrary string at the beginning of generated JavaScript and CSS files.
-```js
-nodejs: {
-  banner: "console.log('Function starting')"
-}
-```
-</Segment>
-<Segment>
-### esbuild?
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code>[<code class="type">BuildOptions</code>](https://esbuild.github.io/api/#build)<code class="symbol">&gt;</code>
-</InlineSection>
-</Section>
-This allows you to customize esbuild config.
-</Segment>
-<Segment>
-### format?
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">cjs</code><code class="symbol"> | </code><code class="primitive">esm</code><code class="symbol">&gt;</code>
-</InlineSection>
-</Section>
-
-<InlineSection>
-**Default** <code class="primitive">esm</code>
-</InlineSection>
-Configure format
-```js
-nodejs: {
-  format: "cjs"
-}
-```
-</Segment>
-<Segment>
-### install?
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">[]</code><code class="symbol">&gt;</code>
-</InlineSection>
-</Section>
-Packages that will be excluded from the bundle and installed into node_modules instead. Useful for dependencies that cannot be bundled, like those with binary dependencies.
-```js
-nodejs: {
-  install: ["pg"]
-}
-```
-</Segment>
-<Segment>
-### loader?
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Record</code><code class="symbol">&lt;</code><code class="primitive">string</code>, [<code class="type">Loader</code>](https://esbuild.github.io/api/#build)<code class="symbol">&gt;</code><code class="symbol">&gt;</code>
-</InlineSection>
-</Section>
-Configure additional esbuild loaders for other file extensions
-```js
-nodejs: {
-  loader: {
-   ".png": "file"
-  }
-}
-```
-</Segment>
-<Segment>
-### minify?
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">boolean</code><code class="symbol">&gt;</code>
-</InlineSection>
-</Section>
-
-<InlineSection>
-**Default** <code class="primitive">true</code>
-</InlineSection>
-Enable or disable minification
-```js
-nodejs: {
-  minify: false
-}
-```
-</Segment>
-<Segment>
-### sourcemap?
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">boolean</code><code class="symbol">&gt;</code>
-</InlineSection>
-</Section>
-
-<InlineSection>
-**Default** <code class="primitive">false</code>
-</InlineSection>
-Configure if sourcemaps are generated when the function is bundled for production. Since they increase payload size and potentially cold starts they are not generated by default. They are always generated during local development mode.
-```js
-nodejs: {
-  sourcemap: true
-}
-```
-</Segment>
-<Segment>
-### splitting?
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">boolean</code><code class="symbol">&gt;</code>
-</InlineSection>
-</Section>
-
-<InlineSection>
-**Default** <code class="primitive">false</code>
-</InlineSection>
-If enabled, modules that are dynamically imported will be bundled as their own files with common dependencies placed in shared chunks. This can help drastically reduce cold starts as your function grows in size.
-```js
-nodejs: {
-  splitting: true
-}
-```
-</Segment>
-
-## PermissionsProps
-<Segment>
-### actions
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">string</code><code class="symbol">[]</code>
-</InlineSection>
-</Section>
-</Segment>
-<Segment>
-### resources
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code><code class="symbol">[]</code>
-</InlineSection>
-</Section>
-</Segment>
-
-## TransformProps
-<Segment>
-### function?
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">Transform</code><code class="symbol">&lt;</code>[<code class="type">FunctionArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/lambda/function/#inputs)<code class="symbol">&gt;</code>
-</InlineSection>
-</Section>
-</Segment>
-
-## UrlProps
-<Segment>
-### authorization?
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">none</code><code class="symbol"> | </code><code class="primitive">iam</code><code class="symbol">&gt;</code>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="symbol">&ldquo;</code><code class="primitive">none</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">iam</code><code class="symbol">&rdquo;</code><code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
 
 <InlineSection>
 **Default** <code class="primitive">none</code>
 </InlineSection>
-The authorization for the function URL
 ```js
 {
   url: {
@@ -613,7 +592,8 @@ The authorization for the function URL
 ```
 </Segment>
 <Segment>
-### cors?
+#### url.cors?
+CORS support for the function URL
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">boolean</code><code class="symbol"> | </code><code class="primitive">Object</code><code class="symbol">&gt;</code>
@@ -623,7 +603,6 @@ The authorization for the function URL
 <InlineSection>
 **Default** <code class="primitive">true</code>
 </InlineSection>
-CORS support for the function URL
 ```js
 {
   url: {
@@ -644,56 +623,56 @@ CORS support for the function URL
 ```
 </Segment>
 <Segment>
-### cors.allowCredentials?
+#### url.cors.allowCredentials?
+Whether to allow cookies or other credentials in requests to the function URL. The default is `false`.
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">boolean</code><code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
-Whether to allow cookies or other credentials in requests to the function URL. The default is `false`.
 </Segment>
 <Segment>
-### cors.allowHeaders?
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code><code class="symbol">[]</code><code class="symbol">&gt;</code>
-</InlineSection>
-</Section>
+#### url.cors.allowHeaders?
 The HTTP headers that origins can include in requests to the function URL. For example: `["date", "keep-alive", "x-custom-header"]`.
-</Segment>
-<Segment>
-### cors.allowMethods?
 <Section type="parameters">
 <InlineSection>
-**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">*</code><code class="symbol"> | </code><code class="primitive">DELETE</code><code class="symbol"> | </code><code class="primitive">GET</code><code class="symbol"> | </code><code class="primitive">HEAD</code><code class="symbol"> | </code><code class="primitive">OPTIONS</code><code class="symbol"> | </code><code class="primitive">PATCH</code><code class="symbol"> | </code><code class="primitive">POST</code><code class="symbol"> | </code><code class="primitive">PUT</code><code class="symbol">&gt;</code><code class="symbol">[]</code><code class="symbol">&gt;</code>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code><code class="symbol">[]</code><code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
+</Segment>
+<Segment>
+#### url.cors.allowMethods?
 The HTTP methods that are allowed when calling the function URL. For example: `["GET", "POST", "DELETE"]`, or the wildcard character (`["*"]`).
-</Segment>
-<Segment>
-### cors.allowOrigins?
 <Section type="parameters">
 <InlineSection>
-**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code><code class="symbol">[]</code><code class="symbol">&gt;</code>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Input</code><code class="symbol">&lt;</code><code class="symbol">&ldquo;</code><code class="primitive">*</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">DELETE</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">GET</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">HEAD</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">OPTIONS</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">PATCH</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">POST</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">PUT</code><code class="symbol">&rdquo;</code><code class="symbol">&gt;</code><code class="symbol">[]</code><code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
+</Segment>
+<Segment>
+#### url.cors.allowOrigins?
 The origins that can access the function URL. You can list any number of specific origins (or the wildcard character (`"*"`)), separated by a comma. For example: `["https://www.example.com", "http://localhost:60905"]`.
-</Segment>
-<Segment>
-### cors.exposeHeaders?
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code><code class="symbol">[]</code><code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
-The HTTP headers in your function response that you want to expose to origins that call the function URL.
 </Segment>
 <Segment>
-### cors.maxAge?
+#### url.cors.exposeHeaders?
+The HTTP headers in your function response that you want to expose to origins that call the function URL.
 <Section type="parameters">
 <InlineSection>
-**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">$\{number\} second</code><code class="symbol"> | </code><code class="primitive">$\{number\} seconds</code><code class="symbol"> | </code><code class="primitive">$\{number\} minute</code><code class="symbol"> | </code><code class="primitive">$\{number\} minutes</code><code class="symbol"> | </code><code class="primitive">$\{number\} hour</code><code class="symbol"> | </code><code class="primitive">$\{number\} hours</code><code class="symbol"> | </code><code class="primitive">$\{number\} day</code><code class="symbol"> | </code><code class="primitive">$\{number\} days</code><code class="symbol">&gt;</code>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code><code class="symbol">[]</code><code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
+</Segment>
+<Segment>
+#### url.cors.maxAge?
 The maximum amount of time, in seconds, that web browsers can cache results of a preflight request. By default, this is set to `0`, which means that the browser doesn't cache results. The maximum value is `86400`.
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="symbol">&ldquo;</code><code class="primitive">$\{number\} second</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">$\{number\} seconds</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">$\{number\} minute</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">$\{number\} minutes</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">$\{number\} hour</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">$\{number\} hours</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">$\{number\} day</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">$\{number\} days</code><code class="symbol">&rdquo;</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
 </Segment>

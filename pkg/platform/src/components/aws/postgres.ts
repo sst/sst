@@ -7,7 +7,7 @@ import { Input } from "../input.js";
 export interface PostgresArgs {
   /**
    * Enging version of the RDS cluster
-   * @default - 15.5
+   * @default `15.5`
    * @example
    * ```js
    * {
@@ -18,7 +18,7 @@ export interface PostgresArgs {
   version?: Input<string>;
   /**
    * Name of a database which is automatically created inside the cluster.
-   * @default - Database is not created
+   * @default Database not created
    * @example
    * ```js
    * {
@@ -33,7 +33,7 @@ export interface PostgresArgs {
   scaling?: Input<{
     /**
      * The minimum number of Aurora capacity units (ACUs) for a DB instance in an Aurora Serverless v2 cluster.
-     * @default - 0.5
+     * @default `0.5`
      * @example
      * ```js
      * {
@@ -46,7 +46,7 @@ export interface PostgresArgs {
     min?: Input<number>;
     /**
      * The maximum number of Aurora capacity units (ACUs) for a DB instance in an Aurora Serverless v2 cluster.
-     * @default - 4
+     * @default `4`
      * @example
      * ```js
      * {

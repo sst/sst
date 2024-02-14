@@ -70,7 +70,15 @@ The S3 bucket name.
 The underlying AWS resources.
 <Section type="parameters">
 <InlineSection>
-**Type** <code class="primitive">[NodesProps](#nodesprops)</code>
+**Type** <code class="primitive">Object</code>
+</InlineSection>
+</Section>
+</Segment>
+<Segment>
+#### nodes.bucket
+<Section type="parameters">
+<InlineSection>
+**Type** [<code class="type">BucketV2</code>](https://www.pulumi.com/registry/packages/aws/api-docs/s3/bucketv2/)
 </InlineSection>
 </Section>
 </Segment>
@@ -80,6 +88,7 @@ The underlying AWS resources.
 Arguments for creating a `Bucket` component.
 <Segment>
 ### public?
+Enable public access to the files in the bucket
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">boolean</code><code class="symbol">&gt;</code>
@@ -89,7 +98,6 @@ Arguments for creating a `Bucket` component.
 <InlineSection>
 **Default** <code class="primitive">false</code>
 </InlineSection>
-Enable public access to the files in the bucket
 ```js
 {
   public: true
@@ -98,26 +106,15 @@ Enable public access to the files in the bucket
 </Segment>
 <Segment>
 ### transform?
+[Transform](/docs/transform/) how this component is created.
 <Section type="parameters">
 <InlineSection>
-**Type** <code class="primitive">[TransformProps](#transformprops)</code>
+**Type** <code class="primitive">Object</code>
 </InlineSection>
 </Section>
 </Segment>
-
-## NodesProps
 <Segment>
-### bucket
-<Section type="parameters">
-<InlineSection>
-**Type** [<code class="type">BucketV2</code>](https://www.pulumi.com/registry/packages/aws/api-docs/s3/bucketv2/)
-</InlineSection>
-</Section>
-</Segment>
-
-## TransformProps
-<Segment>
-### bucket?
+#### transform.bucket?
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Transform</code><code class="symbol">&lt;</code>[<code class="type">BucketV2Args</code>](https://www.pulumi.com/registry/packages/aws/api-docs/s3/bucketv2/#inputs)<code class="symbol">&gt;</code>
@@ -125,7 +122,7 @@ Enable public access to the files in the bucket
 </Section>
 </Segment>
 <Segment>
-### bucketPolicy?
+#### transform.bucketPolicy?
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Transform</code><code class="symbol">&lt;</code>[<code class="type">BucketPolicyArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/s3/bucketpolicy/#inputs)<code class="symbol">&gt;</code>

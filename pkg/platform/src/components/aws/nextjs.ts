@@ -54,7 +54,7 @@ export interface NextjsArgs extends SsrSiteArgs {
    * How the logs are stored in CloudWatch
    * - "combined" - Logs from all routes are stored in the same log group.
    * - "per-route" - Logs from each route are stored in a separate log group.
-   * @default "per-route"
+   * @default `per-route`
    * @example
    * ```js
    * logging: "combined",
@@ -63,13 +63,13 @@ export interface NextjsArgs extends SsrSiteArgs {
   logging?: "combined" | "per-route";
   /**
    * The server function is deployed to Lambda in a single region. Alternatively, you can enable this option to deploy to Lambda@Edge.
-   * @default false
+   * @default `false`
    */
   edge?: boolean;
   imageOptimization?: {
     /**
      * The amount of memory in MB allocated for image optimization function.
-     * @default 1024 MB
+     * @default `1024 MB`
      * @example
      * ```js
      * imageOptimization: {
@@ -82,7 +82,7 @@ export interface NextjsArgs extends SsrSiteArgs {
   experimental?: {
     /**
      * Enable streaming. Currently an experimental feature in OpenNext.
-     * @default false
+     * @default `false`
      * @example
      * ```js
      * experimental: {
@@ -95,7 +95,7 @@ export interface NextjsArgs extends SsrSiteArgs {
      * Disabling incremental cache will cause the entire page to be revalidated on each request. This can result in ISR and SSG pages to be in an inconsistent state. Specify this option if you are using SSR pages only.
      *
      * Note that it is possible to disable incremental cache while leaving on-demand revalidation enabled.
-     * @default false
+     * @default `false`
      * @example
      * ```js
      * experimental: {
@@ -106,7 +106,7 @@ export interface NextjsArgs extends SsrSiteArgs {
     disableIncrementalCache?: boolean;
     /**
      * Disabling DynamoDB cache will cause on-demand revalidation by path (`revalidatePath`) and by cache tag (`revalidateTag`) to fail silently.
-     * @default false
+     * @default `false`
      * @example
      * ```js
      * experimental: {
@@ -358,45 +358,52 @@ export class Nextjs extends Component implements Link.Linkable {
                     ? {}
                     : {
                         server: {
-                          type: "function",
-                          function: serverConfig,
-                          streaming: experimental?.streaming,
-                          injections: isPerRouteLoggingEnabled()
-                            ? [useServerFunctionPerRouteLoggingInjection()]
-                            : [],
+                          server: {
+                            function: serverConfig,
+                            streaming: experimental?.streaming,
+                            injections: isPerRouteLoggingEnabled()
+                              ? [useServerFunctionPerRouteLoggingInjection()]
+                              : [],
+                          },
                         },
                       }),
                   imageOptimizer: {
-                    type: "image-optimization-function",
-                    function: {
-                      description: `${name} image optimizer`,
-                      handler: "index.handler",
-                      bundle: path.join(
-                        outputPath,
-                        ".open-next",
-                        "image-optimization-function",
-                      ),
-                      runtime: "nodejs18.x",
-                      architecture: "arm64",
-                      environment: {
-                        BUCKET_NAME: bucketName,
-                        BUCKET_KEY_PREFIX: "_assets",
+                    imageOptimization: {
+                      function: {
+                        description: `${name} image optimizer`,
+                        handler: "index.handler",
+                        bundle: path.join(
+                          outputPath,
+                          ".open-next",
+                          "image-optimization-function",
+                        ),
+                        runtime: "nodejs18.x",
+                        architecture: "arm64",
+                        environment: {
+                          BUCKET_NAME: bucketName,
+                          BUCKET_KEY_PREFIX: "_assets",
+                        },
+                        memory: imageOptimization?.memory ?? "1536 MB",
                       },
-                      memory: imageOptimization?.memory ?? "1536 MB",
                     },
                   },
                   s3: {
-                    type: "s3",
-                    originPath: "_assets",
-                    copy: [
-                      {
-                        from: ".open-next/assets",
-                        to: "_assets",
-                        cached: true,
-                        versionedSubDir: "_next",
-                      },
-                      { from: ".open-next/cache", to: "_cache", cached: false },
-                    ],
+                    s3: {
+                      originPath: "_assets",
+                      copy: [
+                        {
+                          from: ".open-next/assets",
+                          to: "_assets",
+                          cached: true,
+                          versionedSubDir: "_next",
+                        },
+                        {
+                          from: ".open-next/cache",
+                          to: "_cache",
+                          cached: false,
+                        },
+                      ],
+                    },
                   },
                 },
                 behaviors: [
@@ -945,8 +952,8 @@ if (event.rawPath) {
                 ],
                 "Effect": "Deny",
                 "Resources": [
-                  "${serverFunction.nodes.logGroup.logGroupArn}",
-                  "${serverFunction.nodes.logGroup.logGroupArn}:*",
+                  "${serverFunction.logGroupArn}",
+                  "${serverFunction.logGroupArn}:*",
                 ],
               }
             ]

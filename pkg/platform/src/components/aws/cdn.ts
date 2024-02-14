@@ -23,7 +23,7 @@ export interface CdnDomainArgs {
   /**
    * Alternative domains to be assigned to the website URL. Visitors to the alternative domains will be redirected to the main domain. (ie. `www.domain.com`).
    * Use this to create a `www.` version of your domain and redirect visitors to the root domain.
-   * @default no redirects configured
+   * @default No redirects configured
    * @example
    * ```js
    * domain: {
@@ -35,7 +35,7 @@ export interface CdnDomainArgs {
   redirects?: Input<string[]>;
   /**
    * Specify additional names that should route to the Cloudfront Distribution.
-   * @default no aliases configured
+   * @default No aliases configured
    * @example
    * ```js
    * domain: {
@@ -48,7 +48,7 @@ export interface CdnDomainArgs {
   /**
    * Name of the hosted zone in Route 53 that contains the domain. By default, SST will look for a hosted zone matching the domain name that's passed in.
    * Do not set both "hostedZone" and "hostedZoneId".
-   * @default same as the `domainName`
+   * @default Same as the `domainName`
    * @example
    * ```js
    * domain: {

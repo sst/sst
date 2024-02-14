@@ -24,21 +24,19 @@ import { sanitizeToPascalCase } from "../naming.js";
 import { Link } from "../link.js";
 import { Input } from "../input.js";
 import type { Prettify, Transform } from "../component.js";
+import { VisibleError } from "../error.js";
 
 type CloudFrontFunctionConfig = { injections: string[] };
 type EdgeFunctionConfig = { function: Unwrap<FunctionArgs> };
-type FunctionOriginConfig = {
-  type: "function";
+type ServerOriginConfig = {
   function: Unwrap<FunctionArgs>;
   injections?: string[];
   streaming?: boolean;
 };
-type ImageOptimizationFunctionOriginConfig = {
-  type: "image-optimization-function";
+type ImageOptimizationOriginConfig = {
   function: Unwrap<FunctionArgs>;
 };
 type S3OriginConfig = {
-  type: "s3";
   originPath?: string;
   copy: {
     from: string;
@@ -48,7 +46,6 @@ type S3OriginConfig = {
   }[];
 };
 type OriginGroupConfig = {
-  type: "group";
   primaryOriginName: string;
   fallbackOriginName: string;
   fallbackStatusCodes: number[];
@@ -64,12 +61,12 @@ export interface SsrSiteFileOptions {
 export interface SsrSiteArgs {
   /**
    * Path to the directory where the app is located.
-   * @default "."
+   * @default `.`
    */
   path?: Input<string>;
   /**
    * Path relative to the app location where the type definitions are located.
-   * @default "."
+   * @default `.`
    */
   typesPath?: Input<string>;
   /**
@@ -115,7 +112,7 @@ export interface SsrSiteArgs {
    * ]
    * ```
    */
-  permissions?: Input<FunctionPermissionArgs[]>;
+  permissions?: Input<Prettify<FunctionPermissionArgs>[]>;
   /**
    * Link resources to the SSR function.
    * This will grant the site permissions to access the linked resources at runtime.
@@ -149,7 +146,7 @@ export interface SsrSiteArgs {
   //dev?: {
   //  /**
   //   * When running `sst dev`, site is not deployed. This is to ensure `sst dev` can start up quickly.
-  //   * @default false
+  //   * @default `false`
   //   * @example
   //   * ```js
   //   * dev: {
@@ -175,7 +172,7 @@ export interface SsrSiteArgs {
   assets?: Input<{
     /**
      * Character encoding for text based assets uploaded to S3 (ex: html, css, js, etc.). If "none" is specified, no charset will be returned in header.
-     * @default utf-8
+     * @default `utf-8`
      * @example
      * ```js
      * assets: {
@@ -188,7 +185,7 @@ export interface SsrSiteArgs {
     >;
     /**
      * The TTL for versioned files (ex: `main-1234.css`) in the CDN and browser cache. Ignored when `versionedFilesCacheHeader` is specified.
-     * @default 1 year
+     * @default `1 year`
      * @example
      * ```js
      * assets: {
@@ -199,7 +196,7 @@ export interface SsrSiteArgs {
     versionedFilesTTL?: Input<number | Duration>;
     /**
      * The header to use for versioned files (ex: `main-1234.css`) in the CDN cache. When specified, the `versionedFilesTTL` option is ignored.
-     * @default public,max-age=31536000,immutable
+     * @default `public,max-age=31536000,immutable`
      * @example
      * ```js
      * assets: {
@@ -210,7 +207,7 @@ export interface SsrSiteArgs {
     versionedFilesCacheHeader?: Input<string>;
     /**
      * The TTL for non-versioned files (ex: `index.html`) in the CDN cache. Ignored when `nonVersionedFilesCacheHeader` is specified.
-     * @default 1 day
+     * @default `1 day`
      * @example
      * ```js
      * assets: {
@@ -221,7 +218,7 @@ export interface SsrSiteArgs {
     nonVersionedFilesTTL?: Input<number | Duration>;
     /**
      * The header to use for non-versioned files (ex: `index.html`) in the CDN cache. When specified, the `nonVersionedFilesTTL` option is ignored.
-     * @default public,max-age=0,s-maxage=86400,stale-while-revalidate=8640
+     * @default `public,max-age=0,s-maxage=86400,stale-while-revalidate=8640`
      * @example
      * ```js
      * assets: {
@@ -250,7 +247,7 @@ export interface SsrSiteArgs {
   invalidation?: Input<{
     /**
      * While deploying, SST waits for the CloudFront cache invalidation process to finish. This ensures that the new content will be served once the deploy command finishes. However, this process can sometimes take more than 5 mins. For non-prod environments it might make sense to pass in `false`. That'll skip waiting for the cache to invalidate and speed up the deploy process.
-     * @default false
+     * @default `false`
      * @example
      * ```js
      * invalidation: {
@@ -265,7 +262,7 @@ export interface SsrSiteArgs {
      * - "all" - All files will be invalidated when any file changes.
      * - "versioned" - Only versioned files will be invalidated when versioned files change.
      * Alternatively you can pass in an array of paths to invalidate.
-     * @default "all"
+     * @default `all`
      * @example
      * Disable invalidation:
      * ```js
@@ -302,7 +299,7 @@ export function prepare(args: SsrSiteArgs, opts?: ComponentResourceOptions) {
       if (!sitePath) return ".";
 
       if (!fs.existsSync(sitePath)) {
-        throw new Error(`No site found at "${path.resolve(sitePath)}"`);
+        throw new VisibleError(`No site found at "${path.resolve(sitePath)}"`);
       }
       return sitePath;
     });
@@ -328,7 +325,7 @@ export function prepare(args: SsrSiteArgs, opts?: ComponentResourceOptions) {
         ].includes(region)
       )
         return;
-      throw new Error(
+      throw new VisibleError(
         `Region ${region} is not currently supported. Please use a different region.`,
       );
     });
@@ -367,13 +364,13 @@ export function buildApp(
       // Ensure that the site has a build script defined
       if (cmd === defaultCommand) {
         if (!fs.existsSync(path.join(sitePath, "package.json"))) {
-          throw new Error(`No package.json found at "${sitePath}".`);
+          throw new VisibleError(`No package.json found at "${sitePath}".`);
         }
         const packageJson = JSON.parse(
           fs.readFileSync(path.join(sitePath, "package.json")).toString(),
         );
         if (!packageJson.scripts || !packageJson.scripts.build) {
-          throw new Error(
+          throw new VisibleError(
             `No "build" script found within package.json in "${sitePath}".`,
           );
         }
@@ -407,7 +404,9 @@ export function buildApp(
             },
           });
         } catch (e) {
-          throw new Error(`There was a problem building the "${name}" site.`);
+          throw new VisibleError(
+            `There was a problem building the "${name}" site.`,
+          );
         }
 
         return sitePath;
@@ -508,10 +507,10 @@ export function createServersAndDistribution(
 
         // Handle each S3 origin
         for (const origin of Object.values(plan.origins)) {
-          if (origin.type !== "s3") continue;
+          if (!origin.s3) continue;
 
           // Handle each copy source
-          for (const copy of origin.copy) {
+          for (const copy of origin.s3.copy) {
             // Build fileOptions
             const fileOptions: SsrSiteFileOptions[] = [
               // unversioned files
@@ -695,16 +694,15 @@ function handler(event) {
       > = {};
 
       Object.entries(plan.origins ?? {}).forEach(([name, props]) => {
-        switch (props.type) {
-          case "s3":
-            origins[name] = buildS3Origin(name, props);
-            break;
-          case "function":
-            origins[name] = buildFunctionOrigin(name, props);
-            break;
-          case "image-optimization-function":
-            origins[name] = buildImageOptimizationFunctionOrigin(name, props);
-            break;
+        if (props.s3) {
+          origins[name] = buildS3Origin(name, props.s3);
+        } else if (props.server) {
+          origins[name] = buildServerOrigin(name, props.server);
+        } else if (props.imageOptimization) {
+          origins[name] = buildImageOptimizationOrigin(
+            name,
+            props.imageOptimization,
+          );
         }
       });
 
@@ -718,15 +716,15 @@ function handler(event) {
       > = {};
 
       Object.entries(plan.origins ?? {}).forEach(([name, props]) => {
-        if (props.type === "group") {
+        if (props.group) {
           originGroups[name] = {
             originId: name,
             failoverCriteria: {
-              statusCodes: props.fallbackStatusCodes,
+              statusCodes: props.group.fallbackStatusCodes,
             },
             members: [
-              { originId: props.primaryOriginName },
-              { originId: props.fallbackOriginName },
+              { originId: props.group.primaryOriginName },
+              { originId: props.group.fallbackOriginName },
             ],
           };
         }
@@ -746,7 +744,7 @@ function handler(event) {
       };
     }
 
-    function buildFunctionOrigin(fnName: string, props: FunctionOriginConfig) {
+    function buildServerOrigin(fnName: string, props: ServerOriginConfig) {
       const fn = new Function(
         `${name}${sanitizeToPascalCase(fnName)}`,
         {
@@ -794,9 +792,9 @@ function handler(event) {
       };
     }
 
-    function buildImageOptimizationFunctionOrigin(
+    function buildImageOptimizationOrigin(
       fnName: string,
-      props: ImageOptimizationFunctionOriginConfig,
+      props: ImageOptimizationOriginConfig,
     ) {
       const fn = new Function(
         `${name}${sanitizeToPascalCase(fnName)}`,
@@ -890,7 +888,7 @@ function handler(event) {
         };
       }
 
-      throw new Error(`Invalid behavior type in the "${name}" site.`);
+      throw new VisibleError(`Invalid behavior type in the "${name}" site.`);
     }
 
     function useServerBehaviorCachePolicy() {
@@ -1055,7 +1053,7 @@ function handler(event) {
       if (!args.warm) return;
 
       if (args.warm && plan.edge) {
-        throw new Error(
+        throw new VisibleError(
           `In the "${name}" Site, warming is currently supported only for the regional mode.`,
         );
       }
@@ -1122,9 +1120,9 @@ function handler(event) {
           // We will generate a hash based on the contents of the S3 files with cache enabled.
           // This will be used to determine if we need to invalidate our CloudFront cache.
           const s3Origin = Object.values(plan.origins).find(
-            (origin) => origin.type === "s3",
-          );
-          if (s3Origin?.type !== "s3") return;
+            (origin) => origin.s3,
+          )?.s3;
+          if (!s3Origin) return;
           const cachedS3Files = s3Origin.copy.filter((file) => file.cached);
           if (cachedS3Files.length === 0) return;
 
@@ -1224,14 +1222,23 @@ export function validatePlan<
   EdgeFunctions extends Record<string, Prettify<EdgeFunctionConfig>>,
   Origins extends Record<
     string,
-    | Prettify<FunctionOriginConfig>
-    | Prettify<ImageOptimizationFunctionOriginConfig>
-    | Prettify<S3OriginConfig>
-    | Prettify<OriginGroupConfig>
+    {
+      server?: Prettify<ServerOriginConfig>;
+      imageOptimization?: Prettify<ImageOptimizationOriginConfig>;
+      s3?: Prettify<S3OriginConfig>;
+      group?: Prettify<OriginGroupConfig>;
+    }
   >,
 >(input: {
   cloudFrontFunctions?: CloudFrontFunctions;
   edgeFunctions?: EdgeFunctions;
+  /**
+   * Each origin can be either an S3, server, image optimization, or group origin.
+   * - S3 origin: configure the `.s3` property
+   * - Lambda URL origin: configure the `.server` property
+   * - Image optimization origin: configure the `.imageOptimization` property
+   * - Group fail-over origin: configure the `.group` property
+   */
   origins: Origins;
   edge: boolean;
   behaviors: {
@@ -1256,5 +1263,17 @@ export function validatePlan<
   };
   buildId?: string;
 }) {
+  Object.entries(input.origins).forEach(([originName, origin]) => {
+    if (
+      !origin.s3 &&
+      !origin.server &&
+      !origin.imageOptimization &&
+      !origin.group
+    ) {
+      throw new VisibleError(
+        `Invalid origin "${originName}" definition. Each origin must be an S3, server, image optimization, or group origin.`,
+      );
+    }
+  });
   return input;
 }

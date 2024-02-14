@@ -20,7 +20,7 @@ import { Link } from "../link.js";
 export interface RemixArgs extends SsrSiteArgs {
   /**
    * The server function is deployed to Lambda in a single region. Alternatively, you can enable this option to deploy to Lambda@Edge.
-   * @default false
+   * @default `false`
    */
   edge?: boolean;
 }
@@ -125,7 +125,7 @@ export class Remix extends Component implements Link.Linkable {
             },
             edgeFunctions: edge
               ? {
-                  edgeServer: {
+                  server: {
                     function: serverConfig,
                   },
                 }
@@ -134,21 +134,23 @@ export class Remix extends Component implements Link.Linkable {
               ...(edge
                 ? {}
                 : {
-                    regionalServer: {
-                      type: "function",
-                      function: serverConfig,
+                    server: {
+                      server: {
+                        function: serverConfig,
+                      },
                     },
                   }),
               s3: {
-                type: "s3",
-                copy: [
-                  {
-                    from: "public",
-                    to: "",
-                    cached: true,
-                    versionedSubDir: "build",
-                  },
-                ],
+                s3: {
+                  copy: [
+                    {
+                      from: "public",
+                      to: "",
+                      cached: true,
+                      versionedSubDir: "build",
+                    },
+                  ],
+                },
               },
             },
             behaviors: [
@@ -156,13 +158,13 @@ export class Remix extends Component implements Link.Linkable {
                 ? {
                     cacheType: "server",
                     cfFunction: "serverCfFunction",
-                    edgeFunction: "edgeServer",
+                    edgeFunction: "server",
                     origin: "s3",
                   }
                 : {
                     cacheType: "server",
                     cfFunction: "serverCfFunction",
-                    origin: "regionalServer",
+                    origin: "server",
                   },
               // create 1 behaviour for each top level asset file/folder
               ...fs.readdirSync(path.join(outputPath, "public")).map(

@@ -1,4 +1,5 @@
 import { CustomResourceOptions, Input, Output, dynamic } from "@pulumi/pulumi";
+import * as aws from "@pulumi/aws";
 import {
   CloudWatchLogsClient,
   CreateLogGroupCommand,

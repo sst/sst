@@ -10,6 +10,8 @@ try {
   await restoreInput();
 }
 
+// TODO spread transform type
+// TODO issue with Nextjs's `Plan` origin type
 async function main() {
   const modules = await buildDocs();
   for (const module of modules) {
@@ -25,7 +27,7 @@ async function main() {
         renderMethods(),
         renderProperties(),
         renderInterfaces(),
-        renderNestedTypes(),
+        //renderNestedTypes(),
       ]
         .flat()
         .join("\n")
@@ -41,11 +43,14 @@ async function main() {
     }
 
     function renderImports() {
+      // Secrets doc is written to "component/secret.mdx"
+      // Bucket doc is written to "component/aws/bucket.mdx"
+      const relativePath = module.name.split("/").length === 1 ? ".." : "../..";
       return [
         ``,
-        `import Segment from '../../../../../components/tsdoc/Segment.astro';`,
-        `import Section from '../../../../../components/tsdoc/Section.astro';`,
-        `import InlineSection from '../../../../../components/tsdoc/InlineSection.astro';`,
+        `import Segment from '${relativePath}/../../../components/tsdoc/Segment.astro';`,
+        `import Section from '${relativePath}/../../../components/tsdoc/Section.astro';`,
+        `import InlineSection from '${relativePath}/../../../components/tsdoc/InlineSection.astro';`,
       ];
     }
 
@@ -132,35 +137,39 @@ async function main() {
 
     function renderProperties() {
       const lines: string[] = [];
-      const properties = useClassGetters();
-      if (!properties.length) return lines;
+      const getters = useClassGetters();
+      if (!getters.length) return lines;
 
       lines.push(``, `## Properties`);
 
-      for (const property of properties) {
-        console.debug(` - property ${property.name}`);
-        const nestedTypeName = `${property.name[0].toLocaleUpperCase()}${property.name.slice(
-          1
-        )}Props`;
+      for (const g of getters) {
+        console.debug(` - property ${g.name}`);
         lines.push(
           ``,
           `<Segment>`,
-          // name
-          `### ${property.name}`,
-          // description
-          ...(property.getSignature?.comment?.summary
-            ? [renderComment(property.getSignature?.comment?.summary!)]
-            : []),
+          `### ${renderName(g)}`,
+          ...(renderDescription(g.getSignature!) ?? []),
           // type
           `<Section type="parameters">`,
           `<InlineSection>`,
-          `**Type** ${renderType(property.getSignature?.type!).replace(
-            "{{_NESTED_TYPE_}}",
-            `[${nestedTypeName}](#${nestedTypeName.toLowerCase()})`
-          )}`,
+          `**Type** ${renderType(g.getSignature?.type!)}`,
           `</InlineSection>`,
           `</Section>`,
-          `</Segment>`
+          `</Segment>`,
+          // nested props (ie. `.nodes`)
+          ...useNestedTypes(g.getSignature?.type!, g.name).flatMap(
+            ({ prefix, subType }) => [
+              `<Segment>`,
+              `#### ${prefix}.${renderName(subType)}`,
+              ...(renderDescription(subType) ?? []),
+              `<Section type="parameters">`,
+              `<InlineSection>`,
+              `**Type** ${renderType(subType.type!)}`,
+              `</InlineSection>`,
+              `</Section>`,
+              `</Segment>`,
+            ]
+          )
         );
       }
       return lines;
@@ -185,29 +194,41 @@ async function main() {
 
         for (const prop of int.children) {
           console.debug(`   - interface prop ${prop.name}`);
-          const nestedTypeName = `${prop.name[0].toLocaleUpperCase()}${prop.name.slice(
-            1
-          )}Props`;
+          const nestedTypeName = `${toPascalCase(prop.name)}Args`;
           lines.push(
             `<Segment>`,
-            // prop name
-            `### ${prop.name}${prop.flags.isOptional ? "?" : ""}`,
+            `### ${renderName(prop)}`,
+            ...(renderDescription(prop) ?? []),
+            // link to Transform doc
+            ...(int.name === `${useClassName()}Args` &&
+            prop.name === "transform"
+              ? ["[Transform](/docs/transform/) how this component is created."]
+              : []),
             // prop type
             `<Section type="parameters">`,
             `<InlineSection>`,
-            `**Type** ${renderType(prop.type!).replace(
-              "{{_NESTED_TYPE_}}",
-              `[${nestedTypeName}](#${nestedTypeName.toLowerCase()})`
-            )}`,
+            `**Type** ${renderType(prop.type!)}`,
             `</InlineSection>`,
             `</Section>`,
-            // prop default value
-            ...(renderInterfaceDefaultTag(prop) ?? []),
-            // prop description
-            ...(renderInterfaceDescription(prop) ?? []),
-            // prop examples
-            ...(renderInterfaceExamples(prop) ?? []),
-            `</Segment>`
+            ...(renderDefaultTag(prop) ?? []),
+            ...(renderExamples(prop) ?? []),
+            `</Segment>`,
+            // nested props (ie. `.domain`, `.transform`)
+            ...useNestedTypes(prop.type!, prop.name).flatMap(
+              ({ prefix, subType }) => [
+                `<Segment>`,
+                `#### ${prefix}.${renderName(subType)}`,
+                ...(renderDescription(subType) ?? []),
+                `<Section type="parameters">`,
+                `<InlineSection>`,
+                `**Type** ${renderType(subType.type!)}`,
+                `</InlineSection>`,
+                `</Section>`,
+                ...(renderDefaultTag(subType) ?? []),
+                ...(renderExamples(subType) ?? []),
+                `</Segment>`,
+              ]
+            )
           );
         }
       }
@@ -218,61 +239,72 @@ async function main() {
     function renderNestedTypes() {
       const lines: string[] = [];
 
-      // properties' nested types
-      useClassGetters().forEach((property) =>
-        renderEach(property.getSignature!)
+      // interfaces' nested types
+      useInterfaces().forEach((int) =>
+        int.children?.forEach((prop) => {
+          const nestedTypes = useNestedTypes(prop.type!);
+          if (!nestedTypes.length) return;
+
+          // `.transform` is rendered inline
+          if (
+            int.name === `${useClassName()}Args` &&
+            prop.name === "transform"
+          ) {
+            // render `plan` as a standalone arg => lift plan to the top level
+            if (nestedTypes[0].subType.name === "plan") {
+              lines.push(``, `## PlanArgs`);
+              nestedTypes.shift(); // remove `plan`
+              nestedTypes.forEach((t) => {
+                t.prefix = t.prefix.replace(/^plan\./, "");
+              });
+            }
+            // other `transform`'s nested types are rendered inline => skip
+            else {
+              return;
+            }
+          } else {
+            // name
+            lines.push(``, `## ${toPascalCase(prop.name)}Args`);
+          }
+
+          // props
+          lines.push(
+            ...nestedTypes.flatMap(({ prefix, subType }) => [
+              `<Segment>`,
+              // prop name
+              `#### ${prefix}${renderName(subType)}`,
+              // prop type
+              `<Section type="parameters">`,
+              `<InlineSection>`,
+              `**Type** ${renderType(subType.type!)}`,
+              `</InlineSection>`,
+              `</Section>`,
+              ...(renderDefaultTag(subType) ?? []),
+              ...(renderDescription(subType) ?? []),
+              ...(renderExamples(subType) ?? []),
+              `</Segment>`,
+            ])
+          );
+        })
       );
 
-      // interfaces' nested types
-      useInterfaces().forEach((int) => int.children?.forEach(renderEach));
-
-      function renderEach(
-        prop:
-          | TypeDoc.Models.DeclarationReflection
-          | TypeDoc.Models.SignatureReflection
-      ) {
-        const nestedTypes = useNestedTypes(prop.type!);
-        if (!nestedTypes.length) return;
-
-        // name
-        lines.push(
-          ``,
-          `## ${prop.name[0].toLocaleUpperCase()}${prop.name.slice(1)}Props`
-        );
-
-        // props
-        lines.push(
-          ...nestedTypes.flatMap(({ prefix, subType }) => [
-            `<Segment>`,
-            // prop name
-            `### ${prefix}${subType.name}${
-              subType.flags.isOptional ? "?" : ""
-            }`,
-            // prop type
-            `<Section type="parameters">`,
-            `<InlineSection>`,
-            `**Type** ${renderType(subType.type!).replaceAll(
-              "{{_NESTED_TYPE_}}",
-              "Object"
-            )}`,
-            `</InlineSection>`,
-            `</Section>`,
-            // prop default value
-            ...(renderInterfaceDefaultTag(subType) ?? []),
-            // prop description
-            ...(renderInterfaceDescription(subType) ?? []),
-            // prop examples
-            ...(renderInterfaceExamples(subType) ?? []),
-            `</Segment>`,
-          ])
-        );
-      }
       return lines;
     }
 
-    function renderInterfaceDefaultTag(
-      prop: TypeDoc.Models.DeclarationReflection
+    function renderName(prop: TypeDoc.Models.DeclarationReflection) {
+      return `${prop.name}${prop.flags.isOptional ? "?" : ""}`;
+    }
+
+    function renderDescription(
+      prop:
+        | TypeDoc.Models.DeclarationReflection
+        | TypeDoc.Models.SignatureReflection
     ) {
+      if (!prop.comment?.summary) return;
+      return [renderComment(prop.comment?.summary)];
+    }
+
+    function renderDefaultTag(prop: TypeDoc.Models.DeclarationReflection) {
       const defaultTag = prop.comment?.blockTags.find(
         (tag) => tag.tag === "@default"
       );
@@ -292,16 +324,7 @@ async function main() {
       ];
     }
 
-    function renderInterfaceDescription(
-      prop: TypeDoc.Models.DeclarationReflection
-    ) {
-      if (!prop.comment?.summary) return;
-      return [renderComment(prop.comment?.summary)];
-    }
-
-    function renderInterfaceExamples(
-      prop: TypeDoc.Models.DeclarationReflection
-    ) {
+    function renderExamples(prop: TypeDoc.Models.DeclarationReflection) {
       return prop.comment?.blockTags
         .filter((tag) => tag.tag === "@example")
         .flatMap((tag) => renderComment(tag.content));
@@ -321,17 +344,6 @@ async function main() {
     }
 
     function renderType(type: TypeDoc.SomeType): string {
-      // TODO fix indention for nested types
-      // TODO render this
-      /**
-       * The domain to be assigned to the website URL (ie. domain.com).
-       *
-       * Supports domains that are hosted either on [Route 53](https://aws.amazon.com/route53/) or externally.
-       */
-      // TODO use `` default value for all components
-      // TODO unhandled linking to interfaces in another component
-      // TODO function link to esbuild `Loader`
-      // TODO link `Transform` to transform doc (add the same line, expand)
       if (type.type === "intrinsic") return renderIntrisicType(type);
       if (type.type === "literal") return renderLiteralType(type);
       if (type.type === "templateLiteral")
@@ -355,167 +367,177 @@ async function main() {
       delete type._project;
       console.log(type);
       throw new Error(`Unsupported type "${type.type}"`);
-
-      function renderIntrisicType(type: TypeDoc.Models.IntrinsicType) {
-        return `<code class="primitive">${type.name}</code>`;
-      }
-
-      function renderLiteralType(type: TypeDoc.Models.LiteralType) {
-        // ie. architecture: "arm64"
-        return `<code class="primitive">${type.value}</code>`;
-      }
-
-      function renderTemplateLiteralType(
-        type: TypeDoc.Models.TemplateLiteralType
+    }
+    function renderIntrisicType(type: TypeDoc.Models.IntrinsicType) {
+      return `<code class="primitive">${type.name}</code>`;
+    }
+    function renderLiteralType(type: TypeDoc.Models.LiteralType) {
+      // ie. architecture: "arm64"
+      return `<code class="symbol">&ldquo;</code><code class="primitive">${type.value}</code><code class="symbol">&rdquo;</code>`;
+    }
+    function renderTemplateLiteralType(
+      type: TypeDoc.Models.TemplateLiteralType
+    ) {
+      // ie. memory: `${number} MB`
+      // {
+      //   "type": "templateLiteral",
+      //   "head": "",
+      //   "tail": [
+      //     [
+      //       {
+      //         "type": "intrinsic",
+      //         "name": "number"
+      //       },
+      //       " MB"
+      //     ]
+      //   ]
+      // },
+      if (
+        typeof type.head !== "string" ||
+        type.tail.length !== 1 ||
+        type.tail[0].length !== 2 ||
+        type.tail[0][0].type !== "intrinsic" ||
+        typeof type.tail[0][1] !== "string"
       ) {
-        // ie. memory: `${number} MB`
-        // {
-        //   "type": "templateLiteral",
-        //   "head": "",
-        //   "tail": [
-        //     [
-        //       {
-        //         "type": "intrinsic",
-        //         "name": "number"
-        //       },
-        //       " MB"
-        //     ]
-        //   ]
-        // },
-        if (
-          typeof type.head !== "string" ||
-          type.tail.length !== 1 ||
-          type.tail[0].length !== 2 ||
-          type.tail[0][0].type !== "intrinsic" ||
-          typeof type.tail[0][1] !== "string"
-        ) {
-          console.error(type);
-          throw new Error(`Unsupported templateLiteral type`);
-        }
-        return `<code class="primitive">${type.head}$\\{${type.tail[0][0].name}\\}${type.tail[0][1]}</code>`;
+        console.error(type);
+        throw new Error(`Unsupported templateLiteral type`);
       }
-
-      function renderUnionType(type: TypeDoc.Models.UnionType) {
-        return type.types
-          .map((t) => renderType(t))
-          .join(`<code class="symbol"> | </code>`);
-      }
-
-      function renderArrayType(type: TypeDoc.Models.ArrayType) {
-        return `${renderType(type.elementType)}<code class="symbol">[]</code>`;
-      }
-
-      function renderTypescriptType(type: TypeDoc.Models.ReferenceType) {
-        // ie. Record<string, string>
+      return `<code class="symbol">&ldquo;</code><code class="primitive">${type.head}$\\{${type.tail[0][0].name}\\}${type.tail[0][1]}</code><code class="symbol">&rdquo;</code>`;
+    }
+    function renderUnionType(type: TypeDoc.Models.UnionType) {
+      return type.types
+        .map((t) => renderType(t))
+        .join(`<code class="symbol"> | </code>`);
+    }
+    function renderArrayType(type: TypeDoc.Models.ArrayType) {
+      return `${renderType(type.elementType)}<code class="symbol">[]</code>`;
+    }
+    function renderTypescriptType(type: TypeDoc.Models.ReferenceType) {
+      // ie. Record<string, string>
+      return [
+        `<code class="primitive">${type.name}</code>`,
+        `<code class="symbol">&lt;</code>`,
+        type.typeArguments?.map((t) => renderType(t)).join(", "),
+        `<code class="symbol">&gt;</code>`,
+      ].join("");
+    }
+    function renderSstType(type: TypeDoc.Models.ReferenceType) {
+      if (type.name === "Transform" || type.name === "Input") {
         return [
           `<code class="primitive">${type.name}</code>`,
           `<code class="symbol">&lt;</code>`,
-          type.typeArguments?.map((t) => renderType(t)).join(", "),
+          renderType(type.typeArguments?.[0]!),
           `<code class="symbol">&gt;</code>`,
         ].join("");
       }
-
-      function renderSstType(type: TypeDoc.Models.ReferenceType) {
-        if (type.name === "Transform" || type.name === "Input") {
-          return [
-            `<code class="primitive">${type.name}</code>`,
-            `<code class="symbol">&lt;</code>`,
-            renderType(type.typeArguments?.[0]!),
-            `<code class="symbol">&gt;</code>`,
-          ].join("");
-        }
+      // types in the same doc
+      if (useInterfaces().find((i) => i.name === type.name)) {
         return `[<code class="type">${
           type.name
         }</code>](#${type.name.toLowerCase()})`;
       }
-
-      function renderPulumiType(type: TypeDoc.Models.ReferenceType) {
-        if (type.name === "Output" || type.name === "Input") {
-          return [
-            `<code class="primitive">${type.name}</code>`,
-            `<code class="symbol">&lt;</code>`,
-            renderType(type.typeArguments?.[0]!),
-            `<code class="symbol">&gt;</code>`,
-          ].join("");
-        }
-        if (type.name === "UnwrappedObject") {
-          return renderType(type.typeArguments?.[0]!);
-        }
-        if (type.name === "ComponentResourceOptions") {
-          return `[<code class="type">${type.name}</code>](https://www.pulumi.com/docs/concepts/options/)`;
-        }
-
-        console.error(type);
-        throw new Error(`Unsupported @pulumi/pulumi type`);
+      // types in different doc
+      const externalModule = {
+        Function: "function",
+        FunctionArgs: "function",
+        FunctionPermissionArgs: "function",
+      }[type.name];
+      if (externalModule) {
+        const hash = type.name.endsWith("Args")
+          ? `#${type.name.toLowerCase()}`
+          : "";
+        return `[<code class="type">${type.name}</code>](${externalModule}/${hash})`;
       }
 
-      function renderPulumiProviderType(type: TypeDoc.Models.ReferenceType) {
-        const ret = ((type as any)._target.fileName as string).match(
-          "node_modules/@pulumi/([^/]+)/(.+).d.ts"
-        )!;
-        const provider = ret[1].toLocaleLowerCase(); // ie. aws
-        const cls = ret[2].toLocaleLowerCase(); // ie. s3/Bucket
-        if (cls === "types/input") {
-          // Input types
-          // ie. errorResponses?: aws.types.input.cloudfront.DistributionCustomErrorResponse[];
-          //{
-          //  type: 'reference',
-          //  refersToTypeParameter: false,
-          //  preferValues: false,
-          //  name: 'DistributionCustomErrorResponse',
-          //  _target: ReflectionSymbolId {
-          //    fileName: '/Users/frank/Sites/ion/pkg/platform/node_modules/@pulumi/aws/types/input.d.ts',
-          //    qualifiedName: 'cloudfront.DistributionCustomErrorResponse',
-          //    pos: 427276,
-          //    transientId: NaN
-          //  },
-          //  qualifiedName: 'cloudfront.DistributionCustomErrorResponse',
-          //  package: '@pulumi/aws',
-          //  typeArguments: undefined
-          //}
-          const link = {
-            DistributionCustomErrorResponse: "cloudfront/distribution",
-          }[type.name];
-          if (!link) {
-            console.error(type);
-            throw new Error(`Unsupported @pulumi provider input type`);
-          }
-          return `[<code class="type">${
-            type.name
-          }</code>](https://www.pulumi.com/registry/packages/${provider}/api-docs/${link}/#${type.name.toLowerCase()})`;
-        } else if (cls.startsWith("types/")) {
+      // @ts-expect-error
+      delete type._project;
+      console.error(type);
+      throw new Error(`Unsupported sst type`);
+    }
+    function renderPulumiType(type: TypeDoc.Models.ReferenceType) {
+      if (type.name === "Output" || type.name === "Input") {
+        return [
+          `<code class="primitive">${type.name}</code>`,
+          `<code class="symbol">&lt;</code>`,
+          renderType(type.typeArguments?.[0]!),
+          `<code class="symbol">&gt;</code>`,
+        ].join("");
+      }
+      if (type.name === "UnwrappedObject") {
+        return renderType(type.typeArguments?.[0]!);
+      }
+      if (type.name === "ComponentResourceOptions") {
+        return `[<code class="type">${type.name}</code>](https://www.pulumi.com/docs/concepts/options/)`;
+      }
+
+      console.error(type);
+      throw new Error(`Unsupported @pulumi/pulumi type`);
+    }
+    function renderPulumiProviderType(type: TypeDoc.Models.ReferenceType) {
+      const ret = ((type as any)._target.fileName as string).match(
+        "node_modules/@pulumi/([^/]+)/(.+).d.ts"
+      )!;
+      const provider = ret[1].toLocaleLowerCase(); // ie. aws
+      const cls = ret[2].toLocaleLowerCase(); // ie. s3/Bucket
+      if (cls === "types/input") {
+        // Input types
+        // ie. errorResponses?: aws.types.input.cloudfront.DistributionCustomErrorResponse[];
+        //{
+        //  type: 'reference',
+        //  refersToTypeParameter: false,
+        //  preferValues: false,
+        //  name: 'DistributionCustomErrorResponse',
+        //  _target: ReflectionSymbolId {
+        //    fileName: '/Users/frank/Sites/ion/pkg/platform/node_modules/@pulumi/aws/types/input.d.ts',
+        //    qualifiedName: 'cloudfront.DistributionCustomErrorResponse',
+        //    pos: 427276,
+        //    transientId: NaN
+        //  },
+        //  qualifiedName: 'cloudfront.DistributionCustomErrorResponse',
+        //  package: '@pulumi/aws',
+        //  typeArguments: undefined
+        //}
+        const link = {
+          DistributionCustomErrorResponse: "cloudfront/distribution",
+        }[type.name];
+        if (!link) {
           console.error(type);
-          throw new Error(`Unsupported @pulumi provider class type`);
-        } else {
-          // Resource types
-          // ie. bucket?: aws.s3.BucketV2;
-          //{
-          //  type: 'reference',
-          //  refersToTypeParameter: false,
-          //  preferValues: false,
-          //  name: 'BucketV2',
-          //  _target: ReflectionSymbolId {
-          //    fileName: '/Users/frank/Sites/ion/pkg/platform/node_modules/@pulumi/aws/s3/bucketV2.d.ts',
-          //    qualifiedName: 'BucketV2',
-          //    pos: 127,
-          //    transientId: NaN
-          //  },
-          //  qualifiedName: 'BucketV2',
-          //  package: '@pulumi/aws',
-          //  typeArguments: []
-          //}
+          throw new Error(`Unsupported @pulumi provider input type`);
         }
-        const hash = type.name.endsWith("Args") ? `#inputs` : "";
-        return `[<code class="type">${type.name}</code>](https://www.pulumi.com/registry/packages/${provider}/api-docs/${cls}/${hash})`;
+        return `[<code class="type">${
+          type.name
+        }</code>](https://www.pulumi.com/registry/packages/${provider}/api-docs/${link}/#${type.name.toLowerCase()})`;
+      } else if (cls.startsWith("types/")) {
+        console.error(type);
+        throw new Error(`Unsupported @pulumi provider class type`);
+      } else {
+        // Resource types
+        // ie. bucket?: aws.s3.BucketV2;
+        //{
+        //  type: 'reference',
+        //  refersToTypeParameter: false,
+        //  preferValues: false,
+        //  name: 'BucketV2',
+        //  _target: ReflectionSymbolId {
+        //    fileName: '/Users/frank/Sites/ion/pkg/platform/node_modules/@pulumi/aws/s3/bucketV2.d.ts',
+        //    qualifiedName: 'BucketV2',
+        //    pos: 127,
+        //    transientId: NaN
+        //  },
+        //  qualifiedName: 'BucketV2',
+        //  package: '@pulumi/aws',
+        //  typeArguments: []
+        //}
       }
-
-      function renderEsbuildType(type: TypeDoc.Models.ReferenceType) {
-        return `[<code class="type">${type.name}</code>](https://esbuild.github.io/api/#build)`;
-      }
-
-      function renderObjectType(type: TypeDoc.Models.ReflectionType) {
-        return `<code class="primitive">{{_NESTED_TYPE_}}</code>`;
-      }
+      const hash = type.name.endsWith("Args") ? `#inputs` : "";
+      return `[<code class="type">${type.name}</code>](https://www.pulumi.com/registry/packages/${provider}/api-docs/${cls}/${hash})`;
+    }
+    function renderEsbuildType(type: TypeDoc.Models.ReferenceType) {
+      const hash = type.name === "Loader" ? `#loader` : "#build";
+      return `[<code class="type">${type.name}</code>](https://esbuild.github.io/api/${hash})`;
+    }
+    function renderObjectType(type: TypeDoc.Models.ReflectionType) {
+      return `<code class="primitive">Object</code>`;
     }
 
     function useClass() {
@@ -567,20 +589,23 @@ async function main() {
     }
 
     function useNestedTypes(
-      type: TypeDoc.SomeType
+      type: TypeDoc.SomeType,
+      prefix: string = ""
     ): { prefix: string; subType: TypeDoc.Models.DeclarationReflection }[] {
       if (type.type === "union")
-        return type.types.flatMap((t) => useNestedTypes(t));
-      if (type.type === "array") return useNestedTypes(type.elementType);
+        return type.types.flatMap((t) => useNestedTypes(t, prefix));
+      if (type.type === "array")
+        return useNestedTypes(type.elementType, `${prefix}[]`);
       if (type.type === "reference")
-        return (type.typeArguments ?? []).flatMap((t) => useNestedTypes(t));
+        return (type.typeArguments ?? []).flatMap((t) =>
+          type.package === "typescript" && type.name === "Record"
+            ? useNestedTypes(t, `${prefix}[]`)
+            : useNestedTypes(t, prefix)
+        );
       if (type.type === "reflection")
-        return type.declaration.children!.flatMap((child) => [
-          { prefix: "", subType: child },
-          ...useNestedTypes(child.type!).map(({ prefix, subType }) => ({
-            prefix: `${child.name}.${prefix}`,
-            subType,
-          })),
+        return type.declaration.children!.flatMap((subType) => [
+          { prefix, subType },
+          ...useNestedTypes(subType.type!, `${prefix}.${subType.name}`),
         ]);
 
       return [];
@@ -598,7 +623,7 @@ async function buildDocs() {
       defaultTag: false,
     },
     entryPoints: [
-      "../pkg/platform/src/components/aws/secret.ts",
+      "../pkg/platform/src/components/secret.ts",
       "../pkg/platform/src/components/aws/bucket.ts",
       "../pkg/platform/src/components/aws/cron.ts",
       "../pkg/platform/src/components/aws/function.ts",
@@ -651,4 +676,8 @@ async function restoreInput() {
     "../pkg/platform/src/components/input.ts.bk",
     "../pkg/platform/src/components/input.ts"
   );
+}
+
+function toPascalCase(s: string) {
+  return `${s[0].toUpperCase()}${s.slice(1)}`;
 }

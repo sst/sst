@@ -130,7 +130,7 @@ export type RetrieveEvent = {
    * Expected value is between 0 and 1.
    * - 0 means the prompt and the retrieved embeddings are completely different.
    * - 1 means the prompt and the retrieved embeddings are identical.
-   * @default 0
+   * @default `0`
    * @example
    * ```js
    * {
@@ -141,7 +141,7 @@ export type RetrieveEvent = {
   threshold?: number;
   /**
    * The number of results to return.
-   * @default 10
+   * @default `10`
    * @example
    * ```js
    * {
