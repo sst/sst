@@ -6,16 +6,11 @@ import type {
 } from "aws-lambda";
 import type { RequestHandler, ResponseMode, ResponseStream } from "./lib/types";
 import { NodeApp } from "astro/app/node";
-import { polyfill } from "@astrojs/webapi";
 import { InternalEvent, convertFrom, convertTo } from "./lib/event-mapper.js";
 import { debug } from "./lib/logger.js";
 import { RenderOptions } from "astro/app";
 
 const astroMajorVersion = parseInt(ASTRO_VERSION.split(".")[0] ?? 0);
-
-polyfill(globalThis, {
-  exclude: "window document",
-});
 
 declare global {
   const awslambda: {

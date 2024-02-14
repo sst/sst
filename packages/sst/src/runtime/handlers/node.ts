@@ -12,7 +12,6 @@ import { useRuntimeWorkers } from "../workers.js";
 import { Colors } from "../../cli/colors.js";
 import { Logger } from "../../logger.js";
 import { findAbove, findBelow } from "../../util/fs.js";
-import { lazy } from "../../util/lazy.js";
 
 export const useNodeHandler = (): RuntimeHandler => {
   const rebuildCache: Record<
@@ -152,7 +151,6 @@ export const useNodeHandler = (): RuntimeHandler => {
       if (!ctx) {
         const options: BuildOptions = {
           entryPoints: [file],
-          platform: "node",
           external: [
             ...forceExternal,
             ...(nodejs.install || []),
@@ -168,7 +166,8 @@ export const useNodeHandler = (): RuntimeHandler => {
           ...(isESM
             ? {
                 format: "esm",
-                target: isLlrt ? "es2022" : "esnext",
+                target: isLlrt ? "es2020" : "esnext",
+                platform: isLlrt ? "browser" : "node",
                 mainFields: ["module", "main"],
                 banner: {
                   js: [
@@ -183,6 +182,7 @@ export const useNodeHandler = (): RuntimeHandler => {
             : {
                 format: "cjs",
                 target: "node14",
+                platform: "node",
                 banner: nodejs.banner
                   ? {
                       js: nodejs.banner,
