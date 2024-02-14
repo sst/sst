@@ -90,7 +90,7 @@ export class WorkersDevUrl extends dynamic.Resource {
   ) {
     super(
       new Provider(),
-      `${name}.sst.WorkersDevUrl`,
+      `${name}.sst.cloudflare.WorkersDevUrl`,
       { ...args, url: undefined },
       opts,
     );

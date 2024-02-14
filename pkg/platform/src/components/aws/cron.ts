@@ -88,7 +88,7 @@ export class Cron extends Component {
   private target: aws.cloudwatch.EventTarget;
 
   constructor(name: string, args: CronArgs, opts?: ComponentResourceOptions) {
-    super("sst:sst:Cron", name, args, opts);
+    super("sst:aws:Cron", name, args, opts);
 
     const parent = this;
 

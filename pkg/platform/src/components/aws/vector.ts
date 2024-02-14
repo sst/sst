@@ -64,7 +64,7 @@ export class Vector
     args?: VectorArgs,
     opts?: ComponentResourceOptions,
   ) {
-    super("sst:sst:Vector", name, args, opts);
+    super("sst:aws:Vector", name, args, opts);
 
     const parent = this;
     const model = normalizeModel();

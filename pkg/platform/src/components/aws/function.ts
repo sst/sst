@@ -488,7 +488,7 @@ export class Function
     args: FunctionArgs,
     opts?: ComponentResourceOptions,
   ) {
-    super("sst:sst:Function", name, args, opts);
+    super("sst:aws:Function", name, args, opts);
 
     const parent = this;
     const region = normalizeRegion();

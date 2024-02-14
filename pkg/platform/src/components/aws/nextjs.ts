@@ -141,7 +141,7 @@ export class Nextjs extends Component implements Link.Linkable {
     args?: NextjsArgs,
     opts?: ComponentResourceOptions,
   ) {
-    super("sst:sst:Nextjs", name, args, opts);
+    super("sst:aws:Nextjs", name, args, opts);
 
     const parent = this;
     const logging = normalizeLogging();

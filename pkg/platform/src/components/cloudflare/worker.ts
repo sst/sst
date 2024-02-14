@@ -127,7 +127,7 @@ export class Worker extends Component {
   private workersDevUrl: WorkersDevUrl;
 
   constructor(name: string, args: WorkerArgs, opts?: ComponentResourceOptions) {
-    super("sst:sst:Worker", name, args, opts);
+    super("sst:cloudflare:Worker", name, args, opts);
 
     const parent = this;
 

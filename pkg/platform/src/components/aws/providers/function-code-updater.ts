@@ -1,4 +1,5 @@
 import { CustomResourceOptions, Input, dynamic } from "@pulumi/pulumi";
+import * as aws from "@pulumi/aws";
 import {
   LambdaClient,
   UpdateFunctionCodeCommand,
@@ -74,6 +75,6 @@ export class FunctionCodeUpdater extends dynamic.Resource {
     args: FunctionCodeUpdaterInputs,
     opts?: CustomResourceOptions,
   ) {
-    super(new Provider(), `${name}.sst.FunctionCodeUpdater`, args, opts);
+    super(new Provider(), `${name}.sst.aws.FunctionCodeUpdater`, args, opts);
   }
 }

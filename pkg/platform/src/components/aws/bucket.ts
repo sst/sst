@@ -64,7 +64,7 @@ export class Bucket
     args?: BucketArgs,
     opts?: ComponentResourceOptions,
   ) {
-    super("sst:sst:Bucket", name, args, opts);
+    super("sst:aws:Bucket", name, args, opts);
 
     const parent = this;
     const publicAccess = normalizePublicAccess();

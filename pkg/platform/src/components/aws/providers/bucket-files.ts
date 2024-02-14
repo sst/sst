@@ -80,6 +80,6 @@ export class BucketFiles extends dynamic.Resource {
     args: BucketFilesInputs,
     opts?: CustomResourceOptions,
   ) {
-    super(new Provider(), `${name}.sst.BucketFiles`, args, opts);
+    super(new Provider(), `${name}.sst.aws.BucketFiles`, args, opts);
   }
 }

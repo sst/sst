@@ -48,7 +48,7 @@ export class Remix extends Component implements Link.Linkable {
     args: RemixArgs = {},
     opts?: ComponentResourceOptions,
   ) {
-    super("sst:sst:Remix", name, args, opts);
+    super("sst:aws:Remix", name, args, opts);
 
     const parent = this;
     const edge = normalizeEdge();

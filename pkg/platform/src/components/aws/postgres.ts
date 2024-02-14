@@ -88,7 +88,7 @@ export class Postgres
     args?: PostgresArgs,
     opts?: ComponentResourceOptions,
   ) {
-    super("sst:sst:Postgres", name, args, opts);
+    super("sst:aws:Postgres", name, args, opts);
 
     const parent = this;
     const scaling = normalizeScaling();

@@ -31,7 +31,7 @@ export class DnsValidatedCertificate extends Component {
     args: DnsValidatedCertificateArgs,
     opts?: ComponentResourceOptions,
   ) {
-    super("sst:sst:Certificate", name, args, opts);
+    super("sst:aws:Certificate", name, args, opts);
 
     const parent = this;
     const { domainName, alternativeNames, zoneId } = args;

@@ -47,7 +47,7 @@ export class Astro extends Component implements Link.Linkable {
     args: AstroArgs = {},
     opts?: ComponentResourceOptions,
   ) {
-    super("sst:sst:Astro", name, args, opts);
+    super("sst:aws:Astro", name, args, opts);
 
     args = {
       typesPath: "src",

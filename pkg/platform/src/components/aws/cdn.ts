@@ -104,7 +104,7 @@ export class Cdn extends Component {
   private _domainUrl?: Output<string>;
 
   constructor(name: string, args: CdnArgs, opts?: ComponentResourceOptions) {
-    super("sst:sst:CDN", name, args, opts);
+    super("sst:aws:CDN", name, args, opts);
     const parent = this;
 
     const domain = normalizeDomain();

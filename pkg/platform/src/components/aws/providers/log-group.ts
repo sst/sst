@@ -110,7 +110,7 @@ export class LogGroup extends dynamic.Resource {
   ) {
     super(
       new Provider(),
-      `${name}.sst.LogGroup`,
+      `${name}.sst.aws.LogGroup`,
       { ...args, logGroupArn: undefined },
       opts,
     );

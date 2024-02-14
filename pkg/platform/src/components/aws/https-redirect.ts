@@ -48,7 +48,7 @@ export class HttpsRedirect extends Component {
     args: HttpsRedirectArgs,
     opts?: ComponentResourceOptions,
   ) {
-    super("sst:sst:HttpsRedirect", name, args, opts);
+    super("sst:aws:HttpsRedirect", name, args, opts);
 
     const parent = this;
 

@@ -181,6 +181,6 @@ export class EmbeddingsTable extends dynamic.Resource {
     args: PostgresTableInputs,
     opts?: CustomResourceOptions,
   ) {
-    super(new Provider(), `${name}.sst.EmbeddingsTable`, args, opts);
+    super(new Provider(), `${name}.sst.aws.EmbeddingsTable`, args, opts);
   }
 }

@@ -70,7 +70,7 @@ export class HostedZoneLookup extends dynamic.Resource {
   ) {
     super(
       new Provider(),
-      `${name}.sst.HostedZoneLookup`,
+      `${name}.sst.aws.HostedZoneLookup`,
       { ...args, zoneId: undefined },
       opts,
     );
