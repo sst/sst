@@ -75,6 +75,10 @@
   font-weight: 400;
   font-family: var(--__sl-font-mono);
   color: var(--color-text-secondary);
+  font-size: var(--sl-text-code);
+}
+.sl-markdown-content div.segment h4.nested span.parent {
+  font-size: calc(var(--sl-text-h4) - 0.0625rem);
 }
 
 /**
