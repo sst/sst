@@ -100,15 +100,127 @@ This function takes some simple args.
 
 </Segment>
 
-## DummyProps
+<Segment>
+### fullArgs
+
+<Section type="signature">
+```ts
+fullArgs(true, false ,true): FormatSpecifier
+```
+</Section>
+
+This function takes full args.
+
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Object</code>
+</InlineSection>
+
+- <p><code class="key">prop1?</code> <code class="primitive">boolean</code></p>
+
+  <InlineSection>
+  **Default** <code class="primitive">true</code>
+  </InlineSection>
+
+  A simple prop to add.
+
+- <p><code class="key">prop2?</code> <code class="symbol">&ldquo;</code><code class="primitive">x86_64</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">arm_64</code><code class="symbol">&rdquo;</code></p>
+
+  <InlineSection>
+  **Default** Uses x86 by default `x86_64`. But this description of the default is really long and runs more than one single line.
+  </InlineSection>
+
+  A complex prop to add with a description that is longer than one line. This matters because 
+
+  A simple example.
+
+  ```ts
+  { prop2: "x86_64" }
+  ```
+
+  A more complicated multi-line example.
+
+  ```ts
+  {
+    prop2: "x86_64"
+  }
+  ```
+
+- <p><code class="key">prop3?</code> [<code class="type">FormatSpecifier</code>](#FormatSpecifier)<code class="symbol">[]</code><code class="symbol"> | </code><code class="primitive">null</code></p>
+
+  <InlineSection>
+  **Default** <code class="primitive">true</code>
+  </InlineSection>
+
+  Just pass something in.
+
+  ```ts
+  {
+    prop2: "x86_64"
+  }
+  ```
+</Section>
+
+<InlineSection>
+**Returns** [<code class="type">FormatSpecifier</code>](#FormatSpecifier)<code class="symbol">[]</code><code class="symbol"> | </code><code class="primitive">null</code>
+</InlineSection>
+
+Here's an example.
+
+```diff lang="ts"
+  function demo() {
++   return fullArgs(true, false ,true);
+  }
+```
+
+And another example.
+
+```ts {4}
+const a = 1;
+const b = a + 1;
+
+fullArgs(true, false ,true);
+```
+
+</Segment>
+
+## Properties
 
 <Segment>
-### simpleProp?
+### primitiveProp
+
+The ARN of the resource.
+
+<InlineSection>
+**Type** <code class="symbol">&ldquo;</code><code class="primitive">x86_64</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">arm_64</code><code class="symbol">&rdquo;</code>
+</InlineSection>
+</Segment>
+
+<Segment>
+### objectProp
+
+The underlying AWS resources.
+
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Object</code>
+</InlineSection>
+
+- <p><code class="key">resource1</code> <code class="primitive">string</code></p>
+- <p><code class="key">resource2</code> [<code class="type">FormatSpecifier</code>](#FormatSpecifier)</p>
+</Section>
+
+</Segment>
+
+## DummyArgs
+
+<Segment>
+### simpleArg
 
 The CPU architecture of the lambda function.
 
 <InlineSection>
-**Type** <code class="primitive">x86_64</code><code class="symbol"> | </code><code class="primitive">arm_64</code>
+**Type** <code class="symbol">&ldquo;</code><code class="primitive">x86_64</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">arm_64</code><code class="symbol">&rdquo;</code>
 </InlineSection>
 
 <InlineSection>
@@ -174,7 +286,7 @@ A prop that takes an object with full keys.
   }
   ```
 
-- <p><code class="key">prop2?</code> <code class="primitive">x86_64</code><code class="symbol"> | </code><code class="primitive">arm_64</code></p>
+- <p><code class="key">prop2?</code> <code class="symbol">&ldquo;</code><code class="primitive">x86_64</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">arm_64</code><code class="symbol">&rdquo;</code></p>
 
   <InlineSection>
   **Default** Uses x86 by default `x86_64`. But this description of the default is really long and runs more than one single line.

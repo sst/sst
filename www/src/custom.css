@@ -34,6 +34,8 @@
   --search-button-height: 2.25rem;
 
   --color-transition: 0.25s ease;
+
+  --paragraph-spacing: 1.5rem;
 }
 
 @media (min-width: 72rem) {

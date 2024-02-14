@@ -22,8 +22,7 @@
   /* H4 Heading */
   margin-top: 0.875rem;
 }
-/* TODO: Remove if no object type lists */
-.sl-markdown-content section.tsdoc.parameters section.inline + :not(a, strong, em, del, span, input, code, :where(.not-content *)) {
+.sl-markdown-content section.tsdoc.parameters > section.inline + :not(a, strong, em, del, span, input, code, :where(.not-content *)) {
   /* Inline Section Heading */
   margin-top: 0.5625rem;
 }
@@ -50,12 +49,6 @@
 .sl-markdown-content section.tsdoc h4:not(:where(.not-content *)) {
   font-size: var(--sl-text-h5); 
 }
-/* Inline */
-.sl-markdown-content section.tsdoc.inline p:first-child {
-  /*
-  line-height: var(--sl-line-height-headings);
-  */
-}
 .sl-markdown-content section.tsdoc.inline p:first-child strong:not(:where(.not-content *)) {
   margin-right: var(--tsdoc-key-margin-right);
   font-family: var(--__sl-font-headings);
@@ -70,6 +63,9 @@
  */
 .sl-markdown-content section.tsdoc.parameters li > :last-child:not(li, ul, ol):not(a, strong, em, del, span, input, :where(.not-content *)) {
   margin-bottom: 0.75rem;
+}
+.sl-markdown-content section.tsdoc.parameters li > :last-child:is(.starlight-aside, .expressive-code) {
+  margin-bottom: 0.875rem;
 }
 
 /**

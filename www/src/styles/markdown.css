@@ -1,10 +1,28 @@
-.sl-markdown-content :not(h1, h2, h3, h4, h5, h6)
-  + :is(h1, h2, h3, h4, h5, h6):not(:where(.not-content *)),
-.sl-markdown-content :not(a, strong, em, del, span, input, code) + hr:not(:where(.not-content *)) {
-  margin-top: 3.5rem;
-}
 .sl-markdown-content strong:not(:where(.not-content *)) {
   font-weight: 600;
+}
+/**
+ * Paragraphs
+ */
+.sl-markdown-content :not(a, strong, em, del, span, input, code)
+  + :not(a, strong, em, del, span, input, code, :where(.not-content *)) {
+  margin-top: var(--paragraph-spacing);
+}
+/* Space around asides and code blocks */
+.sl-markdown-content :not(a, strong, em, del, span, input, code)
+  + :is(.starlight-aside, .expressive-code) {
+  margin-top: calc(var(--paragraph-spacing) + 0.5rem);
+}
+.sl-markdown-content :is(.starlight-aside, .expressive-code)
+  + :not(a, strong, em, del, span, input, code, h1, h2, h3, h4, h5, h6, :where(.not-content *)) {
+  margin-top: calc(var(--paragraph-spacing) + 0.4375rem);
+}
+/* Space around sections */
+.sl-markdown-content :not(h1, h2, h3, h4, h5, h6)
+  + :is(h1, h2, h3, h4, h5, h6):not(:where(.not-content *)),
+.sl-markdown-content :not(a, strong, em, del, span, input, code)
+  + hr:not(:where(.not-content *)) {
+  margin-top: 3.5rem;
 }
 
 /**
@@ -48,8 +66,12 @@
 .starlight-aside__title + .starlight-aside__content {
   margin-top: 0.75rem;
 }
-.starlight-aside__content {
-  /*font-size: var(--sl-text-sm);*/
+.sl-markdown-content .starlight-aside a:not(:where(.not-content *)),
+.sl-markdown-content .starlight-aside a:not(:where(.not-content *)):hover,
+.sl-markdown-content .starlight-aside a:not(:where(.not-content *)) code,
+.sl-markdown-content .starlight-aside a:not(:where(.not-content *)):hover code {
+  color: var(--sl-color-white);
+  text-decoration: underline;
 }
 
 /**
@@ -88,7 +110,7 @@
   border-color: var(--sl-color-border-code);
 }
 .sl-markdown-content .expressive-code .copy {
-  inset-block-start: calc(1px + var(--ec-uiPadInl) / 2);
+  inset-block-start: calc(var(--ec-brdWd) + var(--button-spacing) + 0.1rem);
 }
 .sl-markdown-content .expressive-code .copy .feedback {
   --tooltip-bg: var(--sl-color-gray-3);
@@ -222,6 +244,9 @@
 .sl-markdown-content li + li:not(:where(.not-content *)) {
   margin-top: 0.625rem;
 }
+.sl-markdown-content li > :last-child:not(li, ul, ol):not(a, strong, em, del, span, input, :where(.not-content *)) {
+  margin-bottom: calc(var(--paragraph-spacing) + 0.5rem);
+}
 .sl-markdown-content ul:not(:where(.not-content *)) > li:before {
   content: "";
   position: absolute;
@@ -244,7 +269,7 @@
   left: 0;
   top: 3px;
   border-radius: 3px;
-  color: var(--color-text-dimmed);
+  color: var(--color-text-secondary);
   font-family: var(--__sl-font-mono);
   border: 1px solid var(--divider-color);
 }
