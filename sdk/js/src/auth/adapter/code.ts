@@ -1,101 +1,69 @@
-import { APIGatewayProxyStructuredResultV2 } from "aws-lambda";
-
-import {
-  useCookie,
-  useDomainName,
-  usePathParam,
-  useQueryParam,
-  useQueryParams,
-  useResponse,
-} from "../../../api/index.js";
 import { Adapter } from "./adapter.js";
-import { randomBytes } from "crypto";
-import { decrypt, encrypt } from "../encryption.js";
+import * as jose from "jose";
+import { deleteCookie, getCookie } from "hono/cookie";
+import { UnknownStateError } from "../index.js";
 
 export function CodeAdapter(config: {
   length?: number;
   onCodeRequest: (
     code: string,
-    claims: Record<string, any>
-  ) => Promise<APIGatewayProxyStructuredResultV2>;
+    claims: Record<string, any>,
+  ) => Promise<Response>;
   onCodeInvalid: (
     code: string,
-    claims: Record<string, any>
-  ) => Promise<APIGatewayProxyStructuredResultV2>;
+    claims: Record<string, any>,
+  ) => Promise<Response>;
 }) {
   const length = config.length || 6;
-
   function generate() {
-    const buffer = randomBytes(length);
+    const buffer = crypto.getRandomValues(new Uint8Array(length));
     const otp = Array.from(buffer)
       .map((byte) => byte % 10)
       .join("");
     return otp;
   }
 
-  return async function () {
-    const step = usePathParam("step");
-
-    if (step === "authorize" || step === "connect") {
+  return function (routes, ctx) {
+    routes.get("/authorize", async (c) => {
       const code = generate();
-      const claims = useQueryParams();
+      const claims = c.req.query();
       delete claims["client_id"];
       delete claims["redirect_uri"];
       delete claims["response_type"];
       delete claims["provider"];
-      useResponse().cookies(
-        {
-          authorization: encrypt(
-            JSON.stringify({
-              claims,
-              code,
-            })
-          ),
-        },
-        {
-          maxAge: 3600,
-          secure: true,
-          sameSite: "None",
-          httpOnly: true,
-        }
-      );
-      return {
-        type: "step",
-        properties: await config.onCodeRequest(code, claims as any),
-      };
-    }
+      const authorization = await new jose.CompactEncrypt(
+        new TextEncoder().encode(
+          JSON.stringify({
+            claims,
+            code,
+          }),
+        ),
+      )
+        .setProtectedHeader({ alg: "RSA-OAEP-512", enc: "A256GCM" })
+        .encrypt(await ctx.publicKey);
+      ctx.cookie(c, "authorization", authorization, 60 * 10);
+      return ctx.forward(c, await config.onCodeRequest(code, claims as any));
+    });
 
-    if (step === "callback") {
+    routes.get("/callback", async (c) => {
+      const authorization = getCookie(c, "authorization");
+      if (!authorization) throw new UnknownStateError();
       const { code, claims } = JSON.parse(
-        decrypt(useCookie("authorization")!)!
+        new TextDecoder().decode(
+          await jose
+            .compactDecrypt(authorization!, await ctx.privateKey)
+            .then((value) => value.plaintext),
+        ),
       );
       if (!code || !claims) {
-        return {
-          type: "step",
-          properties: await config.onCodeInvalid(code, claims),
-        };
+        return ctx.forward(c, await config.onCodeInvalid(code, claims as any));
       }
-      const compare = useQueryParam("code");
+      const compare = c.req.query("code");
       if (code !== compare) {
-        return {
-          type: "step",
-          properties: await config.onCodeInvalid(code, claims),
-        };
+        return ctx.forward(c, await config.onCodeInvalid(code, claims as any));
       }
-      useResponse().cookies(
-        {
-          authorization: "",
-        },
-        {
-          expires: new Date(1),
-        }
-      );
-      return {
-        type: "success",
-        properties: {
-          claims: claims,
-        },
-      };
-    }
-  } satisfies Adapter;
+      deleteCookie(c, "authorization");
+      return ctx.forward(c, await ctx.success(c, { claims }));
+    });
+  } satisfies Adapter<{ claims: Record<string, string> }>;
 }

@@ -5,14 +5,6 @@ import { Hono } from "hono/tiny";
 import { Context } from "hono";
 import { Resource } from "../resource.js";
 import { deleteCookie, getCookie, setCookie } from "hono/cookie";
-import { CookieOptions } from "hono/utils/cookie";
-
-const COOKIES = {
-  maxAge: 60 * 15,
-  // secure: true,
-  // sameSite: "None",
-  httpOnly: true,
-} satisfies CookieOptions;
 
 interface OnSuccessResponder<T extends { type: any; properties: any }> {
   session(input: T & jose.JWTPayload): Promise<Response>;
@@ -53,12 +45,23 @@ export class InvalidSessionError extends Error {
   }
 }
 
+export type Prettify<T> = {
+  [K in keyof T]: T[K];
+} & {};
+
 export function AuthHandler<
-  Providers extends { [key: string]: Adapter<any> },
-  Sessions extends SessionBuilder,
->(
-  _sessions: Sessions,
-  providers: Providers,
+  Providers extends Record<string, Adapter<any>>,
+  Sessions extends SessionBuilder = SessionBuilder,
+  Result = {
+    [key in keyof Providers]: Prettify<
+      {
+        provider: key;
+      } & (Providers[key] extends Adapter<infer T> ? T : {})
+    >;
+  }[keyof Providers],
+>(input: {
+  session?: Sessions;
+  providers: Providers;
   callbacks: {
     index?(event: Request): Promise<Response>;
     error?(error: UnknownStateError): Promise<Response | undefined>;
@@ -73,13 +76,7 @@ export function AuthHandler<
       allowClient(clientID: string, redirect: string): Promise<boolean>;
       success(
         response: OnSuccessResponder<Sessions["$typeValues"]>,
-        input: {
-          [key in keyof Providers]: Providers[key] extends Adapter<
-            infer Success
-          >
-            ? Success
-            : never;
-        }[keyof Providers],
+        input: Result,
       ): Promise<Response>;
     };
     connect?: {
@@ -89,15 +86,17 @@ export function AuthHandler<
       start?(session: Sessions["$typeValues"], event: Request): Promise<void>;
       success?(session: Sessions["$typeValues"], input: {}): Promise<Response>;
     };
-  },
-) {
+  };
+}) {
   const auth = Resource[process.env.AUTH_ID!];
-  const privateKey = jose.importPKCS8(auth.privateKey, "RS512");
-  // const publicKey = jose.importSPKI(auth.publicKey, "RS512");
+  const privateKey = jose.importPKCS8(auth.privateKey, "RSA-OAEP-512");
+  const publicKey = jose.importSPKI(auth.publicKey, "RSA-OAEP-512", {
+    extractable: true,
+  });
   const app = new Hono();
 
-  if (!callbacks.auth.error) {
-    callbacks.auth.error = async (err) => {
+  if (!input.callbacks.auth.error) {
+    input.callbacks.auth.error = async (err) => {
       return new Response(err.message, {
         status: 400,
         headers: {
@@ -119,11 +118,7 @@ export function AuthHandler<
       return c.text("Missing code");
     }
 
-    const pub = Resource[process.env.AUTH_ID!].publicKey;
-    const { payload } = await jose.jwtVerify(
-      code as string,
-      await jose.importPKCS8(pub, "RS512"),
-    );
+    const { payload } = await jose.jwtVerify(code as string, await privateKey);
     if (payload.redirect_uri !== form.get("redirect_uri")) {
       c.status(400);
       return c.text("redirect_uri mismatch");
@@ -160,34 +155,34 @@ export function AuthHandler<
       c.status(400);
       return c.text("Missing response_type");
     }
-    const cookies = {
-      ...COOKIES,
-      ...(c.req.url.startsWith("https://")
-        ? { secure: true, sameSite: "None" }
-        : {}),
-    } as CookieOptions;
-    setCookie(c, "provider", provider, cookies);
-    setCookie(c, "response_type", response_type, cookies);
-    setCookie(c, "redirect_uri", redirect_uri, cookies);
-    setCookie(c, "state", state || "", cookies);
+    options.cookie(c, "provider", provider, 60 * 10);
+    options.cookie(c, "response_type", response_type, 60 * 10);
+    options.cookie(c, "redirect_uri", redirect_uri, 60 * 10);
+    options.cookie(c, "state", state || "", 60 * 10);
 
-    if (callbacks.auth.start) {
-      await callbacks.auth.start(c.req.raw);
+    if (input.callbacks.auth.start) {
+      await input.callbacks.auth.start(c.req.raw);
     }
     await next();
   });
 
-  const options: Omit<AdapterOptions<any>, "name"> = {
+  const options: {
+    algorithm: AdapterOptions<any>["algorithm"];
+    success: AdapterOptions<any>["success"];
+    forward: AdapterOptions<any>["forward"];
+    cookie: AdapterOptions<any>["cookie"];
+  } = {
+    algorithm: "RS512",
     async success(ctx: Context, properties: any) {
       const redirect_uri = getCookie(ctx, "redirect_uri");
       const response_type = getCookie(ctx, "response_type");
       if (!redirect_uri) {
         return options.forward(
           ctx,
-          await callbacks.auth.error!(new UnknownStateError()),
+          await input.callbacks.auth.error!(new UnknownStateError()),
         );
       }
-      return await callbacks.auth.success(
+      return await input.callbacks.auth.success(
         {
           async session(session) {
             const token = await new jose.SignJWT(session)
@@ -241,12 +236,23 @@ export function AuthHandler<
         Object.fromEntries(response.headers.entries()),
       );
     },
+    cookie(c, key, value, maxAge) {
+      setCookie(c, key, value, {
+        maxAge,
+        httpOnly: true,
+        ...(c.req.url.startsWith("https://")
+          ? { secure: true, sameSite: "None" }
+          : {}),
+      });
+    },
   };
 
-  for (const [name, value] of Object.entries(providers)) {
+  for (const [name, value] of Object.entries(input.providers)) {
     const route = new Hono();
     value(route, {
       name,
+      publicKey,
+      privateKey,
       ...options,
     });
     app.route(`/${name}`, route);
