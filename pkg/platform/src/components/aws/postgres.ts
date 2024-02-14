@@ -58,6 +58,9 @@ export interface PostgresArgs {
      */
     max?: Input<number>;
   }>;
+  /**
+   * [Transform](/docs/transform/) how this component is created.
+   */
   transform?: {
     cluster?: Transform<aws.rds.ClusterArgs>;
     instance?: Transform<aws.rds.ClusterInstanceArgs>;

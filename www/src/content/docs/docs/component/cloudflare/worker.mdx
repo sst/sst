@@ -5,6 +5,7 @@ description: Reference doc for the `Worker` component
 
 import Segment from '../../../../../components/tsdoc/Segment.astro';
 import Section from '../../../../../components/tsdoc/Section.astro';
+import NestedTitle from '../../../../../components/tsdoc/NestedTitle.astro';
 import InlineSection from '../../../../../components/tsdoc/InlineSection.astro';
 
 <Section type="about">
@@ -54,13 +55,11 @@ new Worker(name, args, opts?)
 <InlineSection>
 **Type** <code class="primitive">Object</code>
 </InlineSection>
-- <p>[<code class="key">worker</code>](#nodesworker)</p>
+- <p>[<code class="key">worker</code>](#nodes-worker)</p>
 </Section>
 </Segment>
 <Segment>
-<InlineSection>
-#### <code class="symbol">nodes.</code>worker
-</InlineSection>
+<NestedTitle id="nodes-worker" Tag="h4" parent="nodes.">worker</NestedTitle>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Output</code><code class="symbol">&lt;</code>[<code class="type">WorkerScript</code>](https://www.pulumi.com/registry/packages/cloudflare/api-docs/workerscript/)<code class="symbol">&gt;</code>
@@ -122,18 +121,16 @@ This will grant the function permissions to access the linked resources at runti
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Object</code><code class="symbol">&gt;</code>
 </InlineSection>
-- <p>[<code class="key">banner?</code>](#nodejsbanner)</p>
-- <p>[<code class="key">esbuild?</code>](#nodejsesbuild)</p>
-- <p>[<code class="key">loader?</code>](#nodejsloader)</p>
-- <p>[<code class="key">minify?</code>](#nodejsminify)</p>
-- <p>[<code class="key">sourcemap?</code>](#nodejssourcemap)</p>
+- <p>[<code class="key">banner?</code>](#nodejs-banner)</p>
+- <p>[<code class="key">esbuild?</code>](#nodejs-esbuild)</p>
+- <p>[<code class="key">loader?</code>](#nodejs-loader)</p>
+- <p>[<code class="key">minify?</code>](#nodejs-minify)</p>
+- <p>[<code class="key">sourcemap?</code>](#nodejs-sourcemap)</p>
 </Section>
 Used to configure nodejs function properties
 </Segment>
 <Segment>
-<InlineSection>
-#### <code class="symbol">nodejs.</code>banner?
-</InlineSection>
+<NestedTitle id="nodejs-banner" Tag="h4" parent="nodejs.">banner?</NestedTitle>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
@@ -147,9 +144,7 @@ nodejs: {
 ```
 </Segment>
 <Segment>
-<InlineSection>
-#### <code class="symbol">nodejs.</code>esbuild?
-</InlineSection>
+<NestedTitle id="nodejs-esbuild" Tag="h4" parent="nodejs.">esbuild?</NestedTitle>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code>[<code class="type">BuildOptions</code>](https://esbuild.github.io/api/#build)<code class="symbol">&gt;</code>
@@ -158,9 +153,7 @@ nodejs: {
 This allows you to customize esbuild config.
 </Segment>
 <Segment>
-<InlineSection>
-#### <code class="symbol">nodejs.</code>loader?
-</InlineSection>
+<NestedTitle id="nodejs-loader" Tag="h4" parent="nodejs.">loader?</NestedTitle>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Record</code><code class="symbol">&lt;</code><code class="primitive">string</code>, [<code class="type">Loader</code>](https://esbuild.github.io/api/#loader)<code class="symbol">&gt;</code><code class="symbol">&gt;</code>
@@ -176,9 +169,7 @@ nodejs: {
 ```
 </Segment>
 <Segment>
-<InlineSection>
-#### <code class="symbol">nodejs.</code>minify?
-</InlineSection>
+<NestedTitle id="nodejs-minify" Tag="h4" parent="nodejs.">minify?</NestedTitle>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">boolean</code><code class="symbol">&gt;</code>
@@ -196,9 +187,7 @@ nodejs: {
 ```
 </Segment>
 <Segment>
-<InlineSection>
-#### <code class="symbol">nodejs.</code>sourcemap?
-</InlineSection>
+<NestedTitle id="nodejs-sourcemap" Tag="h4" parent="nodejs.">sourcemap?</NestedTitle>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">boolean</code><code class="symbol">&gt;</code>

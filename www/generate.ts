@@ -14,6 +14,7 @@ async function main() {
   const modules = await buildDocs();
   for (const module of modules) {
     const fileName = `${module.name}.mdx`;
+    const linkHashes = new Map<TypeDoc.Models.DeclarationReflection, string>();
     console.info(`Generating ${fileName}...`);
     await fs.writeFile(
       path.join("src/content/docs/docs/component", fileName),
@@ -47,6 +48,7 @@ async function main() {
         ``,
         `import Segment from '${relativePath}/../../../components/tsdoc/Segment.astro';`,
         `import Section from '${relativePath}/../../../components/tsdoc/Section.astro';`,
+        `import NestedTitle from '${relativePath}/../../../components/tsdoc/NestedTitle.astro';`,
         `import InlineSection from '${relativePath}/../../../components/tsdoc/InlineSection.astro';`,
       ];
     }
@@ -155,13 +157,11 @@ async function main() {
           `</Segment>`,
           // nested props (ie. `.nodes`)
           ...useNestedTypes(g.getSignature!.type!, g.name).flatMap(
-            ({ prefix, subType }) => [
+            ({ depth, prefix, subType }) => [
               `<Segment>`,
-              `<InlineSection>`,
-              `#### <code class="symbol">${prefix}.</code>${renderName(
-                subType
-              )}`,
-              `</InlineSection>`,
+              `<NestedTitle id="${linkHashes.get(subType)}" Tag="${
+                depth === 0 ? "h4" : "h5"
+              }" parent="${prefix}.">${renderName(subType)}</NestedTitle>`,
               `<Section type="parameters">`,
               `<InlineSection>`,
               `**Type** ${renderType(subType.type!)}`,
@@ -195,15 +195,9 @@ async function main() {
 
         for (const prop of int.children) {
           console.debug(`   - interface prop ${prop.name}`);
-          const nestedTypeName = `${toPascalCase(prop.name)}Args`;
           lines.push(
             `<Segment>`,
             `### ${renderName(prop)}`,
-            // link to Transform doc
-            ...(int.name === `${useClassName()}Args` &&
-            prop.name === "transform"
-              ? ["[Transform](/docs/transform/) how this component is created."]
-              : []),
             `<Section type="parameters">`,
             `<InlineSection>`,
             `**Type** ${renderType(prop.type!)}`,
@@ -216,13 +210,11 @@ async function main() {
             `</Segment>`,
             // nested props (ie. `.domain`, `.transform`)
             ...useNestedTypes(prop.type!, prop.name).flatMap(
-              ({ prefix, subType }) => [
+              ({ depth, prefix, subType }) => [
                 `<Segment>`,
-                `<InlineSection>`,
-                `#### <code class="symbol">${prefix}.</code>${renderName(
-                  subType
-                )}`,
-                `</InlineSection>`,
+                `<NestedTitle id="${linkHashes.get(subType)}" Tag="${
+                  depth === 0 ? "h4" : "h5"
+                }" parent="${prefix}.">${renderName(subType)}</NestedTitle>`,
                 `<Section type="parameters">`,
                 `<InlineSection>`,
                 `**Type** ${renderType(subType.type!)}`,
@@ -283,9 +275,18 @@ async function main() {
         ({ depth, prefix, subType }) => {
           const hasChildren = useNestedTypes(subType.type!).length;
           const type = hasChildren ? ` ${renderType(subType.type!)}` : "";
-          const hash = `${prefix}.${subType.name}`
-            .toLowerCase()
-            .replace(/[^a-z0-9]/g, "");
+          const generateHash = (counter = 0): string => {
+            const hash = `${prefix}.${subType.name}`
+              .toLowerCase()
+              .replace(/[^a-z0-9\.]/g, "")
+              .replace(/\./g, "-");
+            +(counter > 0 ? `-${counter}` : "");
+            return Array.from(linkHashes.values()).includes(hash)
+              ? generateHash(counter + 1)
+              : hash;
+          };
+          const hash = generateHash();
+          linkHashes.set(subType, hash);
           return `${" ".repeat(depth * 2)}- <p>[<code class="key">${renderName(
             subType
           )}</code>](#${hash})${type}</p>`;

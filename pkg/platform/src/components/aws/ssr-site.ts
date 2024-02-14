@@ -279,6 +279,9 @@ export interface SsrSiteArgs {
      */
     paths?: Input<"none" | "all" | "versioned" | string[]>;
   }>;
+  /**
+   * [Transform](/docs/transform/) how this component is created.
+   */
   transform?: {
     plan?: Transform<Plan>;
   };

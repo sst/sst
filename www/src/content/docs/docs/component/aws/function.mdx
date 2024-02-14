@@ -5,6 +5,7 @@ description: Reference doc for the `Function` component
 
 import Segment from '../../../../../components/tsdoc/Segment.astro';
 import Section from '../../../../../components/tsdoc/Section.astro';
+import NestedTitle from '../../../../../components/tsdoc/NestedTitle.astro';
 import InlineSection from '../../../../../components/tsdoc/InlineSection.astro';
 
 <Section type="about">
@@ -63,14 +64,12 @@ new Function(name, args, opts?)
 <InlineSection>
 **Type** <code class="primitive">Object</code>
 </InlineSection>
-- <p>[<code class="key">function</code>](#nodesfunction)</p>
-- <p>[<code class="key">role</code>](#nodesrole)</p>
+- <p>[<code class="key">function</code>](#nodes-function)</p>
+- <p>[<code class="key">role</code>](#nodes-role)</p>
 </Section>
 </Segment>
 <Segment>
-<InlineSection>
-#### <code class="symbol">nodes.</code>function
-</InlineSection>
+<NestedTitle id="nodes-function" Tag="h4" parent="nodes.">function</NestedTitle>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Output</code><code class="symbol">&lt;</code>[<code class="type">Function</code>](https://www.pulumi.com/registry/packages/aws/api-docs/lambda/function/)<code class="symbol">&gt;</code>
@@ -78,9 +77,7 @@ new Function(name, args, opts?)
 </Section>
 </Segment>
 <Segment>
-<InlineSection>
-#### <code class="symbol">nodes.</code>role
-</InlineSection>
+<NestedTitle id="nodes-role" Tag="h4" parent="nodes.">role</NestedTitle>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Output</code><code class="symbol">&lt;</code>[<code class="type">Role</code>](https://www.pulumi.com/registry/packages/aws/api-docs/iam/role/)<code class="symbol">&gt;</code>
@@ -143,8 +140,8 @@ Typically, omit `bundle`. If omitted, the handler file is bundled with esbuild, 
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Object</code><code class="symbol">[]</code><code class="symbol">&gt;</code>
 </InlineSection>
-- <p>[<code class="key">from</code>](#copyfilesfrom)</p>
-- <p>[<code class="key">to?</code>](#copyfilesto)</p>
+- <p>[<code class="key">from</code>](#copyfiles-from)</p>
+- <p>[<code class="key">to?</code>](#copyfiles-to)</p>
 </Section>
 Used to configure additional files to copy into the function bundle
 ```js
@@ -154,9 +151,7 @@ Used to configure additional files to copy into the function bundle
 ```
 </Segment>
 <Segment>
-<InlineSection>
-#### <code class="symbol">copyFiles[].</code>from
-</InlineSection>
+<NestedTitle id="copyfiles-from" Tag="h4" parent="copyFiles[].">from</NestedTitle>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
@@ -165,9 +160,7 @@ Used to configure additional files to copy into the function bundle
 Source path relative to sst.config.ts
 </Segment>
 <Segment>
-<InlineSection>
-#### <code class="symbol">copyFiles[].</code>to?
-</InlineSection>
+<NestedTitle id="copyfiles-to" Tag="h4" parent="copyFiles[].">to?</NestedTitle>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
@@ -265,7 +258,7 @@ This will grant the function permissions to access the linked resources at runti
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Object</code><code class="symbol">&gt;</code>
 </InlineSection>
-- <p>[<code class="key">retention?</code>](#loggingretention)</p>
+- <p>[<code class="key">retention?</code>](#logging-retention)</p>
 </Section>
 
 <InlineSection>
@@ -281,9 +274,7 @@ Configure function logging
 ```
 </Segment>
 <Segment>
-<InlineSection>
-#### <code class="symbol">logging.</code>retention?
-</InlineSection>
+<NestedTitle id="logging-retention" Tag="h4" parent="logging.">retention?</NestedTitle>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="symbol">&ldquo;</code><code class="primitive">1 day</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">3 days</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">5 days</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">1 week</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">2 weeks</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">1 month</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">2 months</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">3 months</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">4 months</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">5 months</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">6 months</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">1 year</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">13 months</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">18 months</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">2 years</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">3 years</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">5 years</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">6 years</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">7 years</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">8 years</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">9 years</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">10 years</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">forever</code><code class="symbol">&rdquo;</code><code class="symbol">&gt;</code>
@@ -319,21 +310,19 @@ The amount of memory allocated for the function.
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Object</code><code class="symbol">&gt;</code>
 </InlineSection>
-- <p>[<code class="key">banner?</code>](#nodejsbanner)</p>
-- <p>[<code class="key">esbuild?</code>](#nodejsesbuild)</p>
-- <p>[<code class="key">format?</code>](#nodejsformat)</p>
-- <p>[<code class="key">install?</code>](#nodejsinstall)</p>
-- <p>[<code class="key">loader?</code>](#nodejsloader)</p>
-- <p>[<code class="key">minify?</code>](#nodejsminify)</p>
-- <p>[<code class="key">sourcemap?</code>](#nodejssourcemap)</p>
-- <p>[<code class="key">splitting?</code>](#nodejssplitting)</p>
+- <p>[<code class="key">banner?</code>](#nodejs-banner)</p>
+- <p>[<code class="key">esbuild?</code>](#nodejs-esbuild)</p>
+- <p>[<code class="key">format?</code>](#nodejs-format)</p>
+- <p>[<code class="key">install?</code>](#nodejs-install)</p>
+- <p>[<code class="key">loader?</code>](#nodejs-loader)</p>
+- <p>[<code class="key">minify?</code>](#nodejs-minify)</p>
+- <p>[<code class="key">sourcemap?</code>](#nodejs-sourcemap)</p>
+- <p>[<code class="key">splitting?</code>](#nodejs-splitting)</p>
 </Section>
 Used to configure nodejs function properties
 </Segment>
 <Segment>
-<InlineSection>
-#### <code class="symbol">nodejs.</code>banner?
-</InlineSection>
+<NestedTitle id="nodejs-banner" Tag="h4" parent="nodejs.">banner?</NestedTitle>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
@@ -347,9 +336,7 @@ nodejs: {
 ```
 </Segment>
 <Segment>
-<InlineSection>
-#### <code class="symbol">nodejs.</code>esbuild?
-</InlineSection>
+<NestedTitle id="nodejs-esbuild" Tag="h4" parent="nodejs.">esbuild?</NestedTitle>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code>[<code class="type">BuildOptions</code>](https://esbuild.github.io/api/#build)<code class="symbol">&gt;</code>
@@ -358,9 +345,7 @@ nodejs: {
 This allows you to customize esbuild config.
 </Segment>
 <Segment>
-<InlineSection>
-#### <code class="symbol">nodejs.</code>format?
-</InlineSection>
+<NestedTitle id="nodejs-format" Tag="h4" parent="nodejs.">format?</NestedTitle>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="symbol">&ldquo;</code><code class="primitive">cjs</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">esm</code><code class="symbol">&rdquo;</code><code class="symbol">&gt;</code>
@@ -378,9 +363,7 @@ nodejs: {
 ```
 </Segment>
 <Segment>
-<InlineSection>
-#### <code class="symbol">nodejs.</code>install?
-</InlineSection>
+<NestedTitle id="nodejs-install" Tag="h4" parent="nodejs.">install?</NestedTitle>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">[]</code><code class="symbol">&gt;</code>
@@ -394,9 +377,7 @@ nodejs: {
 ```
 </Segment>
 <Segment>
-<InlineSection>
-#### <code class="symbol">nodejs.</code>loader?
-</InlineSection>
+<NestedTitle id="nodejs-loader" Tag="h4" parent="nodejs.">loader?</NestedTitle>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Record</code><code class="symbol">&lt;</code><code class="primitive">string</code>, [<code class="type">Loader</code>](https://esbuild.github.io/api/#loader)<code class="symbol">&gt;</code><code class="symbol">&gt;</code>
@@ -412,9 +393,7 @@ nodejs: {
 ```
 </Segment>
 <Segment>
-<InlineSection>
-#### <code class="symbol">nodejs.</code>minify?
-</InlineSection>
+<NestedTitle id="nodejs-minify" Tag="h4" parent="nodejs.">minify?</NestedTitle>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">boolean</code><code class="symbol">&gt;</code>
@@ -432,9 +411,7 @@ nodejs: {
 ```
 </Segment>
 <Segment>
-<InlineSection>
-#### <code class="symbol">nodejs.</code>sourcemap?
-</InlineSection>
+<NestedTitle id="nodejs-sourcemap" Tag="h4" parent="nodejs.">sourcemap?</NestedTitle>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">boolean</code><code class="symbol">&gt;</code>
@@ -452,9 +429,7 @@ nodejs: {
 ```
 </Segment>
 <Segment>
-<InlineSection>
-#### <code class="symbol">nodejs.</code>splitting?
-</InlineSection>
+<NestedTitle id="nodejs-splitting" Tag="h4" parent="nodejs.">splitting?</NestedTitle>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">boolean</code><code class="symbol">&gt;</code>
@@ -477,8 +452,8 @@ nodejs: {
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Object</code><code class="symbol">[]</code><code class="symbol">&gt;</code>
 </InlineSection>
-- <p>[<code class="key">actions</code>](#permissionsactions)</p>
-- <p>[<code class="key">resources</code>](#permissionsresources)</p>
+- <p>[<code class="key">actions</code>](#permissions-actions)</p>
+- <p>[<code class="key">resources</code>](#permissions-resources)</p>
 </Section>
 
 <InlineSection>
@@ -523,9 +498,7 @@ Granting function permissions to access all resources.
 ```
 </Segment>
 <Segment>
-<InlineSection>
-#### <code class="symbol">permissions[].</code>actions
-</InlineSection>
+<NestedTitle id="permissions-actions" Tag="h4" parent="permissions[].">actions</NestedTitle>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">string</code><code class="symbol">[]</code>
@@ -534,9 +507,7 @@ Granting function permissions to access all resources.
 IAM actions to allow to perform on the resources.
 </Segment>
 <Segment>
-<InlineSection>
-#### <code class="symbol">permissions[].</code>resources
-</InlineSection>
+<NestedTitle id="permissions-resources" Tag="h4" parent="permissions[].">resources</NestedTitle>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code><code class="symbol">[]</code>
@@ -600,18 +571,16 @@ The amount of time that Lambda allows a function to run before stopping it.
 </Segment>
 <Segment>
 ### transform?
-[Transform](/docs/transform/) how this component is created.
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Object</code>
 </InlineSection>
-- <p>[<code class="key">function?</code>](#transformfunction)</p>
+- <p>[<code class="key">function?</code>](#transform-function)</p>
 </Section>
+[Transform](/docs/transform/) how this component is created.
 </Segment>
 <Segment>
-<InlineSection>
-#### <code class="symbol">transform.</code>function?
-</InlineSection>
+<NestedTitle id="transform-function" Tag="h4" parent="transform.">function?</NestedTitle>
 <Section type="parameters">
 <InlineSection>
 **Type** [<code class="type">FunctionArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/lambda/function/#inputs)<code class="symbol"> | </code><code class="symbol">(</code><code class="primitive">args</code><code class="symbol">: </code>[<code class="type">FunctionArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/lambda/function/#inputs)<code class="symbol"> => </code>[<code class="type">FunctionArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/lambda/function/#inputs)<code class="symbol"> | </code><code class="primitive">void</code><code class="symbol">)</code>
@@ -624,14 +593,14 @@ The amount of time that Lambda allows a function to run before stopping it.
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">boolean</code><code class="symbol"> | </code><code class="primitive">Object</code><code class="symbol">&gt;</code>
 </InlineSection>
-- <p>[<code class="key">authorization?</code>](#urlauthorization)</p>
-- <p>[<code class="key">cors?</code>](#urlcors) <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">boolean</code><code class="symbol"> | </code><code class="primitive">Object</code><code class="symbol">&gt;</code></p>
-  - <p>[<code class="key">allowCredentials?</code>](#urlcorsallowcredentials)</p>
-  - <p>[<code class="key">allowHeaders?</code>](#urlcorsallowheaders)</p>
-  - <p>[<code class="key">allowMethods?</code>](#urlcorsallowmethods)</p>
-  - <p>[<code class="key">allowOrigins?</code>](#urlcorsalloworigins)</p>
-  - <p>[<code class="key">exposeHeaders?</code>](#urlcorsexposeheaders)</p>
-  - <p>[<code class="key">maxAge?</code>](#urlcorsmaxage)</p>
+- <p>[<code class="key">authorization?</code>](#url-authorization)</p>
+- <p>[<code class="key">cors?</code>](#url-cors) <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">boolean</code><code class="symbol"> | </code><code class="primitive">Object</code><code class="symbol">&gt;</code></p>
+  - <p>[<code class="key">allowCredentials?</code>](#url-cors-allowcredentials)</p>
+  - <p>[<code class="key">allowHeaders?</code>](#url-cors-allowheaders)</p>
+  - <p>[<code class="key">allowMethods?</code>](#url-cors-allowmethods)</p>
+  - <p>[<code class="key">allowOrigins?</code>](#url-cors-alloworigins)</p>
+  - <p>[<code class="key">exposeHeaders?</code>](#url-cors-exposeheaders)</p>
+  - <p>[<code class="key">maxAge?</code>](#url-cors-maxage)</p>
 </Section>
 
 <InlineSection>
@@ -656,9 +625,7 @@ Enable function URLs, a dedicated endpoint for your Lambda function.
 ```
 </Segment>
 <Segment>
-<InlineSection>
-#### <code class="symbol">url.</code>authorization?
-</InlineSection>
+<NestedTitle id="url-authorization" Tag="h4" parent="url.">authorization?</NestedTitle>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="symbol">&ldquo;</code><code class="primitive">none</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">iam</code><code class="symbol">&rdquo;</code><code class="symbol">&gt;</code>
@@ -678,9 +645,7 @@ The authorization for the function URL
 ```
 </Segment>
 <Segment>
-<InlineSection>
-#### <code class="symbol">url.</code>cors?
-</InlineSection>
+<NestedTitle id="url-cors" Tag="h4" parent="url.">cors?</NestedTitle>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">boolean</code><code class="symbol"> | </code><code class="primitive">Object</code><code class="symbol">&gt;</code>
@@ -711,9 +676,7 @@ CORS support for the function URL
 ```
 </Segment>
 <Segment>
-<InlineSection>
-#### <code class="symbol">url.cors.</code>allowCredentials?
-</InlineSection>
+<NestedTitle id="url-cors-allowcredentials" Tag="h5" parent="url.cors.">allowCredentials?</NestedTitle>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">boolean</code><code class="symbol">&gt;</code>
@@ -722,9 +685,7 @@ CORS support for the function URL
 Whether to allow cookies or other credentials in requests to the function URL. The default is `false`.
 </Segment>
 <Segment>
-<InlineSection>
-#### <code class="symbol">url.cors.</code>allowHeaders?
-</InlineSection>
+<NestedTitle id="url-cors-allowheaders" Tag="h5" parent="url.cors.">allowHeaders?</NestedTitle>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code><code class="symbol">[]</code><code class="symbol">&gt;</code>
@@ -733,9 +694,7 @@ Whether to allow cookies or other credentials in requests to the function URL. T
 The HTTP headers that origins can include in requests to the function URL. For example: `["date", "keep-alive", "x-custom-header"]`.
 </Segment>
 <Segment>
-<InlineSection>
-#### <code class="symbol">url.cors.</code>allowMethods?
-</InlineSection>
+<NestedTitle id="url-cors-allowmethods" Tag="h5" parent="url.cors.">allowMethods?</NestedTitle>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Input</code><code class="symbol">&lt;</code><code class="symbol">&ldquo;</code><code class="primitive">*</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">DELETE</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">GET</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">HEAD</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">OPTIONS</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">PATCH</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">POST</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">PUT</code><code class="symbol">&rdquo;</code><code class="symbol">&gt;</code><code class="symbol">[]</code><code class="symbol">&gt;</code>
@@ -744,9 +703,7 @@ The HTTP headers that origins can include in requests to the function URL. For e
 The HTTP methods that are allowed when calling the function URL. For example: `["GET", "POST", "DELETE"]`, or the wildcard character (`["*"]`).
 </Segment>
 <Segment>
-<InlineSection>
-#### <code class="symbol">url.cors.</code>allowOrigins?
-</InlineSection>
+<NestedTitle id="url-cors-alloworigins" Tag="h5" parent="url.cors.">allowOrigins?</NestedTitle>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code><code class="symbol">[]</code><code class="symbol">&gt;</code>
@@ -755,9 +712,7 @@ The HTTP methods that are allowed when calling the function URL. For example: `[
 The origins that can access the function URL. You can list any number of specific origins (or the wildcard character (`"*"`)), separated by a comma. For example: `["https://www.example.com", "http://localhost:60905"]`.
 </Segment>
 <Segment>
-<InlineSection>
-#### <code class="symbol">url.cors.</code>exposeHeaders?
-</InlineSection>
+<NestedTitle id="url-cors-exposeheaders" Tag="h5" parent="url.cors.">exposeHeaders?</NestedTitle>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code><code class="symbol">[]</code><code class="symbol">&gt;</code>
@@ -766,9 +721,7 @@ The origins that can access the function URL. You can list any number of specifi
 The HTTP headers in your function response that you want to expose to origins that call the function URL.
 </Segment>
 <Segment>
-<InlineSection>
-#### <code class="symbol">url.cors.</code>maxAge?
-</InlineSection>
+<NestedTitle id="url-cors-maxage" Tag="h5" parent="url.cors.">maxAge?</NestedTitle>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="symbol">&ldquo;</code><code class="primitive">$\{number\} second</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">$\{number\} seconds</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">$\{number\} minute</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">$\{number\} minutes</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">$\{number\} hour</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">$\{number\} hours</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">$\{number\} day</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">$\{number\} days</code><code class="symbol">&rdquo;</code><code class="symbol">&gt;</code>

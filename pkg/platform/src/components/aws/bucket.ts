@@ -26,6 +26,9 @@ export interface BucketArgs {
    * ```
    */
   public?: Input<boolean>;
+  /**
+   * [Transform](/docs/transform/) how this component is created.
+   */
   transform?: {
     bucket?: Transform<aws.s3.BucketV2Args>;
     bucketPolicy?: Transform<aws.s3.BucketPolicyArgs>;

@@ -5,6 +5,7 @@ description: Reference doc for the `Cron` component
 
 import Segment from '../../../../../components/tsdoc/Segment.astro';
 import Section from '../../../../../components/tsdoc/Section.astro';
+import NestedTitle from '../../../../../components/tsdoc/NestedTitle.astro';
 import InlineSection from '../../../../../components/tsdoc/InlineSection.astro';
 
 <Section type="about">
@@ -45,15 +46,13 @@ new Cron(name, args, opts?)
 <InlineSection>
 **Type** <code class="primitive">Object</code>
 </InlineSection>
-- <p>[<code class="key">job</code>](#nodesjob)</p>
-- <p>[<code class="key">rule</code>](#nodesrule)</p>
-- <p>[<code class="key">target</code>](#nodestarget)</p>
+- <p>[<code class="key">job</code>](#nodes-job)</p>
+- <p>[<code class="key">rule</code>](#nodes-rule)</p>
+- <p>[<code class="key">target</code>](#nodes-target)</p>
 </Section>
 </Segment>
 <Segment>
-<InlineSection>
-#### <code class="symbol">nodes.</code>job
-</InlineSection>
+<NestedTitle id="nodes-job" Tag="h4" parent="nodes.">job</NestedTitle>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Output</code><code class="symbol">&lt;</code>[<code class="type">Function</code>](function/)<code class="symbol">&gt;</code>
@@ -61,9 +60,7 @@ new Cron(name, args, opts?)
 </Section>
 </Segment>
 <Segment>
-<InlineSection>
-#### <code class="symbol">nodes.</code>rule
-</InlineSection>
+<NestedTitle id="nodes-rule" Tag="h4" parent="nodes.">rule</NestedTitle>
 <Section type="parameters">
 <InlineSection>
 **Type** [<code class="type">EventRule</code>](https://www.pulumi.com/registry/packages/aws/api-docs/cloudwatch/eventrule/)
@@ -71,9 +68,7 @@ new Cron(name, args, opts?)
 </Section>
 </Segment>
 <Segment>
-<InlineSection>
-#### <code class="symbol">nodes.</code>target
-</InlineSection>
+<NestedTitle id="nodes-target" Tag="h4" parent="nodes.">target</NestedTitle>
 <Section type="parameters">
 <InlineSection>
 **Type** [<code class="type">EventTarget</code>](https://www.pulumi.com/registry/packages/aws/api-docs/cloudwatch/eventtarget/)
@@ -88,7 +83,7 @@ new Cron(name, args, opts?)
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol"> | </code><code class="primitive">Object</code><code class="symbol">&gt;</code>
 </InlineSection>
-- <p>[<code class="key">function</code>](#jobfunction)</p>
+- <p>[<code class="key">function</code>](#job-function)</p>
 </Section>
 Path to the handler for the cron function.
 ```js
@@ -98,9 +93,7 @@ Path to the handler for the cron function.
 ```
 </Segment>
 <Segment>
-<InlineSection>
-#### <code class="symbol">job.</code>function
-</InlineSection>
+<NestedTitle id="job-function" Tag="h4" parent="job.">function</NestedTitle>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol"> | </code>[<code class="type">FunctionArgs</code>](function/#functionargs)<code class="symbol">&gt;</code>
@@ -152,19 +145,17 @@ cron(15 10 * * ? *)    // 10:15 AM (UTC) every day.
 </Segment>
 <Segment>
 ### transform?
-[Transform](/docs/transform/) how this component is created.
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Object</code>
 </InlineSection>
-- <p>[<code class="key">rule?</code>](#transformrule)</p>
-- <p>[<code class="key">target?</code>](#transformtarget)</p>
+- <p>[<code class="key">rule?</code>](#transform-rule)</p>
+- <p>[<code class="key">target?</code>](#transform-target)</p>
 </Section>
+[Transform](/docs/transform/) how this component is created.
 </Segment>
 <Segment>
-<InlineSection>
-#### <code class="symbol">transform.</code>rule?
-</InlineSection>
+<NestedTitle id="transform-rule" Tag="h4" parent="transform.">rule?</NestedTitle>
 <Section type="parameters">
 <InlineSection>
 **Type** [<code class="type">EventRuleArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/cloudwatch/eventrule/#inputs)<code class="symbol"> | </code><code class="symbol">(</code><code class="primitive">args</code><code class="symbol">: </code>[<code class="type">EventRuleArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/cloudwatch/eventrule/#inputs)<code class="symbol"> => </code>[<code class="type">EventRuleArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/cloudwatch/eventrule/#inputs)<code class="symbol"> | </code><code class="primitive">void</code><code class="symbol">)</code>
@@ -172,9 +163,7 @@ cron(15 10 * * ? *)    // 10:15 AM (UTC) every day.
 </Section>
 </Segment>
 <Segment>
-<InlineSection>
-#### <code class="symbol">transform.</code>target?
-</InlineSection>
+<NestedTitle id="transform-target" Tag="h4" parent="transform.">target?</NestedTitle>
 <Section type="parameters">
 <InlineSection>
 **Type** [<code class="type">EventTargetArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/cloudwatch/eventtarget/#inputs)<code class="symbol"> | </code><code class="symbol">(</code><code class="primitive">args</code><code class="symbol">: </code>[<code class="type">EventTargetArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/cloudwatch/eventtarget/#inputs)<code class="symbol"> => </code>[<code class="type">EventTargetArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/cloudwatch/eventtarget/#inputs)<code class="symbol"> | </code><code class="primitive">void</code><code class="symbol">)</code>

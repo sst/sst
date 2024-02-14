@@ -453,6 +453,9 @@ export interface FunctionArgs {
       to?: Input<string>;
     }[]
   >;
+  /**
+   * [Transform](/docs/transform/) how this component is created.
+   */
   transform?: {
     function?: Transform<aws.lambda.FunctionArgs>;
   };

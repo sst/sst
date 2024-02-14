@@ -63,6 +63,9 @@ export interface CronArgs {
    * ```
    */
   schedule: Input<`rate(${string})` | `cron(${string})`>;
+  /**
+   * [Transform](/docs/transform/) how this component is created.
+   */
   transform?: {
     rule?: Transform<aws.cloudwatch.EventRuleArgs>;
     target?: Transform<aws.cloudwatch.EventTargetArgs>;

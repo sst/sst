@@ -5,6 +5,7 @@ description: Reference doc for the `Bucket` component
 
 import Segment from '../../../../../components/tsdoc/Segment.astro';
 import Section from '../../../../../components/tsdoc/Section.astro';
+import NestedTitle from '../../../../../components/tsdoc/NestedTitle.astro';
 import InlineSection from '../../../../../components/tsdoc/InlineSection.astro';
 
 <Section type="about">
@@ -71,14 +72,12 @@ The S3 bucket name.
 <InlineSection>
 **Type** <code class="primitive">Object</code>
 </InlineSection>
-- <p>[<code class="key">bucket</code>](#nodesbucket)</p>
+- <p>[<code class="key">bucket</code>](#nodes-bucket)</p>
 </Section>
 The underlying AWS resources.
 </Segment>
 <Segment>
-<InlineSection>
-#### <code class="symbol">nodes.</code>bucket
-</InlineSection>
+<NestedTitle id="nodes-bucket" Tag="h4" parent="nodes.">bucket</NestedTitle>
 <Section type="parameters">
 <InlineSection>
 **Type** [<code class="type">BucketV2</code>](https://www.pulumi.com/registry/packages/aws/api-docs/s3/bucketv2/)
@@ -109,19 +108,17 @@ Enable public access to the files in the bucket
 </Segment>
 <Segment>
 ### transform?
-[Transform](/docs/transform/) how this component is created.
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Object</code>
 </InlineSection>
-- <p>[<code class="key">bucket?</code>](#transformbucket)</p>
-- <p>[<code class="key">bucketPolicy?</code>](#transformbucketpolicy)</p>
+- <p>[<code class="key">bucket?</code>](#transform-bucket)</p>
+- <p>[<code class="key">bucketPolicy?</code>](#transform-bucketpolicy)</p>
 </Section>
+[Transform](/docs/transform/) how this component is created.
 </Segment>
 <Segment>
-<InlineSection>
-#### <code class="symbol">transform.</code>bucket?
-</InlineSection>
+<NestedTitle id="transform-bucket" Tag="h4" parent="transform.">bucket?</NestedTitle>
 <Section type="parameters">
 <InlineSection>
 **Type** [<code class="type">BucketV2Args</code>](https://www.pulumi.com/registry/packages/aws/api-docs/s3/bucketv2/#inputs)<code class="symbol"> | </code><code class="symbol">(</code><code class="primitive">args</code><code class="symbol">: </code>[<code class="type">BucketV2Args</code>](https://www.pulumi.com/registry/packages/aws/api-docs/s3/bucketv2/#inputs)<code class="symbol"> => </code>[<code class="type">BucketV2Args</code>](https://www.pulumi.com/registry/packages/aws/api-docs/s3/bucketv2/#inputs)<code class="symbol"> | </code><code class="primitive">void</code><code class="symbol">)</code>
@@ -129,9 +126,7 @@ Enable public access to the files in the bucket
 </Section>
 </Segment>
 <Segment>
-<InlineSection>
-#### <code class="symbol">transform.</code>bucketPolicy?
-</InlineSection>
+<NestedTitle id="transform-bucketpolicy" Tag="h4" parent="transform.">bucketPolicy?</NestedTitle>
 <Section type="parameters">
 <InlineSection>
 **Type** [<code class="type">BucketPolicyArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/s3/bucketpolicy/#inputs)<code class="symbol"> | </code><code class="symbol">(</code><code class="primitive">args</code><code class="symbol">: </code>[<code class="type">BucketPolicyArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/s3/bucketpolicy/#inputs)<code class="symbol"> => </code>[<code class="type">BucketPolicyArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/s3/bucketpolicy/#inputs)<code class="symbol"> | </code><code class="primitive">void</code><code class="symbol">)</code>
