@@ -89,10 +89,6 @@ export function AuthHandler<
   };
 }) {
   const auth = Resource[process.env.AUTH_ID!];
-  const privateKey = jose.importPKCS8(auth.privateKey, "RSA-OAEP-512");
-  const publicKey = jose.importSPKI(auth.publicKey, "RSA-OAEP-512", {
-    extractable: true,
-  });
   const app = new Hono();
 
   if (!input.callbacks.auth.error) {
@@ -106,6 +102,90 @@ export function AuthHandler<
     };
   }
 
+  const options: Omit<AdapterOptions<any>, "name"> = {
+    signing: {
+      privateKey: jose.importPKCS8(auth.privateKey, "RS512"),
+      publicKey: jose.importSPKI(auth.publicKey, "RS512"),
+    },
+    encryption: {
+      privateKey: jose.importPKCS8(auth.privateKey, "RSA-OAEP-512"),
+      publicKey: jose.importSPKI(auth.publicKey, "RSA-OAEP-512"),
+    },
+    algorithm: "RS512",
+    async success(ctx: Context, properties: any) {
+      const redirect_uri = getCookie(ctx, "redirect_uri");
+      const response_type = getCookie(ctx, "response_type");
+      if (!redirect_uri) {
+        return options.forward(
+          ctx,
+          await input.callbacks.auth.error!(new UnknownStateError()),
+        );
+      }
+      return await input.callbacks.auth.success(
+        {
+          async session(session) {
+            const token = await new jose.SignJWT(session)
+              .setProtectedHeader({ alg: "RS512" })
+              .setExpirationTime("1yr")
+              .sign(await options.signing.privateKey);
+
+            deleteCookie(ctx, "provider");
+            deleteCookie(ctx, "response_type");
+            deleteCookie(ctx, "redirect_uri");
+            deleteCookie(ctx, "state");
+
+            const client_id = getCookie(ctx, "client_id");
+            const state = getCookie(ctx, "state");
+
+            if (response_type === "token") {
+              const location = new URL(redirect_uri);
+              location.hash = `access_token=${token}&state=${state || ""}`;
+              return ctx.redirect(location.toString(), 302);
+            }
+
+            if (response_type === "code") {
+              // This allows the code to be reused within a 30 second window
+              // The code should be single use but we're making this tradeoff to remain stateless
+              // In the future can store this in a dynamo table to ensure single use
+              const code = await new jose.SignJWT({
+                client_id,
+                redirect_uri,
+                token,
+              })
+                .setProtectedHeader({ alg: "RS512" })
+                .setExpirationTime("30s")
+                .sign(await options.signing.privateKey);
+              const location = new URL(redirect_uri);
+              location.searchParams.set("code", code);
+              location.searchParams.set("state", state || "");
+              return ctx.redirect(location.toString(), 302);
+            }
+
+            ctx.status(400);
+            return ctx.text(`Unsupported response_type: ${response_type}`);
+          },
+        },
+        properties,
+      );
+    },
+    forward(ctx: Context, response: Response) {
+      return ctx.newResponse(
+        response.body,
+        response.status as any,
+        Object.fromEntries(response.headers.entries()),
+      );
+    },
+    cookie(c, key, value, maxAge) {
+      setCookie(c, key, value, {
+        maxAge,
+        httpOnly: true,
+        ...(c.req.url.startsWith("https://")
+          ? { secure: true, sameSite: "None" }
+          : {}),
+      });
+    },
+  };
+
   app.get("/token", async (c) => {
     const form = await c.req.formData();
     if (form.get("grant_type") !== "authorization_code") {
@@ -118,7 +198,10 @@ export function AuthHandler<
       return c.text("Missing code");
     }
 
-    const { payload } = await jose.jwtVerify(code as string, await privateKey);
+    const { payload } = await jose.jwtVerify(
+      code as string,
+      await options.signing.publicKey,
+    );
     if (payload.redirect_uri !== form.get("redirect_uri")) {
       c.status(400);
       return c.text("redirect_uri mismatch");
@@ -166,93 +249,10 @@ export function AuthHandler<
     await next();
   });
 
-  const options: {
-    algorithm: AdapterOptions<any>["algorithm"];
-    success: AdapterOptions<any>["success"];
-    forward: AdapterOptions<any>["forward"];
-    cookie: AdapterOptions<any>["cookie"];
-  } = {
-    algorithm: "RS512",
-    async success(ctx: Context, properties: any) {
-      const redirect_uri = getCookie(ctx, "redirect_uri");
-      const response_type = getCookie(ctx, "response_type");
-      if (!redirect_uri) {
-        return options.forward(
-          ctx,
-          await input.callbacks.auth.error!(new UnknownStateError()),
-        );
-      }
-      return await input.callbacks.auth.success(
-        {
-          async session(session) {
-            const token = await new jose.SignJWT(session)
-              .setProtectedHeader({ alg: "RS512" })
-              .setExpirationTime("1yr")
-              .sign(await privateKey);
-
-            deleteCookie(ctx, "provider");
-            deleteCookie(ctx, "response_type");
-            deleteCookie(ctx, "redirect_uri");
-            deleteCookie(ctx, "state");
-
-            const client_id = getCookie(ctx, "client_id");
-            const state = getCookie(ctx, "state");
-
-            if (response_type === "token") {
-              const location = new URL(redirect_uri);
-              location.hash = `access_token=${token}&state=${state || ""}`;
-              return ctx.redirect(location.toString(), 302);
-            }
-
-            if (response_type === "code") {
-              // This allows the code to be reused within a 30 second window
-              // The code should be single use but we're making this tradeoff to remain stateless
-              // In the future can store this in a dynamo table to ensure single use
-              const code = await new jose.SignJWT({
-                client_id,
-                redirect_uri,
-                token,
-              })
-                .setProtectedHeader({ alg: "RS512" })
-                .setExpirationTime("30s")
-                .sign(await privateKey);
-              const location = new URL(redirect_uri);
-              location.searchParams.set("code", code);
-              location.searchParams.set("state", state || "");
-              return ctx.redirect(location.toString(), 302);
-            }
-
-            ctx.status(400);
-            return ctx.text(`Unsupported response_type: ${response_type}`);
-          },
-        },
-        properties,
-      );
-    },
-    forward(ctx: Context, response: Response) {
-      return ctx.newResponse(
-        response.body,
-        response.status as any,
-        Object.fromEntries(response.headers.entries()),
-      );
-    },
-    cookie(c, key, value, maxAge) {
-      setCookie(c, key, value, {
-        maxAge,
-        httpOnly: true,
-        ...(c.req.url.startsWith("https://")
-          ? { secure: true, sameSite: "None" }
-          : {}),
-      });
-    },
-  };
-
   for (const [name, value] of Object.entries(input.providers)) {
     const route = new Hono();
     value(route, {
       name,
-      publicKey,
-      privateKey,
       ...options,
     });
     app.route(`/${name}`, route);

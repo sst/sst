@@ -40,7 +40,7 @@ export function CodeAdapter(config: {
         ),
       )
         .setProtectedHeader({ alg: "RSA-OAEP-512", enc: "A256GCM" })
-        .encrypt(await ctx.publicKey);
+        .encrypt(await ctx.encryption.publicKey);
       ctx.cookie(c, "authorization", authorization, 60 * 10);
       return ctx.forward(c, await config.onCodeRequest(code, claims as any));
     });
@@ -51,7 +51,7 @@ export function CodeAdapter(config: {
       const { code, claims } = JSON.parse(
         new TextDecoder().decode(
           await jose
-            .compactDecrypt(authorization!, await ctx.privateKey)
+            .compactDecrypt(authorization!, await ctx.encryption.privateKey)
             .then((value) => value.plaintext),
         ),
       );
