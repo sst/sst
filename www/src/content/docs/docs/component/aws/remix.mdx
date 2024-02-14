@@ -67,12 +67,16 @@ The CloudFront URL of the website.
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Object</code><code class="symbol">&gt;</code>
 </InlineSection>
-- <p>[<code class="key">fileOptions</code>](#assets.fileOptions)</p>
-- <p>[<code class="key">nonVersionedFilesCacheHeader</code>](#assets.nonVersionedFilesCacheHeader)</p>
-- <p>[<code class="key">nonVersionedFilesTTL</code>](#assets.nonVersionedFilesTTL)</p>
-- <p>[<code class="key">textEncoding</code>](#assets.textEncoding)</p>
-- <p>[<code class="key">versionedFilesCacheHeader</code>](#assets.versionedFilesCacheHeader)</p>
-- <p>[<code class="key">versionedFilesTTL</code>](#assets.versionedFilesTTL)</p>
+- <p>[<code class="key">fileOptions?</code>](#assetsfileoptions) <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Object</code><code class="symbol">[]</code><code class="symbol">&gt;</code></p>
+  - <p>[<code class="key">cacheControl?</code>](#assetsfileoptionscachecontrol)</p>
+  - <p>[<code class="key">contentType?</code>](#assetsfileoptionscontenttype)</p>
+  - <p>[<code class="key">files</code>](#assetsfileoptionsfiles)</p>
+  - <p>[<code class="key">ignore?</code>](#assetsfileoptionsignore)</p>
+- <p>[<code class="key">nonVersionedFilesCacheHeader?</code>](#assetsnonversionedfilescacheheader)</p>
+- <p>[<code class="key">nonVersionedFilesTTL?</code>](#assetsnonversionedfilesttl)</p>
+- <p>[<code class="key">textEncoding?</code>](#assetstextencoding)</p>
+- <p>[<code class="key">versionedFilesCacheHeader?</code>](#assetsversionedfilescacheheader)</p>
+- <p>[<code class="key">versionedFilesTTL?</code>](#assetsversionedfilesttl)</p>
 </Section>
 Configure the assets uploaded to S3.
 </Segment>
@@ -84,10 +88,6 @@ Configure the assets uploaded to S3.
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Object</code><code class="symbol">[]</code><code class="symbol">&gt;</code>
 </InlineSection>
-- <p>[<code class="key">cacheControl</code>](#fileOptions[].cacheControl)</p>
-- <p>[<code class="key">contentType</code>](#fileOptions[].contentType)</p>
-- <p>[<code class="key">files</code>](#fileOptions[].files)</p>
-- <p>[<code class="key">ignore</code>](#fileOptions[].ignore)</p>
 </Section>
 List of file options to specify cache control and content type for cached files. These file options are appended to the default file options so it's possible to override the default file options by specifying an overlapping file pattern.
 ```js
@@ -264,11 +264,11 @@ buildCommand: "yarn build",
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol"> | </code><code class="primitive">Object</code><code class="symbol">&gt;</code>
 </InlineSection>
-- <p>[<code class="key">aliases</code>](#domain.aliases)</p>
-- <p>[<code class="key">domainName</code>](#domain.domainName)</p>
-- <p>[<code class="key">hostedZone</code>](#domain.hostedZone)</p>
-- <p>[<code class="key">hostedZoneId</code>](#domain.hostedZoneId)</p>
-- <p>[<code class="key">redirects</code>](#domain.redirects)</p>
+- <p>[<code class="key">aliases?</code>](#domainaliases)</p>
+- <p>[<code class="key">domainName</code>](#domaindomainname)</p>
+- <p>[<code class="key">hostedZone?</code>](#domainhostedzone)</p>
+- <p>[<code class="key">hostedZoneId?</code>](#domainhostedzoneid)</p>
+- <p>[<code class="key">redirects?</code>](#domainredirects)</p>
 </Section>
 The domain for this website. SST supports domains that are hosted
 either on [Route 53](https://aws.amazon.com/route53/) or externally.
@@ -418,8 +418,8 @@ environment: {
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Object</code><code class="symbol">&gt;</code>
 </InlineSection>
-- <p>[<code class="key">paths</code>](#invalidation.paths)</p>
-- <p>[<code class="key">wait</code>](#invalidation.wait)</p>
+- <p>[<code class="key">paths?</code>](#invalidationpaths)</p>
+- <p>[<code class="key">wait?</code>](#invalidationwait)</p>
 </Section>
 </Segment>
 <Segment>
@@ -507,8 +507,8 @@ Path to the directory where the app is located.
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Object</code><code class="symbol">[]</code><code class="symbol">&gt;</code>
 </InlineSection>
-- <p>[<code class="key">actions</code>](#permissions[].actions)</p>
-- <p>[<code class="key">resources</code>](#permissions[].resources)</p>
+- <p>[<code class="key">actions</code>](#permissionsactions)</p>
+- <p>[<code class="key">resources</code>](#permissionsresources)</p>
 </Section>
 
 <InlineSection>
@@ -548,13 +548,47 @@ The Amazon Resource Name (ARN) of the resources to allow actions on.
 </Segment>
 <Segment>
 ### transform?
+[Transform](/docs/transform/) how this component is created.
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Object</code>
 </InlineSection>
-- <p>[<code class="key">plan</code>](#transform.plan)</p>
+- <p>[<code class="key">plan?</code>](#transformplan) <code class="primitive">Object</code><code class="symbol"> | </code><code class="symbol">(</code><code class="primitive">args</code><code class="symbol">: </code><code class="primitive">Object</code><code class="symbol"> => </code><code class="primitive">Object</code><code class="symbol"> | </code><code class="primitive">void</code><code class="symbol">)</code></p>
+  - <p>[<code class="key">behaviors</code>](#transformplanbehaviors) <code class="primitive">Object</code><code class="symbol">[]</code></p>
+    - <p>[<code class="key">allowedMethods?</code>](#transformplanbehaviorsallowedmethods)</p>
+    - <p>[<code class="key">cacheType</code>](#transformplanbehaviorscachetype)</p>
+    - <p>[<code class="key">cfFunction?</code>](#transformplanbehaviorscffunction)</p>
+    - <p>[<code class="key">edgeFunction?</code>](#transformplanbehaviorsedgefunction)</p>
+    - <p>[<code class="key">origin</code>](#transformplanbehaviorsorigin)</p>
+    - <p>[<code class="key">pattern?</code>](#transformplanbehaviorspattern)</p>
+  - <p>[<code class="key">buildId?</code>](#transformplanbuildid)</p>
+  - <p>[<code class="key">cloudFrontFunctions?</code>](#transformplancloudfrontfunctions) <code class="primitive">Record</code><code class="symbol">&lt;</code><code class="primitive">string</code>, <code class="primitive">Object</code><code class="symbol">&gt;</code></p>
+    - <p>[<code class="key">injections</code>](#transformplancloudfrontfunctionsinjections)</p>
+  - <p>[<code class="key">edge</code>](#transformplanedge)</p>
+  - <p>[<code class="key">edgeFunctions?</code>](#transformplanedgefunctions) <code class="primitive">Record</code><code class="symbol">&lt;</code><code class="primitive">string</code>, <code class="primitive">Object</code><code class="symbol">&gt;</code></p>
+    - <p>[<code class="key">function</code>](#transformplanedgefunctionsfunction)</p>
+  - <p>[<code class="key">errorResponses?</code>](#transformplanerrorresponses)</p>
+  - <p>[<code class="key">origins</code>](#transformplanorigins) <code class="primitive">Record</code><code class="symbol">&lt;</code><code class="primitive">string</code>, <code class="primitive">Object</code><code class="symbol">&gt;</code></p>
+    - <p>[<code class="key">group?</code>](#transformplanoriginsgroup) <code class="primitive">Object</code></p>
+      - <p>[<code class="key">fallbackOriginName</code>](#transformplanoriginsgroupfallbackoriginname)</p>
+      - <p>[<code class="key">fallbackStatusCodes</code>](#transformplanoriginsgroupfallbackstatuscodes)</p>
+      - <p>[<code class="key">primaryOriginName</code>](#transformplanoriginsgroupprimaryoriginname)</p>
+    - <p>[<code class="key">imageOptimization?</code>](#transformplanoriginsimageoptimization) <code class="primitive">Object</code></p>
+      - <p>[<code class="key">function</code>](#transformplanoriginsimageoptimizationfunction)</p>
+    - <p>[<code class="key">s3?</code>](#transformplanoriginss3) <code class="primitive">Object</code></p>
+      - <p>[<code class="key">copy</code>](#transformplanoriginss3copy) <code class="primitive">Object</code><code class="symbol">[]</code></p>
+        - <p>[<code class="key">cached</code>](#transformplanoriginss3copycached)</p>
+        - <p>[<code class="key">from</code>](#transformplanoriginss3copyfrom)</p>
+        - <p>[<code class="key">to</code>](#transformplanoriginss3copyto)</p>
+        - <p>[<code class="key">versionedSubDir?</code>](#transformplanoriginss3copyversionedsubdir)</p>
+      - <p>[<code class="key">originPath?</code>](#transformplanoriginss3originpath)</p>
+    - <p>[<code class="key">server?</code>](#transformplanoriginsserver) <code class="primitive">Object</code></p>
+      - <p>[<code class="key">function</code>](#transformplanoriginsserverfunction)</p>
+      - <p>[<code class="key">injections?</code>](#transformplanoriginsserverinjections)</p>
+      - <p>[<code class="key">streaming?</code>](#transformplanoriginsserverstreaming)</p>
+  - <p>[<code class="key">serverCachePolicy?</code>](#transformplanservercachepolicy) <code class="primitive">Object</code></p>
+    - <p>[<code class="key">allowedHeaders?</code>](#transformplanservercachepolicyallowedheaders)</p>
 </Section>
-[Transform](/docs/transform/) how this component is created.
 </Segment>
 <Segment>
 <InlineSection>
@@ -562,16 +596,8 @@ The Amazon Resource Name (ARN) of the resources to allow actions on.
 </InlineSection>
 <Section type="parameters">
 <InlineSection>
-**Type** <code class="primitive">Transform</code><code class="symbol">&lt;</code><code class="primitive">Object</code><code class="symbol">&gt;</code>
+**Type** <code class="primitive">Object</code><code class="symbol"> | </code><code class="symbol">(</code><code class="primitive">args</code><code class="symbol">: </code><code class="primitive">Object</code><code class="symbol"> => </code><code class="primitive">Object</code><code class="symbol"> | </code><code class="primitive">void</code><code class="symbol">)</code>
 </InlineSection>
-- <p>[<code class="key">behaviors</code>](#plan.behaviors)</p>
-- <p>[<code class="key">buildId</code>](#plan.buildId)</p>
-- <p>[<code class="key">cloudFrontFunctions</code>](#plan.cloudFrontFunctions)</p>
-- <p>[<code class="key">edge</code>](#plan.edge)</p>
-- <p>[<code class="key">edgeFunctions</code>](#plan.edgeFunctions)</p>
-- <p>[<code class="key">errorResponses</code>](#plan.errorResponses)</p>
-- <p>[<code class="key">origins</code>](#plan.origins)</p>
-- <p>[<code class="key">serverCachePolicy</code>](#plan.serverCachePolicy)</p>
 </Section>
 </Segment>
 <Segment>
@@ -582,12 +608,6 @@ The Amazon Resource Name (ARN) of the resources to allow actions on.
 <InlineSection>
 **Type** <code class="primitive">Object</code><code class="symbol">[]</code>
 </InlineSection>
-- <p>[<code class="key">allowedMethods</code>](#behaviors[].allowedMethods)</p>
-- <p>[<code class="key">cacheType</code>](#behaviors[].cacheType)</p>
-- <p>[<code class="key">cfFunction</code>](#behaviors[].cfFunction)</p>
-- <p>[<code class="key">edgeFunction</code>](#behaviors[].edgeFunction)</p>
-- <p>[<code class="key">origin</code>](#behaviors[].origin)</p>
-- <p>[<code class="key">pattern</code>](#behaviors[].pattern)</p>
 </Section>
 </Segment>
 <Segment>
@@ -596,7 +616,7 @@ The Amazon Resource Name (ARN) of the resources to allow actions on.
 </InlineSection>
 <Section type="parameters">
 <InlineSection>
-**Type** <code class="symbol">&ldquo;</code><code class="primitive">DELETE</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">GET</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">HEAD</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">OPTIONS</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">PATCH</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">POST</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">PUT</code><code class="symbol">&rdquo;</code><code class="symbol">[]</code>
+**Type** <code class="symbol">(</code><code class="symbol">&ldquo;</code><code class="primitive">DELETE</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">GET</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">HEAD</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">OPTIONS</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">PATCH</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">POST</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">PUT</code><code class="symbol">&rdquo;</code><code class="symbol">)[]</code>
 </InlineSection>
 </Section>
 </Segment>
@@ -668,7 +688,6 @@ The Amazon Resource Name (ARN) of the resources to allow actions on.
 <InlineSection>
 **Type** <code class="primitive">Record</code><code class="symbol">&lt;</code><code class="primitive">string</code>, <code class="primitive">Object</code><code class="symbol">&gt;</code>
 </InlineSection>
-- <p>[<code class="key">injections</code>](#cloudFrontFunctions[].injections)</p>
 </Section>
 </Segment>
 <Segment>
@@ -699,7 +718,6 @@ The Amazon Resource Name (ARN) of the resources to allow actions on.
 <InlineSection>
 **Type** <code class="primitive">Record</code><code class="symbol">&lt;</code><code class="primitive">string</code>, <code class="primitive">Object</code><code class="symbol">&gt;</code>
 </InlineSection>
-- <p>[<code class="key">function</code>](#edgeFunctions[].function)</p>
 </Section>
 </Segment>
 <Segment>
@@ -730,10 +748,6 @@ The Amazon Resource Name (ARN) of the resources to allow actions on.
 <InlineSection>
 **Type** <code class="primitive">Record</code><code class="symbol">&lt;</code><code class="primitive">string</code>, <code class="primitive">Object</code><code class="symbol">&gt;</code>
 </InlineSection>
-- <p>[<code class="key">group</code>](#origins[].group)</p>
-- <p>[<code class="key">imageOptimization</code>](#origins[].imageOptimization)</p>
-- <p>[<code class="key">s3</code>](#origins[].s3)</p>
-- <p>[<code class="key">server</code>](#origins[].server)</p>
 </Section>
 Each origin can be either an S3, server, image optimization, or group origin.
 </Segment>
@@ -745,9 +759,6 @@ Each origin can be either an S3, server, image optimization, or group origin.
 <InlineSection>
 **Type** <code class="primitive">Object</code>
 </InlineSection>
-- <p>[<code class="key">fallbackOriginName</code>](#group.fallbackOriginName)</p>
-- <p>[<code class="key">fallbackStatusCodes</code>](#group.fallbackStatusCodes)</p>
-- <p>[<code class="key">primaryOriginName</code>](#group.primaryOriginName)</p>
 </Section>
 </Segment>
 <Segment>
@@ -788,7 +799,6 @@ Each origin can be either an S3, server, image optimization, or group origin.
 <InlineSection>
 **Type** <code class="primitive">Object</code>
 </InlineSection>
-- <p>[<code class="key">function</code>](#imageOptimization.function)</p>
 </Section>
 </Segment>
 <Segment>
@@ -809,8 +819,6 @@ Each origin can be either an S3, server, image optimization, or group origin.
 <InlineSection>
 **Type** <code class="primitive">Object</code>
 </InlineSection>
-- <p>[<code class="key">copy</code>](#s3.copy)</p>
-- <p>[<code class="key">originPath</code>](#s3.originPath)</p>
 </Section>
 </Segment>
 <Segment>
@@ -821,10 +829,6 @@ Each origin can be either an S3, server, image optimization, or group origin.
 <InlineSection>
 **Type** <code class="primitive">Object</code><code class="symbol">[]</code>
 </InlineSection>
-- <p>[<code class="key">cached</code>](#copy[].cached)</p>
-- <p>[<code class="key">from</code>](#copy[].from)</p>
-- <p>[<code class="key">to</code>](#copy[].to)</p>
-- <p>[<code class="key">versionedSubDir</code>](#copy[].versionedSubDir)</p>
 </Section>
 </Segment>
 <Segment>
@@ -885,9 +889,6 @@ Each origin can be either an S3, server, image optimization, or group origin.
 <InlineSection>
 **Type** <code class="primitive">Object</code>
 </InlineSection>
-- <p>[<code class="key">function</code>](#server.function)</p>
-- <p>[<code class="key">injections</code>](#server.injections)</p>
-- <p>[<code class="key">streaming</code>](#server.streaming)</p>
 </Section>
 </Segment>
 <Segment>
@@ -928,7 +929,6 @@ Each origin can be either an S3, server, image optimization, or group origin.
 <InlineSection>
 **Type** <code class="primitive">Object</code>
 </InlineSection>
-- <p>[<code class="key">allowedHeaders</code>](#serverCachePolicy.allowedHeaders)</p>
 </Section>
 </Segment>
 <Segment>

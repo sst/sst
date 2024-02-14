@@ -10,8 +10,6 @@ try {
   await restoreInput();
 }
 
-// TODO spread transform type
-// TODO issue with Nextjs's `Plan` origin type
 async function main() {
   const modules = await buildDocs();
   for (const module of modules) {
@@ -168,7 +166,6 @@ async function main() {
               `<InlineSection>`,
               `**Type** ${renderType(subType.type!)}`,
               `</InlineSection>`,
-              ...renderNestedTypeList(subType),
               `</Section>`,
               ...(renderDescription(subType) ?? []),
               `</Segment>`,
@@ -202,6 +199,11 @@ async function main() {
           lines.push(
             `<Segment>`,
             `### ${renderName(prop)}`,
+            // link to Transform doc
+            ...(int.name === `${useClassName()}Args` &&
+            prop.name === "transform"
+              ? ["[Transform](/docs/transform/) how this component is created."]
+              : []),
             `<Section type="parameters">`,
             `<InlineSection>`,
             `**Type** ${renderType(prop.type!)}`,
@@ -210,11 +212,6 @@ async function main() {
             `</Section>`,
             ...(renderDefaultTag(prop) ?? []),
             ...(renderDescription(prop) ?? []),
-            // link to Transform doc
-            ...(int.name === `${useClassName()}Args` &&
-            prop.name === "transform"
-              ? ["[Transform](/docs/transform/) how this component is created."]
-              : []),
             ...(renderExamples(prop) ?? []),
             `</Segment>`,
             // nested props (ie. `.domain`, `.transform`)
@@ -230,7 +227,6 @@ async function main() {
                 `<InlineSection>`,
                 `**Type** ${renderType(subType.type!)}`,
                 `</InlineSection>`,
-                ...renderNestedTypeList(subType),
                 `</Section>`,
                 ...(renderDefaultTag(subType) ?? []),
                 ...(renderDescription(subType) ?? []),
@@ -283,12 +279,18 @@ async function main() {
         | TypeDoc.Models.DeclarationReflection
         | TypeDoc.Models.SignatureReflection
     ) {
-      return useNestedTypes(prop.type!)
-        .filter(({ prefix }) => prefix === "" || prefix === "[]")
-        .map(
-          ({ prefix, subType }) =>
-            `- <p>[<code class="key">${subType.name}</code>](#${prop.name}${prefix}.${subType.name})</p>`
-        );
+      return useNestedTypes(prop.type!, prop.name).map(
+        ({ depth, prefix, subType }) => {
+          const hasChildren = useNestedTypes(subType.type!).length;
+          const type = hasChildren ? ` ${renderType(subType.type!)}` : "";
+          const hash = `${prefix}.${subType.name}`
+            .toLowerCase()
+            .replace(/[^a-z0-9]/g, "");
+          return `${" ".repeat(depth * 2)}- <p>[<code class="key">${renderName(
+            subType
+          )}</code>](#${hash})${type}</p>`;
+        }
+      );
     }
 
     function renderExamples(prop: TypeDoc.Models.DeclarationReflection) {
@@ -377,7 +379,11 @@ async function main() {
         .join(`<code class="symbol"> | </code>`);
     }
     function renderArrayType(type: TypeDoc.Models.ArrayType) {
-      return `${renderType(type.elementType)}<code class="symbol">[]</code>`;
+      return type.elementType.type === "union"
+        ? `<code class="symbol">(</code>${renderType(
+            type.elementType
+          )}<code class="symbol">)[]</code>`
+        : `${renderType(type.elementType)}<code class="symbol">[]</code>`;
     }
     function renderTypescriptType(type: TypeDoc.Models.ReferenceType) {
       // ie. Record<string, string>
@@ -389,7 +395,23 @@ async function main() {
       ].join("");
     }
     function renderSstType(type: TypeDoc.Models.ReferenceType) {
-      if (type.name === "Transform" || type.name === "Input") {
+      if (type.name === "Transform") {
+        const renderedType = renderType(type.typeArguments?.[0]!);
+        return [
+          renderedType,
+          `<code class="symbol"> | </code>`,
+          `<code class="symbol">(</code>`,
+          `<code class="primitive">args</code>`,
+          `<code class="symbol">: </code>`,
+          renderedType,
+          `<code class="symbol"> => </code>`,
+          renderedType,
+          `<code class="symbol"> | </code>`,
+          `<code class="primitive">void</code>`,
+          `<code class="symbol">)</code>`,
+        ].join("");
+      }
+      if (type.name === "Input") {
         return [
           `<code class="primitive">${type.name}</code>`,
           `<code class="symbol">&lt;</code>`,
@@ -557,22 +579,31 @@ async function main() {
 
     function useNestedTypes(
       type: TypeDoc.SomeType,
-      prefix: string = ""
-    ): { prefix: string; subType: TypeDoc.Models.DeclarationReflection }[] {
+      prefix: string = "",
+      depth: number = 0
+    ): {
+      subType: TypeDoc.Models.DeclarationReflection;
+      prefix: string;
+      depth: number;
+    }[] {
       if (type.type === "union")
-        return type.types.flatMap((t) => useNestedTypes(t, prefix));
+        return type.types.flatMap((t) => useNestedTypes(t, prefix, depth));
       if (type.type === "array")
-        return useNestedTypes(type.elementType, `${prefix}[]`);
+        return useNestedTypes(type.elementType, `${prefix}[]`, depth);
       if (type.type === "reference")
         return (type.typeArguments ?? []).flatMap((t) =>
           type.package === "typescript" && type.name === "Record"
-            ? useNestedTypes(t, `${prefix}[]`)
-            : useNestedTypes(t, prefix)
+            ? useNestedTypes(t, `${prefix}[]`, depth)
+            : useNestedTypes(t, prefix, depth)
         );
       if (type.type === "reflection")
         return type.declaration.children!.flatMap((subType) => [
-          { prefix, subType },
-          ...useNestedTypes(subType.type!, `${prefix}.${subType.name}`),
+          { prefix, subType, depth },
+          ...useNestedTypes(
+            subType.type!,
+            `${prefix}.${subType.name}`,
+            depth + 1
+          ),
         ]);
 
       return [];

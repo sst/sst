@@ -43,8 +43,8 @@ new Postgres(name, args?, opts?)
 <InlineSection>
 **Type** <code class="primitive">Object</code>
 </InlineSection>
-- <p>[<code class="key">cluster</code>](#nodes.cluster)</p>
-- <p>[<code class="key">instance</code>](#nodes.instance)</p>
+- <p>[<code class="key">cluster</code>](#nodescluster)</p>
+- <p>[<code class="key">instance</code>](#nodesinstance)</p>
 </Section>
 </Segment>
 <Segment>
@@ -93,8 +93,8 @@ Name of a database which is automatically created inside the cluster.
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Object</code><code class="symbol">&gt;</code>
 </InlineSection>
-- <p>[<code class="key">max</code>](#scaling.max)</p>
-- <p>[<code class="key">min</code>](#scaling.min)</p>
+- <p>[<code class="key">max?</code>](#scalingmax)</p>
+- <p>[<code class="key">min?</code>](#scalingmin)</p>
 </Section>
 Aurora Serverless v2 scaling configuration
 </Segment>
@@ -144,14 +144,14 @@ The minimum number of Aurora capacity units (ACUs) for a DB instance in an Auror
 </Segment>
 <Segment>
 ### transform?
+[Transform](/docs/transform/) how this component is created.
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Object</code>
 </InlineSection>
-- <p>[<code class="key">cluster</code>](#transform.cluster)</p>
-- <p>[<code class="key">instance</code>](#transform.instance)</p>
+- <p>[<code class="key">cluster?</code>](#transformcluster)</p>
+- <p>[<code class="key">instance?</code>](#transforminstance)</p>
 </Section>
-[Transform](/docs/transform/) how this component is created.
 </Segment>
 <Segment>
 <InlineSection>
@@ -159,7 +159,7 @@ The minimum number of Aurora capacity units (ACUs) for a DB instance in an Auror
 </InlineSection>
 <Section type="parameters">
 <InlineSection>
-**Type** <code class="primitive">Transform</code><code class="symbol">&lt;</code>[<code class="type">ClusterArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/rds/cluster/#inputs)<code class="symbol">&gt;</code>
+**Type** [<code class="type">ClusterArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/rds/cluster/#inputs)<code class="symbol"> | </code><code class="symbol">(</code><code class="primitive">args</code><code class="symbol">: </code>[<code class="type">ClusterArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/rds/cluster/#inputs)<code class="symbol"> => </code>[<code class="type">ClusterArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/rds/cluster/#inputs)<code class="symbol"> | </code><code class="primitive">void</code><code class="symbol">)</code>
 </InlineSection>
 </Section>
 </Segment>
@@ -169,7 +169,7 @@ The minimum number of Aurora capacity units (ACUs) for a DB instance in an Auror
 </InlineSection>
 <Section type="parameters">
 <InlineSection>
-**Type** <code class="primitive">Transform</code><code class="symbol">&lt;</code>[<code class="type">ClusterInstanceArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/rds/clusterinstance/#inputs)<code class="symbol">&gt;</code>
+**Type** [<code class="type">ClusterInstanceArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/rds/clusterinstance/#inputs)<code class="symbol"> | </code><code class="symbol">(</code><code class="primitive">args</code><code class="symbol">: </code>[<code class="type">ClusterInstanceArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/rds/clusterinstance/#inputs)<code class="symbol"> => </code>[<code class="type">ClusterInstanceArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/rds/clusterinstance/#inputs)<code class="symbol"> | </code><code class="primitive">void</code><code class="symbol">)</code>
 </InlineSection>
 </Section>
 </Segment>

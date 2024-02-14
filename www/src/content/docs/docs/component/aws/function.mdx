@@ -63,8 +63,8 @@ new Function(name, args, opts?)
 <InlineSection>
 **Type** <code class="primitive">Object</code>
 </InlineSection>
-- <p>[<code class="key">function</code>](#nodes.function)</p>
-- <p>[<code class="key">role</code>](#nodes.role)</p>
+- <p>[<code class="key">function</code>](#nodesfunction)</p>
+- <p>[<code class="key">role</code>](#nodesrole)</p>
 </Section>
 </Segment>
 <Segment>
@@ -143,8 +143,8 @@ Typically, omit `bundle`. If omitted, the handler file is bundled with esbuild, 
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Object</code><code class="symbol">[]</code><code class="symbol">&gt;</code>
 </InlineSection>
-- <p>[<code class="key">from</code>](#copyFiles[].from)</p>
-- <p>[<code class="key">to</code>](#copyFiles[].to)</p>
+- <p>[<code class="key">from</code>](#copyfilesfrom)</p>
+- <p>[<code class="key">to?</code>](#copyfilesto)</p>
 </Section>
 Used to configure additional files to copy into the function bundle
 ```js
@@ -265,7 +265,7 @@ This will grant the function permissions to access the linked resources at runti
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Object</code><code class="symbol">&gt;</code>
 </InlineSection>
-- <p>[<code class="key">retention</code>](#logging.retention)</p>
+- <p>[<code class="key">retention?</code>](#loggingretention)</p>
 </Section>
 
 <InlineSection>
@@ -319,14 +319,14 @@ The amount of memory allocated for the function.
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Object</code><code class="symbol">&gt;</code>
 </InlineSection>
-- <p>[<code class="key">banner</code>](#nodejs.banner)</p>
-- <p>[<code class="key">esbuild</code>](#nodejs.esbuild)</p>
-- <p>[<code class="key">format</code>](#nodejs.format)</p>
-- <p>[<code class="key">install</code>](#nodejs.install)</p>
-- <p>[<code class="key">loader</code>](#nodejs.loader)</p>
-- <p>[<code class="key">minify</code>](#nodejs.minify)</p>
-- <p>[<code class="key">sourcemap</code>](#nodejs.sourcemap)</p>
-- <p>[<code class="key">splitting</code>](#nodejs.splitting)</p>
+- <p>[<code class="key">banner?</code>](#nodejsbanner)</p>
+- <p>[<code class="key">esbuild?</code>](#nodejsesbuild)</p>
+- <p>[<code class="key">format?</code>](#nodejsformat)</p>
+- <p>[<code class="key">install?</code>](#nodejsinstall)</p>
+- <p>[<code class="key">loader?</code>](#nodejsloader)</p>
+- <p>[<code class="key">minify?</code>](#nodejsminify)</p>
+- <p>[<code class="key">sourcemap?</code>](#nodejssourcemap)</p>
+- <p>[<code class="key">splitting?</code>](#nodejssplitting)</p>
 </Section>
 Used to configure nodejs function properties
 </Segment>
@@ -477,8 +477,8 @@ nodejs: {
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Object</code><code class="symbol">[]</code><code class="symbol">&gt;</code>
 </InlineSection>
-- <p>[<code class="key">actions</code>](#permissions[].actions)</p>
-- <p>[<code class="key">resources</code>](#permissions[].resources)</p>
+- <p>[<code class="key">actions</code>](#permissionsactions)</p>
+- <p>[<code class="key">resources</code>](#permissionsresources)</p>
 </Section>
 
 <InlineSection>
@@ -600,13 +600,13 @@ The amount of time that Lambda allows a function to run before stopping it.
 </Segment>
 <Segment>
 ### transform?
+[Transform](/docs/transform/) how this component is created.
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Object</code>
 </InlineSection>
-- <p>[<code class="key">function</code>](#transform.function)</p>
+- <p>[<code class="key">function?</code>](#transformfunction)</p>
 </Section>
-[Transform](/docs/transform/) how this component is created.
 </Segment>
 <Segment>
 <InlineSection>
@@ -614,7 +614,7 @@ The amount of time that Lambda allows a function to run before stopping it.
 </InlineSection>
 <Section type="parameters">
 <InlineSection>
-**Type** <code class="primitive">Transform</code><code class="symbol">&lt;</code>[<code class="type">FunctionArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/lambda/function/#inputs)<code class="symbol">&gt;</code>
+**Type** [<code class="type">FunctionArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/lambda/function/#inputs)<code class="symbol"> | </code><code class="symbol">(</code><code class="primitive">args</code><code class="symbol">: </code>[<code class="type">FunctionArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/lambda/function/#inputs)<code class="symbol"> => </code>[<code class="type">FunctionArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/lambda/function/#inputs)<code class="symbol"> | </code><code class="primitive">void</code><code class="symbol">)</code>
 </InlineSection>
 </Section>
 </Segment>
@@ -624,8 +624,14 @@ The amount of time that Lambda allows a function to run before stopping it.
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">boolean</code><code class="symbol"> | </code><code class="primitive">Object</code><code class="symbol">&gt;</code>
 </InlineSection>
-- <p>[<code class="key">authorization</code>](#url.authorization)</p>
-- <p>[<code class="key">cors</code>](#url.cors)</p>
+- <p>[<code class="key">authorization?</code>](#urlauthorization)</p>
+- <p>[<code class="key">cors?</code>](#urlcors) <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">boolean</code><code class="symbol"> | </code><code class="primitive">Object</code><code class="symbol">&gt;</code></p>
+  - <p>[<code class="key">allowCredentials?</code>](#urlcorsallowcredentials)</p>
+  - <p>[<code class="key">allowHeaders?</code>](#urlcorsallowheaders)</p>
+  - <p>[<code class="key">allowMethods?</code>](#urlcorsallowmethods)</p>
+  - <p>[<code class="key">allowOrigins?</code>](#urlcorsalloworigins)</p>
+  - <p>[<code class="key">exposeHeaders?</code>](#urlcorsexposeheaders)</p>
+  - <p>[<code class="key">maxAge?</code>](#urlcorsmaxage)</p>
 </Section>
 
 <InlineSection>
@@ -679,12 +685,6 @@ The authorization for the function URL
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">boolean</code><code class="symbol"> | </code><code class="primitive">Object</code><code class="symbol">&gt;</code>
 </InlineSection>
-- <p>[<code class="key">allowCredentials</code>](#cors.allowCredentials)</p>
-- <p>[<code class="key">allowHeaders</code>](#cors.allowHeaders)</p>
-- <p>[<code class="key">allowMethods</code>](#cors.allowMethods)</p>
-- <p>[<code class="key">allowOrigins</code>](#cors.allowOrigins)</p>
-- <p>[<code class="key">exposeHeaders</code>](#cors.exposeHeaders)</p>
-- <p>[<code class="key">maxAge</code>](#cors.maxAge)</p>
 </Section>
 
 <InlineSection>
