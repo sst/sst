@@ -40,13 +40,13 @@ export default $config({
 });
 
 function runVectorExample() {
-  const vector = new sst.Vector("MyVectorDB", {
+  const vector = new sst.aws.Vector("MyVectorDB", {
     model: "text-embedding-ada-002",
     //model: "amazon.titan-embed-image-v1",
     openAiApiKey: new sst.Secret("OpenAiApiKey").value,
   });
 
-  const seeder = new sst.Function("Seeder", {
+  const seeder = new sst.aws.Function("Seeder", {
     handler: "functions/vector-example/index.seeder",
     link: [vector],
     copyFiles: [
@@ -68,7 +68,7 @@ function runVectorExample() {
     url: true,
   });
 
-  const app = new sst.Function("MyApp", {
+  const app = new sst.aws.Function("MyApp", {
     handler: "functions/vector-example/index.app",
     link: [vector],
     url: true,
