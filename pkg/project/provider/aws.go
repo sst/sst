@@ -46,7 +46,6 @@ func (a *AwsProvider) Env() (map[string]string, error) {
 }
 
 func (a *AwsProvider) Lock(app string, stage string, out *os.File) error {
-	slog.Info("locking", "app", app, "stage", stage)
 	s3Client := s3.NewFromConfig(a.config)
 
 	lockKey := a.pathForLock(app, stage)

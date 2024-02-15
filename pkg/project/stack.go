@@ -196,6 +196,7 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 		}
 		input.OnFiles(files)
 	}
+	slog.Info("tracked files")
 
 	ws, err := auto.NewLocalWorkspace(ctx,
 		auto.WorkDir(s.project.PathWorkingDir()),

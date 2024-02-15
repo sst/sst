@@ -3,7 +3,6 @@ import * as aws from "@pulumi/aws";
 import { Component, Transform } from "../component";
 import { Link } from "../link";
 import { FunctionArgs, Function } from "./function";
-
 import { PrivateKey } from "@pulumi/tls";
 
 export interface AuthArgs {

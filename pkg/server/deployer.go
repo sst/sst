@@ -17,8 +17,8 @@ func startDeployer(ctx context.Context, p *project.Project) (util.CleanupFunc, e
 	watchedFiles := make(map[string]bool)
 
 	bus.Subscribe(ctx, func(event *watcher.FileChangedEvent) {
-		mutex.Lock()
-		defer mutex.Unlock()
+		mutex.RLock()
+		defer mutex.RUnlock()
 		if _, ok := watchedFiles[event.Path]; ok {
 			trigger <- true
 		}
@@ -36,8 +36,9 @@ func startDeployer(ctx context.Context, p *project.Project) (util.CleanupFunc, e
 					bus.Publish(event)
 				},
 				OnFiles: func(files []string) {
-					mutex.RLock()
-					defer mutex.RUnlock()
+					slog.Info("files changed", "files", len(files))
+					mutex.Lock()
+					defer mutex.Unlock()
 					for _, file := range files {
 						watchedFiles[file] = true
 					}

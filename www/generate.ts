@@ -28,7 +28,7 @@ async function main() {
         renderInterfaces(),
       ]
         .flat()
-        .join("\n")
+        .join("\n"),
     );
 
     function renderHeader() {
@@ -65,12 +65,12 @@ async function main() {
 
       // examples
       const examples = comment.blockTags.filter(
-        (tag) => tag.tag === "@example"
+        (tag) => tag.tag === "@example",
       );
       if (examples.length) {
         lines.push(
           ``,
-          ...examples.map((example) => renderComment(example.content))
+          ...examples.map((example) => renderComment(example.content)),
         );
       }
 
@@ -91,7 +91,7 @@ async function main() {
         "```ts",
         renderFunctionSignature(signature),
         "```",
-        `</Section>`
+        `</Section>`,
       );
 
       // parameters
@@ -103,10 +103,10 @@ async function main() {
           ...signature.parameters.map(
             (param) =>
               `- <p><code class="key">${param.name}</code> ${renderType(
-                param.type!
-              )}</p>`
+                param.type!,
+              )}</p>`,
           ),
-          `</Section>`
+          `</Section>`,
         );
       }
 
@@ -130,7 +130,7 @@ async function main() {
         `### noop`,
         `<Section type="signature">`,
         `</Section>`,
-        `</Segment>`
+        `</Segment>`,
       );
     }
 
@@ -169,8 +169,8 @@ async function main() {
               `</Section>`,
               ...(renderDescription(subType) ?? []),
               `</Segment>`,
-            ]
-          )
+            ],
+          ),
         );
       }
       return lines;
@@ -224,8 +224,8 @@ async function main() {
                 ...(renderDescription(subType) ?? []),
                 ...(renderExamples(subType) ?? []),
                 `</Segment>`,
-              ]
-            )
+              ],
+            ),
           );
         }
       }
@@ -240,7 +240,7 @@ async function main() {
     function renderDescription(
       prop:
         | TypeDoc.Models.DeclarationReflection
-        | TypeDoc.Models.SignatureReflection
+        | TypeDoc.Models.SignatureReflection,
     ) {
       if (!prop.comment?.summary) return;
       return [renderComment(prop.comment?.summary)];
@@ -248,7 +248,7 @@ async function main() {
 
     function renderDefaultTag(prop: TypeDoc.Models.DeclarationReflection) {
       const defaultTag = prop.comment?.blockTags.find(
-        (tag) => tag.tag === "@default"
+        (tag) => tag.tag === "@default",
       );
       if (!defaultTag) return;
       return [
@@ -269,7 +269,7 @@ async function main() {
     function renderNestedTypeList(
       prop:
         | TypeDoc.Models.DeclarationReflection
-        | TypeDoc.Models.SignatureReflection
+        | TypeDoc.Models.SignatureReflection,
     ) {
       return useNestedTypes(prop.type!, prop.name).map(
         ({ depth, prefix, subType }) => {
@@ -288,9 +288,9 @@ async function main() {
           const hash = generateHash();
           linkHashes.set(subType, hash);
           return `${" ".repeat(depth * 2)}- <p>[<code class="key">${renderName(
-            subType
+            subType,
           )}</code>](#${hash})${type}</p>`;
-        }
+        },
       );
     }
 
@@ -301,7 +301,7 @@ async function main() {
     }
 
     function renderFunctionSignature(
-      signature: TypeDoc.Models.SignatureReflection
+      signature: TypeDoc.Models.SignatureReflection,
     ) {
       const parameters = (signature.parameters ?? [])
         .map((param) => param.name + (param.flags.isOptional ? "?" : ""))
@@ -346,7 +346,7 @@ async function main() {
       return `<code class="symbol">&ldquo;</code><code class="primitive">${type.value}</code><code class="symbol">&rdquo;</code>`;
     }
     function renderTemplateLiteralType(
-      type: TypeDoc.Models.TemplateLiteralType
+      type: TypeDoc.Models.TemplateLiteralType,
     ) {
       // ie. memory: `${number} MB`
       // {
@@ -382,7 +382,7 @@ async function main() {
     function renderArrayType(type: TypeDoc.Models.ArrayType) {
       return type.elementType.type === "union"
         ? `<code class="symbol">(</code>${renderType(
-            type.elementType
+            type.elementType,
           )}<code class="symbol">)[]</code>`
         : `${renderType(type.elementType)}<code class="symbol">[]</code>`;
     }
@@ -465,7 +465,7 @@ async function main() {
     }
     function renderPulumiProviderType(type: TypeDoc.Models.ReferenceType) {
       const ret = ((type as any)._target.fileName as string).match(
-        "node_modules/@pulumi/([^/]+)/(.+).d.ts"
+        "node_modules/@pulumi/([^/]+)/(.+).d.ts",
       )!;
       const provider = ret[1].toLocaleLowerCase(); // ie. aws
       const cls = ret[2].toLocaleLowerCase(); // ie. s3/Bucket
@@ -532,7 +532,7 @@ async function main() {
 
     function useClass() {
       const c = module.children?.find(
-        (c) => c.kind === TypeDoc.ReflectionKind.Class
+        (c) => c.kind === TypeDoc.ReflectionKind.Class,
       );
       if (!c) throw new Error("Class not found");
       return c;
@@ -550,7 +550,7 @@ async function main() {
 
     function useClassConstructor() {
       const constructor = useClass().children?.find(
-        (c) => c.kind === TypeDoc.ReflectionKind.Constructor
+        (c) => c.kind === TypeDoc.ReflectionKind.Constructor,
       );
       if (!constructor) throw new Error("Constructor not found");
       return constructor;
@@ -562,26 +562,26 @@ async function main() {
           c.kind === TypeDoc.ReflectionKind.Method &&
           !c.flags.isExternal &&
           c.signatures &&
-          !c.signatures[0].comment?.modifierTags.has("@internal")
+          !c.signatures[0].comment?.modifierTags.has("@internal"),
       );
     }
 
     function useClassGetters() {
       return (useClass().children ?? []).filter(
-        (c) => c.kind === TypeDoc.ReflectionKind.Accessor && c.flags.isPublic
+        (c) => c.kind === TypeDoc.ReflectionKind.Accessor && c.flags.isPublic,
       );
     }
 
     function useInterfaces() {
       return (module.children ?? []).filter(
-        (c) => c.kind === TypeDoc.ReflectionKind.Interface
+        (c) => c.kind === TypeDoc.ReflectionKind.Interface,
       );
     }
 
     function useNestedTypes(
       type: TypeDoc.SomeType,
       prefix: string = "",
-      depth: number = 0
+      depth: number = 0,
     ): {
       subType: TypeDoc.Models.DeclarationReflection;
       prefix: string;
@@ -595,7 +595,7 @@ async function main() {
         return (type.typeArguments ?? []).flatMap((t) =>
           type.package === "typescript" && type.name === "Record"
             ? useNestedTypes(t, `${prefix}[]`, depth)
-            : useNestedTypes(t, prefix, depth)
+            : useNestedTypes(t, prefix, depth),
         );
       if (type.type === "reflection")
         return type.declaration.children!.flatMap((subType) => [
@@ -603,7 +603,7 @@ async function main() {
           ...useNestedTypes(
             subType.type!,
             `${prefix}.${subType.name}`,
-            depth + 1
+            depth + 1,
           ),
         ]);
 
@@ -650,7 +650,7 @@ async function buildDocs() {
 
   // Return classes
   return project.children!.filter(
-    (c) => c.kind === TypeDoc.ReflectionKind.Module
+    (c) => c.kind === TypeDoc.ReflectionKind.Module,
   );
 }
 
@@ -662,18 +662,18 @@ function configureLogger() {
 async function patchInput() {
   await fs.rename(
     "../pkg/platform/src/components/input.ts",
-    "../pkg/platform/src/components/input.ts.bk"
+    "../pkg/platform/src/components/input.ts.bk",
   );
   await fs.copyFile(
     "./input-patch.ts",
-    "../pkg/platform/src/components/input.ts"
+    "../pkg/platform/src/components/input.ts",
   );
 }
 
 async function restoreInput() {
   await fs.rename(
     "../pkg/platform/src/components/input.ts.bk",
-    "../pkg/platform/src/components/input.ts"
+    "../pkg/platform/src/components/input.ts",
   );
 }
 
