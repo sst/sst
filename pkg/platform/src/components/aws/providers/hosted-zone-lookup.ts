@@ -6,16 +6,24 @@ import {
 } from "@aws-sdk/client-route-53";
 import { useClient } from "../helpers/client.js";
 
-export interface HostedZoneLookupInputs {
-  domain: Input<string>;
-}
-
 interface Inputs {
   domain: string;
 }
 
+interface Outputs {
+  zoneId: string;
+}
+
+export interface HostedZoneLookupInputs {
+  domain: Input<Inputs["domain"]>;
+}
+
+export interface HostedZoneLookup {
+  zoneId: Output<Outputs["zoneId"]>;
+}
+
 class Provider implements dynamic.ResourceProvider {
-  async create(inputs: Inputs): Promise<dynamic.CreateResult> {
+  async create(inputs: Inputs): Promise<dynamic.CreateResult<Outputs>> {
     const zoneId = await this.lookup(inputs.domain);
     return { id: zoneId, outs: { zoneId } };
   }
@@ -24,7 +32,7 @@ class Provider implements dynamic.ResourceProvider {
     id: string,
     olds: Inputs,
     news: Inputs,
-  ): Promise<dynamic.UpdateResult> {
+  ): Promise<dynamic.UpdateResult<Outputs>> {
     const zoneId = await this.lookup(news.domain);
     return { outs: { zoneId } };
   }
@@ -56,10 +64,6 @@ class Provider implements dynamic.ResourceProvider {
 
     throw new Error(`Could not find hosted zone for domain ${domain}`);
   }
-}
-
-export interface HostedZoneLookup {
-  zoneId: Output<string>;
 }
 
 export class HostedZoneLookup extends dynamic.Resource {

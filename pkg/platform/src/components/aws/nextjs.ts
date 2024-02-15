@@ -149,6 +149,8 @@ export class Nextjs extends Component implements Link.Linkable {
     const buildCommand = normalizeBuildCommand();
     buildCommand.apply((buildCommand) => console.log(buildCommand));
     const { sitePath, doNotDeploy, region } = prepare(args ?? {}, opts);
+
+    // TODO check if deployed
     //if (doNotDeploy) {
     //  // @ts-expect-error
     //  this.bucket = this.distribution = null;

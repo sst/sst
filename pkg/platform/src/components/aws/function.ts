@@ -1016,7 +1016,7 @@ export class Function
   }
 
   /** @internal */
-  public getSSTLink(): Link.Definition {
+  public getSSTLink() {
     return {
       type: `{ functionName: string }`,
       value: {

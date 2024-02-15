@@ -9,20 +9,30 @@ import {
 } from "@aws-sdk/client-cloudwatch-logs";
 import { useClient } from "../helpers/client.js";
 
-export interface LogGroupInputs {
-  logGroupName: Input<string>;
-  retentionInDays: Input<number>;
-  region: Input<aws.Region>;
-}
-
 interface Inputs {
   logGroupName: string;
   retentionInDays: number;
   region: aws.Region;
 }
 
+interface Outputs {
+  logGroupArn: string;
+  logGroupName: string;
+}
+
+export interface LogGroupInputs {
+  logGroupName: Input<Inputs["logGroupName"]>;
+  retentionInDays: Input<Inputs["retentionInDays"]>;
+  region: Input<Inputs["region"]>;
+}
+
+export interface LogGroup {
+  logGroupArn: Output<Outputs["logGroupArn"]>;
+  logGroupName: Output<Outputs["logGroupName"]>;
+}
+
 class Provider implements dynamic.ResourceProvider {
-  async create(inputs: Inputs): Promise<dynamic.CreateResult> {
+  async create(inputs: Inputs): Promise<dynamic.CreateResult<Outputs>> {
     await this.createLogGroup(inputs);
     await this.setRetentionPolicy(inputs);
     return {
@@ -36,9 +46,9 @@ class Provider implements dynamic.ResourceProvider {
 
   async update(
     id: string,
-    olds: Inputs,
+    olds: Outputs,
     news: Inputs,
-  ): Promise<dynamic.UpdateResult> {
+  ): Promise<dynamic.UpdateResult<Outputs>> {
     await this.createLogGroup(news);
     await this.setRetentionPolicy(news);
     return {
@@ -95,11 +105,6 @@ class Provider implements dynamic.ResourceProvider {
       );
     }
   }
-}
-
-export interface LogGroup {
-  logGroupArn: Output<string>;
-  logGroupName: Output<string>;
 }
 
 export class LogGroup extends dynamic.Resource {

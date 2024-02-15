@@ -43,12 +43,12 @@ class Provider implements dynamic.ResourceProvider {
         S3Key: inputs.s3Key,
       }),
     );
-    return { id: inputs.functionName, outs: {} };
+    return { id: inputs.functionName };
   }
 
   async update(
     id: string,
-    olds: Inputs,
+    olds: any,
     news: Inputs,
   ): Promise<dynamic.UpdateResult> {
     const client = useClient(LambdaClient, {
@@ -65,7 +65,7 @@ class Provider implements dynamic.ResourceProvider {
         S3Key: news.s3Key,
       }),
     );
-    return { outs: {} };
+    return {};
   }
 }
 

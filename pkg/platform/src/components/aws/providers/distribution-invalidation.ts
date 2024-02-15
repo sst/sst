@@ -28,16 +28,16 @@ interface Inputs {
 class Provider implements dynamic.ResourceProvider {
   async create(inputs: Inputs): Promise<dynamic.CreateResult> {
     await this.handle(inputs);
-    return { id: "invalidation", outs: {} };
+    return { id: "invalidation" };
   }
 
   async update(
     id: string,
-    olds: Inputs,
+    olds: any,
     news: Inputs,
   ): Promise<dynamic.UpdateResult> {
     await this.handle(news);
-    return { outs: {} };
+    return {};
   }
 
   async handle(inputs: Inputs) {

@@ -21,8 +21,12 @@ interface Inputs {
   vectorSize: number;
 }
 
+interface Outputs {
+  vectorSize: Inputs["vectorSize"];
+}
+
 class Provider implements dynamic.ResourceProvider {
-  async create(inputs: Inputs): Promise<dynamic.CreateResult> {
+  async create(inputs: Inputs): Promise<dynamic.CreateResult<Outputs>> {
     await this.createDatabase(inputs);
     await this.enablePgvectorExtension(inputs);
     await this.enablePgtrgmExtension(inputs);
@@ -31,15 +35,15 @@ class Provider implements dynamic.ResourceProvider {
     await this.createMetadataIndex(inputs);
     return {
       id: inputs.tableName,
-      outs: {},
+      outs: { vectorSize: inputs.vectorSize },
     };
   }
 
   async update(
     id: string,
-    olds: Inputs,
+    olds: Outputs,
     news: Inputs,
-  ): Promise<dynamic.UpdateResult> {
+  ): Promise<dynamic.UpdateResult<Outputs>> {
     await this.createDatabase(news);
     await this.enablePgvectorExtension(news);
     await this.enablePgtrgmExtension(news);
@@ -50,7 +54,7 @@ class Provider implements dynamic.ResourceProvider {
     await this.createEmbeddingIndex(news);
     await this.createMetadataIndex(news);
     return {
-      outs: {},
+      outs: { vectorSize: news.vectorSize },
     };
   }
 

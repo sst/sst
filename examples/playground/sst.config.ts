@@ -18,28 +18,15 @@ export default $config({
   async run() {
     //return runVectorExample();
 
-    const bucket = new sst.Bucket("MyBucket", {
+    const bucket = new sst.aws.Bucket("MyBucket", {
       public: true,
       transform: {
         bucket: (args) => {
           args.tags = { foo: "bar" };
         },
-        bucketPolicy(args) {
-          args.policy = $util.jsonStringify(
-            $util.jsonParse(args.policy).apply((v) => {
-              v.Statement.push({
-                Principal: "*",
-                Effect: "Allow",
-                Action: "s3:PutObject",
-                Resource: v.Statement[0].Resource,
-              });
-              return v;
-            }),
-          );
-        },
       },
     });
-    const app = new sst.Function("MyApp", {
+    const app = new sst.aws.Function("MyApp", {
       bundle: "functions/bundled-example",
       handler: "index.handler",
       link: [bucket],

@@ -47,7 +47,7 @@ export async function run(program: automation.PulumiFn) {
       args.type === "pulumi:providers:aws"
     ) {
       const parts = args.name.split(".");
-      if (parts.length === 3 && parts[1] === "sst") {
+      if (parts.length === 4 && parts[1] === "sst") {
         normalizedName = parts[0];
       }
     }
