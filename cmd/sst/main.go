@@ -107,6 +107,38 @@ func main() {
 				},
 			},
 			{
+				Name:      "import",
+				ArgsUsage: "[type] [name] [id]",
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name: "parent",
+					},
+				},
+				Action: func(cli *cli.Context) error {
+					resourceType := cli.Args().Get(0)
+					name := cli.Args().Get(1)
+					id := cli.Args().Get(2)
+					parent := cli.String("parent")
+
+					p, err := initProject(cli)
+					if err != nil {
+						return err
+					}
+
+					err = p.Stack.Import(cli.Context, &project.ImportOptions{
+						Type:   resourceType,
+						Name:   name,
+						ID:     id,
+						Parent: parent,
+					})
+					if err != nil {
+						return err
+					}
+
+					return nil
+				},
+			},
+			{
 				Name: "secrets",
 				Subcommands: []*cli.Command{
 					{

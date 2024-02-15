@@ -16,6 +16,7 @@ import (
 	"github.com/pulumi/pulumi/sdk/v3/go/auto/optrefresh"
 	"github.com/pulumi/pulumi/sdk/v3/go/auto/optup"
 	"github.com/pulumi/pulumi/sdk/v3/go/common/apitype"
+	"github.com/pulumi/pulumi/sdk/v3/go/common/resource"
 	"github.com/pulumi/pulumi/sdk/v3/go/common/tokens"
 	"github.com/pulumi/pulumi/sdk/v3/go/common/workspace"
 	"github.com/sst/ion/pkg/global"
@@ -242,10 +243,6 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 	}
 	slog.Info("built config")
 
-	if err != nil {
-		return err
-	}
-
 	stream := make(chan events.EngineEvent)
 	eventlog, err := os.Create(filepath.Join(s.project.PathWorkingDir(), "event.log"))
 	if err != nil {
@@ -378,6 +375,132 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 	if err != nil {
 		slog.Info("error running stack command", "err", err)
 	}
+	return nil
+}
+
+type ImportOptions struct {
+	Type   string
+	Name   string
+	ID     string
+	Parent string
+}
+
+func (s *stack) Import(ctx context.Context, input *ImportOptions) error {
+	urnPrefix := fmt.Sprintf("urn:pulumi:%v::%v::", s.project.app.Stage, s.project.app.Name)
+	urnFinal := input.Type + "::" + input.Name
+	urn, err := resource.ParseURN(urnPrefix + urnFinal)
+	if err != nil {
+		return err
+	}
+	var parent resource.URN
+	if input.Parent != "" {
+		splits := strings.Split(input.Parent, "::")
+		parentType := splits[0]
+		parentName := splits[1]
+		urn, err = resource.ParseURN(urnPrefix + parentType + "$" + urnFinal)
+		if err != nil {
+			return err
+		}
+		parent, err = resource.ParseURN(urnPrefix + parentType + "::" + parentName)
+	}
+
+	fmt.Println(urn)
+	fmt.Println(parent)
+
+	err = s.lock()
+	if err != nil {
+		return err
+	}
+	defer s.unlock()
+
+	passphrase, err := provider.Passphrase(s.project.backend, s.project.app.Name, s.project.app.Stage)
+	if err != nil {
+		return err
+	}
+	env, err := s.project.backend.Env()
+	if err != nil {
+		return err
+	}
+	env["PULUMI_CONFIG_PASSPHRASE"] = passphrase
+
+	ws, err := auto.NewLocalWorkspace(ctx,
+		auto.WorkDir(s.project.PathWorkingDir()),
+		auto.PulumiHome(global.ConfigDir()),
+		auto.Project(workspace.Project{
+			Name:    tokens.PackageName(s.project.app.Name),
+			Runtime: workspace.NewProjectRuntimeInfo("nodejs", nil),
+			Backend: &workspace.ProjectBackend{
+				URL: fmt.Sprintf("file://%v", s.project.PathWorkingDir()),
+			},
+		}),
+		auto.EnvVars(env),
+	)
+	if err != nil {
+		return err
+	}
+
+	stack, err := auto.SelectStack(ctx, s.project.app.Stage, ws)
+	if err != nil {
+		return err
+	}
+
+	config := auto.ConfigMap{}
+	for provider, args := range s.project.app.Providers {
+		for key, value := range args {
+			if provider == "cloudflare" && key == "accountId" {
+				continue
+			}
+			config[fmt.Sprintf("%v:%v", provider, key)] = auto.ConfigValue{Value: value}
+		}
+	}
+	err = stack.SetAllConfig(ctx, config)
+	if err != nil {
+		return err
+	}
+
+	export, err := stack.Export(ctx)
+	if err != nil {
+		return err
+	}
+
+	var deployment apitype.DeploymentV3
+	err = json.Unmarshal(export.Deployment, &deployment)
+	if err != nil {
+		return err
+	}
+
+	fmt.Println("existing")
+	match := apitype.ResourceV3{}
+	for _, resource := range deployment.Resources {
+		fmt.Println(resource.URN)
+		if urn == resource.URN {
+			match = resource
+		}
+	}
+	match.URN = urn
+	match.Parent = parent
+	match.Type, err = tokens.ParseTypeToken(input.Type)
+	match.Custom = true
+	if err != nil {
+		return err
+	}
+	match.ID = resource.ID(input.ID)
+
+	deployment.Resources = append(deployment.Resources, match)
+	serialized, err := json.Marshal(deployment)
+	export.Deployment = serialized
+	err = stack.Import(ctx, export)
+	if err != nil {
+		return err
+	}
+
+	fmt.Println("imported")
+	fmt.Println("refreshing")
+	_, err = stack.Refresh(ctx, optrefresh.Target([]string{string(urn)}))
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
