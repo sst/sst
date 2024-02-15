@@ -6,13 +6,15 @@ import { Input } from "../input.js";
 
 export interface CronJobProps {
   /**
-   * The function that will be executed when the job runs.
+   * The full function props.
    *
-   * @example
-   * ```js
+   * ```ts
    * {
    *   job: {
-   *     function: "packages/functions/src/index.handler"
+   *     function: {
+   *       runtime: "nodejs20.x",
+   *       handler: "packages/functions/src/index.handler",
+   *     }
    *   }
    * }
    * ```
@@ -22,9 +24,12 @@ export interface CronJobProps {
 
 export interface CronArgs {
   /**
-   * Path to the handler for the cron function.
+   * The function that'll be executed when the cron job runs.
+   * You can pass in the path or the full function props.
+   *
    * @example
-   * ```js
+   *
+   * ```ts
    * {
    *   job: "src/cron.handler"
    * }
@@ -34,51 +39,58 @@ export interface CronArgs {
   /**
    * The schedule for the cron job.
    *
-   * The string format takes a [rate expression](https://docs.aws.amazon.com/lambda/latest/dg/services-cloudwatchevents-expressions.html).
-   *
-   * ```txt
-   * rate(1 minute)
-   * rate(5 minutes)
-   * rate(1 hour)
-   * rate(5 hours)
-   * rate(1 day)
-   * rate(5 days)
-   * ```
-   * Or as a [cron expression](https://docs.aws.amazon.com/eventbridge/latest/userguide/eb-create-rule-schedule.html#eb-cron-expressions).
-   *
-   * ```txt
-   * cron(15 10 * * ? *)    // 10:15 AM (UTC) every day.
-   * ```
-   *
    * @example
-   * ```js
+   *
+   * You can use a [rate expression](https://docs.aws.amazon.com/lambda/latest/dg/services-cloudwatchevents-expressions.html).
+   *
+   * ```ts
    * {
-   *   schedule: "rate(5 minutes)",
+   *   schedule: "rate(5 minutes)"
+   *   // schedule: "rate(1 minute)"
+   *   // schedule: "rate(5 minutes)"
+   *   // schedule: "rate(1 hour)"
+   *   // schedule: "rate(5 hours)"
+   *   // schedule: "rate(1 day)"
+   *   // schedule: "rate(5 days)"
    * }
    * ```
-   * ```js
+   * Or a [cron expression](https://docs.aws.amazon.com/eventbridge/latest/userguide/eb-create-rule-schedule.html#eb-cron-expressions).
+   *
+   * ```ts
    * {
-   *   schedule: "cron(15 10 * * ? *)",
+   *   schedule: "cron(15 10 * * ? *)", // 10:15 AM (UTC) every day
    * }
    * ```
    */
   schedule: Input<`rate(${string})` | `cron(${string})`>;
   /**
-   * [Transform](/docs/transform/) how this component is created.
+   * [Transform](/docs/components#transform/) how this component creates its underlying resources.
    */
   transform?: {
+    /**
+     * Transform the EventBridge Rule resource.
+     */
     rule?: Transform<aws.cloudwatch.EventRuleArgs>;
+    /**
+     * Transform the EventBridge Target resource.
+     */
     target?: Transform<aws.cloudwatch.EventTargetArgs>;
   };
 }
 
 /**
- * The `Cron` component makes it easy to create a Cron job powered by Event Bus.
+ * The `Cron` component lets you add cron jobs to your app.
+ * It's powered by [Amazon Event Bus](https://docs.aws.amazon.com/eventbridge/latest/userguide/eb-event-bus.html).
+ *
  * @example
- * #### Using the minimal config
- * ```js
- * new sst.aws.Cron("Web", {
- *   job: "src/cron.handler"
+ * #### Example
+ *
+ * Pass in a `schedule` and a `job` function that'll be executed.
+ *
+ * ```ts
+ * new sst.aws.Cron("MyCronJob", {
+ *   job: "src/cron.handler",
+ *   schedule: "rate(1 minute)",
  * });
  * ```
  */
@@ -148,10 +160,22 @@ export class Cron extends Component {
     }
   }
 
+  /**
+   * The underlying [resources](/docs/components/#nodes) this component creates.
+   */
   public get nodes() {
     return {
+      /**
+       * The sst.aws.Function.
+       */
       job: this.fn,
+      /**
+       * The EventBridge Rule resource.
+       */
       rule: this.rule,
+      /**
+       * The EventBridge Target resource.
+       */
       target: this.target,
     };
   }

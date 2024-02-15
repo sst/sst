@@ -14,6 +14,7 @@
 .sl-markdown-content h2 + div.segment:has(> h3:first-child) {
   margin-top: 2.5rem;
 }
+
 /**
  * Sections
  */
@@ -48,6 +49,9 @@
  */
 .sl-markdown-content section.tsdoc h4:not(:where(.not-content *)) {
   font-size: var(--sl-text-h5); 
+}
+.sl-markdown-content div.segment > :not(h1, h2, h3, h4, h5, h6) + :is(h4, h5, h6):not(:where(.not-content *)) {
+  margin-top: 2rem;
 }
 .sl-markdown-content section.tsdoc.inline p:first-child strong:not(:where(.not-content *)) {
   margin-right: var(--tsdoc-key-margin-right);

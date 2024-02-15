@@ -1,6 +1,6 @@
 ---
 title: Cron
-description: Reference doc for the `Cron` component
+description: Reference for the `sst.aws.Cron` component
 ---
 
 import Segment from '../../../../../components/tsdoc/Segment.astro';
@@ -9,12 +9,17 @@ import NestedTitle from '../../../../../components/tsdoc/NestedTitle.astro';
 import InlineSection from '../../../../../components/tsdoc/InlineSection.astro';
 
 <Section type="about">
-The `Cron` component makes it easy to create a Cron job powered by Event Bus.
+The `Cron` component lets you add cron jobs to your app.
+It's powered by [Amazon Event Bus](https://docs.aws.amazon.com/eventbridge/latest/userguide/eb-event-bus.html).
 
-#### Using the minimal config
-```js
-new sst.aws.Cron("Web", {
-  job: "src/cron.handler"
+#### Example
+
+Pass in a `schedule` and a `job` function that'll be executed.
+
+```ts
+new sst.aws.Cron("MyCronJob", {
+  job: "src/cron.handler",
+  schedule: "rate(1 minute)",
 });
 ```
 </Section>
@@ -50,6 +55,7 @@ new Cron(name, args, opts?)
 - <p>[<code class="key">rule</code>](#nodes-rule)</p>
 - <p>[<code class="key">target</code>](#nodes-target)</p>
 </Section>
+The underlying [resources](/docs/components/#nodes) this component creates.
 </Segment>
 <Segment>
 <NestedTitle id="nodes-job" Tag="h4" parent="nodes.">job</NestedTitle>
@@ -58,6 +64,7 @@ new Cron(name, args, opts?)
 **Type** <code class="primitive">Output</code><code class="symbol">&lt;</code>[<code class="type">Function</code>](function/)<code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
+The sst.aws.Function.
 </Segment>
 <Segment>
 <NestedTitle id="nodes-rule" Tag="h4" parent="nodes.">rule</NestedTitle>
@@ -66,6 +73,7 @@ new Cron(name, args, opts?)
 **Type** [<code class="type">EventRule</code>](https://www.pulumi.com/registry/packages/aws/api-docs/cloudwatch/eventrule/)
 </InlineSection>
 </Section>
+The EventBridge Rule resource.
 </Segment>
 <Segment>
 <NestedTitle id="nodes-target" Tag="h4" parent="nodes.">target</NestedTitle>
@@ -74,6 +82,7 @@ new Cron(name, args, opts?)
 **Type** [<code class="type">EventTarget</code>](https://www.pulumi.com/registry/packages/aws/api-docs/cloudwatch/eventtarget/)
 </InlineSection>
 </Section>
+The EventBridge Target resource.
 </Segment>
 
 ## CronArgs
@@ -85,8 +94,9 @@ new Cron(name, args, opts?)
 </InlineSection>
 - <p>[<code class="key">function</code>](#job-function)</p>
 </Section>
-Path to the handler for the cron function.
-```js
+The function that'll be executed when the cron job runs.
+You can pass in the path or the full function props.
+```ts
 {
   job: "src/cron.handler"
 }
@@ -99,11 +109,15 @@ Path to the handler for the cron function.
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol"> | </code>[<code class="type">FunctionArgs</code>](function/#functionargs)<code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
-The function that will be executed when the job runs.
-```js
+The full function props.
+
+```ts
 {
   job: {
-    function: "packages/functions/src/index.handler"
+    function: {
+      runtime: "nodejs20.x",
+      handler: "packages/functions/src/index.handler",
+    }
   }
 }
 ```
@@ -116,30 +130,24 @@ The function that will be executed when the job runs.
 </InlineSection>
 </Section>
 The schedule for the cron job.
+You can use a [rate expression](https://docs.aws.amazon.com/lambda/latest/dg/services-cloudwatchevents-expressions.html).
 
-The string format takes a [rate expression](https://docs.aws.amazon.com/lambda/latest/dg/services-cloudwatchevents-expressions.html).
-
-```txt
-rate(1 minute)
-rate(5 minutes)
-rate(1 hour)
-rate(5 hours)
-rate(1 day)
-rate(5 days)
-```
-Or as a [cron expression](https://docs.aws.amazon.com/eventbridge/latest/userguide/eb-create-rule-schedule.html#eb-cron-expressions).
-
-```txt
-cron(15 10 * * ? *)    // 10:15 AM (UTC) every day.
-```
-```js
+```ts
 {
-  schedule: "rate(5 minutes)",
+  schedule: "rate(5 minutes)"
+  // schedule: "rate(1 minute)"
+  // schedule: "rate(5 minutes)"
+  // schedule: "rate(1 hour)"
+  // schedule: "rate(5 hours)"
+  // schedule: "rate(1 day)"
+  // schedule: "rate(5 days)"
 }
 ```
-```js
+Or a [cron expression](https://docs.aws.amazon.com/eventbridge/latest/userguide/eb-create-rule-schedule.html#eb-cron-expressions).
+
+```ts
 {
-  schedule: "cron(15 10 * * ? *)",
+  schedule: "cron(15 10 * * ? *)", // 10:15 AM (UTC) every day
 }
 ```
 </Segment>
@@ -152,7 +160,7 @@ cron(15 10 * * ? *)    // 10:15 AM (UTC) every day.
 - <p>[<code class="key">rule?</code>](#transform-rule)</p>
 - <p>[<code class="key">target?</code>](#transform-target)</p>
 </Section>
-[Transform](/docs/transform/) how this component is created.
+[Transform](/docs/components#transform/) how this component creates the underlying resources.
 </Segment>
 <Segment>
 <NestedTitle id="transform-rule" Tag="h4" parent="transform.">rule?</NestedTitle>
@@ -161,6 +169,7 @@ cron(15 10 * * ? *)    // 10:15 AM (UTC) every day.
 **Type** [<code class="type">EventRuleArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/cloudwatch/eventrule/#inputs)<code class="symbol"> | </code><code class="symbol">(</code><code class="primitive">args</code><code class="symbol">: </code>[<code class="type">EventRuleArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/cloudwatch/eventrule/#inputs)<code class="symbol"> => </code>[<code class="type">EventRuleArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/cloudwatch/eventrule/#inputs)<code class="symbol"> | </code><code class="primitive">void</code><code class="symbol">)</code>
 </InlineSection>
 </Section>
+Transform the EventBridge Rule resource.
 </Segment>
 <Segment>
 <NestedTitle id="transform-target" Tag="h4" parent="transform.">target?</NestedTitle>
@@ -169,6 +178,7 @@ cron(15 10 * * ? *)    // 10:15 AM (UTC) every day.
 **Type** [<code class="type">EventTargetArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/cloudwatch/eventtarget/#inputs)<code class="symbol"> | </code><code class="symbol">(</code><code class="primitive">args</code><code class="symbol">: </code>[<code class="type">EventTargetArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/cloudwatch/eventtarget/#inputs)<code class="symbol"> => </code>[<code class="type">EventTargetArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/cloudwatch/eventtarget/#inputs)<code class="symbol"> | </code><code class="primitive">void</code><code class="symbol">)</code>
 </InlineSection>
 </Section>
+Transform the EventBridge Target resource.
 </Segment>
 
 ## CronJobProps
@@ -179,11 +189,15 @@ cron(15 10 * * ? *)    // 10:15 AM (UTC) every day.
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol"> | </code>[<code class="type">FunctionArgs</code>](function/#functionargs)<code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
-The function that will be executed when the job runs.
-```js
+The full function props.
+
+```ts
 {
   job: {
-    function: "packages/functions/src/index.handler"
+    function: {
+      runtime: "nodejs20.x",
+      handler: "packages/functions/src/index.handler",
+    }
   }
 }
 ```

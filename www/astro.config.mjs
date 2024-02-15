@@ -19,12 +19,12 @@ const sidebar = [
     ],
   },
   {
-    label: "Features",
+    label: "Concepts",
     items: [
       { label: "Linking", link: "/docs/linking-resources/" },
-      { label: "Live Mode", link: "/docs/live-mode/" },
-      { label: "Transform", link: "/docs/transform/" },
       { label: "Console", link: "/docs/console/" },
+      { label: "Live Mode", link: "/docs/live-mode/" },
+      { label: "Components", link: "/docs/components/" },
     ],
   },
   {
