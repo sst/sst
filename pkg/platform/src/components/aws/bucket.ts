@@ -1,9 +1,4 @@
-import {
-  ComponentResourceOptions,
-  output,
-  interpolate,
-  jsonStringify,
-} from "@pulumi/pulumi";
+import { ComponentResourceOptions, output, interpolate } from "@pulumi/pulumi";
 import * as aws from "@pulumi/aws";
 import { RandomId } from "@pulumi/random";
 import { prefixName, hashNumberToString } from "../naming";
@@ -111,16 +106,15 @@ export class Bucket
           `${name}Policy`,
           transform(args?.transform?.bucketPolicy, {
             bucket: bucket.bucket,
-            policy: jsonStringify({
-              Statement: [
+            policy: aws.iam.getPolicyDocumentOutput({
+              statements: [
                 {
-                  Principal: "*",
-                  Effect: "Allow",
-                  Action: ["s3:GetObject"],
-                  Resource: [interpolate`${bucket.arn}/*`],
+                  principals: [{ type: "*", identifiers: ["*"] }],
+                  actions: ["s3:GetObject"],
+                  resources: [interpolate`${bucket.arn}/*`],
                 },
               ],
-            }),
+            }).json,
           }),
           {
             parent,
