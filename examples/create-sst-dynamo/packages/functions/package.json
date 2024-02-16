@@ -1,5 +1,5 @@
 {
-  "name": "@create-sst-dynamo/functions",
+  "name": "@@@app/functions",
   "version": "0.0.0",
   "type": "module",
   "scripts": {
@@ -7,15 +7,9 @@
     "typecheck": "tsc -noEmit"
   },
   "devDependencies": {
-    "@types/node": "^20.10.4",
-    "@types/aws-lambda": "^8.10.130",
-    "vitest": "^1.0.4",
-    "sst": "^2.38.7"
-  },
-  "dependencies": {
-    "@pothos/core": "^3.40.0",
-    "graphql": "^16.8.1",
-    "ulid": "^2.3.0",
-    "@types/aws-lambda": "^8.10.130"
+    "@types/node": "^20.11.17",
+    "@types/aws-lambda": "^8.10.133",
+    "vitest": "^1.2.2",
+    "sst": "^2.40.3"
   }
 }

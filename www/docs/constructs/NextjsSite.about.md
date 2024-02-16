@@ -28,7 +28,7 @@ Here's how it works at a high level.
 2. This adds the `NextjsSite` construct to your stacks code.
 
    ```ts {8-10}
-   import { NextjsSite, StackContext } as sst from "sst/constructs";
+   import { NextjsSite, StackContext } from "sst/constructs";
 
    export default function MyStack({ stack }: StackContext) {
 
