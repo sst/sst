@@ -12,7 +12,7 @@ import (
 )
 
 func startDeployer(ctx context.Context, p *project.Project) (util.CleanupFunc, error) {
-	trigger := make(chan any)
+	trigger := make(chan any, 10000)
 	mutex := sync.RWMutex{}
 	watchedFiles := make(map[string]bool)
 
