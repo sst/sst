@@ -148,6 +148,9 @@ func PullState(backend Backend, app, stage string, out string) error {
 	if err != nil {
 		return err
 	}
+	if reader == nil {
+		return nil
+	}
 	file, err := os.Create(out)
 	if err != nil {
 		return err
