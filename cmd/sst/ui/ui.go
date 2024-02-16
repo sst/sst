@@ -362,6 +362,15 @@ func (u *UI) Event(evt *server.Event) {
 		formattedDuration := fmt.Sprintf("%.9s", fmt.Sprintf("+%v", duration))
 		u.printEvent(u.getColor(evt.FunctionLogEvent.WorkerID), formattedDuration, evt.FunctionLogEvent.Line)
 	}
+
+	if evt.FunctionBuildEvent != nil {
+		if len(evt.FunctionBuildEvent.Errors) > 0 {
+			u.printEvent(color.FgRed, evt.FunctionBuildEvent.FunctionID, strings.Join(evt.FunctionBuildEvent.Errors, "\n"))
+			return
+		}
+		u.printEvent(color.FgGreen, evt.FunctionBuildEvent.FunctionID, "Built")
+	}
+
 }
 
 func (u *UI) printEvent(barColor color.Attribute, label string, message string) {

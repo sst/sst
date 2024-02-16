@@ -358,6 +358,20 @@ func (a *AwsProvider) putData(key, app, stage string, data io.Reader) error {
 	return nil
 }
 
+func (a *AwsProvider) removeData(key, app, stage string) error {
+	s3Client := s3.NewFromConfig(a.config)
+
+	_, err := s3Client.DeleteObject(context.TODO(), &s3.DeleteObjectInput{
+		Bucket: aws.String(a.bootstrap.State),
+		Key:    aws.String(a.pathForData(key, app, stage)),
+	})
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (a *AwsProvider) getPassphrase(app string, stage string) (string, error) {
 	ssmClient := ssm.NewFromConfig(a.config)
 

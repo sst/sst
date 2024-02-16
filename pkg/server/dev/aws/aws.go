@@ -207,16 +207,24 @@ func Start(
 			build := builds[functionID]
 			warp := complete.Warps[functionID]
 			if build == nil {
-				build, _ = runtime.Build(ctx, &runtime.BuildInput{
+				build, err = runtime.Build(ctx, &runtime.BuildInput{
 					Warp:    warp,
 					Project: p,
 					Dev:     true,
 					Links:   complete.Links,
 				})
-				bus.Publish(&FunctionBuildEvent{
-					Errors: build.Errors,
-				})
-				if len(build.Errors) > 0 {
+				if err == nil {
+					bus.Publish(&FunctionBuildEvent{
+						FunctionID: functionID,
+						Errors:     build.Errors,
+					})
+				} else {
+					bus.Publish(&FunctionBuildEvent{
+						FunctionID: functionID,
+						Errors:     []string{err.Error()},
+					})
+				}
+				if err != nil || len(build.Errors) > 0 {
 					delete(builds, functionID)
 					return false
 				}

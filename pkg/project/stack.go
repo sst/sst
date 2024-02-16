@@ -89,11 +89,20 @@ type StackEventStream = chan StackEvent
 func (s *stack) Run(ctx context.Context, input *StackInput) error {
 	slog.Info("running stack command", "cmd", input.Command)
 
-	err := s.lock()
+	err := s.Lock()
+	if err != nil {
+		if errors.Is(err, &provider.LockExistsError{}) {
+			return &ConcurrentUpdateError{}
+		}
+		return err
+	}
+	defer s.Unlock()
+
+	_, err = s.PullState()
 	if err != nil {
 		return err
 	}
-	defer s.unlock()
+	defer s.PushState()
 
 	tasks, _ := errgroup.WithContext(ctx)
 	secrets := map[string]string{}
@@ -407,11 +416,16 @@ func (s *stack) Import(ctx context.Context, input *ImportOptions) error {
 	fmt.Println(urn)
 	fmt.Println(parent)
 
-	err = s.lock()
+	err = provider.Lock(s.project.backend, s.project.app.Name, s.project.app.Stage)
 	if err != nil {
 		return err
 	}
-	defer s.unlock()
+	defer provider.Unlock(s.project.backend, s.project.app.Name, s.project.app.Stage)
+
+	_, err = s.PullState()
+	if err != nil {
+		return err
+	}
 
 	passphrase, err := provider.Passphrase(s.project.backend, s.project.app.Name, s.project.app.Stage)
 	if err != nil {
@@ -470,23 +484,27 @@ func (s *stack) Import(ctx context.Context, input *ImportOptions) error {
 	}
 
 	fmt.Println("existing")
-	match := apitype.ResourceV3{}
-	for _, resource := range deployment.Resources {
+	existingIndex := -1
+	for index, resource := range deployment.Resources {
 		fmt.Println(resource.URN)
 		if urn == resource.URN {
-			match = resource
+			existingIndex = index
+			break
 		}
 	}
-	match.URN = urn
-	match.Parent = parent
-	match.Type, err = tokens.ParseTypeToken(input.Type)
-	match.Custom = true
+	if existingIndex < 0 {
+		deployment.Resources = append(deployment.Resources, apitype.ResourceV3{})
+		existingIndex = len(deployment.Resources) - 1
+	}
+	deployment.Resources[existingIndex].URN = urn
+	deployment.Resources[existingIndex].Parent = parent
+	deployment.Resources[existingIndex].Custom = true
+	deployment.Resources[existingIndex].ID = resource.ID(input.ID)
+	deployment.Resources[existingIndex].Type, err = tokens.ParseTypeToken(input.Type)
 	if err != nil {
 		return err
 	}
-	match.ID = resource.ID(input.ID)
 
-	deployment.Resources = append(deployment.Resources, match)
 	serialized, err := json.Marshal(deployment)
 	export.Deployment = serialized
 	err = stack.Import(ctx, export)
@@ -500,68 +518,55 @@ func (s *stack) Import(ctx context.Context, input *ImportOptions) error {
 	if err != nil {
 		return err
 	}
-
-	return nil
+	return s.PushState()
 }
 
-func (s *stack) lock() error {
-	pulumiDir := filepath.Join(s.project.PathWorkingDir(), ".pulumi")
-	err := os.RemoveAll(
-		pulumiDir,
-	)
-	if err != nil {
-		return err
-	}
+func (s *stack) Lock() error {
+	return provider.Lock(s.project.backend, s.project.app.Name, s.project.app.Stage)
+}
 
+func (s *stack) Unlock() error {
+	return provider.Unlock(s.project.backend, s.project.app.Name, s.project.app.Stage)
+}
+
+func (s *stack) PullState() (string, error) {
+	pulumiDir := filepath.Join(s.project.PathWorkingDir(), ".pulumi")
+	err := os.RemoveAll(pulumiDir)
+	if err != nil {
+		return "", err
+	}
 	appDir := filepath.Join(pulumiDir, "stacks", s.project.app.Name)
 	err = os.MkdirAll(appDir, 0755)
 	if err != nil {
-		return err
+		return "", err
 	}
-
-	file, err := os.Create(
-		filepath.Join(appDir, fmt.Sprintf("%v.json", s.project.app.Stage)),
+	path := filepath.Join(appDir, fmt.Sprintf("%v.json", s.project.app.Stage))
+	err = provider.PullState(
+		s.project.backend,
+		s.project.app.Name,
+		s.project.app.Stage,
+		path,
 	)
 	if err != nil {
-		return fmt.Errorf("failed to create local state: %w", err)
+		return "", err
 	}
-	defer file.Close()
-
-	slog.Info("locking", "app", s.project.app.Name, "stage", s.project.app.Stage)
-	err = s.project.backend.Lock(s.project.app.Name, s.project.app.Stage, file)
-	if err != nil {
-		if errors.Is(err, &provider.LockExistsError{}) {
-			return &ConcurrentUpdateError{}
-		}
-		return err
-	}
-	slog.Info("locked")
-
-	return nil
+	return path, nil
 }
 
-func (s *stack) unlock() error {
+func (s *stack) PushState() error {
 	pulumiDir := filepath.Join(s.project.PathWorkingDir(), ".pulumi")
-
-	stateFile := filepath.Join(pulumiDir, "stacks", s.project.app.Name, fmt.Sprintf("%v.json", s.project.app.Stage))
-	file, err := os.Open(
-		stateFile,
+	return provider.PushState(
+		s.project.backend,
+		s.project.app.Name,
+		s.project.app.Stage,
+		filepath.Join(pulumiDir, "stacks", s.project.app.Name, fmt.Sprintf("%v.json", s.project.app.Stage)),
 	)
-	if err != nil {
-		return err
-	}
-	defer file.Close()
-
-	slog.Info("unlocking", "app", s.project.app.Name, "stage", s.project.app.Stage, "state", stateFile)
-	err = s.project.backend.Unlock(s.project.app.Name, s.project.app.Stage, file)
-	if err != nil {
-		return err
-	}
-	slog.Info("unlocked")
-
-	return nil
 }
 
 func (s *stack) Cancel() error {
-	return s.project.backend.Cancel(s.project.app.Name, s.project.app.Stage)
+	return provider.Unlock(
+		s.project.backend,
+		s.project.app.Name,
+		s.project.app.Stage,
+	)
 }

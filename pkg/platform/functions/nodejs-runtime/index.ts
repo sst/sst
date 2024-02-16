@@ -21,10 +21,12 @@ let response: any;
 let context: LambdaContext;
 
 async function error(ex: any) {
+  console.log(ex);
   await fetch(
-    AWS_LAMBDA_RUNTIME_API + !context
-      ? `/runtime/init/error`
-      : `/runtime/invocation/${context.awsRequestId}/error`,
+    AWS_LAMBDA_RUNTIME_API +
+      (!context
+        ? `/runtime/init/error`
+        : `/runtime/invocation/${context.awsRequestId}/error`),
     {
       method: "POST",
       headers: {
@@ -52,9 +54,8 @@ try {
       ).join(", ")}`,
     );
   }
-  // if (!mod) mod = require(file);
 } catch (ex: any) {
-  error(ex);
+  await error(ex);
   process.exit(1);
 }
 
@@ -132,7 +133,7 @@ while (true) {
   try {
     response = await fn(request, context);
   } catch (ex: any) {
-    error(ex);
+    await error(ex);
     continue;
   }
 

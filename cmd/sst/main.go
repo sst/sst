@@ -139,6 +139,46 @@ func main() {
 				},
 			},
 			{
+				Name: "state",
+				Subcommands: []*cli.Command{
+					{
+						Name: "edit",
+						Action: func(cli *cli.Context) error {
+							p, err := initProject(cli)
+							if err != nil {
+								return err
+							}
+
+							err = p.Stack.Lock()
+							if err != nil {
+								return err
+							}
+							defer p.Stack.Unlock()
+
+							path, err := p.Stack.PullState()
+							if err != nil {
+								return err
+							}
+							editor := os.Getenv("EDITOR")
+							if editor == "" {
+								editor = "vim"
+							}
+							cmd := exec.Command(editor, path)
+							cmd.Stdin = os.Stdin
+							cmd.Stdout = os.Stdout
+							cmd.Stderr = os.Stderr
+							if err := cmd.Start(); err != nil {
+								return err
+							}
+							if err := cmd.Wait(); err != nil {
+								return err
+							}
+							return p.Stack.PushState()
+						},
+					},
+				},
+			},
+			{
 				Name: "secrets",
 				Subcommands: []*cli.Command{
 					{

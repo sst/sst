@@ -9,18 +9,17 @@ import (
 	"encoding/json"
 	"io"
 	"os"
+	"time"
 
 	"golang.org/x/exp/slog"
 )
 
 type Backend interface {
-	Lock(app, stage string, out *os.File) error
-	Unlock(app, stage string, in *os.File) error
-	Cancel(app, stage string) error
 	Env() (map[string]string, error)
 
 	getData(key, app, stage string) (io.Reader, error)
 	putData(key, app, stage string, data io.Reader) error
+	removeData(key, app, stage string) error
 
 	setPassphrase(app, stage string, passphrase string) error
 	getPassphrase(app, stage string) (string, error)
@@ -61,8 +60,22 @@ func (e *LockExistsError) Error() string {
 	return "Lock exists"
 }
 
+var passphraseCache = map[Backend]map[string]string{}
+
 func Passphrase(backend Backend, app, stage string) (string, error) {
 	slog.Info("getting passphrase", "app", app, "stage", stage)
+
+	cache, ok := passphraseCache[backend]
+	if !ok {
+		cache = map[string]string{}
+		passphraseCache[backend] = cache
+	}
+
+	existingPassphrase, ok := cache[app+stage]
+	if ok {
+		return existingPassphrase, nil
+	}
+
 	passphrase, err := backend.getPassphrase(app, stage)
 	if err != nil {
 		return "", err
@@ -82,12 +95,13 @@ func Passphrase(backend Backend, app, stage string) (string, error) {
 		}
 	}
 
+	existingPassphrase, ok = cache[app+stage]
 	return passphrase, nil
 }
 
 func GetLinks(backend Backend, app, stage string) (map[string]interface{}, error) {
 	data := map[string]interface{}{}
-	err := getData(backend, "link", app, stage, &data)
+	err := getData(backend, "link", app, stage, true, &data)
 	if err != nil {
 		return nil, err
 	}
@@ -99,12 +113,12 @@ func PutLinks(backend Backend, app, stage string, data map[string]interface{}) e
 	if data == nil || len(data) == 0 {
 		return nil
 	}
-	return putData(backend, "link", app, stage, data)
+	return putData(backend, "link", app, stage, true, data)
 }
 
 func GetSecrets(backend Backend, app, stage string) (map[string]string, error) {
 	data := map[string]string{}
-	err := getData(backend, "secret", app, stage, &data)
+	err := getData(backend, "secret", app, stage, true, &data)
 	if err != nil {
 		return nil, err
 	}
@@ -112,43 +126,101 @@ func GetSecrets(backend Backend, app, stage string) (map[string]string, error) {
 }
 
 func PutSecrets(backend Backend, app, stage string, data map[string]string) error {
-	slog.Info("putting selinkscrets", "app", app, "stage", stage)
+	slog.Info("putting secrets", "app", app, "stage", stage)
 	if data == nil || len(data) == 0 {
 		return nil
 	}
-	return putData(backend, "secret", app, stage, data)
+	return putData(backend, "secret", app, stage, true, data)
 }
 
-func putData(backend Backend, key, app, stage string, data interface{}) error {
-	passphrase, err := Passphrase(backend, app, stage)
+func PushState(backend Backend, app, stage string, from string) error {
+	slog.Info("pushing state", "app", app, "stage", stage, "from", from)
+	file, err := os.Open(from)
+	if err != nil {
+		return nil
+	}
+	return backend.putData("app", app, stage, file)
+}
+
+func PullState(backend Backend, app, stage string, out string) error {
+	slog.Info("pulling state", "app", app, "stage", stage, "out", out)
+	reader, err := backend.getData("app", app, stage)
 	if err != nil {
 		return err
 	}
+	file, err := os.Create(out)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+	_, err = io.Copy(file, reader)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+type lockData struct {
+	Created time.Time `json:"created"`
+}
+
+func Lock(backend Backend, app, stage string) error {
+	slog.Info("locking", "app", app, "stage", stage)
+	var lockData lockData
+	err := getData(backend, "lock", app, stage, false, &lockData)
+	if err != nil {
+		return err
+	}
+	if !lockData.Created.IsZero() {
+		return &LockExistsError{}
+	}
+	lockData.Created = time.Now()
+	err = putData(backend, "lock", app, stage, false, lockData)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func Unlock(backend Backend, app, stage string) error {
+	slog.Info("unlocking", "app", app, "stage", stage)
+	return removeData(backend, "lock", app, stage)
+}
+
+func putData(backend Backend, key, app, stage string, encrypt bool, data interface{}) error {
+	slog.Info("putting data", "key", key, "app", app, "stage", stage)
 	jsonBytes, err := json.Marshal(data)
 	if err != nil {
 		return err
 	}
-	passphraseBytes, err := base64.StdEncoding.DecodeString(passphrase)
-	if err != nil {
-		return err
+	if encrypt {
+		passphrase, err := Passphrase(backend, app, stage)
+		if err != nil {
+			return err
+		}
+		passphraseBytes, err := base64.StdEncoding.DecodeString(passphrase)
+		if err != nil {
+			return err
+		}
+		blockCipher, err := aes.NewCipher(passphraseBytes)
+		if err != nil {
+			return err
+		}
+		gcm, err := cipher.NewGCM(blockCipher)
+		if err != nil {
+			return err
+		}
+		nonce := make([]byte, gcm.NonceSize())
+		if _, err = rand.Read(nonce); err != nil {
+			return err
+		}
+		jsonBytes = gcm.Seal(nonce, nonce, jsonBytes, nil)
 	}
-	blockCipher, err := aes.NewCipher(passphraseBytes)
-	if err != nil {
-		return err
-	}
-	gcm, err := cipher.NewGCM(blockCipher)
-	if err != nil {
-		return err
-	}
-	nonce := make([]byte, gcm.NonceSize())
-	if _, err = rand.Read(nonce); err != nil {
-		return err
-	}
-	ciphertext := gcm.Seal(nonce, nonce, jsonBytes, nil)
-	return backend.putData(key, app, stage, bytes.NewReader(ciphertext))
+	return backend.putData(key, app, stage, bytes.NewReader(jsonBytes))
 }
 
-func getData(backend Backend, key, app, stage string, out interface{}) error {
+func getData(backend Backend, key, app, stage string, encrypted bool, out interface{}) error {
+	slog.Info("getting data", "key", key, "app", app, "stage", stage)
 	reader, err := backend.getData(key, app, stage)
 	if err != nil {
 		return err
@@ -156,34 +228,41 @@ func getData(backend Backend, key, app, stage string, out interface{}) error {
 	if reader == nil {
 		return nil
 	}
-	passphrase, err := Passphrase(backend, app, stage)
-	if err != nil {
-		return nil
-	}
-	passphraseBytes, err := base64.StdEncoding.DecodeString(passphrase)
-	if err != nil {
-		return nil
-	}
-	blockCipher, err := aes.NewCipher(passphraseBytes)
-	if err != nil {
-		return nil
-	}
-	gcm, err := cipher.NewGCM(blockCipher)
+
+	data, err := io.ReadAll(reader)
 	if err != nil {
 		return nil
 	}
 
-	encryptedData, err := io.ReadAll(reader)
-	if err != nil {
-		return nil
+	if encrypted {
+		passphrase, err := Passphrase(backend, app, stage)
+		if err != nil {
+			return nil
+		}
+		passphraseBytes, err := base64.StdEncoding.DecodeString(passphrase)
+		if err != nil {
+			return nil
+		}
+		blockCipher, err := aes.NewCipher(passphraseBytes)
+		if err != nil {
+			return nil
+		}
+		gcm, err := cipher.NewGCM(blockCipher)
+		if err != nil {
+			return nil
+		}
+
+		nonce, ciphertext := data[:gcm.NonceSize()], data[gcm.NonceSize():]
+
+		data, err = gcm.Open(nil, nonce, ciphertext, nil)
+		if err != nil {
+			return nil
+		}
 	}
 
-	nonce, ciphertext := encryptedData[:gcm.NonceSize()], encryptedData[gcm.NonceSize():]
+	return json.Unmarshal(data, out)
+}
 
-	decrypted, err := gcm.Open(nil, nonce, ciphertext, nil)
-	if err != nil {
-		return nil
-	}
-
-	return json.Unmarshal(decrypted, out)
+func removeData(backend Backend, key, app, stage string) error {
+	return backend.removeData(key, app, stage)
 }

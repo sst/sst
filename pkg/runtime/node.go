@@ -12,6 +12,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/evanw/esbuild/pkg/api"
 	esbuild "github.com/evanw/esbuild/pkg/api"
 	"github.com/sst/ion/internal/fs"
 )
@@ -61,7 +62,7 @@ func (w *NodeWorker) Logs() io.ReadCloser {
 }
 
 type NodeProperties struct {
-	Loader    map[string]esbuild.Loader `json:"loader"`
+	Loader    map[string]string `json:"loader"`
 	Install   []string
 	Banner    string
 	ESBuild   esbuild.BuildOptions `json:"esbuild"`
@@ -100,6 +101,31 @@ func (r *NodeRuntime) Build(ctx context.Context, input *BuildInput) (*BuildOutpu
 	}
 	target := filepath.Join(input.Out(), strings.ReplaceAll(rel, filepath.Ext(rel), extension))
 
+	slog.Info("loader info", "loader", properties.Loader)
+
+	loader := map[string]esbuild.Loader{}
+	loaderMap := map[string]api.Loader{
+		"js":      api.LoaderJS,
+		"jsx":     api.LoaderJSX,
+		"ts":      api.LoaderTS,
+		"tsx":     api.LoaderTSX,
+		"css":     api.LoaderCSS,
+		"json":    api.LoaderJSON,
+		"text":    api.LoaderText,
+		"base64":  api.LoaderBase64,
+		"file":    api.LoaderFile,
+		"dataurl": api.LoaderDataURL,
+		"binary":  api.LoaderBinary,
+	}
+
+	for key, value := range properties.Loader {
+		mapped, ok := loaderMap[value]
+		if !ok {
+			continue
+		}
+		loader[key] = mapped
+	}
+
 	options := esbuild.BuildOptions{
 		EntryPoints: []string{file},
 		Platform:    esbuild.PlatformNode,
@@ -109,7 +135,7 @@ func (r *NodeRuntime) Build(ctx context.Context, input *BuildInput) (*BuildOutpu
 			},
 			properties.Install...,
 		),
-		Loader:            properties.Loader,
+		Loader:            loader,
 		KeepNames:         true,
 		Bundle:            true,
 		Splitting:         properties.Splitting,
