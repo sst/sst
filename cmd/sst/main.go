@@ -325,6 +325,8 @@ func main() {
 				Name:  "dev",
 				Flags: []cli.Flag{},
 				Action: func(cli *cli.Context) error {
+					fmt.Print("\033[H\033[2J")
+
 					args := cli.Args().Slice()
 					hasTarget := len(args) > 0
 
