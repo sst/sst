@@ -346,6 +346,10 @@ func (u *UI) getFunction(input string) string {
 }
 
 func (u *UI) Event(evt *server.Event) {
+	if evt.ConcurrentUpdateEvent != nil {
+		u.printEvent(color.FgRed, "Locked", "A concurrent update was detected on the stack. Run `sst cancel` to delete the lock file and retry.")
+	}
+
 	if evt.FunctionInvokedEvent != nil {
 		u.workerTime[evt.FunctionInvokedEvent.WorkerID] = time.Now()
 		u.printEvent(u.getColor(evt.FunctionInvokedEvent.WorkerID), color.New(color.FgWhite, color.Bold).Sprintf("%-11s", "Invoked"), u.getFunction(evt.FunctionInvokedEvent.FunctionID))

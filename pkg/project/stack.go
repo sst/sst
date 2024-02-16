@@ -50,8 +50,6 @@ type StdOutEvent struct {
 
 type ConcurrentUpdateEvent struct{}
 
-type ConcurrentUpdateError struct{}
-
 type Links map[string]interface{}
 
 type WarpDefinition struct {
@@ -80,10 +78,6 @@ type Error struct {
 	URN     string
 }
 
-func (e *ConcurrentUpdateError) Error() string {
-	return "Concurrent update detected, run `sst cancel` to delete lock file and retry."
-}
-
 type StackEventStream = chan StackEvent
 
 func (s *stack) Run(ctx context.Context, input *StackInput) error {
@@ -92,7 +86,7 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 	err := s.Lock()
 	if err != nil {
 		if errors.Is(err, &provider.LockExistsError{}) {
-			return &ConcurrentUpdateError{}
+			input.OnEvent(&StackEvent{ConcurrentUpdateEvent: &ConcurrentUpdateEvent{}})
 		}
 		return err
 	}

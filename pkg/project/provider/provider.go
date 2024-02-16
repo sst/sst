@@ -57,7 +57,7 @@ const SSM_NAME_BOOTSTRAP = "/sst/bootstrap"
 type LockExistsError struct{}
 
 func (e *LockExistsError) Error() string {
-	return "Lock exists"
+	return "Concurrent update detected, run `sst cancel` to delete lock file and retry."
 }
 
 var passphraseCache = map[Backend]map[string]string{}
