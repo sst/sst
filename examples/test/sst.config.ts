@@ -27,5 +27,9 @@ export default $config({
         ],
       }),
     });
+
+    return {
+      role: role.arn,
+    };
   },
 });

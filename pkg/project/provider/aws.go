@@ -163,24 +163,24 @@ func (a *AwsProvider) Init(app string, stage string, args map[string]string) (er
 	}
 	a.bootstrap = bootstrap
 
-	creds, err := cfg.Credentials.Retrieve(context.TODO())
-	if err != nil {
-		return err
-	}
+	// creds, err := cfg.Credentials.Retrieve(context.TODO())
+	// if err != nil {
+	// 	return err
+	// }
 	delete(args, "profile")
-	if creds.AccessKeyID != "" {
-		args["accessKey"] = creds.AccessKeyID
-	}
+	// if creds.AccessKeyID != "" {
+	// 	args["accessKey"] = creds.AccessKeyID
+	// }
 
-	if creds.SecretAccessKey != "" {
-		args["secretKey"] = creds.SecretAccessKey
-	}
-	if creds.SessionToken != "" {
-		args["token"] = creds.SessionToken
-	}
-	if cfg.Region != "" {
-		args["region"] = cfg.Region
-	}
+	// if creds.SecretAccessKey != "" {
+	// 	args["secretKey"] = creds.SecretAccessKey
+	// }
+	// if creds.SessionToken != "" {
+	// 	args["token"] = creds.SessionToken
+	// }
+	// if cfg.Region != "" {
+	// 	args["region"] = cfg.Region
+	// }
 
 	tags, err := json.Marshal(map[string]interface{}{
 		"tags": map[string]string{

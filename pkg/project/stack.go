@@ -352,7 +352,7 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 		delete(outputs, "_receivers")
 
 		for key, value := range outputs {
-			complete.Outputs[key] = value
+			complete.Outputs[key] = value.Value
 		}
 	}()
 
@@ -526,6 +526,21 @@ func (s *stack) Lock() error {
 }
 
 func (s *stack) Unlock() error {
+	dir := s.project.PathWorkingDir()
+	files, err := os.ReadDir(dir)
+	if err != nil {
+		return err
+	}
+
+	for _, file := range files {
+		if strings.HasPrefix(file.Name(), "Pulumi") {
+			err := os.Remove(filepath.Join(dir, file.Name()))
+			if err != nil {
+				return err
+			}
+		}
+	}
+
 	return provider.Unlock(s.project.backend, s.project.app.Name, s.project.app.Stage)
 }
 
