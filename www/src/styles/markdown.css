@@ -11,11 +11,11 @@
 /* Space around asides and code blocks */
 .sl-markdown-content :not(a, strong, em, del, span, input, code)
   + :is(.starlight-aside, .expressive-code) {
-  margin-top: calc(var(--paragraph-spacing) + 0.5rem);
+  margin-top: calc(var(--paragraph-spacing) + 0.4375rem);
 }
 .sl-markdown-content :is(.starlight-aside, .expressive-code)
   + :not(a, strong, em, del, span, input, code, h1, h2, h3, h4, h5, h6, :where(.not-content *)) {
-  margin-top: calc(var(--paragraph-spacing) + 0.4375rem);
+  margin-top: calc(var(--paragraph-spacing) + 0.5rem);
 }
 /* Space around sections */
 .sl-markdown-content :not(h1, h2, h3, h4, h5, h6)

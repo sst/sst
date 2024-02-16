@@ -53,11 +53,11 @@ const RETENTION = {
 
 export type FunctionPermissionArgs = {
   /**
-   * IAM actions to allow to perform on the resources.
+   * The [IAM actions](https://docs.aws.amazon.com/service-authorization/latest/reference/reference_policies_actions-resources-contextkeys.html#actions_table) that can be performed.
    */
   actions: string[];
   /**
-   * The Amazon Resource Name (ARN) of the resources to allow actions on.
+   * The resources(s) specified using the [IAM ARN format](https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_identifiers.html).
    */
   resources: Input<string>[];
 };
@@ -65,10 +65,62 @@ export type FunctionPermissionArgs = {
 interface FunctionUrlCorsArgs
   extends Omit<
     aws.types.input.lambda.FunctionUrlCors,
-    "allowMethods" | "maxAge"
+    | "maxAge"
+    | "allowHeaders"
+    | "allowOrigins"
+    | "allowMethods"
+    | "exposeHeaders"
+    | "allowCredentials"
   > {
   /**
-   * The HTTP methods that are allowed when calling the function URL. For example: `["GET", "POST", "DELETE"]`, or the wildcard character (`["*"]`).
+   * Allow cookies or other credentials in requests to the function URL.
+   * @default `false`
+   */
+  allowCredentials?: Input<boolean>;
+  /**
+   * The HTTP headers that origins can include in requests to the function URL.
+   * @example
+   * ```js
+   * {
+   *   allowHeaders: ["date", "keep-alive", "x-custom-header"]
+   * }
+   * ```
+   */
+  allowHeaders?: Input<Input<string>[]>;
+  /**
+   * The origins that can access the function URL.
+   * @example
+   * ```js
+   * {
+   *   allowOrigins: ["https://www.example.com", "http://localhost:60905"]
+   * }
+   * ```
+   * Or the wildcard character for all origins.
+   * ```js
+   * {
+   *   allowOrigins: ["*"]
+   * }
+   * ```
+   */
+  allowOrigins?: Input<Input<string>[]>;
+  /**
+   * The HTTP headers in your function response that you want to expose to origins that call the function URL.
+   */
+  exposeHeaders?: Input<Input<string>[]>;
+  /**
+   * The HTTP methods that are allowed when calling the function URL.
+   * @example
+   * ```js
+   * {
+   *   allowMethods: ["GET", "POST", "DELETE"]
+   * }
+   * ```
+   * Or the wildcard character for all methods.
+   * ```js
+   * {
+   *   allowMethods: ["*"]
+   * }
+   * ```
    */
   allowMethods?: Input<
     Input<
@@ -76,15 +128,16 @@ interface FunctionUrlCorsArgs
     >[]
   >;
   /**
-   * The maximum amount of time, in seconds, that web browsers can cache results of a preflight request. By default, this is set to `0`, which means that the browser doesn't cache results. The maximum value is `86400`.
+   * The maximum amount of time the browser can cache results of a preflight request. By
+   * default the browser doesn't cache the results. The maximum value is `86400 seconds` or `1 day`.
+   * @default `"0 seconds"`
    */
   maxAge?: Input<Duration>;
 }
 
 export interface FunctionArgs {
   /**
-   * A description for the function.
-   * @default No description
+   * A description for the function. This is displayed in the AWS Console.
    * @example
    * ```js
    * {
@@ -94,8 +147,9 @@ export interface FunctionArgs {
    */
   description?: Input<string>;
   /**
-   * The runtime environment for the function.
-   * @default `nodejs18.x`
+   * The runtime environment for the function. Support for other runtimes is on our roadmap.
+   *
+   * @default `"nodejs18.x"`
    * @example
    * ```js
    * {
@@ -105,11 +159,20 @@ export interface FunctionArgs {
    */
   runtime?: Input<"nodejs18.x" | "nodejs20.x" | "provided.al2023">;
   /**
-   * Path to the source code directory for the function.
-   * Use `bundle` only when the function code is ready to be deployed to Lambda.
-   * Typically, omit `bundle`. If omitted, the handler file is bundled with esbuild, using its output directory as the bundle folder.
-   * @default Path to the esbuild output directory
+   * Path to the source code directory for the function. By default, the handler is
+   * bundled with [esbuild](https://esbuild.github.io/). Use `bundle` to skip bundling.
+   *
+   * :::caution
+   * Use `bundle` only when you want to bundle the function yourself.
+   * :::
+   *
+   * If the `bundle` option is specified, the `handler` needs to be in the root of the bundle.
+   *
    * @example
+   *
+   * Here, the entire `packages/functions/src` directory is zipped. And the handler is
+   * in the `src` directory.
+   *
    * ```js
    * {
    *   bundle: "packages/functions/src",
@@ -119,27 +182,35 @@ export interface FunctionArgs {
    */
   bundle?: Input<string>;
   /**
-   * Path to the handler for the function.
+   * Path to the handler for the function with the format `{file}.{method}`. Note that, the
+   * file extension is not specified.
+   *
+   * The handler path is relative to the root of your SST app.
+   *
    * @example
-   * When `bundle` is specified, the handler is relative to the bundle folder.
+   *
+   * Here there is a file called `index.js` (or `.ts`) in the `packages/functions/src/`
+   * directory with an exported method called `handler`.
+   *
+   * ```js
+   * {
+   *   handler: "packages/functions/src/index.handler"
+   * }
+   * ```
+   *
+   * If `bundle` is specified, the handler needs to be in the root of the bundle directory.
+   *
    * ```js
    * {
    *   bundle: "packages/functions/src",
    *   handler: "index.handler"
    * }
    * ```
-   * @example
-   * When `bundle` is not specified, the handler is relative to the root of your SST application.
-   * ```js
-   * {
-   *   handler: "packages/functions/src/index.handler"
-   * }
-   * ```
    */
   handler: Input<string>;
   /**
    * The amount of time that Lambda allows a function to run before stopping it.
-   * @default `20 seconds`
+   * @default `"20 seconds"`
    * @example
    * ```js
    * {
@@ -149,8 +220,16 @@ export interface FunctionArgs {
    */
   timeout?: Input<Duration>;
   /**
-   * The amount of memory allocated for the function.
-   * @default `1024 MB`
+   * The amount of memory allocated for the function. Takes values between 128 MB
+   * and 10240 MB in 1 MB increments.  The amount of memory affects the amount of
+   * virtual CPU available to the function.
+   *
+   * :::tip
+   * While functions with less memory are cheaper, larger functions can process faster.
+   * And might end up being more [cost effective](https://docs.aws.amazon.com/lambda/latest/operatorguide/computing-power.html).
+   * :::
+   *
+   * @default `"1024 MB"`
    * @example
    * ```js
    * {
@@ -160,9 +239,20 @@ export interface FunctionArgs {
    */
   memory?: Input<Size>;
   /**
-   * Key-value pairs that Lambda makes available for the function at runtime.
-   * @default No environment variables
+   * Key-value pairs of values that are set as [Lambda environment variables](https://docs.aws.amazon.com/lambda/latest/dg/configuration-envvars.html).
+   * The keys need to:
+   * - Start with a letter
+   * - Be at least 2 characters long
+   * - Contain only letters, numbers, or underscores
+   *
+   * They can be accessed in your function using `process.env.<key>`.
+   *
+   * :::note
+   * The total size of the environment variables cannot exceed 4 KB.
+   * :::
+   *
    * @example
+   *
    * ```js
    * {
    *   environment: {
@@ -173,11 +263,16 @@ export interface FunctionArgs {
    */
   environment?: Input<Record<string, Input<string>>>;
   /**
-   * Permissions and the resources that the function needs to access.
-   * The permissions are use to create the function's IAM role.
-   * @default No permissions
+   * Permissions and the resources that the function needs to access. These permissions are
+   * used to create the function's IAM role.
+   *
+   * :::tip
+   * If you `link` the function to a resource, the permissions to access it are
+   * automatically added.
+   * :::
+   *
    * @example
-   * Allow function to read and write to the S3 bucket `my-bucket`.
+   * Allow the function to read and write to an S3 bucket called `my-bucket`.
    * ```js
    * {
    *   permissions: [
@@ -189,7 +284,8 @@ export interface FunctionArgs {
    * }
    * ```
    *
-   * Allow function to perform all actions on the S3 bucket `my-bucket`.
+   * Allow the function to perform all actions on an S3 bucket called `my-bucket`.
+   *
    * ```js
    * {
    *   permissions: [
@@ -201,7 +297,8 @@ export interface FunctionArgs {
    * }
    * ```
    *
-   * Granting function permissions to access all resources.
+   * Granting the function permissions to access all resources.
+   *
    * ```js
    * {
    *   permissions: [
@@ -215,10 +312,13 @@ export interface FunctionArgs {
    */
   permissions?: Input<Prettify<FunctionPermissionArgs>[]>;
   /**
-   * Link resources to the function.
-   * This will grant the function permissions to access the linked resources at runtime.
+   * [Link resources](/docs/linking/) to the function. The will be grant permissions
+   * to the resources and allow you to access it in your handler.
    *
    * @example
+   *
+   * Takes a list of resources to link to the function.
+   *
    * ```js
    * {
    *   link: [myBucket, stripeKey],
@@ -227,7 +327,13 @@ export interface FunctionArgs {
    */
   link?: Input<any[]>;
   /**
-   * Whether to enable streaming for the function.
+   * Enable streaming for the function. Stream is only supported when using the function
+   * `url` and not when using it with API Gateway.
+   *
+   * :::tip
+   * You'll need to [wrap your handler](https://docs.aws.amazon.com/lambda/latest/dg/configuration-response-streaming.html) with `awslambda.streamifyResponse()` to enable streaming.
+   * :::
+   *
    * @default `false`
    * @example
    * ```js
@@ -242,8 +348,8 @@ export interface FunctionArgs {
    */
   injections?: Input<string[]>;
   /**
-   * Configure function logging
-   * @default Logs retained indefinitely
+   * Configure the function logs in CloudWatch.
+   * @default `&lcub;retention: "forever"&rcub;`
    * @example
    * ```js
    * {
@@ -255,14 +361,16 @@ export interface FunctionArgs {
    */
   logging?: Input<{
     /**
-     * The duration function logs are kept in CloudWatch Logs.
+     * The duration the function logs are kept in CloudWatch.
      * @default `forever`
      */
     retention?: Input<keyof typeof RETENTION>;
   }>;
   /**
-   * The system architectures for the function.
-   * @default `x86_64`
+   * The [architecture](https://docs.aws.amazon.com/lambda/latest/dg/foundation-arch.html)
+   * of the Lambda function.
+   *
+   * @default `"x86_64"`
    * @example
    * ```js
    * {
@@ -272,15 +380,18 @@ export interface FunctionArgs {
    */
   architecture?: Input<"x86_64" | "arm64">;
   /**
-   * Enable function URLs, a dedicated endpoint for your Lambda function.
-   * @default Disabled `false`
+   * Enable [Lambda function URLs](https://docs.aws.amazon.com/lambda/latest/dg/lambda-urls.html).
+   * These are dedicated endpoints for your Lambda functions.
+   * @default `false`
    * @example
+   * Enable it with the default options.
    * ```js
    * {
    *   url: true
    * }
    * ```
    *
+   * Enable it and configure the options.
    * ```js
    * {
    *   url: {
@@ -296,8 +407,8 @@ export interface FunctionArgs {
     | boolean
     | {
         /**
-         * The authorization for the function URL
-         * @default `none`
+         * The authorization used for the function URL. Supports [IAM authorization](https://docs.aws.amazon.com/lambda/latest/dg/urls-auth.html).
+         * @default `"none"`
          * @example
          * ```js
          * {
@@ -309,9 +420,10 @@ export interface FunctionArgs {
          */
         authorization?: Input<"none" | "iam">;
         /**
-         * CORS support for the function URL
+         * Customize the CORS (Cross-origin resource sharing) settings for the function URL.
          * @default `true`
          * @example
+         * Disable CORS.
          * ```js
          * {
          *   url: {
@@ -319,7 +431,7 @@ export interface FunctionArgs {
          *   },
          * }
          * ```
-         *
+         * Only enable the `GET` and `POST` methods for `https://example.com`.
          * ```js
          * {
          *   url: {
@@ -335,12 +447,16 @@ export interface FunctionArgs {
       }
   >;
   /**
-   * Used to configure nodejs function properties
+   * Configure how your function is bundled. By default, SST will bundle your function
+   * code using [esbuild](https://esbuild.github.io/). This tree shakes your code to
+   * only include what's used; reducing the size of your function package and improving
+   * cold starts.
    */
   nodejs?: Input<{
     // TODO exclude
     /**
-     * Configure additional esbuild loaders for other file extensions
+     * Configure additional esbuild loaders for other file extensions. This is useful
+     * when your code is importing non-JS files like `.png`, `.css`, etc.
      *
      * @example
      * ```js
@@ -353,7 +469,13 @@ export interface FunctionArgs {
      */
     loader?: Input<Record<string, Loader>>;
     /**
-     * Packages that will be excluded from the bundle and installed into node_modules instead. Useful for dependencies that cannot be bundled, like those with binary dependencies.
+     * Packages that will be excluded from the bundle. Certain npm packages cannot be
+     * bundled using esbuild. This allows you to exclude them from the bundle and instead
+     * install them into a `node_modules/` directory in the function package.
+     *
+     * These packages are excluded when esbuild is traversing the imports in your code to
+     * generate the bundle. So these are the package names as seen in the imports. Also,
+     * this works on packages that are not directly imported by your code.
      *
      * @example
      * ```js
@@ -364,7 +486,7 @@ export interface FunctionArgs {
      */
     install?: Input<string[]>;
     /**
-     * Use this to insert an arbitrary string at the beginning of generated JavaScript and CSS files.
+     * Use this to insert a string at the beginning of the generated JS file.
      *
      * @example
      * ```js
@@ -375,11 +497,17 @@ export interface FunctionArgs {
      */
     banner?: Input<string>;
     /**
-     * This allows you to customize esbuild config.
+     * This allows you to customize esbuild config that is used.
+     *
+     * :::tip
+     * Check out the JS version of the code snippets in the esbuild docs for the
+     * [build options](https://esbuild.github.io/api/#build).
+     * :::
+     *
      */
     esbuild?: Input<BuildOptions>;
     /**
-     * Enable or disable minification
+     * Enable or disable if the function code is minified when bundled.
      *
      * @default `true`
      *
@@ -392,9 +520,9 @@ export interface FunctionArgs {
      */
     minify?: Input<boolean>;
     /**
-     * Configure format
+     * Configure the format of the generated JS code; ESM or CommonJS.
      *
-     * @default `esm`
+     * @default `"esm"`
      *
      * @example
      * ```js
@@ -405,7 +533,15 @@ export interface FunctionArgs {
      */
     format?: Input<"cjs" | "esm">;
     /**
-     * Configure if sourcemaps are generated when the function is bundled for production. Since they increase payload size and potentially cold starts they are not generated by default. They are always generated during local development mode.
+     * Configure if source maps are added to the function bundle for **production**. Since they
+     * increase payload size and potentially cold starts, they are not added by default.
+     * However, they are always generated during `sst dev`.
+     *
+     * :::tip[SST Console]
+     * For the [Console](/docs/console/), source maps are always generated and uploaded
+     * to your bootstrap bucket. These are then downloaded and used to displayed
+     * in the console.
+     * :::
      *
      * @default `false`
      *
@@ -418,7 +554,9 @@ export interface FunctionArgs {
      */
     sourcemap?: Input<boolean>;
     /**
-     * If enabled, modules that are dynamically imported will be bundled as their own files with common dependencies placed in shared chunks. This can help drastically reduce cold starts as your function grows in size.
+     * If enabled, modules that are dynamically imported will be bundled in their own files
+     * with common dependencies placed in shared chunks. This can help reduce cold starts
+     * as your function grows in size.
      *
      * @default `false`
      *
@@ -432,46 +570,151 @@ export interface FunctionArgs {
     splitting?: Input<boolean>;
   }>;
   /**
-   * Used to configure additional files to copy into the function bundle
+   * Add additional files to copy into the function package. Takes a list of objects
+   * with `from` and `to` paths. These will be copied over before the function package
+   * is zipped up.
    *
    * @example
+   *
+   * Copying over a single file from the `src` directory to the `src/` directory of the
+   * function package.
+   *
    * ```js
    * {
    *   copyFiles: [{ from: "src/index.js" }]
+   * }
+   *```
+   *
+   * Copying over a single file from the `src` directory to the `core/src` directory in
+   * the function package.
+   *
+   * ```js
+   * {
+   *   copyFiles: [{ from: "src/index.js", to: "core/src/index.js" }]
+   * }
+   *```
+   *
+   * Copying over a couple of files.
+   *
+   * ```js
+   * {
+   *   copyFiles: [
+   *     { from: "src/this.js", to: "core/src/this.js" },
+   *     { from: "src/that.js", to: "core/src/that.js" }
+   *   ]
    * }
    *```
    */
   copyFiles?: Input<
     {
       /**
-       * Source path relative to sst.config.ts
+       * Source path relative to the `sst.config.ts`.
        */
       from: Input<string>;
       /**
-       * Destination path relative to function root in bundle
+       * Destination path relative to function root in the package. By default, it
+       * creates the same directory structure as the `from` path and copies the file.
+       *
+       * @default The `from` path in the function package
        */
       to?: Input<string>;
     }[]
   >;
   /**
-   * [Transform](/docs/transform/) how this component is created.
+   * [Transform](/docs/components#transform/) how this component creates its underlying resources.
    */
   transform?: {
+    /**
+     * Transform the Lambda Function resource.
+     */
     function?: Transform<aws.lambda.FunctionArgs>;
   };
 }
 
 /**
- * The `Function` component is a higher level component that makes it easy to create an AWS Lambda Function.
+ * The `Function` component lets you add serverless functions to your app.
+ * It uses [AWS Lambda](https://aws.amazon.com/lambda/).
+ *
+ * :::note
+ * Currently supports Node.js functions only. Support for other runtimes is on the roadmap.
+ * :::
  *
  * @example
  *
- * #### Using the minimal config
+ * #### Minimal example
+ *
+ * Pass in the path to your handler function.
+ *
  * ```ts
  * new sst.aws.Function("MyFunction", {
  *   handler: "src/lambda.handler",
  * });
  * ```
+ *
+ * #### Set additional config
+ *
+ * Pass in additional Lambda config.
+ *
+ * ```ts {3,4}
+ * new sst.aws.Function("MyFunction", {
+ *   handler: "src/lambda.handler",
+ *   timeout: "3 minutes",
+ *   memory: "1024 MB",
+ * });
+ * ```
+ *
+ * #### Link resources
+ *
+ * [Link resources](/docs/linking/) to the function. The will be grant permissions
+ * to the resources and allow you to access it in your handler.
+ *
+ * ```ts {3}
+ * new sst.aws.Function("MyFunction", {
+ *   handler: "src/lambda.handler",
+ *   link: [myBucket, stripeKey],
+ * });
+ * ```
+ *
+ * #### Set environment variables
+ *
+ * Set environment variables for the function. Available in your handler as `process.env`.
+ *
+ * ```ts {4}
+ * new sst.aws.Function("MyFunction", {
+ *   handler: "src/lambda.handler",
+ *   environment: {
+ *     DEBUG: "true",
+ *   },
+ * });
+ * ```
+ *
+ * #### Enable function URLs
+ *
+ * Enable function URLs to invoke the function over HTTP.
+ *
+ * ```ts {3}
+ * new sst.aws.Function("MyFunction", {
+ *   handler: "src/lambda.handler",
+ *   url: true,
+ * });
+ * ```
+ *
+ * #### Bundling
+ *
+ * By default, SST will bundle your function code using [esbuild](https://esbuild.github.io/).
+ *  You can customize this using the `nodejs` property.
+ *
+ * ```ts
+ * new sst.aws.Function("MyFunction", {
+ *   handler: "src/lambda.handler",
+ *   nodejs: {
+ *     install: ["pg"],
+ *   },
+ * });
+ * ```
+ *
+ * Or override it entirely by passing in your own function `bundle`.
+ *
  */
 export class Function
   extends Component
@@ -996,10 +1239,19 @@ export class Function
     }
   }
 
+  /**
+   * The underlying [resources](/docs/components/#nodes) this component creates.
+   */
   public get nodes() {
     return {
-      function: this.function,
+      /**
+       * The IAM Role the function will use.
+       */
       role: this.role,
+      /**
+       * The AWS Lambda function.
+       */
+      function: this.function,
     };
   }
 
@@ -1007,10 +1259,16 @@ export class Function
     return this.fnUrl.apply((url) => url?.functionUrl ?? output(undefined));
   }
 
+  /**
+   * The ARN of the Lambda function.
+   */
   public get arn() {
     return this.function.arn;
   }
 
+  /**
+   * The ARN of the Lambda function's log group.
+   */
   public get logGroupArn() {
     return this.logGroup.logGroupArn;
   }

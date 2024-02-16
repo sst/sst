@@ -21,7 +21,7 @@ const sidebar = [
   {
     label: "Concepts",
     items: [
-      { label: "Linking", link: "/docs/linking-resources/" },
+      { label: "Linking", link: "/docs/linking/" },
       { label: "Console", link: "/docs/console/" },
       { label: "Live Mode", link: "/docs/live-mode/" },
       { label: "Components", link: "/docs/components/" },

@@ -80,7 +80,7 @@ export interface CronArgs {
 
 /**
  * The `Cron` component lets you add cron jobs to your app.
- * It's powered by [Amazon Event Bus](https://docs.aws.amazon.com/eventbridge/latest/userguide/eb-event-bus.html).
+ * It uses [Amazon Event Bus](https://docs.aws.amazon.com/eventbridge/latest/userguide/eb-event-bus.html).
  *
  * @example
  * #### Example
