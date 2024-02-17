@@ -62,27 +62,37 @@ export function AuthHandler<
   session?: Sessions;
   providers: Providers;
   callbacks: {
-    index?(event: Request): Promise<Response>;
-    error?(error: UnknownStateError): Promise<Response | undefined>;
+    index?(req: Request): Promise<Response>;
+    error?(
+      error: UnknownStateError,
+      req: Request,
+    ): Promise<Response | undefined>;
     auth: {
       error?(
         error:
           | MissingParameterError
           | UnauthorizedClientError
           | UnknownProviderError,
+        req: Request,
       ): Promise<Response>;
       start?(event: Request): Promise<void>;
-      allowClient(clientID: string, redirect: string): Promise<boolean>;
+      allowClient(
+        clientID: string,
+        redirect: string,
+        req: Request,
+      ): Promise<boolean>;
       success(
         response: OnSuccessResponder<Sessions["$typeValues"]>,
         input: Result,
+        req: Request,
       ): Promise<Response>;
     };
     connect?: {
       error?(
         error: InvalidSessionError | UnknownProviderError,
+        req: Request,
       ): Promise<Response | undefined>;
-      start?(session: Sessions["$typeValues"], event: Request): Promise<void>;
+      start?(session: Sessions["$typeValues"], req: Request): Promise<void>;
       success?(session: Sessions["$typeValues"], input: {}): Promise<Response>;
     };
   };
@@ -121,7 +131,10 @@ export function AuthHandler<
       if (!redirect_uri) {
         return options.forward(
           ctx,
-          await input.callbacks.auth.error!(new UnknownStateError()),
+          await input.callbacks.auth.error!(
+            new UnknownStateError(),
+            ctx.req.raw,
+          ),
         );
       }
       return await input.callbacks.auth.success(
@@ -169,6 +182,7 @@ export function AuthHandler<
           },
         },
         properties,
+        ctx.req.raw,
       );
     },
     forward(ctx: Context, response: Response) {
@@ -263,7 +277,7 @@ export function AuthHandler<
     app.route(`/${name}`, route);
   }
 
-  app.all("/*", async (c, next) => {
+  app.all("/*", async (c) => {
     return c.notFound();
   });
   console.log(app.routes);
