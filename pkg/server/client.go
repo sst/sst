@@ -61,7 +61,6 @@ func Connect(ctx context.Context, input ConnectInput) error {
 		if err != nil {
 			return err
 		}
-
 	}
 
 	resp, err := http.Get("http://" + addr + "/stream")

@@ -24,7 +24,7 @@ type Worker interface {
 }
 
 type BuildInput struct {
-	Warp    project.WarpDefinition
+	Warp    project.Warp
 	Project *project.Project
 	Links   project.Links
 	Dev     bool

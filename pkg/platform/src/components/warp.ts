@@ -3,11 +3,11 @@ import { Input } from "@pulumi/pulumi";
 export module Warp {
   export interface Definition {
     functionID: string;
-    runtime: Input<string>;
-    properties: Input<any>;
-    handler: Input<string>;
-    bundle?: Input<string>;
-    links: Input<string[]>;
+    runtime: string;
+    properties: any;
+    handler: string;
+    bundle?: string;
+    links: string[];
   }
   let warps: Record<string, Definition> = {};
   export function reset() {

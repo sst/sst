@@ -136,6 +136,7 @@ interface FunctionUrlCorsArgs
 }
 
 export interface FunctionArgs {
+  liveDev?: Input<false>;
   /**
    * A description for the function. This is displayed in the AWS Console.
    * @example
@@ -734,6 +735,7 @@ export class Function
     super("sst:aws:Function", name, args, opts);
 
     const parent = this;
+    const dev = output(args.liveDev).apply((v) => $dev && v !== false);
     const region = normalizeRegion();
     const injections = normalizeInjections();
     const runtime = normalizeRuntime();
@@ -764,22 +766,29 @@ export class Function
       input.map((item) => item.name),
     );
 
-    if ($dev) {
+    $all([
+      dev,
+      name,
+      links,
+      args.handler,
+      args.bundle,
+      args.runtime,
+      args.nodejs,
+    ]).apply(([dev, name, links, handler, bundle, runtime, nodejs]) => {
+      if (!dev) return;
       Warp.register({
         functionID: name,
         links,
-        handler: args.handler,
-        bundle: args.bundle,
-        runtime: output(args.runtime).apply((v) => v ?? "nodejs18.x"),
-        properties: all([args.nodejs]).apply(([nodejs]) => nodejs || {}),
+        handler: handler,
+        bundle: bundle,
+        runtime: runtime || "nodejs18.x",
+        properties: nodejs,
       });
-    }
+    });
 
-    all([args.handler, args.bundle, links]).apply(
-      ([handler, bundle, rawLinks]) => {
-        if (!rawLinks.length) return;
-        Link.Receiver.register(bundle || handler, links);
-      },
+    $all([args.handler, args.bundle, links, environment]).apply(
+      ([handler, bundle, links, environment]) =>
+        Link.Receiver.register(bundle || handler, links, environment),
     );
 
     this.registerOutputs({
@@ -805,10 +814,9 @@ export class Function
     }
 
     function normalizeRuntime() {
-      if ($dev) {
-        return "provided.al2023";
-      }
-      return output(args.runtime).apply((v) => v ?? "nodejs18.x");
+      return all([args.runtime, dev]).apply(([v, dev]) =>
+        dev ? "provided.al2023" : v ?? "nodejs18.x",
+      );
     }
 
     function normalizeTimeout() {
@@ -826,9 +834,9 @@ export class Function
     }
 
     function normalizeEnvironment() {
-      return output(args.environment).apply((environment) => {
+      return all([args.environment, dev]).apply(([environment, dev]) => {
         const result = environment ?? {};
-        if ($dev) {
+        if (dev) {
           result.SST_FUNCTION_ID = name;
           result.SST_APP = $app.name;
           result.SST_STAGE = $app.stage;
@@ -926,35 +934,37 @@ export class Function
     }
 
     function buildHandler() {
-      if ($dev) {
-        return {
-          handler: "bootstrap",
-          bundle: path.join($cli.paths.platform, "dist", "bridge"),
-        };
-      }
+      return output(dev).apply((dev) => {
+        if (dev) {
+          return {
+            handler: "bootstrap",
+            bundle: path.join($cli.paths.platform, "dist", "bridge"),
+          };
+        }
 
-      if (args.bundle) {
-        return {
-          bundle: output(args.bundle),
-          handler: output(args.handler),
-        };
-      }
+        if (args.bundle) {
+          return {
+            bundle: output(args.bundle),
+            handler: output(args.handler),
+          };
+        }
 
-      const buildResult = all([args, linkData]).apply(
-        async ([args, linkData]) => {
-          const result = await build(name, {
-            ...args,
-            links: linkData,
-          });
-          if (result.type === "error")
-            throw new Error(result.errors.join("\n"));
-          return result;
-        },
-      );
-      return {
-        handler: buildResult.handler,
-        bundle: buildResult.out,
-      };
+        const buildResult = all([args, linkData]).apply(
+          async ([args, linkData]) => {
+            const result = await build(name, {
+              ...args,
+              links: linkData,
+            });
+            if (result.type === "error")
+              throw new Error(result.errors.join("\n"));
+            return result;
+          },
+        );
+        return {
+          handler: buildResult.handler,
+          bundle: buildResult.out,
+        };
+      });
     }
 
     function buildHandlerWrapper() {
@@ -1034,8 +1044,8 @@ export class Function
     }
 
     function createRole() {
-      return all([args.permissions || [], linkPermissions]).apply(
-        ([argsPermissions, linkPermissions]) => {
+      return all([args.permissions || [], linkPermissions, dev]).apply(
+        ([argsPermissions, linkPermissions, dev]) => {
           return new aws.iam.Role(
             `${name}Role`,
             {
@@ -1049,7 +1059,7 @@ export class Function
                     Statement: [
                       ...argsPermissions,
                       ...linkPermissions,
-                      ...($dev
+                      ...(dev
                         ? [
                             {
                               actions: ["iot:*"],

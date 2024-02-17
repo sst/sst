@@ -340,13 +340,13 @@ func main() {
 						return err
 					}
 
-					restartTarget := make(chan project.Links)
+					deployComplete := make(chan *project.CompleteEvent)
 					runOnce := false
 					go func() {
 						if !hasTarget {
 							return
 						}
-						links := <-restartTarget
+						complete := <-deployComplete
 
 						for {
 							cmd := exec.Command(
@@ -354,16 +354,28 @@ func main() {
 								args[1:]...,
 							)
 
+							cwd, _ := os.Getwd()
+							for dir, receiver := range complete.Receivers {
+								dir = filepath.Join(cfgPath, "..", dir)
+								_, err := filepath.Rel(cwd, dir)
+								if err != nil {
+									continue
+								}
+								for key, value := range receiver.Environment {
+									cmd.Env = append(cmd.Env, fmt.Sprintf("%s=%s", key, value))
+								}
+								for _, resource := range receiver.Links {
+									value := complete.Links[resource]
+									jsonValue, _ := json.Marshal(value)
+									envVar := fmt.Sprintf("SST_RESOURCE_%s=%s", resource, jsonValue)
+									cmd.Env = append(cmd.Env, envVar)
+								}
+							}
+
+							fmt.Println(cmd.Env)
 							cmd.Env = append(cmd.Env,
 								os.Environ()...,
 							)
-
-							for resource, value := range links {
-								jsonValue, _ := json.Marshal(value)
-								envVar := fmt.Sprintf("SST_RESOURCE_%s=%s", resource, jsonValue)
-								cmd.Env = append(cmd.Env, envVar)
-							}
-
 							cmd.Stdin = os.Stdin
 							cmd.Stdout = os.Stdout
 							cmd.Stderr = os.Stderr
@@ -373,6 +385,7 @@ func main() {
 
 							go func() {
 								cmd.Wait()
+								fmt.Println("process exited")
 								processExit <- true
 							}()
 
@@ -380,13 +393,20 @@ func main() {
 							for {
 								select {
 								case <-ctx.Done():
-									cmd.Process.Signal(os.Interrupt)
+									if cmd.Process != nil {
+										cmd.Process.Signal(os.Interrupt)
+									}
 									return
 								case <-processExit:
 									cancel()
-								case nextLinks := <-restartTarget:
-									for key, value := range nextLinks {
-										oldValue := links[key]
+								case nextComplete := <-deployComplete:
+									fmt.Println("Restarting...", cmd.Process)
+									fmt.Println(cmd.Process.Signal(os.Interrupt))
+									<-processExit
+									complete = nextComplete
+									break loop
+									for key, value := range nextComplete.Links {
+										oldValue := complete.Links[key]
 										if !reflect.DeepEqual(oldValue, value) {
 											cmd.Process.Signal(os.Interrupt)
 											cmd.Wait()
@@ -428,7 +448,7 @@ func main() {
 										return
 									}
 
-									restartTarget <- event.CompleteEvent.Links
+									deployComplete <- event.CompleteEvent
 								}
 							}
 

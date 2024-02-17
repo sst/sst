@@ -52,20 +52,27 @@ type ConcurrentUpdateEvent struct{}
 
 type Links map[string]interface{}
 
-type WarpDefinition struct {
-	FunctionID string          `json:"functionID"`
-	Runtime    string          `json:"runtime"`
-	Handler    string          `json:"handler"`
-	Bundle     string          `json:"bundle"`
-	Properties json.RawMessage `json:"properties"`
-	Links      []string        `json:"links"`
+type Receiver struct {
+	Links       []string
+	Environment map[string]string
 }
+type Receivers map[string]Receiver
 
-type Warps map[string]WarpDefinition
+type Warp struct {
+	FunctionID  string            `json:"functionID"`
+	Runtime     string            `json:"runtime"`
+	Handler     string            `json:"handler"`
+	Bundle      string            `json:"bundle"`
+	Properties  json.RawMessage   `json:"properties"`
+	Links       []string          `json:"links"`
+	Environment map[string]string `json:"environment"`
+}
+type Warps map[string]Warp
 
 type CompleteEvent struct {
 	Links     Links
 	Warps     Warps
+	Receivers Receivers
 	Outputs   map[string]interface{}
 	Hints     map[string]string
 	Errors    []Error
@@ -254,12 +261,13 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 	defer eventlog.Close()
 
 	complete := &CompleteEvent{
-		Links:    Links{},
-		Warps:    Warps{},
-		Hints:    map[string]string{},
-		Outputs:  map[string]interface{}{},
-		Errors:   []Error{},
-		Finished: false,
+		Links:     Links{},
+		Receivers: Receivers{},
+		Warps:     Warps{},
+		Hints:     map[string]string{},
+		Outputs:   map[string]interface{}{},
+		Errors:    []Error{},
+		Finished:  false,
 	}
 
 	go func() {
@@ -337,12 +345,23 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 			warps := warpsOutput.Value.(map[string]interface{})
 			for key, value := range warps {
 				data, _ := json.Marshal(value)
-				var definition WarpDefinition
+				var definition Warp
 				json.Unmarshal(data, &definition)
 				complete.Warps[key] = definition
 			}
 		}
 		delete(outputs, "_warps")
+
+		receiversOutput, ok := outputs["_receivers"]
+		if ok {
+			receivers := receiversOutput.Value.(map[string]interface{})
+			for key, value := range receivers {
+				data, _ := json.Marshal(value)
+				var out Receiver
+				json.Unmarshal(data, &out)
+				complete.Receivers[key] = out
+			}
+		}
 		delete(outputs, "_receivers")
 
 		for key, value := range outputs {

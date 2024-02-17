@@ -663,6 +663,7 @@ function handler(event) {
               runtime: "nodejs18.x",
               timeout: "20 seconds",
               memory: "1024 MB",
+              liveDev: false,
               ...props,
               nodejs: {
                 format: "esm" as const,
@@ -755,6 +756,7 @@ function handler(event) {
           runtime: "nodejs18.x",
           timeout: "20 seconds",
           memory: "1024 MB",
+          liveDev: false,
           ...props.function,
           nodejs: {
             format: "esm" as const,
@@ -802,6 +804,7 @@ function handler(event) {
       const fn = new Function(
         `${name}${sanitizeToPascalCase(fnName)}`,
         {
+          liveDev: false,
           timeout: "25 seconds",
           logging: {
             retention: "3 days",
@@ -1067,6 +1070,7 @@ function handler(event) {
       const warmer = new Function(
         `${name}Warmer`,
         {
+          liveDev: false,
           description: `${name} warmer`,
           bundle: path.join($cli.paths.platform, "dist", "ssr-warmer"),
           runtime: "nodejs20.x",

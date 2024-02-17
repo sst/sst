@@ -84,9 +84,22 @@ export module Link {
   }
 
   export module Receiver {
-    let receivers: Record<string, Input<string[]>> = {};
-    export function register(directory: string, links: Input<string[]>) {
-      receivers[directory] = links;
+    let receivers: Record<
+      string,
+      {
+        links: Input<string[]>;
+        environment: Record<string, string>;
+      }
+    > = {};
+    export function register(
+      directory: string,
+      links: Input<string[]>,
+      environment: Record<string, string>,
+    ) {
+      receivers[directory] = {
+        links,
+        environment,
+      };
     }
 
     export function list() {
