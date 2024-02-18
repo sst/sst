@@ -123,8 +123,9 @@ while (true) {
       },
     };
     request = await result.json();
-  } catch (ex) {
-    await error("damn");
+  } catch (ex: any) {
+    if (ex.code === "UND_ERR_HEADERS_TIMEOUT") continue;
+    await error(ex);
     continue;
   }
   (global as any)[Symbol.for("aws.lambda.runtime.requestId")] =

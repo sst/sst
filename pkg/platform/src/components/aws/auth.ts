@@ -1,4 +1,9 @@
-import { ComponentResourceOptions, Output, output } from "@pulumi/pulumi";
+import {
+  ComponentResourceOptions,
+  Output,
+  output,
+  secret,
+} from "@pulumi/pulumi";
 import * as aws from "@pulumi/aws";
 import { Component, Transform } from "../component";
 import { Link } from "../link";
@@ -29,8 +34,8 @@ export class Auth extends Component implements Link.Linkable {
         url: true,
         environment: {
           ...args.environment,
-          AUTH_PRIVATE_KEY: this.key.privateKeyPemPkcs8,
-          AUTH_PUBLIC_KEY: this.key.publicKeyPem,
+          AUTH_PRIVATE_KEY: secret(this.key.privateKeyPemPkcs8),
+          AUTH_PUBLIC_KEY: secret(this.key.publicKeyPem),
         },
       });
     });
@@ -53,7 +58,8 @@ export class Auth extends Component implements Link.Linkable {
     return {
       type: `{}`,
       value: {
-        publicKey: this.key.publicKeyPem,
+        auth: true,
+        publicKey: secret(this.key.publicKeyPem),
       },
     };
   }

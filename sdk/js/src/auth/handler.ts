@@ -181,7 +181,10 @@ export function AuthHandler<
             return ctx.text(`Unsupported response_type: ${response_type}`);
           },
         },
-        properties,
+        {
+          provider: ctx.get("provider"),
+          ...properties,
+        },
         ctx.req.raw,
       );
     },
@@ -269,7 +272,11 @@ export function AuthHandler<
   });
 
   for (const [name, value] of Object.entries(input.providers)) {
-    const route = new Hono();
+    const route = new Hono<any>();
+    route.use(async (c, next) => {
+      c.set("provider", name);
+      await next();
+    });
     value(route, {
       name,
       ...options,

@@ -357,8 +357,7 @@ func main() {
 							cwd, _ := os.Getwd()
 							for dir, receiver := range complete.Receivers {
 								dir = filepath.Join(cfgPath, "..", dir)
-								_, err := filepath.Rel(cwd, dir)
-								if err != nil {
+								if !strings.HasPrefix(dir, cwd) {
 									continue
 								}
 								for key, value := range receiver.Environment {
@@ -394,14 +393,14 @@ func main() {
 								select {
 								case <-ctx.Done():
 									if cmd.Process != nil {
-										cmd.Process.Signal(os.Interrupt)
+										cmd.Process.Kill()
+										<-processExit
 									}
 									return
 								case <-processExit:
 									cancel()
 								case nextComplete := <-deployComplete:
-									fmt.Println("Restarting...", cmd.Process)
-									fmt.Println(cmd.Process.Signal(os.Interrupt))
+									cmd.Process.Kill()
 									<-processExit
 									complete = nextComplete
 									break loop
@@ -428,6 +427,7 @@ func main() {
 						OnEvent: func(event server.Event) {
 							if !hasTarget || !runOnce {
 								defer u.Trigger(&event.StackEvent)
+								defer u.Event(&event)
 								if event.StackEvent.PreludeEvent != nil {
 									u.Reset()
 									u.Start()
@@ -467,7 +467,6 @@ func main() {
 								}
 							}
 
-							u.Event(&event)
 						},
 					})
 
