@@ -30,9 +30,6 @@ func (p *Project) InstallPlatform(version string) error {
 	if err != nil {
 		return err
 	}
-	if version == "dev" {
-		return nil
-	}
 	cmd := exec.Command("bun", "install")
 	cmd.Dir = platformDir
 	err = cmd.Run()
