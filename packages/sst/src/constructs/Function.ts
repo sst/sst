@@ -978,7 +978,7 @@ export class Function extends CDKFunction implements SSTConstruct {
           ? {
               code: Code.fromInline("export function placeholder() {}"),
               handler: "index.placeholder",
-              runtime: CDKRuntime.NODEJS_18_X,
+              runtime: CDKRuntime.FROM_IMAGE,
               layers: undefined,
             }
           : {
