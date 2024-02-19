@@ -231,7 +231,7 @@ func main() {
 				},
 			},
 			{
-				Name:  "link",
+				Name:  "shell",
 				Flags: []cli.Flag{},
 				Action: func(cli *cli.Context) error {
 					p, err := initProject(cli)
