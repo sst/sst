@@ -295,7 +295,7 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 		slog.Info("stack command complete")
 		defer input.OnEvent(&StackEvent{CompleteEvent: complete})
 
-		rawDeploment, _ := stack.Export(ctx)
+		rawDeploment, _ := stack.Export(context.Background())
 		var deployment apitype.DeploymentV3
 		json.Unmarshal(rawDeploment.Deployment, &deployment)
 
@@ -485,10 +485,8 @@ func (s *stack) Import(ctx context.Context, input *ImportOptions) error {
 		return err
 	}
 
-	fmt.Println("existing")
 	existingIndex := -1
 	for index, resource := range deployment.Resources {
-		fmt.Println(resource.URN)
 		if urn == resource.URN {
 			existingIndex = index
 			break

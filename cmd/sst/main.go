@@ -362,13 +362,14 @@ func main() {
 							break
 						}
 
+						cwd, _ := os.Getwd()
+						os.Setenv("PATH", os.Getenv("PATH")+":"+filepath.Join(cwd, "node_modules", ".bin"))
 						for {
 							cmd := exec.Command(
 								args[0],
 								args[1:]...,
 							)
 
-							cwd, _ := os.Getwd()
 							for dir, receiver := range complete.Receivers {
 								dir = filepath.Join(cfgPath, "..", dir)
 								if !strings.HasPrefix(dir, cwd) {
@@ -441,7 +442,6 @@ func main() {
 								defer u.Event(&event)
 								if event.StackEvent.PreludeEvent != nil {
 									u.Reset()
-									u.Start()
 								}
 							}
 
@@ -505,7 +505,6 @@ func main() {
 						ui.Interrupt()
 						cancel()
 					}()
-					ui.Start()
 					err = p.Stack.Run(ctx, &project.StackInput{
 						Command: "up",
 						OnEvent: ui.Trigger,
