@@ -1,3 +1,10 @@
 #!/bin/sh
 
 bun build ./functions/nodejs-runtime/index.ts --target=node --outdir ./dist/nodejs-runtime/
+
+rm -rf ./dist/remix-server
+rm -rf ./dist/empty-function
+rm -rf ./dist/ssr-function-placeholder
+cp -r ./functions/remix-server ./dist/remix-server
+cp -r ./functions/empty-function ./dist/empty-function
+cp -r ./functions/ssr-function-placeholder ./dist/ssr-function-placeholder

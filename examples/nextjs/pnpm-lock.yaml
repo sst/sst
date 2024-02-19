@@ -15,7 +15,7 @@ dependencies:
     specifier: ^18
     version: 18.0.0(react@18.0.0)
   sst:
-    specifier: 3.0.1-16
+    specifier: ion
     version: 3.0.1-16
 
 devDependencies:
@@ -114,7 +114,7 @@ packages:
       '@aws-sdk/util-user-agent-browser': 3.468.0
       '@aws-sdk/util-user-agent-node': 3.470.0
       '@smithy/config-resolver': 2.1.1
-      '@smithy/core': 1.3.1
+      '@smithy/core': 1.3.2
       '@smithy/eventstream-serde-browser': 2.1.1
       '@smithy/eventstream-serde-config-resolver': 2.1.1
       '@smithy/eventstream-serde-node': 2.1.1
@@ -136,7 +136,7 @@ packages:
       '@smithy/util-body-length-browser': 2.1.1
       '@smithy/util-body-length-node': 2.2.1
       '@smithy/util-defaults-mode-browser': 2.1.1
-      '@smithy/util-defaults-mode-node': 2.1.1
+      '@smithy/util-defaults-mode-node': 2.2.0
       '@smithy/util-endpoints': 1.1.1
       '@smithy/util-retry': 2.1.1
       '@smithy/util-stream': 2.1.1
@@ -164,7 +164,7 @@ packages:
       '@aws-sdk/util-user-agent-browser': 3.468.0
       '@aws-sdk/util-user-agent-node': 3.470.0
       '@smithy/config-resolver': 2.1.1
-      '@smithy/core': 1.3.1
+      '@smithy/core': 1.3.2
       '@smithy/fetch-http-handler': 2.4.1
       '@smithy/hash-node': 2.1.1
       '@smithy/invalid-dependency': 2.1.1
@@ -183,7 +183,7 @@ packages:
       '@smithy/util-body-length-browser': 2.1.1
       '@smithy/util-body-length-node': 2.2.1
       '@smithy/util-defaults-mode-browser': 2.1.1
-      '@smithy/util-defaults-mode-node': 2.1.1
+      '@smithy/util-defaults-mode-node': 2.2.0
       '@smithy/util-endpoints': 1.1.1
       '@smithy/util-retry': 2.1.1
       '@smithy/util-utf8': 2.1.1
@@ -210,7 +210,7 @@ packages:
       '@aws-sdk/util-user-agent-browser': 3.468.0
       '@aws-sdk/util-user-agent-node': 3.470.0
       '@smithy/config-resolver': 2.1.1
-      '@smithy/core': 1.3.1
+      '@smithy/core': 1.3.2
       '@smithy/fetch-http-handler': 2.4.1
       '@smithy/hash-node': 2.1.1
       '@smithy/invalid-dependency': 2.1.1
@@ -229,7 +229,7 @@ packages:
       '@smithy/util-body-length-browser': 2.1.1
       '@smithy/util-body-length-node': 2.2.1
       '@smithy/util-defaults-mode-browser': 2.1.1
-      '@smithy/util-defaults-mode-node': 2.1.1
+      '@smithy/util-defaults-mode-node': 2.2.0
       '@smithy/util-endpoints': 1.1.1
       '@smithy/util-middleware': 2.1.1
       '@smithy/util-retry': 2.1.1
@@ -244,7 +244,7 @@ packages:
     resolution: {integrity: sha512-o0434EH+d1BxHZvgG7z8vph2SYefciQ5RnJw2MgvETGnthgqsnI4nnNJLSw0FVeqCeS18n6vRtzqlGYR2YPCNg==}
     engines: {node: '>=14.0.0'}
     dependencies:
-      '@smithy/core': 1.3.1
+      '@smithy/core': 1.3.2
       '@smithy/protocol-http': 3.1.1
       '@smithy/signature-v4': 2.1.1
       '@smithy/smithy-client': 2.3.1
@@ -435,7 +435,7 @@ packages:
       '@smithy/util-body-length-browser': 2.1.1
       '@smithy/util-body-length-node': 2.2.1
       '@smithy/util-defaults-mode-browser': 2.1.1
-      '@smithy/util-defaults-mode-node': 2.1.1
+      '@smithy/util-defaults-mode-node': 2.2.0
       '@smithy/util-endpoints': 1.1.1
       '@smithy/util-retry': 2.1.1
       '@smithy/util-utf8': 2.1.1
@@ -672,8 +672,8 @@ packages:
       tslib: 2.6.2
     dev: false
 
-  /@smithy/core@1.3.1:
-    resolution: {integrity: sha512-tf+NIu9FkOh312b6M9G4D68is4Xr7qptzaZGZUREELF8ysE1yLKphqt7nsomjKZVwW7WE5pDDex9idowNGRQ/Q==}
+  /@smithy/core@1.3.2:
+    resolution: {integrity: sha512-tYDmTp0f2TZVE18jAOH1PnmkngLQ+dOGUlMd1u67s87ieueNeyqhja6z/Z4MxhybEiXKOWFOmGjfTZWFxljwJw==}
     engines: {node: '>=14.0.0'}
     dependencies:
       '@smithy/middleware-endpoint': 2.4.1
@@ -985,8 +985,8 @@ packages:
       tslib: 2.6.2
     dev: false
 
-  /@smithy/util-defaults-mode-node@2.1.1:
-    resolution: {integrity: sha512-tYVrc+w+jSBfBd267KDnvSGOh4NMz+wVH7v4CClDbkdPfnjvImBZsOURncT5jsFwR9KCuDyPoSZq4Pa6+eCUrA==}
+  /@smithy/util-defaults-mode-node@2.2.0:
+    resolution: {integrity: sha512-iFJp/N4EtkanFpBUtSrrIbtOIBf69KNuve03ic1afhJ9/korDxdM0c6cCH4Ehj/smI9pDCfVv+bqT3xZjF2WaA==}
     engines: {node: '>= 10.0.0'}
     dependencies:
       '@smithy/config-resolver': 2.1.1

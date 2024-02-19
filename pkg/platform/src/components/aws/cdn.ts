@@ -3,6 +3,7 @@ import {
   ComponentResourceOptions,
   output,
   interpolate,
+  all,
 } from "@pulumi/pulumi";
 import * as aws from "@pulumi/aws";
 import { DnsValidatedCertificate } from "./dns-validated-certificate.js";
@@ -171,6 +172,41 @@ export class Cdn extends Component {
     }
 
     function createDistribution() {
+      // TODO remove
+      //      all([
+      //        transform(args.transform.distribution, {
+      //          defaultCacheBehavior: {
+      //            allowedMethods: [],
+      //            cachedMethods: [],
+      //            targetOriginId: "placeholder",
+      //            viewerProtocolPolicy: "redirect-to-https",
+      //          },
+      //          enabled: true,
+      //          origins: [],
+      //          restrictions: {
+      //            geoRestriction: {
+      //              restrictionType: "none",
+      //            },
+      //          },
+      //          aliases: domain
+      //            ? output(domain).apply((domain) => [
+      //                domain.domainName,
+      //                ...domain.aliases,
+      //              ])
+      //            : [],
+      //          viewerCertificate: certificate
+      //            ? {
+      //                acmCertificateArn: certificate.certificateArn,
+      //                sslSupportMethod: "sni-only",
+      //              }
+      //            : {
+      //                cloudfrontDefaultCertificate: true,
+      //              },
+      //        }),
+      //      ]).apply(([args]) =>
+      //        console.log("!@#$%^&", JSON.stringify(args, null, 2)),
+      //      );
+
       return new aws.cloudfront.Distribution(
         `${name}Distribution`,
         transform(args.transform.distribution, {

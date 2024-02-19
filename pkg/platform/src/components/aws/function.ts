@@ -630,6 +630,10 @@ export interface FunctionArgs {
      */
     function?: Transform<aws.lambda.FunctionArgs>;
   };
+  /**
+   * @internal
+   */
+  _ignoreCodeChanges?: boolean;
 }
 
 /**
@@ -1055,8 +1059,8 @@ export class Function
               inlinePolicies: [
                 {
                   name: "inline",
-                  policy: jsonStringify({
-                    Statement: [
+                  policy: aws.iam.getPolicyDocumentOutput({
+                    statements: [
                       ...argsPermissions,
                       ...linkPermissions,
                       ...(dev
@@ -1067,12 +1071,8 @@ export class Function
                             },
                           ]
                         : []),
-                    ].map((p) => ({
-                      Effect: "Allow",
-                      Action: p.actions,
-                      Resource: p.resources,
-                    })),
-                  }),
+                    ],
+                  }).json,
                 },
               ],
               managedPolicyArns: [
@@ -1172,7 +1172,13 @@ export class Function
           ),
           source: zipPath.apply((zipPath) => new asset.FileArchive(zipPath)),
         },
-        { parent, retainOnDelete: true },
+        {
+          parent,
+          ignoreChanges: args._ignoreCodeChanges
+            ? ["key", "source"]
+            : undefined,
+          retainOnDelete: true,
+        },
       );
     }
 
@@ -1242,7 +1248,12 @@ export class Function
             functionLastModified: fnRaw.lastModified,
             region,
           },
-          { parent },
+          {
+            parent,
+            ignoreChanges: args._ignoreCodeChanges
+              ? ["s3Bucket", "s3Key"]
+              : undefined,
+          },
         );
         return fnRaw;
       });

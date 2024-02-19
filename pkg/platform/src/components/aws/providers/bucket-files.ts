@@ -21,25 +21,23 @@ interface Inputs {
   files: BucketFile[];
 }
 
-interface Outputs extends Inputs {}
-
 class Provider implements dynamic.ResourceProvider {
-  async create(inputs: Inputs): Promise<dynamic.CreateResult<Outputs>> {
+  async create(inputs: Inputs): Promise<dynamic.CreateResult> {
     await this.upload(inputs.bucketName, inputs.files, []);
-    return { id: "uploads", outs: inputs };
+    return { id: "files" };
   }
 
   async update(
     id: string,
     olds: Inputs,
     news: Inputs,
-  ): Promise<dynamic.UpdateResult<Outputs>> {
+  ): Promise<dynamic.UpdateResult> {
     await this.upload(
       news.bucketName,
       news.files,
       news.bucketName === olds.bucketName ? olds.files : [],
     );
-    return { outs: news };
+    return {};
   }
 
   async upload(

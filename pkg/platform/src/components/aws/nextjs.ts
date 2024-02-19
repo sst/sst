@@ -11,13 +11,14 @@ import {
   output,
 } from "@pulumi/pulumi";
 import * as aws from "@pulumi/aws";
-import { Size, toMBs } from "../size.js";
+import { Size } from "../size.js";
 import { Function } from "./function.js";
 import {
   SsrSiteArgs,
   buildApp,
   createBucket,
   createServersAndDistribution,
+  getDeployStrategy,
   prepare,
   useCloudFrontFunctionHostHeaderInjection,
   validatePlan,
@@ -29,16 +30,80 @@ import { Component, transform } from "../component.js";
 import { sanitizeToPascalCase } from "../naming.js";
 import { Hint } from "../hint.js";
 import { Link } from "../link.js";
+import { VisibleError } from "../error.js";
+import type { Input } from "../input.js";
+import { Cache } from "./providers/cache.js";
 
 const LAYER_VERSION = "2";
-const DEFAULT_OPEN_NEXT_VERSION = "2.3.1";
+const DEFAULT_OPEN_NEXT_VERSION = "3.0.0-rc.4";
 const DEFAULT_CACHE_POLICY_ALLOWED_HEADERS = [
   "accept",
+  "x-prerender-revalidate",
   "rsc",
   "next-router-prefetch",
   "next-router-state-tree",
   "next-url",
 ];
+
+type BaseFunction = {
+  handler: string;
+  bundle: string;
+};
+
+type OpenNextFunctionOrigin = {
+  type: "function";
+  streaming?: boolean;
+  wrapper: string;
+  converter: string;
+} & BaseFunction;
+
+type OpenNextServerFunctionOrigin = OpenNextFunctionOrigin & {
+  queue: string;
+  incrementalCache: string;
+  tagCache: string;
+};
+
+type OpenNextImageOptimizationOrigin = OpenNextFunctionOrigin & {
+  imageLoader: string;
+};
+
+type OpenNextS3Origin = {
+  type: "s3";
+  originPath: string;
+  copy: {
+    from: string;
+    to: string;
+    cached: boolean;
+    versionedSubDir?: string;
+  }[];
+};
+
+interface OpenNextOutput {
+  edgeFunctions: {
+    [key: string]: BaseFunction;
+  } & {
+    middleware?: BaseFunction & { pathResolver: string };
+  };
+  origins: {
+    s3: OpenNextS3Origin;
+    default: OpenNextServerFunctionOrigin;
+    imageOptimizer: OpenNextImageOptimizationOrigin;
+  } & {
+    [key: string]: OpenNextServerFunctionOrigin | OpenNextS3Origin;
+  };
+  behaviors: {
+    pattern: string;
+    origin?: string;
+    edgeFunction?: string;
+  }[];
+  additionalProps?: {
+    disableIncrementalCache?: boolean;
+    disableTagCache?: boolean;
+    initializationFunction?: BaseFunction;
+    warmer?: BaseFunction;
+    revalidationFunction?: BaseFunction;
+  };
+}
 
 export interface NextjsArgs extends SsrSiteArgs {
   /**
@@ -46,30 +111,25 @@ export interface NextjsArgs extends SsrSiteArgs {
    * @default Latest OpenNext version
    * @example
    * ```js
-   * openNextVersion: "2.2.4",
+   * openNextVersion: "3.0.0-rc.3",
    * ```
    */
-  openNextVersion?: string;
+  openNextVersion?: Input<string>;
   /**
    * How the logs are stored in CloudWatch
    * - "combined" - Logs from all routes are stored in the same log group.
-   * - "per-route" - Logs from each route are stored in a separate log group.
-   * @default `per-route`
+   * - "per-route" - Logs from each route are stored in a separate log group. Doesn't work right now
+   * @default "per-route"
    * @example
    * ```js
    * logging: "combined",
    * ```
    */
   logging?: "combined" | "per-route";
-  /**
-   * The server function is deployed to Lambda in a single region. Alternatively, you can enable this option to deploy to Lambda@Edge.
-   * @default `false`
-   */
-  edge?: boolean;
   imageOptimization?: {
     /**
      * The amount of memory in MB allocated for image optimization function.
-     * @default `1024 MB`
+     * @default 1024 MB
      * @example
      * ```js
      * imageOptimization: {
@@ -79,62 +139,24 @@ export interface NextjsArgs extends SsrSiteArgs {
      */
     memory?: Size;
   };
-  experimental?: {
-    /**
-     * Enable streaming. Currently an experimental feature in OpenNext.
-     * @default `false`
-     * @example
-     * ```js
-     * experimental: {
-     *   streaming: true,
-     * }
-     * ```
-     */
-    streaming?: boolean;
-    /**
-     * Disabling incremental cache will cause the entire page to be revalidated on each request. This can result in ISR and SSG pages to be in an inconsistent state. Specify this option if you are using SSR pages only.
-     *
-     * Note that it is possible to disable incremental cache while leaving on-demand revalidation enabled.
-     * @default `false`
-     * @example
-     * ```js
-     * experimental: {
-     *   disableIncrementalCache: true,
-     * }
-     * ```
-     */
-    disableIncrementalCache?: boolean;
-    /**
-     * Disabling DynamoDB cache will cause on-demand revalidation by path (`revalidatePath`) and by cache tag (`revalidateTag`) to fail silently.
-     * @default `false`
-     * @example
-     * ```js
-     * experimental: {
-     *   disableDynamoDBCache: true,
-     * }
-     * ```
-     */
-    disableDynamoDBCache?: boolean;
-  };
 }
 
 /**
  * The `Nextjs` component makes it easy to create a Next.js app.
  * @example
- * #### Using the minimal config
+ * Deploys a Next.js app in the `my-next-app` directory.
+ *
  * ```js
- * new sst.aws.Nextjs("Web", {
+ * new Nextjs("Web", {
  *   path: "my-next-app/",
  * });
  * ```
  */
 export class Nextjs extends Component implements Link.Linkable {
   private doNotDeploy: Output<boolean>;
-  private edge: Output<boolean>;
   private cdn: Cdn;
   private assets: Bucket;
   private server?: Function;
-  //private serverFunctionForDev?: Function;
 
   constructor(
     name: string,
@@ -142,21 +164,6 @@ export class Nextjs extends Component implements Link.Linkable {
     opts?: ComponentResourceOptions,
   ) {
     super("sst:aws:Nextjs", name, args, opts);
-
-    const parent = this;
-    const logging = normalizeLogging();
-    const experimental = normalizeExperimental();
-    const buildCommand = normalizeBuildCommand();
-    buildCommand.apply((buildCommand) => console.log(buildCommand));
-    const { sitePath, doNotDeploy, region } = prepare(args ?? {}, opts);
-
-    // TODO check if deployed
-    //if (doNotDeploy) {
-    //  // @ts-expect-error
-    //  this.bucket = this.distribution = null;
-    //  this.serverFunctionForDev = createServerFunctionForDev();
-    //  return;
-    //}
 
     let _routes: Output<
       ({
@@ -166,53 +173,52 @@ export class Nextjs extends Component implements Link.Linkable {
         sourcemapKey?: string;
       } & ({ regexMatch: string } | { prefixMatch: string }))[]
     >;
-    let routesManifest: Output<{
-      dynamicRoutes: { page: string; regex: string }[];
-      staticRoutes: { page: string; regex: string }[];
-      dataRoutes?: { page: string; dataRouteRegex: string }[];
-    }>;
-    let appPathRoutesManifest: Output<Record<string, string>>;
-    let appPathsManifest: Output<Record<string, string>>;
-    let pagesManifest: Output<Record<string, string>>;
-    let prerenderManifest: Output<{
-      version: number;
-      routes: Record<string, unknown>;
-    }>;
 
-    const outputPath = buildApp(name, args || {}, sitePath, buildCommand);
+    args = args ?? {};
+    opts = opts ?? {};
+    const parent = this;
+    const logging = normalizeLogging();
+    const buildCommand = normalizeBuildCommand();
+    const { sitePath, region } = prepare(args, opts);
+    const strategy = getDeployStrategy(parent, name);
     const { access, bucket } = createBucket(parent, name);
+    const outputPath = buildApp(name, args, strategy, sitePath, buildCommand);
+    const {
+      openNextOutput,
+      buildId,
+      routesManifest,
+      appPathRoutesManifest,
+      appPathsManifest,
+      pagesManifest,
+      prerenderManifest,
+    } = loadBuildOutput();
     const revalidationQueue = createRevalidationQueue();
     const revalidationTable = createRevalidationTable();
-
-    const plan = buildPlan(bucket);
-    // TODO set dependency
-    // TODO ensure sourcemaps are removed in function code
+    createRevalidationTableSeeder();
+    const plan = buildPlan();
     removeSourcemaps();
-
     const { distribution, ssrFunctions, edgeFunctions } =
       createServersAndDistribution(
         parent,
         name,
-        args || {},
+        args,
+        strategy,
         outputPath,
         access,
         bucket,
         plan,
       );
     const serverFunction = ssrFunctions[0] ?? Object.values(edgeFunctions)[0];
+    handleMissingSourcemap();
 
-    handleMissingSourcemap(); // TODO implement
+    // Handle per-route logging
+    disableDefaultLogging();
+    uploadSourcemaps();
 
-    if (isPerRouteLoggingEnabled()) {
-      //disableDefaultLogging();
-      uploadSourcemaps();
-    }
-
-    this.doNotDeploy = doNotDeploy;
+    this.doNotDeploy = output(false);
     this.assets = bucket;
     this.cdn = distribution as unknown as Cdn;
     this.server = serverFunction as unknown as Function;
-    this.edge = plan.edge;
     Hint.register(
       this.urn,
       all([this.cdn.domainUrl, this.cdn.url]).apply(
@@ -224,7 +230,7 @@ export class Nextjs extends Component implements Link.Linkable {
         mode: $dev ? "placeholder" : "deployed",
         path: sitePath,
         customDomainUrl: this.cdn.domainUrl,
-        edge: this.edge,
+        edge: plan.edge,
       },
     });
 
@@ -232,109 +238,308 @@ export class Nextjs extends Component implements Link.Linkable {
       return output(args?.logging).apply((logging) => logging ?? "per-route");
     }
 
-    function normalizeExperimental() {
-      return output(args?.experimental).apply((experimental) => ({
-        streaming: experimental?.streaming ?? false,
-        disableDynamoDBCache: experimental?.disableDynamoDBCache ?? false,
-        disableIncrementalCache: experimental?.disableIncrementalCache ?? false,
-        ...experimental,
-      }));
-    }
-
     function normalizeBuildCommand() {
-      return all([args?.buildCommand, experimental]).apply(
-        ([buildCommand, experimental]) =>
+      return all([args?.buildCommand, args?.openNextVersion]).apply(
+        ([buildCommand, openNextVersion]) =>
           buildCommand ??
           [
             "npx",
             "--yes",
-            `open-next@${args?.openNextVersion ?? DEFAULT_OPEN_NEXT_VERSION}`,
+            `open-next@${openNextVersion ?? DEFAULT_OPEN_NEXT_VERSION}`,
             "build",
-            ...(experimental.streaming ? ["--streaming"] : []),
-            ...(experimental.disableDynamoDBCache
-              ? ["--dangerously-disable-dynamodb-cache"]
-              : []),
-            ...(experimental.disableIncrementalCache
-              ? ["--dangerously-disable-incremental-cache"]
-              : []),
           ].join(" "),
       );
     }
 
-    function buildPlan(bucket: Bucket) {
+    function loadBuildOutput() {
+      const data = strategy.apply((strategy) => {
+        if (strategy === "full") return loadOpenNextOutput();
+        else if (strategy === "mock-full") return null;
+        return loadOpenNextOutputPlaceholder();
+      });
+
+      const cache = new Cache(`${name}OpenNextOutput`, { data }, { parent });
+
+      return {
+        openNextOutput: cache.data as ReturnType<typeof loadOpenNextOutput>,
+        buildId: loadBuildId(),
+        routesManifest: loadRoutesManifest(),
+        appPathRoutesManifest: loadAppPathRoutesManifest(),
+        appPathsManifest: loadAppPathsManifest(),
+        pagesManifest: loadPagesManifest(),
+        prerenderManifest: loadPrerenderManifest(),
+      };
+    }
+
+    function loadOpenNextOutput() {
+      return outputPath.apply((outputPath) => {
+        const openNextOutputPath = path.join(
+          outputPath,
+          ".open-next",
+          "open-next.output.json",
+        );
+        if (!fs.existsSync(openNextOutputPath)) {
+          throw new VisibleError(
+            `Failed to load open-next.output.json from "${openNextOutputPath}".`,
+          );
+        }
+        const content = fs.readFileSync(openNextOutputPath).toString();
+        const json = JSON.parse(content) as OpenNextOutput;
+        // Currently open-next.output.json's initializationFunction value
+        // is wrong, it is set to ".open-next/initialization-function"
+        if (json.additionalProps?.initializationFunction) {
+          json.additionalProps.initializationFunction = {
+            handler: "index.handler",
+            bundle: ".open-next/dynamodb-provider",
+          };
+        }
+        return json;
+      });
+    }
+
+    function loadOpenNextOutputPlaceholder() {
+      // Configure origins and behaviors based on the Next.js app from quick start
+      return {
+        edgeFunctions: {},
+        origins: {
+          s3: {
+            type: "s3",
+            originPath: "_assets",
+            // do not upload anything
+            copy: [],
+          },
+          imageOptimizer: {
+            type: "function",
+            handler: "index.handler",
+            // use placeholder code
+            bundle: path.join($cli.paths.platform, "dist", "empty-function"),
+            streaming: false,
+          },
+          default: {
+            type: "function",
+            handler: "index.handler",
+            // use placeholder code
+            bundle: path.join(
+              $cli.paths.platform,
+              "dist",
+              "ssr-function-placeholder",
+            ),
+            streaming: false,
+          },
+        },
+        behaviors: [
+          { pattern: "_next/image*", origin: "imageOptimizer" },
+          { pattern: "_next/data/*", origin: "default" },
+          { pattern: "*", origin: "default" },
+          { pattern: "BUILD_ID", origin: "s3" },
+          { pattern: "_next/*", origin: "s3" },
+          { pattern: "favicon.ico", origin: "s3" },
+          { pattern: "next.svg", origin: "s3" },
+          { pattern: "vercel.svg", origin: "s3" },
+        ],
+        additionalProps: {
+          // skip creating revalidation queue
+          disableIncrementalCache: true,
+          // skip creating revalidation table
+          disableTagCache: true,
+        },
+      };
+    }
+
+    function loadBuildId() {
+      return all([strategy, outputPath]).apply(([strategy, outputPath]) => {
+        if (strategy !== "full") return "mock-build-id";
+
+        try {
+          return fs
+            .readFileSync(path.join(outputPath, ".next/BUILD_ID"))
+            .toString();
+        } catch (e) {
+          console.error(e);
+          throw new VisibleError(
+            `Failed to read build id from ".next/BUILD_ID" for the "${name}" site.`,
+          );
+        }
+      });
+    }
+
+    function loadRoutesManifest() {
+      return all([strategy, outputPath]).apply(([strategy, outputPath]) => {
+        if (strategy !== "full") return { dynamicRoutes: [], staticRoutes: [] };
+
+        try {
+          const content = fs
+            .readFileSync(path.join(outputPath, ".next/routes-manifest.json"))
+            .toString();
+          return JSON.parse(content) as {
+            dynamicRoutes: { page: string; regex: string }[];
+            staticRoutes: { page: string; regex: string }[];
+            dataRoutes?: { page: string; dataRouteRegex: string }[];
+          };
+        } catch (e) {
+          console.error(e);
+          throw new VisibleError(
+            `Failed to read routes data from ".next/routes-manifest.json" for the "${name}" site.`,
+          );
+        }
+      });
+    }
+
+    function loadAppPathRoutesManifest() {
+      // Example
+      // {
+      //   "/_not-found": "/_not-found",
+      //   "/page": "/",
+      //   "/favicon.ico/route": "/favicon.ico",
+      //   "/api/route": "/api",                    <- app/api/route.js
+      //   "/api/sub/route": "/api/sub",            <- app/api/sub/route.js
+      //   "/items/[slug]/route": "/items/[slug]"   <- app/items/[slug]/route.js
+      // }
+
+      return all([strategy, outputPath]).apply(([strategy, outputPath]) => {
+        if (strategy !== "full") return {};
+
+        try {
+          const content = fs
+            .readFileSync(
+              path.join(outputPath, ".next/app-path-routes-manifest.json"),
+            )
+            .toString();
+          return JSON.parse(content) as Record<string, string>;
+        } catch (e) {
+          return {};
+        }
+      });
+    }
+
+    function loadAppPathsManifest() {
+      return all([strategy, outputPath]).apply(([strategy, outputPath]) => {
+        if (strategy !== "full") return {};
+
+        try {
+          const content = fs
+            .readFileSync(
+              path.join(outputPath, ".next/server/app-paths-manifest.json"),
+            )
+            .toString();
+          return JSON.parse(content) as Record<string, string>;
+        } catch (e) {
+          return {};
+        }
+      });
+    }
+
+    function loadPagesManifest() {
+      return all([strategy, outputPath]).apply(([strategy, outputPath]) => {
+        if (strategy !== "full") return {};
+
+        try {
+          const content = fs
+            .readFileSync(
+              path.join(outputPath, ".next/server/pages-manifest.json"),
+            )
+            .toString();
+          return JSON.parse(content) as Record<string, string>;
+        } catch (e) {
+          return {};
+        }
+      });
+    }
+
+    function loadPrerenderManifest() {
+      return all([strategy, outputPath]).apply(([strategy, outputPath]) => {
+        if (strategy !== "full") return { version: 0, routes: {} };
+
+        try {
+          const content = fs
+            .readFileSync(
+              path.join(outputPath, ".next/prerender-manifest.json"),
+            )
+            .toString();
+          return JSON.parse(content) as {
+            version: number;
+            routes: Record<string, unknown>;
+          };
+        } catch (e) {
+          console.debug("Failed to load prerender-manifest.json", e);
+        }
+      });
+    }
+
+    function buildPlan() {
       return all([
-        outputPath,
-        region,
-        args?.edge,
-        args?.experimental,
+        [region, logging, outputPath],
+        buildId,
+        openNextOutput,
         args?.imageOptimization,
-      ]).apply(([outputPath, region, edge, experimental, imageOptimization]) =>
-        all([
-          bucket.name,
-          useRoutes(),
-          revalidationQueue.apply((q) => ({ url: q?.url, arn: q?.arn })),
-          revalidationTable.apply((t) => ({ name: t?.name, arn: t?.arn })),
-        ]).apply(
-          ([
-            bucketName,
-            routes,
-            { url: revalidationQueueUrl, arn: revalidationQueueArn },
-            { name: revalidationTableName, arn: revalidationTableArn },
-          ]) => {
-            const serverConfig = {
-              bundle: path.join(outputPath, ".open-next", "server-function"),
-              handler: "index.handler",
-              environment: {
-                CACHE_BUCKET_NAME: bucketName,
-                CACHE_BUCKET_KEY_PREFIX: "_cache",
-                CACHE_BUCKET_REGION: region,
-                ...(revalidationQueueUrl && {
-                  REVALIDATION_QUEUE_URL: revalidationQueueUrl,
-                  REVALIDATION_QUEUE_REGION: region,
-                }),
-                ...(revalidationTableName && {
-                  CACHE_DYNAMO_TABLE: revalidationTableName,
-                }),
-              },
-              policies: [
-                ...(revalidationQueueArn
-                  ? [
-                      {
-                        actions: [
-                          "sqs:SendMessage",
-                          "sqs:GetQueueAttributes",
-                          "sqs:GetQueueUrl",
-                        ],
-                        resources: [revalidationQueueArn],
-                      },
-                    ]
-                  : []),
-                ...(revalidationTableArn
-                  ? [
-                      {
-                        actions: [
-                          "dynamodb:BatchGetItem",
-                          "dynamodb:GetRecords",
-                          "dynamodb:GetShardIterator",
-                          "dynamodb:Query",
-                          "dynamodb:GetItem",
-                          "dynamodb:Scan",
-                          "dynamodb:ConditionCheckItem",
-                          "dynamodb:BatchWriteItem",
-                          "dynamodb:PutItem",
-                          "dynamodb:UpdateItem",
-                          "dynamodb:DeleteItem",
-                          "dynamodb:DescribeTable",
-                        ],
-                        resources: [
-                          revalidationTableArn,
-                          `${revalidationTableArn}/*`,
-                        ],
-                      },
-                    ]
-                  : []),
-              ],
-              layers: isPerRouteLoggingEnabled()
+        bucket.name,
+        revalidationQueue.apply((q) => ({ url: q?.url, arn: q?.arn })),
+        revalidationTable.apply((t) => ({ name: t?.name, arn: t?.arn })),
+        useServerFunctionPerRouteLoggingInjection(),
+      ]).apply(
+        ([
+          [region, logging, outputPath],
+          buildId,
+          openNextOutput,
+          imageOptimization,
+          bucketName,
+          { url: revalidationQueueUrl, arn: revalidationQueueArn },
+          { name: revalidationTableName, arn: revalidationTableArn },
+          serverFunctionPerRouteLoggingInjection,
+        ]) => {
+          const defaultFunctionProps = {
+            environment: {
+              CACHE_BUCKET_NAME: bucketName,
+              CACHE_BUCKET_KEY_PREFIX: "_cache",
+              CACHE_BUCKET_REGION: region,
+              ...(revalidationQueueUrl && {
+                REVALIDATION_QUEUE_URL: revalidationQueueUrl,
+                REVALIDATION_QUEUE_REGION: region,
+              }),
+              ...(revalidationTableName && {
+                CACHE_DYNAMO_TABLE: revalidationTableName,
+              }),
+            },
+            policies: [
+              ...(revalidationQueueArn
+                ? [
+                    {
+                      actions: [
+                        "sqs:SendMessage",
+                        "sqs:GetQueueAttributes",
+                        "sqs:GetQueueUrl",
+                      ],
+                      resources: [revalidationQueueArn],
+                    },
+                  ]
+                : []),
+              ...(revalidationTableArn
+                ? [
+                    {
+                      actions: [
+                        "dynamodb:BatchGetItem",
+                        "dynamodb:GetRecords",
+                        "dynamodb:GetShardIterator",
+                        "dynamodb:Query",
+                        "dynamodb:GetItem",
+                        "dynamodb:Scan",
+                        "dynamodb:ConditionCheckItem",
+                        "dynamodb:BatchWriteItem",
+                        "dynamodb:PutItem",
+                        "dynamodb:UpdateItem",
+                        "dynamodb:DeleteItem",
+                        "dynamodb:DescribeTable",
+                      ],
+                      resources: [
+                        revalidationTableArn,
+                        `${revalidationTableArn}/*`,
+                      ],
+                    },
+                  ]
+                : []),
+            ],
+            layers:
+              logging === "per-route"
                 ? [
                     `arn:aws:lambda:${region}:226609089145:layer:sst-extension-arm64:${LAYER_VERSION}`,
                     //              cdk?.server?.architecture?.name === Architecture.X86_64.name
@@ -342,319 +547,279 @@ export class Nextjs extends Component implements Link.Linkable {
                     //                : `arn:aws:lambda:${stack.region}:226609089145:layer:sst-extension-arm64:${LAYER_VERSION}`
                   ]
                 : undefined,
-            };
+          };
 
-            return validatePlan(
-              transform(args?.transform?.plan, {
-                edge: edge ?? false,
-                cloudFrontFunctions: {
-                  serverCfFunction: {
-                    injections: [useCloudFrontFunctionHostHeaderInjection()],
-                  },
+          return validatePlan(
+            transform(args?.transform?.plan, {
+              edge: false,
+              cloudFrontFunctions: {
+                serverCfFunction: {
+                  injections: [useCloudFrontFunctionHostHeaderInjection()],
                 },
-                edgeFunctions: edge
-                  ? { server: { function: serverConfig } }
-                  : undefined,
-                origins: {
-                  ...(edge
-                    ? {}
-                    : {
-                        server: {
-                          server: {
-                            function: serverConfig,
-                            streaming: experimental?.streaming,
-                            injections: isPerRouteLoggingEnabled()
-                              ? [useServerFunctionPerRouteLoggingInjection()]
-                              : [],
-                          },
-                        },
-                      }),
-                  imageOptimizer: {
-                    imageOptimization: {
+              },
+              edgeFunctions: Object.fromEntries(
+                Object.entries(openNextOutput.edgeFunctions).map(
+                  ([key, value]) => [
+                    key,
+                    {
                       function: {
-                        description: `${name} image optimizer`,
-                        handler: "index.handler",
-                        bundle: path.join(
-                          outputPath,
-                          ".open-next",
-                          "image-optimization-function",
-                        ),
-                        runtime: "nodejs18.x",
-                        architecture: "arm64",
-                        environment: {
-                          BUCKET_NAME: bucketName,
-                          BUCKET_KEY_PREFIX: "_assets",
-                        },
-                        memory: imageOptimization?.memory ?? "1536 MB",
+                        description: `${name} server`,
+                        bundle: path.isAbsolute(value.bundle)
+                          ? value.bundle
+                          : path.join(outputPath, value.bundle),
+                        handler: value.handler,
+                        ...defaultFunctionProps,
                       },
                     },
-                  },
-                  s3: {
-                    s3: {
-                      originPath: "_assets",
-                      copy: [
-                        {
-                          from: ".open-next/assets",
-                          to: "_assets",
-                          cached: true,
-                          versionedSubDir: "_next",
+                  ],
+                ),
+              ),
+              origins: Object.fromEntries(
+                Object.entries(openNextOutput.origins).map(([key, value]) => {
+                  if (key === "s3") {
+                    value = value as OpenNextS3Origin;
+                    return [
+                      key,
+                      {
+                        s3: {
+                          originPath: value.originPath,
+                          copy: value.copy,
                         },
-                        {
-                          from: ".open-next/cache",
-                          to: "_cache",
-                          cached: false,
+                      },
+                    ];
+                  }
+                  if (key === "imageOptimizer") {
+                    value = value as OpenNextImageOptimizationOrigin;
+                    return [
+                      key,
+                      {
+                        imageOptimization: {
+                          function: {
+                            description: `${name} image optimizer`,
+                            handler: value.handler,
+                            bundle: path.isAbsolute(value.bundle)
+                              ? value.bundle
+                              : path.join(outputPath, value.bundle),
+                            runtime: "nodejs18.x",
+                            architecture: "arm64",
+                            environment: {
+                              BUCKET_NAME: bucketName,
+                              BUCKET_KEY_PREFIX: "_assets",
+                            },
+                            memory: imageOptimization?.memory ?? "1536 MB",
+                          },
                         },
-                      ],
+                      },
+                    ];
+                  }
+                  value = value as OpenNextServerFunctionOrigin;
+                  return [
+                    key,
+                    {
+                      server: {
+                        function: {
+                          description: `${name} server`,
+                          bundle: path.isAbsolute(value.bundle)
+                            ? value.bundle
+                            : path.join(outputPath, value.bundle),
+                          handler: value.handler,
+                          ...defaultFunctionProps,
+                        },
+                        streaming: value.streaming,
+                        injections:
+                          logging === "per-route"
+                            ? [serverFunctionPerRouteLoggingInjection]
+                            : [],
+                      },
                     },
-                  },
-                },
-                behaviors: [
-                  ...(edge
-                    ? [
-                        {
-                          cacheType: "server",
-                          cfFunction: "serverCfFunction",
-                          edgeFunction: "server",
-                          origin: "s3",
-                        } as const,
-                        {
-                          cacheType: "server",
-                          pattern: "api/*",
-                          cfFunction: "serverCfFunction",
-                          edgeFunction: "server",
-                          origin: "s3",
-                        } as const,
-                        {
-                          cacheType: "server",
-                          pattern: "_next/data/*",
-                          cfFunction: "serverCfFunction",
-                          edgeFunction: "server",
-                          origin: "s3",
-                        } as const,
-                      ]
-                    : [
-                        {
-                          cacheType: "server",
-                          cfFunction: "serverCfFunction",
-                          origin: "server",
-                        } as const,
-                        {
-                          cacheType: "server",
-                          pattern: "api/*",
-                          cfFunction: "serverCfFunction",
-                          origin: "server",
-                        } as const,
-                        {
-                          cacheType: "server",
-                          pattern: "_next/data/*",
-                          cfFunction: "serverCfFunction",
-                          origin: "server",
-                        } as const,
-                      ]),
-                  {
-                    cacheType: "server",
-                    pattern: "_next/image*",
-                    cfFunction: "serverCfFunction",
-                    origin: "imageOptimizer",
-                  },
-                  // create 1 behaviour for each top level asset file/folder
-                  ...fs
-                    .readdirSync(path.join(outputPath, ".open-next/assets"))
-                    .map(
-                      (item) =>
-                        ({
-                          cacheType: "static",
-                          pattern: fs
-                            .statSync(
-                              path.join(outputPath, ".open-next/assets", item),
-                            )
-                            .isDirectory()
-                            ? `${item}/*`
-                            : item,
-                          origin: "s3",
-                        }) as const,
-                    ),
-                ],
-                serverCachePolicy: {
-                  allowedHeaders: DEFAULT_CACHE_POLICY_ALLOWED_HEADERS,
-                },
-                buildId: fs
-                  .readFileSync(path.join(outputPath, ".next/BUILD_ID"))
-                  .toString(),
+                  ];
+                }),
+              ),
+              behaviors: openNextOutput.behaviors.map((behavior) => {
+                return {
+                  pattern:
+                    behavior.pattern === "*" ? undefined : behavior.pattern,
+                  origin: behavior.origin ?? "",
+                  cacheType:
+                    behavior.origin === "s3" ? "static" : ("server" as const),
+                  cfFunction: "serverCfFunction",
+                  edgeFunction: behavior.edgeFunction ?? "",
+                };
               }),
-            );
-
-            function useServerFunctionPerRouteLoggingInjection() {
-              return `
-if (event.rawPath) {
-  const routeData = ${JSON.stringify(
-    // @ts-expect-error
-    routes.map(({ regexMatch, prefixMatch, logGroupPath }) => ({
-      regex: regexMatch,
-      prefix: prefixMatch,
-      logGroupPath,
-    })),
-  )}.find(({ regex, prefix }) => {
-    if (regex) return event.rawPath.match(new RegExp(regex));
-    if (prefix) return event.rawPath === prefix || (event.rawPath === prefix + "/");
-    return false;
-  });
-  if (routeData) {
-    console.log("::sst::" + JSON.stringify({
-      action:"log.split",
-      properties: {
-        logGroupName:"/sst/lambda/" + context.functionName + routeData.logGroupPath,
-      },
-    }));
-  }
-}`;
-            }
-          },
-        ),
+              serverCachePolicy: {
+                allowedHeaders: DEFAULT_CACHE_POLICY_ALLOWED_HEADERS,
+              },
+              buildId,
+            }),
+          );
+        },
       );
     }
 
     function createRevalidationQueue() {
-      return experimental.apply((experimental) => {
-        if (!serverFunction) return;
-        if (experimental.disableIncrementalCache) return;
+      return all([strategy, outputPath, openNextOutput]).apply(
+        ([strategy, outputPath, openNextOutput]) => {
+          if (openNextOutput.additionalProps?.disableIncrementalCache) return;
 
-        const queue = new aws.sqs.Queue(
-          `${name}RevalidationQueue`,
+          const revalidationFunction =
+            openNextOutput.additionalProps?.revalidationFunction;
+          if (!revalidationFunction) return;
+
+          const queue = new aws.sqs.Queue(
+            `${name}RevalidationQueue`,
+            {
+              fifoQueue: true,
+              receiveWaitTimeSeconds: 20,
+            },
+            { parent },
+          );
+          const consumer = new Function(
+            `${name}Revalidator`,
+            {
+              description: `${name} ISR revalidator`,
+              handler: revalidationFunction.handler,
+              bundle: path.join(outputPath, revalidationFunction.bundle),
+              runtime: "nodejs18.x",
+              timeout: "30 seconds",
+              permissions: [
+                {
+                  actions: [
+                    "sqs:ChangeMessageVisibility",
+                    "sqs:DeleteMessage",
+                    "sqs:GetQueueAttributes",
+                    "sqs:GetQueueUrl",
+                    "sqs:ReceiveMessage",
+                  ],
+                  resources: [queue.arn],
+                },
+              ],
+              _ignoreCodeChanges: strategy !== "full",
+            },
+            { parent },
+          );
+          new aws.lambda.EventSourceMapping(
+            `${name}RevalidatorEventSource`,
+            {
+              functionName: consumer.nodes.function.name,
+              eventSourceArn: queue.arn,
+              batchSize: 5,
+            },
+            { parent },
+          );
+          return queue;
+        },
+      );
+    }
+
+    function createRevalidationTable() {
+      return openNextOutput.apply((openNextOutput) => {
+        if (openNextOutput.additionalProps?.disableTagCache) return;
+
+        return new aws.dynamodb.Table(
+          `${name}RevalidationTable`,
           {
-            fifoQueue: true,
-            receiveWaitTimeSeconds: 20,
-          },
-          { parent },
-        );
-        const consumer = new Function(
-          `${name}Revalidator`,
-          {
-            description: `${name} ISR revalidator`,
-            handler: "index.handler",
-            bundle: outputPath.apply((outputPath) =>
-              path.join(outputPath, ".open-next", "revalidation-function"),
-            ),
-            runtime: "nodejs18.x",
-            timeout: "30 seconds",
-            permissions: [
+            attributes: [
+              { name: "tag", type: "S" },
+              { name: "path", type: "S" },
+              { name: "revalidatedAt", type: "N" },
+            ],
+            hashKey: "tag",
+            rangeKey: "path",
+            pointInTimeRecovery: {
+              enabled: true,
+            },
+            billingMode: "PAY_PER_REQUEST",
+            globalSecondaryIndexes: [
               {
-                actions: [
-                  "sqs:ChangeMessageVisibility",
-                  "sqs:DeleteMessage",
-                  "sqs:GetQueueAttributes",
-                  "sqs:GetQueueUrl",
-                  "sqs:ReceiveMessage",
-                ],
-                resources: [queue.arn],
+                name: "revalidate",
+                hashKey: "path",
+                rangeKey: "revalidatedAt",
+                projectionType: "ALL",
               },
             ],
           },
           { parent },
         );
-        new aws.lambda.EventSourceMapping(
-          `${name}RevalidatorEventSource`,
-          {
-            functionName: consumer.nodes.function.name,
-            eventSourceArn: queue.arn,
-            batchSize: 5,
-          },
-          { parent },
-        );
-        return queue;
       });
     }
 
-    function createRevalidationTable() {
-      return all([experimental, outputPath, usePrerenderManifest()]).apply(
-        ([experimental, outputPath, prerenderManifest]) => {
-          if (!serverFunction) return;
-          if (experimental.disableDynamoDBCache) return;
+    function createRevalidationTableSeeder() {
+      return all([
+        strategy,
+        revalidationTable,
+        outputPath,
+        openNextOutput,
+        prerenderManifest,
+      ]).apply(
+        ([
+          strategy,
+          revalidationTable,
+          outputPath,
+          openNextOutput,
+          prerenderManifest,
+        ]) => {
+          if (openNextOutput.additionalProps?.disableTagCache) return;
+          if (!openNextOutput.additionalProps?.initializationFunction) return;
 
-          const table = new aws.dynamodb.Table(
-            `${name}RevalidationTable`,
+          // Provision 128MB of memory for every 4,000 prerendered routes,
+          // 1GB per 40,000, up to 10GB. This tends to use ~70% of the memory
+          // provisioned when testing.
+          const prerenderedRouteCount = Object.keys(
+            prerenderManifest?.routes ?? {},
+          ).length;
+          const seedFn = new Function(
+            `${name}RevalidationSeeder`,
             {
-              attributes: [
-                { name: "tag", type: "S" },
-                { name: "path", type: "S" },
-                { name: "revalidatedAt", type: "N" },
-              ],
-              hashKey: "tag",
-              rangeKey: "path",
-              pointInTimeRecovery: {
-                enabled: true,
-              },
-              billingMode: "PAY_PER_REQUEST",
-              globalSecondaryIndexes: [
+              description: `${name} ISR revalidation data seeder`,
+              handler:
+                openNextOutput.additionalProps.initializationFunction.handler,
+              bundle: path.join(
+                outputPath,
+                openNextOutput.additionalProps.initializationFunction.bundle,
+              ),
+              runtime: "nodejs18.x",
+              timeout: "900 seconds",
+              memory: `${Math.min(
+                10240,
+                Math.max(128, Math.ceil(prerenderedRouteCount / 4000) * 128),
+              )} MB`,
+              permissions: [
                 {
-                  name: "revalidate",
-                  hashKey: "path",
-                  rangeKey: "revalidatedAt",
-                  projectionType: "ALL",
+                  actions: [
+                    "dynamodb:BatchWriteItem",
+                    "dynamodb:PutItem",
+                    "dynamodb:DescribeTable",
+                  ],
+                  resources: [revalidationTable!.arn],
                 },
               ],
+              environment: {
+                CACHE_DYNAMO_TABLE: revalidationTable!.name,
+              },
+              _ignoreCodeChanges: strategy !== "full",
             },
             { parent },
           );
-
-          const dynamodbProviderPath = path.join(
-            outputPath,
-            ".open-next",
-            "dynamodb-provider",
+          new aws.lambda.Invocation(
+            `${name}RevalidationSeed`,
+            {
+              functionName: seedFn.nodes.function.name,
+              triggers: {
+                version: Date.now().toString(),
+              },
+              input: JSON.stringify({}),
+            },
+            { parent, ignoreChanges: strategy === "full" ? undefined : ["*"] },
           );
-          if (fs.existsSync(dynamodbProviderPath)) {
-            // Provision 128MB of memory for every 4,000 prerendered routes,
-            // 1GB per 40,000, up to 10GB. This tends to use ~70% of the memory
-            // provisioned when testing.
-            const prerenderedRouteCount = Object.keys(
-              prerenderManifest?.routes ?? {},
-            ).length;
-            const seedFn = new Function(
-              `${name}RevalidationSeeder`,
-              {
-                description: `${name} ISR revalidation data seeder`,
-                handler: "index.handler",
-                bundle: dynamodbProviderPath,
-                runtime: "nodejs18.x",
-                timeout: "900 seconds",
-                memory: `${Math.min(
-                  10240,
-                  Math.max(128, Math.ceil(prerenderedRouteCount / 4000) * 128),
-                )} MB`,
-                permissions: [
-                  {
-                    actions: [
-                      "dynamodb:BatchWriteItem",
-                      "dynamodb:PutItem",
-                      "dynamodb:DescribeTable",
-                    ],
-                    resources: [table.arn],
-                  },
-                ],
-                environment: {
-                  CACHE_DYNAMO_TABLE: table.name,
-                },
-              },
-              { parent },
-            );
-            new aws.lambda.Invocation(
-              `${name}RevalidationSeed`,
-              {
-                functionName: seedFn.nodes.function.name,
-                triggers: {
-                  version: Date.now().toString(),
-                },
-                input: JSON.stringify({}),
-              },
-              { parent },
-            );
-          }
-          return table;
         },
       );
     }
 
     function removeSourcemaps() {
+      // TODO set dependency
+      // TODO ensure sourcemaps are removed in function code
+      // We don't need to remove source maps in V3
+      return;
       return outputPath.apply((outputPath) => {
         const files = globSync("**/*.js.map", {
           cwd: path.join(outputPath, ".open-next", "server-function"),
@@ -674,15 +839,17 @@ if (event.rawPath) {
 
       _routes = all([
         outputPath,
-        useRoutesManifest(),
-        useAppPathRoutesManifest(),
-        useAppPathsManifest(),
+        routesManifest,
+        appPathRoutesManifest,
+        appPathsManifest,
+        pagesManifest,
       ]).apply(
         ([
           outputPath,
           routesManifest,
           appPathRoutesManifest,
           appPathsManifest,
+          pagesManifest,
         ]) => {
           const dynamicAndStaticRoutes = [
             ...routesManifest.dynamicRoutes,
@@ -801,7 +968,6 @@ if (event.rawPath) {
             //   "/": "pages/index.js",
             //   "/ssr": "pages/ssr.js"
             // }
-            const pagesManifest = usePagesManifest();
             const filePath = pagesManifest[page];
             if (!filePath) return;
 
@@ -822,112 +988,37 @@ if (event.rawPath) {
       return _routes;
     }
 
-    function useRoutesManifest() {
-      if (routesManifest) return routesManifest;
-
-      return outputPath.apply((outputPath) => {
-        try {
-          const content = fs
-            .readFileSync(path.join(outputPath, ".next/routes-manifest.json"))
-            .toString();
-          routesManifest = JSON.parse(content);
-          return routesManifest!;
-        } catch (e) {
-          console.error(e);
-          throw new Error(
-            `Failed to read routes data from ".next/routes-manifest.json" for the "${name}" site.`,
-          );
-        }
-      });
-    }
-
-    function useAppPathRoutesManifest() {
-      // Example
-      // {
-      //   "/_not-found": "/_not-found",
-      //   "/page": "/",
-      //   "/favicon.ico/route": "/favicon.ico",
-      //   "/api/route": "/api",                    <- app/api/route.js
-      //   "/api/sub/route": "/api/sub",            <- app/api/sub/route.js
-      //   "/items/[slug]/route": "/items/[slug]"   <- app/items/[slug]/route.js
-      // }
-
-      if (appPathRoutesManifest) return appPathRoutesManifest;
-
-      appPathRoutesManifest = outputPath.apply((outputPath) => {
-        try {
-          const content = fs
-            .readFileSync(
-              path.join(outputPath, ".next/app-path-routes-manifest.json"),
-            )
-            .toString();
-          return JSON.parse(content) as Record<string, string>;
-        } catch (e) {
-          return {};
-        }
-      });
-      return appPathRoutesManifest;
-    }
-
-    function useAppPathsManifest() {
-      if (appPathsManifest) return appPathsManifest;
-
-      appPathsManifest = outputPath.apply((outputPath) => {
-        try {
-          const content = fs
-            .readFileSync(
-              path.join(outputPath, ".next/server/app-paths-manifest.json"),
-            )
-            .toString();
-          return JSON.parse(content) as Record<string, string>;
-        } catch (e) {
-          return {};
-        }
-      });
-      return appPathsManifest!;
-    }
-
-    function usePagesManifest() {
-      if (pagesManifest) return pagesManifest;
-
-      pagesManifest = outputPath.apply((outputPath) => {
-        try {
-          const content = fs
-            .readFileSync(
-              path.join(outputPath, ".next/server/pages-manifest.json"),
-            )
-            .toString();
-          return JSON.parse(content) as Record<string, string>;
-        } catch (e) {
-          return {};
-        }
-      });
-      return pagesManifest;
-    }
-
-    function usePrerenderManifest() {
-      if (prerenderManifest) return prerenderManifest;
-
-      return outputPath.apply((outputPath) => {
-        try {
-          const content = fs
-            .readFileSync(
-              path.join(outputPath, ".next/prerender-manifest.json"),
-            )
-            .toString();
-          prerenderManifest = JSON.parse(content);
-          return prerenderManifest!;
-        } catch (e) {
-          console.debug("Failed to load prerender-manifest.json", e);
-        }
-      });
-    }
-
-    function isPerRouteLoggingEnabled() {
-      return !doNotDeploy && !args?.edge && args?.logging === "per-route";
+    function useServerFunctionPerRouteLoggingInjection() {
+      return useRoutes().apply(
+        (routes) => `
+if (event.rawPath) {
+  const routeData = ${JSON.stringify(
+    // @ts-expect-error
+    routes.map(({ regexMatch, prefixMatch, logGroupPath }) => ({
+      regex: regexMatch,
+      prefix: prefixMatch,
+      logGroupPath,
+    })),
+  )}.find(({ regex, prefix }) => {
+    if (regex) return event.rawPath.match(new RegExp(regex));
+    if (prefix) return event.rawPath === prefix || (event.rawPath === prefix + "/");
+    return false;
+  });
+  if (routeData) {
+    console.log("::sst::" + JSON.stringify({
+      action:"log.split",
+      properties: {
+        logGroupName:"/sst/lambda/" + context.functionName + routeData.logGroupPath,
+      },
+    }));
+  }
+}`,
+      );
     }
 
     function handleMissingSourcemap() {
+      // TODO implement
+      return;
       //if (doNotDeploy || this.args.edge) return;
       //const hasMissingSourcemap = useRoutes().every(
       //  ({ sourcemapPath, sourcemapKey }) => !sourcemapPath || !sourcemapKey
@@ -938,12 +1029,15 @@ if (event.rawPath) {
     }
 
     function disableDefaultLogging() {
-      if (!serverFunction) return;
+      // Temporarily enable default logging even when per-route logging is enabled
+      return;
+      logging.apply((logging) => {
+        if (logging !== "per-route") return;
 
-      const policy = new aws.iam.Policy(
-        `${name}DisableLoggingPolicy`,
-        {
-          policy: interpolate`{
+        const policy = new aws.iam.Policy(
+          `${name}DisableLoggingPolicy`,
+          {
+            policy: interpolate`{
             "Version": "2012-10-17",
             "Statement": [
               {
@@ -960,39 +1054,42 @@ if (event.rawPath) {
               }
             ]
           }`,
-        },
-        { parent },
-      );
-      new aws.iam.RolePolicyAttachment(
-        `${name}DisableLoggingPolicyAttachment`,
-        {
-          policyArn: policy.arn,
-          role: serverFunction.nodes.function.role,
-        },
-        { parent },
-      );
+          },
+          { parent },
+        );
+        new aws.iam.RolePolicyAttachment(
+          `${name}DisableLoggingPolicyAttachment`,
+          {
+            policyArn: policy.arn,
+            role: serverFunction.nodes.function.role,
+          },
+          { parent },
+        );
+      });
     }
 
     function uploadSourcemaps() {
-      if (!serverFunction) return;
+      logging.apply((logging) => {
+        if (logging !== "per-route") return;
 
-      useRoutes().apply((routes) => {
-        routes.forEach(({ sourcemapPath, sourcemapKey }) => {
-          if (!sourcemapPath || !sourcemapKey) return;
+        useRoutes().apply((routes) => {
+          routes.forEach(({ sourcemapPath, sourcemapKey }) => {
+            if (!sourcemapPath || !sourcemapKey) return;
 
-          new aws.s3.BucketObjectv2(
-            `${name}Sourcemap${sanitizeToPascalCase(sourcemapKey)}`,
-            {
-              bucket: region.apply((region) =>
-                bootstrap.forRegion(region).then((b) => b.asset),
-              ),
-              source: new asset.FileAsset(sourcemapPath),
-              key: serverFunction!.nodes.function.arn.apply((arn) =>
-                path.posix.join("sourcemaps", arn, sourcemapKey),
-              ),
-            },
-            { parent, retainOnDelete: true },
-          );
+            new aws.s3.BucketObjectv2(
+              `${name}Sourcemap${sanitizeToPascalCase(sourcemapKey)}`,
+              {
+                bucket: region.apply((region) =>
+                  bootstrap.forRegion(region).then((b) => b.asset),
+                ),
+                source: new asset.FileAsset(sourcemapPath),
+                key: serverFunction!.nodes.function.arn.apply((arn) =>
+                  path.posix.join("sourcemaps", arn, sourcemapKey),
+                ),
+              },
+              { parent, retainOnDelete: true },
+            );
+          });
         });
       });
     }
@@ -1024,6 +1121,19 @@ if (event.rawPath) {
     if (this.doNotDeploy) return;
 
     return this.cdn.domainUrl;
+  }
+
+  /**
+   * The internally created CDK resources.
+   */
+  public get nodes() {
+    if (this.doNotDeploy) return;
+
+    return {
+      server: this.server,
+      assets: this.assets,
+      cdn: this.cdn,
+    };
   }
 
   /** @internal */

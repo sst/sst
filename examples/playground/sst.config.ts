@@ -26,6 +26,7 @@ export default $config({
         },
       },
     });
+
     const app = new sst.aws.Function("MyApp", {
       bundle: "functions/bundled-example",
       handler: "index.handler",

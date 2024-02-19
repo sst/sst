@@ -25,7 +25,7 @@ await Promise.all(
 
 // Do not require transpile
 await Promise.all(
-  ["remix-server"].map((dir) =>
+  ["remix-server", "empty-function"].map((dir) =>
     fs.cp(`./functions/${dir}`, `./dist/${dir}`, {
       recursive: true,
     }),
