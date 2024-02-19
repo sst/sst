@@ -88,13 +88,13 @@ export module Link {
       string,
       {
         links: Input<string[]>;
-        environment: Record<string, string>;
+        environment: Record<string, Input<string>>;
       }
     > = {};
     export function register(
       directory: string,
       links: Input<string[]>,
-      environment: Record<string, string>,
+      environment: Record<string, Input<string>>,
     ) {
       receivers[directory] = {
         links,

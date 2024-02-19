@@ -1,7 +1,5 @@
 import Image from "next/image";
-import { headers } from "next/headers";
 import styles from "./page.module.css";
-//import { Resource } from "sst";
 
 export default function Home() {
   return (
@@ -10,7 +8,7 @@ export default function Home() {
         <p>
           Get started by editing&nbsp;
           <code className={styles.code}>app/page.tsx</code>
-          <div>{"" /* Resource.Web.url */}</div>
+          <div>Cool</div>
         </p>
         <div>
           <a

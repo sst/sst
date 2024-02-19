@@ -770,7 +770,7 @@ export class Function
       input.map((item) => item.name),
     );
 
-    $all([
+    all([
       dev,
       name,
       links,
@@ -789,12 +789,9 @@ export class Function
         properties: nodejs,
       });
     });
-
-    $all([args.handler, args.bundle, links, environment]).apply(
-      ([handler, bundle, links, environment]) =>
-        Link.Receiver.register(bundle || handler, links, environment),
-    );
-
+    all([bundle, handler]).apply(([bundle, handler]) => {
+      Link.Receiver.register(bundle || handler, links, environment);
+    });
     this.registerOutputs({
       _metadata: {
         handler: args.handler,

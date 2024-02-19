@@ -13,6 +13,7 @@ import (
 	"path/filepath"
 	"reflect"
 	"strings"
+	"sync"
 
 	//"syscall"
 	"time"
@@ -343,11 +344,23 @@ func main() {
 
 					deployComplete := make(chan *project.CompleteEvent)
 					runOnce := false
+					var wg sync.WaitGroup
+					defer wg.Wait()
+
+					wg.Add(1)
 					go func() {
+						defer wg.Done()
 						if !hasTarget {
 							return
 						}
-						complete := <-deployComplete
+
+						complete := &project.CompleteEvent{}
+						select {
+						case <-ctx.Done():
+							return
+						case complete = <-deployComplete:
+							break
+						}
 
 						for {
 							cmd := exec.Command(
@@ -371,7 +384,6 @@ func main() {
 									cmd.Env = append(cmd.Env, envVar)
 								}
 							}
-
 							fmt.Println(cmd.Env)
 							cmd.Env = append(cmd.Env,
 								os.Environ()...,
@@ -379,15 +391,14 @@ func main() {
 							cmd.Stdin = os.Stdin
 							cmd.Stdout = os.Stdout
 							cmd.Stderr = os.Stderr
-							cmd.Start()
-							runOnce = true
 							processExit := make(chan interface{})
-
+							cmd.Start()
 							go func() {
 								cmd.Wait()
-								fmt.Println("process exited")
+								fmt.Println("dev target exited")
 								processExit <- true
 							}()
+							runOnce = true
 
 						loop:
 							for {
@@ -400,9 +411,11 @@ func main() {
 									return
 								case <-processExit:
 									cancel()
+									return
 								case nextComplete := <-deployComplete:
 									cmd.Process.Kill()
 									<-processExit
+									time.Sleep(10 * time.Second)
 									complete = nextComplete
 									break loop
 									for key, value := range nextComplete.Links {
@@ -470,7 +483,7 @@ func main() {
 
 						},
 					})
-
+					cancel()
 					if err != nil {
 						return err
 					}

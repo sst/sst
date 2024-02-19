@@ -1,10 +1,13 @@
-/// <reference path="./.sst/platform/src/global.d.ts" />
+/// <reference path="./.sst/platform/config.d.ts" />
 
 export default $config({
   app(input) {
     return {
       name: "nextjs",
       removalPolicy: input?.stage === "production" ? "retain" : "remove",
+      providers: {
+        aws: {},
+      },
     };
   },
   async run() {
