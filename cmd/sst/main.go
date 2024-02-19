@@ -384,7 +384,6 @@ func main() {
 									cmd.Env = append(cmd.Env, envVar)
 								}
 							}
-							fmt.Println(cmd.Env)
 							cmd.Env = append(cmd.Env,
 								os.Environ()...,
 							)
@@ -395,7 +394,6 @@ func main() {
 							cmd.Start()
 							go func() {
 								cmd.Wait()
-								fmt.Println("dev target exited")
 								processExit <- true
 							}()
 							runOnce = true
@@ -413,9 +411,8 @@ func main() {
 									cancel()
 									return
 								case nextComplete := <-deployComplete:
-									cmd.Process.Kill()
+									cmd.Process.Signal(os.Interrupt)
 									<-processExit
-									time.Sleep(10 * time.Second)
 									complete = nextComplete
 									break loop
 									for key, value := range nextComplete.Links {
