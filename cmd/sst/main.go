@@ -403,7 +403,7 @@ func main() {
 								select {
 								case <-ctx.Done():
 									if cmd.Process != nil {
-										cmd.Process.Kill()
+										cmd.Process.Signal(os.Interrupt)
 										<-processExit
 									}
 									return
