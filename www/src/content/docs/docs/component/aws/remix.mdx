@@ -8,6 +8,8 @@ import Section from '../../../../../components/tsdoc/Section.astro';
 import NestedTitle from '../../../../../components/tsdoc/NestedTitle.astro';
 import InlineSection from '../../../../../components/tsdoc/InlineSection.astro';
 
+<div class="tsdoc">
+
 <Section type="about">
 The `Remix` component makes it easy to create an Remix app.
 
@@ -40,8 +42,8 @@ new Remix(name, args, opts?)
 
 ## Properties
 
-<Segment>
 ### domainUrl
+<Segment>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">undefined</code><code class="symbol"> | </code><code class="primitive">Output</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
@@ -51,8 +53,8 @@ If the custom domain is enabled, this is the URL of the website with the
 custom domain.
 </Segment>
 
-<Segment>
 ### url
+<Segment>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Output</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
@@ -62,8 +64,8 @@ The CloudFront URL of the website.
 </Segment>
 
 ## RemixArgs
-<Segment>
 ### assets?
+<Segment>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Object</code><code class="symbol">&gt;</code>
@@ -81,8 +83,8 @@ The CloudFront URL of the website.
 </Section>
 Configure the assets uploaded to S3.
 </Segment>
-<Segment>
 <NestedTitle id="assets-fileoptions" Tag="h4" parent="assets.">fileOptions?</NestedTitle>
+<Segment>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Object</code><code class="symbol">[]</code><code class="symbol">&gt;</code>
@@ -101,40 +103,40 @@ assets: {
 }
 ```
 </Segment>
-<Segment>
 <NestedTitle id="assets-fileoptions-cachecontrol" Tag="h5" parent="assets.fileOptions[].">cacheControl?</NestedTitle>
+<Segment>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">string</code>
 </InlineSection>
 </Section>
 </Segment>
-<Segment>
 <NestedTitle id="assets-fileoptions-contenttype" Tag="h5" parent="assets.fileOptions[].">contentType?</NestedTitle>
+<Segment>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">string</code>
 </InlineSection>
 </Section>
 </Segment>
-<Segment>
 <NestedTitle id="assets-fileoptions-files" Tag="h5" parent="assets.fileOptions[].">files</NestedTitle>
+<Segment>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">string</code><code class="symbol"> | </code><code class="primitive">string</code><code class="symbol">[]</code>
 </InlineSection>
 </Section>
 </Segment>
-<Segment>
 <NestedTitle id="assets-fileoptions-ignore" Tag="h5" parent="assets.fileOptions[].">ignore?</NestedTitle>
+<Segment>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">string</code><code class="symbol"> | </code><code class="primitive">string</code><code class="symbol">[]</code>
 </InlineSection>
 </Section>
 </Segment>
-<Segment>
 <NestedTitle id="assets-nonversionedfilescacheheader" Tag="h4" parent="assets.">nonVersionedFilesCacheHeader?</NestedTitle>
+<Segment>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
@@ -151,8 +153,8 @@ assets: {
 }
 ```
 </Segment>
-<Segment>
 <NestedTitle id="assets-nonversionedfilesttl" Tag="h4" parent="assets.">nonVersionedFilesTTL?</NestedTitle>
+<Segment>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">number</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">$\{number\} second</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">$\{number\} seconds</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">$\{number\} minute</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">$\{number\} minutes</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">$\{number\} hour</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">$\{number\} hours</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">$\{number\} day</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">$\{number\} days</code><code class="symbol">&rdquo;</code><code class="symbol">&gt;</code>
@@ -169,8 +171,8 @@ assets: {
 }
 ```
 </Segment>
-<Segment>
 <NestedTitle id="assets-textencoding" Tag="h4" parent="assets.">textEncoding?</NestedTitle>
+<Segment>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="symbol">&ldquo;</code><code class="primitive">none</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">utf-8</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">iso-8859-1</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">windows-1252</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">ascii</code><code class="symbol">&rdquo;</code><code class="symbol">&gt;</code>
@@ -187,8 +189,8 @@ assets: {
 }
 ```
 </Segment>
-<Segment>
 <NestedTitle id="assets-versionedfilescacheheader" Tag="h4" parent="assets.">versionedFilesCacheHeader?</NestedTitle>
+<Segment>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
@@ -205,8 +207,8 @@ assets: {
 }
 ```
 </Segment>
-<Segment>
 <NestedTitle id="assets-versionedfilesttl" Tag="h4" parent="assets.">versionedFilesTTL?</NestedTitle>
+<Segment>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">number</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">$\{number\} second</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">$\{number\} seconds</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">$\{number\} minute</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">$\{number\} minutes</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">$\{number\} hour</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">$\{number\} hours</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">$\{number\} day</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">$\{number\} days</code><code class="symbol">&rdquo;</code><code class="symbol">&gt;</code>
@@ -223,8 +225,8 @@ assets: {
 }
 ```
 </Segment>
-<Segment>
 ### buildCommand?
+<Segment>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
@@ -239,8 +241,8 @@ The command for building the website
 buildCommand: "yarn build",
 ```
 </Segment>
-<Segment>
 ### domain?
+<Segment>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol"> | </code><code class="primitive">Object</code><code class="symbol">&gt;</code>
@@ -268,8 +270,8 @@ domain: {
 },
 ```
 </Segment>
-<Segment>
 <NestedTitle id="domain-aliases" Tag="h4" parent="domain.">aliases?</NestedTitle>
+<Segment>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">[]</code><code class="symbol">&gt;</code>
@@ -287,8 +289,8 @@ domain: {
 }
 ```
 </Segment>
-<Segment>
 <NestedTitle id="domain-domainname" Tag="h4" parent="domain.">domainName</NestedTitle>
+<Segment>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
@@ -298,8 +300,8 @@ The domain to be assigned to the website URL (ie. domain.com).
 
 Supports domains that are hosted either on [Route 53](https://aws.amazon.com/route53/) or externally.
 </Segment>
-<Segment>
 <NestedTitle id="domain-hostedzone" Tag="h4" parent="domain.">hostedZone?</NestedTitle>
+<Segment>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
@@ -318,8 +320,8 @@ domain: {
 }
 ```
 </Segment>
-<Segment>
 <NestedTitle id="domain-hostedzoneid" Tag="h4" parent="domain.">hostedZoneId?</NestedTitle>
+<Segment>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
@@ -335,8 +337,8 @@ domain: {
 }
 ```
 </Segment>
-<Segment>
 <NestedTitle id="domain-redirects" Tag="h4" parent="domain.">redirects?</NestedTitle>
+<Segment>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">[]</code><code class="symbol">&gt;</code>
@@ -355,8 +357,8 @@ domain: {
 }
 ```
 </Segment>
-<Segment>
 ### edge?
+<Segment>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">boolean</code>
@@ -368,8 +370,8 @@ domain: {
 </InlineSection>
 The server function is deployed to Lambda in a single region. Alternatively, you can enable this option to deploy to Lambda@Edge.
 </Segment>
-<Segment>
 ### environment?
+<Segment>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Record</code><code class="symbol">&lt;</code><code class="primitive">string</code>, <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code><code class="symbol">&gt;</code><code class="symbol">&gt;</code>
@@ -383,8 +385,8 @@ environment: {
 },
 ```
 </Segment>
-<Segment>
 ### invalidation?
+<Segment>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Object</code><code class="symbol">&gt;</code>
@@ -393,8 +395,8 @@ environment: {
 - <p>[<code class="key">wait?</code>](#invalidation-wait)</p>
 </Section>
 </Segment>
-<Segment>
 <NestedTitle id="invalidation-paths" Tag="h4" parent="invalidation.">paths?</NestedTitle>
+<Segment>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">[]</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">none</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">all</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">versioned</code><code class="symbol">&rdquo;</code><code class="symbol">&gt;</code>
@@ -422,8 +424,8 @@ invalidation: {
 }
 ```
 </Segment>
-<Segment>
 <NestedTitle id="invalidation-wait" Tag="h4" parent="invalidation.">wait?</NestedTitle>
+<Segment>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">boolean</code><code class="symbol">&gt;</code>
@@ -440,8 +442,8 @@ invalidation: {
 }
 ```
 </Segment>
-<Segment>
 ### link?
+<Segment>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">any</code><code class="symbol">[]</code><code class="symbol">&gt;</code>
@@ -455,8 +457,8 @@ This will grant the site permissions to access the linked resources at runtime.
 }
 ```
 </Segment>
-<Segment>
 ### path?
+<Segment>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
@@ -468,8 +470,8 @@ This will grant the site permissions to access the linked resources at runtime.
 </InlineSection>
 Path to the directory where the app is located.
 </Segment>
-<Segment>
 ### permissions?
+<Segment>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Object</code><code class="symbol">[]</code><code class="symbol">&gt;</code>
@@ -491,8 +493,8 @@ permissions: [
 ]
 ```
 </Segment>
-<Segment>
 <NestedTitle id="permissions-actions" Tag="h4" parent="permissions[].">actions</NestedTitle>
+<Segment>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">string</code><code class="symbol">[]</code>
@@ -500,8 +502,8 @@ permissions: [
 </Section>
 The [IAM actions](https://docs.aws.amazon.com/service-authorization/latest/reference/reference_policies_actions-resources-contextkeys.html#actions_table) that can be performed.
 </Segment>
-<Segment>
 <NestedTitle id="permissions-resources" Tag="h4" parent="permissions[].">resources</NestedTitle>
+<Segment>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code><code class="symbol">[]</code>
@@ -509,8 +511,8 @@ The [IAM actions](https://docs.aws.amazon.com/service-authorization/latest/refer
 </Section>
 The resources(s) specified using the [IAM ARN format](https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_identifiers.html).
 </Segment>
-<Segment>
 ### transform?
+<Segment>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Object</code>
@@ -553,128 +555,128 @@ The resources(s) specified using the [IAM ARN format](https://docs.aws.amazon.co
 </Section>
 [Transform](/docs/transform/) how this component is created.
 </Segment>
-<Segment>
 <NestedTitle id="transform-plan" Tag="h4" parent="transform.">plan?</NestedTitle>
+<Segment>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Object</code><code class="symbol"> | </code><code class="symbol">(</code><code class="primitive">args</code><code class="symbol">: </code><code class="primitive">Object</code><code class="symbol"> => </code><code class="primitive">Object</code><code class="symbol"> | </code><code class="primitive">void</code><code class="symbol">)</code>
 </InlineSection>
 </Section>
 </Segment>
-<Segment>
 <NestedTitle id="transform-plan-behaviors" Tag="h5" parent="transform.plan.">behaviors</NestedTitle>
+<Segment>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Object</code><code class="symbol">[]</code>
 </InlineSection>
 </Section>
 </Segment>
-<Segment>
 <NestedTitle id="transform-plan-behaviors-allowedmethods" Tag="h5" parent="transform.plan.behaviors[].">allowedMethods?</NestedTitle>
+<Segment>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="symbol">(</code><code class="symbol">&ldquo;</code><code class="primitive">DELETE</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">GET</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">HEAD</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">OPTIONS</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">PATCH</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">POST</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">PUT</code><code class="symbol">&rdquo;</code><code class="symbol">)[]</code>
 </InlineSection>
 </Section>
 </Segment>
-<Segment>
 <NestedTitle id="transform-plan-behaviors-cachetype" Tag="h5" parent="transform.plan.behaviors[].">cacheType</NestedTitle>
+<Segment>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="symbol">&ldquo;</code><code class="primitive">server</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">static</code><code class="symbol">&rdquo;</code>
 </InlineSection>
 </Section>
 </Segment>
-<Segment>
 <NestedTitle id="transform-plan-behaviors-cffunction" Tag="h5" parent="transform.plan.behaviors[].">cfFunction?</NestedTitle>
+<Segment>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">string</code>
 </InlineSection>
 </Section>
 </Segment>
-<Segment>
 <NestedTitle id="transform-plan-behaviors-edgefunction" Tag="h5" parent="transform.plan.behaviors[].">edgeFunction?</NestedTitle>
+<Segment>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">string</code>
 </InlineSection>
 </Section>
 </Segment>
-<Segment>
 <NestedTitle id="transform-plan-behaviors-origin" Tag="h5" parent="transform.plan.behaviors[].">origin</NestedTitle>
+<Segment>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">string</code>
 </InlineSection>
 </Section>
 </Segment>
-<Segment>
 <NestedTitle id="transform-plan-behaviors-pattern" Tag="h5" parent="transform.plan.behaviors[].">pattern?</NestedTitle>
+<Segment>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">string</code>
 </InlineSection>
 </Section>
 </Segment>
-<Segment>
 <NestedTitle id="transform-plan-buildid" Tag="h5" parent="transform.plan.">buildId?</NestedTitle>
+<Segment>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">string</code>
 </InlineSection>
 </Section>
 </Segment>
-<Segment>
 <NestedTitle id="transform-plan-cloudfrontfunctions" Tag="h5" parent="transform.plan.">cloudFrontFunctions?</NestedTitle>
+<Segment>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Record</code><code class="symbol">&lt;</code><code class="primitive">string</code>, <code class="primitive">Object</code><code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
 </Segment>
-<Segment>
 <NestedTitle id="transform-plan-cloudfrontfunctions-injections" Tag="h5" parent="transform.plan.cloudFrontFunctions[].">injections</NestedTitle>
+<Segment>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">string</code><code class="symbol">[]</code>
 </InlineSection>
 </Section>
 </Segment>
-<Segment>
 <NestedTitle id="transform-plan-edge" Tag="h5" parent="transform.plan.">edge</NestedTitle>
+<Segment>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">boolean</code>
 </InlineSection>
 </Section>
 </Segment>
-<Segment>
 <NestedTitle id="transform-plan-edgefunctions" Tag="h5" parent="transform.plan.">edgeFunctions?</NestedTitle>
+<Segment>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Record</code><code class="symbol">&lt;</code><code class="primitive">string</code>, <code class="primitive">Object</code><code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
 </Segment>
-<Segment>
 <NestedTitle id="transform-plan-edgefunctions-function" Tag="h5" parent="transform.plan.edgeFunctions[].">function</NestedTitle>
+<Segment>
 <Section type="parameters">
 <InlineSection>
 **Type** [<code class="type">FunctionArgs</code>](function/#functionargs)
 </InlineSection>
 </Section>
 </Segment>
-<Segment>
 <NestedTitle id="transform-plan-errorresponses" Tag="h5" parent="transform.plan.">errorResponses?</NestedTitle>
+<Segment>
 <Section type="parameters">
 <InlineSection>
 **Type** [<code class="type">DistributionCustomErrorResponse</code>](https://www.pulumi.com/registry/packages/aws/api-docs/cloudfront/distribution/#distributioncustomerrorresponse)<code class="symbol">[]</code>
 </InlineSection>
 </Section>
 </Segment>
-<Segment>
 <NestedTitle id="transform-plan-origins" Tag="h5" parent="transform.plan.">origins</NestedTitle>
+<Segment>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Record</code><code class="symbol">&lt;</code><code class="primitive">string</code>, <code class="primitive">Object</code><code class="symbol">&gt;</code>
@@ -682,160 +684,160 @@ The resources(s) specified using the [IAM ARN format](https://docs.aws.amazon.co
 </Section>
 Each origin can be either an S3, server, image optimization, or group origin.
 </Segment>
-<Segment>
 <NestedTitle id="transform-plan-origins-group" Tag="h5" parent="transform.plan.origins[].">group?</NestedTitle>
+<Segment>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Object</code>
 </InlineSection>
 </Section>
 </Segment>
-<Segment>
 <NestedTitle id="transform-plan-origins-group-fallbackoriginname" Tag="h5" parent="transform.plan.origins[].group.">fallbackOriginName</NestedTitle>
+<Segment>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">string</code>
 </InlineSection>
 </Section>
 </Segment>
-<Segment>
 <NestedTitle id="transform-plan-origins-group-fallbackstatuscodes" Tag="h5" parent="transform.plan.origins[].group.">fallbackStatusCodes</NestedTitle>
+<Segment>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">number</code><code class="symbol">[]</code>
 </InlineSection>
 </Section>
 </Segment>
-<Segment>
 <NestedTitle id="transform-plan-origins-group-primaryoriginname" Tag="h5" parent="transform.plan.origins[].group.">primaryOriginName</NestedTitle>
+<Segment>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">string</code>
 </InlineSection>
 </Section>
 </Segment>
-<Segment>
 <NestedTitle id="transform-plan-origins-imageoptimization" Tag="h5" parent="transform.plan.origins[].">imageOptimization?</NestedTitle>
+<Segment>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Object</code>
 </InlineSection>
 </Section>
 </Segment>
-<Segment>
 <NestedTitle id="transform-plan-origins-imageoptimization-function" Tag="h5" parent="transform.plan.origins[].imageOptimization.">function</NestedTitle>
+<Segment>
 <Section type="parameters">
 <InlineSection>
 **Type** [<code class="type">FunctionArgs</code>](function/#functionargs)
 </InlineSection>
 </Section>
 </Segment>
-<Segment>
 <NestedTitle id="transform-plan-origins-s3" Tag="h5" parent="transform.plan.origins[].">s3?</NestedTitle>
+<Segment>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Object</code>
 </InlineSection>
 </Section>
 </Segment>
-<Segment>
 <NestedTitle id="transform-plan-origins-s3-copy" Tag="h5" parent="transform.plan.origins[].s3.">copy</NestedTitle>
+<Segment>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Object</code><code class="symbol">[]</code>
 </InlineSection>
 </Section>
 </Segment>
-<Segment>
 <NestedTitle id="transform-plan-origins-s3-copy-cached" Tag="h5" parent="transform.plan.origins[].s3.copy[].">cached</NestedTitle>
+<Segment>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">boolean</code>
 </InlineSection>
 </Section>
 </Segment>
-<Segment>
 <NestedTitle id="transform-plan-origins-s3-copy-from" Tag="h5" parent="transform.plan.origins[].s3.copy[].">from</NestedTitle>
+<Segment>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">string</code>
 </InlineSection>
 </Section>
 </Segment>
-<Segment>
 <NestedTitle id="transform-plan-origins-s3-copy-to" Tag="h5" parent="transform.plan.origins[].s3.copy[].">to</NestedTitle>
+<Segment>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">string</code>
 </InlineSection>
 </Section>
 </Segment>
-<Segment>
 <NestedTitle id="transform-plan-origins-s3-copy-versionedsubdir" Tag="h5" parent="transform.plan.origins[].s3.copy[].">versionedSubDir?</NestedTitle>
+<Segment>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">string</code>
 </InlineSection>
 </Section>
 </Segment>
-<Segment>
 <NestedTitle id="transform-plan-origins-s3-originpath" Tag="h5" parent="transform.plan.origins[].s3.">originPath?</NestedTitle>
+<Segment>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">string</code>
 </InlineSection>
 </Section>
 </Segment>
-<Segment>
 <NestedTitle id="transform-plan-origins-server" Tag="h5" parent="transform.plan.origins[].">server?</NestedTitle>
+<Segment>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Object</code>
 </InlineSection>
 </Section>
 </Segment>
-<Segment>
 <NestedTitle id="transform-plan-origins-server-function" Tag="h5" parent="transform.plan.origins[].server.">function</NestedTitle>
+<Segment>
 <Section type="parameters">
 <InlineSection>
 **Type** [<code class="type">FunctionArgs</code>](function/#functionargs)
 </InlineSection>
 </Section>
 </Segment>
-<Segment>
 <NestedTitle id="transform-plan-origins-server-injections" Tag="h5" parent="transform.plan.origins[].server.">injections?</NestedTitle>
+<Segment>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">string</code><code class="symbol">[]</code>
 </InlineSection>
 </Section>
 </Segment>
-<Segment>
 <NestedTitle id="transform-plan-origins-server-streaming" Tag="h5" parent="transform.plan.origins[].server.">streaming?</NestedTitle>
+<Segment>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">boolean</code>
 </InlineSection>
 </Section>
 </Segment>
-<Segment>
 <NestedTitle id="transform-plan-servercachepolicy" Tag="h5" parent="transform.plan.">serverCachePolicy?</NestedTitle>
+<Segment>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Object</code>
 </InlineSection>
 </Section>
 </Segment>
-<Segment>
 <NestedTitle id="transform-plan-servercachepolicy-allowedheaders" Tag="h5" parent="transform.plan.serverCachePolicy.">allowedHeaders?</NestedTitle>
+<Segment>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">string</code><code class="symbol">[]</code>
 </InlineSection>
 </Section>
 </Segment>
-<Segment>
 ### typesPath?
+<Segment>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
@@ -847,8 +849,8 @@ Each origin can be either an S3, server, image optimization, or group origin.
 </InlineSection>
 Path relative to the app location where the type definitions are located.
 </Segment>
-<Segment>
 ### warm?
+<Segment>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">number</code><code class="symbol">&gt;</code>
@@ -860,3 +862,4 @@ Path relative to the app location where the type definitions are located.
 </InlineSection>
 The number of server functions to keep warm. This option is only supported for the regional mode.
 </Segment>
+</div>

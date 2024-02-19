@@ -501,7 +501,7 @@ export interface FunctionArgs {
      * This allows you to customize esbuild config that is used.
      *
      * :::tip
-     * Check out the JS version of the code snippets in the esbuild docs for the
+     * Check out the _JS tab_ in the code snippets in the esbuild docs for the
      * [build options](https://esbuild.github.io/api/#build).
      * :::
      *

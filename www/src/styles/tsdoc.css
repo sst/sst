@@ -1,17 +1,17 @@
 /**
  * Segments
  */
-.sl-markdown-content div.segment + div.segment:not(:where(.not-content *)) {
+.sl-markdown-content > .tsdoc div.segment + :is(h2, h3, h4, h5, h6) {
   margin-top: 3rem;
 }
-.sl-markdown-content div.segment:not(:last-child):after {
+.sl-markdown-content > .tsdoc div.segment:not(:last-child):after {
   content: '';
   display: block;
   height: 1px;
   background: var(--divider-color);
   margin-top: 3rem;
 }
-.sl-markdown-content h2 + div.segment:has(> h3:first-child) {
+.sl-markdown-content > .tsdoc > h2 + h3 {
   margin-top: 2.5rem;
 }
 
@@ -19,41 +19,38 @@
  * Sections
  */
 /* Parameters */
-.sl-markdown-content section.tsdoc.parameters h4 + :not(a, strong, em, del, span, input, code, :where(.not-content *)) {
+.sl-markdown-content > .tsdoc section.parameters h4 + :not(a, strong, em, del, span, input, code, :where(.not-content *)) {
   /* H4 Heading */
   margin-top: 0.875rem;
 }
-.sl-markdown-content section.tsdoc.parameters > section.inline + :not(a, strong, em, del, span, input, code, :where(.not-content *)) {
+.sl-markdown-content > .tsdoc section.parameters > section.inline + :not(a, strong, em, del, span, input, code, :where(.not-content *)) {
   /* Inline Section Heading */
   margin-top: 0.5625rem;
 }
-.sl-markdown-content section.tsdoc.parameters :not(h4, a, strong, em, del, span, input, code) + :not(a, strong, em, del, span, input, code, ul, :where(.not-content *, .starlight-aside *)) {
+.sl-markdown-content >.tsdoc section.parameters :not(h4, a, strong, em, del, span, input, code) + :not(a, strong, em, del, span, input, code, ul, :where(.not-content *, .starlight-aside *)) {
   margin-top: 0.5rem;
 }
-.sl-markdown-content section.tsdoc.parameters :not(h4, a, strong, em, del, span, input, code) + :is(.starlight-aside, .expressive-code),
-.sl-markdown-content section.tsdoc :is(.starlight-aside, .expressive-code) + :not(h4, a, strong, em, del, span, input, code) {
+.sl-markdown-content > .tsdoc section.parameters :not(h4, a, strong, em, del, span, input, code) + :is(.starlight-aside, .expressive-code),
+.sl-markdown-content > .tsdoc section :is(.starlight-aside, .expressive-code) + :not(h4, a, strong, em, del, span, input, code) {
   margin-top: 0.625rem;
 }
 /* Signature */
-.sl-markdown-content section.tsdoc.signature,
-.sl-markdown-content section.tsdoc.signature + section.tsdoc {
+.sl-markdown-content > .tsdoc section.signature,
+.sl-markdown-content > .tsdoc section.signature + section {
   margin-top: 2rem;
 }
 /* About */
-.sl-markdown-content section.tsdoc.about :not(h1, h2, h3, h4, h5, h6) + :is(h4, h5, h6):not(:where(.not-content *)) {
+.sl-markdown-content > .tsdoc section.about :not(h1, h2, h3, h4, h5, h6) + :is(h4, h5, h6):not(:where(.not-content *)) {
   margin-top: 2rem;
 }
 
 /**
  * Headings
  */
-.sl-markdown-content section.tsdoc h4:not(:where(.not-content *)) {
+.sl-markdown-content > .tsdoc section h4:not(:where(.not-content *)) {
   font-size: var(--sl-text-h5); 
 }
-.sl-markdown-content div.segment > :not(h1, h2, h3, h4, h5, h6) + :is(h4, h5, h6):not(:where(.not-content *)) {
-  margin-top: 2rem;
-}
-.sl-markdown-content section.tsdoc.inline p:first-child strong:not(:where(.not-content *)) {
+.sl-markdown-content > .tsdoc section.inline p:first-child strong:not(:where(.not-content *)) {
   margin-right: var(--tsdoc-key-margin-right);
   font-family: var(--__sl-font-headings);
   letter-spacing: -0.5px;
@@ -65,70 +62,70 @@
 /**
  * Lists
  */
-.sl-markdown-content section.tsdoc.parameters li > :last-child:not(li, ul, ol):not(a, strong, em, del, span, input, :where(.not-content *)) {
+.sl-markdown-content > .tsdoc section.parameters li > :last-child:not(li, ul, ol):not(a, strong, em, del, span, input, :where(.not-content *)) {
   margin-bottom: 0.75rem;
 }
-.sl-markdown-content section.tsdoc.parameters li > :last-child:is(.starlight-aside, .expressive-code) {
+.sl-markdown-content > .tsdoc section.parameters li > :last-child:is(.starlight-aside, .expressive-code) {
   margin-bottom: 0.875rem;
 }
 
 /**
  * Nested Title
  */
-.sl-markdown-content div.segment :is(h4, h5).nested span.parent {
+.sl-markdown-content > .tsdoc :is(h4, h5).nested span.parent {
   font-weight: 400;
   font-family: var(--__sl-font-mono);
   color: var(--color-text-secondary);
   font-size: var(--sl-text-code);
 }
-.sl-markdown-content div.segment h4.nested span.parent {
+.sl-markdown-content > .tsdoc h4.nested span.parent {
   font-size: calc(var(--sl-text-h4) - 0.0625rem);
 }
 
 /**
  * Keys & Values
  */
-.sl-markdown-content section.tsdoc code.key:before,
-.sl-markdown-content section.tsdoc code.type:before,
-.sl-markdown-content section.tsdoc code.method:before,
-.sl-markdown-content section.tsdoc code.symbol:before,
-.sl-markdown-content section.tsdoc code.primitive:before,
-.sl-markdown-content section.tsdoc code.key:after,
-.sl-markdown-content section.tsdoc code.type:after,
-.sl-markdown-content section.tsdoc code.method:after,
-.sl-markdown-content section.tsdoc code.symbol:after,
-.sl-markdown-content section.tsdoc code.primitive:after {
+.sl-markdown-content > .tsdoc section code.key:before,
+.sl-markdown-content > .tsdoc section code.type:before,
+.sl-markdown-content > .tsdoc section code.method:before,
+.sl-markdown-content > .tsdoc section code.symbol:before,
+.sl-markdown-content > .tsdoc section code.primitive:before,
+.sl-markdown-content > .tsdoc section code.key:after,
+.sl-markdown-content > .tsdoc section code.type:after,
+.sl-markdown-content > .tsdoc section code.method:after,
+.sl-markdown-content > .tsdoc section code.symbol:after,
+.sl-markdown-content > .tsdoc section code.primitive:after {
   content: '';
 }
-.sl-markdown-content section.tsdoc code.key {
+.sl-markdown-content > .tsdoc section code.key {
   margin-right: var(--tsdoc-key-margin-right);
 }
-.sl-markdown-content section.tsdoc code.key,
-.sl-markdown-content section.tsdoc code.type,
-.sl-markdown-content section.tsdoc code.symbol,
-.sl-markdown-content section.tsdoc code.primitive {
+.sl-markdown-content > .tsdoc section code.key,
+.sl-markdown-content > .tsdoc section code.type,
+.sl-markdown-content > .tsdoc section code.symbol,
+.sl-markdown-content > .tsdoc section code.primitive {
   font-size: var(--sl-text-code);
 }
-.sl-markdown-content section.tsdoc code.key,
-.sl-markdown-content section.tsdoc code.primitive {
+.sl-markdown-content > .tsdoc section code.key,
+.sl-markdown-content > .tsdoc section code.primitive {
   color: var(--color-text);
 }
-.sl-markdown-content section.tsdoc a > code.key,
-.sl-markdown-content section.tsdoc a > code.primitive {
+.sl-markdown-content > .tsdoc section a > code.key,
+.sl-markdown-content > .tsdoc section a > code.primitive {
   color: var(--sl-color-text-accent);
 }
-.sl-markdown-content section.tsdoc code.symbol {
+.sl-markdown-content > .tsdoc section code.symbol {
   color: var(--color-text-secondary);
 }
-.sl-markdown-content section.tsdoc code.type,
-.sl-markdown-content section.tsdoc code.symbol,
-.sl-markdown-content section.tsdoc code.primitive {
+.sl-markdown-content > .tsdoc section code.type,
+.sl-markdown-content > .tsdoc section code.symbol,
+.sl-markdown-content > .tsdoc section code.primitive {
   font-weight: 400;
 }
-.sl-markdown-content section.tsdoc code.primitive {
+.sl-markdown-content > .tsdoc section code.primitive {
   font-style: italic;
 }
 
-.sl-markdown-content section.tsdoc span.dimmed {
+.sl-markdown-content > .tsdoc section span.dimmed {
   color: var(--color-text-secondary);
 }

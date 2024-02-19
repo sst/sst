@@ -9,6 +9,8 @@ import Section from '../../../components/tsdoc/Section.astro';
 import NestedTitle from '../../../components/tsdoc/NestedTitle.astro';
 import InlineSection from '../../../components/tsdoc/InlineSection.astro';
 
+<div class="tsdoc">
+
 <Section type="about">
 Returns a locale object for the specified definition with `locale.format` and `locale.formatPrefix` methods.
 
@@ -68,9 +70,9 @@ new FormatSpecifier(specifier, addend?): FormatSpecifier
 
 ## Methods
 
-<Segment>
 ### noop
 
+<Segment>
 <Section type="signature">
 ```ts
 noop(): void
@@ -80,9 +82,9 @@ noop(): void
 This function doesn't do anything.
 </Segment>
 
-<Segment>
 ### simpleArgs
 
+<Segment>
 <Section type="signature">
 ```ts
 simpleArgs(true, false ,true): void
@@ -101,9 +103,9 @@ This function takes some simple args.
 
 </Segment>
 
-<Segment>
 ### fullArgs
 
+<Segment>
 <Section type="signature">
 ```ts
 fullArgs(true, false ,true): FormatSpecifier
@@ -187,9 +189,9 @@ fullArgs(true, false ,true);
 
 ## Properties
 
-<Segment>
 ### primitiveProp
 
+<Segment>
 The ARN of the resource.
 
 <InlineSection>
@@ -197,9 +199,9 @@ The ARN of the resource.
 </InlineSection>
 </Segment>
 
-<Segment>
 ### objectProp
 
+<Segment>
 A simple object prop.
 
 <Section type="parameters">
@@ -212,9 +214,9 @@ A simple object prop.
 </Section>
 </Segment>
 
-<Segment>
 ### objectPropNested
 
+<Segment>
 A nested object prop.
 
 <Section type="parameters">
@@ -234,10 +236,9 @@ A nested object prop.
 
 </Segment>
 
-<Segment>
-#### resource1
 <NestedTitle id="1" Tag="h4" parent="objectPropNested.">objectKey1</NestedTitle>
 
+<Segment>
 A simple object prop.
 
 <InlineSection>
@@ -245,9 +246,9 @@ A simple object prop.
 </InlineSection>
 </Segment>
 
-<Segment>
 <NestedTitle id="2" Tag="h5" parent="objectPropNested.resource1.">objectKey1</NestedTitle>
 
+<Segment>
 A simple object prop.
 
 <InlineSection>
@@ -255,9 +256,9 @@ A simple object prop.
 </InlineSection>
 </Segment>
 
-<Segment>
 <NestedTitle id="3" Tag="h5" parent="objectPropNested.resource1.objectKey1.">objectKey11</NestedTitle>
 
+<Segment>
 A simple object prop.
 
 <InlineSection>
@@ -265,9 +266,9 @@ A simple object prop.
 </InlineSection>
 </Segment>
 
-<Segment>
 <NestedTitle id="4" Tag="h5" parent="objectPropNested.resource1.objectKey1.objectKey11[].">objectKey112</NestedTitle>
 
+<Segment>
 A simple object prop.
 
 <InlineSection>
@@ -275,9 +276,9 @@ A simple object prop.
 </InlineSection>
 </Segment>
 
-<Segment>
 <NestedTitle id="5" Tag="h5" parent="objectPropNested.resource1.objectKey1.objectKey11[].objectKey112.">key1111</NestedTitle>
 
+<Segment>
 A simple prop.
 
 <InlineSection>
@@ -287,9 +288,9 @@ A simple prop.
 
 ## DummyArgs
 
-<Segment>
 ### simpleArg
 
+<Segment>
 The CPU architecture of the lambda function.
 
 <InlineSection>
@@ -309,9 +310,9 @@ new Function(stack, "Function", {
 ```
 </Segment>
 
-<Segment>
 ### objectPropSimple?
 
+<Segment>
 A prop that takes an object with simple keys.
 
 <Section type="parameters">
@@ -335,9 +336,9 @@ new Function(stack, "Function", {
 ```
 </Segment>
 
-<Segment>
 ### objectPropFull?
 
+<Segment>
 A prop that takes an object with full keys.
 
 <Section type="parameters">
@@ -407,9 +408,9 @@ new Function(stack, "Function", {
 ```
 </Segment>
 
-<Segment>
 ### transform?
 
+<Segment>
 [Transform](/docs/transform/) how this component is created.
 
 <Section type="parameters">
@@ -425,3 +426,5 @@ new Function(stack, "Function", {
 **Default** <code class="primitive">undefined</code>
 </InlineSection>
 </Segment>
+
+</div>
