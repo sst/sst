@@ -442,7 +442,6 @@ func main() {
 								if event.StackEvent.PreludeEvent != nil {
 									u.Reset()
 									u.Start()
-									u.Changes()
 								}
 							}
 

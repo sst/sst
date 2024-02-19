@@ -22,12 +22,10 @@ import (
 	"github.com/sst/ion/pkg/global"
 	"github.com/sst/ion/pkg/js"
 	"github.com/sst/ion/pkg/project/provider"
-	"golang.org/x/sync/errgroup"
 )
 
 type stack struct {
-	project    *Project
-	passphrase string
+	project *Project
 }
 
 type StackEvent struct {
@@ -35,6 +33,7 @@ type StackEvent struct {
 	StdOutEvent           *StdOutEvent
 	ConcurrentUpdateEvent *ConcurrentUpdateEvent
 	CompleteEvent         *CompleteEvent
+	StackCommandEvent     *StackCommandEvent
 }
 
 type StackInput struct {
@@ -80,6 +79,10 @@ type CompleteEvent struct {
 	Resources []apitype.ResourceV3
 }
 
+type StackCommandEvent struct {
+	Command string
+}
+
 type Error struct {
 	Message string
 	URN     string
@@ -89,6 +92,9 @@ type StackEventStream = chan StackEvent
 
 func (s *stack) Run(ctx context.Context, input *StackInput) error {
 	slog.Info("running stack command", "cmd", input.Command)
+	input.OnEvent(&StackEvent{StackCommandEvent: &StackCommandEvent{
+		Command: input.Command,
+	}})
 
 	err := s.Lock()
 	if err != nil {
@@ -105,31 +111,14 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 	}
 	defer s.PushState()
 
-	tasks, _ := errgroup.WithContext(ctx)
-	secrets := map[string]string{}
-	passphrase := s.passphrase
-
-	tasks.Go(func() error {
-		secrets, err = provider.GetSecrets(s.project.backend, s.project.app.Name, s.project.app.Stage)
-		if err != nil {
-			return fmt.Errorf("failed to list secrets: %w", err)
-		}
-		return nil
-	})
-
-	if os.Getenv("SST_DISABLE_PASSPHRASE") != "true" && passphrase == "" {
-		tasks.Go(func() error {
-			passphrase, err = provider.Passphrase(s.project.backend, s.project.app.Name, s.project.app.Stage)
-			if err != nil {
-				return fmt.Errorf("failed to get passphrase: %w", err)
-			}
-			s.passphrase = passphrase
-			return nil
-		})
+	passphrase, err := provider.Passphrase(s.project.backend, s.project.app.Name, s.project.app.Stage)
+	if err != nil {
+		return err
 	}
 
-	if err := tasks.Wait(); err != nil {
-		return err
+	secrets, err := provider.GetSecrets(s.project.backend, s.project.app.Name, s.project.app.Stage)
+	if err != nil {
+		return fmt.Errorf("failed to list secrets: %w", err)
 	}
 
 	env, err := s.project.backend.Env()
@@ -310,11 +299,11 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 		var deployment apitype.DeploymentV3
 		json.Unmarshal(rawDeploment.Deployment, &deployment)
 
-		outputs, _ := stack.Outputs(ctx)
+		outputs := decrypt(deployment.Resources[0].Outputs)
 		complete.Resources = deployment.Resources
 		linksOutput, ok := outputs["_links"]
 		if ok {
-			links := linksOutput.Value.(map[string]interface{})
+			links := linksOutput.(map[string]interface{})
 			for key, value := range links {
 				complete.Links[key] = value
 			}
@@ -330,7 +319,7 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 
 		hintsOutput, ok := outputs["_hints"]
 		if ok {
-			hints := hintsOutput.Value.(map[string]interface{})
+			hints := hintsOutput.(map[string]interface{})
 			for key, value := range hints {
 				str, ok := value.(string)
 				if ok {
@@ -342,7 +331,7 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 
 		warpsOutput, ok := outputs["_warps"]
 		if ok {
-			warps := warpsOutput.Value.(map[string]interface{})
+			warps := warpsOutput.(map[string]interface{})
 			for key, value := range warps {
 				data, _ := json.Marshal(value)
 				var definition Warp
@@ -354,7 +343,7 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 
 		receiversOutput, ok := outputs["_receivers"]
 		if ok {
-			receivers := receiversOutput.Value.(map[string]interface{})
+			receivers := receiversOutput.(map[string]interface{})
 			for key, value := range receivers {
 				data, _ := json.Marshal(value)
 				var out Receiver
@@ -365,7 +354,7 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 		delete(outputs, "_receivers")
 
 		for key, value := range outputs {
-			complete.Outputs[key] = value.Value
+			complete.Outputs[key] = value
 		}
 	}()
 
@@ -597,4 +586,22 @@ func (s *stack) Cancel() error {
 		s.project.app.Name,
 		s.project.app.Stage,
 	)
+}
+
+func decrypt(input map[string]interface{}) map[string]interface{} {
+	for key, value := range input {
+		switch value := value.(type) {
+		case map[string]interface{}:
+			if value["plaintext"] != nil {
+				var parsed any
+				json.Unmarshal([]byte(value["plaintext"].(string)), &parsed)
+				input[key] = parsed
+				continue
+			}
+			input[key] = decrypt(value)
+		default:
+			continue
+		}
+	}
+	return input
 }

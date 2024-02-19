@@ -11,14 +11,11 @@ export default $config({
     };
   },
   async run() {
-    new sst.aws.Nextjs("Web", {
-      //domain: "ion-next.sst.sh",
-      //      domain: {
-      //        domainName: "ion-next.sst.sh",
-      //        aliases: ["ion-nextjs.sst.sh"],
-      //        redirects: ["www.ion-next.sst.sh"],
-      //        hostedZone: "sst.sh",
-      //      },
-    });
+    new sst.aws.Nextjs("Web", {});
+
+    return {
+      secret: $util.secret("secret"),
+      normal: "normal",
+    };
   },
 });

@@ -57,6 +57,12 @@ func (u *UI) Reset() {
 }
 
 func (u *UI) Trigger(evt *project.StackEvent) {
+	if evt.StackCommandEvent != nil && evt.StackCommandEvent.Command == "up" {
+		color.New(color.FgYellow, color.Bold).Print("~")
+		color.New(color.FgWhite, color.Bold).Println("  Deploying changes")
+		fmt.Println()
+	}
+
 	if evt.SummaryEvent != nil {
 		u.spinner.Suffix = "  Finalizing..."
 	}
@@ -407,12 +413,6 @@ func (u *UI) Header(version, app, stage string) {
 
 	color.New(color.FgWhite, color.Bold).Printf("   %-12s", "Stage:")
 	color.New(color.FgHiBlack).Println(stage)
-	fmt.Println()
-}
-
-func (u *UI) Changes() {
-	color.New(color.FgYellow, color.Bold).Print("~")
-	color.New(color.FgWhite, color.Bold).Println("  Deploying changes")
 	fmt.Println()
 }
 
