@@ -1,6 +1,6 @@
 ---
 title: Postgres
-description: Reference for the `sst.aws.Postgres` component
+description: Reference for the `sst.aws.Postgres` component.
 ---
 
 import Segment from '../../../../../components/tsdoc/Segment.astro';
@@ -9,11 +9,24 @@ import NestedTitle from '../../../../../components/tsdoc/NestedTitle.astro';
 import InlineSection from '../../../../../components/tsdoc/InlineSection.astro';
 
 <Section type="about">
-The `Postgres` component is a higher level component that makes it easy to create a Vector database powered by RDS Postgres Serverless v2.
+The `Postgres` component lets you add a Postgres database to your app using
+[Amazon Aurora Serverless v2](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/aurora-serverless-v2.html).
 
-#### Using the minimal config
+#### Minimal example
+
 ```js
 new sst.aws.Postgres("MyDatabase");
+```
+
+#### Change the scaling config
+
+```js
+new sst.aws.Postgres("MyDatabase", {
+  scaling: {
+    min: 2,
+    max: 128
+  }
+});
 ```
 </Section>
 
@@ -93,7 +106,25 @@ Name of a database which is automatically created inside the cluster.
 - <p>[<code class="key">max?</code>](#scaling-max)</p>
 - <p>[<code class="key">min?</code>](#scaling-min)</p>
 </Section>
-Aurora Serverless v2 scaling configuration
+
+<InlineSection>
+**Default** <code class="primitive">&lcub;min: 0.5, max: 4&rcub;</code>
+</InlineSection>
+The Aurora Serverless v2 scaling config. By default, the cluster has one DB instance that
+is used for both writes and reads. The instance can scale from the minumum number of ACUs
+to the maximum number of ACUs.
+
+:::caution
+Aurora Serverless v2 does not scale down to 0. The minimum cost of a Postgres cluster
+per month is roughly `0.5 * $0.12 per ACU hour * 24 hrs * 30 days = $43.20`.
+:::
+
+An ACU or Aurora Capacity Unit is a combination of CPU and RAM. In Aurora Serverless v2, you cannot scale down to 0. The cost of an Aurora Serverless v2 cluster is based on the ACU hours
+used. Additionally, you are billed for I/O and storage used by the cluster.
+[Read more here](https://aws.amazon.com/rds/aurora/pricing/).
+
+Each ACU is roughly equivalent to 2 GB of memory. So pick the minium and maximum
+based on the baseline and peak memory usage of your app.
 </Segment>
 <Segment>
 <NestedTitle id="scaling-max" Tag="h4" parent="scaling.">max?</NestedTitle>
@@ -106,7 +137,7 @@ Aurora Serverless v2 scaling configuration
 <InlineSection>
 **Default** <code class="primitive">4</code>
 </InlineSection>
-The maximum number of Aurora capacity units (ACUs) for a DB instance in an Aurora Serverless v2 cluster.
+The maximum number of ACUs, ranges from 0.5 to 128, in increments of 0.5.
 ```js
 {
   scaling: {
@@ -126,7 +157,14 @@ The maximum number of Aurora capacity units (ACUs) for a DB instance in an Auror
 <InlineSection>
 **Default** <code class="primitive">0.5</code>
 </InlineSection>
-The minimum number of Aurora capacity units (ACUs) for a DB instance in an Aurora Serverless v2 cluster.
+The minium number of ACUs, ranges from 0.5 to 128, in increments of 0.5.
+
+For your production workloads, setting a mimum of 0.5 ACUs might not be a great idea due
+to the following reasons, you can also [read more here](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/aurora-serverless-v2.setting-capacity.html#aurora-serverless-v2.setting-capacity.incompatible_parameters).
+- It takes longer to scale from a low number of ACUs to a much higher number.
+- Query perfomance depends on the buffer cache. So if frequently accessed data cannot
+  fit into the buffer cache, you might see uneven performance.
+- The max connections for a 0.5 ACU Postgres instance is capped at 2000.
 ```js
 {
   scaling: {
@@ -144,7 +182,8 @@ The minimum number of Aurora capacity units (ACUs) for a DB instance in an Auror
 - <p>[<code class="key">cluster?</code>](#transform-cluster)</p>
 - <p>[<code class="key">instance?</code>](#transform-instance)</p>
 </Section>
-[Transform](/docs/transform/) how this component is created.
+[Transform](/docs/components#transform/) how this component creates its underlying
+resources.
 </Segment>
 <Segment>
 <NestedTitle id="transform-cluster" Tag="h4" parent="transform.">cluster?</NestedTitle>
@@ -153,6 +192,7 @@ The minimum number of Aurora capacity units (ACUs) for a DB instance in an Auror
 **Type** [<code class="type">ClusterArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/rds/cluster/#inputs)<code class="symbol"> | </code><code class="symbol">(</code><code class="primitive">args</code><code class="symbol">: </code>[<code class="type">ClusterArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/rds/cluster/#inputs)<code class="symbol"> => </code>[<code class="type">ClusterArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/rds/cluster/#inputs)<code class="symbol"> | </code><code class="primitive">void</code><code class="symbol">)</code>
 </InlineSection>
 </Section>
+Transform the RDS Cluster.
 </Segment>
 <Segment>
 <NestedTitle id="transform-instance" Tag="h4" parent="transform.">instance?</NestedTitle>
@@ -161,6 +201,7 @@ The minimum number of Aurora capacity units (ACUs) for a DB instance in an Auror
 **Type** [<code class="type">ClusterInstanceArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/rds/clusterinstance/#inputs)<code class="symbol"> | </code><code class="symbol">(</code><code class="primitive">args</code><code class="symbol">: </code>[<code class="type">ClusterInstanceArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/rds/clusterinstance/#inputs)<code class="symbol"> => </code>[<code class="type">ClusterInstanceArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/rds/clusterinstance/#inputs)<code class="symbol"> | </code><code class="primitive">void</code><code class="symbol">)</code>
 </InlineSection>
 </Section>
+Transform the database instance in the RDS Cluster.
 </Segment>
 <Segment>
 ### version?
@@ -171,9 +212,9 @@ The minimum number of Aurora capacity units (ACUs) for a DB instance in an Auror
 </Section>
 
 <InlineSection>
-**Default** <code class="primitive">15.5</code>
+**Default** <code class="primitive">"15.5"</code>
 </InlineSection>
-Enging version of the RDS cluster
+The Postgres engine version. Check out the [available versions in your region](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/Concepts.Aurora_Fea_Regions_DB-eng.Feature.ServerlessV2.html#Concepts.Aurora_Fea_Regions_DB-eng.Feature.ServerlessV2.apg).
 ```js
 {
   version: "13.9"

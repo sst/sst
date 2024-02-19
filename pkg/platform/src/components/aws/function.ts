@@ -622,7 +622,8 @@ export interface FunctionArgs {
     }[]
   >;
   /**
-   * [Transform](/docs/components#transform/) how this component creates its underlying resources.
+   * [Transform](/docs/components#transform/) how this component creates its underlying
+   * resources.
    */
   transform?: {
     /**

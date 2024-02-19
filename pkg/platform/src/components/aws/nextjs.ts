@@ -142,7 +142,10 @@ export interface NextjsArgs extends SsrSiteArgs {
 }
 
 /**
- * The `Nextjs` component makes it easy to create a Next.js app.
+ * The `Nextjs` component lets you deploy Next.js apps on AWS. It uses
+ * [OpenNext](https://open-next.js.org) to build your Next.js app, and transforms the build
+ * output to a format that can be deployed to AWS.
+ *
  * @example
  * Deploys a Next.js app in the `my-next-app` directory.
  *
