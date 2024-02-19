@@ -293,7 +293,7 @@ export function prepare(args: SsrSiteArgs, opts: ComponentResourceOptions) {
   const region = normalizeRegion();
   checkSupportedRegion();
   // TODO temporarily uncomment
-  //writeTypesFile();
+  writeTypesFile();
 
   return {
     sitePath,
@@ -339,7 +339,6 @@ export function prepare(args: SsrSiteArgs, opts: ComponentResourceOptions) {
 
   function writeTypesFile() {
     return all([sitePath, args.typesPath]).apply(([sitePath, typesPath]) => {
-      return;
       const filePath = path.resolve(sitePath, typesPath || ".", "sst-env.d.ts");
 
       // Do not override the types file if it already exists
