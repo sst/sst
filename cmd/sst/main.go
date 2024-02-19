@@ -244,12 +244,18 @@ func main() {
 						return err
 					}
 					args := cli.Args().Slice()
+					if len(args) == 0 {
+						args = append(args, "sh")
+					}
 					cmd := exec.Command(
 						args[0],
 						args[1:]...,
 					)
 					cmd.Env = append(cmd.Env,
 						os.Environ()...,
+					)
+					cmd.Env = append(cmd.Env,
+						fmt.Sprintf("PS1=%s/%s> ", p.App().Name, p.App().Stage),
 					)
 
 					for resource, value := range links {
