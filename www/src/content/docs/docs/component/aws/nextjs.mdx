@@ -13,9 +13,10 @@ The `Nextjs` component lets you deploy Next.js apps on AWS. It uses
 [OpenNext](https://open-next.js.org) to build your Next.js app, and transforms the build
 output to a format that can be deployed to AWS.
 
-#### Using the minimal config
+Deploys a Next.js app in the `my-next-app` directory.
+
 ```js
-new sst.aws.Nextjs("Web", {
+new Nextjs("Web", {
   path: "my-next-app/",
 });
 ```
@@ -51,6 +52,34 @@ new Nextjs(name, args?, opts?)
 </Section>
 If the custom domain is enabled, this is the URL of the website with the
 custom domain.
+</Segment>
+
+<Segment>
+### nodes
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Object</code>
+</InlineSection>
+- <p>[<code class="key">assets</code>](#nodes-assets)</p>
+- <p>[<code class="key">server</code>](#nodes-server)</p>
+</Section>
+The internally created CDK resources.
+</Segment>
+<Segment>
+<NestedTitle id="nodes-assets" Tag="h4" parent="nodes.">assets</NestedTitle>
+<Section type="parameters">
+<InlineSection>
+**Type** [<code class="type">Bucket</code>](bucket/)
+</InlineSection>
+</Section>
+</Segment>
+<Segment>
+<NestedTitle id="nodes-server" Tag="h4" parent="nodes.">server</NestedTitle>
+<Section type="parameters">
+<InlineSection>
+**Type** [<code class="type">Function</code>](function/)
+</InlineSection>
+</Section>
 </Segment>
 
 <Segment>
@@ -358,19 +387,6 @@ domain: {
 ```
 </Segment>
 <Segment>
-### edge?
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">boolean</code>
-</InlineSection>
-</Section>
-
-<InlineSection>
-**Default** <code class="primitive">false</code>
-</InlineSection>
-The server function is deployed to Lambda in a single region. Alternatively, you can enable this option to deploy to Lambda@Edge.
-</Segment>
-<Segment>
 ### environment?
 <Section type="parameters">
 <InlineSection>
@@ -383,73 +399,6 @@ environment: {
   API_URL: api.url,
   USER_POOL_CLIENT: auth.cognitoUserPoolClient.userPoolClientId,
 },
-```
-</Segment>
-<Segment>
-### experimental?
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">Object</code>
-</InlineSection>
-- <p>[<code class="key">disableDynamoDBCache?</code>](#experimental-disabledynamodbcache)</p>
-- <p>[<code class="key">disableIncrementalCache?</code>](#experimental-disableincrementalcache)</p>
-- <p>[<code class="key">streaming?</code>](#experimental-streaming)</p>
-</Section>
-</Segment>
-<Segment>
-<NestedTitle id="experimental-disabledynamodbcache" Tag="h4" parent="experimental.">disableDynamoDBCache?</NestedTitle>
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">boolean</code>
-</InlineSection>
-</Section>
-
-<InlineSection>
-**Default** <code class="primitive">false</code>
-</InlineSection>
-Disabling DynamoDB cache will cause on-demand revalidation by path (`revalidatePath`) and by cache tag (`revalidateTag`) to fail silently.
-```js
-experimental: {
-  disableDynamoDBCache: true,
-}
-```
-</Segment>
-<Segment>
-<NestedTitle id="experimental-disableincrementalcache" Tag="h4" parent="experimental.">disableIncrementalCache?</NestedTitle>
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">boolean</code>
-</InlineSection>
-</Section>
-
-<InlineSection>
-**Default** <code class="primitive">false</code>
-</InlineSection>
-Disabling incremental cache will cause the entire page to be revalidated on each request. This can result in ISR and SSG pages to be in an inconsistent state. Specify this option if you are using SSR pages only.
-
-Note that it is possible to disable incremental cache while leaving on-demand revalidation enabled.
-```js
-experimental: {
-  disableIncrementalCache: true,
-}
-```
-</Segment>
-<Segment>
-<NestedTitle id="experimental-streaming" Tag="h4" parent="experimental.">streaming?</NestedTitle>
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">boolean</code>
-</InlineSection>
-</Section>
-
-<InlineSection>
-**Default** <code class="primitive">false</code>
-</InlineSection>
-Enable streaming. Currently an experimental feature in OpenNext.
-```js
-experimental: {
-  streaming: true,
-}
 ```
 </Segment>
 <Segment>
@@ -470,7 +419,7 @@ experimental: {
 </Section>
 
 <InlineSection>
-**Default** <code class="primitive">1024 MB</code>
+**Default** 1024 MB
 </InlineSection>
 The amount of memory in MB allocated for image optimization function.
 ```js
@@ -560,11 +509,11 @@ This will grant the site permissions to access the linked resources at runtime.
 </Section>
 
 <InlineSection>
-**Default** <code class="primitive">per-route</code>
+**Default** "per-route"
 </InlineSection>
 How the logs are stored in CloudWatch
 - "combined" - Logs from all routes are stored in the same log group.
-- "per-route" - Logs from each route are stored in a separate log group.
+- "per-route" - Logs from each route are stored in a separate log group. Doesn't work right now
 ```js
 logging: "combined",
 ```
@@ -573,7 +522,7 @@ logging: "combined",
 ### openNextVersion?
 <Section type="parameters">
 <InlineSection>
-**Type** <code class="primitive">string</code>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
 
@@ -582,7 +531,7 @@ logging: "combined",
 </InlineSection>
 OpenNext version for building the Next.js site.
 ```js
-openNextVersion: "2.2.4",
+openNextVersion: "3.0.0-rc.3",
 ```
 </Segment>
 <Segment>

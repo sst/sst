@@ -111,7 +111,7 @@ Name of a database which is automatically created inside the cluster.
 **Default** <code class="primitive">&lcub;min: 0.5, max: 4&rcub;</code>
 </InlineSection>
 The Aurora Serverless v2 scaling config. By default, the cluster has one DB instance that
-is used for both writes and reads. The instance can scale from the minumum number of ACUs
+is used for both writes and reads. The instance can scale from the minimum number of ACUs
 to the maximum number of ACUs.
 
 :::caution
@@ -123,7 +123,7 @@ An ACU or Aurora Capacity Unit is a combination of CPU and RAM. In Aurora Server
 used. Additionally, you are billed for I/O and storage used by the cluster.
 [Read more here](https://aws.amazon.com/rds/aurora/pricing/).
 
-Each ACU is roughly equivalent to 2 GB of memory. So pick the minium and maximum
+Each ACU is roughly equivalent to 2 GB of memory. So pick the minimum and maximum
 based on the baseline and peak memory usage of your app.
 </Segment>
 <Segment>
@@ -157,12 +157,12 @@ The maximum number of ACUs, ranges from 0.5 to 128, in increments of 0.5.
 <InlineSection>
 **Default** <code class="primitive">0.5</code>
 </InlineSection>
-The minium number of ACUs, ranges from 0.5 to 128, in increments of 0.5.
+The minimum number of ACUs, ranges from 0.5 to 128, in increments of 0.5.
 
-For your production workloads, setting a mimum of 0.5 ACUs might not be a great idea due
+For your production workloads, setting a minimum of 0.5 ACUs might not be a great idea due
 to the following reasons, you can also [read more here](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/aurora-serverless-v2.setting-capacity.html#aurora-serverless-v2.setting-capacity.incompatible_parameters).
 - It takes longer to scale from a low number of ACUs to a much higher number.
-- Query perfomance depends on the buffer cache. So if frequently accessed data cannot
+- Query performance depends on the buffer cache. So if frequently accessed data cannot
   fit into the buffer cache, you might see uneven performance.
 - The max connections for a 0.5 ACU Postgres instance is capped at 2000.
 ```js
