@@ -357,98 +357,70 @@ export function prepare(args: SsrSiteArgs, opts: ComponentResourceOptions) {
   }
 }
 
-export function getDeployStrategy(parent: ComponentResource, name: string) {
-  const cache = new Cache(
-    `${name}DeployedStatus`,
-    { data: $dev ? null : true },
-    { parent },
-  );
-
-  return cache.data.apply((hasDeployed?: boolean) =>
-    $dev
-      ? hasDeployed
-        ? // ie. running `sst dev`, previously deployed
-          // do not build site, mock previous deployed plan
-          "mock-full"
-        : // ie. running `sst dev`, previously not deployed
-          // do not build site, deploy placeholder app
-          "placeholder"
-      : // ie. running `sst deploy`
-        // build site, and do a full deploy
-        "full",
-  );
-}
-
 export function buildApp(
   name: string,
   args: SsrSiteArgs,
-  strategy: ReturnType<typeof getDeployStrategy>,
   sitePath: Output<string>,
   buildCommand?: Output<string>,
 ) {
   const defaultCommand = "npm run build";
 
-  return all([
-    strategy,
-    sitePath,
-    buildCommand,
-    args.link,
-    args.environment,
-  ]).apply(([strategy, sitePath, buildCommand, links, environment]) => {
-    const cmd = buildCommand || defaultCommand;
+  return all([sitePath, buildCommand, args.link, args.environment]).apply(
+    ([sitePath, buildCommand, links, environment]) => {
+      const cmd = buildCommand || defaultCommand;
 
-    // Ensure that the site has a build script defined
-    if (cmd === defaultCommand) {
-      if (!fs.existsSync(path.join(sitePath, "package.json"))) {
-        throw new VisibleError(`No package.json found at "${sitePath}".`);
-      }
-      const packageJson = JSON.parse(
-        fs.readFileSync(path.join(sitePath, "package.json")).toString(),
-      );
-      if (!packageJson.scripts || !packageJson.scripts.build) {
-        throw new VisibleError(
-          `No "build" script found within package.json in "${sitePath}".`,
+      // Ensure that the site has a build script defined
+      if (cmd === defaultCommand) {
+        if (!fs.existsSync(path.join(sitePath, "package.json"))) {
+          throw new VisibleError(`No package.json found at "${sitePath}".`);
+        }
+        const packageJson = JSON.parse(
+          fs.readFileSync(path.join(sitePath, "package.json")).toString(),
         );
-      }
-    }
-
-    if (process.env.SKIP) return output(sitePath);
-    if (strategy === "mock-full" || strategy === "placeholder")
-      return output(sitePath);
-
-    // Build link environment variables to inject
-    const linkData = Link.build(links || []);
-    const linkEnvs = output(linkData).apply((linkData) => {
-      const envs: Record<string, string> = {};
-      for (const datum of linkData) {
-        envs[`SST_RESOURCE_${datum.name}`] = JSON.stringify(datum.value);
-      }
-      return envs;
-    });
-
-    // Run build
-    return linkEnvs.apply((linkEnvs) => {
-      console.debug(`Running "${cmd}" script`);
-      try {
-        execSync(cmd, {
-          cwd: sitePath,
-          stdio: "inherit",
-          env: {
-            SST: "1",
-            ...process.env,
-            ...environment,
-            ...linkEnvs,
-          },
-        });
-      } catch (e) {
-        throw new VisibleError(
-          `There was a problem building the "${name}" site.`,
-        );
+        if (!packageJson.scripts || !packageJson.scripts.build) {
+          throw new VisibleError(
+            `No "build" script found within package.json in "${sitePath}".`,
+          );
+        }
       }
 
-      return sitePath;
-    });
-  });
+      if (process.env.SKIP) return output(sitePath);
+      if ($dev) return output(sitePath);
+
+      // Build link environment variables to inject
+      const linkData = Link.build(links || []);
+      const linkEnvs = output(linkData).apply((linkData) => {
+        const envs: Record<string, string> = {};
+        for (const datum of linkData) {
+          envs[`SST_RESOURCE_${datum.name}`] = JSON.stringify(datum.value);
+        }
+        return envs;
+      });
+
+      // Run build
+      return linkEnvs.apply((linkEnvs) => {
+        console.debug(`Running "${cmd}" script`);
+        try {
+          execSync(cmd, {
+            cwd: sitePath,
+            stdio: "inherit",
+            env: {
+              SST: "1",
+              ...process.env,
+              ...environment,
+              ...linkEnvs,
+            },
+          });
+        } catch (e) {
+          throw new VisibleError(
+            `There was a problem building the "${name}" site.`,
+          );
+        }
+
+        return sitePath;
+      });
+    },
+  );
 }
 
 export function createBucket(parent: ComponentResource, name: string) {
@@ -502,565 +474,559 @@ export function createServersAndDistribution(
   parent: ComponentResource,
   name: string,
   args: SsrSiteArgs,
-  strategy: ReturnType<typeof getDeployStrategy>,
   outputPath: Output<string>,
   access: aws.cloudfront.OriginAccessIdentity,
   bucket: Bucket,
   plan: Input<Plan>,
 ) {
-  return all([strategy, outputPath, plan]).apply(
-    ([strategy, outputPath, plan]) => {
-      const ssrFunctions: Function[] = [];
-      let singletonCachePolicy: aws.cloudfront.CachePolicy;
+  return all([outputPath, plan]).apply(([outputPath, plan]) => {
+    const ssrFunctions: Function[] = [];
+    let singletonCachePolicy: aws.cloudfront.CachePolicy;
 
-      const bucketFile = uploadAssets();
-      const cfFunctions = createCloudFrontFunctions();
-      const edgeFunctions = createEdgeFunctions();
-      const origins = buildOrigins();
-      const originGroups = buildOriginGroups();
-      const distribution = createCloudFrontDistribution();
-      allowServerFunctionInvalidateDistribution();
-      createDistributionInvalidation();
-      createWarmer();
+    const bucketFile = uploadAssets();
+    const cfFunctions = createCloudFrontFunctions();
+    const edgeFunctions = createEdgeFunctions();
+    const origins = buildOrigins();
+    const originGroups = buildOriginGroups();
+    const distribution = createCloudFrontDistribution();
+    allowServerFunctionInvalidateDistribution();
+    createDistributionInvalidation();
+    createWarmer();
 
-      return { distribution, ssrFunctions, edgeFunctions };
+    return { distribution, ssrFunctions, edgeFunctions };
 
-      function uploadAssets() {
-        return output(args.assets).apply(async (assets) => {
-          // Define content headers
-          const nonVersionedFilesTTL =
-            typeof assets?.nonVersionedFilesTTL === "number"
-              ? assets.nonVersionedFilesTTL
-              : toSeconds(assets?.nonVersionedFilesTTL ?? "1 day");
-          const staleWhileRevalidateTTL = Math.max(
-            Math.floor(nonVersionedFilesTTL / 10),
-            30,
-          );
-          const versionedFilesTTL =
-            typeof assets?.versionedFilesTTL === "number"
-              ? assets.versionedFilesTTL
-              : toSeconds(assets?.versionedFilesTTL ?? "365 days");
+    function uploadAssets() {
+      return output(args.assets).apply(async (assets) => {
+        // Define content headers
+        const nonVersionedFilesTTL =
+          typeof assets?.nonVersionedFilesTTL === "number"
+            ? assets.nonVersionedFilesTTL
+            : toSeconds(assets?.nonVersionedFilesTTL ?? "1 day");
+        const staleWhileRevalidateTTL = Math.max(
+          Math.floor(nonVersionedFilesTTL / 10),
+          30,
+        );
+        const versionedFilesTTL =
+          typeof assets?.versionedFilesTTL === "number"
+            ? assets.versionedFilesTTL
+            : toSeconds(assets?.versionedFilesTTL ?? "365 days");
 
-          const bucketFiles: BucketFile[] = [];
+        const bucketFiles: BucketFile[] = [];
 
-          // Handle each S3 origin
-          for (const origin of Object.values(plan.origins)) {
-            if (!origin.s3) continue;
+        // Handle each S3 origin
+        for (const origin of Object.values(plan.origins)) {
+          if (!origin.s3) continue;
 
-            // Handle each copy source
-            for (const copy of origin.s3.copy) {
-              // Build fileOptions
-              const fileOptions: SsrSiteFileOptions[] = [
-                // unversioned files
-                {
-                  files: "**",
-                  ignore: copy.versionedSubDir
-                    ? path.posix.join(copy.versionedSubDir, "**")
-                    : undefined,
-                  cacheControl:
-                    assets?.nonVersionedFilesCacheHeader ??
-                    `public,max-age=0,s-maxage=${nonVersionedFilesTTL},stale-while-revalidate=${staleWhileRevalidateTTL}`,
-                },
-                // versioned files
-                ...(copy.versionedSubDir
-                  ? [
-                      {
-                        files: path.posix.join(copy.versionedSubDir, "**"),
-                        cacheControl:
-                          assets?.versionedFilesCacheHeader ??
-                          `public,max-age=${versionedFilesTTL},immutable`,
-                      },
-                    ]
-                  : []),
-                ...(assets?.fileOptions ?? []),
-              ];
+          // Handle each copy source
+          for (const copy of origin.s3.copy) {
+            // Build fileOptions
+            const fileOptions: SsrSiteFileOptions[] = [
+              // unversioned files
+              {
+                files: "**",
+                ignore: copy.versionedSubDir
+                  ? path.posix.join(copy.versionedSubDir, "**")
+                  : undefined,
+                cacheControl:
+                  assets?.nonVersionedFilesCacheHeader ??
+                  `public,max-age=0,s-maxage=${nonVersionedFilesTTL},stale-while-revalidate=${staleWhileRevalidateTTL}`,
+              },
+              // versioned files
+              ...(copy.versionedSubDir
+                ? [
+                    {
+                      files: path.posix.join(copy.versionedSubDir, "**"),
+                      cacheControl:
+                        assets?.versionedFilesCacheHeader ??
+                        `public,max-age=${versionedFilesTTL},immutable`,
+                    },
+                  ]
+                : []),
+              ...(assets?.fileOptions ?? []),
+            ];
 
-              // Upload files based on fileOptions
-              const filesUploaded: string[] = [];
-              for (const fileOption of fileOptions.reverse()) {
-                const files = globSync(fileOption.files, {
-                  cwd: path.resolve(outputPath, copy.from),
-                  nodir: true,
-                  dot: true,
-                  ignore: fileOption.ignore,
-                }).filter((file) => !filesUploaded.includes(file));
+            // Upload files based on fileOptions
+            const filesUploaded: string[] = [];
+            for (const fileOption of fileOptions.reverse()) {
+              const files = globSync(fileOption.files, {
+                cwd: path.resolve(outputPath, copy.from),
+                nodir: true,
+                dot: true,
+                ignore: fileOption.ignore,
+              }).filter((file) => !filesUploaded.includes(file));
 
-                bucketFiles.push(
-                  ...(await Promise.all(
-                    files.map(async (file) => {
-                      const source = path.resolve(outputPath, copy.from, file);
-                      const content = await fs.promises.readFile(source);
-                      const hash = crypto
-                        .createHash("sha256")
-                        .update(content)
-                        .digest("hex");
-                      return {
-                        source,
-                        key: path.posix.join(copy.to, file),
-                        hash,
-                        cacheControl: fileOption.cacheControl,
-                        contentType: getContentType(file, "UTF-8"),
-                      };
-                    }),
-                  )),
-                );
-                filesUploaded.push(...files);
-              }
+              bucketFiles.push(
+                ...(await Promise.all(
+                  files.map(async (file) => {
+                    const source = path.resolve(outputPath, copy.from, file);
+                    const content = await fs.promises.readFile(source);
+                    const hash = crypto
+                      .createHash("sha256")
+                      .update(content)
+                      .digest("hex");
+                    return {
+                      source,
+                      key: path.posix.join(copy.to, file),
+                      hash,
+                      cacheControl: fileOption.cacheControl,
+                      contentType: getContentType(file, "UTF-8"),
+                    };
+                  }),
+                )),
+              );
+              filesUploaded.push(...files);
             }
           }
+        }
 
-          return new BucketFiles(
-            `${name}AssetFiles`,
+        return new BucketFiles(
+          `${name}AssetFiles`,
+          {
+            bucketName: bucket.name,
+            files: bucketFiles,
+          },
+          { parent },
+        );
+      });
+    }
+
+    function getContentType(filename: string, textEncoding: string) {
+      const ext = filename.endsWith(".well-known/site-association-json")
+        ? ".json"
+        : path.extname(filename);
+      const extensions = {
+        [".txt"]: { mime: "text/plain", isText: true },
+        [".htm"]: { mime: "text/html", isText: true },
+        [".html"]: { mime: "text/html", isText: true },
+        [".xhtml"]: { mime: "application/xhtml+xml", isText: true },
+        [".css"]: { mime: "text/css", isText: true },
+        [".js"]: { mime: "text/javascript", isText: true },
+        [".mjs"]: { mime: "text/javascript", isText: true },
+        [".apng"]: { mime: "image/apng", isText: false },
+        [".avif"]: { mime: "image/avif", isText: false },
+        [".gif"]: { mime: "image/gif", isText: false },
+        [".jpeg"]: { mime: "image/jpeg", isText: false },
+        [".jpg"]: { mime: "image/jpeg", isText: false },
+        [".png"]: { mime: "image/png", isText: false },
+        [".svg"]: { mime: "image/svg+xml", isText: true },
+        [".bmp"]: { mime: "image/bmp", isText: false },
+        [".tiff"]: { mime: "image/tiff", isText: false },
+        [".webp"]: { mime: "image/webp", isText: false },
+        [".ico"]: { mime: "image/vnd.microsoft.icon", isText: false },
+        [".eot"]: { mime: "application/vnd.ms-fontobject", isText: false },
+        [".ttf"]: { mime: "font/ttf", isText: false },
+        [".otf"]: { mime: "font/otf", isText: false },
+        [".woff"]: { mime: "font/woff", isText: false },
+        [".woff2"]: { mime: "font/woff2", isText: false },
+        [".json"]: { mime: "application/json", isText: true },
+        [".jsonld"]: { mime: "application/ld+json", isText: true },
+        [".xml"]: { mime: "application/xml", isText: true },
+        [".pdf"]: { mime: "application/pdf", isText: false },
+        [".zip"]: { mime: "application/zip", isText: false },
+        [".wasm"]: { mime: "application/wasm", isText: false },
+      };
+      const extensionData = extensions[ext as keyof typeof extensions];
+      const mime = extensionData?.mime ?? "application/octet-stream";
+      const charset =
+        extensionData?.isText && textEncoding !== "none"
+          ? `;charset=${textEncoding}`
+          : "";
+      return `${mime}${charset}`;
+    }
+
+    function createCloudFrontFunctions() {
+      const functions: Record<string, aws.cloudfront.Function> = {};
+
+      Object.entries(plan.cloudFrontFunctions ?? {}).forEach(
+        ([fnName, { injections }]) => {
+          functions[fnName] = new aws.cloudfront.Function(
+            `${name}CloudfrontFunction${sanitizeToPascalCase(fnName)}`,
             {
-              bucketName: bucket.name,
-              files: bucketFiles,
-            },
-            { parent },
-          );
-        });
-      }
-
-      function getContentType(filename: string, textEncoding: string) {
-        const ext = filename.endsWith(".well-known/site-association-json")
-          ? ".json"
-          : path.extname(filename);
-        const extensions = {
-          [".txt"]: { mime: "text/plain", isText: true },
-          [".htm"]: { mime: "text/html", isText: true },
-          [".html"]: { mime: "text/html", isText: true },
-          [".xhtml"]: { mime: "application/xhtml+xml", isText: true },
-          [".css"]: { mime: "text/css", isText: true },
-          [".js"]: { mime: "text/javascript", isText: true },
-          [".mjs"]: { mime: "text/javascript", isText: true },
-          [".apng"]: { mime: "image/apng", isText: false },
-          [".avif"]: { mime: "image/avif", isText: false },
-          [".gif"]: { mime: "image/gif", isText: false },
-          [".jpeg"]: { mime: "image/jpeg", isText: false },
-          [".jpg"]: { mime: "image/jpeg", isText: false },
-          [".png"]: { mime: "image/png", isText: false },
-          [".svg"]: { mime: "image/svg+xml", isText: true },
-          [".bmp"]: { mime: "image/bmp", isText: false },
-          [".tiff"]: { mime: "image/tiff", isText: false },
-          [".webp"]: { mime: "image/webp", isText: false },
-          [".ico"]: { mime: "image/vnd.microsoft.icon", isText: false },
-          [".eot"]: { mime: "application/vnd.ms-fontobject", isText: false },
-          [".ttf"]: { mime: "font/ttf", isText: false },
-          [".otf"]: { mime: "font/otf", isText: false },
-          [".woff"]: { mime: "font/woff", isText: false },
-          [".woff2"]: { mime: "font/woff2", isText: false },
-          [".json"]: { mime: "application/json", isText: true },
-          [".jsonld"]: { mime: "application/ld+json", isText: true },
-          [".xml"]: { mime: "application/xml", isText: true },
-          [".pdf"]: { mime: "application/pdf", isText: false },
-          [".zip"]: { mime: "application/zip", isText: false },
-          [".wasm"]: { mime: "application/wasm", isText: false },
-        };
-        const extensionData = extensions[ext as keyof typeof extensions];
-        const mime = extensionData?.mime ?? "application/octet-stream";
-        const charset =
-          extensionData?.isText && textEncoding !== "none"
-            ? `;charset=${textEncoding}`
-            : "";
-        return `${mime}${charset}`;
-      }
-
-      function createCloudFrontFunctions() {
-        const functions: Record<string, aws.cloudfront.Function> = {};
-
-        Object.entries(plan.cloudFrontFunctions ?? {}).forEach(
-          ([fnName, { injections }]) => {
-            functions[fnName] = new aws.cloudfront.Function(
-              `${name}CloudfrontFunction${sanitizeToPascalCase(fnName)}`,
-              {
-                runtime: "cloudfront-js-1.0",
-                code: `
+              runtime: "cloudfront-js-1.0",
+              code: `
 function handler(event) {
   var request = event.request;
   ${injections.join("\n")}
   return request;
 }`,
-              },
-              { parent },
-            );
-          },
-        );
-        return functions;
-      }
-
-      function createEdgeFunctions() {
-        const functions: Record<string, Function> = {};
-
-        Object.entries(plan.edgeFunctions ?? {}).forEach(
-          ([fnName, { function: props }]) => {
-            const fn = new Function(
-              `${name}Edge${sanitizeToPascalCase(fnName)}`,
-              {
-                runtime: "nodejs18.x",
-                timeout: "20 seconds",
-                memory: "1024 MB",
-                liveDev: false,
-                ...props,
-                nodejs: {
-                  format: "esm" as const,
-                  ...props.nodejs,
-                },
-                environment: output(args.environment).apply((environment) => ({
-                  ...environment,
-                  ...props.environment,
-                })),
-                link: output(args.link).apply((link) => [
-                  bucket,
-                  ...(props.link ?? []),
-                  ...(link ?? []),
-                ]),
-                transform: {
-                  function: (args) => ({ ...args, publish: true }),
-                },
-                _ignoreCodeChanges: strategy !== "full",
-              },
-              { provider: useProvider("us-east-1"), parent },
-            );
-
-            functions[fnName] = fn;
-          },
-        );
-        return functions;
-      }
-
-      function buildOrigins() {
-        const origins: Record<
-          string,
-          aws.types.input.cloudfront.DistributionOrigin
-        > = {};
-
-        Object.entries(plan.origins ?? {}).forEach(([name, props]) => {
-          if (props.s3) {
-            origins[name] = buildS3Origin(name, props.s3);
-          } else if (props.server) {
-            origins[name] = buildServerOrigin(name, props.server);
-          } else if (props.imageOptimization) {
-            origins[name] = buildImageOptimizationOrigin(
-              name,
-              props.imageOptimization,
-            );
-          }
-        });
-
-        return origins;
-      }
-
-      function buildOriginGroups() {
-        const originGroups: Record<
-          string,
-          aws.types.input.cloudfront.DistributionOriginGroup
-        > = {};
-
-        Object.entries(plan.origins ?? {}).forEach(([name, props]) => {
-          if (props.group) {
-            originGroups[name] = {
-              originId: name,
-              failoverCriteria: {
-                statusCodes: props.group.fallbackStatusCodes,
-              },
-              members: [
-                { originId: props.group.primaryOriginName },
-                { originId: props.group.fallbackOriginName },
-              ],
-            };
-          }
-        });
-
-        return originGroups;
-      }
-
-      function buildS3Origin(name: string, props: S3OriginConfig) {
-        return {
-          originId: name,
-          domainName: bucket.nodes.bucket.bucketRegionalDomainName,
-          originPath: props.originPath ? `/${props.originPath}` : "",
-          s3OriginConfig: {
-            originAccessIdentity: access.cloudfrontAccessIdentityPath,
-          },
-        };
-      }
-
-      function buildServerOrigin(fnName: string, props: ServerOriginConfig) {
-        const fn = new Function(
-          `${name}${sanitizeToPascalCase(fnName)}`,
-          {
-            description: `${name} server`,
-            runtime: "nodejs18.x",
-            timeout: "20 seconds",
-            memory: "1024 MB",
-            liveDev: false,
-            ...props.function,
-            nodejs: {
-              format: "esm" as const,
-              ...props.function.nodejs,
-            },
-            environment: output(args.environment).apply((environment) => ({
-              ...environment,
-              ...props.function.environment,
-            })),
-            streaming: props.streaming,
-            injections: output(props.injections).apply((injections) => [
-              ...(args.warm
-                ? [useServerFunctionWarmingInjection(props.streaming)]
-                : []),
-              ...(injections || []),
-            ]),
-            link: output(args.link).apply((link) => [
-              bucket,
-              ...(props.function.link ?? []),
-              ...(link ?? []),
-            ]),
-            url: true,
-            _ignoreCodeChanges: strategy !== "full",
-          },
-          { parent },
-        );
-        ssrFunctions.push(fn);
-
-        return {
-          originId: fnName,
-          domainName: fn.url.apply((url) => new URL(url!).host),
-          customOriginConfig: {
-            httpPort: 80,
-            httpsPort: 443,
-            originProtocolPolicy: "https-only",
-            originReadTimeout: 20,
-            originSslProtocols: ["TLSv1.2"],
-          },
-        };
-      }
-
-      function buildImageOptimizationOrigin(
-        fnName: string,
-        props: ImageOptimizationOriginConfig,
-      ) {
-        const fn = new Function(
-          `${name}${sanitizeToPascalCase(fnName)}`,
-          {
-            timeout: "25 seconds",
-            liveDev: false,
-            logging: {
-              retention: "3 days",
-            },
-            permissions: [
-              {
-                actions: ["s3:GetObject"],
-                resources: [interpolate`${bucket.arn}/*`],
-              },
-            ],
-            ...props.function,
-            url: true,
-            _ignoreCodeChanges: strategy !== "full",
-          },
-          { parent },
-        );
-
-        return {
-          originId: fnName,
-          domainName: fn.url.apply((url) => new URL(url!).host),
-          customOriginConfig: {
-            httpPort: 80,
-            httpsPort: 443,
-            originProtocolPolicy: "https-only",
-            originReadTimeout: 20,
-            originSslProtocols: ["TLSv1.2"],
-          },
-        };
-      }
-
-      function buildBehavior(behavior: Plan["behaviors"][number]) {
-        const edgeFunction = edgeFunctions[behavior.edgeFunction || ""];
-        const cfFunction = cfFunctions[behavior.cfFunction || ""];
-
-        if (behavior.cacheType === "static") {
-          return {
-            targetOriginId: behavior.origin,
-            viewerProtocolPolicy: "redirect-to-https",
-            allowedMethods: behavior.allowedMethods ?? [
-              "GET",
-              "HEAD",
-              "OPTIONS",
-            ],
-            cachedMethods: ["GET", "HEAD"],
-            compress: true,
-            // CloudFront's managed CachingOptimized policy
-            cachePolicyId: "658327ea-f89d-4fab-a63d-7e88639e58f6",
-            functionAssociations: cfFunction
-              ? [
-                  {
-                    eventType: "viewer-request",
-                    functionArn: cfFunction.arn,
-                  },
-                ]
-              : [],
-          };
-        } else if (behavior.cacheType === "server") {
-          return {
-            targetOriginId: behavior.origin,
-            viewerProtocolPolicy: "redirect-to-https",
-            allowedMethods: behavior.allowedMethods ?? [
-              "DELETE",
-              "GET",
-              "HEAD",
-              "OPTIONS",
-              "PATCH",
-              "POST",
-              "PUT",
-            ],
-            cachedMethods: ["GET", "HEAD"],
-            compress: true,
-            cachePolicyId: useServerBehaviorCachePolicy().id,
-            // CloudFront's Managed-AllViewerExceptHostHeader policy
-            originRequestPolicyId: "b689b0a8-53d0-40ab-baf2-68738e2966ac",
-            functionAssociations: cfFunction
-              ? [
-                  {
-                    eventType: "viewer-request",
-                    functionArn: cfFunction.arn,
-                  },
-                ]
-              : [],
-            lambdaFunctionAssociations: edgeFunction
-              ? [
-                  {
-                    includeBody: true,
-                    eventType: "origin-request",
-                    lambdaArn: edgeFunction.nodes.function.qualifiedArn,
-                  },
-                ]
-              : [],
-          };
-        }
-
-        throw new VisibleError(`Invalid behavior type in the "${name}" site.`);
-      }
-
-      function useServerBehaviorCachePolicy() {
-        singletonCachePolicy =
-          singletonCachePolicy ??
-          new aws.cloudfront.CachePolicy(
-            `${name}ServerCachePolicy`,
-            {
-              comment: "SST server response cache policy",
-              defaultTtl: 0,
-              maxTtl: 365,
-              minTtl: 0,
-              parametersInCacheKeyAndForwardedToOrigin: {
-                cookiesConfig: {
-                  cookieBehavior: "none",
-                },
-                headersConfig:
-                  (plan.serverCachePolicy?.allowedHeaders ?? []).length > 0
-                    ? {
-                        headerBehavior: "whitelist",
-                        headers: {
-                          items: plan.serverCachePolicy?.allowedHeaders,
-                        },
-                      }
-                    : {
-                        headerBehavior: "none",
-                      },
-                queryStringsConfig: {
-                  queryStringBehavior: "all",
-                },
-                enableAcceptEncodingBrotli: true,
-                enableAcceptEncodingGzip: true,
-              },
             },
             { parent },
           );
-        return singletonCachePolicy;
-      }
+        },
+      );
+      return functions;
+    }
 
-      function useServerFunctionWarmingInjection(streaming?: boolean) {
-        return [
-          `if (event.type === "warmer") {`,
-          `  const p = new Promise((resolve) => {`,
-          `    setTimeout(() => {`,
-          `      resolve({ serverId: "server-" + Math.random().toString(36).slice(2, 8) });`,
-          `    }, event.delay);`,
-          `  });`,
-          ...(streaming
+    function createEdgeFunctions() {
+      const functions: Record<string, Function> = {};
+
+      Object.entries(plan.edgeFunctions ?? {}).forEach(
+        ([fnName, { function: props }]) => {
+          const fn = new Function(
+            `${name}Edge${sanitizeToPascalCase(fnName)}`,
+            {
+              runtime: "nodejs18.x",
+              timeout: "20 seconds",
+              memory: "1024 MB",
+              ...props,
+              nodejs: {
+                format: "esm" as const,
+                ...props.nodejs,
+              },
+              environment: output(args.environment).apply((environment) => ({
+                ...environment,
+                ...props.environment,
+              })),
+              link: output(args.link).apply((link) => [
+                bucket,
+                ...(props.link ?? []),
+                ...(link ?? []),
+              ]),
+              transform: {
+                function: (args) => ({ ...args, publish: true }),
+              },
+              liveDev: false,
+              _ignoreCodeChanges: $dev,
+            },
+            { provider: useProvider("us-east-1"), parent },
+          );
+
+          functions[fnName] = fn;
+        },
+      );
+      return functions;
+    }
+
+    function buildOrigins() {
+      const origins: Record<
+        string,
+        aws.types.input.cloudfront.DistributionOrigin
+      > = {};
+
+      Object.entries(plan.origins ?? {}).forEach(([name, props]) => {
+        if (props.s3) {
+          origins[name] = buildS3Origin(name, props.s3);
+        } else if (props.server) {
+          origins[name] = buildServerOrigin(name, props.server);
+        } else if (props.imageOptimization) {
+          origins[name] = buildImageOptimizationOrigin(
+            name,
+            props.imageOptimization,
+          );
+        }
+      });
+
+      return origins;
+    }
+
+    function buildOriginGroups() {
+      const originGroups: Record<
+        string,
+        aws.types.input.cloudfront.DistributionOriginGroup
+      > = {};
+
+      Object.entries(plan.origins ?? {}).forEach(([name, props]) => {
+        if (props.group) {
+          originGroups[name] = {
+            originId: name,
+            failoverCriteria: {
+              statusCodes: props.group.fallbackStatusCodes,
+            },
+            members: [
+              { originId: props.group.primaryOriginName },
+              { originId: props.group.fallbackOriginName },
+            ],
+          };
+        }
+      });
+
+      return originGroups;
+    }
+
+    function buildS3Origin(name: string, props: S3OriginConfig) {
+      return {
+        originId: name,
+        domainName: bucket.nodes.bucket.bucketRegionalDomainName,
+        originPath: props.originPath ? `/${props.originPath}` : "",
+        s3OriginConfig: {
+          originAccessIdentity: access.cloudfrontAccessIdentityPath,
+        },
+      };
+    }
+
+    function buildServerOrigin(fnName: string, props: ServerOriginConfig) {
+      const fn = new Function(
+        `${name}${sanitizeToPascalCase(fnName)}`,
+        {
+          description: `${name} server`,
+          runtime: "nodejs18.x",
+          timeout: "20 seconds",
+          memory: "1024 MB",
+          ...props.function,
+          nodejs: {
+            format: "esm" as const,
+            ...props.function.nodejs,
+          },
+          environment: output(args.environment).apply((environment) => ({
+            ...environment,
+            ...props.function.environment,
+          })),
+          streaming: props.streaming,
+          injections: output(props.injections).apply((injections) => [
+            ...(args.warm
+              ? [useServerFunctionWarmingInjection(props.streaming)]
+              : []),
+            ...(injections || []),
+          ]),
+          link: output(args.link).apply((link) => [
+            bucket,
+            ...(props.function.link ?? []),
+            ...(link ?? []),
+          ]),
+          url: true,
+          liveDev: false,
+          _ignoreCodeChanges: $dev,
+        },
+        { parent },
+      );
+      ssrFunctions.push(fn);
+
+      return {
+        originId: fnName,
+        domainName: fn.url.apply((url) => new URL(url!).host),
+        customOriginConfig: {
+          httpPort: 80,
+          httpsPort: 443,
+          originProtocolPolicy: "https-only",
+          originReadTimeout: 20,
+          originSslProtocols: ["TLSv1.2"],
+        },
+      };
+    }
+
+    function buildImageOptimizationOrigin(
+      fnName: string,
+      props: ImageOptimizationOriginConfig,
+    ) {
+      const fn = new Function(
+        `${name}${sanitizeToPascalCase(fnName)}`,
+        {
+          timeout: "25 seconds",
+          logging: {
+            retention: "3 days",
+          },
+          permissions: [
+            {
+              actions: ["s3:GetObject"],
+              resources: [interpolate`${bucket.arn}/*`],
+            },
+          ],
+          ...props.function,
+          url: true,
+          liveDev: false,
+          _ignoreCodeChanges: $dev,
+        },
+        { parent },
+      );
+
+      return {
+        originId: fnName,
+        domainName: fn.url.apply((url) => new URL(url!).host),
+        customOriginConfig: {
+          httpPort: 80,
+          httpsPort: 443,
+          originProtocolPolicy: "https-only",
+          originReadTimeout: 20,
+          originSslProtocols: ["TLSv1.2"],
+        },
+      };
+    }
+
+    function buildBehavior(behavior: Plan["behaviors"][number]) {
+      const edgeFunction = edgeFunctions[behavior.edgeFunction || ""];
+      const cfFunction = cfFunctions[behavior.cfFunction || ""];
+
+      if (behavior.cacheType === "static") {
+        return {
+          targetOriginId: behavior.origin,
+          viewerProtocolPolicy: "redirect-to-https",
+          allowedMethods: behavior.allowedMethods ?? ["GET", "HEAD", "OPTIONS"],
+          cachedMethods: ["GET", "HEAD"],
+          compress: true,
+          // CloudFront's managed CachingOptimized policy
+          cachePolicyId: "658327ea-f89d-4fab-a63d-7e88639e58f6",
+          functionAssociations: cfFunction
             ? [
-                `  const response = await p;`,
-                `  responseStream.write(JSON.stringify(response));`,
-                `  responseStream.end();`,
-                `  return;`,
+                {
+                  eventType: "viewer-request",
+                  functionArn: cfFunction.arn,
+                },
               ]
-            : [`  return p;`]),
-          `}`,
-        ].join("\n");
+            : [],
+        };
+      } else if (behavior.cacheType === "server") {
+        return {
+          targetOriginId: behavior.origin,
+          viewerProtocolPolicy: "redirect-to-https",
+          allowedMethods: behavior.allowedMethods ?? [
+            "DELETE",
+            "GET",
+            "HEAD",
+            "OPTIONS",
+            "PATCH",
+            "POST",
+            "PUT",
+          ],
+          cachedMethods: ["GET", "HEAD"],
+          compress: true,
+          cachePolicyId: useServerBehaviorCachePolicy().id,
+          // CloudFront's Managed-AllViewerExceptHostHeader policy
+          originRequestPolicyId: "b689b0a8-53d0-40ab-baf2-68738e2966ac",
+          functionAssociations: cfFunction
+            ? [
+                {
+                  eventType: "viewer-request",
+                  functionArn: cfFunction.arn,
+                },
+              ]
+            : [],
+          lambdaFunctionAssociations: edgeFunction
+            ? [
+                {
+                  includeBody: true,
+                  eventType: "origin-request",
+                  lambdaArn: edgeFunction.nodes.function.qualifiedArn,
+                },
+              ]
+            : [],
+        };
       }
 
-      function createServerFunctionForDev() {
-        //const role = new Role(self, `${name}DevServerRole`, {
-        //  assumedBy: new CompositePrincipal(
-        //    new AccountPrincipal(app.account),
-        //    new ServicePrincipal("lambda.amazonaws.com")
-        //  ),
-        //  maxSessionDuration: CdkDuration.hours(12),
-        //}, {parent});
-        //return new SsrFunction(self, `${name}DevServerFunction`, {
-        //  description: "Server handler placeholder",
-        //  bundle: path.join(__dirname, "../support/ssr-site-function-stub"),
-        //  handler: "index.handler",
-        //  runtime,
-        //  memorySize,
-        //  timeout,
-        //  role,
-        //  bind,
-        //  environment,
-        //  permissions,
-        //  // note: do not need to set vpc and layers settings b/c this function is not being used
-        //}, {parent});
-      }
+      throw new VisibleError(`Invalid behavior type in the "${name}" site.`);
+    }
 
-      function createCloudFrontDistribution() {
-        return new Cdn(
-          `${name}Cdn`,
+    function useServerBehaviorCachePolicy() {
+      singletonCachePolicy =
+        singletonCachePolicy ??
+        new aws.cloudfront.CachePolicy(
+          `${name}ServerCachePolicy`,
           {
-            domain: args.domain,
-            transform: {
-              distribution: (distribution) => ({
-                ...distribution,
-                comment: `${name} app`,
-                origins: Object.values(origins),
-                originGroups: Object.values(originGroups),
-                defaultRootObject: "",
-                defaultCacheBehavior: buildBehavior(
-                  plan.behaviors.find((behavior) => !behavior.pattern)!,
-                ),
-                orderedCacheBehaviors: plan.behaviors
-                  .filter((behavior) => behavior.pattern)
-                  .map((behavior) => ({
-                    pathPattern: behavior.pattern!,
-                    ...buildBehavior(behavior),
-                  })),
-                customErrorResponses: [
-                  {
-                    errorCode: 404,
-                    responseCode: 200,
-                    responsePagePath: "/404.html",
-                  },
-                ],
-                waitForDeployment: strategy === "full",
-              }),
+            comment: "SST server response cache policy",
+            defaultTtl: 0,
+            maxTtl: 365,
+            minTtl: 0,
+            parametersInCacheKeyAndForwardedToOrigin: {
+              cookiesConfig: {
+                cookieBehavior: "none",
+              },
+              headersConfig:
+                (plan.serverCachePolicy?.allowedHeaders ?? []).length > 0
+                  ? {
+                      headerBehavior: "whitelist",
+                      headers: {
+                        items: plan.serverCachePolicy?.allowedHeaders,
+                      },
+                    }
+                  : {
+                      headerBehavior: "none",
+                    },
+              queryStringsConfig: {
+                queryStringBehavior: "all",
+              },
+              enableAcceptEncodingBrotli: true,
+              enableAcceptEncodingGzip: true,
             },
           },
-          // create distribution after s3 upload finishes
-          { dependsOn: bucketFile, parent },
+          { parent },
         );
-      }
+      return singletonCachePolicy;
+    }
 
-      function allowServerFunctionInvalidateDistribution() {
-        const policy = new aws.iam.Policy(
-          `${name}InvalidationPolicy`,
-          {
-            policy: interpolate`{
+    function useServerFunctionWarmingInjection(streaming?: boolean) {
+      return [
+        `if (event.type === "warmer") {`,
+        `  const p = new Promise((resolve) => {`,
+        `    setTimeout(() => {`,
+        `      resolve({ serverId: "server-" + Math.random().toString(36).slice(2, 8) });`,
+        `    }, event.delay);`,
+        `  });`,
+        ...(streaming
+          ? [
+              `  const response = await p;`,
+              `  responseStream.write(JSON.stringify(response));`,
+              `  responseStream.end();`,
+              `  return;`,
+            ]
+          : [`  return p;`]),
+        `}`,
+      ].join("\n");
+    }
+
+    function createServerFunctionForDev() {
+      //const role = new Role(self, `${name}DevServerRole`, {
+      //  assumedBy: new CompositePrincipal(
+      //    new AccountPrincipal(app.account),
+      //    new ServicePrincipal("lambda.amazonaws.com")
+      //  ),
+      //  maxSessionDuration: CdkDuration.hours(12),
+      //}, {parent});
+      //return new SsrFunction(self, `${name}DevServerFunction`, {
+      //  description: "Server handler placeholder",
+      //  bundle: path.join(__dirname, "../support/ssr-site-function-stub"),
+      //  handler: "index.handler",
+      //  runtime,
+      //  memorySize,
+      //  timeout,
+      //  role,
+      //  bind,
+      //  environment,
+      //  permissions,
+      //  // note: do not need to set vpc and layers settings b/c this function is not being used
+      //}, {parent});
+    }
+
+    function createCloudFrontDistribution() {
+      return new Cdn(
+        `${name}Cdn`,
+        {
+          domain: args.domain,
+          transform: {
+            distribution: (distribution) => ({
+              ...distribution,
+              comment: `${name} app`,
+              origins: Object.values(origins),
+              originGroups: Object.values(originGroups),
+              defaultRootObject: "",
+              defaultCacheBehavior: buildBehavior(
+                plan.behaviors.find((behavior) => !behavior.pattern)!,
+              ),
+              orderedCacheBehaviors: plan.behaviors
+                .filter((behavior) => behavior.pattern)
+                .map((behavior) => ({
+                  pathPattern: behavior.pattern!,
+                  ...buildBehavior(behavior),
+                })),
+              customErrorResponses: [
+                {
+                  errorCode: 404,
+                  responseCode: 200,
+                  responsePagePath: "/404.html",
+                },
+              ],
+              waitForDeployment: !$dev,
+            }),
+          },
+        },
+        // create distribution after s3 upload finishes
+        { dependsOn: bucketFile, parent },
+      );
+    }
+
+    function allowServerFunctionInvalidateDistribution() {
+      const policy = new aws.iam.Policy(
+        `${name}InvalidationPolicy`,
+        {
+          policy: interpolate`{
             "Version": "2012-10-17",
             "Statement": [
               {
@@ -1070,194 +1036,193 @@ function handler(event) {
               }
             ]
           }`,
-          },
-          { parent },
-        );
+        },
+        { parent },
+      );
 
-        for (const fn of [...ssrFunctions, ...Object.values(edgeFunctions)]) {
-          fn.nodes.function.name.apply((functionName) => {
-            const uniqueHash = crypto
-              .createHash("md5")
-              .update(functionName)
-              .digest("hex")
-              .substring(0, 4);
+      for (const fn of [...ssrFunctions, ...Object.values(edgeFunctions)]) {
+        fn.nodes.function.name.apply((functionName) => {
+          const uniqueHash = crypto
+            .createHash("md5")
+            .update(functionName)
+            .digest("hex")
+            .substring(0, 4);
 
-            new aws.iam.RolePolicyAttachment(
-              `${name}InvalidationPolicyAttachment${uniqueHash}`,
-              {
-                policyArn: policy.arn,
-                role: fn.nodes.role.name,
-              },
-              { parent },
-            );
-          });
-        }
-      }
-
-      function createWarmer() {
-        // note: Currently all sites have a single server function. When we add
-        //       support for multiple server functions (ie. route splitting), we
-        //       need to handle warming multiple functions.
-        if (!args.warm) return;
-
-        if (args.warm && plan.edge) {
-          throw new VisibleError(
-            `In the "${name}" Site, warming is currently supported only for the regional mode.`,
+          new aws.iam.RolePolicyAttachment(
+            `${name}InvalidationPolicyAttachment${uniqueHash}`,
+            {
+              policyArn: policy.arn,
+              role: fn.nodes.role.name,
+            },
+            { parent },
           );
-        }
+        });
+      }
+    }
 
-        if (ssrFunctions.length === 0) return;
+    function createWarmer() {
+      // note: Currently all sites have a single server function. When we add
+      //       support for multiple server functions (ie. route splitting), we
+      //       need to handle warming multiple functions.
+      if (!args.warm) return;
 
-        // Create warmer function
-        const warmer = new Function(
-          `${name}Warmer`,
-          {
-            description: `${name} warmer`,
-            bundle: path.join($cli.paths.platform, "dist", "ssr-warmer"),
-            runtime: "nodejs20.x",
-            handler: "index.handler",
-            timeout: "900 seconds",
-            memory: "128 MB",
-            liveDev: false,
-            environment: {
-              FUNCTION_NAME: ssrFunctions[0].nodes.function.name,
-              CONCURRENCY: output(args.warm).apply((warm) => warm.toString()),
-            },
-            link: [ssrFunctions[0]],
-          },
-          { parent },
-        );
-
-        // Create cron job
-        const schedule = new aws.cloudwatch.EventRule(
-          `${name}WarmerRule`,
-          {
-            description: `${name} warmer`,
-            scheduleExpression: "rate(5 minutes)",
-          },
-          { parent },
-        );
-        new aws.cloudwatch.EventTarget(
-          `${name}WarmerTarget`,
-          {
-            rule: schedule.name,
-            arn: warmer.nodes.function.arn,
-            retryPolicy: {
-              maximumRetryAttempts: 0,
-            },
-          },
-          { parent },
-        );
-
-        // Prewarm on deploy
-        new aws.lambda.Invocation(
-          `${name}Prewarm`,
-          {
-            functionName: warmer.nodes.function.name,
-            triggers: {
-              version: Date.now().toString(),
-            },
-            input: JSON.stringify({}),
-          },
-          { parent },
+      if (args.warm && plan.edge) {
+        throw new VisibleError(
+          `In the "${name}" Site, warming is currently supported only for the regional mode.`,
         );
       }
 
-      function createDistributionInvalidation() {
-        all([outputPath, args.invalidation]).apply(
-          ([outputPath, invalidation]) => {
-            // We will generate a hash based on the contents of the S3 files with cache enabled.
-            // This will be used to determine if we need to invalidate our CloudFront cache.
-            const s3Origin = Object.values(plan.origins).find(
-              (origin) => origin.s3,
-            )?.s3;
-            if (!s3Origin) return;
-            const cachedS3Files = s3Origin.copy.filter((file) => file.cached);
-            if (cachedS3Files.length === 0) return;
+      if (ssrFunctions.length === 0) return;
 
-            // Build invalidation paths
-            const invalidationPaths: string[] = [];
-            if (invalidation?.paths === "none") {
-            } else if (
-              invalidation?.paths === "all" ||
-              invalidation?.paths === undefined
-            ) {
-              invalidationPaths.push("/*");
-            } else if (invalidation?.paths === "versioned") {
-              cachedS3Files.forEach((item) => {
-                if (!item.versionedSubDir) return;
-                invalidationPaths.push(
-                  path.posix.join("/", item.to, item.versionedSubDir, "*"),
+      // Create warmer function
+      const warmer = new Function(
+        `${name}Warmer`,
+        {
+          description: `${name} warmer`,
+          bundle: path.join($cli.paths.platform, "dist", "ssr-warmer"),
+          runtime: "nodejs20.x",
+          handler: "index.handler",
+          timeout: "900 seconds",
+          memory: "128 MB",
+          liveDev: false,
+          environment: {
+            FUNCTION_NAME: ssrFunctions[0].nodes.function.name,
+            CONCURRENCY: output(args.warm).apply((warm) => warm.toString()),
+          },
+          link: [ssrFunctions[0]],
+        },
+        { parent },
+      );
+
+      // Create cron job
+      const schedule = new aws.cloudwatch.EventRule(
+        `${name}WarmerRule`,
+        {
+          description: `${name} warmer`,
+          scheduleExpression: "rate(5 minutes)",
+        },
+        { parent },
+      );
+      new aws.cloudwatch.EventTarget(
+        `${name}WarmerTarget`,
+        {
+          rule: schedule.name,
+          arn: warmer.nodes.function.arn,
+          retryPolicy: {
+            maximumRetryAttempts: 0,
+          },
+        },
+        { parent },
+      );
+
+      // Prewarm on deploy
+      new aws.lambda.Invocation(
+        `${name}Prewarm`,
+        {
+          functionName: warmer.nodes.function.name,
+          triggers: {
+            version: Date.now().toString(),
+          },
+          input: JSON.stringify({}),
+        },
+        { parent },
+      );
+    }
+
+    function createDistributionInvalidation() {
+      all([outputPath, args.invalidation]).apply(
+        ([outputPath, invalidation]) => {
+          // We will generate a hash based on the contents of the S3 files with cache enabled.
+          // This will be used to determine if we need to invalidate our CloudFront cache.
+          const s3Origin = Object.values(plan.origins).find(
+            (origin) => origin.s3,
+          )?.s3;
+          if (!s3Origin) return;
+          const cachedS3Files = s3Origin.copy.filter((file) => file.cached);
+          if (cachedS3Files.length === 0) return;
+
+          // Build invalidation paths
+          const invalidationPaths: string[] = [];
+          if (invalidation?.paths === "none") {
+          } else if (
+            invalidation?.paths === "all" ||
+            invalidation?.paths === undefined
+          ) {
+            invalidationPaths.push("/*");
+          } else if (invalidation?.paths === "versioned") {
+            cachedS3Files.forEach((item) => {
+              if (!item.versionedSubDir) return;
+              invalidationPaths.push(
+                path.posix.join("/", item.to, item.versionedSubDir, "*"),
+              );
+            });
+          } else {
+            invalidationPaths.push(...(invalidation?.paths || []));
+          }
+          if (invalidationPaths.length === 0) return;
+
+          // Build build ID
+          let invalidationBuildId: string;
+          if (plan.buildId) {
+            invalidationBuildId = plan.buildId;
+          } else {
+            const hash = crypto.createHash("md5");
+
+            cachedS3Files.forEach((item) => {
+              // The below options are needed to support following symlinks when building zip files:
+              // - nodir: This will prevent symlinks themselves from being copied into the zip.
+              // - follow: This will follow symlinks and copy the files within.
+
+              // For versioned files, use file path for digest since file version in name should change on content change
+              if (item.versionedSubDir) {
+                globSync("**", {
+                  dot: true,
+                  nodir: true,
+                  follow: true,
+                  cwd: path.resolve(
+                    outputPath,
+                    item.from,
+                    item.versionedSubDir,
+                  ),
+                }).forEach((filePath) => hash.update(filePath));
+              }
+
+              // For non-versioned files, use file content for digest
+              if (invalidation?.paths !== "versioned") {
+                globSync("**", {
+                  ignore: item.versionedSubDir
+                    ? [path.posix.join(item.versionedSubDir, "**")]
+                    : undefined,
+                  dot: true,
+                  nodir: true,
+                  follow: true,
+                  cwd: path.resolve(outputPath, item.from),
+                }).forEach((filePath) =>
+                  hash.update(
+                    fs.readFileSync(
+                      path.resolve(outputPath, item.from, filePath),
+                    ),
+                  ),
                 );
-              });
-            } else {
-              invalidationPaths.push(...(invalidation?.paths || []));
-            }
-            if (invalidationPaths.length === 0) return;
+              }
+            });
+            invalidationBuildId = hash.digest("hex");
+            console.debug(`Generated build ID ${invalidationBuildId}`);
+          }
 
-            // Build build ID
-            let invalidationBuildId: string;
-            if (plan.buildId) {
-              invalidationBuildId = plan.buildId;
-            } else {
-              const hash = crypto.createHash("md5");
-
-              cachedS3Files.forEach((item) => {
-                // The below options are needed to support following symlinks when building zip files:
-                // - nodir: This will prevent symlinks themselves from being copied into the zip.
-                // - follow: This will follow symlinks and copy the files within.
-
-                // For versioned files, use file path for digest since file version in name should change on content change
-                if (item.versionedSubDir) {
-                  globSync("**", {
-                    dot: true,
-                    nodir: true,
-                    follow: true,
-                    cwd: path.resolve(
-                      outputPath,
-                      item.from,
-                      item.versionedSubDir,
-                    ),
-                  }).forEach((filePath) => hash.update(filePath));
-                }
-
-                // For non-versioned files, use file content for digest
-                if (invalidation?.paths !== "versioned") {
-                  globSync("**", {
-                    ignore: item.versionedSubDir
-                      ? [path.posix.join(item.versionedSubDir, "**")]
-                      : undefined,
-                    dot: true,
-                    nodir: true,
-                    follow: true,
-                    cwd: path.resolve(outputPath, item.from),
-                  }).forEach((filePath) =>
-                    hash.update(
-                      fs.readFileSync(
-                        path.resolve(outputPath, item.from, filePath),
-                      ),
-                    ),
-                  );
-                }
-              });
-              invalidationBuildId = hash.digest("hex");
-              console.debug(`Generated build ID ${invalidationBuildId}`);
-            }
-
-            new DistributionInvalidation(
-              `${name}Invalidation`,
-              {
-                distributionId: distribution.nodes.distribution.id,
-                paths: invalidationPaths,
-                version: invalidationBuildId,
-              },
-              { parent },
-            );
-          },
-        );
-      }
-    },
-  );
+          new DistributionInvalidation(
+            `${name}Invalidation`,
+            {
+              distributionId: distribution.nodes.distribution.id,
+              paths: invalidationPaths,
+              version: invalidationBuildId,
+            },
+            { parent },
+          );
+        },
+      );
+    }
+  });
 }
 
 export function useCloudFrontFunctionHostHeaderInjection() {

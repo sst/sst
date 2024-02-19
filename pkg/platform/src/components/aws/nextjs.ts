@@ -18,7 +18,6 @@ import {
   buildApp,
   createBucket,
   createServersAndDistribution,
-  getDeployStrategy,
   prepare,
   useCloudFrontFunctionHostHeaderInjection,
   validatePlan,
@@ -153,10 +152,9 @@ export interface NextjsArgs extends SsrSiteArgs {
  * ```
  */
 export class Nextjs extends Component implements Link.Linkable {
-  private doNotDeploy: Output<boolean>;
   private cdn: Cdn;
   private assets: Bucket;
-  private server?: Function;
+  private server: Function;
 
   constructor(
     name: string,
@@ -180,9 +178,8 @@ export class Nextjs extends Component implements Link.Linkable {
     const logging = normalizeLogging();
     const buildCommand = normalizeBuildCommand();
     const { sitePath, region } = prepare(args, opts);
-    const strategy = getDeployStrategy(parent, name);
     const { access, bucket } = createBucket(parent, name);
-    const outputPath = buildApp(name, args, strategy, sitePath, buildCommand);
+    const outputPath = buildApp(name, args, sitePath, buildCommand);
     const {
       openNextOutput,
       buildId,
@@ -202,7 +199,6 @@ export class Nextjs extends Component implements Link.Linkable {
         parent,
         name,
         args,
-        strategy,
         outputPath,
         access,
         bucket,
@@ -215,7 +211,6 @@ export class Nextjs extends Component implements Link.Linkable {
     disableDefaultLogging();
     uploadSourcemaps();
 
-    this.doNotDeploy = output(false);
     this.assets = bucket;
     this.cdn = distribution as unknown as Cdn;
     this.server = serverFunction as unknown as Function;
@@ -252,13 +247,16 @@ export class Nextjs extends Component implements Link.Linkable {
     }
 
     function loadBuildOutput() {
-      const data = strategy.apply((strategy) => {
-        if (strategy === "full") return loadOpenNextOutput();
-        else if (strategy === "mock-full") return null;
-        return loadOpenNextOutputPlaceholder();
-      });
-
-      const cache = new Cache(`${name}OpenNextOutput`, { data }, { parent });
+      const cache = new Cache(
+        `${name}OpenNextOutput`,
+        {
+          data: $dev ? loadOpenNextOutputPlaceholder() : loadOpenNextOutput(),
+        },
+        {
+          parent,
+          ignoreChanges: $dev ? ["*"] : undefined,
+        },
+      );
 
       return {
         openNextOutput: cache.data as ReturnType<typeof loadOpenNextOutput>,
@@ -347,8 +345,8 @@ export class Nextjs extends Component implements Link.Linkable {
     }
 
     function loadBuildId() {
-      return all([strategy, outputPath]).apply(([strategy, outputPath]) => {
-        if (strategy !== "full") return "mock-build-id";
+      return outputPath.apply((outputPath) => {
+        if ($dev) return "mock-build-id";
 
         try {
           return fs
@@ -364,8 +362,8 @@ export class Nextjs extends Component implements Link.Linkable {
     }
 
     function loadRoutesManifest() {
-      return all([strategy, outputPath]).apply(([strategy, outputPath]) => {
-        if (strategy !== "full") return { dynamicRoutes: [], staticRoutes: [] };
+      return outputPath.apply((outputPath) => {
+        if ($dev) return { dynamicRoutes: [], staticRoutes: [] };
 
         try {
           const content = fs
@@ -396,8 +394,8 @@ export class Nextjs extends Component implements Link.Linkable {
       //   "/items/[slug]/route": "/items/[slug]"   <- app/items/[slug]/route.js
       // }
 
-      return all([strategy, outputPath]).apply(([strategy, outputPath]) => {
-        if (strategy !== "full") return {};
+      return outputPath.apply((outputPath) => {
+        if ($dev) return {};
 
         try {
           const content = fs
@@ -413,8 +411,8 @@ export class Nextjs extends Component implements Link.Linkable {
     }
 
     function loadAppPathsManifest() {
-      return all([strategy, outputPath]).apply(([strategy, outputPath]) => {
-        if (strategy !== "full") return {};
+      return outputPath.apply((outputPath) => {
+        if ($dev) return {};
 
         try {
           const content = fs
@@ -430,8 +428,8 @@ export class Nextjs extends Component implements Link.Linkable {
     }
 
     function loadPagesManifest() {
-      return all([strategy, outputPath]).apply(([strategy, outputPath]) => {
-        if (strategy !== "full") return {};
+      return outputPath.apply((outputPath) => {
+        if ($dev) return {};
 
         try {
           const content = fs
@@ -447,8 +445,8 @@ export class Nextjs extends Component implements Link.Linkable {
     }
 
     function loadPrerenderManifest() {
-      return all([strategy, outputPath]).apply(([strategy, outputPath]) => {
-        if (strategy !== "full") return { version: 0, routes: {} };
+      return outputPath.apply((outputPath) => {
+        if ($dev) return { version: 0, routes: {} };
 
         try {
           const content = fs
@@ -657,8 +655,8 @@ export class Nextjs extends Component implements Link.Linkable {
     }
 
     function createRevalidationQueue() {
-      return all([strategy, outputPath, openNextOutput]).apply(
-        ([strategy, outputPath, openNextOutput]) => {
+      return all([outputPath, openNextOutput]).apply(
+        ([outputPath, openNextOutput]) => {
           if (openNextOutput.additionalProps?.disableIncrementalCache) return;
 
           const revalidationFunction =
@@ -693,7 +691,8 @@ export class Nextjs extends Component implements Link.Linkable {
                   resources: [queue.arn],
                 },
               ],
-              _ignoreCodeChanges: strategy !== "full",
+              liveDev: false,
+              _ignoreCodeChanges: $dev,
             },
             { parent },
           );
@@ -745,14 +744,12 @@ export class Nextjs extends Component implements Link.Linkable {
 
     function createRevalidationTableSeeder() {
       return all([
-        strategy,
         revalidationTable,
         outputPath,
         openNextOutput,
         prerenderManifest,
       ]).apply(
         ([
-          strategy,
           revalidationTable,
           outputPath,
           openNextOutput,
@@ -796,7 +793,8 @@ export class Nextjs extends Component implements Link.Linkable {
               environment: {
                 CACHE_DYNAMO_TABLE: revalidationTable!.name,
               },
-              _ignoreCodeChanges: strategy !== "full",
+              liveDev: false,
+              _ignoreCodeChanges: $dev,
             },
             { parent },
           );
@@ -809,7 +807,7 @@ export class Nextjs extends Component implements Link.Linkable {
               },
               input: JSON.stringify({}),
             },
-            { parent, ignoreChanges: strategy === "full" ? undefined : ["*"] },
+            { parent, ignoreChanges: $dev ? ["*"] : undefined },
           );
         },
       );
@@ -1109,7 +1107,6 @@ if (event.rawPath) {
    * The CloudFront URL of the website.
    */
   public get url() {
-    //if (this.doNotDeploy) return this.props.dev?.url;
     return this.cdn.url;
   }
 
@@ -1118,8 +1115,6 @@ if (event.rawPath) {
    * custom domain.
    */
   public get domainUrl() {
-    if (this.doNotDeploy) return;
-
     return this.cdn.domainUrl;
   }
 
@@ -1127,12 +1122,10 @@ if (event.rawPath) {
    * The internally created CDK resources.
    */
   public get nodes() {
-    if (this.doNotDeploy) return;
-
     return {
       server: this.server,
       assets: this.assets,
-      cdn: this.cdn,
+      //cdn: this.cdn,
     };
   }
 

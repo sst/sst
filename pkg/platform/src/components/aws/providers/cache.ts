@@ -8,16 +8,12 @@ interface Inputs {
   data: any;
 }
 
-interface Outputs {
-  data: any;
-}
-
 export interface Cache {
-  data: Output<Outputs["data"]>;
+  data: Output<Inputs["data"]>;
 }
 
 class Provider implements dynamic.ResourceProvider {
-  async create(inputs: Inputs): Promise<dynamic.CreateResult<Outputs>> {
+  async create(inputs: Inputs): Promise<dynamic.CreateResult<Inputs>> {
     return {
       id: "cache",
       outs: {
@@ -28,12 +24,12 @@ class Provider implements dynamic.ResourceProvider {
 
   async update(
     id: string,
-    olds: Outputs,
+    olds: Inputs,
     news: Inputs,
-  ): Promise<dynamic.UpdateResult<Outputs>> {
+  ): Promise<dynamic.UpdateResult<Inputs>> {
     return {
       outs: {
-        data: news.data ?? olds.data,
+        data: news.data,
       },
     };
   }
