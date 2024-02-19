@@ -1,6 +1,6 @@
 ---
 title: Function
-description: Reference for the `sst.aws.Function` component
+description: Reference for the `sst.aws.Function` component.
 ---
 
 import Segment from '../../../../../components/tsdoc/Segment.astro';
@@ -376,6 +376,14 @@ Takes a list of resources to link to the function.
 ```
 </Segment>
 <Segment>
+### liveDev?
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="symbol">&ldquo;</code><code class="primitive">false</code><code class="symbol">&rdquo;</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+</Segment>
+<Segment>
 ### logging?
 <Section type="parameters">
 <InlineSection>
@@ -740,7 +748,8 @@ The amount of time that Lambda allows a function to run before stopping it.
 </InlineSection>
 - <p>[<code class="key">function?</code>](#transform-function)</p>
 </Section>
-[Transform](/docs/components#transform/) how this component creates its underlying resources.
+[Transform](/docs/components#transform/) how this component creates its underlying
+resources.
 </Segment>
 <Segment>
 <NestedTitle id="transform-function" Tag="h4" parent="transform.">function?</NestedTitle>

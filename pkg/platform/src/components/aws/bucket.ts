@@ -6,33 +6,51 @@ import { Component, Transform, transform } from "../component";
 import { Link } from "../link";
 import type { Input } from "../input";
 
-/**
- * Arguments for creating a `Bucket` component.
- */
 export interface BucketArgs {
+  /**
+   * Enable public read access for all the files in the bucket.
+   * @default `false`
+   * @example
+   * ```js
+   * {
+   *   public: true
+   * }
+   * ```
+   */
   public?: Input<boolean>;
   /**
-   * [Transform](/docs/transform/) how this component is created.
+   * [Transform](/docs/components#transform/) how this component creates its underlying
+   * resources.
    */
   transform?: {
+    /**
+     * Transform the S3 Bucket resource.
+     */
     bucket?: Transform<aws.s3.BucketV2Args>;
+    /**
+     * Transform the IAM Policy that's attached to the Bucket.
+     */
     bucketPolicy?: Transform<aws.s3.BucketPolicyArgs>;
   };
 }
 
 /**
- * The `Bucket` component is a higher level component that makes it easy to create an AWS S3 Bucket.
+ * The `Bucket` component lets you add an [AWS S3 Bucket](https://aws.amazon.com/s3/) to
+ * your app.
  *
  * @example
  *
- * #### Using the minimal config
+ * #### Minimal example
+ *
  * ```ts
  * new sst.Bucket("MyBucket");
  * ```
  *
- * #### Enabling public read access
- * This allows anyone to read files in the bucket. This is useful for hosting public files.
- * ```ts
+ * #### Public read access
+ *
+ * Enable `public` read access for all the files in the bucket. Useful for hosting public files.
+ *
+ * ```ts {2}
  * new sst.Bucket("MyBucket", {
  *   public: true,
  * });
@@ -130,24 +148,27 @@ export class Bucket
   }
 
   /**
-   * The S3 bucket name.
+   * The generated name of the S3 Bucket.
    */
   public get name() {
     return this.bucket.bucket;
   }
 
   /**
-   * The S3 bucket arn.
+   * The ARN of the S3 Bucket.
    */
   public get arn() {
     return this.bucket.arn;
   }
 
   /**
-   * The underlying AWS resources.
+   * The underlying [resources](/docs/components/#nodes) this component creates.
    */
   public get nodes() {
     return {
+      /**
+       * The AWS S3 bucket.
+       */
       bucket: this.bucket,
     };
   }

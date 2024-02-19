@@ -36,7 +36,7 @@ async function main() {
       return [
         `---`,
         `title: ${useClassName()}`,
-        `description: Reference for the \`sst.aws.${useClassName()}\` component`,
+        `description: Reference for the \`sst.aws.${useClassName()}\` component.`,
         `---`,
       ];
     }
