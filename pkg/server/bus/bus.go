@@ -44,6 +44,7 @@ func Subscribe[T Event](ctx context.Context, fn func(T)) {
 		<-ctx.Done()
 		mutex.Lock()
 		defer mutex.Unlock()
+		slog.Info("unsubscribing", "type", t)
 		subscribers[t] = append(s[:index], s[index+1:]...)
 	}()
 }

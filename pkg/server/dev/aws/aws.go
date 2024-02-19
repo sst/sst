@@ -330,6 +330,7 @@ func Start(
 					if !ok {
 						continue
 					}
+					slog.Info("checking rebuild", "workerID", workerID, "functionID", info.FunctionID, "path", event.Path)
 					if runtime.ShouldRebuild(warp.Runtime, warp.FunctionID, event.Path) {
 						slog.Info("rebuilding", "workerID", workerID, "functionID", info.FunctionID)
 						info.Worker.Stop()

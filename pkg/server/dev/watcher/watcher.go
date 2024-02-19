@@ -37,6 +37,7 @@ func Start(ctx context.Context, root string) (util.CleanupFunc, error) {
 					return nil
 				}
 			}
+			slog.Info("watching", "path", path)
 			err = watcher.Add(path)
 			if err != nil {
 				return err

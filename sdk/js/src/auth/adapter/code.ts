@@ -8,10 +8,12 @@ export function CodeAdapter(config: {
   onCodeRequest: (
     code: string,
     claims: Record<string, any>,
+    req: Request,
   ) => Promise<Response>;
   onCodeInvalid: (
     code: string,
     claims: Record<string, any>,
+    req: Request,
   ) => Promise<Response>;
 }) {
   const length = config.length || 6;
@@ -42,7 +44,10 @@ export function CodeAdapter(config: {
         .setProtectedHeader({ alg: "RSA-OAEP-512", enc: "A256GCM" })
         .encrypt(await ctx.encryption.publicKey);
       ctx.cookie(c, "authorization", authorization, 60 * 10);
-      return ctx.forward(c, await config.onCodeRequest(code, claims as any));
+      return ctx.forward(
+        c,
+        await config.onCodeRequest(code, claims as any, c.req.raw),
+      );
     });
 
     routes.get("/callback", async (c) => {
@@ -56,11 +61,18 @@ export function CodeAdapter(config: {
         ),
       );
       if (!code || !claims) {
-        return ctx.forward(c, await config.onCodeInvalid(code, claims as any));
+        return ctx.forward(
+          c,
+          await config.onCodeInvalid(code, claims as any, c.req.raw),
+        );
       }
       const compare = c.req.query("code");
+      console.log("comparing", code, "to", compare);
       if (code !== compare) {
-        return ctx.forward(c, await config.onCodeInvalid(code, claims as any));
+        return ctx.forward(
+          c,
+          await config.onCodeInvalid(code, claims as any, c.req.raw),
+        );
       }
       deleteCookie(c, "authorization");
       return ctx.forward(c, await ctx.success(c, { claims }));

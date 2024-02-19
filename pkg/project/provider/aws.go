@@ -41,6 +41,7 @@ func (a *AwsProvider) Env() (map[string]string, error) {
 	env["AWS_SECRET_ACCESS_KEY"] = creds.SecretAccessKey
 	env["AWS_SESSION_TOKEN"] = creds.SessionToken
 	env["AWS_DEFAULT_REGION"] = a.config.Region
+	env["AWS_REGION"] = a.config.Region
 
 	return env, nil
 }
