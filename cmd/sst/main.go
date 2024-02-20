@@ -721,6 +721,10 @@ func initProject(cli *cli.Context) (*project.Project, error) {
 		if err != nil {
 			return nil, err
 		}
+		err = p.Install()
+		if err != nil {
+			return nil, err
+		}
 		spin.Stop()
 	}
 

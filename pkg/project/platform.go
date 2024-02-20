@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"log/slog"
 	"os"
-	"os/exec"
 	"path/filepath"
 
 	"github.com/sst/ion/pkg/platform"
@@ -27,12 +26,6 @@ func (p *Project) InstallPlatform(version string) error {
 	platformDir := p.PathPlatformDir()
 	os.RemoveAll(filepath.Join(platformDir))
 	err := platform.CopyTo(".", platformDir)
-	if err != nil {
-		return err
-	}
-	cmd := exec.Command("bun", "install")
-	cmd.Dir = platformDir
-	err = cmd.Run()
 	if err != nil {
 		return err
 	}

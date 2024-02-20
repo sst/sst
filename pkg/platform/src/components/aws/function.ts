@@ -811,10 +811,6 @@ export class Function
       },
     });
 
-    Metadata.register(this.urn, {
-      handler: args.handler,
-    });
-
     this.function = codeUpdater.version.apply(() => fn);
     this.role = role;
     this.logGroup = logGroup;

@@ -113,6 +113,8 @@ export class Cron extends Component {
     this.rule = rule;
     this.target = target;
 
+    // this.registerOutputs({});
+
     function createFunction() {
       return output(args.job).apply((job) => {
         const props =
