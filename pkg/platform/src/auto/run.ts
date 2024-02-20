@@ -11,6 +11,7 @@ import {
 
 import aws from "@pulumi/aws";
 import { VisibleError } from "../components/error";
+import { Metadata } from "../components/metadata";
 
 export async function run(program: automation.PulumiFn) {
   process.chdir($cli.paths.root);
@@ -83,6 +84,7 @@ export async function run(program: automation.PulumiFn) {
   outputs._links = Link.list();
   outputs._hints = Hint.list();
   outputs._warps = Warp.list();
+  outputs._metadata = Metadata.list();
   outputs._receivers = Link.Receiver.list();
   return outputs;
 }

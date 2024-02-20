@@ -24,6 +24,7 @@ import { Link } from "../link.js";
 import { VisibleError } from "../error.js";
 import { Warp } from "../warp.js";
 import type { Input } from "../input.js";
+import { Metadata } from "../metadata.js";
 
 const RETENTION = {
   "1 day": 1,
@@ -808,6 +809,10 @@ export class Function
       _metadata: {
         handler: args.handler,
       },
+    });
+
+    Metadata.register(this.urn, {
+      handler: args.handler,
     });
 
     this.function = codeUpdater.version.apply(() => fn);

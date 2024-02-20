@@ -318,7 +318,6 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 			typesFile.WriteString("export {}")
 			provider.PutLinks(s.project.backend, s.project.app.Name, s.project.app.Stage, links)
 		}
-		delete(outputs, "_links")
 
 		hintsOutput, ok := outputs["_hints"]
 		if ok {
@@ -330,7 +329,6 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 				}
 			}
 		}
-		delete(outputs, "_hints")
 
 		warpsOutput, ok := outputs["_warps"]
 		if ok {
@@ -342,7 +340,6 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 				complete.Warps[key] = definition
 			}
 		}
-		delete(outputs, "_warps")
 
 		receiversOutput, ok := outputs["_receivers"]
 		if ok {
@@ -354,9 +351,11 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 				complete.Receivers[key] = out
 			}
 		}
-		delete(outputs, "_receivers")
 
 		for key, value := range outputs {
+			if strings.HasPrefix(key, "_") {
+				continue
+			}
 			complete.Outputs[key] = value
 		}
 	}()

@@ -1,5 +1,3 @@
-import { Resource } from "sst";
-
 export async function handler() {
   console.log("hello");
   return {
@@ -7,6 +5,6 @@ export async function handler() {
     headers: {
       "Content-Type": "text/plain",
     },
-    body: Resource.Bucket.bucketName,
+    body: "ok",
   };
 }

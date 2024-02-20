@@ -12,24 +12,9 @@ export default $config({
     };
   },
   async run() {
-    const role = new aws.iam.Role("MyRole", {
-      name: "MyRole",
-      assumeRolePolicy: JSON.stringify({
-        Version: "2012-10-17",
-        Statement: [
-          {
-            Effect: "Allow",
-            Principal: {
-              Service: "lambda.amazonaws.com",
-            },
-            Action: "sts:AssumeRole",
-          },
-        ],
-      }),
+    new sst.aws.Function("MyFunction", {
+      handler: "src/index.handler",
     });
-
-    return {
-      role: role.arn,
-    };
+    return {};
   },
 });
