@@ -1081,31 +1081,39 @@ export class Function
     function createRole() {
       return all([args.permissions || [], linkPermissions, dev]).apply(
         ([argsPermissions, linkPermissions, dev]) => {
+          const policy = aws.iam.getPolicyDocumentOutput({
+            statements: [
+              ...argsPermissions,
+              ...linkPermissions,
+              ...(dev
+                ? [
+                    {
+                      actions: ["iot:*"],
+                      resources: ["*"],
+                    },
+                  ]
+                : []),
+            ],
+          });
+
           return new aws.iam.Role(
             `${name}Role`,
             {
               assumeRolePolicy: aws.iam.assumeRolePolicyForPrincipal({
                 Service: "lambda.amazonaws.com",
               }),
-              inlinePolicies: [
-                {
-                  name: "inline",
-                  policy: aws.iam.getPolicyDocumentOutput({
-                    statements: [
-                      ...argsPermissions,
-                      ...linkPermissions,
-                      ...(dev
-                        ? [
-                            {
-                              actions: ["iot:*"],
-                              resources: ["*"],
-                            },
-                          ]
-                        : []),
-                    ],
-                  }).json,
-                },
-              ],
+              // if there are no statements, do not add an inline policy.
+              // adding an inline policy with no statements will cause an error.
+              inlinePolicies: policy.apply(({ statements }) =>
+                statements
+                  ? [
+                      {
+                        name: "inline",
+                        policy: policy.json,
+                      },
+                    ]
+                  : [],
+              ),
               managedPolicyArns: [
                 "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
               ],
