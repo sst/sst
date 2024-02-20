@@ -299,6 +299,9 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 		var deployment apitype.DeploymentV3
 		json.Unmarshal(rawDeploment.Deployment, &deployment)
 
+		if len(deployment.Resources) == 0 {
+			return
+		}
 		outputs := decrypt(deployment.Resources[0].Outputs)
 		complete.Resources = deployment.Resources
 		linksOutput, ok := outputs["_links"]
