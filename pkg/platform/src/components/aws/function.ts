@@ -24,7 +24,6 @@ import { Link } from "../link.js";
 import { VisibleError } from "../error.js";
 import { Warp } from "../warp.js";
 import type { Input } from "../input.js";
-import { Metadata } from "../metadata.js";
 
 const RETENTION = {
   "1 day": 1,

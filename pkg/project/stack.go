@@ -312,6 +312,7 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 			}
 			typesFile, _ := os.Create(filepath.Join(s.project.PathWorkingDir(), "types.generated.ts"))
 			defer typesFile.Close()
+			typesFile.WriteString(`import "sst"` + "\n")
 			typesFile.WriteString(`declare module "sst" {` + "\n")
 			typesFile.WriteString("  export interface Resource " + inferTypes(links, "  ") + "\n")
 			typesFile.WriteString("}" + "\n")

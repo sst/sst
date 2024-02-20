@@ -3,7 +3,6 @@ import {
   ComponentResourceOptions,
   output,
   interpolate,
-  all,
 } from "@pulumi/pulumi";
 import * as aws from "@pulumi/aws";
 import { DnsValidatedCertificate } from "./dns-validated-certificate.js";
@@ -13,6 +12,7 @@ import { Component, Prettify, Transform, transform } from "../component.js";
 import { sanitizeToPascalCase } from "../naming.js";
 import { HostedZoneLookup } from "./providers/hosted-zone-lookup.js";
 import { Input } from "../input.js";
+import { DistributionDeploymentWaiter } from "./providers/distribution-deployment-waiter.js";
 
 export interface CdnDomainArgs {
   /**
@@ -95,20 +95,24 @@ export interface CdnArgs {
    * ```
    */
   domain?: Input<string | Prettify<CdnDomainArgs>>;
+  /**
+   * Whether to wait for the CloudFront distribution to be deployed before
+   * completing the deployment. This is useful if you need to use the
+   * distribution URL in other resources.
+   * @default `true`
+   * @example
+   * ```js
+   * waitForDeployment: false,
+   * ```
+   */
+  waitForDeployment?: Input<boolean>;
   transform: {
     distribution: Transform<aws.cloudfront.DistributionArgs>;
   };
-  /**
-   * When running `sst deploy`, `waitForDeployment` is set to `true`. And when running
-   * `sst dev`, `waitForDeployment` is set to `false`. This always triggers an update
-   * to the CloudFront distribution. Use this flag to ignore changes to the distribution.
-   * @internal
-   */
-  _ignoreDistributionChanges?: boolean;
 }
 
 export class Cdn extends Component {
-  private distribution: aws.cloudfront.Distribution;
+  private distribution: Output<aws.cloudfront.Distribution>;
   private _domainUrl?: Output<string>;
 
   constructor(name: string, args: CdnArgs, opts?: ComponentResourceOptions) {
@@ -120,10 +124,11 @@ export class Cdn extends Component {
     const zoneId = lookupHostedZoneId();
     const certificate = createSsl();
     const distribution = createDistribution();
+    const waiter = createDistributionDeploymentWaiter();
     createRoute53Records();
     createRedirects();
 
-    this.distribution = distribution;
+    this.distribution = waiter.isDone.apply(() => distribution);
     this._domainUrl = domain?.domainName
       ? interpolate`https://${domain.domainName}`
       : undefined;
@@ -209,12 +214,27 @@ export class Cdn extends Component {
             : {
                 cloudfrontDefaultCertificate: true,
               },
+          waitForDeployment: false,
         }),
         {
           parent,
-          ignoreChanges: args._ignoreDistributionChanges ? ["*"] : undefined,
         },
       );
+    }
+
+    function createDistributionDeploymentWaiter() {
+      return output(args.waitForDeployment).apply((waitForDeployment) => {
+        const wait = waitForDeployment ?? true;
+        return new DistributionDeploymentWaiter(
+          `${name}Waiter`,
+          {
+            distributionId: distribution.id,
+            etag: distribution.etag,
+            wait,
+          },
+          { parent, ignoreChanges: wait ? undefined : ["*"] },
+        );
+      });
     }
 
     function createRoute53Records(): void {

@@ -142,30 +142,6 @@ export interface SsrSiteArgs {
    * @default Server function is not kept warm
    */
   warm?: Input<number>;
-  // TODO implement `sst dev`
-  //dev?: {
-  //  /**
-  //   * When running `sst dev`, site is not deployed. This is to ensure `sst dev` can start up quickly.
-  //   * @default `false`
-  //   * @example
-  //   * ```js
-  //   * dev: {
-  //   *   deploy: true
-  //   * }
-  //   * ```
-  //   */
-  //  deploy?: boolean;
-  //  /**
-  //   * The local site URL when running `sst dev`.
-  //   * @example
-  //   * ```js
-  //   * dev: {
-  //   *   url: "http://localhost:3000"
-  //   * }
-  //   * ```
-  //   */
-  //  url?: string;
-  //};
   /**
    * Configure the assets uploaded to S3.
    */
@@ -291,8 +267,6 @@ export function prepare(args: SsrSiteArgs, opts: ComponentResourceOptions) {
   const sitePath = normalizeSitePath();
   const region = normalizeRegion();
   checkSupportedRegion();
-  // TODO make buildApp happen after types is written
-  writeTypesFile();
 
   return {
     sitePath,
@@ -332,24 +306,6 @@ export function prepare(args: SsrSiteArgs, opts: ComponentResourceOptions) {
         return;
       throw new VisibleError(
         `Region ${region} is not currently supported. Please use a different region.`,
-      );
-    });
-  }
-
-  function writeTypesFile() {
-    return all([sitePath, args.typesPath]).apply(([sitePath, typesPath]) => {
-      const filePath = path.resolve(sitePath, typesPath || ".", "sst-env.d.ts");
-
-      // Do not override the types file if it already exists
-      if (fs.existsSync(filePath)) return;
-
-      const relPathToSstTypesFile = path.join(
-        path.relative(path.dirname(filePath), $cli.paths.root),
-        ".sst/types.generated.ts",
-      );
-      fs.writeFileSync(
-        filePath,
-        `/// <reference path="${relPathToSstTypesFile}" />`,
       );
     });
   }
@@ -486,12 +442,16 @@ export function createServersAndDistribution(
     const edgeFunctions = createEdgeFunctions();
     const origins = buildOrigins();
     const originGroups = buildOriginGroups();
-    const distribution = createCloudFrontDistribution();
+    const distribution = createDistribution();
     allowServerFunctionInvalidateDistribution();
     createDistributionInvalidation();
     createWarmer();
 
-    return { distribution, ssrFunctions, edgeFunctions };
+    return {
+      distribution,
+      ssrFunctions,
+      edgeFunctions,
+    };
 
     function uploadAssets() {
       return output(args.assets).apply(async (assets) => {
@@ -960,34 +920,12 @@ function handler(event) {
       ].join("\n");
     }
 
-    function createServerFunctionForDev() {
-      //const role = new Role(self, `${name}DevServerRole`, {
-      //  assumedBy: new CompositePrincipal(
-      //    new AccountPrincipal(app.account),
-      //    new ServicePrincipal("lambda.amazonaws.com")
-      //  ),
-      //  maxSessionDuration: CdkDuration.hours(12),
-      //}, {parent});
-      //return new SsrFunction(self, `${name}DevServerFunction`, {
-      //  description: "Server handler placeholder",
-      //  bundle: path.join(__dirname, "../support/ssr-site-function-stub"),
-      //  handler: "index.handler",
-      //  runtime,
-      //  memorySize,
-      //  timeout,
-      //  role,
-      //  bind,
-      //  environment,
-      //  permissions,
-      //  // note: do not need to set vpc and layers settings b/c this function is not being used
-      //}, {parent});
-    }
-
-    function createCloudFrontDistribution() {
+    function createDistribution() {
       return new Cdn(
         `${name}Cdn`,
         {
           domain: args.domain,
+          waitForDeployment: !$dev,
           transform: {
             distribution: (distribution) => ({
               ...distribution,
@@ -1011,10 +949,8 @@ function handler(event) {
                   responsePagePath: "/404.html",
                 },
               ],
-              waitForDeployment: !$dev,
             }),
           },
-          _ignoreDistributionChanges: $dev,
         },
         // create distribution after s3 upload finishes
         { dependsOn: bucketFile, parent },
@@ -1216,7 +1152,10 @@ function handler(event) {
               paths: invalidationPaths,
               version: invalidationBuildId,
             },
-            { parent, ignoreChanges: $dev ? ["*"] : undefined },
+            {
+              parent,
+              ignoreChanges: $dev ? ["*"] : undefined,
+            },
           );
         },
       );
