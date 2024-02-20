@@ -8,6 +8,8 @@ import Section from '../../../../../components/tsdoc/Section.astro';
 import NestedTitle from '../../../../../components/tsdoc/NestedTitle.astro';
 import InlineSection from '../../../../../components/tsdoc/InlineSection.astro';
 
+<div class="tsdoc">
+
 <Section type="about">
 The `Bucket` component lets you add an [AWS S3 Bucket](https://aws.amazon.com/s3/) to
 your app.
@@ -15,7 +17,7 @@ your app.
 #### Minimal example
 
 ```ts
-new sst.Bucket("MyBucket");
+new sst.aws.Bucket("MyBucket");
 ```
 
 #### Public read access
@@ -23,7 +25,7 @@ new sst.Bucket("MyBucket");
 Enable `public` read access for all the files in the bucket. Useful for hosting public files.
 
 ```ts {2}
-new sst.Bucket("MyBucket", {
+new sst.aws.Bucket("MyBucket", {
   public: true,
 });
 ```
@@ -50,8 +52,8 @@ new Bucket(name, args?, opts?)
 
 ## Properties
 
-<Segment>
 ### arn
+<Segment>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Output</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
@@ -60,8 +62,8 @@ new Bucket(name, args?, opts?)
 The ARN of the S3 Bucket.
 </Segment>
 
-<Segment>
 ### name
+<Segment>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Output</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
@@ -70,8 +72,8 @@ The ARN of the S3 Bucket.
 The generated name of the S3 Bucket.
 </Segment>
 
-<Segment>
 ### nodes
+<Segment>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Object</code>
@@ -80,19 +82,19 @@ The generated name of the S3 Bucket.
 </Section>
 The underlying [resources](/docs/components/#nodes) this component creates.
 </Segment>
-<Segment>
 <NestedTitle id="nodes-bucket" Tag="h4" parent="nodes.">bucket</NestedTitle>
+<Segment>
 <Section type="parameters">
 <InlineSection>
 **Type** [<code class="type">BucketV2</code>](https://www.pulumi.com/registry/packages/aws/api-docs/s3/bucketv2/)
 </InlineSection>
 </Section>
-The AWS S3 bucket.
+The Amazon S3 bucket.
 </Segment>
 
 ## BucketArgs
-<Segment>
 ### public?
+<Segment>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">boolean</code><code class="symbol">&gt;</code>
@@ -109,8 +111,8 @@ Enable public read access for all the files in the bucket.
 }
 ```
 </Segment>
-<Segment>
 ### transform?
+<Segment>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Object</code>
@@ -121,8 +123,8 @@ Enable public read access for all the files in the bucket.
 [Transform](/docs/components#transform/) how this component creates its underlying
 resources.
 </Segment>
-<Segment>
 <NestedTitle id="transform-bucket" Tag="h4" parent="transform.">bucket?</NestedTitle>
+<Segment>
 <Section type="parameters">
 <InlineSection>
 **Type** [<code class="type">BucketV2Args</code>](https://www.pulumi.com/registry/packages/aws/api-docs/s3/bucketv2/#inputs)<code class="symbol"> | </code><code class="symbol">(</code><code class="primitive">args</code><code class="symbol">: </code>[<code class="type">BucketV2Args</code>](https://www.pulumi.com/registry/packages/aws/api-docs/s3/bucketv2/#inputs)<code class="symbol"> => </code>[<code class="type">BucketV2Args</code>](https://www.pulumi.com/registry/packages/aws/api-docs/s3/bucketv2/#inputs)<code class="symbol"> | </code><code class="primitive">void</code><code class="symbol">)</code>
@@ -130,8 +132,8 @@ resources.
 </Section>
 Transform the S3 Bucket resource.
 </Segment>
-<Segment>
 <NestedTitle id="transform-bucketpolicy" Tag="h4" parent="transform.">bucketPolicy?</NestedTitle>
+<Segment>
 <Section type="parameters">
 <InlineSection>
 **Type** [<code class="type">BucketPolicyArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/s3/bucketpolicy/#inputs)<code class="symbol"> | </code><code class="symbol">(</code><code class="primitive">args</code><code class="symbol">: </code>[<code class="type">BucketPolicyArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/s3/bucketpolicy/#inputs)<code class="symbol"> => </code>[<code class="type">BucketPolicyArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/s3/bucketpolicy/#inputs)<code class="symbol"> | </code><code class="primitive">void</code><code class="symbol">)</code>
@@ -139,3 +141,4 @@ Transform the S3 Bucket resource.
 </Section>
 Transform the IAM Policy that's attached to the Bucket.
 </Segment>
+</div>

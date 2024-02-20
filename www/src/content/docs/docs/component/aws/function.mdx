@@ -8,6 +8,8 @@ import Section from '../../../../../components/tsdoc/Section.astro';
 import NestedTitle from '../../../../../components/tsdoc/NestedTitle.astro';
 import InlineSection from '../../../../../components/tsdoc/InlineSection.astro';
 
+<div class="tsdoc">
+
 <Section type="about">
 The `Function` component lets you add serverless functions to your app.
 It uses [AWS Lambda](https://aws.amazon.com/lambda/).
@@ -40,14 +42,25 @@ new sst.aws.Function("MyFunction", {
 
 #### Link resources
 
-[Link resources](/docs/linking/) to the function. The will be grant permissions
+[Link resources](/docs/linking/) to the function. The will grant permissions
 to the resources and allow you to access it in your handler.
 
-```ts {3}
+```ts {5}
+const myBucket = new sst.Bucket("MyBucket");
+
 new sst.aws.Function("MyFunction", {
   handler: "src/lambda.handler",
-  link: [myBucket, stripeKey],
+  link: [myBucket],
 });
+```
+
+You can use the [SST Node client](/docs/reference/client/) to access the linked resources
+in your handler.
+
+```ts title="src/lambda.ts"
+import { Resource } from "sst";
+
+console.log(Resource.MyBucket.bucketName);
 ```
 
 #### Set environment variables
@@ -112,8 +125,8 @@ new Function(name, args, opts?)
 
 ## Properties
 
-<Segment>
 ### arn
+<Segment>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Output</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
@@ -122,8 +135,8 @@ new Function(name, args, opts?)
 The ARN of the Lambda function.
 </Segment>
 
-<Segment>
 ### logGroupArn
+<Segment>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Output</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
@@ -132,8 +145,8 @@ The ARN of the Lambda function.
 The ARN of the Lambda function's log group.
 </Segment>
 
-<Segment>
 ### nodes
+<Segment>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Object</code>
@@ -143,8 +156,8 @@ The ARN of the Lambda function's log group.
 </Section>
 The underlying [resources](/docs/components/#nodes) this component creates.
 </Segment>
-<Segment>
 <NestedTitle id="nodes-function" Tag="h4" parent="nodes.">function</NestedTitle>
+<Segment>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Output</code><code class="symbol">&lt;</code>[<code class="type">Function</code>](https://www.pulumi.com/registry/packages/aws/api-docs/lambda/function/)<code class="symbol">&gt;</code>
@@ -152,8 +165,8 @@ The underlying [resources](/docs/components/#nodes) this component creates.
 </Section>
 The AWS Lambda function.
 </Segment>
-<Segment>
 <NestedTitle id="nodes-role" Tag="h4" parent="nodes.">role</NestedTitle>
+<Segment>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Output</code><code class="symbol">&lt;</code>[<code class="type">Role</code>](https://www.pulumi.com/registry/packages/aws/api-docs/iam/role/)<code class="symbol">&gt;</code>
@@ -162,8 +175,8 @@ The AWS Lambda function.
 The IAM Role the function will use.
 </Segment>
 
-<Segment>
 ### url
+<Segment>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Output</code><code class="symbol">&lt;</code><code class="primitive">undefined</code><code class="symbol"> | </code><code class="primitive">string</code><code class="symbol">&gt;</code>
@@ -172,8 +185,8 @@ The IAM Role the function will use.
 </Segment>
 
 ## FunctionArgs
-<Segment>
 ### _ignoreCodeChanges?
+<Segment>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">boolean</code>
@@ -181,8 +194,8 @@ The IAM Role the function will use.
 </Section>
 
 </Segment>
-<Segment>
 ### architecture?
+<Segment>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="symbol">&ldquo;</code><code class="primitive">x86_64</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">arm64</code><code class="symbol">&rdquo;</code><code class="symbol">&gt;</code>
@@ -200,8 +213,8 @@ of the Lambda function.
 }
 ```
 </Segment>
-<Segment>
 ### bundle?
+<Segment>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
@@ -225,8 +238,8 @@ in the `src` directory.
 }
 ```
 </Segment>
-<Segment>
 ### copyFiles?
+<Segment>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Object</code><code class="symbol">[]</code><code class="symbol">&gt;</code>
@@ -266,8 +279,8 @@ Copying over a couple of files.
 }
 ```
 </Segment>
-<Segment>
 <NestedTitle id="copyfiles-from" Tag="h4" parent="copyFiles[].">from</NestedTitle>
+<Segment>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
@@ -275,8 +288,8 @@ Copying over a couple of files.
 </Section>
 Source path relative to the `sst.config.ts`.
 </Segment>
-<Segment>
 <NestedTitle id="copyfiles-to" Tag="h4" parent="copyFiles[].">to?</NestedTitle>
+<Segment>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
@@ -289,8 +302,8 @@ Source path relative to the `sst.config.ts`.
 Destination path relative to function root in the package. By default, it
 creates the same directory structure as the `from` path and copies the file.
 </Segment>
-<Segment>
 ### description?
+<Segment>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
@@ -303,8 +316,8 @@ A description for the function. This is displayed in the AWS Console.
 }
 ```
 </Segment>
-<Segment>
 ### environment?
+<Segment>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Record</code><code class="symbol">&lt;</code><code class="primitive">string</code>, <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code><code class="symbol">&gt;</code><code class="symbol">&gt;</code>
@@ -329,8 +342,8 @@ The total size of the environment variables cannot exceed 4 KB.
 }
 ```
 </Segment>
-<Segment>
 ### handler
+<Segment>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
@@ -358,8 +371,8 @@ If `bundle` is specified, the handler needs to be in the root of the bundle dire
 }
 ```
 </Segment>
-<Segment>
 ### injections?
+<Segment>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">[]</code><code class="symbol">&gt;</code>
@@ -367,8 +380,8 @@ If `bundle` is specified, the handler needs to be in the root of the bundle dire
 </Section>
 
 </Segment>
-<Segment>
 ### link?
+<Segment>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">any</code><code class="symbol">[]</code><code class="symbol">&gt;</code>
@@ -384,16 +397,16 @@ Takes a list of resources to link to the function.
 }
 ```
 </Segment>
-<Segment>
 ### liveDev?
+<Segment>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="symbol">&ldquo;</code><code class="primitive">false</code><code class="symbol">&rdquo;</code><code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
 </Segment>
-<Segment>
 ### logging?
+<Segment>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Object</code><code class="symbol">&gt;</code>
@@ -413,8 +426,8 @@ Configure the function logs in CloudWatch.
 }
 ```
 </Segment>
-<Segment>
 <NestedTitle id="logging-retention" Tag="h4" parent="logging.">retention?</NestedTitle>
+<Segment>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="symbol">&ldquo;</code><code class="primitive">1 day</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">3 days</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">5 days</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">1 week</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">2 weeks</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">1 month</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">2 months</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">3 months</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">4 months</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">5 months</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">6 months</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">1 year</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">13 months</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">18 months</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">2 years</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">3 years</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">5 years</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">6 years</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">7 years</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">8 years</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">9 years</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">10 years</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">forever</code><code class="symbol">&rdquo;</code><code class="symbol">&gt;</code>
@@ -426,8 +439,8 @@ Configure the function logs in CloudWatch.
 </InlineSection>
 The duration the function logs are kept in CloudWatch.
 </Segment>
-<Segment>
 ### memory?
+<Segment>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="symbol">&ldquo;</code><code class="primitive">$\{number\} MB</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">$\{number\} GB</code><code class="symbol">&rdquo;</code><code class="symbol">&gt;</code>
@@ -451,8 +464,8 @@ And might end up being more [cost effective](https://docs.aws.amazon.com/lambda/
 }
 ```
 </Segment>
-<Segment>
 ### nodejs?
+<Segment>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Object</code><code class="symbol">&gt;</code>
@@ -471,8 +484,8 @@ code using [esbuild](https://esbuild.github.io/). This tree shakes your code to
 only include what's used; reducing the size of your function package and improving
 cold starts.
 </Segment>
-<Segment>
 <NestedTitle id="nodejs-banner" Tag="h4" parent="nodejs.">banner?</NestedTitle>
+<Segment>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
@@ -485,8 +498,8 @@ nodejs: {
 }
 ```
 </Segment>
-<Segment>
 <NestedTitle id="nodejs-esbuild" Tag="h4" parent="nodejs.">esbuild?</NestedTitle>
+<Segment>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code>[<code class="type">BuildOptions</code>](https://esbuild.github.io/api/#build)<code class="symbol">&gt;</code>
@@ -495,12 +508,12 @@ nodejs: {
 This allows you to customize esbuild config that is used.
 
 :::tip
-Check out the JS version of the code snippets in the esbuild docs for the
+Check out the _JS tab_ in the code snippets in the esbuild docs for the
 [build options](https://esbuild.github.io/api/#build).
 :::
 </Segment>
-<Segment>
 <NestedTitle id="nodejs-format" Tag="h4" parent="nodejs.">format?</NestedTitle>
+<Segment>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="symbol">&ldquo;</code><code class="primitive">cjs</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">esm</code><code class="symbol">&rdquo;</code><code class="symbol">&gt;</code>
@@ -517,8 +530,8 @@ nodejs: {
 }
 ```
 </Segment>
-<Segment>
 <NestedTitle id="nodejs-install" Tag="h4" parent="nodejs.">install?</NestedTitle>
+<Segment>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">[]</code><code class="symbol">&gt;</code>
@@ -537,8 +550,8 @@ nodejs: {
 }
 ```
 </Segment>
-<Segment>
 <NestedTitle id="nodejs-loader" Tag="h4" parent="nodejs.">loader?</NestedTitle>
+<Segment>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Record</code><code class="symbol">&lt;</code><code class="primitive">string</code>, [<code class="type">Loader</code>](https://esbuild.github.io/api/#loader)<code class="symbol">&gt;</code><code class="symbol">&gt;</code>
@@ -554,8 +567,8 @@ nodejs: {
 }
 ```
 </Segment>
-<Segment>
 <NestedTitle id="nodejs-minify" Tag="h4" parent="nodejs.">minify?</NestedTitle>
+<Segment>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">boolean</code><code class="symbol">&gt;</code>
@@ -572,8 +585,8 @@ nodejs: {
 }
 ```
 </Segment>
-<Segment>
 <NestedTitle id="nodejs-sourcemap" Tag="h4" parent="nodejs.">sourcemap?</NestedTitle>
+<Segment>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">boolean</code><code class="symbol">&gt;</code>
@@ -598,8 +611,8 @@ nodejs: {
 }
 ```
 </Segment>
-<Segment>
 <NestedTitle id="nodejs-splitting" Tag="h4" parent="nodejs.">splitting?</NestedTitle>
+<Segment>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">boolean</code><code class="symbol">&gt;</code>
@@ -618,8 +631,8 @@ nodejs: {
 }
 ```
 </Segment>
-<Segment>
 ### permissions?
+<Segment>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Object</code><code class="symbol">[]</code><code class="symbol">&gt;</code>
@@ -672,8 +685,8 @@ Granting the function permissions to access all resources.
 }
 ```
 </Segment>
-<Segment>
 <NestedTitle id="permissions-actions" Tag="h4" parent="permissions[].">actions</NestedTitle>
+<Segment>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">string</code><code class="symbol">[]</code>
@@ -681,8 +694,8 @@ Granting the function permissions to access all resources.
 </Section>
 The [IAM actions](https://docs.aws.amazon.com/service-authorization/latest/reference/reference_policies_actions-resources-contextkeys.html#actions_table) that can be performed.
 </Segment>
-<Segment>
 <NestedTitle id="permissions-resources" Tag="h4" parent="permissions[].">resources</NestedTitle>
+<Segment>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code><code class="symbol">[]</code>
@@ -690,8 +703,8 @@ The [IAM actions](https://docs.aws.amazon.com/service-authorization/latest/refer
 </Section>
 The resources(s) specified using the [IAM ARN format](https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_identifiers.html).
 </Segment>
-<Segment>
 ### runtime?
+<Segment>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="symbol">&ldquo;</code><code class="primitive">nodejs18.x</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">nodejs20.x</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">provided.al2023</code><code class="symbol">&rdquo;</code><code class="symbol">&gt;</code>
@@ -708,8 +721,8 @@ The runtime environment for the function. Support for other runtimes is on our r
 }
 ```
 </Segment>
-<Segment>
 ### streaming?
+<Segment>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">boolean</code><code class="symbol">&gt;</code>
@@ -731,8 +744,8 @@ You'll need to [wrap your handler](https://docs.aws.amazon.com/lambda/latest/dg/
 }
 ```
 </Segment>
-<Segment>
 ### timeout?
+<Segment>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="symbol">&ldquo;</code><code class="primitive">$\{number\} second</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">$\{number\} seconds</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">$\{number\} minute</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">$\{number\} minutes</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">$\{number\} hour</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">$\{number\} hours</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">$\{number\} day</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">$\{number\} days</code><code class="symbol">&rdquo;</code><code class="symbol">&gt;</code>
@@ -749,8 +762,8 @@ The amount of time that Lambda allows a function to run before stopping it.
 }
 ```
 </Segment>
-<Segment>
 ### transform?
+<Segment>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Object</code>
@@ -760,8 +773,8 @@ The amount of time that Lambda allows a function to run before stopping it.
 [Transform](/docs/components#transform/) how this component creates its underlying
 resources.
 </Segment>
-<Segment>
 <NestedTitle id="transform-function" Tag="h4" parent="transform.">function?</NestedTitle>
+<Segment>
 <Section type="parameters">
 <InlineSection>
 **Type** [<code class="type">FunctionArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/lambda/function/#inputs)<code class="symbol"> | </code><code class="symbol">(</code><code class="primitive">args</code><code class="symbol">: </code>[<code class="type">FunctionArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/lambda/function/#inputs)<code class="symbol"> => </code>[<code class="type">FunctionArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/lambda/function/#inputs)<code class="symbol"> | </code><code class="primitive">void</code><code class="symbol">)</code>
@@ -769,8 +782,8 @@ resources.
 </Section>
 Transform the Lambda Function resource.
 </Segment>
-<Segment>
 ### url?
+<Segment>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">boolean</code><code class="symbol"> | </code><code class="primitive">Object</code><code class="symbol">&gt;</code>
@@ -809,8 +822,8 @@ Enable it and configure the options.
 }
 ```
 </Segment>
-<Segment>
 <NestedTitle id="url-authorization" Tag="h4" parent="url.">authorization?</NestedTitle>
+<Segment>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="symbol">&ldquo;</code><code class="primitive">none</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">iam</code><code class="symbol">&rdquo;</code><code class="symbol">&gt;</code>
@@ -829,8 +842,8 @@ The authorization used for the function URL. Supports [IAM authorization](https:
 }
 ```
 </Segment>
-<Segment>
 <NestedTitle id="url-cors" Tag="h4" parent="url.">cors?</NestedTitle>
+<Segment>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">boolean</code><code class="symbol"> | </code><code class="primitive">Object</code><code class="symbol">&gt;</code>
@@ -861,8 +874,8 @@ Only enable the `GET` and `POST` methods for `https://example.com`.
 }
 ```
 </Segment>
-<Segment>
 <NestedTitle id="url-cors-allowcredentials" Tag="h5" parent="url.cors.">allowCredentials?</NestedTitle>
+<Segment>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">boolean</code><code class="symbol">&gt;</code>
@@ -874,8 +887,8 @@ Only enable the `GET` and `POST` methods for `https://example.com`.
 </InlineSection>
 Allow cookies or other credentials in requests to the function URL.
 </Segment>
-<Segment>
 <NestedTitle id="url-cors-allowheaders" Tag="h5" parent="url.cors.">allowHeaders?</NestedTitle>
+<Segment>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code><code class="symbol">[]</code><code class="symbol">&gt;</code>
@@ -888,8 +901,8 @@ The HTTP headers that origins can include in requests to the function URL.
 }
 ```
 </Segment>
-<Segment>
 <NestedTitle id="url-cors-allowmethods" Tag="h5" parent="url.cors.">allowMethods?</NestedTitle>
+<Segment>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Input</code><code class="symbol">&lt;</code><code class="symbol">&ldquo;</code><code class="primitive">*</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">DELETE</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">GET</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">HEAD</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">OPTIONS</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">PATCH</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">POST</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">PUT</code><code class="symbol">&rdquo;</code><code class="symbol">&gt;</code><code class="symbol">[]</code><code class="symbol">&gt;</code>
@@ -908,8 +921,8 @@ Or the wildcard character for all methods.
 }
 ```
 </Segment>
-<Segment>
 <NestedTitle id="url-cors-alloworigins" Tag="h5" parent="url.cors.">allowOrigins?</NestedTitle>
+<Segment>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code><code class="symbol">[]</code><code class="symbol">&gt;</code>
@@ -928,8 +941,8 @@ Or the wildcard character for all origins.
 }
 ```
 </Segment>
-<Segment>
 <NestedTitle id="url-cors-exposeheaders" Tag="h5" parent="url.cors.">exposeHeaders?</NestedTitle>
+<Segment>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code><code class="symbol">[]</code><code class="symbol">&gt;</code>
@@ -937,8 +950,8 @@ Or the wildcard character for all origins.
 </Section>
 The HTTP headers in your function response that you want to expose to origins that call the function URL.
 </Segment>
-<Segment>
 <NestedTitle id="url-cors-maxage" Tag="h5" parent="url.cors.">maxAge?</NestedTitle>
+<Segment>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="symbol">&ldquo;</code><code class="primitive">$\{number\} second</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">$\{number\} seconds</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">$\{number\} minute</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">$\{number\} minutes</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">$\{number\} hour</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">$\{number\} hours</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">$\{number\} day</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">$\{number\} days</code><code class="symbol">&rdquo;</code><code class="symbol">&gt;</code>
@@ -951,3 +964,4 @@ The HTTP headers in your function response that you want to expose to origins th
 The maximum amount of time the browser can cache results of a preflight request. By
 default the browser doesn't cache the results. The maximum value is `86400 seconds` or `1 day`.
 </Segment>
+</div>

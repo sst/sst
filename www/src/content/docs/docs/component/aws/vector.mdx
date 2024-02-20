@@ -8,6 +8,8 @@ import Section from '../../../../../components/tsdoc/Section.astro';
 import NestedTitle from '../../../../../components/tsdoc/NestedTitle.astro';
 import InlineSection from '../../../../../components/tsdoc/InlineSection.astro';
 
+<div class="tsdoc">
+
 <Section type="about">
 The `Vector` component is a higher level component that makes it easy to create a Vector database powered by RDS Postgres Serverless v2.
 
@@ -37,8 +39,8 @@ new Vector(name, args?, opts?)
 </Segment>
 
 ## VectorArgs
-<Segment>
 ### model?
+<Segment>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="symbol">&ldquo;</code><code class="primitive">amazon.titan-embed-text-v1</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">amazon.titan-embed-image-v1</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">text-embedding-ada-002</code><code class="symbol">&rdquo;</code><code class="symbol">&gt;</code>
@@ -50,8 +52,8 @@ new Vector(name, args?, opts?)
 </InlineSection>
 The embedding model to use for generating vectors
 </Segment>
-<Segment>
 ### openAiApiKey?
+<Segment>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
@@ -71,3 +73,4 @@ const OPENAI_API_KEY = new sst.aws.Secret("OPENAI_API_KEY");
 }
 ```
 </Segment>
+</div>

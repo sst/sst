@@ -57,10 +57,31 @@ func (u *UI) Reset() {
 }
 
 func (u *UI) Trigger(evt *project.StackEvent) {
-	if evt.StackCommandEvent != nil && evt.StackCommandEvent.Command == "up" {
-		color.New(color.FgYellow, color.Bold).Print("~")
-		color.New(color.FgWhite, color.Bold).Println("  Deploying changes")
+	if evt.StackCommandEvent != nil {
+		u.spinner.Disable()
+
+		if evt.StackCommandEvent.Command == "up" {
+			color.New(color.FgYellow, color.Bold).Print("~")
+			color.New(color.FgWhite, color.Bold).Println("  Deploying")
+			u.spinner.Suffix = "  Deploying..."
+		}
+
+		if evt.StackCommandEvent.Command == "destroy" {
+			color.New(color.FgRed, color.Bold).Print("~")
+			color.New(color.FgWhite, color.Bold).Println("  Removing")
+			u.spinner.Suffix = "  Removing..."
+		}
+
+		if evt.StackCommandEvent.Command == "refresh" {
+			color.New(color.FgBlue, color.Bold).Print("~")
+			color.New(color.FgWhite, color.Bold).Println("  Refreshing")
+			u.spinner.Suffix = "  Refreshing..."
+		}
+
 		fmt.Println()
+		u.spinner.Start()
+		u.spinner.Enable()
+		return
 	}
 
 	if evt.SummaryEvent != nil {

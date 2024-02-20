@@ -66,6 +66,12 @@
 .starlight-aside__title + .starlight-aside__content {
   margin-top: 0.75rem;
 }
+.sl-markdown-content .starlight-aside__content {
+  font-size: var(--sl-text-code);
+}
+.sl-markdown-content .starlight-aside__content code:not(:where(.not-content *)) {
+  font-size: var(--sl-text-code-sm);
+}
 .sl-markdown-content .starlight-aside a:not(:where(.not-content *)),
 .sl-markdown-content .starlight-aside a:not(:where(.not-content *)):hover,
 .sl-markdown-content .starlight-aside a:not(:where(.not-content *)) code,

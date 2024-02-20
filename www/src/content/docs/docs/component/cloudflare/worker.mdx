@@ -8,6 +8,8 @@ import Section from '../../../../../components/tsdoc/Section.astro';
 import NestedTitle from '../../../../../components/tsdoc/NestedTitle.astro';
 import InlineSection from '../../../../../components/tsdoc/InlineSection.astro';
 
+<div class="tsdoc">
+
 <Section type="about">
 The `Worker` component is a higher level component that makes it easy to create a Cloudflare Worker.
 
@@ -40,8 +42,8 @@ new Worker(name, args, opts?)
 
 ## Properties
 
-<Segment>
 ### devUrl
+<Segment>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Output</code><code class="symbol">&lt;</code><code class="primitive">undefined</code><code class="symbol"> | </code><code class="primitive">string</code><code class="symbol">&gt;</code>
@@ -49,8 +51,8 @@ new Worker(name, args, opts?)
 </Section>
 </Segment>
 
-<Segment>
 ### nodes
+<Segment>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Object</code>
@@ -58,8 +60,8 @@ new Worker(name, args, opts?)
 - <p>[<code class="key">worker</code>](#nodes-worker)</p>
 </Section>
 </Segment>
-<Segment>
 <NestedTitle id="nodes-worker" Tag="h4" parent="nodes.">worker</NestedTitle>
+<Segment>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Output</code><code class="symbol">&lt;</code>[<code class="type">WorkerScript</code>](https://www.pulumi.com/registry/packages/cloudflare/api-docs/workerscript/)<code class="symbol">&gt;</code>
@@ -68,8 +70,8 @@ new Worker(name, args, opts?)
 </Segment>
 
 ## WorkerArgs
-<Segment>
 ### devUrl?
+<Segment>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">boolean</code><code class="symbol">&gt;</code>
@@ -86,8 +88,8 @@ Enable dev URLs, a dedicated endpoint for your Worker.
 }
 ```
 </Segment>
-<Segment>
 ### handler
+<Segment>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
@@ -100,8 +102,8 @@ Path to the handler for the worker.
 }
 ```
 </Segment>
-<Segment>
 ### link?
+<Segment>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">any</code><code class="symbol">[]</code><code class="symbol">&gt;</code>
@@ -115,8 +117,8 @@ This will grant the function permissions to access the linked resources at runti
 }
 ```
 </Segment>
-<Segment>
 ### nodejs?
+<Segment>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Object</code><code class="symbol">&gt;</code>
@@ -129,8 +131,8 @@ This will grant the function permissions to access the linked resources at runti
 </Section>
 Used to configure nodejs function properties
 </Segment>
-<Segment>
 <NestedTitle id="nodejs-banner" Tag="h4" parent="nodejs.">banner?</NestedTitle>
+<Segment>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
@@ -143,8 +145,8 @@ nodejs: {
 }
 ```
 </Segment>
-<Segment>
 <NestedTitle id="nodejs-esbuild" Tag="h4" parent="nodejs.">esbuild?</NestedTitle>
+<Segment>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code>[<code class="type">BuildOptions</code>](https://esbuild.github.io/api/#build)<code class="symbol">&gt;</code>
@@ -152,8 +154,8 @@ nodejs: {
 </Section>
 This allows you to customize esbuild config.
 </Segment>
-<Segment>
 <NestedTitle id="nodejs-loader" Tag="h4" parent="nodejs.">loader?</NestedTitle>
+<Segment>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Record</code><code class="symbol">&lt;</code><code class="primitive">string</code>, [<code class="type">Loader</code>](https://esbuild.github.io/api/#loader)<code class="symbol">&gt;</code><code class="symbol">&gt;</code>
@@ -168,8 +170,8 @@ nodejs: {
 }
 ```
 </Segment>
-<Segment>
 <NestedTitle id="nodejs-minify" Tag="h4" parent="nodejs.">minify?</NestedTitle>
+<Segment>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">boolean</code><code class="symbol">&gt;</code>
@@ -186,8 +188,8 @@ nodejs: {
 }
 ```
 </Segment>
-<Segment>
 <NestedTitle id="nodejs-sourcemap" Tag="h4" parent="nodejs.">sourcemap?</NestedTitle>
+<Segment>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">boolean</code><code class="symbol">&gt;</code>
@@ -204,3 +206,4 @@ nodejs: {
 }
 ```
 </Segment>
+</div>

@@ -501,7 +501,7 @@ export interface FunctionArgs {
      * This allows you to customize esbuild config that is used.
      *
      * :::tip
-     * Check out the JS version of the code snippets in the esbuild docs for the
+     * Check out the _JS tab_ in the code snippets in the esbuild docs for the
      * [build options](https://esbuild.github.io/api/#build).
      * :::
      *
@@ -671,14 +671,25 @@ export interface FunctionArgs {
  *
  * #### Link resources
  *
- * [Link resources](/docs/linking/) to the function. The will be grant permissions
+ * [Link resources](/docs/linking/) to the function. The will grant permissions
  * to the resources and allow you to access it in your handler.
  *
- * ```ts {3}
+ * ```ts {5}
+ * const myBucket = new sst.Bucket("MyBucket");
+ *
  * new sst.aws.Function("MyFunction", {
  *   handler: "src/lambda.handler",
- *   link: [myBucket, stripeKey],
+ *   link: [myBucket],
  * });
+ * ```
+ *
+ * You can use the [SST Node client](/docs/reference/client/) to access the linked resources
+ * in your handler.
+ *
+ * ```ts title="src/lambda.ts"
+ * import { Resource } from "sst";
+ *
+ * console.log(Resource.MyBucket.bucketName);
  * ```
  *
  * #### Set environment variables

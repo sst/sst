@@ -26,6 +26,7 @@ async function main() {
         renderMethods(),
         renderProperties(),
         renderInterfaces(),
+        renderFooter(),
       ]
         .flat()
         .join("\n")
@@ -51,6 +52,8 @@ async function main() {
         `import Section from '${relativePath}/../../../components/tsdoc/Section.astro';`,
         `import NestedTitle from '${relativePath}/../../../components/tsdoc/NestedTitle.astro';`,
         `import InlineSection from '${relativePath}/../../../components/tsdoc/InlineSection.astro';`,
+        "",
+        '<div class="tsdoc">',
       ];
     }
 
@@ -127,8 +130,8 @@ async function main() {
         ``,
         `## Methods`,
         ``,
-        `<Segment>`,
         `### noop`,
+        `<Segment>`,
         `<Section type="signature">`,
         `</Section>`,
         `</Segment>`
@@ -146,8 +149,8 @@ async function main() {
         console.debug(` - property ${g.name}`);
         lines.push(
           ``,
-          `<Segment>`,
           `### ${renderName(g)}`,
+          `<Segment>`,
           `<Section type="parameters">`,
           `<InlineSection>`,
           `**Type** ${renderType(g.getSignature!.type!)}`,
@@ -159,10 +162,10 @@ async function main() {
           // nested props (ie. `.nodes`)
           ...useNestedTypes(g.getSignature!.type!, g.name).flatMap(
             ({ depth, prefix, subType }) => [
-              `<Segment>`,
               `<NestedTitle id="${linkHashes.get(subType)}" Tag="${
                 depth === 0 ? "h4" : "h5"
               }" parent="${prefix}.">${renderName(subType)}</NestedTitle>`,
+              `<Segment>`,
               `<Section type="parameters">`,
               `<InlineSection>`,
               `**Type** ${renderType(subType.type!)}`,
@@ -197,8 +200,8 @@ async function main() {
         for (const prop of int.children) {
           console.debug(`   - interface prop ${prop.name}`);
           lines.push(
-            `<Segment>`,
             `### ${renderName(prop)}`,
+            `<Segment>`,
             `<Section type="parameters">`,
             `<InlineSection>`,
             `**Type** ${renderType(prop.type!)}`,
@@ -212,10 +215,10 @@ async function main() {
             // nested props (ie. `.domain`, `.transform`)
             ...useNestedTypes(prop.type!, prop.name).flatMap(
               ({ depth, prefix, subType }) => [
-                `<Segment>`,
                 `<NestedTitle id="${linkHashes.get(subType)}" Tag="${
                   depth === 0 ? "h4" : "h5"
                 }" parent="${prefix}.">${renderName(subType)}</NestedTitle>`,
+                `<Segment>`,
                 `<Section type="parameters">`,
                 `<InlineSection>`,
                 `**Type** ${renderType(subType.type!)}`,
@@ -232,6 +235,10 @@ async function main() {
       }
 
       return lines;
+    }
+
+    function renderFooter() {
+      return ["</div>"];
     }
 
     function renderName(prop: TypeDoc.Models.DeclarationReflection) {
