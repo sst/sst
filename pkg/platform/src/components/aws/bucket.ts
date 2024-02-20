@@ -43,7 +43,7 @@ export interface BucketArgs {
  * #### Minimal example
  *
  * ```ts
- * new sst.Bucket("MyBucket");
+ * new sst.aws.Bucket("MyBucket");
  * ```
  *
  * #### Public read access
@@ -51,7 +51,7 @@ export interface BucketArgs {
  * Enable `public` read access for all the files in the bucket. Useful for hosting public files.
  *
  * ```ts {2}
- * new sst.Bucket("MyBucket", {
+ * new sst.aws.Bucket("MyBucket", {
  *   public: true,
  * });
  * ```
@@ -167,7 +167,7 @@ export class Bucket
   public get nodes() {
     return {
       /**
-       * The AWS S3 bucket.
+       * The Amazon S3 bucket.
        */
       bucket: this.bucket,
     };

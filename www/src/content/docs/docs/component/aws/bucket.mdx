@@ -17,7 +17,7 @@ your app.
 #### Minimal example
 
 ```ts
-new sst.Bucket("MyBucket");
+new sst.aws.Bucket("MyBucket");
 ```
 
 #### Public read access
@@ -25,7 +25,7 @@ new sst.Bucket("MyBucket");
 Enable `public` read access for all the files in the bucket. Useful for hosting public files.
 
 ```ts {2}
-new sst.Bucket("MyBucket", {
+new sst.aws.Bucket("MyBucket", {
   public: true,
 });
 ```
@@ -89,7 +89,7 @@ The underlying [resources](/docs/components/#nodes) this component creates.
 **Type** [<code class="type">BucketV2</code>](https://www.pulumi.com/registry/packages/aws/api-docs/s3/bucketv2/)
 </InlineSection>
 </Section>
-The AWS S3 bucket.
+The Amazon S3 bucket.
 </Segment>
 
 ## BucketArgs

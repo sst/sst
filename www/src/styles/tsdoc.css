@@ -30,10 +30,12 @@
 .sl-markdown-content >.tsdoc section.parameters :not(h4, a, strong, em, del, span, input, code) + :not(a, strong, em, del, span, input, code, ul, :where(.not-content *, .starlight-aside *)) {
   margin-top: 0.5rem;
 }
+/*
 .sl-markdown-content > .tsdoc section.parameters :not(h4, a, strong, em, del, span, input, code) + :is(.starlight-aside, .expressive-code),
 .sl-markdown-content > .tsdoc section :is(.starlight-aside, .expressive-code) + :not(h4, a, strong, em, del, span, input, code) {
   margin-top: 0.625rem;
 }
+*/
 /* Signature */
 .sl-markdown-content > .tsdoc section.signature,
 .sl-markdown-content > .tsdoc section.signature + section {
@@ -41,7 +43,7 @@
 }
 /* About */
 .sl-markdown-content > .tsdoc section.about :not(h1, h2, h3, h4, h5, h6) + :is(h4, h5, h6):not(:where(.not-content *)) {
-  margin-top: 2rem;
+  margin-top: 2.5rem;
 }
 
 /**
