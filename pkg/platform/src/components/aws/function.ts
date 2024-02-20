@@ -761,8 +761,8 @@ export class Function
     const zipPath = zipBundleFolder();
     const bundleHash = calculateHash();
     const file = createBucketObject();
-    const fnRaw = createFunction();
-    const fn = updateFunctionCode();
+    const fn = createFunction();
+    const codeUpdater = updateFunctionCode();
 
     const logGroup = createLogGroup();
     const fnUrl = createUrl();
@@ -799,7 +799,7 @@ export class Function
       },
     });
 
-    this.function = fn;
+    this.function = codeUpdater.version.apply(() => fn);
     this.role = role;
     this.logGroup = logGroup;
     this.fnUrl = fnUrl;
@@ -936,7 +936,24 @@ export class Function
     }
 
     function buildHandler() {
-      return output(dev).apply((dev) => {
+      return all([args.bundle, dev]).apply(([bundle, dev]) => {
+        if (args._ignoreCodeChanges) {
+          return bundle?.startsWith($cli.paths.platform)
+            ? // If bundle starts with $cli.paths.platform, it means a built-in function
+              // is being used. In that case, we will use the built-in function as is.
+              { bundle, handler: args.handler }
+            : // If the bundle is not a built-in function, we will force it to be the empty
+              // built-in function.
+              {
+                bundle: path.join(
+                  $cli.paths.platform,
+                  "functions",
+                  "empty-function",
+                ),
+                handler: "index.handler",
+              };
+        }
+
         if (dev) {
           return {
             handler: "bootstrap",
@@ -1008,7 +1025,7 @@ export class Function
         );
         if (!newHandlerFileExt)
           throw new VisibleError(
-            `Could not find file for handler "${handler}"`,
+            `Could not find handler file "${handler}" for function "${name}"`,
           );
 
         return {
@@ -1236,25 +1253,25 @@ export class Function
     }
 
     function updateFunctionCode() {
-      return output([fnRaw]).apply(([fnRaw]) => {
-        new FunctionCodeUpdater(
-          `${name}CodeUpdater`,
-          {
-            functionName: fnRaw.name,
-            s3Bucket: file.bucket,
-            s3Key: file.key,
-            functionLastModified: fnRaw.lastModified,
-            region,
-          },
-          {
-            parent,
-            ignoreChanges: args._ignoreCodeChanges
-              ? ["s3Bucket", "s3Key"]
-              : undefined,
-          },
-        );
-        return fnRaw;
-      });
+      return output([fn]).apply(
+        ([fn]) =>
+          new FunctionCodeUpdater(
+            `${name}CodeUpdater`,
+            {
+              functionName: fn.name,
+              s3Bucket: file.bucket,
+              s3Key: file.key,
+              functionLastModified: fn.lastModified,
+              region,
+            },
+            {
+              parent,
+              ignoreChanges: args._ignoreCodeChanges
+                ? ["s3Bucket", "s3Key"]
+                : undefined,
+            },
+          ),
+      );
     }
   }
 

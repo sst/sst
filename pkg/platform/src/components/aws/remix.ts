@@ -211,7 +211,12 @@ export class Remix extends Component implements Link.Linkable {
 
       // Copy the server lambda handler
       fs.copyFileSync(
-        path.join($cli.paths.platform, "dist", "remix-server", wrapperFile),
+        path.join(
+          $cli.paths.platform,
+          "functions",
+          "remix-server",
+          wrapperFile,
+        ),
         path.join(buildPath, "server.mjs"),
       );
 
@@ -224,7 +229,12 @@ export class Remix extends Component implements Link.Linkable {
       // the bundle.
       const polyfillDest = path.join(buildPath, "polyfill.mjs");
       fs.copyFileSync(
-        path.join($cli.paths.platform, "dist", "remix-server", "polyfill.mjs"),
+        path.join(
+          $cli.paths.platform,
+          "functions",
+          "remix-server",
+          "polyfill.mjs",
+        ),
         polyfillDest,
       );
 

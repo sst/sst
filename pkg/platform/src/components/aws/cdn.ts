@@ -98,6 +98,13 @@ export interface CdnArgs {
   transform: {
     distribution: Transform<aws.cloudfront.DistributionArgs>;
   };
+  /**
+   * When running `sst deploy`, `waitForDeployment` is set to `true`. And when running
+   * `sst dev`, `waitForDeployment` is set to `false`. This always triggers an update
+   * to the CloudFront distribution. Use this flag to ignore changes to the distribution.
+   * @internal
+   */
+  _ignoreDistributionChanges?: boolean;
 }
 
 export class Cdn extends Component {
@@ -172,41 +179,6 @@ export class Cdn extends Component {
     }
 
     function createDistribution() {
-      // TODO remove
-      //      all([
-      //        transform(args.transform.distribution, {
-      //          defaultCacheBehavior: {
-      //            allowedMethods: [],
-      //            cachedMethods: [],
-      //            targetOriginId: "placeholder",
-      //            viewerProtocolPolicy: "redirect-to-https",
-      //          },
-      //          enabled: true,
-      //          origins: [],
-      //          restrictions: {
-      //            geoRestriction: {
-      //              restrictionType: "none",
-      //            },
-      //          },
-      //          aliases: domain
-      //            ? output(domain).apply((domain) => [
-      //                domain.domainName,
-      //                ...domain.aliases,
-      //              ])
-      //            : [],
-      //          viewerCertificate: certificate
-      //            ? {
-      //                acmCertificateArn: certificate.certificateArn,
-      //                sslSupportMethod: "sni-only",
-      //              }
-      //            : {
-      //                cloudfrontDefaultCertificate: true,
-      //              },
-      //        }),
-      //      ]).apply(([args]) =>
-      //        console.log("!@#$%^&", JSON.stringify(args, null, 2)),
-      //      );
-
       return new aws.cloudfront.Distribution(
         `${name}Distribution`,
         transform(args.transform.distribution, {
@@ -238,7 +210,10 @@ export class Cdn extends Component {
                 cloudfrontDefaultCertificate: true,
               },
         }),
-        { parent },
+        {
+          parent,
+          ignoreChanges: args._ignoreDistributionChanges ? ["*"] : undefined,
+        },
       );
     }
 

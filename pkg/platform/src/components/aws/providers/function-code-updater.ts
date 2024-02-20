@@ -1,4 +1,4 @@
-import { CustomResourceOptions, Input, dynamic } from "@pulumi/pulumi";
+import { CustomResourceOptions, Input, Output, dynamic } from "@pulumi/pulumi";
 import * as aws from "@pulumi/aws";
 import {
   LambdaClient,
@@ -27,8 +27,16 @@ interface Inputs {
   region: aws.Region;
 }
 
+interface Outputs {
+  version: string;
+}
+
+export interface FunctionCodeUpdater {
+  version: Output<Outputs["version"]>;
+}
+
 class Provider implements dynamic.ResourceProvider {
-  async create(inputs: Inputs): Promise<dynamic.CreateResult> {
+  async create(inputs: Inputs): Promise<dynamic.CreateResult<Outputs>> {
     const client = useClient(LambdaClient, {
       region: inputs.region,
       retrableErrors: [
@@ -36,21 +44,24 @@ class Provider implements dynamic.ResourceProvider {
         "ServiceException",
       ],
     });
-    await client.send(
+    const ret = await client.send(
       new UpdateFunctionCodeCommand({
         FunctionName: inputs.functionName,
         S3Bucket: inputs.s3Bucket,
         S3Key: inputs.s3Key,
       }),
     );
-    return { id: inputs.functionName };
+    return {
+      id: inputs.functionName,
+      outs: { version: ret.Version ?? "unknown" },
+    };
   }
 
   async update(
     id: string,
     olds: any,
     news: Inputs,
-  ): Promise<dynamic.UpdateResult> {
+  ): Promise<dynamic.UpdateResult<Outputs>> {
     const client = useClient(LambdaClient, {
       region: news.region,
       retrableErrors: [
@@ -58,14 +69,14 @@ class Provider implements dynamic.ResourceProvider {
         "ServiceException",
       ],
     });
-    await client.send(
+    const ret = await client.send(
       new UpdateFunctionCodeCommand({
         FunctionName: news.functionName,
         S3Bucket: news.s3Bucket,
         S3Key: news.s3Key,
       }),
     );
-    return {};
+    return { outs: { version: ret.Version ?? "unknown" } };
   }
 }
 

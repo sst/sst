@@ -25,7 +25,6 @@ import { Link } from "../link.js";
 import { Input } from "../input.js";
 import type { Prettify, Transform } from "../component.js";
 import { VisibleError } from "../error.js";
-import { Cache } from "./providers/cache.js";
 
 type CloudFrontFunctionConfig = { injections: string[] };
 type EdgeFunctionConfig = { function: Unwrap<FunctionArgs> };
@@ -293,6 +292,7 @@ export function prepare(args: SsrSiteArgs, opts: ComponentResourceOptions) {
   const region = normalizeRegion();
   checkSupportedRegion();
   // TODO temporarily uncomment
+  // make buildApp happen after types is written
   //writeTypesFile();
 
   return {
@@ -585,7 +585,7 @@ export function createServersAndDistribution(
             bucketName: bucket.name,
             files: bucketFiles,
           },
-          { parent },
+          { parent, ignoreChanges: $dev ? ["*"] : undefined },
         );
       });
     }
@@ -1016,6 +1016,7 @@ function handler(event) {
               waitForDeployment: !$dev,
             }),
           },
+          _ignoreDistributionChanges: $dev,
         },
         // create distribution after s3 upload finishes
         { dependsOn: bucketFile, parent },
@@ -1079,7 +1080,7 @@ function handler(event) {
         `${name}Warmer`,
         {
           description: `${name} warmer`,
-          bundle: path.join($cli.paths.platform, "dist", "ssr-warmer"),
+          bundle: path.join($cli.paths.platform, "functions", "ssr-warmer"),
           runtime: "nodejs20.x",
           handler: "index.handler",
           timeout: "900 seconds",
@@ -1217,7 +1218,7 @@ function handler(event) {
               paths: invalidationPaths,
               version: invalidationBuildId,
             },
-            { parent },
+            { parent, ignoreChanges: $dev ? ["*"] : undefined },
           );
         },
       );

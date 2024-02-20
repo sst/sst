@@ -34,7 +34,7 @@ import type { Input } from "../input.js";
 import { Cache } from "./providers/cache.js";
 
 const LAYER_VERSION = "2";
-const DEFAULT_OPEN_NEXT_VERSION = "3.0.0-rc.4";
+const DEFAULT_OPEN_NEXT_VERSION = "3.0.0-rc.5";
 const DEFAULT_CACHE_POLICY_ALLOWED_HEADERS = [
   "accept",
   "x-prerender-revalidate",
@@ -300,7 +300,7 @@ export class Nextjs extends Component implements Link.Linkable {
 
     function loadOpenNextOutputPlaceholder() {
       // Configure origins and behaviors based on the Next.js app from quick start
-      return {
+      return outputPath.apply((outputPath) => ({
         edgeFunctions: {},
         origins: {
           s3: {
@@ -311,19 +311,25 @@ export class Nextjs extends Component implements Link.Linkable {
           },
           imageOptimizer: {
             type: "function",
-            handler: "index.handler",
             // use placeholder code
-            bundle: path.join($cli.paths.platform, "dist", "empty-function"),
+            handler: "index.handler",
+            bundle: path.relative(
+              outputPath,
+              path.join($cli.paths.platform, "functions", "empty-function"),
+            ),
             streaming: false,
           },
           default: {
             type: "function",
             handler: "index.handler",
             // use placeholder code
-            bundle: path.join(
-              $cli.paths.platform,
-              "dist",
-              "ssr-function-placeholder",
+            bundle: path.relative(
+              outputPath,
+              path.join(
+                $cli.paths.platform,
+                "functions",
+                "ssr-function-placeholder",
+              ),
             ),
             streaming: false,
           },
@@ -344,7 +350,7 @@ export class Nextjs extends Component implements Link.Linkable {
           // skip creating revalidation table
           disableTagCache: true,
         },
-      };
+      }));
     }
 
     function loadBuildId() {
@@ -565,9 +571,7 @@ export class Nextjs extends Component implements Link.Linkable {
                     {
                       function: {
                         description: `${name} server`,
-                        bundle: path.isAbsolute(value.bundle)
-                          ? value.bundle
-                          : path.join(outputPath, value.bundle),
+                        bundle: path.join(outputPath, value.bundle),
                         handler: value.handler,
                         ...defaultFunctionProps,
                       },
@@ -598,9 +602,7 @@ export class Nextjs extends Component implements Link.Linkable {
                           function: {
                             description: `${name} image optimizer`,
                             handler: value.handler,
-                            bundle: path.isAbsolute(value.bundle)
-                              ? value.bundle
-                              : path.join(outputPath, value.bundle),
+                            bundle: path.join(outputPath, value.bundle),
                             runtime: "nodejs18.x",
                             architecture: "arm64",
                             environment: {
@@ -620,9 +622,7 @@ export class Nextjs extends Component implements Link.Linkable {
                       server: {
                         function: {
                           description: `${name} server`,
-                          bundle: path.isAbsolute(value.bundle)
-                            ? value.bundle
-                            : path.join(outputPath, value.bundle),
+                          bundle: path.join(outputPath, value.bundle),
                           handler: value.handler,
                           ...defaultFunctionProps,
                         },
@@ -808,7 +808,9 @@ export class Nextjs extends Component implements Link.Linkable {
               triggers: {
                 version: Date.now().toString(),
               },
-              input: JSON.stringify({}),
+              input: JSON.stringify({
+                RequestType: "Create",
+              }),
             },
             { parent, ignoreChanges: $dev ? ["*"] : undefined },
           );
