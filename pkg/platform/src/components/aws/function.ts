@@ -50,6 +50,8 @@ const RETENTION = {
   forever: 0,
 };
 
+export type FunctionDefinition = string | Function | FunctionArgs;
+
 export type FunctionPermissionArgs = {
   /**
    * The [IAM actions](https://docs.aws.amazon.com/service-authorization/latest/reference/reference_policies_actions-resources-contextkeys.html#actions_table) that can be performed.
@@ -991,74 +993,79 @@ export class Function
 
     function buildHandlerWrapper() {
       const ret = all([
+        dev,
         bundle,
         handler0,
         linkData,
         streaming,
         injections,
-      ]).apply(async ([bundle, handler, linkData, streaming, injections]) => {
-        const hasUserInjections = injections.length > 0;
-        // already injected via esbuild when bundle is undefined
-        const hasLinkInjections = args.bundle && linkData.length > 0;
+      ]).apply(
+        async ([dev, bundle, handler, linkData, streaming, injections]) => {
+          if (dev) return { handler };
 
-        if (!hasUserInjections && !hasLinkInjections) return { handler };
+          const hasUserInjections = injections.length > 0;
+          // already injected via esbuild when bundle is undefined
+          const hasLinkInjections = args.bundle && linkData.length > 0;
 
-        const linkInjection = hasLinkInjections
-          ? linkData
-              .map((item) => [
-                `process.env.SST_RESOURCE_${item.name} = ${JSON.stringify(
-                  JSON.stringify(item.value),
-                )};\n`,
-              ])
-              .join("")
-          : "";
+          if (!hasUserInjections && !hasLinkInjections) return { handler };
 
-        const parsed = path.posix.parse(handler);
-        const handlerDir = parsed.dir;
-        const oldHandlerFileName = parsed.name;
-        const oldHandlerFunction = parsed.ext.replace(/^\./, "");
-        const newHandlerFileName = "server-index";
-        const newHandlerFunction = "handler";
+          const linkInjection = hasLinkInjections
+            ? linkData
+                .map((item) => [
+                  `process.env.SST_RESOURCE_${item.name} = ${JSON.stringify(
+                    JSON.stringify(item.value),
+                  )};\n`,
+                ])
+                .join("")
+            : "";
 
-        // Validate handler file exists
-        const newHandlerFileExt = [".js", ".mjs", ".cjs"].find((ext) =>
-          fs.existsSync(
-            path.join(bundle, handlerDir, oldHandlerFileName + ext),
-          ),
-        );
-        if (!newHandlerFileExt)
-          throw new VisibleError(
-            `Could not find handler file "${handler}" for function "${name}"`,
+          const parsed = path.posix.parse(handler);
+          const handlerDir = parsed.dir;
+          const oldHandlerFileName = parsed.name;
+          const oldHandlerFunction = parsed.ext.replace(/^\./, "");
+          const newHandlerFileName = "server-index";
+          const newHandlerFunction = "handler";
+
+          // Validate handler file exists
+          const newHandlerFileExt = [".js", ".mjs", ".cjs"].find((ext) =>
+            fs.existsSync(
+              path.join(bundle, handlerDir, oldHandlerFileName + ext),
+            ),
           );
+          if (!newHandlerFileExt)
+            throw new VisibleError(
+              `Could not find handler file "${handler}" for function "${name}"`,
+            );
 
-        return {
-          handler: path.posix.join(
-            handlerDir,
-            `${newHandlerFileName}.${newHandlerFunction}`,
-          ),
-          wrapper: {
-            dir: handlerDir,
-            name: `${newHandlerFileName}.mjs`,
-            content: streaming
-              ? [
-                  linkInjection,
-                  `export const ${newHandlerFunction} = awslambda.streamifyResponse(async (event, context) => {`,
-                  ...injections,
-                  `  const { ${oldHandlerFunction}: rawHandler} = await import("./${oldHandlerFileName}${newHandlerFileExt}");`,
-                  `  return rawHandler(event, context);`,
-                  `});`,
-                ].join("\n")
-              : [
-                  linkInjection,
-                  `export const ${newHandlerFunction} = async (event, context) => {`,
-                  ...injections,
-                  `  const { ${oldHandlerFunction}: rawHandler} = await import("./${oldHandlerFileName}${newHandlerFileExt}");`,
-                  `  return rawHandler(event, context);`,
-                  `};`,
-                ].join("\n"),
-          },
-        };
-      });
+          return {
+            handler: path.posix.join(
+              handlerDir,
+              `${newHandlerFileName}.${newHandlerFunction}`,
+            ),
+            wrapper: {
+              dir: handlerDir,
+              name: `${newHandlerFileName}.mjs`,
+              content: streaming
+                ? [
+                    linkInjection,
+                    `export const ${newHandlerFunction} = awslambda.streamifyResponse(async (event, context) => {`,
+                    ...injections,
+                    `  const { ${oldHandlerFunction}: rawHandler} = await import("./${oldHandlerFileName}${newHandlerFileExt}");`,
+                    `  return rawHandler(event, context);`,
+                    `});`,
+                  ].join("\n")
+                : [
+                    linkInjection,
+                    `export const ${newHandlerFunction} = async (event, context) => {`,
+                    ...injections,
+                    `  const { ${oldHandlerFunction}: rawHandler} = await import("./${oldHandlerFileName}${newHandlerFileExt}");`,
+                    `  return rawHandler(event, context);`,
+                    `};`,
+                  ].join("\n"),
+            },
+          };
+        },
+      );
       return {
         handler: ret.handler,
         wrapper: ret.wrapper,
@@ -1318,6 +1325,23 @@ export class Function
    */
   public get logGroupArn() {
     return this.logGroup.logGroupArn;
+  }
+
+  static fromDefinition(
+    parent: Component,
+    name: string,
+    definition: Input<FunctionDefinition>,
+  ) {
+    return output(definition).apply((definition) => {
+      if (typeof definition === "string") {
+        return new Function(name, { handler: definition }, { parent });
+      } else if (definition instanceof Function) {
+        return definition;
+      } else if (definition.handler) {
+        return new Function(name, definition, { parent });
+      }
+      throw new Error(`Invalid function definition for the "${name}" Function`);
+    });
   }
 
   /** @internal */

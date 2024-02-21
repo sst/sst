@@ -26,15 +26,20 @@ export default $config({
         },
       },
     });
+    bucket.subscribe({
+      name: "MySubscriber",
+      events: ["s3:ObjectCreated:*"],
+      function: "functions/bucket-subscriber-example/index.handler",
+    });
 
     const app = new sst.aws.Function("MyApp", {
-      bundle: "functions/bundled-example",
-      handler: "index.handler",
+      handler: "functions/handler-example/index.handler",
       link: [bucket],
       url: true,
     });
 
     return {
+      bucket: bucket.name,
       app: app.url,
     };
   },

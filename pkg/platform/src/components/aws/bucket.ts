@@ -1,3 +1,4 @@
+import crypto from "crypto";
 import {
   ComponentResourceOptions,
   output,
@@ -10,6 +11,7 @@ import { prefixName, hashNumberToString } from "../naming";
 import { Component, Transform, transform } from "../component";
 import { Link } from "../link";
 import type { Input } from "../input";
+import { Function, FunctionDefinition } from "./function";
 
 export interface BucketArgs {
   /**
@@ -50,6 +52,59 @@ export interface BucketArgs {
   };
 }
 
+export interface BucketSubscribeArgs {
+  /**
+   * A unique name of the subscription.
+   */
+  name: string;
+  /**
+   * The S3 event types that will trigger the notification.
+   * @example
+   * ```js
+   * {
+   *   events: "s3:ObjectCreated:*"
+   * }
+   */
+  events: Input<
+    Input<
+      | "s3:ObjectCreated:*"
+      | "s3:ObjectCreated:Put"
+      | "s3:ObjectCreated:Post"
+      | "s3:ObjectCreated:Copy"
+      | "s3:ObjectCreated:CompleteMultipartUpload"
+      | "s3:ObjectRemoved:*"
+      | "s3:ObjectRemoved:Delete"
+      | "s3:ObjectRemoved:DeleteMarkerCreated"
+      | "s3:ObjectRestore:Post"
+      | "s3:ObjectRestore:Completed"
+      | "s3:ObjectRestore:Delete"
+      | "s3:ReducedRedundancyLostObject"
+      | "s3:Replication:OperationFailedReplication"
+      | "s3:Replication:OperationMissedThreshold"
+      | "s3:Replication:OperationReplicatedAfterThreshold"
+      | "s3:Replication:OperationNotTracked"
+      | "s3:LifecycleExpiration:*"
+      | "s3:LifecycleExpiration:Delete"
+      | "s3:LifecycleExpiration:DeleteMarkerCreated"
+      | "s3:LifecycleTransition"
+      | "s3:IntelligentTiering"
+      | "s3:ObjectTagging:*"
+      | "s3:ObjectTagging:Put"
+      | "s3:ObjectTagging:Delete"
+      | "s3:ObjectAcl:Put"
+    >[]
+  >;
+  /**
+   * S3 object key prefix filter rules to determine which objects trigger this event.
+   */
+  filterPrefix?: Input<string>;
+  /**
+   * S3 object key suffix filter rules to determine which objects trigger this event.
+   */
+  filterSuffix?: Input<string>;
+  function?: Input<FunctionDefinition>;
+}
+
 /**
  * The `Bucket` component lets you add an [AWS S3 Bucket](https://aws.amazon.com/s3/) to
  * your app.
@@ -76,6 +131,7 @@ export class Bucket
   extends Component
   implements Link.Linkable, Link.AWS.Linkable
 {
+  private constructorName: string;
   private bucket: aws.s3.BucketV2;
 
   constructor(
@@ -93,6 +149,7 @@ export class Bucket
     const publicAccessBlock = createPublicAccess();
     createBucketPolicy();
 
+    this.constructorName = name;
     this.bucket = bucket;
 
     function createBucket() {
@@ -210,6 +267,49 @@ export class Bucket
        */
       bucket: this.bucket,
     };
+  }
+
+  /**
+   * Subscribes to the S3 Bucket.
+   */
+  public subscribe(args: BucketSubscribeArgs) {
+    const parent = this;
+    const parentName = this.constructorName;
+
+    if (args.function) {
+      const fn = Function.fromDefinition(
+        parent,
+        `${parentName}Subscriber${args.name}`,
+        args.function,
+      );
+      const permission = new aws.lambda.Permission(
+        `${parentName}SubscriberPermissions${args.name}`,
+        {
+          action: "lambda:InvokeFunction",
+          function: fn.arn,
+          principal: "s3.amazonaws.com",
+          sourceArn: this.bucket.arn,
+        },
+        { parent },
+      );
+      new aws.s3.BucketNotification(
+        `${parentName}Notification${args.name}`,
+        {
+          bucket: this.bucket.bucket,
+          lambdaFunctions: [
+            {
+              id: args.name,
+              lambdaFunctionArn: fn.arn,
+              events: args.events,
+              filterPrefix: args.filterPrefix,
+              filterSuffix: args.filterSuffix,
+            },
+          ],
+        },
+        { parent, dependsOn: [permission] },
+      );
+    }
+    return this;
   }
 
   /** @internal */
