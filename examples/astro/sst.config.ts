@@ -1,13 +1,16 @@
-/// <reference path="./.sst/platform/src/global.d.ts" />
+/// <reference path="./.sst/platform/config.d.ts" />
 
 export default $config({
   app(input) {
     return {
       name: "astro",
       removalPolicy: input?.stage === "production" ? "retain" : "remove",
+      providers: {
+        aws: {},
+      },
     };
   },
   async run() {
-    new sst.Astro("Web");
+    new sst.aws.Astro("Web");
   },
 });

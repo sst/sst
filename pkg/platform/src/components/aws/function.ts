@@ -10,7 +10,6 @@ import {
   output,
   all,
   interpolate,
-  jsonStringify,
 } from "@pulumi/pulumi";
 import * as aws from "@pulumi/aws";
 import { build } from "../../runtime/node.js";
@@ -1224,7 +1223,7 @@ export class Function
           code: new asset.AssetArchive({
             index: new asset.StringAsset("exports.handler = () => {}"),
           }),
-          handler,
+          handler: "index.handler",
           role: role.arn,
           runtime,
           timeout: timeout.apply((timeout) => toSeconds(timeout)),

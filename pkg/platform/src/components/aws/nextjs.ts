@@ -161,8 +161,8 @@ export class Nextjs extends Component implements Link.Linkable {
 
   constructor(
     name: string,
-    args?: NextjsArgs,
-    opts?: ComponentResourceOptions,
+    args: NextjsArgs = {},
+    opts: ComponentResourceOptions = {},
   ) {
     super("sst:aws:Nextjs", name, args, opts);
 
@@ -175,8 +175,6 @@ export class Nextjs extends Component implements Link.Linkable {
       } & ({ regexMatch: string } | { prefixMatch: string }))[]
     >;
 
-    args = args ?? {};
-    opts = opts ?? {};
     const parent = this;
     const logging = normalizeLogging();
     const buildCommand = normalizeBuildCommand();

@@ -16,13 +16,14 @@ import { Bucket } from "./bucket.js";
 import { Component, transform } from "../component.js";
 import { Hint } from "../hint.js";
 import { Link } from "../link.js";
+import type { Input } from "../input.js";
 
 export interface RemixArgs extends SsrSiteArgs {
   /**
    * The server function is deployed to Lambda in a single region. Alternatively, you can enable this option to deploy to Lambda@Edge.
    * @default `false`
    */
-  edge?: boolean;
+  edge?: Input<boolean>;
 }
 
 /**
@@ -36,35 +37,23 @@ export interface RemixArgs extends SsrSiteArgs {
  * ```
  */
 export class Remix extends Component implements Link.Linkable {
-  private doNotDeploy: Output<boolean>;
-  private edge: Output<boolean>;
-  private cdn: Cdn;
+  private cdn: Output<Cdn>;
   private assets: Bucket;
-  private server?: Function;
-  //private serverFunctionForDev?: Function;
+  private server: Output<Function>;
 
   constructor(
     name: string,
     args: RemixArgs = {},
-    opts?: ComponentResourceOptions,
+    opts: ComponentResourceOptions = {},
   ) {
     super("sst:aws:Remix", name, args, opts);
 
     const parent = this;
     const edge = normalizeEdge();
-    const { sitePath, doNotDeploy } = prepare(args, opts);
-    //if (doNotDeploy) {
-    //  // @ts-expect-error
-    //  this.bucket = this.distribution = null;
-    //  this.serverFunctionForDev = createServerFunctionForDev();
-    //  return;
-    //}
-
-    const outputPath = buildApp(name, args, sitePath);
+    const { sitePath, region } = prepare(args, opts);
     const { access, bucket } = createBucket(parent, name);
-
+    const outputPath = buildApp(name, args, sitePath);
     const plan = buildPlan();
-
     const { distribution, ssrFunctions, edgeFunctions } =
       createServersAndDistribution(
         parent,
@@ -77,11 +66,9 @@ export class Remix extends Component implements Link.Linkable {
       );
     const serverFunction = ssrFunctions[0] ?? Object.values(edgeFunctions)[0];
 
-    this.doNotDeploy = doNotDeploy;
     this.assets = bucket;
-    this.cdn = distribution as unknown as Cdn;
-    this.server = serverFunction as unknown as Function;
-    this.edge = plan.edge;
+    this.cdn = distribution;
+    this.server = serverFunction;
     Hint.register(
       this.urn,
       all([this.cdn.domainUrl, this.cdn.url]).apply(
@@ -93,7 +80,7 @@ export class Remix extends Component implements Link.Linkable {
         mode: $dev ? "placeholder" : "deployed",
         path: sitePath,
         customDomainUrl: this.cdn.domainUrl,
-        edge: this.edge,
+        edge,
       },
     });
 
@@ -253,7 +240,6 @@ export class Remix extends Component implements Link.Linkable {
    * The CloudFront URL of the website.
    */
   public get url() {
-    //if (this.doNotDeploy) return this.props.dev?.url;
     return this.cdn.url;
   }
 
@@ -262,9 +248,17 @@ export class Remix extends Component implements Link.Linkable {
    * custom domain.
    */
   public get domainUrl() {
-    if (this.doNotDeploy) return;
-
     return this.cdn.domainUrl;
+  }
+
+  /**
+   * The internally created CDK resources.
+   */
+  public get nodes() {
+    return {
+      server: this.server as unknown as Function,
+      assets: this.assets,
+    };
   }
 
   /** @internal */

@@ -1142,7 +1142,6 @@ function handler(event) {
               }
             });
             invalidationBuildId = hash.digest("hex");
-            console.debug(`Generated build ID ${invalidationBuildId}`);
           }
 
           new DistributionInvalidation(

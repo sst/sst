@@ -18,29 +18,6 @@ export default $config({
   async run() {
     //return runVectorExample();
 
-    new sst.aws.Cdn("MyCdn", {
-      waitForDeployment: true,
-      transform: {
-        distribution: (args) => {
-          args.defaultCacheBehavior = {
-            ...args.defaultCacheBehavior,
-            viewerProtocolPolicy: "redirect-to-https",
-            allowedMethods: ["GET", "HEAD", "OPTIONS"],
-            cachedMethods: ["GET", "HEAD"],
-            compress: true,
-            cachePolicyId: "658327ea-f89d-4fab-a63d-7e88639e58f6",
-          };
-          args.origins = [
-            {
-              domainName: "my-bucket-123456.s3.amazonaws.com",
-              originId: "placeholder",
-            },
-          ];
-          args.enabled = true;
-        },
-      },
-    });
-
     const bucket = new sst.aws.Bucket("MyBucket", {
       public: true,
       transform: {
