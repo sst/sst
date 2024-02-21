@@ -314,7 +314,7 @@ func main() {
 					}
 
 					if !p.CheckPlatform(version) {
-						err := p.InstallPlatform(version)
+						err := p.CopyPlatform(version)
 						if err != nil {
 							return err
 						}
@@ -717,7 +717,7 @@ func initProject(cli *cli.Context) (*project.Project, error) {
 		spin := spinner.New(spinner.CharSets[14], 100*time.Millisecond)
 		spin.Suffix = "  Installing dependencies..."
 		spin.Start()
-		err := p.InstallPlatform(version)
+		err := p.CopyPlatform(version)
 		if err != nil {
 			return nil, err
 		}

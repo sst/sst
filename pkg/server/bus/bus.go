@@ -2,6 +2,7 @@ package bus
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 	"reflect"
 	"sync"
@@ -47,4 +48,22 @@ func Subscribe[T Event](ctx context.Context, fn func(T)) {
 		slog.Info("unsubscribing", "type", t)
 		subscribers[t] = append(s[:index], s[index+1:]...)
 	}()
+}
+
+func Listen[T Event](ctx context.Context, example T) <-chan T {
+	events := make(chan T, 100)
+	Subscribe(ctx, func(event T) {
+		events <- event
+	})
+	go func() {
+		<-ctx.Done()
+		close(events)
+	}()
+	return events
+}
+
+func Next[T Event](input T) {
+	t := reflect.TypeOf((*T)(nil)).Elem()
+	fmt.Println("subscribed to", t)
+
 }

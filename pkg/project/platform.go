@@ -21,7 +21,7 @@ func (p *Project) CheckPlatform(version string) bool {
 	return string(contents) == version
 }
 
-func (p *Project) InstallPlatform(version string) error {
+func (p *Project) CopyPlatform(version string) error {
 	slog.Info("installing platform")
 	platformDir := p.PathPlatformDir()
 	os.RemoveAll(filepath.Join(platformDir))

@@ -17,6 +17,7 @@ import (
 	"github.com/sst/ion/pkg/server/bus"
 	"github.com/sst/ion/pkg/server/dev/aws"
 	"github.com/sst/ion/pkg/server/dev/watcher"
+	"github.com/sst/ion/pkg/server/socket"
 )
 
 type Server struct {
@@ -154,15 +155,17 @@ func (s *Server) Start(parentContext context.Context) error {
 	if err != nil {
 		return err
 	}
-	port = 44149
+	port = 13557
 	s.server.Addr = fmt.Sprintf("0.0.0.0:%d", port)
 	slog.Info("server", "addr", s.server.Addr)
 
+	socket.Start(ctx, s.project, mux)
 	for _, p := range s.project.Providers {
 		switch casted := p.(type) {
 		case *provider.AwsProvider:
 			cleanup, err := aws.Start(ctx, mux, casted,
 				s.project,
+				port,
 			)
 			if err != nil {
 				return err

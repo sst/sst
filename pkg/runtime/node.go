@@ -76,10 +76,7 @@ var NODE_EXTENSIONS = []string{".ts", ".tsx", ".mts", ".cts", ".js", ".jsx", ".m
 
 func (r *NodeRuntime) Build(ctx context.Context, input *BuildInput) (*BuildOutput, error) {
 	var properties NodeProperties
-	err := json.Unmarshal(input.Warp.Properties, &properties)
-	if err != nil {
-		return nil, err
-	}
+	json.Unmarshal(input.Warp.Properties, &properties)
 
 	file, ok := r.getFile(input)
 	if !ok {
@@ -210,7 +207,7 @@ func (r *NodeRuntime) Run(ctx context.Context, input *RunInput) (Worker, error) 
 		filepath.Join(input.Build.Out, input.Build.Handler),
 		input.WorkerID,
 	)
-	cmd.Env = append(input.Env, "AWS_LAMBDA_RUNTIME_API=localhost:44149/lambda/"+input.WorkerID)
+	cmd.Env = append(input.Env, "AWS_LAMBDA_RUNTIME_API="+input.Server)
 	slog.Info("starting worker", "env", cmd.Env)
 	cmd.Dir = input.Build.Out
 	stdout, _ := cmd.StdoutPipe()

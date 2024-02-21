@@ -42,6 +42,7 @@ type BuildOutput struct {
 
 type RunInput struct {
 	Project    *project.Project
+	Server     string
 	FunctionID string
 	WorkerID   string
 	Runtime    string

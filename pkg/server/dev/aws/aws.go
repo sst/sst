@@ -2,6 +2,7 @@ package aws
 
 import (
 	"bufio"
+	"bytes"
 	"context"
 	"crypto/rand"
 	"crypto/tls"
@@ -39,11 +40,15 @@ type fragment struct {
 type FunctionInvokedEvent struct {
 	FunctionID string
 	WorkerID   string
+	RequestID  string
+	Input      []byte
 }
 
 type FunctionResponseEvent struct {
 	FunctionID string
 	WorkerID   string
+	RequestID  string
+	Output     []byte
 }
 
 type FunctionBuildEvent struct {
@@ -54,6 +59,7 @@ type FunctionBuildEvent struct {
 type FunctionLogEvent struct {
 	FunctionID string
 	WorkerID   string
+	RequestID  string
 	Line       string
 }
 
@@ -62,9 +68,11 @@ func Start(
 	mux *http.ServeMux,
 	aws *provider.AwsProvider,
 	p *project.Project,
+	port int,
 ) (util.CleanupFunc, error) {
 	expire := time.Hour * 24
 	from := time.Now()
+	server := fmt.Sprintf("localhost:%d/lambda/", port)
 
 	config := aws.Config()
 	slog.Info("getting endpoint")
@@ -157,19 +165,25 @@ func Start(
 	}
 
 	type WorkerInfo struct {
-		FunctionID string
-		WorkerID   string
-		Worker     runtime.Worker
-		Env        []string
+		FunctionID       string
+		WorkerID         string
+		Worker           runtime.Worker
+		CurrentRequestID string
+		Env              []string
 	}
 
 	completeChan := make(chan *project.CompleteEvent, 1000)
 	initChan := make(chan MQTT.Message, 1000)
 	shutdownChan := make(chan MQTT.Message, 1000)
 	fileChan := make(chan *watcher.FileChangedEvent, 1000)
+
+	type workerResponse struct {
+		response *http.Response
+		workerID string
+		path     []string
+	}
+	workerResponseChan := make(chan workerResponse, 1000)
 	workerShutdownChan := make(chan *WorkerInfo, 1000)
-	workerInvokedChan := make(chan string, 1000)
-	workerResponseChan := make(chan string, 1000)
 
 	bus.Subscribe(ctx, func(event *project.StackEvent) {
 		if event.CompleteEvent != nil {
@@ -231,6 +245,7 @@ func Start(
 				builds[functionID] = build
 			}
 			worker, _ := runtime.Run(ctx, &runtime.RunInput{
+				Server:     server + workerID,
 				Project:    p,
 				WorkerID:   workerID,
 				Runtime:    warp.Runtime,
@@ -251,6 +266,7 @@ func Start(
 					bus.Publish(&FunctionLogEvent{
 						FunctionID: functionID,
 						WorkerID:   workerID,
+						RequestID:  info.CurrentRequestID,
 						Line:       line,
 					})
 				}
@@ -265,18 +281,33 @@ func Start(
 			select {
 			case <-ctx.Done():
 				return
-			case workerID := <-workerInvokedChan:
-				info := workers[workerID]
-				bus.Publish(&FunctionInvokedEvent{
-					FunctionID: info.FunctionID,
-					WorkerID:   info.WorkerID,
-				})
-			case workerID := <-workerResponseChan:
-				info := workers[workerID]
-				bus.Publish(&FunctionResponseEvent{
-					FunctionID: info.FunctionID,
-					WorkerID:   info.WorkerID,
-				})
+			case evt := <-workerResponseChan:
+				info, ok := workers[evt.workerID]
+				if !ok {
+					continue
+				}
+
+				body, err := io.ReadAll(evt.response.Body)
+				if err != nil {
+					continue
+				}
+				if evt.path[len(evt.path)-1] == "next" {
+					info.CurrentRequestID = evt.response.Header.Get("lambda-runtime-aws-request-id")
+					bus.Publish(&FunctionInvokedEvent{
+						FunctionID: info.FunctionID,
+						WorkerID:   info.WorkerID,
+						RequestID:  info.CurrentRequestID,
+						Input:      body,
+					})
+				}
+				if evt.path[len(evt.path)-1] == "response" {
+					bus.Publish(&FunctionResponseEvent{
+						FunctionID: info.FunctionID,
+						WorkerID:   info.WorkerID,
+						RequestID:  evt.path[len(evt.path)-2],
+						Output:     body,
+					})
+				}
 			case info := <-workerShutdownChan:
 				slog.Info("worker died", "workerID", info.WorkerID)
 				existing, ok := workers[info.WorkerID]
@@ -307,7 +338,7 @@ func Start(
 				}
 				workerEnv[workerID] = payload.Env
 				if ok := run(payload.FunctionID, workerID); !ok {
-					result, _ := http.Post("http://localhost:44149/lambda/"+workerID+"/runtime/init/error", "application/json", strings.NewReader(`{"errorMessage":"Function failed to build"}`))
+					result, _ := http.Post("http://"+server+workerID+"/runtime/init/error", "application/json", strings.NewReader(`{"errorMessage":"Function failed to build"}`))
 					defer result.Body.Close()
 					body, _ := io.ReadAll(result.Body)
 					slog.Info("error", "body", string(body))
@@ -350,15 +381,11 @@ func Start(
 
 	}()
 
-	clientLock := util.NewKeyLock()
-
 	mux.HandleFunc(`/lambda/`, func(w http.ResponseWriter, r *http.Request) {
 		path := strings.Split(r.URL.Path, "/")
 		slog.Info("lambda request", "path", path)
 		workerID := path[2]
-		clientLock.Lock(workerID)
 		slog.Info("lambda lock", "workerID", workerID)
-		defer clientLock.Unlock(workerID)
 		writer := iot_writer.New(mqttClient, prefix+"/"+workerID+"/request")
 		read, write := io.Pipe()
 		pending.Store(workerID, write)
@@ -399,15 +426,19 @@ func Start(
 
 		done := make(chan struct{})
 		go func() {
-			_, err = io.Copy(conn, read)
+			buf := &bytes.Buffer{}
+			write := io.MultiWriter(conn, buf)
+			_, err = io.Copy(write, read)
 			if err != nil {
 				fmt.Println("Error writing to the connection:", err)
 			}
-			if path[len(path)-1] == "next" {
-				workerInvokedChan <- workerID
-			}
-			if path[len(path)-1] == "response" {
-				workerResponseChan <- workerID
+			resp, err := http.ReadResponse(bufio.NewReader(buf), nil)
+			if err == nil {
+				workerResponseChan <- workerResponse{
+					workerID: workerID,
+					response: resp,
+					path:     path,
+				}
 			}
 			done <- struct{}{}
 		}()
