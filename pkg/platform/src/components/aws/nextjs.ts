@@ -323,11 +323,7 @@ export class Nextjs extends Component implements Link.Linkable {
             // use placeholder code
             bundle: path.relative(
               outputPath,
-              path.join(
-                $cli.paths.platform,
-                "functions",
-                "ssr-function-placeholder",
-              ),
+              path.join($cli.paths.platform, "functions", "empty-function"),
             ),
             streaming: false,
           },

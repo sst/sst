@@ -229,7 +229,7 @@ export class Remix extends Component implements Link.Linkable {
         handler: path.join(buildPath, "server.handler"),
         nodejs: {
           esbuild: {
-            inject: [polyfillDest],
+            inject: [path.resolve(polyfillDest)],
           },
         },
       };

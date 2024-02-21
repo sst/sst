@@ -453,7 +453,6 @@ export interface FunctionArgs {
    * cold starts.
    */
   nodejs?: Input<{
-    // TODO exclude
     /**
      * Configure additional esbuild loaders for other file extensions. This is useful
      * when your code is importing non-JS files like `.png`, `.css`, etc.
@@ -946,22 +945,16 @@ export class Function
     }
 
     function buildHandler() {
-      return all([args.bundle, dev]).apply(([bundle, dev]) => {
+      return dev.apply((dev) => {
         if (args._ignoreCodeChanges) {
-          return bundle?.startsWith($cli.paths.platform)
-            ? // If bundle starts with $cli.paths.platform, it means a built-in function
-              // is being used. In that case, we will use the built-in function as is.
-              { bundle, handler: args.handler }
-            : // If the bundle is not a built-in function, we will force it to be the empty
-              // built-in function.
-              {
-                bundle: path.join(
-                  $cli.paths.platform,
-                  "functions",
-                  "empty-function",
-                ),
-                handler: "index.handler",
-              };
+          return {
+            bundle: path.join(
+              $cli.paths.platform,
+              "functions",
+              "empty-function",
+            ),
+            handler: "index.handler",
+          };
         }
 
         if (dev) {
@@ -1223,7 +1216,7 @@ export class Function
           code: new asset.AssetArchive({
             index: new asset.StringAsset("exports.handler = () => {}"),
           }),
-          handler: "index.handler",
+          handler,
           role: role.arn,
           runtime,
           timeout: timeout.apply((timeout) => toSeconds(timeout)),
@@ -1233,7 +1226,12 @@ export class Function
           },
           architectures,
         }),
-        { parent },
+        {
+          parent,
+          ignoreChanges: args._ignoreCodeChanges
+            ? ["code", "handler"]
+            : undefined,
+        },
       );
     }
 
@@ -1282,12 +1280,7 @@ export class Function
               functionLastModified: fn.lastModified,
               region,
             },
-            {
-              parent,
-              ignoreChanges: args._ignoreCodeChanges
-                ? ["s3Bucket", "s3Key"]
-                : undefined,
-            },
+            { parent },
           ),
       );
     }
