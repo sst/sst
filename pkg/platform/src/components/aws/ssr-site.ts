@@ -188,7 +188,7 @@ export interface SsrSiteArgs {
     >;
     /**
      * The `Cache-Control` header to use for versioned files (like `main-1234.css`). This is
-     * used by both CloudFront and the browser cache.
+     * used by both CloudFront and the browser cache. The default `max-age` is set to 1 year.
      * @default `"public,max-age=31536000,immutable"`
      * @example
      * ```js
