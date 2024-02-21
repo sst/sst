@@ -31,7 +31,7 @@ type Invocation struct {
 	Output interface{}       `json:"output,omitempty"`
 	Start  int64             `json:"start,omitempty"`
 	End    int64             `json:"end,omitempty"`
-	Errors []string          `json:"errors"`
+	Errors []InvocationError `json:"errors"`
 	Logs   []InvocationLog   `json:"logs"`
 	Report *InvocationReport `json:"report,omitempty"`
 }
@@ -50,10 +50,23 @@ type InvocationReport struct {
 	Xray     string `json:"xray"`
 }
 
+type InvocationError struct {
+	ID      string  `json:"id"`
+	Error   string  `json:"error"`
+	Message string  `json:"message"`
+	Stack   []Frame `json:"stack"`
+	Failed  bool    `json:"failed"`
+}
+
+type Frame struct {
+	Raw string `json:"raw"`
+}
+
 func Start(ctx context.Context, p *project.Project, mux *http.ServeMux) {
 
 	connected := make(chan *websocket.Conn)
 	disconnected := make(chan *websocket.Conn)
+	invocationClear := make(chan string)
 
 	go func() {
 		sockets := make(map[*websocket.Conn]struct{})
@@ -86,6 +99,18 @@ func Start(ctx context.Context, p *project.Project, mux *http.ServeMux) {
 			select {
 			case <-ctx.Done():
 				return
+			case source := <-invocationClear:
+				if source == "all" {
+					invocations = map[string]*Invocation{}
+					break
+				}
+				for id, invocation := range invocations {
+					if invocation.Source == source {
+						delete(invocations, id)
+					}
+				}
+				break
+
 			case evt := <-stack:
 				if evt.CompleteEvent != nil {
 					complete = evt.CompleteEvent
@@ -129,7 +154,7 @@ func Start(ctx context.Context, p *project.Project, mux *http.ServeMux) {
 					Source: source,
 					Input:  json.RawMessage(evt.Input),
 					Start:  time.Now().UnixMilli(),
-					Errors: []string{},
+					Errors: []InvocationError{},
 					Logs:   []InvocationLog{},
 				}
 				invocations[evt.RequestID] = invocation
@@ -153,6 +178,18 @@ func Start(ctx context.Context, p *project.Project, mux *http.ServeMux) {
 					invocation.Report = &InvocationReport{
 						Duration: invocation.End - invocation.Start,
 					}
+					error := InvocationError{
+						Message: evt.ErrorMessage,
+						Error:   evt.ErrorType,
+						Failed:  true,
+						Stack:   []Frame{},
+					}
+					for _, frame := range evt.Trace {
+						error.Stack = append(error.Stack, Frame{
+							Raw: frame,
+						})
+					}
+					invocation.Errors = append(invocation.Errors, error)
 					publishInvocation(invocation)
 				}
 				break
@@ -186,10 +223,24 @@ func Start(ctx context.Context, p *project.Project, mux *http.ServeMux) {
 		}()
 
 		for {
-			_, _, err := ws.ReadMessage()
+			_, data, err := ws.ReadMessage()
 			if err != nil {
+				slog.Info("socket error", "err", err)
 				break
 			}
+
+			slog.Info("socket message", "message", string(data))
+			var message map[string]interface{}
+			err = json.Unmarshal(data, &message)
+			if err != nil {
+				continue
+			}
+
+			if message["type"] == "log.cleared" {
+				source := message["properties"].(map[string]interface{})["source"].(string)
+				invocationClear <- source
+			}
+
 		}
 	})
 }
