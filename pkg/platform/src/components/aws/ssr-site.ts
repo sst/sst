@@ -456,18 +456,8 @@ export function createServersAndDistribution(
     function uploadAssets() {
       return output(args.assets).apply(async (assets) => {
         // Define content headers
-        const nonVersionedFilesTTL =
-          typeof assets?.nonVersionedFilesTTL === "number"
-            ? assets.nonVersionedFilesTTL
-            : toSeconds(assets?.nonVersionedFilesTTL ?? "1 day");
-        const staleWhileRevalidateTTL = Math.max(
-          Math.floor(nonVersionedFilesTTL / 10),
-          30,
-        );
-        const versionedFilesTTL =
-          typeof assets?.versionedFilesTTL === "number"
-            ? assets.versionedFilesTTL
-            : toSeconds(assets?.versionedFilesTTL ?? "365 days");
+        const versionedFilesTTL = 31536000; // 1 year
+        const nonVersionedFilesTTL = 86400; // 1 day
 
         const bucketFiles: BucketFile[] = [];
 
@@ -487,7 +477,7 @@ export function createServersAndDistribution(
                   : undefined,
                 cacheControl:
                   assets?.nonVersionedFilesCacheHeader ??
-                  `public,max-age=0,s-maxage=${nonVersionedFilesTTL},stale-while-revalidate=${staleWhileRevalidateTTL}`,
+                  `public,max-age=0,s-maxage=${nonVersionedFilesTTL},stale-while-revalidate=${nonVersionedFilesTTL}`,
               },
               // versioned files
               ...(copy.versionedSubDir
