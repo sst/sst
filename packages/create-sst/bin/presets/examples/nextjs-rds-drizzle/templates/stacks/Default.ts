@@ -3,7 +3,7 @@ import { StackContext, RDS, Script, NextjsSite } from "sst/constructs";
 export function Default({ stack }: StackContext) {
   const rds = new RDS(stack, "db", {
     engine: "postgresql13.9",
-    defaultDatabaseName: "mydb",
+    defaultDatabaseName: "app_database",
   });
 
   const site = new NextjsSite(stack, "site", {

@@ -4,7 +4,7 @@ import { Default } from "./stacks/Default";
 export default {
   config(_input) {
     return {
-      name: "nextjs-rds-drizzle-migrations",
+      name: "@@app",
       region: "us-east-1",
     };
   },
