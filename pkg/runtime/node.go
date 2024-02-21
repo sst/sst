@@ -132,6 +132,7 @@ func (r *NodeRuntime) Build(ctx context.Context, input *BuildInput) (*BuildOutpu
 			},
 			properties.Install...,
 		),
+		Sourcemap:         esbuild.SourceMapLinked,
 		Loader:            loader,
 		KeepNames:         true,
 		Bundle:            true,
@@ -200,6 +201,7 @@ func (r *NodeRuntime) Run(ctx context.Context, input *RunInput) (Worker, error) 
 	cmd := exec.CommandContext(
 		ctx,
 		"node",
+		"--enable-source-maps",
 		filepath.Join(
 			input.Project.PathPlatformDir(),
 			"/dist/nodejs-runtime/index.js",
