@@ -42,11 +42,11 @@ new sst.aws.Function("MyFunction", {
 
 #### Link resources
 
-[Link resources](/docs/linking/) to the function. The will grant permissions
+[Link resources](/docs/linking/) to the function. This will grant permissions
 to the resources and allow you to access it in your handler.
 
 ```ts {5}
-const myBucket = new sst.Bucket("MyBucket");
+const myBucket = new sst.aws.Bucket("MyBucket");
 
 new sst.aws.Function("MyFunction", {
   handler: "src/lambda.handler",
