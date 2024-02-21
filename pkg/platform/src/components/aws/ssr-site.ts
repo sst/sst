@@ -187,7 +187,7 @@ export interface SsrSiteArgs {
       "utf-8" | "iso-8859-1" | "windows-1252" | "ascii" | "none"
     >;
     /**
-     * The `Cache-Control` header to use for versioned files (like `main-1234.css`). This is
+     * The `Cache-Control` header used for versioned files (like `main-1234.css`). This is
      * used by both CloudFront and the browser cache. The default `max-age` is set to 1 year.
      * @default `"public,max-age=31536000,immutable"`
      * @example
@@ -199,19 +199,9 @@ export interface SsrSiteArgs {
      */
     versionedFilesCacheHeader?: Input<string>;
     /**
-     * The TTL for non-versioned files (ex: `index.html`) in the CDN cache. Ignored when `nonVersionedFilesCacheHeader` is specified.
-     * @default `1 day`
-     * @example
-     * ```js
-     * assets: {
-     *   nonVersionedFilesTTL: "4 hours"
-     * }
-     * ```
-     */
-    nonVersionedFilesTTL?: Input<number | Duration>;
-    /**
-     * The header to use for non-versioned files (ex: `index.html`) in the CDN cache. When specified, the `nonVersionedFilesTTL` option is ignored.
-     * @default `public,max-age=0,s-maxage=86400,stale-while-revalidate=8640`
+     * The `Cache-Control` header used for non-versioned files (like `main-1234.css`). This is
+     * used by both CloudFront and the browser cache. The default `max-age` is set to * 1 year.
+     * @default `"public,max-age=0,s-maxage=86400,stale-while-revalidate=8640"`
      * @example
      * ```js
      * assets: {
