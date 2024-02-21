@@ -408,7 +408,6 @@ export function createBucket(parent: ComponentResource, name: string) {
   }
 
   function createS3Bucket() {
-    // TODO add "enforceSSL: true"
     const bucket = new Bucket(
       `${name}Assets`,
       {},

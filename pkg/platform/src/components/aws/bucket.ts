@@ -1,4 +1,9 @@
-import { ComponentResourceOptions, output, interpolate } from "@pulumi/pulumi";
+import {
+  ComponentResourceOptions,
+  output,
+  interpolate,
+  all,
+} from "@pulumi/pulumi";
 import * as aws from "@pulumi/aws";
 import { RandomId } from "@pulumi/random";
 import { prefixName, hashNumberToString } from "../naming";
@@ -18,6 +23,17 @@ export interface BucketArgs {
    * ```
    */
   public?: Input<boolean>;
+  /**
+   * Enforces SSL for all requests.
+   * @default `true`
+   * @example
+   * ```js
+   * {
+   *   enforceSsl: false
+   * }
+   * ```
+   */
+  enforceSsl?: Input<boolean>;
   /**
    * [Transform](/docs/components#transform/) how this component creates its underlying
    * resources.
@@ -71,6 +87,7 @@ export class Bucket
 
     const parent = this;
     const publicAccess = normalizePublicAccess();
+    const enforceSsl = normalizeEnforceSsl();
 
     const bucket = createBucket();
     const publicAccessBlock = createPublicAccess();
@@ -117,33 +134,55 @@ export class Bucket
     }
 
     function createBucketPolicy() {
-      return publicAccess.apply((publicAccess) => {
-        if (!publicAccess) return;
-
-        new aws.s3.BucketPolicy(
-          `${name}Policy`,
-          transform(args?.transform?.bucketPolicy, {
-            bucket: bucket.bucket,
-            policy: aws.iam.getPolicyDocumentOutput({
-              statements: [
+      return all([publicAccess, enforceSsl]).apply(
+        ([publicAccess, enforceSsl]) => {
+          const statements = [];
+          if (publicAccess) {
+            statements.push({
+              principals: [{ type: "*", identifiers: ["*"] }],
+              actions: ["s3:GetObject"],
+              resources: [interpolate`${bucket.arn}/*`],
+            });
+          }
+          if (enforceSsl) {
+            statements.push({
+              effect: "Deny",
+              principals: [{ type: "*", identifiers: ["*"] }],
+              actions: ["s3:*"],
+              resources: [bucket.arn, interpolate`${bucket.arn}/*`],
+              conditions: [
                 {
-                  principals: [{ type: "*", identifiers: ["*"] }],
-                  actions: ["s3:GetObject"],
-                  resources: [interpolate`${bucket.arn}/*`],
+                  test: "Bool",
+                  variable: "aws:SecureTransport",
+                  values: ["false"],
                 },
               ],
-            }).json,
-          }),
-          {
-            parent,
-            dependsOn: publicAccessBlock,
-          },
-        );
-      });
+            });
+          }
+
+          if (statements.length === 0) return;
+
+          new aws.s3.BucketPolicy(
+            `${name}Policy`,
+            transform(args?.transform?.bucketPolicy, {
+              bucket: bucket.bucket,
+              policy: aws.iam.getPolicyDocumentOutput({ statements }).json,
+            }),
+            {
+              parent,
+              dependsOn: publicAccessBlock,
+            },
+          );
+        },
+      );
     }
 
     function normalizePublicAccess() {
       return output(args?.public).apply((v) => v ?? false);
+    }
+
+    function normalizeEnforceSsl() {
+      return output(args?.enforceSsl).apply((v) => v ?? true);
     }
   }
 
