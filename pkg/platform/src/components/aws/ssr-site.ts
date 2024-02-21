@@ -53,9 +53,22 @@ type OriginGroupConfig = {
 
 export type Plan = ReturnType<typeof validatePlan>;
 export interface SsrSiteFileOptions {
+  /**
+   * A glob pattern or array of glob patterns of files to apply these options to.
+   */
   files: string | string[];
+  /**
+   * A glob pattern or array of glob patterns of files exclude from the ones matched
+   * by the `files` glob pattern.
+   */
   ignore?: string | string[];
+  /**
+   * The `Cache-Control` header to apply to the matched files.
+   */
   cacheControl?: string;
+  /**
+   * The `Content-Type` header to apply to the matched files.
+   */
   contentType?: string;
 }
 export interface SsrSiteArgs {
@@ -79,23 +92,32 @@ export interface SsrSiteArgs {
    */
   buildCommand?: Input<string>;
   /**
-   * The domain for this website. SST supports domains that are hosted
-   * either on [Route 53](https://aws.amazon.com/route53/) or externally.
+   * Set a custom domain for your SSR site. Supports domains hosted either on
+   * [Route 53](https://aws.amazon.com/route53/) or outside AWS.
    *
-   * Note that you can also migrate externally hosted domains to Route 53 by
+   * :::tip
+   * You can also migrate an externally hosted domain to Amazon Route 53 by
    * [following this guide](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/MigratingDNS.html).
+   * :::
    *
    * @example
-   * ```js
-   * domain: "domain.com",
-   * ```
    *
    * ```js
-   * domain: {
-   *   domainName: "domain.com",
-   *   redirects: ["www.domain.com"],
-   *   hostedZone: "domain.com"
-   * },
+   * {
+   *   domain: "domain.com"
+   * }
+   * ```
+   *
+   * Specify the Route 53 hosted zone and a `www.` version of the custom domain.
+   *
+   * ```js
+   * {
+   *   domain: {
+   *     domainName: "domain.com",
+   *     hostedZone: "domain.com",
+   *     redirects: ["www.domain.com"]
+   *   }
+   * }
    * ```
    */
   domain?: Input<string | Prettify<CdnDomainArgs>>;
@@ -211,15 +233,30 @@ export interface SsrSiteArgs {
      */
     nonVersionedFilesCacheHeader?: Input<string>;
     /**
-     * List of file options to specify cache control and content type for cached files. These file options are appended to the default file options so it's possible to override the default file options by specifying an overlapping file pattern.
+     * Specify the `Content-Type` and `Cache-Control` headers for specific files. This allows
+     * you to override the default behavior for specific files using glob patterns.
      * @example
+     * Apply `Cache-Control` and `Content-Type` to all zip files.
      * ```js
      * assets: {
      *   fileOptions: [
      *     {
      *       files: "**\/*.zip",
-     *       cacheControl: "private,no-cache,no-store,must-revalidate",
      *       contentType: "application/zip",
+     *       cacheControl: "private,no-cache,no-store,must-revalidate"
+     *     },
+     *   ],
+     * }
+     * ```
+     * Apply `Cache-Control` to all CSS and JS files except for CSS files with `index-`
+     * prefix in the `main/` directory.
+     * ```js
+     * assets: {
+     *   fileOptions: [
+     *     {
+     *       files: ["**\/*.css", "**\/*.js"],
+     *       ignore: "main\/index-*.css",
+     *       cacheControl: "private,no-cache,no-store,must-revalidate"
      *     },
      *   ],
      * }

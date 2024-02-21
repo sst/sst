@@ -106,6 +106,57 @@ interface OpenNextOutput {
 
 export interface NextjsArgs extends SsrSiteArgs {
   /**
+   * Set [environment variables](https://nextjs.org/docs/pages/building-your-application/configuring/environment-variables) for your Next.js app.
+   *
+   * These are used while building your app with `next build` and loaded into `process.env`. These are also made available locally while running `sst dev next dev`.
+   *
+   * :::tip
+   * You can also `link` resources to your Next.js app and access them in a type-safe way with the [SST Node client](/docs/reference/client/).
+   * :::
+   *
+   * To access these in the browser, you need to prefix them with `NEXT_PUBLIC_`. [Read more here](https://nextjs.org/docs/pages/building-your-application/configuring/environment-variables#bundling-environment-variables-for-the-browser).
+   *
+   * @example
+   * ```js
+   * environment: {
+   *   API_URL: api.url,
+   *   // Accessible in the browser
+   *   NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: "pk_test_123"
+   * }
+   * ```
+   */
+  environment?: SsrSiteArgs["environment"];
+  /**
+   * Set a custom domain for your Next.js app. Supports domains hosted either on
+   * [Route 53](https://aws.amazon.com/route53/) or outside AWS.
+   *
+   * :::tip
+   * You can also migrate an externally hosted domain to Amazon Route 53 by
+   * [following this guide](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/MigratingDNS.html).
+   * :::
+   *
+   * @example
+   *
+   * ```js
+   * {
+   *   domain: "domain.com"
+   * }
+   * ```
+   *
+   * Specify the Route 53 hosted zone and a `www.` version of the custom domain.
+   *
+   * ```js
+   * {
+   *   domain: {
+   *     domainName: "domain.com",
+   *     hostedZone: "domain.com",
+   *     redirects: ["www.domain.com"]
+   *   }
+   * }
+   * ```
+   */
+  domain?: SsrSiteArgs["domain"];
+  /**
    * Configure how the Next.js app assets are uploaded to S3.
    */
   assets?: SsrSiteArgs["assets"];

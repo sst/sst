@@ -16,58 +16,97 @@ import { DistributionDeploymentWaiter } from "./providers/distribution-deploymen
 
 export interface CdnDomainArgs {
   /**
-   * The domain to be assigned to the website URL (ie. domain.com).
-   *
-   * Supports domains that are hosted either on [Route 53](https://aws.amazon.com/route53/) or externally.
+   * The custom domain you want to use. Supports domains hosted on [Route 53](https://aws.amazon.com/route53/) or outside AWS.
+   * @example
+   * ```js
+   * {
+   *   domain: "domain.com"
+   * }
+   * ```
    */
   domainName: Input<string>;
   /**
-   * Alternative domains to be assigned to the website URL. Visitors to the alternative domains will be redirected to the main domain. (ie. `www.domain.com`).
-   * Use this to create a `www.` version of your domain and redirect visitors to the root domain.
-   * @default No redirects configured
+   * Alternate domains to be used. Visitors to the alternate domains will be redirected to the
+   * main `domain`.
+   *
+   * :::note
+   * Unlike the `aliases` option, this will redirect visitors back to the main `domain`.
+   * :::
+   *
    * @example
-   * ```js
-   * domain: {
-   *   domainName: "domain.com",
-   *   redirects: ["www.domain.com"],
+   * Use this to create a `www.` version of your domain and redirect visitors to the apex domain.
+   * ```js {4}
+   * {
+   *   domain: {
+   *     domainName: "domain.com",
+   *     redirects: ["www.domain.com"]
+   *   }
    * }
    * ```
    */
   redirects?: Input<string[]>;
   /**
-   * Specify additional names that should route to the Cloudfront Distribution.
-   * @default No aliases configured
+   * Alias domains that should be used. Unlike the `redirect` option, this keeps your visitors
+   * on this alias domain.
+   *
    * @example
-   * ```js
-   * domain: {
-   *   domainName: "app1.domain.com",
-   *   aliases: ["app2.domain.com"],
+   * So if your users visit `app2.domain.com`, they will stay on `app2.domain.com` in their
+   * browser.
+   * ```js {4}
+   * {
+   *   domain: {
+   *     domainName: "app1.domain.com",
+   *     aliases: ["app2.domain.com"]
+   *   }
    * }
    * ```
    */
   aliases?: Input<string[]>;
   /**
-   * Name of the hosted zone in Route 53 that contains the domain. By default, SST will look for a hosted zone matching the domain name that's passed in.
-   * Do not set both "hostedZone" and "hostedZoneId".
+   * Name of the [Route 53 hosted zone](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/hosted-zones-working-with.html) that contains the `domainName`. You can find the hosted zone name in the Route 53 part of the AWS Console.
+
+   *
+   * Usually your domain name is in a hosted zone with the same name. For example,
+   * `domain.com` might be in a hosted zone also called `domain.com`. So by default, SST will
+   * look for a hosted zone that matches the `domainName`.
+   *
+   * There are cases where these might not be the same. For example, if you use a subdomain,
+   * `app.domain.com`, the hosted zone might be `domain.com`. So you'll need to pass in the
+   * hosted zone name.
+   *
+   * :::note
+   * If both the `hostedZone` and `hostedZoneId` are set, `hostedZoneId` will take precedence.
+   * :::
+   *
    * @default Same as the `domainName`
    * @example
-   * ```js
-   * domain: {
-   *   domainName: "app.domain.com",
-   *   hostedZone: "domain.com",
+   * ```js {4}
+   * {
+   *   domain: {
+   *     domainName: "app.domain.com",
+   *     hostedZone: "domain.com"
+   *   }
    * }
    * ```
    */
   hostedZone?: Input<string>;
   /**
-   * The 14 letter id of the hosted zone in Route 53 that contains the domain.
-   * Only set this option if there are multiple hosted zones of the same domain in Route 53.
-   * Do not set both "hostedZone" and "hostedZoneId".
+   * The 14 letter ID of the [Route 53 hosted zone](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/hosted-zones-working-with.html) that contains the `domainName`. You can find the hosted zone ID in the Route 53 part of the AWS Console.
+   *
+   * This option is useful for cases where you have multiple hosted zones that have the same
+   * domain.
+   *
+   * :::note
+   * If both the `hostedZone` and `hostedZoneId` are set, `hostedZoneId` will take precedence.
+   * :::
+   *
    * @example
-   * ```js
-   * domain: {
-   *   domainName: "domain.com",
-   *   hostedZoneId: "Z2FDTNDATAQYW2",
+   * ```js {4}
+   * {
+   *   domain: {
+   *     domainName: "domain.com",
+   *     hostedZoneId: "Z2FDTNDATAQYW2"
+   *   }
    * }
    * ```
    */
@@ -76,22 +115,32 @@ export interface CdnDomainArgs {
 
 export interface CdnArgs {
   /**
-   * The domain for this website. SST supports domains that are hosted
-   * either on [Route 53](https://aws.amazon.com/route53/) or externally.
+   * Set a custom domain for your SSR site. Supports domains hosted either on
+   * [Route 53](https://aws.amazon.com/route53/) or outside AWS.
    *
-   * Note that you can also migrate externally hosted domains to Route 53 by
+   * :::tip
+   * You can also migrate an externally hosted domain to Amazon Route 53 by
    * [following this guide](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/MigratingDNS.html).
+   * :::
    *
    * @example
-   * ```js
-   * domain: "domain.com",
-   * ```
    *
    * ```js
-   * domain: {
-   *   domainName: "domain.com",
-   *   redirects: ["www.domain.com"],
-   * },
+   * {
+   *   domain: "domain.com"
+   * }
+   * ```
+   *
+   * Specify the Route 53 hosted zone and a `www.` version of the custom domain.
+   *
+   * ```js
+   * {
+   *   domain: {
+   *     domainName: "domain.com",
+   *     hostedZone: "domain.com",
+   *     redirects: ["www.domain.com"]
+   *   }
+   * }
    * ```
    */
   domain?: Input<string | Prettify<CdnDomainArgs>>;
