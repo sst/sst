@@ -124,7 +124,7 @@ export default defineConfig({
             "data-modal-header-bg-color": "white",
             "data-button-hide": "true",
             "data-modal-title": "Ask AI",
-            "data-font-family:": "monospace",
+            "data-font-family": "var(--__sl-font)",
             "data-modal-title-font-family": "var(--__sl-font-headings)",
             "data-modal-border-radius": "0.625rem",
             "data-modal-example-questions":

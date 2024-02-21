@@ -145,6 +145,30 @@ export interface SsrSiteArgs {
   /**
    * Configure the assets uploaded to S3.
    */
+  // TODO implement `sst dev`
+  //dev?: {
+  //  /**
+  //   * When running `sst dev`, site is not deployed. This is to ensure `sst dev` can start up quickly.
+  //   * @default `false`
+  //   * @example
+  //   * ```js
+  //   * dev: {
+  //   *   deploy: true
+  //   * }
+  //   * ```
+  //   */
+  //  deploy?: boolean;
+  //  /**
+  //   * The local site URL when running `sst dev`.
+  //   * @example
+  //   * ```js
+  //   * dev: {
+  //   *   url: "http://localhost:3000"
+  //   * }
+  //   * ```
+  //   */
+  //  url?: string;
+  //};
   assets?: Input<{
     /**
      * Character encoding for text based assets uploaded to S3 (ex: html, css, js, etc.). If "none" is specified, no charset will be returned in header.

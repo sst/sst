@@ -132,7 +132,7 @@ export interface NextjsArgs extends SsrSiteArgs {
      * @example
      * ```js
      * imageOptimization: {
-     *   memory: "512 MB",
+     *   memory: "512 MB"
      * }
      * ```
      */
