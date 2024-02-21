@@ -21,7 +21,11 @@ let response: any;
 let context: LambdaContext;
 
 async function error(ex: any) {
-  console.log(ex);
+  const body = JSON.stringify({
+    errorType: "Error",
+    errorMessage: ex.message,
+    trace: ex.stack?.split("\n"),
+  });
   await fetch(
     AWS_LAMBDA_RUNTIME_API +
       (!context
@@ -32,11 +36,7 @@ async function error(ex: any) {
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({
-        errorType: "Error",
-        errorMessage: ex.message,
-        trace: ex.stack?.split("\n"),
-      }),
+      body,
     },
   );
 }

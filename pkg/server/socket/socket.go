@@ -61,6 +61,7 @@ func Start(ctx context.Context, p *project.Project, mux *http.ServeMux) {
 
 		invoke := bus.Listen(ctx, &aws.FunctionInvokedEvent{})
 		response := bus.Listen(ctx, &aws.FunctionResponseEvent{})
+		error := bus.Listen(ctx, &aws.FunctionErrorEvent{})
 		log := bus.Listen(ctx, &aws.FunctionLogEvent{})
 		stack := bus.Listen(ctx, &project.StackEvent{})
 
@@ -138,6 +139,16 @@ func Start(ctx context.Context, p *project.Project, mux *http.ServeMux) {
 				invocation, ok := invocations[evt.RequestID]
 				if ok {
 					invocation.Output = json.RawMessage(evt.Output)
+					invocation.End = time.Now().UnixMilli()
+					invocation.Report = &InvocationReport{
+						Duration: invocation.End - invocation.Start,
+					}
+					publishInvocation(invocation)
+				}
+				break
+			case evt := <-error:
+				invocation, ok := invocations[evt.RequestID]
+				if ok {
 					invocation.End = time.Now().UnixMilli()
 					invocation.Report = &InvocationReport{
 						Duration: invocation.End - invocation.Start,

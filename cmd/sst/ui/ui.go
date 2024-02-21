@@ -402,6 +402,13 @@ func (u *UI) Event(evt *server.Event) {
 		u.printEvent(color.FgGreen, "Build", evt.FunctionBuildEvent.FunctionID)
 	}
 
+	if evt.FunctionErrorEvent != nil {
+		u.printEvent(color.FgRed, "Error", evt.FunctionErrorEvent.ErrorMessage)
+		for _, item := range evt.FunctionErrorEvent.Trace {
+			u.printEvent(color.FgRed, "", strings.TrimSpace(item))
+		}
+	}
+
 }
 
 func (u *UI) printEvent(barColor color.Attribute, label string, message string) {

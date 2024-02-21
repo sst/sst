@@ -51,6 +51,15 @@ type FunctionResponseEvent struct {
 	Output     []byte
 }
 
+type FunctionErrorEvent struct {
+	FunctionID   string
+	WorkerID     string
+	RequestID    string
+	ErrorType    string   `json:"errorType"`
+	ErrorMessage string   `json:"errorMessage"`
+	Trace        []string `json:"trace"`
+}
+
 type FunctionBuildEvent struct {
 	FunctionID string
 	Errors     []string
@@ -178,9 +187,10 @@ func Start(
 	fileChan := make(chan *watcher.FileChangedEvent, 1000)
 
 	type workerResponse struct {
-		response *http.Response
-		workerID string
-		path     []string
+		response    *http.Response
+		requestBody *bytes.Buffer
+		workerID    string
+		path        []string
 	}
 	workerResponseChan := make(chan workerResponse, 1000)
 	workerShutdownChan := make(chan *WorkerInfo, 1000)
@@ -287,7 +297,7 @@ func Start(
 					continue
 				}
 
-				body, err := io.ReadAll(evt.response.Body)
+				responseBody, err := io.ReadAll(evt.response.Body)
 				if err != nil {
 					continue
 				}
@@ -297,7 +307,7 @@ func Start(
 						FunctionID: info.FunctionID,
 						WorkerID:   info.WorkerID,
 						RequestID:  info.CurrentRequestID,
-						Input:      body,
+						Input:      responseBody,
 					})
 				}
 				if evt.path[len(evt.path)-1] == "response" {
@@ -305,8 +315,17 @@ func Start(
 						FunctionID: info.FunctionID,
 						WorkerID:   info.WorkerID,
 						RequestID:  evt.path[len(evt.path)-2],
-						Output:     body,
+						Output:     responseBody,
 					})
+				}
+				if evt.path[len(evt.path)-1] == "error" {
+					fee := &FunctionErrorEvent{
+						FunctionID: info.FunctionID,
+						WorkerID:   info.WorkerID,
+						RequestID:  evt.path[len(evt.path)-2],
+					}
+					json.Unmarshal(evt.requestBody.Bytes(), &fee)
+					bus.Publish(fee)
 				}
 			case info := <-workerShutdownChan:
 				slog.Info("worker died", "workerID", info.WorkerID)
@@ -404,8 +423,10 @@ func Start(
 		fmt.Fprint(writer, "Host: 127.0.0.1\r\n")
 		_, err := fmt.Fprint(writer, "\r\n")
 
+		requestBody := &bytes.Buffer{}
 		if r.ContentLength > 0 {
-			io.Copy(writer, r.Body)
+			write := io.MultiWriter(writer, requestBody)
+			io.Copy(write, r.Body)
 		}
 		writer.Flush()
 
@@ -435,9 +456,10 @@ func Start(
 			resp, err := http.ReadResponse(bufio.NewReader(buf), nil)
 			if err == nil {
 				workerResponseChan <- workerResponse{
-					workerID: workerID,
-					response: resp,
-					path:     path,
+					workerID:    workerID,
+					response:    resp,
+					requestBody: requestBody,
+					path:        path,
 				}
 			}
 			done <- struct{}{}
