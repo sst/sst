@@ -142,9 +142,6 @@ export interface SsrSiteArgs {
    * @default Server function is not kept warm
    */
   warm?: Input<number>;
-  /**
-   * Configure the assets uploaded to S3.
-   */
   // TODO implement `sst dev`
   //dev?: {
   //  /**
@@ -169,10 +166,16 @@ export interface SsrSiteArgs {
   //   */
   //  url?: string;
   //};
+  /**
+   * Configure how the assets uploaded to S3.
+   */
   assets?: Input<{
     /**
-     * Character encoding for text based assets uploaded to S3 (ex: html, css, js, etc.). If "none" is specified, no charset will be returned in header.
-     * @default `utf-8`
+     * Character encoding for text based assets uploaded to S3, like HTML, CSS, JS. This is
+     * used to set the `Content-Type` header when these files are served out.
+     *
+     * If set to `"none"`, then no charset will be returned in header.
+     * @default `"utf-8"`
      * @example
      * ```js
      * assets: {
@@ -184,19 +187,9 @@ export interface SsrSiteArgs {
       "utf-8" | "iso-8859-1" | "windows-1252" | "ascii" | "none"
     >;
     /**
-     * The TTL for versioned files (ex: `main-1234.css`) in the CDN and browser cache. Ignored when `versionedFilesCacheHeader` is specified.
-     * @default `1 year`
-     * @example
-     * ```js
-     * assets: {
-     *   versionedFilesTTL: "30 days"
-     * }
-     * ```
-     */
-    versionedFilesTTL?: Input<number | Duration>;
-    /**
-     * The header to use for versioned files (ex: `main-1234.css`) in the CDN cache. When specified, the `versionedFilesTTL` option is ignored.
-     * @default `public,max-age=31536000,immutable`
+     * The `Cache-Control` header to use for versioned files (like `main-1234.css`). This is
+     * used by both CloudFront and the browser cache.
+     * @default `"public,max-age=31536000,immutable"`
      * @example
      * ```js
      * assets: {

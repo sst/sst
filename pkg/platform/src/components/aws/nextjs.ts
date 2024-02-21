@@ -106,6 +106,10 @@ interface OpenNextOutput {
 
 export interface NextjsArgs extends SsrSiteArgs {
   /**
+   * Configure how the Next.js app assets are uploaded to S3.
+   */
+  assets?: SsrSiteArgs["assets"];
+  /**
    * OpenNext version for building the Next.js site.
    * @default Latest OpenNext version
    * @example
