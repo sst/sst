@@ -839,7 +839,8 @@ The resources(s) specified using the [IAM ARN format](https://docs.aws.amazon.co
   - <p>[<code class="key">serverCachePolicy?</code>](#transform-plan-servercachepolicy) <code class="primitive">Object</code></p>
     - <p>[<code class="key">allowedHeaders?</code>](#transform-plan-servercachepolicy-allowedheaders)</p>
 </Section>
-[Transform](/docs/transform/) how this component is created.
+[Transform](/docs/components#transform/) how this component creates its underlying
+resources.
 </Segment>
 <NestedTitle id="transform-plan" Tag="h4" parent="transform.">plan?</NestedTitle>
 <Segment>
@@ -1122,19 +1123,6 @@ Each origin can be either an S3, server, image optimization, or group origin.
 </InlineSection>
 </Section>
 </Segment>
-### typesPath?
-<Segment>
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
-</InlineSection>
-</Section>
-
-<InlineSection>
-**Default** <code class="primitive">.</code>
-</InlineSection>
-Path relative to the app location where the type definitions are located.
-</Segment>
 ### warm?
 <Segment>
 <Section type="parameters">
@@ -1144,8 +1132,10 @@ Path relative to the app location where the type definitions are located.
 </Section>
 
 <InlineSection>
-**Default** Server function is not kept warm
+**Default** <code class="primitive">0</code>
 </InlineSection>
-The number of server functions to keep warm. This option is only supported for the regional mode.
+The number of instances of the server function to keep warm. This is useful for cases where you are experiencing long cold starts. The default is to not keep any instances warm.
+
+This works by starting a serverless cron job to make _n_ concurrent requests to the server function every few minutes. Where _n_ is the number of instances to keep warm.
 </Segment>
 </div>

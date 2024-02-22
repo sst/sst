@@ -661,7 +661,8 @@ The resources(s) specified using the [IAM ARN format](https://docs.aws.amazon.co
   - <p>[<code class="key">serverCachePolicy?</code>](#transform-plan-servercachepolicy) <code class="primitive">Object</code></p>
     - <p>[<code class="key">allowedHeaders?</code>](#transform-plan-servercachepolicy-allowedheaders)</p>
 </Section>
-[Transform](/docs/transform/) how this component is created.
+[Transform](/docs/components#transform/) how this component creates its underlying
+resources.
 </Segment>
 <NestedTitle id="transform-plan" Tag="h4" parent="transform.">plan?</NestedTitle>
 <Segment>
@@ -943,19 +944,6 @@ Each origin can be either an S3, server, image optimization, or group origin.
 **Type** <code class="primitive">string</code><code class="symbol">[]</code>
 </InlineSection>
 </Section>
-</Segment>
-### typesPath?
-<Segment>
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
-</InlineSection>
-</Section>
-
-<InlineSection>
-**Default** <code class="primitive">.</code>
-</InlineSection>
-Path relative to the app location where the type definitions are located.
 </Segment>
 ### warm?
 <Segment>

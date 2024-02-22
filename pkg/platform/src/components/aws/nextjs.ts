@@ -107,6 +107,14 @@ interface OpenNextOutput {
 
 export interface NextjsArgs extends SsrSiteArgs {
   /**
+   * The number of instances of the server function to keep warm. This is useful for cases where you are experiencing long cold starts. The default is to not keep any instances warm.
+   *
+   * This works by starting a serverless cron job to make _n_ concurrent requests to the server function every few minutes. Where _n_ is the number of instances to keep warm.
+   *
+   * @default `0`
+   */
+  warm?: SsrSiteArgs["warm"];
+  /**
    * Permissions and the resources that the [server function](#nodes-server) in your Next.js app needs to access. These permissions are used to create the function's IAM role.
    *
    * :::tip
@@ -382,7 +390,7 @@ export interface NextjsArgs extends SsrSiteArgs {
  *
  * #### Link resources
  *
- * [Link resources](/docs/linking/) to your Next.js app. The will grant permissions
+ * [Link resources](/docs/linking/) to your Next.js app. This will grant permissions
  * to the resources and allow you to access it in your handler.
  *
  * ```ts {4}
