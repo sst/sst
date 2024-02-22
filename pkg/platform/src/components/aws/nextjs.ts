@@ -107,37 +107,154 @@ interface OpenNextOutput {
 
 export interface NextjsArgs extends SsrSiteArgs {
   /**
+   * Configure how the CloudFront cache invalidations are handled. This is run after your Next.js app has been deployed.
+   * :::tip
+   * You get 1000 free invalidations per month. After that, you pay $0.005 per invalidation path. [Read more here](https://aws.amazon.com/cloudfront/pricing/).
+   * :::
+   * @default `&lcub;paths: "all", wait: false&rcub;`
+   * @example
+   * Wait for all paths to be invalidated.
+   * ```js
+   * {
+   *   invalidation: {
+   *     paths: "all",
+   *     wait: true
+   *   }
+   * }
+   * ```
+   */
+  invalidation?: SsrSiteArgs["invalidation"];
+  /**
+   * The command used internally to build your Next.js app. It uses OpenNext with the `openNextVersion`.
+   *
+   * @default `"npx --yes open-next@OPEN_NEXT_VERSION build"`
+   *
+   * @example
+   *
+   * If you want SST to use a custom `build` script from your `package.json`.
+   * ```js
+   * {
+   *   buildCommand: "npm run build"
+   * }
+   * ```
+   */
+  buildCommand?: SsrSiteArgs["buildCommand"];
+  /**
+   * Set [environment variables](https://nextjs.org/docs/pages/building-your-application/configuring/environment-variables) in your Next.js app. These are made available:
+   *
+   * 1. In `next build`, they are loaded into `process.env`.
+   * 2. Locally while running `sst dev next dev`.
+   *
+   * :::tip
+   * You can also `link` resources to your Next.js app and access them in a type-safe way with the [SST Node client](/docs/reference/client/). We recommend linking since it's more secure.
+   * :::
+   *
+   * Recall that in Next.js, you need to prefix your environment variables with `NEXT_PUBLIC_` to access these in the browser. [Read more here](https://nextjs.org/docs/pages/building-your-application/configuring/environment-variables#bundling-environment-variables-for-the-browser).
+   *
+   * @example
+   * ```js
+   * {
+   *   environment: {
+   *     API_URL: api.url,
+   *     // Accessible in the browser
+   *     NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: "pk_test_123"
+   *   }
+   * }
+   * ```
+   */
+  environment?: SsrSiteArgs["environment"];
+  /**
+   * Set a custom domain for your Next.js app. Supports domains hosted either on
+   * [Route 53](https://aws.amazon.com/route53/) or outside AWS.
+   *
+   * :::tip
+   * You can also migrate an externally hosted domain to Amazon Route 53 by
+   * [following this guide](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/MigratingDNS.html).
+   * :::
+   *
+   * @example
+   *
+   * ```js
+   * {
+   *   domain: "domain.com"
+   * }
+   * ```
+   *
+   * Specify the Route 53 hosted zone and a `www.` version of the custom domain.
+   *
+   * ```js
+   * {
+   *   domain: {
+   *     domainName: "domain.com",
+   *     hostedZone: "domain.com",
+   *     redirects: ["www.domain.com"]
+   *   }
+   * }
+   * ```
+   */
+  domain?: SsrSiteArgs["domain"];
+  /**
    * Configure how the Next.js app assets are uploaded to S3.
    */
   assets?: SsrSiteArgs["assets"];
   /**
-   * OpenNext version for building the Next.js site.
-   * @default Latest OpenNext version
+   * Configure the [OpenNext](https://open-next.js.org) version used to build the Next.js app.
+   *
+   * :::note
+   * This does not automatically update to the latest OpenNext version. It remains pinned to the version of SST you have.
+   * :::
+   *
+   * By default, this is pinned to the version of OpenNext that was released with the SST version you are using. You can [find this in the source](https://github.com/sst/ion/blob/dev/pkg/platform/src/components/aws/nextjs.ts) under `DEFAULT_OPEN_NEXT_VERSION`.
+   *
+   * @default The latest version of OpenNext
    * @example
    * ```js
-   * openNextVersion: "3.0.0-rc.3",
+   * {
+   *   openNextVersion: "3.0.0-rc.3",
+   * }
    * ```
    */
   openNextVersion?: Input<string>;
   /**
-   * How the logs are stored in CloudWatch
-   * - "combined" - Logs from all routes are stored in the same log group.
-   * - "per-route" - Logs from each route are stored in a separate log group. Doesn't work right now
-   * @default "per-route"
+   * Configure how the logs are stored in CloudWatch.
+   *
+   * By default, AWS CloudWatch sends all the logs to the same log group, `combined`. This
+   * makes it hard to find the request you are looking for.
+   *
+   * :::tip[SST Console]
+   * With `per-route` logging enabled, the [Console](/docs/console/) will display each of
+   * your routes separately on the resources screen.
+   * :::
+   *
+   * SST will instead split the logs from Individual routes into different log groups,
+   * `per-route`. The log group names are prefixed with `/sst/lambda/`, followed by the
+   * server function name. It'll look something like `/sst/lambda/prod-app-MyNextSite-serverFunction6DFA6F1B-TiNQRV8IhGAu/979bddc4/about`.
+   *
+   * @default `"per-route"`
    * @example
    * ```js
-   * logging: "combined",
+   * {
+   *   logging: "combined"
+   * }
    * ```
    */
   logging?: "combined" | "per-route";
+  /**
+   * Configure the Lambda function used for image optimization.
+   * @default `&lcub;memory: "1024 MB"&rcub;`
+   */
   imageOptimization?: {
     /**
-     * The amount of memory in MB allocated for image optimization function.
-     * @default 1024 MB
+     * The amount of memory allocated to the image optimization function.
+     * Takes values between 128 MB and 10240 MB in 1 MB increments.
+     *
+     * @default `"1024 MB"`
      * @example
      * ```js
-     * imageOptimization: {
-     *   memory: "512 MB"
+     * {
+     *   imageOptimization: {
+     *     memory: "512 MB"
+     *   }
      * }
      * ```
      */
@@ -151,11 +268,79 @@ export interface NextjsArgs extends SsrSiteArgs {
  * output to a format that can be deployed to AWS.
  *
  * @example
- * Deploys a Next.js app in the `my-next-app` directory.
+ *
+ * #### Minimal example
+ *
+ * Deploy the Next.js app that's in the project root.
  *
  * ```js
- * new Nextjs("Web", {
- *   path: "my-next-app/",
+ * new sst.aws.Nextjs("Web");
+ * ```
+ *
+ * #### Change the path
+ *
+ * Deploys a Next.js app in the `my-next-app` directory.
+ *
+ * ```js {2}
+ * new sst.aws.Nextjs("Web", {
+ *   path: "my-next-app/"
+ * });
+ * ```
+ *
+ * #### Add a custom domain
+ *
+ * Set a custom domain for your Next.js app.
+ *
+ * ```js {2}
+ * new sst.aws.Nextjs("Web", {
+ *   domain: "my-app.com"
+ * });
+ * ```
+ *
+ * #### Redirect www to apex domain
+ *
+ * Redirect `www.my-app.com` to `my-app.com`.
+ *
+ * ```js {4}
+ * new sst.aws.Nextjs("Web", {
+ *   domain: {
+ *     domainName: "my-app.com",
+ *     aliases: ["www.my-app.com"]
+ *   }
+ * });
+ * ```
+ *
+ * #### Link resources
+ *
+ * [Link resources](/docs/linking/) to your Next.js app. The will grant permissions
+ * to the resources and allow you to access it in your handler.
+ *
+ * ```ts {4}
+ * const myBucket = new sst.aws.Bucket("MyBucket");
+ *
+ * new sst.aws.Nextjs("Web", {
+ *   link: [myBucket],
+ * });
+ * ```
+ *
+ * You can use the [SST Node client](/docs/reference/client/) to access the linked resources
+ * in your Next.js app.
+ *
+ * ```ts title="app/page.tsx"
+ * import { Resource } from "sst";
+ *
+ * console.log(Resource.MyBucket.bucketName);
+ * ```
+ *
+ * #### Set environment variables
+ *
+ * Set [environment variables](https://nextjs.org/docs/app/building-your-application/configuring/environment-variables) in your Next.js app.
+ *
+ * ```ts {3}
+ * new sst.aws.Nextjs("Web", {
+ *   environment: {
+ *     API_URL: "https://api.example.com",
+ *   },
  * });
  * ```
  */
@@ -1103,14 +1288,14 @@ if (event.rawPath) {
   }
 
   /**
-   * The CloudFront URL of the website.
+   * The autogenerated CloudFront URL of the Next.js app.
    */
   public get url() {
     return this.cdn.url;
   }
 
   /**
-   * If the custom domain is enabled, this is the URL of the website with the
+   * If the `domain` is set, this is the URL of the Next.js app with the
    * custom domain.
    */
   public get domainUrl() {
@@ -1118,11 +1303,17 @@ if (event.rawPath) {
   }
 
   /**
-   * The internally created CDK resources.
+   * The underlying [resources](/docs/components/#nodes) this component creates.
    */
   public get nodes() {
     return {
+      /**
+       * The AWS Lambda server function.
+       */
       server: this.server as unknown as Function,
+      /**
+       * The Amazon S3 Bucket that stores the assets.
+       */
       assets: this.assets,
     };
   }

@@ -53,9 +53,22 @@ type OriginGroupConfig = {
 
 export type Plan = ReturnType<typeof validatePlan>;
 export interface SsrSiteFileOptions {
+  /**
+   * A glob pattern or array of glob patterns of files to apply these options to.
+   */
   files: string | string[];
+  /**
+   * A glob pattern or array of glob patterns of files to exclude from the ones matched
+   * by the `files` glob pattern.
+   */
   ignore?: string | string[];
+  /**
+   * The `Cache-Control` header to apply to the matched files.
+   */
   cacheControl?: string;
+  /**
+   * The `Content-Type` header to apply to the matched files.
+   */
   contentType?: string;
 }
 export interface SsrSiteArgs {
@@ -79,23 +92,32 @@ export interface SsrSiteArgs {
    */
   buildCommand?: Input<string>;
   /**
-   * The domain for this website. SST supports domains that are hosted
-   * either on [Route 53](https://aws.amazon.com/route53/) or externally.
+   * Set a custom domain for your SSR site. Supports domains hosted either on
+   * [Route 53](https://aws.amazon.com/route53/) or outside AWS.
    *
-   * Note that you can also migrate externally hosted domains to Route 53 by
+   * :::tip
+   * You can also migrate an externally hosted domain to Amazon Route 53 by
    * [following this guide](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/MigratingDNS.html).
+   * :::
    *
    * @example
-   * ```js
-   * domain: "domain.com",
-   * ```
    *
    * ```js
-   * domain: {
-   *   domainName: "domain.com",
-   *   redirects: ["www.domain.com"],
-   *   hostedZone: "domain.com"
-   * },
+   * {
+   *   domain: "domain.com"
+   * }
+   * ```
+   *
+   * Specify the Route 53 hosted zone and a `www.` version of the custom domain.
+   *
+   * ```js
+   * {
+   *   domain: {
+   *     domainName: "domain.com",
+   *     hostedZone: "domain.com",
+   *     redirects: ["www.domain.com"]
+   *   }
+   * }
    * ```
    */
   domain?: Input<string | Prettify<CdnDomainArgs>>;
@@ -178,8 +200,10 @@ export interface SsrSiteArgs {
      * @default `"utf-8"`
      * @example
      * ```js
-     * assets: {
-     *   textEncoding: "iso-8859-1"
+     * {
+     *   assets: {
+     *     textEncoding: "iso-8859-1"
+     *   }
      * }
      * ```
      */
@@ -192,71 +216,108 @@ export interface SsrSiteArgs {
      * @default `"public,max-age=31536000,immutable"`
      * @example
      * ```js
-     * assets: {
-     *   versionedFilesCacheHeader: "public,max-age=31536000,immutable"
+     * {
+     *   assets: {
+     *     versionedFilesCacheHeader: "public,max-age=31536000,immutable"
+     *   }
      * }
      * ```
      */
     versionedFilesCacheHeader?: Input<string>;
     /**
      * The `Cache-Control` header used for non-versioned files (like `main-1234.css`). This is
-     * used by both CloudFront and the browser cache. The default `max-age` is set to * 1 year.
+     * used by both CloudFront and the browser cache. The default `max-age` is set to 1 year.
      * @default `"public,max-age=0,s-maxage=86400,stale-while-revalidate=8640"`
      * @example
      * ```js
-     * assets: {
-     *   nonVersionedFilesCacheHeader: "public,max-age=0,no-cache"
+     * {
+     *   assets: {
+     *     nonVersionedFilesCacheHeader: "public,max-age=0,no-cache"
+     *   }
      * }
      * ```
      */
     nonVersionedFilesCacheHeader?: Input<string>;
     /**
-     * List of file options to specify cache control and content type for cached files. These file options are appended to the default file options so it's possible to override the default file options by specifying an overlapping file pattern.
+     * Specify the `Content-Type` and `Cache-Control` headers for specific files. This allows
+     * you to override the default behavior for specific files using glob patterns.
      * @example
+     * Apply `Cache-Control` and `Content-Type` to all zip files.
      * ```js
-     * assets: {
-     *   fileOptions: [
-     *     {
-     *       files: "**\/*.zip",
-     *       cacheControl: "private,no-cache,no-store,must-revalidate",
-     *       contentType: "application/zip",
-     *     },
-     *   ],
+     * {
+     *   assets: {
+     *     fileOptions: [
+     *       {
+     *         files: "**\/*.zip",
+     *         contentType: "application/zip",
+     *         cacheControl: "private,no-cache,no-store,must-revalidate"
+     *       },
+     *     ],
+     *   }
+     * }
+     * ```
+     * Apply `Cache-Control` to all CSS and JS files except for CSS files with `index-`
+     * prefix in the `main/` directory.
+     * ```js
+     * {
+     *   assets: {
+     *     fileOptions: [
+     *       {
+     *         files: ["**\/*.css", "**\/*.js"],
+     *         ignore: "main\/index-*.css",
+     *         cacheControl: "private,no-cache,no-store,must-revalidate"
+     *       },
+     *     ],
+     *   }
      * }
      * ```
      */
     fileOptions?: Input<Prettify<SsrSiteFileOptions>[]>;
   }>;
+  /**
+   * Configure how the CloudFront cache invalidations are handled.
+   */
   invalidation?: Input<{
     /**
      * While deploying, SST waits for the CloudFront cache invalidation process to finish. This ensures that the new content will be served once the deploy command finishes. However, this process can sometimes take more than 5 mins. For non-prod environments it might make sense to pass in `false`. That'll skip waiting for the cache to invalidate and speed up the deploy process.
      * @default `false`
      * @example
      * ```js
-     * invalidation: {
-     *   wait: true,
+     * {
+     *   invalidation: {
+     *     wait: true,
+     *   }
      * }
      * ```
      */
     wait?: Input<boolean>;
     /**
-     * The paths to invalidate. There are three built-in options:
-     * - "none" - No invalidation will be performed.
-     * - "all" - All files will be invalidated when any file changes.
-     * - "versioned" - Only versioned files will be invalidated when versioned files change.
-     * Alternatively you can pass in an array of paths to invalidate.
-     * @default `all`
+     * The paths to invalidate.
+     *
+     * You can either pass in an array of glob patterns to invalidate specific files. Or you can use one of these built-in options:
+     * - `none`: Nothing will be invalidated.
+     * - `all`: All files will be invalidated when any file changes.
+     * - `versioned`: Only versioned files will be invalidated when versioned files change.
+     *
+     * :::note
+     * Invalidating `all` counts as one invalidation, while each glob pattern counts as a single invalidation path.
+     * :::
+     * @default `"all"`
      * @example
-     * Disable invalidation:
+     * Disable invalidation.
      * ```js
-     * invalidation: {
-     *   paths: "none",
+     * {
+     *   invalidation: {
+     *     paths: "none"
+     *   }
      * }
      * ```
-     * Invalidate "index.html" and all files under the "products" route:
+     * Invalidate the `index.html` and all files under the `products/` route.
      * ```js
-     * invalidation: {
-     *   paths: ["/index.html", "/products/*"],
+     * {
+     *   invalidation: {
+     *     paths: ["/index.html", "/products/*"]
+     *   }
      * }
      * ```
      */

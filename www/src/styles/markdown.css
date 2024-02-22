@@ -17,6 +17,10 @@
   + :not(a, strong, em, del, span, input, code, h1, h2, h3, h4, h5, h6, :where(.not-content *)) {
   margin-top: calc(var(--paragraph-spacing) + 0.5rem);
 }
+.sl-markdown-content :is(.starlight-aside, .expressive-code)
+  + :is(.starlight-aside, .expressive-code) {
+  margin-top: calc(var(--paragraph-spacing) + 1.125rem);
+}
 /* Space around sections */
 .sl-markdown-content :not(h1, h2, h3, h4, h5, h6)
   + :is(h1, h2, h3, h4, h5, h6):not(:where(.not-content *)),

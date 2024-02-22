@@ -116,16 +116,35 @@ Configure how the assets uploaded to S3.
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Object</code><code class="symbol">[]</code><code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
-List of file options to specify cache control and content type for cached files. These file options are appended to the default file options so it's possible to override the default file options by specifying an overlapping file pattern.
+Specify the `Content-Type` and `Cache-Control` headers for specific files. This allows
+you to override the default behavior for specific files using glob patterns.
+Apply `Cache-Control` and `Content-Type` to all zip files.
 ```js
-assets: {
-  fileOptions: [
-    {
-      files: "**/*.zip",
-      cacheControl: "private,no-cache,no-store,must-revalidate",
-      contentType: "application/zip",
-    },
-  ],
+{
+  assets: {
+    fileOptions: [
+      {
+        files: "**/*.zip",
+        contentType: "application/zip",
+        cacheControl: "private,no-cache,no-store,must-revalidate"
+      },
+    ],
+  }
+}
+```
+Apply `Cache-Control` to all CSS and JS files except for CSS files with `index-`
+prefix in the `main/` directory.
+```js
+{
+  assets: {
+    fileOptions: [
+      {
+        files: ["**/*.css", "**/*.js"],
+        ignore: "main/index-*.css",
+        cacheControl: "private,no-cache,no-store,must-revalidate"
+      },
+    ],
+  }
 }
 ```
 </Segment>
@@ -136,6 +155,7 @@ assets: {
 **Type** <code class="primitive">string</code>
 </InlineSection>
 </Section>
+The `Cache-Control` header to apply to the matched files.
 </Segment>
 <NestedTitle id="assets-fileoptions-contenttype" Tag="h5" parent="assets.fileOptions[].">contentType?</NestedTitle>
 <Segment>
@@ -144,6 +164,7 @@ assets: {
 **Type** <code class="primitive">string</code>
 </InlineSection>
 </Section>
+The `Content-Type` header to apply to the matched files.
 </Segment>
 <NestedTitle id="assets-fileoptions-files" Tag="h5" parent="assets.fileOptions[].">files</NestedTitle>
 <Segment>
@@ -152,6 +173,7 @@ assets: {
 **Type** <code class="primitive">string</code><code class="symbol"> | </code><code class="primitive">string</code><code class="symbol">[]</code>
 </InlineSection>
 </Section>
+A glob pattern or array of glob patterns of files to apply these options to.
 </Segment>
 <NestedTitle id="assets-fileoptions-ignore" Tag="h5" parent="assets.fileOptions[].">ignore?</NestedTitle>
 <Segment>
@@ -160,6 +182,8 @@ assets: {
 **Type** <code class="primitive">string</code><code class="symbol"> | </code><code class="primitive">string</code><code class="symbol">[]</code>
 </InlineSection>
 </Section>
+A glob pattern or array of glob patterns of files to exclude from the ones matched
+by the `files` glob pattern.
 </Segment>
 <NestedTitle id="assets-nonversionedfilescacheheader" Tag="h4" parent="assets.">nonVersionedFilesCacheHeader?</NestedTitle>
 <Segment>
@@ -173,10 +197,12 @@ assets: {
 **Default** <code class="primitive">"public,max-age=0,s-maxage=86400,stale-while-revalidate=8640"</code>
 </InlineSection>
 The `Cache-Control` header used for non-versioned files (like `main-1234.css`). This is
-used by both CloudFront and the browser cache. The default `max-age` is set to * 1 year.
+used by both CloudFront and the browser cache. The default `max-age` is set to 1 year.
 ```js
-assets: {
-  nonVersionedFilesCacheHeader: "public,max-age=0,no-cache"
+{
+  assets: {
+    nonVersionedFilesCacheHeader: "public,max-age=0,no-cache"
+  }
 }
 ```
 </Segment>
@@ -196,8 +222,10 @@ used to set the `Content-Type` header when these files are served out.
 
 If set to `"none"`, then no charset will be returned in header.
 ```js
-assets: {
-  textEncoding: "iso-8859-1"
+{
+  assets: {
+    textEncoding: "iso-8859-1"
+  }
 }
 ```
 </Segment>
@@ -215,8 +243,10 @@ assets: {
 The `Cache-Control` header used for versioned files (like `main-1234.css`). This is
 used by both CloudFront and the browser cache. The default `max-age` is set to 1 year.
 ```js
-assets: {
-  versionedFilesCacheHeader: "public,max-age=31536000,immutable"
+{
+  assets: {
+    versionedFilesCacheHeader: "public,max-age=31536000,immutable"
+  }
 }
 ```
 </Segment>
@@ -248,21 +278,29 @@ buildCommand: "yarn build",
 - <p>[<code class="key">hostedZoneId?</code>](#domain-hostedzoneid)</p>
 - <p>[<code class="key">redirects?</code>](#domain-redirects)</p>
 </Section>
-The domain for this website. SST supports domains that are hosted
-either on [Route 53](https://aws.amazon.com/route53/) or externally.
+Set a custom domain for your SSR site. Supports domains hosted either on
+[Route 53](https://aws.amazon.com/route53/) or outside AWS.
 
-Note that you can also migrate externally hosted domains to Route 53 by
+:::tip
+You can also migrate an externally hosted domain to Amazon Route 53 by
 [following this guide](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/MigratingDNS.html).
+:::
 ```js
-domain: "domain.com",
+{
+  domain: "domain.com"
+}
 ```
 
+Specify the Route 53 hosted zone and a `www.` version of the custom domain.
+
 ```js
-domain: {
-  domainName: "domain.com",
-  redirects: ["www.domain.com"],
-  hostedZone: "domain.com"
-},
+{
+  domain: {
+    domainName: "domain.com",
+    hostedZone: "domain.com",
+    redirects: ["www.domain.com"]
+  }
+}
 ```
 </Segment>
 <NestedTitle id="domain-aliases" Tag="h4" parent="domain.">aliases?</NestedTitle>
@@ -272,15 +310,16 @@ domain: {
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">[]</code><code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
-
-<InlineSection>
-**Default** No aliases configured
-</InlineSection>
-Specify additional names that should route to the Cloudfront Distribution.
-```js
-domain: {
-  domainName: "app1.domain.com",
-  aliases: ["app2.domain.com"],
+Alias domains that should be used. Unlike the `redirect` option, this keeps your visitors
+on this alias domain.
+So if your users visit `app2.domain.com`, they will stay on `app2.domain.com` in their
+browser.
+```js {4}
+{
+  domain: {
+    domainName: "app1.domain.com",
+    aliases: ["app2.domain.com"]
+  }
 }
 ```
 </Segment>
@@ -291,9 +330,12 @@ domain: {
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
-The domain to be assigned to the website URL (ie. domain.com).
-
-Supports domains that are hosted either on [Route 53](https://aws.amazon.com/route53/) or externally.
+The custom domain you want to use. Supports domains hosted on [Route 53](https://aws.amazon.com/route53/) or outside AWS.
+```js
+{
+  domain: "domain.com"
+}
+```
 </Segment>
 <NestedTitle id="domain-hostedzone" Tag="h4" parent="domain.">hostedZone?</NestedTitle>
 <Segment>
@@ -306,12 +348,26 @@ Supports domains that are hosted either on [Route 53](https://aws.amazon.com/rou
 <InlineSection>
 **Default** Same as the `domainName`
 </InlineSection>
-Name of the hosted zone in Route 53 that contains the domain. By default, SST will look for a hosted zone matching the domain name that's passed in.
-Do not set both "hostedZone" and "hostedZoneId".
-```js
-domain: {
-  domainName: "app.domain.com",
-  hostedZone: "domain.com",
+Name of the [Route 53 hosted zone](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/hosted-zones-working-with.html) that contains the `domainName`. You can find the hosted zone name in the Route 53 part of the AWS Console.
+
+
+Usually your domain name is in a hosted zone with the same name. For example,
+`domain.com` might be in a hosted zone also called `domain.com`. So by default, SST will
+look for a hosted zone that matches the `domainName`.
+
+There are cases where these might not be the same. For example, if you use a subdomain,
+`app.domain.com`, the hosted zone might be `domain.com`. So you'll need to pass in the
+hosted zone name.
+
+:::note
+If both the `hostedZone` and `hostedZoneId` are set, `hostedZoneId` will take precedence.
+:::
+```js {4}
+{
+  domain: {
+    domainName: "app.domain.com",
+    hostedZone: "domain.com"
+  }
 }
 ```
 </Segment>
@@ -322,13 +378,20 @@ domain: {
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
-The 14 letter id of the hosted zone in Route 53 that contains the domain.
-Only set this option if there are multiple hosted zones of the same domain in Route 53.
-Do not set both "hostedZone" and "hostedZoneId".
-```js
-domain: {
-  domainName: "domain.com",
-  hostedZoneId: "Z2FDTNDATAQYW2",
+The 14 letter ID of the [Route 53 hosted zone](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/hosted-zones-working-with.html) that contains the `domainName`. You can find the hosted zone ID in the Route 53 part of the AWS Console.
+
+This option is useful for cases where you have multiple hosted zones that have the same
+domain.
+
+:::note
+If both the `hostedZone` and `hostedZoneId` are set, `hostedZoneId` will take precedence.
+:::
+```js {4}
+{
+  domain: {
+    domainName: "domain.com",
+    hostedZoneId: "Z2FDTNDATAQYW2"
+  }
 }
 ```
 </Segment>
@@ -339,16 +402,19 @@ domain: {
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">[]</code><code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
+Alternate domains to be used. Visitors to the alternate domains will be redirected to the
+main `domain`.
 
-<InlineSection>
-**Default** No redirects configured
-</InlineSection>
-Alternative domains to be assigned to the website URL. Visitors to the alternative domains will be redirected to the main domain. (ie. `www.domain.com`).
-Use this to create a `www.` version of your domain and redirect visitors to the root domain.
-```js
-domain: {
-  domainName: "domain.com",
-  redirects: ["www.domain.com"],
+:::note
+Unlike the `aliases` option, this will redirect visitors back to the main `domain`.
+:::
+Use this to create a `www.` version of your domain and redirect visitors to the apex domain.
+```js {4}
+{
+  domain: {
+    domainName: "domain.com",
+    redirects: ["www.domain.com"]
+  }
 }
 ```
 </Segment>
@@ -376,6 +442,7 @@ environment: {
 - <p>[<code class="key">paths?</code>](#invalidation-paths)</p>
 - <p>[<code class="key">wait?</code>](#invalidation-wait)</p>
 </Section>
+Configure how the CloudFront cache invalidations are handled.
 </Segment>
 <NestedTitle id="invalidation-paths" Tag="h4" parent="invalidation.">paths?</NestedTitle>
 <Segment>
@@ -386,23 +453,32 @@ environment: {
 </Section>
 
 <InlineSection>
-**Default** <code class="primitive">all</code>
+**Default** <code class="primitive">"all"</code>
 </InlineSection>
-The paths to invalidate. There are three built-in options:
-- "none" - No invalidation will be performed.
-- "all" - All files will be invalidated when any file changes.
-- "versioned" - Only versioned files will be invalidated when versioned files change.
-Alternatively you can pass in an array of paths to invalidate.
-Disable invalidation:
+The paths to invalidate.
+
+You can either pass in an array of glob patterns to invalidate specific files. Or you can use one of these built-in options:
+- `none`: Nothing will be invalidated.
+- `all`: All files will be invalidated when any file changes.
+- `versioned`: Only versioned files will be invalidated when versioned files change.
+
+:::note
+Invalidating `all` counts as one invalidation, while each glob pattern counts as a single invalidation path.
+:::
+Disable invalidation.
 ```js
-invalidation: {
-  paths: "none",
+{
+  invalidation: {
+    paths: "none"
+  }
 }
 ```
-Invalidate "index.html" and all files under the "products" route:
+Invalidate the `index.html` and all files under the `products/` route.
 ```js
-invalidation: {
-  paths: ["/index.html", "/products/*"],
+{
+  invalidation: {
+    paths: ["/index.html", "/products/*"]
+  }
 }
 ```
 </Segment>
@@ -419,8 +495,10 @@ invalidation: {
 </InlineSection>
 While deploying, SST waits for the CloudFront cache invalidation process to finish. This ensures that the new content will be served once the deploy command finishes. However, this process can sometimes take more than 5 mins. For non-prod environments it might make sense to pass in `false`. That'll skip waiting for the cache to invalidate and speed up the deploy process.
 ```js
-invalidation: {
-  wait: true,
+{
+  invalidation: {
+    wait: true,
+  }
 }
 ```
 </Segment>
