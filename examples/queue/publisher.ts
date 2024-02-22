@@ -6,7 +6,7 @@ export const handler = async (event) => {
   // send a message
   await client.send(
     new SendMessageCommand({
-      QueueUrl: Resource.MyQueue.queueUrl,
+      QueueUrl: Resource.MyQueue.url,
       MessageBody: "Hello from the subscriber",
     })
   );

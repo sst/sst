@@ -464,26 +464,26 @@ export function createBucket(parent: ComponentResource, name: string) {
       {},
       { parent, retainOnDelete: false },
     );
+
     // allow access from another account bucket policy
-    const policyDocument = aws.iam.getPolicyDocumentOutput({
-      statements: [
-        {
-          principals: [
-            {
-              type: "AWS",
-              identifiers: [access.iamArn],
-            },
-          ],
-          actions: ["s3:GetObject"],
-          resources: [interpolate`${bucket.arn}/*`],
-        },
-      ],
-    });
     new aws.s3.BucketPolicy(
       `${name}AssetsPolicy`,
       {
         bucket: bucket.name,
-        policy: policyDocument.json,
+        policy: aws.iam.getPolicyDocumentOutput({
+          statements: [
+            {
+              principals: [
+                {
+                  type: "AWS",
+                  identifiers: [access.iamArn],
+                },
+              ],
+              actions: ["s3:GetObject"],
+              resources: [interpolate`${bucket.arn}/*`],
+            },
+          ],
+        }).json,
       },
       { parent },
     );

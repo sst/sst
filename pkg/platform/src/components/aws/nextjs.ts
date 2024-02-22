@@ -862,10 +862,8 @@ export class Nextjs extends Component implements Link.Linkable {
             },
             { parent },
           );
-          queue.subscribe({
-            name: `${name}Revalidator`,
-            batchSize: 5,
-            function: {
+          queue.subscribe(
+            {
               description: `${name} ISR revalidator`,
               handler: revalidationFunction.handler,
               bundle: path.join(outputPath, revalidationFunction.bundle),
@@ -886,7 +884,10 @@ export class Nextjs extends Component implements Link.Linkable {
               liveDev: false,
               _ignoreCodeChanges: $dev,
             },
-          });
+            {
+              batchSize: 5,
+            },
+          );
           return queue;
         },
       );

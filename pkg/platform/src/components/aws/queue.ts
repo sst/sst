@@ -121,28 +121,6 @@ export interface QueueSubscribeArgs {
    * @default `false`
    */
   reportBatchItemFailures?: Input<boolean>;
-  /**
-   * The Lambda function to invoke when there are messages in the SQS.
-   * @example
-   *
-   * Specify a function handler.
-   * ```js
-   * {
-   *   function: "packages/functions/src/index.handler"
-   * }
-   * ```
-   *
-   * Customize the function.
-   * ```js
-   * {
-   *   function: {
-   *     handler: "packages/functions/src/index.handler",
-   *     timeout: "60 seconds",
-   *   }
-   * }
-   * ```
-   */
-  function: Input<FunctionDefinition>;
 }
 
 /**
@@ -200,13 +178,6 @@ export class Queue
   }
 
   /**
-   * The generated name of the SQS Queue.
-   */
-  public get name() {
-    return this.queue.name;
-  }
-
-  /**
    * The ARN of the SQS Queue.
    */
   public get arn() {
@@ -234,8 +205,28 @@ export class Queue
 
   /**
    * Subscribes to the SQS Queue.
+   * @example
+   *
+   * ```js
+   * subscribe("src/subscriber.handler");
+   * ```
+   *
+   * Customize the subscription.
+   * ```js
+   * subscribe("src/subscriber.handler", {
+   *   batchSize: 5,
+   * });
+   * ```
+   *
+   * Customize the subscriber function.
+   * ```js
+   * subscribe({
+   *   handler: "src/subscriber.handler",
+   *   timeout: "60 seconds",
+   * });
+   * ```
    */
-  public subscribe(args: QueueSubscribeArgs) {
+  public subscribe(subscriber: FunctionDefinition, args?: QueueSubscribeArgs) {
     const parent = this;
     const parentName = this.constructorName;
 
@@ -248,7 +239,7 @@ export class Queue
     const fn = Function.fromDefinition(
       parent,
       `${parentName}Subscriber`,
-      args.function,
+      subscriber,
       {
         description: `Subscribed to ${parentName}`,
         permissions: [
@@ -270,8 +261,8 @@ export class Queue
       {
         eventSourceArn: this.arn,
         functionName: fn.name,
-        batchSize: args.batchSize,
-        filterCriteria: args.filters && {
+        batchSize: args?.batchSize,
+        filterCriteria: args?.filters && {
           filters: output(args.filters).apply((filters) =>
             filters.map((filter) => ({
               pattern: JSON.stringify(filter),
@@ -279,12 +270,12 @@ export class Queue
           ),
         },
         maximumBatchingWindowInSeconds:
-          args.maxBatchingWindow &&
+          args?.maxBatchingWindow &&
           output(args.maxBatchingWindow).apply((v) => toSeconds(v)),
         scalingConfig: {
-          maximumConcurrency: args.maxConcurrency,
+          maximumConcurrency: args?.maxConcurrency,
         },
-        functionResponseTypes: output(args.reportBatchItemFailures).apply(
+        functionResponseTypes: output(args?.reportBatchItemFailures).apply(
           (v) => (v ? ["ReportBatchItemFailures"] : []),
         ),
       },
@@ -297,9 +288,9 @@ export class Queue
   /** @internal */
   public getSSTLink() {
     return {
-      type: `{ queueUrl: string }`,
+      type: `{ url: string }`,
       value: {
-        queueUrl: this.url,
+        url: this.url,
       },
     };
   }

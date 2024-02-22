@@ -12,10 +12,7 @@ export default $config({
   },
   async run() {
     const bucket = new sst.aws.Bucket("MyBucket");
-    bucket.subscribe({
-      events: ["s3:ObjectCreated:*", "s3:ObjectRemoved:*"],
-      function: "subscriber.handler",
-    });
+    bucket.subscribe("subscriber.handler");
 
     return {
       bucket: bucket.name,

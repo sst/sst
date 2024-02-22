@@ -59,13 +59,15 @@ export interface BucketArgs {
 export interface BucketSubscribeArgs {
   /**
    * The S3 event types that will trigger the notification.
+   * @default All events
    * @example
    * ```js
    * {
-   *   events: ["s3:ObjectCreated:*"]
+   *   events: ["s3:ObjectCreated:*", "s3:ObjectRemoved:*"]
    * }
+   * ```
    */
-  events: Input<
+  events?: Input<
     Input<
       | "s3:ObjectCreated:*"
       | "s3:ObjectCreated:Put"
@@ -75,10 +77,12 @@ export interface BucketSubscribeArgs {
       | "s3:ObjectRemoved:*"
       | "s3:ObjectRemoved:Delete"
       | "s3:ObjectRemoved:DeleteMarkerCreated"
+      | "s3:ObjectRestore:*"
       | "s3:ObjectRestore:Post"
       | "s3:ObjectRestore:Completed"
       | "s3:ObjectRestore:Delete"
       | "s3:ReducedRedundancyLostObject"
+      | "s3:Replication:*"
       | "s3:Replication:OperationFailedReplication"
       | "s3:Replication:OperationMissedThreshold"
       | "s3:Replication:OperationReplicatedAfterThreshold"
@@ -114,28 +118,6 @@ export interface BucketSubscribeArgs {
    * ```
    */
   filterSuffix?: Input<string>;
-  /**
-   * The Lambda function to invoke when the S3 event is triggered.
-   * @example
-   *
-   * Specify a function handler.
-   * ```js
-   * {
-   *   function: "packages/functions/src/index.handler"
-   * }
-   * ```
-   *
-   * Customize the function.
-   * ```js
-   * {
-   *   function: {
-   *     handler: "packages/functions/src/index.handler",
-   *     timeout: "60 seconds",
-   *   }
-   * }
-   * ```
-   */
-  function: Input<FunctionDefinition>;
 }
 
 /**
@@ -304,22 +286,54 @@ export class Bucket
 
   /**
    * Subscribes to the S3 Bucket.
+   * @example
+   *
+   * Subscribe to all S3 events.
+   * ```js
+   * subscribe("src/subscriber.handler");
+   * ```
+   *
+   * Subscribe to specific S3 events.
+   * ```js
+   * subscribe("src/subscriber.handler", {
+   *   events: ["s3:ObjectCreated:*", "s3:ObjectRemoved:*"],
+   * });
+   * ```
+   *
+   * Customize the subscriber function.
+   * ```js
+   * subscribe({
+   *   handler: "src/subscriber.handler",
+   *   timeout: "60 seconds",
+   * });
+   * ```
    */
-  public subscribe(args: BucketSubscribeArgs) {
+  public subscribe(subscriber: FunctionDefinition, args?: BucketSubscribeArgs) {
     const parent = this;
     const parentName = this.constructorName;
 
-    output(args).apply((args) => {
+    all([subscriber, args]).apply(([subscriber, args]) => {
+      const events = args?.events ?? [
+        "s3:ObjectCreated:*",
+        "s3:ObjectRemoved:*",
+        "s3:ObjectRestore:*",
+        "s3:ReducedRedundancyLostObject",
+        "s3:Replication:*",
+        "s3:LifecycleExpiration:*",
+        "s3:LifecycleTransition",
+        "s3:IntelligentTiering",
+        "s3:ObjectTagging:*",
+        "s3:ObjectAcl:Put",
+      ];
+
       // Build subscriber name
       const id = sanitizeToPascalCase(
         hashStringToPrettyString(
           [
-            ...args.events,
-            args.filterPrefix ?? "",
-            args.filterSuffix ?? "",
-            typeof args.function === "string"
-              ? args.function
-              : args.function.handler,
+            ...events,
+            args?.filterPrefix ?? "",
+            args?.filterSuffix ?? "",
+            typeof subscriber === "string" ? subscriber : subscriber.handler,
           ].join(""),
           4,
         ),
@@ -328,11 +342,14 @@ export class Bucket
       const fn = Function.fromDefinition(
         parent,
         `${parentName}Subscriber${id}`,
-        args.function,
+        subscriber,
         {
-          description: `Subscribed to ${parentName} on ${args.events.join(
-            ", ",
-          )}`,
+          description:
+            events.length < 5
+              ? `Subscribed to ${parentName} on ${events.join(", ")}`
+              : `Subscribed to ${parentName} on ${events
+                  .slice(0, 3)
+                  .join(", ")}, and ${events.length - 3} more events`,
         },
       );
       const permission = new aws.lambda.Permission(
@@ -353,9 +370,9 @@ export class Bucket
             {
               id: `Notification${id}`,
               lambdaFunctionArn: fn.arn,
-              events: args.events,
-              filterPrefix: args.filterPrefix,
-              filterSuffix: args.filterSuffix,
+              events,
+              filterPrefix: args?.filterPrefix,
+              filterSuffix: args?.filterSuffix,
             },
           ],
         },
@@ -368,9 +385,9 @@ export class Bucket
   /** @internal */
   public getSSTLink() {
     return {
-      type: `{ bucketName: string }`,
+      type: `{ name: string }`,
       value: {
-        bucketName: this.name,
+        name: this.name,
       },
     };
   }
