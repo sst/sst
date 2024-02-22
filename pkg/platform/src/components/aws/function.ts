@@ -76,6 +76,16 @@ interface FunctionUrlCorsArgs
   /**
    * Allow cookies or other credentials in requests to the function URL.
    * @default `false`
+   * @example
+   * ```js
+   * {
+   *   url: {
+   *     cors: {
+   *       allowCredentials: true
+   *     }
+   *   }
+   * }
+   * ```
    */
   allowCredentials?: Input<boolean>;
   /**
@@ -83,7 +93,11 @@ interface FunctionUrlCorsArgs
    * @example
    * ```js
    * {
-   *   allowHeaders: ["date", "keep-alive", "x-custom-header"]
+   *   url: {
+   *     cors: {
+   *       allowHeaders: ["date", "keep-alive", "x-custom-header"]
+   *     }
+   *   }
    * }
    * ```
    */
@@ -93,19 +107,38 @@ interface FunctionUrlCorsArgs
    * @example
    * ```js
    * {
-   *   allowOrigins: ["https://www.example.com", "http://localhost:60905"]
+   *   url: {
+   *     cors: {
+   *       allowOrigins: ["https://www.example.com", "http://localhost:60905"]
+   *     }
+   *   }
    * }
    * ```
    * Or the wildcard character for all origins.
    * ```js
    * {
-   *   allowOrigins: ["*"]
+   *   url: {
+   *     cors: {
+   *       allowOrigins: ["*"]
+   *     }
+   *   }
    * }
    * ```
    */
   allowOrigins?: Input<Input<string>[]>;
   /**
-   * The HTTP headers in your function response that you want to expose to origins that call the function URL.
+   * The HTTP headers you want to expose in your function to an origin that calls the function URL.
+   * @default Common headers like `cache-control`, `content-language`, `content-type`, `expires`, `last-modified`, `pragma`.
+   * @example
+   * ```js
+   * {
+   *   url: {
+   *     cors: {
+   *       exposeHeaders: ["date", "keep-alive", "x-custom-header"]
+   *     }
+   *   }
+   * }
+   * ```
    */
   exposeHeaders?: Input<Input<string>[]>;
   /**
@@ -113,13 +146,21 @@ interface FunctionUrlCorsArgs
    * @example
    * ```js
    * {
-   *   allowMethods: ["GET", "POST", "DELETE"]
+   *   url: {
+   *     cors: {
+   *       allowMethods: ["GET", "POST", "DELETE"]
+   *     }
+   *   }
    * }
    * ```
    * Or the wildcard character for all methods.
    * ```js
    * {
-   *   allowMethods: ["*"]
+   *   url: {
+   *     cors: {
+   *       allowMethods: ["*"]
+   *     }
+   *   }
    * }
    * ```
    */
@@ -132,6 +173,16 @@ interface FunctionUrlCorsArgs
    * The maximum amount of time the browser can cache results of a preflight request. By
    * default the browser doesn't cache the results. The maximum value is `86400 seconds` or `1 day`.
    * @default `"0 seconds"`
+   * @example
+   * ```js
+   * {
+   *   url: {
+   *     cors: {
+   *       maxAge: "1 day"
+   *     }
+   *   }
+   * }
+   * ```
    */
   maxAge?: Input<Duration>;
 }
@@ -399,7 +450,7 @@ export interface FunctionArgs {
    *   url: {
    *     authorization: "iam",
    *     cors: {
-   *       allowedOrigins: ['https://example.com'],
+   *       allowedOrigins: ['https://example.com']
    *     }
    *   }
    * }
@@ -415,8 +466,8 @@ export interface FunctionArgs {
          * ```js
          * {
          *   url: {
-         *     authorization: "iam",
-         *   },
+         *     authorization: "iam"
+         *   }
          * }
          * ```
          */
@@ -429,8 +480,8 @@ export interface FunctionArgs {
          * ```js
          * {
          *   url: {
-         *     cors: true,
-         *   },
+         *     cors: true
+         *   }
          * }
          * ```
          * Only enable the `GET` and `POST` methods for `https://example.com`.
@@ -439,9 +490,9 @@ export interface FunctionArgs {
          *   url: {
          *     cors: {
          *       allowedMethods: ["GET", "POST"],
-         *       allowedOrigins: ['https://example.com'],
-         *     },
-         *   },
+         *       allowedOrigins: ["https://example.com"]
+         *     }
+         *   }
          * }
          * ```
          */
@@ -461,9 +512,11 @@ export interface FunctionArgs {
      *
      * @example
      * ```js
-     * nodejs: {
-     *   loader: {
-     *    ".png": "file"
+     * {
+     *   nodejs: {
+     *     loader: {
+     *      ".png": "file"
+     *     }
      *   }
      * }
      * ```
@@ -480,8 +533,10 @@ export interface FunctionArgs {
      *
      * @example
      * ```js
-     * nodejs: {
-     *   install: ["pg"]
+     * {
+     *   nodejs: {
+     *     install: ["pg"]
+     *   }
      * }
      * ```
      */
@@ -491,8 +546,10 @@ export interface FunctionArgs {
      *
      * @example
      * ```js
-     * nodejs: {
-     *   banner: "console.log('Function starting')"
+     * {
+     *   nodejs: {
+     *     banner: "console.log('Function starting')"
+     *   }
      * }
      * ```
      */
@@ -514,8 +571,10 @@ export interface FunctionArgs {
      *
      * @example
      * ```js
-     * nodejs: {
-     *   minify: false
+     * {
+     *   nodejs: {
+     *     minify: false
+     *   }
      * }
      * ```
      */
@@ -527,8 +586,10 @@ export interface FunctionArgs {
      *
      * @example
      * ```js
-     * nodejs: {
-     *   format: "cjs"
+     * {
+     *   nodejs: {
+     *     format: "cjs"
+     *   }
      * }
      * ```
      */
@@ -548,8 +609,10 @@ export interface FunctionArgs {
      *
      * @example
      * ```js
-     * nodejs: {
-     *   sourcemap: true
+     * {
+     *   nodejs: {
+     *     sourcemap: true
+     *   }
      * }
      * ```
      */
@@ -563,8 +626,10 @@ export interface FunctionArgs {
      *
      * @example
      * ```js
-     * nodejs: {
-     *   splitting: true
+     * {
+     *   nodejs: {
+     *     splitting: true
+     *   }
      * }
      * ```
      */
