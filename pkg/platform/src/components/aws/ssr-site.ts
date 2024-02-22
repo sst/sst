@@ -78,11 +78,6 @@ export interface SsrSiteArgs {
    */
   path?: Input<string>;
   /**
-   * Path relative to the app location where the type definitions are located.
-   * @default `.`
-   */
-  typesPath?: Input<string>;
-  /**
    * The command for building the website
    * @default `npm run build`
    * @example
