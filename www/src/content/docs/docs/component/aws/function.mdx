@@ -54,7 +54,7 @@ new sst.aws.Function("MyFunction", {
 });
 ```
 
-You can use the [SST Node client](/docs/reference/client/) to access the linked resources
+You can use the [Node client](/docs/reference/client/) to access the linked resources
 in your handler.
 
 ```ts title="src/lambda.ts"
@@ -387,13 +387,15 @@ If `bundle` is specified, the handler needs to be in the root of the bundle dire
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">any</code><code class="symbol">[]</code><code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
-[Link resources](/docs/linking/) to the function. The will be grant permissions
-to the resources and allow you to access it in your handler.
+[Link resources](/docs/linking/) to your function. This will:
+
+1. Grant the permissions needed to access the resources.
+2. Allow you to access it in your site using the [Node client](/docs/reference/client/).
 Takes a list of resources to link to the function.
 
 ```js
 {
-  link: [myBucket, stripeKey],
+  link: [myBucket, stripeKey]
 }
 ```
 </Segment>
@@ -667,7 +669,7 @@ Allow the function to read and write to an S3 bucket called `my-bucket`.
   permissions: [
     {
       actions: ["s3:GetObject", "s3:PutObject"],
-      resources: ["arn:aws:s3:::my-bucket/*"],
+      resources: ["arn:aws:s3:::my-bucket/*"]
     },
   ]
 }
@@ -680,7 +682,7 @@ Allow the function to perform all actions on an S3 bucket called `my-bucket`.
   permissions: [
     {
       actions: ["s3:*"],
-      resources: ["arn:aws:s3:::my-bucket/*"],
+      resources: ["arn:aws:s3:::my-bucket/*"]
     },
   ]
 }
@@ -693,7 +695,7 @@ Granting the function permissions to access all resources.
   permissions: [
     {
       actions: ["*"],
-      resources: ["*"],
+      resources: ["*"]
     },
   ]
 }

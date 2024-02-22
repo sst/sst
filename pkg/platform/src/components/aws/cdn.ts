@@ -27,10 +27,10 @@ export interface CdnDomainArgs {
   domainName: Input<string>;
   /**
    * Alternate domains to be used. Visitors to the alternate domains will be redirected to the
-   * main `domain`.
+   * main `domainName`.
    *
    * :::note
-   * Unlike the `aliases` option, this will redirect visitors back to the main `domain`.
+   * Unlike the `aliases` option, this will redirect visitors back to the main `domainName`.
    * :::
    *
    * @example

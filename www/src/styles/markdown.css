@@ -271,13 +271,13 @@
   counter-increment: listitem;
   content: counter(listitem);
   position: absolute;
-  font-size: 0.6875rem;
-  line-height: 19px;
+  font-size: 0.625rem;
+  line-height: 17px;
   text-align: center;
-  height: 20px;
-  width: 20px;
+  height: 18px;
+  width: 18px;
   left: 0;
-  top: 3px;
+  top: 4px;
   border-radius: 3px;
   color: var(--color-text-secondary);
   font-family: var(--__sl-font-mono);

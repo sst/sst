@@ -403,10 +403,10 @@ If both the `hostedZone` and `hostedZoneId` are set, `hostedZoneId` will take pr
 </InlineSection>
 </Section>
 Alternate domains to be used. Visitors to the alternate domains will be redirected to the
-main `domain`.
+main `domainName`.
 
 :::note
-Unlike the `aliases` option, this will redirect visitors back to the main `domain`.
+Unlike the `aliases` option, this will redirect visitors back to the main `domainName`.
 :::
 Use this to create a `www.` version of your domain and redirect visitors to the apex domain.
 ```js {4}
@@ -509,11 +509,15 @@ While deploying, SST waits for the CloudFront cache invalidation process to fini
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">any</code><code class="symbol">[]</code><code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
-Link resources to the SSR function.
-This will grant the site permissions to access the linked resources at runtime.
+[Link resources](/docs/linking/) to your site. This will:
+
+1. Grant the permissions needed to access the resources.
+2. Allow you to access it in your site using the [Node client](/docs/reference/client/).
+Takes a list of resources to link to the function.
+
 ```js
 {
-  link: [myBucket, stripeKey],
+  link: [myBucket, stripeKey]
 }
 ```
 </Segment>
@@ -526,7 +530,7 @@ This will grant the site permissions to access the linked resources at runtime.
 </Section>
 
 <InlineSection>
-**Default** <code class="primitive">.</code>
+**Default** <code class="primitive">"."</code>
 </InlineSection>
 Path to the directory where the app is located.
 </Segment>
@@ -539,18 +543,49 @@ Path to the directory where the app is located.
 - <p>[<code class="key">actions</code>](#permissions-actions)</p>
 - <p>[<code class="key">resources</code>](#permissions-resources)</p>
 </Section>
+Permissions and the resources that the function needs to access. These permissions are
+used to create the function's IAM role.
 
-<InlineSection>
-**Default** No permissions
-</InlineSection>
-Attaches the given list of permissions to the SSR function.
+:::tip
+If you `link` the function to a resource, the permissions to access it are
+automatically added.
+:::
+Allow the function to read and write to an S3 bucket called `my-bucket`.
 ```js
-permissions: [
-  {
-    actions: ["s3:*"],
-    resources: ["arn:aws:s3:::*"],
-  }
-]
+{
+  permissions: [
+    {
+      actions: ["s3:GetObject", "s3:PutObject"],
+      resources: ["arn:aws:s3:::my-bucket/*"]
+    },
+  ]
+}
+```
+
+Allow the function to perform all actions on an S3 bucket called `my-bucket`.
+
+```js
+{
+  permissions: [
+    {
+      actions: ["s3:*"],
+      resources: ["arn:aws:s3:::my-bucket/*"]
+    },
+  ]
+}
+```
+
+Granting the function permissions to access all resources.
+
+```js
+{
+  permissions: [
+    {
+      actions: ["*"],
+      resources: ["*"]
+    },
+  ]
+}
 ```
 </Segment>
 <NestedTitle id="permissions-actions" Tag="h4" parent="permissions[].">actions</NestedTitle>

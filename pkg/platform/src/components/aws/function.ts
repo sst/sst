@@ -331,7 +331,7 @@ export interface FunctionArgs {
    *   permissions: [
    *     {
    *       actions: ["s3:GetObject", "s3:PutObject"],
-   *       resources: ["arn:aws:s3:::my-bucket/*"],
+   *       resources: ["arn:aws:s3:::my-bucket/*"]
    *     },
    *   ]
    * }
@@ -344,7 +344,7 @@ export interface FunctionArgs {
    *   permissions: [
    *     {
    *       actions: ["s3:*"],
-   *       resources: ["arn:aws:s3:::my-bucket/*"],
+   *       resources: ["arn:aws:s3:::my-bucket/*"]
    *     },
    *   ]
    * }
@@ -357,7 +357,7 @@ export interface FunctionArgs {
    *   permissions: [
    *     {
    *       actions: ["*"],
-   *       resources: ["*"],
+   *       resources: ["*"]
    *     },
    *   ]
    * }
@@ -365,8 +365,10 @@ export interface FunctionArgs {
    */
   permissions?: Input<Prettify<FunctionPermissionArgs>[]>;
   /**
-   * [Link resources](/docs/linking/) to the function. The will be grant permissions
-   * to the resources and allow you to access it in your handler.
+   * [Link resources](/docs/linking/) to your function. This will:
+   *
+   * 1. Grant the permissions needed to access the resources.
+   * 2. Allow you to access it in your site using the [Node client](/docs/reference/client/).
    *
    * @example
    *
@@ -374,7 +376,7 @@ export interface FunctionArgs {
    *
    * ```js
    * {
-   *   link: [myBucket, stripeKey],
+   *   link: [myBucket, stripeKey]
    * }
    * ```
    */
@@ -748,7 +750,7 @@ export interface FunctionArgs {
  * });
  * ```
  *
- * You can use the [SST Node client](/docs/reference/client/) to access the linked resources
+ * You can use the [Node client](/docs/reference/client/) to access the linked resources
  * in your handler.
  *
  * ```ts title="src/lambda.ts"

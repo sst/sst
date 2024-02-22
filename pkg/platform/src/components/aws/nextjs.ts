@@ -107,9 +107,79 @@ interface OpenNextOutput {
 
 export interface NextjsArgs extends SsrSiteArgs {
   /**
+   * Permissions and the resources that the [server function](#nodes-server) in your Next.js app needs to access. These permissions are used to create the function's IAM role.
+   *
+   * :::tip
+   * If you `link` the function to a resource, the permissions to access it are
+   * automatically added.
+   * :::
+   *
+   * @example
+   * Allow reading and writing to an S3 bucket called `my-bucket`.
+   * ```js
+   * {
+   *   permissions: [
+   *     {
+   *       actions: ["s3:GetObject", "s3:PutObject"],
+   *       resources: ["arn:aws:s3:::my-bucket/*"]
+   *     },
+   *   ]
+   * }
+   * ```
+   *
+   * Perform all actions on an S3 bucket called `my-bucket`.
+   *
+   * ```js
+   * {
+   *   permissions: [
+   *     {
+   *       actions: ["s3:*"],
+   *       resources: ["arn:aws:s3:::my-bucket/*"]
+   *     },
+   *   ]
+   * }
+   * ```
+   *
+   * Grant permissions to access all resources.
+   *
+   * ```js
+   * {
+   *   permissions: [
+   *     {
+   *       actions: ["*"],
+   *       resources: ["*"]
+   *     },
+   *   ]
+   * }
+   * ```
+   */
+  permissions?: SsrSiteArgs["permissions"];
+  /**
+   * Path to the directory where your Next.js app is located. By default this assumes your Next.js app is in the root of your SST app.
+   * @default `"."`
+   */
+  path?: SsrSiteArgs["path"];
+  /**
+   * [Link resources](/docs/linking/) to your Next.js app. This will:
+   *
+   * 1. Grant the permissions needed to access the resources.
+   * 2. Allow you to access it in your site using the [Node client](/docs/reference/client/).
+   *
+   * @example
+   *
+   * Takes a list of resources to link to the function.
+   *
+   * ```js
+   * {
+   *   link: [myBucket, stripeKey]
+   * }
+   * ```
+   */
+  link?: SsrSiteArgs["link"];
+  /**
    * Configure how the CloudFront cache invalidations are handled. This is run after your Next.js app has been deployed.
    * :::tip
-   * You get 1000 free invalidations per month. After that, you pay $0.005 per invalidation path. [Read more here](https://aws.amazon.com/cloudfront/pricing/).
+   * You get 1000 free invalidations per month. After that you pay $0.005 per invalidation path. [Read more here](https://aws.amazon.com/cloudfront/pricing/).
    * :::
    * @default `&lcub;paths: "all", wait: false&rcub;`
    * @example
@@ -146,7 +216,7 @@ export interface NextjsArgs extends SsrSiteArgs {
    * 2. Locally while running `sst dev next dev`.
    *
    * :::tip
-   * You can also `link` resources to your Next.js app and access them in a type-safe way with the [SST Node client](/docs/reference/client/). We recommend linking since it's more secure.
+   * You can also `link` resources to your Next.js app and access them in a type-safe way with the [Node client](/docs/reference/client/). We recommend linking since it's more secure.
    * :::
    *
    * Recall that in Next.js, you need to prefix your environment variables with `NEXT_PUBLIC_` to access these in the browser. [Read more here](https://nextjs.org/docs/pages/building-your-application/configuring/environment-variables#bundling-environment-variables-for-the-browser).
@@ -210,15 +280,15 @@ export interface NextjsArgs extends SsrSiteArgs {
    * @example
    * ```js
    * {
-   *   openNextVersion: "3.0.0-rc.3",
+   *   openNextVersion: "3.0.0-rc.3"
    * }
    * ```
    */
   openNextVersion?: Input<string>;
   /**
-   * Configure how the logs are stored in CloudWatch.
+   * Configure how the logs from your Next.js app are stored in Amazon CloudWatch.
    *
-   * By default, AWS CloudWatch sends all the logs to the same log group, `combined`. This
+   * CloudWatch sends all the logs to the same log group, `combined`. This
    * makes it hard to find the request you are looking for.
    *
    * :::tip[SST Console]
@@ -226,7 +296,7 @@ export interface NextjsArgs extends SsrSiteArgs {
    * your routes separately on the resources screen.
    * :::
    *
-   * SST will instead split the logs from Individual routes into different log groups,
+   * SST will instead split the logs from individual routes into different log groups,
    * `per-route`. The log group names are prefixed with `/sst/lambda/`, followed by the
    * server function name. It'll look something like `/sst/lambda/prod-app-MyNextSite-serverFunction6DFA6F1B-TiNQRV8IhGAu/979bddc4/about`.
    *
@@ -323,7 +393,7 @@ export interface NextjsArgs extends SsrSiteArgs {
  * });
  * ```
  *
- * You can use the [SST Node client](/docs/reference/client/) to access the linked resources
+ * You can use the [Node client](/docs/reference/client/) to access the linked resources
  * in your Next.js app.
  *
  * ```ts title="app/page.tsx"

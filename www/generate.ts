@@ -124,7 +124,9 @@ async function main() {
       if (!methods?.length) return lines;
 
       console.error(methods[0].name);
-      throw new Error("Need to implement methods");
+      return lines;
+      // TODO
+      //throw new Error("Need to implement methods");
 
       lines.push(
         ``,
@@ -632,7 +634,7 @@ async function buildDocs() {
     },
     entryPoints: [
       "../pkg/platform/src/components/secret.ts",
-      "../pkg/platform/src/components/aws/bucket.ts",
+      //"../pkg/platform/src/components/aws/bucket.ts",
       "../pkg/platform/src/components/aws/cron.ts",
       "../pkg/platform/src/components/aws/function.ts",
       "../pkg/platform/src/components/aws/postgres.ts",

@@ -74,7 +74,7 @@ export interface SsrSiteFileOptions {
 export interface SsrSiteArgs {
   /**
    * Path to the directory where the app is located.
-   * @default `.`
+   * @default `"."`
    */
   path?: Input<string>;
   /**
@@ -117,27 +117,67 @@ export interface SsrSiteArgs {
    */
   domain?: Input<string | Prettify<CdnDomainArgs>>;
   /**
-   * Attaches the given list of permissions to the SSR function.
-   * @default No permissions
+   * Permissions and the resources that the function needs to access. These permissions are
+   * used to create the function's IAM role.
+   *
+   * :::tip
+   * If you `link` the function to a resource, the permissions to access it are
+   * automatically added.
+   * :::
+   *
    * @example
+   * Allow the function to read and write to an S3 bucket called `my-bucket`.
    * ```js
-   * permissions: [
-   *   {
-   *     actions: ["s3:*"],
-   *     resources: ["arn:aws:s3:::*"],
-   *   }
-   * ]
+   * {
+   *   permissions: [
+   *     {
+   *       actions: ["s3:GetObject", "s3:PutObject"],
+   *       resources: ["arn:aws:s3:::my-bucket/*"]
+   *     },
+   *   ]
+   * }
+   * ```
+   *
+   * Allow the function to perform all actions on an S3 bucket called `my-bucket`.
+   *
+   * ```js
+   * {
+   *   permissions: [
+   *     {
+   *       actions: ["s3:*"],
+   *       resources: ["arn:aws:s3:::my-bucket/*"]
+   *     },
+   *   ]
+   * }
+   * ```
+   *
+   * Granting the function permissions to access all resources.
+   *
+   * ```js
+   * {
+   *   permissions: [
+   *     {
+   *       actions: ["*"],
+   *       resources: ["*"]
+   *     },
+   *   ]
+   * }
    * ```
    */
   permissions?: FunctionArgs["permissions"];
   /**
-   * Link resources to the SSR function.
-   * This will grant the site permissions to access the linked resources at runtime.
+   * [Link resources](/docs/linking/) to your site. This will:
+   *
+   * 1. Grant the permissions needed to access the resources.
+   * 2. Allow you to access it in your site using the [Node client](/docs/reference/client/).
    *
    * @example
+   *
+   * Takes a list of resources to link to the function.
+   *
    * ```js
    * {
-   *   link: [myBucket, stripeKey],
+   *   link: [myBucket, stripeKey]
    * }
    * ```
    */
@@ -319,7 +359,8 @@ export interface SsrSiteArgs {
     paths?: Input<"none" | "all" | "versioned" | string[]>;
   }>;
   /**
-   * [Transform](/docs/transform/) how this component is created.
+   * [Transform](/docs/components#transform/) how this component creates its underlying
+   * resources.
    */
   transform?: {
     plan?: Transform<Plan>;

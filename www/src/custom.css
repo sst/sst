@@ -434,6 +434,9 @@ mobile-starlight-toc nav .dropdown a[aria-current=true] {
   .main-frame > div > .main-pane:only-child {
     --sl-content-width: calc(var(--content-width) + 2 * var(--sl-content-pad-x) + var(--sl-sidebar-width));
   }
+  .main-frame > div > .main-pane {
+    min-width: 0;
+  }
 }
 
 /**
