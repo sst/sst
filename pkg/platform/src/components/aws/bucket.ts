@@ -1,4 +1,3 @@
-import crypto from "crypto";
 import {
   ComponentResourceOptions,
   output,
@@ -7,7 +6,12 @@ import {
 } from "@pulumi/pulumi";
 import * as aws from "@pulumi/aws";
 import { RandomId } from "@pulumi/random";
-import { prefixName, hashNumberToString } from "../naming";
+import {
+  prefixName,
+  hashNumberToPrettyString,
+  hashStringToPrettyString,
+  sanitizeToPascalCase,
+} from "../naming";
 import { Component, Transform, transform } from "../component";
 import { Link } from "../link";
 import type { Input } from "../input";
@@ -54,15 +58,11 @@ export interface BucketArgs {
 
 export interface BucketSubscribeArgs {
   /**
-   * A unique name of the subscription.
-   */
-  name: string;
-  /**
    * The S3 event types that will trigger the notification.
    * @example
    * ```js
    * {
-   *   events: "s3:ObjectCreated:*"
+   *   events: ["s3:ObjectCreated:*"]
    * }
    */
   events: Input<
@@ -96,13 +96,46 @@ export interface BucketSubscribeArgs {
   >;
   /**
    * S3 object key prefix filter rules to determine which objects trigger this event.
+   * @example
+   * ```js
+   * {
+   *   filterPrefix: "images/"
+   * }
+   * ```
    */
   filterPrefix?: Input<string>;
   /**
    * S3 object key suffix filter rules to determine which objects trigger this event.
+   * @example
+   * ```js
+   * {
+   *  filterSuffix: ".jpg"
+   * }
+   * ```
    */
   filterSuffix?: Input<string>;
-  function?: Input<FunctionDefinition>;
+  /**
+   * The Lambda function to invoke when the S3 event is triggered.
+   * @example
+   *
+   * Specify a function handler.
+   * ```js
+   * {
+   *   function: "packages/functions/src/index.handler"
+   * }
+   * ```
+   *
+   * Customize the function.
+   * ```js
+   * {
+   *   function: {
+   *     handler: "packages/functions/src/index.handler",
+   *     timeout: "60 seconds",
+   *   }
+   * }
+   * ```
+   */
+  function: Input<FunctionDefinition>;
 }
 
 /**
@@ -166,7 +199,7 @@ export class Bucket
         input.bucket = randomId.dec.apply((dec) =>
           prefixName(
             name.toLowerCase(),
-            `-${hashNumberToString(parseInt(dec), 8)}`,
+            `-${hashNumberToPrettyString(parseInt(dec), 8)}`,
           ),
         );
       }
@@ -276,29 +309,49 @@ export class Bucket
     const parent = this;
     const parentName = this.constructorName;
 
-    if (args.function) {
+    output(args).apply((args) => {
+      // Build subscriber name
+      const id = sanitizeToPascalCase(
+        hashStringToPrettyString(
+          [
+            ...args.events,
+            args.filterPrefix ?? "",
+            args.filterSuffix ?? "",
+            typeof args.function === "string"
+              ? args.function
+              : args.function.handler,
+          ].join(""),
+          4,
+        ),
+      );
+
       const fn = Function.fromDefinition(
         parent,
-        `${parentName}Subscriber${args.name}`,
+        `${parentName}Subscriber${id}`,
         args.function,
+        {
+          description: `Subscribed to ${parentName} on ${args.events.join(
+            ", ",
+          )}`,
+        },
       );
       const permission = new aws.lambda.Permission(
-        `${parentName}SubscriberPermissions${args.name}`,
+        `${parentName}Subscriber${id}Permissions`,
         {
           action: "lambda:InvokeFunction",
           function: fn.arn,
           principal: "s3.amazonaws.com",
-          sourceArn: this.bucket.arn,
+          sourceArn: this.arn,
         },
         { parent },
       );
       new aws.s3.BucketNotification(
-        `${parentName}Notification${args.name}`,
+        `${parentName}Notification${id}`,
         {
           bucket: this.bucket.bucket,
           lambdaFunctions: [
             {
-              id: args.name,
+              id: `Notification${id}`,
               lambdaFunctionArn: fn.arn,
               events: args.events,
               filterPrefix: args.filterPrefix,
@@ -308,7 +361,7 @@ export class Bucket
         },
         { parent, dependsOn: [permission] },
       );
-    }
+    });
     return this;
   }
 
@@ -327,7 +380,7 @@ export class Bucket
     return [
       {
         actions: ["s3:*"],
-        resources: [this.bucket.arn, interpolate`${this.bucket.arn}/*`],
+        resources: [this.arn, interpolate`${this.arn}/*`],
       },
     ];
   }

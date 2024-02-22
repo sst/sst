@@ -32,6 +32,7 @@ import { Link } from "../link.js";
 import { VisibleError } from "../error.js";
 import type { Input } from "../input.js";
 import { Cache } from "./providers/cache.js";
+import { Queue } from "./queue.js";
 
 const LAYER_VERSION = "2";
 const DEFAULT_OPEN_NEXT_VERSION = "3.0.0-rc.5";
@@ -664,17 +665,22 @@ export class Nextjs extends Component implements Link.Linkable {
             openNextOutput.additionalProps?.revalidationFunction;
           if (!revalidationFunction) return;
 
-          const queue = new aws.sqs.Queue(
+          const queue = new Queue(
             `${name}RevalidationQueue`,
             {
-              fifoQueue: true,
-              receiveWaitTimeSeconds: 20,
+              fifo: true,
+              transform: {
+                queue: (args) => {
+                  args.receiveWaitTimeSeconds = 20;
+                },
+              },
             },
             { parent },
           );
-          const consumer = new Function(
-            `${name}Revalidator`,
-            {
+          queue.subscribe({
+            name: `${name}Revalidator`,
+            batchSize: 5,
+            function: {
               description: `${name} ISR revalidator`,
               handler: revalidationFunction.handler,
               bundle: path.join(outputPath, revalidationFunction.bundle),
@@ -695,17 +701,7 @@ export class Nextjs extends Component implements Link.Linkable {
               liveDev: false,
               _ignoreCodeChanges: $dev,
             },
-            { parent },
-          );
-          new aws.lambda.EventSourceMapping(
-            `${name}RevalidatorEventSource`,
-            {
-              functionName: consumer.nodes.function.name,
-              eventSourceArn: queue.arn,
-              batchSize: 5,
-            },
-            { parent },
-          );
+          });
           return queue;
         },
       );

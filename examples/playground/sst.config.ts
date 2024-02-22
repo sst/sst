@@ -26,11 +26,6 @@ export default $config({
         },
       },
     });
-    bucket.subscribe({
-      name: "MySubscriber",
-      events: ["s3:ObjectCreated:*"],
-      function: "functions/bucket-subscriber-example/index.handler",
-    });
 
     const app = new sst.aws.Function("MyApp", {
       handler: "functions/handler-example/index.handler",

@@ -50,7 +50,7 @@ const RETENTION = {
   forever: 0,
 };
 
-export type FunctionDefinition = string | Function | FunctionArgs;
+export type FunctionDefinition = string | FunctionArgs;
 
 export type FunctionPermissionArgs = {
   /**
@@ -1314,6 +1314,13 @@ export class Function
   }
 
   /**
+   * The name of the Lambda function.
+   */
+  public get name() {
+    return this.function.name;
+  }
+
+  /**
    * The ARN of the Lambda function.
    */
   public get arn() {
@@ -1331,14 +1338,31 @@ export class Function
     parent: Component,
     name: string,
     definition: Input<FunctionDefinition>,
+    override?: Pick<FunctionArgs, "description" | "permissions">,
   ) {
     return output(definition).apply((definition) => {
       if (typeof definition === "string") {
-        return new Function(name, { handler: definition }, { parent });
-      } else if (definition instanceof Function) {
-        return definition;
+        return new Function(
+          name,
+          { handler: definition, ...override },
+          { parent },
+        );
       } else if (definition.handler) {
-        return new Function(name, definition, { parent });
+        return new Function(
+          name,
+          {
+            ...definition,
+            ...override,
+            permissions: all([
+              definition.permissions,
+              override?.permissions,
+            ]).apply(([permissions, overridePermissions]) => [
+              ...(permissions ?? []),
+              ...(overridePermissions ?? []),
+            ]),
+          },
+          { parent },
+        );
       }
       throw new Error(`Invalid function definition for the "${name}" Function`);
     });

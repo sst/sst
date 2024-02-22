@@ -1,3 +1,5 @@
+import crypto from "crypto";
+
 export function sanitizeToPascalCase(str: string) {
   const strNorm = str.replace(/[^a-zA-Z0-9]/g, "");
   return strNorm.charAt(0).toUpperCase() + strNorm.slice(1);
@@ -34,11 +36,11 @@ export function prefixName(name: string, suffix?: string) {
   return `${prefixedName}${suffixStr}`;
 }
 
-export function hashNumberToString(number: number, length: number) {
-  const charLength = HASH_CHARS.length;
+export function hashNumberToPrettyString(number: number, length: number) {
+  const charLength = PRETTY_CHARS.length;
   let hash = "";
   while (number > 0) {
-    hash = HASH_CHARS[number % charLength] + hash;
+    hash = PRETTY_CHARS[number % charLength] + hash;
     number = Math.floor(number / charLength);
   }
 
@@ -51,4 +53,11 @@ export function hashNumberToString(number: number, length: number) {
   return hash;
 }
 
-export const HASH_CHARS = "abcdefhkmnorstuvwxz";
+export function hashStringToPrettyString(str: string, length: number) {
+  const hash = crypto.createHash("sha256");
+  hash.update(str);
+  const num = Number("0x" + hash.digest("hex").substring(0, 16));
+  return hashNumberToPrettyString(num, length);
+}
+
+export const PRETTY_CHARS = "abcdefhkmnorstuvwxz";

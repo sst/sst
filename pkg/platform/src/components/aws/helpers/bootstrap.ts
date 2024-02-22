@@ -10,7 +10,7 @@ import {
   PutBucketVersioningCommand,
 } from "@aws-sdk/client-s3";
 export type {} from "@smithy/types";
-import { HASH_CHARS, hashNumberToString } from "../../naming";
+import { PRETTY_CHARS, hashNumberToPrettyString } from "../../naming";
 
 const VERSION = 1;
 
@@ -66,9 +66,9 @@ export const bootstrap = {
 
         // Generate a bootstrap bucket suffix number
         const suffixLength = 12;
-        const minNumber = Math.pow(HASH_CHARS.length, suffixLength);
+        const minNumber = Math.pow(PRETTY_CHARS.length, suffixLength);
         const numberSuffix = Math.floor(Math.random() * minNumber) + minNumber;
-        const rand = hashNumberToString(numberSuffix, suffixLength);
+        const rand = hashNumberToPrettyString(numberSuffix, suffixLength);
         const asset = `sst-asset-${rand}`;
         const state = `sst-state-${rand}`;
         const data = {
