@@ -1046,8 +1046,12 @@ export class Function
               ...args,
               links: linkData,
             });
-            if (result.type === "error")
-              throw new Error(result.errors.join("\n"));
+            if (result.type === "error") {
+              console.log(result);
+              throw new Error(
+                "Failed to build function: " + result.errors.join("\n").trim(),
+              );
+            }
             return result;
           },
         );

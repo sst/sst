@@ -206,11 +206,7 @@ export async function build(
     if ("errors" in result) {
       return {
         type: "error" as const,
-        errors: result.errors.flatMap((x) => [
-          console.log(x.text),
-          x.location?.file || "",
-          console.log(x.location?.line, "│", x.location?.lineText),
-        ]),
+        errors: result.errors.flatMap((x) => [x.text]).filter(Boolean),
       };
     }
 

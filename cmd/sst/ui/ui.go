@@ -360,18 +360,6 @@ func (u *UI) getColor(input string) color.Attribute {
 	return result
 }
 
-func (u *UI) getFunction(input string) string {
-	if u.complete == nil {
-		return input
-	}
-	for _, resource := range u.complete.Resources {
-		if resource.Type == "sst:sst:Function" && resource.URN.Name() == input {
-			return resource.Outputs["_metadata"].(map[string]interface{})["handler"].(string)
-		}
-	}
-	return ""
-}
-
 func (u *UI) Event(evt *server.Event) {
 	if evt.ConcurrentUpdateEvent != nil {
 		u.printEvent(color.FgRed, "Locked", "A concurrent update was detected on the stack. Run `sst cancel` to delete the lock file and retry.")
@@ -379,7 +367,7 @@ func (u *UI) Event(evt *server.Event) {
 
 	if evt.FunctionInvokedEvent != nil {
 		u.workerTime[evt.FunctionInvokedEvent.WorkerID] = time.Now()
-		u.printEvent(u.getColor(evt.FunctionInvokedEvent.WorkerID), color.New(color.FgWhite, color.Bold).Sprintf("%-11s", "Invoked"), u.getFunction(evt.FunctionInvokedEvent.FunctionID))
+		u.printEvent(u.getColor(evt.FunctionInvokedEvent.WorkerID), color.New(color.FgWhite, color.Bold).Sprintf("%-11s", "Invoked"), u.functionName(evt.FunctionInvokedEvent.FunctionID))
 	}
 
 	if evt.FunctionResponseEvent != nil {
@@ -396,19 +384,33 @@ func (u *UI) Event(evt *server.Event) {
 
 	if evt.FunctionBuildEvent != nil {
 		if len(evt.FunctionBuildEvent.Errors) > 0 {
-			u.printEvent(color.FgRed, "Build Error", evt.FunctionBuildEvent.FunctionID+" "+strings.Join(evt.FunctionBuildEvent.Errors, "\n"))
+			u.printEvent(color.FgRed, "Build Error", u.functionName(evt.FunctionBuildEvent.FunctionID)+" "+strings.Join(evt.FunctionBuildEvent.Errors, "\n"))
 			return
 		}
-		u.printEvent(color.FgGreen, "Build", evt.FunctionBuildEvent.FunctionID)
+		u.printEvent(color.FgGreen, "Build", u.functionName(evt.FunctionBuildEvent.FunctionID))
 	}
 
 	if evt.FunctionErrorEvent != nil {
-		u.printEvent(color.FgRed, "Error", evt.FunctionErrorEvent.ErrorMessage)
+		u.printEvent(u.getColor(evt.FunctionErrorEvent.WorkerID), color.New(color.FgRed).Sprintf("%-11s", "Error"), evt.FunctionErrorEvent.ErrorMessage)
 		for _, item := range evt.FunctionErrorEvent.Trace {
-			u.printEvent(color.FgRed, "", strings.TrimSpace(item))
+			if strings.Contains(item, "Error:") {
+				continue
+			}
+			u.printEvent(u.getColor(evt.FunctionErrorEvent.WorkerID), "", "↳ "+strings.TrimSpace(item))
 		}
 	}
+}
 
+func (u *UI) functionName(functionID string) string {
+	if u.complete == nil {
+		return functionID
+	}
+	for _, resource := range u.complete.Resources {
+		if resource.Type == "sst:aws:Function" && resource.URN.Name() == functionID {
+			return resource.Outputs["_metadata"].(map[string]interface{})["handler"].(string)
+		}
+	}
+	return functionID
 }
 
 func (u *UI) printEvent(barColor color.Attribute, label string, message string) {
