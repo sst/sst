@@ -11,7 +11,7 @@ import { WorkerScript } from "@pulumi/cloudflare";
 import type { Loader, BuildOptions } from "esbuild";
 import { build } from "../../runtime/cloudflare.js";
 import { Component } from "../component";
-import { WorkersDevUrl } from "./providers/workers-dev-url";
+import { WorkersUrl } from "./providers/workers-url.js";
 import { Link } from "../link.js";
 import type { Input } from "../input.js";
 
@@ -41,13 +41,13 @@ export interface WorkerArgs {
    * Enable a dedicated endpoint for your Worker.
    * @default `false`
    */
-  devUrl?: Input<boolean>;
+  url?: Input<boolean>;
   /**
    * Configure how your function is bundled.
    *
    * SST bundles your worker code using [esbuild](https://esbuild.github.io/). This tree shakes your code to only include what's used.
    */
-  nodejs?: Input<{
+  build?: Input<{
     /**
      * Configure additional esbuild loaders for other file extensions. This is useful
      * when your code is importing non-JS files like `.png`, `.css`, etc.
@@ -55,7 +55,7 @@ export interface WorkerArgs {
      * @example
      * ```js
      * {
-     *   nodejs: {
+     *   build: {
      *     loader: {
      *      ".png": "file"
      *     }
@@ -70,7 +70,7 @@ export interface WorkerArgs {
      * @example
      * ```js
      * {
-     *   nodejs: {
+     *   build: {
      *     banner: "console.log('Function starting')"
      *   }
      * }
@@ -95,14 +95,13 @@ export interface WorkerArgs {
      * @example
      * ```js
      * {
-     *   nodejs: {
+     *   build: {
      *     minify: false
      *   }
      * }
      * ```
      */
     minify?: Input<boolean>;
-    sourcemap?: Input<boolean>;
   }>;
   /**
    * [Link resources](/docs/linking/) to your worker. This will:
@@ -186,26 +185,26 @@ export interface WorkerArgs {
  */
 export class Worker extends Component {
   private script: Output<WorkerScript>;
-  private workersDevUrl: WorkersDevUrl;
+  private workersUrl: WorkersUrl;
 
   constructor(name: string, args: WorkerArgs, opts?: ComponentResourceOptions) {
     super("sst:cloudflare:Worker", name, args, opts);
 
     const parent = this;
 
-    const devUrlEnabled = normalizeDevUrl();
+    const urlEnabled = normalizeUrl();
 
     const linkData = buildLinkData();
     const iamCredentials = createAwsCredentials();
     const handler = buildHandler();
     const script = createScript();
-    const workersDevUrl = createWorkersDevUrl();
+    const workersUrl = createWorkersUrl();
 
     this.script = script;
-    this.workersDevUrl = workersDevUrl;
+    this.workersUrl = workersUrl;
 
-    function normalizeDevUrl() {
-      return output(args.devUrl).apply((v) => v ?? false);
+    function normalizeUrl() {
+      return output(args.url).apply((v) => v ?? false);
     }
 
     function buildLinkData() {
@@ -303,13 +302,13 @@ export class Worker extends Component {
       );
     }
 
-    function createWorkersDevUrl() {
-      return new WorkersDevUrl(
-        `${name}DevUrl`,
+    function createWorkersUrl() {
+      return new WorkersUrl(
+        `${name}Url`,
         {
           accountId: $app.providers?.cloudflare?.accountId!,
           scriptName: script.name,
-          enabled: devUrlEnabled,
+          enabled: urlEnabled,
         },
         { parent },
       );
@@ -319,10 +318,8 @@ export class Worker extends Component {
   /**
    * The Worker URL if `url` is enabled.
    */
-  public get devUrl() {
-    return this.workersDevUrl.url.apply((url) =>
-      url ? `https://${url}` : url,
-    );
+  public get url() {
+    return this.workersUrl.url.apply((url) => (url ? `https://${url}` : url));
   }
 
   /**

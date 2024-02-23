@@ -1,7 +1,7 @@
 import { CustomResourceOptions, Input, Output, dynamic } from "@pulumi/pulumi";
 import { cfFetch } from "../helpers/fetch.js";
 
-export interface WorkersDevUrlInputs {
+export interface WorkersUrlInputs {
   accountId: Input<string>;
   scriptName: Input<string>;
   enabled: Input<boolean>;
@@ -78,19 +78,19 @@ class Provider implements dynamic.ResourceProvider {
   }
 }
 
-export interface WorkersDevUrl {
+export interface WorkersUrl {
   url: Output<string | undefined>;
 }
 
-export class WorkersDevUrl extends dynamic.Resource {
+export class WorkersUrl extends dynamic.Resource {
   constructor(
     name: string,
-    args: WorkersDevUrlInputs,
+    args: WorkersUrlInputs,
     opts?: CustomResourceOptions,
   ) {
     super(
       new Provider(),
-      `${name}.sst.cloudflare.WorkersDevUrl`,
+      `${name}.sst.cloudflare.WorkersUrl`,
       { ...args, url: undefined },
       opts,
     );

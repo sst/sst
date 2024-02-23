@@ -15,10 +15,8 @@ export async function build(
   },
 ) {
   const out = path.join($cli.paths.work, "artifacts", `${name}-src`);
-  const sourcemapOut = path.join($cli.paths.work, "artifacts", `${name}-map`);
   await fs.rm(out, { recursive: true, force: true });
   await fs.mkdir(out, { recursive: true });
-  await fs.mkdir(sourcemapOut, { recursive: true });
 
   if (!(await existsAsync(input.handler)))
     return {
@@ -26,7 +24,7 @@ export async function build(
       errors: [`Could not find file for handler "${input.handler}"`],
     };
 
-  const nodejs = input.nodejs || {};
+  const build = input.build || {};
   const relative = path.relative($cli.paths.root, path.resolve(input.handler));
   const target = path.join(
     out,
@@ -43,7 +41,7 @@ export async function build(
   const options: BuildOptions = {
     entryPoints: [path.resolve(input.handler)],
     platform: "node",
-    loader: nodejs.loader,
+    loader: build.loader,
     keepNames: true,
     bundle: true,
     logLevel: "silent",
@@ -57,16 +55,13 @@ export async function build(
     banner: {
       js: [
         `globalThis.$SST_LINKS = ${JSON.stringify(links)};`,
-        nodejs.banner || "",
+        build.banner || "",
       ].join("\n"),
     },
     outfile: target,
-    // always generate sourcemaps in local
-    // never generate sourcemaps if explicitly false
-    // otherwise generate sourcemaps
-    sourcemap: nodejs.sourcemap === false ? false : true,
-    minify: nodejs.minify,
-    ...nodejs.esbuild,
+    sourcemap: false,
+    minify: build.minify,
+    ...build.esbuild,
   };
   const ctx = await esbuild.context(options);
 
@@ -75,24 +70,9 @@ export async function build(
 
     ctx.dispose();
 
-    const moveSourcemap = async () => {
-      if (nodejs.sourcemap) return;
-
-      const map = Object.keys(result.metafile?.outputs || {}).find((item) =>
-        item.endsWith(".map"),
-      );
-      if (!map) return;
-
-      const oldPath = path.resolve($cli.paths.work, "artifacts", map);
-      const newPath = path.join(sourcemapOut, path.basename(map));
-      await fs.rename(oldPath, newPath);
-      return newPath;
-    };
-
     return {
       type: "success" as const,
       handler: target,
-      sourcemap: await moveSourcemap(),
     };
   } catch (ex: any) {
     const result = ex as BuildResult;
