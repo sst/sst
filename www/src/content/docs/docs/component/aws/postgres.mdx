@@ -25,8 +25,8 @@ new sst.aws.Postgres("MyDatabase");
 ```js
 new sst.aws.Postgres("MyDatabase", {
   scaling: {
-    min: 2,
-    max: 128
+    min: "2 ACU",
+    max: "128 ACU"
   }
 });
 ```
@@ -173,7 +173,7 @@ Name of a database which is automatically created inside the cluster.
 </Section>
 
 <InlineSection>
-**Default** <code class="primitive">&lcub;min: 0.5, max: 4&rcub;</code>
+**Default** <code class="primitive">&lcub;min: "0.5 ACU", max: "4 ACU"&rcub;</code>
 </InlineSection>
 The Aurora Serverless v2 scaling config. By default, the cluster has one DB instance that
 is used for both writes and reads. The instance can scale from the minimum number of ACUs
@@ -196,19 +196,19 @@ based on the baseline and peak memory usage of your app.
 <Segment>
 <Section type="parameters">
 <InlineSection>
-**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">number</code><code class="symbol">&gt;</code>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="symbol">&ldquo;</code><code class="primitive">$\{number\} ACU</code><code class="symbol">&rdquo;</code><code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
 
 <InlineSection>
-**Default** <code class="primitive">4</code>
+**Default** <code class="primitive">4 ACU</code>
 </InlineSection>
 The maximum number of ACUs, ranges from 0.5 to 128, in increments of 0.5.
 
 ```js
 {
   scaling: {
-    max: 128
+    max: "128 ACU"
   }
 }
 ```
@@ -217,12 +217,12 @@ The maximum number of ACUs, ranges from 0.5 to 128, in increments of 0.5.
 <Segment>
 <Section type="parameters">
 <InlineSection>
-**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">number</code><code class="symbol">&gt;</code>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="symbol">&ldquo;</code><code class="primitive">$\{number\} ACU</code><code class="symbol">&rdquo;</code><code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
 
 <InlineSection>
-**Default** <code class="primitive">0.5</code>
+**Default** <code class="primitive">0.5 ACU</code>
 </InlineSection>
 The minimum number of ACUs, ranges from 0.5 to 128, in increments of 0.5.
 
@@ -236,7 +236,7 @@ to the following reasons, you can also [read more here](https://docs.aws.amazon.
 ```js
 {
   scaling: {
-    min: 2
+    min: "2 ACU"
   }
 }
 ```

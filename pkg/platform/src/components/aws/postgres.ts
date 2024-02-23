@@ -4,6 +4,12 @@ import { Component, Transform, transform } from "../component";
 import { Link } from "../link";
 import { Input } from "../input.js";
 
+type ACU = `${number} ACU`;
+
+function parseACU(acu: ACU) {
+  return parseInt(acu.split(" ")[0]);
+}
+
 export interface PostgresArgs {
   /**
    * The Postgres engine version. Check out the [available versions in your region](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/Concepts.Aurora_Fea_Regions_DB-eng.Feature.ServerlessV2.html#Concepts.Aurora_Fea_Regions_DB-eng.Feature.ServerlessV2.apg).
@@ -44,7 +50,7 @@ export interface PostgresArgs {
    * Each ACU is roughly equivalent to 2 GB of memory. So pick the minimum and maximum
    * based on the baseline and peak memory usage of your app.
    *
-   * @default `&lcub;min: 0.5, max: 4&rcub;`
+   * @default `&lcub;min: "0.5 ACU", max: "4 ACU"&rcub;`
    */
   scaling?: Input<{
     /**
@@ -57,31 +63,31 @@ export interface PostgresArgs {
      *   fit into the buffer cache, you might see uneven performance.
      * - The max connections for a 0.5 ACU Postgres instance is capped at 2000.
      *
-     * @default `0.5`
+     * @default `0.5 ACU`
      * @example
      * ```js
      * {
      *   scaling: {
-     *     min: 2
+     *     min: "2 ACU"
      *   }
      * }
      * ```
      */
-    min?: Input<number>;
+    min?: Input<ACU>;
     /**
      * The maximum number of ACUs, ranges from 0.5 to 128, in increments of 0.5.
      *
-     * @default `4`
+     * @default `4 ACU`
      * @example
      * ```js
      * {
      *   scaling: {
-     *     max: 128
+     *     max: "128 ACU"
      *   }
      * }
      * ```
      */
-    max?: Input<number>;
+    max?: Input<ACU>;
   }>;
   /**
    * [Transform](/docs/components#transform/) how this component creates its underlying
@@ -116,8 +122,8 @@ export interface PostgresArgs {
  * ```js
  * new sst.aws.Postgres("MyDatabase", {
  *   scaling: {
- *     min: 2,
- *     max: 128
+ *     min: "2 ACU",
+ *     max: "128 ACU"
  *   }
  * });
  * ```
@@ -151,8 +157,8 @@ export class Postgres
 
     function normalizeScaling() {
       return output(args?.scaling).apply((scaling) => ({
-        minCapacity: scaling?.min ?? 0.5,
-        maxCapacity: scaling?.max ?? 4,
+        minCapacity: parseACU(scaling?.min ?? "0.5 ACU"),
+        maxCapacity: parseACU(scaling?.max ?? "4 ACU"),
       }));
     }
 
