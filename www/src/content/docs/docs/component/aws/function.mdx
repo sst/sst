@@ -24,7 +24,7 @@ Pass in the path to your handler function.
 
 ```ts
 new sst.aws.Function("MyFunction", {
-  handler: "src/lambda.handler",
+  handler: "src/lambda.handler"
 });
 ```
 
@@ -36,7 +36,7 @@ Pass in additional Lambda config.
 new sst.aws.Function("MyFunction", {
   handler: "src/lambda.handler",
   timeout: "3 minutes",
-  memory: "1024 MB",
+  memory: "1024 MB"
 });
 ```
 
@@ -50,7 +50,7 @@ const myBucket = new sst.aws.Bucket("MyBucket");
 
 new sst.aws.Function("MyFunction", {
   handler: "src/lambda.handler",
-  link: [myBucket],
+  link: [myBucket]
 });
 ```
 
@@ -71,8 +71,8 @@ Set environment variables for the function. Available in your handler as `proces
 new sst.aws.Function("MyFunction", {
   handler: "src/lambda.handler",
   environment: {
-    DEBUG: "true",
-  },
+    DEBUG: "true"
+  }
 });
 ```
 
@@ -83,7 +83,7 @@ Enable function URLs to invoke the function over HTTP.
 ```ts {3}
 new sst.aws.Function("MyFunction", {
   handler: "src/lambda.handler",
-  url: true,
+  url: true
 });
 ```
 
@@ -96,8 +96,8 @@ By default, SST will bundle your function code using [esbuild](https://esbuild.g
 new sst.aws.Function("MyFunction", {
   handler: "src/lambda.handler",
   nodejs: {
-    install: ["pg"],
-  },
+    install: ["pg"]
+  }
 });
 ```
 

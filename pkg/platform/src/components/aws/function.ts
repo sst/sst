@@ -720,7 +720,7 @@ export interface FunctionArgs {
  *
  * ```ts
  * new sst.aws.Function("MyFunction", {
- *   handler: "src/lambda.handler",
+ *   handler: "src/lambda.handler"
  * });
  * ```
  *
@@ -732,7 +732,7 @@ export interface FunctionArgs {
  * new sst.aws.Function("MyFunction", {
  *   handler: "src/lambda.handler",
  *   timeout: "3 minutes",
- *   memory: "1024 MB",
+ *   memory: "1024 MB"
  * });
  * ```
  *
@@ -746,7 +746,7 @@ export interface FunctionArgs {
  *
  * new sst.aws.Function("MyFunction", {
  *   handler: "src/lambda.handler",
- *   link: [myBucket],
+ *   link: [myBucket]
  * });
  * ```
  *
@@ -767,8 +767,8 @@ export interface FunctionArgs {
  * new sst.aws.Function("MyFunction", {
  *   handler: "src/lambda.handler",
  *   environment: {
- *     DEBUG: "true",
- *   },
+ *     DEBUG: "true"
+ *   }
  * });
  * ```
  *
@@ -779,7 +779,7 @@ export interface FunctionArgs {
  * ```ts {3}
  * new sst.aws.Function("MyFunction", {
  *   handler: "src/lambda.handler",
- *   url: true,
+ *   url: true
  * });
  * ```
  *
@@ -792,8 +792,8 @@ export interface FunctionArgs {
  * new sst.aws.Function("MyFunction", {
  *   handler: "src/lambda.handler",
  *   nodejs: {
- *     install: ["pg"],
- *   },
+ *     install: ["pg"]
+ *   }
  * });
  * ```
  *
