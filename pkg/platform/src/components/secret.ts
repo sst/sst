@@ -74,6 +74,10 @@ export class Secret extends Component implements Link.Linkable {
   private _name: string;
   private _placeholder?: string;
 
+  /**
+   * @param name Name of the secret.
+   * @param placeholder Placeholder value of the secret.
+   */
   constructor(name: string, placeholder?: string) {
     super(
       "sst:sst:Secret",

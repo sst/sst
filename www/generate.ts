@@ -105,12 +105,12 @@ async function main() {
           ``,
           `<Section type="parameters">`,
           `#### Parameters`,
-          ...signature.parameters.map(
-            (param) =>
-              `- <p><code class="key">${renderName(param)}</code> ${renderType(
-                param.type!
-              )}</p>`
-          ),
+          ...signature.parameters.flatMap((param) => [
+            `- <p><code class="key">${renderName(param)}</code> ${renderType(
+              param.type!
+            )}</p>`,
+            ...(renderDescription(param) ?? []),
+          ]),
           `</Section>`
         );
       }
@@ -306,7 +306,10 @@ async function main() {
     }
 
     function renderDescription(
-      prop: TypeDoc.DeclarationReflection | TypeDoc.SignatureReflection
+      prop:
+        | TypeDoc.DeclarationReflection
+        | TypeDoc.ParameterReflection
+        | TypeDoc.SignatureReflection
     ) {
       if (!prop.comment?.summary) return;
       return [renderComment(prop.comment?.summary)];
