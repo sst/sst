@@ -1,6 +1,8 @@
 package project
 
-import "strings"
+import (
+	"strings"
+)
 
 func inferTypes(input map[string]interface{}, indentArgs ...string) string {
 	indent := ""
@@ -12,17 +14,23 @@ func inferTypes(input map[string]interface{}, indentArgs ...string) string {
 	builder.WriteString("\n")
 	for key, value := range input {
 		builder.WriteString(indent + "  " + key + ": ")
-		switch value.(type) {
-		case string:
-			builder.WriteString("string")
-		case int:
-			builder.WriteString("number")
-		case float64:
-			builder.WriteString("number")
-		case float32:
-			builder.WriteString("number")
-		case map[string]interface{}:
-			builder.WriteString(inferTypes(value.(map[string]interface{}), indent+"  "))
+		if key == "type" && len(indentArgs) == 1 {
+			builder.WriteString("\"")
+			builder.WriteString(value.(string))
+			builder.WriteString("\"")
+		} else {
+			switch value.(type) {
+			case string:
+				builder.WriteString("string")
+			case int:
+				builder.WriteString("number")
+			case float64:
+				builder.WriteString("number")
+			case float32:
+				builder.WriteString("number")
+			case map[string]interface{}:
+				builder.WriteString(inferTypes(value.(map[string]interface{}), indent+"  "))
+			}
 		}
 		builder.WriteString("\n")
 	}

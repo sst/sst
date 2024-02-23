@@ -231,8 +231,7 @@ export class Postgres
   /** @internal */
   public getSSTLink() {
     return {
-      type: `{ clusterArn: string; secretArn: string; databaseName: string }`,
-      value: {
+      properties: {
         clusterArn: this.clusterArn,
         secretArn: this.secretArn,
         database: this.database,

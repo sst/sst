@@ -16,9 +16,11 @@ export default $config({
       job: "src/index.handler",
       schedule: "rate(1 minute)",
     });
-    new sst.aws.Bucket("MyBucket");
+    const bucket = new sst.aws.Bucket("MyBucket");
+
     new sst.aws.Function("MyFunction", {
       handler: "src/index.handler",
+      link: [bucket],
     });
     return {};
   },

@@ -1,3 +1,5 @@
+import { Resource } from "sst";
+
 export async function handler() {
   console.log("this is a log line");
   throw new Error("test");

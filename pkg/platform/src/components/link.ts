@@ -1,14 +1,13 @@
-import { Input, Output, runtime } from "@pulumi/pulumi";
+import { Input, Output, runtime, output, all } from "@pulumi/pulumi";
 import { FunctionPermissionArgs } from "./aws/function.js";
 import { VisibleError } from "./error.js";
 
 export module Link {
   export interface Definition {
-    value: Input<any>;
-    type: string;
+    properties: Input<Record<string, any>>;
   }
 
-  let links: Record<string, any> = {};
+  let links: Record<string, Record<string, any>> = {};
   export function reset() {
     links = {};
     runtime.registerStackTransformation((args) => {
@@ -22,7 +21,10 @@ export module Link {
           }
 
           const link = resource.getSSTLink();
-          links[args.name] = link.value;
+          links[args.name] = output(link.properties).apply((props) => ({
+            type: args.type.replaceAll(":", "."),
+            ...props,
+          }));
         }
       });
       return {
@@ -41,15 +43,17 @@ export module Link {
     return "getSSTLink" in obj;
   }
 
-  export function build(links: Definition[]) {
+  export function build(links: any[]) {
     return links.map((l) => {
       if (isLinkable(l)) {
         const link = l.getSSTLink();
-        return {
-          name: l.urn.apply((x) => x.split("::").at(-1)!),
-          value: link.value,
-          type: link.type,
-        };
+        return all([l.urn, link.properties]).apply(([urn, properties]) => ({
+          name: urn.split("::").at(-1)!,
+          properties: {
+            ...properties,
+            type: urn.split("::").at(-2)!,
+          },
+        }));
       }
       throw new VisibleError(`${l} is not a linkable component`);
     });

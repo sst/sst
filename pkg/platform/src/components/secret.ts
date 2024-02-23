@@ -124,8 +124,7 @@ export class Secret extends Component implements Link.Linkable {
   /** @internal */
   public getSSTLink() {
     return {
-      type: `{ value: string }`,
-      value: {
+      properties: {
         value: this.value,
       },
     };

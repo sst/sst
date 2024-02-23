@@ -10,7 +10,7 @@ export async function build(
   input: pulumi.Unwrap<WorkerArgs> & {
     links?: {
       name: string;
-      value: string;
+      properties: any;
     }[];
   },
 ) {
@@ -36,7 +36,7 @@ export async function build(
 
   // Rebuilt using existing esbuild context
   const links = Object.fromEntries(
-    input.links?.map((item) => [item.name, item.value]) || [],
+    input.links?.map((item) => [item.name, item.properties]) || [],
   );
   const options: BuildOptions = {
     entryPoints: [path.resolve(input.handler)],

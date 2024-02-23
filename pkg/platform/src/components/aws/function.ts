@@ -1089,7 +1089,7 @@ export class Function
             ? linkData
                 .map((item) => [
                   `process.env.SST_RESOURCE_${item.name} = ${JSON.stringify(
-                    JSON.stringify(item.value),
+                    JSON.stringify(item.properties),
                   )};\n`,
                 ])
                 .join("")
@@ -1451,7 +1451,7 @@ export class Function
   public getSSTLink() {
     return {
       type: `{ name: string }`,
-      value: {
+      properties: {
         name: this.name,
       },
     };

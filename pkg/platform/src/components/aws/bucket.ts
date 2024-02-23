@@ -385,8 +385,7 @@ export class Bucket
   /** @internal */
   public getSSTLink() {
     return {
-      type: `{ name: string }`,
-      value: {
+      properties: {
         name: this.name,
       },
     };

@@ -237,8 +237,7 @@ export class Vector
   /** @internal */
   public getSSTLink() {
     return {
-      type: `{ ingestorFunctionName: string, retrieverFunctionName: string, removerFunctionName: string }`,
-      value: {
+      properties: {
         ingestorFunctionName: this.ingestorFunctionName,
         retrieverFunctionName: this.retrieverFunctionName,
         removerFunctionName: this.removerFunctionName,

@@ -453,7 +453,7 @@ export function buildApp(
       const linkEnvs = output(linkData).apply((linkData) => {
         const envs: Record<string, string> = {};
         for (const datum of linkData) {
-          envs[`SST_RESOURCE_${datum.name}`] = JSON.stringify(datum.value);
+          envs[`SST_RESOURCE_${datum.name}`] = JSON.stringify(datum.properties);
         }
         return envs;
       });

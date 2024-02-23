@@ -1029,8 +1029,7 @@ if (event.rawPath) {
   /** @internal */
   public getSSTLink() {
     return {
-      type: `{ url: string; }`,
-      value: {
+      properties: {
         url: this.url,
       },
     };
