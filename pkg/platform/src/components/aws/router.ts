@@ -1,0 +1,193 @@
+import { ComponentResourceOptions, output } from "@pulumi/pulumi";
+import * as aws from "@pulumi/aws";
+import { Component, Prettify, Transform, transform } from "../component";
+import { Link } from "../link";
+import type { Input } from "../input";
+import { Function, FunctionDefinition } from "./function";
+import { Duration, toSeconds } from "../duration";
+import { VisibleError } from "../error";
+import { Cdn, CdnDomainArgs } from "./cdn";
+
+export interface RouterArgs {
+  /**
+   * Set a custom domain for your Router. Supports domains hosted either on
+   * [Route 53](https://aws.amazon.com/route53/) or outside AWS.
+   *
+   * :::tip
+   * You can also migrate an externally hosted domain to Amazon Route 53 by
+   * [following this guide](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/MigratingDNS.html).
+   * :::
+   *
+   * @example
+   *
+   * ```js
+   * {
+   *   domain: "domain.com"
+   * }
+   * ```
+   *
+   * Specify the Route 53 hosted zone and a `www.` version of the custom domain.
+   *
+   * ```js
+   * {
+   *   domain: {
+   *     domainName: "domain.com",
+   *     hostedZone: "domain.com",
+   *     redirects: ["www.domain.com"]
+   *   }
+   * }
+   * ```
+   */
+  domain?: Input<string | Prettify<CdnDomainArgs>>;
+  routes: Record<string, string>;
+}
+
+/**
+ * The `Router` component lets you add an AWS CDN Router to your app.
+ *
+ * @example
+ *
+ * #### Minimal example
+ *
+ * ```ts
+ * const api = new sst.aws.Function("MyApi", {
+ *   handler: "src/api.handler",
+ *   url: true,
+ * });
+ *
+ * new sst.aws.Router("MyRouter", {
+ *   domain: "api.example.com",
+ *   routes: {
+ *     "/*": api.url
+ *   }
+ * });
+ * ```
+ */
+export class Router extends Component implements Link.Linkable {
+  private cdn: Cdn;
+
+  constructor(
+    name: string,
+    args: RouterArgs,
+    opts: ComponentResourceOptions = {},
+  ) {
+    super("sst:aws:Router", name, args, opts);
+
+    const parent = this;
+
+    validateRoutes();
+
+    const cdn = createCdn();
+
+    this.cdn = cdn;
+
+    function validateRoutes() {
+      output(args.routes).apply((routes) => {
+        Object.keys(routes).map((path) => {
+          if (!path.startsWith("/")) {
+            throw new Error(
+              `In "${name}" Router, the route path "${path}" must start with a "/"`,
+            );
+          }
+        });
+      });
+    }
+
+    function createCdn() {
+      return new Cdn(
+        `${name}Cdn`,
+        {
+          domain: args.domain,
+          waitForDeployment: true,
+          transform: {
+            distribution: (distribution) => ({
+              ...distribution,
+              comment: `${name} router`,
+              origins: output(args.routes).apply((routes) =>
+                Object.entries(routes).map(([path, url]) => ({
+                  originId: path,
+                  domainName: new URL(url).host,
+                  customOriginConfig: {
+                    httpPort: 80,
+                    httpsPort: 443,
+                    originProtocolPolicy: "https-only",
+                    originReadTimeout: 20,
+                    originSslProtocols: ["TLSv1.2"],
+                  },
+                })),
+              ),
+              defaultCacheBehavior: output(args.routes).apply((routes) => {
+                return {
+                  targetOriginId: routes["/*"] ? "/*" : Object.keys(routes)[0],
+                  viewerProtocolPolicy: "redirect-to-https",
+                  allowedMethods: [
+                    "DELETE",
+                    "GET",
+                    "HEAD",
+                    "OPTIONS",
+                    "PATCH",
+                    "POST",
+                    "PUT",
+                  ],
+                  cachedMethods: ["GET", "HEAD"],
+                  compress: true,
+                  cachePolicyId: "658327ea-f89d-4fab-a63d-7e88639e58f6",
+                };
+              }),
+              orderedCacheBehaviors: output(args.routes).apply((routes) =>
+                Object.keys(routes)
+                  .filter((path) => path !== "/*")
+                  .map((path) => ({
+                    pathPattern: path,
+                    targetOriginId: path,
+                    viewerProtocolPolicy: "redirect-to-https",
+                    allowedMethods: [
+                      "DELETE",
+                      "GET",
+                      "HEAD",
+                      "OPTIONS",
+                      "PATCH",
+                      "POST",
+                      "PUT",
+                    ],
+                    cachedMethods: ["GET", "HEAD"],
+                    compress: true,
+                    cachePolicyId: "658327ea-f89d-4fab-a63d-7e88639e58f6",
+                    //cachePolicyId: useServerBehaviorCachePolicy().id,
+                    //// CloudFront's Managed-AllViewerExceptHostHeader policy
+                    //originRequestPolicyId: "b689b0a8-53d0-40ab-baf2-68738e2966ac",
+                  })),
+              ),
+            }),
+          },
+        },
+        { parent },
+      );
+    }
+  }
+
+  /**
+   * The autogenerated CloudFront URL of the Next.js app.
+   */
+  public get url() {
+    return this.cdn.url;
+  }
+
+  /**
+   * If the `domain` is set, this is the URL of the Next.js app with the
+   * custom domain.
+   */
+  public get domainUrl() {
+    return this.cdn.domainUrl;
+  }
+
+  /** @internal */
+  public getSSTLink() {
+    return {
+      type: `{ url: string }`,
+      value: {
+        url: this.url,
+      },
+    };
+  }
+}

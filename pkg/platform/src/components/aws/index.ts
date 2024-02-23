@@ -4,6 +4,7 @@ export * from "./cron.js";
 export * from "./function.js";
 export * from "./postgres.js";
 export * from "./queue.js";
+export * from "./router.js";
 export * from "./vector.js";
 
 export * from "./astro.js";

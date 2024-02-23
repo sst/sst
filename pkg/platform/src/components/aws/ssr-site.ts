@@ -15,7 +15,6 @@ import {
 import * as aws from "@pulumi/aws";
 import { Cdn, CdnDomainArgs } from "./cdn.js";
 import { Function, FunctionArgs } from "./function.js";
-import { Duration, toSeconds } from "../duration.js";
 import { DistributionInvalidation } from "./providers/distribution-invalidation.js";
 import { useProvider } from "./helpers/provider.js";
 import { Bucket } from "./bucket.js";
