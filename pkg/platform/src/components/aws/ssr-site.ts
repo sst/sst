@@ -1021,7 +1021,7 @@ function handler(event) {
         `${name}Cdn`,
         {
           domain: args.domain,
-          waitForDeployment: !$dev,
+          wait: !$dev,
           transform: {
             distribution: (distribution) => ({
               ...distribution,

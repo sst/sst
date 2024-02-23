@@ -151,10 +151,10 @@ export interface CdnArgs {
    * @default `true`
    * @example
    * ```js
-   * waitForDeployment: false,
+   * wait: false,
    * ```
    */
-  waitForDeployment?: Input<boolean>;
+  wait?: Input<boolean>;
   transform: {
     distribution: Transform<aws.cloudfront.DistributionArgs>;
   };
@@ -272,14 +272,13 @@ export class Cdn extends Component {
     }
 
     function createDistributionDeploymentWaiter() {
-      return output(args.waitForDeployment).apply((waitForDeployment) => {
-        const wait = waitForDeployment ?? true;
+      return output(args.wait).apply((wait) => {
         return new DistributionDeploymentWaiter(
           `${name}Waiter`,
           {
             distributionId: distribution.id,
             etag: distribution.etag,
-            wait,
+            wait: wait ?? true,
           },
           { parent, ignoreChanges: wait ? undefined : ["*"] },
         );
