@@ -25,7 +25,7 @@ new sst.aws.Nextjs("Web");
 
 #### Change the path
 
-Deploys a Next.js app in the `my-next-app` directory.
+Deploys a Next.js app in the `my-next-app/` directory.
 
 ```js {2}
 new sst.aws.Nextjs("Web", {
@@ -51,21 +51,21 @@ Redirect `www.my-app.com` to `my-app.com`.
 new sst.aws.Nextjs("Web", {
   domain: {
     domainName: "my-app.com",
-    aliases: ["www.my-app.com"]
+    redirects: ["www.my-app.com"]
   }
 });
 ```
 
 #### Link resources
 
-[Link resources](/docs/linking/) to your Next.js app. The will grant permissions
-to the resources and allow you to access it in your handler.
+[Link resources](/docs/linking/) to your Next.js app. This will grant permissions
+to the resources and allow you to access it in your app.
 
 ```ts {4}
 const myBucket = new sst.aws.Bucket("MyBucket");
 
 new sst.aws.Nextjs("Web", {
-  link: [myBucket],
+  link: [myBucket]
 });
 ```
 
@@ -75,19 +75,7 @@ in your Next.js app.
 ```ts title="app/page.tsx"
 import { Resource } from "sst";
 
-console.log(Resource.MyBucket.bucketName);
-```
-
-#### Set environment variables
-
-Set [environment variables](https://nextjs.org/docs/app/building-your-application/configuring/environment-variables) in your Next.js app.
-
-```ts {3}
-new sst.aws.Nextjs("Web", {
-  environment: {
-    API_URL: "https://api.example.com",
-  },
-});
+console.log(Resource.MyBucket.name);
 ```
 </Section>
 
@@ -150,7 +138,7 @@ The Amazon S3 Bucket that stores the assets.
 **Type** [<code class="type">Function</code>](function/)
 </InlineSection>
 </Section>
-The AWS Lambda server function.
+The AWS Lambda server function that renders the app.
 </Segment>
 
 ### url
@@ -334,7 +322,7 @@ used by both CloudFront and the browser cache. The default `max-age` is set to 1
 **Default** <code class="primitive">"npx --yes open-next@OPEN_NEXT_VERSION build"</code>
 </InlineSection>
 The command used internally to build your Next.js app. It uses OpenNext with the `openNextVersion`.
-If you want SST to use a custom `build` script from your `package.json`.
+If you want to use a custom `build` script from your `package.json`.
 ```js
 {
   buildCommand: "npm run build"
@@ -631,11 +619,13 @@ Invalidate the `index.html` and all files under the `products/` route.
 <InlineSection>
 **Default** <code class="primitive">false</code>
 </InlineSection>
-While deploying, SST waits for the CloudFront cache invalidation process to finish. This ensures that the new content will be served once the deploy command finishes. However, this process can sometimes take more than 5 mins. For non-prod environments it might make sense to pass in `false`. That'll skip waiting for the cache to invalidate and speed up the deploy process.
+Configure if `sst deploy` should wait for the CloudFront cache invalidation to finish.
+
+Waiting for the CloudFront cache invalidation process to finish ensures that the new content will be served once the deploy finishes. However, this process can sometimes take more than 5 mins. For non-prod environments it might make sense to pass in `false`. That'll skip waiting for the cache to invalidate and speed up the deploys.
 ```js
 {
   invalidation: {
-    wait: true,
+    wait: true
   }
 }
 ```
@@ -724,7 +714,16 @@ By default, this is pinned to the version of OpenNext that was released with the
 <InlineSection>
 **Default** <code class="primitive">"."</code>
 </InlineSection>
-Path to the directory where your Next.js app is located. By default this assumes your Next.js app is in the root of your SST app.
+Path to the directory where your Next.js app is located. This path is relative to your `sst.config.ts`.
+
+By default this assumes your Next.js app is in the root of your SST app.
+If your Next.js app is in a package in your monorepo.
+
+```js
+{
+  path: "packages/web"
+}
+```
 </Segment>
 ### permissions?
 <Segment>
@@ -1134,7 +1133,7 @@ Each origin can be either an S3, server, image optimization, or group origin.
 <InlineSection>
 **Default** <code class="primitive">0</code>
 </InlineSection>
-The number of instances of the server function to keep warm. This is useful for cases where you are experiencing long cold starts. The default is to not keep any instances warm.
+The number of instances of the [server function](#nodes-server) to keep warm. This is useful for cases where you are experiencing long cold starts. The default is to not keep any instances warm.
 
 This works by starting a serverless cron job to make _n_ concurrent requests to the server function every few minutes. Where _n_ is the number of instances to keep warm.
 </Segment>

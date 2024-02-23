@@ -107,7 +107,7 @@ interface OpenNextOutput {
 
 export interface NextjsArgs extends SsrSiteArgs {
   /**
-   * The number of instances of the server function to keep warm. This is useful for cases where you are experiencing long cold starts. The default is to not keep any instances warm.
+   * The number of instances of the [server function](#nodes-server) to keep warm. This is useful for cases where you are experiencing long cold starts. The default is to not keep any instances warm.
    *
    * This works by starting a serverless cron job to make _n_ concurrent requests to the server function every few minutes. Where _n_ is the number of instances to keep warm.
    *
@@ -163,8 +163,20 @@ export interface NextjsArgs extends SsrSiteArgs {
    */
   permissions?: SsrSiteArgs["permissions"];
   /**
-   * Path to the directory where your Next.js app is located. By default this assumes your Next.js app is in the root of your SST app.
+   * Path to the directory where your Next.js app is located. This path is relative to your `sst.config.ts`.
+   *
+   * By default this assumes your Next.js app is in the root of your SST app.
    * @default `"."`
+   *
+   * @example
+   *
+   * If your Next.js app is in a package in your monorepo.
+   *
+   * ```js
+   * {
+   *   path: "packages/web"
+   * }
+   * ```
    */
   path?: SsrSiteArgs["path"];
   /**
@@ -209,7 +221,7 @@ export interface NextjsArgs extends SsrSiteArgs {
    *
    * @example
    *
-   * If you want SST to use a custom `build` script from your `package.json`.
+   * If you want to use a custom `build` script from your `package.json`.
    * ```js
    * {
    *   buildCommand: "npm run build"
@@ -357,7 +369,7 @@ export interface NextjsArgs extends SsrSiteArgs {
  *
  * #### Change the path
  *
- * Deploys a Next.js app in the `my-next-app` directory.
+ * Deploys a Next.js app in the `my-next-app/` directory.
  *
  * ```js {2}
  * new sst.aws.Nextjs("Web", {
@@ -383,7 +395,7 @@ export interface NextjsArgs extends SsrSiteArgs {
  * new sst.aws.Nextjs("Web", {
  *   domain: {
  *     domainName: "my-app.com",
- *     aliases: ["www.my-app.com"]
+ *     redirects: ["www.my-app.com"]
  *   }
  * });
  * ```
@@ -391,13 +403,13 @@ export interface NextjsArgs extends SsrSiteArgs {
  * #### Link resources
  *
  * [Link resources](/docs/linking/) to your Next.js app. This will grant permissions
- * to the resources and allow you to access it in your handler.
+ * to the resources and allow you to access it in your app.
  *
  * ```ts {4}
  * const myBucket = new sst.aws.Bucket("MyBucket");
  *
  * new sst.aws.Nextjs("Web", {
- *   link: [myBucket],
+ *   link: [myBucket]
  * });
  * ```
  *
@@ -407,19 +419,7 @@ export interface NextjsArgs extends SsrSiteArgs {
  * ```ts title="app/page.tsx"
  * import { Resource } from "sst";
  *
- * console.log(Resource.MyBucket.bucketName);
- * ```
- *
- * #### Set environment variables
- *
- * Set [environment variables](https://nextjs.org/docs/app/building-your-application/configuring/environment-variables) in your Next.js app.
- *
- * ```ts {3}
- * new sst.aws.Nextjs("Web", {
- *   environment: {
- *     API_URL: "https://api.example.com",
- *   },
- * });
+ * console.log(Resource.MyBucket.name);
  * ```
  */
 export class Nextjs extends Component implements Link.Linkable {
@@ -1387,7 +1387,7 @@ if (event.rawPath) {
   public get nodes() {
     return {
       /**
-       * The AWS Lambda server function.
+       * The AWS Lambda server function that renders the app.
        */
       server: this.server as unknown as Function,
       /**

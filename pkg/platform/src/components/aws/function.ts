@@ -756,7 +756,7 @@ export interface FunctionArgs {
  * ```ts title="src/lambda.ts"
  * import { Resource } from "sst";
  *
- * console.log(Resource.MyBucket.bucketName);
+ * console.log(Resource.MyBucket.name);
  * ```
  *
  * #### Set environment variables

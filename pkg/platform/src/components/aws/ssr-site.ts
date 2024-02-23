@@ -82,7 +82,9 @@ export interface SsrSiteArgs {
    * @default `npm run build`
    * @example
    * ```js
-   * buildCommand: "yarn build",
+   * {
+   *   buildCommand: "yarn build"
+   * }
    * ```
    */
   buildCommand?: Input<string>;
@@ -314,13 +316,15 @@ export interface SsrSiteArgs {
    */
   invalidation?: Input<{
     /**
-     * While deploying, SST waits for the CloudFront cache invalidation process to finish. This ensures that the new content will be served once the deploy command finishes. However, this process can sometimes take more than 5 mins. For non-prod environments it might make sense to pass in `false`. That'll skip waiting for the cache to invalidate and speed up the deploy process.
+     * Configure if `sst deploy` should wait for the CloudFront cache invalidation to finish.
+     *
+     * Waiting for the CloudFront cache invalidation process to finish ensures that the new content will be served once the deploy finishes. However, this process can sometimes take more than 5 mins. For non-prod environments it might make sense to pass in `false`. That'll skip waiting for the cache to invalidate and speed up the deploys.
      * @default `false`
      * @example
      * ```js
      * {
      *   invalidation: {
-     *     wait: true,
+     *     wait: true
      *   }
      * }
      * ```

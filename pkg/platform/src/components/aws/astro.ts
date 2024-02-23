@@ -21,18 +21,260 @@ import { getStringifiedRouteTree } from "./helpers/astroRouteCompressor.js";
 import { Link } from "../link.js";
 import { Cache } from "./providers/cache.js";
 
-export interface AstroArgs extends SsrSiteArgs {}
+export interface AstroArgs extends SsrSiteArgs {
+  /**
+   * The number of instances of the [server function](#nodes-server) to keep warm. This is useful for cases where you are experiencing long cold starts. The default is to not keep any instances warm.
+   *
+   * This works by starting a serverless cron job to make _n_ concurrent requests to the server function every few minutes. Where _n_ is the number of instances to keep warm.
+   *
+   * @default `0`
+   */
+  warm?: SsrSiteArgs["warm"];
+  /**
+   * Permissions and the resources that the [server function](#nodes-server) in your Astro site needs to access. These permissions are used to create the function's IAM role.
+   *
+   * :::tip
+   * If you `link` the function to a resource, the permissions to access it are
+   * automatically added.
+   * :::
+   *
+   * @example
+   * Allow reading and writing to an S3 bucket called `my-bucket`.
+   * ```js
+   * {
+   *   permissions: [
+   *     {
+   *       actions: ["s3:GetObject", "s3:PutObject"],
+   *       resources: ["arn:aws:s3:::my-bucket/*"]
+   *     },
+   *   ]
+   * }
+   * ```
+   *
+   * Perform all actions on an S3 bucket called `my-bucket`.
+   *
+   * ```js
+   * {
+   *   permissions: [
+   *     {
+   *       actions: ["s3:*"],
+   *       resources: ["arn:aws:s3:::my-bucket/*"]
+   *     },
+   *   ]
+   * }
+   * ```
+   *
+   * Grant permissions to access all resources.
+   *
+   * ```js
+   * {
+   *   permissions: [
+   *     {
+   *       actions: ["*"],
+   *       resources: ["*"]
+   *     },
+   *   ]
+   * }
+   * ```
+   */
+  permissions?: SsrSiteArgs["permissions"];
+  /**
+   * Path to the directory where your Astro site is located.  This path is relative to your `sst.config.ts`.
+   *
+   * By default it assumes your Astro site is in the root of your SST app.
+   * @default `"."`
+   *
+   * @example
+   *
+   * If your Astro site is in a package in your monorepo.
+   *
+   * ```js
+   * {
+   *   path: "packages/web"
+   * }
+   * ```
+   */
+  path?: SsrSiteArgs["path"];
+  /**
+   * [Link resources](/docs/linking/) to your Astro site. This will:
+   *
+   * 1. Grant the permissions needed to access the resources.
+   * 2. Allow you to access it in your site using the [Node client](/docs/reference/client/).
+   *
+   * @example
+   *
+   * Takes a list of resources to link to the function.
+   *
+   * ```js
+   * {
+   *   link: [myBucket, stripeKey]
+   * }
+   * ```
+   */
+  link?: SsrSiteArgs["link"];
+  /**
+   * Configure how the CloudFront cache invalidations are handled. This is run after your Astro site has been deployed.
+   * :::tip
+   * You get 1000 free invalidations per month. After that you pay $0.005 per invalidation path. [Read more here](https://aws.amazon.com/cloudfront/pricing/).
+   * :::
+   * @default `&lcub;paths: "all", wait: false&rcub;`
+   * @example
+   * Wait for all paths to be invalidated.
+   * ```js
+   * {
+   *   invalidation: {
+   *     paths: "all",
+   *     wait: true
+   *   }
+   * }
+   * ```
+   */
+  invalidation?: SsrSiteArgs["invalidation"];
+  /**
+   * Set [environment variables](https://nextjs.org/docs/pages/building-your-application/configuring/environment-variables) in your Astro site. These are made available:
+   *
+   * 1. In `astro build`, they are loaded into `import.meta.env`.
+   * 2. Locally while running `sst dev astro dev`.
+   *
+   * :::tip
+   * You can also `link` resources to your Astro site and access them in a type-safe way with the [Node client](/docs/reference/client/). We recommend linking since it's more secure.
+   * :::
+   *
+   * Recall that in Astro, you need to prefix your environment variables with `PUBLIC_` to access them on the client-side. [Read more here](https://docs.astro.build/en/guides/environment-variables/).
+   *
+   * @example
+   * ```js
+   * {
+   *   environment: {
+   *     API_URL: api.url,
+   *     // Accessible on the client-side
+   *     PUBLIC_STRIPE_PUBLISHABLE_KEY: "pk_test_123"
+   *   }
+   * }
+   * ```
+   */
+  environment?: SsrSiteArgs["environment"];
+  /**
+   * Set a custom domain for your Astro site. Supports domains hosted either on
+   * [Route 53](https://aws.amazon.com/route53/) or outside AWS.
+   *
+   * :::tip
+   * You can also migrate an externally hosted domain to Amazon Route 53 by
+   * [following this guide](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/MigratingDNS.html).
+   * :::
+   *
+   * @example
+   *
+   * ```js
+   * {
+   *   domain: "domain.com"
+   * }
+   * ```
+   *
+   * Specify the Route 53 hosted zone and a `www.` version of the custom domain.
+   *
+   * ```js
+   * {
+   *   domain: {
+   *     domainName: "domain.com",
+   *     hostedZone: "domain.com",
+   *     redirects: ["www.domain.com"]
+   *   }
+   * }
+   * ```
+   */
+  domain?: SsrSiteArgs["domain"];
+  /**
+   * The command used internally to build your Astro site. It uses OpenNext with the `openNextVersion`.
+   *
+   * @default `"npm run build"`
+   *
+   * @example
+   *
+   * If you want to use a different build command.
+   * ```js
+   * {
+   *   buildCommand: "yarn build"
+   * }
+   * ```
+   */
+  buildCommand?: SsrSiteArgs["buildCommand"];
+  /**
+   * Configure how the Astro site assets are uploaded to S3.
+   */
+  assets?: SsrSiteArgs["assets"];
+}
 
 const BUILD_META_FILE_NAME: BuildMetaFileName = "sst.buildMeta.json";
 
 /**
- * The `Astro` component makes it easy to create an Astro app.
+ * The `Astro` component lets you deploy an Astro site to AWS.
+ *
  * @example
- * #### Using the minimal config
+ *
+ * #### Minimal example
+ *
+ * Deploy the Astro site that's in the project root.
+ *
  * ```js
+ * new sst.aws.Astro("Web");
+ * ```
+ *
+ * #### Change the path
+ *
+ * Deploys the Astro site in the `my-astro-app/` directory.
+ *
+ * ```js {2}
  * new sst.aws.Astro("Web", {
- *   path: "my-astro-app/",
+ *   path: "my-astro-app/"
  * });
+ * ```
+ *
+ * #### Add a custom domain
+ *
+ * Set a custom domain for your Astro site.
+ *
+ * ```js {2}
+ * new sst.aws.Astro("Web", {
+ *   domain: "my-app.com"
+ * });
+ * ```
+ *
+ * #### Redirect www to apex domain
+ *
+ * Redirect `www.my-app.com` to `my-app.com`.
+ *
+ * ```js {4}
+ * new sst.aws.Astro("Web", {
+ *   domain: {
+ *     domainName: "my-app.com",
+ *     redirects: ["www.my-app.com"]
+ *   }
+ * });
+ * ```
+ *
+ * #### Link resources
+ *
+ * [Link resources](/docs/linking/) to your Astro site. This will grant permissions
+ * to the resources and allow you to access it in your site.
+ *
+ * ```ts {4}
+ * const myBucket = new sst.aws.Bucket("MyBucket");
+ *
+ * new sst.aws.Astro("Web", {
+ *   link: [myBucket]
+ * });
+ * ```
+ *
+ * You can use the [Node client](/docs/reference/client/) to access the linked resources
+ * in your Astro site.
+ *
+ * ```astro title="src/pages/index.astro"
+ * ---
+ * import { Resource } from "sst";
+ *
+ * console.log(Resource.MyBucket.name);
+ * ---
  * ```
  */
 export class Astro extends Component implements Link.Linkable {
@@ -346,14 +588,14 @@ export class Astro extends Component implements Link.Linkable {
   }
 
   /**
-   * The CloudFront URL of the website.
+   * The autogenerated CloudFront URL of the Astro site.
    */
   public get url() {
     return this.cdn.url;
   }
 
   /**
-   * If the custom domain is enabled, this is the URL of the website with the
+   * If the `domain` is set, this is the URL of the Astro site with the
    * custom domain.
    */
   public get domainUrl() {
@@ -361,11 +603,17 @@ export class Astro extends Component implements Link.Linkable {
   }
 
   /**
-   * The internally created CDK resources.
+   * The underlying [resources](/docs/components/#nodes) this component creates.
    */
   public get nodes() {
     return {
+      /**
+       * The AWS Lambda server function that renders the site.
+       */
       server: this.server as unknown as Function,
+      /**
+       * The Amazon S3 Bucket that stores the assets.
+       */
       assets: this.assets,
     };
   }

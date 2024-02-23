@@ -263,7 +263,9 @@ used by both CloudFront and the browser cache. The default `max-age` is set to 1
 </InlineSection>
 The command for building the website
 ```js
-buildCommand: "yarn build",
+{
+  buildCommand: "yarn build"
+}
 ```
 </Segment>
 ### domain?
@@ -506,11 +508,13 @@ Invalidate the `index.html` and all files under the `products/` route.
 <InlineSection>
 **Default** <code class="primitive">false</code>
 </InlineSection>
-While deploying, SST waits for the CloudFront cache invalidation process to finish. This ensures that the new content will be served once the deploy command finishes. However, this process can sometimes take more than 5 mins. For non-prod environments it might make sense to pass in `false`. That'll skip waiting for the cache to invalidate and speed up the deploy process.
+Configure if `sst deploy` should wait for the CloudFront cache invalidation to finish.
+
+Waiting for the CloudFront cache invalidation process to finish ensures that the new content will be served once the deploy finishes. However, this process can sometimes take more than 5 mins. For non-prod environments it might make sense to pass in `false`. That'll skip waiting for the cache to invalidate and speed up the deploys.
 ```js
 {
   invalidation: {
-    wait: true,
+    wait: true
   }
 }
 ```
