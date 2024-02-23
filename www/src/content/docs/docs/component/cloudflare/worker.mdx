@@ -30,7 +30,7 @@ and allow you to access it in your handler.
 const myBucket = new sst.aws.Bucket("MyBucket");
 
 new sst.cloudflare.Worker("MyWorker", {
-  handler: "src/worker.handler"
+  handler: "src/worker.handler",
   link: [myBucket]
 });
 ```
@@ -50,7 +50,7 @@ Enable worker URLs to invoke the worker over HTTP.
 
 ```ts {3}
 new sst.cloudflare.Worker("MyWorker", {
-  handler: "src/worker.handler"
+  handler: "src/worker.handler",
   url: true
 });
 ```
@@ -62,7 +62,7 @@ By default, SST will bundle your worker code using [esbuild](https://esbuild.git
 
 ```ts
 new sst.cloudflare.Worker("MyWorker", {
-  handler: "src/worker.handler"
+  handler: "src/worker.handler",
   build: {
     install: ["pg"]
   }
@@ -85,21 +85,11 @@ new Worker(name, args, opts?)
 #### Parameters
 - <p><code class="key">name</code> <code class="primitive">string</code></p>
 - <p><code class="key">args</code> [<code class="type">WorkerArgs</code>](#workerargs)</p>
-- <p><code class="key">opts</code> [<code class="type">ComponentResourceOptions</code>](https://www.pulumi.com/docs/concepts/options/)</p>
+- <p><code class="key">opts?</code> [<code class="type">ComponentResourceOptions</code>](https://www.pulumi.com/docs/concepts/options/)</p>
 </Section>
 </Segment>
 
 ## Properties
-
-### devUrl
-<Segment>
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">Output</code><code class="symbol">&lt;</code><code class="primitive">undefined</code><code class="symbol"> | </code><code class="primitive">string</code><code class="symbol">&gt;</code>
-</InlineSection>
-</Section>
-The Worker URL if `url` is enabled.
-</Segment>
 
 ### nodes
 <Segment>
@@ -121,8 +111,86 @@ The underlying [resources](/docs/components/#nodes) this component creates.
 The Cloudflare Worker script.
 </Segment>
 
+### url
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Output</code><code class="symbol">&lt;</code><code class="primitive">undefined</code><code class="symbol"> | </code><code class="primitive">string</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+The Worker URL if `url` is enabled.
+</Segment>
+
 ## WorkerArgs
-### devUrl?
+### build?
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Object</code><code class="symbol">&gt;</code>
+</InlineSection>
+- <p>[<code class="key">banner?</code>](#build-banner)</p>
+- <p>[<code class="key">esbuild?</code>](#build-esbuild)</p>
+- <p>[<code class="key">loader?</code>](#build-loader)</p>
+- <p>[<code class="key">minify?</code>](#build-minify)</p>
+</Section>
+Configure how your function is bundled.
+
+SST bundles your worker code using [esbuild](https://esbuild.github.io/). This tree shakes your code to only include what's used.
+
+</Segment>
+<NestedTitle id="build-banner" Tag="h4" parent="build.">banner?</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+Use this to insert a string at the beginning of the generated JS file.
+
+```js
+{
+  build: {
+    banner: "console.log('Function starting')"
+  }
+}
+```
+</Segment>
+<NestedTitle id="build-esbuild" Tag="h4" parent="build.">esbuild?</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code>[<code class="type">BuildOptions</code>](https://esbuild.github.io/api/#build)<code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+This allows you to customize esbuild config that is used.
+
+:::tip
+Check out the _JS tab_ in the code snippets in the esbuild docs for the
+[build options](https://esbuild.github.io/api/#build).
+:::
+
+</Segment>
+<NestedTitle id="build-loader" Tag="h4" parent="build.">loader?</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Record</code><code class="symbol">&lt;</code><code class="primitive">string</code>, [<code class="type">Loader</code>](https://esbuild.github.io/api/#loader)<code class="symbol">&gt;</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+Configure additional esbuild loaders for other file extensions. This is useful
+when your code is importing non-JS files like `.png`, `.css`, etc.
+
+```js
+{
+  build: {
+    loader: {
+     ".png": "file"
+    }
+  }
+}
+```
+</Segment>
+<NestedTitle id="build-minify" Tag="h4" parent="build.">minify?</NestedTitle>
 <Segment>
 <Section type="parameters">
 <InlineSection>
@@ -131,10 +199,17 @@ The Cloudflare Worker script.
 </Section>
 
 <InlineSection>
-**Default** <code class="primitive">false</code>
+**Default** <code class="primitive">true</code>
 </InlineSection>
-Enable a dedicated endpoint for your Worker.
+Enable or disable if the worked code is minified when bundled.
 
+```js
+{
+  build: {
+    minify: false
+  }
+}
+```
 </Segment>
 ### handler
 <Segment>
@@ -180,76 +255,7 @@ Takes a list of components to link to the function.
 }
 ```
 </Segment>
-### nodejs?
-<Segment>
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Object</code><code class="symbol">&gt;</code>
-</InlineSection>
-- <p>[<code class="key">banner?</code>](#nodejs-banner)</p>
-- <p>[<code class="key">esbuild?</code>](#nodejs-esbuild)</p>
-- <p>[<code class="key">loader?</code>](#nodejs-loader)</p>
-- <p>[<code class="key">minify?</code>](#nodejs-minify)</p>
-- <p>[<code class="key">sourcemap?</code>](#nodejs-sourcemap)</p>
-</Section>
-Configure how your function is bundled.
-
-SST bundles your worker code using [esbuild](https://esbuild.github.io/). This tree shakes your code to only include what's used.
-
-</Segment>
-<NestedTitle id="nodejs-banner" Tag="h4" parent="nodejs.">banner?</NestedTitle>
-<Segment>
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
-</InlineSection>
-</Section>
-Use this to insert a string at the beginning of the generated JS file.
-
-```js
-{
-  nodejs: {
-    banner: "console.log('Function starting')"
-  }
-}
-```
-</Segment>
-<NestedTitle id="nodejs-esbuild" Tag="h4" parent="nodejs.">esbuild?</NestedTitle>
-<Segment>
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code>[<code class="type">BuildOptions</code>](https://esbuild.github.io/api/#build)<code class="symbol">&gt;</code>
-</InlineSection>
-</Section>
-This allows you to customize esbuild config that is used.
-
-:::tip
-Check out the _JS tab_ in the code snippets in the esbuild docs for the
-[build options](https://esbuild.github.io/api/#build).
-:::
-
-</Segment>
-<NestedTitle id="nodejs-loader" Tag="h4" parent="nodejs.">loader?</NestedTitle>
-<Segment>
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Record</code><code class="symbol">&lt;</code><code class="primitive">string</code>, [<code class="type">Loader</code>](https://esbuild.github.io/api/#loader)<code class="symbol">&gt;</code><code class="symbol">&gt;</code>
-</InlineSection>
-</Section>
-Configure additional esbuild loaders for other file extensions. This is useful
-when your code is importing non-JS files like `.png`, `.css`, etc.
-
-```js
-{
-  nodejs: {
-    loader: {
-     ".png": "file"
-    }
-  }
-}
-```
-</Segment>
-<NestedTitle id="nodejs-minify" Tag="h4" parent="nodejs.">minify?</NestedTitle>
+### url?
 <Segment>
 <Section type="parameters">
 <InlineSection>
@@ -258,25 +264,9 @@ when your code is importing non-JS files like `.png`, `.css`, etc.
 </Section>
 
 <InlineSection>
-**Default** <code class="primitive">true</code>
+**Default** <code class="primitive">false</code>
 </InlineSection>
-Enable or disable if the worked code is minified when bundled.
-
-```js
-{
-  nodejs: {
-    minify: false
-  }
-}
-```
-</Segment>
-<NestedTitle id="nodejs-sourcemap" Tag="h4" parent="nodejs.">sourcemap?</NestedTitle>
-<Segment>
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">boolean</code><code class="symbol">&gt;</code>
-</InlineSection>
-</Section>
+Enable a dedicated endpoint for your Worker.
 
 </Segment>
 </div>

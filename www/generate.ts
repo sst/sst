@@ -14,7 +14,7 @@ async function main() {
   const modules = await buildDocs();
   for (const module of modules) {
     const fileName = `${module.name}.mdx`;
-    const linkHashes = new Map<TypeDoc.Models.DeclarationReflection, string>();
+    const linkHashes = new Map<TypeDoc.DeclarationReflection, string>();
     console.info(`Generating ${fileName}...`);
     await fs.writeFile(
       path.join("src/content/docs/docs/component", fileName),
@@ -107,7 +107,7 @@ async function main() {
           `#### Parameters`,
           ...signature.parameters.map(
             (param) =>
-              `- <p><code class="key">${param.name}</code> ${renderType(
+              `- <p><code class="key">${renderName(param)}</code> ${renderType(
                 param.type!
               )}</p>`
           ),
@@ -299,20 +299,20 @@ async function main() {
       return ["</div>"];
     }
 
-    function renderName(prop: TypeDoc.Models.DeclarationReflection) {
+    function renderName(
+      prop: TypeDoc.DeclarationReflection | TypeDoc.ParameterReflection
+    ) {
       return `${prop.name}${prop.flags.isOptional ? "?" : ""}`;
     }
 
     function renderDescription(
-      prop:
-        | TypeDoc.Models.DeclarationReflection
-        | TypeDoc.Models.SignatureReflection
+      prop: TypeDoc.DeclarationReflection | TypeDoc.SignatureReflection
     ) {
       if (!prop.comment?.summary) return;
       return [renderComment(prop.comment?.summary)];
     }
 
-    function renderDefaultTag(prop: TypeDoc.Models.DeclarationReflection) {
+    function renderDefaultTag(prop: TypeDoc.DeclarationReflection) {
       const defaultTag = prop.comment?.blockTags.find(
         (tag) => tag.tag === "@default"
       );
@@ -333,9 +333,7 @@ async function main() {
     }
 
     function renderNestedTypeList(
-      prop:
-        | TypeDoc.Models.DeclarationReflection
-        | TypeDoc.Models.SignatureReflection
+      prop: TypeDoc.DeclarationReflection | TypeDoc.SignatureReflection
     ) {
       return useNestedTypes(prop.type!, prop.name).map(
         ({ depth, prefix, subType }) => {
@@ -360,22 +358,20 @@ async function main() {
       );
     }
 
-    function renderExamples(prop: TypeDoc.Models.DeclarationReflection) {
+    function renderExamples(prop: TypeDoc.DeclarationReflection) {
       return prop.comment?.blockTags
         .filter((tag) => tag.tag === "@example")
         .flatMap((tag) => renderComment(tag.content));
     }
 
-    function renderFunctionSignature(
-      signature: TypeDoc.Models.SignatureReflection
-    ) {
+    function renderFunctionSignature(signature: TypeDoc.SignatureReflection) {
       const parameters = (signature.parameters ?? [])
         .map((param) => param.name + (param.flags.isOptional ? "?" : ""))
         .join(", ");
       return `${signature.name}(${parameters})`;
     }
 
-    function renderComment(parts: TypeDoc.Models.CommentDisplayPart[]) {
+    function renderComment(parts: TypeDoc.CommentDisplayPart[]) {
       return parts.map((part) => part.text).join("");
     }
 
@@ -404,16 +400,14 @@ async function main() {
       console.log(type);
       throw new Error(`Unsupported type "${type.type}"`);
     }
-    function renderIntrisicType(type: TypeDoc.Models.IntrinsicType) {
+    function renderIntrisicType(type: TypeDoc.IntrinsicType) {
       return `<code class="primitive">${type.name}</code>`;
     }
-    function renderLiteralType(type: TypeDoc.Models.LiteralType) {
+    function renderLiteralType(type: TypeDoc.LiteralType) {
       // ie. architecture: "arm64"
       return `<code class="symbol">&ldquo;</code><code class="primitive">${type.value}</code><code class="symbol">&rdquo;</code>`;
     }
-    function renderTemplateLiteralType(
-      type: TypeDoc.Models.TemplateLiteralType
-    ) {
+    function renderTemplateLiteralType(type: TypeDoc.TemplateLiteralType) {
       // ie. memory: `${number} MB`
       // {
       //   "type": "templateLiteral",
@@ -440,19 +434,19 @@ async function main() {
       }
       return `<code class="symbol">&ldquo;</code><code class="primitive">${type.head}$\\{${type.tail[0][0].name}\\}${type.tail[0][1]}</code><code class="symbol">&rdquo;</code>`;
     }
-    function renderUnionType(type: TypeDoc.Models.UnionType) {
+    function renderUnionType(type: TypeDoc.UnionType) {
       return type.types
         .map((t) => renderType(t))
         .join(`<code class="symbol"> | </code>`);
     }
-    function renderArrayType(type: TypeDoc.Models.ArrayType) {
+    function renderArrayType(type: TypeDoc.ArrayType) {
       return type.elementType.type === "union"
         ? `<code class="symbol">(</code>${renderType(
             type.elementType
           )}<code class="symbol">)[]</code>`
         : `${renderType(type.elementType)}<code class="symbol">[]</code>`;
     }
-    function renderTypescriptType(type: TypeDoc.Models.ReferenceType) {
+    function renderTypescriptType(type: TypeDoc.ReferenceType) {
       // ie. Record<string, string>
       return [
         `<code class="primitive">${type.name}</code>`,
@@ -461,7 +455,7 @@ async function main() {
         `<code class="symbol">&gt;</code>`,
       ].join("");
     }
-    function renderSstType(type: TypeDoc.Models.ReferenceType) {
+    function renderSstType(type: TypeDoc.ReferenceType) {
       if (type.name === "Transform") {
         const renderedType = renderType(type.typeArguments?.[0]!);
         return [
@@ -511,7 +505,7 @@ async function main() {
       console.error(type);
       throw new Error(`Unsupported sst type`);
     }
-    function renderPulumiType(type: TypeDoc.Models.ReferenceType) {
+    function renderPulumiType(type: TypeDoc.ReferenceType) {
       if (type.name === "Output" || type.name === "Input") {
         return [
           `<code class="primitive">${type.name}</code>`,
@@ -530,7 +524,7 @@ async function main() {
       console.error(type);
       throw new Error(`Unsupported @pulumi/pulumi type`);
     }
-    function renderPulumiProviderType(type: TypeDoc.Models.ReferenceType) {
+    function renderPulumiProviderType(type: TypeDoc.ReferenceType) {
       const ret = ((type as any)._target.fileName as string).match(
         "node_modules/@pulumi/([^/]+)/(.+).d.ts"
       )!;
@@ -589,11 +583,11 @@ async function main() {
       const hash = type.name.endsWith("Args") ? `#inputs` : "";
       return `[<code class="type">${type.name}</code>](https://www.pulumi.com/registry/packages/${provider}/api-docs/${cls}/${hash})`;
     }
-    function renderEsbuildType(type: TypeDoc.Models.ReferenceType) {
+    function renderEsbuildType(type: TypeDoc.ReferenceType) {
       const hash = type.name === "Loader" ? `#loader` : "#build";
       return `[<code class="type">${type.name}</code>](https://esbuild.github.io/api/${hash})`;
     }
-    function renderObjectType(type: TypeDoc.Models.ReflectionType) {
+    function renderObjectType(type: TypeDoc.ReflectionType) {
       return `<code class="primitive">Object</code>`;
     }
 
@@ -655,7 +649,7 @@ async function main() {
       );
     }
 
-    function useInterfaceProps(i: TypeDoc.Models.DeclarationReflection) {
+    function useInterfaceProps(i: TypeDoc.DeclarationReflection) {
       if (!i.children?.length)
         throw new Error(`Interface ${i.name} has no props`);
 
@@ -669,7 +663,7 @@ async function main() {
       prefix: string = "",
       depth: number = 0
     ): {
-      subType: TypeDoc.Models.DeclarationReflection;
+      subType: TypeDoc.DeclarationReflection;
       prefix: string;
       depth: number;
     }[] {
