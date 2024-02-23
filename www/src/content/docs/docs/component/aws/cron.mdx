@@ -98,6 +98,7 @@ The EventBridge Target resource.
 </Section>
 The function that'll be executed when the cron job runs.
 You can pass in the path or the full function props.
+
 ```ts
 {
   job: "src/cron.handler"
@@ -123,6 +124,7 @@ The full function props.
   }
 }
 ```
+
 </Segment>
 ### schedule
 <Segment>
@@ -132,6 +134,7 @@ The full function props.
 </InlineSection>
 </Section>
 The schedule for the cron job.
+
 You can use a [rate expression](https://docs.aws.amazon.com/lambda/latest/dg/services-cloudwatchevents-expressions.html).
 
 ```ts
@@ -163,6 +166,7 @@ Or a [cron expression](https://docs.aws.amazon.com/eventbridge/latest/userguide/
 - <p>[<code class="key">target?</code>](#transform-target)</p>
 </Section>
 [Transform](/docs/components#transform/) how this component creates its underlying resources.
+
 </Segment>
 <NestedTitle id="transform-rule" Tag="h4" parent="transform.">rule?</NestedTitle>
 <Segment>
@@ -172,6 +176,7 @@ Or a [cron expression](https://docs.aws.amazon.com/eventbridge/latest/userguide/
 </InlineSection>
 </Section>
 Transform the EventBridge Rule resource.
+
 </Segment>
 <NestedTitle id="transform-target" Tag="h4" parent="transform.">target?</NestedTitle>
 <Segment>
@@ -181,6 +186,7 @@ Transform the EventBridge Rule resource.
 </InlineSection>
 </Section>
 Transform the EventBridge Target resource.
+
 </Segment>
 
 ## CronJobProps
@@ -203,5 +209,6 @@ The full function props.
   }
 }
 ```
+
 </Segment>
 </div>

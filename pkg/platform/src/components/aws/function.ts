@@ -235,10 +235,13 @@ export interface FunctionArgs {
    */
   bundle?: Input<string>;
   /**
-   * Path to the handler for the function with the format `{file}.{method}`. Note that, the
-   * file extension is not specified.
+   * Path to the handler for the function with the format `{file}.{method}`.
    *
-   * The handler path is relative to the root of your SST app.
+   * :::note
+   * You don't need to specify the file extension.
+   * :::
+   *
+   * The handler path is relative to the root your repo or the `sst.config.ts`.
    *
    * @example
    *
@@ -372,7 +375,7 @@ export interface FunctionArgs {
    *
    * @example
    *
-   * Takes a list of resources to link to the function.
+   * Takes a list of components to link to the function.
    *
    * ```js
    * {
@@ -502,7 +505,9 @@ export interface FunctionArgs {
       }
   >;
   /**
-   * Configure how your function is bundled. By default, SST will bundle your function
+   * Configure how your function is bundled.
+   *
+   * By default, SST will bundle your function
    * code using [esbuild](https://esbuild.github.io/). This tree shakes your code to
    * only include what's used; reducing the size of your function package and improving
    * cold starts.
@@ -1380,6 +1385,9 @@ export class Function
     };
   }
 
+  /**
+   * The Lambda function URL if `url` is enabled.
+   */
   public get url() {
     return this.fnUrl.apply((url) => url?.functionUrl ?? output(undefined));
   }

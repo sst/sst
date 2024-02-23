@@ -11,12 +11,61 @@ import InlineSection from '../../../../../components/tsdoc/InlineSection.astro';
 <div class="tsdoc">
 
 <Section type="about">
-The `Worker` component is a higher level component that makes it easy to create a Cloudflare Worker.
+The `Worker` component lets you create a Cloudflare Worker.
 
-#### Using the minimal config
+#### Minimal example
+
 ```ts
 new sst.cloudflare.Worker("MyWorker", {
-  handler: "src/worker.handler",
+  handler: "src/worker.handler"
+});
+```
+
+#### Link resources
+
+[Link resources](/docs/linking/) to the Worker. This will handle the credentials
+and allow you to access it in your handler.
+
+```ts {5}
+const myBucket = new sst.aws.Bucket("MyBucket");
+
+new sst.cloudflare.Worker("MyWorker", {
+  handler: "src/worker.handler"
+  link: [myBucket]
+});
+```
+
+You can use the [Node client](/docs/reference/client/) to access the linked resources
+in your handler.
+
+```ts title="src/worker.ts"
+import { Resource } from "sst";
+
+console.log(Resource.MyBucket.name);
+```
+
+#### Enable URLs
+
+Enable worker URLs to invoke the worker over HTTP.
+
+```ts {3}
+new sst.cloudflare.Worker("MyWorker", {
+  handler: "src/worker.handler"
+  url: true
+});
+```
+
+#### Bundling
+
+By default, SST will bundle your worker code using [esbuild](https://esbuild.github.io/).
+ You can customize this using the `build` property.
+
+```ts
+new sst.cloudflare.Worker("MyWorker", {
+  handler: "src/worker.handler"
+  build: {
+    install: ["pg"]
+  }
 });
 ```
 </Section>
@@ -49,6 +98,7 @@ new Worker(name, args, opts?)
 **Type** <code class="primitive">Output</code><code class="symbol">&lt;</code><code class="primitive">undefined</code><code class="symbol"> | </code><code class="primitive">string</code><code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
+The Worker URL if `url` is enabled.
 </Segment>
 
 ### nodes
@@ -59,6 +109,7 @@ new Worker(name, args, opts?)
 </InlineSection>
 - <p>[<code class="key">worker</code>](#nodes-worker)</p>
 </Section>
+The underlying [resources](/docs/components/#nodes) this component creates.
 </Segment>
 <NestedTitle id="nodes-worker" Tag="h4" parent="nodes.">worker</NestedTitle>
 <Segment>
@@ -67,6 +118,7 @@ new Worker(name, args, opts?)
 **Type** <code class="primitive">Output</code><code class="symbol">&lt;</code>[<code class="type">WorkerScript</code>](https://www.pulumi.com/registry/packages/cloudflare/api-docs/workerscript/)<code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
+The Cloudflare Worker script.
 </Segment>
 
 ## WorkerArgs
@@ -79,14 +131,10 @@ new Worker(name, args, opts?)
 </Section>
 
 <InlineSection>
-**Default** Disabled `false`
+**Default** <code class="primitive">false</code>
 </InlineSection>
-Enable dev URLs, a dedicated endpoint for your Worker.
-```js
-{
-  devUrl: true
-}
-```
+Enable a dedicated endpoint for your Worker.
+
 </Segment>
 ### handler
 <Segment>
@@ -95,10 +143,20 @@ Enable dev URLs, a dedicated endpoint for your Worker.
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
-Path to the handler for the worker.
+Path to the handler for the worker with the format `{file}.{method}`.
+
+:::note
+You don't need to specify the file extension.
+:::
+
+The handler path is relative to the root your repo or the `sst.config.ts`.
+
+Here there is a file called `worker.js` (or `.ts`) in the `packages/functions/src/`
+directory with an exported method called `handler`.
+
 ```js
 {
-  handler: "src/worker.handler"
+  handler: "packages/functions/src/worker.handler"
 }
 ```
 </Segment>
@@ -109,11 +167,16 @@ Path to the handler for the worker.
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">any</code><code class="symbol">[]</code><code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
-Link resources to the function.
-This will grant the function permissions to access the linked resources at runtime.
+[Link resources](/docs/linking/) to your worker. This will:
+
+1. Handle the credentials needed to access the resources.
+2. Allow you to access it in your site using the [Node client](/docs/reference/client/).
+
+Takes a list of components to link to the function.
+
 ```js
 {
-  link: [myBucket, stripeKey],
+  link: [myBucket, stripeKey]
 }
 ```
 </Segment>
@@ -129,7 +192,10 @@ This will grant the function permissions to access the linked resources at runti
 - <p>[<code class="key">minify?</code>](#nodejs-minify)</p>
 - <p>[<code class="key">sourcemap?</code>](#nodejs-sourcemap)</p>
 </Section>
-Used to configure nodejs function properties
+Configure how your function is bundled.
+
+SST bundles your worker code using [esbuild](https://esbuild.github.io/). This tree shakes your code to only include what's used.
+
 </Segment>
 <NestedTitle id="nodejs-banner" Tag="h4" parent="nodejs.">banner?</NestedTitle>
 <Segment>
@@ -138,10 +204,13 @@ Used to configure nodejs function properties
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
-Use this to insert an arbitrary string at the beginning of generated JavaScript and CSS files.
+Use this to insert a string at the beginning of the generated JS file.
+
 ```js
-nodejs: {
-  banner: "console.log('Function starting')"
+{
+  nodejs: {
+    banner: "console.log('Function starting')"
+  }
 }
 ```
 </Segment>
@@ -152,7 +221,13 @@ nodejs: {
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code>[<code class="type">BuildOptions</code>](https://esbuild.github.io/api/#build)<code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
-This allows you to customize esbuild config.
+This allows you to customize esbuild config that is used.
+
+:::tip
+Check out the _JS tab_ in the code snippets in the esbuild docs for the
+[build options](https://esbuild.github.io/api/#build).
+:::
+
 </Segment>
 <NestedTitle id="nodejs-loader" Tag="h4" parent="nodejs.">loader?</NestedTitle>
 <Segment>
@@ -161,11 +236,15 @@ This allows you to customize esbuild config.
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Record</code><code class="symbol">&lt;</code><code class="primitive">string</code>, [<code class="type">Loader</code>](https://esbuild.github.io/api/#loader)<code class="symbol">&gt;</code><code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
-Configure additional esbuild loaders for other file extensions
+Configure additional esbuild loaders for other file extensions. This is useful
+when your code is importing non-JS files like `.png`, `.css`, etc.
+
 ```js
-nodejs: {
-  loader: {
-   ".png": "file"
+{
+  nodejs: {
+    loader: {
+     ".png": "file"
+    }
   }
 }
 ```
@@ -181,10 +260,13 @@ nodejs: {
 <InlineSection>
 **Default** <code class="primitive">true</code>
 </InlineSection>
-Enable or disable minification
+Enable or disable if the worked code is minified when bundled.
+
 ```js
-nodejs: {
-  minify: false
+{
+  nodejs: {
+    minify: false
+  }
 }
 ```
 </Segment>
@@ -196,14 +278,5 @@ nodejs: {
 </InlineSection>
 </Section>
 
-<InlineSection>
-**Default** <code class="primitive">false</code>
-</InlineSection>
-Configure if sourcemaps are generated when the function is bundled for production. Since they increase payload size and potentially cold starts they are not generated by default. They are always generated during local development mode.
-```js
-nodejs: {
-  sourcemap: true
-}
-```
 </Segment>
 </div>

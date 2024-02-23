@@ -174,7 +174,7 @@ export interface SsrSiteArgs {
    *
    * @example
    *
-   * Takes a list of resources to link to the function.
+   * Takes a list of components to link to the function.
    *
    * ```js
    * {

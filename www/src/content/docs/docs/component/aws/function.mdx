@@ -192,6 +192,7 @@ The IAM Role the function will use.
 **Type** <code class="primitive">Output</code><code class="symbol">&lt;</code><code class="primitive">undefined</code><code class="symbol"> | </code><code class="primitive">string</code><code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
+The Lambda function URL if `url` is enabled.
 </Segment>
 
 ## Links
@@ -220,6 +221,7 @@ The name of the Lambda function.
 </InlineSection>
 The [architecture](https://docs.aws.amazon.com/lambda/latest/dg/foundation-arch.html)
 of the Lambda function.
+
 ```js
 {
   architecture: "arm64"
@@ -241,6 +243,7 @@ Use `bundle` only when you want to bundle the function yourself.
 :::
 
 If the `bundle` option is specified, the `handler` needs to be in the root of the bundle.
+
 Here, the entire `packages/functions/src` directory is zipped. And the handler is
 in the `src` directory.
 
@@ -263,6 +266,7 @@ in the `src` directory.
 Add additional files to copy into the function package. Takes a list of objects
 with `from` and `to` paths. These will be copied over before the function package
 is zipped up.
+
 Copying over a single file from the `src` directory to the `src/` directory of the
 function package.
 
@@ -300,6 +304,7 @@ Copying over a couple of files.
 </InlineSection>
 </Section>
 Source path relative to the `sst.config.ts`.
+
 </Segment>
 <NestedTitle id="copyfiles-to" Tag="h4" parent="copyFiles[].">to?</NestedTitle>
 <Segment>
@@ -314,6 +319,7 @@ Source path relative to the `sst.config.ts`.
 </InlineSection>
 Destination path relative to function root in the package. By default, it
 creates the same directory structure as the `from` path and copies the file.
+
 </Segment>
 ### description?
 <Segment>
@@ -323,6 +329,7 @@ creates the same directory structure as the `from` path and copies the file.
 </InlineSection>
 </Section>
 A description for the function. This is displayed in the AWS Console.
+
 ```js
 {
   description: "Handler function for my nightly cron job."
@@ -347,6 +354,7 @@ They can be accessed in your function using `process.env.<key>`.
 :::note
 The total size of the environment variables cannot exceed 4 KB.
 :::
+
 ```js
 {
   environment: {
@@ -362,10 +370,14 @@ The total size of the environment variables cannot exceed 4 KB.
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
-Path to the handler for the function with the format `{file}.{method}`. Note that, the
-file extension is not specified.
+Path to the handler for the function with the format `{file}.{method}`.
 
-The handler path is relative to the root of your SST app.
+:::note
+You don't need to specify the file extension.
+:::
+
+The handler path is relative to the root your repo or the `sst.config.ts`.
+
 Here there is a file called `index.js` (or `.ts`) in the `packages/functions/src/`
 directory with an exported method called `handler`.
 
@@ -395,7 +407,8 @@ If `bundle` is specified, the handler needs to be in the root of the bundle dire
 
 1. Grant the permissions needed to access the resources.
 2. Allow you to access it in your site using the [Node client](/docs/reference/client/).
-Takes a list of resources to link to the function.
+
+Takes a list of components to link to the function.
 
 ```js
 {
@@ -410,6 +423,7 @@ Takes a list of resources to link to the function.
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="symbol">&ldquo;</code><code class="primitive">false</code><code class="symbol">&rdquo;</code><code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
+
 </Segment>
 ### logging?
 <Segment>
@@ -424,6 +438,7 @@ Takes a list of resources to link to the function.
 **Default** <code class="primitive">&lcub;retention: "forever"&rcub;</code>
 </InlineSection>
 Configure the function logs in CloudWatch.
+
 ```js
 {
   logging: {
@@ -444,6 +459,7 @@ Configure the function logs in CloudWatch.
 **Default** <code class="primitive">forever</code>
 </InlineSection>
 The duration the function logs are kept in CloudWatch.
+
 </Segment>
 ### memory?
 <Segment>
@@ -464,6 +480,7 @@ virtual CPU available to the function.
 While functions with less memory are cheaper, larger functions can process faster.
 And might end up being more [cost effective](https://docs.aws.amazon.com/lambda/latest/operatorguide/computing-power.html).
 :::
+
 ```js
 {
   memory: "10240 MB"
@@ -485,10 +502,13 @@ And might end up being more [cost effective](https://docs.aws.amazon.com/lambda/
 - <p>[<code class="key">sourcemap?</code>](#nodejs-sourcemap)</p>
 - <p>[<code class="key">splitting?</code>](#nodejs-splitting)</p>
 </Section>
-Configure how your function is bundled. By default, SST will bundle your function
+Configure how your function is bundled.
+
+By default, SST will bundle your function
 code using [esbuild](https://esbuild.github.io/). This tree shakes your code to
 only include what's used; reducing the size of your function package and improving
 cold starts.
+
 </Segment>
 <NestedTitle id="nodejs-banner" Tag="h4" parent="nodejs.">banner?</NestedTitle>
 <Segment>
@@ -498,6 +518,7 @@ cold starts.
 </InlineSection>
 </Section>
 Use this to insert a string at the beginning of the generated JS file.
+
 ```js
 {
   nodejs: {
@@ -519,6 +540,7 @@ This allows you to customize esbuild config that is used.
 Check out the _JS tab_ in the code snippets in the esbuild docs for the
 [build options](https://esbuild.github.io/api/#build).
 :::
+
 </Segment>
 <NestedTitle id="nodejs-format" Tag="h4" parent="nodejs.">format?</NestedTitle>
 <Segment>
@@ -532,6 +554,7 @@ Check out the _JS tab_ in the code snippets in the esbuild docs for the
 **Default** <code class="primitive">"esm"</code>
 </InlineSection>
 Configure the format of the generated JS code; ESM or CommonJS.
+
 ```js
 {
   nodejs: {
@@ -554,6 +577,7 @@ install them into a `node_modules/` directory in the function package.
 These packages are excluded when esbuild is traversing the imports in your code to
 generate the bundle. So these are the package names as seen in the imports. Also,
 this works on packages that are not directly imported by your code.
+
 ```js
 {
   nodejs: {
@@ -571,6 +595,7 @@ this works on packages that are not directly imported by your code.
 </Section>
 Configure additional esbuild loaders for other file extensions. This is useful
 when your code is importing non-JS files like `.png`, `.css`, etc.
+
 ```js
 {
   nodejs: {
@@ -593,6 +618,7 @@ when your code is importing non-JS files like `.png`, `.css`, etc.
 **Default** <code class="primitive">true</code>
 </InlineSection>
 Enable or disable if the function code is minified when bundled.
+
 ```js
 {
   nodejs: {
@@ -621,6 +647,7 @@ For the [Console](/docs/console/), source maps are always generated and uploaded
 to your bootstrap bucket. These are then downloaded and used to displayed
 in the console.
 :::
+
 ```js
 {
   nodejs: {
@@ -643,6 +670,7 @@ in the console.
 If enabled, modules that are dynamically imported will be bundled in their own files
 with common dependencies placed in shared chunks. This can help reduce cold starts
 as your function grows in size.
+
 ```js
 {
   nodejs: {
@@ -667,6 +695,7 @@ used to create the function's IAM role.
 If you `link` the function to a resource, the permissions to access it are
 automatically added.
 :::
+
 Allow the function to read and write to an S3 bucket called `my-bucket`.
 ```js
 {
@@ -713,6 +742,7 @@ Granting the function permissions to access all resources.
 </InlineSection>
 </Section>
 The [IAM actions](https://docs.aws.amazon.com/service-authorization/latest/reference/reference_policies_actions-resources-contextkeys.html#actions_table) that can be performed.
+
 </Segment>
 <NestedTitle id="permissions-resources" Tag="h4" parent="permissions[].">resources</NestedTitle>
 <Segment>
@@ -722,6 +752,7 @@ The [IAM actions](https://docs.aws.amazon.com/service-authorization/latest/refer
 </InlineSection>
 </Section>
 The resources(s) specified using the [IAM ARN format](https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_identifiers.html).
+
 </Segment>
 ### runtime?
 <Segment>
@@ -735,6 +766,7 @@ The resources(s) specified using the [IAM ARN format](https://docs.aws.amazon.co
 **Default** <code class="primitive">"nodejs18.x"</code>
 </InlineSection>
 The runtime environment for the function. Support for other runtimes is on our roadmap.
+
 ```js
 {
   runtime: "nodejs20.x"
@@ -758,6 +790,7 @@ Enable streaming for the function. Stream is only supported when using the funct
 :::tip
 You'll need to [wrap your handler](https://docs.aws.amazon.com/lambda/latest/dg/configuration-response-streaming.html) with `awslambda.streamifyResponse()` to enable streaming.
 :::
+
 ```js
 {
   streaming: true
@@ -776,6 +809,7 @@ You'll need to [wrap your handler](https://docs.aws.amazon.com/lambda/latest/dg/
 **Default** <code class="primitive">"20 seconds"</code>
 </InlineSection>
 The amount of time that Lambda allows a function to run before stopping it.
+
 ```js
 {
   timeout: "900 seconds"
@@ -792,6 +826,7 @@ The amount of time that Lambda allows a function to run before stopping it.
 </Section>
 [Transform](/docs/components#transform/) how this component creates its underlying
 resources.
+
 </Segment>
 <NestedTitle id="transform-function" Tag="h4" parent="transform.">function?</NestedTitle>
 <Segment>
@@ -801,6 +836,7 @@ resources.
 </InlineSection>
 </Section>
 Transform the Lambda Function resource.
+
 </Segment>
 ### url?
 <Segment>
@@ -823,6 +859,7 @@ Transform the Lambda Function resource.
 </InlineSection>
 Enable [Lambda function URLs](https://docs.aws.amazon.com/lambda/latest/dg/lambda-urls.html).
 These are dedicated endpoints for your Lambda functions.
+
 Enable it with the default options.
 ```js
 {
@@ -854,6 +891,7 @@ Enable it and configure the options.
 **Default** <code class="primitive">"none"</code>
 </InlineSection>
 The authorization used for the function URL. Supports [IAM authorization](https://docs.aws.amazon.com/lambda/latest/dg/urls-auth.html).
+
 ```js
 {
   url: {
@@ -874,6 +912,7 @@ The authorization used for the function URL. Supports [IAM authorization](https:
 **Default** <code class="primitive">true</code>
 </InlineSection>
 Customize the CORS (Cross-origin resource sharing) settings for the function URL.
+
 Disable CORS.
 ```js
 {
@@ -906,6 +945,7 @@ Only enable the `GET` and `POST` methods for `https://example.com`.
 **Default** <code class="primitive">false</code>
 </InlineSection>
 Allow cookies or other credentials in requests to the function URL.
+
 ```js
 {
   url: {
@@ -924,6 +964,7 @@ Allow cookies or other credentials in requests to the function URL.
 </InlineSection>
 </Section>
 The HTTP headers that origins can include in requests to the function URL.
+
 ```js
 {
   url: {
@@ -942,6 +983,7 @@ The HTTP headers that origins can include in requests to the function URL.
 </InlineSection>
 </Section>
 The HTTP methods that are allowed when calling the function URL.
+
 ```js
 {
   url: {
@@ -970,6 +1012,7 @@ Or the wildcard character for all methods.
 </InlineSection>
 </Section>
 The origins that can access the function URL.
+
 ```js
 {
   url: {
@@ -1002,6 +1045,7 @@ Or the wildcard character for all origins.
 **Default** Common headers like `cache-control`, `content-language`, `content-type`, `expires`, `last-modified`, `pragma`.
 </InlineSection>
 The HTTP headers you want to expose in your function to an origin that calls the function URL.
+
 ```js
 {
   url: {
@@ -1025,6 +1069,7 @@ The HTTP headers you want to expose in your function to an origin that calls the
 </InlineSection>
 The maximum amount of time the browser can cache results of a preflight request. By
 default the browser doesn't cache the results. The maximum value is `86400 seconds` or `1 day`.
+
 ```js
 {
   url: {

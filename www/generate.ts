@@ -266,6 +266,7 @@ async function main() {
             `</Section>`,
             ...(renderDefaultTag(prop) ?? []),
             ...(renderDescription(prop) ?? []),
+            ``,
             ...(renderExamples(prop) ?? []),
             `</Segment>`,
             // nested props (ie. `.domain`, `.transform`)
@@ -282,6 +283,7 @@ async function main() {
                 `</Section>`,
                 ...(renderDefaultTag(subType) ?? []),
                 ...(renderDescription(subType) ?? []),
+                ``,
                 ...(renderExamples(subType) ?? []),
                 `</Segment>`,
               ]
