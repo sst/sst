@@ -57,10 +57,12 @@ export class Secret extends Component implements Link.Linkable {
   }
 
   /** @internal */
-  public getSSTLink(): Link.Definition {
+  public getSSTLink() {
     return {
-      type: "string",
-      value: this.value,
+      type: `{ value: string }`,
+      value: {
+        value: this.value,
+      },
     };
   }
 }

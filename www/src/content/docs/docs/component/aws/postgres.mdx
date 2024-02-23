@@ -53,6 +53,26 @@ new Postgres(name, args?, opts?)
 
 ## Properties
 
+### clusterArn
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Output</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+The ARN of the RDS Cluster.
+</Segment>
+
+### database
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Output</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+The name of the database.
+</Segment>
+
 ### nodes
 <Segment>
 <Section type="parameters">
@@ -78,6 +98,48 @@ new Postgres(name, args?, opts?)
 **Type** [<code class="type">ClusterInstance</code>](https://www.pulumi.com/registry/packages/aws/api-docs/rds/clusterinstance/)
 </InlineSection>
 </Section>
+</Segment>
+
+### secretArn
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Output</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+The ARN of the master user secret.
+</Segment>
+
+## Links
+
+### clusterArn
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">string</code>
+</InlineSection>
+</Section>
+The ARN of the RDS Cluster.
+</Segment>
+
+### database
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">string</code>
+</InlineSection>
+</Section>
+The name of the database.
+</Segment>
+
+### secretArn
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">string</code>
+</InlineSection>
+</Section>
+The ARN of the master user secret.
 </Segment>
 
 ## PostgresArgs

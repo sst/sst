@@ -194,16 +194,19 @@ The IAM Role the function will use.
 </Section>
 </Segment>
 
-## FunctionArgs
-### _ignoreCodeChanges?
+## Links
+
+### name
 <Segment>
 <Section type="parameters">
 <InlineSection>
-**Type** <code class="primitive">boolean</code>
+**Type** <code class="primitive">string</code>
 </InlineSection>
 </Section>
-
+The name of the Lambda function.
 </Segment>
+
+## FunctionArgs
 ### architecture?
 <Segment>
 <Section type="parameters">
@@ -380,15 +383,6 @@ If `bundle` is specified, the handler needs to be in the root of the bundle dire
   handler: "index.handler"
 }
 ```
-</Segment>
-### injections?
-<Segment>
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">[]</code><code class="symbol">&gt;</code>
-</InlineSection>
-</Section>
-
 </Segment>
 ### link?
 <Segment>

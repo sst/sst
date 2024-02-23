@@ -213,14 +213,35 @@ export class Vector
     }
   }
 
+  /**
+   * The name of the ingestor function.
+   */
+  public get ingestorFunctionName() {
+    return this.ingestHandler.nodes.function.name;
+  }
+
+  /**
+   * The name of the retriever function.
+   */
+  public get retrieverFunctionName() {
+    return this.retrieveHandler.nodes.function.name;
+  }
+
+  /**
+   * The name of the remover function.
+   */
+  public get removerFunctionName() {
+    return this.removeHandler.nodes.function.name;
+  }
+
   /** @internal */
-  public getSSTLink(): Link.Definition {
+  public getSSTLink() {
     return {
       type: `{ ingestorFunctionName: string, retrieverFunctionName: string, removerFunctionName: string }`,
       value: {
-        ingestorFunctionName: this.ingestHandler.nodes.function.name,
-        retrieverFunctionName: this.retrieveHandler.nodes.function.name,
-        removerFunctionName: this.removeHandler.nodes.function.name,
+        ingestorFunctionName: this.ingestorFunctionName,
+        retrieverFunctionName: this.retrieverFunctionName,
+        removerFunctionName: this.removerFunctionName,
       },
     };
   }

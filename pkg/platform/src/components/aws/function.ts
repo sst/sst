@@ -1442,9 +1442,9 @@ export class Function
   /** @internal */
   public getSSTLink() {
     return {
-      type: `{ functionName: string }`,
+      type: `{ name: string }`,
       value: {
-        functionName: this.function.name,
+        name: this.name,
       },
     };
   }

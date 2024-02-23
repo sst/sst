@@ -200,6 +200,27 @@ export class Postgres
     }
   }
 
+  /**
+   * The ARN of the RDS Cluster.
+   */
+  public get clusterArn() {
+    return this.cluster.arn;
+  }
+
+  /**
+   * The ARN of the master user secret.
+   */
+  public get secretArn() {
+    return this.cluster.masterUserSecrets[0].secretArn;
+  }
+
+  /**
+   * The name of the database.
+   */
+  public get database() {
+    return this.databaseName;
+  }
+
   public get nodes() {
     return {
       cluster: this.cluster,
@@ -212,9 +233,9 @@ export class Postgres
     return {
       type: `{ clusterArn: string; secretArn: string; databaseName: string }`,
       value: {
-        clusterArn: this.cluster.arn,
-        secretArn: this.cluster.masterUserSecrets[0].secretArn,
-        databaseName: this.databaseName,
+        clusterArn: this.clusterArn,
+        secretArn: this.secretArn,
+        database: this.database,
       },
     };
   }

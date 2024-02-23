@@ -25,6 +25,7 @@ async function main() {
         renderConstructor(),
         renderMethods(),
         renderProperties(),
+        renderLinks(),
         renderInterfaces(),
         renderFooter(),
       ]
@@ -182,6 +183,62 @@ async function main() {
       return lines;
     }
 
+    function renderLinks() {
+      const lines: string[] = [];
+      const method = useClassGetSSTLinkMethod();
+      if (!method) return lines;
+
+      lines.push(``, `## Links`);
+
+      // Validate getSSTLink() return type
+      const returnType = method.signatures![0].type as TypeDoc.ReflectionType;
+      if (returnType.declaration.children?.length !== 2) {
+        throw new Error(
+          "Failed to render links b/c getSSTLink() return value does not match { type, value }"
+        );
+      }
+      const valueType = returnType.declaration.children[1]
+        .type as TypeDoc.ReflectionType;
+      if (!valueType.declaration.children?.length) {
+        throw new Error(
+          "Failed to render links b/c getSSTLink() returned 0 link values"
+        );
+      }
+
+      for (const link of valueType.declaration.children) {
+        console.debug(` - link ${link.name}`);
+
+        const type = (link.type as TypeDoc.ReferenceType).typeArguments![0];
+        if (!type || type.type !== "intrinsic") {
+          console.error(link.type);
+          throw new Error(
+            `Failed to render link ${link.name} b/c link value does not match type Output<intrinsic>`
+          );
+        }
+
+        // Find the getter property that matches the link name
+        const getter = useClassGetters().find((g) => g.name === link.name);
+        if (!getter)
+          throw new Error(
+            `Failed to render link ${link.name} b/c cannot find a getter property with the matching name`
+          );
+
+        lines.push(
+          ``,
+          `### ${renderName(link)}`,
+          `<Segment>`,
+          `<Section type="parameters">`,
+          `<InlineSection>`,
+          `**Type** ${renderType(type)}`,
+          `</InlineSection>`,
+          `</Section>`,
+          ...(renderDescription(getter.getSignature!) ?? []),
+          `</Segment>`
+        );
+      }
+      return lines;
+    }
+
     function renderInterfaces() {
       const lines: string[] = [];
 
@@ -196,10 +253,7 @@ async function main() {
         }
 
         // props
-        if (!int.children?.length)
-          throw new Error(`Interface ${int.name} has no props`);
-
-        for (const prop of int.children) {
+        for (const prop of useInterfaceProps(int)) {
           console.debug(`   - interface prop ${prop.name}`);
           lines.push(
             `### ${renderName(prop)}`,
@@ -577,6 +631,16 @@ async function main() {
       );
     }
 
+    function useClassGetSSTLinkMethod() {
+      return useClass().children?.find(
+        (c) =>
+          c.kind === TypeDoc.ReflectionKind.Method &&
+          !c.flags.isExternal &&
+          c.signatures &&
+          c.signatures[0].name === "getSSTLink"
+      );
+    }
+
     function useClassGetters() {
       return (useClass().children ?? []).filter(
         (c) => c.kind === TypeDoc.ReflectionKind.Accessor && c.flags.isPublic
@@ -586,6 +650,15 @@ async function main() {
     function useInterfaces() {
       return (module.children ?? []).filter(
         (c) => c.kind === TypeDoc.ReflectionKind.Interface
+      );
+    }
+
+    function useInterfaceProps(i: TypeDoc.Models.DeclarationReflection) {
+      if (!i.children?.length)
+        throw new Error(`Interface ${i.name} has no props`);
+
+      return i.children.filter(
+        (child) => !child.comment?.modifierTags.has("@internal")
       );
     }
 
