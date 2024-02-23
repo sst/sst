@@ -131,7 +131,7 @@ export interface AstroArgs extends SsrSiteArgs {
    */
   invalidation?: SsrSiteArgs["invalidation"];
   /**
-   * Set [environment variables](https://nextjs.org/docs/pages/building-your-application/configuring/environment-variables) in your Astro site. These are made available:
+   * Set [environment variables](https://docs.astro.build/en/guides/environment-variables/) in your Astro site. These are made available:
    *
    * 1. In `astro build`, they are loaded into `import.meta.env`.
    * 2. Locally while running `sst dev astro dev`.
@@ -185,7 +185,7 @@ export interface AstroArgs extends SsrSiteArgs {
    */
   domain?: SsrSiteArgs["domain"];
   /**
-   * The command used internally to build your Astro site. It uses OpenNext with the `openNextVersion`.
+   * The command used internally to build your Astro site.
    *
    * @default `"npm run build"`
    *

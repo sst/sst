@@ -321,7 +321,7 @@ used by both CloudFront and the browser cache. The default `max-age` is set to 1
 <InlineSection>
 **Default** <code class="primitive">"npm run build"</code>
 </InlineSection>
-The command used internally to build your Astro site. It uses OpenNext with the `openNextVersion`.
+The command used internally to build your Astro site.
 If you want to use a different build command.
 ```js
 {
@@ -488,7 +488,7 @@ Use this to create a `www.` version of your domain and redirect visitors to the 
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Record</code><code class="symbol">&lt;</code><code class="primitive">string</code>, <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code><code class="symbol">&gt;</code><code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
-Set [environment variables](https://nextjs.org/docs/pages/building-your-application/configuring/environment-variables) in your Astro site. These are made available:
+Set [environment variables](https://docs.astro.build/en/guides/environment-variables/) in your Astro site. These are made available:
 
 1. In `astro build`, they are loaded into `import.meta.env`.
 2. Locally while running `sst dev astro dev`.
