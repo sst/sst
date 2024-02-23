@@ -145,7 +145,7 @@ export interface WorkerArgs {
  * const myBucket = new sst.aws.Bucket("MyBucket");
  *
  * new sst.cloudflare.Worker("MyWorker", {
- *   handler: "src/worker.handler"
+ *   handler: "src/worker.handler",
  *   link: [myBucket]
  * });
  * ```
@@ -165,7 +165,7 @@ export interface WorkerArgs {
  *
  * ```ts {3}
  * new sst.cloudflare.Worker("MyWorker", {
- *   handler: "src/worker.handler"
+ *   handler: "src/worker.handler",
  *   url: true
  * });
  * ```
@@ -177,7 +177,7 @@ export interface WorkerArgs {
  *
  * ```ts
  * new sst.cloudflare.Worker("MyWorker", {
- *   handler: "src/worker.handler"
+ *   handler: "src/worker.handler",
  *   build: {
  *     install: ["pg"]
  *   }
