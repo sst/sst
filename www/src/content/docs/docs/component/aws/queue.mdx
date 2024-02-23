@@ -1,0 +1,278 @@
+---
+title: Queue
+description: Reference for the `sst.aws.Queue` component.
+---
+
+import Segment from '../../../../../components/tsdoc/Segment.astro';
+import Section from '../../../../../components/tsdoc/Section.astro';
+import NestedTitle from '../../../../../components/tsdoc/NestedTitle.astro';
+import InlineSection from '../../../../../components/tsdoc/InlineSection.astro';
+
+<div class="tsdoc">
+
+<Section type="about">
+The `Queue` component lets you add an [AWS SQS Queue](https://aws.amazon.com/sqs/) to
+your app.
+
+#### Minimal example
+
+```ts
+new sst.aws.Queue("MyQueue");
+```
+
+#### FIFO queue
+
+```ts {2}
+new sst.aws.Queue("MyQueue", {
+  fifo: true,
+});
+```
+</Section>
+
+---
+
+## Constructor
+
+<Segment>
+<Section type="signature">
+```ts
+new Queue(name, args?, opts?)
+```
+</Section>
+
+<Section type="parameters">
+#### Parameters
+- <p><code class="key">name</code> <code class="primitive">string</code></p>
+- <p><code class="key">args?</code> [<code class="type">QueueArgs</code>](#queueargs)</p>
+- <p><code class="key">opts?</code> [<code class="type">ComponentResourceOptions</code>](https://www.pulumi.com/docs/concepts/options/)</p>
+</Section>
+</Segment>
+
+## Properties
+
+### arn
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Output</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+The ARN of the SQS Queue.
+</Segment>
+
+### nodes
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Object</code>
+</InlineSection>
+- <p>[<code class="key">queue</code>](#nodes-queue)</p>
+</Section>
+The underlying [resources](/docs/components/#nodes) this component creates.
+</Segment>
+<NestedTitle id="nodes-queue" Tag="h4" parent="nodes.">queue</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** [<code class="type">Queue</code>](https://www.pulumi.com/registry/packages/aws/api-docs/sqs/queue/)
+</InlineSection>
+</Section>
+The Amazon SQS Queue.
+</Segment>
+
+### url
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Output</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+The ARN of the SQS Queue.
+</Segment>
+
+## Links
+
+### url
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">string</code>
+</InlineSection>
+</Section>
+The ARN of the SQS Queue.
+</Segment>
+
+## QueueArgs
+### fifo?
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">boolean</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+
+<InlineSection>
+**Default** <code class="primitive">false</code>
+</InlineSection>
+FIFO (First-In-First-Out) queues are designed to guarantee that messages are processed exactly once, in the order that they are sent.
+
+:::note
+Changing a standard queue to a FIFO queue or the other way around will result in the destruction and recreation of the queue.
+:::
+
+```js
+{
+  fifo: true
+}
+```
+</Segment>
+### transform?
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Object</code>
+</InlineSection>
+- <p>[<code class="key">queue?</code>](#transform-queue)</p>
+</Section>
+[Transform](/docs/components#transform/) how this component creates its underlying
+resources.
+
+</Segment>
+<NestedTitle id="transform-queue" Tag="h4" parent="transform.">queue?</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** [<code class="type">QueueArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/sqs/queue/#inputs)<code class="symbol"> | </code><code class="symbol">(</code><code class="primitive">args</code><code class="symbol">: </code>[<code class="type">QueueArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/sqs/queue/#inputs)<code class="symbol"> => </code>[<code class="type">QueueArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/sqs/queue/#inputs)<code class="symbol"> | </code><code class="primitive">void</code><code class="symbol">)</code>
+</InlineSection>
+</Section>
+Transform the SQS Queue resource.
+
+</Segment>
+
+## QueueSubscribeArgs
+### batchSize?
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">number</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+
+<InlineSection>
+**Default** <code class="primitive">10</code>
+</InlineSection>
+The largest number of records that AWS Lambda will retrieve from your event
+source at the time of invoking your function. Your function receives an
+event with all the retrieved records.
+
+Valid Range:
+- Minimum value of 1.
+- Maximum value of 10.
+
+If `maxBatchingWindow` is configured, this value can go up to 10,000.
+
+</Segment>
+### filters?
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Record</code><code class="symbol">&lt;</code><code class="primitive">string</code>, <code class="primitive">any</code><code class="symbol">&gt;</code><code class="symbol">&gt;</code><code class="symbol">[]</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+
+<InlineSection>
+**Default** No filters
+</InlineSection>
+Add filter criteria option.
+
+Suppose your Amazon SQS queue contains messages in the following JSON format.
+```js
+{
+  RecordNumber: 0000,
+  TimeStamp: "yyyy-mm-ddThh:mm:ss",
+  RequestCode: "AAAA"
+}
+```
+
+To process only those records where the `RequestCode` is `BBBB`.
+```js
+{
+  filters: [
+    {
+      body: {
+        RequestCode: ["BBBB"]
+      }
+    }
+  ]
+}
+```
+
+And to process only those records where `RecordNumber` greater than `9999`.
+```js
+{
+  filters: [
+    {
+      body: {
+        RecordNumber: [{ numeric: [ ">", 9999 ] }]
+      }
+    }
+  ]
+}
+```
+</Segment>
+### maxBatchingWindow?
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="symbol">&ldquo;</code><code class="primitive">$\{number\} second</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">$\{number\} seconds</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">$\{number\} minute</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">$\{number\} minutes</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">$\{number\} hour</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">$\{number\} hours</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">$\{number\} day</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">$\{number\} days</code><code class="symbol">&rdquo;</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+
+<InlineSection>
+**Default** <code class="primitive">0 seconds</code>
+</InlineSection>
+The maximum amount of time to gather records before invoking the function.
+
+Valid Range:
+- Minimum value of 0 seconds.
+- Maximum value of 300 seconds.
+
+```js
+{
+  maxBatchingWindow: "60 seconds"
+}
+</Segment>
+### maxConcurrency?
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">number</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+
+<InlineSection>
+**Default** If not set, Lambda can scale up to your account's total concurrency quota, which is 1,000 by default.
+</InlineSection>
+The maximum concurrency setting limits the number of concurrent instances
+of the function that an Amazon SQS event source can invoke.
+
+Valid Range:
+- Minimum value of 2.
+- Maximum value of 1000.
+
+</Segment>
+### reportBatchItemFailures?
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">boolean</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+
+<InlineSection>
+**Default** <code class="primitive">false</code>
+</InlineSection>
+Allow functions to return partially successful responses for a batch of records.
+
+</Segment>
+</div>

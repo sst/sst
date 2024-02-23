@@ -45,8 +45,8 @@ new Bucket(name, args?, opts?)
 <Section type="parameters">
 #### Parameters
 - <p><code class="key">name</code> <code class="primitive">string</code></p>
-- <p><code class="key">args</code> [<code class="type">BucketArgs</code>](#bucketargs)</p>
-- <p><code class="key">opts</code> [<code class="type">ComponentResourceOptions</code>](https://www.pulumi.com/docs/concepts/options/)</p>
+- <p><code class="key">args?</code> [<code class="type">BucketArgs</code>](#bucketargs)</p>
+- <p><code class="key">opts?</code> [<code class="type">ComponentResourceOptions</code>](https://www.pulumi.com/docs/concepts/options/)</p>
 </Section>
 </Segment>
 
@@ -92,7 +92,38 @@ The underlying [resources](/docs/components/#nodes) this component creates.
 The Amazon S3 bucket.
 </Segment>
 
+## Links
+
+### name
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">string</code>
+</InlineSection>
+</Section>
+The generated name of the S3 Bucket.
+</Segment>
+
 ## BucketArgs
+### enforceSsl?
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">boolean</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+
+<InlineSection>
+**Default** <code class="primitive">true</code>
+</InlineSection>
+Enforces SSL for all requests.
+
+```js
+{
+  enforceSsl: false
+}
+```
+</Segment>
 ### public?
 <Segment>
 <Section type="parameters">
@@ -105,6 +136,7 @@ The Amazon S3 bucket.
 **Default** <code class="primitive">false</code>
 </InlineSection>
 Enable public read access for all the files in the bucket.
+
 ```js
 {
   public: true
@@ -122,6 +154,7 @@ Enable public read access for all the files in the bucket.
 </Section>
 [Transform](/docs/components#transform/) how this component creates its underlying
 resources.
+
 </Segment>
 <NestedTitle id="transform-bucket" Tag="h4" parent="transform.">bucket?</NestedTitle>
 <Segment>
@@ -131,6 +164,7 @@ resources.
 </InlineSection>
 </Section>
 Transform the S3 Bucket resource.
+
 </Segment>
 <NestedTitle id="transform-bucketpolicy" Tag="h4" parent="transform.">bucketPolicy?</NestedTitle>
 <Segment>
@@ -140,5 +174,57 @@ Transform the S3 Bucket resource.
 </InlineSection>
 </Section>
 Transform the IAM Policy that's attached to the Bucket.
+
+</Segment>
+
+## BucketSubscribeArgs
+### events?
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Input</code><code class="symbol">&lt;</code><code class="symbol">&ldquo;</code><code class="primitive">s3:ObjectCreated:*</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">s3:ObjectCreated:Put</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">s3:ObjectCreated:Post</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">s3:ObjectCreated:Copy</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">s3:ObjectCreated:CompleteMultipartUpload</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">s3:ObjectRemoved:*</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">s3:ObjectRemoved:Delete</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">s3:ObjectRemoved:DeleteMarkerCreated</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">s3:ObjectRestore:*</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">s3:ObjectRestore:Post</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">s3:ObjectRestore:Completed</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">s3:ObjectRestore:Delete</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">s3:ReducedRedundancyLostObject</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">s3:Replication:*</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">s3:Replication:OperationFailedReplication</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">s3:Replication:OperationMissedThreshold</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">s3:Replication:OperationReplicatedAfterThreshold</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">s3:Replication:OperationNotTracked</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">s3:LifecycleExpiration:*</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">s3:LifecycleExpiration:Delete</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">s3:LifecycleExpiration:DeleteMarkerCreated</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">s3:LifecycleTransition</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">s3:IntelligentTiering</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">s3:ObjectTagging:*</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">s3:ObjectTagging:Put</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">s3:ObjectTagging:Delete</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">s3:ObjectAcl:Put</code><code class="symbol">&rdquo;</code><code class="symbol">&gt;</code><code class="symbol">[]</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+
+<InlineSection>
+**Default** All events
+</InlineSection>
+The S3 event types that will trigger the notification.
+
+```js
+{
+  events: ["s3:ObjectCreated:*", "s3:ObjectRemoved:*"]
+}
+```
+</Segment>
+### filterPrefix?
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+S3 object key prefix filter rules to determine which objects trigger this event.
+
+```js
+{
+  filterPrefix: "images/"
+}
+```
+</Segment>
+### filterSuffix?
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+S3 object key suffix filter rules to determine which objects trigger this event.
+
+```js
+{
+ filterSuffix: ".jpg"
+}
+```
 </Segment>
 </div>

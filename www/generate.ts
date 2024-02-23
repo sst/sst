@@ -192,12 +192,12 @@ async function main() {
 
       // Validate getSSTLink() return type
       const returnType = method.signatures![0].type as TypeDoc.ReflectionType;
-      if (returnType.declaration.children?.length !== 2) {
+      if (returnType.declaration.children?.length !== 1) {
         throw new Error(
-          "Failed to render links b/c getSSTLink() return value does not match { type, value }"
+          "Failed to render links b/c getSSTLink() return value does not match { properties }"
         );
       }
-      const valueType = returnType.declaration.children[1]
+      const valueType = returnType.declaration.children[0]
         .type as TypeDoc.ReflectionType;
       if (!valueType.declaration.children?.length) {
         throw new Error(
@@ -706,7 +706,7 @@ async function buildDocs() {
     },
     entryPoints: [
       "../pkg/platform/src/components/secret.ts",
-      //"../pkg/platform/src/components/aws/bucket.ts",
+      "../pkg/platform/src/components/aws/bucket.ts",
       "../pkg/platform/src/components/aws/cron.ts",
       "../pkg/platform/src/components/aws/function.ts",
       "../pkg/platform/src/components/aws/postgres.ts",
@@ -715,7 +715,7 @@ async function buildDocs() {
       "../pkg/platform/src/components/aws/nextjs.ts",
       "../pkg/platform/src/components/aws/remix.ts",
       //"../pkg/platform/src/components/aws/static-site.ts",
-      //"../pkg/platform/src/components/aws/queue.ts",
+      "../pkg/platform/src/components/aws/queue.ts",
       //"../pkg/platform/src/components/aws/router.ts",
       //"../pkg/platform/src/components/aws/sns-topic.ts",
       //"../pkg/platform/src/components/aws/dynamodb-table.ts",

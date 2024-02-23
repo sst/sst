@@ -1413,6 +1413,7 @@ export class Function
     return this.logGroup.logGroupArn;
   }
 
+  /** @internal */
   static fromDefinition(
     parent: Component,
     name: string,
@@ -1450,7 +1451,6 @@ export class Function
   /** @internal */
   public getSSTLink() {
     return {
-      type: `{ name: string }`,
       properties: {
         name: this.name,
       },
