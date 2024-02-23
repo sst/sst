@@ -38,7 +38,7 @@ async function main() {
       return [
         `---`,
         `title: ${useClassName()}`,
-        `description: Reference for the \`sst.aws.${useClassName()}\` component.`,
+        `description: Reference for the \`${useClassProviderNamespace()}.${useClassName()}\` component.`,
         `---`,
       ];
     }
@@ -604,6 +604,25 @@ async function main() {
 
     function useClassName() {
       return useClass().name;
+    }
+
+    function useClassProviderNamespace() {
+      // "sources": [
+      //   {
+      //     "fileName": "pkg/platform/src/components/aws/astro.ts",
+      //     "line": 280,
+      //     "character": 13,
+      //     "url": "https://github.com/sst/ion/blob/0776cea/pkg/platform/src/components/aws/astro.ts#L280"
+      //   }
+      // ],
+      const fileName = useClass().sources![0].fileName;
+      if (!fileName.startsWith("pkg/platform/src/components/"))
+        throw new Error(
+          `Fail to generate class namespace from class fileName ${fileName}. Expected to start with "pkg/platform/src/components/"`
+        );
+
+      const namespace = fileName.split("/").slice(-2, -1)[0];
+      return namespace === "components" ? "sst" : `sst.${namespace}`;
     }
 
     function useClassComment() {
