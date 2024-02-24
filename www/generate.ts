@@ -124,21 +124,43 @@ async function main() {
       const methods = useClassMethods();
       if (!methods?.length) return lines;
 
-      console.error(methods[0].name);
-      return lines;
-      // TODO
-      //throw new Error("Need to implement methods");
+      lines.push(``, `## Methods`);
 
-      lines.push(
-        ``,
-        `## Methods`,
-        ``,
-        `### noop`,
-        `<Segment>`,
-        `<Section type="signature">`,
-        `</Section>`,
-        `</Segment>`
-      );
+      for (const m of methods) {
+        lines.push(
+          ``,
+          `### ${m.name}`,
+          `<Segment>`,
+          `<Section type="signature">`,
+          "```ts",
+          renderFunctionSignature(m.signatures![0]),
+          "```",
+          `</Section>`
+        );
+
+        // parameters
+        if (m.signatures![0].parameters?.length) {
+          lines.push(
+            ``,
+            `<Section type="parameters">`,
+            `#### Parameters`,
+            ...m.signatures![0].parameters.flatMap((param) => [
+              `- <p><code class="key">${renderName(param)}</code> ${renderType(
+                param.type!
+              )}</p>`,
+              ...(renderDescription(param) ?? []),
+            ]),
+            `</Section>`
+          );
+        }
+
+        lines.push(
+          ...(renderDescription(m.signatures![0]) ?? []),
+          ...(renderExamples(m.signatures![0]) ?? []),
+          `</Segment>`
+        );
+      }
+      return lines;
     }
 
     function renderProperties() {
@@ -365,7 +387,9 @@ async function main() {
       );
     }
 
-    function renderExamples(prop: TypeDoc.DeclarationReflection) {
+    function renderExamples(
+      prop: TypeDoc.DeclarationReflection | TypeDoc.SignatureReflection
+    ) {
       return prop.comment?.blockTags
         .filter((tag) => tag.tag === "@example")
         .flatMap((tag) => renderComment(tag.content));
@@ -412,7 +436,11 @@ async function main() {
     }
     function renderLiteralType(type: TypeDoc.LiteralType) {
       // ie. architecture: "arm64"
-      return `<code class="symbol">&ldquo;</code><code class="primitive">${type.value}</code><code class="symbol">&rdquo;</code>`;
+      const santized =
+        typeof type.value === "string"
+          ? type.value!.replace(/([*:])/g, "\\$1")
+          : type.value;
+      return `<code class="symbol">&ldquo;</code><code class="primitive">${santized}</code><code class="symbol">&rdquo;</code>`;
     }
     function renderTemplateLiteralType(type: TypeDoc.TemplateLiteralType) {
       // ie. memory: `${number} MB`

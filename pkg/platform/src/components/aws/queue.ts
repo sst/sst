@@ -104,6 +104,7 @@ export interface QueueSubscribeArgs {
    * {
    *   maxBatchingWindow: "60 seconds"
    * }
+   * ```
    */
   maxBatchingWindow?: Input<DurationMinutes>;
   /**

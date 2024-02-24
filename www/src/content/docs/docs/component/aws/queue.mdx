@@ -48,6 +48,42 @@ new Queue(name, args?, opts?)
 </Section>
 </Segment>
 
+## Methods
+
+### subscribe
+<Segment>
+<Section type="signature">
+```ts
+subscribe(subscriber, args?)
+```
+</Section>
+
+<Section type="parameters">
+#### Parameters
+- <p><code class="key">subscriber</code> <code class="primitive">string</code><code class="symbol"> | </code>[<code class="type">FunctionArgs</code>](/docs/component/aws/function/#functionargs)</p>
+- <p><code class="key">args?</code> [<code class="type">QueueSubscribeArgs</code>](#queuesubscribeargs)</p>
+</Section>
+Subscribes to the SQS Queue.
+```js
+subscribe("src/subscriber.handler");
+```
+
+Customize the subscription.
+```js
+subscribe("src/subscriber.handler", {
+  batchSize: 5,
+});
+```
+
+Customize the subscriber function.
+```js
+subscribe({
+  handler: "src/subscriber.handler",
+  timeout: "60 seconds",
+});
+```
+</Segment>
+
 ## Properties
 
 ### arn
@@ -243,6 +279,7 @@ Valid Range:
 {
   maxBatchingWindow: "60 seconds"
 }
+```
 </Segment>
 ### maxConcurrency?
 <Segment>
