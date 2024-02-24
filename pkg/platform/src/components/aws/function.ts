@@ -15,7 +15,6 @@ import * as aws from "@pulumi/aws";
 import { build } from "../../runtime/node.js";
 import { FunctionCodeUpdater } from "./providers/function-code-updater.js";
 import { bootstrap } from "./helpers/bootstrap.js";
-import { LogGroup } from "./providers/log-group.js";
 import { Duration, DurationMinutes, toSeconds } from "../duration.js";
 import { Size, toMBs } from "../size.js";
 import { Component, Prettify, Transform, transform } from "../component.js";
@@ -700,6 +699,14 @@ export interface FunctionArgs {
      * Transform the Lambda Function resource.
      */
     function?: Transform<aws.lambda.FunctionArgs>;
+    /**
+     * Transform the IAM Role resource.
+     */
+    role?: Transform<aws.iam.RoleArgs>;
+    /**
+     * Transform the CloudWatch LogGroup resource.
+     */
+    logGroup?: Transform<aws.cloudwatch.LogGroupArgs>;
   };
   /**
    * @internal
@@ -809,7 +816,7 @@ export class Function
 {
   private function: Output<aws.lambda.Function>;
   private role: Output<aws.iam.Role>;
-  private logGroup: LogGroup;
+  private logGroup: aws.cloudwatch.LogGroup;
   private fnUrl: Output<aws.lambda.FunctionUrl | undefined>;
   private missingSourcemap?: boolean;
 
@@ -842,10 +849,10 @@ export class Function
     const zipPath = zipBundleFolder();
     const bundleHash = calculateHash();
     const file = createBucketObject();
+    const logGroup = createLogGroup();
     const fn = createFunction();
     const codeUpdater = updateFunctionCode();
 
-    const logGroup = createLogGroup();
     const fnUrl = createUrl();
 
     const links = output(linkData).apply((input) =>
@@ -1166,7 +1173,7 @@ export class Function
 
           return new aws.iam.Role(
             `${name}Role`,
-            {
+            transform(args.transform?.role, {
               assumeRolePolicy: aws.iam.assumeRolePolicyForPrincipal({
                 Service: "lambda.amazonaws.com",
               }),
@@ -1185,7 +1192,7 @@ export class Function
               managedPolicyArns: [
                 "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
               ],
-            },
+            }),
             { parent },
           );
         },
@@ -1289,6 +1296,19 @@ export class Function
       );
     }
 
+    function createLogGroup() {
+      return new aws.cloudwatch.LogGroup(
+        `${name}LogGroup`,
+        transform(args.transform?.logGroup, {
+          name: `/${$app.name}/${$app.stage}/${name}`,
+          retentionInDays: logging.apply(
+            (logging) => RETENTION[logging.retention],
+          ),
+        }),
+        { parent },
+      );
+    }
+
     function createFunction() {
       return new aws.lambda.Function(
         `${name}Function`,
@@ -1306,6 +1326,10 @@ export class Function
             variables: environment,
           },
           architectures,
+          loggingConfig: {
+            logFormat: "Text",
+            logGroup: logGroup.name,
+          },
         }),
         {
           parent,
@@ -1313,20 +1337,6 @@ export class Function
             ? ["code", "handler"]
             : undefined,
         },
-      );
-    }
-
-    function createLogGroup() {
-      return new LogGroup(
-        `${name}LogGroup`,
-        {
-          logGroupName: interpolate`/aws/lambda/${fn.name}`,
-          retentionInDays: logging.apply(
-            (logging) => RETENTION[logging.retention],
-          ),
-          region,
-        },
-        { parent },
       );
     }
 
@@ -1380,6 +1390,10 @@ export class Function
        * The AWS Lambda function.
        */
       function: this.function,
+      /**
+       * The CloudWatch Log Group the function logs are stored.
+       */
+      logGroup: this.logGroup,
     };
   }
 
@@ -1402,13 +1416,6 @@ export class Function
    */
   public get arn() {
     return this.function.arn;
-  }
-
-  /**
-   * The ARN of the Lambda function's log group.
-   */
-  public get logGroupArn() {
-    return this.logGroup.logGroupArn;
   }
 
   /** @internal */
