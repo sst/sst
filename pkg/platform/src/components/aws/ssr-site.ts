@@ -312,55 +312,58 @@ export interface SsrSiteArgs {
   }>;
   /**
    * Configure how the CloudFront cache invalidations are handled.
+   * @default `&lcub;wait: false, paths: "all"&rcub;`
+   * @example
+   * Disable invalidation.
+   * ```js
+   * {
+   *   invalidation: false
+   * }
+   * ```
    */
-  invalidation?: Input<{
-    /**
-     * Configure if `sst deploy` should wait for the CloudFront cache invalidation to finish.
-     *
-     * Waiting for the CloudFront cache invalidation process to finish ensures that the new content will be served once the deploy finishes. However, this process can sometimes take more than 5 mins. For non-prod environments it might make sense to pass in `false`. That'll skip waiting for the cache to invalidate and speed up the deploys.
-     * @default `false`
-     * @example
-     * ```js
-     * {
-     *   invalidation: {
-     *     wait: true
-     *   }
-     * }
-     * ```
-     */
-    wait?: Input<boolean>;
-    /**
-     * The paths to invalidate.
-     *
-     * You can either pass in an array of glob patterns to invalidate specific files. Or you can use one of these built-in options:
-     * - `none`: Nothing will be invalidated.
-     * - `all`: All files will be invalidated when any file changes.
-     * - `versioned`: Only versioned files will be invalidated when versioned files change.
-     *
-     * :::note
-     * Invalidating `all` counts as one invalidation, while each glob pattern counts as a single invalidation path.
-     * :::
-     * @default `"all"`
-     * @example
-     * Disable invalidation.
-     * ```js
-     * {
-     *   invalidation: {
-     *     paths: "none"
-     *   }
-     * }
-     * ```
-     * Invalidate the `index.html` and all files under the `products/` route.
-     * ```js
-     * {
-     *   invalidation: {
-     *     paths: ["/index.html", "/products/*"]
-     *   }
-     * }
-     * ```
-     */
-    paths?: Input<"none" | "all" | "versioned" | string[]>;
-  }>;
+  invalidation?: Input<
+    | false
+    | {
+        /**
+         * Configure if `sst deploy` should wait for the CloudFront cache invalidation to finish.
+         *
+         * Waiting for the CloudFront cache invalidation process to finish ensures that the new content will be served once the deploy finishes. However, this process can sometimes take more than 5 mins. For non-prod environments it might make sense to pass in `false`. That'll skip waiting for the cache to invalidate and speed up the deploys.
+         * @default `false`
+         * @example
+         * ```js
+         * {
+         *   invalidation: {
+         *     wait: true
+         *   }
+         * }
+         * ```
+         */
+        wait?: Input<boolean>;
+        /**
+         * The paths to invalidate.
+         *
+         * You can either pass in an array of glob patterns to invalidate specific files. Or you can use one of these built-in options:
+         * - `none`: Nothing will be invalidated.
+         * - `all`: All files will be invalidated when any file changes.
+         * - `versioned`: Only versioned files will be invalidated when versioned files change.
+         *
+         * :::note
+         * Invalidating `all` counts as one invalidation, while each glob pattern counts as a single invalidation path.
+         * :::
+         * @default `"all"`
+         * @example
+         * Invalidate the `index.html` and all files under the `products/` route.
+         * ```js
+         * {
+         *   invalidation: {
+         *     paths: ["/index.html", "/products/*"]
+         *   }
+         * }
+         * ```
+         */
+        paths?: Input<"all" | "versioned" | string[]>;
+      }
+  >;
   /**
    * [Transform](/docs/components#transform/) how this component creates its underlying
    * resources.
@@ -1162,7 +1165,15 @@ function handler(event) {
 
     function createDistributionInvalidation() {
       all([outputPath, args.invalidation]).apply(
-        ([outputPath, invalidation]) => {
+        ([outputPath, invalidationRaw]) => {
+          // Normalize invalidation
+          if (invalidationRaw === false) return;
+          const invalidation = {
+            wait: false,
+            paths: "all",
+            ...invalidationRaw,
+          };
+
           // We will generate a hash based on the contents of the S3 files with cache enabled.
           // This will be used to determine if we need to invalidate our CloudFront cache.
           const s3Origin = Object.values(plan.origins).find(
@@ -1174,13 +1185,9 @@ function handler(event) {
 
           // Build invalidation paths
           const invalidationPaths: string[] = [];
-          if (invalidation?.paths === "none") {
-          } else if (
-            invalidation?.paths === "all" ||
-            invalidation?.paths === undefined
-          ) {
+          if (invalidation.paths === "all") {
             invalidationPaths.push("/*");
-          } else if (invalidation?.paths === "versioned") {
+          } else if (invalidation.paths === "versioned") {
             cachedS3Files.forEach((item) => {
               if (!item.versionedSubDir) return;
               invalidationPaths.push(
@@ -1219,7 +1226,7 @@ function handler(event) {
               }
 
               // For non-versioned files, use file content for digest
-              if (invalidation?.paths !== "versioned") {
+              if (invalidation.paths !== "versioned") {
                 globSync("**", {
                   ignore: item.versionedSubDir
                     ? [path.posix.join(item.versionedSubDir, "**")]
@@ -1246,6 +1253,7 @@ function handler(event) {
               distributionId: distribution.nodes.distribution.id,
               paths: invalidationPaths,
               version: invalidationBuildId,
+              wait: invalidation.wait,
             },
             {
               parent,

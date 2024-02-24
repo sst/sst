@@ -39,6 +39,7 @@ const sidebar = [
       { label: "Secret", link: "/docs/component/secret/" },
       { label: "Worker", link: "/docs/component/cloudflare/worker/" },
       { label: "Bucket", link: "/docs/component/aws/bucket/" },
+      { label: "Router", link: "/docs/component/aws/router/" },
       { label: "Function", link: "/docs/component/aws/function/" },
       { label: "Postgres", link: "/docs/component/aws/postgres/" },
     ],

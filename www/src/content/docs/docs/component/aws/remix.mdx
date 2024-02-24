@@ -554,7 +554,7 @@ You can also `link` resources to your Remix app and access them in a type-safe w
 <Segment>
 <Section type="parameters">
 <InlineSection>
-**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Object</code><code class="symbol">&gt;</code>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="symbol">&ldquo;</code><code class="primitive">false</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="primitive">Object</code><code class="symbol">&gt;</code>
 </InlineSection>
 - <p>[<code class="key">paths?</code>](#invalidation-paths)</p>
 - <p>[<code class="key">wait?</code>](#invalidation-wait)</p>
@@ -582,7 +582,7 @@ Wait for all paths to be invalidated.
 <Segment>
 <Section type="parameters">
 <InlineSection>
-**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">[]</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">none</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">all</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">versioned</code><code class="symbol">&rdquo;</code><code class="symbol">&gt;</code>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">[]</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">all</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">versioned</code><code class="symbol">&rdquo;</code><code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
 
@@ -600,14 +600,6 @@ You can either pass in an array of glob patterns to invalidate specific files. O
 Invalidating `all` counts as one invalidation, while each glob pattern counts as a single invalidation path.
 :::
 
-Disable invalidation.
-```js
-{
-  invalidation: {
-    paths: "none"
-  }
-}
-```
 Invalidate the `index.html` and all files under the `products/` route.
 ```js
 {

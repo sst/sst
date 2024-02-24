@@ -12,10 +12,10 @@ const FILE_LIMIT = 3000;
 const WILDCARD_LIMIT = 15;
 
 export interface DistributionInvalidationInputs {
-  distributionId: Input<string>;
-  paths?: Input<string[]>;
-  wait?: Input<boolean>;
-  version?: Input<string>;
+  distributionId: Input<Inputs["distributionId"]>;
+  paths: Input<Inputs["paths"]>;
+  wait: Input<Inputs["wait"]>;
+  version: Input<Inputs["version"]>;
 }
 
 interface Inputs {
@@ -141,16 +141,7 @@ export class DistributionInvalidation extends dynamic.Resource {
     super(
       new Provider(),
       `${name}.sst.aws.DistributionInvalidation`,
-      {
-        ...args,
-        paths: output(args.paths).apply((paths) => [
-          ...new Set(paths ?? ["/*"]),
-        ]),
-        wait: args.wait || false,
-        version:
-          args.version ||
-          Date.now().toString(16) + Math.random().toString(16).slice(2),
-      },
+      args,
       opts,
     );
   }
