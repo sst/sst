@@ -500,7 +500,7 @@ async function main() {
         const hash = type.name.endsWith("Args")
           ? `#${type.name.toLowerCase()}`
           : "";
-        return `[<code class="type">${type.name}</code>](../${externalModule}/${hash})`;
+        return `[<code class="type">${type.name}</code>](/docs/component/aws/${externalModule}/${hash})`;
       }
 
       // @ts-expect-error
