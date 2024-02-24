@@ -136,9 +136,9 @@ export interface BucketSubscribeArgs {
  *
  * Enable `public` read access for all the files in the bucket. Useful for hosting public files.
  *
- * ```ts {2}
+ * ```ts
  * new sst.aws.Bucket("MyBucket", {
- *   public: true,
+ *   public: true
  * });
  * ```
  */
