@@ -15,7 +15,7 @@ import {
 import { Component, Transform, transform } from "../component";
 import { Link } from "../link";
 import type { Input } from "../input";
-import { Function, FunctionDefinition } from "./function";
+import { Function, FunctionArgs } from "./function";
 
 export interface BucketArgs {
   /**
@@ -308,7 +308,10 @@ export class Bucket
    * });
    * ```
    */
-  public subscribe(subscriber: FunctionDefinition, args?: BucketSubscribeArgs) {
+  public subscribe(
+    subscriber: string | FunctionArgs,
+    args?: BucketSubscribeArgs,
+  ) {
     const parent = this;
     const parentName = this.constructorName;
 

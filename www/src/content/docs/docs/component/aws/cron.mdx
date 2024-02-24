@@ -63,7 +63,7 @@ The underlying [resources](/docs/components/#nodes) this component creates.
 <Segment>
 <Section type="parameters">
 <InlineSection>
-**Type** <code class="primitive">Output</code><code class="symbol">&lt;</code>[<code class="type">Function</code>](function/)<code class="symbol">&gt;</code>
+**Type** <code class="primitive">Output</code><code class="symbol">&lt;</code>[<code class="type">Function</code>](../function/)<code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
 The sst.aws.Function.
@@ -92,39 +92,27 @@ The EventBridge Target resource.
 <Segment>
 <Section type="parameters">
 <InlineSection>
-**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol"> | </code><code class="primitive">Object</code><code class="symbol">&gt;</code>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol"> | </code>[<code class="type">FunctionArgs</code>](../function/#functionargs)<code class="symbol">&gt;</code>
 </InlineSection>
-- <p>[<code class="key">function</code>](#job-function)</p>
 </Section>
 The function that'll be executed when the cron job runs.
-You can pass in the path or the full function props.
 
 ```ts
 {
   job: "src/cron.handler"
 }
 ```
-</Segment>
-<NestedTitle id="job-function" Tag="h4" parent="job.">function</NestedTitle>
-<Segment>
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol"> | </code>[<code class="type">FunctionArgs</code>](function/#functionargs)<code class="symbol">&gt;</code>
-</InlineSection>
-</Section>
-The full function props.
+
+Alternatively, you can pass in the full function props.
 
 ```ts
 {
   job: {
-    function: {
-      runtime: "nodejs20.x",
-      handler: "packages/functions/src/index.handler",
-    }
+    handler: "src/cron.handler",
+    timeout: "60 seconds",
   }
 }
 ```
-
 </Segment>
 ### schedule
 <Segment>
@@ -186,29 +174,6 @@ Transform the EventBridge Rule resource.
 </InlineSection>
 </Section>
 Transform the EventBridge Target resource.
-
-</Segment>
-
-## CronJobProps
-### function
-<Segment>
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol"> | </code>[<code class="type">FunctionArgs</code>](function/#functionargs)<code class="symbol">&gt;</code>
-</InlineSection>
-</Section>
-The full function props.
-
-```ts
-{
-  job: {
-    function: {
-      runtime: "nodejs20.x",
-      handler: "packages/functions/src/index.handler",
-    }
-  }
-}
-```
 
 </Segment>
 </div>

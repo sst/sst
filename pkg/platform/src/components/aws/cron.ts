@@ -1,31 +1,12 @@
 import { ComponentResourceOptions, output, Output } from "@pulumi/pulumi";
 import * as aws from "@pulumi/aws";
-import { Component, Prettify, Transform, transform } from "../component";
+import { Component, Transform, transform } from "../component";
 import { Function, FunctionArgs } from "./function";
 import { Input } from "../input.js";
-
-export interface CronJobProps {
-  /**
-   * The full function props.
-   *
-   * ```ts
-   * {
-   *   job: {
-   *     function: {
-   *       runtime: "nodejs20.x",
-   *       handler: "packages/functions/src/index.handler",
-   *     }
-   *   }
-   * }
-   * ```
-   */
-  function: Input<string | FunctionArgs>;
-}
 
 export interface CronArgs {
   /**
    * The function that'll be executed when the cron job runs.
-   * You can pass in the path or the full function props.
    *
    * @example
    *
@@ -34,8 +15,19 @@ export interface CronArgs {
    *   job: "src/cron.handler"
    * }
    * ```
+   *
+   * Alternatively, you can pass in the full function props.
+   *
+   * ```ts
+   * {
+   *   job: {
+   *     handler: "src/cron.handler",
+   *     timeout: "60 seconds",
+   *   }
+   * }
+   * ```
    */
-  job: Input<string | Prettify<CronJobProps>>;
+  job: Input<string | FunctionArgs>;
   /**
    * The schedule for the cron job.
    *
@@ -113,18 +105,10 @@ export class Cron extends Component {
     this.rule = rule;
     this.target = target;
 
-    // this.registerOutputs({});
-
     function createFunction() {
-      return output(args.job).apply((job) => {
-        const props =
-          typeof job === "string"
-            ? { handler: job }
-            : typeof job.function === "string"
-              ? { handler: job.function }
-              : job.function;
-        return new Function(`${name}Handler`, props, { parent });
-      });
+      return output(args.job).apply((job) =>
+        Function.fromDefinition(parent, `${name}Handler`, job),
+      );
     }
 
     function createRule() {

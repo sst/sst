@@ -50,8 +50,6 @@ const RETENTION = {
   forever: 0,
 };
 
-export type FunctionDefinition = string | FunctionArgs;
-
 export type FunctionPermissionArgs = {
   /**
    * The [IAM actions](https://docs.aws.amazon.com/service-authorization/latest/reference/reference_policies_actions-resources-contextkeys.html#actions_table) that can be performed.
@@ -1417,7 +1415,7 @@ export class Function
   static fromDefinition(
     parent: Component,
     name: string,
-    definition: Input<FunctionDefinition>,
+    definition: Input<string | FunctionArgs>,
     override?: Pick<FunctionArgs, "description" | "permissions">,
   ) {
     return output(definition).apply((definition) => {

@@ -3,7 +3,7 @@ import * as aws from "@pulumi/aws";
 import { Component, Transform, transform } from "../component";
 import { Link } from "../link";
 import type { Input } from "../input";
-import { Function, FunctionDefinition } from "./function";
+import { Function, FunctionArgs } from "./function";
 import { Duration, toSeconds } from "../duration";
 import { VisibleError } from "../error";
 
@@ -226,7 +226,10 @@ export class Queue
    * });
    * ```
    */
-  public subscribe(subscriber: FunctionDefinition, args?: QueueSubscribeArgs) {
+  public subscribe(
+    subscriber: string | FunctionArgs,
+    args?: QueueSubscribeArgs,
+  ) {
     const parent = this;
     const parentName = this.constructorName;
 
