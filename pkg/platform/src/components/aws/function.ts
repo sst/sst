@@ -16,7 +16,7 @@ import { build } from "../../runtime/node.js";
 import { FunctionCodeUpdater } from "./providers/function-code-updater.js";
 import { bootstrap } from "./helpers/bootstrap.js";
 import { LogGroup } from "./providers/log-group.js";
-import { Duration, toSeconds } from "../duration.js";
+import { Duration, DurationMinutes, toSeconds } from "../duration.js";
 import { Size, toMBs } from "../size.js";
 import { Component, Prettify, Transform, transform } from "../component.js";
 import { Link } from "../link.js";
@@ -272,7 +272,7 @@ export interface FunctionArgs {
    * }
    * ```
    */
-  timeout?: Input<Duration>;
+  timeout?: Input<DurationMinutes>;
   /**
    * The amount of memory allocated for the function. Takes values between 128 MB
    * and 10240 MB in 1 MB increments.  The amount of memory affects the amount of

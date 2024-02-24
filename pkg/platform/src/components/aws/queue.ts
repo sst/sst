@@ -4,7 +4,7 @@ import { Component, Transform, transform } from "../component";
 import { Link } from "../link";
 import type { Input } from "../input";
 import { Function, FunctionArgs } from "./function";
-import { Duration, toSeconds } from "../duration";
+import { DurationMinutes, toSeconds } from "../duration";
 import { VisibleError } from "../error";
 
 export interface QueueArgs {
@@ -105,7 +105,7 @@ export interface QueueSubscribeArgs {
    *   maxBatchingWindow: "60 seconds"
    * }
    */
-  maxBatchingWindow?: Input<Duration>;
+  maxBatchingWindow?: Input<DurationMinutes>;
   /**
    * The maximum concurrency setting limits the number of concurrent instances
    * of the function that an Amazon SQS event source can invoke.
