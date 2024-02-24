@@ -110,8 +110,6 @@ export function AuthHandler<
     };
   }
 
-  console.log(process.env.AUTH_PRIVATE_KEY!);
-  console.log(process.env.AUTH_PUBLIC_KEY!);
   const options: Omit<AdapterOptions<any>, "name"> = {
     signing: {
       privateKey: jose.importPKCS8(process.env.AUTH_PRIVATE_KEY!, "RS512"),

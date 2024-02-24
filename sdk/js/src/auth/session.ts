@@ -20,9 +20,7 @@ export function createSessionBuilder<
 
   return {
     async verify(token: string): Promise<SessionValue> {
-      const auth = Object.values(Resource).find(
-        (value) => value.auth === true && value.publicKey,
-      );
+      const auth = Object.values(Resource).find((value) => value.publicKey);
       if (!auth) {
         throw new Error("No auth resource found");
       }

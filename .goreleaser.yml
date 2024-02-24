@@ -3,7 +3,7 @@ before:
   hooks:
     - go mod tidy
     - go build -o ./pkg/platform/dist/bridge/bootstrap ./pkg/platform/bridge
-    - cd ./pkg/platform && ./scripts/build-functions
+    - bash -c 'cd ./pkg/platform && ./scripts/build-functions'
 builds:
   - env:
       - CGO_ENABLED=0
