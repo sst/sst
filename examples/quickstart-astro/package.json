@@ -13,9 +13,9 @@
     "sst:dev": "sst dev"
   },
   "dependencies": {
-    "@aws-sdk/client-s3": "^3.511.0",
-    "@aws-sdk/s3-request-presigner": "^3.511.0",
-    "astro": "^4.3.6"
+    "@aws-sdk/client-s3": "^3.521.0",
+    "@aws-sdk/s3-request-presigner": "^3.521.0",
+    "astro": "^4.4.4"
   },
   "devDependencies": {
     "sst": "^2.40.3",

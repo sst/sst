@@ -10,7 +10,7 @@
   "dependencies": {
     "react": "^18.0.0",
     "react-dom": "^18.0.0",
-    "react-router-dom": "^6.22.0",
+    "react-router-dom": "^6.22.1",
     "urql": "^4.0.6",
     "graphql": "^16.8.1",
     "@create-sst-rds/graphql": "0.0.0",
