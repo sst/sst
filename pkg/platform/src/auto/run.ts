@@ -35,26 +35,20 @@ export async function run(program: automation.PulumiFn) {
 
   const componentNames = new Set<string>();
   runtime.registerStackTransformation((args: ResourceTransformationArgs) => {
+    if (args.type.startsWith("pulumi")) {
+      return;
+    }
+
     if (componentNames.has(args.name)) {
       throw new VisibleError(
         `Invalid component name "${args.name}". Component names must be unique.`,
       );
     }
     componentNames.add(args.name);
-    let normalizedName = args.name;
-    if (
-      args.type === "pulumi-nodejs:dynamic:Resource" ||
-      args.type === "pulumi:providers:aws"
-    ) {
-      const parts = args.name.split(".");
-      if (parts.length === 4 && parts[1] === "sst") {
-        normalizedName = parts[0];
-      }
-    }
 
-    if (!normalizedName.match(/^[A-Z][a-zA-Z0-9]*$/)) {
+    if (!args.name.match(/^[A-Z][a-zA-Z0-9]*$/)) {
       throw new Error(
-        `Invalid component name "${normalizedName}". Component names must start with an uppercase letter and contain only alphanumeric characters.`,
+        `Invalid component name "${args.name}". Component names must start with an uppercase letter and contain only alphanumeric characters.`,
       );
     }
 
@@ -63,8 +57,7 @@ export async function run(program: automation.PulumiFn) {
 
   Link.makeLinkable(aws.dynamodb.Table, function () {
     return {
-      type: `{ tableName: string }`,
-      value: { tableName: this.name },
+      properties: { tableName: this.name },
     };
   });
   Link.AWS.makeLinkable(aws.dynamodb.Table, function () {
