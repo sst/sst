@@ -189,6 +189,10 @@ async function main() {
       if (!method) return lines;
 
       lines.push(``, `## Links`);
+      lines.push(
+        ``,
+        `The following are accessible through the [Node client](/docs/reference/client/) at runtime.`
+      );
 
       // Validate getSSTLink() return type
       const returnType = method.signatures![0].type as TypeDoc.ReflectionType;
