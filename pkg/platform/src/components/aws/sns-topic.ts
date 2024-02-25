@@ -32,10 +32,6 @@ export interface SnsTopicArgs {
      * Transform the SNS Topic resource.
      */
     topic?: Transform<aws.sns.TopicArgs>;
-    /**
-     * Transform the SNS Topic subscription resource.
-     */
-    subscription?: Transform<aws.sns.TopicSubscriptionArgs>;
   };
 }
 
