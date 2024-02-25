@@ -135,16 +135,6 @@ new Function(name, args, opts?)
 The ARN of the Lambda function.
 </Segment>
 
-### logGroupArn
-<Segment>
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">Output</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
-</InlineSection>
-</Section>
-The ARN of the Lambda function's log group.
-</Segment>
-
 ### name
 <Segment>
 <Section type="parameters">
@@ -162,6 +152,7 @@ The name of the Lambda function.
 **Type** <code class="primitive">Object</code>
 </InlineSection>
 - <p>[<code class="key">function</code>](#nodes-function)</p>
+- <p>[<code class="key">logGroup</code>](#nodes-loggroup)</p>
 - <p>[<code class="key">role</code>](#nodes-role)</p>
 </Section>
 The underlying [resources](/docs/components/#nodes) this component creates.
@@ -174,6 +165,15 @@ The underlying [resources](/docs/components/#nodes) this component creates.
 </InlineSection>
 </Section>
 The AWS Lambda function.
+</Segment>
+<NestedTitle id="nodes-loggroup" Tag="h4" parent="nodes.">logGroup</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** [<code class="type">LogGroup</code>](https://www.pulumi.com/registry/packages/aws/api-docs/cloudwatch/loggroup/)
+</InlineSection>
+</Section>
+The CloudWatch Log Group the function logs are stored.
 </Segment>
 <NestedTitle id="nodes-role" Tag="h4" parent="nodes.">role</NestedTitle>
 <Segment>
@@ -825,6 +825,8 @@ The amount of time that Lambda allows a function to run before stopping it.
 **Type** <code class="primitive">Object</code>
 </InlineSection>
 - <p>[<code class="key">function?</code>](#transform-function)</p>
+- <p>[<code class="key">logGroup?</code>](#transform-loggroup)</p>
+- <p>[<code class="key">role?</code>](#transform-role)</p>
 </Section>
 [Transform](/docs/components#transform/) how this component creates its underlying
 resources.
@@ -838,6 +840,26 @@ resources.
 </InlineSection>
 </Section>
 Transform the Lambda Function resource.
+
+</Segment>
+<NestedTitle id="transform-loggroup" Tag="h4" parent="transform.">logGroup?</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** [<code class="type">LogGroupArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/cloudwatch/loggroup/#inputs)<code class="symbol"> | </code><code class="symbol">(</code><code class="primitive">args</code><code class="symbol">: </code>[<code class="type">LogGroupArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/cloudwatch/loggroup/#inputs)<code class="symbol"> => </code>[<code class="type">LogGroupArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/cloudwatch/loggroup/#inputs)<code class="symbol"> | </code><code class="primitive">void</code><code class="symbol">)</code>
+</InlineSection>
+</Section>
+Transform the CloudWatch LogGroup resource.
+
+</Segment>
+<NestedTitle id="transform-role" Tag="h4" parent="transform.">role?</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** [<code class="type">RoleArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/iam/role/#inputs)<code class="symbol"> | </code><code class="symbol">(</code><code class="primitive">args</code><code class="symbol">: </code>[<code class="type">RoleArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/iam/role/#inputs)<code class="symbol"> => </code>[<code class="type">RoleArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/iam/role/#inputs)<code class="symbol"> | </code><code class="primitive">void</code><code class="symbol">)</code>
+</InlineSection>
+</Section>
+Transform the IAM Role resource.
 
 </Segment>
 ### url?

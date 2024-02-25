@@ -1401,7 +1401,10 @@ export class Function
    * The Lambda function URL if `url` is enabled.
    */
   public get url() {
-    return this.fnUrl.apply((url) => url?.functionUrl ?? output(undefined));
+    return this.fnUrl.apply((url) => {
+      if (!url) throw new Error("Function URL is not enabled");
+      return url.functionUrl;
+    });
   }
 
   /**
