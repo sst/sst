@@ -40,6 +40,7 @@ const sidebar = [
       { label: "Worker", link: "/docs/component/cloudflare/worker/" },
       { label: "Bucket", link: "/docs/component/aws/bucket/" },
       { label: "Router", link: "/docs/component/aws/router/" },
+      { label: "Dynamo", link: "/docs/component/aws/dynamo/" },
       { label: "SnsTopic", link: "/docs/component/aws/sns-topic/" },
       { label: "Function", link: "/docs/component/aws/function/" },
       { label: "Postgres", link: "/docs/component/aws/postgres/" },

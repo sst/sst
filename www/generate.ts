@@ -535,6 +535,7 @@ async function main() {
       // types in different doc
       const externalModule = {
         Bucket: "bucket",
+        Dynamo: "dynamo",
         Function: "function",
         FunctionArgs: "function",
         FunctionPermissionArgs: "function",
@@ -782,7 +783,7 @@ async function buildDocs() {
       "../pkg/platform/src/components/aws/queue.ts",
       "../pkg/platform/src/components/aws/router.ts",
       "../pkg/platform/src/components/aws/sns-topic.ts",
-      //"../pkg/platform/src/components/aws/dynamodb-table.ts",
+      "../pkg/platform/src/components/aws/dynamo.ts",
       //"../pkg/platform/src/components/aws/apigateway-httpapi.ts",
       "../pkg/platform/src/components/cloudflare/worker.ts",
     ],

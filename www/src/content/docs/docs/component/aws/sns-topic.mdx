@@ -167,21 +167,10 @@ Changing a standard topic to a FIFO topic or the other way around will result in
 <InlineSection>
 **Type** <code class="primitive">Object</code>
 </InlineSection>
-- <p>[<code class="key">subscription?</code>](#transform-subscription)</p>
 - <p>[<code class="key">topic?</code>](#transform-topic)</p>
 </Section>
 [Transform](/docs/components#transform/) how this component creates its underlying
 resources.
-
-</Segment>
-<NestedTitle id="transform-subscription" Tag="h4" parent="transform.">subscription?</NestedTitle>
-<Segment>
-<Section type="parameters">
-<InlineSection>
-**Type** [<code class="type">TopicSubscriptionArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/sns/topicsubscription/#inputs)<code class="symbol"> | </code><code class="symbol">(</code><code class="primitive">args</code><code class="symbol">: </code>[<code class="type">TopicSubscriptionArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/sns/topicsubscription/#inputs)<code class="symbol"> => </code>[<code class="type">TopicSubscriptionArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/sns/topicsubscription/#inputs)<code class="symbol"> | </code><code class="primitive">void</code><code class="symbol">)</code>
-</InlineSection>
-</Section>
-Transform the SNS Topic subscription resource.
 
 </Segment>
 <NestedTitle id="transform-topic" Tag="h4" parent="transform.">topic?</NestedTitle>
@@ -251,5 +240,27 @@ isn't present in the message attributes.
    ]
 }
 ```
+</Segment>
+### transform?
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Object</code>
+</InlineSection>
+- <p>[<code class="key">subscription?</code>](#transform-subscription)</p>
+</Section>
+[Transform](/docs/components#transform/) how this subscription creates its underlying
+resources.
+
+</Segment>
+<NestedTitle id="transform-subscription" Tag="h4" parent="transform.">subscription?</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** [<code class="type">TopicSubscriptionArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/sns/topicsubscription/#inputs)<code class="symbol"> | </code><code class="symbol">(</code><code class="primitive">args</code><code class="symbol">: </code>[<code class="type">TopicSubscriptionArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/sns/topicsubscription/#inputs)<code class="symbol"> => </code>[<code class="type">TopicSubscriptionArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/sns/topicsubscription/#inputs)<code class="symbol"> | </code><code class="primitive">void</code><code class="symbol">)</code>
+</InlineSection>
+</Section>
+Transform the SNS Topic Subscription resource.
+
 </Segment>
 </div>

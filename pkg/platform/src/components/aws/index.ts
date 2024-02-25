@@ -1,6 +1,7 @@
 export * from "./auth.js";
 export * from "./bucket.js";
 export * from "./cron.js";
+export * from "./dynamo.js";
 export * from "./function.js";
 export * from "./postgres.js";
 export * from "./queue.js";
