@@ -134,7 +134,7 @@ export interface SnsTopicSubscribeArgs {
  *
  * Once linked, you can publish messages to the topic from your function code.
  *
- * ```ts title="app/page.tsx" {1,6}
+ * ```ts title="app/page.tsx" {1,7}
  * import { Resource } from "sst";
  * import { SNSClient, PublishCommand } from "@aws-sdk/client-sqs";
  *
