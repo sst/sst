@@ -1,0 +1,250 @@
+---
+title: SnsTopic
+description: Reference for the `sst.aws.SnsTopic` component.
+---
+
+import Segment from '../../../../../components/tsdoc/Segment.astro';
+import Section from '../../../../../components/tsdoc/Section.astro';
+import NestedTitle from '../../../../../components/tsdoc/NestedTitle.astro';
+import InlineSection from '../../../../../components/tsdoc/InlineSection.astro';
+
+<div class="tsdoc">
+
+<Section type="about">
+The `SnsTopic` component lets you add an [AWS SNS Topic](https://aws.amazon.com/sns/) to
+your app.
+
+#### Minimal example
+
+```ts
+new sst.aws.SnsTopic("MyTopic");
+```
+</Section>
+
+---
+
+## Constructor
+
+<Segment>
+<Section type="signature">
+```ts
+new SnsTopic(name, args, opts)
+```
+</Section>
+
+<Section type="parameters">
+#### Parameters
+- <p><code class="key">name</code> <code class="primitive">string</code></p>
+- <p><code class="key">args</code> [<code class="type">SnsTopicArgs</code>](#snstopicargs)</p>
+- <p><code class="key">opts</code> [<code class="type">ComponentResourceOptions</code>](https://www.pulumi.com/docs/concepts/options/)</p>
+</Section>
+</Segment>
+
+## Methods
+
+### subscribe
+<Segment>
+<Section type="signature">
+```ts
+subscribe(subscriber, args)
+```
+</Section>
+
+<Section type="parameters">
+#### Parameters
+- <p><code class="key">subscriber</code> <code class="primitive">string</code><code class="symbol"> | </code>[<code class="type">FunctionArgs</code>](/docs/component/aws/function/#functionargs)</p>
+- <p><code class="key">args</code> [<code class="type">SnsTopicSubscribeArgs</code>](#snstopicsubscribeargs)</p>
+</Section>
+Subscribes to the SNS Topic.
+```js
+subscribe("src/subscriber.handler");
+```
+
+Customize the subscription.
+```js
+subscribe("src/subscriber.handler", {
+  batchSize: 5,
+});
+```
+
+Customize the subscriber function.
+```js
+subscribe({
+  handler: "src/subscriber.handler",
+  timeout: "60 seconds",
+});
+```
+</Segment>
+
+## Properties
+
+### arn
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Output</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+The ARN of the SNS Topic.
+</Segment>
+
+### name
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Output</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+The name of the SNS Topic.
+</Segment>
+
+### nodes
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Object</code>
+</InlineSection>
+- <p>[<code class="key">topic</code>](#nodes-topic)</p>
+</Section>
+The underlying [resources](/docs/components/#nodes) this component creates.
+</Segment>
+<NestedTitle id="nodes-topic" Tag="h4" parent="nodes.">topic</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** [<code class="type">Topic</code>](https://www.pulumi.com/registry/packages/aws/api-docs/sns/topic/)
+</InlineSection>
+</Section>
+The Amazon SNS Topic.
+</Segment>
+
+## Links
+
+The following are accessible through the [Node client](/docs/reference/client/) at runtime.
+
+### arn
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">string</code>
+</InlineSection>
+</Section>
+The ARN of the SNS Topic.
+</Segment>
+
+## SnsTopicArgs
+### fifo?
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">boolean</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+
+<InlineSection>
+**Default** <code class="primitive">false</code>
+</InlineSection>
+FIFO (First-In-First-Out) topics are designed to provide strict message ordering.
+
+:::note
+Changing a standard topic to a FIFO topic or the other way around will result in the destruction and recreation of the topic.
+:::
+
+```js
+{
+  fifo: true
+}
+```
+</Segment>
+### transform?
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Object</code>
+</InlineSection>
+- <p>[<code class="key">subscription?</code>](#transform-subscription)</p>
+- <p>[<code class="key">topic?</code>](#transform-topic)</p>
+</Section>
+[Transform](/docs/components#transform/) how this component creates its underlying
+resources.
+
+</Segment>
+<NestedTitle id="transform-subscription" Tag="h4" parent="transform.">subscription?</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** [<code class="type">TopicSubscriptionArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/sns/topicsubscription/#inputs)<code class="symbol"> | </code><code class="symbol">(</code><code class="primitive">args</code><code class="symbol">: </code>[<code class="type">TopicSubscriptionArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/sns/topicsubscription/#inputs)<code class="symbol"> => </code>[<code class="type">TopicSubscriptionArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/sns/topicsubscription/#inputs)<code class="symbol"> | </code><code class="primitive">void</code><code class="symbol">)</code>
+</InlineSection>
+</Section>
+Transform the SNS Topic subscription resource.
+
+</Segment>
+<NestedTitle id="transform-topic" Tag="h4" parent="transform.">topic?</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** [<code class="type">TopicArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/sns/topic/#inputs)<code class="symbol"> | </code><code class="symbol">(</code><code class="primitive">args</code><code class="symbol">: </code>[<code class="type">TopicArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/sns/topic/#inputs)<code class="symbol"> => </code>[<code class="type">TopicArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/sns/topic/#inputs)<code class="symbol"> | </code><code class="primitive">void</code><code class="symbol">)</code>
+</InlineSection>
+</Section>
+Transform the SNS Topic resource.
+
+</Segment>
+
+## SnsTopicSubscribeArgs
+### filters?
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Record</code><code class="symbol">&lt;</code><code class="primitive">string</code>, <code class="primitive">any</code><code class="symbol">&gt;</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+
+<InlineSection>
+**Default** No filters
+</InlineSection>
+Add filter criteria option. If any single property in this filter doesn't match
+an attribute assigned to the message, the policy rejects the message.
+
+Suppose your Amazon SNS topic message contains attributes in the following JSON format.
+```js
+{
+  store: "example_corp",
+  event: "order-placed",
+  customer_interests: [
+     "soccer",
+     "rugby",
+     "hockey"
+  ],
+  price_usd: 210.75
+}
+```
+
+This policy accepts the example message.
+```js
+{
+   store: ["example_corp"],
+   event: [{"anything-but": "order_cancelled"}],
+   customer_interests: [
+      "rugby",
+      "football",
+      "baseball"
+   ],
+   price_usd: [{numeric: [">=", 100]}]
+}
+```
+
+And this policy rejects the example message, because the encrypted property name
+isn't present in the message attributes.
+```js
+{
+   store: ["example_corp"],
+   event: ["order_cancelled"],
+   encrypted: [false],
+   customer_interests: [
+      "basketball",
+      "baseball"
+   ]
+}
+```
+</Segment>
+</div>

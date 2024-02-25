@@ -768,7 +768,7 @@ async function buildDocs() {
       //"../pkg/platform/src/components/aws/static-site.ts",
       "../pkg/platform/src/components/aws/queue.ts",
       "../pkg/platform/src/components/aws/router.ts",
-      //"../pkg/platform/src/components/aws/sns-topic.ts",
+      "../pkg/platform/src/components/aws/sns-topic.ts",
       //"../pkg/platform/src/components/aws/dynamodb-table.ts",
       //"../pkg/platform/src/components/aws/apigateway-httpapi.ts",
       "../pkg/platform/src/components/cloudflare/worker.ts",

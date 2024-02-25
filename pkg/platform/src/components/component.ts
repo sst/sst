@@ -65,6 +65,7 @@ export class Component extends ComponentResource {
             case "aws:cloudwatch/eventRule:EventRule":
             case "aws:lambda/function:Function":
             case "aws:dynamodb/table:Table":
+            case "aws:sns/topic:Topic":
               overrides = { name: prefixName(args.name) };
               break;
             case "cloudflare:index/workerScript:WorkerScript":
@@ -111,6 +112,7 @@ export class Component extends ComponentResource {
             case "aws:s3/bucketPublicAccessBlock:BucketPublicAccessBlock":
             case "aws:s3/bucketV2:BucketV2":
             case "aws:s3/bucketWebsiteConfigurationV2:BucketWebsiteConfigurationV2":
+            case "aws:sns/topicSubscription:TopicSubscription":
               break;
             default:
               throw new Error(

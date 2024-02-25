@@ -186,7 +186,7 @@ export class Queue
   }
 
   /**
-   * The ARN of the SQS Queue.
+   * The URL of the SQS Queue.
    */
   public get url() {
     return this.queue.url;
