@@ -10,7 +10,7 @@ export interface SnsTopicArgs {
   /**
    * FIFO (First-In-First-Out) topics are designed to provide strict message ordering.
    *
-   * :::note
+   * :::caution
    * Changing a standard topic to a FIFO topic or the other way around will result in the destruction and recreation of the topic.
    * :::
    *
@@ -37,11 +37,13 @@ export interface SnsTopicArgs {
 
 export interface SnsTopicSubscribeArgs {
   /**
-   * Add filter criteria option. If any single property in this filter doesn't match
-   * an attribute assigned to the message, the policy rejects the message.
-   * @default No filters
+   * Filter the messages that'll be processed by the `subscriber` function.
+   *
+   * If any single property in the filter doesn't match
+   * an attribute assigned to the message, then the policy rejects the message.
+   *
    * @example
-   * Suppose your Amazon SNS topic message contains attributes in the following JSON format.
+   * For example, if your SNS Topic message contains this in a JSON format.
    * ```js
    * {
    *   store: "example_corp",
@@ -55,35 +57,28 @@ export interface SnsTopicSubscribeArgs {
    * }
    * ```
    *
-   * This policy accepts the example message.
+   * Then this filter policy accepts the message.
+   *
    * ```js
    * {
-   *    store: ["example_corp"],
-   *    event: [{"anything-but": "order_cancelled"}],
-   *    customer_interests: [
-   *       "rugby",
-   *       "football",
-   *       "baseball"
-   *    ],
-   *    price_usd: [{numeric: [">=", 100]}]
+   *   filter: {
+   *     store: ["example_corp"],
+   *     event: [{"anything-but": "order_cancelled"}],
+   *     customer_interests: [
+   *        "rugby",
+   *        "football",
+   *        "baseball"
+   *     ],
+   *     price_usd: [{numeric: [">=", 100]}]
+   *   }
    * }
    * ```
    *
-   * And this policy rejects the example message, because the encrypted property name
-   * isn't present in the message attributes.
-   * ```js
-   * {
-   *    store: ["example_corp"],
-   *    event: ["order_cancelled"],
-   *    encrypted: [false],
-   *    customer_interests: [
-   *       "basketball",
-   *       "baseball"
-   *    ]
-   * }
-   * ```
+   * :::tip
+   * Learn more about [subscription filter policies](https://docs.aws.amazon.com/sns/latest/dg/sns-subscription-filter-policies.html).
+   * :::
    */
-  filters?: Input<Record<string, any>>;
+  filter?: Input<Record<string, any>>;
   /**
    * [Transform](/docs/components#transform/) how this subscription creates its underlying
    * resources.
@@ -97,15 +92,58 @@ export interface SnsTopicSubscribeArgs {
 }
 
 /**
- * The `SnsTopic` component lets you add an [AWS SNS Topic](https://aws.amazon.com/sns/) to
- * your app.
+ * The `SnsTopic` component lets you add an [Amazon SNS Topic](https://docs.aws.amazon.com/sns/latest/dg/sns-create-topic.html) to your app.
+ *
+ * :::note
+ * The difference between an `SnsTopic` and a `Queue` is that with a topic you can deliver messages to multiple subscribers.
+ * :::
  *
  * @example
  *
- * #### Minimal example
+ * #### Create a topic
  *
  * ```ts
- * new sst.aws.SnsTopic("MyTopic");
+ * const myTopic = new sst.aws.SnsTopic("MyTopic");
+ * ```
+ *
+ * #### Make it a FIFO topic
+ *
+ * You can optionally make it a FIFO topic.
+ *
+ * ```ts {2}
+ * new sst.aws.SnsTopic("MyTopic", {
+ *   fifo: true
+ * });
+ * ```
+ *
+ * #### Add a subscriber
+ *
+ * ```ts
+ * myTopic.subscribe("src/subscriber.handler");
+ * ```
+ *
+ * #### Link the topic to a resource
+ *
+ * You can link the secret to other resources, like a function or your Next.js app.
+ *
+ * ```ts
+ * new sst.aws.Nextjs("Web", {
+ *   link: [myTopic]
+ * });
+ * ```
+ *
+ * Once linked, you can publish messages to the topic from your function code.
+ *
+ * ```ts title="app/page.tsx" {1,7}
+ * import { Resource } from "sst";
+ * import { SNSClient, PublishCommand } from "@aws-sdk/client-sqs";
+ *
+ * const sns = new SNSClient({});
+ *
+ * await sns.send(new PublishCommand({
+ *   TopicArn: Resource.MyTopic.arn,
+ *   Message: "Hello from Next.js!"
+ * }));
  * ```
  */
 export class SnsTopic
@@ -172,25 +210,41 @@ export class SnsTopic
   }
 
   /**
-   * Subscribes to the SNS Topic.
+   * Subscribes to this SNS Topic.
+   *
+   * @param subscriber The function that'll be notified.
+   * @param args Configure the subscription.
+   *
    * @example
    *
    * ```js
-   * subscribe("src/subscriber.handler");
+   * myTopic.subscribe("src/subscriber.handler");
    * ```
    *
-   * Customize the subscription.
+   * Add multiple subscribers.
+   *
    * ```js
-   * subscribe("src/subscriber.handler", {
-   *   batchSize: 5,
+   * myTopic
+   *   .subscribe("src/subscriber1.handler")
+   *   .subscribe("src/subscriber2.handler");
+   * ```
+   *
+   * Add a filter to the subscription.
+   *
+   * ```js
+   * myTopic.subscribe("src/subscriber.handler", {
+   *   filter: {
+   *     price_usd: [{numeric: [">=", 100]}]
+   *   }
    * });
    * ```
    *
    * Customize the subscriber function.
+   *
    * ```js
-   * subscribe({
+   * myTopic.subscribe({
    *   handler: "src/subscriber.handler",
-   *   timeout: "60 seconds",
+   *   timeout: "60 seconds"
    * });
    * ```
    */
@@ -203,7 +257,7 @@ export class SnsTopic
 
     // Build subscriber name
     const id = sanitizeToPascalCase(
-      hashStringToPrettyString(JSON.stringify(args.filters ?? {}), 4),
+      hashStringToPrettyString(JSON.stringify(args.filter ?? {}), 4),
     );
 
     const fn = Function.fromDefinition(
@@ -230,7 +284,7 @@ export class SnsTopic
         topic: this.topic.arn,
         protocol: "lambda",
         endpoint: fn.arn,
-        filterPolicy: JSON.stringify(args.filters ?? {}),
+        filterPolicy: JSON.stringify(args.filter ?? {}),
       }),
       { parent, dependsOn: [permission] },
     );

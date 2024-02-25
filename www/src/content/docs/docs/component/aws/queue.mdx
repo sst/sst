@@ -11,22 +11,55 @@ import InlineSection from '../../../../../components/tsdoc/InlineSection.astro';
 <div class="tsdoc">
 
 <Section type="about">
-The `Queue` component lets you add an [AWS SQS Queue](https://aws.amazon.com/sqs/) to
-your app.
+The `Queue` component lets you add a serverless queue to your app. It uses [Amazon SQS](https://aws.amazon.com/sqs/).
 
-#### Minimal example
+#### Create a queue
 
 ```ts
-new sst.aws.Queue("MyQueue");
+const myQueue = new sst.aws.Queue("MyQueue");
 ```
 
 #### Make it a FIFO queue
+
+You can optionally make it a FIFO queue.
 
 ```ts {2}
 new sst.aws.Queue("MyQueue", {
   fifo: true
 });
 ```
+
+#### Add a subscriber
+
+```ts
+myQueue.subscribe("src/subscriber.handler");
+```
+
+#### Link the queue to a resource
+
+You can link the secret to other resources, like a function or your Next.js app.
+
+```ts
+new sst.aws.Nextjs("Web", {
+  link: [myQueue]
+});
+```
+
+Once linked, you can send messages to the queue from your function code.
+
+```ts title="app/page.tsx" {1,7}
+import { Resource } from "sst";
+import { SQSClient, SendMessageCommand } from "@aws-sdk/client-sqs";
+
+const sqs = new SQSClient({});
+
+await sqs.send(new SendMessageCommand({
+  QueueUrl: Resource.MyQueue.url,
+  MessageBody: "Hello from Next.js!"
+}));
+```
+
+This is using the the `@aws-sdk/client-sqs` package.
 </Section>
 
 ---
@@ -83,11 +116,17 @@ myQueue
   .subscribe("src/subscriber2.handler");
 ```
 
-Customize the subscription.
+Add a filter to the subscription.
 
 ```js
 myQueue.subscribe("src/subscriber.handler", {
-  batchSize: 5
+  filters: [
+    {
+      body: {
+        RequestCode: ["BBBB"]
+      }
+    }
+  ]
 });
 ```
 
@@ -212,14 +251,16 @@ Transform the SQS Queue resource.
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Record</code><code class="symbol">&lt;</code><code class="primitive">string</code>, <code class="primitive">any</code><code class="symbol">&gt;</code><code class="symbol">&gt;</code><code class="symbol">[]</code><code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
-Filter the records processed by the `subscriber` function.
+Filter the records that'll be processed by the `subscriber` function.
 
 :::tip
-Learn more about the [filter rule syntax](https://docs.aws.amazon.com/lambda/latest/dg/invocation-eventfiltering.html#filtering-syntax).
+You can pass in up to 5 different filters.
 :::
 
+You can pass in up to 5 different filter policies. These will logically ORer together. Meaning that if any single policy matches, the message will be processed.
+
 For example, if you Queue contains records in this JSON format.
-```j
+```js
 {
   RecordNumber: 0000,
   RequestCode: "AAAA",
@@ -254,6 +295,10 @@ And to process only those records where `RecordNumber` greater than `9999`.
   ]
 }
 ```
+
+:::tip
+Learn more about the [filter rule syntax](https://docs.aws.amazon.com/lambda/latest/dg/invocation-eventfiltering.html#filtering-syntax).
+:::
 </Segment>
 ### transform?
 <Segment>
