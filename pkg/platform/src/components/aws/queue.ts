@@ -38,15 +38,17 @@ export interface QueueArgs {
 
 export interface QueueSubscribeArgs {
   /**
-   * Filter the records processed by the `subscriber` function.
+   * Filter the records that'll be processed by the `subscriber` function.
    *
    * :::tip
-   * Learn more about the [filter rule syntax](https://docs.aws.amazon.com/lambda/latest/dg/invocation-eventfiltering.html#filtering-syntax).
+   * You can pass in up to 5 different filters.
    * :::
+   *
+   * You can pass in up to 5 different filter policies. These will logically ORer together. Meaning that if any single policy matches, the message will be processed.
    *
    * @example
    * For example, if you Queue contains records in this JSON format.
-   * ```j
+   * ```js
    * {
    *   RecordNumber: 0000,
    *   RequestCode: "AAAA",
@@ -81,6 +83,10 @@ export interface QueueSubscribeArgs {
    *   ]
    * }
    * ```
+   *
+   * :::tip
+   * Learn more about the [filter rule syntax](https://docs.aws.amazon.com/lambda/latest/dg/invocation-eventfiltering.html#filtering-syntax).
+   * :::
    */
   filters?: Input<Input<Record<string, any>>[]>;
   /**
@@ -96,24 +102,57 @@ export interface QueueSubscribeArgs {
 }
 
 /**
- * The `Queue` component lets you add an [AWS SQS Queue](https://aws.amazon.com/sqs/) to
- * your app.
+ * The `Queue` component lets you add a serverless queue to your app. It uses [Amazon SQS](https://aws.amazon.com/sqs/).
  *
  * @example
  *
- * #### Minimal example
+ * #### Create a queue
  *
  * ```ts
- * new sst.aws.Queue("MyQueue");
+ * const myQueue = new sst.aws.Queue("MyQueue");
  * ```
  *
  * #### Make it a FIFO queue
+ *
+ * You can optionally make it a FIFO queue.
  *
  * ```ts {2}
  * new sst.aws.Queue("MyQueue", {
  *   fifo: true
  * });
  * ```
+ *
+ * #### Add a subscriber
+ *
+ * ```ts
+ * myQueue.subscribe("src/subscriber.handler");
+ * ```
+ *
+ * #### Link the queue to a resource
+ *
+ * You can link the secret to other resources, like a function or your Next.js app.
+ *
+ * ```ts
+ * new sst.aws.Nextjs("Web", {
+ *   link: [myQueue]
+ * });
+ * ```
+ *
+ * Once linked, you can send messages to the queue from your function code.
+ *
+ * ```ts title="app/page.tsx" {1,6}
+ * import { Resource } from "sst";
+ * import { SQSClient, SendMessageCommand } from "@aws-sdk/client-sqs";
+ *
+ * const sqs = new SQSClient({});
+ *
+ * await sqs.send(new SendMessageCommand({
+ *   QueueUrl: Resource.MyQueue.url,
+ *   MessageBody: "Hello from Next.js!"
+ * }));
+ * ```
+ *
+ * This is using the the `@aws-sdk/client-sqs` package.
  */
 export class Queue
   extends Component
@@ -195,11 +234,17 @@ export class Queue
    *   .subscribe("src/subscriber2.handler");
    * ```
    *
-   * Customize the subscription.
+   * Add a filter to the subscription.
    *
    * ```js
    * myQueue.subscribe("src/subscriber.handler", {
-   *   batchSize: 5
+   *   filters: [
+   *     {
+   *       body: {
+   *         RequestCode: ["BBBB"]
+   *       }
+   *     }
+   *   ]
    * });
    * ```
    *

@@ -121,7 +121,7 @@ export interface BucketSubscribeArgs {
    */
   filterSuffix?: Input<string>;
   /**
-   * [Transform](/docs/components#transform/) how this subscription creates its underlying
+   * [Transform](/docs/components#transform/) how this notification creates its underlying
    * resources.
    */
   transform?: {

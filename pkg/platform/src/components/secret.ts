@@ -27,7 +27,7 @@ export class SecretMissingError extends VisibleError {
  * const mySecret = new sst.Secret("MySecret");
  * ```
  *
- * ### Set a placeholder
+ * #### Set a placeholder
  *
  * You can optionally set a `placeholder`.
  *
@@ -57,19 +57,17 @@ export class SecretMissingError extends VisibleError {
  *
  * #### Link the secret to a resource
  *
- * You can link the secret to other resources. For example, to a Function.
+ * You can link the secret to other resources, like a function or your Next.js app.
  *
  * ```ts
- * new sst.Function(this, "MyFunction", {
- *   handler: "src/lambda.handler",
+ * new sst.aws.Nextjs("Web", {
  *   link: [mySecret]
  * });
  * ```
  *
- * #### Use the secret in your function code
  * Once linked, you can use the secret in your function code.
  *
- * ```ts title="src/lambda.ts"
+ * ```ts title="app/page.tsx"
  * import { Resource } from "sst";
  *
  * console.log(Resource.MySecret.value);
