@@ -367,7 +367,7 @@ async function main() {
       return [
         ``,
         `<InlineSection>`,
-        `**Default** ${renderType(prop.type!)}`,
+        `**Returns** ${renderType(prop.type!)}`,
         `</InlineSection>`,
       ];
     }
