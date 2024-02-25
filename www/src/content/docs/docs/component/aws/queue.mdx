@@ -91,11 +91,12 @@ myQueue.subscribe("src/subscriber.handler", {
 });
 ```
 
-Customize the subscriber function.
+Customize the `subscriber` function.
+
 ```js
-subscribe({
+myQueue.subscribe({
   handler: "src/subscriber.handler",
-  timeout: "60 seconds",
+  timeout: "60 seconds"
 });
 ```
 </Segment>
@@ -325,7 +326,7 @@ Ranges between a maximum of 1000 and a minimum of 2.
 <InlineSection>
 **Default** <code class="primitive">false</code>
 </InlineSection>
-Allow functions to return partially successful responses for a batch of records.
+Allow the `subscriber` to return partially successful responses for a batch of records.
 
 </Segment>
 </div>

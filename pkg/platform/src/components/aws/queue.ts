@@ -121,7 +121,7 @@ export interface QueueSubscribeArgs {
    */
   maxConcurrency?: Input<number>;
   /**
-   * Allow functions to return partially successful responses for a batch of records.
+   * Allow the `subscriber` to return partially successful responses for a batch of records.
    * @default `false`
    */
   reportBatchItemFailures?: Input<boolean>;
@@ -236,10 +236,11 @@ export class Queue
    * ```
    *
    * Customize the subscriber function.
+   *
    * ```js
-   * subscribe({
+   * myQueue.subscribe({
    *   handler: "src/subscriber.handler",
-   *   timeout: "60 seconds",
+   *   timeout: "60 seconds"
    * });
    * ```
    */

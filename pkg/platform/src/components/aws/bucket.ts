@@ -323,7 +323,7 @@ export class Bucket
    * });
    * ```
    *
-   * Customize the `subscriber` function.
+   * Customize the subscriber function.
    *
    * ```js
    * myBucket.subscribe({
