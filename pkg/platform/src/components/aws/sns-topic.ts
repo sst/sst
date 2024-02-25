@@ -88,6 +88,16 @@ export interface SnsTopicSubscribeArgs {
    * ```
    */
   filters?: Input<Record<string, any>>;
+  /**
+   * [Transform](/docs/components#transform/) how this subscription creates its underlying
+   * resources.
+   */
+  transform?: {
+    /**
+     * Transform the SNS Topic Subscription resource.
+     */
+    subscription?: Transform<aws.sns.TopicSubscriptionArgs>;
+  };
 }
 
 /**
@@ -220,12 +230,12 @@ export class SnsTopic
     );
     new aws.sns.TopicSubscription(
       `${parentName}Subscription${id}`,
-      {
+      transform(args?.transform?.subscription, {
         topic: this.topic.arn,
         protocol: "lambda",
         endpoint: fn.arn,
         filterPolicy: JSON.stringify(args.filters ?? {}),
-      },
+      }),
       { parent, dependsOn: [permission] },
     );
 

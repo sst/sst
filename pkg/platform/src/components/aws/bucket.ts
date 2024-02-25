@@ -120,6 +120,16 @@ export interface BucketSubscribeArgs {
    * ```
    */
   filterSuffix?: Input<string>;
+  /**
+   * [Transform](/docs/components#transform/) how this subscription creates its underlying
+   * resources.
+   */
+  transform?: {
+    /**
+     * Transform the S3 Bucket Notification resource.
+     */
+    notification?: Transform<aws.s3.BucketNotificationArgs>;
+  };
 }
 
 /**
@@ -391,7 +401,7 @@ export class Bucket
       );
       new aws.s3.BucketNotification(
         `${parentName}Notification${id}`,
-        {
+        transform(args?.transform?.notification, {
           bucket: this.bucket.bucket,
           lambdaFunctions: [
             {
@@ -402,7 +412,7 @@ export class Bucket
               filterSuffix: args?.filterSuffix,
             },
           ],
-        },
+        }),
         { parent, dependsOn: [permission] },
       );
     });
