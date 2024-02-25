@@ -66,6 +66,7 @@ subscribe(subscriber, args?)
 - <p><code class="key">args?</code> [<code class="type">BucketSubscribeArgs</code>](#bucketsubscribeargs)</p>
 </Section>
 Subscribes to the S3 Bucket.
+
 Subscribe to all S3 events.
 ```js
 subscribe("src/subscriber.handler");
@@ -226,7 +227,7 @@ Transform the IAM Policy that's attached to the Bucket.
 </Section>
 
 <InlineSection>
-**Default** All events
+**Default** All S3 events
 </InlineSection>
 The S3 event types that will trigger the notification.
 
@@ -243,8 +244,9 @@ The S3 event types that will trigger the notification.
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
-S3 object key prefix filter rules to determine which objects trigger this event.
+An S3 object key prefix that will trigger the notification.
 
+All the objects in the `images/` folder.
 ```js
 {
   filterPrefix: "images/"
@@ -258,8 +260,9 @@ S3 object key prefix filter rules to determine which objects trigger this event.
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
-S3 object key suffix filter rules to determine which objects trigger this event.
+An S3 object key suffix that will trigger the notification.
 
+All the objects with the `.jpg` suffix.
 ```js
 {
  filterSuffix: ".jpg"

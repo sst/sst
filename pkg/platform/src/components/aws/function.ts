@@ -795,8 +795,7 @@ export interface FunctionArgs {
  *
  * #### Bundling
  *
- * By default, SST will bundle your function code using [esbuild](https://esbuild.github.io/).
- *  You can customize this using the `nodejs` property.
+ * Customize how SST uses [esbuild](https://esbuild.github.io/) to bundle your worker code with the `nodejs` property.
  *
  * ```ts
  * new sst.aws.Function("MyFunction", {
