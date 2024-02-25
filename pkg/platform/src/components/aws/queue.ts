@@ -9,10 +9,10 @@ import { VisibleError } from "../error";
 
 export interface QueueArgs {
   /**
-   * FIFO (First-In-First-Out) queues are designed to guarantee that messages are processed exactly once, in the order that they are sent.
+   * FIFO or _first-in-first-out_ queues are designed to guarantee that messages are processed exactly once and in the order that they are sent.
    *
-   * :::note
-   * Changing a standard queue to a FIFO queue or the other way around will result in the destruction and recreation of the queue.
+   * :::caution
+   * Changing a standard queue to a FIFO queue (or the other way around) will cause the queue to be destroyed and recreated.
    * :::
    *
    * @default `false`
@@ -38,33 +38,34 @@ export interface QueueArgs {
 
 export interface QueueSubscribeArgs {
   /**
-   * The largest number of records that AWS Lambda will retrieve from your event
-   * source at the time of invoking your function. Your function receives an
-   * event with all the retrieved records.
+   * The largest number of records that the `subscriber` function will retrieve from your queue a time. The function will then receives an event with all the retrieved records.
    *
-   * Valid Range:
-   * - Minimum value of 1.
-   * - Maximum value of 10.
+   * Ranges between a maximum of 10 and a minimum of 1.
    *
-   * If `maxBatchingWindow` is configured, this value can go up to 10,000.
+   * If `maxBatchingWindow` is configured, this value can go up to 10000.
    *
    * @default `10`
    */
   batchSize?: Input<number>;
   /**
-   * Add filter criteria option.
-   * @default No filters
+   * Filter the records processed by the `subscriber` function.
+   *
+   * :::tip
+   * Learn more about the [filter rule syntax](https://docs.aws.amazon.com/lambda/latest/dg/invocation-eventfiltering.html#filtering-syntax).
+   * :::
+   *
    * @example
-   * Suppose your Amazon SQS queue contains messages in the following JSON format.
-   * ```js
+   * For example, if you Queue contains records in this JSON format.
+   * ```j
    * {
    *   RecordNumber: 0000,
-   *   TimeStamp: "yyyy-mm-ddThh:mm:ss",
-   *   RequestCode: "AAAA"
+   *   RequestCode: "AAAA",
+   *   TimeStamp: "yyyy-mm-ddThh:mm:ss"
    * }
    * ```
    *
    * To process only those records where the `RequestCode` is `BBBB`.
+
    * ```js
    * {
    *   filters: [
@@ -78,6 +79,7 @@ export interface QueueSubscribeArgs {
    * ```
    *
    * And to process only those records where `RecordNumber` greater than `9999`.
+   *
    * ```js
    * {
    *   filters: [
@@ -92,13 +94,11 @@ export interface QueueSubscribeArgs {
    */
   filters?: Input<Input<Record<string, any>>[]>;
   /**
-   * The maximum amount of time to gather records before invoking the function.
+   * The maximum amount of time to wait and collect records before invoking the `subscriber`.
    *
-   * Valid Range:
-   * - Minimum value of 0 seconds.
-   * - Maximum value of 300 seconds.
+   * Ranges between a maximum of 300 seconds and a minimum of 0. Where, 0  means the `subscriber` is called right away.
    *
-   * @default `0 seconds`
+   * @default `"0 seconds"`
    * @example
    * ```js
    * {
@@ -108,13 +108,16 @@ export interface QueueSubscribeArgs {
    */
   maxBatchingWindow?: Input<DurationMinutes>;
   /**
-   * The maximum concurrency setting limits the number of concurrent instances
-   * of the function that an Amazon SQS event source can invoke.
+   * The maximum number of concurrent instances of the `subscriber` function that are
+   * invoked by the Amazon SQS event.
    *
-   * Valid Range:
-   * - Minimum value of 2.
-   * - Maximum value of 1000.
-   * @default If not set, Lambda can scale up to your account's total concurrency quota, which is 1,000 by default.
+   * :::note
+   * The default is set to your account's Lambda concurrency limit. This is 1000 for most accounts.
+   * :::
+   *
+   * Ranges between a maximum of 1000 and a minimum of 2.
+   *
+   * @default `1000`
    */
   maxConcurrency?: Input<number>;
   /**
@@ -136,11 +139,11 @@ export interface QueueSubscribeArgs {
  * new sst.aws.Queue("MyQueue");
  * ```
  *
- * #### FIFO queue
+ * #### Make it a FIFO queue
  *
  * ```ts {2}
  * new sst.aws.Queue("MyQueue", {
- *   fifo: true,
+ *   fifo: true
  * });
  * ```
  */
@@ -186,7 +189,7 @@ export class Queue
   }
 
   /**
-   * The URL of the SQS Queue.
+   * The SQS Queue URL.
    */
   public get url() {
     return this.queue.url;
@@ -205,17 +208,30 @@ export class Queue
   }
 
   /**
-   * Subscribes to the SQS Queue.
+   * Subscribe to this queue.
+   *
+   * @param subscriber The function that'll be notified.
+   * @param args Configure the subscription.
+   *
    * @example
    *
    * ```js
-   * subscribe("src/subscriber.handler");
+   * myQueue.subscribe("src/subscriber.handler");
+   * ```
+   *
+   * Add multiple subscribers.
+   *
+   * ```js
+   * myQueue
+   *   .subscribe("src/subscriber1.handler")
+   *   .subscribe("src/subscriber2.handler");
    * ```
    *
    * Customize the subscription.
+   *
    * ```js
-   * subscribe("src/subscriber.handler", {
-   *   batchSize: 5,
+   * myQueue.subscribe("src/subscriber.handler", {
+   *   batchSize: 5
    * });
    * ```
    *

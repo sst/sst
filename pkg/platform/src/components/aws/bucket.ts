@@ -287,7 +287,10 @@ export class Bucket
   }
 
   /**
-   * Subscribes to events from this bucket. The `subscriber` is a function that'll be called.
+   * Subscribes to events from this bucket.
+   *
+   * @param subscriber The function that'll be notified.
+   * @param args Configure the subscription.
    *
    * @example
    *
@@ -295,18 +298,35 @@ export class Bucket
    * myBucket.subscribe("src/subscriber.handler");
    * ```
    *
+   * Add multiple subscribers.
    *
+   * ```js
+   * myBucket
+   *   .subscribe("src/subscriber1.handler")
+   *   .subscribe("src/subscriber2.handler");
+   * ```
    *
    * Subscribe to specific S3 events.
+   *
    * ```js
-   * subscribe("src/subscriber.handler", {
-   *   events: ["s3:ObjectCreated:*", "s3:ObjectRemoved:*"],
+   * myBucket.subscribe("src/subscriber.handler", {
+   *   events: ["s3:ObjectCreated:*", "s3:ObjectRemoved:*"]
    * });
    * ```
    *
-   * Customize the subscriber function.
+   * Subscribe to specific S3 events from a specific folder.
+   *
    * ```js
-   * subscribe({
+   * myBucket.subscribe("src/subscriber.handler", {
+   *   filterPrefix: "images/",
+   *   events: ["s3:ObjectCreated:*", "s3:ObjectRemoved:*"]
+   * });
+   * ```
+   *
+   * Customize the `subscriber` function.
+   *
+   * ```js
+   * myBucket.subscribe({
    *   handler: "src/subscriber.handler",
    *   timeout: "60 seconds",
    * });
