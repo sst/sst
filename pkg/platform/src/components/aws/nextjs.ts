@@ -963,7 +963,11 @@ export class Nextjs extends Component implements Link.Linkable {
               _ignoreCodeChanges: $dev,
             },
             {
-              batchSize: 5,
+              transform: {
+                eventSourceMapping: (args) => {
+                  args.batchSize = 5;
+                },
+              },
             },
           );
           return queue;
@@ -1309,8 +1313,8 @@ if (event.rawPath) {
                 ],
                 "Effect": "Deny",
                 "Resources": [
-                  "${serverFunction.logGroupArn}",
-                  "${serverFunction.logGroupArn}:*",
+                  "${serverFunction.nodes.logGroup.arn}",
+                  "${serverFunction.nodes.logGroup.arn}:*",
                 ],
               }
             ]
