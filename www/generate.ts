@@ -155,6 +155,7 @@ async function main() {
         }
 
         lines.push(
+          ...renderReturnValue(m.signatures![0]),
           ...(renderDescription(m.signatures![0]) ?? []),
           ``,
           ...(renderExamples(m.signatures![0]) ?? []),
@@ -362,6 +363,15 @@ async function main() {
       ];
     }
 
+    function renderReturnValue(prop: TypeDoc.SignatureReflection) {
+      return [
+        ``,
+        `<InlineSection>`,
+        `**Default** ${renderType(prop.type!)}`,
+        `</InlineSection>`,
+      ];
+    }
+
     function renderNestedTypeList(
       prop: TypeDoc.DeclarationReflection | TypeDoc.SignatureReflection
     ) {
@@ -528,6 +538,8 @@ async function main() {
         Function: "function",
         FunctionArgs: "function",
         FunctionPermissionArgs: "function",
+        Queue: "queue",
+        SnsTopic: "sns-topic",
       }[type.name];
       if (externalModule) {
         const hash = type.name.endsWith("Args")

@@ -55,7 +55,12 @@ subscribe(subscriber, args)
 - <p><code class="key">subscriber</code> <code class="primitive">string</code><code class="symbol"> | </code>[<code class="type">FunctionArgs</code>](/docs/component/aws/function/#functionargs)</p>
 - <p><code class="key">args</code> [<code class="type">SnsTopicSubscribeArgs</code>](#snstopicsubscribeargs)</p>
 </Section>
+
+<InlineSection>
+**Default** [<code class="type">SnsTopic</code>](/docs/component/aws/sns-topic/)
+</InlineSection>
 Subscribes to the SNS Topic.
+
 ```js
 subscribe("src/subscriber.handler");
 ```

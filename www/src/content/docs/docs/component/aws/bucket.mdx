@@ -65,12 +65,17 @@ subscribe(subscriber, args?)
 - <p><code class="key">subscriber</code> <code class="primitive">string</code><code class="symbol"> | </code>[<code class="type">FunctionArgs</code>](/docs/component/aws/function/#functionargs)</p>
 - <p><code class="key">args?</code> [<code class="type">BucketSubscribeArgs</code>](#bucketsubscribeargs)</p>
 </Section>
-Subscribes to the S3 Bucket.
 
-Subscribe to all S3 events.
+<InlineSection>
+**Default** [<code class="type">Bucket</code>](/docs/component/aws/bucket/)
+</InlineSection>
+Subscribes to events from this bucket. The `subscriber` is a function that'll be called.
+
 ```js
-subscribe("src/subscriber.handler");
+myBucket.subscribe("src/subscriber.handler");
 ```
+
+
 
 Subscribe to specific S3 events.
 ```js
