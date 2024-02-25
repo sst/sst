@@ -27,7 +27,13 @@ export class SecretMissingError extends VisibleError {
  * const mySecret = new sst.Secret("MySecret");
  * ```
  *
- * Or, optionally set a `placeholder`.
+ * ### Set a placeholder
+ *
+ * You can optionally set a `placeholder`.
+ *
+ * :::tip
+ * Useful for cases where you might use a secret for values that aren't sensitive, so you can just set them in code.
+ * :::
  *
  * ```ts
  * const mySecret = new sst.Secret("MySecret", "my-secret-placeholder-value");
@@ -75,8 +81,8 @@ export class Secret extends Component implements Link.Linkable {
   private _placeholder?: string;
 
   /**
-   * @param name Name of the secret.
-   * @param placeholder Placeholder value of the secret.
+   * @param placeholder A placeholder value of the secret. This can be useful for cases where you might not be storing sensitive values.
+
    */
   constructor(name: string, placeholder?: string) {
     super(
@@ -112,10 +118,6 @@ export class Secret extends Component implements Link.Linkable {
 
   /**
    * The placeholder value of the secret.
-   *
-   * :::tip
-   * This can be useful for cases where you might use `sst.Secret` for values that aren't sensitive, so you can just set them in code.
-   * :::
    */
   public get placeholder() {
     return output(this._placeholder);

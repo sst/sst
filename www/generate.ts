@@ -156,6 +156,7 @@ async function main() {
 
         lines.push(
           ...(renderDescription(m.signatures![0]) ?? []),
+          ``,
           ...(renderExamples(m.signatures![0]) ?? []),
           `</Segment>`
         );

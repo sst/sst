@@ -171,8 +171,7 @@ export interface WorkerArgs {
  *
  * #### Bundling
  *
- * By default, SST will bundle your worker code using [esbuild](https://esbuild.github.io/).
- *  You can customize this using the `build` property.
+ * Customize how SST uses [esbuild](https://esbuild.github.io/) to bundle your worker code with the `build` property.
  *
  * ```ts
  * new sst.cloudflare.Worker("MyWorker", {

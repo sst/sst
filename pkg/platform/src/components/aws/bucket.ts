@@ -59,7 +59,7 @@ export interface BucketArgs {
 export interface BucketSubscribeArgs {
   /**
    * The S3 event types that will trigger the notification.
-   * @default All events
+   * @default All S3 events
    * @example
    * ```js
    * {
@@ -99,8 +99,9 @@ export interface BucketSubscribeArgs {
     >[]
   >;
   /**
-   * S3 object key prefix filter rules to determine which objects trigger this event.
+   * An S3 object key prefix that will trigger the notification.
    * @example
+   * All the objects in the `images/` folder.
    * ```js
    * {
    *   filterPrefix: "images/"
@@ -109,8 +110,9 @@ export interface BucketSubscribeArgs {
    */
   filterPrefix?: Input<string>;
   /**
-   * S3 object key suffix filter rules to determine which objects trigger this event.
+   * An S3 object key suffix that will trigger the notification.
    * @example
+   * All the objects with the `.jpg` suffix.
    * ```js
    * {
    *  filterSuffix: ".jpg"
@@ -285,13 +287,15 @@ export class Bucket
   }
 
   /**
-   * Subscribes to the S3 Bucket.
+   * Subscribes to events from this bucket. The `subscriber` is a function that'll be called.
+   *
    * @example
    *
-   * Subscribe to all S3 events.
    * ```js
-   * subscribe("src/subscriber.handler");
+   * myBucket.subscribe("src/subscriber.handler");
    * ```
+   *
+   *
    *
    * Subscribe to specific S3 events.
    * ```js
