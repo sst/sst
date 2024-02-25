@@ -38,16 +38,6 @@ export interface QueueArgs {
 
 export interface QueueSubscribeArgs {
   /**
-   * The largest number of records that the `subscriber` function will retrieve from your queue a time. The function will then receives an event with all the retrieved records.
-   *
-   * Ranges between a maximum of 10 and a minimum of 1.
-   *
-   * If `maxBatchingWindow` is configured, this value can go up to 10000.
-   *
-   * @default `10`
-   */
-  batchSize?: Input<number>;
-  /**
    * Filter the records processed by the `subscriber` function.
    *
    * :::tip
@@ -94,37 +84,15 @@ export interface QueueSubscribeArgs {
    */
   filters?: Input<Input<Record<string, any>>[]>;
   /**
-   * The maximum amount of time to wait and collect records before invoking the `subscriber`.
-   *
-   * Ranges between a maximum of 300 seconds and a minimum of 0. Where, 0  means the `subscriber` is called right away.
-   *
-   * @default `"0 seconds"`
-   * @example
-   * ```js
-   * {
-   *   maxBatchingWindow: "60 seconds"
-   * }
-   * ```
+   * [Transform](/docs/components#transform/) how this subscription creates its underlying
+   * resources.
    */
-  maxBatchingWindow?: Input<DurationMinutes>;
-  /**
-   * The maximum number of concurrent instances of the `subscriber` function that are
-   * invoked by the Amazon SQS event.
-   *
-   * :::note
-   * The default is set to your account's Lambda concurrency limit. This is 1000 for most accounts.
-   * :::
-   *
-   * Ranges between a maximum of 1000 and a minimum of 2.
-   *
-   * @default `1000`
-   */
-  maxConcurrency?: Input<number>;
-  /**
-   * Allow the `subscriber` to return partially successful responses for a batch of records.
-   * @default `false`
-   */
-  reportBatchItemFailures?: Input<boolean>;
+  transform?: {
+    /**
+     * Transform the Lambda Event Source Mapping resource.
+     */
+    eventSourceMapping?: Transform<aws.lambda.EventSourceMappingArgs>;
+  };
 }
 
 /**
@@ -279,10 +247,9 @@ export class Queue
     );
     new aws.lambda.EventSourceMapping(
       `${parentName}EventSourceMapping`,
-      {
+      transform(args?.transform?.eventSourceMapping, {
         eventSourceArn: this.arn,
         functionName: fn.name,
-        batchSize: args?.batchSize,
         filterCriteria: args?.filters && {
           filters: output(args.filters).apply((filters) =>
             filters.map((filter) => ({
@@ -290,16 +257,7 @@ export class Queue
             })),
           ),
         },
-        maximumBatchingWindowInSeconds:
-          args?.maxBatchingWindow &&
-          output(args.maxBatchingWindow).apply((v) => toSeconds(v)),
-        scalingConfig: {
-          maximumConcurrency: args?.maxConcurrency,
-        },
-        functionResponseTypes: output(args?.reportBatchItemFailures).apply(
-          (v) => (v ? ["ReportBatchItemFailures"] : []),
-        ),
-      },
+      }),
       { parent },
     );
 

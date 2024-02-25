@@ -91,7 +91,7 @@ myQueue.subscribe("src/subscriber.handler", {
 });
 ```
 
-Customize the `subscriber` function.
+Customize the subscriber function.
 
 ```js
 myQueue.subscribe({
@@ -205,24 +205,6 @@ Transform the SQS Queue resource.
 </Segment>
 
 ## QueueSubscribeArgs
-### batchSize?
-<Segment>
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">number</code><code class="symbol">&gt;</code>
-</InlineSection>
-</Section>
-
-<InlineSection>
-**Default** <code class="primitive">10</code>
-</InlineSection>
-The largest number of records that the `subscriber` function will retrieve from your queue a time. The function will then receives an event with all the retrieved records.
-
-Ranges between a maximum of 10 and a minimum of 1.
-
-If `maxBatchingWindow` is configured, this value can go up to 10000.
-
-</Segment>
 ### filters?
 <Segment>
 <Section type="parameters">
@@ -273,60 +255,26 @@ And to process only those records where `RecordNumber` greater than `9999`.
 }
 ```
 </Segment>
-### maxBatchingWindow?
+### transform?
 <Segment>
 <Section type="parameters">
 <InlineSection>
-**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="symbol">&ldquo;</code><code class="primitive">$\{number\} second</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">$\{number\} seconds</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">$\{number\} minute</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">$\{number\} minutes</code><code class="symbol">&rdquo;</code><code class="symbol">&gt;</code>
+**Type** <code class="primitive">Object</code>
 </InlineSection>
+- <p>[<code class="key">eventSourceMapping?</code>](#transform-eventsourcemapping)</p>
 </Section>
-
-<InlineSection>
-**Default** <code class="primitive">"0 seconds"</code>
-</InlineSection>
-The maximum amount of time to wait and collect records before invoking the `subscriber`.
-
-Ranges between a maximum of 300 seconds and a minimum of 0. Where, 0  means the `subscriber` is called right away.
-
-```js
-{
-  maxBatchingWindow: "60 seconds"
-}
-```
-</Segment>
-### maxConcurrency?
-<Segment>
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">number</code><code class="symbol">&gt;</code>
-</InlineSection>
-</Section>
-
-<InlineSection>
-**Default** <code class="primitive">1000</code>
-</InlineSection>
-The maximum number of concurrent instances of the `subscriber` function that are
-invoked by the Amazon SQS event.
-
-:::note
-The default is set to your account's Lambda concurrency limit. This is 1000 for most accounts.
-:::
-
-Ranges between a maximum of 1000 and a minimum of 2.
+[Transform](/docs/components#transform/) how this subscription creates its underlying
+resources.
 
 </Segment>
-### reportBatchItemFailures?
+<NestedTitle id="transform-eventsourcemapping" Tag="h4" parent="transform.">eventSourceMapping?</NestedTitle>
 <Segment>
 <Section type="parameters">
 <InlineSection>
-**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">boolean</code><code class="symbol">&gt;</code>
+**Type** [<code class="type">EventSourceMappingArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/lambda/eventsourcemapping/#inputs)<code class="symbol"> | </code><code class="symbol">(</code><code class="primitive">args</code><code class="symbol">: </code>[<code class="type">EventSourceMappingArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/lambda/eventsourcemapping/#inputs)<code class="symbol"> => </code>[<code class="type">EventSourceMappingArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/lambda/eventsourcemapping/#inputs)<code class="symbol"> | </code><code class="primitive">void</code><code class="symbol">)</code>
 </InlineSection>
 </Section>
-
-<InlineSection>
-**Default** <code class="primitive">false</code>
-</InlineSection>
-Allow the `subscriber` to return partially successful responses for a batch of records.
+Transform the Lambda Event Source Mapping resource.
 
 </Segment>
 </div>
