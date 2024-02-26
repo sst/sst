@@ -327,7 +327,11 @@ export interface SsrSiteArgs {
         /**
          * Configure if `sst deploy` should wait for the CloudFront cache invalidation to finish.
          *
-         * Waiting for the CloudFront cache invalidation process to finish ensures that the new content will be served once the deploy finishes. However, this process can sometimes take more than 5 mins. For non-prod environments it might make sense to pass in `false`. That'll skip waiting for the cache to invalidate and speed up the deploys.
+         * :::tip
+         * For non-prod environments it might make sense to pass in `false`.
+         * :::
+         *
+         * Waiting for the CloudFront cache invalidation process to finish ensures that the new content will be served once the deploy finishes. However, this process can sometimes take more than 5 mins.
          * @default `false`
          * @example
          * ```js
@@ -343,7 +347,6 @@ export interface SsrSiteArgs {
          * The paths to invalidate.
          *
          * You can either pass in an array of glob patterns to invalidate specific files. Or you can use one of these built-in options:
-         * - `none`: Nothing will be invalidated.
          * - `all`: All files will be invalidated when any file changes.
          * - `versioned`: Only versioned files will be invalidated when versioned files change.
          *

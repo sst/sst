@@ -262,7 +262,14 @@ export interface FunctionArgs {
    */
   handler: Input<string>;
   /**
-   * The amount of time that Lambda allows a function to run before stopping it.
+   * The maximum amount of time the function can run. The minimum timeout is 1 second and the maximum is 900 seconds or 15 minutes.
+   *
+   * :::note
+   * If a function is connected to another service, the request will time out based on the service's limits.
+   * :::
+   *
+   * While the maximum timeout is 15 minutes, if a function is connected to other services, it'll time out based on those limits. API Gateway for example has a timeout of 30 seconds. So even if the function has a timeout of 15 minutes, the API request will time out after 30 seconds.
+   *
    * @default `"20 seconds"`
    * @example
    * ```js

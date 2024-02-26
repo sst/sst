@@ -13,7 +13,7 @@ export module Link {
     runtime.registerStackTransformation((args) => {
       const resource = args.resource;
       process.nextTick(() => {
-        if (Link.isLinkable(resource)) {
+        if (Link.isLinkable(resource) && !args.opts.parent) {
           // Ensure linkable resources have unique names. This includes all
           // SST components and non-SST components that are linkable.
           if (links[args.name]) {

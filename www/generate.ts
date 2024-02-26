@@ -38,7 +38,7 @@ async function main() {
       return [
         `---`,
         `title: ${useClassName()}`,
-        `description: Reference for the \`${useClassProviderNamespace()}.${useClassName()}\` component.`,
+        `description: Reference doc for the \`${useClassProviderNamespace()}.${useClassName()}\` component.`,
         `---`,
       ];
     }

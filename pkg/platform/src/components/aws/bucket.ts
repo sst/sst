@@ -141,7 +141,7 @@ export interface BucketSubscribeArgs {
  * #### Minimal example
  *
  * ```ts
- * new sst.aws.Bucket("MyBucket");
+ * const myBucket = new sst.aws.Bucket("MyBucket");
  * ```
  *
  * #### Public read access
@@ -152,6 +152,36 @@ export interface BucketSubscribeArgs {
  * new sst.aws.Bucket("MyBucket", {
  *   public: true
  * });
+ * ```
+ *
+ * #### Add a subscriber
+ *
+ * ```ts
+ * myBucket.subscribe("src/subscriber.handler");
+ * ```
+ *
+ * #### Link the bucket to a resource
+ *
+ * You can link the bucket to other resources, like a function or your Next.js app.
+ *
+ * ```ts
+ * new sst.aws.Nextjs("Web", {
+ *   link: [myBucket]
+ * });
+ * ```
+ *
+ * Once linked, you can generate a pre-signed URL to upload files in your app.
+ *
+ * ```ts title="app/page.tsx" {1,7}
+ * import { Resource } from "sst";
+ * import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+ * import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
+ *
+ * const command = new PutObjectCommand({
+ *    Key: "file.txt",
+ *    Bucket: Resource.MyBucket.name
+ *  });
+ *  console.log(await getSignedUrl(new S3Client({}), command));
  * ```
  */
 export class Bucket

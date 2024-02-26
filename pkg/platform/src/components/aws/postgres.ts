@@ -7,7 +7,8 @@ import { Input } from "../input.js";
 type ACU = `${number} ACU`;
 
 function parseACU(acu: ACU) {
-  return parseInt(acu.split(" ")[0]);
+  const result = parseFloat(acu.split(" ")[0]);
+  return result;
 }
 
 export interface PostgresArgs {
@@ -114,7 +115,7 @@ export interface PostgresArgs {
  * #### Minimal example
  *
  * ```js
- * new sst.aws.Postgres("MyDatabase");
+ * const myDatabase = new sst.aws.Postgres("MyDatabase");
  * ```
  *
  * #### Change the scaling config
@@ -125,6 +126,30 @@ export interface PostgresArgs {
  *     min: "2 ACU",
  *     max: "128 ACU"
  *   }
+ * });
+ * ```
+ *
+ * #### Link to a resource
+ *
+ * You can link your database to other resources, like a function or your Next.js app.
+ *
+ * ```ts
+ * new sst.aws.Nextjs("Web", {
+ *   link: [myDatabase]
+ * });
+ * ```
+ *
+ * Once linked, you can connect to it from your function code.
+ *
+ * ```ts title="app/page.tsx" {1,6,7,8}
+ * import { Resource } from "sst";
+ * import { drizzle } from "drizzle-orm/aws-data-api/pg";
+ * import { RDSDataClient } from "@aws-sdk/client-rds-data";
+ *
+ * drizzle(new RDSDataClient({}), {
+ *   database: Resource.MyDatabase.database,
+ *   secretArn: Resource.MyDatabase.secretArn,
+ *   resourceArn: Resource.MyDatabase.clusterArn
  * });
  * ```
  */

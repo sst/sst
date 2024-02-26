@@ -203,6 +203,12 @@ export interface NextjsArgs extends SsrSiteArgs {
    * :::
    * @default `&lcub;paths: "all", wait: false&rcub;`
    * @example
+   * Turn off invalidations.
+   * ```js
+   * {
+   *   invalidation: false
+   * }
+   * ```
    * Wait for all paths to be invalidated.
    * ```js
    * {

@@ -1,6 +1,6 @@
 ---
 title: Cron
-description: Reference for the `sst.aws.Cron` component.
+description: Reference doc for the `sst.aws.Cron` component.
 ---
 
 import Segment from '../../../../../components/tsdoc/Segment.astro';
@@ -14,14 +14,26 @@ import InlineSection from '../../../../../components/tsdoc/InlineSection.astro';
 The `Cron` component lets you add cron jobs to your app.
 It uses [Amazon Event Bus](https://docs.aws.amazon.com/eventbridge/latest/userguide/eb-event-bus.html).
 
-#### Example
+#### Minimal example
 
 Pass in a `schedule` and a `job` function that'll be executed.
 
 ```ts
 new sst.aws.Cron("MyCronJob", {
   job: "src/cron.handler",
+  schedule: "rate(1 minute)"
+});
+```
+
+#### Customize the function
+
+```js
+new sst.aws.Cron("MyCronJob", {
   schedule: "rate(1 minute)",
+  job: {
+    handler: "src/cron.handler",
+    timeout: "60 seconds"
+  }
 });
 ```
 </Section>

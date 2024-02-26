@@ -75,14 +75,26 @@ export interface CronArgs {
  * It uses [Amazon Event Bus](https://docs.aws.amazon.com/eventbridge/latest/userguide/eb-event-bus.html).
  *
  * @example
- * #### Example
+ * #### Minimal example
  *
  * Pass in a `schedule` and a `job` function that'll be executed.
  *
  * ```ts
  * new sst.aws.Cron("MyCronJob", {
  *   job: "src/cron.handler",
+ *   schedule: "rate(1 minute)"
+ * });
+ * ```
+ *
+ * #### Customize the function
+ *
+ * ```js
+ * new sst.aws.Cron("MyCronJob", {
  *   schedule: "rate(1 minute)",
+ *   job: {
+ *     handler: "src/cron.handler",
+ *     timeout: "60 seconds"
+ *   }
  * });
  * ```
  */
