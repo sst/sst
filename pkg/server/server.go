@@ -12,6 +12,7 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/sst/ion/internal/util"
 	"github.com/sst/ion/pkg/project"
 	"github.com/sst/ion/pkg/project/provider"
 	"github.com/sst/ion/pkg/server/bus"
@@ -159,9 +160,8 @@ func (s *Server) Start(parentContext context.Context) error {
 
 	port, err := findAvailablePort()
 	if err != nil {
-		return err
+		return util.NewReadableError("There is already an instance of sst running")
 	}
-	port = 13557
 	s.server.Addr = fmt.Sprintf("0.0.0.0:%d", port)
 	slog.Info("server", "addr", s.server.Addr)
 
@@ -230,7 +230,7 @@ func (s *Server) broadcast(event *Event) {
 }
 
 func findAvailablePort() (int, error) {
-	listener, err := net.Listen("tcp", "localhost:0")
+	listener, err := net.Listen("tcp", "localhost:13557")
 	if err != nil {
 		return 0, err
 	}
