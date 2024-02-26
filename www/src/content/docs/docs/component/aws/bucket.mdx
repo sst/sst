@@ -57,7 +57,7 @@ const command = new PutObjectCommand({
    Key: "file.txt",
    Bucket: Resource.MyBucket.name
  });
- console.log(await getSignedUrl(new S3Client({}), command));
+ await getSignedUrl(new S3Client({}), command);
 ```
 </Section>
 

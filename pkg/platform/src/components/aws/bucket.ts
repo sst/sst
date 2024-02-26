@@ -181,7 +181,7 @@ export interface BucketSubscribeArgs {
  *    Key: "file.txt",
  *    Bucket: Resource.MyBucket.name
  *  });
- *  console.log(await getSignedUrl(new S3Client({}), command));
+ *  await getSignedUrl(new S3Client({}), command);
  * ```
  */
 export class Bucket

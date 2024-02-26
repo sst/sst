@@ -14,58 +14,57 @@ import { hashStringToPrettyString, sanitizeToPascalCase } from "../naming";
 
 export interface DynamoArgs {
   /**
-   * An object defining the fields of the table. Key is the name of the field and the value is the type.
+   * An object defining the fields of the table that'll be used to create indexes. The key is the name of the field and the value is the type.
+   *
+   * :::note
+   * You don't need to define all your fields here, just the ones you want to use for indexes.
+   * :::
+   *
+   * While you can have fields field types other than `string`, `number`, and `binary`; you can only use these types for your indexes.
    *
    * @example
    * ```js
    * {
    *   fields: {
    *     userId: "string",
-   *     noteId: "string",
+   *     noteId: "string"
    *   }
    * }
    * ```
    */
   fields: Input<Record<string, "string" | "number" | "binary">>;
   /**
-   * Define the table's primary index.
+   * Define the table's primary index. You can only have one primary index.
    *
    * @example
    * ```js
    * {
-   *   fields: {
-   *     userId: "string",
-   *     noteId: "string",
-   *   },
-   *   primaryIndex: { hashKey: "userId", rangeKey: "noteId" },
+   *   primaryIndex: { hashKey: "userId", rangeKey: "noteId" }
    * }
    * ```
    */
   primaryIndex: Input<{
     /**
-     * Define the hash key for the primary index
+     * The hash key field of the index. This field needs to be defined in the `fields`.
      */
     hashKey: Input<string>;
     /**
-     * Define the sort key for the primary index
+     * The hash key field of the index. This field needs to be defined in the `fields`.
      */
     rangeKey?: Input<string>;
   }>;
   /**
-   * Configure the table's global secondary indexes
+   * Configure the table's global secondary indexes.
+   *
+   * You can have up to 20 global secondary indexes per table. And each global secondary index should have a unique name.
    *
    * @example
    *
    * ```js
    * {
-   *   fields: {
-   *     userId: "string",
-   *     noteId: "string",
-   *     createdAt: "number",
-   *   },
    *   globalIndexes: {
-   *     "CreatedAtIndex": { hashKey: "userId", rangeKey: "createdAt" },
-   *   },
+   *     CreatedAtIndex: { hashKey: "userId", rangeKey: "createdAt" }
+   *   }
    * }
    * ```
    */
@@ -74,30 +73,29 @@ export interface DynamoArgs {
       string,
       Input<{
         /**
-         * Define the hash key for the global secondary index
+         * The hash key field of the index. This field needs to be defined in the `fields`.
          */
         hashKey: Input<string>;
         /**
-         * Define the sort key for the global secondary index
+         * The range key field of the index. This field needs to be defined in the `fields`.
          */
         rangeKey?: Input<string>;
       }>
     >
   >;
   /**
-   * Configure the table's local secondary indexes
+   * Configure the table's local secondary indexes.
+   *
+   * Unlike global indexes, local indexes use the same `hashKey` as the `primaryIndex` of the table.
+   *
+   * You can have up to 5 local secondary indexes per table. And each local secondary index should have a unique name.
    *
    * @example
    * ```js
    * {
-   *   fields: {
-   *     userId: "string",
-   *     noteId: "string",
-   *     createdAt: "number",
-   *   },
    *   localIndexes: {
-   *     "CreatedAtIndex": { rangeKey: "createdAt" },
-   *   },
+   *     CreatedAtIndex: { rangeKey: "createdAt" }
+   *   }
    * }
    * ```
    */
@@ -106,24 +104,36 @@ export interface DynamoArgs {
       string,
       Input<{
         /**
-         * Define the sort key for the local secondary index
+         * The range key field of the index. This field needs to be defined in the `fields`.
          */
         rangeKey: Input<string>;
       }>
     >
   >;
   /**
-   * When an item in the table is modified, the stream captures the information and sends it to your function.
-   * You can configure the information that will be written to the stream whenever data in the table is modified:
-   * - new-image: The entire item, as it appears after it was modified.
-   * - old-image: The entire item, as it appeared before it was modified.
-   * - new-and-old-images:	oth the new and the old images of the item.
-   * - keys-only: Only the key fields of the modified item.
-   * @default Stream not enabled
+   * Enable [DynamoDB Streams](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Streams.html) for the table.
+   *
+   * :::note
+   * Streams are not enabled by default since there's a cost attached to them. You'll need to enable it before adding a subscriber.
+   * :::
+   *
+   * When an item in the table is modified, the stream captures the information and sends it to your subscriber function.
+   *
+   * :::tip
+   * The `new-and-old-images` stream type is a good default option since it has both the new and old items.
+   * :::
+   *
+   * You can configure what will be written to the stream:
+   *
+   * - `"new-image"`: The entire item after it was modified.
+   * - `"old-image"`: The entire item before it was modified.
+   * - `"new-and-old-images"`:	Both the new and the old items. A good default to use since it contains all the data.
+   * - `"keys-only"`: Only the keys of the fields of the modified items. If you are worried about the costs, you can use this since it stores the least amount of data.
+   * @default Not enabled
    * @example
    * ```js
    * {
-   *   stream: "new-and-old-images",
+   *   stream: "new-and-old-images"
    * }
    * ```
    */
@@ -145,6 +155,12 @@ export interface DynamoArgs {
 export interface DynamoSubscribeArgs {
   /**
    * Filter the records processed by the `subscriber` function.
+   *
+   * :::tip
+   * You can pass in up to 5 different filters.
+   * :::
+   *
+   * You can pass in up to 5 different filter policies. These will logically ORed together. Meaning that if any single policy matches, the record will be processed.
    *
    * :::tip
    * Learn more about the [filter rule syntax](https://docs.aws.amazon.com/lambda/latest/dg/invocation-eventfiltering.html#filtering-syntax).
@@ -181,7 +197,7 @@ export interface DynamoSubscribeArgs {
    * }
    * ```
    *
-   * To process only those records where the `RequestCode` is `BBBB`.
+   * To process only those records where the `CustomerName` is `AnyCompany Industries`.
 
    * ```js
    * {
@@ -213,21 +229,104 @@ export interface DynamoSubscribeArgs {
 }
 
 /**
- * The `Dynamo` component lets you add an [AWS DynamoDB Table](https://aws.amazon.com/dynamodb/) to
- * your app.
+ * The `Dynamo` component lets you add an [Amazon DynamoDB](https://aws.amazon.com/dynamodb/) table to your app.
  *
  * @example
  *
  * #### Minimal example
  *
  * ```ts
+ * const myTable = new sst.aws.Dynamo("MyTable", {
+ *   fields: {
+ *     userId: "string",
+ *     noteId: "string"
+ *   },
+ *   primaryIndex: { hashKey: "userId", rangeKey: "noteId" }
+ * });
+ * ```
+ *
+ * #### Add a global index
+ *
+ * Optionally add a global index to the table.
+ *
+ * ```ts {8-10}
  * new sst.aws.Dynamo("MyTable", {
  *   fields: {
  *     userId: "string",
  *     noteId: "string",
+ *     createdAt: "number",
  *   },
  *   primaryIndex: { hashKey: "userId", rangeKey: "noteId" },
+ *   globalIndexes: {
+ *     CreatedAtIndex: { hashKey: "userId", rangeKey: "createdAt" }
+ *   }
  * });
+ * ```
+ *
+ * #### Add a local index
+ *
+ * Optionally add a local index to the table.
+ *
+ * ```ts {8-10}
+ * new sst.aws.Dynamo("MyTable", {
+ *   fields: {
+ *     userId: "string",
+ *     noteId: "string",
+ *     createdAt: "number",
+ *   },
+ *   primaryIndex: { hashKey: "userId", rangeKey: "noteId" },
+ *   localIndexes: {
+ *     CreatedAtIndex: { rangeKey: "createdAt" }
+ *   }
+ * });
+ * ```
+ *
+ * #### Subscribe to a DynamoDB Stream
+ *
+ * To subscribe to a [DynamoDB Stream](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Streams.html), start by enabling it.
+ *
+ * ```ts {7}
+ * const myTable = new sst.aws.Dynamo("MyTable", {
+ *   fields: {
+ *     userId: "string",
+ *     noteId: "string"
+ *   },
+ *   primaryIndex: { hashKey: "userId", rangeKey: "noteId" },
+ *   stream: "new-and-old-images"
+ * });
+ * ```
+ *
+ * Then, subscribing to it.
+ *
+ * ```ts
+ * myTable.subscribe("src/subscriber.handler");
+ * ```
+ *
+ * #### Link the table to a resource
+ *
+ * You can link the table to other resources, like a function or your Next.js app.
+ *
+ * ```ts
+ * new sst.aws.Nextjs("Web", {
+ *   link: [myTable]
+ * });
+ * ```
+ *
+ * Once linked, you can query the table through your app.
+ *
+ * ```ts title="app/page.tsx" {1,7}
+ * import { Resource } from "sst";
+ * import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
+ * import { DynamoDBDocumentClient, QueryCommand } from "@aws-sdk/lib-dynamodb";
+ *
+ * const client = DynamoDBDocumentClient.from(new DynamoDBClient({}));
+ * await docClient.send(new QueryCommand({
+ *   TableName: Resource.myTable.name,
+ *   KeyConditionExpression: "userId = :userId",
+ *   ExpressionAttributeValues: {
+ *     ":userId": "my-user-id"
+ *   }
+ * }));
  * ```
  */
 export class Dynamo
@@ -328,25 +427,53 @@ export class Dynamo
   }
 
   /**
-   * Subscribes to the DynamoDB Table.
+   * Subscribe to this table's DynamoDB Stream.
+   *
+   * :::note
+   * You'll first need to enable the `stream` before subscribing to it.
+   * :::
+   *
+   * @param subscriber The function that'll be notified.
+   * @param args Configure the subscription.
+   *
    * @example
    *
    * ```js
-   * subscribe("src/subscriber.handler");
+   * myTable.subscribe("src/subscriber.handler");
    * ```
    *
-   * Customize the subscription.
+   * Add multiple subscribers.
+   *
    * ```js
-   * subscribe("src/subscriber.handler", {
-   *   batchSize: 5,
+   * myTable
+   *   .subscribe("src/subscriber1.handler")
+   *   .subscribe("src/subscriber2.handler");
+   * ```
+   *
+   * Add a filter to the subscription.
+   *
+   * ```js
+   * myTable.subscribe("src/subscriber.handler", {
+   *   filters: [
+   *     {
+   *       dynamodb: {
+   *         Keys: {
+   *           CustomerName: {
+   *             S: ["AnyCompany Industries"]
+   *           }
+   *         }
+   *       }
+   *     }
+   *   ]
    * });
    * ```
    *
    * Customize the subscriber function.
+   *
    * ```js
-   * subscribe({
+   * myTable.subscribe({
    *   handler: "src/subscriber.handler",
-   *   timeout: "60 seconds",
+   *   timeout: "60 seconds"
    * });
    * ```
    */

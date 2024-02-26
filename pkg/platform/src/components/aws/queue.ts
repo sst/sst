@@ -44,7 +44,7 @@ export interface QueueSubscribeArgs {
    * You can pass in up to 5 different filters.
    * :::
    *
-   * You can pass in up to 5 different filter policies. These will logically ORer together. Meaning that if any single policy matches, the message will be processed.
+   * You can pass in up to 5 different filter policies. These will logically ORed together. Meaning that if any single policy matches, the record will be processed.
    *
    * :::tip
    * Learn more about the [filter rule syntax](https://docs.aws.amazon.com/lambda/latest/dg/invocation-eventfiltering.html#filtering-syntax).
