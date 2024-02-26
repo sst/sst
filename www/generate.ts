@@ -526,7 +526,11 @@ async function main() {
           `<code class="symbol">&gt;</code>`,
         ].join("");
       }
-      // types in the same doc
+      // types in the same doc (links to the class ie. `subscribe()` return type)
+      if (type.name === useClassName()) {
+        return `[<code class="type">${type.name}</code>](.)`;
+      }
+      // types in the same doc (links to an interface)
       if (useInterfaces().find((i) => i.name === type.name)) {
         return `[<code class="type">${
           type.name
@@ -534,14 +538,10 @@ async function main() {
       }
       // types in different doc
       const externalModule = {
-        ApiGatewayHttpApi: "apigateway-httpapi",
         Bucket: "bucket",
-        Dynamo: "dynamo",
         Function: "function",
         FunctionArgs: "function",
         FunctionPermissionArgs: "function",
-        Queue: "queue",
-        SnsTopic: "sns-topic",
       }[type.name];
       if (externalModule) {
         const hash = type.name.endsWith("Args")
@@ -825,8 +825,4 @@ async function restoreInput() {
     "../pkg/platform/src/components/input.ts.bk",
     "../pkg/platform/src/components/input.ts"
   );
-}
-
-function toPascalCase(s: string) {
-  return `${s[0].toUpperCase()}${s.slice(1)}`;
 }
