@@ -7,7 +7,8 @@ import { Input } from "../input.js";
 type ACU = `${number} ACU`;
 
 function parseACU(acu: ACU) {
-  return parseInt(acu.split(" ")[0]);
+  const result = parseFloat(acu.split(" ")[0]);
+  return result;
 }
 
 export interface PostgresArgs {

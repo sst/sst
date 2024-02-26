@@ -188,14 +188,22 @@ type RetriveResponse = {
 
 const lambda = new LambdaClient();
 
-export const VectorClient = (name: string) => {
+export function VectorClient<
+  T extends keyof {
+    [key in keyof Resource as "sst.aws.Vector" extends Resource[key]["type"]
+      ? string extends key
+        ? never
+        : key
+      : never]: Resource[key];
+  },
+>(name: T) {
   return {
     ingest: async (event: IngestEvent) => {
       const ret = await lambda.send(
         new InvokeCommand({
           FunctionName: Resource[name].ingestorFunctionName,
           Payload: JSON.stringify(event),
-        })
+        }),
       );
 
       parsePayload(ret, "Failed to ingest into the vector db");
@@ -206,11 +214,11 @@ export const VectorClient = (name: string) => {
         new InvokeCommand({
           FunctionName: Resource[name].retrieverFunctionName,
           Payload: JSON.stringify(event),
-        })
+        }),
       );
       return parsePayload<RetriveResponse>(
         ret,
-        "Failed to retrieve from the vector db"
+        "Failed to retrieve from the vector db",
       );
     },
 
@@ -219,12 +227,12 @@ export const VectorClient = (name: string) => {
         new InvokeCommand({
           FunctionName: Resource[name].removerFunctionName,
           Payload: JSON.stringify(event),
-        })
+        }),
       );
       parsePayload(ret, "Failed to remove from the vector db");
     },
   };
-};
+}
 
 function parsePayload<T>(output: InvokeCommandOutput, message: string): T {
   const payload = JSON.parse(Buffer.from(output.Payload!).toString());
