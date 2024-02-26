@@ -78,7 +78,7 @@ export class DnsValidatedCertificate extends Component {
     this.certificateValidation = certificateValidation;
   }
 
-  public get certificateArn() {
+  public get arn() {
     return this.certificateValidation.certificateArn;
   }
 }

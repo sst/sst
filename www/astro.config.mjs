@@ -44,6 +44,10 @@ const sidebar = [
       { label: "SnsTopic", link: "/docs/component/aws/sns-topic/" },
       { label: "Function", link: "/docs/component/aws/function/" },
       { label: "Postgres", link: "/docs/component/aws/postgres/" },
+      {
+        label: "ApiGatewayHttpApi",
+        link: "/docs/component/aws/apigateway-httpapi/",
+      },
     ],
   },
   {

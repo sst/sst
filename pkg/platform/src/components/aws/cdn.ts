@@ -257,7 +257,7 @@ export class Cdn extends Component {
             : [],
           viewerCertificate: certificate
             ? {
-                acmCertificateArn: certificate.certificateArn,
+                acmCertificateArn: certificate.arn,
                 sslSupportMethod: "sni-only",
               }
             : {

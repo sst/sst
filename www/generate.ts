@@ -534,6 +534,7 @@ async function main() {
       }
       // types in different doc
       const externalModule = {
+        ApiGatewayHttpApi: "apigateway-httpapi",
         Bucket: "bucket",
         Dynamo: "dynamo",
         Function: "function",
@@ -690,6 +691,7 @@ async function main() {
         (c) =>
           c.kind === TypeDoc.ReflectionKind.Method &&
           !c.flags.isExternal &&
+          !c.flags.isPrivate &&
           c.signatures &&
           !c.signatures[0].comment?.modifierTags.has("@internal")
       );
@@ -784,7 +786,7 @@ async function buildDocs() {
       "../pkg/platform/src/components/aws/router.ts",
       "../pkg/platform/src/components/aws/sns-topic.ts",
       "../pkg/platform/src/components/aws/dynamo.ts",
-      //"../pkg/platform/src/components/aws/apigateway-httpapi.ts",
+      "../pkg/platform/src/components/aws/apigateway-httpapi.ts",
       "../pkg/platform/src/components/cloudflare/worker.ts",
     ],
     tsconfig: "../pkg/platform/tsconfig.json",

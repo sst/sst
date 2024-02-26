@@ -1,3 +1,4 @@
+export * from "./apigateway-httpapi.js";
 export * from "./auth.js";
 export * from "./bucket.js";
 export * from "./cron.js";

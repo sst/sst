@@ -58,6 +58,7 @@ export class Component extends ComponentResource {
 
           let overrides;
           switch (args.type) {
+            case "aws:apigatewayv2/api:Api":
             case "aws:iam/policy:Policy":
             case "aws:iam/role:Role":
             case "aws:iam/user:User":
@@ -89,6 +90,11 @@ export class Component extends ComponentResource {
                 name: interpolate`${prefixName(args.name)}${suffix}`,
               };
               break;
+            case "aws:apigatewayv2/apiMapping:ApiMapping":
+            case "aws:apigatewayv2/domainName:DomainName":
+            case "aws:apigatewayv2/integration:Integration":
+            case "aws:apigatewayv2/route:Route":
+            case "aws:apigatewayv2/stage:Stage":
             case "aws:acm/certificate:Certificate":
             case "aws:acm/certificateValidation:CertificateValidation":
             case "aws:iam/accessKey:AccessKey":
