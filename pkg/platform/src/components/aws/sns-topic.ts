@@ -42,6 +42,10 @@ export interface SnsTopicSubscribeArgs {
    * If any single property in the filter doesn't match
    * an attribute assigned to the message, then the policy rejects the message.
    *
+   * :::tip
+   * Learn more about [subscription filter policies](https://docs.aws.amazon.com/sns/latest/dg/sns-subscription-filter-policies.html).
+   * :::
+   *
    * @example
    * For example, if your SNS Topic message contains this in a JSON format.
    * ```js
@@ -73,10 +77,6 @@ export interface SnsTopicSubscribeArgs {
    *   }
    * }
    * ```
-   *
-   * :::tip
-   * Learn more about [subscription filter policies](https://docs.aws.amazon.com/sns/latest/dg/sns-subscription-filter-policies.html).
-   * :::
    */
   filter?: Input<Record<string, any>>;
   /**
@@ -124,7 +124,7 @@ export interface SnsTopicSubscribeArgs {
  *
  * #### Link the topic to a resource
  *
- * You can link the secret to other resources, like a function or your Next.js app.
+ * You can link the topic to other resources, like a function or your Next.js app.
  *
  * ```ts
  * new sst.aws.Nextjs("Web", {

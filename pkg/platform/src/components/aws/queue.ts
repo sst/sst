@@ -46,6 +46,10 @@ export interface QueueSubscribeArgs {
    *
    * You can pass in up to 5 different filter policies. These will logically ORer together. Meaning that if any single policy matches, the message will be processed.
    *
+   * :::tip
+   * Learn more about the [filter rule syntax](https://docs.aws.amazon.com/lambda/latest/dg/invocation-eventfiltering.html#filtering-syntax).
+   * :::
+   *
    * @example
    * For example, if you Queue contains records in this JSON format.
    * ```js
@@ -83,10 +87,6 @@ export interface QueueSubscribeArgs {
    *   ]
    * }
    * ```
-   *
-   * :::tip
-   * Learn more about the [filter rule syntax](https://docs.aws.amazon.com/lambda/latest/dg/invocation-eventfiltering.html#filtering-syntax).
-   * :::
    */
   filters?: Input<Input<Record<string, any>>[]>;
   /**
@@ -130,7 +130,7 @@ export interface QueueSubscribeArgs {
  *
  * #### Link the queue to a resource
  *
- * You can link the secret to other resources, like a function or your Next.js app.
+ * You can link the queue to other resources, like a function or your Next.js app.
  *
  * ```ts
  * new sst.aws.Nextjs("Web", {
@@ -151,8 +151,6 @@ export interface QueueSubscribeArgs {
  *   MessageBody: "Hello from Next.js!"
  * }));
  * ```
- *
- * This is using the the `@aws-sdk/client-sqs` package.
  */
 export class Queue
   extends Component

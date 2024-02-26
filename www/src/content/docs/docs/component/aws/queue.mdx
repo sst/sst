@@ -1,6 +1,6 @@
 ---
 title: Queue
-description: Reference for the `sst.aws.Queue` component.
+description: Reference doc for the `sst.aws.Queue` component.
 ---
 
 import Segment from '../../../../../components/tsdoc/Segment.astro';
@@ -37,7 +37,7 @@ myQueue.subscribe("src/subscriber.handler");
 
 #### Link the queue to a resource
 
-You can link the secret to other resources, like a function or your Next.js app.
+You can link the queue to other resources, like a function or your Next.js app.
 
 ```ts
 new sst.aws.Nextjs("Web", {
@@ -58,8 +58,6 @@ await sqs.send(new SendMessageCommand({
   MessageBody: "Hello from Next.js!"
 }));
 ```
-
-This is using the the `@aws-sdk/client-sqs` package.
 </Section>
 
 ---
@@ -259,6 +257,10 @@ You can pass in up to 5 different filters.
 
 You can pass in up to 5 different filter policies. These will logically ORer together. Meaning that if any single policy matches, the message will be processed.
 
+:::tip
+Learn more about the [filter rule syntax](https://docs.aws.amazon.com/lambda/latest/dg/invocation-eventfiltering.html#filtering-syntax).
+:::
+
 For example, if you Queue contains records in this JSON format.
 ```js
 {
@@ -295,10 +297,6 @@ And to process only those records where `RecordNumber` greater than `9999`.
   ]
 }
 ```
-
-:::tip
-Learn more about the [filter rule syntax](https://docs.aws.amazon.com/lambda/latest/dg/invocation-eventfiltering.html#filtering-syntax).
-:::
 </Segment>
 ### transform?
 <Segment>
