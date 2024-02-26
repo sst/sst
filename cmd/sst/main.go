@@ -658,6 +658,7 @@ func main() {
 		} else {
 			panic(err)
 		}
+		os.Exit(1)
 	}
 
 }
