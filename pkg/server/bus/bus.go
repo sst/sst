@@ -52,13 +52,29 @@ func Subscribe[T Event](ctx context.Context, fn func(T)) {
 
 func Listen[T Event](ctx context.Context, example T) <-chan T {
 	events := make(chan T, 100)
-	Subscribe(ctx, func(event T) {
+	mutex.Lock()
+	defer mutex.Unlock()
+	t := reflect.TypeOf((*T)(nil)).Elem()
+
+	s := subscribers[t]
+	if s == nil {
+		s = []interface{}{}
+	}
+	s = append(s, func(event T) {
 		events <- event
 	})
+	index := len(s) - 1
+	subscribers[t] = s
+	slog.Info("subscribed", "type", t)
 	go func() {
 		<-ctx.Done()
+		mutex.Lock()
+		defer mutex.Unlock()
+		slog.Info("unsubscribing", "type", t)
+		subscribers[t] = append(s[:index], s[index+1:]...)
 		close(events)
 	}()
+
 	return events
 }
 
