@@ -100,27 +100,31 @@ export interface StaticSiteArgs {
    */
   domain?: Input<string | Prettify<CdnDomainArgs>>;
   /**
-   * The command for building the website
-   * @default `npm run build`
-   * @example
-   * ```js
-   * {
-   *   buildCommand: "yarn build"
-   * }
-   * ```
+   * Configure the build process for the website.
    */
-  buildCommand?: Input<string>;
-  /**
-   * The directory with the content that will be uploaded to the S3 bucket. If a `buildCommand` is provided, this is usually where the build output is generated. The path is relative to the [`path`](#path) where the website source is located.
-   * @default entire "path" directory
-   * @example
-   * ```js
-   * {
-   *   buildOutput: "build",
-   * }
-   * ```
-   */
-  buildOutput?: Input<string>;
+  build: Input<{
+    /**
+     * The command for building the website
+     * @default `npm run build`
+     * @example
+     * ```js
+     * {
+     *   buildCommand: "yarn build"
+     * }
+     * ```
+     */
+    command?: Input<string>;
+    /**
+     * The directory with the content that will be uploaded to the S3 bucket. If a `buildCommand` is provided, this is usually where the build output is generated. The path is relative to the [`path`](#path) where the website source is located.
+     * @example
+     * ```js
+     * {
+     *   buildOutput: "build",
+     * }
+     * ```
+     */
+    output: Input<string>;
+  }>;
   vite?: Input<{
     /**
      * The path where code-gen should place the type definition for environment variables
@@ -313,7 +317,7 @@ export class StaticSite extends Component implements Link.Linkable {
 
   constructor(
     name: string,
-    args: StaticSiteArgs = {},
+    args: StaticSiteArgs,
     opts: ComponentResourceOptions = {},
   ) {
     super("sst:aws:StaticSite", name, args, opts);
@@ -448,44 +452,41 @@ export class StaticSite extends Component implements Link.Linkable {
     }
 
     function buildApp() {
-      return all([
-        sitePath,
-        args.buildCommand,
-        args.buildOutput,
-        environment,
-      ]).apply(([sitePath, buildCommand, buildOutput, environment]) => {
-        if ($dev)
-          return path.join($cli.paths.platform, "functions", "empty-site");
+      return all([sitePath, args.build, environment]).apply(
+        ([sitePath, build, environment]) => {
+          if ($dev)
+            return path.join($cli.paths.platform, "functions", "empty-site");
 
-        // Run build
-        if (buildCommand && !process.env.SKIP) {
-          console.debug(`Running "${buildCommand}" script`);
-          try {
-            execSync(buildCommand, {
-              cwd: sitePath,
-              stdio: "inherit",
-              env: {
-                ...process.env,
-                ...environment,
-              },
-            });
-          } catch (e) {
+          // Run build
+          if (!process.env.SKIP) {
+            const buildCommand = build.command ?? "npm run build";
+            console.debug(`Running "${buildCommand}" script`);
+            try {
+              execSync(buildCommand, {
+                cwd: sitePath,
+                stdio: "inherit",
+                env: {
+                  ...process.env,
+                  ...environment,
+                },
+              });
+            } catch (e) {
+              throw new VisibleError(
+                `There was a problem building the "${name}" site.`,
+              );
+            }
+          }
+
+          // Validate build output
+          if (!fs.existsSync(build.output)) {
             throw new VisibleError(
-              `There was a problem building the "${name}" site.`,
+              `No build output found at "${path.resolve(build.output)}"`,
             );
           }
-        }
 
-        // Validate build output
-        const outputPath = buildOutput ?? sitePath;
-        if (!fs.existsSync(outputPath)) {
-          throw new VisibleError(
-            `No build output found at "${path.resolve(outputPath)}"`,
-          );
-        }
-
-        return outputPath;
-      });
+          return build.output;
+        },
+      );
     }
 
     function uploadAssets() {

@@ -11,6 +11,11 @@ export default $config({
     };
   },
   async run() {
-    new sst.aws.StaticSite("MySite");
+    new sst.aws.StaticSite("MySite", {
+      build: {
+        command: "bun run build",
+        output: "dist",
+      },
+    });
   },
 });
