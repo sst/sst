@@ -561,11 +561,11 @@ type HttpsListenerProps = {
    * @example
    * ```js
    * {
-   *   https: true,
+   *   httpsRedirect: true,
    * }
    * ```
    */
-  https?: boolean;
+  httpsRedirect?: boolean;
   /**
    * This option attaches these certificate to the https load balancer. This must be specified
    * @default undefined
@@ -1006,7 +1006,7 @@ export class Service extends Construct implements SSTConstruct {
     let target: ApplicationTargetGroup;
 
     const albConfig = cdk?.applicationLoadBalancer as AlbProps;
-    if (albConfig.https) {
+    if (albConfig.httpsRedirect) {
       if (!albConfig.certificates) {
         throw new VisibleError(
             `In the "${this.node.id}" Service, the "httpsLoadBalancer" option is enabled but no "certificates" are provided.`
