@@ -36,7 +36,7 @@ interface DomainArgs {
    * look for a hosted zone that matches the `domainName`.
    *
    * There are cases where these might not be the same. For example, if you use a subdomain,
-   * `app.domain.com`, the hosted zone might be `domain.com`. So you'll need to pass in the
+   * `api.domain.com`, the hosted zone might be `domain.com`. So you'll need to pass in the
    * hosted zone name.
    *
    * :::note
@@ -48,7 +48,7 @@ interface DomainArgs {
    * ```js {4}
    * {
    *   domain: {
-   *     domainName: "app.domain.com",
+   *     domainName: "api.domain.com",
    *     hostedZone: "domain.com"
    *   }
    * }
@@ -69,7 +69,7 @@ interface DomainArgs {
    * ```js {4}
    * {
    *   domain: {
-   *     domainName: "domain.com",
+   *     domainName: "api.domain.com",
    *     hostedZoneId: "Z2FDTNDATAQYW2"
    *   }
    * }
@@ -77,16 +77,35 @@ interface DomainArgs {
    */
   hostedZoneId?: Input<string>;
   /**
-   * The base mapping for the custom domain.
+   * The base mapping for the custom domain. This adds a suffix to the URL of the API.
    *
-   * For example, by setting the domainName to api.domain.com and the path to v1, the custom domain URL of the API will become https://api.domain.com/v1/. If the path is not set, the custom domain URL will be https://api.domain.com. Note the additional trailing slash in the former case.
+   * @example
+   *
+   * Given the following base path and domain name.
+   *
+   * ```js
+   * {
+   *   domain: {
+   *     domainName: "api.domain.com",
+   *     path: "v1"
+   *   }
+   * }
+   * ```
+   *
+   * The full URL of the API will be `https://api.domain.com/v1/`.
+   *
+   * :::note
+   * There's an extra trailing slash when a base path is set.
+   * :::
+   *
+   * Be default there is no base path, so if the `domainName` is `api.domain.com`, the full URL will be `https://api.domain.com`.
    */
   path?: string;
 }
 
 export interface ApiGatewayHttpApiArgs {
   /**
-   * Set a custom domain for your Next.js app. Supports domains hosted either on
+   * Set a custom domain for your HTTP API. Supports domains hosted either on
    * [Route 53](https://aws.amazon.com/route53/) or outside AWS.
    *
    * :::tip
@@ -98,18 +117,17 @@ export interface ApiGatewayHttpApiArgs {
    *
    * ```js
    * {
-   *   domain: "domain.com"
+   *   domain: "api.domain.com"
    * }
    * ```
    *
-   * Specify the Route 53 hosted zone and a `www.` version of the custom domain.
+   * Specify the Route 53 hosted zone.
    *
    * ```js
    * {
    *   domain: {
-   *     domainName: "domain.com",
-   *     hostedZone: "domain.com",
-   *     redirects: ["www.domain.com"]
+   *     domainName: "api.domain.com",
+   *     hostedZone: "domain.com"
    *   }
    * }
    * ```
@@ -137,16 +155,29 @@ export interface ApiGatewayHttpApiArgs {
 
 export interface ApiGatewayHttpApiRouteArgs {
   /**
-   * Controlling and managing access to your HTTP API.
+   * Enable auth for your HTTP API.
+   *
+   * :::note
+   * Currently only IAM auth is supported.
+   * :::
+   *
+   * @example
+   * ```js
+   * {
+   *   auth: {
+   *     iam: true
+   *   }
+   * }
+   * ```
    */
   auth?: Input<{
     /**
-     * enable IAM authorization for HTTP API routes. When IAM authorization is enabled, clients must use Signature Version 4 to sign their requests with AWS credentials.
+     * Enable IAM authorization for a given API route. When IAM auth is enabled, clients need to use Signature Version 4 to sign their requests with their AWS credentials.
      */
     iam?: Input<true>;
   }>;
   /**
-   * [Transform](/docs/components#transform/) how this subscription creates its underlying
+   * [Transform](/docs/components#transform/) how this component creates its underlying
    * resources.
    */
   transform?: {
@@ -166,23 +197,26 @@ export interface ApiGatewayHttpApiRouteArgs {
  *
  * @example
  *
- * #### Create an API
+ * #### Create the API
  *
  * ```ts
  * const myApi = new sst.aws.ApiGatewayHttpApi("MyApi");
- * myApi
- *  .route("GET /", "src/get.handler")
- *  .route("POST /", "src/post.handler");
  * ```
  *
  * #### Add a custom domain
  *
- * Set a custom domain for your API.
- *
  * ```js {2}
- * const myApi = new sst.aws.ApiGatewayHttpApi("MyApi");
- *   domain: "api.my-app.com"
+ * new sst.aws.ApiGatewayHttpApi("MyApi", {
+ *   domain: "api.domain.com"
  * });
+ * ```
+ *
+ * #### Add routes
+ *
+ * ```ts
+ * myApi
+ *  .route("GET /", "src/get.handler")
+ *  .route("POST /", "src/post.handler");
  * ```
  */
 export class ApiGatewayHttpApi extends Component implements Link.Linkable {
@@ -384,12 +418,39 @@ export class ApiGatewayHttpApi extends Component implements Link.Linkable {
   }
 
   /**
-   * Add a route to the API Gateway HTTP API.
+   * Add a route to the API Gateway HTTP API. The route is a combination of
+   * - An HTTP method and a path, `{METHOD} /{path}`.
+   * - Or a `$default` route.
+   *
+   * :::tip
+   * The `$default` route is a default or catch-all route. It'll match if no other route matches.
+   * :::
+   *
+   * A method could be one of `GET`, `POST`, `PUT`, `DELETE`, `PATCH`, `HEAD`, `OPTIONS`, or `ANY`. Here `ANY` matches any HTTP method.
+   *
+   * The path can be a combination of
+   * - Literal segments, `/notes`, `/notes/new`, etc.
+   * - Parameter segments, `/notes/{noteId}`, `/notes/{noteId}/attachments/{attachmentId}`, etc.
+   * - Greedy segments, `/{proxy+}`, `/notes/{proxy+}`,  etc. The `{proxy+}` segment is a greedy segment that matches all child paths. It needs to be at the end of the path.
+   *
+   * :::tip
+   * The `{proxy+}` is a greedy segment, it matches all its child paths.
+   * :::
+   *
+   * The `$default` is a reserved keyword for the default route. It'll be matched if no other route matches.
+   *
+   * :::note
+   * You cannot have duplicate routes.
+   * :::
+   *
+   * When a request comes in, the API Gateway will look for the most specific match. If no route matches, the `$default` route will be invoked.
+   *
    * @param route The path for the route.
-   * @param subscriber The function that'll be invoked.
+   * @param handler The function that'll be invoked.
    * @param args Configure the route.
    *
    * @example
+   * Here's how you add a simple route.
    *
    * ```js
    * myApi.route("GET /", "src/get.handler");
@@ -403,14 +464,45 @@ export class ApiGatewayHttpApi extends Component implements Link.Linkable {
    *   .route("POST /", "src/post.handler");
    * ```
    *
-   * Add a filter to the subscription.
+   * Match any HTTP method.
    *
    * ```js
-   * myApi.route("GET /", "src/get.handler", {
-   * });
+   * myApi.route("ANY /", "src/route.handler");
    * ```
    *
-   * Customize the route function.
+   * Add a default route.
+   *
+   * ```js
+   * myApi
+   *   .route("GET /", "src/get.handler")
+   *   .route($default, "src/default.handler");
+   * ```
+   *
+   * Add a parameterized route.
+   *
+   * ```js
+   * myApi.route("GET /notes/{id}", "src/get.handler");
+   * ```
+   *
+   * Add a greedy route.
+   *
+   * ```js
+   * myApi.route("GET /notes/{proxy+}", "src/greedy.handler");
+   * ```
+   *
+   * Enable auth for a route.
+   *
+   * ```js
+   * myApi
+   *   .route("GET /", "src/get.handler")
+   *   .route("POST /", "src/post.handler", {
+   *     auth: {
+   *       iam: true
+   *     }
+   *   });
+   * ```
+   *
+   * Customize the route handler.
    *
    * ```js
    * myApi.route("GET /", {
@@ -421,7 +513,7 @@ export class ApiGatewayHttpApi extends Component implements Link.Linkable {
    */
   public route(
     route: string,
-    subscriber: string | FunctionArgs,
+    handler: string | FunctionArgs,
     args: ApiGatewayHttpApiRouteArgs = {},
   ) {
     const parent = this;
@@ -434,7 +526,7 @@ export class ApiGatewayHttpApi extends Component implements Link.Linkable {
     const fn = Function.fromDefinition(
       parent,
       `${parentName}Handler${id}`,
-      subscriber,
+      handler,
       {
         description: `${parentName} route ${routeKey}`,
       },
