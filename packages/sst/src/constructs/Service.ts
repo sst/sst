@@ -402,29 +402,6 @@ export interface ServiceProps {
    * ```
    */
   waitForInvalidation?: boolean;
-
-  /**
-   * This option will allow you to redirect HTTP traffic to HTTPS on the load balancer itself.
-   * @default false
-   * @example
-   * ```js
-   * {
-   *   httpsLoadBalancer: true,
-   * }
-   * ```
-   */
-  httpsLoadBalancer?: boolean;
-  /**
-   * This option attaches these certificate to the https load balancer. This must be specified
-   * @default undefined
-   * @example
-   * ```js
-   * {
-   *   certificates: [new Certificate(stack, "Certificate", certificateProps],
-   * }
-   * ```
-   */
-  certificates?: IListenerCertificate[];
   build?: {
     /**
      * Build args to pass to the docker build command.
@@ -497,7 +474,7 @@ export interface ServiceProps {
      */
     applicationLoadBalancer?:
         | boolean
-        | Omit<ApplicationLoadBalancerProps, "vpc">
+        | AlbProps;
     /**
      * Customize the Application Load Balancer's target group.
      * @default true
@@ -576,6 +553,31 @@ type ServiceNormalizedProps = ServiceProps & {
   logRetention: Exclude<ServiceProps["logRetention"], undefined>;
 };
 
+type AlbProps = Omit<ApplicationLoadBalancerProps, "vpc"> & HttpsListenerProps;
+type HttpsListenerProps = {
+  /**
+   * This option will allow you to redirect HTTP traffic to HTTPS on the load balancer itself.
+   * @default false
+   * @example
+   * ```js
+   * {
+   *   https: true,
+   * }
+   * ```
+   */
+  https?: boolean;
+  /**
+   * This option attaches these certificate to the https load balancer. This must be specified
+   * @default undefined
+   * @example
+   * ```js
+   * {
+   *   certificates: [new Certificate(stack, "Certificate", certificateProps],
+   * }
+   * ```
+   */
+  certificates?: IListenerCertificate[];
+}
 /**
  * The `Service` construct is a higher level CDK construct that makes it easy to create modern web apps with Server Side Rendering capabilities.
  * @example
@@ -632,7 +634,7 @@ export class Service extends Construct implements SSTConstruct {
     const vpc = this.createVpc();
     const { cluster, container, taskDefinition, service } =
         this.createService(vpc);
-    const { alb, target } = this.createLoadBalancer(vpc, service, this.props.httpsLoadBalancer, this.props.certificates);
+    const { alb, target } = this.createLoadBalancer(vpc, service);
     this.createAutoScaling(service, target);
     this.alb = alb;
 
@@ -980,7 +982,7 @@ export class Service extends Construct implements SSTConstruct {
     return { cluster, taskDefinition, container, service };
   }
 
-  private createLoadBalancer(vpc: IVpc, service: FargateService, https?: boolean, certificates?: IListenerCertificate[]) {
+  private createLoadBalancer(vpc: IVpc, service: FargateService) {
     const { cdk } = this.props;
 
     // Do not create load balancer if disabled
@@ -999,15 +1001,18 @@ export class Service extends Construct implements SSTConstruct {
           ? {}
           : cdk?.applicationLoadBalancer),
     });
+
     let listener: ApplicationListener;
     let target: ApplicationTargetGroup;
-    if (https) {
-      if (!certificates) {
+
+    const albConfig = cdk?.applicationLoadBalancer as AlbProps;
+    if (albConfig.https) {
+      if (!albConfig.certificates) {
         throw new VisibleError(
             `In the "${this.node.id}" Service, the "httpsLoadBalancer" option is enabled but no "certificates" are provided.`
         );
       }
-      let httpListener = alb.addListener('http_listener', {
+      let httpListener = alb.addListener('HttpListener', {
         protocol: ApplicationProtocol.HTTP,
       })
       // Dummy response. If omitted, we get the following error on `cdk synth`:
@@ -1031,7 +1036,7 @@ export class Service extends Construct implements SSTConstruct {
       listener = alb.addListener('HttpsListener', {
         protocol: ApplicationProtocol.HTTPS,
         port: 443,
-        certificates: certificates,
+        certificates: albConfig.certificates,
       });
       target = listener.addTargets("TargetGroup", {
         port: 80,
