@@ -62,10 +62,14 @@ import {
 import { LogGroup, LogRetention, RetentionDays } from "aws-cdk-lib/aws-logs";
 import { Platform } from "aws-cdk-lib/aws-ecr-assets";
 import {
+  ApplicationListener,
   ApplicationLoadBalancer,
   ApplicationLoadBalancerProps,
   ApplicationTargetGroup,
   ApplicationTargetGroupProps,
+  ApplicationProtocol,
+  CfnListener,
+  ListenerAction, IListenerCertificate
 } from "aws-cdk-lib/aws-elasticloadbalancingv2";
 import { createAppContext } from "./context.js";
 import { toCdkSize } from "./index.js";
@@ -176,7 +180,7 @@ const supportedMemories = {
 
 export interface ServiceDomainProps extends DistributionDomainProps {}
 export interface ServiceCdkDistributionProps
-  extends Omit<DistributionProps, "defaultBehavior"> {}
+    extends Omit<DistributionProps, "defaultBehavior"> {}
 
 export interface ServiceProps {
   /**
@@ -210,7 +214,7 @@ export interface ServiceProps {
    * ```
    */
   architecture?: Lowercase<
-    keyof Pick<typeof CpuArchitecture, "ARM64" | "X86_64">
+      keyof Pick<typeof CpuArchitecture, "ARM64" | "X86_64">
   >;
   /**
    * The amount of CPU allocated.
@@ -398,6 +402,29 @@ export interface ServiceProps {
    * ```
    */
   waitForInvalidation?: boolean;
+
+  /**
+   * This option will allow you to redirect HTTP traffic to HTTPS on the load balancer itself.
+   * @default false
+   * @example
+   * ```js
+   * {
+   *   httpsLoadBalancer: true,
+   * }
+   * ```
+   */
+  httpsLoadBalancer?: boolean;
+  /**
+   * This option attaches these certificate to the https load balancer. This must be specified
+   * @default undefined
+   * @example
+   * ```js
+   * {
+   *   certificates: [new Certificate(stack, "Certificate", certificateProps],
+   * }
+   * ```
+   */
+  certificates?: IListenerCertificate[];
   build?: {
     /**
      * Build args to pass to the docker build command.
@@ -469,8 +496,8 @@ export interface ServiceProps {
      * ```
      */
     applicationLoadBalancer?:
-      | boolean
-      | Omit<ApplicationLoadBalancerProps, "vpc">;
+        | boolean
+        | Omit<ApplicationLoadBalancerProps, "vpc">
     /**
      * Customize the Application Load Balancer's target group.
      * @default true
@@ -572,7 +599,6 @@ export class Service extends Construct implements SSTConstruct {
   private service?: FargateService;
   private distribution?: Distribution;
   private alb?: ApplicationLoadBalancer;
-
   constructor(scope: Construct, id: string, props: ServiceProps) {
     super(scope, id);
 
@@ -589,7 +615,7 @@ export class Service extends Construct implements SSTConstruct {
       ...props,
     };
     this.doNotDeploy =
-      !stack.isActive || (app.mode === "dev" && !this.props.dev?.deploy);
+        !stack.isActive || (app.mode === "dev" && !this.props.dev?.deploy);
 
     this.validateServiceExists();
     this.validateMemoryCpuAndStorage();
@@ -605,8 +631,8 @@ export class Service extends Construct implements SSTConstruct {
     // Create ECS cluster
     const vpc = this.createVpc();
     const { cluster, container, taskDefinition, service } =
-      this.createService(vpc);
-    const { alb, target } = this.createLoadBalancer(vpc, service);
+        this.createService(vpc);
+    const { alb, target } = this.createLoadBalancer(vpc, service, this.props.httpsLoadBalancer, this.props.certificates);
     this.createAutoScaling(service, target);
     this.alb = alb;
 
@@ -621,13 +647,13 @@ export class Service extends Construct implements SSTConstruct {
     this.bindForService(props?.bind || []);
     this.attachPermissionsForService(props?.permissions || []);
     Object.entries(props?.environment || {}).map(([key, value]) =>
-      this.addEnvironmentForService(key, value)
+        this.addEnvironmentForService(key, value)
     );
 
     useDeferredTasks().add(async () => {
       if (!app.isRunningSSTTest() && !props?.cdk?.container?.image) {
         Colors.line(
-          `➜  Building the container image for the "${this.node.id}" service...`
+            `➜  Building the container image for the "${this.node.id}" service...`
         );
 
         // Build app
@@ -708,8 +734,8 @@ export class Service extends Construct implements SSTConstruct {
       type: "Service" as const,
       data: {
         mode: this.doNotDeploy
-          ? ("placeholder" as const)
-          : ("deployed" as const),
+            ? ("placeholder" as const)
+            : ("deployed" as const),
         path: this.props.path,
         customDomainUrl: this.customDomainUrl,
         url: this.url,
@@ -717,8 +743,8 @@ export class Service extends Construct implements SSTConstruct {
         task: this.taskDefinition?.taskDefinitionArn,
         container: this.container?.containerName,
         secrets: (this.props.bind || [])
-          .filter((c) => c instanceof Secret)
-          .map((c) => (c as Secret).name),
+            .filter((c) => c instanceof Secret)
+            .map((c) => (c as Secret).name),
       },
     };
   }
@@ -727,15 +753,15 @@ export class Service extends Construct implements SSTConstruct {
   public getFunctionBinding(): FunctionBindingProps {
     const app = this.node.root as App;
     return this.distribution
-      ? {
+        ? {
           clientPackage: "service",
           variables: {
             url: this.doNotDeploy
-              ? {
+                ? {
                   type: "plain",
                   value: this.props.dev?.url ?? "localhost",
                 }
-              : {
+                : {
                   // Do not set real value b/c we don't want to make the Lambda function
                   // depend on the Site. B/c often the site depends on the Api, causing
                   // a CloudFormation circular dependency if the Api and the Site belong
@@ -747,12 +773,12 @@ export class Service extends Construct implements SSTConstruct {
           permissions: {
             "ssm:GetParameters": [
               `arn:${Stack.of(this).partition}:ssm:${app.region}:${
-                app.account
+                  app.account
               }:parameter${getParameterPath(this, "url")}`,
             ],
           },
         }
-      : {
+        : {
           clientPackage: "service",
           variables: {},
           permissions: {},
@@ -811,26 +837,26 @@ export class Service extends Construct implements SSTConstruct {
     // Validate path exists
     if (!fs.existsSync(servicePath)) {
       throw new VisibleError(
-        `In the "${this.node.id}" Service, path is not found at "${path.resolve(
-          servicePath
-        )}"`
+          `In the "${this.node.id}" Service, path is not found at "${path.resolve(
+              servicePath
+          )}"`
       );
     }
 
     // Validate path is a directory
     if (fs.statSync(servicePath).isFile()) {
       throw new VisibleError(
-        [
-          `In the "${this.node.id}" Service, the path "${path.resolve(
-            servicePath
-          )}" should be a directory.`,
-          `Did you mean:`,
-          ``,
-          `  {`,
-          `    path: "${path.dirname(servicePath)}",`,
-          `    file: "${path.basename(servicePath)}",`,
-          `  }`,
-        ].join("\n")
+          [
+            `In the "${this.node.id}" Service, the path "${path.resolve(
+                servicePath
+            )}" should be a directory.`,
+            `Did you mean:`,
+            ``,
+            `  {`,
+            `    path: "${path.dirname(servicePath)}",`,
+            `    file: "${path.basename(servicePath)}",`,
+            `  }`,
+          ].join("\n")
       );
     }
 
@@ -839,7 +865,7 @@ export class Service extends Construct implements SSTConstruct {
       const dockerfilePath = path.join(servicePath, file);
       if (!fs.existsSync(dockerfilePath)) {
         throw new VisibleError(
-          `In the "${this.node.id}" Service, no Dockerfile is found at "${dockerfilePath}". Make sure to set the "file" property to the path of the Dockerfile relative to "${servicePath}".`
+            `In the "${this.node.id}" Service, no Dockerfile is found at "${dockerfilePath}". Make sure to set the "file" property to the path of the Dockerfile relative to "${servicePath}".`
         );
       }
     }
@@ -849,29 +875,29 @@ export class Service extends Construct implements SSTConstruct {
     const { memory, cpu, storage } = this.props;
     if (!supportedCpus[cpu]) {
       throw new VisibleError(
-        `In the "${
-          this.node.id
-        }" Service, only the following "cpu" settings are supported: ${Object.keys(
-          supportedCpus
-        ).join(", ")}`
+          `In the "${
+              this.node.id
+          }" Service, only the following "cpu" settings are supported: ${Object.keys(
+              supportedCpus
+          ).join(", ")}`
       );
     }
 
     // @ts-ignore
     if (!supportedMemories[cpu][memory]) {
       throw new VisibleError(
-        `In the "${
-          this.node.id
-        }" Service, only the following "memory" settings are supported with "${cpu}": ${Object.keys(
-          supportedMemories[cpu]
-        ).join(", ")}`
+          `In the "${
+              this.node.id
+          }" Service, only the following "memory" settings are supported with "${cpu}": ${Object.keys(
+              supportedMemories[cpu]
+          ).join(", ")}`
       );
     }
 
     const storageInGiB = toCdkSize(storage).toGibibytes();
     if (storageInGiB < 20 || storageInGiB > 200) {
       throw new VisibleError(
-        `In the "${this.node.id}" Service, the supported value for storage is between "20 GB" and "200 GB"`
+          `In the "${this.node.id}" Service, the supported value for storage is between "20 GB" and "200 GB"`
       );
     }
   }
@@ -880,23 +906,23 @@ export class Service extends Construct implements SSTConstruct {
     const { cdk } = this.props;
 
     return (
-      cdk?.vpc ??
-      new Vpc(this, "Vpc", {
-        natGateways: 1,
-      })
+        cdk?.vpc ??
+        new Vpc(this, "Vpc", {
+          natGateways: 1,
+        })
     );
   }
 
   private createService(vpc: IVpc) {
     const { architecture, cpu, memory, storage, port, logRetention, cdk } =
-      this.props;
+        this.props;
     const app = this.node.root as App;
     const clusterName = app.logicalPrefixedName(this.node.id);
 
     const logGroup = new LogRetention(this, "LogRetention", {
       logGroupName: `/sst/service/${clusterName}`,
       retention:
-        RetentionDays[logRetention.toUpperCase() as keyof typeof RetentionDays],
+          RetentionDays[logRetention.toUpperCase() as keyof typeof RetentionDays],
       logRetentionRetryOptions: {
         maxRetries: 100,
       },
@@ -915,21 +941,21 @@ export class Service extends Construct implements SSTConstruct {
       // note: the minimum allowed value by CloudFormation is 21, set to
       //       undefined to set to the default value of 20
       ephemeralStorageGiB:
-        ephemeralStorageGiB === 20 ? undefined : ephemeralStorageGiB,
+          ephemeralStorageGiB === 20 ? undefined : ephemeralStorageGiB,
       runtimePlatform: {
         cpuArchitecture:
-          architecture === "arm64"
-            ? CpuArchitecture.ARM64
-            : CpuArchitecture.X86_64,
+            architecture === "arm64"
+                ? CpuArchitecture.ARM64
+                : CpuArchitecture.X86_64,
       },
     });
 
     const container = taskDefinition.addContainer("Container", {
       logging: new AwsLogDriver({
         logGroup: LogGroup.fromLogGroupArn(
-          this,
-          "LogGroup",
-          logGroup.logGroupArn
+            this,
+            "LogGroup",
+            logGroup.logGroupArn
         ),
         streamPrefix: "service",
       }),
@@ -954,14 +980,14 @@ export class Service extends Construct implements SSTConstruct {
     return { cluster, taskDefinition, container, service };
   }
 
-  private createLoadBalancer(vpc: IVpc, service: FargateService) {
+  private createLoadBalancer(vpc: IVpc, service: FargateService, https?: boolean, certificates?: IListenerCertificate[]) {
     const { cdk } = this.props;
 
     // Do not create load balancer if disabled
     if (cdk?.applicationLoadBalancer === false) {
       if (cdk?.applicationLoadBalancerTargetGroup)
         throw new VisibleError(
-          `In the "${this.node.id}" Service, the "cdk.applicationLoadBalancerTargetGroup" cannot be applied if the Application Load Balancer is diabled.`
+            `In the "${this.node.id}" Service, the "cdk.applicationLoadBalancerTargetGroup" cannot be applied if the Application Load Balancer is disabled.`
         );
       return {};
     }
@@ -970,21 +996,63 @@ export class Service extends Construct implements SSTConstruct {
       vpc,
       internetFacing: true,
       ...(cdk?.applicationLoadBalancer === true
-        ? {}
-        : cdk?.applicationLoadBalancer),
+          ? {}
+          : cdk?.applicationLoadBalancer),
     });
-    const listener = alb.addListener("Listener", { port: 80 });
-    const target = listener.addTargets("TargetGroup", {
-      port: 80,
-      targets: [service],
-      ...cdk?.applicationLoadBalancerTargetGroup,
-    });
+    let listener: ApplicationListener;
+    let target: ApplicationTargetGroup;
+    if (https) {
+      if (!certificates) {
+        throw new VisibleError(
+            `In the "${this.node.id}" Service, the "httpsLoadBalancer" option is enabled but no "certificates" are provided.`
+        );
+      }
+      let httpListener = alb.addListener('http_listener', {
+        protocol: ApplicationProtocol.HTTP,
+      })
+      // Dummy response. If omitted, we get the following error on `cdk synth`:
+      // "Listener needs at least one default target group (call addTargetGroups)"
+      // See: https://github.com/aws/aws-cdk/issues/2563 for details
+      httpListener.addAction("DummyResponse", {
+        action: ListenerAction.fixedResponse(404)
+      });
+      const cfnHttpListener = httpListener.node.defaultChild as CfnListener;
+      cfnHttpListener.defaultActions = [{
+        type: "redirect",
+        redirectConfig: {
+          protocol: "HTTPS",
+          host: "#{host}",
+          path: "/#{path}",
+          query: "#{query}",
+          port: "443",
+          statusCode: "HTTP_301"
+        }
+      }];
+      listener = alb.addListener('HttpsListener', {
+        protocol: ApplicationProtocol.HTTPS,
+        port: 443,
+        certificates: certificates,
+      });
+      target = listener.addTargets("TargetGroup", {
+        port: 80,
+        targets: [service],
+        ...cdk?.applicationLoadBalancerTargetGroup,
+      })
+    } else {
+      listener = alb.addListener("Listener", { port: 80 });
+      target = listener.addTargets("TargetGroup", {
+        port: 80,
+        targets: [service],
+        ...cdk?.applicationLoadBalancerTargetGroup,
+      });
+    }
+
     return { alb, target };
   }
 
   private createAutoScaling(
-    service: FargateService,
-    target?: ApplicationTargetGroup
+      service: FargateService,
+      target?: ApplicationTargetGroup
   ) {
     const {
       minContainers,
@@ -1050,8 +1118,8 @@ export class Service extends Construct implements SSTConstruct {
             originRequestPolicy: OriginRequestPolicy.ALL_VIEWER,
           },
           ...(cdk?.cloudfrontDistribution === true
-            ? {}
-            : cdk?.cloudfrontDistribution),
+              ? {}
+              : cdk?.cloudfrontDistribution),
         },
       },
     });
@@ -1063,8 +1131,8 @@ export class Service extends Construct implements SSTConstruct {
     const app = this.node.root as App;
     const role = new Role(this, "ServerFunctionRole", {
       assumedBy: new CompositePrincipal(
-        new AccountPrincipal(app.account),
-        new ServicePrincipal("lambda.amazonaws.com")
+          new AccountPrincipal(app.account),
+          new ServicePrincipal("lambda.amazonaws.com")
       ),
       maxSessionDuration: CdkDuration.hours(12),
     });
@@ -1072,9 +1140,9 @@ export class Service extends Construct implements SSTConstruct {
     return new Function(this, `ServerFunction`, {
       description: "Service dev function",
       handler: path.join(
-        __dirname,
-        "../support/service-dev-function",
-        "index.handler"
+          __dirname,
+          "../support/service-dev-function",
+          "index.handler"
       ),
       runtime: "nodejs18.x",
       memorySize: "512 MB",
@@ -1091,26 +1159,26 @@ export class Service extends Construct implements SSTConstruct {
     // Get referenced secrets
     const referencedSecrets: Secret[] = [];
     constructs.forEach((c) =>
-      referencedSecrets.push(...getReferencedSecrets(c))
+        referencedSecrets.push(...getReferencedSecrets(c))
     );
 
     [...constructs, ...referencedSecrets].forEach((c) => {
       // Bind environment
       const env = bindEnvironment(c);
       Object.entries(env).forEach(([key, value]) =>
-        this.addEnvironmentForService(key, value)
+          this.addEnvironmentForService(key, value)
       );
 
       // Bind permissions
       const permissions = bindPermissions(c);
       Object.entries(permissions).forEach(([action, resources]) =>
-        this.attachPermissionsForService([
-          new PolicyStatement({
-            actions: [action],
-            effect: Effect.ALLOW,
-            resources,
-          }),
-        ])
+          this.attachPermissionsForService([
+            new PolicyStatement({
+              actions: [action],
+              effect: Effect.ALLOW,
+              resources,
+            }),
+          ])
       );
     });
   }
@@ -1131,23 +1199,23 @@ export class Service extends Construct implements SSTConstruct {
   private async createNixpacksBuilder() {
     try {
       await execAsync(
-        [
-          "docker",
-          "build",
-          `-t ${NIXPACKS_IMAGE_NAME}`,
-          "--platform=linux/amd64",
-          path.resolve(__dirname, "../support/nixpacks"),
-        ].join(" "),
-        {
-          env: {
-            ...process.env,
-          },
-        }
+          [
+            "docker",
+            "build",
+            `-t ${NIXPACKS_IMAGE_NAME}`,
+            "--platform=linux/amd64",
+            path.resolve(__dirname, "../support/nixpacks"),
+          ].join(" "),
+          {
+            env: {
+              ...process.env,
+            },
+          }
       );
     } catch (e) {
       console.error(e);
       throw new VisibleError(
-        `Failed to setup Nixpacks builder for the ${this.node.id} service`
+          `Failed to setup Nixpacks builder for the ${this.node.id} service`
       );
     }
   }
@@ -1156,27 +1224,27 @@ export class Service extends Construct implements SSTConstruct {
     const { path: servicePath } = this.props;
     try {
       await execAsync(
-        [
-          "docker",
-          "run",
-          "--rm",
-          "--network=host",
-          `--name=sst-${this.node.id}-service`,
-          `-v=${path.resolve(servicePath)}:/service`,
-          `-w="/service"`,
-          NIXPACKS_IMAGE_NAME,
-          `build . --out .`,
-        ].join(" "),
-        {
-          env: {
-            ...process.env,
-          },
-        }
+          [
+            "docker",
+            "run",
+            "--rm",
+            "--network=host",
+            `--name=sst-${this.node.id}-service`,
+            `-v=${path.resolve(servicePath)}:/service`,
+            `-w="/service"`,
+            NIXPACKS_IMAGE_NAME,
+            `build . --out .`,
+          ].join(" "),
+          {
+            env: {
+              ...process.env,
+            },
+          }
       );
     } catch (e) {
       console.error(e);
       throw new VisibleError(
-        `Failed to run Nixpacks build for the ${this.node.id} service`
+          `Failed to run Nixpacks build for the ${this.node.id} service`
       );
     }
     return ".nixpacks/Dockerfile";
@@ -1187,22 +1255,22 @@ export class Service extends Construct implements SSTConstruct {
     const platform = architecture === "arm64" ? "linux/arm64" : "linux/amd64";
     try {
       await execAsync(
-        [
-          "docker",
-          "build",
-          `-t sst-build:service-${this.node.id}`,
-          `--platform ${platform}`,
-          `-f ${path.join(servicePath, dockerfile)}`,
-          ...Object.entries(build?.buildArgs || {}).map(
-            ([k, v]) => `--build-arg ${k}=${v}`
-          ),
-          this.props.path,
-        ].join(" "),
-        {
-          env: {
-            ...process.env,
-          },
-        }
+          [
+            "docker",
+            "build",
+            `-t sst-build:service-${this.node.id}`,
+            `--platform ${platform}`,
+            `-f ${path.join(servicePath, dockerfile)}`,
+            ...Object.entries(build?.buildArgs || {}).map(
+                ([k, v]) => `--build-arg ${k}=${v}`
+            ),
+            this.props.path,
+          ].join(" "),
+          {
+            env: {
+              ...process.env,
+            },
+          }
       );
     } catch (e) {
       console.error(e);
@@ -1211,14 +1279,14 @@ export class Service extends Construct implements SSTConstruct {
   }
 
   private updateContainerImage(
-    dockerfile: string,
-    taskDefinition: FargateTaskDefinition,
-    container: ContainerDefinition
+      dockerfile: string,
+      taskDefinition: FargateTaskDefinition,
+      container: ContainerDefinition
   ) {
     const { path: servicePath, architecture, build } = this.props;
     const image = ContainerImage.fromAsset(servicePath, {
       platform:
-        architecture === "arm64" ? Platform.LINUX_ARM64 : Platform.LINUX_AMD64,
+          architecture === "arm64" ? Platform.LINUX_ARM64 : Platform.LINUX_AMD64,
       file: dockerfile,
       buildArgs: build?.buildArgs,
       exclude: [".sst/dist", ".sst/artifacts"],
@@ -1226,8 +1294,8 @@ export class Service extends Construct implements SSTConstruct {
     });
     const cfnTask = taskDefinition.node.defaultChild as CfnTaskDefinition;
     cfnTask.addPropertyOverride(
-      "ContainerDefinitions.0.Image",
-      image.bind(this, container).imageName
+        "ContainerDefinitions.0.Image",
+        image.bind(this, container).imageName
     );
   }
 }
