@@ -18,15 +18,20 @@ func RandomString(length int) string {
 }
 
 type ReadableError struct {
-	Message string
+	message string
+	error   error
 }
 
-func NewReadableError(message string) *ReadableError {
-	return &ReadableError{Message: message}
+func NewReadableError(err error, message string) *ReadableError {
+	return &ReadableError{message: message, error: err}
 }
 
 func (e *ReadableError) Error() string {
-	return e.Message
+	return e.message
+}
+
+func (e *ReadableError) Unwrap() error {
+	return e.error
 }
 
 type CleanupFunc func() error

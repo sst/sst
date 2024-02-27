@@ -387,7 +387,7 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 
 	slog.Info("done running stack command")
 	if err != nil {
-		return errors.New("error running stack command")
+		return err
 	}
 	return nil
 }

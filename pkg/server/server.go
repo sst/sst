@@ -12,7 +12,6 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/sst/ion/internal/util"
 	"github.com/sst/ion/pkg/project"
 	"github.com/sst/ion/pkg/project/provider"
 	"github.com/sst/ion/pkg/server/bus"
@@ -83,6 +82,8 @@ func New(p *project.Project) (*Server, error) {
 	}
 	return result, nil
 }
+
+var ErrServerAlreadyRunning = fmt.Errorf("There is already an instance of sst running")
 
 func (s *Server) Start(parentContext context.Context) error {
 	timer := time.NewTimer(5 * time.Minute)
@@ -160,7 +161,7 @@ func (s *Server) Start(parentContext context.Context) error {
 
 	port, err := findAvailablePort()
 	if err != nil {
-		return util.NewReadableError("There is already an instance of sst running")
+		return ErrServerAlreadyRunning
 	}
 	s.server.Addr = fmt.Sprintf("0.0.0.0:%d", port)
 	slog.Info("server", "addr", s.server.Addr)

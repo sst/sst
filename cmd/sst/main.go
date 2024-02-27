@@ -48,6 +48,7 @@ func main() {
 	interruptChannel := make(chan os.Signal, 1)
 	signal.Notify(interruptChannel, os.Interrupt)
 	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 	go func() {
 		<-interruptChannel
 		cancel()
@@ -152,13 +153,13 @@ func main() {
 
 							err = p.Stack.Lock()
 							if err != nil {
-								return err
+								return util.NewReadableError(err, "Could not lock state")
 							}
 							defer p.Stack.Unlock()
 
 							path, err := p.Stack.PullState()
 							if err != nil {
-								return err
+								return util.NewReadableError(err, "Could not pull state")
 							}
 							editor := os.Getenv("EDITOR")
 							if editor == "" {
@@ -169,10 +170,10 @@ func main() {
 							cmd.Stdout = os.Stdout
 							cmd.Stderr = os.Stderr
 							if err := cmd.Start(); err != nil {
-								return err
+								return util.NewReadableError(err, "Could not start editor")
 							}
 							if err := cmd.Wait(); err != nil {
-								return err
+								return util.NewReadableError(err, "Editor exited with error")
 							}
 							return p.Stack.PushState()
 						},
@@ -199,12 +200,12 @@ func main() {
 							backend := p.Backend()
 							secrets, err := provider.GetSecrets(backend, p.App().Name, p.App().Stage)
 							if err != nil {
-								return err
+								return util.NewReadableError(err, "Could not get secrets")
 							}
 							secrets[key] = value
 							err = provider.PutSecrets(backend, p.App().Name, p.App().Stage, secrets)
 							if err != nil {
-								return err
+								return util.NewReadableError(err, "Could not set secret")
 							}
 							fmt.Println("Secret set")
 							return nil
@@ -220,7 +221,7 @@ func main() {
 							backend := p.Backend()
 							secrets, err := provider.GetSecrets(backend, p.App().Name, p.App().Stage)
 							if err != nil {
-								return err
+								return util.NewReadableError(err, "Could not get secrets")
 							}
 							for key, value := range secrets {
 								fmt.Println(key, "=", value)
@@ -282,15 +283,18 @@ func main() {
 						return err
 					}
 
-					server, err := server.New(project)
+					s, err := server.New(project)
 					if err != nil {
 						return err
 					}
 					interruptChannel := make(chan os.Signal, 1)
 					signal.Notify(interruptChannel, os.Interrupt)
 
-					err = server.Start(ctx)
+					err = s.Start(ctx)
 					if err != nil {
+						if err == server.ErrServerAlreadyRunning {
+							return util.NewReadableError(err, "Server already running")
+						}
 						return err
 					}
 					return nil
@@ -340,12 +344,12 @@ func main() {
 
 					cfgPath, err := project.Discover()
 					if err != nil {
-						return err
+						return util.NewReadableError(err, "Could not find sst.config.ts")
 					}
 
 					stage, err := getStage(cli, cfgPath)
 					if err != nil {
-						return err
+						return util.NewReadableError(err, "Could not find stage")
 					}
 
 					deployComplete := make(chan *project.CompleteEvent)
@@ -487,7 +491,7 @@ func main() {
 					})
 					cancel()
 					if err != nil {
-						return err
+						return util.NewReadableError(err, "")
 					}
 
 					return nil
@@ -504,19 +508,12 @@ func main() {
 					ui := ui.New(ui.ProgressModeDeploy)
 					defer ui.Destroy()
 					ui.Header(version, p.App().Name, p.App().Stage)
-
-					ctx, cancel := context.WithCancel(cli.Context)
-					go func() {
-						<-interruptChannel
-						ui.Interrupt()
-						cancel()
-					}()
 					err = p.Stack.Run(ctx, &project.StackInput{
 						Command: "up",
 						OnEvent: ui.Trigger,
 					})
 					if err != nil {
-						return err
+						return util.NewReadableError(err, "")
 					}
 					return nil
 				},
@@ -532,7 +529,6 @@ func main() {
 					ui := ui.New(ui.ProgressModeRemove)
 					defer ui.Destroy()
 					ui.Header(version, p.App().Name, p.App().Stage)
-
 					interruptChannel := make(chan os.Signal, 1)
 					signal.Notify(interruptChannel, os.Interrupt)
 
@@ -542,13 +538,12 @@ func main() {
 						ui.Interrupt()
 						cancel()
 					}()
-
 					err = p.Stack.Run(ctx, &project.StackInput{
 						Command: "destroy",
 						OnEvent: ui.Trigger,
 					})
 					if err != nil {
-						return err
+						return util.NewReadableError(err, "")
 					}
 					return nil
 				},
@@ -567,20 +562,12 @@ func main() {
 
 					interruptChannel := make(chan os.Signal, 1)
 					signal.Notify(interruptChannel, os.Interrupt)
-
-					ctx, cancel := context.WithCancel(cli.Context)
-					go func() {
-						<-interruptChannel
-						ui.Interrupt()
-						cancel()
-					}()
-
 					err = p.Stack.Run(ctx, &project.StackInput{
 						Command: "refresh",
 						OnEvent: ui.Trigger,
 					})
 					if err != nil {
-						return err
+						return util.NewReadableError(err, "")
 					}
 					return nil
 				},
@@ -593,14 +580,11 @@ func main() {
 					if err != nil {
 						return err
 					}
-
 					err = p.Stack.Cancel()
 					if err != nil {
-						return err
+						return util.NewReadableError(err, "")
 					}
-
 					fmt.Println("Cancelled any pending deploys for", p.App().Name, "/", p.App().Stage)
-
 					return nil
 				},
 			},
@@ -653,10 +637,15 @@ func main() {
 
 	err := app.RunContext(ctx, os.Args)
 	if err != nil {
+		slog.Error("exited with error", "err", err)
 		if readableErr, ok := err.(*util.ReadableError); ok {
-			fmt.Println(readableErr.Message)
+			msg := readableErr.Error()
+			if msg != "" {
+				fmt.Println(readableErr.Error())
+			}
 		} else {
-			panic(err)
+			fmt.Println("Unexpected error occurred. Please check the logs for more details.")
+			fmt.Println(err.Error())
 		}
 		os.Exit(1)
 	}
@@ -697,12 +686,12 @@ func initProject(cli *cli.Context) (*project.Project, error) {
 
 	cfgPath, err := project.Discover()
 	if err != nil {
-		return nil, err
+		return nil, util.NewReadableError(err, "Could not find sst.config.ts")
 	}
 
 	stage, err := getStage(cli, cfgPath)
 	if err != nil {
-		return nil, err
+		return nil, util.NewReadableError(err, "Could not find stage")
 	}
 
 	p, err := project.New(&project.ProjectConfig{
@@ -711,7 +700,7 @@ func initProject(cli *cli.Context) (*project.Project, error) {
 		Config:  cfgPath,
 	})
 	if err != nil {
-		return nil, err
+		return nil, util.NewReadableError(err, "Could not initialize project")
 	}
 
 	if !p.CheckPlatform(version) {
@@ -720,11 +709,11 @@ func initProject(cli *cli.Context) (*project.Project, error) {
 		spin.Start()
 		err := p.CopyPlatform(version)
 		if err != nil {
-			return nil, err
+			return nil, util.NewReadableError(err, "Could not copy platform code to project directory")
 		}
 		err = p.Install()
 		if err != nil {
-			return nil, err
+			return nil, util.NewReadableError(err, "Could not install dependencies")
 		}
 		spin.Stop()
 	}
@@ -735,17 +724,17 @@ func initProject(cli *cli.Context) (*project.Project, error) {
 	}
 	nextLogFile, err := os.Create(filepath.Join(p.PathWorkingDir(), "sst.log"))
 	if err != nil {
-		return nil, err
+		return nil, util.NewReadableError(err, "Could not create log file")
 	}
 	_, err = io.Copy(nextLogFile, logFile)
 	if err != nil {
-		return nil, err
+		return nil, util.NewReadableError(err, "Could not copy log file")
 	}
 	logFile = nextLogFile
 	configureLog(cli)
 
 	if err := p.LoadProviders(); err != nil {
-		return nil, err
+		return nil, util.NewReadableError(err, err.Error())
 	}
 
 	app := p.App()
