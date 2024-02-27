@@ -72,7 +72,7 @@ func Listen[T Event](ctx context.Context, example T) <-chan T {
 		defer mutex.Unlock()
 		slog.Info("unsubscribing", "type", t)
 		subscribers[t] = append(s[:index], s[index+1:]...)
-		close(events)
+		// close(events)
 	}()
 
 	return events
