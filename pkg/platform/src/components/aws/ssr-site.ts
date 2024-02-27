@@ -472,7 +472,6 @@ export function buildApp(
             cwd: sitePath,
             stdio: "inherit",
             env: {
-              SST: "1",
               ...process.env,
               ...environment,
               ...linkEnvs,
@@ -512,7 +511,7 @@ export function createBucket(parent: ComponentResource, name: string) {
 
     // allow access from another account bucket policy
     new aws.s3.BucketPolicy(
-      `${name}AssetsPolicy`,
+      `${name}AssetsOriginAccessPolicy`,
       {
         bucket: bucket.name,
         policy: aws.iam.getPolicyDocumentOutput({
