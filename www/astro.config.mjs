@@ -13,9 +13,9 @@ const sidebar = [
   {
     label: "Get Started",
     items: [
-      { label: "Next.js", link: "/docs/quickstart/nextjs/" },
-      { label: "Remix", link: "/docs/quickstart/remix/" },
-      { label: "Astro", link: "/docs/quickstart/astro/" },
+      { label: "Next.js", link: "/docs/start/nextjs/" },
+      { label: "Remix", link: "/docs/start/remix/" },
+      { label: "Astro", link: "/docs/start/astro/" },
     ],
   },
   {
