@@ -117,7 +117,7 @@ await docClient.send(new QueryCommand({
 <Segment>
 <Section type="signature">
 ```ts
-new Dynamo(name, args, opts)
+new Dynamo(name, args, opts?)
 ```
 </Section>
 
@@ -125,7 +125,7 @@ new Dynamo(name, args, opts)
 #### Parameters
 - <p><code class="key">name</code> <code class="primitive">string</code></p>
 - <p><code class="key">args</code> [<code class="type">DynamoArgs</code>](#dynamoargs)</p>
-- <p><code class="key">opts</code> [<code class="type">ComponentResourceOptions</code>](https://www.pulumi.com/docs/concepts/options/)</p>
+- <p><code class="key">opts?</code> [<code class="type">ComponentResourceOptions</code>](https://www.pulumi.com/docs/concepts/options/)</p>
 </Section>
 </Segment>
 
@@ -135,7 +135,7 @@ new Dynamo(name, args, opts)
 <Segment>
 <Section type="signature">
 ```ts
-subscribe(subscriber, args)
+subscribe(subscriber, args?)
 ```
 </Section>
 
@@ -143,7 +143,7 @@ subscribe(subscriber, args)
 #### Parameters
 - <p><code class="key">subscriber</code> <code class="primitive">string</code><code class="symbol"> | </code>[<code class="type">FunctionArgs</code>](/docs/component/aws/function/#functionargs)</p>
 The function that'll be notified.
-- <p><code class="key">args</code> [<code class="type">DynamoSubscribeArgs</code>](#dynamosubscribeargs)</p>
+- <p><code class="key">args?</code> [<code class="type">DynamoSubscribeArgs</code>](#dynamosubscribeargs)</p>
 Configure the subscription.
 </Section>
 

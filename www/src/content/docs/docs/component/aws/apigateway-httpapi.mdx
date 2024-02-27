@@ -43,15 +43,15 @@ myApi
 <Segment>
 <Section type="signature">
 ```ts
-new ApiGatewayHttpApi(name, args, opts)
+new ApiGatewayHttpApi(name, args?, opts?)
 ```
 </Section>
 
 <Section type="parameters">
 #### Parameters
 - <p><code class="key">name</code> <code class="primitive">string</code></p>
-- <p><code class="key">args</code> [<code class="type">ApiGatewayHttpApiArgs</code>](#apigatewayhttpapiargs)</p>
-- <p><code class="key">opts</code> [<code class="type">ComponentResourceOptions</code>](https://www.pulumi.com/docs/concepts/options/)</p>
+- <p><code class="key">args?</code> [<code class="type">ApiGatewayHttpApiArgs</code>](#apigatewayhttpapiargs)</p>
+- <p><code class="key">opts?</code> [<code class="type">ComponentResourceOptions</code>](https://www.pulumi.com/docs/concepts/options/)</p>
 </Section>
 </Segment>
 
@@ -61,7 +61,7 @@ new ApiGatewayHttpApi(name, args, opts)
 <Segment>
 <Section type="signature">
 ```ts
-route(route, handler, args)
+route(route, handler, args?)
 ```
 </Section>
 
@@ -71,7 +71,7 @@ route(route, handler, args)
 The path for the route.
 - <p><code class="key">handler</code> <code class="primitive">string</code><code class="symbol"> | </code>[<code class="type">FunctionArgs</code>](/docs/component/aws/function/#functionargs)</p>
 The function that'll be invoked.
-- <p><code class="key">args</code> [<code class="type">ApiGatewayHttpApiRouteArgs</code>](#apigatewayhttpapirouteargs)</p>
+- <p><code class="key">args?</code> [<code class="type">ApiGatewayHttpApiRouteArgs</code>](#apigatewayhttpapirouteargs)</p>
 Configure the route.
 </Section>
 

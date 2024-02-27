@@ -195,15 +195,15 @@ export function VectorClient<
         ? never
         : key
       : never]: Resource[key];
-  },
+  }
 >(name: T) {
   return {
     ingest: async (event: IngestEvent) => {
       const ret = await lambda.send(
         new InvokeCommand({
-          FunctionName: Resource[name].ingestorFunctionName,
+          FunctionName: Resource[name].ingestor,
           Payload: JSON.stringify(event),
-        }),
+        })
       );
 
       parsePayload(ret, "Failed to ingest into the vector db");
@@ -212,22 +212,22 @@ export function VectorClient<
     retrieve: async (event: RetrieveEvent) => {
       const ret = await lambda.send(
         new InvokeCommand({
-          FunctionName: Resource[name].retrieverFunctionName,
+          FunctionName: Resource[name].retriever,
           Payload: JSON.stringify(event),
-        }),
+        })
       );
       return parsePayload<RetriveResponse>(
         ret,
-        "Failed to retrieve from the vector db",
+        "Failed to retrieve from the vector db"
       );
     },
 
     remove: async (event: RemoveEvent) => {
       const ret = await lambda.send(
         new InvokeCommand({
-          FunctionName: Resource[name].removerFunctionName,
+          FunctionName: Resource[name].remover,
           Payload: JSON.stringify(event),
-        }),
+        })
       );
       parsePayload(ret, "Failed to remove from the vector db");
     },

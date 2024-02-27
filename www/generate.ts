@@ -94,7 +94,7 @@ async function main() {
       lines.push(
         `<Section type="signature">`,
         "```ts",
-        renderFunctionSignature(signature),
+        renderSignature(signature),
         "```",
         `</Section>`
       );
@@ -106,9 +106,9 @@ async function main() {
           `<Section type="parameters">`,
           `#### Parameters`,
           ...signature.parameters.flatMap((param) => [
-            `- <p><code class="key">${renderName(param)}</code> ${renderType(
-              param.type!
-            )}</p>`,
+            `- <p><code class="key">${renderSignatureArg(
+              param
+            )}</code> ${renderType(param.type!)}</p>`,
             ...(renderDescription(param) ?? []),
           ]),
           `</Section>`
@@ -133,7 +133,7 @@ async function main() {
           `<Segment>`,
           `<Section type="signature">`,
           "```ts",
-          renderFunctionSignature(m.signatures![0]),
+          renderSignature(m.signatures![0]),
           "```",
           `</Section>`
         );
@@ -145,9 +145,9 @@ async function main() {
             `<Section type="parameters">`,
             `#### Parameters`,
             ...m.signatures![0].parameters.flatMap((param) => [
-              `- <p><code class="key">${renderName(param)}</code> ${renderType(
-                param.type!
-              )}</p>`,
+              `- <p><code class="key">${renderSignatureArg(
+                param
+              )}</code> ${renderType(param.type!)}</p>`,
               ...(renderDescription(param) ?? []),
             ]),
             `</Section>`
@@ -327,10 +327,27 @@ async function main() {
       return ["</div>"];
     }
 
-    function renderName(
-      prop: TypeDoc.DeclarationReflection | TypeDoc.ParameterReflection
-    ) {
+    function renderName(prop: TypeDoc.DeclarationReflection) {
       return `${prop.name}${prop.flags.isOptional ? "?" : ""}`;
+    }
+
+    function renderSignatureArg(prop: TypeDoc.ParameterReflection) {
+      if (prop.defaultValue && prop.defaultValue !== "{}")
+        throw new Error(
+          [
+            `Unsupported default value "${prop.defaultValue}" for name "${prop.name}".`,
+            ``,
+            `Function signature parameters can be defined as optional in one of two ways:`,
+            ` - flag.isOptional is set, ie. "(args?: FooArgs)"`,
+            ` - defaultValue is set, ie. "(args: FooArgs = {})`,
+            ``,
+            `But in this case, the default value is not "{}". Hence not supported.`,
+          ].join("\n")
+        );
+
+      return `${prop.name}${
+        prop.flags.isOptional || prop.defaultValue ? "?" : ""
+      }`;
     }
 
     function renderDescription(
@@ -406,9 +423,9 @@ async function main() {
         .flatMap((tag) => renderComment(tag.content));
     }
 
-    function renderFunctionSignature(signature: TypeDoc.SignatureReflection) {
+    function renderSignature(signature: TypeDoc.SignatureReflection) {
       const parameters = (signature.parameters ?? [])
-        .map((param) => param.name + (param.flags.isOptional ? "?" : ""))
+        .map(renderSignatureArg)
         .join(", ");
       return `${signature.name}(${parameters})`;
     }
@@ -542,6 +559,7 @@ async function main() {
         Function: "function",
         FunctionArgs: "function",
         FunctionPermissionArgs: "function",
+        PostgresArgs: "postgres",
       }[type.name];
       if (externalModule) {
         const hash = type.name.endsWith("Args")

@@ -71,15 +71,15 @@ await sns.send(new PublishCommand({
 <Segment>
 <Section type="signature">
 ```ts
-new SnsTopic(name, args, opts)
+new SnsTopic(name, args?, opts?)
 ```
 </Section>
 
 <Section type="parameters">
 #### Parameters
 - <p><code class="key">name</code> <code class="primitive">string</code></p>
-- <p><code class="key">args</code> [<code class="type">SnsTopicArgs</code>](#snstopicargs)</p>
-- <p><code class="key">opts</code> [<code class="type">ComponentResourceOptions</code>](https://www.pulumi.com/docs/concepts/options/)</p>
+- <p><code class="key">args?</code> [<code class="type">SnsTopicArgs</code>](#snstopicargs)</p>
+- <p><code class="key">opts?</code> [<code class="type">ComponentResourceOptions</code>](https://www.pulumi.com/docs/concepts/options/)</p>
 </Section>
 </Segment>
 
@@ -89,7 +89,7 @@ new SnsTopic(name, args, opts)
 <Segment>
 <Section type="signature">
 ```ts
-subscribe(subscriber, args)
+subscribe(subscriber, args?)
 ```
 </Section>
 
@@ -97,7 +97,7 @@ subscribe(subscriber, args)
 #### Parameters
 - <p><code class="key">subscriber</code> <code class="primitive">string</code><code class="symbol"> | </code>[<code class="type">FunctionArgs</code>](/docs/component/aws/function/#functionargs)</p>
 The function that'll be notified.
-- <p><code class="key">args</code> [<code class="type">SnsTopicSubscribeArgs</code>](#snstopicsubscribeargs)</p>
+- <p><code class="key">args?</code> [<code class="type">SnsTopicSubscribeArgs</code>](#snstopicsubscribeargs)</p>
 Configure the subscription.
 </Section>
 

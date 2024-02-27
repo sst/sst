@@ -5,8 +5,8 @@ import {
   interpolate,
   output,
 } from "@pulumi/pulumi";
-import { Component } from "../component.js";
-import { Postgres } from "./postgres.js";
+import { Component, Transform, transform } from "../component.js";
+import { Postgres, PostgresArgs } from "./postgres.js";
 import { EmbeddingsTable } from "./providers/embeddings-table.js";
 import { Function } from "./function.js";
 import { Link } from "../link.js";
@@ -51,6 +51,16 @@ export interface VectorArgs {
    * ```
    */
   openAiApiKey?: Input<string>;
+  /**
+   * [Transform](/docs/components#transform/) how this component creates its underlying
+   * resources.
+   */
+  transform?: {
+    /**
+     * Transform the Postgres component.
+     */
+    postgres?: Transform<PostgresArgs>;
+  };
 }
 
 /**
@@ -165,7 +175,11 @@ export class Vector
     }
 
     function createDB() {
-      return new Postgres(`${name}Database`, {}, { parent });
+      return new Postgres(
+        `${name}Database`,
+        transform(args?.transform?.postgres, {}),
+        { parent },
+      );
     }
 
     function createDBTable() {
@@ -266,31 +280,31 @@ export class Vector
   /**
    * The name of the ingestor Lambda function.
    */
-  public get ingestorFunctionName() {
-    return this.ingestHandler.nodes.function.name;
+  public get ingestor() {
+    return this.ingestHandler.name;
   }
 
   /**
    * The name of the retriever Lambda function.
    */
-  public get retrieverFunctionName() {
-    return this.retrieveHandler.nodes.function.name;
+  public get retriever() {
+    return this.retrieveHandler.name;
   }
 
   /**
    * The name of the remover Lambda function.
    */
-  public get removerFunctionName() {
-    return this.removeHandler.nodes.function.name;
+  public get remover() {
+    return this.removeHandler.name;
   }
 
   /** @internal */
   public getSSTLink() {
     return {
       properties: {
-        ingestorFunctionName: this.ingestorFunctionName,
-        retrieverFunctionName: this.retrieverFunctionName,
-        removerFunctionName: this.removerFunctionName,
+        ingestor: this.ingestor,
+        retriever: this.retriever,
+        remover: this.remover,
       },
     };
   }

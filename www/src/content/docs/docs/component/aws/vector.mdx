@@ -78,7 +78,7 @@ new Vector(name, args?, opts?)
 
 ## Properties
 
-### ingestorFunctionName
+### ingestor
 <Segment>
 <Section type="parameters">
 <InlineSection>
@@ -88,7 +88,7 @@ new Vector(name, args?, opts?)
 The name of the ingestor Lambda function.
 </Segment>
 
-### removerFunctionName
+### remover
 <Segment>
 <Section type="parameters">
 <InlineSection>
@@ -98,7 +98,7 @@ The name of the ingestor Lambda function.
 The name of the remover Lambda function.
 </Segment>
 
-### retrieverFunctionName
+### retriever
 <Segment>
 <Section type="parameters">
 <InlineSection>
@@ -112,7 +112,7 @@ The name of the retriever Lambda function.
 
 The following are accessible through the [Node client](/docs/reference/client/) at runtime.
 
-### ingestorFunctionName
+### ingestor
 <Segment>
 <Section type="parameters">
 <InlineSection>
@@ -122,7 +122,7 @@ The following are accessible through the [Node client](/docs/reference/client/) 
 The name of the ingestor Lambda function.
 </Segment>
 
-### removerFunctionName
+### remover
 <Segment>
 <Section type="parameters">
 <InlineSection>
@@ -132,7 +132,7 @@ The name of the ingestor Lambda function.
 The name of the remover Lambda function.
 </Segment>
 
-### retrieverFunctionName
+### retriever
 <Segment>
 <Section type="parameters">
 <InlineSection>
@@ -184,5 +184,27 @@ Use `sst.Secret` to store your API key securely.
   openAiApiKey: "<your-api-key>"
 }
 ```
+</Segment>
+### transform?
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Object</code>
+</InlineSection>
+- <p>[<code class="key">postgres?</code>](#transform-postgres)</p>
+</Section>
+[Transform](/docs/components#transform/) how this component creates its underlying
+resources.
+
+</Segment>
+<NestedTitle id="transform-postgres" Tag="h4" parent="transform.">postgres?</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** [<code class="type">PostgresArgs</code>](/docs/component/aws/postgres/#postgresargs)<code class="symbol"> | </code><code class="symbol">(</code><code class="primitive">args</code><code class="symbol">: </code>[<code class="type">PostgresArgs</code>](/docs/component/aws/postgres/#postgresargs)<code class="symbol"> => </code>[<code class="type">PostgresArgs</code>](/docs/component/aws/postgres/#postgresargs)<code class="symbol"> | </code><code class="primitive">void</code><code class="symbol">)</code>
+</InlineSection>
+</Section>
+Transform the Postgres component.
+
 </Segment>
 </div>
