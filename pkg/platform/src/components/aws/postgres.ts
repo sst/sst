@@ -112,7 +112,7 @@ export interface PostgresArgs {
  *
  * @example
  *
- * #### Minimal example
+ * #### Create the database
  *
  * ```js
  * const myDatabase = new sst.aws.Postgres("MyDatabase");

@@ -114,7 +114,7 @@ export interface DynamoArgs {
    * Enable [DynamoDB Streams](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Streams.html) for the table.
    *
    * :::note
-   * Streams are not enabled by default since there's a cost attached to them. You'll need to enable it before adding a subscriber.
+   * Streams are not enabled by default since there's a cost attached to storing them.
    * :::
    *
    * When an item in the table is modified, the stream captures the information and sends it to your subscriber function.
@@ -125,10 +125,10 @@ export interface DynamoArgs {
    *
    * You can configure what will be written to the stream:
    *
-   * - `"new-image"`: The entire item after it was modified.
-   * - `"old-image"`: The entire item before it was modified.
-   * - `"new-and-old-images"`:	Both the new and the old items. A good default to use since it contains all the data.
-   * - `"keys-only"`: Only the keys of the fields of the modified items. If you are worried about the costs, you can use this since it stores the least amount of data.
+   * - `new-image`: The entire item after it was modified.
+   * - `old-image`: The entire item before it was modified.
+   * - `new-and-old-images`:	Both the new and the old items. A good default to use since it contains all the data.
+   * - `keys-only`: Only the keys of the fields of the modified items. If you are worried about the costs, you can use this since it stores the least amount of data.
    * @default Not enabled
    * @example
    * ```js

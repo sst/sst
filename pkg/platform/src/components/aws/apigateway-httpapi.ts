@@ -385,7 +385,7 @@ export class ApiGatewayHttpApi extends Component implements Link.Linkable {
 
   /**
    * Add a route to the API Gateway HTTP API.
-   * @param path The path for the route.
+   * @param route The path for the route.
    * @param subscriber The function that'll be invoked.
    * @param args Configure the route.
    *

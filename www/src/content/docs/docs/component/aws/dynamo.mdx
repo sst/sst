@@ -398,10 +398,10 @@ The hash key field of the index. This field needs to be defined in the `fields`.
 <InlineSection>
 **Default** Not enabled
 </InlineSection>
-Enable DynamoDB Streams for the table.
+Enable [DynamoDB Streams](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Streams.html) for the table.
 
 :::note
-Streams are not enabled by default since there's a cost attached to them. You'll need to enable it before adding a subscriber.
+Streams are not enabled by default since there's a cost attached to storing them.
 :::
 
 When an item in the table is modified, the stream captures the information and sends it to your subscriber function.
@@ -412,10 +412,10 @@ The `new-and-old-images` stream type is a good default option since it has both 
 
 You can configure what will be written to the stream:
 
-- `"new-image"`: The entire item after it was modified.
-- `"old-image"`: The entire item before it was modified.
-- `"new-and-old-images"`:	Both the new and the old items. A good default to use since it contains all the data.
-- `"keys-only"`: Only the keys of the fields of the modified items. If you are worried about the costs, you can use the `keys-only` stream type since it stores the least amount of data.
+- `new-image`: The entire item after it was modified.
+- `old-image`: The entire item before it was modified.
+- `new-and-old-images`:	Both the new and the old items. A good default to use since it contains all the data.
+- `keys-only`: Only the keys of the fields of the modified items. If you are worried about the costs, you can use this since it stores the least amount of data.
 
 ```js
 {
@@ -457,6 +457,12 @@ Transform the DynamoDB Table resource.
 Filter the records processed by the `subscriber` function.
 
 :::tip
+You can pass in up to 5 different filters.
+:::
+
+You can pass in up to 5 different filter policies. These will logically ORed together. Meaning that if any single policy matches, the record will be processed.
+
+:::tip
 Learn more about the [filter rule syntax](https://docs.aws.amazon.com/lambda/latest/dg/invocation-eventfiltering.html#filtering-syntax).
 :::
 
@@ -490,7 +496,7 @@ For example, if your DynamoDB table's stream contains the follow record.
 }
 ```
 
-To process only those records where the `RequestCode` is `BBBB`.
+To process only those records where the `CustomerName` is `AnyCompany Industries`.
 
 ```js
 {

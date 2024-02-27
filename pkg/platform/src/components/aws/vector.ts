@@ -21,20 +21,32 @@ const ModelInfo = {
 
 export interface VectorArgs {
   /**
-   * The embedding model to use for generating vectors
-   * @default Titan Multimodal Embeddings G1
+   * The model used for generating the vectors.
+   *
+   * To use the `text-embedding-ada-002` model, you'll need to pass in your `openAiApiKey`.
+   *
+   * @default `"amazon.titan-embed-text-v1"`
+   * @example
+   * ```js
+   *
+   * {
+   *   model: "amazon.titan-embed-image-v1"
+   * }
+   * ```
    */
   model?: Input<keyof typeof ModelInfo>;
   /**
-   * Specifies the  OpenAI API key
-   *.This key is required for datar ingestoig and retrieal usvin an OpenAI modelg.
-   * @default OpenAI API key is not set
+   * Your OpenAI API key. This is needed only if you're using the `text-embedding-ada-002` model.
+   *
+   * :::tip
+   * Use `sst.Secret` to store your API key securely.
+   * :::
+   *
    * @example
    * ```js
-   * const OPENAI_API_KEY = new sst.aws.Secret("OPENAI_API_KEY");
    *
    * {
-   *   openAiApiKey: OPENAI_API_KEY.value,
+   *   openAiApiKey: "<your-api-key>"
    * }
    * ```
    */
@@ -42,13 +54,51 @@ export interface VectorArgs {
 }
 
 /**
- * The `Vector` component is a higher level component that makes it easy to create a Vector database powered by RDS Postgres Serverless v2.
+ * The `Vector` component lets you store and retrieve vector data in your app.
+ *
+ * - It uses an LLM to generate the embedding.
+ * - Stores it in a vector database powered by [RDS Postgres Serverless v2](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/aurora-serverless-v2.html).
+ * - Provides a [Node client](/docs/reference/client/) to ingest, retrieve, and remove the vector data.
  *
  * @example
  *
- * #### Using the minimal config
+ * #### Create the database
+ *
  * ```ts
- * new sst.aws.Vector("MyVectorDB");
+ * const myVectorDB = new sst.aws.Vector("MyVectorDB");
+ * ```
+ *
+ * #### Change the model
+ *
+ * Optionally, use a different model, like OpenAI's `text-embedding-ada-002` model. You'll need to pass in your OpenAI API key.
+ *
+ * ```ts {3}
+ * new sst.aws.Vector("MyVectorDB", {
+ *   openAiApiKey: new sst.aws.Secret("OpenAiApiKey").value,
+ *   model: "text-embedding-ada-002"
+ * });
+ * ```
+ *
+ * #### Link to a resource
+ *
+ * You can link it to other resources, like a function or your Next.js app.
+ *
+ * ```ts
+ * new sst.aws.Nextjs("Web", {
+ *   link: [myVectorDB]
+ * });
+ * ```
+ *
+ * Once linked, you can query it in your function code using the [Node client](/docs/reference/client/).
+ *
+ * ```ts title="app/page.tsx" {3}
+ * import { VectorClient } from "sst";
+ *
+ * const vector = VectorClient("MyVectorDB");
+ *
+ * await vector.retrieve({
+ *   text: "Some text to search for"
+ * });
  * ```
  */
 export class Vector
@@ -214,21 +264,21 @@ export class Vector
   }
 
   /**
-   * The name of the ingestor function.
+   * The name of the ingestor Lambda function.
    */
   public get ingestorFunctionName() {
     return this.ingestHandler.nodes.function.name;
   }
 
   /**
-   * The name of the retriever function.
+   * The name of the retriever Lambda function.
    */
   public get retrieverFunctionName() {
     return this.retrieveHandler.nodes.function.name;
   }
 
   /**
-   * The name of the remover function.
+   * The name of the remover Lambda function.
    */
   public get removerFunctionName() {
     return this.removeHandler.nodes.function.name;
