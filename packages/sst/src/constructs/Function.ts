@@ -96,7 +96,7 @@ export interface FunctionDockerBuildCacheProps extends DockerCacheOption {}
 export interface FunctionDockerBuildProps {
   /**
    * Cache from options to pass to the `docker build` command.
-   * @default - no cache from args are passed
+   * @default No cache from args are passed
    * @example
    * ```js
    * cacheFrom: [{type: "gha"}],
@@ -105,7 +105,7 @@ export interface FunctionDockerBuildProps {
   cacheFrom?: FunctionDockerBuildCacheProps[];
   /**
    * Cache to options to pass to the `docker build` command.
-   * @default - no cache to args are passed
+   * @default No cache to args are passed
    * @example
    * ```js
    * cacheTo: {type: "gha"},
@@ -779,6 +779,42 @@ export interface ContainerProps {
    * ```
    */
   buildArgs?: Record<string, string>;
+  /**
+   * SSH agent socket or keys to pass to the docker build command.
+   * Docker BuildKit must be enabled to use the ssh flag
+   * @default No --ssh flag is passed to the build command
+   * @example
+   * ```js
+   * container: {
+   *   buildSsh: "default"
+   * }
+   * ```
+   */
+  buildSsh?: string;
+  /**
+   * Cache from options to pass to the docker build command.
+   * [DockerCacheOption](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_ecr_assets.DockerCacheOption.html)[].
+   * @default No cache from options are passed to the build command
+   * @example
+   * ```js
+   * container: {
+   *   cacheFrom: [{ type: 'registry', params: { ref: 'ghcr.io/myorg/myimage:cache' }}],
+   * }
+   * ```
+   */
+  cacheFrom?: FunctionDockerBuildCacheProps[];
+  /**
+   * Cache to options to pass to the docker build command.
+   * [DockerCacheOption](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_ecr_assets.DockerCacheOption.html)[].
+   * @default No cache to options are passed to the build command
+   * @example
+   * ```js
+   * container: {
+   *   cacheTo: { type: 'registry', params: { ref: 'ghcr.io/myorg/myimage:cache', mode: 'max', compression: 'zstd' }},
+   * }
+   * ```
+   */
+  cacheTo?: FunctionDockerBuildCacheProps;
 }
 
 /**
@@ -1030,6 +1066,15 @@ export class Function extends CDKFunction implements SSTConstruct {
             ...(props.container?.file ? { file: props.container.file } : {}),
             ...(props.container?.buildArgs
               ? { buildArgs: props.container.buildArgs }
+              : {}),
+            ...(props.container?.buildSsh
+              ? { buildSsh: props.container.buildSsh }
+              : {}),
+            ...(props.container?.cacheFrom
+              ? { cacheFrom: props.container.cacheFrom }
+              : {}),
+            ...(props.container?.cacheTo
+              ? { cacheTo: props.container.cacheTo }
               : {}),
             exclude: [".sst/dist", ".sst/artifacts"],
             ignoreMode: IgnoreMode.GLOB,
