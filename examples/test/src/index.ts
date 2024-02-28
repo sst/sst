@@ -1,4 +1,2 @@
-import { VectorClient } from "sst";
-import { Resource } from "sst";
-
-const client = VectorClient("Vector");
+import "./asfasdasd";
+export function handler() {}

@@ -268,25 +268,24 @@ func (u *UI) Trigger(evt *project.StackEvent) {
 
 	if evt.DiagnosticEvent != nil {
 		if evt.DiagnosticEvent.Severity == "error" {
-			msg := strings.TrimSpace(evt.DiagnosticEvent.Message)
 			u.printProgress(Progress{
 				URN:     evt.DiagnosticEvent.URN,
 				Color:   color.FgRed,
 				Final:   true,
 				Label:   "Error",
-				Message: msg,
+				Message: parseError(evt.DiagnosticEvent.Message)[0],
 			})
 		}
 
 		if evt.DiagnosticEvent.Severity == "info" {
 			u.spinner.Disable()
-			fmt.Println(strings.TrimRight(evt.DiagnosticEvent.Message, " \n"))
+			fmt.Println(parseError(evt.DiagnosticEvent.Message)[0])
 			u.spinner.Enable()
 		}
 
 		if evt.DiagnosticEvent.Severity == "info#err" {
 			u.spinner.Disable()
-			fmt.Println(strings.TrimRight(evt.DiagnosticEvent.Message, " \n"))
+			fmt.Println(parseError(evt.DiagnosticEvent.Message)[0])
 			u.spinner.Enable()
 		}
 	}
@@ -339,7 +338,7 @@ func (u *UI) Trigger(evt *project.StackEvent) {
 			if status.URN != "" {
 				color.New(color.FgRed, color.Bold).Println("   " + formatURN(status.URN))
 			}
-			color.New(color.FgWhite).Println(status.Message)
+			color.New(color.FgWhite).Println(strings.Join(parseError(status.Message), "\n"))
 		}
 	}
 }
@@ -518,7 +517,7 @@ func (u *UI) printProgress(progress Progress) {
 		color.New(color.FgHiBlack).Printf(" (%s)", progress.Duration)
 	}
 	if progress.Message != "" {
-		color.New(color.FgHiBlack).Print(" ", progress.Message)
+		color.New(color.FgHiBlack).Print(progress.Message)
 	}
 	fmt.Println()
 	u.hasProgress = true
