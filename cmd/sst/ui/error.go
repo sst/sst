@@ -17,11 +17,14 @@ func parseError(input string) []string {
 
 	if strings.Contains(input, "occurred:") {
 		lines := []string{}
-		for _, line := range strings.Split(input, "\n") {
+		sections := strings.Split(input, "*")
+		for _, line := range sections[1:] {
 			line = strings.TrimSpace(line)
-			if strings.HasPrefix(line, "*") {
-				splits := strings.Split(line, ":")
-				lines = append(lines, strings.TrimSpace(splits[len(splits)-1]))
+			splits := strings.Split(line, ":")
+			final := strings.TrimSpace(splits[len(splits)-1])
+
+			for _, split := range strings.Split(final, "\n") {
+				lines = append(lines, split)
 			}
 		}
 		return lines

@@ -273,7 +273,7 @@ func (u *UI) Trigger(evt *project.StackEvent) {
 				Color:   color.FgRed,
 				Final:   true,
 				Label:   "Error",
-				Message: parseError(evt.DiagnosticEvent.Message)[0],
+				Message: parseError(evt.DiagnosticEvent.Message),
 			})
 		}
 
@@ -338,7 +338,7 @@ func (u *UI) Trigger(evt *project.StackEvent) {
 			if status.URN != "" {
 				color.New(color.FgRed, color.Bold).Println("   " + formatURN(status.URN))
 			}
-			color.New(color.FgWhite).Println(strings.Join(parseError(status.Message), "\n"))
+			color.New(color.FgWhite).Println("   " + strings.Join(parseError(status.Message), "\n   "))
 		}
 	}
 }
@@ -488,7 +488,7 @@ type Progress struct {
 	Label   string
 	URN     string
 	Final   bool
-	Message string
+	Message []string
 	time.Duration
 }
 
@@ -516,8 +516,12 @@ func (u *UI) printProgress(progress Progress) {
 	if progress.Duration != 0 {
 		color.New(color.FgHiBlack).Printf(" (%s)", progress.Duration)
 	}
-	if progress.Message != "" {
-		color.New(color.FgHiBlack).Print(progress.Message)
+	if len(progress.Message) > 0 {
+		for _, item := range progress.Message {
+			fmt.Println()
+			color.New(progress.Color, color.Bold).Print("|  ")
+			color.New(color.FgWhite).Print(item)
+		}
 	}
 	fmt.Println()
 	u.hasProgress = true

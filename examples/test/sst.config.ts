@@ -12,11 +12,9 @@ export default $config({
     };
   },
   async run() {
-    const fn = new sst.aws.Function("MyFunction", {
-      handler: "src/index.handler",
-    });
-    new aws.s3.Bucket("MyBucket", {
-      bucket: "my-bucket",
+    new aws.dynamodb.Table("Web", {
+      name: "/aweofih",
+      billingMode: "PAY_PER_REQUEST",
     });
     return {};
   },

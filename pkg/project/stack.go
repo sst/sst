@@ -268,14 +268,18 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 				if !ok {
 					return
 				}
-				input.OnEvent(&StackEvent{EngineEvent: event})
 
 				if event.DiagnosticEvent != nil && event.DiagnosticEvent.Severity == "error" {
+					if strings.HasPrefix(event.DiagnosticEvent.Message, "update failed") {
+						break
+					}
 					complete.Errors = append(complete.Errors, Error{
 						Message: event.DiagnosticEvent.Message,
 						URN:     event.DiagnosticEvent.URN,
 					})
 				}
+
+				input.OnEvent(&StackEvent{EngineEvent: event})
 
 				if event.SummaryEvent != nil {
 					complete.Finished = true
