@@ -15,6 +15,9 @@ export default $config({
     const fn = new sst.aws.Function("MyFunction", {
       handler: "src/index.handler",
     });
+    new aws.s3.Bucket("MyBucket", {
+      bucket: "my-bucket",
+    });
     return {};
   },
 });
