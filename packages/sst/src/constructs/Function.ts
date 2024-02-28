@@ -96,7 +96,7 @@ export interface FunctionDockerBuildCacheProps extends DockerCacheOption {}
 export interface FunctionDockerBuildProps {
   /**
    * Cache from options to pass to the `docker build` command.
-   * @default - no cache from args are passed
+   * @default No cache from args are passed
    * @example
    * ```js
    * cacheFrom: [{type: "gha"}],
@@ -105,7 +105,7 @@ export interface FunctionDockerBuildProps {
   cacheFrom?: FunctionDockerBuildCacheProps[];
   /**
    * Cache to options to pass to the `docker build` command.
-   * @default - no cache to args are passed
+   * @default No cache to args are passed
    * @example
    * ```js
    * cacheTo: {type: "gha"},
