@@ -1,0 +1,17 @@
+{
+  "name": "@@app",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "sst bind next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "db:generate": "drizzle-kit generate:pg",
+    "db:migrate": "sst bind tsx ./drizzle/migrate.ts"
+  },
+  "dependencies": {
+  },
+  "devDependencies": {
+  }
+}

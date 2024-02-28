@@ -38,7 +38,7 @@ new Api(stack, "Api", {
 ### Adding routes to an existing HTTP API
 
 ```js {5-7}
-import { HttpApi } from '@aws-cdk/aws-apigatewayv2-alpha';
+import { HttpApi } from 'aws-cdk-lib/aws-apigatewayv2';
 
 new Api(stack, "Api", {
   cdk: {
@@ -56,12 +56,17 @@ new Api(stack, "Api", {
 
 ### Adding subscribers to an existing SNS Topic
 
-```js {4}
-import * as sns from "@aws-cdk/aws-sns";
+```js {8-10}
+import * as sns from "aws-cdk-lib/aws-sns";
 
 new Topic(stack, "Topic", {
-  snsTopic: sns.Topic.fromTopicArn(stack, "ExistingTopic", topicArn),
-  subscribers: ["src/subscriber1.main", "src/subscriber2.main"],
+  subscribers: {
+    subscriber1: "src/subscriber1.main",
+    subscriber2: "src/subscriber2.main",
+  },
+  cdk: {
+    topic: sns.Topic.fromTopicArn(stack, "ExistingTopic", topicArn),
+  },
 });
 ```
 

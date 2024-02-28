@@ -10,7 +10,7 @@ import {
   printResource,
 } from "./helper";
 import * as acm from "aws-cdk-lib/aws-certificatemanager";
-import * as apig from "@aws-cdk/aws-apigatewayv2-alpha";
+import * as apig from "aws-cdk-lib/aws-apigatewayv2";
 import * as route53 from "aws-cdk-lib/aws-route53";
 import * as logs from "aws-cdk-lib/aws-logs";
 import {

@@ -103,6 +103,9 @@ interface GlobalOptions {
 }
 
 export async function initProject(globals: GlobalOptions) {
+  // Suppress warnings about deprecated CDK props.
+  process.env.JSII_DEPRECATED = "quiet";
+
   // Logger.debug("initing project");
   const root = globals.root || (await findRoot());
   const out = path.join(root, ".sst");

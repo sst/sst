@@ -51,6 +51,7 @@ import {
   Size as CDKSize,
   Duration as CDKDuration,
   IgnoreMode,
+  DockerCacheOption,
   CustomResource,
 } from "aws-cdk-lib/core";
 import { Effect, Policy, PolicyStatement, Role } from "aws-cdk-lib/aws-iam";
@@ -88,6 +89,28 @@ export type Runtime = keyof typeof supportedRuntimes;
 export type FunctionInlineDefinition = string | Function;
 export type FunctionDefinition = string | Function | FunctionProps;
 export interface FunctionUrlCorsProps extends functionUrlCors.CorsProps {}
+export interface FunctionDockerBuildCacheProps extends DockerCacheOption {}
+
+export interface FunctionDockerBuildProps {
+  /**
+   * Cache from options to pass to the `docker build` command.
+   * @default No cache from args are passed
+   * @example
+   * ```js
+   * cacheFrom: [{type: "gha"}],
+   * ```
+   */
+  cacheFrom?: FunctionDockerBuildCacheProps[];
+  /**
+   * Cache to options to pass to the `docker build` command.
+   * @default No cache to args are passed
+   * @example
+   * ```js
+   * cacheTo: {type: "gha"},
+   * ```
+   */
+  cacheTo?: FunctionDockerBuildCacheProps;
+}
 
 export interface FunctionHooks {
   /**
@@ -618,6 +641,11 @@ export interface PythonProps {
    * your own build processes, and you are doing this for the sake of build optimization.
    */
   noDocker?: boolean;
+
+  /**
+   * Build options to pass to the docker build command.
+   */
+  dockerBuild?: FunctionDockerBuildProps;
 }
 
 /**
@@ -749,6 +777,42 @@ export interface ContainerProps {
    * ```
    */
   buildArgs?: Record<string, string>;
+  /**
+   * SSH agent socket or keys to pass to the docker build command.
+   * Docker BuildKit must be enabled to use the ssh flag
+   * @default No --ssh flag is passed to the build command
+   * @example
+   * ```js
+   * container: {
+   *   buildSsh: "default"
+   * }
+   * ```
+   */
+  buildSsh?: string;
+  /**
+   * Cache from options to pass to the docker build command.
+   * [DockerCacheOption](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_ecr_assets.DockerCacheOption.html)[].
+   * @default No cache from options are passed to the build command
+   * @example
+   * ```js
+   * container: {
+   *   cacheFrom: [{ type: 'registry', params: { ref: 'ghcr.io/myorg/myimage:cache' }}],
+   * }
+   * ```
+   */
+  cacheFrom?: FunctionDockerBuildCacheProps[];
+  /**
+   * Cache to options to pass to the docker build command.
+   * [DockerCacheOption](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_ecr_assets.DockerCacheOption.html)[].
+   * @default No cache to options are passed to the build command
+   * @example
+   * ```js
+   * container: {
+   *   cacheTo: { type: 'registry', params: { ref: 'ghcr.io/myorg/myimage:cache', mode: 'max', compression: 'zstd' }},
+   * }
+   * ```
+   */
+  cacheTo?: FunctionDockerBuildCacheProps;
 }
 
 /**
@@ -946,22 +1010,9 @@ export class Function extends CDKFunction implements SSTConstruct {
         ...props,
         ...(props.runtime === "container"
           ? {
-              code: Code.fromAssetImage(props.handler!, {
-                ...(architecture?.dockerPlatform
-                  ? { platform: Platform.custom(architecture.dockerPlatform) }
-                  : {}),
-                ...(props.container?.cmd ? { cmd: props.container.cmd } : {}),
-                ...(props.container?.file
-                  ? { file: props.container.file }
-                  : {}),
-                ...(props.container?.buildArgs
-                  ? { buildArgs: props.container.buildArgs }
-                  : {}),
-                exclude: [".sst/dist", ".sst/artifacts"],
-                ignoreMode: IgnoreMode.GLOB,
-              }),
-              handler: CDKHandler.FROM_IMAGE,
-              runtime: CDKRuntime.FROM_IMAGE,
+              code: Code.fromInline("export function placeholder() {}"),
+              handler: "index.placeholder",
+              runtime: CDKRuntime.NODEJS_18_X,
               layers: undefined,
             }
           : {
@@ -987,8 +1038,6 @@ export class Function extends CDKFunction implements SSTConstruct {
             `➜  Building the container image for the "${this.node.id}" function...`
           );
 
-        const project = useProject();
-
         // Build function
         const result = await useRuntimeHandlers().build(
           this.node.addr,
@@ -1004,9 +1053,42 @@ export class Function extends CDKFunction implements SSTConstruct {
           );
         }
 
-        // No need to update code if runtime is container
-        if (props.runtime === "container") return;
+        // Update function code for container
+        const cfnFunction = this.node.defaultChild as CfnFunction;
+        if (props.runtime === "container") {
+          const code = Code.fromAssetImage(props.handler!, {
+            ...(architecture?.dockerPlatform
+              ? { platform: Platform.custom(architecture.dockerPlatform) }
+              : {}),
+            ...(props.container?.cmd ? { cmd: props.container.cmd } : {}),
+            ...(props.container?.file ? { file: props.container.file } : {}),
+            ...(props.container?.buildArgs
+              ? { buildArgs: props.container.buildArgs }
+              : {}),
+            ...(props.container?.buildSsh
+              ? { buildSsh: props.container.buildSsh }
+              : {}),
+            ...(props.container?.cacheFrom
+              ? { cacheFrom: props.container.cacheFrom }
+              : {}),
+            ...(props.container?.cacheTo
+              ? { cacheTo: props.container.cacheTo }
+              : {}),
+            exclude: [".sst/dist", ".sst/artifacts"],
+            ignoreMode: IgnoreMode.GLOB,
+          });
+          const codeConfig = code.bind(this);
+          cfnFunction.packageType = "Image";
+          cfnFunction.code = {
+            imageUri: codeConfig.image?.imageUri,
+          };
+          delete cfnFunction.runtime;
+          delete cfnFunction.handler;
+          code.bindToResource(cfnFunction);
+          return;
+        }
 
+        // Update function code for non-container
         if (result.sourcemap) {
           const data = await fs.readFile(result.sourcemap);
           await fs.writeFile(result.sourcemap, zlib.gzipSync(data));
@@ -1022,7 +1104,6 @@ export class Function extends CDKFunction implements SSTConstruct {
         this.missingSourcemap = !result.sourcemap;
 
         // Update code
-        const cfnFunction = this.node.defaultChild as CfnFunction;
         const code = AssetCode.fromAsset(result.out);
         const codeConfig = code.bind(this);
 

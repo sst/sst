@@ -1,4 +1,5 @@
 import type { SSRManifest } from "astro";
+import { version as ASTRO_VERSION } from "astro/package.json";
 import type {
   APIGatewayProxyEventV2,
   CloudFrontRequestEvent,
@@ -8,6 +9,9 @@ import { NodeApp } from "astro/app/node";
 import { polyfill } from "@astrojs/webapi";
 import { InternalEvent, convertFrom, convertTo } from "./lib/event-mapper.js";
 import { debug } from "./lib/logger.js";
+import { RenderOptions } from "astro/app";
+
+const astroMajorVersion = parseInt(ASTRO_VERSION.split(".")[0] ?? 0);
 
 polyfill(globalThis, {
   exclude: "window document",
@@ -37,7 +41,6 @@ function createRequest(internalEvent: InternalEvent) {
       ? undefined
       : internalEvent.body,
   };
-  debug("request", { requestUrl, requestProps });
   return new Request(requestUrl, requestProps);
 }
 
@@ -45,7 +48,8 @@ export function createExports(
   manifest: SSRManifest,
   { responseMode }: { responseMode: ResponseMode }
 ) {
-  debug("handlerInit", { responseMode });
+  debug("handlerInit", responseMode);
+  debug("astroVersion", ASTRO_VERSION);
   const isStreaming = responseMode === "stream";
   const app = new NodeApp(manifest);
 
@@ -67,8 +71,26 @@ export function createExports(
       return streamError(404, "Not found", responseStream);
     }
 
-    // Process request
-    const response = await app.render(request, routeData);
+    let response: Response;
+
+    if (astroMajorVersion <= 3) {
+      // Astro 3.x and below use RouteData only
+      debug("routeData", routeData);
+
+      // Process request
+      response = await app.render(request, routeData);
+    } else {
+      // Astro 4.x and above use RenderOptions
+      const renderOptions: RenderOptions = {
+        routeData,
+        clientAddress: internalEvent.headers['x-forwarded-for'] || internalEvent.remoteAddress,
+      }
+
+      debug("renderOptions", renderOptions);
+
+      // Process request
+      response = await app.render(request, renderOptions);
+    }
 
     // Stream response back to Cloudfront
     const convertedResponse = await convertTo({
@@ -102,8 +124,15 @@ export function createExports(
       });
     }
 
+    const renderOptions: RenderOptions = {
+      routeData,
+      clientAddress: internalEvent.headers['x-forwarded-for'] || internalEvent.remoteAddress,
+    }
+
+    debug("renderOptions", renderOptions);
+
     // Process request
-    const response = await app.render(request, routeData);
+    const response = await app.render(request, renderOptions);
 
     // Buffer response back to Cloudfront
     const convertedResponse = await convertTo({

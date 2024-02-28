@@ -687,7 +687,9 @@ new Table(stack, "MyTable", {
   },
   primaryIndex: { partitionKey: "noteId", sortKey: "userId" },
   stream: true,
-  consumers: ["processor.main"],
+  consumers: {
+    myConsumer: "processor.main",
+  }
 });
 ```
 
@@ -712,18 +714,11 @@ functions:
 ```
 
 ```js title="SST"
-// Create stream
-const stream = new kinesis.Stream(stack, "MyStream");
-
-// Create Lambda function
-const processor = new sst.Function(stack, "Processor", "processor.main");
-
-// Subscribe function to streams
-processor.addEventSource(
-  new KinesisEventSource(stream, {
-    startingPosition: lambda.StartingPosition.TRIM_HORIZON,
-  })
-);
+new KinesisStream(stack, "MyStream", {
+  consumers: {
+    myConsumer: "processor.main",
+  }
+});
 ```
 
 #### S3
@@ -741,19 +736,15 @@ functions:
 ```
 
 ```js title="SST"
-// Create bucket
-const bucket = new s3.Bucket(stack, "MyBucket");
-
-// Create Lambda function
-const processor = new sst.Function(stack, "Processor", "processor.main");
-
-// Subscribe function to streams
-processor.addEventSource(
-  new S3EventSource(bucket, {
-    events: [s3.EventType.OBJECT_CREATED],
-    filters: [{ prefix: "uploads/" }],
-  })
-);
+new Bucket(stack, "MyBucket", {
+  notifications: {
+    myNotification: {
+      function: "notification.main",
+      events: ["object_created"],
+      filters: [{ prefix: "uploads/" }],
+    }
+  }
+});
 ```
 
 #### CloudWatch Events
@@ -887,7 +878,7 @@ functions:
 ```
 
 ```js title="SST"
-new sst.Auth(stack, "Auth", {
+new Cognito(stack, "Auth", {
   triggers: {
     preSignUp: "src/preSignUp.main",
   },

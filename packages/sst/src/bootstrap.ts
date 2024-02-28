@@ -44,7 +44,7 @@ const CDK_STACK_NAME = "CDKToolkit";
 const SST_STACK_NAME = "SSTBootstrap";
 const OUTPUT_VERSION = "Version";
 const OUTPUT_BUCKET = "BucketName";
-const LATEST_VERSION = "7.2";
+const LATEST_VERSION = "7.3";
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 
 export const useBootstrap = lazy(async () => {

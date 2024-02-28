@@ -1,6 +1,6 @@
 import { Construct } from "constructs";
 import { Token } from "aws-cdk-lib/core";
-import * as apig from "@aws-cdk/aws-apigatewayv2-alpha";
+import { DomainName, IDomainName } from "aws-cdk-lib/aws-apigatewayv2";
 import * as route53 from "aws-cdk-lib/aws-route53";
 import * as route53Targets from "aws-cdk-lib/aws-route53-targets";
 import * as acm from "aws-cdk-lib/aws-certificatemanager";
@@ -28,7 +28,7 @@ export interface CustomDomainProps {
     /**
      * Override the internally created domain name
      */
-    domainName?: apig.IDomainName;
+    domainName?: IDomainName;
     /**
      * Override the internally created hosted zone
      */
@@ -41,7 +41,7 @@ export interface CustomDomainProps {
 }
 
 export interface CustomDomainData {
-  readonly apigDomain: apig.IDomainName;
+  readonly apigDomain: IDomainName;
   readonly mappingKey?: string;
   readonly certificate?: acm.ICertificate;
   readonly isApigDomainCreated: boolean;
@@ -258,7 +258,7 @@ function createApigDomain(
   domainName: string,
   certificate: acm.ICertificate
 ) {
-  return new apig.DomainName(scope, "DomainName", {
+  return new DomainName(scope, "DomainName", {
     domainName,
     certificate,
   });
@@ -268,7 +268,7 @@ function createARecords(
   scope: Construct,
   hostedZone: route53.IHostedZone,
   domainName: string,
-  apigDomain: apig.IDomainName
+  apigDomain: IDomainName
 ) {
   // create DNS record
   const recordProps = {

@@ -179,7 +179,7 @@ Similar to Functions, you can use the `bind` fields to pass other resources to y
 ```ts {4}
 const table = new Table(stack, "table", { /* ... */ });
 
-new Job (stack, "factorial, {
+new Job (stack, "factorial", {
   bind: [table], // bind table to job
   handler: "packages/functions/src/job.handler",
 });

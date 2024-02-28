@@ -3,9 +3,11 @@ import { CustomResource } from "aws-cdk-lib/core";
 import * as iam from "aws-cdk-lib/aws-iam";
 import * as logs from "aws-cdk-lib/aws-logs";
 import * as acm from "aws-cdk-lib/aws-certificatemanager";
-import * as cfnApig from "aws-cdk-lib/aws-apigatewayv2";
-import * as apig from "@aws-cdk/aws-apigatewayv2-alpha";
-import * as apigAuthorizers from "@aws-cdk/aws-apigatewayv2-authorizers-alpha";
+import * as apig from "aws-cdk-lib/aws-apigatewayv2";
+import * as apigAuthorizers from "aws-cdk-lib/aws-apigatewayv2-authorizers";
+import { WebSocketLambdaIntegration } from "aws-cdk-lib/aws-apigatewayv2-integrations";
+
+import {} from "aws-cdk-lib/aws-apigatewayv2";
 import { Effect, Policy, PolicyStatement } from "aws-cdk-lib/aws-iam";
 
 import { App } from "./App.js";
@@ -21,7 +23,6 @@ import { FunctionBindingProps } from "./util/functionBinding.js";
 import { Permissions } from "./util/permission.js";
 import * as apigV2Domain from "./util/apiGatewayV2Domain.js";
 import * as apigV2AccessLog from "./util/apiGatewayV2AccessLog.js";
-import { WebSocketLambdaIntegration } from "@aws-cdk/aws-apigatewayv2-integrations-alpha/lib/websocket/index.js";
 
 /////////////////////
 // Interfaces
@@ -711,7 +712,7 @@ export class WebSocketApi extends Construct implements SSTConstruct {
       //       the CloudFormation template (ie. set to undefined), CloudFormation
       //       doesn't updates the route. The route's authorizationType would
       //       still be `AWS_IAM`.
-      const cfnRoute = route.node.defaultChild as cfnApig.CfnRoute;
+      const cfnRoute = route.node.defaultChild as apig.CfnRoute;
       cfnRoute.authorizationType = authorizationType;
     }
 

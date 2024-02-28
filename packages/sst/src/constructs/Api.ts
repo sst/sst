@@ -5,7 +5,25 @@ import {
   PolicyDocument,
   PolicyStatement,
 } from "aws-cdk-lib/aws-iam";
-import { CfnApi, CfnRoute, CfnStage } from "aws-cdk-lib/aws-apigatewayv2";
+import {
+  CfnApi,
+  CfnRoute,
+  CfnStage,
+  DomainName,
+  HttpApi,
+  HttpApiProps,
+  HttpMethod,
+  HttpNoneAuthorizer,
+  HttpRoute,
+  HttpRouteIntegration,
+  HttpRouteKey,
+  HttpStage,
+  HttpStageProps,
+  IHttpApi,
+  IHttpRouteAuthorizer,
+  IntegrationCredentials,
+  PayloadFormatVersion,
+} from "aws-cdk-lib/aws-apigatewayv2";
 import {
   HttpUrlIntegration,
   HttpUrlIntegrationProps,
@@ -14,7 +32,14 @@ import {
   HttpNlbIntegration,
   HttpNlbIntegrationProps,
   HttpLambdaIntegration,
-} from "@aws-cdk/aws-apigatewayv2-integrations-alpha";
+} from "aws-cdk-lib/aws-apigatewayv2-integrations";
+import {
+  HttpIamAuthorizer,
+  HttpJwtAuthorizer,
+  HttpLambdaAuthorizer,
+  HttpLambdaResponseType,
+  HttpUserPoolAuthorizer,
+} from "aws-cdk-lib/aws-apigatewayv2-authorizers";
 import {
   HttpAwsIntegration,
   HttpAwsIntegrationProps,
@@ -35,29 +60,6 @@ import { Permissions } from "./util/permission.js";
 import * as apigV2Cors from "./util/apiGatewayV2Cors.js";
 import * as apigV2Domain from "./util/apiGatewayV2Domain.js";
 import * as apigV2AccessLog from "./util/apiGatewayV2AccessLog.js";
-import {
-  DomainName,
-  HttpApi,
-  HttpApiProps,
-  HttpMethod,
-  HttpNoneAuthorizer,
-  HttpRoute,
-  HttpRouteIntegration,
-  HttpRouteKey,
-  HttpStage,
-  HttpStageProps,
-  IHttpApi,
-  IHttpRouteAuthorizer,
-  IntegrationCredentials,
-  PayloadFormatVersion,
-} from "@aws-cdk/aws-apigatewayv2-alpha";
-import {
-  HttpIamAuthorizer,
-  HttpJwtAuthorizer,
-  HttpLambdaAuthorizer,
-  HttpLambdaResponseType,
-  HttpUserPoolAuthorizer,
-} from "@aws-cdk/aws-apigatewayv2-authorizers-alpha";
 import { IFunction } from "aws-cdk-lib/aws-lambda";
 import {
   IApplicationListener,
@@ -437,7 +439,7 @@ export interface ApiProps<
      *
      * @example
      * ```js
-     * import { HttpApi } from "@aws-cdk/aws-apigatewayv2-alpha";
+     * import { HttpApi } from "aws-cdk-lib/aws-apigatewayv2";
      *
      * new Api(stack, "Api", {
      *   cdk: {
@@ -456,7 +458,7 @@ export interface ApiProps<
      *
      * @example
      * ```js
-     * import { HttpApi } from "@aws-cdk/aws-apigatewayv2-alpha";
+     * import { HttpApi } from "aws-cdk-lib/aws-apigatewayv2";
      *
      * new Api(stack, "Api", {
      *   cdk: {

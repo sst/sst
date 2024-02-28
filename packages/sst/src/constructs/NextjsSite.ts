@@ -78,6 +78,19 @@ export interface NextjsSiteProps extends Omit<SsrSiteProps, "nodejs"> {
      */
     memorySize?: number | Size;
   };
+  openNext?: {
+    /**
+     * Specify a custom build output path for cases when running OpenNext from
+     * a monorepo with decentralized build output. This is passed to the
+     * `--build-output-path` flag of OpenNext.
+     * @default Default build output path
+     * @example
+     * ```js
+     * buildOutputPath: "dist/apps/example-app"
+     * ```
+     */
+    buildOutputPath?: string;
+  };
   experimental?: {
     /**
      * Enable streaming. Currently an experimental feature in OpenNext.
@@ -173,13 +186,12 @@ type NextjsSiteNormalizedProps = NextjsSiteProps & SsrSiteNormalizedProps;
  */
 export class NextjsSite extends SsrSite {
   declare props: NextjsSiteNormalizedProps;
-  private _routes?: {
+  private _routes?: ({
     route: string;
-    regex: string;
     logGroupPath: string;
     sourcemapPath?: string;
     sourcemapKey?: string;
-  }[];
+  } & ({ regexMatch: string } | { prefixMatch: string }))[];
   private routesManifest?: {
     dynamicRoutes: { page: string; regex: string }[];
     staticRoutes: { page: string; regex: string }[];
@@ -213,6 +225,9 @@ export class NextjsSite extends SsrSite {
         "--yes",
         `open-next@${props?.openNextVersion ?? DEFAULT_OPEN_NEXT_VERSION}`,
         "build",
+        ...(props.openNext?.buildOutputPath
+          ? ["--build-output-path", props.openNext.buildOutputPath]
+          : []),
         ...(props.experimental.streaming ? ["--streaming"] : []),
         ...(props.experimental.disableDynamoDBCache
           ? ["--dangerously-disable-dynamodb-cache"]
@@ -227,7 +242,7 @@ export class NextjsSite extends SsrSite {
     this.handleMissingSourcemap();
 
     if (this.isPerRouteLoggingEnabled()) {
-      this.disableDefaultLogging();
+      //this.disableDefaultLogging();
       this.uploadSourcemaps();
     }
 
@@ -405,11 +420,10 @@ export class NextjsSite extends SsrSite {
             } as const)
         ),
       ],
-      cachePolicyAllowedHeaders: DEFAULT_CACHE_POLICY_ALLOWED_HEADERS,
-      buildId: this.getBuildId(),
-      warmerConfig: {
-        function: path.join(sitePath, ".open-next", "warmer-function"),
+      serverCachePolicy: {
+        allowedHeaders: DEFAULT_CACHE_POLICY_ALLOWED_HEADERS,
       },
+      buildId: this.getBuildId(),
     });
   }
 
@@ -556,38 +570,68 @@ export class NextjsSite extends SsrSite {
     if (this._routes) return this._routes;
 
     const routesManifest = this.useRoutesManifest();
+    const appPathRoutesManifest = this.useAppPathRoutesManifest();
+
+    const dynamicAndStaticRoutes = [
+      ...routesManifest.dynamicRoutes,
+      ...routesManifest.staticRoutes,
+    ].map(({ page, regex }) => {
+      const cwRoute = NextjsSite.buildCloudWatchRouteName(page);
+      const cwHash = NextjsSite.buildCloudWatchRouteHash(page);
+      const sourcemapPath =
+        this.getSourcemapForAppRoute(page) ||
+        this.getSourcemapForPagesRoute(page);
+      return {
+        route: page,
+        regexMatch: regex,
+        logGroupPath: `/${cwHash}${cwRoute}`,
+        sourcemapPath: sourcemapPath,
+        sourcemapKey: cwHash,
+      };
+    });
+
+    // Some app routes are not in the routes manifest, so we need to add them
+    // ie. app/api/route.ts => IS NOT in the routes manifest
+    //     app/items/[slug]/route.ts => IS in the routes manifest (dynamicRoutes)
+    const appRoutes = Object.values(appPathRoutesManifest)
+      .filter(
+        (page) =>
+          routesManifest.dynamicRoutes.every((route) => route.page !== page) &&
+          routesManifest.staticRoutes.every((route) => route.page !== page)
+      )
+      .map((page) => {
+        const cwRoute = NextjsSite.buildCloudWatchRouteName(page);
+        const cwHash = NextjsSite.buildCloudWatchRouteHash(page);
+        const sourcemapPath = this.getSourcemapForAppRoute(page);
+        return {
+          route: page,
+          prefixMatch: page,
+          logGroupPath: `/${cwHash}${cwRoute}`,
+          sourcemapPath: sourcemapPath,
+          sourcemapKey: cwHash,
+        };
+      });
+
+    const dataRoutes = (routesManifest.dataRoutes || []).map(
+      ({ page, dataRouteRegex }) => {
+        const routeDisplayName = page.endsWith("/")
+          ? `/_next/data/BUILD_ID${page}index.json`
+          : `/_next/data/BUILD_ID${page}.json`;
+        const cwRoute = NextjsSite.buildCloudWatchRouteName(routeDisplayName);
+        const cwHash = NextjsSite.buildCloudWatchRouteHash(page);
+        return {
+          route: routeDisplayName,
+          regexMatch: dataRouteRegex,
+          logGroupPath: `/${cwHash}${cwRoute}`,
+        };
+      }
+    );
 
     this._routes = [
-      ...[...routesManifest.dynamicRoutes, ...routesManifest.staticRoutes]
-        .map(({ page, regex }) => {
-          const cwRoute = NextjsSite.buildCloudWatchRouteName(page);
-          const cwHash = NextjsSite.buildCloudWatchRouteHash(page);
-          const sourcemapPath =
-            this.getSourcemapForAppRoute(page) ||
-            this.getSourcemapForPagesRoute(page);
-          return {
-            route: page,
-            regex,
-            logGroupPath: `/${cwHash}${cwRoute}`,
-            sourcemapPath: sourcemapPath,
-            sourcemapKey: cwHash,
-          };
-        })
-        .sort((a, b) => a.route.localeCompare(b.route)),
-      ...(routesManifest.dataRoutes || [])
-        .map(({ page, dataRouteRegex }) => {
-          const routeDisplayName = page.endsWith("/")
-            ? `/_next/data/BUILD_ID${page}index.json`
-            : `/_next/data/BUILD_ID${page}.json`;
-          const cwRoute = NextjsSite.buildCloudWatchRouteName(routeDisplayName);
-          const cwHash = NextjsSite.buildCloudWatchRouteHash(page);
-          return {
-            route: routeDisplayName,
-            regex: dataRouteRegex,
-            logGroupPath: `/${cwHash}${cwRoute}`,
-          };
-        })
-        .sort((a, b) => a.route.localeCompare(b.route)),
+      ...[...dynamicAndStaticRoutes, ...appRoutes].sort((a, b) =>
+        a.route.localeCompare(b.route)
+      ),
+      ...dataRoutes.sort((a, b) => a.route.localeCompare(b.route)),
     ];
     return this._routes;
   }
@@ -612,6 +656,16 @@ export class NextjsSite extends SsrSite {
   }
 
   private useAppPathRoutesManifest() {
+    // Example
+    // {
+    //   "/_not-found": "/_not-found",
+    //   "/page": "/",
+    //   "/favicon.ico/route": "/favicon.ico",
+    //   "/api/route": "/api",                    <- app/api/route.js
+    //   "/api/sub/route": "/api/sub",            <- app/api/sub/route.js
+    //   "/items/[slug]/route": "/items/[slug]"   <- app/items/[slug]/route.js
+    // }
+
     if (this.appPathRoutesManifest) return this.appPathRoutesManifest;
 
     const { path: sitePath } = this.props;
@@ -679,11 +733,17 @@ export class NextjsSite extends SsrSite {
     return `
 if (event.rawPath) {
   const routeData = ${JSON.stringify(
-    this.useRoutes().map(({ regex, logGroupPath }) => ({
-      regex,
+    // @ts-expect-error
+    this.useRoutes().map(({ regexMatch, prefixMatch, logGroupPath }) => ({
+      regex: regexMatch,
+      prefix: prefixMatch,
       logGroupPath,
     }))
-  )}.find(({ regex }) => event.rawPath.match(new RegExp(regex)));
+  )}.find(({ regex, prefix }) => {
+    if (regex) return event.rawPath.match(new RegExp(regex));
+    if (prefix) return event.rawPath === prefix || (event.rawPath === prefix + "/");
+    return false;
+  });
   if (routeData) {
     console.log("::sst::" + JSON.stringify({
       action:"log.split",

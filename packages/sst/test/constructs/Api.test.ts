@@ -9,8 +9,8 @@ import {
   createApp,
 } from "./helper.js";
 import * as acm from "aws-cdk-lib/aws-certificatemanager";
-import * as apig from "@aws-cdk/aws-apigatewayv2-alpha";
-import * as apigAuthorizers from "@aws-cdk/aws-apigatewayv2-authorizers-alpha";
+import * as apig from "aws-cdk-lib/aws-apigatewayv2";
+import * as apigAuthorizers from "aws-cdk-lib/aws-apigatewayv2-authorizers";
 import * as autoscaling from "aws-cdk-lib/aws-autoscaling";
 import * as cognito from "aws-cdk-lib/aws-cognito";
 import * as ec2 from "aws-cdk-lib/aws-ec2";

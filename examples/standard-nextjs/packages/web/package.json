@@ -11,13 +11,13 @@
   "dependencies": {
     "react": "^18",
     "react-dom": "^18",
-    "next": "14.0.4"
+    "next": "14.1.0"
   },
   "devDependencies": {
     "typescript": "^5",
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
-    "sst": "^2.38.7"
+    "sst": "^2.40.3"
   }
 }

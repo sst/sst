@@ -2,7 +2,11 @@ import url from "url";
 import path from "path";
 import fs from "fs/promises";
 import { Construct } from "constructs";
-import { Duration as CdkDuration, IgnoreMode } from "aws-cdk-lib/core";
+import {
+  Duration as CdkDuration,
+  DockerCacheOption,
+  IgnoreMode,
+} from "aws-cdk-lib/core";
 import { Platform } from "aws-cdk-lib/aws-ecr-assets";
 import { PolicyStatement, Role, Effect } from "aws-cdk-lib/aws-iam";
 import {
@@ -46,6 +50,7 @@ const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 
 export type JobMemorySize = "3 GB" | "7 GB" | "15 GB" | "145 GB";
 export interface JobNodeJSProps extends NodeJSProps {}
+export interface JobContainerCacheProps extends DockerCacheOption {}
 export interface JobContainerProps {
   /**
    * Specify or override the CMD on the Docker image.
@@ -80,6 +85,42 @@ export interface JobContainerProps {
    * ```
    */
   buildArgs?: Record<string, string>;
+  /**
+   * SSH agent socket or keys to pass to the docker build command.
+   * Docker BuildKit must be enabled to use the ssh flag
+   * @default No --ssh flag is passed to the build command
+   * @example
+   * ```js
+   * container: {
+   *   buildSsh: "default"
+   * }
+   * ```
+   */
+  buildSsh?: string;
+  /**
+   * Cache from options to pass to the docker build command.
+   * [DockerCacheOption](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_ecr_assets.DockerCacheOption.html)[].
+   * @default No cache from options are passed to the build command
+   * @example
+   * ```js
+   * container: {
+   *   cacheFrom: [{ type: 'registry', params: { ref: 'ghcr.io/myorg/myimage:cache' }}],
+   * }
+   * ```
+   */
+  cacheFrom?: JobContainerCacheProps[];
+  /**
+   * Cache to options to pass to the docker build command.
+   * [DockerCacheOption](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_ecr_assets.DockerCacheOption.html)[].
+   * @default No cache to options are passed to the build command
+   * @example
+   * ```js
+   * container: {
+   *   cacheTo: { type: 'registry', params: { ref: 'ghcr.io/myorg/myimage:cache', mode: 'max', compression: 'zstd' }},
+   * }
+   * ```
+   */
+  cacheTo?: JobContainerCacheProps;
 }
 
 export interface JobProps {
@@ -97,7 +138,7 @@ export interface JobProps {
   architecture?: "x86_64" | "arm_64";
   /**
    * The runtime environment for the job.
-   * @default "nodejs"
+   * @default "nodejs18.x"
    * @example
    * ```js
    * new Job(stack, "MyJob", {
@@ -106,7 +147,7 @@ export interface JobProps {
    * })
    *```
    */
-  runtime?: "nodejs" | "container";
+  runtime?: "nodejs" | "nodejs16.x" | "nodejs18.x" | "nodejs20.x" | "container";
   /**
    * For "nodejs" runtime, point to the entry point and handler function.
    * Of the format: `/path/to/file.function`.
@@ -530,6 +571,9 @@ export class Job extends Construct implements SSTConstruct {
               : Platform.custom("linux/amd64"),
           file: container?.file,
           buildArgs: container?.buildArgs,
+          buildSsh: container?.buildSsh,
+          cacheFrom: container?.cacheFrom,
+          cacheTo: container?.cacheTo,
           exclude: [".sst/dist", ".sst/artifacts"],
           ignoreMode: IgnoreMode.GLOB,
         });
@@ -591,11 +635,23 @@ export class Job extends Construct implements SSTConstruct {
       const code = AssetCode.fromAsset(result.out);
       const codeConfig = code.bind(this);
       const project = this.job.node.defaultChild as CfnProject;
+      const dockerImageMap = {
+        arm_64: {
+          nodejs: "amazon/aws-lambda-nodejs:16.2023.07.13.14",
+          "nodejs16.x": "amazon/aws-lambda-nodejs:16.2023.07.13.14",
+          "nodejs18.x": "amazon/aws-lambda-nodejs:18.2023.12.14.13",
+          "nodejs20.x": "amazon/aws-lambda-nodejs:20.2023.12.14.13",
+        },
+        x86_64: {
+          nodejs: "amazon/aws-lambda-nodejs:16",
+          "nodejs16.x": "amazon/aws-lambda-nodejs:16",
+          "nodejs18.x": "amazon/aws-lambda-nodejs:18",
+          "nodejs20.x": "amazon/aws-lambda-nodejs:20",
+        },
+      };
       const image = LinuxBuildImage.fromDockerRegistry(
         // ARM images can be found here https://hub.docker.com/r/amazon/aws-lambda-nodejs
-        architecture === "arm_64"
-          ? "amazon/aws-lambda-nodejs:16.2023.07.13.14"
-          : "amazon/aws-lambda-nodejs:16"
+        dockerImageMap[architecture ?? "x86_64"][runtime ?? "nodejs18.x"]
       );
       project.environment = {
         ...project.environment,

@@ -24,7 +24,6 @@ import {
   deployStack,
   DeployStackResult,
   destroyStack,
-  makeBodyParameterAndUpload,
   DeploymentMethod,
 } from "./deploy-stack.js";
 import {
@@ -45,6 +44,7 @@ import {
 } from "sst-aws-cdk/lib/api/util/cloudformation.js";
 import { StackActivityProgress } from "sst-aws-cdk/lib/api/util/cloudformation/stack-activity-monitor.js";
 import { replaceEnvPlaceholders } from "sst-aws-cdk/lib/api/util/placeholders.js";
+import { makeBodyParameterAndUpload } from "sst-aws-cdk/lib/api/util/template-body-parameter.js";
 import { callWithRetry } from "./util.js";
 import { HotswapMode } from "sst-aws-cdk/lib/api/hotswap/common.js";
 
@@ -231,6 +231,13 @@ export interface DeployStackOptions {
    * @default true To remain backward compatible.
    */
   readonly assetParallelism?: boolean;
+
+  /**
+   * Whether to deploy if the app contains no stacks.
+   *
+   * @default false
+   */
+  ignoreNoStacks?: boolean;
 }
 
 interface AssetOptions {
@@ -345,6 +352,15 @@ export class Deployments {
     this.environmentResources = new EnvironmentResourcesRegistry(
       props.toolkitStackName
     );
+  }
+
+  /**
+   * Resolves the environment for a stack.
+   */
+  public async resolveEnvironment(
+    stack: cxapi.CloudFormationStackArtifact
+  ): Promise<cxapi.Environment> {
+    return this.sdkProvider.resolveEnvironment(stack.environment);
   }
 
   public async readCurrentTemplateWithNestedStacks(
@@ -509,6 +525,12 @@ export class Deployments {
     return stack.exists;
   }
 
+  public async prepareSdkWithDeployRole(
+    stackArtifact: cxapi.CloudFormationStackArtifact
+  ): Promise<PreparedSdkForEnvironment> {
+    return this.prepareSdkFor(stackArtifact, undefined, Mode.ForWriting);
+  }
+
   private async prepareSdkWithLookupOrDeployRole(
     stackArtifact: cxapi.CloudFormationStackArtifact
   ): Promise<PreparedSdkForEnvironment> {
@@ -547,9 +569,7 @@ export class Deployments {
       );
     }
 
-    const resolvedEnvironment = await this.sdkProvider.resolveEnvironment(
-      stack.environment
-    );
+    const resolvedEnvironment = await this.resolveEnvironment(stack);
 
     // Substitute any placeholders with information about the current environment
     const arns = await replaceEnvPlaceholders(
