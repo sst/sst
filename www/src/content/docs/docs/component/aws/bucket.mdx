@@ -178,7 +178,7 @@ The underlying [resources](/docs/components/#nodes) this component creates.
 <Segment>
 <Section type="parameters">
 <InlineSection>
-**Type** [<code class="type">BucketV2</code>](https://www.pulumi.com/registry/packages/aws/api-docs/s3/bucketv2/)
+**Type** <code class="primitive">Output</code><code class="symbol">&lt;</code>[<code class="type">BucketV2</code>](https://www.pulumi.com/registry/packages/aws/api-docs/s3/bucketv2/)<code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
 The Amazon S3 bucket.
@@ -199,25 +199,6 @@ The generated name of the S3 Bucket.
 </Segment>
 
 ## BucketArgs
-### enforceSsl?
-<Segment>
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">boolean</code><code class="symbol">&gt;</code>
-</InlineSection>
-</Section>
-
-<InlineSection>
-**Default** <code class="primitive">true</code>
-</InlineSection>
-Enforces SSL for all requests.
-
-```js
-{
-  enforceSsl: false
-}
-```
-</Segment>
 ### public?
 <Segment>
 <Section type="parameters">
@@ -244,7 +225,8 @@ Enable public read access for all the files in the bucket.
 **Type** <code class="primitive">Object</code>
 </InlineSection>
 - <p>[<code class="key">bucket?</code>](#transform-bucket)</p>
-- <p>[<code class="key">bucketPolicy?</code>](#transform-bucketpolicy)</p>
+- <p>[<code class="key">policy?</code>](#transform-policy)</p>
+- <p>[<code class="key">publicAccessBlock?</code>](#transform-publicaccessblock)</p>
 </Section>
 [Transform](/docs/components#transform/) how this component creates its underlying
 resources.
@@ -260,14 +242,24 @@ resources.
 Transform the S3 Bucket resource.
 
 </Segment>
-<NestedTitle id="transform-bucketpolicy" Tag="h4" parent="transform.">bucketPolicy?</NestedTitle>
+<NestedTitle id="transform-policy" Tag="h4" parent="transform.">policy?</NestedTitle>
 <Segment>
 <Section type="parameters">
 <InlineSection>
 **Type** [<code class="type">BucketPolicyArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/s3/bucketpolicy/#inputs)<code class="symbol"> | </code><code class="symbol">(</code><code class="primitive">args</code><code class="symbol">: </code>[<code class="type">BucketPolicyArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/s3/bucketpolicy/#inputs)<code class="symbol"> => </code>[<code class="type">BucketPolicyArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/s3/bucketpolicy/#inputs)<code class="symbol"> | </code><code class="primitive">void</code><code class="symbol">)</code>
 </InlineSection>
 </Section>
-Transform the IAM Policy that's attached to the Bucket.
+Transform the S3 Bucket Policy resource.
+
+</Segment>
+<NestedTitle id="transform-publicaccessblock" Tag="h4" parent="transform.">publicAccessBlock?</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** [<code class="type">BucketPublicAccessBlockArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/s3/bucketpublicaccessblock/#inputs)<code class="symbol"> | </code><code class="symbol">(</code><code class="primitive">args</code><code class="symbol">: </code>[<code class="type">BucketPublicAccessBlockArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/s3/bucketpublicaccessblock/#inputs)<code class="symbol"> => </code>[<code class="type">BucketPublicAccessBlockArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/s3/bucketpublicaccessblock/#inputs)<code class="symbol"> | </code><code class="primitive">void</code><code class="symbol">)</code>
+</InlineSection>
+</Section>
+Transform the public access block resource that's attached to the Bucket.
 
 </Segment>
 

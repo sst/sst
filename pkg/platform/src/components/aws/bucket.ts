@@ -3,6 +3,7 @@ import {
   output,
   interpolate,
   all,
+  Output,
 } from "@pulumi/pulumi";
 import * as aws from "@pulumi/aws";
 import { RandomId } from "@pulumi/random";
@@ -29,17 +30,6 @@ export interface BucketArgs {
    * ```
    */
   public?: Input<boolean>;
-  /**
-   * Enforces SSL for all requests.
-   * @default `true`
-   * @example
-   * ```js
-   * {
-   *   enforceSsl: false
-   * }
-   * ```
-   */
-  enforceSsl?: Input<boolean>;
   /**
    * [Transform](/docs/components#transform/) how this component creates its underlying
    * resources.
@@ -193,7 +183,7 @@ export class Bucket
   implements Link.Linkable, Link.AWS.Linkable
 {
   private constructorName: string;
-  private bucket: aws.s3.BucketV2;
+  private bucket: Output<aws.s3.BucketV2>;
 
   constructor(
     name: string,
@@ -204,14 +194,17 @@ export class Bucket
 
     const parent = this;
     const publicAccess = normalizePublicAccess();
-    const enforceSsl = normalizeEnforceSsl();
 
     const bucket = createBucket();
     const publicAccessBlock = createPublicAccess();
-    createBucketPolicy();
+    const policy = createBucketPolicy();
 
     this.constructorName = name;
-    this.bucket = bucket;
+    // Ensure the policy is created when the bucket is used in another component
+    // (ie. bucket.name). Also, a bucket can only have one policy. We want to ensure
+    // the policy created here is created first. And SST will throw an error if
+    // another policy is created after this one.
+    this.bucket = policy.apply(() => bucket);
 
     function createBucket() {
       const input = transform(args?.transform?.bucket, {
@@ -252,55 +245,45 @@ export class Bucket
     }
 
     function createBucketPolicy() {
-      return all([publicAccess, enforceSsl]).apply(
-        ([publicAccess, enforceSsl]) => {
-          const statements = [];
-          if (publicAccess) {
-            statements.push({
-              principals: [{ type: "*", identifiers: ["*"] }],
-              actions: ["s3:GetObject"],
-              resources: [interpolate`${bucket.arn}/*`],
-            });
-          }
-          if (enforceSsl) {
-            statements.push({
-              effect: "Deny",
-              principals: [{ type: "*", identifiers: ["*"] }],
-              actions: ["s3:*"],
-              resources: [bucket.arn, interpolate`${bucket.arn}/*`],
-              conditions: [
-                {
-                  test: "Bool",
-                  variable: "aws:SecureTransport",
-                  values: ["false"],
-                },
-              ],
-            });
-          }
-
-          if (statements.length === 0) return;
-
-          new aws.s3.BucketPolicy(
-            `${name}Policy`,
-            transform(args?.transform?.policy, {
-              bucket: bucket.bucket,
-              policy: aws.iam.getPolicyDocumentOutput({ statements }).json,
-            }),
+      return publicAccess.apply((publicAccess) => {
+        const statements = [];
+        if (publicAccess) {
+          statements.push({
+            principals: [{ type: "*", identifiers: ["*"] }],
+            actions: ["s3:GetObject"],
+            resources: [interpolate`${bucket.arn}/*`],
+          });
+        }
+        statements.push({
+          effect: "Deny",
+          principals: [{ type: "*", identifiers: ["*"] }],
+          actions: ["s3:*"],
+          resources: [bucket.arn, interpolate`${bucket.arn}/*`],
+          conditions: [
             {
-              parent,
-              dependsOn: publicAccessBlock,
+              test: "Bool",
+              variable: "aws:SecureTransport",
+              values: ["false"],
             },
-          );
-        },
-      );
+          ],
+        });
+
+        return new aws.s3.BucketPolicy(
+          `${name}Policy`,
+          transform(args?.transform?.policy, {
+            bucket: bucket.bucket,
+            policy: aws.iam.getPolicyDocumentOutput({ statements }).json,
+          }),
+          {
+            parent,
+            dependsOn: publicAccessBlock,
+          },
+        );
+      });
     }
 
     function normalizePublicAccess() {
       return output(args?.public).apply((v) => v ?? false);
-    }
-
-    function normalizeEnforceSsl() {
-      return output(args?.enforceSsl).apply((v) => v ?? true);
     }
   }
 
