@@ -388,9 +388,6 @@ export class StaticSite extends Component implements Link.Linkable {
         `${name}Assets`,
         {
           transform: {
-            publicAccessBlock: (args) => {
-              args.blockPublicPolicy = false;
-            },
             policy: (args) => {
               const newPolicy = aws.iam.getPolicyDocumentOutput({
                 statements: [
@@ -406,7 +403,6 @@ export class StaticSite extends Component implements Link.Linkable {
                   },
                 ],
               }).json;
-
               args.policy = output([args.policy, newPolicy]).apply(
                 ([policy, newPolicy]) => {
                   const policyJson = JSON.parse(policy as string);

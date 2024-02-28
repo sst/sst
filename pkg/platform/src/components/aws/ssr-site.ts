@@ -508,9 +508,6 @@ export function createBucket(parent: ComponentResource, name: string) {
       `${name}Assets`,
       {
         transform: {
-          publicAccessBlock: (args) => {
-            args.blockPublicPolicy = false;
-          },
           policy: (args) => {
             const newPolicy = aws.iam.getPolicyDocumentOutput({
               statements: [
