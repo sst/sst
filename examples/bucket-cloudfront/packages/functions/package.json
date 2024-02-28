@@ -7,9 +7,9 @@
     "typecheck": "tsc -noEmit"
   },
   "devDependencies": {
-    "@types/node": "^20.10.4",
-    "@types/aws-lambda": "^8.10.130",
-    "vitest": "^1.0.4",
-    "sst": "^2.38.7"
+    "@types/node": "^20.11.20",
+    "@types/aws-lambda": "^8.10.134",
+    "vitest": "^1.3.1",
+    "sst": "^2.40.3"
   }
 }

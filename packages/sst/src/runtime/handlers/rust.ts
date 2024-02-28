@@ -11,7 +11,8 @@ const execAsync = promisify(exec);
 export const useRustHandler = (): RuntimeHandler => {
   const processes = new Map<string, ChildProcessWithoutNullStreams>();
   const sources = new Map<string, string>();
-  const handlerName = process.platform === "win32" ? `handler.exe` : `handler`;
+  const isWindows = process.platform === "win32";
+  const handlerName = isWindows ? `handler.exe` : `handler`;
 
   return {
     shouldBuild: (input) => {
@@ -74,7 +75,7 @@ export const useRustHandler = (): RuntimeHandler => {
             }
           );
           await fs.cp(
-            path.join(project, `target/debug`, parsed.name),
+            path.join(project, `target/debug`, `${parsed.name}${isWindows ? ".exe" : ""}`),
             path.join(input.out, "handler")
           );
         } catch (ex) {

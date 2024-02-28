@@ -35,7 +35,24 @@ export const linkTypeMap = (
                         // type scalar properties
                         scalar: Object.keys(fields).filter((f) => {
                             const [type] = fields[f] || []
-                            return type && typeMap.scalars.includes(type)
+
+                            const isScalar =
+                                type && typeMap.scalars.includes(type)
+                            if (!isScalar) {
+                                return false
+                            }
+                            const args = fields[f]?.[1]
+                            const argTypes = Object.values(args || {})
+                                .map((x) => x?.[1])
+                                .filter(Boolean)
+
+                            const hasRequiredArgs = argTypes.some(
+                                (str) => str && str.endsWith('!'),
+                            )
+                            if (hasRequiredArgs) {
+                                return false
+                            }
+                            return true
                         }),
                         // fields with corresponding `type` and `args`
                         fields: Object.assign(

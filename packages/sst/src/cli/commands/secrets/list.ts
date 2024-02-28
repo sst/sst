@@ -31,7 +31,7 @@ export const list = (program: Program) =>
 
         if (Object.entries(secrets).length === 0) {
           Colors.line("No secrets set");
-          return;
+          await exit();
         }
         switch (args.format || "table") {
           case "json":
