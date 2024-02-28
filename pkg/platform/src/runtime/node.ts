@@ -109,10 +109,9 @@ export async function build(
     minify: nodejs.minify,
     ...override,
   };
-  const ctx = await esbuild.context(options);
 
   try {
-    const result = await ctx.rebuild();
+    const result = await esbuild.build(options);
 
     // Install node_modules
     const installPackages = [
@@ -178,8 +177,6 @@ export async function build(
         });
       });
     }
-
-    ctx.dispose();
 
     const moveSourcemap = async () => {
       if (nodejs.sourcemap) return;

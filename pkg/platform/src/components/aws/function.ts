@@ -1063,7 +1063,6 @@ export class Function
               links: linkData,
             });
             if (result.type === "error") {
-              console.log(result);
               throw new Error(
                 "Failed to build function: " + result.errors.join("\n").trim(),
               );

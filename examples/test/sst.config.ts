@@ -12,7 +12,9 @@ export default $config({
     };
   },
   async run() {
-    const vector = new sst.aws.Vector("Vector");
+    const fn = new sst.aws.Function("MyFunction", {
+      handler: "src/index.handler",
+    });
     return {};
   },
 });
