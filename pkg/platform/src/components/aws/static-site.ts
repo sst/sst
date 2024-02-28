@@ -384,35 +384,42 @@ export class StaticSite extends Component implements Link.Linkable {
     }
 
     function createS3Bucket() {
-      const bucket = new Bucket(
+      return new Bucket(
         `${name}Assets`,
-        {},
-        { parent, retainOnDelete: false },
-      );
-
-      // allow access from another account bucket policy
-      new aws.s3.BucketPolicy(
-        `${name}AssetsOriginAccessPolicy`,
         {
-          bucket: bucket.name,
-          policy: aws.iam.getPolicyDocumentOutput({
-            statements: [
-              {
-                principals: [
+          transform: {
+            publicAccessBlock: (args) => {
+              args.blockPublicPolicy = false;
+            },
+            policy: (args) => {
+              const newPolicy = aws.iam.getPolicyDocumentOutput({
+                statements: [
                   {
-                    type: "AWS",
-                    identifiers: [access.iamArn],
+                    principals: [
+                      {
+                        type: "AWS",
+                        identifiers: [access.iamArn],
+                      },
+                    ],
+                    actions: ["s3:GetObject"],
+                    resources: [interpolate`${bucket.arn}/*`],
                   },
                 ],
-                actions: ["s3:GetObject"],
-                resources: [interpolate`${bucket.arn}/*`],
-              },
-            ],
-          }).json,
+              }).json;
+
+              args.policy = output([args.policy, newPolicy]).apply(
+                ([policy, newPolicy]) => {
+                  const policyJson = JSON.parse(policy as string);
+                  const newPolicyJson = JSON.parse(newPolicy as string);
+                  policyJson.Statement.push(...newPolicyJson.Statement);
+                  return JSON.stringify(policyJson);
+                },
+              );
+            },
+          },
         },
-        { parent },
+        { parent, retainOnDelete: false },
       );
-      return bucket;
     }
 
     function generateViteTypes() {

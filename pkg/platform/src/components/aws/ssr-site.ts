@@ -11,6 +11,7 @@ import {
   interpolate,
   ComponentResource,
   ComponentResourceOptions,
+  jsonParse,
 } from "@pulumi/pulumi";
 import * as aws from "@pulumi/aws";
 import { Cdn, CdnDomainArgs } from "./cdn.js";
@@ -503,35 +504,42 @@ export function createBucket(parent: ComponentResource, name: string) {
   }
 
   function createS3Bucket() {
-    const bucket = new Bucket(
+    return new Bucket(
       `${name}Assets`,
-      {},
-      { parent, retainOnDelete: false },
-    );
-
-    // allow access from another account bucket policy
-    new aws.s3.BucketPolicy(
-      `${name}AssetsOriginAccessPolicy`,
       {
-        bucket: bucket.name,
-        policy: aws.iam.getPolicyDocumentOutput({
-          statements: [
-            {
-              principals: [
+        transform: {
+          publicAccessBlock: (args) => {
+            args.blockPublicPolicy = false;
+          },
+          policy: (args) => {
+            const newPolicy = aws.iam.getPolicyDocumentOutput({
+              statements: [
                 {
-                  type: "AWS",
-                  identifiers: [access.iamArn],
+                  principals: [
+                    {
+                      type: "AWS",
+                      identifiers: [access.iamArn],
+                    },
+                  ],
+                  actions: ["s3:GetObject"],
+                  resources: [interpolate`${bucket.arn}/*`],
                 },
               ],
-              actions: ["s3:GetObject"],
-              resources: [interpolate`${bucket.arn}/*`],
-            },
-          ],
-        }).json,
+            }).json;
+
+            args.policy = output([args.policy, newPolicy]).apply(
+              ([policy, newPolicy]) => {
+                const policyJson = JSON.parse(policy as string);
+                const newPolicyJson = JSON.parse(newPolicy as string);
+                policyJson.Statement.push(...newPolicyJson.Statement);
+                return JSON.stringify(policyJson);
+              },
+            );
+          },
+        },
       },
-      { parent },
+      { parent, retainOnDelete: false },
     );
-    return bucket;
   }
 }
 
@@ -721,6 +729,14 @@ function handler(event) {
 
       Object.entries(plan.edgeFunctions ?? {}).forEach(
         ([fnName, { function: props }]) => {
+          // Edge functions don't support linking
+          output(args.link).apply((link) => {
+            if (link?.length)
+              throw new VisibleError(
+                `Resource linking is not currently supported when deploying to the edge.`,
+              );
+          });
+
           const fn = new Function(
             `${name}Edge${sanitizeToPascalCase(fnName)}`,
             {
@@ -737,7 +753,6 @@ function handler(event) {
                 ...props.environment,
               })),
               link: output(args.link).apply((link) => [
-                bucket,
                 ...(props.link ?? []),
                 ...(link ?? []),
               ]),
@@ -838,7 +853,6 @@ function handler(event) {
             ...(injections || []),
           ]),
           link: output(args.link).apply((link) => [
-            bucket,
             ...(props.function.link ?? []),
             ...(link ?? []),
           ]),

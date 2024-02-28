@@ -50,9 +50,13 @@ export interface BucketArgs {
      */
     bucket?: Transform<aws.s3.BucketV2Args>;
     /**
-     * Transform the IAM Policy that's attached to the Bucket.
+     * Transform the S3 Bucket Policy resource.
      */
-    bucketPolicy?: Transform<aws.s3.BucketPolicyArgs>;
+    policy?: Transform<aws.s3.BucketPolicyArgs>;
+    /**
+     * Transform the public access block resource that's attached to the Bucket.
+     */
+    publicAccessBlock?: Transform<aws.s3.BucketPublicAccessBlockArgs>;
   };
 }
 
@@ -235,13 +239,13 @@ export class Bucket
       return publicAccess.apply((publicAccess) => {
         return new aws.s3.BucketPublicAccessBlock(
           `${name}PublicAccessBlock`,
-          {
+          transform(args?.transform?.publicAccessBlock, {
             bucket: bucket.bucket,
             blockPublicAcls: true,
             blockPublicPolicy: !publicAccess,
             ignorePublicAcls: true,
             restrictPublicBuckets: !publicAccess,
-          },
+          }),
           { parent },
         );
       });
@@ -278,7 +282,7 @@ export class Bucket
 
           new aws.s3.BucketPolicy(
             `${name}Policy`,
-            transform(args?.transform?.bucketPolicy, {
+            transform(args?.transform?.policy, {
               bucket: bucket.bucket,
               policy: aws.iam.getPolicyDocumentOutput({ statements }).json,
             }),
