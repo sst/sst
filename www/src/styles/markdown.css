@@ -275,7 +275,8 @@
   line-height: 17px;
   text-align: center;
   height: 18px;
-  width: 18px;
+  min-width: 18px;
+  padding-inline: 4px;
   left: 0;
   top: 4px;
   border-radius: 3px;
