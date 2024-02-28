@@ -26,5 +26,5 @@ func parseError(input string) []string {
 		}
 		return lines
 	}
-	return []string{input, "ADD THIS ERROR TO NOTION"}
+	return []string{input, "ADD THIS ERROR HERE https://www.notion.so/sst-dev/Flaky-errors-2a51e5e471f745ee9d0b8d69c5b4f8c8?pvs=4"}
 }
