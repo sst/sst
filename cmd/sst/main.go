@@ -337,7 +337,6 @@ func main() {
 				Name:  "dev",
 				Flags: []cli.Flag{},
 				Action: func(cli *cli.Context) error {
-					fmt.Print("\033[H\033[2J")
 
 					args := cli.Args().Slice()
 					hasTarget := len(args) > 0
@@ -442,6 +441,7 @@ func main() {
 					}()
 
 					state := &server.State{}
+					fmt.Print("\033[H\033[2J")
 					u := ui.New(ui.ProgressModeDev)
 					err = server.Connect(cli.Context, server.ConnectInput{
 						CfgPath: cfgPath,
