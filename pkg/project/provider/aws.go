@@ -24,7 +24,7 @@ import (
 )
 
 type AwsProvider struct {
-	args        map[string]string
+	args        map[string]interface{}
 	config      aws.Config
 	bootstrap   *awsBootstrapData
 	credentials sync.Once
@@ -146,7 +146,7 @@ func (a *AwsProvider) Cancel(app string, stage string) error {
 
 const BOOTSTRAP_VERSION = 1
 
-func (a *AwsProvider) Init(app string, stage string, args map[string]string) (err error) {
+func (a *AwsProvider) Init(app string, stage string, args map[string]interface{}) (err error) {
 	a.args = args
 
 	cfg, err := a.resolveConfig()
@@ -304,11 +304,11 @@ func (a *AwsProvider) resolveConfig() (aws.Config, error) {
 	cfg, err := config.LoadDefaultConfig(
 		ctx,
 		func(lo *config.LoadOptions) error {
-			if a.args["profile"] != "" {
-				lo.SharedConfigProfile = a.args["profile"]
+			if profile, ok := a.args["profile"].(string); ok && profile != "" {
+				lo.SharedConfigProfile = profile
 			}
-			if a.args["region"] != "" {
-				lo.Region = a.args["region"]
+			if region, ok := a.args["region"].(string); ok && region != "" {
+				lo.Region = region
 				lo.DefaultRegion = "us-east-1"
 			}
 			return nil

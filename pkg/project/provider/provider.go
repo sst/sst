@@ -44,7 +44,7 @@ func (dt *DevTransport) Publish(input interface{}) error {
 }
 
 type Provider interface {
-	Init(app, stage string, provider map[string]string) error
+	Init(app, stage string, provider map[string]interface{}) error
 }
 
 type DevSession interface {

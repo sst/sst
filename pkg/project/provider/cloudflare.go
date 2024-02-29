@@ -9,7 +9,7 @@ import (
 type CloudflareProvider struct {
 }
 
-func (c *CloudflareProvider) Init(app string, stage string, args map[string]string) error {
+func (c *CloudflareProvider) Init(app string, stage string, args map[string]interface{}) error {
 	return nil
 }
 

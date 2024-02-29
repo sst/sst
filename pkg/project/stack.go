@@ -233,7 +233,14 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 			if provider == "cloudflare" && key == "accountId" {
 				continue
 			}
-			config[fmt.Sprintf("%v:%v", provider, key)] = auto.ConfigValue{Value: value}
+			switch v := value.(type) {
+			case string:
+				config[fmt.Sprintf("%v:%v", provider, key)] = auto.ConfigValue{Value: v}
+			case []string:
+				for i, val := range v {
+					config[fmt.Sprintf("%v:%v[%d]", provider, key, i)] = auto.ConfigValue{Value: val}
+				}
+			}
 		}
 	}
 	err = stack.SetAllConfig(ctx, config)
@@ -473,7 +480,14 @@ func (s *stack) Import(ctx context.Context, input *ImportOptions) error {
 			if provider == "cloudflare" && key == "accountId" {
 				continue
 			}
-			config[fmt.Sprintf("%v:%v", provider, key)] = auto.ConfigValue{Value: value}
+			switch v := value.(type) {
+			case string:
+				config[fmt.Sprintf("%v:%v", provider, key)] = auto.ConfigValue{Value: v}
+			case []string:
+				for i, val := range v {
+					config[fmt.Sprintf("%v:%v[%d]", provider, key, i)] = auto.ConfigValue{Value: val}
+				}
+			}
 		}
 	}
 	err = stack.SetAllConfig(ctx, config)

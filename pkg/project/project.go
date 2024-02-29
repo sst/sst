@@ -13,10 +13,10 @@ import (
 )
 
 type App struct {
-	Name          string                       `json:"name"`
-	Stage         string                       `json:"stage"`
-	RemovalPolicy string                       `json:"removalPolicy"`
-	Providers     map[string]map[string]string `json:"providers"`
+	Name          string                            `json:"name"`
+	Stage         string                            `json:"stage"`
+	RemovalPolicy string                            `json:"removalPolicy"`
+	Providers     map[string]map[string]interface{} `json:"providers"`
 }
 
 type Project struct {
@@ -140,7 +140,7 @@ console.log("~j" + JSON.stringify(mod.app({
 		proj.app.Stage = input.Stage
 
 		if proj.app.Providers == nil {
-			proj.app.Providers = map[string]map[string]string{}
+			proj.app.Providers = map[string]map[string]interface{}{}
 		}
 
 		if proj.app.Name == "" {
@@ -161,7 +161,7 @@ console.log("~j" + JSON.stringify(mod.app({
 
 func (proj *Project) LoadProviders() error {
 	if _, ok := proj.app.Providers["aws"]; !ok {
-		proj.app.Providers["aws"] = map[string]string{}
+		proj.app.Providers["aws"] = map[string]interface{}{}
 	}
 
 	proj.Providers = map[string]provider.Provider{}
