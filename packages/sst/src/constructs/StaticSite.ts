@@ -34,10 +34,7 @@ import {
 } from "./BaseSite.js";
 import { useDeferredTasks } from "./deferred_task.js";
 import { SSTConstruct, isCDKConstruct } from "./Construct.js";
-import {
-  FunctionBindingProps,
-  getParameterPath,
-} from "./util/functionBinding.js";
+import { BindingProps, getParameterPath } from "./util/binding.js";
 import { gray } from "colorette";
 import { useProject } from "../project.js";
 import { createAppContext } from "./context.js";
@@ -452,7 +449,7 @@ export class StaticSite extends Construct implements SSTConstruct {
   }
 
   /** @internal */
-  public getFunctionBinding(): FunctionBindingProps {
+  public getBindings(): BindingProps {
     const app = this.node.root as App;
     return {
       clientPackage: "site",

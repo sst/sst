@@ -7,11 +7,11 @@ import { SSTConstruct } from "./Construct.js";
 import { App } from "./App.js";
 import { Stack } from "./Stack.js";
 import {
-  FunctionBindingProps,
+  BindingProps,
   getEnvironmentKey,
   getParameterPath,
   placeholderSecretValue,
-} from "./util/functionBinding.js";
+} from "./util/binding.js";
 import { CustomResource } from "aws-cdk-lib/core";
 
 const PUBLIC_KEY_PROP = "publicKey";
@@ -146,7 +146,7 @@ export class Auth extends Construct implements SSTConstruct {
   }
 
   /** @internal */
-  public getFunctionBinding(): FunctionBindingProps {
+  public getBindings(): BindingProps {
     const app = this.node.root as App;
     return {
       clientPackage: "auth",
@@ -213,7 +213,7 @@ export class Auth extends Construct implements SSTConstruct {
       });
 
       // Auth construct has two types of Function bindinds:
-      // - Api routes: bindings defined in `getFunctionBinding()`
+      // - Api routes: bindings defined in `getBindings()`
       //     ie. calling `bind([auth])` will grant functions access to the public key
       // - Auth authenticator: binds manually. Need to grant access to the prefix and private key
       const fn = props.api.getFunction(path)!;

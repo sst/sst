@@ -11,15 +11,16 @@ import { App } from "./App.js";
 import { Stack } from "./Stack.js";
 import { Job } from "./Job.js";
 import { Secret } from "./Config.js";
-import { SSTConstruct } from "./Construct.js";
+import { SSTConstruct, isSSTConstruct } from "./Construct.js";
 import { Size, toCdkSize } from "./util/size.js";
 import { Duration, toCdkDuration } from "./util/duration.js";
 import {
-  FunctionBindingProps,
-  bindEnvironment,
-  bindPermissions,
-  getReferencedSecrets,
-} from "./util/functionBinding.js";
+  BindingResource,
+  BindingProps,
+  getBindingEnvironments,
+  getBindingPermissions,
+  getBindingReferencedSecrets,
+} from "./util/binding.js";
 import { Permissions, attachPermissionsToRole } from "./util/permission.js";
 import * as functionUrlCors from "./util/functionUrlCors.js";
 
@@ -60,7 +61,6 @@ import { StringParameter } from "aws-cdk-lib/aws-ssm";
 import { Platform } from "aws-cdk-lib/aws-ecr-assets";
 import { useBootstrap } from "../bootstrap.js";
 import { Colors } from "../cli/colors.js";
-import { IBucket } from "aws-cdk-lib/aws-s3";
 import { Asset } from "aws-cdk-lib/aws-s3-assets";
 import { Config } from "../config.js";
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
@@ -328,7 +328,7 @@ export interface FunctionProps
    * })
    * ```
    */
-  bind?: SSTConstruct[];
+  bind?: BindingResource[];
   /**
    * Attaches the given list of permissions to the function. Configuring this property is equivalent to calling `attachPermissions()` after the function is created.
    *
@@ -861,7 +861,7 @@ export class Function extends CDKFunction implements SSTConstruct {
   private missingSourcemap?: boolean;
   private functionUrl?: FunctionUrl;
   private props: FunctionProps;
-  private allBindings: SSTConstruct[] = [];
+  private allBindings: BindingResource[] = [];
 
   constructor(scope: Construct, id: string, props: FunctionProps) {
     const app = scope.node.root as App;
@@ -1178,31 +1178,23 @@ export class Function extends CDKFunction implements SSTConstruct {
    * fn.bind([STRIPE_KEY, bucket]);
    * ```
    */
-  public bind(constructs: SSTConstruct[]): void {
+  public bind(constructs: BindingResource[]): void {
     // Get referenced secrets
     const referencedSecrets: Secret[] = [];
-    constructs.forEach((c) =>
-      referencedSecrets.push(...getReferencedSecrets(c))
+    constructs.forEach((r) =>
+      referencedSecrets.push(...getBindingReferencedSecrets(r))
     );
 
-    [...constructs, ...referencedSecrets].forEach((c) => {
+    [...constructs, ...referencedSecrets].forEach((r) => {
       // Bind environment
-      const env = bindEnvironment(c);
+      const env = getBindingEnvironments(r);
       Object.entries(env).forEach(([key, value]) =>
         this.addEnvironment(key, value)
       );
 
       // Bind permissions
-      const permissions = bindPermissions(c);
-      Object.entries(permissions).forEach(([action, resources]) =>
-        this.attachPermissions([
-          new PolicyStatement({
-            actions: [action],
-            effect: Effect.ALLOW,
-            resources,
-          }),
-        ])
-      );
+      const policyStatements = getBindingPermissions(r);
+      this.attachPermissions(policyStatements);
     });
 
     this.allBindings.push(...constructs, ...referencedSecrets);
@@ -1241,7 +1233,8 @@ export class Function extends CDKFunction implements SSTConstruct {
         missingSourcemap: this.missingSourcemap === true ? true : undefined,
         localId: this.node.addr,
         secrets: this.allBindings
-          .filter((c) => c instanceof Secret)
+          .map((r) => (isSSTConstruct(r) ? r : r.resource))
+          .filter((r) => r instanceof Secret)
           .map((c) => (c as Secret).name),
         prefetchSecrets: this.props.prefetchSecrets,
       },
@@ -1249,7 +1242,7 @@ export class Function extends CDKFunction implements SSTConstruct {
   }
 
   /** @internal */
-  public getFunctionBinding(): FunctionBindingProps {
+  public getBindings(): BindingProps {
     return {
       clientPackage: "function",
       variables: {

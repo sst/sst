@@ -87,9 +87,10 @@ import { Size } from "./util/size.js";
 import { Duration, toCdkDuration } from "./util/duration.js";
 import { Permissions, attachPermissionsToRole } from "./util/permission.js";
 import {
-  FunctionBindingProps,
+  BindingResource,
+  BindingProps,
   getParameterPath,
-} from "./util/functionBinding.js";
+} from "./util/binding.js";
 import { useProject } from "../project.js";
 import { VisibleError } from "../error.js";
 import { RetentionDays } from "aws-cdk-lib/aws-logs";
@@ -146,7 +147,7 @@ export interface SsrSiteProps {
    * })
    * ```
    */
-  bind?: SSTConstruct[];
+  bind?: BindingResource[];
   /**
    * Path to the directory where the app is located.
    * @default "."
@@ -1537,7 +1538,7 @@ function handler(event) {
   >;
 
   /** @internal */
-  public getFunctionBinding(): FunctionBindingProps {
+  public getBindings(): BindingProps {
     const app = this.node.root as App;
     return {
       clientPackage: "site",
