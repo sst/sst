@@ -1178,14 +1178,14 @@ export class Function extends CDKFunction implements SSTConstruct {
    * fn.bind([STRIPE_KEY, bucket]);
    * ```
    */
-  public bind(resources: BindingResource[]): void {
+  public bind(constructs: BindingResource[]): void {
     // Get referenced secrets
     const referencedSecrets: Secret[] = [];
-    resources.forEach((r) =>
+    constructs.forEach((r) =>
       referencedSecrets.push(...getBindingReferencedSecrets(r))
     );
 
-    [...resources, ...referencedSecrets].forEach((r) => {
+    [...constructs, ...referencedSecrets].forEach((r) => {
       // Bind environment
       const env = getBindingEnvironments(r);
       Object.entries(env).forEach(([key, value]) =>
@@ -1197,7 +1197,7 @@ export class Function extends CDKFunction implements SSTConstruct {
       this.attachPermissions(policyStatements);
     });
 
-    this.allBindings.push(...resources, ...referencedSecrets);
+    this.allBindings.push(...constructs, ...referencedSecrets);
   }
 
   /**

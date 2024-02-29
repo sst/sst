@@ -303,7 +303,7 @@ export class EdgeFunction extends Construct {
     return { handlerFilename, asset };
   }
 
-  private bind(resources: BindingResource[]): void {
+  private bind(constructs: BindingResource[]): void {
     const app = this.node.root as App;
     this.bindingEnvs = {
       SST_APP: app.name,
@@ -314,11 +314,11 @@ export class EdgeFunction extends Construct {
 
     // Get referenced secrets
     const referencedSecrets: Secret[] = [];
-    resources.forEach((r) =>
+    constructs.forEach((r) =>
       referencedSecrets.push(...getBindingReferencedSecrets(r))
     );
 
-    [...resources, ...referencedSecrets].forEach((r) => {
+    [...constructs, ...referencedSecrets].forEach((r) => {
       // Bind environment
       this.bindingEnvs = {
         ...this.bindingEnvs,

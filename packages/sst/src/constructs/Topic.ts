@@ -287,11 +287,11 @@ export class Topic extends Construct implements SSTConstruct {
    * topic.bind([STRIPE_KEY, bucket]);
    * ```
    */
-  public bind(resources: BindingResource[]) {
+  public bind(constructs: BindingResource[]) {
     Object.values(this.subscribers)
       .filter((subscriber) => subscriber instanceof Fn)
-      .forEach((subscriber) => subscriber.bind(resources));
-    this.bindingForAllSubscribers.push(...resources);
+      .forEach((subscriber) => subscriber.bind(constructs));
+    this.bindingForAllSubscribers.push(...constructs);
   }
 
   /**
@@ -310,7 +310,7 @@ export class Topic extends Construct implements SSTConstruct {
    */
   public bindToSubscriber(
     subscriberName: string,
-    resources: BindingResource[]
+    constructs: BindingResource[]
   ): void {
     const subscriber = this.subscribers[subscriberName];
     if (!(subscriber instanceof Fn)) {
@@ -318,7 +318,7 @@ export class Topic extends Construct implements SSTConstruct {
         `Cannot bind to the "${this.node.id}" Topic subscriber because it's not a Lambda function`
       );
     }
-    subscriber.bind(resources);
+    subscriber.bind(constructs);
   }
 
   /**

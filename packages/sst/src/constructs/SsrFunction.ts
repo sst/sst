@@ -286,7 +286,7 @@ export class SsrFunction extends Construct implements SSTConstruct {
     resource.node.addDependency(policy);
   }
 
-  private bind(resources: BindingResource[]): void {
+  private bind(constructs: BindingResource[]): void {
     const app = this.node.root as App;
     this.function.addEnvironment("SST_APP", app.name);
     this.function.addEnvironment("SST_STAGE", app.stage);
@@ -297,11 +297,11 @@ export class SsrFunction extends Construct implements SSTConstruct {
 
     // Get referenced secrets
     const referencedSecrets: Secret[] = [];
-    resources.forEach((r) =>
+    constructs.forEach((r) =>
       referencedSecrets.push(...getBindingReferencedSecrets(r))
     );
 
-    [...resources, ...referencedSecrets].forEach((r) => {
+    [...constructs, ...referencedSecrets].forEach((r) => {
       // Bind environment
       const env = getBindingEnvironments(r);
       Object.entries(env).forEach(([key, value]) =>

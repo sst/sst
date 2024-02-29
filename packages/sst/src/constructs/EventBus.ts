@@ -456,14 +456,14 @@ export class EventBus extends Construct implements SSTConstruct {
    * bus.bind([STRIPE_KEY, bucket]);
    * ```
    */
-  public bind(resources: BindingResource[]) {
+  public bind(constructs: BindingResource[]) {
     Object.values(this.targetsData).forEach((rule) =>
       Object.values(rule)
         .filter((target) => target instanceof Fn)
-        .forEach((target) => (target as Fn).bind(resources))
+        .forEach((target) => (target as Fn).bind(constructs))
     );
 
-    this.bindingForAllTargets.push(...resources);
+    this.bindingForAllTargets.push(...constructs);
   }
 
   /**
@@ -489,7 +489,7 @@ export class EventBus extends Construct implements SSTConstruct {
   public bindToTarget(
     ruleKey: string,
     targetName: string,
-    resources: BindingResource[]
+    constructs: BindingResource[]
   ): void {
     const rule = this.targetsData[ruleKey];
     if (!rule) {
@@ -504,7 +504,7 @@ export class EventBus extends Construct implements SSTConstruct {
         `Cannot bind to the "${this.node.id}" EventBus target because it's not a Lambda function`
       );
     }
-    target.bind(resources);
+    target.bind(constructs);
   }
 
   /**

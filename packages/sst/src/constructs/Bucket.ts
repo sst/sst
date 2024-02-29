@@ -384,11 +384,11 @@ export class Bucket extends Construct implements SSTConstruct {
    * bucket.bind([STRIPE_KEY, bucket]);
    * ```
    */
-  public bind(resources: BindingResource[]) {
+  public bind(constructs: BindingResource[]) {
     this.notificationFunctions.forEach((notification) =>
-      notification.bind(resources)
+      notification.bind(constructs)
     );
-    this.bindingForAllNotifications.push(...resources);
+    this.bindingForAllNotifications.push(...constructs);
   }
 
   /**
@@ -407,7 +407,7 @@ export class Bucket extends Construct implements SSTConstruct {
    */
   public bindToNotification(
     notificationName: string,
-    resources: BindingResource[]
+    constructs: BindingResource[]
   ): void {
     const notification = this.notifications[notificationName];
     if (!(notification instanceof Fn)) {
@@ -415,7 +415,7 @@ export class Bucket extends Construct implements SSTConstruct {
         `Cannot bind to the "${this.node.id}" Bucket notification because it's not a Lambda function`
       );
     }
-    notification.bind(resources);
+    notification.bind(constructs);
   }
 
   /**

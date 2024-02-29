@@ -268,12 +268,12 @@ export class Queue extends Construct implements SSTConstruct {
    * queue.bind([STRIPE_KEY, bucket]);
    * ```
    */
-  public bind(resources: BindingResource[]): void {
+  public bind(constructs: BindingResource[]): void {
     if (this.consumerFunction instanceof Fn) {
-      this.consumerFunction.bind(resources);
+      this.consumerFunction.bind(constructs);
     }
 
-    this.bindingForAllConsumers.push(...resources);
+    this.bindingForAllConsumers.push(...constructs);
   }
 
   /**

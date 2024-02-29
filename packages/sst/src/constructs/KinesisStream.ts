@@ -223,9 +223,9 @@ export class KinesisStream extends Construct implements SSTConstruct {
    * stream.bind([STRIPE_KEY, bucket]]);
    * ```
    */
-  public bind(resources: BindingResource[]) {
-    Object.values(this.functions).forEach((fn) => fn.bind(resources));
-    this.bindingForAllConsumers.push(...resources);
+  public bind(constructs: BindingResource[]) {
+    Object.values(this.functions).forEach((fn) => fn.bind(constructs));
+    this.bindingForAllConsumers.push(...constructs);
   }
 
   /**
@@ -238,7 +238,7 @@ export class KinesisStream extends Construct implements SSTConstruct {
    */
   public bindToConsumer(
     consumerName: string,
-    resources: BindingResource[]
+    constructs: BindingResource[]
   ): void {
     if (!this.functions[consumerName]) {
       throw new Error(
@@ -246,7 +246,7 @@ export class KinesisStream extends Construct implements SSTConstruct {
       );
     }
 
-    this.functions[consumerName].bind(resources);
+    this.functions[consumerName].bind(constructs);
   }
 
   /**

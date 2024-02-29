@@ -442,9 +442,9 @@ export class Job extends Construct implements SSTConstruct {
    * job.bind([STRIPE_KEY, bucket]);
    * ```
    */
-  public bind(resources: BindingResource[]): void {
-    this.liveDevJob?.bind(resources);
-    this.bindForCodeBuild(resources);
+  public bind(constructs: BindingResource[]): void {
+    this.liveDevJob?.bind(constructs);
+    this.bindForCodeBuild(constructs);
   }
 
   /**
@@ -717,14 +717,14 @@ export class Job extends Construct implements SSTConstruct {
     });
   }
 
-  private bindForCodeBuild(resources: BindingResource[]): void {
+  private bindForCodeBuild(constructs: BindingResource[]): void {
     // Get referenced secrets
     const referencedSecrets: Secret[] = [];
-    resources.forEach((r) =>
+    constructs.forEach((r) =>
       referencedSecrets.push(...getBindingReferencedSecrets(r))
     );
 
-    [...resources, ...referencedSecrets].forEach((r) => {
+    [...constructs, ...referencedSecrets].forEach((r) => {
       // Bind environment
       const env = getBindingEnvironments(r);
       Object.entries(env).forEach(([key, value]) =>

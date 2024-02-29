@@ -879,13 +879,13 @@ export class Api<
    * api.bind([STRIPE_KEY, bucket]);
    * ```
    */
-  public bind(resources: BindingResource[]) {
+  public bind(constructs: BindingResource[]) {
     for (const route of Object.values(this.routesData)) {
       if (route.type === "function" || route.type === "graphql") {
-        route.function.bind(resources);
+        route.function.bind(constructs);
       }
     }
-    this.bindingForAllRoutes.push(...resources);
+    this.bindingForAllRoutes.push(...constructs);
   }
 
   /**
@@ -903,7 +903,7 @@ export class Api<
    * ```
    *
    */
-  public bindToRoute(routeKey: string, resources: BindingResource[]): void {
+  public bindToRoute(routeKey: string, constructs: BindingResource[]): void {
     const fn = this.getFunction(routeKey);
     if (!fn) {
       throw new Error(
@@ -911,7 +911,7 @@ export class Api<
       );
     }
 
-    fn.bind(resources);
+    fn.bind(constructs);
   }
 
   /**

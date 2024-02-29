@@ -468,8 +468,8 @@ function renderType(file, files, prefix, parameter) {
     }
 
     const link = (() => {
-      // Do not show link for "SSTConstruct" param type
-      if (parameter.name === "SSTConstruct") {
+      // Do not show link for "BindingResource" param type
+      if (parameter.name === "BindingResource") {
         return undefined;
       }
       if (file.children?.find((c) => c.id === id))

@@ -667,9 +667,9 @@ export class AppSyncApi extends Construct implements SSTConstruct {
    * api.bind([STRIPE_KEY, bucket]);
    * ```
    */
-  public bind(resources: BindingResource[]) {
-    Object.values(this.functionsByDsKey).forEach((fn) => fn.bind(resources));
-    this.bindingForAllFunctions.push(...resources);
+  public bind(constructs: BindingResource[]) {
+    Object.values(this.functionsByDsKey).forEach((fn) => fn.bind(constructs));
+    this.bindingForAllFunctions.push(...constructs);
   }
 
   /**
@@ -681,7 +681,7 @@ export class AppSyncApi extends Construct implements SSTConstruct {
    * ```
    *
    */
-  public bindToDataSource(key: string, resources: BindingResource[]): void {
+  public bindToDataSource(key: string, constructs: BindingResource[]): void {
     const fn = this.getFunction(key);
     if (!fn) {
       throw new Error(
@@ -689,7 +689,7 @@ export class AppSyncApi extends Construct implements SSTConstruct {
       );
     }
 
-    fn.bind(resources);
+    fn.bind(constructs);
   }
 
   /**

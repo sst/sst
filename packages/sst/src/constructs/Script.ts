@@ -169,10 +169,10 @@ export class Script extends Construct implements SSTConstruct {
    * script.bind([STRIPE_KEY, bucket]);
    * ```
    */
-  public bind(resources: BindingResource[]): void {
-    this.createFunction?.bind(resources);
-    this.updateFunction?.bind(resources);
-    this.deleteFunction?.bind(resources);
+  public bind(constructs: BindingResource[]): void {
+    this.createFunction?.bind(constructs);
+    this.updateFunction?.bind(constructs);
+    this.deleteFunction?.bind(constructs);
   }
 
   /**

@@ -302,13 +302,13 @@ export class Cognito extends Construct implements SSTConstruct {
     return this.attachPermissionsForUsers(this.cdk.unauthRole, arg1, arg2);
   }
 
-  public bindForTriggers(resources: BindingResource[]): void {
-    Object.values(this.functions).forEach((fn) => fn.bind(resources));
+  public bindForTriggers(constructs: BindingResource[]): void {
+    Object.values(this.functions).forEach((fn) => fn.bind(constructs));
   }
 
   public bindForTrigger(
     triggerKey: keyof CognitoUserPoolTriggers,
-    resources: BindingResource[]
+    constructs: BindingResource[]
   ): void {
     const fn = this.getFunction(triggerKey);
     if (!fn) {
@@ -317,7 +317,7 @@ export class Cognito extends Construct implements SSTConstruct {
       );
     }
 
-    fn.bind(resources);
+    fn.bind(constructs);
   }
 
   public attachPermissionsForTriggers(permissions: Permissions): void {

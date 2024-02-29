@@ -809,9 +809,9 @@ export class Service extends Construct implements SSTConstruct {
    * service.bind([STRIPE_KEY, bucket]);
    * ```
    */
-  public bind(resources: BindingResource[]): void {
-    this.devFunction?.bind(resources);
-    this.bindForService(resources);
+  public bind(constructs: BindingResource[]): void {
+    this.devFunction?.bind(constructs);
+    this.bindForService(constructs);
   }
 
   /**
@@ -1129,14 +1129,14 @@ export class Service extends Construct implements SSTConstruct {
     });
   }
 
-  private bindForService(resources: BindingResource[]): void {
+  private bindForService(constructs: BindingResource[]): void {
     // Get referenced secrets
     const referencedSecrets: Secret[] = [];
-    resources.forEach((r) =>
+    constructs.forEach((r) =>
       referencedSecrets.push(...getBindingReferencedSecrets(r))
     );
 
-    [...resources, ...referencedSecrets].forEach((r) => {
+    [...constructs, ...referencedSecrets].forEach((r) => {
       // Bind environment
       const env = getBindingEnvironments(r);
       Object.entries(env).forEach(([key, value]) =>

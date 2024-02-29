@@ -397,9 +397,9 @@ export class WebSocketApi extends Construct implements SSTConstruct {
    * api.bind([STRIPE_KEY, bucket]);
    * ```
    */
-  public bind(resources: BindingResource[]) {
-    Object.values(this.functions).forEach((fn) => fn.bind(resources));
-    this.bindingForAllRoutes.push(...resources);
+  public bind(constructs: BindingResource[]) {
+    Object.values(this.functions).forEach((fn) => fn.bind(constructs));
+    this.bindingForAllRoutes.push(...constructs);
   }
 
   /**
@@ -411,7 +411,7 @@ export class WebSocketApi extends Construct implements SSTConstruct {
    * ```
    *
    */
-  public bindToRoute(routeKey: string, resources: BindingResource[]): void {
+  public bindToRoute(routeKey: string, constructs: BindingResource[]): void {
     const fn = this.getFunction(routeKey);
     if (!fn) {
       throw new Error(
@@ -419,7 +419,7 @@ export class WebSocketApi extends Construct implements SSTConstruct {
       );
     }
 
-    fn.bind(resources);
+    fn.bind(constructs);
   }
 
   /**

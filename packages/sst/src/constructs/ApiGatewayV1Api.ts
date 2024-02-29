@@ -697,13 +697,13 @@ export class ApiGatewayV1Api<
    * api.bind([STRIPE_KEY, bucket]);
    * ```
    */
-  public bind(resources: BindingResource[]) {
+  public bind(constructs: BindingResource[]) {
     Object.values(this.functions).forEach((fn) => {
       if (fn instanceof Fn) {
-        fn.bind(resources);
+        fn.bind(constructs);
       }
     });
-    this.bindingForAllRoutes.push(...resources);
+    this.bindingForAllRoutes.push(...constructs);
   }
 
   /**
@@ -721,7 +721,7 @@ export class ApiGatewayV1Api<
    * ```
    *
    */
-  public bindToRoute(routeKey: string, resources: BindingResource[]): void {
+  public bindToRoute(routeKey: string, constructs: BindingResource[]): void {
     const fn = this.getFunction(routeKey);
     if (!fn) {
       throw new Error(
@@ -729,7 +729,7 @@ export class ApiGatewayV1Api<
       );
     }
 
-    fn.bind(resources);
+    fn.bind(constructs);
   }
 
   /**
