@@ -52,7 +52,7 @@ func (p *Project) writePackageJson() error {
 	dependencies := result["dependencies"].(map[string]interface{})
 	for name, config := range p.app.Providers {
 		version := config["version"]
-		if version == "" {
+		if version == nil || version == "" {
 			version = "latest"
 		}
 		slog.Info("adding dependency", "name", name)
