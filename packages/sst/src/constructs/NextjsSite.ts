@@ -369,14 +369,14 @@ export class NextjsSite extends SsrSite {
               } as const,
               {
                 cacheType: "server",
-                pattern: this.pathPattern("api/*"),
+                pattern: this.prefixPattern("api/*"),
                 cfFunction: "serverCfFunction",
                 edgeFunction: "edgeServer",
                 origin: "s3",
               } as const,
               {
                 cacheType: "server",
-                pattern: this.pathPattern("_next/data/*"),
+                pattern: this.prefixPattern("_next/data/*"),
                 cfFunction: "serverCfFunction",
                 edgeFunction: "edgeServer",
                 origin: "s3",
@@ -390,20 +390,20 @@ export class NextjsSite extends SsrSite {
               } as const,
               {
                 cacheType: "server",
-                pattern: this.pathPattern("api/*"),
+                pattern: this.prefixPattern("api/*"),
                 cfFunction: "serverCfFunction",
                 origin: "regionalServer",
               } as const,
               {
                 cacheType: "server",
-                pattern: this.pathPattern("_next/data/*"),
+                pattern: this.prefixPattern("_next/data/*"),
                 cfFunction: "serverCfFunction",
                 origin: "regionalServer",
               } as const,
             ]),
         {
           cacheType: "server",
-          pattern: this.pathPattern("_next/image*"),
+          pattern: this.prefixPattern("_next/image*"),
           cfFunction: "serverCfFunction",
           origin: "imageOptimizer",
         },
@@ -412,7 +412,7 @@ export class NextjsSite extends SsrSite {
           (item) =>
             ({
               cacheType: "static",
-              pattern: this.pathPattern(
+              pattern: this.prefixPattern(
                 fs
                   .statSync(path.join(sitePath, ".open-next/assets", item))
                   .isDirectory()
@@ -430,11 +430,9 @@ export class NextjsSite extends SsrSite {
     });
   }
 
-  /**
-   * Prefix CF behavior path patterns with `basePath` if configured in next.config
-   */
-  private pathPattern(pattern: string): string {
-    const { basePath } = this.routesManifest || {};
+  private prefixPattern(pattern: string): string {
+    // Prefix CloudFront distribution behavior path patterns with `basePath` if configured
+    const { basePath } = this.useRoutesManifest();
     return basePath && basePath.length > 0
       ? `${basePath.slice(1)}/${pattern}`
       : pattern;
