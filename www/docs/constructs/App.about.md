@@ -5,12 +5,18 @@ The App construct extends cdk.App and is used internally by SST to:
 - Automatically prefix stack names with the stage and app name
 - Deploy the entire app using the same AWS profile and region
 
-It is made available as the `app` in the `stacks/index.js` of your SST app.
+It is made available as the `app` in the `stacks()` callback in `sst.config.ts` of your SST app.
 
-```js
-export default function main(app) {
-  new MySampleStack(app, "sample");
-}
+```ts title="sst.config.ts" {8}
+export default {
+  config(input) {
+    return {
+      name: "myapp",
+      region: "us-east-1",
+    };
+  },
+  stacks(app) {},
+} satisfies SSTConfig;
 ```
 
 Since it is initialized internally, the props that are passed to App cannot be changed.
@@ -19,10 +25,10 @@ Since it is initialized internally, the props that are passed to App cannot be c
 
 ### Accessing app properties
 
-The properties of the app can be accessed in the `stacks/index.js` as:
+The properties of the app can be accessed in the `sst.config.ts` as:
 
-```js
-export default function main(app) {
+```ts
+stacks(app) {
   app.name;
   app.stage;
   app.region;
@@ -34,8 +40,8 @@ export default function main(app) {
 
 You can also use [`addDefaultFunctionPermissions`](#adddefaultfunctionpermissions), [`addDefaultFunctionEnv`](#adddefaultfunctionenv), and [`addDefaultFunctionLayers`](#adddefaultfunctionlayers) to progressively add more permissions, environment variables, and layers to the defaults. These can be called multiple times and from anywhere.
 
-```js title="stacks/index.js"
-export default function main(app) {
+```ts title="sst.config.ts"
+stacks(app) {
   app.setDefaultFunctionProps({
     timeout: 20,
     memorySize: 512,
@@ -49,10 +55,10 @@ export default function main(app) {
 
 Or if you need to access the `Stack` scope, you can pass in a callback.
 
-```js title="stacks/index.js"
+```ts title="sst.config.ts"
 import { StringParameter } from "aws-cdk-lib/aws-ssm";
 
-export default function main(app) {
+stacks(app) {
   app.setDefaultFunctionProps((stack) => ({
     timeout: 20,
     memorySize: 512,
@@ -72,8 +78,8 @@ You can also use `addDefaultFunctionPermissions`, `addDefaultFunctionEnv`, and `
 
 However, they only affect the functions that are created after the call.
 
-```js title="stacks/index.js"
-export default function main(app) {
+```ts title="sst.config.ts"
+stacks(app) {
   app.stack(StackA)
 
   app.addDefaultFunctionEnv({
@@ -98,8 +104,8 @@ You can also use the [Stack's `setDefaultFunctionProps`](Stack.md#setdefaultfunc
 
 You can set a removal policy to apply to all the resources in the app. This is useful for ephemeral environments that need to clean up all their resources on removal.
 
-``` js title="stacks/index.js"
-export default function main(app) {
+```ts title="sst.config.ts"
+stacks(app) {
   // Remove all resources when the dev stage is removed
   if (app.stage === "dev") {
     app.setDefaultRemovalPolicy("destroy");

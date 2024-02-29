@@ -42,15 +42,17 @@ import { App } from "./App.js";
 import { Stack } from "./Stack.js";
 import { SSTConstruct } from "./Construct.js";
 import {
-  bindEnvironment,
-  bindPermissions,
-  getReferencedSecrets,
-} from "./util/functionBinding.js";
+  BindingResource,
+  getBindingEnvironments,
+  getBindingPermissions,
+  getBindingReferencedSecrets,
+} from "./util/binding.js";
 import { Permissions, attachPermissionsToRole } from "./util/permission.js";
 import { Size, toCdkSize } from "./util/size.js";
 import { Duration, toCdkDuration } from "./util/duration.js";
 import { useDeferredTasks } from "./deferred_task.js";
 import { Asset } from "aws-cdk-lib/aws-s3-assets";
+import { Config } from "../config.js";
 const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
 
 export interface SsrFunctionProps
@@ -62,12 +64,13 @@ export interface SsrFunctionProps
   memorySize?: number | Size;
   permissions?: Permissions;
   environment?: Record<string, string>;
-  bind?: SSTConstruct[];
+  bind?: BindingResource[];
   nodejs?: NodeJSProps;
   copyFiles?: FunctionCopyFilesProps[];
   logRetention?: RetentionDays;
   streaming?: boolean;
   injections?: string[];
+  prefetchSecrets?: boolean;
 }
 
 /////////////////////
@@ -117,6 +120,7 @@ export class SsrFunction extends Construct implements SSTConstruct {
     this.attachPermissions(props.permissions || []);
     this.bind(props.bind || []);
     this.function.node.addDependency(assetReplacer);
+    this.createSecretPrefetcher();
 
     this.assetReplacer = assetReplacer;
     this.assetReplacerPolicy = assetReplacerPolicy;
@@ -246,7 +250,43 @@ export class SsrFunction extends Construct implements SSTConstruct {
     return { assetReplacer: resource, assetReplacerPolicy: policy };
   }
 
-  private bind(constructs: SSTConstruct[]): void {
+  private createSecretPrefetcher() {
+    const { prefetchSecrets } = this.props;
+    if (!prefetchSecrets) return;
+
+    const stack = Stack.of(this) as Stack;
+
+    // Create custom resource to prewarm on deploy
+    const policy = new Policy(this, "SecretPrefetcherPolicy", {
+      statements: [
+        new PolicyStatement({
+          effect: Effect.ALLOW,
+          actions: ["lambda:GetFunction", "lambda:UpdateFunctionConfiguration"],
+          resources: [this.function.functionArn],
+        }),
+        new PolicyStatement({
+          effect: Effect.ALLOW,
+          actions: ["ssm:GetParameters"],
+          resources: [
+            `arn:${stack.partition}:ssm:${stack.region}:${stack.account}:parameter${Config.PREFIX.STAGE}*`,
+            `arn:${stack.partition}:ssm:${stack.region}:${stack.account}:parameter${Config.PREFIX.FALLBACK}*`,
+          ],
+        }),
+      ],
+    });
+    stack.customResourceHandler.role?.attachInlinePolicy(policy);
+    const resource = new CustomResource(this, "SecretPrefetcher", {
+      serviceToken: stack.customResourceHandler.functionArn,
+      resourceType: "Custom::SecretPrefetcher",
+      properties: {
+        version: Date.now().toString(),
+        functionName: this.function.functionName,
+      },
+    });
+    resource.node.addDependency(policy);
+  }
+
+  private bind(constructs: BindingResource[]): void {
     const app = this.node.root as App;
     this.function.addEnvironment("SST_APP", app.name);
     this.function.addEnvironment("SST_STAGE", app.stage);
@@ -257,34 +297,33 @@ export class SsrFunction extends Construct implements SSTConstruct {
 
     // Get referenced secrets
     const referencedSecrets: Secret[] = [];
-    constructs.forEach((c) =>
-      referencedSecrets.push(...getReferencedSecrets(c))
+    constructs.forEach((r) =>
+      referencedSecrets.push(...getBindingReferencedSecrets(r))
     );
 
-    [...constructs, ...referencedSecrets].forEach((c) => {
+    [...constructs, ...referencedSecrets].forEach((r) => {
       // Bind environment
-      const env = bindEnvironment(c);
+      const env = getBindingEnvironments(r);
       Object.entries(env).forEach(([key, value]) =>
         this.function.addEnvironment(key, value)
       );
 
       // Bind permissions
-      const permissions = bindPermissions(c);
-      Object.entries(permissions).forEach(([action, resources]) =>
-        this.attachPermissions([
-          new PolicyStatement({
-            actions: [action],
-            effect: Effect.ALLOW,
-            resources,
-          }),
-        ])
-      );
+      const policyStatements = getBindingPermissions(r);
+      this.attachPermissions(policyStatements);
     });
   }
 
   private async buildAssetFromHandler() {
-    const { handler, runtime, nodejs, copyFiles, architecture: enumArchitecture } = this.props;
-    const architecture = enumArchitecture === Architecture.X86_64 ? "x86_64" : "arm_64"
+    const {
+      handler,
+      runtime,
+      nodejs,
+      copyFiles,
+      architecture: enumArchitecture,
+    } = this.props;
+    const architecture =
+      enumArchitecture === Architecture.X86_64 ? "x86_64" : "arm_64";
 
     useFunctions().add(this.node.addr, {
       handler,
@@ -375,10 +414,10 @@ export class SsrFunction extends Construct implements SSTConstruct {
       path.join(bundle, handlerDir, `${newHandlerName}.mjs`),
       streaming
         ? [
-            `export const ${newHandlerFunction} = awslambda.streamifyResponse(async (event, context) => {`,
+            `export const ${newHandlerFunction} = awslambda.streamifyResponse(async (event, responseStream, context) => {`,
             ...injections,
             `  const { ${oldHandlerFunction}: rawHandler} = await import("./${oldHandlerName}.mjs");`,
-            `  return rawHandler(event, context);`,
+            `  return rawHandler(event, responseStream);`,
             `});`,
           ].join("\n")
         : [
@@ -436,12 +475,13 @@ export class SsrFunction extends Construct implements SSTConstruct {
         missingSourcemap: this.missingSourcemap === true ? true : undefined,
         localId: this.node.addr,
         secrets: [] as string[],
+        prefetchSecrets: this.props.prefetchSecrets,
       },
     };
   }
 
   /** @internal */
-  public getFunctionBinding() {
+  public getBindings() {
     return undefined;
   }
 }

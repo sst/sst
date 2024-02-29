@@ -6,6 +6,7 @@ import { FunctionInvoker } from "./function-invoker.js";
 import { log, wrapper } from "./util.js";
 import { SourcemapUploader } from "./sourcemap-uploader.js";
 import { S3Uploader, batchProcessor } from "./s3-uploader.js";
+import { SecretPrefetcher } from "./secret-prefetcher.js";
 
 export interface BaseProcessorEvent {
   processorType: string;
@@ -42,6 +43,9 @@ const customResourceEventHandler = wrapper(async (cfnRequest: any) => {
       break;
     case "Custom::S3Uploader":
       await S3Uploader(cfnRequest);
+      break;
+    case "Custom::SecretPrefetcher":
+      await SecretPrefetcher(cfnRequest);
       break;
   }
 });

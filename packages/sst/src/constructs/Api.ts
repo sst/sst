@@ -5,37 +5,10 @@ import {
   PolicyDocument,
   PolicyStatement,
 } from "aws-cdk-lib/aws-iam";
-import { CfnApi, CfnRoute, CfnStage } from "aws-cdk-lib/aws-apigatewayv2";
 import {
-  HttpUrlIntegration,
-  HttpUrlIntegrationProps,
-  HttpAlbIntegration,
-  HttpAlbIntegrationProps,
-  HttpNlbIntegration,
-  HttpNlbIntegrationProps,
-  HttpLambdaIntegration,
-} from "@aws-cdk/aws-apigatewayv2-integrations-alpha";
-import {
-  HttpAwsIntegration,
-  HttpAwsIntegrationProps,
-} from "./cdk/HttpAwsIntegration.js";
-
-import { App } from "./App.js";
-import { Stack } from "./Stack.js";
-import { getFunctionRef, SSTConstruct, isCDKConstruct } from "./Construct.js";
-import {
-  Function as Fn,
-  FunctionProps,
-  FunctionInlineDefinition,
-  FunctionDefinition,
-} from "./Function.js";
-import { FunctionBindingProps } from "./util/functionBinding.js";
-import { Duration, toCdkDuration } from "./util/duration.js";
-import { Permissions } from "./util/permission.js";
-import * as apigV2Cors from "./util/apiGatewayV2Cors.js";
-import * as apigV2Domain from "./util/apiGatewayV2Domain.js";
-import * as apigV2AccessLog from "./util/apiGatewayV2AccessLog.js";
-import {
+  CfnApi,
+  CfnRoute,
+  CfnStage,
   DomainName,
   HttpApi,
   HttpApiProps,
@@ -50,14 +23,43 @@ import {
   IHttpRouteAuthorizer,
   IntegrationCredentials,
   PayloadFormatVersion,
-} from "@aws-cdk/aws-apigatewayv2-alpha";
+} from "aws-cdk-lib/aws-apigatewayv2";
+import {
+  HttpUrlIntegration,
+  HttpUrlIntegrationProps,
+  HttpAlbIntegration,
+  HttpAlbIntegrationProps,
+  HttpNlbIntegration,
+  HttpNlbIntegrationProps,
+  HttpLambdaIntegration,
+} from "aws-cdk-lib/aws-apigatewayv2-integrations";
 import {
   HttpIamAuthorizer,
   HttpJwtAuthorizer,
   HttpLambdaAuthorizer,
   HttpLambdaResponseType,
   HttpUserPoolAuthorizer,
-} from "@aws-cdk/aws-apigatewayv2-authorizers-alpha";
+} from "aws-cdk-lib/aws-apigatewayv2-authorizers";
+import {
+  HttpAwsIntegration,
+  HttpAwsIntegrationProps,
+} from "./cdk/HttpAwsIntegration.js";
+
+import { App } from "./App.js";
+import { Stack } from "./Stack.js";
+import { getFunctionRef, SSTConstruct, isCDKConstruct } from "./Construct.js";
+import {
+  Function as Fn,
+  FunctionProps,
+  FunctionInlineDefinition,
+  FunctionDefinition,
+} from "./Function.js";
+import { BindingResource, BindingProps } from "./util/binding.js";
+import { Duration, toCdkDuration } from "./util/duration.js";
+import { Permissions } from "./util/permission.js";
+import * as apigV2Cors from "./util/apiGatewayV2Cors.js";
+import * as apigV2Domain from "./util/apiGatewayV2Domain.js";
+import * as apigV2AccessLog from "./util/apiGatewayV2AccessLog.js";
 import { IFunction } from "aws-cdk-lib/aws-lambda";
 import {
   IApplicationListener,
@@ -437,7 +439,7 @@ export interface ApiProps<
      *
      * @example
      * ```js
-     * import { HttpApi } from "@aws-cdk/aws-apigatewayv2-alpha";
+     * import { HttpApi } from "aws-cdk-lib/aws-apigatewayv2";
      *
      * new Api(stack, "Api", {
      *   cdk: {
@@ -456,7 +458,7 @@ export interface ApiProps<
      *
      * @example
      * ```js
-     * import { HttpApi } from "@aws-cdk/aws-apigatewayv2-alpha";
+     * import { HttpApi } from "aws-cdk-lib/aws-apigatewayv2";
      *
      * new Api(stack, "Api", {
      *   cdk: {
@@ -760,7 +762,7 @@ export class Api<
       | { type: "nlb"; nlb: INetworkListener };
   };
   private authorizersData: Record<string, IHttpRouteAuthorizer>;
-  private bindingForAllRoutes: SSTConstruct[] = [];
+  private bindingForAllRoutes: BindingResource[] = [];
   private permissionsAttachedForAllRoutes: Permissions[] = [];
 
   constructor(scope: Construct, id: string, props?: ApiProps<Authorizers>) {
@@ -877,7 +879,7 @@ export class Api<
    * api.bind([STRIPE_KEY, bucket]);
    * ```
    */
-  public bind(constructs: SSTConstruct[]) {
+  public bind(constructs: BindingResource[]) {
     for (const route of Object.values(this.routesData)) {
       if (route.type === "function" || route.type === "graphql") {
         route.function.bind(constructs);
@@ -901,7 +903,7 @@ export class Api<
    * ```
    *
    */
-  public bindToRoute(routeKey: string, constructs: SSTConstruct[]): void {
+  public bindToRoute(routeKey: string, constructs: BindingResource[]): void {
     const fn = this.getFunction(routeKey);
     if (!fn) {
       throw new Error(
@@ -993,7 +995,7 @@ export class Api<
   }
 
   /** @internal */
-  public getFunctionBinding(): FunctionBindingProps {
+  public getBindings(): BindingProps {
     return {
       clientPackage: "api",
       variables: {

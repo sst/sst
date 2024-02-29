@@ -9,7 +9,7 @@ import {
   FunctionInlineDefinition,
   FunctionDefinition,
 } from "./Function.js";
-import { FunctionBindingProps } from "./util/functionBinding.js";
+import { BindingResource, BindingProps } from "./util/binding.js";
 import { toCdkDuration } from "./util/duration.js";
 import { Permissions } from "./util/permission.js";
 
@@ -138,7 +138,7 @@ export class Queue extends Construct implements SSTConstruct {
    * The internally created consumer `Function` instance.
    */
   public consumerFunction?: Fn | lambda.IFunction;
-  private bindingForAllConsumers: SSTConstruct[] = [];
+  private bindingForAllConsumers: BindingResource[] = [];
   private permissionsAttachedForAllConsumers: Permissions[] = [];
   private props: QueueProps;
 
@@ -268,7 +268,7 @@ export class Queue extends Construct implements SSTConstruct {
    * queue.bind([STRIPE_KEY, bucket]);
    * ```
    */
-  public bind(constructs: SSTConstruct[]): void {
+  public bind(constructs: BindingResource[]): void {
     if (this.consumerFunction instanceof Fn) {
       this.consumerFunction.bind(constructs);
     }
@@ -307,7 +307,7 @@ export class Queue extends Construct implements SSTConstruct {
   }
 
   /** @internal */
-  public getFunctionBinding(): FunctionBindingProps {
+  public getBindings(): BindingProps {
     return {
       clientPackage: "queue",
       variables: {

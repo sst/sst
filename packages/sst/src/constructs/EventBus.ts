@@ -20,7 +20,7 @@ import {
   FunctionInlineDefinition,
   FunctionDefinition,
 } from "./Function.js";
-import { FunctionBindingProps } from "./util/functionBinding.js";
+import { BindingResource, BindingProps } from "./util/binding.js";
 import { Permissions } from "./util/permission.js";
 import { SqsEventSource } from "aws-cdk-lib/aws-lambda-event-sources";
 import { SqsDestination } from "aws-cdk-lib/aws-lambda-destinations";
@@ -342,7 +342,7 @@ export class EventBus extends Construct implements SSTConstruct {
     string,
     Record<string, Fn | Queue | lambda.IFunction | ILogGroup>
   > = {};
-  private readonly bindingForAllTargets: SSTConstruct[] = [];
+  private readonly bindingForAllTargets: BindingResource[] = [];
   private readonly permissionsAttachedForAllTargets: Permissions[] = [];
   private readonly props: EventBusProps;
 
@@ -456,7 +456,7 @@ export class EventBus extends Construct implements SSTConstruct {
    * bus.bind([STRIPE_KEY, bucket]);
    * ```
    */
-  public bind(constructs: SSTConstruct[]) {
+  public bind(constructs: BindingResource[]) {
     Object.values(this.targetsData).forEach((rule) =>
       Object.values(rule)
         .filter((target) => target instanceof Fn)
@@ -489,7 +489,7 @@ export class EventBus extends Construct implements SSTConstruct {
   public bindToTarget(
     ruleKey: string,
     targetName: string,
-    constructs: SSTConstruct[]
+    constructs: BindingResource[]
   ): void {
     const rule = this.targetsData[ruleKey];
     if (!rule) {
@@ -581,7 +581,7 @@ export class EventBus extends Construct implements SSTConstruct {
   }
 
   /** @internal */
-  public getFunctionBinding(): FunctionBindingProps {
+  public getBindings(): BindingProps {
     return {
       clientPackage: "event-bus",
       variables: {

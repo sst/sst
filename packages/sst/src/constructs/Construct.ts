@@ -2,7 +2,7 @@ import { Construct } from "constructs";
 import { Stack as CDKStack } from "aws-cdk-lib/core";
 import { Function as Fn } from "aws-cdk-lib/aws-lambda";
 import { Stack } from "./Stack.js";
-import { FunctionBindingProps } from "./util/functionBinding.js";
+import { BindingProps } from "./util/binding.js";
 
 const JSII_RTTI_SYMBOL_1 = Symbol.for("jsii.rtti");
 
@@ -19,7 +19,7 @@ export interface SSTConstructMetadata<
 export interface SSTConstruct extends Construct {
   id: string;
   getConstructMetadata(): SSTConstructMetadata;
-  getFunctionBinding(): FunctionBindingProps | undefined;
+  getBindings(): BindingProps | undefined;
 }
 
 export function getFunctionRef(fn?: any) {

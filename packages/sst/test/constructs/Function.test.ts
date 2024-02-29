@@ -19,7 +19,7 @@ import * as ec2 from "aws-cdk-lib/aws-ec2";
 import * as iam from "aws-cdk-lib/aws-iam";
 import * as sns from "aws-cdk-lib/aws-sns";
 import * as lambda from "aws-cdk-lib/aws-lambda";
-import * as apig from "@aws-cdk/aws-apigatewayv2-alpha";
+import * as apig from "aws-cdk-lib/aws-apigatewayv2";
 import {
   Api,
   WebSocketApi,
@@ -246,18 +246,41 @@ test("runtime: container", async () => {
   });
 });
 
+test("runtime: container: props", async () => {
+  const app = await createApp();
+  const stack = new Stack(app, "stack");
+  new Function(stack, "Function", {
+    runtime: "container",
+    handler: "test/constructs/container-function",
+    container: {
+      cacheFrom: [
+        { type: "inline" },
+        { type: "local", params: { src: ".", mode: "max" } },
+      ],
+      cacheTo: { type: "inline" },
+    },
+  });
+  await app.finish();
+  hasResource(stack, "AWS::Lambda::Function", {
+    Code: objectLike({
+      ImageUri: ANY,
+    }),
+  });
+});
+
 test("runtime: container: invalid file", async () => {
   const app = await createApp();
   const stack = new Stack(app, "stack");
-  expect(() => {
-    new Function(stack, "Function", {
-      runtime: "container",
-      handler: "test/constructs/container-function",
-      container: {
-        file: "Dockerfile.garbage",
-      },
-    });
-  }).toThrow(/Cannot find file/);
+  new Function(stack, "Function", {
+    runtime: "container",
+    handler: "test/constructs/container-function",
+    container: {
+      file: "Dockerfile.garbage",
+    },
+  });
+  await expect(async () => {
+    await app.finish();
+  }).rejects.toThrow(/no such file/);
 });
 
 test("runtime: invalid", async () => {
@@ -570,6 +593,38 @@ test("bind: config", async () => {
               ],
             },
           ],
+        },
+      ],
+      Version: "2012-10-17",
+    },
+  });
+});
+
+test("bind: customize permissions", async () => {
+  const stack = new Stack(await createApp(), "stack");
+  const s = new Config.Secret(stack, "MY_SECRET");
+  new Function(stack, "Function", {
+    handler: "test/lambda.handler",
+    bind: [
+      { resource: s, permissions: [{ actions: ["ssm:*"], resources: ["*"] }] },
+    ],
+  });
+  hasResource(stack, "AWS::Lambda::Function", {
+    Environment: {
+      Variables: {
+        SST_Secret_value_MY_SECRET: "__FETCH_FROM_SSM__",
+        AWS_NODEJS_CONNECTION_REUSE_ENABLED: "1",
+      },
+    },
+  });
+  hasResource(stack, "AWS::IAM::Policy", {
+    PolicyDocument: {
+      Statement: [
+        lambdaDefaultPolicy,
+        {
+          Action: "ssm:*",
+          Effect: "Allow",
+          Resource: "*",
         },
       ],
       Version: "2012-10-17",

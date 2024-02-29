@@ -18,6 +18,7 @@ const CDK_DOCS_MAP = {
   Stack: "",
   StackProps: "",
   CfnOutputProps: "",
+  Project: "aws_codebuild",
   IVpc: "aws_ec2",
   ISecurityGroup: "aws_ec2",
   SubnetSelection: "aws_ec2",
@@ -50,6 +51,32 @@ const CDK_DOCS_MAP = {
   TokenAuthorizer: "aws_apigateway",
   LambdaIntegrationOptions: "aws_apigateway",
   CognitoUserPoolsAuthorizer: "aws_apigateway",
+  HttpApi: "aws_apigatewayv2",
+  HttpApiProps: "aws_apigatewayv2",
+  HttpIntegrationSubtype: "aws_apigatewayv2",
+  HttpStageProps: "aws_apigatewayv2",
+  IHttpApi: "aws_apigatewayv2",
+  IntegrationCredentials: "aws_apigatewayv2",
+  IWebSocketApi: "aws_apigatewayv2",
+  IWebSocketStage: "aws_apigatewayv2",
+  ParameterMapping: "aws_apigatewayv2",
+  WebSocketApi: "aws_apigatewayv2",
+  WebSocketApiProps: "aws_apigatewayv2",
+  WebSocketStage: "aws_apigatewayv2",
+  WebSocketStageProps: "aws_apigatewayv2",
+  HttpUrlIntegration: "aws_apigatewayv2_integrations",
+  HttpUrlIntegrationProps: "aws_apigatewayv2_integrations",
+  HttpAlbIntegration: "aws_apigatewayv2_integrations",
+  HttpAlbIntegrationProps: "aws_apigatewayv2_integrations",
+  HttpNlbIntegration: "aws_apigatewayv2_integrations",
+  HttpNlbIntegrationProps: "aws_apigatewayv2_integrations",
+  HttpLambdaIntegration: "aws_apigatewayv2_integrations",
+  HttpIamAuthorizer: "aws_apigatewayv2_authorizers",
+  HttpJwtAuthorizer: "aws_apigatewayv2_authorizers",
+  HttpLambdaAuthorizer: "aws_apigatewayv2_authorizers",
+  HttpLambdaResponseType: "aws_apigatewayv2_authorizers",
+  HttpUserPoolAuthorizer: "aws_apigatewayv2_authorizers",
+  WebSocketLambdaAuthorizer: "aws_apigatewayv2_authorizers",
   ServerlessCluster: "aws_rds",
   IServerlessCluster: "aws_rds",
   Role: "aws_iam",
@@ -69,6 +96,7 @@ const CDK_DOCS_MAP = {
   IEventBus: "aws_events",
   CronOptions: "aws_events",
   EventBusProps: "aws_events",
+  Schedule: "aws_events",
   SqsQueueProps: "aws_events_targets",
   LambdaFunctionProps: "aws_events_targets",
   IStream: "aws_kinesis",
@@ -101,8 +129,10 @@ const CDK_DOCS_MAP = {
   IDistribution: "aws_cloudfront",
   IOriginRequestPolicy: "aws_cloudfront",
   AddBehaviorOptions: "aws_cloudfront",
+  AllowedMethods: "aws_cloudfront",
   CachePolicyProps: "aws_cloudfront",
   Distribution: "aws_cloudfront",
+  ErrorResponse: "aws_cloudfront",
   IResponseHeadersPolicy: "aws_cloudfront",
   S3OriginProps: "aws_cloudfront",
   OriginRequestPolicyProps: "aws_cloudfront",
@@ -438,8 +468,11 @@ function renderType(file, files, prefix, parameter) {
     }
 
     const link = (() => {
-      // Do not show link for "SSTConstruct" param type
-      if (parameter.name === "SSTConstruct") {
+      // Do not show link for "BindingResource" and "SSTConstruct"
+      if (
+        parameter.name === "BindingResource" ||
+        parameter.name === "SSTConstruct"
+      ) {
         return undefined;
       }
       if (file.children?.find((c) => c.id === id))
@@ -487,7 +520,6 @@ function renderProperties(file, files, properties, prefix, onlyPublic) {
     lines.push(
       "_Type_ : " + renderType(file, files, nextPrefix, signature.type) + "\n"
     );
-    console.log(JSON.stringify({ signature }, null, 2));
     const comment =
       signature.comment ||
       signature.type?.declaration?.signatures?.[0]?.comment;

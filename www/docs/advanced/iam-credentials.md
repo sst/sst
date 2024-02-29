@@ -138,7 +138,8 @@ For SST to deploy and manage your applications, it requires certain IAM permissi
               "iam:GetRole",
               "iam:GetRolePolicy",
               "iam:PutRolePolicy",
-              "iam:TagRole"
+              "iam:TagRole",
+              "iam:PassRole"
           ],
           "Resource": [
               "arn:aws:iam::112233445566:role/cdk-hnb659fds-cfn-exec-role-*",
@@ -155,6 +156,7 @@ For SST to deploy and manage your applications, it requires certain IAM permissi
               "s3:CreateBucket",
               "s3:DeleteBucketPolicy",
               "s3:GetEncryptionConfiguration",
+              "s3:GetBucketLocation",
               "s3:GetBucketPolicy",
               "s3:PutBucketPolicy",
               "s3:PutBucketVersioning",
@@ -348,7 +350,8 @@ Below are the permissions required:
           "iam:GetRole",
           "iam:GetRolePolicy",
           "iam:PutRolePolicy",
-          "iam:TagRole"
+          "iam:TagRole",
+          "iam:PassRole"
       ],
       "Resource": [
           "arn:aws:iam::112233445566:role/cdk-hnb659fds-cfn-exec-role-*",
@@ -368,6 +371,7 @@ Below are the permissions required:
           "s3:CreateBucket",
           "s3:DeleteBucketPolicy",
           "s3:GetEncryptionConfiguration",
+          "s3:GetBucketLocation",
           "s3:GetBucketPolicy",
           "s3:PutBucketPolicy",
           "s3:PutBucketVersioning",

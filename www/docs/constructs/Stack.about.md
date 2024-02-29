@@ -14,13 +14,10 @@ export function MyStack({ stack }: StackContext) {
 
 ### Adding to an app
 
-Add it to your app in `stacks/index.js`.
+Add it to your app in `sst.config.ts`.
 
 ```ts
-import { StackA } from "./MyStack";
-import { StackB } from "./MyStack";
-
-export default function main(app) {
+stacks(app) {
   app.stack(StackA).stack(StackB);
 
   // Add more stacks
@@ -49,20 +46,16 @@ By default, the name of the CloudFormation stack is the stage name, app name, an
 
 You can override the stack function name by passing in `id`. In this case, the CloudFormation stack name is `stage-app-my-stack`.
 
-```ts
-import { MyStack } from "./MyStack";
-
-export default function main(app) {
+```ts title="sst.config.ts"
+stacks(app) {
   app.stack(MyStack, { id: "my-stack" });
 }
 ```
 
 Alternatively, you can override the CloudFormation stack name directly by passing in `stackName`.
 
-```ts
-import { MyStack } from "./MyStack";
-
-export default function main(app) {
+```ts title="sst.config.ts"
+stacks(app) {
   app.stack(MyStack, { stackName: `${app.stage}-my-hello-stack` });
 }
 ```
@@ -115,9 +108,8 @@ export async function MyStack({ stack }: StackContext) {
 
 When initializing the stack, make sure you call `await`
 
-```ts
-import { MyStack } from "./MyStack";
-export default function main(app: sst.App) {
+```ts title="sst.config.ts"
+async stacks(app) {
   await app.stack(MyStack);
 }
 ```

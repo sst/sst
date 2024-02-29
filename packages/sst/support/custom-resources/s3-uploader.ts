@@ -14,7 +14,7 @@ import {
 import { LambdaClient, InvokeCommand } from "@aws-sdk/client-lambda";
 import { CdkCustomResourceEvent } from "aws-lambda";
 import type { BaseProcessorEvent } from "./index";
-import { sdkLogger } from "./util.js";
+import { useAWSClient } from "./util.js";
 
 interface Props {
   sources: {
@@ -50,8 +50,8 @@ interface ProcessorEvent extends BaseProcessorEvent {
   replaceValues: Props["replaceValues"];
 }
 
-const s3 = new S3Client({ logger: sdkLogger });
-const lambda = new LambdaClient({ logger: sdkLogger });
+const s3 = useAWSClient(S3Client);
+const lambda = useAWSClient(LambdaClient);
 
 export async function S3Uploader(cfnRequest: CdkCustomResourceEvent) {
   switch (cfnRequest.RequestType) {
@@ -262,7 +262,7 @@ function getContentType(filename: string, textEncoding: string) {
     [".xml"]: { mime: "application/xml", isText: true },
     [".pdf"]: { mime: "application/pdf", isText: false },
     [".zip"]: { mime: "application/zip", isText: false },
-    [".wasm"]: {  mime: "application/wasm", isText: false },
+    [".wasm"]: { mime: "application/wasm", isText: false },
   };
   const extensionData = extensions[ext as keyof typeof extensions];
   const mime = extensionData?.mime ?? "application/octet-stream";

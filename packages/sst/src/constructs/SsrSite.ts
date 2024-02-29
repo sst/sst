@@ -87,9 +87,10 @@ import { Size } from "./util/size.js";
 import { Duration, toCdkDuration } from "./util/duration.js";
 import { Permissions, attachPermissionsToRole } from "./util/permission.js";
 import {
-  FunctionBindingProps,
+  BindingResource,
+  BindingProps,
   getParameterPath,
-} from "./util/functionBinding.js";
+} from "./util/binding.js";
 import { useProject } from "../project.js";
 import { VisibleError } from "../error.js";
 import { RetentionDays } from "aws-cdk-lib/aws-logs";
@@ -146,7 +147,7 @@ export interface SsrSiteProps {
    * })
    * ```
    */
-  bind?: SSTConstruct[];
+  bind?: BindingResource[];
   /**
    * Path to the directory where the app is located.
    * @default "."
@@ -249,6 +250,11 @@ export interface SsrSiteProps {
      * @default false
      */
     enableServerUrlIamAuth?: boolean;
+    /**
+     * Prefetches bound secret values and injects them into the function's environment variables.
+     * @default false
+     */
+    prefetchSecrets?: boolean;
   };
   dev?: {
     /**
@@ -471,6 +477,10 @@ export interface SsrSiteProps {
       | "logRetention"
     > &
       Pick<FunctionProps, "copyFiles">;
+    /**
+     * @hidden Need to fix tsdoc generation to support the `Plan` type
+     */
+    transform?: (args: Plan) => void;
   };
 }
 
@@ -580,6 +590,7 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
     // Build app
     buildApp();
     const plan = this.plan(bucket);
+    transformPlan();
     validateTimeout();
 
     // Create CloudFront
@@ -702,6 +713,10 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
       });
     }
 
+    function transformPlan() {
+      cdk?.transform?.(plan);
+    }
+
     function createServerFunctionForDev() {
       const role = new Role(self, "ServerFunctionRole", {
         assumedBy: new CompositePrincipal(
@@ -743,10 +758,7 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
       // Create warmer function
       const warmer = new CdkFunction(self, "WarmerFunction", {
         description: "SSR warmer",
-        code: Code.fromAsset(
-          plan.warmerConfig?.function ??
-            path.join(__dirname, "../support/ssr-warmer")
-        ),
+        code: Code.fromAsset(path.join(__dirname, "../support/ssr-warmer")),
         runtime: Runtime.NODEJS_18_X,
         handler: "index.handler",
         timeout: CdkDuration.minutes(15),
@@ -760,8 +772,7 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
 
       // Create cron job
       new Rule(self, "WarmerRule", {
-        schedule:
-          plan.warmerConfig?.schedule ?? Schedule.rate(CdkDuration.minutes(5)),
+        schedule: Schedule.rate(CdkDuration.minutes(5)),
         targets: [new LambdaFunction(warmer, { retryAttempts: 0 })],
       });
 
@@ -1010,9 +1021,10 @@ function handler(event) {
         ...cdk?.server,
         streaming: props.streaming,
         injections: [
-          ...(warm ? [useServerFunctionWarmingInjection()] : []),
+          ...(warm ? [useServerFunctionWarmingInjection(props.streaming)] : []),
           ...(props.injections || []),
         ],
+        prefetchSecrets: regional?.prefetchSecrets,
       });
       ssrFunctions.push(fn);
 
@@ -1229,7 +1241,7 @@ function handler(event) {
     }
 
     function useServerBehaviorCachePolicy() {
-      const allowedHeaders = plan.cachePolicyAllowedHeaders || [];
+      const allowedHeaders = plan.serverCachePolicy?.allowedHeaders ?? [];
       singletonCachePolicy =
         singletonCachePolicy ??
         new CachePolicy(
@@ -1252,15 +1264,24 @@ function handler(event) {
       return singletonOriginRequestPolicy;
     }
 
-    function useServerFunctionWarmingInjection() {
-      return `
-if (event.type === "warmer") {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve({ serverId: "server-" + Math.random().toString(36).slice(2, 8) });
-    }, event.delay);
-  });
-}`;
+    function useServerFunctionWarmingInjection(streaming?: boolean) {
+      return [
+        `if (event.type === "warmer") {`,
+        `  const p = new Promise((resolve) => {`,
+        `    setTimeout(() => {`,
+        `      resolve({ serverId: "server-" + Math.random().toString(36).slice(2, 8) });`,
+        `    }, event.delay);`,
+        `  });`,
+        ...(streaming
+          ? [
+              `  const response = await p;`,
+              `  responseStream.write(JSON.stringify(response));`,
+              `  responseStream.end();`,
+              `  return;`,
+            ]
+          : [`  return p;`]),
+        `}`,
+      ].join("\n");
     }
 
     function getS3FileOptions(copy: S3OriginConfig["copy"]) {
@@ -1507,6 +1528,7 @@ if (event.type === "warmer") {
         secrets: (this.props.bind || [])
           .filter((c) => c instanceof Secret)
           .map((c) => (c as Secret).name),
+        prefetchSecrets: this.props.regional?.prefetchSecrets,
       },
     };
   }
@@ -1516,7 +1538,7 @@ if (event.type === "warmer") {
   >;
 
   /** @internal */
-  public getFunctionBinding(): FunctionBindingProps {
+  public getBindings(): BindingProps {
     const app = this.node.root as App;
     return {
       clientPackage: "site",
@@ -1575,12 +1597,10 @@ if (event.type === "warmer") {
       edgeFunction?: keyof EdgeFunctions;
     }[];
     errorResponses?: ErrorResponse[];
-    cachePolicyAllowedHeaders?: string[];
-    buildId?: string;
-    warmerConfig?: {
-      function: string;
-      schedule?: Schedule;
+    serverCachePolicy?: {
+      allowedHeaders?: string[];
     };
+    buildId?: string;
   }) {
     return input;
   }

@@ -28,17 +28,6 @@ import {
 const FALLBACK_STAGE = ".fallback";
 const SECRET_UPDATED_AT_ENV = "SST_ADMIN_SECRET_UPDATED_AT";
 
-const PREFIX = {
-  get STAGE() {
-    const project = useProject();
-    return project.config.ssmPrefix;
-  },
-  get FALLBACK() {
-    const project = useProject();
-    return `/sst/${project.config.name}/${FALLBACK_STAGE}/`;
-  },
-};
-
 declare module "./bus.js" {
   export interface Events {
     "config.secret.updated": { name: string };
@@ -51,6 +40,17 @@ interface Secret {
 }
 
 export namespace Config {
+  export const PREFIX = {
+    get STAGE() {
+      const project = useProject();
+      return project.config.ssmPrefix;
+    },
+    get FALLBACK() {
+      const project = useProject();
+      return `/sst/${project.config.name}/${FALLBACK_STAGE}/`;
+    },
+  };
+
   export async function parameters() {
     const result: (ReturnType<typeof parse> & { value: string })[] = [];
 
@@ -194,6 +194,7 @@ export namespace Config {
   }
 
   export async function restart(keys: string[]) {
+    // Note: Currently functions and sites with prefetch secrets are not restarted
     const metadata = await Stacks.metadata();
     const siteData = Object.values(metadata)
       .flat()
@@ -216,12 +217,18 @@ export namespace Config {
     const siteDataPlaceholder = siteData.filter(
       (c) => c.data.mode === "placeholder"
     );
+    const siteDataWithPrefetchSecrets = siteData
+      .filter((c) => c.data.mode === "deployed")
+      .filter((c) => c.data.prefetchSecrets);
     const siteDataEdge = siteData
       .filter((c) => c.data.mode === "deployed")
+      .filter((c) => !c.data.prefetchSecrets)
       .filter((c) => c.data.edge);
     const siteDataRegional = siteData
       .filter((c) => c.data.mode === "deployed")
+      .filter((c) => !c.data.prefetchSecrets)
       .filter((c) => !c.data.edge);
+
     const regionalSiteArns = siteData.map((s) => s.data.server);
     const functionData = Object.values(metadata)
       .flat()
@@ -229,6 +236,12 @@ export namespace Config {
       // filter out SSR functions for sites
       .filter((c) => !regionalSiteArns.includes(c.data.arn))
       .filter((c) => keys.some((key) => c.data.secrets.includes(key)));
+    const functionDataWithPrefetchSecrets = functionData.filter(
+      (c) => c.data.prefetchSecrets
+    );
+    const functionDataWithoutPrefetchSecrets = functionData.filter(
+      (c) => !c.data.prefetchSecrets
+    );
 
     // Restart sites
     const restartedSites = (
@@ -243,7 +256,7 @@ export namespace Config {
     // Restart functions
     const restartedFunctions = (
       await Promise.all(
-        functionData.map(async (f) => {
+        functionDataWithoutPrefetchSecrets.map(async (f) => {
           const restarted = await restartFunction(f.data.arn);
           return restarted ? f : restarted;
         })
@@ -255,6 +268,8 @@ export namespace Config {
       sites: restartedSites,
       placeholderSites: siteDataPlaceholder,
       functions: restartedFunctions,
+      sitesWithPrefetch: siteDataWithPrefetchSecrets,
+      functionsWithPrefetch: functionDataWithPrefetchSecrets,
     };
   }
 }

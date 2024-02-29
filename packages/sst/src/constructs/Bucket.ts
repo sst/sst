@@ -9,7 +9,7 @@ import {
   FunctionInlineDefinition,
   FunctionDefinition,
 } from "./Function.js";
-import { FunctionBindingProps } from "./util/functionBinding.js";
+import { BindingResource, BindingProps } from "./util/binding.js";
 import { Permissions } from "./util/permission.js";
 import { Duration, toCdkDuration } from "./util/duration.js";
 import {
@@ -300,7 +300,7 @@ export class Bucket extends Construct implements SSTConstruct {
     bucket: IBucket;
   };
   readonly notifications: Record<string, Fn | Queue | Topic> = {};
-  readonly bindingForAllNotifications: SSTConstruct[] = [];
+  readonly bindingForAllNotifications: BindingResource[] = [];
   readonly permissionsAttachedForAllNotifications: Permissions[] = [];
   readonly props: BucketProps;
 
@@ -384,7 +384,7 @@ export class Bucket extends Construct implements SSTConstruct {
    * bucket.bind([STRIPE_KEY, bucket]);
    * ```
    */
-  public bind(constructs: SSTConstruct[]) {
+  public bind(constructs: BindingResource[]) {
     this.notificationFunctions.forEach((notification) =>
       notification.bind(constructs)
     );
@@ -407,7 +407,7 @@ export class Bucket extends Construct implements SSTConstruct {
    */
   public bindToNotification(
     notificationName: string,
-    constructs: SSTConstruct[]
+    constructs: BindingResource[]
   ): void {
     const notification = this.notifications[notificationName];
     if (!(notification instanceof Fn)) {
@@ -477,7 +477,7 @@ export class Bucket extends Construct implements SSTConstruct {
   }
 
   /** @internal */
-  public getFunctionBinding(): FunctionBindingProps {
+  public getBindings(): BindingProps {
     return {
       clientPackage: "bucket",
       variables: {

@@ -1,0 +1,13 @@
+{
+  "version": "5",
+  "dialect": "pg",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "5",
+      "when": 1708281327583,
+      "tag": "0000_slippery_stepford_cuckoos",
+      "breakpoints": true
+    }
+  ]
+}

@@ -3,9 +3,11 @@ import { CustomResource } from "aws-cdk-lib/core";
 import * as iam from "aws-cdk-lib/aws-iam";
 import * as logs from "aws-cdk-lib/aws-logs";
 import * as acm from "aws-cdk-lib/aws-certificatemanager";
-import * as cfnApig from "aws-cdk-lib/aws-apigatewayv2";
-import * as apig from "@aws-cdk/aws-apigatewayv2-alpha";
-import * as apigAuthorizers from "@aws-cdk/aws-apigatewayv2-authorizers-alpha";
+import * as apig from "aws-cdk-lib/aws-apigatewayv2";
+import * as apigAuthorizers from "aws-cdk-lib/aws-apigatewayv2-authorizers";
+import { WebSocketLambdaIntegration } from "aws-cdk-lib/aws-apigatewayv2-integrations";
+
+import {} from "aws-cdk-lib/aws-apigatewayv2";
 import { Effect, Policy, PolicyStatement } from "aws-cdk-lib/aws-iam";
 
 import { App } from "./App.js";
@@ -17,11 +19,10 @@ import {
   FunctionInlineDefinition,
   FunctionDefinition,
 } from "./Function.js";
-import { FunctionBindingProps } from "./util/functionBinding.js";
+import { BindingResource, BindingProps } from "./util/binding.js";
 import { Permissions } from "./util/permission.js";
 import * as apigV2Domain from "./util/apiGatewayV2Domain.js";
 import * as apigV2AccessLog from "./util/apiGatewayV2AccessLog.js";
-import { WebSocketLambdaIntegration } from "@aws-cdk/aws-apigatewayv2-integrations-alpha/lib/websocket/index.js";
 
 /////////////////////
 // Interfaces
@@ -278,7 +279,7 @@ export class WebSocketApi extends Construct implements SSTConstruct {
   private _customDomainUrl?: string;
   private functions: { [key: string]: Fn } = {};
   private apigRoutes: { [key: string]: apig.WebSocketRoute } = {};
-  private bindingForAllRoutes: SSTConstruct[] = [];
+  private bindingForAllRoutes: BindingResource[] = [];
   private permissionsAttachedForAllRoutes: Permissions[] = [];
   private authorizer?:
     | "none"
@@ -396,7 +397,7 @@ export class WebSocketApi extends Construct implements SSTConstruct {
    * api.bind([STRIPE_KEY, bucket]);
    * ```
    */
-  public bind(constructs: SSTConstruct[]) {
+  public bind(constructs: BindingResource[]) {
     Object.values(this.functions).forEach((fn) => fn.bind(constructs));
     this.bindingForAllRoutes.push(...constructs);
   }
@@ -410,7 +411,7 @@ export class WebSocketApi extends Construct implements SSTConstruct {
    * ```
    *
    */
-  public bindToRoute(routeKey: string, constructs: SSTConstruct[]): void {
+  public bindToRoute(routeKey: string, constructs: BindingResource[]): void {
     const fn = this.getFunction(routeKey);
     if (!fn) {
       throw new Error(
@@ -476,7 +477,7 @@ export class WebSocketApi extends Construct implements SSTConstruct {
   }
 
   /** @internal */
-  public getFunctionBinding(): FunctionBindingProps {
+  public getBindings(): BindingProps {
     return {
       clientPackage: "websocket-api",
       variables: {
@@ -711,7 +712,7 @@ export class WebSocketApi extends Construct implements SSTConstruct {
       //       the CloudFormation template (ie. set to undefined), CloudFormation
       //       doesn't updates the route. The route's authorizationType would
       //       still be `AWS_IAM`.
-      const cfnRoute = route.node.defaultChild as cfnApig.CfnRoute;
+      const cfnRoute = route.node.defaultChild as apig.CfnRoute;
       cfnRoute.authorizationType = authorizationType;
     }
 

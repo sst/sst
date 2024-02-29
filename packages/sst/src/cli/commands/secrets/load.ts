@@ -6,14 +6,14 @@ export const load = (program: Program) =>
     "Loads secrets from an .env file",
     (yargs) =>
       yargs
-          .positional("filename", {
-            type: "string",
-            demandOption: true,
-          })
-          .option("fallback", {
-            type: "boolean",
-            describe: "Load the fallback values",
-          }),
+        .positional("filename", {
+          type: "string",
+          demandOption: true,
+        })
+        .option("fallback", {
+          type: "boolean",
+          describe: "Load the fallback values",
+        }),
     async (args) => {
       const { exit, exitWithError } = await import("../../program.js");
       const { Config } = await import("../../../config.js");
@@ -46,8 +46,14 @@ export const load = (program: Program) =>
         const restarting = createSpinner(
           ` Restarting all resources using ${blue(envNames.join(", "))}...`
         ).start();
-        const { edgeSites, sites, placeholderSites, functions } =
-          await Config.restart(envNames);
+        const {
+          edgeSites,
+          sites,
+          placeholderSites,
+          functions,
+          sitesWithPrefetch,
+          functionsWithPrefetch,
+        } = await Config.restart(envNames);
         restarting.stop().clear();
 
         const siteCount = sites.length + placeholderSites.length;
@@ -68,12 +74,19 @@ export const load = (program: Program) =>
               : `Reloaded ${functionCount} functions`
           );
         }
-        edgeSites.forEach(({ id, type }) => {
+        [...edgeSites, ...sitesWithPrefetch].forEach(({ id, type }) => {
           Colors.line(
             Colors.primary(`➜ `),
             `Redeploy the "${id}" ${type} to use the new secret`
           );
         });
+
+        if (functionsWithPrefetch.length > 0) {
+          Colors.line(
+            Colors.primary(`➜ `),
+            `Redeploy the functions with "prefetchSecret" enabled to use the new secret`
+          );
+        }
 
         await exit();
       } catch (e: any) {
