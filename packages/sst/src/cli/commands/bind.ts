@@ -59,7 +59,7 @@ export const bind = (program: Program) =>
           import("../../constructs/StaticSite.js"),
           import("../../constructs/deprecated/NextjsSite.js"),
           import("../../constructs/Config.js"),
-          import("../../constructs/util/functionBinding.js"),
+          import("../../constructs/util/binding.js"),
         ]);
 
         try {

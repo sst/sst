@@ -13,7 +13,7 @@ import {
 } from "./Function.js";
 import { SSTConstruct, getFunctionRef } from "./Construct.js";
 import { Permissions } from "./util/permission.js";
-import { BindingResource } from "./util/functionBinding.js";
+import { BindingResource } from "./util/binding.js";
 const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
 
 export interface ScriptProps {
@@ -311,7 +311,7 @@ export class Script extends Construct implements SSTConstruct {
   }
 
   /** @internal */
-  public getFunctionBinding() {
+  public getBindings() {
     return undefined;
   }
 }

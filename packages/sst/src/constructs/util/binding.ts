@@ -1,11 +1,10 @@
 import * as ssm from "aws-cdk-lib/aws-ssm";
 import { SSTConstruct, isSSTConstruct } from "../Construct.js";
-import { App } from "../App.js";
 import { Secret } from "../Secret.js";
 import { Config } from "../../config.js";
 import { Effect, PolicyStatement } from "aws-cdk-lib/aws-iam";
 
-export interface FunctionBindingProps {
+export interface BindingProps {
   clientPackage: string;
   permissions: Record<string, string[]>;
   variables: Record<
@@ -59,7 +58,7 @@ export type BindingResource =
 
 export function getBindingEnvironments(r: BindingResource) {
   const c = isSSTConstruct(r) ? r : r.resource;
-  const binding = c.getFunctionBinding();
+  const binding = c.getBindings();
 
   let environment: Record<string, string> = {};
   if (binding) {
@@ -82,7 +81,7 @@ export function getBindingEnvironments(r: BindingResource) {
 
 export function getBindingParameters(r: BindingResource) {
   const c = isSSTConstruct(r) ? r : r.resource;
-  const binding = c.getFunctionBinding();
+  const binding = c.getBindings();
   if (!binding) {
     return;
   }
@@ -107,7 +106,7 @@ export function getBindingParameters(r: BindingResource) {
 
 export function getBindingPermissions(r: BindingResource) {
   if (isSSTConstruct(r)) {
-    return Object.entries(r.getFunctionBinding()?.permissions ?? {}).map(
+    return Object.entries(r.getBindings()?.permissions ?? {}).map(
       ([action, resources]) =>
         new PolicyStatement({
           actions: [action],
@@ -128,7 +127,7 @@ export function getBindingPermissions(r: BindingResource) {
 
 export function getBindingType(r: BindingResource) {
   const c = isSSTConstruct(r) ? r : r.resource;
-  const binding = c.getFunctionBinding();
+  const binding = c.getBindings();
   if (!binding) {
     return;
   }
@@ -141,7 +140,7 @@ export function getBindingType(r: BindingResource) {
 
 export function getBindingReferencedSecrets(r: BindingResource) {
   const c = isSSTConstruct(r) ? r : r.resource;
-  const binding = c.getFunctionBinding();
+  const binding = c.getBindings();
   const secrets: Secret[] = [];
   if (binding) {
     Object.values(binding.variables).forEach((variable) => {

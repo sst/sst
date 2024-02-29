@@ -54,10 +54,7 @@ import {
   FunctionInlineDefinition,
   FunctionDefinition,
 } from "./Function.js";
-import {
-  BindingResource,
-  FunctionBindingProps,
-} from "./util/functionBinding.js";
+import { BindingResource, BindingProps } from "./util/binding.js";
 import { Duration, toCdkDuration } from "./util/duration.js";
 import { Permissions } from "./util/permission.js";
 import * as apigV2Cors from "./util/apiGatewayV2Cors.js";
@@ -998,7 +995,7 @@ export class Api<
   }
 
   /** @internal */
-  public getFunctionBinding(): FunctionBindingProps {
+  public getBindings(): BindingProps {
     return {
       clientPackage: "api",
       variables: {

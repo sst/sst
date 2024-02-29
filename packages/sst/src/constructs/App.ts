@@ -14,7 +14,7 @@ import {
   BindingResource,
   getBindingParameters,
   getBindingType,
-} from "./util/functionBinding.js";
+} from "./util/binding.js";
 import { StackProps } from "./Stack.js";
 import { FunctionalStack, stack } from "./FunctionalStack.js";
 import { Auth } from "./Auth.js";

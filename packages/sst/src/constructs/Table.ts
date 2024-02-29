@@ -11,10 +11,7 @@ import {
   FunctionDefinition,
 } from "./Function.js";
 import { KinesisStream } from "./KinesisStream.js";
-import {
-  BindingResource,
-  FunctionBindingProps,
-} from "./util/functionBinding.js";
+import { BindingResource, BindingProps } from "./util/binding.js";
 import { Permissions } from "./util/permission.js";
 
 /////////////////////
@@ -615,7 +612,7 @@ export class Table extends Construct implements SSTConstruct {
   }
 
   /** @internal */
-  public getFunctionBinding(): FunctionBindingProps {
+  public getBindings(): BindingProps {
     return {
       clientPackage: "table",
       variables: {

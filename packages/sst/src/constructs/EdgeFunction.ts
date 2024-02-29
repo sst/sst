@@ -48,7 +48,7 @@ import {
   getBindingEnvironments,
   getBindingPermissions,
   getBindingReferencedSecrets,
-} from "./util/functionBinding.js";
+} from "./util/binding.js";
 import { Size, toCdkSize } from "./util/size.js";
 import { Duration, toCdkDuration } from "./util/duration.js";
 import { Permissions, attachPermissionsToRole } from "./util/permission.js";

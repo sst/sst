@@ -43,13 +43,13 @@ import { Secret } from "./Secret.js";
 import { useDeferredTasks } from "./deferred_task.js";
 import { Permissions, attachPermissionsToRole } from "./util/permission.js";
 import {
-  FunctionBindingProps,
+  BindingProps,
   getParameterPath,
   getBindingEnvironments,
   getBindingPermissions,
   getBindingReferencedSecrets,
   BindingResource,
-} from "./util/functionBinding.js";
+} from "./util/binding.js";
 import { useProject } from "../project.js";
 import { IVpc, Vpc } from "aws-cdk-lib/aws-ec2";
 import {
@@ -766,7 +766,7 @@ export class Service extends Construct implements SSTConstruct {
   }
 
   /** @internal */
-  public getFunctionBinding(): FunctionBindingProps {
+  public getBindings(): BindingProps {
     const app = this.node.root as App;
     return this.distribution
       ? {

@@ -38,11 +38,11 @@ import { Duration, toCdkDuration } from "./util/duration.js";
 import { Permissions, attachPermissionsToRole } from "./util/permission.js";
 import {
   BindingResource,
-  FunctionBindingProps,
+  BindingProps,
   getBindingEnvironments,
   getBindingPermissions,
   getBindingReferencedSecrets,
-} from "./util/functionBinding.js";
+} from "./util/binding.js";
 import { ISecurityGroup, IVpc, SubnetSelection } from "aws-cdk-lib/aws-ec2";
 import { useDeferredTasks } from "./deferred_task.js";
 import { useProject } from "../project.js";
@@ -419,7 +419,7 @@ export class Job extends Construct implements SSTConstruct {
   }
 
   /** @internal */
-  public getFunctionBinding(): FunctionBindingProps {
+  public getBindings(): BindingProps {
     return {
       clientPackage: "job",
       variables: {

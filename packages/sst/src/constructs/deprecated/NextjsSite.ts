@@ -47,10 +47,7 @@ import {
 } from "../BaseSite.js";
 import { Permissions, attachPermissionsToRole } from "../util/permission.js";
 import { getHandlerHash } from "../util/builder.js";
-import {
-  FunctionBindingProps,
-  getParameterPath,
-} from "../util/functionBinding.js";
+import { BindingProps, getParameterPath } from "../util/binding.js";
 import * as crossRegionHelper from "./cross-region-helper.js";
 import { gray, red } from "colorette";
 import { useProject } from "../../project.js";
@@ -463,7 +460,7 @@ export class NextjsSite extends Construct implements SSTConstruct {
   }
 
   /** @internal */
-  public getFunctionBinding(): FunctionBindingProps {
+  public getBindings(): BindingProps {
     const app = this.node.root as App;
     return {
       clientPackage: "site",

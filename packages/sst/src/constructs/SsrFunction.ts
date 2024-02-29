@@ -46,7 +46,7 @@ import {
   getBindingEnvironments,
   getBindingPermissions,
   getBindingReferencedSecrets,
-} from "./util/functionBinding.js";
+} from "./util/binding.js";
 import { Permissions, attachPermissionsToRole } from "./util/permission.js";
 import { Size, toCdkSize } from "./util/size.js";
 import { Duration, toCdkDuration } from "./util/duration.js";
@@ -481,7 +481,7 @@ export class SsrFunction extends Construct implements SSTConstruct {
   }
 
   /** @internal */
-  public getFunctionBinding() {
+  public getBindings() {
     return undefined;
   }
 }

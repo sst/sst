@@ -26,10 +26,7 @@ import {
   FunctionInlineDefinition,
   FunctionDefinition,
 } from "./Function.js";
-import {
-  BindingResource,
-  FunctionBindingProps,
-} from "./util/functionBinding.js";
+import { BindingResource, BindingProps } from "./util/binding.js";
 import { Permissions } from "./util/permission.js";
 import { useProject } from "../project.js";
 import { Table as CDKTable } from "aws-cdk-lib/aws-dynamodb";
@@ -749,7 +746,7 @@ export class AppSyncApi extends Construct implements SSTConstruct {
   }
 
   /** @internal */
-  public getFunctionBinding() {
+  public getBindings() {
     // Do not bind imported AppSync APIs b/c we don't know the API URL
     if (!this.url) {
       return;
@@ -764,7 +761,7 @@ export class AppSyncApi extends Construct implements SSTConstruct {
         },
       },
       permissions: {},
-    } as FunctionBindingProps;
+    } as BindingProps;
   }
 
   private createGraphApi() {

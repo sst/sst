@@ -159,7 +159,7 @@ test("cdk.cluster is imported: secret imported by partial arn", async () => {
     },
   });
   expect(
-    cluster.getFunctionBinding().permissions["secretsmanager:GetSecretValue"][0]
+    cluster.getBindings().permissions["secretsmanager:GetSecretValue"][0]
   ).toBe("arn:aws:secretsmanager:us-east-1:123456789012:secret:my-secret*");
 });
 
@@ -183,7 +183,7 @@ test("cdk.cluster is imported: secret imported by full arn", async () => {
     },
   });
   expect(
-    cluster.getFunctionBinding().permissions["secretsmanager:GetSecretValue"][0]
+    cluster.getBindings().permissions["secretsmanager:GetSecretValue"][0]
   ).toBe(
     "arn:aws:secretsmanager:us-east-1:123456789012:secret:my-secret-123456"
   );
@@ -467,7 +467,7 @@ test("cdk.cluster.credentials: using secret name", async () => {
     },
   });
   // KMS permissions is not granted (not necessary b/c not using custom KMS key)
-  const bindings = cluster.getFunctionBinding();
+  const bindings = cluster.getBindings();
   expect(bindings.permissions["kms:Decrypt"]).toBeUndefined();
 });
 
@@ -489,7 +489,7 @@ test("cdk.cluster.credentials: using custom kms key", async () => {
     },
   });
   // KMS permissions is granted
-  const bindings = cluster.getFunctionBinding();
+  const bindings = cluster.getBindings();
   expect(bindings.permissions["kms:Decrypt"]).toBeDefined();
   // Migration function has permission to this key
   hasResource(stack, "AWS::IAM::Policy", {
@@ -539,6 +539,6 @@ test("cdk.cluster.credentials: imported secret with custom encryption key", asyn
     },
   });
   // KMS permissions is granted
-  const bindings = cluster.getFunctionBinding();
+  const bindings = cluster.getBindings();
   expect(bindings.permissions["kms:Decrypt"]).toBeDefined();
 });

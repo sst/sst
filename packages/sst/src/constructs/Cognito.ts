@@ -34,7 +34,7 @@ import {
   PolicyStatement,
   Role,
 } from "aws-cdk-lib/aws-iam";
-import { BindingResource } from "./util/functionBinding.js";
+import { BindingResource } from "./util/binding.js";
 
 const CognitoUserPoolTriggerOperationMapping = {
   createAuthChallenge: UserPoolOperation.CREATE_AUTH_CHALLENGE,
@@ -361,7 +361,7 @@ export class Cognito extends Construct implements SSTConstruct {
   }
 
   /** @internal */
-  public getFunctionBinding() {
+  public getBindings() {
     return undefined;
   }
 

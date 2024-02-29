@@ -16,11 +16,11 @@ import { Size, toCdkSize } from "./util/size.js";
 import { Duration, toCdkDuration } from "./util/duration.js";
 import {
   BindingResource,
-  FunctionBindingProps,
+  BindingProps,
   getBindingEnvironments,
   getBindingPermissions,
   getBindingReferencedSecrets,
-} from "./util/functionBinding.js";
+} from "./util/binding.js";
 import { Permissions, attachPermissionsToRole } from "./util/permission.js";
 import * as functionUrlCors from "./util/functionUrlCors.js";
 
@@ -1242,7 +1242,7 @@ export class Function extends CDKFunction implements SSTConstruct {
   }
 
   /** @internal */
-  public getFunctionBinding(): FunctionBindingProps {
+  public getBindings(): BindingProps {
     return {
       clientPackage: "function",
       variables: {

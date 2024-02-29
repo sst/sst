@@ -18,7 +18,7 @@ import { FunctionProps, Function as Fn } from "./Function.js";
 import type { App } from "./App.js";
 import { isConstruct } from "./Construct.js";
 import { Permissions } from "./util/permission.js";
-import { BindingResource } from "./util/functionBinding.js";
+import { BindingResource } from "./util/binding.js";
 
 const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
 
