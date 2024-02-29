@@ -87,6 +87,7 @@ import { Size } from "./util/size.js";
 import { Duration, toCdkDuration } from "./util/duration.js";
 import { Permissions, attachPermissionsToRole } from "./util/permission.js";
 import {
+  BindingResource,
   FunctionBindingProps,
   getParameterPath,
 } from "./util/functionBinding.js";
@@ -146,7 +147,7 @@ export interface SsrSiteProps {
    * })
    * ```
    */
-  bind?: SSTConstruct[];
+  bind?: BindingResource[];
   /**
    * Path to the directory where the app is located.
    * @default "."

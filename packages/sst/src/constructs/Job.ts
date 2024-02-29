@@ -37,10 +37,11 @@ import {
 import { Duration, toCdkDuration } from "./util/duration.js";
 import { Permissions, attachPermissionsToRole } from "./util/permission.js";
 import {
+  BindingResource,
   FunctionBindingProps,
-  bindEnvironment,
-  bindPermissions,
-  getReferencedSecrets,
+  getBindingEnvironments,
+  getBindingPermissions,
+  getBindingReferencedSecrets,
 } from "./util/functionBinding.js";
 import { ISecurityGroup, IVpc, SubnetSelection } from "aws-cdk-lib/aws-ec2";
 import { useDeferredTasks } from "./deferred_task.js";
@@ -259,7 +260,7 @@ export interface JobProps {
    * })
    * ```
    */
-  bind?: SSTConstruct[];
+  bind?: BindingResource[];
   /**
    * Attaches the given list of permissions to the job. Configuring this property is equivalent to calling `attachPermissions()` after the job is created.
    *
@@ -441,9 +442,9 @@ export class Job extends Construct implements SSTConstruct {
    * job.bind([STRIPE_KEY, bucket]);
    * ```
    */
-  public bind(constructs: SSTConstruct[]): void {
-    this.liveDevJob?.bind(constructs);
-    this.bindForCodeBuild(constructs);
+  public bind(resources: BindingResource[]): void {
+    this.liveDevJob?.bind(resources);
+    this.bindForCodeBuild(resources);
   }
 
   /**
@@ -716,31 +717,23 @@ export class Job extends Construct implements SSTConstruct {
     });
   }
 
-  private bindForCodeBuild(constructs: SSTConstruct[]): void {
+  private bindForCodeBuild(resources: BindingResource[]): void {
     // Get referenced secrets
     const referencedSecrets: Secret[] = [];
-    constructs.forEach((c) =>
-      referencedSecrets.push(...getReferencedSecrets(c))
+    resources.forEach((r) =>
+      referencedSecrets.push(...getBindingReferencedSecrets(r))
     );
 
-    [...constructs, ...referencedSecrets].forEach((c) => {
+    [...resources, ...referencedSecrets].forEach((r) => {
       // Bind environment
-      const env = bindEnvironment(c);
+      const env = getBindingEnvironments(r);
       Object.entries(env).forEach(([key, value]) =>
         this.addEnvironmentForCodeBuild(key, value)
       );
 
       // Bind permissions
-      const permissions = bindPermissions(c);
-      Object.entries(permissions).forEach(([action, resources]) =>
-        this.attachPermissionsForCodeBuild([
-          new PolicyStatement({
-            actions: [action],
-            effect: Effect.ALLOW,
-            resources,
-          }),
-        ])
-      );
+      const policyStatements = getBindingPermissions(r);
+      this.attachPermissionsForCodeBuild(policyStatements);
     });
   }
 

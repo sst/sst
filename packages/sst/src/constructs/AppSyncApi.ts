@@ -26,7 +26,10 @@ import {
   FunctionInlineDefinition,
   FunctionDefinition,
 } from "./Function.js";
-import { FunctionBindingProps } from "./util/functionBinding.js";
+import {
+  BindingResource,
+  FunctionBindingProps,
+} from "./util/functionBinding.js";
 import { Permissions } from "./util/permission.js";
 import { useProject } from "../project.js";
 import { Table as CDKTable } from "aws-cdk-lib/aws-dynamodb";
@@ -494,7 +497,7 @@ export class AppSyncApi extends Construct implements SSTConstruct {
   } = {};
   private readonly dsKeysByResKey: { [key: string]: string } = {};
   private readonly resolversByResKey: { [key: string]: Resolver } = {};
-  private readonly bindingForAllFunctions: SSTConstruct[] = [];
+  private readonly bindingForAllFunctions: BindingResource[] = [];
   private readonly permissionsAttachedForAllFunctions: Permissions[] = [];
 
   constructor(scope: Construct, id: string, props: AppSyncApiProps) {
@@ -667,9 +670,9 @@ export class AppSyncApi extends Construct implements SSTConstruct {
    * api.bind([STRIPE_KEY, bucket]);
    * ```
    */
-  public bind(constructs: SSTConstruct[]) {
-    Object.values(this.functionsByDsKey).forEach((fn) => fn.bind(constructs));
-    this.bindingForAllFunctions.push(...constructs);
+  public bind(resources: BindingResource[]) {
+    Object.values(this.functionsByDsKey).forEach((fn) => fn.bind(resources));
+    this.bindingForAllFunctions.push(...resources);
   }
 
   /**
@@ -681,7 +684,7 @@ export class AppSyncApi extends Construct implements SSTConstruct {
    * ```
    *
    */
-  public bindToDataSource(key: string, constructs: SSTConstruct[]): void {
+  public bindToDataSource(key: string, resources: BindingResource[]): void {
     const fn = this.getFunction(key);
     if (!fn) {
       throw new Error(
@@ -689,7 +692,7 @@ export class AppSyncApi extends Construct implements SSTConstruct {
       );
     }
 
-    fn.bind(constructs);
+    fn.bind(resources);
   }
 
   /**

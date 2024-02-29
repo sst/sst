@@ -19,7 +19,10 @@ import {
   FunctionInlineDefinition,
   FunctionDefinition,
 } from "./Function.js";
-import { FunctionBindingProps } from "./util/functionBinding.js";
+import {
+  BindingResource,
+  FunctionBindingProps,
+} from "./util/functionBinding.js";
 import { Permissions } from "./util/permission.js";
 import * as apigV2Domain from "./util/apiGatewayV2Domain.js";
 import * as apigV2AccessLog from "./util/apiGatewayV2AccessLog.js";
@@ -279,7 +282,7 @@ export class WebSocketApi extends Construct implements SSTConstruct {
   private _customDomainUrl?: string;
   private functions: { [key: string]: Fn } = {};
   private apigRoutes: { [key: string]: apig.WebSocketRoute } = {};
-  private bindingForAllRoutes: SSTConstruct[] = [];
+  private bindingForAllRoutes: BindingResource[] = [];
   private permissionsAttachedForAllRoutes: Permissions[] = [];
   private authorizer?:
     | "none"
@@ -397,9 +400,9 @@ export class WebSocketApi extends Construct implements SSTConstruct {
    * api.bind([STRIPE_KEY, bucket]);
    * ```
    */
-  public bind(constructs: SSTConstruct[]) {
-    Object.values(this.functions).forEach((fn) => fn.bind(constructs));
-    this.bindingForAllRoutes.push(...constructs);
+  public bind(resources: BindingResource[]) {
+    Object.values(this.functions).forEach((fn) => fn.bind(resources));
+    this.bindingForAllRoutes.push(...resources);
   }
 
   /**
@@ -411,7 +414,7 @@ export class WebSocketApi extends Construct implements SSTConstruct {
    * ```
    *
    */
-  public bindToRoute(routeKey: string, constructs: SSTConstruct[]): void {
+  public bindToRoute(routeKey: string, resources: BindingResource[]): void {
     const fn = this.getFunction(routeKey);
     if (!fn) {
       throw new Error(
@@ -419,7 +422,7 @@ export class WebSocketApi extends Construct implements SSTConstruct {
       );
     }
 
-    fn.bind(constructs);
+    fn.bind(resources);
   }
 
   /**

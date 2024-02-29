@@ -9,7 +9,10 @@ import {
   FunctionInlineDefinition,
   FunctionDefinition,
 } from "./Function.js";
-import { FunctionBindingProps } from "./util/functionBinding.js";
+import {
+  BindingResource,
+  FunctionBindingProps,
+} from "./util/functionBinding.js";
 import { Permissions } from "./util/permission.js";
 import { Duration, toCdkDuration } from "./util/duration.js";
 import {
@@ -300,7 +303,7 @@ export class Bucket extends Construct implements SSTConstruct {
     bucket: IBucket;
   };
   readonly notifications: Record<string, Fn | Queue | Topic> = {};
-  readonly bindingForAllNotifications: SSTConstruct[] = [];
+  readonly bindingForAllNotifications: BindingResource[] = [];
   readonly permissionsAttachedForAllNotifications: Permissions[] = [];
   readonly props: BucketProps;
 
@@ -384,11 +387,11 @@ export class Bucket extends Construct implements SSTConstruct {
    * bucket.bind([STRIPE_KEY, bucket]);
    * ```
    */
-  public bind(constructs: SSTConstruct[]) {
+  public bind(resources: BindingResource[]) {
     this.notificationFunctions.forEach((notification) =>
-      notification.bind(constructs)
+      notification.bind(resources)
     );
-    this.bindingForAllNotifications.push(...constructs);
+    this.bindingForAllNotifications.push(...resources);
   }
 
   /**
@@ -407,7 +410,7 @@ export class Bucket extends Construct implements SSTConstruct {
    */
   public bindToNotification(
     notificationName: string,
-    constructs: SSTConstruct[]
+    resources: BindingResource[]
   ): void {
     const notification = this.notifications[notificationName];
     if (!(notification instanceof Fn)) {
@@ -415,7 +418,7 @@ export class Bucket extends Construct implements SSTConstruct {
         `Cannot bind to the "${this.node.id}" Bucket notification because it's not a Lambda function`
       );
     }
-    notification.bind(constructs);
+    notification.bind(resources);
   }
 
   /**

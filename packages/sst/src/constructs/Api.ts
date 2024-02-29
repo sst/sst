@@ -54,7 +54,10 @@ import {
   FunctionInlineDefinition,
   FunctionDefinition,
 } from "./Function.js";
-import { FunctionBindingProps } from "./util/functionBinding.js";
+import {
+  BindingResource,
+  FunctionBindingProps,
+} from "./util/functionBinding.js";
 import { Duration, toCdkDuration } from "./util/duration.js";
 import { Permissions } from "./util/permission.js";
 import * as apigV2Cors from "./util/apiGatewayV2Cors.js";
@@ -762,7 +765,7 @@ export class Api<
       | { type: "nlb"; nlb: INetworkListener };
   };
   private authorizersData: Record<string, IHttpRouteAuthorizer>;
-  private bindingForAllRoutes: SSTConstruct[] = [];
+  private bindingForAllRoutes: BindingResource[] = [];
   private permissionsAttachedForAllRoutes: Permissions[] = [];
 
   constructor(scope: Construct, id: string, props?: ApiProps<Authorizers>) {
@@ -879,13 +882,13 @@ export class Api<
    * api.bind([STRIPE_KEY, bucket]);
    * ```
    */
-  public bind(constructs: SSTConstruct[]) {
+  public bind(resources: BindingResource[]) {
     for (const route of Object.values(this.routesData)) {
       if (route.type === "function" || route.type === "graphql") {
-        route.function.bind(constructs);
+        route.function.bind(resources);
       }
     }
-    this.bindingForAllRoutes.push(...constructs);
+    this.bindingForAllRoutes.push(...resources);
   }
 
   /**
@@ -903,7 +906,7 @@ export class Api<
    * ```
    *
    */
-  public bindToRoute(routeKey: string, constructs: SSTConstruct[]): void {
+  public bindToRoute(routeKey: string, resources: BindingResource[]): void {
     const fn = this.getFunction(routeKey);
     if (!fn) {
       throw new Error(
@@ -911,7 +914,7 @@ export class Api<
       );
     }
 
-    fn.bind(constructs);
+    fn.bind(resources);
   }
 
   /**

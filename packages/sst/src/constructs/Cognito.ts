@@ -34,6 +34,7 @@ import {
   PolicyStatement,
   Role,
 } from "aws-cdk-lib/aws-iam";
+import { BindingResource } from "./util/functionBinding.js";
 
 const CognitoUserPoolTriggerOperationMapping = {
   createAuthChallenge: UserPoolOperation.CREATE_AUTH_CHALLENGE,
@@ -301,13 +302,13 @@ export class Cognito extends Construct implements SSTConstruct {
     return this.attachPermissionsForUsers(this.cdk.unauthRole, arg1, arg2);
   }
 
-  public bindForTriggers(constructs: SSTConstruct[]): void {
-    Object.values(this.functions).forEach((fn) => fn.bind(constructs));
+  public bindForTriggers(resources: BindingResource[]): void {
+    Object.values(this.functions).forEach((fn) => fn.bind(resources));
   }
 
   public bindForTrigger(
     triggerKey: keyof CognitoUserPoolTriggers,
-    constructs: SSTConstruct[]
+    resources: BindingResource[]
   ): void {
     const fn = this.getFunction(triggerKey);
     if (!fn) {
@@ -316,7 +317,7 @@ export class Cognito extends Construct implements SSTConstruct {
       );
     }
 
-    fn.bind(constructs);
+    fn.bind(resources);
   }
 
   public attachPermissionsForTriggers(permissions: Permissions): void {

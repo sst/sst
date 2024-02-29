@@ -44,10 +44,11 @@ import { useDeferredTasks } from "./deferred_task.js";
 import { Permissions, attachPermissionsToRole } from "./util/permission.js";
 import {
   FunctionBindingProps,
-  bindEnvironment,
-  bindPermissions,
   getParameterPath,
-  getReferencedSecrets,
+  getBindingEnvironments,
+  getBindingPermissions,
+  getBindingReferencedSecrets,
+  BindingResource,
 } from "./util/functionBinding.js";
 import { useProject } from "../project.js";
 import { IVpc, Vpc } from "aws-cdk-lib/aws-ec2";
@@ -331,7 +332,7 @@ export interface ServiceProps {
    * }
    * ```
    */
-  bind?: SSTConstruct[];
+  bind?: BindingResource[];
   /**
    * The customDomain for this service. SST supports domains that are hosted
    * either on [Route 53](https://aws.amazon.com/route53/) or externally.
@@ -808,9 +809,9 @@ export class Service extends Construct implements SSTConstruct {
    * service.bind([STRIPE_KEY, bucket]);
    * ```
    */
-  public bind(constructs: SSTConstruct[]): void {
-    this.devFunction?.bind(constructs);
-    this.bindForService(constructs);
+  public bind(resources: BindingResource[]): void {
+    this.devFunction?.bind(resources);
+    this.bindForService(resources);
   }
 
   /**
@@ -1128,31 +1129,23 @@ export class Service extends Construct implements SSTConstruct {
     });
   }
 
-  private bindForService(constructs: SSTConstruct[]): void {
+  private bindForService(resources: BindingResource[]): void {
     // Get referenced secrets
     const referencedSecrets: Secret[] = [];
-    constructs.forEach((c) =>
-      referencedSecrets.push(...getReferencedSecrets(c))
+    resources.forEach((r) =>
+      referencedSecrets.push(...getBindingReferencedSecrets(r))
     );
 
-    [...constructs, ...referencedSecrets].forEach((c) => {
+    [...resources, ...referencedSecrets].forEach((r) => {
       // Bind environment
-      const env = bindEnvironment(c);
+      const env = getBindingEnvironments(r);
       Object.entries(env).forEach(([key, value]) =>
         this.addEnvironmentForService(key, value)
       );
 
       // Bind permissions
-      const permissions = bindPermissions(c);
-      Object.entries(permissions).forEach(([action, resources]) =>
-        this.attachPermissionsForService([
-          new PolicyStatement({
-            actions: [action],
-            effect: Effect.ALLOW,
-            resources,
-          }),
-        ])
-      );
+      const policyStatements = getBindingPermissions(r);
+      this.attachPermissionsForService(policyStatements);
     });
   }
 

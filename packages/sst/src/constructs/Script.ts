@@ -11,12 +11,9 @@ import {
   FunctionProps,
   FunctionDefinition,
 } from "./Function.js";
-import {
-  SSTConstruct,
-  SSTConstructMetadata,
-  getFunctionRef,
-} from "./Construct.js";
+import { SSTConstruct, getFunctionRef } from "./Construct.js";
 import { Permissions } from "./util/permission.js";
+import { BindingResource } from "./util/functionBinding.js";
 const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
 
 export interface ScriptProps {
@@ -172,10 +169,10 @@ export class Script extends Construct implements SSTConstruct {
    * script.bind([STRIPE_KEY, bucket]);
    * ```
    */
-  public bind(constructs: SSTConstruct[]): void {
-    this.createFunction?.bind(constructs);
-    this.updateFunction?.bind(constructs);
-    this.deleteFunction?.bind(constructs);
+  public bind(resources: BindingResource[]): void {
+    this.createFunction?.bind(resources);
+    this.updateFunction?.bind(resources);
+    this.deleteFunction?.bind(resources);
   }
 
   /**

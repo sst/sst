@@ -20,7 +20,10 @@ import {
   FunctionInlineDefinition,
   FunctionDefinition,
 } from "./Function.js";
-import { FunctionBindingProps } from "./util/functionBinding.js";
+import {
+  BindingResource,
+  FunctionBindingProps,
+} from "./util/functionBinding.js";
 import { Permissions } from "./util/permission.js";
 import { SqsEventSource } from "aws-cdk-lib/aws-lambda-event-sources";
 import { SqsDestination } from "aws-cdk-lib/aws-lambda-destinations";
@@ -342,7 +345,7 @@ export class EventBus extends Construct implements SSTConstruct {
     string,
     Record<string, Fn | Queue | lambda.IFunction | ILogGroup>
   > = {};
-  private readonly bindingForAllTargets: SSTConstruct[] = [];
+  private readonly bindingForAllTargets: BindingResource[] = [];
   private readonly permissionsAttachedForAllTargets: Permissions[] = [];
   private readonly props: EventBusProps;
 
@@ -456,14 +459,14 @@ export class EventBus extends Construct implements SSTConstruct {
    * bus.bind([STRIPE_KEY, bucket]);
    * ```
    */
-  public bind(constructs: SSTConstruct[]) {
+  public bind(resources: BindingResource[]) {
     Object.values(this.targetsData).forEach((rule) =>
       Object.values(rule)
         .filter((target) => target instanceof Fn)
-        .forEach((target) => (target as Fn).bind(constructs))
+        .forEach((target) => (target as Fn).bind(resources))
     );
 
-    this.bindingForAllTargets.push(...constructs);
+    this.bindingForAllTargets.push(...resources);
   }
 
   /**
@@ -489,7 +492,7 @@ export class EventBus extends Construct implements SSTConstruct {
   public bindToTarget(
     ruleKey: string,
     targetName: string,
-    constructs: SSTConstruct[]
+    resources: BindingResource[]
   ): void {
     const rule = this.targetsData[ruleKey];
     if (!rule) {
@@ -504,7 +507,7 @@ export class EventBus extends Construct implements SSTConstruct {
         `Cannot bind to the "${this.node.id}" EventBus target because it's not a Lambda function`
       );
     }
-    target.bind(constructs);
+    target.bind(resources);
   }
 
   /**

@@ -11,7 +11,10 @@ import {
   FunctionDefinition,
 } from "./Function.js";
 import { KinesisStream } from "./KinesisStream.js";
-import { FunctionBindingProps } from "./util/functionBinding.js";
+import {
+  BindingResource,
+  FunctionBindingProps,
+} from "./util/functionBinding.js";
 import { Permissions } from "./util/permission.js";
 
 /////////////////////
@@ -310,7 +313,7 @@ export class Table extends Construct implements SSTConstruct {
   };
   private dynamodbTableType?: "CREATED" | "IMPORTED";
   private functions: { [consumerName: string]: Fn } = {};
-  private bindingForAllConsumers: SSTConstruct[] = [];
+  private bindingForAllConsumers: BindingResource[] = [];
   private permissionsAttachedForAllConsumers: Permissions[] = [];
   private props: TableProps;
   private stream?: dynamodb.StreamViewType;
@@ -519,9 +522,9 @@ export class Table extends Construct implements SSTConstruct {
    * table.bind([STRIPE_KEY, bucket]);
    * ```
    */
-  public bind(constructs: SSTConstruct[]) {
-    Object.values(this.functions).forEach((fn) => fn.bind(constructs));
-    this.bindingForAllConsumers.push(...constructs);
+  public bind(resources: BindingResource[]) {
+    Object.values(this.functions).forEach((fn) => fn.bind(resources));
+    this.bindingForAllConsumers.push(...resources);
   }
 
   /**
@@ -534,7 +537,7 @@ export class Table extends Construct implements SSTConstruct {
    */
   public bindToConsumer(
     consumerName: string,
-    constructs: SSTConstruct[]
+    resources: BindingResource[]
   ): void {
     if (!this.functions[consumerName]) {
       throw new Error(
@@ -542,7 +545,7 @@ export class Table extends Construct implements SSTConstruct {
       );
     }
 
-    this.functions[consumerName].bind(constructs);
+    this.functions[consumerName].bind(resources);
   }
 
   /**

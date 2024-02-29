@@ -9,7 +9,10 @@ import {
   FunctionInlineDefinition,
   FunctionDefinition,
 } from "./Function.js";
-import { FunctionBindingProps } from "./util/functionBinding.js";
+import {
+  BindingResource,
+  FunctionBindingProps,
+} from "./util/functionBinding.js";
 import { Permissions } from "./util/permission.js";
 
 export interface CronJobProps {
@@ -162,8 +165,8 @@ export class Cron extends Construct implements SSTConstruct {
    * ```
    *
    */
-  public bind(constructs: SSTConstruct[]) {
-    this.jobFunction.bind(constructs);
+  public bind(resources: BindingResource[]) {
+    this.jobFunction.bind(resources);
   }
 
   /**

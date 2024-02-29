@@ -251,10 +251,13 @@ test("runtime: container: props", async () => {
   const stack = new Stack(app, "stack");
   new Function(stack, "Function", {
     runtime: "container",
-    handler: "test/constructs/container-function",    
+    handler: "test/constructs/container-function",
     container: {
-      cacheFrom: [{type: 'inline'}, {type: 'local', params: {src: '.', mode: 'max'}}],
-      cacheTo: {type: 'inline'},
+      cacheFrom: [
+        { type: "inline" },
+        { type: "local", params: { src: ".", mode: "max" } },
+      ],
+      cacheTo: { type: "inline" },
     },
   });
   await app.finish();
@@ -264,7 +267,6 @@ test("runtime: container: props", async () => {
     }),
   });
 });
-
 
 test("runtime: container: invalid file", async () => {
   const app = await createApp();
@@ -591,6 +593,38 @@ test("bind: config", async () => {
               ],
             },
           ],
+        },
+      ],
+      Version: "2012-10-17",
+    },
+  });
+});
+
+test("bind: customize permissions", async () => {
+  const stack = new Stack(await createApp(), "stack");
+  const s = new Config.Secret(stack, "MY_SECRET");
+  new Function(stack, "Function", {
+    handler: "test/lambda.handler",
+    bind: [
+      { resource: s, permissions: [{ actions: ["ssm:*"], resources: ["*"] }] },
+    ],
+  });
+  hasResource(stack, "AWS::Lambda::Function", {
+    Environment: {
+      Variables: {
+        SST_Secret_value_MY_SECRET: "__FETCH_FROM_SSM__",
+        AWS_NODEJS_CONNECTION_REUSE_ENABLED: "1",
+      },
+    },
+  });
+  hasResource(stack, "AWS::IAM::Policy", {
+    PolicyDocument: {
+      Statement: [
+        lambdaDefaultPolicy,
+        {
+          Action: "ssm:*",
+          Effect: "Allow",
+          Resource: "*",
         },
       ],
       Version: "2012-10-17",

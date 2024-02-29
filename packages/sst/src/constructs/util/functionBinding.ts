@@ -1,8 +1,9 @@
 import * as ssm from "aws-cdk-lib/aws-ssm";
-import { SSTConstruct } from "../Construct.js";
+import { SSTConstruct, isSSTConstruct } from "../Construct.js";
 import { App } from "../App.js";
 import { Secret } from "../Secret.js";
 import { Config } from "../../config.js";
+import { Effect, PolicyStatement } from "aws-cdk-lib/aws-iam";
 
 export interface FunctionBindingProps {
   clientPackage: string;
@@ -49,7 +50,15 @@ export interface FunctionBindingProps {
   >;
 }
 
-export function bindEnvironment(c: SSTConstruct) {
+export type BindingResource =
+  | SSTConstruct
+  | {
+      resource: SSTConstruct;
+      permissions: { actions: string[]; resources: string[] }[];
+    };
+
+export function getBindingEnvironments(r: BindingResource) {
+  const c = isSSTConstruct(r) ? r : r.resource;
   const binding = c.getFunctionBinding();
 
   let environment: Record<string, string> = {};
@@ -71,13 +80,13 @@ export function bindEnvironment(c: SSTConstruct) {
   return environment;
 }
 
-export function bindParameters(c: SSTConstruct) {
+export function getBindingParameters(r: BindingResource) {
+  const c = isSSTConstruct(r) ? r : r.resource;
   const binding = c.getFunctionBinding();
   if (!binding) {
     return;
   }
 
-  const app = c.node.root as App;
   Object.entries(binding.variables).forEach(([prop, variable]) => {
     const resId = `Parameter_${prop}`;
     if (!c.node.tryFindChild(resId)) {
@@ -96,16 +105,29 @@ export function bindParameters(c: SSTConstruct) {
   });
 }
 
-export function bindPermissions(c: SSTConstruct) {
-  const binding = c.getFunctionBinding();
-  if (!binding) {
-    return {};
+export function getBindingPermissions(r: BindingResource) {
+  if (isSSTConstruct(r)) {
+    return Object.entries(r.getFunctionBinding()?.permissions ?? {}).map(
+      ([action, resources]) =>
+        new PolicyStatement({
+          actions: [action],
+          effect: Effect.ALLOW,
+          resources,
+        })
+    );
   }
 
-  return c.getFunctionBinding()?.permissions || {};
+  return r.permissions.map((p) => {
+    return new PolicyStatement({
+      actions: p.actions,
+      effect: Effect.ALLOW,
+      resources: p.resources,
+    });
+  });
 }
 
-export function bindType(c: SSTConstruct) {
+export function getBindingType(r: BindingResource) {
+  const c = isSSTConstruct(r) ? r : r.resource;
   const binding = c.getFunctionBinding();
   if (!binding) {
     return;
@@ -117,7 +139,8 @@ export function bindType(c: SSTConstruct) {
   };
 }
 
-export function getReferencedSecrets(c: SSTConstruct) {
+export function getBindingReferencedSecrets(r: BindingResource) {
+  const c = isSSTConstruct(r) ? r : r.resource;
   const binding = c.getFunctionBinding();
   const secrets: Secret[] = [];
   if (binding) {
