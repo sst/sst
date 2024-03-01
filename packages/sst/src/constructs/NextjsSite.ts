@@ -774,9 +774,10 @@ if (event.rawPath) {
     // In Next.js page router preview mode (depends on the cookie __prerender_bypass),
     // to ensure we receive the cached page instead of the preview version, we set the
     // header "x-prerender-bypass", and add it to cache policy's allowed headers.
-    return `if (request.cookies["__prerender_bypass"]) { 
+    return `
+if (request.cookies["__prerender_bypass"]) { 
   request.headers["x-prerender-bypass"] = { value: "true" }; 
-}';`;
+}`;
   }
 
   private getBuildId() {
