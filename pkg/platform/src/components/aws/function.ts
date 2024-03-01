@@ -1318,7 +1318,14 @@ export class Function
       return new aws.lambda.Function(
         `${name}Function`,
         transform(args.transform?.function, {
-          description: args.description,
+          description: all([args.description, dev]).apply(
+            ([description, dev]) =>
+              dev
+                ? description
+                  ? `${description.substring(0, 240)} (live)`
+                  : "live"
+                : `${description ?? ""}`,
+          ),
           code: new asset.AssetArchive({
             index: new asset.StringAsset("exports.handler = () => {}"),
           }),
