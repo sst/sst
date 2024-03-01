@@ -300,6 +300,7 @@ export class Remix extends Component implements Link.Linkable {
     const parent = this;
     const edge = normalizeEdge();
     const { sitePath, region } = prepare(args, opts);
+    const isUsingVite = checkIsUsingVite();
     const { access, bucket } = createBucket(parent, name);
     const outputPath = buildApp(name, args, sitePath);
     const plan = buildPlan();
@@ -337,92 +338,115 @@ export class Remix extends Component implements Link.Linkable {
       return output(args?.edge).apply((edge) => edge ?? false);
     }
 
-    function buildPlan() {
-      return all([outputPath, edge]).apply(([outputPath, edge]) => {
-        const serverConfig = createServerLambdaBundle(
-          outputPath,
-          edge ? "edge-server.mjs" : "regional-server.mjs",
-        );
+    function checkIsUsingVite() {
+      return sitePath.apply(
+        (sitePath) =>
+          fs.existsSync(path.join(sitePath, "vite.config.ts")) ||
+          fs.existsSync(path.join(sitePath, "vite.config.js")),
+      );
+    }
 
-        return validatePlan(
-          transform(args?.transform?.plan, {
-            edge,
-            cloudFrontFunctions: {
-              serverCfFunction: {
-                injections: [useCloudFrontFunctionHostHeaderInjection()],
-              },
-              staticCfFunction: {
-                injections: [
-                  // Note: When using libraries like remix-flat-routes the file can
-                  // contains special characters like "+". It needs to be encoded.
-                  `request.uri = request.uri.split('/').map(encodeURIComponent).join('/');`,
-                ],
-              },
-            },
-            edgeFunctions: edge
-              ? {
-                  server: {
-                    function: serverConfig,
-                  },
-                }
-              : undefined,
-            origins: {
-              ...(edge
-                ? {}
-                : {
-                    server: {
-                      server: {
-                        function: serverConfig,
-                      },
-                    },
-                  }),
-              s3: {
-                s3: {
-                  copy: [
-                    {
-                      from: "public",
-                      to: "",
-                      cached: true,
-                      versionedSubDir: "build",
-                    },
+    function buildPlan() {
+      return all([isUsingVite, outputPath, edge]).apply(
+        ([isUsingVite, outputPath, edge]) => {
+          const serverConfig = createServerLambdaBundle(
+            isUsingVite,
+            outputPath,
+            edge ? "edge-server.mjs" : "regional-server.mjs",
+          );
+
+          // The path for all files that need to be in the "/" directory (static assets)
+          // is different when using Vite. These will be located in the "build/client"
+          // path of the output. It will be the "public" folder when using remix config.
+          const assetsPath = isUsingVite
+            ? path.join("build", "client")
+            : "public";
+          const assetsVersionedSubDir = isUsingVite ? undefined : "build";
+
+          return validatePlan(
+            transform(args?.transform?.plan, {
+              edge,
+              cloudFrontFunctions: {
+                serverCfFunction: {
+                  injections: [useCloudFrontFunctionHostHeaderInjection()],
+                },
+                staticCfFunction: {
+                  injections: [
+                    // Note: When using libraries like remix-flat-routes the file can
+                    // contains special characters like "+". It needs to be encoded.
+                    `request.uri = request.uri.split('/').map(encodeURIComponent).join('/');`,
                   ],
                 },
               },
-            },
-            behaviors: [
-              edge
+              edgeFunctions: edge
                 ? {
-                    cacheType: "server",
-                    cfFunction: "serverCfFunction",
-                    edgeFunction: "server",
-                    origin: "s3",
+                    server: {
+                      function: serverConfig,
+                    },
                   }
-                : {
-                    cacheType: "server",
-                    cfFunction: "serverCfFunction",
-                    origin: "server",
+                : undefined,
+              origins: {
+                ...(edge
+                  ? {}
+                  : {
+                      server: {
+                        server: {
+                          function: serverConfig,
+                        },
+                      },
+                    }),
+                s3: {
+                  s3: {
+                    copy: [
+                      {
+                        from: assetsPath,
+                        to: "",
+                        cached: true,
+                        versionedSubDir: assetsVersionedSubDir,
+                      },
+                    ],
                   },
-              // create 1 behaviour for each top level asset file/folder
-              ...fs.readdirSync(path.join(outputPath, "public")).map(
-                (item) =>
-                  ({
-                    cacheType: "static",
-                    pattern: fs
-                      .statSync(path.join(outputPath, "public", item))
-                      .isDirectory()
-                      ? `${item}/*`
-                      : item,
-                    cfFunction: "staticCfFunction",
-                    origin: "s3",
-                  }) as const,
-              ),
-            ],
-          }),
-        );
-      });
+                },
+              },
+              behaviors: [
+                edge
+                  ? {
+                      cacheType: "server",
+                      cfFunction: "serverCfFunction",
+                      edgeFunction: "server",
+                      origin: "s3",
+                    }
+                  : {
+                      cacheType: "server",
+                      cfFunction: "serverCfFunction",
+                      origin: "server",
+                    },
+                // create 1 behaviour for each top level asset file/folder
+                ...fs.readdirSync(path.join(outputPath, assetsPath)).map(
+                  (item) =>
+                    ({
+                      cacheType: "static",
+                      pattern: fs
+                        .statSync(path.join(outputPath, assetsPath, item))
+                        .isDirectory()
+                        ? `${item}/*`
+                        : item,
+                      cfFunction: "staticCfFunction",
+                      origin: "s3",
+                    }) as const,
+                ),
+              ],
+            }),
+          );
+        },
+      );
     }
 
-    function createServerLambdaBundle(outputPath: string, wrapperFile: string) {
+    function createServerLambdaBundle(
+      isUsingVite: boolean,
+      outputPath: string,
+      wrapperFile: string,
+    ) {
       // Create a Lambda@Edge handler for the Remix server bundle.
       //
       // Note: Remix does perform their own internal ESBuild process, but it
@@ -445,22 +469,32 @@ export class Remix extends Component implements Link.Linkable {
       const buildPath = path.join(outputPath, "build");
       fs.mkdirSync(buildPath, { recursive: true });
 
-      // Copy the server lambda handler
-      fs.copyFileSync(
-        path.join(
-          $cli.paths.platform,
-          "functions",
-          "remix-server",
-          wrapperFile,
+      // Copy the server lambda handler and pre-append the build injection based
+      // on the config file used.
+      const content = [
+        // When using Vite config, the output build will be "server/index.js"
+        // and when using Remix config it will be `server.js`.
+        `// Import the server build that was produced by 'remix build'`,
+        isUsingVite
+          ? `import * as remixServerBuild from "./server/index.js";`
+          : `import * as remixServerBuild from "./index.js";`,
+        ``,
+        fs.readFileSync(
+          path.join(
+            $cli.paths.platform,
+            "functions",
+            "remix-server",
+            wrapperFile,
+          ),
         ),
-        path.join(buildPath, "server.mjs"),
-      );
+      ].join("\n");
+      fs.writeFileSync(path.join(buildPath, "server.mjs"), content);
 
       // Copy the Remix polyfil to the server build directory
       //
       // Note: We need to ensure that the polyfills are injected above other code that
-      // will depend on them. Importing them within the top of the lambda code
-      // doesn't appear to guarantee this, we therefore leverage ESBUild's
+      // will depend on them when not using Vite. Importing them within the top of the
+      // lambda code doesn't appear to guarantee this, we therefore leverage ESBUild's
       // `inject` option to ensure that the polyfills are injected at the top of
       // the bundle.
       const polyfillDest = path.join(buildPath, "polyfill.mjs");
