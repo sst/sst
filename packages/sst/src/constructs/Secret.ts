@@ -5,8 +5,8 @@ import { SSTConstruct } from "./Construct.js";
 import {
   getParameterPath,
   getParameterFallbackPath,
-  FunctionBindingProps,
-} from "./util/functionBinding.js";
+  BindingProps,
+} from "./util/binding.js";
 
 /**
  * The `Secret` construct is a higher level CDK construct that makes it easy to manage app secrets.
@@ -44,7 +44,7 @@ export class Secret extends Construct implements SSTConstruct {
   }
 
   /** @internal */
-  public getFunctionBinding(): FunctionBindingProps {
+  public getBindings(): BindingProps {
     const app = this.node.root as App;
     const partition = Stack.of(this).partition;
     return {

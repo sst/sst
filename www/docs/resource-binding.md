@@ -176,6 +176,23 @@ The IAM policy statement looks like:
 }
 ```
 
+To customize the policy statement, specify the desired `actions` and `resources` during binding:
+
+```ts
+site.bind([
+  { resource: bucket, permissions: [{ actions: ["s3:GetObject"], resources: [`${bucket.arn}/*`] }] }
+]);
+```
+
+The IAM policy statement looks like:
+
+```yml
+{
+  "Action": "s3:GetObject",
+  "Resource": "arn:aws:s3:::{BUCKET_NAME}/*",
+  "Effect": "Allow",
+}
+```
 </details>
 
 ---

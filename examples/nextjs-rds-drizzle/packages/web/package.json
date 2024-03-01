@@ -1,0 +1,30 @@
+{
+  "name": "nextjs-rds-drizzle",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "sst bind next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "db:generate": "drizzle-kit generate:pg",
+    "db:migrate": "sst bind tsx ./drizzle/migrate.ts"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@aws-sdk/client-rds-data": "^3.521.0",
+    "@types/node": "^20.11.20",
+    "@types/react": "^18.2.58",
+    "@types/react-dom": "^18.2.19",
+    "next": "^14.1.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "postcss": "^8.4.35",
+    "tailwindcss": "^3.4.1",
+    "autoprefixer": "^10.4.17",
+    "drizzle-kit": "^0.20.14",
+    "drizzle-orm": "^0.29.4",
+    "typescript": "^5.3.3",
+    "tsx": "^4.7.1"
+  }
+}

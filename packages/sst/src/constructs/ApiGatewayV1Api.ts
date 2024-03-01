@@ -12,7 +12,7 @@ import * as apigV1AccessLog from "./util/apiGatewayV1AccessLog.js";
 import { App } from "./App.js";
 import { Stack } from "./Stack.js";
 import { Bucket } from "./Bucket.js";
-import { FunctionBindingProps } from "./util/functionBinding.js";
+import { BindingResource, BindingProps } from "./util/binding.js";
 import { Duration, toCdkDuration } from "./util/duration.js";
 import { getFunctionRef, SSTConstruct, isCDKConstruct } from "./Construct.js";
 import { DnsValidatedCertificate } from "./cdk/dns-validated-certificate.js";
@@ -580,7 +580,7 @@ export class ApiGatewayV1Api<
   private props: ApiGatewayV1ApiProps<Authorizers>;
   private functions: { [key: string]: Fn | lambda.IFunction } = {};
   private authorizersData: Record<string, apig.IAuthorizer> = {};
-  private bindingForAllRoutes: SSTConstruct[] = [];
+  private bindingForAllRoutes: BindingResource[] = [];
   private permissionsAttachedForAllRoutes: Permissions[] = [];
 
   constructor(
@@ -697,7 +697,7 @@ export class ApiGatewayV1Api<
    * api.bind([STRIPE_KEY, bucket]);
    * ```
    */
-  public bind(constructs: SSTConstruct[]) {
+  public bind(constructs: BindingResource[]) {
     Object.values(this.functions).forEach((fn) => {
       if (fn instanceof Fn) {
         fn.bind(constructs);
@@ -721,7 +721,7 @@ export class ApiGatewayV1Api<
    * ```
    *
    */
-  public bindToRoute(routeKey: string, constructs: SSTConstruct[]): void {
+  public bindToRoute(routeKey: string, constructs: BindingResource[]): void {
     const fn = this.getFunction(routeKey);
     if (!fn) {
       throw new Error(
@@ -797,7 +797,7 @@ export class ApiGatewayV1Api<
   }
 
   /** @internal */
-  public getFunctionBinding(): FunctionBindingProps {
+  public getBindings(): BindingProps {
     return {
       clientPackage: "api",
       variables: {

@@ -26,7 +26,7 @@ import { App } from "./App.js";
 import { Stack } from "./Stack.js";
 import { getFunctionRef, SSTConstruct, isCDKConstruct } from "./Construct.js";
 import { Function as Fn } from "./Function.js";
-import { FunctionBindingProps } from "./util/functionBinding.js";
+import { BindingProps } from "./util/binding.js";
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 
 /////////////////////
@@ -313,7 +313,7 @@ export class RDS extends Construct implements SSTConstruct {
   }
 
   /** @internal */
-  public getFunctionBinding(): FunctionBindingProps {
+  public getBindings(): BindingProps {
     return {
       clientPackage: "rds",
       variables: {

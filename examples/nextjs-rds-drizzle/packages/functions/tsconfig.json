@@ -1,0 +1,12 @@
+{
+  "extends": "@tsconfig/node18/tsconfig.json",
+  "include": ["**/*.ts", "../../.sst/types"],
+  "compilerOptions": {
+    "module": "esnext",
+    "moduleResolution": "node",
+    "baseUrl": ".",
+    "paths": {
+      "@drizzle-sst/web/*": ["../web/*"]
+    }
+  }
+}

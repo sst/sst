@@ -1,5 +1,5 @@
 {
-  "name": "@@app",
+  "name": "create-sst-dynamo",
   "version": "0.0.0",
   "private": true,
   "type": "module",

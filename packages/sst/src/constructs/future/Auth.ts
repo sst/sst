@@ -6,10 +6,7 @@ import { SSTConstruct } from "../Construct.js";
 import { App } from "../App.js";
 import { Stack } from "../Stack.js";
 import { Secret } from "../Secret.js";
-import {
-  FunctionBindingProps,
-  getParameterPath,
-} from "../util/functionBinding.js";
+import { BindingProps, getParameterPath } from "../util/binding.js";
 import { CustomResource } from "aws-cdk-lib/core";
 
 export interface AuthProps {
@@ -183,7 +180,7 @@ export class Auth extends Construct implements SSTConstruct {
   }
 
   /** @internal */
-  public getFunctionBinding(): FunctionBindingProps {
+  public getBindings(): BindingProps {
     return {
       clientPackage: "future/auth",
       variables: {

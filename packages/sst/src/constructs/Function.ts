@@ -11,15 +11,16 @@ import { App } from "./App.js";
 import { Stack } from "./Stack.js";
 import { Job } from "./Job.js";
 import { Secret } from "./Config.js";
-import { SSTConstruct } from "./Construct.js";
+import { SSTConstruct, isSSTConstruct } from "./Construct.js";
 import { Size, toCdkSize } from "./util/size.js";
 import { Duration, toCdkDuration } from "./util/duration.js";
 import {
-  FunctionBindingProps,
-  bindEnvironment,
-  bindPermissions,
-  getReferencedSecrets,
-} from "./util/functionBinding.js";
+  BindingResource,
+  BindingProps,
+  getBindingEnvironments,
+  getBindingPermissions,
+  getBindingReferencedSecrets,
+} from "./util/binding.js";
 import { Permissions, attachPermissionsToRole } from "./util/permission.js";
 import * as functionUrlCors from "./util/functionUrlCors.js";
 
@@ -60,7 +61,6 @@ import { StringParameter } from "aws-cdk-lib/aws-ssm";
 import { Platform } from "aws-cdk-lib/aws-ecr-assets";
 import { useBootstrap } from "../bootstrap.js";
 import { Colors } from "../cli/colors.js";
-import { IBucket } from "aws-cdk-lib/aws-s3";
 import { Asset } from "aws-cdk-lib/aws-s3-assets";
 import { Config } from "../config.js";
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
@@ -96,7 +96,7 @@ export interface FunctionDockerBuildCacheProps extends DockerCacheOption {}
 export interface FunctionDockerBuildProps {
   /**
    * Cache from options to pass to the `docker build` command.
-   * @default - no cache from args are passed
+   * @default No cache from args are passed
    * @example
    * ```js
    * cacheFrom: [{type: "gha"}],
@@ -105,7 +105,7 @@ export interface FunctionDockerBuildProps {
   cacheFrom?: FunctionDockerBuildCacheProps[];
   /**
    * Cache to options to pass to the `docker build` command.
-   * @default - no cache to args are passed
+   * @default No cache to args are passed
    * @example
    * ```js
    * cacheTo: {type: "gha"},
@@ -328,7 +328,7 @@ export interface FunctionProps
    * })
    * ```
    */
-  bind?: SSTConstruct[];
+  bind?: BindingResource[];
   /**
    * Attaches the given list of permissions to the function. Configuring this property is equivalent to calling `attachPermissions()` after the function is created.
    *
@@ -779,6 +779,42 @@ export interface ContainerProps {
    * ```
    */
   buildArgs?: Record<string, string>;
+  /**
+   * SSH agent socket or keys to pass to the docker build command.
+   * Docker BuildKit must be enabled to use the ssh flag
+   * @default No --ssh flag is passed to the build command
+   * @example
+   * ```js
+   * container: {
+   *   buildSsh: "default"
+   * }
+   * ```
+   */
+  buildSsh?: string;
+  /**
+   * Cache from options to pass to the docker build command.
+   * [DockerCacheOption](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_ecr_assets.DockerCacheOption.html)[].
+   * @default No cache from options are passed to the build command
+   * @example
+   * ```js
+   * container: {
+   *   cacheFrom: [{ type: 'registry', params: { ref: 'ghcr.io/myorg/myimage:cache' }}],
+   * }
+   * ```
+   */
+  cacheFrom?: FunctionDockerBuildCacheProps[];
+  /**
+   * Cache to options to pass to the docker build command.
+   * [DockerCacheOption](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_ecr_assets.DockerCacheOption.html)[].
+   * @default No cache to options are passed to the build command
+   * @example
+   * ```js
+   * container: {
+   *   cacheTo: { type: 'registry', params: { ref: 'ghcr.io/myorg/myimage:cache', mode: 'max', compression: 'zstd' }},
+   * }
+   * ```
+   */
+  cacheTo?: FunctionDockerBuildCacheProps;
 }
 
 /**
@@ -825,7 +861,7 @@ export class Function extends CDKFunction implements SSTConstruct {
   private missingSourcemap?: boolean;
   private functionUrl?: FunctionUrl;
   private props: FunctionProps;
-  private allBindings: SSTConstruct[] = [];
+  private allBindings: BindingResource[] = [];
 
   constructor(scope: Construct, id: string, props: FunctionProps) {
     const app = scope.node.root as App;
@@ -1031,6 +1067,15 @@ export class Function extends CDKFunction implements SSTConstruct {
             ...(props.container?.buildArgs
               ? { buildArgs: props.container.buildArgs }
               : {}),
+            ...(props.container?.buildSsh
+              ? { buildSsh: props.container.buildSsh }
+              : {}),
+            ...(props.container?.cacheFrom
+              ? { cacheFrom: props.container.cacheFrom }
+              : {}),
+            ...(props.container?.cacheTo
+              ? { cacheTo: props.container.cacheTo }
+              : {}),
             exclude: [".sst/dist", ".sst/artifacts"],
             ignoreMode: IgnoreMode.GLOB,
           });
@@ -1133,31 +1178,23 @@ export class Function extends CDKFunction implements SSTConstruct {
    * fn.bind([STRIPE_KEY, bucket]);
    * ```
    */
-  public bind(constructs: SSTConstruct[]): void {
+  public bind(constructs: BindingResource[]): void {
     // Get referenced secrets
     const referencedSecrets: Secret[] = [];
-    constructs.forEach((c) =>
-      referencedSecrets.push(...getReferencedSecrets(c))
+    constructs.forEach((r) =>
+      referencedSecrets.push(...getBindingReferencedSecrets(r))
     );
 
-    [...constructs, ...referencedSecrets].forEach((c) => {
+    [...constructs, ...referencedSecrets].forEach((r) => {
       // Bind environment
-      const env = bindEnvironment(c);
+      const env = getBindingEnvironments(r);
       Object.entries(env).forEach(([key, value]) =>
         this.addEnvironment(key, value)
       );
 
       // Bind permissions
-      const permissions = bindPermissions(c);
-      Object.entries(permissions).forEach(([action, resources]) =>
-        this.attachPermissions([
-          new PolicyStatement({
-            actions: [action],
-            effect: Effect.ALLOW,
-            resources,
-          }),
-        ])
-      );
+      const policyStatements = getBindingPermissions(r);
+      this.attachPermissions(policyStatements);
     });
 
     this.allBindings.push(...constructs, ...referencedSecrets);
@@ -1196,7 +1233,8 @@ export class Function extends CDKFunction implements SSTConstruct {
         missingSourcemap: this.missingSourcemap === true ? true : undefined,
         localId: this.node.addr,
         secrets: this.allBindings
-          .filter((c) => c instanceof Secret)
+          .map((r) => (isSSTConstruct(r) ? r : r.resource))
+          .filter((r) => r instanceof Secret)
           .map((c) => (c as Secret).name),
         prefetchSecrets: this.props.prefetchSecrets,
       },
@@ -1204,7 +1242,7 @@ export class Function extends CDKFunction implements SSTConstruct {
   }
 
   /** @internal */
-  public getFunctionBinding(): FunctionBindingProps {
+  public getBindings(): BindingProps {
     return {
       clientPackage: "function",
       variables: {

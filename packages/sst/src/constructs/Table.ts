@@ -11,7 +11,7 @@ import {
   FunctionDefinition,
 } from "./Function.js";
 import { KinesisStream } from "./KinesisStream.js";
-import { FunctionBindingProps } from "./util/functionBinding.js";
+import { BindingResource, BindingProps } from "./util/binding.js";
 import { Permissions } from "./util/permission.js";
 
 /////////////////////
@@ -310,7 +310,7 @@ export class Table extends Construct implements SSTConstruct {
   };
   private dynamodbTableType?: "CREATED" | "IMPORTED";
   private functions: { [consumerName: string]: Fn } = {};
-  private bindingForAllConsumers: SSTConstruct[] = [];
+  private bindingForAllConsumers: BindingResource[] = [];
   private permissionsAttachedForAllConsumers: Permissions[] = [];
   private props: TableProps;
   private stream?: dynamodb.StreamViewType;
@@ -519,7 +519,7 @@ export class Table extends Construct implements SSTConstruct {
    * table.bind([STRIPE_KEY, bucket]);
    * ```
    */
-  public bind(constructs: SSTConstruct[]) {
+  public bind(constructs: BindingResource[]) {
     Object.values(this.functions).forEach((fn) => fn.bind(constructs));
     this.bindingForAllConsumers.push(...constructs);
   }
@@ -534,7 +534,7 @@ export class Table extends Construct implements SSTConstruct {
    */
   public bindToConsumer(
     consumerName: string,
-    constructs: SSTConstruct[]
+    constructs: BindingResource[]
   ): void {
     if (!this.functions[consumerName]) {
       throw new Error(
@@ -612,7 +612,7 @@ export class Table extends Construct implements SSTConstruct {
   }
 
   /** @internal */
-  public getFunctionBinding(): FunctionBindingProps {
+  public getBindings(): BindingProps {
     return {
       clientPackage: "table",
       variables: {

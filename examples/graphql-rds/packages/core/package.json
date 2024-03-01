@@ -8,8 +8,8 @@
     "migrate": "sst bind tsx ./src/migrator.ts"
   },
   "devDependencies": {
-    "vitest": "^1.2.2",
-    "@types/node": "^20.11.17",
+    "vitest": "^1.3.1",
+    "@types/node": "^20.11.20",
     "sst": "^2.40.3",
     "tsx": "^4.7.1"
   },
@@ -17,7 +17,7 @@
     "ulid": "^2.3.0",
     "kysely": "0.25.0",
     "kysely-data-api": "^0.2.1",
-    "aws-sdk": "^2.1556.0",
-    "@aws-sdk/client-rds-data": "^3.511.0"
+    "aws-sdk": "^2.1565.0",
+    "@aws-sdk/client-rds-data": "^3.521.0"
   }
 }
