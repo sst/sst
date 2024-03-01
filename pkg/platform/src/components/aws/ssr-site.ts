@@ -248,8 +248,10 @@ export interface SsrSiteArgs {
       "utf-8" | "iso-8859-1" | "windows-1252" | "ascii" | "none"
     >;
     /**
-     * The `Cache-Control` header used for versioned files (like `main-1234.css`). This is
-     * used by both CloudFront and the browser cache. The default `max-age` is set to 1 year.
+     * The `Cache-Control` header used for versioned files, like `main-1234.css`. This is
+     * used by both CloudFront and the browser cache.
+     *
+     * The default `max-age` is set to 1 year.
      * @default `"public,max-age=31536000,immutable"`
      * @example
      * ```js
@@ -262,8 +264,10 @@ export interface SsrSiteArgs {
      */
     versionedFilesCacheHeader?: Input<string>;
     /**
-     * The `Cache-Control` header used for non-versioned files (like `main-1234.css`). This is
-     * used by both CloudFront and the browser cache. The default `max-age` is set to 1 year.
+     * The `Cache-Control` header used for non-versioned files, like `index.html`. This is
+     * used by both CloudFront and the browser cache.
+     *
+     * The default is set not cache on browsers, and cache for 1 day on CloudFront.
      * @default `"public,max-age=0,s-maxage=86400,stale-while-revalidate=8640"`
      * @example
      * ```js
@@ -278,6 +282,11 @@ export interface SsrSiteArgs {
     /**
      * Specify the `Content-Type` and `Cache-Control` headers for specific files. This allows
      * you to override the default behavior for specific files using glob patterns.
+     *
+     * :::tip
+     * Behind the scenes, a combination of the `s3 cp` and `s3 sync` commands upload the assets to S3. An `s3 cp` command is run for each `fileOptions` block, and these options are passed in to the command.
+     * :::
+     *
      * @example
      * Apply `Cache-Control` and `Content-Type` to all zip files.
      * ```js
@@ -288,8 +297,8 @@ export interface SsrSiteArgs {
      *         files: "**\/*.zip",
      *         contentType: "application/zip",
      *         cacheControl: "private,no-cache,no-store,must-revalidate"
-     *       },
-     *     ],
+     *       }
+     *     ]
      *   }
      * }
      * ```
@@ -303,8 +312,8 @@ export interface SsrSiteArgs {
      *         files: ["**\/*.css", "**\/*.js"],
      *         ignore: "main\/index-*.css",
      *         cacheControl: "private,no-cache,no-store,must-revalidate"
-     *       },
-     *     ],
+     *       }
+     *     ]
      *   }
      * }
      * ```

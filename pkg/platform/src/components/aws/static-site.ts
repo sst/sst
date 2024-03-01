@@ -42,46 +42,91 @@ interface FileOptions {
 
 export interface StaticSiteArgs {
   /**
-   * Path to the directory where the app is located.
+   * Path to the directory where your static site is located. By default this assumes your static site is in the root of your SST app.
+   *
+   * This directory will be uploaded to S3. The path is relative to your `sst.config.ts`.
+   *
+   * :::note
+   * If the `build` options are specified, `build.output` will be uploaded to S3 instead.
+   * :::
+   *
+   * If you are using a static site generator, like Vite, you'll need to configure the `build` options. When these are set, the `build.output` directory will be uploaded to S3 instead.
+   *
    * @default `"."`
+   *
+   * @example
+   *
+   * Change where your static site is located.
+   *
+   * ```js
+   * {
+   *   path: "packages/web"
+   * }
+   * ```
    */
   path?: Input<string>;
   /**
-   * The name of the index page (e.g. "index.html") of the website.
-   * @default `index.html`
+   * The name of the index page of the site. This is a path relative to the root of your site, or the `path`.
+   *
+   * :::note
+   * The index page only applies to the root of your site.
+   * :::
+   *
+   * By default this is set to `index.html`. So if a visitor goes to your site, let's say `example.com`, `example.com/index.html` will be served.
+   *
+   * @default `"index.html"`
    * @example
    * ```js
    * {
-   *   indexPage: "home.html",
+   *   indexPage: "home.html"
    * }
    * ```
    */
   indexPage?: string;
   /**
-   * The error page for the website when visiting a page that does not exist.
-   * @default redirect to the index page
+   * The error page to display on a 403 or 404 error. This is a path relative to the root of your site, or the `path`.
+   * @default The `indexPage` of your site.
    * @example
    * ```js
    * {
-   *   errorPage: "404.html",
+   *   errorPage: "404.html"
    * }
    * ```
    */
   errorPage?: Input<string>;
   /**
-   * An object with the key being the environment variable name.
+   * Set environment variables for your static site. These are made available:
+   *
+   * 1. Locally while running your site through `sst dev`.
+   * 2. In the build process when running `build.command`.
    *
    * @example
    * ```js
    * environment: {
-   *   API_URL: api.url,
-   *   USER_POOL_CLIENT: auth.cognitoUserPoolClient.userPoolClientId,
-   * },
+   *   API_URL: api.url
+   *   STRIPE_PUBLISHABLE_KEY: "pk_test_123"
+   * }
+   * ```
+   *
+   * Some static site generators like Vite have their [concept of environment variables](https://vitejs.dev/guide/env-and-mode), and you can use this option to set them.
+   *
+   * :::note
+   * The types for the Vite environment variables are generated automatically. You can change their location through `vite.types`.
+   * :::
+   *
+   * These can be accessed as `import.meta.env` in your site. And only the ones prefixed with `VITE_` can be accessed in the browser.
+   *
+   * ```js
+   * environment: {
+   *   API_URL: api.url
+   *   // Accessible in the browser
+   *   VITE_STRIPE_PUBLISHABLE_KEY: "pk_test_123"
+   * }
    * ```
    */
   environment?: Input<Record<string, Input<string>>>;
   /**
-   * Set a custom domain for your SSR site. Supports domains hosted either on
+   * Set a custom domain for your static site. Supports domains hosted either on
    * [Route 53](https://aws.amazon.com/route53/) or outside AWS.
    *
    * :::tip
@@ -111,40 +156,64 @@ export interface StaticSiteArgs {
    */
   domain?: Input<string | Prettify<CdnDomainArgs>>;
   /**
-   * Configure the build process for the website.
+   * Configure if your static site needs to be built. This is useful if you are using a static site generator.
+   * @example
+   * For a Vite project using npm this might look like this.
+   *
+   * ```js
+   * {
+   *   build: {
+   *     command: "npm run build",
+   *     output: "dist"
+   *   }
+   * }
+   * ```
    */
   build: Input<{
     /**
-     * The command for building the website
-     * @default `npm run build`
+     * The command that builds the static site. It's run before your site is deployed. This is run at the root of your site, `path`.
      * @example
      * ```js
      * {
-     *   buildCommand: "yarn build"
+     *   build: {
+     *     command: "yarn build"
+     *   }
      * }
      * ```
      */
     command?: Input<string>;
     /**
-     * The directory with the content that will be uploaded to the S3 bucket. If a `buildCommand` is provided, this is usually where the build output is generated. The path is relative to the [`path`](#path) where the website source is located.
+     * The directory where the build output of your static site is generated. This will be uploaded to S3.
+     *
+     * The path is relative to the root of your site, `path`.
      * @example
      * ```js
      * {
-     *   buildOutput: "build",
+     *   build: {
+     *     output: "build"
+     *   }
      * }
      * ```
      */
     output: Input<string>;
   }>;
+  /**
+   * Configure [Vite](https://vitejs.dev) related options.
+   *
+   * :::tip
+   * If a `vite.config.ts` or `vite.config.js` file is detected in the `path`, then these options will be used during the build and deploy process.
+   * :::
+   */
   vite?: Input<{
     /**
-     * The path where code-gen should place the type definition for environment variables
-     * @default "src/sst-env.d.ts"
+     * The path where the type definition for the `environment` variables are generated. This is relative to the `path`. [Read more](https://vitejs.dev/guide/env-and-mode#intellisense-for-typescript).
+     *
+     * @default `"src/sst-env.d.ts"`
      * @example
      * ```js
      * {
      *   vite: {
-     *     types: "./other/path/sst-env.d.ts",
+     *     types: "other/path/sst-env.d.ts"
      *   }
      * }
      * ```
@@ -152,12 +221,27 @@ export interface StaticSiteArgs {
     types?: string;
   }>;
   /**
-   * Configure how the assets uploaded to S3.
+   * Configure how the static site's assets are uploaded to S3.
    *
-   * Default text encoding is `utf-8`.
-   * Default cache control is:
-   * - `max-age=0,no-cache,no-store,must-revalidate` for HTML files
-   * - `max-age=31536000,public,immutable` for JS/CSS files
+   * By default, this is set to the following. Read more about these options below.
+   * ```js
+   * {
+   *   assets: {
+   *     textEncoding: "utf-8",
+   *     fileOptions: [
+   *       {
+   *         files: ["**\/*.css", "**\/*.js"],
+   *         cacheControl: "max-age=31536000,public,immutable"
+   *       },
+   *       {
+   *         files: "**\/*.html",
+   *         cacheControl: "max-age=0,no-cache,no-store,must-revalidate"
+   *       }
+   *     ]
+   *   }
+   * }
+   * ```
+   * @default `Object`
    */
   assets?: Input<{
     /**
@@ -179,30 +263,86 @@ export interface StaticSiteArgs {
       "utf-8" | "iso-8859-1" | "windows-1252" | "ascii" | "none"
     >;
     /**
-     * Pass in a list of file options to configure cache control for different files. Behind the scenes, the `StaticSite` construct uses a combination of the `s3 cp` and `s3 sync` commands to upload the website content to the S3 bucket. An `s3 cp` command is run for each file option block, and the options are passed in as the command options.
-     * @example
+     * Specify the `Content-Type` and `Cache-Control` headers for specific files. This allows
+     * you to override the default behavior for specific files using glob patterns.
+     *
+     * :::tip
+     * Behind the scenes, a combination of the `s3 cp` and `s3 sync` commands upload the assets to S3. An `s3 cp` command is run for each `fileOptions` block, and these options are passed in to the command.
+     * :::
+     *
+     * By default, this is set to cache CSS/JS files for 1 year and not cache HTML files.
+     *
      * ```js
-     * assets: {
-     *   fileOptions: [
-     *     {
-     *       files: "**\/*.zip",
-     *       cacheControl: "private,no-cache,no-store,must-revalidate",
-     *       contentType: "application/zip",
-     *     },
-     *   ],
+     * {
+     *   assets: {
+     *     fileOptions: [
+     *       {
+     *         files: ["**\/*.css", "**\/*.js"],
+     *         cacheControl: "max-age=31536000,public,immutable"
+     *       },
+     *       {
+     *         files: "**\/*.html",
+     *         cacheControl: "max-age=0,no-cache,no-store,must-revalidate"
+     *       }
+     *     ]
+     *   }
+     * }
+     * ```
+     *
+     * @default `Object[]`
+     * @example
+     * You can change the default options. For example, apply `Cache-Control` and `Content-Type` to all zip files.
+     * ```js
+     * {
+     *   assets: {
+     *     fileOptions: [
+     *       {
+     *         files: "**\/*.zip",
+     *         contentType: "application/zip",
+     *         cacheControl: "private,no-cache,no-store,must-revalidate"
+     *       },
+     *     ],
+     *   }
+     * }
+     * ```
+     * Apply `Cache-Control` to all CSS and JS files except for CSS files with `index-`
+     * prefix in the `main/` directory.
+     * ```js
+     * {
+     *   assets: {
+     *     fileOptions: [
+     *       {
+     *         files: ["**\/*.css", "**\/*.js"],
+     *         ignore: "main\/index-*.css",
+     *         cacheControl: "private,no-cache,no-store,must-revalidate"
+     *       },
+     *     ],
+     *   }
      * }
      * ```
      */
     fileOptions?: Input<Prettify<FileOptions>[]>;
   }>;
   /**
-   * Configure how the CloudFront cache invalidations are handled.
-   * @default `&lcub;wait: false, paths: "all"&rcub;`
+   * Configure how the CloudFront cache invalidations are handled. This is run after your static site has been deployed.
+   * :::tip
+   * You get 1000 free invalidations per month. After that you pay $0.005 per invalidation path. [Read more here](https://aws.amazon.com/cloudfront/pricing/).
+   * :::
+   * @default `&lcub;paths: "all", wait: false&rcub;`
    * @example
-   * Disable invalidation.
+   * Turn off invalidations.
    * ```js
    * {
    *   invalidation: false
+   * }
+   * ```
+   * Wait for all paths to be invalidated.
+   * ```js
+   * {
+   *   invalidation: {
+   *     paths: "all",
+   *     wait: true
+   *   }
    * }
    * ```
    */
@@ -253,32 +393,81 @@ export interface StaticSiteArgs {
 }
 
 /**
- * The `StaticSite` component lets you deploy a website to AWS.
+ * The `StaticSite` component lets you deploy a static website to AWS. It uses [Amazon S3](https://aws.amazon.com/s3/) to store your files and [Amazon CloudFront](https://aws.amazon.com/cloudfront/) to serve them.
+ *
+ * It can also `build` your site by running your static site generator, like [Vite](https://vitejs.dev) and uploading the build output to S3.
  *
  * @example
  *
  * #### Minimal example
  *
- * Deploys a React site created using [Vite](https://vitejs.dev).
+ * Simply uploads the current directory as a static site.
  *
  * ```js
- * new sst.aws.StaticSite("Web", {
- *   build: {
- *     output: "dist"
- *   },
- * });
+ * new sst.aws.StaticSite("Web");
  * ```
  *
  * #### Change the path
  *
- * Deploys the site in the `my-app/` directory.
+ * Change the `path` that should be uploaded.
  *
- * ```js {2}
+ * ```js
  * new sst.aws.StaticSite("Web", {
- *   path: "my-app/",
+ *   path: "path/to/site"
+ * });
+ * ```
+ *
+ * #### Deploy a Vite SPA
+ *
+ * Use [Vite](https://vitejs.dev) to deploy a React/Vue/Svelte/etc. SPA by specifying the `build` config.
+ *
+ * ```js
+ * new sst.aws.StaticSite("Web", {
  *   build: {
+ *     command: "npm run build",
  *     output: "dist"
- *   },
+ *   }
+ * });
+ * ```
+ *
+ * #### Deploy a Jekyll site
+ *
+ * Use [Jekyll](https://jekyllrb.com) to deploy a static site.
+ *
+ * ```js
+ * new sst.aws.StaticSite("Web", {
+ *   errorPage: "404.html",
+ *   build: {
+ *     command: "bundle exec jekyll build",
+ *     output: "_site"
+ *   }
+ * });
+ * ```
+ *
+ * #### Deploy a Gatsby site
+ *
+ * Use [Gatsby](https://www.gatsbyjs.com) to deploy a static site.
+ *
+ * ```js
+ * new sst.aws.StaticSite("Web", {
+ *   errorPage: "404.html",
+ *   build: {
+ *     command: "npm run build",
+ *     output: "public"
+ *   }
+ * });
+ * ```
+ *
+ * #### Deploy an Angular SPA
+ *
+ * Use [Angular](https://angular.dev) to deploy a SPA.
+ *
+ * ```js
+ * new sst.aws.StaticSite("Web", {
+ *   build: {
+ *     command: "ng build --output-path dist",
+ *     output: "dist"
+ *   }
  * });
  * ```
  *
@@ -288,10 +477,7 @@ export interface StaticSiteArgs {
  *
  * ```js {2}
  * new sst.aws.StaticSite("Web", {
- *   domain: "my-app.com",
- *   build: {
- *     output: "dist"
- *   },
+ *   domain: "my-app.com"
  * });
  * ```
  *
@@ -305,9 +491,32 @@ export interface StaticSiteArgs {
  *     domainName: "my-app.com",
  *     redirects: ["www.my-app.com"]
  *   }
- *   build: {
- *     output: "dist"
+ * });
+ * ```
+ *
+ * #### Set environment variables
+ *
+ * Set `environment` variables for the build process of your static site. These will be used locally and on deploy.
+ *
+ * :::tip
+ * For Vite, the types for the environment variables are also generated. This can be configured through the `vite` prop.
+ * :::
+ *
+ * For some static site generators like Vite, [environment variables](https://vitejs.dev/guide/env-and-mode) prefixed with `VITE_` can be accessed in the browser.
+ *
+ * ```ts {5-7}
+ * const myBucket = new sst.aws.Bucket("MyBucket");
+ *
+ * new sst.aws.StaticSite("Web", {
+ *   environment: {
+ *     BUCKET_NAME: myBucket.name,
+ *     // Accessible in the browser
+ *     VITE_STRIPE_PUBLISHABLE_KEY: "pk_test_123"
  *   },
+ *   build: {
+ *     command: "npm run build",
+ *     output: "dist"
+ *   }
  * });
  * ```
  */
