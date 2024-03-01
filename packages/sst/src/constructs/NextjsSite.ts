@@ -169,6 +169,7 @@ const DEFAULT_CACHE_POLICY_ALLOWED_HEADERS = [
   "next-router-prefetch",
   "next-router-state-tree",
   "next-url",
+  "x-prerender-bypass",
 ];
 
 type NextjsSiteNormalizedProps = NextjsSiteProps & SsrSiteNormalizedProps;
@@ -297,7 +298,10 @@ export class NextjsSite extends SsrSite {
       cloudFrontFunctions: {
         serverCfFunction: {
           constructId: "CloudFrontFunction",
-          injections: [this.useCloudFrontFunctionHostHeaderInjection()],
+          injections: [
+            this.useCloudFrontFunctionHostHeaderInjection(),
+            this.useCloudFrontFunctionPrerenderBypassHeaderInjection(),
+          ],
         },
       },
       edgeFunctions: edge
@@ -763,6 +767,16 @@ if (event.rawPath) {
       },
     }));
   }
+}`;
+  }
+
+  private useCloudFrontFunctionPrerenderBypassHeaderInjection() {
+    // In Next.js page router preview mode (depends on the cookie __prerender_bypass),
+    // to ensure we receive the cached page instead of the preview version, we set the
+    // header "x-prerender-bypass", and add it to cache policy's allowed headers.
+    return `
+if (request.cookies["__prerender_bypass"]) { 
+  request.headers["x-prerender-bypass"] = { value: "true" }; 
 }`;
   }
 
