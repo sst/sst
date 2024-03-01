@@ -947,11 +947,16 @@ export class Function extends CDKFunction implements SSTConstruct {
         };
       }
 
+      // Ensure descriptions fits the 256 chars limit
+      const description = props.description
+        ? `${props.description.substring(0, 240)} (live)`
+        : `live`;
+
       super(scope, id, {
         ...props,
         ...(props.runtime === "container"
           ? {
-              description: "SST Live Lambda handler",
+              description,
               code: Code.fromAssetImage(
                 path.resolve(__dirname, "../support/bridge"),
                 {
@@ -965,7 +970,7 @@ export class Function extends CDKFunction implements SSTConstruct {
               layers: undefined,
             }
           : {
-              description: "SST Live Lambda handler",
+              description,
               runtime: CDKRuntime.NODEJS_18_X,
               code: Code.fromAsset(
                 path.resolve(__dirname, "../support/bridge")
