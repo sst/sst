@@ -300,7 +300,7 @@ export class NextjsSite extends SsrSite {
           constructId: "CloudFrontFunction",
           injections: [
             this.useCloudFrontFunctionHostHeaderInjection(),
-            this.usePagePreviewBypassRequestHeaderInjection(),
+            this.useCloudFrontFunctionPrerenderBypassHeaderInjection(),
           ],
         },
       },
@@ -770,7 +770,10 @@ if (event.rawPath) {
 }`;
   }
 
-  private usePagePreviewBypassRequestHeaderInjection() {
+  private useCloudFrontFunctionPrerenderBypassHeaderInjection() {
+    // In Next.js page router preview mode (depends on the cookie __prerender_bypass),
+    // to ensure we receive the cached page instead of the preview version, we set the
+    // header "x-prerender-bypass", and add it to cache policy's allowed headers.
     return `if (request.cookies["__prerender_bypass"]) { 
   request.headers["x-prerender-bypass"] = { value: "true" }; 
 }';`;
