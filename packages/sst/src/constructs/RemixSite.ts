@@ -51,10 +51,12 @@ export class RemixSite extends SsrSite {
   protected plan() {
     const { path: sitePath, edge } = this.props;
 
+    const isUsingVite = this.hasViteConfig();
+    const format = this.getServerModuleFormat(isUsingVite);
     const { handler, inject } = this.createServerLambdaBundle(
+      isUsingVite,
       edge ? "edge-server.js" : "regional-server.js"
     );
-    const format = this.getServerModuleFormat();
     const serverConfig = {
       description: "Server handler for Remix",
       handler,
@@ -65,6 +67,12 @@ export class RemixSite extends SsrSite {
         },
       },
     };
+
+    // The path for all files that need to be in the "/" directory (static assets)
+    // is different when using Vite. These will be located in the "build/client"
+    // path of the output. It will be the "public" folder when using remix config.
+    const assetsPath = isUsingVite ? path.join("build", "client") : "public";
+    const assetsVersionedSubDir = isUsingVite ? undefined : "build";
 
     return this.validatePlan({
       edge: edge ?? false,
@@ -107,10 +115,10 @@ export class RemixSite extends SsrSite {
           type: "s3",
           copy: [
             {
-              from: "public",
+              from: assetsPath,
               to: "",
               cached: true,
-              versionedSubDir: "build",
+              versionedSubDir: assetsVersionedSubDir,
             },
           ],
         },
@@ -129,12 +137,12 @@ export class RemixSite extends SsrSite {
               origin: "regionalServer",
             },
         // create 1 behaviour for each top level asset file/folder
-        ...fs.readdirSync(path.join(sitePath, "public")).map(
+        ...fs.readdirSync(path.join(sitePath, assetsPath)).map(
           (item) =>
             ({
               cacheType: "static",
               pattern: fs
-                .statSync(path.join(sitePath, "public", item))
+                .statSync(path.join(sitePath, assetsPath, item))
                 .isDirectory()
                 ? `${item}/*`
                 : item,
@@ -145,8 +153,21 @@ export class RemixSite extends SsrSite {
       ],
     });
   }
-  protected getServerModuleFormat(): "cjs" | "esm" {
+
+  private hasViteConfig() {
     const { path: sitePath } = this.props;
+    return (
+      fs.existsSync(path.resolve(sitePath, "vite.config.ts")) ||
+      fs.existsSync(path.resolve(sitePath, "vite.config.js"))
+    );
+  }
+
+  private getServerModuleFormat(isUsingVite: boolean) {
+    const { path: sitePath } = this.props;
+
+    // Remix has two possible config formats: "remix.config.js" or "vite.config.ts/js".
+    // If using the vite format, we can short circuit the logic and just return ESM.
+    if (isUsingVite) return "esm";
 
     // Validate config path
     const configPath = path.resolve(sitePath, "remix.config.js");
@@ -169,7 +190,7 @@ export class RemixSite extends SsrSite {
     } catch (e) {
       return "esm";
     }
-    const format = userConfig.serverModuleFormat ?? "cjs";
+    const format = (userConfig.serverModuleFormat as "cjs" | "esm") ?? "cjs";
     if (userConfig.serverModuleFormat !== "esm") {
       useWarning().add("remix.cjs");
     }
@@ -197,7 +218,7 @@ export class RemixSite extends SsrSite {
     return format;
   }
 
-  private createServerLambdaBundle(wrapperFile: string) {
+  private createServerLambdaBundle(isUsingVite: boolean, wrapperFile: string) {
     // Create a Lambda@Edge handler for the Remix server bundle.
     //
     // Note: Remix does perform their own internal ESBuild process, but it
@@ -220,17 +241,31 @@ export class RemixSite extends SsrSite {
     const buildPath = path.join(this.props.path, "build");
     fs.mkdirSync(buildPath, { recursive: true });
 
-    // Copy the server lambda handler
-    fs.copyFileSync(
-      path.resolve(__dirname, `../support/remix-site-function/${wrapperFile}`),
-      path.join(buildPath, "server.js")
-    );
+    // Copy the server lambda handler and pre-append the build injection based
+    // on the config file used.
+    const content = [
+      // When using Vite config, the output build will be "server/index.js"
+      // and when using Remix config it will be `server.js`.
+      `// Import the server build that was produced by 'remix build'`,
+      isUsingVite
+        ? `import * as remixServerBuild from "./server/index.js";`
+        : `import * as remixServerBuild from "./index.js";`,
+      ``,
+      fs.readFileSync(
+        path.resolve(
+          __dirname,
+          `../support/remix-site-function/${wrapperFile}`
+        ),
+        { encoding: "utf8" }
+      ),
+    ].join("\n");
+    fs.writeFileSync(path.resolve(buildPath, "server.js"), content);
 
     // Copy the Remix polyfil to the server build directory
     //
     // Note: We need to ensure that the polyfills are injected above other code that
-    // will depend on them. Importing them within the top of the lambda code
-    // doesn't appear to guarantee this, we therefore leverage ESBUild's
+    // will depend on them when not using Vite. Importing them within the top of the
+    // lambda code doesn't appear to guarantee this, we therefore leverage ESBUild's
     // `inject` option to ensure that the polyfills are injected at the top of
     // the bundle.
     const polyfillDest = path.join(buildPath, "polyfill.js");

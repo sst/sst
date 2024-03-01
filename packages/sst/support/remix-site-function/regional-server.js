@@ -1,18 +1,10 @@
 // This is a custom Lambda URL handler which imports the Remix server
 // build and performs the Remix server rendering.
 
-// We have to ensure that our polyfills are imported prior to any other modules
-// which may depend on them;
-import { installGlobals } from "@remix-run/node";
-installGlobals();
-
 import {
   createRequestHandler as createNodeRequestHandler,
   readableStreamToString,
 } from "@remix-run/node";
-
-// Import the server build that was produced by `remix build`;
-import * as remixServerBuild from "./index.js";
 
 /**
  * Common binary MIME types
