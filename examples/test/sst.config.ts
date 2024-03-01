@@ -12,9 +12,8 @@ export default $config({
     };
   },
   async run() {
-    new aws.dynamodb.Table("Web", {
-      name: "/aweofih",
-      billingMode: "PAY_PER_REQUEST",
+    new sst.aws.Function("MyFunction", {
+      handler: "src/lambda.handler",
     });
     return {};
   },

@@ -224,3 +224,9 @@ func (p *Project) App() *App {
 func (p *Project) Backend() provider.Backend {
 	return p.backend
 }
+
+func (p *Project) Cleanup() error {
+	return os.RemoveAll(
+		filepath.Join(p.PathWorkingDir(), "artifacts"),
+	)
+}

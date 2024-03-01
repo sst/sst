@@ -126,6 +126,7 @@ func main() {
 					if err != nil {
 						return err
 					}
+					defer p.Cleanup()
 
 					err = p.Stack.Import(cli.Context, &project.ImportOptions{
 						Type:   resourceType,
@@ -150,6 +151,7 @@ func main() {
 							if err != nil {
 								return err
 							}
+							defer p.Cleanup()
 
 							err = p.Stack.Lock()
 							if err != nil {
@@ -191,6 +193,8 @@ func main() {
 							if err != nil {
 								return err
 							}
+							defer p.Cleanup()
+
 							if cli.Args().Len() != 2 {
 								return fmt.Errorf("key and value required")
 							}
@@ -218,6 +222,8 @@ func main() {
 							if err != nil {
 								return err
 							}
+							defer p.Cleanup()
+
 							backend := p.Backend()
 							secrets, err := provider.GetSecrets(backend, p.App().Name, p.App().Stage)
 							if err != nil {
@@ -239,6 +245,8 @@ func main() {
 					if err != nil {
 						return err
 					}
+					defer p.Cleanup()
+
 					backend := p.Backend()
 					links, err := provider.GetLinks(backend, p.App().Name, p.App().Stage)
 					if err != nil {
@@ -282,6 +290,7 @@ func main() {
 					if err != nil {
 						return err
 					}
+					defer project.Cleanup()
 
 					s, err := server.New(project)
 					if err != nil {
@@ -505,6 +514,8 @@ func main() {
 					if err != nil {
 						return err
 					}
+					defer p.Cleanup()
+
 					ui := ui.New(ui.ProgressModeDeploy)
 					defer ui.Destroy()
 					ui.Header(version, p.App().Name, p.App().Stage)
@@ -526,6 +537,8 @@ func main() {
 					if err != nil {
 						return err
 					}
+					defer p.Cleanup()
+
 					ui := ui.New(ui.ProgressModeRemove)
 					defer ui.Destroy()
 					ui.Header(version, p.App().Name, p.App().Stage)
@@ -556,6 +569,8 @@ func main() {
 					if err != nil {
 						return err
 					}
+					defer p.Cleanup()
+
 					ui := ui.New(ui.ProgressModeRefresh)
 					defer ui.Destroy()
 					ui.Header(version, p.App().Name, p.App().Stage)
@@ -580,6 +595,8 @@ func main() {
 					if err != nil {
 						return err
 					}
+					defer p.Cleanup()
+
 					err = p.Stack.Cancel()
 					if err != nil {
 						return util.NewReadableError(err, "")
