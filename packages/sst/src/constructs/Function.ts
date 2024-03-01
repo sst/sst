@@ -911,14 +911,16 @@ export class Function extends CDKFunction implements SSTConstruct {
         };
       }
 
-      // Lambda descriptions have a limit of 256 chars. Subtract 26 chars to account for Live Lambda label suffix.
-      const liveLambdaDescription = `${props.description ? props.description.substring(0, 230) : ''} (SST Live Lambda handler)`.trim()
+      // Ensure descriptions fits the 256 chars limit
+      const description = props.description
+        ? `${props.description.substring(0, 240)} (live)`
+        : `live`;
 
       super(scope, id, {
         ...props,
         ...(props.runtime === "container"
           ? {
-              description: liveLambdaDescription,
+              description,
               code: Code.fromAssetImage(
                 path.resolve(__dirname, "../support/bridge"),
                 {
@@ -932,7 +934,7 @@ export class Function extends CDKFunction implements SSTConstruct {
               layers: undefined,
             }
           : {
-              description: liveLambdaDescription,
+              description,
               runtime: CDKRuntime.NODEJS_18_X,
               code: Code.fromAsset(
                 path.resolve(__dirname, "../support/bridge")
