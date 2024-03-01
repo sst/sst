@@ -18,12 +18,17 @@ export async function publishAssets(stacks: CloudFormationStackArtifact[]) {
 
   const results: Record<string, any> = {};
   for (const stack of stacks) {
+    const stackTags = Object.entries(stack.tags ?? {}).map(([Key, Value]) => ({
+      Key,
+      Value,
+    }));
     const result = await publishDeployAssets(provider, {
       stack: stack as any,
       quiet: false,
       deploymentMethod: {
         method: "direct",
       },
+      tags: stackTags,
     });
     results[stack.stackName] = result;
   }
