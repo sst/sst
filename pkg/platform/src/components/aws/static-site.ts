@@ -544,6 +544,10 @@ export class StaticSite extends Component implements Link.Linkable {
     const distribution = createDistribution();
     createDistributionInvalidation();
 
+    all([sitePath, environment]).apply(([sitepath, environment]) => {
+      Link.Receiver.register(sitepath, [], environment);
+    });
+
     this.assets = bucket;
     this.cdn = distribution;
     Hint.register(
