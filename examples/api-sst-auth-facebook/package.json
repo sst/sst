@@ -23,7 +23,7 @@
     "web"
   ],
   "dependencies": {
-    "@aws-sdk/client-dynamodb": "^3.511.0",
-    "@aws-sdk/util-dynamodb": "^3.511.0"
+    "@aws-sdk/client-dynamodb": "^3.521.0",
+    "@aws-sdk/util-dynamodb": "^3.521.0"
   }
 }

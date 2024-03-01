@@ -26,7 +26,7 @@ import {
   FunctionInlineDefinition,
   FunctionDefinition,
 } from "./Function.js";
-import { FunctionBindingProps } from "./util/functionBinding.js";
+import { BindingResource, BindingProps } from "./util/binding.js";
 import { Permissions } from "./util/permission.js";
 import { useProject } from "../project.js";
 import { Table as CDKTable } from "aws-cdk-lib/aws-dynamodb";
@@ -494,7 +494,7 @@ export class AppSyncApi extends Construct implements SSTConstruct {
   } = {};
   private readonly dsKeysByResKey: { [key: string]: string } = {};
   private readonly resolversByResKey: { [key: string]: Resolver } = {};
-  private readonly bindingForAllFunctions: SSTConstruct[] = [];
+  private readonly bindingForAllFunctions: BindingResource[] = [];
   private readonly permissionsAttachedForAllFunctions: Permissions[] = [];
 
   constructor(scope: Construct, id: string, props: AppSyncApiProps) {
@@ -667,7 +667,7 @@ export class AppSyncApi extends Construct implements SSTConstruct {
    * api.bind([STRIPE_KEY, bucket]);
    * ```
    */
-  public bind(constructs: SSTConstruct[]) {
+  public bind(constructs: BindingResource[]) {
     Object.values(this.functionsByDsKey).forEach((fn) => fn.bind(constructs));
     this.bindingForAllFunctions.push(...constructs);
   }
@@ -681,7 +681,7 @@ export class AppSyncApi extends Construct implements SSTConstruct {
    * ```
    *
    */
-  public bindToDataSource(key: string, constructs: SSTConstruct[]): void {
+  public bindToDataSource(key: string, constructs: BindingResource[]): void {
     const fn = this.getFunction(key);
     if (!fn) {
       throw new Error(
@@ -746,7 +746,7 @@ export class AppSyncApi extends Construct implements SSTConstruct {
   }
 
   /** @internal */
-  public getFunctionBinding() {
+  public getBindings() {
     // Do not bind imported AppSync APIs b/c we don't know the API URL
     if (!this.url) {
       return;
@@ -761,7 +761,7 @@ export class AppSyncApi extends Construct implements SSTConstruct {
         },
       },
       permissions: {},
-    } as FunctionBindingProps;
+    } as BindingProps;
   }
 
   private createGraphApi() {

@@ -1,5 +1,5 @@
 {
-  "name": "@@app",
+  "name": "api-auth-jwt-cognito-user-pool",
   "version": "0.0.0",
   "private": true,
   "type": "module",

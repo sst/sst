@@ -1,5 +1,5 @@
 {
-  "name": "@@@app/core",
+  "name": "@api-auth-jwt-cognito-user-pool/core",
   "version": "0.0.0",
   "type": "module",
   "scripts": {
@@ -7,8 +7,8 @@
     "typecheck": "tsc -noEmit"
   },
   "devDependencies": {
-    "vitest": "^1.2.2",
-    "@types/node": "^20.11.17",
+    "vitest": "^1.3.1",
+    "@types/node": "^20.11.20",
     "sst": "^2.40.3"
   }
 }

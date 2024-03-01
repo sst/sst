@@ -162,13 +162,14 @@ export interface NextjsSiteProps extends Omit<SsrSiteProps, "nodejs"> {
 }
 
 const LAYER_VERSION = "2";
-const DEFAULT_OPEN_NEXT_VERSION = "2.3.1";
+const DEFAULT_OPEN_NEXT_VERSION = "2.3.5";
 const DEFAULT_CACHE_POLICY_ALLOWED_HEADERS = [
   "accept",
   "rsc",
   "next-router-prefetch",
   "next-router-state-tree",
   "next-url",
+  "x-prerender-bypass",
 ];
 
 type NextjsSiteNormalizedProps = NextjsSiteProps & SsrSiteNormalizedProps;
@@ -193,6 +194,7 @@ export class NextjsSite extends SsrSite {
     sourcemapKey?: string;
   } & ({ regexMatch: string } | { prefixMatch: string }))[];
   private routesManifest?: {
+    basePath: string;
     dynamicRoutes: { page: string; regex: string }[];
     staticRoutes: { page: string; regex: string }[];
     dataRoutes?: { page: string; dataRouteRegex: string }[];
@@ -296,7 +298,10 @@ export class NextjsSite extends SsrSite {
       cloudFrontFunctions: {
         serverCfFunction: {
           constructId: "CloudFrontFunction",
-          injections: [this.useCloudFrontFunctionHostHeaderInjection()],
+          injections: [
+            this.useCloudFrontFunctionHostHeaderInjection(),
+            this.useCloudFrontFunctionPrerenderBypassHeaderInjection(),
+          ],
         },
       },
       edgeFunctions: edge
@@ -368,14 +373,14 @@ export class NextjsSite extends SsrSite {
               } as const,
               {
                 cacheType: "server",
-                pattern: "api/*",
+                pattern: this.prefixPattern("api/*"),
                 cfFunction: "serverCfFunction",
                 edgeFunction: "edgeServer",
                 origin: "s3",
               } as const,
               {
                 cacheType: "server",
-                pattern: "_next/data/*",
+                pattern: this.prefixPattern("_next/data/*"),
                 cfFunction: "serverCfFunction",
                 edgeFunction: "edgeServer",
                 origin: "s3",
@@ -389,20 +394,20 @@ export class NextjsSite extends SsrSite {
               } as const,
               {
                 cacheType: "server",
-                pattern: "api/*",
+                pattern: this.prefixPattern("api/*"),
                 cfFunction: "serverCfFunction",
                 origin: "regionalServer",
               } as const,
               {
                 cacheType: "server",
-                pattern: "_next/data/*",
+                pattern: this.prefixPattern("_next/data/*"),
                 cfFunction: "serverCfFunction",
                 origin: "regionalServer",
               } as const,
             ]),
         {
           cacheType: "server",
-          pattern: "_next/image*",
+          pattern: this.prefixPattern("_next/image*"),
           cfFunction: "serverCfFunction",
           origin: "imageOptimizer",
         },
@@ -411,11 +416,13 @@ export class NextjsSite extends SsrSite {
           (item) =>
             ({
               cacheType: "static",
-              pattern: fs
-                .statSync(path.join(sitePath, ".open-next/assets", item))
-                .isDirectory()
-                ? `${item}/*`
-                : item,
+              pattern: this.prefixPattern(
+                fs
+                  .statSync(path.join(sitePath, ".open-next/assets", item))
+                  .isDirectory()
+                  ? `${item}/*`
+                  : item
+              ),
               origin: "s3",
             } as const)
         ),
@@ -425,6 +432,14 @@ export class NextjsSite extends SsrSite {
       },
       buildId: this.getBuildId(),
     });
+  }
+
+  private prefixPattern(pattern: string): string {
+    // Prefix CloudFront distribution behavior path patterns with `basePath` if configured
+    const { basePath } = this.useRoutesManifest();
+    return basePath && basePath.length > 0
+      ? `${basePath.slice(1)}/${pattern}`
+      : pattern;
   }
 
   private createRevalidationQueue() {
@@ -752,6 +767,16 @@ if (event.rawPath) {
       },
     }));
   }
+}`;
+  }
+
+  private useCloudFrontFunctionPrerenderBypassHeaderInjection() {
+    // In Next.js page router preview mode (depends on the cookie __prerender_bypass),
+    // to ensure we receive the cached page instead of the preview version, we set the
+    // header "x-prerender-bypass", and add it to cache policy's allowed headers.
+    return `
+if (request.cookies["__prerender_bypass"]) { 
+  request.headers["x-prerender-bypass"] = { value: "true" }; 
 }`;
   }
 

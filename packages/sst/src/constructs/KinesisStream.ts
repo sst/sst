@@ -10,7 +10,7 @@ import {
   FunctionInlineDefinition,
   FunctionDefinition,
 } from "./Function.js";
-import { FunctionBindingProps } from "./util/functionBinding.js";
+import { BindingResource, BindingProps } from "./util/binding.js";
 import { Permissions } from "./util/permission.js";
 
 /////////////////////
@@ -153,7 +153,7 @@ export class KinesisStream extends Construct implements SSTConstruct {
     stream: kinesis.IStream;
   };
   private functions: { [consumerName: string]: Fn } = {};
-  private readonly bindingForAllConsumers: SSTConstruct[] = [];
+  private readonly bindingForAllConsumers: BindingResource[] = [];
   private readonly permissionsAttachedForAllConsumers: Permissions[] = [];
   private readonly props: KinesisStreamProps;
 
@@ -223,7 +223,7 @@ export class KinesisStream extends Construct implements SSTConstruct {
    * stream.bind([STRIPE_KEY, bucket]]);
    * ```
    */
-  public bind(constructs: SSTConstruct[]) {
+  public bind(constructs: BindingResource[]) {
     Object.values(this.functions).forEach((fn) => fn.bind(constructs));
     this.bindingForAllConsumers.push(...constructs);
   }
@@ -238,7 +238,7 @@ export class KinesisStream extends Construct implements SSTConstruct {
    */
   public bindToConsumer(
     consumerName: string,
-    constructs: SSTConstruct[]
+    constructs: BindingResource[]
   ): void {
     if (!this.functions[consumerName]) {
       throw new Error(
@@ -312,7 +312,7 @@ export class KinesisStream extends Construct implements SSTConstruct {
   }
 
   /** @internal */
-  public getFunctionBinding(): FunctionBindingProps {
+  public getBindings(): BindingProps {
     return {
       clientPackage: "kinesis-stream",
       variables: {

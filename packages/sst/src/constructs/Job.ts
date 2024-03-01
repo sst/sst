@@ -2,7 +2,11 @@ import url from "url";
 import path from "path";
 import fs from "fs/promises";
 import { Construct } from "constructs";
-import { Duration as CdkDuration, IgnoreMode } from "aws-cdk-lib/core";
+import {
+  Duration as CdkDuration,
+  DockerCacheOption,
+  IgnoreMode,
+} from "aws-cdk-lib/core";
 import { Platform } from "aws-cdk-lib/aws-ecr-assets";
 import { PolicyStatement, Role, Effect } from "aws-cdk-lib/aws-iam";
 import {
@@ -33,11 +37,12 @@ import {
 import { Duration, toCdkDuration } from "./util/duration.js";
 import { Permissions, attachPermissionsToRole } from "./util/permission.js";
 import {
-  FunctionBindingProps,
-  bindEnvironment,
-  bindPermissions,
-  getReferencedSecrets,
-} from "./util/functionBinding.js";
+  BindingResource,
+  BindingProps,
+  getBindingEnvironments,
+  getBindingPermissions,
+  getBindingReferencedSecrets,
+} from "./util/binding.js";
 import { ISecurityGroup, IVpc, SubnetSelection } from "aws-cdk-lib/aws-ec2";
 import { useDeferredTasks } from "./deferred_task.js";
 import { useProject } from "../project.js";
@@ -48,6 +53,7 @@ const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 
 export type JobMemorySize = "3 GB" | "7 GB" | "15 GB" | "145 GB";
 export interface JobNodeJSProps extends NodeJSProps {}
+export interface JobContainerCacheProps extends DockerCacheOption {}
 export interface JobContainerProps {
   /**
    * Specify or override the CMD on the Docker image.
@@ -82,6 +88,42 @@ export interface JobContainerProps {
    * ```
    */
   buildArgs?: Record<string, string>;
+  /**
+   * SSH agent socket or keys to pass to the docker build command.
+   * Docker BuildKit must be enabled to use the ssh flag
+   * @default No --ssh flag is passed to the build command
+   * @example
+   * ```js
+   * container: {
+   *   buildSsh: "default"
+   * }
+   * ```
+   */
+  buildSsh?: string;
+  /**
+   * Cache from options to pass to the docker build command.
+   * [DockerCacheOption](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_ecr_assets.DockerCacheOption.html)[].
+   * @default No cache from options are passed to the build command
+   * @example
+   * ```js
+   * container: {
+   *   cacheFrom: [{ type: 'registry', params: { ref: 'ghcr.io/myorg/myimage:cache' }}],
+   * }
+   * ```
+   */
+  cacheFrom?: JobContainerCacheProps[];
+  /**
+   * Cache to options to pass to the docker build command.
+   * [DockerCacheOption](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_ecr_assets.DockerCacheOption.html)[].
+   * @default No cache to options are passed to the build command
+   * @example
+   * ```js
+   * container: {
+   *   cacheTo: { type: 'registry', params: { ref: 'ghcr.io/myorg/myimage:cache', mode: 'max', compression: 'zstd' }},
+   * }
+   * ```
+   */
+  cacheTo?: JobContainerCacheProps;
 }
 
 export interface JobProps {
@@ -218,7 +260,7 @@ export interface JobProps {
    * })
    * ```
    */
-  bind?: SSTConstruct[];
+  bind?: BindingResource[];
   /**
    * Attaches the given list of permissions to the job. Configuring this property is equivalent to calling `attachPermissions()` after the job is created.
    *
@@ -377,7 +419,7 @@ export class Job extends Construct implements SSTConstruct {
   }
 
   /** @internal */
-  public getFunctionBinding(): FunctionBindingProps {
+  public getBindings(): BindingProps {
     return {
       clientPackage: "job",
       variables: {
@@ -400,7 +442,7 @@ export class Job extends Construct implements SSTConstruct {
    * job.bind([STRIPE_KEY, bucket]);
    * ```
    */
-  public bind(constructs: SSTConstruct[]): void {
+  public bind(constructs: BindingResource[]): void {
     this.liveDevJob?.bind(constructs);
     this.bindForCodeBuild(constructs);
   }
@@ -532,6 +574,9 @@ export class Job extends Construct implements SSTConstruct {
               : Platform.custom("linux/amd64"),
           file: container?.file,
           buildArgs: container?.buildArgs,
+          buildSsh: container?.buildSsh,
+          cacheFrom: container?.cacheFrom,
+          cacheTo: container?.cacheTo,
           exclude: [".sst/dist", ".sst/artifacts"],
           ignoreMode: IgnoreMode.GLOB,
         });
@@ -672,31 +717,23 @@ export class Job extends Construct implements SSTConstruct {
     });
   }
 
-  private bindForCodeBuild(constructs: SSTConstruct[]): void {
+  private bindForCodeBuild(constructs: BindingResource[]): void {
     // Get referenced secrets
     const referencedSecrets: Secret[] = [];
-    constructs.forEach((c) =>
-      referencedSecrets.push(...getReferencedSecrets(c))
+    constructs.forEach((r) =>
+      referencedSecrets.push(...getBindingReferencedSecrets(r))
     );
 
-    [...constructs, ...referencedSecrets].forEach((c) => {
+    [...constructs, ...referencedSecrets].forEach((r) => {
       // Bind environment
-      const env = bindEnvironment(c);
+      const env = getBindingEnvironments(r);
       Object.entries(env).forEach(([key, value]) =>
         this.addEnvironmentForCodeBuild(key, value)
       );
 
       // Bind permissions
-      const permissions = bindPermissions(c);
-      Object.entries(permissions).forEach(([action, resources]) =>
-        this.attachPermissionsForCodeBuild([
-          new PolicyStatement({
-            actions: [action],
-            effect: Effect.ALLOW,
-            resources,
-          }),
-        ])
-      );
+      const policyStatements = getBindingPermissions(r);
+      this.attachPermissionsForCodeBuild(policyStatements);
     });
   }
 

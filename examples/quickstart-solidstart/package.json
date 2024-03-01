@@ -9,10 +9,10 @@
   },
   "type": "module",
   "devDependencies": {
-    "@types/node": "^20.11.17",
+    "@types/node": "^20.11.20",
     "aws-cdk-lib": "2.91.0",
     "constructs": "10.2.69",
-    "esbuild": "^0.20.0",
+    "esbuild": "^0.20.1",
     "postcss": "^8.4.35",
     "solid-start-node": "^0.3.10",
     "solid-start-sst": "^2.40.3",
@@ -21,11 +21,11 @@
     "vite": "4.5.0"
   },
   "dependencies": {
-    "@aws-sdk/client-s3": "^3.511.0",
-    "@aws-sdk/s3-request-presigner": "^3.511.0",
+    "@aws-sdk/client-s3": "^3.521.0",
+    "@aws-sdk/s3-request-presigner": "^3.521.0",
     "@solidjs/meta": "^0.29.3",
     "@solidjs/router": "0.8.2",
-    "solid-js": "^1.8.14",
+    "solid-js": "^1.8.15",
     "solid-start": "^0.3.10",
     "undici": "^6.6.2"
   },

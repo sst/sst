@@ -1,10 +1,10 @@
 import * as ssm from "aws-cdk-lib/aws-ssm";
-import { SSTConstruct } from "../Construct.js";
-import { App } from "../App.js";
+import { SSTConstruct, isSSTConstruct } from "../Construct.js";
 import { Secret } from "../Secret.js";
 import { Config } from "../../config.js";
+import { Effect, PolicyStatement } from "aws-cdk-lib/aws-iam";
 
-export interface FunctionBindingProps {
+export interface BindingProps {
   clientPackage: string;
   permissions: Record<string, string[]>;
   variables: Record<
@@ -49,8 +49,16 @@ export interface FunctionBindingProps {
   >;
 }
 
-export function bindEnvironment(c: SSTConstruct) {
-  const binding = c.getFunctionBinding();
+export type BindingResource =
+  | SSTConstruct
+  | {
+      resource: SSTConstruct;
+      permissions: { actions: string[]; resources: string[] }[];
+    };
+
+export function getBindingEnvironments(r: BindingResource) {
+  const c = isSSTConstruct(r) ? r : r.resource;
+  const binding = c.getBindings();
 
   let environment: Record<string, string> = {};
   if (binding) {
@@ -71,13 +79,13 @@ export function bindEnvironment(c: SSTConstruct) {
   return environment;
 }
 
-export function bindParameters(c: SSTConstruct) {
-  const binding = c.getFunctionBinding();
+export function getBindingParameters(r: BindingResource) {
+  const c = isSSTConstruct(r) ? r : r.resource;
+  const binding = c.getBindings();
   if (!binding) {
     return;
   }
 
-  const app = c.node.root as App;
   Object.entries(binding.variables).forEach(([prop, variable]) => {
     const resId = `Parameter_${prop}`;
     if (!c.node.tryFindChild(resId)) {
@@ -96,17 +104,30 @@ export function bindParameters(c: SSTConstruct) {
   });
 }
 
-export function bindPermissions(c: SSTConstruct) {
-  const binding = c.getFunctionBinding();
-  if (!binding) {
-    return {};
+export function getBindingPermissions(r: BindingResource) {
+  if (isSSTConstruct(r)) {
+    return Object.entries(r.getBindings()?.permissions ?? {}).map(
+      ([action, resources]) =>
+        new PolicyStatement({
+          actions: [action],
+          effect: Effect.ALLOW,
+          resources,
+        })
+    );
   }
 
-  return c.getFunctionBinding()?.permissions || {};
+  return r.permissions.map((p) => {
+    return new PolicyStatement({
+      actions: p.actions,
+      effect: Effect.ALLOW,
+      resources: p.resources,
+    });
+  });
 }
 
-export function bindType(c: SSTConstruct) {
-  const binding = c.getFunctionBinding();
+export function getBindingType(r: BindingResource) {
+  const c = isSSTConstruct(r) ? r : r.resource;
+  const binding = c.getBindings();
   if (!binding) {
     return;
   }
@@ -117,8 +138,9 @@ export function bindType(c: SSTConstruct) {
   };
 }
 
-export function getReferencedSecrets(c: SSTConstruct) {
-  const binding = c.getFunctionBinding();
+export function getBindingReferencedSecrets(r: BindingResource) {
+  const c = isSSTConstruct(r) ? r : r.resource;
+  const binding = c.getBindings();
   const secrets: Secret[] = [];
   if (binding) {
     Object.values(binding.variables).forEach((variable) => {
