@@ -1,5 +1,17 @@
 # @serverless-stack/cli2
 
+## 2.40.5
+
+### Patch Changes
+
+- [#3543](https://github.com/sst/sst/pull/3543) [`8ac2bd8d7`](https://github.com/sst/sst/commit/8ac2bd8d70851b532d2b0633a44cb1e1b68bf007) Thanks [@JanStevens](https://github.com/JanStevens)! - NextjsSite: Next.js page router bypass the cloudfront cache for preview mode
+
+- [#3650](https://github.com/sst/sst/pull/3650) [`ccd41f02c`](https://github.com/sst/sst/commit/ccd41f02c0bdd0db0fd56366bf4f256ae0e10faa) Thanks [@SpencerDuball](https://github.com/SpencerDuball)! - RemixSite: support vite project
+
+- [#3613](https://github.com/sst/sst/pull/3613) [`ab7f8471a`](https://github.com/sst/sst/commit/ab7f8471a67b8270f2b9059a9084055e33d93643) Thanks [@jplwood](https://github.com/jplwood)! - NextjsSite: support basepath
+
+- [`1fbda7870`](https://github.com/sst/sst/commit/1fbda78706ab98cf83f7ccfe8fc25b04b724b00e) Thanks [@fwang](https://github.com/fwang)! - NextjsSite: update OpenNext to 2.3.5
+
 ## 2.40.4
 
 ### Patch Changes
