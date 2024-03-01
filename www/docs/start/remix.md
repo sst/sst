@@ -233,7 +233,7 @@ Next, we'll add a cron job to remove the uploaded files every day. Add this to `
 
 ```ts title="sst.config.ts"
 new Cron(stack, "cron", {
-  schedule: "rate(1 minute)",
+  schedule: "rate(1 day)",
   job: {
     function: {
       bind: [bucket],

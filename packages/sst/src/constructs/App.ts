@@ -10,7 +10,11 @@ import {
 } from "./Construct.js";
 import { FunctionProps, useFunctions } from "./Function.js";
 import { Permissions } from "./util/permission.js";
-import { bindParameters, bindType } from "./util/functionBinding.js";
+import {
+  BindingResource,
+  getBindingParameters,
+  getBindingType,
+} from "./util/binding.js";
 import { StackProps } from "./Stack.js";
 import { FunctionalStack, stack } from "./FunctionalStack.js";
 import { Auth } from "./Auth.js";
@@ -236,7 +240,7 @@ export class App extends CDKApp {
    * app.addDefaultFunctionBinding([STRIPE_KEY, bucket]);
    * ```
    */
-  public addDefaultFunctionBinding(bind: SSTConstruct[]) {
+  public addDefaultFunctionBinding(bind: BindingResource[]) {
     this.defaultFunctionProps.push({ bind });
   }
 
@@ -288,7 +292,7 @@ export class App extends CDKApp {
       return;
     }
 
-    const binding = bindType(c);
+    const binding = getBindingType(c);
     if (!binding) {
       return;
     }
@@ -435,14 +439,10 @@ export class App extends CDKApp {
   private createBindingSsmParameters() {
     class CreateSsmParameters implements IAspect {
       public visit(c: IConstruct): void {
-        if (!isSSTConstruct(c)) {
-          return;
-        }
-        if ("_doNotAllowOthersToBind" in c && c._doNotAllowOthersToBind) {
-          return;
-        }
+        if (!isSSTConstruct(c)) return;
+        if ("_doNotAllowOthersToBind" in c && c._doNotAllowOthersToBind) return;
 
-        bindParameters(c);
+        getBindingParameters(c);
       }
     }
 
@@ -562,12 +562,8 @@ export class App extends CDKApp {
 
     class EnsureUniqueConstructIds implements IAspect {
       public visit(c: IConstruct): void {
-        if (!isSSTConstruct(c)) {
-          return;
-        }
-        if ("_doNotAllowOthersToBind" in c && c._doNotAllowOthersToBind) {
-          return;
-        }
+        if (!isSSTConstruct(c)) return;
+        if ("_doNotAllowOthersToBind" in c && c._doNotAllowOthersToBind) return;
 
         const className = c.constructor.name;
         const id = c.id;

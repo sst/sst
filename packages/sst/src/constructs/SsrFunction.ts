@@ -42,10 +42,11 @@ import { App } from "./App.js";
 import { Stack } from "./Stack.js";
 import { SSTConstruct } from "./Construct.js";
 import {
-  bindEnvironment,
-  bindPermissions,
-  getReferencedSecrets,
-} from "./util/functionBinding.js";
+  BindingResource,
+  getBindingEnvironments,
+  getBindingPermissions,
+  getBindingReferencedSecrets,
+} from "./util/binding.js";
 import { Permissions, attachPermissionsToRole } from "./util/permission.js";
 import { Size, toCdkSize } from "./util/size.js";
 import { Duration, toCdkDuration } from "./util/duration.js";
@@ -63,7 +64,7 @@ export interface SsrFunctionProps
   memorySize?: number | Size;
   permissions?: Permissions;
   environment?: Record<string, string>;
-  bind?: SSTConstruct[];
+  bind?: BindingResource[];
   nodejs?: NodeJSProps;
   copyFiles?: FunctionCopyFilesProps[];
   logRetention?: RetentionDays;
@@ -285,7 +286,7 @@ export class SsrFunction extends Construct implements SSTConstruct {
     resource.node.addDependency(policy);
   }
 
-  private bind(constructs: SSTConstruct[]): void {
+  private bind(constructs: BindingResource[]): void {
     const app = this.node.root as App;
     this.function.addEnvironment("SST_APP", app.name);
     this.function.addEnvironment("SST_STAGE", app.stage);
@@ -296,28 +297,20 @@ export class SsrFunction extends Construct implements SSTConstruct {
 
     // Get referenced secrets
     const referencedSecrets: Secret[] = [];
-    constructs.forEach((c) =>
-      referencedSecrets.push(...getReferencedSecrets(c))
+    constructs.forEach((r) =>
+      referencedSecrets.push(...getBindingReferencedSecrets(r))
     );
 
-    [...constructs, ...referencedSecrets].forEach((c) => {
+    [...constructs, ...referencedSecrets].forEach((r) => {
       // Bind environment
-      const env = bindEnvironment(c);
+      const env = getBindingEnvironments(r);
       Object.entries(env).forEach(([key, value]) =>
         this.function.addEnvironment(key, value)
       );
 
       // Bind permissions
-      const permissions = bindPermissions(c);
-      Object.entries(permissions).forEach(([action, resources]) =>
-        this.attachPermissions([
-          new PolicyStatement({
-            actions: [action],
-            effect: Effect.ALLOW,
-            resources,
-          }),
-        ])
-      );
+      const policyStatements = getBindingPermissions(r);
+      this.attachPermissions(policyStatements);
     });
   }
 
@@ -488,7 +481,7 @@ export class SsrFunction extends Construct implements SSTConstruct {
   }
 
   /** @internal */
-  public getFunctionBinding() {
+  public getBindings() {
     return undefined;
   }
 }

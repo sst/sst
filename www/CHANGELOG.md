@@ -1,5 +1,13 @@
 # @serverless-stack/docs
 
+## 2.11.1
+
+### Patch Changes
+
+- [#3668](https://github.com/sst/sst/pull/3668) [`6d6d1bb00`](https://github.com/sst/sst/commit/6d6d1bb007b701729c761ce9db83c70ed5a11d38) Thanks [@deriegle](https://github.com/deriegle)! - Fixes cron schedule for remix starter guide
+
+- [#3672](https://github.com/sst/sst/pull/3672) [`d5fa9e0f9`](https://github.com/sst/sst/commit/d5fa9e0f93ba813fa022e7fdf7b284a7c7078fc9) Thanks [@benry1](https://github.com/benry1)! - Add missing required iam permissions
+
 ## 2.11.0
 
 ### Minor Changes

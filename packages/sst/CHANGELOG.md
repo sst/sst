@@ -1,5 +1,23 @@
 # @serverless-stack/cli2
 
+## 2.40.4
+
+### Patch Changes
+
+- [#3659](https://github.com/sst/sst/pull/3659) [`e2a019d80`](https://github.com/sst/sst/commit/e2a019d8035bd47ed6ee34731700dbb1b52c9c5c) Thanks [@ZakkProjects](https://github.com/ZakkProjects)! - Runtime: Fix rust local-lambda build step on windows #
+
+- [`f818a1a31`](https://github.com/sst/sst/commit/f818a1a31c2b9613869fa0cb292540eec6f1c126) Thanks [@fwang](https://github.com/fwang)! - Resource binding customize permissions
+
+## 2.40.3
+
+### Patch Changes
+
+- [`e9847fb13`](https://github.com/sst/sst/commit/e9847fb1399ea7e1af0a2bd4130339deabf49a8a) Thanks [@fwang](https://github.com/fwang)! - Cli: fix deploy status event not shown
+
+## 2.40.2
+
+## 2.40.1
+
 ## 2.40.0
 
 ### Minor Changes

@@ -25,7 +25,7 @@ import {
   FunctionDefinition,
 } from "./Function.js";
 import { Queue } from "./Queue.js";
-import { FunctionBindingProps } from "./util/functionBinding.js";
+import { BindingResource, BindingProps } from "./util/binding.js";
 import { Permissions } from "./util/permission.js";
 
 /////////////////////
@@ -175,7 +175,7 @@ export class Topic extends Construct implements SSTConstruct {
     topic: ITopic;
   };
   private subscribers: Record<string, Fn | Queue> = {};
-  private bindingForAllSubscribers: SSTConstruct[] = [];
+  private bindingForAllSubscribers: BindingResource[] = [];
   private permissionsAttachedForAllSubscribers: Permissions[] = [];
   private props: TopicProps;
 
@@ -287,7 +287,7 @@ export class Topic extends Construct implements SSTConstruct {
    * topic.bind([STRIPE_KEY, bucket]);
    * ```
    */
-  public bind(constructs: SSTConstruct[]) {
+  public bind(constructs: BindingResource[]) {
     Object.values(this.subscribers)
       .filter((subscriber) => subscriber instanceof Fn)
       .forEach((subscriber) => subscriber.bind(constructs));
@@ -310,7 +310,7 @@ export class Topic extends Construct implements SSTConstruct {
    */
   public bindToSubscriber(
     subscriberName: string,
-    constructs: SSTConstruct[]
+    constructs: BindingResource[]
   ): void {
     const subscriber = this.subscribers[subscriberName];
     if (!(subscriber instanceof Fn)) {
@@ -383,7 +383,7 @@ export class Topic extends Construct implements SSTConstruct {
   }
 
   /** @internal */
-  public getFunctionBinding(): FunctionBindingProps {
+  public getBindings(): BindingProps {
     return {
       clientPackage: "topic",
       variables: {

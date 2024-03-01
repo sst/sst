@@ -35,7 +35,6 @@ import {
 import { useProject } from "../project.js";
 import { useRuntimeHandlers } from "../runtime/handlers.js";
 import { BaseSiteReplaceProps } from "./BaseSite.js";
-import { SSTConstruct } from "./Construct.js";
 import { App } from "./App.js";
 import { Stack } from "./Stack.js";
 import { Secret } from "./Config.js";
@@ -45,10 +44,11 @@ import {
   FunctionCopyFilesProps,
 } from "./Function.js";
 import {
-  bindEnvironment,
-  bindPermissions,
-  getReferencedSecrets,
-} from "./util/functionBinding.js";
+  BindingResource,
+  getBindingEnvironments,
+  getBindingPermissions,
+  getBindingReferencedSecrets,
+} from "./util/binding.js";
 import { Size, toCdkSize } from "./util/size.js";
 import { Duration, toCdkDuration } from "./util/duration.js";
 import { Permissions, attachPermissionsToRole } from "./util/permission.js";
@@ -63,7 +63,7 @@ export interface EdgeFunctionProps {
   memorySize?: number | Size;
   permissions?: Permissions;
   environment?: Record<string, string>;
-  bind?: SSTConstruct[];
+  bind?: BindingResource[];
   nodejs?: NodeJSProps;
   copyFiles?: FunctionCopyFilesProps[];
   scopeOverride?: IConstruct;
@@ -303,7 +303,7 @@ export class EdgeFunction extends Construct {
     return { handlerFilename, asset };
   }
 
-  private bind(constructs: SSTConstruct[]): void {
+  private bind(constructs: BindingResource[]): void {
     const app = this.node.root as App;
     this.bindingEnvs = {
       SST_APP: app.name,
@@ -314,29 +314,21 @@ export class EdgeFunction extends Construct {
 
     // Get referenced secrets
     const referencedSecrets: Secret[] = [];
-    constructs.forEach((c) =>
-      referencedSecrets.push(...getReferencedSecrets(c))
+    constructs.forEach((r) =>
+      referencedSecrets.push(...getBindingReferencedSecrets(r))
     );
 
-    [...constructs, ...referencedSecrets].forEach((c) => {
+    [...constructs, ...referencedSecrets].forEach((r) => {
       // Bind environment
       this.bindingEnvs = {
         ...this.bindingEnvs,
-        ...bindEnvironment(c),
+        ...getBindingEnvironments(r),
       };
 
       // Bind permissions
       if (this.props.permissions !== "*") {
-        this.props.permissions.push(
-          ...Object.entries(bindPermissions(c)).map(
-            ([action, resources]) =>
-              new PolicyStatement({
-                actions: [action],
-                effect: Effect.ALLOW,
-                resources,
-              })
-          )
-        );
+        const policyStatements = getBindingPermissions(r);
+        this.props.permissions.push(...policyStatements);
       }
     });
   }

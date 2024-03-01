@@ -16,8 +16,9 @@ import * as lambda from "aws-cdk-lib/aws-lambda";
 import { useProject } from "../project.js";
 import { FunctionProps, Function as Fn } from "./Function.js";
 import type { App } from "./App.js";
-import { isConstruct, SSTConstruct } from "./Construct.js";
+import { isConstruct } from "./Construct.js";
 import { Permissions } from "./util/permission.js";
+import { BindingResource } from "./util/binding.js";
 
 const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
 
@@ -145,7 +146,7 @@ export class Stack extends CDKStack {
    * app.addDefaultFunctionBinding([STRIPE_KEY, bucket]);
    * ```
    */
-  public addDefaultFunctionBinding(bind: SSTConstruct[]) {
+  public addDefaultFunctionBinding(bind: BindingResource[]) {
     this.defaultFunctionProps.push({ bind });
   }
 
