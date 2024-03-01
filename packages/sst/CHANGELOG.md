@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.40.6
+
+### Patch Changes
+
+- [`887e9a3da`](https://github.com/sst/sst/commit/887e9a3daf93afbf39cb816810381cb55697b919) Thanks [@fwang](https://github.com/fwang)! - cli: fix tags not set for CloudFormation stacks
+
 ## 2.40.5
 
 ### Patch Changes
