@@ -8,9 +8,9 @@
   },
   "dependencies": {},
   "devDependencies": {
-    "@types/node": "^20.11.20",
+    "@types/node": "^20.11.24",
     "@types/aws-lambda": "^8.10.134",
     "vitest": "^1.3.1",
-    "sst": "^2.40.3"
+    "sst": "^2.40.6"
   }
 }

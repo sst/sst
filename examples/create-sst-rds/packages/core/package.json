@@ -9,15 +9,15 @@
   },
   "devDependencies": {
     "vitest": "^1.3.1",
-    "@types/node": "^20.11.20",
-    "sst": "^2.40.3",
+    "@types/node": "^20.11.24",
+    "sst": "^2.40.6",
     "tsx": "^4.7.1"
   },
   "dependencies": {
     "ulid": "^2.3.0",
     "kysely": "0.25.0",
     "kysely-data-api": "^0.2.1",
-    "aws-sdk": "^2.1565.0",
-    "@aws-sdk/client-rds-data": "^3.521.0"
+    "aws-sdk": "^2.1569.0",
+    "@aws-sdk/client-rds-data": "^3.525.0"
   }
 }
