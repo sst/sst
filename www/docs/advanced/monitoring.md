@@ -91,7 +91,9 @@ export default {
       // since they'll be loaded from the Layer
       app.setDefaultFunctionProps({
         nodejs: {
-          install: ["dd-trace", "datadog-lambda-js"],
+          esbuild: {
+            external: ["dd-trace", "datadog-lambda-js"],
+          },
         },
       });
     }
@@ -100,8 +102,6 @@ export default {
     app.stack(/* ... */);
 
     if (enableDatadog) {
-      await app.finish();
-
       // Attach the Datadog contruct to each stack
       app.node.children.forEach((stack) => {
         if (stack instanceof Stack) {
