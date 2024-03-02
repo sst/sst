@@ -229,6 +229,13 @@ func run() error {
 		return token.Error()
 	}
 
+	if token := mqttClient.Subscribe(prefix+"/kill", 1, func(c MQTT.Client, m MQTT.Message) {
+		slog.Info("received kill message")
+		cancel()
+	}); token.Wait() && token.Error() != nil {
+		return token.Error()
+	}
+
 	if token := mqttClient.Publish(prefix+"/init", 1, false, initPayload); token.Wait() && token.Error() != nil {
 		return token.Error()
 	}

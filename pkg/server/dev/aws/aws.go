@@ -227,33 +227,43 @@ func Start(
 		workerEnv := map[string][]string{}
 		builds := map[string]*runtime.BuildOutput{}
 
-		run := func(functionID string, workerID string) bool {
+		getBuildOutput := func(functionID string) *runtime.BuildOutput {
 			build := builds[functionID]
-			warp := complete.Warps[functionID]
-			if build == nil {
-				build, err = runtime.Build(ctx, &runtime.BuildInput{
-					Warp:    warp,
-					Project: p,
-					Dev:     true,
-					Links:   complete.Links,
-				})
-				if err == nil {
-					bus.Publish(&FunctionBuildEvent{
-						FunctionID: functionID,
-						Errors:     build.Errors,
-					})
-				} else {
-					bus.Publish(&FunctionBuildEvent{
-						FunctionID: functionID,
-						Errors:     []string{err.Error()},
-					})
-				}
-				if err != nil || len(build.Errors) > 0 {
-					delete(builds, functionID)
-					return false
-				}
-				builds[functionID] = build
+			if build != nil {
+				return build
 			}
+			warp := complete.Warps[functionID]
+			build, err = runtime.Build(ctx, &runtime.BuildInput{
+				Warp:    warp,
+				Project: p,
+				Dev:     true,
+				Links:   complete.Links,
+			})
+			if err == nil {
+				bus.Publish(&FunctionBuildEvent{
+					FunctionID: functionID,
+					Errors:     build.Errors,
+				})
+			} else {
+				bus.Publish(&FunctionBuildEvent{
+					FunctionID: functionID,
+					Errors:     []string{err.Error()},
+				})
+			}
+			if err != nil || len(build.Errors) > 0 {
+				delete(builds, functionID)
+				return nil
+			}
+			builds[functionID] = build
+			return build
+		}
+
+		run := func(functionID string, workerID string) bool {
+			build := getBuildOutput(functionID)
+			if build == nil {
+				return false
+			}
+			warp := complete.Warps[functionID]
 			worker, _ := runtime.Run(ctx, &runtime.RunInput{
 				Server:     server + workerID,
 				Project:    p,
@@ -360,7 +370,16 @@ func Start(
 					result, _ := http.Post("http://"+server+workerID+"/runtime/init/error", "application/json", strings.NewReader(`{"errorMessage":"Function failed to build"}`))
 					defer result.Body.Close()
 					body, _ := io.ReadAll(result.Body)
-					slog.Info("error", "body", string(body))
+					slog.Info("error", "body", string(body), "status", result.StatusCode)
+
+					if result.StatusCode != 202 {
+						result, _ := http.Get("http://" + server + workerID + "/runtime/invocation/next")
+						requestID := result.Header.Get("lambda-runtime-aws-request-id")
+						result, _ = http.Post("http://"+server+workerID+"/runtime/invocation/"+requestID+"/error", "application/json", strings.NewReader(`{"errorMessage":"Function failed to build"}`))
+						defer result.Body.Close()
+						body, _ := io.ReadAll(result.Body)
+						slog.Info("error", "body", string(body), "status", result.StatusCode)
+					}
 				}
 				break
 
@@ -374,24 +393,31 @@ func Start(
 				delete(workers, workerID)
 				delete(workerEnv, workerID)
 			case event := <-fileChan:
-				functions := map[string]bool{}
+				slog.Info("checking if code needs to be rebuilt", "file", event.Path)
+				toBuild := map[string]bool{}
+
 				for workerID, info := range workers {
 					warp, ok := complete.Warps[info.FunctionID]
 					if !ok {
 						continue
 					}
-					slog.Info("checking rebuild", "workerID", workerID, "functionID", info.FunctionID, "path", event.Path)
 					if runtime.ShouldRebuild(warp.Runtime, warp.FunctionID, event.Path) {
-						slog.Info("rebuilding", "workerID", workerID, "functionID", info.FunctionID)
+						slog.Info("stopping", "workerID", workerID, "functionID", info.FunctionID)
 						info.Worker.Stop()
 						delete(builds, info.FunctionID)
-						functions[info.FunctionID] = true
+						toBuild[info.FunctionID] = true
+					}
+				}
+
+				for functionID := range toBuild {
+					output := getBuildOutput(functionID)
+					if output == nil {
+						delete(toBuild, functionID)
 					}
 				}
 
 				for workerID, info := range workers {
-					if functions[info.FunctionID] {
-						slog.Info("restarting", "workerID", workerID, "functionID", info.FunctionID)
+					if toBuild[info.FunctionID] {
 						run(info.FunctionID, workerID)
 					}
 				}

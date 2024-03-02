@@ -91,10 +91,21 @@ func (p *Project) writeTypes() error {
 	file.WriteString("\n\n")
 
 	for name := range p.app.Providers {
-		file.WriteString(`import _` + name + ` from "@pulumi/` + name + `";` + "\n")
+		file.WriteString(`import _` + name + `, { ProviderArgs as _` + name + `Args } from "@pulumi/` + name + `";` + "\n")
 	}
 
 	file.WriteString("\n\n")
+
+	file.WriteString(`declare module "./src/config" {` + "\n")
+	file.WriteString(`  interface App {` + "\n")
+	file.WriteString(`    providers?: {` + "\n")
+	for name := range p.app.Providers {
+		file.WriteString(`      ` + name + `?: _` + name + `Args;` + "\n")
+	}
+	file.WriteString(`    }` + "\n")
+	file.WriteString(`  }` + "\n")
+	file.WriteString(`}` + "\n")
+	file.WriteString("\n")
 
 	file.WriteString(`declare global {` + "\n")
 	for name := range p.app.Providers {

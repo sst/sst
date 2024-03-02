@@ -7,14 +7,16 @@ export default $config({
       removalPolicy: "retain-all",
       providers: {
         aws: {},
-        cloudflare: {},
       },
     };
   },
   async run() {
-    new sst.aws.Function("MyFunction", {
-      handler: "src/lambda.handler",
+    const fn = new sst.aws.Function("MyFunction", {
+      handler: "src/index.handler",
+      url: true,
     });
-    return {};
+    return {
+      url: fn.url,
+    };
   },
 });
