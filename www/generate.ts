@@ -806,7 +806,7 @@ async function buildDocs() {
     },
     entryPoints: [
       "../pkg/platform/src/components/secret.ts",
-      "../pkg/platform/src/components/aws/apigateway-httpapi.ts",
+      "../pkg/platform/src/components/aws/apigatewayv2.ts",
       "../pkg/platform/src/components/aws/bucket.ts",
       "../pkg/platform/src/components/aws/cron.ts",
       "../pkg/platform/src/components/aws/dynamo.ts",

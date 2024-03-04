@@ -47,8 +47,8 @@ const sidebar = [
       { label: "Postgres", link: "/docs/component/aws/postgres/" },
       { label: "StaticSite", link: "/docs/component/aws/static-site/" },
       {
-        label: "ApiGatewayHttpApi",
-        link: "/docs/component/aws/apigateway-httpapi/",
+        label: "ApiGatewayV2",
+        link: "/docs/component/aws/apigatewayv2/",
       },
     ],
   },

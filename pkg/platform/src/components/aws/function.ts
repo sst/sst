@@ -185,6 +185,7 @@ interface FunctionUrlCorsArgs
 }
 
 export interface FunctionArgs {
+  /** @internal */
   liveDev?: Input<false>;
   /**
    * A description for the function. This is displayed in the AWS Console.

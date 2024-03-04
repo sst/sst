@@ -103,7 +103,7 @@ interface DomainArgs {
   path?: string;
 }
 
-export interface ApiGatewayHttpApiArgs {
+export interface ApiGatewayV2Args {
   /**
    * Set a custom domain for your HTTP API. Supports domains hosted either on
    * [Route 53](https://aws.amazon.com/route53/) or outside AWS.
@@ -153,7 +153,7 @@ export interface ApiGatewayHttpApiArgs {
   };
 }
 
-export interface ApiGatewayHttpApiRouteArgs {
+export interface ApiGatewayV2RouteArgs {
   /**
    * Enable auth for your HTTP API.
    *
@@ -193,20 +193,20 @@ export interface ApiGatewayHttpApiRouteArgs {
 }
 
 /**
- * The `ApiGatewayHttpApi` component lets you add an [Amazon API Gateway HTTP API](https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api.htmll) to your app.
+ * The `ApiGatewayV2` component lets you add an [Amazon API Gateway HTTP API](https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api.htmll) to your app.
  *
  * @example
  *
  * #### Create the API
  *
  * ```ts
- * const myApi = new sst.aws.ApiGatewayHttpApi("MyApi");
+ * const myApi = new sst.aws.ApiGatewayV2("MyApi");
  * ```
  *
  * #### Add a custom domain
  *
  * ```js {2}
- * new sst.aws.ApiGatewayHttpApi("MyApi", {
+ * new sst.aws.ApiGatewayV2("MyApi", {
  *   domain: "api.domain.com"
  * });
  * ```
@@ -219,7 +219,7 @@ export interface ApiGatewayHttpApiRouteArgs {
  *  .route("POST /", "src/post.handler");
  * ```
  */
-export class ApiGatewayHttpApi extends Component implements Link.Linkable {
+export class ApiGatewayV2 extends Component implements Link.Linkable {
   private constructorName: string;
   private api: aws.apigatewayv2.Api;
   private apigDomain?: aws.apigatewayv2.DomainName;
@@ -227,10 +227,10 @@ export class ApiGatewayHttpApi extends Component implements Link.Linkable {
 
   constructor(
     name: string,
-    args: ApiGatewayHttpApiArgs = {},
+    args: ApiGatewayV2Args = {},
     opts: ComponentResourceOptions = {},
   ) {
-    super("sst:aws:ApiGatewayHttpApi", name, args, opts);
+    super("sst:aws:ApiGatewayV2", name, args, opts);
 
     const parent = this;
 
@@ -514,7 +514,7 @@ export class ApiGatewayHttpApi extends Component implements Link.Linkable {
   public route(
     route: string,
     handler: string | FunctionArgs,
-    args: ApiGatewayHttpApiRouteArgs = {},
+    args: ApiGatewayV2RouteArgs = {},
   ) {
     const parent = this;
     const parentName = this.constructorName;

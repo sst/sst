@@ -1,0 +1,473 @@
+---
+title: ApiGatewayV2
+description: Reference doc for the `sst.aws.ApiGatewayV2` component.
+---
+
+import Segment from '../../../../../components/tsdoc/Segment.astro';
+import Section from '../../../../../components/tsdoc/Section.astro';
+import NestedTitle from '../../../../../components/tsdoc/NestedTitle.astro';
+import InlineSection from '../../../../../components/tsdoc/InlineSection.astro';
+
+<div class="tsdoc">
+
+<Section type="about">
+The `ApiGatewayV2` component lets you add an [Amazon API Gateway HTTP API](https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api.htmll) to your app.
+
+#### Create the API
+
+```ts
+const myApi = new sst.aws.ApiGatewayV2("MyApi");
+```
+
+#### Add a custom domain
+
+```js {2}
+new sst.aws.ApiGatewayV2("MyApi", {
+  domain: "api.domain.com"
+});
+```
+
+#### Add routes
+
+```ts
+myApi
+ .route("GET /", "src/get.handler")
+ .route("POST /", "src/post.handler");
+```
+</Section>
+
+---
+
+## Constructor
+
+<Segment>
+<Section type="signature">
+```ts
+new ApiGatewayV2(name, args?, opts?)
+```
+</Section>
+
+<Section type="parameters">
+#### Parameters
+- <p><code class="key">name</code> <code class="primitive">string</code></p>
+- <p><code class="key">args?</code> [<code class="type">ApiGatewayV2Args</code>](#apigatewayv2args)</p>
+- <p><code class="key">opts?</code> [<code class="type">ComponentResourceOptions</code>](https://www.pulumi.com/docs/concepts/options/)</p>
+</Section>
+</Segment>
+
+## Methods
+
+### route
+<Segment>
+<Section type="signature">
+```ts
+route(route, handler, args?)
+```
+</Section>
+
+<Section type="parameters">
+#### Parameters
+- <p><code class="key">route</code> <code class="primitive">string</code></p>
+The path for the route.
+- <p><code class="key">handler</code> <code class="primitive">string</code><code class="symbol"> | </code>[<code class="type">FunctionArgs</code>](/docs/component/aws/function/#functionargs)</p>
+The function that'll be invoked.
+- <p><code class="key">args?</code> [<code class="type">ApiGatewayV2RouteArgs</code>](#apigatewayv2routeargs)</p>
+Configure the route.
+</Section>
+
+<InlineSection>
+**Returns** [<code class="type">ApiGatewayV2</code>](.)
+</InlineSection>
+Add a route to the API Gateway HTTP API. The route is a combination of
+- An HTTP method and a path, `{METHOD} /{path}`.
+- Or a `$default` route.
+
+:::tip
+The `$default` route is a default or catch-all route. It'll match if no other route matches.
+:::
+
+A method could be one of `GET`, `POST`, `PUT`, `DELETE`, `PATCH`, `HEAD`, `OPTIONS`, or `ANY`. Here `ANY` matches any HTTP method.
+
+The path can be a combination of
+- Literal segments, `/notes`, `/notes/new`, etc.
+- Parameter segments, `/notes/{noteId}`, `/notes/{noteId}/attachments/{attachmentId}`, etc.
+- Greedy segments, `/{proxy+}`, `/notes/{proxy+}`,  etc. The `{proxy+}` segment is a greedy segment that matches all child paths. It needs to be at the end of the path.
+
+:::tip
+The `{proxy+}` is a greedy segment, it matches all its child paths.
+:::
+
+The `$default` is a reserved keyword for the default route. It'll be matched if no other route matches.
+
+:::note
+You cannot have duplicate routes.
+:::
+
+When a request comes in, the API Gateway will look for the most specific match. If no route matches, the `$default` route will be invoked.
+
+Here's how you add a simple route.
+
+```js
+myApi.route("GET /", "src/get.handler");
+```
+
+Add multiple routes.
+
+```js
+myApi
+  .route("GET /", "src/get.handler")
+  .route("POST /", "src/post.handler");
+```
+
+Match any HTTP method.
+
+```js
+myApi.route("ANY /", "src/route.handler");
+```
+
+Add a default route.
+
+```js
+myApi
+  .route("GET /", "src/get.handler")
+  .route($default, "src/default.handler");
+```
+
+Add a parameterized route.
+
+```js
+myApi.route("GET /notes/{id}", "src/get.handler");
+```
+
+Add a greedy route.
+
+```js
+myApi.route("GET /notes/{proxy+}", "src/greedy.handler");
+```
+
+Enable auth for a route.
+
+```js
+myApi
+  .route("GET /", "src/get.handler")
+  .route("POST /", "src/post.handler", {
+    auth: {
+      iam: true
+    }
+  });
+```
+
+Customize the route handler.
+
+```js
+myApi.route("GET /", {
+  handler: "src/get.handler",
+  memory: "2048 MB"
+});
+```
+</Segment>
+
+## Properties
+
+### nodes
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Object</code>
+</InlineSection>
+- <p>[<code class="key">api</code>](#nodes-api)</p>
+</Section>
+The underlying [resources](/docs/components/#nodes) this component creates.
+</Segment>
+<NestedTitle id="nodes-api" Tag="h4" parent="nodes.">api</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** [<code class="type">Api</code>](https://www.pulumi.com/registry/packages/aws/api-docs/apigatewayv2/api/)
+</InlineSection>
+</Section>
+The Amazon API Gateway HTTP API
+</Segment>
+
+### url
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Output</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+The URL of the API.
+
+If the `domain` is set, this is the URL with the custom domain.
+Otherwise, it's the autogenerated API Gateway URL.
+</Segment>
+
+## Links
+
+The following are accessible through the [Node client](/docs/reference/client/) at runtime.
+
+### url
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">string</code>
+</InlineSection>
+</Section>
+The URL of the API.
+
+If the `domain` is set, this is the URL with the custom domain.
+Otherwise, it's the autogenerated API Gateway URL.
+</Segment>
+
+## ApiGatewayV2Args
+### domain?
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol"> | </code><code class="primitive">Object</code><code class="symbol">&gt;</code>
+</InlineSection>
+- <p>[<code class="key">domainName</code>](#domain-domainname)</p>
+- <p>[<code class="key">hostedZone?</code>](#domain-hostedzone)</p>
+- <p>[<code class="key">hostedZoneId?</code>](#domain-hostedzoneid)</p>
+- <p>[<code class="key">path?</code>](#domain-path)</p>
+</Section>
+Set a custom domain for your HTTP API. Supports domains hosted either on
+[Route 53](https://aws.amazon.com/route53/) or outside AWS.
+
+:::tip
+You can also migrate an externally hosted domain to Amazon Route 53 by
+[following this guide](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/MigratingDNS.html).
+:::
+
+```js
+{
+  domain: "api.domain.com"
+}
+```
+
+Specify the Route 53 hosted zone.
+
+```js
+{
+  domain: {
+    domainName: "api.domain.com",
+    hostedZone: "domain.com"
+  }
+}
+```
+</Segment>
+<NestedTitle id="domain-domainname" Tag="h4" parent="domain.">domainName</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+The custom domain you want to use. Supports domains hosted on [Route 53](https://aws.amazon.com/route53/) or outside AWS.
+
+```js
+{
+  domain: "domain.com"
+}
+```
+</Segment>
+<NestedTitle id="domain-hostedzone" Tag="h4" parent="domain.">hostedZone?</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+
+<InlineSection>
+**Default** Same as the `domainName`
+</InlineSection>
+Name of the [Route 53 hosted zone](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/hosted-zones-working-with.html) that contains the `domainName`. You can find the hosted zone name in the Route 53 part of the AWS Console.
+
+
+Usually your domain name is in a hosted zone with the same name. For example,
+`domain.com` might be in a hosted zone also called `domain.com`. So by default, SST will
+look for a hosted zone that matches the `domainName`.
+
+There are cases where these might not be the same. For example, if you use a subdomain,
+`api.domain.com`, the hosted zone might be `domain.com`. So you'll need to pass in the
+hosted zone name.
+
+:::note
+If both the `hostedZone` and `hostedZoneId` are set, `hostedZoneId` will take precedence.
+:::
+
+```js {4}
+{
+  domain: {
+    domainName: "api.domain.com",
+    hostedZone: "domain.com"
+  }
+}
+```
+</Segment>
+<NestedTitle id="domain-hostedzoneid" Tag="h4" parent="domain.">hostedZoneId?</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+The 14 letter ID of the [Route 53 hosted zone](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/hosted-zones-working-with.html) that contains the `domainName`. You can find the hosted zone ID in the Route 53 part of the AWS Console.
+
+This option is useful for cases where you have multiple hosted zones that have the same
+domain.
+
+:::note
+If both the `hostedZone` and `hostedZoneId` are set, `hostedZoneId` will take precedence.
+:::
+
+```js {4}
+{
+  domain: {
+    domainName: "api.domain.com",
+    hostedZoneId: "Z2FDTNDATAQYW2"
+  }
+}
+```
+</Segment>
+<NestedTitle id="domain-path" Tag="h4" parent="domain.">path?</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">string</code>
+</InlineSection>
+</Section>
+The base mapping for the custom domain. This adds a suffix to the URL of the API.
+
+Given the following base path and domain name.
+
+```js
+{
+  domain: {
+    domainName: "api.domain.com",
+    path: "v1"
+  }
+}
+```
+
+The full URL of the API will be `https://api.domain.com/v1/`.
+
+:::note
+There's an extra trailing slash when a base path is set.
+:::
+
+Be default there is no base path, so if the `domainName` is `api.domain.com`, the full URL will be `https://api.domain.com`.
+</Segment>
+### transform?
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Object</code>
+</InlineSection>
+- <p>[<code class="key">api?</code>](#transform-api)</p>
+- <p>[<code class="key">domainName?</code>](#transform-domainname)</p>
+- <p>[<code class="key">stage?</code>](#transform-stage)</p>
+</Section>
+[Transform](/docs/components#transform) how this component creates its underlying
+resources.
+
+</Segment>
+<NestedTitle id="transform-api" Tag="h4" parent="transform.">api?</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** [<code class="type">ApiArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/apigatewayv2/api/#inputs)<code class="symbol"> | </code><code class="symbol">(</code><code class="primitive">args</code><code class="symbol">: </code>[<code class="type">ApiArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/apigatewayv2/api/#inputs)<code class="symbol"> => </code>[<code class="type">ApiArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/apigatewayv2/api/#inputs)<code class="symbol"> | </code><code class="primitive">void</code><code class="symbol">)</code>
+</InlineSection>
+</Section>
+Transform the API Gateway HTTP API resource.
+
+</Segment>
+<NestedTitle id="transform-domainname" Tag="h4" parent="transform.">domainName?</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** [<code class="type">DomainNameArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/apigatewayv2/domainname/#inputs)<code class="symbol"> | </code><code class="symbol">(</code><code class="primitive">args</code><code class="symbol">: </code>[<code class="type">DomainNameArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/apigatewayv2/domainname/#inputs)<code class="symbol"> => </code>[<code class="type">DomainNameArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/apigatewayv2/domainname/#inputs)<code class="symbol"> | </code><code class="primitive">void</code><code class="symbol">)</code>
+</InlineSection>
+</Section>
+Transform the API Gateway HTTP API domain name resource.
+
+</Segment>
+<NestedTitle id="transform-stage" Tag="h4" parent="transform.">stage?</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** [<code class="type">StageArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/apigatewayv2/stage/#inputs)<code class="symbol"> | </code><code class="symbol">(</code><code class="primitive">args</code><code class="symbol">: </code>[<code class="type">StageArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/apigatewayv2/stage/#inputs)<code class="symbol"> => </code>[<code class="type">StageArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/apigatewayv2/stage/#inputs)<code class="symbol"> | </code><code class="primitive">void</code><code class="symbol">)</code>
+</InlineSection>
+</Section>
+Transform the API Gateway HTTP API stage resource.
+
+</Segment>
+
+## ApiGatewayV2RouteArgs
+### auth?
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Object</code><code class="symbol">&gt;</code>
+</InlineSection>
+- <p>[<code class="key">iam?</code>](#auth-iam)</p>
+</Section>
+Enable auth for your HTTP API.
+
+:::note
+Currently only IAM auth is supported.
+:::
+
+```js
+{
+  auth: {
+    iam: true
+  }
+}
+```
+</Segment>
+<NestedTitle id="auth-iam" Tag="h4" parent="auth.">iam?</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">true</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+Enable IAM authorization for a given API route. When IAM auth is enabled, clients need to use Signature Version 4 to sign their requests with their AWS credentials.
+
+</Segment>
+### transform?
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Object</code>
+</InlineSection>
+- <p>[<code class="key">integration?</code>](#transform-integration)</p>
+- <p>[<code class="key">route?</code>](#transform-route)</p>
+</Section>
+[Transform](/docs/components#transform) how this component creates its underlying
+resources.
+
+</Segment>
+<NestedTitle id="transform-integration" Tag="h4" parent="transform.">integration?</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** [<code class="type">IntegrationArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/apigatewayv2/integration/#inputs)<code class="symbol"> | </code><code class="symbol">(</code><code class="primitive">args</code><code class="symbol">: </code>[<code class="type">IntegrationArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/apigatewayv2/integration/#inputs)<code class="symbol"> => </code>[<code class="type">IntegrationArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/apigatewayv2/integration/#inputs)<code class="symbol"> | </code><code class="primitive">void</code><code class="symbol">)</code>
+</InlineSection>
+</Section>
+Transform the API Gateway HTTP API integration resource.
+
+</Segment>
+<NestedTitle id="transform-route" Tag="h4" parent="transform.">route?</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** [<code class="type">RouteArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/apigatewayv2/route/#inputs)<code class="symbol"> | </code><code class="symbol">(</code><code class="primitive">args</code><code class="symbol">: </code>[<code class="type">RouteArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/apigatewayv2/route/#inputs)<code class="symbol"> => </code>[<code class="type">RouteArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/apigatewayv2/route/#inputs)<code class="symbol"> | </code><code class="primitive">void</code><code class="symbol">)</code>
+</InlineSection>
+</Section>
+Transform the API Gateway HTTP API route resource.
+
+</Segment>
+</div>
