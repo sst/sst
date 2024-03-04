@@ -13,13 +13,13 @@ export default $config({
     };
   },
   async run() {
-    const bucket = new sst.Bucket("MyBucket");
-    const worker = new sst.Worker("MyApp", {
+    const bucket = new sst.aws.Bucket("MyBucket");
+    const worker = new sst.cloudflare.Worker("MyApp", {
       handler: "src/index.ts",
       link: [bucket],
-      devUrl: true,
+      url: true,
     });
 
-    return { app: worker.devUrl };
+    return { app: worker.url };
   },
 });

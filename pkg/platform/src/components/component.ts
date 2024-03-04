@@ -69,6 +69,7 @@ export class Component extends ComponentResource {
             case "aws:sns/topic:Topic":
               overrides = { name: prefixName(args.name) };
               break;
+            case "cloudflare:index/r2Bucket:R2Bucket":
             case "cloudflare:index/workerScript:WorkerScript":
               overrides = { name: prefixName(args.name).toLocaleLowerCase() };
               break;
@@ -119,6 +120,7 @@ export class Component extends ComponentResource {
             case "aws:s3/bucketV2:BucketV2":
             case "aws:s3/bucketWebsiteConfigurationV2:BucketWebsiteConfigurationV2":
             case "aws:sns/topicSubscription:TopicSubscription":
+            case "cloudflare:index/workerDomain:WorkerDomain":
               break;
             default:
               throw new Error(

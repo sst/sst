@@ -7,10 +7,10 @@ import {
   jsonStringify,
 } from "@pulumi/pulumi";
 import * as aws from "@pulumi/aws";
-import { WorkerScript } from "@pulumi/cloudflare";
+import * as cf from "@pulumi/cloudflare";
 import type { Loader, BuildOptions } from "esbuild";
 import { build } from "../../runtime/cloudflare.js";
-import { Component } from "../component";
+import { Component, Transform, transform } from "../component";
 import { WorkersUrl } from "./providers/workers-url.js";
 import { Link } from "../link.js";
 import type { Input } from "../input.js";
@@ -42,6 +42,19 @@ export interface WorkerArgs {
    * @default `false`
    */
   url?: Input<boolean>;
+  /**
+   * @internal
+   */
+  domain?: Input<{
+    /**
+     * The domain to use for the worker.
+     */
+    hostname: Input<string>;
+    /**
+     * The zone id for the domain.
+     */
+    zoneId: Input<string>;
+  }>;
   /**
    * Configure how your function is bundled.
    *
@@ -120,6 +133,16 @@ export interface WorkerArgs {
    * ```
    */
   link?: Input<any[]>;
+  /**
+   * [Transform](/docs/components#transform/) how this component creates its underlying
+   * resources.
+   */
+  transform?: {
+    /**
+     * Transform the Worker resource.
+     */
+    worker?: Transform<cf.WorkerScriptArgs>;
+  };
 }
 
 /**
@@ -183,7 +206,7 @@ export interface WorkerArgs {
  * ```
  */
 export class Worker extends Component {
-  private script: Output<WorkerScript>;
+  private script: Output<cf.WorkerScript>;
   private workersUrl: WorkersUrl;
 
   constructor(name: string, args: WorkerArgs, opts?: ComponentResourceOptions) {
@@ -198,6 +221,7 @@ export class Worker extends Component {
     const handler = buildHandler();
     const script = createScript();
     const workersUrl = createWorkersUrl();
+    createWorkersDomain();
 
     this.script = script;
     this.workersUrl = workersUrl;
@@ -270,9 +294,9 @@ export class Worker extends Component {
     function createScript() {
       return all([handler, iamCredentials]).apply(
         async ([handler, iamCredentials]) =>
-          new WorkerScript(
+          new cf.WorkerScript(
             `${name}Script`,
-            {
+            transform(args.transform?.worker, {
               name,
               accountId: $app.providers?.cloudflare?.accountId!,
               content: (await fs.readFile(handler)).toString(),
@@ -295,7 +319,7 @@ export class Worker extends Component {
                     },
                   ]
                 : [],
-            },
+            }),
             { parent },
           ),
       );
@@ -308,6 +332,21 @@ export class Worker extends Component {
           accountId: $app.providers?.cloudflare?.accountId!,
           scriptName: script.name,
           enabled: urlEnabled,
+        },
+        { parent },
+      );
+    }
+
+    function createWorkersDomain() {
+      if (!args.domain) return;
+
+      return new cf.WorkerDomain(
+        `${name}Domain`,
+        {
+          accountId: $app.providers?.cloudflare?.accountId!,
+          service: script.name,
+          hostname: output(args.domain).apply((domain) => domain.hostname),
+          zoneId: output(args.domain).apply((domain) => domain.zoneId),
         },
         { parent },
       );
