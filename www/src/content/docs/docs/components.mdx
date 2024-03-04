@@ -1,21 +1,200 @@
 ---
 title: Components
-description: What is an Ion component.
+description: Components are the building blocks of your SST app.
 ---
 
-- What is a component
-  - Types: AWS, Cloudflare, SST
+Every SST app is made up of components. Components in turn create one or more pieces of low level infrastructure. Components wrap these up into logical units that represent the high level concepts of your app.
 
-- What is a node
-- Examples
+For example, `sst.aws.Function` lets you add a Lambda function to your app. While, `sst.aws.Nextjs` lets you deploy your Next.js app.
 
-- Input and Output types
+SST's components use [Pulumi](https://www.pulumi.com/docs/concepts/resources/components/) behind the scenes to create the low level infrastructure. These are generated from [Terraform modules](https://developer.hashicorp.com/terraform). SST allows you to customize the low level infrastructure.
 
-- Naming components with PascalCase
+:::tip
+You can create any type of infrastructure even if SST doesn't support it directly.
+:::
 
-- ComponentResourceOptions
+You can also use any Pulumi component in your SST app. This is useful if you want to create infrastructure that SST doesn't support yet.
 
-- What is a transform
-- Why does it matter
-- Examples
+---
 
+## Providers
+
+Components are classes that are name spaced under the cloud provider it deploys to. Currently, Ion supports two providers:
+
+1. AWS
+2. Cloudflare
+
+Support for other providers is on the roadmap.
+
+---
+
+## Create a component
+
+To add a component to your app, you create an instance of it by passing in a couple of args. For example, here's the signature of the [Function](/docs/component/aws/function) component.
+
+```ts
+new sst.aws.Function(name: string, args: FunctionArgs, opts?: pulumi.ComponentResourceOptions)
+```
+
+Each component takes the following:
+
+- `name`: The name of the component. This needs to be unique across your entire app.
+- `args`: An object of properties that allows you to configure the component.
+- `opts?`: An optional object of properties that allows you to configure this component in Pulumi.
+
+Here's an example of creating a `Function` component:
+
+```ts
+const myFunction = new sst.aws.Function("MyFunction", {
+  handler: "src/lambda.handler"
+});
+```
+
+---
+
+### Names
+
+There are two guidelines to follow when naming your components:
+
+1. Component names are global across your entire app.
+
+2. Use PascalCase for the component name. For example, `MyFunction` instead of `myFunction` or `my_function`.
+
+These make it possible to [link resources](/docs/linking/) together in your SST app.
+
+---
+
+### Args
+
+Each component takes a set of args that allow you to configure it. These args are specific to each component. For example, the Function component takes [`FunctionArgs`](/docs/component/aws/function#functionargs).
+
+:::tip
+You can completely configure a component using its args and the `transform` prop.
+:::
+
+Most of these args are optional, meaning that most components need very little configuration to get started. Typically, the most common configuration options are lifted to the top-level. To further configure the component, you'll need to use the `transform` prop.
+
+Args usually take primitive types. However, they also take a special version of a primitive type. It'll look something like _`Input<string>`_. We'll look at this in detail below.
+
+---
+
+### Transform
+
+Most components take the `transform` prop as a part of their constructor or methods. It's an object that takes callbacks that allow you to transform how that component's infrastructure is created.
+
+For example, here's what's the `transform` prop looks like for the [Function](/docs/component/aws/function#transform) takes:
+
+- `function`: A callback to transform the underlying Lambda function.
+- `logGroup`: A callback to transform the Lambda's LogGroup resource.
+- `role`: A callback to transform the role that the Lambda function assumes.
+
+The type for these callbacks is similar. Here's what the `role` callback looks like:
+
+```ts
+RoleArgs | (args: RoleArgs => RoleArgs | void)
+```
+
+So this takes either a `RoleArgs` object or a function that takes `RoleArgs` and returns `RoleArgs` or `void`. Where [RoleArgs](https://www.pulumi.com/registry/packages/aws/api-docs/iam/role/#inputs) is the props for the role that's passed to Pulumi.
+
+This allows you to either:
+
+- Pass in your own `RoleArgs` object.
+
+  ```ts
+  {
+    transform: {
+      role: {
+        name: "MyRole"
+      }
+    }
+  }
+  ```
+
+- Pass in a callback that takes the current `RoleArgs` and returns a new `RoleArgs` object.
+
+  ```ts
+  {
+    transform: (args) => ({
+      name: `${args.name}-MyRole`
+    })
+  }
+  ```
+
+- Or, pass in a callback that takes the current `RoleArgs`, mutate it, and return `void`.
+
+  ```ts
+  {
+    transform: (args) => {
+      args.name = `${args.name}-MyRole`;
+    }
+  }
+  ```
+
+---
+
+## Properties
+
+An instance of a component exposes a set of properties. For example, the `Function` component exposes the following [properties](/docs/component/aws/function#properties) — `arn`, `name`, `url`, and `nodes`.
+
+These can be used to output info about your app or can be used as args for other components.
+
+These are typically primitive types. However, they can also be a special version of a primitive type. It'll look something like _`Output<string>`_. We'll look at this in detail below.
+
+---
+
+### Links
+
+Some of these properties are also made available via [resource linking](/docs/linking/). This allows you to access them in your functions and frontends in a typesafe way.
+
+For example, a Function exposes its `name` through its [links](/docs/component/aws/bucket/#links).
+
+---
+
+### Nodes
+
+The `nodes` property that a component exposes gives you access to the underlying infrastructure. This is an object that contains references to the underlying Pulumi components that are created.
+
+:::tip
+The nodes that are made available reflect the ones that can be configured using the `transform` prop.
+:::
+
+For example, the `Function` component exposes the following [nodes](/docs/component/aws/function#nodes) — `function`, `logGroup`, and `role`.
+
+---
+
+## Inputs & Outputs
+
+The args (input) and properties (output) types of a component are a special type. They look something like _`Input<primitive>`_ and _`Output<primitive>`_.
+
+:::tip
+Input and Output types are what allows SST to deploy yours apps as fast as possible.
+:::
+
+For the case of an arg or Input type, it represents a value that might not be known yet. This is useful when you want to pass in a value that's not yet known at the time of creating the component. Or rather, it allows you pass in an Output of another component.
+
+For example, the `sst.aws.Router` component takes _`Input<string>`_ as a route. Meaning it can take a string.
+
+```ts {3}
+new sst.aws.Router("MyRouter", {
+  routes: {
+    "/api": "https://my-api.com"
+  }
+});
+```
+
+Or as the output URL of a Function, which in turn is _`Output<string>`_.
+
+```ts {8}
+const myFunction = new sst.aws.Function("MyFunction", {
+  url: true,
+  handler: "src/lambda.handler"
+});
+
+new sst.aws.Router("MyRouter", {
+  routes: {
+    "/api": myFunction.url
+  }
+});
+```
+
+The way Input and Output types are connected together, allows SST to create dependencies between your components. This allows it to deploy your apps as fast as possible. You can learn more about [Input and Output types on the Pulumi docs](https://www.pulumi.com/docs/concepts/inputs-outputs/).

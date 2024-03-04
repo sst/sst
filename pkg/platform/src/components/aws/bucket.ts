@@ -31,7 +31,7 @@ export interface BucketArgs {
    */
   public?: Input<boolean>;
   /**
-   * [Transform](/docs/components#transform/) how this component creates its underlying
+   * [Transform](/docs/components#transform) how this component creates its underlying
    * resources.
    */
   transform?: {
@@ -115,7 +115,7 @@ export interface BucketSubscribeArgs {
    */
   filterSuffix?: Input<string>;
   /**
-   * [Transform](/docs/components#transform/) how this notification creates its underlying
+   * [Transform](/docs/components#transform) how this notification creates its underlying
    * resources.
    */
   transform?: {

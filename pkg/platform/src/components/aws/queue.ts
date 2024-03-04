@@ -25,7 +25,7 @@ export interface QueueArgs {
    */
   fifo?: Input<boolean>;
   /**
-   * [Transform](/docs/components#transform/) how this component creates its underlying
+   * [Transform](/docs/components#transform) how this component creates its underlying
    * resources.
    */
   transform?: {
@@ -90,7 +90,7 @@ export interface QueueSubscribeArgs {
    */
   filters?: Input<Input<Record<string, any>>[]>;
   /**
-   * [Transform](/docs/components#transform/) how this subscription creates its underlying
+   * [Transform](/docs/components#transform) how this subscription creates its underlying
    * resources.
    */
   transform?: {

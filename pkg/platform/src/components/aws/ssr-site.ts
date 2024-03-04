@@ -354,7 +354,7 @@ export interface SsrSiteArgs {
       }
   >;
   /**
-   * [Transform](/docs/components#transform/) how this component creates its underlying
+   * [Transform](/docs/components#transform) how this component creates its underlying
    * resources.
    */
   transform?: {

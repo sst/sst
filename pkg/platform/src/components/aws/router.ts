@@ -82,7 +82,7 @@ export interface RouterArgs {
    */
   routes: Input<Record<string, Input<string>>>;
   /**
-   * [Transform](/docs/components#transform/) how this component creates its underlying
+   * [Transform](/docs/components#transform) how this component creates its underlying
    * resources.
    */
   transform?: {
