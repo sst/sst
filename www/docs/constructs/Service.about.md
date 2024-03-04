@@ -423,3 +423,23 @@ new Service(stack, "MyService", {
   },
 });
 ```
+
+### Using an existing Cluster
+
+```js
+import { Cluster } from "aws-cdk-lib/aws-ecs";
+
+const myCluster = new Cluster(stack, "MultiServicesCluster");
+
+const serviceOne = new Service(stack, "ServiceOne", {
+  cluster: myCluster,
+  path: "./services/one",
+  port: 3000,
+});
+
+const serviceTwo = new Service(stack, "ServiceTwo", {
+  cluster: myCluster,
+  path: "./services/two",
+  port: 3000,
+});
+```

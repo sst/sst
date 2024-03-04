@@ -230,6 +230,22 @@ export interface ServiceProps {
    */
   cpu?: keyof typeof supportedCpus;
   /**
+   * Create new service in existing cluster
+   * 
+   * @example
+   * ```js
+   * import { Cluster } from "aws-cdk-lib/aws-ecs";
+   * import { Service } from "sst/constructs";
+   * 
+   * const cluster = new Cluster(stack, "my-cluster");
+   * const service = new Service(stack, "my-service", {
+   *   cluster,
+   *   ...
+   * }
+   * ```
+   */
+  cluster?: Cluster;
+  /**
    * The amount of memory allocated.
    * @default "0.5 GB"
    * @example
@@ -644,10 +660,14 @@ export class Service extends Construct implements SSTConstruct {
       return;
     }
 
+    if (props.cluster) {
+      this.cluster = props.cluster;
+    }
+
     // Create ECS cluster
     const vpc = this.createVpc();
     const { cluster, container, taskDefinition, service } =
-      this.createService(vpc);
+      this.createService(vpc, props.cluster);
     const { alb, target } = this.createLoadBalancer(vpc, service);
     this.createAutoScaling(service, target);
     this.alb = alb;
@@ -929,25 +949,42 @@ export class Service extends Construct implements SSTConstruct {
     );
   }
 
-  private createService(vpc: IVpc) {
+  private createService(vpc: IVpc, cluster?: Cluster) {
     const { architecture, cpu, memory, storage, port, logRetention, cdk } =
       this.props;
     const app = this.node.root as App;
-    const clusterName = app.logicalPrefixedName(this.node.id);
+    let clusterName: string;
+    let logGroup: LogRetention;
 
-    const logGroup = new LogRetention(this, "LogRetention", {
-      logGroupName: `/sst/service/${clusterName}`,
-      retention:
-        RetentionDays[logRetention.toUpperCase() as keyof typeof RetentionDays],
-      logRetentionRetryOptions: {
-        maxRetries: 100,
-      },
-    });
+    if (!cluster) {
+      clusterName = app.logicalPrefixedName(this.node.id);
 
-    const cluster = new Cluster(this, "Cluster", {
-      clusterName,
-      vpc,
-    });
+      logGroup = new LogRetention(this, "LogRetention", {
+        logGroupName: `/sst/service/${clusterName}`,
+        retention:
+          RetentionDays[logRetention.toUpperCase() as keyof typeof RetentionDays],
+        logRetentionRetryOptions: {
+          maxRetries: 100,
+        },
+      });
+
+      cluster = new Cluster(this, "Cluster", {
+        clusterName,
+        vpc,
+      });
+    } else {
+      const serviceName = app.logicalPrefixedName(this.node.id);
+      clusterName = cluster.clusterName;
+      
+      logGroup = new LogRetention(this, "LogRetention", {
+        logGroupName: `/sst/service/${clusterName}/${serviceName}`,
+        retention:
+          RetentionDays[logRetention.toUpperCase() as keyof typeof RetentionDays],
+        logRetentionRetryOptions: {
+          maxRetries: 100,
+        },
+      });
+    }
 
     const ephemeralStorageGiB = toCdkSize(storage).toGibibytes();
     const taskDefinition = new FargateTaskDefinition(this, `TaskDefinition`, {
