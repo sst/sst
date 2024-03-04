@@ -18,7 +18,7 @@ The `Remix` component lets you deploy a Remix app to AWS.
 Deploy a Remix app that's in the project root.
 
 ```js
-new sst.aws.Remix("Web");
+new sst.aws.Remix("MyWeb");
 ```
 
 #### Change the path
@@ -26,7 +26,7 @@ new sst.aws.Remix("Web");
 Deploys the Remix app in the `my-remix-app/` directory.
 
 ```js {2}
-new sst.aws.Remix("Web", {
+new sst.aws.Remix("MyWeb", {
   path: "my-remix-app/"
 });
 ```
@@ -36,7 +36,7 @@ new sst.aws.Remix("Web", {
 Set a custom domain for your Remix app.
 
 ```js {2}
-new sst.aws.Remix("Web", {
+new sst.aws.Remix("MyWeb", {
   domain: "my-app.com"
 });
 ```
@@ -46,7 +46,7 @@ new sst.aws.Remix("Web", {
 Redirect `www.my-app.com` to `my-app.com`.
 
 ```js {4}
-new sst.aws.Remix("Web", {
+new sst.aws.Remix("MyWeb", {
   domain: {
     domainName: "my-app.com",
     redirects: ["www.my-app.com"]
@@ -62,7 +62,7 @@ to the resources and allow you to access it in your app.
 ```ts {4}
 const myBucket = new sst.aws.Bucket("MyBucket");
 
-new sst.aws.Remix("Web", {
+new sst.aws.Remix("MyWeb", {
   link: [myBucket]
 });
 ```

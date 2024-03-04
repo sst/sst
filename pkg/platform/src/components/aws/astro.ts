@@ -227,7 +227,7 @@ const BUILD_META_FILE_NAME: BuildMetaFileName = "sst.buildMeta.json";
  * Deploy the Astro site that's in the project root.
  *
  * ```js
- * new sst.aws.Astro("Web");
+ * new sst.aws.Astro("MyWeb");
  * ```
  *
  * #### Change the path
@@ -235,7 +235,7 @@ const BUILD_META_FILE_NAME: BuildMetaFileName = "sst.buildMeta.json";
  * Deploys the Astro site in the `my-astro-app/` directory.
  *
  * ```js {2}
- * new sst.aws.Astro("Web", {
+ * new sst.aws.Astro("MyWeb", {
  *   path: "my-astro-app/"
  * });
  * ```
@@ -245,7 +245,7 @@ const BUILD_META_FILE_NAME: BuildMetaFileName = "sst.buildMeta.json";
  * Set a custom domain for your Astro site.
  *
  * ```js {2}
- * new sst.aws.Astro("Web", {
+ * new sst.aws.Astro("MyWeb", {
  *   domain: "my-app.com"
  * });
  * ```
@@ -255,7 +255,7 @@ const BUILD_META_FILE_NAME: BuildMetaFileName = "sst.buildMeta.json";
  * Redirect `www.my-app.com` to `my-app.com`.
  *
  * ```js {4}
- * new sst.aws.Astro("Web", {
+ * new sst.aws.Astro("MyWeb", {
  *   domain: {
  *     domainName: "my-app.com",
  *     redirects: ["www.my-app.com"]
@@ -271,7 +271,7 @@ const BUILD_META_FILE_NAME: BuildMetaFileName = "sst.buildMeta.json";
  * ```ts {4}
  * const myBucket = new sst.aws.Bucket("MyBucket");
  *
- * new sst.aws.Astro("Web", {
+ * new sst.aws.Astro("MyWeb", {
  *   link: [myBucket]
  * });
  * ```

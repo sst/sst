@@ -1,10 +1,156 @@
 ---
 title: Linking
-description: Link resources together and access them in a typesafe way.
+description: Link resources together and access them in a typesafe and secure way.
 ---
 
-- What are resource links
-  - Typesafety
-  - Permissions
-- Supported components
-  - Making a component linkable, $linkable
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
+Resource linking is a feature of SST that allows you to link resources together and access them in a typesafe and secure way. This is done by:
+
+1. Create a resource that you want to linked. For example, a bucket.
+
+   ```js {6,11}
+   const myBucket = new sst.aws.Bucket("MyBucket");
+   ```
+
+2. Link it to a function or frontend, using the `link` prop.
+
+   <Tabs>
+     <TabItem label="Next.js">
+     ```js {2}
+     new sst.aws.Nextjs("Web", {
+       link: [myBucket]
+     });
+     ```
+     </TabItem>
+     <TabItem label="Remix">
+     ```js {2}
+     new sst.aws.Remix("Web", {
+       link: [myBucket]
+     });
+     ```
+     </TabItem>
+     <TabItem label="Astro">
+     ```js {2}
+     new sst.aws.Astro("Web", {
+       link: [myBucket]
+     });
+     ```
+     </TabItem>
+     <TabItem label="Function">
+     ```js {3}
+     new sst.aws.Function("MyFunction", {
+       handler: "src/lambda.handler",
+       link: [myBucket]
+     });
+     ```
+     </TabItem>
+   </Tabs>
+
+3. Use the [Node client](/docs/reference/client/) to access the linked resource in a typesafe way.
+
+   <Tabs>
+     <TabItem label="Next.js">
+     ```js title="app/page.tsx"
+     import { Resource } from "sst";
+
+     console.log(Resource.MyBucket.name);
+     ```
+     </TabItem>
+     <TabItem label="Remix">
+     ```js title="app/root.tsx"
+     import { Resource } from "sst";
+
+     console.log(Resource.MyBucket.name);
+     ```
+     </TabItem>
+     <TabItem label="Astro">
+     ```astro title="src/pages/index.astro"
+     ---
+     import { Resource } from "sst";
+
+     console.log(Resource.MyBucket.name);
+     ---
+     ```
+     </TabItem>
+     <TabItem label="Function">
+     ```js title="src/lambda.ts"
+     import { Resource } from "sst";
+
+     console.log(Resource.MyBucket.name);
+     ```
+     </TabItem>
+   </Tabs>
+
+#### Working locally
+
+The above applies to your app deployed through `sst deploy`. However, to access linked resources locally you'll need to be running `sst dev`.
+
+This applies to both the functions and the frontends.
+
+<Tabs>
+  <TabItem label="Next.js">
+  ```bash
+  sst dev next dev
+  ```
+  </TabItem>
+  <TabItem label="Remix">
+  ```bash
+  sst dev remix dev
+  ```
+  </TabItem>
+  <TabItem label="Astro">
+  ```bash
+  sst dev astro dev
+  ```
+  </TabItem>
+  <TabItem label="Function">
+  ```bash
+  sst dev
+  ```
+  </TabItem>
+</Tabs>
+
+---
+
+## How it works
+
+At high level when you link a resource to a function or frontend, the following happens:
+
+1. The function is given permission to access the linked resource.
+
+2. The _links_ that the resource exposes are injected into the function package.
+
+   :::tip
+   The links a component exposes are listed in its API reference. For example, you can [view a Bucket's links here](/docs/component/aws/bucket/#links).
+   :::
+
+3. The types to access these links are generated.
+
+---
+
+### Injecting links
+
+Resource links are injected into your function or frontend package when you run `sst dev` or `sst deploy`. But this is done in a slightly different way for both these cases.
+
+#### Functions
+
+The functions in SST are tree shaken and bundled using [esbuild](https://esbuild.github.io/). While bundling, SST injects the resource links into the [`globalThis`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/globalThis).
+
+#### Frontends
+
+The frontends are not bundled by SST. Instead, when SST builds them, it injects the resource links into the `process.env` object using the prefix `SST_RESOURCE_`.
+
+This is why when you are running your frontend locally, it needs to be wrapped in the `sst dev` command.
+
+---
+
+### Generating types
+
+When you run `sst dev` or `sst deploy`, SST generates the types to access the linked resources. These are generated in a `.sst/types.generated.ts` file.
+
+:::tip
+If your types are not automatically getting picked up, make sure there is a `sst.env.d.ts` file in your project root.
+:::
+
+This file is in turn linked using a `sst-env.d.ts` file. This file is automatically created next to the `tsconfig.json` when you initialize your SST app.

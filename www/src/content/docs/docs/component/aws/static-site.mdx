@@ -13,7 +13,7 @@ import InlineSection from '../../../../../components/tsdoc/InlineSection.astro';
 <Section type="about">
 The `StaticSite` component lets you deploy a static website to AWS. It uses [Amazon S3](https://aws.amazon.com/s3/) to store your files and [Amazon CloudFront](https://aws.amazon.com/cloudfront/) to serve them.
 
-It can also `build` your site by running your static site generator and uploading the build output to S3.
+It can also `build` your site by running your static site generator, like [Vite](https://vitejs.dev) and uploading the build output to S3.
 
 #### Minimal example
 
@@ -25,7 +25,7 @@ new sst.aws.StaticSite("Web");
 
 #### Change the path
 
-Change the directory that should be uploaded.
+Change the `path` that should be uploaded.
 
 ```js
 new sst.aws.StaticSite("Web", {
@@ -35,7 +35,7 @@ new sst.aws.StaticSite("Web", {
 
 #### Deploy a Vite SPA
 
-Use [Vite](https://vitejs.dev) to deploy a React/Vue/Svelte single-page-app by specifying the `build` config.
+Use [Vite](https://vitejs.dev) to deploy a React/Vue/Svelte/etc. SPA by specifying the `build` config.
 
 ```js
 new sst.aws.StaticSite("Web", {
@@ -110,7 +110,7 @@ new sst.aws.StaticSite("Web", {
 });
 ```
 
-#### Set environment vairables
+#### Set environment variables
 
 Set `environment` variables for the build process of your static site. These will be used locally and on deploy.
 
@@ -120,10 +120,12 @@ For Vite, the types for the environment variables are also generated. This can b
 
 For some static site generators like Vite, [environment variables](https://vitejs.dev/guide/env-and-mode) prefixed with `VITE_` can be accessed in the browser.
 
-```ts {3-5}
+```ts {5-7}
+const myBucket = new sst.aws.Bucket("MyBucket");
+
 new sst.aws.StaticSite("Web", {
   environment: {
-    API_URL: api.url
+    BUCKET_NAME: myBucket.name,
     // Accessible in the browser
     VITE_STRIPE_PUBLISHABLE_KEY: "pk_test_123"
   },

@@ -18,7 +18,7 @@ The `Astro` component lets you deploy an Astro site to AWS.
 Deploy the Astro site that's in the project root.
 
 ```js
-new sst.aws.Astro("Web");
+new sst.aws.Astro("MyWeb");
 ```
 
 #### Change the path
@@ -26,7 +26,7 @@ new sst.aws.Astro("Web");
 Deploys the Astro site in the `my-astro-app/` directory.
 
 ```js {2}
-new sst.aws.Astro("Web", {
+new sst.aws.Astro("MyWeb", {
   path: "my-astro-app/"
 });
 ```
@@ -36,7 +36,7 @@ new sst.aws.Astro("Web", {
 Set a custom domain for your Astro site.
 
 ```js {2}
-new sst.aws.Astro("Web", {
+new sst.aws.Astro("MyWeb", {
   domain: "my-app.com"
 });
 ```
@@ -46,7 +46,7 @@ new sst.aws.Astro("Web", {
 Redirect `www.my-app.com` to `my-app.com`.
 
 ```js {4}
-new sst.aws.Astro("Web", {
+new sst.aws.Astro("MyWeb", {
   domain: {
     domainName: "my-app.com",
     redirects: ["www.my-app.com"]
@@ -62,7 +62,7 @@ to the resources and allow you to access it in your site.
 ```ts {4}
 const myBucket = new sst.aws.Bucket("MyBucket");
 
-new sst.aws.Astro("Web", {
+new sst.aws.Astro("MyWeb", {
   link: [myBucket]
 });
 ```

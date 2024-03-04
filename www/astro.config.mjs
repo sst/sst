@@ -16,6 +16,7 @@ const sidebar = [
       { label: "Next.js", link: "/docs/start/nextjs/" },
       { label: "Remix", link: "/docs/start/remix/" },
       { label: "Astro", link: "/docs/start/astro/" },
+      { label: "API", link: "/docs/start/api/" },
     ],
   },
   {
@@ -56,17 +57,17 @@ const sidebar = [
     items: [
       { label: "CLI", link: "/docs/reference/cli/" },
       { label: "Client", link: "/docs/reference/client/" },
+      { label: "Config", link: "/docs/reference/config/" },
     ],
   },
-  {
-    label: "How to",
-    items: [
-      { label: "Configure Ion", link: "/docs/configure-ion/" },
-      { label: "Migrate from SST", link: "/docs/migrate-from-sst/" },
-      { label: "Import Resources", link: "/docs/import-resources/" },
-      { label: "Create an AWS Account", link: "/docs/create-an-aws-account/" },
-    ],
-  },
+  //  {
+  //    label: "How to",
+  //    items: [
+  //      { label: "Migrate from SST", link: "/docs/migrate-from-sst/" },
+  //      { label: "Import Resources", link: "/docs/import-resources/" },
+  //      { label: "Create an AWS Account", link: "/docs/create-an-aws-account/" },
+  //    ],
+  //  },
 ];
 
 if (mode === "development") {

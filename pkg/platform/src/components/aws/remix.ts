@@ -227,7 +227,7 @@ export interface RemixArgs extends SsrSiteArgs {
  * Deploy a Remix app that's in the project root.
  *
  * ```js
- * new sst.aws.Remix("Web");
+ * new sst.aws.Remix("MyWeb");
  * ```
  *
  * #### Change the path
@@ -235,7 +235,7 @@ export interface RemixArgs extends SsrSiteArgs {
  * Deploys the Remix app in the `my-remix-app/` directory.
  *
  * ```js {2}
- * new sst.aws.Remix("Web", {
+ * new sst.aws.Remix("MyWeb", {
  *   path: "my-remix-app/"
  * });
  * ```
@@ -245,7 +245,7 @@ export interface RemixArgs extends SsrSiteArgs {
  * Set a custom domain for your Remix app.
  *
  * ```js {2}
- * new sst.aws.Remix("Web", {
+ * new sst.aws.Remix("MyWeb", {
  *   domain: "my-app.com"
  * });
  * ```
@@ -255,7 +255,7 @@ export interface RemixArgs extends SsrSiteArgs {
  * Redirect `www.my-app.com` to `my-app.com`.
  *
  * ```js {4}
- * new sst.aws.Remix("Web", {
+ * new sst.aws.Remix("MyWeb", {
  *   domain: {
  *     domainName: "my-app.com",
  *     redirects: ["www.my-app.com"]
@@ -271,7 +271,7 @@ export interface RemixArgs extends SsrSiteArgs {
  * ```ts {4}
  * const myBucket = new sst.aws.Bucket("MyBucket");
  *
- * new sst.aws.Remix("Web", {
+ * new sst.aws.Remix("MyWeb", {
  *   link: [myBucket]
  * });
  * ```

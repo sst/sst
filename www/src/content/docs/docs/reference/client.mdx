@@ -1,0 +1,57 @@
+---
+title: Client
+description: Access linked resources in your handlers in a typesafe way.
+---
+
+The SST Node Client is an npm package that allows you to access linked resources in your functions and frontends in a typesafe way.
+
+:::note
+You'll first need to link a resource to your function or frontend to be able to access it. [Learn more about resource linking](/docs/linking/).
+:::
+
+---
+
+## Installation
+
+Install the [npm package](https://www.npmjs.com/package/sst).
+
+```bash
+npm install sst
+```
+
+---
+
+## Usage
+
+Import `Resource` to access the linked resources.
+
+```js title="src/lambda.ts"
+import { Resource } from "sst";
+
+console.log(Resource.MyBucket.name);
+```
+
+:::tip
+The `Resource` object is typesafe and will autocomplete the available resources in your editor.
+:::
+
+Here we are assuming that a bucket has been linked to the function. Here's what that could look like.
+
+```js title="sst.config.ts"
+const myBucket = new sst.aws.Bucket("MyBucket");
+
+new sst.aws.Function("MyFunction", {
+  handler: "src/lambda.handler",
+  link: [myBucket]
+});
+```
+
+---
+
+## How it works
+
+In the above example, `Resource.MyBucket.name` works because it's been injected into the function package on `sst dev` and `sst deploy`.
+
+For functions, this is injected into the [`globalThis`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/globalThis) using [esbuild](https://esbuild.github.io/) and for frontends, it's injected into the `process.env` object.
+
+The Node client first checks the `process.env` and then the `globalThis` for the linked resources. You can [read more about how the links are injected](/docs/linking/#injecting-links).
