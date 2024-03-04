@@ -1,4 +1,5 @@
 import { output } from "@pulumi/pulumi";
+import * as aws from "@pulumi/aws";
 import { lazy } from "../../../util/lazy";
 
 const useProviderCache = lazy(() => new Map<string, aws.Provider>());

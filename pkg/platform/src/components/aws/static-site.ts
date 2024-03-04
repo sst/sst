@@ -536,7 +536,7 @@ export class StaticSite extends Component implements Link.Linkable {
 
   constructor(
     name: string,
-    args: StaticSiteArgs,
+    args: StaticSiteArgs = {},
     opts: ComponentResourceOptions = {},
   ) {
     super("sst:aws:StaticSite", name, args, opts);
