@@ -11,7 +11,6 @@ import {
   interpolate,
   ComponentResource,
   ComponentResourceOptions,
-  jsonParse,
 } from "@pulumi/pulumi";
 import * as aws from "@pulumi/aws";
 import { Cdn, CdnDomainArgs } from "./cdn.js";

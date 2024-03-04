@@ -380,13 +380,13 @@ If set to `"none"`, then no charset will be returned in header.
 }
 ```
 </Segment>
-### build
+### build?
 <Segment>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Object</code><code class="symbol">&gt;</code>
 </InlineSection>
-- <p>[<code class="key">command?</code>](#build-command)</p>
+- <p>[<code class="key">command</code>](#build-command)</p>
 - <p>[<code class="key">output</code>](#build-output)</p>
 </Section>
 Configure if your static site needs to be built. This is useful if you are using a static site generator.
@@ -402,7 +402,7 @@ For a Vite project using npm this might look like this.
 }
 ```
 </Segment>
-<NestedTitle id="build-command" Tag="h4" parent="build.">command?</NestedTitle>
+<NestedTitle id="build-command" Tag="h4" parent="build.">command</NestedTitle>
 <Segment>
 <Section type="parameters">
 <InlineSection>
@@ -679,7 +679,7 @@ By default this is set to `index.html`. So if a visitor goes to your site, let's
 <Segment>
 <Section type="parameters">
 <InlineSection>
-**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="symbol">&ldquo;</code><code class="primitive">false</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="primitive">Object</code><code class="symbol">&gt;</code>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">false</code><code class="symbol"> | </code><code class="primitive">Object</code><code class="symbol">&gt;</code>
 </InlineSection>
 - <p>[<code class="key">paths?</code>](#invalidation-paths)</p>
 - <p>[<code class="key">wait?</code>](#invalidation-wait)</p>
@@ -792,6 +792,28 @@ Change where your static site is located.
   path: "packages/web"
 }
 ```
+</Segment>
+### transform?
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Object</code>
+</InlineSection>
+- <p>[<code class="key">assets?</code>](#transform-assets)</p>
+</Section>
+[Transform](/docs/components#transform) how this component creates its underlying
+resources.
+
+</Segment>
+<NestedTitle id="transform-assets" Tag="h4" parent="transform.">assets?</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** [<code class="type">BucketArgs</code>](/docs/component/aws/bucket/#bucketargs)<code class="symbol"> | </code><code class="symbol">(</code><code class="primitive">args</code><code class="symbol">: </code>[<code class="type">BucketArgs</code>](/docs/component/aws/bucket/#bucketargs)<code class="symbol"> => </code>[<code class="type">BucketArgs</code>](/docs/component/aws/bucket/#bucketargs)<code class="symbol"> | </code><code class="primitive">void</code><code class="symbol">)</code>
+</InlineSection>
+</Section>
+Transform the Bucket resource.
+
 </Segment>
 ### vite?
 <Segment>

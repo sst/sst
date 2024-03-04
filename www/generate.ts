@@ -463,7 +463,21 @@ async function main() {
       return `<code class="primitive">${type.name}</code>`;
     }
     function renderLiteralType(type: TypeDoc.LiteralType) {
-      // ie. architecture: "arm64"
+      // Intrisic values: don't print in quotes
+      // ie.
+      // {
+      //   "type": "literal",
+      //   "value": false
+      // }
+      if (type.value === true || type.value === false) {
+        return `<code class="primitive">${type.value}</code>`;
+      }
+      // String value
+      // ie.
+      // {
+      //   "type": "literal",
+      //   "value": "arm64"
+      // }
       const santized =
         typeof type.value === "string"
           ? type.value!.replace(/([*:])/g, "\\$1")

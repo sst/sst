@@ -9,8 +9,8 @@ import {
   output,
 } from "@pulumi/pulumi";
 import { Cdn, CdnDomainArgs } from "./cdn.js";
-import { Bucket } from "./bucket.js";
-import { Component, Prettify } from "../component.js";
+import { Bucket, BucketArgs } from "./bucket.js";
+import { Component, Prettify, Transform, transform } from "../component.js";
 import { Hint } from "../hint.js";
 import { Link } from "../link.js";
 import { Input } from "../input.js";
@@ -169,7 +169,7 @@ export interface StaticSiteArgs {
    * }
    * ```
    */
-  build: Input<{
+  build?: Input<{
     /**
      * The command that builds the static site. It's run before your site is deployed. This is run at the root of your site, `path`.
      * @example
@@ -181,7 +181,7 @@ export interface StaticSiteArgs {
      * }
      * ```
      */
-    command?: Input<string>;
+    command: Input<string>;
     /**
      * The directory where the build output of your static site is generated. This will be uploaded to S3.
      *
@@ -390,6 +390,16 @@ export interface StaticSiteArgs {
         paths?: Input<"all" | string[]>;
       }
   >;
+  /**
+   * [Transform](/docs/components#transform) how this component creates its underlying
+   * resources.
+   */
+  transform?: {
+    /**
+     * Transform the Bucket resource.
+     */
+    assets?: Transform<BucketArgs>;
+  };
 }
 
 /**
@@ -599,9 +609,9 @@ export class StaticSite extends Component implements Link.Linkable {
     function createS3Bucket() {
       return new Bucket(
         `${name}Assets`,
-        {
+        transform(args.transform?.assets, {
           transform: {
-            policy: (args) => {
+            policy: (policyArgs) => {
               const newPolicy = aws.iam.getPolicyDocumentOutput({
                 statements: [
                   {
@@ -616,7 +626,7 @@ export class StaticSite extends Component implements Link.Linkable {
                   },
                 ],
               }).json;
-              args.policy = output([args.policy, newPolicy]).apply(
+              policyArgs.policy = output([policyArgs.policy, newPolicy]).apply(
                 ([policy, newPolicy]) => {
                   const policyJson = JSON.parse(policy as string);
                   const newPolicyJson = JSON.parse(newPolicy as string);
@@ -626,7 +636,7 @@ export class StaticSite extends Component implements Link.Linkable {
               );
             },
           },
-        },
+        }),
         { parent, retainOnDelete: false },
       );
     }
@@ -672,13 +682,13 @@ export class StaticSite extends Component implements Link.Linkable {
         ([sitePath, build, environment]) => {
           if ($dev)
             return path.join($cli.paths.platform, "functions", "empty-site");
+          if (!build) return sitePath;
 
           // Run build
           if (!process.env.SKIP) {
-            const buildCommand = build.command ?? "npm run build";
-            console.debug(`Running "${buildCommand}" script`);
+            console.debug(`Running "${build.command}" script`);
             try {
-              execSync(buildCommand, {
+              execSync(build.command, {
                 cwd: sitePath,
                 stdio: "inherit",
                 env: {
@@ -711,7 +721,7 @@ export class StaticSite extends Component implements Link.Linkable {
           const bucketFiles: BucketFile[] = [];
 
           // Build fileOptions
-          const fileOptions: FileOptions[] = [
+          const fileOptions = assets?.fileOptions ?? [
             {
               files: "**",
               cacheControl: "max-age=0,no-cache,no-store,must-revalidate",
@@ -720,7 +730,6 @@ export class StaticSite extends Component implements Link.Linkable {
               files: ["**/*.js", "**/*.css"],
               cacheControl: "max-age=31536000,public,immutable",
             },
-            ...(assets?.fileOptions ?? []),
           ];
 
           // Upload files based on fileOptions
@@ -730,7 +739,12 @@ export class StaticSite extends Component implements Link.Linkable {
               cwd: path.resolve(outputPath),
               nodir: true,
               dot: true,
-              ignore: fileOption.ignore,
+              ignore: [
+                ".sst/**",
+                ...(typeof fileOption.ignore === "string"
+                  ? [fileOption.ignore]
+                  : fileOption.ignore ?? []),
+              ],
             }).filter((file) => !filesUploaded.includes(file));
 
             bucketFiles.push(
