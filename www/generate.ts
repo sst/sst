@@ -556,6 +556,7 @@ async function main() {
       // types in different doc
       const externalModule = {
         Bucket: "bucket",
+        BucketArgs: "bucket",
         Function: "function",
         FunctionArgs: "function",
         FunctionPermissionArgs: "function",

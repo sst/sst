@@ -14,6 +14,7 @@ import * as aws from "@pulumi/aws";
 import { Size } from "../size.js";
 import { Function } from "./function.js";
 import {
+  Plan,
   SsrSiteArgs,
   buildApp,
   createBucket,
@@ -384,7 +385,7 @@ export interface NextjsArgs extends SsrSiteArgs {
  * Deploy the Next.js app that's in the project root.
  *
  * ```js
- * new sst.aws.Nextjs("MyWeb");
+ * new sst.aws.Nextjs("Web");
  * ```
  *
  * #### Change the path
@@ -392,7 +393,7 @@ export interface NextjsArgs extends SsrSiteArgs {
  * Deploys a Next.js app in the `my-next-app/` directory.
  *
  * ```js {2}
- * new sst.aws.Nextjs("MyWeb", {
+ * new sst.aws.Nextjs("Web", {
  *   path: "my-next-app/"
  * });
  * ```
@@ -402,7 +403,7 @@ export interface NextjsArgs extends SsrSiteArgs {
  * Set a custom domain for your Next.js app.
  *
  * ```js {2}
- * new sst.aws.Nextjs("MyWeb", {
+ * new sst.aws.Nextjs("Web", {
  *   domain: "my-app.com"
  * });
  * ```
@@ -412,7 +413,7 @@ export interface NextjsArgs extends SsrSiteArgs {
  * Redirect `www.my-app.com` to `my-app.com`.
  *
  * ```js {4}
- * new sst.aws.Nextjs("MyWeb", {
+ * new sst.aws.Nextjs("Web", {
  *   domain: {
  *     domainName: "my-app.com",
  *     redirects: ["www.my-app.com"]
@@ -428,7 +429,7 @@ export interface NextjsArgs extends SsrSiteArgs {
  * ```ts {4}
  * const myBucket = new sst.aws.Bucket("MyBucket");
  *
- * new sst.aws.Nextjs("MyWeb", {
+ * new sst.aws.Nextjs("Web", {
  *   link: [myBucket]
  * });
  * ```
@@ -467,7 +468,7 @@ export class Nextjs extends Component implements Link.Linkable {
     const logging = normalizeLogging();
     const buildCommand = normalizeBuildCommand();
     const { sitePath, region } = prepare(args, opts);
-    const { access, bucket } = createBucket(parent, name);
+    const { access, bucket } = createBucket(parent, name, args);
     const outputPath = buildApp(name, args, sitePath, buildCommand);
     const {
       openNextOutput,
@@ -838,106 +839,104 @@ export class Nextjs extends Component implements Link.Linkable {
                 : undefined,
           };
 
-          return validatePlan(
-            transform(args?.transform?.plan, {
-              edge: false,
-              cloudFrontFunctions: {
-                serverCfFunction: {
-                  injections: [
-                    useCloudFrontFunctionHostHeaderInjection(),
-                    useCloudFrontFunctionPrerenderBypassHeaderInjection(),
-                  ],
-                },
+          return validatePlan({
+            edge: false,
+            cloudFrontFunctions: {
+              serverCfFunction: {
+                injections: [
+                  useCloudFrontFunctionHostHeaderInjection(),
+                  useCloudFrontFunctionPrerenderBypassHeaderInjection(),
+                ],
               },
-              edgeFunctions: Object.fromEntries(
-                Object.entries(openNextOutput.edgeFunctions).map(
-                  ([key, value]) => [
+            },
+            edgeFunctions: Object.fromEntries(
+              Object.entries(openNextOutput.edgeFunctions).map(
+                ([key, value]) => [
+                  key,
+                  {
+                    function: {
+                      description: `${name} server`,
+                      bundle: path.join(outputPath, value.bundle),
+                      handler: value.handler,
+                      ...defaultFunctionProps,
+                    },
+                  },
+                ],
+              ),
+            ),
+            origins: Object.fromEntries(
+              Object.entries(openNextOutput.origins).map(([key, value]) => {
+                if (key === "s3") {
+                  value = value as OpenNextS3Origin;
+                  return [
                     key,
                     {
+                      s3: {
+                        originPath: value.originPath,
+                        copy: value.copy,
+                      },
+                    },
+                  ];
+                }
+                if (key === "imageOptimizer") {
+                  value = value as OpenNextImageOptimizationOrigin;
+                  return [
+                    key,
+                    {
+                      imageOptimization: {
+                        function: {
+                          description: `${name} image optimizer`,
+                          handler: value.handler,
+                          bundle: path.join(outputPath, value.bundle),
+                          runtime: "nodejs18.x",
+                          architecture: "arm64",
+                          environment: {
+                            BUCKET_NAME: bucketName,
+                            BUCKET_KEY_PREFIX: "_assets",
+                          },
+                          memory: imageOptimization?.memory ?? "1536 MB",
+                        },
+                      },
+                    },
+                  ];
+                }
+                value = value as OpenNextServerFunctionOrigin;
+                return [
+                  key,
+                  {
+                    server: {
                       function: {
                         description: `${name} server`,
                         bundle: path.join(outputPath, value.bundle),
                         handler: value.handler,
                         ...defaultFunctionProps,
                       },
+                      streaming: value.streaming,
+                      injections:
+                        logging === "per-route"
+                          ? [serverFunctionPerRouteLoggingInjection]
+                          : [],
                     },
-                  ],
-                ),
-              ),
-              origins: Object.fromEntries(
-                Object.entries(openNextOutput.origins).map(([key, value]) => {
-                  if (key === "s3") {
-                    value = value as OpenNextS3Origin;
-                    return [
-                      key,
-                      {
-                        s3: {
-                          originPath: value.originPath,
-                          copy: value.copy,
-                        },
-                      },
-                    ];
-                  }
-                  if (key === "imageOptimizer") {
-                    value = value as OpenNextImageOptimizationOrigin;
-                    return [
-                      key,
-                      {
-                        imageOptimization: {
-                          function: {
-                            description: `${name} image optimizer`,
-                            handler: value.handler,
-                            bundle: path.join(outputPath, value.bundle),
-                            runtime: "nodejs18.x",
-                            architecture: "arm64",
-                            environment: {
-                              BUCKET_NAME: bucketName,
-                              BUCKET_KEY_PREFIX: "_assets",
-                            },
-                            memory: imageOptimization?.memory ?? "1536 MB",
-                          },
-                        },
-                      },
-                    ];
-                  }
-                  value = value as OpenNextServerFunctionOrigin;
-                  return [
-                    key,
-                    {
-                      server: {
-                        function: {
-                          description: `${name} server`,
-                          bundle: path.join(outputPath, value.bundle),
-                          handler: value.handler,
-                          ...defaultFunctionProps,
-                        },
-                        streaming: value.streaming,
-                        injections:
-                          logging === "per-route"
-                            ? [serverFunctionPerRouteLoggingInjection]
-                            : [],
-                      },
-                    },
-                  ];
-                }),
-              ),
-              behaviors: openNextOutput.behaviors.map((behavior) => {
-                return {
-                  pattern:
-                    behavior.pattern === "*" ? undefined : behavior.pattern,
-                  origin: behavior.origin ?? "",
-                  cacheType:
-                    behavior.origin === "s3" ? "static" : ("server" as const),
-                  cfFunction: "serverCfFunction",
-                  edgeFunction: behavior.edgeFunction ?? "",
-                };
+                  },
+                ];
               }),
-              serverCachePolicy: {
-                allowedHeaders: DEFAULT_CACHE_POLICY_ALLOWED_HEADERS,
-              },
-              buildId,
+            ),
+            behaviors: openNextOutput.behaviors.map((behavior) => {
+              return {
+                pattern:
+                  behavior.pattern === "*" ? undefined : behavior.pattern,
+                origin: behavior.origin ?? "",
+                cacheType:
+                  behavior.origin === "s3" ? "static" : ("server" as const),
+                cfFunction: "serverCfFunction" as const,
+                edgeFunction: behavior.edgeFunction ?? "",
+              };
             }),
-          );
+            serverCachePolicy: {
+              allowedHeaders: DEFAULT_CACHE_POLICY_ALLOWED_HEADERS,
+            },
+            buildId,
+          }) as Plan;
         },
       );
     }

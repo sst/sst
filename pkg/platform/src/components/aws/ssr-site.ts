@@ -18,12 +18,12 @@ import { Cdn, CdnDomainArgs } from "./cdn.js";
 import { Function, FunctionArgs } from "./function.js";
 import { DistributionInvalidation } from "./providers/distribution-invalidation.js";
 import { useProvider } from "./helpers/provider.js";
-import { Bucket } from "./bucket.js";
+import { Bucket, BucketArgs } from "./bucket.js";
 import { BucketFile, BucketFiles } from "./providers/bucket-files.js";
 import { sanitizeToPascalCase } from "../naming.js";
 import { Link } from "../link.js";
 import { Input } from "../input.js";
-import type { Prettify, Transform } from "../component.js";
+import { transform, type Prettify, type Transform } from "../component.js";
 import { VisibleError } from "../error.js";
 
 type CloudFrontFunctionConfig = { injections: string[] };
@@ -201,30 +201,6 @@ export interface SsrSiteArgs {
    * @default Server function is not kept warm
    */
   warm?: Input<number>;
-  // TODO implement `sst dev`
-  //dev?: {
-  //  /**
-  //   * When running `sst dev`, site is not deployed. This is to ensure `sst dev` can start up quickly.
-  //   * @default `false`
-  //   * @example
-  //   * ```js
-  //   * dev: {
-  //   *   deploy: true
-  //   * }
-  //   * ```
-  //   */
-  //  deploy?: boolean;
-  //  /**
-  //   * The local site URL when running `sst dev`.
-  //   * @example
-  //   * ```js
-  //   * dev: {
-  //   *   url: "http://localhost:3000"
-  //   * }
-  //   * ```
-  //   */
-  //  url?: string;
-  //};
   /**
    * Configure how the assets uploaded to S3.
    */
@@ -382,7 +358,10 @@ export interface SsrSiteArgs {
    * resources.
    */
   transform?: {
-    plan?: Transform<Plan>;
+    /**
+     * Transform the Bucket resource.
+     */
+    assets?: Transform<BucketArgs>;
   };
 }
 
@@ -499,7 +478,11 @@ export function buildApp(
   );
 }
 
-export function createBucket(parent: ComponentResource, name: string) {
+export function createBucket(
+  parent: ComponentResource,
+  name: string,
+  args: SsrSiteArgs,
+) {
   const access = createCloudFrontOriginAccessIdentity();
   const bucket = createS3Bucket();
   return { access, bucket };
@@ -515,9 +498,9 @@ export function createBucket(parent: ComponentResource, name: string) {
   function createS3Bucket() {
     return new Bucket(
       `${name}Assets`,
-      {
+      transform(args.transform?.assets, {
         transform: {
-          policy: (args) => {
+          policy: (policyArgs) => {
             const newPolicy = aws.iam.getPolicyDocumentOutput({
               statements: [
                 {
@@ -533,7 +516,7 @@ export function createBucket(parent: ComponentResource, name: string) {
               ],
             }).json;
 
-            args.policy = output([args.policy, newPolicy]).apply(
+            policyArgs.policy = output([policyArgs.policy, newPolicy]).apply(
               ([policy, newPolicy]) => {
                 const policyJson = JSON.parse(policy as string);
                 const newPolicyJson = JSON.parse(newPolicy as string);
@@ -543,7 +526,7 @@ export function createBucket(parent: ComponentResource, name: string) {
             );
           },
         },
-      },
+      }),
       { parent, retainOnDelete: false },
     );
   }

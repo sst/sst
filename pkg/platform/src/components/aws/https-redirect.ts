@@ -95,7 +95,7 @@ export class HttpsRedirect extends Component {
         ),
         priceClass: "PriceClass_All",
         viewerCertificate: {
-          acmCertificateArn: certificate.certificateArn,
+          acmCertificateArn: certificate.arn,
           sslSupportMethod: "sni-only",
         },
         defaultCacheBehavior: {

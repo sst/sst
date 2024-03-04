@@ -301,7 +301,7 @@ export class Astro extends Component implements Link.Linkable {
 
     const parent = this;
     const { sitePath } = prepare(args, opts);
-    const { access, bucket } = createBucket(parent, name);
+    const { access, bucket } = createBucket(parent, name, args);
     const outputPath = buildApp(name, args, sitePath);
     const { buildMeta } = loadBuildOutput();
     const plan = buildPlan();
@@ -560,7 +560,7 @@ export class Astro extends Component implements Link.Linkable {
             });
         }
 
-        return validatePlan(transform(args?.transform?.plan, plan));
+        return validatePlan(plan);
       });
     }
   }

@@ -301,7 +301,7 @@ export class Remix extends Component implements Link.Linkable {
     const edge = normalizeEdge();
     const { sitePath, region } = prepare(args, opts);
     const isUsingVite = checkIsUsingVite();
-    const { access, bucket } = createBucket(parent, name);
+    const { access, bucket } = createBucket(parent, name, args);
     const outputPath = buildApp(name, args, sitePath);
     const plan = buildPlan();
     const { distribution, ssrFunctions, edgeFunctions } =
@@ -363,81 +363,79 @@ export class Remix extends Component implements Link.Linkable {
             : "public";
           const assetsVersionedSubDir = isUsingVite ? undefined : "build";
 
-          return validatePlan(
-            transform(args?.transform?.plan, {
-              edge,
-              cloudFrontFunctions: {
-                serverCfFunction: {
-                  injections: [useCloudFrontFunctionHostHeaderInjection()],
-                },
-                staticCfFunction: {
-                  injections: [
-                    // Note: When using libraries like remix-flat-routes the file can
-                    // contains special characters like "+". It needs to be encoded.
-                    `request.uri = request.uri.split('/').map(encodeURIComponent).join('/');`,
+          return validatePlan({
+            edge,
+            cloudFrontFunctions: {
+              serverCfFunction: {
+                injections: [useCloudFrontFunctionHostHeaderInjection()],
+              },
+              staticCfFunction: {
+                injections: [
+                  // Note: When using libraries like remix-flat-routes the file can
+                  // contains special characters like "+". It needs to be encoded.
+                  `request.uri = request.uri.split('/').map(encodeURIComponent).join('/');`,
+                ],
+              },
+            },
+            edgeFunctions: edge
+              ? {
+                  server: {
+                    function: serverConfig,
+                  },
+                }
+              : undefined,
+            origins: {
+              ...(edge
+                ? {}
+                : {
+                    server: {
+                      server: {
+                        function: serverConfig,
+                      },
+                    },
+                  }),
+              s3: {
+                s3: {
+                  copy: [
+                    {
+                      from: assetsPath,
+                      to: "",
+                      cached: true,
+                      versionedSubDir: assetsVersionedSubDir,
+                    },
                   ],
                 },
               },
-              edgeFunctions: edge
+            },
+            behaviors: [
+              edge
                 ? {
-                    server: {
-                      function: serverConfig,
-                    },
+                    cacheType: "server",
+                    cfFunction: "serverCfFunction",
+                    edgeFunction: "server",
+                    origin: "s3",
                   }
-                : undefined,
-              origins: {
-                ...(edge
-                  ? {}
-                  : {
-                      server: {
-                        server: {
-                          function: serverConfig,
-                        },
-                      },
-                    }),
-                s3: {
-                  s3: {
-                    copy: [
-                      {
-                        from: assetsPath,
-                        to: "",
-                        cached: true,
-                        versionedSubDir: assetsVersionedSubDir,
-                      },
-                    ],
+                : {
+                    cacheType: "server",
+                    cfFunction: "serverCfFunction",
+                    origin: "server",
                   },
-                },
-              },
-              behaviors: [
-                edge
-                  ? {
-                      cacheType: "server",
-                      cfFunction: "serverCfFunction",
-                      edgeFunction: "server",
-                      origin: "s3",
-                    }
-                  : {
-                      cacheType: "server",
-                      cfFunction: "serverCfFunction",
-                      origin: "server",
-                    },
-                // create 1 behaviour for each top level asset file/folder
-                ...fs.readdirSync(path.join(outputPath, assetsPath)).map(
-                  (item) =>
-                    ({
-                      cacheType: "static",
-                      pattern: fs
-                        .statSync(path.join(outputPath, assetsPath, item))
-                        .isDirectory()
-                        ? `${item}/*`
-                        : item,
-                      cfFunction: "staticCfFunction",
-                      origin: "s3",
-                    }) as const,
-                ),
-              ],
-            }),
-          );
+              // create 1 behaviour for each top level asset file/folder
+              ...fs.readdirSync(path.join(outputPath, assetsPath)).map(
+                (item) =>
+                  ({
+                    cacheType: "static",
+                    pattern: fs
+                      .statSync(path.join(outputPath, assetsPath, item))
+                      .isDirectory()
+                      ? `${item}/*`
+                      : item,
+                    cfFunction: "staticCfFunction",
+                    origin: "s3",
+                  }) as const,
+              ),
+            ],
+          });
         },
       );
     }
