@@ -660,14 +660,10 @@ export class Service extends Construct implements SSTConstruct {
       return;
     }
 
-    if (props.cluster) {
-      this.cluster = props.cluster;
-    }
-
     // Create ECS cluster
     const vpc = this.createVpc();
     const { cluster, container, taskDefinition, service } =
-      this.createService(vpc, props.cluster);
+      this.createService(vpc);
     const { alb, target } = this.createLoadBalancer(vpc, service);
     this.createAutoScaling(service, target);
     this.alb = alb;
@@ -949,14 +945,15 @@ export class Service extends Construct implements SSTConstruct {
     );
   }
 
-  private createService(vpc: IVpc, cluster?: Cluster) {
-    const { architecture, cpu, memory, storage, port, logRetention, cdk } =
+  private createService(vpc: IVpc) {
+    const { architecture, cpu, memory, storage, port, logRetention, cdk, cluster: customCluster } =
       this.props;
     const app = this.node.root as App;
     let clusterName: string;
     let logGroup: LogRetention;
+    let cluster: Cluster;
 
-    if (!cluster) {
+    if (!customCluster) {
       clusterName = app.logicalPrefixedName(this.node.id);
 
       logGroup = new LogRetention(this, "LogRetention", {
@@ -974,6 +971,7 @@ export class Service extends Construct implements SSTConstruct {
       });
     } else {
       const serviceName = app.logicalPrefixedName(this.node.id);
+      cluster = customCluster;
       clusterName = cluster.clusterName;
       
       logGroup = new LogRetention(this, "LogRetention", {
