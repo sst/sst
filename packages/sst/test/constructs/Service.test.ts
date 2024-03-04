@@ -1,6 +1,6 @@
 import { test, expect, beforeAll, vi } from "vitest";
 import { HostedZone } from "aws-cdk-lib/aws-route53";
-import { ContainerImage } from "aws-cdk-lib/aws-ecs";
+import { ContainerImage, Cluster } from "aws-cdk-lib/aws-ecs";
 import {
   countResources,
   countResourcesLike,
@@ -229,6 +229,26 @@ test("cpu invalid", async () => {
       cpu: "3 vCPU",
     });
   }).rejects.toThrow(/only the following "cpu" settings/);
+});
+
+
+test("cluster defined", async () => {
+  const app = await createApp();
+  const stack = new Stack(app, "stack");
+  const cluster = new Cluster(stack,
+    "custom-cluster-id",
+    { clusterName: "custom-cluster" }
+  );
+
+  new Service(stack, "Service", {
+    cluster,
+    port: 3000,
+  });
+
+  countResources(stack, "AWS::ECS::Cluster", 1);
+  hasResource(stack, "AWS::ECS::Cluster", {
+    ClusterName: "custom-cluster",
+  });
 });
 
 test("memory undefined", async () => {
