@@ -22,7 +22,7 @@ export interface CronArgs {
    * {
    *   job: {
    *     handler: "src/cron.handler",
-   *     timeout: "60 seconds",
+   *     timeout: "60 seconds"
    *   }
    * }
    * ```
@@ -56,7 +56,7 @@ export interface CronArgs {
    */
   schedule: Input<`rate(${string})` | `cron(${string})`>;
   /**
-   * [Transform](/docs/components#transform/) how this component creates its underlying resources.
+   * [Transform](/docs/components#transform) how this component creates its underlying resources.
    */
   transform?: {
     /**
