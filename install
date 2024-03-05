@@ -1,0 +1,122 @@
+#!/bin/bash
+
+APP=sst
+
+os=$(uname -s | tr '[:upper:]' '[:lower:]')
+arch=$(uname -m)
+
+case "$os" in
+linux)
+case "$arch" in
+x86_64) filename="$APP-linux-x86_64.tar.gz" ;;
+arm64) filename="$APP-linux-arm64.tar.gz" ;;
+i386) filename="$APP-linux-i386.tar.gz" ;;
+*) echo "unsupported architecture: $arch"; exit 1 ;;
+esac
+;;
+darwin)
+case "$arch" in
+x86_64) filename="sst-mac-x86_64.tar.gz" ;;
+arm64) filename="sst-mac-arm64.tar.gz" ;;
+*) echo "unsupported architecture: $arch"; exit 1 ;;
+esac
+;;
+*)
+echo "unsupported os: $os"
+exit 1
+;;
+esac
+
+INSTALL_DIR=$HOME/.sst/bin
+mkdir -p $INSTALL_DIR
+
+echo "downloading $filename"
+url="https://github.com/sst/ion/releases/latest/download/$filename"
+curl -sL $url | tar xz
+mv sst $INSTALL_DIR
+echo "sst has been installed to $INSTALL_DIR"
+
+REFRESH_COMMAND=''
+if [[ ":$PATH:" == *":$INSTALL_DIR:"* ]]; then
+  echo "$INSTALL_DIR is already in your PATH"
+else
+  echo "adding $INSTALL_DIR to your PATH"
+  case $(basename "$SHELL") in
+  fish)
+    echo "ensure $INSTALL_DIR is added to your path - we do not support this automatically in fish shell but you're welcome to contribute a PR: https://github.com/sst/ion/blob/dev/install"
+      ;;
+  zsh)
+      zsh_config=$HOME/.zshrc
+
+      commands=(
+          "export PATH=$INSTALL_DIR:\$PATH"
+      )
+
+      if [[ -w $zsh_config ]]; then
+          {
+              echo -e '\n# sst'
+              for command in "${commands[@]}"; do
+                  echo "$command"
+              done
+          } >>"$zsh_config"
+          exec $SHELL
+      else
+          echo "manually add the directory to $zsh_config (or similar):"
+
+          for command in "${commands[@]}"; do
+              echo "  $command"
+          done
+      fi
+      ;;
+  bash)
+      bash_configs=(
+          "$HOME/.bashrc"
+          "$HOME/.bash_profile"
+      )
+      commands=(
+          "export PATH=$INSTALL_DIR:\$PATH"
+      )
+      if [[ ${XDG_CONFIG_HOME:-} ]]; then
+          bash_configs+=(
+              "$XDG_CONFIG_HOME/.bash_profile"
+              "$XDG_CONFIG_HOME/.bashrc"
+              "$XDG_CONFIG_HOME/bash_profile"
+              "$XDG_CONFIG_HOME/bashrc"
+          )
+      fi
+
+      set_manually=true
+      for bash_config in "${bash_configs[@]}"; do
+          if [[ -w $bash_config ]]; then
+              {
+                  echo -e '\n# bun'
+
+                  for command in "${commands[@]}"; do
+                      echo "$command"
+                  done
+              } >>"$bash_config"
+
+              echo "added \"$INSTALL_DIR\" to \$PATH in \"$bash_config\""
+
+              source $bash_config
+              set_manually=false
+              break
+          fi
+      done
+
+      if [[ $set_manually = true ]]; then
+          echo "manually add the directory to $bash_configs (or similar):"
+
+          for command in "${commands[@]}"; do
+              echo "  $command"
+          done
+      fi
+      ;;
+  *)
+      echo 'manually add the directory to ~/.bashrc (or similar):'
+      info_bold "  export $install_env=$quoted_install_dir"
+      info_bold "  export PATH=\"$bin_env:\$PATH\""
+      ;;
+  esac
+fi
+
