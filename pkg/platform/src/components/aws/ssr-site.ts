@@ -358,7 +358,7 @@ export interface SsrSiteArgs {
    */
   transform?: {
     /**
-     * Transform the Bucket resource.
+     * Transform the Bucket resource used for uploading the assets.
      */
     assets?: Transform<BucketArgs>;
   };

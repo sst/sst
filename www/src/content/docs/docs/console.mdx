@@ -12,3 +12,362 @@ The Console is completely optional and comes with a generous free tier.
 :::
 
 ---
+
+## Get started
+
+Start by creating an account and connecting your AWS account.
+
+:::note
+Currently the Console only supports SST apps **deployed to AWS**.
+:::
+
+1. **Create an account with your email**
+
+   It's better to use your work email so that you can invite your team to your workspace later — [**console.sst.dev**](https://console.sst.dev)
+
+2. **Create a workspace**
+   
+   You can add your apps and invite your team to a workspace. A workspace can be for a personal project or for your team at work. You can create as many workspaces as you want.
+
+   :::tip
+   Create a workspace for your organization. You can use it to invite your team and connect all your AWS accounts.
+   :::
+
+2. **Connect your AWS account**
+
+   This will ask you to create a CloudFormation stack in your AWS account. Make sure that this stack is being added to **us-east-1**. Scroll down and click **Create stack**.
+
+   :::caution
+   The CloudFormation stack needs to be created in **us-east-1**. If you create it in the wrong region by mistake, remove it and create it again.
+   :::
+
+   This stack will scan all the regions in your account for SST apps and subscribe to them. Once created, you'll see all your apps, stages, and the functions in the apps.
+
+3. **Invite your team**
+
+   Use the email address of your teammates to invite them. They just need to login with the email you've used and they'll be able to join your workspace.
+
+---
+
+## Features
+
+Here are a few of the things the Console does for you.
+
+---
+
+### Logs
+
+With the SST Console, you don't need to go to CloudWatch to look at the logs for your functions. You can view:
+
+- Past logs
+- Live logs
+- Jump to a specific time
+
+---
+
+### Issues
+
+The SST Console will automatically show you any errors in your Lambda functions in real-time. And notify you through Slack or email.
+
+With Issues, there is:
+
+- **Nothing to setup**, no code to instrument
+- **Source maps** are supported **automatically**, no need to upload
+- **No impact on performance** or cold starts, since the functions aren't modified
+
+:::tip
+Issues works out of the box and has no impact on performance or cold starts.
+:::
+
+---
+
+#### Behind the scenes
+
+Here's how it works.
+
+1. When an app is deployed or when an account is first synced, we add a log subscriber to your Lambda functions. 
+   - Note there's a maximum of 2 subscribers allowed. More on this below.
+2. The subscriber filters for anything that looks like an error and processes those log lines.
+3. It applies the source maps to the error stack trace.
+4. Finally, it groups similar looking errors together.
+
+---
+
+#### Adding a log subscriber
+
+The process of adding a log subscriber to your Lambda functions might fail. This can happen if:
+
+- We don't have enough permissions to add a subscriber. In this case, update the permissions that you've granted to the Console.
+- We've hit the limit for the number of subscribers. To fix this, you can remove one of the existing subscribers.
+
+You can see these errors in the Issues tab. Once you've fixed these issues, you can hit **Retry** and it'll try attaching the subscriber again. 
+
+---
+
+#### Error detection
+
+Issues reports Lambda function failures. In addition, for Node.js it reports errors that are logged using `console.error(new Error("my-error"))`.
+
+:::note
+For the Console to automatically report your errors, you need to pass in an error object with the `console.error` call, like so — `console.error(new Error("my-error"))`.
+:::
+
+---
+
+#### Limits
+
+There's a soft limit of 10K issues per hour per workspace. If your account goes over this limit, Issues will be temporarily paused. You can [contact us][contact-us] if this happens.
+
+---
+
+### Local logs
+
+When the Console starts up, it checks if you are running `sst dev` locally. If so, then it'll show you real-time logs from your local terminal. This works by connecting to a local server that's run as a part of the SST CLI.
+
+:::info
+The local server only allows access from `localhost` and `console.sst.dev`.
+:::
+
+The local logs works in all browsers and environments. But for certain browsers like Safari or Brave, and Gitpod, it needs some additional configuration.
+
+---
+
+#### Safari & Brave
+
+Certain browsers like Safari and Brave require the local connection between the browser and the `sst dev` CLI to be running on HTTPS.
+
+SST integrates with [mkcert](https://github.com/FiloSottile/mkcert) to automatically generate a self-signed certificate. To set this up:
+
+1. Follow the mkcert [installation steps](https://github.com/FiloSottile/mkcert#installation).
+2. Run `mkcert -install` in your terminal.
+3. Restart your browser.
+4. Restart `sst dev` and navigate to Console in the browser.
+
+---
+
+#### Gitpod
+
+If you are using [Gitpod](https://www.gitpod.io/), you can use the Gitpod Local Companion app to connect to the `sst dev`  process running inside your Gitpod workspace.
+
+To get started:
+
+1. [Install Gitpod Local Companion app](https://www.gitpod.io/blog/local-app#installation).
+2. [Run the Companion app](https://www.gitpod.io/blog/local-app#running).
+3. Navigate to Console in the browser.
+
+The companion app runs locally and creates a tunnelled connection to your Gitpod workspace.
+
+---
+
+## How it works
+
+At a high level, here's how the Console works.
+
+- It's hosted on our side
+
+  It stores some metadata about what resources you have deployed. We'll have a version that can be self-hosted in the future.
+
+- You can view all your apps and stages
+
+  Once you've connected your AWS accounts, it'll deploy a separate CloudFormation stack and connect to any SST apps in it. And all your apps and stages will show up automatically.
+
+- You can manage your apps
+
+  You can view all the SST Functions in your app. You can view all the issues in your functions in real-time with the source maps automatically applied. You can view their logs, invoke them, or replay invocations. You can also save event payloads to your workspace.
+
+  For your local [`sst dev`](/docs/live/) environment, the logs will be streamed in real-time from your local machine.
+
+- It's open-source, built with SST, and deployed with [Seed](https://seed.run)
+
+  The Console is a full-stack SST app. You can view the [source on GitHub](https://github.com/sst/console).
+
+---
+
+## Security
+
+The CloudFormation stack that the Console uses, creates an IAM Role in your account to manage your resources. If this is a concern for your production environments, we have a couple of options.
+
+By default, this role is granted `AdministratorAccess`, but you can customize it to restrict access. We'll look at this below. Additionally, if you'd like us to sign a BAA, feel free to [contact us][contact-us].
+
+There maybe we cases where you don't want any data leaving your AWS account. For this, we'll be supporting self-hosting the Console in the future.
+
+---
+
+#### IAM permissions
+
+Permissions for the SST Console fall into two categories: read and write.
+
+- **Read Permissions** — The Console needs specific permissions to display information about resources within your SST apps:
+
+  | Purpose                                | AWS IAM Action                   |
+  |----------------------------------------|----------------------------------|
+  | Fetch stack outputs                    | `cloudformation:DescribeStacks`  |
+  | Retrieve function runtime and size     | `lambda:GetFunction`      |
+  | Access stack metadata                  | `ec2:DescribeRegions`<br/>`s3:GetObject`<br/>`s3:ListBucket`|
+  | Display function logs                  | `logs:DescribeLogStreams`<br/>`logs:FilterLogEvents`<br/>`logs:GetLogEvents`<br/>`logs:StartQuery`|
+  | Monitor invocation usage               | `cloudwatch:GetMetricData`       |
+
+  Attach the `arn:aws:iam::aws:policy/ReadOnlyAccess` AWS managed policy to the IAM Role for comprehensive read access.
+
+- **Write Permissions** — The Console requires the following write permissions:
+
+  | Purpose                                          | AWS IAM Action                                                               |
+  |-----------------------------------------------------|------------------------------------------------------------------------------|
+  | Forward bootstrap bucket events to event bus     | `s3:PutBucketNotification`                                      |
+  | Send events to SST Console                       | `events:PutRule`<br/>`events:PutTargets`                           |
+  | Grant event bus access for SST Console           | `iam:CreateRole`<br/>`iam:DeleteRole`<br/>`iam:DeleteRolePolicy`<br/>`iam:PassRole`<br/>`iam:PutRolePolicy` |
+  | Enable Issues to subscribe logs                  | `logs:CreateLogGroup`<br/>`logs:PutSubscriptionFilter` |
+  | Invoke Lambda functions and replay invocations   | `lambda:InvokeFunction` |
+
+
+It's good practice to periodically review and update these policies.
+
+---
+
+#### Customize policy
+
+To customize IAM permissions for the CloudFormation stack:
+
+1. On the CloudFormation create stack page, download the default `template.json`.
+
+2. Edit the template file with necessary changes.
+
+   <details>
+   <summary>_View the template changes_</summary>
+   
+     ```diff
+         "SSTRole": {
+           "Type": "AWS::IAM::Role",
+           "Properties": {
+             ...
+             "ManagedPolicyArns": [
+     -         "arn:aws:iam::aws:policy/AdministratorAccess"
+     +         "arn:aws:iam::aws:policy/ReadOnlyAccess"
+     +       ],
+     +       "Policies": [
+     +         {
+     +           "PolicyName": "SSTPolicy",
+     +           "PolicyDocument": {
+     +             "Version": "2012-10-17",
+     +             "Statement": [
+     +               {
+     +                 "Effect": "Allow",
+     +                 "Action": [
+     +                   "s3:PutBucketNotification"
+     +                 ],
+     +                 "Resource": [
+     +                   "arn:aws:s3:::sstbootstrap-*"
+     +                 ]
+     +               },
+     +               {
+     +                 "Effect": "Allow",
+     +                 "Action": [
+     +                   "events:PutRule",
+     +                   "events:PutTargets"
+     +                 ],
+     +                 "Resource": {
+     +                   "Fn::Sub": "arn:aws:events:*:${AWS::AccountId}:rule/SSTConsole*"
+     +                 }
+     +               },
+     +               {
+     +                 "Effect": "Allow",
+     +                 "Action": [
+     +                   "iam:CreateRole",
+     +                   "iam:DeleteRole",
+     +                   "iam:DeleteRolePolicy",
+     +                   "iam:PassRole",
+     +                   "iam:PutRolePolicy"
+     +                 ],
+     +                 "Resource": {
+     +                   "Fn::Sub": "arn:aws:iam::${AWS::AccountId}:role/SSTConsolePublisher*"
+     +                 }
+     +               },
+     +               {
+     +                 "Effect": "Allow",
+     +                 "Action": [
+     +                   "logs:CreateLogGroup",
+     +                   "logs:PutSubscriptionFilter"
+     +                 ],
+     +                 "Resource": {
+     +                   "Fn::Sub": "arn:aws:logs:*:${AWS::AccountId}:log-group:*"
+     +                 }
+     +               },
+     +               {
+     +                 "Effect": "Allow",
+     +                 "Action": [
+     +                   "lambda:InvokeFunction"
+     +                 ],
+     +                 "Resource": {
+     +                   "Fn::Sub": "arn:aws:lambda:*:${AWS::AccountId}:function:*"
+     +                 }
+     +               }
+     +             ]
+     +           }
+     +         }
+             ]
+           }
+         }
+     ```
+   
+   </details>
+
+3. Upload your edited `template.json` file to an S3 bucket.
+
+4. Return to the CloudFormation create stack page and replace the template URL in the page URL.
+
+---
+
+## Pricing
+
+The SST Console pricing is based on the number of times the Lambda functions in your SST apps are invoked per month and it uses the following tiers.
+
+| Invocations | Rate (per invocation) |
+|-------------|------|
+| First 1M    | Free |
+| 1M - 10M    | $0.00002 |
+| 10M+        | $0.000002 |
+
+A couple of things to note.
+
+- These are calculated for a given workspace on a monthly basis.
+- This does not apply to local stages, they'll be free forever.
+- There's also a soft limit for Issues on all accounts.
+- For volume pricing, feel free to [contact us][contact-us].
+
+
+---
+
+## FAQ
+
+- Do I need to use the Console to use SST?
+
+  You don't need the Console to use SST. It displays the local logs from your terminal in a UI that's more convenient.
+
+- What if I don't want to pay for the Console?
+
+  You can still invite your team and use it to view your local logs and stages.
+
+- Do I need a credit card to get started?
+
+  The Console is free to get started and **doesn't need a credit card**.
+
+- Which Lambda functions are included in the number of invocations?
+
+  The number of invocations are only counted for the **Lambda functions in your SST apps**. Other Lambda functions in your AWS accounts are not included.
+
+- Do the functions in my local stages count as a part of the invocations?
+
+  Lambda functions that are invoked **locally are not included**.
+
+- Can I access the local stages if I'm above the free tier?
+
+  If you go above the free tier in your _production_ stages, you **can still access your local stages**. Just make sure you have `sst dev` running locally, otherwise the Console won't be able to detect that it's a local stage.
+
+- My invocation volume is far higher than the listed tiers. Are there any other options?
+
+  Feel free to [contact us][contact-us] and we can figure out a pricing plan that works for you.
+
+If you have any further questions, feel free to [send us an email][contact-us].
+
+
+[contact-us]: mailto:hello@sst.dev

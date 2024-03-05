@@ -13,7 +13,7 @@
   + :is(.starlight-aside, .expressive-code) {
   margin-top: calc(var(--paragraph-spacing) + 0.4375rem);
 }
-.sl-markdown-content :is(.starlight-aside, .expressive-code)
+.sl-markdown-content :is(.starlight-aside, .expressive-code, table)
   + :not(a, strong, em, del, span, input, code, h1, h2, h3, h4, h5, h6, :where(.not-content *)) {
   margin-top: calc(var(--paragraph-spacing) + 0.5rem);
 }
@@ -308,4 +308,7 @@
 }
 .sl-markdown-content :is(th, td):not(:where(.not-content *)) {
   padding-block: 0.5rem;
+}
+.sl-markdown-content :is(th):not(:where(.not-content *)) {
+  padding-block-start: 0;
 }
