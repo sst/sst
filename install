@@ -59,7 +59,9 @@ else
                   echo "$command"
               done
           } >>"$zsh_config"
+          echo "starting"
           $SHELL
+          echo "done"
       else
           echo "manually add the directory to $zsh_config (or similar):"
 
