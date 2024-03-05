@@ -60,7 +60,7 @@ export class SecretMissingError extends VisibleError {
  * You can link the secret to other resources, like a function or your Next.js app.
  *
  * ```ts
- * new sst.aws.Nextjs("Web", {
+ * new sst.aws.Nextjs("MyWeb", {
  *   link: [mySecret]
  * });
  * ```

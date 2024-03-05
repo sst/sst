@@ -133,7 +133,7 @@ export interface QueueSubscribeArgs {
  * You can link the queue to other resources, like a function or your Next.js app.
  *
  * ```ts
- * new sst.aws.Nextjs("Web", {
+ * new sst.aws.Nextjs("MyWeb", {
  *   link: [myQueue]
  * });
  * ```

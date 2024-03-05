@@ -307,7 +307,7 @@ export interface DynamoSubscribeArgs {
  * You can link the table to other resources, like a function or your Next.js app.
  *
  * ```ts
- * new sst.aws.Nextjs("Web", {
+ * new sst.aws.Nextjs("MyWeb", {
  *   link: [myTable]
  * });
  * ```

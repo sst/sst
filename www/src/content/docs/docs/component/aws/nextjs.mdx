@@ -20,7 +20,7 @@ output to a format that can be deployed to AWS.
 Deploy the Next.js app that's in the project root.
 
 ```js
-new sst.aws.Nextjs("Web");
+new sst.aws.Nextjs("MyWeb");
 ```
 
 #### Change the path
@@ -28,7 +28,7 @@ new sst.aws.Nextjs("Web");
 Deploys a Next.js app in the `my-next-app/` directory.
 
 ```js {2}
-new sst.aws.Nextjs("Web", {
+new sst.aws.Nextjs("MyWeb", {
   path: "my-next-app/"
 });
 ```
@@ -38,7 +38,7 @@ new sst.aws.Nextjs("Web", {
 Set a custom domain for your Next.js app.
 
 ```js {2}
-new sst.aws.Nextjs("Web", {
+new sst.aws.Nextjs("MyWeb", {
   domain: "my-app.com"
 });
 ```
@@ -48,7 +48,7 @@ new sst.aws.Nextjs("Web", {
 Redirect `www.my-app.com` to `my-app.com`.
 
 ```js {4}
-new sst.aws.Nextjs("Web", {
+new sst.aws.Nextjs("MyWeb", {
   domain: {
     domainName: "my-app.com",
     redirects: ["www.my-app.com"]
@@ -64,7 +64,7 @@ to the resources and allow you to access it in your app.
 ```ts {4}
 const myBucket = new sst.aws.Bucket("MyBucket");
 
-new sst.aws.Nextjs("Web", {
+new sst.aws.Nextjs("MyWeb", {
   link: [myBucket]
 });
 ```

@@ -182,11 +182,7 @@
 .sl-markdown-content .expressive-code .ec-line.ins,
 .sl-markdown-content .expressive-code .ec-line.del {
   border-inline-start: none;
-}
-.sl-markdown-content .expressive-code .ec-line mark,
-.sl-markdown-content .expressive-code .ec-line ins,
-.sl-markdown-content .expressive-code .ec-line del {
-  padding-inline: 0.3125rem;
+  padding-inline: var(--ec-codePadInl) !important;
 }
 .sl-markdown-content .expressive-code .ec-line mark:before,
 .sl-markdown-content .expressive-code .ec-line ins:before,
