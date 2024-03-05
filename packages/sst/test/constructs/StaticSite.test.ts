@@ -491,6 +491,14 @@ test("constructor: path not exist", async () => {
   }).rejects.toThrow(/No path found/);
 });
 
+test("constructor: path with space", async () => {
+  expect(async () => {
+    await createSite({
+      path: "test/constructs/site with space in path",
+    });
+  }).rejects.not.toThrow(/No path found/);
+});
+
 test("constructor: errorPage is string", async () => {
   const { stack } = await createSite({
     errorPage: "error.html",

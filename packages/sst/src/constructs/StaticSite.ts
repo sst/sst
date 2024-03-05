@@ -587,11 +587,11 @@ interface ImportMeta {
       : 200;
     const cmd = [
       "node",
-      script,
+      `"${script}"`, // wrapping in quotes to escape paths with spaces
       Buffer.from(JSON.stringify([{ src: siteOutputPath, tar: "" }])).toString(
         "base64"
       ),
-      zipPath,
+      `"${zipPath}"`,
       fileSizeLimit,
     ].join(" ");
 
