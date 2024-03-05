@@ -14,9 +14,11 @@ _Note: Ion is currently in alpha and only supports deploying Next.js sites and L
 
 ## Installation
 
-### Curl
+### curl
 sst can be installed using a simple curl command
-`curl -fsSL https://ion.sst.dev/install | bash`
+```
+curl -fsSL https://ion.sst.dev/install | bash
+```
 
 #### macOS
 
