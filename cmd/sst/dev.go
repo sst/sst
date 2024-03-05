@@ -120,7 +120,7 @@ func CmdDev(cli *Cli) error {
 	}()
 
 	state := &server.State{}
-	fmt.Print("\033[H\033[2J")
+	// fmt.Print("\033[H\033[2J")
 	u := ui.New(ui.ProgressModeDev)
 	err = server.Connect(cli.Context, server.ConnectInput{
 		CfgPath: cfgPath,
