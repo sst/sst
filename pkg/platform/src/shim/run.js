@@ -1,5 +1,3 @@
-import * as aws from "@pulumi/aws";
-import * as cloudflare from "@pulumi/cloudflare";
 import * as util from "@pulumi/pulumi";
 import * as sst from "../components/";
 import { Link } from "../components/link";
@@ -16,8 +14,6 @@ export {
   all as "$all",
   interpolate as "$interpolate",
   util as "$util",
-  aws as "aws",
-  cloudflare as "cloudflare",
   sst as "sst",
   $config as "$config",
   $secrets as "$secrets",

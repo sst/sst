@@ -157,6 +157,13 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 	if err != nil {
 		return err
 	}
+
+	providerShim := []string{}
+	for name := range s.project.app.Providers {
+		providerShim = append(providerShim, fmt.Sprintf("import * as %s from '@pulumi/%s'", name, name))
+		providerShim = append(providerShim, fmt.Sprintf("globalThis.%s = %s", name, name))
+	}
+
 	buildResult, err := js.Build(js.EvalOptions{
 		Dir: s.project.PathPlatformDir(),
 		Define: map[string]string{
@@ -167,11 +174,13 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 		Inject: []string{filepath.Join(s.project.PathWorkingDir(), "platform/src/shim/run.js")},
 		Code: fmt.Sprintf(`
       import { run } from "%v";
+      %v
       import mod from "%v/sst.config.ts";
       const result = await run(mod.run)
       export default result
     `,
 			filepath.Join(s.project.PathWorkingDir(), "platform/src/auto/run.ts"),
+			strings.Join(providerShim, "\n"),
 			s.project.PathRoot(),
 		),
 	})
