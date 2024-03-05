@@ -22,9 +22,9 @@ const sidebar = [
   {
     label: "Concepts",
     items: [
+      { label: "Live", link: "/docs/live/" },
       { label: "Linking", link: "/docs/linking/" },
       { label: "Console", link: "/docs/console/" },
-      { label: "Live Mode", link: "/docs/live-mode/" },
       { label: "Components", link: "/docs/components/" },
     ],
   },
