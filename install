@@ -1,5 +1,5 @@
 #!/bin/bash
-
+set -euo pipefail
 APP=sst
 
 os=$(uname -s | tr '[:upper:]' '[:lower:]')
@@ -59,9 +59,7 @@ else
                   echo "$command"
               done
           } >>"$zsh_config"
-          echo "starting"
-          $SHELL
-          echo "done"
+          exec zsh -i
       else
           echo "manually add the directory to $zsh_config (or similar):"
 
