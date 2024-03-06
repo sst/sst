@@ -17,7 +17,7 @@ import (
 )
 
 func CmdDev(cli *Cli) error {
-	args := cli.positionals
+	args := cli.arguments
 	hasTarget := len(args) > 0
 
 	cfgPath, err := project.Discover()

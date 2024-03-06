@@ -95,7 +95,7 @@ func run() error {
 			}
 			for _, c := range last.Children {
 				if c.Name == arg {
-					cmd = &c
+					cmd = c
 					break
 				}
 			}
@@ -118,11 +118,11 @@ func run() error {
 	flag.Parse()
 
 	cli := &Cli{
-		flags:       parsedFlags,
-		positionals: positionals,
-		path:        cmds,
-		Context:     ctx,
-		cancel:      cancel,
+		flags:     parsedFlags,
+		arguments: positionals,
+		path:      cmds,
+		Context:   ctx,
+		cancel:    cancel,
 	}
 
 	configureLog(cli)
@@ -155,7 +155,15 @@ func run() error {
 	spin.Stop()
 
 	active := cmds[len(cmds)-1]
-	if cli.Bool("help") || active.Run == nil {
+
+	required := 0
+	for _, arg := range active.Args {
+		if !arg.Required {
+			continue
+		}
+		required += 1
+	}
+	if cli.Bool("help") || active.Run == nil || len(cli.arguments) != required {
 		return cli.PrintHelp()
 	} else {
 		return active.Run(cli)
@@ -182,7 +190,7 @@ var Root = Command{
 			Description: "print help",
 		},
 	},
-	Children: []Command{
+	Children: []*Command{
 		{
 			Name:        "version",
 			Description: "print the version",
@@ -194,7 +202,23 @@ var Root = Command{
 		{
 			Name:        "import",
 			Description: "import existing resource",
-			Args:        "<type> <name> <id>",
+			Args: []Argument{
+				{
+					Name:        "type",
+					Required:    true,
+					Description: "The type of the resource",
+				},
+				{
+					Name:        "name",
+					Required:    true,
+					Description: "The name of the resource",
+				},
+				{
+					Name:        "id",
+					Required:    true,
+					Description: "The id of the resource",
+				},
+			},
 			Flags: []Flag{
 				{
 					Type:        "string",
@@ -230,25 +254,39 @@ var Root = Command{
 		{
 			Name:        "dev",
 			Description: "run in development mode",
-			Args:        "[target command]",
+			Args:        []Argument{{Name: "command", Description: "The command to run"}},
 			Run:         CmdDev,
 		},
 		{
 			Name:        "secret",
 			Description: "manage secrets",
-			Children: []Command{
+			Children: []*Command{
 				{
 					Name:        "set",
 					Description: "set a secret",
-					Args:        "<name> <value>",
-					Examples: []string{
-						"sst secret set StripeSecret 123456789",
-						"sst secret set StripeSecret productionsecret --stage=production",
+					Args: []Argument{
+						{
+							Name:        "name",
+							Required:    true,
+							Description: "The name of the secret",
+						},
+						{
+							Name:        "value",
+							Required:    true,
+							Description: "The value of the secret",
+						},
+					},
+					Examples: []Example{
+						{
+							Content:     "sst secret set StripeSecret 123456789",
+							Description: "Set the StripeSecret to 123456789",
+						},
+						{
+							Content:     "sst secret set StripeSecret productionsecret --stage=production",
+							Description: "Set the StripeSecret to production",
+						},
 					},
 					Run: func(cli *Cli) error {
-						if cli.PositionalLength() < 2 {
-							return cli.PrintHelp()
-						}
 						key := cli.Positional(0)
 						value := cli.Positional(1)
 						p, err := initProject(cli)
@@ -295,7 +333,7 @@ var Root = Command{
 		},
 		{
 			Name:        "shell",
-			Args:        "[command]",
+			Args:        []Argument{{Name: "command", Description: "The command to run"}},
 			Description: "run command with all resource linked in environment",
 			Run: func(cli *Cli) error {
 				p, err := initProject(cli)
@@ -309,7 +347,7 @@ var Root = Command{
 				if err != nil {
 					return err
 				}
-				args := cli.positionals
+				args := cli.arguments
 				if len(args) == 0 {
 					args = append(args, "sh")
 				}
@@ -531,7 +569,7 @@ var Root = Command{
 		{
 			Name:        "state",
 			Description: "manage state of your deployment",
-			Children: []Command{
+			Children: []*Command{
 				{
 					Name:        "edit",
 					Description: "edit the state of your deployment",
@@ -574,12 +612,16 @@ var Root = Command{
 	},
 }
 
+func init() {
+	Root.init()
+}
+
 type Cli struct {
-	flags       map[string]interface{}
-	positionals []string
-	path        CommandPath
-	Context     context.Context
-	cancel      context.CancelFunc
+	flags     map[string]interface{}
+	arguments []string
+	path      CommandPath
+	Context   context.Context
+	cancel    context.CancelFunc
 }
 
 func (c *Cli) Cancel() {
@@ -604,23 +646,66 @@ func (c *Cli) PrintHelp() error {
 	return c.path.PrintHelp()
 }
 
-func (c *Cli) PositionalLength() int {
-	return len(c.positionals)
+func (c *Cli) Arguments() []string {
+	return c.arguments
 }
 
 func (c *Cli) Positional(index int) string {
-	return c.positionals[index]
+	return c.arguments[index]
 }
 
 type Command struct {
 	Name        string               `json:"name"`
 	Hidden      bool                 `json:"hidden"`
 	Description string               `json:"description"`
-	Args        string               `json:"args"`
+	Args        ArgumentList         `json:"args"`
 	Flags       []Flag               `json:"flags"`
-	Examples    []string             `json:"examples"`
-	Children    []Command            `json:"children"`
+	Examples    []Example            `json:"examples"`
+	Children    []*Command           `json:"children"`
 	Run         func(cli *Cli) error `json:"-"`
+}
+
+func (c *Command) init() {
+	if c.Args == nil {
+		c.Args = ArgumentList{}
+	}
+	if c.Flags == nil {
+		c.Flags = []Flag{}
+	}
+	if c.Examples == nil {
+		c.Examples = []Example{}
+	}
+	if c.Children == nil {
+		c.Children = []*Command{}
+	}
+	for _, cmd := range c.Children {
+		cmd.init()
+	}
+}
+
+type Example struct {
+	Content     string `json:"content"`
+	Description string `json:"description"`
+}
+
+type Argument struct {
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	Required    bool   `json:"required"`
+}
+
+type ArgumentList []Argument
+
+func (a ArgumentList) String() string {
+	args := []string{}
+	for _, arg := range a {
+		if arg.Required {
+			args = append(args, "<"+arg.Name+">")
+		} else {
+			args = append(args, "["+arg.Name+"]")
+		}
+	}
+	return strings.Join(args, " ")
 }
 
 type Flag struct {
@@ -650,8 +735,8 @@ func (c CommandPath) PrintHelp() error {
 				continue
 			}
 			next := len(child.Name)
-			if child.Args != "" {
-				next += len(child.Args) + 1
+			if len(child.Args) > 0 {
+				next += len(child.Args.String())
 			}
 			if next > maxSubcommand {
 				maxSubcommand = next
@@ -666,7 +751,7 @@ func (c CommandPath) PrintHelp() error {
 			fmt.Printf(
 				"  %s %s  %s\n",
 				strings.Join(prefix, " "),
-				color.New(color.FgWhite, color.Bold).Sprintf("%-*s", maxSubcommand, strings.Join([]string{child.Name, child.Args}, " ")),
+				color.New(color.FgWhite, color.Bold).Sprintf("%-*s", maxSubcommand, strings.Join([]string{child.Name, child.Args.String()}, " ")),
 				child.Description,
 			)
 		}
@@ -675,8 +760,8 @@ func (c CommandPath) PrintHelp() error {
 	if len(active.Children) == 0 {
 		color.New(color.FgWhite, color.Bold).Print("Usage: ")
 		color.New(color.FgCyan).Print(strings.Join(prefix, " "))
-		if active.Args != "" {
-			color.New(color.FgGreen).Print(" " + active.Args)
+		if len(active.Args) > 0 {
+			color.New(color.FgGreen).Print(" " + active.Args.String())
 		}
 		fmt.Println()
 		fmt.Println()
@@ -706,7 +791,7 @@ func (c CommandPath) PrintHelp() error {
 			fmt.Println()
 			color.New(color.FgWhite, color.Bold).Print("Examples:\n")
 			for _, example := range active.Examples {
-				fmt.Println("  " + example)
+				fmt.Println("  " + example.Content)
 			}
 		}
 	}
