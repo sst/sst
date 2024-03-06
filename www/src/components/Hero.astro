@@ -30,7 +30,7 @@ const  slug = Astro.props.entry.slug;
     </button>
   </div>
   <div class="actions">
-    <a href="/docs/what-is-ion">What is Ion</a>
+    <a href="/docs/">What is Ion</a>
     <a href="/docs/start/nextjs">Get Started</a>
   </div>
   </div>
@@ -115,14 +115,14 @@ const  slug = Astro.props.entry.slug;
     justify-content: center;
     margin-bottom: 1rem;
 	}
-  a {
+  .actions a {
     color: var(--sl-color-text-accent);
     text-underline-offset: 0.1875rem;
     text-decoration: none;
     font-family: var(--sl-font-mono);
     font-weight: 500;
   }
-  a:hover {
+  .actions a:hover {
     text-decoration: underline;
   }
 

@@ -9,7 +9,7 @@ const mode = import.meta.env.MODE;
 const sidebar = [
   {
     label: "What is Ion",
-    link: "/docs/what-is-ion/",
+    link: "/docs/",
   },
   {
     label: "Get Started",
