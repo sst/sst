@@ -3,15 +3,29 @@ title: Use Next.js with SST
 description: Create and deploy a Next.js app to AWS with SST and OpenNext.
 ---
 
-Prerequisites
+We are going to create a Next.js app, add an S3 Bucket for file uploads, and deploy it to AWS using SST.
 
-- Configure AWS credentials
+Before you get started, you want to:
 
-Steps
+1. [Configure your AWS credentials](https://docs.sst.dev/advanced/iam-credentials#loading-from-a-file)
 
-1. Create Next.js app
+2. ```bash title="Install SST"
+   curl -fsSL https://ion.sst.dev/install | bash
+   ```
 
-1. Install SST
+:::note
+The CLI currently supports macOS, Linux, and WSL.
+:::
+
+---
+
+## 1. Create a Next.js app
+
+Let's start by creating our app.
+
+```bash
+npx create-next-app@latest
+```
 
 1. Init SST
 

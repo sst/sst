@@ -15,9 +15,9 @@ const sidebar = [
     label: "Get Started",
     items: [
       { label: "Next.js", link: "/docs/start/nextjs/" },
-      { label: "Remix", link: "/docs/start/remix/" },
-      { label: "Astro", link: "/docs/start/astro/" },
-      { label: "API", link: "/docs/start/api/" },
+      //      { label: "Remix", link: "/docs/start/remix/" },
+      //      { label: "Astro", link: "/docs/start/astro/" },
+      //      { label: "API", link: "/docs/start/api/" },
     ],
   },
   {
@@ -122,7 +122,7 @@ export default defineConfig({
         github: config.github,
       },
       editLink: {
-        baseUrl: "https://github.com/sst/ion/edit/main/www",
+        baseUrl: "https://github.com/sst/ion/edit/dev/www",
       },
       components: {
         Hero: "./src/components/Hero.astro",

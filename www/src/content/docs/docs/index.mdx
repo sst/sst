@@ -15,10 +15,18 @@ Once Ion is stable, it’ll be released as SST v3. [Read the full announcement](
 
 ---
 
-SST Ion is a framework that makes it easy to build modern full-stack applications on your own infrastructure.
+Aside from the underlying engine, there are a few differences between SST v2 and Ion.
+
+- There are no _"stacks"_ and no stack resource limits.
+- There are no npm packages for the CLI, just the CLI and the `sst.config.ts`.
+- The `bind` command has been merged into the `dev` command. You don't need to run both of them.
+
+---
+
+SST is a framework that makes it easy to build modern full-stack applications on your own infrastructure.
 
 :::note
-Ion currently **only supports Node.js** applications. Support for other languages and runtimes are on the roadmap.
+Ion currently **only supports Node.js** applications and **macOS, Linux, and WSL**. Support for other runtimes and OSes are on the roadmap.
 :::
 
 If you are new to SST, here's how it works.
@@ -230,6 +238,8 @@ To make this all work, Ion comes with a CLI that you install globally.
 ```bash
 https://ion.sst.dev/install | bash
 ```
+
+The CLI currently supports macOS, Linux, and WSL.
 
 ---
 

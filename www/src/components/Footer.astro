@@ -1,13 +1,25 @@
 ---
+import userConfig from 'virtual:starlight/user-config';
 import type { Props } from '@astrojs/starlight/props';
 import { Icon } from '@astrojs/starlight/components';
 import config from '../../config';
 
-const { editUrl, template, lastUpdated } = Astro.props.entry.data;
+const slug = Astro.props.entry.slug;
+const editLink = userConfig.editLink.baseUrl;
+const componentSrcPath = "pkg/platform/src/components";
+const { template, lastUpdated } = Astro.props.entry.data;
+
+const editUrl = slug.startsWith("docs/component/")
+  // Change path for component source files
+  ? new URL(
+    `${componentSrcPath}/${slug.replace("docs/component/", "")}.ts`, editLink
+  )
+  : Astro.props.editUrl;
+
 ---
 
 {
-  template === "docs" && (
+  template === "doc" && (
     <footer>
       <div class="meta sl-flex">
         <div>
