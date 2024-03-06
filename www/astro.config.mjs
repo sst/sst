@@ -2,6 +2,7 @@ import { defineConfig } from "astro/config";
 import starlight from "@astrojs/starlight";
 import sitemap from "@astrojs/sitemap";
 import config from "./config";
+import sst from "astro-sst";
 
 const mode = import.meta.env.MODE;
 
@@ -83,6 +84,10 @@ if (mode === "development") {
 // https://astro.build/config
 export default defineConfig({
   site: "https://ion.sst.dev",
+  adapter: sst(),
+  server: {
+    host: "0.0.0.0",
+  },
   integrations: [
     sitemap({
       filter: (page) => !page.includes("/dummy/"),
