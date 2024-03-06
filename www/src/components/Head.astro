@@ -24,6 +24,10 @@ const ogImageUrl = slug === ""
   : `${config.socialCard}/ion/${encodedTitle}.png`;
 ---
 
+{ slug === "" && (
+  <title>{title}</title>
+)}
+
 <Default {...Astro.props}><slot /></Default>
 
 <meta property="og:image" content={ogImageUrl} />

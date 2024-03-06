@@ -88,7 +88,7 @@ export default defineConfig({
       filter: (page) => !page.includes("/dummy/"),
     }),
     starlight({
-      title: "Ion Docs",
+      title: "Ion",
       logo: {
         light: "./src/assets/logo-light.svg",
         dark: "./src/assets/logo-dark.svg",
@@ -117,6 +117,7 @@ export default defineConfig({
         baseUrl: "https://github.com/sst/ion/edit/main/www",
       },
       components: {
+        Hero: "./src/components/Hero.astro",
         Head: "./src/components/Head.astro",
         Header: "./src/components/Header.astro",
         Footer: "./src/components/Footer.astro",
