@@ -134,7 +134,7 @@ export interface PostgresArgs {
  * You can link your database to other resources, like a function or your Next.js app.
  *
  * ```ts
- * new sst.aws.Nextjs("Web", {
+ * new sst.aws.Nextjs("MyWeb", {
  *   link: [myDatabase]
  * });
  * ```

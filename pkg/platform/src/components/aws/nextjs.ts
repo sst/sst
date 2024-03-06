@@ -385,7 +385,7 @@ export interface NextjsArgs extends SsrSiteArgs {
  * Deploy the Next.js app that's in the project root.
  *
  * ```js
- * new sst.aws.Nextjs("Web");
+ * new sst.aws.Nextjs("MyWeb");
  * ```
  *
  * #### Change the path
@@ -393,7 +393,7 @@ export interface NextjsArgs extends SsrSiteArgs {
  * Deploys a Next.js app in the `my-next-app/` directory.
  *
  * ```js {2}
- * new sst.aws.Nextjs("Web", {
+ * new sst.aws.Nextjs("MyWeb", {
  *   path: "my-next-app/"
  * });
  * ```
@@ -403,7 +403,7 @@ export interface NextjsArgs extends SsrSiteArgs {
  * Set a custom domain for your Next.js app.
  *
  * ```js {2}
- * new sst.aws.Nextjs("Web", {
+ * new sst.aws.Nextjs("MyWeb", {
  *   domain: "my-app.com"
  * });
  * ```
@@ -413,7 +413,7 @@ export interface NextjsArgs extends SsrSiteArgs {
  * Redirect `www.my-app.com` to `my-app.com`.
  *
  * ```js {4}
- * new sst.aws.Nextjs("Web", {
+ * new sst.aws.Nextjs("MyWeb", {
  *   domain: {
  *     domainName: "my-app.com",
  *     redirects: ["www.my-app.com"]
@@ -429,7 +429,7 @@ export interface NextjsArgs extends SsrSiteArgs {
  * ```ts {4}
  * const myBucket = new sst.aws.Bucket("MyBucket");
  *
- * new sst.aws.Nextjs("Web", {
+ * new sst.aws.Nextjs("MyWeb", {
  *   link: [myBucket]
  * });
  * ```

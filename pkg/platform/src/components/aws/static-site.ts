@@ -396,7 +396,7 @@ export interface StaticSiteArgs {
    */
   transform?: {
     /**
-     * Transform the Bucket resource.
+     * Transform the Bucket resource used for uploading the assets.
      */
     assets?: Transform<BucketArgs>;
   };
@@ -414,7 +414,7 @@ export interface StaticSiteArgs {
  * Simply uploads the current directory as a static site.
  *
  * ```js
- * new sst.aws.StaticSite("Web");
+ * new sst.aws.StaticSite("MyWeb");
  * ```
  *
  * #### Change the path
@@ -422,7 +422,7 @@ export interface StaticSiteArgs {
  * Change the `path` that should be uploaded.
  *
  * ```js
- * new sst.aws.StaticSite("Web", {
+ * new sst.aws.StaticSite("MyWeb", {
  *   path: "path/to/site"
  * });
  * ```
@@ -432,7 +432,7 @@ export interface StaticSiteArgs {
  * Use [Vite](https://vitejs.dev) to deploy a React/Vue/Svelte/etc. SPA by specifying the `build` config.
  *
  * ```js
- * new sst.aws.StaticSite("Web", {
+ * new sst.aws.StaticSite("MyWeb", {
  *   build: {
  *     command: "npm run build",
  *     output: "dist"
@@ -445,7 +445,7 @@ export interface StaticSiteArgs {
  * Use [Jekyll](https://jekyllrb.com) to deploy a static site.
  *
  * ```js
- * new sst.aws.StaticSite("Web", {
+ * new sst.aws.StaticSite("MyWeb", {
  *   errorPage: "404.html",
  *   build: {
  *     command: "bundle exec jekyll build",
@@ -459,7 +459,7 @@ export interface StaticSiteArgs {
  * Use [Gatsby](https://www.gatsbyjs.com) to deploy a static site.
  *
  * ```js
- * new sst.aws.StaticSite("Web", {
+ * new sst.aws.StaticSite("MyWeb", {
  *   errorPage: "404.html",
  *   build: {
  *     command: "npm run build",
@@ -473,7 +473,7 @@ export interface StaticSiteArgs {
  * Use [Angular](https://angular.dev) to deploy a SPA.
  *
  * ```js
- * new sst.aws.StaticSite("Web", {
+ * new sst.aws.StaticSite("MyWeb", {
  *   build: {
  *     command: "ng build --output-path dist",
  *     output: "dist"
@@ -486,7 +486,7 @@ export interface StaticSiteArgs {
  * Set a custom domain for your site.
  *
  * ```js {2}
- * new sst.aws.StaticSite("Web", {
+ * new sst.aws.StaticSite("MyWeb", {
  *   domain: "my-app.com"
  * });
  * ```
@@ -496,7 +496,7 @@ export interface StaticSiteArgs {
  * Redirect `www.my-app.com` to `my-app.com`.
  *
  * ```js {4}
- * new sst.aws.StaticSite("Web", {
+ * new sst.aws.StaticSite("MyWeb", {
  *   domain: {
  *     domainName: "my-app.com",
  *     redirects: ["www.my-app.com"]
@@ -517,7 +517,7 @@ export interface StaticSiteArgs {
  * ```ts {5-7}
  * const myBucket = new sst.aws.Bucket("MyBucket");
  *
- * new sst.aws.StaticSite("Web", {
+ * new sst.aws.StaticSite("MyWeb", {
  *   environment: {
  *     BUCKET_NAME: myBucket.name,
  *     // Accessible in the browser

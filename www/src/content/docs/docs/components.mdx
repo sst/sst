@@ -19,12 +19,42 @@ You can also use any Pulumi component in your SST app. This is useful if you wan
 
 ## Providers
 
-Components are classes that are name spaced under the cloud provider it deploys to. Currently, Ion supports two providers:
+Components are classes that are name spaced under the cloud provider it deploys to. Currently, Ion supports two providers out of the box. Support for other providers is coming soon.
 
-1. AWS
-2. Cloudflare
+---
 
-Support for other providers is on the roadmap.
+### AWS
+
+This is Pulumi's [AWS Classic](https://www.pulumi.com/registry/packages/aws/) provider is automatically included in your SST app. So you can directly use Pulumi's AWS components.
+
+```js
+import * as aws from "@pulumi/aws";
+
+new aws.s3.BucketV2("b", {
+  bucket: "mybucket",
+  tags: {
+    Name: "My bucket"
+  }
+});
+```
+
+---
+
+### Cloudflare
+
+This is Pulumi's [Cloudflare](https://www.pulumi.com/registry/packages/cloudflare/) provider and it's also included in your SST app. Allowing you use Cloudflare components.
+
+```js
+import * as cloudflare from "@pulumi/cloudflare";
+
+new cloudflare.Record("sample-record", {
+  name: "my-record",
+  zoneId: "xxsdfhsfkashadf",
+  type: "A",
+  value: "192.168.0.11",
+  ttl: 3600
+});
+```
 
 ---
 
@@ -114,9 +144,11 @@ This allows you to either:
 
   ```ts
   {
-    transform: (args) => ({
-      name: `${args.name}-MyRole`
-    })
+    transform: {
+      role: (args) => ({
+        name: `${args.name}-MyRole`
+      })
+    }
   }
   ```
 
@@ -124,8 +156,10 @@ This allows you to either:
 
   ```ts
   {
-    transform: (args) => {
-      args.name = `${args.name}-MyRole`;
+    transform: {
+      role: (args) => {
+        args.name = `${args.name}-MyRole`;
+      }
     }
   }
   ```

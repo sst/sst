@@ -159,7 +159,7 @@ export interface BucketSubscribeArgs {
  * You can link the bucket to other resources, like a function or your Next.js app.
  *
  * ```ts
- * new sst.aws.Nextjs("Web", {
+ * new sst.aws.Nextjs("MyWeb", {
  *   link: [myBucket]
  * });
  * ```
