@@ -1,7 +1,7 @@
 import { VisibleError } from "./error";
 import { output, secret } from "@pulumi/pulumi";
 import { Link } from "./link";
-import { Component } from "./component";
+import { Component, Prettify } from "./component";
 
 export class SecretMissingError extends VisibleError {
   constructor(public readonly secretName: string) {

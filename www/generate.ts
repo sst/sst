@@ -4,22 +4,53 @@ import * as TypeDoc from "typedoc";
 
 try {
   await configureLogger();
-  await patchInput();
+  await patchCode();
   await main();
 } finally {
-  await restoreInput();
+  await restoreCode();
 }
 
 async function main() {
-  const modules = await buildDocs();
+  const modules = await buildTsFiles();
   for (const module of modules) {
-    const fileName = `${module.name}.mdx`;
+    console.info(`Generating ${module.name}...`);
+    const sourceFile = module.sources![0].fileName;
+    let outputFilePath: string;
+    let outputFileContent: string[][];
     const linkHashes = new Map<TypeDoc.DeclarationReflection, string>();
-    console.info(`Generating ${fileName}...`);
-    await fs.writeFile(
-      path.join("src/content/docs/docs/component", fileName),
-      [
-        renderHeader(),
+
+    // Render config file
+    if (sourceFile === "pkg/platform/src/global-config.d.ts") return;
+    else if (sourceFile === "pkg/platform/src/config.ts") {
+      // merge config and global-config files
+      module.children = [
+        ...module.children!,
+        ...modules.find((m) => m.name === "global-config")!.children!,
+      ];
+
+      outputFilePath = path.join(
+        `src/content/docs/docs/reference/${module.name}.mdx`
+      );
+      outputFileContent = [
+        renderConfigHeader(),
+        renderImports(),
+        renderConfigVariables(),
+        renderConfigFunctions(),
+        renderInterfaces(),
+        renderFooter(),
+      ];
+    }
+    // Render components
+    else {
+      // Remove leading `components/`
+      // module.name = "components/aws/bucket"
+      // module.name = "components/secret"
+      outputFilePath = path.join(
+        "src/content/docs/docs/component",
+        `${module.name.split("/").slice(1).join("/")}.mdx`
+      );
+      outputFileContent = [
+        renderComponentHeader(),
         renderImports(),
         renderAbout(),
         renderConstructor(),
@@ -28,13 +59,12 @@ async function main() {
         renderLinks(),
         renderInterfaces(),
         renderFooter(),
-      ]
-        .flat()
-        .join("\n")
-    );
+      ];
+    }
 
-    function renderHeader() {
-      // TODO: Add a link to the full class name instead of sst.AWS
+    await fs.writeFile(outputFilePath, outputFileContent.flat().join("\n"));
+
+    function renderComponentHeader() {
       return [
         `---`,
         `title: ${useClassName()}`,
@@ -43,19 +73,113 @@ async function main() {
       ];
     }
 
+    function renderConfigHeader() {
+      return [
+        `---`,
+        `title: Config`,
+        `description: Configure your SST app.`,
+        `---`,
+      ];
+    }
+
     function renderImports() {
-      // Secrets doc is written to "component/secret.mdx"
-      // Bucket doc is written to "component/aws/bucket.mdx"
-      const relativePath = module.name.split("/").length === 1 ? ".." : "../..";
+      const relativePath = path.relative(outputFilePath, "src");
       return [
         ``,
-        `import Segment from '${relativePath}/../../../components/tsdoc/Segment.astro';`,
-        `import Section from '${relativePath}/../../../components/tsdoc/Section.astro';`,
-        `import NestedTitle from '${relativePath}/../../../components/tsdoc/NestedTitle.astro';`,
-        `import InlineSection from '${relativePath}/../../../components/tsdoc/InlineSection.astro';`,
+        `import Segment from '${relativePath}/src/components/tsdoc/Segment.astro';`,
+        `import Section from '${relativePath}/src/components/tsdoc/Section.astro';`,
+        `import NestedTitle from '${relativePath}/src/components/tsdoc/NestedTitle.astro';`,
+        `import InlineSection from '${relativePath}/src/components/tsdoc/InlineSection.astro';`,
         "",
         '<div class="tsdoc">',
       ];
+    }
+
+    function renderConfigVariables() {
+      const lines: string[] = [];
+      const vars = (module.children ?? []).filter(
+        (c) =>
+          c.kind === TypeDoc.ReflectionKind.Variable &&
+          !c.comment?.modifierTags.has("@internal")
+      );
+
+      if (!vars.length) return lines;
+
+      // $app's type is Simplify<$APP>, and there's no way to get the flattened type
+      // in TypeDoc. So we'll replace $app's type with the $APP interface.
+      const type$app = vars.find((v) => v.name === "$app");
+      const interface$app = useInterfaces().find((i) => i.name === "$APP");
+      if (type$app && interface$app) {
+        // @ts-expect-error
+        type$app.type = {
+          type: "reflection",
+          declaration: interface$app,
+        };
+      }
+
+      lines.push(``, `## Variables`);
+
+      for (const v of vars) {
+        console.debug(` - variable ${v.name}`);
+        lines.push(
+          ``,
+          `### ${renderName(v)}`,
+          `<Segment>`,
+          `<Section type="parameters">`,
+          `<InlineSection>`,
+          `**Type** ${renderType(v.type!)}`,
+          `</InlineSection>`,
+          ...renderNestedTypeList(v),
+          `</Section>`,
+          ...renderDescription(v),
+          ...renderExamples(v),
+          `</Segment>`,
+          // nested props (ie. `.nodes`)
+          ...useNestedTypes(v.type!, v.name).flatMap(
+            ({ depth, prefix, subType }) => [
+              `<NestedTitle id="${linkHashes.get(subType)}" Tag="${
+                depth === 0 ? "h4" : "h5"
+              }" parent="${prefix}.">${renderName(subType)}</NestedTitle>`,
+              `<Segment>`,
+              `<Section type="parameters">`,
+              `<InlineSection>`,
+              `**Type** ${renderType(subType.type!)}`,
+              `</InlineSection>`,
+              `</Section>`,
+              ...renderDescription(subType),
+              `</Segment>`,
+            ]
+          )
+        );
+      }
+      return lines;
+    }
+
+    function renderConfigFunctions() {
+      const lines: string[] = [];
+      const fns = (module.children ?? []).filter(
+        (f) =>
+          f.kind === TypeDoc.ReflectionKind.Function &&
+          !f.signatures![0].comment?.modifierTags.has("@internal")
+      );
+
+      if (!fns.length) return lines;
+
+      lines.push(``, `## Functions`);
+
+      for (const f of fns) {
+        console.debug(` - function ${f.name}`);
+        lines.push(
+          ``,
+          `### ${renderName(f)}`,
+          `<Segment>`,
+          ...renderDescription(f.signatures![0]),
+          ``,
+          ...renderExamples(f.signatures![0]),
+          `</Segment>`
+        );
+      }
+      return lines;
     }
 
     function renderAbout() {
@@ -109,7 +233,7 @@ async function main() {
             `- <p><code class="key">${renderSignatureArg(
               param
             )}</code> ${renderType(param.type!)}</p>`,
-            ...(renderDescription(param) ?? []),
+            ...renderDescription(param),
           ]),
           `</Section>`
         );
@@ -148,7 +272,7 @@ async function main() {
               `- <p><code class="key">${renderSignatureArg(
                 param
               )}</code> ${renderType(param.type!)}</p>`,
-              ...(renderDescription(param) ?? []),
+              ...renderDescription(param),
             ]),
             `</Section>`
           );
@@ -156,9 +280,9 @@ async function main() {
 
         lines.push(
           ...renderReturnValue(m.signatures![0]),
-          ...(renderDescription(m.signatures![0]) ?? []),
+          ...renderDescription(m.signatures![0]),
           ``,
-          ...(renderExamples(m.signatures![0]) ?? []),
+          ...renderExamples(m.signatures![0]),
           `</Segment>`
         );
       }
@@ -184,7 +308,7 @@ async function main() {
           `</InlineSection>`,
           ...renderNestedTypeList(g.getSignature!),
           `</Section>`,
-          ...(renderDescription(g.getSignature!) ?? []),
+          ...renderDescription(g.getSignature!),
           `</Segment>`,
           // nested props (ie. `.nodes`)
           ...useNestedTypes(g.getSignature!.type!, g.name).flatMap(
@@ -198,7 +322,7 @@ async function main() {
               `**Type** ${renderType(subType.type!)}`,
               `</InlineSection>`,
               `</Section>`,
-              ...(renderDescription(subType) ?? []),
+              ...renderDescription(subType),
               `</Segment>`,
             ]
           )
@@ -260,7 +384,7 @@ async function main() {
           `**Type** ${renderType(type)}`,
           `</InlineSection>`,
           `</Section>`,
-          ...(renderDescription(getter.getSignature!) ?? []),
+          ...renderDescription(getter.getSignature!),
           `</Segment>`
         );
       }
@@ -269,8 +393,11 @@ async function main() {
 
     function renderInterfaces() {
       const lines: string[] = [];
+      const interfaces = useInterfaces().filter(
+        (c) => !c.comment?.modifierTags.has("@internal")
+      );
 
-      for (const int of useInterfaces()) {
+      for (const int of interfaces) {
         console.debug(` - interface ${int.name}`);
         // interface name
         lines.push(``, `## ${int.name}`);
@@ -282,41 +409,78 @@ async function main() {
 
         // props
         for (const prop of useInterfaceProps(int)) {
-          console.debug(`   - interface prop ${prop.name}`);
-          lines.push(
-            `### ${renderName(prop)}`,
-            `<Segment>`,
-            `<Section type="parameters">`,
-            `<InlineSection>`,
-            `**Type** ${renderType(prop.type!)}`,
-            `</InlineSection>`,
-            ...renderNestedTypeList(prop),
-            `</Section>`,
-            ...(renderDefaultTag(prop) ?? []),
-            ...(renderDescription(prop) ?? []),
-            ``,
-            ...(renderExamples(prop) ?? []),
-            `</Segment>`,
-            // nested props (ie. `.domain`, `.transform`)
-            ...useNestedTypes(prop.type!, prop.name).flatMap(
-              ({ depth, prefix, subType }) => [
-                `<NestedTitle id="${linkHashes.get(subType)}" Tag="${
-                  depth === 0 ? "h4" : "h5"
-                }" parent="${prefix}.">${renderName(subType)}</NestedTitle>`,
-                `<Segment>`,
-                `<Section type="parameters">`,
-                `<InlineSection>`,
-                `**Type** ${renderType(subType.type!)}`,
-                `</InlineSection>`,
-                `</Section>`,
-                ...(renderDefaultTag(subType) ?? []),
-                ...(renderDescription(subType) ?? []),
+          if (prop.kind === TypeDoc.ReflectionKind.Property) {
+            console.debug(`   - interface prop ${prop.name}`);
+            lines.push(
+              `### ${renderName(prop)}`,
+              `<Segment>`,
+              `<Section type="parameters">`,
+              `<InlineSection>`,
+              `**Type** ${renderType(prop.type!)}`,
+              `</InlineSection>`,
+              ...renderNestedTypeList(prop),
+              `</Section>`,
+              ...renderDefaultTag(prop),
+              ...renderDescription(prop),
+              ``,
+              ...renderExamples(prop),
+              `</Segment>`,
+              // nested props (ie. `.domain`, `.transform`)
+              ...useNestedTypes(prop.type!, prop.name).flatMap(
+                ({ depth, prefix, subType }) => [
+                  `<NestedTitle id="${linkHashes.get(subType)}" Tag="${
+                    depth === 0 ? "h4" : "h5"
+                  }" parent="${prefix}.">${renderName(subType)}</NestedTitle>`,
+                  `<Segment>`,
+                  `<Section type="parameters">`,
+                  `<InlineSection>`,
+                  `**Type** ${renderType(subType.type!)}`,
+                  `</InlineSection>`,
+                  `</Section>`,
+                  ...renderDefaultTag(subType),
+                  ...renderDescription(subType),
+                  ``,
+                  ...renderExamples(subType),
+                  `</Segment>`,
+                ]
+              )
+            );
+          } else if (prop.kind === TypeDoc.ReflectionKind.Method) {
+            console.debug(`   - interface method ${prop.name}`);
+            lines.push(
+              `### ${renderName(prop)}`,
+              `<Segment>`,
+              `<Section type="signature">`,
+              "```ts",
+              renderSignature(prop.signatures![0]),
+              "```",
+              `</Section>`
+            );
+
+            // parameters
+            if (prop.signatures![0].parameters?.length) {
+              lines.push(
                 ``,
-                ...(renderExamples(subType) ?? []),
-                `</Segment>`,
-              ]
-            )
-          );
+                `<Section type="parameters">`,
+                `#### Parameters`,
+                ...prop.signatures![0].parameters.flatMap((param) => [
+                  `- <p><code class="key">${renderSignatureArg(
+                    param
+                  )}</code> ${renderType(param.type!)}</p>`,
+                  ...renderDescription(param),
+                ]),
+                `</Section>`
+              );
+            }
+
+            lines.push(
+              ...renderReturnValue(prop.signatures![0]),
+              ...renderDescription(prop.signatures![0]),
+              ``,
+              ...renderExamples(prop.signatures![0]),
+              `</Segment>`
+            );
+          }
         }
       }
 
@@ -356,7 +520,7 @@ async function main() {
         | TypeDoc.ParameterReflection
         | TypeDoc.SignatureReflection
     ) {
-      if (!prop.comment?.summary) return;
+      if (!prop.comment?.summary) return [];
       return [renderComment(prop.comment?.summary)];
     }
 
@@ -364,7 +528,7 @@ async function main() {
       const defaultTag = prop.comment?.blockTags.find(
         (tag) => tag.tag === "@default"
       );
-      if (!defaultTag) return;
+      if (!defaultTag) return [];
       return [
         ``,
         `<InlineSection>`,
@@ -418,7 +582,7 @@ async function main() {
     function renderExamples(
       prop: TypeDoc.DeclarationReflection | TypeDoc.SignatureReflection
     ) {
-      return prop.comment?.blockTags
+      return (prop.comment?.blockTags ?? [])
         .filter((tag) => tag.tag === "@example")
         .flatMap((tag) => renderComment(tag.content));
     }
@@ -558,14 +722,17 @@ async function main() {
         ].join("");
       }
       // types in the same doc (links to the class ie. `subscribe()` return type)
-      if (type.name === useClassName()) {
+      if (isModuleClassComponent() && type.name === useClassName()) {
         return `[<code class="type">${type.name}</code>](.)`;
       }
       // types in the same doc (links to an interface)
       if (useInterfaces().find((i) => i.name === type.name)) {
+        // HACK: in Config doc, there are 3 `app` links on the page, `app`, `app-1`, and
+        //       `app-2`. We need to link to `app-1`.
+        const postfix = isModuleConfig() && type.name === "App" ? "-1" : "";
         return `[<code class="type">${
           type.name
-        }</code>](#${type.name.toLowerCase()})`;
+        }</code>](#${type.name.toLowerCase()}${postfix})`;
       }
       // types in different doc
       const externalModule = {
@@ -603,7 +770,13 @@ async function main() {
       if (type.name === "ComponentResourceOptions") {
         return `[<code class="type">${type.name}</code>](https://www.pulumi.com/docs/concepts/options/)`;
       }
+      // Handle $util type in global.d.ts
+      if (type.name === "__module") {
+        return `[<code class="type">@pulumi/pulumi</code>](https://www.pulumi.com/docs/reference/pkg/nodejs/pulumi/pulumi/)`;
+      }
 
+      // @ts-expect-error
+      delete type._project;
       console.error(type);
       throw new Error(`Unsupported @pulumi/pulumi type`);
     }
@@ -672,6 +845,15 @@ async function main() {
     }
     function renderObjectType(type: TypeDoc.ReflectionType) {
       return `<code class="primitive">Object</code>`;
+    }
+
+    function isModuleConfig() {
+      const sourceFile = module.sources![0].fileName;
+      return sourceFile === "pkg/platform/src/config.ts";
+    }
+
+    function isModuleClassComponent() {
+      return !isModuleConfig();
     }
 
     function useClass() {
@@ -795,7 +977,7 @@ async function main() {
   }
 }
 
-async function buildDocs() {
+async function buildTsFiles() {
   // Generate project reflection
   const app = await TypeDoc.Application.bootstrap({
     // Ignore type errors caused by patching `Input<>`.
@@ -805,22 +987,24 @@ async function buildDocs() {
       defaultTag: false,
     },
     entryPoints: [
+      "../pkg/platform/src/config.ts",
+      "../pkg/platform/src/global-config.d.ts",
       "../pkg/platform/src/components/secret.ts",
-      "../pkg/platform/src/components/aws/apigatewayv2.ts",
-      "../pkg/platform/src/components/aws/bucket.ts",
-      "../pkg/platform/src/components/aws/cron.ts",
-      "../pkg/platform/src/components/aws/dynamo.ts",
-      "../pkg/platform/src/components/aws/function.ts",
-      "../pkg/platform/src/components/aws/postgres.ts",
-      "../pkg/platform/src/components/aws/vector.ts",
-      "../pkg/platform/src/components/aws/astro.ts",
-      "../pkg/platform/src/components/aws/nextjs.ts",
-      "../pkg/platform/src/components/aws/remix.ts",
-      "../pkg/platform/src/components/aws/queue.ts",
-      "../pkg/platform/src/components/aws/router.ts",
-      "../pkg/platform/src/components/aws/sns-topic.ts",
-      "../pkg/platform/src/components/aws/static-site.ts",
-      "../pkg/platform/src/components/cloudflare/worker.ts",
+      //"../pkg/platform/src/components/aws/apigatewayv2.ts",
+      //"../pkg/platform/src/components/aws/bucket.ts",
+      //"../pkg/platform/src/components/aws/cron.ts",
+      //"../pkg/platform/src/components/aws/dynamo.ts",
+      //"../pkg/platform/src/components/aws/function.ts",
+      //"../pkg/platform/src/components/aws/postgres.ts",
+      //"../pkg/platform/src/components/aws/vector.ts",
+      //"../pkg/platform/src/components/aws/astro.ts",
+      //"../pkg/platform/src/components/aws/nextjs.ts",
+      //"../pkg/platform/src/components/aws/remix.ts",
+      //"../pkg/platform/src/components/aws/queue.ts",
+      //"../pkg/platform/src/components/aws/router.ts",
+      //"../pkg/platform/src/components/aws/sns-topic.ts",
+      //"../pkg/platform/src/components/aws/static-site.ts",
+      //"../pkg/platform/src/components/cloudflare/worker.ts",
     ],
     tsconfig: "../pkg/platform/tsconfig.json",
   });
@@ -842,7 +1026,8 @@ function configureLogger() {
   console.debug = () => {};
 }
 
-async function patchInput() {
+async function patchCode() {
+  // patch Input
   await fs.rename(
     "../pkg/platform/src/components/input.ts",
     "../pkg/platform/src/components/input.ts.bk"
@@ -851,11 +1036,29 @@ async function patchInput() {
     "./input-patch.ts",
     "../pkg/platform/src/components/input.ts"
   );
+  // patch global
+  const globalType = await fs.readFile("../pkg/platform/src/global.d.ts");
+  await fs.writeFile(
+    "../pkg/platform/src/global-config.d.ts",
+    globalType
+      .toString()
+      .trim()
+      // move all exports out of `declare global {}`, b/c TypeDoc doesn't support it
+      .replace("declare global {", "")
+      .replace(/}$/, "")
+      // change `export import $util` to `export const $util` b/c TypeDoc
+      // tries to traverse the import and fails. We don't need to look into $util
+      // anyways as we will link to the pulumi docs.
+      .replace("export import $util", "export const $util")
+  );
 }
 
-async function restoreInput() {
+async function restoreCode() {
+  // restore Input
   await fs.rename(
     "../pkg/platform/src/components/input.ts.bk",
     "../pkg/platform/src/components/input.ts"
   );
+  // restore global
+  await fs.rm("../pkg/platform/src/global-config.d.ts");
 }

@@ -1,0 +1,246 @@
+---
+title: Config
+description: Configure your SST app.
+---
+
+import Segment from '../../../../../src/components/tsdoc/Segment.astro';
+import Section from '../../../../../src/components/tsdoc/Section.astro';
+import NestedTitle from '../../../../../src/components/tsdoc/NestedTitle.astro';
+import InlineSection from '../../../../../src/components/tsdoc/InlineSection.astro';
+
+<div class="tsdoc">
+
+## Variables
+
+### $app
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Object</code>
+</InlineSection>
+- <p>[<code class="key">name</code>](#app-name)</p>
+- <p>[<code class="key">providers</code>](#app-providers)</p>
+- <p>[<code class="key">removalPolicy?</code>](#app-removalpolicy)</p>
+- <p>[<code class="key">stage</code>](#app-stage)</p>
+</Section>
+Information about the app
+</Segment>
+<NestedTitle id="app-name" Tag="h4" parent="$app.">name</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">string</code>
+</InlineSection>
+</Section>
+Name of the app
+</Segment>
+<NestedTitle id="app-providers" Tag="h4" parent="$app.">providers</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">undefined</code><code class="symbol"> | </code><code class="primitive">Record</code><code class="symbol">&lt;</code><code class="primitive">string</code>, <code class="primitive">any</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+The providers to use in the app
+</Segment>
+<NestedTitle id="app-removalpolicy" Tag="h4" parent="$app.">removalPolicy?</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="symbol">&ldquo;</code><code class="primitive">remove</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">retain</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">retain-all</code><code class="symbol">&rdquo;</code>
+</InlineSection>
+</Section>
+Whether to retain or remove resources on app removal
+- remove: remove all resources
+- retain: retain S3 buckets and DynamoDB tables, and remove all other resources
+- retain-all: retain all resources
+</Segment>
+<NestedTitle id="app-stage" Tag="h4" parent="$app.">stage</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">string</code>
+</InlineSection>
+</Section>
+The stage of the app
+</Segment>
+
+### $dev
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">boolean</code>
+</InlineSection>
+</Section>
+True if running in `sst dev`
+</Segment>
+
+### $util
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** [<code class="type">@pulumi/pulumi</code>](https://www.pulumi.com/docs/reference/pkg/nodejs/pulumi/pulumi/)
+</InlineSection>
+</Section>
+Access the Pulumi SDK utilities without needing to import them.
+To create a new asset, you can do
+```ts
+const myFiles = new $util.asset.FileArchive("./path/to/files");
+```
+
+This is equivalent to
+```ts
+import * as pulumi from "@pulumi/pulumi";
+
+const myFiles = new pulumi.asset.FileArchive("./path/to/files");
+```
+</Segment>
+
+## Functions
+
+### $all
+<Segment>
+Wait for all Output values to resolve
+
+```ts
+declare value1: Output<string>;
+declare value2: Output<string>;
+
+$all([value1, value2]).apply(([value1, value2]) =>
+  console.log({ value1, value2 })
+);
+```
+</Segment>
+
+### $interpolate
+<Segment>
+String interpolation with Output values.
+
+```ts
+const bucket = new sst.aws.Bucket("MyBucket");
+
+const description = $interpolate`This is a bucket named ${bucket.name}`;
+```
+
+This is equivalent to
+```ts
+const description = bucket.name.apply(name => `This is a bucket named ${name}`);
+```
+</Segment>
+
+## App
+
+Information about the app
+### name
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">string</code>
+</InlineSection>
+</Section>
+Name of the app
+
+</Segment>
+### providers?
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Record</code><code class="symbol">&lt;</code><code class="primitive">string</code>, <code class="primitive">any</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+Providers to use in the app
+
+```ts
+{
+  providers: {
+    aws: {},
+    cloudflare: {
+      accountId: "6fef9ed9089bb15de3e4198618385de2",
+    },
+  },
+}
+```
+</Segment>
+### removalPolicy?
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="symbol">&ldquo;</code><code class="primitive">remove</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">retain</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">retain-all</code><code class="symbol">&rdquo;</code>
+</InlineSection>
+</Section>
+
+<InlineSection>
+**Default** "retain"
+</InlineSection>
+Whether to retain or remove resources on app removal
+- remove: remove all resources
+- retain: retain S3 buckets and DynamoDB tables, and remove all other resources
+- retain-all: retain all resources
+
+Retain resources if the stage is "production", otherwise remove all resources.
+```ts
+{
+  removalPolicy: input.stage === "production" ? "retain" : "remove",
+}
+```
+</Segment>
+
+## Config
+
+Config interfact holds the app and run function
+### app
+<Segment>
+<Section type="signature">
+```ts
+app(input)
+```
+</Section>
+
+<Section type="parameters">
+#### Parameters
+- <p><code class="key">input</code> <code class="primitive">Object</code></p>
+</Section>
+
+<InlineSection>
+**Returns** [<code class="type">App</code>](#app-1)
+</InlineSection>
+Define the information about the app
+
+```ts
+app(input) {
+  return {
+    name: "my-sst-app",
+    providers: {
+      aws: {},
+      cloudflare: {
+        accountId: "6fef9ed9089bb15de3e4198618385de2",
+      },
+    },
+    removalPolicy: input.stage === "production" ? "retain" : "remove",
+  };
+},
+```
+</Segment>
+### run
+<Segment>
+<Section type="signature">
+```ts
+run()
+```
+</Section>
+
+<InlineSection>
+**Returns** <code class="primitive">Promise</code><code class="symbol">&lt;</code><code class="primitive">void</code><code class="symbol"> | </code><code class="primitive">Record</code><code class="symbol">&lt;</code><code class="primitive">string</code>, <code class="primitive">any</code><code class="symbol">&gt;</code><code class="symbol">&gt;</code>
+</InlineSection>
+Define the resources in the app
+
+```ts
+async run() {
+  const bucket = new sst.aws.Bucket("MyBucket");
+  return {
+    bucketName: bucket.name,
+  };
+}
+```
+</Segment>
+</div>
