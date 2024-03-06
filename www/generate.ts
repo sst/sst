@@ -2,15 +2,226 @@ import * as path from "path";
 import * as fs from "fs/promises";
 import * as TypeDoc from "typedoc";
 
+type CliCommand = {
+  name: string;
+  hidden: boolean;
+  description: string;
+  args: { name: string; description: string; required: boolean }[] | null;
+  flags:
+    | { name: string; description: string; type: "string" | "bool" }[]
+    | null;
+  examples: { content: string; description: string }[] | null;
+  children: CliCommand[] | null;
+};
+
+const cmd = process.argv[2];
+
 try {
   await configureLogger();
   await patchCode();
-  await main();
+  if ((cmd ?? "tsdoc") === "tsdoc") await generateTsDoc();
+  if ((cmd ?? "cli") === "cli") await generateCliDoc();
 } finally {
   await restoreCode();
 }
 
-async function main() {
+async function generateCliDoc() {
+  const content = await fs.readFile("cli-doc.json");
+  const json = JSON.parse(content.toString()) as CliCommand;
+  const outputFilePath = `src/content/docs/docs/reference/cli.mdx`;
+
+  await fs.writeFile(
+    outputFilePath,
+    [
+      renderCliHeader(),
+      renderCliImports(),
+      renderCliGlobalFlags(),
+      renderCliCommands(),
+      renderCliFooter(),
+    ]
+      .flat()
+      .join("\n")
+  );
+
+  function renderCliHeader() {
+    return [
+      `---`,
+      `title: CLI`,
+      `description: Reference doc for the SST CLI.`,
+      `---`,
+    ];
+  }
+
+  function renderCliImports() {
+    const relativePath = path.relative(outputFilePath, "src");
+    return [
+      ``,
+      `import Segment from '${relativePath}/src/components/tsdoc/Segment.astro';`,
+      `import Section from '${relativePath}/src/components/tsdoc/Section.astro';`,
+      `import NestedTitle from '${relativePath}/src/components/tsdoc/NestedTitle.astro';`,
+      `import InlineSection from '${relativePath}/src/components/tsdoc/InlineSection.astro';`,
+      "",
+      '<div class="tsdoc">',
+    ];
+  }
+
+  function renderCliGlobalFlags() {
+    const lines: string[] = [];
+    if (!json.flags) return lines;
+
+    lines.push(``, `## Global Flags`);
+
+    for (const f of json.flags) {
+      console.debug(` - global flag ${f.name}`);
+      lines.push(
+        ``,
+        `### ${f.name}`,
+        `<Segment>`,
+        `<Section type="parameters">`,
+        `<InlineSection>`,
+        `**Type** ${renderCliType(f.type)}`,
+        `</InlineSection>`,
+        `</Section>`,
+        f.description,
+        `</Segment>`
+      );
+    }
+    return lines;
+  }
+
+  function renderCliCommands() {
+    const lines: string[] = [];
+    if (!json.children) return lines;
+
+    lines.push(``, `## Commands`);
+
+    for (const c of json.children.filter((c) => !c.hidden)) {
+      console.debug(` - command ${c.name}`);
+      lines.push(``, `### ${c.name}`, `<Segment>`);
+
+      // args
+      // TODO render 'arg.required'
+      if (c.args) {
+        lines.push(
+          ``,
+          `<Section type="parameters">`,
+          `#### Args`,
+          ...c.args.flatMap((a) => [
+            `- <p><code class="key">${a.name}</code></p>`,
+            a.description,
+          ]),
+          `</Section>`
+        );
+      }
+
+      // flags
+      if (c.flags) {
+        lines.push(
+          ``,
+          `<Section type="parameters">`,
+          `#### Flags`,
+          ...c.flags.flatMap((f) => [
+            `- <p><code class="key">${f.name}</code> ${renderCliType(
+              f.type
+            )}</p>`,
+            f.description,
+          ]),
+          `</Section>`
+        );
+      }
+
+      // subcommands
+      if (c.children) {
+        lines.push(
+          ``,
+          `<Section type="parameters">`,
+          `#### Subcommands`,
+          ...c.children
+            .filter((s) => !s.hidden)
+            .flatMap((s) => [
+              `- <p>[<code class="key">${s.name}</code>](#${c.name}-${s.name})</p>`,
+            ]),
+          `</Section>`
+        );
+      }
+
+      // examples
+      lines.push(
+        c.description,
+        ...(c.examples ?? []).flatMap((e) => [
+          e.description,
+          "```",
+          e.content,
+          "```",
+        ]),
+        `</Segment>`
+      );
+
+      // subcommands details
+      (c.children ?? [])
+        .filter((s) => !s.hidden)
+        .flatMap((s) => {
+          lines.push(
+            `<NestedTitle id="${c.name}-${s.name}" Tag="h4" parent="${c.name} ">${s.name}</NestedTitle>`,
+            `<Segment>`,
+            `<Section type="parameters">`
+          );
+
+          // subcommand args
+          if (s.args) {
+            lines.push(
+              `<InlineSection>`,
+              `**Args**`,
+              ...s.args.flatMap((a) => [
+                `- <p><code class="key">${a.name}</code></p>`,
+                a.description,
+              ]),
+              `</InlineSection>`
+            );
+          }
+
+          // subcommand flags
+          if (s.flags) {
+            lines.push(
+              `<InlineSection>`,
+              `**Args**`,
+              ...s.flags.flatMap((f) => [
+                `- <p><code class="key">${f.name}</code></p>`,
+                f.description,
+              ]),
+              `</InlineSection>`
+            );
+          }
+
+          // subcommands examples
+          lines.push(
+            `</Section>`,
+            s.description,
+            ...(s.examples ?? []).flatMap((e) => [
+              e.description,
+              "```",
+              e.content,
+              "```",
+            ]),
+            `</Segment>`
+          );
+        });
+    }
+    return lines;
+  }
+
+  function renderCliFooter() {
+    return ["</div>"];
+  }
+
+  function renderCliType(type: "string" | "bool") {
+    return `<code class="primitive">${
+      type === "bool" ? "boolean" : type
+    }</code>`;
+  }
+}
+
+async function generateTsDoc() {
   const modules = await buildTsFiles();
   for (const module of modules) {
     console.info(`Generating ${module.name}...`);
@@ -28,9 +239,7 @@ async function main() {
         ...modules.find((m) => m.name === "global-config")!.children!,
       ];
 
-      outputFilePath = path.join(
-        `src/content/docs/docs/reference/${module.name}.mdx`
-      );
+      outputFilePath = `src/content/docs/docs/reference/${module.name}.mdx`;
       outputFileContent = [
         renderConfigHeader(),
         renderImports(),
@@ -990,21 +1199,21 @@ async function buildTsFiles() {
       "../pkg/platform/src/config.ts",
       "../pkg/platform/src/global-config.d.ts",
       "../pkg/platform/src/components/secret.ts",
-      //"../pkg/platform/src/components/aws/apigatewayv2.ts",
-      //"../pkg/platform/src/components/aws/bucket.ts",
-      //"../pkg/platform/src/components/aws/cron.ts",
-      //"../pkg/platform/src/components/aws/dynamo.ts",
-      //"../pkg/platform/src/components/aws/function.ts",
-      //"../pkg/platform/src/components/aws/postgres.ts",
-      //"../pkg/platform/src/components/aws/vector.ts",
-      //"../pkg/platform/src/components/aws/astro.ts",
-      //"../pkg/platform/src/components/aws/nextjs.ts",
-      //"../pkg/platform/src/components/aws/remix.ts",
-      //"../pkg/platform/src/components/aws/queue.ts",
-      //"../pkg/platform/src/components/aws/router.ts",
-      //"../pkg/platform/src/components/aws/sns-topic.ts",
-      //"../pkg/platform/src/components/aws/static-site.ts",
-      //"../pkg/platform/src/components/cloudflare/worker.ts",
+      "../pkg/platform/src/components/aws/apigatewayv2.ts",
+      "../pkg/platform/src/components/aws/bucket.ts",
+      "../pkg/platform/src/components/aws/cron.ts",
+      "../pkg/platform/src/components/aws/dynamo.ts",
+      "../pkg/platform/src/components/aws/function.ts",
+      "../pkg/platform/src/components/aws/postgres.ts",
+      "../pkg/platform/src/components/aws/vector.ts",
+      "../pkg/platform/src/components/aws/astro.ts",
+      "../pkg/platform/src/components/aws/nextjs.ts",
+      "../pkg/platform/src/components/aws/remix.ts",
+      "../pkg/platform/src/components/aws/queue.ts",
+      "../pkg/platform/src/components/aws/router.ts",
+      "../pkg/platform/src/components/aws/sns-topic.ts",
+      "../pkg/platform/src/components/aws/static-site.ts",
+      "../pkg/platform/src/components/cloudflare/worker.ts",
     ],
     tsconfig: "../pkg/platform/tsconfig.json",
   });
@@ -1013,7 +1222,7 @@ async function buildTsFiles() {
   if (!project) throw new Error("Failed to convert project");
 
   // Generate JSON (generated for debugging purposes)
-  await app.generateJson(project, "docs.json");
+  await app.generateJson(project, "ts-doc.json");
 
   // Return classes
   return project.children!.filter(

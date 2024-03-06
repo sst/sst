@@ -21,4 +21,5 @@ pnpm-debug.log*
 .DS_Store
 
 # typedoc output
-docs.json
+ts-doc.json
+cli-doc.json

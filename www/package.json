@@ -5,10 +5,13 @@
   "scripts": {
     "dev": "astro dev",
     "start": "astro dev",
-    "build": "tsx generate.ts && astro check && astro build",
+    "build": "bun generate && astro check && astro build",
     "preview": "astro preview",
     "astro": "astro",
-    "generate": "tsx generate.ts"
+    "generate-build-cli": "go run ../cmd/sst introspect > cli-doc.jsons",
+    "generate": "tsx generate.ts",
+    "generate-tsdoc": "tsx generate.ts tsdoc",
+    "generate-cli": "tsx generate.ts cli"
   },
   "dependencies": {
     "@astrojs/sitemap": "^3.0.5",

@@ -1,0 +1,178 @@
+---
+title: CLI
+description: Reference doc for the SST CLI.
+---
+
+import Segment from '../../../../../src/components/tsdoc/Segment.astro';
+import Section from '../../../../../src/components/tsdoc/Section.astro';
+import NestedTitle from '../../../../../src/components/tsdoc/NestedTitle.astro';
+import InlineSection from '../../../../../src/components/tsdoc/InlineSection.astro';
+
+<div class="tsdoc">
+
+## Global Flags
+
+### stage
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">string</code>
+</InlineSection>
+</Section>
+the stage to deploy to
+</Segment>
+
+### verbose
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">boolean</code>
+</InlineSection>
+</Section>
+enable verbose logging
+</Segment>
+
+### help
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">boolean</code>
+</InlineSection>
+</Section>
+print help
+</Segment>
+
+## Commands
+
+### version
+<Segment>
+print the version
+</Segment>
+
+### import
+<Segment>
+
+<Section type="parameters">
+#### Args
+- <p><code class="key">type</code></p>
+the type of resource to import
+- <p><code class="key">name</code></p>
+the name of the resource
+- <p><code class="key">id</code></p>
+the id of the resource
+</Section>
+
+<Section type="parameters">
+#### Flags
+- <p><code class="key">parent</code> <code class="primitive">string</code></p>
+the parent resource
+</Section>
+importing existing resource
+</Segment>
+
+### dev
+<Segment>
+
+<Section type="parameters">
+#### Args
+- <p><code class="key">command</code></p>
+the command to run
+</Section>
+run in development mode
+</Segment>
+
+### secret
+<Segment>
+
+<Section type="parameters">
+#### Subcommands
+- <p>[<code class="key">set</code>](#secret-set)</p>
+- <p>[<code class="key">list</code>](#secret-list)</p>
+</Section>
+manage secrets
+</Segment>
+<NestedTitle id="secret-set" Tag="h4" parent="secret ">set</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Args**
+- <p><code class="key">name</code></p>
+the name of the secret
+- <p><code class="key">value</code></p>
+the value of the secret
+</InlineSection>
+</Section>
+set a secret
+set a secret
+```
+sst secret set StripeSecret 123456789
+```
+set a secret for a specific stage
+```
+sst secret set StripeSecret productionsecret --stage=production
+```
+</Segment>
+<NestedTitle id="secret-list" Tag="h4" parent="secret ">list</NestedTitle>
+<Segment>
+<Section type="parameters">
+</Section>
+list all secrets
+</Segment>
+
+### shell
+<Segment>
+
+<Section type="parameters">
+#### Args
+- <p><code class="key">command</code></p>
+the command to run
+</Section>
+run command with all resource linked in environment
+</Segment>
+
+### install
+<Segment>
+install dependencies specified in sst.config.ts
+</Segment>
+
+### deploy
+<Segment>
+deploy your application
+</Segment>
+
+### remove
+<Segment>
+remove your application
+</Segment>
+
+### refresh
+<Segment>
+
+</Segment>
+
+### cancel
+<Segment>
+cancel any pending deploys
+</Segment>
+
+### create
+<Segment>
+
+</Segment>
+
+### state
+<Segment>
+
+<Section type="parameters">
+#### Subcommands
+- <p>[<code class="key">edit</code>](#state-edit)</p>
+</Section>
+manage state of your deployment
+</Segment>
+<NestedTitle id="state-edit" Tag="h4" parent="state ">edit</NestedTitle>
+<Segment>
+<Section type="parameters">
+</Section>
+edit the state of your deployment
+</Segment>
+</div>
