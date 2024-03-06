@@ -163,7 +163,7 @@ func run() error {
 		}
 		required += 1
 	}
-	if cli.Bool("help") || active.Run == nil || len(cli.arguments) != required {
+	if cli.Bool("help") || active.Run == nil || len(cli.arguments) < required {
 		return cli.PrintHelp()
 	} else {
 		return active.Run(cli)
