@@ -5,17 +5,10 @@ description: Create and deploy a Next.js app to AWS with SST and OpenNext.
 
 We are going to create a Next.js app, add an S3 Bucket for file uploads, and deploy it to AWS using SST.
 
-Before you get started, you want to:
+Before you get started:
 
 1. [Configure your AWS credentials](https://docs.sst.dev/advanced/iam-credentials#loading-from-a-file)
-
-2. ```bash title="Install SST"
-   curl -fsSL https://ion.sst.dev/install | bash
-   ```
-
-:::note
-The CLI currently supports macOS, Linux, and WSL.
-:::
+2. [Install the SST CLI](/docs/reference/cli)
 
 ---
 
@@ -27,26 +20,191 @@ Let's start by creating our app.
 npx create-next-app@latest
 ```
 
-1. Init SST
+#### Init SST
 
-1. `sst dev next dev`
+Now let's initialize SST in our app. Make sure you have the [CLI installed](/docs/reference/cli/).
 
-1. Add bucket to `sst.config.ts`
+```bash
+sst init
+```
 
-1. Bind to Next.js
+This'll create a `sst.config.ts` file in the root of your app.
 
-1. Generate pre-signed URL in Next.js
+#### Start dev mode
 
-1. Render upload form
+Start the dev mode for your Next.js app and link it to SST.
 
-1. Test upload
+```bash
+npm run dev
+```
 
-1. `sst deploy`
+:::note
+You are starting `next dev` wrapped in `sst dev next dev`.
+:::
 
-1. Test deployed site
+---
 
-1. Open console and sign up
+## 2. Add an S3 Bucket
 
-1. Connect AWS account
+Let's add a `public` S3 Bucket for file uploads. Update your `sst.config.ts`.
 
-1. View logs from Next.js
+```js title="sst.config.ts"
+const bucket = new sst.aws.Bucket("MyBucket", {
+  public: true
+});
+```
+
+#### Link the bucket
+
+Now, link the bucket to our Next.js app.
+
+```js title="sst.config.ts" {2}
+new sst.aws.Nextjs("MyWeb", {
+  link: [bucket]
+});
+```
+
+---
+
+## 3. Create an upload form
+
+Add a form client component in `components/form.tsx`.
+
+```tsx title="components/form.tsx"
+"use client";
+
+import styles from "./form.module.css";
+
+export default function Form({ url }: { url: string }) {
+  return (
+    <form
+      className={styles.form}
+      onSubmit={async (e) => {
+        e.preventDefault();
+
+        const file = (e.target as HTMLFormElement).file.files?.[0]!;
+
+        const image = await fetch(url, {
+          body: file,
+          method: "PUT",
+          headers: {
+            "Content-Type": file.type,
+            "Content-Disposition": `attachment; filename="${file.name}"`,
+          },
+        });
+
+        window.location.href = image.url.split("?")[0];
+      }}
+    >
+      <input name="file" type="file" accept="image/png, image/jpeg" />
+      <button type="submit">Upload</button>
+    </form>
+  );
+}
+```
+
+Add some styles.
+
+```css title="components/form.module.css"
+.form {
+  padding: 1rem;
+  border-radius: var(--border-radius);
+  background-color: rgba(var(--callout-rgb), 0.5);
+  border: 1px solid rgba(var(--callout-border-rgb), 0.3);
+}
+
+.form input {
+  margin-right: 1rem;
+  font-family: var(--font-mono);
+}
+
+.form button {
+  appearance: none;
+  padding: 0.5rem 0.75rem;
+  font-weight: 500;
+  font-size: 0.875rem;
+  border-radius: calc(1rem - var(--border-radius));
+  background: linear-gradient(
+    to bottom right,
+    rgba(var(--tile-start-rgb), 1),
+    rgba(var(--tile-end-rgb), 1)
+  );
+  border: 1px solid rgba(var(--callout-border-rgb), 1);
+}
+
+.form button:active:enabled {
+  background: linear-gradient(
+    to top left,
+    rgba(var(--tile-start-rgb), 1),
+    rgba(var(--tile-end-rgb), 1)
+  );
+}
+```
+
+---
+
+## 4. Generate a pre-signed URL
+
+When our app loads, we'll generate a pre-signed URL for the file upload and render the form with it.
+
+```ts title="app/page.tsx" {4}
+export default async function Home() {
+  const command = new PutObjectCommand({
+    Key: crypto.randomUUID(),
+    Bucket: Resource.MyBucket.name,
+  });
+  const url = await getSignedUrl(new S3Client({}), command);
+
+  return (
+    <main className={styles.main}>
+      <Form url={url} />
+    </main>
+  );
+}
+```
+
+:::tip
+We are directly accessing our S3 bucket with `Resource.MyBucket.name`.
+:::
+
+Add the relevant imports.
+
+```ts title="app/page.tsx"
+import crypto from "crypto";
+import { Resource } from "sst";
+import Form from "@/components/form";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
+```
+
+And install the npm packages.
+
+```bash
+npm install sst@ion @aws-sdk/client-s3 @aws-sdk/s3-request-presigner
+```
+
+Head over to `http://localhost:3000` and try **uploading an image**, you should see it upload and then load the image.
+
+---
+
+## 5. Deploy your app
+
+Now let's deploy your app to AWS.
+
+```bash
+sst deploy
+```
+
+Congrats! Your app should now be live!
+
+![SST Next.js app](../../../../assets/docs/start-nextjs.png)
+
+---
+
+## 6. Connect the console
+
+Optionally, you can view your app and its logs in the [SST Console](/docs/console/) — [**console.sst.dev**](https://console.sst.dev)
+
+![Next.js in SST Console](../../../../assets/docs/nextjs-app-in-the-sst-console.png)
+
+You can [create a free account](https://console.sst.dev) and connect it to your AWS account.
