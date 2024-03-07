@@ -98,16 +98,20 @@ const myFiles = new pulumi.asset.FileArchive("./path/to/files");
 
 ## Functions
 
-### $all
+### $concat
 <Segment>
-Wait for all Output values to resolve
+Takes a sequence of Output values or plain JavaScript values, stringifies each,
+and concatenates all values into one final string.
 
 ```ts
-declare value1: Output<string>;
-declare value2: Output<string>;
+const bucket = new sst.aws.Bucket("MyBucket");
+const description = $concat("This is a bucket named ", bucket.name);
+```
 
-$all([value1, value2]).apply(([value1, value2]) =>
-  console.log({ value1, value2 })
+This is equivalent to
+```ts
+const description = bucket.name.apply(name =>
+  "This is a bucket named ".concat(name)
 );
 ```
 </Segment>
@@ -125,6 +129,54 @@ const description = $interpolate`This is a bucket named ${bucket.name}`;
 This is equivalent to
 ```ts
 const description = bucket.name.apply(name => `This is a bucket named ${name}`);
+```
+</Segment>
+
+### $jsonParse
+<Segment>
+Takes an Output value or plain Javascript value, use JSON.parse to deserialize
+the resolved JSON string into a JSON object.
+
+```ts
+const policy = $jsonParse(policyStr);
+```
+
+This is equivalent to
+```ts
+const policy = policyStr.apply((policy) =>
+  JSON.parse(policy)
+);
+```
+</Segment>
+
+### $jsonStringify
+<Segment>
+Takes an Output value or plain JSON object, use JSON.stringify to serialize
+the resolved JSON object into a JSON string.
+
+```ts
+const policy = $jsonStringify(policyObj);
+```
+
+This is equivalent to
+```ts
+const policy = policyObj.apply((policy) =>
+  JSON.stringify(policy)
+);
+```
+</Segment>
+
+### $resolve
+<Segment>
+Wait for all Output values to resolve
+
+```ts
+declare value1: Output<string>;
+declare value2: Output<string>;
+
+$resolve([value1, value2]).apply(([value1, value2]) =>
+  console.log({ value1, value2 })
+);
 ```
 </Segment>
 
