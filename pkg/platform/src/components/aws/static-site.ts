@@ -570,8 +570,7 @@ export class StaticSite extends Component implements Link.Linkable {
       _metadata: {
         path: sitePath,
         environment,
-        customDomainUrl: this.cdn.domainUrl,
-        url: this.cdn.url,
+        url: distribution.domainUrl ?? distribution.url,
       },
     });
 

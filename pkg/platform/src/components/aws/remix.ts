@@ -329,7 +329,7 @@ export class Remix extends Component implements Link.Linkable {
       _metadata: {
         mode: $dev ? "placeholder" : "deployed",
         path: sitePath,
-        customDomainUrl: distribution.domainUrl ?? distribution.url,
+        url: distribution.apply((d) => d.domainUrl ?? d.url),
         edge,
         server: serverFunction.arn,
       },
