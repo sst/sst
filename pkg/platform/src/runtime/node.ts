@@ -138,7 +138,7 @@ export async function build(
           }),
     );
 
-    if (installPackages) {
+    if (installPackages.length) {
       const src = await findAbove(parsed.dir, "package.json");
       if (!src) {
         return {
