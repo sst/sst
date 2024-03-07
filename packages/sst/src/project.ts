@@ -100,6 +100,7 @@ interface GlobalOptions {
   stage?: string;
   root?: string;
   region?: string;
+  configPrefix?: string;
 }
 
 export async function initProject(globals: GlobalOptions) {
@@ -107,17 +108,18 @@ export async function initProject(globals: GlobalOptions) {
   process.env.JSII_DEPRECATED = "quiet";
 
   // Logger.debug("initing project");
-  const root = globals.root || (await findRoot());
+  const root = globals.root || (await findRoot(globals));
   const out = path.join(root, ".sst");
   await fs.mkdir(out, {
     recursive: true,
   });
+  const configPrefix = `${globals.configPrefix}.sst` || "sst";
   // Logger.debug("made out dir");
 
   let file: string | undefined;
   const [metafile, sstConfig] = await (async function () {
     for (const ext of CONFIG_EXTENSIONS) {
-      file = path.join(root, "sst" + ext);
+      file = path.join(root, configPrefix + ext);
       if (!fsSync.existsSync(file)) continue;
       // Logger.debug("found sst config");
       const [metafile, config] = await load(file, true);
@@ -128,7 +130,7 @@ export async function initProject(globals: GlobalOptions) {
     throw new VisibleError(
       "Could not find a configuration file",
       "Make sure one of the following exists",
-      ...CONFIG_EXTENSIONS.map((x) => `  - sst${x}`)
+      ...CONFIG_EXTENSIONS.map((x) => `  - ${configPrefix}${x}`)
     );
   })();
 
@@ -260,16 +262,17 @@ async function promptPersonalStage(
   return await promptPersonalStage(out, true);
 }
 
-async function findRoot() {
+async function findRoot(globals: GlobalOptions) {
+  const configPrefix = `${globals.configPrefix}.sst` || "sst";
   async function find(dir: string): Promise<string> {
     if (dir === "/")
       throw new VisibleError(
         "Could not find a configuration file",
         "Make sure one of the following exists",
-        ...CONFIG_EXTENSIONS.map((ext) => `  - sst${ext}`)
+        ...CONFIG_EXTENSIONS.map((ext) => `  - ${configPrefix}${ext}`)
       );
     for (const ext of CONFIG_EXTENSIONS) {
-      const configPath = path.join(dir, `sst${ext}`);
+      const configPath = path.join(dir, `${configPrefix}${ext}`);
       if (fsSync.existsSync(configPath)) {
         return dir;
       }
