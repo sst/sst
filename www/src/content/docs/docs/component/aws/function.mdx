@@ -1021,7 +1021,7 @@ The HTTP methods that are allowed when calling the function URL.
   }
 }
 ```
-Or the wildcard character for all methods.
+Or the wildcard for all methods.
 ```js
 {
   url: {
@@ -1054,7 +1054,7 @@ The origins that can access the function URL.
   }
 }
 ```
-Or the wildcard character for all origins.
+Or the wildcard for all origins.
 ```js
 {
   url: {
@@ -1074,7 +1074,7 @@ Or the wildcard character for all origins.
 </Section>
 
 <InlineSection>
-**Default** Common headers like `cache-control`, `content-language`, `content-type`, `expires`, `last-modified`, `pragma`.
+**Default** <code class="primitive">[]</code>
 </InlineSection>
 The HTTP headers you want to expose in your function to an origin that calls the function URL.
 

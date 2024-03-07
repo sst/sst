@@ -15,6 +15,37 @@ export default $config({
   async run() {
     const isPersonal = $app.stage !== "production" && $app.stage !== "dev";
 
+    if (!isPersonal) {
+      const oidc = new aws.iam.OpenIdConnectProvider("GithubOidc", {
+        clientIdLists: ["sts.amazonaws.com"],
+        thumbprintLists: ["6938fd4d98bab03faadb97b34396831e3780aea1"],
+        url: `https://token.actions.githubusercontent.com`,
+      });
+      const role = new aws.iam.Role("GithubRole", {
+        assumeRolePolicy: {
+          Version: "2012-10-17",
+          Statement: [
+            {
+              Effect: "Allow",
+              Principal: {
+                Federated: oidc.arn,
+              },
+              Action: "sts:AssumeRoleWithWebIdentity",
+              Condition: {
+                StringLike: {
+                  "token.actions.githubusercontent.com:sub": `repo:sst/ion:*`,
+                },
+              },
+            },
+          ],
+        },
+      });
+      new aws.iam.RolePolicyAttachment("GithubRolePolicy", {
+        role: role.name,
+        policyArn: aws.iam.ManagedPolicies.AdministratorAccess,
+      });
+    }
+
     const domain =
       {
         production: "ion.sst.dev",
@@ -30,10 +61,10 @@ export default $config({
         });
 
     new sst.aws.Astro("Astro", {
-      // domain: {
-      //   domainName: domain,
-      //   hostedZoneId: zone.zoneId,
-      // },
+      domain: {
+        domainName: domain,
+        hostedZoneId: zone.zoneId,
+      },
     });
   },
 });

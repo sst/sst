@@ -44,7 +44,7 @@ interface BucketCorsArgs {
    *   }
    * }
    * ```
-   * Or the wildcard character for all origins.
+   * Or the wildcard for all origins.
    * ```js
    * {
    *   cors: {
@@ -99,6 +99,12 @@ interface BucketCorsArgs {
 export interface BucketArgs {
   /**
    * Enable public read access for all the files in the bucket.
+   *
+   * :::tip
+   * You don't need to enable this if you're using CloudFront to serve files from the bucket.
+   * :::
+   *
+   * Should only be turned on if you want to host public files directly from the bucket.
    * @default `false`
    * @example
    * ```js

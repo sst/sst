@@ -104,7 +104,7 @@ interface FunctionUrlCorsArgs {
    *   }
    * }
    * ```
-   * Or the wildcard character for all origins.
+   * Or the wildcard for all origins.
    * ```js
    * {
    *   url: {
@@ -129,7 +129,7 @@ interface FunctionUrlCorsArgs {
    *   }
    * }
    * ```
-   * Or the wildcard character for all methods.
+   * Or the wildcard for all methods.
    * ```js
    * {
    *   url: {
@@ -147,7 +147,7 @@ interface FunctionUrlCorsArgs {
   >;
   /**
    * The HTTP headers you want to expose in your function to an origin that calls the function URL.
-   * @default Common headers like `cache-control`, `content-language`, `content-type`, `expires`, `last-modified`, `pragma`.
+   * @default `[]`
    * @example
    * ```js
    * {

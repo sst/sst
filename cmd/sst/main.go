@@ -171,59 +171,80 @@ func run() error {
 }
 
 var Root = Command{
-	Name:        "sst",
-	Description: "Deploy anything",
+	Name: "sst",
+	Description: Description{
+		Short: "deploy anything",
+	},
 	Flags: []Flag{
 		{
-			Name:        "stage",
-			Type:        "string",
-			Description: "The stage to deploy to",
+			Name: "stage",
+			Type: "string",
+			Description: Description{
+				Short: "the stage to deploy to",
+			},
 		},
 		{
-			Name:        "verbose",
-			Type:        "bool",
-			Description: "Enable verbose logging",
+			Name: "verbose",
+			Type: "bool",
+			Description: Description{
+				Short: "enable verbose logging",
+			},
 		},
 		{
-			Name:        "help",
-			Type:        "bool",
-			Description: "Print help",
+			Name: "help",
+			Type: "bool",
+			Description: Description{
+				Short: "print help",
+			},
 		},
 	},
 	Children: []*Command{
 		{
-			Name:        "version",
-			Description: "Print the version",
+			Name: "version",
+			Description: Description{
+				Short: "print the version",
+			},
 			Run: func(cli *Cli) error {
 				fmt.Printf("ion.%s\n", version)
 				return nil
 			},
 		},
 		{
-			Name:        "import-unstable",
-			Description: "(unstable)Import existing resource",
+			Name:   "import-unstable",
+			Hidden: true,
+			Description: Description{
+				Short: "(unstable)import existing resource",
+			},
 			Args: []Argument{
 				{
-					Name:        "type",
-					Required:    true,
-					Description: "The type of the resource",
+					Name:     "type",
+					Required: true,
+					Description: Description{
+						Short: "The type of the resource",
+					},
 				},
 				{
-					Name:        "name",
-					Required:    true,
-					Description: "The name of the resource",
+					Name:     "name",
+					Required: true,
+					Description: Description{
+						Short: "The name of the resource",
+					},
 				},
 				{
-					Name:        "id",
-					Required:    true,
-					Description: "The id of the resource",
+					Name:     "id",
+					Required: true,
+					Description: Description{
+						Short: "The id of the resource",
+					},
 				},
 			},
 			Flags: []Flag{
 				{
-					Type:        "string",
-					Name:        "parent",
-					Description: "The parent resource",
+					Type: "string",
+					Name: "parent",
+					Description: Description{
+						Short: "the parent resource",
+					},
 				},
 			},
 			Run: func(cli *Cli) error {
@@ -252,38 +273,59 @@ var Root = Command{
 			},
 		},
 		{
-			Name:        "dev",
-			Description: "Run in development mode",
-			Args:        []Argument{{Name: "command", Description: "The command to run"}},
-			Run:         CmdDev,
+			Name: "dev",
+			Description: Description{
+				Short: "run in development mode",
+			},
+			Args: []Argument{
+				{
+					Name: "command",
+					Description: Description{
+						Short: "The command to run",
+					},
+				},
+			},
+			Run: CmdDev,
 		},
 		{
-			Name:        "secret",
-			Description: "Manage secrets",
+			Name: "secret",
+			Description: Description{
+				Short: "manage secrets",
+			},
 			Children: []*Command{
 				{
-					Name:        "set",
-					Description: "Set a secret",
+					Name: "set",
+					Description: Description{
+						Short: "set a secret",
+					},
 					Args: []Argument{
 						{
-							Name:        "name",
-							Required:    true,
-							Description: "The name of the secret",
+							Name:     "name",
+							Required: true,
+							Description: Description{
+								Short: "The name of the secret",
+							},
 						},
 						{
-							Name:        "value",
-							Required:    true,
-							Description: "The value of the secret",
+							Name:     "value",
+							Required: true,
+							Description: Description{
+								Short: "The value of the secret",
+							},
 						},
 					},
 					Examples: []Example{
 						{
-							Content:     "sst secret set StripeSecret 123456789",
-							Description: "Set the StripeSecret to 123456789",
+							Content: "sst secret set StripeSecret 123456789",
+							Description: Description{
+								Short: "Set the StripeSecret to 123456789",
+							},
 						},
 						{
-							Content:     "sst secret set StripeSecret productionsecret --stage=production",
-							Description: "Set the StripeSecret to production",
+							Content: "sst secret set StripeSecret productionsecret --stage=production",
+							Description: Description{
+								Short: "Set the StripeSecret to production",
+							},
 						},
 					},
 					Run: func(cli *Cli) error {
@@ -309,8 +351,10 @@ var Root = Command{
 					},
 				},
 				{
-					Name:        "list",
-					Description: "List all secrets",
+					Name: "list",
+					Description: Description{
+						Short: "list all secrets",
+					},
 					Run: func(cli *Cli) error {
 						p, err := initProject(cli)
 						if err != nil {
@@ -332,9 +376,18 @@ var Root = Command{
 			},
 		},
 		{
-			Name:        "shell",
-			Args:        []Argument{{Name: "command", Description: "The command to run"}},
-			Description: "Run command with all resource linked in environment",
+			Name: "shell",
+			Args: []Argument{
+				{
+					Name: "command",
+					Description: Description{
+						Short: "The command to run",
+					},
+				},
+			},
+			Description: Description{
+				Short: "run command with all resource linked in environment",
+			},
 			Run: func(cli *Cli) error {
 				p, err := initProject(cli)
 				if err != nil {
@@ -415,8 +468,10 @@ var Root = Command{
 			},
 		},
 		{
-			Name:        "install",
-			Description: "Install dependencies specified in sst.config.ts",
+			Name: "install",
+			Description: Description{
+				Short: "install dependencies specified in sst.config.ts",
+			},
 			Run: func(cli *Cli) error {
 				cfgPath, err := project.Discover()
 				if err != nil {
@@ -447,8 +502,10 @@ var Root = Command{
 			},
 		},
 		{
-			Name:        "deploy",
-			Description: "Deploy your application",
+			Name: "deploy",
+			Description: Description{
+				Short: "deploy your application",
+			},
 			Run: func(cli *Cli) error {
 				p, err := initProject(cli)
 				if err != nil {
@@ -470,8 +527,10 @@ var Root = Command{
 			},
 		},
 		{
-			Name:        "remove",
-			Description: "Remove your application",
+			Name: "remove",
+			Description: Description{
+				Short: "remove your application",
+			},
 			Run: func(cli *Cli) error {
 				p, err := initProject(cli)
 				if err != nil {
@@ -513,8 +572,10 @@ var Root = Command{
 			},
 		},
 		{
-			Name:        "cancel",
-			Description: "Cancel any pending deploys",
+			Name: "cancel",
+			Description: Description{
+				Short: "cancel any pending deploys",
+			},
 			Run: func(cli *Cli) error {
 				p, err := initProject(cli)
 				if err != nil {
@@ -566,12 +627,16 @@ var Root = Command{
 			},
 		},
 		{
-			Name:        "state",
-			Description: "Manage state of your deployment",
+			Name: "state",
+			Description: Description{
+				Short: "manage state of your deployment",
+			},
 			Children: []*Command{
 				{
-					Name:        "edit",
-					Description: "edit the state of your deployment",
+					Name: "edit",
+					Description: Description{
+						Short: "edit the state of your deployment",
+					},
 					Run: func(cli *Cli) error {
 						p, err := initProject(cli)
 						if err != nil {
@@ -656,7 +721,7 @@ func (c *Cli) Positional(index int) string {
 type Command struct {
 	Name        string               `json:"name"`
 	Hidden      bool                 `json:"hidden"`
-	Description string               `json:"description"`
+	Description Description          `json:"description"`
 	Args        ArgumentList         `json:"args"`
 	Flags       []Flag               `json:"flags"`
 	Examples    []Example            `json:"examples"`
@@ -683,14 +748,19 @@ func (c *Command) init() {
 }
 
 type Example struct {
-	Content     string `json:"content"`
-	Description string `json:"description"`
+	Content     string      `json:"content"`
+	Description Description `json:"description"`
 }
 
 type Argument struct {
-	Name        string `json:"name"`
-	Description string `json:"description"`
-	Required    bool   `json:"required"`
+	Name        string      `json:"name"`
+	Required    bool        `json:"required"`
+	Description Description `json:"description"`
+}
+
+type Description struct {
+	Short string `json:"short,omitempty"`
+	Long  string `json:"long,omitempty"`
 }
 
 type ArgumentList []Argument
@@ -708,9 +778,9 @@ func (a ArgumentList) String() string {
 }
 
 type Flag struct {
-	Name        string `json:"name"`
-	Type        string `json:"type"`
-	Description string `json:"description"`
+	Name        string      `json:"name"`
+	Type        string      `json:"type"`
+	Description Description `json:"description"`
 }
 
 type CommandPath []Command
@@ -726,7 +796,7 @@ func (c CommandPath) PrintHelp() error {
 
 	if len(active.Children) > 0 {
 		fmt.Print(color.BlueString(strings.Join(prefix, " ") + ": "))
-		fmt.Println(color.WhiteString(c[len(c)-1].Description))
+		fmt.Println(color.WhiteString(c[len(c)-1].Description.Short))
 
 		maxSubcommand := 0
 		for _, child := range active.Children {
@@ -751,7 +821,7 @@ func (c CommandPath) PrintHelp() error {
 				"  %s %s  %s\n",
 				strings.Join(prefix, " "),
 				color.New(color.FgWhite, color.Bold).Sprintf("%-*s", maxSubcommand, strings.Join([]string{child.Name, child.Args.String()}, " ")),
-				child.Description,
+				child.Description.Short,
 			)
 		}
 	}
@@ -781,7 +851,7 @@ func (c CommandPath) PrintHelp() error {
 				fmt.Printf(
 					"  %s  %s\n",
 					color.New(color.FgMagenta).Sprintf("--%-*s", maxFlag, f.Name),
-					f.Description,
+					f.Description.Short,
 				)
 			}
 		}
