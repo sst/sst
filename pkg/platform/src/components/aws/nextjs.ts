@@ -514,8 +514,9 @@ export class Nextjs extends Component implements Link.Linkable {
       _metadata: {
         mode: $dev ? "placeholder" : "deployed",
         path: sitePath,
-        customDomainUrl: this.cdn.domainUrl,
+        customDomainUrl: distribution.domainUrl ?? distribution.url,
         edge: plan.edge,
+        server: serverFunction.arn,
       },
     });
 
