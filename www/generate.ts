@@ -125,7 +125,7 @@ async function generateCliDoc() {
       lines.push(``, `### ${cmd.name}`, `<Segment>`);
 
       // usage
-      if (cmd.children.length) {
+      if (!cmd.children.length) {
         lines.push(
           `#### Usage`,
           `<Section type="signature">`,
