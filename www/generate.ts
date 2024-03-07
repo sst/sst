@@ -243,6 +243,7 @@ async function generateTsDoc() {
       outputFileContent = [
         renderConfigHeader(),
         renderImports(),
+        renderAbout(),
         renderConfigVariables(),
         renderConfigFunctions(),
         renderInterfaces(),
@@ -394,7 +395,9 @@ async function generateTsDoc() {
     function renderAbout() {
       console.debug(` - about`);
       const lines = [];
-      const comment = useClassComment();
+      const comment = isRenderingComponent()
+        ? useClassComment()
+        : useModuleComment();
 
       lines.push(``, `<Section type="about">`);
 
@@ -931,14 +934,14 @@ async function generateTsDoc() {
         ].join("");
       }
       // types in the same doc (links to the class ie. `subscribe()` return type)
-      if (isModuleClassComponent() && type.name === useClassName()) {
+      if (isRenderingComponent() && type.name === useClassName()) {
         return `[<code class="type">${type.name}</code>](.)`;
       }
       // types in the same doc (links to an interface)
       if (useInterfaces().find((i) => i.name === type.name)) {
         // HACK: in Config doc, there are 3 `app` links on the page, `app`, `app-1`, and
         //       `app-2`. We need to link to `app-1`.
-        const postfix = isModuleConfig() && type.name === "App" ? "-1" : "";
+        const postfix = isRenderingConfig() && type.name === "App" ? "-1" : "";
         return `[<code class="type">${
           type.name
         }</code>](#${type.name.toLowerCase()}${postfix})`;
@@ -1056,13 +1059,19 @@ async function generateTsDoc() {
       return `<code class="primitive">Object</code>`;
     }
 
-    function isModuleConfig() {
+    function isRenderingConfig() {
       const sourceFile = module.sources![0].fileName;
       return sourceFile === "pkg/platform/src/config.ts";
     }
 
-    function isModuleClassComponent() {
-      return !isModuleConfig();
+    function isRenderingComponent() {
+      return !isRenderingConfig();
+    }
+
+    function useModuleComment() {
+      const comment = module.comment;
+      if (!comment) throw new Error("Class comment not found");
+      return comment;
     }
 
     function useClass() {

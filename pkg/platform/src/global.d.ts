@@ -12,7 +12,7 @@ interface $APP
   extends Readonly<
     Omit<App, "providers"> & {
       /**
-       * The stage of the app
+       * The stage currently being deployed or removed
        */
       stage: string;
       /**

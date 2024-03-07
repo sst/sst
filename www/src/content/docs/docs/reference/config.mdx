@@ -10,6 +10,29 @@ import InlineSection from '../../../../../src/components/tsdoc/InlineSection.ast
 
 <div class="tsdoc">
 
+<Section type="about">
+Define the app and resources in the app.
+
+Here's an example of `sst.config.ts`:
+```ts
+export default $config({
+  app(input) {
+    return {
+      name: "my-sst-app",
+      providers: {
+        aws: {},
+      },
+    };
+  },
+  async run() {
+    new sst.aws.Bucket("MyBucket");
+  }
+});
+```
+</Section>
+
+---
+
 ## Variables
 
 ### $app
@@ -62,7 +85,7 @@ Whether to retain or remove resources on app removal
 **Type** <code class="primitive">string</code>
 </InlineSection>
 </Section>
-The stage of the app
+The stage currently being deployed or removed
 </Segment>
 
 ### $dev
@@ -237,6 +260,20 @@ Retain resources if the stage is "production", otherwise remove all resources.
 ```
 </Segment>
 
+## AppInput
+
+Input to the app config
+### stage
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">string</code>
+</InlineSection>
+</Section>
+The stage currently being deployed or removed
+
+</Segment>
+
 ## Config
 
 Config interfact holds the app and run function
@@ -250,7 +287,7 @@ app(input)
 
 <Section type="parameters">
 #### Parameters
-- <p><code class="key">input</code> <code class="primitive">Object</code></p>
+- <p><code class="key">input</code> [<code class="type">AppInput</code>](#appinput)</p>
 </Section>
 
 <InlineSection>
