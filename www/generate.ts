@@ -5,20 +5,20 @@ import * as TypeDoc from "typedoc";
 type CliCommand = {
   name: string;
   hidden: boolean;
-  description: { short: string; long: string };
+  description: { short: string; long?: string };
   args: {
     name: string;
-    description: { short: string; long: string };
+    description: { short: string; long?: string };
     required: boolean;
   }[];
   flags: {
     name: string;
-    description: { short: string; long: string };
+    description: { short: string; long?: string };
     type: "string" | "bool";
   }[];
   examples: {
     content: string;
-    description: { short: string; long: string };
+    description: { short: string; long?: string };
   }[];
   children: CliCommand[];
 };
@@ -82,7 +82,7 @@ async function generateCliDoc() {
     lines.push(
       ``,
       `<Section type="about">`,
-      json.description.long,
+      renderCliDescription(json.description),
       `</Section>`,
       ``,
       `---`
@@ -107,7 +107,7 @@ async function generateCliDoc() {
         `**Type** ${renderCliFlagType(f.type)}`,
         `</InlineSection>`,
         `</Section>`,
-        f.description.long,
+        renderCliDescription(f.description),
         `</Segment>`
       );
     }
@@ -144,7 +144,7 @@ async function generateCliDoc() {
           `#### Args`,
           ...cmd.args.flatMap((a) => [
             `- <p><code class="key">${renderCliArgName(a)}</code></p>`,
-            a.description.long,
+            renderCliDescription(a.description),
           ]),
           `</Section>`
         );
@@ -160,7 +160,7 @@ async function generateCliDoc() {
             `- <p><code class="key">${f.name}</code> ${renderCliFlagType(
               f.type
             )}</p>`,
-            f.description.long,
+            renderCliDescription(f.description),
           ]),
           `</Section>`
         );
@@ -183,9 +183,9 @@ async function generateCliDoc() {
 
       // examples
       lines.push(
-        cmd.description.long,
+        renderCliDescription(cmd.description),
         ...cmd.examples.flatMap((e) => [
-          e.description.long,
+          renderCliDescription(e.description),
           "```",
           e.content,
           "```",
@@ -221,7 +221,7 @@ async function generateCliDoc() {
               `**Args**`,
               ...subcmd.args.flatMap((a) => [
                 `- <p><code class="key">${a.name}</code></p>`,
-                a.description.long,
+                renderCliDescription(a.description),
               ]),
               `</InlineSection>`
             );
@@ -234,7 +234,7 @@ async function generateCliDoc() {
               `**Args**`,
               ...subcmd.flags.flatMap((f) => [
                 `- <p><code class="key">${f.name}</code></p>`,
-                f.description.long,
+                renderCliDescription(f.description),
               ]),
               `</InlineSection>`
             );
@@ -243,9 +243,9 @@ async function generateCliDoc() {
           // subcommands examples
           lines.push(
             `</Section>`,
-            subcmd.description.long,
+            renderCliDescription(subcmd.description),
             ...subcmd.examples.flatMap((e) => [
-              e.description.long,
+              renderCliDescription(e.description),
               "```",
               e.content,
               "```",
@@ -255,6 +255,10 @@ async function generateCliDoc() {
         });
     }
     return lines;
+  }
+
+  function renderCliDescription(description: CliCommand["description"]) {
+    return description.long ?? description.short;
   }
 
   function renderCliArgName(prop: CliCommand["args"][number]) {

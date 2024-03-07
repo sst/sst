@@ -173,28 +173,28 @@ func run() error {
 var Root = Command{
 	Name: "sst",
 	Description: Description{
-		Short: "deploy anything",
+		Short: "Deploy anything",
 	},
 	Flags: []Flag{
 		{
 			Name: "stage",
 			Type: "string",
 			Description: Description{
-				Short: "the stage to deploy to",
+				Short: "The stage to deploy to",
 			},
 		},
 		{
 			Name: "verbose",
 			Type: "bool",
 			Description: Description{
-				Short: "enable verbose logging",
+				Short: "Enable verbose logging",
 			},
 		},
 		{
 			Name: "help",
 			Type: "bool",
 			Description: Description{
-				Short: "print help",
+				Short: "Print help",
 			},
 		},
 	},
@@ -202,7 +202,7 @@ var Root = Command{
 		{
 			Name: "version",
 			Description: Description{
-				Short: "print the version",
+				Short: "Print the version",
 			},
 			Run: func(cli *Cli) error {
 				fmt.Printf("ion.%s\n", version)
@@ -213,7 +213,7 @@ var Root = Command{
 			Name:   "import-unstable",
 			Hidden: true,
 			Description: Description{
-				Short: "(unstable)import existing resource",
+				Short: "(unstable)Import existing resource",
 			},
 			Args: []Argument{
 				{
@@ -243,7 +243,7 @@ var Root = Command{
 					Type: "string",
 					Name: "parent",
 					Description: Description{
-						Short: "the parent resource",
+						Short: "The parent resource",
 					},
 				},
 			},
@@ -275,7 +275,7 @@ var Root = Command{
 		{
 			Name: "dev",
 			Description: Description{
-				Short: "run in development mode",
+				Short: "Run in development mode",
 			},
 			Args: []Argument{
 				{
@@ -290,13 +290,13 @@ var Root = Command{
 		{
 			Name: "secret",
 			Description: Description{
-				Short: "manage secrets",
+				Short: "Manage secrets",
 			},
 			Children: []*Command{
 				{
 					Name: "set",
 					Description: Description{
-						Short: "set a secret",
+						Short: "Set a secret",
 					},
 					Args: []Argument{
 						{
@@ -353,7 +353,7 @@ var Root = Command{
 				{
 					Name: "list",
 					Description: Description{
-						Short: "list all secrets",
+						Short: "List all secrets",
 					},
 					Run: func(cli *Cli) error {
 						p, err := initProject(cli)
@@ -386,7 +386,7 @@ var Root = Command{
 				},
 			},
 			Description: Description{
-				Short: "run command with all resource linked in environment",
+				Short: "Run command with all resource linked in environment",
 			},
 			Run: func(cli *Cli) error {
 				p, err := initProject(cli)
@@ -470,7 +470,7 @@ var Root = Command{
 		{
 			Name: "install",
 			Description: Description{
-				Short: "install dependencies specified in sst.config.ts",
+				Short: "Install dependencies specified in sst.config.ts",
 			},
 			Run: func(cli *Cli) error {
 				cfgPath, err := project.Discover()
@@ -504,7 +504,7 @@ var Root = Command{
 		{
 			Name: "deploy",
 			Description: Description{
-				Short: "deploy your application",
+				Short: "Deploy your application",
 			},
 			Run: func(cli *Cli) error {
 				p, err := initProject(cli)
@@ -529,7 +529,7 @@ var Root = Command{
 		{
 			Name: "remove",
 			Description: Description{
-				Short: "remove your application",
+				Short: "Remove your application",
 			},
 			Run: func(cli *Cli) error {
 				p, err := initProject(cli)
@@ -574,7 +574,7 @@ var Root = Command{
 		{
 			Name: "cancel",
 			Description: Description{
-				Short: "cancel any pending deploys",
+				Short: "Cancel any pending deploys",
 			},
 			Run: func(cli *Cli) error {
 				p, err := initProject(cli)
@@ -629,13 +629,13 @@ var Root = Command{
 		{
 			Name: "state",
 			Description: Description{
-				Short: "manage state of your deployment",
+				Short: "Manage state of your deployment",
 			},
 			Children: []*Command{
 				{
 					Name: "edit",
 					Description: Description{
-						Short: "edit the state of your deployment",
+						Short: "Edit the state of your deployment",
 					},
 					Run: func(cli *Cli) error {
 						p, err := initProject(cli)
