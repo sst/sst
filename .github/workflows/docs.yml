@@ -24,7 +24,7 @@ jobs:
           aws-region: us-east-1
           role-to-assume: arn:aws:iam::226609089145:role/www-production-GithubRole
           role-session-name: GitHubActions
-          role-duration-seconds: 1200 # Optional: Specifies the duration, in seconds, of the role session (default is 1 hour)
+          role-duration-seconds: 1200
 
       - uses: actions/setup-go@v4
         with:
@@ -35,7 +35,6 @@ jobs:
 
       - name: deploy
         run: |
-          cd www
-          go run ../cmd/sst deploy
+          go run ../cmd/sst deploy --stage=production
 
 
