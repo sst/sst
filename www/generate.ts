@@ -295,7 +295,7 @@ async function generateTsDoc() {
     let outputFileContent: string[][];
     const linkHashes = new Map<TypeDoc.DeclarationReflection, string>();
 
-    // Render config file
+    // Render global config file
     if (sourceFile === "pkg/platform/src/global-config.d.ts") {
       outputFilePath = `src/content/docs/docs/reference/global.mdx`;
       outputFileContent = [
@@ -304,17 +304,16 @@ async function generateTsDoc() {
         renderAbout(),
         renderConfigVariables(),
         renderConfigFunctions(),
-        renderInterfaces(),
         renderFooter(),
       ];
-    } else if (sourceFile === "pkg/platform/src/config.ts") {
+    }
+    // Render config file
+    else if (sourceFile === "pkg/platform/src/config.ts") {
       outputFilePath = `src/content/docs/docs/reference/config.mdx`;
       outputFileContent = [
         renderConfigHeader(),
         renderImports(),
         renderAbout(),
-        renderConfigVariables(),
-        renderConfigFunctions(),
         renderInterfaces(),
         renderFooter(),
       ];
