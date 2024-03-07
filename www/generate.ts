@@ -884,7 +884,7 @@ async function generateTsDoc() {
       if (type.type === "array") return renderArrayType(type);
       if (type.type === "reference" && type.package === "typescript")
         return renderTypescriptType(type);
-      if (type.type === "reference" && type.package === "sst")
+      if (type.type === "reference" && type.package === "@sst/platform")
         return renderSstType(type);
       if (type.type === "reference" && type.package === "@pulumi/pulumi")
         return renderPulumiType(type);
