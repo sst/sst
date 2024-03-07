@@ -773,7 +773,7 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
       // Create cron job
       new Rule(self, "WarmerRule", {
         schedule: Schedule.rate(CdkDuration.minutes(5)),
-        targets: [new LambdaFunction(warmer, {retryAttempts: 0})],
+        targets: [new LambdaFunction(warmer, { retryAttempts: 0 })],
       });
 
       // Create custom resource to prewarm on deploy
