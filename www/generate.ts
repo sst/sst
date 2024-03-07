@@ -1007,12 +1007,9 @@ async function generateTsDoc() {
       }
       // types in the same doc (links to an interface)
       if (useInterfaces().find((i) => i.name === type.name)) {
-        // HACK: in Config doc, there are 3 `app` links on the page, `app`, `app-1`, and
-        //       `app-2`. We need to link to `app-1`.
-        const postfix = isRenderingConfig() && type.name === "App" ? "-1" : "";
         return `[<code class="type">${
           type.name
-        }</code>](#${type.name.toLowerCase()}${postfix})`;
+        }</code>](#${type.name.toLowerCase()})`;
       }
       // types in different doc
       const externalModule = {
