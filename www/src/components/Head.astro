@@ -3,6 +3,7 @@ import { Base64 } from "js-base64";
 import type { Props } from '@astrojs/starlight/props'
 import Default from '@astrojs/starlight/components/Head.astro'
 import config from '../../config';
+import { ViewTransitions } from "astro:transitions"
 
 const  slug = Astro.props.entry.slug;
 const { title } = Astro.props.entry.data;
@@ -32,3 +33,5 @@ const ogImageUrl = slug === ""
 
 <meta property="og:image" content={ogImageUrl} />
 <meta name="twitter:image" content={ogImageUrl} />
+<ViewTransitions />
+

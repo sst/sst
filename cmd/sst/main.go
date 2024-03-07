@@ -200,8 +200,8 @@ var Root = Command{
 			},
 		},
 		{
-			Name:        "import",
-			Description: "import existing resource",
+			Name:        "import-unstable",
+			Description: "(unstable)import existing resource",
 			Args: []Argument{
 				{
 					Name:        "type",

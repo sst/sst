@@ -46,20 +46,32 @@ print help
 
 ### version
 <Segment>
+
+<Section type="parameters">
+#### Args
+</Section>
+
+<Section type="parameters">
+#### Flags
+</Section>
+
+<Section type="parameters">
+#### Subcommands
+</Section>
 print the version
 </Segment>
 
-### import
+### import-unstable
 <Segment>
 
 <Section type="parameters">
 #### Args
 - <p><code class="key">type</code></p>
-the type of resource to import
+The type of the resource
 - <p><code class="key">name</code></p>
-the name of the resource
+The name of the resource
 - <p><code class="key">id</code></p>
-the id of the resource
+The id of the resource
 </Section>
 
 <Section type="parameters">
@@ -67,7 +79,11 @@ the id of the resource
 - <p><code class="key">parent</code> <code class="primitive">string</code></p>
 the parent resource
 </Section>
-importing existing resource
+
+<Section type="parameters">
+#### Subcommands
+</Section>
+(unstable)import existing resource
 </Segment>
 
 ### dev
@@ -76,13 +92,29 @@ importing existing resource
 <Section type="parameters">
 #### Args
 - <p><code class="key">command</code></p>
-the command to run
+The command to run
+</Section>
+
+<Section type="parameters">
+#### Flags
+</Section>
+
+<Section type="parameters">
+#### Subcommands
 </Section>
 run in development mode
 </Segment>
 
 ### secret
 <Segment>
+
+<Section type="parameters">
+#### Args
+</Section>
+
+<Section type="parameters">
+#### Flags
+</Section>
 
 <Section type="parameters">
 #### Subcommands
@@ -97,17 +129,20 @@ manage secrets
 <InlineSection>
 **Args**
 - <p><code class="key">name</code></p>
-the name of the secret
+The name of the secret
 - <p><code class="key">value</code></p>
-the value of the secret
+The value of the secret
+</InlineSection>
+<InlineSection>
+**Args**
 </InlineSection>
 </Section>
 set a secret
-set a secret
+Set the StripeSecret to 123456789
 ```
 sst secret set StripeSecret 123456789
 ```
-set a secret for a specific stage
+Set the StripeSecret to production
 ```
 sst secret set StripeSecret productionsecret --stage=production
 ```
@@ -115,6 +150,12 @@ sst secret set StripeSecret productionsecret --stage=production
 <NestedTitle id="secret-list" Tag="h4" parent="secret ">list</NestedTitle>
 <Segment>
 <Section type="parameters">
+<InlineSection>
+**Args**
+</InlineSection>
+<InlineSection>
+**Args**
+</InlineSection>
 </Section>
 list all secrets
 </Segment>
@@ -125,43 +166,131 @@ list all secrets
 <Section type="parameters">
 #### Args
 - <p><code class="key">command</code></p>
-the command to run
+The command to run
+</Section>
+
+<Section type="parameters">
+#### Flags
+</Section>
+
+<Section type="parameters">
+#### Subcommands
 </Section>
 run command with all resource linked in environment
 </Segment>
 
 ### install
 <Segment>
+
+<Section type="parameters">
+#### Args
+</Section>
+
+<Section type="parameters">
+#### Flags
+</Section>
+
+<Section type="parameters">
+#### Subcommands
+</Section>
 install dependencies specified in sst.config.ts
 </Segment>
 
 ### deploy
 <Segment>
+
+<Section type="parameters">
+#### Args
+</Section>
+
+<Section type="parameters">
+#### Flags
+</Section>
+
+<Section type="parameters">
+#### Subcommands
+</Section>
 deploy your application
 </Segment>
 
 ### remove
 <Segment>
+
+<Section type="parameters">
+#### Args
+</Section>
+
+<Section type="parameters">
+#### Flags
+</Section>
+
+<Section type="parameters">
+#### Subcommands
+</Section>
 remove your application
 </Segment>
 
 ### refresh
 <Segment>
 
+<Section type="parameters">
+#### Args
+</Section>
+
+<Section type="parameters">
+#### Flags
+</Section>
+
+<Section type="parameters">
+#### Subcommands
+</Section>
+
 </Segment>
 
 ### cancel
 <Segment>
+
+<Section type="parameters">
+#### Args
+</Section>
+
+<Section type="parameters">
+#### Flags
+</Section>
+
+<Section type="parameters">
+#### Subcommands
+</Section>
 cancel any pending deploys
 </Segment>
 
-### create
+### init
 <Segment>
+
+<Section type="parameters">
+#### Args
+</Section>
+
+<Section type="parameters">
+#### Flags
+</Section>
+
+<Section type="parameters">
+#### Subcommands
+</Section>
 
 </Segment>
 
 ### state
 <Segment>
+
+<Section type="parameters">
+#### Args
+</Section>
+
+<Section type="parameters">
+#### Flags
+</Section>
 
 <Section type="parameters">
 #### Subcommands
@@ -172,6 +301,12 @@ manage state of your deployment
 <NestedTitle id="state-edit" Tag="h4" parent="state ">edit</NestedTitle>
 <Segment>
 <Section type="parameters">
+<InlineSection>
+**Args**
+</InlineSection>
+<InlineSection>
+**Args**
+</InlineSection>
 </Section>
 edit the state of your deployment
 </Segment>
