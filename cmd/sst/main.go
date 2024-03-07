@@ -531,7 +531,7 @@ var Root = Command{
 			},
 		},
 		{
-			Name: "create",
+			Name: "init",
 			Run: func(cli *Cli) error {
 				if _, err := os.Stat("sst.config.ts"); err == nil {
 					color.New(color.FgRed, color.Bold).Print("❌")
