@@ -5,10 +5,21 @@ import * as TypeDoc from "typedoc";
 type CliCommand = {
   name: string;
   hidden: boolean;
-  description: string;
-  args: { name: string; description: string; required: boolean }[];
-  flags: { name: string; description: string; type: "string" | "bool" }[];
-  examples: { content: string; description: string }[];
+  description: { short: string; long: string };
+  args: {
+    name: string;
+    description: { short: string; long: string };
+    required: boolean;
+  }[];
+  flags: {
+    name: string;
+    description: { short: string; long: string };
+    type: "string" | "bool";
+  }[];
+  examples: {
+    content: string;
+    description: { short: string; long: string };
+  }[];
   children: CliCommand[];
 };
 
@@ -33,6 +44,7 @@ async function generateCliDoc() {
     [
       renderCliHeader(),
       renderCliImports(),
+      renderCliAbout(),
       renderCliGlobalFlags(),
       renderCliCommands(),
       renderCliFooter(),
@@ -63,6 +75,21 @@ async function generateCliDoc() {
     ];
   }
 
+  function renderCliAbout() {
+    console.debug(` - about`);
+    const lines = [];
+
+    lines.push(
+      ``,
+      `<Section type="about">`,
+      json.description.long,
+      `</Section>`,
+      ``,
+      `---`
+    );
+    return lines;
+  }
+
   function renderCliGlobalFlags() {
     const lines: string[] = [];
     if (!json.flags.length) return lines;
@@ -80,7 +107,7 @@ async function generateCliDoc() {
         `**Type** ${renderCliFlagType(f.type)}`,
         `</InlineSection>`,
         `</Section>`,
-        f.description,
+        f.description.long,
         `</Segment>`
       );
     }
@@ -117,7 +144,7 @@ async function generateCliDoc() {
           `#### Args`,
           ...cmd.args.flatMap((a) => [
             `- <p><code class="key">${renderCliArgName(a)}</code></p>`,
-            a.description,
+            a.description.long,
           ]),
           `</Section>`
         );
@@ -133,7 +160,7 @@ async function generateCliDoc() {
             `- <p><code class="key">${f.name}</code> ${renderCliFlagType(
               f.type
             )}</p>`,
-            f.description,
+            f.description.long,
           ]),
           `</Section>`
         );
@@ -156,9 +183,9 @@ async function generateCliDoc() {
 
       // examples
       lines.push(
-        cmd.description,
+        cmd.description.long,
         ...cmd.examples.flatMap((e) => [
-          e.description,
+          e.description.long,
           "```",
           e.content,
           "```",
@@ -194,7 +221,7 @@ async function generateCliDoc() {
               `**Args**`,
               ...subcmd.args.flatMap((a) => [
                 `- <p><code class="key">${a.name}</code></p>`,
-                a.description,
+                a.description.long,
               ]),
               `</InlineSection>`
             );
@@ -207,7 +234,7 @@ async function generateCliDoc() {
               `**Args**`,
               ...subcmd.flags.flatMap((f) => [
                 `- <p><code class="key">${f.name}</code></p>`,
-                f.description,
+                f.description.long,
               ]),
               `</InlineSection>`
             );
@@ -216,9 +243,9 @@ async function generateCliDoc() {
           // subcommands examples
           lines.push(
             `</Section>`,
-            subcmd.description,
+            subcmd.description.long,
             ...subcmd.examples.flatMap((e) => [
-              e.description,
+              e.description.long,
               "```",
               e.content,
               "```",
