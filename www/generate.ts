@@ -352,7 +352,7 @@ async function generateTsDoc() {
       return [
         `---`,
         `title: Config`,
-        `description: Configure your SST app.`,
+        `description: Use the \`sst.config.ts\` to configure your app.`,
         `---`,
       ];
     }
