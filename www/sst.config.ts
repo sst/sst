@@ -7,7 +7,13 @@ export default $config({
       removalPolicy: input?.stage === "production" ? "retain" : "remove",
       providers: {
         aws: {
-          profile: input.stage === "production" ? "sst-production" : "sst-dev",
+          profile: (() => {
+            if (process.env.GITHUB_ACTIONS) return undefined;
+            if (input.stage === "production") {
+              return "sst-production";
+            }
+            return "sst-dev";
+          })(),
         },
       },
     };

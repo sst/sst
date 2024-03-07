@@ -26,6 +26,16 @@ jobs:
           role-session-name: GitHubActions
           role-duration-seconds: 1200 # Optional: Specifies the duration, in seconds, of the role session (default is 1 hour)
 
-      - name: Use AWS CLI
+      - uses: actions/setup-go@v4
+        with:
+          go-version: '>=1.21.0'
+
+      - name: mod
+        run: go mod download
+
+      - name: deploy
         run: |
-          aws s3 ls
+          cd www
+          go run ../cmd/sst deploy
+
+
