@@ -12,7 +12,7 @@ Before you get started:
 
 ---
 
-## 1. Create a Next.js app
+## Create a Next.js app
 
 Let's start by creating our app.
 
@@ -44,7 +44,7 @@ You are starting `next dev` wrapped in `sst dev next dev`.
 
 ---
 
-## 2. Add an S3 Bucket
+## Add an S3 Bucket
 
 Let's add a `public` S3 Bucket for file uploads. Update your `sst.config.ts`.
 
@@ -66,7 +66,7 @@ new sst.aws.Nextjs("MyWeb", {
 
 ---
 
-## 3. Create an upload form
+## Create an upload form
 
 Add a form client component in `components/form.tsx`.
 
@@ -143,7 +143,7 @@ Add some styles.
 
 ---
 
-## 4. Generate a pre-signed URL
+## Generate a pre-signed URL
 
 When our app loads, we'll generate a pre-signed URL for the file upload and render the form with it.
 
@@ -187,7 +187,7 @@ Head over to `http://localhost:3000` and try **uploading an image**, you should 
 
 ---
 
-## 5. Deploy your app
+## Deploy your app
 
 Now let's deploy your app to AWS.
 
@@ -201,7 +201,7 @@ Congrats! Your app should now be live!
 
 ---
 
-## 6. Connect the console
+## Connect the console
 
 Optionally, you can view your app and its logs in the [SST Console](/docs/console/) — [**console.sst.dev**](https://console.sst.dev)
 

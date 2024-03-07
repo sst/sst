@@ -280,7 +280,7 @@ The origins that can access the bucket.
   }
 }
 ```
-Or the wildcard character for all origins.
+Or the wildcard for all origins.
 ```js
 {
   cors: {
@@ -344,6 +344,12 @@ default the browser doesn't cache the results. The maximum value is `86400 secon
 **Default** <code class="primitive">false</code>
 </InlineSection>
 Enable public read access for all the files in the bucket.
+
+:::tip
+You don't need to enable this if you're using CloudFront to serve files from the bucket.
+:::
+
+Should only be turned on if you want to host public files directly from the bucket.
 
 ```js
 {
