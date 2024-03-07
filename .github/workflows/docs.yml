@@ -1,0 +1,41 @@
+name: docs
+
+on:
+  push:
+    branches:
+      - dev
+
+jobs:
+  deploy:
+    name: deploy
+    runs-on: ubuntu-latest
+
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - name: checkout
+        uses: actions/checkout@v2
+
+      - name: aws
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-region: us-east-1
+          role-to-assume: arn:aws:iam::226609089145:role/www-production-GithubRole
+          role-session-name: GitHubActions
+          role-duration-seconds: 1200 # Optional: Specifies the duration, in seconds, of the role session (default is 1 hour)
+
+      - uses: actions/setup-go@v4
+        with:
+          go-version: '>=1.21.0'
+
+      - name: mod
+        run: go mod download
+
+      - name: deploy
+        run: |
+          cd www
+          go run ../cmd/sst deploy
+
+

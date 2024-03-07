@@ -7,7 +7,13 @@ export default $config({
       removalPolicy: input?.stage === "production" ? "retain" : "remove",
       providers: {
         aws: {
-          profile: input.stage === "production" ? "sst-production" : "sst-dev",
+          profile: (() => {
+            if (process.env.GITHUB_ACTIONS) return undefined;
+            if (input.stage === "production") {
+              return "sst-production";
+            }
+            return "sst-dev";
+          })(),
         },
       },
     };
@@ -22,6 +28,7 @@ export default $config({
         url: `https://token.actions.githubusercontent.com`,
       });
       const role = new aws.iam.Role("GithubRole", {
+        name: `www-${$app.stage}-GithubRole`,
         assumeRolePolicy: {
           Version: "2012-10-17",
           Statement: [
