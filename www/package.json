@@ -8,10 +8,10 @@
     "build": "bun generate && astro check && astro build",
     "preview": "astro preview",
     "astro": "astro",
-    "generate-build-cli": "go run ../cmd/sst introspect > cli-doc.jsons",
-    "generate": "tsx generate.ts",
+    "generate": "bun generate-cli-json && tsx generate.ts",
     "generate-tsdoc": "tsx generate.ts tsdoc",
-    "generate-cli": "tsx generate.ts cli"
+    "generate-cli": "bun generate-cli-json && tsx generate.ts cli",
+    "generate-cli-json": "go run ../cmd/sst introspect > cli-doc.json"
   },
   "dependencies": {
     "@astrojs/sitemap": "^3.0.5",

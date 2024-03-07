@@ -6,12 +6,10 @@ type CliCommand = {
   name: string;
   hidden: boolean;
   description: string;
-  args: { name: string; description: string; required: boolean }[] | null;
-  flags:
-    | { name: string; description: string; type: "string" | "bool" }[]
-    | null;
-  examples: { content: string; description: string }[] | null;
-  children: CliCommand[] | null;
+  args: { name: string; description: string; required: boolean }[];
+  flags: { name: string; description: string; type: "string" | "bool" }[];
+  examples: { content: string; description: string }[];
+  children: CliCommand[];
 };
 
 const cmd = process.argv[2];
@@ -67,7 +65,7 @@ async function generateCliDoc() {
 
   function renderCliGlobalFlags() {
     const lines: string[] = [];
-    if (!json.flags) return lines;
+    if (!json.flags.length) return lines;
 
     lines.push(``, `## Global Flags`);
 
@@ -79,7 +77,7 @@ async function generateCliDoc() {
         `<Segment>`,
         `<Section type="parameters">`,
         `<InlineSection>`,
-        `**Type** ${renderCliType(f.type)}`,
+        `**Type** ${renderCliFlagType(f.type)}`,
         `</InlineSection>`,
         `</Section>`,
         f.description,
@@ -91,23 +89,34 @@ async function generateCliDoc() {
 
   function renderCliCommands() {
     const lines: string[] = [];
-    if (!json.children) return lines;
+    if (!json.children.length) return lines;
 
     lines.push(``, `## Commands`);
 
-    for (const c of json.children.filter((c) => !c.hidden)) {
-      console.debug(` - command ${c.name}`);
-      lines.push(``, `### ${c.name}`, `<Segment>`);
+    for (const cmd of json.children.filter((cmd) => !cmd.hidden)) {
+      console.debug(` - command ${cmd.name}`);
+      lines.push(``, `### ${cmd.name}`, `<Segment>`);
+
+      // usage
+      if (cmd.children.length) {
+        lines.push(
+          `#### Usage`,
+          `<Section type="signature">`,
+          "```",
+          `sst ${renderCliCommandUsage(cmd)}`,
+          "```",
+          `</Section>`
+        );
+      }
 
       // args
-      // TODO render 'arg.required'
-      if (c.args) {
+      if (cmd.args.length) {
         lines.push(
           ``,
           `<Section type="parameters">`,
           `#### Args`,
-          ...c.args.flatMap((a) => [
-            `- <p><code class="key">${a.name}</code></p>`,
+          ...cmd.args.flatMap((a) => [
+            `- <p><code class="key">${renderCliArgName(a)}</code></p>`,
             a.description,
           ]),
           `</Section>`
@@ -115,13 +124,13 @@ async function generateCliDoc() {
       }
 
       // flags
-      if (c.flags) {
+      if (cmd.flags.length) {
         lines.push(
           ``,
           `<Section type="parameters">`,
           `#### Flags`,
-          ...c.flags.flatMap((f) => [
-            `- <p><code class="key">${f.name}</code> ${renderCliType(
+          ...cmd.flags.flatMap((f) => [
+            `- <p><code class="key">${f.name}</code> ${renderCliFlagType(
               f.type
             )}</p>`,
             f.description,
@@ -131,15 +140,15 @@ async function generateCliDoc() {
       }
 
       // subcommands
-      if (c.children) {
+      if (cmd.children.length) {
         lines.push(
           ``,
           `<Section type="parameters">`,
           `#### Subcommands`,
-          ...c.children
+          ...cmd.children
             .filter((s) => !s.hidden)
             .flatMap((s) => [
-              `- <p>[<code class="key">${s.name}</code>](#${c.name}-${s.name})</p>`,
+              `- <p>[<code class="key">${s.name}</code>](#${cmd.name}-${s.name})</p>`,
             ]),
           `</Section>`
         );
@@ -147,8 +156,8 @@ async function generateCliDoc() {
 
       // examples
       lines.push(
-        c.description,
-        ...(c.examples ?? []).flatMap((e) => [
+        cmd.description,
+        ...cmd.examples.flatMap((e) => [
           e.description,
           "```",
           e.content,
@@ -158,21 +167,32 @@ async function generateCliDoc() {
       );
 
       // subcommands details
-      (c.children ?? [])
-        .filter((s) => !s.hidden)
-        .flatMap((s) => {
+      cmd.children
+        .filter((subcmd) => !subcmd.hidden)
+        .flatMap((subcmd) => {
           lines.push(
-            `<NestedTitle id="${c.name}-${s.name}" Tag="h4" parent="${c.name} ">${s.name}</NestedTitle>`,
-            `<Segment>`,
-            `<Section type="parameters">`
+            `<NestedTitle id="${cmd.name}-${subcmd.name}" Tag="h4" parent="${cmd.name} ">${subcmd.name}</NestedTitle>`,
+            `<Segment>`
           );
 
+          // usage
+          lines.push(
+            `**Usage**`,
+            `<Section type="signature">`,
+            "```",
+            `sst ${cmd.name} ${renderCliCommandUsage(subcmd)}`,
+            "```",
+            `</Section>`
+          );
+
+          lines.push(`<Section type="parameters">`);
+
           // subcommand args
-          if (s.args) {
+          if (subcmd.args.length) {
             lines.push(
               `<InlineSection>`,
               `**Args**`,
-              ...s.args.flatMap((a) => [
+              ...subcmd.args.flatMap((a) => [
                 `- <p><code class="key">${a.name}</code></p>`,
                 a.description,
               ]),
@@ -181,11 +201,11 @@ async function generateCliDoc() {
           }
 
           // subcommand flags
-          if (s.flags) {
+          if (subcmd.flags.length) {
             lines.push(
               `<InlineSection>`,
               `**Args**`,
-              ...s.flags.flatMap((f) => [
+              ...subcmd.flags.flatMap((f) => [
                 `- <p><code class="key">${f.name}</code></p>`,
                 f.description,
               ]),
@@ -196,8 +216,8 @@ async function generateCliDoc() {
           // subcommands examples
           lines.push(
             `</Section>`,
-            s.description,
-            ...(s.examples ?? []).flatMap((e) => [
+            subcmd.description,
+            ...subcmd.examples.flatMap((e) => [
               e.description,
               "```",
               e.content,
@@ -210,11 +230,25 @@ async function generateCliDoc() {
     return lines;
   }
 
+  function renderCliArgName(prop: CliCommand["args"][number]) {
+    return `${prop.name}${prop.required ? "" : "?"}`;
+  }
+
+  function renderCliCommandUsage(command: CliCommand) {
+    const parts: string[] = [];
+
+    parts.push(command.name);
+    command.args.forEach((arg) =>
+      arg.required ? parts.push(`<${arg.name}>`) : parts.push(`[${arg.name}]`)
+    );
+    return parts.join(" ");
+  }
+
   function renderCliFooter() {
     return ["</div>"];
   }
 
-  function renderCliType(type: "string" | "bool") {
+  function renderCliFlagType(type: CliCommand["flags"][number]["type"]) {
     return `<code class="primitive">${
       type === "bool" ? "boolean" : type
     }</code>`;

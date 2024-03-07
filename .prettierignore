@@ -1,2 +1,2 @@
 # Ignore markdown files in the docs
-/www/src/content/docs/docs/component/**/*.mdx
+/www/src/content/docs/docs/**/*.mdx

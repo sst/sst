@@ -172,28 +172,28 @@ func run() error {
 
 var Root = Command{
 	Name:        "sst",
-	Description: "deploy anything",
+	Description: "Deploy anything",
 	Flags: []Flag{
 		{
 			Name:        "stage",
 			Type:        "string",
-			Description: "the stage to deploy to",
+			Description: "The stage to deploy to",
 		},
 		{
 			Name:        "verbose",
 			Type:        "bool",
-			Description: "enable verbose logging",
+			Description: "Enable verbose logging",
 		},
 		{
 			Name:        "help",
 			Type:        "bool",
-			Description: "print help",
+			Description: "Print help",
 		},
 	},
 	Children: []*Command{
 		{
 			Name:        "version",
-			Description: "print the version",
+			Description: "Print the version",
 			Run: func(cli *Cli) error {
 				fmt.Printf("ion.%s\n", version)
 				return nil
@@ -201,7 +201,7 @@ var Root = Command{
 		},
 		{
 			Name:        "import",
-			Description: "import existing resource",
+			Description: "Import existing resource",
 			Args: []Argument{
 				{
 					Name:        "type",
@@ -223,7 +223,7 @@ var Root = Command{
 				{
 					Type:        "string",
 					Name:        "parent",
-					Description: "the parent resource",
+					Description: "The parent resource",
 				},
 			},
 			Run: func(cli *Cli) error {
@@ -253,17 +253,17 @@ var Root = Command{
 		},
 		{
 			Name:        "dev",
-			Description: "run in development mode",
+			Description: "Run in development mode",
 			Args:        []Argument{{Name: "command", Description: "The command to run"}},
 			Run:         CmdDev,
 		},
 		{
 			Name:        "secret",
-			Description: "manage secrets",
+			Description: "Manage secrets",
 			Children: []*Command{
 				{
 					Name:        "set",
-					Description: "set a secret",
+					Description: "Set a secret",
 					Args: []Argument{
 						{
 							Name:        "name",
@@ -310,7 +310,7 @@ var Root = Command{
 				},
 				{
 					Name:        "list",
-					Description: "list all secrets",
+					Description: "List all secrets",
 					Run: func(cli *Cli) error {
 						p, err := initProject(cli)
 						if err != nil {
@@ -334,7 +334,7 @@ var Root = Command{
 		{
 			Name:        "shell",
 			Args:        []Argument{{Name: "command", Description: "The command to run"}},
-			Description: "run command with all resource linked in environment",
+			Description: "Run command with all resource linked in environment",
 			Run: func(cli *Cli) error {
 				p, err := initProject(cli)
 				if err != nil {
@@ -416,7 +416,7 @@ var Root = Command{
 		},
 		{
 			Name:        "install",
-			Description: "install dependencies specified in sst.config.ts",
+			Description: "Install dependencies specified in sst.config.ts",
 			Run: func(cli *Cli) error {
 				cfgPath, err := project.Discover()
 				if err != nil {
@@ -448,7 +448,7 @@ var Root = Command{
 		},
 		{
 			Name:        "deploy",
-			Description: "deploy your application",
+			Description: "Deploy your application",
 			Run: func(cli *Cli) error {
 				p, err := initProject(cli)
 				if err != nil {
@@ -471,7 +471,7 @@ var Root = Command{
 		},
 		{
 			Name:        "remove",
-			Description: "remove your application",
+			Description: "Remove your application",
 			Run: func(cli *Cli) error {
 				p, err := initProject(cli)
 				if err != nil {
@@ -514,7 +514,7 @@ var Root = Command{
 		},
 		{
 			Name:        "cancel",
-			Description: "cancel any pending deploys",
+			Description: "Cancel any pending deploys",
 			Run: func(cli *Cli) error {
 				p, err := initProject(cli)
 				if err != nil {
@@ -567,7 +567,7 @@ var Root = Command{
 		},
 		{
 			Name:        "state",
-			Description: "manage state of your deployment",
+			Description: "Manage state of your deployment",
 			Children: []*Command{
 				{
 					Name:        "edit",

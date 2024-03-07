@@ -19,7 +19,7 @@ import InlineSection from '../../../../../src/components/tsdoc/InlineSection.ast
 **Type** <code class="primitive">string</code>
 </InlineSection>
 </Section>
-the stage to deploy to
+The stage to deploy to
 </Segment>
 
 ### verbose
@@ -29,7 +29,7 @@ the stage to deploy to
 **Type** <code class="primitive">boolean</code>
 </InlineSection>
 </Section>
-enable verbose logging
+Enable verbose logging
 </Segment>
 
 ### help
@@ -39,14 +39,14 @@ enable verbose logging
 **Type** <code class="primitive">boolean</code>
 </InlineSection>
 </Section>
-print help
+Print help
 </Segment>
 
 ## Commands
 
 ### version
 <Segment>
-print the version
+Print the version
 </Segment>
 
 ### import
@@ -55,19 +55,19 @@ print the version
 <Section type="parameters">
 #### Args
 - <p><code class="key">type</code></p>
-the type of resource to import
+The type of the resource
 - <p><code class="key">name</code></p>
-the name of the resource
+The name of the resource
 - <p><code class="key">id</code></p>
-the id of the resource
+The id of the resource
 </Section>
 
 <Section type="parameters">
 #### Flags
 - <p><code class="key">parent</code> <code class="primitive">string</code></p>
-the parent resource
+The parent resource
 </Section>
-importing existing resource
+Import existing resource
 </Segment>
 
 ### dev
@@ -75,48 +75,66 @@ importing existing resource
 
 <Section type="parameters">
 #### Args
-- <p><code class="key">command</code></p>
-the command to run
+- <p><code class="key">command?</code></p>
+The command to run
 </Section>
-run in development mode
+Run in development mode
 </Segment>
 
 ### secret
 <Segment>
+#### Usage
+<Section type="signature">
+```
+sst secret
+```
+</Section>
 
 <Section type="parameters">
 #### Subcommands
 - <p>[<code class="key">set</code>](#secret-set)</p>
 - <p>[<code class="key">list</code>](#secret-list)</p>
 </Section>
-manage secrets
+Manage secrets
 </Segment>
 <NestedTitle id="secret-set" Tag="h4" parent="secret ">set</NestedTitle>
 <Segment>
+**Usage**
+<Section type="signature">
+```
+sst secret set <name> <value>
+```
+</Section>
 <Section type="parameters">
 <InlineSection>
 **Args**
 - <p><code class="key">name</code></p>
-the name of the secret
+The name of the secret
 - <p><code class="key">value</code></p>
-the value of the secret
+The value of the secret
 </InlineSection>
 </Section>
-set a secret
-set a secret
+Set a secret
+Set the StripeSecret to 123456789
 ```
 sst secret set StripeSecret 123456789
 ```
-set a secret for a specific stage
+Set the StripeSecret to production
 ```
 sst secret set StripeSecret productionsecret --stage=production
 ```
 </Segment>
 <NestedTitle id="secret-list" Tag="h4" parent="secret ">list</NestedTitle>
 <Segment>
+**Usage**
+<Section type="signature">
+```
+sst secret list
+```
+</Section>
 <Section type="parameters">
 </Section>
-list all secrets
+List all secrets
 </Segment>
 
 ### shell
@@ -124,25 +142,25 @@ list all secrets
 
 <Section type="parameters">
 #### Args
-- <p><code class="key">command</code></p>
-the command to run
+- <p><code class="key">command?</code></p>
+The command to run
 </Section>
-run command with all resource linked in environment
+Run command with all resource linked in environment
 </Segment>
 
 ### install
 <Segment>
-install dependencies specified in sst.config.ts
+Install dependencies specified in sst.config.ts
 </Segment>
 
 ### deploy
 <Segment>
-deploy your application
+Deploy your application
 </Segment>
 
 ### remove
 <Segment>
-remove your application
+Remove your application
 </Segment>
 
 ### refresh
@@ -152,25 +170,37 @@ remove your application
 
 ### cancel
 <Segment>
-cancel any pending deploys
+Cancel any pending deploys
 </Segment>
 
-### create
+### init
 <Segment>
 
 </Segment>
 
 ### state
 <Segment>
+#### Usage
+<Section type="signature">
+```
+sst state
+```
+</Section>
 
 <Section type="parameters">
 #### Subcommands
 - <p>[<code class="key">edit</code>](#state-edit)</p>
 </Section>
-manage state of your deployment
+Manage state of your deployment
 </Segment>
 <NestedTitle id="state-edit" Tag="h4" parent="state ">edit</NestedTitle>
 <Segment>
+**Usage**
+<Section type="signature">
+```
+sst state edit
+```
+</Section>
 <Section type="parameters">
 </Section>
 edit the state of your deployment
