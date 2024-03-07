@@ -22,6 +22,7 @@ import { Link } from "../link.js";
 import { VisibleError } from "../error.js";
 import { Warp } from "../warp.js";
 import type { Input } from "../input.js";
+import { prefixName } from "../naming.js";
 
 const RETENTION = {
   "1 day": 1,
@@ -1300,7 +1301,7 @@ export class Function
       return new aws.cloudwatch.LogGroup(
         `${name}LogGroup`,
         transform(args.transform?.logGroup, {
-          name: `/${$app.name}/${$app.stage}/${name}`,
+          name: `/aws/lambda/${prefixName(name)}`,
           retentionInDays: logging.apply(
             (logging) => RETENTION[logging.retention],
           ),
