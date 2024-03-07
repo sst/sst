@@ -1,13 +1,9 @@
 ---
 import type { Props } from '@astrojs/starlight/props'
 import Default from '@astrojs/starlight/components/Hero.astro'
+import config from '../../config';
 
-const download = {
-  curl: "curl -fsSL",
-  url: "https://ion.sst.dev/install",
-  bash: "| bash",
-};
-
+const download = config.download;
 const  slug = Astro.props.entry.slug;
 ---
 

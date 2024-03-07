@@ -17,16 +17,16 @@ Once Ion is stable, it’ll be released as SST v3. [Read the full announcement](
 
 Aside from the underlying engine, there are a few differences between SST v2 and Ion.
 
-- There are no _"stacks"_ and no stack resource limits.
-- There are no npm packages for the CLI, just the CLI and the `sst.config.ts`.
-- The `bind` command has been merged into the `dev` command. You don't need to run both of them.
+- There are no _"stacks"_ or stack resource limits.
+- There are no npm packages, just a CLI and the `sst.config.ts`.
+- The `bind` command has been merged into the `dev` command. You won't need to run both of them.
 
 ---
 
 SST is a framework that makes it easy to build modern full-stack applications on your own infrastructure.
 
 :::note
-Ion currently **only supports Node.js** applications and **macOS, Linux, and WSL**. Support for other runtimes and OSes are on the roadmap.
+Ion currently **supports Node.js** applications on **macOS, Linux, and WSL**. Support for other runtimes and OSes are on the roadmap.
 :::
 
 If you are new to SST, here's how it works.
@@ -62,7 +62,7 @@ You start by defining, _**in code**_, the frontend you are using. Or if you don'
   <TabItem label="API">
   ```js title="sst.config.ts"
   new sst.aws.ApiGatewayV2("MyApi", {
-    domain: "api.domain.com"
+    domain: "api.my-app.com"
   });
   ```
   </TabItem>
@@ -74,7 +74,7 @@ Support for other frontends are on the roadmap.
 
 ## Backend
 
-Just like configuring the frontend, you can configure backend features of your application _in code_. You can features like cron jobs, buckets, queues, databases, and more.
+Just like configuring the frontend, you can configure backend features _in code_. Features like cron jobs, buckets, queues, databases, and more.
 
 <Tabs>
   <TabItem label="Cron">
@@ -110,17 +110,23 @@ You can check out the full list of components on the sidebar.
 
 ## Infrastructure
 
-The above snippets are called **Components**. They are a way of defining the features of your application in code. You can define any feature of your application.
+The above snippets are called **Components**. They are a way of defining the features of your application in code. You can define any feature of your application with them.
 
-These will create the necessary infrastructure in your account, in this case AWS, all without using the AWS Console. Currently **Ion supports AWS and Cloudflare**.
+They create the necessary infrastructure in your account. AWS in the above examples, all without using the AWS Console.
 
-You can learn more about [components](/docs/components/).
+:::tip
+Ion currently supports AWS and Cloudflare.
+:::
+
+Learn more about [Components](/docs/components/).
 
 ---
 
 ### Configure
 
-SST's components come with sensible defaults designed to get your started easily. But they can also be configured completely. For example, for the `sst.aws.Function` can be configured with all the common Lambda function props.
+SST's components come with sensible defaults designed to get you started. But they can also be configured completely.
+
+For example, the `sst.aws.Function` can be configured with all the common Lambda function props.
 
 ```js {3,4} title="sst.config.ts"
 new sst.aws.Function("MyFunction", {
@@ -130,7 +136,7 @@ new sst.aws.Function("MyFunction", {
 });
 ```
 
-But with SST you can take it a step fruther and transform how the Function component creates its low level infrastructure. In this case, Function also creates an IAM Role. You can transform the IAM Role using the `transform` prop.
+But with SST you can take it a step further and transform how the Function component creates its low level infrastructure. The Function component also creates an IAM Role. You can transform the IAM Role using the `transform` prop.
 
 ```js {3-7} title="sst.config.ts"
 new sst.aws.Function("MyFunction", {
@@ -143,13 +149,13 @@ new sst.aws.Function("MyFunction", {
 });
 ```
 
-You can read more about [transforms](/docs/components#transforms).
+Read more about [transforms](/docs/components#transforms).
 
 ---
 
 ### Extend
 
-If you want to add a feature to your app that is not supported by SST's components yet, you can use Pulumi components directly in your SST app. This is because components in SST are built on Pulumi components.
+If you want to add a feature to your app that's not supported by SST's components yet, you can use Pulumi components directly in your SST app. This is because components in SST are built on Pulumi components.
 
 ```js title="sst.config.ts"
 import * as aws from "@pulumi/aws";
@@ -162,7 +168,7 @@ new aws.s3.BucketV2("b", {
 });
 ```
 
-Pulumi's [AWS Classic](https://www.pulumi.com/registry/packages/aws/) provider is automatically included in your SST app.
+Pulumi's [AWS Classic provider](https://www.pulumi.com/registry/packages/aws/) is automatically included in your SST app.
 
 ---
 
@@ -170,7 +176,7 @@ Pulumi's [AWS Classic](https://www.pulumi.com/registry/packages/aws/) provider i
 
 Once you've added a couple of features, SST can help you link them together. This is great because you **won't need to hardcode** anything in your app.
 
-For example, let's say your app has a Next.js frontend and an S3 bucket for file uploads. You can `link` them together.
+Let's say your app has a Next.js frontend and an S3 bucket for file uploads, you can `link` them together.
 
 ```js title="sst.config.ts" {4}
 const myBucket = new sst.aws.Bucket("MyBucket");
@@ -180,7 +186,7 @@ new sst.aws.Nextjs("MyWeb", {
 });
 ```
 
-Now, you can use SST's [Node client](/docs/reference/client/) to access the S3 bucket in your Next.js app.
+You can then use SST's [Node client](/docs/reference/client/) to access the S3 bucket in your Next.js app.
 
 ```ts title="app/page.tsx"
 import { Resource } from "sst";
@@ -188,7 +194,7 @@ import { Resource } from "sst";
 console.log(Resource.MyBucket.name);
 ```
 
-You can learn more about [resource linking](/docs/linking/).
+Learn more about [resource linking](/docs/linking/).
 
 ---
 
@@ -216,7 +222,7 @@ my-nextjs-app
 
 #### Monorepo mode
 
-Alternatively, you can use SST in a monorepo. This is useful if you have multiple frontends or you are working on a large project.
+Alternatively, you can use SST in a monorepo. This is useful if you have multiple frontends or you are working on a large project. In this case the `sst.config.ts` is in the root of your monorepo.
 
 ```plaintext {2}
 my-sst-app
@@ -236,7 +242,7 @@ my-sst-app
 To make this all work, Ion comes with a CLI that you install globally.
 
 ```bash
-https://ion.sst.dev/install | bash
+curl -fsSL https://ion.sst.dev/install | bash
 ```
 
 The CLI currently supports macOS, Linux, and WSL.

@@ -1,4 +1,9 @@
 export default {
+  download: {
+    curl: "curl -fsSL",
+    url: "https://ion.sst.dev/install",
+    bash: "| bash",
+  },
   sst: "https://sst.dev",
   github: "https://github.com/sst/ion",
   discord: "https://sst.dev/discord",
