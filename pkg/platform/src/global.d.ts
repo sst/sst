@@ -1,3 +1,9 @@
+/**
+ * Global functions and variables
+ *
+ * @packageDocumentation
+ */
+
 import "@types/node";
 import * as util from "@pulumi/pulumi";
 import * as _sst from "./components/index";

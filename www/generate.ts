@@ -296,15 +296,19 @@ async function generateTsDoc() {
     const linkHashes = new Map<TypeDoc.DeclarationReflection, string>();
 
     // Render config file
-    if (sourceFile === "pkg/platform/src/global-config.d.ts") return;
-    else if (sourceFile === "pkg/platform/src/config.ts") {
-      // merge config and global-config files
-      module.children = [
-        ...module.children!,
-        ...modules.find((m) => m.name === "global-config")!.children!,
+    if (sourceFile === "pkg/platform/src/global-config.d.ts") {
+      outputFilePath = `src/content/docs/docs/reference/global.mdx`;
+      outputFileContent = [
+        renderConfigHeader(),
+        renderImports(),
+        renderAbout(),
+        renderConfigVariables(),
+        renderConfigFunctions(),
+        renderInterfaces(),
+        renderFooter(),
       ];
-
-      outputFilePath = `src/content/docs/docs/reference/${module.name}.mdx`;
+    } else if (sourceFile === "pkg/platform/src/config.ts") {
+      outputFilePath = `src/content/docs/docs/reference/config.mdx`;
       outputFileContent = [
         renderConfigHeader(),
         renderImports(),
@@ -1126,7 +1130,10 @@ async function generateTsDoc() {
 
     function isRenderingConfig() {
       const sourceFile = module.sources![0].fileName;
-      return sourceFile === "pkg/platform/src/config.ts";
+      return (
+        sourceFile === "pkg/platform/src/config.ts" ||
+        sourceFile === "pkg/platform/src/global-config.d.ts"
+      );
     }
 
     function isRenderingComponent() {
