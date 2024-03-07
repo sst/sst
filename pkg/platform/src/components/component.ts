@@ -112,6 +112,7 @@ export class Component extends ComponentResource {
             case "aws:lambda/invocation:Invocation":
             case "aws:lambda/permission:Permission":
             case "aws:route53/record:Record":
+            case "aws:s3/bucketCorsConfigurationV2:BucketCorsConfigurationV2":
             case "aws:s3/bucketNotification:BucketNotification":
             case "aws:s3/bucketObject:BucketObject":
             case "aws:s3/bucketObjectv2:BucketObjectv2":

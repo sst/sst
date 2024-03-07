@@ -13,10 +13,88 @@ import {
   hashStringToPrettyString,
   sanitizeToPascalCase,
 } from "../naming";
-import { Component, Transform, transform } from "../component";
+import { Component, Prettify, Transform, transform } from "../component";
 import { Link } from "../link";
 import type { Input } from "../input";
 import { Function, FunctionArgs } from "./function";
+import { Duration, toSeconds } from "../duration";
+
+interface BucketCorsArgs {
+  /**
+   * The HTTP headers that origins can include in requests to the bucket.
+   * @default `["*"]`
+   * @example
+   * ```js
+   * {
+   *   cors: {
+   *     allowHeaders: ["date", "keep-alive", "x-custom-header"]
+   *   }
+   * }
+   * ```
+   */
+  allowHeaders?: Input<Input<string>[]>;
+  /**
+   * The origins that can access the bucket.
+   * @default `["*"]`
+   * @example
+   * ```js
+   * {
+   *   cors: {
+   *     allowOrigins: ["https://www.example.com", "http://localhost:60905"]
+   *   }
+   * }
+   * ```
+   * Or the wildcard character for all origins.
+   * ```js
+   * {
+   *   cors: {
+   *     allowOrigins: ["*"]
+   *   }
+   * }
+   * ```
+   */
+  allowOrigins?: Input<Input<string>[]>;
+  /**
+   * The HTTP methods that are allowed when calling the bucket.
+   * @default `["DELETE" | "GET" | "HEAD" | "POST" | "PUT"]`
+   * @example
+   * ```js
+   * {
+   *   cors: {
+   *     allowMethods: ["GET", "POST", "DELETE"]
+   *   }
+   * }
+   * ```
+   */
+  allowMethods?: Input<Input<"DELETE" | "GET" | "HEAD" | "POST" | "PUT">[]>;
+  /**
+   * The HTTP headers you want to expose to an origin that calls the bucket.
+   * @default `[]`
+   * @example
+   * ```js
+   * {
+   *   cors: {
+   *     exposeHeaders: ["date", "keep-alive", "x-custom-header"]
+   *   }
+   * }
+   * ```
+   */
+  exposeHeaders?: Input<Input<string>[]>;
+  /**
+   * The maximum amount of time the browser can cache results of a preflight request. By
+   * default the browser doesn't cache the results. The maximum value is `86400 seconds` or `1 day`.
+   * @default `"0 seconds"`
+   * @example
+   * ```js
+   * {
+   *   cors: {
+   *     maxAge: "1 day"
+   *   }
+   * }
+   * ```
+   */
+  maxAge?: Input<Duration>;
+}
 
 export interface BucketArgs {
   /**
@@ -31,6 +109,11 @@ export interface BucketArgs {
    */
   public?: Input<boolean>;
   /**
+   * The CORS configuration for the bucket.
+   * @default `true`
+   */
+  cors?: Input<false | Prettify<BucketCorsArgs>>;
+  /**
    * [Transform](/docs/components#transform) how this component creates its underlying
    * resources.
    */
@@ -39,6 +122,10 @@ export interface BucketArgs {
      * Transform the S3 Bucket resource.
      */
     bucket?: Transform<aws.s3.BucketV2Args>;
+    /**
+     * Transform the S3 Bucket CORS configuration resource.
+     */
+    cors?: Transform<aws.s3.BucketCorsConfigurationV2Args>;
     /**
      * Transform the S3 Bucket Policy resource.
      */
@@ -198,6 +285,7 @@ export class Bucket
     const bucket = createBucket();
     const publicAccessBlock = createPublicAccess();
     const policy = createBucketPolicy();
+    createCorsRule();
 
     this.constructorName = name;
     // Ensure the policy is created when the bucket is used in another component
@@ -278,6 +366,35 @@ export class Bucket
             parent,
             dependsOn: publicAccessBlock,
           },
+        );
+      });
+    }
+
+    function createCorsRule() {
+      return output(args?.cors).apply((cors) => {
+        if (cors === false) return;
+
+        return new aws.s3.BucketCorsConfigurationV2(
+          `${name}Cors`,
+          transform(args?.transform?.cors, {
+            bucket: bucket.bucket,
+            corsRules: [
+              {
+                allowedHeaders: cors?.allowHeaders ?? ["*"],
+                allowedMethods: cors?.allowMethods ?? [
+                  "DELETE",
+                  "GET",
+                  "HEAD",
+                  "POST",
+                  "PUT",
+                ],
+                allowedOrigins: cors?.allowOrigins ?? ["*"],
+                exposeHeaders: cors?.exposeHeaders,
+                maxAgeSeconds: toSeconds(cors?.maxAge ?? "0 seconds"),
+              },
+            ],
+          }),
+          { parent },
         );
       });
     }

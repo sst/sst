@@ -60,16 +60,7 @@ export type FunctionPermissionArgs = {
   resources: Input<string>[];
 };
 
-interface FunctionUrlCorsArgs
-  extends Omit<
-    aws.types.input.lambda.FunctionUrlCors,
-    | "maxAge"
-    | "allowHeaders"
-    | "allowOrigins"
-    | "allowMethods"
-    | "exposeHeaders"
-    | "allowCredentials"
-  > {
+interface FunctionUrlCorsArgs {
   /**
    * Allow cookies or other credentials in requests to the function URL.
    * @default `false`
@@ -87,6 +78,7 @@ interface FunctionUrlCorsArgs
   allowCredentials?: Input<boolean>;
   /**
    * The HTTP headers that origins can include in requests to the function URL.
+   * @default `["*"]`
    * @example
    * ```js
    * {
@@ -101,6 +93,7 @@ interface FunctionUrlCorsArgs
   allowHeaders?: Input<Input<string>[]>;
   /**
    * The origins that can access the function URL.
+   * @default `["*"]`
    * @example
    * ```js
    * {
@@ -124,22 +117,8 @@ interface FunctionUrlCorsArgs
    */
   allowOrigins?: Input<Input<string>[]>;
   /**
-   * The HTTP headers you want to expose in your function to an origin that calls the function URL.
-   * @default Common headers like `cache-control`, `content-language`, `content-type`, `expires`, `last-modified`, `pragma`.
-   * @example
-   * ```js
-   * {
-   *   url: {
-   *     cors: {
-   *       exposeHeaders: ["date", "keep-alive", "x-custom-header"]
-   *     }
-   *   }
-   * }
-   * ```
-   */
-  exposeHeaders?: Input<Input<string>[]>;
-  /**
    * The HTTP methods that are allowed when calling the function URL.
+   * @default `["*"]`
    * @example
    * ```js
    * {
@@ -166,6 +145,21 @@ interface FunctionUrlCorsArgs
       "*" | "DELETE" | "GET" | "HEAD" | "OPTIONS" | "PATCH" | "POST" | "PUT"
     >[]
   >;
+  /**
+   * The HTTP headers you want to expose in your function to an origin that calls the function URL.
+   * @default Common headers like `cache-control`, `content-language`, `content-type`, `expires`, `last-modified`, `pragma`.
+   * @example
+   * ```js
+   * {
+   *   url: {
+   *     cors: {
+   *       exposeHeaders: ["date", "keep-alive", "x-custom-header"]
+   *     }
+   *   }
+   * }
+   * ```
+   */
+  exposeHeaders?: Input<Input<string>[]>;
   /**
    * The maximum amount of time the browser can cache results of a preflight request. By
    * default the browser doesn't cache the results. The maximum value is `86400 seconds` or `1 day`.

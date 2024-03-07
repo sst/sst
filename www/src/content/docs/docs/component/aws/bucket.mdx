@@ -199,6 +199,139 @@ The generated name of the S3 Bucket.
 </Segment>
 
 ## BucketArgs
+### cors?
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">false</code><code class="symbol"> | </code><code class="primitive">Object</code><code class="symbol">&gt;</code>
+</InlineSection>
+- <p>[<code class="key">allowHeaders?</code>](#cors-allowheaders)</p>
+- <p>[<code class="key">allowMethods?</code>](#cors-allowmethods)</p>
+- <p>[<code class="key">allowOrigins?</code>](#cors-alloworigins)</p>
+- <p>[<code class="key">exposeHeaders?</code>](#cors-exposeheaders)</p>
+- <p>[<code class="key">maxAge?</code>](#cors-maxage)</p>
+</Section>
+
+<InlineSection>
+**Default** <code class="primitive">true</code>
+</InlineSection>
+The CORS configuration for the bucket.
+
+</Segment>
+<NestedTitle id="cors-allowheaders" Tag="h4" parent="cors.">allowHeaders?</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code><code class="symbol">[]</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+
+<InlineSection>
+**Default** <code class="primitive">["*"]</code>
+</InlineSection>
+The HTTP headers that origins can include in requests to the bucket URL.
+
+```js
+{
+  cors: {
+    allowHeaders: ["date", "keep-alive", "x-custom-header"]
+  }
+}
+```
+</Segment>
+<NestedTitle id="cors-allowmethods" Tag="h4" parent="cors.">allowMethods?</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Input</code><code class="symbol">&lt;</code><code class="symbol">&ldquo;</code><code class="primitive">DELETE</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">GET</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">HEAD</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">POST</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">PUT</code><code class="symbol">&rdquo;</code><code class="symbol">&gt;</code><code class="symbol">[]</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+
+<InlineSection>
+**Default** <code class="primitive">["DELETE" | "GET" | "HEAD" | "POST" | "PUT"]</code>
+</InlineSection>
+The HTTP methods that are allowed when calling the bucket URL.
+
+```js
+{
+  cors: {
+    allowMethods: ["GET", "POST", "DELETE"]
+  }
+}
+```
+</Segment>
+<NestedTitle id="cors-alloworigins" Tag="h4" parent="cors.">allowOrigins?</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code><code class="symbol">[]</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+
+<InlineSection>
+**Default** <code class="primitive">["*"]</code>
+</InlineSection>
+The origins that can access the bucket URL.
+
+```js
+{
+  cors: {
+    allowOrigins: ["https://www.example.com", "http://localhost:60905"]
+  }
+}
+```
+Or the wildcard character for all origins.
+```js
+{
+  cors: {
+    allowOrigins: ["*"]
+  }
+}
+```
+</Segment>
+<NestedTitle id="cors-exposeheaders" Tag="h4" parent="cors.">exposeHeaders?</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code><code class="symbol">[]</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+
+<InlineSection>
+**Default** <code class="primitive">[]</code>
+</InlineSection>
+The HTTP headers you want to expose to an origin that calls the bucket URL.
+
+```js
+{
+  cors: {
+    exposeHeaders: ["date", "keep-alive", "x-custom-header"]
+  }
+}
+```
+</Segment>
+<NestedTitle id="cors-maxage" Tag="h4" parent="cors.">maxAge?</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="symbol">&ldquo;</code><code class="primitive">$\{number\} second</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">$\{number\} seconds</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">$\{number\} minute</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">$\{number\} minutes</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">$\{number\} hour</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">$\{number\} hours</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">$\{number\} day</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">$\{number\} days</code><code class="symbol">&rdquo;</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+
+<InlineSection>
+**Default** <code class="primitive">"0 seconds"</code>
+</InlineSection>
+The maximum amount of time the browser can cache results of a preflight request. By
+default the browser doesn't cache the results. The maximum value is `86400 seconds` or `1 day`.
+
+```js
+{
+  cors: {
+    maxAge: "1 day"
+  }
+}
+```
+</Segment>
 ### public?
 <Segment>
 <Section type="parameters">
@@ -225,6 +358,7 @@ Enable public read access for all the files in the bucket.
 **Type** <code class="primitive">Object</code>
 </InlineSection>
 - <p>[<code class="key">bucket?</code>](#transform-bucket)</p>
+- <p>[<code class="key">cors?</code>](#transform-cors)</p>
 - <p>[<code class="key">policy?</code>](#transform-policy)</p>
 - <p>[<code class="key">publicAccessBlock?</code>](#transform-publicaccessblock)</p>
 </Section>
@@ -240,6 +374,16 @@ resources.
 </InlineSection>
 </Section>
 Transform the S3 Bucket resource.
+
+</Segment>
+<NestedTitle id="transform-cors" Tag="h4" parent="transform.">cors?</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** [<code class="type">BucketCorsConfigurationV2Args</code>](https://www.pulumi.com/registry/packages/aws/api-docs/s3/bucketcorsconfigurationv2/#inputs)<code class="symbol"> | </code><code class="symbol">(</code><code class="primitive">args</code><code class="symbol">: </code>[<code class="type">BucketCorsConfigurationV2Args</code>](https://www.pulumi.com/registry/packages/aws/api-docs/s3/bucketcorsconfigurationv2/#inputs)<code class="symbol"> => </code>[<code class="type">BucketCorsConfigurationV2Args</code>](https://www.pulumi.com/registry/packages/aws/api-docs/s3/bucketcorsconfigurationv2/#inputs)<code class="symbol"> | </code><code class="primitive">void</code><code class="symbol">)</code>
+</InlineSection>
+</Section>
+Transform the S3 Bucket CORS configuration resource.
 
 </Segment>
 <NestedTitle id="transform-policy" Tag="h4" parent="transform.">policy?</NestedTitle>
