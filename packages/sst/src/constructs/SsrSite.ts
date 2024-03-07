@@ -773,7 +773,7 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
       // Create cron job
       new Rule(self, "WarmerRule", {
         schedule: Schedule.rate(CdkDuration.minutes(5)),
-        targets: [new LambdaFunction(warmer, { retryAttempts: 0 })],
+        targets: [new LambdaFunction(warmer, {retryAttempts: 0})],
       });
 
       // Create custom resource to prewarm on deploy
@@ -876,9 +876,27 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
             : undefined,
         };
       } else if (behavior.cacheType === "server") {
-        return {
-          viewerProtocolPolicy:
-            cdk?.viewerProtocolPolicy ?? ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+        // Interface for functionAssociations
+        interface FunctionAssociation {
+          eventType: CfFunctionEventType;
+          function: CfFunction;
+        }
+
+        // Initialize an empty array for functionAssociations
+        let functionAssociations: FunctionAssociation[] = [];
+
+        // Check if cdk.distribution.defaultBehavior.functionAssociations is not undefined
+        if (cdk?.distribution?.defaultBehavior?.functionAssociations !== null) {
+          // If cfFunction exists, prepare to add the new functionAssociation
+          functionAssociations = cfFunction ? [{
+            eventType: CfFunctionEventType.VIEWER_REQUEST,
+            function: cfFunction,
+          }] : [];
+        }
+
+        // Construct the rest of the configuration object
+        const config = {
+          viewerProtocolPolicy: cdk?.viewerProtocolPolicy ?? ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
           origin,
           allowedMethods: behavior.allowedMethods ?? AllowedMethods.ALLOW_ALL,
           cachedMethods: CachedMethods.CACHE_GET_HEAD_OPTIONS,
@@ -887,17 +905,6 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
           responseHeadersPolicy: cdk?.responseHeadersPolicy,
           originRequestPolicy: useServerBehaviorOriginRequestPolicy(),
           ...(cdk?.distribution?.defaultBehavior || {}),
-          functionAssociations: [
-            ...(cfFunction
-              ? [
-                  {
-                    eventType: CfFunctionEventType.VIEWER_REQUEST,
-                    function: cfFunction,
-                  },
-                ]
-              : []),
-            ...(cdk?.distribution?.defaultBehavior?.functionAssociations || []),
-          ],
           edgeLambdas: [
             ...(edgeFunction
               ? [
@@ -921,6 +928,13 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
             ...(cdk?.distribution?.defaultBehavior?.edgeLambdas || []),
           ],
         };
+
+        // Conditionally add functionAssociations if it's not null
+        if (functionAssociations.length > 0) {
+          config.functionAssociations = functionAssociations;
+        }
+
+        return config;
       }
 
       throw new Error(`Invalid behavior type in the "${id}" site.`);
