@@ -468,7 +468,7 @@ However, if you are working on your backend functions and your frontend at the s
 							Content: "sst secret list --stage=production",
 							Description: Description{
 								Short: "List the secrets in production",
-								Long: "List all the secrets in the `production` stage.",
+								Long: "Optionally, list the secrets in a specific stage.",
 							},
 						},
 					},
