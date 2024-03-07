@@ -550,7 +550,6 @@ var Root = Command{
 					if err != nil {
 						return err
 					}
-
 					if result == "Yes" {
 						template = "nextjs"
 					}
