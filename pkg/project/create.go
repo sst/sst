@@ -97,6 +97,7 @@ func Create(templateName string) error {
 
 		case "install-deps":
 			cmd := exec.Command("npm", "install")
+
 			if _, err := os.Stat("yarn.lock"); err == nil {
 				cmd = exec.Command("yarn", "install")
 			}

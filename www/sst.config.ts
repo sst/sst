@@ -13,6 +13,27 @@ export default $config({
     };
   },
   async run() {
-    new sst.aws.Astro("Astro", {});
+    const isPersonal = $app.stage !== "production" && $app.stage !== "dev";
+
+    const domain =
+      {
+        production: "ion.sst.dev",
+        dev: "dev.ion.sst.dev",
+      }[$app.stage] || $app.stage + "dev.ion.sst.dev";
+
+    const zone = isPersonal
+      ? await aws.route53.getZone({
+          name: domain,
+        })
+      : new aws.route53.Zone("Zone", {
+          name: domain,
+        });
+
+    new sst.aws.Astro("Astro", {
+      // domain: {
+      //   domainName: domain,
+      //   hostedZoneId: zone.zoneId,
+      // },
+    });
   },
 });
