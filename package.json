@@ -1,0 +1,8 @@
+{
+  "name": "ion",
+  "workspaces": [
+    "www",
+    "pkg/platform",
+    "sdk/js"
+  ]
+}

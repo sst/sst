@@ -1,6 +1,6 @@
 {
   "$schema": "https://json.schemastore.org/package.json",
-  "name": "sst",
+  "name": "@sst/platform",
   "type": "module",
   "prettier": {},
   "scripts": {

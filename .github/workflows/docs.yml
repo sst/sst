@@ -37,6 +37,6 @@ jobs:
 
       - name: deploy
         run: |
-          cd www
           bun install
+          cd www
           go run ../cmd/sst deploy --stage=production
