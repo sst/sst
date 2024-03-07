@@ -33,9 +33,10 @@ jobs:
       - name: mod
         run: go mod download
 
+      - uses: oven-sh/setup-bun@v1
+
       - name: deploy
         run: |
           cd www
+          bun install
           go run ../cmd/sst deploy --stage=production
-
-
