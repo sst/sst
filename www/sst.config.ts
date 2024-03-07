@@ -22,6 +22,7 @@ export default $config({
         url: `https://token.actions.githubusercontent.com`,
       });
       const role = new aws.iam.Role("GithubRole", {
+        name: `www-${$app.stage}-GithubRole`,
         assumeRolePolicy: {
           Version: "2012-10-17",
           Statement: [
