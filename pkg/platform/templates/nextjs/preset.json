@@ -15,6 +15,22 @@
           }
         ]
       }
+    },
+    {
+      "type": "patch",
+      "properties": {
+        "file": "package.json",
+        "patch": [
+          {
+            "op": "add",
+            "path": "/dependencies/sst",
+            "value": "^3.0.0"
+          }
+        ]
+      }
+    },
+    {
+      "type": "install-deps"
     }
   ]
 }

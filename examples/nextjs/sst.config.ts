@@ -5,17 +5,9 @@ export default $config({
     return {
       name: "nextjs",
       removalPolicy: input?.stage === "production" ? "retain" : "remove",
-      providers: {
-        aws: {},
-      },
     };
   },
   async run() {
-    new sst.aws.Nextjs("Web", {});
-
-    return {
-      secret: $util.secret("secret"),
-      normal: "normal",
-    };
+    const site = new sst.aws.Nextjs("Web");
   },
 });
