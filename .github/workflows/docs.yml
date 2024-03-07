@@ -35,6 +35,7 @@ jobs:
 
       - name: deploy
         run: |
+          cd www
           go run ../cmd/sst deploy --stage=production
 
 
