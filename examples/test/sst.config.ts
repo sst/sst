@@ -15,6 +15,7 @@ export default $config({
       handler: "src/index.handler",
       url: true,
     });
+    const bucket = new aws.s3.Bucket("MyBucket", { bucket: "foo" });
     return {
       url: fn.url,
     };

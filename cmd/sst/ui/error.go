@@ -20,7 +20,10 @@ func parseError(input string) []string {
 		sections := strings.Split(input, "*")
 		for _, line := range sections[1:] {
 			line = strings.TrimSpace(line)
-			splits := regexp.MustCompile("[a-zA-Z]+:").Split(line, -1)
+			splits := regexp.MustCompile("[a-zA-Z]+:").Split(
+				strings.Split(line, "\n")[0],
+				-1,
+			)
 			final := strings.TrimSpace(splits[len(splits)-1])
 
 			for _, split := range strings.Split(final, "\n") {
