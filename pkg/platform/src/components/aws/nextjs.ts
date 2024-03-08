@@ -791,7 +791,7 @@ export class Nextjs extends Component implements Link.Linkable {
                 CACHE_DYNAMO_TABLE: revalidationTableName,
               }),
             },
-            policies: [
+            permissions: [
               ...(revalidationQueueArn
                 ? [
                     {
