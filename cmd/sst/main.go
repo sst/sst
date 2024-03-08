@@ -174,12 +174,12 @@ var Root = Command{
 	Name: "sst",
 	Description: Description{
 		Short: "deploy anything",
-		ng: `
+		Long: `
 The CLI helps you manage your SST apps.
 
-`   + "```bas h " + ` title="Install"
-curl -fsSL https://ion.sst.dev/install | bash
-`   + "`` ` " + `
+` + "```bash" + ` title="Install"
+curl -fsSL https://ion.sst.dev/install.sh | bash
+` + "```" + `
 
 :::note
 The CLI currently supports macOS, Linux, and WSL. Windows support is coming soon.
@@ -187,15 +187,15 @@ The CLI currently supports macOS, Linux, and WSL. Windows support is coming soon
 
 Once installed you can run the commands using.
 
-`   + "```bas h " + `
+` + "```bash" + `
 sst [command]
-`   + "`` ` " + `
+` + "```" + `
 
-The CLI takes a few global flags. For example, the deploy command takes the `   + "`--stage ` " + ` flag
+The CLI takes a few global flags. For example, the deploy command takes the ` + "`--stage`" + ` flag
 
-`   + "```bas h " + `
+` + "```bash" + `
 sst deploy --stage=production
-`   + "`` ` " + `
+` + "```" + `
 `,
 	},
 	Flags: []Flag{
@@ -207,14 +207,14 @@ sst deploy --stage=production
 				Long: `
 The stage the CLI is running on.
 
-`   + "```bas h " + ` frame="none"
+` + "```bash" + ` frame="none"
 sst [command] --stage=production
-`   + "`` ` " + `
+` + "```" + `
 
 If the stage is not passed in, then the CLI will:
 
 1. Uses the username on the local machine.
-   - If the username is `   + "`root ` " +  ` , ` + "`a d min` + "`prod`" + `, ` + "`dev`" + `, ` + "`production`" + `, then it will prompt for a stage name.
+   - If the username is ` + "`root`" + `, ` + "`admin`" + `, ` + "`prod`" + `, ` + "`dev`" + `, ` + "`production`" + `, then it will prompt for a stage name.
 2. Stores this in the ` + "`.sst/stage`" + ` file and reads from it in the future.
 
 :::tip
@@ -781,7 +781,7 @@ sst deploy --stage=production
 		},
 		{
 			Name:   "refresh",
-			den: true,
+			Hidden: true,
 			Run: func(cli *Cli) error {
 				p, err := initProject(cli)
 				if err != nil {
@@ -805,10 +805,10 @@ sst deploy --stage=production
 			Name: "cancel",
 			Description: Description{
 				Short: "Cancel any pending deploys",
-				: `
-If something unexpected kills the `   + "`sst deploy ` " + ` process, your local state file might be left in an unreadable state.
+				Long: `
+If something unexpected kills the ` + "`sst deploy`" + ` process, your local state file might be left in an unreadable state.
 
-This will prevent you froom deploying again. You can run `   + "`sst cancel ` " + ` to clean up the state file and be able to deploy again.
+This will prevent you froom deploying again. You can run ` + "`sst cancel`" + ` to clean up the state file and be able to deploy again.
 
 You should not usually run into this.
 `,
@@ -832,10 +832,10 @@ You should not usually run into this.
 			Name: "init",
 			Description: Description{
 				Short: "Init drop-in mode",
-				: `
+				Long: `
 Run this to initialize your app in drop-in mode. Currently, supports Next.js apps.
 
-This will create a `   + "`sst.config.ts ` " + ` file and configure the types for your project.
+This will create a ` + "`sst.config.ts`" + ` file and configure the types for your project.
 `,
 			},
 			Run: func(cli *Cli) error {
@@ -872,7 +872,7 @@ This will create a `   + "`sst.config.ts ` " + ` file and configure the types fo
 			},
 		},
 		{
-			Name:     "state",
+			Name:   "state",
 			Hidden: true,
 			Description: Description{
 				Short: "Manage state of your deployment",
