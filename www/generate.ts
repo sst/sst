@@ -18,7 +18,6 @@ type CliCommand = {
   }[];
   examples: {
     content: string;
-    description: { short: string; long?: string };
   }[];
   children: CliCommand[];
 };
@@ -180,19 +179,6 @@ async function generateCliDoc() {
         );
       }
 
-      // examples
-      lines.push(
-        renderCliDescription(cmd.description),
-        ``,
-        ...cmd.examples.flatMap((e) => [
-          renderCliDescription(e.description),
-          '```bash frame="none"',
-          e.content,
-          "```",
-        ]),
-        `</Segment>`
-      );
-
       // subcommands details
       cmd.children
         .filter((subcmd) => !subcmd.hidden)
@@ -236,19 +222,6 @@ async function generateCliDoc() {
               `</Section>`
             );
           }
-
-          // subcommands examples
-          lines.push(
-            renderCliDescription(subcmd.description),
-            ``,
-            ...subcmd.examples.flatMap((e) => [
-              renderCliDescription(e.description),
-              '```bash frame="none"',
-              e.content,
-              "```",
-            ]),
-            `</Segment>`
-          );
         });
     }
     return lines;
