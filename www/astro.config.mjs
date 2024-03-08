@@ -4,8 +4,6 @@ import sitemap from "@astrojs/sitemap";
 import config from "./config";
 import sst from "astro-sst";
 
-const mode = import.meta.env.MODE;
-
 const sidebar = [
   {
     label: "What is Ion",
@@ -72,7 +70,7 @@ const sidebar = [
   //  },
 ];
 
-if (mode === "development") {
+if (import.meta.env.DEV) {
   sidebar.push({
     label: "Dummy",
     items: [
