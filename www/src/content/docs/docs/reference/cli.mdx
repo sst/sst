@@ -133,13 +133,21 @@ A command to also start your frontend.
 
 Run your app in development mode. Optionally, pass in a command to start your frontend as well.
 
+```bash frame="none"
+sst dev
+```
+
 This starts a local server, watch for changes to your code, updates your app, and it runs your functions [Live](/docs/live).
 
 :::note
 If your run `sst dev` with a command, it'll not print your your function logs.
 :::
 
-If you start your frontend along with `sst dev next dev`, it'll [link your resources](/docs/linking) to it too.
+If you start your frontend along with `sst dev`, it'll [link your resources](/docs/linking) to it too.
+
+```bash frame="none"
+sst dev next dev
+```
 
 Starting two instances of `sst dev` in the same project only starts a single _server_. Meaning that the second instance connects to the existing one.
 
@@ -211,7 +219,7 @@ sst secret list
 </Section>
 Lists all the secrets.
 
-List all the secrets in the `production` stage.
+Optionally, list the secrets in a specific stage.
 ```bash frame="none"
 sst secret list --stage=production
 ```
@@ -228,10 +236,45 @@ sst shell [command]
 <Section type="parameters">
 #### Args
 - <p><code class="key">command?</code></p>
-The command to run
+A command to run.
 </Section>
-Run a command with all the resource linked to the environment.
 
+Run a command with all the resources linked to the environment.
+
+For example, you can run a node script and use the [Node client](/docs/reference/client) to access *all* the linked resources in your app.
+
+```js title="sst.config.ts"
+const myMainBucket = new sst.aws.Bucket("MyMainBucket");
+const myAdminBucket = new sst.aws.Bucket("MyAdminBucket");
+
+new sst.aws.Nextjs("MyMainWeb", {
+  link: [myMainBucket]
+});
+
+new sst.aws.Nextjs("MyAdminWeb", {
+  link: [myAdminBucket]
+});
+```
+
+Now if you run a script.
+
+```bash
+sst shell node my-script.js
+```
+
+It'll have access to all the buckets from above.
+
+```js title="my-script.js"
+import { Resource } from "sst";
+
+console.log(Resource.MyMainBucket.name, Resource.MyAdminBucket.name);
+```
+
+
+If no command is passed in, it opens a shell session with the linked resources. This is useful if you want to run multiple commands, all while accessing the linked resources.
+```bash frame="none"
+sst shell
+```
 </Segment>
 
 ### install

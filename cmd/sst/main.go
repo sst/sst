@@ -340,13 +340,21 @@ sst --help
 				Long: `
 Run your app in development mode. Optionally, pass in a command to start your frontend as well.
 
+`+"```bash"+` frame="none"
+sst dev
+`+"```"+`
+
 This starts a local server, watch for changes to your code, updates your app, and it runs your functions [Live](/docs/live).
 
 :::note
 If your run `+"`sst dev`"+` with a command, it'll not print your your function logs.
 :::
 
-If you start your frontend along with `+"`sst dev next dev`"+`, it'll [link your resources](/docs/linking) to it too.
+If you start your frontend along with `+"`sst dev`"+`, it'll [link your resources](/docs/linking) to it too.
+
+`+"```bash"+` frame="none"
+sst dev next dev
+`+"```"+`
 
 Starting two instances of `+"`sst dev`"+` in the same project only starts a single _server_. Meaning that the second instance connects to the existing one.
 
@@ -399,7 +407,11 @@ However, if you are working on your backend functions and your frontend at the s
 					Name: "set",
 					Description: Description{
 						Short: "Set a secret",
-						Long: "Set the value of the secret.",
+						Long: `
+Set the value of the secret.
+
+
+`,
 					},
 					Args: []Argument{
 						{
@@ -498,14 +510,55 @@ However, if you are working on your backend functions and your frontend at the s
 				{
 					Name: "command",
 					Description: Description{
-						Short: "The command to run",
+						Short: "A command to run",
+						Long: "A command to run.",
 					},
 				},
 			},
 			Description: Description{
 				Short: "Run command with all resource linked in environment",
-				Long: "Run a command with all the resource linked to the environment.",
+				Long: `
+Run a command with all the resources linked to the environment.
+
+For example, you can run a node script and use the [Node client](/docs/reference/client) to access *all* the linked resources in your app.
+
+`+"```js"+` title="sst.config.ts"
+const myMainBucket = new sst.aws.Bucket("MyMainBucket");
+const myAdminBucket = new sst.aws.Bucket("MyAdminBucket");
+
+new sst.aws.Nextjs("MyMainWeb", {
+  link: [myMainBucket]
+});
+
+new sst.aws.Nextjs("MyAdminWeb", {
+  link: [myAdminBucket]
+});
+`+"```"+`
+
+Now if you run a script.
+
+`+"```bash"+`
+sst shell node my-script.js
+`+"```"+`
+
+It'll have access to all the buckets from above.
+
+`+"```js"+` title="my-script.js"
+import { Resource } from "sst";
+
+console.log(Resource.MyMainBucket.name, Resource.MyAdminBucket.name);
+`+"```"+`
+`,
 			},
+      Examples: []Example{
+        {
+          Content: "sst shell",
+          Description: Description{
+            Short: "Open a shell session",
+            Long: "If no command is passed in, it opens a shell session with the linked resources. This is useful if you want to run multiple commands, all while accessing the linked resources.",
+          },
+        },
+      },
 			Run: func(cli *Cli) error {
 				p, err := initProject(cli)
 				if err != nil {
