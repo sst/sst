@@ -432,10 +432,46 @@ async function generateTsDoc() {
 
       for (const f of fns) {
         console.debug(` - function ${f.name}`);
+        lines.push(``, `### ${renderName(f)}`, `<Segment>`);
+
+        // signature
         lines.push(
-          ``,
-          `### ${renderName(f)}`,
-          `<Segment>`,
+          `<Section type="signature">`,
+          "```ts",
+          renderSignature(f.signatures![0]),
+          "```",
+          `</Section>`
+        );
+
+        // parameters
+        if (f.signatures![0].parameters?.length) {
+          lines.push(
+            ``,
+            `<Section type="parameters">`,
+            `#### Parameters`,
+            ...f.signatures![0].parameters.flatMap((param) => {
+              // HACK: special handle for $jsonParse's reviver param b/c
+              //       it's a function type.
+              const type =
+                f.name === "$jsonParse" && param.name === "reviver"
+                  ? renderJsonParseReviverType()
+                  : f.name === "$jsonStringify" && param.name === "replacer"
+                    ? renderJsonStringifyReplacerType()
+                    : renderType(param.type!);
+
+              return [
+                `- <p><code class="key">${renderSignatureArg(
+                  param
+                )}</code> ${type}</p>`,
+                ...renderDescription(param),
+              ];
+            }),
+            `</Section>`
+          );
+        }
+
+        lines.push(
+          ...renderReturnValue(f.signatures![0]),
           ...renderDescription(f.signatures![0]),
           ``,
           ...renderExamples(f.signatures![0]),
@@ -1018,6 +1054,9 @@ async function generateTsDoc() {
       throw new Error(`Unsupported sst type`);
     }
     function renderPulumiType(type: TypeDoc.ReferenceType) {
+      if (type.name === "T") {
+        return `<code class="primitive">${type.name}</code>`;
+      }
       if (type.name === "Output" || type.name === "Input") {
         return [
           `<code class="primitive">${type.name}</code>`,
@@ -1026,7 +1065,7 @@ async function generateTsDoc() {
           `<code class="symbol">&gt;</code>`,
         ].join("");
       }
-      if (type.name === "UnwrappedObject") {
+      if (type.name === "UnwrappedObject" || type.name === "Unwrap") {
         return renderType(type.typeArguments?.[0]!);
       }
       if (type.name === "ComponentResourceOptions") {
@@ -1104,6 +1143,12 @@ async function generateTsDoc() {
     function renderEsbuildType(type: TypeDoc.ReferenceType) {
       const hash = type.name === "Loader" ? `#loader` : "#build";
       return `[<code class="type">${type.name}</code>](https://esbuild.github.io/api/${hash})`;
+    }
+    function renderJsonParseReviverType() {
+      return `[<code class="type">JSON.parse reviver</code>](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON/parse#reviver)`;
+    }
+    function renderJsonStringifyReplacerType() {
+      return `[<code class="type">JSON.stringify replacer</code>](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON/stringify#replacer)`;
     }
     function renderObjectType(type: TypeDoc.ReflectionType) {
       return `<code class="primitive">Object</code>`;

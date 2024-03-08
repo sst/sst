@@ -124,6 +124,20 @@ const myFiles = new pulumi.asset.FileArchive("./path/to/files");
 
 ### $concat
 <Segment>
+<Section type="signature">
+```ts
+$concat(params)
+```
+</Section>
+
+<Section type="parameters">
+#### Parameters
+- <p><code class="key">params</code> <code class="primitive">any</code><code class="symbol">[]</code></p>
+</Section>
+
+<InlineSection>
+**Returns** <code class="primitive">Output</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
+</InlineSection>
 Takes a sequence of Output values or plain JavaScript values, stringifies each,
 and concatenates them into one final string.
 
@@ -150,6 +164,21 @@ const description = $concat("This is a bucket named ", bucket.name);
 
 ### $interpolate
 <Segment>
+<Section type="signature">
+```ts
+$interpolate(literals, placeholders)
+```
+</Section>
+
+<Section type="parameters">
+#### Parameters
+- <p><code class="key">literals</code> <code class="primitive">TemplateStringsArray</code><code class="symbol">&lt;</code><code class="symbol">&gt;</code></p>
+- <p><code class="key">placeholders</code> <code class="primitive">any</code><code class="symbol">[]</code></p>
+</Section>
+
+<InlineSection>
+**Returns** <code class="primitive">Output</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
+</InlineSection>
 Use string interpolation on Output values.
 
 This is takes care of resolving the Output values for you. Say you had a bucket:
@@ -172,6 +201,21 @@ const description = $interpolate`This is a bucket named ${bucket.name}`;
 
 ### $jsonParse
 <Segment>
+<Section type="signature">
+```ts
+$jsonParse(text, reviver?)
+```
+</Section>
+
+<Section type="parameters">
+#### Parameters
+- <p><code class="key">text</code> <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code></p>
+- <p><code class="key">reviver?</code> [<code class="type">JSON.parse reviver</code>](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON/parse#reviver)</p>
+</Section>
+
+<InlineSection>
+**Returns** <code class="primitive">Output</code><code class="symbol">&lt;</code><code class="primitive">any</code><code class="symbol">&gt;</code>
+</InlineSection>
 Takes an Output value or plain JavaScript value, uses `JSON.parse`
 on the resolved JSON string to turn it into a JSON object.
 
@@ -192,6 +236,22 @@ const policy = $jsonParse(policyStr);
 
 ### $jsonStringify
 <Segment>
+<Section type="signature">
+```ts
+$jsonStringify(obj, replacer?, space?)
+```
+</Section>
+
+<Section type="parameters">
+#### Parameters
+- <p><code class="key">obj</code> <code class="primitive">any</code></p>
+- <p><code class="key">replacer?</code> [<code class="type">JSON.stringify replacer</code>](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON/stringify#replacer)</p>
+- <p><code class="key">space?</code> <code class="primitive">string</code><code class="symbol"> | </code><code class="primitive">number</code></p>
+</Section>
+
+<InlineSection>
+**Returns** <code class="primitive">Output</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
+</InlineSection>
 Takes an Output value or plain JSON object, uses `JSON.stringify`
 on the resolved JSON object to turn it into a JSON string.
 
@@ -212,6 +272,20 @@ const policy = $jsonStringify(policyObj);
 
 ### $resolve
 <Segment>
+<Section type="signature">
+```ts
+$resolve(val)
+```
+</Section>
+
+<Section type="parameters">
+#### Parameters
+- <p><code class="key">val</code> <code class="primitive">Record</code><code class="symbol">&lt;</code><code class="primitive">string</code>, <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">T</code><code class="symbol">&gt;</code><code class="symbol">&gt;</code></p>
+</Section>
+
+<InlineSection>
+**Returns** <code class="primitive">Output</code><code class="symbol">&lt;</code><code class="primitive">Record</code><code class="symbol">&lt;</code><code class="primitive">string</code>, <code class="primitive">T</code><code class="symbol">&gt;</code><code class="symbol">&gt;</code>
+</InlineSection>
 Wait for a list of Output values to be resolved, and then apply a function to their resolved values.
 
 Say you had a couple of S3 Buckets:
