@@ -174,12 +174,12 @@ var Root = Command{
 	Name: "sst",
 	Description: Description{
 		Short: "deploy anything",
-    Long: `
+		ng: `
 The CLI helps you manage your SST apps.
 
-`+"```bash"+` title="Install"
-curl -fsSL https://ion.sst.dev/install.sh | bash
-`+"```"+`
+`   + "```bas h " + ` title="Install"
+curl -fsSL https://ion.sst.dev/install | bash
+`   + "`` ` " + `
 
 :::note
 The CLI currently supports macOS, Linux, and WSL. Windows support is coming soon.
@@ -187,15 +187,15 @@ The CLI currently supports macOS, Linux, and WSL. Windows support is coming soon
 
 Once installed you can run the commands using.
 
-`+"```bash"+`
+`   + "```bas h " + `
 sst [command]
-`+"```"+`
+`   + "`` ` " + `
 
-The CLI takes a few global flags. For example, the deploy command takes the `+"`--stage`"+` flag
+The CLI takes a few global flags. For example, the deploy command takes the `   + "`--stage ` " + ` flag
 
-`+"```bash"+`
+`   + "```bas h " + `
 sst deploy --stage=production
-`+"```"+`
+`   + "`` ` " + `
 `,
 	},
 	Flags: []Flag{
@@ -207,18 +207,18 @@ sst deploy --stage=production
 				Long: `
 The stage the CLI is running on.
 
-`+"```bash"+` frame="none"
+`   + "```bas h " + ` frame="none"
 sst [command] --stage=production
-`+"```"+`
+`   + "`` ` " + `
 
 If the stage is not passed in, then the CLI will:
 
 1. Uses the username on the local machine.
-   - If the username is `+"`root`"+`, `+"`admin`"+`, `+"`prod`"+`, `+"`dev`"+`, `+"`production`"+`, then it will prompt for a stage name.
-2. Stores this in the `+"`.sst/stage`"+` file and reads from it in the future.
+   - If the username is `   + "`root ` " +  ` , ` + "`a d min` + "`prod`" + `, ` + "`dev`" + `, ` + "`production`" + `, then it will prompt for a stage name.
+2. Stores this in the ` + "`.sst/stage`" + ` file and reads from it in the future.
 
 :::tip
-The stage that is stored in the `+"`.sst/stage`"+` file is called your personal stage.
+The stage that is stored in the ` + "`.sst/stage`" + ` file is called your personal stage.
 :::
 `,
 			},
@@ -231,9 +231,9 @@ The stage that is stored in the `+"`.sst/stage`"+` file is called your personal 
 				Long: `
 Enables verbose logging for the CLI output.
 
-`+"```bash"+` frame="none"
+` + "```bash" + ` frame="none"
 sst [command] --verbose
-`+"```"+`
+` + "```" + `
 `,
 			},
 		},
@@ -245,15 +245,15 @@ sst [command] --verbose
 				Long: `
 Prints help for the given command.
 
-`+"```sh"+` frame="none"
+` + "```sh" + ` frame="none"
 sst [command] --help
-`+"```"+`
+` + "```" + `
 
 Or for the global help.
 
-`+"```sh"+` frame="none"
+` + "```sh" + ` frame="none"
 sst --help
-`+"```"+`
+` + "```" + `
 `,
 			},
 		},
@@ -263,7 +263,7 @@ sst --help
 			Name: "version",
 			Description: Description{
 				Short: "Print the version",
-				Long: `Prints the current version of the CLI.`,
+				Long:  `Prints the current version of the CLI.`,
 			},
 			Run: func(cli *Cli) error {
 				fmt.Printf("ion.%s\n", version)
@@ -340,35 +340,35 @@ sst --help
 				Long: `
 Run your app in development mode. Optionally, pass in a command to start your frontend as well.
 
-`+"```bash"+` frame="none"
+` + "```bash" + ` frame="none"
 sst dev
-`+"```"+`
+` + "```" + `
 
 This starts a local server, watch for changes to your code, updates your app, and it runs your functions [Live](/docs/live).
 
 :::note
-If your run `+"`sst dev`"+` with a command, it'll not print your your function logs.
+If your run ` + "`sst dev`" + ` with a command, it'll not print your your function logs.
 :::
 
-If you start your frontend along with `+"`sst dev`"+`, it'll [link your resources](/docs/linking) to it too.
+If you start your frontend along with ` + "`sst dev`" + `, it'll [link your resources](/docs/linking) to it too.
 
-`+"```bash"+` frame="none"
+` + "```bash" + ` frame="none"
 sst dev next dev
-`+"```"+`
+` + "```" + `
 
-Starting two instances of `+"`sst dev`"+` in the same project only starts a single _server_. Meaning that the second instance connects to the existing one.
+Starting two instances of ` + "`sst dev`" + ` in the same project only starts a single _server_. Meaning that the second instance connects to the existing one.
 
 :::note
-You can start as many instances of `+"`sst dev`"+` in your app as you want.
+You can start as many instances of ` + "`sst dev`" + ` in your app as you want.
 :::
 
-This means that you don't need to run `+"`sst dev`"+` separately for your frontend, unlike with SST v2.
+This means that you don't need to run ` + "`sst dev`" + ` separately for your frontend, unlike with SST v2.
 
 :::tip
-You don't need to run `+"`sst dev`"+` separately for your frontend, unlike with SST v2.
+You don't need to run ` + "`sst dev`" + ` separately for your frontend, unlike with SST v2.
 :::
 
-However, if you are working on your backend functions and your frontend at the same time, you can run `+"`sst dev`"+` to view your functions logs.
+However, if you are working on your backend functions and your frontend at the same time, you can run ` + "`sst dev`" + ` to view your functions logs.
 `,
 			},
 			Args: []Argument{
@@ -379,27 +379,27 @@ However, if you are working on your backend functions and your frontend at the s
 					},
 				},
 			},
-      Examples: []Example{
-        {
-          Content: "sst dev",
-          Description: Description{
-            Short: "",
-          },
-        },
-        {
-          Content: "sst dev next dev",
-          Description: Description{
-            Short: "Start dev mode for SST and Next.js",
-          },
-        },
-      },
+			Examples: []Example{
+				{
+					Content: "sst dev",
+					Description: Description{
+						Short: "",
+					},
+				},
+				{
+					Content: "sst dev next dev",
+					Description: Description{
+						Short: "Start dev mode for SST and Next.js",
+					},
+				},
+			},
 			Run: CmdDev,
 		},
 		{
 			Name: "secret",
 			Description: Description{
 				Short: "Manage secrets",
-				Long: "Manage the secrets in your app defined with `sst.Secret`.",
+				Long:  "Manage the secrets in your app defined with `sst.Secret`.",
 			},
 			Children: []*Command{
 				{
@@ -411,17 +411,17 @@ Set the value of the secret.
 
 The secrets are encrypted and stored in an S3 Bucket in your AWS account.
 
-For example, set the `+"`sst.Secret`"+` called `+"`StripeSecret`"+` to `+"`123456789`"+`.
+For example, set the ` + "`sst.Secret`" + ` called ` + "`StripeSecret`" + ` to ` + "`123456789`" + `.
 
-`+"```bash"+` frame="none"
+` + "```bash" + ` frame="none"
 sst secret set StripeSecret 123456789
-`+"```"+`
+` + "```" + `
 
 Optionally, set the secret in a specific stage.
 
-`+"```bash"+` frame="none"
+` + "```bash" + ` frame="none"
 sst secret set StripeSecret productionsecret --stage=production
-`+"```"+`
+` + "```" + `
 `,
 					},
 					Args: []Argument{
@@ -430,7 +430,7 @@ sst secret set StripeSecret productionsecret --stage=production
 							Required: true,
 							Description: Description{
 								Short: "The name of the secret",
-								Long: "The name of the secret.",
+								Long:  "The name of the secret.",
 							},
 						},
 						{
@@ -438,7 +438,7 @@ sst secret set StripeSecret productionsecret --stage=production
 							Required: true,
 							Description: Description{
 								Short: "The value of the secret",
-								Long: "The value of the secret.",
+								Long:  "The value of the secret.",
 							},
 						},
 					},
@@ -487,9 +487,9 @@ Lists all the secrets.
 
 Optionally, list the secrets in a specific stage.
 
-`+"```bash"+` frame="none"
+` + "```bash" + ` frame="none"
 sst secret list --stage=production
-`+"```"+`
+` + "```" + `
 `,
 					},
 					Examples: []Example{
@@ -527,7 +527,7 @@ sst secret list --stage=production
 					Name: "command",
 					Description: Description{
 						Short: "A command to run",
-						Long: "A command to run.",
+						Long:  "A command to run.",
 					},
 				},
 			},
@@ -538,7 +538,7 @@ Run a command with all the resources linked to the environment.
 
 For example, you can run a node script and use the [Node client](/docs/reference/client) to access *all* the linked resources in your app.
 
-`+"```js"+` title="sst.config.ts"
+` + "```js" + ` title="sst.config.ts"
 const myMainBucket = new sst.aws.Bucket("MyMainBucket");
 const myAdminBucket = new sst.aws.Bucket("MyAdminBucket");
 
@@ -549,39 +549,39 @@ new sst.aws.Nextjs("MyMainWeb", {
 new sst.aws.Nextjs("MyAdminWeb", {
   link: [myAdminBucket]
 });
-`+"```"+`
+` + "```" + `
 
 Now if you run a script.
 
-`+"```bash"+` frame="none"
+` + "```bash" + ` frame="none"
 sst shell node my-script.js
-`+"```"+`
+` + "```" + `
 
 It'll have access to all the buckets from above.
 
-`+"```js"+` title="my-script.js"
+` + "```js" + ` title="my-script.js"
 import { Resource } from "sst";
 
 console.log(Resource.MyMainBucket.name, Resource.MyAdminBucket.name);
-`+"```"+`
+` + "```" + `
 
 If no command is passed in, it opens a shell session with the linked resources.
 
-`+"```bash"+` frame="none"
+` + "```bash" + ` frame="none"
 sst shell
-`+"```"+`
+` + "```" + `
 
 This is useful if you want to run multiple commands, all while accessing the linked resources.
 `,
 			},
-      Examples: []Example{
-        {
-          Content: "sst shell",
-          Description: Description{
-            Short: "Open a shell session",
-          },
-        },
-      },
+			Examples: []Example{
+				{
+					Content: "sst shell",
+					Description: Description{
+						Short: "Open a shell session",
+					},
+				},
+			},
 			Run: func(cli *Cli) error {
 				p, err := initProject(cli)
 				if err != nil {
@@ -666,7 +666,7 @@ This is useful if you want to run multiple commands, all while accessing the lin
 			Description: Description{
 				Short: "Install dependencies specified in sst.config.ts",
 				Long: `
-Installs the dependencies in `+"`sst.config.ts`"+`.
+Installs the dependencies in ` + "`sst.config.ts`" + `.
 
 You'll need to run this when you add a new provider to your config.
 `,
@@ -709,19 +709,19 @@ Deploy your application. By default, it deploys to your personal stage.
 
 Optionally, deploy your app to a specific stage.
 
-`+"```bash"+` frame="none"
+` + "```bash" + ` frame="none"
 sst deploy --stage=production
-`+"```"+`
+` + "```" + `
 `,
 			},
-      Examples: []Example{
-        {
-          Content: "sst deploy --stage=production",
-          Description: Description{
-            Short: "Deploy to production",
-          },
-        },
-      },
+			Examples: []Example{
+				{
+					Content: "sst deploy --stage=production",
+					Description: Description{
+						Short: "Deploy to production",
+					},
+				},
+			},
 			Run: func(cli *Cli) error {
 				p, err := initProject(cli)
 				if err != nil {
@@ -750,14 +750,14 @@ sst deploy --stage=production
 Removes your application. By default, it removes your personal stage.
 
 :::tip
-The resources in your app are removed based on the `+"`removalPolicy`"+` in your `+"`sst.config.ts`"+`.
+The resources in your app are removed based on the ` + "`removalPolicy`" + ` in your ` + "`sst.config.ts`" + `.
 :::
 
 Optionally, remove your app from a specific stage.
 
-`+"```bash"+` frame="none"
+` + "```bash" + ` frame="none"
 sst deploy --stage=production
-`+"```"+`
+` + "```" + `
 `,
 			},
 			Run: func(cli *Cli) error {
@@ -780,8 +780,8 @@ sst deploy --stage=production
 			},
 		},
 		{
-			Name: "refresh",
-      Hidden: true,
+			Name:   "refresh",
+			den: true,
 			Run: func(cli *Cli) error {
 				p, err := initProject(cli)
 				if err != nil {
@@ -805,10 +805,10 @@ sst deploy --stage=production
 			Name: "cancel",
 			Description: Description{
 				Short: "Cancel any pending deploys",
-        Long: `
-If something unexpected kills the `+"`sst deploy`"+` process, your local state file might be left in an unreadable state.
+				: `
+If something unexpected kills the `   + "`sst deploy ` " + ` process, your local state file might be left in an unreadable state.
 
-This will prevent you froom deploying again. You can run `+"`sst cancel`"+` to clean up the state file and be able to deploy again.
+This will prevent you froom deploying again. You can run `   + "`sst cancel ` " + ` to clean up the state file and be able to deploy again.
 
 You should not usually run into this.
 `,
@@ -832,10 +832,10 @@ You should not usually run into this.
 			Name: "init",
 			Description: Description{
 				Short: "Init drop-in mode",
-        Long: `
+				: `
 Run this to initialize your app in drop-in mode. Currently, supports Next.js apps.
 
-This will create a `+"`sst.config.ts`"+` file and configure the types for your project.
+This will create a `   + "`sst.config.ts ` " + ` file and configure the types for your project.
 `,
 			},
 			Run: func(cli *Cli) error {
@@ -872,8 +872,8 @@ This will create a `+"`sst.config.ts`"+` file and configure the types for your p
 			},
 		},
 		{
-			Name: "state",
-      Hidden: true,
+			Name:     "state",
+			Hidden: true,
 			Description: Description{
 				Short: "Manage state of your deployment",
 			},
