@@ -25,7 +25,21 @@
  * });
  * ```
  *
- * The `Config` object takes two functions: [`app`](#app-2) and [`run`](#run). Where `app` allows you to configure your SST app. And `run` allows you to define the resources in it.
+ * The `Config` object takes two functions: [`app`](#app-2) and [`run`](#run).
+ *
+ * The `app` function is evaluated right when your app loads. It's used to define the app config and its providers.
+ *
+ * :::note
+ * You can Pulumi code in the `run` function not the `app` function.
+ * :::
+ *
+ * While the `run` function is for your stacks code. This is where you define your resources using SST or Pulumi's components.
+ *
+ * :::tip
+ * The [Global](/docs/reference/global/) library can help you with your stacks code.
+ * :::
+ *
+ * The run function also has access to a list of [Global](/docs/reference/global/) `$` variables and functions. These serve as the context for your stacks code.
  *
  * @packageDocumentation
  */
@@ -131,7 +145,7 @@ export interface Config {
    * The config for your app. It needs to return an object of type [`App`](#app-1).
    *
    * :::tip
-   * The `app` function in your config is called first when your app loads.
+   * The `app` function is evaluated when your app loads.
    * :::
    *
    * @example
@@ -155,8 +169,8 @@ export interface Config {
   /**
    * An async function that lets you define the resources in your app.
    *
-   * :::tip
-   * The `app` function in your config is called first.
+   * :::note
+   * You can use SST and Pulumi components only in the `run` function.
    * :::
    *
    * You can optionally return an object that'll be displayed as the output in the CLI.
