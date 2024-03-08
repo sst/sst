@@ -1045,13 +1045,7 @@ function handler(event) {
                   pathPattern: behavior.pattern!,
                   ...buildBehavior(behavior),
                 })),
-              customErrorResponses: [
-                {
-                  errorCode: 404,
-                  responseCode: 200,
-                  responsePagePath: "/404.html",
-                },
-              ],
+              customErrorResponses: plan.errorResponses,
             }),
           },
         },

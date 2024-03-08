@@ -845,27 +845,27 @@ export class StaticSite extends Component implements Link.Linkable {
                 },
               ],
               defaultRootObject: indexPage,
-              errorResponses: args.errorPage
+              customErrorResponses: args.errorPage
                 ? [
                     {
-                      httpStatus: 403,
+                      errorCode: 403,
                       responsePagePath: interpolate`/${args.errorPage}`,
                     },
                     {
-                      httpStatus: 404,
+                      errorCode: 404,
                       responsePagePath: interpolate`/${args.errorPage}`,
                     },
                   ]
                 : [
                     {
-                      httpStatus: 403,
+                      errorCode: 403,
                       responsePagePath: interpolate`/${indexPage}`,
-                      responseHttpStatus: 200,
+                      responseCode: 200,
                     },
                     {
-                      httpStatus: 404,
+                      errorCode: 404,
                       responsePagePath: interpolate`/${indexPage}`,
-                      responseHttpStatus: 200,
+                      responseCode: 200,
                     },
                   ],
               defaultCacheBehavior: {
@@ -877,13 +877,6 @@ export class StaticSite extends Component implements Link.Linkable {
                 // CloudFront's managed CachingOptimized policy
                 cachePolicyId: "658327ea-f89d-4fab-a63d-7e88639e58f6",
               },
-              customErrorResponses: [
-                {
-                  errorCode: 404,
-                  responseCode: 200,
-                  responsePagePath: "/404.html",
-                },
-              ],
             }),
           },
         },
