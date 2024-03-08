@@ -376,7 +376,6 @@ However, if you are working on your backend functions and your frontend at the s
 					Name: "command",
 					Description: Description{
 						Short: "The command to run",
-						Long: `A command to also start your frontend.`,
 					},
 				},
 			},
@@ -390,7 +389,7 @@ However, if you are working on your backend functions and your frontend at the s
         {
           Content: "sst dev next dev",
           Description: Description{
-            Short: "Start dev mode for SST, Next.js, and link the resources.",
+            Short: "Start dev mode for SST and Next.js",
           },
         },
       },
@@ -410,7 +409,19 @@ However, if you are working on your backend functions and your frontend at the s
 						Long: `
 Set the value of the secret.
 
+The secrets are encrypted and stored in an S3 Bucket in your AWS account.
+
 For example, set the `+"`sst.Secret`"+` called `+"`StripeSecret`"+` to `+"`123456789`"+`.
+
+`+"```bash"+` frame="none"
+sst secret set StripeSecret 123456789
+`+"```"+`
+
+Optionally, set the secret in a specific stage.
+
+`+"```bash"+` frame="none"
+sst secret set StripeSecret productionsecret --stage=production
+`+"```"+`
 `,
 					},
 					Args: []Argument{
@@ -436,14 +447,12 @@ For example, set the `+"`sst.Secret`"+` called `+"`StripeSecret`"+` to `+"`12345
 							Content: "sst secret set StripeSecret 123456789",
 							Description: Description{
 								Short: "Set the StripeSecret to 123456789",
-								Long: "Set the `sst.Secret` called `StripeSecret` to `123456789`.",
 							},
 						},
 						{
 							Content: "sst secret set StripeSecret productionsecret --stage=production",
 							Description: Description{
 								Short: "Set the StripeSecret in production",
-								Long: "Set the `sst.Secret` called `StripeSecret` in the `production` stage.",
 							},
 						},
 					},
@@ -473,14 +482,21 @@ For example, set the `+"`sst.Secret`"+` called `+"`StripeSecret`"+` to `+"`12345
 					Name: "list",
 					Description: Description{
 						Short: "List all secrets",
-						Long: "Lists all the secrets.",
+						Long: `
+Lists all the secrets.
+
+Optionally, list the secrets in a specific stage.
+
+`+"```bash"+` frame="none"
+sst secret list --stage=production
+`+"```"+`
+`,
 					},
 					Examples: []Example{
 						{
 							Content: "sst secret list --stage=production",
 							Description: Description{
 								Short: "List the secrets in production",
-								Long: "Optionally, list the secrets in a specific stage.",
 							},
 						},
 					},
@@ -537,7 +553,7 @@ new sst.aws.Nextjs("MyAdminWeb", {
 
 Now if you run a script.
 
-`+"```bash"+`
+`+"```bash"+` frame="none"
 sst shell node my-script.js
 `+"```"+`
 
@@ -548,6 +564,14 @@ import { Resource } from "sst";
 
 console.log(Resource.MyMainBucket.name, Resource.MyAdminBucket.name);
 `+"```"+`
+
+If no command is passed in, it opens a shell session with the linked resources.
+
+`+"```bash"+` frame="none"
+sst shell
+`+"```"+`
+
+This is useful if you want to run multiple commands, all while accessing the linked resources.
 `,
 			},
       Examples: []Example{
@@ -555,7 +579,6 @@ console.log(Resource.MyMainBucket.name, Resource.MyAdminBucket.name);
           Content: "sst shell",
           Description: Description{
             Short: "Open a shell session",
-            Long: "If no command is passed in, it opens a shell session with the linked resources. This is useful if you want to run multiple commands, all while accessing the linked resources.",
           },
         },
       },
@@ -681,14 +704,21 @@ You'll need to run this when you add a new provider to your config.
 			Name: "deploy",
 			Description: Description{
 				Short: "Deploy your application",
-				Long: "Deploy your application.",
+				Long: `
+Deploy your application. By default, it deploys to your local stage.
+
+Optionally, deploy your app to a specific stage.
+
+`+"```bash"+` frame="none"
+sst deploy --stage=production
+`+"```"+`
+`,
 			},
       Examples: []Example{
         {
           Content: "sst deploy --stage=production",
           Description: Description{
             Short: "Deploy to production",
-            Long: "Optionally, deploy your app to a specific stage.",
           },
         },
       },
@@ -716,7 +746,18 @@ You'll need to run this when you add a new provider to your config.
 			Name: "remove",
 			Description: Description{
 				Short: "Remove your application",
-				Long: `Removes your application.
+				Long: `
+Removes your application. By default, it removes your local stage.
+
+:::tip
+The resources in your app are removed based on the `+"`removalPolicy`"+` in your `+"`sst.config.ts`"+`.
+:::
+
+Optionally, remove your app from a specific stage.
+
+`+"```bash"+` frame="none"
+sst deploy --stage=production
+`+"```"+`
 `,
 			},
 			Run: func(cli *Cli) error {
@@ -740,6 +781,7 @@ You'll need to run this when you add a new provider to your config.
 		},
 		{
 			Name: "refresh",
+      Hidden: true,
 			Run: func(cli *Cli) error {
 				p, err := initProject(cli)
 				if err != nil {
@@ -763,6 +805,13 @@ You'll need to run this when you add a new provider to your config.
 			Name: "cancel",
 			Description: Description{
 				Short: "Cancel any pending deploys",
+        Long: `
+If something unexpected kills the `+"`sst deploy`"+` process, your local state file might be left in an unreadable state.
+
+This will prevent you froom deploying again. You can run `+"`sst cancel`"+` to clean up the state file and be able to deploy again.
+
+You should not usually run into this.
+`,
 			},
 			Run: func(cli *Cli) error {
 				p, err := initProject(cli)
@@ -781,6 +830,14 @@ You'll need to run this when you add a new provider to your config.
 		},
 		{
 			Name: "init",
+			Description: Description{
+				Short: "Init drop-in mode",
+        Long: `
+Run this to initialize your app in drop-in mode. Currently, supports Next.js apps.
+
+This will create a `+"`sst.config.ts`"+` file and configure the types for your project.
+`,
+			},
 			Run: func(cli *Cli) error {
 				if _, err := os.Stat("sst.config.ts"); err == nil {
 					color.New(color.FgRed, color.Bold).Print("❌")
@@ -816,6 +873,7 @@ You'll need to run this when you add a new provider to your config.
 		},
 		{
 			Name: "state",
+      Hidden: true,
 			Description: Description{
 				Short: "Manage state of your deployment",
 			},
