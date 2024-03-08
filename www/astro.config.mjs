@@ -58,8 +58,8 @@ const sidebar = [
     items: [
       { label: "CLI", link: "/docs/reference/cli/" },
       { label: "Client", link: "/docs/reference/client/" },
-      { label: "Config", link: "/docs/reference/config/" },
       { label: "Global", link: "/docs/reference/global/" },
+      { label: "Config", link: "/docs/reference/config/" },
     ],
   },
   //  {

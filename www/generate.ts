@@ -275,7 +275,7 @@ async function generateTsDoc() {
     if (sourceFile === "pkg/platform/src/global-config.d.ts") {
       outputFilePath = `src/content/docs/docs/reference/global.mdx`;
       outputFileContent = [
-        renderConfigHeader(),
+        renderGlobalHeader(),
         renderImports(),
         renderAbout(),
         renderConfigVariables(),
@@ -332,6 +332,15 @@ async function generateTsDoc() {
         `---`,
         `title: Config`,
         `description: Reference doc for the \`sst.config.ts\`.`,
+        `---`,
+      ];
+    }
+
+    function renderGlobalHeader() {
+      return [
+        `---`,
+        `title: Global`,
+        `description: Reference doc for the Global \`$\` library.`,
         `---`,
       ];
     }

@@ -1,6 +1,6 @@
 ---
-title: Config
-description: Reference doc for the `sst.config.ts`.
+title: Global
+description: Reference doc for the Global `$` library.
 ---
 
 import Segment from '../../../../../src/components/tsdoc/Segment.astro';
@@ -11,7 +11,24 @@ import InlineSection from '../../../../../src/components/tsdoc/InlineSection.ast
 <div class="tsdoc">
 
 <Section type="about">
-Global functions and variables
+The Global library is a collection of `$` functions and variables that are available in your stacks code, `run` function, of your [`sst.config.ts`](/docs/reference/config/).
+
+:::tip
+You don't need to import the Global library. It's available in the `run` function of your `sst.config.ts`.
+:::
+
+For example, you can get the name of your app in your stacks code using `$app.name`.
+
+```ts title="sst.config.ts" {4}
+export default $config({
+  // ...
+  async run() {
+    console.log($app.name);
+  }
+});
+```
+
+The variables contain the context of the app that's being run. While the functions help you work with the [Ouputs of components](/docs/components##inputs--outputs).
 </Section>
 
 ---
@@ -26,10 +43,10 @@ Global functions and variables
 </InlineSection>
 - <p>[<code class="key">name</code>](#app-name)</p>
 - <p>[<code class="key">providers</code>](#app-providers)</p>
-- <p>[<code class="key">removalPolicy?</code>](#app-removalpolicy)</p>
+- <p>[<code class="key">removalPolicy</code>](#app-removalpolicy)</p>
 - <p>[<code class="key">stage</code>](#app-stage)</p>
 </Section>
-Information about the app
+Context about the app being run.
 </Segment>
 <NestedTitle id="app-name" Tag="h4" parent="$app.">name</NestedTitle>
 <Segment>
@@ -38,13 +55,7 @@ Information about the app
 **Type** <code class="primitive">string</code>
 </InlineSection>
 </Section>
-The name of the app. This is used to prefix the names of the resources in your app.
-
-:::caution
-If you change the name of your app, it'll redeploy your app with new resources. The old resources will be orphaned.
-:::
-
-This means that you don't want to change the name of your app without removing the old resources first.
+The name of the current app.
 </Segment>
 <NestedTitle id="app-providers" Tag="h4" parent="$app.">providers</NestedTitle>
 <Segment>
@@ -53,24 +64,16 @@ This means that you don't want to change the name of your app without removing t
 **Type** <code class="primitive">undefined</code><code class="symbol"> | </code><code class="primitive">Record</code><code class="symbol">&lt;</code><code class="primitive">string</code>, <code class="primitive">any</code><code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
-The providers to use in the app
+The providers currently being used in the app.
 </Segment>
-<NestedTitle id="app-removalpolicy" Tag="h4" parent="$app.">removalPolicy?</NestedTitle>
+<NestedTitle id="app-removalpolicy" Tag="h4" parent="$app.">removalPolicy</NestedTitle>
 <Segment>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="symbol">&ldquo;</code><code class="primitive">remove</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">retain</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">retain-all</code><code class="symbol">&rdquo;</code>
 </InlineSection>
 </Section>
-Configure how your resources are handled on `sst remove`:
-
-- `remove`: Remove all your resources on remove.
-- `retain`: Retains S3 buckets and DynamoDB tables, and remove all other resources.
-- `retain-all`: Retains all your resources on remove.
-
-:::tip
-It's a good idea to use `retain` for your production stage.
-:::
+The removal policy for the current stage. If `removalPolicy` was not set in the `sst.config.ts`, this will be return its default value, `retain`.
 </Segment>
 <NestedTitle id="app-stage" Tag="h4" parent="$app.">stage</NestedTitle>
 <Segment>
@@ -79,7 +82,7 @@ It's a good idea to use `retain` for your production stage.
 **Type** <code class="primitive">string</code>
 </InlineSection>
 </Section>
-The stage currently being deployed or removed
+The stage currently being run.
 </Segment>
 
 ### $dev
@@ -89,7 +92,7 @@ The stage currently being deployed or removed
 **Type** <code class="primitive">boolean</code>
 </InlineSection>
 </Section>
-True if running in `sst dev`
+Returns `true` if the app is running in `sst dev`.
 </Segment>
 
 ### $util
@@ -99,14 +102,18 @@ True if running in `sst dev`
 **Type** [<code class="type">@pulumi/pulumi</code>](https://www.pulumi.com/docs/reference/pkg/nodejs/pulumi/pulumi/)
 </InlineSection>
 </Section>
-Access the Pulumi SDK utilities without needing to import them.
-To create a new asset, you can do
-```ts
+A convenience reference to the the [`util`](https://www.pulumi.com/docs/reference/pkg/nodejs/pulumi/pulumi/) module from Pulumi.
+
+This is useful for working with components. You can use these without importing or installing the Pulumi SDK.
+For example, to create a new asset, you can:
+
+```ts title="sst.config.ts"
 const myFiles = new $util.asset.FileArchive("./path/to/files");
 ```
 
-This is equivalent to
-```ts
+This is equivalent to doing:
+
+```ts title="sst.config.ts"
 import * as pulumi from "@pulumi/pulumi";
 
 const myFiles = new pulumi.asset.FileArchive("./path/to/files");
@@ -118,80 +125,105 @@ const myFiles = new pulumi.asset.FileArchive("./path/to/files");
 ### $concat
 <Segment>
 Takes a sequence of Output values or plain JavaScript values, stringifies each,
-and concatenates all values into one final string.
+and concatenates them into one final string.
+
+This is takes care of resolving the Output values for you. Say you had a bucket:
 
 ```ts
 const bucket = new sst.aws.Bucket("MyBucket");
-const description = $concat("This is a bucket named ", bucket.name);
 ```
 
-This is equivalent to
+Instead of having to resolve the bucket name first::
+
 ```ts
 const description = bucket.name.apply(name =>
   "This is a bucket named ".concat(name)
 );
 ```
+
+You can directly do this:
+
+```ts
+const description = $concat("This is a bucket named ", bucket.name);
+```
 </Segment>
 
 ### $interpolate
 <Segment>
-String interpolation with Output values.
+Use string interpolation on Output values.
+
+This is takes care of resolving the Output values for you. Say you had a bucket:
 
 ```ts
 const bucket = new sst.aws.Bucket("MyBucket");
-
-const description = $interpolate`This is a bucket named ${bucket.name}`;
 ```
 
-This is equivalent to
+Instead of resolving the bucket name first:
+
 ```ts
 const description = bucket.name.apply(name => `This is a bucket named ${name}`);
+```
+
+You can directly do this:
+```ts
+const description = $interpolate`This is a bucket named ${bucket.name}`;
 ```
 </Segment>
 
 ### $jsonParse
 <Segment>
-Takes an Output value or plain Javascript value, use JSON.parse to deserialize
-the resolved JSON string into a JSON object.
+Takes an Output value or plain JavaScript value, uses `JSON.parse`
+on the resolved JSON string to turn it into a JSON object.
 
-```ts
-const policy = $jsonParse(policyStr);
-```
+So for example, instead of doing of resolving the value first:
 
-This is equivalent to
 ```ts
 const policy = policyStr.apply((policy) =>
   JSON.parse(policy)
 );
 ```
+
+You can directly do this:
+
+```ts
+const policy = $jsonParse(policyStr);
+```
 </Segment>
 
 ### $jsonStringify
 <Segment>
-Takes an Output value or plain JSON object, use JSON.stringify to serialize
-the resolved JSON object into a JSON string.
+Takes an Output value or plain JSON object, uses `JSON.stringify`
+on the resolved JSON object to turn it into a JSON string.
 
-```ts
-const policy = $jsonStringify(policyObj);
-```
+So for example, instead of doing of resolving the value first:
 
-This is equivalent to
 ```ts
 const policy = policyObj.apply((policy) =>
   JSON.stringify(policy)
 );
 ```
+
+You can directly do this:
+
+```ts
+const policy = $jsonStringify(policyObj);
+```
 </Segment>
 
 ### $resolve
 <Segment>
-Wait for all Output values to resolve
+Wait for a list of Output values to be resolved, and then apply a function to their resolved values.
+
+Say you had a couple of S3 Buckets:
+```ts
+const bucket1 = new sst.aws.Bucket("MyBucket1");
+const bucket2 = new sst.aws.Bucket("MyBucket2");
+```
+
+You can run a function after both of them are resolved:
 
 ```ts
-declare value1: Output<string>;
-declare value2: Output<string>;
-
-$resolve([value1, value2]).apply(([value1, value2]) =>
+$resolve([bucket1.name, bucket2.name]).apply(([value1, value2]) =>
   console.log({ value1, value2 })
 );
 ```
