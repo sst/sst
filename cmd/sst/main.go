@@ -410,7 +410,7 @@ However, if you are working on your backend functions and your frontend at the s
 						Long: `
 Set the value of the secret.
 
-
+For example, set the `+"`sst.Secret`"+` called `+"`StripeSecret`"+` to `+"`123456789`"+`.
 `,
 					},
 					Args: []Argument{

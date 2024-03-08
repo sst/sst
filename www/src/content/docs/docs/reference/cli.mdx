@@ -113,9 +113,6 @@ sst --help
 sst version
 ```
 </Section>
-Prints the current version of the CLI.
-
-</Segment>
 
 ### dev
 <Segment>
@@ -131,49 +128,6 @@ sst dev [command]
 A command to also start your frontend.
 </Section>
 
-Run your app in development mode. Optionally, pass in a command to start your frontend as well.
-
-```bash frame="none"
-sst dev
-```
-
-This starts a local server, watch for changes to your code, updates your app, and it runs your functions [Live](/docs/live).
-
-:::note
-If your run `sst dev` with a command, it'll not print your your function logs.
-:::
-
-If you start your frontend along with `sst dev`, it'll [link your resources](/docs/linking) to it too.
-
-```bash frame="none"
-sst dev next dev
-```
-
-Starting two instances of `sst dev` in the same project only starts a single _server_. Meaning that the second instance connects to the existing one.
-
-:::note
-You can start as many instances of `sst dev` in your app as you want.
-:::
-
-This means that you don't need to run `sst dev` separately for your frontend, unlike with SST v2.
-
-:::tip
-You don't need to run `sst dev` separately for your frontend, unlike with SST v2.
-:::
-
-However, if you are working on your backend functions and your frontend at the same time, you can run `sst dev` to view your functions logs.
-
-
-
-```bash frame="none"
-sst dev
-```
-Start dev mode for SST, Next.js, and link the resources.
-```bash frame="none"
-sst dev next dev
-```
-</Segment>
-
 ### secret
 <Segment>
 
@@ -182,9 +136,6 @@ sst dev next dev
 - <p>[<code class="key">set</code>](#secret-set)</p>
 - <p>[<code class="key">list</code>](#secret-list)</p>
 </Section>
-Manage the secrets in your app defined with `sst.Secret`.
-
-</Segment>
 <NestedTitle id="secret-set" Tag="h4" parent="secret ">set</NestedTitle>
 <Segment>
 <Section type="signature">
@@ -199,17 +150,6 @@ The name of the secret.
 - <p><code class="key">value</code></p>
 The value of the secret.
 </Section>
-Set the value of the secret.
-
-Set the `sst.Secret` called `StripeSecret` to `123456789`.
-```bash frame="none"
-sst secret set StripeSecret 123456789
-```
-Set the `sst.Secret` called `StripeSecret` in the `production` stage.
-```bash frame="none"
-sst secret set StripeSecret productionsecret --stage=production
-```
-</Segment>
 <NestedTitle id="secret-list" Tag="h4" parent="secret ">list</NestedTitle>
 <Segment>
 <Section type="signature">
@@ -217,13 +157,6 @@ sst secret set StripeSecret productionsecret --stage=production
 sst secret list
 ```
 </Section>
-Lists all the secrets.
-
-Optionally, list the secrets in a specific stage.
-```bash frame="none"
-sst secret list --stage=production
-```
-</Segment>
 
 ### shell
 <Segment>
@@ -239,44 +172,6 @@ sst shell [command]
 A command to run.
 </Section>
 
-Run a command with all the resources linked to the environment.
-
-For example, you can run a node script and use the [Node client](/docs/reference/client) to access *all* the linked resources in your app.
-
-```js title="sst.config.ts"
-const myMainBucket = new sst.aws.Bucket("MyMainBucket");
-const myAdminBucket = new sst.aws.Bucket("MyAdminBucket");
-
-new sst.aws.Nextjs("MyMainWeb", {
-  link: [myMainBucket]
-});
-
-new sst.aws.Nextjs("MyAdminWeb", {
-  link: [myAdminBucket]
-});
-```
-
-Now if you run a script.
-
-```bash
-sst shell node my-script.js
-```
-
-It'll have access to all the buckets from above.
-
-```js title="my-script.js"
-import { Resource } from "sst";
-
-console.log(Resource.MyMainBucket.name, Resource.MyAdminBucket.name);
-```
-
-
-If no command is passed in, it opens a shell session with the linked resources. This is useful if you want to run multiple commands, all while accessing the linked resources.
-```bash frame="none"
-sst shell
-```
-</Segment>
-
 ### install
 <Segment>
 <Section type="signature">
@@ -285,13 +180,6 @@ sst install
 ```
 </Section>
 
-Installs the dependencies in `sst.config.ts`.
-
-You'll need to run this when you add a new provider to your config.
-
-
-</Segment>
-
 ### deploy
 <Segment>
 <Section type="signature">
@@ -299,13 +187,6 @@ You'll need to run this when you add a new provider to your config.
 sst deploy
 ```
 </Section>
-Deploy your application.
-
-Optionally, deploy your app to a specific stage.
-```bash frame="none"
-sst deploy --stage=production
-```
-</Segment>
 
 ### remove
 <Segment>
@@ -314,10 +195,6 @@ sst deploy --stage=production
 sst remove
 ```
 </Section>
-Removes your application.
-
-
-</Segment>
 
 ### refresh
 <Segment>
@@ -327,9 +204,6 @@ sst refresh
 ```
 </Section>
 
-
-</Segment>
-
 ### cancel
 <Segment>
 <Section type="signature">
@@ -337,9 +211,6 @@ sst refresh
 sst cancel
 ```
 </Section>
-Cancel any pending deploys
-
-</Segment>
 
 ### init
 <Segment>
@@ -349,9 +220,6 @@ sst init
 ```
 </Section>
 
-
-</Segment>
-
 ### state
 <Segment>
 
@@ -359,9 +227,6 @@ sst init
 #### Subcommands
 - <p>[<code class="key">edit</code>](#state-edit)</p>
 </Section>
-Manage state of your deployment
-
-</Segment>
 <NestedTitle id="state-edit" Tag="h4" parent="state ">edit</NestedTitle>
 <Segment>
 <Section type="signature">
@@ -369,7 +234,4 @@ Manage state of your deployment
 sst state edit
 ```
 </Section>
-Edit the state of your deployment
-
-</Segment>
 </div>
