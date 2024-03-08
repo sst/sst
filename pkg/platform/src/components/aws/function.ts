@@ -715,6 +715,10 @@ export interface FunctionArgs {
    * @internal
    */
   _ignoreCodeChanges?: boolean;
+  /**
+   * @internal
+   */
+  _skipMetadata?: boolean;
 }
 
 /**
@@ -886,6 +890,7 @@ export class Function
     this.registerOutputs({
       _metadata: {
         handler: args.handler,
+        internal: args._skipMetadata,
       },
     });
 

@@ -886,6 +886,7 @@ function handler(event) {
           url: true,
           liveDev: false,
           _ignoreCodeChanges: $dev,
+          _skipMetadata: true,
         },
         { parent },
       );
@@ -1122,6 +1123,7 @@ function handler(event) {
             CONCURRENCY: output(args.warm).apply((warm) => warm.toString()),
           },
           link: [ssrFunctions[0]],
+          _skipMetadata: true,
         },
         { parent },
       );

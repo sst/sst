@@ -1083,6 +1083,7 @@ export class Nextjs extends Component implements Link.Linkable {
               },
               liveDev: false,
               _ignoreCodeChanges: $dev,
+              _skipMetadata: true,
             },
             { parent },
           );
