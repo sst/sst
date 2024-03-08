@@ -18,17 +18,6 @@ import type { Input } from "../input";
 
 export interface BucketArgs {
   /**
-   * Enable public read access for all the files in the bucket.
-   * @default `false`
-   * @example
-   * ```js
-   * {
-   *   public: true
-   * }
-   * ```
-   */
-  public?: Input<boolean>;
-  /**
    * [Transform](/docs/components#transform/) how this component creates its underlying
    * resources.
    */
@@ -109,26 +98,14 @@ export class Bucket extends Component {
     this.bucket = bucket;
 
     function createBucket() {
-      const input = transform(args?.transform?.bucket, {
-        name,
-        accountId: $app.providers?.cloudflare?.accountId!,
-      });
-
-      //      if (!input.bucket) {
-      //        const randomId = new RandomId(
-      //          `${name}Id`,
-      //          { byteLength: 6 },
-      //          { parent },
-      //        );
-      //        input.bucket = randomId.dec.apply((dec) =>
-      //          prefixName(
-      //            name.toLowerCase(),
-      //            `-${hashNumberToPrettyString(parseInt(dec), 8)}`,
-      //          ),
-      //        );
-      //      }
-
-      return new cloudflare.R2Bucket(`${name}Bucket`, input, { parent });
+      return new cloudflare.R2Bucket(
+        `${name}Bucket`,
+        transform(args?.transform?.bucket, {
+          name,
+          accountId: $app.providers?.cloudflare?.accountId!,
+        }),
+        { parent },
+      );
     }
   }
 

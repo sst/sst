@@ -10,10 +10,24 @@ import * as aws from "@pulumi/aws";
 import * as cf from "@pulumi/cloudflare";
 import type { Loader, BuildOptions } from "esbuild";
 import { build } from "../../runtime/cloudflare.js";
-import { Component, Transform, transform } from "../component";
+import { Component, Prettify, Transform, transform } from "../component";
 import { WorkersUrl } from "./providers/workers-url.js";
 import { Link } from "../link.js";
 import type { Input } from "../input.js";
+
+/**
+ * @internal
+ */
+export interface WorkerDomainArgs {
+  /**
+   * The domain to use for the worker.
+   */
+  hostname: Input<string>;
+  /**
+   * The zone id for the domain.
+   */
+  zoneId: Input<string>;
+}
 
 export interface WorkerArgs {
   /**
@@ -45,16 +59,7 @@ export interface WorkerArgs {
   /**
    * @internal
    */
-  domain?: Input<{
-    /**
-     * The domain to use for the worker.
-     */
-    hostname: Input<string>;
-    /**
-     * The zone id for the domain.
-     */
-    zoneId: Input<string>;
-  }>;
+  domain?: Input<Prettify<WorkerDomainArgs>>;
   /**
    * Configure how your function is bundled.
    *
@@ -133,6 +138,22 @@ export interface WorkerArgs {
    * ```
    */
   link?: Input<any[]>;
+  /**
+   * Key-value pairs of values that are set as [Worker environment variables](https://developers.cloudflare.com/workers/configuration/environment-variables/).
+   *
+   * They can be accessed in your function using `env.<key>`.
+   *
+   * @example
+   *
+   * ```js
+   * {
+   *   environment: {
+   *     DEBUG: "true"
+   *   }
+   * }
+   * ```
+   */
+  environment?: Input<Record<string, Input<string>>>;
   /**
    * [Transform](/docs/components#transform/) how this component creates its underlying
    * resources.
@@ -292,8 +313,8 @@ export class Worker extends Component {
     }
 
     function createScript() {
-      return all([handler, iamCredentials]).apply(
-        async ([handler, iamCredentials]) =>
+      return all([handler, args.environment, iamCredentials]).apply(
+        async ([handler, environment, iamCredentials]) =>
           new cf.WorkerScript(
             `${name}Script`,
             transform(args.transform?.worker, {
@@ -303,14 +324,20 @@ export class Worker extends Component {
               module: true,
               compatibilityDate: "2024-01-01",
               compatibilityFlags: ["nodejs_compat"],
-              plainTextBindings: iamCredentials
-                ? [
-                    {
-                      name: "AWS_ACCESS_KEY_ID",
-                      text: iamCredentials.id,
-                    },
-                  ]
-                : [],
+              plainTextBindings: [
+                ...(iamCredentials
+                  ? [
+                      {
+                        name: "AWS_ACCESS_KEY_ID",
+                        text: iamCredentials.id,
+                      },
+                    ]
+                  : []),
+                ...Object.entries(environment ?? {}).map(([key, value]) => ({
+                  name: key,
+                  text: value,
+                })),
+              ],
               secretTextBindings: iamCredentials
                 ? [
                     {
