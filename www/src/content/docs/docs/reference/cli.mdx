@@ -136,31 +136,34 @@ Run your app in development mode. Optionally, pass in a command to start your fr
 sst dev
 ```
 
-This starts a local server, watch for changes to your code, updates your app, and it runs your functions [Live](/docs/live).
-
-:::note
-If your run `sst dev` with a command, it'll not print your your function logs.
-:::
-
-If you start your frontend along with `sst dev`, it'll [link your resources](/docs/linking) to it too.
+You can also pass in a command to start your frontend with it.
 
 ```bash frame="none"
 sst dev next dev
 ```
 
-Starting two instances of `sst dev` in the same project only starts a single _server_. Meaning that the second instance connects to the existing one.
+Dev mode does a few things:
+
+1. Starts a local server
+2. Watches your stacks code and re-deploys changes
+3. Run your functions [Live](/docs/live/)
+4. If you pass in a `command`, it'll:
+   - Load your [linked resources](/docs/linking) in the environment
+   - And run the command
 
 :::note
+If your run `sst dev` with a command, it'll not print your function logs.
+:::
+
+If `sst dev` starts your fronted, it won't print logs from your SST app. We do this to prevent your logs from being too noisy. To view your logs, you can run `sst dev` in a separate terminal.
+
+:::tip
 You can start as many instances of `sst dev` in your app as you want.
 :::
 
-This means that you don't need to run `sst dev` separately for your frontend, unlike with SST v2.
+Starting multiple instances of `sst dev` in the same project only starts a single _server_. Meaning that the second instance connects to the existing one.
 
-:::tip
-You don't need to run `sst dev` separately for your frontend, unlike with SST v2.
-:::
-
-However, if you are working on your backend functions and your frontend at the same time, you can run `sst dev` to view your functions logs.
+This is different from SST v2, in that you needed to run `sst dev` and `sst bind` for your frontend.
 
 </Segment>
 
