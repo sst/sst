@@ -1301,7 +1301,7 @@ export class Function
       return new aws.cloudwatch.LogGroup(
         `${name}LogGroup`,
         transform(args.transform?.logGroup, {
-          name: `/aws/lambda/${prefixName(name)}`,
+          name: `/aws/lambda/${prefixName(name)}Function`,
           retentionInDays: logging.apply(
             (logging) => RETENTION[logging.retention],
           ),
