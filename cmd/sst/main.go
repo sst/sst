@@ -218,7 +218,7 @@ If the stage is not passed in, then the CLI will:
 2. Stores this in the `+"`.sst/stage`"+` file and reads from it in the future.
 
 :::tip
-The stage that is stored in the `+"`.sst/stage`"+` file is called your local stage.
+The stage that is stored in the `+"`.sst/stage`"+` file is called your personal stage.
 :::
 `,
 			},
@@ -705,7 +705,7 @@ You'll need to run this when you add a new provider to your config.
 			Description: Description{
 				Short: "Deploy your application",
 				Long: `
-Deploy your application. By default, it deploys to your local stage.
+Deploy your application. By default, it deploys to your personal stage.
 
 Optionally, deploy your app to a specific stage.
 
@@ -747,7 +747,7 @@ sst deploy --stage=production
 			Description: Description{
 				Short: "Remove your application",
 				Long: `
-Removes your application. By default, it removes your local stage.
+Removes your application. By default, it removes your personal stage.
 
 :::tip
 The resources in your app are removed based on the `+"`removalPolicy`"+` in your `+"`sst.config.ts`"+`.
