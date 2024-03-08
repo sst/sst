@@ -173,7 +173,30 @@ func run() error {
 var Root = Command{
 	Name: "sst",
 	Description: Description{
-		Short: "Deploy anything",
+		Short: "deploy anything",
+    Long: `
+The CLI helps you manage your SST apps.
+
+`+"```bash"+` title="Install"
+curl -fsSL https://ion.sst.dev/install.sh | bash
+`+"```"+`
+
+:::note
+The CLI currently supports macOS, Linux, and WSL. Windows support is coming soon.
+:::
+
+Once installed you can run the commands using.
+
+`+"```bash"+`
+sst [command]
+`+"```"+`
+
+The CLI takes a few global flags. For example, the deploy command takes the `+"`--stage`"+` flag
+
+`+"```bash"+`
+sst deploy --stage=production
+`+"```"+`
+`,
 	},
 	Flags: []Flag{
 		{
@@ -181,6 +204,23 @@ var Root = Command{
 			Type: "string",
 			Description: Description{
 				Short: "The stage to deploy to",
+				Long: `
+The stage the CLI is running on.
+
+`+"```bash"+` frame="none"
+sst [command] --stage=production
+`+"```"+`
+
+If the stage is not passed in, then the CLI will:
+
+1. Uses the username on the local machine.
+   - If the username is `+"`root`"+`, `+"`admin`"+`, `+"`prod`"+`, `+"`dev`"+`, `+"`production`"+`, then it will prompt for a stage name.
+2. Stores this in the `+"`.sst/stage`"+` file and reads from it in the future.
+
+:::tip
+The stage that is stored in the `+"`.sst/stage`"+` file is called your local stage.
+:::
+`,
 			},
 		},
 		{
@@ -188,6 +228,13 @@ var Root = Command{
 			Type: "bool",
 			Description: Description{
 				Short: "Enable verbose logging",
+				Long: `
+Enables verbose logging for the CLI output.
+
+`+"```bash"+` frame="none"
+sst [command] --verbose
+`+"```"+`
+`,
 			},
 		},
 		{
@@ -195,6 +242,19 @@ var Root = Command{
 			Type: "bool",
 			Description: Description{
 				Short: "Print help",
+				Long: `
+Prints help for the given command.
+
+`+"```sh"+` frame="none"
+sst [command] --help
+`+"```"+`
+
+Or for the global help.
+
+`+"```sh"+` frame="none"
+sst --help
+`+"```"+`
+`,
 			},
 		},
 	},
@@ -203,6 +263,7 @@ var Root = Command{
 			Name: "version",
 			Description: Description{
 				Short: "Print the version",
+				Long: `Prints the current version of the CLI.`,
 			},
 			Run: func(cli *Cli) error {
 				fmt.Printf("ion.%s\n", version)
@@ -276,27 +337,69 @@ var Root = Command{
 			Name: "dev",
 			Description: Description{
 				Short: "Run in development mode",
+				Long: `
+Run your app in development mode. Optionally, pass in a command to start your frontend as well.
+
+This starts a local server, watch for changes to your code, updates your app, and it runs your functions [Live](/docs/live).
+
+:::note
+If your run `+"`sst dev`"+` with a command, it'll not print your your function logs.
+:::
+
+If you start your frontend along with `+"`sst dev next dev`"+`, it'll [link your resources](/docs/linking) to it too.
+
+Starting two instances of `+"`sst dev`"+` in the same project only starts a single _server_. Meaning that the second instance connects to the existing one.
+
+:::note
+You can start as many instances of `+"`sst dev`"+` in your app as you want.
+:::
+
+This means that you don't need to run `+"`sst dev`"+` separately for your frontend, unlike with SST v2.
+
+:::tip
+You don't need to run `+"`sst dev`"+` separately for your frontend, unlike with SST v2.
+:::
+
+However, if you are working on your backend functions and your frontend at the same time, you can run `+"`sst dev`"+` to view your functions logs.
+`,
 			},
 			Args: []Argument{
 				{
 					Name: "command",
 					Description: Description{
 						Short: "The command to run",
+						Long: `A command to also start your frontend.`,
 					},
 				},
 			},
+      Examples: []Example{
+        {
+          Content: "sst dev",
+          Description: Description{
+            Short: "",
+          },
+        },
+        {
+          Content: "sst dev next dev",
+          Description: Description{
+            Short: "Start dev mode for SST, Next.js, and link the resources.",
+          },
+        },
+      },
 			Run: CmdDev,
 		},
 		{
 			Name: "secret",
 			Description: Description{
 				Short: "Manage secrets",
+				Long: "Manage the secrets in your app defined with `sst.Secret`.",
 			},
 			Children: []*Command{
 				{
 					Name: "set",
 					Description: Description{
 						Short: "Set a secret",
+						Long: "Set the value of the secret.",
 					},
 					Args: []Argument{
 						{
@@ -304,6 +407,7 @@ var Root = Command{
 							Required: true,
 							Description: Description{
 								Short: "The name of the secret",
+								Long: "The name of the secret.",
 							},
 						},
 						{
@@ -311,6 +415,7 @@ var Root = Command{
 							Required: true,
 							Description: Description{
 								Short: "The value of the secret",
+								Long: "The value of the secret.",
 							},
 						},
 					},
@@ -319,12 +424,14 @@ var Root = Command{
 							Content: "sst secret set StripeSecret 123456789",
 							Description: Description{
 								Short: "Set the StripeSecret to 123456789",
+								Long: "Set the `sst.Secret` called `StripeSecret` to `123456789`.",
 							},
 						},
 						{
 							Content: "sst secret set StripeSecret productionsecret --stage=production",
 							Description: Description{
-								Short: "Set the StripeSecret to production",
+								Short: "Set the StripeSecret in production",
+								Long: "Set the `sst.Secret` called `StripeSecret` in the `production` stage.",
 							},
 						},
 					},
@@ -354,6 +461,16 @@ var Root = Command{
 					Name: "list",
 					Description: Description{
 						Short: "List all secrets",
+						Long: "Lists all the secrets.",
+					},
+					Examples: []Example{
+						{
+							Content: "sst secret list --stage=production",
+							Description: Description{
+								Short: "List the secrets in production",
+								Long: "List all the secrets in the `production` stage.",
+							},
+						},
 					},
 					Run: func(cli *Cli) error {
 						p, err := initProject(cli)
@@ -387,6 +504,7 @@ var Root = Command{
 			},
 			Description: Description{
 				Short: "Run command with all resource linked in environment",
+				Long: "Run a command with all the resource linked to the environment.",
 			},
 			Run: func(cli *Cli) error {
 				p, err := initProject(cli)
@@ -471,6 +589,11 @@ var Root = Command{
 			Name: "install",
 			Description: Description{
 				Short: "Install dependencies specified in sst.config.ts",
+				Long: `
+Installs the dependencies in `+"`sst.config.ts`"+`.
+
+You'll need to run this when you add a new provider to your config.
+`,
 			},
 			Run: func(cli *Cli) error {
 				cfgPath, err := project.Discover()
@@ -505,7 +628,17 @@ var Root = Command{
 			Name: "deploy",
 			Description: Description{
 				Short: "Deploy your application",
+				Long: "Deploy your application.",
 			},
+      Examples: []Example{
+        {
+          Content: "sst deploy --stage=production",
+          Description: Description{
+            Short: "Deploy to production",
+            Long: "Optionally, deploy your app to a specific stage.",
+          },
+        },
+      },
 			Run: func(cli *Cli) error {
 				p, err := initProject(cli)
 				if err != nil {
@@ -530,6 +663,8 @@ var Root = Command{
 			Name: "remove",
 			Description: Description{
 				Short: "Remove your application",
+				Long: `Removes your application.
+`,
 			},
 			Run: func(cli *Cli) error {
 				p, err := initProject(cli)

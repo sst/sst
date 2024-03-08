@@ -1,6 +1,6 @@
 ---
 title: CLI
-description: Reference doc for the SST CLI.
+description: Reference doc for the `sst` CLI.
 ---
 
 import Segment from '../../../../../src/components/tsdoc/Segment.astro';
@@ -11,7 +11,29 @@ import InlineSection from '../../../../../src/components/tsdoc/InlineSection.ast
 <div class="tsdoc">
 
 <Section type="about">
-Deploy anything
+
+The CLI helps you manage your SST apps.
+
+```bash title="Install"
+curl -fsSL https://ion.sst.dev/install.sh | bash
+```
+
+:::note
+The CLI currently supports macOS, Linux, and WSL. Windows support is coming soon.
+:::
+
+Once installed you can run the commands using.
+
+```bash
+sst [command]
+```
+
+The CLI takes a few global flags. For example, the deploy command takes the `--stage` flag
+
+```bash
+sst deploy --stage=production
+```
+
 </Section>
 
 ---
@@ -25,7 +47,23 @@ Deploy anything
 **Type** <code class="primitive">string</code>
 </InlineSection>
 </Section>
-The stage to deploy to
+
+The stage the CLI is running on.
+
+```bash frame="none"
+sst [command] --stage=production
+```
+
+If the stage is not passed in, then the CLI will:
+
+1. Uses the username on the local machine.
+   - If the username is `root`, `admin`, `prod`, `dev`, `production`, then it will prompt for a stage name.
+2. Stores this in the `.sst/stage` file and reads from it in the future.
+
+:::tip
+The stage that is stored in the `.sst/stage` file is called your local stage.
+:::
+
 </Segment>
 
 ### verbose
@@ -35,7 +73,13 @@ The stage to deploy to
 **Type** <code class="primitive">boolean</code>
 </InlineSection>
 </Section>
-Enable verbose logging
+
+Enables verbose logging for the CLI output.
+
+```bash frame="none"
+sst [command] --verbose
+```
+
 </Segment>
 
 ### help
@@ -45,27 +89,38 @@ Enable verbose logging
 **Type** <code class="primitive">boolean</code>
 </InlineSection>
 </Section>
-Print help
+
+Prints help for the given command.
+
+```sh frame="none"
+sst [command] --help
+```
+
+Or for the global help.
+
+```sh frame="none"
+sst --help
+```
+
 </Segment>
 
 ## Commands
 
 ### version
 <Segment>
-#### Usage
 <Section type="signature">
-```
+```sh frame="none"
 sst version
 ```
 </Section>
-Print the version
+Prints the current version of the CLI.
+
 </Segment>
 
 ### dev
 <Segment>
-#### Usage
 <Section type="signature">
-```
+```sh frame="none"
 sst dev [command]
 ```
 </Section>
@@ -73,9 +128,42 @@ sst dev [command]
 <Section type="parameters">
 #### Args
 - <p><code class="key">command?</code></p>
-The command to run
+A command to also start your frontend.
 </Section>
-Run in development mode
+
+Run your app in development mode. Optionally, pass in a command to start your frontend as well.
+
+This starts a local server, watch for changes to your code, updates your app, and it runs your functions [Live](/docs/live).
+
+:::note
+If your run `sst dev` with a command, it'll not print your your function logs.
+:::
+
+If you start your frontend along with `sst dev next dev`, it'll [link your resources](/docs/linking) to it too.
+
+Starting two instances of `sst dev` in the same project only starts a single _server_. Meaning that the second instance connects to the existing one.
+
+:::note
+You can start as many instances of `sst dev` in your app as you want.
+:::
+
+This means that you don't need to run `sst dev` separately for your frontend, unlike with SST v2.
+
+:::tip
+You don't need to run `sst dev` separately for your frontend, unlike with SST v2.
+:::
+
+However, if you are working on your backend functions and your frontend at the same time, you can run `sst dev` to view your functions logs.
+
+
+
+```bash frame="none"
+sst dev
+```
+Start dev mode for SST, Next.js, and link the resources.
+```bash frame="none"
+sst dev next dev
+```
 </Segment>
 
 ### secret
@@ -86,53 +174,53 @@ Run in development mode
 - <p>[<code class="key">set</code>](#secret-set)</p>
 - <p>[<code class="key">list</code>](#secret-list)</p>
 </Section>
-Manage secrets
+Manage the secrets in your app defined with `sst.Secret`.
+
 </Segment>
 <NestedTitle id="secret-set" Tag="h4" parent="secret ">set</NestedTitle>
 <Segment>
-**Usage**
 <Section type="signature">
-```
+```sh frame="none"
 sst secret set <name> <value>
 ```
 </Section>
 <Section type="parameters">
-<InlineSection>
-**Args**
+#### Args
 - <p><code class="key">name</code></p>
-The name of the secret
+The name of the secret.
 - <p><code class="key">value</code></p>
-The value of the secret
-</InlineSection>
+The value of the secret.
 </Section>
-Set a secret
-Set the StripeSecret to 123456789
-```
+Set the value of the secret.
+
+Set the `sst.Secret` called `StripeSecret` to `123456789`.
+```bash frame="none"
 sst secret set StripeSecret 123456789
 ```
-Set the StripeSecret to production
-```
+Set the `sst.Secret` called `StripeSecret` in the `production` stage.
+```bash frame="none"
 sst secret set StripeSecret productionsecret --stage=production
 ```
 </Segment>
 <NestedTitle id="secret-list" Tag="h4" parent="secret ">list</NestedTitle>
 <Segment>
-**Usage**
 <Section type="signature">
-```
+```sh frame="none"
 sst secret list
 ```
 </Section>
-<Section type="parameters">
-</Section>
-List all secrets
+Lists all the secrets.
+
+List all the secrets in the `production` stage.
+```bash frame="none"
+sst secret list --stage=production
+```
 </Segment>
 
 ### shell
 <Segment>
-#### Usage
 <Section type="signature">
-```
+```sh frame="none"
 sst shell [command]
 ```
 </Section>
@@ -142,72 +230,82 @@ sst shell [command]
 - <p><code class="key">command?</code></p>
 The command to run
 </Section>
-Run command with all resource linked in environment
+Run a command with all the resource linked to the environment.
+
 </Segment>
 
 ### install
 <Segment>
-#### Usage
 <Section type="signature">
-```
+```sh frame="none"
 sst install
 ```
 </Section>
-Install dependencies specified in sst.config.ts
+
+Installs the dependencies in `sst.config.ts`.
+
+You'll need to run this when you add a new provider to your config.
+
+
 </Segment>
 
 ### deploy
 <Segment>
-#### Usage
 <Section type="signature">
-```
+```sh frame="none"
 sst deploy
 ```
 </Section>
-Deploy your application
+Deploy your application.
+
+Optionally, deploy your app to a specific stage.
+```bash frame="none"
+sst deploy --stage=production
+```
 </Segment>
 
 ### remove
 <Segment>
-#### Usage
 <Section type="signature">
-```
+```sh frame="none"
 sst remove
 ```
 </Section>
-Remove your application
+Removes your application.
+
+
 </Segment>
 
 ### refresh
 <Segment>
-#### Usage
 <Section type="signature">
-```
+```sh frame="none"
 sst refresh
 ```
 </Section>
+
 
 </Segment>
 
 ### cancel
 <Segment>
-#### Usage
 <Section type="signature">
-```
+```sh frame="none"
 sst cancel
 ```
 </Section>
 Cancel any pending deploys
+
 </Segment>
 
 ### init
 <Segment>
-#### Usage
 <Section type="signature">
-```
+```sh frame="none"
 sst init
 ```
 </Section>
+
 
 </Segment>
 
@@ -219,17 +317,16 @@ sst init
 - <p>[<code class="key">edit</code>](#state-edit)</p>
 </Section>
 Manage state of your deployment
+
 </Segment>
 <NestedTitle id="state-edit" Tag="h4" parent="state ">edit</NestedTitle>
 <Segment>
-**Usage**
 <Section type="signature">
-```
+```sh frame="none"
 sst state edit
 ```
 </Section>
-<Section type="parameters">
-</Section>
 Edit the state of your deployment
+
 </Segment>
 </div>

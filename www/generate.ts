@@ -57,7 +57,7 @@ async function generateCliDoc() {
     return [
       `---`,
       `title: CLI`,
-      `description: Reference doc for the SST CLI.`,
+      `description: Reference doc for the \`sst\` CLI.`,
       `---`,
     ];
   }
@@ -127,9 +127,8 @@ async function generateCliDoc() {
       // usage
       if (!cmd.children.length) {
         lines.push(
-          `#### Usage`,
           `<Section type="signature">`,
-          "```",
+          '```sh frame="none"',
           `sst ${renderCliCommandUsage(cmd)}`,
           "```",
           `</Section>`
@@ -184,9 +183,10 @@ async function generateCliDoc() {
       // examples
       lines.push(
         renderCliDescription(cmd.description),
+        ``,
         ...cmd.examples.flatMap((e) => [
           renderCliDescription(e.description),
-          "```",
+          '```bash frame="none"',
           e.content,
           "```",
         ]),
@@ -204,49 +204,46 @@ async function generateCliDoc() {
 
           // usage
           lines.push(
-            `**Usage**`,
             `<Section type="signature">`,
-            "```",
+            '```sh frame="none"',
             `sst ${cmd.name} ${renderCliCommandUsage(subcmd)}`,
             "```",
             `</Section>`
           );
 
-          lines.push(`<Section type="parameters">`);
-
           // subcommand args
           if (subcmd.args.length) {
             lines.push(
-              `<InlineSection>`,
-              `**Args**`,
+              `<Section type="parameters">`,
+              `#### Args`,
               ...subcmd.args.flatMap((a) => [
                 `- <p><code class="key">${a.name}</code></p>`,
                 renderCliDescription(a.description),
               ]),
-              `</InlineSection>`
+              `</Section>`
             );
           }
 
           // subcommand flags
           if (subcmd.flags.length) {
             lines.push(
-              `<InlineSection>`,
-              `**Args**`,
+              `<Section type="parameters">`,
+              `#### Flags`,
               ...subcmd.flags.flatMap((f) => [
                 `- <p><code class="key">${f.name}</code></p>`,
                 renderCliDescription(f.description),
               ]),
-              `</InlineSection>`
+              `</Section>`
             );
           }
 
           // subcommands examples
           lines.push(
-            `</Section>`,
             renderCliDescription(subcmd.description),
+            ``,
             ...subcmd.examples.flatMap((e) => [
               renderCliDescription(e.description),
-              "```",
+              '```bash frame="none"',
               e.content,
               "```",
             ]),
@@ -355,7 +352,7 @@ async function generateTsDoc() {
       return [
         `---`,
         `title: Config`,
-        `description: Use the \`sst.config.ts\` to configure your app.`,
+        `description: Reference doc for the \`sst.config.ts\`.`,
         `---`,
       ];
     }
