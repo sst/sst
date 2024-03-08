@@ -179,6 +179,9 @@ async function generateCliDoc() {
         );
       }
 
+      // description
+      lines.push(renderCliDescription(cmd.description), `</Segment>`);
+
       // subcommands details
       cmd.children
         .filter((subcmd) => !subcmd.hidden)
@@ -222,6 +225,9 @@ async function generateCliDoc() {
               `</Section>`
             );
           }
+
+          // subcommands description
+          lines.push(renderCliDescription(subcmd.description), `</Segment>`);
         });
     }
     return lines;
