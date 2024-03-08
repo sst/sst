@@ -178,7 +178,7 @@ var Root = Command{
 The CLI helps you manage your SST apps.
 
 ` + "```bash" + ` title="Install"
-curl -fsSL https://ion.sst.dev/install.sh | bash
+curl -fsSL https://ion.sst.dev/install | bash
 ` + "```" + `
 
 :::note
