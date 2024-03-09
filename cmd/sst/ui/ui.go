@@ -102,12 +102,7 @@ func (u *UI) Trigger(evt *project.StackEvent) {
 		}
 
 		if evt.ResourcePreEvent.Metadata.Op == apitype.OpSame {
-			u.printProgress(Progress{
-				Color: color.FgHiBlack,
-				Label: "Skipped",
-				Final: true,
-				URN:   evt.ResourcePreEvent.Metadata.URN,
-			})
+			// Do not print anything for skipped resources
 			return
 		}
 
@@ -227,7 +222,7 @@ func (u *UI) Trigger(evt *project.StackEvent) {
 		}
 		if evt.ResOutputsEvent.Metadata.Op == apitype.OpDelete {
 			u.printProgress(Progress{
-				Color:    color.FgRed,
+				Color:    color.FgHiBlack,
 				Label:    "Deleted",
 				Final:    true,
 				URN:      evt.ResOutputsEvent.Metadata.URN,
@@ -236,7 +231,7 @@ func (u *UI) Trigger(evt *project.StackEvent) {
 		}
 		if evt.ResOutputsEvent.Metadata.Op == apitype.OpDeleteReplaced {
 			u.printProgress(Progress{
-				Color:    color.FgRed,
+				Color:    color.FgHiBlack,
 				Label:    "Deleted",
 				Final:    true,
 				URN:      evt.ResOutputsEvent.Metadata.URN,
@@ -513,8 +508,8 @@ func (u *UI) printProgress(progress Progress) {
 
 	color.New(progress.Color, color.Bold).Print("|  ")
 	color.New(color.FgHiBlack).Print(fmt.Sprintf("%-11s", progress.Label), " ", formatURN(progress.URN))
-	if progress.Duration != 0 {
-		color.New(color.FgHiBlack).Printf(" (%s)", progress.Duration)
+	if progress.Duration > time.Second {
+		color.New(color.FgHiBlack).Printf(" (%.1fs)", progress.Duration.Seconds())
 	}
 	if len(progress.Message) > 0 {
 		for _, item := range progress.Message {
