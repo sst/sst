@@ -477,7 +477,9 @@ sst secret set StripeSecret productionsecret --stage=production
 						if err != nil {
 							return util.NewReadableError(err, "Could not set secret")
 						}
-						fmt.Println("Secret set")
+						color.New(color.FgGreen).Print("✔")
+						color.New(color.FgWhite).Printf("  Set \"%s\"", key)
+						fmt.Println()
 						return nil
 					},
 				},
@@ -540,7 +542,10 @@ sst secret remove StripeSecret --stage=production
 
 						// check if the secret exists
 						if _, ok := secrets[key]; !ok {
-							return util.NewReadableError(nil, "Secret does not exist")
+							color.New(color.FgRed).Print("❌")
+							color.New(color.FgWhite).Printf("  Secret \"%s\" does not exist", key)
+							fmt.Println()
+							return nil
 						}
 
 						delete(secrets, key)
@@ -548,7 +553,9 @@ sst secret remove StripeSecret --stage=production
 						if err != nil {
 							return util.NewReadableError(err, "Could not set secret")
 						}
-						fmt.Println("Secret removed")
+						color.New(color.FgGreen).Print("✔")
+						color.New(color.FgWhite).Printf("  Removed \"%s\"", key)
+						fmt.Println()
 						return nil
 					},
 				},
