@@ -537,6 +537,12 @@ sst secret remove StripeSecret --stage=production
 						if err != nil {
 							return util.NewReadableError(err, "Could not get secrets")
 						}
+
+						// check if the secret exists
+						if _, ok := secrets[key]; !ok {
+							return util.NewReadableError(nil, "Secret does not exist")
+						}
+
 						delete(secrets, key)
 						err = provider.PutSecrets(backend, p.App().Name, p.App().Stage, secrets)
 						if err != nil {
