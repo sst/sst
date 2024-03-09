@@ -482,6 +482,71 @@ sst secret set StripeSecret productionsecret --stage=production
 					},
 				},
 				{
+					Name: "remove",
+					Description: Description{
+						Short: "Remove a secret",
+						Long: `
+Remove a secret.
+
+For example, remove the ` + "`sst.Secret`" + ` called ` + "`StripeSecret`" + `.
+
+` + "```bash" + ` frame="none"
+sst secret remove StripeSecret
+` + "```" + `
+
+Optionally, remove a secret in a specific stage.
+
+` + "```bash" + ` frame="none"
+sst secret remove StripeSecret --stage=production
+` + "```" + `
+`,
+					},
+					Args: []Argument{
+						{
+							Name:     "name",
+							Required: true,
+							Description: Description{
+								Short: "The name of the secret",
+								Long:  "The name of the secret.",
+							},
+						},
+					},
+					Examples: []Example{
+						{
+							Content: "sst secret remove StripeSecret",
+							Description: Description{
+								Short: "Remove the StripeSecret",
+							},
+						},
+						{
+							Content: "sst secret remove StripeSecret --stage=production",
+							Description: Description{
+								Short: "Remove the StripeSecret in production",
+							},
+						},
+					},
+					Run: func(cli *Cli) error {
+						key := cli.Positional(0)
+						p, err := initProject(cli)
+						if err != nil {
+							return err
+						}
+						defer p.Cleanup()
+						backend := p.Backend()
+						secrets, err := provider.GetSecrets(backend, p.App().Name, p.App().Stage)
+						if err != nil {
+							return util.NewReadableError(err, "Could not get secrets")
+						}
+						delete(secrets, key)
+						err = provider.PutSecrets(backend, p.App().Name, p.App().Stage, secrets)
+						if err != nil {
+							return util.NewReadableError(err, "Could not set secret")
+						}
+						fmt.Println("Secret removed")
+						return nil
+					},
+				},
+				{
 					Name: "list",
 					Description: Description{
 						Short: "List all secrets",
