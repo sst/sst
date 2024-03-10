@@ -84,6 +84,7 @@ export function createExports(
       const renderOptions: RenderOptions = {
         routeData,
         clientAddress: internalEvent.headers['x-forwarded-for'] || internalEvent.remoteAddress,
+        addCookieHeader:true
       }
 
       debug("renderOptions", renderOptions);
@@ -127,6 +128,7 @@ export function createExports(
     const renderOptions: RenderOptions = {
       routeData,
       clientAddress: internalEvent.headers['x-forwarded-for'] || internalEvent.remoteAddress,
+      addCookieHeader:true
     }
 
     debug("renderOptions", renderOptions);
