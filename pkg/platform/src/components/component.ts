@@ -73,6 +73,9 @@ export class Component extends ComponentResource {
             case "cloudflare:index/workerScript:WorkerScript":
               overrides = { name: prefixName(args.name).toLocaleLowerCase() };
               break;
+            case "cloudflare:index/workersKvNamespace:WorkersKvNamespace":
+              overrides = { title: prefixName(args.name).toLocaleLowerCase() };
+              break;
             case "aws:rds/cluster:Cluster":
               overrides = {
                 clusterIdentifier: prefixName(args.name).toLocaleLowerCase(),
