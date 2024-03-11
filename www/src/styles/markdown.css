@@ -131,6 +131,7 @@
 .sl-markdown-content .expressive-code .copy button {
   width: 2rem;
   height: 2rem;
+  border-color: var(--sl-color-border-code);
 }
 /* Frames */
 .sl-markdown-content .expressive-code .frame.has-title:not(.is-terminal) .header {
