@@ -22,8 +22,8 @@ The <a href={config.console}>SST Console</a> is a web based dashboard to manage 
 
 With the SST Console you can invoke functions, debug issues, view logs, and manage all your apps with your team — **<ConsoleUrl url={config.console} />**
 
-:::info
-Looking for the Old Console? You can still access it here — <ConsoleUrl url="https://old.console.sst.dev" />
+:::tip
+Want to host the Console in your own AWS account? <a href="https://forms.gle/GL4AhG5gK9mnaQmm9">Get in touch with us</a>.
 :::
 
 ---
@@ -94,7 +94,7 @@ At a high level, here's how the Console works.
 
    - You can view all the SST Functions in your app.
    - You can view all the issues in your functions in real-time with the source maps automatically applied.
-   - You can view functions logs, invoke them, or replay invocations
+   - You can view functions logs, invoke them, or replay invocations.
    - You can also save event payloads to your workspace.
    - For your local [`sst dev`](live-lambda-development.md) stage, the logs will be streamed in real-time from your local machine.
 
@@ -189,7 +189,7 @@ Issues works out of the box and has no impact on performance or cold starts.
 
 #### Adding a log subscriber
 
-The process of adding a log subscriber to your Lambda functions might fail. This can happen due to:
+The process of adding a log subscriber to your Lambda functions might fail. This can happen if:
 
 - We don't have enough permissions to add a subscriber. In this case, update the [permissions](#iam-permissions) that you've granted to the Console.
 - We've hit the limit for the number of subscribers. To fix this, you can remove one of the existing subscribers.
