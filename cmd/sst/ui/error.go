@@ -25,7 +25,6 @@ func parseError(input string) []string {
 				-1,
 			)
 			final := strings.TrimSpace(splits[len(splits)-1])
-
 			for _, split := range strings.Split(final, "\n") {
 				lines = append(lines, split)
 			}

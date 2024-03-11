@@ -160,7 +160,7 @@ console.log("~j" + JSON.stringify(mod.app({
 }
 
 func (proj *Project) LoadProviders() error {
-	if _, ok := proj.app.Providers["aws"]; !ok {
+	if len(proj.app.Providers) == 0 {
 		proj.app.Providers["aws"] = map[string]interface{}{}
 	}
 
@@ -187,7 +187,12 @@ func (proj *Project) LoadProviders() error {
 		proj.Providers[name] = p
 	}
 
-	proj.backend = proj.Providers["aws"].(provider.Backend)
+	for _, p := range proj.Providers {
+		casted, ok := p.(provider.Backend)
+		if ok {
+			proj.backend = casted
+		}
+	}
 
 	return nil
 }
