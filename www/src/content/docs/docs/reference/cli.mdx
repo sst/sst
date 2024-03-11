@@ -173,6 +173,7 @@ This is different from SST v2, in that you needed to run `sst dev` and `sst bind
 <Section type="parameters">
 #### Subcommands
 - <p>[<code class="key">set</code>](#secret-set)</p>
+- <p>[<code class="key">remove</code>](#secret-remove)</p>
 - <p>[<code class="key">list</code>](#secret-list)</p>
 </Section>
 Manage the secrets in your app defined with `sst.Secret`.
@@ -206,6 +207,34 @@ Optionally, set the secret in a specific stage.
 
 ```bash frame="none"
 sst secret set StripeSecret productionsecret --stage=production
+```
+
+</Segment>
+<NestedTitle id="secret-remove" Tag="h4" parent="secret ">remove</NestedTitle>
+<Segment>
+<Section type="signature">
+```sh frame="none"
+sst secret remove <name>
+```
+</Section>
+<Section type="parameters">
+#### Args
+- <p><code class="key">name</code></p>
+The name of the secret.
+</Section>
+
+Remove a secret.
+
+For example, remove the `sst.Secret` called `StripeSecret`.
+
+```bash frame="none"
+sst secret remove StripeSecret
+```
+
+Optionally, remove a secret in a specific stage.
+
+```bash frame="none"
+sst secret remove StripeSecret --stage=production
 ```
 
 </Segment>
@@ -364,5 +393,50 @@ Run this to initialize your app in drop-in mode. Currently, supports Next.js app
 
 This will create a `sst.config.ts` file and configure the types for your project.
 
+</Segment>
+
+### upgrade
+<Segment>
+<Section type="signature">
+```sh frame="none"
+sst upgrade [version]
+```
+</Section>
+
+<Section type="parameters">
+#### Args
+- <p><code class="key">version?</code></p>
+The version to upgrade to
+</Section>
+Upgrade the CLI to the latest version
+</Segment>
+
+### telemetry
+<Segment>
+
+<Section type="parameters">
+#### Subcommands
+- <p>[<code class="key">enable</code>](#telemetry-enable)</p>
+- <p>[<code class="key">disable</code>](#telemetry-disable)</p>
+</Section>
+Control telemetry settings
+</Segment>
+<NestedTitle id="telemetry-enable" Tag="h4" parent="telemetry ">enable</NestedTitle>
+<Segment>
+<Section type="signature">
+```sh frame="none"
+sst telemetry enable
+```
+</Section>
+Enable telemetry
+</Segment>
+<NestedTitle id="telemetry-disable" Tag="h4" parent="telemetry ">disable</NestedTitle>
+<Segment>
+<Section type="signature">
+```sh frame="none"
+sst telemetry disable
+```
+</Section>
+Disable telemetry
 </Segment>
 </div>

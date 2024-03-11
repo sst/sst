@@ -210,6 +210,25 @@ Enable or disable if the worked code is minified when bundled.
 }
 ```
 </Segment>
+### environment?
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Record</code><code class="symbol">&lt;</code><code class="primitive">string</code>, <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code><code class="symbol">&gt;</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+Key-value pairs of values that are set as [Worker environment variables](https://developers.cloudflare.com/workers/configuration/environment-variables/).
+
+They can be accessed in your function using `env.<key>`.
+
+```js
+{
+  environment: {
+    DEBUG: "true"
+  }
+}
+```
+</Segment>
 ### handler
 <Segment>
 <Section type="parameters">
