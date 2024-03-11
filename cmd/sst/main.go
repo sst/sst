@@ -953,6 +953,25 @@ This will create a ` + "`sst.config.ts`" + ` file and configure the types for yo
 			},
 		},
 		{
+			Name: "upgrade",
+			Description: Description{
+				Short: "Upgrade the CLI to the latest version",
+			},
+			Args: ArgumentList{
+				{
+					Name: "version",
+					Description: Description{
+						Short: "The version to upgrade to",
+					},
+				},
+			},
+			Run: func(cli *Cli) error {
+				return global.Upgrade(
+					cli.Positional(0),
+				)
+			},
+		},
+		{
 			Name:   "state",
 			Hidden: true,
 			Description: Description{
@@ -1042,6 +1061,9 @@ func (c *Cli) Arguments() []string {
 }
 
 func (c *Cli) Positional(index int) string {
+	if index >= len(c.arguments) {
+		return ""
+	}
 	return c.arguments[index]
 }
 
@@ -1166,7 +1188,7 @@ func (c CommandPath) PrintHelp() error {
 		maxFlag := 0
 		for _, cmd := range c {
 			for _, f := range cmd.Flags {
-				l := len(f.Name) + 2
+				l := len(f.Name) + 3
 				if l > maxFlag {
 					maxFlag = l
 				}
