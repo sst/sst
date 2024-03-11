@@ -136,7 +136,7 @@ export default defineConfig({
           tag: "script",
           attrs: {
             src: "https://widget.kapa.ai/kapa-widget.bundle.js",
-            "data-website-id": "31ffb9c3-2af4-4b7e-a1ee-060c71c60a89",
+            "data-website-id": "6853540a-5c1e-4de3-9e2f-b893b6b825a8",
             "data-project-name": "Ion",
             "data-project-color": "#E27152",
             "data-modal-header-bg-color": "white",
@@ -146,7 +146,7 @@ export default defineConfig({
             "data-modal-title-font-family": "var(--__sl-font-headings)",
             "data-modal-border-radius": "0.625rem",
             "data-modal-example-questions":
-              "How do I deploy a Next.js app?,How do I set a secret in Ion?,How do I set my AWS credentials?,How do I set a custom domain?",
+              "How do I deploy a Next.js app?,How do I set a secret?,How do I link resources together?,How do I set a custom domain for my API?",
             "data-modal-override-open-class": "kapa-modal-open",
             "data-project-logo": "/logo-square.png",
             async: true,
