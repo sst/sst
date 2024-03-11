@@ -58,6 +58,7 @@ func Upgrade(version string) error {
 	}
 
 	sstBinPath := filepath.Join(homeDir, ".sst", "bin")
+	os.RemoveAll(sstBinPath)
 	if err := os.MkdirAll(sstBinPath, os.ModePerm); err != nil {
 		return err
 	}
