@@ -966,12 +966,20 @@ This will create a ` + "`sst.config.ts`" + ` file and configure the types for yo
 			Name: "upgrade",
 			Description: Description{
 				Short: "Upgrade the CLI to the latest version",
+				Long: `
+Upgrade the CLI to the latest version. Or optionally, pass in a version to upgrade to.
+
+` + "```bash" + ` frame="none"
+sst upgrade 0.10
+` + "```" + `
+`,
 			},
 			Args: ArgumentList{
 				{
 					Name: "version",
 					Description: Description{
-						Short: "The version to upgrade to",
+						Short: "A version to upgrade to",
+						Long: "A version to upgrade to.",
 					},
 				},
 			},
@@ -985,12 +993,26 @@ This will create a ` + "`sst.config.ts`" + ` file and configure the types for yo
 			Name: "telemetry",
 			Description: Description{
 				Short: "Control telemetry settings",
+				Long: `
+Manage telemetry settings.
+
+SST collects completely anonymous telemetry data about general usage.
+
+We track the following anonymously:
+
+- Version of SST in use.
+- Command invoked, ` + "`sst dev`" + `, ` + "`sst deploy`" + `, etc.
+- General machine information, like the number of CPUs, OS, CI/CD environment, etc.
+
+This is completely optional and can be disabled at any time.
+`,
 			},
 			Children: []*Command{
 				{
 					Name: "enable",
 					Description: Description{
 						Short: "Enable telemetry",
+						Long: "Enable telemetry.",
 					},
 					Run: func(cli *Cli) error {
 						return telemetry.Enable()
@@ -1000,6 +1022,7 @@ This will create a ` + "`sst.config.ts`" + ` file and configure the types for yo
 					Name: "disable",
 					Description: Description{
 						Short: "Disable telemetry",
+						Long: "Disable telemetry.",
 					},
 					Run: func(cli *Cli) error {
 						return telemetry.Disable()

@@ -406,9 +406,15 @@ sst upgrade [version]
 <Section type="parameters">
 #### Args
 - <p><code class="key">version?</code></p>
-The version to upgrade to
+A version to upgrade to.
 </Section>
-Upgrade the CLI to the latest version
+
+Upgrade the CLI to the latest version. Or optionally, pass in a version to upgrade to.
+
+```bash frame="none"
+sst upgrade 0.10
+```
+
 </Segment>
 
 ### telemetry
@@ -419,7 +425,17 @@ Upgrade the CLI to the latest version
 - <p>[<code class="key">enable</code>](#telemetry-enable)</p>
 - <p>[<code class="key">disable</code>](#telemetry-disable)</p>
 </Section>
-Control telemetry settings
+
+Manage the telemetry settings.
+
+SST collects completely anonymous telemetry data about general usage. This is completely optional and can be disabled at any time.
+
+We track the following anonymously:
+
+- Version of SST in use.
+- Command invoked, `sst dev`, `sst deploy`, etc.
+- General machine information, like the number of CPUs, OS, CI/CD environment, etc.
+
 </Segment>
 <NestedTitle id="telemetry-enable" Tag="h4" parent="telemetry ">enable</NestedTitle>
 <Segment>
@@ -437,6 +453,6 @@ Enable telemetry
 sst telemetry disable
 ```
 </Section>
-Disable telemetry
+Disable telemetry.
 </Segment>
 </div>
