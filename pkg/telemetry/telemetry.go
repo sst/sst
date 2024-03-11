@@ -116,11 +116,15 @@ func SetVersion(value string) {
 	version = value
 }
 
+var wg sync.WaitGroup
+
 func Track(event string, properties map[string]interface{}) {
+	if !IsEnabled() {
+		return
+	}
+	wg.Add(1)
 	go func() {
-		if !IsEnabled() {
-			return
-		}
+		defer wg.Done()
 		env := telemetryEnvironment()
 		for key, value := range env {
 			properties[key] = value
@@ -135,5 +139,6 @@ func Track(event string, properties map[string]interface{}) {
 }
 
 func Close() {
+	wg.Wait()
 	client.Close()
 }
