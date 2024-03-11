@@ -39,4 +39,4 @@ jobs:
         run: |
           bun install
           cd www
-          go run ../cmd/sst deploy --stage=production
+          go run ../cmd/sst deploy --stage=production --verbose
