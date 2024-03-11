@@ -26,6 +26,7 @@ import (
 	"github.com/sst/ion/pkg/project"
 	"github.com/sst/ion/pkg/project/provider"
 	"github.com/sst/ion/pkg/server"
+	"github.com/sst/ion/pkg/telemetry"
 )
 
 var version = "dev"
@@ -39,8 +40,16 @@ var logFile = (func() *os.File {
 })()
 
 func main() {
+	telemetry.SetVersion(version)
+	defer telemetry.Close()
+	telemetry.Track("cli.start", map[string]interface{}{
+		"args": os.Args[1:],
+	})
 	err := run()
 	if err != nil {
+		telemetry.Track("cli.error", map[string]interface{}{
+			"error": err.Error(),
+		})
 		slog.Error("exited with error", "err", err)
 		if readableErr, ok := err.(*util.ReadableError); ok {
 			msg := readableErr.Error()
@@ -53,6 +62,7 @@ func main() {
 		}
 		os.Exit(1)
 	}
+	telemetry.Track("cli.success", map[string]interface{}{})
 }
 
 func run() error {
@@ -969,6 +979,32 @@ This will create a ` + "`sst.config.ts`" + ` file and configure the types for yo
 				return global.Upgrade(
 					cli.Positional(0),
 				)
+			},
+		},
+		{
+			Name: "telemetry",
+			Description: Description{
+				Short: "Control telemetry settings",
+			},
+			Children: []*Command{
+				{
+					Name: "enable",
+					Description: Description{
+						Short: "Enable telemetry",
+					},
+					Run: func(cli *Cli) error {
+						return telemetry.Enable()
+					},
+				},
+				{
+					Name: "disable",
+					Description: Description{
+						Short: "Disable telemetry",
+					},
+					Run: func(cli *Cli) error {
+						return telemetry.Disable()
+					},
+				},
 			},
 		},
 		{
