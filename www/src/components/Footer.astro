@@ -5,8 +5,9 @@ import { Icon } from '@astrojs/starlight/components';
 import config from '../../config';
 
 const slug = Astro.props.entry.slug;
+const { lang, lastUpdated } = Astro.props;
+const { template } = Astro.props.entry.data;
 const editLink = userConfig.editLink.baseUrl;
-const { template, lastUpdated } = Astro.props.entry.data;
 
 let editUrl = Astro.props.editUrl;
 
@@ -35,11 +36,15 @@ else if (slug === "docs/reference/cli") {
         <div>
           <a href={editUrl} class="sl-flex">
             <Icon name="pencil" size="1em" />
-            Edit this page on GitHub
+            Edit this page
+          </a>
+          <a href={`${config.github}/issues/new`} class="sl-flex">
+            <Icon name="github" size="1em" />
+            Find a bug? Open an issue
           </a>
           <a href={config.discord} class="sl-flex">
             <Icon name="discord" size="1em" />
-            Need help? Join us on Discord
+            Join our Discord community
           </a>
         </div>
         <p>

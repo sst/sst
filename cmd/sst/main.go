@@ -998,7 +998,7 @@ Manage telemetry settings.
 
 SST collects completely anonymous telemetry data about general usage. We track:
 
-- Version of SST in use.
+- Version of SST in use
 - Command invoked, ` + "`sst dev`" + `, ` + "`sst deploy`" + `, etc.
 - General machine information, like the number of CPUs, OS, CI/CD environment, etc.
 
