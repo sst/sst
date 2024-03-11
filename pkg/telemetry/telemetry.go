@@ -6,6 +6,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"runtime"
+	"strings"
 	"sync"
 
 	"github.com/posthog/posthog-go"
@@ -65,7 +66,7 @@ var telemetryEnvironment = sync.OnceValue((func() map[string]interface{} {
 	var out bytes.Buffer
 	cmd.Stdout = &out
 	cmd.Run()
-	rootCommitHash := out.String()
+	rootCommitHash := strings.TrimSpace(out.String())
 	projectID := ""
 	if len(rootCommitHash) == 40 {
 		projectID = rootCommitHash
@@ -88,27 +89,15 @@ var telemetryEnvironment = sync.OnceValue((func() map[string]interface{} {
 		}
 	}
 	return map[string]interface{}{
-		"id": map[string]interface{}{
-			"user":    userID,
-			"project": projectID,
-			"session": sessionID,
-		},
-		"system": map[string]interface{}{
-			"platform":     runtime.GOOS,
-			"architecture": runtime.GOARCH,
-		},
-		"cpu": map[string]interface{}{
-			"count": runtime.NumCPU(),
-		},
-		"memory": map[string]interface{}{
-			"total": int(memStats.TotalAlloc),
-		},
-		"ci": map[string]interface{}{
-			"name": ci,
-		},
-		"sst": map[string]interface{}{
-			"version": version,
-		},
+		"user_id":             userID,
+		"project_id":          projectID,
+		"session_id":          sessionID,
+		"system_platform":     runtime.GOOS,
+		"system_architecture": runtime.GOARCH,
+		"cpu_count":           runtime.NumCPU(),
+		"memory_total":        int(memStats.TotalAlloc),
+		"ci_name":             ci,
+		"sst_version":         version,
 	}
 }))
 
@@ -133,8 +122,10 @@ func Track(event string, properties map[string]interface{}) {
 			return
 		}
 		env := telemetryEnvironment()
-		properties["environment"] = env
-		userID := env["id"].(map[string]interface{})["user"]
+		for key, value := range env {
+			properties[key] = value
+		}
+		userID := env["user_id"]
 		client.Enqueue(posthog.Capture{
 			DistinctId: userID.(string),
 			Event:      event,
