@@ -996,9 +996,7 @@ sst upgrade 0.10
 				Long: `
 Manage telemetry settings.
 
-SST collects completely anonymous telemetry data about general usage.
-
-We track the following anonymously:
+SST collects completely anonymous telemetry data about general usage. We track:
 
 - Version of SST in use.
 - Command invoked, ` + "`sst dev`" + `, ` + "`sst deploy`" + `, etc.

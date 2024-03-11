@@ -101,6 +101,7 @@ export default defineConfig({
         dark: "./src/assets/logo-dark.svg",
         replacesTitle: true,
       },
+      lastUpdated: true,
       favicon: "/favicon.svg",
       pagination: false,
       customCss: [

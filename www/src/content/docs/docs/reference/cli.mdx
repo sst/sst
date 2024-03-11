@@ -426,15 +426,17 @@ sst upgrade 0.10
 - <p>[<code class="key">disable</code>](#telemetry-disable)</p>
 </Section>
 
-Manage the telemetry settings.
+Manage telemetry settings.
 
-SST collects completely anonymous telemetry data about general usage. This is completely optional and can be disabled at any time.
+SST collects completely anonymous telemetry data about general usage.
 
 We track the following anonymously:
 
 - Version of SST in use.
 - Command invoked, `sst dev`, `sst deploy`, etc.
 - General machine information, like the number of CPUs, OS, CI/CD environment, etc.
+
+This is completely optional and can be disabled at any time.
 
 </Segment>
 <NestedTitle id="telemetry-enable" Tag="h4" parent="telemetry ">enable</NestedTitle>
@@ -444,7 +446,7 @@ We track the following anonymously:
 sst telemetry enable
 ```
 </Section>
-Enable telemetry
+Enable telemetry.
 </Segment>
 <NestedTitle id="telemetry-disable" Tag="h4" parent="telemetry ">disable</NestedTitle>
 <Segment>
