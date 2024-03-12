@@ -456,8 +456,8 @@ async function generateTsDoc() {
                 f.name === "$jsonParse" && param.name === "reviver"
                   ? renderJsonParseReviverType()
                   : f.name === "$jsonStringify" && param.name === "replacer"
-                    ? renderJsonStringifyReplacerType()
-                    : renderType(param.type!);
+                  ? renderJsonStringifyReplacerType()
+                  : renderType(param.type!);
 
               return [
                 `- <p><code class="key">${renderSignatureArg(

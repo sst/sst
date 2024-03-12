@@ -129,6 +129,11 @@ export interface App {
    * ```
    */
   providers?: Record<string, any>;
+
+  /**
+   * The backend to store all state for your app. This is where SST keeps track of deployed resources and secrets.
+   */
+  backend?: "aws" | "cloudflare";
 }
 
 export interface AppInput {

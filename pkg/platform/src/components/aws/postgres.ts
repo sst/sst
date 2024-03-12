@@ -278,7 +278,13 @@ export class Postgres
         resources: [this.cluster.masterUserSecrets[0].secretArn],
       },
       {
-        actions: ["rds-data:ExecuteStatement"],
+        actions: [
+          "rds-data:BatchExecuteStatement",
+          "rds-data:BeginTransaction",
+          "rds-data:CommitTransaction",
+          "rds-data:ExecuteStatement",
+          "rds-data:RollbackTransaction",
+        ],
         resources: [this.cluster.arn],
       },
     ];

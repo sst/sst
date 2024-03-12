@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 
 	"github.com/sst/ion/internal/fs"
+	"github.com/sst/ion/internal/util"
 	"github.com/sst/ion/pkg/js"
 	"github.com/sst/ion/pkg/project/provider"
 )
@@ -17,6 +18,7 @@ type App struct {
 	Stage         string                            `json:"stage"`
 	RemovalPolicy string                            `json:"removalPolicy"`
 	Providers     map[string]map[string]interface{} `json:"providers"`
+	Backend       string                            `json:"backend"`
 }
 
 type Project struct {
@@ -160,7 +162,7 @@ console.log("~j" + JSON.stringify(mod.app({
 }
 
 func (proj *Project) LoadProviders() error {
-	if _, ok := proj.app.Providers["aws"]; !ok {
+	if len(proj.app.Providers) == 0 {
 		proj.app.Providers["aws"] = map[string]interface{}{}
 	}
 
@@ -187,7 +189,24 @@ func (proj *Project) LoadProviders() error {
 		proj.Providers[name] = p
 	}
 
-	proj.backend = proj.Providers["aws"].(provider.Backend)
+	if proj.app.Backend != "" {
+		p, ok := proj.Providers[proj.app.Backend]
+		if !ok {
+			return util.NewReadableError(nil, `You specified "`+proj.app.Backend+`" as the backend, but it is not in the providers section of the project configuration file.`)
+		}
+		casted, ok := p.(provider.Backend)
+		if !ok {
+			return util.NewReadableError(nil, proj.app.Backend+` is not a valid backend provider.`)
+		}
+		proj.backend = casted
+	} else {
+		for _, p := range proj.Providers {
+			casted, ok := p.(provider.Backend)
+			if ok {
+				proj.backend = casted
+			}
+		}
+	}
 
 	return nil
 }
