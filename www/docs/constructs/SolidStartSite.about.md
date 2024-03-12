@@ -491,7 +491,7 @@ import { Certificate } from "aws-cdk-lib/aws-certificatemanager";
 
 new SolidStartSite(stack, "Site", {
   path: "my-solid-app/",
-  cutomDomain: {
+  customDomain: {
     isExternalDomain: true,
     domainName: "my-app.com",
     cdk: {
