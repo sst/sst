@@ -87,8 +87,8 @@ func (p *Project) writeTypes() error {
 	}
 	defer file.Close()
 
-	file.WriteString(`import "./src/global.d.ts"`)
-	file.WriteString("\n\n")
+	file.WriteString(`import "./src/global.d.ts"` + "\n")
+	file.WriteString(`import { AppInput, App, Config } from "./src/config"` + "\n")
 
 	for name := range p.app.Providers {
 		file.WriteString(`import _` + name + `, { ProviderArgs as _` + name + `Args } from "@pulumi/` + name + `";` + "\n")
@@ -96,22 +96,23 @@ func (p *Project) writeTypes() error {
 
 	file.WriteString("\n\n")
 
-	file.WriteString(`declare module "./src/config" {` + "\n")
-	file.WriteString(`  interface App {` + "\n")
-	file.WriteString(`    providers?: {` + "\n")
-	for name := range p.app.Providers {
-		file.WriteString(`      ` + name + `?: _` + name + `Args;` + "\n")
-	}
-	file.WriteString(`    }` + "\n")
-	file.WriteString(`  }` + "\n")
-	file.WriteString(`}` + "\n")
-	file.WriteString("\n")
-
 	file.WriteString(`declare global {` + "\n")
 	for name := range p.app.Providers {
 		file.WriteString(`  // @ts-expect-error` + "\n")
 		file.WriteString(`  export import ` + name + ` = _` + name + "\n")
 	}
+	file.WriteString(`  interface Providers {` + "\n")
+	file.WriteString(`    providers: {` + "\n")
+	for name := range p.app.Providers {
+		file.WriteString(`      ` + name + `?: _` + name + `Args;` + "\n")
+	}
+	file.WriteString(`    }` + "\n")
+	file.WriteString(`  }` + "\n")
+	file.WriteString(`  export const $config: (` + "\n")
+	file.WriteString(`    input: Omit<Config, "app"> & {` + "\n")
+	file.WriteString(`      app(input: AppInput): Omit<App, "providers"> & Providers;` + "\n")
+	file.WriteString(`    },` + "\n")
+	file.WriteString(`  ) => Config;` + "\n")
 	file.WriteString(`}` + "\n")
 
 	return nil

@@ -56,9 +56,6 @@ declare global {
   export import sst = _sst;
 
   /** @internal */
-  export const $config: typeof config;
-
-  /** @internal */
   export const $linkable: typeof import("./components/link").Link.makeLinkable;
 
   /**

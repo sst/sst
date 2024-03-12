@@ -8,6 +8,7 @@ export default $config({
       providers: {
         cloudflare: {},
       },
+      backend: "cloudflare",
     };
   },
   async run() {
