@@ -106,7 +106,7 @@ export interface RouterArgs {
  * ```ts
  * new sst.aws.Router("MyRouter", {
  *   routes: {
- *     "/*": "some-interal-service.com"
+ *     "/*": "some-internal-service.com"
  *   }
  * });
  * ```
@@ -303,6 +303,7 @@ export class Router extends Component implements Link.Linkable {
       });
     }
   }
+  urn: Output<string>;
 
   /**
    * The URL of the Router.
