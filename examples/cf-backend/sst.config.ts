@@ -5,7 +5,7 @@ export default $config({
       name: "cf-backend",
       removalPolicy: input?.stage === "production" ? "retain" : "remove",
       backend: "cloudflare",
-      providers: { cloudflare: {}, github: {} },
+      providers: { cloudflare: {} },
     };
   },
   async run() {
