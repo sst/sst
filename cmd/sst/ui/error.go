@@ -25,12 +25,11 @@ func parseError(input string) []string {
 				-1,
 			)
 			final := strings.TrimSpace(splits[len(splits)-1])
-
 			for _, split := range strings.Split(final, "\n") {
 				lines = append(lines, split)
 			}
 		}
 		return lines
 	}
-	return []string{input, "ADD THIS ERROR HERE https://www.notion.so/sst-dev/Flaky-errors-2a51e5e471f745ee9d0b8d69c5b4f8c8?pvs=4"}
+	return []string{input}
 }

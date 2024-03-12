@@ -26,6 +26,7 @@ import (
 	"github.com/sst/ion/pkg/project"
 	"github.com/sst/ion/pkg/project/provider"
 	"github.com/sst/ion/pkg/server"
+	"github.com/sst/ion/pkg/telemetry"
 )
 
 var version = "dev"
@@ -39,8 +40,16 @@ var logFile = (func() *os.File {
 })()
 
 func main() {
+	telemetry.SetVersion(version)
+	defer telemetry.Close()
+	telemetry.Track("cli.start", map[string]interface{}{
+		"args": os.Args[1:],
+	})
 	err := run()
 	if err != nil {
+		telemetry.Track("cli.error", map[string]interface{}{
+			"error": err.Error(),
+		})
 		slog.Error("exited with error", "err", err)
 		if readableErr, ok := err.(*util.ReadableError); ok {
 			msg := readableErr.Error()
@@ -53,6 +62,7 @@ func main() {
 		}
 		os.Exit(1)
 	}
+	telemetry.Track("cli.success", map[string]interface{}{})
 }
 
 func run() error {
@@ -477,7 +487,9 @@ sst secret set StripeSecret productionsecret --stage=production
 						if err != nil {
 							return util.NewReadableError(err, "Could not set secret")
 						}
-						fmt.Println("Secret set")
+						color.New(color.FgGreen).Print("✔")
+						color.New(color.FgWhite).Printf("  Set \"%s\"", key)
+						fmt.Println()
 						return nil
 					},
 				},
@@ -540,7 +552,10 @@ sst secret remove StripeSecret --stage=production
 
 						// check if the secret exists
 						if _, ok := secrets[key]; !ok {
-							return util.NewReadableError(nil, "Secret does not exist")
+							color.New(color.FgRed).Print("❌")
+							color.New(color.FgWhite).Printf("  Secret \"%s\" does not exist", key)
+							fmt.Println()
+							return nil
 						}
 
 						delete(secrets, key)
@@ -548,7 +563,9 @@ sst secret remove StripeSecret --stage=production
 						if err != nil {
 							return util.NewReadableError(err, "Could not set secret")
 						}
-						fmt.Println("Secret removed")
+						color.New(color.FgGreen).Print("✔")
+						color.New(color.FgWhite).Printf("  Removed \"%s\"", key)
+						fmt.Println()
 						return nil
 					},
 				},
@@ -946,6 +963,72 @@ This will create a ` + "`sst.config.ts`" + ` file and configure the types for yo
 			},
 		},
 		{
+			Name: "upgrade",
+			Description: Description{
+				Short: "Upgrade the CLI to the latest version",
+				Long: `
+Upgrade the CLI to the latest version. Or optionally, pass in a version to upgrade to.
+
+` + "```bash" + ` frame="none"
+sst upgrade 0.10
+` + "```" + `
+`,
+			},
+			Args: ArgumentList{
+				{
+					Name: "version",
+					Description: Description{
+						Short: "A version to upgrade to",
+						Long: "A version to upgrade to.",
+					},
+				},
+			},
+			Run: func(cli *Cli) error {
+				return global.Upgrade(
+					cli.Positional(0),
+				)
+			},
+		},
+		{
+			Name: "telemetry",
+			Description: Description{
+				Short: "Control telemetry settings",
+				Long: `
+Manage telemetry settings.
+
+SST collects completely anonymous telemetry data about general usage. We track:
+
+- Version of SST in use
+- Command invoked, ` + "`sst dev`" + `, ` + "`sst deploy`" + `, etc.
+- General machine information, like the number of CPUs, OS, CI/CD environment, etc.
+
+This is completely optional and can be disabled at any time.
+`,
+			},
+			Children: []*Command{
+				{
+					Name: "enable",
+					Description: Description{
+						Short: "Enable telemetry",
+						Long: "Enable telemetry.",
+					},
+					Run: func(cli *Cli) error {
+						return telemetry.Enable()
+					},
+				},
+				{
+					Name: "disable",
+					Description: Description{
+						Short: "Disable telemetry",
+						Long: "Disable telemetry.",
+					},
+					Run: func(cli *Cli) error {
+						return telemetry.Disable()
+					},
+				},
+			},
+		},
+		{
 			Name:   "state",
 			Hidden: true,
 			Description: Description{
@@ -1035,6 +1118,9 @@ func (c *Cli) Arguments() []string {
 }
 
 func (c *Cli) Positional(index int) string {
+	if index >= len(c.arguments) {
+		return ""
+	}
 	return c.arguments[index]
 }
 
@@ -1159,7 +1245,7 @@ func (c CommandPath) PrintHelp() error {
 		maxFlag := 0
 		for _, cmd := range c {
 			for _, f := range cmd.Flags {
-				l := len(f.Name) + 2
+				l := len(f.Name) + 3
 				if l > maxFlag {
 					maxFlag = l
 				}
