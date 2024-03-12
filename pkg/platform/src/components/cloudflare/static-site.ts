@@ -5,10 +5,11 @@ import {
   ComponentResourceOptions,
   Output,
   all,
+  asset,
   interpolate,
   output,
 } from "@pulumi/pulumi";
-import { Bucket, BucketArgs } from "./bucket.js";
+import { Kv, KvArgs } from "./kv.js";
 import { Component, Prettify, Transform, transform } from "../component.js";
 import { Hint } from "../hint.js";
 import { Link } from "../link.js";
@@ -16,8 +17,7 @@ import { Input } from "../input.js";
 import { VisibleError } from "../error.js";
 import { execSync } from "child_process";
 import { globSync } from "glob";
-import { BucketFile, BucketFiles } from "../aws/providers/bucket-files.js";
-//import { DistributionInvalidation } from "./providers/distribution-invalidation.js";
+import { KvDataEntry, KvData } from "./providers/kv-data.js";
 import { Worker, WorkerArgs, WorkerDomainArgs } from "./worker.js";
 
 interface FileOptions {
@@ -325,81 +325,14 @@ export interface StaticSiteArgs {
     fileOptions?: Input<Prettify<FileOptions>[]>;
   }>;
   /**
-   * Configure how the CloudFront cache invalidations are handled. This is run after your static site has been deployed.
-   * :::tip
-   * You get 1000 free invalidations per month. After that you pay $0.005 per invalidation path. [Read more here](https://aws.amazon.com/cloudfront/pricing/).
-   * :::
-   * @default `&lcub;paths: "all", wait: false&rcub;`
-   * @example
-   * Turn off invalidations.
-   * ```js
-   * {
-   *   invalidation: false
-   * }
-   * ```
-   * Wait for all paths to be invalidated.
-   * ```js
-   * {
-   *   invalidation: {
-   *     paths: "all",
-   *     wait: true
-   *   }
-   * }
-   * ```
-   */
-  invalidation?: Input<
-    | false
-    | {
-        /**
-         * Configure if `sst deploy` should wait for the CloudFront cache invalidation to finish.
-         *
-         * :::tip
-         * For non-prod environments it might make sense to pass in `false`.
-         * :::
-         *
-         * Waiting for the CloudFront cache invalidation process to finish ensures that the new content will be served once the deploy finishes. However, this process can sometimes take more than 5 mins.
-         * @default `false`
-         * @example
-         * ```js
-         * {
-         *   invalidation: {
-         *     wait: true
-         *   }
-         * }
-         * ```
-         */
-        wait?: Input<boolean>;
-        /**
-         * The paths to invalidate.
-         *
-         * You can either pass in an array of glob patterns to invalidate specific files. Or you can use the built-in option `all` to invalidation all files when any file changes.
-         *
-         * :::note
-         * Invalidating `all` counts as one invalidation, while each glob pattern counts as a single invalidation path.
-         * :::
-         * @default `"all"`
-         * @example
-         * Invalidate the `index.html` and all files under the `products/` route.
-         * ```js
-         * {
-         *   invalidation: {
-         *     paths: ["/index.html", "/products/*"]
-         *   }
-         * }
-         * ```
-         */
-        paths?: Input<"all" | string[]>;
-      }
-  >;
-  /**
    * [Transform](/docs/components#transform) how this component creates its underlying
    * resources.
    */
   transform?: {
     /**
-     * Transform the Bucket resource used for uploading the assets.
+     * Transform the Kv resource used for uploading the assets.
      */
-    assets?: Transform<BucketArgs>;
+    assets?: Transform<KvArgs>;
   };
 }
 
@@ -532,7 +465,7 @@ export interface StaticSiteArgs {
  * ```
  */
 export class StaticSite extends Component implements Link.Linkable {
-  private assets: Bucket;
+  private assets: Kv;
   private router: Worker;
 
   constructor(
@@ -548,18 +481,19 @@ export class StaticSite extends Component implements Link.Linkable {
     const indexPage = normalizeIndexPage();
     generateViteTypes();
     const outputPath = buildApp();
-    const bucket = createBucket();
+    const storage = createStorage();
 
-    const bucketFile = uploadAssets();
+    // TODO CHANGED
+    const assetManifest = generateAssetManifest();
+    const kvData = uploadAssets();
     // TODO CHANGED
     const worker = createRouter();
-    createDistributionInvalidation();
 
     all([sitePath, environment]).apply(([sitepath, environment]) => {
       Link.Receiver.register(sitepath, [], environment);
     });
 
-    this.assets = bucket;
+    this.assets = storage;
     this.router = worker;
     Hint.register(this.urn, worker.url as Output<string>);
     this.registerOutputs({
@@ -593,12 +527,11 @@ export class StaticSite extends Component implements Link.Linkable {
       );
     }
 
-    function createBucket() {
-      return new Bucket(
-        `${name}Assets`,
-        transform(args.transform?.assets, {}),
-        { parent, retainOnDelete: false },
-      );
+    function createStorage() {
+      return new Kv(`${name}Assets`, transform(args.transform?.assets, {}), {
+        parent,
+        retainOnDelete: false,
+      });
     }
 
     function generateViteTypes() {
@@ -675,11 +608,9 @@ export class StaticSite extends Component implements Link.Linkable {
       );
     }
 
-    function uploadAssets() {
+    function generateAssetManifest() {
       return all([outputPath, args.assets]).apply(
         async ([outputPath, assets]) => {
-          const bucketFiles: BucketFile[] = [];
-
           // Build fileOptions
           const fileOptions = assets?.fileOptions ?? [
             {
@@ -693,7 +624,8 @@ export class StaticSite extends Component implements Link.Linkable {
           ];
 
           // Upload files based on fileOptions
-          const filesUploaded: string[] = [];
+          const manifest = [];
+          const filesProcessed: string[] = [];
           for (const fileOption of fileOptions.reverse()) {
             const files = globSync(fileOption.files, {
               cwd: path.resolve(outputPath),
@@ -705,9 +637,10 @@ export class StaticSite extends Component implements Link.Linkable {
                   ? [fileOption.ignore]
                   : fileOption.ignore ?? []),
               ],
-            }).filter((file) => !filesUploaded.includes(file));
+            }).filter((file) => !filesProcessed.includes(file));
+            filesProcessed.push(...files);
 
-            bucketFiles.push(
+            manifest.push(
               ...(await Promise.all(
                 files.map(async (file) => {
                   const source = path.resolve(outputPath, file);
@@ -726,24 +659,30 @@ export class StaticSite extends Component implements Link.Linkable {
                 }),
               )),
             );
-            filesUploaded.push(...files);
           }
 
-          return new BucketFiles(
-            `${name}AssetFiles`,
-            {
-              endpoint: `https://${$app.providers?.cloudflare
-                ?.accountId!}.r2.cloudflarestorage.com`,
-              credentials: {
-                accessKeyId: process.env.CLOUDFLARE_R2_ACCESS_KEY_ID!,
-                secretAccessKey: process.env.CLOUDFLARE_R2_SECRET_ACCESS_KEY!,
-              },
-              bucketName: bucket.name,
-              files: bucketFiles,
-            },
-            { parent, ignoreChanges: $dev ? ["*"] : undefined },
-          );
+          return manifest;
         },
+      );
+    }
+
+    function uploadAssets() {
+      return new KvData(
+        `${name}AssetFiles`,
+        {
+          accountId: $app.providers?.cloudflare?.accountId!,
+          namespaceId: storage.id,
+          entries: assetManifest.apply((manifest) =>
+            manifest.map((m) => ({
+              source: m.source,
+              key: m.key,
+              hash: m.hash,
+              cacheControl: m.cacheControl,
+              contentType: m.contentType,
+            })),
+          ),
+        },
+        { parent, ignoreChanges: $dev ? ["*"] : undefined },
       );
     }
 
@@ -792,7 +731,6 @@ export class StaticSite extends Component implements Link.Linkable {
     }
 
     function createRouter() {
-      // TODO handle index and error response
       return new Worker(
         `${name}Router`,
         {
@@ -807,68 +745,27 @@ export class StaticSite extends Component implements Link.Linkable {
             INDEX_PAGE: indexPage,
             ...(args.errorPage ? { ERROR_PAGE: args.errorPage } : {}),
           },
+          build: {
+            banner: assetManifest.apply(
+              (assetManifest) =>
+                `const AssetManifest = ${JSON.stringify(
+                  Object.fromEntries(assetManifest.map((e) => [e.key, e.hash])),
+                )};`,
+            ),
+          },
           transform: {
-            worker: {
-              r2BucketBindings: [
+            worker: (workerArgs) => {
+              workerArgs.kvNamespaceBindings = [
                 {
-                  name: "BUCKET",
-                  bucketName: bucket.name,
+                  name: "ASSETS",
+                  namespaceId: storage.id,
                 },
-              ],
+              ];
             },
           },
         },
         // create distribution after s3 upload finishes
-        { dependsOn: bucketFile, parent },
-      );
-    }
-
-    function createDistributionInvalidation() {
-      all([outputPath, args.invalidation]).apply(
-        ([outputPath, invalidationRaw]) => {
-          // Normalize invalidation
-          if (invalidationRaw === false) return;
-          const invalidation = {
-            wait: false,
-            paths: "all" as const,
-            ...invalidationRaw,
-          };
-
-          // Build invalidation paths
-          const invalidationPaths =
-            invalidation.paths === "all" ? ["/*"] : invalidation.paths;
-          if (invalidationPaths.length === 0) return;
-
-          // Calculate a hash based on the contents of the S3 files. This will be
-          // used to determine if we need to invalidate our CloudFront cache.
-          //
-          // The below options are needed to support following symlinks when building zip files:
-          // - nodir: This will prevent symlinks themselves from being copied into the zip.
-          // - follow: This will follow symlinks and copy the files within.
-          const hash = crypto.createHash("md5");
-          globSync("**", {
-            dot: true,
-            nodir: true,
-            follow: true,
-            cwd: path.resolve(outputPath),
-          }).forEach((filePath) =>
-            hash.update(fs.readFileSync(path.resolve(outputPath, filePath))),
-          );
-
-          //          new DistributionInvalidation(
-          //            `${name}Invalidation`,
-          //            {
-          //              distributionId: distribution.nodes.distribution.id,
-          //              paths: invalidationPaths,
-          //              version: hash.digest("hex"),
-          //              wait: invalidation.wait,
-          //            },
-          //            {
-          //              parent,
-          //              ignoreChanges: $dev ? ["*"] : undefined,
-          //            },
-          //          );
-        },
+        { dependsOn: kvData, parent },
       );
     }
   }

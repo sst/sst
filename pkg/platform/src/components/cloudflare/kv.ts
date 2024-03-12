@@ -66,10 +66,10 @@ export class Kv extends Component {
   }
 
   /**
-   * The generated name of the KV namespace.
+   * The generated id of the KV namespace.
    */
-  public get title() {
-    return this.namespace.title;
+  public get id() {
+    return this.namespace.id;
   }
 
   /**

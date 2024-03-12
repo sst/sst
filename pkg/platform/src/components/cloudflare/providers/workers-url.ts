@@ -49,6 +49,9 @@ class Provider implements dynamic.ResourceProvider {
     try {
       const ret = await cfFetch<{ subdomain: string }>(
         `/accounts/${inputs.accountId}/workers/subdomain`,
+        {
+          headers: { "Content-Type": "application/json" },
+        },
       );
       return ret.subdomain;
     } catch (error: any) {
@@ -63,6 +66,7 @@ class Provider implements dynamic.ResourceProvider {
         `/accounts/${inputs.accountId}/workers/scripts/${inputs.scriptName}/subdomain`,
         {
           method: "POST",
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ enabled: inputs.enabled }),
         },
       );

@@ -732,7 +732,7 @@ export class StaticSite extends Component implements Link.Linkable {
           ];
 
           // Upload files based on fileOptions
-          const filesUploaded: string[] = [];
+          const filesProcessed: string[] = [];
           for (const fileOption of fileOptions.reverse()) {
             const files = globSync(fileOption.files, {
               cwd: path.resolve(outputPath),
@@ -744,7 +744,7 @@ export class StaticSite extends Component implements Link.Linkable {
                   ? [fileOption.ignore]
                   : fileOption.ignore ?? []),
               ],
-            }).filter((file) => !filesUploaded.includes(file));
+            }).filter((file) => !filesProcessed.includes(file));
 
             bucketFiles.push(
               ...(await Promise.all(
@@ -765,7 +765,7 @@ export class StaticSite extends Component implements Link.Linkable {
                 }),
               )),
             );
-            filesUploaded.push(...files);
+            filesProcessed.push(...files);
           }
 
           return new BucketFiles(

@@ -12,34 +12,18 @@ export interface BucketFile {
 }
 
 export interface BucketFilesInputs {
-  endpoint?: Input<string>;
-  credentials?: Input<{
-    accessKeyId: Input<string>;
-    secretAccessKey: Input<string>;
-  }>;
   bucketName: Input<string>;
   files: Input<BucketFile[]>;
 }
 
 interface Inputs {
-  endpoint?: string;
-  credentials?: {
-    accessKeyId: string;
-    secretAccessKey: string;
-  };
   bucketName: string;
   files: BucketFile[];
 }
 
 class Provider implements dynamic.ResourceProvider {
   async create(inputs: Inputs): Promise<dynamic.CreateResult> {
-    await this.upload(
-      inputs.endpoint,
-      inputs.credentials,
-      inputs.bucketName,
-      inputs.files,
-      [],
-    );
+    await this.upload(inputs.bucketName, inputs.files, []);
     return { id: "files" };
   }
 
@@ -49,8 +33,6 @@ class Provider implements dynamic.ResourceProvider {
     news: Inputs,
   ): Promise<dynamic.UpdateResult> {
     await this.upload(
-      news.endpoint,
-      news.credentials,
       news.bucketName,
       news.files,
       news.bucketName === olds.bucketName ? olds.files : [],
@@ -59,15 +41,13 @@ class Provider implements dynamic.ResourceProvider {
   }
 
   async upload(
-    endpoint: string | undefined,
-    credentials: Inputs["credentials"],
     bucketName: string,
     files: BucketFile[],
     oldFiles: BucketFile[],
   ) {
     const oldFilesMap = new Map(oldFiles.map((f) => [f.key, f]));
 
-    const s3 = useClient(S3Client, { endpoint, credentials });
+    const s3 = useClient(S3Client);
     await Promise.all(
       files.map(async (file) => {
         const oldFile = oldFilesMap.get(file.key);

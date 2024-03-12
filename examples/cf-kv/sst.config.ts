@@ -3,7 +3,7 @@
 export default $config({
   app(input) {
     return {
-      name: "cf-bucket",
+      name: "cf-kv",
       removalPolicy: input?.stage === "production" ? "retain" : "remove",
       providers: {
         aws: {},

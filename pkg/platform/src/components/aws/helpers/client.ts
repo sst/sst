@@ -5,11 +5,6 @@ import { lazy } from "../../../util/lazy";
 const useClientCache = lazy(() => new Map<string, any>());
 
 type ClientOptions = {
-  credentials?: {
-    accessKeyId: string;
-    secretAccessKey: string;
-  };
-  endpoint?: string;
   region?: string;
   retrableErrors?: string[];
 };
@@ -33,8 +28,6 @@ export const useClient = <C extends any>(
     };
   })();
   const result = new client({
-    credentials: opts?.credentials,
-    endpoint: opts?.endpoint,
     region: opts?.region,
     retryStrategy: new StandardRetryStrategy(async () => 10000, {
       retryDecider: (e: any) => {
