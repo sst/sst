@@ -16,7 +16,7 @@
  * });
  * ```
  *
- * The variables contain the context of the app that's being run. While the functions help you work with the [Ouputs of components](/docs/components##inputs--outputs).
+ * The variables contain the context of the app that's being run. While the functions help you work with the [Outputs of components](/docs/components##inputs--outputs).
  *
  * @packageDocumentation
  */
