@@ -5,19 +5,27 @@ export default $config({
     return {
       name: "test",
       removalPolicy: "retain-all",
+      backend: "aws",
       providers: {
-        aws: {},
+        aws: {
+          region: "us-west-1",
+        },
       },
     };
   },
   async run() {
-    const fn = new sst.aws.Function("MyFunction", {
+    const fn = new sst.aws.Function("SomeFunction", {
       handler: "src/index.handler",
       url: true,
     });
-    const bucket = new aws.s3.Bucket("MyBucket", { bucket: "foo" });
+    const router = new sst.aws.Router("MyRouter", {
+      routes: {
+        "/*": fn.url,
+      },
+    });
     return {
       url: fn.url,
+      router: router.url,
     };
   },
 });
