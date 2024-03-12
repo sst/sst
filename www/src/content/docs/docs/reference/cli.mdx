@@ -311,6 +311,22 @@ This is useful if you want to run multiple commands, all while accessing the lin
 
 </Segment>
 
+### add
+<Segment>
+<Section type="signature">
+```sh frame="none"
+sst add <provider>
+```
+</Section>
+
+<Section type="parameters">
+#### Args
+- <p><code class="key">provider</code></p>
+The provider to add
+</Section>
+Add a new provider
+</Segment>
+
 ### install
 <Segment>
 <Section type="signature">
@@ -428,11 +444,9 @@ sst upgrade 0.10
 
 Manage telemetry settings.
 
-SST collects completely anonymous telemetry data about general usage.
+SST collects completely anonymous telemetry data about general usage. We track:
 
-We track the following anonymously:
-
-- Version of SST in use.
+- Version of SST in use
 - Command invoked, `sst dev`, `sst deploy`, etc.
 - General machine information, like the number of CPUs, OS, CI/CD environment, etc.
 
