@@ -3,7 +3,7 @@ title: Live
 description: Make changes and test your functions in milliseconds.
 ---
 
-Live is a feature of SST that lets you test changes made to your functions in milliseconds. Your changes work without having to redeploy. And while being invoked remotely.
+Live is a feature of SST that lets you test changes made to your functions in milliseconds. Your changes work without having to redeploy. And they can be invoked remotely.
 
 :::tip
 By default, `sst dev` will run all the functions in your app _"live"_.
@@ -20,7 +20,7 @@ This setup of running your functions locally and proxying the results back allow
 
 - Your changes are **reloaded in under 10ms**.
 - You can set **breakpoints to debug** your function in your favorite IDE.
-- Functions can be invoke remotely. For example, say `https://my-api.com/hello` is your API endpoint, hitting that will run the local version of that function.
+- Functions can be invoke remotely. For example, say `https://my-api.com/hello` is your API endpoint. Hitting that will run the local version of that function.
   - This applies to more than just APIs. Any cron job or async event that gets invoked remotely will also run your local function.
   - It allows you to very easily debug and **test webhooks**, since you can just give the webhook your API endpoint.
   - Supports all function triggers, there's no need to mock an event.
@@ -30,7 +30,7 @@ This setup of running your functions locally and proxying the results back allow
 
 ## How it works
 
-On AWS Live uses [IoT over WebSocket](https://docs.aws.amazon.com/iot/latest/developerguide/protocols.html) to communicate between your local machine and the remote Lambda function.
+On AWS, Live uses [IoT over WebSocket](https://docs.aws.amazon.com/iot/latest/developerguide/protocols.html) to communicate between your local machine and the remote Lambda function.
 
 :::note
 Every AWS account comes with a AWS IoT Core endpoint by default.
@@ -40,13 +40,13 @@ This is roughly what the flow looks like:
 
 1. When you run `sst dev`, it deploys your app and replaces the Lambda functions with a _stub_ version.
 2. It also starts up a local WebSocket client and connects to your AWS accounts' IoT endpoint.
-3. Now, when a Lambda function in your app is invoked, it publishes an event, where the payload is the Lambda function request.
+3. When a Lambda function in your app is invoked, it publishes an event, where the payload is the Lambda function request.
 4. Your local WebSocket client receives this event. It publishes an event acknowledging that it received the request.
 5. Next, it runs the local version of the function and publishes an event with the function response as the payload. The local version is run as a Node.js Worker.
 6. Finally, the stub Lambda function receives the event and responds with the payload.
 
 :::tip
-The _stub_ function that's deployed uses a different runtime than the actual function. This is because it's used as a proxy and is optimized to reduce cold starts.
+The _stub_ function that's deployed uses a different runtime than the actual function.
 :::
 
 ---
@@ -71,7 +71,7 @@ export async function main(event) {
 
 #### Connect to a local DB
 
-You might have some resources that are only available locally. For example, a local database server (MySQL or PostgreSQL).
+You might have some resources that are only available locally. For example, a local database server.
 
 To connect to these, you can check the `SST_LIVE` environment variable.
 
@@ -89,7 +89,7 @@ AWS IoT that powers Live is **completely serverless**. So you don't get charged 
 
 It's also pretty cheap. With a free tier of 500k events per month and roughly $1.00 per million for the next billion messages. You can [check out the details here](https://aws.amazon.com/iot-core/pricing/).
 
-As a result this approach has worked for large teams with dozens of developers.
+This approach has been economical even for large teams with dozens of developers.
 
 ---
 
@@ -103,7 +103,7 @@ Live also supports connecting to AWS resources inside a VPC.
 
 ### Using a VPC
 
-By default your local Lambda function cannot connect to resources in a VPC. You'll need to:
+By default your local functions cannot connect to resources in a VPC. You'll need to:
 
 1. Setup a VPN connection from your local machine to your VPC network. You can use the AWS Client VPN service to set it up. [Follow the Mutual authentication section in this doc](https://docs.aws.amazon.com/vpn/latest/clientvpn-admin/client-authentication.html#mutual) to setup the certificates and import them into your Amazon Certificate Manager.
 2. Then [create a Client VPC Endpoint](https://aws.amazon.com/blogs/networking-and-content-delivery/introducing-aws-client-vpn-to-securely-access-aws-and-on-premises-resources/), and associate it with your VPC.
@@ -127,9 +127,9 @@ For VS Code, add the following Launch Configuration to `.vscode/launch.json`.
       "name": "Debug SST Live",
       "type": "node",
       "request": "launch",
+      "runtimeArgs": ["dev"],
       "console": "integratedTerminal",
       "skipFiles": ["<node_internals>/**"],
-      "runtimeArgs": ["dev", "--increase-timeout"],
       "runtimeExecutable": "${workspaceRoot}/node_modules/.bin/sst"
     }
   ]
