@@ -1,14 +1,15 @@
 /// <reference path="./.sst/platform/config.d.ts" />
-
 export default $config({
   app(input) {
     return {
       name: "cf-backend",
       removalPolicy: input?.stage === "production" ? "retain" : "remove",
-      providers: {
-        cloudflare: {},
-      },
       backend: "cloudflare",
+      providers: {
+        aws: {},
+        cloudflare: {},
+        github: {},
+      },
     };
   },
   async run() {

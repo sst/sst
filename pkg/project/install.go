@@ -129,7 +129,3 @@ func (p *Project) fetchDeps() error {
 	}
 	return nil
 }
-
-func (p *Project) Add() error {
-	return nil
-}

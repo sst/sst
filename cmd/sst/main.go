@@ -753,6 +753,53 @@ This is useful if you want to run multiple commands, all while accessing the lin
 			},
 		},
 		{
+			Name: "add",
+			Description: Description{
+				Short: "Add a new provider",
+			},
+			Args: []Argument{
+				{
+					Name:     "provider",
+					Required: true,
+					Description: Description{
+						Short: "The provider to add",
+					},
+				},
+			},
+			Run: func(cli *Cli) error {
+				pkg := cli.Positional(0)
+				fmt.Println("Adding provider", pkg+"...")
+				cfgPath, err := project.Discover()
+				if err != nil {
+					return err
+				}
+
+				p, err := project.New(&project.ProjectConfig{
+					Version: version,
+					Config:  cfgPath,
+				})
+				if err != nil {
+					return err
+				}
+				if !p.CheckPlatform(version) {
+					err := p.CopyPlatform(version)
+					if err != nil {
+						return err
+					}
+				}
+
+				err = p.Add(pkg)
+				if err != nil {
+					return err
+				}
+				err = p.Install()
+				if err != nil {
+					return err
+				}
+				return nil
+			},
+		},
+		{
 			Name: "install",
 			Description: Description{
 				Short: "Install dependencies specified in sst.config.ts",
@@ -979,7 +1026,7 @@ sst upgrade 0.10
 					Name: "version",
 					Description: Description{
 						Short: "A version to upgrade to",
-						Long: "A version to upgrade to.",
+						Long:  "A version to upgrade to.",
 					},
 				},
 			},
@@ -1010,7 +1057,7 @@ This is completely optional and can be disabled at any time.
 					Name: "enable",
 					Description: Description{
 						Short: "Enable telemetry",
-						Long: "Enable telemetry.",
+						Long:  "Enable telemetry.",
 					},
 					Run: func(cli *Cli) error {
 						return telemetry.Enable()
@@ -1020,7 +1067,7 @@ This is completely optional and can be disabled at any time.
 					Name: "disable",
 					Description: Description{
 						Short: "Disable telemetry",
-						Long: "Disable telemetry.",
+						Long:  "Disable telemetry.",
 					},
 					Run: func(cli *Cli) error {
 						return telemetry.Disable()
