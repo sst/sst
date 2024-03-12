@@ -552,8 +552,8 @@ sst secret remove StripeSecret --stage=production
 
 						// check if the secret exists
 						if _, ok := secrets[key]; !ok {
-							color.New(color.FgRed).Print("❌")
-							color.New(color.FgWhite).Printf("  Secret \"%s\" does not exist", key)
+							color.New(color.FgRed).Print("✗")
+							color.New(color.FgWhite).Printf("  \"%s\" does not exist", key)
 							fmt.Println()
 							return nil
 						}
@@ -985,7 +985,7 @@ This will create a ` + "`sst.config.ts`" + ` file and configure the types for yo
 			},
 			Run: func(cli *Cli) error {
 				if _, err := os.Stat("sst.config.ts"); err == nil {
-					color.New(color.FgRed, color.Bold).Print("❌")
+					color.New(color.FgRed, color.Bold).Print("✗")
 					color.New(color.FgWhite, color.Bold).Println(" sst.config.ts already exists")
 					return nil
 				}
