@@ -303,7 +303,6 @@ export class Router extends Component implements Link.Linkable {
       });
     }
   }
-  urn: Output<string>;
 
   /**
    * The URL of the Router.
