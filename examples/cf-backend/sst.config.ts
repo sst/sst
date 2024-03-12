@@ -9,11 +9,10 @@ export default $config({
     };
   },
   async run() {
-    // You do not have to set this, it's injected automatically
-    const account = process.env.CLOUDFLARE_DEFAULT_ACCOUNT_ID!;
+    $app;
     const kv = new cloudflare.WorkersKvNamespace("MyKv", {
       title: "MyKv",
-      accountId: account,
+      accountId: sst.cloudflare.DEFAULT_ACCOUNT_ID,
     });
   },
 });
