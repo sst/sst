@@ -58,7 +58,7 @@ export class Kv extends Component {
         `${name}Namespace`,
         transform(args?.transform?.namespace, {
           title: name,
-          accountId: $app.providers?.cloudflare?.accountId!,
+          accountId: sst.cloudflare.DEFAULT_ACCOUNT_ID,
         }),
         { parent },
       );

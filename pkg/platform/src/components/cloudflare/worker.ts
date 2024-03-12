@@ -319,7 +319,7 @@ export class Worker extends Component {
             `${name}Script`,
             transform(args.transform?.worker, {
               name,
-              accountId: $app.providers?.cloudflare?.accountId!,
+              accountId: sst.cloudflare.DEFAULT_ACCOUNT_ID,
               content: (await fs.readFile(handler)).toString(),
               module: true,
               compatibilityDate: "2024-01-01",
@@ -356,7 +356,7 @@ export class Worker extends Component {
       return new WorkersUrl(
         `${name}Url`,
         {
-          accountId: $app.providers?.cloudflare?.accountId!,
+          accountId: sst.cloudflare.DEFAULT_ACCOUNT_ID,
           scriptName: script.name,
           enabled: urlEnabled,
         },
@@ -370,7 +370,7 @@ export class Worker extends Component {
       return new cf.WorkerDomain(
         `${name}Domain`,
         {
-          accountId: $app.providers?.cloudflare?.accountId!,
+          accountId: sst.cloudflare.DEFAULT_ACCOUNT_ID,
           service: script.name,
           hostname: output(args.domain).apply((domain) => domain.hostname),
           zoneId: output(args.domain).apply((domain) => domain.zoneId),

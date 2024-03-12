@@ -102,7 +102,7 @@ export class Bucket extends Component {
         `${name}Bucket`,
         transform(args?.transform?.bucket, {
           name,
-          accountId: $app.providers?.cloudflare?.accountId!,
+          accountId: sst.cloudflare.DEFAULT_ACCOUNT_ID,
         }),
         { parent },
       );

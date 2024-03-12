@@ -6,10 +6,10 @@ export default $config({
       name: "cf-vite",
       removalPolicy: input?.stage === "production" ? "retain" : "remove",
       providers: {
-        cloudflare: {
-          accountId: "24beb0945bae6b37c2b147db108c6ec8",
-        },
+        aws: {},
+        cloudflare: {},
       },
+      backend: "aws",
     };
   },
   async run() {

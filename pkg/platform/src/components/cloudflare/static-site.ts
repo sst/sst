@@ -670,7 +670,7 @@ export class StaticSite extends Component implements Link.Linkable {
       return new KvData(
         `${name}AssetFiles`,
         {
-          accountId: $app.providers?.cloudflare?.accountId!,
+          accountId: sst.cloudflare.DEFAULT_ACCOUNT_ID,
           namespaceId: storage.id,
           entries: assetManifest.apply((manifest) =>
             manifest.map((m) => ({

@@ -5,7 +5,11 @@ export default $config({
     return {
       name: "cf-bucket",
       removalPolicy: input?.stage === "production" ? "retain" : "remove",
-      providers: {},
+      providers: {
+        aws: {},
+        cloudflare: {},
+      },
+      backend: "aws",
     };
   },
   async run() {

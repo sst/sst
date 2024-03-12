@@ -7,10 +7,9 @@ export default $config({
       removalPolicy: input?.stage === "production" ? "retain" : "remove",
       providers: {
         aws: {},
-        cloudflare: {
-          accountId: "24beb0945bae6b37c2b147db108c6ec8",
-        },
+        cloudflare: {},
       },
+      backend: "aws",
     };
   },
   async run() {
