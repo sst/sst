@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"io"
+	"log/slog"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -25,13 +26,10 @@ type bootstrap struct {
 }
 
 func (c *CloudflareProvider) Init(app, stage string, provider map[string]interface{}) error {
-	accountID := os.Getenv("CLOUDFLARE_ACCOUNT_ID")
+	accountID := os.Getenv("CLOUDFLARE_DEFAULT_ACCOUNT_ID")
 	apiToken := os.Getenv("CLOUDFLARE_API_TOKEN")
 	apiKey := os.Getenv("CLOUDFLARE_API_KEY")
 	email := os.Getenv("CLOUDFLARE_EMAIL")
-	if provider["accountId"] != nil {
-		accountID = provider["accountId"].(string)
-	}
 	if provider["apiToken"] != nil {
 		apiToken = provider["apiToken"].(string)
 	}
@@ -42,9 +40,7 @@ func (c *CloudflareProvider) Init(app, stage string, provider map[string]interfa
 		email = provider["email"].(string)
 	}
 	var api *cloudflare.API
-	c.env = map[string]string{
-		"CLOUDFLARE_ACCOUNT_ID": accountID,
-	}
+	c.env = map[string]string{}
 	if apiToken != "" {
 		api, _ = cloudflare.NewWithAPIToken(apiToken)
 		c.env["CLOUDFLARE_API_TOKEN"] = apiToken
@@ -58,7 +54,17 @@ func (c *CloudflareProvider) Init(app, stage string, provider map[string]interfa
 		return util.NewReadableError(nil, "Cloudflare API not initialized. Please provide CLOUDFLARE_API_TOKEN or CLOUDFLARE_API_KEY and CLOUDFLARE_EMAIL environment variables or in the provider section of the project configuration file.")
 	}
 	c.client = api
+	if accountID == "" {
+		accounts, _, err := c.client.Accounts(context.Background(), cloudflare.AccountsListParams{})
+		if err != nil {
+			return err
+		}
+		accountID = accounts[0].ID
+	}
+	c.env["CLOUDFLARE_DEFAULT_ACCOUNT_ID"] = accountID
 	c.identifier = cloudflare.AccountIdentifier(accountID)
+	slog.Info("cloudflare account selected", "account", accountID)
+
 	ctx := context.Background()
 	buckets, err := api.ListR2Buckets(ctx, c.identifier, cloudflare.ListR2BucketsParams{
 		Name: "sst-state",
@@ -68,6 +74,7 @@ func (c *CloudflareProvider) Init(app, stage string, provider map[string]interfa
 	}
 	for _, bucket := range buckets {
 		if bucket.Name == "sst-state" {
+			slog.Info("found existing bucket", "bucket", bucket.Name)
 			c.bootstrap = &bootstrap{
 				State: bucket.Name,
 			}
@@ -75,6 +82,7 @@ func (c *CloudflareProvider) Init(app, stage string, provider map[string]interfa
 	}
 
 	if c.bootstrap == nil {
+		slog.Info("creating new bucket", "bucket", "sst-state")
 		_, err = c.client.CreateR2Bucket(ctx, c.identifier, cloudflare.CreateR2BucketParameters{
 			Name: "sst-state",
 		})
@@ -122,6 +130,7 @@ func (c *CloudflareProvider) removeData(kind, app, stage string) error {
 	return nil
 }
 
+// these should go into secrets manager once it's out of beta
 func (c *CloudflareProvider) setPassphrase(app, stage string, passphrase string) error {
 	return c.putData("passphrase", app, stage, bytes.NewReader([]byte(passphrase)))
 }

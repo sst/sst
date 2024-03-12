@@ -6,16 +6,15 @@ export default $config({
       name: "cf-backend",
       removalPolicy: input?.stage === "production" ? "retain" : "remove",
       providers: {
-        cloudflare: {
-          accountId: "15d29c8639fd3733b1b5486a2acfd968",
-        },
+        cloudflare: {},
       },
     };
   },
   async run() {
+    const account = process.env.CLOUDFLARE_DEFAULT_ACCOUNT_ID!;
     const kv = new cloudflare.WorkersKvNamespace("MyKv", {
       title: "MyKv",
-      accountId: $app.providers!.cloudflare.accountId,
+      accountId: account,
     });
   },
 });
