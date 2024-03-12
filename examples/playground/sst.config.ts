@@ -7,9 +7,6 @@ export default $config({
       removalPolicy: input?.stage === "production" ? "retain" : "remove",
       providers: {
         aws: {},
-        cloudflare: {
-          accountId: "24beb0945bae6b37c2b147db108c6ec8",
-        },
       },
     };
   },
@@ -23,15 +20,15 @@ export default $config({
       },
     });
 
-    //    const app = new sst.aws.Function("MyApp", {
-    //      handler: "functions/handler-example/index.handler",
-    //      link: [bucket],
-    //      url: true,
-    //    });
+    const app = new sst.aws.Function("MyApp2", {
+      handler: "functions/handler-example/index.handler",
+      link: [bucket],
+      url: true,
+    });
 
     return {
       bucket: bucket.name,
-      //      app: app.url,
+      app: app.url,
     };
   },
 });

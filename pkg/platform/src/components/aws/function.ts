@@ -1330,6 +1330,9 @@ export class Function
           code: new asset.AssetArchive({
             index: new asset.StringAsset("exports.handler = () => {}"),
           }),
+          //code: new asset.FileArchive(
+          //  path.join($cli.paths.platform, "functions", "empty-function"),
+          //),
           handler,
           role: role.arn,
           runtime,
