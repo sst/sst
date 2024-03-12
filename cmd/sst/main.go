@@ -792,6 +792,13 @@ This is useful if you want to run multiple commands, all while accessing the lin
 				if err != nil {
 					return err
 				}
+				p, err = project.New(&project.ProjectConfig{
+					Version: version,
+					Config:  cfgPath,
+				})
+				if err != nil {
+					return err
+				}
 				err = p.Install()
 				if err != nil {
 					return err
