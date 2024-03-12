@@ -9,7 +9,6 @@ export default $config({
     };
   },
   async run() {
-    $app;
     const kv = new cloudflare.WorkersKvNamespace("MyKv", {
       title: "MyKv",
       accountId: sst.cloudflare.DEFAULT_ACCOUNT_ID,
