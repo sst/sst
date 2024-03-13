@@ -95,7 +95,7 @@ export interface App {
    * 1. Add the config for it in the `providers` object. The key is the name of the provider.
    * 2. Install the provider using `sst install`.
    *
-   * :::tip
+   * :::note
    * If you are using one of our quick starts with the `sst init` command, it'll automatically install the right provider for you.
    * :::
    *

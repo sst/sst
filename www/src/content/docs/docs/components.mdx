@@ -19,46 +19,21 @@ You can also use any Pulumi component in your SST app. This is useful if you wan
 
 ## Providers
 
-Components are classes that are name spaced under the cloud provider it deploys to. Currently, Ion supports two providers out of the box. Support for other providers is coming soon.
+Components are classes that are name spaced under the cloud provider it deploys to. Currently, SST has components that depoy to two providers:
+
+- **AWS**
+
+  These components are namespaced under `sst.aws.*`. They use Pulumi's [AWS Classic](https://www.pulumi.com/registry/packages/aws/) provider.
+
+- **Cloudflare**
+
+  These components are namespaced under `sst.cloudflare.*`. They use Pulumi's [Cloudflare](https://www.pulumi.com/registry/packages/cloudflare/) provider.
+
+Aside from SST's components, you can use any [Pulumi provider](https://www.pulumi.com/registry/) for your Pulumi components in your app. You can read more about `providers` in [Config](/docs/reference/config/).
 
 ---
 
-### AWS
-
-This is Pulumi's [AWS Classic](https://www.pulumi.com/registry/packages/aws/) provider is automatically included in your SST app. So you can directly use Pulumi's AWS components.
-
-```js
-import * as aws from "@pulumi/aws";
-
-new aws.s3.BucketV2("b", {
-  bucket: "mybucket",
-  tags: {
-    Name: "My bucket"
-  }
-});
-```
-
----
-
-### Cloudflare
-
-This is Pulumi's [Cloudflare](https://www.pulumi.com/registry/packages/cloudflare/) provider and it's also included in your SST app. Allowing you use Cloudflare components.
-
-```js
-import * as cloudflare from "@pulumi/cloudflare";
-
-new cloudflare.Record("sample-record", {
-  name: "my-record",
-  zoneId: "xxsdfhsfkashadf",
-  type: "A",
-  value: "192.168.0.11",
-  ttl: 3600
-});
-```
-
----
-
-## Create a component
+## Constructor
 
 To add a component to your app, you create an instance of it by passing in a couple of args. For example, here's the signature of the [Function](/docs/component/aws/function) component.
 
