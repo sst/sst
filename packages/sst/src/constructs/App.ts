@@ -356,8 +356,8 @@ export class App extends CDKApp {
     for (const child of this.node.children) {
       if (isStackConstruct(child)) {
         // Tag stacks
-        Tags.of(child).add("sst:app", this.name);
-        Tags.of(child).add("sst:stage", this.stage);
+        child.tags.setTag("sst:app", this.name);
+        child.tags.setTag("sst:stage", this.stage);
 
         if (
           child instanceof Stack &&
