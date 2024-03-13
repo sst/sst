@@ -42,9 +42,9 @@ interface $APP
      */
     stage: string;
     /**
-     * The removal policy for the current stage. If `removalPolicy` was not set in the `sst.config.ts`, this will be return its default value, `retain`.
+     * The removal policy for the current stage. If `removal` was not set in the `sst.config.ts`, this will be return its default value, `retain`.
      */
-    removalPolicy: "remove" | "retain" | "retain-all";
+    removal: "remove" | "retain" | "retain-all";
     /**
      * The providers currently being used in the app.
      */

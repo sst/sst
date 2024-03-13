@@ -4,7 +4,7 @@ export default $config({
   app(input) {
     return {
       name: "{{.App}}",
-      removalPolicy: input?.stage === "production" ? "retain" : "remove",
+      removal: input?.stage === "production" ? "retain" : "remove",
     };
   },
   async run() {

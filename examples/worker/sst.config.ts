@@ -4,7 +4,7 @@ export default $config({
   app(input) {
     return {
       name: "worker",
-      removalPolicy: input?.stage === "production" ? "retain" : "remove",
+      removal: input?.stage === "production" ? "retain" : "remove",
       providers: {
         cloudflare: {
           accountId: "15d29c8639fd3733b1b5486a2acfd968",

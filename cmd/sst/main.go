@@ -895,7 +895,7 @@ sst deploy --stage=production
 Removes your application. By default, it removes your personal stage.
 
 :::tip
-The resources in your app are removed based on the ` + "`removalPolicy`" + ` in your ` + "`sst.config.ts`" + `.
+The resources in your app are removed based on the ` + "`removal` setting" + ` in your ` + "`sst.config.ts`" + `.
 :::
 
 Optionally, remove your app from a specific stage.
@@ -1350,7 +1350,7 @@ func initProject(cli *Cli) (*project.Project, error) {
 		Config:  cfgPath,
 	})
 	if err != nil {
-		return nil, util.NewReadableError(err, "Could not initialize project")
+		return nil, err
 	}
 
 	if !p.CheckPlatform(version) {

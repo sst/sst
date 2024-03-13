@@ -79,11 +79,11 @@ export interface App {
    * Retain resources if it's the _production_ stage, otherwise remove all resources.
    * ```ts
    * {
-   *   removalPolicy: input.stage === "production" ? "retain" : "remove"
+   *   removal: input.stage === "production" ? "retain" : "remove"
    * }
    * ```
    */
-  removalPolicy?: "remove" | "retain" | "retain-all";
+  removal?: "remove" | "retain" | "retain-all";
   /**
    * The providers to use in this app and their config. SST supports all [Pulumi's providers](https://www.pulumi.com/registry/).
    *
@@ -131,9 +131,9 @@ export interface App {
   providers?: Record<string, any>;
 
   /**
-   * The backend to store all state for your app. This is where SST keeps track of deployed resources and secrets.
+   * Where to store all state for your app. This is where SST keeps track of deployed resources and secrets.
    */
-  backend?: "aws" | "cloudflare";
+  home: "aws" | "cloudflare";
 }
 
 export interface AppInput {
@@ -165,7 +165,7 @@ export interface Config {
    *         accountId: "6fef9ed9089bb15de3e4198618385de2"
    *       }
    *     },
-   *     removalPolicy: input.stage === "production" ? "retain" : "remove"
+   *     removal: input.stage === "production" ? "retain" : "remove"
    *   };
    * },
    * ```

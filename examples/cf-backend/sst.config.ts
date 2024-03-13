@@ -3,7 +3,7 @@ export default $config({
   app(input) {
     return {
       name: "cf-backend",
-      removalPolicy: input?.stage === "production" ? "retain" : "remove",
+      removal: input?.stage === "production" ? "retain" : "remove",
       backend: "cloudflare",
       providers: { cloudflare: {} },
     };

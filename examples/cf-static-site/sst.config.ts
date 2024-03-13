@@ -4,7 +4,7 @@ export default $config({
   app(input) {
     return {
       name: "cf-static-site",
-      removalPolicy: input?.stage === "production" ? "retain" : "remove",
+      removal: input?.stage === "production" ? "retain" : "remove",
       providers: {
         aws: {},
         cloudflare: {},
