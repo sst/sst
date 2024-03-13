@@ -9,7 +9,7 @@ export default $config({
         aws: {},
         cloudflare: {},
       },
-      backend: "aws",
+      home: "aws",
     };
   },
   async run() {

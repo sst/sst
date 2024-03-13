@@ -19,6 +19,10 @@ type App struct {
 	Removal   string                 `json:"removal"`
 	Providers map[string]interface{} `json:"providers"`
 	Home      string                 `json:"home"`
+	// Deprecated: Backend is now Home
+	Backend string `json:"backend"`
+	// Deprecated: RemovalPolicy is now Removal
+	RemovalPolicy string `json:"removalPolicy"`
 }
 
 type Project struct {
@@ -147,7 +151,7 @@ console.log("~j" + JSON.stringify(mod.app({
 
 		for name, args := range proj.app.Providers {
 			if argsBool, ok := args.(bool); ok && argsBool {
-				proj.app.Providers[name] = make(map[interface{}]interface{})
+				proj.app.Providers[name] = make(map[string]interface{})
 			}
 		}
 
@@ -161,6 +165,10 @@ console.log("~j" + JSON.stringify(mod.app({
 
 		if proj.app.Home == "" {
 			return nil, util.NewReadableError(nil, `You must specify a "home" provider in the project configuration file.`)
+		}
+
+		if proj.app.RemovalPolicy != "" {
+			return nil, util.NewReadableError(nil, `The "removalPolicy" has been renamed to "removal"`)
 		}
 
 		if proj.app.Removal == "" {

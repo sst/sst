@@ -4,7 +4,7 @@ export default $config({
     return {
       name: "cf-backend",
       removal: input?.stage === "production" ? "retain" : "remove",
-      backend: "cloudflare",
+      home: "cloudflare",
       providers: { cloudflare: {} },
     };
   },

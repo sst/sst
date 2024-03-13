@@ -102,7 +102,7 @@ func (p *Project) writeTypes() error {
 		file.WriteString(`  export import ` + name + ` = _` + name + "\n")
 	}
 	file.WriteString(`  interface Providers {` + "\n")
-	file.WriteString(`    providers: {` + "\n")
+	file.WriteString(`    providers?: {` + "\n")
 	for name := range p.app.Providers {
 		file.WriteString(`      ` + name + `?:  (_` + name + `Args & { version?: string }) | boolean;` + "\n")
 	}

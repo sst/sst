@@ -1,14 +1,11 @@
 /// <reference path="./.sst/platform/config.d.ts" />
-
 export default $config({
   app() {
     return {
       name: "test",
       removal: "retain-all",
-      backend: "aws",
-      providers: {
-        aws: {},
-      },
+      home: "aws",
+      providers: {},
     };
   },
   async run() {
