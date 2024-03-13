@@ -7,7 +7,7 @@ Every SST app is made up of components. Components in turn create one or more pi
 
 For example, `sst.aws.Function` lets you add a Lambda function to your app. While, `sst.aws.Nextjs` lets you deploy your Next.js app.
 
-SST's components use [Pulumi](https://www.pulumi.com/docs/concepts/resources/components/) behind the scenes to create the low level infrastructure. These are generated from [Terraform modules](https://developer.hashicorp.com/terraform). SST allows you to customize the low level infrastructure.
+SST's components use [Pulumi](https://www.pulumi.com/docs/concepts/resources/components/) behind the scenes to create the low level infrastructure. These are generated from [Terraform modules](https://developer.hashicorp.com/terraform). SST allows you to customize how these are created.
 
 :::tip
 You can create any type of infrastructure even if SST doesn't support it directly.
@@ -29,7 +29,19 @@ Components are classes that are name spaced under the cloud provider it deploys 
 
   These components are namespaced under `sst.cloudflare.*`. They use Pulumi's [Cloudflare](https://www.pulumi.com/registry/packages/cloudflare/) provider.
 
+:::tip
+SST supports all [Pulumi providers](https://www.pulumi.com/registry/).
+:::
+
 Aside from SST's components, you can use any [Pulumi provider](https://www.pulumi.com/registry/) for your Pulumi components in your app. You can read more about `providers` in [Config](/docs/reference/config/).
+
+---
+
+### Home
+
+SST generates some state for your app and stores this in your `home` provider. This is used to keep track of the resources and secrets in your app. 
+
+Currently, SST supports AWS and Cloudflare as `home` providers. You can read more about the `home` provider in [Config](/docs/reference/config/).
 
 ---
 
@@ -85,13 +97,13 @@ Args usually take primitive types. However, they also take a special version of 
 
 ### Transform
 
-Most components take the `transform` prop as a part of their constructor or methods. It's an object that takes callbacks that allow you to transform how that component's infrastructure is created.
+Most components take a `transform` prop as a part of their constructor or methods. It's an object that takes callbacks that allow you to transform how that component's infrastructure is created.
 
 For example, here's what's the `transform` prop looks like for the [Function](/docs/component/aws/function#transform) takes:
 
-- `function`: A callback to transform the underlying Lambda function.
-- `logGroup`: A callback to transform the Lambda's LogGroup resource.
-- `role`: A callback to transform the role that the Lambda function assumes.
+- `function`: A callback to transform the underlying Lambda function
+- `logGroup`: A callback to transform the Lambda's LogGroup resource
+- `role`: A callback to transform the role that the Lambda function assumes
 
 The type for these callbacks is similar. Here's what the `role` callback looks like:
 
@@ -127,7 +139,7 @@ This allows you to either:
   }
   ```
 
-- Or, pass in a callback that takes the current `RoleArgs`, mutate it, and return `void`.
+- Or, pass in a callback that takes the current `RoleArgs` and mutate it.
 
   ```ts
   {
@@ -206,4 +218,4 @@ new sst.aws.Router("MyRouter", {
 });
 ```
 
-The way Input and Output types are connected together, allows SST to create dependencies between your components. This allows it to deploy your apps as fast as possible. You can learn more about [Input and Output types on the Pulumi docs](https://www.pulumi.com/docs/concepts/inputs-outputs/).
+The way Input and Output types are connected together allows SST to create dependencies between your components. This allows it to deploy your apps as fast as possible. You can learn more about [Input and Output types on the Pulumi docs](https://www.pulumi.com/docs/concepts/inputs-outputs/).

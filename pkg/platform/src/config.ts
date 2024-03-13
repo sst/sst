@@ -14,9 +14,7 @@
  *   app(input) {
  *     return {
  *       name: "my-sst-app",
- *       providers: {
- *         aws: {}
- *       }
+ *       home: "aws"
  *     };
  *   },
  *   async run() {
@@ -85,45 +83,60 @@ export interface App {
    */
   removal?: "remove" | "retain" | "retain-all";
   /**
-   * The providers to use in this app and their config. SST supports all [Pulumi's providers](https://www.pulumi.com/registry/).
+   * The providers that are being used in this app. SST supports all [Pulumi's providers](https://www.pulumi.com/registry/). This allows you to use the components from these providers in your app.
    *
-   * :::tip
-   * SST supports all Pulumi's providers.
-   * :::
+   * For example, if you use the [AWS Classic](https://www.pulumi.com/registry/packages/aws/) provider, you can use the `aws` components in your app.
    *
-   * To add a new provider you need to:
-   * 1. Add the config for it in the `providers` object. The key is the name of the provider.
-   * 2. Install the provider using `sst install`.
+   * ```ts
+   * import * as aws from "@pulumi/aws";
+   *
+   * new aws.s3.BucketV2("b", {
+   *   bucket: "mybucket"
+   * });
+   * ```
    *
    * :::note
-   * If you are using one of our quick starts with the `sst init` command, it'll automatically install the right provider for you.
+   * By default, your `home` provider is included in the `providers` list.
    * :::
    *
-   * You can check out the config of a provider over on Pulumi's docs. For example, here's the config for some common providers:
-   * - [AWS](https://www.pulumi.com/registry/packages/aws/api-docs/provider/#inputs)
-   * - [Cloudflare](https://www.pulumi.com/registry/packages/cloudflare/api-docs/provider/#inputs)
-   *
-   * In most cases you don't need to pass in a config for the provider.
-   *
-   * @example
-   *
-   * Using the AWS provider. The credentials are handled by default by thw AWS SDK.
+   * If you don't set a `provider` it uses your `home` provider with the default config. So if you set `home` to `aws`, it's the same as doing:
    *
    * ```ts
    * {
+   *   home: "aws",
    *   providers: {
-   *     aws: {}
+   *     aws: true
    *   }
    * }
    * ```
    *
-   * Adding the Cloudflare provider.
+   * @default The `home` provider.
+   *
+   * @example
+   *
+   * You can also configure the provider props. Here's the config for some common providers:
+   * - [AWS](https://www.pulumi.com/registry/packages/aws/api-docs/provider/#inputs)
+   * - [Cloudflare](https://www.pulumi.com/registry/packages/cloudflare/api-docs/provider/#inputs)
+   *
+   * For example, to change the region for AWS.
    *
    * ```ts
    * {
    *   providers: {
-   *     aws: {},
-   *     cloudflare: { }
+   *     aws: {
+   *       region: "us-west-2"
+   *     }
+   *   }
+   * }
+   * ```
+   *
+   * You also add multiple providers.
+   *
+   * ```ts
+   * {
+   *   providers: {
+   *     aws: true,
+   *     cloudflare: true
    *   }
    * }
    * ```
@@ -131,7 +144,38 @@ export interface App {
   providers?: Record<string, any>;
 
   /**
-   * Where to store all state for your app. This is where SST keeps track of deployed resources and secrets.
+   * The provider SST will use to store the state for your app. The state keeps track of all your resources and secrets. The state is generated locally and backed up in your cloud provider.
+   *
+   * :::tip
+   * SST uses the `home` provider to store the state for your app.
+   * :::
+   *
+   * Currently supports AWS and Cloudflare.
+   *
+   * Setting the `home` provider is the same as setting the `providers` list. So if you set `home` to `aws`, it's the same as doing:
+   *
+   * ```ts
+   * {
+   *   home: "aws",
+   *   providers: {
+   *     aws: true
+   *   }
+   * }
+   * ```
+   *
+   * If you want to confgiure your home provider, you can:
+   *
+   * ```ts
+   * {
+   *   home: "aws",
+   *   providers: {
+   *     aws: {
+   *       region: "us-west-2"
+   *     }
+   *   }
+   * }
+   * ```
+   *
    */
   home: "aws" | "cloudflare";
 }
@@ -159,8 +203,9 @@ export interface Config {
    * app(input) {
    *   return {
    *     name: "my-sst-app",
+   *     home: "aws",
    *     providers: {
-   *       aws: {},
+   *       aws: true,
    *       cloudflare: {
    *         accountId: "6fef9ed9089bb15de3e4198618385de2"
    *       }
