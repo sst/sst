@@ -31,13 +31,13 @@
  * You can Pulumi code in the `run` function not the `app` function.
  * :::
  *
- * While the `run` function is for your stacks code. This is where you define your resources using SST or Pulumi's components.
+ * While the `run` function is where you define your resources using SST or Pulumi's components.
  *
  * :::tip
- * The [Global](/docs/reference/global/) library can help you with your stacks code.
+ * The [Global](/docs/reference/global/) library can help you with your app config and resources.
  * :::
  *
- * The run function also has access to a list of [Global](/docs/reference/global/) `$` variables and functions. These serve as the context for your stacks code.
+ * The run function also has access to a list of [Global](/docs/reference/global/) `$` variables and functions. These serve as the context for your app config.
  *
  * @packageDocumentation
  */

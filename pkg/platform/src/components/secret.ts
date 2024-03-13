@@ -12,13 +12,13 @@ export class SecretMissingError extends VisibleError {
 }
 
 /**
- * The `Secret` component lets you create secrets in your stacks code.
+ * The `Secret` component lets you create secrets in your app.
  *
  * :::note
  * Secrets are encrypted when they are stored in your state file or in a function package.
  * :::
  *
- * Secrets are encrypted and stored in an S3 Bucket in your AWS account. If used in your stacks code, they'll be encrypted in your state file as well. Similarly, if used in your function code, they'll be encrypted in your function package and decrypted at runtime.
+ * Secrets are encrypted and stored in an S3 Bucket in your AWS account. If used in your app config, they'll be encrypted in your state file as well. Similarly, if used in your function code, they'll be encrypted in your function package and decrypted at runtime.
  *
  * @example
  *
@@ -47,9 +47,9 @@ export class SecretMissingError extends VisibleError {
  * sst secrets set MySecret my-secret-value
  * ```
  *
- * #### Use the secret in your stacks code
+ * #### Use the secret in your app config
  *
- * You can now use the secret in your stacks code.
+ * You can now use the secret in your app config.
  *
  * ```ts title="sst.config.ts"
  * console.log(mySecret.value);

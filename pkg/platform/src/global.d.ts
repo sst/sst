@@ -1,11 +1,11 @@
 /**
- * The Global library is a collection of `$` functions and variables that are available in your stacks code, `run` function, of your [`sst.config.ts`](/docs/reference/config/).
+ * The Global library is a collection of `$` functions and variables that are available in the `run` function, of your [`sst.config.ts`](/docs/reference/config/).
  *
  * :::tip
  * You don't need to import the Global library. It's available in the `run` function of your `sst.config.ts`.
  * :::
  *
- * For example, you can get the name of your app in your stacks code using `$app.name`.
+ * For example, you can get the name of your app in your app config using `$app.name`.
  *
  * ```ts title="sst.config.ts" {4}
  * export default $config({

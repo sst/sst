@@ -363,7 +363,7 @@ sst dev next dev
 Dev mode does a few things:
 
 1. Starts a local server
-2. Watches your stacks code and re-deploys changes
+2. Watches your app config and re-deploys your changes
 3. Run your functions [Live](/docs/live/)
 4. If you pass in a ` + "`command`" + `, it'll:
    - Load your [linked resources](/docs/linking) in the environment
