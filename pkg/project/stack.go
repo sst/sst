@@ -111,17 +111,17 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 	}
 	defer s.PushState()
 
-	passphrase, err := provider.Passphrase(s.project.backend, s.project.app.Name, s.project.app.Stage)
+	passphrase, err := provider.Passphrase(s.project.home, s.project.app.Name, s.project.app.Stage)
 	if err != nil {
 		return err
 	}
 
-	secrets, err := provider.GetSecrets(s.project.backend, s.project.app.Name, s.project.app.Stage)
+	secrets, err := provider.GetSecrets(s.project.home, s.project.app.Name, s.project.app.Stage)
 	if err != nil {
 		return fmt.Errorf("failed to list secrets: %w", err)
 	}
 
-	env, err := s.project.backend.Env()
+	env, err := s.project.home.Env()
 	if err != nil {
 		return err
 	}
@@ -238,7 +238,7 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 
 	config := auto.ConfigMap{}
 	for provider, args := range s.project.app.Providers {
-		for key, value := range args {
+		for key, value := range args.(map[string]interface{}) {
 			if provider == "cloudflare" && key == "accountId" {
 				continue
 			}
@@ -337,7 +337,7 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 			typesFile.WriteString("  export interface Resource " + inferTypes(links, "  ") + "\n")
 			typesFile.WriteString("}" + "\n")
 			typesFile.WriteString("export {}")
-			provider.PutLinks(s.project.backend, s.project.app.Name, s.project.app.Stage, links)
+			provider.PutLinks(s.project.home, s.project.app.Name, s.project.app.Stage, links)
 		}
 
 		hintsOutput, ok := outputs["_hints"]
@@ -441,22 +441,22 @@ func (s *stack) Import(ctx context.Context, input *ImportOptions) error {
 	fmt.Println(urn)
 	fmt.Println(parent)
 
-	err = provider.Lock(s.project.backend, s.project.app.Name, s.project.app.Stage)
+	err = provider.Lock(s.project.home, s.project.app.Name, s.project.app.Stage)
 	if err != nil {
 		return err
 	}
-	defer provider.Unlock(s.project.backend, s.project.app.Name, s.project.app.Stage)
+	defer provider.Unlock(s.project.home, s.project.app.Name, s.project.app.Stage)
 
 	_, err = s.PullState()
 	if err != nil {
 		return err
 	}
 
-	passphrase, err := provider.Passphrase(s.project.backend, s.project.app.Name, s.project.app.Stage)
+	passphrase, err := provider.Passphrase(s.project.home, s.project.app.Name, s.project.app.Stage)
 	if err != nil {
 		return err
 	}
-	env, err := s.project.backend.Env()
+	env, err := s.project.home.Env()
 	if err != nil {
 		return err
 	}
@@ -485,8 +485,8 @@ func (s *stack) Import(ctx context.Context, input *ImportOptions) error {
 
 	config := auto.ConfigMap{}
 	for provider, args := range s.project.app.Providers {
-		for key, value := range args {
-			if provider == "cloudflare" && key == "accountId" {
+		for key, value := range args.(map[string]interface{}) {
+			if key == "version" {
 				continue
 			}
 			switch v := value.(type) {
@@ -552,7 +552,7 @@ func (s *stack) Import(ctx context.Context, input *ImportOptions) error {
 }
 
 func (s *stack) Lock() error {
-	return provider.Lock(s.project.backend, s.project.app.Name, s.project.app.Stage)
+	return provider.Lock(s.project.home, s.project.app.Name, s.project.app.Stage)
 }
 
 func (s *stack) Unlock() error {
@@ -571,7 +571,7 @@ func (s *stack) Unlock() error {
 		}
 	}
 
-	return provider.Unlock(s.project.backend, s.project.app.Name, s.project.app.Stage)
+	return provider.Unlock(s.project.home, s.project.app.Name, s.project.app.Stage)
 }
 
 func (s *stack) PullState() (string, error) {
@@ -587,7 +587,7 @@ func (s *stack) PullState() (string, error) {
 	}
 	path := filepath.Join(appDir, fmt.Sprintf("%v.json", s.project.app.Stage))
 	err = provider.PullState(
-		s.project.backend,
+		s.project.home,
 		s.project.app.Name,
 		s.project.app.Stage,
 		path,
@@ -601,7 +601,7 @@ func (s *stack) PullState() (string, error) {
 func (s *stack) PushState() error {
 	pulumiDir := filepath.Join(s.project.PathWorkingDir(), ".pulumi")
 	return provider.PushState(
-		s.project.backend,
+		s.project.home,
 		s.project.app.Name,
 		s.project.app.Stage,
 		filepath.Join(pulumiDir, "stacks", s.project.app.Name, fmt.Sprintf("%v.json", s.project.app.Stage)),
@@ -610,7 +610,7 @@ func (s *stack) PushState() error {
 
 func (s *stack) Cancel() error {
 	return provider.Unlock(
-		s.project.backend,
+		s.project.home,
 		s.project.app.Name,
 		s.project.app.Stage,
 	)

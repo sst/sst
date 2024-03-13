@@ -51,7 +51,7 @@ func (p *Project) writePackageJson() error {
 
 	dependencies := result["dependencies"].(map[string]interface{})
 	for name, config := range p.app.Providers {
-		version := config["version"]
+		version := config.(map[string]interface{})["version"]
 		if version == nil || version == "" {
 			version = "latest"
 		}
@@ -102,9 +102,9 @@ func (p *Project) writeTypes() error {
 		file.WriteString(`  export import ` + name + ` = _` + name + "\n")
 	}
 	file.WriteString(`  interface Providers {` + "\n")
-	file.WriteString(`    providers: {` + "\n")
+	file.WriteString(`    providers?: {` + "\n")
 	for name := range p.app.Providers {
-		file.WriteString(`      ` + name + `?: _` + name + `Args;` + "\n")
+		file.WriteString(`      ` + name + `?:  (_` + name + `Args & { version?: string }) | boolean;` + "\n")
 	}
 	file.WriteString(`    }` + "\n")
 	file.WriteString(`  }` + "\n")

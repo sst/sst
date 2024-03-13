@@ -106,7 +106,7 @@ export interface RouterArgs {
  * ```ts
  * new sst.aws.Router("MyRouter", {
  *   routes: {
- *     "/*": "some-interal-service.com"
+ *     "/*": "some-internal-service.com"
  *   }
  * });
  * ```

@@ -7,7 +7,7 @@ declare global {
       work: string;
       platform: string;
     };
-    backend: string;
+    home: string;
   };
 }
 

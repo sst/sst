@@ -4,12 +4,12 @@ export default $config({
   app(input) {
     return {
       name: "cf-nextjs",
-      removalPolicy: input?.stage === "production" ? "retain" : "remove",
+      removal: input?.stage === "production" ? "retain" : "remove",
       providers: {
         aws: {},
         cloudflare: {},
       },
-      backend: "aws",
+      home: "aws",
     };
   },
   async run() {

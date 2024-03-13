@@ -1,20 +1,15 @@
 /// <reference path="./.sst/platform/config.d.ts" />
-
 export default $config({
   app() {
     return {
       name: "test",
-      removalPolicy: "retain-all",
-      backend: "aws",
-      providers: {
-        aws: {
-          region: "us-west-1",
-        },
-      },
+      removal: "retain-all",
+      home: "aws",
+      providers: {},
     };
   },
   async run() {
-    const fn = new sst.aws.Function("SomeFunction", {
+    const fn = new sst.aws.Function("MyFunction2", {
       handler: "src/index.handler",
       url: true,
     });

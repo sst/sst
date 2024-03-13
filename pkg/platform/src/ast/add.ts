@@ -61,7 +61,7 @@ if (
 // Create a new property node for "foo: {}"
 const newProperty = ts.factory.createPropertyAssignment(
   pkg,
-  ts.factory.createObjectLiteralExpression([]),
+  ts.factory.createTrue(),
 );
 
 providersProperty.initializer.properties.push(newProperty);

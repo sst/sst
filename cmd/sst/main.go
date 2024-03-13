@@ -370,10 +370,10 @@ Dev mode does a few things:
    - And run the command
 
 :::note
-If your run ` + "`sst dev`" + ` with a command, it'll not print your function logs.
+If you run ` + "`sst dev`" + ` with a command, it will not print your function logs.
 :::
 
-If ` + "`sst dev`" + ` starts your fronted, it won't print logs from your SST app. We do this to prevent your logs from being too noisy. To view your logs, you can run ` + "`sst dev`" + ` in a separate terminal.
+If ` + "`sst dev`" + ` starts your frontend, it won't print logs from your SST app. We do this to prevent your logs from being too noisy. To view your logs, you can run ` + "`sst dev`" + ` in a separate terminal.
 
 :::tip
 You can start as many instances of ` + "`sst dev`" + ` in your app as you want.
@@ -895,7 +895,7 @@ sst deploy --stage=production
 Removes your application. By default, it removes your personal stage.
 
 :::tip
-The resources in your app are removed based on the ` + "`removalPolicy`" + ` in your ` + "`sst.config.ts`" + `.
+The resources in your app are removed based on the ` + "`removal` setting" + ` in your ` + "`sst.config.ts`" + `.
 :::
 
 Optionally, remove your app from a specific stage.
@@ -953,7 +953,7 @@ sst deploy --stage=production
 				Long: `
 If something unexpected kills the ` + "`sst deploy`" + ` process, your local state file might be left in an unreadable state.
 
-This will prevent you froom deploying again. You can run ` + "`sst cancel`" + ` to clean up the state file and be able to deploy again.
+This will prevent you from deploying again. You can run ` + "`sst cancel`" + ` to clean up the state file and be able to deploy again.
 
 You should not usually run into this.
 `,
@@ -1350,7 +1350,7 @@ func initProject(cli *Cli) (*project.Project, error) {
 		Config:  cfgPath,
 	})
 	if err != nil {
-		return nil, util.NewReadableError(err, "Could not initialize project")
+		return nil, err
 	}
 
 	if !p.CheckPlatform(version) {
