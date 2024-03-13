@@ -1,13 +1,15 @@
 ---
-title: Client
-description: Access linked resources in your handlers in a typesafe way.
+title: SDK
+description: Interact with linked resources in your functions in a typesafe way.
 ---
 
-The Node Client is an [npm package](https://www.npmjs.com/package/sst) that allows you to access linked resources in your functions and frontends in a typesafe way.
+The JS SDK is an [npm package](https://www.npmjs.com/package/sst) that allows you to access linked resources in your functions and frontends in a typesafe way.
 
-:::note
-You'll first need to link a resource to your function or frontend to be able to access it. [Learn more about resource linking](/docs/linking/).
+:::tip
+You'll first need to [link a resource](/docs/linking/) to your function or frontend to be able to access it.
 :::
+
+Currently, the SDK is only available for JavaScript and TypeScript. Support for other languages is coming soon.
 
 ---
 
@@ -58,4 +60,4 @@ In the above example, `Resource.MyBucket.name` works because it's been injected 
 
 For functions, this is injected into the [`globalThis`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/globalThis) using [esbuild](https://esbuild.github.io/) and for frontends, it's injected into the `process.env` object.
 
-The Node client first checks the `process.env` and then the `globalThis` for the linked resources. You can [read more about how the links are injected](/docs/linking/#injecting-links).
+The JS SDK first checks the `process.env` and then the `globalThis` for the linked resources. You can [read more about how the links are injected](/docs/linking/#injecting-links).

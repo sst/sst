@@ -125,7 +125,7 @@ export interface WorkerArgs {
    * [Link resources](/docs/linking/) to your worker. This will:
    *
    * 1. Handle the credentials needed to access the resources.
-   * 2. Allow you to access it in your site using the [Node client](/docs/reference/client/).
+   * 2. Allow you to access it in your site using the [SDK](/docs/reference/sdk/).
    *
    * @example
    *
@@ -193,7 +193,7 @@ export interface WorkerArgs {
  * });
  * ```
  *
- * You can use the [Node client](/docs/reference/client/) to access the linked resources
+ * You can use the [SDK](/docs/reference/sdk/) to access the linked resources
  * in your handler.
  *
  * ```ts title="src/worker.ts"

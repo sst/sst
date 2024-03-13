@@ -371,7 +371,7 @@ export interface FunctionArgs {
    * [Link resources](/docs/linking/) to your function. This will:
    *
    * 1. Grant the permissions needed to access the resources.
-   * 2. Allow you to access it in your site using the [Node client](/docs/reference/client/).
+   * 2. Allow you to access it in your site using the [SDK](/docs/reference/sdk/).
    *
    * @example
    *
@@ -767,7 +767,7 @@ export interface FunctionArgs {
  * });
  * ```
  *
- * You can use the [Node client](/docs/reference/client/) to access the linked resources
+ * You can use the [SDK](/docs/reference/sdk/) to access the linked resources
  * in your handler.
  *
  * ```ts title="src/lambda.ts"

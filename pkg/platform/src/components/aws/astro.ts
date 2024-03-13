@@ -98,7 +98,7 @@ export interface AstroArgs extends SsrSiteArgs {
    * [Link resources](/docs/linking/) to your Astro site. This will:
    *
    * 1. Grant the permissions needed to access the resources.
-   * 2. Allow you to access it in your site using the [Node client](/docs/reference/client/).
+   * 2. Allow you to access it in your site using the [SDK](/docs/reference/sdk/).
    *
    * @example
    *
@@ -136,7 +136,7 @@ export interface AstroArgs extends SsrSiteArgs {
    * 2. Locally while running `sst dev astro dev`.
    *
    * :::tip
-   * You can also `link` resources to your Astro site and access them in a type-safe way with the [Node client](/docs/reference/client/). We recommend linking since it's more secure.
+   * You can also `link` resources to your Astro site and access them in a type-safe way with the [SDK](/docs/reference/sdk/). We recommend linking since it's more secure.
    * :::
    *
    * Recall that in Astro, you need to prefix your environment variables with `PUBLIC_` to access them on the client-side. [Read more here](https://docs.astro.build/en/guides/environment-variables/).
@@ -276,7 +276,7 @@ const BUILD_META_FILE_NAME: BuildMetaFileName = "sst.buildMeta.json";
  * });
  * ```
  *
- * You can use the [Node client](/docs/reference/client/) to access the linked resources
+ * You can use the [SDK](/docs/reference/sdk/) to access the linked resources
  * in your Astro site.
  *
  * ```astro title="src/pages/index.astro"

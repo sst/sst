@@ -170,7 +170,7 @@ export interface SsrSiteArgs {
    * [Link resources](/docs/linking/) to your site. This will:
    *
    * 1. Grant the permissions needed to access the resources.
-   * 2. Allow you to access it in your site using the [Node client](/docs/reference/client/).
+   * 2. Allow you to access it in your site using the [SDK](/docs/reference/sdk/).
    *
    * @example
    *

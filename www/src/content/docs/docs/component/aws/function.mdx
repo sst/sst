@@ -54,7 +54,7 @@ new sst.aws.Function("MyFunction", {
 });
 ```
 
-You can use the [Node client](/docs/reference/client/) to access the linked resources
+You can use the [SDK](/docs/reference/sdk/) to access the linked resources
 in your handler.
 
 ```ts title="src/lambda.ts"
@@ -196,7 +196,7 @@ The Lambda function URL if `url` is enabled.
 
 ## Links
 
-The following are accessible through the [Node client](/docs/reference/client/) at runtime.
+The following are accessible through the [SDK](/docs/reference/sdk/) at runtime.
 
 ### name
 <Segment>
@@ -407,7 +407,7 @@ If `bundle` is specified, the handler needs to be in the root of the bundle dire
 [Link resources](/docs/linking/) to your function. This will:
 
 1. Grant the permissions needed to access the resources.
-2. Allow you to access it in your site using the [Node client](/docs/reference/client/).
+2. Allow you to access it in your site using the [SDK](/docs/reference/sdk/).
 
 Takes a list of components to link to the function.
 

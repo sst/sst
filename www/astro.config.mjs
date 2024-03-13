@@ -55,7 +55,7 @@ const sidebar = [
     label: "Reference",
     items: [
       { label: "CLI", link: "/docs/reference/cli/" },
-      { label: "Client", link: "/docs/reference/client/" },
+      { label: "SDK", link: "/docs/reference/sdk/" },
       { label: "Global", link: "/docs/reference/global/" },
       { label: "Config", link: "/docs/reference/config/" },
     ],

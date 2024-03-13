@@ -68,7 +68,7 @@ export interface VectorArgs {
  *
  * - It uses an LLM to generate the embedding.
  * - Stores it in a vector database powered by [RDS Postgres Serverless v2](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/aurora-serverless-v2.html).
- * - Provides a [Node client](/docs/reference/client/) to ingest, retrieve, and remove the vector data.
+ * - Provides a [SDK](/docs/reference/sdk/) to ingest, retrieve, and remove the vector data.
  *
  * @example
  *
@@ -99,7 +99,7 @@ export interface VectorArgs {
  * });
  * ```
  *
- * Once linked, you can query it in your function code using the [Node client](/docs/reference/client/).
+ * Once linked, you can query it in your function code using the [SDK](/docs/reference/sdk/).
  *
  * ```ts title="app/page.tsx" {3}
  * import { VectorClient } from "sst";

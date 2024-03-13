@@ -640,7 +640,7 @@ async function generateTsDoc() {
       lines.push(``, `## Links`);
       lines.push(
         ``,
-        `The following are accessible through the [Node client](/docs/reference/client/) at runtime.`
+        `The following are accessible through the [SDK](/docs/reference/sdk/) at runtime.`
       );
 
       // Validate getSSTLink() return type
