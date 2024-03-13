@@ -57,14 +57,14 @@ The run function also has access to a list of [Global](/docs/reference/global/) 
 ---
 
 ## App
-### backend?
+### home
 <Segment>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="symbol">&ldquo;</code><code class="primitive">aws</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">cloudflare</code><code class="symbol">&rdquo;</code>
 </InlineSection>
 </Section>
-The backend to store all state for your app. This is where SST keeps track of deployed resources and secrets.
+Where to store all state for your app. This is where SST keeps track of deployed resources and secrets.
 
 </Segment>
 ### name
@@ -160,7 +160,7 @@ It's a good idea to use `retain` for your production stage.
 Retain resources if it's the _production_ stage, otherwise remove all resources.
 ```ts
 {
-  removalPolicy: input.stage === "production" ? "retain" : "remove"
+  removal: input.stage === "production" ? "retain" : "remove"
 }
 ```
 </Segment>
@@ -212,7 +212,7 @@ app(input) {
         accountId: "6fef9ed9089bb15de3e4198618385de2"
       }
     },
-    removalPolicy: input.stage === "production" ? "retain" : "remove"
+    removal: input.stage === "production" ? "retain" : "remove"
   };
 },
 ```

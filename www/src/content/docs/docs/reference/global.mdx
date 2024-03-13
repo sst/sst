@@ -43,7 +43,7 @@ The variables contain the context of the app that's being run. While the functio
 </InlineSection>
 - <p>[<code class="key">name</code>](#app-name)</p>
 - <p>[<code class="key">providers</code>](#app-providers)</p>
-- <p>[<code class="key">removalPolicy</code>](#app-removalpolicy)</p>
+- <p>[<code class="key">removal</code>](#app-removal)</p>
 - <p>[<code class="key">stage</code>](#app-stage)</p>
 </Section>
 Context about the app being run.
@@ -66,14 +66,14 @@ The name of the current app.
 </Section>
 The providers currently being used in the app.
 </Segment>
-<NestedTitle id="app-removalpolicy" Tag="h4" parent="$app.">removalPolicy</NestedTitle>
+<NestedTitle id="app-removal" Tag="h4" parent="$app.">removal</NestedTitle>
 <Segment>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="symbol">&ldquo;</code><code class="primitive">remove</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">retain</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">retain-all</code><code class="symbol">&rdquo;</code>
 </InlineSection>
 </Section>
-The removal policy for the current stage. If `removalPolicy` was not set in the `sst.config.ts`, this will be return its default value, `retain`.
+The removal policy for the current stage. If `removal` was not set in the `sst.config.ts`, this will be return its default value, `retain`.
 </Segment>
 <NestedTitle id="app-stage" Tag="h4" parent="$app.">stage</NestedTitle>
 <Segment>

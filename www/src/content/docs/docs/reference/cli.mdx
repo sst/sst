@@ -370,13 +370,13 @@ sst remove
 Removes your application. By default, it removes your personal stage.
 
 :::tip
-The resources in your app are removed based on the `removalPolicy` in your `sst.config.ts`.
+The resources in your app are removed based on the `removal` setting in your `sst.config.ts`.
 :::
 
 Optionally, remove your app from a specific stage.
 
 ```bash frame="none"
-sst remove --stage=production
+sst deploy --stage=production
 ```
 
 </Segment>
