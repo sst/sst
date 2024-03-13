@@ -900,10 +900,7 @@ export class Function
     this.fnUrl = fnUrl;
 
     function normalizeRegion() {
-      return all([
-        $app.providers?.aws?.region!,
-        (opts?.provider as aws.Provider)?.region,
-      ]).apply(([appRegion, region]) => region ?? appRegion);
+      return aws.getRegionOutput(undefined, { provider: opts?.provider }).name;
     }
 
     function normalizeInjections() {
@@ -1180,6 +1177,11 @@ export class Function
           return new aws.iam.Role(
             `${name}Role`,
             transform(args.transform?.role, {
+              name: region.apply((region) =>
+                prefixName(
+                  `${name}Role-${region.toLowerCase().replace(/-/g, "")}`,
+                ),
+              ),
               assumeRolePolicy: aws.iam.assumeRolePolicyForPrincipal({
                 Service: "lambda.amazonaws.com",
               }),
@@ -1327,12 +1329,9 @@ export class Function
                   : "live"
                 : `${description ?? ""}`,
           ),
-          code: new asset.AssetArchive({
-            index: new asset.StringAsset("exports.handler = () => {}"),
-          }),
-          //code: new asset.FileArchive(
-          //  path.join($cli.paths.platform, "functions", "empty-function"),
-          //),
+          code: new asset.FileArchive(
+            path.join($cli.paths.platform, "functions", "empty-function"),
+          ),
           handler,
           role: role.arn,
           runtime,

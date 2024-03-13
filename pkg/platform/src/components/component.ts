@@ -58,14 +58,15 @@ export class Component extends ComponentResource {
 
           let overrides;
           switch (args.type) {
-            case "aws:apigatewayv2/api:Api":
-            case "aws:iam/policy:Policy":
+            // resources prefixed manually
             case "aws:iam/role:Role":
-            case "aws:iam/user:User":
-            case "aws:iam/userPolicy:UserPolicy":
+            case "aws:s3/bucketV2:BucketV2":
+              break;
+            case "aws:apigatewayv2/api:Api":
             case "aws:cloudwatch/eventRule:EventRule":
-            case "aws:lambda/function:Function":
             case "aws:dynamodb/table:Table":
+            case "aws:iam/user:User":
+            case "aws:lambda/function:Function":
             case "aws:sns/topic:Topic":
               overrides = { name: prefixName(args.name) };
               break;
@@ -102,7 +103,9 @@ export class Component extends ComponentResource {
             case "aws:acm/certificate:Certificate":
             case "aws:acm/certificateValidation:CertificateValidation":
             case "aws:iam/accessKey:AccessKey":
+            case "aws:iam/policy:Policy":
             case "aws:iam/rolePolicyAttachment:RolePolicyAttachment":
+            case "aws:iam/userPolicy:UserPolicy":
             case "aws:cloudfront/cachePolicy:CachePolicy":
             case "aws:cloudfront/distribution:Distribution":
             case "aws:cloudfront/function:Function":
@@ -121,7 +124,6 @@ export class Component extends ComponentResource {
             case "aws:s3/bucketObjectv2:BucketObjectv2":
             case "aws:s3/bucketPolicy:BucketPolicy":
             case "aws:s3/bucketPublicAccessBlock:BucketPublicAccessBlock":
-            case "aws:s3/bucketV2:BucketV2":
             case "aws:s3/bucketWebsiteConfigurationV2:BucketWebsiteConfigurationV2":
             case "aws:sns/topicSubscription:TopicSubscription":
             case "cloudflare:index/workerDomain:WorkerDomain":

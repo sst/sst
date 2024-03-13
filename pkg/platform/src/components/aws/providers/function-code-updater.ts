@@ -16,7 +16,7 @@ export interface FunctionCodeUpdaterInputs {
    * back to the placeholder code.
    */
   functionLastModified: Input<string>;
-  region: Input<aws.Region>;
+  region: Input<string>;
 }
 
 interface Inputs {
@@ -24,7 +24,7 @@ interface Inputs {
   s3Key: string;
   functionName: string;
   functionLastModified: string;
-  region: aws.Region;
+  region: string;
 }
 
 interface Outputs {

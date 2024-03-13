@@ -20,7 +20,7 @@ export default $config({
       },
     });
 
-    const app = new sst.aws.Function("MyApp2", {
+    const app = new sst.aws.Function("MyApp", {
       handler: "functions/handler-example/index.handler",
       link: [bucket],
       url: true,

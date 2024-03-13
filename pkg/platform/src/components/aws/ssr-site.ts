@@ -386,10 +386,7 @@ export function prepare(args: SsrSiteArgs, opts: ComponentResourceOptions) {
   }
 
   function normalizeRegion() {
-    return all([
-      $app.providers?.aws?.region!,
-      (opts.provider as aws.Provider)?.region,
-    ]).apply(([appRegion, region]) => region ?? appRegion);
+    return aws.getRegionOutput(undefined, { provider: opts?.provider }).name;
   }
 
   function checkSupportedRegion() {
