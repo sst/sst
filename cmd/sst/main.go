@@ -756,6 +756,29 @@ This is useful if you want to run multiple commands, all while accessing the lin
 			Name: "add",
 			Description: Description{
 				Short: "Add a new provider",
+        Long: `
+Adds a provider to your ` + "`sst.config.ts`" + ` and installs it. For example.
+
+` + "```bash" + ` frame="none"
+sst add aws
+` + "```" + `
+
+Adds the following to your config.
+
+` + "```ts" + ` title="sst.config.ts"
+{
+  providers: {
+    aws: true
+  }
+}
+` + "```" + `
+
+:::tip
+You can get the name of a provider from the URL of the provider in the [Pulumi Registry](https://www.pulumi.com/registry/).
+:::
+
+Running ` + "`sst add aws`" + ` above is the same as adding the provider to your config and running ` + "`sst install`" + `.
+`,
 			},
 			Args: []Argument{
 				{
@@ -763,6 +786,7 @@ This is useful if you want to run multiple commands, all while accessing the lin
 					Required: true,
 					Description: Description{
 						Short: "The provider to add",
+						Long: "The provider to add.",
 					},
 				},
 			},
@@ -809,11 +833,18 @@ This is useful if you want to run multiple commands, all while accessing the lin
 		{
 			Name: "install",
 			Description: Description{
-				Short: "Install dependencies specified in sst.config.ts",
+				Short: "Install the providers specified in sst.config.ts",
 				Long: `
-Installs the dependencies in ` + "`sst.config.ts`" + `.
+Installs the providers in your ` + "`sst.config.ts`" + `. You'll need this command when:
 
-You'll need to run this when you add a new provider to your config.
+1. You add a new provider to ` + "`providers`" + ` or ` + "`home`" + ` in your config.
+2. Or, when you want to install new providers after you ` + "`git pull`" + ` some changes.
+
+:::tip
+The ` + "`sst install`" + ` command is similar to ` + "`npm install`" + `.
+:::
+
+Behind the scenes it downloads the packages for the providers and adds the types to your project.
 `,
 			},
 			Run: func(cli *Cli) error {
