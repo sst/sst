@@ -39,6 +39,7 @@ const CDK_DOCS_MAP = {
   ApplicationTargetGroupProps: "aws_elasticloadbalancingv2",
   ApplicationLoadBalancer: "aws_elasticloadbalancingv2",
   ApplicationLoadBalancerProps: "aws_elasticloadbalancingv2",
+  BaseApplicationListenerProps: "aws_elasticloadbalancingv2",
   Certificate: "aws_certificatemanager",
   ICertificate: "aws_certificatemanager",
   DnsValidatedCertificate: "aws_certificatemanager",
