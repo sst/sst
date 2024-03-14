@@ -133,24 +133,24 @@ func CmdDev(cli *Cli) error {
 					u.Reset()
 				}
 			}
-
+			if event.ConcurrentUpdateEvent != nil {
+				cli.Cancel()
+				return
+			}
 			if event.PreludeEvent != nil && hasTarget && runOnce {
 				fmt.Println()
 				fmt.Println("🔥 SST is deploying, run sst dev to view progress 🔥")
 				return
 			}
-
 			if event.CompleteEvent != nil {
 				if hasTarget {
 					if !runOnce && (!event.CompleteEvent.Finished || len(event.CompleteEvent.Errors) > 0) {
 						cli.Cancel()
 						return
 					}
-
 					deployComplete <- event.CompleteEvent
 				}
 			}
-
 			if event.StateEvent != nil {
 				next := event.StateEvent.State
 				defer func() {
@@ -165,9 +165,9 @@ func CmdDev(cli *Cli) error {
 					)
 				}
 			}
-
 		},
 	})
+	u.Destroy()
 	cli.Cancel()
 	if err != nil {
 		return util.NewReadableError(err, "")
