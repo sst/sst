@@ -28,6 +28,7 @@ const CDK_DOCS_MAP = {
   FargateServiceProps: "aws_ecs",
   FargateTaskDefinition: "aws_ecs",
   FunctionUrlOptions: "aws_lambda",
+  ICluster: "aws_ecs",
   LogGroup: "aws_logs",
   LogGroupProps: "aws_logs",
   ILogGroup: "aws_logs",

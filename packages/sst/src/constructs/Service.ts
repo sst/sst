@@ -63,6 +63,7 @@ import {
   FargateService,
   FargateTaskDefinition,
   FargateServiceProps,
+  ICluster,
 } from "aws-cdk-lib/aws-ecs";
 import { LogGroup, LogRetention, RetentionDays } from "aws-cdk-lib/aws-logs";
 import { Platform } from "aws-cdk-lib/aws-ecr-assets";
@@ -563,7 +564,22 @@ export interface ServiceProps {
       image?: ContainerDefinitionOptions["image"];
     };
     /**
-     * Runs codebuild job in the specified VPC. Note this will only work once deployed.
+     * Create the service in an existing ECS cluster.
+     *
+     * @example
+     * ```js
+     * import { Cluster } from "aws-cdk-lib/aws-ecs";
+     *
+     * {
+     *   cdk: {
+     *     cluster: Cluster.fromClusterArn(stack, "Cluster", "arn:aws:ecs:us-east-1:123456789012:cluster/my-cluster"),
+     *   }
+     * }
+     * ```
+     */
+    cluster?: ICluster;
+    /**
+     * Create the service in the specified VPC. Note this will only work once deployed.
      *
      * @example
      * ```js
@@ -608,7 +624,7 @@ export class Service extends Construct implements SSTConstruct {
   private doNotDeploy: boolean;
   private devFunction?: Function;
   private vpc?: IVpc;
-  private cluster?: Cluster;
+  private cluster?: ICluster;
   private container?: ContainerDefinition;
   private taskDefinition?: FargateTaskDefinition;
   private service?: FargateService;
@@ -646,8 +662,8 @@ export class Service extends Construct implements SSTConstruct {
 
     // Create ECS cluster
     const vpc = this.createVpc();
-    const { cluster, container, taskDefinition, service } =
-      this.createService(vpc);
+    const cluster = this.createCluster(vpc);
+    const { container, taskDefinition, service } = this.createService(cluster);
     const { alb, target } = this.createLoadBalancer(vpc, service);
     this.createAutoScaling(service, target);
     this.alb = alb;
@@ -929,24 +945,29 @@ export class Service extends Construct implements SSTConstruct {
     );
   }
 
-  private createService(vpc: IVpc) {
+  private createCluster(vpc: IVpc) {
+    if (this.props.cdk?.cluster) return this.props.cdk.cluster;
+
+    const app = this.node.root as App;
+    const clusterName = app.logicalPrefixedName(this.node.id);
+    return new Cluster(this, "Cluster", {
+      clusterName,
+      vpc,
+    });
+  }
+
+  private createService(cluster: ICluster) {
     const { architecture, cpu, memory, storage, port, logRetention, cdk } =
       this.props;
     const app = this.node.root as App;
-    const clusterName = app.logicalPrefixedName(this.node.id);
 
     const logGroup = new LogRetention(this, "LogRetention", {
-      logGroupName: `/sst/service/${clusterName}`,
+      logGroupName: `/sst/service/${cluster.clusterName}`,
       retention:
         RetentionDays[logRetention.toUpperCase() as keyof typeof RetentionDays],
       logRetentionRetryOptions: {
         maxRetries: 100,
       },
-    });
-
-    const cluster = new Cluster(this, "Cluster", {
-      clusterName,
-      vpc,
     });
 
     const ephemeralStorageGiB = toCdkSize(storage).toGibibytes();

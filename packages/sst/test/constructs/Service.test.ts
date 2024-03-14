@@ -1,6 +1,6 @@
 import { test, expect, beforeAll, vi } from "vitest";
 import { HostedZone } from "aws-cdk-lib/aws-route53";
-import { ContainerImage } from "aws-cdk-lib/aws-ecs";
+import { ContainerImage, Cluster } from "aws-cdk-lib/aws-ecs";
 import {
   countResources,
   countResourcesLike,
@@ -490,6 +490,24 @@ test("environment", async () => {
         Environment: arrayWith([objectLike({ Name: "DEBUG", Value: "*" })]),
       }),
     ],
+  });
+});
+
+test("cdk.cluster", async () => {
+  const app = await createApp();
+  const stack = new Stack(app, "stack");
+  const cluster = new Cluster(stack, "custom-cluster-id", {
+    clusterName: "custom-cluster",
+  });
+
+  new Service(stack, "Service", {
+    port: 3000,
+    cdk: { cluster },
+  });
+
+  countResources(stack, "AWS::ECS::Cluster", 1);
+  hasResource(stack, "AWS::ECS::Cluster", {
+    ClusterName: "custom-cluster",
   });
 });
 

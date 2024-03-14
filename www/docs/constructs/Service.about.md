@@ -423,3 +423,23 @@ new Service(stack, "MyService", {
   },
 });
 ```
+
+### Using an existing Cluster
+
+```js
+import { Cluster } from "aws-cdk-lib/aws-ecs";
+
+const cluster = new Cluster(stack, "SharedCluster");
+
+new Service(stack, "MyServiceA", {
+  path: "./service-a",
+  port: 3000,
+  cdk: { cluster },
+});
+
+new Service(stack, "MyServiceB", {
+  path: "./service-b",
+  port: 3000,
+  cdk: { cluster },
+});
+```
