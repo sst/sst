@@ -326,7 +326,9 @@ new Service(stack, "MyService", {
 });
 ```
 
-### Configuring Fargate Service
+### Advanced examples
+
+#### Configuring Fargate Service
 
 Here's an example of configuring the circuit breaker for the Fargate service.
 
@@ -342,7 +344,7 @@ new Service(stack, "MyService", {
 });
 ```
 
-### Configuring Service Container
+#### Configuring Service Container
 
 Here's an example of configuring the Fargate container health check. Make sure the `curl` command exists inside the container.
 
@@ -366,7 +368,7 @@ new Service(stack, "MyService", {
 });
 ```
 
-### Configuring Application Load Balancer
+#### Configuring Application Load Balancer
 
 Here's an example of configuring the Application Load Balancer subnets.
 
@@ -387,7 +389,7 @@ new Service(stack, "MyService", {
 });
 ```
 
-### Configuring Application Load Balancer Target
+#### Configuring Application Load Balancer Target
 
 Here's an example of configuring the Application Load Balancer health check.
 
@@ -408,7 +410,7 @@ new Service(stack, "MyService", {
 });
 ```
 
-### Configuring Application Load Balancer HTTP to HTTPS redirect
+#### Configuring Application Load Balancer HTTP to HTTPS redirect
 
 Here's an example of redirecting HTTP requests to HTTPS.
 
@@ -447,7 +449,7 @@ service.applicationLoadBalancer.addListener("HttpListener", {
 })
 ```
 
-### Using an existing VPC
+#### Using an existing VPC
 
 ```js
 import { Vpc } from "aws-cdk-lib/aws-ec2";
@@ -463,7 +465,7 @@ new Service(stack, "MyService", {
 });
 ```
 
-### Sharing a Cluster
+#### Sharing a Cluster
 
 ```js
 import { Cluster } from "aws-cdk-lib/aws-ecs";
