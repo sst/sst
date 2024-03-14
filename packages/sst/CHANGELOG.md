@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.41.2
+
+### Patch Changes
+
+- [`0ddcd3210`](https://github.com/sst/sst/commit/0ddcd3210900dd96f531676069d0f72e874c0d80) Thanks [@fwang](https://github.com/fwang)! - Service: support customizing ALB listener
+
 ## 2.41.1
 
 ### Patch Changes
