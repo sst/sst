@@ -17,34 +17,34 @@ func CmdInit(cli *Cli) error {
 	}
 
 	color.New(color.FgYellow).Println(`
-  ███████╗███████╗████████╗
-  ██╔════╝██╔════╝╚══██╔══╝
-  ███████╗███████╗   ██║   
-  ╚════██║╚════██║   ██║   
-  ███████║███████║   ██║   
-  ╚══════╝╚══════╝   ╚═╝
+   ███████╗███████╗████████╗
+   ██╔════╝██╔════╝╚══██╔══╝
+   ███████╗███████╗   ██║   
+   ╚════██║╚════██║   ██║   
+   ███████║███████║   ██║   
+   ╚══════╝╚══════╝   ╚═╝
   `)
 
 	var template string
 	if _, err := os.Stat("next.config.js"); err == nil {
-    color.New(color.FgBlue, color.Bold).Print(">")
-		fmt.Println(" Next.js detected...")
-		fmt.Println("  - creating an sst.config.ts")
-		fmt.Println("  - adding the sst sdk to package.json")
-		fmt.Println("  - modifying tsconfig.json")
+		color.New(color.FgBlue, color.Bold).Print(">")
+		fmt.Println("  Next.js detected...")
+		fmt.Println("   - creating an sst.config.ts")
+		fmt.Println("   - adding the sst sdk to package.json")
+		fmt.Println("   - modifying tsconfig.json")
 		fmt.Println()
 		template = "nextjs"
 	}
 
 	if template == "" {
-    color.New(color.FgBlue, color.Bold).Print(">")
-		fmt.Println(" Adding a new sst.config.ts...")
+		color.New(color.FgBlue, color.Bold).Print(">")
+		fmt.Println("  Adding a new sst.config.ts...")
 		fmt.Println()
 		template = "vanilla"
 	}
 
 	p := promptui.Select{
-		Label:        "Continue",
+		Label:        "‏‏‎ ‎Continue",
 		HideSelected: true,
 		Items:        []string{"Yes", "No"},
 		HideHelp:     true,
@@ -58,12 +58,12 @@ func CmdInit(cli *Cli) error {
 		return nil
 	}
 
-	color.New(color.FgGreen, color.Bold).Print("✓")
+	color.New(color.FgGreen, color.Bold).Print("✓ ")
 	color.New(color.FgWhite).Println(" Template: ", template)
-  fmt.Println()
+	fmt.Println()
 
 	p = promptui.Select{
-		Label:        "Where do you want to deploy your app? You can change this later",
+		Label:        "‏‏‎ ‎Where do you want to deploy your app? You can change this later",
 		HideSelected: true,
 		Items:        []string{"aws", "cloudflare"},
 		HideHelp:     true,
@@ -73,17 +73,17 @@ func CmdInit(cli *Cli) error {
 		return err
 	}
 
-	color.New(color.FgGreen, color.Bold).Print("✓")
+	color.New(color.FgGreen, color.Bold).Print("✓ ")
 	color.New(color.FgWhite).Println(" Using: " + home)
-  fmt.Println()
+	fmt.Println()
 
 	err = project.Create(template, home)
 	if err != nil {
 		return err
 	}
 	initProject(cli)
-	color.New(color.FgGreen, color.Bold).Print("✓")
+	color.New(color.FgGreen, color.Bold).Print("✓ ")
 	color.New(color.FgWhite).Println(" Success 🎉")
-  fmt.Println()
+	fmt.Println()
 	return nil
 }
