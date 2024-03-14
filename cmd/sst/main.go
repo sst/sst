@@ -1012,11 +1012,11 @@ You should not usually run into this.
 		{
 			Name: "init",
 			Description: Description{
-				Short: "Init drop-in mode",
+				Short: "Initialize a new project",
 				Long: `
-Run this to initialize your app in drop-in mode. Currently, supports Next.js apps.
+Initialize a new project in the current directory. This will create a ` + "`sst.config.ts`" + ` and ` + "`sst install`" + ` your providers.
 
-This will create a ` + "`sst.config.ts`" + ` file and configure the types for your project.
+If this is run in a Next.js, Remix, or Astro project, it'll init SST in drop-in mode. 
 `,
 			},
 			Run: CmdInit,

@@ -10,22 +10,28 @@ import (
 )
 
 func CmdInit(cli *Cli) error {
-	color.New(color.FgYellow, color.Bold).Println(`                __ 
-     __________/ /_
-    / ___/ ___/ __/
-   (__  |__  ) /_  
-  /____/____/\__/`)
-	// color.New(color.FgYellow, color.Bold).Println(`   ______    ______    ______
-	// /\  ___\  /\  ___\  /\__  _\
-	// \ \___  \ \ \___  \ \/_/\ \/
-	//  \/\_____\ \/\_____\   \ \_\
-	//   \/_____/  \/_____/    \/_/`)
-	fmt.Println()
 	if _, err := os.Stat("sst.config.ts"); err == nil {
-		color.New(color.FgRed, color.Bold).Print("✗")
-		color.New(color.FgWhite, color.Bold).Println(" sst.config.ts already exists")
+		color.New(color.FgRed, color.Bold).Print("×")
+		color.New(color.FgWhite, color.Bold).Println(" SST project already exists")
 		return nil
 	}
+
+	color.New(color.FgYellow).Println(`
+  ███████╗███████╗████████╗
+  ██╔════╝██╔════╝╚══██╔══╝
+  ███████╗███████╗   ██║   
+  ╚════██║╚════██║   ██║   
+  ███████║███████║   ██║   
+  ╚══════╝╚══════╝   ╚═╝   
+  `)
+//	color.New(color.FgYellow).Println(`
+//  ███████ ███████ ████████ 
+//  ██      ██         ██    
+//  ███████ ███████    ██    
+//       ██      ██    ██    
+//  ███████ ███████    ██    
+//  `)
+	fmt.Println()
 
 	var template string
 	if _, err := os.Stat("next.config.js"); err == nil {
@@ -60,7 +66,7 @@ func CmdInit(cli *Cli) error {
 		return nil
 	}
 
-	color.New(color.FgGreen, color.Bold).Print("✔")
+	color.New(color.FgGreen, color.Bold).Print("✓")
 	color.New(color.FgWhite).Println(" Using ", template, " template")
 
 	p = promptui.Select{
@@ -74,7 +80,7 @@ func CmdInit(cli *Cli) error {
 		return err
 	}
 
-	color.New(color.FgGreen, color.Bold).Print("✔")
+	color.New(color.FgGreen, color.Bold).Print("✓")
 	color.New(color.FgWhite).Println(" Setting home to " + home)
 
 	err = project.Create(template, home)
@@ -82,7 +88,7 @@ func CmdInit(cli *Cli) error {
 		return err
 	}
 	initProject(cli)
-	color.New(color.FgGreen, color.Bold).Print("✔")
+	color.New(color.FgGreen, color.Bold).Print("✓")
 	color.New(color.FgWhite).Println(" Created new project with '", template, "' template")
 	return nil
 }
