@@ -188,7 +188,7 @@ func (u *UI) Trigger(evt *project.StackEvent) {
 		}
 
 		if evt.ResOutputsEvent.Metadata.Type == "sst:aws:Nextjs" && evt.ResOutputsEvent.Metadata.Op == apitype.OpCreate {
-			u.footer = "🎉 Congrats on your new site!" + color.New(color.FgHiBlack).Sprintf(" (DNS could take a few mins)")
+			u.footer = "🎉 Congrats on your new site!"
 		}
 
 		duration := time.Since(u.timing[evt.ResOutputsEvent.Metadata.URN]).Round(time.Millisecond)
