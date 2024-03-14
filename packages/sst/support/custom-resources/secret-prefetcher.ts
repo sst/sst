@@ -1,17 +1,19 @@
 import {
   LambdaClient,
-  GetFunctionCommand,
   UpdateFunctionConfigurationCommand,
+  UpdateFunctionConfigurationCommandInput,
+  GetFunctionCommand,
+  GetFunctionCommandInput,
 } from "@aws-sdk/client-lambda";
 import { CdkCustomResourceEvent } from "aws-lambda";
-import { sdkLogger } from "./util.js";
+import { useAWSClient } from "./util.js";
 import { parseEnvironment } from "../../src/node/util/index.js";
 
 interface Props {
   functionName: string;
 }
 
-const lambda = new LambdaClient({ logger: sdkLogger });
+const lambda = useAWSClient(LambdaClient);
 
 export async function SecretPrefetcher(cfnRequest: CdkCustomResourceEvent) {
   switch (cfnRequest.RequestType) {
@@ -22,10 +24,12 @@ export async function SecretPrefetcher(cfnRequest: CdkCustomResourceEvent) {
 
       try {
         // Get binding envs
-        const ret = await lambda.send(
-          new GetFunctionCommand({
-            FunctionName: props.functionName,
-          })
+        const ret = await retryOnAccessDenied(() =>
+          lambda.send(
+            new GetFunctionCommand({
+              FunctionName: props.functionName,
+            })
+          )
         );
         const envs = ret.Configuration?.Environment?.Variables ?? {};
         Object.entries(envs)
@@ -49,13 +53,15 @@ export async function SecretPrefetcher(cfnRequest: CdkCustomResourceEvent) {
         Object.entries(allVariables["Secret"] ?? {}).map(([key, value]) => {
           envs[`SST_Secret_value_${key}`] = value.value.toString();
         });
-        await lambda.send(
-          new UpdateFunctionConfigurationCommand({
-            FunctionName: props.functionName,
-            Environment: {
-              Variables: envs,
-            },
-          })
+        await retryOnAccessDenied(() =>
+          lambda.send(
+            new UpdateFunctionConfigurationCommand({
+              FunctionName: props.functionName,
+              Environment: {
+                Variables: envs,
+              },
+            })
+          )
         );
       } finally {
         process.env = processEnvBackup;
@@ -66,5 +72,22 @@ export async function SecretPrefetcher(cfnRequest: CdkCustomResourceEvent) {
       break;
     default:
       throw new Error("Unsupported request type");
+  }
+}
+
+async function retryOnAccessDenied(cb: () => Promise<any>, attempt = 0) {
+  try {
+    return await cb();
+  } catch (e: any) {
+    if (
+      (e.name === "AccessDenied" || e.name === "AccessDeniedException") &&
+      e.message.includes("is not authorized to perform") &&
+      attempt < 10
+    ) {
+      // Wait for 5 seconds and retry up to 10 times
+      await new Promise((resolve) => setTimeout(resolve, 5000));
+      return retryOnAccessDenied(cb, attempt + 1);
+    }
+    throw e;
   }
 }

@@ -546,7 +546,7 @@ import { Certificate } from "aws-cdk-lib/aws-certificatemanager";
 
 new SvelteKitSite(stack, "Site", {
   path: "my-svelte-app/",
-  cutomDomain: {
+  customDomain: {
     isExternalDomain: true,
     domainName: "my-app.com",
     cdk: {
