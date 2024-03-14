@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"flag"
@@ -124,8 +125,11 @@ func run() error {
 			}
 		}
 	}
-	flag.Parse()
-
+	flag.CommandLine.Init("sst", flag.ContinueOnError)
+	// suppresses default output on failure
+	buf := bytes.NewBuffer([]byte{})
+	flag.CommandLine.SetOutput(buf)
+	err := flag.CommandLine.Parse(os.Args[1:])
 	cli := &Cli{
 		flags:     parsedFlags,
 		arguments: positionals,
@@ -133,8 +137,10 @@ func run() error {
 		Context:   ctx,
 		cancel:    cancel,
 	}
-
 	configureLog(cli)
+	if err != nil {
+		return cli.PrintHelp()
+	}
 
 	spin := spinner.New(spinner.CharSets[14], 100*time.Millisecond)
 	spin.Suffix = "  First run, setting up environment..."
@@ -755,7 +761,7 @@ This is useful if you want to run multiple commands, all while accessing the lin
 			Name: "add",
 			Description: Description{
 				Short: "Add a new provider",
-        Long: `
+				Long: `
 Adds a provider to your ` + "`sst.config.ts`" + ` and installs it. For example.
 
 ` + "```bash" + ` frame="none"
@@ -785,7 +791,7 @@ Running ` + "`sst add aws`" + ` above is the same as adding the provider to your
 					Required: true,
 					Description: Description{
 						Short: "The provider to add",
-						Long: "The provider to add.",
+						Long:  "The provider to add.",
 					},
 				},
 			},
