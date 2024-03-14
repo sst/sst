@@ -408,6 +408,45 @@ new Service(stack, "MyService", {
 });
 ```
 
+### Configuring Application Load Balancer HTTP to HTTPS redirect
+
+Here's an example of redirecting HTTP requests to HTTPS.
+
+```js
+import { Certificate } from "aws-cdk-lib/aws-certificatemanager";
+import {
+  ApplicationProtocol,
+  ListenerAction,
+  ListenerCertificate,
+} from "aws-cdk-lib/aws-elasticloadbalancingv2";
+
+const service = new Service(stack, "MyService", {
+  path: "./service",
+  port: 3000,
+  cdk: {
+    // Set default listener to be HTTPS
+    applicationLoadBalancerListener: {
+      protocol: ApplicationProtocol.HTTPS,
+      port: 443,
+      certificates: [ListenerCertificate.fromArn("arn:xxxxxxxxxx")],
+    },
+  },
+});
+
+// Add redirect listener
+service.applicationLoadBalancer.addListener("HttpListener", {
+  protocol: ApplicationProtocol.HTTP,
+  defaultAction: ListenerAction.redirect({
+    protocol: "HTTPS",
+    host: "#{host}",
+    path: "/#{path}",
+    query: "#{query}",
+    port: "443",
+    statusCode: "HTTP_301",
+  }),
+})
+```
+
 ### Using an existing VPC
 
 ```js
@@ -424,7 +463,7 @@ new Service(stack, "MyService", {
 });
 ```
 
-### Using an existing Cluster
+### Sharing a Cluster
 
 ```js
 import { Cluster } from "aws-cdk-lib/aws-ecs";
