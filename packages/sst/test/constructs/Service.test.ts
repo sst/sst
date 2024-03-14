@@ -231,26 +231,6 @@ test("cpu invalid", async () => {
   }).rejects.toThrow(/only the following "cpu" settings/);
 });
 
-
-test("cluster defined", async () => {
-  const app = await createApp();
-  const stack = new Stack(app, "stack");
-  const cluster = new Cluster(stack,
-    "custom-cluster-id",
-    { clusterName: "custom-cluster" }
-  );
-
-  new Service(stack, "Service", {
-    cluster,
-    port: 3000,
-  });
-
-  countResources(stack, "AWS::ECS::Cluster", 1);
-  hasResource(stack, "AWS::ECS::Cluster", {
-    ClusterName: "custom-cluster",
-  });
-});
-
 test("memory undefined", async () => {
   const { stack } = await createService({});
   hasResource(stack, "AWS::ECS::TaskDefinition", {
@@ -510,6 +490,24 @@ test("environment", async () => {
         Environment: arrayWith([objectLike({ Name: "DEBUG", Value: "*" })]),
       }),
     ],
+  });
+});
+
+test("cdk.cluster", async () => {
+  const app = await createApp();
+  const stack = new Stack(app, "stack");
+  const cluster = new Cluster(stack, "custom-cluster-id", {
+    clusterName: "custom-cluster",
+  });
+
+  new Service(stack, "Service", {
+    port: 3000,
+    cdk: { cluster },
+  });
+
+  countResources(stack, "AWS::ECS::Cluster", 1);
+  hasResource(stack, "AWS::ECS::Cluster", {
+    ClusterName: "custom-cluster",
   });
 });
 

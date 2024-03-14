@@ -429,17 +429,17 @@ new Service(stack, "MyService", {
 ```js
 import { Cluster } from "aws-cdk-lib/aws-ecs";
 
-const myCluster = new Cluster(stack, "MultiServicesCluster");
+const cluster = new Cluster(stack, "SharedCluster");
 
-const serviceOne = new Service(stack, "ServiceOne", {
-  cluster: myCluster,
-  path: "./services/one",
+new Service(stack, "MyServiceA", {
+  path: "./service-a",
   port: 3000,
+  cdk: { cluster },
 });
 
-const serviceTwo = new Service(stack, "ServiceTwo", {
-  cluster: myCluster,
-  path: "./services/two",
+new Service(stack, "MyServiceB", {
+  path: "./service-b",
   port: 3000,
+  cdk: { cluster },
 });
 ```
