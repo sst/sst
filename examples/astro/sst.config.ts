@@ -5,9 +5,7 @@ export default $config({
     return {
       name: "astro",
       removal: input?.stage === "production" ? "retain" : "remove",
-      providers: {
-        aws: {},
-      },
+      home: "aws",
     };
   },
   async run() {
