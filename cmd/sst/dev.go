@@ -10,6 +10,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/fatih/color"
 	"github.com/sst/ion/cmd/sst/ui"
 	"github.com/sst/ion/internal/util"
 	"github.com/sst/ion/pkg/project"
@@ -139,7 +140,8 @@ func CmdDev(cli *Cli) error {
 			}
 			if event.PreludeEvent != nil && hasTarget && runOnce {
 				fmt.Println()
-				fmt.Println("🔥 SST is deploying, run sst dev to view progress 🔥")
+				color.New(color.FgYellow, color.Bold).Print("~")
+				color.New(color.FgWhite, color.Bold).Println("  Deploying")
 				return
 			}
 			if event.CompleteEvent != nil {
