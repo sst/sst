@@ -38,7 +38,11 @@ function buildRouteTree(routes: BuildMetaConfig["routes"], level = 0) {
     ) {
       delete routeTree.branches[key];
     } else if (branch.nodes.length > 1) {
-      routeTree.branches[key] = buildRouteTree(branch.nodes, level + 1);
+      const deduplicatedNodes = branch.nodes.filter(
+        (node, index, arr) =>
+          arr.findIndex((n) => n.pattern === node.pattern) === index
+      );
+      routeTree.branches[key] = buildRouteTree(deduplicatedNodes, level + 1);
       branch.nodes = [];
     }
   }
