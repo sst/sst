@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.41.1
+
+### Patch Changes
+
+- [#3709](https://github.com/sst/sst/pull/3709) [`8e80d6179`](https://github.com/sst/sst/commit/8e80d61793b300a7c4a0ab1483d5d1b3afee2334) Thanks [@bayssmekanique](https://github.com/bayssmekanique)! - Astro: fixes infinite loop during deployment caused by Astro plugins
+
 ## 2.41.0
 
 ### Minor Changes

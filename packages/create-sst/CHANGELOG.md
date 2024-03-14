@@ -1,5 +1,7 @@
 # create-sst
 
+## 2.41.1
+
 ## 2.41.0
 
 ### Minor Changes
