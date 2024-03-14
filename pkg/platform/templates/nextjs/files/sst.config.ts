@@ -5,9 +5,10 @@ export default $config({
     return {
       name: "{{.App}}",
       removal: input?.stage === "production" ? "retain" : "remove",
+      home: "{{.Home}}",
     };
   },
   async run() {
-    const site = new sst.aws.Nextjs("Web");
+    const site = new sst.{{.Home}}.Nextjs("Web");
   },
 });

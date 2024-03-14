@@ -5,9 +5,10 @@ export default $config({
     return {
       name: "nextjs",
       removal: input?.stage === "production" ? "retain" : "remove",
+      home: "cloudflare",
     };
   },
   async run() {
-    const site = new sst.aws.Nextjs("Web");
+    const site = new sst.cloudflare.Nextjs("Web");
   },
 });

@@ -19,7 +19,6 @@ import (
 	"github.com/briandowns/spinner"
 	"github.com/fatih/color"
 	"github.com/joho/godotenv"
-	"github.com/manifoldco/promptui"
 	"github.com/sst/ion/cmd/sst/ui"
 	"github.com/sst/ion/internal/util"
 	"github.com/sst/ion/pkg/global"
@@ -1014,38 +1013,7 @@ Run this to initialize your app in drop-in mode. Currently, supports Next.js app
 This will create a ` + "`sst.config.ts`" + ` file and configure the types for your project.
 `,
 			},
-			Run: func(cli *Cli) error {
-				if _, err := os.Stat("sst.config.ts"); err == nil {
-					color.New(color.FgRed, color.Bold).Print("✗")
-					color.New(color.FgWhite, color.Bold).Println(" sst.config.ts already exists")
-					return nil
-				}
-				template := "vanilla"
-				if _, err := os.Stat("next.config.js"); err == nil {
-					p := promptui.Select{
-						Label:        "Next.js detected, would you like to use the Next.js template?",
-						HideSelected: true,
-						Items:        []string{"Yes", "No"},
-						HideHelp:     true,
-					}
-					_, result, err := p.Run()
-					if err != nil {
-						return err
-					}
-					if result == "Yes" {
-						template = "nextjs"
-					}
-				}
-				err := project.Create(template)
-				if err != nil {
-					return err
-				}
-				initProject(cli)
-				color.New(color.FgGreen, color.Bold).Print("✔")
-				color.New(color.FgWhite, color.Bold).Println("  Created new project with '", template, "' template")
-				return nil
-
-			},
+			Run: CmdInit,
 		},
 		{
 			Name: "upgrade",
@@ -1296,7 +1264,7 @@ func (c CommandPath) PrintHelp() error {
 			}
 			next := len(child.Name)
 			if len(child.Args) > 0 {
-				next += len(child.Args.String())
+				next += len(child.Args.String()) + 1
 			}
 			if next > maxSubcommand {
 				maxSubcommand = next

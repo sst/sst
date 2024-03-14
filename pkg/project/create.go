@@ -33,7 +33,7 @@ type preset struct {
 	Steps []step `json:"steps"`
 }
 
-func Create(templateName string) error {
+func Create(templateName string, home string) error {
 	if _, err := os.Stat("sst.config.ts"); err == nil {
 		return fmt.Errorf("sst.config.ts already exists")
 	}
@@ -127,9 +127,11 @@ func Create(templateName string) error {
 				slog.Info("copying template", "path", path)
 				tmpl, err := template.New(path).Parse(string(src))
 				data := struct {
-					App string
+					App  string
+					Home string
 				}{
-					App: directoryName,
+					App:  directoryName,
+					Home: home,
 				}
 
 				output, err := os.Create(name)

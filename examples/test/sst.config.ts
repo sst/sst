@@ -1,26 +1,12 @@
 /// <reference path="./.sst/platform/config.d.ts" />
+
 export default $config({
-  app() {
+  app(input) {
     return {
       name: "test",
-      removal: "retain-all",
+      removal: input?.stage === "production" ? "retain" : "remove",
       home: "aws",
-      providers: {},
     };
   },
-  async run() {
-    const fn = new sst.aws.Function("MyFunction2", {
-      handler: "src/index.handler",
-      url: true,
-    });
-    const router = new sst.aws.Router("MyRouter", {
-      routes: {
-        "/*": fn.url,
-      },
-    });
-    return {
-      url: fn.url,
-      router: router.url,
-    };
-  },
+  async run() {},
 });
