@@ -68,10 +68,15 @@ import {
 import { LogGroup, LogRetention, RetentionDays } from "aws-cdk-lib/aws-logs";
 import { Platform } from "aws-cdk-lib/aws-ecr-assets";
 import {
+  ApplicationListener,
   ApplicationLoadBalancer,
   ApplicationLoadBalancerProps,
   ApplicationTargetGroup,
   ApplicationTargetGroupProps,
+  ApplicationProtocol,
+  CfnListener,
+  ListenerAction,
+  IListenerCertificate,
 } from "aws-cdk-lib/aws-elasticloadbalancingv2";
 import { createAppContext } from "./context.js";
 import { toCdkSize } from "./index.js";
@@ -511,9 +516,7 @@ export interface ServiceProps {
      * }
      * ```
      */
-    applicationLoadBalancer?:
-      | boolean
-      | Omit<ApplicationLoadBalancerProps, "vpc">;
+    applicationLoadBalancer?: boolean | AlbProps;
     /**
      * Customize the Application Load Balancer's target group.
      * @default true
@@ -607,6 +610,31 @@ type ServiceNormalizedProps = ServiceProps & {
   logRetention: Exclude<ServiceProps["logRetention"], undefined>;
 };
 
+type AlbProps = Omit<ApplicationLoadBalancerProps, "vpc"> & HttpsListenerProps;
+type HttpsListenerProps = {
+  /**
+   * This option will allow you to redirect HTTP traffic to HTTPS on the load balancer itself.
+   * @default false
+   * @example
+   * ```js
+   * {
+   *   httpsRedirect: true,
+   * }
+   * ```
+   */
+  httpsRedirect?: boolean;
+  /**
+   * This option attaches these certificate to the https load balancer. This must be specified
+   * @default undefined
+   * @example
+   * ```js
+   * {
+   *   certificates: [new Certificate(stack, "Certificate", certificateProps],
+   * }
+   * ```
+   */
+  certificates?: IListenerCertificate[];
+};
 /**
  * The `Service` construct is a higher level CDK construct that makes it easy to create modern web apps with Server Side Rendering capabilities.
  * @example
@@ -630,7 +658,6 @@ export class Service extends Construct implements SSTConstruct {
   private service?: FargateService;
   private distribution?: Distribution;
   private alb?: ApplicationLoadBalancer;
-
   constructor(scope: Construct, id: string, props: ServiceProps) {
     super(scope, id);
 
@@ -1024,7 +1051,7 @@ export class Service extends Construct implements SSTConstruct {
     if (cdk?.applicationLoadBalancer === false) {
       if (cdk?.applicationLoadBalancerTargetGroup)
         throw new VisibleError(
-          `In the "${this.node.id}" Service, the "cdk.applicationLoadBalancerTargetGroup" cannot be applied if the Application Load Balancer is diabled.`
+          `In the "${this.node.id}" Service, the "cdk.applicationLoadBalancerTargetGroup" cannot be applied if the Application Load Balancer is disabled.`
         );
       return {};
     }
@@ -1036,12 +1063,59 @@ export class Service extends Construct implements SSTConstruct {
         ? {}
         : cdk?.applicationLoadBalancer),
     });
-    const listener = alb.addListener("Listener", { port: 80 });
-    const target = listener.addTargets("TargetGroup", {
-      port: 80,
-      targets: [service],
-      ...cdk?.applicationLoadBalancerTargetGroup,
-    });
+
+    let listener: ApplicationListener;
+    let target: ApplicationTargetGroup;
+
+    const albConfig = cdk?.applicationLoadBalancer as AlbProps;
+    if (albConfig.httpsRedirect) {
+      if (!albConfig.certificates) {
+        throw new VisibleError(
+          `In the "${this.node.id}" Service, the "httpsLoadBalancer" option is enabled but no "certificates" are provided.`
+        );
+      }
+      let httpListener = alb.addListener("HttpListener", {
+        protocol: ApplicationProtocol.HTTP,
+      });
+      // Dummy response. If omitted, we get the following error on `cdk synth`:
+      // "Listener needs at least one default target group (call addTargetGroups)"
+      // See: https://github.com/aws/aws-cdk/issues/2563 for details
+      httpListener.addAction("DummyResponse", {
+        action: ListenerAction.fixedResponse(404),
+      });
+      const cfnHttpListener = httpListener.node.defaultChild as CfnListener;
+      cfnHttpListener.defaultActions = [
+        {
+          type: "redirect",
+          redirectConfig: {
+            protocol: "HTTPS",
+            host: "#{host}",
+            path: "/#{path}",
+            query: "#{query}",
+            port: "443",
+            statusCode: "HTTP_301",
+          },
+        },
+      ];
+      listener = alb.addListener("HttpsListener", {
+        protocol: ApplicationProtocol.HTTPS,
+        port: 443,
+        certificates: albConfig.certificates,
+      });
+      target = listener.addTargets("TargetGroup", {
+        port: 80,
+        targets: [service],
+        ...cdk?.applicationLoadBalancerTargetGroup,
+      });
+    } else {
+      listener = alb.addListener("Listener", { port: 80 });
+      target = listener.addTargets("TargetGroup", {
+        port: 80,
+        targets: [service],
+        ...cdk?.applicationLoadBalancerTargetGroup,
+      });
+    }
+
     return { alb, target };
   }
 
