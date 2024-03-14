@@ -1,5 +1,11 @@
 # @serverless-stack/docs
 
+## 2.11.2
+
+### Patch Changes
+
+- [#3692](https://github.com/sst/sst/pull/3692) [`533caaeaa`](https://github.com/sst/sst/commit/533caaeaaa2b1def8e312efe0fa9a7734076d43a) Thanks [@zxan1285](https://github.com/zxan1285)! - Service: support using existing ECS Cluster
+
 ## 2.11.1
 
 ### Patch Changes

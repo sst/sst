@@ -1,5 +1,13 @@
 # @serverless-stack/cli2
 
+## 2.40.8
+
+### Patch Changes
+
+- [#3700](https://github.com/sst/sst/pull/3700) [`df8866bad`](https://github.com/sst/sst/commit/df8866bad57d9f243a066b929125abf99aabbc9d) Thanks [@sommeeeer](https://github.com/sommeeeer)! - NextjsSite: update to OpenNext 2.3.7
+
+- [#3692](https://github.com/sst/sst/pull/3692) [`533caaeaa`](https://github.com/sst/sst/commit/533caaeaaa2b1def8e312efe0fa9a7734076d43a) Thanks [@zxan1285](https://github.com/zxan1285)! - Service: support using existing ECS Cluster
+
 ## 2.40.7
 
 ### Patch Changes
