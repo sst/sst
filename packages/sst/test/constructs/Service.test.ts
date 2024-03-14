@@ -671,6 +671,30 @@ test("cdk.applicationLoadBalancerTargetGroup: ALB disabled", async () => {
     /"cdk.applicationLoadBalancerTargetGroup" cannot be applied/
   );
 });
+test("cdk.applicationLoadBalancerListener", async () => {
+  const { service, stack } = await createService({
+    cdk: {
+      applicationLoadBalancerListener: {
+        port: 8080,
+      },
+    },
+  });
+  hasResource(stack, "AWS::ElasticLoadBalancingV2::Listener", {
+    Port: 8080,
+  });
+});
+test("cdk.applicationLoadBalancerListener: ALB disabled", async () => {
+  expect(async () => {
+    await createService({
+      cdk: {
+        applicationLoadBalancer: false,
+        applicationLoadBalancerListener: {
+          port: 8080,
+        },
+      },
+    });
+  }).rejects.toThrow(/"cdk.applicationLoadBalancerListener" cannot be applied/);
+});
 
 test("sst deploy inactive stack", async () => {
   const app = await createApp({

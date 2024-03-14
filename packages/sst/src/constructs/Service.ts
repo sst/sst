@@ -72,6 +72,7 @@ import {
   ApplicationLoadBalancerProps,
   ApplicationTargetGroup,
   ApplicationTargetGroupProps,
+  BaseApplicationListenerProps,
 } from "aws-cdk-lib/aws-elasticloadbalancingv2";
 import { createAppContext } from "./context.js";
 import { toCdkSize } from "./index.js";
@@ -516,7 +517,20 @@ export interface ServiceProps {
       | Omit<ApplicationLoadBalancerProps, "vpc">;
     /**
      * Customize the Application Load Balancer's target group.
-     * @default true
+     * @example
+     * ```js
+     * {
+     *   cdk: {
+     *     applicationLoadBalancerListener: {
+     *       port: 8080
+     *     }
+     *   }
+     * }
+     * ```
+     */
+    applicationLoadBalancerListener?: BaseApplicationListenerProps;
+    /**
+     * Customize the Application Load Balancer's target group.
      * @example
      * ```js
      * {
@@ -1022,9 +1036,13 @@ export class Service extends Construct implements SSTConstruct {
 
     // Do not create load balancer if disabled
     if (cdk?.applicationLoadBalancer === false) {
+      if (cdk?.applicationLoadBalancerListener)
+        throw new VisibleError(
+          `In the "${this.node.id}" Service, the "cdk.applicationLoadBalancerListener" cannot be applied if the Application Load Balancer is disabled.`
+        );
       if (cdk?.applicationLoadBalancerTargetGroup)
         throw new VisibleError(
-          `In the "${this.node.id}" Service, the "cdk.applicationLoadBalancerTargetGroup" cannot be applied if the Application Load Balancer is diabled.`
+          `In the "${this.node.id}" Service, the "cdk.applicationLoadBalancerTargetGroup" cannot be applied if the Application Load Balancer is disabled.`
         );
       return {};
     }
@@ -1036,7 +1054,10 @@ export class Service extends Construct implements SSTConstruct {
         ? {}
         : cdk?.applicationLoadBalancer),
     });
-    const listener = alb.addListener("Listener", { port: 80 });
+    const listener = alb.addListener("Listener", {
+      port: 80,
+      ...cdk?.applicationLoadBalancerListener,
+    });
     const target = listener.addTargets("TargetGroup", {
       port: 80,
       targets: [service],
