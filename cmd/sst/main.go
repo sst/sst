@@ -220,7 +220,7 @@ sst deploy --stage=production
 			Description: Description{
 				Short: "The stage to deploy to",
 				Long: `
-The stage the CLI is running on.
+Set the stage the CLI is running on.
 
 ` + "```bash" + ` frame="none"
 sst [command] --stage=production
@@ -277,7 +277,7 @@ sst --help
 		{
 			Name: "version",
 			Description: Description{
-				Short: "Print the version",
+				Short: "Print the version of the CLI",
 				Long:  `Prints the current version of the CLI.`,
 			},
 			Run: func(cli *Cli) error {
@@ -628,7 +628,7 @@ sst secret list --stage=production
 				},
 			},
 			Description: Description{
-				Short: "Run command with all resource linked in environment",
+				Short: "Run a command with linked resources",
 				Long: `
 Run a command with all the resources linked to the environment.
 
@@ -838,7 +838,7 @@ Running ` + "`sst add aws`" + ` above is the same as adding the provider to your
 		{
 			Name: "install",
 			Description: Description{
-				Short: "Install the providers specified in sst.config.ts",
+				Short: "Install all the providers",
 				Long: `
 Installs the providers in your ` + "`sst.config.ts`" + `. You'll need this command when:
 
@@ -1024,7 +1024,7 @@ If this is run in a Next.js, Remix, or Astro project, it'll init SST in drop-in 
 		{
 			Name: "upgrade",
 			Description: Description{
-				Short: "Upgrade the CLI to the latest version",
+				Short: "Upgrade the CLI",
 				Long: `
 Upgrade the CLI to the latest version. Or optionally, pass in a version to upgrade to.
 
@@ -1051,7 +1051,7 @@ sst upgrade 0.10
 		{
 			Name: "telemetry",
 			Description: Description{
-				Short: "Control telemetry settings",
+				Short: "Manage telemetry settings",
 				Long: `
 Manage telemetry settings.
 
