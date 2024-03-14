@@ -1,5 +1,15 @@
 # @serverless-stack/cli2
 
+## 2.40.7
+
+### Patch Changes
+
+- [`0eb2d3f2e`](https://github.com/sst/sst/commit/0eb2d3f2e0127793cc1ccb64855c871e17bd7b46) Thanks [@fwang](https://github.com/fwang)! - secret prefetcher: accommodate for IAM policy delay
+
+- [`12b4c0ff9`](https://github.com/sst/sst/commit/12b4c0ff9ab23132ac58d0942fb2def753c9df7d) Thanks [@fwang](https://github.com/fwang)! - Handle custom resource response 4kb limit
+
+- [#3674](https://github.com/sst/sst/pull/3674) [`602ddbfb5`](https://github.com/sst/sst/commit/602ddbfb58cbb19ded03f9c2b252821a5baf2cc3) Thanks [@mikeyaa](https://github.com/mikeyaa)! - Function: don't overwrite description, but add Live Lambda label
+
 ## 2.40.6
 
 ### Patch Changes
