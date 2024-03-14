@@ -22,7 +22,7 @@ func CmdInit(cli *Cli) error {
   ███████╗███████╗   ██║   
   ╚════██║╚════██║   ██║   
   ███████║███████║   ██║   
-  ╚══════╝╚══════╝   ╚═╝   
+  ╚══════╝╚══════╝   ╚═╝
   `)
 //	color.New(color.FgYellow).Println(`
 //  ███████ ███████ ████████ 
@@ -31,28 +31,27 @@ func CmdInit(cli *Cli) error {
 //       ██      ██    ██    
 //  ███████ ███████    ██    
 //  `)
-	fmt.Println()
 
 	var template string
 	if _, err := os.Stat("next.config.js"); err == nil {
-		fmt.Println("  Next.js detected - initializing an sst project will")
-		fmt.Println("  - create an sst.config.ts file")
-		fmt.Println("  - add the sst sdk to your package.json")
-		fmt.Println("  - modify your tsconfig.json")
+    color.New(color.FgBlue, color.Bold).Print(">")
+		fmt.Println(" Next.js detected...")
+		fmt.Println("  - creating an sst.config.ts")
+		fmt.Println("  - adding the sst sdk to package.json")
+		fmt.Println("  - modifying tsconfig.json")
 		fmt.Println()
 		template = "nextjs"
 	}
 
 	if template == "" {
-		fmt.Println("  Creating a new sst project - this will")
-		fmt.Println("  - create an sst.config.ts file")
-		fmt.Println("  - install dependencies")
+    color.New(color.FgBlue, color.Bold).Print(">")
+		fmt.Println(" Adding a new sst.config.ts...")
 		fmt.Println()
 		template = "vanilla"
 	}
 
 	p := promptui.Select{
-		Label:        "Do you want to continue?",
+		Label:        "Continue",
 		HideSelected: true,
 		Items:        []string{"Yes", "No"},
 		HideHelp:     true,
@@ -66,11 +65,11 @@ func CmdInit(cli *Cli) error {
 		return nil
 	}
 
-	color.New(color.FgGreen, color.Bold).Print("✓")
-	color.New(color.FgWhite).Println(" Using ", template, " template")
+//	color.New(color.FgGreen, color.Bold).Print("✓")
+//	color.New(color.FgWhite).Println(" Using ", template, " template")
 
 	p = promptui.Select{
-		Label:        "Where do you want to store the state of your app?",
+		Label:        "Where do you want to deploy your app? You can change this later",
 		HideSelected: true,
 		Items:        []string{"aws", "cloudflare"},
 		HideHelp:     true,
@@ -80,8 +79,8 @@ func CmdInit(cli *Cli) error {
 		return err
 	}
 
-	color.New(color.FgGreen, color.Bold).Print("✓")
-	color.New(color.FgWhite).Println(" Setting home to " + home)
+//	color.New(color.FgGreen, color.Bold).Print("✓")
+//	color.New(color.FgWhite).Println(" Setting home to " + home)
 
 	err = project.Create(template, home)
 	if err != nil {
@@ -89,6 +88,7 @@ func CmdInit(cli *Cli) error {
 	}
 	initProject(cli)
 	color.New(color.FgGreen, color.Bold).Print("✓")
-	color.New(color.FgWhite).Println(" Created new project with '", template, "' template")
+	color.New(color.FgWhite).Println(" Created new project with template: ", template)
+  fmt.Println()
 	return nil
 }
