@@ -985,13 +985,13 @@ sst remove --stage=production
 		{
 			Name: "cancel",
 			Description: Description{
-				Short: "Cancel any pending deploys",
+				Short: "Cancel any locks on the app state",
 				Long: `
-If something unexpected kills the ` + "`sst deploy`" + ` process, your local state file might be left in an unreadable state.
+When you run ` + "`sst deploy`" + `, it acquires a lock on your state file to prevent concurrent deploys.
 
-This will prevent you from deploying again. You can run ` + "`sst cancel`" + ` to clean up the state file and be able to deploy again.
+However, if something unexpectedly kills the ` + "`sst deploy`" + ` process, or if you manage to run ` + "`sst deploy`" + ` concurrently, the lock might not be released.
 
-You should not usually run into this.
+This should not usually happen, but it can prevent you from deploying. You can run ` + "`sst cancel`" + ` to release the lock.
 `,
 			},
 			Run: func(cli *Cli) error {
