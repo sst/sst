@@ -24,13 +24,6 @@ func CmdInit(cli *Cli) error {
   ███████║███████║   ██║   
   ╚══════╝╚══════╝   ╚═╝
   `)
-//	color.New(color.FgYellow).Println(`
-//  ███████ ███████ ████████ 
-//  ██      ██         ██    
-//  ███████ ███████    ██    
-//       ██      ██    ██    
-//  ███████ ███████    ██    
-//  `)
 
 	var template string
 	if _, err := os.Stat("next.config.js"); err == nil {
@@ -81,7 +74,7 @@ func CmdInit(cli *Cli) error {
 	}
 
 	color.New(color.FgGreen, color.Bold).Print("✓")
-	color.New(color.FgWhite).Println(" Using " + home)
+	color.New(color.FgWhite).Println(" Using: " + home)
   fmt.Println()
 
 	err = project.Create(template, home)
