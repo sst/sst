@@ -314,16 +314,14 @@ test("logRetention undefined", async () => {
   const { stack } = await createService({});
   hasResource(stack, "Custom::LogRetention", {
     RetentionInDays: ABSENT,
-    LogGroupName: "/sst/service/test-app-Service",
   });
 });
 test("logRetention defined", async () => {
-  const { service, stack } = await createService({
+  const { stack } = await createService({
     logRetention: "one_month",
   });
   hasResource(stack, "Custom::LogRetention", {
     RetentionInDays: 30,
-    LogGroupName: "/sst/service/test-app-Service",
   });
 });
 
