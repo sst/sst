@@ -8,7 +8,7 @@
  * You specify it using the `$config` function. This takes an object of type [`Config`](#config).
  *
  * ```ts title="sst.config.ts"
- * /// <reference path="./.sst/platform/src/global.d.ts" />
+ * /// <reference path="./.sst/platform/config.d.ts" />
  *
  * export default $config({
  *   app(input) {

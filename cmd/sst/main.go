@@ -931,7 +931,7 @@ The resources in your app are removed based on the ` + "`removal` setting" + ` i
 Optionally, remove your app from a specific stage.
 
 ` + "```bash" + ` frame="none"
-sst deploy --stage=production
+sst remove --stage=production
 ` + "```" + `
 `,
 			},
