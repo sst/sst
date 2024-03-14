@@ -65,8 +65,9 @@ func CmdInit(cli *Cli) error {
 		return nil
 	}
 
-//	color.New(color.FgGreen, color.Bold).Print("✓")
-//	color.New(color.FgWhite).Println(" Using ", template, " template")
+	color.New(color.FgGreen, color.Bold).Print("✓")
+	color.New(color.FgWhite).Println(" Template: ", template)
+  fmt.Println()
 
 	p = promptui.Select{
 		Label:        "Where do you want to deploy your app? You can change this later",
@@ -79,8 +80,9 @@ func CmdInit(cli *Cli) error {
 		return err
 	}
 
-//	color.New(color.FgGreen, color.Bold).Print("✓")
-//	color.New(color.FgWhite).Println(" Setting home to " + home)
+	color.New(color.FgGreen, color.Bold).Print("✓")
+	color.New(color.FgWhite).Println(" Using " + home)
+  fmt.Println()
 
 	err = project.Create(template, home)
 	if err != nil {
@@ -88,7 +90,7 @@ func CmdInit(cli *Cli) error {
 	}
 	initProject(cli)
 	color.New(color.FgGreen, color.Bold).Print("✓")
-	color.New(color.FgWhite).Println(" Created new project with template: ", template)
+	color.New(color.FgWhite).Println(" Success 🎉")
   fmt.Println()
 	return nil
 }
