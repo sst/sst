@@ -32,8 +32,8 @@ jobs:
       - name: Go Mod
         run: go mod download
 
-      - name: Node Dependencies
-        run: bun i --frozen-lockfile
+      - run: bun i --frozen-lockfile
+      - run: git reset --hard
 
       - uses: goreleaser/goreleaser-action@v4
         with:
