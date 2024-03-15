@@ -22,10 +22,10 @@ const (
 
 func Disable() error {
 	path := filepath.Join(global.ConfigDir(), TELEMETRY_DISABLED_KEY)
-
-	err = os.MkdirAll(global.ConfigDir(), 0755)
-	if err != nil {
-		return err
+	// TODO remove temporary workaround
+	err0 := os.MkdirAll(global.ConfigDir(), 0755)
+	if err0 != nil {
+		return err0
 	}
 
 	file, err := os.Create(path)

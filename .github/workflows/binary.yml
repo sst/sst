@@ -32,6 +32,7 @@ jobs:
       - name: Go Mod
         run: go mod download
 
+      # TODO remove temporary workaround
       - run: bun i --frozen-lockfile
       - run: git reset --hard
 
