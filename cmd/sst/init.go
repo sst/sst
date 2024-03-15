@@ -26,14 +26,18 @@ func CmdInit(cli *Cli) error {
   `)
 
 	var template string
-	if _, err := os.Stat("next.config.js"); err == nil {
-		color.New(color.FgBlue, color.Bold).Print(">")
-		fmt.Println("  Next.js detected...")
-		fmt.Println("   - creating an sst.config.ts")
-		fmt.Println("   - adding the sst sdk to package.json")
-		fmt.Println("   - modifying tsconfig.json")
-		fmt.Println()
-		template = "nextjs"
+	files := []string{"next.config.js", "next.config.mjs"}
+	for _, file := range files {
+		if _, err := os.Stat(file); err == nil {
+			color.New(color.FgBlue, color.Bold).Print(">")
+			fmt.Println("  Next.js detected...")
+			fmt.Println("   - creating an sst.config.ts")
+			fmt.Println("   - adding the sst sdk to package.json")
+			fmt.Println("   - modifying tsconfig.json")
+			fmt.Println()
+			template = "nextjs"
+			break
+		}
 	}
 
 	if template == "" {
