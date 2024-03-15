@@ -3,6 +3,7 @@ import * as aws from "@pulumi/aws";
 import {
   LambdaClient,
   UpdateFunctionCodeCommand,
+  GetFunctionCommand,
 } from "@aws-sdk/client-lambda";
 import { useClient } from "../helpers/client.js";
 
@@ -37,6 +38,25 @@ export interface FunctionCodeUpdater {
 
 class Provider implements dynamic.ResourceProvider {
   async create(inputs: Inputs): Promise<dynamic.CreateResult<Outputs>> {
+    const version = await this.updateCode(inputs);
+    await this.waitForUpdate(inputs);
+    return {
+      id: inputs.functionName,
+      outs: { version },
+    };
+  }
+
+  async update(
+    id: string,
+    olds: any,
+    news: Inputs,
+  ): Promise<dynamic.UpdateResult<Outputs>> {
+    const version = await this.updateCode(news);
+    await this.waitForUpdate(news);
+    return { outs: { version } };
+  }
+
+  async updateCode(inputs: Inputs) {
     const client = useClient(LambdaClient, {
       region: inputs.region,
       retrableErrors: [
@@ -51,32 +71,33 @@ class Provider implements dynamic.ResourceProvider {
         S3Key: inputs.s3Key,
       }),
     );
-    return {
-      id: inputs.functionName,
-      outs: { version: ret.Version ?? "unknown" },
-    };
+    return ret.Version ?? "unknown";
   }
 
-  async update(
-    id: string,
-    olds: any,
-    news: Inputs,
-  ): Promise<dynamic.UpdateResult<Outputs>> {
+  async waitForUpdate(inputs: Inputs): Promise<void> {
     const client = useClient(LambdaClient, {
-      region: news.region,
+      region: inputs.region,
       retrableErrors: [
         // Lambda is not ready to accept updates right after creation
         "ServiceException",
       ],
     });
     const ret = await client.send(
-      new UpdateFunctionCodeCommand({
-        FunctionName: news.functionName,
-        S3Bucket: news.s3Bucket,
-        S3Key: news.s3Key,
+      new GetFunctionCommand({
+        FunctionName: inputs.functionName,
       }),
     );
-    return { outs: { version: ret.Version ?? "unknown" } };
+    if (ret.Configuration?.LastUpdateStatus === "Successful") return;
+
+    if (ret.Configuration?.LastUpdateStatus === "Failed") {
+      throw new Error(
+        `Failed to update function ${ret.Configuration.LastUpdateStatusReasonCode}: ${ret.Configuration.LastUpdateStatusReason}`,
+      );
+    }
+
+    await new Promise((resolve) => setTimeout(resolve, 300));
+
+    return this.waitForUpdate(inputs);
   }
 }
 

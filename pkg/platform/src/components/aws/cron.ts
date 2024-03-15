@@ -137,7 +137,7 @@ export class Cron extends Component {
       return new aws.cloudwatch.EventTarget(
         `${name}Target`,
         transform(args.transform?.target, {
-          arn: fn.nodes.function.arn,
+          arn: fn.arn,
           rule: rule.name,
         }),
         { parent },
@@ -149,7 +149,7 @@ export class Cron extends Component {
         `${name}Permission`,
         {
           action: "lambda:InvokeFunction",
-          function: fn.nodes.function.arn,
+          function: fn.arn,
           principal: "events.amazonaws.com",
           sourceArn: rule.arn,
         },
