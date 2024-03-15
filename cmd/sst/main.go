@@ -983,9 +983,9 @@ sst remove --stage=production
 			},
 		},
 		{
-			Name: "cancel",
+			Name: "unlock",
 			Description: Description{
-				Short: "Cancel any locks on the app state",
+				Short: "Clear any locks on the app state",
 				Long: `
 When you run ` + "`sst deploy`" + `, it acquires a lock on your state file to prevent concurrent deploys.
 
@@ -1005,7 +1005,9 @@ This should not usually happen, but it can prevent you from deploying. You can r
 				if err != nil {
 					return util.NewReadableError(err, "")
 				}
-				fmt.Println("Cancelled any pending deploys for", p.App().Name, "/", p.App().Stage)
+				color.New(color.FgGreen, color.Bold).Print("✓ ")
+				color.New(color.FgWhite).Print(" Unlocked the app state for: ")
+				color.New(color.FgWhite, color.Bold).Println(p.App().Name, "/", p.App().Stage)
 				return nil
 			},
 		},
