@@ -3,6 +3,8 @@ title: CLI
 description: Reference doc for the `sst` CLI.
 ---
 
+{/* DO NOT EDIT. AUTO-GENERATED FROM cmd/sst/main.go */}
+
 import Segment from '../../../../../src/components/tsdoc/Segment.astro';
 import Section from '../../../../../src/components/tsdoc/Section.astro';
 import NestedTitle from '../../../../../src/components/tsdoc/NestedTitle.astro';
@@ -410,17 +412,17 @@ sst remove --stage=production
 
 </Segment>
 
-### cancel
+### unlock
 <Segment>
 <Section type="signature">
 ```sh frame="none"
-sst cancel
+sst unlock
 ```
 </Section>
 
 When you run `sst deploy`, it acquires a lock on your state file to prevent concurrent deploys.
 
-However, if something unexpected kills the `sst deploy` process, or if you manage to run `sst deploy` concurrently, the lock might not be released.
+However, if something unexpectedly kills the `sst deploy` process, or if you manage to run `sst deploy` concurrently, the lock might not be released.
 
 This should not usually happen, but it can prevent you from deploying. You can run `sst cancel` to release the lock.
 

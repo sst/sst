@@ -234,32 +234,32 @@ func getData(backend Home, key, app, stage string, encrypted bool, out interface
 
 	data, err := io.ReadAll(reader)
 	if err != nil {
-		return nil
+		return err
 	}
 
 	if encrypted {
 		passphrase, err := Passphrase(backend, app, stage)
 		if err != nil {
-			return nil
+			return err
 		}
 		passphraseBytes, err := base64.StdEncoding.DecodeString(passphrase)
 		if err != nil {
-			return nil
+			return err
 		}
 		blockCipher, err := aes.NewCipher(passphraseBytes)
 		if err != nil {
-			return nil
+			return err
 		}
 		gcm, err := cipher.NewGCM(blockCipher)
 		if err != nil {
-			return nil
+			return err
 		}
 
 		nonce, ciphertext := data[:gcm.NonceSize()], data[gcm.NonceSize():]
 
 		data, err = gcm.Open(nil, nonce, ciphertext, nil)
 		if err != nil {
-			return nil
+			return err
 		}
 	}
 

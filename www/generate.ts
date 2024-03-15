@@ -24,6 +24,10 @@ type CliCommand = {
 
 const cmd = process.argv[2];
 
+function renderSourceMessage(source: string) {
+  return [``, `{/* DO NOT EDIT. AUTO-GENERATED FROM ${source} */}`];
+}
+
 try {
   await configureLogger();
   await patchCode();
@@ -42,6 +46,7 @@ async function generateCliDoc() {
     outputFilePath,
     [
       renderCliHeader(),
+      renderSourceMessage("cmd/sst/main.go"),
       renderCliImports(),
       renderCliAbout(),
       renderCliGlobalFlags(),
@@ -276,6 +281,7 @@ async function generateTsDoc() {
       outputFilePath = `src/content/docs/docs/reference/global.mdx`;
       outputFileContent = [
         renderGlobalHeader(),
+        renderSourceMessage("pkg/platform/src/global.d.ts"),
         renderImports(),
         renderAbout(),
         renderConfigVariables(),
@@ -288,6 +294,7 @@ async function generateTsDoc() {
       outputFilePath = `src/content/docs/docs/reference/config.mdx`;
       outputFileContent = [
         renderConfigHeader(),
+        renderSourceMessage(sourceFile),
         renderImports(),
         renderAbout(),
         renderInterfaces(),
@@ -305,6 +312,7 @@ async function generateTsDoc() {
       );
       outputFileContent = [
         renderComponentHeader(),
+        renderSourceMessage(sourceFile),
         renderImports(),
         renderAbout(),
         renderConstructor(),
