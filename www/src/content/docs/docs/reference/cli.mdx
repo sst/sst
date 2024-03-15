@@ -48,7 +48,7 @@ sst deploy --stage=production
 </InlineSection>
 </Section>
 
-The stage the CLI is running on.
+Set the stage the CLI is running on.
 
 ```bash frame="none"
 sst [command] --stage=production
@@ -405,7 +405,7 @@ The resources in your app are removed based on the `removal` setting in your `ss
 Optionally, remove your app from a specific stage.
 
 ```bash frame="none"
-sst deploy --stage=production
+sst remove --stage=production
 ```
 
 </Segment>
@@ -418,11 +418,11 @@ sst cancel
 ```
 </Section>
 
-If something unexpected kills the `sst deploy` process, your local state file might be left in an unreadable state.
+When you run `sst deploy`, it acquires a lock on your state file to prevent concurrent deploys.
 
-This will prevent you from deploying again. You can run `sst cancel` to clean up the state file and be able to deploy again.
+However, if something unexpected kills the `sst deploy` process, or if you manage to run `sst deploy` concurrently, the lock might not be released.
 
-You should not usually run into this.
+This should not usually happen, but it can prevent you from deploying. You can run `sst cancel` to release the lock.
 
 </Segment>
 
@@ -434,9 +434,9 @@ sst init
 ```
 </Section>
 
-Run this to initialize your app in drop-in mode. Currently, supports Next.js apps.
+Initialize a new project in the current directory. This will create a `sst.config.ts` and `sst install` your providers.
 
-This will create a `sst.config.ts` file and configure the types for your project.
+If this is run in a Next.js, Remix, or Astro project, it'll init SST in drop-in mode. 
 
 </Segment>
 

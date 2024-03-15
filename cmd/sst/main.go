@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"flag"
@@ -124,8 +125,11 @@ func run() error {
 			}
 		}
 	}
-	flag.Parse()
-
+	flag.CommandLine.Init("sst", flag.ContinueOnError)
+	// suppresses default output on failure
+	buf := bytes.NewBuffer([]byte{})
+	flag.CommandLine.SetOutput(buf)
+	err := flag.CommandLine.Parse(os.Args[1:])
 	cli := &Cli{
 		flags:     parsedFlags,
 		arguments: positionals,
@@ -133,8 +137,10 @@ func run() error {
 		Context:   ctx,
 		cancel:    cancel,
 	}
-
 	configureLog(cli)
+	if err != nil {
+		return cli.PrintHelp()
+	}
 
 	spin := spinner.New(spinner.CharSets[14], 100*time.Millisecond)
 	spin.Suffix = "  First run, setting up environment..."
@@ -154,13 +160,15 @@ func run() error {
 		}
 	}
 
-	if global.NeedsPlugins() {
-		spin.Start()
-		err := global.InstallPlugins()
-		if err != nil {
-			return err
+	/*
+		if global.NeedsPlugins() {
+			spin.Start()
+			err := global.InstallPlugins()
+			if err != nil {
+				return err
+			}
 		}
-	}
+	*/
 	spin.Stop()
 
 	active := cmds[len(cmds)-1]
@@ -214,7 +222,7 @@ sst deploy --stage=production
 			Description: Description{
 				Short: "The stage to deploy to",
 				Long: `
-The stage the CLI is running on.
+Set the stage the CLI is running on.
 
 ` + "```bash" + ` frame="none"
 sst [command] --stage=production
@@ -271,7 +279,7 @@ sst --help
 		{
 			Name: "version",
 			Description: Description{
-				Short: "Print the version",
+				Short: "Print the version of the CLI",
 				Long:  `Prints the current version of the CLI.`,
 			},
 			Run: func(cli *Cli) error {
@@ -622,7 +630,7 @@ sst secret list --stage=production
 				},
 			},
 			Description: Description{
-				Short: "Run command with all resource linked in environment",
+				Short: "Run a command with linked resources",
 				Long: `
 Run a command with all the resources linked to the environment.
 
@@ -755,7 +763,7 @@ This is useful if you want to run multiple commands, all while accessing the lin
 			Name: "add",
 			Description: Description{
 				Short: "Add a new provider",
-        Long: `
+				Long: `
 Adds a provider to your ` + "`sst.config.ts`" + ` and installs it. For example.
 
 ` + "```bash" + ` frame="none"
@@ -785,7 +793,7 @@ Running ` + "`sst add aws`" + ` above is the same as adding the provider to your
 					Required: true,
 					Description: Description{
 						Short: "The provider to add",
-						Long: "The provider to add.",
+						Long:  "The provider to add.",
 					},
 				},
 			},
@@ -832,7 +840,7 @@ Running ` + "`sst add aws`" + ` above is the same as adding the provider to your
 		{
 			Name: "install",
 			Description: Description{
-				Short: "Install the providers specified in sst.config.ts",
+				Short: "Install all the providers",
 				Long: `
 Installs the providers in your ` + "`sst.config.ts`" + `. You'll need this command when:
 
@@ -977,15 +985,15 @@ sst remove --stage=production
 			},
 		},
 		{
-			Name: "cancel",
+			Name: "unlock",
 			Description: Description{
-				Short: "Cancel any pending deploys",
+				Short: "Clear any locks on the app state",
 				Long: `
-If something unexpected kills the ` + "`sst deploy`" + ` process, your local state file might be left in an unreadable state.
+When you run ` + "`sst deploy`" + `, it acquires a lock on your state file to prevent concurrent deploys.
 
-This will prevent you from deploying again. You can run ` + "`sst cancel`" + ` to clean up the state file and be able to deploy again.
+However, if something unexpectedly kills the ` + "`sst deploy`" + ` process, or if you manage to run ` + "`sst deploy`" + ` concurrently, the lock might not be released.
 
-You should not usually run into this.
+This should not usually happen, but it can prevent you from deploying. You can run ` + "`sst cancel`" + ` to release the lock.
 `,
 			},
 			Run: func(cli *Cli) error {
@@ -999,18 +1007,20 @@ You should not usually run into this.
 				if err != nil {
 					return util.NewReadableError(err, "")
 				}
-				fmt.Println("Cancelled any pending deploys for", p.App().Name, "/", p.App().Stage)
+				color.New(color.FgGreen, color.Bold).Print("✓ ")
+				color.New(color.FgWhite).Print(" Unlocked the app state for: ")
+				color.New(color.FgWhite, color.Bold).Println(p.App().Name, "/", p.App().Stage)
 				return nil
 			},
 		},
 		{
 			Name: "init",
 			Description: Description{
-				Short: "Init drop-in mode",
+				Short: "Initialize a new project",
 				Long: `
-Run this to initialize your app in drop-in mode. Currently, supports Next.js apps.
+Initialize a new project in the current directory. This will create a ` + "`sst.config.ts`" + ` and ` + "`sst install`" + ` your providers.
 
-This will create a ` + "`sst.config.ts`" + ` file and configure the types for your project.
+If this is run in a Next.js, Remix, or Astro project, it'll init SST in drop-in mode. 
 `,
 			},
 			Run: CmdInit,
@@ -1018,7 +1028,7 @@ This will create a ` + "`sst.config.ts`" + ` file and configure the types for yo
 		{
 			Name: "upgrade",
 			Description: Description{
-				Short: "Upgrade the CLI to the latest version",
+				Short: "Upgrade the CLI",
 				Long: `
 Upgrade the CLI to the latest version. Or optionally, pass in a version to upgrade to.
 
@@ -1045,7 +1055,7 @@ sst upgrade 0.10
 		{
 			Name: "telemetry",
 			Description: Description{
-				Short: "Control telemetry settings",
+				Short: "Manage telemetry settings",
 				Long: `
 Manage telemetry settings.
 
