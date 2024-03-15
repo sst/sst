@@ -1375,19 +1375,16 @@ export class Function
     }
 
     function updateFunctionCode() {
-      return output([fn]).apply(
-        ([fn]) =>
-          new FunctionCodeUpdater(
-            `${name}CodeUpdater`,
-            {
-              functionName: fn.name,
-              s3Bucket: file.bucket,
-              s3Key: file.key,
-              functionLastModified: fn.lastModified,
-              region,
-            },
-            { parent },
-          ),
+      return new FunctionCodeUpdater(
+        `${name}CodeUpdater`,
+        {
+          functionName: fn.name,
+          s3Bucket: file.bucket,
+          s3Key: file.key,
+          functionLastModified: fn.lastModified,
+          region,
+        },
+        { parent },
       );
     }
   }

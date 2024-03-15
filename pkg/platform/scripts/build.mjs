@@ -1,7 +1,6 @@
 import esbuild from "esbuild";
 import fs from "fs/promises";
 
-
 // Require transpile
 await Promise.all(
   ["ssr-warmer", "vector-handler"].map((file) =>
@@ -19,15 +18,6 @@ await Promise.all(
         ].join(""),
       },
       outfile: `./dist/${file}/index.mjs`,
-    }),
-  ),
-);
-
-// Do not require transpile
-await Promise.all(
-  ["remix-server", "empty-function"].map((dir) =>
-    fs.cp(`./functions/${dir}`, `./dist/${dir}`, {
-      recursive: true,
     }),
   ),
 );

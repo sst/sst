@@ -5,10 +5,12 @@ export default $config({
     return {
       name: "nextjs",
       removal: input?.stage === "production" ? "retain" : "remove",
-      home: "cloudflare",
+      home: "aws",
     };
   },
   async run() {
-    const site = new sst.cloudflare.Nextjs("Web");
+    const site = new sst.aws.Nextjs("Web", {
+      warm: 5,
+    });
   },
 });

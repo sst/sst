@@ -24,6 +24,7 @@ import { Link } from "../link.js";
 import { Input } from "../input.js";
 import { transform, type Prettify, type Transform } from "../component.js";
 import { VisibleError } from "../error.js";
+import { Cron } from "./cron.js";
 
 type CloudFrontFunctionConfig = { injections: string[] };
 type EdgeFunctionConfig = { function: Unwrap<FunctionArgs> };
@@ -1104,43 +1105,33 @@ function handler(event) {
 
       if (ssrFunctions.length === 0) return;
 
-      // Create warmer function
-      const warmer = new Function(
+      // Create cron job
+      const cron = new Cron(
         `${name}Warmer`,
         {
-          description: `${name} warmer`,
-          bundle: path.join($cli.paths.platform, "functions", "ssr-warmer"),
-          runtime: "nodejs20.x",
-          handler: "index.handler",
-          timeout: "900 seconds",
-          memory: "128 MB",
-          liveDev: false,
-          environment: {
-            FUNCTION_NAME: ssrFunctions[0].nodes.function.name,
-            CONCURRENCY: output(args.warm).apply((warm) => warm.toString()),
+          schedule: "rate(5 minutes)",
+          job: {
+            description: `${name} warmer`,
+            bundle: path.join($cli.paths.platform, "dist", "ssr-warmer"),
+            runtime: "nodejs20.x",
+            handler: "index.handler",
+            timeout: "900 seconds",
+            memory: "128 MB",
+            liveDev: false,
+            environment: {
+              FUNCTION_NAME: ssrFunctions[0].nodes.function.name,
+              CONCURRENCY: output(args.warm).apply((warm) => warm.toString()),
+            },
+            link: [ssrFunctions[0]],
+            _skipMetadata: true,
           },
-          link: [ssrFunctions[0]],
-          _skipMetadata: true,
-        },
-        { parent },
-      );
-
-      // Create cron job
-      const schedule = new aws.cloudwatch.EventRule(
-        `${name}WarmerRule`,
-        {
-          description: `${name} warmer`,
-          scheduleExpression: "rate(5 minutes)",
-        },
-        { parent },
-      );
-      new aws.cloudwatch.EventTarget(
-        `${name}WarmerTarget`,
-        {
-          rule: schedule.name,
-          arn: warmer.nodes.function.arn,
-          retryPolicy: {
-            maximumRetryAttempts: 0,
+          transform: {
+            target: (targetArgs) => {
+              targetArgs.retryPolicy = {
+                maximumRetryAttempts: 0,
+                maximumEventAgeInSeconds: 60,
+              };
+            },
           },
         },
         { parent },
@@ -1150,7 +1141,7 @@ function handler(event) {
       new aws.lambda.Invocation(
         `${name}Prewarm`,
         {
-          functionName: warmer.nodes.function.name,
+          functionName: cron.nodes.job.name,
           triggers: {
             version: Date.now().toString(),
           },

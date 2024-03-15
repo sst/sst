@@ -86,6 +86,11 @@ export class FunctionCodeUpdater extends dynamic.Resource {
     args: FunctionCodeUpdaterInputs,
     opts?: CustomResourceOptions,
   ) {
-    super(new Provider(), `${name}.sst.aws.FunctionCodeUpdater`, args, opts);
+    super(
+      new Provider(),
+      `${name}.sst.aws.FunctionCodeUpdater`,
+      { ...args, version: undefined },
+      opts,
+    );
   }
 }
