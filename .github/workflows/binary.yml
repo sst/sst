@@ -33,7 +33,7 @@ jobs:
         run: go mod download
 
       - name: Node Dependencies
-        run: bun i
+        run: bun i --frozen-lockfile
 
       - uses: goreleaser/goreleaser-action@v4
         with:
