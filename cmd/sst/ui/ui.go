@@ -279,9 +279,13 @@ func (u *UI) Trigger(evt *project.StackEvent) {
 		}
 
 		if evt.DiagnosticEvent.Severity == "info#err" {
-			u.spinner.Disable()
-			fmt.Println(parseError(evt.DiagnosticEvent.Message)[0])
-			u.spinner.Enable()
+			if strings.HasPrefix(evt.DiagnosticEvent.Message, "Downloading provider") {
+				u.printEvent(color.FgMagenta, "Info", evt.DiagnosticEvent.Message)
+			} else {
+				u.spinner.Disable()
+				fmt.Println(parseError(evt.DiagnosticEvent.Message)[0])
+				u.spinner.Enable()
+			}
 		}
 	}
 
@@ -413,7 +417,7 @@ func (u *UI) printEvent(barColor color.Attribute, label string, message string) 
 		defer u.spinner.Enable()
 	}
 	color.New(barColor, color.Bold).Print("|  ")
-	color.New(color.FgHiBlack).Print(fmt.Sprintf("%-11s", label), " ", message)
+	color.New(color.FgHiBlack).Print(fmt.Sprintf("%-11s", label), " ", strings.TrimSpace(message))
 	fmt.Println()
 }
 

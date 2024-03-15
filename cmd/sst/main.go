@@ -160,13 +160,15 @@ func run() error {
 		}
 	}
 
-	if global.NeedsPlugins() {
-		spin.Start()
-		err := global.InstallPlugins()
-		if err != nil {
-			return err
+	/*
+		if global.NeedsPlugins() {
+			spin.Start()
+			err := global.InstallPlugins()
+			if err != nil {
+				return err
+			}
 		}
-	}
+	*/
 	spin.Stop()
 
 	active := cmds[len(cmds)-1]
