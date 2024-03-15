@@ -36,7 +36,7 @@ import { Cache } from "./providers/cache.js";
 import { Queue } from "./queue.js";
 
 const LAYER_VERSION = "2";
-const DEFAULT_OPEN_NEXT_VERSION = "3.0.0-rc.5";
+const DEFAULT_OPEN_NEXT_VERSION = "3.0.0-rc.8";
 const DEFAULT_CACHE_POLICY_ALLOWED_HEADERS = [
   "accept",
   "x-prerender-revalidate",
