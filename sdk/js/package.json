@@ -3,7 +3,7 @@
   "name": "sst",
   "type": "module",
   "sideEffects": false,
-  "version": "3.0.1-37",
+  "version": "3.0.2",
   "main": "./dist/index.js",
   "exports": {
     ".": "./dist/index.js",
@@ -12,7 +12,7 @@
   "scripts": {
     "build": "tsc",
     "dev": "tsc -w",
-    "release": "pnpm build && pnpm version prerelease && pnpm publish --no-git-checks --tag=ion --access=public"
+    "release": "pnpm build && pnpm version patch && pnpm publish --no-git-checks --tag=ion --access=public"
   },
   "devDependencies": {
     "@tsconfig/node18": "^18.2.2",

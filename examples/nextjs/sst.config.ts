@@ -9,6 +9,6 @@ export default $config({
     };
   },
   async run() {
-    const site = new sst.aws.Nextjs("Web");
+    new sst.aws.Nextjs("MyWeb");
   },
 });

@@ -1,6 +1,6 @@
 {
   "type": "module",
   "dependencies": {
-    "sst": "npm:sst@ion"
+    "sst": "3.0.0"
   }
 }
