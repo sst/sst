@@ -69,7 +69,8 @@ type ProjectConfig struct {
 	Config  string
 }
 
-var ErrInvalidStageName = fmt.Errorf("Invalid stage name")
+var ErrInvalidStageName = fmt.Errorf("invalid stage name")
+var ErrV2Config = fmt.Errorf("sstv2 config detected")
 var StageRegex = regexp.MustCompile(`^[a-zA-Z0-9-]+$`)
 
 func New(input *ProjectConfig) (*Project, error) {
@@ -123,6 +124,10 @@ func New(input *ProjectConfig) (*Project, error) {
 			},
 			Code: fmt.Sprintf(`
 import mod from '%s';
+if (mod.stacks || mod.config) {
+  console.log("v2")
+  process.exit(0)
+}
 console.log("~j" + JSON.stringify(mod.app({
   stage: $input.stage || undefined,
 })))`,
@@ -140,6 +145,9 @@ console.log("~j" + JSON.stringify(mod.app({
 			break
 		}
 
+		if cmd == js.CommandStdOut && line == "v2" {
+			return nil, ErrV2Config
+		}
 		if cmd != js.CommandJSON {
 			fmt.Println(line)
 			continue

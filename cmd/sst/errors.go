@@ -6,8 +6,11 @@ import (
 )
 
 func TransformError(err error) error {
-	mapping := map[error]string{}
-	mapping[project.ErrInvalidStageName] = "The stage name is invalid. It can only contain alphanumeric characters and hyphens."
+	mapping := map[error]string{
+		project.ErrInvalidStageName: "The stage name is invalid. It can only contain alphanumeric characters and hyphens.",
+		project.ErrV2Config:         "You are using sst ion and this looks like an sst v2 config",
+	}
+
 	match, ok := mapping[err]
 	if !ok {
 		return err

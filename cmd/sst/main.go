@@ -59,7 +59,6 @@ func main() {
 			}
 		} else {
 			fmt.Println("Unexpected error occurred. Please check the logs for more details.")
-			fmt.Println(err.Error())
 		}
 		os.Exit(1)
 	}
