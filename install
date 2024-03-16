@@ -38,7 +38,7 @@ curl -sL $url | tar xz
 mv sst $INSTALL_DIR
 cd ../
 rm -rf ssttmp
-echo "sst has been installed to $INSTALL_DIR"
+echo "sst $($INSTALL_DIR/sst version) has been installed to $INSTALL_DIR"
 
 REFRESH_COMMAND=''
 if [[ ":$PATH:" == *":$INSTALL_DIR:"* ]]; then

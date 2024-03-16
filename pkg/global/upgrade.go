@@ -3,6 +3,7 @@ package global
 import (
 	"archive/tar"
 	"compress/gzip"
+	"encoding/json"
 	"fmt"
 	"io"
 	"log/slog"
@@ -13,7 +14,7 @@ import (
 	"strings"
 )
 
-func Upgrade(version string) error {
+func Upgrade(version string) (string, error) {
 	var filename string
 	switch runtime.GOOS {
 	case "darwin":
@@ -32,53 +33,71 @@ func Upgrade(version string) error {
 	case "386":
 		filename += "i386.tar.gz"
 	default:
-		return fmt.Errorf("unsupported architecture")
+		return "", fmt.Errorf("unsupported architecture")
 	}
-	url := "https://github.com/sst/ion/releases/latest/download/sst-" + filename
 	if version != "" {
 		if !strings.HasPrefix(version, "v") {
 			version = "v" + version
 		}
-		url = "https://github.com/sst/ion/releases/download/" + version + "/sst-" + filename
 	}
+	if version == "" {
+		resp, err := http.Get("https://api.github.com/repos/sst/ion/releases/latest")
+		if err != nil {
+			return "", err
+		}
+		defer resp.Body.Close()
+
+		if resp.StatusCode != http.StatusOK {
+			return "", err
+		}
+
+		var releaseInfo struct {
+			TagName string `json:"tag_name"`
+		}
+		if err := json.NewDecoder(resp.Body).Decode(&releaseInfo); err != nil {
+			return "", err
+		}
+		version = releaseInfo.TagName
+	}
+	url := "https://github.com/sst/ion/releases/download/" + version + "/sst-" + filename
 	slog.Info("downloading", "url", url)
 	resp, err := http.Get(url)
 	if err != nil {
-		return err
+		return "", err
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("unexpected HTTP status when downloading release: %s", resp.Status)
+		return "", fmt.Errorf("unexpected HTTP status when downloading release: %s", resp.Status)
 	}
 
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	sstBinPath := filepath.Join(homeDir, ".sst", "bin")
 	os.RemoveAll(sstBinPath)
 	if err := os.MkdirAll(sstBinPath, os.ModePerm); err != nil {
-		return err
+		return "", err
 	}
 
 	// Assuming we have a variable `resp` which is the response from a *http.Request
 	body, err := gzip.NewReader(resp.Body)
 	if err != nil {
-		return err
+		return "", err
 	}
 	defer body.Close()
 
 	if err := untar(body, sstBinPath); err != nil {
-		return err
+		return "", err
 	}
 
 	if err := os.Chmod(filepath.Join(sstBinPath, "sst"), 0755); err != nil {
-		return err
+		return "", err
 	}
 
-	return nil
+	return version, nil
 }
 
 func untar(reader io.Reader, target string) error {

@@ -927,9 +927,14 @@ var Root = Command{
 				},
 			},
 			Run: func(cli *Cli) error {
-				return global.Upgrade(
+				version, err := global.Upgrade(
 					cli.Positional(0),
 				)
+				if err != nil {
+					return err
+				}
+				fmt.Printf("Installed version %s\n", version)
+				return nil
 			},
 		},
 		{
