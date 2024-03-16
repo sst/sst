@@ -97,22 +97,6 @@ func Create(templateName string, home string) error {
 			exec.Command("npx", "prettier", "--write", patchStep.File).Start()
 			break
 
-		case "install-deps":
-			cmd := exec.Command("npm", "install")
-
-			if _, err := os.Stat("yarn.lock"); err == nil {
-				cmd = exec.Command("yarn", "install")
-			}
-			if _, err := os.Stat("pnpm-lock.yaml"); err == nil {
-				cmd = exec.Command("pnpm", "install")
-			}
-			if _, err := os.Stat("bun.lockb"); err == nil {
-				cmd = exec.Command("bun", "install")
-			}
-			slog.Info("installing deps", "args", cmd.Args)
-			cmd.Run()
-			break
-
 		case "copy":
 			err = fs.WalkDir(platform.Templates, filepath.Join("templates", templateName, "files"), func(path string, d fs.DirEntry, err error) error {
 				if d.IsDir() {

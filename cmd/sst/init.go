@@ -2,9 +2,12 @@ package main
 
 import (
 	"fmt"
+	"log/slog"
 	"os"
+	"os/exec"
 	"time"
 
+	"github.com/briandowns/spinner"
 	"github.com/fatih/color"
 	"github.com/manifoldco/promptui"
 	"github.com/sst/ion/pkg/project"
@@ -101,6 +104,27 @@ func CmdInit(cli *Cli) error {
 	if err != nil {
 		return err
 	}
+	var cmd *exec.Cmd
+
+	if _, err := os.Stat("yarn.lock"); err == nil {
+		cmd = exec.Command("yarn", "install")
+	}
+	if _, err := os.Stat("pnpm-lock.yaml"); err == nil {
+		cmd = exec.Command("pnpm", "install")
+	}
+	if _, err := os.Stat("bun.lockb"); err == nil {
+		cmd = exec.Command("bun", "install")
+	}
+	if cmd != nil {
+		spin := spinner.New(spinner.CharSets[14], 100*time.Millisecond)
+		spin.Suffix = "  Installing dependencies..."
+		spin.Start()
+		slog.Info("installing deps", "args", cmd.Args)
+		cmd.Run()
+		spin.Stop()
+	}
+
+	slog.Info("initializing project", "template", template)
 	initProject(cli)
 	color.New(color.FgGreen, color.Bold).Print("✓ ")
 	color.New(color.FgWhite).Println(" Success 🎉")

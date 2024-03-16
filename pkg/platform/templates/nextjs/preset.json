@@ -33,9 +33,6 @@
           }
         ]
       }
-    },
-    {
-      "type": "install-deps"
     }
   ]
 }
