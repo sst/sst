@@ -139,5 +139,28 @@ func Create(templateName string, home string) error {
 		}
 	}
 
+	gitignoreFilename := ".gitignore"
+	file, err := os.OpenFile(gitignoreFilename, os.O_RDWR|os.O_CREATE, 0666)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	bytes, err := os.ReadFile(gitignoreFilename)
+	if err != nil {
+		panic(err)
+	}
+	content := string(bytes)
+
+	if !strings.Contains(content, ".sst") {
+		if content != "" && !strings.HasSuffix(content, "\n") {
+			file.WriteString("\n")
+		}
+		_, err := file.WriteString(".sst\n")
+		if err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
