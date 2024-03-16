@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/fatih/color"
 	"github.com/manifoldco/promptui"
@@ -16,14 +17,26 @@ func CmdInit(cli *Cli) error {
 		return nil
 	}
 
-	color.New(color.FgYellow).Println(`
-   ███████╗███████╗████████╗
-   ██╔════╝██╔════╝╚══██╔══╝
-   ███████╗███████╗   ██║   
-   ╚════██║╚════██║   ██║   
-   ███████║███████║   ██║   
-   ╚══════╝╚══════╝   ╚═╝
-  `)
+	logo := []string{
+		``,
+		`   ███████╗███████╗████████╗`,
+		`   ██╔════╝██╔════╝╚══██╔══╝`,
+		`   ███████╗███████╗   ██║   `,
+		`   ╚════██║╚════██║   ██║   `,
+		`   ███████║███████║   ██║   `,
+		`   ╚══════╝╚══════╝   ╚═╝   `,
+		``,
+	}
+
+	fmt.Print("\033[?25l")
+	for _, line := range logo {
+		for _, char := range line {
+			color.New(color.FgYellow).Print(string(char))
+			time.Sleep(5 * time.Millisecond)
+		}
+		fmt.Println()
+	}
+	fmt.Print("\033[?25h")
 
 	var template string
 	files := []string{"next.config.js", "next.config.mjs"}
@@ -66,15 +79,18 @@ func CmdInit(cli *Cli) error {
 	color.New(color.FgWhite).Println(" Template: ", template)
 	fmt.Println()
 
-	p = promptui.Select{
-		Label:        "‏‏‎ ‎Where do you want to deploy your app? You can change this later",
-		HideSelected: true,
-		Items:        []string{"aws", "cloudflare"},
-		HideHelp:     true,
-	}
-	_, home, err := p.Run()
-	if err != nil {
-		return err
+	home := "aws"
+	if template != "nextjs" {
+		p = promptui.Select{
+			Label:        "‏‏‎ ‎Where do you want to deploy your app? You can change this later",
+			HideSelected: true,
+			Items:        []string{"aws", "cloudflare"},
+			HideHelp:     true,
+		}
+		_, home, err = p.Run()
+		if err != nil {
+			return err
+		}
 	}
 
 	color.New(color.FgGreen, color.Bold).Print("✓ ")
