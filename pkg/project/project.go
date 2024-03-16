@@ -6,6 +6,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"regexp"
 
 	"github.com/sst/ion/internal/fs"
 	"github.com/sst/ion/internal/util"
@@ -68,7 +69,14 @@ type ProjectConfig struct {
 	Config  string
 }
 
+var ErrInvalidStageName = fmt.Errorf("Invalid stage name")
+var StageRegex = regexp.MustCompile(`^[a-zA-Z0-9-]+$`)
+
 func New(input *ProjectConfig) (*Project, error) {
+	if !StageRegex.MatchString(input.Stage) {
+		return nil, ErrInvalidStageName
+	}
+
 	rootPath := filepath.Dir(input.Config)
 
 	process, err := js.Start(
