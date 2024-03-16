@@ -25,6 +25,11 @@
             "op": "add",
             "path": "/dependencies/sst",
             "value": "^3.0.0"
+          },
+          {
+            "op": "add",
+            "path": "/scripts/dev",
+            "value": "sst dev next dev"
           }
         ]
       }

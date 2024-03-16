@@ -9,6 +9,6 @@ export default $config({
     };
   },
   async run() {
-    const site = new sst.{{.Home}}.Nextjs("MyWeb");
+    new sst.{{.Home}}.Nextjs("MyWeb");
   },
 });
