@@ -32,8 +32,12 @@ mkdir -p $INSTALL_DIR
 
 echo "downloading $filename"
 url="https://github.com/sst/ion/releases/latest/download/$filename"
+mkdir ssttmp
+cd ssttmp
 curl -sL $url | tar xz
 mv sst $INSTALL_DIR
+cd ../
+rm -rf ssttmp
 echo "sst has been installed to $INSTALL_DIR"
 
 REFRESH_COMMAND=''
