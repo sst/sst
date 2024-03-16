@@ -10,7 +10,6 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/fatih/color"
 	"github.com/sst/ion/cmd/sst/ui"
 	"github.com/sst/ion/internal/util"
 	"github.com/sst/ion/pkg/project"
@@ -127,7 +126,7 @@ func CmdDev(cli *Cli) error {
 		CfgPath: cfgPath,
 		Stage:   stage,
 		OnEvent: func(event server.Event) {
-			if !hasTarget || !runOnce {
+			if !hasTarget || !runOnce || true {
 				defer u.Trigger(&event.StackEvent)
 				defer u.Event(&event)
 				if event.StackEvent.PreludeEvent != nil {
@@ -138,12 +137,12 @@ func CmdDev(cli *Cli) error {
 				cli.Cancel()
 				return
 			}
-			if event.PreludeEvent != nil && hasTarget && runOnce {
-				fmt.Println()
-				color.New(color.FgYellow, color.Bold).Print("~")
-				color.New(color.FgWhite, color.Bold).Println("  Deploying")
-				return
-			}
+			// if event.PreludeEvent != nil && hasTarget && runOnce {
+			// 	fmt.Println()
+			// 	color.New(color.FgYellow, color.Bold).Print("~")
+			// 	color.New(color.FgWhite, color.Bold).Println("  Deploying")
+			// 	return
+			// }
 			if event.CompleteEvent != nil {
 				if hasTarget {
 					if !runOnce && (!event.CompleteEvent.Finished || len(event.CompleteEvent.Errors) > 0) {
