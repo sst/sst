@@ -23,6 +23,10 @@ const (
 	ProgressModeRefresh ProgressMode = "refresh"
 )
 
+const (
+	IconX = "×"
+)
+
 type UI struct {
 	spinner     *spinner.Spinner
 	mode        ProgressMode
@@ -325,12 +329,12 @@ func (u *UI) Trigger(evt *project.StackEvent) {
 		}
 
 		if len(evt.CompleteEvent.Errors) == 0 && !evt.CompleteEvent.Finished {
-			color.New(color.FgRed, color.Bold).Print("\n✗")
+			color.New(color.FgRed, color.Bold).Print("\n" + IconX)
 			color.New(color.FgWhite, color.Bold).Println(" Interrupted")
 			return
 		}
 
-		color.New(color.FgRed, color.Bold).Print("\n✗")
+		color.New(color.FgRed, color.Bold).Print("\n" + IconX)
 		color.New(color.FgWhite, color.Bold).Println(" Failed")
 
 		for _, status := range evt.CompleteEvent.Errors {

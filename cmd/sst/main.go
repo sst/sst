@@ -560,7 +560,7 @@ sst secret remove StripeSecret --stage=production
 
 						// check if the secret exists
 						if _, ok := secrets[key]; !ok {
-							color.New(color.FgRed).Print("✗")
+							color.New(color.FgRed).Print(ui.IconX)
 							color.New(color.FgWhite).Printf("  \"%s\" does not exist", key)
 							fmt.Println()
 							return nil

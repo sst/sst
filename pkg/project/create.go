@@ -33,9 +33,11 @@ type preset struct {
 	Steps []step `json:"steps"`
 }
 
+var ErrConfigExists = fmt.Errorf("sst.config.ts already exists")
+
 func Create(templateName string, home string) error {
 	if _, err := os.Stat("sst.config.ts"); err == nil {
-		return fmt.Errorf("sst.config.ts already exists")
+		return ErrConfigExists
 	}
 
 	currentDirectory, err := os.Getwd()
