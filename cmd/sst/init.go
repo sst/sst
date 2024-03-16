@@ -10,6 +10,7 @@ import (
 	"github.com/briandowns/spinner"
 	"github.com/fatih/color"
 	"github.com/manifoldco/promptui"
+	"github.com/sst/ion/internal/util"
 	"github.com/sst/ion/pkg/project"
 )
 
@@ -72,7 +73,7 @@ func CmdInit(cli *Cli) error {
 
 	_, confirm, err := p.Run()
 	if err != nil {
-		return err
+		return util.NewReadableError(err, "")
 	}
 	if confirm == "No" {
 		return nil
@@ -92,7 +93,7 @@ func CmdInit(cli *Cli) error {
 		}
 		_, home, err = p.Run()
 		if err != nil {
-			return err
+			return util.NewReadableError(err, "")
 		}
 	}
 
