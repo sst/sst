@@ -125,7 +125,10 @@ func CmdInit(cli *Cli) error {
 	}
 
 	slog.Info("initializing project", "template", template)
-	initProject(cli)
+	_, err = initProject(cli)
+	if err != nil {
+		return err
+	}
 	color.New(color.FgGreen, color.Bold).Print("✓ ")
 	color.New(color.FgWhite).Println(" Success 🎉")
 	fmt.Println()
