@@ -24,7 +24,7 @@
           {
             "op": "add",
             "path": "/dependencies/sst",
-            "value": "^3.0.0"
+            "value": "^3.0.1"
           },
           {
             "op": "add",
