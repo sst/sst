@@ -279,78 +279,16 @@ var Root = Command{
 	},
 	Children: []*Command{
 		{
-			Name: "version",
+			Name: "init",
 			Description: Description{
-				Short: "Print the version of the CLI",
-				Long:  `Prints the current version of the CLI.`,
+				Short: "Initialize a new project",
+				Long: strings.Join([]string{
+					"Initialize a new project in the current directory. This will create a `sst.config.ts` and `sst install` your providers.",
+					"",
+					"If this is run in a Next.js, Remix, or Astro project, it'll init SST in drop-in mode.",
+				}, "\n"),
 			},
-			Run: func(cli *Cli) error {
-				fmt.Printf("ion.%s\n", version)
-				return nil
-			},
-		},
-		{
-			Name:   "import-unstable",
-			Hidden: true,
-			Description: Description{
-				Short: "(unstable)Import existing resource",
-			},
-			Args: []Argument{
-				{
-					Name:     "type",
-					Required: true,
-					Description: Description{
-						Short: "The type of the resource",
-					},
-				},
-				{
-					Name:     "name",
-					Required: true,
-					Description: Description{
-						Short: "The name of the resource",
-					},
-				},
-				{
-					Name:     "id",
-					Required: true,
-					Description: Description{
-						Short: "The id of the resource",
-					},
-				},
-			},
-			Flags: []Flag{
-				{
-					Type: "string",
-					Name: "parent",
-					Description: Description{
-						Short: "The parent resource",
-					},
-				},
-			},
-			Run: func(cli *Cli) error {
-				resourceType := cli.Positional(0)
-				name := cli.Positional(1)
-				id := cli.Positional(2)
-				parent := cli.String("parent")
-
-				p, err := initProject(cli)
-				if err != nil {
-					return err
-				}
-				defer p.Cleanup()
-
-				err = p.Stack.Import(cli.Context, &project.ImportOptions{
-					Type:   resourceType,
-					Name:   name,
-					ID:     id,
-					Parent: parent,
-				})
-				if err != nil {
-					return err
-				}
-
-				return nil
-			},
+			Run: CmdInit,
 		},
 		{
 			Name: "dev",
@@ -416,6 +354,172 @@ var Root = Command{
 				},
 			},
 			Run: CmdDev,
+		},
+		{
+			Name: "deploy",
+			Description: Description{
+				Short: "Deploy your application",
+				Long: strings.Join([]string{
+					"Deploy your application. By default, it deploys to your personal stage.",
+					"",
+					"Optionally, deploy your app to a specific stage.",
+					"",
+					"```bash frame=\"none\"",
+					"sst deploy --stage=production",
+					"```",
+				}, "\n"),
+			},
+			Examples: []Example{
+				{
+					Content: "sst deploy --stage=production",
+					Description: Description{
+						Short: "Deploy to production",
+					},
+				},
+			},
+			Run: func(cli *Cli) error {
+				p, err := initProject(cli)
+				if err != nil {
+					return err
+				}
+				defer p.Cleanup()
+
+				ui := ui.New(ui.ProgressModeDeploy)
+				defer ui.Destroy()
+				ui.Header(version, p.App().Name, p.App().Stage)
+				err = p.Stack.Run(cli.Context, &project.StackInput{
+					Command: "up",
+					OnEvent: ui.Trigger,
+				})
+				if err != nil {
+					return util.NewReadableError(err, "")
+				}
+				return nil
+			},
+		},
+		{
+			Name: "add",
+			Description: Description{
+				Short: "Add a new provider",
+				Long: strings.Join([]string{
+					"Adds a provider to your `sst.config.ts` and installs it. For example.",
+					"",
+					"```bash frame=\"none\"",
+					"sst add aws",
+					"```",
+					"",
+					"Adds the following to your config.",
+					"",
+					"```ts title=\"sst.config.ts\"",
+					"{",
+					"  providers: {",
+					"    aws: true",
+					"  }",
+					"}",
+					"```",
+					"",
+					":::tip",
+					"You can get the name of a provider from the URL of the provider in the [Pulumi Registry](https://www.pulumi.com/registry/).",
+					":::",
+					"",
+					"Running `sst add aws` above is the same as adding the provider to your config and running `sst install`.",
+				}, "\n"),
+			},
+			Args: []Argument{
+				{
+					Name:     "provider",
+					Required: true,
+					Description: Description{
+						Short: "The provider to add",
+						Long:  "The provider to add.",
+					},
+				},
+			},
+			Run: func(cli *Cli) error {
+				pkg := cli.Positional(0)
+				fmt.Println("Adding provider", pkg+"...")
+				cfgPath, err := project.Discover()
+				if err != nil {
+					return err
+				}
+
+				p, err := project.New(&project.ProjectConfig{
+					Version: version,
+					Config:  cfgPath,
+				})
+				if err != nil {
+					return err
+				}
+				if !p.CheckPlatform(version) {
+					err := p.CopyPlatform(version)
+					if err != nil {
+						return err
+					}
+				}
+
+				err = p.Add(pkg)
+				if err != nil {
+					return err
+				}
+				p, err = project.New(&project.ProjectConfig{
+					Version: version,
+					Config:  cfgPath,
+				})
+				if err != nil {
+					return err
+				}
+				err = p.Install()
+				if err != nil {
+					return err
+				}
+				return nil
+			},
+		},
+		{
+			Name: "install",
+			Description: Description{
+				Short: "Install all the providers",
+				Long: strings.Join([]string{
+					"Installs the providers in your `sst.config.ts`. You'll need this command when:",
+					"",
+					"1. You add a new provider to `providers` or `home` in your config.",
+					"2. Or, when you want to install new providers after you `git pull` some changes.",
+					"",
+					":::tip",
+					"The `sst install` command is similar to `npm install`.",
+					":::",
+					"",
+					"Behind the scenes it downloads the packages for the providers and adds the types to your project.",
+				}, "\n"),
+			},
+			Run: func(cli *Cli) error {
+				cfgPath, err := project.Discover()
+				if err != nil {
+					return err
+				}
+
+				p, err := project.New(&project.ProjectConfig{
+					Version: version,
+					Config:  cfgPath,
+				})
+				if err != nil {
+					return err
+				}
+
+				if !p.CheckPlatform(version) {
+					err := p.CopyPlatform(version)
+					if err != nil {
+						return err
+					}
+				}
+
+				err = p.Install()
+				if err != nil {
+					return err
+				}
+
+				return nil
+			},
 		},
 		{
 			Name: "secret",
@@ -725,209 +829,6 @@ var Root = Command{
 			},
 		},
 		{
-			Name:   "server",
-			Hidden: true,
-			Run: func(cli *Cli) error {
-				project, err := initProject(cli)
-				if err != nil {
-					return err
-				}
-				defer project.Cleanup()
-
-				s, err := server.New(project)
-				if err != nil {
-					return err
-				}
-
-				err = s.Start(cli.Context)
-				if err != nil {
-					if err == server.ErrServerAlreadyRunning {
-						return util.NewReadableError(err, "Server already running")
-					}
-					return err
-				}
-				return nil
-			},
-		},
-		{
-			Name:   "introspect",
-			Hidden: true,
-			Run: func(cli *Cli) error {
-				data, err := json.MarshalIndent(cli.path[0], "", "  ")
-				if err != nil {
-					return err
-				}
-				fmt.Println(string(data))
-				return nil
-			},
-		},
-		{
-			Name: "add",
-			Description: Description{
-				Short: "Add a new provider",
-				Long: strings.Join([]string{
-					"Adds a provider to your `sst.config.ts` and installs it. For example.",
-					"",
-					"```bash frame=\"none\"",
-					"sst add aws",
-					"```",
-					"",
-					"Adds the following to your config.",
-					"",
-					"```ts title=\"sst.config.ts\"",
-					"{",
-					"  providers: {",
-					"    aws: true",
-					"  }",
-					"}",
-					"```",
-					"",
-					":::tip",
-					"You can get the name of a provider from the URL of the provider in the [Pulumi Registry](https://www.pulumi.com/registry/).",
-					":::",
-					"",
-					"Running `sst add aws` above is the same as adding the provider to your config and running `sst install`.",
-				}, "\n"),
-			},
-			Args: []Argument{
-				{
-					Name:     "provider",
-					Required: true,
-					Description: Description{
-						Short: "The provider to add",
-						Long:  "The provider to add.",
-					},
-				},
-			},
-			Run: func(cli *Cli) error {
-				pkg := cli.Positional(0)
-				fmt.Println("Adding provider", pkg+"...")
-				cfgPath, err := project.Discover()
-				if err != nil {
-					return err
-				}
-
-				p, err := project.New(&project.ProjectConfig{
-					Version: version,
-					Config:  cfgPath,
-				})
-				if err != nil {
-					return err
-				}
-				if !p.CheckPlatform(version) {
-					err := p.CopyPlatform(version)
-					if err != nil {
-						return err
-					}
-				}
-
-				err = p.Add(pkg)
-				if err != nil {
-					return err
-				}
-				p, err = project.New(&project.ProjectConfig{
-					Version: version,
-					Config:  cfgPath,
-				})
-				if err != nil {
-					return err
-				}
-				err = p.Install()
-				if err != nil {
-					return err
-				}
-				return nil
-			},
-		},
-		{
-			Name: "install",
-			Description: Description{
-				Short: "Install all the providers",
-				Long: strings.Join([]string{
-					"Installs the providers in your `sst.config.ts`. You'll need this command when:",
-					"",
-					"1. You add a new provider to `providers` or `home` in your config.",
-					"2. Or, when you want to install new providers after you `git pull` some changes.",
-					"",
-					":::tip",
-					"The `sst install` command is similar to `npm install`.",
-					":::",
-					"",
-					"Behind the scenes it downloads the packages for the providers and adds the types to your project.",
-				}, "\n"),
-			},
-			Run: func(cli *Cli) error {
-				cfgPath, err := project.Discover()
-				if err != nil {
-					return err
-				}
-
-				p, err := project.New(&project.ProjectConfig{
-					Version: version,
-					Config:  cfgPath,
-				})
-				if err != nil {
-					return err
-				}
-
-				if !p.CheckPlatform(version) {
-					err := p.CopyPlatform(version)
-					if err != nil {
-						return err
-					}
-				}
-
-				err = p.Install()
-				if err != nil {
-					return err
-				}
-
-				return nil
-			},
-		},
-		{
-			Name: "deploy",
-			Description: Description{
-				Short: "Deploy your application",
-				Long: strings.Join([]string{
-					"Deploy your application. By default, it deploys to your personal stage.",
-					"",
-					"Optionally, deploy your app to a specific stage.",
-					"",
-					"```bash frame=\"none\"",
-					"sst deploy --stage=production",
-					"```",
-				}, "\n"),
-			},
-			Examples: []Example{
-				{
-					Content: "sst deploy --stage=production",
-					Description: Description{
-						Short: "Deploy to production",
-					},
-				},
-			},
-			Run: func(cli *Cli) error {
-				p, err := initProject(cli)
-				if err != nil {
-					return err
-				}
-				defer p.Cleanup()
-
-				ui := ui.New(ui.ProgressModeDeploy)
-				defer ui.Destroy()
-				ui.Header(version, p.App().Name, p.App().Stage)
-				err = p.Stack.Run(cli.Context, &project.StackInput{
-					Command: "up",
-					OnEvent: ui.Trigger,
-				})
-				if err != nil {
-					return util.NewReadableError(err, "")
-				}
-				return nil
-			},
-		},
-		{
 			Name: "remove",
 			Description: Description{
 				Short: "Remove your application",
@@ -956,28 +857,6 @@ var Root = Command{
 				ui.Header(version, p.App().Name, p.App().Stage)
 				err = p.Stack.Run(cli.Context, &project.StackInput{
 					Command: "destroy",
-					OnEvent: ui.Trigger,
-				})
-				if err != nil {
-					return util.NewReadableError(err, "")
-				}
-				return nil
-			},
-		},
-		{
-			Name:   "refresh",
-			Hidden: true,
-			Run: func(cli *Cli) error {
-				p, err := initProject(cli)
-				if err != nil {
-					return err
-				}
-				defer p.Cleanup()
-				ui := ui.New(ui.ProgressModeRefresh)
-				defer ui.Destroy()
-				ui.Header(version, p.App().Name, p.App().Stage)
-				err = p.Stack.Run(cli.Context, &project.StackInput{
-					Command: "refresh",
 					OnEvent: ui.Trigger,
 				})
 				if err != nil {
@@ -1016,16 +895,15 @@ var Root = Command{
 			},
 		},
 		{
-			Name: "init",
+			Name: "version",
 			Description: Description{
-				Short: "Initialize a new project",
-				Long: strings.Join([]string{
-					"Initialize a new project in the current directory. This will create a `sst.config.ts` and `sst install` your providers.",
-					"",
-					"If this is run in a Next.js, Remix, or Astro project, it'll init SST in drop-in mode.",
-				}, "\n"),
+				Short: "Print the version of the CLI",
+				Long:  `Prints the current version of the CLI.`,
 			},
-			Run: CmdInit,
+			Run: func(cli *Cli) error {
+				fmt.Printf("ion.%s\n", version)
+				return nil
+			},
 		},
 		{
 			Name: "upgrade",
@@ -1089,6 +967,128 @@ var Root = Command{
 						return telemetry.Disable()
 					},
 				},
+			},
+		},
+		{
+			Name:   "import-unstable",
+			Hidden: true,
+			Description: Description{
+				Short: "(unstable)Import existing resource",
+			},
+			Args: []Argument{
+				{
+					Name:     "type",
+					Required: true,
+					Description: Description{
+						Short: "The type of the resource",
+					},
+				},
+				{
+					Name:     "name",
+					Required: true,
+					Description: Description{
+						Short: "The name of the resource",
+					},
+				},
+				{
+					Name:     "id",
+					Required: true,
+					Description: Description{
+						Short: "The id of the resource",
+					},
+				},
+			},
+			Flags: []Flag{
+				{
+					Type: "string",
+					Name: "parent",
+					Description: Description{
+						Short: "The parent resource",
+					},
+				},
+			},
+			Run: func(cli *Cli) error {
+				resourceType := cli.Positional(0)
+				name := cli.Positional(1)
+				id := cli.Positional(2)
+				parent := cli.String("parent")
+
+				p, err := initProject(cli)
+				if err != nil {
+					return err
+				}
+				defer p.Cleanup()
+
+				err = p.Stack.Import(cli.Context, &project.ImportOptions{
+					Type:   resourceType,
+					Name:   name,
+					ID:     id,
+					Parent: parent,
+				})
+				if err != nil {
+					return err
+				}
+
+				return nil
+			},
+		},
+		{
+			Name:   "server",
+			Hidden: true,
+			Run: func(cli *Cli) error {
+				project, err := initProject(cli)
+				if err != nil {
+					return err
+				}
+				defer project.Cleanup()
+
+				s, err := server.New(project)
+				if err != nil {
+					return err
+				}
+
+				err = s.Start(cli.Context)
+				if err != nil {
+					if err == server.ErrServerAlreadyRunning {
+						return util.NewReadableError(err, "Server already running")
+					}
+					return err
+				}
+				return nil
+			},
+		},
+		{
+			Name:   "introspect",
+			Hidden: true,
+			Run: func(cli *Cli) error {
+				data, err := json.MarshalIndent(cli.path[0], "", "  ")
+				if err != nil {
+					return err
+				}
+				fmt.Println(string(data))
+				return nil
+			},
+		},
+		{
+			Name:   "refresh",
+			Hidden: true,
+			Run: func(cli *Cli) error {
+				p, err := initProject(cli)
+				if err != nil {
+					return err
+				}
+				defer p.Cleanup()
+				ui := ui.New(ui.ProgressModeRefresh)
+				defer ui.Destroy()
+				ui.Header(version, p.App().Name, p.App().Stage)
+				err = p.Stack.Run(cli.Context, &project.StackInput{
+					Command: "refresh",
+					OnEvent: ui.Trigger,
+				})
+				if err != nil {
+					return util.NewReadableError(err, "")
+				}
+				return nil
 			},
 		},
 		{
