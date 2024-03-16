@@ -191,29 +191,29 @@ var Root = Command{
 	Name: "sst",
 	Description: Description{
 		Short: "deploy anything",
-		Long: `
-The CLI helps you manage your SST apps.
-
-` + "```bash" + ` title="Install"
-curl -fsSL https://ion.sst.dev/install | bash
-` + "```" + `
-
-:::note
-The CLI currently supports macOS, Linux, and WSL. Windows support is coming soon.
-:::
-
-Once installed you can run the commands using.
-
-` + "```bash" + `
-sst [command]
-` + "```" + `
-
-The CLI takes a few global flags. For example, the deploy command takes the ` + "`--stage`" + ` flag
-
-` + "```bash" + `
-sst deploy --stage=production
-` + "```" + `
-`,
+		Long: strings.Join([]string{
+			"The CLI helps you manage your SST apps.",
+			"",
+			"```bash title=\"Install\"",
+			"curl -fsSL https://ion.sst.dev/install | bash",
+			"```",
+			"",
+			":::note",
+			"The CLI currently supports macOS, Linux, and WSL. Windows support is coming soon.",
+			":::",
+			"",
+			"Once installed you can run the commands using.",
+			"",
+			"```bash",
+			"sst [command]",
+			"```",
+			"",
+			"The CLI takes a few global flags. For example, the deploy command takes the `--stage` flag",
+			"",
+			"```bash",
+			"sst deploy --stage=production",
+			"```",
+		}, "\n"),
 	},
 	Flags: []Flag{
 		{
@@ -221,23 +221,23 @@ sst deploy --stage=production
 			Type: "string",
 			Description: Description{
 				Short: "The stage to deploy to",
-				Long: `
-Set the stage the CLI is running on.
-
-` + "```bash" + ` frame="none"
-sst [command] --stage=production
-` + "```" + `
-
-If the stage is not passed in, then the CLI will:
-
-1. Uses the username on the local machine.
-   - If the username is ` + "`root`" + `, ` + "`admin`" + `, ` + "`prod`" + `, ` + "`dev`" + `, ` + "`production`" + `, then it will prompt for a stage name.
-2. Stores this in the ` + "`.sst/stage`" + ` file and reads from it in the future.
-
-:::tip
-The stage that is stored in the ` + "`.sst/stage`" + ` file is called your personal stage.
-:::
-`,
+				Long: strings.Join([]string{
+					"Set the stage the CLI is running on.",
+					"",
+					"```bash",
+					"sst [command] --stage=production",
+					"```",
+					"",
+					"If the stage is not passed in, then the CLI will:",
+					"",
+					"1. Uses the username on the local machine.",
+					"   - If the username is `root`, `admin`, `prod`, `dev`, `production`, then it will prompt for a stage name.",
+					"2. Stores this in the `.sst/stage` file and reads from it in the future.",
+					"",
+					":::tip",
+					"The stage that is stored in the `.sst/stage` file is called your personal stage.",
+					":::",
+				}, "\n"),
 			},
 		},
 		{
@@ -245,13 +245,16 @@ The stage that is stored in the ` + "`.sst/stage`" + ` file is called your perso
 			Type: "bool",
 			Description: Description{
 				Short: "Enable verbose logging",
-				Long: `
-Enables verbose logging for the CLI output.
-
-` + "```bash" + ` frame="none"
-sst [command] --verbose
-` + "```" + `
-`,
+				Long: strings.Join([]string{
+					"",
+					"Enables verbose logging for the CLI output.",
+					"",
+					"```bash",
+					"frame=\"none\"",
+					"sst [command] --verbose",
+					"```",
+					"",
+				}, "\n"),
 			},
 		},
 		{
