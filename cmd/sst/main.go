@@ -262,19 +262,19 @@ var Root = Command{
 			Type: "bool",
 			Description: Description{
 				Short: "Print help",
-				Long: `
-Prints help for the given command.
-
-` + "```sh" + ` frame="none"
-sst [command] --help
-` + "```" + `
-
-Or for the global help.
-
-` + "```sh" + ` frame="none"
-sst --help
-` + "```" + `
-`,
+				Long: strings.Join([]string{
+					"Prints help for the given command.",
+					"",
+					"```sh frame=\"none\"",
+					"sst [command] --help",
+					"```",
+					"",
+					"Or for the global help.",
+					"",
+					"```sh frame=\"none\"",
+					"sst --help",
+					"```",
+				}, "\n"),
 			},
 		},
 	},
@@ -357,42 +357,42 @@ sst --help
 			Name: "dev",
 			Description: Description{
 				Short: "Run in development mode",
-				Long: `
-Run your app in development mode. Optionally, pass in a command to start your frontend as well.
-
-` + "```bash" + ` frame="none"
-sst dev
-` + "```" + `
-
-You can also pass in a command to start your frontend with it.
-
-` + "```bash" + ` frame="none"
-sst dev next dev
-` + "```" + `
-
-Dev mode does a few things:
-
-1. Starts a local server
-2. Watches your app config and re-deploys your changes
-3. Run your functions [Live](/docs/live/)
-4. If you pass in a ` + "`command`" + `, it'll:
-   - Load your [linked resources](/docs/linking) in the environment
-   - And run the command
-
-:::note
-If you run ` + "`sst dev`" + ` with a command, it will not print your function logs.
-:::
-
-If ` + "`sst dev`" + ` starts your frontend, it won't print logs from your SST app. We do this to prevent your logs from being too noisy. To view your logs, you can run ` + "`sst dev`" + ` in a separate terminal.
-
-:::tip
-You can start as many instances of ` + "`sst dev`" + ` in your app as you want.
-:::
-
-Starting multiple instances of ` + "`sst dev`" + ` in the same project only starts a single _server_. Meaning that the second instance connects to the existing one.
-
-This is different from SST v2, in that you needed to run ` + "`sst dev`" + ` and ` + "`sst bind`" + ` for your frontend.
-`,
+				Long: strings.Join([]string{
+					"Run your app in development mode. Optionally, pass in a command to start your frontend as well.",
+					"",
+					"```bash",
+					"sst dev",
+					"```",
+					"",
+					"You can also pass in a command to start your frontend with it.",
+					"",
+					"```bash",
+					"sst dev next dev",
+					"```",
+					"",
+					"Dev mode does a few things:",
+					"",
+					"1. Starts a local server",
+					"2. Watches your app config and re-deploys your changes",
+					"3. Run your functions [Live](/docs/live/)",
+					"4. If you pass in a `command`, it'll:",
+					"   - Load your [linked resources](/docs/linking) in the environment",
+					"   - And run the command",
+					"",
+					":::note",
+					"If you run `sst dev` with a command, it will not print your function logs.",
+					":::",
+					"",
+					"If `sst dev` starts your frontend, it won't print logs from your SST app. We do this to prevent your logs from being too noisy. To view your logs, you can run `sst dev` in a separate terminal.",
+					"",
+					":::tip",
+					"You can start as many instances of `sst dev` in your app as you want.",
+					":::",
+					"",
+					"Starting multiple instances of `sst dev` in the same project only starts a single _server_. Meaning that the second instance connects to the existing one.",
+					"",
+					"This is different from SST v2, in that you needed to run `sst dev` and `sst bind` for your frontend.",
+				}, "\n"),
 			},
 			Args: []Argument{
 				{
@@ -429,23 +429,23 @@ This is different from SST v2, in that you needed to run ` + "`sst dev`" + ` and
 					Name: "set",
 					Description: Description{
 						Short: "Set a secret",
-						Long: `
-Set the value of the secret.
-
-The secrets are encrypted and stored in an S3 Bucket in your AWS account.
-
-For example, set the ` + "`sst.Secret`" + ` called ` + "`StripeSecret`" + ` to ` + "`123456789`" + `.
-
-` + "```bash" + ` frame="none"
-sst secret set StripeSecret 123456789
-` + "```" + `
-
-Optionally, set the secret in a specific stage.
-
-` + "```bash" + ` frame="none"
-sst secret set StripeSecret productionsecret --stage=production
-` + "```" + `
-`,
+						Long: strings.Join([]string{
+							"Set the value of the secret.",
+							"",
+							"The secrets are encrypted and stored in an S3 Bucket in your AWS account.",
+							"",
+							"For example, set the `sst.Secret` called `StripeSecret` to `123456789`.",
+							"",
+							"```bash",
+							"sst secret set StripeSecret 123456789",
+							"```",
+							"",
+							"Optionally, set the secret in a specific stage.",
+							"",
+							"```bash",
+							"sst secret set StripeSecret productionsecret --stage=production",
+							"```",
+						}, "\n"),
 					},
 					Args: []Argument{
 						{
@@ -507,21 +507,21 @@ sst secret set StripeSecret productionsecret --stage=production
 					Name: "remove",
 					Description: Description{
 						Short: "Remove a secret",
-						Long: `
-Remove a secret.
-
-For example, remove the ` + "`sst.Secret`" + ` called ` + "`StripeSecret`" + `.
-
-` + "```bash" + ` frame="none"
-sst secret remove StripeSecret
-` + "```" + `
-
-Optionally, remove a secret in a specific stage.
-
-` + "```bash" + ` frame="none"
-sst secret remove StripeSecret --stage=production
-` + "```" + `
-`,
+						Long: strings.Join([]string{
+							"Remove a secret.",
+							"",
+							"For example, remove the `sst.Secret` called `StripeSecret`.",
+							"",
+							"```bash frame=\"none\"",
+							"sst secret remove StripeSecret",
+							"```",
+							"",
+							"Optionally, remove a secret in a specific stage.",
+							"",
+							"```bash frame=\"none\"",
+							"sst secret remove StripeSecret --stage=production",
+							"```",
+						}, "\n"),
 					},
 					Args: []Argument{
 						{
@@ -583,15 +583,15 @@ sst secret remove StripeSecret --stage=production
 					Name: "list",
 					Description: Description{
 						Short: "List all secrets",
-						Long: `
-Lists all the secrets.
-
-Optionally, list the secrets in a specific stage.
-
-` + "```bash" + ` frame="none"
-sst secret list --stage=production
-` + "```" + `
-`,
+						Long: strings.Join([]string{
+							"Lists all the secrets.",
+							"",
+							"Optionally, list the secrets in a specific stage.",
+							"",
+							"```bash frame=\"none\"",
+							"sst secret list --stage=production",
+							"```",
+						}, "\n"),
 					},
 					Examples: []Example{
 						{
@@ -634,46 +634,46 @@ sst secret list --stage=production
 			},
 			Description: Description{
 				Short: "Run a command with linked resources",
-				Long: `
-Run a command with all the resources linked to the environment.
-
-For example, you can run a Node script and use the [JS SDK](/docs/reference/sdk/) to access *all* the linked resources in your app.
-
-` + "```js" + ` title="sst.config.ts"
-const myMainBucket = new sst.aws.Bucket("MyMainBucket");
-const myAdminBucket = new sst.aws.Bucket("MyAdminBucket");
-
-new sst.aws.Nextjs("MyMainWeb", {
-  link: [myMainBucket]
-});
-
-new sst.aws.Nextjs("MyAdminWeb", {
-  link: [myAdminBucket]
-});
-` + "```" + `
-
-Now if you run a script.
-
-` + "```bash" + ` frame="none"
-sst shell node my-script.js
-` + "```" + `
-
-It'll have access to all the buckets from above.
-
-` + "```js" + ` title="my-script.js"
-import { Resource } from "sst";
-
-console.log(Resource.MyMainBucket.name, Resource.MyAdminBucket.name);
-` + "```" + `
-
-If no command is passed in, it opens a shell session with the linked resources.
-
-` + "```bash" + ` frame="none"
-sst shell
-` + "```" + `
-
-This is useful if you want to run multiple commands, all while accessing the linked resources.
-`,
+				Long: strings.Join([]string{
+					"Run a command with all the resources linked to the environment.",
+					"",
+					"For example, you can run a Node script and use the [JS SDK](/docs/reference/sdk/) to access *all* the linked resources in your app.",
+					"",
+					"```js title=\"sst.config.ts\"",
+					"const myMainBucket = new sst.aws.Bucket(\"MyMainBucket\");",
+					"const myAdminBucket = new sst.aws.Bucket(\"MyAdminBucket\");",
+					"",
+					"new sst.aws.Nextjs(\"MyMainWeb\", {",
+					"  link: [myMainBucket]",
+					"});",
+					"",
+					"new sst.aws.Nextjs(\"MyAdminWeb\", {",
+					"  link: [myAdminBucket]",
+					"});",
+					"```",
+					"",
+					"Now if you run a script.",
+					"",
+					"```bash frame=\"none\"",
+					"sst shell node my-script.js",
+					"```",
+					"",
+					"It'll have access to all the buckets from above.",
+					"",
+					"```js title=\"my-script.js\"",
+					"import { Resource } from \"sst\";",
+					"",
+					"console.log(Resource.MyMainBucket.name, Resource.MyAdminBucket.name);",
+					"```",
+					"",
+					"If no command is passed in, it opens a shell session with the linked resources.",
+					"",
+					"```bash frame=\"none\"",
+					"sst shell",
+					"```",
+					"",
+					"This is useful if you want to run multiple commands, all while accessing the linked resources.",
+				}, "\n"),
 			},
 			Examples: []Example{
 				{
@@ -766,29 +766,29 @@ This is useful if you want to run multiple commands, all while accessing the lin
 			Name: "add",
 			Description: Description{
 				Short: "Add a new provider",
-				Long: `
-Adds a provider to your ` + "`sst.config.ts`" + ` and installs it. For example.
-
-` + "```bash" + ` frame="none"
-sst add aws
-` + "```" + `
-
-Adds the following to your config.
-
-` + "```ts" + ` title="sst.config.ts"
-{
-  providers: {
-    aws: true
-  }
-}
-` + "```" + `
-
-:::tip
-You can get the name of a provider from the URL of the provider in the [Pulumi Registry](https://www.pulumi.com/registry/).
-:::
-
-Running ` + "`sst add aws`" + ` above is the same as adding the provider to your config and running ` + "`sst install`" + `.
-`,
+				Long: strings.Join([]string{
+					"Adds a provider to your `sst.config.ts` and installs it. For example.",
+					"",
+					"```bash",
+					"sst add aws",
+					"```",
+					"",
+					"Adds the following to your config.",
+					"",
+					"```ts title=\"sst.config.ts\"",
+					"{",
+					"  providers: {",
+					"    aws: true",
+					"  }",
+					"}",
+					"```",
+					"",
+					":::tip",
+					"You can get the name of a provider from the URL of the provider in the [Pulumi Registry](https://www.pulumi.com/registry/).",
+					":::",
+					"",
+					"Running `sst add aws` above is the same as adding the provider to your config and running `sst install`.",
+				}, "\n"),
 			},
 			Args: []Argument{
 				{
@@ -844,18 +844,18 @@ Running ` + "`sst add aws`" + ` above is the same as adding the provider to your
 			Name: "install",
 			Description: Description{
 				Short: "Install all the providers",
-				Long: `
-Installs the providers in your ` + "`sst.config.ts`" + `. You'll need this command when:
-
-1. You add a new provider to ` + "`providers`" + ` or ` + "`home`" + ` in your config.
-2. Or, when you want to install new providers after you ` + "`git pull`" + ` some changes.
-
-:::tip
-The ` + "`sst install`" + ` command is similar to ` + "`npm install`" + `.
-:::
-
-Behind the scenes it downloads the packages for the providers and adds the types to your project.
-`,
+				Long: strings.Join([]string{
+					"Installs the providers in your `sst.config.ts`. You'll need this command when:",
+					"",
+					"1. You add a new provider to `providers` or `home` in your config.",
+					"2. Or, when you want to install new providers after you `git pull` some changes.",
+					"",
+					":::tip",
+					"The `sst install` command is similar to `npm install`.",
+					":::",
+					"",
+					"Behind the scenes it downloads the packages for the providers and adds the types to your project.",
+				}, "\n"),
 			},
 			Run: func(cli *Cli) error {
 				cfgPath, err := project.Discover()
@@ -890,15 +890,15 @@ Behind the scenes it downloads the packages for the providers and adds the types
 			Name: "deploy",
 			Description: Description{
 				Short: "Deploy your application",
-				Long: `
-Deploy your application. By default, it deploys to your personal stage.
-
-Optionally, deploy your app to a specific stage.
-
-` + "```bash" + ` frame="none"
-sst deploy --stage=production
-` + "```" + `
-`,
+				Long: strings.Join([]string{
+					"Deploy your application. By default, it deploys to your personal stage.",
+					"",
+					"Optionally, deploy your app to a specific stage.",
+					"",
+					"```bash",
+					"sst deploy --stage=production",
+					"```",
+				}, "\n"),
 			},
 			Examples: []Example{
 				{
@@ -932,19 +932,19 @@ sst deploy --stage=production
 			Name: "remove",
 			Description: Description{
 				Short: "Remove your application",
-				Long: `
-Removes your application. By default, it removes your personal stage.
-
-:::tip
-The resources in your app are removed based on the ` + "`removal` setting" + ` in your ` + "`sst.config.ts`" + `.
-:::
-
-Optionally, remove your app from a specific stage.
-
-` + "```bash" + ` frame="none"
-sst remove --stage=production
-` + "```" + `
-`,
+				Long: strings.Join([]string{
+					"Removes your application. By default, it removes your personal stage.",
+					"",
+					":::tip",
+					"The resources in your app are removed based on the `removal` setting in your `sst.config.ts`.",
+					":::",
+					"",
+					"Optionally, remove your app from a specific stage.",
+					"",
+					"```bash frame=\"none\"",
+					"sst remove --stage=production",
+					"```",
+				}, "\n"),
 			},
 			Run: func(cli *Cli) error {
 				p, err := initProject(cli)
@@ -991,13 +991,13 @@ sst remove --stage=production
 			Name: "unlock",
 			Description: Description{
 				Short: "Clear any locks on the app state",
-				Long: `
-When you run ` + "`sst deploy`" + `, it acquires a lock on your state file to prevent concurrent deploys.
-
-However, if something unexpectedly kills the ` + "`sst deploy`" + ` process, or if you manage to run ` + "`sst deploy`" + ` concurrently, the lock might not be released.
-
-This should not usually happen, but it can prevent you from deploying. You can run ` + "`sst cancel`" + ` to release the lock.
-`,
+				Long: strings.Join([]string{
+					"When you run `sst deploy`, it acquires a lock on your state file to prevent concurrent deploys.",
+					"",
+					"However, if something unexpectedly kills the `sst deploy` process, or if you manage to run `sst deploy` concurrently, the lock might not be released.",
+					"",
+					"This should not usually happen, but it can prevent you from deploying. You can run `sst cancel` to release the lock.",
+				}, "\n"),
 			},
 			Run: func(cli *Cli) error {
 				p, err := initProject(cli)
@@ -1020,11 +1020,11 @@ This should not usually happen, but it can prevent you from deploying. You can r
 			Name: "init",
 			Description: Description{
 				Short: "Initialize a new project",
-				Long: `
-Initialize a new project in the current directory. This will create a ` + "`sst.config.ts`" + ` and ` + "`sst install`" + ` your providers.
-
-If this is run in a Next.js, Remix, or Astro project, it'll init SST in drop-in mode. 
-`,
+				Long: strings.Join([]string{
+					"Initialize a new project in the current directory. This will create a `sst.config.ts` and `sst install` your providers.",
+					"",
+					"If this is run in a Next.js, Remix, or Astro project, it'll init SST in drop-in mode.",
+				}, "\n"),
 			},
 			Run: CmdInit,
 		},
@@ -1032,13 +1032,13 @@ If this is run in a Next.js, Remix, or Astro project, it'll init SST in drop-in 
 			Name: "upgrade",
 			Description: Description{
 				Short: "Upgrade the CLI",
-				Long: `
-Upgrade the CLI to the latest version. Or optionally, pass in a version to upgrade to.
-
-` + "```bash" + ` frame="none"
-sst upgrade 0.10
-` + "```" + `
-`,
+				Long: strings.Join([]string{
+					"Upgrade the CLI to the latest version. Or optionally, pass in a version to upgrade to.",
+					"",
+					"```bash",
+					"sst upgrade 0.10",
+					"```",
+				}, "\n"),
 			},
 			Args: ArgumentList{
 				{
@@ -1059,17 +1059,16 @@ sst upgrade 0.10
 			Name: "telemetry",
 			Description: Description{
 				Short: "Manage telemetry settings",
-				Long: `
-Manage telemetry settings.
-
-SST collects completely anonymous telemetry data about general usage. We track:
-
-- Version of SST in use
-- Command invoked, ` + "`sst dev`" + `, ` + "`sst deploy`" + `, etc.
-- General machine information, like the number of CPUs, OS, CI/CD environment, etc.
-
-This is completely optional and can be disabled at any time.
-`,
+				Long: strings.Join([]string{
+					"Manage telemetry settings.",
+					"",
+					"SST collects completely anonymous telemetry data about general usage. We track:",
+					"- Version of SST in use",
+					"- Command invoked, `sst dev`, `sst deploy`, etc.",
+					"- General machine information, like the number of CPUs, OS, CI/CD environment, etc.",
+					"",
+					"This is completely optional and can be disabled at any time.",
+				}, "\n"),
 			},
 			Children: []*Command{
 				{
