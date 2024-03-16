@@ -1264,7 +1264,7 @@ func (c CommandPath) PrintHelp() error {
 	active := c[len(c)-1]
 
 	if len(active.Children) > 0 {
-		fmt.Print(color.BlueString(strings.Join(prefix, " ") + ": "))
+		fmt.Print(strings.Join(prefix, " ") + ": ")
 		fmt.Println(color.WhiteString(c[len(c)-1].Description.Short))
 
 		maxSubcommand := 0
