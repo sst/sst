@@ -10,6 +10,7 @@ import (
 	"github.com/briandowns/spinner"
 	"github.com/fatih/color"
 	"github.com/pulumi/pulumi/sdk/v3/go/common/apitype"
+	"github.com/pulumi/pulumi/sdk/v3/go/common/resource"
 	"github.com/sst/ion/pkg/project"
 	"github.com/sst/ion/pkg/server"
 )
@@ -35,6 +36,7 @@ type UI struct {
 	dedupe      map[string]bool
 	timing      map[string]time.Time
 	hints       map[string]string
+	parents     map[string]string
 	footer      string
 	colors      map[string]color.Attribute
 	workerTime  map[string]time.Time
@@ -54,6 +56,7 @@ func New(mode ProgressMode) *UI {
 
 func (u *UI) Reset() {
 	u.hasProgress = false
+	u.parents = map[string]string{}
 	u.hints = map[string]string{}
 	u.pending = map[string]string{}
 	u.dedupe = map[string]bool{}
@@ -103,6 +106,9 @@ func (u *UI) Trigger(evt *project.StackEvent) {
 		u.timing[evt.ResourcePreEvent.Metadata.URN] = time.Now()
 		if evt.ResourcePreEvent.Metadata.Type == "pulumi:pulumi:Stack" {
 			return
+		}
+		if evt.ResourcePreEvent.Metadata.New.Parent != "" {
+			u.parents[evt.ResourcePreEvent.Metadata.URN] = evt.ResourcePreEvent.Metadata.New.Parent
 		}
 
 		if evt.ResourcePreEvent.Metadata.Op == apitype.OpSame {
@@ -179,6 +185,9 @@ func (u *UI) Trigger(evt *project.StackEvent) {
 		// 	u.outputs = evt.ResOutputsEvent.Metadata.New.Outputs
 		// 	return
 		// }
+		if evt.ResOutputsEvent.Metadata.Type == "pulumi:pulumi:Stack" {
+			return
+		}
 
 		if evt.ResOutputsEvent.Metadata.New != nil {
 			if hint, ok := evt.ResOutputsEvent.Metadata.New.Outputs["_hint"]; ok {
@@ -339,7 +348,7 @@ func (u *UI) Trigger(evt *project.StackEvent) {
 
 		for _, status := range evt.CompleteEvent.Errors {
 			if status.URN != "" {
-				color.New(color.FgRed, color.Bold).Println("   " + formatURN(status.URN))
+				color.New(color.FgRed, color.Bold).Println("   " + u.formatURN(status.URN))
 			}
 			color.New(color.FgWhite).Println("   " + strings.Join(parseError(status.Message), "\n   "))
 		}
@@ -464,7 +473,26 @@ func (u *UI) Start() {
 	}
 }
 
-func formatURN(urn string) string {
+func (u *UI) formatURN(urn string) string {
+	if urn == "" {
+		return ""
+	}
+
+	child := resource.URN(urn)
+	result := child.Name() + " (" + child.Type().DisplayName() + ")"
+
+	for {
+		parent := resource.URN(u.parents[string(child)])
+		if parent == "" {
+			break
+		}
+		if parent.Type().DisplayName() != "pulumi:pulumi:Stack" {
+			result = parent.Name() + " (" + parent.Type().DisplayName() + ")" + " → " + result
+		}
+		child = parent
+	}
+	return result
+
 	if urn == "" {
 		return ""
 	}
@@ -505,7 +533,7 @@ func (u *UI) printProgress(progress Progress) {
 	u.dedupe[dedupeKey] = true
 	if !progress.Final && false {
 		u.pending[progress.URN] =
-			color.New(color.FgWhite).Sprintf("   %-11s %v", progress.Label, formatURN(progress.URN))
+			color.New(color.FgWhite).Sprintf("   %-11s %v", progress.Label, u.formatURN(progress.URN))
 		suffix := "  Deploying...\n"
 		for _, item := range u.pending {
 			suffix += item + "\n"
@@ -515,7 +543,7 @@ func (u *UI) printProgress(progress Progress) {
 	}
 
 	color.New(progress.Color, color.Bold).Print("|  ")
-	color.New(color.FgHiBlack).Print(fmt.Sprintf("%-11s", progress.Label), " ", formatURN(progress.URN))
+	color.New(color.FgHiBlack).Print(fmt.Sprintf("%-11s", progress.Label), " ", u.formatURN(progress.URN))
 	if progress.Duration > time.Second {
 		color.New(color.FgHiBlack).Printf(" (%.1fs)", progress.Duration.Seconds())
 	}
