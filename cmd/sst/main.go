@@ -1291,6 +1291,7 @@ func (c CommandPath) PrintHelp() error {
 				maxSubcommand = next
 			}
 		}
+		fmt.Println("maxSubcommand", maxSubcommand)
 
 		fmt.Println()
 		for _, child := range active.Children {
@@ -1300,7 +1301,12 @@ func (c CommandPath) PrintHelp() error {
 			fmt.Printf(
 				"  %s %s  %s\n",
 				strings.Join(prefix, " "),
-				color.New(color.FgWhite, color.Bold).Sprintf("%-*s", maxSubcommand, strings.Join([]string{child.Name, child.Args.String()}, " ")),
+				color.New(color.FgWhite, color.Bold).Sprintf("%-*s", maxSubcommand, func() string {
+					if len(child.Args) > 0 {
+						return strings.Join([]string{child.Name, child.Args.String()}, " ")
+					}
+					return child.Name
+				}()),
 				child.Description.Short,
 			)
 		}
