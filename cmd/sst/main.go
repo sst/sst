@@ -1291,7 +1291,6 @@ func (c CommandPath) PrintHelp() error {
 				maxSubcommand = next
 			}
 		}
-		fmt.Println("maxSubcommand", maxSubcommand)
 
 		fmt.Println()
 		for _, child := range active.Children {
