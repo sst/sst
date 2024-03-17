@@ -103,6 +103,49 @@ interface DomainArgs {
   path?: string;
 }
 
+interface IamAuthArgs {
+  /**
+   * Enable IAM authorization for a given API route. When IAM auth is enabled, clients need to use Signature Version 4 to sign their requests with their AWS credentials.
+   */
+  type: "iam";
+}
+
+interface JWTAuthArgs {
+  /**
+   * Enable JWT authorization for a given API route.
+   */
+  type: "jwt";
+  /**
+   * Authorization scopes supported by this route.
+   */
+  authorizationScopes?: aws.apigatewayv2.RouteArgs["authorizationScopes"];
+  /**
+   * A single entry specifies where to extract the JSON Web Token (JWT) from inbound requests.
+   *
+   * @example
+   * ```js
+   * {
+   *   identitySources: ["$request.header.Authorization"]
+   * }
+   * ```
+   */
+  identitySources: aws.apigatewayv2.AuthorizerArgs["identitySources"];
+  /**
+   * Configuration of a JWT authorizer.
+   *
+   * @example
+   * ```js
+   * {
+   *   jwtConfiguration: {
+   *     audience: ["audience"],
+   *     issuer: "https://issuer.com",
+   *   }
+   * }
+   * ```
+   */
+  jwtConfiguration: aws.apigatewayv2.AuthorizerArgs["jwtConfiguration"];
+}
+
 export interface ApiGatewayV2Args {
   /**
    * Set a custom domain for your HTTP API. Supports domains hosted either on
@@ -158,24 +201,41 @@ export interface ApiGatewayV2RouteArgs {
    * Enable auth for your HTTP API.
    *
    * :::note
-   * Currently only IAM auth is supported.
+   * Currently only IAM and JWT auth are supported.
    * :::
    *
    * @example
    * ```js
    * {
    *   auth: {
-   *     iam: true
+   *     type: "iam"
+   *   }
+   * }
+   * ```
+   *
+   * @example
+   * ```js
+   * const userPool = new aws.cognito.UserPool("my-user-pool", {
+   *  name: "my-user-pool",
+   * });
+   *
+   * const userPoolClient = new aws.cognito.UserPoolClient("my-user-pool-client", {
+   *  userPoolId: userPool.id,
+   * });
+   *
+   * {
+   *   auth: {
+   *    type: "jwt"
+   *    identitySources: ["$request.header.Authorization"],
+   *    jwtConfiguration: {
+   *      audience: [userPoolClient.id],
+   *      issuer: pulumi.interpolate`https://cognito-idp.${aws.config.region}.amazonaws.com/${userPool.id}`,
+   *    }
    *   }
    * }
    * ```
    */
-  auth?: Input<{
-    /**
-     * Enable IAM authorization for a given API route. When IAM auth is enabled, clients need to use Signature Version 4 to sign their requests with their AWS credentials.
-     */
-    iam?: Input<true>;
-  }>;
+  auth?: Input<IamAuthArgs> | Input<JWTAuthArgs>;
   /**
    * [Transform](/docs/components#transform) how this component creates its underlying
    * resources.
@@ -388,6 +448,45 @@ export class ApiGatewayV2 extends Component implements Link.Linkable {
     }
   }
 
+  #createRouteAuth(args?: ApiGatewayV2RouteArgs["auth"]): Output<{
+    authorizationScopes?: aws.apigatewayv2.RouteArgs["authorizationScopes"];
+    authorizationType: "AWS_IAM" | "JWT" | "NONE" | string;
+    authorizerId?: aws.apigatewayv2.RouteArgs["authorizerId"];
+  }> {
+    const parent = this;
+    const parentName = this.constructorName;
+    const api = this.api;
+    return output(args).apply((auth) => {
+      switch (auth?.type) {
+        case "jwt":
+          const { id: authorizerId } = new aws.apigatewayv2.Authorizer(
+            `${parentName}JwtAuthorizer`,
+            {
+              apiId: api.id,
+              name: `${parentName}JwtAuthorizer`,
+              authorizerType: "JWT",
+              identitySources: auth.identitySources,
+              jwtConfiguration: auth.jwtConfiguration,
+            },
+            { parent },
+          );
+          return {
+            authorizationType: "JWT",
+            authorizationScopes: auth.authorizationScopes,
+            authorizerId,
+          };
+        case "iam":
+          return {
+            authorizationType: "AWS_IAM",
+          };
+        default:
+          return {
+            authorizationType: "NONE",
+          };
+      }
+    });
+  }
+
   /**
    * The URL of the API.
    *
@@ -497,7 +596,7 @@ export class ApiGatewayV2 extends Component implements Link.Linkable {
    *   .route("GET /", "src/get.handler")
    *   .route("POST /", "src/post.handler", {
    *     auth: {
-   *       iam: true
+   *       type: "iam"
    *     }
    *   });
    * ```
@@ -551,19 +650,23 @@ export class ApiGatewayV2 extends Component implements Link.Linkable {
       }),
       { parent, dependsOn: [permission] },
     );
-    new aws.apigatewayv2.Route(
-      `${parentName}Route${id}`,
-      transform(args.transform?.route, {
-        apiId: this.api.id,
-        routeKey,
-        target: interpolate`integrations/${integration.id}`,
-        authorizationType: output(args.auth).apply((auth) =>
-          auth?.iam ? "AWS_IAM" : "NONE",
-        ),
-      }),
-      { parent },
+    return output(this.#createRouteAuth(args.auth)).apply(
+      ({ authorizationScopes, authorizationType, authorizerId }) => {
+        new aws.apigatewayv2.Route(
+          `${parentName}Route${id}`,
+          transform(args.transform?.route, {
+            apiId: this.api.id,
+            routeKey,
+            target: interpolate`integrations/${integration.id}`,
+            authorizationScopes,
+            authorizationType,
+            authorizerId,
+          }),
+          { parent },
+        );
+        return this;
+      },
     );
-    return this;
   }
 
   private parseRoute(route: string) {

@@ -19,7 +19,7 @@ export default $config({
     });
     api
       .route("GET /", "route.handler")
-      .route("GET /foo", "route.handler", { auth: { iam: true } })
+      .route("GET /foo", "route.handler", { auth: { type: "iam" } })
       .route("$default", "route.handler");
 
     return {
