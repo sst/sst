@@ -352,6 +352,12 @@ var Root = Command{
 						Short: "Start dev mode for SST and Next.js",
 					},
 				},
+				{
+					Content: "sst dev \"next dev --turbo\"",
+					Description: Description{
+						Short: "When passing flags wrap command in quotes",
+					},
+				},
 			},
 			Run: CmdDev,
 		},
