@@ -448,10 +448,14 @@ var Root = Command{
 				if err != nil {
 					return err
 				}
-
+				stage, err := getStage(cli, cfgPath)
+				if err != nil {
+					return err
+				}
 				p, err := project.New(&project.ProjectConfig{
 					Version: version,
 					Config:  cfgPath,
+					Stage:   stage,
 				})
 				if err != nil {
 					return err
@@ -470,6 +474,7 @@ var Root = Command{
 				p, err = project.New(&project.ProjectConfig{
 					Version: version,
 					Config:  cfgPath,
+					Stage:   stage,
 				})
 				if err != nil {
 					return err
@@ -504,9 +509,15 @@ var Root = Command{
 					return err
 				}
 
+				stage, err := getStage(cli, cfgPath)
+				if err != nil {
+					return err
+				}
+
 				p, err := project.New(&project.ProjectConfig{
 					Version: version,
 					Config:  cfgPath,
+					Stage:   stage,
 				})
 				if err != nil {
 					return err
@@ -1378,21 +1389,6 @@ func initProject(cli *Cli) (*project.Project, error) {
 		return nil, err
 	}
 
-	if !p.CheckPlatform(version) {
-		spin := spinner.New(spinner.CharSets[14], 100*time.Millisecond)
-		spin.Suffix = "  Installing dependencies..."
-		spin.Start()
-		err := p.CopyPlatform(version)
-		if err != nil {
-			return nil, util.NewReadableError(err, "Could not copy platform code to project directory")
-		}
-		err = p.Install()
-		if err != nil {
-			return nil, util.NewReadableError(err, "Could not install dependencies")
-		}
-		spin.Stop()
-	}
-
 	_, err = logFile.Seek(0, 0)
 	if err != nil {
 		return nil, err
@@ -1407,6 +1403,26 @@ func initProject(cli *Cli) (*project.Project, error) {
 	}
 	logFile = nextLogFile
 	configureLog(cli)
+
+	spin := spinner.New(spinner.CharSets[14], 100*time.Millisecond)
+	defer spin.Stop()
+	if !p.CheckPlatform(version) {
+		spin.Suffix = "  Upgrading project..."
+		spin.Start()
+		err := p.CopyPlatform(version)
+		if err != nil {
+			return nil, util.NewReadableError(err, "Could not copy platform code to project directory")
+		}
+	}
+
+	if p.NeedsInstall() {
+		spin.Suffix = "  Installing dependencies..."
+		spin.Start()
+		err = p.Install()
+		if err != nil {
+			return nil, util.NewReadableError(err, "Could not install dependencies")
+		}
+	}
 
 	if err := p.LoadProviders(); err != nil {
 		return nil, util.NewReadableError(err, err.Error())

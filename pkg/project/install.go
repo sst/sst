@@ -9,6 +9,21 @@ import (
 	"path/filepath"
 )
 
+func getDependencyPackage(name string) string {
+	return "@pulumi/" + name
+}
+
+func (p *Project) NeedsInstall() bool {
+	platformDir := p.PathPlatformDir()
+	for name, _ := range p.app.Providers {
+		pkg := getDependencyPackage(name)
+		if _, err := os.Stat(filepath.Join(platformDir, "node_modules", pkg)); err != nil {
+			return true
+		}
+	}
+	return false
+}
+
 func (p *Project) Install() error {
 	slog.Info("installing deps")
 	err := p.writePackageJson()
@@ -56,7 +71,7 @@ func (p *Project) writePackageJson() error {
 			version = "latest"
 		}
 		slog.Info("adding dependency", "name", name)
-		dependencies["@pulumi/"+name] = version
+		dependencies[getDependencyPackage(name)] = version
 	}
 
 	dataToWrite, err := json.MarshalIndent(result, "", "  ")
