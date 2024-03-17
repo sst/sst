@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -17,7 +18,11 @@ import (
 )
 
 func CmdDev(cli *Cli) error {
-	args := cli.arguments
+	var args []string
+	for _, arg := range cli.arguments {
+		args = append(args, strings.Fields(arg)...)
+	}
+	slog.Info("args", "args", args, "length", len(args))
 	hasTarget := len(args) > 0
 
 	cfgPath, err := project.Discover()
