@@ -63,6 +63,9 @@ func (u *UI) Reset() {
 }
 
 func (u *UI) Trigger(evt *project.StackEvent) {
+	if evt.ConcurrentUpdateEvent != nil {
+		u.printEvent(color.FgRed, "Locked", "A concurrent update was detected on the stack. Run `sst unlock` to delete the lock file and retry.")
+	}
 	if evt.StackCommandEvent != nil {
 		u.spinner.Disable()
 
@@ -106,7 +109,12 @@ func (u *UI) Trigger(evt *project.StackEvent) {
 		if evt.ResourcePreEvent.Metadata.Type == "pulumi:pulumi:Stack" {
 			return
 		}
-		if evt.ResourcePreEvent.Metadata.New.Parent != "" {
+
+		if evt.ResourcePreEvent.Metadata.Old != nil && evt.ResourcePreEvent.Metadata.Old.Parent != "" {
+			u.parents[evt.ResourcePreEvent.Metadata.URN] = evt.ResourcePreEvent.Metadata.Old.Parent
+		}
+
+		if evt.ResourcePreEvent.Metadata.New != nil && evt.ResourcePreEvent.Metadata.New.Parent != "" {
 			u.parents[evt.ResourcePreEvent.Metadata.URN] = evt.ResourcePreEvent.Metadata.New.Parent
 		}
 
@@ -372,7 +380,8 @@ func (u *UI) getColor(input string) color.Attribute {
 
 func (u *UI) Event(evt *server.Event) {
 	if evt.ConcurrentUpdateEvent != nil {
-		u.printEvent(color.FgRed, "Locked", "A concurrent update was detected on the stack. Run `sst cancel` to delete the lock file and retry.")
+		u.printEvent(color.FgRed, "Locked", "A concurrent update was detected on the stack. Run `sst unlock` to delete the lock file and retry.")
+		return
 	}
 
 	if evt.FunctionInvokedEvent != nil {

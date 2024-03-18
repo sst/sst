@@ -3,7 +3,6 @@ package project
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"log/slog"
 	"os"
@@ -98,7 +97,7 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 
 	err := s.Lock()
 	if err != nil {
-		if errors.Is(err, &provider.LockExistsError{}) {
+		if err == provider.ErrLockExists {
 			input.OnEvent(&StackEvent{ConcurrentUpdateEvent: &ConcurrentUpdateEvent{}})
 		}
 		return err

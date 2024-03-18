@@ -57,7 +57,7 @@ func (a *AwsProvider) Lock(app string, stage string, out *os.File) error {
 
 	if err == nil {
 		slog.Info("lock exists", "key", lockKey)
-		return &LockExistsError{}
+		return ErrLockExists
 	}
 
 	slog.Info("writing lock")
@@ -332,7 +332,6 @@ func (a *AwsProvider) getData(key, app, stage string) (io.Reader, error) {
 		Bucket: aws.String(a.bootstrap.State),
 		Key:    aws.String(a.pathForData(key, app, stage)),
 	})
-
 	if err != nil {
 		var nsk *s3types.NoSuchKey
 		if errors.As(err, &nsk) {
