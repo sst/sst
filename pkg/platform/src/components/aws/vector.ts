@@ -17,13 +17,15 @@ const ModelInfo = {
   "amazon.titan-embed-text-v1": { provider: "bedrock" as const, size: 1536 },
   "amazon.titan-embed-image-v1": { provider: "bedrock" as const, size: 1024 },
   "text-embedding-ada-002": { provider: "openai" as const, size: 1536 },
+  "text-embedding-3-small": { provider: "openai" as const, size: 1536 },
+  "text-embedding-3-large": { provider: "openai" as const, size: 3072 },
 };
 
 export interface VectorArgs {
   /**
    * The model used for generating the vectors.
    *
-   * To use the `text-embedding-ada-002` model, you'll need to pass in your `openAiApiKey`.
+   * To use the `text-embedding-ada-002`, `text-embedding-3-small`, `text-embedding-3-large` model, you'll need to pass in your `openAiApiKey`.
    *
    * @default `"amazon.titan-embed-text-v1"`
    * @example
@@ -36,7 +38,7 @@ export interface VectorArgs {
    */
   model?: Input<keyof typeof ModelInfo>;
   /**
-   * Your OpenAI API key. This is needed only if you're using the `text-embedding-ada-002` model.
+   * Your OpenAI API key. This is needed only if you're using the `text-embedding-ada-002`, `text-embedding-3-small` or `text-embedding-3-large` model.
    *
    * :::tip
    * Use `sst.Secret` to store your API key securely.
@@ -80,12 +82,12 @@ export interface VectorArgs {
  *
  * #### Change the model
  *
- * Optionally, use a different model, like OpenAI's `text-embedding-ada-002` model. You'll need to pass in your OpenAI API key.
+ * Optionally, use a different model, like OpenAI's `text-embedding-ada-002`, `text-embedding-3-small` or `text-embedding-3-large` model. You'll need to pass in your OpenAI API key.
  *
  * ```ts {3}
  * new sst.aws.Vector("MyVectorDB", {
  *   openAiApiKey: new sst.aws.Secret("OpenAiApiKey").value,
- *   model: "text-embedding-ada-002"
+ *   model: "text-embedding-3-small"
  * });
  * ```
  *
