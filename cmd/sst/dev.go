@@ -176,7 +176,7 @@ func CmdDev(cli *Cli) error {
 	u.Destroy()
 	cli.Cancel()
 	if err != nil {
-		return util.NewReadableError(err, "")
+		return err
 	}
 
 	return nil
