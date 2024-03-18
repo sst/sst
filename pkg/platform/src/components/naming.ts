@@ -19,7 +19,7 @@ export function prefixName(name: string, suffix?: string) {
     }
 
     if (stageLen + nameLen + 1 <= L) {
-      const appTruncated = $app.name.substring(0, L - stageLen - nameLen - 1);
+      const appTruncated = $app.name.substring(0, L - stageLen - nameLen - 2);
       return appTruncated === ""
         ? `${$app.stage}-${name}`
         : `${appTruncated}-${$app.stage}-${name}`;

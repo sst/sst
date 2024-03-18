@@ -1179,7 +1179,8 @@ export class Function
             transform(args.transform?.role, {
               name: region.apply((region) =>
                 prefixName(
-                  `${name}Role-${region.toLowerCase().replace(/-/g, "")}`,
+                  `${name}Role`,
+                  `-${region.toLowerCase().replace(/-/g, "")}`,
                 ),
               ),
               assumeRolePolicy: aws.iam.assumeRolePolicyForPrincipal({
