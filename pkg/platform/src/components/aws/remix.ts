@@ -319,12 +319,14 @@ export class Remix extends Component implements Link.Linkable {
     this.assets = bucket;
     this.cdn = distribution;
     this.server = serverFunction;
-    Hint.register(
-      this.urn,
-      all([this.cdn.domainUrl, this.cdn.url]).apply(
-        ([domainUrl, url]) => domainUrl ?? url,
-      ),
-    );
+    if (!$dev) {
+      Hint.register(
+        this.urn,
+        all([this.cdn.domainUrl, this.cdn.url]).apply(
+          ([domainUrl, url]) => domainUrl ?? url,
+        ),
+      );
+    }
     this.registerOutputs({
       _metadata: {
         mode: $dev ? "placeholder" : "deployed",
