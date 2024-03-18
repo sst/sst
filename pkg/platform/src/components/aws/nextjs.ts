@@ -765,7 +765,7 @@ export class Nextjs extends Component implements Link.Linkable {
         buildId,
         openNextOutput,
         args?.imageOptimization,
-        bucket.name,
+        [bucket.arn, bucket.name],
         revalidationQueue.apply((q) => ({ url: q?.url, arn: q?.arn })),
         revalidationTable.apply((t) => ({ name: t?.name, arn: t?.arn })),
         useServerFunctionPerRouteLoggingInjection(),
@@ -775,7 +775,7 @@ export class Nextjs extends Component implements Link.Linkable {
           buildId,
           openNextOutput,
           imageOptimization,
-          bucketName,
+          [bucketArn, bucketName],
           { url: revalidationQueueUrl, arn: revalidationQueueArn },
           { name: revalidationTableName, arn: revalidationTableArn },
           serverFunctionPerRouteLoggingInjection,
@@ -794,6 +794,11 @@ export class Nextjs extends Component implements Link.Linkable {
               }),
             },
             permissions: [
+              // access to the cache data
+              {
+                actions: ["s3:GetObject", "s3:PutObject"],
+                resources: [`${bucketArn}/*`],
+              },
               ...(revalidationQueueArn
                 ? [
                     {
