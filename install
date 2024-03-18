@@ -47,7 +47,27 @@ else
   echo "adding $INSTALL_DIR to your PATH"
   case $(basename "$SHELL") in
   fish)
-    echo "ensure $INSTALL_DIR is added to your path - we do not support this automatically in fish shell but you're welcome to contribute a PR: https://github.com/sst/ion/blob/dev/install"
+    fish_config=$HOME/.config/fish/config.fish
+
+      commands=(
+          "fish_add_path $INSTALL_DIR"
+      )
+
+      if [[ -w $fish_config ]]; then
+          {
+              echo -e '\n# sst'
+              for command in "${commands[@]}"; do
+                  echo "$command"
+              done
+          } >>"$fish_config"
+          exec fish -i
+      else
+          echo "manually add the directory to $fish_config (or similar):"
+
+          for command in "${commands[@]}"; do
+              echo "  $command"
+          done
+      fi
       ;;
   zsh)
       zsh_config=$HOME/.zshrc
