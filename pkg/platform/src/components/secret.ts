@@ -6,7 +6,7 @@ import { Component, Prettify } from "./component";
 export class SecretMissingError extends VisibleError {
   constructor(public readonly secretName: string) {
     super(
-      `Set a value for ${secretName} with \`sst secrets set ${secretName} <value>\``,
+      `Set a value for ${secretName} with \`sst secret set ${secretName} <value>\``,
     );
   }
 }
@@ -44,7 +44,7 @@ export class SecretMissingError extends VisibleError {
  * You can then set the value of a secret using the [CLI](/docs/reference/cli/).
  *
  * ```sh title="Terminal"
- * sst secrets set MySecret my-secret-value
+ * sst secret set MySecret my-secret-value
  * ```
  *
  * #### Use the secret in your app config
