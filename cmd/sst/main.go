@@ -950,7 +950,7 @@ var Root = Command{
 				if err != nil {
 					return err
 				}
-				fmt.Printf("Installed version %s\n", version)
+				fmt.Printf("Upgraded to %s\n", version)
 				return nil
 			},
 		},
