@@ -47,10 +47,10 @@ func CmdInit(cli *Cli) error {
 	for _, file := range files {
 		if _, err := os.Stat(file); err == nil {
 			color.New(color.FgBlue, color.Bold).Print(">")
-			fmt.Println("  Next.js detected...")
-			fmt.Println("   - creating an sst.config.ts")
-			fmt.Println("   - adding the sst sdk to package.json")
-			fmt.Println("   - modifying tsconfig.json")
+			fmt.Println("  Next.js detected. This will...")
+			fmt.Println("   - create an sst.config.ts")
+			fmt.Println("   - modify the tsconfig.json")
+			fmt.Println("   - add the sst sdk to package.json")
 			fmt.Println()
 			template = "nextjs"
 			break
@@ -59,7 +59,9 @@ func CmdInit(cli *Cli) error {
 
 	if template == "" {
 		color.New(color.FgBlue, color.Bold).Print(">")
-		fmt.Println("  Adding a new sst.config.ts...")
+		fmt.Println("  No frontend detected. This will...")
+		fmt.Println("   - use the vanilla template")
+		fmt.Println("   - create an sst.config.ts")
 		fmt.Println()
 		template = "vanilla"
 	}

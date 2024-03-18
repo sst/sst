@@ -25,6 +25,7 @@ const (
 
 const (
 	IconX = "×"
+  IconCheck = "✓"
 )
 
 type UI struct {
@@ -317,7 +318,7 @@ func (u *UI) Trigger(evt *project.StackEvent) {
 			fmt.Println()
 		}
 		if len(evt.CompleteEvent.Errors) == 0 && evt.CompleteEvent.Finished {
-			color.New(color.FgGreen, color.Bold).Print("✔")
+			color.New(color.FgGreen, color.Bold).Print(IconCheck)
 			color.New(color.FgWhite, color.Bold).Println("  Complete")
 			if len(evt.CompleteEvent.Hints) > 0 {
 				for k, v := range evt.CompleteEvent.Hints {
@@ -346,12 +347,12 @@ func (u *UI) Trigger(evt *project.StackEvent) {
 
 		if len(evt.CompleteEvent.Errors) == 0 && !evt.CompleteEvent.Finished {
 			color.New(color.FgRed, color.Bold).Print("\n" + IconX)
-			color.New(color.FgWhite, color.Bold).Println(" Interrupted")
+			color.New(color.FgWhite, color.Bold).Println("  Interrupted")
 			return
 		}
 
 		color.New(color.FgRed, color.Bold).Print("\n" + IconX)
-		color.New(color.FgWhite, color.Bold).Println(" Failed")
+		color.New(color.FgWhite, color.Bold).Println("  Failed")
 
 		for _, status := range evt.CompleteEvent.Errors {
 			if status.URN != "" {
