@@ -307,6 +307,12 @@ var Root = Command{
 					"sst dev next dev",
 					"```",
 					"",
+					"To pass in a flag to your command, wrap it in quotes.",
+					"",
+					"```bash frame=\"none\"",
+					"sst dev \"next dev --turbo\"",
+					"```",
+					"",
 					"Dev mode does a few things:",
 					"",
 					"1. Starts a local server",
@@ -523,6 +529,10 @@ var Root = Command{
 					return err
 				}
 
+				spin := spinner.New(spinner.CharSets[14], 100*time.Millisecond)
+				defer spin.Stop()
+				spin.Suffix = "  Installing providers..."
+				spin.Start()
 				if !p.CheckPlatform(version) {
 					err := p.CopyPlatform(version)
 					if err != nil {
@@ -534,7 +544,8 @@ var Root = Command{
 				if err != nil {
 					return err
 				}
-
+				spin.Stop()
+				ui.Success("Installed providers")
 				return nil
 			},
 		},

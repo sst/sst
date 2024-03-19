@@ -28,7 +28,7 @@ Now let's initialize SST in our app. Make sure you have the [CLI installed](/doc
 sst init
 ```
 
-This'll create a `sst.config.ts` file in the root of your app.
+This'll create a `sst.config.ts` file in your project root.
 
 #### Start dev mode
 
@@ -145,7 +145,7 @@ Add some styles.
 
 ## 4. Generate a pre-signed URL
 
-When our app loads, we'll generate a pre-signed URL for the file upload and render the form with it.
+When our app loads, we'll generate a pre-signed URL for the file upload and render the form with it. Replace your `Home` component in `app/page.tsx`.
 
 ```ts title="app/page.tsx" {4}
 export default async function Home() {
@@ -170,7 +170,6 @@ We are directly accessing our S3 bucket with `Resource.MyBucket.name`.
 Add the relevant imports.
 
 ```ts title="app/page.tsx"
-import crypto from "crypto";
 import { Resource } from "sst";
 import Form from "@/components/form";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
