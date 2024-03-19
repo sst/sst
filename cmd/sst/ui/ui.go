@@ -577,6 +577,6 @@ func Success(msg string) {
 }
 
 func Error(msg string) {
-	color.New(color.FgRed).Print(IconX + "  ")
+	color.New(color.FgRed, color.Bold).Print(IconX + "  ")
 	color.New(color.FgWhite).Println(msg)
 }
