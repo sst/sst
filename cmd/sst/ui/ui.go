@@ -468,6 +468,10 @@ func (u *UI) Header(version, app, stage string) {
 
 	color.New(color.FgWhite, color.Bold).Printf("   %-12s", "Stage:")
 	color.New(color.FgHiBlack).Println(stage)
+	if u.mode == ProgressModeDev {
+		color.New(color.FgWhite, color.Bold).Printf("   %-12s", "Console:")
+		color.New(color.FgHiBlack).Println("https://console.sst.dev")
+	}
 	fmt.Println()
 }
 
