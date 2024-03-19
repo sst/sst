@@ -13,5 +13,10 @@ export default $config({
     const fn = new sst.aws.Function("MyFunction", {
       handler: "src/index.handler",
     });
+
+    const api = new sst.aws.ApiGatewayV2("MyApi").route("GET /", {
+      link: [bucket],
+      handler: "src/index.handler",
+    });
   },
 });

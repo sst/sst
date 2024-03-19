@@ -15,6 +15,7 @@ import { VisibleError } from "../error";
 import { HostedZoneLookup } from "./providers/hosted-zone-lookup";
 import { DnsValidatedCertificate } from "./dns-validated-certificate";
 import { useProvider } from "./helpers/provider";
+import { Hint } from "../hint";
 
 interface DomainArgs {
   /**
@@ -249,6 +250,8 @@ export class ApiGatewayV2 extends Component implements Link.Linkable {
     this.api = api;
     this.apigDomain = apigDomain;
     this.apiMapping = apiMapping;
+
+    Hint.register(this.urn, this.url);
 
     function normalizeDomain() {
       if (!args.domain) return;
