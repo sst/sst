@@ -523,6 +523,10 @@ var Root = Command{
 					return err
 				}
 
+				spin := spinner.New(spinner.CharSets[14], 100*time.Millisecond)
+				defer spin.Stop()
+				spin.Suffix = "  Installing providers..."
+				spin.Start()
 				if !p.CheckPlatform(version) {
 					err := p.CopyPlatform(version)
 					if err != nil {
@@ -534,7 +538,8 @@ var Root = Command{
 				if err != nil {
 					return err
 				}
-
+				spin.Stop()
+				ui.Success("Installed providers")
 				return nil
 			},
 		},
