@@ -726,7 +726,7 @@ function handler(event) {
           const fn = new Function(
             `${name}Edge${sanitizeToPascalCase(fnName)}`,
             {
-              runtime: "nodejs18.x",
+              runtime: "nodejs20.x",
               timeout: "20 seconds",
               memory: "1024 MB",
               ...props,
@@ -819,7 +819,7 @@ function handler(event) {
         `${name}${sanitizeToPascalCase(fnName)}`,
         {
           description: `${name} server`,
-          runtime: "nodejs18.x",
+          runtime: "nodejs20.x",
           timeout: "20 seconds",
           memory: "1024 MB",
           ...props.function,

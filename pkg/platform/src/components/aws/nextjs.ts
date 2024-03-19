@@ -896,7 +896,7 @@ export class Nextjs extends Component implements Link.Linkable {
                           description: `${name} image optimizer`,
                           handler: value.handler,
                           bundle: path.join(outputPath, value.bundle),
-                          runtime: "nodejs18.x",
+                          runtime: "nodejs20.x",
                           architecture: "arm64",
                           environment: {
                             BUCKET_NAME: bucketName,
@@ -975,7 +975,7 @@ export class Nextjs extends Component implements Link.Linkable {
               description: `${name} ISR revalidator`,
               handler: revalidationFunction.handler,
               bundle: path.join(outputPath, revalidationFunction.bundle),
-              runtime: "nodejs18.x",
+              runtime: "nodejs20.x",
               timeout: "30 seconds",
               permissions: [
                 {
@@ -1069,7 +1069,7 @@ export class Nextjs extends Component implements Link.Linkable {
                 outputPath,
                 openNextOutput.additionalProps.initializationFunction.bundle,
               ),
-              runtime: "nodejs18.x",
+              runtime: "nodejs20.x",
               timeout: "900 seconds",
               memory: `${Math.min(
                 10240,

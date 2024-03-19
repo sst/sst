@@ -195,11 +195,11 @@ export interface FunctionArgs {
   /**
    * The runtime environment for the function. Support for other runtimes is on our roadmap.
    *
-   * @default `"nodejs18.x"`
+   * @default `"nodejs20.x"`
    * @example
    * ```js
    * {
-   *   runtime: "nodejs20.x"
+   *   runtime: "nodejs18.x"
    * }
    * ```
    */
@@ -880,7 +880,7 @@ export class Function
         links,
         handler: handler,
         bundle: bundle,
-        runtime: runtime || "nodejs18.x",
+        runtime: runtime || "nodejs20.x",
         properties: nodejs,
       });
     });
@@ -909,7 +909,7 @@ export class Function
 
     function normalizeRuntime() {
       return all([args.runtime, dev]).apply(([v, dev]) =>
-        dev ? "provided.al2023" : v ?? "nodejs18.x",
+        dev ? "provided.al2023" : v ?? "nodejs20.x",
       );
     }
 
