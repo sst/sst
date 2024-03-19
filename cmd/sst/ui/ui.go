@@ -319,7 +319,7 @@ func (u *UI) Trigger(evt *project.StackEvent) {
 		}
 		if len(evt.CompleteEvent.Errors) == 0 && evt.CompleteEvent.Finished {
 			color.New(color.FgGreen, color.Bold).Print(IconCheck)
-			color.New(color.FgWhite, color.Bold).Println("  Complete")
+			color.New(color.FgWhite, color.Bold).Println("  ", u.formatCompleteCopy())
 			if len(evt.CompleteEvent.Hints) > 0 {
 				for k, v := range evt.CompleteEvent.Hints {
 					splits := strings.Split(k, "::")
@@ -480,6 +480,19 @@ func (u *UI) Start() {
 	if u.mode == ProgressModeRefresh {
 		u.spinner.Suffix = "  Refreshing..."
 	}
+}
+
+func (u *UI) formatCompleteCopy() string {
+	if u.mode == ProgressModeRemove {
+		return "Removed"
+	}
+	if u.mode == ProgressModeRefresh {
+		return "Refreshed"
+	}
+	if u.mode == ProgressModeDeploy {
+		return "Deployed"
+	}
+	return "Complete"
 }
 
 func (u *UI) formatURN(urn string) string {
