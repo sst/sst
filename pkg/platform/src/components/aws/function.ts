@@ -203,7 +203,7 @@ interface FunctionUrlCorsArgs {
 
 export interface FunctionArgs {
   /** @internal */
-  dev?: Input<false>;
+  live?: Input<false>;
   /**
    * A description for the function. This is displayed in the AWS Console.
    * @example
@@ -856,7 +856,7 @@ export class Function
     super("sst:aws:Function", name, args, opts);
 
     const parent = this;
-    const dev = output(args.dev).apply((v) => $dev && v !== false);
+    const dev = output(args.live).apply((v) => $dev && v !== false);
     const region = normalizeRegion();
     const injections = normalizeInjections();
     const runtime = normalizeRuntime();

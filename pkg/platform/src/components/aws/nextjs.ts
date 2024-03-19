@@ -989,7 +989,7 @@ export class Nextjs extends Component implements Link.Linkable {
                   resources: [queue.arn],
                 },
               ],
-              dev: false,
+              live: false,
               _ignoreCodeChanges: $dev,
             },
             {
@@ -1088,7 +1088,7 @@ export class Nextjs extends Component implements Link.Linkable {
               environment: {
                 CACHE_DYNAMO_TABLE: revalidationTable!.name,
               },
-              dev: false,
+              live: false,
               _ignoreCodeChanges: $dev,
               _skipMetadata: true,
             },
