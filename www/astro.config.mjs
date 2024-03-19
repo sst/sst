@@ -15,7 +15,7 @@ const sidebar = [
       { label: "Next.js", link: "/docs/start/nextjs/" },
       //      { label: "Remix", link: "/docs/start/remix/" },
       //      { label: "Astro", link: "/docs/start/astro/" },
-      //      { label: "API", link: "/docs/start/api/" },
+      { label: "API", link: "/docs/start/api/" },
     ],
   },
   {
