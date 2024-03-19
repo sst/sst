@@ -319,7 +319,20 @@ func (u *UI) Trigger(evt *project.StackEvent) {
 		}
 		if len(evt.CompleteEvent.Errors) == 0 && evt.CompleteEvent.Finished {
 			color.New(color.FgGreen, color.Bold).Print(IconCheck)
-			color.New(color.FgWhite, color.Bold).Println("  ", u.formatCompleteCopy())
+			if !u.hasProgress {
+				color.New(color.FgWhite, color.Bold).Println("  No changes")
+			}
+			if u.hasProgress {
+				if u.mode == ProgressModeRemove {
+					color.New(color.FgWhite, color.Bold).Println("  Removed")
+				}
+				if u.mode == ProgressModeDeploy {
+					color.New(color.FgWhite, color.Bold).Println("  Complete")
+				}
+				if u.mode == ProgressModeRefresh {
+					color.New(color.FgWhite, color.Bold).Println("  Refreshed")
+				}
+			}
 			if len(evt.CompleteEvent.Hints) > 0 {
 				for k, v := range evt.CompleteEvent.Hints {
 					splits := strings.Split(k, "::")
@@ -351,7 +364,7 @@ func (u *UI) Trigger(evt *project.StackEvent) {
 			return
 		}
 
-		color.New(color.FgRed, color.Bold).Print("\n" + IconX)
+		color.New(color.FgRed, color.Bold).Print(IconX)
 		color.New(color.FgWhite, color.Bold).Println("  Failed")
 
 		for _, status := range evt.CompleteEvent.Errors {
@@ -441,6 +454,7 @@ func (u *UI) printEvent(barColor color.Attribute, label string, message string) 
 	color.New(barColor, color.Bold).Print("|  ")
 	color.New(color.FgHiBlack).Print(fmt.Sprintf("%-11s", label), " ", strings.TrimSpace(message))
 	fmt.Println()
+	u.hasProgress = true
 }
 
 func (u *UI) Interrupt() {
@@ -484,19 +498,6 @@ func (u *UI) Start() {
 	if u.mode == ProgressModeRefresh {
 		u.spinner.Suffix = "  Refreshing..."
 	}
-}
-
-func (u *UI) formatCompleteCopy() string {
-	if u.mode == ProgressModeRemove {
-		return "Removed"
-	}
-	if u.mode == ProgressModeRefresh {
-		return "Refreshed"
-	}
-	if len(u.dedupe) > 0 {
-		return "Complete"
-	}
-	return "No changes"
 }
 
 func (u *UI) formatURN(urn string) string {
@@ -556,7 +557,10 @@ func (u *UI) printProgress(progress Progress) {
 	if progress.Duration > time.Second {
 		color.New(color.FgHiBlack).Printf(" (%.1fs)", progress.Duration.Seconds())
 	}
-	if len(progress.Message) > 0 {
+	if len(progress.Message) == 1 {
+		color.New(color.FgWhite).Print(progress.Message[0])
+	}
+	if len(progress.Message) > 1 {
 		for _, item := range progress.Message {
 			fmt.Println()
 			color.New(progress.Color, color.Bold).Print("|  ")

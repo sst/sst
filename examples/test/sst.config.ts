@@ -1,4 +1,7 @@
 /// <reference path="./.sst/platform/config.d.ts" />
+
+import { VisibleError } from "./.sst/platform/src/components/error";
+
 export default $config({
   app(input) {
     return {
@@ -8,6 +11,7 @@ export default $config({
     };
   },
   async run() {
+    throw new VisibleError("This is a visible error");
     new sst.aws.Bucket("MyBucket");
   },
 });
