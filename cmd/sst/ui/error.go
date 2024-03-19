@@ -12,6 +12,10 @@ func parseError(input string) []string {
 		input = regexp.MustCompile(`<ref \*\d+>\s*`).ReplaceAllString(input, "")
 		input = strings.TrimSpace(input)
 		lines := strings.Split(input, "\n")
+		if strings.HasPrefix(lines[0], "VisibleError") {
+			stripped := strings.SplitN(lines[0], ": ", 2)
+			return stripped[1:]
+		}
 		return lines
 	}
 

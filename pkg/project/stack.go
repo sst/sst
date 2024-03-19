@@ -89,6 +89,8 @@ type Error struct {
 
 type StackEventStream = chan StackEvent
 
+var ErrStackRunFailed = fmt.Errorf("stack run had errors")
+
 func (s *stack) Run(ctx context.Context, input *StackInput) error {
 	slog.Info("running stack command", "cmd", input.Command)
 	input.OnEvent(&StackEvent{StackCommandEvent: &StackCommandEvent{
@@ -406,7 +408,7 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 
 	slog.Info("done running stack command")
 	if err != nil {
-		return err
+		return ErrStackRunFailed
 	}
 	return nil
 }
