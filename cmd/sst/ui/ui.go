@@ -25,7 +25,7 @@ const (
 
 const (
 	IconX     = "×"
-	IconCheck = "✔"
+	IconCheck = "✓"
 )
 
 type UI struct {
@@ -575,7 +575,7 @@ func (u *UI) printProgress(progress Progress) {
 }
 
 func Success(msg string) {
-	color.New(color.FgGreen).Print(IconCheck + "  ")
+	color.New(color.FgGreen, color.Bold).Print(IconCheck + "  ")
 	color.New(color.FgWhite).Println(msg)
 }
 
