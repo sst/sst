@@ -203,7 +203,7 @@ interface FunctionUrlCorsArgs {
 
 export interface FunctionArgs {
   /** @internal */
-  liveDev?: Input<false>;
+  dev?: Input<false>;
   /**
    * A description for the function. This is displayed in the AWS Console.
    * @example
@@ -856,7 +856,7 @@ export class Function
     super("sst:aws:Function", name, args, opts);
 
     const parent = this;
-    const dev = output(args.liveDev).apply((v) => $dev && v !== false);
+    const dev = output(args.dev).apply((v) => $dev && v !== false);
     const region = normalizeRegion();
     const injections = normalizeInjections();
     const runtime = normalizeRuntime();
@@ -887,25 +887,29 @@ export class Function
       input.map((item) => item.name),
     );
 
-    all([
-      dev,
+    Warp.register(
       name,
-      links,
-      args.handler,
-      args.bundle,
-      args.runtime,
-      args.nodejs,
-    ]).apply(([dev, name, links, handler, bundle, runtime, nodejs]) => {
-      if (!dev) return;
-      Warp.register({
-        functionID: name,
+      all([
+        dev,
+        name,
         links,
-        handler: handler,
-        bundle: bundle,
-        runtime: runtime || "nodejs20.x",
-        properties: nodejs,
-      });
-    });
+        args.handler,
+        args.bundle,
+        args.runtime,
+        args.nodejs,
+      ]).apply(([dev, name, links, handler, bundle, runtime, nodejs]) => {
+        if (!dev) return undefined;
+        return {
+          functionID: name,
+          links,
+          handler: handler,
+          bundle: bundle,
+          runtime: runtime || "nodejs20.x",
+          properties: nodejs,
+        };
+      }),
+    );
+
     all([bundle, handler]).apply(([bundle, handler]) => {
       Link.Receiver.register(bundle || handler, links, environment);
     });

@@ -10,12 +10,10 @@ export default $config({
   },
   async run() {
     const bucket = new sst.aws.Bucket("MyBucket");
-    const fn = new sst.aws.Function("MyFunction", {
-      handler: "src/index.handler",
-    });
 
     const api = new sst.aws.ApiGatewayV2("MyApi").route("GET /", {
       link: [bucket],
+      dev: false,
       handler: "src/index.handler",
     });
   },
