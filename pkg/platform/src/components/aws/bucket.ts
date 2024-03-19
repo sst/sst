@@ -228,7 +228,7 @@ export interface BucketSubscribeArgs {
  * #### Minimal example
  *
  * ```ts
- * const myBucket = new sst.aws.Bucket("MyBucket");
+ * const bucket = new sst.aws.Bucket("MyBucket");
  * ```
  *
  * #### Public read access
@@ -244,7 +244,7 @@ export interface BucketSubscribeArgs {
  * #### Add a subscriber
  *
  * ```ts
- * myBucket.subscribe("src/subscriber.handler");
+ * bucket.subscribe("src/subscriber.handler");
  * ```
  *
  * #### Link the bucket to a resource
@@ -253,7 +253,7 @@ export interface BucketSubscribeArgs {
  *
  * ```ts
  * new sst.aws.Nextjs("MyWeb", {
- *   link: [myBucket]
+ *   link: [bucket]
  * });
  * ```
  *
@@ -445,13 +445,13 @@ export class Bucket
    * @example
    *
    * ```js
-   * myBucket.subscribe("src/subscriber.handler");
+   * bucket.subscribe("src/subscriber.handler");
    * ```
    *
    * Add multiple subscribers.
    *
    * ```js
-   * myBucket
+   * bucket
    *   .subscribe("src/subscriber1.handler")
    *   .subscribe("src/subscriber2.handler");
    * ```
@@ -459,7 +459,7 @@ export class Bucket
    * Subscribe to specific S3 events.
    *
    * ```js
-   * myBucket.subscribe("src/subscriber.handler", {
+   * bucket.subscribe("src/subscriber.handler", {
    *   events: ["s3:ObjectCreated:*", "s3:ObjectRemoved:*"]
    * });
    * ```
@@ -467,7 +467,7 @@ export class Bucket
    * Subscribe to specific S3 events from a specific folder.
    *
    * ```js
-   * myBucket.subscribe("src/subscriber.handler", {
+   * bucket.subscribe("src/subscriber.handler", {
    *   filterPrefix: "images/",
    *   events: ["s3:ObjectCreated:*", "s3:ObjectRemoved:*"]
    * });
@@ -476,7 +476,7 @@ export class Bucket
    * Customize the subscriber function.
    *
    * ```js
-   * myBucket.subscribe({
+   * bucket.subscribe({
    *   handler: "src/subscriber.handler",
    *   timeout: "60 seconds",
    * });

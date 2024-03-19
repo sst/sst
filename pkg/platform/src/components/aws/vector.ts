@@ -75,7 +75,7 @@ export interface VectorArgs {
  * #### Create the database
  *
  * ```ts
- * const myVectorDB = new sst.aws.Vector("MyVectorDB");
+ * const vector = new sst.aws.Vector("MyVectorDB");
  * ```
  *
  * #### Change the model
@@ -95,7 +95,7 @@ export interface VectorArgs {
  *
  * ```ts
  * new sst.aws.Nextjs("MyWeb", {
- *   link: [myVectorDB]
+ *   link: [vector]
  * });
  * ```
  *

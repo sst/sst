@@ -24,7 +24,7 @@ export class SecretMissingError extends VisibleError {
  *
  * #### Create a secret
  * ```ts
- * const mySecret = new sst.Secret("MySecret");
+ * const secret = new sst.Secret("MySecret");
  * ```
  *
  * #### Set a placeholder
@@ -36,7 +36,7 @@ export class SecretMissingError extends VisibleError {
  * :::
  *
  * ```ts
- * const mySecret = new sst.Secret("MySecret", "my-secret-placeholder-value");
+ * const secret = new sst.Secret("MySecret", "my-secret-placeholder-value");
  * ```
  *
  * #### Set the value of the secret
@@ -61,7 +61,7 @@ export class SecretMissingError extends VisibleError {
  *
  * ```ts
  * new sst.aws.Nextjs("MyWeb", {
- *   link: [mySecret]
+ *   link: [secret]
  * });
  * ```
  *

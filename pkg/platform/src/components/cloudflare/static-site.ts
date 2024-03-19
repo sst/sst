@@ -449,11 +449,11 @@ export interface StaticSiteArgs {
  * For some static site generators like Vite, [environment variables](https://vitejs.dev/guide/env-and-mode) prefixed with `VITE_` can be accessed in the browser.
  *
  * ```ts {5-7}
- * const myBucket = new sst.aws.Bucket("MyBucket");
+ * const bucket = new sst.aws.Bucket("MyBucket");
  *
  * new sst.aws.StaticSite("MyWeb", {
  *   environment: {
- *     BUCKET_NAME: myBucket.name,
+ *     BUCKET_NAME: bucket.name,
  *     // Accessible in the browser
  *     VITE_STRIPE_PUBLISHABLE_KEY: "pk_test_123"
  *   },

@@ -193,7 +193,7 @@ export interface NextjsArgs extends SsrSiteArgs {
    *
    * ```js
    * {
-   *   link: [myBucket, stripeKey]
+   *   link: [bucket, stripeKey]
    * }
    * ```
    */
@@ -427,10 +427,10 @@ export interface NextjsArgs extends SsrSiteArgs {
  * to the resources and allow you to access it in your app.
  *
  * ```ts {4}
- * const myBucket = new sst.aws.Bucket("MyBucket");
+ * const bucket = new sst.aws.Bucket("MyBucket");
  *
  * new sst.aws.Nextjs("MyWeb", {
- *   link: [myBucket]
+ *   link: [bucket]
  * });
  * ```
  *

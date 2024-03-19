@@ -201,7 +201,7 @@ export interface ApiGatewayV2RouteArgs {
  * #### Create the API
  *
  * ```ts
- * const myApi = new sst.aws.ApiGatewayV2("MyApi");
+ * const api = new sst.aws.ApiGatewayV2("MyApi");
  * ```
  *
  * #### Add a custom domain
@@ -215,7 +215,7 @@ export interface ApiGatewayV2RouteArgs {
  * #### Add routes
  *
  * ```ts
- * myApi
+ * api
  *  .route("GET /", "src/get.handler")
  *  .route("POST /", "src/post.handler");
  * ```
@@ -456,13 +456,13 @@ export class ApiGatewayV2 extends Component implements Link.Linkable {
    * Here's how you add a simple route.
    *
    * ```js
-   * myApi.route("GET /", "src/get.handler");
+   * api.route("GET /", "src/get.handler");
    * ```
    *
    * Add multiple routes.
    *
    * ```js
-   * myApi
+   * api
    *   .route("GET /", "src/get.handler")
    *   .route("POST /", "src/post.handler");
    * ```
@@ -470,13 +470,13 @@ export class ApiGatewayV2 extends Component implements Link.Linkable {
    * Match any HTTP method.
    *
    * ```js
-   * myApi.route("ANY /", "src/route.handler");
+   * api.route("ANY /", "src/route.handler");
    * ```
    *
    * Add a default route.
    *
    * ```js
-   * myApi
+   * api
    *   .route("GET /", "src/get.handler")
    *   .route($default, "src/default.handler");
    * ```
@@ -484,19 +484,19 @@ export class ApiGatewayV2 extends Component implements Link.Linkable {
    * Add a parameterized route.
    *
    * ```js
-   * myApi.route("GET /notes/{id}", "src/get.handler");
+   * api.route("GET /notes/{id}", "src/get.handler");
    * ```
    *
    * Add a greedy route.
    *
    * ```js
-   * myApi.route("GET /notes/{proxy+}", "src/greedy.handler");
+   * api.route("GET /notes/{proxy+}", "src/greedy.handler");
    * ```
    *
    * Enable auth for a route.
    *
    * ```js
-   * myApi
+   * api
    *   .route("GET /", "src/get.handler")
    *   .route("POST /", "src/post.handler", {
    *     auth: {
@@ -508,7 +508,7 @@ export class ApiGatewayV2 extends Component implements Link.Linkable {
    * Customize the route handler.
    *
    * ```js
-   * myApi.route("GET /", {
+   * api.route("GET /", {
    *   handler: "src/get.handler",
    *   memory: "2048 MB"
    * });

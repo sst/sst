@@ -401,7 +401,7 @@ export interface FunctionArgs {
    *
    * ```js
    * {
-   *   link: [myBucket, stripeKey]
+   *   link: [bucket, stripeKey]
    * }
    * ```
    */
@@ -781,11 +781,11 @@ export interface FunctionArgs {
  * to the resources and allow you to access it in your handler.
  *
  * ```ts {5}
- * const myBucket = new sst.aws.Bucket("MyBucket");
+ * const bucket = new sst.aws.Bucket("MyBucket");
  *
  * new sst.aws.Function("MyFunction", {
  *   handler: "src/lambda.handler",
- *   link: [myBucket]
+ *   link: [bucket]
  * });
  * ```
  *

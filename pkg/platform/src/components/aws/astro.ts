@@ -106,7 +106,7 @@ export interface AstroArgs extends SsrSiteArgs {
    *
    * ```js
    * {
-   *   link: [myBucket, stripeKey]
+   *   link: [bucket, stripeKey]
    * }
    * ```
    */
@@ -269,10 +269,10 @@ const BUILD_META_FILE_NAME: BuildMetaFileName = "sst.buildMeta.json";
  * to the resources and allow you to access it in your site.
  *
  * ```ts {4}
- * const myBucket = new sst.aws.Bucket("MyBucket");
+ * const bucket = new sst.aws.Bucket("MyBucket");
  *
  * new sst.aws.Astro("MyWeb", {
- *   link: [myBucket]
+ *   link: [bucket]
  * });
  * ```
  *

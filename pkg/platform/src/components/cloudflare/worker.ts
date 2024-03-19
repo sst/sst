@@ -133,7 +133,7 @@ export interface WorkerArgs {
    *
    * ```js
    * {
-   *   link: [myBucket, stripeKey]
+   *   link: [bucket, stripeKey]
    * }
    * ```
    */
@@ -185,11 +185,11 @@ export interface WorkerArgs {
  * and allow you to access it in your handler.
  *
  * ```ts {5}
- * const myBucket = new sst.aws.Bucket("MyBucket");
+ * const bucket = new sst.aws.Bucket("MyBucket");
  *
  * new sst.cloudflare.Worker("MyWorker", {
  *   handler: "src/worker.handler",
- *   link: [myBucket]
+ *   link: [bucket]
  * });
  * ```
  *

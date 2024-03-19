@@ -22,7 +22,7 @@ The difference between an `SnsTopic` and a `Queue` is that with a topic you can 
 #### Create a topic
 
 ```ts
-const myTopic = new sst.aws.SnsTopic("MyTopic");
+const topic = new sst.aws.SnsTopic("MyTopic");
 ```
 
 #### Make it a FIFO topic
@@ -38,7 +38,7 @@ new sst.aws.SnsTopic("MyTopic", {
 #### Add a subscriber
 
 ```ts
-myTopic.subscribe("src/subscriber.handler");
+topic.subscribe("src/subscriber.handler");
 ```
 
 #### Link the topic to a resource
@@ -47,7 +47,7 @@ You can link the topic to other resources, like a function or your Next.js app.
 
 ```ts
 new sst.aws.Nextjs("MyWeb", {
-  link: [myTopic]
+  link: [topic]
 });
 ```
 
@@ -109,13 +109,13 @@ Configure the subscription.
 Subscribes to this SNS Topic.
 
 ```js
-myTopic.subscribe("src/subscriber.handler");
+topic.subscribe("src/subscriber.handler");
 ```
 
 Add multiple subscribers.
 
 ```js
-myTopic
+topic
   .subscribe("src/subscriber1.handler")
   .subscribe("src/subscriber2.handler");
 ```
@@ -123,7 +123,7 @@ myTopic
 Add a filter to the subscription.
 
 ```js
-myTopic.subscribe("src/subscriber.handler", {
+topic.subscribe("src/subscriber.handler", {
   filter: {
     price_usd: [{numeric: [">=", 100]}]
   }
@@ -133,7 +133,7 @@ myTopic.subscribe("src/subscriber.handler", {
 Customize the subscriber function.
 
 ```js
-myTopic.subscribe({
+topic.subscribe({
   handler: "src/subscriber.handler",
   timeout: "60 seconds"
 });

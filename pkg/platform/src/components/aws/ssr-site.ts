@@ -179,7 +179,7 @@ export interface SsrSiteArgs {
    *
    * ```js
    * {
-   *   link: [myBucket, stripeKey]
+   *   link: [bucket, stripeKey]
    * }
    * ```
    */

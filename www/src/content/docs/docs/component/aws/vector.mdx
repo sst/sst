@@ -22,7 +22,7 @@ The `Vector` component lets you store and retrieve vector data in your app.
 #### Create the database
 
 ```ts
-const myVectorDB = new sst.aws.Vector("MyVectorDB");
+const vector = new sst.aws.Vector("MyVectorDB");
 ```
 
 #### Change the model
@@ -42,7 +42,7 @@ You can link it to other resources, like a function or your Next.js app.
 
 ```ts
 new sst.aws.Nextjs("MyWeb", {
-  link: [myVectorDB]
+  link: [vector]
 });
 ```
 
