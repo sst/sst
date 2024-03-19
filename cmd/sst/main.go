@@ -918,7 +918,7 @@ var Root = Command{
 				Long:  `Prints the current version of the CLI.`,
 			},
 			Run: func(cli *Cli) error {
-				fmt.Printf("ion.%s\n", version)
+				fmt.Println(version)
 				return nil
 			},
 		},
@@ -944,13 +944,21 @@ var Root = Command{
 				},
 			},
 			Run: func(cli *Cli) error {
-				version, err := global.Upgrade(
+				newVersion, err := global.Upgrade(
 					cli.Positional(0),
 				)
 				if err != nil {
 					return err
 				}
-				fmt.Printf("Upgraded to %s\n", version)
+				newVersion = strings.TrimPrefix(newVersion, "v")
+
+				color.New(color.FgGreen, color.Bold).Print(ui.IconCheck)
+				if newVersion == version {
+					color.New(color.FgWhite).Print("  Already on latest ")
+				} else {
+					color.New(color.FgWhite).Printf("  Upgraded from %s to ", version)
+				}
+				color.New(color.FgCyan, color.Bold).Println(newVersion)
 				return nil
 			},
 		},
