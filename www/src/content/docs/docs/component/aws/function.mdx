@@ -737,6 +737,15 @@ Granting the function permissions to access all resources.
 </Section>
 The [IAM actions](https://docs.aws.amazon.com/service-authorization/latest/reference/reference_policies_actions-resources-contextkeys.html#actions_table) that can be performed.
 
+```js
+{
+  permissions: [
+    {
+      actions: ["s3:*"]
+    }
+  ]
+}
+```
 </Segment>
 <NestedTitle id="permissions-resources" Tag="h4" parent="permissions[].">resources</NestedTitle>
 <Segment>
@@ -745,8 +754,17 @@ The [IAM actions](https://docs.aws.amazon.com/service-authorization/latest/refer
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code><code class="symbol">[]</code>
 </InlineSection>
 </Section>
-The resources(s) specified using the [IAM ARN format](https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_identifiers.html).
+The resourcess specified using the [IAM ARN format](https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_identifiers.html).
 
+```js
+{
+  permissions: [
+    {
+      resources: ["arn:aws:s3:::my-bucket/*"]
+    }
+  ]
+}
+```
 </Segment>
 ### runtime?
 <Segment>
@@ -757,13 +775,13 @@ The resources(s) specified using the [IAM ARN format](https://docs.aws.amazon.co
 </Section>
 
 <InlineSection>
-**Default** <code class="primitive">"nodejs18.x"</code>
+**Default** <code class="primitive">"nodejs20.x"</code>
 </InlineSection>
 The runtime environment for the function. Support for other runtimes is on our roadmap.
 
 ```js
 {
-  runtime: "nodejs20.x"
+  runtime: "nodejs18.x"
 }
 ```
 </Segment>

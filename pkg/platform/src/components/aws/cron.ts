@@ -164,7 +164,7 @@ export class Cron extends Component {
   public get nodes() {
     return {
       /**
-       * The sst.aws.Function.
+       * The AWS Lambda Function that's invoked when the cron job runs.
        */
       job: this.fn,
       /**

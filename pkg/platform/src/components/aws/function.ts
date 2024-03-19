@@ -53,10 +53,32 @@ const RETENTION = {
 export type FunctionPermissionArgs = {
   /**
    * The [IAM actions](https://docs.aws.amazon.com/service-authorization/latest/reference/reference_policies_actions-resources-contextkeys.html#actions_table) that can be performed.
+   * @example
+   *
+   * ```js
+   * {
+   *   permissions: [
+   *     {
+   *       actions: ["s3:*"]
+   *     }
+   *   ]
+   * }
+   * ```
    */
   actions: string[];
   /**
-   * The resources(s) specified using the [IAM ARN format](https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_identifiers.html).
+   * The resourcess specified using the [IAM ARN format](https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_identifiers.html).
+   * @example
+   *
+   * ```js
+   * {
+   *   permissions: [
+   *     {
+   *       resources: ["arn:aws:s3:::my-bucket/*"]
+   *     }
+   *   ]
+   * }
+   * ```
    */
   resources: Input<string>[];
 };

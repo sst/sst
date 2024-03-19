@@ -240,10 +240,9 @@ export interface SsrSiteArgs {
      */
     versionedFilesCacheHeader?: Input<string>;
     /**
-     * The `Cache-Control` header used for non-versioned files, like `index.html`. This is
-     * used by both CloudFront and the browser cache.
+     * The `Cache-Control` header used for non-versioned files, like `index.html`. This is used by both CloudFront and the browser cache.
      *
-     * The default is set not cache on browsers, and cache for 1 day on CloudFront.
+     * The default is set to not cache on browsers, and cache for 1 day on CloudFront.
      * @default `"public,max-age=0,s-maxage=86400,stale-while-revalidate=8640"`
      * @example
      * ```js
@@ -317,7 +316,7 @@ export interface SsrSiteArgs {
          * For non-prod environments it might make sense to pass in `false`.
          * :::
          *
-         * Waiting for the CloudFront cache invalidation process to finish ensures that the new content will be served once the deploy finishes. However, this process can sometimes take more than 5 mins.
+         * Waiting for this process to finish ensures that new content will be available after the deploy finishes. However, this process can sometimes take more than 5 mins.
          * @default `false`
          * @example
          * ```js
@@ -333,15 +332,15 @@ export interface SsrSiteArgs {
          * The paths to invalidate.
          *
          * You can either pass in an array of glob patterns to invalidate specific files. Or you can use one of these built-in options:
-         * - `all`: All files will be invalidated when any file changes.
-         * - `versioned`: Only versioned files will be invalidated when versioned files change.
+         * - `all`: All files will be invalidated when any file changes
+         * - `versioned`: Only versioned files will be invalidated when versioned files change
          *
          * :::note
-         * Invalidating `all` counts as one invalidation, while each glob pattern counts as a single invalidation path.
+         * Each glob pattern counts as a single invalidation. However, invalidating `all` counts as a single invalidation as well.
          * :::
          * @default `"all"`
          * @example
-         * Invalidate the `index.html` and all files under the `products/` route.
+         * Invalidate the `index.html` and all files under the `products/` route. This counts as two invalidations.
          * ```js
          * {
          *   invalidation: {

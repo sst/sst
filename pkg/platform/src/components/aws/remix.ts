@@ -218,7 +218,7 @@ export interface RemixArgs extends SsrSiteArgs {
 }
 
 /**
- * The `Remix` component lets you deploy a Remix app to AWS.
+ * The `Remix` component lets you deploy a [Remix](https://remix.run) app to AWS.
  *
  * @example
  *

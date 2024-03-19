@@ -218,7 +218,7 @@ export interface AstroArgs extends SsrSiteArgs {
 const BUILD_META_FILE_NAME: BuildMetaFileName = "sst.buildMeta.json";
 
 /**
- * The `Astro` component lets you deploy an Astro site to AWS.
+ * The `Astro` component lets you deploy an [Astro](https://astro.build) site to AWS.
  *
  * @example
  *
