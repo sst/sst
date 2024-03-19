@@ -965,11 +965,11 @@ var Root = Command{
 
 				color.New(color.FgGreen, color.Bold).Print(ui.IconCheck)
 				if newVersion == version {
-					color.New(color.FgWhite).Print("  Already on latest ")
+					color.New(color.FgWhite).Printf("  Already on latest %s\n", version)
 				} else {
 					color.New(color.FgWhite).Printf("  Upgraded from %s to ", version)
+					color.New(color.FgCyan, color.Bold).Println(newVersion)
 				}
-				color.New(color.FgCyan, color.Bold).Println(newVersion)
 				return nil
 			},
 		},
