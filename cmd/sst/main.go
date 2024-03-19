@@ -1416,7 +1416,7 @@ func initProject(cli *Cli) (*project.Project, error) {
 	}
 
 	if p.NeedsInstall() {
-		spin.Suffix = "  Installing dependencies..."
+		spin.Suffix = "  Installing providers..."
 		spin.Start()
 		err = p.Install()
 		if err != nil {

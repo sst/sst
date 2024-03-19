@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/fs"
 	"log/slog"
 	"os"
@@ -145,10 +146,9 @@ func Create(templateName string, home string) error {
 		return err
 	}
 	defer file.Close()
-
-	bytes, err := os.ReadFile(gitignoreFilename)
+	bytes, err := io.ReadAll(file)
 	if err != nil {
-		panic(err)
+		return err
 	}
 	content := string(bytes)
 
