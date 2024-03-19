@@ -139,6 +139,8 @@ func PushState(backend Home, app, stage string, from string) error {
 	return backend.putData("app", app, stage, file)
 }
 
+var ErrStateNotFound = fmt.Errorf("state not found")
+
 func PullState(backend Home, app, stage string, out string) error {
 	slog.Info("pulling state", "app", app, "stage", stage, "out", out)
 	reader, err := backend.getData("app", app, stage)
@@ -146,7 +148,7 @@ func PullState(backend Home, app, stage string, out string) error {
 		return err
 	}
 	if reader == nil {
-		return nil
+		return ErrStateNotFound
 	}
 	file, err := os.Create(out)
 	if err != nil {

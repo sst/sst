@@ -55,10 +55,10 @@ func main() {
 		if readableErr, ok := err.(*util.ReadableError); ok {
 			msg := readableErr.Error()
 			if msg != "" {
-				fmt.Println(readableErr.Error())
+				ui.Error(readableErr.Error())
 			}
 		} else {
-			fmt.Println("Unexpected error occurred. Please check the logs for more details.")
+			ui.Error("Unexpected error occurred. Please check the logs for more details.")
 		}
 		os.Exit(1)
 	}
@@ -628,9 +628,7 @@ var Root = Command{
 						if err != nil {
 							return util.NewReadableError(err, "Could not set secret")
 						}
-						color.New(color.FgGreen).Print("✔")
-						color.New(color.FgWhite).Printf("  Set \"%s\"", key)
-						fmt.Println()
+						ui.Success(fmt.Sprintf("Set \"%s\" for stage \"%s\"", key, p.App().Stage))
 						return nil
 					},
 				},
@@ -693,10 +691,7 @@ var Root = Command{
 
 						// check if the secret exists
 						if _, ok := secrets[key]; !ok {
-							color.New(color.FgRed).Print(ui.IconX)
-							color.New(color.FgWhite).Printf("  \"%s\" does not exist", key)
-							fmt.Println()
-							return nil
+							return util.NewReadableError(nil, fmt.Sprintf("Secret \"%s\" does not exist for stage \"%s\"", key, p.App().Stage))
 						}
 
 						delete(secrets, key)
@@ -704,9 +699,7 @@ var Root = Command{
 						if err != nil {
 							return util.NewReadableError(err, "Could not set secret")
 						}
-						color.New(color.FgGreen).Print("✔")
-						color.New(color.FgWhite).Printf("  Removed \"%s\"", key)
-						fmt.Println()
+						ui.Success(fmt.Sprintf("Removed \"%s\" for stage \"%s\"", key, p.App().Stage))
 						return nil
 					},
 				},

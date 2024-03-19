@@ -3,6 +3,7 @@ package project
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log/slog"
 	"os"
@@ -90,6 +91,7 @@ type Error struct {
 type StackEventStream = chan StackEvent
 
 var ErrStackRunFailed = fmt.Errorf("stack run had errors")
+var ErrStageNotFound = fmt.Errorf("stage not found")
 
 func (s *stack) Run(ctx context.Context, input *StackInput) error {
 	slog.Info("running stack command", "cmd", input.Command)
@@ -108,7 +110,13 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 
 	_, err = s.PullState()
 	if err != nil {
-		return err
+		if errors.Is(err, provider.ErrStateNotFound) {
+			if input.Command != "up" {
+				return ErrStageNotFound
+			}
+		} else {
+			return err
+		}
 	}
 	defer s.PushState()
 

@@ -11,7 +11,6 @@ export default $config({
     };
   },
   async run() {
-    throw new VisibleError("This is a visible error");
     new sst.aws.Bucket("MyBucket");
   },
 });

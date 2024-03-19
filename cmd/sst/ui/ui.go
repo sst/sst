@@ -462,7 +462,7 @@ func (u *UI) Interrupt() {
 }
 
 func (u *UI) Destroy() {
-	u.spinner.Disable()
+	u.spinner.Stop()
 }
 
 func (u *UI) Header(version, app, stage string) {
