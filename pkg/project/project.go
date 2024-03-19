@@ -218,7 +218,7 @@ func (proj *Project) LoadProviders() error {
 
 		err := p.Init(proj.app.Name, proj.app.Stage, args.(map[string]interface{}))
 		if err != nil {
-			return fmt.Errorf("Error initializing provider %s: %w", name, err)
+			return fmt.Errorf("Error initializing %s:\n   %w", name, err)
 		}
 		proj.Providers[name] = p
 	}
