@@ -1,0 +1,30 @@
+{
+  "steps": [
+    {
+      "type": "copy"
+    },
+    {
+      "type": "patch",
+      "properties": {
+        "file": "package.json",
+        "patch": [
+          {
+            "op": "add",
+            "path": "/dependencies/sst",
+            "value": "^3.0.1"
+          },
+          {
+            "op": "add",
+            "path": "/dependencies/astro-sst",
+            "value": "^2.41.2"
+          },
+          {
+            "op": "add",
+            "path": "/scripts/dev",
+            "value": "sst dev astro dev"
+          }
+        ]
+      }
+    }
+  ]
+}

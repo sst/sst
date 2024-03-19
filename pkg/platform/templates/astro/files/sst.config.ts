@@ -3,12 +3,12 @@
 export default $config({
   app(input) {
     return {
-      name: "astro",
+      name: "{{.App}}",
       removal: input?.stage === "production" ? "retain" : "remove",
-      home: "aws",
+      home: "{{.Home}}",
     };
   },
   async run() {
-    new sst.aws.Astro("MyWeb");
+    new sst.{{.Home}}.Astro("MyWeb");
   },
 });
