@@ -257,11 +257,7 @@ Filter the records that'll be processed by the `subscriber` function.
 You can pass in up to 5 different filters.
 :::
 
-You can pass in up to 5 different filter policies. These will logically ORed together. Meaning that if any single policy matches, the record will be processed.
-
-:::tip
-Learn more about the [filter rule syntax](https://docs.aws.amazon.com/lambda/latest/dg/invocation-eventfiltering.html#filtering-syntax).
-:::
+You can pass in up to 5 different filter policies. These will logically ORed together. Meaning that if any single policy matches, the record will be processed. Learn more about the [filter rule syntax](https://docs.aws.amazon.com/lambda/latest/dg/invocation-eventfiltering.html#filtering-syntax).
 
 For example, if you Queue contains records in this JSON format.
 ```js
@@ -308,7 +304,7 @@ And to process only those records where `RecordNumber` greater than `9999`.
 </InlineSection>
 - <p>[<code class="key">eventSourceMapping?</code>](#transform-eventsourcemapping)</p>
 </Section>
-[Transform](/docs/components#transform) how this subscription creates its underlying
+[Transform](/docs/components#transform) how this component creates its underlying
 resources.
 
 </Segment>

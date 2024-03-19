@@ -44,11 +44,7 @@ export interface QueueSubscribeArgs {
    * You can pass in up to 5 different filters.
    * :::
    *
-   * You can pass in up to 5 different filter policies. These will logically ORed together. Meaning that if any single policy matches, the record will be processed.
-   *
-   * :::tip
-   * Learn more about the [filter rule syntax](https://docs.aws.amazon.com/lambda/latest/dg/invocation-eventfiltering.html#filtering-syntax).
-   * :::
+   * You can pass in up to 5 different filter policies. These will logically ORed together. Meaning that if any single policy matches, the record will be processed. Learn more about the [filter rule syntax](https://docs.aws.amazon.com/lambda/latest/dg/invocation-eventfiltering.html#filtering-syntax).
    *
    * @example
    * For example, if you Queue contains records in this JSON format.
@@ -90,7 +86,7 @@ export interface QueueSubscribeArgs {
    */
   filters?: Input<Input<Record<string, any>>[]>;
   /**
-   * [Transform](/docs/components#transform) how this subscription creates its underlying
+   * [Transform](/docs/components#transform) how this component creates its underlying
    * resources.
    */
   transform?: {

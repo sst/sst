@@ -176,10 +176,10 @@ Once you've added a couple of features, SST can help you link them together. Thi
 Let's say your app has a Next.js frontend and an S3 bucket for file uploads. You can `link` the bucket to your Next.js app.
 
 ```js title="sst.config.ts" {4}
-const myBucket = new sst.aws.Bucket("MyBucket");
+const bucket = new sst.aws.Bucket("MyBucket");
 
 new sst.aws.Nextjs("MyWeb", {
-  link: [myBucket]
+  link: [bucket]
 });
 ```
 
