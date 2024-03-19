@@ -24,8 +24,8 @@ const (
 )
 
 const (
-	IconX = "×"
-  IconCheck = "✓"
+	IconX     = "×"
+	IconCheck = "✓"
 )
 
 type UI struct {
@@ -208,7 +208,7 @@ func (u *UI) Trigger(evt *project.StackEvent) {
 			}
 		}
 
-		if evt.ResOutputsEvent.Metadata.Type == "sst:aws:Nextjs" && evt.ResOutputsEvent.Metadata.Op == apitype.OpCreate {
+		if evt.ResOutputsEvent.Metadata.Type == "sst:aws:Nextjs" && evt.ResOutputsEvent.Metadata.Op == apitype.OpCreate && false {
 			u.footer = "🎉 Congrats on your new site!"
 		}
 
@@ -463,6 +463,10 @@ func (u *UI) Header(version, app, stage string) {
 
 	color.New(color.FgWhite, color.Bold).Printf("   %-12s", "Stage:")
 	color.New(color.FgHiBlack).Println(stage)
+	if u.mode == ProgressModeDev {
+		color.New(color.FgWhite, color.Bold).Printf("   %-12s", "Console:")
+		color.New(color.FgHiBlack).Println("https://console.sst.dev")
+	}
 	fmt.Println()
 }
 
@@ -489,10 +493,10 @@ func (u *UI) formatCompleteCopy() string {
 	if u.mode == ProgressModeRefresh {
 		return "Refreshed"
 	}
-	if u.mode == ProgressModeDeploy {
-		return "Deployed"
+	if len(u.dedupe) > 0 {
+		return "Complete"
 	}
-	return "Complete"
+	return "No changes"
 }
 
 func (u *UI) formatURN(urn string) string {
@@ -501,17 +505,20 @@ func (u *UI) formatURN(urn string) string {
 	}
 
 	child := resource.URN(urn)
-	result := child.Name() + " (" + child.Type().DisplayName() + ")"
+	result := child.Name() + " [" + child.Type().DisplayName() + "]"
 
 	for {
 		parent := resource.URN(u.parents[string(child)])
 		if parent == "" {
 			break
 		}
-		if parent.Type().DisplayName() != "pulumi:pulumi:Stack" {
-			result = parent.Name() + " (" + parent.Type().DisplayName() + ")" + " → " + result
+		if parent.Type().DisplayName() == "pulumi:pulumi:Stack" {
+			break
 		}
 		child = parent
+	}
+	if string(child) != urn {
+		result = child.Name() + " [" + child.Type().DisplayName() + "]" + " → " + result
 	}
 	return result
 }
