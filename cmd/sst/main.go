@@ -960,7 +960,7 @@ var Root = Command{
 				if newVersion == version {
 					color.New(color.FgWhite).Printf("  Already on latest %s\n", version)
 				} else {
-					color.New(color.FgWhite).Printf("  Upgraded from %s to ", version)
+					color.New(color.FgWhite).Printf("  Upgraded %s ➜ ", version)
 					color.New(color.FgCyan, color.Bold).Println(newVersion)
 				}
 				return nil

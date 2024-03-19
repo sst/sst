@@ -202,7 +202,16 @@ interface FunctionUrlCorsArgs {
 }
 
 export interface FunctionArgs {
-  /** @internal */
+  /**
+   * Disable running this function [Live](/docs/live/) in `sst dev`.
+   * @default `true`
+   * @example
+   * ```js
+   * {
+   *   live: false
+   * }
+   * ```
+   */
   live?: Input<false>;
   /**
    * A description for the function. This is displayed in the AWS Console.
