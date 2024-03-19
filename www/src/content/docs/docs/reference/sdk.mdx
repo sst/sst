@@ -44,11 +44,11 @@ The `Resource` object is typesafe and will autocomplete the available resources 
 Here we are assuming that a bucket has been linked to the function. Here's what that could look like.
 
 ```js title="sst.config.ts"
-const myBucket = new sst.aws.Bucket("MyBucket");
+const bucket = new sst.aws.Bucket("MyBucket");
 
 new sst.aws.Function("MyFunction", {
   handler: "src/lambda.handler",
-  link: [myBucket]
+  link: [bucket]
 });
 ```
 

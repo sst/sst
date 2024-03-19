@@ -23,7 +23,9 @@ export interface VectorArgs {
   /**
    * The model used for generating the vectors.
    *
+   * :::tip
    * To use the `text-embedding-ada-002` model, you'll need to pass in your `openAiApiKey`.
+   * :::
    *
    * @default `"amazon.titan-embed-text-v1"`
    * @example

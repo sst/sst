@@ -10,7 +10,7 @@ Resource linking is a feature of SST that allows you to link resources together 
 1. Create a resource that you want to link to. For example, a bucket.
 
    ```js {6,11}
-   const myBucket = new sst.aws.Bucket("MyBucket");
+   const bucket = new sst.aws.Bucket("MyBucket");
    ```
 
 2. Link it to your function or frontend, using the `link` prop.
@@ -19,21 +19,21 @@ Resource linking is a feature of SST that allows you to link resources together 
      <TabItem label="Next.js">
      ```js {2}
      new sst.aws.Nextjs("MyWeb", {
-       link: [myBucket]
+       link: [bucket]
      });
      ```
      </TabItem>
      <TabItem label="Remix">
      ```js {2}
      new sst.aws.Remix("MyWeb", {
-       link: [myBucket]
+       link: [bucket]
      });
      ```
      </TabItem>
      <TabItem label="Astro">
      ```js {2}
      new sst.aws.Astro("MyWeb", {
-       link: [myBucket]
+       link: [bucket]
      });
      ```
      </TabItem>
@@ -41,7 +41,7 @@ Resource linking is a feature of SST that allows you to link resources together 
      ```js {3}
      new sst.aws.Function("MyFunction", {
        handler: "src/lambda.handler",
-       link: [myBucket]
+       link: [bucket]
      });
      ```
      </TabItem>
