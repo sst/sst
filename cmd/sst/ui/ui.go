@@ -329,6 +329,9 @@ func (u *UI) Trigger(evt *project.StackEvent) {
 				if u.mode == ProgressModeDeploy {
 					color.New(color.FgWhite, color.Bold).Println("  Complete")
 				}
+				if u.mode == ProgressModeDev {
+					color.New(color.FgWhite, color.Bold).Println("  Complete")
+				}
 				if u.mode == ProgressModeRefresh {
 					color.New(color.FgWhite, color.Bold).Println("  Refreshed")
 				}
@@ -558,7 +561,7 @@ func (u *UI) printProgress(progress Progress) {
 		color.New(color.FgHiBlack).Printf(" (%.1fs)", progress.Duration.Seconds())
 	}
 	if len(progress.Message) == 1 {
-		color.New(color.FgWhite).Print(progress.Message[0])
+		color.New(color.FgWhite).Print(" " + progress.Message[0])
 	}
 	if len(progress.Message) > 1 {
 		for _, item := range progress.Message {

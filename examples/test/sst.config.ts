@@ -1,7 +1,5 @@
 /// <reference path="./.sst/platform/config.d.ts" />
 
-import { VisibleError } from "./.sst/platform/src/components/error";
-
 export default $config({
   app(input) {
     return {
@@ -11,6 +9,9 @@ export default $config({
     };
   },
   async run() {
-    new sst.aws.Bucket("MyBucket");
+    const bucket = new sst.aws.Bucket("MyBucket");
+    const fn = new sst.aws.Function("MyFunction", {
+      handler: "src/index.handler",
+    });
   },
 });
