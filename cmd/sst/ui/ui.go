@@ -323,7 +323,15 @@ func (u *UI) Trigger(evt *project.StackEvent) {
 				color.New(color.FgWhite, color.Bold).Println("  No changes")
 			}
 			if u.hasProgress {
-				color.New(color.FgWhite, color.Bold).Println("  Complete")
+				if u.mode == ProgressModeRemove {
+					color.New(color.FgWhite, color.Bold).Println("  Removed")
+				}
+				if u.mode == ProgressModeDeploy {
+					color.New(color.FgWhite, color.Bold).Println("  Complete")
+				}
+				if u.mode == ProgressModeRefresh {
+					color.New(color.FgWhite, color.Bold).Println("  Refreshed")
+				}
 			}
 			if len(evt.CompleteEvent.Hints) > 0 {
 				for k, v := range evt.CompleteEvent.Hints {
