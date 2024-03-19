@@ -497,17 +497,20 @@ func (u *UI) formatURN(urn string) string {
 	}
 
 	child := resource.URN(urn)
-	result := child.Name() + " (" + child.Type().DisplayName() + ")"
+	result := child.Name() + " [" + child.Type().DisplayName() + "]"
 
 	for {
 		parent := resource.URN(u.parents[string(child)])
 		if parent == "" {
 			break
 		}
-		if parent.Type().DisplayName() != "pulumi:pulumi:Stack" {
-			result = parent.Name() + " (" + parent.Type().DisplayName() + ")" + " → " + result
+		if parent.Type().DisplayName() == "pulumi:pulumi:Stack" {
+			break
 		}
 		child = parent
+	}
+	if string(child) != urn {
+		result = child.Name() + " [" + child.Type().DisplayName() + "]" + " → " + result
 	}
 	return result
 }
