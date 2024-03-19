@@ -24,8 +24,8 @@ const (
 )
 
 const (
-	IconX = "×"
-  IconCheck = "✓"
+	IconX     = "×"
+	IconCheck = "✓"
 )
 
 type UI struct {
@@ -208,7 +208,7 @@ func (u *UI) Trigger(evt *project.StackEvent) {
 			}
 		}
 
-		if evt.ResOutputsEvent.Metadata.Type == "sst:aws:Nextjs" && evt.ResOutputsEvent.Metadata.Op == apitype.OpCreate {
+		if evt.ResOutputsEvent.Metadata.Type == "sst:aws:Nextjs" && evt.ResOutputsEvent.Metadata.Op == apitype.OpCreate && false {
 			u.footer = "🎉 Congrats on your new site!"
 		}
 
