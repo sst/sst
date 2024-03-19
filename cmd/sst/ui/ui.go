@@ -319,7 +319,12 @@ func (u *UI) Trigger(evt *project.StackEvent) {
 		}
 		if len(evt.CompleteEvent.Errors) == 0 && evt.CompleteEvent.Finished {
 			color.New(color.FgGreen, color.Bold).Print(IconCheck)
-			color.New(color.FgWhite, color.Bold).Println("  Complete")
+			if len(u.dedupe) == 0 {
+				color.New(color.FgWhite, color.Bold).Println("  No changes")
+			}
+			if len(u.dedupe) > 0 {
+				color.New(color.FgWhite, color.Bold).Println("  Complete")
+			}
 			if len(evt.CompleteEvent.Hints) > 0 {
 				for k, v := range evt.CompleteEvent.Hints {
 					splits := strings.Split(k, "::")
