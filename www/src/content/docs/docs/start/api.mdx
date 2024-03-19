@@ -39,7 +39,7 @@ Let's add an API using [Amazon API Gateway](https://docs.aws.amazon.com/apigatew
 
 ```js title="sst.config.ts"
 async run() {
-  const api = new sst.aws.ApiGatewayV2("MyApi")
+  new sst.aws.ApiGatewayV2("MyApi")
     .route("GET /", "index.upload")
     .route("GET /latest", "index.latest");
 }
@@ -59,7 +59,7 @@ This will give you the URL of your API.
 
 ```bash frame="none"
 ✔  Complete
-   API: https://y9ink9nh96.execute-api.us-east-1.amazonaws.com
+   MyApi: https://y9ink9nh96.execute-api.us-east-1.amazonaws.com
 ```
 
 ---
@@ -79,7 +79,7 @@ const bucket = new sst.aws.Bucket("MyBucket", {
 Now, link the bucket to the API routes.
 
 ```js title="sst.config.ts" {3,7}
-const api = new sst.aws.ApiGatewayV2("MyApi")
+new sst.aws.ApiGatewayV2("MyApi")
   .route("GET /", {
     link: [bucket],
     handler: "index.upload"
