@@ -159,6 +159,10 @@ func CmdDev(cli *Cli) error {
 				}
 			}
 			if event.StateEvent != nil {
+				if event.StateEvent.State.Config != cfgPath {
+					cli.Cancel()
+					return
+				}
 				next := event.StateEvent.State
 				defer func() {
 					state = next

@@ -30,8 +30,9 @@ type Server struct {
 }
 
 type State struct {
-	App   string
-	Stage string
+	App    string
+	Stage  string
+	Config string
 }
 
 type Event struct {
@@ -76,8 +77,9 @@ func New(p *project.Project) (*Server, error) {
 			p.PathConfig(): true,
 		},
 		state: &State{
-			App:   p.App().Name,
-			Stage: p.App().Stage,
+			Config: p.PathConfig(),
+			App:    p.App().Name,
+			Stage:  p.App().Stage,
 		},
 	}
 	return result, nil
@@ -220,6 +222,8 @@ func (s *Server) Start(parentContext context.Context) error {
 	case <-ctx.Done():
 		return nil
 	}
+
+	slog.Info("server shutting down")
 
 	return nil
 }
