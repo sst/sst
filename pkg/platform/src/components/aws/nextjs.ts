@@ -467,8 +467,8 @@ export class Nextjs extends Component implements Link.Linkable {
     const parent = this;
     const logging = normalizeLogging();
     const buildCommand = normalizeBuildCommand();
-    const { sitePath, region } = prepare(args, opts);
-    const { access, bucket } = createBucket(parent, name, args);
+    const { sitePath, partition, region } = prepare(args, opts);
+    const { access, bucket } = createBucket(parent, name, partition, args);
     const outputPath = buildApp(name, args, sitePath, buildCommand);
     const {
       openNextOutput,

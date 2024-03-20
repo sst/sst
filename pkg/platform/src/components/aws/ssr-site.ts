@@ -25,6 +25,7 @@ import { Input } from "../input.js";
 import { transform, type Prettify, type Transform } from "../component.js";
 import { VisibleError } from "../error.js";
 import { Cron } from "./cron.js";
+import { OriginAccessIdentity } from "./providers/origin-access-identity.js";
 
 type CloudFrontFunctionConfig = { injections: string[] };
 type EdgeFunctionConfig = { function: Unwrap<FunctionArgs> };
@@ -366,11 +367,13 @@ export interface SsrSiteArgs {
 
 export function prepare(args: SsrSiteArgs, opts: ComponentResourceOptions) {
   const sitePath = normalizeSitePath();
+  const partition = normalizePartition();
   const region = normalizeRegion();
   checkSupportedRegion();
 
   return {
     sitePath,
+    partition,
     region,
   };
 
@@ -383,6 +386,11 @@ export function prepare(args: SsrSiteArgs, opts: ComponentResourceOptions) {
       }
       return sitePath;
     });
+  }
+
+  function normalizePartition() {
+    return aws.getPartitionOutput(undefined, { provider: opts?.provider })
+      .partition;
   }
 
   function normalizeRegion() {
@@ -477,6 +485,7 @@ export function buildApp(
 export function createBucket(
   parent: ComponentResource,
   name: string,
+  partition: Output<string>,
   args: SsrSiteArgs,
 ) {
   const access = createCloudFrontOriginAccessIdentity();
@@ -484,7 +493,7 @@ export function createBucket(
   return { access, bucket };
 
   function createCloudFrontOriginAccessIdentity() {
-    return new aws.cloudfront.OriginAccessIdentity(
+    return new OriginAccessIdentity(
       `${name}OriginAccessIdentity`,
       {},
       { parent },
@@ -503,7 +512,9 @@ export function createBucket(
                   principals: [
                     {
                       type: "AWS",
-                      identifiers: [access.iamArn],
+                      identifiers: [
+                        interpolate`arn:${partition}:iam::cloudfront:user/CloudFront Origin Access Identity ${access.id}`,
+                      ],
                     },
                   ],
                   actions: ["s3:GetObject"],
@@ -533,7 +544,7 @@ export function createServersAndDistribution(
   name: string,
   args: SsrSiteArgs,
   outputPath: Output<string>,
-  access: aws.cloudfront.OriginAccessIdentity,
+  access: OriginAccessIdentity,
   bucket: Bucket,
   plan: Input<Plan>,
 ) {
@@ -808,7 +819,7 @@ function handler(event) {
         domainName: bucket.nodes.bucket.bucketRegionalDomainName,
         originPath: props.originPath ? `/${props.originPath}` : "",
         s3OriginConfig: {
-          originAccessIdentity: access.cloudfrontAccessIdentityPath,
+          originAccessIdentity: interpolate`origin-access-identity/cloudfront/${access.id}`,
         },
       };
     }
