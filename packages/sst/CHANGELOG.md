@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.41.3
+
+### Patch Changes
+
+- [#3713](https://github.com/sst/sst/pull/3713) [`e950c6028`](https://github.com/sst/sst/commit/e950c60288e7cb9ae40d813f46e38227f777129d) Thanks [@sommeeeer](https://github.com/sommeeeer)! - NextjsSite: include x-prerender-revalidate in allowed headers
+
 ## 2.41.2
 
 ### Patch Changes
