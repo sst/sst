@@ -39,7 +39,7 @@ npm run dev
 ```
 
 :::note
-You are starting `next dev` wrapped in `sst dev astro dev`.
+You are starting `astro dev` wrapped in `sst dev astro dev`.
 :::
 
 ---
@@ -143,7 +143,7 @@ Add some styles, replace the `<style />` tag with:
 
 ## 4. Generate a pre-signed URL
 
-When our app loads, we'll generate a pre-signed URL for the file upload and add it to the form.
+When our app loads, we'll generate a pre-signed URL for the file upload and use it in the form.
 
 ```astro title="src/pages/index.astro" {9}
 ---
