@@ -29,7 +29,7 @@ export const types = (program: Program) =>
           name: project.config.name,
           region: project.config.region,
         });
-        sstConfig.stacks(app);
+        await sstConfig.stacks(app);
         Colors.line(
           Colors.success(`✔ `),
           `Types generated in ${path.resolve(project.paths.out, "types")}`

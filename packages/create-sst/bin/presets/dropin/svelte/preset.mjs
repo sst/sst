@@ -5,7 +5,7 @@ export default [
   install({
     packages: [
       "sst",
-      "aws-cdk-lib@2.124.0",
+      "aws-cdk-lib@2.132.1",
       "constructs@10.3.0",
       "svelte-kit-sst",
     ],

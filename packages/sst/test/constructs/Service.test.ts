@@ -1,6 +1,6 @@
 import { test, expect, beforeAll, vi } from "vitest";
 import { HostedZone } from "aws-cdk-lib/aws-route53";
-import { ContainerImage } from "aws-cdk-lib/aws-ecs";
+import { ContainerImage, Cluster } from "aws-cdk-lib/aws-ecs";
 import {
   countResources,
   countResourcesLike,
@@ -314,16 +314,14 @@ test("logRetention undefined", async () => {
   const { stack } = await createService({});
   hasResource(stack, "Custom::LogRetention", {
     RetentionInDays: ABSENT,
-    LogGroupName: "/sst/service/test-app-Service",
   });
 });
 test("logRetention defined", async () => {
-  const { service, stack } = await createService({
+  const { stack } = await createService({
     logRetention: "one_month",
   });
   hasResource(stack, "Custom::LogRetention", {
     RetentionInDays: 30,
-    LogGroupName: "/sst/service/test-app-Service",
   });
 });
 
@@ -493,6 +491,24 @@ test("environment", async () => {
   });
 });
 
+test("cdk.cluster", async () => {
+  const app = await createApp();
+  const stack = new Stack(app, "stack");
+  const cluster = new Cluster(stack, "custom-cluster-id", {
+    clusterName: "custom-cluster",
+  });
+
+  new Service(stack, "Service", {
+    port: 3000,
+    cdk: { cluster },
+  });
+
+  countResources(stack, "AWS::ECS::Cluster", 1);
+  hasResource(stack, "AWS::ECS::Cluster", {
+    ClusterName: "custom-cluster",
+  });
+});
+
 test("cdk.fargateService", async () => {
   const { stack } = await createService({
     cdk: {
@@ -652,6 +668,30 @@ test("cdk.applicationLoadBalancerTargetGroup: ALB disabled", async () => {
   }).rejects.toThrow(
     /"cdk.applicationLoadBalancerTargetGroup" cannot be applied/
   );
+});
+test("cdk.applicationLoadBalancerListener", async () => {
+  const { service, stack } = await createService({
+    cdk: {
+      applicationLoadBalancerListener: {
+        port: 8080,
+      },
+    },
+  });
+  hasResource(stack, "AWS::ElasticLoadBalancingV2::Listener", {
+    Port: 8080,
+  });
+});
+test("cdk.applicationLoadBalancerListener: ALB disabled", async () => {
+  expect(async () => {
+    await createService({
+      cdk: {
+        applicationLoadBalancer: false,
+        applicationLoadBalancerListener: {
+          port: 8080,
+        },
+      },
+    });
+  }).rejects.toThrow(/"cdk.applicationLoadBalancerListener" cannot be applied/);
 });
 
 test("sst deploy inactive stack", async () => {

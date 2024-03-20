@@ -1,5 +1,41 @@
 # @serverless-stack/cli2
 
+## 2.41.2
+
+### Patch Changes
+
+- [`0ddcd3210`](https://github.com/sst/sst/commit/0ddcd3210900dd96f531676069d0f72e874c0d80) Thanks [@fwang](https://github.com/fwang)! - Service: support customizing ALB listener
+
+## 2.41.1
+
+### Patch Changes
+
+- [#3709](https://github.com/sst/sst/pull/3709) [`8e80d6179`](https://github.com/sst/sst/commit/8e80d61793b300a7c4a0ab1483d5d1b3afee2334) Thanks [@bayssmekanique](https://github.com/bayssmekanique)! - Astro: fixes infinite loop during deployment caused by Astro plugins
+
+## 2.41.0
+
+### Minor Changes
+
+- [`f2bf1285d`](https://github.com/sst/sst/commit/f2bf1285d2bc1b13ef909363a8dc18ca54ab4c43) Thanks [@fwang](https://github.com/fwang)! - Update CDK to v1.132.1
+
+## 2.40.8
+
+### Patch Changes
+
+- [#3700](https://github.com/sst/sst/pull/3700) [`df8866bad`](https://github.com/sst/sst/commit/df8866bad57d9f243a066b929125abf99aabbc9d) Thanks [@sommeeeer](https://github.com/sommeeeer)! - NextjsSite: update to OpenNext 2.3.7
+
+- [#3692](https://github.com/sst/sst/pull/3692) [`533caaeaa`](https://github.com/sst/sst/commit/533caaeaaa2b1def8e312efe0fa9a7734076d43a) Thanks [@zxan1285](https://github.com/zxan1285)! - Service: support using existing ECS Cluster
+
+## 2.40.7
+
+### Patch Changes
+
+- [`0eb2d3f2e`](https://github.com/sst/sst/commit/0eb2d3f2e0127793cc1ccb64855c871e17bd7b46) Thanks [@fwang](https://github.com/fwang)! - secret prefetcher: accommodate for IAM policy delay
+
+- [`12b4c0ff9`](https://github.com/sst/sst/commit/12b4c0ff9ab23132ac58d0942fb2def753c9df7d) Thanks [@fwang](https://github.com/fwang)! - Handle custom resource response 4kb limit
+
+- [#3674](https://github.com/sst/sst/pull/3674) [`602ddbfb5`](https://github.com/sst/sst/commit/602ddbfb58cbb19ded03f9c2b252821a5baf2cc3) Thanks [@mikeyaa](https://github.com/mikeyaa)! - Function: don't overwrite description, but add Live Lambda label
+
 ## 2.40.6
 
 ### Patch Changes

@@ -326,7 +326,9 @@ new Service(stack, "MyService", {
 });
 ```
 
-### Configuring Fargate Service
+### Advanced examples
+
+#### Configuring Fargate Service
 
 Here's an example of configuring the circuit breaker for the Fargate service.
 
@@ -342,7 +344,7 @@ new Service(stack, "MyService", {
 });
 ```
 
-### Configuring Service Container
+#### Configuring Service Container
 
 Here's an example of configuring the Fargate container health check. Make sure the `curl` command exists inside the container.
 
@@ -366,7 +368,7 @@ new Service(stack, "MyService", {
 });
 ```
 
-### Configuring Application Load Balancer
+#### Configuring Application Load Balancer
 
 Here's an example of configuring the Application Load Balancer subnets.
 
@@ -387,7 +389,7 @@ new Service(stack, "MyService", {
 });
 ```
 
-### Configuring Application Load Balancer Target
+#### Configuring Application Load Balancer Target
 
 Here's an example of configuring the Application Load Balancer health check.
 
@@ -408,7 +410,46 @@ new Service(stack, "MyService", {
 });
 ```
 
-### Using an existing VPC
+#### Configuring Application Load Balancer HTTP to HTTPS redirect
+
+Here's an example of redirecting HTTP requests to HTTPS.
+
+```js
+import { Certificate } from "aws-cdk-lib/aws-certificatemanager";
+import {
+  ApplicationProtocol,
+  ListenerAction,
+  ListenerCertificate,
+} from "aws-cdk-lib/aws-elasticloadbalancingv2";
+
+const service = new Service(stack, "MyService", {
+  path: "./service",
+  port: 3000,
+  cdk: {
+    // Set default listener to be HTTPS
+    applicationLoadBalancerListener: {
+      protocol: ApplicationProtocol.HTTPS,
+      port: 443,
+      certificates: [ListenerCertificate.fromArn("arn:xxxxxxxxxx")],
+    },
+  },
+});
+
+// Add redirect listener
+service.applicationLoadBalancer.addListener("HttpListener", {
+  protocol: ApplicationProtocol.HTTP,
+  defaultAction: ListenerAction.redirect({
+    protocol: "HTTPS",
+    host: "#{host}",
+    path: "/#{path}",
+    query: "#{query}",
+    port: "443",
+    statusCode: "HTTP_301",
+  }),
+})
+```
+
+#### Using an existing VPC
 
 ```js
 import { Vpc } from "aws-cdk-lib/aws-ec2";
@@ -421,5 +462,25 @@ new Service(stack, "MyService", {
       vpcId: "vpc-xxxxxxxxxx",
     }),
   },
+});
+```
+
+#### Sharing a Cluster
+
+```js
+import { Cluster } from "aws-cdk-lib/aws-ecs";
+
+const cluster = new Cluster(stack, "SharedCluster");
+
+new Service(stack, "MyServiceA", {
+  path: "./service-a",
+  port: 3000,
+  cdk: { cluster },
+});
+
+new Service(stack, "MyServiceB", {
+  path: "./service-b",
+  port: 3000,
+  cdk: { cluster },
 });
 ```
