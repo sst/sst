@@ -9,6 +9,6 @@ export default $config({
     };
   },
   async run() {
-    new sst.aws.Remix("Web");
+    new sst.aws.Remix("MyWeb");
   },
 });
