@@ -396,10 +396,10 @@ func (u *UI) getColor(input string) color.Attribute {
 }
 
 func (u *UI) Event(evt *server.Event) {
-	if evt.ConcurrentUpdateEvent != nil {
-		u.printEvent(color.FgRed, "Locked", "A concurrent update was detected on the stack. Run `sst unlock` to delete the lock file and retry.")
-		return
-	}
+	// if evt.ConcurrentUpdateEvent != nil {
+	// 	u.printEvent(color.FgRed, "Locked", "A concurrent update was detected on the stack. Run `sst unlock` to delete the lock file and retry.")
+	// 	return
+	// }
 
 	if evt.FunctionInvokedEvent != nil {
 		u.workerTime[evt.FunctionInvokedEvent.WorkerID] = time.Now()
@@ -509,7 +509,15 @@ func (u *UI) formatURN(urn string) string {
 	}
 
 	child := resource.URN(urn)
-	result := child.Name() + " [" + child.Type().DisplayName() + "]"
+	name := child.Name()
+	typeName := child.Type().DisplayName()
+	splits := strings.SplitN(child.Name(), ".", 2)
+	fmt.Println(splits)
+	if len(splits) > 1 {
+		name = splits[0]
+		typeName = strings.ReplaceAll(splits[1], ".", ":")
+	}
+	result := name + " [" + typeName + "]"
 
 	for {
 		parent := resource.URN(u.parents[string(child)])

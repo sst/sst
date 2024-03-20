@@ -214,6 +214,9 @@ func (s *Server) Start(parentContext context.Context) error {
 				StackEvent: *event,
 			}
 		}
+		if event.ConcurrentUpdateEvent != nil {
+			cancel()
+		}
 	})
 
 	select {

@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/sst/ion/internal/util"
 	"github.com/sst/ion/pkg/project"
+	"github.com/sst/ion/pkg/project/provider"
 )
 
 func TransformError(err error) error {
@@ -10,7 +11,7 @@ func TransformError(err error) error {
 		project.ErrInvalidStageName: "The stage name is invalid. It can only contain alphanumeric characters and hyphens.",
 		project.ErrV2Config:         "You are using sst ion and this looks like an sst v2 config",
 		project.ErrStageNotFound:    "Stage not found",
-		project.ErrStackRunFailed:   "",
+		provider.ErrLockExists:      "",
 	}
 
 	match, ok := mapping[err]
