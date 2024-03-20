@@ -47,8 +47,12 @@ func main() {
 	err := run()
 	if err != nil {
 		err := TransformError(err)
+		errorMessage := err.Error()
+		if len(errorMessage) > 255 {
+			errorMessage = errorMessage[:255]
+		}
 		telemetry.Track("cli.error", map[string]interface{}{
-			"error": err.Error()[:255],
+			"error": errorMessage,
 		})
 		slog.Error("exited with error", "err", err)
 		if readableErr, ok := err.(*util.ReadableError); ok {
