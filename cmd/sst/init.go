@@ -6,9 +6,9 @@ import (
 	"log/slog"
 	"os"
 	"os/exec"
-	"time"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/briandowns/spinner"
 	"github.com/fatih/color"
@@ -68,8 +68,8 @@ func CmdInit(cli *Cli) error {
 			color.New(color.FgBlue, color.Bold).Print(">")
 			fmt.Println("  Astro detected. This will...")
 			fmt.Println("   - create an sst.config.ts")
-			fmt.Println("   - set up the astro-sst adapter in astro.config.mjs")
-			fmt.Println("   - add the sst sdk and astro-sst adapter to package.json")
+			fmt.Println("   - modify the astro.config.mjs")
+			fmt.Println("   - add the sst sdk to package.json")
 			fmt.Println()
 			template = "astro"
 		} else if filepath.HasPrefix(filepath.Base(path), "remix.config") || (filepath.HasPrefix(filepath.Base(path), "vite.config") && fileContains(path, "@remix-run/dev")) {
@@ -85,7 +85,7 @@ func CmdInit(cli *Cli) error {
 			return fmt.Errorf("file found")
 		}
 
-		return nil;
+		return nil
 	})
 
 	if template == "" {
@@ -140,6 +140,33 @@ func CmdInit(cli *Cli) error {
 	}
 	var cmd *exec.Cmd
 
+	spin := spinner.New(spinner.CharSets[14], 100*time.Millisecond)
+	spin.Suffix = "  Installing providers..."
+	spin.Start()
+
+	cfgPath, err := project.Discover()
+	if err != nil {
+		return err
+	}
+	proj, err := project.New(&project.ProjectConfig{
+		Config:  cfgPath,
+		Stage:   "sst",
+		Version: version,
+	})
+	if err != nil {
+		return err
+	}
+	if err := proj.CopyPlatform(version); err != nil {
+		return err
+	}
+
+	if err := proj.Install(); err != nil {
+		return err
+	}
+
+	if _, err := os.Stat("package-lock.json"); err == nil {
+		cmd = exec.Command("npm", "install")
+	}
 	if _, err := os.Stat("yarn.lock"); err == nil {
 		cmd = exec.Command("yarn", "install")
 	}
@@ -150,7 +177,6 @@ func CmdInit(cli *Cli) error {
 		cmd = exec.Command("bun", "install")
 	}
 	if cmd != nil {
-		spin := spinner.New(spinner.CharSets[14], 100*time.Millisecond)
 		spin.Suffix = "  Installing dependencies..."
 		spin.Start()
 		slog.Info("installing deps", "args", cmd.Args)
@@ -158,11 +184,6 @@ func CmdInit(cli *Cli) error {
 		spin.Stop()
 	}
 
-	slog.Info("initializing project", "template", template)
-	_, err = initProject(cli)
-	if err != nil {
-		return err
-	}
 	color.New(color.FgGreen, color.Bold).Print("✓ ")
 	color.New(color.FgWhite).Println(" Success 🎉")
 	fmt.Println()
