@@ -513,12 +513,11 @@ func (u *UI) formatURN(urn string) string {
 	name := child.Name()
 	typeName := child.Type().DisplayName()
 	splits := strings.SplitN(child.Name(), ".", 2)
-	fmt.Println(splits)
 	if len(splits) > 1 {
 		name = splits[0]
 		typeName = strings.ReplaceAll(splits[1], ".", ":")
 	}
-	result := name + " [" + typeName + "]"
+	result := name + " " + typeName
 
 	for {
 		parent := resource.URN(u.parents[string(child)])
@@ -531,7 +530,7 @@ func (u *UI) formatURN(urn string) string {
 		child = parent
 	}
 	if string(child) != urn {
-		result = child.Name() + " [" + child.Type().DisplayName() + "]" + " → " + result
+		result = child.Name() + " " + child.Type().DisplayName() + " → " + result
 	}
 	return result
 }
