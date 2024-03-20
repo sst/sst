@@ -213,6 +213,7 @@ export interface RemixArgs extends SsrSiteArgs {
    *
    * By default, it's deployed to AWS Lambda in a single region. Enable this option if you want to instead deploy it to Lambda@Edge.
    * @default `false`
+   * @internal
    */
   edge?: Input<boolean>;
 }
