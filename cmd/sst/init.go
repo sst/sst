@@ -6,9 +6,9 @@ import (
 	"log/slog"
 	"os"
 	"os/exec"
-	"time"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/briandowns/spinner"
 	"github.com/fatih/color"
@@ -85,7 +85,7 @@ func CmdInit(cli *Cli) error {
 			return fmt.Errorf("file found")
 		}
 
-		return nil;
+		return nil
 	})
 
 	if template == "" {
@@ -140,6 +140,9 @@ func CmdInit(cli *Cli) error {
 	}
 	var cmd *exec.Cmd
 
+	if _, err := os.Stat("package-lock.json"); err == nil {
+		cmd = exec.Command("npm", "install")
+	}
 	if _, err := os.Stat("yarn.lock"); err == nil {
 		cmd = exec.Command("yarn", "install")
 	}
