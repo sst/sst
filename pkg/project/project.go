@@ -1,12 +1,17 @@
 package project
 
 import (
+	"bufio"
+	"bytes"
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"os"
+	"os/exec"
 	"path"
 	"path/filepath"
 	"regexp"
+	"strings"
 
 	"github.com/sst/ion/internal/fs"
 	"github.com/sst/ion/internal/util"
@@ -30,7 +35,6 @@ type Project struct {
 	version   string
 	root      string
 	config    string
-	process   *js.Process
 	app       *App
 	home      provider.Home
 	Providers map[string]provider.Provider
@@ -80,26 +84,17 @@ func New(input *ProjectConfig) (*Project, error) {
 
 	rootPath := filepath.Dir(input.Config)
 
-	process, err := js.Start(
-		rootPath,
-	)
-	if err != nil {
-		return nil, err
-	}
-
 	proj := &Project{
 		version: input.Version,
 		root:    rootPath,
-		process: process,
 		config:  input.Config,
 	}
 	proj.Stack = &stack{
 		project: proj,
 	}
 	tmp := proj.PathWorkingDir()
-	// platformDir := proj.PathPlatformDir()
 
-	_, err = os.Stat(tmp)
+	_, err := os.Stat(tmp)
 	if err != nil {
 		if !os.IsNotExist(err) {
 			return nil, err
@@ -113,7 +108,7 @@ func New(input *ProjectConfig) (*Project, error) {
 	inputBytes, err := json.Marshal(map[string]string{
 		"stage": input.Stage,
 	})
-	err = process.Eval(
+	buildResult, err := js.Build(
 		js.EvalOptions{
 			Dir: tmp,
 			Banner: `
@@ -125,7 +120,7 @@ func New(input *ProjectConfig) (*Project, error) {
 			Code: fmt.Sprintf(`
 import mod from '%s';
 if (mod.stacks || mod.config) {
-  console.log("v2")
+  console.log("~v2")
   process.exit(0)
 }
 console.log("~j" + JSON.stringify(mod.app({
@@ -138,62 +133,67 @@ console.log("~j" + JSON.stringify(mod.app({
 		return nil, err
 	}
 
-	for {
-		cmd, line := process.Scan()
-
-		if cmd == js.CommandDone {
-			break
-		}
-
-		if cmd == js.CommandStdOut && line == "v2" {
+	slog.Info("evaluating config")
+	output, err := exec.Command("node", "--no-warnings", buildResult.OutputFiles[0].Path).Output()
+	slog.Info("config evaluated")
+	if err != nil {
+		return nil, err
+	}
+	scanner := bufio.NewScanner(bytes.NewReader(output))
+	for scanner.Scan() {
+		line := scanner.Text()
+		if line == "~v2" {
 			return nil, ErrV2Config
 		}
-		if cmd != js.CommandJSON {
-			fmt.Println(line)
+		if strings.HasPrefix(line, "~j") {
+			var parsed App
+			err = json.Unmarshal([]byte(line[2:]), &parsed)
+			if err != nil {
+				return nil, err
+			}
+			proj.app = &parsed
+			proj.app.Stage = input.Stage
+
+			if proj.app.Providers == nil {
+				proj.app.Providers = map[string]interface{}{}
+			}
+
+			for name, args := range proj.app.Providers {
+				if argsBool, ok := args.(bool); ok && argsBool {
+					proj.app.Providers[name] = make(map[string]interface{})
+				}
+			}
+
+			if _, ok := proj.app.Providers[proj.app.Home]; !ok {
+				proj.app.Providers[proj.app.Home] = map[string]interface{}{}
+			}
+
+			if proj.app.Name == "" {
+				return nil, fmt.Errorf("Project name is required")
+			}
+
+			if proj.app.Home == "" {
+				return nil, util.NewReadableError(nil, `You must specify a "home" provider in the project configuration file.`)
+			}
+
+			if proj.app.RemovalPolicy != "" {
+				return nil, util.NewReadableError(nil, `The "removalPolicy" has been renamed to "removal"`)
+			}
+
+			if proj.app.Removal == "" {
+				proj.app.Removal = "retain"
+			}
+
+			if proj.app.Removal != "remove" && proj.app.Removal != "retain" && proj.app.Removal != "retain-all" {
+				return nil, fmt.Errorf("Removal must be one of: remove, retain, retain-all")
+			}
 			continue
 		}
 
-		var parsed App
-		err = json.Unmarshal([]byte(line), &parsed)
-		if err != nil {
-			return nil, err
-		}
-		proj.app = &parsed
-		proj.app.Stage = input.Stage
-
-		if proj.app.Providers == nil {
-			proj.app.Providers = map[string]interface{}{}
-		}
-
-		for name, args := range proj.app.Providers {
-			if argsBool, ok := args.(bool); ok && argsBool {
-				proj.app.Providers[name] = make(map[string]interface{})
-			}
-		}
-
-		if _, ok := proj.app.Providers[proj.app.Home]; !ok {
-			proj.app.Providers[proj.app.Home] = map[string]interface{}{}
-		}
-
-		if proj.app.Name == "" {
-			return nil, fmt.Errorf("Project name is required")
-		}
-
-		if proj.app.Home == "" {
-			return nil, util.NewReadableError(nil, `You must specify a "home" provider in the project configuration file.`)
-		}
-
-		if proj.app.RemovalPolicy != "" {
-			return nil, util.NewReadableError(nil, `The "removalPolicy" has been renamed to "removal"`)
-		}
-
-		if proj.app.Removal == "" {
-			proj.app.Removal = "retain"
-		}
-
-		if proj.app.Removal != "remove" && proj.app.Removal != "retain" && proj.app.Removal != "retain-all" {
-			return nil, fmt.Errorf("Removal must be one of: remove, retain, retain-all")
-		}
+		fmt.Println(line)
+	}
+	if err := scanner.Err(); err != nil {
+		return nil, err
 	}
 
 	return proj, nil
