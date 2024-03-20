@@ -169,8 +169,10 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 
 	providerShim := []string{}
 	for name := range s.project.app.Providers {
-		providerShim = append(providerShim, fmt.Sprintf("import * as %s from '@pulumi/%s'", name, name))
-		providerShim = append(providerShim, fmt.Sprintf("globalThis.%s = %s", name, name))
+		pkg := getProviderPackage(name)
+		global := cleanProviderName(name)
+		providerShim = append(providerShim, fmt.Sprintf("import * as %s from '%s'", global, pkg))
+		providerShim = append(providerShim, fmt.Sprintf("globalThis.%s = %s", global, global))
 	}
 
 	buildResult, err := js.Build(js.EvalOptions{
