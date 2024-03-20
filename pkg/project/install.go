@@ -7,15 +7,19 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 )
 
 func getDependencyPackage(name string) string {
+	if strings.Contains(name, "/") {
+		return name
+	}
 	return "@pulumi/" + name
 }
 
 func (p *Project) NeedsInstall() bool {
 	platformDir := p.PathPlatformDir()
-	for name, _ := range p.app.Providers {
+	for name := range p.app.Providers {
 		pkg := getDependencyPackage(name)
 		if _, err := os.Stat(filepath.Join(platformDir, "node_modules", pkg)); err != nil {
 			return true
