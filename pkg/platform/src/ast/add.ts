@@ -53,7 +53,7 @@ if (!providersProperty) {
 
 if (
   providersProperty.initializer.properties.find(
-    (property) => property.name.getText() === pkg,
+    (property) => property.name.getText().replaceAll('"', "") === pkg,
   )
 ) {
   process.exit(0);
