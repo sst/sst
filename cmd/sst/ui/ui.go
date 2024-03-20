@@ -320,16 +320,17 @@ func (u *UI) Trigger(evt *project.StackEvent) {
 		if len(evt.CompleteEvent.Errors) == 0 && evt.CompleteEvent.Finished {
 			color.New(color.FgGreen, color.Bold).Print(IconCheck)
 			if !u.hasProgress {
-				color.New(color.FgWhite, color.Bold).Println("  No changes")
+				if u.mode == ProgressModeRemove {
+					color.New(color.FgWhite, color.Bold).Println("  Stage already removed")
+				} else {
+					color.New(color.FgWhite, color.Bold).Println("  No changes")
+				}
 			}
 			if u.hasProgress {
 				if u.mode == ProgressModeRemove {
 					color.New(color.FgWhite, color.Bold).Println("  Removed")
 				}
-				if u.mode == ProgressModeDeploy {
-					color.New(color.FgWhite, color.Bold).Println("  Complete")
-				}
-				if u.mode == ProgressModeDev {
+				if u.mode == ProgressModeDeploy || u.mode == ProgressModeDev {
 					color.New(color.FgWhite, color.Bold).Println("  Complete")
 				}
 				if u.mode == ProgressModeRefresh {
@@ -396,10 +397,10 @@ func (u *UI) getColor(input string) color.Attribute {
 }
 
 func (u *UI) Event(evt *server.Event) {
-	if evt.ConcurrentUpdateEvent != nil {
-		u.printEvent(color.FgRed, "Locked", "A concurrent update was detected on the stack. Run `sst unlock` to delete the lock file and retry.")
-		return
-	}
+	// if evt.ConcurrentUpdateEvent != nil {
+	// 	u.printEvent(color.FgRed, "Locked", "A concurrent update was detected on the stack. Run `sst unlock` to delete the lock file and retry.")
+	// 	return
+	// }
 
 	if evt.FunctionInvokedEvent != nil {
 		u.workerTime[evt.FunctionInvokedEvent.WorkerID] = time.Now()
@@ -509,7 +510,14 @@ func (u *UI) formatURN(urn string) string {
 	}
 
 	child := resource.URN(urn)
-	result := child.Name() + " [" + child.Type().DisplayName() + "]"
+	name := child.Name()
+	typeName := child.Type().DisplayName()
+	splits := strings.SplitN(child.Name(), ".", 2)
+	if len(splits) > 1 {
+		name = splits[0]
+		typeName = strings.ReplaceAll(splits[1], ".", ":")
+	}
+	result := name + " " + typeName
 
 	for {
 		parent := resource.URN(u.parents[string(child)])
@@ -522,7 +530,7 @@ func (u *UI) formatURN(urn string) string {
 		child = parent
 	}
 	if string(child) != urn {
-		result = child.Name() + " [" + child.Type().DisplayName() + "]" + " → " + result
+		result = child.Name() + " " + child.Type().DisplayName() + " → " + result
 	}
 	return result
 }

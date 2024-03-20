@@ -300,8 +300,8 @@ export class Astro extends Component implements Link.Linkable {
     super("sst:aws:Astro", name, args, opts);
 
     const parent = this;
-    const { sitePath } = prepare(args, opts);
-    const { access, bucket } = createBucket(parent, name, args);
+    const { sitePath, partition, region } = prepare(args, opts);
+    const { access, bucket } = createBucket(parent, name, partition, args);
     const outputPath = buildApp(name, args, sitePath);
     const { buildMeta } = loadBuildOutput();
     const plan = buildPlan();
