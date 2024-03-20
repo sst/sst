@@ -115,7 +115,7 @@ export class HttpsRedirect extends Component {
             customOriginConfig: {
               httpPort: 80,
               httpsPort: 443,
-              originProtocolPolicy: "https-only",
+              originProtocolPolicy: "http-only",
               originSslProtocols: ["TLSv1.2"],
             },
           },
