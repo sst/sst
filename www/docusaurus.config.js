@@ -143,7 +143,7 @@ module.exports = {
             },
             {
               label: "About us",
-              href: "https://sst.dev/about.html",
+              href: "https://sst.dev/about/",
             },
             {
               label: "Contact us",
