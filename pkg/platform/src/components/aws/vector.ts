@@ -18,7 +18,6 @@ const ModelInfo = {
   "amazon.titan-embed-image-v1": { provider: "bedrock" as const, size: 1024 },
   "text-embedding-ada-002": { provider: "openai" as const, size: 1536 },
   "text-embedding-3-small": { provider: "openai" as const, size: 1536 },
-  "text-embedding-3-large": { provider: "openai" as const, size: 3072 },
 };
 
 export interface VectorArgs {
@@ -26,7 +25,7 @@ export interface VectorArgs {
    * The model used for generating the vectors.
    *
    * :::tip
-   * To use the `text-embedding-ada-002`, `text-embedding-3-small`, or `text-embedding-3-large` model, you'll need to pass in your `openAiApiKey`.
+   * To use the `text-embedding-ada-002` or `text-embedding-3-small` model, you'll need to pass in your `openAiApiKey`.
    * :::
    *
    * @default `"amazon.titan-embed-text-v1"`
@@ -40,7 +39,7 @@ export interface VectorArgs {
    */
   model?: Input<keyof typeof ModelInfo>;
   /**
-   * Your OpenAI API key. This is needed only if you're using the `text-embedding-ada-002`, `text-embedding-3-small`, or `text-embedding-3-large` model.
+   * Your OpenAI API key. This is needed only if you're using the `text-embedding-ada-002` or `text-embedding-3-small` model.
    *
    * :::tip
    * Use `sst.Secret` to store your API key securely.
@@ -84,7 +83,7 @@ export interface VectorArgs {
  *
  * #### Change the model
  *
- * Optionally, use a different model, like OpenAI's `text-embedding-ada-002`, `text-embedding-3-small`, or `text-embedding-3-large` model. You'll need to pass in your OpenAI API key.
+ * Optionally, use a different model, like OpenAI's `text-embedding-3-small` model. You'll need to pass in your OpenAI API key.
  *
  * ```ts {3}
  * new sst.aws.Vector("MyVectorDB", {
@@ -187,20 +186,19 @@ export class Vector
     }
 
     function createDBTable() {
-      // Create table after the DB instance is created
-      postgres.nodes.instance.arn.apply(() => {
-        new EmbeddingsTable(
-          `${name}Table`,
-          {
-            clusterArn: postgres.nodes.cluster.arn,
-            secretArn: postgres.nodes.cluster.masterUserSecrets[0].secretArn,
-            databaseName,
-            tableName,
-            vectorSize,
-          },
-          { parent },
-        );
-      });
+      vectorSize.apply((vectorSize) => console.log("vectorSize", vectorSize));
+
+      new EmbeddingsTable(
+        `${name}Table`,
+        {
+          clusterArn: postgres.nodes.cluster.arn,
+          secretArn: postgres.nodes.cluster.masterUserSecrets[0].secretArn,
+          databaseName,
+          tableName,
+          vectorSize,
+        },
+        { parent, dependsOn: postgres.nodes.instance },
+      );
     }
 
     function createIngestHandler() {
