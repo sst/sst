@@ -1,6 +1,6 @@
 # ❍
 
-Ion is a new engine for deploying SST apps. It uses Pulumi and Terraform, as opposed to CDK and CloudFormation.
+Ion is a new engine for deploying SST apps. It uses Pulumi and Terraform, as opposed to CDK and CloudFormation. [Read the full announcement here](https://sst.dev/blog/moving-away-from-cdk.html).
 
 - **10x faster** deploys
 - Native **multi-region** support
@@ -8,8 +8,6 @@ Ion is a new engine for deploying SST apps. It uses Pulumi and Terraform, as opp
 - No stacks or stack resource limits
 - No CDK or npm package conflicts
 - Native support for **non-AWS** providers
-
-[Read the full announcement here](https://sst.dev/blog/moving-away-from-cdk.html).
 
 _Note: Ion is currently in alpha. We’ll be sharing more details on how to migrate your existing SST apps soon._
 
@@ -25,7 +23,7 @@ Download the pre-compiled binaries from the [releases](https://github.com/sst/io
 
 ## Get Started
 
-To get started, check out one of these:
+Get started with your favorite framework:
 
 - [Next.js](https://ion.sst.dev/docs/start/nextjs)
 - [Remix](https://ion.sst.dev/docs/start/remix)
