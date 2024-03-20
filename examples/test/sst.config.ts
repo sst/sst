@@ -5,9 +5,18 @@ export default $config({
       name: "test",
       removal: input?.stage === "production" ? "retain" : "remove",
       home: "aws",
+      providers: { "@upstash/pulumi": true },
     };
   },
   async run() {
-    new sst.aws.Bucket("MyBucket");
+    new upstash.RedisDatabase("MyDatabase", {
+      region: "us-east-1",
+      databaseName: "my-database",
+    })
+    const bucket = new sst.aws.Bucket("MyBucket");
+    const api = new sst.aws.ApiGatewayV2("MyApi").route("GET /", {
+      link: [bucket],
+      handler: "src/index.handler",
+    });
   },
 });

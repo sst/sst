@@ -18,13 +18,13 @@ export class SecretMissingError extends VisibleError {
  * Secrets are encrypted when they are stored in your state file or in a function package.
  * :::
  *
- * Secrets are encrypted and stored in an S3 Bucket in your AWS account. If used in your app config, they'll be encrypted in your state file as well. Similarly, if used in your function code, they'll be encrypted in your function package and decrypted at runtime.
+ * Secrets are encrypted and stored in an S3 Bucket in your AWS account. If used in your app config, they'll be encrypted in your state file as well. If used in your function code, they'll be decrypted and stored in the function package.
  *
  * @example
  *
  * #### Create a secret
  * ```ts
- * const mySecret = new sst.Secret("MySecret");
+ * const secret = new sst.Secret("MySecret");
  * ```
  *
  * #### Set a placeholder
@@ -36,7 +36,7 @@ export class SecretMissingError extends VisibleError {
  * :::
  *
  * ```ts
- * const mySecret = new sst.Secret("MySecret", "my-secret-placeholder-value");
+ * const secret = new sst.Secret("MySecret", "my-secret-placeholder-value");
  * ```
  *
  * #### Set the value of the secret
@@ -61,7 +61,7 @@ export class SecretMissingError extends VisibleError {
  *
  * ```ts
  * new sst.aws.Nextjs("MyWeb", {
- *   link: [mySecret]
+ *   link: [secret]
  * });
  * ```
  *

@@ -1,0 +1,25 @@
+{
+  "steps": [
+    {
+      "type": "copy"
+    },
+    {
+      "type": "patch",
+      "properties": {
+        "file": "package.json",
+        "patch": [
+          {
+            "op": "add",
+            "path": "/dependencies/sst",
+            "value": "^3.0.1"
+          },
+          {
+            "op": "add",
+            "path": "/scripts/dev",
+            "value": "sst dev remix dev"
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -9,6 +9,6 @@ export default $config({
     };
   },
   async run() {
-    new sst.aws.Astro("Web");
+    new sst.aws.Astro("MyWeb");
   },
 });

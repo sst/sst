@@ -396,16 +396,20 @@ func Start(
 				slog.Info("checking if code needs to be rebuilt", "file", event.Path)
 				toBuild := map[string]bool{}
 
-				for workerID, info := range workers {
-					warp, ok := complete.Warps[info.FunctionID]
+				for functionID := range builds {
+					warp, ok := complete.Warps[functionID]
 					if !ok {
 						continue
 					}
 					if runtime.ShouldRebuild(warp.Runtime, warp.FunctionID, event.Path) {
-						slog.Info("stopping", "workerID", workerID, "functionID", info.FunctionID)
-						info.Worker.Stop()
-						delete(builds, info.FunctionID)
-						toBuild[info.FunctionID] = true
+						for _, worker := range workers {
+							if worker.FunctionID == functionID {
+								slog.Info("stopping", "workerID", worker.WorkerID, "functionID", worker.FunctionID)
+								worker.Worker.Stop()
+							}
+						}
+						delete(builds, functionID)
+						toBuild[functionID] = true
 					}
 				}
 

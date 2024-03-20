@@ -9,7 +9,7 @@ export module Warp {
     bundle?: string;
     links: string[];
   }
-  let warps: Record<string, Definition> = {};
+  let warps: Record<string, Input<Definition | undefined>> = {};
   export function reset() {
     warps = {};
   }
@@ -18,7 +18,10 @@ export module Warp {
     return warps;
   }
 
-  export function register(definition: Definition) {
-    warps[definition.functionID] = definition;
+  export function register(
+    functionID: string,
+    definition: Input<Definition | undefined>,
+  ) {
+    warps[functionID] = definition;
   }
 }

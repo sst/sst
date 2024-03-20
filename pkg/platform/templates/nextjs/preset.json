@@ -33,6 +33,13 @@
           }
         ]
       }
+    },
+    {
+      "type": "gitignore",
+      "properties": {
+        "name": "# open-next",
+        "path": ".open-next"
+      }
     }
   ]
 }

@@ -106,7 +106,7 @@ export interface WorkerArgs {
      */
     esbuild?: Input<BuildOptions>;
     /**
-     * Enable or disable if the worked code is minified when bundled.
+     * Enable or disable if the worker code is minified when bundled.
      *
      * @default `true`
      *
@@ -133,15 +133,15 @@ export interface WorkerArgs {
    *
    * ```js
    * {
-   *   link: [myBucket, stripeKey]
+   *   link: [bucket, stripeKey]
    * }
    * ```
    */
   link?: Input<any[]>;
   /**
-   * Key-value pairs of values that are set as [Worker environment variables](https://developers.cloudflare.com/workers/configuration/environment-variables/).
+   * Key-value pairs that are set as [Worker environment variables](https://developers.cloudflare.com/workers/configuration/environment-variables/).
    *
-   * They can be accessed in your function using `env.<key>`.
+   * They can be accessed in your function through `env.<key>`.
    *
    * @example
    *
@@ -185,11 +185,11 @@ export interface WorkerArgs {
  * and allow you to access it in your handler.
  *
  * ```ts {5}
- * const myBucket = new sst.aws.Bucket("MyBucket");
+ * const bucket = new sst.aws.Bucket("MyBucket");
  *
  * new sst.cloudflare.Worker("MyWorker", {
  *   handler: "src/worker.handler",
- *   link: [myBucket]
+ *   link: [bucket]
  * });
  * ```
  *

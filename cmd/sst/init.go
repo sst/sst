@@ -1,11 +1,14 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
 	"log/slog"
 	"os"
 	"os/exec"
 	"time"
+	"path/filepath"
+	"strings"
 
 	"github.com/briandowns/spinner"
 	"github.com/fatih/color"
@@ -43,9 +46,17 @@ func CmdInit(cli *Cli) error {
 	fmt.Print("\033[?25h")
 
 	var template string
-	files := []string{"next.config.js", "next.config.mjs"}
-	for _, file := range files {
-		if _, err := os.Stat(file); err == nil {
+
+	// Loop through the files in the current directory
+	filepath.Walk(".", func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return nil
+		}
+		// Check if the file name is prefixed with the specified prefix.
+		if info.IsDir() {
+			return nil
+		}
+		if filepath.HasPrefix(filepath.Base(path), "next.config") {
 			color.New(color.FgBlue, color.Bold).Print(">")
 			fmt.Println("  Next.js detected. This will...")
 			fmt.Println("   - create an sst.config.ts")
@@ -53,9 +64,29 @@ func CmdInit(cli *Cli) error {
 			fmt.Println("   - add the sst sdk to package.json")
 			fmt.Println()
 			template = "nextjs"
-			break
+		} else if filepath.HasPrefix(filepath.Base(path), "astro.config") {
+			color.New(color.FgBlue, color.Bold).Print(">")
+			fmt.Println("  Astro detected. This will...")
+			fmt.Println("   - create an sst.config.ts")
+			fmt.Println("   - set up the astro-sst adapter in astro.config.mjs")
+			fmt.Println("   - add the sst sdk and astro-sst adapter to package.json")
+			fmt.Println()
+			template = "astro"
+		} else if filepath.HasPrefix(filepath.Base(path), "remix.config") || (filepath.HasPrefix(filepath.Base(path), "vite.config") && fileContains(path, "@remix-run/dev")) {
+			color.New(color.FgBlue, color.Bold).Print(">")
+			fmt.Println("  Remix detected. This will...")
+			fmt.Println("   - create an sst.config.ts")
+			fmt.Println("   - add the sst sdk to package.json")
+			fmt.Println()
+			template = "remix"
 		}
-	}
+
+		if template != "" {
+			return fmt.Errorf("file found")
+		}
+
+		return nil;
+	})
 
 	if template == "" {
 		color.New(color.FgBlue, color.Bold).Print(">")
@@ -86,7 +117,7 @@ func CmdInit(cli *Cli) error {
 	fmt.Println()
 
 	home := "aws"
-	if template != "nextjs" {
+	if template != "nextjs" && template != "astro" && template != "remix" {
 		p = promptui.Select{
 			Label:        "‏‏‎ ‎Where do you want to deploy your app? You can change this later",
 			HideSelected: true,
@@ -136,4 +167,25 @@ func CmdInit(cli *Cli) error {
 	color.New(color.FgWhite).Println(" Success 🎉")
 	fmt.Println()
 	return nil
+}
+
+func fileContains(filePath string, str string) bool {
+	file, err := os.Open(filePath)
+	if err != nil {
+		return false
+	}
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		if strings.Contains(scanner.Text(), str) {
+			return true
+		}
+	}
+
+	if err := scanner.Err(); err != nil {
+		return false
+	}
+
+	return false
 }

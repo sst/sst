@@ -44,11 +44,7 @@ export interface QueueSubscribeArgs {
    * You can pass in up to 5 different filters.
    * :::
    *
-   * You can pass in up to 5 different filter policies. These will logically ORed together. Meaning that if any single policy matches, the record will be processed.
-   *
-   * :::tip
-   * Learn more about the [filter rule syntax](https://docs.aws.amazon.com/lambda/latest/dg/invocation-eventfiltering.html#filtering-syntax).
-   * :::
+   * You can pass in up to 5 different filter policies. These will logically ORed together. Meaning that if any single policy matches, the record will be processed. Learn more about the [filter rule syntax](https://docs.aws.amazon.com/lambda/latest/dg/invocation-eventfiltering.html#filtering-syntax).
    *
    * @example
    * For example, if you Queue contains records in this JSON format.
@@ -90,7 +86,7 @@ export interface QueueSubscribeArgs {
    */
   filters?: Input<Input<Record<string, any>>[]>;
   /**
-   * [Transform](/docs/components#transform) how this subscription creates its underlying
+   * [Transform](/docs/components#transform) how this component creates its underlying
    * resources.
    */
   transform?: {
@@ -109,7 +105,7 @@ export interface QueueSubscribeArgs {
  * #### Create a queue
  *
  * ```ts
- * const myQueue = new sst.aws.Queue("MyQueue");
+ * const queue = new sst.aws.Queue("MyQueue");
  * ```
  *
  * #### Make it a FIFO queue
@@ -125,7 +121,7 @@ export interface QueueSubscribeArgs {
  * #### Add a subscriber
  *
  * ```ts
- * myQueue.subscribe("src/subscriber.handler");
+ * queue.subscribe("src/subscriber.handler");
  * ```
  *
  * #### Link the queue to a resource
@@ -134,7 +130,7 @@ export interface QueueSubscribeArgs {
  *
  * ```ts
  * new sst.aws.Nextjs("MyWeb", {
- *   link: [myQueue]
+ *   link: [queue]
  * });
  * ```
  *
@@ -221,13 +217,13 @@ export class Queue
    * @example
    *
    * ```js
-   * myQueue.subscribe("src/subscriber.handler");
+   * queue.subscribe("src/subscriber.handler");
    * ```
    *
    * Add multiple subscribers.
    *
    * ```js
-   * myQueue
+   * queue
    *   .subscribe("src/subscriber1.handler")
    *   .subscribe("src/subscriber2.handler");
    * ```
@@ -235,7 +231,7 @@ export class Queue
    * Add a filter to the subscription.
    *
    * ```js
-   * myQueue.subscribe("src/subscriber.handler", {
+   * queue.subscribe("src/subscriber.handler", {
    *   filters: [
    *     {
    *       body: {
@@ -249,7 +245,7 @@ export class Queue
    * Customize the subscriber function.
    *
    * ```js
-   * myQueue.subscribe({
+   * queue.subscribe({
    *   handler: "src/subscriber.handler",
    *   timeout: "60 seconds"
    * });

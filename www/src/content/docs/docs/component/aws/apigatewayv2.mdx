@@ -18,7 +18,7 @@ The `ApiGatewayV2` component lets you add an [Amazon API Gateway HTTP API](https
 #### Create the API
 
 ```ts
-const myApi = new sst.aws.ApiGatewayV2("MyApi");
+const api = new sst.aws.ApiGatewayV2("MyApi");
 ```
 
 #### Add a custom domain
@@ -32,7 +32,7 @@ new sst.aws.ApiGatewayV2("MyApi", {
 #### Add routes
 
 ```ts
-myApi
+api
  .route("GET /", "src/get.handler")
  .route("POST /", "src/post.handler");
 ```
@@ -110,13 +110,13 @@ When a request comes in, the API Gateway will look for the most specific match. 
 Here's how you add a simple route.
 
 ```js
-myApi.route("GET /", "src/get.handler");
+api.route("GET /", "src/get.handler");
 ```
 
 Add multiple routes.
 
 ```js
-myApi
+api
   .route("GET /", "src/get.handler")
   .route("POST /", "src/post.handler");
 ```
@@ -124,13 +124,13 @@ myApi
 Match any HTTP method.
 
 ```js
-myApi.route("ANY /", "src/route.handler");
+api.route("ANY /", "src/route.handler");
 ```
 
 Add a default route.
 
 ```js
-myApi
+api
   .route("GET /", "src/get.handler")
   .route($default, "src/default.handler");
 ```
@@ -138,19 +138,19 @@ myApi
 Add a parameterized route.
 
 ```js
-myApi.route("GET /notes/{id}", "src/get.handler");
+api.route("GET /notes/{id}", "src/get.handler");
 ```
 
 Add a greedy route.
 
 ```js
-myApi.route("GET /notes/{proxy+}", "src/greedy.handler");
+api.route("GET /notes/{proxy+}", "src/greedy.handler");
 ```
 
 Enable auth for a route.
 
 ```js
-myApi
+api
   .route("GET /", "src/get.handler")
   .route("POST /", "src/post.handler", {
     auth: {
@@ -162,7 +162,7 @@ myApi
 Customize the route handler.
 
 ```js
-myApi.route("GET /", {
+api.route("GET /", {
   handler: "src/get.handler",
   memory: "2048 MB"
 });

@@ -24,8 +24,8 @@ const (
 )
 
 const (
-	IconX = "×"
-  IconCheck = "✓"
+	IconX     = "×"
+	IconCheck = "✓"
 )
 
 type UI struct {
@@ -208,7 +208,7 @@ func (u *UI) Trigger(evt *project.StackEvent) {
 			}
 		}
 
-		if evt.ResOutputsEvent.Metadata.Type == "sst:aws:Nextjs" && evt.ResOutputsEvent.Metadata.Op == apitype.OpCreate {
+		if evt.ResOutputsEvent.Metadata.Type == "sst:aws:Nextjs" && evt.ResOutputsEvent.Metadata.Op == apitype.OpCreate && false {
 			u.footer = "🎉 Congrats on your new site!"
 		}
 
@@ -319,7 +319,23 @@ func (u *UI) Trigger(evt *project.StackEvent) {
 		}
 		if len(evt.CompleteEvent.Errors) == 0 && evt.CompleteEvent.Finished {
 			color.New(color.FgGreen, color.Bold).Print(IconCheck)
-			color.New(color.FgWhite, color.Bold).Println("  Complete")
+			if !u.hasProgress {
+				color.New(color.FgWhite, color.Bold).Println("  No changes")
+			}
+			if u.hasProgress {
+				if u.mode == ProgressModeRemove {
+					color.New(color.FgWhite, color.Bold).Println("  Removed")
+				}
+				if u.mode == ProgressModeDeploy {
+					color.New(color.FgWhite, color.Bold).Println("  Complete")
+				}
+				if u.mode == ProgressModeDev {
+					color.New(color.FgWhite, color.Bold).Println("  Complete")
+				}
+				if u.mode == ProgressModeRefresh {
+					color.New(color.FgWhite, color.Bold).Println("  Refreshed")
+				}
+			}
 			if len(evt.CompleteEvent.Hints) > 0 {
 				for k, v := range evt.CompleteEvent.Hints {
 					splits := strings.Split(k, "::")
@@ -351,7 +367,7 @@ func (u *UI) Trigger(evt *project.StackEvent) {
 			return
 		}
 
-		color.New(color.FgRed, color.Bold).Print("\n" + IconX)
+		color.New(color.FgRed, color.Bold).Print(IconX)
 		color.New(color.FgWhite, color.Bold).Println("  Failed")
 
 		for _, status := range evt.CompleteEvent.Errors {
@@ -441,6 +457,7 @@ func (u *UI) printEvent(barColor color.Attribute, label string, message string) 
 	color.New(barColor, color.Bold).Print("|  ")
 	color.New(color.FgHiBlack).Print(fmt.Sprintf("%-11s", label), " ", strings.TrimSpace(message))
 	fmt.Println()
+	u.hasProgress = true
 }
 
 func (u *UI) Interrupt() {
@@ -448,7 +465,7 @@ func (u *UI) Interrupt() {
 }
 
 func (u *UI) Destroy() {
-	u.spinner.Disable()
+	u.spinner.Stop()
 }
 
 func (u *UI) Header(version, app, stage string) {
@@ -463,6 +480,10 @@ func (u *UI) Header(version, app, stage string) {
 
 	color.New(color.FgWhite, color.Bold).Printf("   %-12s", "Stage:")
 	color.New(color.FgHiBlack).Println(stage)
+	if u.mode == ProgressModeDev {
+		color.New(color.FgWhite, color.Bold).Printf("   %-12s", "Console:")
+		color.New(color.FgHiBlack).Println("https://console.sst.dev/local/" + app + "/" + stage)
+	}
 	fmt.Println()
 }
 
@@ -488,17 +509,20 @@ func (u *UI) formatURN(urn string) string {
 	}
 
 	child := resource.URN(urn)
-	result := child.Name() + " (" + child.Type().DisplayName() + ")"
+	result := child.Name() + " [" + child.Type().DisplayName() + "]"
 
 	for {
 		parent := resource.URN(u.parents[string(child)])
 		if parent == "" {
 			break
 		}
-		if parent.Type().DisplayName() != "pulumi:pulumi:Stack" {
-			result = parent.Name() + " (" + parent.Type().DisplayName() + ")" + " → " + result
+		if parent.Type().DisplayName() == "pulumi:pulumi:Stack" {
+			break
 		}
 		child = parent
+	}
+	if string(child) != urn {
+		result = child.Name() + " [" + child.Type().DisplayName() + "]" + " → " + result
 	}
 	return result
 }
@@ -536,7 +560,10 @@ func (u *UI) printProgress(progress Progress) {
 	if progress.Duration > time.Second {
 		color.New(color.FgHiBlack).Printf(" (%.1fs)", progress.Duration.Seconds())
 	}
-	if len(progress.Message) > 0 {
+	if len(progress.Message) == 1 {
+		color.New(color.FgWhite).Print(" " + progress.Message[0])
+	}
+	if len(progress.Message) > 1 {
 		for _, item := range progress.Message {
 			fmt.Println()
 			color.New(progress.Color, color.Bold).Print("|  ")
@@ -545,4 +572,14 @@ func (u *UI) printProgress(progress Progress) {
 	}
 	fmt.Println()
 	u.hasProgress = true
+}
+
+func Success(msg string) {
+	color.New(color.FgGreen, color.Bold).Print(IconCheck + "  ")
+	color.New(color.FgWhite).Println(msg)
+}
+
+func Error(msg string) {
+	color.New(color.FgRed, color.Bold).Print(IconX + "  ")
+	color.New(color.FgWhite).Println(msg)
 }

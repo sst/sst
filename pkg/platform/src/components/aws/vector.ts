@@ -25,7 +25,9 @@ export interface VectorArgs {
   /**
    * The model used for generating the vectors.
    *
+   * :::tip
    * To use the `text-embedding-ada-002`, `text-embedding-3-small`, or `text-embedding-3-large` model, you'll need to pass in your `openAiApiKey`.
+   * :::
    *
    * @default `"amazon.titan-embed-text-v1"`
    * @example
@@ -77,7 +79,7 @@ export interface VectorArgs {
  * #### Create the database
  *
  * ```ts
- * const myVectorDB = new sst.aws.Vector("MyVectorDB");
+ * const vector = new sst.aws.Vector("MyVectorDB");
  * ```
  *
  * #### Change the model
@@ -97,7 +99,7 @@ export interface VectorArgs {
  *
  * ```ts
  * new sst.aws.Nextjs("MyWeb", {
- *   link: [myVectorDB]
+ *   link: [vector]
  * });
  * ```
  *

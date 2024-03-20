@@ -3,6 +3,7 @@ package project
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log/slog"
 	"os"
@@ -89,6 +90,9 @@ type Error struct {
 
 type StackEventStream = chan StackEvent
 
+var ErrStackRunFailed = fmt.Errorf("stack run had errors")
+var ErrStageNotFound = fmt.Errorf("stage not found")
+
 func (s *stack) Run(ctx context.Context, input *StackInput) error {
 	slog.Info("running stack command", "cmd", input.Command)
 	input.OnEvent(&StackEvent{StackCommandEvent: &StackCommandEvent{
@@ -106,7 +110,13 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 
 	_, err = s.PullState()
 	if err != nil {
-		return err
+		if errors.Is(err, provider.ErrStateNotFound) {
+			if input.Command != "up" {
+				return ErrStageNotFound
+			}
+		} else {
+			return err
+		}
 	}
 	defer s.PushState()
 
@@ -159,8 +169,10 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 
 	providerShim := []string{}
 	for name := range s.project.app.Providers {
-		providerShim = append(providerShim, fmt.Sprintf("import * as %s from '@pulumi/%s'", name, name))
-		providerShim = append(providerShim, fmt.Sprintf("globalThis.%s = %s", name, name))
+		pkg := getProviderPackage(name)
+		global := cleanProviderName(name)
+		providerShim = append(providerShim, fmt.Sprintf("import * as %s from '%s'", global, pkg))
+		providerShim = append(providerShim, fmt.Sprintf("globalThis.%s = %s", global, global))
 	}
 
 	buildResult, err := js.Build(js.EvalOptions{
@@ -406,7 +418,7 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 
 	slog.Info("done running stack command")
 	if err != nil {
-		return err
+		return ErrStackRunFailed
 	}
 	return nil
 }

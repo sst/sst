@@ -19,7 +19,7 @@ The `Postgres` component lets you add a Postgres database to your app using
 #### Create the database
 
 ```js
-const myDatabase = new sst.aws.Postgres("MyDatabase");
+const database = new sst.aws.Postgres("MyDatabase");
 ```
 
 #### Change the scaling config
@@ -39,7 +39,7 @@ You can link your database to other resources, like a function or your Next.js a
 
 ```ts
 new sst.aws.Nextjs("MyWeb", {
-  link: [myDatabase]
+  link: [database]
 });
 ```
 

@@ -38,7 +38,7 @@ export interface BucketArgs {
  * #### Minimal example
  *
  * ```ts
- * const myBucket = new sst.cloudflare.Bucket("MyBucket");
+ * const bucket = new sst.cloudflare.Bucket("MyBucket");
  * ```
  *
  * #### Public read access
@@ -54,7 +54,7 @@ export interface BucketArgs {
  * #### Add a subscriber
  *
  * ```ts
- * myBucket.subscribe("src/subscriber.handler");
+ * bucket.subscribe("src/subscriber.handler");
  * ```
  *
  * #### Link the bucket to a resource
@@ -63,7 +63,7 @@ export interface BucketArgs {
  *
  * ```ts
  * new sst.aws.Nextjs("MyWeb", {
- *   link: [myBucket]
+ *   link: [bucket]
  * });
  * ```
  *

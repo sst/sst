@@ -106,7 +106,7 @@ export interface AstroArgs extends SsrSiteArgs {
    *
    * ```js
    * {
-   *   link: [myBucket, stripeKey]
+   *   link: [bucket, stripeKey]
    * }
    * ```
    */
@@ -218,7 +218,7 @@ export interface AstroArgs extends SsrSiteArgs {
 const BUILD_META_FILE_NAME: BuildMetaFileName = "sst.buildMeta.json";
 
 /**
- * The `Astro` component lets you deploy an Astro site to AWS.
+ * The `Astro` component lets you deploy an [Astro](https://astro.build) site to AWS.
  *
  * @example
  *
@@ -269,10 +269,10 @@ const BUILD_META_FILE_NAME: BuildMetaFileName = "sst.buildMeta.json";
  * to the resources and allow you to access it in your site.
  *
  * ```ts {4}
- * const myBucket = new sst.aws.Bucket("MyBucket");
+ * const bucket = new sst.aws.Bucket("MyBucket");
  *
  * new sst.aws.Astro("MyWeb", {
- *   link: [myBucket]
+ *   link: [bucket]
  * });
  * ```
  *
@@ -320,12 +320,14 @@ export class Astro extends Component implements Link.Linkable {
     this.assets = bucket;
     this.cdn = distribution;
     this.server = serverFunction;
-    Hint.register(
-      this.urn,
-      all([this.cdn.domainUrl, this.cdn.url]).apply(
-        ([domainUrl, url]) => domainUrl ?? url,
-      ),
-    );
+    if (!$dev) {
+      Hint.register(
+        this.urn,
+        all([this.cdn.domainUrl, this.cdn.url]).apply(
+          ([domainUrl, url]) => domainUrl ?? url,
+        ),
+      );
+    }
     this.registerOutputs({
       _metadata: {
         mode: $dev ? "placeholder" : "deployed",

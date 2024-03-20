@@ -4,6 +4,7 @@ before:
     - go mod tidy
     - go build -o ./pkg/platform/dist/bridge/bootstrap ./pkg/platform/bridge
     - bash -c 'cd ./pkg/platform && ./scripts/build-functions'
+    - go test ./cmd/... ./pkg/...
 builds:
   - env:
       - CGO_ENABLED=0

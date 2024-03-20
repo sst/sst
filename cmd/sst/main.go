@@ -55,10 +55,10 @@ func main() {
 		if readableErr, ok := err.(*util.ReadableError); ok {
 			msg := readableErr.Error()
 			if msg != "" {
-				fmt.Println(readableErr.Error())
+				ui.Error(readableErr.Error())
 			}
 		} else {
-			fmt.Println("Unexpected error occurred. Please check the logs for more details.")
+			ui.Error("Unexpected error occurred. Please check the logs for more details.")
 		}
 		os.Exit(1)
 	}
@@ -307,6 +307,12 @@ var Root = Command{
 					"sst dev next dev",
 					"```",
 					"",
+					"To pass in a flag to your command, wrap it in quotes.",
+					"",
+					"```bash frame=\"none\"",
+					"sst dev \"next dev --turbo\"",
+					"```",
+					"",
 					"Dev mode does a few things:",
 					"",
 					"1. Starts a local server",
@@ -523,6 +529,10 @@ var Root = Command{
 					return err
 				}
 
+				spin := spinner.New(spinner.CharSets[14], 100*time.Millisecond)
+				defer spin.Stop()
+				spin.Suffix = "  Installing providers..."
+				spin.Start()
 				if !p.CheckPlatform(version) {
 					err := p.CopyPlatform(version)
 					if err != nil {
@@ -534,7 +544,8 @@ var Root = Command{
 				if err != nil {
 					return err
 				}
-
+				spin.Stop()
+				ui.Success("Installed providers")
 				return nil
 			},
 		},
@@ -617,9 +628,7 @@ var Root = Command{
 						if err != nil {
 							return util.NewReadableError(err, "Could not set secret")
 						}
-						color.New(color.FgGreen).Print("✔")
-						color.New(color.FgWhite).Printf("  Set \"%s\"", key)
-						fmt.Println()
+						ui.Success(fmt.Sprintf("Set \"%s\" for stage \"%s\"", key, p.App().Stage))
 						return nil
 					},
 				},
@@ -682,10 +691,7 @@ var Root = Command{
 
 						// check if the secret exists
 						if _, ok := secrets[key]; !ok {
-							color.New(color.FgRed).Print(ui.IconX)
-							color.New(color.FgWhite).Printf("  \"%s\" does not exist", key)
-							fmt.Println()
-							return nil
+							return util.NewReadableError(nil, fmt.Sprintf("Secret \"%s\" does not exist for stage \"%s\"", key, p.App().Stage))
 						}
 
 						delete(secrets, key)
@@ -693,9 +699,7 @@ var Root = Command{
 						if err != nil {
 							return util.NewReadableError(err, "Could not set secret")
 						}
-						color.New(color.FgGreen).Print("✔")
-						color.New(color.FgWhite).Printf("  Removed \"%s\"", key)
-						fmt.Println()
+						ui.Success(fmt.Sprintf("Removed \"%s\" for stage \"%s\"", key, p.App().Stage))
 						return nil
 					},
 				},
@@ -918,7 +922,7 @@ var Root = Command{
 				Long:  `Prints the current version of the CLI.`,
 			},
 			Run: func(cli *Cli) error {
-				fmt.Printf("ion.%s\n", version)
+				fmt.Println(version)
 				return nil
 			},
 		},
@@ -944,13 +948,21 @@ var Root = Command{
 				},
 			},
 			Run: func(cli *Cli) error {
-				version, err := global.Upgrade(
+				newVersion, err := global.Upgrade(
 					cli.Positional(0),
 				)
 				if err != nil {
 					return err
 				}
-				fmt.Printf("Upgraded to %s\n", version)
+				newVersion = strings.TrimPrefix(newVersion, "v")
+
+				color.New(color.FgGreen, color.Bold).Print(ui.IconCheck)
+				if newVersion == version {
+					color.New(color.FgWhite).Printf("  Already on latest %s\n", version)
+				} else {
+					color.New(color.FgWhite).Printf("  Upgraded %s ➜ ", version)
+					color.New(color.FgCyan, color.Bold).Println(newVersion)
+				}
 				return nil
 			},
 		},
@@ -1416,7 +1428,7 @@ func initProject(cli *Cli) (*project.Project, error) {
 	}
 
 	if p.NeedsInstall() {
-		spin.Suffix = "  Installing dependencies..."
+		spin.Suffix = "  Installing providers..."
 		spin.Start()
 		err = p.Install()
 		if err != nil {
