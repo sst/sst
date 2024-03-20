@@ -184,6 +184,8 @@ func CmdInit(cli *Cli) error {
 		spin.Stop()
 	}
 
+	spin.Stop()
+
 	color.New(color.FgGreen, color.Bold).Print("✓ ")
 	color.New(color.FgWhite).Println(" Success 🎉")
 	fmt.Println()
