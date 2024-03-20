@@ -9,7 +9,7 @@ Ion is a new engine for deploying SST apps. It uses Pulumi and Terraform, as opp
 - No CDK or npm package conflicts
 - Native support for **non-AWS** providers
 
-_Note: Ion is currently in alpha. We’ll be sharing more details on how to migrate your existing SST apps soon._
+_Note: Ion is generally available and recommended for new SST users. We are working on a migration path for SST v2 users._
 
 ## Installation
 
