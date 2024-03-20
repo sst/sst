@@ -320,16 +320,17 @@ func (u *UI) Trigger(evt *project.StackEvent) {
 		if len(evt.CompleteEvent.Errors) == 0 && evt.CompleteEvent.Finished {
 			color.New(color.FgGreen, color.Bold).Print(IconCheck)
 			if !u.hasProgress {
-				color.New(color.FgWhite, color.Bold).Println("  No changes")
+				if u.mode == ProgressModeRemove {
+					color.New(color.FgWhite, color.Bold).Println("  Stage already removed")
+				} else {
+					color.New(color.FgWhite, color.Bold).Println("  No changes")
+				}
 			}
 			if u.hasProgress {
 				if u.mode == ProgressModeRemove {
 					color.New(color.FgWhite, color.Bold).Println("  Removed")
 				}
-				if u.mode == ProgressModeDeploy {
-					color.New(color.FgWhite, color.Bold).Println("  Complete")
-				}
-				if u.mode == ProgressModeDev {
+				if u.mode == ProgressModeDeploy || u.mode == ProgressModeDev {
 					color.New(color.FgWhite, color.Bold).Println("  Complete")
 				}
 				if u.mode == ProgressModeRefresh {
