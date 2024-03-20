@@ -68,8 +68,8 @@ func CmdInit(cli *Cli) error {
 			color.New(color.FgBlue, color.Bold).Print(">")
 			fmt.Println("  Astro detected. This will...")
 			fmt.Println("   - create an sst.config.ts")
-			fmt.Println("   - set up the astro-sst adapter in astro.config.mjs")
-			fmt.Println("   - add the sst sdk and astro-sst adapter to package.json")
+			fmt.Println("   - modify the astro.config.mjs")
+			fmt.Println("   - add the sst sdk to package.json")
 			fmt.Println()
 			template = "astro"
 		} else if filepath.HasPrefix(filepath.Base(path), "remix.config") || (filepath.HasPrefix(filepath.Base(path), "vite.config") && fileContains(path, "@remix-run/dev")) {
