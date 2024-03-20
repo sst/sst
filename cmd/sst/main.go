@@ -1,11 +1,10 @@
 package main
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
-	"flag"
 	"fmt"
+	flag "github.com/spf13/pflag"
 	"io"
 	"log/slog"
 	"os"
@@ -76,60 +75,34 @@ func run() error {
 		cancel()
 	}()
 
-	nonFlags := []string{"sst"}
-	flags := []string{}
-	for index, arg := range os.Args {
-		if strings.HasPrefix(arg, "-") {
-			flags = append(flags, arg)
-			continue
-		}
-		if index != 0 {
-			nonFlags = append(nonFlags, arg)
-		}
-	}
-	rearranged := append(flags, nonFlags...)
-	os.Args = append([]string{os.Args[0]}, rearranged...)
-
 	parsedFlags := map[string]interface{}{}
+	Root.registerFlags(parsedFlags)
+	flag.CommandLine.Init("sst", flag.ContinueOnError)
+	cliParseError := flag.CommandLine.Parse(os.Args[1:])
+
 	positionals := []string{}
-	cmds := CommandPath{}
-	for i, arg := range nonFlags {
+	cmds := CommandPath{
+		Root,
+	}
+	for i, arg := range flag.Args() {
 		var cmd *Command
-		if i == 0 {
-			cmd = &Root
-		} else {
-			last := cmds[len(cmds)-1]
-			if len(last.Children) == 0 {
-				positionals = nonFlags[i:]
+
+		last := cmds[len(cmds)-1]
+		if len(last.Children) == 0 {
+			positionals = flag.Args()[i:]
+			break
+		}
+		for _, c := range last.Children {
+			if c.Name == arg {
+				cmd = c
 				break
 			}
-			for _, c := range last.Children {
-				if c.Name == arg {
-					cmd = c
-					break
-				}
-			}
-			if cmd == nil {
-				break
-			}
+		}
+		if cmd == nil {
+			break
 		}
 		cmds = append(cmds, *cmd)
-
-		for _, f := range cmd.Flags {
-			if f.Type == "string" {
-				parsedFlags[f.Name] = flag.String(f.Name, "", "")
-			}
-
-			if f.Type == "bool" {
-				parsedFlags[f.Name] = flag.Bool(f.Name, false, "")
-			}
-		}
 	}
-	flag.CommandLine.Init("sst", flag.ContinueOnError)
-	// suppresses default output on failure
-	buf := bytes.NewBuffer([]byte{})
-	flag.CommandLine.SetOutput(buf)
-	err := flag.CommandLine.Parse(os.Args[1:])
 	cli := &Cli{
 		flags:     parsedFlags,
 		arguments: positionals,
@@ -138,7 +111,7 @@ func run() error {
 		cancel:    cancel,
 	}
 	configureLog(cli)
-	if err != nil {
+	if cliParseError != nil {
 		return cli.PrintHelp()
 	}
 
@@ -819,7 +792,10 @@ var Root = Command{
 				if err != nil {
 					return err
 				}
-				args := cli.arguments
+				var args []string
+				for _, arg := range cli.arguments {
+					args = append(args, strings.Fields(arg)...)
+				}
 				if len(args) == 0 {
 					args = append(args, "sh")
 				}
@@ -846,7 +822,11 @@ var Root = Command{
 				cmd.Stdout = os.Stdout
 				cmd.Stderr = os.Stderr
 				cmd.Stdin = os.Stdin
-				return cmd.Run()
+				err = cmd.Run()
+				if err != nil {
+					return util.NewReadableError(err, err.Error())
+				}
+				return nil
 			},
 		},
 		{
@@ -1174,6 +1154,21 @@ var Root = Command{
 			},
 		},
 	},
+}
+
+func (c *Command) registerFlags(parsed map[string]interface{}) {
+	for _, f := range c.Flags {
+		if f.Type == "string" {
+			parsed[f.Name] = flag.String(f.Name, "", "")
+		}
+
+		if f.Type == "bool" {
+			parsed[f.Name] = flag.Bool(f.Name, false, "")
+		}
+	}
+	for _, child := range c.Children {
+		child.registerFlags(parsed)
+	}
 }
 
 func init() {
