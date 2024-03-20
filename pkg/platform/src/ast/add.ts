@@ -60,7 +60,7 @@ if (
 }
 // Create a new property node for "foo: {}"
 const newProperty = ts.factory.createPropertyAssignment(
-  pkg,
+  ts.factory.createStringLiteral(pkg),
   ts.factory.createTrue(),
 );
 
