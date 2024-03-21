@@ -63,6 +63,7 @@ export class Component extends ComponentResource {
             case "aws:s3/bucketV2:BucketV2":
               break;
             case "aws:apigatewayv2/api:Api":
+            case "aws:apigatewayv2/authorizer:Authorizer":
             case "aws:cloudwatch/eventRule:EventRule":
             case "aws:dynamodb/table:Table":
             case "aws:iam/user:User":

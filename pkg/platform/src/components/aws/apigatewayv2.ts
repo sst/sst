@@ -159,7 +159,7 @@ export interface ApiGatewayV2RouteArgs {
    * Enable auth for your HTTP API.
    *
    * :::note
-   * Currently only IAM auth is supported.
+   * Currently IAM and JWT auth are supported.
    * :::
    *
    * @example
@@ -176,6 +176,60 @@ export interface ApiGatewayV2RouteArgs {
      * Enable IAM authorization for a given API route. When IAM auth is enabled, clients need to use Signature Version 4 to sign their requests with their AWS credentials.
      */
     iam?: Input<true>;
+    /**
+     * Enable JWT authorization for a given API route. When JWT auth is enabled, clients need to include a valid JSON Web Token (JWT) in their requests.
+     * @example
+     * ```js
+     * {
+     *   auth: {
+     *     jwt: {
+     *       audiences: ["https://api.example.com"],
+     *       issuer: "https://issuer.com/",
+     *       scopes: ["read:profile", "write:profile"],
+     *       identitySource: "$request.header.AccessToken",
+     *     }
+     *   }
+     * }
+     * ```
+     *
+     * And if you are using an AWS Cognito User Pool as the identity provider like this.
+     * ```js
+     * const userPool = new aws.cognito.UserPool(...);
+     * const userPoolClient = new aws.cognito.UserPoolClient(...);
+     * ```
+     *
+     * You can use configure the User Pool as the identity provider like this.
+     * ```js
+     * {
+     *   auth: {
+     *     jwt: {
+     *       audiences: [userPoolClient.id],
+     *       issuer: $interpolate`https://cognito-idp.${aws.getArnOutput(userPool).region}.amazonaws.com/${userPool.id}`,
+     *     }
+     *   }
+     * }
+     * ```
+     */
+    jwt?: Input<{
+      /**
+       * Base domain of the identity provider that issues JSON Web Tokens.
+       */
+      issuer: Input<string>;
+      /**
+       * List of the intended recipients of the JWT. A valid JWT must provide an "aud" that matches at least one entry in this list.
+       */
+      audiences: Input<Input<string>[]>;
+      /**
+       * Defines the permissions or access levels that the JWT grants. If the JWT does not have the required scope, the request is rejected.
+       * @default No scopes are required
+       */
+      scopes?: Input<Input<string>[]>;
+      /**
+       * Specifies where to extract the JSON Web Token (JWT) from inbound requests.
+       * @default `"$request.header.Authorization"`
+       */
+      identitySource?: Input<string>;
+    }>;
   }>;
   /**
    * [Transform](/docs/components#transform) how this component creates its underlying
@@ -190,6 +244,10 @@ export interface ApiGatewayV2RouteArgs {
      * Transform the API Gateway HTTP API route resource.
      */
     route?: Transform<aws.apigatewayv2.RouteArgs>;
+    /**
+     * Transform the API Gateway authorizer resource.
+     */
+    authorizer?: Transform<aws.apigatewayv2.AuthorizerArgs>;
   };
 }
 
@@ -225,6 +283,7 @@ export class ApiGatewayV2 extends Component implements Link.Linkable {
   private api: aws.apigatewayv2.Api;
   private apigDomain?: aws.apigatewayv2.DomainName;
   private apiMapping?: Output<aws.apigatewayv2.ApiMapping>;
+  private authorizers: Record<string, aws.apigatewayv2.Authorizer> = {};
 
   constructor(
     name: string,
@@ -521,7 +580,7 @@ export class ApiGatewayV2 extends Component implements Link.Linkable {
   ) {
     const parent = this;
     const parentName = this.constructorName;
-    const routeKey = this.parseRoute(route);
+    const routeKey = parseRoute();
 
     // Build route name
     const id = sanitizeToPascalCase(hashStringToPrettyString(routeKey, 4));
@@ -554,52 +613,102 @@ export class ApiGatewayV2 extends Component implements Link.Linkable {
       }),
       { parent, dependsOn: [permission] },
     );
-    new aws.apigatewayv2.Route(
-      `${parentName}Route${id}`,
-      transform(args.transform?.route, {
-        apiId: this.api.id,
-        routeKey,
-        target: interpolate`integrations/${integration.id}`,
-        authorizationType: output(args.auth).apply((auth) =>
-          auth?.iam ? "AWS_IAM" : "NONE",
+    const authArgs = createAuthorizer();
+
+    authArgs.apply(
+      (authArgs) =>
+        new aws.apigatewayv2.Route(
+          `${parentName}Route${id}`,
+          transform(args.transform?.route, {
+            apiId: this.api.id,
+            routeKey,
+            target: interpolate`integrations/${integration.id}`,
+            ...authArgs,
+          }),
+          { parent },
         ),
-      }),
-      { parent },
     );
     return this;
-  }
 
-  private parseRoute(route: string) {
-    if (route.toLowerCase() === "$default") return "$default";
+    function parseRoute() {
+      if (route.toLowerCase() === "$default") return "$default";
 
-    const parts = route.split(" ");
-    if (parts.length !== 2) {
-      throw new VisibleError(
-        `Invalid route ${route}. A route must be in the format "METHOD /path".`,
-      );
+      const parts = route.split(" ");
+      if (parts.length !== 2) {
+        throw new VisibleError(
+          `Invalid route ${route}. A route must be in the format "METHOD /path".`,
+        );
+      }
+      const [methodRaw, path] = route.split(" ");
+      const method = methodRaw.toUpperCase();
+      if (
+        ![
+          "ANY",
+          "DELETE",
+          "GET",
+          "HEAD",
+          "OPTIONS",
+          "PATCH",
+          "POST",
+          "PUT",
+        ].includes(method)
+      )
+        throw new VisibleError(`Invalid method ${methodRaw} in route ${route}`);
+
+      if (!path.startsWith("/"))
+        throw new VisibleError(
+          `Invalid path ${path} in route ${route}. Path must start with "/".`,
+        );
+
+      return `${method} ${path}`;
     }
-    const [methodRaw, path] = route.split(" ");
-    const method = methodRaw.toUpperCase();
-    if (
-      ![
-        "ANY",
-        "DELETE",
-        "GET",
-        "HEAD",
-        "OPTIONS",
-        "PATCH",
-        "POST",
-        "PUT",
-      ].includes(method)
-    )
-      throw new VisibleError(`Invalid method ${methodRaw} in route ${route}`);
 
-    if (!path.startsWith("/"))
-      throw new VisibleError(
-        `Invalid path ${path} in route ${route}. Path must start with "/".`,
-      );
+    function createAuthorizer() {
+      return output(args.auth).apply((auth) => {
+        if (auth?.iam) return { authorizationType: "AWS_IAM" };
+        if (auth?.jwt) {
+          // Build authorizer name
+          const id = sanitizeToPascalCase(
+            hashStringToPrettyString(
+              [
+                auth.jwt.issuer,
+                ...auth.jwt.audiences.sort(),
+                auth.jwt.identitySource ?? "",
+              ].join(""),
+              4,
+            ),
+          );
 
-    return `${method} ${path}`;
+          const authorizer =
+            parent.authorizers[id] ??
+            new aws.apigatewayv2.Authorizer(
+              `${parentName}Authorizer${id}`,
+              transform(args.transform?.authorizer, {
+                apiId: parent.api.id,
+                authorizerType: "JWT",
+                identitySources: [
+                  auth.jwt.identitySource ?? "$request.header.Authorization",
+                ],
+                jwtConfiguration: {
+                  audiences: auth.jwt.audiences,
+                  issuer: auth.jwt.issuer,
+                },
+              }),
+              { parent },
+            );
+          parent.authorizers[id] = authorizer;
+
+          return {
+            authorizationType: "JWT",
+            authorizationScopes: auth.jwt.scopes,
+            authorizerId: authorizer.id,
+          };
+        }
+        return {
+          authorizationType: "NONE",
+        };
+      });
+    }
   }
 
   /** @internal */
