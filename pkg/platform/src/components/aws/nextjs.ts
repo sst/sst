@@ -36,7 +36,7 @@ import { Cache } from "./providers/cache.js";
 import { Queue } from "./queue.js";
 
 const LAYER_VERSION = "2";
-const DEFAULT_OPEN_NEXT_VERSION = "3.0.0-rc.5";
+const DEFAULT_OPEN_NEXT_VERSION = "3.0.0-rc.8";
 const DEFAULT_CACHE_POLICY_ALLOWED_HEADERS = [
   "accept",
   "x-prerender-revalidate",
@@ -185,7 +185,7 @@ export interface NextjsArgs extends SsrSiteArgs {
    * [Link resources](/docs/linking/) to your Next.js app. This will:
    *
    * 1. Grant the permissions needed to access the resources.
-   * 2. Allow you to access it in your site using the [Node client](/docs/reference/client/).
+   * 2. Allow you to access it in your site using the [SDK](/docs/reference/sdk/).
    *
    * @example
    *
@@ -193,7 +193,7 @@ export interface NextjsArgs extends SsrSiteArgs {
    *
    * ```js
    * {
-   *   link: [myBucket, stripeKey]
+   *   link: [bucket, stripeKey]
    * }
    * ```
    */
@@ -244,7 +244,7 @@ export interface NextjsArgs extends SsrSiteArgs {
    * 2. Locally while running `sst dev next dev`.
    *
    * :::tip
-   * You can also `link` resources to your Next.js app and access them in a type-safe way with the [Node client](/docs/reference/client/). We recommend linking since it's more secure.
+   * You can also `link` resources to your Next.js app and access them in a type-safe way with the [SDK](/docs/reference/sdk/). We recommend linking since it's more secure.
    * :::
    *
    * Recall that in Next.js, you need to prefix your environment variables with `NEXT_PUBLIC_` to access these in the browser. [Read more here](https://nextjs.org/docs/pages/building-your-application/configuring/environment-variables#bundling-environment-variables-for-the-browser).
@@ -374,7 +374,7 @@ export interface NextjsArgs extends SsrSiteArgs {
 }
 
 /**
- * The `Nextjs` component lets you deploy Next.js apps on AWS. It uses
+ * The `Nextjs` component lets you deploy [Next.js](https://nextjs.org) apps on AWS. It uses
  * [OpenNext](https://open-next.js.org) to build your Next.js app, and transforms the build
  * output to a format that can be deployed to AWS.
  *
@@ -427,14 +427,14 @@ export interface NextjsArgs extends SsrSiteArgs {
  * to the resources and allow you to access it in your app.
  *
  * ```ts {4}
- * const myBucket = new sst.aws.Bucket("MyBucket");
+ * const bucket = new sst.aws.Bucket("MyBucket");
  *
  * new sst.aws.Nextjs("MyWeb", {
- *   link: [myBucket]
+ *   link: [bucket]
  * });
  * ```
  *
- * You can use the [Node client](/docs/reference/client/) to access the linked resources
+ * You can use the [SDK](/docs/reference/sdk/) to access the linked resources
  * in your Next.js app.
  *
  * ```ts title="app/page.tsx"
@@ -467,8 +467,8 @@ export class Nextjs extends Component implements Link.Linkable {
     const parent = this;
     const logging = normalizeLogging();
     const buildCommand = normalizeBuildCommand();
-    const { sitePath, region } = prepare(args, opts);
-    const { access, bucket } = createBucket(parent, name, args);
+    const { sitePath, partition, region } = prepare(args, opts);
+    const { access, bucket } = createBucket(parent, name, partition, args);
     const outputPath = buildApp(name, args, sitePath, buildCommand);
     const {
       openNextOutput,
@@ -504,12 +504,14 @@ export class Nextjs extends Component implements Link.Linkable {
     this.assets = bucket;
     this.cdn = distribution;
     this.server = serverFunction;
-    Hint.register(
-      this.urn,
-      all([this.cdn.domainUrl, this.cdn.url]).apply(
-        ([domainUrl, url]) => domainUrl ?? url,
-      ),
-    );
+    if (!$dev) {
+      Hint.register(
+        this.urn,
+        all([this.cdn.domainUrl, this.cdn.url]).apply(
+          ([domainUrl, url]) => domainUrl ?? url,
+        ),
+      );
+    }
     this.registerOutputs({
       _metadata: {
         mode: $dev ? "placeholder" : "deployed",
@@ -763,7 +765,7 @@ export class Nextjs extends Component implements Link.Linkable {
         buildId,
         openNextOutput,
         args?.imageOptimization,
-        bucket.name,
+        [bucket.arn, bucket.name],
         revalidationQueue.apply((q) => ({ url: q?.url, arn: q?.arn })),
         revalidationTable.apply((t) => ({ name: t?.name, arn: t?.arn })),
         useServerFunctionPerRouteLoggingInjection(),
@@ -773,7 +775,7 @@ export class Nextjs extends Component implements Link.Linkable {
           buildId,
           openNextOutput,
           imageOptimization,
-          bucketName,
+          [bucketArn, bucketName],
           { url: revalidationQueueUrl, arn: revalidationQueueArn },
           { name: revalidationTableName, arn: revalidationTableArn },
           serverFunctionPerRouteLoggingInjection,
@@ -791,7 +793,12 @@ export class Nextjs extends Component implements Link.Linkable {
                 CACHE_DYNAMO_TABLE: revalidationTableName,
               }),
             },
-            policies: [
+            permissions: [
+              // access to the cache data
+              {
+                actions: ["s3:GetObject", "s3:PutObject"],
+                resources: [`${bucketArn}/*`],
+              },
               ...(revalidationQueueArn
                 ? [
                     {
@@ -889,7 +896,7 @@ export class Nextjs extends Component implements Link.Linkable {
                           description: `${name} image optimizer`,
                           handler: value.handler,
                           bundle: path.join(outputPath, value.bundle),
-                          runtime: "nodejs18.x",
+                          runtime: "nodejs20.x",
                           architecture: "arm64",
                           environment: {
                             BUCKET_NAME: bucketName,
@@ -968,7 +975,7 @@ export class Nextjs extends Component implements Link.Linkable {
               description: `${name} ISR revalidator`,
               handler: revalidationFunction.handler,
               bundle: path.join(outputPath, revalidationFunction.bundle),
-              runtime: "nodejs18.x",
+              runtime: "nodejs20.x",
               timeout: "30 seconds",
               permissions: [
                 {
@@ -982,7 +989,7 @@ export class Nextjs extends Component implements Link.Linkable {
                   resources: [queue.arn],
                 },
               ],
-              liveDev: false,
+              live: false,
               _ignoreCodeChanges: $dev,
             },
             {
@@ -1062,7 +1069,7 @@ export class Nextjs extends Component implements Link.Linkable {
                 outputPath,
                 openNextOutput.additionalProps.initializationFunction.bundle,
               ),
-              runtime: "nodejs18.x",
+              runtime: "nodejs20.x",
               timeout: "900 seconds",
               memory: `${Math.min(
                 10240,
@@ -1081,8 +1088,9 @@ export class Nextjs extends Component implements Link.Linkable {
               environment: {
                 CACHE_DYNAMO_TABLE: revalidationTable!.name,
               },
-              liveDev: false,
+              live: false,
               _ignoreCodeChanges: $dev,
+              _skipMetadata: true,
             },
             { parent },
           );

@@ -16,18 +16,13 @@ var files embed.FS
 var Templates embed.FS
 
 func CopyTo(srcDir, destDir string) error {
-	// Create the destination directory if it doesn't exist
 	if err := os.MkdirAll(destDir, 0755); err != nil {
 		return err
 	}
-
-	// List all files and directories in the embedded FS
 	entries, err := files.ReadDir(srcDir)
 	if err != nil {
 		return err
 	}
-
-	// Loop through each entry (file or directory)
 	for _, entry := range entries {
 		srcPath := filepath.Join(srcDir, entry.Name())
 		destPath := filepath.Join(destDir, entry.Name())

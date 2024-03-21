@@ -3,8 +3,8 @@ package main
 import (
 	"context"
 	"encoding/json"
-	"flag"
 	"fmt"
+	flag "github.com/spf13/pflag"
 	"io"
 	"log/slog"
 	"os"
@@ -19,13 +19,13 @@ import (
 	"github.com/briandowns/spinner"
 	"github.com/fatih/color"
 	"github.com/joho/godotenv"
-	"github.com/manifoldco/promptui"
 	"github.com/sst/ion/cmd/sst/ui"
 	"github.com/sst/ion/internal/util"
 	"github.com/sst/ion/pkg/global"
 	"github.com/sst/ion/pkg/project"
 	"github.com/sst/ion/pkg/project/provider"
 	"github.com/sst/ion/pkg/server"
+	"github.com/sst/ion/pkg/telemetry"
 )
 
 var version = "dev"
@@ -39,20 +39,33 @@ var logFile = (func() *os.File {
 })()
 
 func main() {
+	telemetry.SetVersion(version)
+	defer telemetry.Close()
+	telemetry.Track("cli.start", map[string]interface{}{
+		"args": os.Args[1:],
+	})
 	err := run()
 	if err != nil {
+		err := TransformError(err)
+		errorMessage := err.Error()
+		if len(errorMessage) > 255 {
+			errorMessage = errorMessage[:255]
+		}
+		telemetry.Track("cli.error", map[string]interface{}{
+			"error": errorMessage,
+		})
 		slog.Error("exited with error", "err", err)
 		if readableErr, ok := err.(*util.ReadableError); ok {
 			msg := readableErr.Error()
 			if msg != "" {
-				fmt.Println(readableErr.Error())
+				ui.Error(readableErr.Error())
 			}
 		} else {
-			fmt.Println("Unexpected error occurred. Please check the logs for more details.")
-			fmt.Println(err.Error())
+			ui.Error("Unexpected error occurred. Please check the logs for more details.")
 		}
 		os.Exit(1)
 	}
+	telemetry.Track("cli.success", map[string]interface{}{})
 }
 
 func run() error {
@@ -66,57 +79,34 @@ func run() error {
 		cancel()
 	}()
 
-	nonFlags := []string{"sst"}
-	flags := []string{}
-	for index, arg := range os.Args {
-		if strings.HasPrefix(arg, "-") {
-			flags = append(flags, arg)
-			continue
-		}
-		if index != 0 {
-			nonFlags = append(nonFlags, arg)
-		}
-	}
-	rearranged := append(flags, nonFlags...)
-	os.Args = append([]string{os.Args[0]}, rearranged...)
-
 	parsedFlags := map[string]interface{}{}
+	Root.registerFlags(parsedFlags)
+	flag.CommandLine.Init("sst", flag.ContinueOnError)
+	cliParseError := flag.CommandLine.Parse(os.Args[1:])
+
 	positionals := []string{}
-	cmds := CommandPath{}
-	for i, arg := range nonFlags {
+	cmds := CommandPath{
+		Root,
+	}
+	for i, arg := range flag.Args() {
 		var cmd *Command
-		if i == 0 {
-			cmd = &Root
-		} else {
-			last := cmds[len(cmds)-1]
-			if len(last.Children) == 0 {
-				positionals = nonFlags[i:]
+
+		last := cmds[len(cmds)-1]
+		if len(last.Children) == 0 {
+			positionals = flag.Args()[i:]
+			break
+		}
+		for _, c := range last.Children {
+			if c.Name == arg {
+				cmd = c
 				break
 			}
-			for _, c := range last.Children {
-				if c.Name == arg {
-					cmd = c
-					break
-				}
-			}
-			if cmd == nil {
-				break
-			}
+		}
+		if cmd == nil {
+			break
 		}
 		cmds = append(cmds, *cmd)
-
-		for _, f := range cmd.Flags {
-			if f.Type == "string" {
-				parsedFlags[f.Name] = flag.String(f.Name, "", "")
-			}
-
-			if f.Type == "bool" {
-				parsedFlags[f.Name] = flag.Bool(f.Name, false, "")
-			}
-		}
 	}
-	flag.Parse()
-
 	cli := &Cli{
 		flags:     parsedFlags,
 		arguments: positionals,
@@ -124,8 +114,10 @@ func run() error {
 		Context:   ctx,
 		cancel:    cancel,
 	}
-
 	configureLog(cli)
+	if cliParseError != nil {
+		return cli.PrintHelp()
+	}
 
 	spin := spinner.New(spinner.CharSets[14], 100*time.Millisecond)
 	spin.Suffix = "  First run, setting up environment..."
@@ -145,13 +137,15 @@ func run() error {
 		}
 	}
 
-	if global.NeedsPlugins() {
-		spin.Start()
-		err := global.InstallPlugins()
-		if err != nil {
-			return err
+	/*
+		if global.NeedsPlugins() {
+			spin.Start()
+			err := global.InstallPlugins()
+			if err != nil {
+				return err
+			}
 		}
-	}
+	*/
 	spin.Stop()
 
 	active := cmds[len(cmds)-1]
@@ -174,29 +168,29 @@ var Root = Command{
 	Name: "sst",
 	Description: Description{
 		Short: "deploy anything",
-    Long: `
-The CLI helps you manage your SST apps.
-
-`+"```bash"+` title="Install"
-curl -fsSL https://ion.sst.dev/install.sh | bash
-`+"```"+`
-
-:::note
-The CLI currently supports macOS, Linux, and WSL. Windows support is coming soon.
-:::
-
-Once installed you can run the commands using.
-
-`+"```bash"+`
-sst [command]
-`+"```"+`
-
-The CLI takes a few global flags. For example, the deploy command takes the `+"`--stage`"+` flag
-
-`+"```bash"+`
-sst deploy --stage=production
-`+"```"+`
-`,
+		Long: strings.Join([]string{
+			"The CLI helps you manage your SST apps.",
+			"",
+			"```bash title=\"Install\"",
+			"curl -fsSL https://ion.sst.dev/install | bash",
+			"```",
+			"",
+			":::note",
+			"The CLI currently supports macOS, Linux, and WSL. Windows support is coming soon.",
+			":::",
+			"",
+			"Once installed you can run the commands using.",
+			"",
+			"```bash",
+			"sst [command]",
+			"```",
+			"",
+			"The CLI takes a few global flags. For example, the deploy command takes the `--stage` flag",
+			"",
+			"```bash",
+			"sst deploy --stage=production",
+			"```",
+		}, "\n"),
 	},
 	Flags: []Flag{
 		{
@@ -204,23 +198,23 @@ sst deploy --stage=production
 			Type: "string",
 			Description: Description{
 				Short: "The stage to deploy to",
-				Long: `
-The stage the CLI is running on.
-
-`+"```bash"+` frame="none"
-sst [command] --stage=production
-`+"```"+`
-
-If the stage is not passed in, then the CLI will:
-
-1. Uses the username on the local machine.
-   - If the username is `+"`root`"+`, `+"`admin`"+`, `+"`prod`"+`, `+"`dev`"+`, `+"`production`"+`, then it will prompt for a stage name.
-2. Stores this in the `+"`.sst/stage`"+` file and reads from it in the future.
-
-:::tip
-The stage that is stored in the `+"`.sst/stage`"+` file is called your personal stage.
-:::
-`,
+				Long: strings.Join([]string{
+					"Set the stage the CLI is running on.",
+					"",
+					"```bash frame=\"none\"",
+					"sst [command] --stage=production",
+					"```",
+					"",
+					"If the stage is not passed in, then the CLI will:",
+					"",
+					"1. Uses the username on the local machine.",
+					"   - If the username is `root`, `admin`, `prod`, `dev`, `production`, then it will prompt for a stage name.",
+					"2. Stores this in the `.sst/stage` file and reads from it in the future.",
+					"",
+					":::tip",
+					"The stage that is stored in the `.sst/stage` file is called your personal stage.",
+					":::",
+				}, "\n"),
 			},
 		},
 		{
@@ -228,13 +222,15 @@ The stage that is stored in the `+"`.sst/stage`"+` file is called your personal 
 			Type: "bool",
 			Description: Description{
 				Short: "Enable verbose logging",
-				Long: `
-Enables verbose logging for the CLI output.
-
-`+"```bash"+` frame="none"
-sst [command] --verbose
-`+"```"+`
-`,
+				Long: strings.Join([]string{
+					"",
+					"Enables verbose logging for the CLI output.",
+					"",
+					"```bash",
+					"sst [command] --verbose",
+					"```",
+					"",
+				}, "\n"),
 			},
 		},
 		{
@@ -242,32 +238,753 @@ sst [command] --verbose
 			Type: "bool",
 			Description: Description{
 				Short: "Print help",
-				Long: `
-Prints help for the given command.
-
-`+"```sh"+` frame="none"
-sst [command] --help
-`+"```"+`
-
-Or for the global help.
-
-`+"```sh"+` frame="none"
-sst --help
-`+"```"+`
-`,
+				Long: strings.Join([]string{
+					"Prints help for the given command.",
+					"",
+					"```sh frame=\"none\"",
+					"sst [command] --help",
+					"```",
+					"",
+					"Or for the global help.",
+					"",
+					"```sh frame=\"none\"",
+					"sst --help",
+					"```",
+				}, "\n"),
 			},
 		},
 	},
 	Children: []*Command{
 		{
-			Name: "version",
+			Name: "init",
 			Description: Description{
-				Short: "Print the version",
-				Long: `Prints the current version of the CLI.`,
+				Short: "Initialize a new project",
+				Long: strings.Join([]string{
+					"Initialize a new project in the current directory. This will create a `sst.config.ts` and `sst install` your providers.",
+					"",
+					"If this is run in a Next.js, Remix, or Astro project, it'll init SST in drop-in mode.",
+				}, "\n"),
+			},
+			Run: CmdInit,
+		},
+		{
+			Name: "dev",
+			Description: Description{
+				Short: "Run in development mode",
+				Long: strings.Join([]string{
+					"Run your app in development mode. Optionally, pass in a command to start your frontend as well.",
+					"",
+					"```bash frame=\"none\"",
+					"sst dev",
+					"```",
+					"",
+					"You can also pass in a command to start your frontend with it.",
+					"",
+					"```bash frame=\"none\"",
+					"sst dev next dev",
+					"```",
+					"",
+					"To pass in a flag to your command, wrap it in quotes.",
+					"",
+					"```bash frame=\"none\"",
+					"sst dev \"next dev --turbo\"",
+					"```",
+					"",
+					"Dev mode does a few things:",
+					"",
+					"1. Starts a local server",
+					"2. Watches your app config and re-deploys your changes",
+					"3. Run your functions [Live](/docs/live/)",
+					"4. If you pass in a `command`, it'll:",
+					"   - Load your [linked resources](/docs/linking) in the environment",
+					"   - And run the command",
+					"",
+					":::note",
+					"If you run `sst dev` with a command, it will not print your function logs.",
+					":::",
+					"",
+					"If `sst dev` starts your frontend, it won't print logs from your SST app. We do this to prevent your logs from being too noisy. To view your logs, you can run `sst dev` in a separate terminal.",
+					"",
+					":::tip",
+					"You can start as many instances of `sst dev` in your app as you want.",
+					":::",
+					"",
+					"Starting multiple instances of `sst dev` in the same project only starts a single _server_. Meaning that the second instance connects to the existing one.",
+					"",
+					"This is different from SST v2, in that you needed to run `sst dev` and `sst bind` for your frontend.",
+				}, "\n"),
+			},
+			Args: []Argument{
+				{
+					Name: "command",
+					Description: Description{
+						Short: "The command to run",
+					},
+				},
+			},
+			Examples: []Example{
+				{
+					Content: "sst dev",
+					Description: Description{
+						Short: "",
+					},
+				},
+				{
+					Content: "sst dev next dev",
+					Description: Description{
+						Short: "Start dev mode for SST and Next.js",
+					},
+				},
+				{
+					Content: "sst dev \"next dev --turbo\"",
+					Description: Description{
+						Short: "When passing flags wrap command in quotes",
+					},
+				},
+			},
+			Run: CmdDev,
+		},
+		{
+			Name: "deploy",
+			Description: Description{
+				Short: "Deploy your application",
+				Long: strings.Join([]string{
+					"Deploy your application. By default, it deploys to your personal stage.",
+					"",
+					"Optionally, deploy your app to a specific stage.",
+					"",
+					"```bash frame=\"none\"",
+					"sst deploy --stage=production",
+					"```",
+				}, "\n"),
+			},
+			Examples: []Example{
+				{
+					Content: "sst deploy --stage=production",
+					Description: Description{
+						Short: "Deploy to production",
+					},
+				},
 			},
 			Run: func(cli *Cli) error {
-				fmt.Printf("ion.%s\n", version)
+				p, err := initProject(cli)
+				if err != nil {
+					return err
+				}
+				defer p.Cleanup()
+
+				ui := ui.New(ui.ProgressModeDeploy)
+				defer ui.Destroy()
+				ui.Header(version, p.App().Name, p.App().Stage)
+				err = p.Stack.Run(cli.Context, &project.StackInput{
+					Command: "up",
+					OnEvent: ui.Trigger,
+				})
+				if err != nil {
+					return err
+				}
 				return nil
+			},
+		},
+		{
+			Name: "add",
+			Description: Description{
+				Short: "Add a new provider",
+				Long: strings.Join([]string{
+					"Adds a provider to your `sst.config.ts` and installs it. For example.",
+					"",
+					"```bash frame=\"none\"",
+					"sst add aws",
+					"```",
+					"",
+					"Adds the following to your config.",
+					"",
+					"```ts title=\"sst.config.ts\"",
+					"{",
+					"  providers: {",
+					"    aws: true",
+					"  }",
+					"}",
+					"```",
+					"",
+					":::tip",
+					"You can get the name of a provider from the URL of the provider in the [Pulumi Registry](https://www.pulumi.com/registry/).",
+					":::",
+					"",
+					"Running `sst add aws` above is the same as adding the provider to your config and running `sst install`.",
+				}, "\n"),
+			},
+			Args: []Argument{
+				{
+					Name:     "provider",
+					Required: true,
+					Description: Description{
+						Short: "The provider to add",
+						Long:  "The provider to add.",
+					},
+				},
+			},
+			Run: func(cli *Cli) error {
+				pkg := cli.Positional(0)
+				fmt.Println("Adding provider", pkg+"...")
+				cfgPath, err := project.Discover()
+				if err != nil {
+					return err
+				}
+				stage, err := getStage(cli, cfgPath)
+				if err != nil {
+					return err
+				}
+				p, err := project.New(&project.ProjectConfig{
+					Version: version,
+					Config:  cfgPath,
+					Stage:   stage,
+				})
+				if err != nil {
+					return err
+				}
+				if !p.CheckPlatform(version) {
+					err := p.CopyPlatform(version)
+					if err != nil {
+						return err
+					}
+				}
+
+				err = p.Add(pkg)
+				if err != nil {
+					return err
+				}
+				p, err = project.New(&project.ProjectConfig{
+					Version: version,
+					Config:  cfgPath,
+					Stage:   stage,
+				})
+				if err != nil {
+					return err
+				}
+				err = p.Install()
+				if err != nil {
+					return err
+				}
+				return nil
+			},
+		},
+		{
+			Name: "install",
+			Description: Description{
+				Short: "Install all the providers",
+				Long: strings.Join([]string{
+					"Installs the providers in your `sst.config.ts`. You'll need this command when:",
+					"",
+					"1. You add a new provider to `providers` or `home` in your config.",
+					"2. Or, when you want to install new providers after you `git pull` some changes.",
+					"",
+					":::tip",
+					"The `sst install` command is similar to `npm install`.",
+					":::",
+					"",
+					"Behind the scenes it downloads the packages for the providers and adds the types to your project.",
+				}, "\n"),
+			},
+			Run: func(cli *Cli) error {
+				cfgPath, err := project.Discover()
+				if err != nil {
+					return err
+				}
+
+				stage, err := getStage(cli, cfgPath)
+				if err != nil {
+					return err
+				}
+
+				p, err := project.New(&project.ProjectConfig{
+					Version: version,
+					Config:  cfgPath,
+					Stage:   stage,
+				})
+				if err != nil {
+					return err
+				}
+
+				spin := spinner.New(spinner.CharSets[14], 100*time.Millisecond)
+				defer spin.Stop()
+				spin.Suffix = "  Installing providers..."
+				spin.Start()
+				if !p.CheckPlatform(version) {
+					err := p.CopyPlatform(version)
+					if err != nil {
+						return err
+					}
+				}
+
+				err = p.Install()
+				if err != nil {
+					return err
+				}
+				spin.Stop()
+				ui.Success("Installed providers")
+				return nil
+			},
+		},
+		{
+			Name: "secret",
+			Description: Description{
+				Short: "Manage secrets",
+				Long:  "Manage the secrets in your app defined with `sst.Secret`.",
+			},
+			Children: []*Command{
+				{
+					Name: "set",
+					Description: Description{
+						Short: "Set a secret",
+						Long: strings.Join([]string{
+							"Set the value of the secret.",
+							"",
+							"The secrets are encrypted and stored in an S3 Bucket in your AWS account.",
+							"",
+							"For example, set the `sst.Secret` called `StripeSecret` to `123456789`.",
+							"",
+							"```bash frame=\"none\"",
+							"sst secret set StripeSecret dev_123456789",
+							"```",
+							"",
+							"Optionally, set the secret in a specific stage.",
+							"",
+							"```bash frame=\"none\"",
+							"sst secret set StripeSecret prod_123456789 --stage=production",
+							"```",
+						}, "\n"),
+					},
+					Args: []Argument{
+						{
+							Name:     "name",
+							Required: true,
+							Description: Description{
+								Short: "The name of the secret",
+								Long:  "The name of the secret.",
+							},
+						},
+						{
+							Name:     "value",
+							Required: true,
+							Description: Description{
+								Short: "The value of the secret",
+								Long:  "The value of the secret.",
+							},
+						},
+					},
+					Examples: []Example{
+						{
+							Content: "sst secret set StripeSecret 123456789",
+							Description: Description{
+								Short: "Set the StripeSecret to 123456789",
+							},
+						},
+						{
+							Content: "sst secret set StripeSecret productionsecret --stage=production",
+							Description: Description{
+								Short: "Set the StripeSecret in production",
+							},
+						},
+					},
+					Run: func(cli *Cli) error {
+						key := cli.Positional(0)
+						value := cli.Positional(1)
+						p, err := initProject(cli)
+						if err != nil {
+							return err
+						}
+						defer p.Cleanup()
+						backend := p.Backend()
+						secrets, err := provider.GetSecrets(backend, p.App().Name, p.App().Stage)
+						if err != nil {
+							return util.NewReadableError(err, "Could not get secrets")
+						}
+						secrets[key] = value
+						err = provider.PutSecrets(backend, p.App().Name, p.App().Stage, secrets)
+						if err != nil {
+							return util.NewReadableError(err, "Could not set secret")
+						}
+						ui.Success(fmt.Sprintf("Set \"%s\" for stage \"%s\"", key, p.App().Stage))
+						return nil
+					},
+				},
+				{
+					Name: "remove",
+					Description: Description{
+						Short: "Remove a secret",
+						Long: strings.Join([]string{
+							"Remove a secret.",
+							"",
+							"For example, remove the `sst.Secret` called `StripeSecret`.",
+							"",
+							"```bash frame=\"none\" frame=\"none\"",
+							"sst secret remove StripeSecret",
+							"```",
+							"",
+							"Optionally, remove a secret in a specific stage.",
+							"",
+							"```bash frame=\"none\" frame=\"none\"",
+							"sst secret remove StripeSecret --stage=production",
+							"```",
+						}, "\n"),
+					},
+					Args: []Argument{
+						{
+							Name:     "name",
+							Required: true,
+							Description: Description{
+								Short: "The name of the secret",
+								Long:  "The name of the secret.",
+							},
+						},
+					},
+					Examples: []Example{
+						{
+							Content: "sst secret remove StripeSecret",
+							Description: Description{
+								Short: "Remove the StripeSecret",
+							},
+						},
+						{
+							Content: "sst secret remove StripeSecret --stage=production",
+							Description: Description{
+								Short: "Remove the StripeSecret in production",
+							},
+						},
+					},
+					Run: func(cli *Cli) error {
+						key := cli.Positional(0)
+						p, err := initProject(cli)
+						if err != nil {
+							return err
+						}
+						defer p.Cleanup()
+						backend := p.Backend()
+						secrets, err := provider.GetSecrets(backend, p.App().Name, p.App().Stage)
+						if err != nil {
+							return util.NewReadableError(err, "Could not get secrets")
+						}
+
+						// check if the secret exists
+						if _, ok := secrets[key]; !ok {
+							return util.NewReadableError(nil, fmt.Sprintf("Secret \"%s\" does not exist for stage \"%s\"", key, p.App().Stage))
+						}
+
+						delete(secrets, key)
+						err = provider.PutSecrets(backend, p.App().Name, p.App().Stage, secrets)
+						if err != nil {
+							return util.NewReadableError(err, "Could not set secret")
+						}
+						ui.Success(fmt.Sprintf("Removed \"%s\" for stage \"%s\"", key, p.App().Stage))
+						return nil
+					},
+				},
+				{
+					Name: "list",
+					Description: Description{
+						Short: "List all secrets",
+						Long: strings.Join([]string{
+							"Lists all the secrets.",
+							"",
+							"Optionally, list the secrets in a specific stage.",
+							"",
+							"```bash frame=\"none\" frame=\"none\"",
+							"sst secret list --stage=production",
+							"```",
+						}, "\n"),
+					},
+					Examples: []Example{
+						{
+							Content: "sst secret list --stage=production",
+							Description: Description{
+								Short: "List the secrets in production",
+							},
+						},
+					},
+					Run: func(cli *Cli) error {
+						p, err := initProject(cli)
+						if err != nil {
+							return err
+						}
+						defer p.Cleanup()
+
+						backend := p.Backend()
+						secrets, err := provider.GetSecrets(backend, p.App().Name, p.App().Stage)
+						if err != nil {
+							return util.NewReadableError(err, "Could not get secrets")
+						}
+						for key, value := range secrets {
+							fmt.Println(key, "=", value)
+						}
+						return nil
+					},
+				},
+			},
+		},
+		{
+			Name: "shell",
+			Args: []Argument{
+				{
+					Name: "command",
+					Description: Description{
+						Short: "A command to run",
+						Long:  "A command to run.",
+					},
+				},
+			},
+			Description: Description{
+				Short: "Run a command with linked resources",
+				Long: strings.Join([]string{
+					"Run a command with all the resources linked to the environment.",
+					"",
+					"For example, you can run a Node script and use the [JS SDK](/docs/reference/sdk/) to access *all* the linked resources in your app.",
+					"",
+					"```js title=\"sst.config.ts\"",
+					"const myMainBucket = new sst.aws.Bucket(\"MyMainBucket\");",
+					"const myAdminBucket = new sst.aws.Bucket(\"MyAdminBucket\");",
+					"",
+					"new sst.aws.Nextjs(\"MyMainWeb\", {",
+					"  link: [myMainBucket]",
+					"});",
+					"",
+					"new sst.aws.Nextjs(\"MyAdminWeb\", {",
+					"  link: [myAdminBucket]",
+					"});",
+					"```",
+					"",
+					"Now if you run a script.",
+					"",
+					"```bash frame=\"none\" frame=\"none\"",
+					"sst shell node my-script.js",
+					"```",
+					"",
+					"It'll have access to all the buckets from above.",
+					"",
+					"```js title=\"my-script.js\"",
+					"import { Resource } from \"sst\";",
+					"",
+					"console.log(Resource.MyMainBucket.name, Resource.MyAdminBucket.name);",
+					"```",
+					"",
+					"If no command is passed in, it opens a shell session with the linked resources.",
+					"",
+					"```bash frame=\"none\" frame=\"none\"",
+					"sst shell",
+					"```",
+					"",
+					"This is useful if you want to run multiple commands, all while accessing the linked resources.",
+				}, "\n"),
+			},
+			Examples: []Example{
+				{
+					Content: "sst shell",
+					Description: Description{
+						Short: "Open a shell session",
+					},
+				},
+			},
+			Run: func(cli *Cli) error {
+				p, err := initProject(cli)
+				if err != nil {
+					return err
+				}
+				defer p.Cleanup()
+
+				backend := p.Backend()
+				links, err := provider.GetLinks(backend, p.App().Name, p.App().Stage)
+				if err != nil {
+					return err
+				}
+				var args []string
+				for _, arg := range cli.arguments {
+					args = append(args, strings.Fields(arg)...)
+				}
+				if len(args) == 0 {
+					args = append(args, "sh")
+				}
+				cmd := exec.Command(
+					args[0],
+					args[1:]...,
+				)
+				cmd.Env = append(cmd.Env,
+					os.Environ()...,
+				)
+				cmd.Env = append(cmd.Env,
+					fmt.Sprintf("PS1=%s/%s> ", p.App().Name, p.App().Stage),
+				)
+
+				for resource, value := range links {
+					jsonValue, err := json.Marshal(value)
+					if err != nil {
+						return err
+					}
+
+					envVar := fmt.Sprintf("SST_RESOURCE_%s=%s", resource, jsonValue)
+					cmd.Env = append(cmd.Env, envVar)
+				}
+				cmd.Stdout = os.Stdout
+				cmd.Stderr = os.Stderr
+				cmd.Stdin = os.Stdin
+				err = cmd.Run()
+				if err != nil {
+					return util.NewReadableError(err, err.Error())
+				}
+				return nil
+			},
+		},
+		{
+			Name: "remove",
+			Description: Description{
+				Short: "Remove your application",
+				Long: strings.Join([]string{
+					"Removes your application. By default, it removes your personal stage.",
+					"",
+					":::tip",
+					"The resources in your app are removed based on the `removal` setting in your `sst.config.ts`.",
+					":::",
+					"",
+					"Optionally, remove your app from a specific stage.",
+					"",
+					"```bash frame=\"none\" frame=\"none\"",
+					"sst remove --stage=production",
+					"```",
+				}, "\n"),
+			},
+			Run: func(cli *Cli) error {
+				p, err := initProject(cli)
+				if err != nil {
+					return err
+				}
+				defer p.Cleanup()
+				ui := ui.New(ui.ProgressModeRemove)
+				defer ui.Destroy()
+				ui.Header(version, p.App().Name, p.App().Stage)
+				err = p.Stack.Run(cli.Context, &project.StackInput{
+					Command: "destroy",
+					OnEvent: ui.Trigger,
+				})
+				if err != nil {
+					return err
+				}
+				return nil
+			},
+		},
+		{
+			Name: "unlock",
+			Description: Description{
+				Short: "Clear any locks on the app state",
+				Long: strings.Join([]string{
+					"When you run `sst deploy`, it acquires a lock on your state file to prevent concurrent deploys.",
+					"",
+					"However, if something unexpectedly kills the `sst deploy` process, or if you manage to run `sst deploy` concurrently, the lock might not be released.",
+					"",
+					"This should not usually happen, but it can prevent you from deploying. You can run `sst cancel` to release the lock.",
+				}, "\n"),
+			},
+			Run: func(cli *Cli) error {
+				p, err := initProject(cli)
+				if err != nil {
+					return err
+				}
+				defer p.Cleanup()
+
+				err = p.Stack.Cancel()
+				if err != nil {
+					return util.NewReadableError(err, "")
+				}
+				color.New(color.FgGreen, color.Bold).Print("✓ ")
+				color.New(color.FgWhite).Print(" Unlocked the app state for: ")
+				color.New(color.FgWhite, color.Bold).Println(p.App().Name, "/", p.App().Stage)
+				return nil
+			},
+		},
+		{
+			Name: "version",
+			Description: Description{
+				Short: "Print the version of the CLI",
+				Long:  `Prints the current version of the CLI.`,
+			},
+			Run: func(cli *Cli) error {
+				fmt.Println(version)
+				return nil
+			},
+		},
+		{
+			Name: "upgrade",
+			Description: Description{
+				Short: "Upgrade the CLI",
+				Long: strings.Join([]string{
+					"Upgrade the CLI to the latest version. Or optionally, pass in a version to upgrade to.",
+					"",
+					"```bash frame=\"none\"",
+					"sst upgrade 0.10",
+					"```",
+				}, "\n"),
+			},
+			Args: ArgumentList{
+				{
+					Name: "version",
+					Description: Description{
+						Short: "A version to upgrade to",
+						Long:  "A version to upgrade to.",
+					},
+				},
+			},
+			Run: func(cli *Cli) error {
+				newVersion, err := global.Upgrade(
+					cli.Positional(0),
+				)
+				if err != nil {
+					return err
+				}
+				newVersion = strings.TrimPrefix(newVersion, "v")
+
+				color.New(color.FgGreen, color.Bold).Print(ui.IconCheck)
+				if newVersion == version {
+					color.New(color.FgWhite).Printf("  Already on latest %s\n", version)
+				} else {
+					color.New(color.FgWhite).Printf("  Upgraded %s ➜ ", version)
+					color.New(color.FgCyan, color.Bold).Println(newVersion)
+				}
+				return nil
+			},
+		},
+		{
+			Name: "telemetry", Description: Description{
+				Short: "Manage telemetry settings",
+				Long: strings.Join([]string{
+					"Manage telemetry settings.",
+					"",
+					"SST collects completely anonymous telemetry data about general usage. We track:",
+					"- Version of SST in use",
+					"- Command invoked, `sst dev`, `sst deploy`, etc.",
+					"- General machine information, like the number of CPUs, OS, CI/CD environment, etc.",
+					"",
+					"This is completely optional and can be disabled at any time.",
+				}, "\n"),
+			},
+			Children: []*Command{
+				{
+					Name: "enable",
+					Description: Description{
+						Short: "Enable telemetry",
+						Long:  "Enable telemetry.",
+					},
+					Run: func(cli *Cli) error {
+						return telemetry.Enable()
+					},
+				},
+				{
+					Name: "disable",
+					Description: Description{
+						Short: "Disable telemetry",
+						Long:  "Disable telemetry.",
+					},
+					Run: func(cli *Cli) error {
+						return telemetry.Disable()
+					},
+				},
 			},
 		},
 		{
@@ -334,297 +1051,6 @@ sst --help
 			},
 		},
 		{
-			Name: "dev",
-			Description: Description{
-				Short: "Run in development mode",
-				Long: `
-Run your app in development mode. Optionally, pass in a command to start your frontend as well.
-
-`+"```bash"+` frame="none"
-sst dev
-`+"```"+`
-
-This starts a local server, watch for changes to your code, updates your app, and it runs your functions [Live](/docs/live).
-
-:::note
-If your run `+"`sst dev`"+` with a command, it'll not print your your function logs.
-:::
-
-If you start your frontend along with `+"`sst dev`"+`, it'll [link your resources](/docs/linking) to it too.
-
-`+"```bash"+` frame="none"
-sst dev next dev
-`+"```"+`
-
-Starting two instances of `+"`sst dev`"+` in the same project only starts a single _server_. Meaning that the second instance connects to the existing one.
-
-:::note
-You can start as many instances of `+"`sst dev`"+` in your app as you want.
-:::
-
-This means that you don't need to run `+"`sst dev`"+` separately for your frontend, unlike with SST v2.
-
-:::tip
-You don't need to run `+"`sst dev`"+` separately for your frontend, unlike with SST v2.
-:::
-
-However, if you are working on your backend functions and your frontend at the same time, you can run `+"`sst dev`"+` to view your functions logs.
-`,
-			},
-			Args: []Argument{
-				{
-					Name: "command",
-					Description: Description{
-						Short: "The command to run",
-					},
-				},
-			},
-      Examples: []Example{
-        {
-          Content: "sst dev",
-          Description: Description{
-            Short: "",
-          },
-        },
-        {
-          Content: "sst dev next dev",
-          Description: Description{
-            Short: "Start dev mode for SST and Next.js",
-          },
-        },
-      },
-			Run: CmdDev,
-		},
-		{
-			Name: "secret",
-			Description: Description{
-				Short: "Manage secrets",
-				Long: "Manage the secrets in your app defined with `sst.Secret`.",
-			},
-			Children: []*Command{
-				{
-					Name: "set",
-					Description: Description{
-						Short: "Set a secret",
-						Long: `
-Set the value of the secret.
-
-The secrets are encrypted and stored in an S3 Bucket in your AWS account.
-
-For example, set the `+"`sst.Secret`"+` called `+"`StripeSecret`"+` to `+"`123456789`"+`.
-
-`+"```bash"+` frame="none"
-sst secret set StripeSecret 123456789
-`+"```"+`
-
-Optionally, set the secret in a specific stage.
-
-`+"```bash"+` frame="none"
-sst secret set StripeSecret productionsecret --stage=production
-`+"```"+`
-`,
-					},
-					Args: []Argument{
-						{
-							Name:     "name",
-							Required: true,
-							Description: Description{
-								Short: "The name of the secret",
-								Long: "The name of the secret.",
-							},
-						},
-						{
-							Name:     "value",
-							Required: true,
-							Description: Description{
-								Short: "The value of the secret",
-								Long: "The value of the secret.",
-							},
-						},
-					},
-					Examples: []Example{
-						{
-							Content: "sst secret set StripeSecret 123456789",
-							Description: Description{
-								Short: "Set the StripeSecret to 123456789",
-							},
-						},
-						{
-							Content: "sst secret set StripeSecret productionsecret --stage=production",
-							Description: Description{
-								Short: "Set the StripeSecret in production",
-							},
-						},
-					},
-					Run: func(cli *Cli) error {
-						key := cli.Positional(0)
-						value := cli.Positional(1)
-						p, err := initProject(cli)
-						if err != nil {
-							return err
-						}
-						defer p.Cleanup()
-						backend := p.Backend()
-						secrets, err := provider.GetSecrets(backend, p.App().Name, p.App().Stage)
-						if err != nil {
-							return util.NewReadableError(err, "Could not get secrets")
-						}
-						secrets[key] = value
-						err = provider.PutSecrets(backend, p.App().Name, p.App().Stage, secrets)
-						if err != nil {
-							return util.NewReadableError(err, "Could not set secret")
-						}
-						fmt.Println("Secret set")
-						return nil
-					},
-				},
-				{
-					Name: "list",
-					Description: Description{
-						Short: "List all secrets",
-						Long: `
-Lists all the secrets.
-
-Optionally, list the secrets in a specific stage.
-
-`+"```bash"+` frame="none"
-sst secret list --stage=production
-`+"```"+`
-`,
-					},
-					Examples: []Example{
-						{
-							Content: "sst secret list --stage=production",
-							Description: Description{
-								Short: "List the secrets in production",
-							},
-						},
-					},
-					Run: func(cli *Cli) error {
-						p, err := initProject(cli)
-						if err != nil {
-							return err
-						}
-						defer p.Cleanup()
-
-						backend := p.Backend()
-						secrets, err := provider.GetSecrets(backend, p.App().Name, p.App().Stage)
-						if err != nil {
-							return util.NewReadableError(err, "Could not get secrets")
-						}
-						for key, value := range secrets {
-							fmt.Println(key, "=", value)
-						}
-						return nil
-					},
-				},
-			},
-		},
-		{
-			Name: "shell",
-			Args: []Argument{
-				{
-					Name: "command",
-					Description: Description{
-						Short: "A command to run",
-						Long: "A command to run.",
-					},
-				},
-			},
-			Description: Description{
-				Short: "Run command with all resource linked in environment",
-				Long: `
-Run a command with all the resources linked to the environment.
-
-For example, you can run a node script and use the [Node client](/docs/reference/client) to access *all* the linked resources in your app.
-
-`+"```js"+` title="sst.config.ts"
-const myMainBucket = new sst.aws.Bucket("MyMainBucket");
-const myAdminBucket = new sst.aws.Bucket("MyAdminBucket");
-
-new sst.aws.Nextjs("MyMainWeb", {
-  link: [myMainBucket]
-});
-
-new sst.aws.Nextjs("MyAdminWeb", {
-  link: [myAdminBucket]
-});
-`+"```"+`
-
-Now if you run a script.
-
-`+"```bash"+` frame="none"
-sst shell node my-script.js
-`+"```"+`
-
-It'll have access to all the buckets from above.
-
-`+"```js"+` title="my-script.js"
-import { Resource } from "sst";
-
-console.log(Resource.MyMainBucket.name, Resource.MyAdminBucket.name);
-`+"```"+`
-
-If no command is passed in, it opens a shell session with the linked resources.
-
-`+"```bash"+` frame="none"
-sst shell
-`+"```"+`
-
-This is useful if you want to run multiple commands, all while accessing the linked resources.
-`,
-			},
-      Examples: []Example{
-        {
-          Content: "sst shell",
-          Description: Description{
-            Short: "Open a shell session",
-          },
-        },
-      },
-			Run: func(cli *Cli) error {
-				p, err := initProject(cli)
-				if err != nil {
-					return err
-				}
-				defer p.Cleanup()
-
-				backend := p.Backend()
-				links, err := provider.GetLinks(backend, p.App().Name, p.App().Stage)
-				if err != nil {
-					return err
-				}
-				args := cli.arguments
-				if len(args) == 0 {
-					args = append(args, "sh")
-				}
-				cmd := exec.Command(
-					args[0],
-					args[1:]...,
-				)
-				cmd.Env = append(cmd.Env,
-					os.Environ()...,
-				)
-				cmd.Env = append(cmd.Env,
-					fmt.Sprintf("PS1=%s/%s> ", p.App().Name, p.App().Stage),
-				)
-
-				for resource, value := range links {
-					jsonValue, err := json.Marshal(value)
-					if err != nil {
-						return err
-					}
-
-					envVar := fmt.Sprintf("SST_RESOURCE_%s=%s", resource, jsonValue)
-					cmd.Env = append(cmd.Env, envVar)
-				}
-				cmd.Stdout = os.Stdout
-				cmd.Stderr = os.Stderr
-				cmd.Stdin = os.Stdin
-				return cmd.Run()
-			},
-		},
-		{
 			Name:   "server",
 			Hidden: true,
 			Run: func(cli *Cli) error {
@@ -662,126 +1088,8 @@ This is useful if you want to run multiple commands, all while accessing the lin
 			},
 		},
 		{
-			Name: "install",
-			Description: Description{
-				Short: "Install dependencies specified in sst.config.ts",
-				Long: `
-Installs the dependencies in `+"`sst.config.ts`"+`.
-
-You'll need to run this when you add a new provider to your config.
-`,
-			},
-			Run: func(cli *Cli) error {
-				cfgPath, err := project.Discover()
-				if err != nil {
-					return err
-				}
-
-				p, err := project.New(&project.ProjectConfig{
-					Version: version,
-					Config:  cfgPath,
-				})
-				if err != nil {
-					return err
-				}
-
-				if !p.CheckPlatform(version) {
-					err := p.CopyPlatform(version)
-					if err != nil {
-						return err
-					}
-				}
-
-				err = p.Install()
-				if err != nil {
-					return err
-				}
-
-				return nil
-			},
-		},
-		{
-			Name: "deploy",
-			Description: Description{
-				Short: "Deploy your application",
-				Long: `
-Deploy your application. By default, it deploys to your personal stage.
-
-Optionally, deploy your app to a specific stage.
-
-`+"```bash"+` frame="none"
-sst deploy --stage=production
-`+"```"+`
-`,
-			},
-      Examples: []Example{
-        {
-          Content: "sst deploy --stage=production",
-          Description: Description{
-            Short: "Deploy to production",
-          },
-        },
-      },
-			Run: func(cli *Cli) error {
-				p, err := initProject(cli)
-				if err != nil {
-					return err
-				}
-				defer p.Cleanup()
-
-				ui := ui.New(ui.ProgressModeDeploy)
-				defer ui.Destroy()
-				ui.Header(version, p.App().Name, p.App().Stage)
-				err = p.Stack.Run(cli.Context, &project.StackInput{
-					Command: "up",
-					OnEvent: ui.Trigger,
-				})
-				if err != nil {
-					return util.NewReadableError(err, "")
-				}
-				return nil
-			},
-		},
-		{
-			Name: "remove",
-			Description: Description{
-				Short: "Remove your application",
-				Long: `
-Removes your application. By default, it removes your personal stage.
-
-:::tip
-The resources in your app are removed based on the `+"`removalPolicy`"+` in your `+"`sst.config.ts`"+`.
-:::
-
-Optionally, remove your app from a specific stage.
-
-`+"```bash"+` frame="none"
-sst deploy --stage=production
-`+"```"+`
-`,
-			},
-			Run: func(cli *Cli) error {
-				p, err := initProject(cli)
-				if err != nil {
-					return err
-				}
-				defer p.Cleanup()
-				ui := ui.New(ui.ProgressModeRemove)
-				defer ui.Destroy()
-				ui.Header(version, p.App().Name, p.App().Stage)
-				err = p.Stack.Run(cli.Context, &project.StackInput{
-					Command: "destroy",
-					OnEvent: ui.Trigger,
-				})
-				if err != nil {
-					return util.NewReadableError(err, "")
-				}
-				return nil
-			},
-		},
-		{
-			Name: "refresh",
-      Hidden: true,
+			Name:   "refresh",
+			Hidden: true,
 			Run: func(cli *Cli) error {
 				p, err := initProject(cli)
 				if err != nil {
@@ -796,84 +1104,14 @@ sst deploy --stage=production
 					OnEvent: ui.Trigger,
 				})
 				if err != nil {
-					return util.NewReadableError(err, "")
-				}
-				return nil
-			},
-		},
-		{
-			Name: "cancel",
-			Description: Description{
-				Short: "Cancel any pending deploys",
-        Long: `
-If something unexpected kills the `+"`sst deploy`"+` process, your local state file might be left in an unreadable state.
-
-This will prevent you froom deploying again. You can run `+"`sst cancel`"+` to clean up the state file and be able to deploy again.
-
-You should not usually run into this.
-`,
-			},
-			Run: func(cli *Cli) error {
-				p, err := initProject(cli)
-				if err != nil {
 					return err
 				}
-				defer p.Cleanup()
-
-				err = p.Stack.Cancel()
-				if err != nil {
-					return util.NewReadableError(err, "")
-				}
-				fmt.Println("Cancelled any pending deploys for", p.App().Name, "/", p.App().Stage)
 				return nil
 			},
 		},
 		{
-			Name: "init",
-			Description: Description{
-				Short: "Init drop-in mode",
-        Long: `
-Run this to initialize your app in drop-in mode. Currently, supports Next.js apps.
-
-This will create a `+"`sst.config.ts`"+` file and configure the types for your project.
-`,
-			},
-			Run: func(cli *Cli) error {
-				if _, err := os.Stat("sst.config.ts"); err == nil {
-					color.New(color.FgRed, color.Bold).Print("❌")
-					color.New(color.FgWhite, color.Bold).Println(" sst.config.ts already exists")
-					return nil
-				}
-				template := "vanilla"
-				if _, err := os.Stat("next.config.js"); err == nil {
-					p := promptui.Select{
-						Label:        "Next.js detected, would you like to use the Next.js template?",
-						HideSelected: true,
-						Items:        []string{"Yes", "No"},
-						HideHelp:     true,
-					}
-					_, result, err := p.Run()
-					if err != nil {
-						return err
-					}
-					if result == "Yes" {
-						template = "nextjs"
-					}
-				}
-				err := project.Create(template)
-				if err != nil {
-					return err
-				}
-				initProject(cli)
-				color.New(color.FgGreen, color.Bold).Print("✔")
-				color.New(color.FgWhite, color.Bold).Println("  Created new project with '", template, "' template")
-				return nil
-
-			},
-		},
-		{
-			Name: "state",
-      Hidden: true,
+			Name:   "state",
+			Hidden: true,
 			Description: Description{
 				Short: "Manage state of your deployment",
 			},
@@ -922,6 +1160,21 @@ This will create a `+"`sst.config.ts`"+` file and configure the types for your p
 	},
 }
 
+func (c *Command) registerFlags(parsed map[string]interface{}) {
+	for _, f := range c.Flags {
+		if f.Type == "string" {
+			parsed[f.Name] = flag.String(f.Name, "", "")
+		}
+
+		if f.Type == "bool" {
+			parsed[f.Name] = flag.Bool(f.Name, false, "")
+		}
+	}
+	for _, child := range c.Children {
+		child.registerFlags(parsed)
+	}
+}
+
 func init() {
 	Root.init()
 }
@@ -961,6 +1214,9 @@ func (c *Cli) Arguments() []string {
 }
 
 func (c *Cli) Positional(index int) string {
+	if index >= len(c.arguments) {
+		return ""
+	}
 	return c.arguments[index]
 }
 
@@ -1041,7 +1297,7 @@ func (c CommandPath) PrintHelp() error {
 	active := c[len(c)-1]
 
 	if len(active.Children) > 0 {
-		fmt.Print(color.BlueString(strings.Join(prefix, " ") + ": "))
+		fmt.Print(strings.Join(prefix, " ") + ": ")
 		fmt.Println(color.WhiteString(c[len(c)-1].Description.Short))
 
 		maxSubcommand := 0
@@ -1051,7 +1307,7 @@ func (c CommandPath) PrintHelp() error {
 			}
 			next := len(child.Name)
 			if len(child.Args) > 0 {
-				next += len(child.Args.String())
+				next += len(child.Args.String()) + 1
 			}
 			if next > maxSubcommand {
 				maxSubcommand = next
@@ -1066,7 +1322,12 @@ func (c CommandPath) PrintHelp() error {
 			fmt.Printf(
 				"  %s %s  %s\n",
 				strings.Join(prefix, " "),
-				color.New(color.FgWhite, color.Bold).Sprintf("%-*s", maxSubcommand, strings.Join([]string{child.Name, child.Args.String()}, " ")),
+				color.New(color.FgWhite, color.Bold).Sprintf("%-*s", maxSubcommand, func() string {
+					if len(child.Args) > 0 {
+						return strings.Join([]string{child.Name, child.Args.String()}, " ")
+					}
+					return child.Name
+				}()),
 				child.Description.Short,
 			)
 		}
@@ -1085,7 +1346,7 @@ func (c CommandPath) PrintHelp() error {
 		maxFlag := 0
 		for _, cmd := range c {
 			for _, f := range cmd.Flags {
-				l := len(f.Name) + 2
+				l := len(f.Name) + 3
 				if l > maxFlag {
 					maxFlag = l
 				}
@@ -1136,22 +1397,7 @@ func initProject(cli *Cli) (*project.Project, error) {
 		Config:  cfgPath,
 	})
 	if err != nil {
-		return nil, util.NewReadableError(err, "Could not initialize project")
-	}
-
-	if !p.CheckPlatform(version) {
-		spin := spinner.New(spinner.CharSets[14], 100*time.Millisecond)
-		spin.Suffix = "  Installing dependencies..."
-		spin.Start()
-		err := p.CopyPlatform(version)
-		if err != nil {
-			return nil, util.NewReadableError(err, "Could not copy platform code to project directory")
-		}
-		err = p.Install()
-		if err != nil {
-			return nil, util.NewReadableError(err, "Could not install dependencies")
-		}
-		spin.Stop()
+		return nil, err
 	}
 
 	_, err = logFile.Seek(0, 0)
@@ -1168,6 +1414,26 @@ func initProject(cli *Cli) (*project.Project, error) {
 	}
 	logFile = nextLogFile
 	configureLog(cli)
+
+	spin := spinner.New(spinner.CharSets[14], 100*time.Millisecond)
+	defer spin.Stop()
+	if !p.CheckPlatform(version) {
+		spin.Suffix = "  Upgrading project..."
+		spin.Start()
+		err := p.CopyPlatform(version)
+		if err != nil {
+			return nil, util.NewReadableError(err, "Could not copy platform code to project directory")
+		}
+	}
+
+	if p.NeedsInstall() {
+		spin.Suffix = "  Installing providers..."
+		spin.Start()
+		err = p.Install()
+		if err != nil {
+			return nil, util.NewReadableError(err, "Could not install dependencies")
+		}
+	}
 
 	if err := p.LoadProviders(); err != nil {
 		return nil, util.NewReadableError(err, err.Error())

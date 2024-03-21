@@ -7,7 +7,7 @@ export default $config({
       providers: {
         aws: {},
       },
-      removalPolicy: input.stage === "production" ? "retain" : "remove",
+      removal: input.stage === "production" ? "retain" : "remove",
     };
   },
   async run() {

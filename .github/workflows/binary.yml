@@ -4,8 +4,7 @@ on:
   push:
     workflow_dispatch:
     tags:
-      - '*'
-
+      - "*"
 
 concurrency: ${{ github.workflow }}-${{ github.ref }}
 
@@ -28,10 +27,14 @@ jobs:
 
       - uses: actions/setup-go@v4
         with:
-          go-version: '>=1.21.0'
+          go-version: ">=1.21.0"
 
       - name: Go Mod
         run: go mod download
+
+      # TODO remove temporary workaround
+      - run: bun i --frozen-lockfile
+      - run: git reset --hard
 
       - uses: goreleaser/goreleaser-action@v4
         with:

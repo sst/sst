@@ -4,10 +4,8 @@ export default $config({
   app(input) {
     return {
       name: "bucket",
-      providers: {
-        aws: {},
-      },
-      removalPolicy: input?.stage === "production" ? "retain" : "remove",
+      home: "aws",
+      removal: input?.stage === "production" ? "retain" : "remove",
     };
   },
   async run() {

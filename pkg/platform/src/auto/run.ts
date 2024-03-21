@@ -47,8 +47,8 @@ export async function run(program: automation.PulumiFn) {
 function addTransformationToRetainResourcesOnDelete() {
   runtime.registerStackTransformation((args: ResourceTransformationArgs) => {
     if (
-      $app.removalPolicy === "retain-all" ||
-      ($app.removalPolicy === "retain" &&
+      $app.removal === "retain-all" ||
+      ($app.removal === "retain" &&
         [
           "aws:s3/bucket:Bucket",
           "aws:s3/bucketV2:BucketV2",

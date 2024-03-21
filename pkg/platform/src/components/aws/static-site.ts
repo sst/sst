@@ -515,11 +515,11 @@ export interface StaticSiteArgs {
  * For some static site generators like Vite, [environment variables](https://vitejs.dev/guide/env-and-mode) prefixed with `VITE_` can be accessed in the browser.
  *
  * ```ts {5-7}
- * const myBucket = new sst.aws.Bucket("MyBucket");
+ * const bucket = new sst.aws.Bucket("MyBucket");
  *
  * new sst.aws.StaticSite("MyWeb", {
  *   environment: {
- *     BUCKET_NAME: myBucket.name,
+ *     BUCKET_NAME: bucket.name,
  *     // Accessible in the browser
  *     VITE_STRIPE_PUBLISHABLE_KEY: "pk_test_123"
  *   },
@@ -732,7 +732,7 @@ export class StaticSite extends Component implements Link.Linkable {
           ];
 
           // Upload files based on fileOptions
-          const filesUploaded: string[] = [];
+          const filesProcessed: string[] = [];
           for (const fileOption of fileOptions.reverse()) {
             const files = globSync(fileOption.files, {
               cwd: path.resolve(outputPath),
@@ -744,7 +744,7 @@ export class StaticSite extends Component implements Link.Linkable {
                   ? [fileOption.ignore]
                   : fileOption.ignore ?? []),
               ],
-            }).filter((file) => !filesUploaded.includes(file));
+            }).filter((file) => !filesProcessed.includes(file));
 
             bucketFiles.push(
               ...(await Promise.all(
@@ -765,7 +765,7 @@ export class StaticSite extends Component implements Link.Linkable {
                 }),
               )),
             );
-            filesUploaded.push(...files);
+            filesProcessed.push(...files);
           }
 
           return new BucketFiles(
@@ -845,27 +845,27 @@ export class StaticSite extends Component implements Link.Linkable {
                 },
               ],
               defaultRootObject: indexPage,
-              errorResponses: args.errorPage
+              customErrorResponses: args.errorPage
                 ? [
                     {
-                      httpStatus: 403,
+                      errorCode: 403,
                       responsePagePath: interpolate`/${args.errorPage}`,
                     },
                     {
-                      httpStatus: 404,
+                      errorCode: 404,
                       responsePagePath: interpolate`/${args.errorPage}`,
                     },
                   ]
                 : [
                     {
-                      httpStatus: 403,
+                      errorCode: 403,
                       responsePagePath: interpolate`/${indexPage}`,
-                      responseHttpStatus: 200,
+                      responseCode: 200,
                     },
                     {
-                      httpStatus: 404,
+                      errorCode: 404,
                       responsePagePath: interpolate`/${indexPage}`,
-                      responseHttpStatus: 200,
+                      responseCode: 200,
                     },
                   ],
               defaultCacheBehavior: {
@@ -877,13 +877,6 @@ export class StaticSite extends Component implements Link.Linkable {
                 // CloudFront's managed CachingOptimized policy
                 cachePolicyId: "658327ea-f89d-4fab-a63d-7e88639e58f6",
               },
-              customErrorResponses: [
-                {
-                  errorCode: 404,
-                  responseCode: 200,
-                  responsePagePath: "/404.html",
-                },
-              ],
             }),
           },
         },

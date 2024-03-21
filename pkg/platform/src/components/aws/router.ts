@@ -75,7 +75,7 @@ export interface RouterArgs {
    * {
    *   routes: {
    *     "/*": "myapp.com",
-   *     "/api/*": myFunction.url
+   *     "/api/*": function.url
    *   }
    * }
    * ```
@@ -106,7 +106,7 @@ export interface RouterArgs {
  * ```ts
  * new sst.aws.Router("MyRouter", {
  *   routes: {
- *     "/*": "some-interal-service.com"
+ *     "/*": "some-internal-service.com"
  *   }
  * });
  * ```
@@ -114,14 +114,14 @@ export interface RouterArgs {
  * #### Route to a function URL
  *
  * ```ts
- * const myFunction = new sst.aws.Function("MyFunction", {
+ * const function = new sst.aws.Function("MyFunction", {
  *   handler: "src/api.handler",
  *   url: true,
  * });
  *
  * new sst.aws.Router("MyRouter", {
  *   routes: {
- *     "/*": myFunction.url
+ *     "/*": function.url
  *   }
  * });
  * ```
@@ -132,7 +132,7 @@ export interface RouterArgs {
  * new sst.aws.Router("MyRouter", {
  *   routes: {
  *     "/*": "myapp.com",
- *     "/api/*": myFunction.url
+ *     "/api/*": function.url
  *   }
  * });
  * ```
@@ -143,7 +143,7 @@ export interface RouterArgs {
  * new sst.aws.Router("MyRouter", {
  *   domain: "myapp.com",
  *   routes: {
- *     "/*": myFunction.url
+ *     "/*": function.url
  *   }
  * });
  * ```

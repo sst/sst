@@ -4,7 +4,8 @@ export default $config({
   app(input) {
     return {
       name: "www",
-      removalPolicy: input?.stage === "production" ? "retain" : "remove",
+      removal: input?.stage === "production" ? "retain" : "remove",
+      home: "aws",
       providers: {
         aws: {
           profile: (() => {
@@ -64,5 +65,16 @@ export default $config({
     new sst.aws.Astro("Astro", {
       domain,
     });
+
+    const telemetry = new sst.aws.Router("TelemetryRouter", {
+      domain: "telemetry." + domain,
+      routes: {
+        "/*": "https://us.i.posthog.com",
+      },
+    });
+
+    return {
+      telemetry: telemetry.url,
+    };
   },
 });

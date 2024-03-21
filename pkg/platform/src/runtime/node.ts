@@ -91,14 +91,12 @@ export async function build(
       : {
           format: "cjs",
           target: "node14",
-          banner: nodejs.banner
-            ? {
-                js: [
-                  `globalThis.$SST_LINKS = ${JSON.stringify(links)};`,
-                  nodejs.banner || "",
-                ].join("\n"),
-              }
-            : undefined,
+          banner: {
+            js: [
+              `globalThis.$SST_LINKS = ${JSON.stringify(links)};`,
+              nodejs.banner || "",
+            ].join("\n"),
+          },
         }),
     outfile: !nodejs.splitting ? target : undefined,
     outdir: nodejs.splitting ? path.dirname(target) : undefined,

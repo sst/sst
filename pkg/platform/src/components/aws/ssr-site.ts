@@ -24,6 +24,8 @@ import { Link } from "../link.js";
 import { Input } from "../input.js";
 import { transform, type Prettify, type Transform } from "../component.js";
 import { VisibleError } from "../error.js";
+import { Cron } from "./cron.js";
+import { OriginAccessIdentity } from "./providers/origin-access-identity.js";
 
 type CloudFrontFunctionConfig = { injections: string[] };
 type EdgeFunctionConfig = { function: Unwrap<FunctionArgs> };
@@ -170,7 +172,7 @@ export interface SsrSiteArgs {
    * [Link resources](/docs/linking/) to your site. This will:
    *
    * 1. Grant the permissions needed to access the resources.
-   * 2. Allow you to access it in your site using the [Node client](/docs/reference/client/).
+   * 2. Allow you to access it in your site using the [SDK](/docs/reference/sdk/).
    *
    * @example
    *
@@ -178,7 +180,7 @@ export interface SsrSiteArgs {
    *
    * ```js
    * {
-   *   link: [myBucket, stripeKey]
+   *   link: [bucket, stripeKey]
    * }
    * ```
    */
@@ -239,10 +241,9 @@ export interface SsrSiteArgs {
      */
     versionedFilesCacheHeader?: Input<string>;
     /**
-     * The `Cache-Control` header used for non-versioned files, like `index.html`. This is
-     * used by both CloudFront and the browser cache.
+     * The `Cache-Control` header used for non-versioned files, like `index.html`. This is used by both CloudFront and the browser cache.
      *
-     * The default is set not cache on browsers, and cache for 1 day on CloudFront.
+     * The default is set to not cache on browsers, and cache for 1 day on CloudFront.
      * @default `"public,max-age=0,s-maxage=86400,stale-while-revalidate=8640"`
      * @example
      * ```js
@@ -316,7 +317,7 @@ export interface SsrSiteArgs {
          * For non-prod environments it might make sense to pass in `false`.
          * :::
          *
-         * Waiting for the CloudFront cache invalidation process to finish ensures that the new content will be served once the deploy finishes. However, this process can sometimes take more than 5 mins.
+         * Waiting for this process to finish ensures that new content will be available after the deploy finishes. However, this process can sometimes take more than 5 mins.
          * @default `false`
          * @example
          * ```js
@@ -332,15 +333,15 @@ export interface SsrSiteArgs {
          * The paths to invalidate.
          *
          * You can either pass in an array of glob patterns to invalidate specific files. Or you can use one of these built-in options:
-         * - `all`: All files will be invalidated when any file changes.
-         * - `versioned`: Only versioned files will be invalidated when versioned files change.
+         * - `all`: All files will be invalidated when any file changes
+         * - `versioned`: Only versioned files will be invalidated when versioned files change
          *
          * :::note
-         * Invalidating `all` counts as one invalidation, while each glob pattern counts as a single invalidation path.
+         * Each glob pattern counts as a single invalidation. However, invalidating `all` counts as a single invalidation as well.
          * :::
          * @default `"all"`
          * @example
-         * Invalidate the `index.html` and all files under the `products/` route.
+         * Invalidate the `index.html` and all files under the `products/` route. This counts as two invalidations.
          * ```js
          * {
          *   invalidation: {
@@ -366,11 +367,13 @@ export interface SsrSiteArgs {
 
 export function prepare(args: SsrSiteArgs, opts: ComponentResourceOptions) {
   const sitePath = normalizeSitePath();
+  const partition = normalizePartition();
   const region = normalizeRegion();
   checkSupportedRegion();
 
   return {
     sitePath,
+    partition,
     region,
   };
 
@@ -385,11 +388,13 @@ export function prepare(args: SsrSiteArgs, opts: ComponentResourceOptions) {
     });
   }
 
+  function normalizePartition() {
+    return aws.getPartitionOutput(undefined, { provider: opts?.provider })
+      .partition;
+  }
+
   function normalizeRegion() {
-    return all([
-      $app.providers?.aws?.region!,
-      (opts.provider as aws.Provider)?.region,
-    ]).apply(([appRegion, region]) => region ?? appRegion);
+    return aws.getRegionOutput(undefined, { provider: opts?.provider }).name;
   }
 
   function checkSupportedRegion() {
@@ -480,6 +485,7 @@ export function buildApp(
 export function createBucket(
   parent: ComponentResource,
   name: string,
+  partition: Output<string>,
   args: SsrSiteArgs,
 ) {
   const access = createCloudFrontOriginAccessIdentity();
@@ -487,7 +493,7 @@ export function createBucket(
   return { access, bucket };
 
   function createCloudFrontOriginAccessIdentity() {
-    return new aws.cloudfront.OriginAccessIdentity(
+    return new OriginAccessIdentity(
       `${name}OriginAccessIdentity`,
       {},
       { parent },
@@ -506,7 +512,9 @@ export function createBucket(
                   principals: [
                     {
                       type: "AWS",
-                      identifiers: [access.iamArn],
+                      identifiers: [
+                        interpolate`arn:${partition}:iam::cloudfront:user/CloudFront Origin Access Identity ${access.id}`,
+                      ],
                     },
                   ],
                   actions: ["s3:GetObject"],
@@ -536,7 +544,7 @@ export function createServersAndDistribution(
   name: string,
   args: SsrSiteArgs,
   outputPath: Output<string>,
-  access: aws.cloudfront.OriginAccessIdentity,
+  access: OriginAccessIdentity,
   bucket: Bucket,
   plan: Input<Plan>,
 ) {
@@ -728,7 +736,7 @@ function handler(event) {
           const fn = new Function(
             `${name}Edge${sanitizeToPascalCase(fnName)}`,
             {
-              runtime: "nodejs18.x",
+              runtime: "nodejs20.x",
               timeout: "20 seconds",
               memory: "1024 MB",
               ...props,
@@ -747,7 +755,7 @@ function handler(event) {
               transform: {
                 function: (args) => ({ ...args, publish: true }),
               },
-              liveDev: false,
+              live: false,
               _ignoreCodeChanges: $dev,
             },
             { provider: useProvider("us-east-1"), parent },
@@ -811,7 +819,7 @@ function handler(event) {
         domainName: bucket.nodes.bucket.bucketRegionalDomainName,
         originPath: props.originPath ? `/${props.originPath}` : "",
         s3OriginConfig: {
-          originAccessIdentity: access.cloudfrontAccessIdentityPath,
+          originAccessIdentity: interpolate`origin-access-identity/cloudfront/${access.id}`,
         },
       };
     }
@@ -821,7 +829,7 @@ function handler(event) {
         `${name}${sanitizeToPascalCase(fnName)}`,
         {
           description: `${name} server`,
-          runtime: "nodejs18.x",
+          runtime: "nodejs20.x",
           timeout: "20 seconds",
           memory: "1024 MB",
           ...props.function,
@@ -845,7 +853,7 @@ function handler(event) {
             ...(link ?? []),
           ]),
           url: true,
-          liveDev: false,
+          live: false,
           _ignoreCodeChanges: $dev,
         },
         { parent },
@@ -884,8 +892,9 @@ function handler(event) {
           ],
           ...props.function,
           url: true,
-          liveDev: false,
+          live: false,
           _ignoreCodeChanges: $dev,
+          _skipMetadata: true,
         },
         { parent },
       );
@@ -1045,13 +1054,7 @@ function handler(event) {
                   pathPattern: behavior.pattern!,
                   ...buildBehavior(behavior),
                 })),
-              customErrorResponses: [
-                {
-                  errorCode: 404,
-                  responseCode: 200,
-                  responsePagePath: "/404.html",
-                },
-              ],
+              customErrorResponses: plan.errorResponses,
             }),
           },
         },
@@ -1112,42 +1115,33 @@ function handler(event) {
 
       if (ssrFunctions.length === 0) return;
 
-      // Create warmer function
-      const warmer = new Function(
+      // Create cron job
+      const cron = new Cron(
         `${name}Warmer`,
         {
-          description: `${name} warmer`,
-          bundle: path.join($cli.paths.platform, "functions", "ssr-warmer"),
-          runtime: "nodejs20.x",
-          handler: "index.handler",
-          timeout: "900 seconds",
-          memory: "128 MB",
-          liveDev: false,
-          environment: {
-            FUNCTION_NAME: ssrFunctions[0].nodes.function.name,
-            CONCURRENCY: output(args.warm).apply((warm) => warm.toString()),
+          schedule: "rate(5 minutes)",
+          job: {
+            description: `${name} warmer`,
+            bundle: path.join($cli.paths.platform, "dist", "ssr-warmer"),
+            runtime: "nodejs20.x",
+            handler: "index.handler",
+            timeout: "900 seconds",
+            memory: "128 MB",
+            live: false,
+            environment: {
+              FUNCTION_NAME: ssrFunctions[0].nodes.function.name,
+              CONCURRENCY: output(args.warm).apply((warm) => warm.toString()),
+            },
+            link: [ssrFunctions[0]],
+            _skipMetadata: true,
           },
-          link: [ssrFunctions[0]],
-        },
-        { parent },
-      );
-
-      // Create cron job
-      const schedule = new aws.cloudwatch.EventRule(
-        `${name}WarmerRule`,
-        {
-          description: `${name} warmer`,
-          scheduleExpression: "rate(5 minutes)",
-        },
-        { parent },
-      );
-      new aws.cloudwatch.EventTarget(
-        `${name}WarmerTarget`,
-        {
-          rule: schedule.name,
-          arn: warmer.nodes.function.arn,
-          retryPolicy: {
-            maximumRetryAttempts: 0,
+          transform: {
+            target: (targetArgs) => {
+              targetArgs.retryPolicy = {
+                maximumRetryAttempts: 0,
+                maximumEventAgeInSeconds: 60,
+              };
+            },
           },
         },
         { parent },
@@ -1157,7 +1151,7 @@ function handler(event) {
       new aws.lambda.Invocation(
         `${name}Prewarm`,
         {
-          functionName: warmer.nodes.function.name,
+          functionName: cron.nodes.job.name,
           triggers: {
             version: Date.now().toString(),
           },

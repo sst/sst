@@ -21,14 +21,14 @@ export interface FetchResult<ResponseType = unknown> {
 
 export async function cfFetch<ResponseType>(
   resource: string,
-  init: RequestInit = {}
+  init: RequestInit = {},
 ): Promise<ResponseType> {
   const ret = await fetch(`${CLOUDFLARE_API_BASE_URL}${resource}`, {
+    ...init,
     headers: {
       Authorization: `Bearer ${CLOUDFLARE_API_TOKEN}`,
-      "Content-Type": "application/json",
+      ...init.headers,
     },
-    ...init,
   });
   const json = (await ret.json()) as FetchResult<ResponseType>;
   // ie.
@@ -45,7 +45,7 @@ export async function cfFetch<ResponseType>(
   }
 
   const error = new Error(
-    `A request to the Cloudflare API (${resource}) failed.`
+    `A request to the Cloudflare API (${resource}) failed.`,
   );
   // @ts-expect-error attach the errors to the error object
   error.errors = json.errors;

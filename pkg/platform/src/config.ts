@@ -8,15 +8,13 @@
  * You specify it using the `$config` function. This takes an object of type [`Config`](#config).
  *
  * ```ts title="sst.config.ts"
- * /// <reference path="./.sst/platform/src/global.d.ts" />
+ * /// <reference path="./.sst/platform/config.d.ts" />
  *
  * export default $config({
  *   app(input) {
  *     return {
  *       name: "my-sst-app",
- *       providers: {
- *         aws: {}
- *       }
+ *       home: "aws"
  *     };
  *   },
  *   async run() {
@@ -33,13 +31,13 @@
  * You can Pulumi code in the `run` function not the `app` function.
  * :::
  *
- * While the `run` function is for your stacks code. This is where you define your resources using SST or Pulumi's components.
+ * While the `run` function is where you define your resources using SST or Pulumi's components.
  *
  * :::tip
- * The [Global](/docs/reference/global/) library can help you with your stacks code.
+ * The [Global](/docs/reference/global/) library can help you with your app config and resources.
  * :::
  *
- * The run function also has access to a list of [Global](/docs/reference/global/) `$` variables and functions. These serve as the context for your stacks code.
+ * The run function also has access to a list of [Global](/docs/reference/global/) `$` variables and functions. These serve as the context for your app config.
  *
  * @packageDocumentation
  */
@@ -79,56 +77,107 @@ export interface App {
    * Retain resources if it's the _production_ stage, otherwise remove all resources.
    * ```ts
    * {
-   *   removalPolicy: input.stage === "production" ? "retain" : "remove"
+   *   removal: input.stage === "production" ? "retain" : "remove"
    * }
    * ```
    */
-  removalPolicy?: "remove" | "retain" | "retain-all";
+  removal?: "remove" | "retain" | "retain-all";
   /**
-   * The providers to use in this app and their config. SST supports all [Pulumi's providers](https://www.pulumi.com/registry/).
+   * The providers that are being used in this app. SST supports all [Pulumi's providers](https://www.pulumi.com/registry/). This allows you to use the components from these providers in your app.
    *
-   * :::tip
-   * SST supports all Pulumi's providers.
+   * For example, if you use the [AWS Classic](https://www.pulumi.com/registry/packages/aws/) provider, you can use the `aws` components in your app.
+   *
+   * ```ts
+   * import * as aws from "@pulumi/aws";
+   *
+   * new aws.s3.BucketV2("b", {
+   *   bucket: "mybucket"
+   * });
+   * ```
+   *
+   * :::note
+   * By default, your `home` provider is included in the `providers` list.
    * :::
    *
-   * To add a new provider you need to:
-   * 1. Add the config for it in the `providers` object. The key is the name of the provider.
-   * 2. Install the provider using `sst install`.
-   *
-   * :::tip
-   * If you are using one of our quick starts with the `sst init` command, it'll automatically install the right provider for you.
-   * :::
-   *
-   * You can check out the config of a provider over on Pulumi's docs. For example, here's the config for some common providers:
-   * - [AWS](https://www.pulumi.com/registry/packages/aws/api-docs/provider/#inputs)
-   * - [Cloudflare](https://www.pulumi.com/registry/packages/cloudflare/api-docs/provider/#inputs)
-   *
-   * In most cases you don't need to pass in a config for the provider.
-   *
-   * @example
-   *
-   * Using the AWS provider. The credentials are handled by default by thw AWS SDK.
+   * If you don't set a `provider` it uses your `home` provider with the default config. So if you set `home` to `aws`, it's the same as doing:
    *
    * ```ts
    * {
+   *   home: "aws",
    *   providers: {
-   *     aws: {}
+   *     aws: true
    *   }
    * }
    * ```
    *
-   * Adding the Cloudflare provider.
+   * @default The `home` provider.
+   *
+   * @example
+   *
+   * You can also configure the provider props. Here's the config for some common providers:
+   * - [AWS](https://www.pulumi.com/registry/packages/aws/api-docs/provider/#inputs)
+   * - [Cloudflare](https://www.pulumi.com/registry/packages/cloudflare/api-docs/provider/#inputs)
+   *
+   * For example, to change the region for AWS.
    *
    * ```ts
    * {
    *   providers: {
-   *     aws: {},
-   *     cloudflare: { }
+   *     aws: {
+   *       region: "us-west-2"
+   *     }
+   *   }
+   * }
+   * ```
+   *
+   * You also add multiple providers.
+   *
+   * ```ts
+   * {
+   *   providers: {
+   *     aws: true,
+   *     cloudflare: true
    *   }
    * }
    * ```
    */
   providers?: Record<string, any>;
+
+  /**
+   * The provider SST will use to store the state for your app. The state keeps track of all your resources and secrets. The state is generated locally and backed up in your cloud provider.
+   *
+   * :::tip
+   * SST uses the `home` provider to store the state for your app.
+   * :::
+   *
+   * Currently supports AWS and Cloudflare.
+   *
+   * Setting the `home` provider is the same as setting the `providers` list. So if you set `home` to `aws`, it's the same as doing:
+   *
+   * ```ts
+   * {
+   *   home: "aws",
+   *   providers: {
+   *     aws: true
+   *   }
+   * }
+   * ```
+   *
+   * If you want to confgiure your home provider, you can:
+   *
+   * ```ts
+   * {
+   *   home: "aws",
+   *   providers: {
+   *     aws: {
+   *       region: "us-west-2"
+   *     }
+   *   }
+   * }
+   * ```
+   *
+   */
+  home: "aws" | "cloudflare";
 }
 
 export interface AppInput {
@@ -154,13 +203,14 @@ export interface Config {
    * app(input) {
    *   return {
    *     name: "my-sst-app",
+   *     home: "aws",
    *     providers: {
-   *       aws: {},
+   *       aws: true,
    *       cloudflare: {
    *         accountId: "6fef9ed9089bb15de3e4198618385de2"
    *       }
    *     },
-   *     removalPolicy: input.stage === "production" ? "retain" : "remove"
+   *     removal: input.stage === "production" ? "retain" : "remove"
    *   };
    * },
    * ```

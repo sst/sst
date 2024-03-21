@@ -5,21 +5,24 @@ description: Ion is a new deployment engine for SST.
 
 import { Tabs, TabItem } from '@astrojs/starlight/components';
 
-Ion is a new engine for deploying [SST](https://sst.dev) apps. It uses [Pulumi](https://www.pulumi.com) and [Terraform](https://www.terraform.io) as opposed to CDK and CloudFormation. It's currently in alpha.
+Ion is a new engine for deploying [SST](https://sst.dev) apps. It uses [Pulumi](https://www.pulumi.com) and [Terraform](https://www.terraform.io), as opposed to CDK and CloudFormation.
 
 :::tip
-Ion is **currently in alpha**. We'll be sharing more details on how to migrate your existing SST apps soon.
+Ion is **generally available** and recommended for new SST users. We are working on a migration path for SST v2 users.
 :::
 
 Once Ion is stable, it’ll be released as SST v3. [Read the full announcement](https://sst.dev/blog/moving-away-from-cdk.html).
 
 ---
 
-Aside from the underlying engine, there are a few differences between SST v2 and Ion.
+Aside from the underlying engine, there are a couple of other differences between SST v2 and Ion.
 
 - There are no _"stacks"_ or stack resource limits.
 - There are no npm packages, just a CLI and the `sst.config.ts`.
+- Resource _binding_ is now called _linking_ and works across cloud providers.
 - The `bind` command has been merged into the `dev` command. You won't need to run both of them.
+
+If you are new to SST, here's how it works.
 
 ---
 
@@ -28,8 +31,6 @@ SST is a framework that makes it easy to build modern full-stack applications on
 :::note
 Ion currently **supports Node.js** applications on **macOS, Linux, and WSL**. Support for other runtimes and OSes are on the roadmap.
 :::
-
-If you are new to SST, here's how it works.
 
 ---
 
@@ -112,11 +113,7 @@ You can check out the full list of components on the sidebar.
 
 The above snippets are called **Components**. They are a way of defining the features of your application in code. You can define any feature of your application with them.
 
-They create the necessary infrastructure in your account. AWS in the above examples, all without using the AWS Console.
-
-:::tip
-Ion currently supports AWS and Cloudflare.
-:::
+In the above examples, they create the necessary infrastructure in your AWS account. All without using the AWS Console.
 
 Learn more about [Components](/docs/components/).
 
@@ -136,7 +133,7 @@ new sst.aws.Function("MyFunction", {
 });
 ```
 
-But with SST you can take it a step further and transform how the Function component creates its low level infrastructure. The Function component also creates an IAM Role. You can transform the IAM Role using the `transform` prop.
+But with SST you can take it a step further and transform how the Function component creates its low level infrastructure. For example, the Function component also creates an IAM Role. You can transform the IAM Role using the `transform` prop.
 
 ```js {3-7} title="sst.config.ts"
 new sst.aws.Function("MyFunction", {
@@ -176,17 +173,17 @@ Pulumi's [AWS Classic provider](https://www.pulumi.com/registry/packages/aws/) i
 
 Once you've added a couple of features, SST can help you link them together. This is great because you **won't need to hardcode** anything in your app.
 
-Let's say your app has a Next.js frontend and an S3 bucket for file uploads, you can `link` them together.
+Let's say your app has a Next.js frontend and an S3 bucket for file uploads. You can `link` the bucket to your Next.js app.
 
 ```js title="sst.config.ts" {4}
-const myBucket = new sst.aws.Bucket("MyBucket");
+const bucket = new sst.aws.Bucket("MyBucket");
 
 new sst.aws.Nextjs("MyWeb", {
-  link: [myBucket]
+  link: [bucket]
 });
 ```
 
-You can then use SST's [Node client](/docs/reference/client/) to access the S3 bucket in your Next.js app.
+You can then use SST's [SDK](/docs/reference/sdk/) to access the S3 bucket in your Next.js app.
 
 ```ts title="app/page.tsx"
 import { Resource } from "sst";
@@ -208,7 +205,7 @@ We've looked at a couple of different types of files. Let's take a step back and
 
 The simplest way to run SST is to use it as a part of your frontend. This is called _drop-in mode_. For example, if you are using Next.js, you can add a `sst.config.ts` file to the root.
 
-```plaintext {3}
+```txt {3}
 my-nextjs-app
 ├─ next.config.js
 ├─ sst.config.ts
@@ -224,22 +221,21 @@ my-nextjs-app
 
 Alternatively, you can use SST in a monorepo. This is useful if you have multiple frontends or you are working on a large project. In this case the `sst.config.ts` is in the root of your monorepo.
 
-```plaintext {2}
+```txt {2}
 my-sst-app
-├─ sst.config.ts
-├─ package.json
 ├─ packages
 │  ├─ functions
 │  ├─ core
 │  └─ web
-└─ stacks
+├─ sst.config.ts
+└─ package.json
 ```
 
 ---
 
 ## CLI
 
-To make this all work, Ion comes with a CLI that you install globally.
+To make this all work, Ion comes with a [CLI](/docs/reference/cli/) that you install globally.
 
 ```bash
 curl -fsSL https://ion.sst.dev/install | bash
@@ -257,13 +253,13 @@ The CLI includes a `dev` command that starts a local development environment.
 sst dev
 ```
 
-It lets you make and test changes to your function live, without having to redeloy them.
+It lets you make and test changes to your function live, without having to redeploy them.
 
 :::tip
 The `sst dev` command runs your functions _**live**_, letting you test changes to your functions in milliseconds. [Learn more](/docs/live/).
 :::
 
-You can also use this command to start your frontend locally, and it'll automatically link your frontend to your backend resources.
+You can also use this command to start your frontend locally, and it'll automatically load your linked resources in your frontend's environment.
 
 <Tabs>
   <TabItem label="Next.js">
@@ -317,7 +313,3 @@ npx sst deploy --stage prod
 Once your app is in production, you can use the [SST Console](/docs/console/) to monitor and manage your app — [**console.sst.dev**](https://console.sst.dev)
 
 [![SST Console](../../../assets/docs/sst-console-logs.png)](https://console.sst.dev)
-
----
-
-Next, you can get started with one of our quick starts, like [Next.js](/docs/starts/nextjs/).

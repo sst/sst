@@ -3,6 +3,8 @@ title: Function
 description: Reference doc for the `sst.aws.Function` component.
 ---
 
+{/* DO NOT EDIT. AUTO-GENERATED FROM pkg/platform/src/components/aws/function.ts */}
+
 import Segment from '../../../../../../src/components/tsdoc/Segment.astro';
 import Section from '../../../../../../src/components/tsdoc/Section.astro';
 import NestedTitle from '../../../../../../src/components/tsdoc/NestedTitle.astro';
@@ -46,15 +48,15 @@ new sst.aws.Function("MyFunction", {
 to the resources and allow you to access it in your handler.
 
 ```ts {5}
-const myBucket = new sst.aws.Bucket("MyBucket");
+const bucket = new sst.aws.Bucket("MyBucket");
 
 new sst.aws.Function("MyFunction", {
   handler: "src/lambda.handler",
-  link: [myBucket]
+  link: [bucket]
 });
 ```
 
-You can use the [Node client](/docs/reference/client/) to access the linked resources
+You can use the [SDK](/docs/reference/sdk/) to access the linked resources
 in your handler.
 
 ```ts title="src/lambda.ts"
@@ -196,7 +198,7 @@ The Lambda function URL if `url` is enabled.
 
 ## Links
 
-The following are accessible through the [Node client](/docs/reference/client/) at runtime.
+The following are accessible through the [SDK](/docs/reference/sdk/) at runtime.
 
 ### name
 <Segment>
@@ -407,13 +409,32 @@ If `bundle` is specified, the handler needs to be in the root of the bundle dire
 [Link resources](/docs/linking/) to your function. This will:
 
 1. Grant the permissions needed to access the resources.
-2. Allow you to access it in your site using the [Node client](/docs/reference/client/).
+2. Allow you to access it in your site using the [SDK](/docs/reference/sdk/).
 
 Takes a list of components to link to the function.
 
 ```js
 {
-  link: [myBucket, stripeKey]
+  link: [bucket, stripeKey]
+}
+```
+</Segment>
+### live?
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">false</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+
+<InlineSection>
+**Default** <code class="primitive">true</code>
+</InlineSection>
+Disable running this function [Live](/docs/live/) in `sst dev`.
+
+```js
+{
+  live: false
 }
 ```
 </Segment>
@@ -735,6 +756,15 @@ Granting the function permissions to access all resources.
 </Section>
 The [IAM actions](https://docs.aws.amazon.com/service-authorization/latest/reference/reference_policies_actions-resources-contextkeys.html#actions_table) that can be performed.
 
+```js
+{
+  permissions: [
+    {
+      actions: ["s3:*"]
+    }
+  ]
+}
+```
 </Segment>
 <NestedTitle id="permissions-resources" Tag="h4" parent="permissions[].">resources</NestedTitle>
 <Segment>
@@ -743,8 +773,17 @@ The [IAM actions](https://docs.aws.amazon.com/service-authorization/latest/refer
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code><code class="symbol">[]</code>
 </InlineSection>
 </Section>
-The resources(s) specified using the [IAM ARN format](https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_identifiers.html).
+The resourcess specified using the [IAM ARN format](https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_identifiers.html).
 
+```js
+{
+  permissions: [
+    {
+      resources: ["arn:aws:s3:::my-bucket/*"]
+    }
+  ]
+}
+```
 </Segment>
 ### runtime?
 <Segment>
@@ -755,13 +794,13 @@ The resources(s) specified using the [IAM ARN format](https://docs.aws.amazon.co
 </Section>
 
 <InlineSection>
-**Default** <code class="primitive">"nodejs18.x"</code>
+**Default** <code class="primitive">"nodejs20.x"</code>
 </InlineSection>
 The runtime environment for the function. Support for other runtimes is on our roadmap.
 
 ```js
 {
-  runtime: "nodejs20.x"
+  runtime: "nodejs18.x"
 }
 ```
 </Segment>

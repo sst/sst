@@ -10,10 +10,24 @@ import * as aws from "@pulumi/aws";
 import * as cf from "@pulumi/cloudflare";
 import type { Loader, BuildOptions } from "esbuild";
 import { build } from "../../runtime/cloudflare.js";
-import { Component, Transform, transform } from "../component";
+import { Component, Prettify, Transform, transform } from "../component";
 import { WorkersUrl } from "./providers/workers-url.js";
 import { Link } from "../link.js";
 import type { Input } from "../input.js";
+
+/**
+ * @internal
+ */
+export interface WorkerDomainArgs {
+  /**
+   * The domain to use for the worker.
+   */
+  hostname: Input<string>;
+  /**
+   * The zone id for the domain.
+   */
+  zoneId: Input<string>;
+}
 
 export interface WorkerArgs {
   /**
@@ -45,16 +59,7 @@ export interface WorkerArgs {
   /**
    * @internal
    */
-  domain?: Input<{
-    /**
-     * The domain to use for the worker.
-     */
-    hostname: Input<string>;
-    /**
-     * The zone id for the domain.
-     */
-    zoneId: Input<string>;
-  }>;
+  domain?: Input<Prettify<WorkerDomainArgs>>;
   /**
    * Configure how your function is bundled.
    *
@@ -101,7 +106,7 @@ export interface WorkerArgs {
      */
     esbuild?: Input<BuildOptions>;
     /**
-     * Enable or disable if the worked code is minified when bundled.
+     * Enable or disable if the worker code is minified when bundled.
      *
      * @default `true`
      *
@@ -120,7 +125,7 @@ export interface WorkerArgs {
    * [Link resources](/docs/linking/) to your worker. This will:
    *
    * 1. Handle the credentials needed to access the resources.
-   * 2. Allow you to access it in your site using the [Node client](/docs/reference/client/).
+   * 2. Allow you to access it in your site using the [SDK](/docs/reference/sdk/).
    *
    * @example
    *
@@ -128,11 +133,27 @@ export interface WorkerArgs {
    *
    * ```js
    * {
-   *   link: [myBucket, stripeKey]
+   *   link: [bucket, stripeKey]
    * }
    * ```
    */
   link?: Input<any[]>;
+  /**
+   * Key-value pairs that are set as [Worker environment variables](https://developers.cloudflare.com/workers/configuration/environment-variables/).
+   *
+   * They can be accessed in your function through `env.<key>`.
+   *
+   * @example
+   *
+   * ```js
+   * {
+   *   environment: {
+   *     DEBUG: "true"
+   *   }
+   * }
+   * ```
+   */
+  environment?: Input<Record<string, Input<string>>>;
   /**
    * [Transform](/docs/components#transform/) how this component creates its underlying
    * resources.
@@ -164,15 +185,15 @@ export interface WorkerArgs {
  * and allow you to access it in your handler.
  *
  * ```ts {5}
- * const myBucket = new sst.aws.Bucket("MyBucket");
+ * const bucket = new sst.aws.Bucket("MyBucket");
  *
  * new sst.cloudflare.Worker("MyWorker", {
  *   handler: "src/worker.handler",
- *   link: [myBucket]
+ *   link: [bucket]
  * });
  * ```
  *
- * You can use the [Node client](/docs/reference/client/) to access the linked resources
+ * You can use the [SDK](/docs/reference/sdk/) to access the linked resources
  * in your handler.
  *
  * ```ts title="src/worker.ts"
@@ -292,25 +313,31 @@ export class Worker extends Component {
     }
 
     function createScript() {
-      return all([handler, iamCredentials]).apply(
-        async ([handler, iamCredentials]) =>
+      return all([handler, args.environment, iamCredentials]).apply(
+        async ([handler, environment, iamCredentials]) =>
           new cf.WorkerScript(
             `${name}Script`,
             transform(args.transform?.worker, {
               name,
-              accountId: $app.providers?.cloudflare?.accountId!,
+              accountId: sst.cloudflare.DEFAULT_ACCOUNT_ID,
               content: (await fs.readFile(handler)).toString(),
               module: true,
               compatibilityDate: "2024-01-01",
               compatibilityFlags: ["nodejs_compat"],
-              plainTextBindings: iamCredentials
-                ? [
-                    {
-                      name: "AWS_ACCESS_KEY_ID",
-                      text: iamCredentials.id,
-                    },
-                  ]
-                : [],
+              plainTextBindings: [
+                ...(iamCredentials
+                  ? [
+                      {
+                        name: "AWS_ACCESS_KEY_ID",
+                        text: iamCredentials.id,
+                      },
+                    ]
+                  : []),
+                ...Object.entries(environment ?? {}).map(([key, value]) => ({
+                  name: key,
+                  text: value,
+                })),
+              ],
               secretTextBindings: iamCredentials
                 ? [
                     {
@@ -329,7 +356,7 @@ export class Worker extends Component {
       return new WorkersUrl(
         `${name}Url`,
         {
-          accountId: $app.providers?.cloudflare?.accountId!,
+          accountId: sst.cloudflare.DEFAULT_ACCOUNT_ID,
           scriptName: script.name,
           enabled: urlEnabled,
         },
@@ -343,7 +370,7 @@ export class Worker extends Component {
       return new cf.WorkerDomain(
         `${name}Domain`,
         {
-          accountId: $app.providers?.cloudflare?.accountId!,
+          accountId: sst.cloudflare.DEFAULT_ACCOUNT_ID,
           service: script.name,
           hostname: output(args.domain).apply((domain) => domain.hostname),
           zoneId: output(args.domain).apply((domain) => domain.zoneId),

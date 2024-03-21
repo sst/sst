@@ -3,6 +3,8 @@ title: Queue
 description: Reference doc for the `sst.aws.Queue` component.
 ---
 
+{/* DO NOT EDIT. AUTO-GENERATED FROM pkg/platform/src/components/aws/queue.ts */}
+
 import Segment from '../../../../../../src/components/tsdoc/Segment.astro';
 import Section from '../../../../../../src/components/tsdoc/Section.astro';
 import NestedTitle from '../../../../../../src/components/tsdoc/NestedTitle.astro';
@@ -16,7 +18,7 @@ The `Queue` component lets you add a serverless queue to your app. It uses [Amaz
 #### Create a queue
 
 ```ts
-const myQueue = new sst.aws.Queue("MyQueue");
+const queue = new sst.aws.Queue("MyQueue");
 ```
 
 #### Make it a FIFO queue
@@ -32,7 +34,7 @@ new sst.aws.Queue("MyQueue", {
 #### Add a subscriber
 
 ```ts
-myQueue.subscribe("src/subscriber.handler");
+queue.subscribe("src/subscriber.handler");
 ```
 
 #### Link the queue to a resource
@@ -41,7 +43,7 @@ You can link the queue to other resources, like a function or your Next.js app.
 
 ```ts
 new sst.aws.Nextjs("MyWeb", {
-  link: [myQueue]
+  link: [queue]
 });
 ```
 
@@ -103,13 +105,13 @@ Configure the subscription.
 Subscribe to this queue.
 
 ```js
-myQueue.subscribe("src/subscriber.handler");
+queue.subscribe("src/subscriber.handler");
 ```
 
 Add multiple subscribers.
 
 ```js
-myQueue
+queue
   .subscribe("src/subscriber1.handler")
   .subscribe("src/subscriber2.handler");
 ```
@@ -117,7 +119,7 @@ myQueue
 Add a filter to the subscription.
 
 ```js
-myQueue.subscribe("src/subscriber.handler", {
+queue.subscribe("src/subscriber.handler", {
   filters: [
     {
       body: {
@@ -131,7 +133,7 @@ myQueue.subscribe("src/subscriber.handler", {
 Customize the subscriber function.
 
 ```js
-myQueue.subscribe({
+queue.subscribe({
   handler: "src/subscriber.handler",
   timeout: "60 seconds"
 });
@@ -182,7 +184,7 @@ The SQS Queue URL.
 
 ## Links
 
-The following are accessible through the [Node client](/docs/reference/client/) at runtime.
+The following are accessible through the [SDK](/docs/reference/sdk/) at runtime.
 
 ### url
 <Segment>
@@ -255,11 +257,7 @@ Filter the records that'll be processed by the `subscriber` function.
 You can pass in up to 5 different filters.
 :::
 
-You can pass in up to 5 different filter policies. These will logically ORed together. Meaning that if any single policy matches, the record will be processed.
-
-:::tip
-Learn more about the [filter rule syntax](https://docs.aws.amazon.com/lambda/latest/dg/invocation-eventfiltering.html#filtering-syntax).
-:::
+You can pass in up to 5 different filter policies. These will logically ORed together. Meaning that if any single policy matches, the record will be processed. Learn more about the [filter rule syntax](https://docs.aws.amazon.com/lambda/latest/dg/invocation-eventfiltering.html#filtering-syntax).
 
 For example, if you Queue contains records in this JSON format.
 ```js
@@ -306,7 +304,7 @@ And to process only those records where `RecordNumber` greater than `9999`.
 </InlineSection>
 - <p>[<code class="key">eventSourceMapping?</code>](#transform-eventsourcemapping)</p>
 </Section>
-[Transform](/docs/components#transform) how this subscription creates its underlying
+[Transform](/docs/components#transform) how this component creates its underlying
 resources.
 
 </Segment>

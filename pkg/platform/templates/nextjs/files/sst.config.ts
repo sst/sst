@@ -4,10 +4,11 @@ export default $config({
   app(input) {
     return {
       name: "{{.App}}",
-      removalPolicy: input?.stage === "production" ? "retain" : "remove",
+      removal: input?.stage === "production" ? "retain" : "remove",
+      home: "{{.Home}}",
     };
   },
   async run() {
-    const site = new sst.aws.Nextjs("Web");
+    new sst.{{.Home}}.Nextjs("MyWeb");
   },
 });

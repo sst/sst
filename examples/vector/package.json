@@ -12,7 +12,7 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "devDependencies": {
-    "sst": "3.0.1-37"
+  "dependencies": {
+    "sst": "3.0.2"
   }
 }

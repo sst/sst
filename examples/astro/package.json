@@ -3,7 +3,7 @@
   "type": "module",
   "version": "0.0.1",
   "scripts": {
-    "dev": "astro dev",
+    "dev": "sst dev astro dev",
     "start": "astro dev",
     "build": "astro check && astro build",
     "preview": "astro preview",
@@ -12,7 +12,8 @@
   "dependencies": {
     "@astrojs/check": "^0.4.1",
     "astro": "^4.2.8",
-    "astro-sst": "^2.40.1",
-    "typescript": "^5.3.3"
+    "astro-sst": "^2.41.2",
+    "typescript": "^5.3.3",
+    "sst": "^3.0.1"
   }
 }

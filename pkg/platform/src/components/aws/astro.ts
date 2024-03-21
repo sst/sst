@@ -98,7 +98,7 @@ export interface AstroArgs extends SsrSiteArgs {
    * [Link resources](/docs/linking/) to your Astro site. This will:
    *
    * 1. Grant the permissions needed to access the resources.
-   * 2. Allow you to access it in your site using the [Node client](/docs/reference/client/).
+   * 2. Allow you to access it in your site using the [SDK](/docs/reference/sdk/).
    *
    * @example
    *
@@ -106,7 +106,7 @@ export interface AstroArgs extends SsrSiteArgs {
    *
    * ```js
    * {
-   *   link: [myBucket, stripeKey]
+   *   link: [bucket, stripeKey]
    * }
    * ```
    */
@@ -136,7 +136,7 @@ export interface AstroArgs extends SsrSiteArgs {
    * 2. Locally while running `sst dev astro dev`.
    *
    * :::tip
-   * You can also `link` resources to your Astro site and access them in a type-safe way with the [Node client](/docs/reference/client/). We recommend linking since it's more secure.
+   * You can also `link` resources to your Astro site and access them in a type-safe way with the [SDK](/docs/reference/sdk/). We recommend linking since it's more secure.
    * :::
    *
    * Recall that in Astro, you need to prefix your environment variables with `PUBLIC_` to access them on the client-side. [Read more here](https://docs.astro.build/en/guides/environment-variables/).
@@ -218,7 +218,7 @@ export interface AstroArgs extends SsrSiteArgs {
 const BUILD_META_FILE_NAME: BuildMetaFileName = "sst.buildMeta.json";
 
 /**
- * The `Astro` component lets you deploy an Astro site to AWS.
+ * The `Astro` component lets you deploy an [Astro](https://astro.build) site to AWS.
  *
  * @example
  *
@@ -269,14 +269,14 @@ const BUILD_META_FILE_NAME: BuildMetaFileName = "sst.buildMeta.json";
  * to the resources and allow you to access it in your site.
  *
  * ```ts {4}
- * const myBucket = new sst.aws.Bucket("MyBucket");
+ * const bucket = new sst.aws.Bucket("MyBucket");
  *
  * new sst.aws.Astro("MyWeb", {
- *   link: [myBucket]
+ *   link: [bucket]
  * });
  * ```
  *
- * You can use the [Node client](/docs/reference/client/) to access the linked resources
+ * You can use the [SDK](/docs/reference/sdk/) to access the linked resources
  * in your Astro site.
  *
  * ```astro title="src/pages/index.astro"
@@ -300,8 +300,8 @@ export class Astro extends Component implements Link.Linkable {
     super("sst:aws:Astro", name, args, opts);
 
     const parent = this;
-    const { sitePath } = prepare(args, opts);
-    const { access, bucket } = createBucket(parent, name, args);
+    const { sitePath, partition, region } = prepare(args, opts);
+    const { access, bucket } = createBucket(parent, name, partition, args);
     const outputPath = buildApp(name, args, sitePath);
     const { buildMeta } = loadBuildOutput();
     const plan = buildPlan();
@@ -320,12 +320,14 @@ export class Astro extends Component implements Link.Linkable {
     this.assets = bucket;
     this.cdn = distribution;
     this.server = serverFunction;
-    Hint.register(
-      this.urn,
-      all([this.cdn.domainUrl, this.cdn.url]).apply(
-        ([domainUrl, url]) => domainUrl ?? url,
-      ),
-    );
+    if (!$dev) {
+      Hint.register(
+        this.urn,
+        all([this.cdn.domainUrl, this.cdn.url]).apply(
+          ([domainUrl, url]) => domainUrl ?? url,
+        ),
+      );
+    }
     this.registerOutputs({
       _metadata: {
         mode: $dev ? "placeholder" : "deployed",
@@ -674,7 +676,11 @@ function buildRouteTree(routes: BuildMetaConfig["routes"], level = 0) {
     ) {
       delete routeTree.branches[key];
     } else if (branch.nodes.length > 1) {
-      routeTree.branches[key] = buildRouteTree(branch.nodes, level + 1);
+      const deduplicatedNodes = branch.nodes.filter(
+        (node, index, arr) =>
+          arr.findIndex((n) => n.pattern === node.pattern) === index,
+      );
+      routeTree.branches[key] = buildRouteTree(deduplicatedNodes, level + 1);
       branch.nodes = [];
     }
   }

@@ -24,6 +24,10 @@ type CliCommand = {
 
 const cmd = process.argv[2];
 
+function renderSourceMessage(source: string) {
+  return [``, `{/* DO NOT EDIT. AUTO-GENERATED FROM ${source} */}`];
+}
+
 try {
   await configureLogger();
   await patchCode();
@@ -42,6 +46,7 @@ async function generateCliDoc() {
     outputFilePath,
     [
       renderCliHeader(),
+      renderSourceMessage("cmd/sst/main.go"),
       renderCliImports(),
       renderCliAbout(),
       renderCliGlobalFlags(),
@@ -276,6 +281,7 @@ async function generateTsDoc() {
       outputFilePath = `src/content/docs/docs/reference/global.mdx`;
       outputFileContent = [
         renderGlobalHeader(),
+        renderSourceMessage("pkg/platform/src/global.d.ts"),
         renderImports(),
         renderAbout(),
         renderConfigVariables(),
@@ -288,6 +294,7 @@ async function generateTsDoc() {
       outputFilePath = `src/content/docs/docs/reference/config.mdx`;
       outputFileContent = [
         renderConfigHeader(),
+        renderSourceMessage(sourceFile),
         renderImports(),
         renderAbout(),
         renderInterfaces(),
@@ -305,6 +312,7 @@ async function generateTsDoc() {
       );
       outputFileContent = [
         renderComponentHeader(),
+        renderSourceMessage(sourceFile),
         renderImports(),
         renderAbout(),
         renderConstructor(),
@@ -456,8 +464,8 @@ async function generateTsDoc() {
                 f.name === "$jsonParse" && param.name === "reviver"
                   ? renderJsonParseReviverType()
                   : f.name === "$jsonStringify" && param.name === "replacer"
-                    ? renderJsonStringifyReplacerType()
-                    : renderType(param.type!);
+                  ? renderJsonStringifyReplacerType()
+                  : renderType(param.type!);
 
               return [
                 `- <p><code class="key">${renderSignatureArg(
@@ -640,7 +648,7 @@ async function generateTsDoc() {
       lines.push(``, `## Links`);
       lines.push(
         ``,
-        `The following are accessible through the [Node client](/docs/reference/client/) at runtime.`
+        `The following are accessible through the [SDK](/docs/reference/sdk/) at runtime.`
       );
 
       // Validate getSSTLink() return type

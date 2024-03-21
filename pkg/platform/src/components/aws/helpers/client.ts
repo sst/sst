@@ -11,7 +11,7 @@ type ClientOptions = {
 
 export const useClient = <C extends any>(
   client: new (config: any) => C,
-  opts?: ClientOptions
+  opts?: ClientOptions,
 ) => {
   const cache = useClientCache();
   const existing = cache.get(client.name);

@@ -4,13 +4,11 @@ export default $config({
   app(input) {
     return {
       name: "remix",
-      removalPolicy: input?.stage === "production" ? "retain" : "remove",
-      providers: {
-        aws: {},
-      },
+      removal: input?.stage === "production" ? "retain" : "remove",
+      home: "aws",
     };
   },
   async run() {
-    new sst.aws.Remix("Web");
+    new sst.aws.Remix("MyWeb");
   },
 });

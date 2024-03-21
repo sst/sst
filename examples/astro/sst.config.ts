@@ -4,13 +4,13 @@ export default $config({
   app(input) {
     return {
       name: "astro",
-      removalPolicy: input?.stage === "production" ? "retain" : "remove",
-      providers: {
-        aws: {},
-      },
+      removal: input?.stage === "production" ? "retain" : "remove",
+      home: "aws",
     };
   },
   async run() {
-    new sst.aws.Astro("Web");
+    new sst.aws.Astro("MyWeb", {
+      domain: "astro.ion.sst.sh",
+    });
   },
 });

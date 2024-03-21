@@ -12,7 +12,7 @@ Before you get started:
 
 ---
 
-## Create a Next.js app
+## 1. Create a Next.js app
 
 Let's start by creating our app.
 
@@ -28,7 +28,7 @@ Now let's initialize SST in our app. Make sure you have the [CLI installed](/doc
 sst init
 ```
 
-This'll create a `sst.config.ts` file in the root of your app.
+This'll create a `sst.config.ts` file in your project root.
 
 #### Start dev mode
 
@@ -44,7 +44,7 @@ You are starting `next dev` wrapped in `sst dev next dev`.
 
 ---
 
-## Add an S3 Bucket
+## 2. Add an S3 Bucket
 
 Let's add a `public` S3 Bucket for file uploads. Update your `sst.config.ts`.
 
@@ -66,7 +66,7 @@ new sst.aws.Nextjs("MyWeb", {
 
 ---
 
-## Create an upload form
+## 3. Create an upload form
 
 Add a form client component in `components/form.tsx`.
 
@@ -143,9 +143,9 @@ Add some styles.
 
 ---
 
-## Generate a pre-signed URL
+## 4. Generate a pre-signed URL
 
-When our app loads, we'll generate a pre-signed URL for the file upload and render the form with it.
+When our app loads, we'll generate a pre-signed URL for the file upload and render the form with it. Replace your `Home` component in `app/page.tsx`.
 
 ```ts title="app/page.tsx" {4}
 export default async function Home() {
@@ -170,7 +170,6 @@ We are directly accessing our S3 bucket with `Resource.MyBucket.name`.
 Add the relevant imports.
 
 ```ts title="app/page.tsx"
-import crypto from "crypto";
 import { Resource } from "sst";
 import Form from "@/components/form";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
@@ -180,14 +179,14 @@ import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 And install the npm packages.
 
 ```bash
-npm install sst@ion @aws-sdk/client-s3 @aws-sdk/s3-request-presigner
+npm install @aws-sdk/client-s3 @aws-sdk/s3-request-presigner
 ```
 
-Head over to `http://localhost:3000` and try **uploading an image**, you should see it upload and then load the image.
+Head over to `http://localhost:3000` and try **uploading an image**, you should see it upload and then download the image.
 
 ---
 
-## Deploy your app
+## 5. Deploy your app
 
 Now let's deploy your app to AWS.
 
@@ -203,8 +202,8 @@ Congrats! Your app should now be live!
 
 ## Connect the console
 
-Optionally, you can view your app and its logs in the [SST Console](/docs/console/) — [**console.sst.dev**](https://console.sst.dev)
+As a next step, you can view your app and its logs in the [SST Console](/docs/console/) — [**console.sst.dev**](https://console.sst.dev)
 
-![Next.js in SST Console](../../../../assets/docs/nextjs-app-in-the-sst-console.png)
+![Next.js app in SST Console](../../../../assets/docs/nextjs-app-in-the-sst-console.png)
 
 You can [create a free account](https://console.sst.dev) and connect it to your AWS account.

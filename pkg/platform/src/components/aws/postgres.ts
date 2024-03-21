@@ -115,7 +115,7 @@ export interface PostgresArgs {
  * #### Create the database
  *
  * ```js
- * const myDatabase = new sst.aws.Postgres("MyDatabase");
+ * const database = new sst.aws.Postgres("MyDatabase");
  * ```
  *
  * #### Change the scaling config
@@ -135,7 +135,7 @@ export interface PostgresArgs {
  *
  * ```ts
  * new sst.aws.Nextjs("MyWeb", {
- *   link: [myDatabase]
+ *   link: [database]
  * });
  * ```
  *
@@ -278,7 +278,13 @@ export class Postgres
         resources: [this.cluster.masterUserSecrets[0].secretArn],
       },
       {
-        actions: ["rds-data:ExecuteStatement"],
+        actions: [
+          "rds-data:BatchExecuteStatement",
+          "rds-data:BeginTransaction",
+          "rds-data:CommitTransaction",
+          "rds-data:ExecuteStatement",
+          "rds-data:RollbackTransaction",
+        ],
         resources: [this.cluster.arn],
       },
     ];

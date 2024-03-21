@@ -1,23 +1,22 @@
 /// <reference path="./.sst/platform/config.d.ts" />
-
 export default $config({
-  app() {
+  app(input) {
     return {
       name: "test",
-      removalPolicy: "retain-all",
-      providers: {
-        aws: {},
-      },
+      removal: input?.stage === "production" ? "retain" : "remove",
+      home: "aws",
+      providers: { "@upstash/pulumi": true },
     };
   },
   async run() {
-    const fn = new sst.aws.Function("MyFunction", {
+    new upstash.RedisDatabase("MyDatabase", {
+      region: "us-east-1",
+      databaseName: "my-database",
+    })
+    const bucket = new sst.aws.Bucket("MyBucket");
+    const api = new sst.aws.ApiGatewayV2("MyApi").route("GET /", {
+      link: [bucket],
       handler: "src/index.handler",
-      url: true,
     });
-    const bucket = new aws.s3.Bucket("MyBucket", { bucket: "foo" });
-    return {
-      url: fn.url,
-    };
   },
 });

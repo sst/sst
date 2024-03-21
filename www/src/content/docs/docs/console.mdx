@@ -3,7 +3,7 @@ title: Console
 description: Manage and monitor your apps with the SST Console.
 ---
 
-The SST Console is a web based dashboard to manage your SST apps. With it you can invoke functions, debug issues, view logs, and manage all your apps, with your team — [**console.sst.dev**](https://console.sst.dev)
+The Console is a web based dashboard to manage your SST apps. With it you can invoke functions, debug issues, view logs, and manage all your apps, with your team — [**console.sst.dev**](https://console.sst.dev)
 
 [![SST Console](../../../assets/docs/sst-console-logs.png)](https://console.sst.dev)
 
@@ -18,7 +18,7 @@ The Console is completely optional and comes with a generous free tier.
 Start by creating an account and connecting your AWS account.
 
 :::note
-Currently the Console only supports SST apps **deployed to AWS**.
+Currently the Console only supports apps **deployed to AWS**.
 :::
 
 1. **Create an account with your email**
@@ -57,7 +57,7 @@ Here are a few of the things the Console does for you.
 
 ### Logs
 
-With the SST Console, you don't need to go to CloudWatch to look at the logs for your functions. You can view:
+With the Console, you don't need to go to CloudWatch to look at the logs for your functions. You can view:
 
 - Past logs
 - Live logs
@@ -67,12 +67,12 @@ With the SST Console, you don't need to go to CloudWatch to look at the logs for
 
 ### Issues
 
-The SST Console will automatically show you any errors in your Lambda functions in real-time. And notify you through Slack or email.
+The Console will automatically show you any errors in your Lambda functions in real-time. And notify you through Slack or email.
 
 With Issues, there is:
 
 - **Nothing to setup**, no code to instrument
-- **Source maps** are supported **automatically**, no need to upload
+- **Source maps** are supported **automatically**
 - **No impact on performance** or cold starts, since the functions aren't modified
 
 :::tip
@@ -86,14 +86,14 @@ Issues works out of the box and has no impact on performance or cold starts.
 Here's how it works.
 
 1. When an app is deployed or when an account is first synced, we add a log subscriber to your Lambda functions. 
-   - Note there's a maximum of 2 subscribers allowed. More on this below.
+   - There's a maximum of 2 subscribers allowed. More on this below.
 2. The subscriber filters for anything that looks like an error and processes those log lines.
 3. It applies the source maps to the error stack trace.
 4. Finally, it groups similar looking errors together.
 
 ---
 
-#### Adding a log subscriber
+#### Log subscriber
 
 The process of adding a log subscriber to your Lambda functions might fail. This can happen if:
 
@@ -108,9 +108,15 @@ You can see these errors in the Issues tab. Once you've fixed these issues, you 
 
 Issues reports Lambda function failures. In addition, for Node.js it reports errors that are logged using `console.error(new Error("my-error"))`.
 
-:::note
-For the Console to automatically report your errors, you need to pass in an error object with the `console.error` call, like so — `console.error(new Error("my-error"))`.
+:::tip
+In Node.js functions you can use `console.error` to report your errors.
 :::
+
+For the Console to automatically report your errors, you need to pass in an error object with the `console.error` call.
+
+```js title="src/lambda.ts"
+console.error(new Error("my-error"));
+```
 
 ---
 
@@ -136,12 +142,7 @@ The local logs works in all browsers and environments. But for certain browsers 
 
 Certain browsers like Safari and Brave require the local connection between the browser and the `sst dev` CLI to be running on HTTPS.
 
-SST integrates with [mkcert](https://github.com/FiloSottile/mkcert) to automatically generate a self-signed certificate. To set this up:
-
-1. Follow the mkcert [installation steps](https://github.com/FiloSottile/mkcert#installation).
-2. Run `mkcert -install` in your terminal.
-3. Restart your browser.
-4. Restart `sst dev` and navigate to Console in the browser.
+SST can integrate with mkcert to automatically generate a self-signed certificate. If you need support for this, feel free to open an issue on GitHub.
 
 ---
 
@@ -151,9 +152,9 @@ If you are using [Gitpod](https://www.gitpod.io/), you can use the Gitpod Local 
 
 To get started:
 
-1. [Install Gitpod Local Companion app](https://www.gitpod.io/blog/local-app#installation).
-2. [Run the Companion app](https://www.gitpod.io/blog/local-app#running).
-3. Navigate to Console in the browser.
+1. [Install Gitpod Local Companion app](https://www.gitpod.io/blog/local-app#installation)
+2. [Run the Companion app](https://www.gitpod.io/blog/local-app#running)
+3. Navigate to Console in the browser
 
 The companion app runs locally and creates a tunnelled connection to your Gitpod workspace.
 
@@ -173,9 +174,9 @@ At a high level, here's how the Console works.
 
 - You can manage your apps
 
-  You can view all the SST Functions in your app. You can view all the issues in your functions in real-time with the source maps automatically applied. You can view their logs, invoke them, or replay invocations. You can also save event payloads to your workspace.
+  You can view all the functions in your app. You can view all the issues in your functions in real-time with the source maps automatically applied. You can view their logs, invoke them, or replay invocations. You can also save event payloads to your workspace.
 
-  For your local [`sst dev`](/docs/live/) environment, the logs will be streamed in real-time from your local machine.
+  For your functions running [Live](/docs/live/), the logs will be streamed in real-time from your local machine.
 
 - It's open-source, built with SST, and deployed with [Seed](https://seed.run)
 
@@ -189,15 +190,15 @@ The CloudFormation stack that the Console uses, creates an IAM Role in your acco
 
 By default, this role is granted `AdministratorAccess`, but you can customize it to restrict access. We'll look at this below. Additionally, if you'd like us to sign a BAA, feel free to [contact us][contact-us].
 
-There maybe we cases where you don't want any data leaving your AWS account. For this, we'll be supporting self-hosting the Console in the future.
+There maybe cases where you don't want any data leaving your AWS account. For this, we'll be supporting self-hosting the Console in the future.
 
 ---
 
 #### IAM permissions
 
-Permissions for the SST Console fall into two categories: read and write.
+Permissions for the Console fall into two categories: read and write:
 
-- **Read Permissions** — The Console needs specific permissions to display information about resources within your SST apps:
+- **Read Permissions**: The Console needs specific permissions to display information about resources within your SST apps.
 
   | Purpose                                | AWS IAM Action                   |
   |----------------------------------------|----------------------------------|
@@ -209,13 +210,13 @@ Permissions for the SST Console fall into two categories: read and write.
 
   Attach the `arn:aws:iam::aws:policy/ReadOnlyAccess` AWS managed policy to the IAM Role for comprehensive read access.
 
-- **Write Permissions** — The Console requires the following write permissions:
+- **Write Permissions**: The Console requires the following write permissions.
 
   | Purpose                                          | AWS IAM Action                                                               |
   |-----------------------------------------------------|------------------------------------------------------------------------------|
   | Forward bootstrap bucket events to event bus     | `s3:PutBucketNotification`                                      |
-  | Send events to SST Console                       | `events:PutRule`<br/>`events:PutTargets`                           |
-  | Grant event bus access for SST Console           | `iam:CreateRole`<br/>`iam:DeleteRole`<br/>`iam:DeleteRolePolicy`<br/>`iam:PassRole`<br/>`iam:PutRolePolicy` |
+  | Send events to Console                       | `events:PutRule`<br/>`events:PutTargets`                           |
+  | Grant event bus access for Console           | `iam:CreateRole`<br/>`iam:DeleteRole`<br/>`iam:DeleteRolePolicy`<br/>`iam:PassRole`<br/>`iam:PutRolePolicy` |
   | Enable Issues to subscribe logs                  | `logs:CreateLogGroup`<br/>`logs:PutSubscriptionFilter` |
   | Invoke Lambda functions and replay invocations   | `lambda:InvokeFunction` |
 
@@ -235,7 +236,7 @@ To customize IAM permissions for the CloudFormation stack:
    <details>
    <summary>_View the template changes_</summary>
    
-     ```diff
+     ```diff title="template.json"
          "SSTRole": {
            "Type": "AWS::IAM::Role",
            "Properties": {
@@ -319,7 +320,7 @@ To customize IAM permissions for the CloudFormation stack:
 
 ## Pricing
 
-The SST Console pricing is based on the number of times the Lambda functions in your SST apps are invoked per month and it uses the following tiers.
+The Console pricing is based on the number of times the Lambda functions in your SST apps are invoked per month and it uses the following tiers.
 
 | Invocations | Rate (per invocation) |
 |-------------|------|
@@ -330,7 +331,7 @@ The SST Console pricing is based on the number of times the Lambda functions in 
 A couple of things to note.
 
 - These are calculated for a given workspace on a monthly basis.
-- This does not apply to local stages, they'll be free forever.
+- This does not apply to personal stages, they'll be free forever.
 - There's also a soft limit for Issues on all accounts.
 - For volume pricing, feel free to [contact us][contact-us].
 
@@ -355,13 +356,13 @@ A couple of things to note.
 
   The number of invocations are only counted for the **Lambda functions in your SST apps**. Other Lambda functions in your AWS accounts are not included.
 
-- Do the functions in my local stages count as a part of the invocations?
+- Do the functions in my personal stages count as a part of the invocations?
 
   Lambda functions that are invoked **locally are not included**.
 
-- Can I access the local stages if I'm above the free tier?
+- Can I access the personal stages if I'm above the free tier?
 
-  If you go above the free tier in your _production_ stages, you **can still access your local stages**. Just make sure you have `sst dev` running locally, otherwise the Console won't be able to detect that it's a local stage.
+  If you go above the free tier in your _production_ stages, you **can still access your personal stages**. Just make sure you have `sst dev` running locally, otherwise the Console won't be able to detect that it's a personal stage.
 
 - My invocation volume is far higher than the listed tiers. Are there any other options?
 

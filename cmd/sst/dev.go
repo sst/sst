@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -17,7 +18,11 @@ import (
 )
 
 func CmdDev(cli *Cli) error {
-	args := cli.arguments
+	var args []string
+	for _, arg := range cli.arguments {
+		args = append(args, strings.Fields(arg)...)
+	}
+	slog.Info("args", "args", args, "length", len(args))
 	hasTarget := len(args) > 0
 
 	cfgPath, err := project.Discover()
@@ -122,36 +127,42 @@ func CmdDev(cli *Cli) error {
 	state := &server.State{}
 	// fmt.Print("\033[H\033[2J")
 	u := ui.New(ui.ProgressModeDev)
+	defer u.Destroy()
 	err = server.Connect(cli.Context, server.ConnectInput{
 		CfgPath: cfgPath,
 		Stage:   stage,
 		OnEvent: func(event server.Event) {
-			if !hasTarget || !runOnce {
+			if !hasTarget || !runOnce || true {
 				defer u.Trigger(&event.StackEvent)
 				defer u.Event(&event)
 				if event.StackEvent.PreludeEvent != nil {
 					u.Reset()
 				}
 			}
-
-			if event.PreludeEvent != nil && hasTarget && runOnce {
-				fmt.Println()
-				fmt.Println("🔥 SST is deploying, run sst dev to view progress 🔥")
+			if event.ConcurrentUpdateEvent != nil {
+				cli.Cancel()
 				return
 			}
-
+			// if event.PreludeEvent != nil && hasTarget && runOnce {
+			// 	fmt.Println()
+			// 	color.New(color.FgYellow, color.Bold).Print("~")
+			// 	color.New(color.FgWhite, color.Bold).Println("  Deploying")
+			// 	return
+			// }
 			if event.CompleteEvent != nil {
 				if hasTarget {
 					if !runOnce && (!event.CompleteEvent.Finished || len(event.CompleteEvent.Errors) > 0) {
 						cli.Cancel()
 						return
 					}
-
 					deployComplete <- event.CompleteEvent
 				}
 			}
-
 			if event.StateEvent != nil {
+				if event.StateEvent.State.Config != cfgPath {
+					cli.Cancel()
+					return
+				}
 				next := event.StateEvent.State
 				defer func() {
 					state = next
@@ -165,7 +176,6 @@ func CmdDev(cli *Cli) error {
 					)
 				}
 			}
-
 		},
 	})
 	cli.Cancel()

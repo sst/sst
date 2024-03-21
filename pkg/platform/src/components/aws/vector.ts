@@ -17,13 +17,16 @@ const ModelInfo = {
   "amazon.titan-embed-text-v1": { provider: "bedrock" as const, size: 1536 },
   "amazon.titan-embed-image-v1": { provider: "bedrock" as const, size: 1024 },
   "text-embedding-ada-002": { provider: "openai" as const, size: 1536 },
+  "text-embedding-3-small": { provider: "openai" as const, size: 1536 },
 };
 
 export interface VectorArgs {
   /**
    * The model used for generating the vectors.
    *
-   * To use the `text-embedding-ada-002` model, you'll need to pass in your `openAiApiKey`.
+   * :::tip
+   * To use the `text-embedding-ada-002` or `text-embedding-3-small` model, you'll need to pass in your `openAiApiKey`.
+   * :::
    *
    * @default `"amazon.titan-embed-text-v1"`
    * @example
@@ -36,7 +39,7 @@ export interface VectorArgs {
    */
   model?: Input<keyof typeof ModelInfo>;
   /**
-   * Your OpenAI API key. This is needed only if you're using the `text-embedding-ada-002` model.
+   * Your OpenAI API key. This is needed only if you're using the `text-embedding-ada-002` or `text-embedding-3-small` model.
    *
    * :::tip
    * Use `sst.Secret` to store your API key securely.
@@ -68,24 +71,24 @@ export interface VectorArgs {
  *
  * - It uses an LLM to generate the embedding.
  * - Stores it in a vector database powered by [RDS Postgres Serverless v2](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/aurora-serverless-v2.html).
- * - Provides a [Node client](/docs/reference/client/) to ingest, retrieve, and remove the vector data.
+ * - Provides a [SDK](/docs/reference/sdk/) to ingest, retrieve, and remove the vector data.
  *
  * @example
  *
  * #### Create the database
  *
  * ```ts
- * const myVectorDB = new sst.aws.Vector("MyVectorDB");
+ * const vector = new sst.aws.Vector("MyVectorDB");
  * ```
  *
  * #### Change the model
  *
- * Optionally, use a different model, like OpenAI's `text-embedding-ada-002` model. You'll need to pass in your OpenAI API key.
+ * Optionally, use a different model, like OpenAI's `text-embedding-3-small` model. You'll need to pass in your OpenAI API key.
  *
  * ```ts {3}
  * new sst.aws.Vector("MyVectorDB", {
  *   openAiApiKey: new sst.aws.Secret("OpenAiApiKey").value,
- *   model: "text-embedding-ada-002"
+ *   model: "text-embedding-3-small"
  * });
  * ```
  *
@@ -95,11 +98,11 @@ export interface VectorArgs {
  *
  * ```ts
  * new sst.aws.Nextjs("MyWeb", {
- *   link: [myVectorDB]
+ *   link: [vector]
  * });
  * ```
  *
- * Once linked, you can query it in your function code using the [Node client](/docs/reference/client/).
+ * Once linked, you can query it in your function code using the [SDK](/docs/reference/sdk/).
  *
  * ```ts title="app/page.tsx" {3}
  * import { VectorClient } from "sst";
@@ -183,20 +186,19 @@ export class Vector
     }
 
     function createDBTable() {
-      // Create table after the DB instance is created
-      postgres.nodes.instance.arn.apply(() => {
-        new EmbeddingsTable(
-          `${name}Table`,
-          {
-            clusterArn: postgres.nodes.cluster.arn,
-            secretArn: postgres.nodes.cluster.masterUserSecrets[0].secretArn,
-            databaseName,
-            tableName,
-            vectorSize,
-          },
-          { parent },
-        );
-      });
+      vectorSize.apply((vectorSize) => console.log("vectorSize", vectorSize));
+
+      new EmbeddingsTable(
+        `${name}Table`,
+        {
+          clusterArn: postgres.nodes.cluster.arn,
+          secretArn: postgres.nodes.cluster.masterUserSecrets[0].secretArn,
+          databaseName,
+          tableName,
+          vectorSize,
+        },
+        { parent, dependsOn: postgres.nodes.instance },
+      );
     }
 
     function createIngestHandler() {

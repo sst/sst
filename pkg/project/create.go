@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/fs"
 	"log/slog"
 	"os"
@@ -29,13 +30,27 @@ type patchStep struct {
 	File  string          `json:"file"`
 }
 
+type gitignoreStep struct {
+	Name string `json:"name"`
+	Path string `json:"path"`
+}
+
 type preset struct {
 	Steps []step `json:"steps"`
 }
 
-func Create(templateName string) error {
+var ErrConfigExists = fmt.Errorf("sst.config.ts already exists")
+
+func Create(templateName string, home string) error {
+	gitignoreSteps := []gitignoreStep{
+		{
+			Name: "# sst",
+			Path: ".sst",
+		},
+	}
+
 	if _, err := os.Stat("sst.config.ts"); err == nil {
-		return fmt.Errorf("sst.config.ts already exists")
+		return ErrConfigExists
 	}
 
 	currentDirectory, err := os.Getwd()
@@ -95,25 +110,19 @@ func Create(templateName string) error {
 			exec.Command("npx", "prettier", "--write", patchStep.File).Start()
 			break
 
-		case "install-deps":
-			cmd := exec.Command("npm", "install")
-
-			if _, err := os.Stat("yarn.lock"); err == nil {
-				cmd = exec.Command("yarn", "install")
-			}
-			if _, err := os.Stat("pnpm-lock.yaml"); err == nil {
-				cmd = exec.Command("pnpm", "install")
-			}
-			if _, err := os.Stat("bun.lockb"); err == nil {
-				cmd = exec.Command("bun", "install")
-			}
-			slog.Info("installing deps", "args", cmd.Args)
-			cmd.Run()
-			break
-
 		case "copy":
-			err = fs.WalkDir(platform.Templates, filepath.Join("templates", templateName, "files"), func(path string, d fs.DirEntry, err error) error {
+			templateFilesPath := filepath.Join("templates", templateName, "files")
+			err = fs.WalkDir(platform.Templates, templateFilesPath, func(path string, d fs.DirEntry, err error) error {
 				if d.IsDir() {
+					// Create the directory if it doesn't exist
+					dir := filepath.Join(".", strings.TrimPrefix(path, templateFilesPath))
+					if dir == "" {
+						return nil
+					}
+					err := os.MkdirAll(dir, 0755)
+					if err != nil {
+						return err
+					}
 					return nil
 				}
 
@@ -122,14 +131,16 @@ func Create(templateName string) error {
 					return err
 				}
 
-				name := d.Name()
+				name := filepath.Join(".", strings.TrimPrefix(path, templateFilesPath))
 
 				slog.Info("copying template", "path", path)
 				tmpl, err := template.New(path).Parse(string(src))
 				data := struct {
-					App string
+					App  string
+					Home string
 				}{
-					App: directoryName,
+					App:  directoryName,
+					Home: home,
 				}
 
 				output, err := os.Create(name)
@@ -145,6 +156,41 @@ func Create(templateName string) error {
 
 				return nil
 			})
+			if err != nil {
+				return err
+			}
+			break;
+
+		case "gitignore":
+			var gitignoreStep gitignoreStep
+			err = json.Unmarshal(step.Properties, &gitignoreStep)
+			if err != nil {
+				return err
+			}
+			slog.Info("handling .gitignore", "section", gitignoreStep.Name)
+			gitignoreSteps = append(gitignoreSteps, gitignoreStep)
+		}
+	}
+
+	// Update .gitignore
+	gitignoreFilename := ".gitignore"
+	file, err := os.OpenFile(gitignoreFilename, os.O_RDWR|os.O_CREATE, 0666)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+	bytes, err := io.ReadAll(file)
+	if err != nil {
+		return err
+	}
+	content := string(bytes)
+
+	for _, step := range gitignoreSteps {
+		if !strings.Contains(content, step.Path) {
+			if content != "" && !strings.HasSuffix(content, "\n") {
+				file.WriteString("\n")
+			}
+			_, err := file.WriteString("\n" + step.Name + "\n" + step.Path + "\n")
 			if err != nil {
 				return err
 			}

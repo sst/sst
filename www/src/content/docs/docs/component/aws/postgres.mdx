@@ -3,6 +3,8 @@ title: Postgres
 description: Reference doc for the `sst.aws.Postgres` component.
 ---
 
+{/* DO NOT EDIT. AUTO-GENERATED FROM pkg/platform/src/components/aws/postgres.ts */}
+
 import Segment from '../../../../../../src/components/tsdoc/Segment.astro';
 import Section from '../../../../../../src/components/tsdoc/Section.astro';
 import NestedTitle from '../../../../../../src/components/tsdoc/NestedTitle.astro';
@@ -17,7 +19,7 @@ The `Postgres` component lets you add a Postgres database to your app using
 #### Create the database
 
 ```js
-const myDatabase = new sst.aws.Postgres("MyDatabase");
+const database = new sst.aws.Postgres("MyDatabase");
 ```
 
 #### Change the scaling config
@@ -37,7 +39,7 @@ You can link your database to other resources, like a function or your Next.js a
 
 ```ts
 new sst.aws.Nextjs("MyWeb", {
-  link: [myDatabase]
+  link: [database]
 });
 ```
 
@@ -136,7 +138,7 @@ The ARN of the master user secret.
 
 ## Links
 
-The following are accessible through the [Node client](/docs/reference/client/) at runtime.
+The following are accessible through the [SDK](/docs/reference/sdk/) at runtime.
 
 ### clusterArn
 <Segment>

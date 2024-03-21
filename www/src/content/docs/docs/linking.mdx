@@ -5,35 +5,35 @@ description: Link resources together and access them in a typesafe and secure wa
 
 import { Tabs, TabItem } from '@astrojs/starlight/components';
 
-Resource linking is a feature of SST that allows you to link resources together and access them in a typesafe and secure way. This is done by:
+Resource linking is a feature of SST that allows you to link resources together and access them in a typesafe and secure way.
 
-1. Create a resource that you want to linked. For example, a bucket.
+1. Create a resource that you want to link to. For example, a bucket.
 
    ```js {6,11}
-   const myBucket = new sst.aws.Bucket("MyBucket");
+   const bucket = new sst.aws.Bucket("MyBucket");
    ```
 
-2. Link it to a function or frontend, using the `link` prop.
+2. Link it to your function or frontend, using the `link` prop.
 
    <Tabs>
      <TabItem label="Next.js">
      ```js {2}
      new sst.aws.Nextjs("MyWeb", {
-       link: [myBucket]
+       link: [bucket]
      });
      ```
      </TabItem>
      <TabItem label="Remix">
      ```js {2}
      new sst.aws.Remix("MyWeb", {
-       link: [myBucket]
+       link: [bucket]
      });
      ```
      </TabItem>
      <TabItem label="Astro">
      ```js {2}
      new sst.aws.Astro("MyWeb", {
-       link: [myBucket]
+       link: [bucket]
      });
      ```
      </TabItem>
@@ -41,13 +41,13 @@ Resource linking is a feature of SST that allows you to link resources together 
      ```js {3}
      new sst.aws.Function("MyFunction", {
        handler: "src/lambda.handler",
-       link: [myBucket]
+       link: [bucket]
      });
      ```
      </TabItem>
    </Tabs>
 
-3. Use the [Node client](/docs/reference/client/) to access the linked resource in a typesafe way.
+3. Use the [SDK](/docs/reference/sdk/) to access the linked resource in a typesafe way.
 
    <Tabs>
      <TabItem label="Next.js">
@@ -58,7 +58,7 @@ Resource linking is a feature of SST that allows you to link resources together 
      ```
      </TabItem>
      <TabItem label="Remix">
-     ```js title="app/root.tsx"
+     ```js title="app/routes/_index.tsx"
      import { Resource } from "sst";
 
      console.log(Resource.MyBucket.name);
@@ -82,11 +82,13 @@ Resource linking is a feature of SST that allows you to link resources together 
      </TabItem>
    </Tabs>
 
+---
+
 #### Working locally
 
-The above applies to your app deployed through `sst deploy`. However, to access linked resources locally you'll need to be running `sst dev`.
+The above applies to your app deployed through `sst deploy`. To access linked resources locally you'll need to be running `sst dev`.
 
-This applies to both the functions and the frontends.
+For the frontends, you'll need to wrap your frontend in the `sst dev` command.
 
 <Tabs>
   <TabItem label="Next.js">
@@ -139,7 +141,7 @@ The functions in SST are tree shaken and bundled using [esbuild](https://esbuild
 
 #### Frontends
 
-The frontends are not bundled by SST. Instead, when SST builds them, it injects the resource links into the `process.env` object using the prefix `SST_RESOURCE_`.
+The frontends are not bundled by SST. Instead, when they are built, SST injects the resource links into the `process.env` object using the prefix `SST_RESOURCE_`.
 
 This is why when you are running your frontend locally, it needs to be wrapped in the `sst dev` command.
 
@@ -153,4 +155,4 @@ When you run `sst dev` or `sst deploy`, SST generates the types to access the li
 If your types are not automatically getting picked up, make sure there is a `sst.env.d.ts` file in your project root.
 :::
 
-This file is in turn linked using a `sst-env.d.ts` file. This file is automatically created next to the `tsconfig.json` when you initialize your SST app.
+This file is referenced using a `sst-env.d.ts` in your project root. The `sst-env.d.ts` should be added when you initialize your app with `sst init`.

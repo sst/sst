@@ -1,6 +1,6 @@
 import fs from "fs";
 import { CustomResourceOptions, Input, dynamic } from "@pulumi/pulumi";
-import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
+import { S3Client, PutObjectCommand, S3 } from "@aws-sdk/client-s3";
 import { useClient } from "../helpers/client.js";
 
 export interface BucketFile {

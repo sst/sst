@@ -7,6 +7,7 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"encoding/json"
+	"fmt"
 	"io"
 	"os"
 	"time"
@@ -14,7 +15,7 @@ import (
 	"golang.org/x/exp/slog"
 )
 
-type Backend interface {
+type Home interface {
 	Env() (map[string]string, error)
 
 	getData(key, app, stage string) (io.Reader, error)
@@ -54,15 +55,11 @@ type DevSession interface {
 
 const SSM_NAME_BOOTSTRAP = "/sst/bootstrap"
 
-type LockExistsError struct{}
+var ErrLockExists = fmt.Errorf("Concurrent update detected, run `sst unlock` to delete lock file and retry.")
 
-func (e *LockExistsError) Error() string {
-	return "Concurrent update detected, run `sst cancel` to delete lock file and retry."
-}
+var passphraseCache = map[Home]map[string]string{}
 
-var passphraseCache = map[Backend]map[string]string{}
-
-func Passphrase(backend Backend, app, stage string) (string, error) {
+func Passphrase(backend Home, app, stage string) (string, error) {
 	slog.Info("getting passphrase", "app", app, "stage", stage)
 
 	cache, ok := passphraseCache[backend]
@@ -99,7 +96,7 @@ func Passphrase(backend Backend, app, stage string) (string, error) {
 	return passphrase, nil
 }
 
-func GetLinks(backend Backend, app, stage string) (map[string]interface{}, error) {
+func GetLinks(backend Home, app, stage string) (map[string]interface{}, error) {
 	data := map[string]interface{}{}
 	err := getData(backend, "link", app, stage, true, &data)
 	if err != nil {
@@ -108,7 +105,7 @@ func GetLinks(backend Backend, app, stage string) (map[string]interface{}, error
 	return data, err
 }
 
-func PutLinks(backend Backend, app, stage string, data map[string]interface{}) error {
+func PutLinks(backend Home, app, stage string, data map[string]interface{}) error {
 	slog.Info("putting links", "app", app, "stage", stage)
 	if data == nil || len(data) == 0 {
 		return nil
@@ -116,7 +113,7 @@ func PutLinks(backend Backend, app, stage string, data map[string]interface{}) e
 	return putData(backend, "link", app, stage, true, data)
 }
 
-func GetSecrets(backend Backend, app, stage string) (map[string]string, error) {
+func GetSecrets(backend Home, app, stage string) (map[string]string, error) {
 	data := map[string]string{}
 	err := getData(backend, "secret", app, stage, true, &data)
 	if err != nil {
@@ -125,15 +122,15 @@ func GetSecrets(backend Backend, app, stage string) (map[string]string, error) {
 	return data, err
 }
 
-func PutSecrets(backend Backend, app, stage string, data map[string]string) error {
+func PutSecrets(backend Home, app, stage string, data map[string]string) error {
 	slog.Info("putting secrets", "app", app, "stage", stage)
-	if data == nil || len(data) == 0 {
+	if data == nil {
 		return nil
 	}
 	return putData(backend, "secret", app, stage, true, data)
 }
 
-func PushState(backend Backend, app, stage string, from string) error {
+func PushState(backend Home, app, stage string, from string) error {
 	slog.Info("pushing state", "app", app, "stage", stage, "from", from)
 	file, err := os.Open(from)
 	if err != nil {
@@ -142,14 +139,16 @@ func PushState(backend Backend, app, stage string, from string) error {
 	return backend.putData("app", app, stage, file)
 }
 
-func PullState(backend Backend, app, stage string, out string) error {
+var ErrStateNotFound = fmt.Errorf("state not found")
+
+func PullState(backend Home, app, stage string, out string) error {
 	slog.Info("pulling state", "app", app, "stage", stage, "out", out)
 	reader, err := backend.getData("app", app, stage)
 	if err != nil {
 		return err
 	}
 	if reader == nil {
-		return nil
+		return ErrStateNotFound
 	}
 	file, err := os.Create(out)
 	if err != nil {
@@ -167,7 +166,7 @@ type lockData struct {
 	Created time.Time `json:"created"`
 }
 
-func Lock(backend Backend, app, stage string) error {
+func Lock(backend Home, app, stage string) error {
 	slog.Info("locking", "app", app, "stage", stage)
 	var lockData lockData
 	err := getData(backend, "lock", app, stage, false, &lockData)
@@ -175,7 +174,7 @@ func Lock(backend Backend, app, stage string) error {
 		return err
 	}
 	if !lockData.Created.IsZero() {
-		return &LockExistsError{}
+		return ErrLockExists
 	}
 	lockData.Created = time.Now()
 	err = putData(backend, "lock", app, stage, false, lockData)
@@ -185,12 +184,12 @@ func Lock(backend Backend, app, stage string) error {
 	return nil
 }
 
-func Unlock(backend Backend, app, stage string) error {
+func Unlock(backend Home, app, stage string) error {
 	slog.Info("unlocking", "app", app, "stage", stage)
 	return removeData(backend, "lock", app, stage)
 }
 
-func putData(backend Backend, key, app, stage string, encrypt bool, data interface{}) error {
+func putData(backend Home, key, app, stage string, encrypt bool, data interface{}) error {
 	slog.Info("putting data", "key", key, "app", app, "stage", stage)
 	jsonBytes, err := json.Marshal(data)
 	if err != nil {
@@ -222,7 +221,7 @@ func putData(backend Backend, key, app, stage string, encrypt bool, data interfa
 	return backend.putData(key, app, stage, bytes.NewReader(jsonBytes))
 }
 
-func getData(backend Backend, key, app, stage string, encrypted bool, out interface{}) error {
+func getData(backend Home, key, app, stage string, encrypted bool, out interface{}) error {
 	slog.Info("getting data", "key", key, "app", app, "stage", stage)
 	reader, err := backend.getData(key, app, stage)
 	if err != nil {
@@ -234,38 +233,38 @@ func getData(backend Backend, key, app, stage string, encrypted bool, out interf
 
 	data, err := io.ReadAll(reader)
 	if err != nil {
-		return nil
+		return err
 	}
 
 	if encrypted {
 		passphrase, err := Passphrase(backend, app, stage)
 		if err != nil {
-			return nil
+			return err
 		}
 		passphraseBytes, err := base64.StdEncoding.DecodeString(passphrase)
 		if err != nil {
-			return nil
+			return err
 		}
 		blockCipher, err := aes.NewCipher(passphraseBytes)
 		if err != nil {
-			return nil
+			return err
 		}
 		gcm, err := cipher.NewGCM(blockCipher)
 		if err != nil {
-			return nil
+			return err
 		}
 
 		nonce, ciphertext := data[:gcm.NonceSize()], data[gcm.NonceSize():]
 
 		data, err = gcm.Open(nil, nonce, ciphertext, nil)
 		if err != nil {
-			return nil
+			return err
 		}
 	}
 
 	return json.Unmarshal(data, out)
 }
 
-func removeData(backend Backend, key, app, stage string) error {
+func removeData(backend Home, key, app, stage string) error {
 	return backend.removeData(key, app, stage)
 }

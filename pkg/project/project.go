@@ -1,31 +1,42 @@
 package project
 
 import (
+	"bufio"
+	"bytes"
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"os"
+	"os/exec"
 	"path"
 	"path/filepath"
+	"regexp"
+	"strings"
 
 	"github.com/sst/ion/internal/fs"
+	"github.com/sst/ion/internal/util"
 	"github.com/sst/ion/pkg/js"
 	"github.com/sst/ion/pkg/project/provider"
 )
 
 type App struct {
-	Name          string                            `json:"name"`
-	Stage         string                            `json:"stage"`
-	RemovalPolicy string                            `json:"removalPolicy"`
-	Providers     map[string]map[string]interface{} `json:"providers"`
+	Name      string                 `json:"name"`
+	Stage     string                 `json:"stage"`
+	Removal   string                 `json:"removal"`
+	Providers map[string]interface{} `json:"providers"`
+	Home      string                 `json:"home"`
+	// Deprecated: Backend is now Home
+	Backend string `json:"backend"`
+	// Deprecated: RemovalPolicy is now Removal
+	RemovalPolicy string `json:"removalPolicy"`
 }
 
 type Project struct {
 	version   string
 	root      string
 	config    string
-	process   *js.Process
 	app       *App
-	backend   provider.Backend
+	home      provider.Home
 	Providers map[string]provider.Provider
 	env       map[string]string
 
@@ -62,29 +73,28 @@ type ProjectConfig struct {
 	Config  string
 }
 
-func New(input *ProjectConfig) (*Project, error) {
-	rootPath := filepath.Dir(input.Config)
+var ErrInvalidStageName = fmt.Errorf("invalid stage name")
+var ErrV2Config = fmt.Errorf("sstv2 config detected")
+var StageRegex = regexp.MustCompile(`^[a-zA-Z0-9-]+$`)
 
-	process, err := js.Start(
-		rootPath,
-	)
-	if err != nil {
-		return nil, err
+func New(input *ProjectConfig) (*Project, error) {
+	if !StageRegex.MatchString(input.Stage) {
+		return nil, ErrInvalidStageName
 	}
+
+	rootPath := filepath.Dir(input.Config)
 
 	proj := &Project{
 		version: input.Version,
 		root:    rootPath,
-		process: process,
 		config:  input.Config,
 	}
 	proj.Stack = &stack{
 		project: proj,
 	}
 	tmp := proj.PathWorkingDir()
-	// platformDir := proj.PathPlatformDir()
 
-	_, err = os.Stat(tmp)
+	_, err := os.Stat(tmp)
 	if err != nil {
 		if !os.IsNotExist(err) {
 			return nil, err
@@ -98,7 +108,7 @@ func New(input *ProjectConfig) (*Project, error) {
 	inputBytes, err := json.Marshal(map[string]string{
 		"stage": input.Stage,
 	})
-	err = process.Eval(
+	buildResult, err := js.Build(
 		js.EvalOptions{
 			Dir: tmp,
 			Banner: `
@@ -109,6 +119,10 @@ func New(input *ProjectConfig) (*Project, error) {
 			},
 			Code: fmt.Sprintf(`
 import mod from '%s';
+if (mod.stacks || mod.config) {
+  console.log("~v2")
+  process.exit(0)
+}
 console.log("~j" + JSON.stringify(mod.app({
   stage: $input.stage || undefined,
 })))`,
@@ -119,51 +133,73 @@ console.log("~j" + JSON.stringify(mod.app({
 		return nil, err
 	}
 
-	for {
-		cmd, line := process.Scan()
-
-		if cmd == js.CommandDone {
-			break
+	slog.Info("evaluating config")
+	output, err := exec.Command("node", "--no-warnings", buildResult.OutputFiles[0].Path).Output()
+	slog.Info("config evaluated")
+	if err != nil {
+		return nil, err
+	}
+	scanner := bufio.NewScanner(bytes.NewReader(output))
+	for scanner.Scan() {
+		line := scanner.Text()
+		if line == "~v2" {
+			return nil, ErrV2Config
 		}
+		if strings.HasPrefix(line, "~j") {
+			var parsed App
+			err = json.Unmarshal([]byte(line[2:]), &parsed)
+			if err != nil {
+				return nil, err
+			}
+			proj.app = &parsed
+			proj.app.Stage = input.Stage
 
-		if cmd != js.CommandJSON {
-			fmt.Println(line)
+			if proj.app.Providers == nil {
+				proj.app.Providers = map[string]interface{}{}
+			}
+
+			for name, args := range proj.app.Providers {
+				if argsBool, ok := args.(bool); ok && argsBool {
+					proj.app.Providers[name] = make(map[string]interface{})
+				}
+			}
+
+			if _, ok := proj.app.Providers[proj.app.Home]; !ok {
+				proj.app.Providers[proj.app.Home] = map[string]interface{}{}
+			}
+
+			if proj.app.Name == "" {
+				return nil, fmt.Errorf("Project name is required")
+			}
+
+			if proj.app.Home == "" {
+				return nil, util.NewReadableError(nil, `You must specify a "home" provider in the project configuration file.`)
+			}
+
+			if proj.app.RemovalPolicy != "" {
+				return nil, util.NewReadableError(nil, `The "removalPolicy" has been renamed to "removal"`)
+			}
+
+			if proj.app.Removal == "" {
+				proj.app.Removal = "retain"
+			}
+
+			if proj.app.Removal != "remove" && proj.app.Removal != "retain" && proj.app.Removal != "retain-all" {
+				return nil, fmt.Errorf("Removal must be one of: remove, retain, retain-all")
+			}
 			continue
 		}
 
-		var parsed App
-		err = json.Unmarshal([]byte(line), &parsed)
-		if err != nil {
-			return nil, err
-		}
-		proj.app = &parsed
-		proj.app.Stage = input.Stage
-
-		if proj.app.Providers == nil {
-			proj.app.Providers = map[string]map[string]interface{}{}
-		}
-
-		if proj.app.Name == "" {
-			return nil, fmt.Errorf("Project name is required")
-		}
-
-		if proj.app.RemovalPolicy == "" {
-			proj.app.RemovalPolicy = "retain"
-		}
-
-		if proj.app.RemovalPolicy != "remove" && proj.app.RemovalPolicy != "retain" && proj.app.RemovalPolicy != "retain-all" {
-			return nil, fmt.Errorf("RemovalPolicy must be one of: remove, retain, retain-all")
-		}
+		fmt.Println(line)
+	}
+	if err := scanner.Err(); err != nil {
+		return nil, err
 	}
 
 	return proj, nil
 }
 
 func (proj *Project) LoadProviders() error {
-	if _, ok := proj.app.Providers["aws"]; !ok {
-		proj.app.Providers["aws"] = map[string]interface{}{}
-	}
-
 	proj.Providers = map[string]provider.Provider{}
 	for name, args := range proj.app.Providers {
 		var p provider.Provider
@@ -180,14 +216,19 @@ func (proj *Project) LoadProviders() error {
 			continue
 		}
 
-		err := p.Init(proj.app.Name, proj.app.Stage, args)
+		err := p.Init(proj.app.Name, proj.app.Stage, args.(map[string]interface{}))
 		if err != nil {
-			return fmt.Errorf("Error initializing provider %s: %w", name, err)
+			return fmt.Errorf("Error initializing %s:\n   %w", name, err)
 		}
 		proj.Providers[name] = p
 	}
 
-	proj.backend = proj.Providers["aws"].(provider.Backend)
+	p := proj.Providers[proj.app.Home]
+	casted, ok := p.(provider.Home)
+	if !ok {
+		return util.NewReadableError(nil, proj.app.Home+` is not a valid backend provider.`)
+	}
+	proj.home = casted
 
 	return nil
 }
@@ -221,8 +262,8 @@ func (p *Project) App() *App {
 	return p.app
 }
 
-func (p *Project) Backend() provider.Backend {
-	return p.backend
+func (p *Project) Backend() provider.Home {
+	return p.home
 }
 
 func (p *Project) Cleanup() error {
