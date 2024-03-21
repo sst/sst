@@ -9,6 +9,8 @@ export default $config({
     };
   },
   async run() {
-    new sst.aws.Astro("MyWeb");
+    new sst.aws.Astro("MyWeb", {
+      domain: "astro.ion.sst.sh",
+    });
   },
 });
