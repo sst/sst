@@ -283,7 +283,7 @@ export class ApiGatewayV2 extends Component implements Link.Linkable {
   private api: aws.apigatewayv2.Api;
   private apigDomain?: aws.apigatewayv2.DomainName;
   private apiMapping?: Output<aws.apigatewayv2.ApiMapping>;
-  private jwtAuthorizers: Record<string, aws.apigatewayv2.Authorizer> = {};
+  private authorizers: Record<string, aws.apigatewayv2.Authorizer> = {};
 
   constructor(
     name: string,
@@ -559,7 +559,7 @@ export class ApiGatewayV2 extends Component implements Link.Linkable {
    *   .route("GET /", "src/get.handler")
    *   .route("POST /", "src/post.handler", {
    *     auth: {
-   *       type: "iam"
+   *       iam: true
    *     }
    *   });
    * ```
@@ -680,7 +680,7 @@ export class ApiGatewayV2 extends Component implements Link.Linkable {
           );
 
           const authorizer =
-            parent.jwtAuthorizers[id] ??
+            parent.authorizers[id] ??
             new aws.apigatewayv2.Authorizer(
               `${parentName}Authorizer${id}`,
               transform(args.transform?.authorizer, {
@@ -696,7 +696,7 @@ export class ApiGatewayV2 extends Component implements Link.Linkable {
               }),
               { parent },
             );
-          parent.jwtAuthorizers[id] = authorizer;
+          parent.authorizers[id] = authorizer;
 
           return {
             authorizationType: "JWT",
