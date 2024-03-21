@@ -1,0 +1,202 @@
+---
+title: Build an API with SST
+description: Create and deploy a serverless API in AWS with SST.
+---
+
+We are going to build a serverless API, add an S3 Bucket for file uploads, and deploy it to AWS using SST.
+
+Before you get started:
+
+1. [Configure your AWS credentials](https://docs.sst.dev/advanced/iam-credentials#loading-from-a-file)
+2. [Install the SST CLI](/docs/reference/cli)
+
+---
+
+## 1. Create a Node.js app
+
+Let's start by creating our app.
+
+```bash
+mkdir my-ts-app && cd my-ts-app
+npm init -y
+```
+
+#### Init SST
+
+Now let's initialize SST in our app. Make sure you have the [CLI installed](/docs/reference/cli/).
+
+```bash
+sst init
+```
+
+This'll create a `sst.config.ts` file in your project root.
+
+---
+
+## 2. Add an API
+
+Let's add an API using [Amazon API Gateway](https://docs.aws.amazon.com/apigateway/latest/developerguide/welcome.html). Update your `sst.config.ts`.
+
+```js title="sst.config.ts"
+async run() {
+  new sst.aws.ApiGatewayV2("MyApi")
+    .route("GET /", "index.upload")
+    .route("GET /latest", "index.latest");
+}
+```
+
+We are adding two routes, one for uploading an image and another for getting the latest uploaded image.
+
+#### Start dev mode
+
+Start your app in dev mode. This runs your functions [_Live_](/docs/live/).
+
+```bash
+sst dev
+```
+
+This will give you the URL of your API.
+
+```bash frame="none"
+✔  Complete
+   MyApi: https://y9ink9nh96.execute-api.us-east-1.amazonaws.com
+```
+
+---
+
+## 3. Add an S3 Bucket
+
+Let's add a `public` S3 Bucket for file uploads. Update your `sst.config.ts`.
+
+```js title="sst.config.ts"
+const bucket = new sst.aws.Bucket("MyBucket", {
+  public: true
+});
+```
+
+#### Link the bucket
+
+Now, link the bucket to the API routes.
+
+```js title="sst.config.ts" {3,7}
+new sst.aws.ApiGatewayV2("MyApi")
+  .route("GET /", {
+    link: [bucket],
+    handler: "index.upload"
+  })
+  .route("GET /latest", {
+    link: [bucket],
+    handler: "index.latest"
+  });
+```
+
+---
+
+## 4. Upload a file to S3
+
+We want the `/` route of our API to generate a pre-signed URL to upload a file to our S3 Bucket.
+
+```ts title="index.ts" {4}
+export async function upload() {
+  const command = new PutObjectCommand({
+    Key: crypto.randomUUID(),
+    Bucket: Resource.MyBucket.name,
+  });
+
+  return {
+    statusCode: 200,
+    body: await getSignedUrl(s3, command),
+  };
+}
+```
+
+:::tip
+We are directly accessing our S3 bucket with `Resource.MyBucket.name`.
+:::
+
+---
+
+## 5. Download a file from S3
+
+We want the `/latest` route of our API to generate a pre-signed URL to download the last uploaded file in our S3 Bucket.
+
+```ts title="index.ts"
+export async function latest() {
+  const objects = await s3.send(
+    new ListObjectsV2Command({
+      Bucket: Resource.MyBucket.name,
+    })
+  );
+
+  const latestFile = objects.Contents!.sort(
+    (a, b) =>
+      (b.LastModified?.getTime() ?? 0) - (a.LastModified?.getTime() ?? 0)
+  )[0];
+
+  const command = new GetObjectCommand({
+    Key: latestFile.Key,
+    Bucket: Resource.MyBucket.name,
+  });
+
+  return {
+    statusCode: 302,
+    headers: {
+      Location: await getSignedUrl(s3, command),
+    },
+  };
+}
+
+```
+
+Add the relevant imports.
+
+```ts title="index.ts"
+import { Resource } from "sst";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import {
+  S3Client,
+  GetObjectCommand,
+  PutObjectCommand,
+  ListObjectsV2Command,
+} from "@aws-sdk/client-s3";
+
+```
+
+And install the npm packages.
+
+```bash
+npm install sst@ion @aws-sdk/client-s3 @aws-sdk/s3-request-presigner
+```
+
+---
+
+#### Test your app
+
+Let's try uploading a file from your project root. Make sure to use your API URL.
+
+```bash
+curl --upload-file package.json "$(curl https://y9ink9nh96.execute-api.us-east-1.amazonaws.com)"
+```
+
+Now head over to `https://y9ink9nh96.execute-api.us-east-1.amazonaws.com/latest` in your browser and it'll download the file you just uploaded.
+
+---
+
+## 6. Deploy your app
+
+Now let's deploy your app.
+
+```bash
+sst deploy
+```
+
+---
+
+## Connect the console
+
+As a next step, you can view your app and its logs in the [SST Console](/docs/console/) — [**console.sst.dev**](https://console.sst.dev)
+
+![API app in SST Console](../../../../assets/docs/api-app-in-the-sst-console.png)
+
+You can [create a free account](https://console.sst.dev) and connect it to your AWS account.
+

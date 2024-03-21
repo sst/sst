@@ -5,16 +5,14 @@ export default $config({
     return {
       name: "vector",
       removal: input?.stage === "production" ? "retain" : "remove",
-      providers: {
-        aws: {},
-      },
+      home: "aws",
     };
   },
   async run() {
     const vector = new sst.aws.Vector("MyVectorDB", {
-      //model: "text-embedding-ada-002",
+      //model: "text-embedding-3-small",
       model: "amazon.titan-embed-image-v1",
-      //openAiApiKey: new sst.Secret("OpenAiApiKey").value,
+      openAiApiKey: new sst.Secret("OpenAiApiKey").value,
     });
 
     const seeder = new sst.aws.Function("Seeder", {

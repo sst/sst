@@ -1,11 +1,10 @@
 package main
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
-	"flag"
 	"fmt"
+	flag "github.com/spf13/pflag"
 	"io"
 	"log/slog"
 	"os"
@@ -48,17 +47,21 @@ func main() {
 	err := run()
 	if err != nil {
 		err := TransformError(err)
+		errorMessage := err.Error()
+		if len(errorMessage) > 255 {
+			errorMessage = errorMessage[:255]
+		}
 		telemetry.Track("cli.error", map[string]interface{}{
-			"error": err.Error(),
+			"error": errorMessage,
 		})
 		slog.Error("exited with error", "err", err)
 		if readableErr, ok := err.(*util.ReadableError); ok {
 			msg := readableErr.Error()
 			if msg != "" {
-				fmt.Println(readableErr.Error())
+				ui.Error(readableErr.Error())
 			}
 		} else {
-			fmt.Println("Unexpected error occurred. Please check the logs for more details.")
+			ui.Error("Unexpected error occurred. Please check the logs for more details.")
 		}
 		os.Exit(1)
 	}
@@ -76,60 +79,34 @@ func run() error {
 		cancel()
 	}()
 
-	nonFlags := []string{"sst"}
-	flags := []string{}
-	for index, arg := range os.Args {
-		if strings.HasPrefix(arg, "-") {
-			flags = append(flags, arg)
-			continue
-		}
-		if index != 0 {
-			nonFlags = append(nonFlags, arg)
-		}
-	}
-	rearranged := append(flags, nonFlags...)
-	os.Args = append([]string{os.Args[0]}, rearranged...)
-
 	parsedFlags := map[string]interface{}{}
+	Root.registerFlags(parsedFlags)
+	flag.CommandLine.Init("sst", flag.ContinueOnError)
+	cliParseError := flag.CommandLine.Parse(os.Args[1:])
+
 	positionals := []string{}
-	cmds := CommandPath{}
-	for i, arg := range nonFlags {
+	cmds := CommandPath{
+		Root,
+	}
+	for i, arg := range flag.Args() {
 		var cmd *Command
-		if i == 0 {
-			cmd = &Root
-		} else {
-			last := cmds[len(cmds)-1]
-			if len(last.Children) == 0 {
-				positionals = nonFlags[i:]
+
+		last := cmds[len(cmds)-1]
+		if len(last.Children) == 0 {
+			positionals = flag.Args()[i:]
+			break
+		}
+		for _, c := range last.Children {
+			if c.Name == arg {
+				cmd = c
 				break
 			}
-			for _, c := range last.Children {
-				if c.Name == arg {
-					cmd = c
-					break
-				}
-			}
-			if cmd == nil {
-				break
-			}
+		}
+		if cmd == nil {
+			break
 		}
 		cmds = append(cmds, *cmd)
-
-		for _, f := range cmd.Flags {
-			if f.Type == "string" {
-				parsedFlags[f.Name] = flag.String(f.Name, "", "")
-			}
-
-			if f.Type == "bool" {
-				parsedFlags[f.Name] = flag.Bool(f.Name, false, "")
-			}
-		}
 	}
-	flag.CommandLine.Init("sst", flag.ContinueOnError)
-	// suppresses default output on failure
-	buf := bytes.NewBuffer([]byte{})
-	flag.CommandLine.SetOutput(buf)
-	err := flag.CommandLine.Parse(os.Args[1:])
 	cli := &Cli{
 		flags:     parsedFlags,
 		arguments: positionals,
@@ -138,7 +115,7 @@ func run() error {
 		cancel:    cancel,
 	}
 	configureLog(cli)
-	if err != nil {
+	if cliParseError != nil {
 		return cli.PrintHelp()
 	}
 
@@ -307,6 +284,12 @@ var Root = Command{
 					"sst dev next dev",
 					"```",
 					"",
+					"To pass in a flag to your command, wrap it in quotes.",
+					"",
+					"```bash frame=\"none\"",
+					"sst dev \"next dev --turbo\"",
+					"```",
+					"",
 					"Dev mode does a few things:",
 					"",
 					"1. Starts a local server",
@@ -398,7 +381,7 @@ var Root = Command{
 					OnEvent: ui.Trigger,
 				})
 				if err != nil {
-					return util.NewReadableError(err, "")
+					return err
 				}
 				return nil
 			},
@@ -448,10 +431,14 @@ var Root = Command{
 				if err != nil {
 					return err
 				}
-
+				stage, err := getStage(cli, cfgPath)
+				if err != nil {
+					return err
+				}
 				p, err := project.New(&project.ProjectConfig{
 					Version: version,
 					Config:  cfgPath,
+					Stage:   stage,
 				})
 				if err != nil {
 					return err
@@ -470,6 +457,7 @@ var Root = Command{
 				p, err = project.New(&project.ProjectConfig{
 					Version: version,
 					Config:  cfgPath,
+					Stage:   stage,
 				})
 				if err != nil {
 					return err
@@ -504,14 +492,24 @@ var Root = Command{
 					return err
 				}
 
+				stage, err := getStage(cli, cfgPath)
+				if err != nil {
+					return err
+				}
+
 				p, err := project.New(&project.ProjectConfig{
 					Version: version,
 					Config:  cfgPath,
+					Stage:   stage,
 				})
 				if err != nil {
 					return err
 				}
 
+				spin := spinner.New(spinner.CharSets[14], 100*time.Millisecond)
+				defer spin.Stop()
+				spin.Suffix = "  Installing providers..."
+				spin.Start()
 				if !p.CheckPlatform(version) {
 					err := p.CopyPlatform(version)
 					if err != nil {
@@ -523,7 +521,8 @@ var Root = Command{
 				if err != nil {
 					return err
 				}
-
+				spin.Stop()
+				ui.Success("Installed providers")
 				return nil
 			},
 		},
@@ -546,13 +545,13 @@ var Root = Command{
 							"For example, set the `sst.Secret` called `StripeSecret` to `123456789`.",
 							"",
 							"```bash frame=\"none\"",
-							"sst secret set StripeSecret 123456789",
+							"sst secret set StripeSecret dev_123456789",
 							"```",
 							"",
 							"Optionally, set the secret in a specific stage.",
 							"",
 							"```bash frame=\"none\"",
-							"sst secret set StripeSecret productionsecret --stage=production",
+							"sst secret set StripeSecret prod_123456789 --stage=production",
 							"```",
 						}, "\n"),
 					},
@@ -606,9 +605,7 @@ var Root = Command{
 						if err != nil {
 							return util.NewReadableError(err, "Could not set secret")
 						}
-						color.New(color.FgGreen).Print("✔")
-						color.New(color.FgWhite).Printf("  Set \"%s\"", key)
-						fmt.Println()
+						ui.Success(fmt.Sprintf("Set \"%s\" for stage \"%s\"", key, p.App().Stage))
 						return nil
 					},
 				},
@@ -671,10 +668,7 @@ var Root = Command{
 
 						// check if the secret exists
 						if _, ok := secrets[key]; !ok {
-							color.New(color.FgRed).Print(ui.IconX)
-							color.New(color.FgWhite).Printf("  \"%s\" does not exist", key)
-							fmt.Println()
-							return nil
+							return util.NewReadableError(nil, fmt.Sprintf("Secret \"%s\" does not exist for stage \"%s\"", key, p.App().Stage))
 						}
 
 						delete(secrets, key)
@@ -682,9 +676,7 @@ var Root = Command{
 						if err != nil {
 							return util.NewReadableError(err, "Could not set secret")
 						}
-						color.New(color.FgGreen).Print("✔")
-						color.New(color.FgWhite).Printf("  Removed \"%s\"", key)
-						fmt.Println()
+						ui.Success(fmt.Sprintf("Removed \"%s\" for stage \"%s\"", key, p.App().Stage))
 						return nil
 					},
 				},
@@ -804,7 +796,10 @@ var Root = Command{
 				if err != nil {
 					return err
 				}
-				args := cli.arguments
+				var args []string
+				for _, arg := range cli.arguments {
+					args = append(args, strings.Fields(arg)...)
+				}
 				if len(args) == 0 {
 					args = append(args, "sh")
 				}
@@ -831,7 +826,11 @@ var Root = Command{
 				cmd.Stdout = os.Stdout
 				cmd.Stderr = os.Stderr
 				cmd.Stdin = os.Stdin
-				return cmd.Run()
+				err = cmd.Run()
+				if err != nil {
+					return util.NewReadableError(err, err.Error())
+				}
+				return nil
 			},
 		},
 		{
@@ -866,7 +865,7 @@ var Root = Command{
 					OnEvent: ui.Trigger,
 				})
 				if err != nil {
-					return util.NewReadableError(err, "")
+					return err
 				}
 				return nil
 			},
@@ -907,7 +906,7 @@ var Root = Command{
 				Long:  `Prints the current version of the CLI.`,
 			},
 			Run: func(cli *Cli) error {
-				fmt.Printf("ion.%s\n", version)
+				fmt.Println(version)
 				return nil
 			},
 		},
@@ -933,13 +932,21 @@ var Root = Command{
 				},
 			},
 			Run: func(cli *Cli) error {
-				version, err := global.Upgrade(
+				newVersion, err := global.Upgrade(
 					cli.Positional(0),
 				)
 				if err != nil {
 					return err
 				}
-				fmt.Printf("Installed version %s\n", version)
+				newVersion = strings.TrimPrefix(newVersion, "v")
+
+				color.New(color.FgGreen, color.Bold).Print(ui.IconCheck)
+				if newVersion == version {
+					color.New(color.FgWhite).Printf("  Already on latest %s\n", version)
+				} else {
+					color.New(color.FgWhite).Printf("  Upgraded %s ➜ ", version)
+					color.New(color.FgCyan, color.Bold).Println(newVersion)
+				}
 				return nil
 			},
 		},
@@ -1097,7 +1104,7 @@ var Root = Command{
 					OnEvent: ui.Trigger,
 				})
 				if err != nil {
-					return util.NewReadableError(err, "")
+					return err
 				}
 				return nil
 			},
@@ -1151,6 +1158,21 @@ var Root = Command{
 			},
 		},
 	},
+}
+
+func (c *Command) registerFlags(parsed map[string]interface{}) {
+	for _, f := range c.Flags {
+		if f.Type == "string" {
+			parsed[f.Name] = flag.String(f.Name, "", "")
+		}
+
+		if f.Type == "bool" {
+			parsed[f.Name] = flag.Bool(f.Name, false, "")
+		}
+	}
+	for _, child := range c.Children {
+		child.registerFlags(parsed)
+	}
 }
 
 func init() {
@@ -1291,7 +1313,6 @@ func (c CommandPath) PrintHelp() error {
 				maxSubcommand = next
 			}
 		}
-		fmt.Println("maxSubcommand", maxSubcommand)
 
 		fmt.Println()
 		for _, child := range active.Children {
@@ -1379,21 +1400,6 @@ func initProject(cli *Cli) (*project.Project, error) {
 		return nil, err
 	}
 
-	if !p.CheckPlatform(version) {
-		spin := spinner.New(spinner.CharSets[14], 100*time.Millisecond)
-		spin.Suffix = "  Installing dependencies..."
-		spin.Start()
-		err := p.CopyPlatform(version)
-		if err != nil {
-			return nil, util.NewReadableError(err, "Could not copy platform code to project directory")
-		}
-		err = p.Install()
-		if err != nil {
-			return nil, util.NewReadableError(err, "Could not install dependencies")
-		}
-		spin.Stop()
-	}
-
 	_, err = logFile.Seek(0, 0)
 	if err != nil {
 		return nil, err
@@ -1408,6 +1414,26 @@ func initProject(cli *Cli) (*project.Project, error) {
 	}
 	logFile = nextLogFile
 	configureLog(cli)
+
+	spin := spinner.New(spinner.CharSets[14], 100*time.Millisecond)
+	defer spin.Stop()
+	if !p.CheckPlatform(version) {
+		spin.Suffix = "  Upgrading project..."
+		spin.Start()
+		err := p.CopyPlatform(version)
+		if err != nil {
+			return nil, util.NewReadableError(err, "Could not copy platform code to project directory")
+		}
+	}
+
+	if p.NeedsInstall() {
+		spin.Suffix = "  Installing providers..."
+		spin.Start()
+		err = p.Install()
+		if err != nil {
+			return nil, util.NewReadableError(err, "Could not install dependencies")
+		}
+	}
 
 	if err := p.LoadProviders(); err != nil {
 		return nil, util.NewReadableError(err, err.Error())

@@ -19,7 +19,7 @@ your app.
 #### Minimal example
 
 ```ts
-const myBucket = new sst.aws.Bucket("MyBucket");
+const bucket = new sst.aws.Bucket("MyBucket");
 ```
 
 #### Public read access
@@ -35,7 +35,7 @@ new sst.aws.Bucket("MyBucket", {
 #### Add a subscriber
 
 ```ts
-myBucket.subscribe("src/subscriber.handler");
+bucket.subscribe("src/subscriber.handler");
 ```
 
 #### Link the bucket to a resource
@@ -44,7 +44,7 @@ You can link the bucket to other resources, like a function or your Next.js app.
 
 ```ts
 new sst.aws.Nextjs("MyWeb", {
-  link: [myBucket]
+  link: [bucket]
 });
 ```
 
@@ -106,13 +106,13 @@ Configure the subscription.
 Subscribes to events from this bucket.
 
 ```js
-myBucket.subscribe("src/subscriber.handler");
+bucket.subscribe("src/subscriber.handler");
 ```
 
 Add multiple subscribers.
 
 ```js
-myBucket
+bucket
   .subscribe("src/subscriber1.handler")
   .subscribe("src/subscriber2.handler");
 ```
@@ -120,7 +120,7 @@ myBucket
 Subscribe to specific S3 events.
 
 ```js
-myBucket.subscribe("src/subscriber.handler", {
+bucket.subscribe("src/subscriber.handler", {
   events: ["s3:ObjectCreated:*", "s3:ObjectRemoved:*"]
 });
 ```
@@ -128,7 +128,7 @@ myBucket.subscribe("src/subscriber.handler", {
 Subscribe to specific S3 events from a specific folder.
 
 ```js
-myBucket.subscribe("src/subscriber.handler", {
+bucket.subscribe("src/subscriber.handler", {
   filterPrefix: "images/",
   events: ["s3:ObjectCreated:*", "s3:ObjectRemoved:*"]
 });
@@ -137,7 +137,7 @@ myBucket.subscribe("src/subscriber.handler", {
 Customize the subscriber function.
 
 ```js
-myBucket.subscribe({
+bucket.subscribe({
   handler: "src/subscriber.handler",
   timeout: "60 seconds",
 });

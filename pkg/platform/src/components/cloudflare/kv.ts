@@ -38,7 +38,7 @@ export interface KvArgs {
  * #### Minimal example
  *
  * ```ts
- * const myStorage = new sst.cloudflare.Kv("MyStorage");
+ * const storage = new sst.cloudflare.Kv("MyStorage");
  * ```
  */
 export class Kv extends Component {

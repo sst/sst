@@ -29,11 +29,11 @@ new sst.cloudflare.Worker("MyWorker", {
 and allow you to access it in your handler.
 
 ```ts {5}
-const myBucket = new sst.aws.Bucket("MyBucket");
+const bucket = new sst.aws.Bucket("MyBucket");
 
 new sst.cloudflare.Worker("MyWorker", {
   handler: "src/worker.handler",
-  link: [myBucket]
+  link: [bucket]
 });
 ```
 
@@ -202,7 +202,7 @@ when your code is importing non-JS files like `.png`, `.css`, etc.
 <InlineSection>
 **Default** <code class="primitive">true</code>
 </InlineSection>
-Enable or disable if the worked code is minified when bundled.
+Enable or disable if the worker code is minified when bundled.
 
 ```js
 {
@@ -219,9 +219,9 @@ Enable or disable if the worked code is minified when bundled.
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Record</code><code class="symbol">&lt;</code><code class="primitive">string</code>, <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code><code class="symbol">&gt;</code><code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
-Key-value pairs of values that are set as [Worker environment variables](https://developers.cloudflare.com/workers/configuration/environment-variables/).
+Key-value pairs that are set as [Worker environment variables](https://developers.cloudflare.com/workers/configuration/environment-variables/).
 
-They can be accessed in your function using `env.<key>`.
+They can be accessed in your function through `env.<key>`.
 
 ```js
 {
@@ -271,7 +271,7 @@ Takes a list of components to link to the function.
 
 ```js
 {
-  link: [myBucket, stripeKey]
+  link: [bucket, stripeKey]
 }
 ```
 </Segment>

@@ -53,14 +53,14 @@ if (!providersProperty) {
 
 if (
   providersProperty.initializer.properties.find(
-    (property) => property.name.getText() === pkg,
+    (property) => property.name.getText().replaceAll('"', "") === pkg,
   )
 ) {
   process.exit(0);
 }
 // Create a new property node for "foo: {}"
 const newProperty = ts.factory.createPropertyAssignment(
-  pkg,
+  ts.factory.createStringLiteral(pkg),
   ts.factory.createTrue(),
 );
 

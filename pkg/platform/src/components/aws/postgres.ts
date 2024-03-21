@@ -115,7 +115,7 @@ export interface PostgresArgs {
  * #### Create the database
  *
  * ```js
- * const myDatabase = new sst.aws.Postgres("MyDatabase");
+ * const database = new sst.aws.Postgres("MyDatabase");
  * ```
  *
  * #### Change the scaling config
@@ -135,7 +135,7 @@ export interface PostgresArgs {
  *
  * ```ts
  * new sst.aws.Nextjs("MyWeb", {
- *   link: [myDatabase]
+ *   link: [database]
  * });
  * ```
  *

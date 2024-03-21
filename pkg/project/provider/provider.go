@@ -7,6 +7,7 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"encoding/json"
+	"fmt"
 	"io"
 	"os"
 	"time"
@@ -54,11 +55,7 @@ type DevSession interface {
 
 const SSM_NAME_BOOTSTRAP = "/sst/bootstrap"
 
-type LockExistsError struct{}
-
-func (e *LockExistsError) Error() string {
-	return "Concurrent update detected, run `sst unlock` to delete lock file and retry."
-}
+var ErrLockExists = fmt.Errorf("Concurrent update detected, run `sst unlock` to delete lock file and retry.")
 
 var passphraseCache = map[Home]map[string]string{}
 
@@ -142,6 +139,8 @@ func PushState(backend Home, app, stage string, from string) error {
 	return backend.putData("app", app, stage, file)
 }
 
+var ErrStateNotFound = fmt.Errorf("state not found")
+
 func PullState(backend Home, app, stage string, out string) error {
 	slog.Info("pulling state", "app", app, "stage", stage, "out", out)
 	reader, err := backend.getData("app", app, stage)
@@ -149,7 +148,7 @@ func PullState(backend Home, app, stage string, out string) error {
 		return err
 	}
 	if reader == nil {
-		return nil
+		return ErrStateNotFound
 	}
 	file, err := os.Create(out)
 	if err != nil {
@@ -175,7 +174,7 @@ func Lock(backend Home, app, stage string) error {
 		return err
 	}
 	if !lockData.Created.IsZero() {
-		return &LockExistsError{}
+		return ErrLockExists
 	}
 	lockData.Created = time.Now()
 	err = putData(backend, "lock", app, stage, false, lockData)

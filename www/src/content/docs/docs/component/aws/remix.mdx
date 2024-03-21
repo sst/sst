@@ -13,7 +13,7 @@ import InlineSection from '../../../../../../src/components/tsdoc/InlineSection.
 <div class="tsdoc">
 
 <Section type="about">
-The `Remix` component lets you deploy a Remix app to AWS.
+The `Remix` component lets you deploy a [Remix](https://remix.run) app to AWS.
 
 #### Minimal example
 
@@ -62,10 +62,10 @@ new sst.aws.Remix("MyWeb", {
 to the resources and allow you to access it in your app.
 
 ```ts {4}
-const myBucket = new sst.aws.Bucket("MyBucket");
+const bucket = new sst.aws.Bucket("MyBucket");
 
 new sst.aws.Remix("MyWeb", {
-  link: [myBucket]
+  link: [bucket]
 });
 ```
 
@@ -286,10 +286,9 @@ by the `files` glob pattern.
 <InlineSection>
 **Default** <code class="primitive">"public,max-age=0,s-maxage=86400,stale-while-revalidate=8640"</code>
 </InlineSection>
-The `Cache-Control` header used for non-versioned files, like `index.html`. This is
-used by both CloudFront and the browser cache.
+The `Cache-Control` header used for non-versioned files, like `index.html`. This is used by both CloudFront and the browser cache.
 
-The default is set not cache on browsers, and cache for 1 day on CloudFront.
+The default is set to not cache on browsers, and cache for 1 day on CloudFront.
 
 ```js
 {
@@ -525,22 +524,6 @@ Use this to create a `www.` version of your domain and redirect visitors to the 
 }
 ```
 </Segment>
-### edge?
-<Segment>
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">boolean</code><code class="symbol">&gt;</code>
-</InlineSection>
-</Section>
-
-<InlineSection>
-**Default** <code class="primitive">false</code>
-</InlineSection>
-Configure where the [server function](#nodes-server) is deployed.
-
-By default, it's deployed to AWS Lambda in a single region. Enable this option if you want to instead deploy it to Lambda@Edge.
-
-</Segment>
 ### environment?
 <Segment>
 <Section type="parameters">
@@ -608,14 +591,14 @@ Wait for all paths to be invalidated.
 The paths to invalidate.
 
 You can either pass in an array of glob patterns to invalidate specific files. Or you can use one of these built-in options:
-- `all`: All files will be invalidated when any file changes.
-- `versioned`: Only versioned files will be invalidated when versioned files change.
+- `all`: All files will be invalidated when any file changes
+- `versioned`: Only versioned files will be invalidated when versioned files change
 
 :::note
-Invalidating `all` counts as one invalidation, while each glob pattern counts as a single invalidation path.
+Each glob pattern counts as a single invalidation. However, invalidating `all` counts as a single invalidation as well.
 :::
 
-Invalidate the `index.html` and all files under the `products/` route.
+Invalidate the `index.html` and all files under the `products/` route. This counts as two invalidations.
 ```js
 {
   invalidation: {
@@ -641,7 +624,7 @@ Configure if `sst deploy` should wait for the CloudFront cache invalidation to f
 For non-prod environments it might make sense to pass in `false`.
 :::
 
-Waiting for the CloudFront cache invalidation process to finish ensures that the new content will be served once the deploy finishes. However, this process can sometimes take more than 5 mins.
+Waiting for this process to finish ensures that new content will be available after the deploy finishes. However, this process can sometimes take more than 5 mins.
 
 ```js
 {
@@ -667,7 +650,7 @@ Takes a list of resources to link to the function.
 
 ```js
 {
-  link: [myBucket, stripeKey]
+  link: [bucket, stripeKey]
 }
 ```
 </Segment>
@@ -757,6 +740,15 @@ Grant permissions to access all resources.
 </Section>
 The [IAM actions](https://docs.aws.amazon.com/service-authorization/latest/reference/reference_policies_actions-resources-contextkeys.html#actions_table) that can be performed.
 
+```js
+{
+  permissions: [
+    {
+      actions: ["s3:*"]
+    }
+  ]
+}
+```
 </Segment>
 <NestedTitle id="permissions-resources" Tag="h4" parent="permissions[].">resources</NestedTitle>
 <Segment>
@@ -765,8 +757,17 @@ The [IAM actions](https://docs.aws.amazon.com/service-authorization/latest/refer
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code><code class="symbol">[]</code>
 </InlineSection>
 </Section>
-The resources(s) specified using the [IAM ARN format](https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_identifiers.html).
+The resourcess specified using the [IAM ARN format](https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_identifiers.html).
 
+```js
+{
+  permissions: [
+    {
+      resources: ["arn:aws:s3:::my-bucket/*"]
+    }
+  ]
+}
+```
 </Segment>
 ### transform?
 <Segment>

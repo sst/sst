@@ -127,6 +127,7 @@ func CmdDev(cli *Cli) error {
 	state := &server.State{}
 	// fmt.Print("\033[H\033[2J")
 	u := ui.New(ui.ProgressModeDev)
+	defer u.Destroy()
 	err = server.Connect(cli.Context, server.ConnectInput{
 		CfgPath: cfgPath,
 		Stage:   stage,
@@ -158,6 +159,10 @@ func CmdDev(cli *Cli) error {
 				}
 			}
 			if event.StateEvent != nil {
+				if event.StateEvent.State.Config != cfgPath {
+					cli.Cancel()
+					return
+				}
 				next := event.StateEvent.State
 				defer func() {
 					state = next
@@ -173,7 +178,6 @@ func CmdDev(cli *Cli) error {
 			}
 		},
 	})
-	u.Destroy()
 	cli.Cancel()
 	if err != nil {
 		return util.NewReadableError(err, "")

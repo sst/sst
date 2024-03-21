@@ -236,7 +236,7 @@ export interface DynamoSubscribeArgs {
  * #### Minimal example
  *
  * ```ts
- * const myTable = new sst.aws.Dynamo("MyTable", {
+ * const table = new sst.aws.Dynamo("MyTable", {
  *   fields: {
  *     userId: "string",
  *     noteId: "string"
@@ -286,7 +286,7 @@ export interface DynamoSubscribeArgs {
  * To subscribe to a [DynamoDB Stream](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Streams.html), start by enabling it.
  *
  * ```ts {7}
- * const myTable = new sst.aws.Dynamo("MyTable", {
+ * const table = new sst.aws.Dynamo("MyTable", {
  *   fields: {
  *     userId: "string",
  *     noteId: "string"
@@ -299,7 +299,7 @@ export interface DynamoSubscribeArgs {
  * Then, subscribing to it.
  *
  * ```ts
- * myTable.subscribe("src/subscriber.handler");
+ * table.subscribe("src/subscriber.handler");
  * ```
  *
  * #### Link the table to a resource
@@ -308,7 +308,7 @@ export interface DynamoSubscribeArgs {
  *
  * ```ts
  * new sst.aws.Nextjs("MyWeb", {
- *   link: [myTable]
+ *   link: [table]
  * });
  * ```
  *
@@ -439,13 +439,13 @@ export class Dynamo
    * @example
    *
    * ```js
-   * myTable.subscribe("src/subscriber.handler");
+   * table.subscribe("src/subscriber.handler");
    * ```
    *
    * Add multiple subscribers.
    *
    * ```js
-   * myTable
+   * table
    *   .subscribe("src/subscriber1.handler")
    *   .subscribe("src/subscriber2.handler");
    * ```
@@ -453,7 +453,7 @@ export class Dynamo
    * Add a filter to the subscription.
    *
    * ```js
-   * myTable.subscribe("src/subscriber.handler", {
+   * table.subscribe("src/subscriber.handler", {
    *   filters: [
    *     {
    *       dynamodb: {
@@ -471,7 +471,7 @@ export class Dynamo
    * Customize the subscriber function.
    *
    * ```js
-   * myTable.subscribe({
+   * table.subscribe({
    *   handler: "src/subscriber.handler",
    *   timeout: "60 seconds"
    * });

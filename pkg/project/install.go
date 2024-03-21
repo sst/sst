@@ -7,7 +7,33 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
+	"strings"
 )
+
+func getProviderPackage(name string) string {
+	if strings.Contains(name, "/") {
+		return name
+	}
+	return "@pulumi/" + name
+}
+
+func cleanProviderName(name string) string {
+	result := regexp.MustCompile("[^a-zA-Z0-9]+").ReplaceAllString(name, "")
+	result = strings.ReplaceAll(result, "pulumi", "")
+	return result
+}
+
+func (p *Project) NeedsInstall() bool {
+	platformDir := p.PathPlatformDir()
+	for name := range p.app.Providers {
+		pkg := getProviderPackage(name)
+		if _, err := os.Stat(filepath.Join(platformDir, "node_modules", pkg)); err != nil {
+			return true
+		}
+	}
+	return false
+}
 
 func (p *Project) Install() error {
 	slog.Info("installing deps")
@@ -56,7 +82,7 @@ func (p *Project) writePackageJson() error {
 			version = "latest"
 		}
 		slog.Info("adding dependency", "name", name)
-		dependencies["@pulumi/"+name] = version
+		dependencies[getProviderPackage(name)] = version
 	}
 
 	dataToWrite, err := json.MarshalIndent(result, "", "  ")
@@ -90,21 +116,25 @@ func (p *Project) writeTypes() error {
 	file.WriteString(`import "./src/global.d.ts"` + "\n")
 	file.WriteString(`import { AppInput, App, Config } from "./src/config"` + "\n")
 
-	for name := range p.app.Providers {
-		file.WriteString(`import _` + name + `, { ProviderArgs as _` + name + `Args } from "@pulumi/` + name + `";` + "\n")
+	for raw := range p.app.Providers {
+		name := cleanProviderName(raw)
+		pkg := getProviderPackage(raw)
+		file.WriteString(`import _` + name + `, { ProviderArgs as _` + name + `Args } from "` + pkg + `";` + "\n")
 	}
 
 	file.WriteString("\n\n")
 
 	file.WriteString(`declare global {` + "\n")
-	for name := range p.app.Providers {
+	for raw := range p.app.Providers {
+		name := cleanProviderName(raw)
 		file.WriteString(`  // @ts-expect-error` + "\n")
 		file.WriteString(`  export import ` + name + ` = _` + name + "\n")
 	}
 	file.WriteString(`  interface Providers {` + "\n")
 	file.WriteString(`    providers?: {` + "\n")
-	for name := range p.app.Providers {
-		file.WriteString(`      ` + name + `?:  (_` + name + `Args & { version?: string }) | boolean;` + "\n")
+	for raw := range p.app.Providers {
+		name := cleanProviderName(raw)
+		file.WriteString(`      "` + raw + `"?:  (_` + name + `Args & { version?: string }) | boolean;` + "\n")
 	}
 	file.WriteString(`    }` + "\n")
 	file.WriteString(`  }` + "\n")

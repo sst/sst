@@ -8,7 +8,7 @@ import { Tabs, TabItem } from '@astrojs/starlight/components';
 Ion is a new engine for deploying [SST](https://sst.dev) apps. It uses [Pulumi](https://www.pulumi.com) and [Terraform](https://www.terraform.io), as opposed to CDK and CloudFormation.
 
 :::tip
-Ion is **currently in alpha**. We'll be sharing more details on how to migrate your existing SST apps soon.
+Ion is **generally available** and recommended for new SST users. We are working on a migration path for SST v2 users.
 :::
 
 Once Ion is stable, it’ll be released as SST v3. [Read the full announcement](https://sst.dev/blog/moving-away-from-cdk.html).
@@ -176,10 +176,10 @@ Once you've added a couple of features, SST can help you link them together. Thi
 Let's say your app has a Next.js frontend and an S3 bucket for file uploads. You can `link` the bucket to your Next.js app.
 
 ```js title="sst.config.ts" {4}
-const myBucket = new sst.aws.Bucket("MyBucket");
+const bucket = new sst.aws.Bucket("MyBucket");
 
 new sst.aws.Nextjs("MyWeb", {
-  link: [myBucket]
+  link: [bucket]
 });
 ```
 

@@ -103,7 +103,7 @@ export interface SnsTopicSubscribeArgs {
  * #### Create a topic
  *
  * ```ts
- * const myTopic = new sst.aws.SnsTopic("MyTopic");
+ * const topic = new sst.aws.SnsTopic("MyTopic");
  * ```
  *
  * #### Make it a FIFO topic
@@ -119,7 +119,7 @@ export interface SnsTopicSubscribeArgs {
  * #### Add a subscriber
  *
  * ```ts
- * myTopic.subscribe("src/subscriber.handler");
+ * topic.subscribe("src/subscriber.handler");
  * ```
  *
  * #### Link the topic to a resource
@@ -128,7 +128,7 @@ export interface SnsTopicSubscribeArgs {
  *
  * ```ts
  * new sst.aws.Nextjs("MyWeb", {
- *   link: [myTopic]
+ *   link: [topic]
  * });
  * ```
  *
@@ -218,13 +218,13 @@ export class SnsTopic
    * @example
    *
    * ```js
-   * myTopic.subscribe("src/subscriber.handler");
+   * topic.subscribe("src/subscriber.handler");
    * ```
    *
    * Add multiple subscribers.
    *
    * ```js
-   * myTopic
+   * topic
    *   .subscribe("src/subscriber1.handler")
    *   .subscribe("src/subscriber2.handler");
    * ```
@@ -232,7 +232,7 @@ export class SnsTopic
    * Add a filter to the subscription.
    *
    * ```js
-   * myTopic.subscribe("src/subscriber.handler", {
+   * topic.subscribe("src/subscriber.handler", {
    *   filter: {
    *     price_usd: [{numeric: [">=", 100]}]
    *   }
@@ -242,7 +242,7 @@ export class SnsTopic
    * Customize the subscriber function.
    *
    * ```js
-   * myTopic.subscribe({
+   * topic.subscribe({
    *   handler: "src/subscriber.handler",
    *   timeout: "60 seconds"
    * });

@@ -17,6 +17,7 @@ import { Component, transform } from "../component.js";
 import { Hint } from "../hint.js";
 import { Link } from "../link.js";
 import type { Input } from "../input.js";
+import { Cache } from "./providers/cache.js";
 
 export interface RemixArgs extends SsrSiteArgs {
   /**
@@ -104,7 +105,7 @@ export interface RemixArgs extends SsrSiteArgs {
    *
    * ```js
    * {
-   *   link: [myBucket, stripeKey]
+   *   link: [bucket, stripeKey]
    * }
    * ```
    */
@@ -213,12 +214,13 @@ export interface RemixArgs extends SsrSiteArgs {
    *
    * By default, it's deployed to AWS Lambda in a single region. Enable this option if you want to instead deploy it to Lambda@Edge.
    * @default `false`
+   * @internal
    */
   edge?: Input<boolean>;
 }
 
 /**
- * The `Remix` component lets you deploy a Remix app to AWS.
+ * The `Remix` component lets you deploy a [Remix](https://remix.run) app to AWS.
  *
  * @example
  *
@@ -269,10 +271,10 @@ export interface RemixArgs extends SsrSiteArgs {
  * to the resources and allow you to access it in your app.
  *
  * ```ts {4}
- * const myBucket = new sst.aws.Bucket("MyBucket");
+ * const bucket = new sst.aws.Bucket("MyBucket");
  *
  * new sst.aws.Remix("MyWeb", {
- *   link: [myBucket]
+ *   link: [bucket]
  * });
  * ```
  *
@@ -299,10 +301,11 @@ export class Remix extends Component implements Link.Linkable {
 
     const parent = this;
     const edge = normalizeEdge();
-    const { sitePath, region } = prepare(args, opts);
+    const { sitePath, partition, region } = prepare(args, opts);
     const isUsingVite = checkIsUsingVite();
-    const { access, bucket } = createBucket(parent, name, args);
+    const { access, bucket } = createBucket(parent, name, partition, args);
     const outputPath = buildApp(name, args, sitePath);
+    const { buildMeta } = loadBuildOutput();
     const plan = buildPlan();
     const { distribution, ssrFunctions, edgeFunctions } =
       createServersAndDistribution(
@@ -319,12 +322,14 @@ export class Remix extends Component implements Link.Linkable {
     this.assets = bucket;
     this.cdn = distribution;
     this.server = serverFunction;
-    Hint.register(
-      this.urn,
-      all([this.cdn.domainUrl, this.cdn.url]).apply(
-        ([domainUrl, url]) => domainUrl ?? url,
-      ),
-    );
+    if (!$dev) {
+      Hint.register(
+        this.urn,
+        all([this.cdn.domainUrl, this.cdn.url]).apply(
+          ([domainUrl, url]) => domainUrl ?? url,
+        ),
+      );
+    }
     this.registerOutputs({
       _metadata: {
         mode: $dev ? "placeholder" : "deployed",
@@ -347,15 +352,26 @@ export class Remix extends Component implements Link.Linkable {
       );
     }
 
-    function buildPlan() {
-      return all([isUsingVite, outputPath, edge]).apply(
-        ([isUsingVite, outputPath, edge]) => {
-          const serverConfig = createServerLambdaBundle(
-            isUsingVite,
-            outputPath,
-            edge ? "edge-server.mjs" : "regional-server.mjs",
-          );
+    function loadBuildOutput() {
+      const cache = new Cache(
+        `${name}BuildOutput`,
+        {
+          data: $dev ? loadBuildMetadataPlaceholder() : loadBuildMetadata(),
+        },
+        {
+          parent,
+          ignoreChanges: $dev ? ["*"] : undefined,
+        },
+      );
 
+      return {
+        buildMeta: cache.data as ReturnType<typeof loadBuildMetadata>,
+      };
+    }
+
+    function loadBuildMetadata() {
+      return all([outputPath, isUsingVite]).apply(
+        ([outputPath, isUsingVite]) => {
           // The path for all files that need to be in the "/" directory (static assets)
           // is different when using Vite. These will be located in the "build/client"
           // path of the output. It will be the "public" folder when using remix config.
@@ -363,6 +379,41 @@ export class Remix extends Component implements Link.Linkable {
             ? path.join("build", "client")
             : "public";
           const assetsVersionedSubDir = isUsingVite ? undefined : "build";
+
+          return {
+            assetsPath,
+            assetsVersionedSubDir,
+            // create 1 behaviour for each top level asset file/folder
+            staticRoutes: fs
+              .readdirSync(path.join(outputPath, assetsPath))
+              .map((item) =>
+                fs
+                  .statSync(path.join(outputPath, assetsPath, item))
+                  .isDirectory()
+                  ? `${item}/*`
+                  : item,
+              ),
+          };
+        },
+      );
+    }
+
+    function loadBuildMetadataPlaceholder() {
+      return {
+        assetsPath: "placeholder",
+        assetsVersionedSubDir: undefined,
+        staticRoutes: ["assets/*", "favicon.ico"],
+      };
+    }
+
+    function buildPlan() {
+      return all([isUsingVite, outputPath, edge, buildMeta]).apply(
+        ([isUsingVite, outputPath, edge, buildMeta]) => {
+          const serverConfig = createServerLambdaBundle(
+            isUsingVite,
+            outputPath,
+            edge ? "edge-server.mjs" : "regional-server.mjs",
+          );
 
           return validatePlan({
             edge,
@@ -399,10 +450,10 @@ export class Remix extends Component implements Link.Linkable {
                 s3: {
                   copy: [
                     {
-                      from: assetsPath,
+                      from: buildMeta.assetsPath,
                       to: "",
                       cached: true,
-                      versionedSubDir: assetsVersionedSubDir,
+                      versionedSubDir: buildMeta.assetsVersionedSubDir,
                     },
                   ],
                 },
@@ -422,15 +473,11 @@ export class Remix extends Component implements Link.Linkable {
                     origin: "server",
                   },
               // create 1 behaviour for each top level asset file/folder
-              ...fs.readdirSync(path.join(outputPath, assetsPath)).map(
-                (item) =>
+              ...buildMeta.staticRoutes.map(
+                (route) =>
                   ({
                     cacheType: "static",
-                    pattern: fs
-                      .statSync(path.join(outputPath, assetsPath, item))
-                      .isDirectory()
-                      ? `${item}/*`
-                      : item,
+                    pattern: route,
                     cfFunction: "staticCfFunction",
                     origin: "s3",
                   }) as const,

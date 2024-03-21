@@ -53,10 +53,32 @@ const RETENTION = {
 export type FunctionPermissionArgs = {
   /**
    * The [IAM actions](https://docs.aws.amazon.com/service-authorization/latest/reference/reference_policies_actions-resources-contextkeys.html#actions_table) that can be performed.
+   * @example
+   *
+   * ```js
+   * {
+   *   permissions: [
+   *     {
+   *       actions: ["s3:*"]
+   *     }
+   *   ]
+   * }
+   * ```
    */
   actions: string[];
   /**
-   * The resources(s) specified using the [IAM ARN format](https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_identifiers.html).
+   * The resourcess specified using the [IAM ARN format](https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_identifiers.html).
+   * @example
+   *
+   * ```js
+   * {
+   *   permissions: [
+   *     {
+   *       resources: ["arn:aws:s3:::my-bucket/*"]
+   *     }
+   *   ]
+   * }
+   * ```
    */
   resources: Input<string>[];
 };
@@ -180,8 +202,17 @@ interface FunctionUrlCorsArgs {
 }
 
 export interface FunctionArgs {
-  /** @internal */
-  liveDev?: Input<false>;
+  /**
+   * Disable running this function [Live](/docs/live/) in `sst dev`.
+   * @default `true`
+   * @example
+   * ```js
+   * {
+   *   live: false
+   * }
+   * ```
+   */
+  live?: Input<false>;
   /**
    * A description for the function. This is displayed in the AWS Console.
    * @example
@@ -195,11 +226,11 @@ export interface FunctionArgs {
   /**
    * The runtime environment for the function. Support for other runtimes is on our roadmap.
    *
-   * @default `"nodejs18.x"`
+   * @default `"nodejs20.x"`
    * @example
    * ```js
    * {
-   *   runtime: "nodejs20.x"
+   *   runtime: "nodejs18.x"
    * }
    * ```
    */
@@ -379,7 +410,7 @@ export interface FunctionArgs {
    *
    * ```js
    * {
-   *   link: [myBucket, stripeKey]
+   *   link: [bucket, stripeKey]
    * }
    * ```
    */
@@ -759,11 +790,11 @@ export interface FunctionArgs {
  * to the resources and allow you to access it in your handler.
  *
  * ```ts {5}
- * const myBucket = new sst.aws.Bucket("MyBucket");
+ * const bucket = new sst.aws.Bucket("MyBucket");
  *
  * new sst.aws.Function("MyFunction", {
  *   handler: "src/lambda.handler",
- *   link: [myBucket]
+ *   link: [bucket]
  * });
  * ```
  *
@@ -834,7 +865,7 @@ export class Function
     super("sst:aws:Function", name, args, opts);
 
     const parent = this;
-    const dev = output(args.liveDev).apply((v) => $dev && v !== false);
+    const dev = output(args.live).apply((v) => $dev && v !== false);
     const region = normalizeRegion();
     const injections = normalizeInjections();
     const runtime = normalizeRuntime();
@@ -865,25 +896,29 @@ export class Function
       input.map((item) => item.name),
     );
 
-    all([
-      dev,
+    Warp.register(
       name,
-      links,
-      args.handler,
-      args.bundle,
-      args.runtime,
-      args.nodejs,
-    ]).apply(([dev, name, links, handler, bundle, runtime, nodejs]) => {
-      if (!dev) return;
-      Warp.register({
-        functionID: name,
+      all([
+        dev,
+        name,
         links,
-        handler: handler,
-        bundle: bundle,
-        runtime: runtime || "nodejs18.x",
-        properties: nodejs,
-      });
-    });
+        args.handler,
+        args.bundle,
+        args.runtime,
+        args.nodejs,
+      ]).apply(([dev, name, links, handler, bundle, runtime, nodejs]) => {
+        if (!dev) return undefined;
+        return {
+          functionID: name,
+          links,
+          handler: handler,
+          bundle: bundle,
+          runtime: runtime || "nodejs20.x",
+          properties: nodejs,
+        };
+      }),
+    );
+
     all([bundle, handler]).apply(([bundle, handler]) => {
       Link.Receiver.register(bundle || handler, links, environment);
     });
@@ -909,7 +944,7 @@ export class Function
 
     function normalizeRuntime() {
       return all([args.runtime, dev]).apply(([v, dev]) =>
-        dev ? "provided.al2023" : v ?? "nodejs18.x",
+        dev ? "provided.al2023" : v ?? "nodejs20.x",
       );
     }
 
@@ -1179,7 +1214,8 @@ export class Function
             transform(args.transform?.role, {
               name: region.apply((region) =>
                 prefixName(
-                  `${name}Role-${region.toLowerCase().replace(/-/g, "")}`,
+                  `${name}Role`,
+                  `-${region.toLowerCase().replace(/-/g, "")}`,
                 ),
               ),
               assumeRolePolicy: aws.iam.assumeRolePolicyForPrincipal({

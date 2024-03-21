@@ -259,6 +259,7 @@ export class Cdn extends Component {
             ? {
                 acmCertificateArn: certificate.arn,
                 sslSupportMethod: "sni-only",
+                minimumProtocolVersion: "TLSv1.2_2021"
               }
             : {
                 cloudfrontDefaultCertificate: true,

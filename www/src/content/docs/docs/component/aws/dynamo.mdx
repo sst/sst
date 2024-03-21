@@ -18,7 +18,7 @@ The `Dynamo` component lets you add an [Amazon DynamoDB](https://aws.amazon.com/
 #### Minimal example
 
 ```ts
-const myTable = new sst.aws.Dynamo("MyTable", {
+const table = new sst.aws.Dynamo("MyTable", {
   fields: {
     userId: "string",
     noteId: "string"
@@ -68,7 +68,7 @@ new sst.aws.Dynamo("MyTable", {
 To subscribe to a [DynamoDB Stream](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Streams.html), start by enabling it.
 
 ```ts {7}
-const myTable = new sst.aws.Dynamo("MyTable", {
+const table = new sst.aws.Dynamo("MyTable", {
   fields: {
     userId: "string",
     noteId: "string"
@@ -81,7 +81,7 @@ const myTable = new sst.aws.Dynamo("MyTable", {
 Then, subscribing to it.
 
 ```ts
-myTable.subscribe("src/subscriber.handler");
+table.subscribe("src/subscriber.handler");
 ```
 
 #### Link the table to a resource
@@ -90,7 +90,7 @@ You can link the table to other resources, like a function or your Next.js app.
 
 ```ts
 new sst.aws.Nextjs("MyWeb", {
-  link: [myTable]
+  link: [table]
 });
 ```
 
@@ -159,13 +159,13 @@ You'll first need to enable the `stream` before subscribing to it.
 :::
 
 ```js
-myTable.subscribe("src/subscriber.handler");
+table.subscribe("src/subscriber.handler");
 ```
 
 Add multiple subscribers.
 
 ```js
-myTable
+table
   .subscribe("src/subscriber1.handler")
   .subscribe("src/subscriber2.handler");
 ```
@@ -173,7 +173,7 @@ myTable
 Add a filter to the subscription.
 
 ```js
-myTable.subscribe("src/subscriber.handler", {
+table.subscribe("src/subscriber.handler", {
   filters: [
     {
       dynamodb: {
@@ -191,7 +191,7 @@ myTable.subscribe("src/subscriber.handler", {
 Customize the subscriber function.
 
 ```js
-myTable.subscribe({
+table.subscribe({
   handler: "src/subscriber.handler",
   timeout: "60 seconds"
 });
