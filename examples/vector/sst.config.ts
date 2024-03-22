@@ -10,7 +10,7 @@ export default $config({
   },
   async run() {
     const vector = new sst.aws.Vector("MyVectorDB", {
-      model: "text-embedding-3-large",
+      model: "text-embedding-ada-002",
       //model: "amazon.titan-embed-image-v1",
       openAiApiKey: new sst.Secret("OpenAiApiKey").value,
     });

@@ -80,7 +80,9 @@ async function generateEmbeddingOpenAI(text: string) {
     model: MODEL!,
     input: text,
     encoding_format: "float",
-    dimensions: parseInt(OPENAI_MODEL_DIMENSIONS!),
+    dimensions: MODEL === "text-embedding-ada-002"
+      ? undefined
+      : parseInt(OPENAI_MODEL_DIMENSIONS!),
   });
   return embeddingResponse.data[0].embedding;
 }
