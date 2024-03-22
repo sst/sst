@@ -52,9 +52,8 @@ export class AstroSite extends SsrSite {
   var routeData = ${getStringifiedRouteTree(routes)};
   var findFirstMatch = (matches) => Array.isArray(matches[0]) ? findFirstMatch(matches[0]) : matches;
   var findMatches = (path, routeData) => routeData.map((route) => route[0].test(path) ? Array.isArray(route[1]) ? findMatches(path, route[1]) : route : null).filter(route => route !== null && route.length > 0);
-  
   var matchedRoute = findFirstMatch(findMatches(request.uri, routeData));
-  if (matchedRoute) {
+  if (matchedRoute[0]) {
     if (!matchedRoute[1] && !/^.*\\.[^\\/]+$/.test(request.uri)) {
       ${
         pageResolution === "file"
