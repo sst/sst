@@ -1,15 +1,14 @@
 /// <reference path="./.sst/platform/config.d.ts" />
+
 export default $config({
   app(input) {
     return {
-      name: "test",
+      name: "solid-start",
       removal: input?.stage === "production" ? "retain" : "remove",
       home: "aws",
     };
   },
   async run() {
-    const api = new sst.aws.ApiGatewayV2("MyApi").route("GET /", {
-      handler: "src/index.handler",
-    });
+    new sst.aws.SolidStart("SolidStart", {});
   },
 });
