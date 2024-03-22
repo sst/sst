@@ -48,15 +48,14 @@ func CmdInit(cli *Cli) error {
 	var template string
 
 	// Loop through the files in the current directory
-	filepath.Walk(".", func(path string, info os.FileInfo, err error) error {
+	err := filepath.Walk(".", func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return nil
 		}
-		// Check if the file name is prefixed with the specified prefix.
 		if info.IsDir() {
 			return nil
 		}
-		if filepath.HasPrefix(filepath.Base(path), "next.config") {
+		if strings.HasPrefix(filepath.Base(path), "next.config") {
 			color.New(color.FgBlue, color.Bold).Print(">")
 			fmt.Println("  Next.js detected. This will...")
 			fmt.Println("   - create an sst.config.ts")
@@ -64,7 +63,7 @@ func CmdInit(cli *Cli) error {
 			fmt.Println("   - add the sst sdk to package.json")
 			fmt.Println()
 			template = "nextjs"
-		} else if filepath.HasPrefix(filepath.Base(path), "astro.config") {
+		} else if strings.HasPrefix(filepath.Base(path), "astro.config") {
 			color.New(color.FgBlue, color.Bold).Print(">")
 			fmt.Println("  Astro detected. This will...")
 			fmt.Println("   - create an sst.config.ts")
@@ -72,7 +71,7 @@ func CmdInit(cli *Cli) error {
 			fmt.Println("   - add the sst sdk to package.json")
 			fmt.Println()
 			template = "astro"
-		} else if filepath.HasPrefix(filepath.Base(path), "remix.config") || (filepath.HasPrefix(filepath.Base(path), "vite.config") && fileContains(path, "@remix-run/dev")) {
+		} else if strings.HasPrefix(filepath.Base(path), "remix.config") || (strings.HasPrefix(filepath.Base(path), "vite.config") && fileContains(path, "@remix-run/dev")) {
 			color.New(color.FgBlue, color.Bold).Print(">")
 			fmt.Println("  Remix detected. This will...")
 			fmt.Println("   - create an sst.config.ts")
@@ -81,12 +80,11 @@ func CmdInit(cli *Cli) error {
 			template = "remix"
 		}
 
-		if template != "" {
-			return fmt.Errorf("file found")
-		}
-
 		return nil
 	})
+	if err != nil {
+		return err
+	}
 
 	if template == "" {
 		color.New(color.FgBlue, color.Bold).Print(">")

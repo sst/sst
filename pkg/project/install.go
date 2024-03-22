@@ -10,6 +10,8 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
+
+	"github.com/sst/ion/pkg/global"
 )
 
 func getProviderPackage(name string) string {
@@ -151,7 +153,7 @@ func (p *Project) writeTypes() error {
 
 func (p *Project) fetchDeps() error {
 	slog.Info("fetching deps")
-	cmd := exec.Command("bun", "install")
+	cmd := exec.Command(global.BunPath(), "install")
 	cmd.Dir = p.PathPlatformDir()
 
 	output, err := cmd.CombinedOutput()

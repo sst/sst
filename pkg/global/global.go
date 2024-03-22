@@ -83,11 +83,16 @@ func InstallPulumi() error {
 }
 
 func NeedsBun() bool {
-	_, err := exec.LookPath("bun")
-	if err != nil {
+	path := BunPath()
+	slog.Info("checking for bun", "path", path)
+	if _, err := os.Stat(path); err != nil {
 		return true
 	}
 	return false
+}
+
+func BunPath() string {
+	return filepath.Join(configDir, "bin", "bun")
 }
 
 func InstallBun() error {
