@@ -252,7 +252,7 @@ export interface ApiGatewayV2RouteArgs {
 }
 
 /**
- * The `ApiGatewayV2` component lets you add an [Amazon API Gateway HTTP API](https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api.htmll) to your app.
+ * The `ApiGatewayV2` component lets you add an [Amazon API Gateway HTTP API](https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api.html) to your app.
  *
  * @example
  *
