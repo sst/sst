@@ -170,6 +170,7 @@ We are directly accessing our S3 bucket with `Resource.MyBucket.name`.
 Add the relevant imports.
 
 ```ts title="app/page.tsx"
+import crypto from "crypto";
 import { Resource } from "sst";
 import Form from "@/components/form";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
