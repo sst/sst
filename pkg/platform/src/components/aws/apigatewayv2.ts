@@ -14,7 +14,6 @@ import { hashStringToPrettyString, sanitizeToPascalCase } from "../naming";
 import { VisibleError } from "../error";
 import { HostedZoneLookup } from "./providers/hosted-zone-lookup";
 import { DnsValidatedCertificate } from "./dns-validated-certificate";
-import { useProvider } from "./helpers/provider";
 import { Hint } from "../hint";
 
 interface DomainArgs {
