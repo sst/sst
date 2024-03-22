@@ -154,7 +154,7 @@ api
   .route("GET /", "src/get.handler")
   .route("POST /", "src/post.handler", {
     auth: {
-      type: "iam"
+      iam: true
     }
   });
 ```
@@ -466,13 +466,13 @@ Enable JWT authorization for a given API route. When JWT auth is enabled, client
 }
 ```
 
-And if you are using an AWS Cognito User Pool as the identity provider like this.
+And if you are using an AWS Cognito User Pool.
 ```js
 const userPool = new aws.cognito.UserPool(...);
 const userPoolClient = new aws.cognito.UserPoolClient(...);
 ```
 
-You can use configure the User Pool as the identity provider like this.
+You can use configure the User Pool as the identity provider.
 ```js
 {
   auth: {
