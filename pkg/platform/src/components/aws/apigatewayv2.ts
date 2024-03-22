@@ -192,13 +192,13 @@ export interface ApiGatewayV2RouteArgs {
      * }
      * ```
      *
-     * And if you are using an AWS Cognito User Pool as the identity provider like this.
+     * And if you are using an AWS Cognito User Pool.
      * ```js
      * const userPool = new aws.cognito.UserPool(...);
      * const userPoolClient = new aws.cognito.UserPoolClient(...);
      * ```
      *
-     * You can use configure the User Pool as the identity provider like this.
+     * You can use configure the User Pool as the identity provider.
      * ```js
      * {
      *   auth: {
