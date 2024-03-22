@@ -37,6 +37,7 @@ const {
   MODEL_PROVIDER,
   // modal provider dependent (optional)
   OPENAI_API_KEY,
+  OPENAI_MODEL_DIMENSIONS,
 } = process.env;
 
 export async function ingest(event: IngestEvent) {
@@ -79,6 +80,7 @@ async function generateEmbeddingOpenAI(text: string) {
     model: MODEL!,
     input: text,
     encoding_format: "float",
+    dimensions: parseInt(OPENAI_MODEL_DIMENSIONS!),
   });
   return embeddingResponse.data[0].embedding;
 }
@@ -125,19 +127,22 @@ async function queryEmbeddings(
   threshold: number,
   count: number,
 ) {
-  const score = `embedding <=> (ARRAY[${embedding.join(",")}])::vector`;
   const ret = await useClient(RDSDataClient).send(
     new ExecuteStatementCommand({
       resourceArn: CLUSTER_ARN,
       secretArn: SECRET_ARN,
       database: DATABASE_NAME,
-      sql: `SELECT metadata, ${score} AS score FROM ${TABLE_NAME}
-                WHERE ${score} < ${1 - threshold}
+      sql: `SELECT metadata, embedding <=> string_to_array(:vector, ',')::float[]::vector AS score FROM ${TABLE_NAME}
+                WHERE embedding <=> string_to_array(:vector, ',')::float[]::vector < ${1 - threshold}
                 AND metadata @> :include
                 ${exclude ? "AND NOT metadata @> :exclude" : ""}
-                ORDER BY ${score}
+                ORDER BY score
                 LIMIT ${count}`,
       parameters: [
+        {
+          name: "vector",
+          value: { stringValue: embedding.join(",") },
+        },
         {
           name: "include",
           value: { stringValue: include },
@@ -155,6 +160,7 @@ async function queryEmbeddings(
       ],
     }),
   );
+
   return ret.records?.map((record) => ({
     metadata: JSON.parse(record[0].stringValue!),
     score: 1 - record[1].doubleValue!,

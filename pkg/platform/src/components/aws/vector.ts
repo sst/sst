@@ -18,14 +18,20 @@ const ModelInfo = {
   "amazon.titan-embed-image-v1": { provider: "bedrock" as const, size: 1024 },
   "text-embedding-ada-002": { provider: "openai" as const, size: 1536 },
   "text-embedding-3-small": { provider: "openai" as const, size: 1536 },
+  "text-embedding-3-large": { provider: "openai" as const, size: 2000 },
 };
 
 export interface VectorArgs {
   /**
    * The model used for generating the vectors.
+   * 
+   * :::note
+   * The `text-embedding-3-large` model produces embeddings with 3072 dimensions. These embeddings are store in a Postgres database using a pgvector [HNSW index](https://github.com/pgvector/pgvector?tab=readme-ov-file#hnsw), supporting up to 2000 dimensions. OpenAI offers [dimensionality reduction](https://platform.openai.com/docs/guides/embeddings/use-cases) to accommodate this, scaling down to 2000 dimensions.
+   * :::
+   *
    *
    * :::tip
-   * To use the `text-embedding-ada-002` or `text-embedding-3-small` model, you'll need to pass in your `openAiApiKey`.
+   * To use the `text-embedding-ada-002`, `text-embedding-3-small`, or `text-embedding-3-large` model, you'll need to pass in your `openAiApiKey`.
    * :::
    *
    * @default `"amazon.titan-embed-text-v1"`
@@ -39,7 +45,7 @@ export interface VectorArgs {
    */
   model?: Input<keyof typeof ModelInfo>;
   /**
-   * Your OpenAI API key. This is needed only if you're using the `text-embedding-ada-002` or `text-embedding-3-small` model.
+   * Your OpenAI API key. This is needed only if you're using the `text-embedding-ada-002`, `text-embedding-3-small`, or `text-embedding-3-small` model.
    *
    * :::tip
    * Use `sst.Secret` to store your API key securely.
@@ -186,8 +192,6 @@ export class Vector
     }
 
     function createDBTable() {
-      vectorSize.apply((vectorSize) => console.log("vectorSize", vectorSize));
-
       new EmbeddingsTable(
         `${name}Table`,
         {
@@ -255,7 +259,10 @@ export class Vector
         TABLE_NAME: tableName,
         MODEL: model,
         MODEL_PROVIDER: ModelInfo[model].provider,
-        ...(openAiApiKey ? { OPENAI_API_KEY: openAiApiKey } : {}),
+        ...(openAiApiKey ? {
+          OPENAI_API_KEY: openAiApiKey,
+          OPENAI_MODEL_DIMENSIONS: ModelInfo[model].size.toString(),
+        } : {}),
       }));
     }
 
