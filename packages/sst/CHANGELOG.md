@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.41.4
+
+### Patch Changes
+
+- [#3720](https://github.com/sst/sst/pull/3720) [`e3c96d89d`](https://github.com/sst/sst/commit/e3c96d89d0fe689cbc6dfee4cb4e4319e7338e67) Thanks [@bayssmekanique](https://github.com/bayssmekanique)! - Astro: fixes 404s caused by dead in route branches in CF routing
+
 ## 2.41.3
 
 ### Patch Changes
