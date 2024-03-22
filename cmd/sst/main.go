@@ -61,7 +61,7 @@ func main() {
 				ui.Error(readableErr.Error())
 			}
 		} else {
-			ui.Error("Unexpected error occurred. Please check the logs for more details.")
+			ui.Error("Unexpected error occurred. Please check the logs or run with --verbose for more details.")
 		}
 		os.Exit(1)
 	}
