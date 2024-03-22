@@ -389,6 +389,12 @@ export class SolidStart extends Component implements Link.Linkable {
                   cfFunction: "serverCfFunction",
                   origin: "server",
                 },
+            {
+              pattern: "_server/",
+              cacheType: "server",
+              cfFunction: "serverCfFunction",
+              origin: "server",
+            },
             // create 1 behaviour for each top level asset file/folder
             ...fs.readdirSync(path.join(outputPath, ".output/public")).map(
               (item) =>
