@@ -143,6 +143,9 @@ func Create(templateName string, home string) error {
 					Home: home,
 				}
 
+				if _, err := os.Stat(name); os.IsExist(err) {
+					return nil
+				}
 				output, err := os.Create(name)
 				if err != nil {
 					return err
@@ -159,7 +162,7 @@ func Create(templateName string, home string) error {
 			if err != nil {
 				return err
 			}
-			break;
+			break
 
 		case "gitignore":
 			var gitignoreStep gitignoreStep

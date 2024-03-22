@@ -10,6 +10,8 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
+
+	"github.com/sst/ion/pkg/global"
 )
 
 func getProviderPackage(name string) string {
@@ -115,6 +117,7 @@ func (p *Project) writeTypes() error {
 	defer file.Close()
 
 	file.WriteString(`import "./src/global.d.ts"` + "\n")
+	file.WriteString(`import "../types.generated"` + "\n")
 	file.WriteString(`import { AppInput, App, Config } from "./src/config"` + "\n")
 
 	for raw := range p.app.Providers {
@@ -151,7 +154,7 @@ func (p *Project) writeTypes() error {
 
 func (p *Project) fetchDeps() error {
 	slog.Info("fetching deps")
-	cmd := exec.Command("bun", "install")
+	cmd := exec.Command(global.BunPath(), "install")
 	cmd.Dir = p.PathPlatformDir()
 
 	output, err := cmd.CombinedOutput()

@@ -6,7 +6,7 @@ import (
 	"log/slog"
 	"os"
 	"os/exec"
-	"path/filepath"
+	"slices"
 	"strings"
 	"time"
 
@@ -47,55 +47,61 @@ func CmdInit(cli *Cli) error {
 
 	var template string
 
-	// Loop through the files in the current directory
-	filepath.Walk(".", func(path string, info os.FileInfo, err error) error {
-		if err != nil {
-			return nil
+	hints := []string{}
+	files, err := os.ReadDir(".")
+	if err != nil {
+		return err
+	}
+	for _, file := range files {
+		if file.IsDir() {
+			continue
 		}
-		// Check if the file name is prefixed with the specified prefix.
-		if info.IsDir() {
-			return nil
-		}
-		if filepath.HasPrefix(filepath.Base(path), "next.config") {
-			color.New(color.FgBlue, color.Bold).Print(">")
-			fmt.Println("  Next.js detected. This will...")
-			fmt.Println("   - create an sst.config.ts")
-			fmt.Println("   - modify the tsconfig.json")
-			fmt.Println("   - add the sst sdk to package.json")
-			fmt.Println()
-			template = "nextjs"
-		} else if filepath.HasPrefix(filepath.Base(path), "astro.config") {
-			color.New(color.FgBlue, color.Bold).Print(">")
-			fmt.Println("  Astro detected. This will...")
-			fmt.Println("   - create an sst.config.ts")
-			fmt.Println("   - modify the astro.config.mjs")
-			fmt.Println("   - add the sst sdk to package.json")
-			fmt.Println()
-			template = "astro"
-		} else if filepath.HasPrefix(filepath.Base(path), "remix.config") || (filepath.HasPrefix(filepath.Base(path), "vite.config") && fileContains(path, "@remix-run/dev")) {
-			color.New(color.FgBlue, color.Bold).Print(">")
-			fmt.Println("  Remix detected. This will...")
-			fmt.Println("   - create an sst.config.ts")
-			fmt.Println("   - add the sst sdk to package.json")
-			fmt.Println()
-			template = "remix"
-		}
+		hints = append(hints, file.Name())
+	}
 
-		if template != "" {
-			return fmt.Errorf("file found")
-		}
+	color.New(color.FgBlue, color.Bold).Print(">")
+	switch {
+	case slices.ContainsFunc(hints, func(s string) bool { return strings.HasPrefix(s, "next.config") }):
+		fmt.Println("  Next.js detected. This will...")
+		fmt.Println("   - create an sst.config.ts")
+		fmt.Println("   - modify the tsconfig.json")
+		fmt.Println("   - add the sst sdk to package.json")
+		template = "nextjs"
+		break
 
-		return nil
-	})
+	case slices.ContainsFunc(hints, func(s string) bool { return strings.HasPrefix(s, "astro.config") }):
+		fmt.Println("  Astro detected. This will...")
+		fmt.Println("   - create an sst.config.ts")
+		fmt.Println("   - modify the astro.config.mjs")
+		fmt.Println("   - add the sst sdk to package.json")
+		template = "astro"
+		break
 
-	if template == "" {
-		color.New(color.FgBlue, color.Bold).Print(">")
+	case slices.ContainsFunc(hints, func(s string) bool {
+		return strings.HasPrefix(s, "remix.config") ||
+			(strings.HasPrefix(s, "vite.config") && fileContains(s, "@remix-run/dev"))
+	}):
+		fmt.Println("  Remix detected. This will...")
+		fmt.Println("   - create an sst.config.ts")
+		fmt.Println("   - add the sst sdk to package.json")
+		template = "remix"
+		break
+
+	case slices.Contains(hints, "package.json"):
+		fmt.Println("  JS project detected. This will...")
+		fmt.Println("   - use the JS template")
+		fmt.Println("   - create an sst.config.ts")
+		template = "js"
+		break
+
+	default:
 		fmt.Println("  No frontend detected. This will...")
 		fmt.Println("   - use the vanilla template")
 		fmt.Println("   - create an sst.config.ts")
-		fmt.Println()
 		template = "vanilla"
+		break
 	}
+	fmt.Println()
 
 	p := promptui.Select{
 		Label:        "‏‏‎ ‎Continue",
@@ -117,7 +123,7 @@ func CmdInit(cli *Cli) error {
 	fmt.Println()
 
 	home := "aws"
-	if template != "nextjs" && template != "astro" && template != "remix" {
+	if template == "vanilla" {
 		p = promptui.Select{
 			Label:        "‏‏‎ ‎Where do you want to deploy your app? You can change this later",
 			HideSelected: true,

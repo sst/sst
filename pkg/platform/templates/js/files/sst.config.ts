@@ -3,9 +3,9 @@
 export default $config({
   app(input) {
     return {
-      name: "test",
+      name: "{{.App}}",
       removal: input?.stage === "production" ? "retain" : "remove",
-      home: "aws",
+      home: "{{.Home}}",
     };
   },
   async run() {},

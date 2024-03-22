@@ -61,7 +61,7 @@ func main() {
 				ui.Error(readableErr.Error())
 			}
 		} else {
-			ui.Error("Unexpected error occurred. Please check the logs for more details.")
+			ui.Error("Unexpected error occurred. Please check the logs or run with --verbose for more details.")
 		}
 		os.Exit(1)
 	}
@@ -136,16 +136,6 @@ func run() error {
 			return err
 		}
 	}
-
-	/*
-		if global.NeedsPlugins() {
-			spin.Start()
-			err := global.InstallPlugins()
-			if err != nil {
-				return err
-			}
-		}
-	*/
 	spin.Stop()
 
 	active := cmds[len(cmds)-1]
