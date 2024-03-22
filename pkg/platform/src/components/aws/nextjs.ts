@@ -783,7 +783,7 @@ export class Nextjs extends Component implements Link.Linkable {
           const defaultFunctionProps = {
             // Temporarily use nodejs18.x until the issue with dynamic routes is resolved on nodejs20.x
             // https://github.com/sst/ion/issues/43#issuecomment-2013916067
-            runtime: "nodejs18.x",
+            runtime: "nodejs18.x" as const,
             environment: {
               CACHE_BUCKET_NAME: bucketName,
               CACHE_BUCKET_KEY_PREFIX: "_cache",
