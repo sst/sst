@@ -18,6 +18,7 @@ export default $config({
       routes: {
         "/*": hono.url,
       },
+      domain: "hono.dev.sst.dev",
     });
     return {
       url: router.url,
