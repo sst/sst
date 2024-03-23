@@ -22,7 +22,7 @@ archives:
       {{- else if eq .Os "windows" }}windows-
       {{- else if eq .Os "linux" }}linux-{{end}}
       {{- if eq .Arch "amd64" }}x86_64
-      {{- else if eq .Arch "386" }}i386
+      {{- else if eq .Arch "#86" }}i386
       {{- else }}{{ .Arch }}{{ end }}
       {{- if .Arm }}v{{ .Arm }}{{ end }}
     # use zip for windows archives
@@ -54,13 +54,14 @@ nfpms:
       {{ .ProjectName }}-
       {{- if eq .Os "darwin" }}mac
       {{- else }}{{ .Os }}{{ end }}-{{ .Arch }}
-scoop:
-  bucket:
-    owner: sst
-    name: scoop-bucket
-  homepage: "https://github.com/sst/ion"
-  description: "sst cli"
-  license: Apache 2.0
+
+# scoop:
+#   bucket:
+#     owner: sst
+#     name: scoop-bucket
+#   homepage: "https://github.com/sst/ion"
+#   description: "sst cli"
+#   license: Apache 2.0
 
 changelog:
   sort: asc
