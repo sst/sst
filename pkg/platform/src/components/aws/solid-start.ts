@@ -16,6 +16,7 @@ import { Bucket } from "./bucket.js";
 import { Component } from "../component.js";
 import { Hint } from "../hint.js";
 import { Link } from "../link.js";
+import { Cache } from "./providers/cache.js";
 
 export interface SolidStartArgs extends SsrSiteArgs {
   /**
@@ -210,7 +211,7 @@ export interface SolidStartArgs extends SsrSiteArgs {
 }
 
 /**
- * The `SolidStart` component lets you deploy a [Remix](https://start.solidjs.com) app to AWS.
+ * The `SolidStart` component lets you deploy a [SolidStart](https://start.solidjs.com) app to AWS.
  *
  * @example
  *
@@ -293,6 +294,7 @@ export class SolidStart extends Component implements Link.Linkable {
     const { sitePath, partition } = prepare(args, opts);
     const { access, bucket } = createBucket(parent, name, partition, args);
     const outputPath = buildApp(name, args, sitePath);
+    const { buildMeta } = loadBuildOutput();
     const plan = buildPlan();
     const { distribution, ssrFunctions, edgeFunctions } =
       createServersAndDistribution(
@@ -326,8 +328,50 @@ export class SolidStart extends Component implements Link.Linkable {
       },
     });
 
+    function loadBuildOutput() {
+      const cache = new Cache(
+        `${name}BuildOutput`,
+        {
+          data: $dev ? loadBuildMetadataPlaceholder() : loadBuildMetadata(),
+        },
+        {
+          parent,
+          ignoreChanges: $dev ? ["*"] : undefined,
+        },
+      );
+
+      return {
+        buildMeta: cache.data as ReturnType<typeof loadBuildMetadata>,
+      };
+    }
+
+    function loadBuildMetadata() {
+      return outputPath.apply((outputPath) => {
+        const assetsPath = path.join(".output", "public");
+
+        return {
+          assetsPath,
+          // create 1 behaviour for each top level asset file/folder
+          staticRoutes: fs
+            .readdirSync(path.join(outputPath, assetsPath))
+            .map((item) =>
+              fs.statSync(path.join(outputPath, assetsPath, item)).isDirectory()
+                ? `${item}/*`
+                : item,
+            ),
+        };
+      });
+    }
+
+    function loadBuildMetadataPlaceholder() {
+      return {
+        assetsPath: "placeholder",
+        staticRoutes: ["_build/*", "_server/*", "assets/*", "favicon.ico"],
+      };
+    }
+
     function buildPlan() {
-      return all([outputPath]).apply(([outputPath, edge]) => {
+      return all([outputPath, buildMeta]).apply(([outputPath, buildMeta]) => {
         const serverConfig = {
           description: "Server handler for Solid",
           handler: path.join(outputPath, ".output", "server", "index.handler"),
@@ -339,36 +383,18 @@ export class SolidStart extends Component implements Link.Linkable {
             serverCfFunction: {
               injections: [useCloudFrontFunctionHostHeaderInjection()],
             },
-            staticCfFunction: {
-              injections: [
-                // Note: When using libraries like remix-flat-routes the file can
-                // contains special characters like "+". It needs to be encoded.
-                `request.uri = request.uri.split('/').map(encodeURIComponent).join('/');`,
-              ],
-            },
           },
-          edgeFunctions: edge
-            ? {
-                server: {
-                  function: serverConfig,
-                },
-              }
-            : undefined,
           origins: {
-            ...(edge
-              ? {}
-              : {
-                  server: {
-                    server: {
-                      function: serverConfig,
-                    },
-                  },
-                }),
+            server: {
+              server: {
+                function: serverConfig,
+              },
+            },
             s3: {
               s3: {
                 copy: [
                   {
-                    from: path.join(outputPath, ".output", "public"),
+                    from: buildMeta.assetsPath,
                     to: "",
                     cached: true,
                   },
@@ -377,35 +403,22 @@ export class SolidStart extends Component implements Link.Linkable {
             },
           },
           behaviors: [
-            edge
-              ? {
-                  cacheType: "server",
-                  cfFunction: "serverCfFunction",
-                  edgeFunction: "server",
-                  origin: "s3",
-                }
-              : {
-                  cacheType: "server",
-                  cfFunction: "serverCfFunction",
-                  origin: "server",
-                },
+            {
+              cacheType: "server",
+              cfFunction: "serverCfFunction",
+              origin: "server",
+            },
             {
               pattern: "_server/",
               cacheType: "server",
               cfFunction: "serverCfFunction",
               origin: "server",
             },
-            // create 1 behaviour for each top level asset file/folder
-            ...fs.readdirSync(path.join(outputPath, ".output/public")).map(
-              (item) =>
+            ...buildMeta.staticRoutes.map(
+              (route) =>
                 ({
                   cacheType: "static",
-                  cfFunction: "staticCfFunction",
-                  pattern: fs
-                    .statSync(path.join(outputPath, ".output/public", item))
-                    .isDirectory()
-                    ? `${item}/*`
-                    : item,
+                  pattern: route,
                   origin: "s3",
                 }) as const,
             ),

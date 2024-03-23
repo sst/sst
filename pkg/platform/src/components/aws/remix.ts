@@ -13,7 +13,7 @@ import {
 } from "./ssr-site.js";
 import { Cdn } from "./cdn.js";
 import { Bucket } from "./bucket.js";
-import { Component, transform } from "../component.js";
+import { Component } from "../component.js";
 import { Hint } from "../hint.js";
 import { Link } from "../link.js";
 import type { Input } from "../input.js";
@@ -472,7 +472,6 @@ export class Remix extends Component implements Link.Linkable {
                     cfFunction: "serverCfFunction",
                     origin: "server",
                   },
-              // create 1 behaviour for each top level asset file/folder
               ...buildMeta.staticRoutes.map(
                 (route) =>
                   ({

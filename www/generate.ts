@@ -464,8 +464,8 @@ async function generateTsDoc() {
                 f.name === "$jsonParse" && param.name === "reviver"
                   ? renderJsonParseReviverType()
                   : f.name === "$jsonStringify" && param.name === "replacer"
-                  ? renderJsonStringifyReplacerType()
-                  : renderType(param.type!);
+                    ? renderJsonStringifyReplacerType()
+                    : renderType(param.type!);
 
               return [
                 `- <p><code class="key">${renderSignatureArg(
@@ -1327,6 +1327,7 @@ async function buildTsFiles() {
       "../pkg/platform/src/components/aws/queue.ts",
       "../pkg/platform/src/components/aws/router.ts",
       "../pkg/platform/src/components/aws/sns-topic.ts",
+      "../pkg/platform/src/components/aws/solid-start.ts",
       "../pkg/platform/src/components/aws/static-site.ts",
       "../pkg/platform/src/components/cloudflare/worker.ts",
     ],
