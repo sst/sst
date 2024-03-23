@@ -64,6 +64,7 @@ func main() {
 			ui.Error("Unexpected error occurred. Please check the logs or run with --verbose for more details.")
 		}
 		os.Exit(1)
+		return
 	}
 	telemetry.Track("cli.success", map[string]interface{}{})
 }
@@ -789,6 +790,17 @@ var Root = Command{
 				var args []string
 				for _, arg := range cli.arguments {
 					args = append(args, strings.Fields(arg)...)
+				}
+				cwd, _ := os.Getwd()
+				currentDir := cwd
+				for {
+					newPath := filepath.Join(currentDir, "node_modules", ".bin") + os.Getenv("PATH") + string(os.PathListSeparator)
+					os.Setenv("PATH", newPath)
+					parentDir := filepath.Dir(currentDir)
+					if parentDir == currentDir {
+						break
+					}
+					currentDir = parentDir
 				}
 				if len(args) == 0 {
 					args = append(args, "sh")

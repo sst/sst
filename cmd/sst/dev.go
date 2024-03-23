@@ -56,7 +56,16 @@ func CmdDev(cli *Cli) error {
 		}
 
 		cwd, _ := os.Getwd()
-		os.Setenv("PATH", os.Getenv("PATH")+":"+filepath.Join(cwd, "node_modules", ".bin"))
+		currentDir := cwd
+		for {
+			newPath := filepath.Join(currentDir, "node_modules", ".bin") + os.Getenv("PATH") + string(os.PathListSeparator)
+			os.Setenv("PATH", newPath)
+			parentDir := filepath.Dir(currentDir)
+			if parentDir == currentDir {
+				break
+			}
+			currentDir = parentDir
+		}
 		for {
 			cmd := exec.Command(
 				args[0],
