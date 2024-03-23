@@ -496,7 +496,7 @@ new NextjsSite(stack, "Site", {
       const password = "P@ssw0rd!";
       const basicAuth = Buffer.from(`${username}:${password}`).toString("base64");
       plan.cloudFrontFunctions.serverCfFunction.injections.push(`
-        if (request?.headers?.authorization?.value !== '${basicAuth}') {
+        if (request?.headers?.authorization?.value !== 'Basic ${basicAuth}') {
           return {
             statusCode: 401,
             statusDescription: "Unauthorized",
