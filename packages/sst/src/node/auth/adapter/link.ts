@@ -10,6 +10,7 @@ import { createAdapter } from "./adapter.js";
 import { getPrivateKey, getPublicKey } from "../auth.js";
 
 interface LinkConfig {
+  expiresInMinutes?: number;
   onLink: (
     link: string,
     claims: Record<string, any>
@@ -22,8 +23,9 @@ interface LinkConfig {
 
 export const LinkAdapter = /* @__PURE__ */ createAdapter(
   (config: LinkConfig) => {
+    const { expiresInMinutes = 10 } = config;
     const signer = createSigner({
-      expiresIn: 1000 * 60 * 10,
+      expiresIn: 1000 * 60 * expiresInMinutes,
       key: getPrivateKey(),
       algorithm: "RS512",
     });
