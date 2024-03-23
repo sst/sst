@@ -794,7 +794,7 @@ var Root = Command{
 				cwd, _ := os.Getwd()
 				currentDir := cwd
 				for {
-					newPath := filepath.Join(currentDir, "node_modules", ".bin") + os.Getenv("PATH") + string(os.PathListSeparator)
+					newPath := filepath.Join(currentDir, "node_modules", ".bin") + string(os.PathListSeparator) + os.Getenv("PATH")
 					os.Setenv("PATH", newPath)
 					parentDir := filepath.Dir(currentDir)
 					if parentDir == currentDir {
