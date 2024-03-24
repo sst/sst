@@ -2,7 +2,8 @@ import { cache } from "@solidjs/router";
 import { StoryDefinition, StoryTypes, UserDefinition } from "~/types";
 
 const story = (path: string) => `https://node-hnapi.herokuapp.com/${path}`;
-const user = (path: string) => `https://hacker-news.firebaseio.com/v0/${path}.json`;
+const user = (path: string) =>
+  `https://hacker-news.firebaseio.com/v0/${path}.json`;
 
 async function fetchAPI(path: string) {
   const url = path.startsWith("user") ? user(path) : story(path);
@@ -31,13 +32,16 @@ const mapStories = {
   new: "newest",
   show: "show",
   ask: "ask",
-  job: "jobs"
+  job: "jobs",
 } as const;
 
-export const getStories = cache(async (type: StoryTypes, page: number): Promise<StoryDefinition[]> => {
-  "use server";
-  return fetchAPI(`${mapStories[type]}?page=${page}`);
-}, "stories");
+export const getStories = cache(
+  async (type: StoryTypes, page: number): Promise<StoryDefinition[]> => {
+    "use server";
+    return fetchAPI(`${mapStories[type]}?page=${page}`);
+  },
+  "stories",
+);
 
 export const getStory = cache(async (id: string): Promise<StoryDefinition> => {
   "use server";
@@ -46,5 +50,6 @@ export const getStory = cache(async (id: string): Promise<StoryDefinition> => {
 
 export const getUser = cache(async (id: string): Promise<UserDefinition> => {
   "use server";
+  await new Promise((resolve) => setTimeout(resolve, 5000));
   return fetchAPI(`user/${id}`);
 }, "user");

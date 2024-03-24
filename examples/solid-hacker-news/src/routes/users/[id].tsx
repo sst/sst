@@ -1,5 +1,5 @@
 import { createAsync, type RouteDefinition, type RouteSectionProps } from "@solidjs/router";
-import { Show } from "solid-js";
+import { Show, Suspense } from "solid-js";
 import { getUser } from "~/lib/api";
 
 export const route = {
@@ -12,6 +12,7 @@ export default function User(props: RouteSectionProps) {
   const user = createAsync(() => getUser(props.params.id));
   return (
     <div class="user-view">
+    <Suspense fallback="Loading user">
       <Show when={user()}>
         <Show when={!user()!.error} fallback={<h1>User not found.</h1>}>
           <h1>User : {user()!.id}</h1>
@@ -32,6 +33,7 @@ export default function User(props: RouteSectionProps) {
           </p>
         </Show>
       </Show>
+      </Suspense>
     </div>
   );
 };
