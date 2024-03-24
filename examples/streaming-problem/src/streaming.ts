@@ -1,9 +1,5 @@
 import { APIGatewayProxyEventV2 } from "aws-lambda";
 
-const TEXT = new Uint8Array(
-  Buffer.from("This is a test of a streaming lambda"),
-);
-
 export const handler = awslambda.streamifyResponse(
   async (evt: APIGatewayProxyEventV2, responseStream) => {
     const httpResponseMetadata = {
@@ -18,9 +14,10 @@ export const handler = awslambda.streamifyResponse(
       responseStream,
       httpResponseMetadata,
     );
-    for (let i = 0; i < TEXT.length; i += chunkSize) {
-      const chunk = TEXT.subarray(i, i + chunkSize);
-      writer.write(chunk);
+    const data = new Uint8Array(Buffer.from("0".repeat(chunkSize * 10)));
+    for (let i = 0; i < data.length; i += chunkSize) {
+      const chunk = data.subarray(i, i + chunkSize);
+      await new Promise((r) => writer.write(chunk, "utf8", r));
       await new Promise((r) => setTimeout(r, delay));
     }
     writer.end();
