@@ -17,7 +17,7 @@ export const handler = awslambda.streamifyResponse(
     const data = new Uint8Array(Buffer.from("0".repeat(chunkSize * 10)));
     for (let i = 0; i < data.length; i += chunkSize) {
       const chunk = data.subarray(i, i + chunkSize);
-      await new Promise((r) => writer.write(chunk, "utf8", r));
+      writer.write(chunk, "utf8");
       await new Promise((r) => setTimeout(r, delay));
     }
     writer.end();
