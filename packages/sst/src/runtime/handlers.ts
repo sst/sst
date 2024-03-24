@@ -14,6 +14,7 @@ import { useGoHandler } from "./handlers/go.js";
 import { useJavaHandler } from "./handlers/java.js";
 import { usePythonHandler } from "./handlers/python.js";
 import { useRustHandler } from "./handlers/rust.js";
+import { useNimHandler } from "./handlers/nim.js";
 import { lazy } from "../util/lazy.js";
 import { Semaphore } from "../util/semaphore.js";
 
@@ -81,6 +82,7 @@ export const useRuntimeHandlers = lazy(() => {
     useJavaHandler(),
     useDotnetHandler(),
     useRustHandler(),
+    useNimHandler(),
   ];
   const project = useProject();
   const bus = useBus();

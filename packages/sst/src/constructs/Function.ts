@@ -85,6 +85,7 @@ const supportedRuntimes = {
   java21: CDKRuntime.JAVA_21,
   "go1.x": CDKRuntime.PROVIDED_AL2,
   go: CDKRuntime.PROVIDED_AL2,
+  nim: CDKRuntime.PROVIDED_AL2,
 };
 
 export type Runtime = keyof typeof supportedRuntimes;
@@ -169,6 +170,11 @@ export interface FunctionProps
    * Used to configure python function properties
    */
   python?: PythonProps;
+
+  /**
+   * Used to configure nim function properties
+   */
+  nim?: NimProps;
 
   /**
    * Used to configure container function properties
@@ -743,6 +749,54 @@ export interface JavaProps {
    * ```
    */
   experimentalUseProvidedRuntime?: "provided" | "provided.al2";
+}
+
+/**
+ * Used to configure Nim package build options
+ */
+export interface NimProps {
+  /**
+   * Nimble build command to generate the bundled .zip file.
+   * @example
+   * ```js
+   * new Function(stack, "Function", {
+   *   nim: {
+   *     buildTask: "bundle"
+   *   }
+   * })
+   * ```
+   */
+  buildTask?: string;
+  /**
+   * Nimble build command to generate the bundled .zip file.
+   *
+   * @default []
+   *
+   * @example
+   * ```js
+   * new Function(stack, "Function", {
+   *   nim: {
+   *     buildArgs: ["--threads:on", "-d:release", "-d:ssl"],
+   *   }
+   * })
+   * ```
+   */
+  buildArgs?: string[];
+  /**
+   * The output folder that the bundled .zip file will be created within.
+   *
+   * @default "out"
+   *
+   * @example
+   * ```js
+   * new Function(stack, "Function", {
+   *   nim: {
+   *     buildOutputDir: "output"
+   *   }
+   * })
+   * ```
+   */
+  buildOutputDir?: string;
 }
 
 export interface ContainerProps {
