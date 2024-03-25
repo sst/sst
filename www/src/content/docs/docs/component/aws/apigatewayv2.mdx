@@ -451,28 +451,25 @@ Enable IAM authorization for a given API route. When IAM auth is enabled, client
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Object</code><code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
-Enable JWT authorization for a given API route. When JWT auth is enabled, clients need to include a valid JSON Web Token (JWT) in their requests.
+Enable JWT or JSON Web Token authorization for a given API route. When JWT auth is enabled, clients need to include a valid JWT in their requests.
+
+You can configure JWT auth.
 
 ```js
 {
   auth: {
     jwt: {
-      audiences: ["https://api.example.com"],
       issuer: "https://issuer.com/",
+      audiences: ["https://api.example.com"],
       scopes: ["read:profile", "write:profile"],
-      identitySource: "$request.header.AccessToken",
+      identitySource: "$request.header.AccessToken"
     }
   }
 }
 ```
 
-And if you are using an AWS Cognito User Pool.
-```js
-const userPool = new aws.cognito.UserPool(...);
-const userPoolClient = new aws.cognito.UserPoolClient(...);
-```
+You can also use Cognito as the identity provider.
 
-You can use configure the User Pool as the identity provider.
 ```js
 {
   auth: {
@@ -483,6 +480,13 @@ You can use configure the User Pool as the identity provider.
   }
 }
 ```
+
+Where `userPool` and `userPoolClient` are:
+
+```js
+const userPool = new aws.cognito.UserPool();
+const userPoolClient = new aws.cognito.UserPoolClient();
+```
 </Segment>
 <NestedTitle id="auth-jwt-audiences" Tag="h5" parent="auth.jwt.">audiences</NestedTitle>
 <Segment>
@@ -491,7 +495,7 @@ You can use configure the User Pool as the identity provider.
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code><code class="symbol">[]</code><code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
-List of the intended recipients of the JWT. A valid JWT must provide an "aud" that matches at least one entry in this list.
+List of the intended recipients of the JWT. A valid JWT must provide an `aud` that matches at least one entry in this list.
 
 </Segment>
 <NestedTitle id="auth-jwt-identitysource" Tag="h5" parent="auth.jwt.">identitySource?</NestedTitle>
@@ -505,7 +509,7 @@ List of the intended recipients of the JWT. A valid JWT must provide an "aud" th
 <InlineSection>
 **Default** <code class="primitive">"$request.header.Authorization"</code>
 </InlineSection>
-Specifies where to extract the JSON Web Token (JWT) from inbound requests.
+Specifies where to extract the JWT from the request.
 
 </Segment>
 <NestedTitle id="auth-jwt-issuer" Tag="h5" parent="auth.jwt.">issuer</NestedTitle>
@@ -525,11 +529,7 @@ Base domain of the identity provider that issues JSON Web Tokens.
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code><code class="symbol">[]</code><code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
-
-<InlineSection>
-**Default** No scopes are required
-</InlineSection>
-Defines the permissions or access levels that the JWT grants. If the JWT does not have the required scope, the request is rejected.
+Defines the permissions or access levels that the JWT grants. If the JWT does not have the required scope, the request is rejected. By default it does not require any scopes.
 
 </Segment>
 ### transform?

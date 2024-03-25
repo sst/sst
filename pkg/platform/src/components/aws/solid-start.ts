@@ -272,7 +272,7 @@ export interface SolidStartArgs extends SsrSiteArgs {
  * You can use the [SDK](/docs/reference/sdk/) to access the linked resources
  * in your SolidStart app.
  *
- * ```ts title="app/root.tsx"
+ * ```ts title="src/app.tsx"
  * import { Resource } from "sst";
  *
  * console.log(Resource.MyBucket.name);

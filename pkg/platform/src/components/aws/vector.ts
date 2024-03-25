@@ -23,16 +23,15 @@ const ModelInfo = {
 
 export interface VectorArgs {
   /**
-   * The model used for generating the vectors.
-   * 
-   * :::note
-   * The `text-embedding-3-large` model produces embeddings with 3072 dimensions. These embeddings are store in a Postgres database using a pgvector [HNSW index](https://github.com/pgvector/pgvector?tab=readme-ov-file#hnsw), supporting up to 2000 dimensions. OpenAI offers [dimensionality reduction](https://platform.openai.com/docs/guides/embeddings/use-cases) to accommodate this, scaling down to 2000 dimensions.
-   * :::
+   * The model used for generating the vectors. Supports AWS' and OpenAI's models.
    *
+   * To use OpenAI's `text-embedding-ada-002`, `text-embedding-3-small`, or `text-embedding-3-large` model, you'll need to pass in an `openAiApiKey`.
    *
    * :::tip
-   * To use the `text-embedding-ada-002`, `text-embedding-3-small`, or `text-embedding-3-large` model, you'll need to pass in your `openAiApiKey`.
+   * To use OpenAI's models, you'll need to pass in an `openAiApiKey`.
    * :::
+   *
+   * OpenAI's `text-embedding-3-large` model produces embeddings with 3072 dimensions. This is [scaled down](https://platform.openai.com/docs/guides/embeddings/use-cases) to 2000 dimensions to store it in Postgres. The Postgres database in this component can store up to 2000 dimensions with a pgvector [HNSW index](https://github.com/pgvector/pgvector?tab=readme-ov-file#hnsw).
    *
    * @default `"amazon.titan-embed-text-v1"`
    * @example
@@ -259,10 +258,12 @@ export class Vector
         TABLE_NAME: tableName,
         MODEL: model,
         MODEL_PROVIDER: ModelInfo[model].provider,
-        ...(openAiApiKey ? {
-          OPENAI_API_KEY: openAiApiKey,
-          OPENAI_MODEL_DIMENSIONS: ModelInfo[model].size.toString(),
-        } : {}),
+        ...(openAiApiKey
+          ? {
+              OPENAI_API_KEY: openAiApiKey,
+              OPENAI_MODEL_DIMENSIONS: ModelInfo[model].size.toString(),
+            }
+          : {}),
       }));
     }
 

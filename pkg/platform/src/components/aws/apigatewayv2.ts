@@ -176,28 +176,26 @@ export interface ApiGatewayV2RouteArgs {
      */
     iam?: Input<true>;
     /**
-     * Enable JWT authorization for a given API route. When JWT auth is enabled, clients need to include a valid JSON Web Token (JWT) in their requests.
+     * Enable JWT or JSON Web Token authorization for a given API route. When JWT auth is enabled, clients need to include a valid JWT in their requests.
+     *
      * @example
+     * You can configure JWT auth.
+     *
      * ```js
      * {
      *   auth: {
      *     jwt: {
-     *       audiences: ["https://api.example.com"],
      *       issuer: "https://issuer.com/",
+     *       audiences: ["https://api.example.com"],
      *       scopes: ["read:profile", "write:profile"],
-     *       identitySource: "$request.header.AccessToken",
+     *       identitySource: "$request.header.AccessToken"
      *     }
      *   }
      * }
      * ```
      *
-     * And if you are using an AWS Cognito User Pool.
-     * ```js
-     * const userPool = new aws.cognito.UserPool(...);
-     * const userPoolClient = new aws.cognito.UserPoolClient(...);
-     * ```
+     * You can also use Cognito as the identity provider.
      *
-     * You can use configure the User Pool as the identity provider.
      * ```js
      * {
      *   auth: {
@@ -208,6 +206,13 @@ export interface ApiGatewayV2RouteArgs {
      *   }
      * }
      * ```
+     *
+     * Where `userPool` and `userPoolClient` are:
+     *
+     * ```js
+     * const userPool = new aws.cognito.UserPool();
+     * const userPoolClient = new aws.cognito.UserPoolClient();
+     * ```
      */
     jwt?: Input<{
       /**
@@ -215,16 +220,15 @@ export interface ApiGatewayV2RouteArgs {
        */
       issuer: Input<string>;
       /**
-       * List of the intended recipients of the JWT. A valid JWT must provide an "aud" that matches at least one entry in this list.
+       * List of the intended recipients of the JWT. A valid JWT must provide an `aud` that matches at least one entry in this list.
        */
       audiences: Input<Input<string>[]>;
       /**
-       * Defines the permissions or access levels that the JWT grants. If the JWT does not have the required scope, the request is rejected.
-       * @default No scopes are required
+       * Defines the permissions or access levels that the JWT grants. If the JWT does not have the required scope, the request is rejected. By default it does not require any scopes.
        */
       scopes?: Input<Input<string>[]>;
       /**
-       * Specifies where to extract the JSON Web Token (JWT) from inbound requests.
+       * Specifies where to extract the JWT from the request.
        * @default `"$request.header.Authorization"`
        */
       identitySource?: Input<string>;
