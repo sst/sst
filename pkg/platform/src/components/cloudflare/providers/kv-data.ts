@@ -2,7 +2,7 @@ import fs from "fs";
 import { CustomResourceOptions, Input, dynamic } from "@pulumi/pulumi";
 import { cfFetch } from "../helpers/fetch.js";
 
-export interface KvDataEntry {
+interface KvDataEntry {
   source: string;
   key: string;
   hash: string;

@@ -264,10 +264,6 @@ By default, this is set to the following. Read more about these options below.
 Specify the `Content-Type` and `Cache-Control` headers for specific files. This allows
 you to override the default behavior for specific files using glob patterns.
 
-:::tip
-Behind the scenes, a combination of the `s3 cp` and `s3 sync` commands upload the assets to S3. An `s3 cp` command is run for each `fileOptions` block, and these options are passed in to the command.
-:::
-
 By default, this is set to cache CSS/JS files for 1 year and not cache HTML files.
 
 ```js
@@ -369,7 +365,7 @@ by the `files` glob pattern.
 <InlineSection>
 **Default** <code class="primitive">"utf-8"</code>
 </InlineSection>
-Character encoding for text based assets uploaded to S3, like HTML, CSS, JS. This is
+Character encoding for text based assets uploaded, like HTML, CSS, JS. This is
 used to set the `Content-Type` header when these files are served out.
 
 If set to `"none"`, then no charset will be returned in header.
@@ -392,6 +388,8 @@ If set to `"none"`, then no charset will be returned in header.
 - <p>[<code class="key">output</code>](#build-output)</p>
 </Section>
 Configure if your static site needs to be built. This is useful if you are using a static site generator.
+
+The `build.output` directory will be uploaded to S3 instead.
 
 For a Vite project using npm this might look like this.
 
@@ -428,7 +426,7 @@ The command that builds the static site. It's run before your site is deployed. 
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
-The directory where the build output of your static site is generated. This will be uploaded to S3.
+The directory where the build output of your static site is generated. This will be uploaded.
 
 The path is relative to the root of your site, `path`.
 

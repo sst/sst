@@ -6,8 +6,7 @@ export default $config({
       name: "cf-static-site",
       removal: input?.stage === "production" ? "retain" : "remove",
       providers: {
-        aws: {},
-        cloudflare: {},
+        cloudflare: true,
       },
       home: "aws",
     };
