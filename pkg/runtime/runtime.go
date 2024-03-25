@@ -96,6 +96,7 @@ func Build(ctx context.Context, input *BuildInput) (*BuildOutput, error) {
 func Run(ctx context.Context, input *RunInput) (Worker, error) {
 	slog.Info("running function", "runtime", input.Runtime, "functionID", input.FunctionID)
 	runtime, ok := GetRuntime(input.Runtime)
+	input.Env = append(input.Env, "SST_LIVE=true")
 	if !ok {
 		return nil, fmt.Errorf("runtime not found")
 	}
