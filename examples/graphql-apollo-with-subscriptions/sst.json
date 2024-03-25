@@ -1,0 +1,6 @@
+{
+  "name": "graphql-apollo",
+  "stage": "dev",
+  "region": "us-east-1",
+  "lint": true
+}
