@@ -475,4 +475,16 @@ sst telemetry disable
 </Section>
 Disable telemetry.
 </Segment>
+
+### refresh
+<Segment>
+<Section type="signature">
+```sh frame="none"
+sst refresh
+```
+</Section>
+Compares your local state with the state of the resources in the cloud provider. Any changes that are found are adopted into your local state.
+
+This is useful for cases where you want to ensure that your local state is in sync with your cloud provider.
+</Segment>
 </div>

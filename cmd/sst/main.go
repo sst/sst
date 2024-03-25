@@ -1091,7 +1091,14 @@ var Root = Command{
 		},
 		{
 			Name:   "refresh",
-			Hidden: true,
+			Description: Description{
+				Short: "Refresh the local app state",
+				Long: strings.Join([]string{
+					"Compares your local state with the state of the resources in the cloud provider. Any changes that are found are adopted into your local state.",
+					"",
+					"This is useful for cases where you want to ensure that your local state is in sync with your cloud provider.",
+				}, "\n"),
+			},
 			Run: func(cli *Cli) error {
 				p, err := initProject(cli)
 				if err != nil {
