@@ -1070,7 +1070,7 @@ var Root = Command{
 				err = s.Start(cli.Context)
 				if err != nil {
 					if err == server.ErrServerAlreadyRunning {
-						return util.NewReadableError(err, "Server already running")
+						return util.NewReadableError(err, "Another instance of SST is already running")
 					}
 					return err
 				}

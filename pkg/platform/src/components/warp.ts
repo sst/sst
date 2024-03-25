@@ -8,6 +8,10 @@ export module Warp {
     handler: string;
     bundle?: string;
     links: string[];
+    copyFiles?: {
+      from: string;
+      to?: string;
+    }[];
   }
   let warps: Record<string, Input<Definition | undefined>> = {};
   export function reset() {

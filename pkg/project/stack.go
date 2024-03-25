@@ -58,12 +58,16 @@ type Receiver struct {
 type Receivers map[string]Receiver
 
 type Warp struct {
-	FunctionID  string            `json:"functionID"`
-	Runtime     string            `json:"runtime"`
-	Handler     string            `json:"handler"`
-	Bundle      string            `json:"bundle"`
-	Properties  json.RawMessage   `json:"properties"`
-	Links       []string          `json:"links"`
+	FunctionID string          `json:"functionID"`
+	Runtime    string          `json:"runtime"`
+	Handler    string          `json:"handler"`
+	Bundle     string          `json:"bundle"`
+	Properties json.RawMessage `json:"properties"`
+	Links      []string        `json:"links"`
+	CopyFiles  []struct {
+		From string `json:"from"`
+		To   string `json:"to"`
+	} `json:"copyFiles"`
 	Environment map[string]string `json:"environment"`
 }
 type Warps map[string]Warp

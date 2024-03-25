@@ -90,6 +90,27 @@ func Build(ctx context.Context, input *BuildInput) (*BuildOutput, error) {
 	}
 	result.Out = out
 
+	if len(input.Warp.CopyFiles) > 0 {
+		for _, item := range input.Warp.CopyFiles {
+			from, err := filepath.Abs(item.From)
+			if err != nil {
+				return nil, err
+			}
+			dest := filepath.Join(out, item.To)
+			if item.To == "" {
+				dest = filepath.Join(out, item.From)
+				err := os.MkdirAll(filepath.Dir(dest), 0755)
+				if err != nil {
+					return nil, err
+				}
+			}
+			err = os.Symlink(from, dest)
+			if err != nil {
+				return nil, err
+			}
+		}
+	}
+
 	return result, nil
 }
 

@@ -14,6 +14,11 @@ export default $config({
       streaming: true,
       url: true,
       timeout: "15 minutes",
+      copyFiles: [
+        {
+          from: "./package.json",
+        },
+      ],
     });
 
     return {

@@ -906,17 +906,21 @@ export class Function
         args.bundle,
         args.runtime,
         args.nodejs,
-      ]).apply(([dev, name, links, handler, bundle, runtime, nodejs]) => {
-        if (!dev) return undefined;
-        return {
-          functionID: name,
-          links,
-          handler: handler,
-          bundle: bundle,
-          runtime: runtime || "nodejs20.x",
-          properties: nodejs,
-        };
-      }),
+        args.copyFiles,
+      ]).apply(
+        ([dev, name, links, handler, bundle, runtime, nodejs, copyFiles]) => {
+          if (!dev) return undefined;
+          return {
+            functionID: name,
+            links,
+            handler: handler,
+            bundle: bundle,
+            runtime: runtime || "nodejs20.x",
+            properties: nodejs,
+            copyFiles,
+          };
+        },
+      ),
     );
 
     all([bundle, handler]).apply(([bundle, handler]) => {
