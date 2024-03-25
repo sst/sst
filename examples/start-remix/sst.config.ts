@@ -9,6 +9,11 @@ export default $config({
     };
   },
   async run() {
-    new sst.aws.Remix("MyWeb");
+    const bucket = new sst.aws.Bucket("MyBucket", {
+      public: true,
+    });
+    new sst.aws.Remix("MyWeb", {
+      link: [bucket],
+    });
   },
 });
