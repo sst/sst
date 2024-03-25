@@ -18,10 +18,7 @@ export default $config({
         command: "bun run build",
         output: "dist",
       },
-      domain: {
-        hostname: "vite.sstion.com",
-        zoneId: "415e6f4652b6d95b775d350f32119abb",
-      },
+      domain: "vite.sstion.com",
     });
   },
 });

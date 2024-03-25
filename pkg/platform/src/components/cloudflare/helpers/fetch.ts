@@ -11,18 +11,23 @@ export interface FetchError {
   error_chain?: FetchError[];
 }
 
-export interface FetchResult<ResponseType = unknown> {
+export interface FetchResult<ResultType> {
   success: boolean;
-  result: ResponseType;
+  result: ResultType;
   errors: FetchError[];
   messages?: string[];
-  result_info?: unknown;
+  result_info?: {
+    page: number;
+    per_page: number;
+    count: number;
+    total_count: number;
+  };
 }
 
-export async function cfFetch<ResponseType>(
+export async function cfFetch<ResultType>(
   resource: string,
   init: RequestInit = {},
-): Promise<ResponseType> {
+) {
   const ret = await fetch(`${CLOUDFLARE_API_BASE_URL}${resource}`, {
     ...init,
     headers: {
@@ -30,7 +35,7 @@ export async function cfFetch<ResponseType>(
       ...init.headers,
     },
   });
-  const json = (await ret.json()) as FetchResult<ResponseType>;
+  const json = (await ret.json()) as FetchResult<ResultType>;
   // ie.
   // {
   //   "result": {
@@ -41,7 +46,7 @@ export async function cfFetch<ResponseType>(
   //   "messages": []
   // }
   if (json.success) {
-    return json.result;
+    return json;
   }
 
   const error = new Error(

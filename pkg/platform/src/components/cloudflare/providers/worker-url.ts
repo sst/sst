@@ -1,7 +1,7 @@
 import { CustomResourceOptions, Input, Output, dynamic } from "@pulumi/pulumi";
 import { cfFetch } from "../helpers/fetch.js";
 
-export interface WorkersUrlInputs {
+export interface WorkerUrlInputs {
   accountId: Input<string>;
   scriptName: Input<string>;
   enabled: Input<boolean>;
@@ -39,13 +39,13 @@ class Provider implements dynamic.ResourceProvider {
     }
 
     const [userSubdomain] = await Promise.all([
-      this.getWorkersDevSubdomain(inputs),
+      this.getWorkerDevSubdomain(inputs),
       this.setEnabledFlag(inputs),
     ]);
     return `${inputs.scriptName}.${userSubdomain}.workers.dev`;
   }
 
-  async getWorkersDevSubdomain(inputs: Inputs) {
+  async getWorkerDevSubdomain(inputs: Inputs) {
     try {
       const ret = await cfFetch<{ subdomain: string }>(
         `/accounts/${inputs.accountId}/workers/subdomain`,
@@ -53,7 +53,7 @@ class Provider implements dynamic.ResourceProvider {
           headers: { "Content-Type": "application/json" },
         },
       );
-      return ret.subdomain;
+      return ret.result.subdomain;
     } catch (error: any) {
       console.log(error);
       throw error;
@@ -62,7 +62,7 @@ class Provider implements dynamic.ResourceProvider {
 
   async setEnabledFlag(inputs: Inputs) {
     try {
-      const ret = await cfFetch(
+      await cfFetch(
         `/accounts/${inputs.accountId}/workers/scripts/${inputs.scriptName}/subdomain`,
         {
           method: "POST",
@@ -82,19 +82,19 @@ class Provider implements dynamic.ResourceProvider {
   }
 }
 
-export interface WorkersUrl {
+export interface WorkerUrl {
   url: Output<string | undefined>;
 }
 
-export class WorkersUrl extends dynamic.Resource {
+export class WorkerUrl extends dynamic.Resource {
   constructor(
     name: string,
-    args: WorkersUrlInputs,
+    args: WorkerUrlInputs,
     opts?: CustomResourceOptions,
   ) {
     super(
       new Provider(),
-      `${name}.sst.cloudflare.WorkersUrl`,
+      `${name}.sst.cloudflare.WorkerUrl`,
       { ...args, url: undefined },
       opts,
     );

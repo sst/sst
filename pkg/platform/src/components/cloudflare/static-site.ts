@@ -8,7 +8,7 @@ import { Link } from "../link.js";
 import { Input } from "../input.js";
 import { globSync } from "glob";
 import { KvData } from "./providers/kv-data.js";
-import { Worker, WorkerDomainArgs } from "./worker.js";
+import { Worker } from "./worker.js";
 import {
   BaseStaticSiteArgs,
   buildApp,
@@ -84,12 +84,11 @@ export interface StaticSiteArgs extends BaseStaticSiteArgs {
    */
   assets?: BaseStaticSiteArgs["assets"];
   /**
-   * Set a custom domain for your static site. Supports domains hosted either on
-   * [Route 53](https://aws.amazon.com/route53/) or outside AWS.
+   * Set a custom domain for your static site. Supports domains hosted on Cloudflare.
    *
    * :::tip
-   * You can also migrate an externally hosted domain to Amazon Route 53 by
-   * [following this guide](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/MigratingDNS.html).
+   * You can migrate an externally hosted domain to Cloudflare by
+   * [following this guide](https://developers.cloudflare.com/dns/zone-setups/full-setup/setup/).
    * :::
    *
    * @example
@@ -99,20 +98,8 @@ export interface StaticSiteArgs extends BaseStaticSiteArgs {
    *   domain: "domain.com"
    * }
    * ```
-   *
-   * Specify the Route 53 hosted zone and a `www.` version of the custom domain.
-   *
-   * ```js
-   * {
-   *   domain: {
-   *     domainName: "domain.com",
-   *     hostedZone: "domain.com",
-   *     redirects: ["www.domain.com"]
-   *   }
-   * }
-   * ```
    */
-  domain?: Input<Prettify<WorkerDomainArgs>>;
+  domain?: Input<string>;
   /**
    * [Transform](/docs/components#transform) how this component creates its underlying
    * resources.

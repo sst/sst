@@ -1,3 +1,4 @@
+import crypto from "crypto";
 import { Resource } from "sst";
 import { json } from "@remix-run/node";
 import { useLoaderData } from "@remix-run/react";

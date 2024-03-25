@@ -37,31 +37,28 @@ export default {
 
     async function lookupCache() {
       const cache = caches.default;
-      const hash = AssetManifest[filePath];
-      const cacheKey = `${request.url}-${hash}`;
-      if (cacheKey) {
-        return await cache.match(cacheKey);
-      }
+      const r = await cache.match(request);
+
+      // cache does not exist
+      if (!r) return;
+
+      // cache exists but etag does not match
+      if (r.headers.get("etag") !== AssetManifest[filePath]) return;
+
+      // cache exists
+      return r;
     }
 
-    async function setCache(response: Response) {
+    async function saveCache(response: Response) {
       const cache = caches.default;
-      const hash = AssetManifest[filePath];
-      const cacheKey = `${request.url}-${hash}`;
-      if (cacheKey) {
-        await cache.put(cacheKey, response.clone());
-      }
+      await cache.put(request, response.clone());
     }
 
-    async function respond(
-      status: number,
-      fallbackFilepath: string,
-      object: any,
-    ) {
+    async function respond(status: number, filePath: string, object: any) {
       // build response
       const headers = new Headers();
-      if (AssetManifest[fallbackFilepath]) {
-        headers.set("etag", AssetManifest[fallbackFilepath]);
+      if (AssetManifest[filePath]) {
+        headers.set("etag", AssetManifest[filePath]);
         headers.set("content-type", object.metadata.contentType);
         headers.set("cache-controle", object.metadata.cacheControl);
       }
@@ -70,8 +67,7 @@ export default {
         headers,
       });
 
-      // set cache
-      await setCache(response);
+      await saveCache(response);
 
       return response;
     }
