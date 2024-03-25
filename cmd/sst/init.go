@@ -193,7 +193,7 @@ func CmdInit(cli *Cli) error {
 	spin.Stop()
 
 	color.New(color.FgGreen, color.Bold).Print("✓ ")
-	color.New(color.FgWhite).Println(" Success 🎉")
+	color.New(color.FgWhite).Println(" Done 🎉")
 	fmt.Println()
 	return nil
 }
