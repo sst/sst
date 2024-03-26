@@ -302,7 +302,7 @@ export class Astro extends Component implements Link.Linkable {
     const parent = this;
     const { sitePath, partition, region } = prepare(args, opts);
     const { access, bucket } = createBucket(parent, name, partition, args);
-    const outputPath = buildApp(name, args, sitePath, args.buildCommand);
+    const outputPath = buildApp(name, args, sitePath);
     const { buildMeta } = loadBuildOutput();
     const plan = buildPlan();
     const { distribution, ssrFunctions, edgeFunctions } =
