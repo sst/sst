@@ -291,20 +291,30 @@ sst deploy
 
 ---
 
+#### Personal stage
+
+By default, your app is deployed to your _personal stage_. The name of your personal stage is your username in the local machine. This is cached in the `.sst/stage` file.
+
+You can override this to deploy to separate stages or environments.
+
+---
+
 #### Environments
 
-The `deploy` command can also deploy your app to a specific stage or environment. This lets you create separate environments for development, production, pull-requests, or branches.
+The `deploy` command can also deploy your app to a specific stage or environment.
 
 ```bash
 # Deploy to dev
-npx sst deploy --stage dev
+npx sst deploy --stage=dev
 
 # Deploy a PR environment
-npx sst deploy --stage pr-123
+npx sst deploy --stage=pr-123
 
 # Deploy to production
-npx sst deploy --stage prod
+npx sst deploy --stage=prod
 ```
+
+This lets you create separate environments for development, production, pull-requests, or branches. Learn more about [stages](/docs/reference/cli#stage).
 
 ---
 

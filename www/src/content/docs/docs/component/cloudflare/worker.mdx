@@ -212,6 +212,26 @@ Enable or disable if the worker code is minified when bundled.
 }
 ```
 </Segment>
+### domain?
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+Set a custom domain for your Worker. Supports domains hosted on Cloudflare.
+
+:::tip
+You can migrate an externally hosted domain to Cloudflare by
+[following this guide](https://developers.cloudflare.com/dns/zone-setups/full-setup/setup/).
+:::
+
+```js
+{
+  domain: "domain.com"
+}
+```
+</Segment>
 ### environment?
 <Segment>
 <Section type="parameters">

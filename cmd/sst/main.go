@@ -200,7 +200,9 @@ var Root = Command{
 					"",
 					"1. Uses the username on the local machine.",
 					"   - If the username is `root`, `admin`, `prod`, `dev`, `production`, then it will prompt for a stage name.",
-					"2. Stores this in the `.sst/stage` file and reads from it in the future.",
+					"2. Store this in the `.sst/stage` file and reads from it in the future.",
+					"",
+					"This stored stage is called your personal stage.",
 					"",
 					":::tip",
 					"The stage that is stored in the `.sst/stage` file is called your personal stage.",
@@ -1475,7 +1477,7 @@ func getStage(cli *Cli, cfgPath string) (string, error) {
 			stage = guessStage()
 			if stage == "" {
 				for {
-					fmt.Print("Enter a stage name for your personal stage: ")
+					fmt.Print("Enter a name for your personal stage: ")
 					_, err := fmt.Scanln(&stage)
 					if err != nil {
 						continue

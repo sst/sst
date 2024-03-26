@@ -65,7 +65,7 @@ func (u *UI) Reset() {
 
 func (u *UI) Trigger(evt *project.StackEvent) {
 	if evt.ConcurrentUpdateEvent != nil {
-		u.printEvent(color.FgRed, "Locked", "A concurrent update was detected on the stack. Run `sst unlock` to delete the lock file and retry.")
+		u.printEvent(color.FgRed, "Locked", "A concurrent update was detected on the app. Run `sst unlock` to remove the lock and try again.")
 	}
 	if evt.StackCommandEvent != nil {
 		u.spinner.Disable()
