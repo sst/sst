@@ -494,15 +494,16 @@ new NextjsSite(stack, "Site", {
     transform: (plan) => {
       const username = "admin";
       const password = "P@ssw0rd!";
+      const basicAuth = Buffer.from(`${username}:${password}`).toString("base64");
       plan.cloudFrontFunctions.serverCfFunction.injections.push(`
-        var authHeaders = request.headers.authorization;
-        if (!authHeaders || authHeaders.value !== "Basic ${Buffer.from(${username}:${password}).toString('base64')
-      }"}) {
-          statusCode: 401,
-          statusDescription: "Unauthorized",
-          headers: {
-            "www-authenticate": { value: 'Basic realm="Secure Area"' }
-          }
+        if (request?.headers?.authorization?.value !== 'Basic ${basicAuth}') {
+          return {
+            statusCode: 401,
+            statusDescription: "Unauthorized",
+            headers: {
+              "www-authenticate": { value: 'Basic realm="Secure Area"' },
+            },
+          };
         }
       `);
     },
@@ -575,7 +576,7 @@ new NextjsSite(stack, "Site", {
         "OriginAccessIdentity",
         "XXXXXXXX"
       ),
-    },    
+    },
   },
 });
 ```
