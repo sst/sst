@@ -284,8 +284,8 @@ export const useContainerHandler = (): RuntimeHandler => {
                               input.props.container?.cacheTo?.params
                             ).map(([pk, pv]) => `${pk}=${pv}`)
                           : []
-                        ).join(","),
-                      ],
+                        )
+                      ].join(","),,
                   ]
                 : []),
               `.`,
@@ -346,8 +346,8 @@ export const useContainerHandler = (): RuntimeHandler => {
                               input.props.container?.cacheTo?.params
                             ).map(([pk, pv]) => `${pk}=${pv}`)
                           : []
-                        ).join(","),
-                      ],
+                        )
+                      ].join(","),,
                   ]
                 : []),
               `--platform ${platform}`,
