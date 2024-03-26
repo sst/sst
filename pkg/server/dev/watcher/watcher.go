@@ -45,6 +45,9 @@ func Start(ctx context.Context, root string) (util.CleanupFunc, error) {
 		}
 		return nil
 	})
+	if err != nil {
+		return nil, err
+	}
 
 	go func() {
 		for {
