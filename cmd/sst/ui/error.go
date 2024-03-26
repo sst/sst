@@ -25,14 +25,20 @@ func parseError(input string) []string {
 		for _, section := range sections[1:] {
 			for _, line := range strings.Split(section, "\n") {
 				line = strings.TrimSpace(line)
-				splits := regexp.MustCompile("[a-zA-Z]+:").Split(
-					strings.Split(line, "\n")[0],
-					-1,
-				)
-				final := strings.TrimSpace(splits[len(splits)-1])
-				for _, split := range strings.Split(final, "\n") {
-					lines = append(lines, split)
+
+				// matches ExampleError: some thing went wrong
+				match := regexp.MustCompile(`\s[A-Z][a-zA-z]+\:.+`).FindString(line)
+				if match != "" {
+					lines = append(lines, strings.TrimSpace(match))
+					continue
 				}
+
+				// if json object is printed stop parsing
+				if line == "{" {
+					break
+				}
+
+				lines = append(lines, line)
 			}
 		}
 		return lines
