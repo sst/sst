@@ -56,12 +56,12 @@ check_version() {
         installed_version=$(sst version)
         
         if [[ "$installed_version" != "$latest_version" ]]; then
-            print_message info "Version ${YELLOW}$installed_version${GREEN} is installed, Upgrade to ${YELLOW}$latest_version${GREEN}? [Y/n]${NC}"
-            read -n 1 -r
-            echo
-            if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-                exit 1
-            fi
+            print_message info "Version ${YELLOW}$installed_version${GREEN} is installed, upgrading to ${YELLOW}$latest_version${GREEN}? [Y/n]${NC}"
+            # read -n 1 -r
+            # echo
+            # if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+            #     exit 1
+            # fi
         else
             print_message info "Latest version ${YELLOW}$latest_version${GREEN} already installed"
             exit 0
