@@ -5,6 +5,10 @@ description: Create and deploy an Astro site to AWS with SST.
 
 We are going to create an Astro site, add an S3 Bucket for file uploads, and deploy it to AWS using SST.
 
+:::tip[View source]
+You can [view the source](https://github.com/sst/ion/tree/dev/examples/start-astro) of this example in our repo.
+:::
+
 Before you get started:
 
 1. [Configure your AWS credentials](https://docs.sst.dev/advanced/iam-credentials#loading-from-a-file)
@@ -170,7 +174,7 @@ And install the npm packages.
 npm install @aws-sdk/client-s3 @aws-sdk/s3-request-presigner
 ```
 
-Head over to `http://localhost:4321` and try **uploading an image**, you should see it upload and then download the image.
+Head over to the local Astro site in your browser, `http://localhost:4321` and try **uploading an image**. You should see it upload and then download the image.
 
 ---
 
@@ -190,9 +194,9 @@ Congrats! Your site should now be live!
 
 ## Connect the console
 
-As a next step, you can view your app and its logs in the [SST Console](/docs/console/) — [**console.sst.dev**](https://console.sst.dev)
+As a next step, you can manage your app and view issues in the [SST Console](/docs/console/).
 
-![Astro site in SST Console](../../../../assets/docs/astro-site-in-the-sst-console.png)
+![Issues in Astro site in SST Console](../../../../assets/docs/issues-in-astro-site-in-the-sst-console.png)
 
 You can [create a free account](https://console.sst.dev) and connect it to your AWS account.
 
