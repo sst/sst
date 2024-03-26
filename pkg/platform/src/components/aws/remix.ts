@@ -304,7 +304,7 @@ export class Remix extends Component implements Link.Linkable {
     const { sitePath, partition, region } = prepare(args, opts);
     const isUsingVite = checkIsUsingVite();
     const { access, bucket } = createBucket(parent, name, partition, args);
-    const outputPath = buildApp(name, args, sitePath);
+    const outputPath = buildApp(name, args, sitePath, args.buildCommand);
     const { buildMeta } = loadBuildOutput();
     const plan = buildPlan();
     const { distribution, ssrFunctions, edgeFunctions } =

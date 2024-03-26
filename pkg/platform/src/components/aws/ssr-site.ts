@@ -421,10 +421,11 @@ export function buildApp(
   name: string,
   args: SsrSiteArgs,
   sitePath: Output<string>,
+  buildCommand?: Input<string>,
 ) {
   const defaultCommand = "npm run build";
 
-  return all([sitePath, args.buildCommand, args.link, args.environment]).apply(
+  return all([sitePath, buildCommand, args.link, args.environment]).apply(
     ([sitePath, buildCommand, links, environment]) => {
       const cmd = buildCommand || defaultCommand;
 

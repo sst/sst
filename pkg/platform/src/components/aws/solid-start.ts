@@ -293,7 +293,7 @@ export class SolidStart extends Component implements Link.Linkable {
     const parent = this;
     const { sitePath, partition } = prepare(args, opts);
     const { access, bucket } = createBucket(parent, name, partition, args);
-    const outputPath = buildApp(name, args, sitePath);
+    const outputPath = buildApp(name, args, sitePath, args.buildCommand);
     const { buildMeta } = loadBuildOutput();
     const plan = buildPlan();
     const { distribution, ssrFunctions, edgeFunctions } =
