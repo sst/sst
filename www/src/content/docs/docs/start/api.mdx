@@ -5,6 +5,10 @@ description: Create and deploy a serverless API in AWS with SST.
 
 We are going to build a serverless API, add an S3 Bucket for file uploads, and deploy it to AWS using SST.
 
+:::tip[View source]
+You can [view the source](https://github.com/sst/ion/tree/dev/examples/start-api) of this example in our repo.
+:::
+
 Before you get started:
 
 1. [Configure your AWS credentials](https://docs.sst.dev/advanced/iam-credentials#loading-from-a-file)
@@ -94,7 +98,7 @@ new sst.aws.ApiGatewayV2("MyApi")
 
 ## 4. Upload a file to S3
 
-We want the `/` route of our API to generate a pre-signed URL to upload a file to our S3 Bucket.
+We want the `/` route of our API to generate a pre-signed URL to upload a file to our S3 Bucket. Create an `index.ts` file and add the following.
 
 ```ts title="index.ts" {4}
 export async function upload() {
@@ -118,7 +122,7 @@ We are directly accessing our S3 bucket with `Resource.MyBucket.name`.
 
 ## 5. Download a file from S3
 
-We want the `/latest` route of our API to generate a pre-signed URL to download the last uploaded file in our S3 Bucket.
+We want the `/latest` route of our API to generate a pre-signed URL to download the last uploaded file in our S3 Bucket. Add this to your `index.ts` file.
 
 ```ts title="index.ts"
 export async function latest() {
@@ -160,6 +164,7 @@ import {
   ListObjectsV2Command,
 } from "@aws-sdk/client-s3";
 
+const s3 = new S3Client({});
 ```
 
 And install the npm packages.
@@ -194,9 +199,9 @@ sst deploy
 
 ## Connect the console
 
-As a next step, you can view your app and its logs in the [SST Console](/docs/console/) — [**console.sst.dev**](https://console.sst.dev)
+As a next step, you can manage your app and view issues in the [SST Console](/docs/console/).
 
-![API app in SST Console](../../../../assets/docs/api-app-in-the-sst-console.png)
+![Issues in API app in SST Console](../../../../assets/docs/issues-in-api-app-in-the-sst-console.png)
 
 You can [create a free account](https://console.sst.dev) and connect it to your AWS account.
 
