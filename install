@@ -100,9 +100,9 @@ add_to_path() {
 XDG_CONFIG_HOME=${XDG_CONFIG_HOME:-$HOME/.config}
 
 declare -A shell_config_files=(
-    [fish]="$HOME/.config/fish/config.fish"
-    [zsh]="$HOME/.zshrc $HOME/.zshenv $XDG_CONFIG_HOME/zsh/.zshrc $XDG_CONFIG_HOME/zsh/.zshenv"
-    [bash]="$HOME/.bashrc $HOME/.bash_profile $XDG_CONFIG_HOME/bash/.bashrc $XDG_CONFIG_HOME/bash/.bash_profile"
+    ["fish"]="$HOME/.config/fish/config.fish"
+    ["zsh"]="$HOME/.zshrc $HOME/.zshenv $XDG_CONFIG_HOME/zsh/.zshrc $XDG_CONFIG_HOME/zsh/.zshenv"
+    ["bash"]="$HOME/.bashrc $HOME/.bash_profile $XDG_CONFIG_HOME/bash/.bashrc $XDG_CONFIG_HOME/bash/.bash_profile"
 )
 
 current_shell=$(basename "$SHELL")
