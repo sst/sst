@@ -9,6 +9,9 @@ ORANGE='\033[38;2;255;140;0m'
 NC='\033[0m' # No Color
 
 os=$(uname -s | tr '[:upper:]' '[:lower:]')
+if [[ "$os" == "darwin" ]]; then
+    os="mac"
+fi
 arch=$(uname -m)
 
 filename="$APP-$os-$arch.tar.gz"
@@ -17,7 +20,7 @@ case "$filename" in
     *"-linux-"*)
         [[ "$arch" == "x86_64" || "$arch" == "arm64" || "$arch" == "i386" ]] || exit 1
     ;;
-    *"-darwin-"*)
+    *"-mac-"*)
         [[ "$arch" == "x86_64" || "$arch" == "arm64" ]] || exit 1
     ;;
     *)
