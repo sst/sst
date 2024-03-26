@@ -57,10 +57,9 @@ func Start(ctx context.Context, root string) (util.CleanupFunc, error) {
 					return
 				}
 				slog.Info("file event", "path", event.Name, "op", event.Op)
-				if event.Op&fsnotify.Write != fsnotify.Write {
-					continue
+				if event.Op.Has(fsnotify.Write) || event.Op.Has(fsnotify.Create) {
+					bus.Publish(&FileChangedEvent{Path: event.Name})
 				}
-				bus.Publish(&FileChangedEvent{Path: event.Name})
 			case <-ctx.Done():
 				return
 			}
