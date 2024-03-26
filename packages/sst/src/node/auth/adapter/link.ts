@@ -9,6 +9,8 @@ import {
 import { createAdapter } from "./adapter.js";
 import { getPrivateKey, getPublicKey } from "../auth.js";
 
+export { TokenError } from "fast-jwt";
+
 interface LinkConfig {
   onLink: (
     link: string,
@@ -17,7 +19,7 @@ interface LinkConfig {
   onSuccess: (
     claims: Record<string, any>
   ) => Promise<APIGatewayProxyStructuredResultV2>;
-  onError: () => Promise<APIGatewayProxyStructuredResultV2>;
+  onError: (error: unknown) => Promise<APIGatewayProxyStructuredResultV2>;
 }
 
 export const LinkAdapter = /* @__PURE__ */ createAdapter(
@@ -51,8 +53,8 @@ export const LinkAdapter = /* @__PURE__ */ createAdapter(
           });
           const jwt = verifier(token);
           return config.onSuccess(jwt);
-        } catch {
-          return config.onError();
+        } catch (error) {
+          return config.onError(error);
         }
       }
 
