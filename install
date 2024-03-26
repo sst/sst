@@ -31,7 +31,7 @@ mkdir -p "$INSTALL_DIR"
 
 url="https://github.com/sst/ion/releases/latest/download/$filename"
 
-latest_version=$(curl -s https://api.github.com/repos/sst/ion/releases/latest | grep -oP '(?<="tag_name": ")[^"]+' | sed 's/^v//')
+latest_version=$(curl -s https://api.github.com/repos/sst/ion/releases/latest | awk -F'"' '/"tag_name": "/ {gsub(/^v/, "", $4); print $4}')
 if [[ $? -ne 0 ]]; then
     echo "${RED}Failed to fetch latest version${NC}"
     exit 1
