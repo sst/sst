@@ -423,14 +423,23 @@ export function buildApp(
   sitePath: Output<string>,
   buildCommand?: Output<string>,
 ) {
-  const defaultCommand = "npm run build";
+  return all([
+    sitePath,
+    buildCommand ?? args.buildCommand,
+    args.link,
+    args.environment,
+  ]).apply(([sitePath, userCommand, links, environment]) => {
+    if (process.env.SKIP) return output(sitePath);
+    if ($dev) return output(sitePath);
 
-  return all([sitePath, buildCommand, args.link, args.environment]).apply(
-    ([sitePath, buildCommand, links, environment]) => {
-      const cmd = buildCommand || defaultCommand;
+    const cmd = resolveBuildCommand();
+    return runBuild();
+
+    function resolveBuildCommand() {
+      if (userCommand) return userCommand;
 
       // Ensure that the site has a build script defined
-      if (cmd === defaultCommand) {
+      if (!userCommand) {
         if (!fs.existsSync(path.join(sitePath, "package.json"))) {
           throw new VisibleError(`No package.json found at "${sitePath}".`);
         }
@@ -444,9 +453,26 @@ export function buildApp(
         }
       }
 
-      if (process.env.SKIP) return output(sitePath);
-      if ($dev) return output(sitePath);
+      if (
+        fs.existsSync(path.join(sitePath, "yarn.lock")) ||
+        fs.existsSync(path.join($cli.paths.root, "yarn.lock"))
+      )
+        return "yarn run build";
+      if (
+        fs.existsSync(path.join(sitePath, "pnpm-lock.yaml")) ||
+        fs.existsSync(path.join($cli.paths.root, "pnpm-lock.yaml"))
+      )
+        return "pnpm run build";
+      if (
+        fs.existsSync(path.join(sitePath, "bun.lockb")) ||
+        fs.existsSync(path.join($cli.paths.root, "bun.lockb"))
+      )
+        return "bun run build";
 
+      return "npm run build";
+    }
+
+    function runBuild() {
       // Build link environment variables to inject
       const linkData = Link.build(links || []);
       const linkEnvs = output(linkData).apply((linkData) => {
@@ -478,8 +504,8 @@ export function buildApp(
 
         return sitePath;
       });
-    },
-  );
+    }
+  });
 }
 
 export function createBucket(
