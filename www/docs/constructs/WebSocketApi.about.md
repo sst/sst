@@ -306,10 +306,10 @@ export const handler = WebSocketApiHandler(async () => {
 
 ```
 
-And to connect, remember to set your Authorization Header. Here's an example using [wscat](https://www.npmjs.com/package/wscat).
+And to connect, remember to set your Sec-WebSocket-Protocol Header. Here's an example using browser [WebSocket API](https://developer.mozilla.org/en-US/docs/Web/API/WebSockets_API).
 
-```sh
-$ wscat -c wss://abcdef123.execute-api.us-west-2.amazonaws.com/production -H "authorization:Bearer jwt-from-auth"
+```javascript
+const connectedAndAuthorizedWebSocket = new WebSocket(websocketApiUrl, authTokenFromSession)
 ```
 
 ### Access log
