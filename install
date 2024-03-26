@@ -2,145 +2,146 @@
 set -euo pipefail
 APP=sst
 
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+ORANGE='\033[38;2;255;140;0m'
+NC='\033[0m' # No Color
+
 os=$(uname -s | tr '[:upper:]' '[:lower:]')
 arch=$(uname -m)
 
-case "$os" in
-linux)
-case "$arch" in
-x86_64) filename="$APP-linux-x86_64.tar.gz" ;;
-arm64) filename="$APP-linux-arm64.tar.gz" ;;
-i386) filename="$APP-linux-i386.tar.gz" ;;
-*) echo "unsupported architecture: $arch"; exit 1 ;;
-esac
-;;
-darwin)
-case "$arch" in
-x86_64) filename="sst-mac-x86_64.tar.gz" ;;
-arm64) filename="sst-mac-arm64.tar.gz" ;;
-*) echo "unsupported architecture: $arch"; exit 1 ;;
-esac
-;;
-*)
-echo "unsupported os: $os"
-exit 1
-;;
+filename="$APP-$os-$arch.tar.gz"
+
+case "$filename" in
+    *"-linux-"*)
+        [[ "$arch" == "x86_64" || "$arch" == "arm64" || "$arch" == "i386" ]] || exit 1
+    ;;
+    *"-darwin-"*)
+        [[ "$arch" == "x86_64" || "$arch" == "arm64" ]] || exit 1
+    ;;
+    *)
+        echo "${RED}Unsupported OS/Arch: $os/$arch${NC}"
+        exit 1
+    ;;
 esac
 
 INSTALL_DIR=$HOME/.sst/bin
-mkdir -p $INSTALL_DIR
+mkdir -p "$INSTALL_DIR"
 
-echo "downloading $filename"
 url="https://github.com/sst/ion/releases/latest/download/$filename"
-mkdir ssttmp
-cd ssttmp
-curl -sL $url | tar xz
-mv sst $INSTALL_DIR
-cd ../
-rm -rf ssttmp
-echo "sst $($INSTALL_DIR/sst version) has been installed to $INSTALL_DIR"
 
-REFRESH_COMMAND=''
-if [[ ":$PATH:" == *":$INSTALL_DIR:"* ]]; then
-  echo "$INSTALL_DIR is already in your PATH"
-else
-  echo "adding $INSTALL_DIR to your PATH"
-  case $(basename "$SHELL") in
-  fish)
-    fish_config=$HOME/.config/fish/config.fish
-
-      commands=(
-          "fish_add_path $INSTALL_DIR"
-      )
-
-      if [[ -w $fish_config ]]; then
-          {
-              echo -e '\n# sst'
-              for command in "${commands[@]}"; do
-                  echo "$command"
-              done
-          } >>"$fish_config"
-          exec fish -i
-      else
-          echo "manually add the directory to $fish_config (or similar):"
-
-          for command in "${commands[@]}"; do
-              echo "  $command"
-          done
-      fi
-      ;;
-  zsh)
-      zsh_config=$HOME/.zshrc
-
-      commands=(
-          "export PATH=$INSTALL_DIR:\$PATH"
-      )
-
-      if [[ -w $zsh_config ]]; then
-          {
-              echo -e '\n# sst'
-              for command in "${commands[@]}"; do
-                  echo "$command"
-              done
-          } >>"$zsh_config"
-          exec zsh -i
-      else
-          echo "manually add the directory to $zsh_config (or similar):"
-
-          for command in "${commands[@]}"; do
-              echo "  $command"
-          done
-      fi
-      ;;
-  bash)
-      bash_configs=(
-          "$HOME/.bashrc"
-          "$HOME/.bash_profile"
-      )
-      commands=(
-          "export PATH=$INSTALL_DIR:\$PATH"
-      )
-      if [[ ${XDG_CONFIG_HOME:-} ]]; then
-          bash_configs+=(
-              "$XDG_CONFIG_HOME/.bash_profile"
-              "$XDG_CONFIG_HOME/.bashrc"
-              "$XDG_CONFIG_HOME/bash_profile"
-              "$XDG_CONFIG_HOME/bashrc"
-          )
-      fi
-
-      set_manually=true
-      for bash_config in "${bash_configs[@]}"; do
-          if [[ -w $bash_config ]]; then
-              {
-                  echo -e '\n# bun'
-
-                  for command in "${commands[@]}"; do
-                      echo "$command"
-                  done
-              } >>"$bash_config"
-
-              echo "added \"$INSTALL_DIR\" to \$PATH in \"$bash_config\""
-
-              source $bash_config
-              set_manually=false
-              break
-          fi
-      done
-
-      if [[ $set_manually = true ]]; then
-          echo "manually add the directory to $bash_configs (or similar):"
-
-          for command in "${commands[@]}"; do
-              echo "  $command"
-          done
-      fi
-      ;;
-  *)
-      echo 'manually add the directory to ~/.bashrc (or similar):'
-      info_bold "  export $install_env=$quoted_install_dir"
-      info_bold "  export PATH=\"$bin_env:\$PATH\""
-      ;;
-  esac
+latest_version=$(curl -s https://api.github.com/repos/sst/ion/releases/latest | grep -oP '(?<="tag_name": ")[^"]+' | sed 's/^v//')
+if [[ $? -ne 0 ]]; then
+    echo "${RED}Failed to fetch latest version${NC}"
+    exit 1
 fi
 
+print_message() {
+    local level=$1
+    local message=$2
+    local color=""
+    
+    case $level in
+        info) color="${GREEN}" ;;
+        warning) color="${YELLOW}" ;;
+        error) color="${RED}" ;;
+    esac
+    
+    echo -e "${color}${message}${NC}"
+}
+
+check_version() {
+    if command -v sst >/dev/null 2>&1; then
+        installed_version=$(sst version)
+        
+        if [[ "$installed_version" != "$latest_version" ]]; then
+            print_message info "Version ${YELLOW}$installed_version${GREEN} is installed, Upgrade to ${YELLOW}$latest_version${GREEN}? [Y/n]${NC}"
+            read -n 1 -r
+            echo
+            if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+                exit 1
+            fi
+        else
+            print_message info "Latest version ${YELLOW}$latest_version${GREEN} already installed"
+            exit 0
+        fi
+    fi
+}
+
+download_and_install() {
+    print_message info "Downloading latest ${ORANGE}SST ❍ ion ${GREEN}version: ${YELLOW}$latest_version ${GREEN}..."
+    mkdir -p ssttmp && cd ssttmp
+    curl -# -L $url | tar xz
+    mv sst $INSTALL_DIR
+    cd .. && rm -rf ssttmp
+}
+
+check_version
+download_and_install
+
+add_to_path() {
+    local config_file=$1
+    local command=$2
+    
+    if [[ -w $config_file ]]; then
+        echo -e "\n# sst" >> "$config_file"
+        echo "$command" >> "$config_file"
+        print_message info "Successfully added ${ORANGE}SST ❍ ion ${GREEN}to \$PATH in $config_file"
+    else
+        print_message warning "Manually add the directory to $config_file (or similar):"
+        print_message info "  $command"
+    fi
+}
+
+XDG_CONFIG_HOME=${XDG_CONFIG_HOME:-$HOME/.config}
+
+declare -A shell_config_files=(
+    [fish]="$HOME/.config/fish/config.fish"
+    [zsh]="$HOME/.zshrc $HOME/.zshenv $XDG_CONFIG_HOME/zsh/.zshrc $XDG_CONFIG_HOME/zsh/.zshenv"
+    [bash]="$HOME/.bashrc $HOME/.bash_profile $XDG_CONFIG_HOME/bash/.bashrc $XDG_CONFIG_HOME/bash/.bash_profile"
+)
+
+current_shell=$(basename "$SHELL")
+
+config_files=${shell_config_files[$current_shell]}
+
+if [[ -z $config_files ]]; then
+    config_files="$HOME/.bashrc $HOME/.bash_profile $XDG_CONFIG_HOME/bash/.bashrc $XDG_CONFIG_HOME/bash/.bash_profile"
+fi
+
+config_file=""
+for file in $config_files; do
+    if [[ -f $file ]]; then
+        config_file=$file
+        break
+    fi
+done
+
+if [[ -z $config_file ]]; then
+    print_message error "No config file found for $current_shell. Checked files: ${config_files[@]}"
+    exit 1
+fi
+
+if [[ ":$PATH:" != *":$INSTALL_DIR:"* ]]; then
+    case $current_shell in
+        fish)
+            add_to_path "$config_file" "fish_add_path $INSTALL_DIR"
+        ;;
+        zsh)
+            add_to_path "$config_file" "export PATH=$INSTALL_DIR:\$PATH"
+        ;;
+        bash)
+            add_to_path "$config_file" "export PATH=$INSTALL_DIR:\$PATH"
+        ;;
+        *)
+            print_message warning "Manually add the directory to $config_file (or similar):"
+            print_message info "  export PATH=$INSTALL_DIR:\$PATH"
+        ;;
+    esac
+fi
+
+if [ -n "${GITHUB_ACTIONS-}" ] && [ "${GITHUB_ACTIONS}" == "true" ]; then
+    echo "$INSTALL_DIR" >> $GITHUB_PATH
+    print_message info "Added $INSTALL_DIR to \$GITHUB_PATH"
+fi
