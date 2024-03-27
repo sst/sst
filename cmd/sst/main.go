@@ -937,6 +937,7 @@ var Root = Command{
 			},
 			Run: func(cli *Cli) error {
 				newVersion, err := global.Upgrade(
+					version,
 					cli.Positional(0),
 				)
 				if err != nil {
@@ -1092,7 +1093,7 @@ var Root = Command{
 			},
 		},
 		{
-			Name:   "refresh",
+			Name: "refresh",
 			Description: Description{
 				Short: "Refresh the local app state",
 				Long: strings.Join([]string{

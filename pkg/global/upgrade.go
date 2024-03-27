@@ -14,7 +14,7 @@ import (
 	"strings"
 )
 
-func Upgrade(version string) (string, error) {
+func Upgrade(existingVersion string, nextVersion string) (string, error) {
 	var filename string
 	switch runtime.GOOS {
 	case "darwin":
@@ -35,12 +35,7 @@ func Upgrade(version string) (string, error) {
 	default:
 		return "", fmt.Errorf("unsupported architecture")
 	}
-	if version != "" {
-		if !strings.HasPrefix(version, "v") {
-			version = "v" + version
-		}
-	}
-	if version == "" {
+	if nextVersion == "" {
 		resp, err := http.Get("https://api.github.com/repos/sst/ion/releases/latest")
 		if err != nil {
 			return "", err
@@ -57,9 +52,17 @@ func Upgrade(version string) (string, error) {
 		if err := json.NewDecoder(resp.Body).Decode(&releaseInfo); err != nil {
 			return "", err
 		}
-		version = releaseInfo.TagName
+		nextVersion = releaseInfo.TagName
 	}
-	url := "https://github.com/sst/ion/releases/download/" + version + "/sst-" + filename
+	if nextVersion == existingVersion {
+		return nextVersion, nil
+	}
+	if nextVersion != "" {
+		if !strings.HasPrefix(nextVersion, "v") {
+			nextVersion = "v" + nextVersion
+		}
+	}
+	url := "https://github.com/sst/ion/releases/download/" + nextVersion + "/sst-" + filename
 	slog.Info("downloading", "url", url)
 	resp, err := http.Get(url)
 	if err != nil {
@@ -97,7 +100,7 @@ func Upgrade(version string) (string, error) {
 		return "", err
 	}
 
-	return version, nil
+	return nextVersion, nil
 }
 
 func untar(reader io.Reader, target string) error {
