@@ -429,7 +429,8 @@ func (u *UI) Event(evt *server.Event) {
 	}
 
 	if evt.FunctionErrorEvent != nil {
-		u.printEvent(u.getColor(evt.FunctionErrorEvent.WorkerID), color.New(color.FgRed).Sprintf("%-11s", "Error"), evt.FunctionErrorEvent.ErrorMessage)
+		u.printEvent(u.getColor(evt.FunctionErrorEvent.WorkerID), color.New(color.FgRed).Sprintf("%-11s", "Error"), "")
+		u.printEvent(u.getColor(evt.FunctionErrorEvent.WorkerID), "", evt.FunctionErrorEvent.ErrorMessage)
 		for _, item := range evt.FunctionErrorEvent.Trace {
 			if strings.Contains(item, "Error:") {
 				continue
@@ -457,7 +458,10 @@ func (u *UI) printEvent(barColor color.Attribute, label string, message string) 
 		defer u.spinner.Enable()
 	}
 	color.New(barColor, color.Bold).Print("|  ")
-	color.New(color.FgHiBlack).Print(fmt.Sprintf("%-11s", label), " ", strings.TrimSpace(message))
+	if label != "" {
+		color.New(color.FgHiBlack).Print(fmt.Sprintf("%-11s", label), " ")
+	}
+	color.New(color.FgHiBlack).Print(strings.TrimSpace(message))
 	fmt.Println()
 	u.hasProgress = true
 }
