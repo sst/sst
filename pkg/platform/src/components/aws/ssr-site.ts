@@ -31,7 +31,6 @@ type CloudFrontFunctionConfig = { injections: string[] };
 type EdgeFunctionConfig = { function: Unwrap<FunctionArgs> };
 type ServerOriginConfig = {
   function: Unwrap<FunctionArgs>;
-  injections?: string[];
   streaming?: boolean;
 };
 type ImageOptimizationOriginConfig = {
@@ -527,12 +526,9 @@ function handler(event) {
             ...props.function.environment,
           })),
           streaming: props.streaming,
-          injections: output(props.injections).apply((injections) => [
-            ...(args.warm
-              ? [useServerFunctionWarmingInjection(props.streaming)]
-              : []),
-            ...(injections || []),
-          ]),
+          injections: args.warm
+            ? [useServerFunctionWarmingInjection(props.streaming)]
+            : [],
           link: output(args.link).apply((link) => [
             ...(props.function.link ?? []),
             ...(link ?? []),

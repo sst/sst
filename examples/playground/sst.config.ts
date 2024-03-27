@@ -9,10 +9,6 @@ export default $config({
     };
   },
   async run() {
-    const bucket0 = new sst.aws.Bucket(
-      "MyBucketWithReallyLongNameThatIsOverTheLimitAndWillBeTruncated"
-    );
-
     const bucket = new sst.aws.Bucket("MyBucket", {
       public: true,
       transform: {

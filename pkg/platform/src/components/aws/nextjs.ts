@@ -2,14 +2,7 @@ import fs from "fs";
 import path from "path";
 import crypto from "crypto";
 import { globSync } from "glob";
-import {
-  ComponentResourceOptions,
-  Output,
-  all,
-  asset,
-  interpolate,
-  output,
-} from "@pulumi/pulumi";
+import { ComponentResourceOptions, Output, all } from "@pulumi/pulumi";
 import * as aws from "@pulumi/aws";
 import { Size } from "../size.js";
 import { Function } from "./function.js";
@@ -23,10 +16,8 @@ import {
   validatePlan,
 } from "./ssr-site.js";
 import { Cdn } from "./cdn.js";
-import { bootstrap } from "./helpers/bootstrap.js";
 import { Bucket } from "./bucket.js";
-import { Component, transform } from "../component.js";
-import { sanitizeToPascalCase } from "../naming.js";
+import { Component } from "../component.js";
 import { Hint } from "../hint.js";
 import { Link } from "../link.js";
 import { VisibleError } from "../error.js";
@@ -35,7 +26,6 @@ import { Cache } from "./providers/cache.js";
 import { Queue } from "./queue.js";
 import { buildApp } from "../base/base-ssr-site.js";
 
-const LAYER_VERSION = "2";
 const DEFAULT_OPEN_NEXT_VERSION = "3.0.0-rc.8";
 const DEFAULT_CACHE_POLICY_ALLOWED_HEADERS = [
   "accept",
@@ -327,30 +317,6 @@ export interface NextjsArgs extends SsrSiteArgs {
    */
   openNextVersion?: Input<string>;
   /**
-   * Configure how the logs from your Next.js app are stored in Amazon CloudWatch.
-   *
-   * CloudWatch sends all the logs to the same log group, `combined`. This
-   * makes it hard to find the request you are looking for.
-   *
-   * :::tip[SST Console]
-   * With `per-route` logging enabled, the [Console](/docs/console/) will display each of
-   * your routes separately on the resources screen.
-   * :::
-   *
-   * SST will instead split the logs from individual routes into different log groups,
-   * `per-route`. The log group names are prefixed with `/sst/lambda/`, followed by the
-   * server function name. It'll look something like `/sst/lambda/prod-app-MyNextSite-serverFunction6DFA6F1B-TiNQRV8IhGAu/979bddc4/about`.
-   *
-   * @default `"per-route"`
-   * @example
-   * ```js
-   * {
-   *   logging: "combined"
-   * }
-   * ```
-   */
-  logging?: "combined" | "per-route";
-  /**
    * Configure the Lambda function used for image optimization.
    * @default `&lcub;memory: "1024 MB"&rcub;`
    */
@@ -465,7 +431,6 @@ export class Nextjs extends Component implements Link.Linkable {
     >;
 
     const parent = this;
-    const logging = normalizeLogging();
     const buildCommand = normalizeBuildCommand();
     const { sitePath, partition, region } = prepare(args, opts);
     const { access, bucket } = createBucket(parent, name, partition, args);
@@ -497,10 +462,6 @@ export class Nextjs extends Component implements Link.Linkable {
     const serverFunction = ssrFunctions[0] ?? Object.values(edgeFunctions)[0];
     handleMissingSourcemap();
 
-    // Handle per-route logging
-    disableDefaultLogging();
-    uploadSourcemaps();
-
     this.assets = bucket;
     this.cdn = distribution;
     this.server = serverFunction;
@@ -521,10 +482,6 @@ export class Nextjs extends Component implements Link.Linkable {
         server: serverFunction.arn,
       },
     });
-
-    function normalizeLogging() {
-      return output(args?.logging).apply((logging) => logging ?? "per-route");
-    }
 
     function normalizeBuildCommand() {
       return all([args?.buildCommand, args?.openNextVersion]).apply(
@@ -761,24 +718,22 @@ export class Nextjs extends Component implements Link.Linkable {
 
     function buildPlan() {
       return all([
-        [region, logging, outputPath],
+        [region, outputPath],
         buildId,
         openNextOutput,
         args?.imageOptimization,
         [bucket.arn, bucket.name],
         revalidationQueue.apply((q) => ({ url: q?.url, arn: q?.arn })),
         revalidationTable.apply((t) => ({ name: t?.name, arn: t?.arn })),
-        useServerFunctionPerRouteLoggingInjection(),
       ]).apply(
         ([
-          [region, logging, outputPath],
+          [region, outputPath],
           buildId,
           openNextOutput,
           imageOptimization,
           [bucketArn, bucketName],
           { url: revalidationQueueUrl, arn: revalidationQueueArn },
           { name: revalidationTableName, arn: revalidationTableArn },
-          serverFunctionPerRouteLoggingInjection,
         ]) => {
           const defaultFunctionProps = {
             // Temporarily use nodejs18.x until the issue with dynamic routes is resolved on nodejs20.x
@@ -839,15 +794,6 @@ export class Nextjs extends Component implements Link.Linkable {
                   ]
                 : []),
             ],
-            layers:
-              logging === "per-route"
-                ? [
-                    `arn:aws:lambda:${region}:226609089145:layer:sst-extension-arm64:${LAYER_VERSION}`,
-                    //              cdk?.server?.architecture?.name === Architecture.X86_64.name
-                    //                ? `arn:aws:lambda:${stack.region}:226609089145:layer:sst-extension-amd64:${LAYER_VERSION}`
-                    //                : `arn:aws:lambda:${stack.region}:226609089145:layer:sst-extension-arm64:${LAYER_VERSION}`
-                  ]
-                : undefined,
           };
 
           return validatePlan({
@@ -923,10 +869,6 @@ export class Nextjs extends Component implements Link.Linkable {
                         ...defaultFunctionProps,
                       },
                       streaming: value.streaming,
-                      injections:
-                        logging === "per-route"
-                          ? [serverFunctionPerRouteLoggingInjection]
-                          : [],
                     },
                   },
                 ];
@@ -1287,34 +1229,6 @@ export class Nextjs extends Component implements Link.Linkable {
       return _routes;
     }
 
-    function useServerFunctionPerRouteLoggingInjection() {
-      return useRoutes().apply(
-        (routes) => `
-if (event.rawPath) {
-  const routeData = ${JSON.stringify(
-    // @ts-expect-error
-    routes.map(({ regexMatch, prefixMatch, logGroupPath }) => ({
-      regex: regexMatch,
-      prefix: prefixMatch,
-      logGroupPath,
-    })),
-  )}.find(({ regex, prefix }) => {
-    if (regex) return event.rawPath.match(new RegExp(regex));
-    if (prefix) return event.rawPath === prefix || (event.rawPath === prefix + "/");
-    return false;
-  });
-  if (routeData) {
-    console.log("::sst::" + JSON.stringify({
-      action:"log.split",
-      properties: {
-        logGroupName:"/sst/lambda/" + context.functionName + routeData.logGroupPath,
-      },
-    }));
-  }
-}`,
-      );
-    }
-
     function useCloudFrontFunctionPrerenderBypassHeaderInjection() {
       // In Next.js page router preview mode (depends on the cookie __prerender_bypass),
       // to ensure we receive the cached page instead of the preview version, we set the
@@ -1335,72 +1249,6 @@ if (event.rawPath) {
       //if (!hasMissingSourcemap) return;
       //// TODO set correct missing sourcemap value
       ////(this.serverFunction as SsrFunction)._overrideMissingSourcemap();
-    }
-
-    function disableDefaultLogging() {
-      // Temporarily enable default logging even when per-route logging is enabled
-      return;
-      logging.apply((logging) => {
-        if (logging !== "per-route") return;
-
-        const policy = new aws.iam.Policy(
-          `${name}DisableLoggingPolicy`,
-          {
-            policy: interpolate`{
-            "Version": "2012-10-17",
-            "Statement": [
-              {
-                "Actions": [
-                  "logs:CreateLogGroup",
-                  "logs:CreateLogStream",
-                  "logs:PutLogEvents",
-                ],
-                "Effect": "Deny",
-                "Resources": [
-                  "${serverFunction.nodes.logGroup.arn}",
-                  "${serverFunction.nodes.logGroup.arn}:*",
-                ],
-              }
-            ]
-          }`,
-          },
-          { parent },
-        );
-        new aws.iam.RolePolicyAttachment(
-          `${name}DisableLoggingPolicyAttachment`,
-          {
-            policyArn: policy.arn,
-            role: serverFunction.nodes.function.role,
-          },
-          { parent },
-        );
-      });
-    }
-
-    function uploadSourcemaps() {
-      logging.apply((logging) => {
-        if (logging !== "per-route") return;
-
-        useRoutes().apply((routes) => {
-          routes.forEach(({ sourcemapPath, sourcemapKey }) => {
-            if (!sourcemapPath || !sourcemapKey) return;
-
-            new aws.s3.BucketObjectv2(
-              `${name}Sourcemap${sanitizeToPascalCase(sourcemapKey)}`,
-              {
-                bucket: region.apply((region) =>
-                  bootstrap.forRegion(region).then((b) => b.asset),
-                ),
-                source: new asset.FileAsset(sourcemapPath),
-                key: serverFunction!.nodes.function.arn.apply((arn) =>
-                  path.posix.join("sourcemaps", arn, sourcemapKey),
-                ),
-              },
-              { parent, retainOnDelete: true },
-            );
-          });
-        });
-      });
     }
 
     function buildCloudWatchRouteName(route: string) {
