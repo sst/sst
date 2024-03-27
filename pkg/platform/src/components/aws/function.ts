@@ -725,6 +725,30 @@ export interface FunctionArgs {
     }[]
   >;
   /**
+   * Configure the function to the virtual private cloud (VPC) to access private
+   * resources while the function is running.
+   *
+   * @example
+   * ```js
+   * {
+   *   vpc: {
+   *     securityGroups: ["sg-0399348378a4c256c"],
+   *     subnets: ["subnet-0b6a2b73896dc8c4c", "subnet-021389ebee680c2f0"]
+   *   }
+   * }
+   * ```
+   */
+  vpc?: Input<{
+    /**
+     * A list of VPC security group IDs.
+     */
+    securityGroups: Input<Input<string>[]>;
+    /**
+     * A list of VPC subnet IDs.
+     */
+    subnets: Input<Input<string>[]>;
+  }>;
+  /**
    * [Transform](/docs/components#transform) how this component creates its underlying
    * resources.
    */
@@ -906,21 +930,17 @@ export class Function
         args.bundle,
         args.runtime,
         args.nodejs,
-        args.copyFiles,
-      ]).apply(
-        ([dev, name, links, handler, bundle, runtime, nodejs, copyFiles]) => {
-          if (!dev) return undefined;
-          return {
-            functionID: name,
-            links,
-            handler: handler,
-            bundle: bundle,
-            runtime: runtime || "nodejs20.x",
-            properties: nodejs,
-            copyFiles,
-          };
-        },
-      ),
+      ]).apply(([dev, name, links, handler, bundle, runtime, nodejs]) => {
+        if (!dev) return undefined;
+        return {
+          functionID: name,
+          links,
+          handler: handler,
+          bundle: bundle,
+          runtime: runtime || "nodejs20.x",
+          properties: nodejs,
+        };
+      }),
     );
 
     all([bundle, handler]).apply(([bundle, handler]) => {
@@ -1239,6 +1259,11 @@ export class Function
               ),
               managedPolicyArns: [
                 "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+                ...(args.vpc
+                  ? [
+                      "arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole",
+                    ]
+                  : []),
               ],
             }),
             { parent },
@@ -1384,6 +1409,10 @@ export class Function
           loggingConfig: {
             logFormat: "Text",
             logGroup: logGroup.name,
+          },
+          vpcConfig: args.vpc && {
+            securityGroupIds: output(args.vpc).securityGroups,
+            subnetIds: output(args.vpc).subnets,
           },
         }),
         {

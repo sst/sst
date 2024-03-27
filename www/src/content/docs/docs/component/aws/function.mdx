@@ -1151,4 +1151,45 @@ default the browser doesn't cache the results. The maximum value is `86400 secon
 }
 ```
 </Segment>
+### vpc?
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Object</code><code class="symbol">&gt;</code>
+</InlineSection>
+- <p>[<code class="key">securityGroups</code>](#vpc-securitygroups)</p>
+- <p>[<code class="key">subnets</code>](#vpc-subnets)</p>
+</Section>
+Configure the function to the virtual private cloud (VPC) to access private
+resources while the function is running.
+
+```js
+{
+  vpc: {
+    securityGroups: ["sg-0399348378a4c256c"],
+    subnets: ["subnet-0b6a2b73896dc8c4c", "subnet-021389ebee680c2f0"]
+  }
+}
+```
+</Segment>
+<NestedTitle id="vpc-securitygroups" Tag="h4" parent="vpc.">securityGroups</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code><code class="symbol">[]</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+A list of VPC security group IDs.
+
+</Segment>
+<NestedTitle id="vpc-subnets" Tag="h4" parent="vpc.">subnets</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code><code class="symbol">[]</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+A list of VPC subnet IDs.
+
+</Segment>
 </div>
