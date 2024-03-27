@@ -703,37 +703,6 @@ Takes a list of resources to link to the function.
 }
 ```
 </Segment>
-### logging?
-<Segment>
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="symbol">&ldquo;</code><code class="primitive">combined</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">per-route</code><code class="symbol">&rdquo;</code>
-</InlineSection>
-</Section>
-
-<InlineSection>
-**Default** <code class="primitive">"per-route"</code>
-</InlineSection>
-Configure how the logs from your Next.js app are stored in Amazon CloudWatch.
-
-CloudWatch sends all the logs to the same log group, `combined`. This
-makes it hard to find the request you are looking for.
-
-:::tip[SST Console]
-With `per-route` logging enabled, the [Console](/docs/console/) will display each of
-your routes separately on the resources screen.
-:::
-
-SST will instead split the logs from individual routes into different log groups,
-`per-route`. The log group names are prefixed with `/sst/lambda/`, followed by the
-server function name. It'll look something like `/sst/lambda/prod-app-MyNextSite-serverFunction6DFA6F1B-TiNQRV8IhGAu/979bddc4/about`.
-
-```js
-{
-  logging: "combined"
-}
-```
-</Segment>
 ### openNextVersion?
 <Segment>
 <Section type="parameters">

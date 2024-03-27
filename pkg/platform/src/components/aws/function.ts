@@ -725,8 +725,7 @@ export interface FunctionArgs {
     }[]
   >;
   /**
-   * Configure the function to the virtual private cloud (VPC) to access private
-   * resources while the function is running.
+   * Configure the function to connect to private subnets in a virtual private cloud or VPC. This allows your function to access private resources.
    *
    * @example
    * ```js
