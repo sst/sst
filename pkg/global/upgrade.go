@@ -54,13 +54,14 @@ func Upgrade(existingVersion string, nextVersion string) (string, error) {
 		}
 		nextVersion = releaseInfo.TagName
 	}
+	if !strings.HasPrefix(nextVersion, "v") {
+		nextVersion = "v" + nextVersion
+	}
+	if !strings.HasPrefix(existingVersion, "v") {
+		existingVersion = "v" + existingVersion
+	}
 	if nextVersion == existingVersion {
 		return nextVersion, nil
-	}
-	if nextVersion != "" {
-		if !strings.HasPrefix(nextVersion, "v") {
-			nextVersion = "v" + nextVersion
-		}
 	}
 	url := "https://github.com/sst/ion/releases/download/" + nextVersion + "/sst-" + filename
 	slog.Info("downloading", "url", url)
