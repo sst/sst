@@ -156,7 +156,6 @@ func (p *Project) fetchDeps() error {
 	slog.Info("fetching deps")
 	cmd := exec.Command(global.BunPath(), "install")
 	cmd.Dir = p.PathPlatformDir()
-
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		return errors.New("failed to run bun install " + string(output))

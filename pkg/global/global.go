@@ -1,7 +1,12 @@
 package global
 
 import (
+	"archive/zip"
+	"bytes"
+	"fmt"
+	"io"
 	"log/slog"
+	"net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -16,6 +21,7 @@ var configDir = (func() string {
 	result := filepath.Join(home, "sst")
 	os.Setenv("PATH", os.Getenv("PATH")+":"+result+"/bin")
 	os.MkdirAll(result, 0755)
+	os.MkdirAll(filepath.Join(result, "bin"), 0755)
 	return result
 }())
 
@@ -82,6 +88,10 @@ func InstallPulumi() error {
 	return err
 }
 
+func BunPath() string {
+	return filepath.Join(configDir, "bin", "bun")
+}
+
 func NeedsBun() bool {
 	path := BunPath()
 	slog.Info("checking for bun", "path", path)
@@ -91,13 +101,72 @@ func NeedsBun() bool {
 	return false
 }
 
-func BunPath() string {
-	return filepath.Join(configDir, "bin", "bun")
-}
-
 func InstallBun() error {
-	slog.Info("installing bun")
-	cmd := exec.Command("bash", "-c", `curl -fsSL https://bun.sh/install | bash`)
-	cmd.Env = append(os.Environ(), "BUN_INSTALL="+configDir)
-	return cmd.Run()
+	slog.Info("bun install")
+	goos := runtime.GOOS
+	arch := runtime.GOARCH
+	bunPath := BunPath()
+
+	var filename string
+	switch {
+	case goos == "darwin" && arch == "arm64":
+		filename = "bun-darwin-aarch64.zip"
+	case goos == "darwin" && arch == "amd64":
+		filename = "bun-darwin-x64.zip"
+	case goos == "linux" && arch == "arm64":
+		filename = "bun-linux-aarch64.zip"
+	case goos == "linux" && arch == "amd64":
+		filename = "bun-linux-x64.zip"
+	default:
+	}
+	if filename == "" {
+		return fmt.Errorf("unsupported platform: %s %s", goos, arch)
+	}
+
+	url := "https://github.com/oven-sh/bun/releases/latest/download/" + filename
+	slog.Info("bun downloading", "url", url)
+	response, err := http.Get(url)
+	if err != nil {
+		return err
+	}
+	defer response.Body.Close()
+	if response.StatusCode != http.StatusOK {
+		return fmt.Errorf("bad status: %s", response.Status)
+	}
+	bodyBytes, err := io.ReadAll(response.Body)
+	if err != nil {
+		return err
+	}
+	readerAt := bytes.NewReader(bodyBytes)
+	zipReader, err := zip.NewReader(readerAt, readerAt.Size())
+	if err != nil {
+		return err
+	}
+	for _, file := range zipReader.File {
+		if filepath.Base(file.Name) == "bun" {
+			f, err := file.Open()
+			if err != nil {
+				return err
+			}
+			defer f.Close()
+
+			outFile, err := os.Create(bunPath)
+			if err != nil {
+				return err
+			}
+			defer outFile.Close()
+
+			_, err = io.Copy(outFile, f)
+			if err != nil {
+				return err
+			}
+
+			err = os.Chmod(bunPath, 0755)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
 }
