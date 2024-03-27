@@ -2,21 +2,9 @@ import path from "path";
 import fs from "fs";
 import { globSync } from "glob";
 import crypto from "crypto";
-import { execSync } from "child_process";
-import {
-  Output,
-  Unwrap,
-  output,
-  all,
-  interpolate,
-  ComponentResource,
-  ComponentResourceOptions,
-} from "@pulumi/pulumi";
-import * as aws from "@pulumi/aws";
-import { sanitizeToPascalCase } from "../naming.js";
-import { Link } from "../link.js";
+import { Output, Unwrap, output, all, ComponentResource } from "@pulumi/pulumi";
 import { Input } from "../input.js";
-import { transform, type Prettify, type Transform } from "../component.js";
+import { transform, type Transform } from "../component.js";
 import { VisibleError } from "../error.js";
 import { BaseSiteFileOptions } from "../base/base-site.js";
 import { BaseSsrSiteArgs } from "../base/base-ssr-site.js";
@@ -248,7 +236,7 @@ export function createRouter(
           handler: path.join(
             $cli.paths.platform,
             "functions",
-            "cf-static-site-router-worker",
+            "cf-ssr-site-router-worker",
           ),
           url: true,
           live: false,

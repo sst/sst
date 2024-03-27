@@ -68,7 +68,7 @@ export class ZoneLookup extends dynamic.Resource {
   ) {
     super(
       new Provider(),
-      `${name}.sst.aws.ZoneLookup`,
+      `${name}.sst.cloudflare.ZoneLookup`,
       { ...args, zoneId: undefined },
       opts,
     );

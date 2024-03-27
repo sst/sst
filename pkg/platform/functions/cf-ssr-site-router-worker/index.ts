@@ -11,8 +11,6 @@ export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
     const pathname = url.pathname.replace(/^\//, "");
-    console.log("pathname", pathname);
-    console.log("Routes", SST_ROUTES[0].regex);
 
     // Return from cache if available
     let cachedResponse = await lookupCache();

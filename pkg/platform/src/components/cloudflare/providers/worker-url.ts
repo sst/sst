@@ -1,23 +1,32 @@
 import { CustomResourceOptions, Input, Output, dynamic } from "@pulumi/pulumi";
 import { cfFetch } from "../helpers/fetch.js";
 
-export interface WorkerUrlInputs {
-  accountId: Input<string>;
-  scriptName: Input<string>;
-  enabled: Input<boolean>;
-}
-
 interface Inputs {
   accountId: string;
   scriptName: string;
   enabled: boolean;
 }
 
+interface Outputs {
+  url: string | undefined;
+}
+
+export interface WorkerUrlInputs {
+  accountId: Input<Inputs["accountId"]>;
+  scriptName: Input<Inputs["scriptName"]>;
+  enabled: Input<Inputs["enabled"]>;
+}
+
+export interface WorkerUrl {
+  url: Output<Outputs["url"]>;
+}
+
 class Provider implements dynamic.ResourceProvider {
   async create(inputs: Inputs): Promise<dynamic.CreateResult> {
+    const url = await this.process(inputs);
     return {
       id: inputs.scriptName,
-      outs: { url: await this.process(inputs) },
+      outs: url ? { url } : {},
     };
   }
 
@@ -80,10 +89,6 @@ class Provider implements dynamic.ResourceProvider {
       throw error;
     }
   }
-}
-
-export interface WorkerUrl {
-  url: Output<string | undefined>;
 }
 
 export class WorkerUrl extends dynamic.Resource {

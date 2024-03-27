@@ -357,23 +357,37 @@ export class Remix extends Component implements Link.Linkable {
       const content = [
         // When using Vite config, the output build will be "server/index.js"
         // and when using Remix config it will be `server.js`.
-        isUsingVite
-          ? `import * as remixServerBuild from "./server/index.js";`
-          : `import * as remixServerBuild from "./index.js";`,
-        `import { createRequestHandler as createNodeRequestHandler } from "@remix-run/cloudflare";`,
+        //isUsingVite
+        //  ? `import * as remixServerBuild from "./server/index.js";`
+        //  : `import * as remixServerBuild from "./index.js";`,
+        //`import { createRequestHandler } from "@remix-run/cloudflare";`,
+        //`import * as remixServerBuild from "./server";`,
+        //`import { createRequestHandler } from "@remix-run/cloudflare";`,
+        //`export default {`,
+        //`  async fetch(request) {`,
+        //`    const requestHandler = createRequestHandler(remixServerBuild);`,
+        //`    return await requestHandler(request);`,
+        //`  },`,
+        //`};`,
+        `import { createRequestHandler } from "@remix-run/cloudflare";`,
+        `import * as build from "./server/index.js";`,
         `export default {`,
         `  async fetch(request) {`,
-        `    const requestHandler = createNodeRequestHandler(remixServerBuild);`,
-        `    return await requestHandler(request);,`,
+        `    console.log("fetch");`,
+        `    console.log("build", build);`,
+        `    console.log("build mode", build.mode);`,
+        `    const handleRequest = createRequestHandler(build);`,
+        `    console.log("handleRequest", handleRequest);`,
+        `    return await handleRequest(request);`,
         `  },`,
         `};`,
       ].join("\n");
-      fs.writeFileSync(path.join(buildPath, "server.mjs"), content);
+      fs.writeFileSync(path.join(buildPath, "server.ts"), content);
 
       const nodeBuiltInModulesPlugin: Plugin = {
         name: "node:built-in:modules",
         setup(build) {
-          build.onResolve({ filter: /util|stream/ }, ({ kind, path }) => {
+          build.onResolve({ filter: /^(util|stream)$/ }, ({ kind, path }) => {
             // this plugin converts `require("node:*")` calls, those are the only ones that
             // need updating (esm imports to "node:*" are totally valid), so here we tag with the
             // node-buffer namespace only imports that are require calls
@@ -397,13 +411,14 @@ export class Remix extends Component implements Link.Linkable {
       };
 
       return {
-        handler: path.join(buildPath, "server.mjs"),
+        handler: path.join(buildPath, "server.ts"),
         build: {
           esbuild: {
             define: {
               process: JSON.stringify({
                 env: {
-                  NODE_ENV: "production",
+                  //NODE_ENV: "production",
+                  NODE_ENV: "development",
                 },
               }),
             },

@@ -90,6 +90,6 @@ class Provider implements dynamic.ResourceProvider {
 
 export class KvData extends dynamic.Resource {
   constructor(name: string, args: KvDataInputs, opts?: CustomResourceOptions) {
-    super(new Provider(), `${name}.sst.aws.KvPairs`, args, opts);
+    super(new Provider(), `${name}.sst.cloudflare.KvPairs`, args, opts);
   }
 }
