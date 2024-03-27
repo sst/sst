@@ -321,7 +321,7 @@ export interface DynamoSubscribeArgs {
  *
  * const client = DynamoDBDocumentClient.from(new DynamoDBClient({}));
  * await docClient.send(new QueryCommand({
- *   TableName: Resource.myTable.name,
+ *   TableName: Resource.MyTable.name,
  *   KeyConditionExpression: "userId = :userId",
  *   ExpressionAttributeValues: {
  *     ":userId": "my-user-id"
