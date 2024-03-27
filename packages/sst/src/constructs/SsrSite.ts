@@ -214,7 +214,7 @@ export interface SsrSiteProps {
    * runtime: "nodejs20.x",
    * ```
    */
-  runtime?: "nodejs16.x" | "nodejs18.x" | "nodejs20.x";
+  runtime?: "nodejs16.x" | "nodejs18.x" | "nodejs20.x" | "llrt.experimental";
   /**
    * Used to configure nodejs function properties
    */
@@ -952,10 +952,14 @@ function handler(event) {
     function createEdgeFunctions() {
       const functions: Record<string, EdgeFunction> = {};
 
+      if (runtime === "llrt.experimental" && Object.keys(plan.edgeFunctions ?? {}).length > 0) {
+        throw new Error("Edge functions are not supported with the `llrt.experimental` runtime.");
+      }
+
       Object.entries(plan.edgeFunctions ?? {}).forEach(
         ([name, { constructId, function: props }]) => {
           const fn = new EdgeFunction(self, constructId, {
-            runtime,
+            runtime: runtime as EdgeFunctionProps["runtime"],
             timeout,
             memorySize,
             bind,

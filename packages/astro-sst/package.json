@@ -50,7 +50,6 @@
     "build": "tsc"
   },
   "dependencies": {
-    "@astrojs/webapi": "^3.0.0",
     "set-cookie-parser": "^2.6.0"
   },
   "devDependencies": {

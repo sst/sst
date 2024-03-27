@@ -164,6 +164,7 @@ await Promise.all(
     "dotnet6-bootstrap",
     "nixpacks",
     "service-dev-function",
+    "llrt-layers",
   ].map((dir) =>
     fs.cpSync(`support/${dir}`, `dist/support/${dir}`, {
       recursive: true,

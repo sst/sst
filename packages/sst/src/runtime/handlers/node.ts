@@ -12,7 +12,6 @@ import { useRuntimeWorkers } from "../workers.js";
 import { Colors } from "../../cli/colors.js";
 import { Logger } from "../../logger.js";
 import { findAbove, findBelow } from "../../util/fs.js";
-import { lazy } from "../../util/lazy.js";
 
 export const useNodeHandler = (): RuntimeHandler => {
   const rebuildCache: Record<
@@ -40,7 +39,8 @@ export const useNodeHandler = (): RuntimeHandler => {
         .join(path.posix.sep);
       return Boolean(cache.result.metafile?.inputs[relative]);
     },
-    canHandle: (input) => input.startsWith("nodejs"),
+    canHandle: (input) =>
+      input.startsWith("nodejs") || input.startsWith("llrt"),
     startWorker: async (input) => {
       const workers = await useRuntimeWorkers();
       new Promise(async () => {
@@ -98,6 +98,7 @@ export const useNodeHandler = (): RuntimeHandler => {
 
       const nodejs = input.props.nodejs || {};
       const isESM = (nodejs.format || "esm") === "esm";
+      const isLlrt = input.props.runtime?.startsWith("llrt");
 
       const relative = path.relative(
         project.paths.root,
@@ -144,12 +145,12 @@ export const useNodeHandler = (): RuntimeHandler => {
         "sharp",
         "pg-native",
         ...(isESM || input.props.runtime !== "nodejs16.x" ? [] : ["aws-sdk"]),
+        ...(isLlrt ? ["aws-sdk", "@smithy", "@uuid"] : []),
       ];
       const { external, ...override } = nodejs.esbuild || {};
       if (!ctx) {
         const options: BuildOptions = {
           entryPoints: [file],
-          platform: "node",
           external: [
             ...forceExternal,
             ...(nodejs.install || []),
@@ -165,7 +166,8 @@ export const useNodeHandler = (): RuntimeHandler => {
           ...(isESM
             ? {
                 format: "esm",
-                target: "esnext",
+                target: isLlrt ? "es2020" : "esnext",
+                platform: isLlrt ? "browser" : "node",
                 mainFields: ["module", "main"],
                 banner: {
                   js: [
@@ -180,6 +182,7 @@ export const useNodeHandler = (): RuntimeHandler => {
             : {
                 format: "cjs",
                 target: "node14",
+                platform: "node",
                 banner: nodejs.banner
                   ? {
                       js: nodejs.banner,

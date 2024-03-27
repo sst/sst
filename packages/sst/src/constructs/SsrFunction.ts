@@ -22,6 +22,7 @@ import {
   FunctionOptions,
   Function as CdkFunction,
   FunctionUrlOptions,
+  LayerVersion,
 } from "aws-cdk-lib/aws-lambda";
 import { Bucket } from "aws-cdk-lib/aws-s3";
 import {
@@ -59,7 +60,7 @@ export interface SsrFunctionProps
   extends Omit<FunctionOptions, "memorySize" | "timeout" | "runtime"> {
   bundle?: string;
   handler: string;
-  runtime?: "nodejs16.x" | "nodejs18.x" | "nodejs20.x";
+  runtime?: "nodejs16.x" | "nodejs18.x" | "nodejs20.x" | "llrt.experimental";
   timeout?: number | Duration;
   memorySize?: number | Size;
   permissions?: Permissions;
@@ -183,7 +184,9 @@ export class SsrFunction extends Construct implements SSTConstruct {
       logRetention,
     } = this.props;
 
-    return new CdkFunction(this, `ServerFunction`, {
+    const isLlrt = runtime?.startsWith("llrt");
+
+    const createdFunction = new CdkFunction(this, `ServerFunction`, {
       ...this.props,
       handler: handler.split(path.sep).join(path.posix.sep),
       logRetention: logRetention ?? RetentionDays.THREE_DAYS,
@@ -191,12 +194,13 @@ export class SsrFunction extends Construct implements SSTConstruct {
         Bucket.fromBucketName(this, "IServerFunctionBucket", assetBucket),
         assetKey
       ),
-      runtime:
-        runtime === "nodejs20.x"
-          ? Runtime.NODEJS_20_X
-          : runtime === "nodejs16.x"
-          ? Runtime.NODEJS_16_X
-          : Runtime.NODEJS_18_X,
+      runtime: isLlrt
+        ? Runtime.PROVIDED_AL2023
+        : runtime === "nodejs20.x"
+        ? Runtime.NODEJS_20_X
+        : runtime === "nodejs16.x"
+        ? Runtime.NODEJS_16_X
+        : Runtime.NODEJS_18_X,
       architecture,
       memorySize:
         typeof memorySize === "string"
@@ -208,6 +212,18 @@ export class SsrFunction extends Construct implements SSTConstruct {
           : CdkDuration.seconds(timeout),
       logRetentionRetryOptions: logRetention && { maxRetries: 100 },
     });
+
+    if (isLlrt) { 
+      const isArm64 = architecture === Architecture.ARM_64;
+      const llrtLayer = new LayerVersion(this, "llrt", {
+        code: Code.fromAsset(path.resolve(__dirname, `../../support/llrt-layers/llrt-lambda-${isArm64 ? "arm64" : "x86"}.zip`)),
+        compatibleRuntimes: [Runtime.PROVIDED_AL2023],
+        compatibleArchitectures: [isArm64 ? Architecture.ARM_64 : Architecture.X86_64],
+      })
+      createdFunction.addLayers(llrtLayer);
+    }
+
+    return createdFunction;
   }
 
   private createCodeReplacer(assetBucket: string, assetKey: string) {
