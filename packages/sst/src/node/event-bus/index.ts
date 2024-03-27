@@ -35,8 +35,9 @@ export function createEventBuilder<
   metadata?: MetadataSchema;
   metadataFn?: MetadataFunction;
   validator: Validator;
+  client?: EventBridgeClient;
 }) {
-  const client = new EventBridgeClient({});
+  const client = input.client || new EventBridgeClient({});
   const validator = input.validator;
   const metadataValidator = input.metadata ? validator(input.metadata) : null;
   return function event<
