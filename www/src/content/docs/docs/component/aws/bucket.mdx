@@ -217,7 +217,19 @@ The generated name of the S3 Bucket.
 <InlineSection>
 **Default** <code class="primitive">true</code>
 </InlineSection>
-The CORS configuration for the bucket.
+The CORS configuration for the bucket. Defaults to `true`, which is the same as:
+
+```js
+{
+  cors: {
+    allowHeaders: ["*"],
+    allowOrigins: ["*"],
+    allowMethods: ["DELETE", "GET", "HEAD", "POST", "PUT"],
+    exposeHeaders: [],
+    maxAge: "0 seconds"
+  }
+}
+```
 
 </Segment>
 <NestedTitle id="cors-allowheaders" Tag="h4" parent="cors.">allowHeaders?</NestedTitle>
