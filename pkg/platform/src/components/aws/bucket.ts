@@ -313,6 +313,7 @@ export class Bucket
         );
         input.bucket = randomId.dec.apply((dec) =>
           prefixName(
+            63,
             name.toLowerCase(),
             `-${hashNumberToPrettyString(parseInt(dec), 8)}`,
           ),

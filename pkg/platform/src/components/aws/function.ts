@@ -1238,6 +1238,7 @@ export class Function
             transform(args.transform?.role, {
               name: region.apply((region) =>
                 prefixName(
+                  64,
                   `${name}Role`,
                   `-${region.toLowerCase().replace(/-/g, "")}`,
                 ),
@@ -1373,7 +1374,7 @@ export class Function
       return new aws.cloudwatch.LogGroup(
         `${name}LogGroup`,
         transform(args.transform?.logGroup, {
-          name: `/aws/lambda/${prefixName(name)}Function`,
+          name: `/aws/lambda/${prefixName(64, `${name}Function`)}`,
           retentionInDays: logging.apply(
             (logging) => RETENTION[logging.retention],
           ),

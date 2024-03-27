@@ -1,20 +1,6 @@
-import {
-  ComponentResourceOptions,
-  output,
-  interpolate,
-  all,
-  Output,
-} from "@pulumi/pulumi";
+import { ComponentResourceOptions } from "@pulumi/pulumi";
 import * as cloudflare from "@pulumi/cloudflare";
-import { RandomId } from "@pulumi/random";
-import {
-  prefixName,
-  hashNumberToPrettyString,
-  hashStringToPrettyString,
-  sanitizeToPascalCase,
-} from "../naming";
 import { Component, Transform, transform } from "../component";
-import type { Input } from "../input";
 
 export interface BucketArgs {
   /**

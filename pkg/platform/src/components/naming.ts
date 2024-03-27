@@ -5,11 +5,11 @@ export function sanitizeToPascalCase(str: string) {
   return strNorm.charAt(0).toUpperCase() + strNorm.slice(1);
 }
 
-export function prefixName(name: string, suffix?: string) {
+export function prefixName(maxLength: number, name: string, suffix?: string) {
   const suffixStr = suffix ?? "";
 
   const prefixedName = (() => {
-    const L = 64 - suffixStr.length;
+    const L = maxLength - suffixStr.length;
     const appLen = $app.name.length;
     const stageLen = $app.stage.length;
     const nameLen = name.length;
@@ -30,7 +30,7 @@ export function prefixName(name: string, suffix?: string) {
       Math.max(8, L - nameLen - 1),
     );
     const nameTruncated = name.substring(0, L - stageTruncated.length - 1);
-    return `${nameTruncated}-${stageTruncated}`;
+    return `${stageTruncated}-${nameTruncated}`;
   })();
 
   return `${prefixedName}${suffixStr}`;

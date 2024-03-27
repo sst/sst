@@ -58,44 +58,61 @@ export class Component extends ComponentResource {
 
           let overrides;
           switch (args.type) {
-            // resources prefixed manually
-            case "aws:iam/role:Role":
-            case "aws:s3/bucketV2:BucketV2":
+            case "aws:cloudwatch/eventRule:EventRule":
+            case "aws:iam/user:User":
+            case "aws:lambda/function:Function":
+              overrides = { name: prefixName(64, args.name) };
               break;
             case "aws:apigatewayv2/api:Api":
             case "aws:apigatewayv2/authorizer:Authorizer":
-            case "aws:cloudwatch/eventRule:EventRule":
+              overrides = { name: prefixName(128, args.name) };
+              break;
             case "aws:dynamodb/table:Table":
-            case "aws:iam/user:User":
-            case "aws:lambda/function:Function":
+              overrides = { name: prefixName(255, args.name) };
+              break;
             case "aws:sns/topic:Topic":
-              overrides = { name: prefixName(args.name) };
+              overrides = {
+                name: output(args.props.fifoTopic).apply((fifo) =>
+                  prefixName(256, args.name, fifo ? ".fifo" : undefined),
+                ),
+              };
               break;
             case "cloudflare:index/r2Bucket:R2Bucket":
             case "cloudflare:index/workerScript:WorkerScript":
-              overrides = { name: prefixName(args.name).toLocaleLowerCase() };
+              overrides = {
+                name: prefixName(64, args.name).toLocaleLowerCase(),
+              };
               break;
             case "cloudflare:index/workersKvNamespace:WorkersKvNamespace":
-              overrides = { title: prefixName(args.name).toLocaleLowerCase() };
+              overrides = {
+                title: prefixName(64, args.name).toLocaleLowerCase(),
+              };
               break;
             case "aws:rds/cluster:Cluster":
               overrides = {
-                clusterIdentifier: prefixName(args.name).toLocaleLowerCase(),
+                clusterIdentifier: prefixName(
+                  63,
+                  args.name,
+                ).toLocaleLowerCase(),
               };
               break;
             case "aws:rds/clusterInstance:ClusterInstance":
               overrides = {
-                identifier: prefixName(args.name).toLocaleLowerCase(),
+                identifier: prefixName(63, args.name).toLocaleLowerCase(),
               };
               break;
             case "aws:sqs/queue:Queue":
-              const suffix = output(args.props.fifoQueue).apply((fifo) =>
-                fifo ? ".fifo" : "",
-              );
               overrides = {
-                name: interpolate`${prefixName(args.name)}${suffix}`,
+                name: output(args.props.fifoQueue).apply((fifo) =>
+                  prefixName(80, args.name, fifo ? ".fifo" : undefined),
+                ),
               };
               break;
+            // resources prefixed manually
+            case "aws:iam/role:Role":
+            case "aws:s3/bucketV2:BucketV2":
+              break;
+            // resources not prefixed
             case "aws:apigatewayv2/apiMapping:ApiMapping":
             case "aws:apigatewayv2/domainName:DomainName":
             case "aws:apigatewayv2/integration:Integration":
