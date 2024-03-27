@@ -3,6 +3,7 @@ package ui
 import (
 	"fmt"
 	"log/slog"
+	"os"
 	"strings"
 	"time"
 
@@ -583,11 +584,11 @@ func (u *UI) printProgress(progress Progress) {
 }
 
 func Success(msg string) {
-	color.New(color.FgGreen, color.Bold).Print(IconCheck + "  ")
-	color.New(color.FgWhite).Println(msg)
+	os.Stderr.WriteString(color.New(color.FgGreen, color.Bold).Sprint(IconCheck + "  "))
+	os.Stderr.WriteString(color.New(color.FgWhite).Sprintln(msg))
 }
 
 func Error(msg string) {
-	color.New(color.FgRed, color.Bold).Print(IconX + "  ")
-	color.New(color.FgWhite).Println(msg)
+	os.Stderr.WriteString(color.New(color.FgRed, color.Bold).Sprint(IconX + "  "))
+	os.Stderr.WriteString(color.New(color.FgWhite).Sprintln(msg))
 }

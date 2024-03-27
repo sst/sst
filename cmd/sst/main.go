@@ -419,7 +419,10 @@ var Root = Command{
 			},
 			Run: func(cli *Cli) error {
 				pkg := cli.Positional(0)
-				fmt.Println("Adding provider", pkg+"...")
+				spin := spinner.New(spinner.CharSets[14], 100*time.Millisecond)
+				spin.Suffix = "  Adding provider..."
+				spin.Start()
+				defer spin.Stop()
 				cfgPath, err := project.Discover()
 				if err != nil {
 					return err
@@ -447,6 +450,7 @@ var Root = Command{
 				if err != nil {
 					return err
 				}
+				spin.Suffix = "  Downloading provider..."
 				p, err = project.New(&project.ProjectConfig{
 					Version: version,
 					Config:  cfgPath,
@@ -459,6 +463,8 @@ var Root = Command{
 				if err != nil {
 					return err
 				}
+				spin.Stop()
+				ui.Success(fmt.Sprintf("Added provider \"%s\"", pkg))
 				return nil
 			},
 		},
@@ -695,23 +701,7 @@ var Root = Command{
 							},
 						},
 					},
-					Run: func(cli *Cli) error {
-						p, err := initProject(cli)
-						if err != nil {
-							return err
-						}
-						defer p.Cleanup()
-
-						backend := p.Backend()
-						secrets, err := provider.GetSecrets(backend, p.App().Name, p.App().Stage)
-						if err != nil {
-							return util.NewReadableError(err, "Could not get secrets")
-						}
-						for key, value := range secrets {
-							fmt.Println(key, "=", value)
-						}
-						return nil
-					},
+					Run: CmdSecretList,
 				},
 			},
 		},
