@@ -5,7 +5,7 @@ description: Components are the building blocks of your SST app.
 
 Every SST app is made up of components. Components in turn create one or more pieces of low level infrastructure. Components wrap these up into logical units that represent the high level concepts of your app.
 
-For example, `sst.aws.Function` lets you add a Lambda function to your app. While, `sst.aws.Nextjs` lets you deploy your Next.js app.
+For example, `sst.aws.Function` lets you add a Lambda function to your app, while `sst.aws.Nextjs` lets you deploy your Next.js app.
 
 SST's components use [Pulumi](https://www.pulumi.com/docs/concepts/resources/components/) behind the scenes to create the low level infrastructure. These are generated from [Terraform modules](https://developer.hashicorp.com/terraform). SST allows you to customize how these are created.
 
@@ -19,7 +19,7 @@ You can also use any Pulumi component in your SST app. This is useful if you wan
 
 ## Providers
 
-Components are classes that are name spaced under the cloud provider it deploys to. Currently, SST has components that depoy to two providers:
+Components are classes that are namespaced under the cloud provider it deploys to. Currently, SST has components that deploy to two providers:
 
 - **AWS**
 
@@ -99,7 +99,7 @@ Args usually take primitive types. However, they also take a special version of 
 
 Most components take a `transform` prop as a part of their constructor or methods. It's an object that takes callbacks that allow you to transform how that component's infrastructure is created.
 
-For example, here's what's the `transform` prop looks like for the [Function](/docs/component/aws/function#transform) takes:
+For example, here's what the `transform` prop looks like for the [Function](/docs/component/aws/function#transform) component:
 
 - `function`: A callback to transform the underlying Lambda function
 - `logGroup`: A callback to transform the Lambda's LogGroup resource
@@ -188,7 +188,7 @@ For example, the `Function` component exposes the following [nodes](/docs/compon
 The args (input) and properties (output) types of a component are a special type. They look something like _`Input<primitive>`_ and _`Output<primitive>`_.
 
 :::tip
-Input and Output types are what allows SST to deploy yours apps as fast as possible.
+Input and Output types are what allow SST to deploy your apps as fast as possible.
 :::
 
 For the case of an arg or Input type, it represents a value that might not be known yet. This is useful when you want to pass in a value that's not yet known at the time of creating the component. Or rather, it allows you pass in an Output of another component.
