@@ -156,7 +156,7 @@ export async function convertTo({
     [
       ...splitCookiesString(response.headers.getSetCookie() ?? undefined),
       ...(appCookies ?? []),
-    ],
+    ].filter((cookie,index,array) => array.indexOf(cookie) === index),
     { decodeValues: false, map: false, silent: true }
   );
 
