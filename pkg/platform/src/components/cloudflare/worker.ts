@@ -11,7 +11,7 @@ import * as aws from "@pulumi/aws";
 import * as cf from "@pulumi/cloudflare";
 import type { Loader, BuildOptions } from "esbuild";
 import { build } from "../../runtime/cloudflare.js";
-import { Component, Prettify, Transform, transform } from "../component";
+import { Component, Transform, transform } from "../component";
 import { WorkerUrl } from "./providers/worker-url.js";
 import { Link } from "../link.js";
 import type { Input } from "../input.js";
@@ -19,22 +19,15 @@ import { ZoneLookup } from "./providers/zone-lookup.js";
 
 export interface WorkerArgs {
   /**
-   * Path to the handler for the worker with the format `{file}.{method}`.
-   *
-   * :::note
-   * You don't need to specify the file extension.
-   * :::
+   * Path to the handler file for the worker.
    *
    * The handler path is relative to the root your repo or the `sst.config.ts`.
    *
    * @example
    *
-   * Here there is a file called `worker.js` (or `.ts`) in the `packages/functions/src/`
-   * directory with an exported method called `handler`.
-   *
    * ```js
    * {
-   *   handler: "packages/functions/src/worker.handler"
+   *   handler: "packages/functions/src/worker.ts"
    * }
    * ```
    */
@@ -165,6 +158,15 @@ export interface WorkerArgs {
      */
     worker?: Transform<cf.WorkerScriptArgs>;
   };
+  /**
+   * @internal
+   */
+  _ignoreCodeChanges?: boolean;
+  /**
+   * @internal
+   * Placehodler for future feature.
+   */
+  live?: boolean;
 }
 
 /**

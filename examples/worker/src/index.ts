@@ -12,6 +12,9 @@ const parser = new XMLParser({
   ignoreAttributes: false,
 });
 
+const stream = require("stream");
+console.log(stream);
+
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const aws = new AwsClient({

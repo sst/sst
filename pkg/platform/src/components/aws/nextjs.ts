@@ -16,7 +16,6 @@ import { Function } from "./function.js";
 import {
   Plan,
   SsrSiteArgs,
-  buildApp,
   createBucket,
   createServersAndDistribution,
   prepare,
@@ -34,6 +33,7 @@ import { VisibleError } from "../error.js";
 import type { Input } from "../input.js";
 import { Cache } from "./providers/cache.js";
 import { Queue } from "./queue.js";
+import { buildApp } from "../base/base-ssr-site.js";
 
 const LAYER_VERSION = "2";
 const DEFAULT_OPEN_NEXT_VERSION = "3.0.0-rc.8";

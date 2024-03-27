@@ -6,7 +6,6 @@ import { Function } from "./function.js";
 import {
   Plan,
   SsrSiteArgs,
-  buildApp,
   createBucket,
   createServersAndDistribution,
   prepare,
@@ -19,6 +18,7 @@ import { Component, transform } from "./../component.js";
 import { Hint } from "./../hint.js";
 import { Link } from "../link.js";
 import { Cache } from "./providers/cache.js";
+import { buildApp } from "../base/base-ssr-site.js";
 
 export interface AstroArgs extends SsrSiteArgs {
   /**

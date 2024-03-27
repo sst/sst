@@ -21,7 +21,7 @@ import {
   buildApp,
   cleanup,
   prepare,
-} from "../base/static-site.js";
+} from "../base/base-static-site.js";
 
 export interface StaticSiteArgs extends BaseStaticSiteArgs {
   /**

@@ -7,26 +7,7 @@ import { Link } from "../link.js";
 import { VisibleError } from "../error.js";
 import { Input } from "../input.js";
 import { Prettify } from "../component.js";
-
-interface FileOptions {
-  /**
-   * A glob pattern or array of glob patterns of files to apply these options to.
-   */
-  files: string | string[];
-  /**
-   * A glob pattern or array of glob patterns of files to exclude from the ones matched
-   * by the `files` glob pattern.
-   */
-  ignore?: string | string[];
-  /**
-   * The `Cache-Control` header to apply to the matched files.
-   */
-  cacheControl?: string;
-  /**
-   * The `Content-Type` header to apply to the matched files.
-   */
-  contentType?: string;
-}
+import { BaseSiteFileOptions } from "./base-site.js";
 
 export interface BaseStaticSiteArgs {
   path?: Input<string>;
@@ -215,7 +196,7 @@ export interface BaseStaticSiteArgs {
      * }
      * ```
      */
-    fileOptions?: Input<Prettify<FileOptions>[]>;
+    fileOptions?: Input<Prettify<BaseSiteFileOptions>[]>;
   }>;
 }
 

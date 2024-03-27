@@ -45,23 +45,25 @@ export async function build(
     keepNames: true,
     bundle: true,
     logLevel: "silent",
-    define: {
-      $SST_LINKS: JSON.stringify({}),
-    },
     metafile: true,
     format: "esm",
     target: "esnext",
     mainFields: ["module", "main"],
-    banner: {
-      js: [
-        `globalThis.$SST_LINKS = ${JSON.stringify(links)};`,
-        build.banner || "",
-      ].join("\n"),
-    },
     outfile: target,
     sourcemap: false,
     minify: build.minify,
     ...build.esbuild,
+    define: {
+      $SST_LINKS: JSON.stringify({}),
+      ...build.esbuild?.define,
+    },
+    banner: {
+      js: [
+        `globalThis.$SST_LINKS = ${JSON.stringify(links)};`,
+        build.banner || "",
+        build.esbuild?.banner || "",
+      ].join("\n"),
+    },
   };
   const ctx = await esbuild.context(options);
 

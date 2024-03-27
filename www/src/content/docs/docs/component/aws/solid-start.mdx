@@ -200,10 +200,6 @@ By default, this is set to the following. Read more about these options below.
 Specify the `Content-Type` and `Cache-Control` headers for specific files. This allows
 you to override the default behavior for specific files using glob patterns.
 
-:::tip
-Behind the scenes, a combination of the `s3 cp` and `s3 sync` commands upload the assets to S3. An `s3 cp` command is run for each `fileOptions` block, and these options are passed in to the command.
-:::
-
 Apply `Cache-Control` and `Content-Type` to all zip files.
 ```js
 {
@@ -309,7 +305,7 @@ The default is set to not cache on browsers, and cache for 1 day on CloudFront.
 <InlineSection>
 **Default** <code class="primitive">"utf-8"</code>
 </InlineSection>
-Character encoding for text based assets uploaded to S3, like HTML, CSS, JS. This is
+Character encoding for text based assets, like HTML, CSS, JS. This is
 used to set the `Content-Type` header when these files are served out.
 
 If set to `"none"`, then no charset will be returned in header.

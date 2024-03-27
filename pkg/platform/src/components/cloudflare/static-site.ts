@@ -14,7 +14,7 @@ import {
   buildApp,
   cleanup,
   prepare,
-} from "../base/static-site.js";
+} from "../base/base-static-site.js";
 
 export interface StaticSiteArgs extends BaseStaticSiteArgs {
   /**
@@ -416,12 +416,13 @@ export class StaticSite extends Component implements Link.Linkable {
             ...(args.errorPage ? { ERROR_PAGE: args.errorPage } : {}),
           },
           build: {
-            banner: assetManifest.apply(
-              (assetManifest) =>
-                `const AssetManifest = ${JSON.stringify(
+            esbuild: assetManifest.apply((assetManifest) => ({
+              define: {
+                SST_ASSET_MANIFEST: JSON.stringify(
                   Object.fromEntries(assetManifest.map((e) => [e.key, e.hash])),
-                )};`,
-            ),
+                ),
+              },
+            })),
           },
           transform: {
             worker: (workerArgs) => {

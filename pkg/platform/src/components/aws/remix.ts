@@ -4,7 +4,6 @@ import { ComponentResourceOptions, Output, all, output } from "@pulumi/pulumi";
 import { Function } from "./function.js";
 import {
   SsrSiteArgs,
-  buildApp,
   createBucket,
   createServersAndDistribution,
   prepare,
@@ -18,6 +17,7 @@ import { Hint } from "../hint.js";
 import { Link } from "../link.js";
 import type { Input } from "../input.js";
 import { Cache } from "./providers/cache.js";
+import { buildApp } from "../base/base-ssr-site.js";
 
 export interface RemixArgs extends SsrSiteArgs {
   /**

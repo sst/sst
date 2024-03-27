@@ -2,7 +2,6 @@ import path from "path";
 import fs from "fs";
 import { globSync } from "glob";
 import crypto from "crypto";
-import { execSync } from "child_process";
 import {
   Output,
   Unwrap,
@@ -20,12 +19,13 @@ import { useProvider } from "./helpers/provider.js";
 import { Bucket, BucketArgs } from "./bucket.js";
 import { BucketFile, BucketFiles } from "./providers/bucket-files.js";
 import { sanitizeToPascalCase } from "../naming.js";
-import { Link } from "../link.js";
 import { Input } from "../input.js";
 import { transform, type Prettify, type Transform } from "../component.js";
 import { VisibleError } from "../error.js";
 import { Cron } from "./cron.js";
 import { OriginAccessIdentity } from "./providers/origin-access-identity.js";
+import { BaseSiteFileOptions } from "../base/base-site.js";
+import { BaseSsrSiteArgs } from "../base/base-ssr-site.js";
 
 type CloudFrontFunctionConfig = { injections: string[] };
 type EdgeFunctionConfig = { function: Unwrap<FunctionArgs> };
@@ -53,260 +53,10 @@ type OriginGroupConfig = {
 };
 
 export type Plan = ReturnType<typeof validatePlan>;
-export interface SsrSiteFileOptions {
-  /**
-   * A glob pattern or array of glob patterns of files to apply these options to.
-   */
-  files: string | string[];
-  /**
-   * A glob pattern or array of glob patterns of files to exclude from the ones matched
-   * by the `files` glob pattern.
-   */
-  ignore?: string | string[];
-  /**
-   * The `Cache-Control` header to apply to the matched files.
-   */
-  cacheControl?: string;
-  /**
-   * The `Content-Type` header to apply to the matched files.
-   */
-  contentType?: string;
-}
-export interface SsrSiteArgs {
-  /**
-   * Path to the directory where the app is located.
-   * @default `"."`
-   */
-  path?: Input<string>;
-  /**
-   * The command for building the website
-   * @default `npm run build`
-   * @example
-   * ```js
-   * {
-   *   buildCommand: "yarn build"
-   * }
-   * ```
-   */
-  buildCommand?: Input<string>;
-  /**
-   * Set a custom domain for your SSR site. Supports domains hosted either on
-   * [Route 53](https://aws.amazon.com/route53/) or outside AWS.
-   *
-   * :::tip
-   * You can also migrate an externally hosted domain to Amazon Route 53 by
-   * [following this guide](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/MigratingDNS.html).
-   * :::
-   *
-   * @example
-   *
-   * ```js
-   * {
-   *   domain: "domain.com"
-   * }
-   * ```
-   *
-   * Specify the Route 53 hosted zone and a `www.` version of the custom domain.
-   *
-   * ```js
-   * {
-   *   domain: {
-   *     domainName: "domain.com",
-   *     hostedZone: "domain.com",
-   *     redirects: ["www.domain.com"]
-   *   }
-   * }
-   * ```
-   */
+export interface SsrSiteArgs extends BaseSsrSiteArgs {
   domain?: Input<string | Prettify<CdnDomainArgs>>;
-  /**
-   * Permissions and the resources that the function needs to access. These permissions are
-   * used to create the function's IAM role.
-   *
-   * :::tip
-   * If you `link` the function to a resource, the permissions to access it are
-   * automatically added.
-   * :::
-   *
-   * @example
-   * Allow the function to read and write to an S3 bucket called `my-bucket`.
-   * ```js
-   * {
-   *   permissions: [
-   *     {
-   *       actions: ["s3:GetObject", "s3:PutObject"],
-   *       resources: ["arn:aws:s3:::my-bucket/*"]
-   *     },
-   *   ]
-   * }
-   * ```
-   *
-   * Allow the function to perform all actions on an S3 bucket called `my-bucket`.
-   *
-   * ```js
-   * {
-   *   permissions: [
-   *     {
-   *       actions: ["s3:*"],
-   *       resources: ["arn:aws:s3:::my-bucket/*"]
-   *     },
-   *   ]
-   * }
-   * ```
-   *
-   * Granting the function permissions to access all resources.
-   *
-   * ```js
-   * {
-   *   permissions: [
-   *     {
-   *       actions: ["*"],
-   *       resources: ["*"]
-   *     },
-   *   ]
-   * }
-   * ```
-   */
   permissions?: FunctionArgs["permissions"];
-  /**
-   * [Link resources](/docs/linking/) to your site. This will:
-   *
-   * 1. Grant the permissions needed to access the resources.
-   * 2. Allow you to access it in your site using the [SDK](/docs/reference/sdk/).
-   *
-   * @example
-   *
-   * Takes a list of components to link to the function.
-   *
-   * ```js
-   * {
-   *   link: [bucket, stripeKey]
-   * }
-   * ```
-   */
-  link?: Input<any[]>;
-  /**
-   * An object with the key being the environment variable name.
-   *
-   * @example
-   * ```js
-   * environment: {
-   *   API_URL: api.url,
-   *   USER_POOL_CLIENT: auth.cognitoUserPoolClient.userPoolClientId,
-   * },
-   * ```
-   */
-  environment?: Input<Record<string, Input<string>>>;
-  /**
-   * The number of server functions to keep warm. This option is only supported for the regional mode.
-   * @default Server function is not kept warm
-   */
   warm?: Input<number>;
-  /**
-   * Configure how the assets uploaded to S3.
-   */
-  assets?: Input<{
-    /**
-     * Character encoding for text based assets uploaded to S3, like HTML, CSS, JS. This is
-     * used to set the `Content-Type` header when these files are served out.
-     *
-     * If set to `"none"`, then no charset will be returned in header.
-     * @default `"utf-8"`
-     * @example
-     * ```js
-     * {
-     *   assets: {
-     *     textEncoding: "iso-8859-1"
-     *   }
-     * }
-     * ```
-     */
-    textEncoding?: Input<
-      "utf-8" | "iso-8859-1" | "windows-1252" | "ascii" | "none"
-    >;
-    /**
-     * The `Cache-Control` header used for versioned files, like `main-1234.css`. This is
-     * used by both CloudFront and the browser cache.
-     *
-     * The default `max-age` is set to 1 year.
-     * @default `"public,max-age=31536000,immutable"`
-     * @example
-     * ```js
-     * {
-     *   assets: {
-     *     versionedFilesCacheHeader: "public,max-age=31536000,immutable"
-     *   }
-     * }
-     * ```
-     */
-    versionedFilesCacheHeader?: Input<string>;
-    /**
-     * The `Cache-Control` header used for non-versioned files, like `index.html`. This is used by both CloudFront and the browser cache.
-     *
-     * The default is set to not cache on browsers, and cache for 1 day on CloudFront.
-     * @default `"public,max-age=0,s-maxage=86400,stale-while-revalidate=8640"`
-     * @example
-     * ```js
-     * {
-     *   assets: {
-     *     nonVersionedFilesCacheHeader: "public,max-age=0,no-cache"
-     *   }
-     * }
-     * ```
-     */
-    nonVersionedFilesCacheHeader?: Input<string>;
-    /**
-     * Specify the `Content-Type` and `Cache-Control` headers for specific files. This allows
-     * you to override the default behavior for specific files using glob patterns.
-     *
-     * :::tip
-     * Behind the scenes, a combination of the `s3 cp` and `s3 sync` commands upload the assets to S3. An `s3 cp` command is run for each `fileOptions` block, and these options are passed in to the command.
-     * :::
-     *
-     * @example
-     * Apply `Cache-Control` and `Content-Type` to all zip files.
-     * ```js
-     * {
-     *   assets: {
-     *     fileOptions: [
-     *       {
-     *         files: "**\/*.zip",
-     *         contentType: "application/zip",
-     *         cacheControl: "private,no-cache,no-store,must-revalidate"
-     *       }
-     *     ]
-     *   }
-     * }
-     * ```
-     * Apply `Cache-Control` to all CSS and JS files except for CSS files with `index-`
-     * prefix in the `main/` directory.
-     * ```js
-     * {
-     *   assets: {
-     *     fileOptions: [
-     *       {
-     *         files: ["**\/*.css", "**\/*.js"],
-     *         ignore: "main\/index-*.css",
-     *         cacheControl: "private,no-cache,no-store,must-revalidate"
-     *       }
-     *     ]
-     *   }
-     * }
-     * ```
-     */
-    fileOptions?: Input<Prettify<SsrSiteFileOptions>[]>;
-  }>;
-  /**
-   * Configure how the CloudFront cache invalidations are handled.
-   * @default `&lcub;wait: false, paths: "all"&rcub;`
-   * @example
-   * Disable invalidation.
-   * ```js
-   * {
-   *   invalidation: false
-   * }
-   * ```
-   */
   invalidation?: Input<
     | false
     | {
@@ -417,97 +167,6 @@ export function prepare(args: SsrSiteArgs, opts: ComponentResourceOptions) {
   }
 }
 
-export function buildApp(
-  name: string,
-  args: SsrSiteArgs,
-  sitePath: Output<string>,
-  buildCommand?: Output<string>,
-) {
-  return all([
-    sitePath,
-    buildCommand ?? args.buildCommand,
-    args.link,
-    args.environment,
-  ]).apply(([sitePath, userCommand, links, environment]) => {
-    if (process.env.SKIP) return output(sitePath);
-    if ($dev) return output(sitePath);
-
-    const cmd = resolveBuildCommand();
-    return runBuild();
-
-    function resolveBuildCommand() {
-      if (userCommand) return userCommand;
-
-      // Ensure that the site has a build script defined
-      if (!userCommand) {
-        if (!fs.existsSync(path.join(sitePath, "package.json"))) {
-          throw new VisibleError(`No package.json found at "${sitePath}".`);
-        }
-        const packageJson = JSON.parse(
-          fs.readFileSync(path.join(sitePath, "package.json")).toString(),
-        );
-        if (!packageJson.scripts || !packageJson.scripts.build) {
-          throw new VisibleError(
-            `No "build" script found within package.json in "${sitePath}".`,
-          );
-        }
-      }
-
-      if (
-        fs.existsSync(path.join(sitePath, "yarn.lock")) ||
-        fs.existsSync(path.join($cli.paths.root, "yarn.lock"))
-      )
-        return "yarn run build";
-      if (
-        fs.existsSync(path.join(sitePath, "pnpm-lock.yaml")) ||
-        fs.existsSync(path.join($cli.paths.root, "pnpm-lock.yaml"))
-      )
-        return "pnpm run build";
-      if (
-        fs.existsSync(path.join(sitePath, "bun.lockb")) ||
-        fs.existsSync(path.join($cli.paths.root, "bun.lockb"))
-      )
-        return "bun run build";
-
-      return "npm run build";
-    }
-
-    function runBuild() {
-      // Build link environment variables to inject
-      const linkData = Link.build(links || []);
-      const linkEnvs = output(linkData).apply((linkData) => {
-        const envs: Record<string, string> = {};
-        for (const datum of linkData) {
-          envs[`SST_RESOURCE_${datum.name}`] = JSON.stringify(datum.properties);
-        }
-        return envs;
-      });
-
-      // Run build
-      return linkEnvs.apply((linkEnvs) => {
-        console.debug(`Running "${cmd}" script`);
-        try {
-          execSync(cmd, {
-            cwd: sitePath,
-            stdio: "inherit",
-            env: {
-              ...process.env,
-              ...environment,
-              ...linkEnvs,
-            },
-          });
-        } catch (e) {
-          throw new VisibleError(
-            `There was a problem building the "${name}" site.`,
-          );
-        }
-
-        return sitePath;
-      });
-    }
-  });
-}
-
 export function createBucket(
   parent: ComponentResource,
   name: string,
@@ -609,7 +268,7 @@ export function createServersAndDistribution(
           // Handle each copy source
           for (const copy of origin.s3.copy) {
             // Build fileOptions
-            const fileOptions: SsrSiteFileOptions[] = [
+            const fileOptions: BaseSiteFileOptions[] = [
               // unversioned files
               {
                 files: "**",
@@ -1084,7 +743,7 @@ function handler(event) {
             }),
           },
         },
-        // create distribution after s3 upload finishes
+        // create distribution after assets are uploaded
         { dependsOn: bucketFile, parent },
       );
     }
