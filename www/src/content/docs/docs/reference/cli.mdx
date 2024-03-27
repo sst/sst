@@ -304,7 +304,11 @@ The value of the secret.
 </Section>
 Set the value of the secret.
 
-The secrets are encrypted and stored in an S3 Bucket in your AWS account.
+The secrets are encrypted and stored in an S3 Bucket in your AWS account. They are also stored in the package of the functions using the secret.
+
+:::tip
+If you are not running `sst dev`, you'll need to `sst deploy` to apply the secret.
+:::
 
 For example, set the `sst.Secret` called `StripeSecret` to `123456789`.
 

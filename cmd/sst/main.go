@@ -574,7 +574,11 @@ var Root = Command{
 						Long: strings.Join([]string{
 							"Set the value of the secret.",
 							"",
-							"The secrets are encrypted and stored in an S3 Bucket in your AWS account.",
+							"The secrets are encrypted and stored in an S3 Bucket in your AWS account. They are also stored in the package of the functions using the secret.",
+							"",
+							":::tip",
+							"If you are not running `sst dev`, you'll need to `sst deploy` to apply the secret.",
+							":::",
 							"",
 							"For example, set the `sst.Secret` called `StripeSecret` to `123456789`.",
 							"",
@@ -639,7 +643,7 @@ var Root = Command{
 						if err != nil {
 							return util.NewReadableError(err, "Could not set secret")
 						}
-						ui.Success(fmt.Sprintf("Set \"%s\" for stage \"%s\"", key, p.App().Stage))
+						ui.Success(fmt.Sprintf("Set \"%s\" for stage \"%s\". Run \"sst deploy\" to update.", key, p.App().Stage))
 						return nil
 					},
 				},

@@ -47,6 +47,10 @@ export class SecretMissingError extends VisibleError {
  * sst secret set MySecret my-secret-value
  * ```
  *
+ * :::note
+ * If you are not running `sst dev`, you'll need to `sst deploy` to apply the secret.
+ * :::
+ *
  * #### Use the secret in your app config
  *
  * You can now use the secret in your app config.
