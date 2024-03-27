@@ -943,7 +943,7 @@ export class Function
       }),
     );
 
-    all([bundle, handler]).apply(([bundle, handler]) => {
+    all([args.bundle, args.handler]).apply(([bundle, handler]) => {
       Link.Receiver.register(bundle || handler, links, environment);
     });
     this.registerOutputs({

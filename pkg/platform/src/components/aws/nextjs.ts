@@ -558,21 +558,19 @@ export class Nextjs extends Component implements Link.Linkable {
           },
           imageOptimizer: {
             type: "function",
-            // use placeholder code
             handler: "index.handler",
-            bundle: path.relative(
+            bundle: path.join(
               outputPath,
-              path.join($cli.paths.platform, "functions", "empty-function"),
+              ".open-next/image-optimization-function",
             ),
             streaming: false,
           },
           default: {
             type: "function",
             handler: "index.handler",
-            // use placeholder code
-            bundle: path.relative(
+            bundle: path.join(
               outputPath,
-              path.join($cli.paths.platform, "functions", "empty-function"),
+              ".open-next/server-functions/default",
             ),
             streaming: false,
           },
