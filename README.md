@@ -17,6 +17,8 @@ _Note: Ion is generally available and recommended for new SST users. We are work
 curl -fsSL https://ion.sst.dev/install | bash
 ```
 
+To use a package manager, [check out our docs](https://ion.sst.dev/docs/reference/cli/).
+
 #### Manually
 
 Download the pre-compiled binaries from the [releases](https://github.com/sst/ion/releases/latest) page and copy to the desired location.
