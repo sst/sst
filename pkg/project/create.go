@@ -15,6 +15,7 @@ import (
 
 	jsonpatch "github.com/evanphx/json-patch/v5"
 	"github.com/sst/ion/pkg/platform"
+	"github.com/tailscale/hujson"
 )
 
 type step struct {
@@ -79,7 +80,13 @@ func Create(templateName string, home string) error {
 				return err
 			}
 			slog.Info("patching", "file", patchStep.File)
-			data, err := os.ReadFile(patchStep.File)
+
+			b, err := os.ReadFile(patchStep.File)
+			if err != nil {
+				return err
+			}
+
+			data, err := hujson.Standardize(b)
 			if err != nil {
 				return err
 			}
