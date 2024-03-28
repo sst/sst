@@ -180,13 +180,15 @@ The ARN of the master user secret.
 </Section>
 
 <InlineSection>
-**Default** Database not created
+**Default** Based on the name of the current app
 </InlineSection>
-Name of a database which is automatically created inside the cluster.
+Name of a database that is automatically created inside the cluster.
+
+The name must begin with a letter and contain only lowercase letters, numbers, or underscores. By default, it takes the name of the app, and replaces the hyphens with underscores.
 
 ```js
 {
-  databaseName: "app"
+  databaseName: "acme"
 }
 ```
 </Segment>
