@@ -79,7 +79,7 @@ function addTransformationToEnsureUniqueComponentNames() {
     componentNames.add(args.name);
 
     if (!args.name.match(/^[A-Z][a-zA-Z0-9]*$/)) {
-      throw new Error(
+      throw new VisibleError(
         `Invalid component name "${args.name}". Component names must start with an uppercase letter and contain only alphanumeric characters.`,
       );
     }

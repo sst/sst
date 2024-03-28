@@ -25,11 +25,11 @@ export interface PostgresArgs {
   version?: Input<string>;
   /**
    * Name of a database which is automatically created inside the cluster.
-   * @default Database not created
+   * @default The name of the current app
    * @example
    * ```js
    * {
-   *   databaseName: "app"
+   *   databaseName: "acme"
    * }
    * ```
    */
@@ -192,7 +192,9 @@ export class Postgres
     }
 
     function normalizeDatabaseName() {
-      return output(args?.databaseName).apply((name) => name ?? $app.name);
+      return output(args?.databaseName).apply(
+        (name) => name ?? $app.name.replaceAll("-", "_"),
+      );
     }
 
     function createCluster() {

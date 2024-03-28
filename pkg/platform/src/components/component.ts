@@ -80,25 +80,22 @@ export class Component extends ComponentResource {
             case "cloudflare:index/r2Bucket:R2Bucket":
             case "cloudflare:index/workerScript:WorkerScript":
               overrides = {
-                name: prefixName(64, args.name).toLocaleLowerCase(),
+                name: prefixName(64, args.name).toLowerCase(),
               };
               break;
             case "cloudflare:index/workersKvNamespace:WorkersKvNamespace":
               overrides = {
-                title: prefixName(64, args.name).toLocaleLowerCase(),
+                title: prefixName(64, args.name).toLowerCase(),
               };
               break;
             case "aws:rds/cluster:Cluster":
               overrides = {
-                clusterIdentifier: prefixName(
-                  63,
-                  args.name,
-                ).toLocaleLowerCase(),
+                clusterIdentifier: prefixName(63, args.name).toLowerCase(),
               };
               break;
             case "aws:rds/clusterInstance:ClusterInstance":
               overrides = {
-                identifier: prefixName(63, args.name).toLocaleLowerCase(),
+                identifier: prefixName(63, args.name).toLowerCase(),
               };
               break;
             case "aws:sqs/queue:Queue":
