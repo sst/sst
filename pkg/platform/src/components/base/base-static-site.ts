@@ -217,7 +217,7 @@ export function prepare(args: BaseStaticSiteArgs) {
       if (!sitePath) return ".";
 
       if (!fs.existsSync(sitePath)) {
-        throw new VisibleError(`No site found at "${path.resolve(sitePath)}"`);
+        throw new VisibleError(`No site found at "${path.resolve(sitePath)}".`);
       }
       return sitePath;
     });
@@ -295,16 +295,14 @@ export function buildApp(
             },
           });
         } catch (e) {
-          throw new VisibleError(
-            `There was a problem building the "${name}" site.`,
-          );
+          throw new VisibleError(`There was a problem building "${name}".`);
         }
       }
 
       // Validate build output
       if (!fs.existsSync(build.output)) {
         throw new VisibleError(
-          `No build output found at "${path.resolve(build.output)}"`,
+          `No build output found at "${path.resolve(build.output)}".`,
         );
       }
 

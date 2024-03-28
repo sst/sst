@@ -182,9 +182,7 @@ export function buildApp(
             },
           });
         } catch (e) {
-          throw new VisibleError(
-            `There was a problem building the "${name}" site.`,
-          );
+          throw new VisibleError(`There was a problem building "${name}".`);
         }
 
         return sitePath;

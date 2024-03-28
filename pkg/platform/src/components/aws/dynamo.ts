@@ -320,7 +320,8 @@ export interface DynamoSubscribeArgs {
  * import { DynamoDBDocumentClient, QueryCommand } from "@aws-sdk/lib-dynamodb";
  *
  * const client = DynamoDBDocumentClient.from(new DynamoDBClient({}));
- * await docClient.send(new QueryCommand({
+ *
+ * await client.send(new QueryCommand({
  *   TableName: Resource.MyTable.name,
  *   KeyConditionExpression: "userId = :userId",
  *   ExpressionAttributeValues: {

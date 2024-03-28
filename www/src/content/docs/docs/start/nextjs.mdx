@@ -174,7 +174,6 @@ We are directly accessing our S3 bucket with `Resource.MyBucket.name`.
 Add the relevant imports.
 
 ```ts title="app/page.tsx"
-import crypto from "crypto";
 import { Resource } from "sst";
 import Form from "@/components/form";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
@@ -207,8 +206,8 @@ Congrats! Your app should now be live!
 
 ## Connect the console
 
-As a next step, you can view your app and its logs in the [SST Console](/docs/console/) — [**console.sst.dev**](https://console.sst.dev)
+As a next step, you can manage your app and view issues in the [SST Console](/docs/console/).
 
-![Next.js app in SST Console](../../../../assets/docs/nextjs-app-in-the-sst-console.png)
+![Issues in Next.js app in SST Console](../../../../assets/docs/issues-in-nextjs-app-in-the-sst-console.png)
 
 You can [create a free account](https://console.sst.dev) and connect it to your AWS account.
