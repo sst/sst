@@ -59,7 +59,9 @@ check_version() {
         installed_version=$(sst version)
         
         if [[ "$installed_version" != "$latest_version" ]]; then
-            print_message info "Version ${YELLOW}$installed_version${GREEN} is installed, upgrading to ${YELLOW}$latest_version${GREEN}? [Y/n]${NC}"
+            print_message info "Installed version: ${YELLOW}$installed_version."
+            
+            # print_message info "Version ${YELLOW}$installed_version${GREEN} is installed, upgrading to ${YELLOW}$latest_version${GREEN}? [Y/n]${NC}"
             # read -n 1 -r
             # echo
             # if [[ ! $REPLY =~ ^[Yy]$ ]]; then
@@ -103,22 +105,18 @@ current_shell=$(basename "$SHELL")
 case $current_shell in
     fish)
         config_files="$HOME/.config/fish/config.fish"
-        ;;
+    ;;
     zsh)
         config_files="$HOME/.zshrc $HOME/.zshenv $XDG_CONFIG_HOME/zsh/.zshrc $XDG_CONFIG_HOME/zsh/.zshenv"
-        ;;
+    ;;
     bash)
         config_files="$HOME/.bashrc $HOME/.bash_profile $XDG_CONFIG_HOME/bash/.bashrc $XDG_CONFIG_HOME/bash/.bash_profile"
-        ;;
+    ;;
     *)
         # Default case if none of the above matches
         config_files="$HOME/.bashrc $HOME/.bash_profile $XDG_CONFIG_HOME/bash/.bashrc $XDG_CONFIG_HOME/bash/.bash_profile"
-        ;;
+    ;;
 esac
-
-if [[ -z $config_files ]]; then
-    config_files="$HOME/.bashrc $HOME/.bash_profile $XDG_CONFIG_HOME/bash/.bashrc $XDG_CONFIG_HOME/bash/.bash_profile"
-fi
 
 config_file=""
 for file in $config_files; do
