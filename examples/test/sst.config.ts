@@ -5,11 +5,6 @@ export default $config({
       name: "test",
       removal: input?.stage === "production" ? "retain" : "remove",
       home: "aws",
-      providers: {
-        cloudflare: {
-          apiToken: "qz9YssGBPcTBYbDQG0xMAOJ68_u0O0snua1ErKVB",
-        },
-      },
     };
   },
   async run() {
