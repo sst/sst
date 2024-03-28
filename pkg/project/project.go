@@ -133,10 +133,11 @@ console.log("~j" + JSON.stringify(mod.app({
 	}
 
 	slog.Info("evaluating config")
-	output, err := exec.Command("node", "--no-warnings", buildResult.OutputFiles[0].Path).Output()
+	node := exec.Command("node", "--no-warnings", buildResult.OutputFiles[0].Path)
+	output, err := node.CombinedOutput()
 	slog.Info("config evaluated")
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("Error evaluating config: %w\n%s", err, output)
 	}
 	scanner := bufio.NewScanner(bytes.NewReader(output))
 	for scanner.Scan() {
