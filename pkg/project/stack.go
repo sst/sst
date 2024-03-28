@@ -222,7 +222,6 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 	}
 	slog.Info("tracked files")
 
-	fmt.Println(global.BinPath())
 	pulumi, err := auto.NewPulumiCommand(&auto.PulumiCommandOptions{
 		Root:             filepath.Join(global.BinPath(), ".."),
 		SkipVersionCheck: true,
