@@ -254,9 +254,6 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 	config := auto.ConfigMap{}
 	for provider, args := range s.project.app.Providers {
 		for key, value := range args.(map[string]interface{}) {
-			if provider == "cloudflare" && key == "accountId" {
-				continue
-			}
 			switch v := value.(type) {
 			case string:
 				config[fmt.Sprintf("%v:%v", provider, key)] = auto.ConfigValue{Value: v}

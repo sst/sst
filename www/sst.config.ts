@@ -26,7 +26,7 @@ export default $config({
         production: "ion.sst.dev",
         dev: "dev.ion.sst.dev",
       }[$app.stage] || $app.stage + "dev.ion.sst.dev";
-      aws.s3.getBucket
+    aws.s3.getBucket;
 
     if (!isPersonal) {
       const oidc = new aws.iam.OpenIdConnectProvider("GithubOidc", {

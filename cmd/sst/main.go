@@ -1476,7 +1476,7 @@ func initProject(cli *Cli) (*project.Project, error) {
 		}
 	}
 
-	if err := p.LoadProviders(); err != nil {
+	if err := p.LoadHome(); err != nil {
 		return nil, util.NewReadableError(err, err.Error())
 	}
 

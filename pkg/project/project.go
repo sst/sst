@@ -32,13 +32,12 @@ type App struct {
 }
 
 type Project struct {
-	version   string
-	root      string
-	config    string
-	app       *App
-	home      provider.Home
-	Providers map[string]provider.Provider
-	env       map[string]string
+	version string
+	root    string
+	config  string
+	app     *App
+	home    provider.Home
+	env     map[string]string
 
 	Stack *stack
 }
@@ -199,36 +198,27 @@ console.log("~j" + JSON.stringify(mod.app({
 	return proj, nil
 }
 
-func (proj *Project) LoadProviders() error {
-	proj.Providers = map[string]provider.Provider{}
-	for name, args := range proj.app.Providers {
-		var p provider.Provider
+func (proj *Project) LoadHome() error {
+	var home provider.Home
+	args := proj.app.Providers[proj.app.Home]
 
-		if name == "aws" {
-			p = &provider.AwsProvider{}
-		}
-
-		if name == "cloudflare" {
-			p = &provider.CloudflareProvider{}
-		}
-
-		if p == nil {
-			continue
-		}
-
-		err := p.Init(proj.app.Name, proj.app.Stage, args.(map[string]interface{}))
-		if err != nil {
-			return fmt.Errorf("Error initializing %s:\n   %w", name, err)
-		}
-		proj.Providers[name] = p
+	if proj.app.Home == "aws" {
+		home = &provider.AwsProvider{}
 	}
 
-	p := proj.Providers[proj.app.Home]
-	casted, ok := p.(provider.Home)
-	if !ok {
-		return util.NewReadableError(nil, proj.app.Home+` is not a valid backend provider.`)
+	if proj.app.Home == "cloudflare" {
+		home = &provider.CloudflareProvider{}
 	}
-	proj.home = casted
+
+	if home == nil {
+		return fmt.Errorf("Home provider %s is invalid", proj.app.Home)
+	}
+
+	err := home.Init(proj.app.Name, proj.app.Stage, args.(map[string]interface{}))
+	if err != nil {
+		return fmt.Errorf("Error initializing %s:\n   %w", proj.app.Home, err)
+	}
+	proj.home = home
 
 	return nil
 }

@@ -13,7 +13,6 @@ import (
 	"time"
 
 	"github.com/sst/ion/pkg/project"
-	"github.com/sst/ion/pkg/project/provider"
 	"github.com/sst/ion/pkg/server/bus"
 	"github.com/sst/ion/pkg/server/dev/aws"
 	"github.com/sst/ion/pkg/server/dev/watcher"
@@ -169,10 +168,10 @@ func (s *Server) Start(parentContext context.Context) error {
 	slog.Info("server", "addr", s.server.Addr)
 
 	socket.Start(ctx, s.project, mux)
-	for _, p := range s.project.Providers {
-		switch casted := p.(type) {
-		case *provider.AwsProvider:
-			cleanup, err := aws.Start(ctx, mux, casted,
+	for name, args := range s.project.App().Providers {
+		switch name {
+		case "aws":
+			cleanup, err := aws.Start(ctx, mux, args.(map[string]interface{}),
 				s.project,
 				port,
 			)

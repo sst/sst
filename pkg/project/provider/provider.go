@@ -16,6 +16,7 @@ import (
 )
 
 type Home interface {
+	Init(app, stage string, provider map[string]interface{}) error
 	Env() (map[string]string, error)
 
 	getData(key, app, stage string) (io.Reader, error)
@@ -42,10 +43,6 @@ func (dt *DevTransport) Publish(input interface{}) error {
 	}
 	dt.Out <- string(jsonBytes)
 	return nil
-}
-
-type Provider interface {
-	Init(app, stage string, provider map[string]interface{}) error
 }
 
 type DevSession interface {

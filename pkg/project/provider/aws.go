@@ -15,8 +15,10 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/credentials/stscreds"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/ssm"
+	"github.com/aws/aws-sdk-go-v2/service/sts"
 	"github.com/sst/ion/internal/util"
 
 	s3types "github.com/aws/aws-sdk-go-v2/service/s3/types"
@@ -149,7 +151,7 @@ const BOOTSTRAP_VERSION = 1
 func (a *AwsProvider) Init(app string, stage string, args map[string]interface{}) (err error) {
 	a.args = args
 
-	cfg, err := a.resolveConfig()
+	cfg, err := AwsResolveConfig(args)
 	if err != nil {
 		return err
 	}
@@ -299,15 +301,15 @@ func (a *AwsProvider) resolveBuckets() (*awsBootstrapData, error) {
 	return bootstrapData, nil
 }
 
-func (a *AwsProvider) resolveConfig() (aws.Config, error) {
+func AwsResolveConfig(args map[string]interface{}) (aws.Config, error) {
 	ctx := context.Background()
 	cfg, err := config.LoadDefaultConfig(
 		ctx,
 		func(lo *config.LoadOptions) error {
-			if profile, ok := a.args["profile"].(string); ok && profile != "" {
+			if profile, ok := args["profile"].(string); ok && profile != "" {
 				lo.SharedConfigProfile = profile
 			}
-			if region, ok := a.args["region"].(string); ok && region != "" {
+			if region, ok := args["region"].(string); ok && region != "" {
 				lo.Region = region
 				lo.DefaultRegion = "us-east-1"
 			}
@@ -316,6 +318,14 @@ func (a *AwsProvider) resolveConfig() (aws.Config, error) {
 	)
 	if err != nil {
 		return aws.Config{}, err
+	}
+	if assumeRole, ok := args["assumeRole"].(map[string]interface{}); ok {
+		stsclient := sts.NewFromConfig(cfg)
+		cfg.Credentials = stscreds.NewAssumeRoleProvider(stsclient, assumeRole["roleArn"].(string), func(aro *stscreds.AssumeRoleOptions) {
+			if sessionName, ok := assumeRole["sessionName"].(string); ok {
+				aro.RoleSessionName = sessionName
+			}
+		})
 	}
 	_, err = cfg.Credentials.Retrieve(ctx)
 	if err != nil {

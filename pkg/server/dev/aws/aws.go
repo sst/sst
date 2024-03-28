@@ -75,7 +75,7 @@ type FunctionLogEvent struct {
 func Start(
 	ctx context.Context,
 	mux *http.ServeMux,
-	aws *provider.AwsProvider,
+	args map[string]interface{},
 	p *project.Project,
 	port int,
 ) (util.CleanupFunc, error) {
@@ -83,7 +83,10 @@ func Start(
 	from := time.Now()
 	server := fmt.Sprintf("localhost:%d/lambda/", port)
 
-	config := aws.Config()
+	config, err := provider.AwsResolveConfig(args)
+	if err != nil {
+		return nil, err
+	}
 	slog.Info("getting endpoint")
 	iotClient := iot.NewFromConfig(config)
 	endpointResp, err := iotClient.DescribeEndpoint(ctx, &iot.DescribeEndpointInput{})
