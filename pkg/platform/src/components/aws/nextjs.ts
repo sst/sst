@@ -26,7 +26,7 @@ import { Cache } from "./providers/cache.js";
 import { Queue } from "./queue.js";
 import { buildApp } from "../base/base-ssr-site.js";
 
-const DEFAULT_OPEN_NEXT_VERSION = "3.0.0-rc.8";
+const DEFAULT_OPEN_NEXT_VERSION = "3.0.0-rc.11";
 const DEFAULT_CACHE_POLICY_ALLOWED_HEADERS = [
   "accept",
   "x-prerender-revalidate",
