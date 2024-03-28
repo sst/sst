@@ -24,7 +24,7 @@
     "@aws-sdk/middleware-retry": "3.374.0",
     "@pulumi/aws": "6.23.0",
     "@pulumi/cloudflare": "5.17.0",
-    "@pulumi/pulumi": "3.98.0",
+    "@pulumi/pulumi": "3.112.0",
     "@pulumi/random": "4.15.0",
     "@pulumi/tls": "5.0.1",
     "@smithy/smithy-client": "2.1.18",

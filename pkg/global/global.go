@@ -15,7 +15,7 @@ import (
 	"strings"
 )
 
-const PULUMI_VERSION = "v3.111.1"
+const PULUMI_VERSION = "v3.112.0"
 
 var configDir = (func() string {
 	home, err := os.UserConfigDir()
@@ -46,6 +46,7 @@ func NeedsPulumi() bool {
 	}
 
 	version := strings.TrimSpace(string(output))
+	fmt.Println("version", version)
 	if version != PULUMI_VERSION {
 		return true
 	}
@@ -54,7 +55,7 @@ func NeedsPulumi() bool {
 }
 
 func InstallPulumi() error {
-	version := "v3.112.0"
+	slog.Info("pulumi install")
 	var osArch string
 
 	switch runtime.GOOS {
@@ -82,8 +83,8 @@ func InstallPulumi() error {
 		fileExtension = ".zip"
 	}
 
-	url := fmt.Sprintf("https://github.com/pulumi/pulumi/releases/download/%v/pulumi-%s-%s%s", version, version, osArch, fileExtension)
-	slog.Info("downloading pulumi", "url", url)
+	url := fmt.Sprintf("https://github.com/pulumi/pulumi/releases/download/%v/pulumi-%s-%s%s", PULUMI_VERSION, PULUMI_VERSION, osArch, fileExtension)
+	slog.Info("pulumi downloading", "url", url)
 
 	resp, err := http.Get(url)
 	if err != nil {
