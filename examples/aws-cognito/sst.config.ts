@@ -68,6 +68,104 @@ export default $config({
       ],
     });
 
+    const authRole = new aws.iam.Role("MyAuthRole", {
+      assumeRolePolicy: aws.iam.getPolicyDocumentOutput({
+        statements: [
+          {
+            effect: "Allow",
+            principals: [
+              {
+                type: "Federated",
+                identifiers: ["cognito-identity.amazonaws.com"],
+              },
+            ],
+            actions: ["sts:AssumeRoleWithWebIdentity"],
+            conditions: [
+              {
+                test: "StringEquals",
+                variable: "cognito-identity.amazonaws.com:aud",
+                values: [identityPool.id],
+              },
+              {
+                test: "StringEquals",
+                variable: "cognito-identity.amazonaws.com:amr",
+                values: ["authenticated"],
+              },
+            ],
+          },
+        ],
+      }).json,
+      inlinePolicies: [
+        {
+          name: "inline",
+          policy: aws.iam.getPolicyDocumentOutput({
+            version: "2012-10-17",
+            statements: [
+              {
+                effect: "Allow",
+                actions: [
+                  "mobileanalytics:PutEvents",
+                  "cognito-sync:*",
+                  "cognito-identity:*",
+                ],
+                resources: ["*"],
+              },
+            ],
+          }).json,
+        },
+      ],
+    });
+    const unauthRole = new aws.iam.Role("MyUnauthRole", {
+      assumeRolePolicy: aws.iam.getPolicyDocumentOutput({
+        statements: [
+          {
+            effect: "Allow",
+            principals: [
+              {
+                type: "Federated",
+                identifiers: ["cognito-identity.amazonaws.com"],
+              },
+            ],
+            actions: ["sts:AssumeRoleWithWebIdentity"],
+            conditions: [
+              {
+                test: "StringEquals",
+                variable: "cognito-identity.amazonaws.com:aud",
+                values: [identityPool.id],
+              },
+              {
+                test: "StringEquals",
+                variable: "cognito-identity.amazonaws.com:amr",
+                values: ["unauthenticated"],
+              },
+            ],
+          },
+        ],
+      }).json,
+      inlinePolicies: [
+        {
+          name: "inline",
+          policy: aws.iam.getPolicyDocumentOutput({
+            version: "2012-10-17",
+            statements: [
+              {
+                effect: "Allow",
+                actions: ["mobileanalytics:PutEvents", "cognito-sync:*"],
+                resources: ["*"],
+              },
+            ],
+          }).json,
+        },
+      ],
+    });
+    new aws.cognito.IdentityPoolRoleAttachment("MyIdentityPoolRoles", {
+      identityPoolId: identityPool.id,
+      roles: {
+        authenticated: authRole.arn,
+        unauthenticated: unauthRole.arn,
+      },
+    });
+
     return {
       Region: region,
       UserPoolId: userPool.id,
