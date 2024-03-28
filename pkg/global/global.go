@@ -46,7 +46,6 @@ func NeedsPulumi() bool {
 	}
 
 	version := strings.TrimSpace(string(output))
-	fmt.Println("version", version)
 	if version != PULUMI_VERSION {
 		return true
 	}
