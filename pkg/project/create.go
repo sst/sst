@@ -1,19 +1,16 @@
 package project
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
 	"io/fs"
 	"log/slog"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"strings"
 	"text/template"
 
-	jsonpatch "github.com/evanphx/json-patch/v5"
 	"github.com/sst/ion/pkg/platform"
 	"github.com/tailscale/hujson"
 )
@@ -27,7 +24,7 @@ type copyStep struct {
 }
 
 type patchStep struct {
-	Patch jsonpatch.Patch `json:"patch"`
+	Patch json.RawMessage `json:"patch"`
 	File  string          `json:"file"`
 }
 
@@ -86,20 +83,11 @@ func Create(templateName string, home string) error {
 				return err
 			}
 
-			data, err := hujson.Standardize(b)
+			value, err := hujson.Parse(b)
 			if err != nil {
 				return err
 			}
-			final, err := patchStep.Patch.ApplyWithOptions(data, &jsonpatch.ApplyOptions{
-				SupportNegativeIndices: false,
-				EnsurePathExistsOnAdd:  true,
-			})
-			if err != nil {
-				return err
-			}
-
-			var formatted bytes.Buffer
-			err = json.Indent(&formatted, final, "", "  ")
+			err = value.Patch(patchStep.Patch)
 			if err != nil {
 				return err
 			}
@@ -108,13 +96,8 @@ func Create(templateName string, home string) error {
 			if err != nil {
 				return err
 			}
-			defer file.Close()
+			defer file.WriteString(string(value.Pack()))
 
-			_, err = formatted.WriteTo(file)
-			if err != nil {
-				return err
-			}
-			exec.Command("npx", "prettier", "--write", patchStep.File).Start()
 			break
 
 		case "copy":
