@@ -255,6 +255,12 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 	for provider, args := range s.project.app.Providers {
 		for key, value := range args.(map[string]interface{}) {
 			switch v := value.(type) {
+			case map[string]interface{}:
+				bytes, err := json.Marshal(v)
+				if err != nil {
+					return err
+				}
+				config[fmt.Sprintf("%v:%v", provider, key)] = auto.ConfigValue{Value: string(bytes)}
 			case string:
 				config[fmt.Sprintf("%v:%v", provider, key)] = auto.ConfigValue{Value: v}
 			case []string:
@@ -576,10 +582,10 @@ func (s *stack) Unlock() error {
 
 	for _, file := range files {
 		if strings.HasPrefix(file.Name(), "Pulumi") {
-			err := os.Remove(filepath.Join(dir, file.Name()))
-			if err != nil {
-				return err
-			}
+			// err := os.Remove(filepath.Join(dir, file.Name()))
+			// if err != nil {
+			// 	return err
+			// }
 		}
 	}
 

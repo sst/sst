@@ -185,17 +185,18 @@ func (a *AwsProvider) Init(app string, stage string, args map[string]interface{}
 	// 	args["region"] = cfg.Region
 	// }
 
-	tags, err := json.Marshal(map[string]interface{}{
-		"tags": map[string]string{
-			"sst:app":   app,
-			"sst:stage": stage,
-		},
-	})
-	if err != nil {
-		return err
+	defaultTags, ok := args["defaultTags"].(map[string]interface{})
+	if !ok {
+		defaultTags = map[string]interface{}{}
 	}
-	args["defaultTags"] = string(tags)
-
+	tags, ok := defaultTags["tags"].(map[string]interface{})
+	if !ok {
+		tags = map[string]interface{}{}
+		defaultTags["tags"] = tags
+	}
+	tags["sst:app"] = app
+	tags["sst:stage"] = stage
+	args["defaultTags"] = defaultTags
 	return err
 }
 
