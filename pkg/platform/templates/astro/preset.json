@@ -17,11 +17,12 @@
             "op": "add",
             "path": "/dependencies/astro-sst",
             "value": "^2.41.2"
-          },
+          }
+        ],
+        "regex": [
           {
-            "op": "add",
-            "path": "/scripts/dev",
-            "value": "sst dev astro dev"
+            "find": "\"dev\":\\s*\"([^\"]+)\"",
+            "replace": "\"dev\": \"sst dev $1\""
           }
         ]
       }

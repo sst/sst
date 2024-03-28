@@ -8,6 +8,7 @@ import (
 	"log/slog"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"text/template"
 
@@ -26,6 +27,10 @@ type copyStep struct {
 type patchStep struct {
 	Patch json.RawMessage `json:"patch"`
 	File  string          `json:"file"`
+	Regex []struct {
+		Find    string `json:"find"`
+		Replace string `json:"replace"`
+	} `json:"regex"`
 }
 
 type gitignoreStep struct {
@@ -92,11 +97,18 @@ func Create(templateName string, home string) error {
 				return err
 			}
 
+			packed := string(value.Pack())
+			for _, pattern := range patchStep.Regex {
+				re := regexp.MustCompile(pattern.Find)
+				packed = re.ReplaceAllString(packed, pattern.Replace)
+			}
+
 			file, err := os.Create(patchStep.File)
 			if err != nil {
 				return err
 			}
-			defer file.WriteString(string(value.Pack()))
+			defer file.Close()
+			file.WriteString(packed)
 
 			break
 

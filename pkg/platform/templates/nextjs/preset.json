@@ -25,11 +25,12 @@
             "op": "add",
             "path": "/dependencies/sst",
             "value": "^3.0.1"
-          },
+          }
+        ],
+        "regex": [
           {
-            "op": "add",
-            "path": "/scripts/dev",
-            "value": "sst dev next dev"
+            "find": "\"dev\":\\s*\"([^\"]+)\"",
+            "replace": "\"dev\": \"sst dev $1\""
           }
         ]
       }
