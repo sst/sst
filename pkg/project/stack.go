@@ -590,10 +590,10 @@ func (s *stack) Unlock() error {
 
 	for _, file := range files {
 		if strings.HasPrefix(file.Name(), "Pulumi") {
-			// err := os.Remove(filepath.Join(dir, file.Name()))
-			// if err != nil {
-			// 	return err
-			// }
+			err := os.Remove(filepath.Join(dir, file.Name()))
+			if err != nil {
+				return err
+			}
 		}
 	}
 
