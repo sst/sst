@@ -3,6 +3,7 @@ package global
 import (
 	"archive/zip"
 	"bytes"
+	"compress/gzip"
 	"fmt"
 	"io"
 	"log/slog"
@@ -11,7 +12,10 @@ import (
 	"os/exec"
 	"path/filepath"
 	"runtime"
+	"strings"
 )
+
+const PULUMI_VERSION = "v3.111.1"
 
 var configDir = (func() string {
 	home, err := os.UserConfigDir()
@@ -19,7 +23,7 @@ var configDir = (func() string {
 		panic(err)
 	}
 	result := filepath.Join(home, "sst")
-	os.Setenv("PATH", os.Getenv("PATH")+":"+result+"/bin")
+	os.Setenv("PATH", result+"/bin:"+os.Getenv("PATH"))
 	os.MkdirAll(result, 0755)
 	os.MkdirAll(filepath.Join(result, "bin"), 0755)
 	return result
@@ -29,67 +33,97 @@ func ConfigDir() string {
 	return configDir
 }
 
-func NeedsPlugins() bool {
-	files, err := os.ReadDir(filepath.Join(configDir, "plugins"))
+func NeedsPulumi() bool {
+	path := PulumiPath()
+	slog.Info("checking for pulumi", "path", path)
+	if _, err := os.Stat(path); err != nil {
+		return true
+	}
+	cmd := exec.Command(path, "version")
+	output, err := cmd.Output()
 	if err != nil {
 		return true
 	}
-	slog.Info("plugins", "files", files)
 
-	if len(files) == 0 {
+	version := strings.TrimSpace(string(output))
+	if version != PULUMI_VERSION {
 		return true
 	}
 
 	return false
 }
 
-func InstallPlugins() error {
-	slog.Info("installing plugins")
-	cmd := exec.Command("pulumi", "plugin", "install", "resource", "aws")
-	cmd.Env = append(os.Environ(), "PULUMI_HOME="+configDir)
-	err := cmd.Run()
+func InstallPulumi() error {
+	version := "v3.112.0"
+	var osArch string
+
+	switch runtime.GOOS {
+	case "darwin":
+		osArch = "darwin"
+	case "linux":
+		osArch = "linux"
+	case "windows":
+		osArch = "windows"
+	default:
+		return fmt.Errorf("unsupported operating system")
+	}
+
+	switch runtime.GOARCH {
+	case "amd64":
+		osArch += "-x64"
+	case "arm64":
+		osArch += "-arm64"
+	default:
+		return fmt.Errorf("unsupported architecture")
+	}
+
+	fileExtension := ".tar.gz"
+	if runtime.GOOS == "windows" {
+		fileExtension = ".zip"
+	}
+
+	url := fmt.Sprintf("https://github.com/pulumi/pulumi/releases/download/%v/pulumi-%s-%s%s", version, version, osArch, fileExtension)
+	slog.Info("downloading pulumi", "url", url)
+
+	resp, err := http.Get(url)
 	if err != nil {
 		return err
 	}
+	defer resp.Body.Close()
 
-	cmd = exec.Command("pulumi", "plugin", "install", "resource", "cloudflare")
-	cmd.Env = append(os.Environ(), "PULUMI_HOME="+configDir)
-	err = cmd.Run()
-	if err != nil {
-		return err
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("failed to download pulumi: HTTP status %d", resp.StatusCode)
+	}
+
+	switch fileExtension {
+	case ".tar.gz":
+		gzr, err := gzip.NewReader(resp.Body)
+		if err != nil {
+			return err
+		}
+		defer gzr.Close()
+		err = untar(gzr, BinPath())
+		if err != nil {
+			return err
+		}
+
+	default:
+		panic("cannot extract zip file for pulumi")
 	}
 
 	return nil
 }
 
-func NeedsPulumi() bool {
-	home, err := os.UserHomeDir()
-	if err != nil {
-		panic(err)
-	}
-	os.Setenv("PATH", os.Getenv("PATH")+":"+home+"/.pulumi/bin")
-	_, err = exec.LookPath("pulumi")
-	if err != nil {
-		return true
-	}
-	return false
-}
-
-func InstallPulumi() error {
-	slog.Info("installing pulumi")
-	if runtime.GOOS == "windows" {
-		psCommand := `"%SystemRoot%\System32\WindowsPowerShell\v1.0\powershell.exe" -NoProfile -InputFormat None -ExecutionPolicy Bypass -Command "[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; iex ((New-Object System.Net.WebClient).DownloadString('https://get.pulumi.com/install.ps1'))" && SET "PATH=%PATH%;%USERPROFILE%\.pulumi\bin"`
-		_, err := exec.Command("cmd", "/C", psCommand).CombinedOutput()
-		return err
-	}
-
-	cmd := `curl -fsSL https://get.pulumi.com | sh`
-	_, err := exec.Command("bash", "-c", cmd).CombinedOutput()
-	return err
+func PulumiPath() string {
+	return filepath.Join(BinPath(), "pulumi")
 }
 
 func BunPath() string {
-	return filepath.Join(configDir, "bin", "bun")
+	return filepath.Join(BinPath(), "bun")
+}
+
+func BinPath() string {
+	return filepath.Join(configDir, "bin")
 }
 
 func NeedsBun() bool {

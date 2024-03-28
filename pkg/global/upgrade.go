@@ -120,7 +120,8 @@ func untar(reader io.Reader, target string) error {
 				return err
 			}
 		case tar.TypeReg:
-			outFile, err := os.Create(filepath.Join(target, header.Name))
+			outPath := filepath.Join(target, filepath.Base(header.Name))
+			outFile, err := os.Create(outPath)
 			if err != nil {
 				return err
 			}
@@ -129,6 +130,12 @@ func untar(reader io.Reader, target string) error {
 				return err
 			}
 			outFile.Close()
+
+			err = os.Chmod(outPath, 0755)
+			if err != nil {
+				return err
+			}
+
 		}
 	}
 	return nil
