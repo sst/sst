@@ -409,7 +409,7 @@ var Root = Command{
 					OnEvent: ui.Trigger,
 				})
 				if err != nil {
-					return err
+					return util.NewReadableError(err, "")
 				}
 				return nil
 			},
@@ -898,7 +898,7 @@ var Root = Command{
 					OnEvent: ui.Trigger,
 				})
 				if err != nil {
-					return err
+					return util.NewReadableError(err, "")
 				}
 				return nil
 			},
@@ -1145,7 +1145,7 @@ var Root = Command{
 					OnEvent: ui.Trigger,
 				})
 				if err != nil {
-					return err
+					return util.NewReadableError(err, "")
 				}
 				return nil
 			},
