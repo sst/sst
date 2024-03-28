@@ -25,7 +25,10 @@ export interface PostgresArgs {
   version?: Input<string>;
   /**
    * Name of a database which is automatically created inside the cluster.
-   * @default The name of the current app
+   *
+   * The name must begin with a letter and contain only lowercase letters, numbers, or underscores.
+   *
+   * @default The name of the current app with hyphens replaced with underscores.
    * @example
    * ```js
    * {
