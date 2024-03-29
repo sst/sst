@@ -88,17 +88,19 @@ Set the stage the CLI is running on.
 sst [command] --stage=production
 ```
 
+The stage is a string that is used to prefix the resources in your app. This allows you to have multiple _environments_ of your app running in the same account.
+
+:::tip
+Changing the stage will redeploy your app to a new stage with new resources. The old resources will still be around in the old stage.
+:::
+
 If the stage is not passed in, then the CLI will:
 
-1. Uses the username on the local machine.
+1. Use the username on the local machine.
    - If the username is `root`, `admin`, `prod`, `dev`, `production`, then it will prompt for a stage name.
 2. Store this in the `.sst/stage` file and reads from it in the future.
 
-This stored stage is called your personal stage.
-
-:::tip
-The stage that is stored in the `.sst/stage` file is called your personal stage.
-:::
+This stored stage is called your **personal stage**. The stage that is stored in the `.sst/stage` file is called your personal stage.
 </Segment>
 
 ### verbose

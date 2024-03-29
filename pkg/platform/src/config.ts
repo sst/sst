@@ -184,6 +184,10 @@ export interface AppInput {
   /**
    * The stage this app is running on. This is a string that can be passed in through the CLI.
    *
+   * :::tip
+   * Changing the stage will redeploy your app to a new stage with new resources. The old resources will still be around in the old stage.
+   * :::
+   *
    * If not passed in, it'll use the username of your local machine, or prompt you for it.
    */
   stage: string;
