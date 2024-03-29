@@ -258,6 +258,9 @@ func (p *Project) Backend() provider.Home {
 }
 
 func (p *Project) Cleanup() error {
+	if os.Getenv("SST_NO_ARTIFACT_CLEANUP") != "" {
+		return nil
+	}
 	return os.RemoveAll(
 		filepath.Join(p.PathWorkingDir(), "artifacts"),
 	)
