@@ -901,7 +901,7 @@ var Root = Command{
 					OnEvent: ui.StackEvent,
 				})
 				if err != nil {
-					return util.NewReadableError(err, "")
+					return err
 				}
 				return nil
 			},
@@ -927,7 +927,7 @@ var Root = Command{
 
 				err = p.Stack.Cancel()
 				if err != nil {
-					return util.NewReadableError(err, "")
+					return err
 				}
 				color.New(color.FgGreen, color.Bold).Print("✓ ")
 				color.New(color.FgWhite).Print(" Unlocked the app state for: ")
@@ -1148,7 +1148,7 @@ var Root = Command{
 					OnEvent: ui.StackEvent,
 				})
 				if err != nil {
-					return util.NewReadableError(err, "")
+					return err
 				}
 				return nil
 			},
