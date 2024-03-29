@@ -111,6 +111,10 @@ export interface SsrSiteArgs extends BaseSsrSiteArgs {
      * Transform the Bucket resource used for uploading the assets.
      */
     assets?: Transform<BucketArgs>;
+    /**
+     * Transform the server Function resource.
+     */
+    server?: Transform<FunctionArgs>;
   };
 }
 
@@ -511,7 +515,7 @@ function handler(event) {
     function buildServerOrigin(fnName: string, props: ServerOriginConfig) {
       const fn = new Function(
         `${name}${sanitizeToPascalCase(fnName)}`,
-        {
+        transform(args.transform?.server, {
           description: `${name} server`,
           runtime: "nodejs20.x",
           timeout: "20 seconds",
@@ -536,7 +540,7 @@ function handler(event) {
           url: true,
           live: false,
           _ignoreCodeChanges: $dev,
-        },
+        }),
         { parent },
       );
       ssrFunctions.push(fn);
