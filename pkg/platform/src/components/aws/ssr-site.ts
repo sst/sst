@@ -774,7 +774,7 @@ function handler(event) {
             `${name}InvalidationPolicyAttachment${uniqueHash}`,
             {
               policyArn: policy.arn,
-              role: fn.nodes.role.name,
+              role: fn.nodes.role!.name,
             },
             { parent },
           );
