@@ -75,6 +75,7 @@ func Connect(ctx context.Context, input ConnectInput) error {
 		return Connect(ctx, input)
 	}
 	defer resp.Body.Close()
+	slog.Info("got server stream")
 	stream := contextreader.New(ctx, resp.Body)
 	scanner := bufio.NewScanner(stream)
 	scanner.Buffer(make([]byte, 4096), 1024*1024*100)
