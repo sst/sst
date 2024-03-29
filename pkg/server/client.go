@@ -9,6 +9,8 @@ import (
 	"os"
 	"os/exec"
 	"time"
+
+	"github.com/sst/ion/internal/contextreader"
 )
 
 type ConnectInput struct {
@@ -68,38 +70,19 @@ func Connect(ctx context.Context, input ConnectInput) error {
 		return Connect(ctx, input)
 	}
 	defer resp.Body.Close()
+	stream := contextreader.New(ctx, resp.Body)
+	scanner := bufio.NewScanner(stream)
+	scanner.Buffer(make([]byte, 4096), 1024*1024*100)
 
-	events := make(chan Event)
-	go func() {
-		scanner := bufio.NewScanner(resp.Body)
-		scanner.Buffer(make([]byte, 1024*1024*10), 1024*1024*10)
-		defer close(events)
-		for scanner.Scan() {
-			line := scanner.Bytes()
-			event := Event{}
-			err := json.Unmarshal(line, &event)
-			if err != nil {
-				continue
-			}
-
-			select {
-			case events <- event:
-				break
-			case <-ctx.Done():
-				return
-			}
+	for scanner.Scan() {
+		line := scanner.Bytes()
+		event := Event{}
+		err := json.Unmarshal(line, &event)
+		if err != nil {
+			continue
 		}
-	}()
-
-	for {
-		select {
-		case evt, ok := <-events:
-			if !ok {
-				return nil
-			}
-			input.OnEvent(evt)
-		case <-ctx.Done():
-			return nil
-		}
+		input.OnEvent(event)
 	}
+
+	return scanner.Err()
 }
