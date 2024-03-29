@@ -408,7 +408,7 @@ var Root = Command{
 				ui.Header(version, p.App().Name, p.App().Stage)
 				err = p.Stack.Run(cli.Context, &project.StackInput{
 					Command: "up",
-					OnEvent: ui.Trigger,
+					OnEvent: ui.StackEvent,
 				})
 				if err != nil {
 					return util.NewReadableError(err, "")
@@ -897,7 +897,7 @@ var Root = Command{
 				ui.Header(version, p.App().Name, p.App().Stage)
 				err = p.Stack.Run(cli.Context, &project.StackInput{
 					Command: "destroy",
-					OnEvent: ui.Trigger,
+					OnEvent: ui.StackEvent,
 				})
 				if err != nil {
 					return util.NewReadableError(err, "")
@@ -1144,7 +1144,7 @@ var Root = Command{
 				ui.Header(version, p.App().Name, p.App().Stage)
 				err = p.Stack.Run(cli.Context, &project.StackInput{
 					Command: "refresh",
-					OnEvent: ui.Trigger,
+					OnEvent: ui.StackEvent,
 				})
 				if err != nil {
 					return util.NewReadableError(err, "")

@@ -66,7 +66,7 @@ func (u *UI) Reset() {
 	u.timing = map[string]time.Time{}
 }
 
-func (u *UI) Trigger(evt *project.StackEvent) {
+func (u *UI) StackEvent(evt *project.StackEvent) {
 	if evt.ConcurrentUpdateEvent != nil {
 		u.printEvent(color.FgRed, "Locked", "A concurrent update was detected on the app. Run `sst unlock` to remove the lock and try again.")
 	}
@@ -93,7 +93,7 @@ func (u *UI) Trigger(evt *project.StackEvent) {
 
 		fmt.Println()
 		u.spinner.Start()
-		u.spinner.Enable()
+		u.spinner.Disable()
 		return
 	}
 
@@ -127,6 +127,7 @@ func (u *UI) Trigger(evt *project.StackEvent) {
 			if u.mode == ProgressModeDeploy || u.mode == ProgressModeDev {
 				u.skipped++
 				u.spinner.Suffix = fmt.Sprintf("  Deploying (%v skipped)...", u.skipped)
+				u.spinner.Enable()
 			}
 			return
 		}
@@ -404,11 +405,6 @@ func (u *UI) getColor(input string) color.Attribute {
 }
 
 func (u *UI) Event(evt *server.Event) {
-	// if evt.ConcurrentUpdateEvent != nil {
-	// 	u.printEvent(color.FgRed, "Locked", "A concurrent update was detected on the stack. Run `sst unlock` to delete the lock file and retry.")
-	// 	return
-	// }
-
 	if evt.FunctionInvokedEvent != nil {
 		u.workerTime[evt.FunctionInvokedEvent.WorkerID] = time.Now()
 		u.printEvent(u.getColor(evt.FunctionInvokedEvent.WorkerID), color.New(color.FgWhite, color.Bold).Sprintf("%-11s", "Invoked"), u.functionName(evt.FunctionInvokedEvent.FunctionID))
@@ -497,22 +493,6 @@ func (u *UI) Header(version, app, stage string) {
 		color.New(color.FgHiBlack).Println("https://console.sst.dev/local/" + app + "/" + stage)
 	}
 	fmt.Println()
-}
-
-func (u *UI) Start() {
-	u.spinner.Start()
-	if u.mode == ProgressModeRemove {
-		u.spinner.Suffix = "  Removing..."
-	}
-	if u.mode == ProgressModeDev {
-		u.spinner.Suffix = "  Deploying..."
-	}
-	if u.mode == ProgressModeDeploy {
-		u.spinner.Suffix = "  Deploying..."
-	}
-	if u.mode == ProgressModeRefresh {
-		u.spinner.Suffix = "  Refreshing..."
-	}
 }
 
 func (u *UI) formatURN(urn string) string {

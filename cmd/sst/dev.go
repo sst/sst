@@ -143,7 +143,7 @@ func CmdDev(cli *Cli) error {
 		Verbose: cli.Bool("verbose"),
 		OnEvent: func(event server.Event) {
 			if !hasTarget || !runOnce || true {
-				defer u.Trigger(&event.StackEvent)
+				defer u.StackEvent(&event.StackEvent)
 				defer u.Event(&event)
 				if event.StackEvent.PreludeEvent != nil {
 					u.Reset()
