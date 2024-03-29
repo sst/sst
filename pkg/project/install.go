@@ -154,7 +154,11 @@ func (p *Project) writeTypes() error {
 
 func (p *Project) fetchDeps() error {
 	slog.Info("fetching deps")
-	cmd := exec.Command(global.BunPath(), "install")
+	manager := global.BunPath()
+	if os.Getenv("NO_BUN") != "" {
+		manager = "npm"
+	}
+	cmd := exec.Command(manager, "install")
 	cmd.Dir = p.PathPlatformDir()
 	output, err := cmd.CombinedOutput()
 	if err != nil {
