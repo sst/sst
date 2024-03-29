@@ -140,6 +140,7 @@ func CmdDev(cli *Cli) error {
 	err = server.Connect(cli.Context, server.ConnectInput{
 		CfgPath: cfgPath,
 		Stage:   stage,
+		Verbose: cli.Bool("verbose"),
 		OnEvent: func(event server.Event) {
 			if !hasTarget || !runOnce || true {
 				defer u.Trigger(&event.StackEvent)

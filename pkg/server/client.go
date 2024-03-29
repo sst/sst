@@ -16,6 +16,7 @@ import (
 type ConnectInput struct {
 	CfgPath string
 	Stage   string
+	Verbose bool
 	OnEvent func(event Event)
 }
 
@@ -34,6 +35,9 @@ func Connect(ctx context.Context, input ConnectInput) error {
 		cmd := exec.Command(currentExecutable)
 		cmd.Env = os.Environ()
 		cmd.Args = append(cmd.Args, "--stage="+input.Stage, "server")
+		if input.Verbose {
+			cmd.Args = append(cmd.Args, "--verbose")
+		}
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
 		if err := cmd.Start(); err != nil {

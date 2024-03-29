@@ -59,6 +59,14 @@ const __dirname = topLevelFileUrlToPath(new topLevelURL(".", import.meta.url))
 	})
 	if len(result.Errors) > 0 {
 		slog.Error("esbuild errors", "errors", result.Errors)
+		for _, err := range result.Errors {
+			slog.Error("esbuild error",
+				"text", err.Text,
+				"location.file", err.Location.File,
+				"location.line", err.Location.Line,
+				"column", err.Location.Column,
+			)
+		}
 		return result, fmt.Errorf("esbuild errors: %v", result.Errors)
 	}
 	slog.Info("esbuild built", "outfile", outfile)
