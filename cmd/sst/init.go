@@ -20,7 +20,7 @@ import (
 func CmdInit(cli *Cli) error {
 	if _, err := os.Stat("sst.config.ts"); err == nil {
 		color.New(color.FgRed, color.Bold).Print("×")
-		color.New(color.FgWhite, color.Bold).Println(" SST project already exists")
+		color.New(color.FgWhite, color.Bold).Println("  SST project already exists")
 		return nil
 	}
 
@@ -118,8 +118,8 @@ func CmdInit(cli *Cli) error {
 		return nil
 	}
 
-	color.New(color.FgGreen, color.Bold).Print("✓ ")
-	color.New(color.FgWhite).Println(" Template: ", template)
+	color.New(color.FgGreen, color.Bold).Print("✓")
+	color.New(color.FgWhite).Println("  Template: ", template)
 	fmt.Println()
 
 	home := "aws"
@@ -136,8 +136,8 @@ func CmdInit(cli *Cli) error {
 		}
 	}
 
-	color.New(color.FgGreen, color.Bold).Print("✓ ")
-	color.New(color.FgWhite).Println(" Using: " + home)
+	color.New(color.FgGreen, color.Bold).Print("✓")
+	color.New(color.FgWhite).Println("  Using: " + home)
 	fmt.Println()
 
 	err = project.Create(template, home)
@@ -192,8 +192,8 @@ func CmdInit(cli *Cli) error {
 
 	spin.Stop()
 
-	color.New(color.FgGreen, color.Bold).Print("✓ ")
-	color.New(color.FgWhite).Println(" Done 🎉")
+	color.New(color.FgGreen, color.Bold).Print("✓")
+	color.New(color.FgWhite).Println("  Done 🎉")
 	fmt.Println()
 	return nil
 }
