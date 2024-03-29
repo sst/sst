@@ -469,6 +469,18 @@ export interface FunctionArgs {
    */
   architecture?: Input<"x86_64" | "arm64">;
   /**
+   * Assigns an existing IAM role to the function, replacing the default behavior of creating a new role.
+   *
+   * @default Creates a new role.
+   * @example
+   * ```js
+   * {
+   *   role: "arn:aws:iam::123456789012:role/my-role"
+   * }
+   * ```
+   */
+  role?: Input<string>;
+  /**
    * Enable [Lambda function URLs](https://docs.aws.amazon.com/lambda/latest/dg/lambda-urls.html).
    * These are dedicated endpoints for your Lambda functions.
    * @default `false`
@@ -875,7 +887,7 @@ export class Function
   implements Link.Linkable, Link.AWS.Linkable
 {
   private function: Output<aws.lambda.Function>;
-  private role: Output<aws.iam.Role>;
+  private role?: aws.iam.Role;
   private logGroup: aws.cloudwatch.LogGroup;
   private fnUrl: Output<aws.lambda.FunctionUrl | undefined>;
   private missingSourcemap?: boolean;
@@ -905,7 +917,9 @@ export class Function
     const linkPermissions = buildLinkPermissions();
     const { bundle, handler: handler0 } = buildHandler();
     const { handler, wrapper } = buildHandlerWrapper();
-    const role = createRole();
+    const { role, roleArn } = args.role
+      ? attachPermissionToExistingRole()
+      : createRole();
     const zipPath = zipBundleFolder();
     const bundleHash = calculateHash();
     const file = createBucketObject();
@@ -918,6 +932,11 @@ export class Function
     const links = output(linkData).apply((input) =>
       input.map((item) => item.name),
     );
+
+    this.function = codeUpdater.version.apply(() => fn);
+    this.role = role;
+    this.logGroup = logGroup;
+    this.fnUrl = fnUrl;
 
     Warp.register(
       name,
@@ -951,11 +970,6 @@ export class Function
         internal: args._skipMetadata,
       },
     });
-
-    this.function = codeUpdater.version.apply(() => fn);
-    this.role = role;
-    this.logGroup = logGroup;
-    this.fnUrl = fnUrl;
 
     function normalizeRegion() {
       return aws.getRegionOutput(undefined, { provider: opts?.provider }).name;
@@ -1214,10 +1228,10 @@ export class Function
       };
     }
 
-    function createRole() {
+    function buildRolePolicy() {
       return all([args.permissions || [], linkPermissions, dev]).apply(
-        ([argsPermissions, linkPermissions, dev]) => {
-          const policy = aws.iam.getPolicyDocumentOutput({
+        ([argsPermissions, linkPermissions, dev]) =>
+          aws.iam.getPolicyDocumentOutput({
             statements: [
               ...argsPermissions,
               ...linkPermissions,
@@ -1230,46 +1244,66 @@ export class Function
                   ]
                 : []),
             ],
-          });
-
-          return new aws.iam.Role(
-            `${name}Role`,
-            transform(args.transform?.role, {
-              name: region.apply((region) =>
-                prefixName(
-                  64,
-                  `${name}Role`,
-                  `-${region.toLowerCase().replace(/-/g, "")}`,
-                ),
-              ),
-              assumeRolePolicy: aws.iam.assumeRolePolicyForPrincipal({
-                Service: "lambda.amazonaws.com",
-              }),
-              // if there are no statements, do not add an inline policy.
-              // adding an inline policy with no statements will cause an error.
-              inlinePolicies: policy.apply(({ statements }) =>
-                statements
-                  ? [
-                      {
-                        name: "inline",
-                        policy: policy.json,
-                      },
-                    ]
-                  : [],
-              ),
-              managedPolicyArns: [
-                "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
-                ...(args.vpc
-                  ? [
-                      "arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole",
-                    ]
-                  : []),
-              ],
-            }),
-            { parent },
-          );
-        },
+          }),
       );
+    }
+
+    function createRole() {
+      const policy = buildRolePolicy();
+      const role = new aws.iam.Role(
+        `${name}Role`,
+        transform(args.transform?.role, {
+          name: region.apply((region) =>
+            prefixName(
+              64,
+              `${name}Role`,
+              `-${region.toLowerCase().replace(/-/g, "")}`,
+            ),
+          ),
+          assumeRolePolicy: aws.iam.assumeRolePolicyForPrincipal({
+            Service: "lambda.amazonaws.com",
+          }),
+          // if there are no statements, do not add an inline policy.
+          // adding an inline policy with no statements will cause an error.
+          inlinePolicies: policy.apply(({ statements }) =>
+            statements
+              ? [
+                  {
+                    name: "inline",
+                    policy: policy.json,
+                  },
+                ]
+              : [],
+          ),
+          managedPolicyArns: [
+            "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+            ...(args.vpc
+              ? [
+                  "arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole",
+                ]
+              : []),
+          ],
+        }),
+        { parent },
+      );
+      return { role, roleArn: role.arn };
+    }
+
+    function attachPermissionToExistingRole() {
+      const policy = buildRolePolicy();
+      const rolePolicy = new aws.iam.RolePolicy(
+        `${name}RolePolicy`,
+        {
+          policy: policy.json,
+          // get role name ie. "my-role" from arn "arn:aws:iam::123456789012:role/my-role"
+          role: output(args.role!).apply((arn) => arn.split("/")[1]),
+        },
+        { parent },
+      );
+      return {
+        role: undefined,
+        roleArn: rolePolicy.role.apply(() => args.role),
+      };
     }
 
     function zipBundleFolder() {
@@ -1398,7 +1432,7 @@ export class Function
             path.join($cli.paths.platform, "functions", "empty-function"),
           ),
           handler,
-          role: role.arn,
+          role: roleArn,
           runtime,
           timeout: timeout.apply((timeout) => toSeconds(timeout)),
           memorySize: memory.apply((memory) => toMBs(memory)),

@@ -6,6 +6,7 @@ import {
   output,
 } from "@pulumi/pulumi";
 import { prefixName } from "./naming.js";
+import { VisibleError } from "./error.js";
 
 /**
  * Helper type to inline nested types
@@ -120,6 +121,7 @@ export class Component extends ComponentResource {
             case "aws:iam/accessKey:AccessKey":
             case "aws:iam/policy:Policy":
             case "aws:iam/rolePolicyAttachment:RolePolicyAttachment":
+            case "aws:iam/rolePolicy:RolePolicy":
             case "aws:iam/userPolicy:UserPolicy":
             case "aws:cloudfront/cachePolicy:CachePolicy":
             case "aws:cloudfront/distribution:Distribution":
@@ -144,7 +146,7 @@ export class Component extends ComponentResource {
             case "cloudflare:index/workerDomain:WorkerDomain":
               break;
             default:
-              throw new Error(
+              throw new VisibleError(
                 `In "${name}" component, the physical name of "${args.name}" (${args.type}) is not prefixed`,
               );
           }
