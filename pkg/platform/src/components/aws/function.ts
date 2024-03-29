@@ -742,6 +742,17 @@ export interface FunctionArgs {
     }[]
   >;
   /**
+   * A list of layers to add to the function.
+   *
+   * @example
+   * ```js
+   * {
+   *   layers: ["arn:aws:lambda:us-east-1:123456789012:layer:my-layer:1"]
+   * }
+   * ```
+   */
+  layers?: Input<string[]>;
+  /**
    * Configure the function to connect to private subnets in a virtual private cloud or VPC. This allows your function to access private resources.
    *
    * @example
@@ -1432,6 +1443,7 @@ export class Function
             securityGroupIds: output(args.vpc).securityGroups,
             subnetIds: output(args.vpc).subnets,
           },
+          layers: args.layers,
         }),
         {
           parent,
