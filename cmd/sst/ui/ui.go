@@ -539,34 +539,22 @@ func (u *UI) printProgress(progress Progress) {
 	u.spinner.Disable()
 	defer u.spinner.Enable()
 	dedupeKey := progress.URN + progress.Label
-	if u.dedupe[dedupeKey] {
-		return
-	}
+	// if u.dedupe[dedupeKey] {
+	// 	return
+	// }
 	u.dedupe[dedupeKey] = true
-	if !progress.Final && false {
-		u.pending[progress.URN] =
-			color.New(color.FgWhite).Sprintf("   %-11s %v", progress.Label, u.formatURN(progress.URN))
-		suffix := "  Deploying...\n"
-		for _, item := range u.pending {
-			suffix += item + "\n"
-		}
-		u.spinner.Suffix = strings.TrimRight(suffix, "\n")
-		return
-	}
 
 	color.New(progress.Color, color.Bold).Print("|  ")
 	color.New(color.FgHiBlack).Print(fmt.Sprintf("%-11s", progress.Label), " ", u.formatURN(progress.URN))
 	if progress.Duration > time.Second {
 		color.New(color.FgHiBlack).Printf(" (%.1fs)", progress.Duration.Seconds())
 	}
-	if len(progress.Message) == 1 {
+	if len(progress.Message) > 0 {
 		color.New(color.FgWhite).Print(" " + progress.Message[0])
-	}
-	if len(progress.Message) > 1 {
-		for _, item := range progress.Message {
+		for _, item := range progress.Message[1:] {
 			fmt.Println()
 			color.New(progress.Color, color.Bold).Print("|  ")
-			color.New(color.FgWhite).Print(item)
+			color.New(color.FgWhite).Print(strings.TrimSpace(item))
 		}
 	}
 	fmt.Println()
