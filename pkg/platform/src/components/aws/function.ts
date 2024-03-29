@@ -471,6 +471,11 @@ export interface FunctionArgs {
   /**
    * Assigns an existing IAM role to the function, replacing the default behavior of creating a new role.
    *
+   * :::tip
+   * Permissions specified in "permissions" and required by "link" resources are not added
+   * automatically. You'll need to manually configure the IAM permissions required by the function.
+   * :::
+   *
    * @default Creates a new role.
    * @example
    * ```js
@@ -917,9 +922,7 @@ export class Function
     const linkPermissions = buildLinkPermissions();
     const { bundle, handler: handler0 } = buildHandler();
     const { handler, wrapper } = buildHandlerWrapper();
-    const { role, roleArn } = args.role
-      ? attachPermissionToExistingRole()
-      : createRole();
+    const role = createRole();
     const zipPath = zipBundleFolder();
     const bundleHash = calculateHash();
     const file = createBucketObject();
@@ -1228,8 +1231,10 @@ export class Function
       };
     }
 
-    function buildRolePolicy() {
-      return all([args.permissions || [], linkPermissions, dev]).apply(
+    function createRole() {
+      if (args.role) return;
+
+      const policy = all([args.permissions || [], linkPermissions, dev]).apply(
         ([argsPermissions, linkPermissions, dev]) =>
           aws.iam.getPolicyDocumentOutput({
             statements: [
@@ -1246,11 +1251,8 @@ export class Function
             ],
           }),
       );
-    }
 
-    function createRole() {
-      const policy = buildRolePolicy();
-      const role = new aws.iam.Role(
+      return new aws.iam.Role(
         `${name}Role`,
         transform(args.transform?.role, {
           name: region.apply((region) =>
@@ -1286,24 +1288,6 @@ export class Function
         }),
         { parent },
       );
-      return { role, roleArn: role.arn };
-    }
-
-    function attachPermissionToExistingRole() {
-      const policy = buildRolePolicy();
-      const rolePolicy = new aws.iam.RolePolicy(
-        `${name}RolePolicy`,
-        {
-          policy: policy.json,
-          // get role name ie. "my-role" from arn "arn:aws:iam::123456789012:role/my-role"
-          role: output(args.role!).apply((arn) => arn.split("/")[1]),
-        },
-        { parent },
-      );
-      return {
-        role: undefined,
-        roleArn: rolePolicy.role.apply(() => args.role),
-      };
     }
 
     function zipBundleFolder() {
@@ -1432,7 +1416,7 @@ export class Function
             path.join($cli.paths.platform, "functions", "empty-function"),
           ),
           handler,
-          role: roleArn,
+          role: args.role ?? role!.arn,
           runtime,
           timeout: timeout.apply((timeout) => toSeconds(timeout)),
           memorySize: memory.apply((memory) => toMBs(memory)),

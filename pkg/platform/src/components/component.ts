@@ -121,7 +121,6 @@ export class Component extends ComponentResource {
             case "aws:iam/accessKey:AccessKey":
             case "aws:iam/policy:Policy":
             case "aws:iam/rolePolicyAttachment:RolePolicyAttachment":
-            case "aws:iam/rolePolicy:RolePolicy":
             case "aws:iam/userPolicy:UserPolicy":
             case "aws:cloudfront/cachePolicy:CachePolicy":
             case "aws:cloudfront/distribution:Distribution":
