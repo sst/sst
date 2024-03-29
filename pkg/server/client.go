@@ -72,7 +72,7 @@ func Connect(ctx context.Context, input ConnectInput) error {
 	events := make(chan Event)
 	go func() {
 		scanner := bufio.NewScanner(resp.Body)
-		scanner.Buffer(make([]byte, 1024*1024), 1024*1024)
+		scanner.Buffer(make([]byte, 1024*1024*10), 1024*1024*10)
 		defer close(events)
 		for scanner.Scan() {
 			line := scanner.Bytes()
