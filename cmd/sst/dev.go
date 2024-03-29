@@ -169,7 +169,8 @@ func CmdDev(cli *Cli) error {
 				}
 			}
 			if event.StateEvent != nil {
-				if event.StateEvent.State.Config != cfgPath {
+				if event.StateEvent.State.Config != cfgPath || event.StateEvent.State.Stage != stage {
+					ui.Error("There is a different sst.dev session running for " + event.StateEvent.State.Config)
 					cli.Cancel()
 					return
 				}

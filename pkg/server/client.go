@@ -8,9 +8,9 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
+	"sync"
+	"syscall"
 	"time"
-
-	"github.com/sst/ion/internal/contextreader"
 )
 
 type ConnectInput struct {
@@ -38,7 +38,7 @@ func Connect(ctx context.Context, input ConnectInput) error {
 		if input.Verbose {
 			cmd.Args = append(cmd.Args, "--verbose")
 		}
-		// cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
+		cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
 		if err := cmd.Start(); err != nil {
@@ -76,19 +76,30 @@ func Connect(ctx context.Context, input ConnectInput) error {
 	}
 	defer resp.Body.Close()
 	slog.Info("got server stream")
-	stream := contextreader.New(ctx, resp.Body)
-	scanner := bufio.NewScanner(stream)
-	scanner.Buffer(make([]byte, 4096), 1024*1024*100)
 
-	for scanner.Scan() {
-		line := scanner.Bytes()
-		event := Event{}
-		err := json.Unmarshal(line, &event)
-		if err != nil {
-			return err
+	var wg sync.WaitGroup
+
+	err = nil
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		scanner := bufio.NewScanner(resp.Body)
+		scanner.Buffer(make([]byte, 4096), 1024*1024*100)
+		for scanner.Scan() {
+			line := scanner.Bytes()
+			event := Event{}
+			err = json.Unmarshal(line, &event)
+			if err != nil {
+				return
+			}
+			input.OnEvent(event)
 		}
-		input.OnEvent(event)
-	}
-
-	return scanner.Err()
+		err = scanner.Err()
+	}()
+	go func() {
+		<-ctx.Done()
+		resp.Body.Close()
+	}()
+	wg.Wait()
+	return err
 }

@@ -2,6 +2,7 @@ package contextreader
 
 import (
 	"context"
+	"fmt"
 	"io"
 )
 
@@ -12,6 +13,7 @@ type ContextReader struct {
 
 func (cr *ContextReader) Read(p []byte) (int, error) {
 	err := cr.ctx.Err()
+	fmt.Println(err)
 	if err != nil {
 		return 0, cr.ctx.Err()
 	}
