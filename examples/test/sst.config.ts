@@ -9,7 +9,7 @@ export default $config({
   },
   async run() {
     const fn = new sst.aws.Function("MyFunction", {
-      handler: "./src/streaming.handler",
+      handler: "./src/index.handler",
       streaming: true,
       url: true,
       timeout: "15 minutes",
@@ -20,10 +20,6 @@ export default $config({
       ],
     });
 
-    new sst.cloudflare.Worker("Worker", {
-      handler: "./src/index.ts",
-      url: true,
-    });
     return {
       url: fn.url,
     };

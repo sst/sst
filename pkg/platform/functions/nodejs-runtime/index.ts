@@ -21,6 +21,7 @@ let response: any;
 let context: LambdaContext;
 
 async function error(ex: any) {
+  console.log(ex);
   const body = JSON.stringify({
     errorType: "Error",
     errorMessage: ex.message,

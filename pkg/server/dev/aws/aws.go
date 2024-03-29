@@ -137,6 +137,7 @@ func Start(
 		}).
 		SetCleanSession(false).
 		SetAutoReconnect(true).
+		SetMaxReconnectInterval(time.Second * 1).
 		SetConnectionLostHandler(func(c MQTT.Client, err error) {
 			slog.Info("mqtt connection lost", "error", err)
 		}).
