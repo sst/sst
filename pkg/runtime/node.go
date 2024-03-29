@@ -210,7 +210,7 @@ func (r *NodeRuntime) Run(ctx context.Context, input *RunInput) (Worker, error) 
 		input.WorkerID,
 	)
 	cmd.Env = append(input.Env, "AWS_LAMBDA_RUNTIME_API="+input.Server)
-	slog.Info("starting worker", "env", cmd.Env)
+	slog.Info("starting worker", "env", cmd.Env, "args", cmd.Args)
 	cmd.Dir = input.Build.Out
 	stdout, _ := cmd.StdoutPipe()
 	stderr, _ := cmd.StderrPipe()

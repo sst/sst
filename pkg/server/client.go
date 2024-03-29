@@ -38,6 +38,7 @@ func Connect(ctx context.Context, input ConnectInput) error {
 		if input.Verbose {
 			cmd.Args = append(cmd.Args, "--verbose")
 		}
+		// cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
 		if err := cmd.Start(); err != nil {
@@ -83,7 +84,7 @@ func Connect(ctx context.Context, input ConnectInput) error {
 		event := Event{}
 		err := json.Unmarshal(line, &event)
 		if err != nil {
-			continue
+			return err
 		}
 		input.OnEvent(event)
 	}
