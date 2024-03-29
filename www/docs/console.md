@@ -22,10 +22,6 @@ The <a href={config.console}>SST Console</a> is a web based dashboard to manage 
 
 With the SST Console you can invoke functions, debug issues, view logs, and manage all your apps with your team — **<ConsoleUrl url={config.console} />**
 
-:::tip
-Want to host the Console in your own AWS account? <a href="https://forms.gle/GL4AhG5gK9mnaQmm9">Get in touch with us</a>.
-:::
-
 ---
 
 ## Quick start
