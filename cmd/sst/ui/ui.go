@@ -42,6 +42,7 @@ type UI struct {
 	colors      map[string]color.Attribute
 	workerTime  map[string]time.Time
 	complete    *project.CompleteEvent
+	skipped     int
 }
 
 func New(mode ProgressMode) *UI {
@@ -57,6 +58,7 @@ func New(mode ProgressMode) *UI {
 
 func (u *UI) Reset() {
 	u.hasProgress = false
+	u.skipped = 0
 	u.parents = map[string]string{}
 	u.hints = map[string]string{}
 	u.pending = map[string]string{}
@@ -122,6 +124,10 @@ func (u *UI) Trigger(evt *project.StackEvent) {
 
 		if evt.ResourcePreEvent.Metadata.Op == apitype.OpSame {
 			// Do not print anything for skipped resources
+			if u.mode == ProgressModeDeploy || u.mode == ProgressModeDev {
+				u.skipped++
+				u.spinner.Suffix = fmt.Sprintf("  Deploying (%v skipped)...", u.skipped)
+			}
 			return
 		}
 
