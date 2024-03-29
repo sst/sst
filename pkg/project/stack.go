@@ -96,6 +96,7 @@ type StackEventStream = chan StackEvent
 
 var ErrStackRunFailed = fmt.Errorf("stack run had errors")
 var ErrStageNotFound = fmt.Errorf("stage not found")
+var ErrPassphraseInvalid = fmt.Errorf("passphrase invalid")
 
 func (s *stack) Run(ctx context.Context, input *StackInput) error {
 	slog.Info("running stack command", "cmd", input.Command)
@@ -131,7 +132,7 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 
 	secrets, err := provider.GetSecrets(s.project.home, s.project.app.Name, s.project.app.Stage)
 	if err != nil {
-		return fmt.Errorf("failed to list secrets: %w", err)
+		return ErrPassphraseInvalid
 	}
 
 	env, err := s.project.home.Env()

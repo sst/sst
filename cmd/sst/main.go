@@ -54,13 +54,14 @@ func main() {
 		telemetry.Track("cli.error", map[string]interface{}{
 			"error": errorMessage,
 		})
-		slog.Error("exited with error", "err", err)
 		if readableErr, ok := err.(*util.ReadableError); ok {
+			slog.Error("exited with error", "err", readableErr.Unwrap())
 			msg := readableErr.Error()
 			if msg != "" {
 				ui.Error(readableErr.Error())
 			}
 		} else {
+			slog.Error("exited with error", "err", err)
 			ui.Error("Unexpected error occurred. Please check the logs or run with --verbose for more details.")
 		}
 		os.Exit(1)
@@ -234,8 +235,8 @@ var Root = Command{
 					"The stage is a string that is used to prefix the resources in your app. This allows you to have multiple _environments_ of your app running in the same account.",
 					"",
 					":::tip",
-          "Changing the stage will redeploy your app to a new stage with new resources. The old resources will still be around in the old stage.",
-          ":::",
+					"Changing the stage will redeploy your app to a new stage with new resources. The old resources will still be around in the old stage.",
+					":::",
 					"",
 					"If the stage is not passed in, then the CLI will:",
 					"",
@@ -411,7 +412,7 @@ var Root = Command{
 					OnEvent: ui.StackEvent,
 				})
 				if err != nil {
-					return util.NewReadableError(err, "")
+					return err
 				}
 				return nil
 			},

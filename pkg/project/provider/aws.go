@@ -385,10 +385,11 @@ func (a *AwsProvider) setPassphrase(app, stage, passphrase string) error {
 	ssmClient := ssm.NewFromConfig(a.config)
 
 	_, err := ssmClient.PutParameter(context.TODO(), &ssm.PutParameterInput{
-		Name:      aws.String(a.pathForPassphrase(app, stage)),
-		Type:      ssmTypes.ParameterTypeSecureString,
-		Value:     aws.String(passphrase),
-		Overwrite: aws.Bool(false),
+		Name:        aws.String(a.pathForPassphrase(app, stage)),
+		Type:        ssmTypes.ParameterTypeSecureString,
+		Value:       aws.String(passphrase),
+		Description: aws.String("DO NOT DELETE STATE WILL BECOME UNRECOVERABLE"),
+		Overwrite:   aws.Bool(false),
 	})
 	return err
 }
