@@ -155,9 +155,6 @@ func (a *AwsProvider) Init(app string, stage string, args map[string]interface{}
 	if err != nil {
 		return err
 	}
-	if cfg.Region == "" {
-		cfg.Region = "us-east-1"
-	}
 	a.config = cfg
 
 	bootstrap, err := a.resolveBuckets()
@@ -311,6 +308,9 @@ func AwsResolveConfig(args map[string]interface{}) (aws.Config, error) {
 	_, err = cfg.Credentials.Retrieve(ctx)
 	if err != nil {
 		return aws.Config{}, err
+	}
+	if cfg.Region == "" {
+		cfg.Region = "us-east-1"
 	}
 	slog.Info("credentials found")
 	return cfg, nil
