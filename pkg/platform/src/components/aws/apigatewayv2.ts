@@ -10,11 +10,16 @@ import { Component, Prettify, Transform, transform } from "../component";
 import { Link } from "../link";
 import type { Input } from "../input";
 import { Function, FunctionArgs } from "./function";
-import { hashStringToPrettyString, sanitizeToPascalCase } from "../naming";
+import {
+  hashStringToPrettyString,
+  prefixName,
+  sanitizeToPascalCase,
+} from "../naming";
 import { VisibleError } from "../error";
 import { HostedZoneLookup } from "./providers/hosted-zone-lookup";
 import { DnsValidatedCertificate } from "./dns-validated-certificate";
 import { Hint } from "../hint";
+import { RETENTION } from "./logging";
 
 interface DomainArgs {
   /**
@@ -134,6 +139,25 @@ export interface ApiGatewayV2Args {
    */
   domain?: Input<string | Prettify<DomainArgs>>;
   /**
+   * Configure the access logs in CloudWatch.
+   * @default `&lcub;retention: "forever"&rcub;`
+   * @example
+   * ```js
+   * {
+   *   accessLog: {
+   *     retention: "1 week"
+   *   }
+   * }
+   * ```
+   */
+  accessLog?: Input<{
+    /**
+     * The duration the function logs are kept in CloudWatch.
+     * @default `forever`
+     */
+    retention?: Input<keyof typeof RETENTION>;
+  }>;
+  /**
    * [Transform](/docs/components#transform) how this component creates its underlying
    * resources.
    */
@@ -150,6 +174,10 @@ export interface ApiGatewayV2Args {
      * Transform the API Gateway HTTP API domain name resource.
      */
     domainName?: Transform<aws.apigatewayv2.DomainNameArgs>;
+    /**
+     * Transform the CloudWatch LogGroup resource used for access logs.
+     */
+    accessLog?: Transform<aws.cloudwatch.LogGroupArgs>;
   };
 }
 
@@ -287,6 +315,7 @@ export class ApiGatewayV2 extends Component implements Link.Linkable {
   private apigDomain?: aws.apigatewayv2.DomainName;
   private apiMapping?: Output<aws.apigatewayv2.ApiMapping>;
   private authorizers: Record<string, aws.apigatewayv2.Authorizer> = {};
+  private logGroup: aws.cloudwatch.LogGroup;
 
   constructor(
     name: string,
@@ -297,9 +326,11 @@ export class ApiGatewayV2 extends Component implements Link.Linkable {
 
     const parent = this;
 
+    const accessLog = normalizeAccessLog();
     const domain = normalizeDomain();
 
     const api = createApi();
+    const logGroup = createLogGroup();
     createStage();
 
     const zoneId = lookupHostedZoneId();
@@ -312,8 +343,16 @@ export class ApiGatewayV2 extends Component implements Link.Linkable {
     this.api = api;
     this.apigDomain = apigDomain;
     this.apiMapping = apiMapping;
+    this.logGroup = logGroup;
 
     Hint.register(this.urn, this.url);
+
+    function normalizeAccessLog() {
+      return output(args.accessLog).apply((accessLog) => ({
+        ...accessLog,
+        retention: accessLog?.retention ?? "forever",
+      }));
+    }
 
     function normalizeDomain() {
       if (!args.domain) return;
@@ -349,6 +388,19 @@ export class ApiGatewayV2 extends Component implements Link.Linkable {
       );
     }
 
+    function createLogGroup() {
+      return new aws.cloudwatch.LogGroup(
+        `${name}AccessLog`,
+        transform(args.transform?.accessLog, {
+          name: `/aws/vendedlogs/apis/${prefixName(64, name)}`,
+          retentionInDays: accessLog.apply(
+            (accessLog) => RETENTION[accessLog.retention],
+          ),
+        }),
+        { parent },
+      );
+    }
+
     function createStage() {
       new aws.apigatewayv2.Stage(
         `${name}Stage`,
@@ -356,6 +408,28 @@ export class ApiGatewayV2 extends Component implements Link.Linkable {
           apiId: api.id,
           autoDeploy: true,
           name: "$default",
+          accessLogSettings: {
+            destinationArn: logGroup.arn,
+            format: JSON.stringify({
+              // request info
+              requestTime: `"$context.requestTime"`,
+              requestId: `"$context.requestId"`,
+              httpMethod: `"$context.httpMethod"`,
+              path: `"$context.path"`,
+              routeKey: `"$context.routeKey"`,
+              status: `$context.status`, // integer value, do not wrap in quotes
+              responseLatency: `$context.responseLatency`, // integer value, do not wrap in quotes
+              // integration info
+              integrationRequestId: `"$context.integration.requestId"`,
+              integrationStatus: `"$context.integration.status"`,
+              integrationLatency: `"$context.integration.latency"`,
+              integrationServiceStatus: `"$context.integration.integrationStatus"`,
+              // caller info
+              ip: `"$context.identity.sourceIp"`,
+              userAgent: `"$context.identity.userAgent"`,
+              //cognitoIdentityId:`"$context.identity.cognitoIdentityId"`, // not supported in us-west-2 region
+            }),
+          },
         }),
         { parent },
       );
