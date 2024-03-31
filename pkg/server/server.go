@@ -48,6 +48,8 @@ type StateEvent struct {
 	State *State
 }
 
+type DeployRequestedEvent struct{}
+
 func resolveServerFile(cfgPath, stage string) string {
 	return filepath.Join(project.ResolveWorkingDir(cfgPath), stage+".server")
 }
@@ -154,6 +156,10 @@ func (s *Server) Start(parentContext context.Context) error {
 		if atomic.LoadInt64(&count) == 1 {
 			cancel()
 		}
+	})
+
+	mux.HandleFunc(("/api/deploy"), func(w http.ResponseWriter, r *http.Request) {
+		bus.Publish(&DeployRequestedEvent{})
 	})
 
 	s.server = &http.Server{

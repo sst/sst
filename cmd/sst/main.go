@@ -4,9 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	flag "github.com/spf13/pflag"
 	"io"
 	"log/slog"
+	"net/http"
 	"os"
 	"os/exec"
 	"os/signal"
@@ -15,6 +15,8 @@ import (
 	"strings"
 	"syscall"
 	"time"
+
+	flag "github.com/spf13/pflag"
 
 	"github.com/briandowns/spinner"
 	"github.com/fatih/color"
@@ -646,6 +648,7 @@ var Root = Command{
 						if err != nil {
 							return util.NewReadableError(err, "Could not set secret")
 						}
+						http.Post("http://localhost:13557/api/deploy", "application/json", strings.NewReader("{}"))
 						ui.Success(fmt.Sprintf("Set \"%s\" for stage \"%s\". Run \"sst deploy\" to update.", key, p.App().Stage))
 						return nil
 					},
@@ -717,6 +720,7 @@ var Root = Command{
 						if err != nil {
 							return util.NewReadableError(err, "Could not set secret")
 						}
+						http.Post("http://localhost:13557/api/deploy", "application/json", strings.NewReader("{}"))
 						ui.Success(fmt.Sprintf("Removed \"%s\" for stage \"%s\"", key, p.App().Stage))
 						return nil
 					},

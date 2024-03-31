@@ -23,6 +23,7 @@ func startDeployer(ctx context.Context, p *project.Project) (util.CleanupFunc, e
 			trigger <- true
 		}
 	})
+	deploRequested := bus.Listen(ctx, &DeployRequestedEvent{})
 
 	wg := sync.WaitGroup{}
 	wg.Add(1)
@@ -49,6 +50,8 @@ func startDeployer(ctx context.Context, p *project.Project) (util.CleanupFunc, e
 			select {
 			case <-ctx.Done():
 				return
+			case <-deploRequested:
+				continue
 			case <-trigger:
 				continue
 			}
