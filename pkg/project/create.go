@@ -85,6 +85,10 @@ func Create(templateName string, home string) error {
 
 			b, err := os.ReadFile(patchStep.File)
 			if err != nil {
+				if os.IsNotExist(err) {
+					slog.Info("file does not exist, ignoring patch", "file", patchStep.File)
+					continue
+				}
 				return err
 			}
 
