@@ -20,8 +20,6 @@ export default $config({
       ],
     });
 
-    new sst.Secret("MySecret").value.apply(console.log);
-
     return {
       url: fn.url,
     };

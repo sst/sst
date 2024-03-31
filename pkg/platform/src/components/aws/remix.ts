@@ -297,7 +297,7 @@ export class Remix extends Component implements Link.Linkable {
     args: RemixArgs = {},
     opts: ComponentResourceOptions = {},
   ) {
-    super("sst:aws:Remix", name, args, opts);
+    super(__pulumiType, name, args, opts);
 
     const parent = this;
     const edge = normalizeEdge();
@@ -601,3 +601,7 @@ export class Remix extends Component implements Link.Linkable {
     };
   }
 }
+
+const __pulumiType = "sst:aws:Remix";
+// @ts-expect-error
+Remix.__pulumiType = __pulumiType;

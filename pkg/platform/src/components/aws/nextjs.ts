@@ -419,7 +419,7 @@ export class Nextjs extends Component implements Link.Linkable {
     args: NextjsArgs = {},
     opts: ComponentResourceOptions = {},
   ) {
-    super("sst:aws:Nextjs", name, args, opts);
+    super(__pulumiType, name, args, opts);
 
     let _routes: Output<
       ({
@@ -1295,3 +1295,7 @@ export class Nextjs extends Component implements Link.Linkable {
     };
   }
 }
+
+const __pulumiType = "sst:aws:Nextjs";
+// @ts-expect-error
+Nextjs.__pulumiType = __pulumiType;

@@ -22,7 +22,7 @@ export class Auth extends Component implements Link.Linkable {
   private readonly _authenticator: Output<Function>;
 
   constructor(name: string, args: AuthArgs, opts?: ComponentResourceOptions) {
-    super("sst:aws:Auth", name, args, opts);
+    super(__pulumiType, name, args, opts);
 
     this._key = new PrivateKey(`${name}Keypair`, {
       algorithm: "RSA",
@@ -67,3 +67,7 @@ export class Auth extends Component implements Link.Linkable {
     return [];
   }
 }
+
+const __pulumiType = "sst:aws:Auth";
+// @ts-expect-error
+Auth.__pulumiType = __pulumiType;

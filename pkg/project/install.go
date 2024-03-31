@@ -123,7 +123,7 @@ func (p *Project) writeTypes() error {
 	for raw := range p.app.Providers {
 		name := cleanProviderName(raw)
 		pkg := getProviderPackage(raw)
-		file.WriteString(`import _` + name + `, { ProviderArgs as _` + name + `Args } from "` + pkg + `";` + "\n")
+		file.WriteString(`import * as _` + name + ` from "` + pkg + `";` + "\n")
 	}
 
 	file.WriteString("\n\n")
@@ -138,7 +138,7 @@ func (p *Project) writeTypes() error {
 	file.WriteString(`    providers?: {` + "\n")
 	for raw := range p.app.Providers {
 		name := cleanProviderName(raw)
-		file.WriteString(`      "` + raw + `"?:  (_` + name + `Args & { version?: string }) | boolean;` + "\n")
+		file.WriteString(`      "` + raw + `"?:  (_` + name + `.ProviderArgs & { version?: string }) | boolean;` + "\n")
 	}
 	file.WriteString(`    }` + "\n")
 	file.WriteString(`  }` + "\n")

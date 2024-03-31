@@ -158,7 +158,7 @@ export class SnsTopic
     args: SnsTopicArgs = {},
     opts: ComponentResourceOptions = {},
   ) {
-    super("sst:aws:SnsTopic", name, args, opts);
+    super(__pulumiType, name, args, opts);
 
     const parent = this;
     const fifo = normalizeFifo();
@@ -311,3 +311,7 @@ export class SnsTopic
     ];
   }
 }
+
+const __pulumiType = "sst:aws:SnsTopic";
+// @ts-expect-error
+SnsTopic.__pulumiType = __pulumiType;

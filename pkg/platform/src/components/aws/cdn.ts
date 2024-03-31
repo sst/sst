@@ -165,7 +165,7 @@ export class Cdn extends Component {
   private _domainUrl?: Output<string>;
 
   constructor(name: string, args: CdnArgs, opts?: ComponentResourceOptions) {
-    super("sst:aws:CDN", name, args, opts);
+    super(pulumiType, name, args, opts);
     const parent = this;
 
     const domain = normalizeDomain();
@@ -259,7 +259,7 @@ export class Cdn extends Component {
             ? {
                 acmCertificateArn: certificate.arn,
                 sslSupportMethod: "sni-only",
-                minimumProtocolVersion: "TLSv1.2_2021"
+                minimumProtocolVersion: "TLSv1.2_2021",
               }
             : {
                 cloudfrontDefaultCertificate: true,
@@ -358,3 +358,7 @@ export class Cdn extends Component {
     };
   }
 }
+
+const pulumiType = "sst:aws:CDN";
+// @ts-expect-error
+Cdn.__pulumiType = pulumiType;

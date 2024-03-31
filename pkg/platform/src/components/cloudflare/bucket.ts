@@ -75,7 +75,7 @@ export class Bucket extends Component {
     args?: BucketArgs,
     opts?: ComponentResourceOptions,
   ) {
-    super("sst:cloudflare:Bucket", name, args, opts);
+    super(__pulumiType, name, args, opts);
 
     const parent = this;
 
@@ -114,3 +114,7 @@ export class Bucket extends Component {
     };
   }
 }
+
+const __pulumiType = "sst:cloudflare:Bucket";
+// @ts-expect-error
+Bucket.__pulumiType = __pulumiType;

@@ -31,7 +31,7 @@ export class DnsValidatedCertificate extends Component {
     args: DnsValidatedCertificateArgs,
     opts?: ComponentResourceOptions,
   ) {
-    super("sst:aws:Certificate", name, args, opts);
+    super(__pulumiType, name, args, opts);
 
     const parent = this;
     const { domainName, alternativeNames, zoneId } = args;
@@ -82,3 +82,7 @@ export class DnsValidatedCertificate extends Component {
     return this.certificateValidation.certificateArn;
   }
 }
+
+const __pulumiType = "sst:aws:Certificate";
+// @ts-expect-error
+DnsValidatedCertificate.__pulumiType = __pulumiType;

@@ -322,7 +322,7 @@ export class ApiGatewayV2 extends Component implements Link.Linkable {
     args: ApiGatewayV2Args = {},
     opts: ComponentResourceOptions = {},
   ) {
-    super("sst:aws:ApiGatewayV2", name, args, opts);
+    super(__pulumiType, name, args, opts);
 
     const parent = this;
 
@@ -797,3 +797,7 @@ export class ApiGatewayV2 extends Component implements Link.Linkable {
     };
   }
 }
+
+const __pulumiType = "sst:aws:ApiGatewayV2";
+// @ts-expect-error
+ApiGatewayV2.__pulumiType = __pulumiType;

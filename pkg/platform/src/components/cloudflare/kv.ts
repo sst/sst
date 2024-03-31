@@ -31,7 +31,7 @@ export class Kv extends Component {
   private namespace: cloudflare.WorkersKvNamespace;
 
   constructor(name: string, args?: KvArgs, opts?: ComponentResourceOptions) {
-    super("sst:cloudflare:Kv", name, args, opts);
+    super(__pulumiType, name, args, opts);
 
     const parent = this;
 
@@ -70,3 +70,7 @@ export class Kv extends Component {
     };
   }
 }
+
+const __pulumiType = "sst:cloudflare:Kv";
+// @ts-expect-error
+Kv.__pulumiType = __pulumiType;

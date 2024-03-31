@@ -288,7 +288,7 @@ export class SolidStart extends Component implements Link.Linkable {
     args: SolidStartArgs = {},
     opts: ComponentResourceOptions = {},
   ) {
-    super("sst:aws:SolidStart", name, args, opts);
+    super(__pulumiType, name, args, opts);
 
     const parent = this;
     const { sitePath, partition } = prepare(args, opts);
@@ -465,3 +465,7 @@ export class SolidStart extends Component implements Link.Linkable {
     };
   }
 }
+
+const __pulumiType = "sst:aws:SolidStart";
+// @ts-expect-error
+SolidStart.__pulumiType = __pulumiType;

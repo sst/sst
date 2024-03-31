@@ -235,7 +235,7 @@ export class Worker extends Component {
   private workerDomain?: cf.WorkerDomain;
 
   constructor(name: string, args: WorkerArgs, opts?: ComponentResourceOptions) {
-    super("sst:cloudflare:Worker", name, args, opts);
+    super(__pulumiType, name, args, opts);
 
     const parent = this;
 
@@ -415,3 +415,7 @@ export class Worker extends Component {
     };
   }
 }
+
+const __pulumiType = "sst:cloudflare:Worker";
+// @ts-expect-error
+Worker.__pulumiType = __pulumiType;

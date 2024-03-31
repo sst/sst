@@ -888,7 +888,7 @@ export class Function
     args: FunctionArgs,
     opts?: ComponentResourceOptions,
   ) {
-    super("sst:aws:Function", name, args, opts);
+    super(__pulumiType, name, args, opts);
 
     const parent = this;
     const dev = output(args.live).apply((v) => $dev && v !== false);
@@ -1561,3 +1561,7 @@ export class Function
     ];
   }
 }
+
+const __pulumiType = "sst:aws:Function";
+// @ts-expect-error
+Function.__pulumiType = __pulumiType;

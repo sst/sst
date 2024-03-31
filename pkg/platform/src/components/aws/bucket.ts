@@ -296,7 +296,7 @@ export class Bucket
     args?: BucketArgs,
     opts?: ComponentResourceOptions,
   ) {
-    super("sst:aws:Bucket", name, args, opts);
+    super(__pulumiType, name, args, opts);
 
     const parent = this;
     const publicAccess = normalizePublicAccess();
@@ -592,3 +592,7 @@ export class Bucket
     ];
   }
 }
+
+const __pulumiType = "sst:aws:Bucket";
+// @ts-expect-error
+Bucket.__pulumiType = __pulumiType;

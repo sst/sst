@@ -169,7 +169,7 @@ export class Postgres
     args?: PostgresArgs,
     opts?: ComponentResourceOptions,
   ) {
-    super("sst:aws:Postgres", name, args, opts);
+    super(__pulumiType, name, args, opts);
 
     const parent = this;
     const scaling = normalizeScaling();
@@ -295,3 +295,7 @@ export class Postgres
     ];
   }
 }
+
+const __pulumiType = "sst:aws:Postgres";
+// @ts-expect-error
+Postgres.__pulumiType = __pulumiType;

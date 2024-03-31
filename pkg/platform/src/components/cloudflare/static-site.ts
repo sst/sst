@@ -249,7 +249,7 @@ export class StaticSite extends Component implements Link.Linkable {
     args: StaticSiteArgs = {},
     opts: ComponentResourceOptions = {},
   ) {
-    super("sst:cloudflare:StaticSite", name, args, opts);
+    super(__pulumiType, name, args, opts);
 
     const parent = this;
     const { sitePath, environment, indexPage } = prepare(args);
@@ -472,3 +472,7 @@ export class StaticSite extends Component implements Link.Linkable {
     };
   }
 }
+
+const __pulumiType = "sst:cloudflare:StaticSite";
+// @ts-expect-error
+StaticSite.__pulumiType = __pulumiType;

@@ -157,7 +157,7 @@ export class Router extends Component implements Link.Linkable {
     args: RouterArgs,
     opts: ComponentResourceOptions = {},
   ) {
-    super("sst:aws:Router", name, args, opts);
+    super(__pulumiType, name, args, opts);
 
     const parent = this;
 
@@ -325,3 +325,7 @@ export class Router extends Component implements Link.Linkable {
     };
   }
 }
+
+const __pulumiType = "sst:aws:Router";
+// @ts-expect-error
+Router.__pulumiType = __pulumiType;

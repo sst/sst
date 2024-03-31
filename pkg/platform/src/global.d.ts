@@ -198,6 +198,21 @@ declare global {
   export const $app: Simplify<$APP>;
 
   /**
+   * Register a transformation function that will be called for each resource of the given type.
+   * Useful to set global defaults.
+   *
+   * @example
+   * For example, to set a default runtime for all functions:
+   *
+   * ```ts
+   * $transform(sst.aws.Function, (args, opts) => {
+   *   args.runtime = "nodejs18.x";
+   * })
+   * ```
+   */
+  export const $transform: typeof import("./components/transform").$transform;
+
+  /**
    * Returns `true` if the app is running in `sst dev`.
    */
   export const $dev: boolean;

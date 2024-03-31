@@ -157,7 +157,7 @@ export class Queue
   private isSubscribed: boolean = false;
 
   constructor(name: string, args?: QueueArgs, opts?: ComponentResourceOptions) {
-    super("sst:aws:Queue", name, args, opts);
+    super(__pulumiType, name, args, opts);
 
     const parent = this;
     const fifo = normalizeFifo();
@@ -322,3 +322,7 @@ export class Queue
     ];
   }
 }
+
+const __pulumiType = "sst:aws:Queue";
+// @ts-expect-error
+Queue.__pulumiType = __pulumiType;

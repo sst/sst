@@ -213,7 +213,7 @@ export class Remix extends Component implements Link.Linkable {
     args: RemixArgs = {},
     opts: ComponentResourceOptions = {},
   ) {
-    super("sst:cloudflare:Remix", name, args, opts);
+    super(__pulumiType, name, args, opts);
 
     const parent = this;
     const { sitePath } = prepare(args);
@@ -464,3 +464,6 @@ export class Remix extends Component implements Link.Linkable {
     };
   }
 }
+const __pulumiType = "sst:cloudflare:Remix";
+// @ts-expect-error
+Remix.__pulumiType = __pulumiType;

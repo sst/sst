@@ -132,7 +132,7 @@ export class Vector
     args?: VectorArgs,
     opts?: ComponentResourceOptions,
   ) {
-    super("sst:aws:Vector", name, args, opts);
+    super(__pulumiType, name, args, opts);
 
     const parent = this;
     const model = normalizeModel();
@@ -333,3 +333,7 @@ export class Vector
     ];
   }
 }
+
+const __pulumiType = "sst:aws:Vector";
+// @ts-expect-error
+Vector.__pulumiType = __pulumiType;

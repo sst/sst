@@ -343,7 +343,7 @@ export class Dynamo
     args: DynamoArgs,
     opts: ComponentResourceOptions = {},
   ) {
-    super("sst:aws:Dynamo", name, args, opts);
+    super(__pulumiType, name, args, opts);
 
     const parent = this;
 
@@ -553,3 +553,7 @@ export class Dynamo
     ];
   }
 }
+
+const __pulumiType = "sst:aws:Dynamo";
+// @ts-expect-error
+Dynamo.__pulumiType = __pulumiType;

@@ -104,7 +104,7 @@ export class Cron extends Component {
   private target: aws.cloudwatch.EventTarget;
 
   constructor(name: string, args: CronArgs, opts?: ComponentResourceOptions) {
-    super("sst:aws:Cron", name, args, opts);
+    super(__pulumiType, name, args, opts);
 
     const parent = this;
 
@@ -178,3 +178,7 @@ export class Cron extends Component {
     };
   }
 }
+
+const __pulumiType = "sst:aws:Cron";
+// @ts-expect-error
+Cron.__pulumiType = __pulumiType;

@@ -297,7 +297,7 @@ export class Astro extends Component implements Link.Linkable {
     args: AstroArgs = {},
     opts: ComponentResourceOptions = {},
   ) {
-    super("sst:aws:Astro", name, args, opts);
+    super(__pulumiType, name, args, opts);
 
     const parent = this;
     const { sitePath, partition, region } = prepare(args, opts);
@@ -605,6 +605,9 @@ export class Astro extends Component implements Link.Linkable {
     };
   }
 }
+const __pulumiType = "sst:aws:Astro";
+// @ts-expect-error
+Astro.__pulumiType = __pulumiType;
 
 type TreeNode = {
   branches: Record<string, TreeNode>;

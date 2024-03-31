@@ -48,7 +48,7 @@ export class HttpsRedirect extends Component {
     args: HttpsRedirectArgs,
     opts?: ComponentResourceOptions,
   ) {
-    super("sst:aws:HttpsRedirect", name, args, opts);
+    super(__pulumiType, name, args, opts);
 
     const parent = this;
 
@@ -148,3 +148,7 @@ export class HttpsRedirect extends Component {
     });
   }
 }
+
+const __pulumiType = "sst:aws:HttpsRedirect";
+// @ts-expect-error
+HttpsRedirect.__pulumiType = __pulumiType;
