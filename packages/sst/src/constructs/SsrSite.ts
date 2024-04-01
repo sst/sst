@@ -821,7 +821,7 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
                 }, {} as Record<string, BehaviorOptions>),
               ...(cdk?.distribution?.additionalBehaviors || {}),
             },
-            errorResponses: plan.errorResponses ?? cdk?.distribution.errorResponses,
+            errorResponses: plan.errorResponses ?? cdk?.distribution?.errorResponses,
           },
         },
       });
