@@ -5,6 +5,9 @@ export default $config({
       name: "test",
       removal: input?.stage === "production" ? "retain" : "remove",
       home: "aws",
+      providers: {
+        cloudflare: true,
+      },
     };
   },
   async run() {
@@ -19,9 +22,13 @@ export default $config({
         },
       ],
     });
-
+    const worker = new sst.cloudflare.Worker("MyWorker", {
+      handler: "./src/worker.ts",
+      url: true,
+    });
     return {
       url: fn.url,
+      worker: worker.url,
     };
   },
 });
