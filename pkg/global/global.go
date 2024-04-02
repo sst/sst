@@ -16,6 +16,7 @@ import (
 )
 
 const PULUMI_VERSION = "v3.112.0"
+const BUN_VERSION = "1.1.0"
 
 var configDir = (func() string {
 	home, err := os.UserConfigDir()
@@ -132,6 +133,15 @@ func NeedsBun() bool {
 	if _, err := os.Stat(path); err != nil {
 		return true
 	}
+	cmd := exec.Command(path, "--version")
+	output, err := cmd.Output()
+	if err != nil {
+		return true
+	}
+	version := strings.TrimSpace(string(output))
+	if version != BUN_VERSION {
+		return true
+	}
 	return false
 }
 
@@ -157,7 +167,7 @@ func InstallBun() error {
 		return fmt.Errorf("unsupported platform: %s %s", goos, arch)
 	}
 
-	url := "https://github.com/oven-sh/bun/releases/latest/download/" + filename
+	url := "https://github.com/oven-sh/bun/releases//download/bun-v" + BUN_VERSION + "/" + filename
 	slog.Info("bun downloading", "url", url)
 	response, err := http.Get(url)
 	if err != nil {
