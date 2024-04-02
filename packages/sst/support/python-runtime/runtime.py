@@ -35,7 +35,7 @@ class Context(object):
         self.log_stream_name = log_stream_name
 
     def get_remaining_time_in_millis(self):
-        return int(max(self.deadline_ms - int(round(time() * 1000)), 0))
+        return int(max(int(self.deadline_ms) - int(round(time() * 1000)), 0))
 
     def log(self):
         return sys.stdout.write
