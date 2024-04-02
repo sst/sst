@@ -378,15 +378,15 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 			}
 		}
 
-		warpsOutput, ok := outputs["_warps"]
-		if ok {
-			warps := warpsOutput.(map[string]interface{})
-			for key, value := range warps {
-				data, _ := json.Marshal(value)
-				var definition Warp
-				json.Unmarshal(data, &definition)
-				complete.Warps[key] = definition
+		for _, resource := range complete.Resources {
+			outputs, ok := resource.Outputs["_live"].(map[string]interface{})
+			if !ok {
+				continue
 			}
+			data, _ := json.Marshal(outputs)
+			var definition Warp
+			json.Unmarshal(data, &definition)
+			complete.Warps[definition.FunctionID] = definition
 		}
 
 		receiversOutput, ok := outputs["_receivers"]

@@ -1,6 +1,5 @@
 import { Link } from "../components/link";
 import { Hint } from "../components/hint";
-import { Warp } from "../components/warp";
 import {
   ResourceTransformationArgs,
   interpolate,
@@ -35,11 +34,9 @@ export async function run(program: automation.PulumiFn) {
 
   Hint.reset();
   Link.reset();
-  Warp.reset();
   const outputs = (await program()) || {};
   outputs._links = Link.list();
   outputs._hints = Hint.list();
-  outputs._warps = Warp.list();
   outputs._receivers = Link.Receiver.list();
   return outputs;
 }
