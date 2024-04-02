@@ -261,9 +261,8 @@ export class StaticSite extends Component implements Link.Linkable {
     this.assets = storage;
     this.router = worker;
 
-    cleanup(this.urn, this.url as Output<string>, sitePath, environment);
-
     this.registerOutputs({
+      ...cleanup(this.url as Output<string>, sitePath, environment),
       _metadata: {
         path: sitePath,
         environment,

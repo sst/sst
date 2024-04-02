@@ -32,12 +32,9 @@ export async function run(program: automation.PulumiFn) {
     ];
   });
 
-  Hint.reset();
   Link.reset();
   const outputs = (await program()) || {};
   outputs._links = Link.list();
-  outputs._hints = Hint.list();
-  outputs._receivers = Link.Receiver.list();
   return outputs;
 }
 

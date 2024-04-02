@@ -927,11 +927,14 @@ export class Function
     this.logGroup = logGroup;
     this.fnUrl = fnUrl;
 
-    all([args.bundle, args.handler]).apply(([bundle, handler]) => {
-      Link.Receiver.register(bundle || handler, links, environment);
-    });
-
     this.registerOutputs({
+      _receiver: all([args.bundle, args.handler]).apply(
+        ([bundle, handler]) => ({
+          directory: bundle || handler,
+          links,
+          environment,
+        }),
+      ),
       _live: all([
         dev,
         name,

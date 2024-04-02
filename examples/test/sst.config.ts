@@ -26,6 +26,7 @@ export default $config({
       handler: "./src/worker.ts",
       url: true,
     });
+    new sst.aws.ApiGatewayV2("MyApi");
     return {
       url: fn.url,
       worker: worker.url,
