@@ -571,7 +571,7 @@ async function generateTsDoc() {
       for (const m of methods) {
         lines.push(
           ``,
-          `### ${m.flags.isStatic ? `${useClassName()}.` : ""}${m.name}`,
+          `### ${m.flags.isStatic ? "static " : ""}${m.name}`,
           `<Segment>`,
           `<Section type="signature">`,
           "```ts",
