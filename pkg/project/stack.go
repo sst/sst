@@ -369,19 +369,20 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 		}
 
 		for _, resource := range complete.Resources {
-			if outputs, ok := resource.Outputs["_live"].(map[string]interface{}); ok {
-				data, _ := json.Marshal(outputs)
+			outputs := decrypt(resource.Outputs)
+			if match, ok := outputs["_live"].(map[string]interface{}); ok {
+				data, _ := json.Marshal(match)
 				var entry Warp
 				json.Unmarshal(data, &entry)
 				complete.Warps[entry.FunctionID] = entry
 			}
-			if outputs, ok := resource.Outputs["_receiver"].(map[string]interface{}); ok {
-				data, _ := json.Marshal(outputs)
+			if match, ok := outputs["_receiver"].(map[string]interface{}); ok {
+				data, _ := json.Marshal(match)
 				var entry Receiver
 				json.Unmarshal(data, &entry)
 				complete.Receivers[entry.Directory] = entry
 			}
-			if hint, ok := resource.Outputs["_hint"].(string); ok {
+			if hint, ok := outputs["_hint"].(string); ok {
 				complete.Hints[string(resource.URN)] = hint
 			}
 		}
