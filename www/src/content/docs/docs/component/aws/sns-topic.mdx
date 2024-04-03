@@ -104,7 +104,7 @@ Configure the subscription.
 </Section>
 
 <InlineSection>
-**Returns** [<code class="type">SnsTopicSubscriber</code>](#snstopicsubscriber)
+**Returns** <code class="primitive">Object</code>
 </InlineSection>
 Subscribes to this SNS Topic.
 
@@ -132,7 +132,44 @@ topic.subscribe({
 ```
 </Segment>
 
-### SnsTopic.subscribe
+### subscribeQueue
+<Segment>
+<Section type="signature">
+```ts
+subscribeQueue(queueArn, args?)
+```
+</Section>
+
+<Section type="parameters">
+#### Parameters
+- <p><code class="key">queueArn</code> <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code></p>
+The ARN of the queue that'll be notified.
+- <p><code class="key">args?</code> [<code class="type">SnsTopicSubscribeArgs</code>](#snstopicsubscribeargs)</p>
+Configure the subscription.
+</Section>
+
+<InlineSection>
+**Returns** <code class="primitive">Object</code>
+</InlineSection>
+Subscribes an SQS Queue to this SNS Topic.
+
+```js
+const queueArn = "arn:aws:sqs:us-east-1:123456789012:MyQueue";
+topic.subscribeQueue(queueArn);
+```
+
+Add a filter to the subscription.
+
+```js
+topic.subscribeQueue(queueArn, {
+  filter: {
+    price_usd: [{numeric: [">=", 100]}]
+  }
+});
+```
+</Segment>
+
+### static subscribe
 <Segment>
 <Section type="signature">
 ```ts
@@ -151,7 +188,7 @@ Configure the subscription.
 </Section>
 
 <InlineSection>
-**Returns** [<code class="type">SnsTopicSubscriber</code>](#snstopicsubscriber)
+**Returns** <code class="primitive">Object</code>
 </InlineSection>
 Subscribes to an existing SNS Topic.
 
@@ -176,6 +213,46 @@ Customize the subscriber function.
 sst.aws.SnsTopic.subscribe(topicArn, {
   handler: "src/subscriber.handler",
   timeout: "60 seconds"
+});
+```
+</Segment>
+
+### static subscribeQueue
+<Segment>
+<Section type="signature">
+```ts
+subscribeQueue(topicArn, queueArn, args?)
+```
+</Section>
+
+<Section type="parameters">
+#### Parameters
+- <p><code class="key">topicArn</code> <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code></p>
+The ARN of the SNS Topic to subscribe to.
+- <p><code class="key">queueArn</code> <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code></p>
+The ARN of the queue that'll be notified.
+- <p><code class="key">args?</code> [<code class="type">SnsTopicSubscribeArgs</code>](#snstopicsubscribeargs)</p>
+Configure the subscription.
+</Section>
+
+<InlineSection>
+**Returns** <code class="primitive">Object</code>
+</InlineSection>
+Subscribes to an existing SNS Topic.
+
+```js
+const topicArn = "arn:aws:sns:us-east-1:123456789012:MyTopic";
+const queueArn = "arn:aws:sqs:us-east-1:123456789012:MyQueue";
+sst.aws.SnsTopic.subscribeQueue(topicArn, queueArn);
+```
+
+Add a filter to the subscription.
+
+```js
+sst.aws.SnsTopic.subscribeQueue(topicArn, queueArn, {
+  filter: {
+    price_usd: [{numeric: [">=", 100]}]
+  }
 });
 ```
 </Segment>
@@ -283,6 +360,60 @@ Transform the SNS Topic resource.
 
 </Segment>
 
+## SnsTopicFunctionSubscriber
+### function
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Output</code><code class="symbol">&lt;</code>[<code class="type">Function</code>](/docs/component/aws/function/)<code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+The Lambda function.
+
+</Segment>
+### permission
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Output</code><code class="symbol">&lt;</code>[<code class="type">Permission</code>](https://www.pulumi.com/registry/packages/aws/api-docs/lambda/permission/)<code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+The Lambda permission.
+
+</Segment>
+### subscription
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Output</code><code class="symbol">&lt;</code>[<code class="type">TopicSubscription</code>](https://www.pulumi.com/registry/packages/aws/api-docs/sns/topicsubscription/)<code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+The SNS topic subscription.
+
+</Segment>
+
+## SnsTopicQueueSubscriber
+### policy
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Output</code><code class="symbol">&lt;</code>[<code class="type">QueuePolicy</code>](https://www.pulumi.com/registry/packages/aws/api-docs/sqs/queuepolicy/)<code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+The SQS queue policy.
+
+</Segment>
+### subscription
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Output</code><code class="symbol">&lt;</code>[<code class="type">TopicSubscription</code>](https://www.pulumi.com/registry/packages/aws/api-docs/sns/topicsubscription/)<code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+The SNS topic subscription.
+
+</Segment>
+
 ## SnsTopicSubscribeArgs
 ### filter?
 <Segment>
@@ -291,7 +422,7 @@ Transform the SNS Topic resource.
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Record</code><code class="symbol">&lt;</code><code class="primitive">string</code>, <code class="primitive">any</code><code class="symbol">&gt;</code><code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
-Filter the messages that'll be processed by the `subscriber` function.
+Filter the messages that'll be processed by the subscriber.
 
 If any single property in the filter doesn't match
 an attribute assigned to the message, then the policy rejects the message.
@@ -351,38 +482,6 @@ resources.
 </InlineSection>
 </Section>
 Transform the SNS Topic Subscription resource.
-
-</Segment>
-
-## SnsTopicSubscriber
-### function
-<Segment>
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">Output</code><code class="symbol">&lt;</code>[<code class="type">Function</code>](/docs/component/aws/function/)<code class="symbol">&gt;</code>
-</InlineSection>
-</Section>
-The Lambda function.
-
-</Segment>
-### permission
-<Segment>
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">Output</code><code class="symbol">&lt;</code>[<code class="type">Permission</code>](https://www.pulumi.com/registry/packages/aws/api-docs/lambda/permission/)<code class="symbol">&gt;</code>
-</InlineSection>
-</Section>
-The Lambda permission.
-
-</Segment>
-### subscription
-<Segment>
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">Output</code><code class="symbol">&lt;</code>[<code class="type">TopicSubscription</code>](https://www.pulumi.com/registry/packages/aws/api-docs/sns/topicsubscription/)<code class="symbol">&gt;</code>
-</InlineSection>
-</Section>
-The SNS topic subscription.
 
 </Segment>
 </div>

@@ -9,12 +9,12 @@ export default $config({
     };
   },
   async run() {
+    const queue = new sst.aws.Queue("MyQueue");
+    queue.subscribe("subscriber.handler");
+
     const topic = new sst.aws.SnsTopic("MyTopic");
-    topic.subscribe("subscriber.handler", {
-      filter: {
-        foo: ["bar"],
-      },
-    });
+    topic.subscribe("subscriber.handler", {});
+    topic.subscribeQueue(queue.arn);
 
     const app = new sst.aws.Function("MyApp", {
       handler: "publisher.handler",

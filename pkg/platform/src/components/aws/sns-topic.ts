@@ -6,6 +6,7 @@ import type { Input } from "../input";
 import { Function, FunctionArgs } from "./function";
 import { hashStringToPrettyString, sanitizeToPascalCase } from "../naming";
 import { VisibleError } from "../error";
+import { parseQueueArn, parseTopicArn } from "./helpers/arn";
 
 export interface SnsTopicArgs {
   /**
@@ -38,7 +39,7 @@ export interface SnsTopicArgs {
 
 export interface SnsTopicSubscribeArgs {
   /**
-   * Filter the messages that'll be processed by the `subscriber` function.
+   * Filter the messages that'll be processed by the subscriber.
    *
    * If any single property in the filter doesn't match
    * an attribute assigned to the message, then the policy rejects the message.
@@ -92,7 +93,7 @@ export interface SnsTopicSubscribeArgs {
   };
 }
 
-export interface SnsTopicSubscriber {
+export interface SnsTopicFunctionSubscriber {
   /**
    * The Lambda function.
    */
@@ -101,6 +102,17 @@ export interface SnsTopicSubscriber {
    * The Lambda permission.
    */
   permission: Output<aws.lambda.Permission>;
+  /**
+   * The SNS topic subscription.
+   */
+  subscription: Output<aws.sns.TopicSubscription>;
+}
+
+export interface SnsTopicQueueSubscriber {
+  /**
+   * The SQS queue policy.
+   */
+  policy: Output<aws.sqs.QueuePolicy>;
   /**
    * The SNS topic subscription.
    */
@@ -260,7 +272,7 @@ export class SnsTopic
     subscriber: string | FunctionArgs,
     args: SnsTopicSubscribeArgs = {},
   ) {
-    return SnsTopic._subscribe(
+    return SnsTopic._subscribeFunction(
       this.constructorName,
       this.arn,
       subscriber,
@@ -315,10 +327,10 @@ export class SnsTopic
       return topicName;
     });
 
-    return this._subscribe(topicName, topicArn, subscriber, args);
+    return this._subscribeFunction(topicName, topicArn, subscriber, args);
   }
 
-  private static _subscribe(
+  private static _subscribeFunction(
     name: Input<string>,
     topicArn: Input<string>,
     subscriber: string | FunctionArgs,
@@ -373,7 +385,140 @@ export class SnsTopic
       function: ret.fn,
       permission: ret.permission,
       subscription: ret.subscription,
-    } as SnsTopicSubscriber;
+    } satisfies SnsTopicFunctionSubscriber;
+  }
+
+  /**
+   * Subscribes an SQS Queue to this SNS Topic.
+   *
+   * @param queueArn The ARN of the queue that'll be notified.
+   * @param args Configure the subscription.
+   *
+   * @example
+   *
+   * ```js
+   * const queueArn = "arn:aws:sqs:us-east-1:123456789012:MyQueue";
+   * topic.subscribeQueue(queueArn);
+   * ```
+   *
+   * Add a filter to the subscription.
+   *
+   * ```js
+   * topic.subscribeQueue(queueArn, {
+   *   filter: {
+   *     price_usd: [{numeric: [">=", 100]}]
+   *   }
+   * });
+   * ```
+   */
+  public subscribeQueue(
+    queueArn: Input<string>,
+    args: SnsTopicSubscribeArgs = {},
+  ) {
+    return SnsTopic._subscribeQueue(
+      this.constructorName,
+      this.arn,
+      queueArn,
+      args,
+    );
+  }
+
+  /**
+   * Subscribes to an existing SNS Topic.
+   *
+   * @param topicArn The ARN of the SNS Topic to subscribe to.
+   * @param queueArn The ARN of the queue that'll be notified.
+   * @param args Configure the subscription.
+   *
+   * @example
+   *
+   * ```js
+   * const topicArn = "arn:aws:sns:us-east-1:123456789012:MyTopic";
+   * const queueArn = "arn:aws:sqs:us-east-1:123456789012:MyQueue";
+   * sst.aws.SnsTopic.subscribeQueue(topicArn, queueArn);
+   * ```
+   *
+   * Add a filter to the subscription.
+   *
+   * ```js
+   * sst.aws.SnsTopic.subscribeQueue(topicArn, queueArn, {
+   *   filter: {
+   *     price_usd: [{numeric: [">=", 100]}]
+   *   }
+   * });
+   * ```
+   */
+  public static subscribeQueue(
+    topicArn: Input<string>,
+    queueArn: Input<string>,
+    args?: SnsTopicSubscribeArgs,
+  ) {
+    const topicName = output(topicArn).apply(
+      (topicArn) => parseTopicArn(topicArn).topicName,
+    );
+
+    return this._subscribeQueue(topicName, topicArn, queueArn, args);
+  }
+
+  private static _subscribeQueue(
+    name: Input<string>,
+    topicArn: Input<string>,
+    queueArn: Input<string>,
+    args: SnsTopicSubscribeArgs = {},
+  ) {
+    const ret = all([name, queueArn, args]).apply(([name, queueArn, args]) => {
+      const { queueUrl } = parseQueueArn(queueArn);
+
+      // Build subscriber name
+      const namePrefix = sanitizeToPascalCase(name);
+      const id = sanitizeToPascalCase(
+        hashStringToPrettyString(
+          [topicArn, JSON.stringify(args.filter ?? {}), queueArn].join(""),
+          4,
+        ),
+      );
+
+      const policy = new aws.sqs.QueuePolicy(`${namePrefix}Policy${id}`, {
+        queueUrl,
+        policy: aws.iam.getPolicyDocumentOutput({
+          statements: [
+            {
+              actions: ["sqs:SendMessage"],
+              resources: [queueArn],
+              principals: [
+                {
+                  type: "Service",
+                  identifiers: ["sns.amazonaws.com"],
+                },
+              ],
+              conditions: [
+                {
+                  test: "ArnEquals",
+                  variable: "aws:SourceArn",
+                  values: [topicArn],
+                },
+              ],
+            },
+          ],
+        }).json,
+      });
+
+      const subscription = new aws.sns.TopicSubscription(
+        `${namePrefix}Subscription${id}`,
+        transform(args?.transform?.subscription, {
+          topic: topicArn,
+          protocol: "sqs",
+          endpoint: queueArn,
+          filterPolicy: JSON.stringify(args.filter ?? {}),
+        }),
+      );
+
+      return { policy, subscription };
+    });
+    return {
+      policy: ret.policy,
+      subscription: ret.subscription,
+    } satisfies SnsTopicQueueSubscriber;
   }
 
   /** @internal */

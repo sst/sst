@@ -7,6 +7,7 @@ import { Function, FunctionArgs } from "./function";
 import { DurationMinutes, toSeconds } from "../duration";
 import { VisibleError } from "../error";
 import { hashStringToPrettyString, sanitizeToPascalCase } from "../naming";
+import { parseQueueArn } from "./helpers/arn";
 
 export interface QueueArgs {
   /**
@@ -264,7 +265,12 @@ export class Queue
       );
     this.isSubscribed = true;
 
-    return Queue._subscribe(this.constructorName, this.arn, subscriber, args);
+    return Queue._subscribeFunction(
+      this.constructorName,
+      this.arn,
+      subscriber,
+      args,
+    );
   }
 
   /**
@@ -308,19 +314,13 @@ export class Queue
     subscriber: string | FunctionArgs,
     args?: QueueSubscribeArgs,
   ) {
-    const queueName = output(queueArn).apply((queueArn) => {
-      const queueName = queueArn.split(":").pop();
-      if (!queueArn.startsWith("arn:aws:sqs:") || !queueName)
-        throw new VisibleError(
-          `The provided ARN "${queueArn}" is not an SQS queue ARN.`,
-        );
-      return queueName;
-    });
-
-    return this._subscribe(queueName, queueArn, subscriber, args);
+    const queueName = output(queueArn).apply(
+      (queueArn) => parseQueueArn(queueArn).queueName,
+    );
+    return this._subscribeFunction(queueName, queueArn, subscriber, args);
   }
 
-  private static _subscribe(
+  private static _subscribeFunction(
     name: Input<string>,
     queueArn: Input<string>,
     subscriber: string | FunctionArgs,
