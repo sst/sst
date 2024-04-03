@@ -4,16 +4,14 @@ export default $config({
   app(input) {
     return {
       name: "topic",
-      providers: {
-        aws: {},
-      },
+      home: "aws",
       removal: input?.stage === "production" ? "retain" : "remove",
     };
   },
   async run() {
     const topic = new sst.aws.SnsTopic("MyTopic");
     topic.subscribe("subscriber.handler", {
-      filters: {
+      filter: {
         foo: ["bar"],
       },
     });

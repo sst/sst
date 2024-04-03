@@ -151,7 +151,7 @@ Configure the subscription.
 </Section>
 
 <InlineSection>
-**Returns** [<code class="type">Dynamo</code>](.)
+**Returns** [<code class="type">DynamoSubscriber</code>](#dynamosubscriber)
 </InlineSection>
 Subscribe to this table's DynamoDB Stream.
 
@@ -161,14 +161,6 @@ You'll first need to enable the `stream` before subscribing to it.
 
 ```js
 table.subscribe("src/subscriber.handler");
-```
-
-Add multiple subscribers.
-
-```js
-table
-  .subscribe("src/subscriber1.handler")
-  .subscribe("src/subscriber2.handler");
 ```
 
 Add a filter to the subscription.
@@ -193,6 +185,66 @@ Customize the subscriber function.
 
 ```js
 table.subscribe({
+  handler: "src/subscriber.handler",
+  timeout: "60 seconds"
+});
+```
+</Segment>
+
+### Dynamo.subscribe
+<Segment>
+<Section type="signature">
+```ts
+subscribe(streamArn, subscriber, args?)
+```
+</Section>
+
+<Section type="parameters">
+#### Parameters
+- <p><code class="key">streamArn</code> <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code></p>
+The ARN of the DynamoDB Stream to subscribe to.
+- <p><code class="key">subscriber</code> <code class="primitive">string</code><code class="symbol"> | </code>[<code class="type">FunctionArgs</code>](/docs/component/aws/function/#functionargs)</p>
+The function that'll be notified.
+- <p><code class="key">args?</code> [<code class="type">DynamoSubscribeArgs</code>](#dynamosubscribeargs)</p>
+Configure the subscription.
+</Section>
+
+<InlineSection>
+**Returns** [<code class="type">DynamoSubscriber</code>](#dynamosubscriber)
+</InlineSection>
+Subscribe to an existing table's DynamoDB Stream.
+
+:::note
+You'll first need to enable the `stream` before subscribing to it.
+:::
+
+```js
+const streamArn = "arn:aws:dynamodb:us-east-1:123456789012:table/MyTable/stream/2024-02-25T23:17:55.264";
+sst.aws.Dynamo.subscribe(streamArn, "src/subscriber.handler");
+```
+
+Add a filter to the subscription.
+
+```js
+sst.aws.Dynamo.subscribe(streamArn, "src/subscriber.handler", {
+  filters: [
+    {
+      dynamodb: {
+        Keys: {
+          CustomerName: {
+            S: ["AnyCompany Industries"]
+          }
+        }
+      }
+    }
+  ]
+});
+```
+
+Customize the subscriber function.
+
+```js
+sst.aws.Dynamo.subscribe(streamArn, {
   handler: "src/subscriber.handler",
   timeout: "60 seconds"
 });
@@ -537,6 +589,28 @@ resources.
 </InlineSection>
 </Section>
 Transform the Lambda Event Source Mapping resource.
+
+</Segment>
+
+## DynamoSubscriber
+### eventSourceMapping
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Output</code><code class="symbol">&lt;</code>[<code class="type">EventSourceMapping</code>](https://www.pulumi.com/registry/packages/aws/api-docs/lambda/eventsourcemapping/)<code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+The Lambda event source mapping.
+
+</Segment>
+### function
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Output</code><code class="symbol">&lt;</code>[<code class="type">Function</code>](/docs/component/aws/function/)<code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+The Lambda function.
 
 </Segment>
 </div>

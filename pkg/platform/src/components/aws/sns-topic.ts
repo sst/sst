@@ -1,10 +1,11 @@
-import { ComponentResourceOptions, output } from "@pulumi/pulumi";
+import { ComponentResourceOptions, Output, all, output } from "@pulumi/pulumi";
 import * as aws from "@pulumi/aws";
 import { Component, Transform, transform } from "../component";
 import { Link } from "../link";
 import type { Input } from "../input";
 import { Function, FunctionArgs } from "./function";
 import { hashStringToPrettyString, sanitizeToPascalCase } from "../naming";
+import { VisibleError } from "../error";
 
 export interface SnsTopicArgs {
   /**
@@ -89,6 +90,21 @@ export interface SnsTopicSubscribeArgs {
      */
     subscription?: Transform<aws.sns.TopicSubscriptionArgs>;
   };
+}
+
+export interface SnsTopicSubscriber {
+  /**
+   * The Lambda function.
+   */
+  function: Output<Function>;
+  /**
+   * The Lambda permission.
+   */
+  permission: Output<aws.lambda.Permission>;
+  /**
+   * The SNS topic subscription.
+   */
+  subscription: Output<aws.sns.TopicSubscription>;
 }
 
 /**
@@ -221,14 +237,6 @@ export class SnsTopic
    * topic.subscribe("src/subscriber.handler");
    * ```
    *
-   * Add multiple subscribers.
-   *
-   * ```js
-   * topic
-   *   .subscribe("src/subscriber1.handler")
-   *   .subscribe("src/subscriber2.handler");
-   * ```
-   *
    * Add a filter to the subscription.
    *
    * ```js
@@ -252,44 +260,120 @@ export class SnsTopic
     subscriber: string | FunctionArgs,
     args: SnsTopicSubscribeArgs = {},
   ) {
-    const parent = this;
-    const parentName = this.constructorName;
-
-    // Build subscriber name
-    const id = sanitizeToPascalCase(
-      hashStringToPrettyString(JSON.stringify(args.filter ?? {}), 4),
-    );
-
-    const fn = Function.fromDefinition(
-      parent,
-      `${parentName}Subscriber${id}`,
+    return SnsTopic._subscribe(
+      this.constructorName,
+      this.arn,
       subscriber,
-      {
-        description: `Subscribed to ${parentName}`,
-      },
+      args,
     );
-    const permission = new aws.lambda.Permission(
-      `${parentName}Subscriber${id}Permissions`,
-      {
-        action: "lambda:InvokeFunction",
-        function: fn.arn,
-        principal: "sns.amazonaws.com",
-        sourceArn: this.arn,
-      },
-      { parent },
-    );
-    new aws.sns.TopicSubscription(
-      `${parentName}Subscription${id}`,
-      transform(args?.transform?.subscription, {
-        topic: this.topic.arn,
-        protocol: "lambda",
-        endpoint: fn.arn,
-        filterPolicy: JSON.stringify(args.filter ?? {}),
-      }),
-      { parent, dependsOn: [permission] },
-    );
+  }
 
-    return this;
+  /**
+   * Subscribes to an existing SNS Topic.
+   *
+   * @param topicArn The ARN of the SNS Topic to subscribe to.
+   * @param subscriber The function that'll be notified.
+   * @param args Configure the subscription.
+   *
+   * @example
+   *
+   * ```js
+   * const topicArn = "arn:aws:sns:us-east-1:123456789012:MyTopic";
+   * sst.aws.SnsTopic.subscribe(topicArn, "src/subscriber.handler");
+   * ```
+   *
+   * Add a filter to the subscription.
+   *
+   * ```js
+   * sst.aws.SnsTopic.subscribe(topicArn, "src/subscriber.handler", {
+   *   filter: {
+   *     price_usd: [{numeric: [">=", 100]}]
+   *   }
+   * });
+   * ```
+   *
+   * Customize the subscriber function.
+   *
+   * ```js
+   * sst.aws.SnsTopic.subscribe(topicArn, {
+   *   handler: "src/subscriber.handler",
+   *   timeout: "60 seconds"
+   * });
+   * ```
+   */
+  public static subscribe(
+    topicArn: Input<string>,
+    subscriber: string | FunctionArgs,
+    args?: SnsTopicSubscribeArgs,
+  ) {
+    const topicName = output(topicArn).apply((topicArn) => {
+      const topicName = topicArn.split(":").pop();
+      if (!topicArn.startsWith("arn:aws:sns:") || !topicName)
+        throw new VisibleError(
+          `The provided ARN "${topicArn}" is not an SNS topic ARN.`,
+        );
+      return topicName;
+    });
+
+    return this._subscribe(topicName, topicArn, subscriber, args);
+  }
+
+  private static _subscribe(
+    name: Input<string>,
+    topicArn: Input<string>,
+    subscriber: string | FunctionArgs,
+    args: SnsTopicSubscribeArgs = {},
+  ) {
+    const ret = all([name, subscriber, args]).apply(
+      ([name, subscriber, args]) => {
+        // Build subscriber name
+        const namePrefix = sanitizeToPascalCase(name);
+        const id = sanitizeToPascalCase(
+          hashStringToPrettyString(
+            [
+              topicArn,
+              JSON.stringify(args.filter ?? {}),
+              typeof subscriber === "string" ? subscriber : subscriber.handler,
+            ].join(""),
+            4,
+          ),
+        );
+
+        const fn = Function.fromDefinition(
+          `${namePrefix}Sub${id}`,
+          subscriber,
+          {
+            description: `Subscribed to ${name}`,
+          },
+        );
+        const permission = new aws.lambda.Permission(
+          `${namePrefix}Sub${id}Permissions`,
+          {
+            action: "lambda:InvokeFunction",
+            function: fn.arn,
+            principal: "sns.amazonaws.com",
+            sourceArn: topicArn,
+          },
+        );
+        const subscription = new aws.sns.TopicSubscription(
+          `${namePrefix}Subscription${id}`,
+          transform(args?.transform?.subscription, {
+            topic: topicArn,
+            protocol: "lambda",
+            endpoint: fn.arn,
+            filterPolicy: JSON.stringify(args.filter ?? {}),
+          }),
+          { dependsOn: [permission] },
+        );
+
+        return { fn, permission, subscription };
+      },
+    );
+    return {
+      function: ret.fn,
+      permission: ret.permission,
+      subscription: ret.subscription,
+    } as SnsTopicSubscriber;
   }
 
   /** @internal */

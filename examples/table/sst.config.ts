@@ -4,9 +4,7 @@ export default $config({
   app(input) {
     return {
       name: "table",
-      providers: {
-        aws: {},
-      },
+      home: "aws",
       removal: input?.stage === "production" ? "retain" : "remove",
     };
   },

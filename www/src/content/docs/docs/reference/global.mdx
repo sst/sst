@@ -304,4 +304,33 @@ $resolve([bucket1.name, bucket2.name]).apply(([value1, value2]) =>
 );
 ```
 </Segment>
+
+### $transform
+<Segment>
+<Section type="signature">
+```ts
+$transform(resource, cb)
+```
+</Section>
+
+<Section type="parameters">
+#### Parameters
+- <p><code class="key">resource</code> <code class="type">Component Class</code></p>
+- <p><code class="key">cb</code> <code class="type">(args, opts) => void</code></p>
+</Section>
+
+<InlineSection>
+**Returns** <code class="primitive">void</code>
+</InlineSection>
+Register a transformation function that will be called for each resource of the given type.
+Useful to set global defaults.
+
+For example, to set a default runtime for all functions:
+
+```ts
+$transform(sst.aws.Function, (args, opts) => {
+  args.runtime = "nodejs18.x";
+})
+```
+</Segment>
 </div>

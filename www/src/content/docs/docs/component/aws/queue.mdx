@@ -100,21 +100,12 @@ Configure the subscription.
 </Section>
 
 <InlineSection>
-**Returns** [<code class="type">Queue</code>](.)
+**Returns** [<code class="type">QueueSubscriber</code>](#queuesubscriber)
 </InlineSection>
 Subscribe to this queue.
 
 ```js
 queue.subscribe("src/subscriber.handler");
-```
-
-Add multiple subscribers.
-
-```js
-queue
-  .subscribe("src/subscriber1.handler")
-  .subscribe("src/subscriber2.handler");
-```
 
 Add a filter to the subscription.
 
@@ -134,6 +125,57 @@ Customize the subscriber function.
 
 ```js
 queue.subscribe({
+  handler: "src/subscriber.handler",
+  timeout: "60 seconds"
+});
+```
+</Segment>
+
+### Queue.subscribe
+<Segment>
+<Section type="signature">
+```ts
+subscribe(queueArn, subscriber, args?)
+```
+</Section>
+
+<Section type="parameters">
+#### Parameters
+- <p><code class="key">queueArn</code> <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code></p>
+The ARN of the SQS Queue to subscribe to.
+- <p><code class="key">subscriber</code> <code class="primitive">string</code><code class="symbol"> | </code>[<code class="type">FunctionArgs</code>](/docs/component/aws/function/#functionargs)</p>
+The function that'll be notified.
+- <p><code class="key">args?</code> [<code class="type">QueueSubscribeArgs</code>](#queuesubscribeargs)</p>
+Configure the subscription.
+</Section>
+
+<InlineSection>
+**Returns** [<code class="type">QueueSubscriber</code>](#queuesubscriber)
+</InlineSection>
+Subscribe to an existing SQS queue.
+
+```js
+const queueArn = "arn:aws:sqs:us-east-1:123456789012:MyQueue";
+sst.aws.Queue.subscribe(queueArn, "src/subscriber.handler");
+
+Add a filter to the subscription.
+
+```js
+sst.aws.Queue.subscribe(queueArn, "src/subscriber.handler", {
+  filters: [
+    {
+      body: {
+        RequestCode: ["BBBB"]
+      }
+    }
+  ]
+});
+```
+
+Customize the subscriber function.
+
+```js
+sst.aws.Queue.subscribe(queueArn, {
   handler: "src/subscriber.handler",
   timeout: "60 seconds"
 });
@@ -316,6 +358,28 @@ resources.
 </InlineSection>
 </Section>
 Transform the Lambda Event Source Mapping resource.
+
+</Segment>
+
+## QueueSubscriber
+### eventSourceMapping
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Output</code><code class="symbol">&lt;</code>[<code class="type">EventSourceMapping</code>](https://www.pulumi.com/registry/packages/aws/api-docs/lambda/eventsourcemapping/)<code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+The Lambda event source mapping.
+
+</Segment>
+### function
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Output</code><code class="symbol">&lt;</code>[<code class="type">Function</code>](/docs/component/aws/function/)<code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+The Lambda function.
 
 </Segment>
 </div>

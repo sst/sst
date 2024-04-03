@@ -458,14 +458,23 @@ async function generateTsDoc() {
             `<Section type="parameters">`,
             `#### Parameters`,
             ...f.signatures![0].parameters.flatMap((param) => {
+              let type;
               // HACK: special handle for $jsonParse's reviver param b/c
               //       it's a function type.
-              const type =
-                f.name === "$jsonParse" && param.name === "reviver"
-                  ? renderJsonParseReviverType()
-                  : f.name === "$jsonStringify" && param.name === "replacer"
-                    ? renderJsonStringifyReplacerType()
-                    : renderType(param.type!);
+              if (f.name === "$jsonParse" && param.name === "reviver") {
+                type = renderJsonParseReviverType();
+              } else if (
+                f.name === "$jsonStringify" &&
+                param.name === "replacer"
+              ) {
+                type = renderJsonStringifyReplacerType();
+              } else if (f.name === "$transform" && param.name === "resource") {
+                type = renderTransformResourceType();
+              } else if (f.name === "$transform" && param.name === "cb") {
+                type = renderTransformCallbackType();
+              } else {
+                type = renderType(param.type!);
+              }
 
               return [
                 `- <p><code class="key">${renderSignatureArg(
@@ -562,7 +571,7 @@ async function generateTsDoc() {
       for (const m of methods) {
         lines.push(
           ``,
-          `### ${m.name}`,
+          `### ${m.flags.isStatic ? `${useClassName()}.` : ""}${m.name}`,
           `<Segment>`,
           `<Section type="signature">`,
           "```ts",
@@ -1157,6 +1166,12 @@ async function generateTsDoc() {
     }
     function renderJsonStringifyReplacerType() {
       return `[<code class="type">JSON.stringify replacer</code>](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON/stringify#replacer)`;
+    }
+    function renderTransformResourceType() {
+      return `<code class="type">Component Class</code>`;
+    }
+    function renderTransformCallbackType() {
+      return `<code class="type">(args, opts) => void</code>`;
     }
     function renderObjectType(type: TypeDoc.ReflectionType) {
       return `<code class="primitive">Object</code>`;

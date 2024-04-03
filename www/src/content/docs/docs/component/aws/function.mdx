@@ -180,7 +180,7 @@ The CloudWatch Log Group the function logs are stored.
 <Segment>
 <Section type="parameters">
 <InlineSection>
-**Type** <code class="primitive">Output</code><code class="symbol">&lt;</code>[<code class="type">Role</code>](https://www.pulumi.com/registry/packages/aws/api-docs/iam/role/)<code class="symbol">&gt;</code>
+**Type** <code class="primitive">undefined</code><code class="symbol"> | </code>[<code class="type">Role</code>](https://www.pulumi.com/registry/packages/aws/api-docs/iam/role/)
 </InlineSection>
 </Section>
 The IAM Role the function will use.
@@ -396,6 +396,21 @@ If `bundle` is specified, the handler needs to be in the root of the bundle dire
 {
   bundle: "packages/functions/src",
   handler: "index.handler"
+}
+```
+</Segment>
+### layers?
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">[]</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+A list of layers to add to the function.
+
+```js
+{
+  layers: ["arn:aws:lambda:us-east-1:123456789012:layer:my-layer:1"]
 }
 ```
 </Segment>
@@ -785,6 +800,30 @@ The resourcess specified using the [IAM ARN format](https://docs.aws.amazon.com/
 }
 ```
 </Segment>
+### role?
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+
+<InlineSection>
+**Default** Creates a new role.
+</InlineSection>
+Assigns an existing IAM role to the function, replacing the default behavior of creating a new role.
+
+:::tip
+Permissions specified in "permissions" and required by "link" resources are not added
+automatically. You'll need to manually configure the IAM permissions required by the function.
+:::
+
+```js
+{
+  role: "arn:aws:iam::123456789012:role/my-role"
+}
+```
+</Segment>
 ### runtime?
 <Segment>
 <Section type="parameters">
@@ -942,7 +981,7 @@ Enable it and configure the options.
 <Segment>
 <Section type="parameters">
 <InlineSection>
-**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="symbol">&ldquo;</code><code class="primitive">none</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">iam</code><code class="symbol">&rdquo;</code><code class="symbol">&gt;</code>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="symbol">&ldquo;</code><code class="primitive">iam</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">none</code><code class="symbol">&rdquo;</code><code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
 
@@ -1042,7 +1081,7 @@ The HTTP headers that origins can include in requests to the function URL.
 <Segment>
 <Section type="parameters">
 <InlineSection>
-**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Input</code><code class="symbol">&lt;</code><code class="symbol">&ldquo;</code><code class="primitive">DELETE</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">GET</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">HEAD</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">POST</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">PUT</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">\*</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">OPTIONS</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">PATCH</code><code class="symbol">&rdquo;</code><code class="symbol">&gt;</code><code class="symbol">[]</code><code class="symbol">&gt;</code>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Input</code><code class="symbol">&lt;</code><code class="symbol">&ldquo;</code><code class="primitive">DELETE</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">GET</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">HEAD</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">OPTIONS</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">PATCH</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">POST</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">PUT</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">\*</code><code class="symbol">&rdquo;</code><code class="symbol">&gt;</code><code class="symbol">[]</code><code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
 

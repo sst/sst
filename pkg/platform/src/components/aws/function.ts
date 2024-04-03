@@ -1072,11 +1072,7 @@ export class Function
     }
 
     function buildLinkData() {
-      if (!args.link) return output([]);
-      return output(args.link).apply((links) => {
-        const linkData = Link.build(links);
-        return linkData;
-      });
+      return output(args.link || []).apply((links) => Link.build(links));
     }
 
     function buildLinkPermissions() {
@@ -1509,18 +1505,14 @@ export class Function
 
   /** @internal */
   static fromDefinition(
-    parent: Component,
     name: string,
     definition: Input<string | FunctionArgs>,
-    override?: Pick<FunctionArgs, "description" | "permissions">,
+    override: Pick<FunctionArgs, "description" | "permissions">,
+    opts?: ComponentResourceOptions,
   ) {
     return output(definition).apply((definition) => {
       if (typeof definition === "string") {
-        return new Function(
-          name,
-          { handler: definition, ...override },
-          { parent },
-        );
+        return new Function(name, { handler: definition, ...override }, opts);
       } else if (definition.handler) {
         return new Function(
           name,
@@ -1535,7 +1527,7 @@ export class Function
               ...(overridePermissions ?? []),
             ]),
           },
-          { parent },
+          opts,
         );
       }
       throw new Error(`Invalid function definition for the "${name}" Function`);

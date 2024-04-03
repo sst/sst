@@ -282,6 +282,25 @@ export interface ApiGatewayV2RouteArgs {
   };
 }
 
+export interface ApiGatewayV2Route {
+  /**
+   * The Lambda function.
+   */
+  function: Function;
+  /**
+   * The Lambda permission.
+   */
+  permission: aws.lambda.Permission;
+  /**
+   * The API Gateway HTTP API integration.
+   */
+  integration: aws.apigatewayv2.Integration;
+  /**
+   * The API Gateway HTTP API route.
+   */
+  route: Output<aws.apigatewayv2.Route>;
+}
+
 /**
  * The `ApiGatewayV2` component lets you add an [Amazon API Gateway HTTP API](https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api.html) to your app.
  *
@@ -304,9 +323,8 @@ export interface ApiGatewayV2RouteArgs {
  * #### Add routes
  *
  * ```ts
- * api
- *  .route("GET /", "src/get.handler")
- *  .route("POST /", "src/post.handler");
+ * api.route("GET /", "src/get.handler");
+ * api.route("POST /", "src/post.handler");
  * ```
  */
 export class ApiGatewayV2 extends Component implements Link.Linkable {
@@ -595,14 +613,6 @@ export class ApiGatewayV2 extends Component implements Link.Linkable {
    * api.route("GET /", "src/get.handler");
    * ```
    *
-   * Add multiple routes.
-   *
-   * ```js
-   * api
-   *   .route("GET /", "src/get.handler")
-   *   .route("POST /", "src/post.handler");
-   * ```
-   *
    * Match any HTTP method.
    *
    * ```js
@@ -612,9 +622,8 @@ export class ApiGatewayV2 extends Component implements Link.Linkable {
    * Add a default route.
    *
    * ```js
-   * api
-   *   .route("GET /", "src/get.handler")
-   *   .route($default, "src/default.handler");
+   * api.route("GET /", "src/get.handler")
+   * api.route($default, "src/default.handler");
    * ```
    *
    * Add a parameterized route.
@@ -632,13 +641,12 @@ export class ApiGatewayV2 extends Component implements Link.Linkable {
    * Enable auth for a route.
    *
    * ```js
-   * api
-   *   .route("GET /", "src/get.handler")
-   *   .route("POST /", "src/post.handler", {
-   *     auth: {
-   *       iam: true
-   *     }
-   *   });
+   * api.route("GET /", "src/get.handler")
+   * api.route("POST /", "src/post.handler", {
+   *   auth: {
+   *     iam: true
+   *   }
+   * });
    * ```
    *
    * Customize the route handler.
@@ -655,57 +663,52 @@ export class ApiGatewayV2 extends Component implements Link.Linkable {
     handler: string | FunctionArgs,
     args: ApiGatewayV2RouteArgs = {},
   ) {
-    const parent = this;
-    const parentName = this.constructorName;
+    const source = this;
+    const sourceName = this.constructorName;
     const routeKey = parseRoute();
 
     // Build route name
-    const id = sanitizeToPascalCase(hashStringToPrettyString(routeKey, 4));
-
-    const fn = Function.fromDefinition(
-      parent,
-      `${parentName}Handler${id}`,
-      handler,
-      {
-        description: `${parentName} route ${routeKey}`,
-      },
+    const id = sanitizeToPascalCase(
+      hashStringToPrettyString([this.api.id, routeKey].join(""), 4),
     );
+
+    const fn = Function.fromDefinition(`${sourceName}Handler${id}`, handler, {
+      description: `${sourceName} route ${routeKey}`,
+    });
     const permission = new aws.lambda.Permission(
-      `${parentName}Handler${id}Permissions`,
+      `${sourceName}Handler${id}Permissions`,
       {
         action: "lambda:InvokeFunction",
         function: fn.arn,
         principal: "apigateway.amazonaws.com",
         sourceArn: interpolate`${this.nodes.api.executionArn}/*`,
       },
-      { parent },
     );
     const integration = new aws.apigatewayv2.Integration(
-      `${parentName}Integration${id}`,
+      `${sourceName}Integration${id}`,
       transform(args.transform?.integration, {
         apiId: this.api.id,
         integrationType: "AWS_PROXY",
         integrationUri: fn.arn,
         payloadFormatVersion: "2.0",
       }),
-      { parent, dependsOn: [permission] },
+      { dependsOn: [permission] },
     );
     const authArgs = createAuthorizer();
 
-    authArgs.apply(
+    const apiRoute = authArgs.apply(
       (authArgs) =>
         new aws.apigatewayv2.Route(
-          `${parentName}Route${id}`,
+          `${sourceName}Route${id}`,
           transform(args.transform?.route, {
             apiId: this.api.id,
             routeKey,
             target: interpolate`integrations/${integration.id}`,
             ...authArgs,
           }),
-          { parent },
         ),
     );
-    return this;
+    return { function: fn, permission, integration, route: apiRoute };
 
     function parseRoute() {
       if (route.toLowerCase() === "$default") return "$default";
@@ -757,11 +760,11 @@ export class ApiGatewayV2 extends Component implements Link.Linkable {
           );
 
           const authorizer =
-            parent.authorizers[id] ??
+            source.authorizers[id] ??
             new aws.apigatewayv2.Authorizer(
-              `${parentName}Authorizer${id}`,
+              `${sourceName}Authorizer${id}`,
               transform(args.transform?.authorizer, {
-                apiId: parent.api.id,
+                apiId: source.api.id,
                 authorizerType: "JWT",
                 identitySources: [
                   auth.jwt.identitySource ?? "$request.header.Authorization",
@@ -771,9 +774,8 @@ export class ApiGatewayV2 extends Component implements Link.Linkable {
                   issuer: auth.jwt.issuer,
                 },
               }),
-              { parent },
             );
-          parent.authorizers[id] = authorizer;
+          source.authorizers[id] = authorizer;
 
           return {
             authorizationType: "JWT",

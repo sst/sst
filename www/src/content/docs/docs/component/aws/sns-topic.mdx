@@ -104,20 +104,12 @@ Configure the subscription.
 </Section>
 
 <InlineSection>
-**Returns** [<code class="type">SnsTopic</code>](.)
+**Returns** [<code class="type">SnsTopicSubscriber</code>](#snstopicsubscriber)
 </InlineSection>
 Subscribes to this SNS Topic.
 
 ```js
 topic.subscribe("src/subscriber.handler");
-```
-
-Add multiple subscribers.
-
-```js
-topic
-  .subscribe("src/subscriber1.handler")
-  .subscribe("src/subscriber2.handler");
 ```
 
 Add a filter to the subscription.
@@ -134,6 +126,54 @@ Customize the subscriber function.
 
 ```js
 topic.subscribe({
+  handler: "src/subscriber.handler",
+  timeout: "60 seconds"
+});
+```
+</Segment>
+
+### SnsTopic.subscribe
+<Segment>
+<Section type="signature">
+```ts
+subscribe(topicArn, subscriber, args?)
+```
+</Section>
+
+<Section type="parameters">
+#### Parameters
+- <p><code class="key">topicArn</code> <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code></p>
+The ARN of the SNS Topic to subscribe to.
+- <p><code class="key">subscriber</code> <code class="primitive">string</code><code class="symbol"> | </code>[<code class="type">FunctionArgs</code>](/docs/component/aws/function/#functionargs)</p>
+The function that'll be notified.
+- <p><code class="key">args?</code> [<code class="type">SnsTopicSubscribeArgs</code>](#snstopicsubscribeargs)</p>
+Configure the subscription.
+</Section>
+
+<InlineSection>
+**Returns** [<code class="type">SnsTopicSubscriber</code>](#snstopicsubscriber)
+</InlineSection>
+Subscribes to an existing SNS Topic.
+
+```js
+const topicArn = "arn:aws:sns:us-east-1:123456789012:MyTopic";
+sst.aws.SnsTopic.subscribe(topicArn, "src/subscriber.handler");
+```
+
+Add a filter to the subscription.
+
+```js
+sst.aws.SnsTopic.subscribe(topicArn, "src/subscriber.handler", {
+  filter: {
+    price_usd: [{numeric: [">=", 100]}]
+  }
+});
+```
+
+Customize the subscriber function.
+
+```js
+sst.aws.SnsTopic.subscribe(topicArn, {
   handler: "src/subscriber.handler",
   timeout: "60 seconds"
 });
@@ -311,6 +351,38 @@ resources.
 </InlineSection>
 </Section>
 Transform the SNS Topic Subscription resource.
+
+</Segment>
+
+## SnsTopicSubscriber
+### function
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Output</code><code class="symbol">&lt;</code>[<code class="type">Function</code>](/docs/component/aws/function/)<code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+The Lambda function.
+
+</Segment>
+### permission
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Output</code><code class="symbol">&lt;</code>[<code class="type">Permission</code>](https://www.pulumi.com/registry/packages/aws/api-docs/lambda/permission/)<code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+The Lambda permission.
+
+</Segment>
+### subscription
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Output</code><code class="symbol">&lt;</code>[<code class="type">TopicSubscription</code>](https://www.pulumi.com/registry/packages/aws/api-docs/sns/topicsubscription/)<code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+The SNS topic subscription.
 
 </Segment>
 </div>

@@ -11,6 +11,7 @@ import { Link } from "../link";
 import type { Input } from "../input";
 import { Function, FunctionArgs } from "./function";
 import { hashStringToPrettyString, sanitizeToPascalCase } from "../naming";
+import { VisibleError } from "../error";
 
 export interface DynamoArgs {
   /**
@@ -228,6 +229,17 @@ export interface DynamoSubscribeArgs {
   };
 }
 
+export interface DynamoSubscriber {
+  /**
+   * The Lambda function.
+   */
+  function: Output<Function>;
+  /**
+   * The Lambda event source mapping.
+   */
+  eventSourceMapping: Output<aws.lambda.EventSourceMapping>;
+}
+
 /**
  * The `Dynamo` component lets you add an [Amazon DynamoDB](https://aws.amazon.com/dynamodb/) table to your app.
  *
@@ -443,14 +455,6 @@ export class Dynamo
    * table.subscribe("src/subscriber.handler");
    * ```
    *
-   * Add multiple subscribers.
-   *
-   * ```js
-   * table
-   *   .subscribe("src/subscriber1.handler")
-   *   .subscribe("src/subscriber2.handler");
-   * ```
-   *
    * Add a filter to the subscription.
    *
    * ```js
@@ -480,58 +484,147 @@ export class Dynamo
    */
   public subscribe(
     subscriber: string | FunctionArgs,
-    args: DynamoSubscribeArgs = {},
+    args?: DynamoSubscribeArgs,
   ) {
-    const parent = this;
-    const parentName = this.constructorName;
+    const sourceName = this.constructorName;
 
     // Validate stream is enabled
     if (!this.isStreamEnabled)
       throw new Error(
-        `Cannot subscribe to "${parentName}" because stream is not enabled.`,
+        `Cannot subscribe to "${sourceName}" because stream is not enabled.`,
       );
 
-    // Build subscriber name
-    const id = sanitizeToPascalCase(
-      hashStringToPrettyString(JSON.stringify(args.filters ?? {}), 4),
-    );
-
-    const fn = Function.fromDefinition(
-      parent,
-      `${parentName}Subscriber${id}`,
+    return Dynamo._subscribe(
+      this.constructorName,
+      this.nodes.table.streamArn,
       subscriber,
-      {
-        description: `Subscribed to ${parentName}`,
-        permissions: [
+      args,
+    );
+  }
+
+  /**
+   * Subscribe to an existing table's DynamoDB Stream.
+   *
+   * :::note
+   * You'll first need to enable the `stream` before subscribing to it.
+   * :::
+   *
+   * @param streamArn The ARN of the DynamoDB Stream to subscribe to.
+   * @param subscriber The function that'll be notified.
+   * @param args Configure the subscription.
+   *
+   * @example
+   *
+   * ```js
+   * const streamArn = "arn:aws:dynamodb:us-east-1:123456789012:table/MyTable/stream/2024-02-25T23:17:55.264";
+   * sst.aws.Dynamo.subscribe(streamArn, "src/subscriber.handler");
+   * ```
+   *
+   * Add a filter to the subscription.
+   *
+   * ```js
+   * sst.aws.Dynamo.subscribe(streamArn, "src/subscriber.handler", {
+   *   filters: [
+   *     {
+   *       dynamodb: {
+   *         Keys: {
+   *           CustomerName: {
+   *             S: ["AnyCompany Industries"]
+   *           }
+   *         }
+   *       }
+   *     }
+   *   ]
+   * });
+   * ```
+   *
+   * Customize the subscriber function.
+   *
+   * ```js
+   * sst.aws.Dynamo.subscribe(streamArn, {
+   *   handler: "src/subscriber.handler",
+   *   timeout: "60 seconds"
+   * });
+   * ```
+   */
+  public static subscribe(
+    streamArn: Input<string>,
+    subscriber: string | FunctionArgs,
+    args?: DynamoSubscribeArgs,
+  ) {
+    // ie. "arn:aws:dynamodb:us-east-1:112233445566:table/MyTable/stream/2024-02-25T23:17:55.264"
+    const tableName = output(streamArn).apply((streamArn) => {
+      const tableName = streamArn.split(":")[5]?.split("/")[1];
+      if (!streamArn.startsWith("arn:aws:dynamodb:") || !tableName)
+        throw new VisibleError(
+          `The provided ARN "${streamArn}" is not a DynamoDB stream ARN.`,
+        );
+      return tableName;
+    });
+
+    return this._subscribe(tableName, streamArn, subscriber, args);
+  }
+
+  private static _subscribe(
+    name: Input<string>,
+    streamArn: Input<string>,
+    subscriber: string | FunctionArgs,
+    args: DynamoSubscribeArgs = {},
+  ) {
+    const ret = all([name, subscriber, args]).apply(
+      ([name, subscriber, args]) => {
+        // Build subscriber name
+        const namePrefix = sanitizeToPascalCase(name);
+        const id = sanitizeToPascalCase(
+          hashStringToPrettyString(
+            [
+              streamArn,
+              JSON.stringify(args.filters ?? {}),
+              typeof subscriber === "string" ? subscriber : subscriber.handler,
+            ].join(""),
+            4,
+          ),
+        );
+
+        const fn = Function.fromDefinition(
+          `${namePrefix}Subscriber${id}`,
+          subscriber,
           {
-            actions: [
-              "dynamodb:DescribeStream",
-              "dynamodb:GetRecords",
-              "dynamodb:GetShardIterator",
-              "dynamodb:ListStreams",
+            description: `Subscribed to ${name}`,
+            permissions: [
+              {
+                actions: [
+                  "dynamodb:DescribeStream",
+                  "dynamodb:GetRecords",
+                  "dynamodb:GetShardIterator",
+                  "dynamodb:ListStreams",
+                ],
+                resources: [streamArn],
+              },
             ],
-            resources: [this.nodes.table.streamArn],
           },
-        ],
+        );
+        const eventSourceMapping = new aws.lambda.EventSourceMapping(
+          `${namePrefix}EventSourceMapping${id}`,
+          transform(args.transform?.eventSourceMapping, {
+            eventSourceArn: streamArn,
+            functionName: fn.name,
+            filterCriteria: args.filters && {
+              filters: args.filters.map((filter) => ({
+                pattern: JSON.stringify(filter),
+              })),
+            },
+            startingPosition: "LATEST",
+          }),
+        );
+        return { fn, eventSourceMapping };
       },
     );
-    new aws.lambda.EventSourceMapping(
-      `${parentName}EventSourceMapping${id}`,
-      transform(args?.transform?.eventSourceMapping, {
-        eventSourceArn: this.nodes.table.streamArn,
-        functionName: fn.name,
-        filterCriteria: args?.filters && {
-          filters: output(args.filters).apply((filters) =>
-            filters.map((filter) => ({
-              pattern: JSON.stringify(filter),
-            })),
-          ),
-        },
-        startingPosition: "LATEST",
-      }),
-      { parent },
-    );
-    return this;
+
+    return {
+      function: ret.fn,
+      eventSourceMapping: ret.eventSourceMapping,
+    } as DynamoSubscriber;
   }
 
   /** @internal */

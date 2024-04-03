@@ -15,21 +15,20 @@ export default $config({
         path: "v1",
       },
     });
-    api
-      .route("GET /", {
-        handler: "route.handler",
-      })
-      .route("GET /foo", "route.handler", { auth: { iam: true } })
-      .route("GET /bar", "route.handler", {
-        auth: {
-          jwt: {
-            issuer:
-              "https://cognito-idp.us-east-1.amazonaws.com/us-east-1_Rq4d8zILG",
-            audiences: ["user@example.com"],
-          },
+    api.route("GET /", {
+      handler: "route.handler",
+    });
+    api.route("GET /foo", "route.handler", { auth: { iam: true } });
+    api.route("GET /bar", "route.handler", {
+      auth: {
+        jwt: {
+          issuer:
+            "https://cognito-idp.us-east-1.amazonaws.com/us-east-1_Rq4d8zILG",
+          audiences: ["user@example.com"],
         },
-      })
-      .route("$default", "route.handler");
+      },
+    });
+    api.route("$default", "route.handler");
 
     return {
       api: api.url,

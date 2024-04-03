@@ -18,6 +18,7 @@ import { Link } from "../link";
 import type { Input } from "../input";
 import { Function, FunctionArgs } from "./function";
 import { Duration, toSeconds } from "../duration";
+import { VisibleError } from "../error";
 
 interface BucketCorsArgs {
   /**
@@ -232,6 +233,21 @@ export interface BucketSubscribeArgs {
   };
 }
 
+export interface BucketSubscriber {
+  /**
+   * The Lambda function.
+   */
+  function: Output<Function>;
+  /**
+   * The Lambda permission.
+   */
+  permission: Output<aws.lambda.Permission>;
+  /**
+   * The S3 bucket notification.
+   */
+  notification: Output<aws.s3.BucketNotification>;
+}
+
 /**
  * The `Bucket` component lets you add an [AWS S3 Bucket](https://aws.amazon.com/s3/) to
  * your app.
@@ -290,6 +306,7 @@ export class Bucket
 {
   private constructorName: string;
   private bucket: Output<aws.s3.BucketV2>;
+  private isSubscribed: boolean = false;
 
   constructor(
     name: string,
@@ -462,14 +479,6 @@ export class Bucket
    * bucket.subscribe("src/subscriber.handler");
    * ```
    *
-   * Add multiple subscribers.
-   *
-   * ```js
-   * bucket
-   *   .subscribe("src/subscriber1.handler")
-   *   .subscribe("src/subscriber2.handler");
-   * ```
-   *
    * Subscribe to specific S3 events.
    *
    * ```js
@@ -500,77 +509,176 @@ export class Bucket
     subscriber: string | FunctionArgs,
     args?: BucketSubscribeArgs,
   ) {
-    const parent = this;
-    const parentName = this.constructorName;
+    if (this.isSubscribed)
+      throw new VisibleError(
+        `Cannot subscribe to the "${this.constructorName}" bucket multiple times. An S3 bucket can only have one subscriber.`,
+      );
+    this.isSubscribed = true;
 
-    all([subscriber, args]).apply(([subscriber, args]) => {
-      const events = args?.events ?? [
-        "s3:ObjectCreated:*",
-        "s3:ObjectRemoved:*",
-        "s3:ObjectRestore:*",
-        "s3:ReducedRedundancyLostObject",
-        "s3:Replication:*",
-        "s3:LifecycleExpiration:*",
-        "s3:LifecycleTransition",
-        "s3:IntelligentTiering",
-        "s3:ObjectTagging:*",
-        "s3:ObjectAcl:Put",
-      ];
+    return Bucket._subscribe(
+      this.constructorName,
+      this.bucket.bucket,
+      this.bucket.arn,
+      subscriber,
+      args,
+    );
+  }
 
-      // Build subscriber name
-      const id = sanitizeToPascalCase(
-        hashStringToPrettyString(
-          [
-            ...events,
-            args?.filterPrefix ?? "",
-            args?.filterSuffix ?? "",
-            typeof subscriber === "string" ? subscriber : subscriber.handler,
-          ].join(""),
-          4,
-        ),
-      );
-
-      const fn = Function.fromDefinition(
-        parent,
-        `${parentName}Subscriber${id}`,
-        subscriber,
-        {
-          description:
-            events.length < 5
-              ? `Subscribed to ${parentName} on ${events.join(", ")}`
-              : `Subscribed to ${parentName} on ${events
-                  .slice(0, 3)
-                  .join(", ")}, and ${events.length - 3} more events`,
-        },
-      );
-      const permission = new aws.lambda.Permission(
-        `${parentName}Subscriber${id}Permissions`,
-        {
-          action: "lambda:InvokeFunction",
-          function: fn.arn,
-          principal: "s3.amazonaws.com",
-          sourceArn: this.arn,
-        },
-        { parent },
-      );
-      new aws.s3.BucketNotification(
-        `${parentName}Notification${id}`,
-        transform(args?.transform?.notification, {
-          bucket: this.bucket.bucket,
-          lambdaFunctions: [
-            {
-              id: `Notification${id}`,
-              lambdaFunctionArn: fn.arn,
-              events,
-              filterPrefix: args?.filterPrefix,
-              filterSuffix: args?.filterSuffix,
-            },
-          ],
-        }),
-        { parent, dependsOn: [permission] },
-      );
+  /**
+   * Subscribes to events from an existing S3 bucket.
+   *
+   * @param bucketArn The ARN of the S3 bucket to subscribe to.
+   * @param subscriber The function that'll be notified.
+   * @param args Configure the subscription.
+   *
+   * @example
+   *
+   * ```js
+   * const bucketArn = "arn:aws:s3:::my-bucket";
+   * sst.aws.Bucket.subscribe(bucketArn, "src/subscriber.handler");
+   * ```
+   *
+   * Subscribe to specific S3 events.
+   *
+   * ```js
+   * sst.aws.Bucket.subscribe(bucketArn, "src/subscriber.handler", {
+   *   events: ["s3:ObjectCreated:*", "s3:ObjectRemoved:*"]
+   * });
+   * ```
+   *
+   * Subscribe to specific S3 events from a specific folder.
+   *
+   * ```js
+   * sst.aws.Bucket.subscribe(bucketArn, "src/subscriber.handler", {
+   *   filterPrefix: "images/",
+   *   events: ["s3:ObjectCreated:*", "s3:ObjectRemoved:*"]
+   * });
+   * ```
+   *
+   * Customize the subscriber function.
+   *
+   * ```js
+   * sst.aws.Bucket.subscribe(bucketArn, {
+   *   handler: "src/subscriber.handler",
+   *   timeout: "60 seconds",
+   * });
+   * ```
+   */
+  public static subscribe(
+    bucketArn: Input<string>,
+    subscriber: string | FunctionArgs,
+    args?: BucketSubscribeArgs,
+  ) {
+    const bucketName = output(bucketArn).apply((bucketArn) => {
+      const bucketName = bucketArn.split(":").pop();
+      if (!bucketArn.startsWith("arn:aws:s3:") || !bucketName)
+        throw new VisibleError(
+          `The provided ARN "${bucketArn}" is not an S3 bucket ARN.`,
+        );
+      return bucketName;
     });
-    return this;
+
+    return this._subscribe(bucketName, bucketName, bucketArn, subscriber, args);
+  }
+
+  private static _subscribe(
+    name: Input<string>,
+    bucketName: Input<string>,
+    bucketArn: Input<string>,
+    subscriber: string | FunctionArgs,
+    args: BucketSubscribeArgs = {},
+  ) {
+    const ret = all([name, subscriber, args]).apply(
+      ([name, subscriber, args]) => {
+        const events = args.events ?? [
+          "s3:ObjectCreated:*",
+          "s3:ObjectRemoved:*",
+          "s3:ObjectRestore:*",
+          "s3:ReducedRedundancyLostObject",
+          "s3:Replication:*",
+          "s3:LifecycleExpiration:*",
+          "s3:LifecycleTransition",
+          "s3:IntelligentTiering",
+          "s3:ObjectTagging:*",
+          "s3:ObjectAcl:Put",
+        ];
+
+        // Build subscriber name
+        const namePrefix = sanitizeToPascalCase(name);
+        const id = sanitizeToPascalCase(
+          hashStringToPrettyString(
+            [
+              bucketArn,
+              // Temporarily only allowing one subscriber per bucket because of the
+              // AWS/Terraform issue that appending/removing a notification deletes
+              // all existing notifications.
+              //
+              // A solution would be to implement a dynamic provider. On create,
+              // get existing notifications then append. And on delete, get existing
+              // notifications then remove from the list.
+              //
+              // https://github.com/hashicorp/terraform-provider-aws/issues/501
+              //
+              // Commenting out the lines below to ensure the id never changes.
+              // Because on id change, the removal of notification happens after
+              // the creation of notification. And the newly created notification
+              // gets removed.
+
+              //...events,
+              //args.filterPrefix ?? "",
+              //args.filterSuffix ?? "",
+              //typeof subscriber === "string" ? subscriber : subscriber.handler,
+            ].join(""),
+            4,
+          ),
+        );
+
+        const fn = Function.fromDefinition(
+          `${namePrefix}Subscriber${id}`,
+          subscriber,
+          {
+            description:
+              events.length < 5
+                ? `Subscribed to ${name} on ${events.join(", ")}`
+                : `Subscribed to ${name} on ${events
+                    .slice(0, 3)
+                    .join(", ")}, and ${events.length - 3} more events`,
+          },
+        );
+        const permission = new aws.lambda.Permission(
+          `${namePrefix}Subscriber${id}Permissions`,
+          {
+            action: "lambda:InvokeFunction",
+            function: fn.arn,
+            principal: "s3.amazonaws.com",
+            sourceArn: bucketArn,
+          },
+        );
+        const notification = new aws.s3.BucketNotification(
+          `${namePrefix}Notification${id}`,
+          transform(args.transform?.notification, {
+            bucket: bucketName,
+            lambdaFunctions: [
+              {
+                id: `Notification${id}`,
+                lambdaFunctionArn: fn.arn,
+                events,
+                filterPrefix: args.filterPrefix,
+                filterSuffix: args.filterSuffix,
+              },
+            ],
+          }),
+          { dependsOn: [permission] },
+        );
+
+        return { fn, permission, notification };
+      },
+    );
+    return {
+      function: ret.fn,
+      permission: ret.permission,
+      notification: ret.notification,
+    } as BucketSubscriber;
   }
 
   /** @internal */

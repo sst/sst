@@ -1,4 +1,4 @@
-import { ComponentResourceOptions, output } from "@pulumi/pulumi";
+import { ComponentResourceOptions, Output, all, output } from "@pulumi/pulumi";
 import * as aws from "@pulumi/aws";
 import { Component, Transform, transform } from "../component";
 import { Link } from "../link";
@@ -6,6 +6,7 @@ import type { Input } from "../input";
 import { Function, FunctionArgs } from "./function";
 import { DurationMinutes, toSeconds } from "../duration";
 import { VisibleError } from "../error";
+import { hashStringToPrettyString, sanitizeToPascalCase } from "../naming";
 
 export interface QueueArgs {
   /**
@@ -95,6 +96,17 @@ export interface QueueSubscribeArgs {
      */
     eventSourceMapping?: Transform<aws.lambda.EventSourceMappingArgs>;
   };
+}
+
+export interface QueueSubscriber {
+  /**
+   * The Lambda function.
+   */
+  function: Output<Function>;
+  /**
+   * The Lambda event source mapping.
+   */
+  eventSourceMapping: Output<aws.lambda.EventSourceMapping>;
 }
 
 /**
@@ -218,15 +230,6 @@ export class Queue
    *
    * ```js
    * queue.subscribe("src/subscriber.handler");
-   * ```
-   *
-   * Add multiple subscribers.
-   *
-   * ```js
-   * queue
-   *   .subscribe("src/subscriber1.handler")
-   *   .subscribe("src/subscriber2.handler");
-   * ```
    *
    * Add a filter to the subscription.
    *
@@ -255,52 +258,119 @@ export class Queue
     subscriber: string | FunctionArgs,
     args?: QueueSubscribeArgs,
   ) {
-    const parent = this;
-    const parentName = this.constructorName;
-
     if (this.isSubscribed)
       throw new VisibleError(
-        `Cannot subscribe to the "${parentName}" queue multiple times. An AWS SQS queue can only have one subscriber.`,
+        `Cannot subscribe to the "${this.constructorName}" queue multiple times. An SQS queue can only have one subscriber.`,
       );
     this.isSubscribed = true;
 
-    const fn = Function.fromDefinition(
-      parent,
-      `${parentName}Subscriber`,
-      subscriber,
-      {
-        description: `Subscribed to ${parentName}`,
-        permissions: [
-          {
-            actions: [
-              "sqs:ChangeMessageVisibility",
-              "sqs:DeleteMessage",
-              "sqs:GetQueueAttributes",
-              "sqs:GetQueueUrl",
-              "sqs:ReceiveMessage",
-            ],
-            resources: [this.arn],
-          },
-        ],
-      },
-    );
-    new aws.lambda.EventSourceMapping(
-      `${parentName}EventSourceMapping`,
-      transform(args?.transform?.eventSourceMapping, {
-        eventSourceArn: this.arn,
-        functionName: fn.name,
-        filterCriteria: args?.filters && {
-          filters: output(args.filters).apply((filters) =>
-            filters.map((filter) => ({
-              pattern: JSON.stringify(filter),
-            })),
-          ),
-        },
-      }),
-      { parent },
-    );
+    return Queue._subscribe(this.constructorName, this.arn, subscriber, args);
+  }
 
-    return this;
+  /**
+   * Subscribe to an existing SQS queue.
+   *
+   * @param queueArn The ARN of the SQS Queue to subscribe to.
+   * @param subscriber The function that'll be notified.
+   * @param args Configure the subscription.
+   *
+   * @example
+   *
+   * ```js
+   * const queueArn = "arn:aws:sqs:us-east-1:123456789012:MyQueue";
+   * sst.aws.Queue.subscribe(queueArn, "src/subscriber.handler");
+   *
+   * Add a filter to the subscription.
+   *
+   * ```js
+   * sst.aws.Queue.subscribe(queueArn, "src/subscriber.handler", {
+   *   filters: [
+   *     {
+   *       body: {
+   *         RequestCode: ["BBBB"]
+   *       }
+   *     }
+   *   ]
+   * });
+   * ```
+   *
+   * Customize the subscriber function.
+   *
+   * ```js
+   * sst.aws.Queue.subscribe(queueArn, {
+   *   handler: "src/subscriber.handler",
+   *   timeout: "60 seconds"
+   * });
+   * ```
+   */
+  public static subscribe(
+    queueArn: Input<string>,
+    subscriber: string | FunctionArgs,
+    args?: QueueSubscribeArgs,
+  ) {
+    const queueName = output(queueArn).apply((queueArn) => {
+      const queueName = queueArn.split(":").pop();
+      if (!queueArn.startsWith("arn:aws:sqs:") || !queueName)
+        throw new VisibleError(
+          `The provided ARN "${queueArn}" is not an SQS queue ARN.`,
+        );
+      return queueName;
+    });
+
+    return this._subscribe(queueName, queueArn, subscriber, args);
+  }
+
+  private static _subscribe(
+    name: Input<string>,
+    queueArn: Input<string>,
+    subscriber: string | FunctionArgs,
+    args: QueueSubscribeArgs = {},
+  ) {
+    const ret = all([name, queueArn]).apply(([name, queueArn]) => {
+      // Build subscriber name
+      const namePrefix = sanitizeToPascalCase(name);
+      const id = sanitizeToPascalCase(hashStringToPrettyString(queueArn, 4));
+
+      const fn = Function.fromDefinition(
+        `${namePrefix}Subscriber${id}`,
+        subscriber,
+        {
+          description: `Subscribed to ${name}`,
+          permissions: [
+            {
+              actions: [
+                "sqs:ChangeMessageVisibility",
+                "sqs:DeleteMessage",
+                "sqs:GetQueueAttributes",
+                "sqs:GetQueueUrl",
+                "sqs:ReceiveMessage",
+              ],
+              resources: [queueArn],
+            },
+          ],
+        },
+      );
+      const mapping = new aws.lambda.EventSourceMapping(
+        `${namePrefix}EventSourceMapping${id}`,
+        transform(args.transform?.eventSourceMapping, {
+          eventSourceArn: queueArn,
+          functionName: fn.name,
+          filterCriteria: args.filters && {
+            filters: output(args.filters).apply((filters) =>
+              filters.map((filter) => ({
+                pattern: JSON.stringify(filter),
+              })),
+            ),
+          },
+        }),
+      );
+      return { fn, mapping };
+    });
+
+    return {
+      function: ret.fn,
+      eventSourceMapping: ret.mapping,
+    } as QueueSubscriber;
   }
 
   /** @internal */

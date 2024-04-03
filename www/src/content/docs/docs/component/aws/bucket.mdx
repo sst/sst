@@ -101,20 +101,12 @@ Configure the subscription.
 </Section>
 
 <InlineSection>
-**Returns** [<code class="type">Bucket</code>](.)
+**Returns** [<code class="type">BucketSubscriber</code>](#bucketsubscriber)
 </InlineSection>
 Subscribes to events from this bucket.
 
 ```js
 bucket.subscribe("src/subscriber.handler");
-```
-
-Add multiple subscribers.
-
-```js
-bucket
-  .subscribe("src/subscriber1.handler")
-  .subscribe("src/subscriber2.handler");
 ```
 
 Subscribe to specific S3 events.
@@ -138,6 +130,61 @@ Customize the subscriber function.
 
 ```js
 bucket.subscribe({
+  handler: "src/subscriber.handler",
+  timeout: "60 seconds",
+});
+```
+</Segment>
+
+### Bucket.subscribe
+<Segment>
+<Section type="signature">
+```ts
+subscribe(bucketArn, subscriber, args?)
+```
+</Section>
+
+<Section type="parameters">
+#### Parameters
+- <p><code class="key">bucketArn</code> <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code></p>
+The ARN of the S3 bucket to subscribe to.
+- <p><code class="key">subscriber</code> <code class="primitive">string</code><code class="symbol"> | </code>[<code class="type">FunctionArgs</code>](/docs/component/aws/function/#functionargs)</p>
+The function that'll be notified.
+- <p><code class="key">args?</code> [<code class="type">BucketSubscribeArgs</code>](#bucketsubscribeargs)</p>
+Configure the subscription.
+</Section>
+
+<InlineSection>
+**Returns** [<code class="type">BucketSubscriber</code>](#bucketsubscriber)
+</InlineSection>
+Subscribes to events from an existing S3 bucket.
+
+```js
+const bucketArn = "arn:aws:s3:::my-bucket";
+sst.aws.Bucket.subscribe(bucketArn, "src/subscriber.handler");
+```
+
+Subscribe to specific S3 events.
+
+```js
+sst.aws.Bucket.subscribe(bucketArn, "src/subscriber.handler", {
+  events: ["s3:ObjectCreated:*", "s3:ObjectRemoved:*"]
+});
+```
+
+Subscribe to specific S3 events from a specific folder.
+
+```js
+sst.aws.Bucket.subscribe(bucketArn, "src/subscriber.handler", {
+  filterPrefix: "images/",
+  events: ["s3:ObjectCreated:*", "s3:ObjectRemoved:*"]
+});
+```
+
+Customize the subscriber function.
+
+```js
+sst.aws.Bucket.subscribe(bucketArn, {
   handler: "src/subscriber.handler",
   timeout: "60 seconds",
 });
@@ -499,6 +546,38 @@ resources.
 </InlineSection>
 </Section>
 Transform the S3 Bucket Notification resource.
+
+</Segment>
+
+## BucketSubscriber
+### function
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Output</code><code class="symbol">&lt;</code>[<code class="type">Function</code>](/docs/component/aws/function/)<code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+The Lambda function.
+
+</Segment>
+### notification
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Output</code><code class="symbol">&lt;</code>[<code class="type">BucketNotification</code>](https://www.pulumi.com/registry/packages/aws/api-docs/s3/bucketnotification/)<code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+The S3 bucket notification.
+
+</Segment>
+### permission
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Output</code><code class="symbol">&lt;</code>[<code class="type">Permission</code>](https://www.pulumi.com/registry/packages/aws/api-docs/lambda/permission/)<code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+The Lambda permission.
 
 </Segment>
 </div>
