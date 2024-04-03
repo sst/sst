@@ -719,7 +719,7 @@ export interface FunctionArgs {
     }[]
   >;
   /**
-   * A list of layers to add to the function.
+   * A list of Lambda layer ARNs to add to the function.
    *
    * @example
    * ```js
