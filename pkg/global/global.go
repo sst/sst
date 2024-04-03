@@ -156,11 +156,11 @@ func InstallBun() error {
 	case goos == "darwin" && arch == "arm64":
 		filename = "bun-darwin-aarch64.zip"
 	case goos == "darwin" && arch == "amd64":
-		filename = "bun-darwin-x64.zip"
+		filename = "bun-darwin-x64-baseline.zip"
 	case goos == "linux" && arch == "arm64":
 		filename = "bun-linux-aarch64.zip"
 	case goos == "linux" && arch == "amd64":
-		filename = "bun-linux-x64.zip"
+		filename = "bun-linux-x64-baseline.zip"
 	default:
 	}
 	if filename == "" {
