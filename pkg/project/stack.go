@@ -52,6 +52,7 @@ type ConcurrentUpdateEvent struct{}
 type Links map[string]interface{}
 
 type Receiver struct {
+	Directory   string
 	Links       []string
 	Environment map[string]string
 }
@@ -367,36 +368,21 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 			provider.PutLinks(s.project.home, s.project.app.Name, s.project.app.Stage, links)
 		}
 
-		hintsOutput, ok := outputs["_hints"]
-		if ok {
-			hints := hintsOutput.(map[string]interface{})
-			for key, value := range hints {
-				str, ok := value.(string)
-				if ok {
-					complete.Hints[key] = str
-				}
+		for _, resource := range complete.Resources {
+			if outputs, ok := resource.Outputs["_live"].(map[string]interface{}); ok {
+				data, _ := json.Marshal(outputs)
+				var entry Warp
+				json.Unmarshal(data, &entry)
+				complete.Warps[entry.FunctionID] = entry
 			}
-		}
-
-		warpsOutput, ok := outputs["_warps"]
-		if ok {
-			warps := warpsOutput.(map[string]interface{})
-			for key, value := range warps {
-				data, _ := json.Marshal(value)
-				var definition Warp
-				json.Unmarshal(data, &definition)
-				complete.Warps[key] = definition
+			if outputs, ok := resource.Outputs["_receiver"].(map[string]interface{}); ok {
+				data, _ := json.Marshal(outputs)
+				var entry Receiver
+				json.Unmarshal(data, &entry)
+				complete.Receivers[entry.Directory] = entry
 			}
-		}
-
-		receiversOutput, ok := outputs["_receivers"]
-		if ok {
-			receivers := receiversOutput.(map[string]interface{})
-			for key, value := range receivers {
-				data, _ := json.Marshal(value)
-				var out Receiver
-				json.Unmarshal(data, &out)
-				complete.Receivers[key] = out
+			if hint, ok := resource.Outputs["_hint"].(string); ok {
+				complete.Hints[string(resource.URN)] = hint
 			}
 		}
 

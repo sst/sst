@@ -1541,6 +1541,7 @@ func guessStage() string {
 		return ""
 	}
 	stage := strings.ToLower(u.Username)
+	stage = project.StageRegex.ReplaceAllString(stage, "")
 
 	if stage == "root" || stage == "admin" || stage == "prod" || stage == "dev" || stage == "production" {
 		return ""

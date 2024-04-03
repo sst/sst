@@ -152,7 +152,7 @@ func Start(
 
 	mqttClient := MQTT.NewClient(opts)
 	if token := mqttClient.Connect(); token.Wait() && token.Error() != nil {
-		return nil, token.Error()
+		return nil, fmt.Errorf("failed to connect to mqtt: %w", token.Error())
 	}
 
 	var pending sync.Map

@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/fsnotify/fsnotify"
 	"github.com/sst/ion/internal/util"
@@ -50,6 +51,7 @@ func Start(ctx context.Context, root string) (util.CleanupFunc, error) {
 	}
 
 	go func() {
+		limiter := map[string]time.Time{}
 		for {
 			select {
 			case event, ok := <-watcher.Events:
@@ -57,7 +59,8 @@ func Start(ctx context.Context, root string) (util.CleanupFunc, error) {
 					return
 				}
 				slog.Info("file event", "path", event.Name, "op", event.Op)
-				if event.Op.Has(fsnotify.Write) || event.Op.Has(fsnotify.Create) {
+				if (event.Op.Has(fsnotify.Write) || event.Op.Has(fsnotify.Create)) && time.Since(limiter[event.Name]) > 500*time.Millisecond {
+					limiter[event.Name] = time.Now()
 					bus.Publish(&FileChangedEvent{Path: event.Name})
 				}
 			case <-ctx.Done():

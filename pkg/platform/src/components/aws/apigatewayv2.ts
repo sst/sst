@@ -363,7 +363,9 @@ export class ApiGatewayV2 extends Component implements Link.Linkable {
     this.apiMapping = apiMapping;
     this.logGroup = logGroup;
 
-    Hint.register(this.urn, this.url);
+    this.registerOutputs({
+      _hint: this.url,
+    });
 
     function normalizeAccessLog() {
       return output(args.accessLog).apply((accessLog) => ({

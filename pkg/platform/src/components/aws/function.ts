@@ -20,7 +20,7 @@ import { Size, toMBs } from "../size.js";
 import { Component, Prettify, Transform, transform } from "../component.js";
 import { Link } from "../link.js";
 import { VisibleError } from "../error.js";
-import { Warp } from "../warp.js";
+import { Live } from "../live.js";
 import type { Input } from "../input.js";
 import { prefixName } from "../naming.js";
 import { RETENTION } from "./logging.js";
@@ -927,9 +927,15 @@ export class Function
     this.logGroup = logGroup;
     this.fnUrl = fnUrl;
 
-    Warp.register(
-      name,
-      all([
+    this.registerOutputs({
+      _receiver: all([args.bundle, args.handler]).apply(
+        ([bundle, handler]) => ({
+          directory: bundle || handler,
+          links,
+          environment,
+        }),
+      ),
+      _live: all([
         dev,
         name,
         links,
@@ -948,12 +954,6 @@ export class Function
           properties: nodejs,
         };
       }),
-    );
-
-    all([args.bundle, args.handler]).apply(([bundle, handler]) => {
-      Link.Receiver.register(bundle || handler, links, environment);
-    });
-    this.registerOutputs({
       _metadata: {
         handler: args.handler,
         internal: args._skipMetadata,

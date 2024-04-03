@@ -312,14 +312,18 @@ export function buildApp(
 }
 
 export function cleanup(
-  urn: Output<string>,
   url: Output<string>,
   sitePath: ReturnType<typeof prepare>["sitePath"],
   environment: ReturnType<typeof prepare>["environment"],
 ) {
-  all([sitePath, environment]).apply(([sitepath, environment]) => {
-    Link.Receiver.register(sitepath, [], environment);
-  });
-
-  Hint.register(urn, url);
+  return {
+    _hint: url,
+    _receiver: all([sitePath, environment]).apply(
+      ([sitePath, environment]) => ({
+        directory: sitePath,
+        links: [],
+        environment,
+      }),
+    ),
+  };
 }
