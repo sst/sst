@@ -20,7 +20,6 @@ import { Size, toMBs } from "../size.js";
 import { Component, Prettify, Transform, transform } from "../component.js";
 import { Link } from "../link.js";
 import { VisibleError } from "../error.js";
-import { Live } from "../live.js";
 import type { Input } from "../input.js";
 import { prefixName } from "../naming.js";
 import { RETENTION } from "./logging.js";
