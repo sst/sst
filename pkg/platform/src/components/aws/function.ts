@@ -443,14 +443,17 @@ export interface FunctionArgs {
    */
   architecture?: Input<"x86_64" | "arm64">;
   /**
-   * Assigns an existing IAM role to the function, replacing the default behavior of creating a new role.
+   * Assigns the given IAM role ARN to the function. This allows you to pass in a previously created role.
    *
-   * :::tip
-   * Permissions specified in "permissions" and required by "link" resources are not added
-   * automatically. You'll need to manually configure the IAM permissions required by the function.
+   * :::caution
+   * When you pass in a role, the function will not update it if you add `permissions` or `link` resources.
    * :::
    *
-   * @default Creates a new role.
+   * By default, the function creates a new IAM role when it's created. It'll update this role if you add `permissions` or `link` resources.
+   *
+   * However, if you pass in a role, you'll need to update it manually if you add `permissions` or `link` resources.
+   *
+   * @default Creates a new role
    * @example
    * ```js
    * {
@@ -486,45 +489,45 @@ export interface FunctionArgs {
   url?: Input<
     | boolean
     | {
-        /**
-         * The authorization used for the function URL. Supports [IAM authorization](https://docs.aws.amazon.com/lambda/latest/dg/urls-auth.html).
-         * @default `"none"`
-         * @example
-         * ```js
-         * {
-         *   url: {
-         *     authorization: "iam"
-         *   }
-         * }
-         * ```
-         */
-        authorization?: Input<"none" | "iam">;
-        /**
-         * Customize the CORS (Cross-origin resource sharing) settings for the function URL.
-         * @default `true`
-         * @example
-         * Disable CORS.
-         * ```js
-         * {
-         *   url: {
-         *     cors: true
-         *   }
-         * }
-         * ```
-         * Only enable the `GET` and `POST` methods for `https://example.com`.
-         * ```js
-         * {
-         *   url: {
-         *     cors: {
-         *       allowedMethods: ["GET", "POST"],
-         *       allowedOrigins: ["https://example.com"]
-         *     }
-         *   }
-         * }
-         * ```
-         */
-        cors?: Input<boolean | Prettify<FunctionUrlCorsArgs>>;
-      }
+      /**
+       * The authorization used for the function URL. Supports [IAM authorization](https://docs.aws.amazon.com/lambda/latest/dg/urls-auth.html).
+       * @default `"none"`
+       * @example
+       * ```js
+       * {
+       *   url: {
+       *     authorization: "iam"
+       *   }
+       * }
+       * ```
+       */
+      authorization?: Input<"none" | "iam">;
+      /**
+       * Customize the CORS (Cross-origin resource sharing) settings for the function URL.
+       * @default `true`
+       * @example
+       * Disable CORS.
+       * ```js
+       * {
+       *   url: {
+       *     cors: true
+       *   }
+       * }
+       * ```
+       * Only enable the `GET` and `POST` methods for `https://example.com`.
+       * ```js
+       * {
+       *   url: {
+       *     cors: {
+       *       allowedMethods: ["GET", "POST"],
+       *       allowedOrigins: ["https://example.com"]
+       *     }
+       *   }
+       * }
+       * ```
+       */
+      cors?: Input<boolean | Prettify<FunctionUrlCorsArgs>>;
+    }
   >;
   /**
    * Configure how your function is bundled.
@@ -874,8 +877,7 @@ export interface FunctionArgs {
  */
 export class Function
   extends Component
-  implements Link.Linkable, Link.AWS.Linkable
-{
+  implements Link.Linkable, Link.AWS.Linkable {
   private function: Output<aws.lambda.Function>;
   private role?: aws.iam.Role;
   private logGroup: aws.cloudwatch.LogGroup;
@@ -1033,10 +1035,10 @@ export class Function
             : url.cors === true || url.cors === undefined
               ? defaultCors
               : {
-                  ...defaultCors,
-                  ...url.cors,
-                  maxAge: url.cors.maxAge && toSeconds(url.cors.maxAge),
-                };
+                ...defaultCors,
+                ...url.cors,
+                maxAge: url.cors.maxAge && toSeconds(url.cors.maxAge),
+              };
 
         return { authorization, cors };
       });
@@ -1151,12 +1153,12 @@ export class Function
 
           const linkInjection = hasLinkInjections
             ? linkData
-                .map((item) => [
-                  `process.env.SST_RESOURCE_${item.name} = ${JSON.stringify(
-                    JSON.stringify(item.properties),
-                  )};\n`,
-                ])
-                .join("")
+              .map((item) => [
+                `process.env.SST_RESOURCE_${item.name} = ${JSON.stringify(
+                  JSON.stringify(item.properties),
+                )};\n`,
+              ])
+              .join("")
             : "";
 
           const parsed = path.posix.parse(handler);
@@ -1187,21 +1189,21 @@ export class Function
               name: `${newHandlerFileName}.mjs`,
               content: streaming
                 ? [
-                    linkInjection,
-                    `export const ${newHandlerFunction} = awslambda.streamifyResponse(async (event, context) => {`,
-                    ...injections,
-                    `  const { ${oldHandlerFunction}: rawHandler} = await import("./${oldHandlerFileName}${newHandlerFileExt}");`,
-                    `  return rawHandler(event, context);`,
-                    `});`,
-                  ].join("\n")
+                  linkInjection,
+                  `export const ${newHandlerFunction} = awslambda.streamifyResponse(async (event, context) => {`,
+                  ...injections,
+                  `  const { ${oldHandlerFunction}: rawHandler} = await import("./${oldHandlerFileName}${newHandlerFileExt}");`,
+                  `  return rawHandler(event, context);`,
+                  `});`,
+                ].join("\n")
                 : [
-                    linkInjection,
-                    `export const ${newHandlerFunction} = async (event, context) => {`,
-                    ...injections,
-                    `  const { ${oldHandlerFunction}: rawHandler} = await import("./${oldHandlerFileName}${newHandlerFileExt}");`,
-                    `  return rawHandler(event, context);`,
-                    `};`,
-                  ].join("\n"),
+                  linkInjection,
+                  `export const ${newHandlerFunction} = async (event, context) => {`,
+                  ...injections,
+                  `  const { ${oldHandlerFunction}: rawHandler} = await import("./${oldHandlerFileName}${newHandlerFileExt}");`,
+                  `  return rawHandler(event, context);`,
+                  `};`,
+                ].join("\n"),
             },
           };
         },
@@ -1223,11 +1225,11 @@ export class Function
               ...linkPermissions,
               ...(dev
                 ? [
-                    {
-                      actions: ["iot:*"],
-                      resources: ["*"],
-                    },
-                  ]
+                  {
+                    actions: ["iot:*"],
+                    resources: ["*"],
+                  },
+                ]
                 : []),
             ],
           }),
@@ -1251,19 +1253,19 @@ export class Function
           inlinePolicies: policy.apply(({ statements }) =>
             statements
               ? [
-                  {
-                    name: "inline",
-                    policy: policy.json,
-                  },
-                ]
+                {
+                  name: "inline",
+                  policy: policy.json,
+                },
+              ]
               : [],
           ),
           managedPolicyArns: [
             "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
             ...(args.vpc
               ? [
-                  "arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole",
-                ]
+                "arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole",
+              ]
               : []),
           ],
         }),
@@ -1327,9 +1329,9 @@ export class Function
               entry.isDir
                 ? archive.directory(entry.from, entry.to, { date: new Date(0) })
                 : archive.file(entry.from, {
-                    name: entry.to,
-                    date: new Date(0),
-                  });
+                  name: entry.to,
+                  date: new Date(0),
+                });
               //if (mode === "start") {
               //  try {
               //    const dir = path.dirname(toPath);
