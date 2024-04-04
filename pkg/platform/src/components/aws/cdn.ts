@@ -115,35 +115,35 @@ export interface CdnDomainArgs {
 
 export interface CdnArgs {
   /**
-   * Any comments you want to include about the distribution.
+   * A comment to describe the distribution. It cannot be longer than 128 characters.
    */
   comment?: Input<string>;
   /**
-   * One or more origins for this distribution (multiples allowed).
+   * One or more origins for this distribution.
    */
   origins: aws.cloudfront.DistributionArgs["origins"];
   /**
-   * One or more origin_group for this distribution (multiples allowed).
+   * One or more origin groups for this distribution.
    */
   originGroups?: aws.cloudfront.DistributionArgs["originGroups"];
   /**
-   * Default cache behavior for this distribution.
+   * The default cache behavior for this distribution.
    */
   defaultCacheBehavior: aws.cloudfront.DistributionArgs["defaultCacheBehavior"];
   /**
-   * Ordered list of cache behaviors resource for this distribution. List from top to bottom in order of precedence. The topmost cache behavior will have precedence 0.
+   * An ordered list of cache behaviors for this distribution. Listed in order of precedence. The first cache behavior will have precedence 0.
    */
   orderedCacheBehaviors?: aws.cloudfront.DistributionArgs["orderedCacheBehaviors"];
   /**
-   * Object that you want CloudFront to return (for example, index.html) when an end user requests the root URL.
+   * An object you want CloudFront to return when a user requests the root URL. For example, the `index.html`.
    */
   defaultRootObject?: aws.cloudfront.DistributionArgs["defaultRootObject"];
   /**
-   * One or more custom error response elements (multiples allowed).
+   * One or more custom error responses.
    */
   customErrorResponses?: aws.cloudfront.DistributionArgs["customErrorResponses"];
   /**
-   * Set a custom domain for your SSR site. Supports domains hosted either on
+   * Set a custom domain for your distribution. Supports domains hosted either on
    * [Route 53](https://aws.amazon.com/route53/) or outside AWS.
    *
    * :::tip
@@ -174,28 +174,32 @@ export interface CdnArgs {
   domain?: Input<string | Prettify<CdnDomainArgs>>;
   /**
    * Whether to wait for the CloudFront distribution to be deployed before
-   * completing the deployment. This is useful if you need to use the
+   * completing the deployment of the app. This is necessary if you need to use the
    * distribution URL in other resources.
    * @default `true`
-   * @example
-   * ```js
-   * wait: false,
-   * ```
    */
   wait?: Input<boolean>;
+  /**
+   * [Transform](/docs/components#transform) how this component creates its underlying resources.
+   */
   transform?: {
+    /**
+     * Transform the CloudFront distribution resource.
+     */
     distribution: Transform<aws.cloudfront.DistributionArgs>;
   };
 }
 
 /**
- * The `Cdn` component is internally used by other SST components to deploy a content delivery network (CDN) to AWS. It uses [Amazon CloudFront](https://aws.amazon.com/cloudfront/) to serve the content and [Amazon Route 53](https://aws.amazon.com/route53/) to manage custom domains.
+ * The `Cdn` component is internally used by other components to deploy a CDN to AWS. It uses [Amazon CloudFront](https://aws.amazon.com/cloudfront/) and [Amazon Route 53](https://aws.amazon.com/route53/) to manage custom domains.
  *
- * :::note
- * This component is not intended to be used directly in your SST apps. You can customize this component via transform.
+ * :::caution
+ * This component is not intended for public use.
  * :::
  *
  * @example
+ *
+ * You'll find this component exposed in the `transform` of other components. And you can customize the args listed here. For example:
  *
  * ```ts
  * new sst.aws.Nextjs("MyWeb", {
@@ -298,19 +302,19 @@ export class Cdn extends Component {
           },
           aliases: domain
             ? output(domain).apply((domain) => [
-                domain.domainName,
-                ...domain.aliases,
-              ])
+              domain.domainName,
+              ...domain.aliases,
+            ])
             : [],
           viewerCertificate: certificate
             ? {
-                acmCertificateArn: certificate.arn,
-                sslSupportMethod: "sni-only",
-                minimumProtocolVersion: "TLSv1.2_2021",
-              }
+              acmCertificateArn: certificate.arn,
+              sslSupportMethod: "sni-only",
+              minimumProtocolVersion: "TLSv1.2_2021",
+            }
             : {
-                cloudfrontDefaultCertificate: true,
-              },
+              cloudfrontDefaultCertificate: true,
+            },
           waitForDeployment: false,
         }),
         {
@@ -385,14 +389,14 @@ export class Cdn extends Component {
   }
 
   /**
-   * The CloudFront URL of the website.
+   * The CloudFront URL of the distribution.
    */
   public get url() {
     return interpolate`https://${this.distribution.domainName}`;
   }
 
   /**
-   * If the custom domain is enabled, this is the URL of the website with the
+   * If the custom domain is enabled, this is the URL of the distribution with the
    * custom domain.
    */
   public get domainUrl() {

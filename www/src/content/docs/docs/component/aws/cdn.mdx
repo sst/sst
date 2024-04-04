@@ -13,11 +13,13 @@ import InlineSection from '../../../../../../src/components/tsdoc/InlineSection.
 <div class="tsdoc">
 
 <Section type="about">
-The `Cdn` component is internally used by other SST components to deploy a content delivery network (CDN) to AWS. It uses [Amazon CloudFront](https://aws.amazon.com/cloudfront/) to serve the content and [Amazon Route 53](https://aws.amazon.com/route53/) to manage custom domains.
+The `Cdn` component is internally used by other components to deploy a CDN to AWS. It uses [Amazon CloudFront](https://aws.amazon.com/cloudfront/) and [Amazon Route 53](https://aws.amazon.com/route53/) to manage custom domains.
 
-:::note
-This component is not intended to be used directly in your SST apps. You can customize this component via transform.
+:::caution
+This component is not intended for public use.
 :::
+
+You'll find this component exposed in the `transform` of other components. And you can customize the args listed here. For example:
 
 ```ts
 new sst.aws.Nextjs("MyWeb", {
@@ -58,7 +60,7 @@ new Cdn(name, args, opts?)
 **Type** <code class="primitive">undefined</code><code class="symbol"> | </code><code class="primitive">Output</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
-If the custom domain is enabled, this is the URL of the website with the
+If the custom domain is enabled, this is the URL of the distribution with the
 custom domain.
 </Segment>
 
@@ -89,7 +91,7 @@ The Amazon CloudFront distribution.
 **Type** <code class="primitive">Output</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
-The CloudFront URL of the website.
+The CloudFront URL of the distribution.
 </Segment>
 
 ## CdnArgs
@@ -100,7 +102,7 @@ The CloudFront URL of the website.
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
-Any comments you want to include about the distribution.
+A comment to describe the distribution. It cannot be longer than 128 characters.
 
 </Segment>
 ### customErrorResponses?
@@ -110,7 +112,7 @@ Any comments you want to include about the distribution.
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Input</code><code class="symbol">&lt;</code>[<code class="type">DistributionCustomErrorResponse</code>](https://www.pulumi.com/registry/packages/aws/api-docs/cloudfront/distribution/#distributioncustomerrorresponse)<code class="symbol">&gt;</code><code class="symbol">[]</code><code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
-One or more custom error response elements (multiples allowed).
+One or more custom error responses.
 
 </Segment>
 ### defaultCacheBehavior
@@ -120,7 +122,7 @@ One or more custom error response elements (multiples allowed).
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code>[<code class="type">DistributionDefaultCacheBehavior</code>](https://www.pulumi.com/registry/packages/aws/api-docs/cloudfront/distribution/#distributiondefaultcachebehavior)<code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
-Default cache behavior for this distribution.
+The default cache behavior for this distribution.
 
 </Segment>
 ### defaultRootObject?
@@ -130,7 +132,7 @@ Default cache behavior for this distribution.
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
-Object that you want CloudFront to return (for example, index.html) when an end user requests the root URL.
+An object you want CloudFront to return when a user requests the root URL. For example, the `index.html`.
 
 </Segment>
 ### domain?
@@ -145,7 +147,7 @@ Object that you want CloudFront to return (for example, index.html) when an end 
 - <p>[<code class="key">hostedZoneId?</code>](#domain-hostedzoneid)</p>
 - <p>[<code class="key">redirects?</code>](#domain-redirects)</p>
 </Section>
-Set a custom domain for your SSR site. Supports domains hosted either on
+Set a custom domain for your distribution. Supports domains hosted either on
 [Route 53](https://aws.amazon.com/route53/) or outside AWS.
 
 :::tip
@@ -298,7 +300,7 @@ Use this to create a `www.` version of your domain and redirect visitors to the 
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Input</code><code class="symbol">&lt;</code>[<code class="type">DistributionOrderedCacheBehavior</code>](https://www.pulumi.com/registry/packages/aws/api-docs/cloudfront/distribution/#distributionorderedcachebehavior)<code class="symbol">&gt;</code><code class="symbol">[]</code><code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
-Ordered list of cache behaviors resource for this distribution. List from top to bottom in order of precedence. The topmost cache behavior will have precedence 0.
+An ordered list of cache behaviors for this distribution. Listed in order of precedence. The first cache behavior will have precedence 0.
 
 </Segment>
 ### originGroups?
@@ -308,7 +310,7 @@ Ordered list of cache behaviors resource for this distribution. List from top to
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Input</code><code class="symbol">&lt;</code>[<code class="type">DistributionOriginGroup</code>](https://www.pulumi.com/registry/packages/aws/api-docs/cloudfront/distribution/#distributionorigingroup)<code class="symbol">&gt;</code><code class="symbol">[]</code><code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
-One or more origin_group for this distribution (multiples allowed).
+One or more origin groups for this distribution.
 
 </Segment>
 ### origins
@@ -318,7 +320,7 @@ One or more origin_group for this distribution (multiples allowed).
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Input</code><code class="symbol">&lt;</code>[<code class="type">DistributionOrigin</code>](https://www.pulumi.com/registry/packages/aws/api-docs/cloudfront/distribution/#distributionorigin)<code class="symbol">&gt;</code><code class="symbol">[]</code><code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
-One or more origins for this distribution (multiples allowed).
+One or more origins for this distribution.
 
 </Segment>
 ### transform?
@@ -329,6 +331,7 @@ One or more origins for this distribution (multiples allowed).
 </InlineSection>
 - <p>[<code class="key">distribution</code>](#transform-distribution)</p>
 </Section>
+[Transform](/docs/components#transform) how this component creates its underlying resources.
 
 </Segment>
 <NestedTitle id="transform-distribution" Tag="h4" parent="transform.">distribution</NestedTitle>
@@ -338,6 +341,7 @@ One or more origins for this distribution (multiples allowed).
 **Type** [<code class="type">DistributionArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/cloudfront/distribution/#inputs)<code class="symbol"> | </code><code class="symbol">(</code><code class="primitive">args</code><code class="symbol">: </code>[<code class="type">DistributionArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/cloudfront/distribution/#inputs)<code class="symbol"> => </code>[<code class="type">DistributionArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/cloudfront/distribution/#inputs)<code class="symbol"> | </code><code class="primitive">void</code><code class="symbol">)</code>
 </InlineSection>
 </Section>
+Transform the CloudFront distribution resource.
 
 </Segment>
 ### wait?
@@ -352,12 +356,9 @@ One or more origins for this distribution (multiples allowed).
 **Default** <code class="primitive">true</code>
 </InlineSection>
 Whether to wait for the CloudFront distribution to be deployed before
-completing the deployment. This is useful if you need to use the
+completing the deployment of the app. This is necessary if you need to use the
 distribution URL in other resources.
 
-```js
-wait: false,
-```
 </Segment>
 
 ## CdnDomainArgs

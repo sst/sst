@@ -91,7 +91,7 @@ export interface RouterArgs {
      */
     cachePolicy?: Transform<aws.cloudfront.CachePolicyArgs>;
     /**
-     * Transform the CDN resource.
+     * Transform the CloudFront CDN resource.
      */
     cdn?: Transform<CdnArgs>;
   };
