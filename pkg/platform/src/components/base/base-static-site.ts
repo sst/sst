@@ -300,13 +300,14 @@ export function buildApp(
       }
 
       // Validate build output
-      if (!fs.existsSync(build.output)) {
+      const outputPath = path.join(sitePath, build.output);
+      if (!fs.existsSync(outputPath)) {
         throw new VisibleError(
-          `No build output found at "${path.resolve(build.output)}".`,
+          `No build output found at "${path.resolve(outputPath)}".`,
         );
       }
 
-      return build.output;
+      return outputPath;
     },
   );
 }
