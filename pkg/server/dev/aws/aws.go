@@ -83,10 +83,8 @@ func Start(
 	from := time.Now()
 	server := fmt.Sprintf("localhost:%d/lambda/", port)
 
-	config, err := provider.AwsResolveConfig(args)
-	if err != nil {
-		return nil, err
-	}
+	prov, _ := p.Provider("aws")
+	config := prov.(*provider.AwsProvider).Config()
 	slog.Info("getting endpoint")
 	iotClient := iot.NewFromConfig(config)
 	endpointResp, err := iotClient.DescribeEndpoint(ctx, &iot.DescribeEndpointInput{})

@@ -1,14 +1,12 @@
 package provider
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
 	"log/slog"
-	"os"
 	"path/filepath"
 	"strings"
 	"sync"
@@ -26,7 +24,6 @@ import (
 )
 
 type AwsProvider struct {
-	args        map[string]interface{}
 	config      aws.Config
 	bootstrap   *awsBootstrapData
 	credentials sync.Once
@@ -39,129 +36,58 @@ func (a *AwsProvider) Env() (map[string]string, error) {
 	}
 
 	env := map[string]string{}
-	env["AWS_ACCESS_KEY_ID"] = creds.AccessKeyID
-	env["AWS_SECRET_ACCESS_KEY"] = creds.SecretAccessKey
-	env["AWS_SESSION_TOKEN"] = creds.SessionToken
-	env["AWS_DEFAULT_REGION"] = a.config.Region
-	env["AWS_REGION"] = a.config.Region
-
+	env["SST_AWS_ACCESS_KEY_ID"] = creds.AccessKeyID
+	env["SST_AWS_SECRET_ACCESS_KEY"] = creds.SecretAccessKey
+	env["SST_AWS_SESSION_TOKEN"] = creds.SessionToken
+	env["SST_AWS_REGION"] = a.config.Region
 	return env, nil
-}
-
-func (a *AwsProvider) Lock(app string, stage string, out *os.File) error {
-	s3Client := s3.NewFromConfig(a.config)
-
-	lockKey := a.pathForLock(app, stage)
-	_, err := s3Client.GetObject(context.TODO(), &s3.GetObjectInput{
-		Bucket: aws.String(a.bootstrap.State),
-		Key:    aws.String(lockKey),
-	})
-
-	if err == nil {
-		slog.Info("lock exists", "key", lockKey)
-		return ErrLockExists
-	}
-
-	slog.Info("writing lock")
-	_, err = s3Client.PutObject(context.TODO(), &s3.PutObjectInput{
-		Bucket: aws.String(a.bootstrap.State),
-		Key:    aws.String(lockKey),
-	})
-	if err != nil {
-		return err
-	}
-
-	slog.Info("syncing old state")
-	result, err := s3Client.GetObject(context.TODO(), &s3.GetObjectInput{
-		Bucket: aws.String(a.bootstrap.State),
-		Key:    aws.String(a.pathForState(app, stage)),
-	})
-
-	if err != nil {
-		var nsk *s3types.NoSuchKey
-		if errors.As(err, &nsk) {
-			_, err := io.Copy(out, bytes.NewReader([]byte("{}")))
-			return err
-		}
-		return err
-	}
-
-	if _, err := io.Copy(out, result.Body); err != nil {
-		return err
-	}
-
-	return nil
 }
 
 func (a *AwsProvider) pathForData(key, app, stage string) string {
 	return filepath.Join(key, app, fmt.Sprintf("%v.json", stage))
 }
 
-func (a *AwsProvider) pathForState(app string, stage string) string {
-	return filepath.Join("app", app, fmt.Sprintf("%v.json", stage))
-}
-
-func (a *AwsProvider) pathForLock(app string, stage string) string {
-	return filepath.Join("lock", app, fmt.Sprintf("%v.json", stage))
-}
-
 func (a *AwsProvider) pathForPassphrase(app string, stage string) string {
 	return "/" + strings.Join([]string{"sst", "passphrase", app, stage}, "/")
 }
 
-func (a *AwsProvider) Unlock(app string, stage string, in *os.File) error {
-	s3Client := s3.NewFromConfig(a.config)
-	defer func() {
-		s3Client.DeleteObject(context.TODO(), &s3.DeleteObjectInput{
-			Bucket: aws.String(a.bootstrap.State),
-			Key:    aws.String(a.pathForLock(app, stage)),
-		})
-	}()
-
-	_, err := s3Client.PutObject(context.TODO(), &s3.PutObjectInput{
-		Bucket:      aws.String(a.bootstrap.State),
-		Key:         aws.String(a.pathForState(app, stage)),
-		ContentType: aws.String("application/json"),
-		Body:        in,
-	})
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (a *AwsProvider) Cancel(app string, stage string) error {
-	slog.Info("canceling", "app", app, "stage", stage)
-	s3Client := s3.NewFromConfig(a.config)
-
-	_, err := s3Client.DeleteObject(context.TODO(), &s3.DeleteObjectInput{
-		Bucket: aws.String(a.bootstrap.State),
-		Key:    aws.String(a.pathForLock(app, stage)),
-	})
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
 const BOOTSTRAP_VERSION = 1
 
-func (a *AwsProvider) Init(app string, stage string, args map[string]interface{}) (err error) {
-	a.args = args
-
-	cfg, err := AwsResolveConfig(args)
+func (a *AwsProvider) Init(app string, stage string, args map[string]interface{}) error {
+	ctx := context.Background()
+	cfg, err := config.LoadDefaultConfig(
+		ctx,
+		func(lo *config.LoadOptions) error {
+			if profile, ok := args["profile"].(string); ok && profile != "" {
+				lo.SharedConfigProfile = profile
+			}
+			if region, ok := args["region"].(string); ok && region != "" {
+				lo.Region = region
+				lo.DefaultRegion = "us-east-1"
+			}
+			return nil
+		},
+	)
 	if err != nil {
 		return err
 	}
+	if assumeRole, ok := args["assumeRole"].(map[string]interface{}); ok {
+		stsclient := sts.NewFromConfig(cfg)
+		cfg.Credentials = stscreds.NewAssumeRoleProvider(stsclient, assumeRole["roleArn"].(string), func(aro *stscreds.AssumeRoleOptions) {
+			if sessionName, ok := assumeRole["sessionName"].(string); ok {
+				aro.RoleSessionName = sessionName
+			}
+		})
+	}
+	_, err = cfg.Credentials.Retrieve(ctx)
+	if err != nil {
+		return err
+	}
+	if cfg.Region == "" {
+		cfg.Region = "us-east-1"
+	}
+	slog.Info("credentials found")
 	a.config = cfg
-
-	bootstrap, err := a.resolveBuckets()
-	if err != nil {
-		return err
-	}
-	a.bootstrap = bootstrap
 	defaultTags, ok := args["defaultTags"].(map[string]interface{})
 	if !ok {
 		defaultTags = map[string]interface{}{}
@@ -174,6 +100,15 @@ func (a *AwsProvider) Init(app string, stage string, args map[string]interface{}
 	tags["sst:app"] = app
 	tags["sst:stage"] = stage
 	args["defaultTags"] = defaultTags
+	return nil
+}
+
+func (a *AwsProvider) Bootstrap(app string, stage string) (err error) {
+	bootstrap, err := a.resolveBuckets()
+	if err != nil {
+		return err
+	}
+	a.bootstrap = bootstrap
 	return err
 }
 
@@ -277,43 +212,6 @@ func (a *AwsProvider) resolveBuckets() (*awsBootstrapData, error) {
 	}
 
 	return bootstrapData, nil
-}
-
-func AwsResolveConfig(args map[string]interface{}) (aws.Config, error) {
-	ctx := context.Background()
-	cfg, err := config.LoadDefaultConfig(
-		ctx,
-		func(lo *config.LoadOptions) error {
-			if profile, ok := args["profile"].(string); ok && profile != "" {
-				lo.SharedConfigProfile = profile
-			}
-			if region, ok := args["region"].(string); ok && region != "" {
-				lo.Region = region
-				lo.DefaultRegion = "us-east-1"
-			}
-			return nil
-		},
-	)
-	if err != nil {
-		return aws.Config{}, err
-	}
-	if assumeRole, ok := args["assumeRole"].(map[string]interface{}); ok {
-		stsclient := sts.NewFromConfig(cfg)
-		cfg.Credentials = stscreds.NewAssumeRoleProvider(stsclient, assumeRole["roleArn"].(string), func(aro *stscreds.AssumeRoleOptions) {
-			if sessionName, ok := assumeRole["sessionName"].(string); ok {
-				aro.RoleSessionName = sessionName
-			}
-		})
-	}
-	_, err = cfg.Credentials.Retrieve(ctx)
-	if err != nil {
-		return aws.Config{}, err
-	}
-	if cfg.Region == "" {
-		cfg.Region = "us-east-1"
-	}
-	slog.Info("credentials found")
-	return cfg, nil
 }
 
 func (a *AwsProvider) getData(key, app, stage string) (io.Reader, error) {

@@ -16,6 +16,7 @@ import { WorkerUrl } from "./providers/worker-url.js";
 import { Link } from "../link.js";
 import type { Input } from "../input.js";
 import { ZoneLookup } from "./providers/zone-lookup.js";
+import { VisibleError } from "../error.js";
 
 export interface WorkerArgs {
   /**
@@ -241,7 +242,7 @@ export class Worker extends Component {
 
     const urlEnabled = normalizeUrl();
 
-    const linkData = buildLinkData();
+    const bindings = buildBindings();
     const iamCredentials = createAwsCredentials();
     const handler = buildHandler();
     const script = createScript();
@@ -252,15 +253,61 @@ export class Worker extends Component {
     this.workerUrl = workerUrl;
     this.workerDomain = workerDomain;
 
+    this.registerOutputs({
+      _live: all([name, args.handler, args.build]).apply(
+        ([name, handler, build]) => ({
+          functionID: name,
+          links: [],
+          handler,
+          runtime: "worker",
+          properties: {
+            accountID: sst.cloudflare.DEFAULT_ACCOUNT_ID,
+            scriptName: script.name,
+            build,
+          },
+        }),
+      ),
+    });
+
     function normalizeUrl() {
       return output(args.url).apply((v) => v ?? false);
     }
 
-    function buildLinkData() {
-      if (!args.link) return [];
+    function buildBindings() {
+      const result = {
+        plainTextBindings: [],
+        secretTextBindings: [],
+        r2BucketBindings: [],
+        queueBindings: [],
+        serviceBindings: [],
+      } as Record<string, any[]>;
+      if (!args.link) return result;
       return output(args.link).apply((links) => {
-        const linkData = Link.build(links);
-        return linkData;
+        for (let link of links) {
+          if (Link.Cloudflare.isLinkable(link)) {
+            const name = output(link.urn).apply(
+              (uri) => uri.split("::").at(-1)!,
+            );
+            const binding = link.getCloudflareBinding();
+            result[binding.type].push({
+              name,
+              ...binding.properties,
+            });
+            continue;
+          }
+          if (Link.isLinkable(link)) {
+            const name = output(link.urn).apply(
+              (uri) => uri.split("::").at(-1)!,
+            );
+            result.secretTextBindings.push({
+              name,
+              text: jsonStringify(link.getSSTLink().properties),
+            });
+            continue;
+          }
+          throw new VisibleError(`${link} is not a linkable component`);
+        }
+        return result;
       });
     }
 
@@ -305,21 +352,19 @@ export class Worker extends Component {
     }
 
     function buildHandler() {
-      const buildResult = all([args, linkData]).apply(
-        async ([args, linkData]) => {
-          const result = await build(name, { ...args, links: linkData });
-          if (result.type === "error") {
-            throw new Error(result.errors.join("\n"));
-          }
-          return result;
-        },
-      );
+      const buildResult = all([args]).apply(async ([args, linkData]) => {
+        const result = await build(name, args);
+        if (result.type === "error") {
+          throw new Error(result.errors.join("\n"));
+        }
+        return result;
+      });
       return buildResult.handler;
     }
 
     function createScript() {
-      return all([handler, args.environment, iamCredentials]).apply(
-        async ([handler, environment, iamCredentials]) =>
+      return all([handler, args.environment, iamCredentials, bindings]).apply(
+        async ([handler, environment, iamCredentials, bindings]) =>
           new cf.WorkerScript(
             `${name}Script`,
             transform(args.transform?.worker, {
@@ -329,6 +374,7 @@ export class Worker extends Component {
               module: true,
               compatibilityDate: "2024-01-01",
               compatibilityFlags: ["nodejs_compat"],
+              ...bindings,
               plainTextBindings: [
                 ...(iamCredentials
                   ? [
@@ -342,15 +388,19 @@ export class Worker extends Component {
                   name: key,
                   text: value,
                 })),
+                ...bindings.plainTextBindings,
               ],
-              secretTextBindings: iamCredentials
-                ? [
-                    {
-                      name: "AWS_SECRET_ACCESS_KEY",
-                      text: iamCredentials.secret,
-                    },
-                  ]
-                : [],
+              secretTextBindings: [
+                ...(iamCredentials
+                  ? [
+                      {
+                        name: "AWS_SECRET_ACCESS_KEY",
+                        text: iamCredentials.secret,
+                      },
+                    ]
+                  : []),
+                ...bindings.secretTextBindings,
+              ],
             }),
             { parent },
           ),

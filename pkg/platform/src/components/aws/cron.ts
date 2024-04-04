@@ -31,6 +31,10 @@ export interface CronArgs {
   /**
    * The schedule for the cron job.
    *
+   * :::note
+   * The cron job continues to run even after you exit `sst dev`.
+   * :::
+   *
    * @example
    *
    * You can use a [rate expression](https://docs.aws.amazon.com/lambda/latest/dg/services-cloudwatchevents-expressions.html).

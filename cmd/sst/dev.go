@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log/slog"
+	"net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -73,8 +74,8 @@ func CmdDev(cli *Cli) error {
 			)
 
 			for dir, receiver := range complete.Receivers {
-				dir = filepath.Join(cfgPath, "..", dir)
-				if !strings.HasPrefix(dir, cwd) {
+				abs := filepath.Join(cfgPath, "..", dir)
+				if !strings.HasPrefix(abs, cwd) {
 					continue
 				}
 				for key, value := range receiver.Environment {
@@ -86,6 +87,26 @@ func CmdDev(cli *Cli) error {
 					envVar := fmt.Sprintf("SST_RESOURCE_%s=%s", resource, jsonValue)
 					cmd.Env = append(cmd.Env, envVar)
 				}
+
+				result, err := http.Get("http://localhost:13557/api/receiver/env?receiverID=" + dir)
+				if err != nil {
+					slog.Info("receiver env err", "err", err.Error())
+					continue
+				}
+				defer result.Body.Close()
+				if result.StatusCode == http.StatusOK {
+					envMap := make(map[string]string)
+					if err := json.NewDecoder(result.Body).Decode(&envMap); err != nil {
+						slog.Info("error decoding JSON response", "err", err.Error())
+						continue
+					}
+					for key, value := range envMap {
+						cmd.Env = append(cmd.Env, key+"="+value)
+					}
+				} else {
+					slog.Info("receiver env non-OK HTTP status", "status", result.Status)
+				}
+
 			}
 			cmd.Env = append(cmd.Env,
 				os.Environ()...,

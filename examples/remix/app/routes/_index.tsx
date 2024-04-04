@@ -1,4 +1,5 @@
 import type { MetaFunction } from "@remix-run/node";
+import { Resource } from "sst";
 
 export const meta: MetaFunction = () => {
   return [
@@ -10,7 +11,7 @@ export const meta: MetaFunction = () => {
 export default function Index() {
   return (
     <div style={{ fontFamily: "system-ui, sans-serif", lineHeight: "1.8" }}>
-      <h1>Welcome to Remix</h1>
+      <h1>Welcome to Remix {Resource.MySecret.value}</h1>
       <ul>
         <li>
           <a

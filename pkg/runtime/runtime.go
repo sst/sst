@@ -52,6 +52,7 @@ type RunInput struct {
 
 var runtimes = []Runtime{
 	newNodeRuntime(),
+	newWorkerRuntime(),
 }
 
 func GetRuntime(input string) (Runtime, bool) {

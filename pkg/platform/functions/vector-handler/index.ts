@@ -80,9 +80,10 @@ async function generateEmbeddingOpenAI(text: string) {
     model: MODEL!,
     input: text,
     encoding_format: "float",
-    dimensions: MODEL === "text-embedding-ada-002"
-      ? undefined
-      : parseInt(OPENAI_MODEL_DIMENSIONS!),
+    dimensions:
+      MODEL === "text-embedding-ada-002"
+        ? undefined
+        : parseInt(OPENAI_MODEL_DIMENSIONS!),
   });
   return embeddingResponse.data[0].embedding;
 }
@@ -135,7 +136,9 @@ async function queryEmbeddings(
       secretArn: SECRET_ARN,
       database: DATABASE_NAME,
       sql: `SELECT metadata, embedding <=> string_to_array(:vector, ',')::float[]::vector AS score FROM ${TABLE_NAME}
-                WHERE embedding <=> string_to_array(:vector, ',')::float[]::vector < ${1 - threshold}
+                WHERE embedding <=> string_to_array(:vector, ',')::float[]::vector < ${
+                  1 - threshold
+                }
                 AND metadata @> :include
                 ${exclude ? "AND NOT metadata @> :exclude" : ""}
                 ORDER BY score

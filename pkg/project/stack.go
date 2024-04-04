@@ -55,6 +55,7 @@ type Receiver struct {
 	Directory   string
 	Links       []string
 	Environment map[string]string
+	AwsRole     string
 }
 type Receivers map[string]Receiver
 
@@ -136,9 +137,9 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 		return ErrPassphraseInvalid
 	}
 
-	env, err := s.project.home.Env()
-	if err != nil {
-		return err
+	env := map[string]string{}
+	for key, value := range s.project.Env() {
+		env[key] = value
 	}
 	for _, value := range os.Environ() {
 		pair := strings.SplitN(value, "=", 2)
@@ -146,8 +147,6 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 			env[pair[0]] = pair[1]
 		}
 	}
-
-	// env := map[string]string{}
 	for key, value := range secrets {
 		env["SST_SECRET_"+key] = value
 	}
@@ -352,22 +351,8 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 		}
 		outputs := decrypt(deployment.Resources[0].Outputs)
 		complete.Resources = deployment.Resources
-		linksOutput, ok := outputs["_links"]
-		if ok {
-			links := linksOutput.(map[string]interface{})
-			for key, value := range links {
-				complete.Links[key] = value
-			}
-			typesFile, _ := os.Create(filepath.Join(s.project.PathWorkingDir(), "types.generated.ts"))
-			defer typesFile.Close()
-			typesFile.WriteString(`import "sst"` + "\n")
-			typesFile.WriteString(`declare module "sst" {` + "\n")
-			typesFile.WriteString("  export interface Resource " + inferTypes(links, "  ") + "\n")
-			typesFile.WriteString("}" + "\n")
-			typesFile.WriteString("export {}")
-			provider.PutLinks(s.project.home, s.project.app.Name, s.project.app.Stage, links)
-		}
 
+		cloudflareBindings := map[string]string{}
 		for _, resource := range complete.Resources {
 			outputs := decrypt(resource.Outputs)
 			if match, ok := outputs["_live"].(map[string]interface{}); ok {
@@ -385,6 +370,39 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 			if hint, ok := outputs["_hint"].(string); ok {
 				complete.Hints[string(resource.URN)] = hint
 			}
+
+			if match, ok := outputs["r2BucketBindings"].([]interface{}); ok {
+				for _, binding := range match {
+					item := binding.(map[string]interface{})
+					cloudflareBindings[item["name"].(string)] = "R2Bucket"
+				}
+			}
+		}
+
+		linksOutput, ok := outputs["_links"]
+		if ok {
+			links := linksOutput.(map[string]interface{})
+			for key, value := range links {
+				complete.Links[key] = value
+			}
+			typesFile, _ := os.Create(filepath.Join(s.project.PathWorkingDir(), "types.generated.ts"))
+			defer typesFile.Close()
+			typesFile.WriteString(`import "sst"` + "\n")
+			typesFile.WriteString(`declare module "sst" {` + "\n")
+			typesFile.WriteString("  export interface Resource " + inferTypes(links, "  ") + "\n")
+			typesFile.WriteString("}" + "\n")
+
+			typesFile.WriteString(`import * as cloudflare from "@cloudflare/workers-types"` + "\n")
+			typesFile.WriteString(`declare module "sst" {` + "\n")
+			typesFile.WriteString("  export interface Resource {")
+			for key, value := range cloudflareBindings {
+				typesFile.WriteString("  " + key + ": cloudflare." + value + "\n")
+			}
+			typesFile.WriteString("  }" + "\n")
+			typesFile.WriteString("}" + "\n")
+
+			typesFile.WriteString("export {}")
+			provider.PutLinks(s.project.home, s.project.app.Name, s.project.app.Stage, links)
 		}
 
 		for key, value := range outputs {
@@ -470,9 +488,15 @@ func (s *stack) Import(ctx context.Context, input *ImportOptions) error {
 	if err != nil {
 		return err
 	}
-	env, err := s.project.home.Env()
-	if err != nil {
-		return err
+	env := map[string]string{}
+	for key, value := range s.project.Env() {
+		env[key] = value
+	}
+	for _, value := range os.Environ() {
+		pair := strings.SplitN(value, "=", 2)
+		if len(pair) == 2 {
+			env[pair[0]] = pair[1]
+		}
 	}
 	env["PULUMI_CONFIG_PASSPHRASE"] = passphrase
 

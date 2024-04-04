@@ -8,16 +8,37 @@ const raw: Record<string, any> = {
   // @ts-expect-error,
   ...globalThis.$SST_LINKS,
 };
-for (const [key, value] of Object.entries(process.env)) {
+for (const [key, value] of Object.entries(env)) {
   if (key.startsWith("SST_RESOURCE_") && value) {
     raw[key.slice("SST_RESOURCE_".length)] = JSON.parse(value);
   }
 }
 
+export function fromCloudflareEnv(input: any) {
+  for (const [key, value] of Object.entries(input)) {
+    raw[key] = value;
+  }
+}
+
+export function wrapCloudflareHandler(handler: any) {
+  function wrap(fn: any) {
+    return function (req: any, env: any, ...rest: any[]) {
+      fromCloudflareEnv(env);
+      return fn(req, env, ...rest);
+    };
+  }
+
+  const result = {} as any;
+  for (const [key, value] of Object.entries(handler)) {
+    result[key] = wrap(value);
+  }
+  return result;
+}
+
 export const Resource = new Proxy(raw, {
-  get(target, prop: string) {
-    if (prop in target) {
-      return target[prop];
+  get(_target, prop: string) {
+    if (prop in raw) {
+      return raw[prop];
     }
     throw new Error(`"${prop}" is not linked`);
   },

@@ -6,8 +6,13 @@ settings:
 
 dependencies:
   sst:
-    specifier: ^3.0.2
-    version: 3.0.2
+    specifier: ^3.0.4
+    version: 3.0.4
+
+devDependencies:
+  '@cloudflare/workers-types':
+    specifier: ^4.20240402.0
+    version: 4.20240402.0
 
 packages:
 
@@ -471,6 +476,10 @@ packages:
     dependencies:
       tslib: 2.6.2
     dev: false
+
+  /@cloudflare/workers-types@4.20240402.0:
+    resolution: {integrity: sha512-GEtg71Gs5iBIQBQB0sBkEOJrmJGpenT2XAODwbvfWADwQpDxgEQfGrcOhaJfLPCfvNpKaMxcBlH9cekWwQEsLQ==}
+    dev: true
 
   /@smithy/abort-controller@2.2.0:
     resolution: {integrity: sha512-wRlta7GuLWpTqtFfGo+nZyOO1vEvewdNR1R4rTxpC8XU6vG/NDyrFBhwLZsqg1NUoR1noVaXJPC/7ZK47QCySw==}
@@ -939,8 +948,8 @@ packages:
       oidc-token-hash: 5.0.3
     dev: false
 
-  /sst@3.0.2:
-    resolution: {integrity: sha512-nBVo6f7AcKaLUeeYaZbVm5q/p5TPfiTp155NFmrVG+Sr0c2ytKoEnqBhFwtlR/oy5oPIKkQ1rTKPHz8cjKuxJA==}
+  /sst@3.0.4:
+    resolution: {integrity: sha512-tbFv2dlPHyGQSV8admS3TMDxtR/Iv09+afjneJIkr/x4M1jKgH039uBf91LEmRYxRAuGALG4rIqOONeAU/oarg==}
     dependencies:
       '@aws-sdk/client-lambda': 3.478.0
       hono: 4.1.3
