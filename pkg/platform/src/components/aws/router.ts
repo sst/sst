@@ -3,7 +3,7 @@ import * as aws from "@pulumi/aws";
 import { Component, Prettify, Transform, transform } from "../component";
 import { Link } from "../link";
 import type { Input } from "../input";
-import { Cdn, CdnArgs, CdnDomainArgs } from "./cdn";
+import { Cdn, CdnArgs } from "./cdn";
 
 export interface RouterArgs {
   /**
@@ -35,7 +35,7 @@ export interface RouterArgs {
    * }
    * ```
    */
-  domain?: Input<string | Prettify<CdnDomainArgs>>;
+  domain?: CdnArgs["domain"];
   /**
    * A map of routes to their destinations. The _key_ is the route path and the
    * _value_ is the destination URL. All routes need to start with `/`.

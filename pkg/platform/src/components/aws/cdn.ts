@@ -14,7 +14,7 @@ import { HostedZoneLookup } from "./providers/hosted-zone-lookup.js";
 import { Input } from "../input.js";
 import { DistributionDeploymentWaiter } from "./providers/distribution-deployment-waiter.js";
 
-export interface CdnDomainArgs {
+interface CdnDomainArgs {
   /**
    * The custom domain you want to use. Supports domains hosted on [Route 53](https://aws.amazon.com/route53/) or outside AWS.
    * @example
@@ -302,19 +302,19 @@ export class Cdn extends Component {
           },
           aliases: domain
             ? output(domain).apply((domain) => [
-              domain.domainName,
-              ...domain.aliases,
-            ])
+                domain.domainName,
+                ...domain.aliases,
+              ])
             : [],
           viewerCertificate: certificate
             ? {
-              acmCertificateArn: certificate.arn,
-              sslSupportMethod: "sni-only",
-              minimumProtocolVersion: "TLSv1.2_2021",
-            }
+                acmCertificateArn: certificate.arn,
+                sslSupportMethod: "sni-only",
+                minimumProtocolVersion: "TLSv1.2_2021",
+              }
             : {
-              cloudfrontDefaultCertificate: true,
-            },
+                cloudfrontDefaultCertificate: true,
+              },
           waitForDeployment: false,
         }),
         {
