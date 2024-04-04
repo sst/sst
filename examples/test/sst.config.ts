@@ -1,4 +1,7 @@
 /// <reference path="./.sst/platform/config.d.ts" />
+
+import { ApiGatewayV2 } from "./.sst/platform/src/components/aws";
+
 export default $config({
   app(input) {
     return {
@@ -11,24 +14,13 @@ export default $config({
     };
   },
   async run() {
-    const fn = new sst.aws.Function("MyFunction", {
-      handler: "./src/index.handler",
-      streaming: true,
-      url: true,
-      timeout: "15 minutes",
-      copyFiles: [
-        {
-          from: "./package.json",
-        },
-      ],
-    });
+    const bucket = new sst.cloudflare.Bucket("MyBucket");
     const worker = new sst.cloudflare.Worker("MyWorker", {
       handler: "./src/worker.ts",
+      link: [bucket],
       url: true,
     });
-    new sst.aws.ApiGatewayV2("MyApi");
     return {
-      url: fn.url,
       worker: worker.url,
     };
   },

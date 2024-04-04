@@ -31,7 +31,6 @@ export async function run(program: automation.PulumiFn) {
       },
     ];
   });
-
   Link.reset();
   const outputs = (await program()) || {};
   outputs._links = Link.list();

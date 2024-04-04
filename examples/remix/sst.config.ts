@@ -9,6 +9,9 @@ export default $config({
     };
   },
   async run() {
-    new sst.aws.Remix("MyWeb");
+    const secret = new sst.Secret("MySecret");
+    new sst.aws.Remix("MyWeb", {
+      link: [secret],
+    });
   },
 });

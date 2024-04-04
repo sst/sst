@@ -16,8 +16,7 @@ import (
 )
 
 type Home interface {
-	Init(app, stage string, provider map[string]interface{}) error
-	Env() (map[string]string, error)
+	Bootstrap(app, stage string) error
 
 	getData(key, app, stage string) (io.Reader, error)
 	putData(key, app, stage string, data io.Reader) error
@@ -30,6 +29,11 @@ type Home interface {
 type DevTransport struct {
 	In  chan string
 	Out chan string
+}
+
+type Provider interface {
+	Init(app string, stage string, args map[string]interface{}) error
+	Env() (map[string]string, error)
 }
 
 type DevEvent struct {

@@ -930,13 +930,14 @@ export class Function
     this.fnUrl = fnUrl;
 
     this.registerOutputs({
-      _receiver: all([args.bundle, args.handler]).apply(
-        ([bundle, handler]) => ({
-          directory: bundle || handler,
-          links,
-          environment,
-        }),
-      ),
+      _receiver: args._skipMetadata
+        ? undefined
+        : all([args.bundle, args.handler]).apply(([bundle, handler]) => ({
+            directory: bundle || handler,
+            links,
+            environment,
+            awsRole: role?.arn,
+          })),
       _live: all([
         dev,
         name,

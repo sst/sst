@@ -1,8 +1,14 @@
+// src/worker.ts
+import { Resource } from "sst";
+
 export default {
-  async fetch(request: Request): Promise<Response> {
-    return new Response("cool", {
+  async fetch(): Promise<Response> {
+    const first = await Resource.MyBucket.list().then((res) => res.objects[0]);
+    const result = await Resource.MyBucket.get(first.key);
+
+    return new Response(result.body, {
       headers: {
-        "content-type": "text/plain",
+        "content-type": result.httpMetadata.contentType,
       },
     });
   },

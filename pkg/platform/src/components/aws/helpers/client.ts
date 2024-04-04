@@ -1,6 +1,7 @@
 import { StandardRetryStrategy } from "@aws-sdk/middleware-retry";
 export type {} from "@smithy/types";
 import { lazy } from "../../../util/lazy";
+import { S3Client } from "@aws-sdk/client-s3";
 
 const useClientCache = lazy(() => new Map<string, any>());
 
@@ -28,7 +29,12 @@ export const useClient = <C extends any>(
     };
   })();
   const result = new client({
-    region: opts?.region,
+    region: opts?.region || process.env.SST_AWS_REGION,
+    credentials: {
+      accessKeyId: process.env.SST_AWS_ACCESS_KEY_ID,
+      sessionToken: process.env.SST_AWS_SESSION_TOKEN,
+      secretAccessKey: process.env.SST_AWS_SECRET_ACCESS_KEY,
+    },
     retryStrategy: new StandardRetryStrategy(async () => 10000, {
       retryDecider: (e: any) => {
         // Handle no internet connection => retry

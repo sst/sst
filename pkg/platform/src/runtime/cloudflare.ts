@@ -5,15 +5,7 @@ import pulumi from "@pulumi/pulumi";
 import { WorkerArgs } from "../components/cloudflare//worker.js";
 import { existsAsync } from "../util/fs.js";
 
-export async function build(
-  name: string,
-  input: pulumi.Unwrap<WorkerArgs> & {
-    links?: {
-      name: string;
-      properties: any;
-    }[];
-  },
-) {
+export async function build(name: string, input: pulumi.Unwrap<WorkerArgs>) {
   const out = path.join($cli.paths.work, "artifacts", `${name}-src`);
   await fs.rm(out, { recursive: true, force: true });
   await fs.mkdir(out, { recursive: true });
@@ -26,6 +18,7 @@ export async function build(
 
   const build = input.build || {};
   const relative = path.relative($cli.paths.root, path.resolve(input.handler));
+  const parsed = path.parse(path.resolve(input.handler));
   const target = path.join(
     out,
     !relative.startsWith("..") && !path.isAbsolute(input.handler!)
@@ -34,12 +27,17 @@ export async function build(
     "index.mjs",
   );
 
-  // Rebuilt using existing esbuild context
-  const links = Object.fromEntries(
-    input.links?.map((item) => [item.name, item.properties]) || [],
-  );
   const options: BuildOptions = {
-    entryPoints: [path.resolve(input.handler)],
+    // entryPoints: [path.resolve(input.handler)],
+    stdin: {
+      contents: `
+      import handler from "${path.join(parsed.dir, parsed.name)}"
+      import { wrapCloudflareHandler } from "sst"
+      export default wrapCloudflareHandler(handler)
+      `,
+      loader: "ts",
+      resolveDir: parsed.dir,
+    },
     platform: "node",
     loader: build.loader,
     keepNames: true,
@@ -53,24 +51,14 @@ export async function build(
     sourcemap: false,
     minify: build.minify,
     ...build.esbuild,
-    define: {
-      $SST_LINKS: JSON.stringify({}),
-      ...build.esbuild?.define,
-    },
     banner: {
-      js: [
-        `globalThis.$SST_LINKS = ${JSON.stringify(links)};`,
-        build.banner || "",
-        build.esbuild?.banner || "",
-      ].join("\n"),
+      js: [build.banner || "", build.esbuild?.banner || ""].join("\n"),
     },
   };
   const ctx = await esbuild.context(options);
 
   try {
     const result = await ctx.rebuild();
-
-    ctx.dispose();
 
     return {
       type: "success" as const,
@@ -93,5 +81,7 @@ export async function build(
       type: "error" as const,
       errors: [ex.toString()],
     };
+  } finally {
+    ctx.dispose();
   }
 }

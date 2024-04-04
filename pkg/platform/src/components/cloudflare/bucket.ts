@@ -1,6 +1,7 @@
 import { ComponentResourceOptions } from "@pulumi/pulumi";
 import * as cloudflare from "@pulumi/cloudflare";
 import { Component, Transform, transform } from "../component";
+import { Link } from "..";
 
 export interface BucketArgs {
   /**
@@ -67,7 +68,7 @@ export interface BucketArgs {
  *  await getSignedUrl(new S3Client({}), command);
  * ```
  */
-export class Bucket extends Component {
+export class Bucket extends Component implements Link.Cloudflare.Linkable {
   private bucket: cloudflare.R2Bucket;
 
   constructor(
@@ -93,6 +94,14 @@ export class Bucket extends Component {
         { parent },
       );
     }
+  }
+  getCloudflareBinding(): Link.Cloudflare.Binding {
+    return {
+      type: "r2BucketBindings",
+      properties: {
+        bucketName: this.bucket.name,
+      },
+    };
   }
 
   /**

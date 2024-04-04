@@ -11,7 +11,9 @@ export default $config({
     };
   },
   async run() {
+    const bucket = new sst.aws.Bucket("MyBucket");
     new sst.aws.Nextjs("MyWeb", {
+      link: [bucket],
       transform: {
         server: (args: FunctionArgs) => {
           args.timeout = "21 seconds";

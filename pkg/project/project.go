@@ -32,12 +32,13 @@ type App struct {
 }
 
 type Project struct {
-	version string
-	root    string
-	config  string
-	app     *App
-	home    provider.Home
-	env     map[string]string
+	version         string
+	root            string
+	config          string
+	app             *App
+	home            provider.Home
+	env             map[string]string
+	loadedProviders map[string]provider.Provider
 
 	Stack *stack
 }
@@ -87,6 +88,7 @@ func New(input *ProjectConfig) (*Project, error) {
 		version: input.Version,
 		root:    rootPath,
 		config:  input.Config,
+		env:     map[string]string{},
 	}
 	proj.Stack = &stack{
 		project: proj,
@@ -164,16 +166,16 @@ console.log("~j" + JSON.stringify(mod.app({
 				}
 			}
 
-			if _, ok := proj.app.Providers[proj.app.Home]; !ok {
-				proj.app.Providers[proj.app.Home] = map[string]interface{}{}
-			}
-
 			if proj.app.Name == "" {
 				return nil, fmt.Errorf("Project name is required")
 			}
 
 			if proj.app.Home == "" {
 				return nil, util.NewReadableError(nil, `You must specify a "home" provider in the project configuration file.`)
+			}
+
+			if _, ok := proj.app.Providers[proj.app.Home]; !ok {
+				proj.app.Providers[proj.app.Home] = map[string]interface{}{}
 			}
 
 			if proj.app.RemovalPolicy != "" {
@@ -200,61 +202,89 @@ console.log("~j" + JSON.stringify(mod.app({
 }
 
 func (proj *Project) LoadHome() error {
-	var home provider.Home
-	args := proj.app.Providers[proj.app.Home]
-
-	if proj.app.Home == "aws" {
-		home = &provider.AwsProvider{}
+	loadedProviders := make(map[string]provider.Provider)
+	for key, args := range proj.app.Providers {
+		var match provider.Provider
+		switch key {
+		case "cloudflare":
+			match = &provider.CloudflareProvider{}
+		case "aws":
+			match = &provider.AwsProvider{}
+		}
+		if match == nil {
+			continue
+		}
+		err := match.Init(proj.app.Name, proj.app.Stage, args.(map[string]interface{}))
+		if err != nil {
+			return err
+		}
+		env, err := match.Env()
+		if err != nil {
+			return err
+		}
+		for key, value := range env {
+			proj.env[key] = value
+		}
+		loadedProviders[key] = match
 	}
 
-	if proj.app.Home == "cloudflare" {
-		home = &provider.CloudflareProvider{}
-	}
-
-	if home == nil {
+	p, ok := loadedProviders[proj.app.Home]
+	if !ok {
 		return fmt.Errorf("Home provider %s is invalid", proj.app.Home)
 	}
-
-	err := home.Init(proj.app.Name, proj.app.Stage, args.(map[string]interface{}))
+	home, ok := p.(provider.Home)
+	if !ok {
+		return fmt.Errorf("Home provider %s is invalid", proj.app.Home)
+	}
+	err := home.Bootstrap(proj.app.Name, proj.app.Stage)
 	if err != nil {
 		return fmt.Errorf("Error initializing %s:\n   %w", proj.app.Home, err)
 	}
 	proj.home = home
-
+	proj.loadedProviders = loadedProviders
 	return nil
 }
 
-func (p *Project) getPath(path ...string) string {
+func (p Project) getPath(path ...string) string {
 	paths := append([]string{p.PathWorkingDir()}, path...)
 	return filepath.Join(paths...)
 }
 
-func (p *Project) PathWorkingDir() string {
+func (p Project) PathWorkingDir() string {
 	return filepath.Join(p.root, ".sst")
 }
 
-func (p *Project) PathPlatformDir() string {
+func (p Project) PathPlatformDir() string {
 	return filepath.Join(p.PathWorkingDir(), "platform")
 }
 
-func (p *Project) PathRoot() string {
+func (p Project) PathRoot() string {
 	return p.root
 }
 
-func (p *Project) PathConfig() string {
+func (p Project) PathConfig() string {
 	return p.config
 }
 
-func (p *Project) Version() string {
+func (p Project) Version() string {
 	return p.version
 }
 
-func (p *Project) App() *App {
+func (p Project) App() *App {
 	return p.app
 }
 
-func (p *Project) Backend() provider.Home {
+func (p Project) Backend() provider.Home {
 	return p.home
+}
+
+func (p Project) Env() map[string]string {
+	return p.env
+}
+
+func (p *Project) Provider(name string) (provider.Provider, bool) {
+	result, ok := p.loadedProviders[name]
+	return result, ok
 }
 
 func (p *Project) Cleanup() error {

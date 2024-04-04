@@ -44,8 +44,9 @@ export module Link {
   }
 
   export function build(links: any[]) {
-    return links.map((l) => {
-      if (isLinkable(l)) {
+    return links
+      .filter((l) => isLinkable(l))
+      .map((l) => {
         const link = l.getSSTLink();
         return all([l.urn, link.properties]).apply(([urn, properties]) => ({
           name: urn.split("::").at(-1)!,
@@ -54,9 +55,7 @@ export module Link {
             type: urn.split("::").at(-2)!,
           },
         }));
-      }
-      throw new VisibleError(`${l} is not a linkable component`);
-    });
+      });
   }
 
   export function makeLinkable<T>(
@@ -68,6 +67,48 @@ export module Link {
 
   export function list() {
     return links;
+  }
+
+  export module Cloudflare {
+    export type Binding =
+      | {
+          type: "serviceBindings";
+          properties: {
+            service: Input<string>;
+          };
+        }
+      | {
+          type: "secretTextBindings";
+          properties: {
+            text: Input<string>;
+          };
+        }
+      | {
+          type: "plainTextBindings";
+          properties: {
+            text: Input<string>;
+          };
+        }
+      | {
+          type: "queueBindings";
+          properties: {
+            queue: Input<string>;
+          };
+        }
+      | {
+          type: "r2BucketBindings";
+          properties: {
+            bucketName: Input<string>;
+          };
+        };
+    export interface Linkable {
+      urn: Output<string>;
+      getCloudflareBinding(): Binding;
+    }
+
+    export function isLinkable(obj: any): obj is Linkable {
+      return "getCloudflareBinding" in obj;
+    }
   }
 
   export module AWS {

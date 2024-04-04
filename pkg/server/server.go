@@ -15,6 +15,7 @@ import (
 	"github.com/sst/ion/pkg/project"
 	"github.com/sst/ion/pkg/server/bus"
 	"github.com/sst/ion/pkg/server/dev/aws"
+	"github.com/sst/ion/pkg/server/dev/cloudflare"
 	"github.com/sst/ion/pkg/server/dev/watcher"
 	"github.com/sst/ion/pkg/server/socket"
 )
@@ -181,6 +182,12 @@ func (s *Server) Start(parentContext context.Context) error {
 				s.project,
 				port,
 			)
+			if err != nil {
+				return err
+			}
+			defer cleanup()
+		case "cloudflare":
+			cleanup, err := cloudflare.Start(ctx, s.project, args.(map[string]interface{}))
 			if err != nil {
 				return err
 			}
