@@ -139,7 +139,7 @@ export interface ApiGatewayV2Args {
    */
   domain?: Input<string | Prettify<DomainArgs>>;
   /**
-   * Configure the access logs in CloudWatch.
+   * Configure the [API Gateway logs](https://docs.aws.amazon.com/apigateway/latest/developerguide/view-cloudwatch-log-events-in-cloudwatch-console.html) in CloudWatch. By default, access logs are enabled and kept forever.
    * @default `&lcub;retention: "forever"&rcub;`
    * @example
    * ```js
@@ -152,7 +152,7 @@ export interface ApiGatewayV2Args {
    */
   accessLog?: Input<{
     /**
-     * The duration the function logs are kept in CloudWatch.
+     * The duration the API Gateway logs are kept in CloudWatch.
      * @default `forever`
      */
     retention?: Input<keyof typeof RETENTION>;
@@ -558,9 +558,9 @@ export class ApiGatewayV2 extends Component implements Link.Linkable {
     //       trailing slash, the API fails with the error {"message":"Not Found"}
     return this.apigDomain && this.apiMapping
       ? all([this.apigDomain.domainName, this.apiMapping.apiMappingKey]).apply(
-          ([domain, key]) =>
-            key ? `https://${domain}/${key}/` : `https://${domain}`,
-        )
+        ([domain, key]) =>
+          key ? `https://${domain}/${key}/` : `https://${domain}`,
+      )
       : this.api.apiEndpoint;
   }
 
