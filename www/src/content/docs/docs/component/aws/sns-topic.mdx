@@ -104,7 +104,7 @@ Configure the subscription.
 </Section>
 
 <InlineSection>
-**Returns** <code class="primitive">Object</code>
+**Returns** [<code class="type">SnsTopicFunctionSubscriber</code>](#snstopicfunctionsubscriber)
 </InlineSection>
 Subscribes to this SNS Topic.
 
@@ -149,7 +149,7 @@ Configure the subscription.
 </Section>
 
 <InlineSection>
-**Returns** <code class="primitive">Object</code>
+**Returns** [<code class="type">SnsTopicQueueSubscriber</code>](#snstopicqueuesubscriber)
 </InlineSection>
 Subscribes an SQS Queue to this SNS Topic.
 
@@ -173,7 +173,7 @@ topic.subscribeQueue(queueArn, {
 <Segment>
 <Section type="signature">
 ```ts
-subscribe(topicArn, subscriber, args?)
+SnsTopic.subscribe(topicArn, subscriber, args?)
 ```
 </Section>
 
@@ -188,7 +188,7 @@ Configure the subscription.
 </Section>
 
 <InlineSection>
-**Returns** <code class="primitive">Object</code>
+**Returns** [<code class="type">SnsTopicFunctionSubscriber</code>](#snstopicfunctionsubscriber)
 </InlineSection>
 Subscribes to an existing SNS Topic.
 
@@ -221,7 +221,7 @@ sst.aws.SnsTopic.subscribe(topicArn, {
 <Segment>
 <Section type="signature">
 ```ts
-subscribeQueue(topicArn, queueArn, args?)
+SnsTopic.subscribeQueue(topicArn, queueArn, args?)
 ```
 </Section>
 
@@ -236,7 +236,7 @@ Configure the subscription.
 </Section>
 
 <InlineSection>
-**Returns** <code class="primitive">Object</code>
+**Returns** [<code class="type">SnsTopicQueueSubscriber</code>](#snstopicqueuesubscriber)
 </InlineSection>
 Subscribes to an existing SNS Topic.
 

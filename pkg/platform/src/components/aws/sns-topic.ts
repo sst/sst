@@ -385,7 +385,7 @@ export class SnsTopic
       function: ret.fn,
       permission: ret.permission,
       subscription: ret.subscription,
-    } satisfies SnsTopicFunctionSubscriber;
+    } satisfies SnsTopicFunctionSubscriber as SnsTopicFunctionSubscriber;
   }
 
   /**
@@ -518,7 +518,7 @@ export class SnsTopic
     return {
       policy: ret.policy,
       subscription: ret.subscription,
-    } satisfies SnsTopicQueueSubscriber;
+    } satisfies SnsTopicQueueSubscriber as SnsTopicQueueSubscriber;
   }
 
   /** @internal */

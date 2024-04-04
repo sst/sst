@@ -575,7 +575,8 @@ async function generateTsDoc() {
           `<Segment>`,
           `<Section type="signature">`,
           "```ts",
-          renderSignature(m.signatures![0]),
+          (m.flags.isStatic ? `${useClassName()}.` : "") +
+            renderSignature(m.signatures![0]),
           "```",
           `</Section>`
         );
