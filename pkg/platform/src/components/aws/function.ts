@@ -1247,9 +1247,27 @@ export class Function
               `-${region.toLowerCase().replace(/-/g, "")}`,
             ),
           ),
-          assumeRolePolicy: aws.iam.assumeRolePolicyForPrincipal({
-            Service: "lambda.amazonaws.com",
-          }),
+          assumeRolePolicy: !$dev
+            ? aws.iam.assumeRolePolicyForPrincipal({
+                Service: "lambda.amazonaws.com",
+              })
+            : aws.iam.getPolicyDocumentOutput({
+                statements: [
+                  {
+                    actions: ["sts:AssumeRole"],
+                    principals: [
+                      {
+                        type: "AWS",
+                        identifiers: [
+                          interpolate`arn:aws:iam::${
+                            aws.getCallerIdentityOutput().accountId
+                          }:root`,
+                        ],
+                      },
+                    ],
+                  },
+                ],
+              }).json,
           // if there are no statements, do not add an inline policy.
           // adding an inline policy with no statements will cause an error.
           inlinePolicies: policy.apply(({ statements }) =>

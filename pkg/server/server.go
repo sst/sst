@@ -12,7 +12,9 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/aws/aws-sdk-go-v2/service/sts"
 	"github.com/sst/ion/pkg/project"
+	"github.com/sst/ion/pkg/project/provider"
 	"github.com/sst/ion/pkg/server/bus"
 	"github.com/sst/ion/pkg/server/dev/aws"
 	"github.com/sst/ion/pkg/server/dev/cloudflare"
@@ -26,7 +28,7 @@ type Server struct {
 	watchedFiles map[string]bool
 	subscribers  []chan *Event
 	state        *State
-	lastEvent    *Event
+	complete     *project.CompleteEvent
 }
 
 type State struct {
@@ -118,7 +120,11 @@ func (s *Server) Start(parentContext context.Context) error {
 				State: s.state,
 			},
 		})
-		publish(s.lastEvent)
+		publish(&Event{
+			StackEvent: project.StackEvent{
+				CompleteEvent: s.complete,
+			},
+		})
 		bus.Subscribe(ctx, func(event *aws.FunctionInvokedEvent) {
 			publish(&Event{
 				FunctionInvokedEvent: event,
@@ -161,6 +167,52 @@ func (s *Server) Start(parentContext context.Context) error {
 
 	mux.HandleFunc(("/api/deploy"), func(w http.ResponseWriter, r *http.Request) {
 		bus.Publish(&DeployRequestedEvent{})
+	})
+
+	mux.HandleFunc("/api/receiver/env", func(w http.ResponseWriter, r *http.Request) {
+		receiverID := r.URL.Query().Get("receiverID")
+		receiver, ok := s.complete.Receivers[receiverID]
+		if !ok {
+			slog.Info("receiver not found", "receiverID", receiverID)
+			http.Error(w, "receiver not found", http.StatusBadRequest)
+			return
+		}
+		if receiver.AwsRole == "" {
+			slog.Info("receiver does not have aws role", "receiverID", receiverID)
+			http.Error(w, "receiver does not have aws role", http.StatusBadRequest)
+			return
+		}
+
+		prov, _ := s.project.Provider("aws")
+		awsProvider := prov.(*provider.AwsProvider)
+		stsClient := sts.NewFromConfig(awsProvider.Config())
+		sessionName := "sst-dev"
+		result, err := stsClient.AssumeRole(r.Context(), &sts.AssumeRoleInput{
+			RoleArn:         &receiver.AwsRole,
+			RoleSessionName: &sessionName,
+		})
+		if err != nil {
+			slog.Info("error assuming role", "err", err.Error())
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		credentials := map[string]string{
+			"AWS_ACCESS_KEY_ID":     *result.Credentials.AccessKeyId,
+			"AWS_SECRET_ACCESS_KEY": *result.Credentials.SecretAccessKey,
+			"AWS_SESSION_TOKEN":     *result.Credentials.SessionToken,
+			"AWS_REGION":            awsProvider.Config().Region,
+		}
+
+		jsonCredentials, err := json.Marshal(credentials)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		w.Write(jsonCredentials)
 	})
 
 	s.server = &http.Server{
@@ -222,9 +274,7 @@ func (s *Server) Start(parentContext context.Context) error {
 
 	bus.Subscribe(ctx, func(event *project.StackEvent) {
 		if event.CompleteEvent != nil {
-			s.lastEvent = &Event{
-				StackEvent: *event,
-			}
+			s.complete = event.CompleteEvent
 		}
 		if event.ConcurrentUpdateEvent != nil {
 			cancel()

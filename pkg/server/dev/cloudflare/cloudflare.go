@@ -16,9 +16,8 @@ import (
 	"github.com/sst/ion/pkg/server/dev/watcher"
 )
 
-type FunctionBuildEvent struct {
-	FunctionID string
-	Errors     []string
+type WorkerBuildEvent struct {
+	WorkerID string
 }
 
 func Start(ctx context.Context, proj *project.Project, args map[string]interface{}) (util.CleanupFunc, error) {
