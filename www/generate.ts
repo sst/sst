@@ -637,10 +637,16 @@ async function generateTsDoc() {
               `<Segment>`,
               `<Section type="parameters">`,
               `<InlineSection>`,
-              `**Type** ${renderType(subType.type!)}`,
+              `**Type** ${
+                subType.kind === TypeDoc.ReflectionKind.Property
+                  ? renderType(subType.type!)
+                  : renderType(subType.getSignature!.type!)
+              }`,
               `</InlineSection>`,
               `</Section>`,
-              ...renderDescription(subType),
+              ...(subType.kind === TypeDoc.ReflectionKind.Property
+                ? renderDescription(subType)
+                : renderDescription(subType.getSignature!)),
               `</Segment>`,
             ]
           )
@@ -876,7 +882,10 @@ async function generateTsDoc() {
     ) {
       return useNestedTypes(prop.type!, prop.name).map(
         ({ depth, prefix, subType }) => {
-          const hasChildren = useNestedTypes(subType.type!).length;
+          const hasChildren =
+            subType.kind === TypeDoc.ReflectionKind.Property
+              ? useNestedTypes(subType.type!).length
+              : useNestedTypes(subType.getSignature?.type!).length;
           const type = hasChildren ? ` ${renderType(subType.type!)}` : "";
           const generateHash = (counter = 0): string => {
             const hash = `${prefix}.${subType.name}`
@@ -1304,11 +1313,20 @@ async function generateTsDoc() {
       if (type.type === "reflection")
         return type.declaration.children!.flatMap((subType) => [
           { prefix, subType, depth },
-          ...useNestedTypes(
-            subType.type!,
-            `${prefix}.${subType.name}`,
-            depth + 1
-          ),
+          ...(subType.kind === TypeDoc.ReflectionKind.Property
+            ? useNestedTypes(
+                subType.type!,
+                `${prefix}.${subType.name}`,
+                depth + 1
+              )
+            : []),
+          ...(subType.kind === TypeDoc.ReflectionKind.Accessor
+            ? useNestedTypes(
+                subType.getSignature?.type!,
+                `${prefix}.${subType.name}`,
+                depth + 1
+              )
+            : []),
         ]);
 
       return [];
