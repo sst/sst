@@ -103,7 +103,7 @@ Configure the subscription.
 <InlineSection>
 **Returns** [<code class="type">BucketSubscriber</code>](#bucketsubscriber)
 </InlineSection>
-Subscribes to events from this bucket.
+Subscribe to events from this bucket.
 
 ```js
 bucket.subscribe("src/subscriber.handler");
@@ -157,10 +157,17 @@ Configure the subscription.
 <InlineSection>
 **Returns** [<code class="type">BucketSubscriber</code>](#bucketsubscriber)
 </InlineSection>
-Subscribes to events from an existing S3 bucket.
+Subscribe to events of an S3 bucket that was not created in your app.
+
+For example, let's say you have an existing S3 bucket with the following ARN.
 
 ```js
 const bucketArn = "arn:aws:s3:::my-bucket";
+```
+
+You can subscribe to it by passing in the ARN.
+
+```js
 sst.aws.Bucket.subscribe(bucketArn, "src/subscriber.handler");
 ```
 
@@ -557,7 +564,7 @@ Transform the S3 Bucket Notification resource.
 **Type** <code class="primitive">Output</code><code class="symbol">&lt;</code>[<code class="type">Function</code>](/docs/component/aws/function/)<code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
-The Lambda function.
+The Lambda function that'll be notified.
 
 </Segment>
 ### notification

@@ -231,7 +231,7 @@ export interface DynamoSubscribeArgs {
 
 export interface DynamoSubscriber {
   /**
-   * The Lambda function.
+   * The Lambda function that'll be notified.
    */
   function: Output<Function>;
   /**
@@ -344,8 +344,7 @@ export interface DynamoSubscriber {
  */
 export class Dynamo
   extends Component
-  implements Link.Linkable, Link.AWS.Linkable
-{
+  implements Link.Linkable, Link.AWS.Linkable {
   private constructorName: string;
   private table: Output<aws.dynamodb.Table>;
   private isStreamEnabled: boolean = false;
@@ -440,7 +439,7 @@ export class Dynamo
   }
 
   /**
-   * Subscribe to this table's DynamoDB Stream.
+   * Subscribe to the DynamoDB Stream of this table.
    *
    * :::note
    * You'll first need to enable the `stream` before subscribing to it.
@@ -503,11 +502,7 @@ export class Dynamo
   }
 
   /**
-   * Subscribe to an existing table's DynamoDB Stream.
-   *
-   * :::note
-   * You'll first need to enable the `stream` before subscribing to it.
-   * :::
+   * Subscribe to the DynamoDB stream of a table that was not created in your app.
    *
    * @param streamArn The ARN of the DynamoDB Stream to subscribe to.
    * @param subscriber The function that'll be notified.
@@ -515,8 +510,15 @@ export class Dynamo
    *
    * @example
    *
+   * For example, let's say you have a DynamoDB stream ARN of an existing table.
+   *
    * ```js
    * const streamArn = "arn:aws:dynamodb:us-east-1:123456789012:table/MyTable/stream/2024-02-25T23:17:55.264";
+   * ```
+   *
+   * You can subscribe to it by passing in the ARN.
+   *
+   * ```js
    * sst.aws.Dynamo.subscribe(streamArn, "src/subscriber.handler");
    * ```
    *

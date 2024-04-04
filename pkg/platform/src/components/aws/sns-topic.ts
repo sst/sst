@@ -31,7 +31,7 @@ export interface SnsTopicArgs {
    */
   transform?: {
     /**
-     * Transform the SNS Topic resource.
+     * Transform the SNS topic resource.
      */
     topic?: Transform<aws.sns.TopicArgs>;
   };
@@ -49,7 +49,7 @@ export interface SnsTopicSubscribeArgs {
    * :::
    *
    * @example
-   * For example, if your SNS Topic message contains this in a JSON format.
+   * For example, if your SNS topic message contains this in a JSON format.
    * ```js
    * {
    *   store: "example_corp",
@@ -87,7 +87,7 @@ export interface SnsTopicSubscribeArgs {
    */
   transform?: {
     /**
-     * Transform the SNS Topic Subscription resource.
+     * Transform the SNS topic Subscription resource.
      */
     subscription?: Transform<aws.sns.TopicSubscriptionArgs>;
   };
@@ -95,7 +95,7 @@ export interface SnsTopicSubscribeArgs {
 
 export interface SnsTopicFunctionSubscriber {
   /**
-   * The Lambda function.
+   * The Lambda function that'll be notified.
    */
   function: Output<Function>;
   /**
@@ -110,7 +110,7 @@ export interface SnsTopicFunctionSubscriber {
 
 export interface SnsTopicQueueSubscriber {
   /**
-   * The SQS queue policy.
+   * The SNS topic policy.
    */
   policy: Output<aws.sqs.QueuePolicy>;
   /**
@@ -120,7 +120,7 @@ export interface SnsTopicQueueSubscriber {
 }
 
 /**
- * The `SnsTopic` component lets you add an [Amazon SNS Topic](https://docs.aws.amazon.com/sns/latest/dg/sns-create-topic.html) to your app.
+ * The `SnsTopic` component lets you add an [Amazon SNS topic](https://docs.aws.amazon.com/sns/latest/dg/sns-create-topic.html) to your app.
  *
  * :::note
  * The difference between an `SnsTopic` and a `Queue` is that with a topic you can deliver messages to multiple subscribers.
@@ -176,8 +176,7 @@ export interface SnsTopicQueueSubscriber {
  */
 export class SnsTopic
   extends Component
-  implements Link.Linkable, Link.AWS.Linkable
-{
+  implements Link.Linkable, Link.AWS.Linkable {
   private constructorName: string;
   private topic: aws.sns.Topic;
 
@@ -212,14 +211,14 @@ export class SnsTopic
   }
 
   /**
-   * The ARN of the SNS Topic.
+   * The ARN of the SNS topic.
    */
   public get arn() {
     return this.topic.arn;
   }
 
   /**
-   * The name of the SNS Topic.
+   * The name of the SNS topic.
    */
   public get name() {
     return this.topic.name;
@@ -231,14 +230,14 @@ export class SnsTopic
   public get nodes() {
     return {
       /**
-       * The Amazon SNS Topic.
+       * The Amazon SNS topic.
        */
       topic: this.topic,
     };
   }
 
   /**
-   * Subscribes to this SNS Topic.
+   * Subscribe to this SNS topic.
    *
    * @param subscriber The function that'll be notified.
    * @param args Configure the subscription.
@@ -281,16 +280,23 @@ export class SnsTopic
   }
 
   /**
-   * Subscribes to an existing SNS Topic.
+   * Subscribe to an SNS topic that was not created in your app.
    *
-   * @param topicArn The ARN of the SNS Topic to subscribe to.
+   * @param topicArn The ARN of the SNS topic to subscribe to.
    * @param subscriber The function that'll be notified.
    * @param args Configure the subscription.
    *
    * @example
    *
+   * For example, let's say you have an existing SNS topic with the following ARN.
+   *
    * ```js
    * const topicArn = "arn:aws:sns:us-east-1:123456789012:MyTopic";
+   * ```
+   *
+   * You can subscribe to it by passing in the ARN.
+   *
+   * ```js
    * sst.aws.SnsTopic.subscribe(topicArn, "src/subscriber.handler");
    * ```
    *
@@ -389,22 +395,29 @@ export class SnsTopic
   }
 
   /**
-   * Subscribes an SQS Queue to this SNS Topic.
+   * Subscribe to this SNS topic with an SQS queue.
    *
    * @param queueArn The ARN of the queue that'll be notified.
    * @param args Configure the subscription.
    *
    * @example
    *
+   * For example, let's say you have a queue.
+   *
    * ```js
-   * const queueArn = "arn:aws:sqs:us-east-1:123456789012:MyQueue";
-   * topic.subscribeQueue(queueArn);
+   * const queue = sst.aws.Queue("MyQueue");
+   * ```
+   *
+   * You can subscribe to this topic with it.
+   *
+   * ```js
+   * topic.subscribeQueue(queue.arn);
    * ```
    *
    * Add a filter to the subscription.
    *
    * ```js
-   * topic.subscribeQueue(queueArn, {
+   * topic.subscribeQueue(queue.arn, {
    *   filter: {
    *     price_usd: [{numeric: [">=", 100]}]
    *   }
@@ -424,17 +437,24 @@ export class SnsTopic
   }
 
   /**
-   * Subscribes to an existing SNS Topic.
+   * Subscribe to an existing SNS topic with a previously created SQS queue.
    *
-   * @param topicArn The ARN of the SNS Topic to subscribe to.
+   * @param topicArn The ARN of the SNS topic to subscribe to.
    * @param queueArn The ARN of the queue that'll be notified.
    * @param args Configure the subscription.
    *
    * @example
    *
+   * For example, let's say you have an existing SNS topic and SQS queue with the following ARNs.
+   *
    * ```js
    * const topicArn = "arn:aws:sns:us-east-1:123456789012:MyTopic";
    * const queueArn = "arn:aws:sqs:us-east-1:123456789012:MyQueue";
+   * ```
+   *
+   * You can subscribe to the topic with the queue.
+   *
+   * ```js
    * sst.aws.SnsTopic.subscribeQueue(topicArn, queueArn);
    * ```
    *

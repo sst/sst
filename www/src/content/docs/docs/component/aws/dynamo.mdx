@@ -153,7 +153,7 @@ Configure the subscription.
 <InlineSection>
 **Returns** [<code class="type">DynamoSubscriber</code>](#dynamosubscriber)
 </InlineSection>
-Subscribe to this table's DynamoDB Stream.
+Subscribe to the DynamoDB Stream of this table.
 
 :::note
 You'll first need to enable the `stream` before subscribing to it.
@@ -212,14 +212,17 @@ Configure the subscription.
 <InlineSection>
 **Returns** [<code class="type">DynamoSubscriber</code>](#dynamosubscriber)
 </InlineSection>
-Subscribe to an existing table's DynamoDB Stream.
+Subscribe to the DynamoDB stream of a table that was not created in your app.
 
-:::note
-You'll first need to enable the `stream` before subscribing to it.
-:::
+For example, let's say you have a DynamoDB stream ARN of an existing table.
 
 ```js
 const streamArn = "arn:aws:dynamodb:us-east-1:123456789012:table/MyTable/stream/2024-02-25T23:17:55.264";
+```
+
+You can subscribe to it by passing in the ARN.
+
+```js
 sst.aws.Dynamo.subscribe(streamArn, "src/subscriber.handler");
 ```
 
@@ -610,7 +613,7 @@ The Lambda event source mapping.
 **Type** <code class="primitive">Output</code><code class="symbol">&lt;</code>[<code class="type">Function</code>](/docs/component/aws/function/)<code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
-The Lambda function.
+The Lambda function that'll be notified.
 
 </Segment>
 </div>

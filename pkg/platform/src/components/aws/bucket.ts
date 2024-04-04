@@ -235,7 +235,7 @@ export interface BucketSubscribeArgs {
 
 export interface BucketSubscriber {
   /**
-   * The Lambda function.
+   * The Lambda function that'll be notified.
    */
   function: Output<Function>;
   /**
@@ -302,8 +302,7 @@ export interface BucketSubscriber {
  */
 export class Bucket
   extends Component
-  implements Link.Linkable, Link.AWS.Linkable
-{
+  implements Link.Linkable, Link.AWS.Linkable {
   private constructorName: string;
   private bucket: Output<aws.s3.BucketV2>;
   private isSubscribed: boolean = false;
@@ -468,7 +467,7 @@ export class Bucket
   }
 
   /**
-   * Subscribes to events from this bucket.
+   * Subscribe to events from this bucket.
    *
    * @param subscriber The function that'll be notified.
    * @param args Configure the subscription.
@@ -525,7 +524,7 @@ export class Bucket
   }
 
   /**
-   * Subscribes to events from an existing S3 bucket.
+   * Subscribe to events of an S3 bucket that was not created in your app.
    *
    * @param bucketArn The ARN of the S3 bucket to subscribe to.
    * @param subscriber The function that'll be notified.
@@ -533,8 +532,15 @@ export class Bucket
    *
    * @example
    *
+   * For example, let's say you have an existing S3 bucket with the following ARN.
+   *
    * ```js
    * const bucketArn = "arn:aws:s3:::my-bucket";
+   * ```
+   *
+   * You can subscribe to it by passing in the ARN.
+   *
+   * ```js
    * sst.aws.Bucket.subscribe(bucketArn, "src/subscriber.handler");
    * ```
    *
@@ -641,8 +647,8 @@ export class Bucket
               events.length < 5
                 ? `Subscribed to ${name} on ${events.join(", ")}`
                 : `Subscribed to ${name} on ${events
-                    .slice(0, 3)
-                    .join(", ")}, and ${events.length - 3} more events`,
+                  .slice(0, 3)
+                  .join(", ")}, and ${events.length - 3} more events`,
           },
         );
         const permission = new aws.lambda.Permission(
