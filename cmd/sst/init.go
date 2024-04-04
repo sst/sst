@@ -123,7 +123,7 @@ func CmdInit(cli *Cli) error {
 	fmt.Println()
 
 	home := "aws"
-	if template == "vanilla" {
+	if template == "vanilla" || template == "js" {
 		p = promptui.Select{
 			Label:        "‏‏‎ ‎Where do you want to deploy your app? You can change this later",
 			HideSelected: true,
@@ -134,6 +134,10 @@ func CmdInit(cli *Cli) error {
 		if err != nil {
 			return util.NewReadableError(err, "")
 		}
+	}
+
+	if template == "js" {
+		template = "js-" + home
 	}
 
 	color.New(color.FgGreen, color.Bold).Print("✓")
