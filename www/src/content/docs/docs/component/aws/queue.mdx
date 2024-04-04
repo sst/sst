@@ -142,7 +142,7 @@ Queue.subscribe(queueArn, subscriber, args?)
 <Section type="parameters">
 #### Parameters
 - <p><code class="key">queueArn</code> <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code></p>
-The ARN of the SQS Queue to subscribe to.
+The ARN of the SQS queue to subscribe to.
 - <p><code class="key">subscriber</code> <code class="primitive">string</code><code class="symbol"> | </code>[<code class="type">FunctionArgs</code>](/docs/component/aws/function/#functionargs)</p>
 The function that'll be notified.
 - <p><code class="key">args?</code> [<code class="type">QueueSubscribeArgs</code>](#queuesubscribeargs)</p>
@@ -152,11 +152,19 @@ Configure the subscription.
 <InlineSection>
 **Returns** [<code class="type">QueueSubscriber</code>](#queuesubscriber)
 </InlineSection>
-Subscribe to an existing SQS queue.
+Subscribe to an SQS queue that was not created in your app.
+
+For example, let's say you have an existing SQS queue with the following ARN.
 
 ```js
 const queueArn = "arn:aws:sqs:us-east-1:123456789012:MyQueue";
+```
+
+You can subscribe to it by passing in the ARN.
+
+```js
 sst.aws.Queue.subscribe(queueArn, "src/subscriber.handler");
+```
 
 Add a filter to the subscription.
 
@@ -191,7 +199,7 @@ sst.aws.Queue.subscribe(queueArn, {
 **Type** <code class="primitive">Output</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
-The ARN of the SQS Queue.
+The ARN of the SQS queue.
 </Segment>
 
 ### nodes
@@ -211,7 +219,7 @@ The underlying [resources](/docs/components/#nodes) this component creates.
 **Type** [<code class="type">Queue</code>](https://www.pulumi.com/registry/packages/aws/api-docs/sqs/queue/)
 </InlineSection>
 </Section>
-The Amazon SQS Queue.
+The Amazon SQS queue.
 </Segment>
 
 ### url
@@ -221,7 +229,7 @@ The Amazon SQS Queue.
 **Type** <code class="primitive">Output</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
-The SQS Queue URL.
+The SQS queue URL.
 </Segment>
 
 ## Links
@@ -235,7 +243,7 @@ The following are accessible through the [SDK](/docs/reference/sdk/) at runtime.
 **Type** <code class="primitive">string</code>
 </InlineSection>
 </Section>
-The SQS Queue URL.
+The SQS queue URL.
 </Segment>
 
 ## QueueArgs
@@ -281,7 +289,7 @@ resources.
 **Type** [<code class="type">QueueArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/sqs/queue/#inputs)<code class="symbol"> | </code><code class="symbol">(</code><code class="primitive">args</code><code class="symbol">: </code>[<code class="type">QueueArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/sqs/queue/#inputs)<code class="symbol"> => </code>[<code class="type">QueueArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/sqs/queue/#inputs)<code class="symbol"> | </code><code class="primitive">void</code><code class="symbol">)</code>
 </InlineSection>
 </Section>
-Transform the SQS Queue resource.
+Transform the SQS queue resource.
 
 </Segment>
 
@@ -379,7 +387,7 @@ The Lambda event source mapping.
 **Type** <code class="primitive">Output</code><code class="symbol">&lt;</code>[<code class="type">Function</code>](/docs/component/aws/function/)<code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
-The Lambda function.
+The Lambda function that'll be notified.
 
 </Segment>
 </div>

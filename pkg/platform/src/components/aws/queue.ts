@@ -32,7 +32,7 @@ export interface QueueArgs {
    */
   transform?: {
     /**
-     * Transform the SQS Queue resource.
+     * Transform the SQS queue resource.
      */
     queue?: Transform<aws.sqs.QueueArgs>;
   };
@@ -101,7 +101,7 @@ export interface QueueSubscribeArgs {
 
 export interface QueueSubscriber {
   /**
-   * The Lambda function.
+   * The Lambda function that'll be notified.
    */
   function: Output<Function>;
   /**
@@ -163,8 +163,7 @@ export interface QueueSubscriber {
  */
 export class Queue
   extends Component
-  implements Link.Linkable, Link.AWS.Linkable
-{
+  implements Link.Linkable, Link.AWS.Linkable {
   private constructorName: string;
   private queue: aws.sqs.Queue;
   private isSubscribed: boolean = false;
@@ -196,14 +195,14 @@ export class Queue
   }
 
   /**
-   * The ARN of the SQS Queue.
+   * The ARN of the SQS queue.
    */
   public get arn() {
     return this.queue.arn;
   }
 
   /**
-   * The SQS Queue URL.
+   * The SQS queue URL.
    */
   public get url() {
     return this.queue.url;
@@ -215,7 +214,7 @@ export class Queue
   public get nodes() {
     return {
       /**
-       * The Amazon SQS Queue.
+       * The Amazon SQS queue.
        */
       queue: this.queue,
     };
@@ -274,17 +273,25 @@ export class Queue
   }
 
   /**
-   * Subscribe to an existing SQS queue.
+   * Subscribe to an SQS queue that was not created in your app.
    *
-   * @param queueArn The ARN of the SQS Queue to subscribe to.
+   * @param queueArn The ARN of the SQS queue to subscribe to.
    * @param subscriber The function that'll be notified.
    * @param args Configure the subscription.
    *
    * @example
    *
+   * For example, let's say you have an existing SQS queue with the following ARN.
+   *
    * ```js
    * const queueArn = "arn:aws:sqs:us-east-1:123456789012:MyQueue";
+   * ```
+   *
+   * You can subscribe to it by passing in the ARN.
+   *
+   * ```js
    * sst.aws.Queue.subscribe(queueArn, "src/subscriber.handler");
+   * ```
    *
    * Add a filter to the subscription.
    *
