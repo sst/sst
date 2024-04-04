@@ -1257,6 +1257,10 @@ export class Function
                     actions: ["sts:AssumeRole"],
                     principals: [
                       {
+                        type: "Service",
+                        identifiers: ["lambda.amazonaws.com"],
+                      },
+                      {
                         type: "AWS",
                         identifiers: [
                           interpolate`arn:aws:iam::${
