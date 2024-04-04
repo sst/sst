@@ -1,7 +1,6 @@
 import {
   SSMClient,
   GetParameterCommand,
-  ParameterNotFound,
   PutParameterCommand,
 } from "@aws-sdk/client-ssm";
 import {
@@ -11,13 +10,14 @@ import {
 } from "@aws-sdk/client-s3";
 export type {} from "@smithy/types";
 import { PRETTY_CHARS, hashNumberToPrettyString } from "../../naming";
+import { useClient } from "./client";
 
 const VERSION = 1;
+const SSM_NAME = `/sst/bootstrap/asset`;
 
 interface BootstrapData {
   version: number;
-  asset: string;
-  state: string;
+  bucket: string;
 }
 
 const bootstrapBuckets: Record<string, Promise<BootstrapData>> = {};
@@ -28,80 +28,75 @@ export const bootstrap = {
       return bootstrapBuckets[region]!;
     }
 
-    const ssm = new SSMClient({
-      // credentials: {
-      //   accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
-      //   sessionToken: process.env.AWS_SESSION_TOKEN!,
-      //   secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
-      // },
-      region,
-    });
-    const s3 = new S3Client({
-      region,
-      // credentials: {
-      //   accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
-      //   sessionToken: process.env.AWS_SESSION_TOKEN!,
-      //   secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
-      // },
-    });
+    const ssm = useClient(SSMClient, { region });
+    const s3 = useClient(S3Client, { region });
+
     try {
       const bucket = (async () => {
-        const result = await ssm
-          .send(
-            new GetParameterCommand({
-              Name: `/sst/bootstrap`,
-            }),
-          )
-          .catch((err) => {
-            if (err instanceof ParameterNotFound) return;
-            throw err;
-          });
+        // check if already bootstrapped
+        const existingData = await getSsmData();
+        if (existingData) return existingData;
 
-        if (result?.Parameter?.Value) {
-          try {
-            const parsed = JSON.parse(result.Parameter.Value);
-            return parsed;
-          } catch (ex) {}
+        // bootstrap
+        const rand = generateBucketSuffix();
+        const bucketName = `sst-asset-${rand}`;
+        const data = {
+          version: VERSION,
+          bucket: bucketName,
+        };
+        await createAssetBucket();
+        await createSsmData();
+        return data;
+
+        async function getSsmData() {
+          const result = await ssm
+            .send(new GetParameterCommand({ Name: SSM_NAME }))
+            .catch((err) => {
+              if (err.name === "ParameterNotFound") return;
+              throw err;
+            });
+
+          // parse value
+          if (result?.Parameter?.Value) {
+            try {
+              return JSON.parse(result.Parameter.Value);
+            } catch (ex) {}
+          }
         }
 
-        // Generate a bootstrap bucket suffix number
-        const suffixLength = 12;
-        const minNumber = Math.pow(PRETTY_CHARS.length, suffixLength);
-        const numberSuffix = Math.floor(Math.random() * minNumber) + minNumber;
-        const rand = hashNumberToPrettyString(numberSuffix, suffixLength);
-        const asset = `sst-asset-${rand}`;
-        const state = `sst-state-${rand}`;
-        const data = {
-          asset,
-          state,
-          version: VERSION,
-        };
-        await s3.send(
-          new CreateBucketCommand({
-            Bucket: asset,
-          }),
-        );
-        await s3.send(
-          new CreateBucketCommand({
-            Bucket: state,
-          }),
-        );
-        await s3.send(
-          new PutBucketVersioningCommand({
-            Bucket: asset,
-            VersioningConfiguration: {
-              Status: "Enabled",
-            },
-          }),
-        );
-        await ssm.send(
-          new PutParameterCommand({
-            Name: `/sst/bootstrap`,
-            Value: JSON.stringify(data),
-            Type: "String",
-          }),
-        );
-        return asset;
+        function generateBucketSuffix() {
+          const suffixLength = 12;
+          const minNumber = Math.pow(PRETTY_CHARS.length, suffixLength);
+          const numberSuffix =
+            Math.floor(Math.random() * minNumber) + minNumber;
+          return hashNumberToPrettyString(numberSuffix, suffixLength);
+        }
+
+        async function createAssetBucket() {
+          await s3.send(
+            new CreateBucketCommand({
+              Bucket: bucketName,
+            }),
+          );
+          await s3.send(
+            new PutBucketVersioningCommand({
+              Bucket: bucketName,
+              VersioningConfiguration: {
+                Status: "Enabled",
+              },
+            }),
+          );
+        }
+
+        async function createSsmData() {
+          await ssm.send(
+            new PutParameterCommand({
+              Name: SSM_NAME,
+              Value: JSON.stringify(data),
+              Type: "String",
+            }),
+          );
+        }
       })();
 
       return (bootstrapBuckets[region] = bucket);

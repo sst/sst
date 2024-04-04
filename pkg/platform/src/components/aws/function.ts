@@ -489,45 +489,45 @@ export interface FunctionArgs {
   url?: Input<
     | boolean
     | {
-      /**
-       * The authorization used for the function URL. Supports [IAM authorization](https://docs.aws.amazon.com/lambda/latest/dg/urls-auth.html).
-       * @default `"none"`
-       * @example
-       * ```js
-       * {
-       *   url: {
-       *     authorization: "iam"
-       *   }
-       * }
-       * ```
-       */
-      authorization?: Input<"none" | "iam">;
-      /**
-       * Customize the CORS (Cross-origin resource sharing) settings for the function URL.
-       * @default `true`
-       * @example
-       * Disable CORS.
-       * ```js
-       * {
-       *   url: {
-       *     cors: true
-       *   }
-       * }
-       * ```
-       * Only enable the `GET` and `POST` methods for `https://example.com`.
-       * ```js
-       * {
-       *   url: {
-       *     cors: {
-       *       allowedMethods: ["GET", "POST"],
-       *       allowedOrigins: ["https://example.com"]
-       *     }
-       *   }
-       * }
-       * ```
-       */
-      cors?: Input<boolean | Prettify<FunctionUrlCorsArgs>>;
-    }
+        /**
+         * The authorization used for the function URL. Supports [IAM authorization](https://docs.aws.amazon.com/lambda/latest/dg/urls-auth.html).
+         * @default `"none"`
+         * @example
+         * ```js
+         * {
+         *   url: {
+         *     authorization: "iam"
+         *   }
+         * }
+         * ```
+         */
+        authorization?: Input<"none" | "iam">;
+        /**
+         * Customize the CORS (Cross-origin resource sharing) settings for the function URL.
+         * @default `true`
+         * @example
+         * Disable CORS.
+         * ```js
+         * {
+         *   url: {
+         *     cors: true
+         *   }
+         * }
+         * ```
+         * Only enable the `GET` and `POST` methods for `https://example.com`.
+         * ```js
+         * {
+         *   url: {
+         *     cors: {
+         *       allowedMethods: ["GET", "POST"],
+         *       allowedOrigins: ["https://example.com"]
+         *     }
+         *   }
+         * }
+         * ```
+         */
+        cors?: Input<boolean | Prettify<FunctionUrlCorsArgs>>;
+      }
   >;
   /**
    * Configure how your function is bundled.
@@ -877,7 +877,8 @@ export interface FunctionArgs {
  */
 export class Function
   extends Component
-  implements Link.Linkable, Link.AWS.Linkable {
+  implements Link.Linkable, Link.AWS.Linkable
+{
   private function: Output<aws.lambda.Function>;
   private role?: aws.iam.Role;
   private logGroup: aws.cloudwatch.LogGroup;
@@ -1035,10 +1036,10 @@ export class Function
             : url.cors === true || url.cors === undefined
               ? defaultCors
               : {
-                ...defaultCors,
-                ...url.cors,
-                maxAge: url.cors.maxAge && toSeconds(url.cors.maxAge),
-              };
+                  ...defaultCors,
+                  ...url.cors,
+                  maxAge: url.cors.maxAge && toSeconds(url.cors.maxAge),
+                };
 
         return { authorization, cors };
       });
@@ -1153,12 +1154,12 @@ export class Function
 
           const linkInjection = hasLinkInjections
             ? linkData
-              .map((item) => [
-                `process.env.SST_RESOURCE_${item.name} = ${JSON.stringify(
-                  JSON.stringify(item.properties),
-                )};\n`,
-              ])
-              .join("")
+                .map((item) => [
+                  `process.env.SST_RESOURCE_${item.name} = ${JSON.stringify(
+                    JSON.stringify(item.properties),
+                  )};\n`,
+                ])
+                .join("")
             : "";
 
           const parsed = path.posix.parse(handler);
@@ -1189,21 +1190,21 @@ export class Function
               name: `${newHandlerFileName}.mjs`,
               content: streaming
                 ? [
-                  linkInjection,
-                  `export const ${newHandlerFunction} = awslambda.streamifyResponse(async (event, context) => {`,
-                  ...injections,
-                  `  const { ${oldHandlerFunction}: rawHandler} = await import("./${oldHandlerFileName}${newHandlerFileExt}");`,
-                  `  return rawHandler(event, context);`,
-                  `});`,
-                ].join("\n")
+                    linkInjection,
+                    `export const ${newHandlerFunction} = awslambda.streamifyResponse(async (event, context) => {`,
+                    ...injections,
+                    `  const { ${oldHandlerFunction}: rawHandler} = await import("./${oldHandlerFileName}${newHandlerFileExt}");`,
+                    `  return rawHandler(event, context);`,
+                    `});`,
+                  ].join("\n")
                 : [
-                  linkInjection,
-                  `export const ${newHandlerFunction} = async (event, context) => {`,
-                  ...injections,
-                  `  const { ${oldHandlerFunction}: rawHandler} = await import("./${oldHandlerFileName}${newHandlerFileExt}");`,
-                  `  return rawHandler(event, context);`,
-                  `};`,
-                ].join("\n"),
+                    linkInjection,
+                    `export const ${newHandlerFunction} = async (event, context) => {`,
+                    ...injections,
+                    `  const { ${oldHandlerFunction}: rawHandler} = await import("./${oldHandlerFileName}${newHandlerFileExt}");`,
+                    `  return rawHandler(event, context);`,
+                    `};`,
+                  ].join("\n"),
             },
           };
         },
@@ -1225,11 +1226,11 @@ export class Function
               ...linkPermissions,
               ...(dev
                 ? [
-                  {
-                    actions: ["iot:*"],
-                    resources: ["*"],
-                  },
-                ]
+                    {
+                      actions: ["iot:*"],
+                      resources: ["*"],
+                    },
+                  ]
                 : []),
             ],
           }),
@@ -1253,19 +1254,19 @@ export class Function
           inlinePolicies: policy.apply(({ statements }) =>
             statements
               ? [
-                {
-                  name: "inline",
-                  policy: policy.json,
-                },
-              ]
+                  {
+                    name: "inline",
+                    policy: policy.json,
+                  },
+                ]
               : [],
           ),
           managedPolicyArns: [
             "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
             ...(args.vpc
               ? [
-                "arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole",
-              ]
+                  "arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole",
+                ]
               : []),
           ],
         }),
@@ -1329,9 +1330,9 @@ export class Function
               entry.isDir
                 ? archive.directory(entry.from, entry.to, { date: new Date(0) })
                 : archive.file(entry.from, {
-                  name: entry.to,
-                  date: new Date(0),
-                });
+                    name: entry.to,
+                    date: new Date(0),
+                  });
               //if (mode === "start") {
               //  try {
               //    const dir = path.dirname(toPath);
@@ -1356,7 +1357,7 @@ export class Function
         {
           key: interpolate`assets/${name}-code-${bundleHash}.zip`,
           bucket: region.apply((region) =>
-            bootstrap.forRegion(region).then((d) => d.asset),
+            bootstrap.forRegion(region).then((d) => d.bucket),
           ),
           source: zipPath.apply((zipPath) => new asset.FileArchive(zipPath)),
         },
