@@ -115,6 +115,34 @@ export interface CdnDomainArgs {
 
 export interface CdnArgs {
   /**
+   * Any comments you want to include about the distribution.
+   */
+  comment?: Input<string>;
+  /**
+   * One or more origins for this distribution (multiples allowed).
+   */
+  origins: aws.cloudfront.DistributionArgs["origins"];
+  /**
+   * One or more origin_group for this distribution (multiples allowed).
+   */
+  originGroups?: aws.cloudfront.DistributionArgs["originGroups"];
+  /**
+   * Default cache behavior for this distribution.
+   */
+  defaultCacheBehavior: aws.cloudfront.DistributionArgs["defaultCacheBehavior"];
+  /**
+   * Ordered list of cache behaviors resource for this distribution. List from top to bottom in order of precedence. The topmost cache behavior will have precedence 0.
+   */
+  orderedCacheBehaviors?: aws.cloudfront.DistributionArgs["orderedCacheBehaviors"];
+  /**
+   * Object that you want CloudFront to return (for example, index.html) when an end user requests the root URL.
+   */
+  defaultRootObject?: aws.cloudfront.DistributionArgs["defaultRootObject"];
+  /**
+   * One or more custom error response elements (multiples allowed).
+   */
+  customErrorResponses?: aws.cloudfront.DistributionArgs["customErrorResponses"];
+  /**
    * Set a custom domain for your SSR site. Supports domains hosted either on
    * [Route 53](https://aws.amazon.com/route53/) or outside AWS.
    *
@@ -155,11 +183,30 @@ export interface CdnArgs {
    * ```
    */
   wait?: Input<boolean>;
-  transform: {
+  transform?: {
     distribution: Transform<aws.cloudfront.DistributionArgs>;
   };
 }
 
+/**
+ * The `Cdn` component is internally used by other SST components to deploy a content delivery network (CDN) to AWS. It uses [Amazon CloudFront](https://aws.amazon.com/cloudfront/) to serve the content and [Amazon Route 53](https://aws.amazon.com/route53/) to manage custom domains.
+ *
+ * :::note
+ * This component is not intended to be used directly in your SST apps. You can customize this component via transform.
+ * :::
+ *
+ * @example
+ *
+ * ```ts
+ * new sst.aws.Nextjs("MyWeb", {
+ *   transform: {
+ *     cdn: (args) => {
+ *       args.wait = false;
+ *     }
+ *   }
+ * });
+ * ```
+ */
 export class Cdn extends Component {
   private distribution: Output<aws.cloudfront.Distribution>;
   private _domainUrl?: Output<string>;
@@ -235,15 +282,15 @@ export class Cdn extends Component {
     function createDistribution() {
       return new aws.cloudfront.Distribution(
         `${name}Distribution`,
-        transform(args.transform.distribution, {
-          defaultCacheBehavior: {
-            allowedMethods: [],
-            cachedMethods: [],
-            targetOriginId: "placeholder",
-            viewerProtocolPolicy: "redirect-to-https",
-          },
+        transform(args.transform?.distribution, {
+          comment: args.comment,
           enabled: true,
-          origins: [],
+          origins: args.origins,
+          originGroups: args.originGroups,
+          defaultCacheBehavior: args.defaultCacheBehavior,
+          orderedCacheBehaviors: args.orderedCacheBehaviors,
+          defaultRootObject: args.defaultRootObject,
+          customErrorResponses: args.customErrorResponses,
           restrictions: {
             geoRestriction: {
               restrictionType: "none",
@@ -352,8 +399,14 @@ export class Cdn extends Component {
     return this._domainUrl;
   }
 
+  /**
+   * The underlying [resources](/docs/components/#nodes) this component creates.
+   */
   public get nodes() {
     return {
+      /**
+       * The Amazon CloudFront distribution.
+       */
       distribution: this.distribution,
     };
   }

@@ -107,6 +107,7 @@ new SolidStart(name, args?, opts?)
 **Type** <code class="primitive">Object</code>
 </InlineSection>
 - <p>[<code class="key">assets</code>](#nodes-assets)</p>
+- <p>[<code class="key">cdn</code>](#nodes-cdn)</p>
 - <p>[<code class="key">server</code>](#nodes-server)</p>
 </Section>
 The underlying [resources](/docs/components/#nodes) this component creates.
@@ -120,11 +121,20 @@ The underlying [resources](/docs/components/#nodes) this component creates.
 </Section>
 The Amazon S3 Bucket that stores the assets.
 </Segment>
+<NestedTitle id="nodes-cdn" Tag="h4" parent="nodes.">cdn</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Output</code><code class="symbol">&lt;</code>[<code class="type">Cdn</code>](/docs/component/aws/cdn/)<code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+The Amazon CloudFront CDN that serves the site.
+</Segment>
 <NestedTitle id="nodes-server" Tag="h4" parent="nodes.">server</NestedTitle>
 <Segment>
 <Section type="parameters">
 <InlineSection>
-**Type** [<code class="type">Function</code>](/docs/component/aws/function/)
+**Type** <code class="primitive">Output</code><code class="symbol">&lt;</code>[<code class="type">Function</code>](/docs/component/aws/function/)<code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
 The AWS Lambda server function that renders the site.
@@ -772,6 +782,7 @@ The resourcess specified using the [IAM ARN format](https://docs.aws.amazon.com/
 **Type** <code class="primitive">Object</code>
 </InlineSection>
 - <p>[<code class="key">assets?</code>](#transform-assets)</p>
+- <p>[<code class="key">cdn?</code>](#transform-cdn)</p>
 - <p>[<code class="key">server?</code>](#transform-server)</p>
 </Section>
 [Transform](/docs/components#transform) how this component creates its underlying
@@ -786,6 +797,16 @@ resources.
 </InlineSection>
 </Section>
 Transform the Bucket resource used for uploading the assets.
+
+</Segment>
+<NestedTitle id="transform-cdn" Tag="h4" parent="transform.">cdn?</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** [<code class="type">CdnArgs</code>](/docs/component/aws/cdn/#cdnargs)<code class="symbol"> | </code><code class="symbol">(</code><code class="primitive">args</code><code class="symbol">: </code>[<code class="type">CdnArgs</code>](/docs/component/aws/cdn/#cdnargs)<code class="symbol"> => </code>[<code class="type">CdnArgs</code>](/docs/component/aws/cdn/#cdnargs)<code class="symbol"> | </code><code class="primitive">void</code><code class="symbol">)</code>
+</InlineSection>
+</Section>
+Transform the CDN resource.
 
 </Segment>
 <NestedTitle id="transform-server" Tag="h4" parent="transform.">server?</NestedTitle>

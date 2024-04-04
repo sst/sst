@@ -1275,11 +1275,15 @@ export class Nextjs extends Component implements Link.Linkable {
       /**
        * The AWS Lambda server function that renders the app.
        */
-      server: this.server as unknown as Function,
+      server: this.server,
       /**
        * The Amazon S3 Bucket that stores the assets.
        */
       assets: this.assets,
+      /**
+       * The Amazon CloudFront CDN that serves the site.
+       */
+      cdn: this.cdn,
     };
   }
 

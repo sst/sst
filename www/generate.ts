@@ -1063,6 +1063,8 @@ async function generateTsDoc() {
       const externalModule = {
         Bucket: "bucket",
         BucketArgs: "bucket",
+        Cdn: "cdn",
+        CdnArgs: "cdn",
         Function: "function",
         FunctionArgs: "function",
         FunctionPermissionArgs: "function",
@@ -1133,9 +1135,15 @@ async function generateTsDoc() {
         //  typeArguments: undefined
         //}
         const link = {
+          DistributionOrigin: "cloudfront/distribution",
+          DistributionOriginGroup: "cloudfront/distribution",
           DistributionCustomErrorResponse: "cloudfront/distribution",
+          DistributionDefaultCacheBehavior: "cloudfront/distribution",
+          DistributionOrderedCacheBehavior: "cloudfront/distribution",
         }[type.name];
         if (!link) {
+          // @ts-expect-error
+          delete type._project;
           console.error(type);
           throw new Error(`Unsupported @pulumi provider input type`);
         }
@@ -1364,6 +1372,8 @@ async function buildTsFiles() {
       "../pkg/platform/src/components/aws/solid-start.ts",
       "../pkg/platform/src/components/aws/static-site.ts",
       "../pkg/platform/src/components/cloudflare/worker.ts",
+      // internal
+      "../pkg/platform/src/components/aws/cdn.ts",
     ],
     tsconfig: "../pkg/platform/tsconfig.json",
   });

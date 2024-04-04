@@ -87,6 +87,26 @@ new Router(name, args, opts?)
 
 ## Properties
 
+### nodes
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Object</code>
+</InlineSection>
+- <p>[<code class="key">cdn</code>](#nodes-cdn)</p>
+</Section>
+The underlying [resources](/docs/components/#nodes) this component creates.
+</Segment>
+<NestedTitle id="nodes-cdn" Tag="h4" parent="nodes.">cdn</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** [<code class="type">Cdn</code>](/docs/component/aws/cdn/)
+</InlineSection>
+</Section>
+The Amazon CloudFront CDN resource.
+</Segment>
+
 ### url
 <Segment>
 <Section type="parameters">
@@ -331,6 +351,7 @@ A request to `/api/sample.xml` will match `/api/*` first and route to it; even t
 **Type** <code class="primitive">Object</code>
 </InlineSection>
 - <p>[<code class="key">cachePolicy?</code>](#transform-cachepolicy)</p>
+- <p>[<code class="key">cdn?</code>](#transform-cdn)</p>
 </Section>
 [Transform](/docs/components#transform) how this component creates its underlying
 resources.
@@ -344,6 +365,16 @@ resources.
 </InlineSection>
 </Section>
 Transform the Cache Policy that's attached to each CloudFront behavior.
+
+</Segment>
+<NestedTitle id="transform-cdn" Tag="h4" parent="transform.">cdn?</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** [<code class="type">CdnArgs</code>](/docs/component/aws/cdn/#cdnargs)<code class="symbol"> | </code><code class="symbol">(</code><code class="primitive">args</code><code class="symbol">: </code>[<code class="type">CdnArgs</code>](/docs/component/aws/cdn/#cdnargs)<code class="symbol"> => </code>[<code class="type">CdnArgs</code>](/docs/component/aws/cdn/#cdnargs)<code class="symbol"> | </code><code class="primitive">void</code><code class="symbol">)</code>
+</InlineSection>
+</Section>
+Transform the CDN resource.
 
 </Segment>
 </div>

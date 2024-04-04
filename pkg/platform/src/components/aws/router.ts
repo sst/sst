@@ -3,7 +3,7 @@ import * as aws from "@pulumi/aws";
 import { Component, Prettify, Transform, transform } from "../component";
 import { Link } from "../link";
 import type { Input } from "../input";
-import { Cdn, CdnDomainArgs } from "./cdn";
+import { Cdn, CdnArgs, CdnDomainArgs } from "./cdn";
 
 export interface RouterArgs {
   /**
@@ -90,6 +90,10 @@ export interface RouterArgs {
      * Transform the Cache Policy that's attached to each CloudFront behavior.
      */
     cachePolicy?: Transform<aws.cloudfront.CachePolicyArgs>;
+    /**
+     * Transform the CDN resource.
+     */
+    cdn?: Transform<CdnArgs>;
   };
 }
 
@@ -213,26 +217,21 @@ export class Router extends Component implements Link.Linkable {
 
       return new Cdn(
         `${name}Cdn`,
-        {
+        transform(args.transform?.cdn, {
+          comment: `${name} router`,
+          origins,
+          defaultCacheBehavior: behaviors.apply(
+            (behaviors) => behaviors.find((b) => !b.pathPattern)!,
+          ),
+          orderedCacheBehaviors: behaviors.apply(
+            (behaviors) =>
+              behaviors.filter(
+                (b) => b.pathPattern,
+              ) as aws.types.input.cloudfront.DistributionOrderedCacheBehavior[],
+          ),
           domain: args.domain,
           wait: true,
-          transform: {
-            distribution: (distribution) => ({
-              ...distribution,
-              comment: `${name} router`,
-              origins,
-              defaultCacheBehavior: behaviors.apply(
-                (behaviors) => behaviors.find((b) => !b.pathPattern)!,
-              ),
-              orderedCacheBehaviors: behaviors.apply(
-                (behaviors) =>
-                  behaviors.filter(
-                    (b) => b.pathPattern,
-                  ) as aws.types.input.cloudfront.DistributionOrderedCacheBehavior[],
-              ),
-            }),
-          },
-        },
+        }),
         { parent },
       );
     }
@@ -314,6 +313,18 @@ export class Router extends Component implements Link.Linkable {
     return all([this.cdn.domainUrl, this.cdn.url]).apply(
       ([domainUrl, url]) => domainUrl ?? url,
     );
+  }
+
+  /**
+   * The underlying [resources](/docs/components/#nodes) this component creates.
+   */
+  public get nodes() {
+    return {
+      /**
+       * The Amazon CloudFront CDN resource.
+       */
+      cdn: this.cdn,
+    };
   }
 
   /** @internal */

@@ -50,6 +50,11 @@ const sidebar = [
         label: "ApiGatewayV2",
         link: "/docs/component/aws/apigatewayv2/",
       },
+      {
+        label: "Internal",
+        items: [{ label: "Cdn", link: "/docs/component/aws/cdn/" }],
+        collapsed: true,
+      },
     ],
   },
   {

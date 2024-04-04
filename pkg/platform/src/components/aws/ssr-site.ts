@@ -12,7 +12,7 @@ import {
   ComponentResourceOptions,
 } from "@pulumi/pulumi";
 import * as aws from "@pulumi/aws";
-import { Cdn, CdnDomainArgs } from "./cdn.js";
+import { Cdn, CdnArgs, CdnDomainArgs } from "./cdn.js";
 import { Function, FunctionArgs } from "./function.js";
 import { DistributionInvalidation } from "./providers/distribution-invalidation.js";
 import { useProvider } from "./helpers/provider.js";
@@ -115,6 +115,10 @@ export interface SsrSiteArgs extends BaseSsrSiteArgs {
      * Transform the server Function resource.
      */
     server?: Transform<FunctionArgs>;
+    /**
+     * Transform the CDN resource.
+     */
+    cdn?: Transform<CdnArgs>;
   };
 }
 
@@ -720,29 +724,24 @@ function handler(event) {
     function createDistribution() {
       return new Cdn(
         `${name}Cdn`,
-        {
+        transform(args.transform?.cdn, {
+          comment: `${name} app`,
+          origins: Object.values(origins),
+          originGroups: Object.values(originGroups),
+          defaultRootObject: "",
+          defaultCacheBehavior: buildBehavior(
+            plan.behaviors.find((behavior) => !behavior.pattern)!,
+          ),
+          orderedCacheBehaviors: plan.behaviors
+            .filter((behavior) => behavior.pattern)
+            .map((behavior) => ({
+              pathPattern: behavior.pattern!,
+              ...buildBehavior(behavior),
+            })),
+          customErrorResponses: plan.errorResponses,
           domain: args.domain,
           wait: !$dev,
-          transform: {
-            distribution: (distribution) => ({
-              ...distribution,
-              comment: `${name} app`,
-              origins: Object.values(origins),
-              originGroups: Object.values(originGroups),
-              defaultRootObject: "",
-              defaultCacheBehavior: buildBehavior(
-                plan.behaviors.find((behavior) => !behavior.pattern)!,
-              ),
-              orderedCacheBehaviors: plan.behaviors
-                .filter((behavior) => behavior.pattern)
-                .map((behavior) => ({
-                  pathPattern: behavior.pattern!,
-                  ...buildBehavior(behavior),
-                })),
-              customErrorResponses: plan.errorResponses,
-            }),
-          },
-        },
+        }),
         // create distribution after assets are uploaded
         { dependsOn: bucketFile, parent },
       );

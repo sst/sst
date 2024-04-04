@@ -8,7 +8,7 @@ import {
   interpolate,
   output,
 } from "@pulumi/pulumi";
-import { Cdn, CdnDomainArgs } from "./cdn.js";
+import { Cdn, CdnArgs, CdnDomainArgs } from "./cdn.js";
 import { Bucket, BucketArgs } from "./bucket.js";
 import { Component, Prettify, Transform, transform } from "../component.js";
 import { Link } from "../link.js";
@@ -195,6 +195,10 @@ export interface StaticSiteArgs extends BaseStaticSiteArgs {
      * Transform the Bucket resource used for uploading the assets.
      */
     assets?: Transform<BucketArgs>;
+    /**
+     * Transform the CDN resource.
+     */
+    cdn?: Transform<CdnArgs>;
   };
 }
 
@@ -513,59 +517,54 @@ export class StaticSite extends Component implements Link.Linkable {
     function createDistribution() {
       return new Cdn(
         `${name}Cdn`,
-        {
-          domain: args.domain,
-          wait: !$dev,
-          transform: {
-            distribution: (distribution) => ({
-              ...distribution,
-              comment: `${name} site`,
-              origins: [
+        transform(args.transform?.cdn, {
+          comment: `${name} site`,
+          origins: [
+            {
+              originId: "s3",
+              domainName: bucket.nodes.bucket.bucketRegionalDomainName,
+              originPath: "",
+              s3OriginConfig: {
+                originAccessIdentity: access.cloudfrontAccessIdentityPath,
+              },
+            },
+          ],
+          defaultRootObject: indexPage,
+          customErrorResponses: args.errorPage
+            ? [
                 {
-                  originId: "s3",
-                  domainName: bucket.nodes.bucket.bucketRegionalDomainName,
-                  originPath: "",
-                  s3OriginConfig: {
-                    originAccessIdentity: access.cloudfrontAccessIdentityPath,
-                  },
+                  errorCode: 403,
+                  responsePagePath: interpolate`/${args.errorPage}`,
+                },
+                {
+                  errorCode: 404,
+                  responsePagePath: interpolate`/${args.errorPage}`,
+                },
+              ]
+            : [
+                {
+                  errorCode: 403,
+                  responsePagePath: interpolate`/${indexPage}`,
+                  responseCode: 200,
+                },
+                {
+                  errorCode: 404,
+                  responsePagePath: interpolate`/${indexPage}`,
+                  responseCode: 200,
                 },
               ],
-              defaultRootObject: indexPage,
-              customErrorResponses: args.errorPage
-                ? [
-                    {
-                      errorCode: 403,
-                      responsePagePath: interpolate`/${args.errorPage}`,
-                    },
-                    {
-                      errorCode: 404,
-                      responsePagePath: interpolate`/${args.errorPage}`,
-                    },
-                  ]
-                : [
-                    {
-                      errorCode: 403,
-                      responsePagePath: interpolate`/${indexPage}`,
-                      responseCode: 200,
-                    },
-                    {
-                      errorCode: 404,
-                      responsePagePath: interpolate`/${indexPage}`,
-                      responseCode: 200,
-                    },
-                  ],
-              defaultCacheBehavior: {
-                targetOriginId: "s3",
-                viewerProtocolPolicy: "redirect-to-https",
-                allowedMethods: ["GET", "HEAD", "OPTIONS"],
-                cachedMethods: ["GET", "HEAD"],
-                compress: true,
-                // CloudFront's managed CachingOptimized policy
-                cachePolicyId: "658327ea-f89d-4fab-a63d-7e88639e58f6",
-              },
-            }),
+          defaultCacheBehavior: {
+            targetOriginId: "s3",
+            viewerProtocolPolicy: "redirect-to-https",
+            allowedMethods: ["GET", "HEAD", "OPTIONS"],
+            cachedMethods: ["GET", "HEAD"],
+            compress: true,
+            // CloudFront's managed CachingOptimized policy
+            cachePolicyId: "658327ea-f89d-4fab-a63d-7e88639e58f6",
           },
-        },
+          domain: args.domain,
+          wait: !$dev,
+        }),
         // create distribution after s3 upload finishes
         { dependsOn: bucketFile, parent },
       );
@@ -642,6 +641,10 @@ export class StaticSite extends Component implements Link.Linkable {
        * The Amazon S3 Bucket that stores the assets.
        */
       assets: this.assets,
+      /**
+       * The Amazon CloudFront CDN that serves the site.
+       */
+      cdn: this.cdn,
     };
   }
 
