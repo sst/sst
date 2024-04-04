@@ -11,6 +11,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@cloudflare/workers-types": "^4.20240403.0"
+    "@cloudflare/workers-types": "^4.20240403.0",
+    "sst": "^3.0.4"
   }
 }

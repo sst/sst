@@ -82,7 +82,7 @@ const bucket = new sst.aws.Bucket("MyBucket", {
 
 Now, link the bucket to the API routes.
 
-```js title="sst.config.ts" {3,7}
+```ts title="sst.config.ts" {3,7}
 new sst.aws.ApiGatewayV2("MyApi")
   .route("GET /", {
     link: [bucket],
@@ -96,7 +96,7 @@ new sst.aws.ApiGatewayV2("MyApi")
 
 ---
 
-## 4. Upload a file to S3
+## 4. Upload a file
 
 We want the `/` route of our API to generate a pre-signed URL to upload a file to our S3 Bucket. Create an `index.ts` file and add the following.
 
@@ -120,7 +120,7 @@ We are directly accessing our S3 bucket with `Resource.MyBucket.name`.
 
 ---
 
-## 5. Download a file from S3
+## 5. Download a file
 
 We want the `/latest` route of our API to generate a pre-signed URL to download the last uploaded file in our S3 Bucket. Add this to your `index.ts` file.
 
@@ -149,7 +149,6 @@ export async function latest() {
     },
   };
 }
-
 ```
 
 Add the relevant imports.
