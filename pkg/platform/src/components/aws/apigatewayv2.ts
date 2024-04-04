@@ -286,7 +286,7 @@ export interface ApiGatewayV2Route {
   /**
    * The Lambda function.
    */
-  function: Function;
+  function: Output<Function>;
   /**
    * The Lambda permission.
    */
@@ -558,9 +558,9 @@ export class ApiGatewayV2 extends Component implements Link.Linkable {
     //       trailing slash, the API fails with the error {"message":"Not Found"}
     return this.apigDomain && this.apiMapping
       ? all([this.apigDomain.domainName, this.apiMapping.apiMappingKey]).apply(
-        ([domain, key]) =>
-          key ? `https://${domain}/${key}/` : `https://${domain}`,
-      )
+          ([domain, key]) =>
+            key ? `https://${domain}/${key}/` : `https://${domain}`,
+        )
       : this.api.apiEndpoint;
   }
 
@@ -664,7 +664,7 @@ export class ApiGatewayV2 extends Component implements Link.Linkable {
     route: string,
     handler: string | FunctionArgs,
     args: ApiGatewayV2RouteArgs = {},
-  ) {
+  ): ApiGatewayV2Route {
     const source = this;
     const sourceName = this.constructorName;
     const routeKey = parseRoute();

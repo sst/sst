@@ -325,7 +325,7 @@ export class Queue
     queueArn: Input<string>,
     subscriber: string | FunctionArgs,
     args: QueueSubscribeArgs = {},
-  ) {
+  ): QueueSubscriber {
     const ret = all([name, queueArn]).apply(([name, queueArn]) => {
       // Build subscriber name
       const namePrefix = sanitizeToPascalCase(name);
@@ -370,7 +370,7 @@ export class Queue
     return {
       function: ret.fn,
       eventSourceMapping: ret.mapping,
-    } as QueueSubscriber;
+    };
   }
 
   /** @internal */

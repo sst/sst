@@ -335,7 +335,7 @@ export class SnsTopic
     topicArn: Input<string>,
     subscriber: string | FunctionArgs,
     args: SnsTopicSubscribeArgs = {},
-  ) {
+  ): SnsTopicFunctionSubscriber {
     const ret = all([name, subscriber, args]).apply(
       ([name, subscriber, args]) => {
         // Build subscriber name
@@ -385,7 +385,7 @@ export class SnsTopic
       function: ret.fn,
       permission: ret.permission,
       subscription: ret.subscription,
-    } satisfies SnsTopicFunctionSubscriber as SnsTopicFunctionSubscriber;
+    };
   }
 
   /**
@@ -465,7 +465,7 @@ export class SnsTopic
     topicArn: Input<string>,
     queueArn: Input<string>,
     args: SnsTopicSubscribeArgs = {},
-  ) {
+  ): SnsTopicQueueSubscriber {
     const ret = all([name, queueArn, args]).apply(([name, queueArn, args]) => {
       const { queueUrl } = parseQueueArn(queueArn);
 
@@ -518,7 +518,7 @@ export class SnsTopic
     return {
       policy: ret.policy,
       subscription: ret.subscription,
-    } satisfies SnsTopicQueueSubscriber as SnsTopicQueueSubscriber;
+    };
   }
 
   /** @internal */

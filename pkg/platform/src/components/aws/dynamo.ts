@@ -570,7 +570,7 @@ export class Dynamo
     streamArn: Input<string>,
     subscriber: string | FunctionArgs,
     args: DynamoSubscribeArgs = {},
-  ) {
+  ): DynamoSubscriber {
     const ret = all([name, subscriber, args]).apply(
       ([name, subscriber, args]) => {
         // Build subscriber name
@@ -624,7 +624,7 @@ export class Dynamo
     return {
       function: ret.fn,
       eventSourceMapping: ret.eventSourceMapping,
-    } as DynamoSubscriber;
+    };
   }
 
   /** @internal */

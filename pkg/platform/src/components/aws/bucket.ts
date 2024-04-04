@@ -587,7 +587,7 @@ export class Bucket
     bucketArn: Input<string>,
     subscriber: string | FunctionArgs,
     args: BucketSubscribeArgs = {},
-  ) {
+  ): BucketSubscriber {
     const ret = all([name, subscriber, args]).apply(
       ([name, subscriber, args]) => {
         const events = args.events ?? [
@@ -678,7 +678,7 @@ export class Bucket
       function: ret.fn,
       permission: ret.permission,
       notification: ret.notification,
-    } as BucketSubscriber;
+    };
   }
 
   /** @internal */
