@@ -47,14 +47,17 @@ else if (slug === "docs/reference/cli") {
             Join our Discord community
           </a>
         </div>
-        <p>
-          Last updated —{' '}
-          { lastUpdated && (
-          <time datetime={lastUpdated.toISOString()}>
-            {lastUpdated.toLocaleDateString(lang, { dateStyle: 'medium', timeZone: 'UTC' })}
-          </time>
-          )}
-        </p>
+        <div>
+          <p>Built with <a href={`${config.github}/tree/dev/www/sst.config.ts`}>Astro &amp; SST</a></p>
+          <p>
+            Last updated —{' '}
+            { lastUpdated && (
+            <time datetime={lastUpdated.toISOString()}>
+              {lastUpdated.toLocaleDateString(lang, { dateStyle: 'medium', timeZone: 'UTC' })}
+            </time>
+            )}
+          </p>
+        </div>
       </div>
     </footer>
  )
@@ -89,6 +92,10 @@ else if (slug === "docs/reference/cli") {
     color: var(--sl-color-text-accent);
 	}
   p {
+    text-align: right;
+    color: var(--color-text-dimmed);
+  }
+  p a {
     color: var(--color-text-dimmed);
   }
 </style>
