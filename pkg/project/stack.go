@@ -392,14 +392,16 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 			typesFile.WriteString("  export interface Resource " + inferTypes(links, "  ") + "\n")
 			typesFile.WriteString("}" + "\n")
 
-			typesFile.WriteString(`import * as cloudflare from "@cloudflare/workers-types"` + "\n")
-			typesFile.WriteString(`declare module "sst" {` + "\n")
-			typesFile.WriteString("  export interface Resource {")
-			for key, value := range cloudflareBindings {
-				typesFile.WriteString("  " + key + ": cloudflare." + value + "\n")
+			if len(cloudflareBindings) > 0 {
+				typesFile.WriteString(`import * as cloudflare from "@cloudflare/workers-types"` + "\n")
+				typesFile.WriteString(`declare module "sst" {` + "\n")
+				typesFile.WriteString("  export interface Resource {")
+				for key, value := range cloudflareBindings {
+					typesFile.WriteString("  " + key + ": cloudflare." + value + "\n")
+				}
+				typesFile.WriteString("  }" + "\n")
+				typesFile.WriteString("}" + "\n")
 			}
-			typesFile.WriteString("  }" + "\n")
-			typesFile.WriteString("}" + "\n")
 
 			typesFile.WriteString("export {}")
 			provider.PutLinks(s.project.home, s.project.app.Name, s.project.app.Stage, links)
