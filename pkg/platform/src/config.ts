@@ -140,6 +140,18 @@ export interface App {
    *   }
    * }
    * ```
+   *
+   * By default, we use the latest verion of a provider. But you can optionally specify a version.
+   *
+   * ```ts
+   * {
+   *   providers: {
+   *     aws: {
+   *       version: "6.27.0"
+   *     }
+   *   }
+   * }
+   * ```
    */
   providers?: Record<string, any>;
 

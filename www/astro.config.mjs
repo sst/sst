@@ -24,6 +24,7 @@ const sidebar = [
       { label: "Live", link: "/docs/live/" },
       { label: "Linking", link: "/docs/linking/" },
       { label: "Console", link: "/docs/console/" },
+      { label: "Providers", link: "/docs/providers/" },
       { label: "Components", link: "/docs/components/" },
     ],
   },

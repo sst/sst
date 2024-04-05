@@ -48,7 +48,9 @@ else if (slug === "docs/reference/cli") {
           </a>
         </div>
         <div>
-          <p>Built with <a href={`${config.github}/tree/dev/www/sst.config.ts`}>Astro &amp; SST</a></p>
+          <p>
+            Built with <a href={`${config.github}/tree/dev/www/sst.config.ts`}>Astro &amp; SST</a>
+          </p>
           <p>
             Last updated —{' '}
             { lastUpdated && (
@@ -56,6 +58,9 @@ else if (slug === "docs/reference/cli") {
               {lastUpdated.toLocaleDateString(lang, { dateStyle: 'medium', timeZone: 'UTC' })}
             </time>
             )}
+          </p>
+          <p>
+            &copy; {new Date().getFullYear()}&nbsp;<a href="https://anoma.ly">Anomaly Innovations</a>
           </p>
         </div>
       </div>

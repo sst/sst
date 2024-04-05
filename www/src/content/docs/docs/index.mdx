@@ -155,8 +155,6 @@ Read more about [transforms](/docs/components#transforms).
 If you want to add a feature to your app that's not supported by SST's components yet, you can use Pulumi components directly in your SST app. This is because components in SST are built on Pulumi components.
 
 ```js title="sst.config.ts"
-import * as aws from "@pulumi/aws";
-
 new aws.s3.BucketV2("b", {
   bucket: "mybucket",
   tags: {
@@ -165,7 +163,7 @@ new aws.s3.BucketV2("b", {
 });
 ```
 
-Pulumi's [AWS Classic provider](https://www.pulumi.com/registry/packages/aws/) is automatically included in your SST app.
+You can also use any provider in the [Pulumi Registry](https://www.pulumi.com/registry/). Read more about [providers](/docs/providers).
 
 ---
 
