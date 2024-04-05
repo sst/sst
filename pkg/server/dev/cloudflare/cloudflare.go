@@ -4,10 +4,12 @@ import (
 	"context"
 	"encoding/json"
 	"log/slog"
+	"net/http"
 	"os"
 	"path/filepath"
 
 	"github.com/cloudflare/cloudflare-go"
+	"github.com/gorilla/websocket"
 	"github.com/sst/ion/internal/util"
 	"github.com/sst/ion/pkg/project"
 	"github.com/sst/ion/pkg/project/provider"
@@ -18,6 +20,16 @@ import (
 
 type WorkerBuildEvent struct {
 	WorkerID string
+	Errors   []string
+}
+
+type WorkerUpdatedEvent struct {
+	WorkerID string
+}
+
+type WorkerInvokedEvent struct {
+	WorkerID  string
+	TailEvent *TailEvent
 }
 
 func Start(ctx context.Context, proj *project.Project, args map[string]interface{}) (util.CleanupFunc, error) {
@@ -26,45 +38,90 @@ func Start(ctx context.Context, proj *project.Project, args map[string]interface
 		return nil, util.NewReadableError(nil, "Cloudflare provider not found in project configuration")
 	}
 	api := prov.(*provider.CloudflareProvider).Api()
-	stackEvents := bus.Listen(ctx, &project.StackEvent{})
+	completeEvents := make(chan *project.CompleteEvent)
+	bus.Subscribe(ctx, func(evt *project.StackEvent) {
+		if evt.CompleteEvent != nil {
+			completeEvents <- evt.CompleteEvent
+		}
+	})
 	fileEvents := bus.Listen(ctx, &watcher.FileChangedEvent{})
 	var complete *project.CompleteEvent
 	builds := map[string]*runtime.BuildOutput{}
+	type tailRef struct {
+		ID         string
+		ScriptName string
+		Account    *cloudflare.ResourceContainer
+	}
+	tails := map[string]tailRef{}
 
 	go func() {
 		for {
 			select {
 			case <-ctx.Done():
 				return
-			case event := <-stackEvents:
-				if event.CompleteEvent != nil {
-					for _, warp := range event.CompleteEvent.Warps {
-						if warp.Runtime != "worker" {
-							continue
-						}
-						if _, ok := builds[warp.FunctionID]; ok {
-							continue
-						}
+			case complete = <-completeEvents:
+				for _, warp := range complete.Warps {
+					if warp.Runtime != "worker" {
+						continue
+					}
 
-						output, err := runtime.Build(ctx, &runtime.BuildInput{
-							Warp:    warp,
-							Links:   event.CompleteEvent.Links,
-							Dev:     true,
-							Project: proj,
+					var properties runtime.WorkerProperties
+					json.Unmarshal(warp.Properties, &properties)
+					account := cloudflare.AccountIdentifier(properties.AccountID)
+					if _, ok := tails[warp.FunctionID]; !ok {
+						tail, err := api.StartWorkersTail(ctx, account, properties.ScriptName)
+						if err != nil {
+							return
+						}
+						tails[warp.FunctionID] = tailRef{
+							ID:         tail.ID,
+							ScriptName: properties.ScriptName,
+							Account:    account,
+						}
+						conn, _, err := websocket.DefaultDialer.DialContext(ctx, tail.URL, http.Header{
+							"Sec-WebSocket-Protocol": []string{"trace-v1"},
 						})
 						if err != nil {
+							slog.Info("error dialing websocket", "error", err)
 							continue
 						}
-						builds[warp.FunctionID] = output
+						go func() {
+							for {
+								msg := &TailEvent{}
+								err := conn.ReadJSON(msg)
+								if err != nil {
+									break
+								}
+								bus.Publish(&WorkerInvokedEvent{
+									WorkerID:  warp.FunctionID,
+									TailEvent: msg,
+								})
+							}
+						}()
 					}
-					complete = event.CompleteEvent
+
+					if _, ok := builds[warp.FunctionID]; ok {
+						continue
+					}
+
+					output, err := runtime.Build(ctx, &runtime.BuildInput{
+						Warp:    warp,
+						Links:   complete.Links,
+						Dev:     true,
+						Project: proj,
+					})
+					if err != nil {
+						continue
+					}
+					builds[warp.FunctionID] = output
+
 				}
 			case file := <-fileEvents:
 				if complete == nil {
 					continue
 				}
-				for functionID, warp := range complete.Warps {
-					if runtime.ShouldRebuild(warp.Runtime, functionID, file.Path) {
+				for workerID, warp := range complete.Warps {
+					if runtime.ShouldRebuild(warp.Runtime, workerID, file.Path) {
 						output, err := runtime.Build(ctx, &runtime.BuildInput{
 							Warp:    warp,
 							Links:   complete.Links,
@@ -74,6 +131,10 @@ func Start(ctx context.Context, proj *project.Project, args map[string]interface
 						if err != nil {
 							continue
 						}
+						bus.Publish(&WorkerBuildEvent{
+							WorkerID: warp.FunctionID,
+							Errors:   output.Errors,
+						})
 						builds[warp.FunctionID] = output
 						var properties runtime.WorkerProperties
 						json.Unmarshal(warp.Properties, &properties)
@@ -94,6 +155,9 @@ func Start(ctx context.Context, proj *project.Project, args map[string]interface
 							slog.Info("error updating worker script", "error", err)
 						}
 						slog.Info("done worker script", "functionID", warp.FunctionID)
+						bus.Publish(&WorkerUpdatedEvent{
+							WorkerID: warp.FunctionID,
+						})
 
 					}
 				}
@@ -103,6 +167,9 @@ func Start(ctx context.Context, proj *project.Project, args map[string]interface
 	}()
 
 	return func() error {
+		for _, tail := range tails {
+			api.DeleteWorkersTail(ctx, tail.Account, tail.ScriptName, tail.ID)
+		}
 		return nil
 	}, nil
 }

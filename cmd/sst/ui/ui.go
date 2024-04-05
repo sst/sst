@@ -3,6 +3,7 @@ package ui
 import (
 	"fmt"
 	"log/slog"
+	"net/url"
 	"os"
 	"strings"
 	"time"
@@ -407,7 +408,7 @@ func (u *UI) getColor(input string) color.Attribute {
 func (u *UI) Event(evt *server.Event) {
 	if evt.FunctionInvokedEvent != nil {
 		u.workerTime[evt.FunctionInvokedEvent.WorkerID] = time.Now()
-		u.printEvent(u.getColor(evt.FunctionInvokedEvent.WorkerID), color.New(color.FgWhite, color.Bold).Sprintf("%-11s", "Invoked"), u.functionName(evt.FunctionInvokedEvent.FunctionID))
+		u.printEvent(u.getColor(evt.FunctionInvokedEvent.WorkerID), color.New(color.FgWhite, color.Bold).Sprintf("%-11s", "Invoke"), u.functionName(evt.FunctionInvokedEvent.FunctionID))
 	}
 
 	if evt.FunctionResponseEvent != nil {
@@ -420,6 +421,30 @@ func (u *UI) Event(evt *server.Event) {
 		duration := time.Since(u.workerTime[evt.FunctionLogEvent.WorkerID]).Round(time.Millisecond)
 		formattedDuration := fmt.Sprintf("%.9s", fmt.Sprintf("+%v", duration))
 		u.printEvent(u.getColor(evt.FunctionLogEvent.WorkerID), formattedDuration, evt.FunctionLogEvent.Line)
+	}
+
+	if evt.WorkerBuildEvent != nil {
+		if len(evt.WorkerBuildEvent.Errors) > 0 {
+			u.printEvent(color.FgRed, "Build Error", u.functionName(evt.WorkerBuildEvent.WorkerID)+" "+strings.Join(evt.WorkerBuildEvent.Errors, "\n"))
+			return
+		}
+		u.printEvent(color.FgGreen, "Build", u.functionName(evt.WorkerBuildEvent.WorkerID))
+	}
+
+	if evt.WorkerUpdatedEvent != nil {
+		u.printEvent(color.FgBlue, "Reload", u.functionName(evt.WorkerUpdatedEvent.WorkerID))
+	}
+	if evt.WorkerInvokedEvent != nil {
+		url, _ := url.Parse(evt.WorkerInvokedEvent.TailEvent.Event.Request.URL)
+		u.printEvent(u.getColor(evt.WorkerInvokedEvent.WorkerID), color.New(color.FgWhite, color.Bold).Sprintf("%-11s", "Invoke"), u.functionName(evt.WorkerInvokedEvent.WorkerID)+" "+evt.WorkerInvokedEvent.TailEvent.Event.Request.Method+" "+url.Path)
+		for _, log := range evt.WorkerInvokedEvent.TailEvent.Logs {
+			duration := time.UnixMilli(log.Timestamp).Sub(time.UnixMilli(evt.WorkerInvokedEvent.TailEvent.EventTimestamp))
+			formattedDuration := fmt.Sprintf("%.9s", fmt.Sprintf("+%v", duration))
+			for _, line := range log.Message {
+				u.printEvent(u.getColor(evt.WorkerInvokedEvent.WorkerID), formattedDuration, line)
+			}
+		}
+		u.printEvent(u.getColor(evt.WorkerInvokedEvent.WorkerID), "Done", evt.WorkerInvokedEvent.TailEvent.Outcome)
 	}
 
 	if evt.FunctionBuildEvent != nil {
@@ -448,6 +473,9 @@ func (u *UI) functionName(functionID string) string {
 	}
 	for _, resource := range u.complete.Resources {
 		if resource.Type == "sst:aws:Function" && resource.URN.Name() == functionID {
+			return resource.Outputs["_metadata"].(map[string]interface{})["handler"].(string)
+		}
+		if resource.Type == "sst:cloudflare:Worker" && resource.URN.Name() == functionID {
 			return resource.Outputs["_metadata"].(map[string]interface{})["handler"].(string)
 		}
 	}

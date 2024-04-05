@@ -45,6 +45,10 @@ type Event struct {
 	FunctionErrorEvent    *aws.FunctionErrorEvent
 	FunctionLogEvent      *aws.FunctionLogEvent
 	FunctionBuildEvent    *aws.FunctionBuildEvent
+
+	WorkerBuildEvent   *cloudflare.WorkerBuildEvent
+	WorkerUpdatedEvent *cloudflare.WorkerUpdatedEvent
+	WorkerInvokedEvent *cloudflare.WorkerInvokedEvent
 }
 
 type StateEvent struct {
@@ -156,6 +160,22 @@ func (s *Server) Start(parentContext context.Context) error {
 		bus.Subscribe(ctx, func(event *aws.FunctionBuildEvent) {
 			publish(&Event{
 				FunctionBuildEvent: event,
+			})
+		})
+
+		bus.Subscribe(ctx, func(event *cloudflare.WorkerBuildEvent) {
+			publish(&Event{
+				WorkerBuildEvent: event,
+			})
+		})
+		bus.Subscribe(ctx, func(event *cloudflare.WorkerUpdatedEvent) {
+			publish(&Event{
+				WorkerUpdatedEvent: event,
+			})
+		})
+		bus.Subscribe(ctx, func(event *cloudflare.WorkerInvokedEvent) {
+			publish(&Event{
+				WorkerInvokedEvent: event,
 			})
 		})
 		<-ctx.Done()

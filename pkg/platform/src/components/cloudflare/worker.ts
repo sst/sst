@@ -267,6 +267,9 @@ export class Worker extends Component {
           },
         }),
       ),
+      _metadata: {
+        handler: args.handler,
+      },
     });
 
     function normalizeUrl() {
@@ -463,6 +466,11 @@ export class Worker extends Component {
        */
       worker: this.script,
     };
+  }
+
+  private static _devWorker: Worker;
+  private static get devWorker() {
+    if (Worker._devWorker) return Worker._devWorker;
   }
 }
 
