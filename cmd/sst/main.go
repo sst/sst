@@ -16,6 +16,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/charmbracelet/huh"
 	flag "github.com/spf13/pflag"
 
 	"github.com/briandowns/spinner"
@@ -1513,16 +1514,18 @@ func getStage(cli *Cli, cfgPath string) (string, error) {
 		if stage == "" {
 			stage = guessStage()
 			if stage == "" {
-				for {
-					fmt.Print("Enter a name for your personal stage: ")
-					_, err := fmt.Scanln(&stage)
-					if err != nil {
-						continue
-					}
-					if stage == "" {
-						continue
-					}
-					break
+				err := huh.NewForm(
+					huh.NewGroup(
+						huh.NewInput().Title(" Enter name for your personal stage").Prompt(" > ").Value(&stage).Validate(func(v string) error {
+							if project.InvalidStageRegex.MatchString(v) {
+								return fmt.Errorf("Invalid stage name")
+							}
+							return nil
+						}),
+					),
+				).WithTheme(huh.ThemeCatppuccin()).Run()
+				if err != nil {
+					return "", err
 				}
 			}
 			err := project.SetPersonalStage(cfgPath, stage)
@@ -1541,7 +1544,7 @@ func guessStage() string {
 		return ""
 	}
 	stage := strings.ToLower(u.Username)
-	stage = project.StageRegex.ReplaceAllString(stage, "")
+	stage = project.InvalidStageRegex.ReplaceAllString(stage, "")
 
 	if stage == "root" || stage == "admin" || stage == "prod" || stage == "dev" || stage == "production" {
 		return ""

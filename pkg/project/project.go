@@ -75,10 +75,10 @@ type ProjectConfig struct {
 
 var ErrInvalidStageName = fmt.Errorf("invalid stage name")
 var ErrV2Config = fmt.Errorf("sstv2 config detected")
-var StageRegex = regexp.MustCompile(`^[a-zA-Z0-9-]+$`)
+var InvalidStageRegex = regexp.MustCompile(`[^a-zA-Z0-9-]`)
 
 func New(input *ProjectConfig) (*Project, error) {
-	if !StageRegex.MatchString(input.Stage) {
+	if InvalidStageRegex.MatchString(input.Stage) {
 		return nil, ErrInvalidStageName
 	}
 
