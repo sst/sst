@@ -35,12 +35,12 @@ sst init
 
 This'll create a `sst.config.ts` file in your project root.
 
-#### Save the Cloudflare API token
+#### Set the Cloudflare API token
 
-Create a `.env` file in your project root with your Cloudflare API token.
+You can save your Cloudflare API token in a `.env` file or just set it directly.
 
-```bash title=".env"
-CLOUDFLARE_API_TOKEN=aaaaaaaa_aaaaaaaaaaaa_aaaaaaaa
+```bash
+export CLOUDFLARE_API_TOKEN=aaaaaaaa_aaaaaaaaaaaa_aaaaaaaa
 ```
 
 ---
@@ -63,21 +63,6 @@ async run() {
 ```
 
 We are enabling the Worker URL, so we can use it as our API.
-
-#### Start dev mode
-
-Start your app in dev mode.
-
-```bash
-sst dev
-```
-
-This will give you the URL of your API.
-
-```bash frame="none"
-✔  Complete
-   url: https://start-cloudflare-jayair-myworkerscript.sst-15d.workers.dev
-```
 
 ---
 
@@ -108,6 +93,7 @@ const worker = new sst.cloudflare.Worker("MyWorker", {
 We want our API to upload a file to the R2 bucket if you make a `PUT` request to it. Create an `index.ts` file and add the following.
 
 ```ts title="index.ts" {4}
+export default {
   async fetch(req: Request) {
     if (req.method == "PUT") {
       const key = crypto.randomUUID();
@@ -125,6 +111,12 @@ We want our API to upload a file to the R2 bucket if you make a `PUT` request to
 :::tip
 We are uploading to our R2 bucket with the SDK — `Resource.MyBucket.put()`
 :::
+
+Import the SDK.
+
+```ts title="index.ts"
+import { Resource } from "sst";
+```
 
 ---
 
@@ -151,10 +143,21 @@ if (req.method == "GET") {
 
 We are getting a list of the files in the files in the bucket with `Resource.MyBucket.list()` and we are getting a file for the given key with `Resource.MyBucket.get()`.
 
-Import the SDK.
+---
 
-```ts title="index.ts"
-import { Resource } from "sst";
+#### Start dev mode
+
+Start your app in dev mode.
+
+```bash
+sst dev
+```
+
+This will give you the URL of your API.
+
+```bash frame="none"
+✔  Complete
+   url: https://start-cloudflare-jayair-myworkerscript.sst-15d.workers.dev
 ```
 
 ---
@@ -173,7 +176,7 @@ Now head over to `https://start-cloudflare-jayair-myworkerscript.sst-15d.workers
 
 ## 6. Deploy your app
 
-Finally, let's deploy your app.
+Finally, let's deploy your app!
 
 ```bash
 sst deploy
