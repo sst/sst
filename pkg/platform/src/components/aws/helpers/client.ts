@@ -1,9 +1,5 @@
 import { StandardRetryStrategy } from "@aws-sdk/middleware-retry";
 export type {} from "@smithy/types";
-import { lazy } from "../../../util/lazy";
-import { S3Client } from "@aws-sdk/client-s3";
-
-const useClientCache = lazy(() => new Map<string, any>());
 
 type ClientOptions = {
   region?: string;
@@ -14,10 +10,6 @@ export const useClient = <C extends any>(
   client: new (config: any) => C,
   opts?: ClientOptions,
 ) => {
-  const cache = useClientCache();
-  const existing = cache.get(client.name);
-  if (existing) return existing as C;
-
   const printNoInternet = (() => {
     let lastPrinted = 0;
     return () => {
@@ -28,7 +20,7 @@ export const useClient = <C extends any>(
       }
     };
   })();
-  const result = new client({
+  return new client({
     region: opts?.region || process.env.SST_AWS_REGION,
     credentials: {
       accessKeyId: process.env.SST_AWS_ACCESS_KEY_ID,
@@ -73,6 +65,4 @@ export const useClient = <C extends any>(
       },
     }),
   });
-  cache.set(client.name, result);
-  return result;
 };
