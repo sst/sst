@@ -236,12 +236,12 @@ export class NextjsSite<ONConfig extends OpenNextConfig = OpenNextConfig> extend
   declare props: NextjsSiteNormalizedProps<ONConfig> & {
     openNextOutput: OpenNextOutput
   }
-  private _routes?: {
+  private _routes?: ({
     route: string;
     logGroupPath: string;
     sourcemapPath?: string;
     sourcemapKey?: string;
-  } & ({ regexMatch: string } | { prefixMatch: string })[];
+  } & ({ regexMatch: string } | { prefixMatch: string }))[];
   private routesManifest?: {
     basePath: string;
     dynamicRoutes: { page: string; regex: string }[];
@@ -612,7 +612,7 @@ export class NextjsSite<ONConfig extends OpenNextConfig = OpenNextConfig> extend
           ? {
             logGroupPrefix: `/sst/lambda/${(this.serverFunction as SsrFunction).functionName
               }`,
-            data: this.useRoutes().map(({ route, logGroupPath }) => ({
+            data: this.useRoutes()?.map(({ route, logGroupPath }) => ({
               route,
               logGroupPath,
             })),
