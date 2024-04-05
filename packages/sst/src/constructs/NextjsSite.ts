@@ -27,7 +27,7 @@ import { Queue } from "aws-cdk-lib/aws-sqs";
 import { SqsEventSource } from "aws-cdk-lib/aws-lambda-event-sources";
 import { Stack } from "./Stack.js";
 import { EdgeFunctionConfig, FunctionOriginConfig, SsrSite, SsrSiteNormalizedProps, SsrSiteProps } from "./SsrSite.js";
-import { Size } from "./util/size.js";
+import { Size, toCdkSize } from "./util/size.js";
 import { Bucket } from "aws-cdk-lib/aws-s3";
 import { Effect, Policy, PolicyStatement } from "aws-cdk-lib/aws-iam";
 import { RetentionDays } from "aws-cdk-lib/aws-logs";
@@ -170,6 +170,17 @@ export interface NextjsSiteProps<ONConfig extends OpenNextConfig> extends Omit<S
      * ```
      */
     memorySize?: number | Size;
+    /**
+     * If set to true, already computed image will return 304 Not Modified.
+     * This means that image needs to be immutable, the etag will be computed based on the image href, format and width and the next BUILD_ID.
+     * @default false
+     * @example
+     * ```js
+     * imageOptimization: {
+     *  staticImageOptimization: true,
+     * }
+     */
+    staticImageOptimization?: boolean;
   };
   cdk?: SsrSiteProps["cdk"] & {
     revalidation?: Pick<CdkFunctionProps, "vpc" | "vpcSubnets">;
@@ -381,6 +392,7 @@ export class NextjsSite<ONConfig extends OpenNextConfig = OpenNextConfig> extend
     const {
       path: sitePath
     } = this.props;
+    const imageOptimization = this.props.imageOptimization;
 
     const openNextOutputPath = path.join(sitePath ?? ".", ".open-next", "open-next.output.json");
     if (!fs.existsSync(openNextOutputPath)) {
@@ -437,11 +449,20 @@ export class NextjsSite<ONConfig extends OpenNextConfig = OpenNextConfig> extend
             environment: {
               BUCKET_NAME: bucket.bucketName,
               BUCKET_KEY_PREFIX: "_assets",
+              ...(
+                this.props.imageOptimization?.staticImageOptimization ?
+                  { OPENNEXT_STATIC_ETAG: "true" } :
+                  {}
+              )
             },
             permissions: [
               "s3"
             ],
-            memorySize: 1536,
+            memorySize: imageOptimization?.memorySize
+              ? typeof imageOptimization.memorySize === "string"
+                ? toCdkSize(imageOptimization.memorySize).toMebibytes()
+                : imageOptimization.memorySize
+              : 1536,
           }
         },
         default: defaultFn.type === "ecs" ? this.createEcsOrigin(defaultFn, "default", bucket) : this.createFunctionOrigin(defaultFn, "default", bucket),
