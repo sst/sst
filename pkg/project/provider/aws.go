@@ -100,6 +100,9 @@ func (a *AwsProvider) Init(app string, stage string, args map[string]interface{}
 	tags["sst:app"] = app
 	tags["sst:stage"] = stage
 	args["defaultTags"] = defaultTags
+	if args["region"] == nil {
+		args["region"] = cfg.Region
+	}
 	return nil
 }
 
