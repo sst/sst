@@ -16,8 +16,6 @@ import {
   Function as CdkFunction,
   FunctionProps as CdkFunctionProps,
   Architecture,
-  LayerVersion,
-  IFunction,
 } from "aws-cdk-lib/aws-lambda";
 import {
   AttributeType,
@@ -28,7 +26,7 @@ import { Provider } from "aws-cdk-lib/custom-resources";
 import { Queue } from "aws-cdk-lib/aws-sqs";
 import { SqsEventSource } from "aws-cdk-lib/aws-lambda-event-sources";
 import { Stack } from "./Stack.js";
-import { ContainerOriginConfig, EdgeFunctionConfig, FunctionOriginConfig, SsrSite, SsrSiteNormalizedProps, SsrSiteProps } from "./SsrSite.js";
+import { EdgeFunctionConfig, FunctionOriginConfig, SsrSite, SsrSiteNormalizedProps, SsrSiteProps } from "./SsrSite.js";
 import { Size } from "./util/size.js";
 import { Bucket } from "aws-cdk-lib/aws-s3";
 import { Effect, Policy, PolicyStatement } from "aws-cdk-lib/aws-iam";
@@ -37,9 +35,9 @@ import { VisibleError } from "../error.js";
 import { CachePolicyProps } from "aws-cdk-lib/aws-cloudfront";
 import { SsrFunction } from "./SsrFunction.js";
 import { Asset } from "aws-cdk-lib/aws-s3-assets";
-import { useFunctions, FunctionProps } from "./Function.js";
+import { useFunctions } from "./Function.js";
 import { useDeferredTasks } from "./deferred_task.js";
-import { Logger } from "../logger.js"; import { SsrContainer, SsrContainerProps } from "./SsrContainer.js";
+import { Logger } from "../logger.js";
 type BaseFunction = {
   handler: string;
   bundle: string;
@@ -117,25 +115,21 @@ interface OpenNextConfig<SplittedFn extends Record<string, OpenNextFnProps> = Re
   }
 }
 
-type InterpolatedCdkProp<T extends OpenNextFnProps> = T extends { override: { generateDockerfile: true } } ?
-  ContainerOriginConfig['container'] :
-  Omit<FunctionOriginConfig['function'], "handler" | "bundle"> & { warm?: number };
+type InterpolatedCdkProp = Omit<FunctionOriginConfig['function'], "handler" | "bundle"> & { warm?: number };
 
 type InterpolatedCdkProps<T extends OpenNextConfig> = {
-  [K in keyof T['functions']]?: T['functions'] extends Record<string, OpenNextFnProps> ? InterpolatedCdkProp<T['functions'][K]> : never
+  [K in keyof T['functions']]?: T['functions'] extends Record<string, OpenNextFnProps> ? InterpolatedCdkProp: never
 } & {
-  default?: InterpolatedCdkProp<T['default']>;
-  middleware?: InterpolatedCdkProp<{}>;
+  default?: InterpolatedCdkProp;
+  middleware?: InterpolatedCdkProp;
 }
 
-type InterpolatedCdkOutput<T extends OpenNextFnProps> = T extends { override: { generateDockerfile: true } } ?
-  SsrContainer["cdk"] :
-  CdkFunction
+type InterpolatedCdkOutput = CdkFunction
 
 type InterpolatedCdkOutputs<T extends OpenNextConfig> = {
-  [K in keyof T["functions"]]: T['functions'] extends Record<string, OpenNextFnProps> ? InterpolatedCdkOutput<T["functions"][K]> : never
+  [K in keyof T["functions"]]: T['functions'] extends Record<string, OpenNextFnProps> ? InterpolatedCdkOutput: never
 } & {
-  default: InterpolatedCdkOutput<T["default"]>;
+  default: InterpolatedCdkOutput;
 }
 
 export interface NextjsSiteProps<ONConfig extends OpenNextConfig> extends Omit<SsrSiteProps, "nodejs"> {
@@ -316,10 +310,8 @@ export class NextjsSite<ONConfig extends OpenNextConfig = OpenNextConfig> extend
     const regionalServers = this.serverFunctions.reduce((acc, server) => {
       return {
         ...acc, [
-          server.function ?
-            server.id.replace("ServerFunction", "") :
-            server.id.replace("ServerContainer", "")
-        ]: server.function ?? server.cdk
+            server.id.replace("ServerFunction", "")
+        ]: server.function 
       };
     }, {} as InterpolatedCdkOutputs<ONConfig>)
     return regionalServers
@@ -359,39 +351,8 @@ export class NextjsSite<ONConfig extends OpenNextConfig = OpenNextConfig> extend
     }
   }
 
-  private createEcsOrigin(ecs: OpenNextECSOrigin, key: string, bucket: Bucket): ContainerOriginConfig {
-    const { cdk, environment } = this.props;
-    const baseServerConfig = {
-      environment: {
-        CACHE_BUCKET_NAME: bucket.bucketName,
-        CACHE_BUCKET_KEY_PREFIX: "_cache",
-        CACHE_BUCKET_REGION: Stack.of(this).region,
-      },
-    }
-    //@ts-expect-error
-    const containerCdkOverrides = (cdk?.servers?.[key] ?? {}) as unknown as SsrContainerProps;
-    return {
-      type: "container" as const,
-      constructId: `${key}ServerContainer`,
-      container: {
-        memory: "1 GB",
-        path: ecs.bundle,
-        cdk: {
-          "applicationLoadBalancerTargetGroup": {
-            healthCheck: {
-              path: "/__health"
-            }
-          }
-        },
-        ...containerCdkOverrides,
-        environment: {
-          ...environment,
-          ...baseServerConfig.environment,
-          ...containerCdkOverrides.environment
-        },
-      },
-
-    }
+  private createEcsOrigin(ecs: OpenNextECSOrigin, key: string, bucket: Bucket) : FunctionOriginConfig {
+    throw new Error('Ecs origin are not supported yet')
   }
 
   private createEdgeOrigin(fn: BaseFunction, key: string, bucket: Bucket): EdgeFunctionConfig {
@@ -450,7 +411,7 @@ export class NextjsSite<ONConfig extends OpenNextConfig = OpenNextConfig> extend
       };
       return acc;
     }
-      , {} as Record<string, FunctionOriginConfig | ContainerOriginConfig>)
+      , {} as Record<string, FunctionOriginConfig>)
 
     const edgeFunctions = Object.entries(openNextOutput.edgeFunctions).reduce((acc, [key, value]) => {
       return { ...acc, [key]: this.createEdgeOrigin(value, key, bucket) };
@@ -523,7 +484,7 @@ export class NextjsSite<ONConfig extends OpenNextConfig = OpenNextConfig> extend
           server.id.replace("ServerContainer", "")
         ]: 
         {
-          host: server.function ? Fn.parseDomainName(server.fnUrl?.url ?? "") : server.cdk?.applicationLoadBalancer?.loadBalancerDnsName ?? "",
+          host:  Fn.parseDomainName(server.fnUrl?.url ?? ""),
           port: 443,
           protocol: "https",
         }
