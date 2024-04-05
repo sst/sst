@@ -210,13 +210,7 @@ export interface NextjsSiteProps<ONConfig extends OpenNextConfig> extends Omit<S
 const LAYER_VERSION = "2";
 const DEFAULT_OPEN_NEXT_VERSION = "2.3.7";
 const DEFAULT_CACHE_POLICY_ALLOWED_HEADERS = [
-  "accept",
-  "rsc",
-  "next-router-prefetch",
-  "next-router-state-tree",
-  "next-url",
-  "x-prerender-bypass",
-  "x-prerender-revalidate"
+  "x-open-next-cache-key"
 ];
 
 type NextjsSiteNormalizedProps<ONConfig extends OpenNextConfig> = NextjsSiteProps<ONConfig> & SsrSiteNormalizedProps
@@ -425,7 +419,7 @@ export class NextjsSite<ONConfig extends OpenNextConfig = OpenNextConfig> extend
           constructId: "CloudFrontFunction",
           injections: [
             this.useCloudFrontFunctionHostHeaderInjection(),
-            this.useCloudFrontFunctionPrerenderBypassHeaderInjection(),
+            this.useCloudFrontFunctionCacheHeaderKey(),
           ],
         },
       },
@@ -824,14 +818,36 @@ if (event.rawPath) {
 }`;
   }
 
-  private useCloudFrontFunctionPrerenderBypassHeaderInjection() {
-    // In Next.js page router preview mode (depends on the cookie __prerender_bypass),
-    // to ensure we receive the cached page instead of the preview version, we set the
-    // header "x-prerender-bypass", and add it to cache policy's allowed headers.
+// This function is used to improve cache hit ratio by setting the cache key based on the request headers and the path
+// next/image only need the accept header, and this header is not useful for the rest of the query
+  private useCloudFrontFunctionCacheHeaderKey() {
     return `
-if (request.cookies["__prerender_bypass"]) { 
-  request.headers["x-prerender-bypass"] = { value: "true" }; 
-}`;
+function getHeader(key) {
+  var header = request.headers[key];
+  if(header) {
+      if(header.multiValue){
+          return header.multiValue.map((header) => header.value).join(",");
+      }
+      if(header.value){
+          return header.value;
+      }
+  }
+  return ""
+  }
+  var cacheKey = "";
+  if(request.uri.startsWith("/_next/image")) {
+    cacheKey = getHeader("accept");
+  }else {
+    cacheKey = getHeader("rsc") + getHeader("next-router-prefetch") + getHeader("next-router-state-tree") + getHeader("next-url") + getHeader("x-prerender-revalidate");
+  }
+  if(request.cookies["__prerender_bypass"]) {
+    cacheKey += request.cookies["__prerender_bypass"] ? request.cookies["__prerender_bypass"].value : "";
+  }
+  var crypto = require('crypto');
+  
+  var hashedKey = crypto.createHash('md5').update(cacheKey).digest('hex');
+  request.headers["x-open-next-cache-key"] = {value: hashedKey};
+  `
   }
 
   private getBuildId() {
