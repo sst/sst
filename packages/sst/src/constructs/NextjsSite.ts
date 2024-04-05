@@ -219,7 +219,7 @@ export interface NextjsSiteProps<ONConfig extends OpenNextConfig> extends Omit<S
 }
 
 const LAYER_VERSION = "2";
-const DEFAULT_OPEN_NEXT_VERSION = "2.3.7";
+const DEFAULT_OPEN_NEXT_VERSION = "3.0.0-rc.13";
 const DEFAULT_CACHE_POLICY_ALLOWED_HEADERS = [
   "x-open-next-cache-key"
 ];
