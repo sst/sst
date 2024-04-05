@@ -92,7 +92,7 @@ const worker = new sst.cloudflare.Worker("MyWorker", {
 
 We want our API to upload a file to the R2 bucket if you make a `PUT` request to it. Create an `index.ts` file and add the following.
 
-```ts title="index.ts" {4}
+```ts title="index.ts" {5}
 export default {
   async fetch(req: Request) {
     if (req.method == "PUT") {
