@@ -4,14 +4,22 @@
       "type": "copy"
     },
     {
-      "op": "add",
-      "path": "/dependencies/sst",
-      "value": "^3.0.4"
-    },
-    {
-      "op": "add",
-      "path": "/devDependencies/@cloudflare/workers-types",
-      "value": "^3.0.4"
+      "type": "patch",
+      "properties": {
+        "file": "package.json",
+        "patch": [
+          {
+            "op": "add",
+            "path": "/dependencies/sst",
+            "value": "^3.0.4"
+          },
+          {
+            "op": "add",
+            "path": "/devDependencies/@cloudflare/workers-types",
+            "value": "^3.0.4"
+          }
+        ]
+      }
     }
   ]
 }
