@@ -277,14 +277,10 @@ export class Worker extends Component implements Link.Cloudflare.Linkable {
     }
 
     function buildBindings() {
-      const result = {
-        plainTextBindings: [],
-        secretTextBindings: [],
-        r2BucketBindings: [],
-        queueBindings: [],
-        serviceBindings: [],
-        kvNamespaceBindings: [],
-      } as Record<string, any[]>;
+      const result = {} as Record<
+        ReturnType<Link.Cloudflare.Linkable["getCloudflareBinding"]>["type"],
+        any[]
+      >;
       if (!args.link) return result;
       return output(args.link).apply((links) => {
         for (let link of links) {
@@ -293,6 +289,7 @@ export class Worker extends Component implements Link.Cloudflare.Linkable {
               (uri) => uri.split("::").at(-1)!,
             );
             const binding = link.getCloudflareBinding();
+            if (!result[binding.type]) result[binding.type] = [];
             result[binding.type].push({
               name,
               ...binding.properties,

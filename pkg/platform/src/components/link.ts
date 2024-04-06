@@ -106,6 +106,12 @@ export module Link {
           properties: {
             bucketName: Input<string>;
           };
+        }
+      | {
+          type: "d1DatabaseBindings";
+          properties: {
+            databaseId: Input<string>;
+          };
         };
     export interface Linkable {
       urn: Output<string>;
