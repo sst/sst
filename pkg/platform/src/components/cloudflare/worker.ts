@@ -283,6 +283,7 @@ export class Worker extends Component {
         r2BucketBindings: [],
         queueBindings: [],
         serviceBindings: [],
+        kvNamespaceBindings: [],
       } as Record<string, any[]>;
       if (!args.link) return result;
       return output(args.link).apply((links) => {
@@ -471,6 +472,11 @@ export class Worker extends Component {
   private static _devWorker: Worker;
   private static get devWorker() {
     if (Worker._devWorker) return Worker._devWorker;
+    const worker = new Worker("DevWorker", {
+      transform: {
+        worker: {},
+      },
+    });
   }
 }
 

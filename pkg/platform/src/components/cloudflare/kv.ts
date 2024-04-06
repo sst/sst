@@ -1,6 +1,7 @@
 import { ComponentResourceOptions } from "@pulumi/pulumi";
 import * as cloudflare from "@pulumi/cloudflare";
 import { Component, Transform, transform } from "../component";
+import { Link } from "../link";
 
 export interface KvArgs {
   /**
@@ -27,7 +28,7 @@ export interface KvArgs {
  * const storage = new sst.cloudflare.Kv("MyStorage");
  * ```
  */
-export class Kv extends Component {
+export class Kv extends Component implements Link.Cloudflare.Linkable {
   private namespace: cloudflare.WorkersKvNamespace;
 
   constructor(name: string, args?: KvArgs, opts?: ComponentResourceOptions) {
@@ -49,6 +50,15 @@ export class Kv extends Component {
         { parent },
       );
     }
+  }
+
+  getCloudflareBinding(): Link.Cloudflare.Binding {
+    return {
+      type: "kvNamespaceBindings",
+      properties: {
+        namespaceId: this.namespace.id,
+      },
+    };
   }
 
   /**

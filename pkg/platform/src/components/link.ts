@@ -72,6 +72,12 @@ export module Link {
   export module Cloudflare {
     export type Binding =
       | {
+          type: "kvNamespaceBindings";
+          properties: {
+            namespaceId: Input<string>;
+          };
+        }
+      | {
           type: "serviceBindings";
           properties: {
             service: Input<string>;
