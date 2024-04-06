@@ -377,6 +377,20 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 					cloudflareBindings[item["name"].(string)] = "R2Bucket"
 				}
 			}
+
+			if match, ok := outputs["d1DatabaseBindings"].([]interface{}); ok {
+				for _, binding := range match {
+					item := binding.(map[string]interface{})
+					cloudflareBindings[item["name"].(string)] = "D1Database"
+				}
+			}
+
+			if match, ok := outputs["kvNamespaceBindings"].([]interface{}); ok {
+				for _, binding := range match {
+					item := binding.(map[string]interface{})
+					cloudflareBindings[item["name"].(string)] = "KVNamespace"
+				}
+			}
 		}
 
 		linksOutput, ok := outputs["_links"]
@@ -395,7 +409,7 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 			if len(cloudflareBindings) > 0 {
 				typesFile.WriteString(`import * as cloudflare from "@cloudflare/workers-types"` + "\n")
 				typesFile.WriteString(`declare module "sst" {` + "\n")
-				typesFile.WriteString("  export interface Resource {")
+				typesFile.WriteString("  export interface Resource {\n")
 				for key, value := range cloudflareBindings {
 					typesFile.WriteString("  " + key + ": cloudflare." + value + "\n")
 				}
