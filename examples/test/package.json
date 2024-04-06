@@ -1,9 +1,0 @@
-{
-  "type": "module",
-  "dependencies": {
-    "sst": "^3.0.4"
-  },
-  "devDependencies": {
-    "@cloudflare/workers-types": "^4.20240402.0"
-  }
-}

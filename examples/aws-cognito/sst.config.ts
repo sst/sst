@@ -3,7 +3,7 @@
 export default $config({
   app(input) {
     return {
-      name: "cognito",
+      name: "aws-cognito",
       removal: input?.stage === "production" ? "retain" : "remove",
       home: "aws",
     };

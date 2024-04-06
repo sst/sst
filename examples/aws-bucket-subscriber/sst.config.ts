@@ -1,0 +1,21 @@
+/// <reference path="./.sst/platform/config.d.ts" />
+
+export default $config({
+  app(input) {
+    return {
+      name: "aws-bucket-subscriber",
+      home: "aws",
+      removal: input?.stage === "production" ? "retain" : "remove",
+    };
+  },
+  async run() {
+    const bucket = new sst.aws.Bucket("MyBucket");
+    bucket.subscribe("subscriber.handler", {
+      events: ["s3:ObjectCreated:*"],
+    });
+
+    return {
+      bucket: bucket.name,
+    };
+  },
+});

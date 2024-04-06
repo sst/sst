@@ -1,7 +1,0 @@
-{
-  "dependencies": {
-    "aws4fetch": "^1.0.17",
-    "fast-xml-parser": "^4.3.3",
-    "sst": "3.0.1-16"
-  }
-}
