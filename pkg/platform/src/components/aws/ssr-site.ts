@@ -523,6 +523,7 @@ function handler(event) {
           description: `${name} server`,
           runtime: "nodejs20.x",
           timeout: "20 seconds",
+          permissions: args.permissions,
           memory: "1024 MB",
           ...props.function,
           nodejs: {
