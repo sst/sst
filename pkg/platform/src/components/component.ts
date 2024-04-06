@@ -78,6 +78,7 @@ export class Component extends ComponentResource {
                 ),
               };
               break;
+            case "cloudflare:index/d1Database:D1Database":
             case "cloudflare:index/r2Bucket:R2Bucket":
             case "cloudflare:index/workerScript:WorkerScript":
               overrides = {

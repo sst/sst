@@ -69,6 +69,7 @@ func Start(ctx context.Context, proj *project.Project, args map[string]interface
 					json.Unmarshal(warp.Properties, &properties)
 					account := cloudflare.AccountIdentifier(properties.AccountID)
 					if _, ok := tails[warp.FunctionID]; !ok {
+						slog.Info("cloudflare tail creating", "functionID", warp.FunctionID)
 						tail, err := api.StartWorkersTail(ctx, account, properties.ScriptName)
 						if err != nil {
 							return
@@ -86,11 +87,13 @@ func Start(ctx context.Context, proj *project.Project, args map[string]interface
 							continue
 						}
 						go func() {
+							defer delete(tails, warp.FunctionID)
 							for {
 								msg := &TailEvent{}
 								err := conn.ReadJSON(msg)
 								if err != nil {
-									break
+									slog.Info("cloudflare tail message error", "error", err)
+									continue
 								}
 								bus.Publish(&WorkerInvokedEvent{
 									WorkerID:  warp.FunctionID,

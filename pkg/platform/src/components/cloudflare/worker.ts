@@ -389,7 +389,7 @@ export class Worker extends Component implements Link.Cloudflare.Linkable {
                   name: key,
                   text: value,
                 })),
-                ...bindings.plainTextBindings,
+                ...(bindings.plainTextBindings || []),
               ],
               secretTextBindings: [
                 ...(iamCredentials
@@ -400,7 +400,7 @@ export class Worker extends Component implements Link.Cloudflare.Linkable {
                       },
                     ]
                   : []),
-                ...bindings.secretTextBindings,
+                ...(bindings.secretTextBindings || []),
               ],
             }),
             { parent },
