@@ -230,7 +230,7 @@ export interface WorkerArgs {
  * });
  * ```
  */
-export class Worker extends Component {
+export class Worker extends Component implements Link.Cloudflare.Linkable {
   private script: Output<cf.WorkerScript>;
   private workerUrl: WorkerUrl;
   private workerDomain?: cf.WorkerDomain;
@@ -469,14 +469,13 @@ export class Worker extends Component {
     };
   }
 
-  private static _devWorker: Worker;
-  private static get devWorker() {
-    if (Worker._devWorker) return Worker._devWorker;
-    const worker = new Worker("DevWorker", {
-      transform: {
-        worker: {},
+  getCloudflareBinding(): Link.Cloudflare.Binding {
+    return {
+      type: "serviceBindings",
+      properties: {
+        service: this.script.id,
       },
-    });
+    };
   }
 }
 
