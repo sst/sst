@@ -300,6 +300,7 @@ export class Worker extends Component implements Link.Cloudflare.Linkable {
             const name = output(link.urn).apply(
               (uri) => uri.split("::").at(-1)!,
             );
+            if (!result.secretTextBindings) result.secretTextBindings = [];
             result.secretTextBindings.push({
               name,
               text: jsonStringify(link.getSSTLink().properties),
