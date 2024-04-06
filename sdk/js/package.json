@@ -3,11 +3,14 @@
   "name": "sst",
   "type": "module",
   "sideEffects": false,
-  "version": "3.0.4",
+  "version": "3.0.5",
   "main": "./dist/index.js",
   "exports": {
     ".": "./dist/index.js",
-    "./*": "./dist/*.js"
+    "./*": [
+      "./dist/*/index.js",
+      "./dist/*.js"
+    ]
   },
   "scripts": {
     "build": "tsc",

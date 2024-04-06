@@ -19,8 +19,5 @@ export default $config({
       },
       domain: "hono.dev.sst.dev",
     });
-    return {
-      url: router.url,
-    };
   },
 });

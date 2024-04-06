@@ -294,7 +294,6 @@ export class Worker extends Component implements Link.Cloudflare.Linkable {
               name,
               ...binding.properties,
             });
-            continue;
           }
           if (Link.isLinkable(link)) {
             const name = output(link.urn).apply(
@@ -467,7 +466,7 @@ export class Worker extends Component implements Link.Cloudflare.Linkable {
     };
   }
 
-  getCloudflareBinding(): Link.Cloudflare.Binding {
+  public getCloudflareBinding(): Link.Cloudflare.Binding {
     return {
       type: "serviceBindings",
       properties: {

@@ -5,3 +5,4 @@ export * from "./static-site";
 export * from "./remix";
 export * from "./worker";
 export * from "./account-id";
+export * from "./auth"
