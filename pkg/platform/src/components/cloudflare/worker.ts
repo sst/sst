@@ -304,9 +304,7 @@ export class Worker extends Component implements Link.Cloudflare.Linkable {
               name,
               text: jsonStringify(link.getSSTLink().properties),
             });
-            continue;
           }
-          throw new VisibleError(`${link} is not a linkable component`);
         }
         return result;
       });
