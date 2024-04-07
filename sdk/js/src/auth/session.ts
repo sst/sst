@@ -1,4 +1,4 @@
-import { importSPKI, jwtVerify } from "jose";
+import { SignJWT, importPKCS8, importSPKI, jwtVerify } from "jose";
 import { Resource } from "../resource.js";
 
 export type SessionBuilder = ReturnType<typeof createSessionBuilder>;
@@ -30,6 +30,17 @@ export function createSessionBuilder<
         await importSPKI(publicKey, "RS512"),
       );
       return result.payload as any;
+    },
+    async create(session: SessionValue) {
+      const privateKey = await importPKCS8(
+        process.env.AUTH_PRIVATE_KEY!,
+        "RS512",
+      );
+      const token = await new SignJWT(session)
+        .setProtectedHeader({ alg: "RS512" })
+        .setExpirationTime("1yr")
+        .sign(privateKey);
+      return token;
     },
     $type: {} as SessionTypes,
     $typeValues: {} as SessionValue,

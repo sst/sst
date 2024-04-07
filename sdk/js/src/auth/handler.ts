@@ -1,12 +1,12 @@
 import { Adapter, AdapterOptions } from "./adapter/adapter.js";
-import * as jose from "jose";
+import { JWTPayload, SignJWT, importPKCS8, importSPKI, jwtVerify } from "jose";
 import { SessionBuilder } from "./session.js";
 import { Hono } from "hono/tiny";
 import { Context } from "hono";
 import { deleteCookie, getCookie, setCookie } from "hono/cookie";
 
 interface OnSuccessResponder<T extends { type: any; properties: any }> {
-  session(input: T & jose.JWTPayload): Promise<Response>;
+  session(input: T & JWTPayload): Promise<Response>;
 }
 
 export class UnknownProviderError extends Error {
@@ -112,15 +112,12 @@ export function AuthHandler<
 
   const options: Omit<AdapterOptions<any>, "name"> = {
     signing: {
-      privateKey: jose.importPKCS8(process.env.AUTH_PRIVATE_KEY!, "RS512"),
-      publicKey: jose.importSPKI(process.env.AUTH_PUBLIC_KEY!, "RS512"),
+      privateKey: importPKCS8(process.env.AUTH_PRIVATE_KEY!, "RS512"),
+      publicKey: importSPKI(process.env.AUTH_PUBLIC_KEY!, "RS512"),
     },
     encryption: {
-      privateKey: jose.importPKCS8(
-        process.env.AUTH_PRIVATE_KEY!,
-        "RSA-OAEP-512",
-      ),
-      publicKey: jose.importSPKI(process.env.AUTH_PUBLIC_KEY!, "RSA-OAEP-512"),
+      privateKey: importPKCS8(process.env.AUTH_PRIVATE_KEY!, "RSA-OAEP-512"),
+      publicKey: importSPKI(process.env.AUTH_PUBLIC_KEY!, "RSA-OAEP-512"),
     },
     algorithm: "RS512",
     async success(ctx: Context, properties: any) {
@@ -138,7 +135,7 @@ export function AuthHandler<
       return await input.callbacks.auth.success(
         {
           async session(session) {
-            const token = await new jose.SignJWT(session)
+            const token = await new SignJWT(session)
               .setProtectedHeader({ alg: "RS512" })
               .setExpirationTime("1yr")
               .sign(await options.signing.privateKey);
@@ -161,7 +158,7 @@ export function AuthHandler<
               // This allows the code to be reused within a 30 second window
               // The code should be single use but we're making this tradeoff to remain stateless
               // In the future can store this in a dynamo table to ensure single use
-              const code = await new jose.SignJWT({
+              const code = await new SignJWT({
                 client_id,
                 redirect_uri,
                 token,
@@ -217,7 +214,7 @@ export function AuthHandler<
       return c.text("Missing code");
     }
 
-    const { payload } = await jose.jwtVerify(
+    const { payload } = await jwtVerify(
       code as string,
       await options.signing.publicKey,
     );

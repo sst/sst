@@ -1,7 +1,7 @@
 import { Adapter } from "./adapter.js";
-import * as jose from "jose";
 import { deleteCookie, getCookie } from "hono/cookie";
 import { UnknownStateError } from "../index.js";
+import { CompactEncrypt, compactDecrypt } from "jose";
 
 export function CodeAdapter(config: {
   length?: number;
@@ -33,7 +33,7 @@ export function CodeAdapter(config: {
       delete claims["redirect_uri"];
       delete claims["response_type"];
       delete claims["provider"];
-      const authorization = await new jose.CompactEncrypt(
+      const authorization = await new CompactEncrypt(
         new TextEncoder().encode(
           JSON.stringify({
             claims,
@@ -55,9 +55,10 @@ export function CodeAdapter(config: {
       if (!authorization) throw new UnknownStateError();
       const { code, claims } = JSON.parse(
         new TextDecoder().decode(
-          await jose
-            .compactDecrypt(authorization!, await ctx.encryption.privateKey)
-            .then((value) => value.plaintext),
+          await compactDecrypt(
+            authorization!,
+            await ctx.encryption.privateKey,
+          ).then((value) => value.plaintext),
         ),
       );
       if (!code || !claims) {

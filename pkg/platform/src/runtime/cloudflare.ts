@@ -49,6 +49,7 @@ export async function build(name: string, input: pulumi.Unwrap<WorkerArgs>) {
     mainFields: ["module", "main"],
     outfile: target,
     sourcemap: false,
+    conditions: ["worker"],
     minify: build.minify,
     ...build.esbuild,
     banner: {

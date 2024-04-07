@@ -1,12 +1,12 @@
 import { Adapter } from "./adapter.js";
-import * as jose from "jose";
+import { SignJWT, jwtVerify } from "jose";
 
 export function LinkAdapter(config: {
   onLink: (link: string, claims: Record<string, any>) => Promise<Response>;
 }) {
   return function (routes, ctx) {
     routes.get("/authorize", async (c) => {
-      const token = await new jose.SignJWT(c.req.query())
+      const token = await new SignJWT(c.req.query())
         .setProtectedHeader({ alg: ctx.algorithm })
         .setExpirationTime("10m")
         .sign(await ctx.signing.privateKey);
@@ -27,7 +27,7 @@ export function LinkAdapter(config: {
     routes.get("/callback", async (c) => {
       const token = c.req.query("token");
       if (!token) throw new Error("Missing token parameter");
-      const verified = await jose.jwtVerify(token, await ctx.signing.publicKey);
+      const verified = await jwtVerify(token, await ctx.signing.publicKey);
       const resp = await ctx.success(c, { claims: verified.payload as any });
       return resp;
     });
