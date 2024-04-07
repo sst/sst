@@ -464,6 +464,9 @@ export class Worker extends Component implements Link.Cloudflare.Linkable {
     };
   }
 
+  /**
+   * @internal
+   */
   public getCloudflareBinding(): Link.Cloudflare.Binding {
     return {
       type: "serviceBindings",

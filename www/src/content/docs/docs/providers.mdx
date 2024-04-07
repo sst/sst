@@ -17,20 +17,6 @@ A provider is the infrastructure service that you can use in your app. It's list
 SST supports all [Pulumi providers](https://www.pulumi.com/registry/) and components.
 :::
 
-Currently, SST has components that deploy to two providers:
-
-- **AWS**
-
-  These components are namespaced under `sst.aws.*`. They use Pulumi's [AWS Classic](https://www.pulumi.com/registry/packages/aws/) provider.
-
-- **Cloudflare**
-
-  These components are namespaced under `sst.cloudflare.*`. They use Pulumi's [Cloudflare](https://www.pulumi.com/registry/packages/cloudflare/) provider.
-
-Aside from SST's components, you can use any Pulumi component for that provider. We'll look at this below.
-
-However, you are not restricted to these providers in your app. You can use **any provider** listed in the [Pulumi Registry](https://www.pulumi.com/registry/).
-
 ---
 
 ## Install
@@ -40,6 +26,8 @@ To add a provider to your app run.
 ```bash
 sst add <provider>
 ```
+
+This command adds the provider to your config, installs the packages, and adds the namespace of the provider to your globals.
 
 The name of a provider comes from the **URL of the provider** in the Pulumi Registry. For example, `https://www.pulumi.com/registry/packages/aws/` is the URL of the AWS Classic provider. So the name of the provider here is `aws`.
 
@@ -51,7 +39,7 @@ Learn more about the [`sst add`](/docs/reference/cli/#add) command.
 
 You can configure a provider in your `sst.config.ts`. For example, to change the region for AWS.
 
-```ts title="sst.config.ts"
+```ts
 {
   providers: {
     aws: {
@@ -69,7 +57,7 @@ You can check out the available list of options that you can configure for a pro
 
 In addition to these options, you can also pass in the version of the provider you want to use. By default, SST uses the latest version.
 
-```ts title="sst.config.ts"
+```ts
 {
   providers: {
     aws: {
@@ -91,7 +79,7 @@ export CLOUDFLARE_API_TOKEN=aaaaaaaa_aaaaaaaaaaaa_aaaaaaaa
 
 However, some providers also allow you to pass in the credentials through the config.
 
-```ts title="sst.config.ts"
+```ts
 {
   providers: {
     cloudflare: {
@@ -107,11 +95,20 @@ Learn more about [configuring providers](/docs/reference/config/#providers).
 
 ## Components
 
-The `sst add` command also injects the provider into the globals of your config. So you'll be able to use any component from provider.
+There are two types of [components](/docs/components/) in your app.
+
+1. Native SST components, namespaced under `sst.*`
+2. And Pulumi components, namespaced under `<provider>.*`
+
+The `sst add` command injects the provider into the globals of your config.
+
+:::tip
+You don't need to `import` from a Pulumi provider package, the `sst add` command injects it into the globals.
+:::
 
 For example, running `sst add aws` will allow you to use all the components under the `aws` namepsace.
 
-```js title="sst.config.ts"
+```js
 new aws.s3.BucketV2("b", {
   bucket: "mybucket",
   tags: {
@@ -159,7 +156,7 @@ Outputs don't block your deployments.
 
 So we instead recommend using the _Output_ version of these functions. For example, if we wanted to set the above as environment variables in a function, we would do something like this
 
-```ts title="sst.config.ts"
+```ts
 new sst.aws.Function("MyFunction, {
   handler: "src/lambda.handler",
   environment: {
@@ -169,7 +166,38 @@ new sst.aws.Function("MyFunction, {
 }
 ```
 
-The `aws.getXXXXOutput` functions typically return an object of type _`Output<primitive>`_. Learn more about [Outputs](/docs/components/#inputs--outputs).
+The `aws.getXXXXOutput` functions typically return an object of type _`Output<primitive>`_. Learn more about [Outputs](/docs/components/#outputs).
+
+---
+
+## Home
+
+The state of the deployed resources and your secrets are uploaded to a bucket in your provider. We call this the `home` of your app.
+
+```ts
+{
+  home: "aws"
+}
+```
+
+You can specify which provider you'd like to use for this. Currently `aws` and `cloudflare` are supported.
+
+:::tip
+Your state and secrets are uploaded to your `home`.
+:::
+
+When you specify your home provider, SST assumes you'd like to use that provider in your app as well and adds it to your providers internally. So the above is equivalent to doing this.
+
+```ts
+{
+  home: "aws",
+  providers: {
+    aws: true
+  }
+}
+```
+
+You can read more about the `home` provider in [Config](/docs/reference/config/).
 
 ---
 
@@ -189,7 +217,7 @@ You might want to create multiple providers in cases where some resources in you
 
 Let's look at an example. Assume your app is normally deployed to `us-west-1`. But you need to create an ACM certificate that needs to be deployed to `us-east-1`.
 
-```ts title="sst.config.ts" {1, 8}
+```ts {1, 8}
 const useast1 = new aws.Provider("useast1", { region: "us-east-1" });
 
 new sst.aws.Function("MyFunction, "src/lambda.handler");

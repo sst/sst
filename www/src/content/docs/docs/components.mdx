@@ -19,29 +19,26 @@ You can also use any Pulumi component in your SST app. This is useful if you wan
 
 ## Providers
 
-Components are classes that are namespaced under the cloud provider it deploys to. Currently, SST has components that deploy to two providers:
+There are two types of components in your app.
+
+1. Native SST components, namespaced under `sst.*`
+2. And Pulumi components, namespaced under `<provider>.*`
+
+A provider is the infrastructure service that the component is deployed to. SST's components currently deploy to two providers.
 
 - **AWS**
 
-  These components are namespaced under `sst.aws.*`. They use Pulumi's [AWS Classic](https://www.pulumi.com/registry/packages/aws/) provider.
+  These components are namespaced under `sst.aws.*`. Internally they use Pulumi's [AWS Classic](https://www.pulumi.com/registry/packages/aws/) provider.
 
 - **Cloudflare**
 
-  These components are namespaced under `sst.cloudflare.*`. They use Pulumi's [Cloudflare](https://www.pulumi.com/registry/packages/cloudflare/) provider.
+  These components are namespaced under `sst.cloudflare.*`. Internally they use Pulumi's [Cloudflare](https://www.pulumi.com/registry/packages/cloudflare/) provider.
 
 :::tip
-SST supports all [Pulumi providers](https://www.pulumi.com/registry/).
+SST supports all [Pulumi providers](https://www.pulumi.com/registry/) and components.
 :::
 
-Aside from SST's components, you can use any [Pulumi provider](https://www.pulumi.com/registry/) for your Pulumi components in your app. You can read more about `providers` in [Config](/docs/reference/config/).
-
----
-
-### Home
-
-SST generates some state for your app and stores this in your `home` provider. This is used to keep track of the resources and secrets in your app. 
-
-Currently, SST supports AWS and Cloudflare as `home` providers. You can read more about the `home` provider in [Config](/docs/reference/config/).
+Learn more about [providers](/docs/providers/).
 
 ---
 
@@ -62,7 +59,7 @@ Each component takes the following:
 Here's an example of creating a `Function` component:
 
 ```ts
-const myFunction = new sst.aws.Function("MyFunction", {
+const function = new sst.aws.Function("MyFunction", {
   handler: "src/lambda.handler"
 });
 ```
@@ -85,11 +82,11 @@ These make it possible to [link resources](/docs/linking/) together in your SST 
 
 Each component takes a set of args that allow you to configure it. These args are specific to each component. For example, the Function component takes [`FunctionArgs`](/docs/component/aws/function#functionargs).
 
+Most of these args are optional, meaning that most components need very little configuration to get started. Typically, the most common configuration options are lifted to the top-level. To further configure the component, you'll need to use the `transform` prop.
+
 :::tip
 You can completely configure a component using its args and the `transform` prop.
 :::
-
-Most of these args are optional, meaning that most components need very little configuration to get started. Typically, the most common configuration options are lifted to the top-level. To further configure the component, you'll need to use the `transform` prop.
 
 Args usually take primitive types. However, they also take a special version of a primitive type. It'll look something like _`Input<string>`_. We'll look at this in detail below.
 
@@ -157,6 +154,10 @@ This allows you to either:
 
 An instance of a component exposes a set of properties. For example, the `Function` component exposes the following [properties](/docs/component/aws/function#properties) — `arn`, `name`, `url`, and `nodes`.
 
+```ts
+const functionArn = function.arn;
+```
+
 These can be used to output info about your app or can be used as args for other components.
 
 These are typically primitive types. However, they can also be a special version of a primitive type. It'll look something like _`Output<string>`_. We'll look at this in detail below.
@@ -183,34 +184,30 @@ For example, the `Function` component exposes the following [nodes](/docs/compon
 
 ---
 
-## Inputs & Outputs
+## Outputs
 
-The args (input) and properties (output) types of a component are a special type. They look something like _`Input<primitive>`_ and _`Output<primitive>`_.
+The properties of a component are typically of a special type that looks something like, _`Output<primitive>`_.
 
 :::tip
-Input and Output types are what allow SST to deploy your apps as fast as possible.
+Output types are what allows SST to deploy your resources as concurrently as possible.
 :::
 
-For the case of an arg or Input type, it represents a value that might not be known yet. This is useful when you want to pass in a value that's not yet known at the time of creating the component. Or rather, it allows you pass in an Output of another component.
+These are values that are not available yet and will be resolved as the deploy progresses. However, these outputs can be used as args in other components.
 
-For example, the `sst.aws.Router` component takes _`Input<string>`_ as a route. Meaning it can take a string.
+This makes it so that parts of your app are not blocked and all your resources are deployed as concurrently as possible.
 
-```ts {3}
-new sst.aws.Router("MyRouter", {
-  routes: {
-    "/api": "https://my-api.com"
-  }
-});
-```
+For example, let's create a function with a url.
 
-Or as the output URL of a Function, which in turn is _`Output<string>`_.
-
-```ts {8}
+```ts
 const myFunction = new sst.aws.Function("MyFunction", {
   url: true,
   handler: "src/lambda.handler"
 });
+```
 
+Here, `myFunction.url` is of type `Output<string>`. We want to use this function url as a route in our router.
+
+```ts {3}
 new sst.aws.Router("MyRouter", {
   routes: {
     "/api": myFunction.url
@@ -218,4 +215,125 @@ new sst.aws.Router("MyRouter", {
 });
 ```
 
-The way Input and Output types are connected together allows SST to create dependencies between your components. This allows it to deploy your apps as fast as possible. You can learn more about [Input and Output types on the Pulumi docs](https://www.pulumi.com/docs/concepts/inputs-outputs/).
+The route arg takes `Input<string>`, which means it can take a string or an output. This creates a dependency internally. So the router will be deployed after the function has been. However, other components that are not dependent on this function can be deployed concurrently.
+
+You can learn more about [Input and Output types on the Pulumi docs](https://www.pulumi.com/docs/concepts/inputs-outputs/).
+
+---
+
+### Apply 
+
+Since outputs are values that are yet to be resolved, you cannot use them in regular operations. You'll need to resolve them first.
+
+For example, let's take the function url from above. We cannot do the following.
+
+```ts
+const newUrl = myFunction.url + "/foo";
+```
+
+This is because the value of the output is not known at the time of this operation. We'll need to resolve it.
+
+The easiest way to work with an output is using `.apply`. It'll allow you to apply an operation on the output and return a new output.
+
+```ts
+const newUrl = myFunction.url.apply((value) => value + "/foo");
+```
+
+In this case, `newUrl` is also an `Output<string>`.
+
+---
+
+### Helpers
+
+To make it a little easier to work with outputs, we have the following global helper functions.
+
+---
+
+#### `$concat`
+
+This let's you do.
+
+```ts
+const newUrl = $concat(myFunction.url, "/foo");
+```
+
+Instead of the apply.
+
+```ts
+const newUrl = myFunction.url.apply((value) => value + "/foo");
+```
+
+Learn more about [`$concat`](/docs/reference/global/#concat).
+
+---
+
+#### `$interpolate`
+
+This let's you do.
+
+```ts
+const newUrl = $interpolate`${myFunction.url}/foo`;
+```
+
+Instead of the apply.
+
+```ts
+const newUrl = myFunction.url.apply((value) => value + "/foo");
+```
+
+Learn more about [`$interpolate`](/docs/reference/global/#interpolate).
+
+---
+
+#### `$jsonParse`
+
+This is for outputs that are JSON strings. So instead of doing this.
+
+```ts
+const policy = policyStr.apply((policy) =>
+  JSON.parse(policy)
+);
+```
+
+You can.
+
+```ts
+const policy = $jsonParse(policyStr);
+```
+
+Learn more about [`$jsonParse`](/docs/reference/global/#jsonParse).
+
+---
+
+#### `$jsonStringify`
+
+Similarly, for outputs that are JSON objects. Instead of doing a stringify after an apply. 
+
+```ts
+const policy = policyObj.apply((policy) =>
+  JSON.stringify(policy)
+);
+```
+
+You can.
+
+```ts
+const policy = $jsonStringify(policyObj);
+```
+
+Learn more about [`$jsonStringify`](/docs/reference/global/#jsonStringify).
+
+---
+
+#### `$resolve`
+
+And finally when you are working with a list of outputs and you want to resolve them all together.
+
+```ts
+$resolve([bucket.name, worker.url]).apply(([bucketName, workerUrl]) => {
+  console.log(`Bucket: ${bucketName}`);
+  console.log(`Worker: ${workerUrl}`);
+})
+```
+
+Learn more about [`$resolve`](/docs/reference/global/#resolve).
