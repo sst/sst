@@ -489,45 +489,45 @@ export interface FunctionArgs {
   url?: Input<
     | boolean
     | {
-        /**
-         * The authorization used for the function URL. Supports [IAM authorization](https://docs.aws.amazon.com/lambda/latest/dg/urls-auth.html).
-         * @default `"none"`
-         * @example
-         * ```js
-         * {
-         *   url: {
-         *     authorization: "iam"
-         *   }
-         * }
-         * ```
-         */
-        authorization?: Input<"none" | "iam">;
-        /**
-         * Customize the CORS (Cross-origin resource sharing) settings for the function URL.
-         * @default `true`
-         * @example
-         * Disable CORS.
-         * ```js
-         * {
-         *   url: {
-         *     cors: true
-         *   }
-         * }
-         * ```
-         * Only enable the `GET` and `POST` methods for `https://example.com`.
-         * ```js
-         * {
-         *   url: {
-         *     cors: {
-         *       allowedMethods: ["GET", "POST"],
-         *       allowedOrigins: ["https://example.com"]
-         *     }
-         *   }
-         * }
-         * ```
-         */
-        cors?: Input<boolean | Prettify<FunctionUrlCorsArgs>>;
-      }
+      /**
+       * The authorization used for the function URL. Supports [IAM authorization](https://docs.aws.amazon.com/lambda/latest/dg/urls-auth.html).
+       * @default `"none"`
+       * @example
+       * ```js
+       * {
+       *   url: {
+       *     authorization: "iam"
+       *   }
+       * }
+       * ```
+       */
+      authorization?: Input<"none" | "iam">;
+      /**
+       * Customize the CORS (Cross-origin resource sharing) settings for the function URL.
+       * @default `true`
+       * @example
+       * Disable CORS.
+       * ```js
+       * {
+       *   url: {
+       *     cors: true
+       *   }
+       * }
+       * ```
+       * Only enable the `GET` and `POST` methods for `https://example.com`.
+       * ```js
+       * {
+       *   url: {
+       *     cors: {
+       *       allowedMethods: ["GET", "POST"],
+       *       allowedOrigins: ["https://example.com"]
+       *     }
+       *   }
+       * }
+       * ```
+       */
+      cors?: Input<boolean | Prettify<FunctionUrlCorsArgs>>;
+    }
   >;
   /**
    * Configure how your function is bundled.
@@ -555,13 +555,22 @@ export interface FunctionArgs {
      */
     loader?: Input<Record<string, Loader>>;
     /**
-     * Packages that will be excluded from the bundle. Certain npm packages cannot be
-     * bundled using esbuild. This allows you to exclude them from the bundle and instead
-     * install them into a `node_modules/` directory in the function package.
+     * Dependencies that need to be excluded from the function package.
      *
-     * These packages are excluded when esbuild is traversing the imports in your code to
-     * generate the bundle. So these are the package names as seen in the imports. Also,
-     * this works on packages that are not directly imported by your code.
+     * Certain npm packages cannot be bundled using esbuild. This allows you to exclude them
+     * from the bundle. Instead they'll be moved into a `node_modules/` directory in the
+     * function package.
+     *
+     * :::tip
+     * If esbuild is giving you an error about a package, try adding it to the `install` list.
+     * :::
+     *
+     * This will allow your functions to be able to use these dependencies when deployed. They
+     * just won't be tree shaken. You however still need to have them in your `package.json`.
+     *
+     * Esbuild will ignore them while traversing the imports in your code. So these are the
+     * package names as seen in the imports. It also works on packages that are not directly
+     * imported by your code.
      *
      * @example
      * ```js
@@ -877,8 +886,7 @@ export interface FunctionArgs {
  */
 export class Function
   extends Component
-  implements Link.Linkable, Link.AWS.Linkable
-{
+  implements Link.Linkable, Link.AWS.Linkable {
   private function: Output<aws.lambda.Function>;
   private role?: aws.iam.Role;
   private logGroup: aws.cloudwatch.LogGroup;
@@ -933,11 +941,11 @@ export class Function
       _receiver: args._skipMetadata
         ? undefined
         : all([args.bundle, args.handler]).apply(([bundle, handler]) => ({
-            directory: bundle || handler,
-            links,
-            environment,
-            awsRole: role?.arn,
-          })),
+          directory: bundle || handler,
+          links,
+          environment,
+          awsRole: role?.arn,
+        })),
       _live: all([
         dev,
         name,
@@ -1037,10 +1045,10 @@ export class Function
             : url.cors === true || url.cors === undefined
               ? defaultCors
               : {
-                  ...defaultCors,
-                  ...url.cors,
-                  maxAge: url.cors.maxAge && toSeconds(url.cors.maxAge),
-                };
+                ...defaultCors,
+                ...url.cors,
+                maxAge: url.cors.maxAge && toSeconds(url.cors.maxAge),
+              };
 
         return { authorization, cors };
       });
@@ -1155,12 +1163,12 @@ export class Function
 
           const linkInjection = hasLinkInjections
             ? linkData
-                .map((item) => [
-                  `process.env.SST_RESOURCE_${item.name} = ${JSON.stringify(
-                    JSON.stringify(item.properties),
-                  )};\n`,
-                ])
-                .join("")
+              .map((item) => [
+                `process.env.SST_RESOURCE_${item.name} = ${JSON.stringify(
+                  JSON.stringify(item.properties),
+                )};\n`,
+              ])
+              .join("")
             : "";
 
           const parsed = path.posix.parse(handler);
@@ -1191,21 +1199,21 @@ export class Function
               name: `${newHandlerFileName}.mjs`,
               content: streaming
                 ? [
-                    linkInjection,
-                    `export const ${newHandlerFunction} = awslambda.streamifyResponse(async (event, context) => {`,
-                    ...injections,
-                    `  const { ${oldHandlerFunction}: rawHandler} = await import("./${oldHandlerFileName}${newHandlerFileExt}");`,
-                    `  return rawHandler(event, context);`,
-                    `});`,
-                  ].join("\n")
+                  linkInjection,
+                  `export const ${newHandlerFunction} = awslambda.streamifyResponse(async (event, context) => {`,
+                  ...injections,
+                  `  const { ${oldHandlerFunction}: rawHandler} = await import("./${oldHandlerFileName}${newHandlerFileExt}");`,
+                  `  return rawHandler(event, context);`,
+                  `});`,
+                ].join("\n")
                 : [
-                    linkInjection,
-                    `export const ${newHandlerFunction} = async (event, context) => {`,
-                    ...injections,
-                    `  const { ${oldHandlerFunction}: rawHandler} = await import("./${oldHandlerFileName}${newHandlerFileExt}");`,
-                    `  return rawHandler(event, context);`,
-                    `};`,
-                  ].join("\n"),
+                  linkInjection,
+                  `export const ${newHandlerFunction} = async (event, context) => {`,
+                  ...injections,
+                  `  const { ${oldHandlerFunction}: rawHandler} = await import("./${oldHandlerFileName}${newHandlerFileExt}");`,
+                  `  return rawHandler(event, context);`,
+                  `};`,
+                ].join("\n"),
             },
           };
         },
@@ -1227,11 +1235,11 @@ export class Function
               ...linkPermissions,
               ...(dev
                 ? [
-                    {
-                      actions: ["iot:*"],
-                      resources: ["*"],
-                    },
-                  ]
+                  {
+                    actions: ["iot:*"],
+                    resources: ["*"],
+                  },
+                ]
                 : []),
             ],
           }),
@@ -1249,47 +1257,46 @@ export class Function
           ),
           assumeRolePolicy: !$dev
             ? aws.iam.assumeRolePolicyForPrincipal({
-                Service: "lambda.amazonaws.com",
-              })
+              Service: "lambda.amazonaws.com",
+            })
             : aws.iam.getPolicyDocumentOutput({
-                statements: [
-                  {
-                    actions: ["sts:AssumeRole"],
-                    principals: [
-                      {
-                        type: "Service",
-                        identifiers: ["lambda.amazonaws.com"],
-                      },
-                      {
-                        type: "AWS",
-                        identifiers: [
-                          interpolate`arn:aws:iam::${
-                            aws.getCallerIdentityOutput().accountId
+              statements: [
+                {
+                  actions: ["sts:AssumeRole"],
+                  principals: [
+                    {
+                      type: "Service",
+                      identifiers: ["lambda.amazonaws.com"],
+                    },
+                    {
+                      type: "AWS",
+                      identifiers: [
+                        interpolate`arn:aws:iam::${aws.getCallerIdentityOutput().accountId
                           }:root`,
-                        ],
-                      },
-                    ],
-                  },
-                ],
-              }).json,
+                      ],
+                    },
+                  ],
+                },
+              ],
+            }).json,
           // if there are no statements, do not add an inline policy.
           // adding an inline policy with no statements will cause an error.
           inlinePolicies: policy.apply(({ statements }) =>
             statements
               ? [
-                  {
-                    name: "inline",
-                    policy: policy.json,
-                  },
-                ]
+                {
+                  name: "inline",
+                  policy: policy.json,
+                },
+              ]
               : [],
           ),
           managedPolicyArns: [
             "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
             ...(args.vpc
               ? [
-                  "arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole",
-                ]
+                "arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole",
+              ]
               : []),
           ],
         }),
@@ -1353,9 +1360,9 @@ export class Function
               entry.isDir
                 ? archive.directory(entry.from, entry.to, { date: new Date(0) })
                 : archive.file(entry.from, {
-                    name: entry.to,
-                    date: new Date(0),
-                  });
+                  name: entry.to,
+                  date: new Date(0),
+                });
               //if (mode === "start") {
               //  try {
               //    const dir = path.dirname(toPath);

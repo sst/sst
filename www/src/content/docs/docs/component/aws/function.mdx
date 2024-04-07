@@ -598,13 +598,22 @@ Configure the format of the generated JS code; ESM or CommonJS.
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">[]</code><code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
-Packages that will be excluded from the bundle. Certain npm packages cannot be
-bundled using esbuild. This allows you to exclude them from the bundle and instead
-install them into a `node_modules/` directory in the function package.
+Dependencies that need to be excluded from the function package.
 
-These packages are excluded when esbuild is traversing the imports in your code to
-generate the bundle. So these are the package names as seen in the imports. Also,
-this works on packages that are not directly imported by your code.
+Certain npm packages cannot be bundled using esbuild. This allows you to exclude them
+from the bundle. Instead they'll be moved into a `node_modules/` directory in the
+function package.
+
+:::tip
+If esbuild is giving you an error about a package, try adding it to the `install` list.
+:::
+
+This will allow your functions to be able to use these dependencies when deployed. They
+just won't be tree shaken. You however still need to have them in your `package.json`.
+
+Esbuild will ignore them while traversing the imports in your code. So these are the
+package names as seen in the imports. It also works on packages that are not directly
+imported by your code.
 
 ```js
 {
