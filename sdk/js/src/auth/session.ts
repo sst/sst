@@ -33,7 +33,7 @@ export function createSessionBuilder<
     },
     async create(session: SessionValue) {
       const privateKey = await importPKCS8(
-        process.env.AUTH_PRIVATE_KEY!,
+        process.env.AUTH_PRIVATE_KEY || Resource.AUTH_PRIVATE_KEY,
         "RS512",
       );
       const token = await new SignJWT(session)

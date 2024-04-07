@@ -48,6 +48,9 @@ export type Prettify<T> = {
   [K in keyof T]: T[K];
 } & {};
 
+import process from "node:process";
+import { Resource } from "../resource.js";
+
 export function AuthHandler<
   Providers extends Record<string, Adapter<any>>,
   Sessions extends SessionBuilder = SessionBuilder,
@@ -112,12 +115,28 @@ export function AuthHandler<
 
   const options: Omit<AdapterOptions<any>, "name"> = {
     signing: {
-      privateKey: importPKCS8(process.env.AUTH_PRIVATE_KEY!, "RS512"),
-      publicKey: importSPKI(process.env.AUTH_PUBLIC_KEY!, "RS512"),
+      privateKey: () =>
+        importPKCS8(
+          process.env.AUTH_PRIVATE_KEY || Resource.AUTH_PRIVATE_KEY,
+          "RS512",
+        ),
+      publicKey: () =>
+        importSPKI(
+          process.env.AUTH_PUBLIC_KEY || Resource.AUTH_PUBLIC_KEY,
+          "RS512",
+        ),
     },
     encryption: {
-      privateKey: importPKCS8(process.env.AUTH_PRIVATE_KEY!, "RSA-OAEP-512"),
-      publicKey: importSPKI(process.env.AUTH_PUBLIC_KEY!, "RSA-OAEP-512"),
+      privateKey: () =>
+        importPKCS8(
+          process.env.AUTH_PRIVATE_KEY || Resource.AUTH_PRIVATE_KEY,
+          "RSA-OAEP-512",
+        ),
+      publicKey: () =>
+        importSPKI(
+          process.env.AUTH_PUBLIC_KEY || Resource.AUTH_PUBLIC_KEY,
+          "RSA-OAEP-512",
+        ),
     },
     algorithm: "RS512",
     async success(ctx: Context, properties: any) {
@@ -138,7 +157,7 @@ export function AuthHandler<
             const token = await new SignJWT(session)
               .setProtectedHeader({ alg: "RS512" })
               .setExpirationTime("1yr")
-              .sign(await options.signing.privateKey);
+              .sign(await options.signing.privateKey());
 
             deleteCookie(ctx, "provider");
             deleteCookie(ctx, "response_type");
@@ -165,7 +184,7 @@ export function AuthHandler<
               })
                 .setProtectedHeader({ alg: "RS512" })
                 .setExpirationTime("30s")
-                .sign(await options.signing.privateKey);
+                .sign(await options.signing.privateKey());
               const location = new URL(redirect_uri);
               location.searchParams.set("code", code);
               location.searchParams.set("state", state || "");
@@ -216,7 +235,7 @@ export function AuthHandler<
 
     const { payload } = await jwtVerify(
       code as string,
-      await options.signing.publicKey,
+      await options.signing.publicKey(),
     );
     if (payload.redirect_uri !== form.get("redirect_uri")) {
       c.status(400);

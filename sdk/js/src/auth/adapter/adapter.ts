@@ -11,12 +11,12 @@ export interface AdapterOptions<Properties> {
   name: string;
   algorithm: string;
   encryption: {
-    publicKey: Promise<KeyLike>;
-    privateKey: Promise<KeyLike>;
+    publicKey: () => Promise<KeyLike>;
+    privateKey: () => Promise<KeyLike>;
   };
   signing: {
-    publicKey: Promise<KeyLike>;
-    privateKey: Promise<KeyLike>;
+    publicKey: () => Promise<KeyLike>;
+    privateKey: () => Promise<KeyLike>;
   };
   success: (ctx: Context, properties: Properties) => Promise<Response>;
   forward: (ctx: Context, response: Response) => Response;

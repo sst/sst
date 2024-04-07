@@ -1,7 +1,7 @@
 import { AuthHandler } from "../handler.js";
 import { LinkAdapter } from "../adapter/link.js";
 import { createSessionBuilder } from "../session.js";
-import { CodeAdapter } from "../index.js";
+import { CodeAdapter } from "../adapter/index.js";
 
 const sessions = createSessionBuilder<{
   user: {

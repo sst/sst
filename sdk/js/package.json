@@ -3,7 +3,7 @@
   "name": "sst",
   "type": "module",
   "sideEffects": false,
-  "version": "3.0.6",
+  "version": "3.0.9",
   "main": "./dist/index.js",
   "exports": {
     ".": "./dist/index.js",
