@@ -17,10 +17,7 @@ export interface AuthArgs {
   };
 }
 
-export class Auth
-  extends Component
-  implements Link.Cloudflare.Linkable, Link.Linkable
-{
+export class Auth extends Component implements Link.Linkable {
   private readonly _key: PrivateKey;
   private readonly _authenticator: Output<Worker>;
 
@@ -61,15 +58,6 @@ export class Auth
     return {
       properties: {
         publicKey: secret(this.key.publicKeyPem),
-      },
-    };
-  }
-
-  public getCloudflareBinding(): Link.Cloudflare.Binding {
-    return {
-      type: "serviceBindings",
-      properties: {
-        service: this.authenticator.nodes.worker.id,
       },
     };
   }
