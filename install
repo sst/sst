@@ -44,23 +44,31 @@ print_message() {
     local level=$1
     local message=$2
     local color=""
-    
+
     case $level in
         info) color="${GREEN}" ;;
         warning) color="${YELLOW}" ;;
         error) color="${RED}" ;;
     esac
-    
+
     echo -e "${color}${message}${NC}"
 }
 
 check_version() {
     if command -v sst >/dev/null 2>&1; then
+        sst_path=$(which sst)
+        sst_shebang=$(cat $sst_path | head -n1)
+
+        if [[ "$sst_shebang" == "#!/usr/bin/env node" ]]; then
+            print_message error "SST v2 is installed globally through npm. You'll need to uninstall it before proceeding."
+            exit 1
+        fi
+
         installed_version=$(sst version)
-        
+
         if [[ "$installed_version" != "$latest_version" ]]; then
             print_message info "Installed version: ${YELLOW}$installed_version."
-            
+
             # print_message info "Version ${YELLOW}$installed_version${GREEN} is installed, upgrading to ${YELLOW}$latest_version${GREEN}? [Y/n]${NC}"
             # read -n 1 -r
             # echo
