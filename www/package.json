@@ -9,7 +9,8 @@
     "preview": "astro preview",
     "astro": "astro",
     "generate": "bun generate-cli-json && tsx generate.ts",
-    "generate-tsdoc": "tsx generate.ts tsdoc",
+    "generate-components": "tsx generate.ts components",
+    "generate-examples": "tsx generate.ts examples",
     "generate-cli": "bun generate-cli-json && tsx generate.ts cli",
     "generate-cli-json": "go run ../cmd/sst introspect > cli-doc.json"
   },

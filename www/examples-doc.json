@@ -1,0 +1,1376 @@
+{
+	"id": 0,
+	"name": "ion",
+	"variant": "project",
+	"kind": 1,
+	"flags": {},
+	"children": [
+		{
+			"id": 1,
+			"name": "aws-apig-auth/sst.config",
+			"variant": "declaration",
+			"kind": 2,
+			"flags": {},
+			"children": [
+				{
+					"id": 2,
+					"name": "default",
+					"variant": "declaration",
+					"kind": 32,
+					"flags": {},
+					"sources": [
+						{
+							"fileName": "aws-apig-auth/sst.config.ts",
+							"line": 3,
+							"character": 0,
+							"url": "https://github.com/sst/ion/blob/6c73ab3/examples/aws-apig-auth/sst.config.ts#L3"
+						}
+					],
+					"type": {
+						"type": "reference",
+						"target": {
+							"sourceFileName": "",
+							"qualifiedName": "Config"
+						},
+						"name": "Config"
+					}
+				}
+			],
+			"groups": [
+				{
+					"title": "Variables",
+					"children": [
+						2
+					]
+				}
+			],
+			"sources": [
+				{
+					"fileName": "aws-apig-auth/sst.config.ts",
+					"line": 1,
+					"character": 0,
+					"url": "https://github.com/sst/ion/blob/6c73ab3/examples/aws-apig-auth/sst.config.ts#L1"
+				}
+			]
+		},
+		{
+			"id": 3,
+			"name": "aws-bucket-subscriber/sst.config",
+			"variant": "declaration",
+			"kind": 2,
+			"flags": {},
+			"children": [
+				{
+					"id": 4,
+					"name": "default",
+					"variant": "declaration",
+					"kind": 32,
+					"flags": {},
+					"sources": [
+						{
+							"fileName": "aws-bucket-subscriber/sst.config.ts",
+							"line": 3,
+							"character": 0,
+							"url": "https://github.com/sst/ion/blob/6c73ab3/examples/aws-bucket-subscriber/sst.config.ts#L3"
+						}
+					],
+					"type": {
+						"type": "reference",
+						"target": {
+							"sourceFileName": "",
+							"qualifiedName": "Config"
+						},
+						"name": "Config"
+					}
+				}
+			],
+			"groups": [
+				{
+					"title": "Variables",
+					"children": [
+						4
+					]
+				}
+			],
+			"sources": [
+				{
+					"fileName": "aws-bucket-subscriber/sst.config.ts",
+					"line": 1,
+					"character": 0,
+					"url": "https://github.com/sst/ion/blob/6c73ab3/examples/aws-bucket-subscriber/sst.config.ts#L1"
+				}
+			]
+		},
+		{
+			"id": 5,
+			"name": "aws-cognito/sst.config",
+			"variant": "declaration",
+			"kind": 2,
+			"flags": {},
+			"children": [
+				{
+					"id": 6,
+					"name": "default",
+					"variant": "declaration",
+					"kind": 32,
+					"flags": {},
+					"sources": [
+						{
+							"fileName": "aws-cognito/sst.config.ts",
+							"line": 3,
+							"character": 0,
+							"url": "https://github.com/sst/ion/blob/6c73ab3/examples/aws-cognito/sst.config.ts#L3"
+						}
+					],
+					"type": {
+						"type": "reference",
+						"target": {
+							"sourceFileName": "",
+							"qualifiedName": "Config"
+						},
+						"name": "Config"
+					}
+				}
+			],
+			"groups": [
+				{
+					"title": "Variables",
+					"children": [
+						6
+					]
+				}
+			],
+			"sources": [
+				{
+					"fileName": "aws-cognito/sst.config.ts",
+					"line": 1,
+					"character": 0,
+					"url": "https://github.com/sst/ion/blob/6c73ab3/examples/aws-cognito/sst.config.ts#L1"
+				}
+			]
+		},
+		{
+			"id": 7,
+			"name": "aws-drizzle/sst.config",
+			"variant": "declaration",
+			"kind": 2,
+			"flags": {},
+			"children": [
+				{
+					"id": 8,
+					"name": "default",
+					"variant": "declaration",
+					"kind": 32,
+					"flags": {},
+					"sources": [
+						{
+							"fileName": "aws-drizzle/sst.config.ts",
+							"line": 3,
+							"character": 0,
+							"url": "https://github.com/sst/ion/blob/6c73ab3/examples/aws-drizzle/sst.config.ts#L3"
+						}
+					],
+					"type": {
+						"type": "reference",
+						"target": {
+							"sourceFileName": "",
+							"qualifiedName": "Config"
+						},
+						"name": "Config"
+					}
+				}
+			],
+			"groups": [
+				{
+					"title": "Variables",
+					"children": [
+						8
+					]
+				}
+			],
+			"sources": [
+				{
+					"fileName": "aws-drizzle/sst.config.ts",
+					"line": 1,
+					"character": 0,
+					"url": "https://github.com/sst/ion/blob/6c73ab3/examples/aws-drizzle/sst.config.ts#L1"
+				}
+			]
+		},
+		{
+			"id": 9,
+			"name": "aws-dynamo/sst.config",
+			"variant": "declaration",
+			"kind": 2,
+			"flags": {},
+			"children": [
+				{
+					"id": 10,
+					"name": "default",
+					"variant": "declaration",
+					"kind": 32,
+					"flags": {},
+					"sources": [
+						{
+							"fileName": "aws-dynamo/sst.config.ts",
+							"line": 3,
+							"character": 0,
+							"url": "https://github.com/sst/ion/blob/6c73ab3/examples/aws-dynamo/sst.config.ts#L3"
+						}
+					],
+					"type": {
+						"type": "reference",
+						"target": {
+							"sourceFileName": "",
+							"qualifiedName": "Config"
+						},
+						"name": "Config"
+					}
+				}
+			],
+			"groups": [
+				{
+					"title": "Variables",
+					"children": [
+						10
+					]
+				}
+			],
+			"sources": [
+				{
+					"fileName": "aws-dynamo/sst.config.ts",
+					"line": 1,
+					"character": 0,
+					"url": "https://github.com/sst/ion/blob/6c73ab3/examples/aws-dynamo/sst.config.ts#L1"
+				}
+			]
+		},
+		{
+			"id": 11,
+			"name": "aws-hono/sst.config",
+			"variant": "declaration",
+			"kind": 2,
+			"flags": {},
+			"children": [
+				{
+					"id": 12,
+					"name": "default",
+					"variant": "declaration",
+					"kind": 32,
+					"flags": {},
+					"sources": [
+						{
+							"fileName": "aws-hono/sst.config.ts",
+							"line": 3,
+							"character": 0,
+							"url": "https://github.com/sst/ion/blob/6c73ab3/examples/aws-hono/sst.config.ts#L3"
+						}
+					],
+					"type": {
+						"type": "reference",
+						"target": {
+							"sourceFileName": "",
+							"qualifiedName": "Config"
+						},
+						"name": "Config"
+					}
+				}
+			],
+			"groups": [
+				{
+					"title": "Variables",
+					"children": [
+						12
+					]
+				}
+			],
+			"sources": [
+				{
+					"fileName": "aws-hono/sst.config.ts",
+					"line": 1,
+					"character": 0,
+					"url": "https://github.com/sst/ion/blob/6c73ab3/examples/aws-hono/sst.config.ts#L1"
+				}
+			]
+		},
+		{
+			"id": 13,
+			"name": "aws-queue/sst.config",
+			"variant": "declaration",
+			"kind": 2,
+			"flags": {},
+			"children": [
+				{
+					"id": 14,
+					"name": "default",
+					"variant": "declaration",
+					"kind": 32,
+					"flags": {},
+					"sources": [
+						{
+							"fileName": "aws-queue/sst.config.ts",
+							"line": 3,
+							"character": 0,
+							"url": "https://github.com/sst/ion/blob/6c73ab3/examples/aws-queue/sst.config.ts#L3"
+						}
+					],
+					"type": {
+						"type": "reference",
+						"target": {
+							"sourceFileName": "",
+							"qualifiedName": "Config"
+						},
+						"name": "Config"
+					}
+				}
+			],
+			"groups": [
+				{
+					"title": "Variables",
+					"children": [
+						14
+					]
+				}
+			],
+			"sources": [
+				{
+					"fileName": "aws-queue/sst.config.ts",
+					"line": 1,
+					"character": 0,
+					"url": "https://github.com/sst/ion/blob/6c73ab3/examples/aws-queue/sst.config.ts#L1"
+				}
+			]
+		},
+		{
+			"id": 15,
+			"name": "aws-router/sst.config",
+			"variant": "declaration",
+			"kind": 2,
+			"flags": {},
+			"children": [
+				{
+					"id": 16,
+					"name": "default",
+					"variant": "declaration",
+					"kind": 32,
+					"flags": {},
+					"comment": {
+						"summary": [
+							{
+								"kind": "text",
+								"text": "Here's how you create a Router on AWS.\n\n"
+							},
+							{
+								"kind": "code",
+								"text": "```ts\nconsole.log(\"foo\");\n```"
+							},
+							{
+								"kind": "text",
+								"text": "\n\nThis uses "
+							},
+							{
+								"kind": "code",
+								"text": "`Function`"
+							},
+							{
+								"kind": "text",
+								"text": " and "
+							},
+							{
+								"kind": "code",
+								"text": "`Router`"
+							},
+							{
+								"kind": "text",
+								"text": " components."
+							}
+						]
+					},
+					"sources": [
+						{
+							"fileName": "aws-router/sst.config.ts",
+							"line": 12,
+							"character": 0,
+							"url": "https://github.com/sst/ion/blob/6c73ab3/examples/aws-router/sst.config.ts#L12"
+						}
+					],
+					"type": {
+						"type": "reference",
+						"target": {
+							"sourceFileName": "",
+							"qualifiedName": "Config"
+						},
+						"name": "Config"
+					}
+				}
+			],
+			"groups": [
+				{
+					"title": "Variables",
+					"children": [
+						16
+					]
+				}
+			],
+			"sources": [
+				{
+					"fileName": "aws-router/sst.config.ts",
+					"line": 1,
+					"character": 0,
+					"url": "https://github.com/sst/ion/blob/6c73ab3/examples/aws-router/sst.config.ts#L1"
+				}
+			]
+		},
+		{
+			"id": 17,
+			"name": "aws-static-site/sst.config",
+			"variant": "declaration",
+			"kind": 2,
+			"flags": {},
+			"children": [
+				{
+					"id": 18,
+					"name": "default",
+					"variant": "declaration",
+					"kind": 32,
+					"flags": {},
+					"sources": [
+						{
+							"fileName": "aws-static-site/sst.config.ts",
+							"line": 3,
+							"character": 0,
+							"url": "https://github.com/sst/ion/blob/6c73ab3/examples/aws-static-site/sst.config.ts#L3"
+						}
+					],
+					"type": {
+						"type": "reference",
+						"target": {
+							"sourceFileName": "",
+							"qualifiedName": "Config"
+						},
+						"name": "Config"
+					}
+				}
+			],
+			"groups": [
+				{
+					"title": "Variables",
+					"children": [
+						18
+					]
+				}
+			],
+			"sources": [
+				{
+					"fileName": "aws-static-site/sst.config.ts",
+					"line": 1,
+					"character": 0,
+					"url": "https://github.com/sst/ion/blob/6c73ab3/examples/aws-static-site/sst.config.ts#L1"
+				}
+			]
+		},
+		{
+			"id": 19,
+			"name": "aws-swift/sst.config",
+			"variant": "declaration",
+			"kind": 2,
+			"flags": {},
+			"children": [
+				{
+					"id": 20,
+					"name": "default",
+					"variant": "declaration",
+					"kind": 32,
+					"flags": {},
+					"sources": [
+						{
+							"fileName": "aws-swift/sst.config.ts",
+							"line": 5,
+							"character": 0,
+							"url": "https://github.com/sst/ion/blob/6c73ab3/examples/aws-swift/sst.config.ts#L5"
+						}
+					],
+					"type": {
+						"type": "reference",
+						"target": {
+							"sourceFileName": "",
+							"qualifiedName": "Config"
+						},
+						"name": "Config"
+					}
+				}
+			],
+			"groups": [
+				{
+					"title": "Variables",
+					"children": [
+						20
+					]
+				}
+			],
+			"sources": [
+				{
+					"fileName": "aws-swift/sst.config.ts",
+					"line": 1,
+					"character": 0,
+					"url": "https://github.com/sst/ion/blob/6c73ab3/examples/aws-swift/sst.config.ts#L1"
+				}
+			]
+		},
+		{
+			"id": 21,
+			"name": "aws-topic/sst.config",
+			"variant": "declaration",
+			"kind": 2,
+			"flags": {},
+			"children": [
+				{
+					"id": 22,
+					"name": "default",
+					"variant": "declaration",
+					"kind": 32,
+					"flags": {},
+					"sources": [
+						{
+							"fileName": "aws-topic/sst.config.ts",
+							"line": 3,
+							"character": 0,
+							"url": "https://github.com/sst/ion/blob/6c73ab3/examples/aws-topic/sst.config.ts#L3"
+						}
+					],
+					"type": {
+						"type": "reference",
+						"target": {
+							"sourceFileName": "",
+							"qualifiedName": "Config"
+						},
+						"name": "Config"
+					}
+				}
+			],
+			"groups": [
+				{
+					"title": "Variables",
+					"children": [
+						22
+					]
+				}
+			],
+			"sources": [
+				{
+					"fileName": "aws-topic/sst.config.ts",
+					"line": 1,
+					"character": 0,
+					"url": "https://github.com/sst/ion/blob/6c73ab3/examples/aws-topic/sst.config.ts#L1"
+				}
+			]
+		},
+		{
+			"id": 23,
+			"name": "aws-vector/sst.config",
+			"variant": "declaration",
+			"kind": 2,
+			"flags": {},
+			"children": [
+				{
+					"id": 24,
+					"name": "default",
+					"variant": "declaration",
+					"kind": 32,
+					"flags": {},
+					"sources": [
+						{
+							"fileName": "aws-vector/sst.config.ts",
+							"line": 3,
+							"character": 0,
+							"url": "https://github.com/sst/ion/blob/6c73ab3/examples/aws-vector/sst.config.ts#L3"
+						}
+					],
+					"type": {
+						"type": "reference",
+						"target": {
+							"sourceFileName": "",
+							"qualifiedName": "Config"
+						},
+						"name": "Config"
+					}
+				}
+			],
+			"groups": [
+				{
+					"title": "Variables",
+					"children": [
+						24
+					]
+				}
+			],
+			"sources": [
+				{
+					"fileName": "aws-vector/sst.config.ts",
+					"line": 1,
+					"character": 0,
+					"url": "https://github.com/sst/ion/blob/6c73ab3/examples/aws-vector/sst.config.ts#L1"
+				}
+			]
+		},
+		{
+			"id": 25,
+			"name": "aws-vite/sst.config",
+			"variant": "declaration",
+			"kind": 2,
+			"flags": {},
+			"children": [
+				{
+					"id": 26,
+					"name": "default",
+					"variant": "declaration",
+					"kind": 32,
+					"flags": {},
+					"sources": [
+						{
+							"fileName": "aws-vite/sst.config.ts",
+							"line": 3,
+							"character": 0,
+							"url": "https://github.com/sst/ion/blob/6c73ab3/examples/aws-vite/sst.config.ts#L3"
+						}
+					],
+					"type": {
+						"type": "reference",
+						"target": {
+							"sourceFileName": "",
+							"qualifiedName": "Config"
+						},
+						"name": "Config"
+					}
+				}
+			],
+			"groups": [
+				{
+					"title": "Variables",
+					"children": [
+						26
+					]
+				}
+			],
+			"sources": [
+				{
+					"fileName": "aws-vite/sst.config.ts",
+					"line": 1,
+					"character": 0,
+					"url": "https://github.com/sst/ion/blob/6c73ab3/examples/aws-vite/sst.config.ts#L1"
+				}
+			]
+		},
+		{
+			"id": 27,
+			"name": "base-ts/sst.config",
+			"variant": "declaration",
+			"kind": 2,
+			"flags": {},
+			"children": [
+				{
+					"id": 28,
+					"name": "default",
+					"variant": "declaration",
+					"kind": 32,
+					"flags": {},
+					"sources": [
+						{
+							"fileName": "base-ts/sst.config.ts",
+							"line": 3,
+							"character": 0,
+							"url": "https://github.com/sst/ion/blob/6c73ab3/examples/base-ts/sst.config.ts#L3"
+						}
+					],
+					"type": {
+						"type": "reference",
+						"target": {
+							"sourceFileName": "",
+							"qualifiedName": "Config"
+						},
+						"name": "Config"
+					}
+				}
+			],
+			"groups": [
+				{
+					"title": "Variables",
+					"children": [
+						28
+					]
+				}
+			],
+			"sources": [
+				{
+					"fileName": "base-ts/sst.config.ts",
+					"line": 1,
+					"character": 0,
+					"url": "https://github.com/sst/ion/blob/6c73ab3/examples/base-ts/sst.config.ts#L1"
+				}
+			]
+		},
+		{
+			"id": 29,
+			"name": "cloudflare-d1/sst.config",
+			"variant": "declaration",
+			"kind": 2,
+			"flags": {},
+			"children": [
+				{
+					"id": 30,
+					"name": "default",
+					"variant": "declaration",
+					"kind": 32,
+					"flags": {},
+					"sources": [
+						{
+							"fileName": "cloudflare-d1/sst.config.ts",
+							"line": 3,
+							"character": 0,
+							"url": "https://github.com/sst/ion/blob/6c73ab3/examples/cloudflare-d1/sst.config.ts#L3"
+						}
+					],
+					"type": {
+						"type": "reference",
+						"target": {
+							"sourceFileName": "",
+							"qualifiedName": "Config"
+						},
+						"name": "Config"
+					}
+				}
+			],
+			"groups": [
+				{
+					"title": "Variables",
+					"children": [
+						30
+					]
+				}
+			],
+			"sources": [
+				{
+					"fileName": "cloudflare-d1/sst.config.ts",
+					"line": 1,
+					"character": 0,
+					"url": "https://github.com/sst/ion/blob/6c73ab3/examples/cloudflare-d1/sst.config.ts#L1"
+				}
+			]
+		},
+		{
+			"id": 31,
+			"name": "cloudflare-remix/sst.config",
+			"variant": "declaration",
+			"kind": 2,
+			"flags": {},
+			"children": [
+				{
+					"id": 32,
+					"name": "default",
+					"variant": "declaration",
+					"kind": 32,
+					"flags": {},
+					"sources": [
+						{
+							"fileName": "cloudflare-remix/sst.config.ts",
+							"line": 3,
+							"character": 0,
+							"url": "https://github.com/sst/ion/blob/6c73ab3/examples/cloudflare-remix/sst.config.ts#L3"
+						}
+					],
+					"type": {
+						"type": "reference",
+						"target": {
+							"sourceFileName": "",
+							"qualifiedName": "Config"
+						},
+						"name": "Config"
+					}
+				}
+			],
+			"groups": [
+				{
+					"title": "Variables",
+					"children": [
+						32
+					]
+				}
+			],
+			"sources": [
+				{
+					"fileName": "cloudflare-remix/sst.config.ts",
+					"line": 1,
+					"character": 0,
+					"url": "https://github.com/sst/ion/blob/6c73ab3/examples/cloudflare-remix/sst.config.ts#L1"
+				}
+			]
+		},
+		{
+			"id": 33,
+			"name": "cloudflare-static-site/sst.config",
+			"variant": "declaration",
+			"kind": 2,
+			"flags": {},
+			"children": [
+				{
+					"id": 34,
+					"name": "default",
+					"variant": "declaration",
+					"kind": 32,
+					"flags": {},
+					"sources": [
+						{
+							"fileName": "cloudflare-static-site/sst.config.ts",
+							"line": 3,
+							"character": 0,
+							"url": "https://github.com/sst/ion/blob/6c73ab3/examples/cloudflare-static-site/sst.config.ts#L3"
+						}
+					],
+					"type": {
+						"type": "reference",
+						"target": {
+							"sourceFileName": "",
+							"qualifiedName": "Config"
+						},
+						"name": "Config"
+					}
+				}
+			],
+			"groups": [
+				{
+					"title": "Variables",
+					"children": [
+						34
+					]
+				}
+			],
+			"sources": [
+				{
+					"fileName": "cloudflare-static-site/sst.config.ts",
+					"line": 1,
+					"character": 0,
+					"url": "https://github.com/sst/ion/blob/6c73ab3/examples/cloudflare-static-site/sst.config.ts#L1"
+				}
+			]
+		},
+		{
+			"id": 35,
+			"name": "cloudflare-vite/sst.config",
+			"variant": "declaration",
+			"kind": 2,
+			"flags": {},
+			"children": [
+				{
+					"id": 36,
+					"name": "default",
+					"variant": "declaration",
+					"kind": 32,
+					"flags": {},
+					"sources": [
+						{
+							"fileName": "cloudflare-vite/sst.config.ts",
+							"line": 3,
+							"character": 0,
+							"url": "https://github.com/sst/ion/blob/6c73ab3/examples/cloudflare-vite/sst.config.ts#L3"
+						}
+					],
+					"type": {
+						"type": "reference",
+						"target": {
+							"sourceFileName": "",
+							"qualifiedName": "Config"
+						},
+						"name": "Config"
+					}
+				}
+			],
+			"groups": [
+				{
+					"title": "Variables",
+					"children": [
+						36
+					]
+				}
+			],
+			"sources": [
+				{
+					"fileName": "cloudflare-vite/sst.config.ts",
+					"line": 1,
+					"character": 0,
+					"url": "https://github.com/sst/ion/blob/6c73ab3/examples/cloudflare-vite/sst.config.ts#L1"
+				}
+			]
+		},
+		{
+			"id": 37,
+			"name": "start-api/sst.config",
+			"variant": "declaration",
+			"kind": 2,
+			"flags": {},
+			"children": [
+				{
+					"id": 38,
+					"name": "default",
+					"variant": "declaration",
+					"kind": 32,
+					"flags": {},
+					"sources": [
+						{
+							"fileName": "start-api/sst.config.ts",
+							"line": 3,
+							"character": 0,
+							"url": "https://github.com/sst/ion/blob/6c73ab3/examples/start-api/sst.config.ts#L3"
+						}
+					],
+					"type": {
+						"type": "reference",
+						"target": {
+							"sourceFileName": "",
+							"qualifiedName": "Config"
+						},
+						"name": "Config"
+					}
+				}
+			],
+			"groups": [
+				{
+					"title": "Variables",
+					"children": [
+						38
+					]
+				}
+			],
+			"sources": [
+				{
+					"fileName": "start-api/sst.config.ts",
+					"line": 1,
+					"character": 0,
+					"url": "https://github.com/sst/ion/blob/6c73ab3/examples/start-api/sst.config.ts#L1"
+				}
+			]
+		},
+		{
+			"id": 39,
+			"name": "start-astro/sst.config",
+			"variant": "declaration",
+			"kind": 2,
+			"flags": {},
+			"children": [
+				{
+					"id": 40,
+					"name": "default",
+					"variant": "declaration",
+					"kind": 32,
+					"flags": {},
+					"sources": [
+						{
+							"fileName": "start-astro/sst.config.ts",
+							"line": 3,
+							"character": 0,
+							"url": "https://github.com/sst/ion/blob/6c73ab3/examples/start-astro/sst.config.ts#L3"
+						}
+					],
+					"type": {
+						"type": "reference",
+						"target": {
+							"sourceFileName": "",
+							"qualifiedName": "Config"
+						},
+						"name": "Config"
+					}
+				}
+			],
+			"groups": [
+				{
+					"title": "Variables",
+					"children": [
+						40
+					]
+				}
+			],
+			"sources": [
+				{
+					"fileName": "start-astro/sst.config.ts",
+					"line": 1,
+					"character": 0,
+					"url": "https://github.com/sst/ion/blob/6c73ab3/examples/start-astro/sst.config.ts#L1"
+				}
+			]
+		},
+		{
+			"id": 41,
+			"name": "start-cloudflare/sst.config",
+			"variant": "declaration",
+			"kind": 2,
+			"flags": {},
+			"children": [
+				{
+					"id": 42,
+					"name": "default",
+					"variant": "declaration",
+					"kind": 32,
+					"flags": {},
+					"sources": [
+						{
+							"fileName": "start-cloudflare/sst.config.ts",
+							"line": 3,
+							"character": 0,
+							"url": "https://github.com/sst/ion/blob/6c73ab3/examples/start-cloudflare/sst.config.ts#L3"
+						}
+					],
+					"type": {
+						"type": "reference",
+						"target": {
+							"sourceFileName": "",
+							"qualifiedName": "Config"
+						},
+						"name": "Config"
+					}
+				}
+			],
+			"groups": [
+				{
+					"title": "Variables",
+					"children": [
+						42
+					]
+				}
+			],
+			"sources": [
+				{
+					"fileName": "start-cloudflare/sst.config.ts",
+					"line": 1,
+					"character": 0,
+					"url": "https://github.com/sst/ion/blob/6c73ab3/examples/start-cloudflare/sst.config.ts#L1"
+				}
+			]
+		},
+		{
+			"id": 43,
+			"name": "start-nextjs/sst.config",
+			"variant": "declaration",
+			"kind": 2,
+			"flags": {},
+			"children": [
+				{
+					"id": 44,
+					"name": "default",
+					"variant": "declaration",
+					"kind": 32,
+					"flags": {},
+					"sources": [
+						{
+							"fileName": "start-nextjs/sst.config.ts",
+							"line": 3,
+							"character": 0,
+							"url": "https://github.com/sst/ion/blob/6c73ab3/examples/start-nextjs/sst.config.ts#L3"
+						}
+					],
+					"type": {
+						"type": "reference",
+						"target": {
+							"sourceFileName": "",
+							"qualifiedName": "Config"
+						},
+						"name": "Config"
+					}
+				}
+			],
+			"groups": [
+				{
+					"title": "Variables",
+					"children": [
+						44
+					]
+				}
+			],
+			"sources": [
+				{
+					"fileName": "start-nextjs/sst.config.ts",
+					"line": 1,
+					"character": 0,
+					"url": "https://github.com/sst/ion/blob/6c73ab3/examples/start-nextjs/sst.config.ts#L1"
+				}
+			]
+		},
+		{
+			"id": 45,
+			"name": "start-remix/sst.config",
+			"variant": "declaration",
+			"kind": 2,
+			"flags": {},
+			"children": [
+				{
+					"id": 46,
+					"name": "default",
+					"variant": "declaration",
+					"kind": 32,
+					"flags": {},
+					"sources": [
+						{
+							"fileName": "start-remix/sst.config.ts",
+							"line": 3,
+							"character": 0,
+							"url": "https://github.com/sst/ion/blob/6c73ab3/examples/start-remix/sst.config.ts#L3"
+						}
+					],
+					"type": {
+						"type": "reference",
+						"target": {
+							"sourceFileName": "",
+							"qualifiedName": "Config"
+						},
+						"name": "Config"
+					}
+				}
+			],
+			"groups": [
+				{
+					"title": "Variables",
+					"children": [
+						46
+					]
+				}
+			],
+			"sources": [
+				{
+					"fileName": "start-remix/sst.config.ts",
+					"line": 1,
+					"character": 0,
+					"url": "https://github.com/sst/ion/blob/6c73ab3/examples/start-remix/sst.config.ts#L1"
+				}
+			]
+		}
+	],
+	"groups": [
+		{
+			"title": "Modules",
+			"children": [
+				1,
+				3,
+				5,
+				7,
+				9,
+				11,
+				13,
+				15,
+				17,
+				19,
+				21,
+				23,
+				25,
+				27,
+				29,
+				31,
+				33,
+				35,
+				37,
+				39,
+				41,
+				43,
+				45
+			]
+		}
+	],
+	"packageName": "ion",
+	"readme": [
+		{
+			"kind": "text",
+			"text": "# ❍\n\nIon is a new engine for deploying SST apps. It uses Pulumi and Terraform, as opposed to CDK and CloudFormation. [Read the full announcement here](https://sst.dev/blog/moving-away-from-cdk.html).\n\n- **10x faster** deploys\n- Native **multi-region** support\n- No more cyclical dependencies\n- No stacks or stack resource limits\n- No CDK or npm package conflicts\n- Native support for **non-AWS** providers\n\n_Note: Ion is generally available and recommended for new SST users. We are working on a migration path for SST v2 users._\n\n## Installation\n\n"
+		},
+		{
+			"kind": "code",
+			"text": "```\ncurl -fsSL https://ion.sst.dev/install | bash\n```"
+		},
+		{
+			"kind": "text",
+			"text": "\n\nTo use a package manager, [check out our docs](https://ion.sst.dev/docs/reference/cli/).\n\n#### Manually\n\nDownload the pre-compiled binaries from the [releases](https://github.com/sst/ion/releases/latest) page and copy to the desired location.\n\n## Get Started\n\nGet started with your favorite framework:\n\n- [Next.js](https://ion.sst.dev/docs/start/nextjs)\n- [Remix](https://ion.sst.dev/docs/start/remix)\n- [Astro](https://ion.sst.dev/docs/start/astro)\n- [API](https://ion.sst.dev/docs/start/api)\n\n## Learn More\n\nLearn more about some of the key concepts:\n\n- [Live](https://ion.sst.dev/docs/live)\n- [Linking](https://ion.sst.dev/docs/linking)\n- [Console](https://ion.sst.dev/docs/console)\n- [Components](https://ion.sst.dev/docs/components)\n\n## Contributing\n\nHere's how you can contribute:\n\n- Help us improve our docs\n- Find a bug? Open an issue\n- Feature request? Submit a PR \n\nJoin the [#ion channel](https://sst.dev/discord) to learn more.\n\n---\n\n**Join our community** [Discord](https://sst.dev/discord) | [YouTube](https://www.youtube.com/c/sst-dev) | [Twitter](https://twitter.com/SST_dev)"
+		}
+	],
+	"symbolIdMap": {
+		"1": {
+			"sourceFileName": "../examples/aws-apig-auth/sst.config.ts",
+			"qualifiedName": ""
+		},
+		"2": {
+			"sourceFileName": "../examples/aws-apig-auth/sst.config.ts",
+			"qualifiedName": "default"
+		},
+		"3": {
+			"sourceFileName": "../examples/aws-bucket-subscriber/sst.config.ts",
+			"qualifiedName": ""
+		},
+		"4": {
+			"sourceFileName": "../examples/aws-bucket-subscriber/sst.config.ts",
+			"qualifiedName": "default"
+		},
+		"5": {
+			"sourceFileName": "../examples/aws-cognito/sst.config.ts",
+			"qualifiedName": ""
+		},
+		"6": {
+			"sourceFileName": "../examples/aws-cognito/sst.config.ts",
+			"qualifiedName": "default"
+		},
+		"7": {
+			"sourceFileName": "../examples/aws-drizzle/sst.config.ts",
+			"qualifiedName": ""
+		},
+		"8": {
+			"sourceFileName": "../examples/aws-drizzle/sst.config.ts",
+			"qualifiedName": "default"
+		},
+		"9": {
+			"sourceFileName": "../examples/aws-dynamo/sst.config.ts",
+			"qualifiedName": ""
+		},
+		"10": {
+			"sourceFileName": "../examples/aws-dynamo/sst.config.ts",
+			"qualifiedName": "default"
+		},
+		"11": {
+			"sourceFileName": "../examples/aws-hono/sst.config.ts",
+			"qualifiedName": ""
+		},
+		"12": {
+			"sourceFileName": "../examples/aws-hono/sst.config.ts",
+			"qualifiedName": "default"
+		},
+		"13": {
+			"sourceFileName": "../examples/aws-queue/sst.config.ts",
+			"qualifiedName": ""
+		},
+		"14": {
+			"sourceFileName": "../examples/aws-queue/sst.config.ts",
+			"qualifiedName": "default"
+		},
+		"15": {
+			"sourceFileName": "../examples/aws-router/sst.config.ts",
+			"qualifiedName": ""
+		},
+		"16": {
+			"sourceFileName": "../examples/aws-router/sst.config.ts",
+			"qualifiedName": "default"
+		},
+		"17": {
+			"sourceFileName": "../examples/aws-static-site/sst.config.ts",
+			"qualifiedName": ""
+		},
+		"18": {
+			"sourceFileName": "../examples/aws-static-site/sst.config.ts",
+			"qualifiedName": "default"
+		},
+		"19": {
+			"sourceFileName": "../examples/aws-swift/sst.config.ts",
+			"qualifiedName": ""
+		},
+		"20": {
+			"sourceFileName": "../examples/aws-swift/sst.config.ts",
+			"qualifiedName": "default"
+		},
+		"21": {
+			"sourceFileName": "../examples/aws-topic/sst.config.ts",
+			"qualifiedName": ""
+		},
+		"22": {
+			"sourceFileName": "../examples/aws-topic/sst.config.ts",
+			"qualifiedName": "default"
+		},
+		"23": {
+			"sourceFileName": "../examples/aws-vector/sst.config.ts",
+			"qualifiedName": ""
+		},
+		"24": {
+			"sourceFileName": "../examples/aws-vector/sst.config.ts",
+			"qualifiedName": "default"
+		},
+		"25": {
+			"sourceFileName": "../examples/aws-vite/sst.config.ts",
+			"qualifiedName": ""
+		},
+		"26": {
+			"sourceFileName": "../examples/aws-vite/sst.config.ts",
+			"qualifiedName": "default"
+		},
+		"27": {
+			"sourceFileName": "../examples/base-ts/sst.config.ts",
+			"qualifiedName": ""
+		},
+		"28": {
+			"sourceFileName": "../examples/base-ts/sst.config.ts",
+			"qualifiedName": "default"
+		},
+		"29": {
+			"sourceFileName": "../examples/cloudflare-d1/sst.config.ts",
+			"qualifiedName": ""
+		},
+		"30": {
+			"sourceFileName": "../examples/cloudflare-d1/sst.config.ts",
+			"qualifiedName": "default"
+		},
+		"31": {
+			"sourceFileName": "../examples/cloudflare-remix/sst.config.ts",
+			"qualifiedName": ""
+		},
+		"32": {
+			"sourceFileName": "../examples/cloudflare-remix/sst.config.ts",
+			"qualifiedName": "default"
+		},
+		"33": {
+			"sourceFileName": "../examples/cloudflare-static-site/sst.config.ts",
+			"qualifiedName": ""
+		},
+		"34": {
+			"sourceFileName": "../examples/cloudflare-static-site/sst.config.ts",
+			"qualifiedName": "default"
+		},
+		"35": {
+			"sourceFileName": "../examples/cloudflare-vite/sst.config.ts",
+			"qualifiedName": ""
+		},
+		"36": {
+			"sourceFileName": "../examples/cloudflare-vite/sst.config.ts",
+			"qualifiedName": "default"
+		},
+		"37": {
+			"sourceFileName": "../examples/start-api/sst.config.ts",
+			"qualifiedName": ""
+		},
+		"38": {
+			"sourceFileName": "../examples/start-api/sst.config.ts",
+			"qualifiedName": "default"
+		},
+		"39": {
+			"sourceFileName": "../examples/start-astro/sst.config.ts",
+			"qualifiedName": ""
+		},
+		"40": {
+			"sourceFileName": "../examples/start-astro/sst.config.ts",
+			"qualifiedName": "default"
+		},
+		"41": {
+			"sourceFileName": "../examples/start-cloudflare/sst.config.ts",
+			"qualifiedName": ""
+		},
+		"42": {
+			"sourceFileName": "../examples/start-cloudflare/sst.config.ts",
+			"qualifiedName": "default"
+		},
+		"43": {
+			"sourceFileName": "../examples/start-nextjs/sst.config.ts",
+			"qualifiedName": ""
+		},
+		"44": {
+			"sourceFileName": "../examples/start-nextjs/sst.config.ts",
+			"qualifiedName": "default"
+		},
+		"45": {
+			"sourceFileName": "../examples/start-remix/sst.config.ts",
+			"qualifiedName": ""
+		},
+		"46": {
+			"sourceFileName": "../examples/start-remix/sst.config.ts",
+			"qualifiedName": "default"
+		}
+	}
+}

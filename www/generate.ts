@@ -1,6 +1,7 @@
 import * as path from "path";
 import * as fs from "fs/promises";
 import * as TypeDoc from "typedoc";
+import { build } from "./.sst/platform/src/runtime/node";
 
 type CliCommand = {
   name: string;
@@ -28,11 +29,45 @@ function renderSourceMessage(source: string) {
   return [``, `{/* DO NOT EDIT. AUTO-GENERATED FROM ${source} */}`];
 }
 
+function renderImports(outputFilePath: string) {
+  const relativePath = path.relative(outputFilePath, "src");
+  return [
+    ``,
+    `import Segment from '${relativePath}/src/components/tsdoc/Segment.astro';`,
+    `import Section from '${relativePath}/src/components/tsdoc/Section.astro';`,
+    `import NestedTitle from '${relativePath}/src/components/tsdoc/NestedTitle.astro';`,
+    `import InlineSection from '${relativePath}/src/components/tsdoc/InlineSection.astro';`,
+    "",
+    '<div class="tsdoc">',
+  ];
+}
+
+function renderExampleImports(outputFilePath: string) {
+  const relativePath = path.relative(outputFilePath, "src");
+  return [
+    ``,
+    `import Segment from '${relativePath}/src/components/tsdoc/Segment.astro';`,
+    `import Section from '${relativePath}/src/components/tsdoc/Section.astro';`,
+    `import NestedTitle from '${relativePath}/src/components/tsdoc/NestedTitle.astro';`,
+    `import InlineSection from '${relativePath}/src/components/tsdoc/InlineSection.astro';`,
+    "",
+  ];
+}
+
+function renderTdComment(parts: TypeDoc.CommentDisplayPart[]) {
+  return parts.map((part) => part.text).join("");
+}
+
+function renderFooter() {
+  return ["</div>"];
+}
+
 try {
   await configureLogger();
   await patchCode();
-  if ((cmd ?? "tsdoc") === "tsdoc") await generateTsDoc();
-  if ((cmd ?? "cli") === "cli") await generateCliDoc();
+  if (!cmd || cmd === "components") await generateComponentsDoc();
+  if (!cmd || cmd === "cli") await generateCliDoc();
+  if (!cmd || cmd === "examples") await generateExamplesDocs();
 } finally {
   await restoreCode();
 }
@@ -47,11 +82,11 @@ async function generateCliDoc() {
     [
       renderCliHeader(),
       renderSourceMessage("cmd/sst/main.go"),
-      renderCliImports(),
+      renderImports(outputFilePath),
       renderCliAbout(),
       renderCliGlobalFlags(),
       renderCliCommands(),
-      renderCliFooter(),
+      renderFooter(),
     ]
       .flat()
       .join("\n")
@@ -63,19 +98,6 @@ async function generateCliDoc() {
       `title: CLI`,
       `description: Reference doc for the \`sst\` CLI.`,
       `---`,
-    ];
-  }
-
-  function renderCliImports() {
-    const relativePath = path.relative(outputFilePath, "src");
-    return [
-      ``,
-      `import Segment from '${relativePath}/src/components/tsdoc/Segment.astro';`,
-      `import Section from '${relativePath}/src/components/tsdoc/Section.astro';`,
-      `import NestedTitle from '${relativePath}/src/components/tsdoc/NestedTitle.astro';`,
-      `import InlineSection from '${relativePath}/src/components/tsdoc/InlineSection.astro';`,
-      "",
-      '<div class="tsdoc">',
     ];
   }
 
@@ -256,10 +278,6 @@ async function generateCliDoc() {
     return parts.join(" ");
   }
 
-  function renderCliFooter() {
-    return ["</div>"];
-  }
-
   function renderCliFlagType(type: CliCommand["flags"][number]["type"]) {
     return `<code class="primitive">${
       type === "bool" ? "boolean" : type
@@ -267,8 +285,43 @@ async function generateCliDoc() {
   }
 }
 
-async function generateTsDoc() {
-  const modules = await buildTsFiles();
+async function generateExamplesDocs() {
+  const modules = await buildExamples();
+  const outputFilePath = `src/content/docs/docs/examples.mdx`;
+  await fs.writeFile(
+    outputFilePath,
+    [
+      renderHeader(),
+      renderSourceMessage("examples/*/sst.config.ts"),
+      renderExampleImports(outputFilePath),
+      ...modules.map((module) => {
+        console.info(`Generating example ${module.name.split("/")[0]}...`);
+        return [
+          ``,
+          `<Section type="about">`,
+          renderTdComment(module.children![0].comment?.summary!),
+          `</Section>`,
+          ``,
+          `---`,
+        ];
+      }),
+    ]
+      .flat()
+      .join("\n")
+  );
+
+  function renderHeader() {
+    return [
+      `---`,
+      `title: Examples`,
+      `description: Examples for the SST.`,
+      `---`,
+    ];
+  }
+}
+
+async function generateComponentsDoc() {
+  const modules = await buildComponents();
   for (const module of modules) {
     console.info(`Generating ${module.name}...`);
     const sourceFile = module.sources![0].fileName;
@@ -282,7 +335,7 @@ async function generateTsDoc() {
       outputFileContent = [
         renderGlobalHeader(),
         renderSourceMessage("pkg/platform/src/global.d.ts"),
-        renderImports(),
+        renderImports(outputFilePath),
         renderAbout(),
         renderConfigVariables(),
         renderConfigFunctions(),
@@ -295,7 +348,7 @@ async function generateTsDoc() {
       outputFileContent = [
         renderConfigHeader(),
         renderSourceMessage(sourceFile),
-        renderImports(),
+        renderImports(outputFilePath),
         renderAbout(),
         renderInterfaces(),
         renderFooter(),
@@ -313,7 +366,7 @@ async function generateTsDoc() {
       outputFileContent = [
         renderComponentHeader(),
         renderSourceMessage(sourceFile),
-        renderImports(),
+        renderImports(outputFilePath),
         renderAbout(),
         renderConstructor(),
         renderMethods(),
@@ -350,19 +403,6 @@ async function generateTsDoc() {
         `title: Global`,
         `description: Reference doc for the Global \`$\` library.`,
         `---`,
-      ];
-    }
-
-    function renderImports() {
-      const relativePath = path.relative(outputFilePath, "src");
-      return [
-        ``,
-        `import Segment from '${relativePath}/src/components/tsdoc/Segment.astro';`,
-        `import Section from '${relativePath}/src/components/tsdoc/Section.astro';`,
-        `import NestedTitle from '${relativePath}/src/components/tsdoc/NestedTitle.astro';`,
-        `import InlineSection from '${relativePath}/src/components/tsdoc/InlineSection.astro';`,
-        "",
-        '<div class="tsdoc">',
       ];
     }
 
@@ -508,7 +548,7 @@ async function generateTsDoc() {
       lines.push(``, `<Section type="about">`);
 
       // description
-      lines.push(renderComment(comment.summary));
+      lines.push(renderTdComment(comment.summary));
 
       // examples
       const examples = comment.blockTags.filter(
@@ -517,7 +557,7 @@ async function generateTsDoc() {
       if (examples.length) {
         lines.push(
           ``,
-          ...examples.map((example) => renderComment(example.content))
+          ...examples.map((example) => renderTdComment(example.content))
         );
       }
 
@@ -729,7 +769,7 @@ async function generateTsDoc() {
 
         // description
         if (int.comment?.summary) {
-          lines.push(``, renderComment(int.comment?.summary!));
+          lines.push(``, renderTdComment(int.comment?.summary!));
         }
 
         // props
@@ -812,10 +852,6 @@ async function generateTsDoc() {
       return lines;
     }
 
-    function renderFooter() {
-      return ["</div>"];
-    }
-
     function renderName(prop: TypeDoc.DeclarationReflection) {
       return `${prop.name}${prop.flags.isOptional ? "?" : ""}`;
     }
@@ -846,7 +882,7 @@ async function generateTsDoc() {
         | TypeDoc.SignatureReflection
     ) {
       if (!prop.comment?.summary) return [];
-      return [renderComment(prop.comment?.summary)];
+      return [renderTdComment(prop.comment?.summary)];
     }
 
     function renderDefaultTag(prop: TypeDoc.DeclarationReflection) {
@@ -864,7 +900,7 @@ async function generateTsDoc() {
               type: "intrinsic",
               name: defaultTag.content[0].text.replace(/`/g, ""),
             } as TypeDoc.SomeType)}`
-          : `**Default** ${renderComment(defaultTag.content)}`,
+          : `**Default** ${renderTdComment(defaultTag.content)}`,
         `</InlineSection>`,
       ];
     }
@@ -912,7 +948,7 @@ async function generateTsDoc() {
     ) {
       return (prop.comment?.blockTags ?? [])
         .filter((tag) => tag.tag === "@example")
-        .flatMap((tag) => renderComment(tag.content));
+        .flatMap((tag) => renderTdComment(tag.content));
     }
 
     function renderSignature(signature: TypeDoc.SignatureReflection) {
@@ -920,10 +956,6 @@ async function generateTsDoc() {
         .map(renderSignatureArg)
         .join(", ");
       return `${signature.name}(${parameters})`;
-    }
-
-    function renderComment(parts: TypeDoc.CommentDisplayPart[]) {
-      return parts.map((part) => part.text).join("");
     }
 
     function renderType(type: TypeDoc.SomeType): string {
@@ -1343,7 +1375,7 @@ async function generateTsDoc() {
   }
 }
 
-async function buildTsFiles() {
+async function buildComponents() {
   // Generate project reflection
   const app = await TypeDoc.Application.bootstrap({
     // Ignore type errors caused by patching `Input<>`.
@@ -1387,6 +1419,33 @@ async function buildTsFiles() {
   // Return classes
   return project.children!.filter(
     (c) => c.kind === TypeDoc.ReflectionKind.Module
+  );
+}
+
+async function buildExamples() {
+  // Generate project reflection
+  const app = await TypeDoc.Application.bootstrap({
+    // Ignore type errors caused by patching `Input<>`.
+    skipErrorChecking: true,
+    // Disable parsing @default tags as ```ts block code.
+    jsDocCompatibility: {
+      defaultTag: false,
+    },
+    entryPoints: ["../examples/*/sst.config.ts"],
+    tsconfig: "../examples/tsconfig.json",
+  });
+
+  const project = await app.convert();
+  if (!project) throw new Error("Failed to convert project");
+
+  // Generate JSON (generated for debugging purposes)
+  await app.generateJson(project, "examples-doc.json");
+
+  return project.children!.filter(
+    (c) =>
+      c.kind === TypeDoc.ReflectionKind.Module &&
+      c.children?.length === 1 &&
+      c.children[0].comment
   );
 }
 
