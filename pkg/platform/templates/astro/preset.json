@@ -4,21 +4,24 @@
       "type": "copy"
     },
     {
+      "type": "npm",
+      "properties": {
+        "file": "package.json",
+        "package": "sst",
+        "version": "ion"
+      }
+    },
+    {
+      "type": "npm",
+      "properties": {
+        "file": "package.json",
+        "package": "astro-sst"
+      }
+    },
+    {
       "type": "patch",
       "properties": {
         "file": "package.json",
-        "patch": [
-          {
-            "op": "add",
-            "path": "/dependencies/sst",
-            "value": "^3.0.1"
-          },
-          {
-            "op": "add",
-            "path": "/dependencies/astro-sst",
-            "value": "^2.41.2"
-          }
-        ],
         "regex": [
           {
             "find": "\"dev\":\\s*\"([^\"]+)\"",

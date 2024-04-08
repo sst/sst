@@ -15,7 +15,12 @@ for (const [key, value] of Object.entries(env)) {
 }
 
 export function fromCloudflareEnv(input: any) {
-  for (const [key, value] of Object.entries(input)) {
+  for (let [key, value] of Object.entries(input)) {
+    if (typeof value === "string") {
+      try {
+        value = JSON.parse(value);
+      } catch {}
+    }
     raw[key] = value;
   }
 }

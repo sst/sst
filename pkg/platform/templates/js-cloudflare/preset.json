@@ -4,21 +4,19 @@
       "type": "copy"
     },
     {
-      "type": "patch",
+      "type": "npm",
       "properties": {
         "file": "package.json",
-        "patch": [
-          {
-            "op": "add",
-            "path": "/dependencies/sst",
-            "value": "^3.0.4"
-          },
-          {
-            "op": "add",
-            "path": "/devDependencies/@cloudflare/workers-types",
-            "value": "^3.0.4"
-          }
-        ]
+        "package": "sst",
+        "version": "ion"
+      }
+    },
+    {
+      "type": "npm",
+      "properties": {
+        "file": "package.json",
+        "package": "@cloudflare/workers-types",
+        "dev": true
       }
     }
   ]

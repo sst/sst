@@ -6,12 +6,14 @@ import (
 	"io"
 	"io/fs"
 	"log/slog"
+	"net/http"
 	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
 	"text/template"
 
+	"github.com/kkqy/gokvpairs"
 	"github.com/sst/ion/pkg/platform"
 	"github.com/tailscale/hujson"
 )
@@ -22,6 +24,13 @@ type step struct {
 }
 
 type copyStep struct {
+}
+
+type npmStep struct {
+	Package string `json:"package"`
+	Version string `json:"version"`
+	File    string `json:"file"`
+	Dev     bool   `json:"dev"`
 }
 
 type patchStep struct {
@@ -43,6 +52,7 @@ type preset struct {
 }
 
 var ErrConfigExists = fmt.Errorf("sst.config.ts already exists")
+var ErrPackageJsonInvalid = fmt.Errorf("package.json is invalid")
 
 func Create(templateName string, home string) error {
 	gitignoreSteps := []gitignoreStep{
@@ -65,7 +75,7 @@ func Create(templateName string, home string) error {
 
 	presetBytes, err := platform.Templates.ReadFile(filepath.Join("templates", templateName, "preset.json"))
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to read preset.json: %w", err)
 	}
 	var preset preset
 	err = json.Unmarshal(presetBytes, &preset)
@@ -73,15 +83,77 @@ func Create(templateName string, home string) error {
 		return err
 	}
 
+	packageJsons := map[string]gokvpairs.KeyValuePairs[interface{}]{}
+
 	for _, step := range preset.Steps {
+		slog.Info("step", "type", step.Type)
 		switch step.Type {
+		case "npm":
+			var npmStep npmStep
+			err = json.Unmarshal(step.Properties, &npmStep)
+			if err != nil {
+				return err
+			}
+			slog.Info("installing npm package", "package", npmStep.Package, "version", npmStep.Version)
+			packageJson := packageJsons[npmStep.File]
+			if packageJson == nil {
+				slog.Info("reading package.json", "file", npmStep.File)
+				f, err := os.Open(npmStep.File)
+				if err != nil {
+					return err
+				}
+				err = json.NewDecoder(f).Decode(&packageJson)
+				if err != nil {
+					return err
+				}
+				packageJsons[npmStep.File] = packageJson
+			}
+
+			field := "dependencies"
+			if npmStep.Dev {
+				field = "devDependencies"
+			}
+			var target map[string]interface{}
+			for _, item := range packageJson {
+				if item.Key == field {
+					target = item.Value.(map[string]interface{})
+				}
+			}
+			if target == nil {
+				target = map[string]interface{}{}
+				packageJson = append(packageJson, gokvpairs.KeyValuePair[interface{}]{Key: field, Value: target})
+				packageJsons[npmStep.File] = packageJson
+			}
+
+			version := npmStep.Version
+			if version == "" {
+				slog.Info("fetching latest version", "package", npmStep.Package)
+				url := "https://registry.npmjs.org/" + npmStep.Package + "/latest"
+				resp, err := http.Get(url)
+				if err != nil {
+					return err
+				}
+				defer resp.Body.Close()
+
+				var data struct {
+					Version string `json:"version"`
+				}
+				err = json.NewDecoder(resp.Body).Decode(&data)
+				if err != nil {
+					return err
+				}
+				slog.Info("latest version", "version", data.Version)
+				version = data.Version
+			}
+			target[npmStep.Package] = version
+
 		case "patch":
 			var patchStep patchStep
 			err = json.Unmarshal(step.Properties, &patchStep)
 			if err != nil {
 				return err
 			}
-			slog.Info("patching", "file", patchStep.File)
+			slog.Info("patching", "file", patchStep.File, "patch", patchStep.Patch)
 
 			b, err := os.ReadFile(patchStep.File)
 			if err != nil {
@@ -178,6 +250,17 @@ func Create(templateName string, home string) error {
 			}
 			slog.Info("handling .gitignore", "section", gitignoreStep.Name)
 			gitignoreSteps = append(gitignoreSteps, gitignoreStep)
+		}
+	}
+
+	for file, content := range packageJsons {
+		bytes, err := json.MarshalIndent(content, "", "  ")
+		if err != nil {
+			return err
+		}
+		err = os.WriteFile(file, bytes, 0666)
+		if err != nil {
+			return err
 		}
 	}
 

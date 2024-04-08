@@ -17,16 +17,17 @@
       }
     },
     {
+      "type": "npm",
+      "properties": {
+        "file": "package.json",
+        "package": "sst",
+        "version": "ion"
+      }
+    },
+    {
       "type": "patch",
       "properties": {
         "file": "package.json",
-        "patch": [
-          {
-            "op": "add",
-            "path": "/dependencies/sst",
-            "value": "^3.0.1"
-          }
-        ],
         "regex": [
           {
             "find": "\"dev\":\\s*\"([^\"]+)\"",

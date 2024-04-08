@@ -1,5 +1,6 @@
 import { SignJWT, importPKCS8, importSPKI, jwtVerify } from "jose";
 import { Resource } from "../resource.js";
+import process from "node:process";
 
 export type SessionBuilder = ReturnType<typeof createSessionBuilder>;
 

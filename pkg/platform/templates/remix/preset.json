@@ -4,22 +4,11 @@
       "type": "copy"
     },
     {
-      "type": "patch",
+      "type": "npm",
       "properties": {
         "file": "package.json",
-        "patch": [
-          {
-            "op": "add",
-            "path": "/dependencies/sst",
-            "value": "^3.0.1"
-          }
-        ],
-        "regex": [
-          {
-            "find": "\"dev\":\\s*\"([^\"]+)\"",
-            "replace": "\"dev\": \"sst dev $1\""
-          }
-        ]
+        "package": "sst",
+        "version": "ion"
       }
     }
   ]
