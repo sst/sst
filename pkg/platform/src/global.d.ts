@@ -49,7 +49,7 @@ interface $APP
      * The providers currently being used in the app.
      */
     providers: App["providers"];
-  }> { }
+  }> {}
 
 declare global {
   // @ts-expect-error
@@ -198,7 +198,7 @@ declare global {
   export const $app: Simplify<$APP>;
 
   /**
-   * Register a function that'll be called when a component of the given type is about 
+   * Register a function that'll be called when a component of the given type is about
    * to be created. This is useful for setting global defaults for your components.
    *
    * :::note
@@ -218,14 +218,14 @@ declare global {
    * })
    * ```
    *
-   * Here, `args` and `opts` are what you'd pass to the `Function` component. Recall the 
+   * Here, `args` and `opts` are what you'd pass to the `Function` component. Recall the
    * signature of the `Function` component:
    *
    * ```ts
    * new sst.aws.Function(name: string, args: FunctionArgs, opts?: pulumi.ComponentResourceOptions)
    * ```
    */
-  export const $transform: typeof import("./components/transform").$transform;
+  export const $transform: typeof import("./components/component").$transform;
 
   /**
    * Returns `true` if the app is running in `sst dev`.
