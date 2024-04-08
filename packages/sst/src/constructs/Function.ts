@@ -79,6 +79,7 @@ const supportedRuntimes = {
   "python3.12": CDKRuntime.PYTHON_3_12,
   "dotnetcore3.1": CDKRuntime.DOTNET_CORE_3_1,
   dotnet6: CDKRuntime.DOTNET_6,
+  dotnet8: CDKRuntime.DOTNET_8,
   java8: CDKRuntime.JAVA_8,
   java11: CDKRuntime.JAVA_11,
   java17: CDKRuntime.JAVA_17,
