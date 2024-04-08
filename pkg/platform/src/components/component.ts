@@ -38,6 +38,10 @@ export class Component extends ComponentResource {
     args?: Inputs,
     opts?: ComponentResourceOptions,
   ) {
+    const transforms = ComponentTransforms.get(type) ?? [];
+    for (const transform of transforms) {
+      transform({ props: args, opts });
+    }
     super(type, name, args, {
       transformations: [
         (args) => {
@@ -155,8 +159,35 @@ export class Component extends ComponentResource {
             opts: args.opts,
           };
         },
+        ...(opts?.transformations ?? []),
       ],
       ...opts,
     });
   }
+}
+
+const ComponentTransforms = new Map<string, any[]>();
+export function $transform<T, Args, Options>(
+  resource: { new (name: string, args: Args, opts?: Options): T },
+  cb: (args: Args, opts: Options) => void,
+) {
+  // @ts-expect-error
+  const type = resource.__pulumiType;
+  if (type.startsWith("sst:")) {
+    let transforms = ComponentTransforms.get(type);
+    if (!transforms) {
+      transforms = [];
+      ComponentTransforms.set(type, transforms);
+    }
+    transforms.push((input) => {
+      cb(input.props, input.opts);
+      return input;
+    });
+    return;
+  }
+  runtime.registerStackTransformation((input) => {
+    if (input.type !== type) return;
+    cb(input.props as any, input.opts as any);
+    return input;
+  });
 }
