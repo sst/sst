@@ -806,6 +806,7 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
           distribution: {
             // these values can be overwritten
             defaultRootObject: "",
+            errorResponses: plan.errorResponses,
             // override props.
             ...cdk?.distribution,
             // these values can NOT be overwritten
@@ -821,7 +822,6 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
                 }, {} as Record<string, BehaviorOptions>),
               ...(cdk?.distribution?.additionalBehaviors || {}),
             },
-            errorResponses: plan.errorResponses,
           },
         },
       });
