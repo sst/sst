@@ -1,7 +1,6 @@
 import * as path from "path";
 import * as fs from "fs/promises";
 import * as TypeDoc from "typedoc";
-import { build } from "./.sst/platform/src/runtime/node";
 
 type CliCommand = {
   name: string;
@@ -292,7 +291,7 @@ async function generateExamplesDocs() {
     outputFilePath,
     [
       renderHeader(),
-      renderSourceMessage("examples/*/sst.config.ts"),
+      renderSourceMessage("examples"),
       renderExampleImports(outputFilePath),
       ...modules.map((module) => {
         console.info(`Generating example ${module.name.split("/")[0]}...`);
@@ -1414,7 +1413,7 @@ async function buildComponents() {
   if (!project) throw new Error("Failed to convert project");
 
   // Generate JSON (generated for debugging purposes)
-  await app.generateJson(project, "ts-doc.json");
+  await app.generateJson(project, "components-doc.json");
 
   // Return classes
   return project.children!.filter(
