@@ -243,16 +243,22 @@ export interface Config {
    *
    * @example
    *
-   * This'll create an S3 Bucket and display its name.
+   * For exmaple, here we return the name of the bucket we created.
    *
    * ```ts
    * async run() {
    *   const bucket = new sst.aws.Bucket("MyBucket");
    *
    *   return {
-   *     bucketName: bucket.name
+   *     bucket: bucket.name
    *   };
    * }
+   * ```
+   *
+   * This will display the following in the CLI.
+   *
+   * ```bash frame=\"none\"
+   * buckeet: bucket-jOaikGu4rla
    * ```
    */
   run(): Promise<Record<string, any> | void>;
