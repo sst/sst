@@ -84,17 +84,17 @@ Each component takes a set of args that allow you to configure it. These args ar
 
 Most of these args are optional, meaning that most components need very little configuration to get started. Typically, the most common configuration options are lifted to the top-level. To further configure the component, you'll need to use the `transform` prop.
 
-:::tip
-You can completely configure a component using its args and the `transform` prop.
-:::
-
 Args usually take primitive types. However, they also take a special version of a primitive type. It'll look something like _`Input<string>`_. We'll look at this in detail below.
 
 ---
 
-### Transform
+## Transform
 
 Most components take a `transform` prop as a part of their constructor or methods. It's an object that takes callbacks that allow you to transform how that component's infrastructure is created.
+
+:::tip
+You can completely configure a component using the `transform` prop.
+:::
 
 For example, here's what the `transform` prop looks like for the [Function](/docs/component/aws/function#transform) component:
 
@@ -105,10 +105,10 @@ For example, here's what the `transform` prop looks like for the [Function](/doc
 The type for these callbacks is similar. Here's what the `role` callback looks like:
 
 ```ts
-RoleArgs | (args: RoleArgs => RoleArgs | void)
+RoleArgs | (args: RoleArgs => void)
 ```
 
-So this takes either a `RoleArgs` object or a function that takes `RoleArgs` and returns `RoleArgs` or `void`. Where [RoleArgs](https://www.pulumi.com/registry/packages/aws/api-docs/iam/role/#inputs) is the props for the role that's passed to Pulumi.
+So this takes either a `RoleArgs` object or a function that takes `RoleArgs`. Where [RoleArgs](https://www.pulumi.com/registry/packages/aws/api-docs/iam/role/#inputs) is the props for the role that's passed to Pulumi.
 
 This allows you to either:
 
@@ -124,19 +124,9 @@ This allows you to either:
   }
   ```
 
-- Pass in a callback that takes the current `RoleArgs` and returns a new `RoleArgs` object.
+  This is **merged** with the original `RoleArgs` that were going to be passed to the component.
 
-  ```ts
-  {
-    transform: {
-      role: (args) => ({
-        name: `${args.name}-MyRole`
-      })
-    }
-  }
-  ```
-
-- Or, pass in a callback that takes the current `RoleArgs` and mutate it.
+- Or, pass in a callback that takes the current `RoleArgs` and mutates it.
 
   ```ts
   {
@@ -147,6 +137,33 @@ This allows you to either:
     }
   }
   ```
+
+---
+
+### `$transform`
+
+Similar to the component transform, we have the global `$transform`. This allows you to transform how a component of a given type is created.
+
+:::tip
+Set global defaults for your components with `$transform`.
+:::
+
+For example, to set a default runtime for all function compoennts.
+
+```ts
+$transform(sst.aws.Function, (args, opts) => {
+  args.runtime = "nodejs18.x";
+})
+```
+
+Here, `args` and `opts` are what you'd pass to the `Function` component. Recall the 
+signature of the `Function` component:
+
+```ts
+new sst.aws.Function(name: string, args: FunctionArgs, opts?: pulumi.ComponentResourceOptions)
+```
+
+Read more about the global [`$transform`](/docs/reference/global/#transform).
 
 ---
 

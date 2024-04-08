@@ -49,7 +49,7 @@ interface $APP
      * The providers currently being used in the app.
      */
     providers: App["providers"];
-  }> {}
+  }> { }
 
 declare global {
   // @ts-expect-error
@@ -198,16 +198,31 @@ declare global {
   export const $app: Simplify<$APP>;
 
   /**
-   * Register a transformation function that will be called for each resource of the given type.
-   * Useful to set global defaults.
+   * Register a function that'll be called when a component of the given type is about 
+   * to be created. This is useful for setting global defaults for your components.
+   *
+   * :::note
+   * This function is only called for components that are created **after** the function is registered.
+   * :::
+   *
+   * The function takes the arguments and options that are being passed to the component,
+   * and can modify them.
    *
    * @example
-   * For example, to set a default runtime for all functions:
+   *
+   * For example, to set a default runtime for all function compoennts.
    *
    * ```ts
    * $transform(sst.aws.Function, (args, opts) => {
    *   args.runtime = "nodejs18.x";
    * })
+   * ```
+   *
+   * Here, `args` and `opts` are what you'd pass to the `Function` component. Recall the 
+   * signature of the `Function` component:
+   *
+   * ```ts
+   * new sst.aws.Function(name: string, args: FunctionArgs, opts?: pulumi.ComponentResourceOptions)
    * ```
    */
   export const $transform: typeof import("./components/transform").$transform;
