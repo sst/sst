@@ -2,7 +2,7 @@ import {
   ComponentResource,
   ComponentResourceOptions,
   Inputs,
-  interpolate,
+  runtime,
   output,
 } from "@pulumi/pulumi";
 import { prefixName } from "./naming.js";
@@ -179,7 +179,7 @@ export function $transform<T, Args, Options>(
       transforms = [];
       ComponentTransforms.set(type, transforms);
     }
-    transforms.push((input) => {
+    transforms.push((input: any) => {
       cb(input.props, input.opts);
       return input;
     });
