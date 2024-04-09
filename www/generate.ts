@@ -343,7 +343,7 @@ async function generateExamplesDocs() {
     const start = lines.indexOf("  async run() {");
     const end = lines.lastIndexOf("  },");
     return [
-      "```ts",
+      '```ts title="sst.config.ts"',
       ...lines.slice(start + 1, end).map((l) => l.substring(4)),
       "```",
     ];

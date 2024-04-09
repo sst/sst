@@ -27,7 +27,7 @@ Make sure to document the `sst.config.ts` in your example.
 ## API Gateway auth
 
 Enable IAM and JWT authorizers for API Gateway routes.
-```ts
+```ts title="sst.config.ts"
 const api = new sst.aws.ApiGatewayV2("MyApi", {
   domain: {
     domainName: "api.ion.sst.sh",
@@ -61,7 +61,7 @@ View the [full example](https://github.com/sst/ion/tree/dev/examples/aws-apig-au
 ## Bucket notifications
 
 Create an S3 bucket and subscribe to its events with a function.
-```ts
+```ts title="sst.config.ts"
 const bucket = new sst.aws.Bucket("MyBucket");
 bucket.subscribe("subscriber.handler", {
   events: ["s3:ObjectCreated:*"],
@@ -79,7 +79,7 @@ View the [full example](https://github.com/sst/ion/tree/dev/examples/aws-bucket-
 ## DynamoDB streams
 
 Create a DynamoDB table, enable streams, and subscribe to it with a function.
-```ts
+```ts title="sst.config.ts"
 const table = new sst.aws.Dynamo("MyTable", {
   fields: {
     id: "string",
@@ -122,7 +122,7 @@ View the [full example](https://github.com/sst/ion/tree/dev/examples/aws-dynamo)
 You can use the `aws.getXXXXOutput()` provider functions to get info about the current
 AWS account.
 Learn more about [provider functions](/docs/providers/#functions).
-```ts
+```ts title="sst.config.ts"
 return {
   region: aws.getRegionOutput().name,
   account: aws.getCallerIdentityOutput({}).accountId,
@@ -136,7 +136,7 @@ View the [full example](https://github.com/sst/ion/tree/dev/examples/aws-info).
 ## Subscribe to queues
 
 Create an SQS queue, subscribe to it, and publish to it from a function.
-```ts
+```ts title="sst.config.ts"
 const queue = new sst.aws.Queue("MyQueue");
 queue.subscribe("subscriber.handler");
 
@@ -159,7 +159,7 @@ View the [full example](https://github.com/sst/ion/tree/dev/examples/aws-queue).
 ## Router and function URL
 
 Creates a router that routes all requests to a function with a URL.
-```ts
+```ts title="sst.config.ts"
 const api = new sst.aws.Function("MyApi", {
   handler: "api.handler",
   url: true,
@@ -181,7 +181,7 @@ View the [full example](https://github.com/sst/ion/tree/dev/examples/aws-router)
 ## Simple static site
 
 Deploy a simple HTML file as a static site with S3 and CloudFront.
-```ts
+```ts title="sst.config.ts"
 // Deploys the current directory as a static site
 new sst.aws.StaticSite("MySite");
 ```
@@ -199,7 +199,7 @@ Building this function requires Docker.
 :::
 
 Check out the README in the repo for more details.
-```ts
+```ts title="sst.config.ts"
 const swift = new sst.aws.Function("Swift", {
   runtime: "provided.al2023",
   architecture: process.arch === "arm64" ? "arm64" : "x86_64",
@@ -225,7 +225,7 @@ View the [full example](https://github.com/sst/ion/tree/dev/examples/aws-swift).
 ## Subscribe to topics
 
 Create an SNS topic, publish to it from a function, and subscribe to it with a function and a queue.
-```ts
+```ts title="sst.config.ts"
 const queue = new sst.aws.Queue("MyQueue");
 queue.subscribe("subscriber.handler");
 
@@ -255,7 +255,7 @@ Store and search for vector data using the Vector component. Includes a seeder A
 uses an LLM to generate embeddings for some movies and optionally their posters.
 
 Once seeded, you can call the search API to query the vector database.
-```ts
+```ts title="sst.config.ts"
 const vector = new sst.aws.Vector("MyVectorDB", {
   model: "text-embedding-ada-002",
   //model: "amazon.titan-embed-image-v1",
@@ -300,7 +300,7 @@ View the [full example](https://github.com/sst/ion/tree/dev/examples/aws-vector)
 ## React SPA with Vite
 
 Deploy a React single-page app (SPA) with Vite to S3 and CloudFront.
-```ts
+```ts title="sst.config.ts"
 new sst.aws.StaticSite("Web", {
   build: {
     command: "pnpm run build",
@@ -316,7 +316,7 @@ View the [full example](https://github.com/sst/ion/tree/dev/examples/aws-vite).
 ## Default function props
 
 Set default props for all the functions in your app using the global [`$transform`](/docs/reference/global/#transform).
-```ts
+```ts title="sst.config.ts"
 $transform(sst.aws.Function, (args) => {
   args.runtime = "nodejs14.x";
   args.environment = {
@@ -350,7 +350,7 @@ return {
 ```
 
 This example is used in our [API quickstart](/docs/start/api/).
-```ts
+```ts title="sst.config.ts"
 const bucket = new sst.aws.Bucket("MyBucket", {
   public: true,
 });
@@ -384,7 +384,7 @@ const url = await getSignedUrl(new S3Client({}), command);
 ```
 
 This example is used in our [Astro quickstart](/docs/start/astro/).
-```ts
+```ts title="sst.config.ts"
 const bucket = new sst.aws.Bucket("MyBucket", {
   public: true,
 });
@@ -412,7 +412,7 @@ await Resource.MyBucket.put(key, req.body, {
 ```
 
 This example is used in our [Cloudflare quickstart](/docs/start/cloudflare/).
-```ts
+```ts title="sst.config.ts"
 const bucket = new sst.cloudflare.Bucket("MyBucket");
 const worker = new sst.cloudflare.Worker("MyWorker", {
   handler: "./index.ts",
@@ -443,7 +443,7 @@ const url = await getSignedUrl(new S3Client({}), command);
 ```
 
 This example is used in our [Next.js quickstart](/docs/start/nextjs/).
-```ts
+```ts title="sst.config.ts"
 const bucket = new sst.aws.Bucket("MyBucket", {
   public: true,
 });
@@ -470,7 +470,7 @@ const url = await getSignedUrl(new S3Client({}), command);
 ```
 
 This example is used in our [Remix quickstart](/docs/start/remix/).
-```ts
+```ts title="sst.config.ts"
 const bucket = new sst.aws.Bucket("MyBucket", {
   public: true,
 });
