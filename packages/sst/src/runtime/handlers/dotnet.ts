@@ -128,7 +128,7 @@ export const useDotnetHandler = (): RuntimeHandler => {
       } catch (ex: any) {
         return {
           type: "error",
-          errors: [ex.stderr],
+          errors: [ex.stdout],
         };
       }
     },
