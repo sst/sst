@@ -1,5 +1,10 @@
 /// <reference path="./.sst/platform/config.d.ts" />
 
+/**
+ * ## Router and function URL
+ *
+ * Creates a router that routes all requests to a function with a URL.
+ */
 export default $config({
   app(input) {
     return {
@@ -21,7 +26,6 @@ export default $config({
       },
     });
     return {
-      api: api.url,
       router: router.url,
     };
   },

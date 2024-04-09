@@ -55,7 +55,7 @@ function renderExampleImports(outputFilePath: string) {
     `Below are a collection of example SST apps. These are available in the [\`examples/\`](${config.github}/tree/dev/examples) directory of the repo.`,
     "",
     ":::tip",
-    "This doc is best viewed through the site search or through the _AI_.",
+    "This doc is best viewed through the table of contents or through _Ask AI_.",
     ":::",
     "",
     "The descriptions for these examples are generated using the comments in the `sst.config.ts` of the app.",

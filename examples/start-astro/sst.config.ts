@@ -3,10 +3,19 @@
 /**
  * ## Astro site in AWS
  *
- * Deploys an Astro site and an S3 bucket for file uploads to AWS. It generates a presigned URL.
- * 
+ * Deploys an Astro site and an S3 bucket for file uploads to AWS. It generates a presigned URL
+ * to upload files to the bucket.
  *
- * This example is used in our [API quickstart](/docs/start/api/).
+ * ```astro title="src/pages/index.astro"
+ * const command = new PutObjectCommand({
+ *   Key: crypto.randomUUID(),
+ *   Bucket: Resource.MyBucket.name,
+ * });
+ *
+ * const url = await getSignedUrl(new S3Client({}), command);
+ * ```
+ *
+ * This example is used in our [Astro quickstart](/docs/start/astro/).
  */
 export default $config({
   app(input) {
