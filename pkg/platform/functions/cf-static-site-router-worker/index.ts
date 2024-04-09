@@ -58,9 +58,9 @@ export default {
       if (SST_ASSET_MANIFEST[filePath]) {
         headers.set("etag", SST_ASSET_MANIFEST[filePath]);
         headers.set("content-type", object.metadata.contentType);
-        headers.set("cache-controle", object.metadata.cacheControl);
+        headers.set("cache-control", object.metadata.cacheControl);
       }
-      const response = new Response(object.value, {
+      const response = new Response(base64ToArrayBuffer(object.value), {
         status,
         headers,
       });
@@ -71,3 +71,13 @@ export default {
     }
   },
 };
+
+function base64ToArrayBuffer(base64: any) {
+  const binaryString = atob(base64);
+  const len = binaryString.length;
+  const bytes = new Uint8Array(len);
+  for (let i = 0; i < len; i++) {
+    bytes[i] = binaryString.charCodeAt(i);
+  }
+  return bytes.buffer;
+}

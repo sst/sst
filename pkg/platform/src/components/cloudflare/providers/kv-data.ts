@@ -70,7 +70,10 @@ class Provider implements dynamic.ResourceProvider {
             }),
           );
           //formData.append("value", fs.createReadStream(entry.source));
-          formData.append("value", await fs.promises.readFile(entry.source));
+          formData.append(
+            "value",
+            await fs.promises.readFile(entry.source, "base64"),
+          );
           try {
             await cfFetch(
               `/accounts/${accountId}/storage/kv/namespaces/${namespaceId}/values/${entry.key}`,
