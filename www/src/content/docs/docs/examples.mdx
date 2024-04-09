@@ -27,6 +27,32 @@ Make sure to document the `sst.config.ts` in your example.
 ## API Gateway auth
 
 Enable IAM and JWT authorizers for API Gateway routes.
+```ts
+const api = new sst.aws.ApiGatewayV2("MyApi", {
+  domain: {
+    domainName: "api.ion.sst.sh",
+    path: "v1",
+  },
+});
+api.route("GET /", {
+  handler: "route.handler",
+});
+api.route("GET /foo", "route.handler", { auth: { iam: true } });
+api.route("GET /bar", "route.handler", {
+  auth: {
+    jwt: {
+      issuer:
+        "https://cognito-idp.us-east-1.amazonaws.com/us-east-1_Rq4d8zILG",
+      audiences: ["user@example.com"],
+    },
+  },
+});
+api.route("$default", "route.handler");
+
+return {
+  api: api.url,
+};
+```
 
 View the [full example](https://github.com/sst/ion/tree/dev/examples/aws-apig-auth).
 
@@ -35,6 +61,16 @@ View the [full example](https://github.com/sst/ion/tree/dev/examples/aws-apig-au
 ## Bucket notifications
 
 Create an S3 bucket and subscribe to its events with a function.
+```ts
+const bucket = new sst.aws.Bucket("MyBucket");
+bucket.subscribe("subscriber.handler", {
+  events: ["s3:ObjectCreated:*"],
+});
+
+return {
+  bucket: bucket.name,
+};
+```
 
 View the [full example](https://github.com/sst/ion/tree/dev/examples/aws-bucket-subscriber).
 
@@ -43,6 +79,39 @@ View the [full example](https://github.com/sst/ion/tree/dev/examples/aws-bucket-
 ## DynamoDB streams
 
 Create a DynamoDB table, enable streams, and subscribe to it with a function.
+```ts
+const table = new sst.aws.Dynamo("MyTable", {
+  fields: {
+    id: "string",
+  },
+  primaryIndex: { hashKey: "id" },
+  stream: "new-and-old-images",
+});
+table.subscribe("subscriber.handler", {
+  filters: [
+    {
+      dynamodb: {
+        NewImage: {
+          message: {
+            S: ["Hello"],
+          },
+        },
+      },
+    },
+  ],
+});
+
+const app = new sst.aws.Function("MyApp", {
+  handler: "publisher.handler",
+  link: [table],
+  url: true,
+});
+
+return {
+  app: app.url,
+  table: table.name,
+};
+```
 
 View the [full example](https://github.com/sst/ion/tree/dev/examples/aws-dynamo).
 
@@ -53,6 +122,12 @@ View the [full example](https://github.com/sst/ion/tree/dev/examples/aws-dynamo)
 You can use the `aws.getXXXXOutput()` provider functions to get info about the current
 AWS account.
 Learn more about [provider functions](/docs/providers/#functions).
+```ts
+return {
+  region: aws.getRegionOutput().name,
+  account: aws.getCallerIdentityOutput({}).accountId,
+};
+```
 
 View the [full example](https://github.com/sst/ion/tree/dev/examples/aws-info).
 
@@ -61,6 +136,21 @@ View the [full example](https://github.com/sst/ion/tree/dev/examples/aws-info).
 ## Subscribe to queues
 
 Create an SQS queue, subscribe to it, and publish to it from a function.
+```ts
+const queue = new sst.aws.Queue("MyQueue");
+queue.subscribe("subscriber.handler");
+
+const app = new sst.aws.Function("MyApp", {
+  handler: "publisher.handler",
+  link: [queue],
+  url: true,
+});
+
+return {
+  app: app.url,
+  queue: queue.url,
+};
+```
 
 View the [full example](https://github.com/sst/ion/tree/dev/examples/aws-queue).
 
@@ -69,6 +159,10 @@ View the [full example](https://github.com/sst/ion/tree/dev/examples/aws-queue).
 ## Simple static site
 
 Deploy a simple HTML file as a static site with S3 and CloudFront.
+```ts
+// Deploys the current directory as a static site
+new sst.aws.StaticSite("MySite");
+```
 
 View the [full example](https://github.com/sst/ion/tree/dev/examples/aws-static-site).
 
@@ -83,6 +177,24 @@ Building this function requires Docker.
 :::
 
 Check out the README in the repo for more details.
+```ts
+const swift = new sst.aws.Function("Swift", {
+  runtime: "provided.al2023",
+  architecture: process.arch === "arm64" ? "arm64" : "x86_64",
+  bundle: build("app"),
+  handler: "bootstrap",
+  url: true,
+});
+const router = new sst.aws.Router("SwiftRouter", {
+  routes: {
+    "/*": swift.url,
+  },
+  domain: "swift.dev.sst.dev",
+});
+return {
+  url: router.url,
+};
+```
 
 View the [full example](https://github.com/sst/ion/tree/dev/examples/aws-swift).
 
@@ -91,6 +203,25 @@ View the [full example](https://github.com/sst/ion/tree/dev/examples/aws-swift).
 ## Subscribe to topics
 
 Create an SNS topic, publish to it from a function, and subscribe to it with a function and a queue.
+```ts
+const queue = new sst.aws.Queue("MyQueue");
+queue.subscribe("subscriber.handler");
+
+const topic = new sst.aws.SnsTopic("MyTopic");
+topic.subscribe("subscriber.handler", {});
+topic.subscribeQueue(queue.arn);
+
+const app = new sst.aws.Function("MyApp", {
+  handler: "publisher.handler",
+  link: [topic],
+  url: true,
+});
+
+return {
+  app: app.url,
+  topic: topic.name,
+};
+```
 
 View the [full example](https://github.com/sst/ion/tree/dev/examples/aws-topic).
 
@@ -102,6 +233,43 @@ Store and search for vector data using the Vector component. Includes a seeder A
 uses an LLM to generate embeddings for some movies and optionally their posters.
 
 Once seeded, you can call the search API to query the vector database.
+```ts
+const vector = new sst.aws.Vector("MyVectorDB", {
+  model: "text-embedding-ada-002",
+  //model: "amazon.titan-embed-image-v1",
+  openAiApiKey: new sst.Secret("OpenAiApiKey").value,
+});
+
+const seeder = new sst.aws.Function("Seeder", {
+  handler: "index.seeder",
+  link: [vector],
+  copyFiles: [
+    { from: "iron-man.jpg", to: "iron-man.jpg" },
+    {
+      from: "black-widow.jpg",
+      to: "black-widow.jpg",
+    },
+    {
+      from: "spider-man.jpg",
+      to: "spider-man.jpg",
+    },
+    { from: "thor.jpg", to: "thor.jpg" },
+    {
+      from: "captain-america.jpg",
+      to: "captain-america.jpg",
+    },
+  ],
+  url: true,
+});
+
+const app = new sst.aws.Function("MyApp", {
+  handler: "index.app",
+  link: [vector],
+  url: true,
+});
+
+return { seeder: seeder.url, app: app.url };
+```
 
 View the [full example](https://github.com/sst/ion/tree/dev/examples/aws-vector).
 
@@ -110,6 +278,14 @@ View the [full example](https://github.com/sst/ion/tree/dev/examples/aws-vector)
 ## React SPA with Vite
 
 Deploy a React single-page app (SPA) with Vite to S3 and CloudFront.
+```ts
+new sst.aws.StaticSite("Web", {
+  build: {
+    command: "pnpm run build",
+    output: "dist",
+  },
+});
+```
 
 View the [full example](https://github.com/sst/ion/tree/dev/examples/aws-vite).
 
@@ -118,5 +294,16 @@ View the [full example](https://github.com/sst/ion/tree/dev/examples/aws-vite).
 ## Default function props
 
 Set default props for all the functions in your app using the global [`$transform`](/docs/reference/global/#transform).
+```ts
+$transform(sst.aws.Function, (args) => {
+  args.runtime = "nodejs14.x";
+  args.environment = {
+    FOO: "BAR",
+  };
+});
+new sst.aws.Function("MyFunction", {
+  handler: "index.ts",
+});
+```
 
 View the [full example](https://github.com/sst/ion/tree/dev/examples/sst-$transform).
