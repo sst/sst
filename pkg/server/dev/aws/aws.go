@@ -72,6 +72,8 @@ type FunctionLogEvent struct {
 	Line       string
 }
 
+var ErrIoTDelay = fmt.Errorf("iot not available")
+
 func Start(
 	ctx context.Context,
 	mux *http.ServeMux,
