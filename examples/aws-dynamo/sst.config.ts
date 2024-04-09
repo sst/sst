@@ -1,5 +1,10 @@
 /// <reference path="./.sst/platform/config.d.ts" />
 
+/**
+ * ## DynamoDB streams
+ *
+ * Create a DynamoDB table, enable streams, and subscribe to it with a function.
+ */
 export default $config({
   app(input) {
     return {

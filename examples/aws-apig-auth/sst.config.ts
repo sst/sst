@@ -1,5 +1,11 @@
 /// <reference path="./.sst/platform/config.d.ts" />
 
+/**
+ * ## API Gateway auth
+ *
+ * Enable IAM and JWT authorizers for API Gateway routes.
+ *
+ */
 export default $config({
   app(input) {
     return {

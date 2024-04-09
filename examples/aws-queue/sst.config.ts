@@ -1,5 +1,10 @@
 /// <reference path="./.sst/platform/config.d.ts" />
 
+/**
+ * ## Subscribe to queues
+ *
+ * Create an SQS queue, subscribe to it, and publish to it from a function.
+ */
 export default $config({
   app(input) {
     return {

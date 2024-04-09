@@ -1,5 +1,13 @@
 /// <reference path="./.sst/platform/config.d.ts" />
 
+/**
+ * ## Vector search
+ *
+ * Store and search for vector data using the Vector component. Includes a seeder API that
+ * uses an LLM to generate embeddings for some movies and optionally their posters.
+ *
+ * Once seeded, you can call the search API to query the vector database.
+ */
 export default $config({
   app(input) {
     return {

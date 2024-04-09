@@ -1,5 +1,10 @@
 /// <reference path="./.sst/platform/config.d.ts" />
 
+/**
+ * ## Subscribe to topics
+ *
+ * Create an SNS topic, publish to it from a function, and subscribe to it with a function and a queue.
+ */
 export default $config({
   app(input) {
     return {

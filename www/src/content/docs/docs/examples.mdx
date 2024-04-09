@@ -1,24 +1,122 @@
 ---
 title: Examples
-description: Examples for the SST.
+description: A collection of example apps for reference.
 ---
 
-{/* DO NOT EDIT. AUTO-GENERATED FROM examples */}
+{/* DO NOT EDIT. AUTO-GENERATED FROM "examples/" */}
 
 import Segment from '../../../../src/components/tsdoc/Segment.astro';
 import Section from '../../../../src/components/tsdoc/Section.astro';
 import NestedTitle from '../../../../src/components/tsdoc/NestedTitle.astro';
 import InlineSection from '../../../../src/components/tsdoc/InlineSection.astro';
 
+Below are a collection of example SST apps. These are available in the [`examples/`](https://github.com/sst/ion/tree/dev/examples) directory of the repo.
 
-<Section type="about">
-Here's how you create a Router on AWS.
+:::tip
+This doc is best viewed through the site search or through the _AI_.
+:::
 
-```ts
-console.log("foo");
-```
+The descriptions for these examples are generated using the comments in the `sst.config.ts` of the app.
 
-This uses `Function` and `Router` components.
-</Section>
+#### Contributing
+To contribute an example or to edit one, submit a PR to the [repo](https://github.com/sst/ion).
+Make sure to document the `sst.config.ts` in your example.
+
 
 ---
+## API Gateway auth
+
+Enable IAM and JWT authorizers for API Gateway routes.
+
+View the [full example](https://github.com/sst/ion/tree/dev/examples/aws-apig-auth).
+
+
+---
+## Bucket notifications
+
+Create an S3 bucket and subscribe to its events with a function.
+
+View the [full example](https://github.com/sst/ion/tree/dev/examples/aws-bucket-subscriber).
+
+
+---
+## DynamoDB streams
+
+Create a DynamoDB table, enable streams, and subscribe to it with a function.
+
+View the [full example](https://github.com/sst/ion/tree/dev/examples/aws-dynamo).
+
+
+---
+## Current AWS account
+
+You can use the `aws.getXXXXOutput()` provider functions to get info about the current
+AWS account.
+Learn more about [provider functions](/docs/providers/#functions).
+
+View the [full example](https://github.com/sst/ion/tree/dev/examples/aws-info).
+
+
+---
+## Subscribe to queues
+
+Create an SQS queue, subscribe to it, and publish to it from a function.
+
+View the [full example](https://github.com/sst/ion/tree/dev/examples/aws-queue).
+
+
+---
+## Simple static site
+
+Deploy a simple HTML file as a static site with S3 and CloudFront.
+
+View the [full example](https://github.com/sst/ion/tree/dev/examples/aws-static-site).
+
+
+---
+## Swift on Lambda
+
+Deploys a simple Swift applicaiton to Lambda using the `al2023` runtime.
+
+:::note
+Building this function requires Docker.
+:::
+
+Check out the README in the repo for more details.
+
+View the [full example](https://github.com/sst/ion/tree/dev/examples/aws-swift).
+
+
+---
+## Subscribe to topics
+
+Create an SNS topic, publish to it from a function, and subscribe to it with a function and a queue.
+
+View the [full example](https://github.com/sst/ion/tree/dev/examples/aws-topic).
+
+
+---
+## Vector search
+
+Store and search for vector data using the Vector component. Includes a seeder API that
+uses an LLM to generate embeddings for some movies and optionally their posters.
+
+Once seeded, you can call the search API to query the vector database.
+
+View the [full example](https://github.com/sst/ion/tree/dev/examples/aws-vector).
+
+
+---
+## React SPA with Vite
+
+Deploy a React single-page app (SPA) with Vite to S3 and CloudFront.
+
+View the [full example](https://github.com/sst/ion/tree/dev/examples/aws-vite).
+
+
+---
+## Default function props
+
+Set default props for all the functions in your app using the global [`$transform`](/docs/reference/global/#transform).
+
+View the [full example](https://github.com/sst/ion/tree/dev/examples/sst-$transform).

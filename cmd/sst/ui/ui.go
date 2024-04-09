@@ -331,7 +331,7 @@ func (u *UI) StackEvent(evt *project.StackEvent) {
 			color.New(color.FgGreen, color.Bold).Print(IconCheck)
 			if !u.hasProgress {
 				if u.mode == ProgressModeRemove {
-					color.New(color.FgWhite, color.Bold).Println("  Stage already removed")
+					color.New(color.FgWhite, color.Bold).Println("  No resources to remove")
 				} else {
 					color.New(color.FgWhite, color.Bold).Println("  No changes")
 				}

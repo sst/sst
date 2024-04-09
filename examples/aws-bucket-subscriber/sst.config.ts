@@ -1,5 +1,10 @@
 /// <reference path="./.sst/platform/config.d.ts" />
 
+/**
+ * ## Bucket notifications
+ *
+ * Create an S3 bucket and subscribe to its events with a function.
+ */
 export default $config({
   app(input) {
     return {

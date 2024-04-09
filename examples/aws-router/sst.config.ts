@@ -1,14 +1,5 @@
 /// <reference path="./.sst/platform/config.d.ts" />
 
-/**
- * Here's how you create a Router on AWS.
- *
- * ```ts
- * console.log("foo");
- * ```
- *
- * This uses `Function` and `Router` components.
- */
 export default $config({
   app(input) {
     return {

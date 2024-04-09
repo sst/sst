@@ -68,6 +68,7 @@ const sidebar = [
       { label: "Config", link: "/docs/reference/config/" },
     ],
   },
+  { label: "Examples", link: "/docs/examples/" },
   //  {
   //    label: "How to",
   //    items: [

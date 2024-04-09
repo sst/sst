@@ -2,6 +2,17 @@
 
 const swiftVersion = "5.10";
 
+/**
+ * ## Swift on Lambda
+ *
+ * Deploys a simple Swift applicaiton to Lambda using the `al2023` runtime.
+ *
+ * :::note
+ * Building this function requires Docker.
+ * :::
+ *
+ * Check out the README in the repo for more details.
+ */
 export default $config({
   app(input) {
     return {
@@ -17,7 +28,6 @@ export default $config({
       bundle: build("app"),
       handler: "bootstrap",
       url: true,
-      streaming: false,
     });
     const router = new sst.aws.Router("SwiftRouter", {
       routes: {

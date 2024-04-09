@@ -1,5 +1,10 @@
 /// <reference path="./.sst/platform/config.d.ts" />
 
+/**
+ * ## React SPA with Vite
+ *
+ * Deploy a React single-page app (SPA) with Vite to S3 and CloudFront.
+ */
 export default $config({
   app(input) {
     return {
