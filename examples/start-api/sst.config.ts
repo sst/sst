@@ -12,14 +12,14 @@ export default $config({
     const bucket = new sst.aws.Bucket("MyBucket", {
       public: true,
     });
-    new sst.aws.ApiGatewayV2("MyApi")
-      .route("GET /", {
-        link: [bucket],
-        handler: "index.upload",
-      })
-      .route("GET /latest", {
-        link: [bucket],
-        handler: "index.latest",
-      });
+    const api = new sst.aws.ApiGatewayV2("MyApi");
+    api.route("GET /", {
+      link: [bucket],
+      handler: "index.upload",
+    });
+    api.route("GET /latest", {
+      link: [bucket],
+      handler: "index.latest",
+    });
   },
 });
