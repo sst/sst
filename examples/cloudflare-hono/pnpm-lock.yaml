@@ -1,0 +1,17 @@
+lockfileVersion: '6.0'
+
+settings:
+  autoInstallPeers: true
+  excludeLinksFromLockfile: false
+
+dependencies:
+  hono:
+    specifier: ^4.1.3
+    version: 4.1.3
+
+packages:
+
+  /hono@4.1.3:
+    resolution: {integrity: sha512-V0I6qCw0gn2MA4LLtyXe6oD3/7ToeQf5Zv98o7uSuLuViQgWHJeYoYrZ4NbXhOtg4SaZjNJJm1+XuFB3LN+j6A==}
+    engines: {node: '>=16.0.0'}
+    dev: false

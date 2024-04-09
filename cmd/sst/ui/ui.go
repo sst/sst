@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"encoding/json"
 	"fmt"
 	"log/slog"
 	"net/url"
@@ -437,11 +438,24 @@ func (u *UI) Event(evt *server.Event) {
 	if evt.WorkerInvokedEvent != nil {
 		url, _ := url.Parse(evt.WorkerInvokedEvent.TailEvent.Event.Request.URL)
 		u.printEvent(u.getColor(evt.WorkerInvokedEvent.WorkerID), color.New(color.FgWhite, color.Bold).Sprintf("%-11s", "Invoke"), u.functionName(evt.WorkerInvokedEvent.WorkerID)+" "+evt.WorkerInvokedEvent.TailEvent.Event.Request.Method+" "+url.Path)
+
 		for _, log := range evt.WorkerInvokedEvent.TailEvent.Logs {
 			duration := time.UnixMilli(log.Timestamp).Sub(time.UnixMilli(evt.WorkerInvokedEvent.TailEvent.EventTimestamp))
 			formattedDuration := fmt.Sprintf("%.9s", fmt.Sprintf("+%v", duration))
-			for _, line := range log.Message {
-				u.printEvent(u.getColor(evt.WorkerInvokedEvent.WorkerID), formattedDuration, line)
+
+			line := []string{}
+			for _, part := range log.Message {
+				switch v := part.(type) {
+				case string:
+					line = append(line, v)
+				case map[string]interface{}:
+					data, _ := json.Marshal(v)
+					line = append(line, string(data))
+				}
+			}
+
+			for _, item := range strings.Split(strings.Join(line, " "), "\n") {
+				u.printEvent(u.getColor(evt.WorkerInvokedEvent.WorkerID), formattedDuration, item)
 			}
 		}
 		u.printEvent(u.getColor(evt.WorkerInvokedEvent.WorkerID), "Done", evt.WorkerInvokedEvent.TailEvent.Outcome)
@@ -491,7 +505,7 @@ func (u *UI) printEvent(barColor color.Attribute, label string, message string) 
 	if label != "" {
 		color.New(color.FgHiBlack).Print(fmt.Sprintf("%-11s", label), " ")
 	}
-	color.New(color.FgHiBlack).Print(strings.TrimSpace(message))
+	color.New(color.FgHiBlack).Print(message)
 	fmt.Println()
 	u.hasProgress = true
 }

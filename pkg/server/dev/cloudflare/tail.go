@@ -87,9 +87,9 @@ type TailEvent struct {
 	EventTimestamp int64 `json:"eventTimestamp"`
 	Exceptions     []any `json:"exceptions"`
 	Logs           []struct {
-		Level     string   `json:"level"`
-		Message   []string `json:"message"`
-		Timestamp int64    `json:"timestamp"`
+		Level     string        `json:"level"`
+		Message   []interface{} `json:"message"`
+		Timestamp int64         `json:"timestamp"`
 	} `json:"logs"`
 	Outcome       string `json:"outcome"`
 	ScriptName    string `json:"scriptName"`

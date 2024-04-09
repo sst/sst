@@ -92,9 +92,12 @@ func Start(ctx context.Context, proj *project.Project, args map[string]interface
 								msg := &TailEvent{}
 								err := conn.ReadJSON(msg)
 								if err != nil {
-									slog.Info("cloudflare tail message error", "error", err)
+									if websocket.IsCloseError(err) {
+										return
+									}
 									continue
 								}
+
 								bus.Publish(&WorkerInvokedEvent{
 									WorkerID:  warp.FunctionID,
 									TailEvent: msg,
