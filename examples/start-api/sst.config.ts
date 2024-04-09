@@ -1,5 +1,13 @@
 /// <reference path="./.sst/platform/config.d.ts" />
 
+/**
+ * ## Simple API in AWS
+ *
+ * A simple API built using API Gateway and Lambda. It has two routes, one generates a
+ * presigned URL to upload a file to an S3 bucket and the other returns the last uploaded file.
+ *
+ * This example is used in our [API quickstart](/docs/start/api/).
+ */
 export default $config({
   app(input) {
     return {
