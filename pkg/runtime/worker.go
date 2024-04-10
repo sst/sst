@@ -78,15 +78,31 @@ func (w *WorkerRuntime) Build(ctx context.Context, input *BuildInput) (*BuildOut
 			ResolveDir: filepath.Dir(abs),
 			Loader:     esbuild.LoaderTS,
 		},
-		External:          []string{"node:*"},
-		Conditions:        []string{"worker"},
-		Sourcemap:         esbuild.SourceMapNone,
-		Loader:            loader,
-		KeepNames:         true,
-		Bundle:            true,
-		Splitting:         build.Splitting,
-		Metafile:          true,
-		Write:             true,
+		External:   []string{"node:*"},
+		Conditions: []string{"worker"},
+		Sourcemap:  esbuild.SourceMapNone,
+		Loader:     loader,
+		KeepNames:  true,
+		Bundle:     true,
+		Splitting:  build.Splitting,
+		Metafile:   true,
+		Write:      true,
+		Plugins: []esbuild.Plugin{{
+			Name: "node-prefix",
+			Setup: func(build api.PluginBuild) {
+				build.OnResolve(esbuild.OnResolveOptions{
+					Filter: ".*",
+				}, func(ora esbuild.OnResolveArgs) (esbuild.OnResolveResult, error) {
+					if NODE_BUILTINS[ora.Path] {
+						return esbuild.OnResolveResult{
+							Path:     "node:" + ora.Path,
+							External: true,
+						}, nil
+					}
+					return esbuild.OnResolveResult{}, nil
+				})
+			},
+		}},
 		Outfile:           target,
 		MinifyWhitespace:  build.Minify,
 		MinifySyntax:      build.Minify,
@@ -164,4 +180,49 @@ func (r *WorkerRuntime) ShouldRebuild(functionID string, file string) bool {
 
 func (r *WorkerRuntime) Run(ctx context.Context, input *RunInput) (Worker, error) {
 	return nil, fmt.Errorf("not implemented")
+}
+
+var NODE_BUILTINS = map[string]bool{
+	"assert":              true,
+	"async_hooks":         true,
+	"buffer":              true,
+	"child_process":       true,
+	"cluster":             true,
+	"console":             true,
+	"constants":           true,
+	"crypto":              true,
+	"dgram":               true,
+	"diagnostics_channel": true,
+	"dns":                 true,
+	"domain":              true,
+	"events":              true,
+	"fs":                  true,
+	"http":                true,
+	"http2":               true,
+	"https":               true,
+	"inspector":           true,
+	"module":              true,
+	"net":                 true,
+	"os":                  true,
+	"path":                true,
+	"perf_hooks":          true,
+	"process":             true,
+	"punycode":            true,
+	"querystring":         true,
+	"readline":            true,
+	"repl":                true,
+	"stream":              true,
+	"string_decoder":      true,
+	"sys":                 true,
+	"timers":              true,
+	"tls":                 true,
+	"trace_events":        true,
+	"tty":                 true,
+	"url":                 true,
+	"util":                true,
+	"v8":                  true,
+	"vm":                  true,
+	"wasi":                true,
+	"worker_threads":      true,
+	"zlib":                true,
 }

@@ -39,6 +39,19 @@ export async function build(name: string, input: pulumi.Unwrap<WorkerArgs>) {
       resolveDir: parsed.dir,
     },
     platform: "node",
+    plugins: [
+      {
+        name: "node-prefix",
+        setup(build) {
+          build.onResolve({ filter: /.*/ }, (args) => {
+            if (BUILTIN_MODULES.has(args.path)) {
+              return { path: "node:" + args.path, external: true };
+            }
+          });
+        },
+      },
+    ],
+
     loader: build.loader,
     keepNames: true,
     bundle: true,
@@ -86,3 +99,48 @@ export async function build(name: string, input: pulumi.Unwrap<WorkerArgs>) {
     ctx.dispose();
   }
 }
+
+const BUILTIN_MODULES = new Set([
+  "assert",
+  "async_hooks",
+  "buffer",
+  "child_process",
+  "cluster",
+  "console",
+  "constants",
+  "crypto",
+  "dgram",
+  "diagnostics_channel",
+  "dns",
+  "domain",
+  "events",
+  "fs",
+  "http",
+  "http2",
+  "https",
+  "inspector",
+  "module",
+  "net",
+  "os",
+  "path",
+  "perf_hooks",
+  "process",
+  "punycode",
+  "querystring",
+  "readline",
+  "repl",
+  "stream",
+  "string_decoder",
+  "sys",
+  "timers",
+  "tls",
+  "trace_events",
+  "tty",
+  "url",
+  "util",
+  "v8",
+  "vm",
+  "wasi",
+  "worker_threads",
+  "zlib",
+]);
