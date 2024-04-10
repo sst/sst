@@ -66,8 +66,6 @@ export const OidcAdapter = /* @__PURE__ */ (config: OidcConfig) => {
         client,
       });
     });
-
-    throw new Error("Invalid auth request");
   } satisfies Adapter<{
     tokenset: TokenSet;
     client: BaseClient;

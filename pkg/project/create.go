@@ -168,9 +168,12 @@ func Create(templateName string, home string) error {
 			if err != nil {
 				return err
 			}
-			err = value.Patch(patchStep.Patch)
-			if err != nil {
-				return err
+
+			if string(patchStep.Patch) != "" {
+				err = value.Patch(patchStep.Patch)
+				if err != nil {
+					return err
+				}
 			}
 
 			packed := string(value.Pack())

@@ -1,0 +1,8 @@
+{
+  "name": "aws-auth",
+  "version": "0.0.0",
+  "type": "module",
+  "dependencies": {
+    "sst": "3.0.13"
+  }
+}

@@ -2,6 +2,7 @@ import { Adapter, AdapterOptions } from "./adapter/adapter.js";
 import { JWTPayload, SignJWT, importPKCS8, importSPKI, jwtVerify } from "jose";
 import { SessionBuilder } from "./session.js";
 import { Hono } from "hono/tiny";
+import { handle as awsHandle } from "hono/aws-lambda";
 import { Context } from "hono";
 import { deleteCookie, getCookie, setCookie } from "hono/cookie";
 
@@ -50,6 +51,8 @@ export type Prettify<T> = {
 
 import process from "node:process";
 import { Resource } from "../resource.js";
+
+export const aws = awsHandle;
 
 export function AuthHandler<
   Providers extends Record<string, Adapter<any>>,
