@@ -360,6 +360,25 @@ Optionally, set the secret in a specific stage.
 ```bash frame="none"
 sst secret set StripeSecret prod_123456789 --stage=production
 ```
+
+To set something like an RSA key, you can first save it to a file.
+
+```bash frame="none"
+cat > tmp.txt <<EOF
+-----BEGIN RSA PRIVATE KEY-----
+MEgCQQCo9+BpMRYQ/dL3DS2CyJxRF+j6ctbT3/Qp84+KeFhnii7NT7fELilKUSnx
+S30WAvQCCo2yU1orfgqr41mM70MBAgMBAAE=
+-----END RSA PRIVATE KEY-----
+EOF
+```
+
+Then set the secret from the file.
+
+```bash frame="none"
+sst secret set Key -- "$(cat tmp.txt)"
+```
+
+And make sure to delete the temp file.
 </Segment>
 <NestedTitle id="secret-remove" Tag="h4" parent="secret ">remove</NestedTitle>
 <Segment>
