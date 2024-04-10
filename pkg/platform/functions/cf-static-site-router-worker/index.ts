@@ -1,5 +1,6 @@
 declare var caches: any;
 declare var SST_ASSET_MANIFEST: Record<string, string>;
+import path from "node:path";
 
 export interface Env {
   ASSETS: any;
@@ -18,8 +19,20 @@ export default {
     if (cachedResponse) return cachedResponse;
 
     // Fetch from KV
-    const object = await env.ASSETS.getWithMetadata(filePath);
-    if (object.value) return await respond(200, filePath, object);
+    {
+      const object = await env.ASSETS.getWithMetadata(filePath);
+      if (object.value) return await respond(200, filePath, object);
+    }
+    {
+      const guess = path.join(filePath, "index.html");
+      const object = await env.ASSETS.getWithMetadata(guess);
+      if (object.value) return await respond(200, guess, object);
+    }
+    {
+      const guess = filePath + ".html";
+      const object = await env.ASSETS.getWithMetadata(guess);
+      if (object.value) return await respond(200, guess, object);
+    }
 
     // Handle error page
     if (env.ERROR_PAGE) {
