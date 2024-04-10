@@ -558,7 +558,7 @@ var Root = Command{
 					"The `sst install` command is similar to `npm install`.",
 					":::",
 					"",
-					"Behind the scenes it downloads the packages for the providers and adds the types to your project.",
+					"Behind the scenes, it installs the packages for your providers and adds the providers to your globals.",
 					"",
 					"If you don't have a version specified for your providers in your `sst.config.ts`, it'll install their latest versions.",
 				}, "\n"),
