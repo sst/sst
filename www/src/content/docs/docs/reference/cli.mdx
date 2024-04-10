@@ -58,6 +58,8 @@ You can also use a package manager to install the CLI.
   scoop update sst
   ```
 
+#### Usage
+
 Once installed you can run the commands using.
 
 ```bash
@@ -69,6 +71,16 @@ The CLI takes a few global flags. For example, the deploy command takes the `--s
 ```bash
 sst deploy --stage=production
 ```
+
+#### Environment variables
+
+You can access any environment variables set in the CLI in your `sst.config.ts` file. For example, running:
+
+```bash
+ENV_VAR=123 sst deploy
+```
+
+Will let you access `ENV_VAR` through `process.env.ENV_VAR`.
 </Section>
 
 ---
