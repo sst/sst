@@ -13,11 +13,19 @@ export default $config({
       handler: "src/index.handler",
       url: true,
     });
+
+    new sst.aws.Nextjs("HonoNextjs", {
+      cdn: sst.cloudflare.CdnAdapter, // sst.aws.CdnAdapter
+    });
+
     const router = new sst.aws.Router("HonoRouter", {
       routes: {
         "/*": hono.url,
       },
-      domain: "hono.dev.sst.dev",
+      domain: {
+        domainName: "hono." + domain.domainName,
+        dns: sst.cloudflare.DnsAdapter, // sst.aws.DnsAdapter
+      },
     });
   },
 });

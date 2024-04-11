@@ -302,7 +302,8 @@ export interface BucketSubscriber {
  */
 export class Bucket
   extends Component
-  implements Link.Linkable, Link.AWS.Linkable {
+  implements Link.Linkable, Link.AWS.Linkable
+{
   private constructorName: string;
   private bucket: Output<aws.s3.BucketV2>;
   private isSubscribed: boolean = false;
@@ -445,6 +446,13 @@ export class Bucket
    */
   public get name() {
     return this.bucket.bucket;
+  }
+
+  /**
+   * The domain name of the bucket
+   */
+  public get domain() {
+    return this.bucket.bucketDomainName;
   }
 
   /**
@@ -647,8 +655,8 @@ export class Bucket
               events.length < 5
                 ? `Subscribed to ${name} on ${events.join(", ")}`
                 : `Subscribed to ${name} on ${events
-                  .slice(0, 3)
-                  .join(", ")}, and ${events.length - 3} more events`,
+                    .slice(0, 3)
+                    .join(", ")}, and ${events.length - 3} more events`,
           },
         );
         const permission = new aws.lambda.Permission(
