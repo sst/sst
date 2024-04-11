@@ -10,6 +10,9 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "hono": "^4.1.3"
+    "hono": "^4.2.3"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20240405.0"
   }
 }

@@ -1,21 +1,26 @@
 import { Hono } from "hono";
-import { streamText } from "hono/streaming";
+import { Resource } from "sst";
 
-const app = new Hono();
-
-const TEXT = "streaming woooo...bye";
-
-app.get("/", async (c) => {
-  return streamText(c, async (stream) => {
-    console.log("a", "b", "c", { d: "e" }, "foo\nlol");
-    console.log("wow");
-    for (let i = 0; i < TEXT.length; i++) {
-      const letter = TEXT[i];
-      const html = `${letter}`;
-      stream.write(html);
-      await new Promise((r) => setTimeout(r, 10));
-    }
+const app = new Hono()
+  .put("/*", async (c) => {
+    const key = crypto.randomUUID();
+    await Resource.MyBucket.put(key, await c.req.arrayBuffer(), {
+      httpMetadata: {
+        contentType: c.req.header("content-type"),
+      },
+    });
+    return new Response(`Object created with key: ${key}`);
+  })
+  .get("/", async (c) => {
+    const first = await Resource.MyBucket.list().then(
+      (res) =>
+        res.objects.sort(
+          (a, b) => a.uploaded.getTime() - b.uploaded.getTime(),
+        )[0],
+    );
+    const result = await Resource.MyBucket.get(first.key);
+    c.header("content-type", result.httpMetadata.contentType);
+    return c.body(result.body as ReadableStream);
   });
-});
 
 export default app;
