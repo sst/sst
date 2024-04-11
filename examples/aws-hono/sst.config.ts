@@ -12,9 +12,9 @@ export default $config({
       public: true,
     });
     const hono = new sst.aws.Function("Hono", {
+      url: true,
       link: [bucket],
       handler: "index.handler",
-      url: true,
     });
 
     return {

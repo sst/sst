@@ -13,6 +13,7 @@ const sidebar = [
     label: "Get Started",
     items: [
       { label: "API", link: "/docs/start/aws/api/" },
+      { label: "Hono", link: "/docs/start/aws/hono/" },
       { label: "Astro", link: "/docs/start/aws/astro/" },
       { label: "Remix", link: "/docs/start/aws/remix/" },
       { label: "Next.js", link: "/docs/start/aws/nextjs/" },
