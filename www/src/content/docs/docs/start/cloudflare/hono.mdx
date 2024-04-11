@@ -1,12 +1,12 @@
 ---
-title: Cloudflare Workers with SST
-description: Create and deploy a Cloudflare Worker as an API with SST.
+title: Hono on Cloudflare with SST
+description: Create and deploy a Hono API on Cloudflare with SST.
 ---
 
-We are going to build an API with a Cloudflare Worker, add an R2 bucket for file uploads, and deploy it using SST.
+We are going to build an API with Hono, add an R2 bucket for file uploads, and deploy it using Cloudflare with SST.
 
 :::tip[View source]
-You can [view the source](https://github.com/sst/ion/tree/dev/examples/cloudflare-worker) of this example in our repo.
+You can [view the source](https://github.com/sst/ion/tree/dev/examples/cloudflare-hono) of this example in our repo.
 :::
 
 Before you get started:
@@ -21,7 +21,7 @@ Before you get started:
 Let's start by creating our app.
 
 ```bash
-mkdir my-worker && cd my-worker
+mkdir my-hono-api && cd my-hono-api
 npm init -y
 ```
 
@@ -51,13 +51,13 @@ Let's add a Worker. Update your `sst.config.ts`.
 
 ```js title="sst.config.ts"
 async run() {
-  const worker = new sst.cloudflare.Worker("MyWorker", {
-    handler: "./index.ts",
+  const hono = new sst.cloudflare.Worker("Hono", {
     url: true,
+    handler: "index.ts",
   });
 
   return {
-    api: worker.url,
+    api: hono.url,
   };
 }
 ```
@@ -70,7 +70,7 @@ We are enabling the Worker URL, so we can use it as our API.
 
 Let's add an R2 bucket for file uploads. Update your `sst.config.ts`.
 
-```js title="sst.config.ts"
+```ts title="sst.config.ts"
 const bucket = new sst.cloudflare.Bucket("MyBucket");
 ```
 
@@ -79,10 +79,10 @@ const bucket = new sst.cloudflare.Bucket("MyBucket");
 Now, link the bucket to our Worker.
 
 ```ts title="sst.config.ts" {3}
-const worker = new sst.cloudflare.Worker("MyWorker", {
-  handler: "./index.ts",
-  link: [bucket],
+const hono = new sst.cloudflare.Worker("Hono", {
   url: true,
+  link: [bucket],
+  handler: "index.ts",
 });
 ```
 
@@ -90,55 +90,60 @@ const worker = new sst.cloudflare.Worker("MyWorker", {
 
 ## 4. Upload a file
 
-We want our API to upload a file to the R2 bucket if you make a `PUT` request to it. Create an `index.ts` file and add the following.
+We want the `/` route of our API to upload a file to the R2 bucket. Create an `index.ts` file and add the following.
 
-```ts title="index.ts" {5-9}
-export default {
-  async fetch(req: Request) {
-    if (req.method == "PUT") {
-      const key = crypto.randomUUID();
-      await Resource.MyBucket.put(key, req.body, {
-        httpMetadata: {
-          contentType: req.headers.get("content-type"),
-        },
-      });
-      return new Response(`Object created with key: ${key}`);
-    }
-  },
-};
+```ts title="index.ts" {4-8}
+const app = new Hono()
+  .put("/*", async (c) => {
+    const key = crypto.randomUUID();
+    await Resource.MyBucket.put(key, c.req.raw.body, {
+      httpMetadata: {
+        contentType: c.req.header("content-type"),
+      },
+    });
+    return new Response(`Object created with key: ${key}`);
+  });
+
+export default app;
 ```
 
 :::tip
 We are uploading to our R2 bucket with the SDK — `Resource.MyBucket.put()`
 :::
 
-Import the SDK.
+Add the imports.
 
 ```ts title="index.ts"
+import { Hono } from "hono";
 import { Resource } from "sst";
+```
+
+And install the npm packages.
+
+```bash
+npm install hono
 ```
 
 ---
 
 ## 5. Download a file
 
-We want to download the last uploaded file if you make a `GET` request to the API. Add this to the `fetch` function in your `index.ts` file.
+We want to download the last uploaded file if you make a `GET` request to the API. Add this to your routes in `index.ts`.
 
 ```ts title="index.ts"
-if (req.method == "GET") {
-  const first = await Resource.MyBucket.list().then(
-    (res) =>
-      res.objects.toSorted(
-        (a, b) => a.uploaded.getTime() - b.uploaded.getTime(),
-      )[0],
-  );
-  const result = await Resource.MyBucket.get(first.key);
-  return new Response(result.body, {
-    headers: {
-      "content-type": result.httpMetadata.contentType,
-    },
+const app = new Hono()
+  // ...
+  .get("/", async (c) => {
+    const first = await Resource.MyBucket.list().then(
+      (res) =>
+        res.objects.sort(
+          (a, b) => a.uploaded.getTime() - b.uploaded.getTime(),
+        )[0],
+    );
+    const result = await Resource.MyBucket.get(first.key);
+    c.header("content-type", result.httpMetadata.contentType);
+    return c.body(result.body);
   });
-}
 ```
 
 We are getting a list of the files in the files in the bucket with `Resource.MyBucket.list()` and we are getting a file for the given key with `Resource.MyBucket.get()`.
@@ -157,7 +162,7 @@ This will give you the URL of your API.
 
 ```bash frame="none"
 ✔  Complete
-   api: https://start-cloudflare-jayair-myworkerscript.sst-15d.workers.dev
+   url: https://my-hono-api-jayair-honoscript.sst-15d.workers.dev
 ```
 
 ---
@@ -167,10 +172,10 @@ This will give you the URL of your API.
 Let's try uploading a file from your project root. Make sure to use your API URL.
 
 ```bash
-curl --upload-file package.json https://start-cloudflare-jayair-myworkerscript.sst-15d.workers.dev
+curl --upload-file package.json https://my-hono-api-jayair-honoscript.sst-15d.workers.dev
 ```
 
-Now head over to `https://start-cloudflare-jayair-myworkerscript.sst-15d.workers.dev` in your browser and it'll load the file you just uploaded.
+Now head over to `https://my-hono-api-jayair-honoscript.sst-15d.workers.dev` in your browser and it'll load the file you just uploaded.
 
 ---
 

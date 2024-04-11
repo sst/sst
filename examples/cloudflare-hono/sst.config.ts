@@ -10,10 +10,11 @@ export default $config({
   async run() {
     const bucket = new sst.cloudflare.Bucket("MyBucket");
     const hono = new sst.cloudflare.Worker("Hono", {
+      url: true,
       link: [bucket],
       handler: "index.ts",
-      url: true,
     });
+
     return {
       api: hono.url,
     };

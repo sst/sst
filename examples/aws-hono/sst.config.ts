@@ -18,7 +18,7 @@ export default $config({
     });
 
     return {
-      hono: hono.url,
+      api: hono.url,
     };
   },
 });

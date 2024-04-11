@@ -19,7 +19,10 @@ const sidebar = [
       { label: "Next.js", link: "/docs/start/aws/nextjs/" },
       {
         label: "Cloudflare",
-        items: [{ label: "Worker", link: "/docs/start/cloudflare/worker/" }],
+        items: [
+          { label: "Hono", link: "/docs/start/cloudflare/hono/" },
+          { label: "Worker", link: "/docs/start/cloudflare/worker/" },
+        ],
       },
     ],
   },
