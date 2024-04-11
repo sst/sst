@@ -13,7 +13,6 @@ export default {
     }
 
     if (req.method == "GET") {
-      console.log("GET");
       const first = await Resource.MyBucket.list().then(
         (res) =>
           res.objects.toSorted(
