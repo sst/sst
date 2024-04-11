@@ -18,12 +18,12 @@
  * };
  * ```
  *
- * This example is used in our [API quickstart](/docs/start/api/).
+ * This example is used in our [API quickstart](/docs/start/aws/api/).
  */
 export default $config({
   app(input) {
     return {
-      name: "start-api",
+      name: "aws-api",
       removal: input?.stage === "production" ? "retain" : "remove",
       home: "aws",
     };

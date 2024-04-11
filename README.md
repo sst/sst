@@ -27,10 +27,10 @@ Download the pre-compiled binaries from the [releases](https://github.com/sst/io
 
 Get started with your favorite framework:
 
-- [Next.js](https://ion.sst.dev/docs/start/nextjs)
-- [Remix](https://ion.sst.dev/docs/start/remix)
-- [Astro](https://ion.sst.dev/docs/start/astro)
-- [API](https://ion.sst.dev/docs/start/api)
+- [Next.js](https://ion.sst.dev/docs/start/aws/nextjs)
+- [Remix](https://ion.sst.dev/docs/start/aws/remix)
+- [Astro](https://ion.sst.dev/docs/start/aws/astro)
+- [API](https://ion.sst.dev/docs/start/aws/api)
 
 ## Learn More
 

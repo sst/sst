@@ -12,11 +12,14 @@ const sidebar = [
   {
     label: "Get Started",
     items: [
-      { label: "API", link: "/docs/start/api/" },
-      { label: "Astro", link: "/docs/start/astro/" },
-      { label: "Remix", link: "/docs/start/remix/" },
-      { label: "Next.js", link: "/docs/start/nextjs/" },
-      { label: "Cloudflare", link: "/docs/start/cloudflare/" },
+      { label: "API", link: "/docs/start/aws/api/" },
+      { label: "Astro", link: "/docs/start/aws/astro/" },
+      { label: "Remix", link: "/docs/start/aws/remix/" },
+      { label: "Next.js", link: "/docs/start/aws/nextjs/" },
+      {
+        label: "Cloudflare",
+        items: [{ label: "Worker", link: "/docs/start/cloudflare/worker/" }],
+      },
     ],
   },
   {

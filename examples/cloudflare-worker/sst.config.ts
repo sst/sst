@@ -15,12 +15,12 @@
  * });
  * ```
  *
- * This example is used in our [Cloudflare quickstart](/docs/start/cloudflare/).
+ * This example is used in our [Cloudflare quickstart](/docs/start/cloudflare/worker/).
  */
 export default $config({
   app(input) {
     return {
-      name: "start-cloudflare",
+      name: "cloudflare-worker",
       removal: input?.stage === "production" ? "retain" : "remove",
       home: "cloudflare",
     };

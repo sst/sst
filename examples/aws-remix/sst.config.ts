@@ -1,26 +1,25 @@
 /// <reference path="./.sst/platform/config.d.ts" />
 
 /**
- * ## Astro site in AWS
+ * ## Remix app in AWS
  *
- * Deploys an Astro site and an S3 bucket for file uploads to AWS. It generates a presigned URL
+ * Deploys an Remix app and an S3 bucket for file uploads to AWS. It generates a presigned URL
  * to upload files to the bucket.
  *
- * ```astro title="src/pages/index.astro"
+ * ```ts title="app/routes/_index.tsx"
  * const command = new PutObjectCommand({
  *   Key: crypto.randomUUID(),
  *   Bucket: Resource.MyBucket.name,
  * });
- *
  * const url = await getSignedUrl(new S3Client({}), command);
  * ```
  *
- * This example is used in our [Astro quickstart](/docs/start/astro/).
+ * This example is used in our [Remix quickstart](/docs/start/aws/remix/).
  */
 export default $config({
   app(input) {
     return {
-      name: "start-astro",
+      name: "aws-remix",
       removal: input?.stage === "production" ? "retain" : "remove",
       home: "aws",
     };
@@ -29,7 +28,7 @@ export default $config({
     const bucket = new sst.aws.Bucket("MyBucket", {
       public: true,
     });
-    new sst.aws.Astro("MyWeb", {
+    new sst.aws.Remix("MyWeb", {
       link: [bucket],
     });
   },
