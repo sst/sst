@@ -9,6 +9,7 @@ jobs:
   deploy:
     name: deploy
     runs-on: ubuntu-latest
+    concurrency: ${{ github.workflow }}-${{ github.ref }}
 
     permissions:
       id-token: write
