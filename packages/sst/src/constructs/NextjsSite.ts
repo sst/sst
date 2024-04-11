@@ -219,7 +219,7 @@ export interface NextjsSiteProps<ONConfig extends OpenNextConfig> extends Omit<S
 }
 
 const LAYER_VERSION = "2";
-const DEFAULT_OPEN_NEXT_VERSION = "3.0.0-rc.13";
+const DEFAULT_OPEN_NEXT_VERSION = "3.0.0-rc.15";
 const DEFAULT_CACHE_POLICY_ALLOWED_HEADERS = [
   "x-open-next-cache-key"
 ];
@@ -432,6 +432,7 @@ export class NextjsSite<ONConfig extends OpenNextConfig = OpenNextConfig> extend
           injections: [
             this.useCloudFrontFunctionHostHeaderInjection(),
             this.useCloudFrontFunctionCacheHeaderKey(),
+            this.useCloudfrontGeoHeadersInjection(),
           ],
         },
       },
@@ -869,6 +870,28 @@ function getHeader(key) {
   var hashedKey = crypto.createHash('md5').update(cacheKey).digest('hex');
   request.headers["x-open-next-cache-key"] = {value: hashedKey};
   `
+  }
+
+  // Inject the CloudFront viewer country, region, latitude, and longitude headers into the request headers
+  // for OpenNext to use them
+  private useCloudfrontGeoHeadersInjection() {
+    return `
+if(request.headers["cloudfront-viewer-city"]) {
+  request.headers["x-open-next-city"] = request.headers["cloudfront-viewer-city"];
+}
+if(request.headers["cloudfront-viewer-country"]) {
+  request.headers["x-open-next-country"] = request.headers["cloudfront-viewer-country"];
+}
+if(request.headers["cloudfront-viewer-region"]) {
+  request.headers["x-open-next-region"] = request.headers["cloudfront-viewer-region"];
+}
+if(request.headers["cloudfront-viewer-latitude"]) {
+  request.headers["x-open-next-latitude"] = request.headers["cloudfront-viewer-latitude"];
+}
+if(request.headers["cloudfront-viewer-longitude"]) {
+  request.headers["x-open-next-longitude"] = request.headers["cloudfront-viewer-longitude"];
+}
+    `
   }
 
   private getBuildId() {
