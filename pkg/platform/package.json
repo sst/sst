@@ -46,5 +46,8 @@
     "@types/aws-lambda": "^8.10.133",
     "openai": "4.29.2",
     "vitest": "^1.2.2"
+  },
+  "overrides": {
+    "string-width": "4.2.3"
   }
 }
