@@ -43,9 +43,13 @@ Let's add an API using [Amazon API Gateway](https://docs.aws.amazon.com/apigatew
 
 ```js title="sst.config.ts"
 async run() {
-  new sst.aws.ApiGatewayV2("MyApi")
-    .route("GET /", "index.upload")
-    .route("GET /latest", "index.latest");
+  const api = new sst.aws.ApiGatewayV2("MyApi");
+  api.route("GET /", {
+    handler: "index.upload",
+  });
+  api.route("GET /latest", {
+    handler: "index.latest",
+  });
 }
 ```
 
@@ -82,16 +86,15 @@ const bucket = new sst.aws.Bucket("MyBucket", {
 
 Now, link the bucket to the API routes.
 
-```ts title="sst.config.ts" {3,7}
-new sst.aws.ApiGatewayV2("MyApi")
-  .route("GET /", {
-    link: [bucket],
-    handler: "index.upload"
-  })
-  .route("GET /latest", {
-    link: [bucket],
-    handler: "index.latest"
-  });
+```ts title="sst.config.ts" {2,6}
+api.route("GET /", {
+  link: [bucket],
+  handler: "index.upload",
+});
+api.route("GET /latest", {
+  link: [bucket],
+  handler: "index.latest",
+});
 ```
 
 ---
