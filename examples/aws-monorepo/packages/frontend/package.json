@@ -1,0 +1,12 @@
+{
+  "name": "@aws-monorepo/frontend",
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "sst dev vite dev",
+    "build": "vite build"
+  },
+  "devDependencies": {
+    "vite": "^5.2.8"
+  }
+}

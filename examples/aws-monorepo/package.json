@@ -1,0 +1,11 @@
+{
+  "name": "aws-monorepo",
+  "version": "0.0.0",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {},
+  "devDependencies": {
+    "typescript": "5.3.3"
+  }
+}

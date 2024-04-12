@@ -1,0 +1,15 @@
+{
+  "name": "@aws-monorepo/functions",
+  "version": "0.0.0",
+  "dependencies": {
+    "@aws-monorepo/core": "workspace:*",
+    "hono": "^4.2.2"
+  },
+  "scripts": {
+    "shell": "sst shell tsx"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.137",
+    "tsx": "^4.7.2"
+  }
+}
