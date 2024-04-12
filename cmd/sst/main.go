@@ -1504,6 +1504,7 @@ func initProject(cli *Cli) (*project.Project, error) {
 	if err != nil {
 		return nil, err
 	}
+	godotenv.Load(filepath.Join(p.PathRoot(), ".env"))
 
 	_, err = logFile.Seek(0, 0)
 	if err != nil {
