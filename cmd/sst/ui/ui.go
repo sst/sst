@@ -311,7 +311,7 @@ func (u *UI) StackEvent(evt *project.StackEvent) {
 
 		if evt.DiagnosticEvent.Severity == "info#err" {
 			if strings.HasPrefix(evt.DiagnosticEvent.Message, "Downloading provider") {
-				u.printEvent(color.FgMagenta, "Info", evt.DiagnosticEvent.Message)
+				u.printEvent(color.FgMagenta, "Info", strings.TrimSpace(evt.DiagnosticEvent.Message))
 			} else {
 				u.spinner.Disable()
 				fmt.Println(parseError(evt.DiagnosticEvent.Message)[0])
