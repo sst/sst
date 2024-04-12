@@ -92,7 +92,7 @@ func Start(ctx context.Context, proj *project.Project, args map[string]interface
 								msg := &TailEvent{}
 								err := conn.ReadJSON(msg)
 								if err != nil {
-									if websocket.IsCloseError(err) {
+									if websocket.IsUnexpectedCloseError(err) {
 										return
 									}
 									continue
