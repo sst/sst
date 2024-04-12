@@ -24,43 +24,6 @@ Make sure to document the `sst.config.ts` in your example.
 
 
 ---
-## File uploads API in AWS
-
-A simple API built using API Gateway and Lambda. It has two routes, one generates a
-presigned URL to upload a file to an S3 bucket and the other returns the last uploaded file.
-
-```ts title="index.ts"
-const command = new PutObjectCommand({
-  Key: crypto.randomUUID(),
-  Bucket: Resource.MyBucket.name,
-});
-
-return {
-  statusCode: 200,
-  body: await getSignedUrl(s3, command),
-};
-```
-
-This example is used in our [API quickstart](/docs/start/aws/api/).
-```ts title="sst.config.ts"
-const bucket = new sst.aws.Bucket("MyBucket", {
-  public: true,
-});
-const api = new sst.aws.ApiGatewayV2("MyApi");
-api.route("GET /", {
-  link: [bucket],
-  handler: "index.upload",
-});
-api.route("GET /latest", {
-  link: [bucket],
-  handler: "index.latest",
-});
-```
-
-View the [full example](https://github.com/sst/ion/tree/dev/examples/aws-api).
-
-
----
 ## API Gateway auth
 
 Enable IAM and JWT authorizers for API Gateway routes.
@@ -92,34 +55,6 @@ return {
 ```
 
 View the [full example](https://github.com/sst/ion/tree/dev/examples/aws-apig-auth).
-
-
----
-## Astro site in AWS
-
-Deploys an Astro site and an S3 bucket for file uploads to AWS. It generates a presigned URL
-to upload files to the bucket.
-
-```astro title="src/pages/index.astro"
-const command = new PutObjectCommand({
-  Key: crypto.randomUUID(),
-  Bucket: Resource.MyBucket.name,
-});
-
-const url = await getSignedUrl(new S3Client({}), command);
-```
-
-This example is used in our [Astro quickstart](/docs/start/aws/astro/).
-```ts title="sst.config.ts"
-const bucket = new sst.aws.Bucket("MyBucket", {
-  public: true,
-});
-new sst.aws.Astro("MyWeb", {
-  link: [bucket],
-});
-```
-
-View the [full example](https://github.com/sst/ion/tree/dev/examples/aws-astro).
 
 
 ---
@@ -198,30 +133,14 @@ View the [full example](https://github.com/sst/ion/tree/dev/examples/aws-info).
 
 
 ---
-## Next.js app in AWS
+## AWS Monorepo
 
-Deploys an Next.js app and an S3 bucket for file uploads to AWS. It generates a presigned URL
-to upload files to the bucket.
-
-```ts title="app/page.tsx"
-const command = new PutObjectCommand({
-  Key: crypto.randomUUID(),
-  Bucket: Resource.MyBucket.name,
-});
-const url = await getSignedUrl(new S3Client({}), command);
-```
-
-This example is used in our [Next.js quickstart](/docs/start/aws/nextjs/).
+A light setup for a more complex project - splits the config into multiple files and uses a monorepo setup.
 ```ts title="sst.config.ts"
-const bucket = new sst.aws.Bucket("MyBucket", {
-  public: true,
-});
-new sst.aws.Nextjs("MyWeb", {
-  link: [bucket],
-});
+await import("./infra/index.js");
 ```
 
-View the [full example](https://github.com/sst/ion/tree/dev/examples/aws-nextjs).
+View the [full example](https://github.com/sst/ion/tree/dev/examples/aws-monorepo).
 
 
 ---
@@ -245,33 +164,6 @@ return {
 ```
 
 View the [full example](https://github.com/sst/ion/tree/dev/examples/aws-queue).
-
-
----
-## Remix app in AWS
-
-Deploys an Remix app and an S3 bucket for file uploads to AWS. It generates a presigned URL
-to upload files to the bucket.
-
-```ts title="app/routes/_index.tsx"
-const command = new PutObjectCommand({
-  Key: crypto.randomUUID(),
-  Bucket: Resource.MyBucket.name,
-});
-const url = await getSignedUrl(new S3Client({}), command);
-```
-
-This example is used in our [Remix quickstart](/docs/start/aws/remix/).
-```ts title="sst.config.ts"
-const bucket = new sst.aws.Bucket("MyBucket", {
-  public: true,
-});
-new sst.aws.Remix("MyWeb", {
-  link: [bucket],
-});
-```
-
-View the [full example](https://github.com/sst/ion/tree/dev/examples/aws-remix).
 
 
 ---
@@ -429,38 +321,6 @@ new sst.aws.StaticSite("Web", {
 ```
 
 View the [full example](https://github.com/sst/ion/tree/dev/examples/aws-vite).
-
-
----
-## File uploads API in Cloudflare
-
-Deploys an API with a Cloudflare Worker, and and R2 bucket for file uploads. It takes a
-request and uploads the file to the bucket.
-
-```ts title="index.ts"
-const key = crypto.randomUUID();
-await Resource.MyBucket.put(key, req.body, {
-  httpMetadata: {
-    contentType: req.headers.get("content-type"),
-  },
-});
-```
-
-This example is used in our [Cloudflare quickstart](/docs/start/cloudflare/worker/).
-```ts title="sst.config.ts"
-const bucket = new sst.cloudflare.Bucket("MyBucket");
-const worker = new sst.cloudflare.Worker("MyWorker", {
-  handler: "./index.ts",
-  link: [bucket],
-  url: true,
-});
-
-return {
-  url: worker.url,
-};
-```
-
-View the [full example](https://github.com/sst/ion/tree/dev/examples/cloudflare-worker).
 
 
 ---

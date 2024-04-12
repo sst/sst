@@ -35,6 +35,22 @@ new sst.aws.StaticSite("MyWeb", {
 });
 ```
 
+#### Running locally
+
+In `sst dev`, we don't deploy your site to AWS because we assume you are running it locally.
+
+:::note
+Your static site will not be deployed when run locally with `sst dev`.
+:::
+
+For example, for a Vite site, you can run it locally with.
+
+```bash
+sst dev vite dev
+```
+
+This will start the Vite dev server and pass in any environment variables that you've set in your config. But it will not deploy your site to AWS.
+
 #### Deploy a Vite SPA
 
 Use [Vite](https://vitejs.dev) to deploy a React/Vue/Svelte/etc. SPA by specifying the `build` config.
