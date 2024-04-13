@@ -20,6 +20,7 @@ export default $config({
         url: true,
       },
     });
+
     const api = new sst.aws.Function("Api", {
       handler: "./src/api.handler",
       link: [auth],
