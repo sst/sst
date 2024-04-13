@@ -26,7 +26,7 @@ func Start(ctx context.Context, root string) (util.CleanupFunc, error) {
 	if err != nil {
 		return nil, err
 	}
-	ignoreSubstrings := []string{".sst", "node_modules"}
+	ignoreSubstrings := []string{".sst", "node_modules", ".git"}
 
 	err = filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
