@@ -13,7 +13,7 @@ export default $config({
       home: "aws",
     };
   },
-  async run() {
-    await import("./infra/index.js");
+  run() {
+    return import("./infra/index.js");
   },
 });

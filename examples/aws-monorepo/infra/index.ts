@@ -1,3 +1,7 @@
 import "./database";
-import "./api";
+import { api } from "./api";
 import "./frontend";
+
+export default {
+  api: api.url,
+};
