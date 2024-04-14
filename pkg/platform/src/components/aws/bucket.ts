@@ -489,7 +489,10 @@ export class Bucket
    * Subscribe to specific S3 events.
    *
    * ```js
-   * bucket.subscribe("src/subscriber.handler", {
+   * bucket.subscribe({
+   *   handler: "src/subscriber.handler",
+   *   link: [bucket] // ensures subscriber can access bucket files
+   * }, {
    *   events: ["s3:ObjectCreated:*", "s3:ObjectRemoved:*"]
    * });
    * ```
