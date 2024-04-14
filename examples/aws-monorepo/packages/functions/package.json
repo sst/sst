@@ -2,7 +2,7 @@
   "name": "@aws-monorepo/functions",
   "version": "0.0.0",
   "dependencies": {
-    "@aws-monorepo/core": "workspace:*",
+    "@aws-monorepo/core": "*",
     "hono": "^4.2.2"
   },
   "scripts": {

@@ -1,6 +1,8 @@
 package main
 
 import (
+	"errors"
+
 	"github.com/sst/ion/internal/util"
 	"github.com/sst/ion/pkg/project"
 	"github.com/sst/ion/pkg/project/provider"
@@ -18,9 +20,20 @@ func TransformError(err error) error {
 		provider.ErrLockExists:       "",
 	}
 
-	match, ok := mapping[err]
-	if !ok {
-		return err
+	readable := []error{
+		project.ErrBuildFailed,
 	}
-	return util.NewReadableError(err, match)
+
+	match, ok := mapping[err]
+	if ok {
+		return util.NewReadableError(err, match)
+	}
+
+	for _, r := range readable {
+		if errors.Is(err, r) {
+			return util.NewReadableError(err, err.Error())
+		}
+	}
+
+	return err
 }

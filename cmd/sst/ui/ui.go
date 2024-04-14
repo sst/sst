@@ -103,6 +103,11 @@ func (u *UI) StackEvent(evt *project.StackEvent) {
 		u.spinner.Suffix = "  Finalizing..."
 	}
 
+	if evt.BuildFailedEvent != nil {
+		u.spinner.Disable()
+		u.printEvent(color.FgRed, "Error", evt.BuildFailedEvent.Error)
+	}
+
 	if evt.StdOutEvent != nil {
 		u.spinner.Disable()
 		fmt.Println(evt.StdOutEvent.Text)

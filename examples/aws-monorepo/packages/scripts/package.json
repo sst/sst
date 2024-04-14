@@ -2,7 +2,7 @@
   "name": "@aws-monorepo/scripts",
   "version": "0.0.0",
   "dependencies": {
-    "@aws-monorepo/core": "workspace:*"
+    "@aws-monorepo/core": "*"
   },
   "scripts": {
     "shell": "sst shell tsx"

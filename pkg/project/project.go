@@ -75,6 +75,7 @@ type ProjectConfig struct {
 
 var ErrInvalidStageName = fmt.Errorf("invalid stage name")
 var ErrV2Config = fmt.Errorf("sstv2 config detected")
+var ErrBuildFailed = fmt.Errorf("")
 var InvalidStageRegex = regexp.MustCompile(`[^a-zA-Z0-9-]`)
 
 func New(input *ProjectConfig) (*Project, error) {
@@ -131,7 +132,7 @@ console.log("~j" + JSON.stringify(mod.app({
 		},
 	)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%w%s", ErrBuildFailed, err)
 	}
 
 	slog.Info("evaluating config")

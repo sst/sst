@@ -23,6 +23,7 @@ import (
 	"github.com/fatih/color"
 	"github.com/joho/godotenv"
 	"github.com/sst/ion/cmd/sst/ui"
+	"github.com/sst/ion/cmd/sst/ui/screen"
 	"github.com/sst/ion/internal/util"
 	"github.com/sst/ion/pkg/global"
 	"github.com/sst/ion/pkg/project"
@@ -312,6 +313,14 @@ var Root = Command{
 				}, "\n"),
 			},
 			Run: CmdInit,
+		},
+		{
+			Name:   "screen",
+			Hidden: true,
+			Run: func(cli *Cli) error {
+				slog.Info("Running dev2")
+				return screen.Start()
+			},
 		},
 		{
 			Name: "dev",

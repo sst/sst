@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log/slog"
 	"path/filepath"
+	"strings"
 	"time"
 
 	esbuild "github.com/evanw/esbuild/pkg/api"
@@ -58,7 +59,6 @@ const __dirname = topLevelFileUrlToPath(new topLevelURL(".", import.meta.url))
 		Metafile: true,
 	})
 	if len(result.Errors) > 0 {
-		slog.Error("esbuild errors", "errors", result.Errors)
 		for _, err := range result.Errors {
 			slog.Error("esbuild error",
 				"text", err.Text,
@@ -67,9 +67,17 @@ const __dirname = topLevelFileUrlToPath(new topLevelURL(".", import.meta.url))
 				"column", err.Location.Column,
 			)
 		}
-		return result, fmt.Errorf("esbuild errors: %v", result.Errors)
+		return result, fmt.Errorf("%s", FormatError(result.Errors))
 	}
 	slog.Info("esbuild built", "outfile", outfile)
 
 	return result, nil
+}
+
+func FormatError(input []esbuild.Message) string {
+	lines := []string{}
+	for _, err := range input {
+		lines = append(lines, fmt.Sprintf("%v:%v:%v: %v", err.Location.File, err.Location.Line, err.Location.Column, err.Text))
+	}
+	return strings.Join(lines, "\n")
 }

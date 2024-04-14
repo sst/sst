@@ -34,6 +34,11 @@ type StackEvent struct {
 	ConcurrentUpdateEvent *ConcurrentUpdateEvent
 	CompleteEvent         *CompleteEvent
 	StackCommandEvent     *StackCommandEvent
+	BuildFailedEvent      *BuildFailedEvent
+}
+
+type BuildFailedEvent struct {
+	Error string
 }
 
 type StackInput struct {
@@ -201,6 +206,11 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 		),
 	})
 	if err != nil {
+		input.OnEvent(&StackEvent{
+			BuildFailedEvent: &BuildFailedEvent{
+				Error: err.Error(),
+			},
+		})
 		return err
 	}
 	outfile := buildResult.OutputFiles[0].Path
