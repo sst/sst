@@ -1,10 +1,10 @@
 import { api } from "./api";
 
-new sst.aws.StaticSite("StaticSite", {
+export const web = new sst.aws.StaticSite("StaticSite", {
   path: "./packages/frontend",
   build: {
-    command: "pnpm run build",
     output: "dist",
+    command: "pnpm run build",
   },
   environment: {
     VITE_API_URL: api.url,

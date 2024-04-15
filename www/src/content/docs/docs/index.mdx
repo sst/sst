@@ -4,6 +4,9 @@ description: Ion is a new deployment engine for SST.
 ---
 
 import { Tabs, TabItem } from '@astrojs/starlight/components';
+import config from '../../../../config.ts';
+
+export const github  = config.github;
 
 Ion is a new engine for deploying [SST](https://sst.dev) apps. It uses [Pulumi](https://www.pulumi.com) and [Terraform](https://www.terraform.io), as opposed to CDK and CloudFormation.
 
@@ -199,7 +202,7 @@ We've looked at a couple of different types of files. Let's take a step back and
 
 ---
 
-#### Drop-in mode
+### Drop-in mode
 
 The simplest way to run SST is to use it as a part of your frontend. This is called _drop-in mode_. For example, if you are using Next.js, you can add a `sst.config.ts` file to the root.
 
@@ -213,21 +216,27 @@ my-nextjs-app
 └─ public
 ```
 
+View an <a href={`${github}/tree/dev/examples/aws-nextjs`}>example Next.js</a> app using SST in drop-in mode.
+
 ---
 
-#### Monorepo mode
+### Monorepo
 
 Alternatively, you can use SST in a monorepo. This is useful if you have multiple frontends or you are working on a large project. In this case the `sst.config.ts` is in the root of your monorepo.
 
 ```txt {2}
 my-sst-app
+├─ sst.config.ts
+├─ package.json
 ├─ packages
 │  ├─ functions
-│  ├─ core
-│  └─ web
-├─ sst.config.ts
-└─ package.json
+│  ├─ frontend
+│  ├─ scripts
+│  └─ core
+└─ infra
 ```
+
+Learn more about our [monorepo setup](/docs/examples/#aws-monorepo).
 
 ---
 

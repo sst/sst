@@ -2,14 +2,9 @@
   "name": "@aws-monorepo/functions",
   "version": "0.0.0",
   "dependencies": {
-    "@aws-monorepo/core": "*",
-    "hono": "^4.2.2"
-  },
-  "scripts": {
-    "shell": "sst shell tsx"
+    "@aws-monorepo/core": "*"
   },
   "devDependencies": {
-    "@types/aws-lambda": "^8.10.137",
-    "tsx": "^4.7.2"
+    "@types/aws-lambda": "^8.10.137"
   }
 }

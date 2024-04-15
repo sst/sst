@@ -1,12 +1,10 @@
+import { Resource } from "sst";
+import { Handler } from "aws-lambda";
 import { Example } from "@aws-monorepo/core/example";
-import { Hono } from "hono";
-import { handle } from "hono/aws-lambda";
 
-const app = new Hono();
-
-app.get("/", async (c) => {
-  console.log("calling Example.hello");
-  return c.text(Example.hello());
-});
-
-export const handler = handle(app);
+export const handler: Handler = async (event) => {
+  return {
+    statusCode: 200,
+    body: `${Example.hello()} Linked to ${Resource.Database.name}.`,
+  };
+};
