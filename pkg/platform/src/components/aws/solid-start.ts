@@ -165,13 +165,12 @@ export interface SolidStartArgs extends SsrSiteArgs {
    * }
    * ```
    *
-   * Specify the Route 53 hosted zone and a `www.` version of the custom domain.
+   * Specify a `www.` version of the custom domain.
    *
    * ```js
    * {
    *   domain: {
-   *     domainName: "domain.com",
-   *     hostedZone: "domain.com",
+   *     name: "domain.com",
    *     redirects: ["www.domain.com"]
    *   }
    * }
@@ -250,7 +249,7 @@ export interface SolidStartArgs extends SsrSiteArgs {
  * ```js {4}
  * new sst.aws.SolidStart("MyWeb", {
  *   domain: {
- *     domainName: "my-app.com",
+ *     name: "my-app.com",
  *     redirects: ["www.my-app.com"]
  *   }
  * });
@@ -315,8 +314,8 @@ export class SolidStart extends Component implements Link.Linkable {
       _hint: $dev
         ? undefined
         : all([this.cdn.domainUrl, this.cdn.url]).apply(
-          ([domainUrl, url]) => domainUrl ?? url,
-        ),
+            ([domainUrl, url]) => domainUrl ?? url,
+          ),
       _metadata: {
         mode: $dev ? "placeholder" : "deployed",
         path: sitePath,

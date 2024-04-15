@@ -106,13 +106,12 @@ export interface StaticSiteArgs extends BaseStaticSiteArgs {
    * }
    * ```
    *
-   * Specify the Route 53 hosted zone and a `www.` version of the custom domain.
+   * Specify a `www.` version of the custom domain.
    *
    * ```js
    * {
    *   domain: {
-   *     domainName: "domain.com",
-   *     hostedZone: "domain.com",
+   *     name: "domain.com",
    *     redirects: ["www.domain.com"]
    *   }
    * }
@@ -314,7 +313,7 @@ export interface StaticSiteArgs extends BaseStaticSiteArgs {
  * ```js {4}
  * new sst.aws.StaticSite("MyWeb", {
  *   domain: {
- *     domainName: "my-app.com",
+ *     name: "my-app.com",
  *     redirects: ["www.my-app.com"]
  *   }
  * });

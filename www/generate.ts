@@ -26,55 +26,6 @@ type CliCommand = {
 
 const cmd = process.argv[2];
 
-function renderSourceMessage(source: string) {
-  return [``, `{/* DO NOT EDIT. AUTO-GENERATED FROM "${source}" */}`];
-}
-
-function renderImports(outputFilePath: string) {
-  const relativePath = path.relative(outputFilePath, "src");
-  return [
-    ``,
-    `import Segment from '${relativePath}/src/components/tsdoc/Segment.astro';`,
-    `import Section from '${relativePath}/src/components/tsdoc/Section.astro';`,
-    `import NestedTitle from '${relativePath}/src/components/tsdoc/NestedTitle.astro';`,
-    `import InlineSection from '${relativePath}/src/components/tsdoc/InlineSection.astro';`,
-    "",
-    '<div class="tsdoc">',
-  ];
-}
-
-function renderExampleImports(outputFilePath: string) {
-  const relativePath = path.relative(outputFilePath, "src");
-  return [
-    ``,
-    `import Segment from '${relativePath}/src/components/tsdoc/Segment.astro';`,
-    `import Section from '${relativePath}/src/components/tsdoc/Section.astro';`,
-    `import NestedTitle from '${relativePath}/src/components/tsdoc/NestedTitle.astro';`,
-    `import InlineSection from '${relativePath}/src/components/tsdoc/InlineSection.astro';`,
-    "",
-    `Below are a collection of example SST apps. These are available in the [\`examples/\`](${config.github}/tree/dev/examples) directory of the repo.`,
-    "",
-    ":::tip",
-    "This doc is best viewed through the table of contents or through _Ask AI_.",
-    ":::",
-    "",
-    "The descriptions for these examples are generated using the comments in the `sst.config.ts` of the app.",
-    "",
-    "#### Contributing",
-    `To contribute an example or to edit one, submit a PR to the [repo](${config.github}).`,
-    "Make sure to document the `sst.config.ts` in your example.",
-    "",
-  ];
-}
-
-function renderTdComment(parts: TypeDoc.CommentDisplayPart[]) {
-  return parts.map((part) => part.text).join("");
-}
-
-function renderFooter() {
-  return ["</div>"];
-}
-
 try {
   await configureLogger();
   await patchCode();
@@ -351,7 +302,10 @@ async function generateExamplesDocs() {
 }
 
 async function generateComponentsDoc() {
-  const modules = await buildComponents();
+  const project = await buildComponents();
+  const modules = project.children!.filter(
+    (c) => c.kind === TypeDoc.ReflectionKind.Module
+  );
   for (const module of modules) {
     console.info(`Generating ${module.name}...`);
     const sourceFile = module.sources![0].fileName;
@@ -1003,6 +957,8 @@ async function generateComponentsDoc() {
         return renderPulumiType(type);
       if (type.type === "reference" && type.package?.startsWith("@pulumi/"))
         return renderPulumiProviderType(type);
+      if (type.type === "reference" && type.package === "@pulumiverse/vercel")
+        return renderVercelType(type);
       if (type.type === "reference" && type.package === "esbuild")
         return renderEsbuildType(type);
       if (type.type === "reflection" && type.declaration.children?.length)
@@ -1110,6 +1066,11 @@ async function generateComponentsDoc() {
           renderType(type.typeArguments?.[0]!),
           `<code class="symbol">&gt;</code>`,
         ].join("");
+      }
+      if (type.name === "DnsAdapter") {
+        // ie. components/aws/dns-adapter.DnsAdapter
+        const namespace = type.reflection?.getFullName().split("/")[1];
+        return `[<code class="type">sst.${namespace}.${type.name}</code>](/docs/component/${namespace}/dns-adapter/)`;
       }
       // types in the same doc (links to the class ie. `subscribe()` return type)
       if (isRenderingComponent() && type.name === useClassName()) {
@@ -1237,6 +1198,28 @@ async function generateComponentsDoc() {
       const hash = type.name.endsWith("Args") ? `#inputs` : "";
       return `[<code class="type">${type.name}</code>](https://www.pulumi.com/registry/packages/${provider}/api-docs/${cls}/${hash})`;
     }
+    function renderVercelType(type: TypeDoc.ReferenceType) {
+      const ret = ((type as any)._target.fileName as string).match(
+        "node_modules/@pulumiverse/([^/]+)/(.+).d.ts"
+      )!;
+      const provider = ret[1].toLocaleLowerCase(); // ie. vercel
+      const cls = ret[2].toLocaleLowerCase(); // ie. dnsRecord
+      // Resource types
+      //{
+      //  type: 'reference',
+      //  name: 'DnsRecord',
+      //  _target: ReflectionSymbolId {
+      //    fileName: '/Users/frank/Sites/ion/node_modules/@pulumiverse/vercel/dnsRecord.d.ts',
+      //    qualifiedName: 'DnsRecord',
+      //    pos: 125,
+      //    transientId: NaN
+      //  },
+      //  qualifiedName: 'DnsRecord',
+      //  package: '@pulumiverse/vercel',
+      //}
+      const hash = type.name.endsWith("Args") ? `#inputs` : "";
+      return `[<code class="type">${type.name}</code>](https://www.pulumi.com/registry/packages/${provider}/api-docs/${cls}/${hash})`;
+    }
     function renderEsbuildType(type: TypeDoc.ReferenceType) {
       const hash = type.name === "Loader" ? `#loader` : "#build";
       return `[<code class="type">${type.name}</code>](https://esbuild.github.io/api/${hash})`;
@@ -1348,9 +1331,29 @@ async function generateComponentsDoc() {
     }
 
     function useInterfaces() {
-      return (module.children ?? []).filter(
+      const interfaces = (module.children ?? []).filter(
         (c) => c.kind === TypeDoc.ReflectionKind.Interface
       );
+
+      return module.name.endsWith("dns-adapter")
+        ? interfaces.sort((a, b) => {
+            const aIsRecord = a.name.endsWith("Record");
+            const bIsRecord = b.name.endsWith("Record");
+            const aIsExactRecord = a.name === "Record";
+            const bIsExactRecord = b.name === "Record";
+
+            // Sort methods that are neither "Record" nor "*Record" at the top
+            if (!aIsRecord && bIsRecord) return -1;
+            if (aIsRecord && !bIsRecord) return 1;
+
+            // Handle exact "Record" methods next
+            if (aIsExactRecord && !bIsExactRecord) return -1;
+            if (!aIsExactRecord && bIsExactRecord) return 1;
+
+            // Lastly, sort alphabetically for the remaining methods
+            return a.name.localeCompare(b.name);
+          })
+        : interfaces;
     }
 
     function useInterfaceProps(i: TypeDoc.DeclarationReflection) {
@@ -1434,6 +1437,10 @@ async function buildComponents() {
       "../pkg/platform/src/components/aws/solid-start.ts",
       "../pkg/platform/src/components/aws/static-site.ts",
       "../pkg/platform/src/components/cloudflare/worker.ts",
+      // dns adapters
+      "../pkg/platform/src/components/aws/dns-adapter.ts",
+      "../pkg/platform/src/components/cloudflare/dns-adapter.ts",
+      "../pkg/platform/src/components/vercel/dns-adapter.ts",
       // internal
       "../pkg/platform/src/components/aws/cdn.ts",
     ],
@@ -1446,10 +1453,7 @@ async function buildComponents() {
   // Generate JSON (generated for debugging purposes)
   await app.generateJson(project, "components-doc.json");
 
-  // Return classes
-  return project.children!.filter(
-    (c) => c.kind === TypeDoc.ReflectionKind.Module
-  );
+  return project;
 }
 
 async function buildExamples() {
@@ -1477,6 +1481,55 @@ async function buildExamples() {
       c.children?.length === 1 &&
       c.children[0].comment
   );
+}
+
+function renderSourceMessage(source: string) {
+  return [``, `{/* DO NOT EDIT. AUTO-GENERATED FROM "${source}" */}`];
+}
+
+function renderImports(outputFilePath: string) {
+  const relativePath = path.relative(outputFilePath, "src");
+  return [
+    ``,
+    `import Segment from '${relativePath}/src/components/tsdoc/Segment.astro';`,
+    `import Section from '${relativePath}/src/components/tsdoc/Section.astro';`,
+    `import NestedTitle from '${relativePath}/src/components/tsdoc/NestedTitle.astro';`,
+    `import InlineSection from '${relativePath}/src/components/tsdoc/InlineSection.astro';`,
+    "",
+    '<div class="tsdoc">',
+  ];
+}
+
+function renderExampleImports(outputFilePath: string) {
+  const relativePath = path.relative(outputFilePath, "src");
+  return [
+    ``,
+    `import Segment from '${relativePath}/src/components/tsdoc/Segment.astro';`,
+    `import Section from '${relativePath}/src/components/tsdoc/Section.astro';`,
+    `import NestedTitle from '${relativePath}/src/components/tsdoc/NestedTitle.astro';`,
+    `import InlineSection from '${relativePath}/src/components/tsdoc/InlineSection.astro';`,
+    "",
+    `Below are a collection of example SST apps. These are available in the [\`examples/\`](${config.github}/tree/dev/examples) directory of the repo.`,
+    "",
+    ":::tip",
+    "This doc is best viewed through the site search or through the _AI_.",
+    ":::",
+    "",
+    "The descriptions for these examples are generated using the comments in the `sst.config.ts` of the app.",
+    "",
+    "#### Contributing",
+    `To contribute an example or to edit one, submit a PR to the [repo](${config.github}).`,
+    "Make sure to document the `sst.config.ts` in your example.",
+    "",
+  ];
+}
+
+function renderTdComment(parts: TypeDoc.CommentDisplayPart[]) {
+  return parts.map((part) => part.text).join("");
+}
+
+function renderFooter() {
+  return ["</div>"];
 }
 
 function configureLogger() {

@@ -16,10 +16,10 @@ import {
   sanitizeToPascalCase,
 } from "../naming";
 import { VisibleError } from "../error";
-import { HostedZoneLookup } from "./providers/hosted-zone-lookup";
 import { DnsValidatedCertificate } from "./dns-validated-certificate";
-import { Hint } from "../hint";
 import { RETENTION } from "./logging";
+import { DnsAdapter as AwsDnsAdapter } from "./dns-adapter.js";
+import { DnsAdapterInput } from "../base/dns-adapter";
 
 interface DomainArgs {
   /**
@@ -31,56 +31,7 @@ interface DomainArgs {
    * }
    * ```
    */
-  domainName: Input<string>;
-  /**
-   * Name of the [Route 53 hosted zone](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/hosted-zones-working-with.html) that contains the `domainName`. You can find the hosted zone name in the Route 53 part of the AWS Console.
-
-   *
-   * Usually your domain name is in a hosted zone with the same name. For example,
-   * `domain.com` might be in a hosted zone also called `domain.com`. So by default, SST will
-   * look for a hosted zone that matches the `domainName`.
-   *
-   * There are cases where these might not be the same. For example, if you use a subdomain,
-   * `api.domain.com`, the hosted zone might be `domain.com`. So you'll need to pass in the
-   * hosted zone name.
-   *
-   * :::note
-   * If both the `hostedZone` and `hostedZoneId` are set, `hostedZoneId` will take precedence.
-   * :::
-   *
-   * @default Same as the `domainName`
-   * @example
-   * ```js {4}
-   * {
-   *   domain: {
-   *     domainName: "api.domain.com",
-   *     hostedZone: "domain.com"
-   *   }
-   * }
-   * ```
-   */
-  hostedZone?: Input<string>;
-  /**
-   * The 14 letter ID of the [Route 53 hosted zone](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/hosted-zones-working-with.html) that contains the `domainName`. You can find the hosted zone ID in the Route 53 part of the AWS Console.
-   *
-   * This option is useful for cases where you have multiple hosted zones that have the same
-   * domain.
-   *
-   * :::note
-   * If both the `hostedZone` and `hostedZoneId` are set, `hostedZoneId` will take precedence.
-   * :::
-   *
-   * @example
-   * ```js {4}
-   * {
-   *   domain: {
-   *     domainName: "api.domain.com",
-   *     hostedZoneId: "Z2FDTNDATAQYW2"
-   *   }
-   * }
-   * ```
-   */
-  hostedZoneId?: Input<string>;
+  name: Input<string>;
   /**
    * The base mapping for the custom domain. This adds a suffix to the URL of the API.
    *
@@ -91,7 +42,7 @@ interface DomainArgs {
    * ```js
    * {
    *   domain: {
-   *     domainName: "api.domain.com",
+   *     name: "api.domain.com",
    *     path: "v1"
    *   }
    * }
@@ -103,9 +54,63 @@ interface DomainArgs {
    * There's an extra trailing slash when a base path is set.
    * :::
    *
-   * Be default there is no base path, so if the `domainName` is `api.domain.com`, the full URL will be `https://api.domain.com`.
+   * Be default there is no base path, so if the `name` is `api.domain.com`, the full URL will be `https://api.domain.com`.
    */
-  path?: string;
+  path?: Input<string>;
+  /**
+   * The ARN of an existing certificate in the `us-east-1` region in AWS Certificate Manager
+   * to use for the domain. By default, SST will create a certificate with the domain name.
+   * The certificate will be created in the `us-east-1`(N. Virginia) region as required by
+   * AWS CloudFront.
+   *
+   * @example
+   * ```js
+   * {
+   *   domain: {
+   *     name: "domain.com",
+   *     cert: "arn:aws:acm:us-east-1:112233445566:certificate/3a958790-8878-4cdc-a396-06d95064cf63"
+   *   }
+   * }
+   * ```
+   */
+  cert?: Input<string>;
+  /**
+   * The DNS adapter you want to use for managing DNS records. Here is a list of currently
+   * suuported [DNS adapters](/docs/component/dns-adapter).
+   *
+   * :::note
+   * If `dns` is set to `false`, you must provide a validated certificate via `cert`. And
+   * you have to add the DNS records manually to point to the CloudFront distribution URL.
+   * :::
+   *
+   * @default `sst.aws.DnsAdapter`
+   * @example
+   *
+   * Specify the hosted zone ID for the domain.
+   *
+   * ```js
+   * {
+   *   domain: {
+   *     name: "domain.com",
+   *     dns: new sst.aws.DnsAdapter("MyDns", {
+   *       zone: "Z2FDTNDATAQYW2"
+   *     })
+   *   }
+   * }
+   * ```
+   *
+   * Domain is hosted on Cloudflare.
+   *
+   * ```js
+   * {
+   *   domain: {
+   *     name: "domain.com",
+   *     dns: new sst.cloudflare.DnsAdapter("MyDns")
+   *   }
+   * }
+   * ```
+   */
+  dns?: Input<DnsAdapterInput & {}>;
 }
 
 export interface ApiGatewayV2Args {
@@ -123,17 +128,6 @@ export interface ApiGatewayV2Args {
    * ```js
    * {
    *   domain: "api.domain.com"
-   * }
-   * ```
-   *
-   * Specify the Route 53 hosted zone.
-   *
-   * ```js
-   * {
-   *   domain: {
-   *     domainName: "api.domain.com",
-   *     hostedZone: "domain.com"
-   *   }
    * }
    * ```
    */
@@ -351,10 +345,9 @@ export class ApiGatewayV2 extends Component implements Link.Linkable {
     const logGroup = createLogGroup();
     createStage();
 
-    const zoneId = lookupHostedZoneId();
-    const certificate = createSsl();
+    const certificateArn = createSsl();
     const apigDomain = createDomainName();
-    createRoute53Records();
+    createDnsRecords();
     const apiMapping = createDomainMapping();
 
     this.constructorName = name;
@@ -377,18 +370,28 @@ export class ApiGatewayV2 extends Component implements Link.Linkable {
     function normalizeDomain() {
       if (!args.domain) return;
 
-      return output(args.domain).apply((domain) => {
-        if (typeof domain === "string") {
-          return { domainName: domain };
-        }
+      // validate
+      output(args.domain).apply((domain) => {
+        if (typeof domain === "string") return;
 
-        if (!domain.domainName) {
-          throw new Error(`Missing "domainName" for domain.`);
-        }
-        if (domain.hostedZone && domain.hostedZoneId) {
-          throw new Error(`Do not set both "hostedZone" and "hostedZoneId".`);
-        }
-        return domain;
+        if (!domain.name) throw new Error(`Missing "name" for domain.`);
+        if (domain.dns === false && !domain.cert)
+          throw new Error(`No "cert" provided for domain with disabled DNS.`);
+      });
+
+      // normalize
+      return output(args.domain).apply((domain) => {
+        const norm = typeof domain === "string" ? { name: domain } : domain;
+
+        return {
+          name: norm.name,
+          path: norm.path,
+          dns:
+            norm.dns === false
+              ? undefined
+              : norm.dns ?? new AwsDnsAdapter(`${name}Dns`, {}, { parent }),
+          cert: norm.cert,
+        };
       });
     }
 
@@ -455,44 +458,32 @@ export class ApiGatewayV2 extends Component implements Link.Linkable {
       );
     }
 
-    function lookupHostedZoneId() {
+    function createSsl() {
       if (!domain) return;
 
       return domain.apply((domain) => {
-        if (domain.hostedZoneId) return output(domain.hostedZoneId);
+        if (domain.cert) return output(domain.cert);
 
-        return new HostedZoneLookup(
-          `${name}HostedZoneLookup`,
+        return new DnsValidatedCertificate(
+          `${name}Ssl`,
           {
-            domain: domain.hostedZone ?? domain.domainName,
+            domainName: domain.name,
+            dns: domain.dns!,
           },
           { parent },
-        ).zoneId;
+        ).arn;
       });
     }
 
-    function createSsl() {
-      if (!domain || !zoneId) return;
-
-      return new DnsValidatedCertificate(
-        `${name}Ssl`,
-        {
-          domainName: domain.domainName,
-          zoneId,
-        },
-        { parent },
-      );
-    }
-
     function createDomainName() {
-      if (!domain || !certificate) return;
+      if (!domain || !certificateArn) return;
 
       return new aws.apigatewayv2.DomainName(
         `${name}DomainName`,
         transform(args.transform?.domainName, {
-          domainName: domain?.domainName,
+          domainName: domain?.name,
           domainNameConfiguration: {
-            certificateArn: certificate.arn,
+            certificateArn,
             endpointType: "REGIONAL",
             securityPolicy: "TLS_1_2",
           },
@@ -501,29 +492,26 @@ export class ApiGatewayV2 extends Component implements Link.Linkable {
       );
     }
 
-    function createRoute53Records(): void {
-      if (!domain || !zoneId || !apigDomain) {
+    function createDnsRecords(): void {
+      if (!domain || !apigDomain) {
         return;
       }
 
-      domain.domainName.apply((domainName) => {
-        for (const type of ["A", "AAAA"]) {
-          new aws.route53.Record(
-            `${name}${type}Record${sanitizeToPascalCase(domainName)}`,
-            {
-              name: domain.domainName,
-              zoneId,
-              type,
-              aliases: [
-                {
-                  name: apigDomain.domainNameConfiguration.targetDomainName,
-                  zoneId: apigDomain.domainNameConfiguration.hostedZoneId,
-                  evaluateTargetHealth: true,
-                },
-              ],
-            },
-            { parent },
-          );
+      domain.dns.apply((dns) => {
+        if (!dns) return;
+
+        if (dns instanceof AwsDnsAdapter) {
+          dns.createAliasRecords({
+            name: domain.name,
+            aliasName: apigDomain.domainNameConfiguration.targetDomainName,
+            aliasZone: apigDomain.domainNameConfiguration.hostedZoneId,
+          });
+        } else {
+          dns.createRecord({
+            type: "CNAME",
+            name: domain.name,
+            value: apigDomain.domainNameConfiguration.targetDomainName,
+          });
         }
       });
     }

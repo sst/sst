@@ -65,13 +65,12 @@ export interface RemixArgs extends SsrSiteArgs {
    * }
    * ```
    *
-   * Specify the Route 53 hosted zone and a `www.` version of the custom domain.
+   * Specify a `www.` version of the custom domain.
    *
    * ```js
    * {
    *   domain: {
-   *     domainName: "domain.com",
-   *     hostedZone: "domain.com",
+   *     name: "domain.com",
    *     redirects: ["www.domain.com"]
    *   }
    * }
@@ -175,7 +174,7 @@ export interface RemixArgs extends SsrSiteArgs {
  * ```js {4}
  * new sst.aws.Remix("MyWeb", {
  *   domain: {
- *     domainName: "my-app.com",
+ *     name: "my-app.com",
  *     redirects: ["www.my-app.com"]
  *   }
  * });

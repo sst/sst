@@ -9,12 +9,12 @@ import { DnsValidatedCertificate } from "./dns-validated-certificate.js";
 import { HttpsRedirect } from "./https-redirect.js";
 import { useProvider } from "./helpers/provider.js";
 import { Component, Prettify, Transform, transform } from "../component.js";
-import { sanitizeToPascalCase } from "../naming.js";
-import { HostedZoneLookup } from "./providers/hosted-zone-lookup.js";
 import { Input } from "../input.js";
 import { DistributionDeploymentWaiter } from "./providers/distribution-deployment-waiter.js";
+import { DnsAdapterInput } from "../base/dns-adapter.js";
+import { DnsAdapter as AwsDnsAdapter } from "./dns-adapter.js";
 
-interface CdnDomainArgs {
+export interface CdnDomainArgs {
   /**
    * The custom domain you want to use. Supports domains hosted on [Route 53](https://aws.amazon.com/route53/) or outside AWS.
    * @example
@@ -24,13 +24,13 @@ interface CdnDomainArgs {
    * }
    * ```
    */
-  domainName: Input<string>;
+  name: Input<string>;
   /**
    * Alternate domains to be used. Visitors to the alternate domains will be redirected to the
-   * main `domainName`.
+   * main `name`.
    *
    * :::note
-   * Unlike the `aliases` option, this will redirect visitors back to the main `domainName`.
+   * Unlike the `aliases` option, this will redirect visitors back to the main `name`.
    * :::
    *
    * @example
@@ -38,7 +38,7 @@ interface CdnDomainArgs {
    * ```js {4}
    * {
    *   domain: {
-   *     domainName: "domain.com",
+   *     name: "domain.com",
    *     redirects: ["www.domain.com"]
    *   }
    * }
@@ -55,7 +55,7 @@ interface CdnDomainArgs {
    * ```js {4}
    * {
    *   domain: {
-   *     domainName: "app1.domain.com",
+   *     name: "app1.domain.com",
    *     aliases: ["app2.domain.com"]
    *   }
    * }
@@ -63,54 +63,59 @@ interface CdnDomainArgs {
    */
   aliases?: Input<string[]>;
   /**
-   * Name of the [Route 53 hosted zone](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/hosted-zones-working-with.html) that contains the `domainName`. You can find the hosted zone name in the Route 53 part of the AWS Console.
-
+   * The ARN of an existing certificate in the `us-east-1` region in AWS Certificate Manager
+   * to use for the domain. By default, SST will create a certificate with the domain name.
+   * The certificate will be created in the `us-east-1`(N. Virginia) region as required by
+   * AWS CloudFront.
    *
-   * Usually your domain name is in a hosted zone with the same name. For example,
-   * `domain.com` might be in a hosted zone also called `domain.com`. So by default, SST will
-   * look for a hosted zone that matches the `domainName`.
-   *
-   * There are cases where these might not be the same. For example, if you use a subdomain,
-   * `app.domain.com`, the hosted zone might be `domain.com`. So you'll need to pass in the
-   * hosted zone name.
-   *
-   * :::note
-   * If both the `hostedZone` and `hostedZoneId` are set, `hostedZoneId` will take precedence.
-   * :::
-   *
-   * @default Same as the `domainName`
    * @example
-   * ```js {4}
+   * ```js
    * {
    *   domain: {
-   *     domainName: "app.domain.com",
-   *     hostedZone: "domain.com"
+   *     name: "domain.com",
+   *     cert: "arn:aws:acm:us-east-1:112233445566:certificate/3a958790-8878-4cdc-a396-06d95064cf63"
    *   }
    * }
    * ```
    */
-  hostedZone?: Input<string>;
+  cert?: Input<string>;
   /**
-   * The 14 letter ID of the [Route 53 hosted zone](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/hosted-zones-working-with.html) that contains the `domainName`. You can find the hosted zone ID in the Route 53 part of the AWS Console.
-   *
-   * This option is useful for cases where you have multiple hosted zones that have the same
-   * domain.
+   * The DNS adapter you want to use for managing DNS records. Here is a list of currently
+   * suuported [DNS adapters](/docs/component/dns-adapter).
    *
    * :::note
-   * If both the `hostedZone` and `hostedZoneId` are set, `hostedZoneId` will take precedence.
+   * If `dns` is set to `false`, you must provide a validated certificate via `cert`. And
+   * you have to add the DNS records manually to point to the CloudFront distribution URL.
    * :::
    *
+   * @default `sst.aws.DnsAdapter`
    * @example
-   * ```js {4}
+   *
+   * Specify the hosted zone ID for the domain.
+   *
+   * ```js
    * {
    *   domain: {
-   *     domainName: "domain.com",
-   *     hostedZoneId: "Z2FDTNDATAQYW2"
+   *     name: "domain.com",
+   *     dns: new sst.aws.DnsAdapter("MyDns", {
+   *       zone: "Z2FDTNDATAQYW2"
+   *     })
+   *   }
+   * }
+   * ```
+   *
+   * Domain is hosted on Cloudflare.
+   *
+   * ```js
+   * {
+   *   domain: {
+   *     name: "domain.com",
+   *     dns: new sst.cloudflare.DnsAdapter("MyDns")
    *   }
    * }
    * ```
    */
-  hostedZoneId?: Input<string>;
+  dns?: Input<DnsAdapterInput & {}>;
 }
 
 export interface CdnArgs {
@@ -159,13 +164,12 @@ export interface CdnArgs {
    * }
    * ```
    *
-   * Specify the Route 53 hosted zone and a `www.` version of the custom domain.
+   * Specify a `www.` version of the custom domain.
    *
    * ```js
    * {
    *   domain: {
-   *     domainName: "domain.com",
-   *     hostedZone: "domain.com",
+   *     name: "domain.com",
    *     redirects: ["www.domain.com"]
    *   }
    * }
@@ -221,66 +225,68 @@ export class Cdn extends Component {
 
     const domain = normalizeDomain();
 
-    const zoneId = lookupHostedZoneId();
-    const certificate = createSsl();
+    const certificateArn = createSsl();
     const distribution = createDistribution();
     const waiter = createDistributionDeploymentWaiter();
-    createRoute53Records();
+    createDnsRecords();
     createRedirects();
 
     this.distribution = waiter.isDone.apply(() => distribution);
-    this._domainUrl = domain?.domainName
-      ? interpolate`https://${domain.domainName}`
+    this._domainUrl = domain?.name
+      ? interpolate`https://${domain.name}`
       : undefined;
 
     function normalizeDomain() {
       if (!args.domain) return;
 
-      return output(args.domain).apply((domain) => {
-        if (typeof domain === "string") {
-          return { domainName: domain, aliases: [], redirects: [] };
-        }
+      // validate
+      output(args.domain).apply((domain) => {
+        if (typeof domain === "string") return;
 
-        if (!domain.domainName) {
-          throw new Error(`Missing "domainName" for domain.`);
-        }
-        if (domain.hostedZone && domain.hostedZoneId) {
-          throw new Error(`Do not set both "hostedZone" and "hostedZoneId".`);
-        }
-        return { aliases: [], redirects: [], ...domain };
+        if (!domain.name) throw new Error(`Missing "name" for domain.`);
+        if (domain.dns === false && !domain.cert)
+          throw new Error(
+            `Need to provide a validated certificate via "cert" when DNS is disabled`,
+          );
+        if (domain.dns === false && domain.redirects?.length)
+          throw new Error(`Redirects are not supported when DNS is disabled`);
       });
-    }
 
-    function lookupHostedZoneId() {
-      if (!domain) return;
+      // normalize
+      return output(args.domain).apply((domain) => {
+        const norm = typeof domain === "string" ? { name: domain } : domain;
 
-      return domain.apply((domain) => {
-        if (domain.hostedZoneId) return output(domain.hostedZoneId);
-
-        return new HostedZoneLookup(
-          `${name}HostedZoneLookup`,
-          {
-            domain: domain.hostedZone ?? domain.domainName,
-          },
-          { parent },
-        ).zoneId;
+        return {
+          name: norm.name,
+          aliases: norm.aliases ?? [],
+          redirects: norm.redirects ?? [],
+          dns:
+            norm.dns === false
+              ? undefined
+              : norm.dns ?? new AwsDnsAdapter(`${name}Dns`, {}, { parent }),
+          cert: norm.cert,
+        };
       });
     }
 
     function createSsl() {
-      if (!domain || !zoneId) return;
+      if (!domain) return;
 
-      // Certificates used for CloudFront distributions are required to be
-      // created in the us-east-1 region
-      return new DnsValidatedCertificate(
-        `${name}Ssl`,
-        {
-          domainName: domain.domainName,
-          alternativeNames: domain.aliases,
-          zoneId,
-        },
-        { parent, provider: useProvider("us-east-1") },
-      );
+      return domain.apply((domain) => {
+        if (domain.cert) return output(domain.cert);
+
+        // Certificates used for CloudFront distributions are required to be
+        // created in the us-east-1 region
+        return new DnsValidatedCertificate(
+          `${name}Ssl`,
+          {
+            domainName: domain.name,
+            alternativeNames: domain.aliases,
+            dns: domain.dns!,
+          },
+          { parent, provider: useProvider("us-east-1") },
+        ).arn;
+      });
     }
 
     function createDistribution() {
@@ -301,14 +307,11 @@ export class Cdn extends Component {
             },
           },
           aliases: domain
-            ? output(domain).apply((domain) => [
-                domain.domainName,
-                ...domain.aliases,
-              ])
+            ? output(domain).apply((domain) => [domain.name, ...domain.aliases])
             : [],
-          viewerCertificate: certificate
+          viewerCertificate: certificateArn
             ? {
-                acmCertificateArn: certificate.arn,
+                acmCertificateArn: certificateArn,
                 sslSupportMethod: "sni-only",
                 minimumProtocolVersion: "TLSv1.2_2021",
               }
@@ -337,50 +340,42 @@ export class Cdn extends Component {
       });
     }
 
-    function createRoute53Records(): void {
-      if (!domain || !zoneId) {
-        return;
-      }
+    function createDnsRecords() {
+      if (!domain) return;
 
-      // Create DNS record
-      output(domain).apply((domain) => {
-        for (const recordName of [domain.domainName, ...domain.aliases]) {
-          for (const type of ["A", "AAAA"]) {
-            new aws.route53.Record(
-              `${name}${type}Record${sanitizeToPascalCase(recordName)}`,
-              {
-                name: recordName,
-                zoneId,
-                type,
-                aliases: [
-                  {
-                    name: distribution.domainName,
-                    zoneId: distribution.hostedZoneId,
-                    evaluateTargetHealth: true,
-                  },
-                ],
-              },
-              { parent },
-            );
+      domain.apply((domain) => {
+        if (!domain.dns) return;
+
+        for (const recordName of [domain.name, ...domain.aliases]) {
+          if (domain.dns instanceof AwsDnsAdapter) {
+            domain.dns.createAliasRecords({
+              name: recordName,
+              aliasName: distribution.domainName,
+              aliasZone: distribution.hostedZoneId,
+            });
+          } else {
+            domain.dns.createRecord({
+              type: "CNAME",
+              name: recordName,
+              value: distribution.domainName,
+            });
           }
         }
       });
     }
 
     function createRedirects(): void {
-      if (!zoneId || !domain) {
-        return;
-      }
+      if (!domain) return;
 
       output(domain).apply((domain) => {
-        if (domain.redirects.length === 0) return;
+        if (!domain.redirects.length) return;
 
         new HttpsRedirect(
           `${name}Redirect`,
           {
-            zoneId,
             sourceDomains: domain.redirects,
-            targetDomain: domain.domainName,
+            targetDomain: domain.name,
+            dns: domain.dns!,
           },
           { parent },
         );

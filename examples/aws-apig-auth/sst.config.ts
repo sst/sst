@@ -17,7 +17,7 @@ export default $config({
   async run() {
     const api = new sst.aws.ApiGatewayV2("MyApi", {
       domain: {
-        domainName: "api.ion.sst.sh",
+        name: "api.ion.sst.sh",
         path: "v1",
       },
     });

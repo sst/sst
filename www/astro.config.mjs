@@ -60,6 +60,21 @@ const sidebar = [
         link: "/docs/component/aws/apigatewayv2/",
       },
       {
+        label: "DnsAdapter",
+        items: [
+          { label: "AWS", link: "/docs/component/aws/dns-adapter/" },
+          {
+            label: "Cloudflare",
+            link: "/docs/component/cloudflare/dns-adapter/",
+          },
+          {
+            label: "Vercel",
+            link: "/docs/component/vercel/dns-adapter/",
+          },
+        ],
+        collapsed: true,
+      },
+      {
         label: "Internal",
         items: [{ label: "Cdn", link: "/docs/component/aws/cdn/" }],
         collapsed: true,

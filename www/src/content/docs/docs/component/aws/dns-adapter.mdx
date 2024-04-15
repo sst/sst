@@ -1,0 +1,201 @@
+---
+title: DnsAdapter
+description: Reference doc for the `sst.aws.DnsAdapter` component.
+---
+
+{/* DO NOT EDIT. AUTO-GENERATED FROM "pkg/platform/src/components/aws/dns-adapter.ts" */}
+
+import Segment from '../../../../../../src/components/tsdoc/Segment.astro';
+import Section from '../../../../../../src/components/tsdoc/Section.astro';
+import NestedTitle from '../../../../../../src/components/tsdoc/NestedTitle.astro';
+import InlineSection from '../../../../../../src/components/tsdoc/InlineSection.astro';
+
+<div class="tsdoc">
+
+<Section type="about">
+The AWS `DnsAdapters` lets you manage DNS records for domains hosted on [Route 53](https://aws.amazon.com/route53/).
+
+This component looks up the hosted zone for the domain and creates the DNS records.
+
+```ts
+new sst.aws.DnsAdapter("MyDns");
+```
+
+Specify the specific hosted zone ID if you have multiple hosted zones with the same domain.
+
+```ts
+new sst.aws.DnsAdapter("MyDns", {
+  zone: "Z2FDTNDATAQYW2",
+});
+```
+</Section>
+
+---
+
+## Constructor
+
+<Segment>
+<Section type="signature">
+```ts
+new DnsAdapter(name, args?, opts?)
+```
+</Section>
+
+<Section type="parameters">
+#### Parameters
+- <p><code class="key">name</code> <code class="primitive">string</code></p>
+- <p><code class="key">args?</code> [<code class="type">DnsAdapterArgs</code>](#dnsadapterargs)</p>
+- <p><code class="key">opts?</code> [<code class="type">ComponentResourceOptions</code>](https://www.pulumi.com/docs/concepts/options/)</p>
+</Section>
+</Segment>
+
+## Methods
+
+### createAliasRecords
+<Segment>
+<Section type="signature">
+```ts
+createAliasRecords(record)
+```
+</Section>
+
+<Section type="parameters">
+#### Parameters
+- <p><code class="key">record</code> [<code class="type">AliasRecord</code>](#aliasrecord)</p>
+The alias record to create.
+</Section>
+
+<InlineSection>
+**Returns** <code class="primitive">Output</code><code class="symbol">&lt;</code>[<code class="type">Record</code>](https://www.pulumi.com/registry/packages/aws/api-docs/route53/record/)<code class="symbol">&gt;</code><code class="symbol">[]</code>
+</InlineSection>
+Creates alias records in the hosted zone.
+
+</Segment>
+
+### createRecord
+<Segment>
+<Section type="signature">
+```ts
+createRecord(record)
+```
+</Section>
+
+<Section type="parameters">
+#### Parameters
+- <p><code class="key">record</code> [<code class="type">Record</code>](#record)</p>
+The DNS record to create.
+</Section>
+
+<InlineSection>
+**Returns** <code class="primitive">Output</code><code class="symbol">&lt;</code>[<code class="type">Record</code>](https://www.pulumi.com/registry/packages/aws/api-docs/route53/record/)<code class="symbol">&gt;</code>
+</InlineSection>
+Creates a DNS record in the hosted zone.
+
+</Segment>
+
+## DnsAdapterArgs
+### transform?
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Object</code>
+</InlineSection>
+- <p>[<code class="key">record?</code>](#transform-record)</p>
+</Section>
+[Transform](/docs/components#transform) how this component creates its underlying
+resources.
+
+</Segment>
+<NestedTitle id="transform-record" Tag="h4" parent="transform.">record?</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** [<code class="type">RecordArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/route53/record/#inputs)<code class="symbol"> | </code><code class="symbol">(</code><code class="primitive">args</code><code class="symbol">: </code>[<code class="type">RecordArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/route53/record/#inputs)<code class="symbol"> => </code>[<code class="type">RecordArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/route53/record/#inputs)<code class="symbol"> | </code><code class="primitive">void</code><code class="symbol">)</code>
+</InlineSection>
+</Section>
+Transform the AWS Route 53 record resource.
+
+</Segment>
+### zone?
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+The 14 letter ID of the [Route 53 hosted zone](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/hosted-zones-working-with.html) that contains the `domainName`. You can find the hosted zone ID in the Route 53 part of the AWS Console.
+
+This option is useful for cases where you have multiple hosted zones that have the same
+domain.
+
+```js
+{
+  zone: "Z2FDTNDATAQYW2"
+}
+```
+</Segment>
+
+## Record
+### name
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+The name of the record.
+
+</Segment>
+### type
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+The type of the record.
+
+</Segment>
+### value
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+The value of the record.
+
+</Segment>
+
+## AliasRecord
+### aliasName
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+The domain name for the alias target.
+
+</Segment>
+### aliasZone
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+The Route 53 hosted zone ID for the alias target.
+
+</Segment>
+### name
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+The name of the record.
+
+</Segment>
+</div>

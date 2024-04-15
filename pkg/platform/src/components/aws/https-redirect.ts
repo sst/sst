@@ -3,39 +3,32 @@ import * as aws from "@pulumi/aws";
 import { DnsValidatedCertificate } from "./dns-validated-certificate.js";
 import { Bucket } from "./bucket.js";
 import { Component } from "../component.js";
-import { sanitizeToPascalCase } from "../naming.js";
 import { useProvider } from "./helpers/provider.js";
 import { Input } from "../input.js";
+import { DnsAdapter } from "../base/dns-adapter.js";
+import { DnsAdapter as AwsDnsAdapter } from "./dns-adapter.js";
 
 /**
  * Properties to configure an HTTPS Redirect
  */
 export interface HttpsRedirectArgs {
   /**
-   * Hosted zone of the domain which will be used to create alias record(s) from
-   * domain names in the hosted zone to the target domain. The hosted zone must
-   * contain entries for the domain name(s) supplied through `sourceDomains` that
-   * will redirect to the target domain.
-   *
-   * Domain names in the hosted zone can include a specific domain (example.com)
-   * and its subdomains (acme.example.com, zenith.example.com).
-   *
-   */
-  readonly zoneId: Input<string>;
-
-  /**
    * The redirect target fully qualified domain name (FQDN). An alias record
    * will be created that points to your CloudFront distribution. Root domain
    * or sub-domain can be supplied.
    */
-  readonly targetDomain: Input<string>;
-
+  targetDomain: Input<string>;
   /**
    * The domain names that will redirect to `targetDomain`
    *
    * @default Domain name of the hosted zone
    */
-  readonly sourceDomains: Input<string[]>;
+  sourceDomains: Input<string[]>;
+  /**
+   * The DNS adapter you want to use for managing DNS records. Here is a list of currently
+   * suuported [DNS adapters](/docs/component/dns-adapter).
+   */
+  dns: Input<DnsAdapter>;
 }
 
 /**
@@ -59,7 +52,7 @@ export class HttpsRedirect extends Component {
         alternativeNames: output(args.sourceDomains).apply((domains) =>
           domains.slice(1),
         ),
-        zoneId: args.zoneId,
+        dns: args.dns,
       },
       { parent, provider: useProvider("us-east-1") },
     );
@@ -124,25 +117,20 @@ export class HttpsRedirect extends Component {
       { parent },
     );
 
-    output(args.sourceDomains).apply((sourceDomains) => {
+    all([args.dns, args.sourceDomains]).apply(([dns, sourceDomains]) => {
       for (const recordName of sourceDomains) {
-        for (const type of ["A", "AAAA"]) {
-          new aws.route53.Record(
-            `${name}${type}Record${sanitizeToPascalCase(recordName)}`,
-            {
-              name: recordName,
-              zoneId: args.zoneId,
-              type,
-              aliases: [
-                {
-                  name: distribution.domainName,
-                  zoneId: distribution.hostedZoneId,
-                  evaluateTargetHealth: true,
-                },
-              ],
-            },
-            { parent },
-          );
+        if (dns instanceof AwsDnsAdapter) {
+          dns.createAliasRecords({
+            name: recordName,
+            aliasName: distribution.domainName,
+            aliasZone: distribution.hostedZoneId,
+          });
+        } else {
+          dns.createRecord({
+            type: "CNAME",
+            name: recordName,
+            value: distribution.domainName,
+          });
         }
       }
     });

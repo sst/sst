@@ -1,8 +1,8 @@
-import { ComponentResourceOptions, output } from "@pulumi/pulumi";
+import { ComponentResourceOptions, Output, all } from "@pulumi/pulumi";
 import * as aws from "@pulumi/aws";
 import { Component } from "../component";
-import { sanitizeToPascalCase } from "../naming";
 import { Input } from "../input.js";
+import { DnsAdapter } from "../base/dns-adapter";
 
 /**
  * Properties to create a DNS validated certificate managed by AWS Certificate Manager.
@@ -13,18 +13,20 @@ export interface DnsValidatedCertificateArgs {
    */
   domainName: Input<string>;
   /**
-   * Route 53 Hosted Zone used to perform DNS validation of the request.  The zone
-   * must be authoritative for the domain name specified in the Certificate Request.
-   */
-  zoneId: Input<string>;
-  /**
    * Set of domains that should be SANs in the issued certificate
    */
   alternativeNames?: Input<string[]>;
+  /**
+   * The DNS adapter you want to use for managing DNS records. Here is a list of currently
+   * suuported [DNS adapters](/docs/component/dns-adapter).
+   */
+  dns: Input<DnsAdapter>;
 }
 
 export class DnsValidatedCertificate extends Component {
-  public certificateValidation: aws.acm.CertificateValidation;
+  private certificateValidation:
+    | aws.acm.CertificateValidation
+    | Output<aws.acm.CertificateValidation>;
 
   constructor(
     name: string,
@@ -34,9 +36,13 @@ export class DnsValidatedCertificate extends Component {
     super(__pulumiType, name, args, opts);
 
     const parent = this;
-    const { domainName, alternativeNames, zoneId } = args;
+    const { domainName, alternativeNames, dns } = args;
 
-    const certificate = output(zoneId).apply((zoneId) => {
+    const certificate = createCertificate();
+    const records = createDnsRecords();
+    this.certificateValidation = validateCertificate();
+
+    function createCertificate() {
       return new aws.acm.Certificate(
         `${name}Certificate`,
         {
@@ -46,36 +52,30 @@ export class DnsValidatedCertificate extends Component {
         },
         { parent },
       );
-    });
+    }
 
-    const records = certificate.domainValidationOptions.apply((options) =>
-      options.map((option) => {
-        return new aws.route53.Record(
-          `${name}Record${sanitizeToPascalCase(option.resourceRecordName)}`,
-          {
-            name: option.resourceRecordName,
-            zoneId,
-            type: option.resourceRecordType,
-            records: [option.resourceRecordValue],
-            ttl: 60,
-          },
-          { parent },
-        );
-      }),
-    );
+    function createDnsRecords() {
+      return all([dns, certificate.domainValidationOptions]).apply(
+        ([dns, options]) =>
+          options.map((option) =>
+            dns.createRecord({
+              type: option.resourceRecordType,
+              name: option.resourceRecordName,
+              value: option.resourceRecordValue,
+            }),
+          ),
+      );
+    }
 
-    const certificateValidation = new aws.acm.CertificateValidation(
-      `${name}Validation`,
-      {
-        certificateArn: certificate.arn,
-        validationRecordFqdns: records.apply((records) =>
-          records.map((record) => record.fqdn),
-        ),
-      },
-      { parent },
-    );
-
-    this.certificateValidation = certificateValidation;
+    function validateCertificate() {
+      return new aws.acm.CertificateValidation(
+        `${name}Validation`,
+        {
+          certificateArn: certificate.arn,
+        },
+        { parent, dependsOn: records },
+      );
+    }
   }
 
   public get arn() {

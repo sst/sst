@@ -1,0 +1,143 @@
+---
+title: DnsAdapter
+description: Reference doc for the `sst.cloudflare.DnsAdapter` component.
+---
+
+{/* DO NOT EDIT. AUTO-GENERATED FROM "pkg/platform/src/components/cloudflare/dns-adapter.ts" */}
+
+import Segment from '../../../../../../src/components/tsdoc/Segment.astro';
+import Section from '../../../../../../src/components/tsdoc/Section.astro';
+import NestedTitle from '../../../../../../src/components/tsdoc/NestedTitle.astro';
+import InlineSection from '../../../../../../src/components/tsdoc/InlineSection.astro';
+
+<div class="tsdoc">
+
+<Section type="about">
+The Cloudflare `DnsAdapters` lets you manage DNS records for domains hosted on [Cloudflare DNS]](https://developers.cloudflare.com/dns/).
+
+This component looks up the zone for the domain and creates the DNS records.
+
+```ts
+new sst.cloudflare.DnsAdapter("MyDns");
+```
+
+Specify the zone ID.
+
+```ts
+new sst.cloudflare.DnsAdapter("MyDns", {
+  zone: "415e6f4653b6d95b775d350f32119abb"
+});
+```
+</Section>
+
+---
+
+## Constructor
+
+<Segment>
+<Section type="signature">
+```ts
+new DnsAdapter(name, args?, opts?)
+```
+</Section>
+
+<Section type="parameters">
+#### Parameters
+- <p><code class="key">name</code> <code class="primitive">string</code></p>
+- <p><code class="key">args?</code> [<code class="type">DnsAdapterArgs</code>](#dnsadapterargs)</p>
+- <p><code class="key">opts?</code> [<code class="type">ComponentResourceOptions</code>](https://www.pulumi.com/docs/concepts/options/)</p>
+</Section>
+</Segment>
+
+## Methods
+
+### createRecord
+<Segment>
+<Section type="signature">
+```ts
+createRecord(record)
+```
+</Section>
+
+<Section type="parameters">
+#### Parameters
+- <p><code class="key">record</code> [<code class="type">Record</code>](#record)</p>
+</Section>
+
+<InlineSection>
+**Returns** <code class="primitive">Output</code><code class="symbol">&lt;</code>[<code class="type">Record</code>](https://www.pulumi.com/registry/packages/cloudflare/api-docs/record/)<code class="symbol">&gt;</code>
+</InlineSection>
+
+</Segment>
+
+## DnsAdapterArgs
+### transform?
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Object</code>
+</InlineSection>
+- <p>[<code class="key">record?</code>](#transform-record)</p>
+</Section>
+[Transform](/docs/components#transform) how this component creates its underlying
+resources.
+
+</Segment>
+<NestedTitle id="transform-record" Tag="h4" parent="transform.">record?</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** [<code class="type">RecordArgs</code>](https://www.pulumi.com/registry/packages/cloudflare/api-docs/record/#inputs)<code class="symbol"> | </code><code class="symbol">(</code><code class="primitive">args</code><code class="symbol">: </code>[<code class="type">RecordArgs</code>](https://www.pulumi.com/registry/packages/cloudflare/api-docs/record/#inputs)<code class="symbol"> => </code>[<code class="type">RecordArgs</code>](https://www.pulumi.com/registry/packages/cloudflare/api-docs/record/#inputs)<code class="symbol"> | </code><code class="primitive">void</code><code class="symbol">)</code>
+</InlineSection>
+</Section>
+Transform the Cloudflare record resource.
+
+</Segment>
+### zone?
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+The ID of the Cloudflare zone to create the record in.
+
+```js
+{
+  zone: "415e6f4653b6d95b775d350f32119abb"
+}
+```
+</Segment>
+
+## Record
+### name
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+The name of the record.
+
+</Segment>
+### type
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+The type of the record.
+
+</Segment>
+### value
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+The value of the record.
+
+</Segment>
+</div>

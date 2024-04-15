@@ -52,7 +52,7 @@ Redirect `www.my-app.com` to `my-app.com`.
 ```js {4}
 new sst.aws.Nextjs("MyWeb", {
   domain: {
-    domainName: "my-app.com",
+    name: "my-app.com",
     redirects: ["www.my-app.com"]
   }
 });
@@ -386,9 +386,9 @@ If you want to use a custom `build` script from your `package.json`.
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol"> | </code><code class="primitive">Object</code><code class="symbol">&gt;</code>
 </InlineSection>
 - <p>[<code class="key">aliases?</code>](#domain-aliases)</p>
-- <p>[<code class="key">domainName</code>](#domain-domainname)</p>
-- <p>[<code class="key">hostedZone?</code>](#domain-hostedzone)</p>
-- <p>[<code class="key">hostedZoneId?</code>](#domain-hostedzoneid)</p>
+- <p>[<code class="key">cert?</code>](#domain-cert)</p>
+- <p>[<code class="key">dns?</code>](#domain-dns)</p>
+- <p>[<code class="key">name</code>](#domain-name)</p>
 - <p>[<code class="key">redirects?</code>](#domain-redirects)</p>
 </Section>
 Set a custom domain for your Next.js app. Supports domains hosted either on
@@ -410,8 +410,7 @@ Specify the Route 53 hosted zone and a `www.` version of the custom domain.
 ```js
 {
   domain: {
-    domainName: "domain.com",
-    hostedZone: "domain.com",
+    name: "domain.com",
     redirects: ["www.domain.com"]
   }
 }
@@ -432,13 +431,77 @@ browser.
 ```js {4}
 {
   domain: {
-    domainName: "app1.domain.com",
+    name: "app1.domain.com",
     aliases: ["app2.domain.com"]
   }
 }
 ```
 </Segment>
-<NestedTitle id="domain-domainname" Tag="h4" parent="domain.">domainName</NestedTitle>
+<NestedTitle id="domain-cert" Tag="h4" parent="domain.">cert?</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+The ARN of an existing certificate in the `us-east-1` region in AWS Certificate Manager
+to use for the domain. By default, SST will create a certificate with the domain name.
+The certificate will be created in the `us-east-1`(N. Virginia) region as required by
+AWS CloudFront.
+
+```js
+{
+  domain: {
+    name: "domain.com",
+    cert: "arn:aws:acm:us-east-1:112233445566:certificate/3a958790-8878-4cdc-a396-06d95064cf63"
+  }
+}
+```
+</Segment>
+<NestedTitle id="domain-dns" Tag="h4" parent="domain.">dns?</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">false</code><code class="symbol"> | </code>[<code class="type">sst.aws.DnsAdapter</code>](/docs/component/aws/dns-adapter/)<code class="symbol"> | </code>[<code class="type">sst.cloudflare.DnsAdapter</code>](/docs/component/cloudflare/dns-adapter/)<code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+
+<InlineSection>
+**Default** <code class="primitive">sst.aws.DnsAdapter</code>
+</InlineSection>
+The DNS adapter you want to use for managing DNS records. Here is a list of currently
+suuported [DNS adapters](/docs/component/dns-adapter).
+
+:::note
+If `dns` is set to `false`, you must provide a validated certificate via `cert`. And
+you have to add the DNS records manually to point to the CloudFront distribution URL.
+:::
+
+Specify the hosted zone ID for the domain.
+
+```js
+{
+  domain: {
+    name: "domain.com",
+    dns: new sst.aws.DnsAdapter("MyDns", {
+      zone: "Z2FDTNDATAQYW2"
+    })
+  }
+}
+```
+
+Domain is hosted on Cloudflare.
+
+```js
+{
+  domain: {
+    name: "domain.com",
+    dns: new sst.cloudflare.DnsAdapter("MyDns")
+  }
+}
+```
+</Segment>
+<NestedTitle id="domain-name" Tag="h4" parent="domain.">name</NestedTitle>
 <Segment>
 <Section type="parameters">
 <InlineSection>
@@ -453,66 +516,6 @@ The custom domain you want to use. Supports domains hosted on [Route 53](https:/
 }
 ```
 </Segment>
-<NestedTitle id="domain-hostedzone" Tag="h4" parent="domain.">hostedZone?</NestedTitle>
-<Segment>
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
-</InlineSection>
-</Section>
-
-<InlineSection>
-**Default** Same as the `domainName`
-</InlineSection>
-Name of the [Route 53 hosted zone](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/hosted-zones-working-with.html) that contains the `domainName`. You can find the hosted zone name in the Route 53 part of the AWS Console.
-
-
-Usually your domain name is in a hosted zone with the same name. For example,
-`domain.com` might be in a hosted zone also called `domain.com`. So by default, SST will
-look for a hosted zone that matches the `domainName`.
-
-There are cases where these might not be the same. For example, if you use a subdomain,
-`app.domain.com`, the hosted zone might be `domain.com`. So you'll need to pass in the
-hosted zone name.
-
-:::note
-If both the `hostedZone` and `hostedZoneId` are set, `hostedZoneId` will take precedence.
-:::
-
-```js {4}
-{
-  domain: {
-    domainName: "app.domain.com",
-    hostedZone: "domain.com"
-  }
-}
-```
-</Segment>
-<NestedTitle id="domain-hostedzoneid" Tag="h4" parent="domain.">hostedZoneId?</NestedTitle>
-<Segment>
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
-</InlineSection>
-</Section>
-The 14 letter ID of the [Route 53 hosted zone](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/hosted-zones-working-with.html) that contains the `domainName`. You can find the hosted zone ID in the Route 53 part of the AWS Console.
-
-This option is useful for cases where you have multiple hosted zones that have the same
-domain.
-
-:::note
-If both the `hostedZone` and `hostedZoneId` are set, `hostedZoneId` will take precedence.
-:::
-
-```js {4}
-{
-  domain: {
-    domainName: "domain.com",
-    hostedZoneId: "Z2FDTNDATAQYW2"
-  }
-}
-```
-</Segment>
 <NestedTitle id="domain-redirects" Tag="h4" parent="domain.">redirects?</NestedTitle>
 <Segment>
 <Section type="parameters">
@@ -521,17 +524,17 @@ If both the `hostedZone` and `hostedZoneId` are set, `hostedZoneId` will take pr
 </InlineSection>
 </Section>
 Alternate domains to be used. Visitors to the alternate domains will be redirected to the
-main `domainName`.
+main `name`.
 
 :::note
-Unlike the `aliases` option, this will redirect visitors back to the main `domainName`.
+Unlike the `aliases` option, this will redirect visitors back to the main `name`.
 :::
 
 Use this to create a `www.` version of your domain and redirect visitors to the apex domain.
 ```js {4}
 {
   domain: {
-    domainName: "domain.com",
+    name: "domain.com",
     redirects: ["www.domain.com"]
   }
 }

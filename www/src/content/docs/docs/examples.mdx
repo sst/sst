@@ -13,7 +13,7 @@ import InlineSection from '../../../../src/components/tsdoc/InlineSection.astro'
 Below are a collection of example SST apps. These are available in the [`examples/`](https://github.com/sst/ion/tree/dev/examples) directory of the repo.
 
 :::tip
-This doc is best viewed through the table of contents or through _Ask AI_.
+This doc is best viewed through the site search or through the _AI_.
 :::
 
 The descriptions for these examples are generated using the comments in the `sst.config.ts` of the app.
@@ -30,7 +30,7 @@ Enable IAM and JWT authorizers for API Gateway routes.
 ```ts title="sst.config.ts"
 const api = new sst.aws.ApiGatewayV2("MyApi", {
   domain: {
-    domainName: "api.ion.sst.sh",
+    name: "api.ion.sst.sh",
     path: "v1",
   },
 });
@@ -279,10 +279,12 @@ const api = new sst.aws.Function("MyApi", {
   url: true,
 });
 const router = new sst.aws.Router("MyRouter", {
+  domain: "router.ion.sst.sh",
   routes: {
     "/*": api.url,
   },
 });
+
 return {
   router: router.url,
 };
@@ -443,3 +445,28 @@ new sst.aws.Function("MyFunction", {
 ```
 
 View the [full example](https://github.com/sst/ion/tree/dev/examples/sst-$transform).
+
+
+---
+## Vercel domains
+
+Creates a router that uses domains purchased through and hosted in your Vercel account.
+Ensure the `VERCEL_API_TOKEN` and `VERCEL_TEAM_ID` environment variables are set.
+```ts title="sst.config.ts"
+const router = new sst.aws.Router("MyRouter", {
+  domain: {
+    name: "ion.sst.moe",
+    dns: new sst.vercel.DnsAdapter("MyDns", {
+      domain: "sst.moe",
+    }),
+  },
+  routes: {
+    "/*": "https://sst.dev",
+  },
+});
+return {
+  router: router.url,
+};
+```
+
+View the [full example](https://github.com/sst/ion/tree/dev/examples/vercel-domain).

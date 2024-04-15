@@ -148,6 +148,7 @@ export class Component extends ComponentResource {
             case "aws:s3/bucketWebsiteConfigurationV2:BucketWebsiteConfigurationV2":
             case "aws:sns/topicSubscription:TopicSubscription":
             case "cloudflare:index/workerDomain:WorkerDomain":
+            case "vercel:index/dnsRecord:DnsRecord":
               break;
             default:
               throw new VisibleError(

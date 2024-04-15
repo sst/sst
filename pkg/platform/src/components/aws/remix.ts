@@ -171,8 +171,7 @@ export interface RemixArgs extends SsrSiteArgs {
    * ```js
    * {
    *   domain: {
-   *     domainName: "domain.com",
-   *     hostedZone: "domain.com",
+   *     name: "domain.com",
    *     redirects: ["www.domain.com"]
    *   }
    * }
@@ -259,7 +258,7 @@ export interface RemixArgs extends SsrSiteArgs {
  * ```js {4}
  * new sst.aws.Remix("MyWeb", {
  *   domain: {
- *     domainName: "my-app.com",
+ *     name: "my-app.com",
  *     redirects: ["www.my-app.com"]
  *   }
  * });
@@ -326,8 +325,8 @@ export class Remix extends Component implements Link.Linkable {
       _hint: $dev
         ? undefined
         : all([this.cdn.domainUrl, this.cdn.url]).apply(
-          ([domainUrl, url]) => domainUrl ?? url,
-        ),
+            ([domainUrl, url]) => domainUrl ?? url,
+          ),
       _metadata: {
         mode: $dev ? "placeholder" : "deployed",
         path: sitePath,
@@ -428,21 +427,21 @@ export class Remix extends Component implements Link.Linkable {
             },
             edgeFunctions: edge
               ? {
-                server: {
-                  function: serverConfig,
-                },
-              }
+                  server: {
+                    function: serverConfig,
+                  },
+                }
               : undefined,
             origins: {
               ...(edge
                 ? {}
                 : {
-                  server: {
                     server: {
-                      function: serverConfig,
+                      server: {
+                        function: serverConfig,
+                      },
                     },
-                  },
-                }),
+                  }),
               s3: {
                 s3: {
                   copy: [
@@ -459,16 +458,16 @@ export class Remix extends Component implements Link.Linkable {
             behaviors: [
               edge
                 ? {
-                  cacheType: "server",
-                  cfFunction: "serverCfFunction",
-                  edgeFunction: "server",
-                  origin: "s3",
-                }
+                    cacheType: "server",
+                    cfFunction: "serverCfFunction",
+                    edgeFunction: "server",
+                    origin: "s3",
+                  }
                 : {
-                  cacheType: "server",
-                  cfFunction: "serverCfFunction",
-                  origin: "server",
-                },
+                    cacheType: "server",
+                    cfFunction: "serverCfFunction",
+                    origin: "server",
+                  },
               ...buildMeta.staticRoutes.map(
                 (route) =>
                   ({

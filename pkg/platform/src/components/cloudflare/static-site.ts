@@ -208,7 +208,7 @@ export interface StaticSiteArgs extends BaseStaticSiteArgs {
  * ```js {4}
  * new sst.aws.StaticSite("MyWeb", {
  *   domain: {
- *     domainName: "my-app.com",
+ *     name: "my-app.com",
  *     redirects: ["www.my-app.com"]
  *   }
  * });

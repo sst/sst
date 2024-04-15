@@ -1,0 +1,150 @@
+---
+title: DnsAdapter
+description: Reference doc for the `sst.vercel.DnsAdapter` component.
+---
+
+{/* DO NOT EDIT. AUTO-GENERATED FROM "pkg/platform/src/components/vercel/dns-adapter.ts" */}
+
+import Segment from '../../../../../../src/components/tsdoc/Segment.astro';
+import Section from '../../../../../../src/components/tsdoc/Section.astro';
+import NestedTitle from '../../../../../../src/components/tsdoc/NestedTitle.astro';
+import InlineSection from '../../../../../../src/components/tsdoc/InlineSection.astro';
+
+<div class="tsdoc">
+
+<Section type="about">
+The Vercel `DnsAdapters` lets you manage DNS records for [Vercel](http://vercel.com) domains.
+
+```ts
+new sst.vercel.DnsAdapter("MyDns", {
+  domain: "example.com"
+});
+```
+
+#### Configuring Vercel provider
+1. To use this component, add the `@pulumiverse/vercel` provider to your app. You can do this by running:
+
+   ```bash
+   sst add @pulumiverse/vercel
+   ```
+
+   The [`sst add`](/docs/reference/cli/#add) commands adds and installs the provider to your `sst.config.ts` file.
+
+2. If you don't already have a Vercel Access Token, follow [this guide](https://vercel.com/guides/how-do-i-use-a-vercel-api-access-token#creating-an-access-token) to create one.
+
+3. Add a `VERCEL_API_TOKEN` environment variable with the access token value. If the domain
+belongs to a team, also add a `VERCEL_TEAM_ID` environment variable with the Team ID. You can
+find your Team ID inside your team's general project settings on the Vercel dashboard.
+</Section>
+
+---
+
+## Constructor
+
+<Segment>
+<Section type="signature">
+```ts
+new DnsAdapter(name, args, opts?)
+```
+</Section>
+
+<Section type="parameters">
+#### Parameters
+- <p><code class="key">name</code> <code class="primitive">string</code></p>
+- <p><code class="key">args</code> [<code class="type">DnsAdapterArgs</code>](#dnsadapterargs)</p>
+- <p><code class="key">opts?</code> [<code class="type">ComponentResourceOptions</code>](https://www.pulumi.com/docs/concepts/options/)</p>
+</Section>
+</Segment>
+
+## Methods
+
+### createRecord
+<Segment>
+<Section type="signature">
+```ts
+createRecord(record)
+```
+</Section>
+
+<Section type="parameters">
+#### Parameters
+- <p><code class="key">record</code> [<code class="type">Record</code>](#record)</p>
+</Section>
+
+<InlineSection>
+**Returns** <code class="primitive">Output</code><code class="symbol">&lt;</code>[<code class="type">DnsRecord</code>](https://www.pulumi.com/registry/packages/vercel/api-docs/dnsrecord/)<code class="symbol">&gt;</code>
+</InlineSection>
+
+</Segment>
+
+## DnsAdapterArgs
+### domain
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+The domain name in your Vercel account to create the record in.
+
+```js
+{
+  domain: "example.com"
+}
+```
+</Segment>
+### transform?
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Object</code>
+</InlineSection>
+- <p>[<code class="key">record?</code>](#transform-record)</p>
+</Section>
+[Transform](/docs/components#transform) how this component creates its underlying
+resources.
+
+</Segment>
+<NestedTitle id="transform-record" Tag="h4" parent="transform.">record?</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** [<code class="type">DnsRecordArgs</code>](https://www.pulumi.com/registry/packages/vercel/api-docs/dnsrecord/#inputs)<code class="symbol"> | </code><code class="symbol">(</code><code class="primitive">args</code><code class="symbol">: </code>[<code class="type">DnsRecordArgs</code>](https://www.pulumi.com/registry/packages/vercel/api-docs/dnsrecord/#inputs)<code class="symbol"> => </code>[<code class="type">DnsRecordArgs</code>](https://www.pulumi.com/registry/packages/vercel/api-docs/dnsrecord/#inputs)<code class="symbol"> | </code><code class="primitive">void</code><code class="symbol">)</code>
+</InlineSection>
+</Section>
+Transform the Vercel record resource.
+
+</Segment>
+
+## Record
+### name
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+The name of the record.
+
+</Segment>
+### type
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+The type of the record.
+
+</Segment>
+### value
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+The value of the record.
+
+</Segment>
+</div>
