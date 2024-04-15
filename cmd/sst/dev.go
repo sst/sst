@@ -115,7 +115,12 @@ func CmdDev(cli *Cli) error {
 			cmd.Stdout = os.Stdout
 			cmd.Stderr = os.Stderr
 			processExit := make(chan interface{})
-			cmd.Start()
+			err := cmd.Start()
+			if err != nil {
+				fmt.Println(err)
+				cli.Cancel()
+				return
+			}
 			go func() {
 				cmd.Wait()
 				processExit <- true
