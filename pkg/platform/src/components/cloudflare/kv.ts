@@ -27,6 +27,26 @@ export interface KvArgs {
  * ```ts
  * const storage = new sst.cloudflare.Kv("MyStorage");
  * ```
+ *
+ * #### Link to a worker
+ *
+ * You can link KV to a worker.
+ *
+ * ```ts {3}
+ * new sst.cloudflare.Worker("MyWorker", {
+ *   handler: "./index.ts",
+ *   link: [storage],
+ *   url: true
+ * });
+ * ```
+ *
+ * Once linked, you can use the SDK to interact with the bucket.
+ *
+ * ```ts title="index.ts" {3}
+ * import { Resource } from "sst";
+ *
+ * await Resource.MyStorage.get("someKey");
+ * ```
  */
 export class Kv extends Component implements Link.Cloudflare.Linkable {
   private namespace: cloudflare.WorkersKvNamespace;

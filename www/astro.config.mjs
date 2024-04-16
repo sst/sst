@@ -63,7 +63,7 @@ const sidebar = [
     label: "Cloudflare",
     items: [
       { label: "D1", link: "/docs/component/cloudflare/d1/" },
-      //{ label: "KV", link: "/docs/component/cloudflare/kv/" },
+      { label: "KV", link: "/docs/component/cloudflare/kv/" },
       { label: "Worker", link: "/docs/component/cloudflare/worker/" },
       { label: "Bucket", link: "/docs/component/cloudflare/bucket/" },
     ],
