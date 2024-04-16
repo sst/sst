@@ -11,14 +11,22 @@ export default $config({
     const bucket = new sst.aws.Bucket("MyBucket", {
       public: true,
     });
-    const hono = new sst.aws.Function("TRPC", {
+
+    const trpc = new sst.aws.Function("TRPC", {
       url: true,
       link: [bucket],
       handler: "index.handler",
     });
 
+    const client = new sst.aws.Function("Client", {
+      url: true,
+      link: [trpc],
+      handler: "client.handler",
+    });
+
     return {
-      api: hono.url,
+      api: trpc.url,
+      client: client.url,
     };
   },
 });
