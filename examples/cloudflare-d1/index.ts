@@ -8,6 +8,6 @@ export default {
     await Resource.MyDatabase.prepare("INSERT INTO todo (id) VALUES (?1)")
       .bind((result.id as number) + 1)
       .run();
-    return new Response("Hello, world!");
+    return new Response(result.id.toString());
   },
 };

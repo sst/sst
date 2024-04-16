@@ -1,5 +1,5 @@
 {
-  "name": "cloudflare-d1",
+  "name": "cloudflare-kv",
   "version": "0.0.0",
   "dependencies": {
     "sst": "^3.0.4"
@@ -8,3 +8,4 @@
     "@cloudflare/workers-types": "^4.20240405.0"
   }
 }
+

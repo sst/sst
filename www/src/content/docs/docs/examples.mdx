@@ -429,6 +429,27 @@ View the [full example](https://github.com/sst/ion/tree/dev/examples/aws-vite).
 
 
 ---
+## Cloudflare KV
+
+This example creates a Cloudflare KV namespace and links it to a worker. Now you can use the
+SDK to interact with the KV namespace in your worker.
+```ts title="sst.config.ts"
+const storage = new sst.cloudflare.Kv("MyStorage");
+const worker = new sst.cloudflare.Worker("Worker", {
+  url: true,
+  link: [storage],
+  handler: "index.ts",
+});
+
+return {
+  url: worker.url,
+};
+```
+
+View the [full example](https://github.com/sst/ion/tree/dev/examples/cloudflare-kv).
+
+
+---
 ## Default function props
 
 Set default props for all the functions in your app using the global [`$transform`](/docs/reference/global/#transform).
