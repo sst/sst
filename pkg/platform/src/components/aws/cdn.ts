@@ -11,8 +11,8 @@ import { useProvider } from "./helpers/provider.js";
 import { Component, Prettify, Transform, transform } from "../component.js";
 import { Input } from "../input.js";
 import { DistributionDeploymentWaiter } from "./providers/distribution-deployment-waiter.js";
-import { DnsAdapterInput } from "../base/dns-adapter.js";
-import { DnsAdapter as AwsDnsAdapter } from "./dns-adapter.js";
+import { Dns } from "../dns.js";
+import { dns as awsDns } from "./dns.js";
 
 export interface CdnDomainArgs {
   /**
@@ -88,7 +88,7 @@ export interface CdnDomainArgs {
    * you have to add the DNS records manually to point to the CloudFront distribution URL.
    * :::
    *
-   * @default `sst.aws.DnsAdapter`
+   * @default `sst.aws.dns`
    * @example
    *
    * Specify the hosted zone ID for the domain.
@@ -97,7 +97,7 @@ export interface CdnDomainArgs {
    * {
    *   domain: {
    *     name: "domain.com",
-   *     dns: new sst.aws.DnsAdapter("MyDns", {
+   *     dns: sst.aws.dns({
    *       zone: "Z2FDTNDATAQYW2"
    *     })
    *   }
@@ -110,12 +110,12 @@ export interface CdnDomainArgs {
    * {
    *   domain: {
    *     name: "domain.com",
-   *     dns: new sst.cloudflare.DnsAdapter("MyDns")
+   *     dns: sst.cloudflare.dns()
    *   }
    * }
    * ```
    */
-  dns?: Input<DnsAdapterInput & {}>;
+  dns?: Input<false | (Dns & {})>;
 }
 
 export interface CdnArgs {
@@ -260,10 +260,7 @@ export class Cdn extends Component {
           name: norm.name,
           aliases: norm.aliases ?? [],
           redirects: norm.redirects ?? [],
-          dns:
-            norm.dns === false
-              ? undefined
-              : norm.dns ?? new AwsDnsAdapter(`${name}Dns`, {}, { parent }),
+          dns: norm.dns === false ? undefined : norm.dns ?? awsDns(),
           cert: norm.cert,
         };
       });
@@ -347,18 +344,26 @@ export class Cdn extends Component {
         if (!domain.dns) return;
 
         for (const recordName of [domain.name, ...domain.aliases]) {
-          if (domain.dns instanceof AwsDnsAdapter) {
-            domain.dns.createAliasRecords({
-              name: recordName,
-              aliasName: distribution.domainName,
-              aliasZone: distribution.hostedZoneId,
-            });
+          if (domain.dns.provider === "aws") {
+            domain.dns.createAliasRecords(
+              name,
+              {
+                name: recordName,
+                aliasName: distribution.domainName,
+                aliasZone: distribution.hostedZoneId,
+              },
+              { parent },
+            );
           } else {
-            domain.dns.createRecord({
-              type: "CNAME",
-              name: recordName,
-              value: distribution.domainName,
-            });
+            domain.dns.createRecord(
+              name,
+              {
+                type: "CNAME",
+                name: recordName,
+                value: distribution.domainName,
+              },
+              { parent },
+            );
           }
         }
       });

@@ -1,6 +1,6 @@
 ---
 title: StaticSite
-description: Reference doc for the `sst.aws.StaticSite` component.
+description: Reference doc for the `sst.aws.StaticSite` component..
 ---
 
 {/* DO NOT EDIT. AUTO-GENERATED FROM "pkg/platform/src/components/aws/static-site.ts" */}
@@ -384,7 +384,7 @@ by the `files` glob pattern.
 <Segment>
 <Section type="parameters">
 <InlineSection>
-**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="symbol">&ldquo;</code><code class="primitive">none</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">utf-8</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">iso-8859-1</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">windows-1252</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">ascii</code><code class="symbol">&rdquo;</code><code class="symbol">&gt;</code>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="symbol">&ldquo;</code><code class="primitive">utf-8</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">iso-8859-1</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">windows-1252</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">ascii</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">none</code><code class="symbol">&rdquo;</code><code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
 
@@ -547,12 +547,12 @@ AWS CloudFront.
 <Segment>
 <Section type="parameters">
 <InlineSection>
-**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">false</code><code class="symbol"> | </code>[<code class="type">sst.aws.DnsAdapter</code>](/docs/component/aws/dns-adapter/)<code class="symbol"> | </code>[<code class="type">sst.cloudflare.DnsAdapter</code>](/docs/component/cloudflare/dns-adapter/)<code class="symbol">&gt;</code>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">false</code><code class="symbol"> | </code>[<code class="type">sst.aws.dns</code>](/docs/component/aws/dns/)<code class="symbol"> | </code>[<code class="type">sst.cloudflare.dns</code>](/docs/component/cloudflare/dns/)<code class="symbol"> | </code>[<code class="type">sst.vercel.dns</code>](/docs/component/vercel/dns/)<code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
 
 <InlineSection>
-**Default** <code class="primitive">sst.aws.DnsAdapter</code>
+**Default** <code class="primitive">sst.aws.dns</code>
 </InlineSection>
 The DNS adapter you want to use for managing DNS records. Here is a list of currently
 suuported [DNS adapters](/docs/component/dns-adapter).
@@ -568,7 +568,7 @@ Specify the hosted zone ID for the domain.
 {
   domain: {
     name: "domain.com",
-    dns: new sst.aws.DnsAdapter("MyDns", {
+    dns: sst.aws.dns({
       zone: "Z2FDTNDATAQYW2"
     })
   }
@@ -581,7 +581,7 @@ Domain is hosted on Cloudflare.
 {
   domain: {
     name: "domain.com",
-    dns: new sst.cloudflare.DnsAdapter("MyDns")
+    dns: sst.cloudflare.dns()
   }
 }
 ```

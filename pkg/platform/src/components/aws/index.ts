@@ -3,7 +3,7 @@ export * from "./astro.js";
 export * from "./auth.js";
 export * from "./bucket.js";
 export * from "./cron.js";
-export * from "./dns-adapter";
+export * from "./dns.js";
 export * from "./dynamo.js";
 export * from "./function.js";
 export * from "./nextjs.js";

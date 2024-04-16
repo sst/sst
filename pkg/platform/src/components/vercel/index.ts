@@ -1,2 +1,2 @@
 export * from "./account-id";
-export * from "./dns-adapter";
+export * from "./dns";

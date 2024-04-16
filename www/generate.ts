@@ -44,7 +44,7 @@ function generateCliDoc() {
   fs.writeFileSync(
     outputFilePath,
     [
-      renderCliHeader(),
+      renderHeader("CLI", "Reference doc for the `sst` CLI."),
       renderSourceMessage("cmd/sst/main.go"),
       renderImports(outputFilePath),
       renderCliAbout(),
@@ -55,15 +55,6 @@ function generateCliDoc() {
       .flat()
       .join("\n")
   );
-
-  function renderCliHeader() {
-    return [
-      `---`,
-      `title: CLI`,
-      `description: Reference doc for the \`sst\` CLI.`,
-      `---`,
-    ];
-  }
 
   function renderCliAbout() {
     console.debug(` - about`);
@@ -243,8 +234,9 @@ function generateCliDoc() {
   }
 
   function renderCliFlagType(type: CliCommand["flags"][number]["type"]) {
-    return `<code class="primitive">${type === "bool" ? "boolean" : type
-      }</code>`;
+    return `<code class="primitive">${
+      type === "bool" ? "boolean" : type
+    }</code>`;
   }
 }
 
@@ -254,7 +246,7 @@ async function generateExamplesDocs() {
   fs.writeFileSync(
     outputFilePath,
     [
-      renderHeader(),
+      renderHeader("Examples", "A collection of example apps for reference."),
       renderSourceMessage("examples/"),
       renderExampleImports(outputFilePath),
       ...modules.map((module) => {
@@ -265,7 +257,8 @@ async function generateExamplesDocs() {
           renderTdComment(module.children![0].comment?.summary!),
           ...renderRunFunction(module),
           ``,
-          `View the [full example](${config.github}/tree/dev/examples/${module.name.split("/")[0]
+          `View the [full example](${config.github}/tree/dev/examples/${
+            module.name.split("/")[0]
           }).`,
           ``,
         ];
@@ -274,15 +267,6 @@ async function generateExamplesDocs() {
       .flat()
       .join("\n")
   );
-
-  function renderHeader() {
-    return [
-      `---`,
-      `title: Examples`,
-      `description: A collection of example apps for reference.`,
-      `---`,
-    ];
-  }
 
   function renderRunFunction(module: TypeDoc.DeclarationReflection) {
     const lines = fs
@@ -304,6 +288,7 @@ async function generateComponentsDoc() {
   const modules = project.children!.filter(
     (c) => c.kind === TypeDoc.ReflectionKind.Module
   );
+
   for (const module of modules) {
     console.info(`Generating ${module.name}...`);
     const sourceFile = module.sources![0].fileName;
@@ -315,12 +300,12 @@ async function generateComponentsDoc() {
     if (sourceFile === "pkg/platform/src/global-config.d.ts") {
       outputFilePath = `src/content/docs/docs/reference/global.mdx`;
       outputFileContent = [
-        renderGlobalHeader(),
+        renderHeader("Global", "Reference doc for the Global `$` library."),
         renderSourceMessage("pkg/platform/src/global.d.ts"),
         renderImports(outputFilePath),
         renderAbout(),
-        renderConfigVariables(),
-        renderConfigFunctions(),
+        renderVariables(),
+        renderFunctions(),
         renderFooter(),
       ];
     }
@@ -328,10 +313,33 @@ async function generateComponentsDoc() {
     else if (sourceFile === "pkg/platform/src/config.ts") {
       outputFilePath = `src/content/docs/docs/reference/config.mdx`;
       outputFileContent = [
-        renderConfigHeader(),
+        renderHeader("Config", "Reference doc for the `sst.config.ts`."),
         renderSourceMessage(sourceFile),
         renderImports(outputFilePath),
         renderAbout(),
+        renderInterfaces(),
+        renderFooter(),
+      ];
+    }
+    // Render DNS adapters
+    else if (sourceFile.endsWith("/dns.ts")) {
+      const dnsProvider = module.name.split("/")[1];
+      const title =
+        {
+          aws: "AWS",
+          cloudflare: "Cloudflare",
+          vercel: "Vercel",
+        }[dnsProvider] || dnsProvider;
+      outputFilePath = `src/content/docs/docs/component/${dnsProvider}/dns.mdx`;
+      outputFileContent = [
+        renderHeader(
+          `${title} DNS Adapter`,
+          `Reference doc for the \`sst.${dnsProvider}.dns\` functions.`
+        ),
+        renderSourceMessage(sourceFile),
+        renderImports(outputFilePath),
+        renderAbout(),
+        renderFunctions(),
         renderInterfaces(),
         renderFooter(),
       ];
@@ -346,7 +354,10 @@ async function generateComponentsDoc() {
         `${module.name.split("/").slice(1).join("/")}.mdx`
       );
       outputFileContent = [
-        renderComponentHeader(),
+        renderHeader(
+          useClassName(),
+          `Reference doc for the \`${useClassProviderNamespace()}.${useClassName()}\` component.`
+        ),
         renderSourceMessage(sourceFile),
         renderImports(outputFilePath),
         renderAbout(),
@@ -361,34 +372,7 @@ async function generateComponentsDoc() {
 
     fs.writeFileSync(outputFilePath, outputFileContent.flat().join("\n"));
 
-    function renderComponentHeader() {
-      return [
-        `---`,
-        `title: ${useClassName()}`,
-        `description: Reference doc for the \`${useClassProviderNamespace()}.${useClassName()}\` component.`,
-        `---`,
-      ];
-    }
-
-    function renderConfigHeader() {
-      return [
-        `---`,
-        `title: Config`,
-        `description: Reference doc for the \`sst.config.ts\`.`,
-        `---`,
-      ];
-    }
-
-    function renderGlobalHeader() {
-      return [
-        `---`,
-        `title: Global`,
-        `description: Reference doc for the Global \`$\` library.`,
-        `---`,
-      ];
-    }
-
-    function renderConfigVariables() {
+    function renderVariables() {
       const lines: string[] = [];
       const vars = (module.children ?? []).filter(
         (c) =>
@@ -430,7 +414,8 @@ async function generateComponentsDoc() {
           // nested props (ie. `.nodes`)
           ...useNestedTypes(v.type!, v.name).flatMap(
             ({ depth, prefix, subType }) => [
-              `<NestedTitle id="${linkHashes.get(subType)}" Tag="${depth === 0 ? "h4" : "h5"
+              `<NestedTitle id="${linkHashes.get(subType)}" Tag="${
+                depth === 0 ? "h4" : "h5"
               }" parent="${prefix}.">${renderName(subType)}</NestedTitle>`,
               `<Segment>`,
               `<Section type="parameters">`,
@@ -447,7 +432,7 @@ async function generateComponentsDoc() {
       return lines;
     }
 
-    function renderConfigFunctions() {
+    function renderFunctions() {
       const lines: string[] = [];
       const fns = (module.children ?? []).filter(
         (f) =>
@@ -597,7 +582,7 @@ async function generateComponentsDoc() {
           `<Section type="signature">`,
           "```ts",
           (m.flags.isStatic ? `${useClassName()}.` : "") +
-          renderSignature(m.signatures![0]),
+            renderSignature(m.signatures![0]),
           "```",
           `</Section>`
         );
@@ -653,14 +638,16 @@ async function generateComponentsDoc() {
           // nested props (ie. `.nodes`)
           ...useNestedTypes(g.getSignature!.type!, g.name).flatMap(
             ({ depth, prefix, subType }) => [
-              `<NestedTitle id="${linkHashes.get(subType)}" Tag="${depth === 0 ? "h4" : "h5"
+              `<NestedTitle id="${linkHashes.get(subType)}" Tag="${
+                depth === 0 ? "h4" : "h5"
               }" parent="${prefix}.">${renderName(subType)}</NestedTitle>`,
               `<Segment>`,
               `<Section type="parameters">`,
               `<InlineSection>`,
-              `**Type** ${subType.kind === TypeDoc.ReflectionKind.Property
-                ? renderType(subType.type!)
-                : renderType(subType.getSignature!.type!)
+              `**Type** ${
+                subType.kind === TypeDoc.ReflectionKind.Property
+                  ? renderType(subType.type!)
+                  : renderType(subType.getSignature!.type!)
               }`,
               `</InlineSection>`,
               `</Section>`,
@@ -772,7 +759,8 @@ async function generateComponentsDoc() {
               // nested props (ie. `.domain`, `.transform`)
               ...useNestedTypes(prop.type!, prop.name).flatMap(
                 ({ depth, prefix, subType }) => [
-                  `<NestedTitle id="${linkHashes.get(subType)}" Tag="${depth === 0 ? "h4" : "h5"
+                  `<NestedTitle id="${linkHashes.get(subType)}" Tag="${
+                    depth === 0 ? "h4" : "h5"
                   }" parent="${prefix}.">${renderName(subType)}</NestedTitle>`,
                   `<Segment>`,
                   `<Section type="parameters">`,
@@ -848,8 +836,9 @@ async function generateComponentsDoc() {
           ].join("\n")
         );
 
-      return `${prop.name}${prop.flags.isOptional || prop.defaultValue ? "?" : ""
-        }`;
+      return `${prop.name}${
+        prop.flags.isOptional || prop.defaultValue ? "?" : ""
+      }`;
     }
 
     function renderDescription(
@@ -874,9 +863,9 @@ async function generateComponentsDoc() {
         // Otherwise render it as a comment ie. No domains configured
         defaultTag.content.length === 1 && defaultTag.content[0].kind === "code"
           ? `**Default** ${renderType({
-            type: "intrinsic",
-            name: defaultTag.content[0].text.replace(/`/g, ""),
-          } as TypeDoc.SomeType)}`
+              type: "intrinsic",
+              name: defaultTag.content[0].text.replace(/`/g, ""),
+            } as TypeDoc.SomeType)}`
           : `**Default** ${renderTdComment(defaultTag.content)}`,
         `</InlineSection>`,
       ];
@@ -1022,8 +1011,8 @@ async function generateComponentsDoc() {
     function renderArrayType(type: TypeDoc.ArrayType) {
       return type.elementType.type === "union"
         ? `<code class="symbol">(</code>${renderType(
-          type.elementType
-        )}<code class="symbol">)[]</code>`
+            type.elementType
+          )}<code class="symbol">)[]</code>`
         : `${renderType(type.elementType)}<code class="symbol">[]</code>`;
     }
     function renderTypescriptType(type: TypeDoc.ReferenceType) {
@@ -1060,10 +1049,13 @@ async function generateComponentsDoc() {
           `<code class="symbol">&gt;</code>`,
         ].join("");
       }
-      if (type.name === "DnsAdapter") {
-        // ie. components/aws/dns-adapter.DnsAdapter
-        const namespace = type.reflection?.getFullName().split("/")[1];
-        return `[<code class="type">sst.${namespace}.${type.name}</code>](/docs/component/${namespace}/dns-adapter/)`;
+      const dnsProvider = {
+        AwsDns: "aws",
+        CloudflareDns: "cloudflare",
+        VercelDns: "vercel",
+      }[type.name];
+      if (dnsProvider) {
+        return `[<code class="type">sst.${dnsProvider}.dns</code>](/docs/component/${dnsProvider}/dns/)`;
       }
       // types in the same doc (links to the class ie. `subscribe()` return type)
       if (isRenderingComponent() && type.name === useClassName()) {
@@ -1071,8 +1063,9 @@ async function generateComponentsDoc() {
       }
       // types in the same doc (links to an interface)
       if (useInterfaces().find((i) => i.name === type.name)) {
-        return `[<code class="type">${type.name
-          }</code>](#${type.name.toLowerCase()})`;
+        return `[<code class="type">${
+          type.name
+        }</code>](#${type.name.toLowerCase()})`;
       }
       // types in different doc
       const externalModule = {
@@ -1162,8 +1155,9 @@ async function generateComponentsDoc() {
           console.error(type);
           throw new Error(`Unsupported @pulumi provider input type`);
         }
-        return `[<code class="type">${type.name
-          }</code>](https://www.pulumi.com/registry/packages/${provider}/api-docs/${link}/#${type.name.toLowerCase()})`;
+        return `[<code class="type">${
+          type.name
+        }</code>](https://www.pulumi.com/registry/packages/${provider}/api-docs/${link}/#${type.name.toLowerCase()})`;
       } else if (cls.startsWith("types/")) {
         console.error(type);
         throw new Error(`Unsupported @pulumi provider class type`);
@@ -1231,16 +1225,13 @@ async function generateComponentsDoc() {
       return `<code class="primitive">Object</code>`;
     }
 
-    function isRenderingConfig() {
+    function isRenderingComponent() {
       const sourceFile = module.sources![0].fileName;
       return (
-        sourceFile === "pkg/platform/src/config.ts" ||
-        sourceFile === "pkg/platform/src/global-config.d.ts"
+        sourceFile !== "pkg/platform/src/config.ts" &&
+        sourceFile !== "pkg/platform/src/global-config.d.ts" &&
+        !sourceFile.endsWith("/dns.ts")
       );
-    }
-
-    function isRenderingComponent() {
-      return !isRenderingConfig();
     }
 
     function useModuleComment() {
@@ -1322,29 +1313,9 @@ async function generateComponentsDoc() {
     }
 
     function useInterfaces() {
-      const interfaces = (module.children ?? []).filter(
+      return (module.children ?? []).filter(
         (c) => c.kind === TypeDoc.ReflectionKind.Interface
       );
-
-      return module.name.endsWith("dns-adapter")
-        ? interfaces.sort((a, b) => {
-          const aIsRecord = a.name.endsWith("Record");
-          const bIsRecord = b.name.endsWith("Record");
-          const aIsExactRecord = a.name === "Record";
-          const bIsExactRecord = b.name === "Record";
-
-          // Sort methods that are neither "Record" nor "*Record" at the top
-          if (!aIsRecord && bIsRecord) return -1;
-          if (aIsRecord && !bIsRecord) return 1;
-
-          // Handle exact "Record" methods next
-          if (aIsExactRecord && !bIsExactRecord) return -1;
-          if (!aIsExactRecord && bIsExactRecord) return 1;
-
-          // Lastly, sort alphabetically for the remaining methods
-          return a.name.localeCompare(b.name);
-        })
-        : interfaces;
     }
 
     function useInterfaceProps(i: TypeDoc.DeclarationReflection) {
@@ -1380,17 +1351,17 @@ async function generateComponentsDoc() {
           { prefix, subType, depth },
           ...(subType.kind === TypeDoc.ReflectionKind.Property
             ? useNestedTypes(
-              subType.type!,
-              `${prefix}.${subType.name}`,
-              depth + 1
-            )
+                subType.type!,
+                `${prefix}.${subType.name}`,
+                depth + 1
+              )
             : []),
           ...(subType.kind === TypeDoc.ReflectionKind.Accessor
             ? useNestedTypes(
-              subType.getSignature?.type!,
-              `${prefix}.${subType.name}`,
-              depth + 1
-            )
+                subType.getSignature?.type!,
+                `${prefix}.${subType.name}`,
+                depth + 1
+              )
             : []),
         ]);
 
@@ -1416,7 +1387,8 @@ async function buildComponents() {
       "../pkg/platform/src/components/aws/bucket.ts",
       "../pkg/platform/src/components/aws/cron.ts",
       "../pkg/platform/src/components/aws/dynamo.ts",
-      "../pkg/platform/src/components/aws/function.ts",
+      // TODO
+      //"../pkg/platform/src/components/aws/function.ts",
       "../pkg/platform/src/components/aws/postgres.ts",
       "../pkg/platform/src/components/aws/vector.ts",
       "../pkg/platform/src/components/aws/astro.ts",
@@ -1431,11 +1403,10 @@ async function buildComponents() {
       "../pkg/platform/src/components/cloudflare/bucket.ts",
       "../pkg/platform/src/components/cloudflare/d1.ts",
       "../pkg/platform/src/components/cloudflare/kv.ts",
-      // dns adapters
-      "../pkg/platform/src/components/aws/dns-adapter.ts",
-      "../pkg/platform/src/components/cloudflare/dns-adapter.ts",
-      "../pkg/platform/src/components/vercel/dns-adapter.ts",
       // internal
+      "../pkg/platform/src/components/aws/dns.ts",
+      "../pkg/platform/src/components/cloudflare/dns.ts",
+      "../pkg/platform/src/components/vercel/dns.ts",
       "../pkg/platform/src/components/aws/cdn.ts",
     ],
     tsconfig: "../pkg/platform/tsconfig.json",
@@ -1475,6 +1446,10 @@ async function buildExamples() {
       c.children?.length === 1 &&
       c.children[0].comment
   );
+}
+
+function renderHeader(title: string, description: string) {
+  return [`---`, `title: ${title}`, `description: ${description}.`, `---`];
 }
 
 function renderSourceMessage(source: string) {
@@ -1528,7 +1503,7 @@ function renderFooter() {
 
 function configureLogger() {
   if (process.env.DEBUG) return;
-  console.debug = () => { };
+  console.debug = () => {};
 }
 
 async function patchCode() {

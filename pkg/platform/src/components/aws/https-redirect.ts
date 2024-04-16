@@ -5,8 +5,7 @@ import { Bucket } from "./bucket.js";
 import { Component } from "../component.js";
 import { useProvider } from "./helpers/provider.js";
 import { Input } from "../input.js";
-import { DnsAdapter } from "../base/dns-adapter.js";
-import { DnsAdapter as AwsDnsAdapter } from "./dns-adapter.js";
+import { Dns } from "../dns.js";
 
 /**
  * Properties to configure an HTTPS Redirect
@@ -28,7 +27,7 @@ export interface HttpsRedirectArgs {
    * The DNS adapter you want to use for managing DNS records. Here is a list of currently
    * suuported [DNS adapters](/docs/component/dns-adapter).
    */
-  dns: Input<DnsAdapter>;
+  dns: Input<Dns & {}>;
 }
 
 /**
@@ -119,18 +118,26 @@ export class HttpsRedirect extends Component {
 
     all([args.dns, args.sourceDomains]).apply(([dns, sourceDomains]) => {
       for (const recordName of sourceDomains) {
-        if (dns instanceof AwsDnsAdapter) {
-          dns.createAliasRecords({
-            name: recordName,
-            aliasName: distribution.domainName,
-            aliasZone: distribution.hostedZoneId,
-          });
+        if (dns.provider === "aws") {
+          dns.createAliasRecords(
+            name,
+            {
+              name: recordName,
+              aliasName: distribution.domainName,
+              aliasZone: distribution.hostedZoneId,
+            },
+            { parent },
+          );
         } else {
-          dns.createRecord({
-            type: "CNAME",
-            name: recordName,
-            value: distribution.domainName,
-          });
+          dns.createRecord(
+            name,
+            {
+              type: "CNAME",
+              name: recordName,
+              value: distribution.domainName,
+            },
+            { parent },
+          );
         }
       }
     });

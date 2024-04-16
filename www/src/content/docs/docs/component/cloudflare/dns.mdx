@@ -1,9 +1,9 @@
 ---
-title: DNS Adapter
-description: Reference doc for the `sst.aws.dns` functions..
+title: Cloudflare DNS Adapter
+description: Reference doc for the `sst.cloudflare.dns` functions..
 ---
 
-{/* DO NOT EDIT. AUTO-GENERATED FROM "pkg/platform/src/components/aws/dns.ts" */}
+{/* DO NOT EDIT. AUTO-GENERATED FROM "pkg/platform/src/components/cloudflare/dns.ts" */}
 
 import Segment from '../../../../../../src/components/tsdoc/Segment.astro';
 import Section from '../../../../../../src/components/tsdoc/Section.astro';
@@ -13,19 +13,19 @@ import InlineSection from '../../../../../../src/components/tsdoc/InlineSection.
 <div class="tsdoc">
 
 <Section type="about">
-The AWS DNS Adapter lets you manage DNS records for domains hosted on [Route 53](https://aws.amazon.com/route53/).
+The Cloudflare DNS Adapter lets you manage DNS records for domains hosted on [Cloudflare DNS]](https://developers.cloudflare.com/dns/).
 
-This component looks up the Route 53 hosted zone for the domain and creates the DNS records.
+This component looks up the zone for the domain and creates the DNS records.
 
 ```ts
-sst.aws.dns();
+sst.cloudflare.dns();
 ```
 
-Specify the specific hosted zone ID if you have multiple hosted zones with the same domain.
+Specify the zone ID.
 
 ```ts
-sst.aws.dns({
-  zone: "Z2FDTNDATAQYW2",
+sst.cloudflare.dns({
+  zone: "415e6f4653b6d95b775d350f32119abb"
 });
 ```
 </Section>
@@ -72,10 +72,10 @@ resources.
 <Segment>
 <Section type="parameters">
 <InlineSection>
-**Type** [<code class="type">RecordArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/route53/record/#inputs)<code class="symbol"> | </code><code class="symbol">(</code><code class="primitive">args</code><code class="symbol">: </code>[<code class="type">RecordArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/route53/record/#inputs)<code class="symbol"> => </code>[<code class="type">RecordArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/route53/record/#inputs)<code class="symbol"> | </code><code class="primitive">void</code><code class="symbol">)</code>
+**Type** [<code class="type">RecordArgs</code>](https://www.pulumi.com/registry/packages/cloudflare/api-docs/record/#inputs)<code class="symbol"> | </code><code class="symbol">(</code><code class="primitive">args</code><code class="symbol">: </code>[<code class="type">RecordArgs</code>](https://www.pulumi.com/registry/packages/cloudflare/api-docs/record/#inputs)<code class="symbol"> => </code>[<code class="type">RecordArgs</code>](https://www.pulumi.com/registry/packages/cloudflare/api-docs/record/#inputs)<code class="symbol"> | </code><code class="primitive">void</code><code class="symbol">)</code>
 </InlineSection>
 </Section>
-Transform the AWS Route 53 record resource.
+Transform the Cloudflare record resource.
 
 </Segment>
 ### zone?
@@ -85,14 +85,11 @@ Transform the AWS Route 53 record resource.
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
-The 14 letter ID of the [Route 53 hosted zone](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/hosted-zones-working-with.html) that contains the `domainName`. You can find the hosted zone ID in the Route 53 part of the AWS Console.
-
-This option is useful for cases where you have multiple hosted zones that have the same
-domain.
+The ID of the Cloudflare zone to create the record in.
 
 ```js
 {
-  zone: "Z2FDTNDATAQYW2"
+  zone: "415e6f4653b6d95b775d350f32119abb"
 }
 ```
 </Segment>

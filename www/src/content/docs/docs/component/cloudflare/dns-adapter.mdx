@@ -1,9 +1,9 @@
 ---
-title: DnsAdapter
-description: Reference doc for the `sst.cloudflare.DnsAdapter` component.
+title: DNS Adapter
+description: Reference doc for the `sst.cloudflare.dns` functions..
 ---
 
-{/* DO NOT EDIT. AUTO-GENERATED FROM "pkg/platform/src/components/cloudflare/dns-adapter.ts" */}
+{/* DO NOT EDIT. AUTO-GENERATED FROM "pkg/platform/src/components/cloudflare/dns.ts" */}
 
 import Segment from '../../../../../../src/components/tsdoc/Segment.astro';
 import Section from '../../../../../../src/components/tsdoc/Section.astro';
@@ -18,13 +18,13 @@ The Cloudflare `DnsAdapters` lets you manage DNS records for domains hosted on [
 This component looks up the zone for the domain and creates the DNS records.
 
 ```ts
-new sst.cloudflare.DnsAdapter("MyDns");
+sst.cloudflare.dns();
 ```
 
 Specify the zone ID.
 
 ```ts
-new sst.cloudflare.DnsAdapter("MyDns", {
+sst.cloudflare.dns({
   zone: "415e6f4653b6d95b775d350f32119abb"
 });
 ```
@@ -32,45 +32,30 @@ new sst.cloudflare.DnsAdapter("MyDns", {
 
 ---
 
-## Constructor
+## Functions
 
+### dns
 <Segment>
 <Section type="signature">
 ```ts
-new DnsAdapter(name, args?, opts?)
+dns(args?)
 ```
 </Section>
 
 <Section type="parameters">
 #### Parameters
-- <p><code class="key">name</code> <code class="primitive">string</code></p>
-- <p><code class="key">args?</code> [<code class="type">DnsAdapterArgs</code>](#dnsadapterargs)</p>
-- <p><code class="key">opts?</code> [<code class="type">ComponentResourceOptions</code>](https://www.pulumi.com/docs/concepts/options/)</p>
-</Section>
-</Segment>
-
-## Methods
-
-### createRecord
-<Segment>
-<Section type="signature">
-```ts
-createRecord(record)
-```
-</Section>
-
-<Section type="parameters">
-#### Parameters
-- <p><code class="key">record</code> [<code class="type">Record</code>](#record)</p>
+- <p><code class="key">args?</code> [<code class="type">DnsArgs</code>](#dnsargs)</p>
+The DNS arguments.
 </Section>
 
 <InlineSection>
-**Returns** <code class="primitive">Output</code><code class="symbol">&lt;</code>[<code class="type">Record</code>](https://www.pulumi.com/registry/packages/cloudflare/api-docs/record/)<code class="symbol">&gt;</code>
+**Returns** <code class="primitive">Object</code>
 </InlineSection>
+
 
 </Segment>
 
-## DnsAdapterArgs
+## DnsArgs
 ### transform?
 <Segment>
 <Section type="parameters">
@@ -107,37 +92,5 @@ The ID of the Cloudflare zone to create the record in.
   zone: "415e6f4653b6d95b775d350f32119abb"
 }
 ```
-</Segment>
-
-## Record
-### name
-<Segment>
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
-</InlineSection>
-</Section>
-The name of the record.
-
-</Segment>
-### type
-<Segment>
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
-</InlineSection>
-</Section>
-The type of the record.
-
-</Segment>
-### value
-<Segment>
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
-</InlineSection>
-</Section>
-The value of the record.
-
 </Segment>
 </div>

@@ -18,8 +18,8 @@ import {
 import { VisibleError } from "../error";
 import { DnsValidatedCertificate } from "./dns-validated-certificate";
 import { RETENTION } from "./logging";
-import { DnsAdapter as AwsDnsAdapter } from "./dns-adapter.js";
-import { DnsAdapterInput } from "../base/dns-adapter";
+import { dns as awsDns } from "./dns.js";
+import { Dns } from "../dns";
 
 interface DomainArgs {
   /**
@@ -83,7 +83,7 @@ interface DomainArgs {
    * you have to add the DNS records manually to point to the CloudFront distribution URL.
    * :::
    *
-   * @default `sst.aws.DnsAdapter`
+   * @default `sst.aws.dns`
    * @example
    *
    * Specify the hosted zone ID for the domain.
@@ -92,7 +92,7 @@ interface DomainArgs {
    * {
    *   domain: {
    *     name: "domain.com",
-   *     dns: new sst.aws.DnsAdapter("MyDns", {
+   *     dns: sst.aws.dns({
    *       zone: "Z2FDTNDATAQYW2"
    *     })
    *   }
@@ -105,12 +105,12 @@ interface DomainArgs {
    * {
    *   domain: {
    *     name: "domain.com",
-   *     dns: new sst.cloudflare.DnsAdapter("MyDns")
+   *     dns: sst.cloudflare.dns()
    *   }
    * }
    * ```
    */
-  dns?: Input<DnsAdapterInput & {}>;
+  dns?: Input<false | (Dns & {})>;
 }
 
 export interface ApiGatewayV2Args {
@@ -386,10 +386,7 @@ export class ApiGatewayV2 extends Component implements Link.Linkable {
         return {
           name: norm.name,
           path: norm.path,
-          dns:
-            norm.dns === false
-              ? undefined
-              : norm.dns ?? new AwsDnsAdapter(`${name}Dns`, {}, { parent }),
+          dns: norm.dns === false ? undefined : norm.dns ?? awsDns(),
           cert: norm.cert,
         };
       });
@@ -500,18 +497,26 @@ export class ApiGatewayV2 extends Component implements Link.Linkable {
       domain.dns.apply((dns) => {
         if (!dns) return;
 
-        if (dns instanceof AwsDnsAdapter) {
-          dns.createAliasRecords({
-            name: domain.name,
-            aliasName: apigDomain.domainNameConfiguration.targetDomainName,
-            aliasZone: apigDomain.domainNameConfiguration.hostedZoneId,
-          });
+        if (dns.provider === "aws") {
+          dns.createAliasRecords(
+            name,
+            {
+              name: domain.name,
+              aliasName: apigDomain.domainNameConfiguration.targetDomainName,
+              aliasZone: apigDomain.domainNameConfiguration.hostedZoneId,
+            },
+            { parent },
+          );
         } else {
-          dns.createRecord({
-            type: "CNAME",
-            name: domain.name,
-            value: apigDomain.domainNameConfiguration.targetDomainName,
-          });
+          dns.createRecord(
+            name,
+            {
+              type: "CNAME",
+              name: domain.name,
+              value: apigDomain.domainNameConfiguration.targetDomainName,
+            },
+            { parent },
+          );
         }
       });
     }

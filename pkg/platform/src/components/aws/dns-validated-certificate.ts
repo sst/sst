@@ -2,7 +2,7 @@ import { ComponentResourceOptions, Output, all } from "@pulumi/pulumi";
 import * as aws from "@pulumi/aws";
 import { Component } from "../component";
 import { Input } from "../input.js";
-import { DnsAdapter } from "../base/dns-adapter";
+import { Dns } from "../dns";
 
 /**
  * Properties to create a DNS validated certificate managed by AWS Certificate Manager.
@@ -20,7 +20,7 @@ export interface DnsValidatedCertificateArgs {
    * The DNS adapter you want to use for managing DNS records. Here is a list of currently
    * suuported [DNS adapters](/docs/component/dns-adapter).
    */
-  dns: Input<DnsAdapter>;
+  dns: Input<Dns & {}>;
 }
 
 export class DnsValidatedCertificate extends Component {
@@ -58,11 +58,15 @@ export class DnsValidatedCertificate extends Component {
       return all([dns, certificate.domainValidationOptions]).apply(
         ([dns, options]) =>
           options.map((option) =>
-            dns.createRecord({
-              type: option.resourceRecordType,
-              name: option.resourceRecordName,
-              value: option.resourceRecordValue,
-            }),
+            dns.createRecord(
+              name,
+              {
+                type: option.resourceRecordType,
+                name: option.resourceRecordName,
+                value: option.resourceRecordValue,
+              },
+              { parent },
+            ),
           ),
       );
     }

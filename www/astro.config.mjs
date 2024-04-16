@@ -84,16 +84,16 @@ const sidebar = [
     items: [
       { label: "Cdn", link: "/docs/component/aws/cdn/" },
       {
-        label: "DnsAdapter",
+        label: "Dns",
         items: [
-          { label: "AWS", link: "/docs/component/aws/dns-adapter/" },
+          { label: "AWS", link: "/docs/component/aws/dns/" },
           {
             label: "Cloudflare",
-            link: "/docs/component/cloudflare/dns-adapter/",
+            link: "/docs/component/cloudflare/dns/",
           },
           {
             label: "Vercel",
-            link: "/docs/component/vercel/dns-adapter/",
+            link: "/docs/component/vercel/dns/",
           },
         ],
       },

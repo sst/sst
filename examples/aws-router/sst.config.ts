@@ -11,10 +11,6 @@ export default $config({
       name: "aws-router",
       home: "aws",
       removal: input?.stage === "production" ? "retain" : "remove",
-      providers: {
-        aws: true,
-        cloudflare: true,
-      },
     };
   },
   async run() {

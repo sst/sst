@@ -1580,7 +1580,7 @@ export class Function
     return {
       properties: {
         name: this.name,
-        url: this.fnUrl.apply((url) => url?.functionUrl),
+        url: this.fnUrl.apply((url) => url?.functionUrl ?? output(undefined)),
       },
     };
   }
