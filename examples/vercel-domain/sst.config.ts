@@ -21,9 +21,7 @@ export default $config({
     const router = new sst.aws.Router("MyRouter", {
       domain: {
         name: "ion.sst.moe",
-        dns: new sst.vercel.DnsAdapter("MyDns", {
-          domain: "sst.moe",
-        }),
+        dns: sst.vercel.dns({ domain: "sst.moe" }),
       },
       routes: {
         "/*": "https://sst.dev",
