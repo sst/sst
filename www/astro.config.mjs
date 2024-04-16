@@ -13,6 +13,7 @@ const sidebar = [
     label: "Get Started",
     items: [
       { label: "API", link: "/docs/start/aws/api/" },
+      { label: "tRPC", link: "/docs/start/aws/trpc/" },
       { label: "Hono", link: "/docs/start/aws/hono/" },
       { label: "Astro", link: "/docs/start/aws/astro/" },
       { label: "Remix", link: "/docs/start/aws/remix/" },
