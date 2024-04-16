@@ -1,5 +1,5 @@
 {
-  "name": "aws-hono",
+  "name": "aws-trpc",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
@@ -10,13 +10,9 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@aws-sdk/client-s3": "^3.552.0",
-    "@aws-sdk/s3-request-presigner": "^3.552.0",
     "@trpc/client": "11.0.0-rc.340",
     "@trpc/server": "11.0.0-rc.340",
-    "sst": "^3.0.2"
-  },
-  "devDependencies": {
-    "@types/aws-lambda": "^8.10.137"
+    "sst": "^3.0.2",
+    "zod": "^3.22.4"
   }
 }

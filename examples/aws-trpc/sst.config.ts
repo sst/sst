@@ -5,16 +5,12 @@ export default $config({
     return {
       name: "aws-trpc",
       home: "aws",
+      removal: input?.stage === "production" ? "retain" : "remove",
     };
   },
   async run() {
-    const bucket = new sst.aws.Bucket("MyBucket", {
-      public: true,
-    });
-
     const trpc = new sst.aws.Function("TRPC", {
       url: true,
-      link: [bucket],
       handler: "index.handler",
     });
 

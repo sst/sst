@@ -1,0 +1,200 @@
+---
+title: tRPC on AWS with SST
+description: Create and deploy a tRPC API in AWS with SST.
+---
+
+We are going to build a serverless [tRPC](https://trpc.io) API, a simple client, and deploy it to AWS using SST.
+
+:::tip[View source]
+You can [view the source](https://github.com/sst/ion/tree/dev/examples/aws-trpc) of this example in our repo.
+:::
+
+Before you get started:
+
+1. [Configure your AWS credentials](https://docs.sst.dev/advanced/iam-credentials#loading-from-a-file)
+2. [Install the SST CLI](/docs/reference/cli)
+
+---
+
+## 1. Create a project
+
+Let's start by creating our app.
+
+```bash
+mkdir my-trpc-app && cd my-trpc-app
+npm init -y
+```
+
+#### Init SST
+
+Now let's initialize SST in our app. Make sure you have the [CLI installed](/docs/reference/cli/).
+
+```bash
+sst init
+```
+
+This'll create a `sst.config.ts` file in your project root.
+
+---
+
+## 2. Add the API
+
+Let's add two Lambda functions; one for our tRPC server and one that'll be our client. Update your `sst.config.ts`.
+
+```js title="sst.config.ts" {9}
+async run() {
+  const trpc = new sst.aws.Function("TRPC", {
+    url: true,
+    handler: "index.handler",
+  });
+
+  const client = new sst.aws.Function("Client", {
+    url: true,
+    link: [trpc],
+    handler: "client.handler",
+  });
+
+  return {
+    api: api.url,
+    client: client.url,
+  };
+}
+```
+
+We are linking the server to our client. This will allow us to access the URL of the server in our client.
+
+#### Start dev mode
+
+Start your app in dev mode. This runs your functions [_Live_](/docs/live/).
+
+```bash
+sst dev
+```
+
+This will give you two URLs.
+
+```bash frame="none"
+✔  Complete
+   api: https://gyrork2ll35rsuml2yr4lifuqu0tsjft.lambda-url.us-east-1.on.aws
+   client: https://3x4y4kg5zv77jeroxsrnjzde3q0tgxib.lambda-url.us-east-1.on.aws
+```
+
+---
+
+## 3. Create the server
+
+Let's create our tRPC server. Add the following to `index.ts`.
+
+```ts title="index.ts"
+const t = initTRPC
+  .context<CreateAWSLambdaContextOptions<APIGatewayEvent>>()
+  .create();
+
+const router = t.router({
+  greet: t.procedure
+    .input(z.object({ name: z.string() }))
+    .query(({ input }) => {
+      return `Hello ${input.name}!`;
+    }),
+});
+
+export type Router = typeof router;
+
+export const handler = awsLambdaRequestHandler({
+  router: router,
+  createContext: (opts) => opts,
+});
+```
+
+We are creating a simple method called `greet` that takes a _string_ as an input.
+
+Add the relevant imports.
+
+```ts title="index.ts"
+import { z } from "zod";
+import {
+  APIGatewayEvent,
+  awsLambdaRequestHandler,
+  CreateAWSLambdaContextOptions
+} from "@trpc/server/adapters/aws-lambda";
+import { initTRPC } from "@trpc/server";
+```
+
+And install the npm packages.
+
+```bash
+npm install zod @trpc/server
+```
+
+---
+
+## 4. Add the client
+
+Now we'll connect to our server in our client. Add the following to `client.ts`.
+
+```ts title="client.ts" {4}
+const client = createTRPCClient<Router>({
+  links: [
+    httpBatchLink({
+      url: Resource.TRPC.url,
+    }),
+  ],
+});
+
+export async function handler() {
+  return {
+    statusCode: 200,
+    body: await client.greet.query({ name: "Patrick Star" }),
+  };
+}
+```
+
+:::tip
+We are accessing our server with `Resource.TRPC.url`.
+:::
+
+Add the relevant imports. Notice we are importing the _types_ for our API.
+
+```ts title="index.ts" {2}
+import { Resource } from "sst";
+import type { Router } from "./index";
+import { createTRPCClient, httpBatchLink } from "@trpc/client";
+```
+
+Install the client npm package.
+
+```bash
+npm install @trpc/client
+```
+
+---
+
+#### Test your app
+
+To test our app, hit the client URL.
+
+```bash
+curl https://3x4y4kg5zv77jeroxsrnjzde3q0tgxib.lambda-url.us-east-1.on.aws
+```
+
+This will print out `Hello Patrick Star!`.
+
+---
+
+## 5. Deploy your app
+
+Now let's deploy your app.
+
+```bash
+sst deploy
+```
+
+---
+
+## Connect the console
+
+As a next step, you can manage your app and view issues in the [SST Console](/docs/console/).
+
+![Issues in tRPC app in SST Console](../../../../../assets/docs/issues-in-trpc-app-in-the-sst-console.png)
+
+You can [create a free account](https://console.sst.dev) and connect it to your AWS account.

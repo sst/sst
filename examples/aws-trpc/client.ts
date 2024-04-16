@@ -1,6 +1,6 @@
-import { createTRPCClient, httpBatchLink } from "@trpc/client";
-import type { Router } from "./index";
 import { Resource } from "sst";
+import type { Router } from "./index";
+import { createTRPCClient, httpBatchLink } from "@trpc/client";
 
 const client = createTRPCClient<Router>({
   links: [
@@ -11,6 +11,8 @@ const client = createTRPCClient<Router>({
 });
 
 export async function handler() {
-  console.log(await client.getSignedUrl.mutate());
-  return {};
+  return {
+    statusCode: 200,
+    body: await client.greet.query({ name: "Patrick Star" }),
+  };
 }
