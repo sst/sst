@@ -5,7 +5,7 @@ import { Link } from "..";
 
 export interface BucketArgs {
   /**
-   * [Transform](/docs/components#transform/) how this component creates its underlying
+   * [Transform](/docs/components/#transform) how this component creates its underlying
    * resources.
    */
   transform?: {
@@ -17,7 +17,7 @@ export interface BucketArgs {
 }
 
 /**
- * The `Bucket` component lets you add an [Cloudflare R2 Bucket](https://developers.cloudflare.com/r2/) to
+ * The `Bucket` component lets you add a [Cloudflare R2 Bucket](https://developers.cloudflare.com/r2/) to
  * your app.
  *
  * @example
@@ -28,44 +28,24 @@ export interface BucketArgs {
  * const bucket = new sst.cloudflare.Bucket("MyBucket");
  * ```
  *
- * #### Public read access
+ * #### Link to a worker
  *
- * Enable `public` read access for all the files in the bucket. Useful for hosting public files.
+ * You can link the bucket to a worker.
  *
- * ```ts
- * new sst.aws.Bucket("MyBucket", {
- *   public: true
+ * ```ts {3}
+ * new sst.cloudflare.Worker("MyWorker", {
+ *   handler: "./index.ts",
+ *   link: [bucket],
+ *   url: true
  * });
  * ```
  *
- * #### Add a subscriber
+ * Once linked, you can use the SDK to interact with the bucket.
  *
- * ```ts
- * bucket.subscribe("src/subscriber.handler");
- * ```
- *
- * #### Link the bucket to a resource
- *
- * You can link the bucket to other resources, like a function or your Next.js app.
- *
- * ```ts
- * new sst.aws.Nextjs("MyWeb", {
- *   link: [bucket]
- * });
- * ```
- *
- * Once linked, you can generate a pre-signed URL to upload files in your app.
- *
- * ```ts title="app/page.tsx" {1,7}
+ * ```ts title="index.ts" {3}
  * import { Resource } from "sst";
- * import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
- * import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
  *
- * const command = new PutObjectCommand({
- *    Key: "file.txt",
- *    Bucket: Resource.MyBucket.name
- *  });
- *  await getSignedUrl(new S3Client({}), command);
+ * await Resource.MyBucket.list();
  * ```
  */
 export class Bucket extends Component implements Link.Cloudflare.Linkable {
@@ -95,6 +75,9 @@ export class Bucket extends Component implements Link.Cloudflare.Linkable {
       );
     }
   }
+  /**
+   * @internal
+   */
   getCloudflareBinding(): Link.Cloudflare.Binding {
     return {
       type: "r2BucketBindings",

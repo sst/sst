@@ -5,7 +5,7 @@ import { Link } from "../link";
 
 export interface D1Args {
   /**
-   * [Transform](/docs/components#transform/) how this component creates its underlying
+   * [Transform](/docs/components/#transform) how this component creates its underlying
    * resources.
    */
   transform?: {
@@ -26,6 +26,28 @@ export interface D1Args {
  *
  * ```ts
  * const db = new sst.cloudflare.D1("MyDatabase");
+ * ```
+ *
+ * #### Link to a worker
+ *
+ * You can link the db to a worker.
+ *
+ * ```ts {3}
+ * new sst.cloudflare.Worker("MyWorker", {
+ *   handler: "./index.ts",
+ *   link: [db],
+ *   url: true
+ * });
+ * ```
+ *
+ * Once linked, you can use the SDK to interact with the db.
+ *
+ * ```ts title="index.ts" {3}
+ * import { Resource } from "sst";
+ *
+ * await Resource.MyDatabase.prepare(
+ *   "SELECT id FROM todo ORDER BY id DESC LIMIT 1",
+ * ).first();
  * ```
  */
 export class D1 extends Component implements Link.Cloudflare.Linkable {
@@ -52,6 +74,9 @@ export class D1 extends Component implements Link.Cloudflare.Linkable {
     }
   }
 
+  /**
+   * @internal
+   */
   getCloudflareBinding(): Link.Cloudflare.Binding {
     return {
       type: "d1DatabaseBindings",

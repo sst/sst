@@ -1,0 +1,100 @@
+---
+title: Kv
+description: Reference doc for the `sst.cloudflare.Kv` component.
+---
+
+{/* DO NOT EDIT. AUTO-GENERATED FROM "pkg/platform/src/components/cloudflare/kv.ts" */}
+
+import Segment from '../../../../../../src/components/tsdoc/Segment.astro';
+import Section from '../../../../../../src/components/tsdoc/Section.astro';
+import NestedTitle from '../../../../../../src/components/tsdoc/NestedTitle.astro';
+import InlineSection from '../../../../../../src/components/tsdoc/InlineSection.astro';
+
+<div class="tsdoc">
+
+<Section type="about">
+The `Kv` component lets you add a [Cloudflare KV storage namespace](https://developers.cloudflare.com/kv/) to
+your app.
+
+#### Minimal example
+
+```ts
+const storage = new sst.cloudflare.Kv("MyStorage");
+```
+</Section>
+
+---
+
+## Constructor
+
+<Segment>
+<Section type="signature">
+```ts
+new Kv(name, args?, opts?)
+```
+</Section>
+
+<Section type="parameters">
+#### Parameters
+- <p><code class="key">name</code> <code class="primitive">string</code></p>
+- <p><code class="key">args?</code> [<code class="type">KvArgs</code>](#kvargs)</p>
+- <p><code class="key">opts?</code> [<code class="type">ComponentResourceOptions</code>](https://www.pulumi.com/docs/concepts/options/)</p>
+</Section>
+</Segment>
+
+## Properties
+
+### id
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Output</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+The generated id of the KV namespace.
+</Segment>
+
+### nodes
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Object</code>
+</InlineSection>
+- <p>[<code class="key">namespace</code>](#nodes-namespace)</p>
+</Section>
+The underlying [resources](/docs/components/#nodes) this component creates.
+</Segment>
+<NestedTitle id="nodes-namespace" Tag="h4" parent="nodes.">namespace</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** [<code class="type">WorkersKvNamespace</code>](https://www.pulumi.com/registry/packages/cloudflare/api-docs/workerskvnamespace/)
+</InlineSection>
+</Section>
+The Cloudflare KV namespace.
+</Segment>
+
+## KvArgs
+### transform?
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Object</code>
+</InlineSection>
+- <p>[<code class="key">namespace?</code>](#transform-namespace)</p>
+</Section>
+[Transform](/docs/components/#transform) how this component creates its underlying
+resources.
+
+</Segment>
+<NestedTitle id="transform-namespace" Tag="h4" parent="transform.">namespace?</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** [<code class="type">WorkersKvNamespaceArgs</code>](https://www.pulumi.com/registry/packages/cloudflare/api-docs/workerskvnamespace/#inputs)<code class="symbol"> | </code><code class="symbol">(</code><code class="primitive">args</code><code class="symbol">: </code>[<code class="type">WorkersKvNamespaceArgs</code>](https://www.pulumi.com/registry/packages/cloudflare/api-docs/workerskvnamespace/#inputs)<code class="symbol"> => </code>[<code class="type">WorkersKvNamespaceArgs</code>](https://www.pulumi.com/registry/packages/cloudflare/api-docs/workerskvnamespace/#inputs)<code class="symbol"> | </code><code class="primitive">void</code><code class="symbol">)</code>
+</InlineSection>
+</Section>
+Transform the R2 KV namespace resource.
+
+</Segment>
+</div>

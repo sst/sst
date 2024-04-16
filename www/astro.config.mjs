@@ -37,7 +37,7 @@ const sidebar = [
     ],
   },
   {
-    label: "Components",
+    label: "AWS",
     items: [
       { label: "Cron", link: "/docs/component/aws/cron/" },
       { label: "Astro", link: "/docs/component/aws/astro/" },
@@ -45,8 +45,6 @@ const sidebar = [
       { label: "Nextjs", link: "/docs/component/aws/nextjs/" },
       { label: "Queue", link: "/docs/component/aws/queue/" },
       { label: "Vector", link: "/docs/component/aws/vector/" },
-      { label: "Secret", link: "/docs/component/secret/" },
-      { label: "Worker", link: "/docs/component/cloudflare/worker/" },
       { label: "Bucket", link: "/docs/component/aws/bucket/" },
       { label: "Router", link: "/docs/component/aws/router/" },
       { label: "Dynamo", link: "/docs/component/aws/dynamo/" },
@@ -59,6 +57,32 @@ const sidebar = [
         label: "ApiGatewayV2",
         link: "/docs/component/aws/apigatewayv2/",
       },
+    ],
+  },
+  {
+    label: "Cloudflare",
+    items: [
+      { label: "D1", link: "/docs/component/cloudflare/d1/" },
+      //{ label: "KV", link: "/docs/component/cloudflare/kv/" },
+      { label: "Worker", link: "/docs/component/cloudflare/worker/" },
+      { label: "Bucket", link: "/docs/component/cloudflare/bucket/" },
+    ],
+  },
+  {
+    label: "Reference",
+    items: [
+      { label: "CLI", link: "/docs/reference/cli/" },
+      { label: "SDK", link: "/docs/reference/sdk/" },
+      { label: "Global", link: "/docs/reference/global/" },
+      { label: "Config", link: "/docs/reference/config/" },
+      { label: "Secret", link: "/docs/component/secret/" },
+    ],
+  },
+  {
+    label: "Internal",
+    collapsed: true,
+    items: [
+      { label: "Cdn", link: "/docs/component/aws/cdn/" },
       {
         label: "DnsAdapter",
         items: [
@@ -72,22 +96,7 @@ const sidebar = [
             link: "/docs/component/vercel/dns-adapter/",
           },
         ],
-        collapsed: true,
       },
-      {
-        label: "Internal",
-        items: [{ label: "Cdn", link: "/docs/component/aws/cdn/" }],
-        collapsed: true,
-      },
-    ],
-  },
-  {
-    label: "Reference",
-    items: [
-      { label: "CLI", link: "/docs/reference/cli/" },
-      { label: "SDK", link: "/docs/reference/sdk/" },
-      { label: "Global", link: "/docs/reference/global/" },
-      { label: "Config", link: "/docs/reference/config/" },
     ],
   },
   { label: "Examples", link: "/docs/examples/" },

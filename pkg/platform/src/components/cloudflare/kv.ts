@@ -5,7 +5,7 @@ import { Link } from "../link";
 
 export interface KvArgs {
   /**
-   * [Transform](/docs/components#transform/) how this component creates its underlying
+   * [Transform](/docs/components/#transform) how this component creates its underlying
    * resources.
    */
   transform?: {
@@ -52,6 +52,9 @@ export class Kv extends Component implements Link.Cloudflare.Linkable {
     }
   }
 
+  /**
+   * @internal
+   */
   getCloudflareBinding(): Link.Cloudflare.Binding {
     return {
       type: "kvNamespaceBindings",
