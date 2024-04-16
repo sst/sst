@@ -31,14 +31,14 @@ new sst.aws.Router("MyRouter", {
 #### Route to a function URL
 
 ```ts
-const function = new sst.aws.Function("MyFunction", {
+const myFunction = new sst.aws.Function("MyFunction", {
   handler: "src/api.handler",
   url: true,
 });
 
 new sst.aws.Router("MyRouter", {
   routes: {
-    "/*": function.url
+    "/*": myFunction.url
   }
 });
 ```
@@ -49,7 +49,7 @@ new sst.aws.Router("MyRouter", {
 new sst.aws.Router("MyRouter", {
   routes: {
     "/*": "myapp.com",
-    "/api/*": function.url
+    "/api/*": myFunction.url
   }
 });
 ```
@@ -60,7 +60,7 @@ new sst.aws.Router("MyRouter", {
 new sst.aws.Router("MyRouter", {
   domain: "myapp.com",
   routes: {
-    "/*": function.url
+    "/*": myFunction.url
   }
 });
 ```
@@ -342,7 +342,7 @@ A request to `/api/sample.xml` will match `/api/*` first and route to it; even t
 {
   routes: {
     "/*": "myapp.com",
-    "/api/*": function.url
+    "/api/*": myFunction.url
   }
 }
 ```

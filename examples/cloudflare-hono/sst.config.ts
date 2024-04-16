@@ -5,6 +5,7 @@ export default $config({
     return {
       name: "cloudflare-hono",
       home: "cloudflare",
+      removal: input?.stage === "production" ? "retain" : "remove",
     };
   },
   async run() {
