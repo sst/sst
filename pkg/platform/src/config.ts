@@ -175,7 +175,7 @@ export interface App {
    * }
    * ```
    *
-   * If you want to confgiure your home provider, you can:
+   * If you want to configure your home provider, you can:
    *
    * ```ts
    * {
