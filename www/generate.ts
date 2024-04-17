@@ -1449,7 +1449,7 @@ async function buildExamples() {
 }
 
 function renderHeader(title: string, description: string) {
-  return [`---`, `title: ${title}`, `description: ${description}.`, `---`];
+  return [`---`, `title: ${title}`, `description: ${description}`, `---`];
 }
 
 function renderSourceMessage(source: string) {
