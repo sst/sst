@@ -89,12 +89,12 @@ const sidebar = [
         items: [
           { label: "AWS", link: "/docs/component/aws/dns/" },
           {
-            label: "Cloudflare",
-            link: "/docs/component/cloudflare/dns/",
-          },
-          {
             label: "Vercel",
             link: "/docs/component/vercel/dns/",
+          },
+          {
+            label: "Cloudflare",
+            link: "/docs/component/cloudflare/dns/",
           },
         ],
       },
