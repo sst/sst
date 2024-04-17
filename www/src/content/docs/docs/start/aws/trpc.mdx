@@ -43,7 +43,7 @@ Let's add two Lambda functions; one for our tRPC server and one that'll be our c
 
 ```js title="sst.config.ts" {9}
 async run() {
-  const trpc = new sst.aws.Function("TRPC", {
+  const trpc = new sst.aws.Function("Trpc", {
     url: true,
     handler: "index.handler",
   });
@@ -136,7 +136,7 @@ Now we'll connect to our server in our client. Add the following to `client.ts`.
 const client = createTRPCClient<Router>({
   links: [
     httpBatchLink({
-      url: Resource.TRPC.url,
+      url: Resource.Trpc.url,
     }),
   ],
 });
@@ -150,7 +150,7 @@ export async function handler() {
 ```
 
 :::tip
-We are accessing our server with `Resource.TRPC.url`.
+We are accessing our server with `Resource.Trpc.url`.
 :::
 
 Add the relevant imports. Notice we are importing the _types_ for our API.

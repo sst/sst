@@ -5,7 +5,7 @@ import { createTRPCClient, httpBatchLink } from "@trpc/client";
 const client = createTRPCClient<Router>({
   links: [
     httpBatchLink({
-      url: Resource.TRPC.url,
+      url: Resource.Trpc.url,
     }),
   ],
 });

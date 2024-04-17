@@ -1,6 +1,6 @@
 import { z } from "zod";
-import { fetchRequestHandler } from "@trpc/server/adapters/fetch";
 import { initTRPC } from "@trpc/server";
+import { fetchRequestHandler } from "@trpc/server/adapters/fetch";
 
 const t = initTRPC.context().create();
 

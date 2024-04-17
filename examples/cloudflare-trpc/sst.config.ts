@@ -9,15 +9,20 @@ export default $config({
     };
   },
   async run() {
-    const bucket = new sst.cloudflare.Bucket("MyBucket");
     const trpc = new sst.cloudflare.Worker("Trpc", {
       url: true,
-      link: [bucket],
       handler: "index.ts",
+    });
+
+    const client = new sst.cloudflare.Worker("Client", {
+      url: true,
+      link: [trpc],
+      handler: "client.ts",
     });
 
     return {
       api: trpc.url,
+      client: client.url,
     };
   },
 });

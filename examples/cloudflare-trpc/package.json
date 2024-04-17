@@ -10,7 +10,9 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@trpc/server": "11.0.0-rc.340"
+    "@trpc/client": "11.0.0-rc.340",
+    "@trpc/server": "11.0.0-rc.340",
+    "sst": "^3.0.2"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20240405.0"

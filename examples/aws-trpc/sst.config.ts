@@ -9,7 +9,7 @@ export default $config({
     };
   },
   async run() {
-    const trpc = new sst.aws.Function("TRPC", {
+    const trpc = new sst.aws.Function("Trpc", {
       url: true,
       handler: "index.handler",
     });
