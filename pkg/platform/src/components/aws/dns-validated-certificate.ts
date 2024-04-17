@@ -17,8 +17,7 @@ export interface DnsValidatedCertificateArgs {
    */
   alternativeNames?: Input<string[]>;
   /**
-   * The DNS adapter you want to use for managing DNS records. Here is a list of currently
-   * suuported [DNS adapters](/docs/component/dns-adapter).
+   * The DNS adapter you want to use for managing DNS records.
    */
   dns: Input<Dns & {}>;
 }

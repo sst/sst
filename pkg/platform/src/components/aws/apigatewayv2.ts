@@ -75,8 +75,7 @@ interface DomainArgs {
    */
   cert?: Input<string>;
   /**
-   * The DNS adapter you want to use for managing DNS records. Here is a list of currently
-   * suuported [DNS adapters](/docs/component/dns-adapter).
+   * The DNS adapter you want to use for managing DNS records.
    *
    * :::note
    * If `dns` is set to `false`, you must provide a validated certificate via `cert`. And
@@ -551,9 +550,9 @@ export class ApiGatewayV2 extends Component implements Link.Linkable {
     //       trailing slash, the API fails with the error {"message":"Not Found"}
     return this.apigDomain && this.apiMapping
       ? all([this.apigDomain.domainName, this.apiMapping.apiMappingKey]).apply(
-          ([domain, key]) =>
-            key ? `https://${domain}/${key}/` : `https://${domain}`,
-        )
+        ([domain, key]) =>
+          key ? `https://${domain}/${key}/` : `https://${domain}`,
+      )
       : this.api.apiEndpoint;
   }
 

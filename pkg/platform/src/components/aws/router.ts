@@ -10,11 +10,6 @@ export interface RouterArgs {
    * Set a custom domain for your Router. Supports domains hosted either on
    * [Route 53](https://aws.amazon.com/route53/) or outside AWS.
    *
-   * :::tip
-   * You can also migrate an externally hosted domain to Amazon Route 53 by
-   * [following this guide](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/MigratingDNS.html).
-   * :::
-   *
    * @example
    *
    * ```js

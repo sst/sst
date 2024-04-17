@@ -1,5 +1,9 @@
 /**
- * The Vercel DNS Adapter lets you manage DNS records for [Vercel](http://vercel.com) domains.
+ * The Vercel DNS Adapter lets you manage DNS records for domains hosted on [Vercel](https://vercel.com/docs/projects/domains/working-with-domains).
+ *
+ * :::note
+ * This adapter is used by other components while configuring their domains.
+ * :::
  *
  * @example
  *

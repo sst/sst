@@ -17,6 +17,7 @@ import { dns as awsDns } from "./dns.js";
 export interface CdnDomainArgs {
   /**
    * The custom domain you want to use. Supports domains hosted on [Route 53](https://aws.amazon.com/route53/) or outside AWS.
+   *
    * @example
    * ```js
    * {
@@ -68,6 +69,10 @@ export interface CdnDomainArgs {
    * The certificate will be created in the `us-east-1`(N. Virginia) region as required by
    * AWS CloudFront.
    *
+   * :::note
+   * If `dns` is set to `false`, you must provide a validated certificate. And you have to add the DNS records manually to point to the CloudFront distribution URL.
+   * :::
+   *
    * @example
    * ```js
    * {
@@ -80,12 +85,11 @@ export interface CdnDomainArgs {
    */
   cert?: Input<string>;
   /**
-   * The DNS adapter you want to use for managing DNS records. Here is a list of currently
-   * suuported [DNS adapters](/docs/component/dns-adapter).
+   * The DNS adapter you want to use for managing DNS records.
    *
    * :::note
-   * If `dns` is set to `false`, you must provide a validated certificate via `cert`. And
-   * you have to add the DNS records manually to point to the CloudFront distribution URL.
+   * If your domain is hosted on a platform that isn't supported by our adapters, you'll need to
+   * set `dns` to `false`. And pass in a validated `cert`.
    * :::
    *
    * @default `sst.aws.dns`
@@ -150,11 +154,6 @@ export interface CdnArgs {
   /**
    * Set a custom domain for your distribution. Supports domains hosted either on
    * [Route 53](https://aws.amazon.com/route53/) or outside AWS.
-   *
-   * :::tip
-   * You can also migrate an externally hosted domain to Amazon Route 53 by
-   * [following this guide](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/MigratingDNS.html).
-   * :::
    *
    * @example
    *
@@ -308,13 +307,13 @@ export class Cdn extends Component {
             : [],
           viewerCertificate: certificateArn
             ? {
-                acmCertificateArn: certificateArn,
-                sslSupportMethod: "sni-only",
-                minimumProtocolVersion: "TLSv1.2_2021",
-              }
+              acmCertificateArn: certificateArn,
+              sslSupportMethod: "sni-only",
+              minimumProtocolVersion: "TLSv1.2_2021",
+            }
             : {
-                cloudfrontDefaultCertificate: true,
-              },
+              cloudfrontDefaultCertificate: true,
+            },
           waitForDeployment: false,
         }),
         {

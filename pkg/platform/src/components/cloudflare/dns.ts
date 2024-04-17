@@ -1,5 +1,5 @@
 /**
- * The Cloudflare DNS Adapter lets you manage DNS records for domains hosted on [Cloudflare DNS]](https://developers.cloudflare.com/dns/).
+ * The Cloudflare DNS Adapter lets you manage DNS records for domains hosted on [Cloudflare DNS](https://developers.cloudflare.com/dns/).
  *
  * This component looks up the zone for the domain and creates the DNS records.
  *
