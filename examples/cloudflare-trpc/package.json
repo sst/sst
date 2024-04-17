@@ -1,0 +1,18 @@
+{
+  "name": "trpc",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@trpc/server": "11.0.0-rc.340"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20240405.0"
+  }
+}
