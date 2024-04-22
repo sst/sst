@@ -119,7 +119,9 @@ func (w *WorkerRuntime) Build(ctx context.Context, input *BuildInput) (*BuildOut
 	}
 
 	result := buildContext.Rebuild()
-	w.results[input.Warp.FunctionID] = result
+	if len(result.Errors) == 0 {
+		w.results[input.Warp.FunctionID] = result
+	}
 	errors := []string{}
 	for _, error := range result.Errors {
 		errors = append(errors, error.Text)
