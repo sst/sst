@@ -63,17 +63,57 @@ export class Component extends ComponentResource {
 
           let overrides;
           switch (args.type) {
+            // AWS LoadBalancer resource names allow for 32 chars, but an 8 letter suffix
+            // ie. "-1234567" is automatically added
+            case "aws:lb/loadBalancer:LoadBalancer":
+              overrides = { name: prefixName(24, args.name) };
+              break;
+            case "aws:rds/cluster:Cluster":
+              overrides = {
+                clusterIdentifier: prefixName(63, args.name).toLowerCase(),
+              };
+              break;
+            case "aws:rds/clusterInstance:ClusterInstance":
+              overrides = {
+                identifier: prefixName(63, args.name).toLowerCase(),
+              };
+              break;
             case "aws:cloudwatch/eventRule:EventRule":
             case "aws:iam/user:User":
             case "aws:lambda/function:Function":
               overrides = { name: prefixName(64, args.name) };
               break;
+            case "aws:sqs/queue:Queue":
+              overrides = {
+                name: output(args.props.fifoQueue).apply((fifo) =>
+                  prefixName(80, args.name, fifo ? ".fifo" : undefined),
+                ),
+              };
+              break;
             case "aws:apigatewayv2/api:Api":
             case "aws:apigatewayv2/authorizer:Authorizer":
               overrides = { name: prefixName(128, args.name) };
               break;
+            case "aws:appautoscaling/policy:Policy":
             case "aws:dynamodb/table:Table":
+            case "aws:ecs/cluster:Cluster":
+            case "aws:ecs/service:Service":
               overrides = { name: prefixName(255, args.name) };
+              break;
+            case "aws:ec2/eip:Eip":
+            case "aws:ec2/internetGateway:InternetGateway":
+            case "aws:ec2/natGateway:NatGateway":
+            case "aws:ec2/routeTable:RouteTable":
+            case "aws:ec2/securityGroup:SecurityGroup":
+            case "aws:ec2/subnet:Subnet":
+            case "aws:ec2/vpc:Vpc":
+              overrides = {
+                tags: {
+                  // @ts-expect-error
+                  ...args.tags,
+                  Name: prefixName(255, args.name),
+                },
+              };
               break;
             case "aws:sns/topic:Topic":
               overrides = {
@@ -94,25 +134,9 @@ export class Component extends ComponentResource {
                 title: prefixName(64, args.name).toLowerCase(),
               };
               break;
-            case "aws:rds/cluster:Cluster":
-              overrides = {
-                clusterIdentifier: prefixName(63, args.name).toLowerCase(),
-              };
-              break;
-            case "aws:rds/clusterInstance:ClusterInstance":
-              overrides = {
-                identifier: prefixName(63, args.name).toLowerCase(),
-              };
-              break;
-            case "aws:sqs/queue:Queue":
-              overrides = {
-                name: output(args.props.fifoQueue).apply((fifo) =>
-                  prefixName(80, args.name, fifo ? ".fifo" : undefined),
-                ),
-              };
-              break;
             // resources prefixed manually
             case "aws:iam/role:Role":
+            case "aws:lb/targetGroup:TargetGroup":
             case "aws:s3/bucketV2:BucketV2":
               break;
             // resources not prefixed
@@ -121,8 +145,11 @@ export class Component extends ComponentResource {
             case "aws:apigatewayv2/integration:Integration":
             case "aws:apigatewayv2/route:Route":
             case "aws:apigatewayv2/stage:Stage":
+            case "aws:appautoscaling/target:Target":
             case "aws:acm/certificate:Certificate":
             case "aws:acm/certificateValidation:CertificateValidation":
+            case "aws:ec2/routeTableAssociation:RouteTableAssociation":
+            case "aws:ecs/taskDefinition:TaskDefinition":
             case "aws:iam/accessKey:AccessKey":
             case "aws:iam/policy:Policy":
             case "aws:iam/rolePolicyAttachment:RolePolicyAttachment":
@@ -138,6 +165,7 @@ export class Component extends ComponentResource {
             case "aws:lambda/functionUrl:FunctionUrl":
             case "aws:lambda/invocation:Invocation":
             case "aws:lambda/permission:Permission":
+            case "aws:lb/listener:Listener":
             case "aws:route53/record:Record":
             case "aws:s3/bucketCorsConfigurationV2:BucketCorsConfigurationV2":
             case "aws:s3/bucketNotification:BucketNotification":
@@ -148,6 +176,7 @@ export class Component extends ComponentResource {
             case "aws:s3/bucketWebsiteConfigurationV2:BucketWebsiteConfigurationV2":
             case "aws:sns/topicSubscription:TopicSubscription":
             case "cloudflare:index/workerDomain:WorkerDomain":
+            case "docker:index/image:Image":
             case "vercel:index/dnsRecord:DnsRecord":
               break;
             default:
