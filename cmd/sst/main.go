@@ -929,6 +929,11 @@ var Root = Command{
 					envVar := fmt.Sprintf("SST_RESOURCE_%s=%s", resource, jsonValue)
 					cmd.Env = append(cmd.Env, envVar)
 				}
+
+				for key, val := range p.Env() {
+					key = strings.ReplaceAll(key, "SST_", "")
+					cmd.Env = append(cmd.Env, fmt.Sprintf("%s=%s", key, val))
+				}
 				cmd.Stdout = os.Stdout
 				cmd.Stderr = os.Stderr
 				cmd.Stdin = os.Stdin
