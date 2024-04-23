@@ -359,12 +359,11 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 		if len(deployment.Resources) == 0 {
 			return
 		}
-		outputs := decrypt(deployment.Resources[0].Outputs)
 		complete.Resources = deployment.Resources
 
 		cloudflareBindings := map[string]string{}
 		for _, resource := range complete.Resources {
-			outputs := decrypt(resource.Outputs)
+			outputs := decrypt(resource.Outputs).(map[string]interface{})
 			if match, ok := outputs["_live"].(map[string]interface{}); ok {
 				data, _ := json.Marshal(match)
 				var entry Warp
@@ -403,6 +402,7 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 			}
 		}
 
+		outputs := decrypt(deployment.Resources[0].Outputs).(map[string]interface{})
 		linksOutput, ok := outputs["_links"]
 		if ok {
 			links := linksOutput.(map[string]interface{})
@@ -680,20 +680,24 @@ func (s *stack) Cancel() error {
 	)
 }
 
-func decrypt(input map[string]interface{}) map[string]interface{} {
-	for key, value := range input {
-		switch value := value.(type) {
-		case map[string]interface{}:
-			if value["plaintext"] != nil {
-				var parsed any
-				json.Unmarshal([]byte(value["plaintext"].(string)), &parsed)
-				input[key] = parsed
-				continue
-			}
-			input[key] = decrypt(value)
-		default:
-			continue
+func decrypt(input interface{}) interface{} {
+	switch cast := input.(type) {
+	case map[string]interface{}:
+		if cast["plaintext"] != nil {
+			var parsed any
+			json.Unmarshal([]byte(cast["plaintext"].(string)), &parsed)
+			return parsed
 		}
+		for key, value := range cast {
+			cast[key] = decrypt(value)
+		}
+		return cast
+	case []interface{}:
+		for i, value := range cast {
+			cast[i] = decrypt(value)
+		}
+		return cast
+	default:
+		return cast
 	}
-	return input
 }

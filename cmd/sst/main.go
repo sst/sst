@@ -925,7 +925,6 @@ var Root = Command{
 					if err != nil {
 						return err
 					}
-
 					envVar := fmt.Sprintf("SST_RESOURCE_%s=%s", resource, jsonValue)
 					cmd.Env = append(cmd.Env, envVar)
 				}
