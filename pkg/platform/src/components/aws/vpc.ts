@@ -7,6 +7,12 @@ export interface VpcArgs {
   /**
    * Number of Availability Zones for the VPC.
    * @default `2`
+   * @example
+   * ```ts
+   * {
+   *   az: 3,
+   * }
+   * ```
    */
   az?: Input<number>;
   /**
@@ -63,19 +69,26 @@ export interface VpcArgs {
  * - A NAT Gateway in each availability zone. All traffic from the private subnets is routed to the NAT Gateway in the same availability zone.
  * - A Security Group.
  *
+ * :::caution
+ * NAT Gateways are billed per hour and per gigabyte of data processed. By default,
+ * this component creates a NAT Gateway in each availability zone. Make sure to review
+ * the [pricing](https://aws.amazon.com/vpc/pricing/) and adjust the number of availability
+ * zones accordingly.
+ * :::
+ *
  * @example
  *
  * #### Create a VPC
  *
  * ```ts
- * const vpc = new sst.aws.Vpc("MyVPC");
+ * new sst.aws.Vpc("MyVPC");
  * ```
  *
  * #### Create a VPC with 3 Availability Zones
  *
  * ```ts
- * const vpc = new sst.aws.Vpc("MyVPC", {
- *  az: 3,
+ * new sst.aws.Vpc("MyVPC", {
+ *   az: 3,
  * });
  * ```
  */
