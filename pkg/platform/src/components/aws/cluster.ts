@@ -1,11 +1,11 @@
-import { ComponentResourceOptions } from "@pulumi/pulumi";
+import { ComponentResourceOptions, Output } from "@pulumi/pulumi";
 import * as aws from "@pulumi/aws";
 import * as docker from "@pulumi/docker";
 import { Component, Prettify, Transform, transform } from "../component";
 import { Input } from "../input";
 import { Dns } from "../dns";
 import { FunctionArgs } from "./function";
-import { ClusterService as ClusterServiceComponent } from "./cluster-service";
+import { Service } from "./service";
 import { RETENTION } from "./logging.js";
 
 export const supportedCpus = {
@@ -111,76 +111,21 @@ export const supportedMemories = {
 
 type Port = `${number}/${"http" | "https" | "tcp" | "udp" | "tcp_udp" | "tls"}`;
 
-interface DomainArgs {
-  /**
-   * The custom domain you want to use. Supports domains hosted on [Route 53](https://aws.amazon.com/route53/) or outside AWS.
-   * @example
-   * ```js
-   * {
-   *   domain: "domain.com"
-   * }
-   * ```
-   */
-  name: Input<string>;
-  /**
-   * The ARN of an existing certificate in the `us-east-1` region in AWS Certificate Manager
-   * to use for the domain. By default, SST will create a certificate with the domain name.
-   * The certificate will be created in the `us-east-1`(N. Virginia) region as required by
-   * AWS CloudFront.
-   *
-   * @example
-   * ```js
-   * {
-   *   domain: {
-   *     name: "domain.com",
-   *     cert: "arn:aws:acm:us-east-1:112233445566:certificate/3a958790-8878-4cdc-a396-06d95064cf63"
-   *   }
-   * }
-   * ```
-   */
-  cert?: Input<string>;
-  /**
-   * The DNS adapter you want to use for managing DNS records.
-   *
-   * :::note
-   * If `dns` is set to `false`, you must provide a validated certificate via `cert`. And
-   * you have to add the DNS records manually to point to the CloudFront distribution URL.
-   * :::
-   *
-   * @default `sst.aws.dns`
-   * @example
-   *
-   * Specify the hosted zone ID for the domain.
-   *
-   * ```js
-   * {
-   *   domain: {
-   *     name: "domain.com",
-   *     dns: sst.aws.dns({
-   *       zone: "Z2FDTNDATAQYW2"
-   *     })
-   *   }
-   * }
-   * ```
-   *
-   * Domain is hosted on Cloudflare.
-   *
-   * ```js
-   * {
-   *   domain: {
-   *     name: "domain.com",
-   *     dns: sst.cloudflare.dns()
-   *   }
-   * }
-   * ```
-   */
-  dns?: Input<false | (Dns & {})>;
-}
-
 export interface ClusterArgs {
   /**
    * The VPC to use for the cluster.
    *
+   * @example
+   * ```js
+   * {
+   *   vpc: {
+   *     id: ["vpc-0d19d2b8ca2b268a1"],
+   *     publicSubnets: ["subnet-0b6a2b73896dc8c4c", "subnet-021389ebee680c2f0"],
+   *     privateSubnets: ["subnet-0db7376a7ad4db5fd ", "subnet-06fc7ee8319b2c0ce"],
+   *     securityGroups: ["sg-0399348378a4c256c"],
+   *   }
+   * }
+   * ```
    */
   vpc: Input<{
     /**
@@ -188,11 +133,13 @@ export interface ClusterArgs {
      */
     id: Input<string>;
     /**
-     * A list of public subnet IDs in the VPC.
+     * A list of public subnet IDs in the VPC. If a service has public ports configured,
+     * its load balancer will be placed in the public subnets.
      */
     publicSubnets: Input<Input<string>[]>;
     /**
-     * A list of private subnet IDs in the VPC.
+     * A list of private subnet IDs in the VPC. The service will be placed in the private
+     * subnets.
      */
     privateSubnets: Input<Input<string>[]>;
     /**
@@ -213,15 +160,225 @@ export interface ClusterArgs {
 }
 
 export interface ClusterServiceArgs {
-  name: string;
+  /**
+   * Configure the docker build command for building the image.
+   * @default `&lcub;&rcub;`
+   * @example
+   * ```js
+   * {
+   *   image: {
+   *     context: "./app",
+   *     dockerfile: "Dockerfile",
+   *     args: {
+   *       MY_VAR: "value"
+   *     }
+   *   }
+   * }
+   * ```
+   */
   image?: Input<{
+    /**
+     * The path to the [Docker build context](https://docs.docker.com/build/building/context/#local-context).
+     * The path is relative to your `sst.config.ts`.
+     * @default `"."`
+     * @example
+     *
+     * Change where the docker build context is located.
+     *
+     * ```js
+     * {
+     *   context: "./app"
+     * }
+     * ```
+     */
     context?: Input<string>;
+    /**
+     * The path to the [Dockerfile](https://docs.docker.com/reference/cli/docker/image/build/#file).
+     * The path is relative to the build context.
+     * @default `"Dockerfile"`
+     * @example
+     * ```js
+     * {
+     *   dockerfile: "Dockerfile.prod"
+     * }
+     * ```
+     */
     dockerfile?: Input<string>;
+    /**
+     * [Build args](https://docs.docker.com/build/guide/build-args/) to pass to the docker build command.
+     * @example
+     * ```js
+     * {
+     *   args: {
+     *     MY_VAR: "value"
+     *   }
+     * }
+     * ```
+     */
     args?: Input<Record<string, Input<string>>>;
   }>;
+  /**
+   * Configure a public endpoint for the service. When configured, a load balancer
+   * will be created to route traffic to the containers. Your users can access the service
+   * using this endpoint.
+   *
+   * You can also configure a custom domain for the public endpoint.
+   *
+   * @example
+   * ```js
+   * {
+   *   public: {
+   *     domain: "domain.com",
+   *     ports: [
+   *       { listen: "80/http" },
+   *       { listen: "443/https", forward: "80/http" }
+   *     ]
+   *   }
+   * }
+   */
   public?: Input<{
-    domain?: Input<string | Prettify<DomainArgs>>;
-    ports: Input<{ listen: Input<Port>; forward?: Input<Port> }[]>;
+    /**
+     * Set a custom domain for the public endpoint. Supports domains hosted either on
+     * [Route 53](https://aws.amazon.com/route53/) or outside AWS.
+     *
+     * :::tip
+     * You can also migrate an externally hosted domain to Amazon Route 53 by
+     * [following this guide](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/MigratingDNS.html).
+     * :::
+     *
+     * @example
+     *
+     * ```js
+     * {
+     *   public: {
+     *     domain: "domain.com"
+     *   }
+     * }
+     * ```
+     */
+    domain?: Input<
+      | string
+      | {
+          /**
+           * The custom domain you want to use. Supports domains hosted on [Route 53](https://aws.amazon.com/route53/) or outside AWS.
+           * @example
+           * ```js
+           * {
+           *   domain: {
+           *     name: "domain.com"
+           *   }
+           * }
+           * ```
+           */
+          name: Input<string>;
+          /**
+           * The ARN of an existing certificate in AWS Certificate Manager to use for the domain.
+           * By default, SST will create a certificate with the domain name.
+           *
+           * @example
+           * ```js
+           * {
+           *   domain: {
+           *     name: "domain.com",
+           *     cert: "arn:aws:acm:us-east-1:112233445566:certificate/3a958790-8878-4cdc-a396-06d95064cf63"
+           *   }
+           * }
+           * ```
+           */
+          cert?: Input<string>;
+          /**
+           * The DNS adapter you want to use for managing DNS records.
+           *
+           * :::note
+           * If `dns` is set to `false`, you must provide a validated certificate via `cert`. And
+           * you have to add the DNS records manually to point to the CloudFront distribution URL.
+           * :::
+           *
+           * @default `sst.aws.dns`
+           * @example
+           *
+           * Specify the hosted zone ID for the domain.
+           *
+           * ```js
+           * {
+           *   domain: {
+           *     name: "domain.com",
+           *     dns: sst.aws.dns({
+           *       zone: "Z2FDTNDATAQYW2"
+           *     })
+           *   }
+           * }
+           * ```
+           *
+           * Domain is hosted on Cloudflare.
+           *
+           * ```js
+           * {
+           *   domain: {
+           *     name: "domain.com",
+           *     dns: sst.cloudflare.dns()
+           *   }
+           * }
+           * ```
+           */
+          dns?: Input<false | (Dns & {})>;
+        }
+    >;
+    /**
+     * Configure the port mappings the public endpoint listens to and forwards to the service.
+     *
+     * Two classes of protocols are supported:
+     * - Application Layer Protocols: `http` and `https`
+     * - Network Layer Protocols: `tcp`, `udp`, `tcp_udp`, and `tls`
+     *
+     * If application layer protocols are used, an [Application Load Balancer](https://docs.aws.amazon.com/elasticloadbalancing/latest/application/introduction.html) is created.
+     * And if network layer protocols are used, a [Network Load Balancer](https://docs.aws.amazon.com/elasticloadbalancing/latest/network/introduction.html) is created.
+     *
+     * :::note
+     * You can not configure both application and network layer protocols in the same service.
+     * :::
+     *
+     * :::note
+     * If ports are configured to listen on `https` or `tls` protocols, a custom domain is required.
+     * :::
+     *
+     * @example
+     * ```js
+     * {
+     *   public: {
+     *     ports: [
+     *       { listen: "80/http", forward: "8080/http" }
+     *     ]
+     *   }
+     * }
+     * ```
+     *
+     * If the forward port and protocol are the same as those the service listens on,
+     * you can omit the `forward` field.
+     *
+     * ```js
+     * {
+     *   public: {
+     *     ports: [
+     *       { listen: "80/http" }
+     *     ]
+     *   }
+     * }
+     * ```
+     */
+    ports: Input<
+      {
+        /**
+         * The port and protocol the service listens on.
+         */
+        listen: Input<Port>;
+        /**
+         * The port and protocol of the container the service forwards the traffic to.
+         * @default The same port and protocol as `listen`
+         */
+        forward?: Input<Port>;
+      }[]
+    >;
   }>;
   /**
    * The CPU architecture of the container.
@@ -267,8 +424,89 @@ export interface ClusterServiceArgs {
    * ```
    */
   storage?: `${number} GB`;
+  /**
+   * [Link resources](/docs/linking/) to your service. This will:
+   *
+   * 1. Grant the permissions needed to access the resources.
+   * 2. Allow you to access it in your site using the [SDK](/docs/reference/sdk/).
+   *
+   * @example
+   *
+   * Takes a list of components to link to the service.
+   *
+   * ```js
+   * {
+   *   link: [bucket, stripeKey]
+   * }
+   * ```
+   */
   link?: FunctionArgs["link"];
+  /**
+   * Permissions and the resources that the service needs to access. These permissions are
+   * used to create the service's [task IAM role](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task-iam-roles.html).
+   *
+   * :::tip
+   * If you `link` the service to a resource, the permissions to access it are
+   * automatically added.
+   * :::
+   *
+   * @example
+   * Allow the service to read and write to an S3 bucket called `my-bucket`.
+   * ```js
+   * {
+   *   permissions: [
+   *     {
+   *       actions: ["s3:GetObject", "s3:PutObject"],
+   *       resources: ["arn:aws:s3:::my-bucket/*"]
+   *     },
+   *   ]
+   * }
+   * ```
+   *
+   * Allow the service to perform all actions on an S3 bucket called `my-bucket`.
+   *
+   * ```js
+   * {
+   *   permissions: [
+   *     {
+   *       actions: ["s3:*"],
+   *       resources: ["arn:aws:s3:::my-bucket/*"]
+   *     },
+   *   ]
+   * }
+   * ```
+   *
+   * Granting the service permissions to access all resources.
+   *
+   * ```js
+   * {
+   *   permissions: [
+   *     {
+   *       actions: ["*"],
+   *       resources: ["*"]
+   *     },
+   *   ]
+   * }
+   * ```
+   */
   permissions?: FunctionArgs["permissions"];
+  /**
+   * Key-value pairs of values that are set as [container environment variables](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/taskdef-envfiles.html).
+   * The keys need to:
+   * - Start with a letter
+   * - Be at least 2 characters long
+   * - Contain only letters, numbers, or underscores
+   *
+   * @example
+   *
+   * ```js
+   * {
+   *   environment: {
+   *     DEBUG: "true"
+   *   }
+   * }
+   * ```
+   */
   environment?: FunctionArgs["environment"];
   /**
    * Configure the service logs in CloudWatch.
@@ -284,14 +522,29 @@ export interface ClusterServiceArgs {
    */
   logging?: Input<{
     /**
-     * The duration the function logs are kept in CloudWatch.
+     * The duration the service logs are kept in CloudWatch.
      * @default `forever`
      */
     retention?: Input<keyof typeof RETENTION>;
   }>;
+  /**
+   * Configure the service to automatically scale in or out based on the CPU or memory utilization.
+   * By default, scaling is disabled. The service will run with a single container.
+   *
+   * @example
+   * ```js
+   * {
+   *   scaling: {
+   *     min: 4,
+   *     max: 16,
+   *     cpuUtilization: 50,
+   *     memoryUtilization: 50,
+   *   }
+   * }
+   */
   scaling?: Input<{
     /**
-     * The minimum capacity for the cluster.
+     * The minimum number of containers to run.
      * @default 1
      * @example
      * ```js
@@ -305,7 +558,7 @@ export interface ClusterServiceArgs {
      */
     min?: Input<number>;
     /**
-     * The maximum capacity for the cluster.
+     * The maximum number of containers to run.
      * @default 1
      * @example
      * ```js
@@ -319,27 +572,27 @@ export interface ClusterServiceArgs {
      */
     max?: Input<number>;
     /**
-     * Scales in or out to achieve a target cpu utilization.
+     * The target CPU utilization percentage to scale in or out. The service will scale in
+     * when the CPU utilization is below the target and scale out when it is above the target.
      * @default 70
      * @example
      * ```js
      * {
      *   scaling: {
      *    cpuUtilization: 50,
-     *    memoryUtilization: 50,
      *   },
      * }
      *```
      */
     cpuUtilization?: Input<number>;
     /**
-     * Scales in or out to achieve a target memory utilization.
+     * The target memory utilization percentage to scale in or out. The service will scale in
+     * when the memory utilization is below the target and scale out when it is above the target.
      * @default 70
      * @example
      * ```js
      * {
      *   scaling: {
-     *    cpuUtilization: 50,
      *    memoryUtilization: 50,
      *   },
      * }
@@ -387,35 +640,33 @@ export interface ClusterServiceArgs {
   };
 }
 
-export interface ClusterService {
-  /**
-   * The ECS Cluster resource.
-   */
-  service: aws.ecs.Cluster;
-}
-
 /**
- * The `Vpc` component lets you add a VPC to your app. It uses [Amazon VPC](https://docs.aws.amazon.com/vpc/).
- *
- * This component creates:
- * - A VPC.
- * - Two Subnets (Public and Private).
- * - An Internet Gateway, and a Route Table routing traffic to the Internet Gateway in the Public Subnet.
- * - A NAT Gateway, and a Route Table routing traffic to the NAT Gateway in the Private Subnet.
- * - A Security Group.
+ * The `Cluster` component lets you create a cluster of containers that run your app.
+ * It uses [Amazon Fargate](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/AWS_Fargate.html).
  *
  * @example
  *
- * #### Create a VPC
+ * #### Create a Cluster
  *
  * ```ts
- * const vpc = new sst.aws.Vpc("MyVPC");
+ * const cluster = new sst.aws.Cluster("MyCluster", {
+ *   vpc: {
+ *     id: ["vpc-0d19d2b8ca2b268a1"],
+ *     publicSubnets: ["subnet-0b6a2b73896dc8c4c", "subnet-021389ebee680c2f0"],
+ *     privateSubnets: ["subnet-0db7376a7ad4db5fd ", "subnet-06fc7ee8319b2c0ce"],
+ *     securityGroups: ["sg-0399348378a4c256c"],
+ *   }
+ * });
+ * ```
+ *
+ * #### Add a service
+ *
+ * ```ts
+ * cluster.addService("MyService");
  * ```
  */
 export class Cluster extends Component {
-  private name: string;
   private args: ClusterArgs;
-  private opts?: ComponentResourceOptions;
   private cluster: aws.ecs.Cluster;
 
   constructor(
@@ -429,9 +680,7 @@ export class Cluster extends Component {
 
     const cluster = createCluster();
 
-    this.name = name;
     this.args = args;
-    this.opts = opts;
     this.cluster = cluster;
 
     function createCluster() {
@@ -456,66 +705,54 @@ export class Cluster extends Component {
   }
 
   /**
-   * Subscribe to this queue.
+   * Add a service to the cluster.
    *
-   * @param subscriber The function that'll be notified.
-   * @param args Configure the subscription.
+   * @param name Name of the service.
+   * @param args Configure the service.
    *
    * @example
    *
-   * ```js
-   * queue.subscribe("src/subscriber.handler");
+   * ```ts
+   * cluster.addService("MyService");
+   * ```
    *
-   * Add a filter to the subscription.
+   * Set a custom domain for the service.
    *
-   * ```js
-   * queue.subscribe("src/subscriber.handler", {
-   *   filters: [
-   *     {
-   *       body: {
-   *         RequestCode: ["BBBB"]
-   *       }
-   *     }
-   *   ]
+   * ```js {3}
+   * cluster.addService("MyService", {
+   *   domain: "my-app.com"
    * });
    * ```
    *
-   * Customize the subscriber function.
+   * [Link resources](/docs/linking/) to your service. This will grant permissions
+   * to the resources and allow you to access it in your app.
    *
-   * ```js
-   * queue.subscribe({
-   *   handler: "src/subscriber.handler",
-   *   timeout: "60 seconds"
+   * ```ts {5}
+   * const bucket = new sst.aws.Bucket("MyBucket");
+   *
+   * cluster.addService("MyService", {
+   *   link: [bucket]
    * });
+   * ```
+   *
+   * If your service app is written in Node.js, you can use the [SDK](/docs/reference/sdk/)
+   * to access the linked resources.
+   *
+   * ```ts title="app.ts"
+   * import { Resource } from "sst";
+   *
+   * console.log(Resource.MyBucket.name);
    * ```
    */
-  public addService(args: ClusterServiceArgs) {
-    const namePrefix = `${this.name}${args.name}`;
-    const component = new ClusterServiceComponent(
-      namePrefix,
-      this.cluster,
-      this.args.vpc,
-      args,
-      this.opts,
-    );
-
-    return {
-      get url() {
-        return component.url;
+  public addService(name: string, args?: ClusterServiceArgs) {
+    return new Service(name, {
+      cluster: {
+        name: this.cluster.name,
+        arn: this.cluster.arn,
       },
-      get loadBalancer() {
-        return component.nodes.loadBalancer;
-      },
-      get service() {
-        return component.nodes.service;
-      },
-      get taskRole() {
-        return component.nodes.taskRole;
-      },
-      get taskDefinition() {
-        return component.nodes.taskDefinition;
-      },
-    };
+      vpc: this.args.vpc,
+      ...args,
+    });
   }
 }
 

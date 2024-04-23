@@ -201,7 +201,7 @@ The following are accessible through the [SDK](/docs/reference/sdk/) at runtime.
 <Segment>
 <Section type="parameters">
 <InlineSection>
-**Type** <code class="primitive">string</code>
+**Type** <code class="primitive">Output</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
 The URL of the API.
@@ -279,10 +279,8 @@ You can also migrate an externally hosted domain to Amazon Route 53 by
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
-The ARN of an existing certificate in the `us-east-1` region in AWS Certificate Manager
-to use for the domain. By default, SST will create a certificate with the domain name.
-The certificate will be created in the `us-east-1`(N. Virginia) region as required by
-AWS CloudFront.
+The ARN of an existing certificate in AWS Certificate Manager to use for the domain.
+By default, SST will create a certificate with the domain name.
 
 ```js
 {
@@ -346,7 +344,9 @@ The custom domain you want to use. Supports domains hosted on [Route 53](https:/
 
 ```js
 {
-  domain: "domain.com"
+  domain: {
+    name: "domain.com"
+  }
 }
 ```
 </Segment>

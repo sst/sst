@@ -691,8 +691,32 @@ async function generateComponentsDoc() {
       for (const link of valueType.declaration.children) {
         console.debug(` - link ${link.name}`);
 
-        const type = (link.type as TypeDoc.ReferenceType).typeArguments![0];
-        if (!type || type.type !== "intrinsic") {
+        // Check type is Output<intrinsic>
+        const isOutputIntrisicType = (() => {
+          const linkType = link.type as TypeDoc.ReferenceType;
+          return (
+            linkType.type === "reference" &&
+            linkType.name === "Output" &&
+            linkType.typeArguments?.[0].type === "intrinsic"
+          );
+        })();
+        // Check type is Output<intrinsic> | undefined
+        const isUnionOutputIntrinsicType = (() => {
+          const linkType = link.type as TypeDoc.UnionType;
+          return (
+            linkType.type === "union" &&
+            linkType.types.every(
+              (t) =>
+                (t.type === "intrinsic" && t.name === "undefined") ||
+                (t.type === "reference" &&
+                  t.name === "Output" &&
+                  t.typeArguments?.[0].type === "intrinsic")
+            )
+          );
+        })();
+        if (!isOutputIntrisicType && !isUnionOutputIntrinsicType) {
+          // @ts-expect-error
+          delete link.type._project;
           console.error(link.type);
           throw new Error(
             `Failed to render link ${link.name} b/c link value does not match type Output<intrinsic>`
@@ -712,7 +736,7 @@ async function generateComponentsDoc() {
           `<Segment>`,
           `<Section type="parameters">`,
           `<InlineSection>`,
-          `**Type** ${renderType(type)}`,
+          `**Type** ${renderType(link.type!)}`,
           `</InlineSection>`,
           `</Section>`,
           ...renderDescription(getter.getSignature!),
@@ -1077,6 +1101,7 @@ async function generateComponentsDoc() {
         FunctionArgs: "function",
         FunctionPermissionArgs: "function",
         PostgresArgs: "postgres",
+        Service: "service",
       }[type.name];
       if (externalModule) {
         const hash = type.name.endsWith("Args")
@@ -1385,10 +1410,10 @@ async function buildComponents() {
       "../pkg/platform/src/components/secret.ts",
       "../pkg/platform/src/components/aws/apigatewayv2.ts",
       "../pkg/platform/src/components/aws/bucket.ts",
+      "../pkg/platform/src/components/aws/cluster.ts",
       "../pkg/platform/src/components/aws/cron.ts",
       "../pkg/platform/src/components/aws/dynamo.ts",
-      // TODO
-      //"../pkg/platform/src/components/aws/function.ts",
+      "../pkg/platform/src/components/aws/function.ts",
       "../pkg/platform/src/components/aws/postgres.ts",
       "../pkg/platform/src/components/aws/vector.ts",
       "../pkg/platform/src/components/aws/astro.ts",
@@ -1396,9 +1421,11 @@ async function buildComponents() {
       "../pkg/platform/src/components/aws/remix.ts",
       "../pkg/platform/src/components/aws/queue.ts",
       "../pkg/platform/src/components/aws/router.ts",
+      "../pkg/platform/src/components/aws/service.ts",
       "../pkg/platform/src/components/aws/sns-topic.ts",
       "../pkg/platform/src/components/aws/solid-start.ts",
       "../pkg/platform/src/components/aws/static-site.ts",
+      "../pkg/platform/src/components/aws/vpc.ts",
       "../pkg/platform/src/components/cloudflare/worker.ts",
       "../pkg/platform/src/components/cloudflare/bucket.ts",
       "../pkg/platform/src/components/cloudflare/d1.ts",

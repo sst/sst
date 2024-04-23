@@ -18,8 +18,7 @@ export default $config({
         }
       : new sst.aws.Vpc("MyVpc");
     const cluster = new sst.aws.Cluster("MyCluster", { vpc });
-    cluster.addService({
-      name: "MyService",
+    cluster.addService("MyService", {
       architecture: "arm64",
       public: {
         domain: "cluster.ion.sst.sh",

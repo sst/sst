@@ -1,6 +1,8 @@
+import fs from "fs";
 import path from "path";
 import {
   ComponentResourceOptions,
+  Input,
   Output,
   all,
   interpolate,
@@ -26,24 +28,55 @@ import {
 import { RETENTION } from "./logging.js";
 import { prefixName } from "../naming";
 
-export class ClusterService extends Component {
+export interface ServiceArgs extends ClusterServiceArgs {
+  /**
+   * The cluster to use for the service.
+   */
+  cluster: Input<{
+    /**
+     * The name of the cluster.
+     */
+    name: Input<string>;
+    /**
+     * The ARN of the cluster.
+     */
+    arn: Input<string>;
+  }>;
+  /**
+   * The VPC to use for the cluster.
+   */
+  vpc: ClusterArgs["vpc"];
+}
+
+/**
+ * The `Service` component is internally used by the `Cluster` component to deploy services to AWS ECS.
+ * It uses [Amazon Fargate](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/AWS_Fargate.html).
+ *
+ * :::caution
+ * This component is not intended for public use.
+ * :::
+ *
+ * You'll find this component returned by the `addService` method of the `Cluster` component.
+ */
+export class Service extends Component implements Link.Linkable {
   private readonly service?: aws.ecs.Service;
   private readonly taskRole: aws.iam.Role;
   private readonly taskDefinition?: aws.ecs.TaskDefinition;
   private readonly loadBalancer?: aws.lb.LoadBalancer;
   private readonly domain?: Output<string | undefined>;
+  private readonly _url?: Output<string>;
 
   constructor(
     name: string,
-    cluster: aws.ecs.Cluster,
-    vpc: ClusterArgs["vpc"],
-    args: ClusterServiceArgs,
+    args: ServiceArgs,
     opts?: ComponentResourceOptions,
   ) {
     super(__pulumiType, name, args, opts);
 
     const self = this;
 
+    const cluster = output(args.cluster);
+    const vpc = output(args.vpc);
     const region = normalizeRegion();
     const architecture = normalizeArchitecture();
     const imageArgs = normalizeImage();
@@ -80,6 +113,11 @@ export class ClusterService extends Component {
     this.domain = pub?.domain
       ? pub.domain.apply((domain) => domain?.name)
       : output(undefined);
+    this._url = !self.loadBalancer
+      ? undefined
+      : all([self.domain, self.loadBalancer]).apply(([domain, loadBalancer]) =>
+          domain ? `https://${domain}/` : `https://${loadBalancer.dnsName}`,
+        );
 
     registerHint();
     registerReceiver();
@@ -232,16 +270,44 @@ export class ClusterService extends Component {
     }
 
     function createImage() {
+      // Edit .dockerignore file
+      const imageArgsNew = imageArgs.apply((imageArgs) => {
+        const context = path.join($cli.paths.root, imageArgs.context);
+        const dockerfile = imageArgs.dockerfile ?? "Dockerfile";
+
+        // get .dockerignore file
+        const file = (() => {
+          let filePath = path.join(context, `${dockerfile}.dockerignore`);
+          if (fs.existsSync(filePath)) return filePath;
+          filePath = path.join(context, ".dockerignore");
+          if (fs.existsSync(filePath)) return filePath;
+        })();
+
+        // add .sst to .dockerignore if not exist
+        const content = file ? fs.readFileSync(file).toString() : "";
+        const lines = content.split("\n");
+        if (!lines.find((line) => line === ".sst")) {
+          fs.writeFileSync(
+            file ?? path.join(context, ".dockerignore"),
+            [...lines, "", "# sst", ".sst"].join("\n"),
+          );
+        }
+        return imageArgs;
+      });
+
+      // Get ECR repository
       const repo = region.apply((region) =>
         bootstrap.forRegion(region).then((d) => d.ecr),
       );
       const authToken = aws.ecr.getAuthorizationTokenOutput({
         registryId: repo.registryId,
       });
+
+      // Build image
       return new docker.Image(
         `${name}Image`,
         transform(args.transform?.image, {
-          build: imageArgs.apply((imageArgs) => ({
+          build: imageArgsNew.apply((imageArgs) => ({
             context: path.join($cli.paths.root, imageArgs.context),
             dockerfile: imageArgs.dockerfile,
             args: imageArgs.args,
@@ -270,8 +336,8 @@ export class ClusterService extends Component {
               ? "application"
               : "network",
           ),
-          subnets: output(vpc).apply((vpc) => vpc.publicSubnets),
-          securityGroups: output(vpc).apply((vpc) => vpc.securityGroups),
+          subnets: vpc.publicSubnets,
+          securityGroups: vpc.securityGroups,
           enableCrossZoneLoadBalancing: true,
         }),
         { parent: self },
@@ -301,7 +367,7 @@ export class ClusterService extends Component {
                 port: forwardPort,
                 protocol: forwardProtocol,
                 targetType: "ip",
-                vpcId: output(vpc).apply((vpc) => vpc.id),
+                vpcId: vpc.id,
               }),
               { parent: self },
             );
@@ -421,7 +487,7 @@ export class ClusterService extends Component {
       return new aws.ecs.TaskDefinition(
         `${name}Task`,
         transform(args.transform?.taskDefinition, {
-          family: args.name,
+          family: name,
           trackLatest: true,
           cpu: cpu.apply((v) => toNumber(v).toString()),
           memory: memory.apply((v) => toMBs(v).toString()),
@@ -437,7 +503,7 @@ export class ClusterService extends Component {
           executionRoleArn: taskRole.arn,
           containerDefinitions: $jsonStringify([
             {
-              name: args.name,
+              name,
               image: image.repoDigest,
               portMappings: pub?.ports.apply((ports) =>
                 ports
@@ -481,11 +547,11 @@ export class ClusterService extends Component {
           taskDefinition: taskDefinition.arn,
           desiredCount: 1,
           launchType: "FARGATE",
-          networkConfiguration: output(vpc).apply((vpc) => ({
+          networkConfiguration: {
             assignPublicIp: true,
             subnets: vpc.privateSubnets,
             securityGroups: vpc.securityGroups,
-          })),
+          },
           deploymentCircuitBreaker: {
             enable: true,
             rollback: true,
@@ -495,7 +561,7 @@ export class ClusterService extends Component {
             targets.apply((targets) =>
               Object.values(targets).map((target) => ({
                 targetGroupArn: target.arn,
-                containerName: args.name,
+                containerName: name,
                 containerPort: target.port.apply((port) => port!),
               })),
             ),
@@ -583,16 +649,7 @@ export class ClusterService extends Component {
     }
 
     function registerHint() {
-      self.registerOutputs({
-        _hint: !self.loadBalancer
-          ? undefined
-          : all([self.domain, self.loadBalancer]).apply(
-              ([domain, loadBalancer]) =>
-                domain
-                  ? `https://${domain}/`
-                  : `https://${loadBalancer.dnsName}`,
-            ),
-      });
+      self.registerOutputs({ _hint: self._url });
     }
 
     function registerReceiver() {
@@ -615,16 +672,9 @@ export class ClusterService extends Component {
    */
   public get url() {
     if ($dev) throw new VisibleError("Cannot access `url` in dev mode.");
-
-    return all([this.domain, this.loadBalancer]).apply(
-      ([domain, loadBalancer]) => {
-        if (!loadBalancer)
-          throw new VisibleError("No public ports are exposed.");
-        return domain
-          ? `https://${domain}/`
-          : `https://${loadBalancer.dnsName}`;
-      },
-    );
+    if (!this.loadBalancer)
+      throw new VisibleError("No public ports are exposed.");
+    return this._url!;
   }
 
   /**
@@ -673,8 +723,17 @@ export class ClusterService extends Component {
       },
     };
   }
+
+  /** @internal */
+  public getSSTLink() {
+    return {
+      properties: {
+        url: this._url,
+      },
+    };
+  }
 }
 
-const __pulumiType = "sst:aws:ClusterService";
+const __pulumiType = "sst:aws:Service";
 // @ts-expect-error
-ClusterService.__pulumiType = __pulumiType;
+Service.__pulumiType = __pulumiType;

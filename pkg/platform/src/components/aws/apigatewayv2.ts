@@ -27,7 +27,9 @@ interface DomainArgs {
    * @example
    * ```js
    * {
-   *   domain: "domain.com"
+   *   domain: {
+   *     name: "domain.com"
+   *   }
    * }
    * ```
    */
@@ -58,10 +60,8 @@ interface DomainArgs {
    */
   path?: Input<string>;
   /**
-   * The ARN of an existing certificate in the `us-east-1` region in AWS Certificate Manager
-   * to use for the domain. By default, SST will create a certificate with the domain name.
-   * The certificate will be created in the `us-east-1`(N. Virginia) region as required by
-   * AWS CloudFront.
+   * The ARN of an existing certificate in AWS Certificate Manager to use for the domain.
+   * By default, SST will create a certificate with the domain name.
    *
    * @example
    * ```js
@@ -550,9 +550,9 @@ export class ApiGatewayV2 extends Component implements Link.Linkable {
     //       trailing slash, the API fails with the error {"message":"Not Found"}
     return this.apigDomain && this.apiMapping
       ? all([this.apigDomain.domainName, this.apiMapping.apiMappingKey]).apply(
-        ([domain, key]) =>
-          key ? `https://${domain}/${key}/` : `https://${domain}`,
-      )
+          ([domain, key]) =>
+            key ? `https://${domain}/${key}/` : `https://${domain}`,
+        )
       : this.api.apiEndpoint;
   }
 

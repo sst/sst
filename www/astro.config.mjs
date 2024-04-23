@@ -40,6 +40,7 @@ const sidebar = [
   {
     label: "AWS",
     items: [
+      { label: "Vpc", link: "/docs/component/aws/vpc/" },
       { label: "Cron", link: "/docs/component/aws/cron/" },
       { label: "Astro", link: "/docs/component/aws/astro/" },
       { label: "Remix", link: "/docs/component/aws/remix/" },
@@ -48,6 +49,7 @@ const sidebar = [
       { label: "Vector", link: "/docs/component/aws/vector/" },
       { label: "Bucket", link: "/docs/component/aws/bucket/" },
       { label: "Router", link: "/docs/component/aws/router/" },
+      { label: "Cluster", link: "/docs/component/aws/cluster/" },
       { label: "Dynamo", link: "/docs/component/aws/dynamo/" },
       { label: "SnsTopic", link: "/docs/component/aws/sns-topic/" },
       { label: "Function", link: "/docs/component/aws/function/" },
@@ -98,6 +100,7 @@ const sidebar = [
           },
         ],
       },
+      { label: "Service", link: "/docs/component/aws/service/" },
     ],
   },
   { label: "Examples", link: "/docs/examples/" },
