@@ -691,19 +691,19 @@ async function generateComponentsDoc() {
       for (const link of valueType.declaration.children) {
         console.debug(` - link ${link.name}`);
 
-        // Check type is Output<intrinsic>
-        const isOutputIntrisicType = (() => {
+        // Convert type Output<intrinsic> => intrinsic
+        const intrisicType = (() => {
           const linkType = link.type as TypeDoc.ReferenceType;
-          return (
+          const match =
             linkType.type === "reference" &&
             linkType.name === "Output" &&
-            linkType.typeArguments?.[0].type === "intrinsic"
-          );
+            linkType.typeArguments?.[0].type === "intrinsic";
+          if (match) return linkType.typeArguments![0];
         })();
-        // Check type is Output<intrinsic> | undefined
-        const isUnionOutputIntrinsicType = (() => {
+        // Convert type Output<intrinsic> | undefined => intrinsic | undefined
+        const unionType = (() => {
           const linkType = link.type as TypeDoc.UnionType;
-          return (
+          const match =
             linkType.type === "union" &&
             linkType.types.every(
               (t) =>
@@ -711,10 +711,17 @@ async function generateComponentsDoc() {
                 (t.type === "reference" &&
                   t.name === "Output" &&
                   t.typeArguments?.[0].type === "intrinsic")
-            )
-          );
+            );
+          if (match) {
+            linkType.types = linkType.types.map((t) =>
+              t.type === "reference" ? t.typeArguments![0] : t
+            );
+            return linkType;
+          }
         })();
-        if (!isOutputIntrisicType && !isUnionOutputIntrinsicType) {
+
+        // Throw an error if type is neither
+        if (!intrisicType && !unionType) {
           // @ts-expect-error
           delete link.type._project;
           console.error(link.type);
@@ -736,7 +743,7 @@ async function generateComponentsDoc() {
           `<Segment>`,
           `<Section type="parameters">`,
           `<InlineSection>`,
-          `**Type** ${renderType(link.type!)}`,
+          `**Type** ${renderType((intrisicType || unionType)!)}`,
           `</InlineSection>`,
           `</Section>`,
           ...renderDescription(getter.getSignature!),
