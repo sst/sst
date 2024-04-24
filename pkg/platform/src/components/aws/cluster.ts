@@ -393,6 +393,11 @@ export interface ClusterServiceArgs {
   architecture?: Input<"x86_64" | "arm64">;
   /**
    * The amount of CPU allocated.
+   *
+   * :::note
+   * Only certain combinations of CPU and memory are supported. [View the valid combinations of CPU and memory](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/fargate-tasks-services.html#fargate-tasks-size).
+   * :::
+   *
    * @default "0.25 vCPU"
    * @example
    * ```js
@@ -404,6 +409,11 @@ export interface ClusterServiceArgs {
   cpu?: keyof typeof supportedCpus;
   /**
    * The amount of memory allocated.
+   *
+   * :::note
+   * Only certain combinations of CPU and memory are supported. [View the valid combinations of CPU and memory](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/fargate-tasks-services.html#fargate-tasks-size).
+   * :::
+   *
    * @default "0.5 GB"
    * @example
    * ```js

@@ -189,6 +189,10 @@ The name of the cluster.
 </InlineSection>
 The amount of CPU allocated.
 
+:::note
+Only certain combinations of CPU and memory are supported. [View the valid combinations of CPU and memory](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/fargate-tasks-services.html#fargate-tasks-size).
+:::
+
 ```js
 {
   cpu: "1 vCPU",
@@ -371,6 +375,10 @@ The duration the service logs are kept in CloudWatch.
 **Default** "0.5 GB"
 </InlineSection>
 The amount of memory allocated.
+
+:::note
+Only certain combinations of CPU and memory are supported. [View the valid combinations of CPU and memory](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/fargate-tasks-services.html#fargate-tasks-size).
+:::
 
 ```js
 {
