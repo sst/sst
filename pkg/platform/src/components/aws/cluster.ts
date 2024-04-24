@@ -162,6 +162,10 @@ export interface ClusterArgs {
 export interface ClusterServiceArgs {
   /**
    * Configure the docker build command for building the image.
+   *
+   * Prior to building the image, SST will automatically add the `.sst` directory
+   * to the `.dockerignore` file if not already present.
+   *
    * @default `&lcub;&rcub;`
    * @example
    * ```js
