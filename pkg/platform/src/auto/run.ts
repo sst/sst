@@ -6,6 +6,7 @@ import {
   mergeOptions,
   runtime,
   automation,
+  output,
 } from "@pulumi/pulumi";
 
 import aws from "@pulumi/aws";
@@ -86,7 +87,7 @@ function addTransformationToCheckBucketsHaveMultiplePolicies() {
   runtime.registerStackTransformation((args: ResourceTransformationArgs) => {
     if (args.type !== "aws:s3/bucketPolicy:BucketPolicy") return;
 
-    args.props.bucket.apply((bucket: string) => {
+    output(args.props.bucket).apply((bucket: string) => {
       if (bucketsWithPolicy[bucket])
         throw new VisibleError(
           `Cannot add bucket policy "${args.name}" to the AWS S3 Bucket "${bucket}". The bucket already has a policy attached "${bucketsWithPolicy[bucket]}".`,
