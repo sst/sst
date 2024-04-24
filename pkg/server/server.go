@@ -114,6 +114,10 @@ func (s *Server) Start(parentContext context.Context) error {
 		flusher, _ := w.(http.Flusher)
 		ctx := r.Context()
 		publish := func(event *Event) {
+			defer func() {
+				if r := recover(); r != nil {
+				}
+			}()
 			data, _ := json.Marshal(event)
 			w.Write(data)
 			w.Write([]byte("\n"))
