@@ -12,13 +12,6 @@
       }
     },
     {
-      "type": "npm",
-      "properties": {
-        "file": "package.json",
-        "package": "astro-sst"
-      }
-    },
-    {
       "type": "patch",
       "properties": {
         "file": "package.json",
@@ -28,6 +21,13 @@
             "replace": "\"dev\": \"sst dev $1\""
           }
         ]
+      }
+    },
+    {
+      "type": "npm",
+      "properties": {
+        "file": "package.json",
+        "package": "astro-sst"
       }
     }
   ]
