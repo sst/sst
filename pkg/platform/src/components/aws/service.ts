@@ -98,6 +98,7 @@ export class Service extends Component implements Link.Linkable {
       return;
     }
 
+    const executionRole = createExecutionRole();
     const image = createImage();
     const logGroup = createLogGroup();
     const taskDefinition = createTaskDefinition();
@@ -446,40 +447,36 @@ export class Service extends Component implements Link.Linkable {
       );
 
       return new aws.iam.Role(
-        `${name}Role`,
+        `${name}TaskRole`,
         transform(args.transform?.taskRole, {
           assumeRolePolicy: !$dev
             ? aws.iam.assumeRolePolicyForPrincipal({
                 Service: "ecs-tasks.amazonaws.com",
               })
-            : aws.iam.getPolicyDocumentOutput({
-                statements: [
-                  {
-                    actions: ["sts:AssumeRole"],
-                    principals: [
-                      {
-                        type: "Service",
-                        identifiers: ["lambda.amazonaws.com"],
-                      },
-                      {
-                        type: "AWS",
-                        identifiers: [
-                          interpolate`arn:aws:iam::${
-                            aws.getCallerIdentityOutput().accountId
-                          }:root`,
-                        ],
-                      },
-                    ],
-                  },
-                ],
-              }).json,
+            : aws.iam.assumeRolePolicyForPrincipal({
+                AWS: interpolate`arn:aws:iam::${
+                  aws.getCallerIdentityOutput().accountId
+                }:root`,
+              }),
           inlinePolicies: policy.apply(({ statements }) =>
             statements ? [{ name: "inline", policy: policy.json }] : [],
           ),
+        }),
+        { parent: self },
+      );
+    }
+
+    function createExecutionRole() {
+      return new aws.iam.Role(
+        `${name}ExecutionRole`,
+        {
+          assumeRolePolicy: aws.iam.assumeRolePolicyForPrincipal({
+            Service: "ecs-tasks.amazonaws.com",
+          }),
           managedPolicyArns: [
             "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy",
           ],
-        }),
+        },
         { parent: self },
       );
     }
@@ -502,7 +499,8 @@ export class Service extends Component implements Link.Linkable {
             cpuArchitecture: architecture.apply((v) => v.toUpperCase()),
             operatingSystemFamily: "LINUX",
           },
-          executionRoleArn: taskRole.arn,
+          executionRoleArn: executionRole.arn,
+          taskRoleArn: taskRole.arn,
           containerDefinitions: $jsonStringify([
             {
               name: taskName,
