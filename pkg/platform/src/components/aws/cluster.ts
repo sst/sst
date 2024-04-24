@@ -662,7 +662,15 @@ export interface ClusterServiceArgs {
  * #### Add a service
  *
  * ```ts
- * cluster.addService("MyService");
+ * cluster.addService("MyService", {
+ *   public: {
+ *     domain: "domain.com",
+ *     ports: [
+ *       { listen: "80/http" },
+ *       { listen: "443/https", forward: "80/http" },
+ *     ]
+ *   }
+ * });
  * ```
  */
 export class Cluster extends Component {
