@@ -5,6 +5,6 @@ WORKDIR /app/
 COPY package.json /app
 RUN npm install
 
-COPY app.mjs /app
+COPY index.mjs /app
 
-ENTRYPOINT ["node", "app.mjs"]
+ENTRYPOINT ["node", "index.mjs"]

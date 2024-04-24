@@ -4,8 +4,8 @@ export default $config({
   app(input) {
     return {
       name: "aws-cluster",
-      home: "aws",
       removal: input?.stage === "production" ? "retain" : "remove",
+      home: "aws",
     };
   },
   async run() {
@@ -16,6 +16,7 @@ export default $config({
     const vpc = new sst.aws.Vpc("MyVpc");
 
     const cluster = new sst.aws.Cluster("MyCluster", { vpc });
+
     cluster.addService("MyService", {
       public: {
         ports: [

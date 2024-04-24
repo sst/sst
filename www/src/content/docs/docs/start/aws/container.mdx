@@ -150,7 +150,26 @@ Server is running on http://localhost:80
 
 ## 4. Upload a file
 
-We want the `/` route of our API to upload a file to our S3 Bucket. Add this to your `index.mjs`.
+We want the `/` route of our API to upload a file to our S3 Bucket. Let's start by installing the npm packages we'll use for the upload.
+
+```bash
+npm install multer @aws-sdk/client-s3 @aws-sdk/lib-storage @aws-sdk/s3-request-presigner
+```
+
+Add the relevant imports.
+
+```ts title="index.ts"
+import multer from "multer";
+import { Resource } from "sst";
+import { Upload } from "@aws-sdk/lib-storage";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import { S3Client, GetObjectCommand, ListObjectsV2Command } from "@aws-sdk/client-s3";
+
+const s3 = new S3Client({});
+const upload = multer({ storage: multer.memoryStorage() });
+```
+
+And add the route to your `index.mjs`.
 
 ```ts title="index.mjs" {4}
 app.post("/", upload.single("file"), async (req, res) => {
@@ -175,25 +194,6 @@ app.post("/", upload.single("file"), async (req, res) => {
 :::tip
 We are directly accessing our S3 bucket with `Resource.MyBucket.name`.
 :::
-
-Add the relevant imports.
-
-```ts title="index.ts"
-import multer from "multer";
-import { Resource } from "sst";
-import { Upload } from "@aws-sdk/lib-storage";
-import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
-import { S3Client, GetObjectCommand, ListObjectsV2Command } from "@aws-sdk/client-s3";
-
-const s3 = new S3Client({});
-const upload = multer({ storage: multer.memoryStorage() });
-```
-
-And install the npm packages.
-
-```bash
-npm install multer @aws-sdk/client-s3 @aws-sdk/lib-storage @aws-sdk/s3-request-presigner
-```
 
 ---
 
