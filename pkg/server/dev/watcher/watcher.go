@@ -62,7 +62,7 @@ func Start(ctx context.Context, root string) (util.CleanupFunc, error) {
 					return
 				}
 				slog.Info("file event", "path", event.Name, "op", event.Op)
-				if (event.Op.Has(fsnotify.Write) || event.Op.Has(fsnotify.Create)) && time.Since(limiter[event.Name]) > 500*time.Millisecond {
+				if time.Since(limiter[event.Name]) > 500*time.Millisecond {
 					limiter[event.Name] = time.Now()
 					bus.Publish(&FileChangedEvent{Path: event.Name})
 				}
