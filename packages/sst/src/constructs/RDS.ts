@@ -48,7 +48,10 @@ export interface RDSProps {
     | "mysql8.0"
     | "postgresql11.13"
     | "postgresql11.16"
-    | "postgresql13.9";
+    | "postgresql13.9"
+    | "postgresql14.10"
+    | "postgresql15.5"
+    | "postgresql16.1";
 
   /**
    * Name of a database which is automatically created inside the cluster.
@@ -442,6 +445,18 @@ export class RDS extends Construct implements SSTConstruct {
     } else if (engine === "postgresql13.9") {
       return DatabaseClusterEngine.auroraPostgres({
         version: AuroraPostgresEngineVersion.VER_13_9,
+      });
+    } else if (engine === "postgresql14.10") {
+      return DatabaseClusterEngine.auroraPostgres({
+        version: AuroraPostgresEngineVersion.VER_14_10,
+      });
+    } else if (engine === "postgresql15.5") {
+      return DatabaseClusterEngine.auroraPostgres({
+        version: AuroraPostgresEngineVersion.VER_15_5,
+      });
+    } else if (engine === "postgresql16.1") {
+      return DatabaseClusterEngine.auroraPostgres({
+        version: AuroraPostgresEngineVersion.VER_16_1,
       });
     }
 
