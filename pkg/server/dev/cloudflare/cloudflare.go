@@ -92,10 +92,8 @@ func Start(ctx context.Context, proj *project.Project, args map[string]interface
 								msg := &TailEvent{}
 								err := conn.ReadJSON(msg)
 								if err != nil {
-									if websocket.IsUnexpectedCloseError(err) {
-										return
-									}
-									continue
+									slog.Info("error reading websocket", "error", err)
+									return
 								}
 
 								bus.Publish(&WorkerInvokedEvent{

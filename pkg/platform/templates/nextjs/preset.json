@@ -6,6 +6,18 @@
     {
       "type": "patch",
       "properties": {
+        "file": "package.json",
+        "regex": [
+          {
+            "find": "\"dev\":\\s*\"([^\"]+)\"",
+            "replace": "\"dev\": \"sst dev $1\""
+          }
+        ]
+      }
+    },
+    {
+      "type": "patch",
+      "properties": {
         "file": "tsconfig.json",
         "patch": [
           {
@@ -22,18 +34,6 @@
         "file": "package.json",
         "package": "sst",
         "version": "ion"
-      }
-    },
-    {
-      "type": "patch",
-      "properties": {
-        "file": "package.json",
-        "regex": [
-          {
-            "find": "\"dev\":\\s*\"([^\"]+)\"",
-            "replace": "\"dev\": \"sst dev $1\""
-          }
-        ]
       }
     },
     {

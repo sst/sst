@@ -115,8 +115,9 @@ export class Service extends Component implements Link.Linkable {
       : output(undefined);
     this._url = !self.loadBalancer
       ? undefined
-      : all([self.domain, self.loadBalancer]).apply(([domain, loadBalancer]) =>
-          domain ? `https://${domain}/` : `https://${loadBalancer.dnsName}`,
+      : all([self.domain, self.loadBalancer?.dnsName]).apply(
+          ([domain, loadBalancer]) =>
+            domain ? `https://${domain}/` : `https://${loadBalancer}`,
         );
 
     registerHint();
