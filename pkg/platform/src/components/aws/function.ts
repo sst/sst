@@ -979,9 +979,7 @@ export class Function
     }
 
     function normalizeRuntime() {
-      return all([args.runtime, dev]).apply(([v, dev]) =>
-        dev ? "provided.al2023" : v ?? "nodejs20.x",
-      );
+      return all([args.runtime]).apply(([v]) => v ?? "nodejs20.x");
     }
 
     function normalizeTimeout() {
@@ -993,7 +991,7 @@ export class Function
     }
 
     function normalizeArchitectures() {
-      return output(args.architecture).apply((arc) =>
+      return all([args.architecture]).apply(([arc]) =>
         arc === "arm64" ? ["arm64"] : ["x86_64"],
       );
     }
@@ -1409,46 +1407,48 @@ export class Function
     }
 
     function createFunction() {
-      return new aws.lambda.Function(
-        `${name}Function`,
-        transform(args.transform?.function, {
-          description: all([args.description, dev]).apply(
-            ([description, dev]) =>
-              dev
-                ? description
-                  ? `${description.substring(0, 240)} (live)`
-                  : "live"
-                : `${description ?? ""}`,
-          ),
-          code: new asset.FileArchive(
-            path.join($cli.paths.platform, "functions", "empty-function"),
-          ),
-          handler,
-          role: args.role ?? role!.arn,
-          runtime,
-          timeout: timeout.apply((timeout) => toSeconds(timeout)),
-          memorySize: memory.apply((memory) => toMBs(memory)),
-          environment: {
-            variables: environment,
-          },
-          architectures,
-          loggingConfig: {
-            logFormat: "Text",
-            logGroup: logGroup.name,
-          },
-          vpcConfig: args.vpc && {
-            securityGroupIds: output(args.vpc).securityGroups,
-            subnetIds: output(args.vpc).subnets,
-          },
-          layers: args.layers,
-        }),
-        {
-          parent,
-          ignoreChanges: args._ignoreCodeChanges
-            ? ["code", "handler"]
-            : undefined,
+      const transformed = transform(args.transform?.function, {
+        description: all([args.description, dev]).apply(([description, dev]) =>
+          dev
+            ? description
+              ? `${description.substring(0, 240)} (live)`
+              : "live"
+            : `${description ?? ""}`,
+        ),
+        code: new asset.FileArchive(
+          path.join($cli.paths.platform, "functions", "empty-function"),
+        ),
+        handler,
+        role: args.role ?? role!.arn,
+        runtime,
+        timeout: timeout.apply((timeout) => toSeconds(timeout)),
+        memorySize: memory.apply((memory) => toMBs(memory)),
+        environment: {
+          variables: environment,
         },
+        architectures,
+        loggingConfig: {
+          logFormat: "Text",
+          logGroup: logGroup.name,
+        },
+        vpcConfig: args.vpc && {
+          securityGroupIds: output(args.vpc).securityGroups,
+          subnetIds: output(args.vpc).subnets,
+        },
+        layers: args.layers,
+      });
+      transformed.runtime = all([transformed.runtime, dev]).apply(
+        ([runtime, dev]) => (dev ? "provided.al2023" : runtime!),
       );
+      transformed.architectures = all([transformed.architectures, dev]).apply(
+        ([architectures, dev]) => (dev ? ["x86_64"] : architectures!),
+      );
+      return new aws.lambda.Function(`${name}Function`, transformed, {
+        parent,
+        ignoreChanges: args._ignoreCodeChanges
+          ? ["code", "handler"]
+          : undefined,
+      });
     }
 
     function createUrl() {
