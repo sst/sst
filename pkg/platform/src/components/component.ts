@@ -175,6 +175,7 @@ export class Component extends ComponentResource {
             case "aws:s3/bucketPublicAccessBlock:BucketPublicAccessBlock":
             case "aws:s3/bucketWebsiteConfigurationV2:BucketWebsiteConfigurationV2":
             case "aws:sns/topicSubscription:TopicSubscription":
+            case "cloudflare:index/record:Record":
             case "cloudflare:index/workerDomain:WorkerDomain":
             case "docker:index/image:Image":
             case "vercel:index/dnsRecord:DnsRecord":
