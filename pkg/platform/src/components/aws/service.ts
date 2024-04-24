@@ -484,10 +484,11 @@ export class Service extends Component implements Link.Linkable {
     }
 
     function createTaskDefinition() {
+      const taskName = prefixName(255, name);
       return new aws.ecs.TaskDefinition(
         `${name}Task`,
         transform(args.transform?.taskDefinition, {
-          family: name,
+          family: taskName,
           trackLatest: true,
           cpu: cpu.apply((v) => toNumber(v).toString()),
           memory: memory.apply((v) => toMBs(v).toString()),
@@ -503,7 +504,7 @@ export class Service extends Component implements Link.Linkable {
           executionRoleArn: taskRole.arn,
           containerDefinitions: $jsonStringify([
             {
-              name,
+              name: taskName,
               image: image.repoDigest,
               portMappings: pub?.ports.apply((ports) =>
                 ports
@@ -543,6 +544,7 @@ export class Service extends Component implements Link.Linkable {
       return new aws.ecs.Service(
         `${name}Service`,
         transform(args.transform?.service, {
+          name,
           cluster: cluster.arn,
           taskDefinition: taskDefinition.arn,
           desiredCount: 1,
@@ -561,7 +563,7 @@ export class Service extends Component implements Link.Linkable {
             targets.apply((targets) =>
               Object.values(targets).map((target) => ({
                 targetGroupArn: target.arn,
-                containerName: name,
+                containerName: taskDefinition.family,
                 containerPort: target.port.apply((port) => port!),
               })),
             ),

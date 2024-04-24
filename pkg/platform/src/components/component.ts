@@ -97,7 +97,6 @@ export class Component extends ComponentResource {
             case "aws:appautoscaling/policy:Policy":
             case "aws:dynamodb/table:Table":
             case "aws:ecs/cluster:Cluster":
-            case "aws:ecs/service:Service":
               overrides = { name: prefixName(255, args.name) };
               break;
             case "aws:ec2/eip:Eip":
@@ -134,7 +133,9 @@ export class Component extends ComponentResource {
                 title: prefixName(64, args.name).toLowerCase(),
               };
               break;
-            // resources prefixed manually
+            // resources manually named
+            case "aws:ecs/service:Service":
+            case "aws:ecs/taskDefinition:TaskDefinition":
             case "aws:iam/role:Role":
             case "aws:lb/targetGroup:TargetGroup":
             case "aws:s3/bucketV2:BucketV2":
@@ -149,7 +150,6 @@ export class Component extends ComponentResource {
             case "aws:acm/certificate:Certificate":
             case "aws:acm/certificateValidation:CertificateValidation":
             case "aws:ec2/routeTableAssociation:RouteTableAssociation":
-            case "aws:ecs/taskDefinition:TaskDefinition":
             case "aws:iam/accessKey:AccessKey":
             case "aws:iam/policy:Policy":
             case "aws:iam/rolePolicyAttachment:RolePolicyAttachment":
