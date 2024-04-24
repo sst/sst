@@ -15,15 +15,15 @@ export type Prettify<T> = {
   [K in keyof T]: T[K];
 } & {};
 
-export type Transform<T> = T | ((args: T) => void | T);
+export type Transform<T> = T | ((args: T) => void);
 export function transform<T extends object>(
   transform: Transform<T> | undefined,
   args: T,
 ) {
   // Case: transform is a function
   if (typeof transform === "function") {
-    const ret = transform(args);
-    return ret ?? args;
+    transform(args);
+    return args;
   }
 
   // Case: no transform

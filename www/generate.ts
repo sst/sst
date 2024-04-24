@@ -1066,8 +1066,6 @@ async function generateComponentsDoc() {
           `<code class="symbol">: </code>`,
           renderedType,
           `<code class="symbol"> => </code>`,
-          renderedType,
-          `<code class="symbol"> | </code>`,
           `<code class="primitive">void</code>`,
           `<code class="symbol">)</code>`,
         ].join("");

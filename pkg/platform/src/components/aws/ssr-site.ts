@@ -445,7 +445,9 @@ function handler(event) {
                 ...(link ?? []),
               ]),
               transform: {
-                function: (args) => ({ ...args, publish: true }),
+                function: (args) => {
+                  args.publish = true;
+                },
               },
               live: false,
               _ignoreCodeChanges: $dev,
@@ -821,8 +823,8 @@ function handler(event) {
             _skipMetadata: true,
           },
           transform: {
-            target: (targetArgs) => {
-              targetArgs.retryPolicy = {
+            target: (args) => {
+              args.retryPolicy = {
                 maximumRetryAttempts: 0,
                 maximumEventAgeInSeconds: 60,
               };
