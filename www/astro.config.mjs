@@ -18,6 +18,7 @@ const sidebar = [
       { label: "Astro", link: "/docs/start/aws/astro/" },
       { label: "Remix", link: "/docs/start/aws/remix/" },
       { label: "Next.js", link: "/docs/start/aws/nextjs/" },
+      { label: "Container", link: "/docs/start/aws/container/" },
       {
         label: "Cloudflare",
         items: [

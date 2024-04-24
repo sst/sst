@@ -1,0 +1,251 @@
+---
+title: Containers on AWS with SST
+description: Create and deploy a container to AWS with SST.
+---
+
+We are going to build Express app in a container, add an S3 Bucket for file uploads, and deploy it to AWS using SST.
+
+:::tip[View source]
+You can [view the source](https://github.com/sst/ion/tree/dev/examples/aws-cluster) of this example in our repo.
+:::
+
+Before you get started:
+
+1. [Configure your AWS credentials](https://docs.sst.dev/advanced/iam-credentials#loading-from-a-file)
+2. [Install the SST CLI](/docs/reference/cli)
+
+---
+
+## 1. Create a project
+
+Let's start by creating our Express app.
+
+```bash
+mkdir my-express-app && cd my-express-app
+npm init -y
+npm install express
+```
+
+#### Init Express
+
+Create your app by adding an `index.mjs` to the root.
+
+```js title="index.mjs"
+import express from "express";
+
+const PORT = 80;
+
+const app = express();
+
+app.get("/", (req, res) => {
+  res.send("Hello World!")
+});
+
+app.listen(PORT, () => {
+  console.log(`Server is running on http://localhost:${PORT}`);
+});
+```
+
+#### Init SST
+
+Now let's initialize SST in our app. Make sure you have the [CLI installed](/docs/reference/cli/).
+
+```bash
+sst init
+```
+
+This'll create a `sst.config.ts` file in your project root. And add a `dev` script to your `package.json`.
+
+```json title="package.json"
+"scripts": {
+  "dev": "sst dev \"node --watch index.mjs\""
+},
+```
+
+---
+
+## 2. Add a Cluster
+
+To deploy our Express app, let's add an [AWS Fargate](https://aws.amazon.com/fargate/) container with [Amazon ECS](https://aws.amazon.com/ecs/). Update your `sst.config.ts`.
+
+```js title="sst.config.ts"
+async run() {
+  const vpc = new sst.aws.Vpc("MyVpc");
+
+  const cluster = new sst.aws.Cluster("MyCluster", { vpc });
+
+  cluster.addService("MyService", {
+    public: {
+      ports: [
+        { listen: "80/http" },
+      ],
+    },
+  });
+}
+```
+
+This creates a VPC, uses it for a new ECS Cluster, adds a Fargate service to it, and exposes it through _http_.
+
+#### Create a Dockerfile
+
+Let's add a `Dockerfile` in the root with the following.
+
+```dockerfile title="Dockerfile"
+FROM node:18-bullseye-slim
+
+WORKDIR /app/
+
+COPY package.json /app
+RUN npm install
+
+COPY index.mjs /app
+
+ENTRYPOINT ["node", "index.mjs"]
+```
+
+---
+
+## 3. Add an S3 Bucket
+
+Let's add a `public` S3 Bucket for file uploads. Update your `sst.config.ts`.
+
+```js title="sst.config.ts"
+const bucket = new sst.aws.Bucket("MyBucket", {
+  public: true
+});
+```
+
+#### Link the bucket
+
+Now, link the bucket to the container service.
+
+```ts title="sst.config.ts" {7}
+cluster.addService("MyService", {
+  public: {
+    ports: [
+      { listen: "80/http" },
+    ],
+  },
+  link: [bucket],
+});
+```
+
+#### Start dev mode
+
+Start your app in dev mode.
+
+```bash
+npm run dev
+```
+
+This will deploy your resources and start your Express app locally.
+
+```bash frame="none"
+✔  Complete
+
+Server is running on http://localhost:80
+```
+
+---
+
+## 4. Upload a file
+
+We want the `/` route of our API to upload a file to our S3 Bucket. Add this to your `index.mjs`.
+
+```ts title="index.mjs" {4}
+app.post("/", upload.single("file"), async (req, res) => {
+  const file = req.file;
+  const params = {
+    Bucket: Resource.MyBucket.name,
+    Key: file.originalname,
+    Body: file.buffer
+  };
+
+  const upload = new Upload({
+    params,
+    client: s3,
+  });
+
+  await upload.done();
+
+  res.status(200).send("File uploaded successfully.");
+});
+```
+
+:::tip
+We are directly accessing our S3 bucket with `Resource.MyBucket.name`.
+:::
+
+Add the relevant imports.
+
+```ts title="index.ts"
+import multer from "multer";
+import { Resource } from "sst";
+import { Upload } from "@aws-sdk/lib-storage";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import { S3Client, GetObjectCommand, ListObjectsV2Command } from "@aws-sdk/client-s3";
+
+const s3 = new S3Client({});
+const upload = multer({ storage: multer.memoryStorage() });
+```
+
+And install the npm packages.
+
+```bash
+npm install multer @aws-sdk/client-s3 @aws-sdk/lib-storage @aws-sdk/s3-request-presigner
+```
+
+---
+
+## 5. Download a file
+
+We want the `/latest` route of our app to generate a pre-signed URL to download the last uploaded file in our S3 Bucket. Add this to your `index.mjs`.
+
+```ts title="index.mjs"
+app.get("/latest", async (req, res) => {
+  const objects = await s3.send(
+    new ListObjectsV2Command({
+      Bucket: Resource.MyBucket.name,
+    })
+  );
+
+  const latestFile = objects.Contents.sort((a, b) => b.LastModified - a.LastModified)[0];
+
+  const command = new GetObjectCommand({
+    Key: latestFile.Key,
+    Bucket: Resource.MyBucket.name,
+  });
+  const url = await getSignedUrl(s3, command);
+
+  res.redirect(url);
+});
+```
+
+---
+
+#### Test your app
+
+Let's try uploading a file from your project root.
+
+```bash
+curl -F file=@package.json http://localhost:80
+```
+
+Now head over to `http://localhost:80/latest` in your browser and it'll download the file you just uploaded.
+
+---
+
+## 6. Deploy your app
+
+Now let's deploy your app.
+
+```bash
+sst deploy
+```
+
+This'll give the URL of your Express app deployed as a Fargate service.
+
+```bash
+✓  Complete
+   MyService: http://jayair-MyServiceLoadBala-592628062.us-east-1.elb.amazonaws.com
+```
