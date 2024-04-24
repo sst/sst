@@ -37,7 +37,7 @@ export const OauthAdapter =
   (config: OauthConfig) => {
     return async function (routes, ctx) {
       function getClient(c: Context) {
-        const callback = c.req.url.replace(/authorize$/, "callback");
+        const callback = c.req.url.replace(/authorize\/.*$/, "callback");
         return [
           callback,
           new config.issuer.Client({

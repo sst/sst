@@ -21,7 +21,7 @@ export interface OidcConfig extends OidcBasicConfig {
 export const OidcAdapter = /* @__PURE__ */ (config: OidcConfig) => {
   return async function (routes, ctx) {
     routes.get("/authorize", async (c) => {
-      const callback = c.req.url.replace(/authorize$/, "callback");
+      const callback = c.req.url.replace(/authorize\/.*$/, "callback");
       const client = new config.issuer.Client({
         client_id: config.clientID,
         redirect_uris: [callback],
@@ -42,7 +42,7 @@ export const OidcAdapter = /* @__PURE__ */ (config: OidcConfig) => {
     });
 
     routes.post("/callback", async (c) => {
-      const callback = c.req.url.replace(/authorize$/, "callback");
+      const callback = c.req.url.replace(/authorize\/.*$/, "callback");
       const client = new config.issuer.Client({
         client_id: config.clientID,
         redirect_uris: [callback],
