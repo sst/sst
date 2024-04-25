@@ -44,6 +44,20 @@
 
 export interface App {
   /**
+   * Optional required version for sst.
+   *
+   * :::tip
+   * Commands will fail if the version does not match.
+   * :::
+   *
+   * @example
+   * ```ts
+   * version: ">= 0.0.300"
+   * ```
+   */
+  version?: string;
+
+  /**
    * The name of the app. This is used to prefix the names of the resources in your app.
    *
    * :::caution

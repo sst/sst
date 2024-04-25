@@ -13,6 +13,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/Masterminds/semver/v3"
 	"github.com/sst/ion/internal/fs"
 	"github.com/sst/ion/internal/util"
 	"github.com/sst/ion/pkg/js"
@@ -25,6 +26,7 @@ type App struct {
 	Removal   string                 `json:"removal"`
 	Providers map[string]interface{} `json:"providers"`
 	Home      string                 `json:"home"`
+	Version   string                 `json:"version"`
 	// Deprecated: Backend is now Home
 	Backend string `json:"backend"`
 	// Deprecated: RemovalPolicy is now Removal
@@ -76,6 +78,9 @@ type ProjectConfig struct {
 var ErrInvalidStageName = fmt.Errorf("invalid stage name")
 var ErrV2Config = fmt.Errorf("sstv2 config detected")
 var ErrBuildFailed = fmt.Errorf("")
+var ErrVersionInvalid = fmt.Errorf("invalid version")
+var ErrVersionMismatch = fmt.Errorf("")
+
 var InvalidStageRegex = regexp.MustCompile(`[^a-zA-Z0-9-]`)
 
 func New(input *ProjectConfig) (*Project, error) {
@@ -185,6 +190,20 @@ console.log("~j" + JSON.stringify(mod.app({
 
 			if proj.app.Removal == "" {
 				proj.app.Removal = "retain"
+			}
+
+			if proj.app.Version != "" && input.Version != "dev" {
+				constraint, err := semver.NewConstraint(proj.app.Version)
+				if err != nil {
+					return nil, ErrVersionInvalid
+				}
+				version, err := semver.NewVersion(input.Version)
+				if err != nil {
+					return nil, ErrVersionInvalid
+				}
+				if !constraint.Check(version) {
+					return nil, fmt.Errorf("%wThe version of sst you are using (%s) does not match %s", ErrVersionMismatch, input.Version, proj.app.Version)
+				}
 			}
 
 			if proj.app.Removal != "remove" && proj.app.Removal != "retain" && proj.app.Removal != "retain-all" {

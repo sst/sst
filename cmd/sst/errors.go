@@ -18,10 +18,12 @@ func TransformError(err error) error {
 		aws.ErrIoTDelay:              "This aws account has not had iot initialized in it before which sst depends on. It may take a few minutes before it is ready.",
 		project.ErrStackRunFailed:    "",
 		provider.ErrLockExists:       "",
+		project.ErrVersionInvalid:    "The version range defined in the config is invalid",
 	}
 
 	readable := []error{
 		project.ErrBuildFailed,
+		project.ErrVersionMismatch,
 	}
 
 	match, ok := mapping[err]
