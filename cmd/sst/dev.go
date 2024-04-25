@@ -72,6 +72,9 @@ func CmdDev(cli *Cli) error {
 				args[0],
 				args[1:]...,
 			)
+			cmd.Env = append(cmd.Env,
+				os.Environ()...,
+			)
 
 			for dir, receiver := range complete.Receivers {
 				abs := filepath.Join(cfgPath, "..", dir)
@@ -108,9 +111,6 @@ func CmdDev(cli *Cli) error {
 				}
 
 			}
-			cmd.Env = append(cmd.Env,
-				os.Environ()...,
-			)
 			cmd.Stdin = os.Stdin
 			cmd.Stdout = os.Stdout
 			cmd.Stderr = os.Stderr
