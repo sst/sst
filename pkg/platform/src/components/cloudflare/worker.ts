@@ -482,7 +482,7 @@ export class Worker
   /**
    * @internal
    */
-  getSSTLink(): Link.Definition {
+  public getSSTLink() {
     return {
       properties: {
         url: this.url,

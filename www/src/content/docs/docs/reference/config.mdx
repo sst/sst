@@ -223,6 +223,23 @@ Retain resources if it's the _production_ stage, otherwise remove all resources.
 }
 ```
 </Segment>
+### version?
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">string</code>
+</InlineSection>
+</Section>
+Optional required version for sst.
+
+:::tip
+Commands will fail if the version does not match.
+:::
+
+```ts
+version: ">= 0.0.300"
+```
+</Segment>
 
 ## AppInput
 ### stage

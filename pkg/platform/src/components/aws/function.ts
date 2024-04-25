@@ -465,7 +465,7 @@ export interface FunctionArgs {
   /**
    * Enable [Lambda function URLs](https://docs.aws.amazon.com/lambda/latest/dg/lambda-urls.html).
    * These are dedicated endpoints for your Lambda functions.
-   * @default URL is disabled
+   * @default `false`
    * @example
    * Enable it with the default options.
    * ```js
@@ -487,7 +487,7 @@ export interface FunctionArgs {
    * ```
    */
   url?: Input<
-    | true
+    | boolean
     | {
         /**
          * The authorization used for the function URL. Supports [IAM authorization](https://docs.aws.amazon.com/lambda/latest/dg/urls-auth.html).
@@ -891,7 +891,7 @@ export class Function
   private function: Output<aws.lambda.Function>;
   private role?: aws.iam.Role;
   private logGroup: aws.cloudwatch.LogGroup;
-  private fnUrl?: aws.lambda.FunctionUrl;
+  private fnUrl: Output<aws.lambda.FunctionUrl | undefined>;
   private missingSourcemap?: boolean;
 
   constructor(
@@ -1024,9 +1024,8 @@ export class Function
     }
 
     function normalizeUrl() {
-      if (!args.url) return;
-
       return output(args.url).apply((url) => {
+        if (url === false || url === undefined) return;
         if (url === true) {
           url = {};
         }
@@ -1456,20 +1455,22 @@ export class Function
     }
 
     function createUrl() {
-      if (!url) return;
+      return url.apply((url) => {
+        if (url === undefined) return;
 
-      return new aws.lambda.FunctionUrl(
-        `${name}Url`,
-        {
-          functionName: fn.name,
-          authorizationType: url.authorization.apply((v) => v.toUpperCase()),
-          invokeMode: streaming.apply((streaming) =>
-            streaming ? "RESPONSE_STREAM" : "BUFFERED",
-          ),
-          cors: url.cors,
-        },
-        { parent },
-      );
+        return new aws.lambda.FunctionUrl(
+          `${name}Url`,
+          {
+            functionName: fn.name,
+            authorizationType: url.authorization.toUpperCase(),
+            invokeMode: streaming.apply((streaming) =>
+              streaming ? "RESPONSE_STREAM" : "BUFFERED",
+            ),
+            cors: url.cors,
+          },
+          { parent },
+        );
+      });
     }
 
     function updateFunctionCode() {
@@ -1518,11 +1519,13 @@ export class Function
    * The Lambda function URL if `url` is enabled.
    */
   public get url() {
-    if (!this.fnUrl)
-      throw new Error(
-        `Function URL is not enabled. Enable it with "url: true".`,
-      );
-    return this.fnUrl.functionUrl;
+    return this.fnUrl.apply((url) => {
+      if (!url)
+        throw new Error(
+          `Function URL is not enabled. Enable it with "url: true".`,
+        );
+      return url.functionUrl;
+    });
   }
 
   /**
@@ -1575,7 +1578,7 @@ export class Function
     return {
       properties: {
         name: this.name,
-        url: this.fnUrl?.functionUrl,
+        url: this.fnUrl.apply((url) => url?.functionUrl ?? output(undefined)),
       },
     };
   }
