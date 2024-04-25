@@ -232,8 +232,7 @@ export interface WorkerArgs {
  */
 export class Worker
   extends Component
-  implements Link.Cloudflare.Linkable, Link.Linkable
-{
+  implements Link.Cloudflare.Linkable, Link.Linkable {
   private script: Output<cf.WorkerScript>;
   private workerUrl: WorkerUrl;
   private workerDomain?: cf.WorkerDomain;
@@ -380,11 +379,11 @@ export class Worker
               plainTextBindings: [
                 ...(iamCredentials
                   ? [
-                      {
-                        name: "AWS_ACCESS_KEY_ID",
-                        text: iamCredentials.id,
-                      },
-                    ]
+                    {
+                      name: "AWS_ACCESS_KEY_ID",
+                      text: iamCredentials.id,
+                    },
+                  ]
                   : []),
                 ...Object.entries(environment ?? {}).map(([key, value]) => ({
                   name: key,
@@ -395,11 +394,11 @@ export class Worker
               secretTextBindings: [
                 ...(iamCredentials
                   ? [
-                      {
-                        name: "AWS_SECRET_ACCESS_KEY",
-                        text: iamCredentials.secret,
-                      },
-                    ]
+                    {
+                      name: "AWS_SECRET_ACCESS_KEY",
+                      text: iamCredentials.secret,
+                    },
+                  ]
                   : []),
                 ...(bindings.secretTextBindings || []),
               ],
