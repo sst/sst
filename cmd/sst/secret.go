@@ -74,7 +74,7 @@ func CmdSecretLoad(cli *Cli) error {
 	}
 	file, err := os.Open(filePath)
 	if err != nil {
-		return util.NewReadableError(err, fmt.Sprintf("Could not open file %s", file))
+		return util.NewReadableError(err, fmt.Sprintf("Could not open file %s", filePath))
 	}
 	defer file.Close()
 
