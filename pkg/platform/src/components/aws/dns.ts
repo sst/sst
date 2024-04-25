@@ -1,20 +1,31 @@
 /**
- * The AWS DNS Adapter lets you manage DNS records for domains hosted on [Route 53](https://aws.amazon.com/route53/).
+ * The AWS DNS Adapter is used to create DNS records to manage domains hosted on
+ * [Route 53](https://aws.amazon.com/route53/).
  *
- * This component looks up the Route 53 hosted zone for the domain and creates the DNS records.
+ * This adapter is passed in as `domain.dns` when setting a custom domain.
  *
  * @example
  *
  * ```ts
- * sst.aws.dns();
+ * {
+ *   domain: {
+ *     name: "example.com",
+ *     dns: sst.aws.dns()
+ *   }
+ * }
  * ```
  *
- * Specify the specific hosted zone ID if you have multiple hosted zones with the same domain.
+ * You can also sepcify a hosted zone ID if you have multiple hosted zones with the same domain.
  *
  * ```ts
- * sst.aws.dns({
- *   zone: "Z2FDTNDATAQYW2",
- * });
+ * {
+ *   domain: {
+ *     name: "example.com",
+ *     dns: sst.aws.dns({
+ *       zone: "Z2FDTNDATAQYW2"
+ *     })
+ *   }
+ * }
  * ```
  *
  * @packageDocumentation
@@ -30,10 +41,10 @@ import { Input } from "../input";
 
 export interface DnsArgs {
   /**
-   * The 14 letter ID of the [Route 53 hosted zone](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/hosted-zones-working-with.html) that contains the `domainName`. You can find the hosted zone ID in the Route 53 part of the AWS Console.
+   * Set the hosted zone ID if you have multiple hosted zones that have the same
+   * domain in Route 53.
    *
-   * This option is useful for cases where you have multiple hosted zones that have the same
-   * domain.
+   * The 14 letter ID of the [Route 53 hosted zone](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/hosted-zones-working-with.html) that contains the `domainName`. You can find the hosted zone ID in the Route 53 part of the AWS Console.
    *
    * @example
    * ```js
@@ -55,9 +66,6 @@ export interface DnsArgs {
   };
 }
 
-/**
- * @param args The DNS arguments.
- */
 export function dns(args: DnsArgs = {}) {
   return {
     provider: "aws",

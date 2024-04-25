@@ -13,20 +13,35 @@ import InlineSection from '../../../../../../src/components/tsdoc/InlineSection.
 <div class="tsdoc">
 
 <Section type="about">
-The Cloudflare DNS Adapter lets you manage DNS records for domains hosted on [Cloudflare DNS](https://developers.cloudflare.com/dns/).
+The Cloudflare DNS Adapter is used to create DNS records to manage domains hosted on
+[Cloudflare DNS](https://developers.cloudflare.com/dns/).
 
-This component looks up the zone for the domain and creates the DNS records.
+:::note
+You need to [add the Cloudflare provider](/docs/providers/#install) to use this adapter.
+:::
+
+This adapter is passed in as `domain.dns` when setting a custom domain.
 
 ```ts
-sst.cloudflare.dns();
+{
+  domain: {
+    name: "example.com",
+    dns: sst.cloudflare.dns()
+  }
+}
 ```
 
 Specify the zone ID.
 
 ```ts
-sst.cloudflare.dns({
-  zone: "415e6f4653b6d95b775d350f32119abb"
-});
+{
+  domain: {
+    name: "example.com",
+    dns: sst.aws.dns({
+      zone: "415e6f4653b6d95b775d350f32119abb"
+    })
+  }
+}
 ```
 </Section>
 
