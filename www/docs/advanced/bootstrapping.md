@@ -89,6 +89,7 @@ There are two ways to customize the bootstrapping resources.
           qualifier: "my-team",
           fileAssetsBucketName: "my-team-CDKToolkit",
           customPermissionsBoundary: "my-team-pb",
+          toolkitStackName: "custom-cdk-bootstrap-stack-name",
         }
       }
     },
