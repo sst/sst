@@ -1,28 +1,31 @@
 /**
- * The Vercel DNS Adapter lets you manage DNS records for domains hosted on [Vercel](https://vercel.com/docs/projects/domains/working-with-domains).
+ * The Vercel DNS Adapter is used to create DNS records to manage domains hosted on [Vercel](https://vercel.com/docs/projects/domains/working-with-domains).
  *
  * :::note
- * This adapter is used by other components while configuring their domains.
+ * You need to [add the Cloudflare provider](/docs/providers/#install) to use this adapter.
  * :::
  *
- * @example
+ * This adapter is passed in as `domain.dns` when setting a custom domain; where `example.com`
+ * is hosted on Vercel.
  *
  * ```ts
- * sst.vercel.dns({
- *   domain: "example.com"
- * });
+ * {
+ *   domain: {
+ *     name: "example.com",
+ *     dns: sst.vercel.dns()
+ *   }
+ * }
  * ```
  *
  * #### Configuring Vercel provider
- * 1. To use this component, add the `@pulumiverse/vercel` provider to your app. You can do this by running:
+ *
+ * 1. To use this component, add the `@pulumiverse/vercel` provider to your app.
  *
  *    ```bash
  *    sst add @pulumiverse/vercel
  *    ```
  *
- *    The [`sst add`](/docs/reference/cli/#add) commands adds and installs the provider to your `sst.config.ts` file.
- *
- * 2. If you don't already have a Vercel Access Token, follow [this guide](https://vercel.com/guides/how-do-i-use-a-vercel-api-access-token#creating-an-access-token) to create one.
+ * 2. If you don't already have a Vercel Access Token, [follow this guide](https://vercel.com/guides/how-do-i-use-a-vercel-api-access-token#creating-an-access-token) to create one.
  *
  * 3. Add a `VERCEL_API_TOKEN` environment variable with the access token value. If the domain
  * belongs to a team, also add a `VERCEL_TEAM_ID` environment variable with the Team ID. You can
@@ -62,9 +65,6 @@ export interface DnsArgs {
   };
 }
 
-/**
- * @param args The DNS arguments.
- */
 export function dns(args: DnsArgs) {
   let caaRecord: vercel.DnsRecord;
   return {

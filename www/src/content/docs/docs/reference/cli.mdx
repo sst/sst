@@ -322,6 +322,7 @@ If you don't have a version specified for your providers in your `sst.config.ts`
 <Section type="parameters">
 #### Subcommands
 - <p>[<code class="key">set</code>](#secret-set)</p>
+- <p>[<code class="key">load</code>](#secret-load)</p>
 - <p>[<code class="key">remove</code>](#secret-remove)</p>
 - <p>[<code class="key">list</code>](#secret-list)</p>
 </Section>
@@ -379,6 +380,20 @@ sst secret set Key -- "$(cat tmp.txt)"
 ```
 
 And make sure to delete the temp file.
+</Segment>
+<NestedTitle id="secret-load" Tag="h4" parent="secret ">load</NestedTitle>
+<Segment>
+<Section type="signature">
+```sh frame="none"
+sst secret load <file>
+```
+</Section>
+<Section type="parameters">
+#### Args
+- <p><code class="key">file</code></p>
+The file to load secrets from
+</Section>
+Set multiple secrets from file
 </Segment>
 <NestedTitle id="secret-remove" Tag="h4" parent="secret ">remove</NestedTitle>
 <Segment>

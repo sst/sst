@@ -6,9 +6,8 @@
  * You need to [add the Cloudflare provider](/docs/providers/#install) to use this adapter.
  * :::
  *
- * This adapter is passed in as `domain.dns` when setting a custom domain.
- *
- * @example
+ * This adapter is passed in as `domain.dns` when setting a custom domain, where `example.com`
+ * is hosted on Cloudflare.
  *
  * ```ts
  * {
@@ -67,9 +66,6 @@ export interface DnsArgs {
   };
 }
 
-/**
- * @param args The DNS arguments.
- */
 export function dns(args: DnsArgs = {}) {
   return {
     provider: "cloudflare",

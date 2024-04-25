@@ -13,28 +13,33 @@ import InlineSection from '../../../../../../src/components/tsdoc/InlineSection.
 <div class="tsdoc">
 
 <Section type="about">
-The Vercel DNS Adapter lets you manage DNS records for domains hosted on [Vercel](https://vercel.com/docs/projects/domains/working-with-domains).
+The Vercel DNS Adapter is used to create DNS records to manage domains hosted on [Vercel](https://vercel.com/docs/projects/domains/working-with-domains).
 
 :::note
-This adapter is used by other components while configuring their domains.
+You need to [add the Cloudflare provider](/docs/providers/#install) to use this adapter.
 :::
 
+This adapter is passed in as `domain.dns` when setting a custom domain; where `example.com`
+is hosted on Vercel.
+
 ```ts
-sst.vercel.dns({
-  domain: "example.com"
-});
+{
+  domain: {
+    name: "example.com",
+    dns: sst.vercel.dns()
+  }
+}
 ```
 
 #### Configuring Vercel provider
-1. To use this component, add the `@pulumiverse/vercel` provider to your app. You can do this by running:
+
+1. To use this component, add the `@pulumiverse/vercel` provider to your app.
 
    ```bash
    sst add @pulumiverse/vercel
    ```
 
-   The [`sst add`](/docs/reference/cli/#add) commands adds and installs the provider to your `sst.config.ts` file.
-
-2. If you don't already have a Vercel Access Token, follow [this guide](https://vercel.com/guides/how-do-i-use-a-vercel-api-access-token#creating-an-access-token) to create one.
+2. If you don't already have a Vercel Access Token, [follow this guide](https://vercel.com/guides/how-do-i-use-a-vercel-api-access-token#creating-an-access-token) to create one.
 
 3. Add a `VERCEL_API_TOKEN` environment variable with the access token value. If the domain
 belongs to a team, also add a `VERCEL_TEAM_ID` environment variable with the Team ID. You can
@@ -56,13 +61,11 @@ dns(args)
 <Section type="parameters">
 #### Parameters
 - <p><code class="key">args</code> [<code class="type">DnsArgs</code>](#dnsargs)</p>
-The DNS arguments.
 </Section>
 
 <InlineSection>
 **Returns** <code class="primitive">Object</code>
 </InlineSection>
-
 
 </Segment>
 
@@ -98,7 +101,7 @@ resources.
 <Segment>
 <Section type="parameters">
 <InlineSection>
-**Type** [<code class="type">DnsRecordArgs</code>](https://www.pulumi.com/registry/packages/vercel/api-docs/dnsrecord/#inputs)<code class="symbol"> | </code><code class="symbol">(</code><code class="primitive">args</code><code class="symbol">: </code>[<code class="type">DnsRecordArgs</code>](https://www.pulumi.com/registry/packages/vercel/api-docs/dnsrecord/#inputs)<code class="symbol"> => </code><code class="primitive">void</code><code class="symbol">)</code>
+**Type** <code class="primitive">any</code>
 </InlineSection>
 </Section>
 Transform the Vercel record resource.
