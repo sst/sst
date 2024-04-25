@@ -57,6 +57,7 @@ export class Auth extends Component implements Link.Linkable {
   public getSSTLink(): Link.Definition {
     return {
       properties: {
+        url: this._authenticator.url,
         publicKey: secret(this.key.publicKeyPem),
       },
     };
