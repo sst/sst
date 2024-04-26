@@ -530,11 +530,7 @@ The [IAM actions](https://docs.aws.amazon.com/service-authorization/latest/refer
 
 ```js
 {
-  permissions: [
-    {
-      actions: ["s3:*"]
-    }
-  ]
+  actions: ["s3:*"]
 }
 ```
 </Segment>
@@ -549,11 +545,7 @@ The resourcess specified using the [IAM ARN format](https://docs.aws.amazon.com/
 
 ```js
 {
-  permissions: [
-    {
-      resources: ["arn:aws:s3:::my-bucket/*"]
-    }
-  ]
+  resources: ["arn:aws:s3:::my-bucket/*"]
 }
 ```
 </Segment>

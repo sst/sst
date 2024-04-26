@@ -1,0 +1,326 @@
+---
+title: CognitoIdentityPool
+description: Reference doc for the `sst.aws.CognitoIdentityPool` component.
+---
+
+{/* DO NOT EDIT. AUTO-GENERATED FROM "pkg/platform/src/components/aws/cognito-identity-pool.ts" */}
+
+import Segment from '../../../../../../src/components/tsdoc/Segment.astro';
+import Section from '../../../../../../src/components/tsdoc/Section.astro';
+import NestedTitle from '../../../../../../src/components/tsdoc/NestedTitle.astro';
+import InlineSection from '../../../../../../src/components/tsdoc/InlineSection.astro';
+
+<div class="tsdoc">
+
+<Section type="about">
+The `CognitoIdentityPool` component lets you add a [Amazon Cognito identity pool](https://docs.aws.amazon.com/cognito/latest/developerguide/cognito-identity.html) to your app.
+
+#### Creating the identity pool
+
+```ts
+new sst.aws.CognitoIdentityPool("MyIdentityPool", {
+  userPools: [
+    {
+      userPool: "us-east-1_QY6Ly46JH",
+      client: "6va5jg3cgtrd170sgokikjm5m6"
+    }
+  ]
+});
+```
+
+#### Configure permissions for authenticated users
+
+```ts
+new sst.aws.CognitoIdentityPool("MyIdentityPool", {
+  userPools: [
+    {
+      userPool: "us-east-1_QY6Ly46JH",
+      client: "6va5jg3cgtrd170sgokikjm5m6"
+    }
+  ],
+  permissions: {
+    authenticated: [
+      {
+        actions: ["s3:GetObject", "s3:PutObject"],
+        resources: ["arn:aws:s3:::my-bucket/*"]
+      }
+    ]
+  }
+});
+```
+</Section>
+
+---
+
+## Constructor
+
+<Segment>
+<Section type="signature">
+```ts
+new CognitoIdentityPool(name, args?, opts?)
+```
+</Section>
+
+<Section type="parameters">
+#### Parameters
+- <p><code class="key">name</code> <code class="primitive">string</code></p>
+- <p><code class="key">args?</code> [<code class="type">CognitoIdentityPoolArgs</code>](#cognitoidentitypoolargs)</p>
+- <p><code class="key">opts?</code> [<code class="type">ComponentResourceOptions</code>](https://www.pulumi.com/docs/concepts/options/)</p>
+</Section>
+</Segment>
+
+## Properties
+
+### id
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Output</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+The Cognito identity pool ID.
+</Segment>
+
+### nodes
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Object</code>
+</InlineSection>
+- <p>[<code class="key">authenticatedRole</code>](#nodes-authenticatedrole)</p>
+- <p>[<code class="key">identityPool</code>](#nodes-identitypool)</p>
+- <p>[<code class="key">unauthenticatedRole</code>](#nodes-unauthenticatedrole)</p>
+</Section>
+The underlying [resources](/docs/components/#nodes) this component creates.
+</Segment>
+<NestedTitle id="nodes-authenticatedrole" Tag="h4" parent="nodes.">authenticatedRole</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** [<code class="type">Role</code>](https://www.pulumi.com/registry/packages/aws/api-docs/iam/role/)
+</InlineSection>
+</Section>
+The authenticated IAM role.
+</Segment>
+<NestedTitle id="nodes-identitypool" Tag="h4" parent="nodes.">identityPool</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** [<code class="type">IdentityPool</code>](https://www.pulumi.com/registry/packages/aws/api-docs/cognito/identitypool/)
+</InlineSection>
+</Section>
+The Amazon Cognito identity pool.
+</Segment>
+<NestedTitle id="nodes-unauthenticatedrole" Tag="h4" parent="nodes.">unauthenticatedRole</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** [<code class="type">Role</code>](https://www.pulumi.com/registry/packages/aws/api-docs/iam/role/)
+</InlineSection>
+</Section>
+The unauthenticated IAM role.
+</Segment>
+
+## CognitoIdentityPoolArgs
+### permissions?
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Object</code><code class="symbol">&gt;</code>
+</InlineSection>
+- <p>[<code class="key">authenticated?</code>](#permissions-authenticated) <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Object</code><code class="symbol">[]</code><code class="symbol">&gt;</code></p>
+  - <p>[<code class="key">actions</code>](#permissions-authenticated-actions)</p>
+  - <p>[<code class="key">resources</code>](#permissions-authenticated-resources)</p>
+- <p>[<code class="key">unauthenticated?</code>](#permissions-unauthenticated) <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Object</code><code class="symbol">[]</code><code class="symbol">&gt;</code></p>
+  - <p>[<code class="key">actions</code>](#permissions-unauthenticated-actions)</p>
+  - <p>[<code class="key">resources</code>](#permissions-unauthenticated-resources)</p>
+</Section>
+The permissions to attach to the authenticated and unauthenticated roles.
+This allows the authenticated and unauthenticated users to access other AWS resources.
+
+```js
+{
+  permissions: {
+    authenticated: [
+      {
+        actions: ["s3:GetObject", "s3:PutObject"],
+        resources: ["arn:aws:s3:::my-bucket/*"]
+      }
+    ],
+    unauthenticated: [
+      {
+        actions: ["s3:GetObject"],
+        resources: ["arn:aws:s3:::my-bucket/*"]
+      }
+    ]
+  }
+}
+```
+</Segment>
+<NestedTitle id="permissions-authenticated" Tag="h4" parent="permissions.">authenticated?</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Object</code><code class="symbol">[]</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+Attaches the given list of permissions to the authenticated users.
+
+</Segment>
+<NestedTitle id="permissions-authenticated-actions" Tag="h5" parent="permissions.authenticated[].">actions</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">string</code><code class="symbol">[]</code>
+</InlineSection>
+</Section>
+The [IAM actions](https://docs.aws.amazon.com/service-authorization/latest/reference/reference_policies_actions-resources-contextkeys.html#actions_table) that can be performed.
+
+```js
+{
+  actions: ["s3:*"]
+}
+```
+</Segment>
+<NestedTitle id="permissions-authenticated-resources" Tag="h5" parent="permissions.authenticated[].">resources</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code><code class="symbol">[]</code>
+</InlineSection>
+</Section>
+The resourcess specified using the [IAM ARN format](https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_identifiers.html).
+
+```js
+{
+  resources: ["arn:aws:s3:::my-bucket/*"]
+}
+```
+</Segment>
+<NestedTitle id="permissions-unauthenticated" Tag="h4" parent="permissions.">unauthenticated?</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Object</code><code class="symbol">[]</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+Attaches the given list of permissions to the unauthenticated users.
+
+</Segment>
+<NestedTitle id="permissions-unauthenticated-actions" Tag="h5" parent="permissions.unauthenticated[].">actions</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">string</code><code class="symbol">[]</code>
+</InlineSection>
+</Section>
+The [IAM actions](https://docs.aws.amazon.com/service-authorization/latest/reference/reference_policies_actions-resources-contextkeys.html#actions_table) that can be performed.
+
+```js
+{
+  actions: ["s3:*"]
+}
+```
+</Segment>
+<NestedTitle id="permissions-unauthenticated-resources" Tag="h5" parent="permissions.unauthenticated[].">resources</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code><code class="symbol">[]</code>
+</InlineSection>
+</Section>
+The resourcess specified using the [IAM ARN format](https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_identifiers.html).
+
+```js
+{
+  resources: ["arn:aws:s3:::my-bucket/*"]
+}
+```
+</Segment>
+### transform?
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Object</code>
+</InlineSection>
+- <p>[<code class="key">authenticatedRole?</code>](#transform-authenticatedrole)</p>
+- <p>[<code class="key">identityPool?</code>](#transform-identitypool)</p>
+- <p>[<code class="key">unauthenticatedRole?</code>](#transform-unauthenticatedrole)</p>
+</Section>
+[Transform](/docs/components#transform) how this component creates its underlying
+resources.
+
+</Segment>
+<NestedTitle id="transform-authenticatedrole" Tag="h4" parent="transform.">authenticatedRole?</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** [<code class="type">RoleArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/iam/role/#inputs)<code class="symbol"> | </code><code class="symbol">(</code><code class="primitive">args</code><code class="symbol">: </code>[<code class="type">RoleArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/iam/role/#inputs)<code class="symbol"> => </code><code class="primitive">void</code><code class="symbol">)</code>
+</InlineSection>
+</Section>
+Transform the authenticated IAM role resource.
+
+</Segment>
+<NestedTitle id="transform-identitypool" Tag="h4" parent="transform.">identityPool?</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** [<code class="type">IdentityPoolArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/cognito/identitypool/#inputs)<code class="symbol"> | </code><code class="symbol">(</code><code class="primitive">args</code><code class="symbol">: </code>[<code class="type">IdentityPoolArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/cognito/identitypool/#inputs)<code class="symbol"> => </code><code class="primitive">void</code><code class="symbol">)</code>
+</InlineSection>
+</Section>
+Transform the Cognito identity pool resource.
+
+</Segment>
+<NestedTitle id="transform-unauthenticatedrole" Tag="h4" parent="transform.">unauthenticatedRole?</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** [<code class="type">RoleArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/iam/role/#inputs)<code class="symbol"> | </code><code class="symbol">(</code><code class="primitive">args</code><code class="symbol">: </code>[<code class="type">RoleArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/iam/role/#inputs)<code class="symbol"> => </code><code class="primitive">void</code><code class="symbol">)</code>
+</InlineSection>
+</Section>
+Transform the unauthenticated IAM role resource.
+
+</Segment>
+### userPools?
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Object</code><code class="symbol">&gt;</code><code class="symbol">[]</code><code class="symbol">&gt;</code>
+</InlineSection>
+- <p>[<code class="key">client</code>](#userpools-client)</p>
+- <p>[<code class="key">userPool</code>](#userpools-userpool)</p>
+</Section>
+Configure Cognito user pools as identity providers to your identity pool.
+
+```ts
+{
+  userPools: [
+    {
+      userPool: "us-east-1_QY6Ly46JH",
+      client: "6va5jg3cgtrd170sgokikjm5m6"
+    },
+  ],
+}
+```
+</Segment>
+<NestedTitle id="userpools-client" Tag="h4" parent="userPools[].">client</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+The Cognito user pool client ID.
+
+</Segment>
+<NestedTitle id="userpools-userpool" Tag="h4" parent="userPools[].">userPool</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+The Cognito user pool ID.
+
+</Segment>
+</div>

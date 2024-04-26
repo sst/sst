@@ -31,11 +31,7 @@ export type FunctionPermissionArgs = {
    *
    * ```js
    * {
-   *   permissions: [
-   *     {
-   *       actions: ["s3:*"]
-   *     }
-   *   ]
+   *   actions: ["s3:*"]
    * }
    * ```
    */
@@ -46,11 +42,7 @@ export type FunctionPermissionArgs = {
    *
    * ```js
    * {
-   *   permissions: [
-   *     {
-   *       resources: ["arn:aws:s3:::my-bucket/*"]
-   *     }
-   *   ]
+   *   resources: ["arn:aws:s3:::my-bucket/*"]
    * }
    * ```
    */
@@ -1251,13 +1243,6 @@ export class Function
       return new aws.iam.Role(
         `${name}Role`,
         transform(args.transform?.role, {
-          name: region.apply((region) =>
-            prefixName(
-              64,
-              `${name}Role`,
-              `-${region.toLowerCase().replace(/-/g, "")}`,
-            ),
-          ),
           assumeRolePolicy: !$dev
             ? aws.iam.assumeRolePolicyForPrincipal({
                 Service: "lambda.amazonaws.com",

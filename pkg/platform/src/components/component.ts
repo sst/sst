@@ -5,6 +5,7 @@ import {
   runtime,
   output,
 } from "@pulumi/pulumi";
+import * as aws from "@pulumi/aws";
 import { prefixName } from "./naming.js";
 import { VisibleError } from "./error.js";
 
@@ -90,8 +91,22 @@ export class Component extends ComponentResource {
                 ),
               };
               break;
+            case "aws:iam/role:Role":
+              overrides = {
+                name: aws
+                  .getRegionOutput(undefined, { provider: args.opts.provider })
+                  .name.apply((region) =>
+                    prefixName(
+                      64,
+                      args.name,
+                      `-${region.toLowerCase().replace(/-/g, "")}`,
+                    ),
+                  ),
+              };
+              break;
             case "aws:apigatewayv2/api:Api":
             case "aws:apigatewayv2/authorizer:Authorizer":
+            case "aws:cognito/userPool:UserPool":
               overrides = { name: prefixName(128, args.name) };
               break;
             case "aws:appautoscaling/policy:Policy":
@@ -134,9 +149,9 @@ export class Component extends ComponentResource {
               };
               break;
             // resources manually named
+            case "aws:cognito/identityPool:IdentityPool":
             case "aws:ecs/service:Service":
             case "aws:ecs/taskDefinition:TaskDefinition":
-            case "aws:iam/role:Role":
             case "aws:lb/targetGroup:TargetGroup":
             case "aws:s3/bucketV2:BucketV2":
               break;
@@ -161,6 +176,8 @@ export class Component extends ComponentResource {
             case "aws:cloudwatch/eventRule:EventRule":
             case "aws:cloudwatch/eventTarget:EventTarget":
             case "aws:cloudwatch/logGroup:LogGroup":
+            case "aws:cognito/identityPoolRoleAttachment:IdentityPoolRoleAttachment":
+            case "aws:cognito/userPoolClient:UserPoolClient":
             case "aws:lambda/eventSourceMapping:EventSourceMapping":
             case "aws:lambda/functionUrl:FunctionUrl":
             case "aws:lambda/invocation:Invocation":

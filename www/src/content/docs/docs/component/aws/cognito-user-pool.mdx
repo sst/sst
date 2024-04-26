@@ -1,0 +1,355 @@
+---
+title: CognitoUserPool
+description: Reference doc for the `sst.aws.CognitoUserPool` component.
+---
+
+{/* DO NOT EDIT. AUTO-GENERATED FROM "pkg/platform/src/components/aws/cognito-user-pool.ts" */}
+
+import Segment from '../../../../../../src/components/tsdoc/Segment.astro';
+import Section from '../../../../../../src/components/tsdoc/Section.astro';
+import NestedTitle from '../../../../../../src/components/tsdoc/NestedTitle.astro';
+import InlineSection from '../../../../../../src/components/tsdoc/InlineSection.astro';
+
+<div class="tsdoc">
+
+<Section type="about">
+The `CognitoUserPool` component lets you add a [Amazon Cognito user pool](https://docs.aws.amazon.com/cognito/latest/developerguide/cognito-user-identity-pools.html) to your app.
+
+#### Create the user pool
+
+```ts
+const userPool = new sst.aws.CognitoUserPool("MyUserPool");
+```
+
+#### Login using email
+
+```ts
+new sst.aws.CognitoUserPool("MyUserPool", {
+  aliases: ["email"]
+});
+```
+
+#### Configure triggers
+
+```ts
+new sst.aws.CognitoUserPool("MyUserPool", {
+  triggers: {
+    preAuthentication: "src/preAuthentication.handler",
+    postAuthentication: "src/postAuthentication.handler",
+  },
+});
+```
+
+#### Add a client
+
+```ts
+userPool.addClient("Web");
+```
+</Section>
+
+---
+
+## Constructor
+
+<Segment>
+<Section type="signature">
+```ts
+new CognitoUserPool(name, args?, opts?)
+```
+</Section>
+
+<Section type="parameters">
+#### Parameters
+- <p><code class="key">name</code> <code class="primitive">string</code></p>
+- <p><code class="key">args?</code> [<code class="type">CognitoUserPoolArgs</code>](#cognitouserpoolargs)</p>
+- <p><code class="key">opts?</code> [<code class="type">ComponentResourceOptions</code>](https://www.pulumi.com/docs/concepts/options/)</p>
+</Section>
+</Segment>
+
+## Methods
+
+### addClient
+<Segment>
+<Section type="signature">
+```ts
+addClient(name, args?)
+```
+</Section>
+
+<Section type="parameters">
+#### Parameters
+- <p><code class="key">name</code> <code class="primitive">string</code></p>
+Name of the client.
+- <p><code class="key">args?</code> [<code class="type">CognitoUserPoolClientArgs</code>](#cognitouserpoolclientargs)</p>
+Configure the client.
+</Section>
+
+<InlineSection>
+**Returns** [<code class="type">CognitoUserPoolClient</code>](/docs/component/aws/cognito-user-pool-client/)
+</InlineSection>
+Add a client to the user pool.
+
+```ts
+userPool.addClient("Web");
+```
+</Segment>
+
+## Properties
+
+### id
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Output</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+The Cognito user pool ID.
+</Segment>
+
+### nodes
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Object</code>
+</InlineSection>
+- <p>[<code class="key">userPool</code>](#nodes-userpool)</p>
+</Section>
+The underlying [resources](/docs/components/#nodes) this component creates.
+</Segment>
+<NestedTitle id="nodes-userpool" Tag="h4" parent="nodes.">userPool</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** [<code class="type">UserPool</code>](https://www.pulumi.com/registry/packages/aws/api-docs/cognito/userpool/)
+</InlineSection>
+</Section>
+The Amazon Cognito user pool.
+</Segment>
+
+## CognitoUserPoolArgs
+### aliases?
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Input</code><code class="symbol">&lt;</code><code class="symbol">&ldquo;</code><code class="primitive">email</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">phone</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">preferred_username</code><code class="symbol">&rdquo;</code><code class="symbol">&gt;</code><code class="symbol">[]</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+
+<InlineSection>
+**Default** User can sign in with their username.
+</InlineSection>
+Configure the different ways a user can sign in besides using their username.
+For example, you might want a user to be able to sign in with their email or phone number.
+
+:::note
+You cannot change the aliases property once the User Pool has been created.
+:::
+
+```ts
+{
+  aliases: ["email"]
+}
+```
+</Segment>
+### transform?
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Object</code>
+</InlineSection>
+- <p>[<code class="key">userPool?</code>](#transform-userpool)</p>
+</Section>
+[Transform](/docs/components#transform) how this component creates its underlying
+resources.
+
+</Segment>
+<NestedTitle id="transform-userpool" Tag="h4" parent="transform.">userPool?</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** [<code class="type">UserPoolArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/cognito/userpool/#inputs)<code class="symbol"> | </code><code class="symbol">(</code><code class="primitive">args</code><code class="symbol">: </code>[<code class="type">UserPoolArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/cognito/userpool/#inputs)<code class="symbol"> => </code><code class="primitive">void</code><code class="symbol">)</code>
+</InlineSection>
+</Section>
+Transform the Cognito user pool resource.
+
+</Segment>
+### triggers?
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Object</code><code class="symbol">&gt;</code>
+</InlineSection>
+- <p>[<code class="key">createAuthChallenge?</code>](#triggers-createauthchallenge)</p>
+- <p>[<code class="key">customEmailSender?</code>](#triggers-customemailsender)</p>
+- <p>[<code class="key">customMessage?</code>](#triggers-custommessage)</p>
+- <p>[<code class="key">customSmsSender?</code>](#triggers-customsmssender)</p>
+- <p>[<code class="key">defineAuthChallenge?</code>](#triggers-defineauthchallenge)</p>
+- <p>[<code class="key">postAuthentication?</code>](#triggers-postauthentication)</p>
+- <p>[<code class="key">postConfirmation?</code>](#triggers-postconfirmation)</p>
+- <p>[<code class="key">preAuthentication?</code>](#triggers-preauthentication)</p>
+- <p>[<code class="key">preSignUp?</code>](#triggers-presignup)</p>
+- <p>[<code class="key">preTokenGenerationConfig?</code>](#triggers-pretokengenerationconfig)</p>
+- <p>[<code class="key">userMigration?</code>](#triggers-usermigration)</p>
+- <p>[<code class="key">verifyAuthChallengeResponse?</code>](#triggers-verifyauthchallengeresponse)</p>
+</Section>
+
+<InlineSection>
+**Default** No triggers
+</InlineSection>
+Configure triggers for this User Pool
+
+```js
+{
+  triggers: {
+    preAuthentication: "src/preAuthentication.handler",
+    postAuthentication: "src/postAuthentication.handler",
+  },
+}
+```
+</Segment>
+<NestedTitle id="triggers-createauthchallenge" Tag="h4" parent="triggers.">createAuthChallenge?</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">string</code><code class="symbol"> | </code>[<code class="type">FunctionArgs</code>](/docs/component/aws/function/#functionargs)
+</InlineSection>
+</Section>
+ARN of the lambda function to present a custom challenge and its answer.
+
+</Segment>
+<NestedTitle id="triggers-customemailsender" Tag="h4" parent="triggers.">customEmailSender?</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">string</code><code class="symbol"> | </code>[<code class="type">FunctionArgs</code>](/docs/component/aws/function/#functionargs)
+</InlineSection>
+</Section>
+ARN of the custom email sender function.
+// TODO V1_0
+
+</Segment>
+<NestedTitle id="triggers-custommessage" Tag="h4" parent="triggers.">customMessage?</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">string</code><code class="symbol"> | </code>[<code class="type">FunctionArgs</code>](/docs/component/aws/function/#functionargs)
+</InlineSection>
+</Section>
+ARN of the lambda function to add customization and localization of verification, recovery, and MFA messages.
+
+</Segment>
+<NestedTitle id="triggers-customsmssender" Tag="h4" parent="triggers.">customSmsSender?</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">string</code><code class="symbol"> | </code>[<code class="type">FunctionArgs</code>](/docs/component/aws/function/#functionargs)
+</InlineSection>
+</Section>
+ARN of the custom SMS sender function.
+
+</Segment>
+<NestedTitle id="triggers-defineauthchallenge" Tag="h4" parent="triggers.">defineAuthChallenge?</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">string</code><code class="symbol"> | </code>[<code class="type">FunctionArgs</code>](/docs/component/aws/function/#functionargs)
+</InlineSection>
+</Section>
+ARN of the lambda function to name a custom challenge.
+
+</Segment>
+<NestedTitle id="triggers-postauthentication" Tag="h4" parent="triggers.">postAuthentication?</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">string</code><code class="symbol"> | </code>[<code class="type">FunctionArgs</code>](/docs/component/aws/function/#functionargs)
+</InlineSection>
+</Section>
+ARN of the lambda function to add custom logging and analytics for authenticated sessions.
+
+</Segment>
+<NestedTitle id="triggers-postconfirmation" Tag="h4" parent="triggers.">postConfirmation?</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">string</code><code class="symbol"> | </code>[<code class="type">FunctionArgs</code>](/docs/component/aws/function/#functionargs)
+</InlineSection>
+</Section>
+ARN of the lambda function to customize welcome messages and log events for custom analytics.
+
+</Segment>
+<NestedTitle id="triggers-preauthentication" Tag="h4" parent="triggers.">preAuthentication?</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">string</code><code class="symbol"> | </code>[<code class="type">FunctionArgs</code>](/docs/component/aws/function/#functionargs)
+</InlineSection>
+</Section>
+ARN of the lambda function to modify or deny sign-in with custom logic.
+
+</Segment>
+<NestedTitle id="triggers-presignup" Tag="h4" parent="triggers.">preSignUp?</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">string</code><code class="symbol"> | </code>[<code class="type">FunctionArgs</code>](/docs/component/aws/function/#functionargs)
+</InlineSection>
+</Section>
+ARN of the lambda function to validate users when they sign up and customize their attributes.
+
+</Segment>
+<NestedTitle id="triggers-pretokengenerationconfig" Tag="h4" parent="triggers.">preTokenGenerationConfig?</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">string</code><code class="symbol"> | </code>[<code class="type">FunctionArgs</code>](/docs/component/aws/function/#functionargs)
+</InlineSection>
+</Section>
+ARN of the lambda function to modify claims in ID and access tokens.
+
+</Segment>
+<NestedTitle id="triggers-usermigration" Tag="h4" parent="triggers.">userMigration?</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">string</code><code class="symbol"> | </code>[<code class="type">FunctionArgs</code>](/docs/component/aws/function/#functionargs)
+</InlineSection>
+</Section>
+ARN of the lambda function to migrate a user from another directory when they sign in to your user pool.
+
+</Segment>
+<NestedTitle id="triggers-verifyauthchallengeresponse" Tag="h4" parent="triggers.">verifyAuthChallengeResponse?</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">string</code><code class="symbol"> | </code>[<code class="type">FunctionArgs</code>](/docs/component/aws/function/#functionargs)
+</InlineSection>
+</Section>
+ARN of the lambda function to compare user answer to expected answer for a custom challenge.
+
+</Segment>
+
+## CognitoUserPoolClientArgs
+### transform?
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Object</code>
+</InlineSection>
+- <p>[<code class="key">client?</code>](#transform-client)</p>
+</Section>
+[Transform](/docs/components#transform) how this component creates its underlying
+resources.
+
+</Segment>
+<NestedTitle id="transform-client" Tag="h4" parent="transform.">client?</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** [<code class="type">UserPoolClientArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/cognito/userpoolclient/#inputs)<code class="symbol"> | </code><code class="symbol">(</code><code class="primitive">args</code><code class="symbol">: </code>[<code class="type">UserPoolClientArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/cognito/userpoolclient/#inputs)<code class="symbol"> => </code><code class="primitive">void</code><code class="symbol">)</code>
+</InlineSection>
+</Section>
+Transform the Cognito user pool client resource.
+
+</Segment>
+</div>

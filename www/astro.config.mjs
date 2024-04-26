@@ -62,6 +62,14 @@ const sidebar = [
         label: "ApiGatewayV2",
         link: "/docs/component/aws/apigatewayv2/",
       },
+      {
+        label: "CognitoUserPool",
+        link: "/docs/component/aws/cognito-user-pool/",
+      },
+      {
+        label: "CognitoIdentityPool",
+        link: "/docs/component/aws/cognito-identity-pool/",
+      },
     ],
   },
   {
@@ -111,6 +119,10 @@ const sidebar = [
         ],
       },
       { label: "Service", link: "/docs/component/aws/service/" },
+      {
+        label: "CognitoUserPoolClient",
+        link: "/docs/component/aws/cognito-user-pool-client/",
+      },
     ],
   },
   { label: "Examples", link: "/docs/examples/" },
