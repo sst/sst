@@ -84,13 +84,19 @@ If your domains are hosted on AWS but in a separate AWS account, you'll need to 
 
 If your domains are hosted on [Vercel](https://vercel.com), you'll need to do the following.
 
-1. Configure the Vercel provider in your app. This includes adding the provider package and configuring the **Vercel Access Token**. [Learn more](/docs/component/vercel/dns/#configure-provider).
+1. [Add the Vercel provider to your app](/docs/component/vercel/dns/#configure-provider).
 
    ```bash
    sst add @pulumiverse/vercel
    ```
 
-2. Use the [`sst.vercel.dns`](/docs/component/vercel/dns/) adapter.
+2. Set the **`VERCEL_API_TOKEN`** in your environment. You might also need to set the `VERCEL_TEAM_ID` if the domain belongs to a team.
+
+   ```bash
+   export VERCEL_API_TOKEN=aaaaaaaa_aaaaaaaaaaaa_aaaaaaaa
+   ```
+
+3. Use the [`sst.vercel.dns`](/docs/component/vercel/dns/) adapter.
 
    ```js
    {
