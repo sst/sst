@@ -1,8 +1,6 @@
 import { env } from "node:process";
 
-export interface Resource {
-  [key: string]: any;
-}
+export interface Resource {}
 
 const raw: Record<string, any> = {
   // @ts-expect-error,
