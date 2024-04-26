@@ -443,15 +443,12 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 					links = map[string]interface{}{}
 					types[dir] = links
 				}
-				if receiver.Aws != nil {
-					for _, link := range receiver.Links {
-						links[link] = complete.Links[link]
-					}
-				}
-				if receiver.Cloudflare != nil {
-					for _, link := range receiver.Links {
+				for _, link := range receiver.Links {
+					if cloudflareBindings[link] != "" && receiver.Cloudflare != nil {
 						links[link] = literal{value: `import("@cloudflare/workers-types").` + cloudflareBindings[link]}
+						continue
 					}
+					links[link] = complete.Links[link]
 				}
 			}
 
