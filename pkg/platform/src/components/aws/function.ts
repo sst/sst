@@ -943,7 +943,9 @@ export class Function
             directory: bundle || handler,
             links,
             environment,
-            awsRole: role?.arn,
+            aws: {
+              role: role?.arn,
+            },
           })),
       _live: all([
         dev,

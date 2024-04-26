@@ -19,6 +19,7 @@ import (
 	"github.com/pulumi/pulumi/sdk/v3/go/common/resource"
 	"github.com/pulumi/pulumi/sdk/v3/go/common/tokens"
 	"github.com/pulumi/pulumi/sdk/v3/go/common/workspace"
+	"github.com/sst/ion/internal/fs"
 	"github.com/sst/ion/pkg/global"
 	"github.com/sst/ion/pkg/js"
 	"github.com/sst/ion/pkg/project/provider"
@@ -57,11 +58,21 @@ type ConcurrentUpdateEvent struct{}
 type Links map[string]interface{}
 
 type Receiver struct {
-	Directory   string
-	Links       []string
-	Environment map[string]string
-	AwsRole     string
+	Directory   string              `json:"directory"`
+	Links       []string            `json:"links"`
+	Environment map[string]string   `json:"environment"`
+	AwsRole     string              `json:"awsRole"`
+	Cloudflare  *CloudflareReceiver `json:"cloudflare"`
+	Aws         *AwsReceiver        `json:"aws"`
 }
+
+type CloudflareReceiver struct {
+}
+
+type AwsReceiver struct {
+	Role string `json:"role"`
+}
+
 type Receivers map[string]Receiver
 
 type Warp struct {
@@ -376,6 +387,7 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 				json.Unmarshal(data, &entry)
 				complete.Receivers[entry.Directory] = entry
 			}
+
 			if hint, ok := outputs["_hint"].(string); ok {
 				complete.Hints[string(resource.URN)] = hint
 			}
@@ -400,35 +412,60 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 					cloudflareBindings[item["name"].(string)] = "KVNamespace"
 				}
 			}
+
+			if match, ok := outputs["serviceBindings"].([]interface{}); ok {
+				for _, binding := range match {
+					item := binding.(map[string]interface{})
+					cloudflareBindings[item["name"].(string)] = "Service"
+				}
+			}
 		}
 
 		outputs := decrypt(deployment.Resources[0].Outputs).(map[string]interface{})
 		linksOutput, ok := outputs["_links"]
 		if ok {
-			links := linksOutput.(map[string]interface{})
-			for key, value := range links {
+			for key, value := range linksOutput.(map[string]interface{}) {
 				complete.Links[key] = value
 			}
-			typesFile, _ := os.Create(filepath.Join(s.project.PathWorkingDir(), "types.generated.ts"))
-			defer typesFile.Close()
-			typesFile.WriteString(`import "sst"` + "\n")
-			typesFile.WriteString(`declare module "sst" {` + "\n")
-			typesFile.WriteString("  export interface Resource " + inferTypes(links, "  ") + "\n")
-			typesFile.WriteString("}" + "\n")
 
-			if len(cloudflareBindings) > 0 {
-				typesFile.WriteString(`import * as cloudflare from "@cloudflare/workers-types"` + "\n")
-				typesFile.WriteString(`declare module "sst" {` + "\n")
-				typesFile.WriteString("  export interface Resource {\n")
-				for key, value := range cloudflareBindings {
-					typesFile.WriteString("  " + key + ": cloudflare." + value + "\n")
+			types := map[string]map[string]interface{}{}
+			for _, receiver := range complete.Receivers {
+				if len(receiver.Links) == 0 {
+					continue
 				}
-				typesFile.WriteString("  }" + "\n")
-				typesFile.WriteString("}" + "\n")
+				typesPath, err := fs.FindUp(receiver.Directory, "tsconfig.json")
+				if err != nil {
+					continue
+				}
+				dir, _ := filepath.Abs(filepath.Dir(typesPath))
+				links, ok := types[dir]
+				if !ok {
+					links = map[string]interface{}{}
+					types[dir] = links
+				}
+				if receiver.Aws != nil {
+					for _, link := range receiver.Links {
+						links[link] = complete.Links[link]
+					}
+				}
+				if receiver.Cloudflare != nil {
+					for _, link := range receiver.Links {
+						links[link] = literal{value: `import("@cloudflare/workers-types").` + cloudflareBindings[link]}
+					}
+				}
 			}
 
-			typesFile.WriteString("export {}")
-			provider.PutLinks(s.project.home, s.project.app.Name, s.project.app.Stage, links)
+			for path, links := range types {
+				typesFile, _ := os.Create(filepath.Join(path, "sst-env.d.ts"))
+				defer typesFile.Close()
+				typesFile.WriteString(`import "sst"` + "\n")
+				typesFile.WriteString(`import * as cloudflare from "@cloudflare/workers-types"` + "\n")
+				typesFile.WriteString(`declare module "sst" {` + "\n")
+				typesFile.WriteString("  export interface Resource " + inferTypes(links, "  ") + "\n")
+				typesFile.WriteString("}" + "\n")
+				typesFile.WriteString("export {}")
+			}
+			provider.PutLinks(s.project.home, s.project.app.Name, s.project.app.Stage, complete.Links)
 		}
 
 		for key, value := range outputs {

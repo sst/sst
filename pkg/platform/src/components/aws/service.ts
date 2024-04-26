@@ -659,7 +659,9 @@ export class Service extends Component implements Link.Linkable {
           directory: imageArgs.context,
           links: linkData.apply((input) => input.map((item) => item.name)),
           environment: args.environment,
-          awsRole: taskRole.arn,
+          aws: {
+            role: taskRole.arn,
+          },
         })),
       });
     }

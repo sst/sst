@@ -4,6 +4,10 @@ import (
 	"strings"
 )
 
+type literal struct {
+	value string
+}
+
 func inferTypes(input map[string]interface{}, indentArgs ...string) string {
 	indent := ""
 	if len(indentArgs) > 0 {
@@ -19,7 +23,9 @@ func inferTypes(input map[string]interface{}, indentArgs ...string) string {
 			builder.WriteString(value.(string))
 			builder.WriteString("\"")
 		} else {
-			switch value.(type) {
+			switch v := value.(type) {
+			case literal:
+				builder.WriteString(v.value)
 			case string:
 				builder.WriteString("string")
 			case int:

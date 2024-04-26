@@ -19,7 +19,6 @@ export default $config({
       link: [trpc],
       handler: "client.ts",
     });
-
     return {
       api: trpc.url,
       client: client.url,
