@@ -17,7 +17,7 @@
  * }
  * ```
  *
- * #### Configuring Vercel provider
+ * #### Configure provider
  *
  * 1. To use this component, add the `@pulumiverse/vercel` provider to your app.
  *

@@ -84,6 +84,14 @@ const sidebar = [
     ],
   },
   {
+    label: "How to",
+    items: [
+      // { label: "Migrate from SST", link: "/docs/migrate-from-sst/" },
+      // { label: "Import Resources", link: "/docs/import-resources/" },
+      { label: "Custom Domains", link: "/docs/custom-domains/" },
+    ],
+  },
+  {
     label: "Internal",
     collapsed: true,
     items: [
@@ -106,14 +114,6 @@ const sidebar = [
     ],
   },
   { label: "Examples", link: "/docs/examples/" },
-  //  {
-  //    label: "How to",
-  //    items: [
-  //      { label: "Migrate from SST", link: "/docs/migrate-from-sst/" },
-  //      { label: "Import Resources", link: "/docs/import-resources/" },
-  //      { label: "Create an AWS Account", link: "/docs/create-an-aws-account/" },
-  //    ],
-  //  },
 ];
 
 if (import.meta.env.DEV) {

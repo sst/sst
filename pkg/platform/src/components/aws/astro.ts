@@ -154,19 +154,35 @@ export interface AstroArgs extends SsrSiteArgs {
    */
   environment?: SsrSiteArgs["environment"];
   /**
-   * Set a custom domain for your Astro site. Supports domains hosted either on
-   * [Route 53](https://aws.amazon.com/route53/) or outside AWS.
+   * Set a custom domain for your Astro site.
+   *
+   * Automatically manages domains hosted on AWS Route 53, Cloudflare, and Vercel. For other
+   * providers, you'll need to pass in a `cert` that validates domain ownership and add the
+   * DNS records.
    *
    * :::tip
-   * You can also migrate an externally hosted domain to Amazon Route 53 by
-   * [following this guide](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/MigratingDNS.html).
+   * Built-in support for AWS Route 53, Cloudflare, and Vercel. And manual setup for other
+   * providers.
    * :::
    *
    * @example
    *
+   * By default this assumes the domain is hosted on Route 53.
+   *
    * ```js
    * {
-   *   domain: "domain.com"
+   *   domain: "example.com"
+   * }
+   * ```
+   *
+   * For domains hosted on Cloudflare.
+   *
+   * ```js
+   * {
+   *   domain: {
+   *     name: "example.com",
+   *     dns: sst.cloudflare.dns()
+   *   }
    * }
    * ```
    *
@@ -323,8 +339,8 @@ export class Astro extends Component implements Link.Linkable {
       _hint: $dev
         ? undefined
         : all([this.cdn.domainUrl, this.cdn.url]).apply(
-            ([domainUrl, url]) => domainUrl ?? url,
-          ),
+          ([domainUrl, url]) => domainUrl ?? url,
+        ),
       _metadata: {
         mode: $dev ? "placeholder" : "deployed",
         path: sitePath,
@@ -631,11 +647,10 @@ function useCloudFrontRoutingInjection(buildMetadata: BuildMetaConfig) {
     var matchedRoute = findFirstMatch(findMatches(request.uri, routeData));
     if (matchedRoute[0]) {
       if (!matchedRoute[1] && !/^.*\\.[^\\/]+$/.test(request.uri)) {
-        ${
-          buildMetadata.pageResolution === "file"
-            ? `request.uri = request.uri === "/" ? "/index.html" : request.uri.replace(/\\/?$/, ".html");`
-            : `request.uri = request.uri.replace(/\\/?$/, "/index.html");`
-        }
+        ${buildMetadata.pageResolution === "file"
+      ? `request.uri = request.uri === "/" ? "/index.html" : request.uri.replace(/\\/?$/, ".html");`
+      : `request.uri = request.uri.replace(/\\/?$/, "/index.html");`
+    }
       } else if (matchedRoute[1] === 2) {
         var redirectPath = matchedRoute[2];
         matchedRoute[0].exec(request.uri).forEach((match, index) => {

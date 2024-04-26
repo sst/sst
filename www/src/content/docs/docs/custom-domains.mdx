@@ -1,0 +1,163 @@
+---
+title: Custom Domains
+description: Configure custom domains in your components.
+---
+
+You can configure custom domains for your frontends or APIs in SST. By default, these components auto-generate a URL. You can pass in the `domain` to use your custom domain.
+
+```ts {2}
+new sst.aws.Nextjs("MyWeb", {
+  domain: "example.com"
+});
+```
+
+SST supports a couple of DNS providers automatically. These include AWS Route 53, Cloudflare, and Vercel. Other providers will need to be manually configured.
+
+:::note
+SST currently supports configuring custom domains for AWS components.
+:::
+
+Let's look at how it works.
+
+---
+
+## How it works
+
+Configuring a custom domain is a two step process.
+
+1. Validate that you own the domain. For AWS you do this by [creating an ACM certificate](https://docs.aws.amazon.com/acm/latest/userguide/domain-ownership-validation.html) and validating it by:
+   - Setting a DNS record with your domain provider.
+   - Verifying through an email sent to the domain owner.
+2. Add the DNS records to route your domain to your component.
+
+SST can these steps automatically for the supported providers through a concept of _adapters_. These create the above DNS records on a given provider.
+
+---
+
+## Adapters
+
+You can use a custom domain hosted on any provider. SST supports domains on AWS, Cloudflare, and Vercel automatically.
+
+---
+
+### AWS
+
+By default, if you set a custom domain, SST assumes the domain is configured in AWS Route 53 in the same AWS account.
+
+```js
+{
+  domain: {
+    name: "example.com"
+  }
+}
+```
+
+This is the same as using the [`sst.aws.dns`](/docs/component/aws/dns/) adapter.
+
+```js
+{
+  domain: {
+    name: "example.com",
+    dns: sst.aws.dns()
+  }
+}
+```
+
+If you have the same domain in multiple hosted zones in Route 53, you can specify the hosted zone.
+
+```js {5}
+{
+  domain: {
+    name: "example.com",
+    dns: sst.aws.dns({
+      zone: "Z2FDTNDATAQYW2"
+    })
+  }
+}
+```
+
+If your domains are hosted on AWS but in a separate AWS account, you'll need to follow the [manual setup](#manual-setup).
+
+---
+
+### Vercel
+
+If your domains are hosted on [Vercel](https://vercel.com), you'll need to do the following.
+
+1. Configure the Vercel provider in your app. This includes adding the provider package and configuring the **Vercel Access Token**. [Learn more](/docs/component/vercel/dns/#configure-provider).
+
+   ```bash
+   sst add @pulumiverse/vercel
+   ```
+
+2. Use the [`sst.vercel.dns`](/docs/component/vercel/dns/) adapter.
+
+   ```js
+   {
+     domain: {
+       name: "example.com",
+       dns: sst.vercel.dns()
+     }
+   }
+   ```
+
+---
+
+### Cloudflare
+
+If your domains are hosted on [Cloudflare](https://developers.cloudflare.com/dns/), you'll need to do the following.
+
+1. Add the Cloudflare provider to your app.
+
+   ```bash
+   sst add cloudflare
+   ```
+
+2. Set the **`CLOUDFLARE_API_TOKEN`** in your environment.
+
+   ```bash
+   export CLOUDFLARE_API_TOKEN=aaaaaaaa_aaaaaaaaaaaa_aaaaaaaa
+   ```
+
+3. Use the [`sst.cloudflare.dns`](/docs/component/cloudflare/dns/) adapter.
+
+   ```js
+   {
+     domain: {
+       name: "example.com",
+       dns: sst.cloudflare.dns()
+     }
+   }
+   ```
+
+---
+
+## Manual setup
+
+If your domain is on a provider that is not supported above, or is a separate AWS account; you'll need verify that you own the domain and set up the DNS records on your own.
+
+To manually set up a domain on an unsupported provider, you'll need to:
+
+1. [Validate that you own the domain](https://docs.aws.amazon.com/acm/latest/userguide/domain-ownership-validation.html) by creating an ACM certificate. You can either validate it by setting a DNS record or by verifying an email sent to the domain owner.
+
+2. Once validated, set the certificate ARN as the `cert` and set `dns` to `false`.
+
+   ```js
+   {
+     domain: {
+       name: "domain.com",
+       dns: false,
+       cert: "arn:aws:acm:us-east-1:112233445566:certificate/3a958790-8878-4cdc-a396-06d95064cf63"
+     }
+   }
+   ```
+
+3. Add the DNS records in your provider to point to the CloudFront distribution, API Gateway, or load balancer URL.
+
+---
+
+#### Certificate region
+
+If you are configuring a custom domain for a CloudFront distribution, the ACM certificate that's used to prove that you own the domain needs be created in the `us-east-1` region.
+
+For all the other components, like ApiGatewayV2 or Cluster, can be created in any region.
