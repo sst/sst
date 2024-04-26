@@ -188,6 +188,10 @@ export class Router extends Component implements Link.Linkable {
     this.cachePolicy = cachePolicy;
     this.cdn = cdn;
 
+    this.registerOutputs({
+      _hint: this.url,
+    });
+
     function validateRoutes() {
       output(args.routes).apply((routes) => {
         Object.keys(routes).map((path) => {
