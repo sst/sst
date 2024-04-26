@@ -1,0 +1,13 @@
+{
+  "name": "aws-bun-elysia",
+  "version": "0.0.0",
+  "scripts": {
+    "dev": "sst dev 'bun --watch ./src/index.ts'"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.563.0",
+    "@aws-sdk/s3-request-presigner": "^3.563.0",
+    "elysia": "^1.0.14",
+    "sst": "^3.0.4"
+  }
+}
