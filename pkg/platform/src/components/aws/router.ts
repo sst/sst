@@ -295,8 +295,8 @@ export class Router extends Component implements Link.Linkable {
         cachedMethods: ["GET", "HEAD"],
         defaultTtl: 0,
         compress: true,
-        // CloudFront's Managed-AllViewerExceptHostHeader policy
         cachePolicyId: cachePolicy.id,
+        // CloudFront's Managed-AllViewerExceptHostHeader policy
         originRequestPolicyId: "b689b0a8-53d0-40ab-baf2-68738e2966ac",
       };
 
