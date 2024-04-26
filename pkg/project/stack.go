@@ -456,7 +456,6 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 				typesFile, _ := os.Create(filepath.Join(path, "sst-env.d.ts"))
 				defer typesFile.Close()
 				typesFile.WriteString(`import "sst"` + "\n")
-				typesFile.WriteString(`import * as cloudflare from "@cloudflare/workers-types"` + "\n")
 				typesFile.WriteString(`declare module "sst" {` + "\n")
 				typesFile.WriteString("  export interface Resource " + inferTypes(links, "  ") + "\n")
 				typesFile.WriteString("}" + "\n")
