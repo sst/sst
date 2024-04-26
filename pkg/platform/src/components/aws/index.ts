@@ -6,6 +6,7 @@ export * from "./cluster.js";
 export * from "./cron.js";
 export * from "./dns.js";
 export * from "./dynamo.js";
+export * from "./email.js";
 export * from "./function.js";
 export * from "./nextjs.js";
 export * from "./postgres.js";

@@ -174,6 +174,8 @@ export class Component extends ComponentResource {
             case "aws:s3/bucketPolicy:BucketPolicy":
             case "aws:s3/bucketPublicAccessBlock:BucketPublicAccessBlock":
             case "aws:s3/bucketWebsiteConfigurationV2:BucketWebsiteConfigurationV2":
+            case "aws:ses/domainIdentityVerification:DomainIdentityVerification":
+            case "aws:sesv2/emailIdentity:EmailIdentity":
             case "aws:sns/topicSubscription:TopicSubscription":
             case "cloudflare:index/record:Record":
             case "cloudflare:index/workerDomain:WorkerDomain":

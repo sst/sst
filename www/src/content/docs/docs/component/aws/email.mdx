@@ -1,0 +1,209 @@
+---
+title: Email
+description: Reference doc for the `sst.aws.Email` component.
+---
+
+{/* DO NOT EDIT. AUTO-GENERATED FROM "pkg/platform/src/components/aws/email.ts" */}
+
+import Segment from '../../../../../../src/components/tsdoc/Segment.astro';
+import Section from '../../../../../../src/components/tsdoc/Section.astro';
+import NestedTitle from '../../../../../../src/components/tsdoc/NestedTitle.astro';
+import InlineSection from '../../../../../../src/components/tsdoc/InlineSection.astro';
+
+<div class="tsdoc">
+
+<Section type="about">
+The `Email` component lets you send emails in your app.
+It uses [Amazon Simple Email Service](https://aws.amazon.com/ses/).
+
+You can enable sending from an email address or all email addresses in a domain.
+
+#### Sending from an email address
+
+For using an email address as the sender, you need to verify the email address.
+When you deploy your app, you will receive an email from AWS SES to verify the
+email address. You need to click the link in the email to verify.
+
+```ts
+new sst.aws.Email("MyEmail", {
+  sender: "john.smith@gmail.com",
+});
+```
+
+#### Sending from all email addresses in a domain
+
+When you use a domain as the sender, you don't need to verify individual email
+addresses in the domain. Once you verify the domain, you can send emails from
+**all email addresses in the domain**.
+
+To verify the domain, you need to add the verification records to your domain DNS.
+The component will create the DNS records for you.
+
+In addition, the component will also create a DMARC record for the domain with the
+default value: `v=DMARC1; p=none;`.
+
+```ts
+new sst.aws.Email("MyEmailDomain", {
+  sender: "domain.com",
+});
+```
+
+:::note
+By default, your AWS SES accounts is in the Amazon SES sandbox. You can only send
+email to verified email addresses and domains. And your account has a limited sending
+quota. To remove these restrictions, you need to [request production access](https://docs.aws.amazon.com/ses/latest/dg/request-production-access.html).
+:::
+</Section>
+
+---
+
+## Constructor
+
+<Segment>
+<Section type="signature">
+```ts
+new Email(name, args, opts?)
+```
+</Section>
+
+<Section type="parameters">
+#### Parameters
+- <p><code class="key">name</code> <code class="primitive">string</code></p>
+- <p><code class="key">args</code> [<code class="type">EmailArgs</code>](#emailargs)</p>
+- <p><code class="key">opts?</code> [<code class="type">ComponentResourceOptions</code>](https://www.pulumi.com/docs/concepts/options/)</p>
+</Section>
+</Segment>
+
+## Properties
+
+### nodes
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Object</code>
+</InlineSection>
+- <p>[<code class="key">identity</code>](#nodes-identity)</p>
+</Section>
+The underlying [resources](/docs/components/#nodes) this component creates.
+</Segment>
+<NestedTitle id="nodes-identity" Tag="h4" parent="nodes.">identity</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** [<code class="type">EmailIdentity</code>](https://www.pulumi.com/registry/packages/aws/api-docs/sesv2/emailidentity/)
+</InlineSection>
+</Section>
+The Amazon SES identity.
+</Segment>
+
+### sender
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Output</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+The sender email address or domain.
+</Segment>
+
+## Links
+
+The following are accessible through the [SDK](/docs/reference/sdk/) at runtime.
+
+### sender
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">string</code>
+</InlineSection>
+</Section>
+The sender email address or domain.
+</Segment>
+
+## EmailArgs
+### dns?
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">false</code><code class="symbol"> | </code>[<code class="type">sst.aws.dns</code>](/docs/component/aws/dns/)<code class="symbol"> | </code>[<code class="type">sst.cloudflare.dns</code>](/docs/component/cloudflare/dns/)<code class="symbol"> | </code>[<code class="type">sst.vercel.dns</code>](/docs/component/vercel/dns/)<code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+
+<InlineSection>
+**Default** <code class="primitive">sst.aws.dns</code>
+</InlineSection>
+The DNS adapter you want to use for managing DNS records. You should only
+specify this for domain senders. You will get an error if you specify this
+for email address senders.
+
+:::note
+If `dns` is set to `false`, you have to add the DNS records manually to verify
+the domain.
+:::
+
+Specify the hosted zone ID for the domain.
+
+```js
+{
+  dns: sst.aws.dns({
+    zone: "Z2FDTNDATAQYW2"
+  })
+}
+```
+
+Domain is hosted on Cloudflare.
+
+```js
+{
+  dns: sst.cloudflare.dns()
+}
+```
+</Segment>
+### sender
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+The email address or domain that you want to send email from.
+
+Using an email address as the sender
+
+```ts
+new sst.aws.Email("MyEmail", {
+  sender: "john.smith@gmail.com",
+});
+```
+
+Using a domain as the sender
+
+```ts
+new sst.aws.Email("MyEmailDomain", {
+  sender: "domain.com",
+});
+```
+</Segment>
+### transform?
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Object</code>
+</InlineSection>
+- <p>[<code class="key">identity?</code>](#transform-identity)</p>
+</Section>
+[Transform](/docs/components#transform) how this component creates its underlying
+resources.
+
+</Segment>
+<NestedTitle id="transform-identity" Tag="h4" parent="transform.">identity?</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** [<code class="type">EmailIdentityArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/sesv2/emailidentity/#inputs)<code class="symbol"> | </code><code class="symbol">(</code><code class="primitive">args</code><code class="symbol">: </code>[<code class="type">EmailIdentityArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/sesv2/emailidentity/#inputs)<code class="symbol"> => </code><code class="primitive">void</code><code class="symbol">)</code>
+</InlineSection>
+</Section>
+Transform the SES identity resource.
+
+</Segment>
+</div>
