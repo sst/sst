@@ -525,7 +525,6 @@ function handler(event) {
           description: `${name} server`,
           runtime: "nodejs20.x",
           timeout: "20 seconds",
-          permissions: args.permissions,
           memory: "1024 MB",
           ...props.function,
           nodejs: {
@@ -536,6 +535,10 @@ function handler(event) {
             ...environment,
             ...props.function.environment,
           })),
+          permissions: output(args.permissions).apply((permissions) => [
+            ...(permissions ?? []),
+            ...(props.function.permissions ?? []),
+          ]),
           streaming: props.streaming,
           injections: args.warm
             ? [useServerFunctionWarmingInjection(props.streaming)]
