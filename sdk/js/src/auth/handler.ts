@@ -223,7 +223,7 @@ export function AuthHandler<
     },
   };
 
-  app.get("/token", async (c) => {
+  app.post("/token", async (c) => {
     console.log("token request");
     const form = await c.req.formData();
     if (form.get("grant_type") !== "authorization_code") {
@@ -262,6 +262,7 @@ export function AuthHandler<
     const redirect_uri =
       c.req.query("redirect_uri") || getCookie(c, "redirect_uri");
     const state = c.req.query("state") || getCookie(c, "state");
+    const client_id = c.req.query('client_id') || getCookie(c, 'client_id');
 
     if (!provider) {
       c.status(400);
@@ -277,10 +278,17 @@ export function AuthHandler<
       c.status(400);
       return c.text("Missing response_type");
     }
+
+    if (!client_id) {
+      c.status(400);
+      return c.text('Missing client_id');
+    }
+
     options.cookie(c, "provider", provider, 60 * 10);
     options.cookie(c, "response_type", response_type, 60 * 10);
     options.cookie(c, "redirect_uri", redirect_uri, 60 * 10);
     options.cookie(c, "state", state || "", 60 * 10);
+    options.cookie(c, 'client_id', client_id || '', 60 * 10);
 
     if (input.callbacks.auth.start) {
       await input.callbacks.auth.start(c.req.raw);
