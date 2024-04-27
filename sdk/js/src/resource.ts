@@ -24,6 +24,15 @@ export function fromCloudflareEnv(input: any) {
 }
 
 export function wrapCloudflareHandler(handler: any) {
+  if (typeof handler === 'function' && handler.hasOwnProperty('prototype')) {
+    return class extends handler {
+      constructor(ctx: any, env: any) {
+        fromCloudflareEnv(env);
+        super(ctx, env)
+      }
+    }
+  }
+
   function wrap(fn: any) {
     return function (req: any, env: any, ...rest: any[]) {
       fromCloudflareEnv(env);

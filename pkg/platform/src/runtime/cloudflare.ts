@@ -65,6 +65,10 @@ export async function build(name: string, input: pulumi.Unwrap<WorkerArgs>) {
     conditions: ["worker"],
     minify: build.minify,
     ...build.esbuild,
+    external: [
+      ...(build.esbuild?.external ?? []),
+      "cloudflare:workers"
+    ],
     banner: {
       js: [build.banner || "", build.esbuild?.banner || ""].join("\n"),
     },

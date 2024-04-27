@@ -386,7 +386,7 @@ export class Worker
               accountId: sst.cloudflare.DEFAULT_ACCOUNT_ID,
               content: (await fs.readFile(handler)).toString(),
               module: true,
-              compatibilityDate: "2024-01-01",
+              compatibilityDate: "2024-04-04",
               compatibilityFlags: ["nodejs_compat"],
               ...bindings,
               plainTextBindings: [
