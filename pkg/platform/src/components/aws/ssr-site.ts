@@ -102,6 +102,7 @@ export interface SsrSiteArgs extends BaseSsrSiteArgs {
         paths?: Input<"all" | "versioned" | string[]>;
       }
   >;
+  vpc?: FunctionArgs["vpc"];
   /**
    * [Transform](/docs/components#transform) how this component creates its underlying
    * resources.
@@ -526,6 +527,7 @@ function handler(event) {
           runtime: "nodejs20.x",
           timeout: "20 seconds",
           memory: "1024 MB",
+          vpc: args.vpc,
           ...props.function,
           nodejs: {
             format: "esm" as const,

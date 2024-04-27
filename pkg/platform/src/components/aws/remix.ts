@@ -13,7 +13,6 @@ import {
 import { Cdn } from "./cdn.js";
 import { Bucket } from "./bucket.js";
 import { Component } from "../component.js";
-import { Hint } from "../hint.js";
 import { Link } from "../link.js";
 import type { Input } from "../input.js";
 import { Cache } from "./providers/cache.js";
@@ -232,6 +231,22 @@ export interface RemixArgs extends SsrSiteArgs {
    * @internal
    */
   edge?: Input<boolean>;
+  /**
+   * Configure the [server function](#nodes-server) in your Remix app to connect
+   * to private subnets in a virtual private cloud or VPC. This allows your app to
+   * access private resources.
+   *
+   * @example
+   * ```js
+   * {
+   *   vpc: {
+   *     securityGroups: ["sg-0399348378a4c256c"],
+   *     subnets: ["subnet-0b6a2b73896dc8c4c", "subnet-021389ebee680c2f0"]
+   *   }
+   * }
+   * ```
+   */
+  vpc?: SsrSiteArgs["vpc"];
 }
 
 /**
@@ -341,8 +356,8 @@ export class Remix extends Component implements Link.Linkable {
       _hint: $dev
         ? undefined
         : all([this.cdn.domainUrl, this.cdn.url]).apply(
-          ([domainUrl, url]) => domainUrl ?? url,
-        ),
+            ([domainUrl, url]) => domainUrl ?? url,
+          ),
       _metadata: {
         mode: $dev ? "placeholder" : "deployed",
         path: sitePath,
@@ -443,21 +458,21 @@ export class Remix extends Component implements Link.Linkable {
             },
             edgeFunctions: edge
               ? {
-                server: {
-                  function: serverConfig,
-                },
-              }
+                  server: {
+                    function: serverConfig,
+                  },
+                }
               : undefined,
             origins: {
               ...(edge
                 ? {}
                 : {
-                  server: {
                     server: {
-                      function: serverConfig,
+                      server: {
+                        function: serverConfig,
+                      },
                     },
-                  },
-                }),
+                  }),
               s3: {
                 s3: {
                   copy: [
@@ -474,16 +489,16 @@ export class Remix extends Component implements Link.Linkable {
             behaviors: [
               edge
                 ? {
-                  cacheType: "server",
-                  cfFunction: "serverCfFunction",
-                  edgeFunction: "server",
-                  origin: "s3",
-                }
+                    cacheType: "server",
+                    cfFunction: "serverCfFunction",
+                    edgeFunction: "server",
+                    origin: "s3",
+                  }
                 : {
-                  cacheType: "server",
-                  cfFunction: "serverCfFunction",
-                  origin: "server",
-                },
+                    cacheType: "server",
+                    cfFunction: "serverCfFunction",
+                    origin: "server",
+                  },
               ...buildMeta.staticRoutes.map(
                 (route) =>
                   ({
