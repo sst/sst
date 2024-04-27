@@ -505,6 +505,7 @@ export class Service extends Component implements Link.Linkable {
             {
               name: taskName,
               image: image.repoDigest,
+              pseudoTerminal: true,
               portMappings: pub?.ports.apply((ports) =>
                 ports
                   .map((port) => port.forwardPort)
