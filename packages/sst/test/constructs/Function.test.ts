@@ -257,7 +257,7 @@ test("runtime: container: props", async () => {
         { type: "inline" },
         { type: "local", params: { src: ".", mode: "max" } },
       ],
-      cacheTo: { type: "inline" },
+      cacheTo: { type: "local", params: { dest: ".", mode: "max"} },
     },
   });
   await app.finish();
