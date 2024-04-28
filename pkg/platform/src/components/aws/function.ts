@@ -729,7 +729,7 @@ export interface FunctionArgs {
    * }
    * ```
    */
-  layers?: Input<string[]>;
+  layers?: Input<Input<string>[]>;
   /**
    * Configure the function to connect to private subnets in a virtual private cloud or VPC. This allows your function to access private resources.
    *
