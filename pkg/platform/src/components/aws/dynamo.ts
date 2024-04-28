@@ -142,6 +142,20 @@ export interface DynamoArgs {
     "keys-only" | "new-image" | "old-image" | "new-and-old-images"
   >;
   /**
+   * The field of the table to store the Time to Live (TTL) timestamp in. This field should
+   * be of type `number`. When the TTL timestamp is reached, the item will be deleted.
+   *
+   * Learn more about [Time to Live (TTL)](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/TTL.html).
+   *
+   * @example
+   * ```js
+   * {
+   *   ttl: "expireAt",
+   * }
+   * ```
+   */
+  ttl?: Input<string>;
+  /**
    * [Transform](/docs/components#transform) how this component creates its underlying
    * resources.
    */
@@ -344,7 +358,8 @@ export interface DynamoSubscriber {
  */
 export class Dynamo
   extends Component
-  implements Link.Linkable, Link.AWS.Linkable {
+  implements Link.Linkable, Link.AWS.Linkable
+{
   private constructorName: string;
   private table: Output<aws.dynamodb.Table>;
   private isStreamEnabled: boolean = false;
@@ -390,6 +405,13 @@ export class Dynamo
               pointInTimeRecovery: {
                 enabled: true,
               },
+              ttl:
+                args.ttl === undefined
+                  ? undefined
+                  : {
+                      attributeName: args.ttl,
+                      enabled: true,
+                    },
               globalSecondaryIndexes: Object.entries(globalIndexes ?? {}).map(
                 ([name, index]) => ({
                   name,
