@@ -24,6 +24,7 @@ export default $config({
     };
   },
   async run() {
+    // Create a permission boundary
     const permissionsBoundary = new aws.iam.Policy("MyPermissionsBoundary", {
       policy: aws.iam.getPolicyDocumentOutput({
         statements: [
@@ -35,10 +36,12 @@ export default $config({
       }).json,
     });
 
+    // Apply the boundary to all roles
     $transform(aws.iam.Role, (args) => {
       args.permissionsBoundary = permissionsBoundary;
     });
 
+    // The boundary automatically applies to this Function's role
     const app = new sst.aws.Function("MyApp", {
       handler: "index.handler",
       permissions: [
