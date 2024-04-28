@@ -78,7 +78,7 @@ func (w *WorkerRuntime) Build(ctx context.Context, input *BuildInput) (*BuildOut
 			ResolveDir: filepath.Dir(abs),
 			Loader:     esbuild.LoaderTS,
 		},
-		External:   []string{"node:*"},
+		External:   []string{"node:*", "cloudflare:workers"},
 		Conditions: []string{"worker"},
 		Sourcemap:  esbuild.SourceMapNone,
 		Loader:     loader,
