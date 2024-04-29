@@ -1,21 +1,22 @@
-import { ComponentResourceOptions, output } from "@pulumi/pulumi";
+import { ComponentResourceOptions, all, output } from "@pulumi/pulumi";
 import * as aws from "@pulumi/aws";
 import { Component, Transform, transform } from "../component";
 import { Input } from "../input";
 import { Link } from "../link";
 import { CognitoUserPoolClient } from "./cognito-user-pool-client";
 import { Function, FunctionArgs } from "./function.js";
+import { VisibleError } from "../error";
 
 export interface CognitoUserPoolArgs {
   /**
    * Configure the different ways a user can sign in besides using their username.
-   * For example, you might want a user to be able to sign in with their email or phone number.
    *
    * :::note
    * You cannot change the aliases property once the User Pool has been created.
+   * Learn more about [aliases](https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-settings-attributes.html#user-pool-settings-aliases).
    * :::
    *
-   * @default User can sign in with their username.
+   * @default User can only sign in with their username.
    * @example
    *
    * ```ts
@@ -25,6 +26,25 @@ export interface CognitoUserPoolArgs {
    * ```
    */
   aliases?: Input<Input<"email" | "phone" | "preferred_username">[]>;
+  /**
+   * Allow users to be able to sign up and sign in with an email addresses or phone number
+   * as their username.
+   *
+   * :::note
+   * You cannot change the usernames property once the User Pool has been created.
+   * Learn more about [aliases](https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-settings-attributes.html#user-pool-settings-aliases).
+   * :::
+   *
+   * @default User can only sign in with their username.
+   * @example
+   *
+   * ```ts
+   * {
+   *   usernames: ["email"]
+   * }
+   * ```
+   */
+  usernames?: Input<Input<"email" | "phone">[]>;
   /**
    * Configure triggers for this User Pool
    * @default No triggers
@@ -128,7 +148,7 @@ export interface CognitoUserPoolClientArgs {
  *
  * ```ts
  * new sst.aws.CognitoUserPool("MyUserPool", {
- *   aliases: ["email"]
+ *   usernames: ["email"]
  * });
  * ```
  *
@@ -164,10 +184,21 @@ export class CognitoUserPool
 
     const parent = this;
 
+    normalizeAliasesAndUsernames();
     const triggers = createTriggers();
     const userPool = createUserPool();
 
     this.userPool = userPool;
+
+    function normalizeAliasesAndUsernames() {
+      all([args.aliases, args.usernames]).apply(([aliases, usernames]) => {
+        if (aliases && usernames) {
+          throw new VisibleError(
+            "You cannot set both aliases and usernames. Learn more about customizing sign-in attributes at https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-settings-attributes.html#user-pool-settings-aliases",
+          );
+        }
+      });
+    }
 
     function createTriggers() {
       if (!args.triggers) return;
@@ -199,6 +230,12 @@ export class CognitoUserPool
               ? ["perferredUsername"]
               : []),
           ]),
+          usernameAttributes: output(args.usernames || []).apply(
+            (usernames) => [
+              ...(usernames.includes("email") ? ["email"] : []),
+              ...(usernames.includes("phone") ? ["phoneNumber"] : []),
+            ],
+          ),
           accountRecoverySetting: {
             recoveryMechanisms: [
               {
