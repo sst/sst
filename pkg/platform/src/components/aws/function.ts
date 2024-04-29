@@ -1534,15 +1534,20 @@ export class Function
     name: string,
     definition: Input<string | FunctionArgs>,
     override: Pick<FunctionArgs, "description" | "permissions">,
+    argsTransform?: Transform<FunctionArgs>,
     opts?: ComponentResourceOptions,
   ) {
     return output(definition).apply((definition) => {
       if (typeof definition === "string") {
-        return new Function(name, { handler: definition, ...override }, opts);
+        return new Function(
+          name,
+          transform(argsTransform, { handler: definition, ...override }),
+          opts,
+        );
       } else if (definition.handler) {
         return new Function(
           name,
-          {
+          transform(argsTransform, {
             ...definition,
             ...override,
             permissions: all([
@@ -1552,7 +1557,7 @@ export class Function
               ...(permissions ?? []),
               ...(overridePermissions ?? []),
             ]),
-          },
+          }),
           opts,
         );
       }

@@ -12,7 +12,15 @@ export default $config({
     const bucket = new sst.aws.Bucket("MyBucket", {
       public: true,
     });
-    const api = new sst.aws.ApiGatewayV2("MyApi");
+    const api = new sst.aws.ApiGatewayV2("MyApi", {
+      transform: {
+        route: {
+          handler: {
+            timeout: "12 seconds",
+          },
+        },
+      },
+    });
     api.route("GET /", {
       link: [bucket],
       handler: "index.upload",

@@ -123,7 +123,9 @@ export class Cron extends Component {
 
     function createFunction() {
       return output(args.job).apply((job) =>
-        Function.fromDefinition(`${name}Handler`, job, {}, { parent }),
+        Function.fromDefinition(`${name}Handler`, job, {}, undefined, {
+          parent,
+        }),
       );
     }
 

@@ -917,11 +917,11 @@ async function generateComponentsDoc() {
               : useNestedTypes(subType.getSignature?.type!).length;
           const type = hasChildren ? ` ${renderType(subType.type!)}` : "";
           const generateHash = (counter = 0): string => {
-            const hash = `${prefix}.${subType.name}`
-              .toLowerCase()
-              .replace(/[^a-z0-9\.]/g, "")
-              .replace(/\./g, "-");
-            +(counter > 0 ? `-${counter}` : "");
+            const hash =
+              `${prefix}.${subType.name}`
+                .toLowerCase()
+                .replace(/[^a-z0-9\.]/g, "")
+                .replace(/\./g, "-") + (counter > 0 ? `-${counter}` : "");
             return Array.from(linkHashes.values()).includes(hash)
               ? generateHash(counter + 1)
               : hash;

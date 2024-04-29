@@ -25,7 +25,7 @@ const userPool = new sst.aws.CognitoUserPool("MyUserPool");
 
 ```ts
 new sst.aws.CognitoUserPool("MyUserPool", {
-  aliases: ["email"]
+  usernames: ["email"]
 });
 ```
 
@@ -126,6 +126,20 @@ The underlying [resources](/docs/components/#nodes) this component creates.
 The Amazon Cognito user pool.
 </Segment>
 
+## Links
+
+The following are accessible through the [SDK](/docs/reference/sdk/) at runtime.
+
+### id
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">string</code>
+</InlineSection>
+</Section>
+The Cognito user pool ID.
+</Segment>
+
 ## CognitoUserPoolArgs
 ### aliases?
 <Segment>
@@ -136,13 +150,13 @@ The Amazon Cognito user pool.
 </Section>
 
 <InlineSection>
-**Default** User can sign in with their username.
+**Default** User can only sign in with their username.
 </InlineSection>
 Configure the different ways a user can sign in besides using their username.
-For example, you might want a user to be able to sign in with their email or phone number.
 
 :::note
 You cannot change the aliases property once the User Pool has been created.
+Learn more about [aliases](https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-settings-attributes.html#user-pool-settings-aliases).
 :::
 
 ```ts
@@ -225,7 +239,6 @@ ARN of the lambda function to present a custom challenge and its answer.
 </InlineSection>
 </Section>
 ARN of the custom email sender function.
-// TODO V1_0
 
 </Segment>
 <NestedTitle id="triggers-custommessage" Tag="h4" parent="triggers.">customMessage?</NestedTitle>
@@ -327,6 +340,31 @@ ARN of the lambda function to migrate a user from another directory when they si
 </Section>
 ARN of the lambda function to compare user answer to expected answer for a custom challenge.
 
+</Segment>
+### usernames?
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Input</code><code class="symbol">&lt;</code><code class="symbol">&ldquo;</code><code class="primitive">email</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">phone</code><code class="symbol">&rdquo;</code><code class="symbol">&gt;</code><code class="symbol">[]</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+
+<InlineSection>
+**Default** User can only sign in with their username.
+</InlineSection>
+Allow users to be able to sign up and sign in with an email addresses or phone number
+as their username.
+
+:::note
+You cannot change the usernames property once the User Pool has been created.
+Learn more about [aliases](https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-settings-attributes.html#user-pool-settings-aliases).
+:::
+
+```ts
+{
+  usernames: ["email"]
+}
+```
 </Segment>
 
 ## CognitoUserPoolClientArgs

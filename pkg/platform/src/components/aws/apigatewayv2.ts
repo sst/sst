@@ -99,7 +99,7 @@ interface DomainArgs {
   /**
    * The DNS provider to use for the domain. Defaults to the AWS.
    *
-   * Takes an adapter that can create the DNS records on the provider. This can automate 
+   * Takes an adapter that can create the DNS records on the provider. This can automate
    * validating the domain and setting up the DNS routing.
    *
    * Supports Route 53, Cloudflare, and Vercel adapters. For other providers, you'll need
@@ -222,6 +222,36 @@ export interface ApiGatewayV2Args {
      * Transform the CloudWatch LogGroup resource used for access logs.
      */
     accessLog?: Transform<aws.cloudwatch.LogGroupArgs>;
+    /**
+     * Transform the routes. This can be used to customize the handler function and
+     * the arguments for each route.
+     *
+     * @example
+     * ```js
+     * {
+     *   transform: {
+     *     route: {
+     *       handler: {
+     *         link: [bucket, stripeKey]
+     *       },
+     *       args: {
+     *         auth: { iam: true }
+     *       }
+     *     }
+     *   }
+     * }
+     * ```
+     */
+    route?: {
+      /**
+       * Transform the handler function for the route.
+       */
+      handler?: Transform<FunctionArgs>;
+      /**
+       * Transform the arguments for the route.
+       */
+      args?: Transform<ApiGatewayV2RouteArgs>;
+    };
   };
 }
 
@@ -373,6 +403,7 @@ export interface ApiGatewayV2Route {
  */
 export class ApiGatewayV2 extends Component implements Link.Linkable {
   private constructorName: string;
+  private constructorArgs: ApiGatewayV2Args;
   private api: aws.apigatewayv2.Api;
   private apigDomain?: aws.apigatewayv2.DomainName;
   private apiMapping?: Output<aws.apigatewayv2.ApiMapping>;
@@ -401,6 +432,7 @@ export class ApiGatewayV2 extends Component implements Link.Linkable {
     const apiMapping = createDomainMapping();
 
     this.constructorName = name;
+    this.constructorArgs = args;
     this.api = api;
     this.apigDomain = apigDomain;
     this.apiMapping = apiMapping;
@@ -601,9 +633,9 @@ export class ApiGatewayV2 extends Component implements Link.Linkable {
     //       trailing slash, the API fails with the error {"message":"Not Found"}
     return this.apigDomain && this.apiMapping
       ? all([this.apigDomain.domainName, this.apiMapping.apiMappingKey]).apply(
-        ([domain, key]) =>
-          key ? `https://${domain}/${key}/` : `https://${domain}`,
-      )
+          ([domain, key]) =>
+            key ? `https://${domain}/${key}/` : `https://${domain}`,
+        )
       : this.api.apiEndpoint;
   }
 
@@ -616,6 +648,10 @@ export class ApiGatewayV2 extends Component implements Link.Linkable {
        * The Amazon API Gateway HTTP API
        */
       api: this.api,
+      /**
+       * The CloudWatch LogGroup for the access logs.
+       */
+      logGroup: this.logGroup,
     };
   }
 
@@ -708,8 +744,8 @@ export class ApiGatewayV2 extends Component implements Link.Linkable {
     handler: string | FunctionArgs,
     args: ApiGatewayV2RouteArgs = {},
   ): ApiGatewayV2Route {
-    const source = this;
-    const sourceName = this.constructorName;
+    const self = this;
+    const selfName = this.constructorName;
     const routeKey = parseRoute();
 
     // Build route name
@@ -717,11 +753,18 @@ export class ApiGatewayV2 extends Component implements Link.Linkable {
       hashStringToPrettyString([this.api.id, routeKey].join(""), 4),
     );
 
-    const fn = Function.fromDefinition(`${sourceName}Handler${id}`, handler, {
-      description: `${sourceName} route ${routeKey}`,
-    });
+    args = transform(this.constructorArgs.transform?.route?.args, args);
+
+    const fn = Function.fromDefinition(
+      `${selfName}Handler${id}`,
+      handler,
+      {
+        description: `${selfName} route ${routeKey}`,
+      },
+      this.constructorArgs.transform?.route?.handler,
+    );
     const permission = new aws.lambda.Permission(
-      `${sourceName}Handler${id}Permissions`,
+      `${selfName}Handler${id}Permissions`,
       {
         action: "lambda:InvokeFunction",
         function: fn.arn,
@@ -730,7 +773,7 @@ export class ApiGatewayV2 extends Component implements Link.Linkable {
       },
     );
     const integration = new aws.apigatewayv2.Integration(
-      `${sourceName}Integration${id}`,
+      `${selfName}Integration${id}`,
       transform(args.transform?.integration, {
         apiId: this.api.id,
         integrationType: "AWS_PROXY",
@@ -744,7 +787,7 @@ export class ApiGatewayV2 extends Component implements Link.Linkable {
     const apiRoute = authArgs.apply(
       (authArgs) =>
         new aws.apigatewayv2.Route(
-          `${sourceName}Route${id}`,
+          `${selfName}Route${id}`,
           transform(args.transform?.route, {
             apiId: this.api.id,
             routeKey,
@@ -805,11 +848,11 @@ export class ApiGatewayV2 extends Component implements Link.Linkable {
           );
 
           const authorizer =
-            source.authorizers[id] ??
+            self.authorizers[id] ??
             new aws.apigatewayv2.Authorizer(
-              `${sourceName}Authorizer${id}`,
+              `${selfName}Authorizer${id}`,
               transform(args.transform?.authorizer, {
-                apiId: source.api.id,
+                apiId: self.api.id,
                 authorizerType: "JWT",
                 identitySources: [
                   auth.jwt.identitySource ?? "$request.header.Authorization",
@@ -820,7 +863,7 @@ export class ApiGatewayV2 extends Component implements Link.Linkable {
                 },
               }),
             );
-          source.authorizers[id] = authorizer;
+          self.authorizers[id] = authorizer;
 
           return {
             authorizationType: "JWT",

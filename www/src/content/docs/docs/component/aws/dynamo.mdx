@@ -503,6 +503,24 @@ resources.
 Transform the DynamoDB Table resource.
 
 </Segment>
+### ttl?
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+The field of the table to store the Time to Live (TTL) timestamp in. This field should
+be of type `number`. When the TTL timestamp is reached, the item will be deleted.
+
+Learn more about [Time to Live (TTL)](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/TTL.html).
+
+```js
+{
+  ttl: "expireAt",
+}
+```
+</Segment>
 
 ## DynamoSubscribeArgs
 ### filters?
