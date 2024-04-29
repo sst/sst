@@ -252,14 +252,21 @@ export class CognitoUserPool
           adminCreateUserConfig: {
             allowAdminCreateUserOnly: false,
           },
-          autoVerifiedAttributes: output(args.aliases || []).apply(
-            (aliases) => [
-              ...(aliases.includes("email") ? ["email"] : []),
-              ...(aliases.includes("phone") ? ["phoneNumber"] : []),
-            ]
-          ),
           usernameConfiguration: {
             caseSensitive: false,
+          },
+          autoVerifiedAttributes: all([
+            args.aliases || [],
+            args.usernames || [],
+          ]).apply(([aliases, usernames]) => {
+            const attributes = [...aliases, ...usernames];
+            return [
+              ...(attributes.includes("email") ? ["email"] : []),
+              ...(attributes.includes("phone") ? ["phoneNumber"] : []),
+            ];
+          }),
+          emailConfiguration: {
+            emailSendingAccount: "COGNITO_DEFAULT",
           },
           verificationMessageTemplate: {
             defaultEmailOption: "CONFIRM_WITH_CODE",
