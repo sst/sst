@@ -66,7 +66,6 @@ export interface CognitoUserPoolArgs {
     createAuthChallenge?: string | FunctionArgs;
     /**
      * ARN of the custom email sender function.
-     * // TODO V1_0
      */
     customEmailSender?: string | FunctionArgs;
     /**
@@ -178,7 +177,7 @@ export class CognitoUserPool
   constructor(
     name: string,
     args: CognitoUserPoolArgs = {},
-    opts?: ComponentResourceOptions,
+    opts?: ComponentResourceOptions
   ) {
     super(__pulumiType, name, args, opts);
 
@@ -194,7 +193,7 @@ export class CognitoUserPool
       all([args.aliases, args.usernames]).apply(([aliases, usernames]) => {
         if (aliases && usernames) {
           throw new VisibleError(
-            "You cannot set both aliases and usernames. Learn more about customizing sign-in attributes at https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-settings-attributes.html#user-pool-settings-aliases",
+            "You cannot set both aliases and usernames. Learn more about customizing sign-in attributes at https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-settings-attributes.html#user-pool-settings-aliases"
           );
         }
       });
@@ -211,11 +210,11 @@ export class CognitoUserPool
               value,
               {
                 description: `Subscribed to ${trigger} from ${name}`,
-              },
+              }
             );
             return [trigger, fn];
-          }),
-        ),
+          })
+        )
       );
     }
 
@@ -223,19 +222,21 @@ export class CognitoUserPool
       return new aws.cognito.UserPool(
         `${name}UserPool`,
         transform(args.transform?.userPool, {
-          aliasAttributes: output(args.aliases || []).apply((aliases) => [
-            ...(aliases.includes("email") ? ["email"] : []),
-            ...(aliases.includes("phone") ? ["phoneNumber"] : []),
-            ...(aliases.includes("preferred_username")
-              ? ["perferredUsername"]
-              : []),
-          ]),
-          usernameAttributes: output(args.usernames || []).apply(
-            (usernames) => [
+          aliasAttributes:
+            args.aliases &&
+            output(args.aliases).apply((aliases) => [
+              ...(aliases.includes("email") ? ["email"] : []),
+              ...(aliases.includes("phone") ? ["phoneNumber"] : []),
+              ...(aliases.includes("preferred_username")
+                ? ["perferredUsername"]
+                : []),
+            ]),
+          usernameAttributes:
+            args.usernames &&
+            output(args.usernames).apply((usernames) => [
               ...(usernames.includes("email") ? ["email"] : []),
               ...(usernames.includes("phone") ? ["phoneNumber"] : []),
-            ],
-          ),
+            ]),
           accountRecoverySetting: {
             recoveryMechanisms: [
               {
@@ -251,15 +252,21 @@ export class CognitoUserPool
           adminCreateUserConfig: {
             allowAdminCreateUserOnly: false,
           },
-          autoVerifiedAttributes: output(args.aliases || []).apply(
-            (aliases) => [
-              ...(aliases.includes("email") ? ["email"] : []),
-              ...(aliases.includes("phone") ? ["phoneNumber"] : []),
-            ],
-          ),
-          //usernameAttributes: ["email"],
           usernameConfiguration: {
             caseSensitive: false,
+          },
+          autoVerifiedAttributes: all([
+            args.aliases || [],
+            args.usernames || [],
+          ]).apply(([aliases, usernames]) => {
+            const attributes = [...aliases, ...usernames];
+            return [
+              ...(attributes.includes("email") ? ["email"] : []),
+              ...(attributes.includes("phone") ? ["phoneNumber"] : []),
+            ];
+          }),
+          emailConfiguration: {
+            emailSendingAccount: "COGNITO_DEFAULT",
           },
           verificationMessageTemplate: {
             defaultEmailOption: "CONFIRM_WITH_CODE",
@@ -269,7 +276,7 @@ export class CognitoUserPool
           },
           lambdaConfig: triggers,
         }),
-        { parent },
+        { parent }
       );
     }
   }

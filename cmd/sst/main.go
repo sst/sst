@@ -702,7 +702,28 @@ var Root = Command{
 					Name: "load",
 					Description: Description{
 						Short: "Set multiple secrets from file",
-						Long:  strings.Join([]string{}, "\n"),
+						Long: strings.Join([]string{
+							"Load all the secrets from a file and set them.",
+							"",
+							"```bash frame=\"none\"",
+							"sst secret load ./secrets.env",
+							"```",
+							"",
+							"The file needs to be in the _dotenv_ or bash format of key-value pairs.",
+							"",
+							"```sh title=\"secrets.env\"",
+							"KEY_1=VALUE1",
+							"KEY_2=VALUE2",
+							"```",
+							"",
+							"Optionally, set the secrets in a specific stage.",
+							"",
+							"```bash frame=\"none\"",
+							"sst secret load ./prod.env --stage=production",
+							"```",
+							"",
+							"",
+						}, "\n"),
 					},
 					Args: []Argument{
 						{
@@ -710,7 +731,7 @@ var Root = Command{
 							Required: true,
 							Description: Description{
 								Short: "The file to load secrets from",
-								Long:  "The file to load secrets from",
+								Long:  "The file to load the secrets from.",
 							},
 						},
 					},
