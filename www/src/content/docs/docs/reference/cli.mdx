@@ -391,9 +391,28 @@ sst secret load <file>
 <Section type="parameters">
 #### Args
 - <p><code class="key">file</code></p>
-The file to load secrets from
+The file to load the secrets from.
 </Section>
-Set multiple secrets from file
+Load all the secrets from a file and set them.
+
+```bash frame="none"
+sst secret load ./secrets.env
+```
+
+The file needs to be in the _dotenv_ or bash format of key-value pairs.
+
+```sh title="secrets.env"
+KEY_1=VALUE1
+KEY_2=VALUE2
+```
+
+Optionally, set it in a specific stage.
+
+```bash frame="none"
+sst secret load ./prod.env --stage=production
+```
+
+
 </Segment>
 <NestedTitle id="secret-remove" Tag="h4" parent="secret ">remove</NestedTitle>
 <Segment>
