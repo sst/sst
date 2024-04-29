@@ -66,7 +66,6 @@ export interface CognitoUserPoolArgs {
     createAuthChallenge?: string | FunctionArgs;
     /**
      * ARN of the custom email sender function.
-     * // TODO V1_0
      */
     customEmailSender?: string | FunctionArgs;
     /**
@@ -257,7 +256,6 @@ export class CognitoUserPool
               ...(aliases.includes("phone") ? ["phoneNumber"] : []),
             ],
           ),
-          //usernameAttributes: ["email"],
           usernameConfiguration: {
             caseSensitive: false,
           },
