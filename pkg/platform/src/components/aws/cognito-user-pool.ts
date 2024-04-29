@@ -177,7 +177,7 @@ export class CognitoUserPool
   constructor(
     name: string,
     args: CognitoUserPoolArgs = {},
-    opts?: ComponentResourceOptions,
+    opts?: ComponentResourceOptions
   ) {
     super(__pulumiType, name, args, opts);
 
@@ -193,7 +193,7 @@ export class CognitoUserPool
       all([args.aliases, args.usernames]).apply(([aliases, usernames]) => {
         if (aliases && usernames) {
           throw new VisibleError(
-            "You cannot set both aliases and usernames. Learn more about customizing sign-in attributes at https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-settings-attributes.html#user-pool-settings-aliases",
+            "You cannot set both aliases and usernames. Learn more about customizing sign-in attributes at https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-settings-attributes.html#user-pool-settings-aliases"
           );
         }
       });
@@ -210,11 +210,11 @@ export class CognitoUserPool
               value,
               {
                 description: `Subscribed to ${trigger} from ${name}`,
-              },
+              }
             );
             return [trigger, fn];
-          }),
-        ),
+          })
+        )
       );
     }
 
@@ -222,19 +222,21 @@ export class CognitoUserPool
       return new aws.cognito.UserPool(
         `${name}UserPool`,
         transform(args.transform?.userPool, {
-          aliasAttributes: output(args.aliases || []).apply((aliases) => [
-            ...(aliases.includes("email") ? ["email"] : []),
-            ...(aliases.includes("phone") ? ["phoneNumber"] : []),
-            ...(aliases.includes("preferred_username")
-              ? ["perferredUsername"]
-              : []),
-          ]),
-          usernameAttributes: output(args.usernames || []).apply(
-            (usernames) => [
+          aliasAttributes:
+            args.aliases &&
+            output(args.aliases).apply((aliases) => [
+              ...(aliases.includes("email") ? ["email"] : []),
+              ...(aliases.includes("phone") ? ["phoneNumber"] : []),
+              ...(aliases.includes("preferred_username")
+                ? ["perferredUsername"]
+                : []),
+            ]),
+          usernameAttributes:
+            args.usernames &&
+            output(args.usernames).apply((usernames) => [
               ...(usernames.includes("email") ? ["email"] : []),
               ...(usernames.includes("phone") ? ["phoneNumber"] : []),
-            ],
-          ),
+            ]),
           accountRecoverySetting: {
             recoveryMechanisms: [
               {
@@ -254,7 +256,7 @@ export class CognitoUserPool
             (aliases) => [
               ...(aliases.includes("email") ? ["email"] : []),
               ...(aliases.includes("phone") ? ["phoneNumber"] : []),
-            ],
+            ]
           ),
           usernameConfiguration: {
             caseSensitive: false,
@@ -267,7 +269,7 @@ export class CognitoUserPool
           },
           lambdaConfig: triggers,
         }),
-        { parent },
+        { parent }
       );
     }
   }
