@@ -309,7 +309,7 @@ var Root = Command{
 				Long: strings.Join([]string{
 					"Initialize a new project in the current directory. This will create a `sst.config.ts` and `sst install` your providers.",
 					"",
-					"If this is run in a Next.js, Remix, or Astro project, it'll init SST in drop-in mode.",
+					"If this is run in a Next.js, Remix, Astro, or SvelteKit project, it'll init SST in drop-in mode.",
 				}, "\n"),
 			},
 			Run: CmdInit,

@@ -56,6 +56,7 @@ const sidebar = [
       { label: "SnsTopic", link: "/docs/component/aws/sns-topic/" },
       { label: "Function", link: "/docs/component/aws/function/" },
       { label: "Postgres", link: "/docs/component/aws/postgres/" },
+      { label: "SvelteKit", link: "/docs/component/aws/svelte-kit/" },
       { label: "StaticSite", link: "/docs/component/aws/static-site/" },
       { label: "SolidStart", link: "/docs/component/aws/solid-start/" },
       {

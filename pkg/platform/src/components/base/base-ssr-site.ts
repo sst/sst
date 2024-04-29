@@ -177,6 +177,7 @@ export function buildApp(
             stdio: "inherit",
             env: {
               ...process.env,
+              SST: "1",
               AWS_ACCESS_KEY_ID: process.env.SST_AWS_ACCESS_KEY_ID,
               AWS_SESSION_TOKEN: process.env.SST_AWS_SESSION_TOKEN,
               AWS_SECRET_ACCESS_KEY: process.env.SST_AWS_SECRET_ACCESS_KEY,

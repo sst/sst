@@ -77,6 +77,14 @@ func CmdInit(cli *Cli) error {
 		template = "astro"
 		break
 
+	case slices.ContainsFunc(hints, func(s string) bool { return strings.HasPrefix(s, "svelte.config") }):
+		fmt.Println("  SvelteKit detected. This will...")
+		fmt.Println("   - create an sst.config.ts")
+		fmt.Println("   - modify the svelte.config.js")
+		fmt.Println("   - add the sst sdk to package.json")
+		template = "svelte-kit"
+		break
+
 	case slices.ContainsFunc(hints, func(s string) bool {
 		return strings.HasPrefix(s, "remix.config") ||
 			(strings.HasPrefix(s, "vite.config") && fileContains(s, "@remix-run/dev"))

@@ -1430,6 +1430,7 @@ async function buildComponents() {
       "../pkg/platform/src/components/aws/sns-topic.ts",
       "../pkg/platform/src/components/aws/solid-start.ts",
       "../pkg/platform/src/components/aws/static-site.ts",
+      "../pkg/platform/src/components/aws/svelte-kit.ts",
       "../pkg/platform/src/components/aws/vpc.ts",
       "../pkg/platform/src/components/cloudflare/worker.ts",
       "../pkg/platform/src/components/cloudflare/bucket.ts",
