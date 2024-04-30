@@ -17,9 +17,9 @@ export type Router = typeof router;
 export default {
   async fetch(request: Request): Promise<Response> {
     return fetchRequestHandler({
+      router,
       req: request,
       endpoint: "/",
-      router,
       createContext: (opts) => opts,
     });
   },

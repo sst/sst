@@ -22,6 +22,7 @@ const sidebar = [
       {
         label: "Cloudflare",
         items: [
+          { label: "tRPC", link: "/docs/start/cloudflare/trpc/" },
           { label: "Hono", link: "/docs/start/cloudflare/hono/" },
           { label: "Worker", link: "/docs/start/cloudflare/worker/" },
         ],

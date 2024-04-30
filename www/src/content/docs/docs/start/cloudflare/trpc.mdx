@@ -1,0 +1,205 @@
+---
+title: tRPC on Cloudflare with SST
+description: Create and deploy a tRPC API in Cloudflare with SST.
+---
+
+We are going to build a [tRPC](https://trpc.io) API, a simple client, and deploy it to Cloudflare using SST.
+
+:::tip[View source]
+You can [view the source](https://github.com/sst/ion/tree/dev/examples/cloudflare-trpc) of this example in our repo.
+:::
+
+Before you get started:
+
+1. [Create your Cloudflare API token](https://developers.cloudflare.com/fundamentals/api/get-started/create-token/)
+2. [Install the SST CLI](/docs/reference/cli)
+
+---
+
+## 1. Create a project
+
+Let's start by creating our app.
+
+```bash
+mkdir my-trpc-app && cd my-trpc-app
+npm init -y
+```
+
+#### Init SST
+
+Now let's initialize SST in our app. Make sure you have the [CLI installed](/docs/reference/cli/).
+
+```bash
+sst init
+```
+
+This'll create a `sst.config.ts` file in your project root.
+
+#### Set the Cloudflare API token
+
+You can save your Cloudflare API token in a `.env` file or just set it directly.
+
+```bash
+export CLOUDFLARE_API_TOKEN=aaaaaaaa_aaaaaaaaaaaa_aaaaaaaa
+```
+
+---
+
+## 2. Add the API
+
+Let's add two Workers; one for our tRPC server and one that'll be our client. Update your `sst.config.ts`.
+
+```js title="sst.config.ts" {9}
+async run() {
+  const trpc = new sst.cloudflare.Worker("Trpc", {
+    url: true,
+    handler: "index.ts",
+  });
+
+  const client = new sst.cloudflare.Worker("Client", {
+    url: true,
+    link: [trpc],
+    handler: "client.ts",
+  });
+
+  return {
+    api: trpc.url,
+    client: client.url,
+  };
+}
+```
+
+We are linking the server to our client. This will allow us to access the server in our client.
+
+---
+
+## 3. Create the server
+
+Let's create our tRPC server. Add the following to `index.ts`.
+
+```ts title="index.ts"
+const t = initTRPC.context().create();
+
+const router = t.router({
+  greet: t.procedure
+    .input(z.object({ name: z.string() }))
+    .query(({ input }) => {
+      return `Hello ${input.name}!`;
+    }),
+});
+
+export type Router = typeof router;
+
+export default {
+  async fetch(request: Request): Promise<Response> {
+    return fetchRequestHandler({
+      router,
+      req: request,
+      endpoint: "/",
+      createContext: (opts) => opts,
+    });
+  },
+};
+```
+
+We are creating a simple method called `greet` that takes a _string_ as an input.
+
+Add the relevant imports.
+
+```ts title="index.ts"
+import { z } from "zod";
+import { initTRPC } from "@trpc/server";
+import { fetchRequestHandler } from "@trpc/server/adapters/fetch";
+```
+
+And install the npm packages.
+
+```bash
+npm install zod @trpc/server@next
+```
+
+---
+
+## 4. Add the client
+
+Now we'll connect to our server in our client. Add the following to `client.ts`.
+
+```ts title="client.ts" {8}
+export default {
+  async fetch() {
+    const client = createTRPCClient<Router>({
+      links: [
+        httpBatchLink({
+          url: "http://localhost/",
+          fetch(req) {
+            return Resource.Trpc.fetch(req);
+          },
+        }),
+      ],
+    });
+    return new Response(
+      await client.greet.query({
+        name: "Patrick Star",
+      }),
+    );
+  },
+};
+```
+
+:::tip
+We are accessing our server with `Resource.Trpc.fetch()`.
+:::
+
+Add the imports. Notice we are importing the _types_ for our API.
+
+```ts title="index.ts" {2}
+import { Resource } from "sst";
+import type { Router } from "./index";
+import { createTRPCClient, httpBatchLink } from "@trpc/client";
+```
+
+Install the client npm package.
+
+```bash
+npm install @trpc/client@next
+```
+
+---
+
+#### Start dev mode
+
+Start your app in dev mode.
+
+```bash
+sst dev
+```
+
+This will give you two URLs.
+
+```bash frame="none"
+✔  Complete
+   api: https://my-trpc-app-jayair-trpcscript.sst-15d.workers.dev
+   client: https://my-trpc-app-jayair-clientscript.sst-15d.workers.dev
+```
+
+---
+
+#### Test your app
+
+To test our app, hit the client URL.
+
+```bash
+curl https://my-trpc-app-jayair-clientscript.sst-15d.workers.dev
+```
+
+This will print out `Hello Patrick Star!`.
+
+---
+
+## 5. Deploy your app
+
+Now let's deploy your app.
+
+```bash
+sst deploy
+```
