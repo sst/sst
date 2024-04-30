@@ -95,6 +95,9 @@ export const useRustHandler = (): RuntimeHandler => {
               "build",
               "--release",
               ...(input.props.architecture === "arm_64" ? ["--arm64"] : []),
+              // Explicitly target glibc 2.26 for Amazon Linux 2
+              // https://repost.aws/questions/QUrXOioL46RcCnFGyELJWKLw/glibc-2-27-on-amazon-linux-2
+              `--target ${input.props.architecture === "arm_64" ? "aarch64" : "x86_64"}-unknown-linux-gnu.2.26`,
               `--bin ${parsed.name}`,
             ].join(" "),
             {
