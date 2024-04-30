@@ -117,6 +117,7 @@ func (p *Project) writeTypes() error {
 	defer file.Close()
 
 	file.WriteString(`import "./src/global.d.ts"` + "\n")
+	file.WriteString(`import "../sst-env"` + "\n")
 	file.WriteString(`import { AppInput, App, Config } from "./src/config"` + "\n")
 
 	for raw := range p.app.Providers {

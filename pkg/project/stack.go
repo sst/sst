@@ -433,11 +433,11 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 				if len(receiver.Links) == 0 {
 					continue
 				}
-				typesPath, err := fs.FindUp(receiver.Directory, "tsconfig.json")
+				typesPath, err := fs.FindUp(filepath.Join(s.project.PathRoot(), receiver.Directory), "tsconfig.json")
 				if err != nil {
 					continue
 				}
-				dir, _ := filepath.Abs(filepath.Dir(typesPath))
+				dir := filepath.Join(filepath.Dir(typesPath), "sst-env.d.ts")
 				links, ok := types[dir]
 				if !ok {
 					links = map[string]interface{}{}
@@ -452,8 +452,21 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 				}
 			}
 
+			globalTypes := map[string]interface{}{}
+			for _, links := range types {
+				for key, value := range links {
+					globalTypes[key] = value
+				}
+			}
+			types[filepath.Join(s.project.PathWorkingDir(), "sst-env.d.ts")] = globalTypes
+
 			for path, links := range types {
-				typesFile, _ := os.Create(filepath.Join(path, "sst-env.d.ts"))
+				slog.Info("generating types", "path", path, "count", len(links))
+				typesFile, err := os.Create(path)
+				if err != nil {
+					slog.Error("failed to create types file", "path", path, "err", err)
+					continue
+				}
 				defer typesFile.Close()
 				typesFile.WriteString(`import "sst"` + "\n")
 				typesFile.WriteString(`declare module "sst" {` + "\n")
