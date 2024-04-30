@@ -24,6 +24,7 @@ func getProviderPackage(name string) string {
 func cleanProviderName(name string) string {
 	result := regexp.MustCompile("[^a-zA-Z0-9]+").ReplaceAllString(name, "")
 	result = strings.ReplaceAll(result, "pulumi", "")
+	result = strings.ReplaceAll(result, "sstprovider", "")
 	return result
 }
 
