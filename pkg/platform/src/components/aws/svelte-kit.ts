@@ -391,6 +391,7 @@ export class SvelteKit extends Component implements Link.Linkable {
       const assetsPath = ".svelte-kit/svelte-kit-sst/client";
       return outputPath.apply((outputPath) => ({
         serverPath: ".svelte-kit/svelte-kit-sst/server",
+        serverFiles: ".svelte-kit/svelte-kit-sst/prerendered",
         prerenderedPath: ".svelte-kit/svelte-kit-sst/prerendered",
         assetsPath,
         assetsVersionedSubDir: "_app",
@@ -408,7 +409,8 @@ export class SvelteKit extends Component implements Link.Linkable {
     function loadBuildMetadataPlaceholder() {
       return {
         serverPath: ".svelte-kit/svelte-kit-sst/server",
-        prerenderedPath: ".svelte-kit/svelte-kit-sst/prerendered",
+        serverFiles: undefined,
+        prerenderedPath: "placeholder",
         assetsPath: "placeholder",
         assetsVersionedSubDir: undefined,
         staticRoutes: ["_app/*", "favicon.png"],
@@ -436,12 +438,14 @@ export class SvelteKit extends Component implements Link.Linkable {
                 },
               },
             },
-            copyFiles: [
-              {
-                from: path.join(outputPath, buildMeta.prerenderedPath),
-                to: "prerendered",
-              },
-            ],
+            copyFiles: buildMeta.serverFiles
+              ? [
+                  {
+                    from: path.join(outputPath, buildMeta.serverFiles),
+                    to: "prerendered",
+                  },
+                ]
+              : undefined,
           };
 
           return validatePlan({
