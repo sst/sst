@@ -1,6 +1,7 @@
 package project
 
 import (
+	"sort"
 	"strings"
 )
 
@@ -16,7 +17,13 @@ func inferTypes(input map[string]interface{}, indentArgs ...string) string {
 	var builder strings.Builder
 	builder.WriteString("{")
 	builder.WriteString("\n")
-	for key, value := range input {
+	keys := make([]string, 0, len(input))
+	for key := range input {
+		keys = append(keys, key)
+	}
+	sort.Strings(keys)
+	for _, key := range keys {
+		value := input[key]
 		builder.WriteString(indent + "  " + key + ": ")
 		if key == "type" && len(indentArgs) == 1 {
 			builder.WriteString("\"")
