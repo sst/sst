@@ -458,7 +458,7 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 					globalTypes[key] = value
 				}
 			}
-			types[filepath.Join(s.project.PathWorkingDir(), "sst-env.d.ts")] = globalTypes
+			types[filepath.Join(s.project.PathWorkingDir(), "types.generated.ts")] = globalTypes
 
 			for path, links := range types {
 				slog.Info("generating types", "path", path, "count", len(links))
