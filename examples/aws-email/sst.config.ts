@@ -9,18 +9,18 @@ export default $config({
     };
   },
   async run() {
-    const address = new sst.aws.Email("EmailAddress", {
-      sender: "frank@sst.dev",
+    const email = new sst.aws.Email("MyEmail", {
+      sender: "email@example.com",
     });
 
-    const fn = new sst.aws.Function("MyApp", {
+    const api = new sst.aws.Function("MyApi", {
       handler: "sender.handler",
-      link: [address],
+      link: [email],
       url: true,
     });
 
     return {
-      url: fn.url,
+      url: api.url,
     };
   },
 });

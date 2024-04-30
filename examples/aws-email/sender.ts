@@ -1,22 +1,23 @@
 import { Resource } from "sst";
 import { SESv2Client, SendEmailCommand } from "@aws-sdk/client-sesv2";
+
 const client = new SESv2Client();
 
 export const handler = async () => {
   await client.send(
     new SendEmailCommand({
-      FromEmailAddress: Resource.EmailAddress.sender,
+      FromEmailAddress: Resource.MyEmail.sender,
       Destination: {
-        ToAddresses: [Resource.EmailAddress.sender],
+        ToAddresses: [Resource.MyEmail.sender],
       },
       Content: {
         Simple: {
           Subject: {
-            Data: "Hello, world!",
+            Data: "Hello World!",
           },
           Body: {
             Text: {
-              Data: "This is the message body.",
+              Data: "Sent from my SST app.",
             },
           },
         },
@@ -26,7 +27,6 @@ export const handler = async () => {
 
   return {
     statusCode: 200,
-
-    body: JSON.stringify({ status: "sent" }, null, 2),
+    body: "Sent!"
   };
 };

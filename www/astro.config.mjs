@@ -16,6 +16,7 @@ const sidebar = [
       { label: "tRPC", link: "/docs/start/aws/trpc/" },
       { label: "Hono", link: "/docs/start/aws/hono/" },
       { label: "Astro", link: "/docs/start/aws/astro/" },
+      { label: "Email", link: "/docs/start/aws/email/" },
       { label: "Remix", link: "/docs/start/aws/remix/" },
       { label: "Next.js", link: "/docs/start/aws/nextjs/" },
       { label: "Container", link: "/docs/start/aws/container/" },
