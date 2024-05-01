@@ -169,7 +169,7 @@ func CmdDev(cli *Cli) error {
 		Stage:   stage,
 		Verbose: cli.Bool("verbose"),
 		OnEvent: func(event server.Event) {
-			if !silent {
+			if !silent || !runOnce {
 				defer u.StackEvent(&event.StackEvent)
 				defer u.Event(&event)
 				if event.StackEvent.PreludeEvent != nil {
