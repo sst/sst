@@ -202,7 +202,7 @@ console.log("~j" + JSON.stringify(mod.app({
 					return nil, ErrVersionInvalid
 				}
 				if !constraint.Check(version) {
-					return nil, fmt.Errorf("%wThe version of sst you are using (%s) does not match %s", ErrVersionMismatch, input.Version, proj.app.Version)
+					return nil, fmt.Errorf("%wYou are using sst v%s whcih does not match %s as specified in sst.config.ts. Use sst upgrade <version> to change versions.", ErrVersionMismatch, input.Version, proj.app.Version)
 				}
 			}
 
