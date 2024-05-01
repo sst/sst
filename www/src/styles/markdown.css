@@ -183,11 +183,10 @@
   --ec-tm-insBg: #1E561572;
   --ec-tm-delBg: #862D2766;
 }
-.sl-markdown-content .expressive-code .ec-line.mark,
-.sl-markdown-content .expressive-code .ec-line.ins,
-.sl-markdown-content .expressive-code .ec-line.del {
+.sl-markdown-content .expressive-code .ec-line.mark > .code,
+.sl-markdown-content .expressive-code .ec-line.ins > .code,
+.sl-markdown-content .expressive-code .ec-line.del > .code {
   border-inline-start: none;
-  padding-inline: var(--ec-codePadInl) !important;
 }
 .sl-markdown-content .expressive-code .ec-line mark:before,
 .sl-markdown-content .expressive-code .ec-line ins:before,
@@ -229,7 +228,7 @@
   font-size: var(--sl-text-code-sm);
   padding-block-end: 0.375rem;
 }
-.sl-markdown-content .tab > [role='tab'][aria-selected] {
+.sl-markdown-content .tab > [role='tab'][aria-selected='true'] {
   color: var(--sl-color-white);
   border-color: var(--sl-color-text-accent);
 }

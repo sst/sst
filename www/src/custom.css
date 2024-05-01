@@ -269,7 +269,6 @@ body > .page > nav starlight-menu-button button {
 nav.sidebar .sidebar-pane {
   border-color: var(--sl-color-hairline);
   padding-top: 0;
-  margin-top: var(--sl-nav-height);
 }
 nav.sidebar .sidebar-pane > .sidebar-content {
   -ms-overflow-style: none;

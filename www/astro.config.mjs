@@ -148,6 +148,9 @@ export default defineConfig({
   server: {
     host: "0.0.0.0",
   },
+  devToolbar: {
+    enabled: false,
+  }, 
   redirects: {
     "/install": "https://raw.githubusercontent.com/sst/ion/dev/install",
   },
