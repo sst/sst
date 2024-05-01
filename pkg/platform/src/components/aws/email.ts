@@ -151,7 +151,7 @@ export class Email
 
     function normalizeDns() {
       all([args.dns, isDomain]).apply(([dns, isDomain]) => {
-        if (isDomain && dns)
+        if (dns && !isDomain)
           throw new Error(
             `The "dns" property is only valid when "sender" is a domain.`,
           );
