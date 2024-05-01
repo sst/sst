@@ -162,7 +162,7 @@ sst init
 </Section>
 Initialize a new project in the current directory. This will create a `sst.config.ts` and `sst install` your providers.
 
-If this is run in a Next.js, Remix, or Astro project, it'll init SST in drop-in mode.
+If this is run in a Next.js, Remix, Astro, or SvelteKit project, it'll init SST in drop-in mode.
 </Segment>
 
 ### dev
@@ -177,6 +177,12 @@ sst dev [command]
 #### Args
 - <p><code class="key">command?</code></p>
 The command to run
+</Section>
+
+<Section type="parameters">
+#### Flags
+- <p><code class="key">silent</code> <code class="primitive">boolean</code></p>
+Do not output function invocation logs
 </Section>
 Run your app in development mode. Optionally, pass in a command to start your frontend as well.
 
@@ -406,7 +412,7 @@ KEY_1=VALUE1
 KEY_2=VALUE2
 ```
 
-Optionally, set it in a specific stage.
+Optionally, set the secrets in a specific stage.
 
 ```bash frame="none"
 sst secret load ./prod.env --stage=production
