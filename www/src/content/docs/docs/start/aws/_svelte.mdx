@@ -3,6 +3,16 @@ title: Next.js on AWS with SST
 description: Create and deploy a Next.js app to AWS with SST and OpenNext.
 ---
 
+```
+# Pick sekelton app with TypeScript
+npm create svelte@latest my-svelte-app
+cd my-svelte-app
+npm install
+
+sst init
+npm run dev
+```
+
 We are going to create a Next.js app, add an S3 Bucket for file uploads, and deploy it to AWS using SST.
 
 :::tip[View source]
@@ -22,7 +32,7 @@ Let's start by creating our app.
 
 ```bash
 npx create-next-app@latest
-cd aws-nextjs
+cd start-nextjs
 ```
 
 #### Init SST
@@ -212,3 +222,4 @@ As a next step, you can manage your app and view issues in the [SST Console](/do
 ![Issues in Next.js app in SST Console](../../../../../assets/docs/start/issues-in-nextjs-app-in-the-sst-console.png)
 
 You can [create a free account](https://console.sst.dev) and connect it to your AWS account.
+
