@@ -8,8 +8,8 @@
   },
   "dependencies": {
     "@aws-sdk/client-rds-data": "^3.564.0",
-    "drizzle-kit": "0.20.17-679add7",
-    "drizzle-orm": "^0.30.9",
+    "drizzle-kit": "0.20.17-e38e63d",
+    "drizzle-orm": "^0.30.10",
     "sst": "^3.0.4"
   }
 }
