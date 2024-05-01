@@ -328,7 +328,7 @@ export class Bucket
     // (ie. bucket.name). Also, a bucket can only have one policy. We want to ensure
     // the policy created here is created first. And SST will throw an error if
     // another policy is created after this one.
-    this.bucket = policy.apply(() => bucket);
+    this.bucket = policy.policy.apply(() => bucket);
 
     function createBucket() {
       const input = transform(args?.transform?.bucket, {
