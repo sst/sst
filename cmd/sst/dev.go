@@ -163,12 +163,13 @@ func CmdDev(cli *Cli) error {
 	// fmt.Print("\033[H\033[2J")
 	u := ui.New(ui.ProgressModeDev)
 	defer u.Destroy()
+	silent := cli.Bool("silent")
 	err = server.Connect(cli.Context, server.ConnectInput{
 		CfgPath: cfgPath,
 		Stage:   stage,
 		Verbose: cli.Bool("verbose"),
 		OnEvent: func(event server.Event) {
-			if !hasTarget || !runOnce || true {
+			if !silent {
 				defer u.StackEvent(&event.StackEvent)
 				defer u.Event(&event)
 				if event.StackEvent.PreludeEvent != nil {

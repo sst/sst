@@ -369,6 +369,16 @@ var Root = Command{
 					"This is different from SST v2, in that you needed to run `sst dev` and `sst bind` for your frontend.",
 				}, "\n"),
 			},
+			Flags: []Flag{
+				{
+					Name: "silent",
+					Type: "bool",
+					Description: Description{
+						Short: "Do not output function invocation logs",
+						Long:  "Do not output function invocation logs",
+					},
+				},
+			},
 			Args: []Argument{
 				{
 					Name: "command",
