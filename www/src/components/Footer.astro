@@ -76,32 +76,41 @@ else if (slug === "docs/examples") {
     margin-top: 3rem;
     border-top: 1px solid var(--divider-color);
   }
-	.meta {
-		gap: 0.75rem 3rem;
-		justify-content: space-between;
-		flex-wrap: wrap;
-		margin-block: 3rem 1.5rem;
-		font-size: var(--sl-text-sm);
-	}
+  .meta {
+    gap: 0.75rem 3rem;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    margin-block: 3rem 1.5rem;
+    font-size: var(--sl-text-sm);
+  }
+  @media (min-width: 30rem) {
+    .meta {
+      flex-direction: row;
+    }
+  }
   a, p {
     padding-block: 0.125rem;
   }
-	a {
-		gap: 0.4375rem;
-		align-items: center;
-		text-decoration: none;
-		color: var(--color-text);
+  a {
+    gap: 0.4375rem;
+    align-items: center;
+    text-decoration: none;
+    color: var(--color-text);
     font-size: var(--sl-text-sm);
-	}
-	a svg {
+  }
+  a svg {
     opacity: var(--icon-opacity);
   }
-	a:hover {
+  a:hover {
     color: var(--sl-color-text-accent);
-	}
+  }
   p {
-    text-align: right;
     color: var(--color-text-dimmed);
+  }
+  @media (min-width: 30rem) {
+    p {
+      text-align: right;
+    }
   }
   p a {
     color: var(--color-text-dimmed);
