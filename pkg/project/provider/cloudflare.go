@@ -3,6 +3,7 @@ package provider
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"io"
 	"log/slog"
 	"net/http"
@@ -28,6 +29,8 @@ type bootstrap struct {
 func (c CloudflareProvider) Api() *cloudflare.API {
 	return c.api
 }
+
+var ErrCloudflareMissingAccount = fmt.Errorf("missing account")
 
 func (c *CloudflareProvider) Init(app, stage string, args map[string]interface{}) error {
 	apiToken := os.Getenv("CLOUDFLARE_API_TOKEN")
@@ -58,6 +61,9 @@ func (c *CloudflareProvider) Init(app, stage string, args map[string]interface{}
 		accounts, _, err := c.api.Accounts(context.Background(), cloudflare.AccountsListParams{})
 		if err != nil {
 			return err
+		}
+		if len(accounts) == 0 {
+
 		}
 		accountID = accounts[0].ID
 	}
