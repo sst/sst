@@ -13,6 +13,7 @@ import (
 	"syscall"
 	"time"
 
+	awssdk "github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/sts"
 	"github.com/sst/ion/pkg/project"
 	"github.com/sst/ion/pkg/project/provider"
@@ -215,6 +216,7 @@ func (s *Server) Start(parentContext context.Context) error {
 		result, err := stsClient.AssumeRole(r.Context(), &sts.AssumeRoleInput{
 			RoleArn:         &receiver.AwsRole,
 			RoleSessionName: &sessionName,
+			DurationSeconds: awssdk.Int32(43200),
 		})
 		if err != nil {
 			slog.Info("error assuming role", "err", err.Error())
