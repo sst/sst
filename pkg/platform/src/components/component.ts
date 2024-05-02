@@ -136,6 +136,9 @@ export class Component extends ComponentResource {
                 ),
               };
               break;
+            case "aws:appsync/graphQLApi:GraphQLApi":
+              overrides = { name: prefixName(65536, args.name) };
+              break;
             case "cloudflare:index/d1Database:D1Database":
             case "cloudflare:index/r2Bucket:R2Bucket":
             case "cloudflare:index/workerScript:WorkerScript":
@@ -149,6 +152,9 @@ export class Component extends ComponentResource {
               };
               break;
             // resources manually named
+            case "aws:appsync/dataSource:DataSource":
+            case "aws:appsync/function:Function":
+            case "aws:appsync/resolver:Resolver":
             case "aws:cognito/identityPool:IdentityPool":
             case "aws:ecs/service:Service":
             case "aws:ecs/taskDefinition:TaskDefinition":
@@ -156,14 +162,16 @@ export class Component extends ComponentResource {
             case "aws:s3/bucketV2:BucketV2":
               break;
             // resources not prefixed
+            case "aws:acm/certificate:Certificate":
+            case "aws:acm/certificateValidation:CertificateValidation":
             case "aws:apigatewayv2/apiMapping:ApiMapping":
             case "aws:apigatewayv2/domainName:DomainName":
             case "aws:apigatewayv2/integration:Integration":
             case "aws:apigatewayv2/route:Route":
             case "aws:apigatewayv2/stage:Stage":
             case "aws:appautoscaling/target:Target":
-            case "aws:acm/certificate:Certificate":
-            case "aws:acm/certificateValidation:CertificateValidation":
+            case "aws:appsync/domainName:DomainName":
+            case "aws:appsync/domainNameApiAssociation:DomainNameApiAssociation":
             case "aws:ec2/routeTableAssociation:RouteTableAssociation":
             case "aws:iam/accessKey:AccessKey":
             case "aws:iam/policy:Policy":

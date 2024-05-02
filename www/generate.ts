@@ -1093,6 +1093,9 @@ async function generateComponentsDoc() {
       }
       // types in different doc
       const externalModule = {
+        AppSyncDataSource: "app-sync-data-source",
+        AppSyncFunction: "app-sync-function",
+        AppSyncResolver: "app-sync-resolver",
         Bucket: "bucket",
         BucketArgs: "bucket",
         Cdn: "cdn",
@@ -1410,6 +1413,10 @@ async function buildComponents() {
       "../pkg/platform/src/global-config.d.ts",
       "../pkg/platform/src/components/secret.ts",
       "../pkg/platform/src/components/aws/apigatewayv2.ts",
+      "../pkg/platform/src/components/aws/app-sync.ts",
+      "../pkg/platform/src/components/aws/app-sync-data-source.ts",
+      "../pkg/platform/src/components/aws/app-sync-function.ts",
+      "../pkg/platform/src/components/aws/app-sync-resolver.ts",
       "../pkg/platform/src/components/aws/bucket.ts",
       "../pkg/platform/src/components/aws/cluster.ts",
       "../pkg/platform/src/components/aws/cognito-identity-pool.ts",

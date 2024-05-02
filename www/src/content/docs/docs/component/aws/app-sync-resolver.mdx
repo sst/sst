@@ -1,0 +1,223 @@
+---
+title: AppSyncResolver
+description: Reference doc for the `sst.aws.AppSyncResolver` component.
+---
+
+{/* DO NOT EDIT. AUTO-GENERATED FROM "pkg/platform/src/components/aws/app-sync-resolver.ts" */}
+
+import Segment from '../../../../../../src/components/tsdoc/Segment.astro';
+import Section from '../../../../../../src/components/tsdoc/Section.astro';
+import NestedTitle from '../../../../../../src/components/tsdoc/NestedTitle.astro';
+import InlineSection from '../../../../../../src/components/tsdoc/InlineSection.astro';
+
+<div class="tsdoc">
+
+<Section type="about">
+The `AppSyncResolver` component is internally used by the `AppSync` component to add
+resolvers to [AWS AppSync](https://docs.aws.amazon.com/appsync/latest/devguide/what-is-appsync.html).
+
+:::caution
+This component is not intended for public use.
+:::
+
+You'll find this component returned by the `addResolver` method of the `AppSync` component.
+</Section>
+
+---
+
+## Constructor
+
+<Segment>
+<Section type="signature">
+```ts
+new AppSyncResolver(name, args, opts?)
+```
+</Section>
+
+<Section type="parameters">
+#### Parameters
+- <p><code class="key">name</code> <code class="primitive">string</code></p>
+- <p><code class="key">args</code> [<code class="type">ResolverArgs</code>](#resolverargs)</p>
+- <p><code class="key">opts?</code> [<code class="type">ComponentResourceOptions</code>](https://www.pulumi.com/docs/concepts/options/)</p>
+</Section>
+</Segment>
+
+## Properties
+
+### nodes
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Object</code>
+</InlineSection>
+- <p>[<code class="key">resolver</code>](#nodes-resolver)</p>
+</Section>
+The underlying [resources](/docs/components/#nodes) this component creates.
+</Segment>
+<NestedTitle id="nodes-resolver" Tag="h4" parent="nodes.">resolver</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** [<code class="type">Resolver</code>](https://www.pulumi.com/registry/packages/aws/api-docs/appsync/resolver/)
+</InlineSection>
+</Section>
+The Amazon AppSync Resolver.
+</Segment>
+
+## ResolverArgs
+### apiId
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+The AppSync GraphQL API ID.
+
+</Segment>
+### code?
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+The function code that contains the request and response functions.
+
+```js
+{
+  code: fs.readFileSync("functions.js")
+}
+```
+</Segment>
+### dataSource?
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+The data source this resolver is using. This only applies for "unit" resolvers.
+
+```js
+{
+  dataSource: "lambdaDS"
+}
+```
+</Segment>
+### field
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+The field name from the schema defined.
+
+</Segment>
+### functions?
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">[]</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+The functions this resolver is using. This only applies for "pipeline" resolvers.
+
+```js
+{
+ functions: ["myFunction1", "myFunction2"]
+}
+```
+</Segment>
+### kind?
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="symbol">&ldquo;</code><code class="primitive">unit</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">pipeline</code><code class="symbol">&rdquo;</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+
+<InlineSection>
+**Default** <code class="primitive">"unit"</code>
+</InlineSection>
+The type of the resolver.
+
+```js
+{
+  kind: "pipeline"
+}
+```
+</Segment>
+### requestTemplate?
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+For "unit" resolvers, this is the request mapping template. And for "pipeline"
+resolvers, this is the before mapping template.
+
+```js
+{
+  dataSource: "dynamoDS",
+  requestTemplate: `{
+    "version": "2017-02-28",
+    "operation": "Scan",
+  }`,
+}
+```
+</Segment>
+### responseTemplate?
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+For "unit" resolvers, this is the response mapping template. And for "pipeline"
+resolvers, this is the after mapping template.
+
+```js
+{
+  dataSource: "dynamoDS",
+  responseTemplate: `{
+    "users": $utils.toJson($context.result.items)
+  }`,
+}
+```
+</Segment>
+### transform?
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Object</code>
+</InlineSection>
+- <p>[<code class="key">resolver?</code>](#transform-resolver)</p>
+</Section>
+[Transform](/docs/components#transform) how this component creates its underlying
+resources.
+
+</Segment>
+<NestedTitle id="transform-resolver" Tag="h4" parent="transform.">resolver?</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** [<code class="type">ResolverArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/appsync/resolver/#inputs)<code class="symbol"> | </code><code class="symbol">(</code><code class="primitive">args</code><code class="symbol">: </code>[<code class="type">ResolverArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/appsync/resolver/#inputs)<code class="symbol"> => </code><code class="primitive">void</code><code class="symbol">)</code>
+</InlineSection>
+</Section>
+Transform the AppSync Resolver resource.
+
+</Segment>
+### type
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+The type name from the schema defined.
+
+</Segment>
+</div>

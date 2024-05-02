@@ -1,0 +1,5 @@
+type Query {
+  license: String
+  user: String
+  pipeline: String
+}

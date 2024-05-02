@@ -1,0 +1,904 @@
+---
+title: AppSync
+description: Reference doc for the `sst.aws.AppSync` component.
+---
+
+{/* DO NOT EDIT. AUTO-GENERATED FROM "pkg/platform/src/components/aws/app-sync.ts" */}
+
+import Segment from '../../../../../../src/components/tsdoc/Segment.astro';
+import Section from '../../../../../../src/components/tsdoc/Section.astro';
+import NestedTitle from '../../../../../../src/components/tsdoc/NestedTitle.astro';
+import InlineSection from '../../../../../../src/components/tsdoc/InlineSection.astro';
+
+<div class="tsdoc">
+
+<Section type="about">
+The `AppSync` component lets you add an [Amazon AppSync GraphQL API](https://docs.aws.amazon.com/appsync/latest/devguide/what-is-appsync.html) to your app.
+
+#### Create a GraphQL API
+
+```ts
+const api = new sst.aws.AppSync("MyApi", {
+  schema: "schema.graphql",
+});
+```
+
+#### Add a data source
+
+```ts
+const lambdaDS = api.addDataSource({
+  name: "lambdaDS",
+  lambda: "src/lambda.handler",
+});
+```
+
+#### Add a resolver
+
+```ts
+api.addResolver("Query user", {
+  dataSource: lambdaDS.name,
+});
+```
+</Section>
+
+---
+
+## Constructor
+
+<Segment>
+<Section type="signature">
+```ts
+new AppSync(name, args, opts?)
+```
+</Section>
+
+<Section type="parameters">
+#### Parameters
+- <p><code class="key">name</code> <code class="primitive">string</code></p>
+- <p><code class="key">args</code> [<code class="type">AppSyncArgs</code>](#appsyncargs)</p>
+- <p><code class="key">opts?</code> [<code class="type">ComponentResourceOptions</code>](https://www.pulumi.com/docs/concepts/options/)</p>
+</Section>
+</Segment>
+
+## Methods
+
+### addDataSource
+<Segment>
+<Section type="signature">
+```ts
+addDataSource(args)
+```
+</Section>
+
+<Section type="parameters">
+#### Parameters
+- <p><code class="key">args</code> [<code class="type">AppSyncDataSourceArgs</code>](#appsyncdatasourceargs)</p>
+Configure the data source.
+</Section>
+
+<InlineSection>
+**Returns** [<code class="type">AppSyncDataSource</code>](/docs/component/aws/app-sync-data-source/)
+</InlineSection>
+Add a data source to this AppSync API.
+
+Add a Lambda function as a data source.
+
+```js
+api.addDataSource({
+  name: "lambdaDS",
+  lambda: "src/lambda.handler"
+});
+```
+
+Customize the Lambda function.
+
+```js
+api.addDataSource({
+  name: "lambdaDS",
+  lambda: {
+    handler: "src/lambda.handler",
+    timeout: "60 seconds"
+  }
+});
+```
+
+Add a DynamoDB table as a data source.
+
+```js
+api.addDataSource({
+  name: "dynamoDS",
+  dynamodb: "arn:aws:dynamodb:us-east-1:123456789012:table/my-table"
+})
+```
+</Segment>
+
+### addFunction
+<Segment>
+<Section type="signature">
+```ts
+addFunction(args)
+```
+</Section>
+
+<Section type="parameters">
+#### Parameters
+- <p><code class="key">args</code> [<code class="type">AppSyncFunctionArgs</code>](#appsyncfunctionargs)</p>
+Configure the function.
+</Section>
+
+<InlineSection>
+**Returns** [<code class="type">AppSyncFunction</code>](/docs/component/aws/app-sync-function/)
+</InlineSection>
+Add a function to this AppSync API.
+
+Add a function using a Lambda data source.
+
+```js
+api.addFunction({
+  name: "myFunction",
+  dataSource: "lambdaDS",
+});
+```
+
+Add a function using a DynamoDB data source.
+
+```js
+api.addResolver("Query user", {
+  name: "myFunction",
+  dataSource: "dynamoDS",
+  requestTemplate: `{
+    "version": "2017-02-28",
+    "operation": "Scan",
+  }`,
+  responseTemplate: `{
+    "users": $utils.toJson($context.result.items)
+  }`,
+});
+```
+</Segment>
+
+### addResolver
+<Segment>
+<Section type="signature">
+```ts
+addResolver(operation, args)
+```
+</Section>
+
+<Section type="parameters">
+#### Parameters
+- <p><code class="key">operation</code> <code class="primitive">string</code></p>
+The type and name of the operation.
+- <p><code class="key">args</code> [<code class="type">AppSyncResolverArgs</code>](#appsyncresolverargs)</p>
+Configure the resolver.
+</Section>
+
+<InlineSection>
+**Returns** [<code class="type">AppSyncResolver</code>](/docs/component/aws/app-sync-resolver/)
+</InlineSection>
+Add a resolver to this AppSync API.
+
+Add a resolver using a Lambda data source.
+
+```js
+api.addResolver("Query user", {
+  dataSource: "lambdaDS",
+});
+```
+
+Add a resolver using a DynamoDB data source.
+
+```js
+api.addResolver("Query user", {
+  dataSource: "dynamoDS",
+  requestTemplate: `{
+    "version": "2017-02-28",
+    "operation": "Scan",
+  }`,
+  responseTemplate: `{
+    "users": $utils.toJson($context.result.items)
+  }`,
+});
+```
+
+Add a pipeline resolver.
+
+```js
+api.addResolver("Query user", {
+  functions: [
+    "MyFunction1",
+    "MyFunction2"
+  ]
+  code: `
+    export function request(ctx) {
+      return {};
+    }
+    export function response(ctx) {
+      return ctx.result;
+    }
+  `,
+});
+```
+</Segment>
+
+## Properties
+
+### id
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Output</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+The GraphQL API id.
+</Segment>
+
+### nodes
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Object</code>
+</InlineSection>
+- <p>[<code class="key">api</code>](#nodes-api)</p>
+</Section>
+The underlying [resources](/docs/components/#nodes) this component creates.
+</Segment>
+<NestedTitle id="nodes-api" Tag="h4" parent="nodes.">api</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** [<code class="type">GraphQLApi</code>](https://www.pulumi.com/registry/packages/aws/api-docs/appsync/graphqlapi/)
+</InlineSection>
+</Section>
+The Amazon AppSync GraphQL API.
+</Segment>
+
+### url
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Output</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+The URL of the GraphQL API.
+</Segment>
+
+## Links
+
+The following are accessible through the [SDK](/docs/reference/sdk/) at runtime.
+
+### url
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">string</code>
+</InlineSection>
+</Section>
+The URL of the GraphQL API.
+</Segment>
+
+## AppSyncArgs
+### domain?
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol"> | </code><code class="primitive">Object</code><code class="symbol">&gt;</code>
+</InlineSection>
+- <p>[<code class="key">cert?</code>](#domain-cert)</p>
+- <p>[<code class="key">dns?</code>](#domain-dns)</p>
+- <p>[<code class="key">name</code>](#domain-name)</p>
+</Section>
+Set a custom domain for your AppSync GraphQL API.
+
+Automatically manages domains hosted on AWS Route 53, Cloudflare, and Vercel. For other
+providers, you'll need to pass in a `cert` that validates domain ownership and add the
+DNS records.
+
+:::tip
+Built-in support for AWS Route 53, Cloudflare, and Vercel. And manual setup for other
+providers.
+:::
+
+By default this assumes the domain is hosted on Route 53.
+
+```js
+{
+  domain: "example.com"
+}
+```
+
+For domains hosted on Cloudflare.
+
+```js
+{
+  domain: {
+    name: "example.com",
+    dns: sst.cloudflare.dns()
+  }
+}
+```
+</Segment>
+<NestedTitle id="domain-cert" Tag="h4" parent="domain.">cert?</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+The ARN of an ACM (AWS Certificate Manager) certificate that proves ownership of the
+domain. By default, a certificate is created and validated automatically.
+
+The certificate will be created in the `us-east-1` region as required by AWS AppSync.
+If you are creating your own certificate, you must also create it in `us-east-1`.
+
+:::tip
+You need to pass in a `cert` for domains that are not hosted on supported `dns` providers.
+:::
+
+To manually set up a domain on an unsupported provider, you'll need to:
+
+1. [Validate that you own the domain](https://docs.aws.amazon.com/acm/latest/userguide/domain-ownership-validation.html) by creating an ACM certificate. You can either validate it by setting a DNS record or by verifying an email sent to the domain owner.
+2. Once validated, set the certificate ARN as the `cert` and set `dns` to `false`.
+3. Add the DNS records in your provider to point to the API Gateway URL.
+
+```js
+{
+  domain: {
+    name: "example.com",
+    dns: false,
+    cert: "arn:aws:acm:us-east-1:112233445566:certificate/3a958790-8878-4cdc-a396-06d95064cf63"
+  }
+}
+```
+</Segment>
+<NestedTitle id="domain-dns" Tag="h4" parent="domain.">dns?</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">false</code><code class="symbol"> | </code>[<code class="type">sst.aws.dns</code>](/docs/component/aws/dns/)<code class="symbol"> | </code>[<code class="type">sst.cloudflare.dns</code>](/docs/component/cloudflare/dns/)<code class="symbol"> | </code>[<code class="type">sst.vercel.dns</code>](/docs/component/vercel/dns/)<code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+
+<InlineSection>
+**Default** <code class="primitive">sst.aws.dns</code>
+</InlineSection>
+The DNS provider to use for the domain. Defaults to the AWS.
+
+Takes an adapter that can create the DNS records on the provider. This can automate
+validating the domain and setting up the DNS routing.
+
+Supports Route 53, Cloudflare, and Vercel adapters. For other providers, you'll need
+to set `dns` to `false` and pass in a certificate validating ownership via `cert`.
+
+Specify the hosted zone ID for the Route 53 domain.
+
+```js
+{
+  domain: {
+    name: "example.com",
+    dns: sst.aws.dns({
+      zone: "Z2FDTNDATAQYW2"
+    })
+  }
+}
+```
+
+Use a domain hosted on Cloudflare, needs the Cloudflare provider.
+
+```js
+{
+  domain: {
+    name: "example.com",
+    dns: sst.cloudflare.dns()
+  }
+}
+```
+
+Use a domain hosted on Vercel, needs the Vercel provider.
+
+```js
+{
+  domain: {
+    name: "example.com",
+    dns: sst.vercel.dns()
+  }
+}
+```
+</Segment>
+<NestedTitle id="domain-name" Tag="h4" parent="domain.">name</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+The custom domain you want to use.
+
+```js
+{
+  domain: {
+    name: "example.com"
+  }
+}
+```
+
+Can also include subdomains based on the current stage.
+
+```js
+{
+  domain: {
+    name: `${$app.stage}.example.com`
+  }
+}
+```
+</Segment>
+### schema
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+Path to the GraphQL schema file. This path is relative to your `sst.config.ts`.
+
+```js
+{
+  schema: "schema.graphql",
+}
+```
+</Segment>
+### transform?
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Object</code>
+</InlineSection>
+- <p>[<code class="key">api?</code>](#transform-api)</p>
+- <p>[<code class="key">domainName?</code>](#transform-domainname)</p>
+</Section>
+[Transform](/docs/components#transform) how this component creates its underlying
+resources.
+
+</Segment>
+<NestedTitle id="transform-api" Tag="h4" parent="transform.">api?</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** [<code class="type">GraphQLApiArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/appsync/graphqlapi/#inputs)<code class="symbol"> | </code><code class="symbol">(</code><code class="primitive">args</code><code class="symbol">: </code>[<code class="type">GraphQLApiArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/appsync/graphqlapi/#inputs)<code class="symbol"> => </code><code class="primitive">void</code><code class="symbol">)</code>
+</InlineSection>
+</Section>
+Transform the AppSync GraphQL API resource.
+
+</Segment>
+<NestedTitle id="transform-domainname" Tag="h4" parent="transform.">domainName?</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** [<code class="type">DomainNameArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/appsync/domainname/#inputs)<code class="symbol"> | </code><code class="symbol">(</code><code class="primitive">args</code><code class="symbol">: </code>[<code class="type">DomainNameArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/appsync/domainname/#inputs)<code class="symbol"> => </code><code class="primitive">void</code><code class="symbol">)</code>
+</InlineSection>
+</Section>
+Transform the AppSync domain name resource.
+
+</Segment>
+
+## AppSyncDataSourceArgs
+### dynamodb?
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+The ARN for the DynamoDB table.
+
+```js
+{
+  name: "dynamoDS",
+  dynamodb: "arn:aws:dynamodb:us-east-1:123456789012:table/my-table"
+}
+```
+</Segment>
+### elasticSearch?
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+The ARN for the Elasticsearch domain.
+
+```js
+{
+  name: "elasticSearchDS",
+  elasticSearch: "arn:aws:es:us-east-1:123456789012:domain/my-domain"
+}
+```
+</Segment>
+### eventBridge?
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+The ARN for the EventBridge event bus.
+
+```js
+{
+  name: "eventBridgeDS",
+  eventBridge: "arn:aws:events:us-east-1:123456789012:event-bus/my-event-bus"
+}
+```
+</Segment>
+### http?
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+The URL for the HTTP endpoint.
+
+```js
+{
+  name: "httpDS",
+  http: "https://api.example.com"
+}
+```
+</Segment>
+### lambda?
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol"> | </code>[<code class="type">FunctionArgs</code>](/docs/component/aws/function/#functionargs)<code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+The ARN for the Lambda function.
+
+```js
+{
+  name: "lambdaDS",
+  lambda: "arn:aws:lambda:us-east-1:123456789012:function:my-function"
+}
+```
+</Segment>
+### name
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">string</code>
+</InlineSection>
+</Section>
+The name of the data source.
+
+```js
+{
+  name: "lambdaDS",
+  lambda: "arn:aws:lambda:us-east-1:123456789012:function:my-function"
+}
+```
+</Segment>
+### openSearch?
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+The ARN for the OpenSearch domain.
+
+```js
+{
+  name: "openSearchDS",
+  openSearch: "arn:aws:opensearch:us-east-1:123456789012:domain/my-domain"
+}
+```
+</Segment>
+### rds?
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Object</code><code class="symbol">&gt;</code>
+</InlineSection>
+- <p>[<code class="key">cluster</code>](#rds-cluster)</p>
+- <p>[<code class="key">credentials</code>](#rds-credentials)</p>
+</Section>
+Configuring RDS data source.
+
+```js
+{
+  name: "rdsDS",
+  rds: {
+    cluster: "arn:aws:rds:us-east-1:123456789012:cluster:my-cluster",
+    credentials: "arn:aws:secretsmanager:us-east-1:123456789012:secret:my-secret"
+  }
+}
+```
+</Segment>
+<NestedTitle id="rds-cluster" Tag="h4" parent="rds.">cluster</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+The ARN for the RDS cluster.
+
+</Segment>
+<NestedTitle id="rds-credentials" Tag="h4" parent="rds.">credentials</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+The ARN for the credentials secret store.
+
+</Segment>
+### transform?
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Object</code>
+</InlineSection>
+- <p>[<code class="key">dataSource?</code>](#transform-datasource)</p>
+- <p>[<code class="key">serviceRole?</code>](#transform-servicerole)</p>
+</Section>
+[Transform](/docs/components#transform) how this component creates its underlying
+resources.
+
+</Segment>
+<NestedTitle id="transform-datasource" Tag="h4" parent="transform.">dataSource?</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** [<code class="type">DataSourceArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/appsync/datasource/#inputs)<code class="symbol"> | </code><code class="symbol">(</code><code class="primitive">args</code><code class="symbol">: </code>[<code class="type">DataSourceArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/appsync/datasource/#inputs)<code class="symbol"> => </code><code class="primitive">void</code><code class="symbol">)</code>
+</InlineSection>
+</Section>
+Transform the AppSync DataSource resource.
+
+</Segment>
+<NestedTitle id="transform-servicerole" Tag="h4" parent="transform.">serviceRole?</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** [<code class="type">RoleArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/iam/role/#inputs)<code class="symbol"> | </code><code class="symbol">(</code><code class="primitive">args</code><code class="symbol">: </code>[<code class="type">RoleArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/iam/role/#inputs)<code class="symbol"> => </code><code class="primitive">void</code><code class="symbol">)</code>
+</InlineSection>
+</Section>
+Transform the AppSync DataSource service role resource.
+
+</Segment>
+
+## AppSyncFunctionArgs
+### code?
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+The function code that contains the request and response functions.
+
+```js
+{
+  code: fs.readFileSync("functions.js")
+}
+```
+</Segment>
+### dataSource
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+The data source this resolver is using. This only applies for "unit" resolvers.
+
+```js
+{
+  dataSource: "lambdaDS"
+}
+```
+</Segment>
+### name
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">string</code>
+</InlineSection>
+</Section>
+The name of the AppSync function.
+
+```js
+{
+  name: "myFunction",
+}
+```
+</Segment>
+### requestMappingTemplate?
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+The function request mapping template.
+
+```js
+{
+  dataSource: "dynamoDS",
+  requestTemplate: `{
+    "version": "2018-05-29",
+    "operation": "Scan",
+  }`,
+}
+```
+</Segment>
+### responseMappingTemplate?
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+The function response mapping template.
+
+```js
+{
+  dataSource: "dynamoDS",
+  responseTemplate: `{
+    "users": $utils.toJson($context.result.items)
+  }`,
+}
+```
+</Segment>
+### transform?
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Object</code>
+</InlineSection>
+- <p>[<code class="key">function?</code>](#transform-function)</p>
+</Section>
+[Transform](/docs/components#transform) how this component creates its underlying
+resources.
+
+</Segment>
+<NestedTitle id="transform-function" Tag="h4" parent="transform.">function?</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** [<code class="type">FunctionArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/appsync/function/#inputs)<code class="symbol"> | </code><code class="symbol">(</code><code class="primitive">args</code><code class="symbol">: </code>[<code class="type">FunctionArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/appsync/function/#inputs)<code class="symbol"> => </code><code class="primitive">void</code><code class="symbol">)</code>
+</InlineSection>
+</Section>
+Transform the AppSync Function resource.
+
+</Segment>
+
+## AppSyncResolverArgs
+### code?
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+The function code that contains the request and response functions.
+
+```js
+{
+  code: fs.readFileSync("functions.js")
+}
+```
+</Segment>
+### dataSource?
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+The data source this resolver is using. This only applies for "unit" resolvers.
+
+```js
+{
+  dataSource: "lambdaDS"
+}
+```
+</Segment>
+### functions?
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">[]</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+The functions this resolver is using. This only applies for "pipeline" resolvers.
+
+```js
+{
+ functions: ["myFunction1", "myFunction2"]
+}
+```
+</Segment>
+### kind?
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="symbol">&ldquo;</code><code class="primitive">unit</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">pipeline</code><code class="symbol">&rdquo;</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+
+<InlineSection>
+**Default** <code class="primitive">"unit"</code>
+</InlineSection>
+The type of the resolver.
+
+```js
+{
+  kind: "pipeline"
+}
+```
+</Segment>
+### requestTemplate?
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+For "unit" resolvers, this is the request mapping template. And for "pipeline"
+resolvers, this is the before mapping template.
+
+```js
+{
+  dataSource: "dynamoDS",
+  requestTemplate: `{
+    "version": "2017-02-28",
+    "operation": "Scan",
+  }`,
+}
+```
+</Segment>
+### responseTemplate?
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+For "unit" resolvers, this is the response mapping template. And for "pipeline"
+resolvers, this is the after mapping template.
+
+```js
+{
+  dataSource: "dynamoDS",
+  responseTemplate: `{
+    "users": $utils.toJson($context.result.items)
+  }`,
+}
+```
+</Segment>
+### transform?
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Object</code>
+</InlineSection>
+- <p>[<code class="key">resolver?</code>](#transform-resolver)</p>
+</Section>
+[Transform](/docs/components#transform) how this component creates its underlying
+resources.
+
+</Segment>
+<NestedTitle id="transform-resolver" Tag="h4" parent="transform.">resolver?</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** [<code class="type">ResolverArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/appsync/resolver/#inputs)<code class="symbol"> | </code><code class="symbol">(</code><code class="primitive">args</code><code class="symbol">: </code>[<code class="type">ResolverArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/appsync/resolver/#inputs)<code class="symbol"> => </code><code class="primitive">void</code><code class="symbol">)</code>
+</InlineSection>
+</Section>
+Transform the AppSync Resolver resource.
+
+</Segment>
+</div>

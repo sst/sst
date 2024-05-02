@@ -1,4 +1,5 @@
 export * from "./apigatewayv2.js";
+export * from "./app-sync.js";
 export * from "./astro.js";
 export * from "./auth.js";
 export * from "./bucket.js";
