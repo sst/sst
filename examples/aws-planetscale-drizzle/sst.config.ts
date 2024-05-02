@@ -5,7 +5,9 @@ export default $config({
       name: "aws-planetscale-drizzle",
       removal: input?.stage === "production" ? "retain" : "remove",
       home: "aws",
-      providers: { "@sst-provider/planetscale": {} },
+      providers: {
+        "@sst-provider/planetscale": {},
+      },
     };
   },
   async run() {
@@ -21,17 +23,18 @@ export default $config({
     const db = new planetscale.Database("Database", {
       name: $interpolate`${$app.name}-${$app.stage}-Database`,
       organization: "sst",
+      clusterSize: "PS_10",
     });
-    const dbCreds = new planetscale.Password("DatabasePassword", {
-      organization: "sst",
-      database: db.defaultBranch,
-      role: "admin",
-      branch: db.defaultBranch,
-    });
+    // const dbCreds = new planetscale.Password("DatabasePassword", {
+    //   organization: "sst",
+    //   database: db.defaultBranch,
+    //   role: "admin",
+    //   branch: db.defaultBranch,
+    // });
     const api = new sst.aws.Function("Api", {
       url: true,
       handler: "./src/api.handler",
-      link: [dbCreds],
+      // link: [dbCreds],
     });
     return {
       url: api.url,
