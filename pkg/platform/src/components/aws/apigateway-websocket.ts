@@ -9,21 +9,21 @@ import * as aws from "@pulumi/aws";
 import { Component, Prettify, Transform, transform } from "../component";
 import { Link } from "../link";
 import type { Input } from "../input";
-import { Function, FunctionArgs } from "./function";
+import { FunctionArgs } from "./function";
 import {
   hashStringToPrettyString,
   prefixName,
   sanitizeToPascalCase,
 } from "../naming";
-import { VisibleError } from "../error";
 import { DnsValidatedCertificate } from "./dns-validated-certificate";
 import { RETENTION } from "./logging";
 import { dns as awsDns } from "./dns.js";
 import { ApiGatewayV2DomainArgs } from "./helpers/apigatewayv2-domain";
+import { ApiGatewayWebSocketRoute } from "./apigateway-websocket-route";
 
-export interface ApiGatewayV2Args {
+export interface ApiGatewayWebSocketArgs {
   /**
-   * Set a custom domain for your HTTP API.
+   * Set a custom domain for your WebSocket API.
    *
    * Automatically manages domains hosted on AWS Route 53, Cloudflare, and Vercel. For other
    * providers, you'll need to pass in a `cert` that validates domain ownership and add the
@@ -81,15 +81,15 @@ export interface ApiGatewayV2Args {
    */
   transform?: {
     /**
-     * Transform the API Gateway HTTP API resource.
+     * Transform the API Gateway WebSocket API resource.
      */
     api?: Transform<aws.apigatewayv2.ApiArgs>;
     /**
-     * Transform the API Gateway HTTP API stage resource.
+     * Transform the API Gateway WebSocket API stage resource.
      */
     stage?: Transform<aws.apigatewayv2.StageArgs>;
     /**
-     * Transform the API Gateway HTTP API domain name resource.
+     * Transform the API Gateway WebSocket API domain name resource.
      */
     domainName?: Transform<aws.apigatewayv2.DomainNameArgs>;
     /**
@@ -124,17 +124,17 @@ export interface ApiGatewayV2Args {
       /**
        * Transform the arguments for the route.
        */
-      args?: Transform<ApiGatewayV2RouteArgs>;
+      args?: Transform<ApiGatewayWebSocketRouteArgs>;
     };
   };
 }
 
-export interface ApiGatewayV2RouteArgs {
+export interface ApiGatewayWebSocketRouteArgs {
   /**
-   * Enable auth for your HTTP API.
+   * Enable auth for your WebSocket API.
    *
    * :::note
-   * Currently IAM and JWT auth are supported.
+   * Currently only IAM auth is supported.
    * :::
    *
    * @example
@@ -151,64 +151,6 @@ export interface ApiGatewayV2RouteArgs {
      * Enable IAM authorization for a given API route. When IAM auth is enabled, clients need to use Signature Version 4 to sign their requests with their AWS credentials.
      */
     iam?: Input<true>;
-    /**
-     * Enable JWT or JSON Web Token authorization for a given API route. When JWT auth is enabled, clients need to include a valid JWT in their requests.
-     *
-     * @example
-     * You can configure JWT auth.
-     *
-     * ```js
-     * {
-     *   auth: {
-     *     jwt: {
-     *       issuer: "https://issuer.com/",
-     *       audiences: ["https://api.example.com"],
-     *       scopes: ["read:profile", "write:profile"],
-     *       identitySource: "$request.header.AccessToken"
-     *     }
-     *   }
-     * }
-     * ```
-     *
-     * You can also use Cognito as the identity provider.
-     *
-     * ```js
-     * {
-     *   auth: {
-     *     jwt: {
-     *       audiences: [userPoolClient.id],
-     *       issuer: $interpolate`https://cognito-idp.${aws.getArnOutput(userPool).region}.amazonaws.com/${userPool.id}`,
-     *     }
-     *   }
-     * }
-     * ```
-     *
-     * Where `userPool` and `userPoolClient` are:
-     *
-     * ```js
-     * const userPool = new aws.cognito.UserPool();
-     * const userPoolClient = new aws.cognito.UserPoolClient();
-     * ```
-     */
-    jwt?: Input<{
-      /**
-       * Base domain of the identity provider that issues JSON Web Tokens.
-       */
-      issuer: Input<string>;
-      /**
-       * List of the intended recipients of the JWT. A valid JWT must provide an `aud` that matches at least one entry in this list.
-       */
-      audiences: Input<Input<string>[]>;
-      /**
-       * Defines the permissions or access levels that the JWT grants. If the JWT does not have the required scope, the request is rejected. By default it does not require any scopes.
-       */
-      scopes?: Input<Input<string>[]>;
-      /**
-       * Specifies where to extract the JWT from the request.
-       * @default `"$request.header.Authorization"`
-       */
-      identitySource?: Input<string>;
-    }>;
   }>;
   /**
    * [Transform](/docs/components#transform) how this component creates its underlying
@@ -216,54 +158,31 @@ export interface ApiGatewayV2RouteArgs {
    */
   transform?: {
     /**
-     * Transform the API Gateway HTTP API integration resource.
+     * Transform the API Gateway WebSocket API integration resource.
      */
     integration?: Transform<aws.apigatewayv2.IntegrationArgs>;
     /**
-     * Transform the API Gateway HTTP API route resource.
+     * Transform the API Gateway WebSocket API route resource.
      */
     route?: Transform<aws.apigatewayv2.RouteArgs>;
-    /**
-     * Transform the API Gateway authorizer resource.
-     */
-    authorizer?: Transform<aws.apigatewayv2.AuthorizerArgs>;
   };
 }
 
-export interface ApiGatewayV2Route {
-  /**
-   * The Lambda function.
-   */
-  function: Output<Function>;
-  /**
-   * The Lambda permission.
-   */
-  permission: aws.lambda.Permission;
-  /**
-   * The API Gateway HTTP API integration.
-   */
-  integration: aws.apigatewayv2.Integration;
-  /**
-   * The API Gateway HTTP API route.
-   */
-  route: Output<aws.apigatewayv2.Route>;
-}
-
 /**
- * The `ApiGatewayV2` component lets you add an [Amazon API Gateway HTTP API](https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api.html) to your app.
+ * The `ApiGatewayWebSocket` component lets you add an [Amazon API Gateway WebSocket API](https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-websocket-api.html) to your app.
  *
  * @example
  *
  * #### Create the API
  *
  * ```ts
- * const api = new sst.aws.ApiGatewayV2("MyApi");
+ * const api = new sst.aws.ApiGatewayWebSocket("MyApi");
  * ```
  *
  * #### Add a custom domain
  *
  * ```js {2}
- * new sst.aws.ApiGatewayV2("MyApi", {
+ * new sst.aws.ApiGatewayWebSocket("MyApi", {
  *   domain: "api.example.com"
  * });
  * ```
@@ -271,22 +190,27 @@ export interface ApiGatewayV2Route {
  * #### Add routes
  *
  * ```ts
- * api.route("GET /", "src/get.handler");
- * api.route("POST /", "src/post.handler");
+ * api.route("$connect", "src/connect.handler");
+ * api.route("$disconnect", "src/disconnect.handler");
+ * api.route("$default", "src/default.handler");
+ * api.route("sendMessage", "src/sendMessage.handler");
  * ```
  */
-export class ApiGatewayV2 extends Component implements Link.Linkable {
+export class ApiGatewayWebSocket
+  extends Component
+  implements Link.Linkable, Link.AWS.Linkable
+{
   private constructorName: string;
-  private constructorArgs: ApiGatewayV2Args;
+  private constructorArgs: ApiGatewayWebSocketArgs;
   private api: aws.apigatewayv2.Api;
+  private stage: aws.apigatewayv2.Stage;
   private apigDomain?: aws.apigatewayv2.DomainName;
   private apiMapping?: Output<aws.apigatewayv2.ApiMapping>;
-  private authorizers: Record<string, aws.apigatewayv2.Authorizer> = {};
   private logGroup: aws.cloudwatch.LogGroup;
 
   constructor(
     name: string,
-    args: ApiGatewayV2Args = {},
+    args: ApiGatewayWebSocketArgs = {},
     opts: ComponentResourceOptions = {},
   ) {
     super(__pulumiType, name, args, opts);
@@ -298,7 +222,7 @@ export class ApiGatewayV2 extends Component implements Link.Linkable {
 
     const api = createApi();
     const logGroup = createLogGroup();
-    createStage();
+    const stage = createStage();
 
     const certificateArn = createSsl();
     const apigDomain = createDomainName();
@@ -308,6 +232,7 @@ export class ApiGatewayV2 extends Component implements Link.Linkable {
     this.constructorName = name;
     this.constructorArgs = args;
     this.api = api;
+    this.stage = stage;
     this.apigDomain = apigDomain;
     this.apiMapping = apiMapping;
     this.logGroup = logGroup;
@@ -352,13 +277,8 @@ export class ApiGatewayV2 extends Component implements Link.Linkable {
       return new aws.apigatewayv2.Api(
         `${name}Api`,
         transform(args.transform?.api, {
-          protocolType: "HTTP",
-          corsConfiguration: {
-            allowCredentials: false,
-            allowHeaders: ["*"],
-            allowMethods: ["*"],
-            allowOrigins: ["*"],
-          },
+          protocolType: "WEBSOCKET",
+          routeSelectionExpression: "$request.body.action",
         }),
         { parent },
       );
@@ -378,7 +298,7 @@ export class ApiGatewayV2 extends Component implements Link.Linkable {
     }
 
     function createStage() {
-      new aws.apigatewayv2.Stage(
+      return new aws.apigatewayv2.Stage(
         `${name}Stage`,
         transform(args.transform?.stage, {
           apiId: api.id,
@@ -390,20 +310,20 @@ export class ApiGatewayV2 extends Component implements Link.Linkable {
               // request info
               requestTime: `"$context.requestTime"`,
               requestId: `"$context.requestId"`,
-              httpMethod: `"$context.httpMethod"`,
-              path: `"$context.path"`,
+              eventType: `"$context.eventType"`,
               routeKey: `"$context.routeKey"`,
               status: `$context.status`, // integer value, do not wrap in quotes
-              responseLatency: `$context.responseLatency`, // integer value, do not wrap in quotes
               // integration info
-              integrationRequestId: `"$context.integration.requestId"`,
-              integrationStatus: `"$context.integration.status"`,
-              integrationLatency: `"$context.integration.latency"`,
+              integrationRequestId: `"$context.awsEndpointRequestId"`,
+              integrationStatus: `"$context.integrationStatus"`,
+              integrationLatency: `"$context.integrationLatency"`,
               integrationServiceStatus: `"$context.integration.integrationStatus"`,
               // caller info
               ip: `"$context.identity.sourceIp"`,
               userAgent: `"$context.identity.userAgent"`,
               //cognitoIdentityId:`"$context.identity.cognitoIdentityId"`, // not supported in us-west-2 region
+              connectedAt: `"$context.connectedAt"`,
+              connectionId: `"$context.connectionId"`,
             }),
           },
         }),
@@ -508,9 +428,31 @@ export class ApiGatewayV2 extends Component implements Link.Linkable {
     return this.apigDomain && this.apiMapping
       ? all([this.apigDomain.domainName, this.apiMapping.apiMappingKey]).apply(
           ([domain, key]) =>
-            key ? `https://${domain}/${key}/` : `https://${domain}`,
+            key ? `wss://${domain}/${key}/` : `wss://${domain}`,
         )
       : this.api.apiEndpoint;
+  }
+
+  /**
+   * The management endpoint for the API used by the API Gateway Management API client.
+   * This is useful for sending messages to connected clients.
+   *
+   * @example
+   * ```js
+   * import { Resource } from "sst";
+   * import { ApiGatewayManagementApiClient } from "@aws-sdk/client-apigatewaymanagementapi";
+   *
+   * const client = new ApiGatewayManagementApiClient({
+   *   endpoint: Resource.MyApi.managementEndpoint,
+   * });
+   * ```
+   */
+  public get managementEndpoint() {
+    // ie. https://v1lmfez2nj.execute-api.us-east-1.amazonaws.com/$default
+    return this.api.apiEndpoint.apply(
+      (endpoint) =>
+        interpolate`${endpoint.replace("wss", "https")}/${this.stage.name}`,
+    );
   }
 
   /**
@@ -530,32 +472,16 @@ export class ApiGatewayV2 extends Component implements Link.Linkable {
   }
 
   /**
-   * Add a route to the API Gateway HTTP API. The route is a combination of
-   * - An HTTP method and a path, `{METHOD} /{path}`.
-   * - Or a `$default` route.
+   * Add a route to the API Gateway WebSocket API.
    *
-   * :::tip
-   * The `$default` route is a default or catch-all route. It'll match if no other route matches.
-   * :::
+   * There are three predefined routes:
+   * - $connect: when the client connects to the API
+   * - $disconnect: when the client or the server disconnects from the API
+   * - $default: the default or catch-all route
    *
-   * A method could be one of `GET`, `POST`, `PUT`, `DELETE`, `PATCH`, `HEAD`, `OPTIONS`, or `ANY`. Here `ANY` matches any HTTP method.
-   *
-   * The path can be a combination of
-   * - Literal segments, `/notes`, `/notes/new`, etc.
-   * - Parameter segments, `/notes/{noteId}`, `/notes/{noteId}/attachments/{attachmentId}`, etc.
-   * - Greedy segments, `/{proxy+}`, `/notes/{proxy+}`,  etc. The `{proxy+}` segment is a greedy segment that matches all child paths. It needs to be at the end of the path.
-   *
-   * :::tip
-   * The `{proxy+}` is a greedy segment, it matches all its child paths.
-   * :::
-   *
-   * The `$default` is a reserved keyword for the default route. It'll be matched if no other route matches.
-   *
-   * :::note
-   * You cannot have duplicate routes.
-   * :::
-   *
-   * When a request comes in, the API Gateway will look for the most specific match. If no route matches, the `$default` route will be invoked.
+   * In addition, you can create custom routes. When a request comes in, the API Gateway
+   * will look the specific route defined by the user. If no route matches, the `$default`
+   * route will be invoked.
    *
    * @param route The path for the route.
    * @param handler The function that'll be invoked.
@@ -565,39 +491,19 @@ export class ApiGatewayV2 extends Component implements Link.Linkable {
    * Here's how you add a simple route.
    *
    * ```js
-   * api.route("GET /", "src/get.handler");
-   * ```
-   *
-   * Match any HTTP method.
-   *
-   * ```js
-   * api.route("ANY /", "src/route.handler");
+   * api.route("sendMessage", "src/sendMessage.handler");
    * ```
    *
    * Add a default route.
    *
    * ```js
-   * api.route("GET /", "src/get.handler")
-   * api.route($default, "src/default.handler");
-   * ```
-   *
-   * Add a parameterized route.
-   *
-   * ```js
-   * api.route("GET /notes/{id}", "src/get.handler");
-   * ```
-   *
-   * Add a greedy route.
-   *
-   * ```js
-   * api.route("GET /notes/{proxy+}", "src/greedy.handler");
+   * api.route("$default", "src/default.handler");
    * ```
    *
    * Enable auth for a route.
    *
    * ```js
-   * api.route("GET /", "src/get.handler")
-   * api.route("POST /", "src/post.handler", {
+   * api.route("sendMessage", "src/sendMessage.handler", {
    *   auth: {
    *     iam: true
    *   }
@@ -607,8 +513,8 @@ export class ApiGatewayV2 extends Component implements Link.Linkable {
    * Customize the route handler.
    *
    * ```js
-   * api.route("GET /", {
-   *   handler: "src/get.handler",
+   * api.route("sendMessage", {
+   *   handler: "src/sendMessage.handler",
    *   memory: "2048 MB"
    * });
    * ```
@@ -616,140 +522,27 @@ export class ApiGatewayV2 extends Component implements Link.Linkable {
   public route(
     route: string,
     handler: string | FunctionArgs,
-    args: ApiGatewayV2RouteArgs = {},
-  ): ApiGatewayV2Route {
+    args: ApiGatewayWebSocketRouteArgs = {},
+  ) {
     const self = this;
     const selfName = this.constructorName;
-    const routeKey = parseRoute();
-
-    // Build route name
-    const id = sanitizeToPascalCase(
-      hashStringToPrettyString([this.api.id, routeKey].join(""), 4),
+    const suffix = sanitizeToPascalCase(
+      ["$connect", "$disconnect", "$default"].includes(route)
+        ? route
+        : hashStringToPrettyString(`${this.api.id}${route}`, 6),
     );
 
-    args = transform(this.constructorArgs.transform?.route?.args, args);
-
-    const fn = Function.fromDefinition(
-      `${selfName}Handler${id}`,
+    return new ApiGatewayWebSocketRoute(`${selfName}Route${suffix}`, {
+      api: {
+        name: selfName,
+        id: self.api.id,
+        executionArn: self.api.executionArn,
+      },
+      route,
       handler,
-      {
-        description: `${selfName} route ${routeKey}`,
-      },
-      this.constructorArgs.transform?.route?.handler,
-    );
-    const permission = new aws.lambda.Permission(
-      `${selfName}Handler${id}Permissions`,
-      {
-        action: "lambda:InvokeFunction",
-        function: fn.arn,
-        principal: "apigateway.amazonaws.com",
-        sourceArn: interpolate`${this.nodes.api.executionArn}/*`,
-      },
-    );
-    const integration = new aws.apigatewayv2.Integration(
-      `${selfName}Integration${id}`,
-      transform(args.transform?.integration, {
-        apiId: this.api.id,
-        integrationType: "AWS_PROXY",
-        integrationUri: fn.arn,
-        payloadFormatVersion: "2.0",
-      }),
-      { dependsOn: [permission] },
-    );
-    const authArgs = createAuthorizer();
-
-    const apiRoute = authArgs.apply(
-      (authArgs) =>
-        new aws.apigatewayv2.Route(
-          `${selfName}Route${id}`,
-          transform(args.transform?.route, {
-            apiId: this.api.id,
-            routeKey,
-            target: interpolate`integrations/${integration.id}`,
-            ...authArgs,
-          }),
-        ),
-    );
-    return { function: fn, permission, integration, route: apiRoute };
-
-    function parseRoute() {
-      if (route.toLowerCase() === "$default") return "$default";
-
-      const parts = route.split(" ");
-      if (parts.length !== 2) {
-        throw new VisibleError(
-          `Invalid route ${route}. A route must be in the format "METHOD /path".`,
-        );
-      }
-      const [methodRaw, path] = route.split(" ");
-      const method = methodRaw.toUpperCase();
-      if (
-        ![
-          "ANY",
-          "DELETE",
-          "GET",
-          "HEAD",
-          "OPTIONS",
-          "PATCH",
-          "POST",
-          "PUT",
-        ].includes(method)
-      )
-        throw new VisibleError(`Invalid method ${methodRaw} in route ${route}`);
-
-      if (!path.startsWith("/"))
-        throw new VisibleError(
-          `Invalid path ${path} in route ${route}. Path must start with "/".`,
-        );
-
-      return `${method} ${path}`;
-    }
-
-    function createAuthorizer() {
-      return output(args.auth).apply((auth) => {
-        if (auth?.iam) return { authorizationType: "AWS_IAM" };
-        if (auth?.jwt) {
-          // Build authorizer name
-          const id = sanitizeToPascalCase(
-            hashStringToPrettyString(
-              [
-                auth.jwt.issuer,
-                ...auth.jwt.audiences.sort(),
-                auth.jwt.identitySource ?? "",
-              ].join(""),
-              4,
-            ),
-          );
-
-          const authorizer =
-            self.authorizers[id] ??
-            new aws.apigatewayv2.Authorizer(
-              `${selfName}Authorizer${id}`,
-              transform(args.transform?.authorizer, {
-                apiId: self.api.id,
-                authorizerType: "JWT",
-                identitySources: [
-                  auth.jwt.identitySource ?? "$request.header.Authorization",
-                ],
-                jwtConfiguration: {
-                  audiences: auth.jwt.audiences,
-                  issuer: auth.jwt.issuer,
-                },
-              }),
-            );
-          self.authorizers[id] = authorizer;
-
-          return {
-            authorizationType: "JWT",
-            authorizationScopes: auth.jwt.scopes,
-            authorizerId: authorizer.id,
-          };
-        }
-        return {
-          authorizationType: "NONE",
-        };
-      });
-    }
+      handlerTransform: this.constructorArgs.transform?.route?.handler,
+      ...transform(this.constructorArgs.transform?.route?.args, args),
+    });
   }
 
   /** @internal */
@@ -757,11 +550,22 @@ export class ApiGatewayV2 extends Component implements Link.Linkable {
     return {
       properties: {
         url: this.url,
+        managementEndpoint: this.managementEndpoint,
       },
     };
   }
+
+  /** @internal */
+  public getSSTAWSPermissions() {
+    return [
+      {
+        actions: ["execute-api:MangeConnections"],
+        resources: [interpolate`${this.api.executionArn}/*/*/@connections/*`],
+      },
+    ];
+  }
 }
 
-const __pulumiType = "sst:aws:ApiGatewayV2";
+const __pulumiType = "sst:aws:ApiGatewayWebSocket";
 // @ts-expect-error
-ApiGatewayV2.__pulumiType = __pulumiType;
+ApiGatewayWebSocket.__pulumiType = __pulumiType;

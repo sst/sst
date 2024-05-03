@@ -75,6 +75,10 @@ const sidebar = [
         label: "CognitoIdentityPool",
         link: "/docs/component/aws/cognito-identity-pool/",
       },
+      {
+        label: "ApiGatewayWebSocket",
+        link: "/docs/component/aws/apigateway-websocket/",
+      },
     ],
   },
   {
@@ -139,6 +143,10 @@ const sidebar = [
       {
         label: "CognitoUserPoolClient",
         link: "/docs/component/aws/cognito-user-pool-client/",
+      },
+      {
+        label: "ApiGatewayWebSocketRoute",
+        link: "/docs/component/aws/apigateway-websocket-route/",
       },
     ],
   },

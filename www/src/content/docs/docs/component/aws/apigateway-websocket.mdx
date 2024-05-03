@@ -1,0 +1,598 @@
+---
+title: ApiGatewayWebSocket
+description: Reference doc for the `sst.aws.ApiGatewayWebSocket` component.
+---
+
+{/* DO NOT EDIT. AUTO-GENERATED FROM "pkg/platform/src/components/aws/apigateway-websocket.ts" */}
+
+import Segment from '../../../../../../src/components/tsdoc/Segment.astro';
+import Section from '../../../../../../src/components/tsdoc/Section.astro';
+import NestedTitle from '../../../../../../src/components/tsdoc/NestedTitle.astro';
+import InlineSection from '../../../../../../src/components/tsdoc/InlineSection.astro';
+
+<div class="tsdoc">
+
+<Section type="about">
+The `ApiGatewayWebSocket` component lets you add an [Amazon API Gateway WebSocket API](https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-websocket-api.html) to your app.
+
+#### Create the API
+
+```ts
+const api = new sst.aws.ApiGatewayWebSocket("MyApi");
+```
+
+#### Add a custom domain
+
+```js {2}
+new sst.aws.ApiGatewayWebSocket("MyApi", {
+  domain: "api.example.com"
+});
+```
+
+#### Add routes
+
+```ts
+api.route("$connect", "src/connect.handler");
+api.route("$disconnect", "src/disconnect.handler");
+api.route("$default", "src/default.handler");
+api.route("sendMessage", "src/sendMessage.handler");
+```
+</Section>
+
+---
+
+## Constructor
+
+<Segment>
+<Section type="signature">
+```ts
+new ApiGatewayWebSocket(name, args?, opts?)
+```
+</Section>
+
+<Section type="parameters">
+#### Parameters
+- <p><code class="key">name</code> <code class="primitive">string</code></p>
+- <p><code class="key">args?</code> [<code class="type">ApiGatewayWebSocketArgs</code>](#apigatewaywebsocketargs)</p>
+- <p><code class="key">opts?</code> [<code class="type">ComponentResourceOptions</code>](https://www.pulumi.com/docs/concepts/options/)</p>
+</Section>
+</Segment>
+
+## Methods
+
+### route
+<Segment>
+<Section type="signature">
+```ts
+route(route, handler, args?)
+```
+</Section>
+
+<Section type="parameters">
+#### Parameters
+- <p><code class="key">route</code> <code class="primitive">string</code></p>
+The path for the route.
+- <p><code class="key">handler</code> <code class="primitive">string</code><code class="symbol"> | </code>[<code class="type">FunctionArgs</code>](/docs/component/aws/function/#functionargs)</p>
+The function that'll be invoked.
+- <p><code class="key">args?</code> [<code class="type">ApiGatewayWebSocketRouteArgs</code>](#apigatewaywebsocketrouteargs)</p>
+Configure the route.
+</Section>
+
+<InlineSection>
+**Returns** [<code class="type">ApiGatewayWebSocketRoute</code>](/docs/component/aws/apigateway-websocket-route/)
+</InlineSection>
+Add a route to the API Gateway WebSocket API.
+
+There are three predefined routes:
+- $connect: when the client connects to the API
+- $disconnect: when the client or the server disconnects from the API
+- $default: the default or catch-all route
+
+In addition, you can create custom routes. When a request comes in, the API Gateway
+will look the specific route defined by the user. If no route matches, the `$default`
+route will be invoked.
+
+Here's how you add a simple route.
+
+```js
+api.route("sendMessage", "src/sendMessage.handler");
+```
+
+Add a default route.
+
+```js
+api.route("$default", "src/default.handler");
+```
+
+Enable auth for a route.
+
+```js
+api.route("sendMessage", "src/sendMessage.handler", {
+  auth: {
+    iam: true
+  }
+});
+```
+
+Customize the route handler.
+
+```js
+api.route("sendMessage", {
+  handler: "src/sendMessage.handler",
+  memory: "2048 MB"
+});
+```
+</Segment>
+
+## Properties
+
+### managementEndpoint
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Output</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+The management endpoint for the API used by the API Gateway Management API client.
+This is useful for sending messages to connected clients.
+</Segment>
+
+### nodes
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Object</code>
+</InlineSection>
+- <p>[<code class="key">api</code>](#nodes-api)</p>
+- <p>[<code class="key">logGroup</code>](#nodes-loggroup)</p>
+</Section>
+The underlying [resources](/docs/components/#nodes) this component creates.
+</Segment>
+<NestedTitle id="nodes-api" Tag="h4" parent="nodes.">api</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** [<code class="type">Api</code>](https://www.pulumi.com/registry/packages/aws/api-docs/apigatewayv2/api/)
+</InlineSection>
+</Section>
+The Amazon API Gateway HTTP API
+</Segment>
+<NestedTitle id="nodes-loggroup" Tag="h4" parent="nodes.">logGroup</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** [<code class="type">LogGroup</code>](https://www.pulumi.com/registry/packages/aws/api-docs/cloudwatch/loggroup/)
+</InlineSection>
+</Section>
+The CloudWatch LogGroup for the access logs.
+</Segment>
+
+### url
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Output</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+The URL of the API.
+
+If the `domain` is set, this is the URL with the custom domain.
+Otherwise, it's the autogenerated API Gateway URL.
+</Segment>
+
+## Links
+
+The following are accessible through the [SDK](/docs/reference/sdk/) at runtime.
+
+### managementEndpoint
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">string</code>
+</InlineSection>
+</Section>
+The management endpoint for the API used by the API Gateway Management API client.
+This is useful for sending messages to connected clients.
+</Segment>
+
+### url
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">string</code>
+</InlineSection>
+</Section>
+The URL of the API.
+
+If the `domain` is set, this is the URL with the custom domain.
+Otherwise, it's the autogenerated API Gateway URL.
+</Segment>
+
+## ApiGatewayWebSocketArgs
+### accessLog?
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Object</code><code class="symbol">&gt;</code>
+</InlineSection>
+- <p>[<code class="key">retention?</code>](#accesslog-retention)</p>
+</Section>
+
+<InlineSection>
+**Default** <code class="primitive">&lcub;retention: "forever"&rcub;</code>
+</InlineSection>
+Configure the [API Gateway logs](https://docs.aws.amazon.com/apigateway/latest/developerguide/view-cloudwatch-log-events-in-cloudwatch-console.html) in CloudWatch. By default, access logs are enabled and kept forever.
+
+```js
+{
+  accessLog: {
+    retention: "1 week"
+  }
+}
+```
+</Segment>
+<NestedTitle id="accesslog-retention" Tag="h4" parent="accessLog.">retention?</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="symbol">&ldquo;</code><code class="primitive">1 day</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">3 days</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">5 days</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">1 week</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">2 weeks</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">1 month</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">2 months</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">3 months</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">4 months</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">5 months</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">6 months</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">1 year</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">13 months</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">18 months</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">2 years</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">3 years</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">5 years</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">6 years</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">7 years</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">8 years</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">9 years</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">10 years</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">forever</code><code class="symbol">&rdquo;</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+
+<InlineSection>
+**Default** <code class="primitive">forever</code>
+</InlineSection>
+The duration the API Gateway logs are kept in CloudWatch.
+
+</Segment>
+### domain?
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol"> | </code><code class="primitive">Object</code><code class="symbol">&gt;</code>
+</InlineSection>
+- <p>[<code class="key">cert?</code>](#domain-cert)</p>
+- <p>[<code class="key">dns?</code>](#domain-dns)</p>
+- <p>[<code class="key">name</code>](#domain-name)</p>
+- <p>[<code class="key">path?</code>](#domain-path)</p>
+</Section>
+Set a custom domain for your WebSocket API.
+
+Automatically manages domains hosted on AWS Route 53, Cloudflare, and Vercel. For other
+providers, you'll need to pass in a `cert` that validates domain ownership and add the
+DNS records.
+
+:::tip
+Built-in support for AWS Route 53, Cloudflare, and Vercel. And manual setup for other
+providers.
+:::
+
+By default this assumes the domain is hosted on Route 53.
+
+```js
+{
+  domain: "example.com"
+}
+```
+
+For domains hosted on Cloudflare.
+
+```js
+{
+  domain: {
+    name: "example.com",
+    dns: sst.cloudflare.dns()
+  }
+}
+```
+</Segment>
+<NestedTitle id="domain-cert" Tag="h4" parent="domain.">cert?</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+The ARN of an ACM (AWS Certificate Manager) certificate that proves ownership of the
+domain. By default, a certificate is created and validated automatically.
+
+:::tip
+You need to pass in a `cert` for domains that are not hosted on supported `dns` providers.
+:::
+
+To manually set up a domain on an unsupported provider, you'll need to:
+
+1. [Validate that you own the domain](https://docs.aws.amazon.com/acm/latest/userguide/domain-ownership-validation.html) by creating an ACM certificate. You can either validate it by setting a DNS record or by verifying an email sent to the domain owner.
+2. Once validated, set the certificate ARN as the `cert` and set `dns` to `false`.
+3. Add the DNS records in your provider to point to the API Gateway URL.
+
+```js
+{
+  domain: {
+    name: "example.com",
+    dns: false,
+    cert: "arn:aws:acm:us-east-1:112233445566:certificate/3a958790-8878-4cdc-a396-06d95064cf63"
+  }
+}
+```
+</Segment>
+<NestedTitle id="domain-dns" Tag="h4" parent="domain.">dns?</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">false</code><code class="symbol"> | </code>[<code class="type">sst.aws.dns</code>](/docs/component/aws/dns/)<code class="symbol"> | </code>[<code class="type">sst.cloudflare.dns</code>](/docs/component/cloudflare/dns/)<code class="symbol"> | </code>[<code class="type">sst.vercel.dns</code>](/docs/component/vercel/dns/)<code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+
+<InlineSection>
+**Default** <code class="primitive">sst.aws.dns</code>
+</InlineSection>
+The DNS provider to use for the domain. Defaults to the AWS.
+
+Takes an adapter that can create the DNS records on the provider. This can automate
+validating the domain and setting up the DNS routing.
+
+Supports Route 53, Cloudflare, and Vercel adapters. For other providers, you'll need
+to set `dns` to `false` and pass in a certificate validating ownership via `cert`.
+
+Specify the hosted zone ID for the Route 53 domain.
+
+```js
+{
+  domain: {
+    name: "example.com",
+    dns: sst.aws.dns({
+      zone: "Z2FDTNDATAQYW2"
+    })
+  }
+}
+```
+
+Use a domain hosted on Cloudflare, needs the Cloudflare provider.
+
+```js
+{
+  domain: {
+    name: "example.com",
+    dns: sst.cloudflare.dns()
+  }
+}
+```
+
+Use a domain hosted on Vercel, needs the Vercel provider.
+
+```js
+{
+  domain: {
+    name: "example.com",
+    dns: sst.vercel.dns()
+  }
+}
+```
+</Segment>
+<NestedTitle id="domain-name" Tag="h4" parent="domain.">name</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+The custom domain you want to use.
+
+```js
+{
+  domain: {
+    name: "example.com"
+  }
+}
+```
+
+Can also include subdomains based on the current stage.
+
+```js
+{
+  domain: {
+    name: `${$app.stage}.example.com`
+  }
+}
+```
+</Segment>
+<NestedTitle id="domain-path" Tag="h4" parent="domain.">path?</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+The base mapping for the custom domain. This adds a suffix to the URL of the API.
+
+Given the following base path and domain name.
+
+```js
+{
+  domain: {
+    name: "api.example.com",
+    path: "v1"
+  }
+}
+```
+
+The full URL of the API will be `https://api.example.com/v1/`.
+
+:::note
+There's an extra trailing slash when a base path is set.
+:::
+
+Be default there is no base path, so if the `name` is `api.example.com`, the full URL will be `https://api.example.com`.
+</Segment>
+### transform?
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Object</code>
+</InlineSection>
+- <p>[<code class="key">accessLog?</code>](#transform-accesslog)</p>
+- <p>[<code class="key">api?</code>](#transform-api)</p>
+- <p>[<code class="key">domainName?</code>](#transform-domainname)</p>
+- <p>[<code class="key">route?</code>](#transform-route) <code class="primitive">Object</code></p>
+  - <p>[<code class="key">args?</code>](#transform-route-args)</p>
+  - <p>[<code class="key">handler?</code>](#transform-route-handler)</p>
+- <p>[<code class="key">stage?</code>](#transform-stage)</p>
+</Section>
+[Transform](/docs/components#transform) how this component creates its underlying
+resources.
+
+</Segment>
+<NestedTitle id="transform-accesslog" Tag="h4" parent="transform.">accessLog?</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** [<code class="type">LogGroupArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/cloudwatch/loggroup/#inputs)<code class="symbol"> | </code><code class="symbol">(</code><code class="primitive">args</code><code class="symbol">: </code>[<code class="type">LogGroupArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/cloudwatch/loggroup/#inputs)<code class="symbol"> => </code><code class="primitive">void</code><code class="symbol">)</code>
+</InlineSection>
+</Section>
+Transform the CloudWatch LogGroup resource used for access logs.
+
+</Segment>
+<NestedTitle id="transform-api" Tag="h4" parent="transform.">api?</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** [<code class="type">ApiArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/apigatewayv2/api/#inputs)<code class="symbol"> | </code><code class="symbol">(</code><code class="primitive">args</code><code class="symbol">: </code>[<code class="type">ApiArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/apigatewayv2/api/#inputs)<code class="symbol"> => </code><code class="primitive">void</code><code class="symbol">)</code>
+</InlineSection>
+</Section>
+Transform the API Gateway WebSocket API resource.
+
+</Segment>
+<NestedTitle id="transform-domainname" Tag="h4" parent="transform.">domainName?</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** [<code class="type">DomainNameArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/apigatewayv2/domainname/#inputs)<code class="symbol"> | </code><code class="symbol">(</code><code class="primitive">args</code><code class="symbol">: </code>[<code class="type">DomainNameArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/apigatewayv2/domainname/#inputs)<code class="symbol"> => </code><code class="primitive">void</code><code class="symbol">)</code>
+</InlineSection>
+</Section>
+Transform the API Gateway WebSocket API domain name resource.
+
+</Segment>
+<NestedTitle id="transform-route" Tag="h4" parent="transform.">route?</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Object</code>
+</InlineSection>
+</Section>
+Transform the routes. This can be used to customize the handler function and
+the arguments for each route.
+
+```js
+{
+  transform: {
+    route: {
+      handler: {
+        link: [bucket, stripeKey]
+      },
+      args: {
+        auth: { iam: true }
+      }
+    }
+  }
+}
+```
+</Segment>
+<NestedTitle id="transform-route-args" Tag="h5" parent="transform.route.">args?</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** [<code class="type">ApiGatewayWebSocketRouteArgs</code>](#apigatewaywebsocketrouteargs)<code class="symbol"> | </code><code class="symbol">(</code><code class="primitive">args</code><code class="symbol">: </code>[<code class="type">ApiGatewayWebSocketRouteArgs</code>](#apigatewaywebsocketrouteargs)<code class="symbol"> => </code><code class="primitive">void</code><code class="symbol">)</code>
+</InlineSection>
+</Section>
+Transform the arguments for the route.
+
+</Segment>
+<NestedTitle id="transform-route-handler" Tag="h5" parent="transform.route.">handler?</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** [<code class="type">FunctionArgs</code>](/docs/component/aws/function/#functionargs)<code class="symbol"> | </code><code class="symbol">(</code><code class="primitive">args</code><code class="symbol">: </code>[<code class="type">FunctionArgs</code>](/docs/component/aws/function/#functionargs)<code class="symbol"> => </code><code class="primitive">void</code><code class="symbol">)</code>
+</InlineSection>
+</Section>
+Transform the handler function for the route.
+
+</Segment>
+<NestedTitle id="transform-stage" Tag="h4" parent="transform.">stage?</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** [<code class="type">StageArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/apigatewayv2/stage/#inputs)<code class="symbol"> | </code><code class="symbol">(</code><code class="primitive">args</code><code class="symbol">: </code>[<code class="type">StageArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/apigatewayv2/stage/#inputs)<code class="symbol"> => </code><code class="primitive">void</code><code class="symbol">)</code>
+</InlineSection>
+</Section>
+Transform the API Gateway WebSocket API stage resource.
+
+</Segment>
+
+## ApiGatewayWebSocketRouteArgs
+### auth?
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Object</code><code class="symbol">&gt;</code>
+</InlineSection>
+- <p>[<code class="key">iam?</code>](#auth-iam)</p>
+</Section>
+Enable auth for your WebSocket API.
+
+:::note
+Currently only IAM auth is supported.
+:::
+
+```js
+{
+  auth: {
+    iam: true
+  }
+}
+```
+</Segment>
+<NestedTitle id="auth-iam" Tag="h4" parent="auth.">iam?</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">true</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+Enable IAM authorization for a given API route. When IAM auth is enabled, clients need to use Signature Version 4 to sign their requests with their AWS credentials.
+
+</Segment>
+### transform?
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Object</code>
+</InlineSection>
+- <p>[<code class="key">integration?</code>](#transform-integration)</p>
+- <p>[<code class="key">route?</code>](#transform-route-1)</p>
+</Section>
+[Transform](/docs/components#transform) how this component creates its underlying
+resources.
+
+</Segment>
+<NestedTitle id="transform-integration" Tag="h4" parent="transform.">integration?</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** [<code class="type">IntegrationArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/apigatewayv2/integration/#inputs)<code class="symbol"> | </code><code class="symbol">(</code><code class="primitive">args</code><code class="symbol">: </code>[<code class="type">IntegrationArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/apigatewayv2/integration/#inputs)<code class="symbol"> => </code><code class="primitive">void</code><code class="symbol">)</code>
+</InlineSection>
+</Section>
+Transform the API Gateway WebSocket API integration resource.
+
+</Segment>
+<NestedTitle id="transform-route-1" Tag="h4" parent="transform.">route?</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** [<code class="type">RouteArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/apigatewayv2/route/#inputs)<code class="symbol"> | </code><code class="symbol">(</code><code class="primitive">args</code><code class="symbol">: </code>[<code class="type">RouteArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/apigatewayv2/route/#inputs)<code class="symbol"> => </code><code class="primitive">void</code><code class="symbol">)</code>
+</InlineSection>
+</Section>
+Transform the API Gateway WebSocket API route resource.
+
+</Segment>
+</div>

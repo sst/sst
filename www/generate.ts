@@ -1093,6 +1093,7 @@ async function generateComponentsDoc() {
       }
       // types in different doc
       const externalModule = {
+        ApiGatewayWebSocketRoute: "apigateway-websocket-route",
         AppSyncDataSource: "app-sync-data-source",
         AppSyncFunction: "app-sync-function",
         AppSyncResolver: "app-sync-resolver",
@@ -1412,6 +1413,8 @@ async function buildComponents() {
       "../pkg/platform/src/config.ts",
       "../pkg/platform/src/global-config.d.ts",
       "../pkg/platform/src/components/secret.ts",
+      "../pkg/platform/src/components/aws/apigateway-websocket.ts",
+      "../pkg/platform/src/components/aws/apigateway-websocket-route.ts",
       "../pkg/platform/src/components/aws/apigatewayv2.ts",
       "../pkg/platform/src/components/aws/app-sync.ts",
       "../pkg/platform/src/components/aws/app-sync-data-source.ts",

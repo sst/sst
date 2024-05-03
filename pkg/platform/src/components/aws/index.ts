@@ -1,4 +1,5 @@
 export * from "./apigatewayv2.js";
+export * from "./apigateway-websocket.js";
 export * from "./app-sync.js";
 export * from "./astro.js";
 export * from "./auth.js";
@@ -6,7 +7,6 @@ export * from "./bucket.js";
 export * from "./cluster.js";
 export * from "./cognito-identity-pool.js";
 export * from "./cognito-user-pool.js";
-export * from "./cognito-user-pool-client.js";
 export * from "./cron.js";
 export * from "./dns.js";
 export * from "./dynamo.js";
