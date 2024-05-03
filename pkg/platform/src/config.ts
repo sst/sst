@@ -155,7 +155,7 @@ export interface App {
    * }
    * ```
    *
-   * By default, we use the latest verion of a provider. But you can optionally specify a version.
+   * By default, we use the latest version of a provider. But you can optionally specify a version.
    *
    * ```ts
    * {
@@ -257,7 +257,7 @@ export interface Config {
    *
    * @example
    *
-   * For exmaple, here we return the name of the bucket we created.
+   * For example, here we return the name of the bucket we created.
    *
    * ```ts
    * async run() {
@@ -272,7 +272,7 @@ export interface Config {
    * This will display the following in the CLI.
    *
    * ```bash frame=\"none\"
-   * buckeet: bucket-jOaikGu4rla
+   * bucket: bucket-jOaikGu4rla
    * ```
    */
   run(): Promise<Record<string, any> | void>;

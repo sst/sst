@@ -210,7 +210,7 @@ declare global {
    *
    * @example
    *
-   * For example, to set a default runtime for all function compoennts.
+   * For example, to set a default runtime for all function components.
    *
    * ```ts
    * $transform(sst.aws.Function, (args, opts) => {
