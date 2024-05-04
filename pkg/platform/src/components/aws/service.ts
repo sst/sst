@@ -43,10 +43,6 @@ export interface ServiceArgs extends ClusterServiceArgs {
     arn: Input<string>;
   }>;
   /**
-   * The name of the service.
-   */
-  name: Input<string>;
-  /**
    * The VPC to use for the cluster.
    */
   vpc: ClusterArgs["vpc"];
@@ -79,7 +75,6 @@ export class Service extends Component implements Link.Linkable {
 
     const self = this;
 
-    const serviceName = output(args.name);
     const cluster = output(args.cluster);
     const vpc = output(args.vpc);
     const region = normalizeRegion();
@@ -320,7 +315,7 @@ export class Service extends Component implements Link.Linkable {
             args: imageArgs.args,
             platform: imageArgs.platform,
           })),
-          imageName: interpolate`${repo.url}:${serviceName}`,
+          imageName: interpolate`${repo.url}:${name}`,
           registry: authToken.apply((authToken) => ({
             password: secret(authToken.password),
             username: authToken.userName,
@@ -434,7 +429,7 @@ export class Service extends Component implements Link.Linkable {
       return new aws.cloudwatch.LogGroup(
         `${name}LogGroup`,
         transform(args.transform?.logGroup, {
-          name: interpolate`/sst/cluster/${cluster.name}/${serviceName}`,
+          name: interpolate`/sst/cluster/${cluster.name}/${name}`,
           retentionInDays: logging.apply(
             (logging) => RETENTION[logging.retention],
           ),
@@ -490,7 +485,7 @@ export class Service extends Component implements Link.Linkable {
       return new aws.ecs.TaskDefinition(
         `${name}Task`,
         transform(args.transform?.taskDefinition, {
-          family: interpolate`${cluster.name}-${serviceName}`,
+          family: interpolate`${cluster.name}-${name}`,
           trackLatest: true,
           cpu: cpu.apply((v) => toNumber(v).toString()),
           memory: memory.apply((v) => toMBs(v).toString()),
@@ -507,7 +502,7 @@ export class Service extends Component implements Link.Linkable {
           taskRoleArn: taskRole.arn,
           containerDefinitions: $jsonStringify([
             {
-              name: serviceName,
+              name,
               image: image.repoDigest,
               pseudoTerminal: true,
               portMappings: pub?.ports.apply((ports) =>
@@ -548,7 +543,7 @@ export class Service extends Component implements Link.Linkable {
       return new aws.ecs.Service(
         `${name}Service`,
         transform(args.transform?.service, {
-          name: serviceName,
+          name,
           cluster: cluster.arn,
           taskDefinition: taskDefinition.arn,
           desiredCount: scaling.min,
@@ -567,7 +562,7 @@ export class Service extends Component implements Link.Linkable {
             targets.apply((targets) =>
               Object.values(targets).map((target) => ({
                 targetGroupArn: target.arn,
-                containerName: serviceName,
+                containerName: name,
                 containerPort: target.port.apply((port) => port!),
               })),
             ),

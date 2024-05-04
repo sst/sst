@@ -738,8 +738,7 @@ export interface ClusterServiceArgs {
  * ```
  */
 export class Cluster extends Component {
-  private constructorName: string;
-  private constructorArgs: ClusterArgs;
+  private args: ClusterArgs;
   private cluster: aws.ecs.Cluster;
 
   constructor(
@@ -753,8 +752,7 @@ export class Cluster extends Component {
 
     const cluster = createCluster();
 
-    this.constructorName = name;
-    this.constructorArgs = args;
+    this.args = args;
     this.cluster = cluster;
 
     function createCluster() {
@@ -819,14 +817,13 @@ export class Cluster extends Component {
    * ```
    */
   public addService(name: string, args?: ClusterServiceArgs) {
-    const prefix = this.constructorName;
-    return new Service(`${prefix}Service${name}`, {
-      name,
+    // Do not prefix the service to allow `Resource.MyService` to work.
+    return new Service(name, {
       cluster: {
         name: this.cluster.name,
         arn: this.cluster.arn,
       },
-      vpc: this.constructorArgs.vpc,
+      vpc: this.args.vpc,
       ...args,
     });
   }
