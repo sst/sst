@@ -9,8 +9,8 @@ export default $config({
     };
   },
   async run() {
-    const rds = new sst.aws.Postgres("Postgres");
-    const api = new sst.aws.Function("Api", {
+    const rds = new sst.aws.Postgres("MyPostgres");
+    const api = new sst.aws.Function("MyApi", {
       url: true,
       link: [rds],
       handler: "./src/api.handler",

@@ -1,7 +1,7 @@
 import { db } from "./drizzle";
 import { todo } from "./todo.sql";
+// import { randomUUID } from "node:crypto";
 import { APIGatewayProxyHandlerV2 } from "aws-lambda";
-import { randomUUID } from "node:crypto";
 
 export const handler: APIGatewayProxyHandlerV2 = async (evt) => {
   if (evt.requestContext.http.method === "GET") {
@@ -15,9 +15,10 @@ export const handler: APIGatewayProxyHandlerV2 = async (evt) => {
   if (evt.requestContext.http.method === "POST") {
     const result = await db
       .insert(todo)
-      .values({ title: "new todo " + randomUUID() })
+      .values({ title: "new todo " + crypto.randomUUID() })
       .returning()
       .execute();
+
     return {
       statusCode: 200,
       body: JSON.stringify(result),
