@@ -1,15 +1,9 @@
-import {
-  ComponentResourceOptions,
-  Output,
-  all,
-  interpolate,
-  output,
-} from "@pulumi/pulumi";
+import { ComponentResourceOptions, Output, all, output } from "@pulumi/pulumi";
 import * as aws from "@pulumi/aws";
 import { Component, Prettify, Transform, transform } from "../component";
 import { Link } from "../link";
 import type { Input } from "../input";
-import { Function, FunctionArgs } from "./function";
+import { FunctionArgs } from "./function";
 import {
   hashStringToPrettyString,
   prefixName,
@@ -20,6 +14,7 @@ import { DnsValidatedCertificate } from "./dns-validated-certificate";
 import { RETENTION } from "./logging";
 import { dns as awsDns } from "./dns.js";
 import { ApiGatewayV2DomainArgs } from "./helpers/apigatewayv2-domain";
+import { ApiGatewayV2LambdaRoute } from "./apigatewayv2-lambda-route";
 
 export interface ApiGatewayV2Args {
   /**
@@ -230,25 +225,6 @@ export interface ApiGatewayV2RouteArgs {
   };
 }
 
-export interface ApiGatewayV2Route {
-  /**
-   * The Lambda function.
-   */
-  function: Output<Function>;
-  /**
-   * The Lambda permission.
-   */
-  permission: aws.lambda.Permission;
-  /**
-   * The API Gateway HTTP API integration.
-   */
-  integration: aws.apigatewayv2.Integration;
-  /**
-   * The API Gateway HTTP API route.
-   */
-  route: Output<aws.apigatewayv2.Route>;
-}
-
 /**
  * The `ApiGatewayV2` component lets you add an [Amazon API Gateway HTTP API](https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api.html) to your app.
  *
@@ -281,7 +257,6 @@ export class ApiGatewayV2 extends Component implements Link.Linkable {
   private api: aws.apigatewayv2.Api;
   private apigDomain?: aws.apigatewayv2.DomainName;
   private apiMapping?: Output<aws.apigatewayv2.ApiMapping>;
-  private authorizers: Record<string, aws.apigatewayv2.Authorizer> = {};
   private logGroup: aws.cloudwatch.LogGroup;
 
   constructor(
@@ -617,60 +592,24 @@ export class ApiGatewayV2 extends Component implements Link.Linkable {
     route: string,
     handler: string | FunctionArgs,
     args: ApiGatewayV2RouteArgs = {},
-  ): ApiGatewayV2Route {
-    const self = this;
-    const selfName = this.constructorName;
-    const routeKey = parseRoute();
-
-    // Build route name
-    const id = sanitizeToPascalCase(
-      hashStringToPrettyString([this.api.id, routeKey].join(""), 4),
+  ) {
+    const routeNormalized = parseRoute();
+    const prefix = this.constructorName;
+    const suffix = sanitizeToPascalCase(
+      hashStringToPrettyString([this.api.id, routeNormalized].join(""), 6),
     );
 
-    args = transform(this.constructorArgs.transform?.route?.args, args);
-
-    const fn = Function.fromDefinition(
-      `${selfName}Handler${id}`,
+    return new ApiGatewayV2LambdaRoute(`${prefix}Route${suffix}`, {
+      api: {
+        name: prefix,
+        id: this.api.id,
+        executionArn: this.api.executionArn,
+      },
+      route: routeNormalized,
       handler,
-      {
-        description: `${selfName} route ${routeKey}`,
-      },
-      this.constructorArgs.transform?.route?.handler,
-    );
-    const permission = new aws.lambda.Permission(
-      `${selfName}Handler${id}Permissions`,
-      {
-        action: "lambda:InvokeFunction",
-        function: fn.arn,
-        principal: "apigateway.amazonaws.com",
-        sourceArn: interpolate`${this.nodes.api.executionArn}/*`,
-      },
-    );
-    const integration = new aws.apigatewayv2.Integration(
-      `${selfName}Integration${id}`,
-      transform(args.transform?.integration, {
-        apiId: this.api.id,
-        integrationType: "AWS_PROXY",
-        integrationUri: fn.arn,
-        payloadFormatVersion: "2.0",
-      }),
-      { dependsOn: [permission] },
-    );
-    const authArgs = createAuthorizer();
-
-    const apiRoute = authArgs.apply(
-      (authArgs) =>
-        new aws.apigatewayv2.Route(
-          `${selfName}Route${id}`,
-          transform(args.transform?.route, {
-            apiId: this.api.id,
-            routeKey,
-            target: interpolate`integrations/${integration.id}`,
-            ...authArgs,
-          }),
-        ),
-    );
-    return { function: fn, permission, integration, route: apiRoute };
+      handlerTransform: this.constructorArgs.transform?.route?.handler,
+      ...transform(this.constructorArgs.transform?.route?.args, args),
+    });
 
     function parseRoute() {
       if (route.toLowerCase() === "$default") return "$default";
@@ -703,52 +642,6 @@ export class ApiGatewayV2 extends Component implements Link.Linkable {
         );
 
       return `${method} ${path}`;
-    }
-
-    function createAuthorizer() {
-      return output(args.auth).apply((auth) => {
-        if (auth?.iam) return { authorizationType: "AWS_IAM" };
-        if (auth?.jwt) {
-          // Build authorizer name
-          const id = sanitizeToPascalCase(
-            hashStringToPrettyString(
-              [
-                auth.jwt.issuer,
-                ...auth.jwt.audiences.sort(),
-                auth.jwt.identitySource ?? "",
-              ].join(""),
-              4,
-            ),
-          );
-
-          const authorizer =
-            self.authorizers[id] ??
-            new aws.apigatewayv2.Authorizer(
-              `${selfName}Authorizer${id}`,
-              transform(args.transform?.authorizer, {
-                apiId: self.api.id,
-                authorizerType: "JWT",
-                identitySources: [
-                  auth.jwt.identitySource ?? "$request.header.Authorization",
-                ],
-                jwtConfiguration: {
-                  audiences: auth.jwt.audiences,
-                  issuer: auth.jwt.issuer,
-                },
-              }),
-            );
-          self.authorizers[id] = authorizer;
-
-          return {
-            authorizationType: "JWT",
-            authorizationScopes: auth.jwt.scopes,
-            authorizerId: authorizer.id,
-          };
-        }
-        return {
-          authorizationType: "NONE",
-        };
-      });
     }
   }
 

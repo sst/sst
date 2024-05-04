@@ -19,7 +19,7 @@ import { DnsValidatedCertificate } from "./dns-validated-certificate";
 import { RETENTION } from "./logging";
 import { dns as awsDns } from "./dns.js";
 import { ApiGatewayV2DomainArgs } from "./helpers/apigatewayv2-domain";
-import { ApiGatewayWebSocketRoute } from "./apigateway-websocket-route";
+import { ApiGatewayWebSocketLambdaRoute } from "./apigateway-websocket-lambda-route";
 
 export interface ApiGatewayWebSocketArgs {
   /**
@@ -430,7 +430,7 @@ export class ApiGatewayWebSocket
           ([domain, key]) =>
             key ? `wss://${domain}/${key}/` : `wss://${domain}`,
         )
-      : this.api.apiEndpoint;
+      : interpolate`${this.api.apiEndpoint}/${this.stage.name}`;
   }
 
   /**
@@ -524,19 +524,18 @@ export class ApiGatewayWebSocket
     handler: string | FunctionArgs,
     args: ApiGatewayWebSocketRouteArgs = {},
   ) {
-    const self = this;
-    const selfName = this.constructorName;
+    const prefix = this.constructorName;
     const suffix = sanitizeToPascalCase(
       ["$connect", "$disconnect", "$default"].includes(route)
         ? route
         : hashStringToPrettyString(`${this.api.id}${route}`, 6),
     );
 
-    return new ApiGatewayWebSocketRoute(`${selfName}Route${suffix}`, {
+    return new ApiGatewayWebSocketLambdaRoute(`${prefix}Route${suffix}`, {
       api: {
-        name: selfName,
-        id: self.api.id,
-        executionArn: self.api.executionArn,
+        name: prefix,
+        id: this.api.id,
+        executionArn: this.api.executionArn,
       },
       route,
       handler,
@@ -559,7 +558,7 @@ export class ApiGatewayWebSocket
   public getSSTAWSPermissions() {
     return [
       {
-        actions: ["execute-api:MangeConnections"],
+        actions: ["execute-api:ManageConnections"],
         resources: [interpolate`${this.api.executionArn}/*/*/@connections/*`],
       },
     ];

@@ -3,10 +3,11 @@ import * as aws from "@pulumi/aws";
 import { Component, Transform, transform } from "../component";
 import { Link } from "../link";
 import type { Input } from "../input";
-import { Function, FunctionArgs } from "./function";
+import { FunctionArgs } from "./function";
 import { hashStringToPrettyString, sanitizeToPascalCase } from "../naming";
-import { VisibleError } from "../error";
 import { parseQueueArn, parseTopicArn } from "./helpers/arn";
+import { SnsTopicLambdaSubscriber } from "./sns-topic-lambda-subscriber";
+import { SnsTopicQueueSubscriber } from "./sns-topic-queue-subscriber";
 
 export interface SnsTopicArgs {
   /**
@@ -37,7 +38,7 @@ export interface SnsTopicArgs {
   };
 }
 
-export interface SnsTopicSubscribeArgs {
+export interface SnsTopicSubscriberArgs {
   /**
    * Filter the messages that'll be processed by the subscriber.
    *
@@ -91,32 +92,6 @@ export interface SnsTopicSubscribeArgs {
      */
     subscription?: Transform<aws.sns.TopicSubscriptionArgs>;
   };
-}
-
-export interface SnsTopicFunctionSubscriber {
-  /**
-   * The Lambda function that'll be notified.
-   */
-  function: Output<Function>;
-  /**
-   * The Lambda permission.
-   */
-  permission: Output<aws.lambda.Permission>;
-  /**
-   * The SNS topic subscription.
-   */
-  subscription: Output<aws.sns.TopicSubscription>;
-}
-
-export interface SnsTopicQueueSubscriber {
-  /**
-   * The SNS topic policy.
-   */
-  policy: Output<aws.sqs.QueuePolicy>;
-  /**
-   * The SNS topic subscription.
-   */
-  subscription: Output<aws.sns.TopicSubscription>;
 }
 
 /**
@@ -176,7 +151,8 @@ export interface SnsTopicQueueSubscriber {
  */
 export class SnsTopic
   extends Component
-  implements Link.Linkable, Link.AWS.Linkable {
+  implements Link.Linkable, Link.AWS.Linkable
+{
   private constructorName: string;
   private topic: aws.sns.Topic;
 
@@ -269,7 +245,7 @@ export class SnsTopic
    */
   public subscribe(
     subscriber: string | FunctionArgs,
-    args: SnsTopicSubscribeArgs = {},
+    args: SnsTopicSubscriberArgs = {},
   ) {
     return SnsTopic._subscribeFunction(
       this.constructorName,
@@ -322,17 +298,11 @@ export class SnsTopic
   public static subscribe(
     topicArn: Input<string>,
     subscriber: string | FunctionArgs,
-    args?: SnsTopicSubscribeArgs,
+    args?: SnsTopicSubscriberArgs,
   ) {
-    const topicName = output(topicArn).apply((topicArn) => {
-      const topicName = topicArn.split(":").pop();
-      if (!topicArn.startsWith("arn:aws:sns:") || !topicName)
-        throw new VisibleError(
-          `The provided ARN "${topicArn}" is not an SNS topic ARN.`,
-        );
-      return topicName;
-    });
-
+    const topicName = output(topicArn).apply(
+      (topicArn) => parseTopicArn(topicArn).topicName,
+    );
     return this._subscribeFunction(topicName, topicArn, subscriber, args);
   }
 
@@ -340,58 +310,27 @@ export class SnsTopic
     name: Input<string>,
     topicArn: Input<string>,
     subscriber: string | FunctionArgs,
-    args: SnsTopicSubscribeArgs = {},
-  ): SnsTopicFunctionSubscriber {
-    const ret = all([name, subscriber, args]).apply(
-      ([name, subscriber, args]) => {
-        // Build subscriber name
-        const namePrefix = sanitizeToPascalCase(name);
-        const id = sanitizeToPascalCase(
-          hashStringToPrettyString(
-            [
-              topicArn,
-              JSON.stringify(args.filter ?? {}),
-              typeof subscriber === "string" ? subscriber : subscriber.handler,
-            ].join(""),
-            4,
-          ),
-        );
+    args: SnsTopicSubscriberArgs = {},
+  ) {
+    return all([name, subscriber, args]).apply(([name, subscriber, args]) => {
+      const prefix = sanitizeToPascalCase(name);
+      const suffix = sanitizeToPascalCase(
+        hashStringToPrettyString(
+          [
+            topicArn,
+            JSON.stringify(args.filter ?? {}),
+            typeof subscriber === "string" ? subscriber : subscriber.handler,
+          ].join(""),
+          6,
+        ),
+      );
 
-        const fn = Function.fromDefinition(
-          `${namePrefix}Sub${id}`,
-          subscriber,
-          {
-            description: `Subscribed to ${name}`,
-          },
-        );
-        const permission = new aws.lambda.Permission(
-          `${namePrefix}Sub${id}Permissions`,
-          {
-            action: "lambda:InvokeFunction",
-            function: fn.arn,
-            principal: "sns.amazonaws.com",
-            sourceArn: topicArn,
-          },
-        );
-        const subscription = new aws.sns.TopicSubscription(
-          `${namePrefix}Subscription${id}`,
-          transform(args?.transform?.subscription, {
-            topic: topicArn,
-            protocol: "lambda",
-            endpoint: fn.arn,
-            filterPolicy: JSON.stringify(args.filter ?? {}),
-          }),
-          { dependsOn: [permission] },
-        );
-
-        return { fn, permission, subscription };
-      },
-    );
-    return {
-      function: ret.fn,
-      permission: ret.permission,
-      subscription: ret.subscription,
-    };
+      return new SnsTopicLambdaSubscriber(`${prefix}Subscriber${suffix}`, {
+        topic: { arn: topicArn },
+        subscriber,
+        ...args,
+      });
+    });
   }
 
   /**
@@ -426,7 +365,7 @@ export class SnsTopic
    */
   public subscribeQueue(
     queueArn: Input<string>,
-    args: SnsTopicSubscribeArgs = {},
+    args: SnsTopicSubscriberArgs = {},
   ) {
     return SnsTopic._subscribeQueue(
       this.constructorName,
@@ -471,12 +410,11 @@ export class SnsTopic
   public static subscribeQueue(
     topicArn: Input<string>,
     queueArn: Input<string>,
-    args?: SnsTopicSubscribeArgs,
+    args?: SnsTopicSubscriberArgs,
   ) {
     const topicName = output(topicArn).apply(
       (topicArn) => parseTopicArn(topicArn).topicName,
     );
-
     return this._subscribeQueue(topicName, topicArn, queueArn, args);
   }
 
@@ -484,61 +422,23 @@ export class SnsTopic
     name: Input<string>,
     topicArn: Input<string>,
     queueArn: Input<string>,
-    args: SnsTopicSubscribeArgs = {},
-  ): SnsTopicQueueSubscriber {
-    const ret = all([name, queueArn, args]).apply(([name, queueArn, args]) => {
-      const { queueUrl } = parseQueueArn(queueArn);
-
-      // Build subscriber name
-      const namePrefix = sanitizeToPascalCase(name);
-      const id = sanitizeToPascalCase(
+    args: SnsTopicSubscriberArgs = {},
+  ) {
+    return all([name, queueArn, args]).apply(([name, queueArn, args]) => {
+      const prefix = sanitizeToPascalCase(name);
+      const suffix = sanitizeToPascalCase(
         hashStringToPrettyString(
           [topicArn, JSON.stringify(args.filter ?? {}), queueArn].join(""),
-          4,
+          6,
         ),
       );
 
-      const policy = new aws.sqs.QueuePolicy(`${namePrefix}Policy${id}`, {
-        queueUrl,
-        policy: aws.iam.getPolicyDocumentOutput({
-          statements: [
-            {
-              actions: ["sqs:SendMessage"],
-              resources: [queueArn],
-              principals: [
-                {
-                  type: "Service",
-                  identifiers: ["sns.amazonaws.com"],
-                },
-              ],
-              conditions: [
-                {
-                  test: "ArnEquals",
-                  variable: "aws:SourceArn",
-                  values: [topicArn],
-                },
-              ],
-            },
-          ],
-        }).json,
+      return new SnsTopicQueueSubscriber(`${prefix}Subscriber${suffix}`, {
+        topic: { arn: topicArn },
+        queue: queueArn,
+        ...args,
       });
-
-      const subscription = new aws.sns.TopicSubscription(
-        `${namePrefix}Subscription${id}`,
-        transform(args?.transform?.subscription, {
-          topic: topicArn,
-          protocol: "sqs",
-          endpoint: queueArn,
-          filterPolicy: JSON.stringify(args.filter ?? {}),
-        }),
-      );
-
-      return { policy, subscription };
     });
-    return {
-      policy: ret.policy,
-      subscription: ret.subscription,
-    };
   }
 
   /** @internal */

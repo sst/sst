@@ -7,7 +7,7 @@ export const handler = async (event) => {
     new PutItemCommand({
       TableName: Resource.MyTable.name,
       Item: {
-        id: { S: "3" },
+        id: { S: Date.now().toString() },
         message: { S: "Hello" },
       },
     })

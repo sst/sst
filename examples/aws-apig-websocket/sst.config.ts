@@ -15,6 +15,8 @@ export default $config({
     api.route("$default", { handler: "lambda.catchAll", link: [api] });
     api.route("sendmessage", "lambda.sendMessage");
 
-    return { managementEndpoint: api.managementEndpoint };
+    return {
+      managementEndpoint: api.managementEndpoint,
+    };
   },
 });

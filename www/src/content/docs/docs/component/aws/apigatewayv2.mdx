@@ -77,7 +77,7 @@ Configure the route.
 </Section>
 
 <InlineSection>
-**Returns** [<code class="type">ApiGatewayV2Route</code>](#apigatewayv2route)
+**Returns** [<code class="type">ApiGatewayV2LambdaRoute</code>](/docs/component/aws/apigatewayv2-lambda-route/)
 </InlineSection>
 Add a route to the API Gateway HTTP API. The route is a combination of
 - An HTTP method and a path, `{METHOD} /{path}`.
@@ -538,48 +538,6 @@ Transform the handler function for the route.
 </InlineSection>
 </Section>
 Transform the API Gateway HTTP API stage resource.
-
-</Segment>
-
-## ApiGatewayV2Route
-### function
-<Segment>
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">Output</code><code class="symbol">&lt;</code>[<code class="type">Function</code>](/docs/component/aws/function/)<code class="symbol">&gt;</code>
-</InlineSection>
-</Section>
-The Lambda function.
-
-</Segment>
-### integration
-<Segment>
-<Section type="parameters">
-<InlineSection>
-**Type** [<code class="type">Integration</code>](https://www.pulumi.com/registry/packages/aws/api-docs/apigatewayv2/integration/)
-</InlineSection>
-</Section>
-The API Gateway HTTP API integration.
-
-</Segment>
-### permission
-<Segment>
-<Section type="parameters">
-<InlineSection>
-**Type** [<code class="type">Permission</code>](https://www.pulumi.com/registry/packages/aws/api-docs/lambda/permission/)
-</InlineSection>
-</Section>
-The Lambda permission.
-
-</Segment>
-### route
-<Segment>
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">Output</code><code class="symbol">&lt;</code>[<code class="type">Route</code>](https://www.pulumi.com/registry/packages/aws/api-docs/apigatewayv2/route/)<code class="symbol">&gt;</code>
-</InlineSection>
-</Section>
-The API Gateway HTTP API route.
 
 </Segment>
 

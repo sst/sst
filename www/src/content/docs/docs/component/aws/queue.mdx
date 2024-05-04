@@ -95,12 +95,12 @@ subscribe(subscriber, args?)
 #### Parameters
 - <p><code class="key">subscriber</code> <code class="primitive">string</code><code class="symbol"> | </code>[<code class="type">FunctionArgs</code>](/docs/component/aws/function/#functionargs)</p>
 The function that'll be notified.
-- <p><code class="key">args?</code> [<code class="type">QueueSubscribeArgs</code>](#queuesubscribeargs)</p>
+- <p><code class="key">args?</code> [<code class="type">QueueSubscriberArgs</code>](#queuesubscriberargs)</p>
 Configure the subscription.
 </Section>
 
 <InlineSection>
-**Returns** [<code class="type">QueueSubscriber</code>](#queuesubscriber)
+**Returns** <code class="primitive">Output</code><code class="symbol">&lt;</code>[<code class="type">QueueLambdaSubscriber</code>](/docs/component/aws/queue-lambda-subscriber/)<code class="symbol">&gt;</code>
 </InlineSection>
 Subscribe to this queue.
 
@@ -145,12 +145,12 @@ Queue.subscribe(queueArn, subscriber, args?)
 The ARN of the SQS queue to subscribe to.
 - <p><code class="key">subscriber</code> <code class="primitive">string</code><code class="symbol"> | </code>[<code class="type">FunctionArgs</code>](/docs/component/aws/function/#functionargs)</p>
 The function that'll be notified.
-- <p><code class="key">args?</code> [<code class="type">QueueSubscribeArgs</code>](#queuesubscribeargs)</p>
+- <p><code class="key">args?</code> [<code class="type">QueueSubscriberArgs</code>](#queuesubscriberargs)</p>
 Configure the subscription.
 </Section>
 
 <InlineSection>
-**Returns** [<code class="type">QueueSubscriber</code>](#queuesubscriber)
+**Returns** <code class="primitive">Output</code><code class="symbol">&lt;</code>[<code class="type">QueueLambdaSubscriber</code>](/docs/component/aws/queue-lambda-subscriber/)<code class="symbol">&gt;</code>
 </InlineSection>
 Subscribe to an SQS queue that was not created in your app.
 
@@ -293,7 +293,7 @@ Transform the SQS queue resource.
 
 </Segment>
 
-## QueueSubscribeArgs
+## QueueSubscriberArgs
 ### filters?
 <Segment>
 <Section type="parameters">
@@ -366,28 +366,6 @@ resources.
 </InlineSection>
 </Section>
 Transform the Lambda Event Source Mapping resource.
-
-</Segment>
-
-## QueueSubscriber
-### eventSourceMapping
-<Segment>
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">Output</code><code class="symbol">&lt;</code>[<code class="type">EventSourceMapping</code>](https://www.pulumi.com/registry/packages/aws/api-docs/lambda/eventsourcemapping/)<code class="symbol">&gt;</code>
-</InlineSection>
-</Section>
-The Lambda event source mapping.
-
-</Segment>
-### function
-<Segment>
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">Output</code><code class="symbol">&lt;</code>[<code class="type">Function</code>](/docs/component/aws/function/)<code class="symbol">&gt;</code>
-</InlineSection>
-</Section>
-The Lambda function that'll be notified.
 
 </Segment>
 </div>

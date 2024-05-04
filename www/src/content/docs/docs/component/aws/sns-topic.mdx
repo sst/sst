@@ -99,12 +99,12 @@ subscribe(subscriber, args?)
 #### Parameters
 - <p><code class="key">subscriber</code> <code class="primitive">string</code><code class="symbol"> | </code>[<code class="type">FunctionArgs</code>](/docs/component/aws/function/#functionargs)</p>
 The function that'll be notified.
-- <p><code class="key">args?</code> [<code class="type">SnsTopicSubscribeArgs</code>](#snstopicsubscribeargs)</p>
+- <p><code class="key">args?</code> [<code class="type">SnsTopicSubscriberArgs</code>](#snstopicsubscriberargs)</p>
 Configure the subscription.
 </Section>
 
 <InlineSection>
-**Returns** [<code class="type">SnsTopicFunctionSubscriber</code>](#snstopicfunctionsubscriber)
+**Returns** <code class="primitive">Output</code><code class="symbol">&lt;</code>[<code class="type">SnsTopicLambdaSubscriber</code>](/docs/component/aws/sns-topic-lambda-subscriber/)<code class="symbol">&gt;</code>
 </InlineSection>
 Subscribe to this SNS topic.
 
@@ -144,12 +144,12 @@ subscribeQueue(queueArn, args?)
 #### Parameters
 - <p><code class="key">queueArn</code> <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code></p>
 The ARN of the queue that'll be notified.
-- <p><code class="key">args?</code> [<code class="type">SnsTopicSubscribeArgs</code>](#snstopicsubscribeargs)</p>
+- <p><code class="key">args?</code> [<code class="type">SnsTopicSubscriberArgs</code>](#snstopicsubscriberargs)</p>
 Configure the subscription.
 </Section>
 
 <InlineSection>
-**Returns** [<code class="type">SnsTopicQueueSubscriber</code>](#snstopicqueuesubscriber)
+**Returns** <code class="primitive">Output</code><code class="symbol">&lt;</code>[<code class="type">SnsTopicQueueSubscriber</code>](/docs/component/aws/sns-topic-queue-subscriber/)<code class="symbol">&gt;</code>
 </InlineSection>
 Subscribe to this SNS topic with an SQS queue.
 
@@ -190,12 +190,12 @@ SnsTopic.subscribe(topicArn, subscriber, args?)
 The ARN of the SNS topic to subscribe to.
 - <p><code class="key">subscriber</code> <code class="primitive">string</code><code class="symbol"> | </code>[<code class="type">FunctionArgs</code>](/docs/component/aws/function/#functionargs)</p>
 The function that'll be notified.
-- <p><code class="key">args?</code> [<code class="type">SnsTopicSubscribeArgs</code>](#snstopicsubscribeargs)</p>
+- <p><code class="key">args?</code> [<code class="type">SnsTopicSubscriberArgs</code>](#snstopicsubscriberargs)</p>
 Configure the subscription.
 </Section>
 
 <InlineSection>
-**Returns** [<code class="type">SnsTopicFunctionSubscriber</code>](#snstopicfunctionsubscriber)
+**Returns** <code class="primitive">Output</code><code class="symbol">&lt;</code>[<code class="type">SnsTopicLambdaSubscriber</code>](/docs/component/aws/sns-topic-lambda-subscriber/)<code class="symbol">&gt;</code>
 </InlineSection>
 Subscribe to an SNS topic that was not created in your app.
 
@@ -245,12 +245,12 @@ SnsTopic.subscribeQueue(topicArn, queueArn, args?)
 The ARN of the SNS topic to subscribe to.
 - <p><code class="key">queueArn</code> <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code></p>
 The ARN of the queue that'll be notified.
-- <p><code class="key">args?</code> [<code class="type">SnsTopicSubscribeArgs</code>](#snstopicsubscribeargs)</p>
+- <p><code class="key">args?</code> [<code class="type">SnsTopicSubscriberArgs</code>](#snstopicsubscriberargs)</p>
 Configure the subscription.
 </Section>
 
 <InlineSection>
-**Returns** [<code class="type">SnsTopicQueueSubscriber</code>](#snstopicqueuesubscriber)
+**Returns** <code class="primitive">Output</code><code class="symbol">&lt;</code>[<code class="type">SnsTopicQueueSubscriber</code>](/docs/component/aws/sns-topic-queue-subscriber/)<code class="symbol">&gt;</code>
 </InlineSection>
 Subscribe to an existing SNS topic with a previously created SQS queue.
 
@@ -381,61 +381,7 @@ Transform the SNS topic resource.
 
 </Segment>
 
-## SnsTopicFunctionSubscriber
-### function
-<Segment>
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">Output</code><code class="symbol">&lt;</code>[<code class="type">Function</code>](/docs/component/aws/function/)<code class="symbol">&gt;</code>
-</InlineSection>
-</Section>
-The Lambda function that'll be notified.
-
-</Segment>
-### permission
-<Segment>
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">Output</code><code class="symbol">&lt;</code>[<code class="type">Permission</code>](https://www.pulumi.com/registry/packages/aws/api-docs/lambda/permission/)<code class="symbol">&gt;</code>
-</InlineSection>
-</Section>
-The Lambda permission.
-
-</Segment>
-### subscription
-<Segment>
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">Output</code><code class="symbol">&lt;</code>[<code class="type">TopicSubscription</code>](https://www.pulumi.com/registry/packages/aws/api-docs/sns/topicsubscription/)<code class="symbol">&gt;</code>
-</InlineSection>
-</Section>
-The SNS topic subscription.
-
-</Segment>
-
-## SnsTopicQueueSubscriber
-### policy
-<Segment>
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">Output</code><code class="symbol">&lt;</code>[<code class="type">QueuePolicy</code>](https://www.pulumi.com/registry/packages/aws/api-docs/sqs/queuepolicy/)<code class="symbol">&gt;</code>
-</InlineSection>
-</Section>
-The SNS topic policy.
-
-</Segment>
-### subscription
-<Segment>
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">Output</code><code class="symbol">&lt;</code>[<code class="type">TopicSubscription</code>](https://www.pulumi.com/registry/packages/aws/api-docs/sns/topicsubscription/)<code class="symbol">&gt;</code>
-</InlineSection>
-</Section>
-The SNS topic subscription.
-
-</Segment>
-
-## SnsTopicSubscribeArgs
+## SnsTopicSubscriberArgs
 ### filter?
 <Segment>
 <Section type="parameters">

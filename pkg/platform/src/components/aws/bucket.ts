@@ -16,9 +16,11 @@ import {
 import { Component, Prettify, Transform, transform } from "../component";
 import { Link } from "../link";
 import type { Input } from "../input";
-import { Function, FunctionArgs } from "./function";
+import { FunctionArgs } from "./function";
 import { Duration, toSeconds } from "../duration";
 import { VisibleError } from "../error";
+import { parseBucketArn } from "./helpers/arn";
+import { BucketLambdaSubscriber } from "./bucket-lambda-subscriber";
 
 interface BucketCorsArgs {
   /**
@@ -157,7 +159,7 @@ export interface BucketArgs {
   };
 }
 
-export interface BucketSubscribeArgs {
+export interface BucketSubscriberArgs {
   /**
    * The S3 event types that will trigger the notification.
    * @default All S3 events
@@ -231,21 +233,6 @@ export interface BucketSubscribeArgs {
      */
     notification?: Transform<aws.s3.BucketNotificationArgs>;
   };
-}
-
-export interface BucketSubscriber {
-  /**
-   * The Lambda function that'll be notified.
-   */
-  function: Output<Function>;
-  /**
-   * The Lambda permission.
-   */
-  permission: Output<aws.lambda.Permission>;
-  /**
-   * The S3 bucket notification.
-   */
-  notification: Output<aws.s3.BucketNotification>;
 }
 
 /**
@@ -517,7 +504,7 @@ export class Bucket
    */
   public subscribe(
     subscriber: string | FunctionArgs,
-    args?: BucketSubscribeArgs,
+    args?: BucketSubscriberArgs,
   ) {
     if (this.isSubscribed)
       throw new VisibleError(
@@ -584,17 +571,11 @@ export class Bucket
   public static subscribe(
     bucketArn: Input<string>,
     subscriber: string | FunctionArgs,
-    args?: BucketSubscribeArgs,
+    args?: BucketSubscriberArgs,
   ) {
-    const bucketName = output(bucketArn).apply((bucketArn) => {
-      const bucketName = bucketArn.split(":").pop();
-      if (!bucketArn.startsWith("arn:aws:s3:") || !bucketName)
-        throw new VisibleError(
-          `The provided ARN "${bucketArn}" is not an S3 bucket ARN.`,
-        );
-      return bucketName;
-    });
-
+    const bucketName = output(bucketArn).apply(
+      (bucketArn) => parseBucketArn(bucketArn).bucketName,
+    );
     return this._subscribe(bucketName, bucketName, bucketArn, subscriber, args);
   }
 
@@ -603,99 +584,46 @@ export class Bucket
     bucketName: Input<string>,
     bucketArn: Input<string>,
     subscriber: string | FunctionArgs,
-    args: BucketSubscribeArgs = {},
-  ): BucketSubscriber {
-    const ret = all([name, subscriber, args]).apply(
-      ([name, subscriber, args]) => {
-        const events = args.events ?? [
-          "s3:ObjectCreated:*",
-          "s3:ObjectRemoved:*",
-          "s3:ObjectRestore:*",
-          "s3:ReducedRedundancyLostObject",
-          "s3:Replication:*",
-          "s3:LifecycleExpiration:*",
-          "s3:LifecycleTransition",
-          "s3:IntelligentTiering",
-          "s3:ObjectTagging:*",
-          "s3:ObjectAcl:Put",
-        ];
+    args: BucketSubscriberArgs = {},
+  ) {
+    return all([name, subscriber, args]).apply(([name, subscriber, args]) => {
+      // Build subscriber name
+      const prefix = sanitizeToPascalCase(name);
+      const suffix = sanitizeToPascalCase(
+        hashStringToPrettyString(
+          [
+            bucketArn,
+            // Temporarily only allowing one subscriber per bucket because of the
+            // AWS/Terraform issue that appending/removing a notification deletes
+            // all existing notifications.
+            //
+            // A solution would be to implement a dynamic provider. On create,
+            // get existing notifications then append. And on delete, get existing
+            // notifications then remove from the list.
+            //
+            // https://github.com/hashicorp/terraform-provider-aws/issues/501
+            //
+            // Commenting out the lines below to ensure the id never changes.
+            // Because on id change, the removal of notification happens after
+            // the creation of notification. And the newly created notification
+            // gets removed.
 
-        // Build subscriber name
-        const namePrefix = sanitizeToPascalCase(name);
-        const id = sanitizeToPascalCase(
-          hashStringToPrettyString(
-            [
-              bucketArn,
-              // Temporarily only allowing one subscriber per bucket because of the
-              // AWS/Terraform issue that appending/removing a notification deletes
-              // all existing notifications.
-              //
-              // A solution would be to implement a dynamic provider. On create,
-              // get existing notifications then append. And on delete, get existing
-              // notifications then remove from the list.
-              //
-              // https://github.com/hashicorp/terraform-provider-aws/issues/501
-              //
-              // Commenting out the lines below to ensure the id never changes.
-              // Because on id change, the removal of notification happens after
-              // the creation of notification. And the newly created notification
-              // gets removed.
+            //...events,
+            //args.filterPrefix ?? "",
+            //args.filterSuffix ?? "",
+            //typeof subscriber === "string" ? subscriber : subscriber.handler,
+          ].join(""),
+          6,
+        ),
+      );
 
-              //...events,
-              //args.filterPrefix ?? "",
-              //args.filterSuffix ?? "",
-              //typeof subscriber === "string" ? subscriber : subscriber.handler,
-            ].join(""),
-            4,
-          ),
-        );
-
-        const fn = Function.fromDefinition(
-          `${namePrefix}Subscriber${id}`,
-          subscriber,
-          {
-            description:
-              events.length < 5
-                ? `Subscribed to ${name} on ${events.join(", ")}`
-                : `Subscribed to ${name} on ${events
-                    .slice(0, 3)
-                    .join(", ")}, and ${events.length - 3} more events`,
-          },
-        );
-        const permission = new aws.lambda.Permission(
-          `${namePrefix}Subscriber${id}Permissions`,
-          {
-            action: "lambda:InvokeFunction",
-            function: fn.arn,
-            principal: "s3.amazonaws.com",
-            sourceArn: bucketArn,
-          },
-        );
-        const notification = new aws.s3.BucketNotification(
-          `${namePrefix}Notification${id}`,
-          transform(args.transform?.notification, {
-            bucket: bucketName,
-            lambdaFunctions: [
-              {
-                id: `Notification${id}`,
-                lambdaFunctionArn: fn.arn,
-                events,
-                filterPrefix: args.filterPrefix,
-                filterSuffix: args.filterSuffix,
-              },
-            ],
-          }),
-          { dependsOn: [permission] },
-        );
-
-        return { fn, permission, notification };
-      },
-    );
-    return {
-      function: ret.fn,
-      permission: ret.permission,
-      notification: ret.notification,
-    };
+      return new BucketLambdaSubscriber(`${prefix}Subscriber${suffix}`, {
+        bucket: { name: bucketName, arn: bucketArn },
+        subscriber,
+        subscriberId: suffix,
+        ...args,
+      });
+    });
   }
 
   /** @internal */

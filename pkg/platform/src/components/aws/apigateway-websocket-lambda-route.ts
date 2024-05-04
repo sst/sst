@@ -35,7 +35,7 @@ export interface Args extends ApiGatewayWebSocketRouteArgs {
 }
 
 /**
- * The `ApiGatewayWebSocketRoute` component is internally used by the `ApiGatewayWebSocket`
+ * The `ApiGatewayWebSocketLambdaRoute` component is internally used by the `ApiGatewayWebSocket`
  * component to add routes to [AWS API Gateway WebSocket API](https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-websocket-api.html).
  *
  * :::caution
@@ -44,7 +44,7 @@ export interface Args extends ApiGatewayWebSocketRouteArgs {
  *
  * You'll find this component returned by the `route` method of the `ApiGatewayWebSocket` component.
  */
-export class ApiGatewayWebSocketRoute extends Component {
+export class ApiGatewayWebSocketLambdaRoute extends Component {
   private readonly fn: Output<Function>;
   private readonly permission: aws.lambda.Permission;
   private readonly apiRoute: aws.apigatewayv2.Route;
@@ -75,16 +75,21 @@ export class ApiGatewayWebSocketRoute extends Component {
           description: interpolate`${api.name} route ${route}`,
         },
         args.handlerTransform,
+        { parent: self },
       );
     }
 
     function createPermission() {
-      return new aws.lambda.Permission(`${name}Permissions`, {
-        action: "lambda:InvokeFunction",
-        function: fn.arn,
-        principal: "apigateway.amazonaws.com",
-        sourceArn: interpolate`${api.executionArn}/*`,
-      });
+      return new aws.lambda.Permission(
+        `${name}Permissions`,
+        {
+          action: "lambda:InvokeFunction",
+          function: fn.arn,
+          principal: "apigateway.amazonaws.com",
+          sourceArn: interpolate`${api.executionArn}/*`,
+        },
+        { parent: self },
+      );
     }
 
     function createIntegration() {
@@ -95,7 +100,7 @@ export class ApiGatewayWebSocketRoute extends Component {
           integrationType: "AWS_PROXY",
           integrationUri: fn.arn,
         }),
-        { dependsOn: [permission] },
+        { parent: self, dependsOn: [permission] },
       );
     }
 
@@ -111,6 +116,7 @@ export class ApiGatewayWebSocketRoute extends Component {
               route === "$connect" && auth?.iam ? "AWS_IAM" : "NONE",
           ),
         }),
+        { parent: self },
       );
     }
   }
@@ -141,6 +147,6 @@ export class ApiGatewayWebSocketRoute extends Component {
   }
 }
 
-const __pulumiType = "sst:aws:ApiGatewayWebSocketRoute";
+const __pulumiType = "sst:aws:ApiGatewayWebSocketLambdaRoute";
 // @ts-expect-error
-ApiGatewayWebSocketRoute.__pulumiType = __pulumiType;
+ApiGatewayWebSocketLambdaRoute.__pulumiType = __pulumiType;

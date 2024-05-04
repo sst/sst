@@ -1,0 +1,188 @@
+---
+title: SnsTopicLambdaSubscriber
+description: Reference doc for the `sst.aws.SnsTopicLambdaSubscriber` component.
+---
+
+{/* DO NOT EDIT. AUTO-GENERATED FROM "pkg/platform/src/components/aws/sns-topic-lambda-subscriber.ts" */}
+
+import Segment from '../../../../../../src/components/tsdoc/Segment.astro';
+import Section from '../../../../../../src/components/tsdoc/Section.astro';
+import NestedTitle from '../../../../../../src/components/tsdoc/NestedTitle.astro';
+import InlineSection from '../../../../../../src/components/tsdoc/InlineSection.astro';
+
+<div class="tsdoc">
+
+<Section type="about">
+The `SnsTopicLambdaSubscriber` component is internally used by the `SnsTopic` component
+to add subscriptions to [Amazon SNS topic](https://docs.aws.amazon.com/sns/latest/dg/sns-create-topic.html).
+
+:::caution
+This component is not intended for public use.
+:::
+
+You'll find this component returned by the `subscribe` method of the `SnsTopic` component.
+</Section>
+
+---
+
+## Constructor
+
+<Segment>
+<Section type="signature">
+```ts
+new SnsTopicLambdaSubscriber(name, args, opts?)
+```
+</Section>
+
+<Section type="parameters">
+#### Parameters
+- <p><code class="key">name</code> <code class="primitive">string</code></p>
+- <p><code class="key">args</code> [<code class="type">Args</code>](#args)</p>
+- <p><code class="key">opts?</code> [<code class="type">ComponentResourceOptions</code>](https://www.pulumi.com/docs/concepts/options/)</p>
+</Section>
+</Segment>
+
+## Properties
+
+### nodes
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Object</code>
+</InlineSection>
+- <p>[<code class="key">function</code>](#nodes-function)</p>
+- <p>[<code class="key">permission</code>](#nodes-permission)</p>
+- <p>[<code class="key">subscription</code>](#nodes-subscription)</p>
+</Section>
+The underlying [resources](/docs/components/#nodes) this component creates.
+</Segment>
+<NestedTitle id="nodes-function" Tag="h4" parent="nodes.">function</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Output</code><code class="symbol">&lt;</code>[<code class="type">Function</code>](/docs/component/aws/function/)<code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+The Lambda function that'll be notified.
+</Segment>
+<NestedTitle id="nodes-permission" Tag="h4" parent="nodes.">permission</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** [<code class="type">Permission</code>](https://www.pulumi.com/registry/packages/aws/api-docs/lambda/permission/)
+</InlineSection>
+</Section>
+The Lambda permission.
+</Segment>
+<NestedTitle id="nodes-subscription" Tag="h4" parent="nodes.">subscription</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** [<code class="type">TopicSubscription</code>](https://www.pulumi.com/registry/packages/aws/api-docs/sns/topicsubscription/)
+</InlineSection>
+</Section>
+The SNS topic subscription.
+</Segment>
+
+## Args
+### filter?
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Record</code><code class="symbol">&lt;</code><code class="primitive">string</code>, <code class="primitive">any</code><code class="symbol">&gt;</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+Filter the messages that'll be processed by the subscriber.
+
+If any single property in the filter doesn't match
+an attribute assigned to the message, then the policy rejects the message.
+
+:::tip
+Learn more about [subscription filter policies](https://docs.aws.amazon.com/sns/latest/dg/sns-subscription-filter-policies.html).
+:::
+
+For example, if your SNS topic message contains this in a JSON format.
+```js
+{
+  store: "example_corp",
+  event: "order-placed",
+  customer_interests: [
+     "soccer",
+     "rugby",
+     "hockey"
+  ],
+  price_usd: 210.75
+}
+```
+
+Then this filter policy accepts the message.
+
+```js
+{
+  filter: {
+    store: ["example_corp"],
+    event: [{"anything-but": "order_cancelled"}],
+    customer_interests: [
+       "rugby",
+       "football",
+       "baseball"
+    ],
+    price_usd: [{numeric: [">=", 100]}]
+  }
+}
+```
+</Segment>
+### subscriber
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol"> | </code>[<code class="type">FunctionArgs</code>](/docs/component/aws/function/#functionargs)<code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+The subscriber function.
+
+</Segment>
+### topic
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Object</code><code class="symbol">&gt;</code>
+</InlineSection>
+- <p>[<code class="key">arn</code>](#topic-arn)</p>
+</Section>
+The topic to use.
+
+</Segment>
+<NestedTitle id="topic-arn" Tag="h4" parent="topic.">arn</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+The ARN of the topic.
+
+</Segment>
+### transform?
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Object</code>
+</InlineSection>
+- <p>[<code class="key">subscription?</code>](#transform-subscription)</p>
+</Section>
+[Transform](/docs/components#transform) how this subscription creates its underlying
+resources.
+
+</Segment>
+<NestedTitle id="transform-subscription" Tag="h4" parent="transform.">subscription?</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** [<code class="type">TopicSubscriptionArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/sns/topicsubscription/#inputs)<code class="symbol"> | </code><code class="symbol">(</code><code class="primitive">args</code><code class="symbol">: </code>[<code class="type">TopicSubscriptionArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/sns/topicsubscription/#inputs)<code class="symbol"> => </code><code class="primitive">void</code><code class="symbol">)</code>
+</InlineSection>
+</Section>
+Transform the SNS topic Subscription resource.
+
+</Segment>
+</div>

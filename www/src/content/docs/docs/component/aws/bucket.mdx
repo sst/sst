@@ -96,12 +96,12 @@ subscribe(subscriber, args?)
 #### Parameters
 - <p><code class="key">subscriber</code> <code class="primitive">string</code><code class="symbol"> | </code>[<code class="type">FunctionArgs</code>](/docs/component/aws/function/#functionargs)</p>
 The function that'll be notified.
-- <p><code class="key">args?</code> [<code class="type">BucketSubscribeArgs</code>](#bucketsubscribeargs)</p>
+- <p><code class="key">args?</code> [<code class="type">BucketSubscriberArgs</code>](#bucketsubscriberargs)</p>
 Configure the subscription.
 </Section>
 
 <InlineSection>
-**Returns** [<code class="type">BucketSubscriber</code>](#bucketsubscriber)
+**Returns** <code class="primitive">Output</code><code class="symbol">&lt;</code>[<code class="type">BucketLambdaSubscriber</code>](/docs/component/aws/bucket-lambda-subscriber/)<code class="symbol">&gt;</code>
 </InlineSection>
 Subscribe to events from this bucket.
 
@@ -153,12 +153,12 @@ Bucket.subscribe(bucketArn, subscriber, args?)
 The ARN of the S3 bucket to subscribe to.
 - <p><code class="key">subscriber</code> <code class="primitive">string</code><code class="symbol"> | </code>[<code class="type">FunctionArgs</code>](/docs/component/aws/function/#functionargs)</p>
 The function that'll be notified.
-- <p><code class="key">args?</code> [<code class="type">BucketSubscribeArgs</code>](#bucketsubscribeargs)</p>
+- <p><code class="key">args?</code> [<code class="type">BucketSubscriberArgs</code>](#bucketsubscriberargs)</p>
 Configure the subscription.
 </Section>
 
 <InlineSection>
-**Returns** [<code class="type">BucketSubscriber</code>](#bucketsubscriber)
+**Returns** <code class="primitive">Output</code><code class="symbol">&lt;</code>[<code class="type">BucketLambdaSubscriber</code>](/docs/component/aws/bucket-lambda-subscriber/)<code class="symbol">&gt;</code>
 </InlineSection>
 Subscribe to events of an S3 bucket that was not created in your app.
 
@@ -494,7 +494,7 @@ Transform the public access block resource that's attached to the Bucket.
 
 </Segment>
 
-## BucketSubscribeArgs
+## BucketSubscriberArgs
 ### events?
 <Segment>
 <Section type="parameters">
@@ -566,38 +566,6 @@ resources.
 </InlineSection>
 </Section>
 Transform the S3 Bucket Notification resource.
-
-</Segment>
-
-## BucketSubscriber
-### function
-<Segment>
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">Output</code><code class="symbol">&lt;</code>[<code class="type">Function</code>](/docs/component/aws/function/)<code class="symbol">&gt;</code>
-</InlineSection>
-</Section>
-The Lambda function that'll be notified.
-
-</Segment>
-### notification
-<Segment>
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">Output</code><code class="symbol">&lt;</code>[<code class="type">BucketNotification</code>](https://www.pulumi.com/registry/packages/aws/api-docs/s3/bucketnotification/)<code class="symbol">&gt;</code>
-</InlineSection>
-</Section>
-The S3 bucket notification.
-
-</Segment>
-### permission
-<Segment>
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">Output</code><code class="symbol">&lt;</code>[<code class="type">Permission</code>](https://www.pulumi.com/registry/packages/aws/api-docs/lambda/permission/)<code class="symbol">&gt;</code>
-</InlineSection>
-</Section>
-The Lambda permission.
 
 </Segment>
 </div>

@@ -1,0 +1,116 @@
+import {
+  ComponentResourceOptions,
+  Input,
+  Output,
+  output,
+} from "@pulumi/pulumi";
+import * as aws from "@pulumi/aws";
+import { Component, transform } from "../component";
+import { Function, FunctionArgs } from "./function";
+import { QueueSubscriberArgs } from "./queue";
+
+export interface Args extends QueueSubscriberArgs {
+  /**
+   * The queue to use.
+   */
+  queue: Input<{
+    /**
+     * The ARN of the queue.
+     */
+    arn: Input<string>;
+  }>;
+  /**
+   * The subscriber function.
+   */
+  subscriber: Input<string | FunctionArgs>;
+}
+
+/**
+ * The `QueueLambdaSubscriber` component is internally used by the `Queue` component to
+ * add consumer to [Amazon SQS](https://aws.amazon.com/sqs/).
+ *
+ * :::caution
+ * This component is not intended for public use.
+ * :::
+ *
+ * You'll find this component returned by the `subscribe` method of the `Queue` component.
+ */
+export class QueueLambdaSubscriber extends Component {
+  private readonly fn: Output<Function>;
+  private readonly eventSourceMapping: aws.lambda.EventSourceMapping;
+
+  constructor(name: string, args: Args, opts?: ComponentResourceOptions) {
+    super(__pulumiType, name, args, opts);
+
+    const self = this;
+    const queue = output(args.queue);
+    const fn = createFunction();
+    const eventSourceMapping = createEventSourceMapping();
+
+    this.fn = fn;
+    this.eventSourceMapping = eventSourceMapping;
+
+    function createFunction() {
+      return Function.fromDefinition(
+        `${name}Function`,
+        args.subscriber,
+        {
+          description: `Subscribed to ${name}`,
+          permissions: [
+            {
+              actions: [
+                "sqs:ChangeMessageVisibility",
+                "sqs:DeleteMessage",
+                "sqs:GetQueueAttributes",
+                "sqs:GetQueueUrl",
+                "sqs:ReceiveMessage",
+              ],
+              resources: [queue.arn],
+            },
+          ],
+        },
+        undefined,
+        { parent: self },
+      );
+    }
+
+    function createEventSourceMapping() {
+      return new aws.lambda.EventSourceMapping(
+        `${name}EventSourceMapping`,
+        transform(args.transform?.eventSourceMapping, {
+          eventSourceArn: queue.arn,
+          functionName: fn.name,
+          filterCriteria: args.filters && {
+            filters: output(args.filters).apply((filters) =>
+              filters.map((filter) => ({
+                pattern: JSON.stringify(filter),
+              })),
+            ),
+          },
+        }),
+        { parent: self },
+      );
+    }
+  }
+
+  /**
+   * The underlying [resources](/docs/components/#nodes) this component creates.
+   */
+  public get nodes() {
+    const self = this;
+    return {
+      /**
+       * The Lambda function that'll be notified.
+       */
+      function: this.fn,
+      /**
+       * The Lambda event source mapping.
+       */
+      eventSourceMapping: this.eventSourceMapping,
+    };
+  }
+}
+
+const __pulumiType = "sst:aws:QueueLambdaSubscriber";
+// @ts-expect-error
+QueueLambdaSubscriber.__pulumiType = __pulumiType;

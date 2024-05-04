@@ -141,12 +141,36 @@ const sidebar = [
         link: "/docs/component/aws/app-sync-data-source/",
       },
       {
+        label: "BucketLambdaSubscriber",
+        link: "/docs/component/aws/bucket-lambda-subscriber/",
+      },
+      {
+        label: "QueueLambdaSubscriber",
+        link: "/docs/component/aws/queue-lambda-subscriber/",
+      },
+      {
+        label: "DynamoLambdaSubscriber",
+        link: "/docs/component/aws/dynamo-lambda-subscriber/",
+      },
+      {
+        label: "SnsTopicLambdaSubscriber",
+        link: "/docs/component/aws/sns-topic-lambda-subscriber/",
+      },
+      {
+        label: "SnsTopicQueueSubscriber",
+        link: "/docs/component/aws/sns-topic-queue-subscriber/",
+      },
+      {
         label: "CognitoUserPoolClient",
         link: "/docs/component/aws/cognito-user-pool-client/",
       },
       {
-        label: "ApiGatewayWebSocketRoute",
-        link: "/docs/component/aws/apigateway-websocket-route/",
+        label: "ApiGatewayV2LambdaRoute",
+        link: "/docs/component/aws/apigatewayv2-lambda-route/",
+      },
+      {
+        label: "ApiGatewayWebSocketLambdaRoute",
+        link: "/docs/component/aws/apigateway-websocket-lambda-route/",
       },
     ],
   },

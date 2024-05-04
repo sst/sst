@@ -3,9 +3,6 @@ import {
   ApiGatewayManagementApiClient,
   PostToConnectionCommand,
 } from "@aws-sdk/client-apigatewaymanagementapi";
-const client = new ApiGatewayManagementApiClient({
-  endpoint: Resource.MyApi.managementEndpoint,
-});
 
 export async function connect(event) {
   console.log("!!! connect");
@@ -25,7 +22,10 @@ export async function sendMessage(event) {
 export async function catchAll(event) {
   console.log("!!! default");
 
-  // Send a message back to the
+  // Send a message back to the client
+  const client = new ApiGatewayManagementApiClient({
+    endpoint: Resource.MyApi.managementEndpoint,
+  });
   await client.send(
     new PostToConnectionCommand({
       ConnectionId: event.requestContext.connectionId,

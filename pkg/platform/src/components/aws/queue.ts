@@ -3,10 +3,11 @@ import * as aws from "@pulumi/aws";
 import { Component, Transform, transform } from "../component";
 import { Link } from "../link";
 import type { Input } from "../input";
-import { Function, FunctionArgs } from "./function";
+import { FunctionArgs } from "./function";
 import { VisibleError } from "../error";
 import { hashStringToPrettyString, sanitizeToPascalCase } from "../naming";
 import { parseQueueArn } from "./helpers/arn";
+import { QueueLambdaSubscriber } from "./queue-lambda-subscriber";
 
 export interface QueueArgs {
   /**
@@ -37,7 +38,7 @@ export interface QueueArgs {
   };
 }
 
-export interface QueueSubscribeArgs {
+export interface QueueSubscriberArgs {
   /**
    * Filter the records that'll be processed by the `subscriber` function.
    *
@@ -96,17 +97,6 @@ export interface QueueSubscribeArgs {
      */
     eventSourceMapping?: Transform<aws.lambda.EventSourceMappingArgs>;
   };
-}
-
-export interface QueueSubscriber {
-  /**
-   * The Lambda function that'll be notified.
-   */
-  function: Output<Function>;
-  /**
-   * The Lambda event source mapping.
-   */
-  eventSourceMapping: Output<aws.lambda.EventSourceMapping>;
 }
 
 /**
@@ -256,7 +246,7 @@ export class Queue
    */
   public subscribe(
     subscriber: string | FunctionArgs,
-    args?: QueueSubscribeArgs,
+    args?: QueueSubscriberArgs,
   ) {
     if (this.isSubscribed)
       throw new VisibleError(
@@ -319,7 +309,7 @@ export class Queue
   public static subscribe(
     queueArn: Input<string>,
     subscriber: string | FunctionArgs,
-    args?: QueueSubscribeArgs,
+    args?: QueueSubscriberArgs,
   ) {
     const queueName = output(queueArn).apply(
       (queueArn) => parseQueueArn(queueArn).queueName,
@@ -331,53 +321,20 @@ export class Queue
     name: Input<string>,
     queueArn: Input<string>,
     subscriber: string | FunctionArgs,
-    args: QueueSubscribeArgs = {},
-  ): QueueSubscriber {
-    const ret = all([name, queueArn]).apply(([name, queueArn]) => {
-      // Build subscriber name
-      const namePrefix = sanitizeToPascalCase(name);
-      const id = sanitizeToPascalCase(hashStringToPrettyString(queueArn, 4));
+    args: QueueSubscriberArgs = {},
+  ) {
+    return all([name, queueArn]).apply(([name, queueArn]) => {
+      const prefix = sanitizeToPascalCase(name);
+      const suffix = sanitizeToPascalCase(
+        hashStringToPrettyString(queueArn, 6),
+      );
 
-      const fn = Function.fromDefinition(
-        `${namePrefix}Subscriber${id}`,
+      return new QueueLambdaSubscriber(`${prefix}Subscriber${suffix}`, {
+        queue: { arn: queueArn },
         subscriber,
-        {
-          description: `Subscribed to ${name}`,
-          permissions: [
-            {
-              actions: [
-                "sqs:ChangeMessageVisibility",
-                "sqs:DeleteMessage",
-                "sqs:GetQueueAttributes",
-                "sqs:GetQueueUrl",
-                "sqs:ReceiveMessage",
-              ],
-              resources: [queueArn],
-            },
-          ],
-        },
-      );
-      const mapping = new aws.lambda.EventSourceMapping(
-        `${namePrefix}EventSourceMapping${id}`,
-        transform(args.transform?.eventSourceMapping, {
-          eventSourceArn: queueArn,
-          functionName: fn.name,
-          filterCriteria: args.filters && {
-            filters: output(args.filters).apply((filters) =>
-              filters.map((filter) => ({
-                pattern: JSON.stringify(filter),
-              })),
-            ),
-          },
-        }),
-      );
-      return { fn, mapping };
+        ...args,
+      });
     });
-
-    return {
-      function: ret.fn,
-      eventSourceMapping: ret.mapping,
-    };
   }
 
   /** @internal */

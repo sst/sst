@@ -1,6 +1,16 @@
 import { aws } from "../..";
 import { VisibleError } from "../../error";
 
+export function parseBucketArn(arn: string) {
+  // arn:aws:s3:::bucket-name
+  const bucketName = arn.split(":")[5];
+  if (!arn.startsWith("arn:") || !bucketName)
+    throw new VisibleError(
+      `The provided ARN "${arn}" is not an S3 bucket ARN.`,
+    );
+  return { bucketName };
+}
+
 export function parseTopicArn(arn: string) {
   // arn:aws:sns:region:account-id:topic-name
   const topicName = arn.split(":")[5];
@@ -30,6 +40,16 @@ export function parseDynamoArn(arn: string) {
   if (!arn.startsWith("arn:") || !tableName)
     throw new VisibleError(
       `The provided ARN "${arn}" is not a DynamoDB table ARN.`,
+    );
+  return { tableName };
+}
+
+export function parseDynamoStreamArn(streamArn: string) {
+  // ie. "arn:aws:dynamodb:us-east-1:112233445566:table/MyTable/stream/2024-02-25T23:17:55.264"
+  const tableName = streamArn.split(":")[5]?.split("/")[1];
+  if (!streamArn.startsWith("arn:aws:dynamodb:") || !tableName)
+    throw new VisibleError(
+      `The provided ARN "${streamArn}" is not a DynamoDB stream ARN.`,
     );
   return { tableName };
 }

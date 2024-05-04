@@ -146,12 +146,12 @@ subscribe(subscriber, args?)
 #### Parameters
 - <p><code class="key">subscriber</code> <code class="primitive">string</code><code class="symbol"> | </code>[<code class="type">FunctionArgs</code>](/docs/component/aws/function/#functionargs)</p>
 The function that'll be notified.
-- <p><code class="key">args?</code> [<code class="type">DynamoSubscribeArgs</code>](#dynamosubscribeargs)</p>
+- <p><code class="key">args?</code> [<code class="type">DynamoSubscriberArgs</code>](#dynamosubscriberargs)</p>
 Configure the subscription.
 </Section>
 
 <InlineSection>
-**Returns** [<code class="type">DynamoSubscriber</code>](#dynamosubscriber)
+**Returns** <code class="primitive">Output</code><code class="symbol">&lt;</code>[<code class="type">DynamoLambdaSubscriber</code>](/docs/component/aws/dynamo-lambda-subscriber/)<code class="symbol">&gt;</code>
 </InlineSection>
 Subscribe to the DynamoDB Stream of this table.
 
@@ -205,12 +205,12 @@ Dynamo.subscribe(streamArn, subscriber, args?)
 The ARN of the DynamoDB Stream to subscribe to.
 - <p><code class="key">subscriber</code> <code class="primitive">string</code><code class="symbol"> | </code>[<code class="type">FunctionArgs</code>](/docs/component/aws/function/#functionargs)</p>
 The function that'll be notified.
-- <p><code class="key">args?</code> [<code class="type">DynamoSubscribeArgs</code>](#dynamosubscribeargs)</p>
+- <p><code class="key">args?</code> [<code class="type">DynamoSubscriberArgs</code>](#dynamosubscriberargs)</p>
 Configure the subscription.
 </Section>
 
 <InlineSection>
-**Returns** [<code class="type">DynamoSubscriber</code>](#dynamosubscriber)
+**Returns** <code class="primitive">Output</code><code class="symbol">&lt;</code>[<code class="type">DynamoLambdaSubscriber</code>](/docs/component/aws/dynamo-lambda-subscriber/)<code class="symbol">&gt;</code>
 </InlineSection>
 Subscribe to the DynamoDB stream of a table that was not created in your app.
 
@@ -522,7 +522,7 @@ Learn more about [Time to Live (TTL)](https://docs.aws.amazon.com/amazondynamodb
 ```
 </Segment>
 
-## DynamoSubscribeArgs
+## DynamoSubscriberArgs
 ### filters?
 <Segment>
 <Section type="parameters">
@@ -610,28 +610,6 @@ resources.
 </InlineSection>
 </Section>
 Transform the Lambda Event Source Mapping resource.
-
-</Segment>
-
-## DynamoSubscriber
-### eventSourceMapping
-<Segment>
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">Output</code><code class="symbol">&lt;</code>[<code class="type">EventSourceMapping</code>](https://www.pulumi.com/registry/packages/aws/api-docs/lambda/eventsourcemapping/)<code class="symbol">&gt;</code>
-</InlineSection>
-</Section>
-The Lambda event source mapping.
-
-</Segment>
-### function
-<Segment>
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">Output</code><code class="symbol">&lt;</code>[<code class="type">Function</code>](/docs/component/aws/function/)<code class="symbol">&gt;</code>
-</InlineSection>
-</Section>
-The Lambda function that'll be notified.
 
 </Segment>
 </div>
