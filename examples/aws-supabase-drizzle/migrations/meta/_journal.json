@@ -1,0 +1,13 @@
+{
+  "version": "5",
+  "dialect": "pg",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "6",
+      "when": 1715012302701,
+      "tag": "0000_great_solo",
+      "breakpoints": true
+    }
+  ]
+}
