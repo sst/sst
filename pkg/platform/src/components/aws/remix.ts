@@ -114,7 +114,7 @@ export interface RemixArgs extends SsrSiteArgs {
    * :::tip
    * You get 1000 free invalidations per month. After that you pay $0.005 per invalidation path. [Read more here](https://aws.amazon.com/cloudfront/pricing/).
    * :::
-   * @default `&lcub;paths: "all", wait: false&rcub;`
+   * @default `{paths: "all", wait: false}`
    * @example
    * Wait for all paths to be invalidated.
    * ```js
@@ -356,8 +356,8 @@ export class Remix extends Component implements Link.Linkable {
       _hint: $dev
         ? undefined
         : all([this.cdn.domainUrl, this.cdn.url]).apply(
-            ([domainUrl, url]) => domainUrl ?? url,
-          ),
+          ([domainUrl, url]) => domainUrl ?? url,
+        ),
       _metadata: {
         mode: $dev ? "placeholder" : "deployed",
         path: sitePath,
@@ -458,21 +458,21 @@ export class Remix extends Component implements Link.Linkable {
             },
             edgeFunctions: edge
               ? {
-                  server: {
-                    function: serverConfig,
-                  },
-                }
+                server: {
+                  function: serverConfig,
+                },
+              }
               : undefined,
             origins: {
               ...(edge
                 ? {}
                 : {
+                  server: {
                     server: {
-                      server: {
-                        function: serverConfig,
-                      },
+                      function: serverConfig,
                     },
-                  }),
+                  },
+                }),
               s3: {
                 s3: {
                   copy: [
@@ -489,16 +489,16 @@ export class Remix extends Component implements Link.Linkable {
             behaviors: [
               edge
                 ? {
-                    cacheType: "server",
-                    cfFunction: "serverCfFunction",
-                    edgeFunction: "server",
-                    origin: "s3",
-                  }
+                  cacheType: "server",
+                  cfFunction: "serverCfFunction",
+                  edgeFunction: "server",
+                  origin: "s3",
+                }
                 : {
-                    cacheType: "server",
-                    cfFunction: "serverCfFunction",
-                    origin: "server",
-                  },
+                  cacheType: "server",
+                  cfFunction: "serverCfFunction",
+                  origin: "server",
+                },
               ...buildMeta.staticRoutes.map(
                 (route) =>
                   ({
