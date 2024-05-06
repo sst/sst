@@ -35,7 +35,7 @@ export default $config({
     });
     const api = new sst.aws.Function("Api", {
       url: true,
-      handler: "./src/api.handler",
+      handler: "src/api.handler",
       link: [project],
     });
     return {

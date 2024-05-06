@@ -34,6 +34,7 @@ export function createSessionBuilder<
     },
     async create(session: SessionValue) {
       const privateKey = await importPKCS8(
+        // @ts-expect-error
         process.env.AUTH_PRIVATE_KEY || Resource.AUTH_PRIVATE_KEY,
         "RS512",
       );

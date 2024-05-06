@@ -970,6 +970,7 @@ var Root = Command{
 					envVar := fmt.Sprintf("SST_RESOURCE_%s=%s", resource, jsonValue)
 					cmd.Env = append(cmd.Env, envVar)
 				}
+				cmd.Env = append(cmd.Env, fmt.Sprintf(`SST_RESOURCE_App={"name": "%s", "stage": "%s" }`, p.App().Name, p.App().Stage))
 
 				for key, val := range p.Env() {
 					key = strings.ReplaceAll(key, "SST_", "")

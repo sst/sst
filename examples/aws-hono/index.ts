@@ -13,6 +13,7 @@ const s3 = new S3Client({});
 
 const app = new Hono()
   .get("/", async (c) => {
+    console.log(Resource.App);
     const command = new PutObjectCommand({
       Key: crypto.randomUUID(),
       Bucket: Resource.MyBucket.name,

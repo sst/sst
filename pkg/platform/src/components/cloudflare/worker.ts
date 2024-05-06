@@ -321,6 +321,13 @@ export class Worker
             });
           }
         }
+        result.plainTextBindings.push({
+          name: "SST_RESOURCE_App",
+          text: jsonStringify({
+            name: $app.name,
+            stage: $app.stage,
+          }),
+        });
         return result;
       });
     }

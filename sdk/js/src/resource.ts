@@ -1,6 +1,11 @@
 import { env } from "node:process";
 
-export interface Resource {}
+export interface Resource {
+  App: {
+    name: string;
+    stage: string;
+  };
+}
 
 const raw: Record<string, any> = {
   // @ts-expect-error,
@@ -24,13 +29,13 @@ export function fromCloudflareEnv(input: any) {
 }
 
 export function wrapCloudflareHandler(handler: any) {
-  if (typeof handler === 'function' && handler.hasOwnProperty('prototype')) {
+  if (typeof handler === "function" && handler.hasOwnProperty("prototype")) {
     return class extends handler {
       constructor(ctx: any, env: any) {
         fromCloudflareEnv(env);
-        super(ctx, env)
+        super(ctx, env);
       }
-    }
+    };
   }
 
   function wrap(fn: any) {

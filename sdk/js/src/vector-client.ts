@@ -190,20 +190,22 @@ const lambda = new LambdaClient();
 
 export function VectorClient<
   T extends keyof {
+    // @ts-expect-error
     [key in keyof Resource as "sst.aws.Vector" extends Resource[key]["type"]
       ? string extends key
         ? never
         : key
       : never]: Resource[key];
-  }
+  },
 >(name: T) {
   return {
     ingest: async (event: IngestEvent) => {
       const ret = await lambda.send(
         new InvokeCommand({
+          // @ts-expect-error
           FunctionName: Resource[name].ingestor,
           Payload: JSON.stringify(event),
-        })
+        }),
       );
 
       parsePayload(ret, "Failed to ingest into the vector db");
@@ -212,22 +214,24 @@ export function VectorClient<
     retrieve: async (event: RetrieveEvent) => {
       const ret = await lambda.send(
         new InvokeCommand({
+          // @ts-expect-error
           FunctionName: Resource[name].retriever,
           Payload: JSON.stringify(event),
-        })
+        }),
       );
       return parsePayload<RetriveResponse>(
         ret,
-        "Failed to retrieve from the vector db"
+        "Failed to retrieve from the vector db",
       );
     },
 
     remove: async (event: RemoveEvent) => {
       const ret = await lambda.send(
         new InvokeCommand({
+          // @ts-expect-error
           FunctionName: Resource[name].remover,
           Payload: JSON.stringify(event),
-        })
+        }),
       );
       parsePayload(ret, "Failed to remove from the vector db");
     },

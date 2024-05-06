@@ -530,6 +530,13 @@ export class Service extends Component implements Link.Linkable {
                     name: `SST_RESOURCE_${d.name}`,
                     value: JSON.stringify(d.properties),
                   })),
+                  {
+                    name: "SST_RESOURCE_App",
+                    value: JSON.stringify({
+                      name: $app.name,
+                      stage: $app.stage,
+                    }),
+                  },
                 ],
               ),
             },

@@ -3,7 +3,7 @@
 export default $config({
   app(input) {
     return {
-      name: "streaming-problem",
+      name: "aws-solid-start",
       removal: input?.stage === "production" ? "retain" : "remove",
       home: "aws",
       providers: {
@@ -14,15 +14,8 @@ export default $config({
     };
   },
   async run() {
-    const fn = new sst.aws.Function("MyFunction", {
-      handler: "./src/streaming.handler",
-      streaming: true,
-      url: true,
-      timeout: "15 minutes",
+    new sst.aws.SolidStart("MyApp", {
+      buildCommand: "bun run build",
     });
-
-    return {
-      url: fn.url,
-    };
   },
 });

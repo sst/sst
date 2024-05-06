@@ -120,11 +120,13 @@ export function AuthHandler<
     signing: {
       privateKey: () =>
         importPKCS8(
+          // @ts-expect-error
           process.env.AUTH_PRIVATE_KEY || Resource.AUTH_PRIVATE_KEY,
           "RS512",
         ),
       publicKey: () =>
         importSPKI(
+          // @ts-expect-error
           process.env.AUTH_PUBLIC_KEY || Resource.AUTH_PUBLIC_KEY,
           "RS512",
         ),
@@ -132,11 +134,13 @@ export function AuthHandler<
     encryption: {
       privateKey: () =>
         importPKCS8(
+          // @ts-expect-error
           process.env.AUTH_PRIVATE_KEY || Resource.AUTH_PRIVATE_KEY,
           "RSA-OAEP-512",
         ),
       publicKey: () =>
         importSPKI(
+          // @ts-expect-error
           process.env.AUTH_PUBLIC_KEY || Resource.AUTH_PUBLIC_KEY,
           "RSA-OAEP-512",
         ),
@@ -262,7 +266,7 @@ export function AuthHandler<
     const redirect_uri =
       c.req.query("redirect_uri") || getCookie(c, "redirect_uri");
     const state = c.req.query("state") || getCookie(c, "state");
-    const client_id = c.req.query('client_id') || getCookie(c, 'client_id');
+    const client_id = c.req.query("client_id") || getCookie(c, "client_id");
 
     if (!provider) {
       c.status(400);
@@ -281,14 +285,14 @@ export function AuthHandler<
 
     if (!client_id) {
       c.status(400);
-      return c.text('Missing client_id');
+      return c.text("Missing client_id");
     }
 
     options.cookie(c, "provider", provider, 60 * 10);
     options.cookie(c, "response_type", response_type, 60 * 10);
     options.cookie(c, "redirect_uri", redirect_uri, 60 * 10);
     options.cookie(c, "state", state || "", 60 * 10);
-    options.cookie(c, 'client_id', client_id || '', 60 * 10);
+    options.cookie(c, "client_id", client_id || "", 60 * 10);
 
     if (input.callbacks.auth.start) {
       await input.callbacks.auth.start(c.req.raw);

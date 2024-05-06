@@ -997,6 +997,10 @@ export class Function
     function normalizeEnvironment() {
       return all([args.environment, dev]).apply(([environment, dev]) => {
         const result = environment ?? {};
+        result.SST_RESOURCE_App = JSON.stringify({
+          name: $app.name,
+          stage: $app.stage,
+        });
         if (dev) {
           result.SST_FUNCTION_ID = name;
           result.SST_APP = $app.name;
