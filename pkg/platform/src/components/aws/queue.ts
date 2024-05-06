@@ -152,8 +152,7 @@ export interface QueueSubscriberArgs {
  */
 export class Queue
   extends Component
-  implements Link.Linkable, Link.AWS.Linkable
-{
+  implements Link.Linkable, Link.AWS.Linkable {
   private constructorName: string;
   private queue: aws.sqs.Queue;
   private isSubscribed: boolean = false;
@@ -220,6 +219,7 @@ export class Queue
    *
    * ```js
    * queue.subscribe("src/subscriber.handler");
+   * ```
    *
    * Add a filter to the subscription.
    *
