@@ -53,7 +53,7 @@ export interface ApiGatewayV2Args {
   domain?: Input<string | Prettify<ApiGatewayV2DomainArgs>>;
   /**
    * Configure the [API Gateway logs](https://docs.aws.amazon.com/apigateway/latest/developerguide/view-cloudwatch-log-events-in-cloudwatch-console.html) in CloudWatch. By default, access logs are enabled and kept forever.
-   * @default `&lcub;retention: "forever"&rcub;`
+   * @default `{retention: "forever"}`
    * @example
    * ```js
    * {

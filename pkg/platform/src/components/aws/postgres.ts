@@ -54,7 +54,7 @@ export interface PostgresArgs {
    * Each ACU is roughly equivalent to 2 GB of memory. So pick the minimum and maximum
    * based on the baseline and peak memory usage of your app.
    *
-   * @default `&lcub;min: "0.5 ACU", max: "4 ACU"&rcub;`
+   * @default `{min: "0.5 ACU", max: "4 ACU"}`
    */
   scaling?: Input<{
     /**
@@ -158,8 +158,7 @@ export interface PostgresArgs {
  */
 export class Postgres
   extends Component
-  implements Link.Linkable, Link.AWS.Linkable
-{
+  implements Link.Linkable, Link.AWS.Linkable {
   private cluster: aws.rds.Cluster;
   private instance: aws.rds.ClusterInstance;
   private databaseName: Output<string>;

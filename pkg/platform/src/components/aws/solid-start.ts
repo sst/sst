@@ -114,7 +114,7 @@ export interface SolidStartArgs extends SsrSiteArgs {
    * :::tip
    * You get 1000 free invalidations per month. After that you pay $0.005 per invalidation path. [Read more here](https://aws.amazon.com/cloudfront/pricing/).
    * :::
-   * @default `&lcub;paths: "all", wait: false&rcub;`
+   * @default `{paths: "all", wait: false}`
    * @example
    * Wait for all paths to be invalidated.
    * ```js
@@ -346,8 +346,8 @@ export class SolidStart extends Component implements Link.Linkable {
       _hint: $dev
         ? undefined
         : all([this.cdn.domainUrl, this.cdn.url]).apply(
-            ([domainUrl, url]) => domainUrl ?? url,
-          ),
+          ([domainUrl, url]) => domainUrl ?? url,
+        ),
       _metadata: {
         mode: $dev ? "placeholder" : "deployed",
         path: sitePath,

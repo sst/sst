@@ -123,7 +123,7 @@ export interface StaticSiteArgs extends BaseStaticSiteArgs {
    * :::tip
    * You get 1000 free invalidations per month. After that you pay $0.005 per invalidation path. [Read more here](https://aws.amazon.com/cloudfront/pricing/).
    * :::
-   * @default `{ paths: "all", wait: false }`
+   * @default `{paths: "all", wait: false}`
    * @example
    * Turn off invalidations.
    * ```js

@@ -58,7 +58,7 @@ export interface ApiGatewayWebSocketArgs {
   domain?: Input<string | Prettify<ApiGatewayV2DomainArgs>>;
   /**
    * Configure the [API Gateway logs](https://docs.aws.amazon.com/apigateway/latest/developerguide/view-cloudwatch-log-events-in-cloudwatch-console.html) in CloudWatch. By default, access logs are enabled and kept forever.
-   * @default `&lcub;retention: "forever"&rcub;`
+   * @default `{retention: "forever"}`
    * @example
    * ```js
    * {
@@ -198,8 +198,7 @@ export interface ApiGatewayWebSocketRouteArgs {
  */
 export class ApiGatewayWebSocket
   extends Component
-  implements Link.Linkable, Link.AWS.Linkable
-{
+  implements Link.Linkable, Link.AWS.Linkable {
   private constructorName: string;
   private constructorArgs: ApiGatewayWebSocketArgs;
   private api: aws.apigatewayv2.Api;
@@ -427,9 +426,9 @@ export class ApiGatewayWebSocket
     //       trailing slash, the API fails with the error {"message":"Not Found"}
     return this.apigDomain && this.apiMapping
       ? all([this.apigDomain.domainName, this.apiMapping.apiMappingKey]).apply(
-          ([domain, key]) =>
-            key ? `wss://${domain}/${key}/` : `wss://${domain}`,
-        )
+        ([domain, key]) =>
+          key ? `wss://${domain}/${key}/` : `wss://${domain}`,
+      )
       : interpolate`${this.api.apiEndpoint}/${this.stage.name}`;
   }
 
