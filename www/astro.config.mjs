@@ -112,7 +112,6 @@ const sidebar = [
     label: "Internal",
     collapsed: true,
     items: [
-      { label: "Cdn", link: "/docs/component/aws/cdn/" },
       {
         label: "Dns",
         items: [
@@ -127,26 +126,35 @@ const sidebar = [
           },
         ],
       },
+      { label: "Cdn", link: "/docs/component/aws/cdn/" },
       { label: "Service", link: "/docs/component/aws/service/" },
-      {
-        label: "AppSyncFunction",
-        link: "/docs/component/aws/app-sync-function/",
-      },
       {
         label: "AppSyncResolver",
         link: "/docs/component/aws/app-sync-resolver/",
+      },
+      {
+        label: "AppSyncFunction",
+        link: "/docs/component/aws/app-sync-function/",
       },
       {
         label: "AppSyncDataSource",
         link: "/docs/component/aws/app-sync-data-source/",
       },
       {
-        label: "BucketLambdaSubscriber",
-        link: "/docs/component/aws/bucket-lambda-subscriber/",
+        label: "CognitoUserPoolClient",
+        link: "/docs/component/aws/cognito-user-pool-client/",
       },
       {
         label: "QueueLambdaSubscriber",
         link: "/docs/component/aws/queue-lambda-subscriber/",
+      },
+      {
+        label: "BucketLambdaSubscriber",
+        link: "/docs/component/aws/bucket-lambda-subscriber/",
+      },
+      {
+        label: "SnsTopicQueueSubscriber",
+        link: "/docs/component/aws/sns-topic-queue-subscriber/",
       },
       {
         label: "DynamoLambdaSubscriber",
@@ -155,14 +163,6 @@ const sidebar = [
       {
         label: "SnsTopicLambdaSubscriber",
         link: "/docs/component/aws/sns-topic-lambda-subscriber/",
-      },
-      {
-        label: "SnsTopicQueueSubscriber",
-        link: "/docs/component/aws/sns-topic-queue-subscriber/",
-      },
-      {
-        label: "CognitoUserPoolClient",
-        link: "/docs/component/aws/cognito-user-pool-client/",
       },
       {
         label: "ApiGatewayV2LambdaRoute",
