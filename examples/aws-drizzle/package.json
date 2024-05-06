@@ -3,11 +3,11 @@
   "version": "0.0.0",
   "scripts": {
     "db": "sst shell drizzle-kit",
-    "db:studio": "sst shell drizzle-kit studio",
-    "db:migrate": "sst shell drizzle-kit migrate"
+    "db:studio": "sst shell drizzle-kit studio"
   },
   "dependencies": {
     "@aws-sdk/client-rds-data": "^3.564.0",
+    "@types/aws-lambda": "^8.10.137",
     "drizzle-kit": "0.20.17-e38e63d",
     "drizzle-orm": "^0.30.10",
     "sst": "^3.0.4"

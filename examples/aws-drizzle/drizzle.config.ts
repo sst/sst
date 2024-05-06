@@ -9,6 +9,7 @@ export default defineConfig({
     secretArn: Resource.MyPostgres.secretArn,
     resourceArn: Resource.MyPostgres.clusterArn,
   },
+  // Pick up all our schema files
   schema: ["./src/**/*.sql.ts"],
   out: "./migrations",
 });

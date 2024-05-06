@@ -13,8 +13,9 @@ export default $config({
     const api = new sst.aws.Function("MyApi", {
       url: true,
       link: [rds],
-      handler: "./src/api.handler",
+      handler: "src/api.handler",
     });
+
     return {
       url: api.url,
     };

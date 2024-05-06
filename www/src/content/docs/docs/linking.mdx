@@ -149,10 +149,9 @@ This is why when you are running your frontend locally, it needs to be wrapped i
 
 ### Generating types
 
-When you run `sst dev` or `sst deploy`, SST generates the types to access the linked resources. These are generated in a `.sst/types.generated.ts` file.
+When you run `sst dev` or `sst deploy`, it generates the types to access the linked resources. These are generated as:
 
-:::tip
-If your types are not automatically getting picked up, make sure there is a `sst-env.d.ts` file in your project root.
-:::
+1. A `sst-env.d.ts` file in the same directory of the nearest `package.json` of the function or frontend that's _receiving_ the links. This contains the types for the resources that are linked to it.
+2. A `.sst/types.generated.ts` file that can be referenced from a `sst-env.d.ts`. This is useful for monorepo packages that don't have a function or frontend. For example, if you have a _core_ package that contains some shared code. 
 
-This file is referenced using a `sst-env.d.ts` in your project root. The `sst-env.d.ts` should be added when you initialize your app with `sst init`.
+You can check the generated `sst-env.d.ts` types into source control. This will let your teammates see the types without having to run `sst dev` when they pull your changes.
