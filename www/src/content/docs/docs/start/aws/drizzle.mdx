@@ -1,28 +1,260 @@
 ---
-title: Drizzle
+title: Drizzle with Amazon RDS and SST
+description: Use Drizzle and SST to manage and deploy your Amazon Postgres RDS database.
 draft: true
 ---
 
-- Create a new Node project
-- Init sst
-- npm i drizzle-orm
-- npm i -D drizzle-kit
-- Add scripts to package.json
-- @aws-sdk/client-rds-data
-- @types/aws-lambda
-- todo.sql.ts
-- drizzle.config.ts
-  - Note: pickup all schemas
-- npm run db generate
+We are going to use Drizzle and SST to manage and deploy an Amazon Postgres RDS database.
 
-ORM
-- drizzle.ts
-- api.ts
+:::tip[View source]
+You can [view the source](https://github.com/sst/ion/tree/dev/examples/aws-drizzle) of this example in our repo.
+:::
 
-Test
-- curl -X POST
-- curl
+Before you get started:
 
-Studio
-- npm run db studio
-- screenshot
+1. [Configure your AWS credentials](https://docs.sst.dev/advanced/iam-credentials#loading-from-a-file)
+2. [Install the SST CLI](/docs/reference/cli)
+
+---
+
+## 1. Create a project
+
+Let's start by creating a Node.js app.
+
+```bash
+mkdir my-drizzle-app && cd my-drizzle-app
+npm init -y
+```
+
+#### Init SST
+
+Now let's initialize SST in our app. Make sure you have the [CLI installed](/docs/reference/cli/).
+
+```bash
+sst init
+```
+
+This'll detect that you are in a plain Node.js project and create a `sst.config.ts` file in the root.
+
+#### Init Drizzle
+
+Add Drizzle to your project. We're also adding the RDS client that Drizzle will use.
+
+```bash
+npm install @aws-sdk/client-rds-data drizzle-orm drizzle-kit@beta
+```
+
+Drizzle ORM is will be used to query our database, while Drizzle Kit will allow us to run migrations. It also comes Drizzle Studio, a query browser.
+
+Let's add the following to the `scripts` in the `package.json`.
+
+```json title="package.json"
+"scripts": {
+  "db": "sst shell drizzle-kit",
+  "db:studio": "sst shell drizzle-kit studio"
+},
+```
+
+SST will pass the credentials to Drizzle Kit and allow it to connect to your database.
+
+---
+
+## 2. Add a Postgres db
+
+Let's add a Postgres database using [Amazon Aurora Serverless v2](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/aurora-serverless-v2.html). Update your `sst.config.ts`.
+
+```ts title="sst.config.ts"
+async run() {
+  const rds = new sst.aws.Postgres("MyPostgres");
+},
+```
+
+#### Add an API
+
+We'll also add an API to query our database. Add the following to your `sst.config.ts` below the database config.
+
+```ts title="sst.config.ts" {3}
+const api = new sst.aws.Function("MyApi", {
+  url: true,
+  link: [rds],
+  handler: "src/api.handler",
+});
+
+return {
+  api: api.url,
+};
+```
+
+We are linking our database to the API.
+
+#### Start dev mode
+
+Start your app in dev mode. This runs your functions [_Live_](/docs/live/).
+
+```bash
+sst dev
+```
+
+It'll take a few minutes to create your database. Once complete, you'll see this.
+
+```bash frame="none"
+✔  Complete
+   api: https://ouu5vovpxllyn5b6ot2nn6vdsa0hvcuj.lambda-url.us-east-1.on.aws
+```
+
+---
+
+## 3. Create a schema
+
+Let's define our Drizzle config. Add a `drizzle.config.ts` in your project root with this.
+
+```ts title="drizzle.config.ts" {8-10}
+import { Resource } from "sst";
+import { defineConfig } from "drizzle-kit";
+
+export default defineConfig({
+  driver: "aws-data-api",
+  dialect: "postgresql",
+  dbCredentials: {
+    database: Resource.MyPostgres.database,
+    secretArn: Resource.MyPostgres.secretArn,
+    resourceArn: Resource.MyPostgres.clusterArn,
+  },
+  // Pick up all our schema files
+  schema: ["./src/**/*.sql.ts"],
+  out: "./migrations",
+});
+```
+
+Here we are telling Drizzle that we'll be specifying your database schema in `.sql.ts` files in our `src/` directory.
+
+:::tip
+SST allows us to automatically access our database with `Resource.MyPostgres.*`.
+:::
+
+We are going to create a simple database to store some todos. Create a new file in `src/todo.sql.ts` with the following.
+
+```ts title="src/todo.sql.ts"
+import { text, serial, pgTable } from "drizzle-orm/pg-core";
+
+export const todo = pgTable("todo", {
+  id: serial("id").primaryKey(),
+  title: text("title").notNull(),
+  description: text("description"),
+});
+```
+
+---
+
+## 4. Generate a migration
+
+We can use this to generate a migration.
+
+```bash
+npm run db generate
+```
+
+This in turn runs `sst shell drizzle-kit generate` and creates a new migration in the `migrations/` directory.
+
+#### Apply the migration
+
+Now we can apply our migration using.
+
+```bash
+npm run db migrate
+```
+
+This should create our new schema.
+
+#### Drizzle Studio
+
+To see our schema in action we can open the Drizzle Studio.
+
+```bash
+npm run db:studio
+```
+
+This will run `sst shell drizzle-kit studio` and direct you to opening `https://local.drizzle.studio`.
+
+![Initial Drizzle Studio with SST](../../../../../assets/docs/start/initial-drizzle-studio-with-sst.png)
+
+
+---
+
+## 5. Query the database
+
+To use Drizzle ORM to query our database, create a new `src/drizzle.ts` config file with the following.
+
+```ts title="src/drizzle.ts"
+import { Resource } from "sst";
+import { drizzle } from "drizzle-orm/aws-data-api/pg";
+import { RDSDataClient } from "@aws-sdk/client-rds-data";
+
+const client = new RDSDataClient({});
+
+export const db = drizzle(client, {
+  database: Resource.MyPostgres.database,
+  secretArn: Resource.MyPostgres.secretArn,
+  resourceArn: Resource.MyPostgres.clusterArn,
+});
+```
+
+Now we can use that in the API. Create our API handler in `src/api.ts`.
+
+```ts title="src/api.ts"
+import { db } from "./drizzle";
+import { todo } from "./todo.sql";
+import { APIGatewayProxyHandlerV2 } from "aws-lambda";
+
+export const handler: APIGatewayProxyHandlerV2 = async (evt) => {
+  if (evt.requestContext.http.method === "GET") {
+    const result = await db.select().from(todo).execute();
+
+    return {
+      statusCode: 200,
+      body: JSON.stringify(result, null, 2),
+    };
+  }
+
+  if (evt.requestContext.http.method === "POST") {
+    const result = await db
+      .insert(todo)
+      .values({ title: "Todo", description: crypto.randomUUID() })
+      .returning()
+      .execute();
+
+    return {
+      statusCode: 200,
+      body: JSON.stringify(result),
+    };
+  }
+};
+```
+
+For _POST_ requests we create a new todo and for _GET_ requests we simply print out all our todos.
+
+---
+
+#### Test your app
+
+To test our app, make a _POST_ request to our API.
+
+```bash
+curl -X POST https://ouu5vovpxllyn5b6ot2nn6vdsa0hvcuj.lambda-url.us-east-1.on.aws
+```
+
+Now if you head over to `https://ouu5vovpxllyn5b6ot2nn6vdsa0hvcuj.lambda-url.us-east-1.on.aws` in your browser, you'll see that a todo has been added.
+
+![Todo created with Drizzle in SST](../../../../../assets/docs/start/todo-created-with-drizzle-in-sst.png)
+
+You should see this in the Drizzle Studio as well.
+
+---
+
+## 6. Deploy your app
+
+Finally, let's deploy your app.
+
+```bash
+sst deploy
+```

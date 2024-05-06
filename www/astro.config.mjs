@@ -19,6 +19,7 @@ const sidebar = [
       { label: "Email", link: "/docs/start/aws/email/" },
       { label: "Remix", link: "/docs/start/aws/remix/" },
       { label: "Svelte", link: "/docs/start/aws/svelte/" },
+      { label: "Drizzle", link: "/docs/start/aws/drizzle/" },
       { label: "Next.js", link: "/docs/start/aws/nextjs/" },
       { label: "Container", link: "/docs/start/aws/container/" },
       {

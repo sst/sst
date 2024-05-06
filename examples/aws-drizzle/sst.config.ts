@@ -17,7 +17,7 @@ export default $config({
     });
 
     return {
-      url: api.url,
+      api: api.url,
     };
   },
 });

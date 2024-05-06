@@ -24,9 +24,4 @@ export const handler: APIGatewayProxyHandlerV2 = async (evt) => {
       body: JSON.stringify(result),
     };
   }
-
-  return {
-    statusCode: 404,
-    body: "Not found",
-  };
 };
