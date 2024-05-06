@@ -92,19 +92,40 @@ export interface ApiGatewayV2Args {
      */
     accessLog?: Transform<aws.cloudwatch.LogGroupArgs>;
     /**
-     * Transform the routes. This can be used to customize the handler function and
-     * the arguments for each route.
+     * Transform the routes. This is called for every route that is added.
+     *
+     * :::note
+     * This is applied right before the resource is created. So it overrides the
+     * props set by the route.
+     * :::
+     *
+     * You can use this to set any common props for all the routes and their handler function.
+     * Like the other transforms, you can either pass in an object or a callback.
      *
      * @example
+     *
+     * Here we are ensuring that all handler functions of our routes have a memory of `2048 MB`.
+     *
      * ```js
      * {
      *   transform: {
      *     route: {
      *       handler: {
-     *         link: [bucket, stripeKey]
+     *         memory: "2048 MB"
      *       },
-     *       args: {
-     *         auth: { iam: true }
+     *     }
+     *   }
+     * }
+     * ```
+     *
+     * Enable IAM auth for all our routes.
+     *
+     * ```js
+     * {
+     *   transform: {
+     *     route: {
+     *       args: (props) => {
+     *         props.auth = { iam: true };
      *       }
      *     }
      *   }
@@ -113,7 +134,7 @@ export interface ApiGatewayV2Args {
      */
     route?: {
       /**
-       * Transform the handler function for the route.
+       * Transform the handler function of the route.
        */
       handler?: Transform<FunctionArgs>;
       /**
@@ -247,6 +268,42 @@ export interface ApiGatewayV2RouteArgs {
  * #### Add routes
  *
  * ```ts
+ * api.route("GET /", "src/get.handler");
+ * api.route("POST /", "src/post.handler");
+ * ```
+ *
+ * #### Configure the routes
+ *
+ * You can configure the route and its handler function.
+ *
+ * ```ts
+ * api.route("GET /", "src/get.handler", { auth: { iam: true } });
+ * api.route("POST /", { handler: "src/post.handler", memory: "2048 MB" });
+ * ```
+ *
+ * #### Set defaults for all routes
+ *
+ * You can use the `transform` to set some defaults for all your routes. For example,
+ * instead of setting the `memory` for each route.
+ *
+ * ```ts
+ * api.route("GET /", { handler: "src/get.handler", memory: "2048 MB" });
+ * api.route("POST /", { handler: "src/post.handler", memory: "2048 MB" });
+ * ```
+ *
+ * You can set it through the `transform`.
+ *
+ * ```ts {5}
+ * new sst.aws.ApiGatewayV2("MyApi", {
+ *   transform: {
+ *     route: {
+ *       handler: {
+ *         memory: "2048 MB"
+ *       }
+ *     }
+ *   }
+ * });
+ *
  * api.route("GET /", "src/get.handler");
  * api.route("POST /", "src/post.handler");
  * ```
@@ -482,9 +539,9 @@ export class ApiGatewayV2 extends Component implements Link.Linkable {
     //       trailing slash, the API fails with the error {"message":"Not Found"}
     return this.apigDomain && this.apiMapping
       ? all([this.apigDomain.domainName, this.apiMapping.apiMappingKey]).apply(
-          ([domain, key]) =>
-            key ? `https://${domain}/${key}/` : `https://${domain}`,
-        )
+        ([domain, key]) =>
+          key ? `https://${domain}/${key}/` : `https://${domain}`,
+      )
       : this.api.apiEndpoint;
   }
 

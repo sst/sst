@@ -1,7 +1,7 @@
-import "sst"
+/* tslint:disable *//* eslint-disable */import "sst"
 declare module "sst" {
   export interface Resource {
-    Postgres: {
+    MyPostgres: {
       clusterArn: string
       database: string
       secretArn: string

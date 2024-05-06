@@ -35,6 +35,42 @@ new sst.aws.ApiGatewayV2("MyApi", {
 api.route("GET /", "src/get.handler");
 api.route("POST /", "src/post.handler");
 ```
+
+#### Configure the routes
+
+You can configure the route and its handler function.
+
+```ts
+api.route("GET /", "src/get.handler", { auth: { iam: true } });
+api.route("POST /", { handler: "src/post.handler", memory: "2048 MB" });
+```
+
+#### Set defaults for all routes
+
+You can use the `transform` to set some defaults for all your routes. For example,
+instead of setting the `memory` for each route.
+
+```ts
+api.route("GET /", { handler: "src/get.handler", memory: "2048 MB" });
+api.route("POST /", { handler: "src/post.handler", memory: "2048 MB" });
+```
+
+You can set it through the `transform`.
+
+```ts {5}
+new sst.aws.ApiGatewayV2("MyApi", {
+  transform: {
+    route: {
+      handler: {
+        memory: "2048 MB"
+      }
+    }
+  }
+});
+
+api.route("GET /", "src/get.handler");
+api.route("POST /", "src/post.handler");
+```
 </Section>
 
 ---
@@ -492,18 +528,38 @@ Transform the API Gateway HTTP API domain name resource.
 **Type** <code class="primitive">Object</code>
 </InlineSection>
 </Section>
-Transform the routes. This can be used to customize the handler function and
-the arguments for each route.
+Transform the routes. This is called for every route that is added.
+
+:::note
+This is applied right before the resource is created. So it overrides the
+props set by the route.
+:::
+
+You can use this to set any common props for all the routes and their handler function.
+Like the other transforms, you can either pass in an object or a callback.
+
+Here we are ensuring that all handler functions of our routes have a memory of `2048 MB`.
 
 ```js
 {
   transform: {
     route: {
       handler: {
-        link: [bucket, stripeKey]
+        memory: "2048 MB"
       },
-      args: {
-        auth: { iam: true }
+    }
+  }
+}
+```
+
+Enable IAM auth for all our routes.
+
+```js
+{
+  transform: {
+    route: {
+      args: (props) => {
+        props.auth = { iam: true };
       }
     }
   }
@@ -527,7 +583,7 @@ Transform the arguments for the route.
 **Type** [<code class="type">FunctionArgs</code>](/docs/component/aws/function/#functionargs)<code class="symbol"> | </code><code class="symbol">(</code><code class="primitive">args</code><code class="symbol">: </code>[<code class="type">FunctionArgs</code>](/docs/component/aws/function/#functionargs)<code class="symbol"> => </code><code class="primitive">void</code><code class="symbol">)</code>
 </InlineSection>
 </Section>
-Transform the handler function for the route.
+Transform the handler function of the route.
 
 </Segment>
 <NestedTitle id="transform-stage" Tag="h4" parent="transform.">stage?</NestedTitle>
