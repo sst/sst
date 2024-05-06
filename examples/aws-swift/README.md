@@ -6,7 +6,7 @@ Deploy Swift applications using sst ion.
 
 Building your application for deployment requires installing Docker.
 
-When deploying with `sst deploy` your application will be build for Amazon Linux, ensuring its campatible with the AWS Lambda provided runtime.
+When deploying with `sst deploy` your application will be build for Amazon Linux, ensuring its compatible with the AWS Lambda provided runtime.
 
 ## Deploy
 

@@ -5,7 +5,7 @@ const swiftVersion = "5.10";
 /**
  * ## Swift on Lambda
  *
- * Deploys a simple Swift applicaiton to Lambda using the `al2023` runtime.
+ * Deploys a simple Swift application to Lambda using the `al2023` runtime.
  *
  * :::note
  * Building this function requires Docker.
