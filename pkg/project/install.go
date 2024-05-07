@@ -1,39 +1,34 @@
 package project
 
 import (
+	"bufio"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"log/slog"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"regexp"
-	"strings"
 
 	"github.com/sst/ion/pkg/global"
+	"github.com/sst/ion/pkg/npm"
+	"golang.org/x/sync/errgroup"
 )
 
-func getProviderPackage(name string) string {
-	if strings.Contains(name, "/") {
-		return name
-	}
-	return "@pulumi/" + name
-}
-
-func cleanProviderName(name string) string {
-	result := regexp.MustCompile("[^a-zA-Z0-9]+").ReplaceAllString(name, "")
-	result = strings.ReplaceAll(result, "pulumiverse", "")
-	result = strings.ReplaceAll(result, "pulumi", "")
-	result = strings.ReplaceAll(result, "sstprovider", "")
-	return result
-}
-
 func (p *Project) NeedsInstall() bool {
-	platformDir := p.PathPlatformDir()
-	for name := range p.app.Providers {
-		pkg := getProviderPackage(name)
-		if _, err := os.Stat(filepath.Join(platformDir, "node_modules", pkg)); err != nil {
+	if len(p.app.Providers) != len(p.lock) {
+		return true
+	}
+	for _, entry := range p.lock {
+		config := p.app.Providers[entry.Name].(map[string]interface{})
+		version := config["version"]
+		if version == nil || version == "" {
+			version = "latest"
+		}
+		slog.Info("checking provider", "name", entry.Name, "version", version, "compare", entry.Version)
+		if version != entry.Version {
 			return true
 		}
 	}
@@ -42,7 +37,13 @@ func (p *Project) NeedsInstall() bool {
 
 func (p *Project) Install() error {
 	slog.Info("installing deps")
-	err := p.writePackageJson()
+
+	err := p.generateProviderLock()
+	if err != nil {
+		return err
+	}
+
+	err = p.writePackageJson()
 	if err != nil {
 		return err
 	}
@@ -53,6 +54,11 @@ func (p *Project) Install() error {
 	}
 
 	err = p.writeTypes()
+	if err != nil {
+		return err
+	}
+
+	err = p.writeProviderLock()
 	if err != nil {
 		return err
 	}
@@ -81,13 +87,9 @@ func (p *Project) writePackageJson() error {
 	}
 
 	dependencies := result["dependencies"].(map[string]interface{})
-	for name, config := range p.app.Providers {
-		version := config.(map[string]interface{})["version"]
-		if version == nil || version == "" {
-			version = "latest"
-		}
-		slog.Info("adding dependency", "name", name)
-		dependencies[getProviderPackage(name)] = version
+	for _, entry := range p.lock {
+		slog.Info("adding dependency", "name", entry.Name)
+		dependencies[entry.Package] = entry.Version
 	}
 
 	dataToWrite, err := json.MarshalIndent(result, "", "  ")
@@ -122,25 +124,21 @@ func (p *Project) writeTypes() error {
 	file.WriteString(`import "../types.generated"` + "\n")
 	file.WriteString(`import { AppInput, App, Config } from "./src/config"` + "\n")
 
-	for raw := range p.app.Providers {
-		name := cleanProviderName(raw)
-		pkg := getProviderPackage(raw)
-		file.WriteString(`import * as _` + name + ` from "` + pkg + `";` + "\n")
+	for _, entry := range p.lock {
+		file.WriteString(`import * as _` + entry.Alias + ` from "` + entry.Package + `";` + "\n")
 	}
 
 	file.WriteString("\n\n")
 
 	file.WriteString(`declare global {` + "\n")
-	for raw := range p.app.Providers {
-		name := cleanProviderName(raw)
+	for _, entry := range p.lock {
 		file.WriteString(`  // @ts-expect-error` + "\n")
-		file.WriteString(`  export import ` + name + ` = _` + name + "\n")
+		file.WriteString(`  export import ` + entry.Alias + ` = _` + entry.Alias + "\n")
 	}
 	file.WriteString(`  interface Providers {` + "\n")
 	file.WriteString(`    providers?: {` + "\n")
-	for raw := range p.app.Providers {
-		name := cleanProviderName(raw)
-		file.WriteString(`      "` + raw + `"?:  (_` + name + `.ProviderArgs & { version?: string }) | boolean;` + "\n")
+	for _, entry := range p.lock {
+		file.WriteString(`      "` + entry.Name + `"?:  (_` + entry.Alias + `.ProviderArgs & { version?: string }) | boolean;` + "\n")
 	}
 	file.WriteString(`    }` + "\n")
 	file.WriteString(`  }` + "\n")
@@ -165,6 +163,107 @@ func (p *Project) fetchDeps() error {
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		return errors.New("failed to run bun install " + string(output))
+	}
+	for _, entry := range p.lock {
+		path := filepath.Join(p.PathPlatformDir(), "node_modules", entry.Package, "provider.js")
+		file, err := os.Open(path)
+		if err != nil {
+			return err
+		}
+		defer file.Close()
+		scanner := bufio.NewScanner(file)
+		pulumiTypePattern := regexp.MustCompile(`Provider\.__pulumiType = ['"]([^'"]+)['"]`)
+		for scanner.Scan() {
+			matches := pulumiTypePattern.FindStringSubmatch(scanner.Text())
+			if len(matches) > 1 {
+				entry.Alias = matches[1]
+				break
+			}
+		}
+		if err := scanner.Err(); err != nil {
+			return err
+		}
+		if entry.Alias == "" {
+			return fmt.Errorf("failed to find __pulumiType for %s", entry.Package)
+		}
+	}
+	return nil
+}
+
+type ProviderLockEntry struct {
+	Name    string `json:"name"`
+	Package string `json:"package"`
+	Version string `json:"version"`
+	Alias   string `json:"alias"`
+}
+
+type ProviderLock = []*ProviderLockEntry
+
+func (p *Project) loadProviderLock() error {
+	lockPath := filepath.Join(p.PathPlatformDir(), "provider-lock.json")
+	data, err := os.ReadFile(lockPath)
+	if err != nil {
+		p.lock = ProviderLock{}
+		return nil
+	}
+	err = json.Unmarshal(data, &p.lock)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (p *Project) generateProviderLock() error {
+	var wg errgroup.Group
+	out := ProviderLock{}
+	results := make(chan ProviderLockEntry)
+	for name, config := range p.app.Providers {
+		n := name
+		version := config.(map[string]interface{})["version"]
+		if version == nil || version == "" {
+			version = "latest"
+		}
+		wg.Go(func() error {
+			for _, prefix := range []string{"@sst-provider/", "@pulumi/", ""} {
+				pkg, err := npm.Get(prefix+n, version.(string))
+				if err != nil {
+					continue
+				}
+				results <- ProviderLockEntry{
+					Name:    n,
+					Package: pkg.Name,
+					Version: version.(string),
+				}
+				return nil
+			}
+			return fmt.Errorf("provider %s not found", n)
+		})
+	}
+	wg.Go(func() error {
+		for range p.app.Providers {
+			r := <-results
+			out = append(out, &r)
+		}
+		close(results)
+		return nil
+	})
+	err := wg.Wait()
+	if err != nil {
+		return err
+	}
+	p.lock = out
+	return nil
+}
+
+func (p *Project) writeProviderLock() error {
+	lockPath := filepath.Join(p.PathPlatformDir(), "provider-lock.json")
+	data, err := json.MarshalIndent(p.lock, "", "  ")
+	if err != nil {
+		return err
+	}
+	err = os.WriteFile(lockPath, data, 0644)
+	if err != nil {
+		return err
 	}
 	return nil
 }

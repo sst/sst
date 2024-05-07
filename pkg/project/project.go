@@ -35,6 +35,7 @@ type App struct {
 
 type Project struct {
 	version         string
+	lock            ProviderLock
 	root            string
 	config          string
 	app             *App
@@ -215,6 +216,11 @@ console.log("~j" + JSON.stringify(mod.app({
 		fmt.Println(line)
 	}
 	if err := scanner.Err(); err != nil {
+		return nil, err
+	}
+
+	err = proj.loadProviderLock()
+	if err != nil {
 		return nil, err
 	}
 

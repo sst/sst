@@ -189,11 +189,9 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 	}
 
 	providerShim := []string{}
-	for name := range s.project.app.Providers {
-		pkg := getProviderPackage(name)
-		global := cleanProviderName(name)
-		providerShim = append(providerShim, fmt.Sprintf("import * as %s from '%s'", global, pkg))
-		providerShim = append(providerShim, fmt.Sprintf("globalThis.%s = %s", global, global))
+	for _, entry := range s.project.lock {
+		providerShim = append(providerShim, fmt.Sprintf("import * as %s from '%s'", entry.Alias, entry.Package))
+		providerShim = append(providerShim, fmt.Sprintf("globalThis.%s = %s", entry.Alias, entry.Alias))
 	}
 
 	buildResult, err := js.Build(js.EvalOptions{

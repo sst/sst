@@ -6,7 +6,6 @@ import (
 	"io"
 	"io/fs"
 	"log/slog"
-	"net/http"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -14,6 +13,7 @@ import (
 	"text/template"
 
 	"github.com/kkqy/gokvpairs"
+	"github.com/sst/ion/pkg/npm"
 	"github.com/sst/ion/pkg/platform"
 	"github.com/tailscale/hujson"
 )
@@ -128,17 +128,7 @@ func Create(templateName string, home string) error {
 			version := npmStep.Version
 			if version == "" {
 				slog.Info("fetching latest version", "package", npmStep.Package)
-				url := "https://registry.npmjs.org/" + npmStep.Package + "/latest"
-				resp, err := http.Get(url)
-				if err != nil {
-					return err
-				}
-				defer resp.Body.Close()
-
-				var data struct {
-					Version string `json:"version"`
-				}
-				err = json.NewDecoder(resp.Body).Decode(&data)
+				data, err := npm.Get(npmStep.Package, "latest")
 				if err != nil {
 					return err
 				}
