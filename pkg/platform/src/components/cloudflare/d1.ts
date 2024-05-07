@@ -12,7 +12,7 @@ export interface D1Args {
     /**
      * Transform the D1 resource.
      */
-    namespace?: Transform<cloudflare.D1DatabaseArgs>;
+    database?: Transform<cloudflare.D1DatabaseArgs>;
   };
 }
 
@@ -58,14 +58,14 @@ export class D1 extends Component implements Link.Cloudflare.Linkable {
 
     const parent = this;
 
-    const namespace = createDB();
+    const db = createDB();
 
-    this.database = namespace;
+    this.database = db;
 
     function createDB() {
       return new cloudflare.D1Database(
         `${name}Database`,
-        transform(args?.transform?.namespace, {
+        transform(args?.transform?.database, {
           name,
           accountId: sst.cloudflare.DEFAULT_ACCOUNT_ID,
         }),
@@ -87,7 +87,7 @@ export class D1 extends Component implements Link.Cloudflare.Linkable {
   }
 
   /**
-   * The generated id of the D1 namespace.
+   * The generated id of the D1 database.
    */
   public get id() {
     return this.database.id;
