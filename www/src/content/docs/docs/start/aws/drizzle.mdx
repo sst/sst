@@ -68,7 +68,8 @@ Let's add a Postgres database using [Amazon Aurora Serverless v2](https://docs.a
 
 ```ts title="sst.config.ts"
 async run() {
-  const rds = new sst.aws.Postgres("MyPostgres");
+  const vpc = new sst.aws.Vpc("MyVpc");
+  const rds = new sst.aws.Postgres("MyPostgres", { vpc });
 },
 ```
 

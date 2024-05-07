@@ -94,8 +94,17 @@ export interface PostgresArgs {
     max?: Input<ACU>;
   }>;
   /**
-   * The VPC to use for the cluster.
-   * @default The default VPC and security group are used.
+   * The VPC to use for the database cluster.
+   *
+   * :::note
+   * The default VPC does not have a private subnet and is not recommended for production.
+   * :::
+   *
+   * By default, your account has a VPC in each account.
+   * This comes with a public subnet. If you don't specify a VPC, it'll use the default one.
+   * This is not recommended for production.
+   *
+   * @default The default VPC in your account.
    *
    * @example
    * ```js
@@ -104,6 +113,20 @@ export interface PostgresArgs {
    *     privateSubnets: ["subnet-0db7376a7ad4db5fd ", "subnet-06fc7ee8319b2c0ce"],
    *     securityGroups: ["sg-0399348378a4c256c"],
    *   }
+   * }
+   * ```
+   *
+   * Or create a new `Vpc` component.
+   *
+   * ```js
+   * const myVpc = new sst.aws.Vpc("MyVpc");
+   * ```
+   *
+   * And pass it in.
+   *
+   * ```js
+   * {
+   *   vpc: myVpc
    * }
    * ```
    */
@@ -148,7 +171,8 @@ export interface PostgresArgs {
  *
  * To connect to your database from your Lambda functions, you can use the
  * [AWS Data API](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/data-api.html). It
- * does not need a persistent connection, or a VPC, and works over HTTP.
+ * does not need a persistent connection, and works over HTTP. You also don't need a VPN to
+ * connect to it locally.
  *
  * @example
  *
@@ -156,6 +180,13 @@ export interface PostgresArgs {
  *
  * ```js
  * const database = new sst.aws.Postgres("MyDatabase");
+ * ```
+ *
+ * #### Use a VPC
+ *
+ * ```js
+ * const vpc = new sst.aws.Vpc("MyVpc");
+ * const database = new sst.aws.Postgres("MyDatabase", { vpc });
  * ```
  *
  * #### Change the scaling config
@@ -195,8 +226,7 @@ export interface PostgresArgs {
  */
 export class Postgres
   extends Component
-  implements Link.Linkable, Link.AWS.Linkable
-{
+  implements Link.Linkable, Link.AWS.Linkable {
   private cluster: aws.rds.Cluster;
   private instance: aws.rds.ClusterInstance;
   private databaseName: Output<string>;

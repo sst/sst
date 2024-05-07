@@ -22,12 +22,20 @@ Data API for Aurora Postgres Serverless v2 is still being [rolled out in all reg
 
 To connect to your database from your Lambda functions, you can use the
 [AWS Data API](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/data-api.html). It
-does not need a persistent connection, or a VPC, and works over HTTP.
+does not need a persistent connection, and works over HTTP. You also don't need a VPN to
+connect to it locally.
 
 #### Create the database
 
 ```js
 const database = new sst.aws.Postgres("MyDatabase");
+```
+
+#### Use a VPC
+
+```js
+const vpc = new sst.aws.Vpc("MyVpc");
+const database = new sst.aws.Postgres("MyDatabase", { vpc });
 ```
 
 #### Change the scaling config
@@ -287,6 +295,7 @@ to the following reasons, you can also [read more here](https://docs.aws.amazon.
 </InlineSection>
 - <p>[<code class="key">cluster?</code>](#transform-cluster)</p>
 - <p>[<code class="key">instance?</code>](#transform-instance)</p>
+- <p>[<code class="key">subnetGroup?</code>](#transform-subnetgroup)</p>
 </Section>
 [Transform](/docs/components#transform) how this component creates its underlying
 resources.
@@ -312,6 +321,16 @@ Transform the RDS Cluster.
 Transform the database instance in the RDS Cluster.
 
 </Segment>
+<NestedTitle id="transform-subnetgroup" Tag="h4" parent="transform.">subnetGroup?</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** [<code class="type">SubnetGroupArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/rds/subnetgroup/#inputs)<code class="symbol"> | </code><code class="symbol">(</code><code class="primitive">args</code><code class="symbol">: </code>[<code class="type">SubnetGroupArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/rds/subnetgroup/#inputs)<code class="symbol"> => </code><code class="primitive">void</code><code class="symbol">)</code>
+</InlineSection>
+</Section>
+Transform the RDS subnet group.
+
+</Segment>
 ### version?
 <Segment>
 <Section type="parameters">
@@ -330,5 +349,72 @@ The Postgres engine version. Check out the [available versions in your region](h
   version: "13.9"
 }
 ```
+</Segment>
+### vpc?
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Object</code><code class="symbol">&gt;</code>
+</InlineSection>
+- <p>[<code class="key">privateSubnets</code>](#vpc-privatesubnets)</p>
+- <p>[<code class="key">securityGroups</code>](#vpc-securitygroups)</p>
+</Section>
+
+<InlineSection>
+**Default** The default VPC in your account.
+</InlineSection>
+The VPC to use for the database cluster.
+
+:::note
+The default VPC does not have a private subnet and is not recommended for production.
+:::
+
+By default, your account has a VPC in each account.
+This comes with a public subnet. If you don't specify a VPC, it'll use the default one.
+This is not recommended for production.
+
+```js
+{
+  vpc: {
+    privateSubnets: ["subnet-0db7376a7ad4db5fd ", "subnet-06fc7ee8319b2c0ce"],
+    securityGroups: ["sg-0399348378a4c256c"],
+  }
+}
+```
+
+Or create a new `Vpc` component.
+
+```js
+const myVpc = new sst.aws.Vpc("MyVpc");
+```
+
+And pass it in.
+
+```js
+{
+  vpc: myVpc
+}
+```
+</Segment>
+<NestedTitle id="vpc-privatesubnets" Tag="h4" parent="vpc.">privateSubnets</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code><code class="symbol">[]</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+A list of private subnet IDs in the VPC. The database will be placed in the private
+subnets.
+
+</Segment>
+<NestedTitle id="vpc-securitygroups" Tag="h4" parent="vpc.">securityGroups</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code><code class="symbol">[]</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+A list of VPC security group IDs.
+
 </Segment>
 </div>
