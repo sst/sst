@@ -13,7 +13,7 @@ require (
 	github.com/charmbracelet/huh v0.3.0
 	github.com/cloudflare/cloudflare-go v0.89.0
 	github.com/eclipse/paho.mqtt.golang v1.4.3
-	github.com/evanw/esbuild v0.20.0
+	github.com/evanw/esbuild v0.20.2
 	github.com/fatih/color v1.16.0
 	github.com/fsnotify/fsnotify v1.7.0
 	github.com/gorilla/websocket v1.5.0
