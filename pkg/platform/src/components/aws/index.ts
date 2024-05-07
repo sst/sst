@@ -19,6 +19,7 @@ export * from "./remix.js";
 export * from "./router.js";
 export * from "./sns-topic.js";
 export * from "./solid-start.js";
+export * from "./nuxt.js";
 export * from "./static-site.js";
 export * from "./svelte-kit.js";
 export * from "./vector.js";
