@@ -114,6 +114,9 @@ export class Component extends ComponentResource {
             case "aws:ecs/cluster:Cluster":
               overrides = { name: prefixName(255, args.name) };
               break;
+            case "aws:rds/subnetGroup:SubnetGroup":
+              overrides = { name: prefixName(255, args.name).toLowerCase() };
+              break;
             case "aws:ec2/eip:Eip":
             case "aws:ec2/internetGateway:InternetGateway":
             case "aws:ec2/natGateway:NatGateway":

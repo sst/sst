@@ -94,10 +94,39 @@ export interface PostgresArgs {
     max?: Input<ACU>;
   }>;
   /**
+   * The VPC to use for the cluster.
+   * @default The default VPC and security group are used.
+   *
+   * @example
+   * ```js
+   * {
+   *   vpc: {
+   *     privateSubnets: ["subnet-0db7376a7ad4db5fd ", "subnet-06fc7ee8319b2c0ce"],
+   *     securityGroups: ["sg-0399348378a4c256c"],
+   *   }
+   * }
+   * ```
+   */
+  vpc?: Input<{
+    /**
+     * A list of private subnet IDs in the VPC. The database will be placed in the private
+     * subnets.
+     */
+    privateSubnets: Input<Input<string>[]>;
+    /**
+     * A list of VPC security group IDs.
+     */
+    securityGroups: Input<Input<string>[]>;
+  }>;
+  /**
    * [Transform](/docs/components#transform) how this component creates its underlying
    * resources.
    */
   transform?: {
+    /**
+     * Transform the RDS subnet group.
+     */
+    subnetGroup?: Transform<aws.rds.SubnetGroupArgs>;
     /**
      * Transform the RDS Cluster.
      */
@@ -166,7 +195,8 @@ export interface PostgresArgs {
  */
 export class Postgres
   extends Component
-  implements Link.Linkable, Link.AWS.Linkable {
+  implements Link.Linkable, Link.AWS.Linkable
+{
   private cluster: aws.rds.Cluster;
   private instance: aws.rds.ClusterInstance;
   private databaseName: Output<string>;
@@ -183,6 +213,7 @@ export class Postgres
     const version = normalizeVersion();
     const databaseName = normalizeDatabaseName();
 
+    const subnetGroup = createSubnetGroup();
     const cluster = createCluster();
     const instance = createInstance();
 
@@ -207,6 +238,18 @@ export class Postgres
       );
     }
 
+    function createSubnetGroup() {
+      if (!args?.vpc) return;
+
+      return new aws.rds.SubnetGroup(
+        `${name}SubnetGroup`,
+        transform(args?.transform?.subnetGroup, {
+          subnetIds: output(args.vpc).privateSubnets,
+        }),
+        { parent },
+      );
+    }
+
     function createCluster() {
       return new aws.rds.Cluster(
         `${name}Cluster`,
@@ -220,10 +263,10 @@ export class Postgres
           serverlessv2ScalingConfiguration: scaling,
           skipFinalSnapshot: true,
           enableHttpEndpoint: true,
+          dbSubnetGroupName: subnetGroup?.name,
+          vpcSecurityGroupIds: args?.vpc && output(args.vpc).securityGroups,
         }),
-        {
-          parent,
-        },
+        { parent },
       );
     }
 
@@ -235,10 +278,9 @@ export class Postgres
           instanceClass: "db.serverless",
           engine: aws.rds.EngineType.AuroraPostgresql,
           engineVersion: cluster.engineVersion,
+          dbSubnetGroupName: subnetGroup?.name,
         }),
-        {
-          parent,
-        },
+        { parent },
       );
     }
   }
