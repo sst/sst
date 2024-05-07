@@ -440,7 +440,6 @@ export class Remix extends Component implements Link.Linkable {
             isUsingVite,
             outputPath,
             edge ? "edge-server.mjs" : "regional-server.mjs",
-            edge ? false : true,
           );
 
           return validatePlan({
@@ -470,6 +469,7 @@ export class Remix extends Component implements Link.Linkable {
                 : {
                     server: {
                       server: {
+                        streaming: true,
                         function: serverConfig,
                       },
                     },
@@ -519,7 +519,6 @@ export class Remix extends Component implements Link.Linkable {
       isUsingVite: boolean,
       outputPath: string,
       wrapperFile: string,
-      streaming: boolean,
     ) {
       // Create a Lambda@Edge handler for the Remix server bundle.
       //
@@ -584,7 +583,6 @@ export class Remix extends Component implements Link.Linkable {
 
       return {
         handler: path.join(buildPath, "server.handler"),
-        streaming,
         nodejs: {
           esbuild: {
             inject: [path.resolve(polyfillDest)],
