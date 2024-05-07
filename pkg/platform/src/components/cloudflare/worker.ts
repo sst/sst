@@ -262,6 +262,7 @@ export class Worker
         links: all([bindings]).apply(([links]) =>
           Object.values(links)
             .flat()
+            .filter((l) => l.name.startsWith("SST_RESOURCE_") === false)
             .map((l) => l.name),
         ),
         environment: args.environment,
