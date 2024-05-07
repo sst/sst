@@ -29,6 +29,7 @@ func (p *Project) CopyPlatform(version string) error {
 	if err != nil {
 		return err
 	}
+	p.lock = ProviderLock{}
 	return os.WriteFile(filepath.Join(platformDir, "version"), []byte(version), 0644)
 }
 
