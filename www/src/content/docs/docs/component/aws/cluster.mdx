@@ -13,8 +13,8 @@ import InlineSection from '../../../../../../src/components/tsdoc/InlineSection.
 <div class="tsdoc">
 
 <Section type="about">
-The `Cluster` component lets you create a cluster of containers that run your app.
-It uses [Amazon Fargate](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/AWS_Fargate.html).
+The `Cluster` component lets you create a cluster of containers and add services to them.
+It uses [Amazon ECS](https://aws.amazon.com/ecs/) on [AWS Fargate](https://aws.amazon.com/fargate/).
 
 #### Create a Cluster
 
@@ -26,15 +26,56 @@ const cluster = new sst.aws.Cluster("MyCluster", { vpc });
 #### Add a service
 
 ```ts
+cluster.addService("MyService");
+```
+
+#### Add a public custom domain
+
+```ts
 cluster.addService("MyService", {
   public: {
-    domain: "domain.com",
+    domain: "example.com",
     ports: [
       { listen: "80/http" },
       { listen: "443/https", forward: "80/http" },
     ]
   }
 });
+```
+
+#### Enable auto-scaling
+
+```ts
+cluster.addService("MyService", {
+  scaling: {
+    min: 4,
+    max: 16,
+    cpuUtilization: 50,
+    memoryUtilization: 50,
+  }
+});
+```
+
+#### Link resources
+
+[Link resources](/docs/linking/) to your service. This will grant permissions
+to the resources and allow you to access it in your app.
+
+```ts {4}
+const bucket = new sst.aws.Bucket("MyBucket");
+
+cluster.addService("MyService", {
+  link: [bucket],
+});
+```
+
+If your service is written in Node.js, you can use the [SDK](/docs/reference/sdk/)
+to access the linked resources.
+
+```ts title="app.ts"
+import { Resource } from "sst";
+
+console.log(Resource.MyBucket.name);
 ```
 </Section>
 
@@ -86,30 +127,23 @@ cluster.addService("MyService");
 
 Set a custom domain for the service.
 
-```js {3}
+```js {2}
 cluster.addService("MyService", {
-  domain: "my-app.com"
+  domain: "example.com"
 });
 ```
 
-[Link resources](/docs/linking/) to your service. This will grant permissions
-to the resources and allow you to access it in your app.
+#### Enable auto-scaling
 
-```ts {5}
-const bucket = new sst.aws.Bucket("MyBucket");
-
+```ts
 cluster.addService("MyService", {
-  link: [bucket]
+  scaling: {
+    min: 4,
+    max: 16,
+    cpuUtilization: 50,
+    memoryUtilization: 50,
+  }
 });
-```
-
-If your service app is written in Node.js, you can use the [SDK](/docs/reference/sdk/)
-to access the linked resources.
-
-```ts title="app.ts"
-import { Resource } from "sst";
-
-console.log(Resource.MyBucket.name);
 ```
 </Segment>
 
@@ -182,7 +216,7 @@ The VPC to use for the cluster.
 }
 ```
 
-Or create a new `Vpc` component.
+Or create a `Vpc` component.
 
 ```js
 const myVpc = new sst.aws.Vpc("MyVpc");
@@ -249,13 +283,13 @@ A list of VPC security group IDs.
 </Section>
 
 <InlineSection>
-**Default** "x86_64"
+**Default** <code class="primitive">"x86_64"</code>
 </InlineSection>
-The CPU architecture of the container.
+The CPU architecture of the container in this service.
 
 ```js
 {
-  architecture: "arm64",
+  architecture: "arm64"
 }
 ```
 </Segment>
@@ -268,17 +302,17 @@ The CPU architecture of the container.
 </Section>
 
 <InlineSection>
-**Default** "0.25 vCPU"
+**Default** <code class="primitive">"0.25 vCPU"</code>
 </InlineSection>
-The amount of CPU allocated.
+The amount of CPU allocated to the container in this service.
 
 :::note
-Only certain combinations of CPU and memory are supported. [View the valid combinations of CPU and memory](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/fargate-tasks-services.html#fargate-tasks-size).
+[View the valid combinations](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/fargate-tasks-services.html#fargate-tasks-size) of CPU and memory.
 :::
 
 ```js
 {
-  cpu: "1 vCPU",
+  cpu: "1 vCPU"
 }
 ```
 </Segment>
@@ -320,7 +354,7 @@ The keys need to:
 Configure the docker build command for building the image.
 
 Prior to building the image, SST will automatically add the `.sst` directory
-to the `.dockerignore` file if not already present.
+to the `.dockerignore` if not already present.
 
 ```js
 {
@@ -341,7 +375,7 @@ to the `.dockerignore` file if not already present.
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Record</code><code class="symbol">&lt;</code><code class="primitive">string</code>, <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code><code class="symbol">&gt;</code><code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
-[Build args](https://docs.docker.com/build/guide/build-args/) to pass to the docker build command.
+Key-value pairs of [build args](https://docs.docker.com/build/guide/build-args/) to pass to the docker build command.
 
 ```js
 {
@@ -362,8 +396,7 @@ to the `.dockerignore` file if not already present.
 <InlineSection>
 **Default** <code class="primitive">"."</code>
 </InlineSection>
-The path to the [Docker build context](https://docs.docker.com/build/building/context/#local-context).
-The path is relative to your `sst.config.ts`.
+The path to the [Docker build context](https://docs.docker.com/build/building/context/#local-context). The path is relative to your project's `sst.config.ts`.
 
 Change where the docker build context is located.
 
@@ -385,8 +418,9 @@ Change where the docker build context is located.
 **Default** <code class="primitive">"Dockerfile"</code>
 </InlineSection>
 The path to the [Dockerfile](https://docs.docker.com/reference/cli/docker/image/build/#file).
-The path is relative to the build context.
+The path is relative to the build `context`.
 
+Use a different Dockerfile.
 ```js
 {
   dockerfile: "Dockerfile.prod"
@@ -403,7 +437,7 @@ The path is relative to the build context.
 [Link resources](/docs/linking/) to your service. This will:
 
 1. Grant the permissions needed to access the resources.
-2. Allow you to access it in your site using the [SDK](/docs/reference/sdk/).
+2. Allow you to access it in your app using the [SDK](/docs/reference/sdk/).
 
 Takes a list of components to link to the service.
 
@@ -423,9 +457,9 @@ Takes a list of components to link to the service.
 </Section>
 
 <InlineSection>
-**Default** <code class="primitive">&lcub;retention: "forever"&rcub;</code>
+**Default** <code class="primitive">&lcub; retention: "forever" &rcub;</code>
 </InlineSection>
-Configure the service logs in CloudWatch.
+Configure the service's logs in CloudWatch.
 
 ```js
 {
@@ -444,9 +478,9 @@ Configure the service logs in CloudWatch.
 </Section>
 
 <InlineSection>
-**Default** <code class="primitive">forever</code>
+**Default** <code class="primitive">"forever"</code>
 </InlineSection>
-The duration the service logs are kept in CloudWatch.
+The duration the logs are kept in CloudWatch.
 
 </Segment>
 ### memory?
@@ -458,17 +492,17 @@ The duration the service logs are kept in CloudWatch.
 </Section>
 
 <InlineSection>
-**Default** "0.5 GB"
+**Default** <code class="primitive">"0.5 GB"</code>
 </InlineSection>
-The amount of memory allocated.
+The amount of memory allocated to the container in this service.
 
 :::note
-Only certain combinations of CPU and memory are supported. [View the valid combinations of CPU and memory](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/fargate-tasks-services.html#fargate-tasks-size).
+[View the valid combinations](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/fargate-tasks-services.html#fargate-tasks-size) of CPU and memory.
 :::
 
 ```js
 {
-  memory: "2 GB",
+  memory: "2 GB"
 }
 ```
 </Segment>
@@ -482,7 +516,7 @@ Only certain combinations of CPU and memory are supported. [View the valid combi
 - <p>[<code class="key">resources</code>](#permissions-resources)</p>
 </Section>
 Permissions and the resources that the service needs to access. These permissions are
-used to create the service's [task IAM role](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task-iam-roles.html).
+used to create the service's [task role](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task-iam-roles.html).
 
 :::tip
 If you `link` the service to a resource, the permissions to access it are
@@ -490,6 +524,7 @@ automatically added.
 :::
 
 Allow the service to read and write to an S3 bucket called `my-bucket`.
+
 ```js
 {
   permissions: [
@@ -572,15 +607,15 @@ The resourcess specified using the [IAM ARN format](https://docs.aws.amazon.com/
   - <p>[<code class="key">listen</code>](#public-ports-listen)</p>
 </Section>
 Configure a public endpoint for the service. When configured, a load balancer
-will be created to route traffic to the containers. Your users can access the service
-using this endpoint.
+will be created to route traffic to the containers. By default, the endpoint is an
+autogenerated load balancer URL.
 
 You can also configure a custom domain for the public endpoint.
 
 ```js
 {
   public: {
-    domain: "domain.com",
+    domain: "example.com",
     ports: [
       { listen: "80/http" },
       { listen: "443/https", forward: "80/http" }
@@ -745,21 +780,17 @@ Can also include subdomains based on the current stage.
 </InlineSection>
 </Section>
 Configure the port mappings the public endpoint listens to and forwards to the service.
+Supports two types of protocols:
 
-Two classes of protocols are supported:
-- Application Layer Protocols: `http` and `https`
-- Network Layer Protocols: `tcp`, `udp`, `tcp_udp`, and `tls`
-
-If application layer protocols are used, an [Application Load Balancer](https://docs.aws.amazon.com/elasticloadbalancing/latest/application/introduction.html) is created.
-And if network layer protocols are used, a [Network Load Balancer](https://docs.aws.amazon.com/elasticloadbalancing/latest/network/introduction.html) is created.
+1. Application Layer Protocols: `http` and `https`. This'll create an [Application Load Balancer](https://docs.aws.amazon.com/elasticloadbalancing/latest/application/introduction.html).
+2. Network Layer Protocols: `tcp`, `udp`, `tcp_udp`, and `tls`. This'll create a [Network Load Balancer](https://docs.aws.amazon.com/elasticloadbalancing/latest/network/introduction.html).
 
 :::note
-You can not configure both application and network layer protocols in the same service.
+If you are listening  on `https` or `tls`, you need to specify a custom `public.domain`.
 :::
 
-:::note
-If ports are configured to listen on `https` or `tls` protocols, a custom domain is required.
-:::
+You can **not** configure both application and network layer protocols for the same
+service.
 
 ```js
 {
@@ -771,8 +802,8 @@ If ports are configured to listen on `https` or `tls` protocols, a custom domain
 }
 ```
 
-If the forward port and protocol are the same as those the service listens on,
-you can omit the `forward` field.
+The `forward` port and protocol defaults to the `listen` port and protocol. So in this
+case both are `80/http`.
 
 ```js
 {
@@ -793,9 +824,10 @@ you can omit the `forward` field.
 </Section>
 
 <InlineSection>
-**Default** The same port and protocol as `listen`
+**Default** The same port and protocol as `listen`.
 </InlineSection>
-The port and protocol of the container the service forwards the traffic to.
+The port and protocol of the container the service forwards the traffic to. Uses the
+format `{port}/{protocol}`.
 
 </Segment>
 <NestedTitle id="public-ports-listen" Tag="h5" parent="public.ports[].">listen</NestedTitle>
@@ -805,7 +837,7 @@ The port and protocol of the container the service forwards the traffic to.
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="symbol">&ldquo;</code><code class="primitive">$\{number\}/https</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">$\{number\}/http</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">$\{number\}/tcp</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">$\{number\}/udp</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">$\{number\}/tcp_udp</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">$\{number\}/tls</code><code class="symbol">&rdquo;</code><code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
-The port and protocol the service listens on.
+The port and protocol the service listens on. Uses the format `{port}/{protocol}`.
 
 </Segment>
 ### scaling?
@@ -819,8 +851,13 @@ The port and protocol the service listens on.
 - <p>[<code class="key">memoryUtilization?</code>](#scaling-memoryutilization)</p>
 - <p>[<code class="key">min?</code>](#scaling-min)</p>
 </Section>
-Configure the service to automatically scale in or out based on the CPU or memory utilization.
-By default, scaling is disabled. The service will run with a single container.
+
+<InlineSection>
+**Default** <code class="primitive">&lcub; min: 1, max: 1 &rcub;</code>
+</InlineSection>
+Configure the service to automatically scale up or down based on the CPU or memory
+utilization of a container. By default, scaling is disabled and the service will run
+in a single container.
 
 ```js
 {
@@ -828,9 +865,10 @@ By default, scaling is disabled. The service will run with a single container.
     min: 4,
     max: 16,
     cpuUtilization: 50,
-    memoryUtilization: 50,
+    memoryUtilization: 50
   }
 }
+```
 </Segment>
 <NestedTitle id="scaling-cpuutilization" Tag="h4" parent="scaling.">cpuUtilization?</NestedTitle>
 <Segment>
@@ -841,16 +879,16 @@ By default, scaling is disabled. The service will run with a single container.
 </Section>
 
 <InlineSection>
-**Default** 70
+**Default** <code class="primitive">70</code>
 </InlineSection>
-The target CPU utilization percentage to scale in or out. The service will scale in
-when the CPU utilization is below the target and scale out when it is above the target.
+The target CPU utilization percentage to scale up or down. It'll scale up
+when the CPU utilization is above the target and scale down when it's below the target.
 
 ```js
 {
   scaling: {
-   cpuUtilization: 50,
-  },
+    cpuUtilization: 50
+  }
 }
 ```
 </Segment>
@@ -863,16 +901,15 @@ when the CPU utilization is below the target and scale out when it is above the 
 </Section>
 
 <InlineSection>
-**Default** 1
+**Default** <code class="primitive">1</code>
 </InlineSection>
-The maximum number of containers to run.
+The maximum number of containers to scale up to.
 
 ```js
 {
   scaling: {
-   minContainers: 4,
-   maxContainers: 16,
-  },
+    max: 16
+  }
 }
 ```
 </Segment>
@@ -885,16 +922,16 @@ The maximum number of containers to run.
 </Section>
 
 <InlineSection>
-**Default** 70
+**Default** <code class="primitive">70</code>
 </InlineSection>
-The target memory utilization percentage to scale in or out. The service will scale in
-when the memory utilization is below the target and scale out when it is above the target.
+The target memory utilization percentage to scale up or down. It'll scale up
+when the memory utilization is above the target and scale down when it's below the target.
 
 ```js
 {
   scaling: {
-   memoryUtilization: 50,
-  },
+    memoryUtilization: 50
+  }
 }
 ```
 </Segment>
@@ -907,16 +944,15 @@ when the memory utilization is below the target and scale out when it is above t
 </Section>
 
 <InlineSection>
-**Default** 1
+**Default** <code class="primitive">1</code>
 </InlineSection>
-The minimum number of containers to run.
+The minimum number of containers to scale down to.
 
 ```js
 {
   scaling: {
-   minContainers: 4,
-   maxContainers: 16,
-  },
+    min: 4
+  }
 }
 ```
 </Segment>
@@ -929,13 +965,13 @@ The minimum number of containers to run.
 </Section>
 
 <InlineSection>
-**Default** "21 GB"
+**Default** <code class="primitive">"21 GB"</code>
 </InlineSection>
-The amount of ephemeral storage allocated, in GB.
+The amount of ephemeral storage (in GB) allocated to a container in this service.
 
 ```js
 {
-  storage: "100 GB",
+  storage: "100 GB"
 }
 ```
 </Segment>
