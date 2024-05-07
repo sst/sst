@@ -15,6 +15,7 @@ export * from "./function.js";
 export * from "./nextjs.js";
 export * from "./postgres.js";
 export * from "./queue.js";
+export * from "./realtime.js";
 export * from "./remix.js";
 export * from "./router.js";
 export * from "./sns-topic.js";

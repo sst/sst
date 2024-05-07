@@ -1,0 +1,22 @@
+{
+  "name": "aws-realtime",
+  "workspaces": [
+    "web"
+  ],
+  "version": "1.0.0",
+  "description": "",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "sst": "3.0.1-7"
+  },
+  "dependencies": {
+    "@aws-sdk/client-iot-data-plane": "^3.569.0"
+  }
+}

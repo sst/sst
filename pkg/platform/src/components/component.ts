@@ -107,7 +107,13 @@ export class Component extends ComponentResource {
             case "aws:apigatewayv2/api:Api":
             case "aws:apigatewayv2/authorizer:Authorizer":
             case "aws:cognito/userPool:UserPool":
+            case "aws:iot/authorizer:Authorizer":
               overrides = { name: prefixName(128, args.name) };
+              break;
+            case "aws:iot/topicRule:TopicRule":
+              overrides = {
+                name: prefixName(128, args.name).replaceAll("-", "_"),
+              };
               break;
             case "aws:appautoscaling/policy:Policy":
             case "aws:dynamodb/table:Table":
