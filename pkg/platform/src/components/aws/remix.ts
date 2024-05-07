@@ -356,8 +356,8 @@ export class Remix extends Component implements Link.Linkable {
       _hint: $dev
         ? undefined
         : all([this.cdn.domainUrl, this.cdn.url]).apply(
-          ([domainUrl, url]) => domainUrl ?? url,
-        ),
+            ([domainUrl, url]) => domainUrl ?? url,
+          ),
       _metadata: {
         mode: $dev ? "placeholder" : "deployed",
         path: sitePath,
@@ -440,6 +440,7 @@ export class Remix extends Component implements Link.Linkable {
             isUsingVite,
             outputPath,
             edge ? "edge-server.mjs" : "regional-server.mjs",
+            edge ? false : true,
           );
 
           return validatePlan({
@@ -458,21 +459,21 @@ export class Remix extends Component implements Link.Linkable {
             },
             edgeFunctions: edge
               ? {
-                server: {
-                  function: serverConfig,
-                },
-              }
+                  server: {
+                    function: serverConfig,
+                  },
+                }
               : undefined,
             origins: {
               ...(edge
                 ? {}
                 : {
-                  server: {
                     server: {
-                      function: serverConfig,
+                      server: {
+                        function: serverConfig,
+                      },
                     },
-                  },
-                }),
+                  }),
               s3: {
                 s3: {
                   copy: [
@@ -489,16 +490,16 @@ export class Remix extends Component implements Link.Linkable {
             behaviors: [
               edge
                 ? {
-                  cacheType: "server",
-                  cfFunction: "serverCfFunction",
-                  edgeFunction: "server",
-                  origin: "s3",
-                }
+                    cacheType: "server",
+                    cfFunction: "serverCfFunction",
+                    edgeFunction: "server",
+                    origin: "s3",
+                  }
                 : {
-                  cacheType: "server",
-                  cfFunction: "serverCfFunction",
-                  origin: "server",
-                },
+                    cacheType: "server",
+                    cfFunction: "serverCfFunction",
+                    origin: "server",
+                  },
               ...buildMeta.staticRoutes.map(
                 (route) =>
                   ({
@@ -518,6 +519,7 @@ export class Remix extends Component implements Link.Linkable {
       isUsingVite: boolean,
       outputPath: string,
       wrapperFile: string,
+      streaming: boolean,
     ) {
       // Create a Lambda@Edge handler for the Remix server bundle.
       //
@@ -582,6 +584,7 @@ export class Remix extends Component implements Link.Linkable {
 
       return {
         handler: path.join(buildPath, "server.handler"),
+        streaming,
         nodejs: {
           esbuild: {
             inject: [path.resolve(polyfillDest)],
