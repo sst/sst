@@ -14,5 +14,8 @@
   },
   "engines": {
     "node": ">=18"
+  },
+  "overrides": {
+    "nitropack": "npm:nitropack-nightly@2.10.0-28585081.346a4950"
   }
 }

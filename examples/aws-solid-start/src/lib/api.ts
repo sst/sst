@@ -38,7 +38,6 @@ const mapStories = {
 export const getStories = cache(
   async (type: StoryTypes, page: number): Promise<StoryDefinition[]> => {
     "use server";
-    await new Promise((resolve) => setTimeout(resolve, 3000));
     return fetchAPI(`${mapStories[type]}?page=${page}`);
   },
   "stories",
