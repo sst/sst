@@ -291,7 +291,17 @@ export class Worker
     }
 
     function buildBindings() {
-      const result = {} as Record<
+      const result = {
+        plainTextBindings: [
+          {
+            name: "SST_RESOURCE_App",
+            text: jsonStringify({
+              name: $app.name,
+              stage: $app.stage,
+            }),
+          },
+        ],
+      } as Record<
         ReturnType<Link.Cloudflare.Linkable["getCloudflareBinding"]>["type"],
         any[]
       >;
@@ -321,13 +331,6 @@ export class Worker
             });
           }
         }
-        result.plainTextBindings.push({
-          name: "SST_RESOURCE_App",
-          text: jsonStringify({
-            name: $app.name,
-            stage: $app.stage,
-          }),
-        });
         return result;
       });
     }
