@@ -113,6 +113,14 @@ export interface PostgresArgs {
  * The `Postgres` component lets you add a Postgres database to your app using
  * [Amazon Aurora Serverless v2](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/aurora-serverless-v2.html).
  *
+ * :::note
+ * Data API for Aurora Postgres Serverless v2 is still being [rolled out in all regions](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/Concepts.Aurora_Fea_Regions_DB-eng.Feature.ServerlessV2.html#Concepts.Aurora_Fea_Regions_DB-eng.Feature.ServerlessV2.apg).
+ * :::
+ *
+ * To connect to your database from your Lambda functions, you can use the
+ * [AWS Data API](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/data-api.html). It
+ * does not need a persistent connection, or a VPC, and works over HTTP.
+ *
  * @example
  *
  * #### Create the database
