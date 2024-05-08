@@ -98,77 +98,6 @@ new Cluster(name, args, opts?)
 </Section>
 </Segment>
 
-## Methods
-
-### addService
-<Segment>
-<Section type="signature">
-```ts
-addService(name, args?)
-```
-</Section>
-
-<Section type="parameters">
-#### Parameters
-- <p><code class="key">name</code> <code class="primitive">string</code></p>
-Name of the service.
-- <p><code class="key">args?</code> [<code class="type">ClusterServiceArgs</code>](#clusterserviceargs)</p>
-Configure the service.
-</Section>
-
-<InlineSection>
-**Returns** [<code class="type">Service</code>](/docs/component/aws/service/)
-</InlineSection>
-Add a service to the cluster.
-
-```ts
-cluster.addService("MyService");
-```
-
-Set a custom domain for the service.
-
-```js {2}
-cluster.addService("MyService", {
-  domain: "example.com"
-});
-```
-
-#### Enable auto-scaling
-
-```ts
-cluster.addService("MyService", {
-  scaling: {
-    min: 4,
-    max: 16,
-    cpuUtilization: 50,
-    memoryUtilization: 50,
-  }
-});
-```
-</Segment>
-
-## Properties
-
-### nodes
-<Segment>
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">Object</code>
-</InlineSection>
-- <p>[<code class="key">cluster</code>](#nodes-cluster)</p>
-</Section>
-The underlying [resources](/docs/components/#nodes) this component creates.
-</Segment>
-<NestedTitle id="nodes-cluster" Tag="h4" parent="nodes.">cluster</NestedTitle>
-<Segment>
-<Section type="parameters">
-<InlineSection>
-**Type** [<code class="type">Cluster</code>](https://www.pulumi.com/registry/packages/aws/api-docs/ecs/cluster/)
-</InlineSection>
-</Section>
-The Amazon ECS Cluster.
-</Segment>
-
 ## ClusterArgs
 ### transform?
 <Segment>
@@ -271,6 +200,77 @@ its load balancer will be placed in the public subnets.
 </Section>
 A list of VPC security group IDs.
 
+</Segment>
+
+## Properties
+
+### nodes
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Object</code>
+</InlineSection>
+- <p>[<code class="key">cluster</code>](#nodes-cluster)</p>
+</Section>
+The underlying [resources](/docs/components/#nodes) this component creates.
+</Segment>
+<NestedTitle id="nodes-cluster" Tag="h4" parent="nodes.">cluster</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** [<code class="type">Cluster</code>](https://www.pulumi.com/registry/packages/aws/api-docs/ecs/cluster/)
+</InlineSection>
+</Section>
+The Amazon ECS Cluster.
+</Segment>
+
+## Methods
+
+### addService
+<Segment>
+<Section type="signature">
+```ts
+addService(name, args?)
+```
+</Section>
+
+<Section type="parameters">
+#### Parameters
+- <p><code class="key">name</code> <code class="primitive">string</code></p>
+Name of the service.
+- <p><code class="key">args?</code> [<code class="type">ClusterServiceArgs</code>](#clusterserviceargs)</p>
+Configure the service.
+</Section>
+
+<InlineSection>
+**Returns** [<code class="type">Service</code>](/docs/component/aws/service/)
+</InlineSection>
+Add a service to the cluster.
+
+```ts
+cluster.addService("MyService");
+```
+
+Set a custom domain for the service.
+
+```js {2}
+cluster.addService("MyService", {
+  domain: "example.com"
+});
+```
+
+#### Enable auto-scaling
+
+```ts
+cluster.addService("MyService", {
+  scaling: {
+    min: 4,
+    max: 16,
+    cpuUtilization: 50,
+    memoryUtilization: 50,
+  }
+});
+```
 </Segment>
 
 ## ClusterServiceArgs

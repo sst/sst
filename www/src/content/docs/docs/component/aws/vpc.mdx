@@ -68,6 +68,138 @@ new Vpc(name, args?, opts?)
 </Section>
 </Segment>
 
+## VpcArgs
+### az?
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">number</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+
+<InlineSection>
+**Default** <code class="primitive">2</code>
+</InlineSection>
+Number of Availability Zones or AZs for the VPC. By default, it creates a VPC with 2
+AZs since services like RDS and Fargate need at least 2 AZs.
+
+```ts
+{
+  az: 3
+}
+```
+</Segment>
+### transform?
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Object</code>
+</InlineSection>
+- <p>[<code class="key">elasticIp?</code>](#transform-elasticip)</p>
+- <p>[<code class="key">internetGateway?</code>](#transform-internetgateway)</p>
+- <p>[<code class="key">natGateway?</code>](#transform-natgateway)</p>
+- <p>[<code class="key">privateRouteTable?</code>](#transform-privateroutetable)</p>
+- <p>[<code class="key">privateSubnet?</code>](#transform-privatesubnet)</p>
+- <p>[<code class="key">publicRouteTable?</code>](#transform-publicroutetable)</p>
+- <p>[<code class="key">publicSubnet?</code>](#transform-publicsubnet)</p>
+- <p>[<code class="key">securityGroup?</code>](#transform-securitygroup)</p>
+- <p>[<code class="key">vpc?</code>](#transform-vpc)</p>
+</Section>
+[Transform](/docs/components#transform) how this component creates its underlying
+resources.
+
+</Segment>
+<NestedTitle id="transform-elasticip" Tag="h4" parent="transform.">elasticIp?</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** [<code class="type">EipArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/ec2/eip/#inputs)<code class="symbol"> | </code><code class="symbol">(</code><code class="primitive">args</code><code class="symbol">: </code>[<code class="type">EipArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/ec2/eip/#inputs)<code class="symbol"> => </code><code class="primitive">void</code><code class="symbol">)</code>
+</InlineSection>
+</Section>
+Transform the EC2 Elastic IP resource.
+
+</Segment>
+<NestedTitle id="transform-internetgateway" Tag="h4" parent="transform.">internetGateway?</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** [<code class="type">InternetGatewayArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/ec2/internetgateway/#inputs)<code class="symbol"> | </code><code class="symbol">(</code><code class="primitive">args</code><code class="symbol">: </code>[<code class="type">InternetGatewayArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/ec2/internetgateway/#inputs)<code class="symbol"> => </code><code class="primitive">void</code><code class="symbol">)</code>
+</InlineSection>
+</Section>
+Transform the EC2 Internet Gateway resource.
+
+</Segment>
+<NestedTitle id="transform-natgateway" Tag="h4" parent="transform.">natGateway?</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** [<code class="type">NatGatewayArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/ec2/natgateway/#inputs)<code class="symbol"> | </code><code class="symbol">(</code><code class="primitive">args</code><code class="symbol">: </code>[<code class="type">NatGatewayArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/ec2/natgateway/#inputs)<code class="symbol"> => </code><code class="primitive">void</code><code class="symbol">)</code>
+</InlineSection>
+</Section>
+Transform the EC2 NAT Gateway resource.
+
+</Segment>
+<NestedTitle id="transform-privateroutetable" Tag="h4" parent="transform.">privateRouteTable?</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** [<code class="type">RouteTableArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/ec2/routetable/#inputs)<code class="symbol"> | </code><code class="symbol">(</code><code class="primitive">args</code><code class="symbol">: </code>[<code class="type">RouteTableArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/ec2/routetable/#inputs)<code class="symbol"> => </code><code class="primitive">void</code><code class="symbol">)</code>
+</InlineSection>
+</Section>
+Transform the EC2 route table resource for the private subnet.
+
+</Segment>
+<NestedTitle id="transform-privatesubnet" Tag="h4" parent="transform.">privateSubnet?</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** [<code class="type">SubnetArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/ec2/subnet/#inputs)<code class="symbol"> | </code><code class="symbol">(</code><code class="primitive">args</code><code class="symbol">: </code>[<code class="type">SubnetArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/ec2/subnet/#inputs)<code class="symbol"> => </code><code class="primitive">void</code><code class="symbol">)</code>
+</InlineSection>
+</Section>
+Transform the EC2 private subnet resource.
+
+</Segment>
+<NestedTitle id="transform-publicroutetable" Tag="h4" parent="transform.">publicRouteTable?</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** [<code class="type">RouteTableArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/ec2/routetable/#inputs)<code class="symbol"> | </code><code class="symbol">(</code><code class="primitive">args</code><code class="symbol">: </code>[<code class="type">RouteTableArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/ec2/routetable/#inputs)<code class="symbol"> => </code><code class="primitive">void</code><code class="symbol">)</code>
+</InlineSection>
+</Section>
+Transform the EC2 route table resource for the public subnet.
+
+</Segment>
+<NestedTitle id="transform-publicsubnet" Tag="h4" parent="transform.">publicSubnet?</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** [<code class="type">SubnetArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/ec2/subnet/#inputs)<code class="symbol"> | </code><code class="symbol">(</code><code class="primitive">args</code><code class="symbol">: </code>[<code class="type">SubnetArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/ec2/subnet/#inputs)<code class="symbol"> => </code><code class="primitive">void</code><code class="symbol">)</code>
+</InlineSection>
+</Section>
+Transform the EC2 public subnet resource.
+
+</Segment>
+<NestedTitle id="transform-securitygroup" Tag="h4" parent="transform.">securityGroup?</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** [<code class="type">SecurityGroupArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/ec2/securitygroup/#inputs)<code class="symbol"> | </code><code class="symbol">(</code><code class="primitive">args</code><code class="symbol">: </code>[<code class="type">SecurityGroupArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/ec2/securitygroup/#inputs)<code class="symbol"> => </code><code class="primitive">void</code><code class="symbol">)</code>
+</InlineSection>
+</Section>
+Transform the EC2 Security Group resource.
+
+</Segment>
+<NestedTitle id="transform-vpc" Tag="h4" parent="transform.">vpc?</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** [<code class="type">VpcArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/ec2/vpc/#inputs)<code class="symbol"> | </code><code class="symbol">(</code><code class="primitive">args</code><code class="symbol">: </code>[<code class="type">VpcArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/ec2/vpc/#inputs)<code class="symbol"> => </code><code class="primitive">void</code><code class="symbol">)</code>
+</InlineSection>
+</Section>
+Transform the EC2 VPC resource.
+
+</Segment>
+
 ## Properties
 
 ### id
@@ -208,137 +340,5 @@ A list of public subnet IDs in the VPC.
 </InlineSection>
 </Section>
 A list of VPC security group IDs.
-</Segment>
-
-## VpcArgs
-### az?
-<Segment>
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">number</code><code class="symbol">&gt;</code>
-</InlineSection>
-</Section>
-
-<InlineSection>
-**Default** <code class="primitive">2</code>
-</InlineSection>
-Number of Availability Zones or AZs for the VPC. By default, it creates a VPC with 2
-AZs since services like RDS and Fargate need at least 2 AZs.
-
-```ts
-{
-  az: 3
-}
-```
-</Segment>
-### transform?
-<Segment>
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">Object</code>
-</InlineSection>
-- <p>[<code class="key">elasticIp?</code>](#transform-elasticip)</p>
-- <p>[<code class="key">internetGateway?</code>](#transform-internetgateway)</p>
-- <p>[<code class="key">natGateway?</code>](#transform-natgateway)</p>
-- <p>[<code class="key">privateRouteTable?</code>](#transform-privateroutetable)</p>
-- <p>[<code class="key">privateSubnet?</code>](#transform-privatesubnet)</p>
-- <p>[<code class="key">publicRouteTable?</code>](#transform-publicroutetable)</p>
-- <p>[<code class="key">publicSubnet?</code>](#transform-publicsubnet)</p>
-- <p>[<code class="key">securityGroup?</code>](#transform-securitygroup)</p>
-- <p>[<code class="key">vpc?</code>](#transform-vpc)</p>
-</Section>
-[Transform](/docs/components#transform) how this component creates its underlying
-resources.
-
-</Segment>
-<NestedTitle id="transform-elasticip" Tag="h4" parent="transform.">elasticIp?</NestedTitle>
-<Segment>
-<Section type="parameters">
-<InlineSection>
-**Type** [<code class="type">EipArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/ec2/eip/#inputs)<code class="symbol"> | </code><code class="symbol">(</code><code class="primitive">args</code><code class="symbol">: </code>[<code class="type">EipArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/ec2/eip/#inputs)<code class="symbol"> => </code><code class="primitive">void</code><code class="symbol">)</code>
-</InlineSection>
-</Section>
-Transform the EC2 Elastic IP resource.
-
-</Segment>
-<NestedTitle id="transform-internetgateway" Tag="h4" parent="transform.">internetGateway?</NestedTitle>
-<Segment>
-<Section type="parameters">
-<InlineSection>
-**Type** [<code class="type">InternetGatewayArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/ec2/internetgateway/#inputs)<code class="symbol"> | </code><code class="symbol">(</code><code class="primitive">args</code><code class="symbol">: </code>[<code class="type">InternetGatewayArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/ec2/internetgateway/#inputs)<code class="symbol"> => </code><code class="primitive">void</code><code class="symbol">)</code>
-</InlineSection>
-</Section>
-Transform the EC2 Internet Gateway resource.
-
-</Segment>
-<NestedTitle id="transform-natgateway" Tag="h4" parent="transform.">natGateway?</NestedTitle>
-<Segment>
-<Section type="parameters">
-<InlineSection>
-**Type** [<code class="type">NatGatewayArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/ec2/natgateway/#inputs)<code class="symbol"> | </code><code class="symbol">(</code><code class="primitive">args</code><code class="symbol">: </code>[<code class="type">NatGatewayArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/ec2/natgateway/#inputs)<code class="symbol"> => </code><code class="primitive">void</code><code class="symbol">)</code>
-</InlineSection>
-</Section>
-Transform the EC2 NAT Gateway resource.
-
-</Segment>
-<NestedTitle id="transform-privateroutetable" Tag="h4" parent="transform.">privateRouteTable?</NestedTitle>
-<Segment>
-<Section type="parameters">
-<InlineSection>
-**Type** [<code class="type">RouteTableArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/ec2/routetable/#inputs)<code class="symbol"> | </code><code class="symbol">(</code><code class="primitive">args</code><code class="symbol">: </code>[<code class="type">RouteTableArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/ec2/routetable/#inputs)<code class="symbol"> => </code><code class="primitive">void</code><code class="symbol">)</code>
-</InlineSection>
-</Section>
-Transform the EC2 route table resource for the private subnet.
-
-</Segment>
-<NestedTitle id="transform-privatesubnet" Tag="h4" parent="transform.">privateSubnet?</NestedTitle>
-<Segment>
-<Section type="parameters">
-<InlineSection>
-**Type** [<code class="type">SubnetArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/ec2/subnet/#inputs)<code class="symbol"> | </code><code class="symbol">(</code><code class="primitive">args</code><code class="symbol">: </code>[<code class="type">SubnetArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/ec2/subnet/#inputs)<code class="symbol"> => </code><code class="primitive">void</code><code class="symbol">)</code>
-</InlineSection>
-</Section>
-Transform the EC2 private subnet resource.
-
-</Segment>
-<NestedTitle id="transform-publicroutetable" Tag="h4" parent="transform.">publicRouteTable?</NestedTitle>
-<Segment>
-<Section type="parameters">
-<InlineSection>
-**Type** [<code class="type">RouteTableArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/ec2/routetable/#inputs)<code class="symbol"> | </code><code class="symbol">(</code><code class="primitive">args</code><code class="symbol">: </code>[<code class="type">RouteTableArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/ec2/routetable/#inputs)<code class="symbol"> => </code><code class="primitive">void</code><code class="symbol">)</code>
-</InlineSection>
-</Section>
-Transform the EC2 route table resource for the public subnet.
-
-</Segment>
-<NestedTitle id="transform-publicsubnet" Tag="h4" parent="transform.">publicSubnet?</NestedTitle>
-<Segment>
-<Section type="parameters">
-<InlineSection>
-**Type** [<code class="type">SubnetArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/ec2/subnet/#inputs)<code class="symbol"> | </code><code class="symbol">(</code><code class="primitive">args</code><code class="symbol">: </code>[<code class="type">SubnetArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/ec2/subnet/#inputs)<code class="symbol"> => </code><code class="primitive">void</code><code class="symbol">)</code>
-</InlineSection>
-</Section>
-Transform the EC2 public subnet resource.
-
-</Segment>
-<NestedTitle id="transform-securitygroup" Tag="h4" parent="transform.">securityGroup?</NestedTitle>
-<Segment>
-<Section type="parameters">
-<InlineSection>
-**Type** [<code class="type">SecurityGroupArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/ec2/securitygroup/#inputs)<code class="symbol"> | </code><code class="symbol">(</code><code class="primitive">args</code><code class="symbol">: </code>[<code class="type">SecurityGroupArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/ec2/securitygroup/#inputs)<code class="symbol"> => </code><code class="primitive">void</code><code class="symbol">)</code>
-</InlineSection>
-</Section>
-Transform the EC2 Security Group resource.
-
-</Segment>
-<NestedTitle id="transform-vpc" Tag="h4" parent="transform.">vpc?</NestedTitle>
-<Segment>
-<Section type="parameters">
-<InlineSection>
-**Type** [<code class="type">VpcArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/ec2/vpc/#inputs)<code class="symbol"> | </code><code class="symbol">(</code><code class="primitive">args</code><code class="symbol">: </code>[<code class="type">VpcArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/ec2/vpc/#inputs)<code class="symbol"> => </code><code class="primitive">void</code><code class="symbol">)</code>
-</InlineSection>
-</Section>
-Transform the EC2 VPC resource.
-
 </Segment>
 </div>

@@ -132,184 +132,6 @@ new Dynamo(name, args, opts?)
 </Section>
 </Segment>
 
-## Methods
-
-### subscribe
-<Segment>
-<Section type="signature">
-```ts
-subscribe(subscriber, args?)
-```
-</Section>
-
-<Section type="parameters">
-#### Parameters
-- <p><code class="key">subscriber</code> <code class="primitive">string</code><code class="symbol"> | </code>[<code class="type">FunctionArgs</code>](/docs/component/aws/function/#functionargs)</p>
-The function that'll be notified.
-- <p><code class="key">args?</code> [<code class="type">DynamoSubscriberArgs</code>](#dynamosubscriberargs)</p>
-Configure the subscription.
-</Section>
-
-<InlineSection>
-**Returns** <code class="primitive">Output</code><code class="symbol">&lt;</code>[<code class="type">DynamoLambdaSubscriber</code>](/docs/component/aws/dynamo-lambda-subscriber/)<code class="symbol">&gt;</code>
-</InlineSection>
-Subscribe to the DynamoDB Stream of this table.
-
-:::note
-You'll first need to enable the `stream` before subscribing to it.
-:::
-
-```js
-table.subscribe("src/subscriber.handler");
-```
-
-Add a filter to the subscription.
-
-```js
-table.subscribe("src/subscriber.handler", {
-  filters: [
-    {
-      dynamodb: {
-        Keys: {
-          CustomerName: {
-            S: ["AnyCompany Industries"]
-          }
-        }
-      }
-    }
-  ]
-});
-```
-
-Customize the subscriber function.
-
-```js
-table.subscribe({
-  handler: "src/subscriber.handler",
-  timeout: "60 seconds"
-});
-```
-</Segment>
-
-### static subscribe
-<Segment>
-<Section type="signature">
-```ts
-Dynamo.subscribe(streamArn, subscriber, args?)
-```
-</Section>
-
-<Section type="parameters">
-#### Parameters
-- <p><code class="key">streamArn</code> <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code></p>
-The ARN of the DynamoDB Stream to subscribe to.
-- <p><code class="key">subscriber</code> <code class="primitive">string</code><code class="symbol"> | </code>[<code class="type">FunctionArgs</code>](/docs/component/aws/function/#functionargs)</p>
-The function that'll be notified.
-- <p><code class="key">args?</code> [<code class="type">DynamoSubscriberArgs</code>](#dynamosubscriberargs)</p>
-Configure the subscription.
-</Section>
-
-<InlineSection>
-**Returns** <code class="primitive">Output</code><code class="symbol">&lt;</code>[<code class="type">DynamoLambdaSubscriber</code>](/docs/component/aws/dynamo-lambda-subscriber/)<code class="symbol">&gt;</code>
-</InlineSection>
-Subscribe to the DynamoDB stream of a table that was not created in your app.
-
-For example, let's say you have a DynamoDB stream ARN of an existing table.
-
-```js
-const streamArn = "arn:aws:dynamodb:us-east-1:123456789012:table/MyTable/stream/2024-02-25T23:17:55.264";
-```
-
-You can subscribe to it by passing in the ARN.
-
-```js
-sst.aws.Dynamo.subscribe(streamArn, "src/subscriber.handler");
-```
-
-Add a filter to the subscription.
-
-```js
-sst.aws.Dynamo.subscribe(streamArn, "src/subscriber.handler", {
-  filters: [
-    {
-      dynamodb: {
-        Keys: {
-          CustomerName: {
-            S: ["AnyCompany Industries"]
-          }
-        }
-      }
-    }
-  ]
-});
-```
-
-Customize the subscriber function.
-
-```js
-sst.aws.Dynamo.subscribe(streamArn, {
-  handler: "src/subscriber.handler",
-  timeout: "60 seconds"
-});
-```
-</Segment>
-
-## Properties
-
-### arn
-<Segment>
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">Output</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
-</InlineSection>
-</Section>
-The ARN of the DynamoDB Table.
-</Segment>
-
-### name
-<Segment>
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">Output</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
-</InlineSection>
-</Section>
-The name of the DynamoDB Table.
-</Segment>
-
-### nodes
-<Segment>
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">Object</code>
-</InlineSection>
-- <p>[<code class="key">table</code>](#nodes-table)</p>
-</Section>
-The underlying [resources](/docs/components/#nodes) this component creates.
-</Segment>
-<NestedTitle id="nodes-table" Tag="h4" parent="nodes.">table</NestedTitle>
-<Segment>
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">Output</code><code class="symbol">&lt;</code>[<code class="type">Table</code>](https://www.pulumi.com/registry/packages/aws/api-docs/dynamodb/table/)<code class="symbol">&gt;</code>
-</InlineSection>
-</Section>
-The Amazon DynamoDB Table.
-</Segment>
-
-## Links
-
-The following are accessible through the [SDK](/docs/reference/sdk/) at runtime.
-
-### name
-<Segment>
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">string</code>
-</InlineSection>
-</Section>
-The name of the DynamoDB Table.
-</Segment>
-
 ## DynamoArgs
 ### fields
 <Segment>
@@ -519,6 +341,184 @@ Learn more about [Time to Live (TTL)](https://docs.aws.amazon.com/amazondynamodb
 {
   ttl: "expireAt",
 }
+```
+</Segment>
+
+## Properties
+
+### arn
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Output</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+The ARN of the DynamoDB Table.
+</Segment>
+
+### name
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Output</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+The name of the DynamoDB Table.
+</Segment>
+
+### nodes
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Object</code>
+</InlineSection>
+- <p>[<code class="key">table</code>](#nodes-table)</p>
+</Section>
+The underlying [resources](/docs/components/#nodes) this component creates.
+</Segment>
+<NestedTitle id="nodes-table" Tag="h4" parent="nodes.">table</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Output</code><code class="symbol">&lt;</code>[<code class="type">Table</code>](https://www.pulumi.com/registry/packages/aws/api-docs/dynamodb/table/)<code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+The Amazon DynamoDB Table.
+</Segment>
+
+## SDK
+
+The following are accessible through the [SDK](/docs/reference/sdk/) at runtime.
+
+### name
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">string</code>
+</InlineSection>
+</Section>
+The name of the DynamoDB Table.
+</Segment>
+
+## Methods
+
+### subscribe
+<Segment>
+<Section type="signature">
+```ts
+subscribe(subscriber, args?)
+```
+</Section>
+
+<Section type="parameters">
+#### Parameters
+- <p><code class="key">subscriber</code> <code class="primitive">string</code><code class="symbol"> | </code>[<code class="type">FunctionArgs</code>](/docs/component/aws/function/#functionargs)</p>
+The function that'll be notified.
+- <p><code class="key">args?</code> [<code class="type">DynamoSubscriberArgs</code>](#dynamosubscriberargs)</p>
+Configure the subscription.
+</Section>
+
+<InlineSection>
+**Returns** <code class="primitive">Output</code><code class="symbol">&lt;</code>[<code class="type">DynamoLambdaSubscriber</code>](/docs/component/aws/dynamo-lambda-subscriber/)<code class="symbol">&gt;</code>
+</InlineSection>
+Subscribe to the DynamoDB Stream of this table.
+
+:::note
+You'll first need to enable the `stream` before subscribing to it.
+:::
+
+```js
+table.subscribe("src/subscriber.handler");
+```
+
+Add a filter to the subscription.
+
+```js
+table.subscribe("src/subscriber.handler", {
+  filters: [
+    {
+      dynamodb: {
+        Keys: {
+          CustomerName: {
+            S: ["AnyCompany Industries"]
+          }
+        }
+      }
+    }
+  ]
+});
+```
+
+Customize the subscriber function.
+
+```js
+table.subscribe({
+  handler: "src/subscriber.handler",
+  timeout: "60 seconds"
+});
+```
+</Segment>
+
+### static subscribe
+<Segment>
+<Section type="signature">
+```ts
+Dynamo.subscribe(streamArn, subscriber, args?)
+```
+</Section>
+
+<Section type="parameters">
+#### Parameters
+- <p><code class="key">streamArn</code> <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code></p>
+The ARN of the DynamoDB Stream to subscribe to.
+- <p><code class="key">subscriber</code> <code class="primitive">string</code><code class="symbol"> | </code>[<code class="type">FunctionArgs</code>](/docs/component/aws/function/#functionargs)</p>
+The function that'll be notified.
+- <p><code class="key">args?</code> [<code class="type">DynamoSubscriberArgs</code>](#dynamosubscriberargs)</p>
+Configure the subscription.
+</Section>
+
+<InlineSection>
+**Returns** <code class="primitive">Output</code><code class="symbol">&lt;</code>[<code class="type">DynamoLambdaSubscriber</code>](/docs/component/aws/dynamo-lambda-subscriber/)<code class="symbol">&gt;</code>
+</InlineSection>
+Subscribe to the DynamoDB stream of a table that was not created in your app.
+
+For example, let's say you have a DynamoDB stream ARN of an existing table.
+
+```js
+const streamArn = "arn:aws:dynamodb:us-east-1:123456789012:table/MyTable/stream/2024-02-25T23:17:55.264";
+```
+
+You can subscribe to it by passing in the ARN.
+
+```js
+sst.aws.Dynamo.subscribe(streamArn, "src/subscriber.handler");
+```
+
+Add a filter to the subscription.
+
+```js
+sst.aws.Dynamo.subscribe(streamArn, "src/subscriber.handler", {
+  filters: [
+    {
+      dynamodb: {
+        Keys: {
+          CustomerName: {
+            S: ["AnyCompany Industries"]
+          }
+        }
+      }
+    }
+  ]
+});
+```
+
+Customize the subscriber function.
+
+```js
+sst.aws.Dynamo.subscribe(streamArn, {
+  handler: "src/subscriber.handler",
+  timeout: "60 seconds"
+});
 ```
 </Segment>
 

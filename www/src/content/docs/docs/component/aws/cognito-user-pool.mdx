@@ -66,80 +66,6 @@ new CognitoUserPool(name, args?, opts?)
 </Section>
 </Segment>
 
-## Methods
-
-### addClient
-<Segment>
-<Section type="signature">
-```ts
-addClient(name, args?)
-```
-</Section>
-
-<Section type="parameters">
-#### Parameters
-- <p><code class="key">name</code> <code class="primitive">string</code></p>
-Name of the client.
-- <p><code class="key">args?</code> [<code class="type">CognitoUserPoolClientArgs</code>](#cognitouserpoolclientargs)</p>
-Configure the client.
-</Section>
-
-<InlineSection>
-**Returns** [<code class="type">CognitoUserPoolClient</code>](/docs/component/aws/cognito-user-pool-client/)
-</InlineSection>
-Add a client to the user pool.
-
-```ts
-userPool.addClient("Web");
-```
-</Segment>
-
-## Properties
-
-### id
-<Segment>
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">Output</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
-</InlineSection>
-</Section>
-The Cognito user pool ID.
-</Segment>
-
-### nodes
-<Segment>
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">Object</code>
-</InlineSection>
-- <p>[<code class="key">userPool</code>](#nodes-userpool)</p>
-</Section>
-The underlying [resources](/docs/components/#nodes) this component creates.
-</Segment>
-<NestedTitle id="nodes-userpool" Tag="h4" parent="nodes.">userPool</NestedTitle>
-<Segment>
-<Section type="parameters">
-<InlineSection>
-**Type** [<code class="type">UserPool</code>](https://www.pulumi.com/registry/packages/aws/api-docs/cognito/userpool/)
-</InlineSection>
-</Section>
-The Amazon Cognito user pool.
-</Segment>
-
-## Links
-
-The following are accessible through the [SDK](/docs/reference/sdk/) at runtime.
-
-### id
-<Segment>
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">string</code>
-</InlineSection>
-</Section>
-The Cognito user pool ID.
-</Segment>
-
 ## CognitoUserPoolArgs
 ### aliases?
 <Segment>
@@ -364,6 +290,80 @@ Learn more about [aliases](https://docs.aws.amazon.com/cognito/latest/developerg
 {
   usernames: ["email"]
 }
+```
+</Segment>
+
+## Properties
+
+### id
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Output</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+The Cognito user pool ID.
+</Segment>
+
+### nodes
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Object</code>
+</InlineSection>
+- <p>[<code class="key">userPool</code>](#nodes-userpool)</p>
+</Section>
+The underlying [resources](/docs/components/#nodes) this component creates.
+</Segment>
+<NestedTitle id="nodes-userpool" Tag="h4" parent="nodes.">userPool</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** [<code class="type">UserPool</code>](https://www.pulumi.com/registry/packages/aws/api-docs/cognito/userpool/)
+</InlineSection>
+</Section>
+The Amazon Cognito user pool.
+</Segment>
+
+## SDK
+
+The following are accessible through the [SDK](/docs/reference/sdk/) at runtime.
+
+### id
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">string</code>
+</InlineSection>
+</Section>
+The Cognito user pool ID.
+</Segment>
+
+## Methods
+
+### addClient
+<Segment>
+<Section type="signature">
+```ts
+addClient(name, args?)
+```
+</Section>
+
+<Section type="parameters">
+#### Parameters
+- <p><code class="key">name</code> <code class="primitive">string</code></p>
+Name of the client.
+- <p><code class="key">args?</code> [<code class="type">CognitoUserPoolClientArgs</code>](#cognitouserpoolclientargs)</p>
+Configure the client.
+</Section>
+
+<InlineSection>
+**Returns** [<code class="type">CognitoUserPoolClient</code>](/docs/component/aws/cognito-user-pool-client/)
+</InlineSection>
+Add a client to the user pool.
+
+```ts
+userPool.addClient("Web");
 ```
 </Segment>
 

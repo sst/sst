@@ -78,72 +78,6 @@ new Vector(name, args?, opts?)
 </Section>
 </Segment>
 
-## Properties
-
-### ingestor
-<Segment>
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">Output</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
-</InlineSection>
-</Section>
-The name of the ingestor Lambda function.
-</Segment>
-
-### remover
-<Segment>
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">Output</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
-</InlineSection>
-</Section>
-The name of the remover Lambda function.
-</Segment>
-
-### retriever
-<Segment>
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">Output</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
-</InlineSection>
-</Section>
-The name of the retriever Lambda function.
-</Segment>
-
-## Links
-
-The following are accessible through the [SDK](/docs/reference/sdk/) at runtime.
-
-### ingestor
-<Segment>
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">string</code>
-</InlineSection>
-</Section>
-The name of the ingestor Lambda function.
-</Segment>
-
-### remover
-<Segment>
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">string</code>
-</InlineSection>
-</Section>
-The name of the remover Lambda function.
-</Segment>
-
-### retriever
-<Segment>
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">string</code>
-</InlineSection>
-</Section>
-The name of the retriever Lambda function.
-</Segment>
-
 ## VectorArgs
 ### model?
 <Segment>
@@ -213,6 +147,438 @@ resources.
 </InlineSection>
 </Section>
 Transform the Postgres component.
+
+</Segment>
+
+## Properties
+
+### ingestor
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Output</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+The name of the ingestor Lambda function.
+</Segment>
+
+### remover
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Output</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+The name of the remover Lambda function.
+</Segment>
+
+### retriever
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Output</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+The name of the retriever Lambda function.
+</Segment>
+
+## SDK
+
+The following are accessible through the [SDK](/docs/reference/sdk/) at runtime.
+
+### ingestor
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">string</code>
+</InlineSection>
+</Section>
+The name of the ingestor Lambda function.
+</Segment>
+
+### remover
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">string</code>
+</InlineSection>
+</Section>
+The name of the remover Lambda function.
+</Segment>
+
+### retriever
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">string</code>
+</InlineSection>
+</Section>
+The name of the retriever Lambda function.
+</Segment>
+
+### VectorClient
+<Segment>
+<Section type="signature">
+```ts
+VectorClient(name)
+```
+</Section>
+
+<Section type="parameters">
+#### Parameters
+- <p><code class="key">name</code> T</p>
+</Section>
+
+<InlineSection>
+**Returns** [<code class="type">VectorClientResponse</code>](#vectorclientresponse)
+</InlineSection>
+Create a client to interact with the Vector database.
+
+```js
+import { VectorClient } from "sst";
+const client = VectorClient("MyVectorDB");
+
+// Ingest a text into the vector db
+await client.ingest({
+  text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+  metadata: { type: "movie", genre: "comedy" },
+});
+
+// Retrieve embeddings similar to the provided text
+const result = await client.retrieve({
+  text: "Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+  include: { type: "movie" },
+  exclude: { genre: "thriller" },
+});
+```
+</Segment>
+### IngestEvent
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Object</code>
+</InlineSection>
+- <p>[<code class="key">image?</code>](#ingestevent-image)</p>
+- <p>[<code class="key">metadata</code>](#ingestevent-metadata)</p>
+- <p>[<code class="key">text?</code>](#ingestevent-text)</p>
+</Section>
+</Segment>
+<NestedTitle id="ingestevent-image" Tag="h4" parent="IngestEvent.">image?</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">string</code>
+</InlineSection>
+</Section>
+The base64 representation of the image used to generate the embedding vector.
+At least one of `text` or `image` must be provided.
+
+```js
+{
+  image: await fs.readFile("./file.jpg").toString("base64"),
+}
+```
+</Segment>
+<NestedTitle id="ingestevent-metadata" Tag="h4" parent="IngestEvent.">metadata</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Record</code><code class="symbol">&lt;</code><code class="primitive">string</code>, <code class="primitive">any</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+Metadata for the event in JSON format.
+This metadata will be used to filter when retrieving and removing embeddings.
+
+```js
+{
+  metadata: {
+    type: "movie",
+    id: "movie-123",
+    name: "Spiderman",
+  }
+}
+```
+</Segment>
+<NestedTitle id="ingestevent-text" Tag="h4" parent="IngestEvent.">text?</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">string</code>
+</InlineSection>
+</Section>
+The text used to generate the embedding vector.
+At least one of `text` or `image` must be provided.
+
+```js
+{
+  text: "This is an example text.",
+}
+```
+</Segment>
+### RemoveEvent
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Object</code>
+</InlineSection>
+- <p>[<code class="key">include</code>](#removeevent-include)</p>
+</Section>
+</Segment>
+<NestedTitle id="removeevent-include" Tag="h4" parent="RemoveEvent.">include</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Record</code><code class="symbol">&lt;</code><code class="primitive">string</code>, <code class="primitive">any</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+The metadata used to filter the removal of embeddings.
+Only embeddings with metadata that match the provided fields will be removed.
+
+To remove embeddings for movie with id "movie-123":
+```js
+{
+  include: {
+    id: "movie-123",
+  }
+}
+```
+To remove embeddings for all movies:
+```js
+ {
+  include: {
+   type: "movie",
+  }
+ }
+```
+</Segment>
+### RetrieveEvent
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Object</code>
+</InlineSection>
+- <p>[<code class="key">count?</code>](#retrieveevent-count)</p>
+- <p>[<code class="key">exclude?</code>](#retrieveevent-exclude)</p>
+- <p>[<code class="key">image?</code>](#retrieveevent-image)</p>
+- <p>[<code class="key">include</code>](#retrieveevent-include)</p>
+- <p>[<code class="key">text?</code>](#retrieveevent-text)</p>
+- <p>[<code class="key">threshold?</code>](#retrieveevent-threshold)</p>
+</Section>
+</Segment>
+<NestedTitle id="retrieveevent-count" Tag="h4" parent="RetrieveEvent.">count?</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">number</code>
+</InlineSection>
+</Section>
+
+<InlineSection>
+**Default** <code class="primitive">10</code>
+</InlineSection>
+The number of results to return.
+
+```js
+{
+  count: 10,
+}
+```
+</Segment>
+<NestedTitle id="retrieveevent-exclude" Tag="h4" parent="RetrieveEvent.">exclude?</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Record</code><code class="symbol">&lt;</code><code class="primitive">string</code>, <code class="primitive">any</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+Exclude embeddings with metadata that match the provided fields.
+
+```js
+{
+  include: {
+    type: "movie",
+    release: "2001",
+  },
+  exclude: {
+    name: "Spiderman",
+  }
+}
+```
+This will match the embedding with metadata:
+```js
+ {
+   type: "movie",
+   name: "A Beautiful Mind",
+   release: "2001",
+ }
+```
+
+But not the embedding with metadata:
+```js
+ {
+   type: "book",
+   name: "Spiderman",
+   release: "2001",
+ }
+```
+</Segment>
+<NestedTitle id="retrieveevent-image" Tag="h4" parent="RetrieveEvent.">image?</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">string</code>
+</InlineSection>
+</Section>
+The base64 representation of the image prompt used to retrive embeddings.
+At least one of `text` or `image` must be provided.
+
+```js
+{
+  image: await fs.readFile("./file.jpg").toString("base64"),
+}
+```
+</Segment>
+<NestedTitle id="retrieveevent-include" Tag="h4" parent="RetrieveEvent.">include</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Record</code><code class="symbol">&lt;</code><code class="primitive">string</code>, <code class="primitive">any</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+The metadata used to filter the retrieval of embeddings.
+Only embeddings with metadata that match the provided fields will be returned.
+
+```js
+{
+  include: {
+    type: "movie",
+    release: "2001",
+  }
+}
+```
+This will match the embedding with metadata:
+```js
+ {
+   type: "movie",
+   name: "Spiderman",
+   release: "2001",
+ }
+```
+
+But not the embedding with metadata:
+```js
+ {
+   type: "book",
+   name: "Spiderman",
+   release: "2001",
+ }
+```
+</Segment>
+<NestedTitle id="retrieveevent-text" Tag="h4" parent="RetrieveEvent.">text?</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">string</code>
+</InlineSection>
+</Section>
+The text prompt used to retrieve embeddings.
+At least one of `text` or `image` must be provided.
+
+```js
+{
+  text: "This is an example text.",
+}
+```
+</Segment>
+<NestedTitle id="retrieveevent-threshold" Tag="h4" parent="RetrieveEvent.">threshold?</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">number</code>
+</InlineSection>
+</Section>
+
+<InlineSection>
+**Default** <code class="primitive">0</code>
+</InlineSection>
+The threshold of similarity between the prompt and the retrieved embeddings.
+Only embeddings with a similarity score higher than the threshold will be returned.
+Expected value is between 0 and 1.
+- 0 means the prompt and the retrieved embeddings are completely different.
+- 1 means the prompt and the retrieved embeddings are identical.
+
+```js
+{
+  threshold: 0.5,
+}
+```
+</Segment>
+### RetrieveResponse
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Object</code>
+</InlineSection>
+- <p>[<code class="key">metadata</code>](#retrieveresponse-metadata)</p>
+- <p>[<code class="key">score</code>](#retrieveresponse-score)</p>
+</Section>
+</Segment>
+<NestedTitle id="retrieveresponse-metadata" Tag="h4" parent="RetrieveResponse.">metadata</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Record</code><code class="symbol">&lt;</code><code class="primitive">string</code>, <code class="primitive">any</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+Metadata for the event in JSON format that was provided when ingesting the embedding.
+
+</Segment>
+<NestedTitle id="retrieveresponse-score" Tag="h4" parent="RetrieveResponse.">score</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">number</code>
+</InlineSection>
+</Section>
+The similarity score between the prompt and the retrieved embedding.
+
+</Segment>
+### VectorClientResponse
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Object</code>
+</InlineSection>
+- <p>[<code class="key">ingest</code>](#vectorclientresponse-ingest)</p>
+- <p>[<code class="key">remove</code>](#vectorclientresponse-remove)</p>
+- <p>[<code class="key">retrieve</code>](#vectorclientresponse-retrieve)</p>
+</Section>
+</Segment>
+<NestedTitle id="vectorclientresponse-ingest" Tag="h4" parent="VectorClientResponse.">ingest</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">(event: [<code class="type">IngestEvent</code>](#ingestevent)) => <code class="primitive">Promise</code><code class="symbol">&lt;</code><code class="primitive">void</code><code class="symbol">&gt;</code></code>
+</InlineSection>
+</Section>
+
+</Segment>
+<NestedTitle id="vectorclientresponse-remove" Tag="h4" parent="VectorClientResponse.">remove</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">(event: [<code class="type">RemoveEvent</code>](#removeevent)) => <code class="primitive">Promise</code><code class="symbol">&lt;</code><code class="primitive">void</code><code class="symbol">&gt;</code></code>
+</InlineSection>
+</Section>
+
+</Segment>
+<NestedTitle id="vectorclientresponse-retrieve" Tag="h4" parent="VectorClientResponse.">retrieve</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">(event: [<code class="type">RetrieveEvent</code>](#retrieveevent)) => <code class="primitive">Promise</code><code class="symbol">&lt;</code>[<code class="type">RetrieveResponse</code>](#retrieveresponse)<code class="symbol">&gt;</code></code>
+</InlineSection>
+</Section>
 
 </Segment>
 </div>

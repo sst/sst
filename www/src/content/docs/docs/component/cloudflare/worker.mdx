@@ -90,52 +90,6 @@ new Worker(name, args, opts?)
 </Section>
 </Segment>
 
-## Properties
-
-### nodes
-<Segment>
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">Object</code>
-</InlineSection>
-- <p>[<code class="key">worker</code>](#nodes-worker)</p>
-</Section>
-The underlying [resources](/docs/components/#nodes) this component creates.
-</Segment>
-<NestedTitle id="nodes-worker" Tag="h4" parent="nodes.">worker</NestedTitle>
-<Segment>
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">Output</code><code class="symbol">&lt;</code>[<code class="type">WorkerScript</code>](https://www.pulumi.com/registry/packages/cloudflare/api-docs/workerscript/)<code class="symbol">&gt;</code>
-</InlineSection>
-</Section>
-The Cloudflare Worker script.
-</Segment>
-
-### url
-<Segment>
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">Output</code><code class="symbol">&lt;</code><code class="primitive">undefined</code><code class="symbol"> | </code><code class="primitive">string</code><code class="symbol">&gt;</code>
-</InlineSection>
-</Section>
-The Worker URL if `url` is enabled.
-</Segment>
-
-## Links
-
-The following are accessible through the [SDK](/docs/reference/sdk/) at runtime.
-
-### url
-<Segment>
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">undefined</code><code class="symbol"> | </code><code class="primitive">string</code>
-</InlineSection>
-</Section>
-The Worker URL if `url` is enabled.
-</Segment>
-
 ## WorkerArgs
 ### build?
 <Segment>
@@ -337,5 +291,51 @@ Transform the Worker resource.
 </InlineSection>
 Enable a dedicated endpoint for your Worker.
 
+</Segment>
+
+## Properties
+
+### nodes
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Object</code>
+</InlineSection>
+- <p>[<code class="key">worker</code>](#nodes-worker)</p>
+</Section>
+The underlying [resources](/docs/components/#nodes) this component creates.
+</Segment>
+<NestedTitle id="nodes-worker" Tag="h4" parent="nodes.">worker</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Output</code><code class="symbol">&lt;</code>[<code class="type">WorkerScript</code>](https://www.pulumi.com/registry/packages/cloudflare/api-docs/workerscript/)<code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+The Cloudflare Worker script.
+</Segment>
+
+### url
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Output</code><code class="symbol">&lt;</code><code class="primitive">undefined</code><code class="symbol"> | </code><code class="primitive">string</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+The Worker URL if `url` is enabled.
+</Segment>
+
+## SDK
+
+The following are accessible through the [SDK](/docs/reference/sdk/) at runtime.
+
+### url
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">undefined</code><code class="symbol"> | </code><code class="primitive">string</code>
+</InlineSection>
+</Section>
+The Worker URL if `url` is enabled.
 </Segment>
 </div>

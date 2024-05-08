@@ -64,6 +64,30 @@ new D1(name, args?, opts?)
 </Section>
 </Segment>
 
+## D1Args
+### transform?
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Object</code>
+</InlineSection>
+- <p>[<code class="key">database?</code>](#transform-database)</p>
+</Section>
+[Transform](/docs/components/#transform) how this component creates its underlying
+resources.
+
+</Segment>
+<NestedTitle id="transform-database" Tag="h4" parent="transform.">database?</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** [<code class="type">D1DatabaseArgs</code>](https://www.pulumi.com/registry/packages/cloudflare/api-docs/d1database/#inputs)<code class="symbol"> | </code><code class="symbol">(</code><code class="primitive">args</code><code class="symbol">: </code>[<code class="type">D1DatabaseArgs</code>](https://www.pulumi.com/registry/packages/cloudflare/api-docs/d1database/#inputs)<code class="symbol"> => </code><code class="primitive">void</code><code class="symbol">)</code>
+</InlineSection>
+</Section>
+Transform the D1 resource.
+
+</Segment>
+
 ## Properties
 
 ### id
@@ -94,29 +118,5 @@ The underlying [resources](/docs/components/#nodes) this component creates.
 </InlineSection>
 </Section>
 The Cloudflare D1 database.
-</Segment>
-
-## D1Args
-### transform?
-<Segment>
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">Object</code>
-</InlineSection>
-- <p>[<code class="key">database?</code>](#transform-database)</p>
-</Section>
-[Transform](/docs/components/#transform) how this component creates its underlying
-resources.
-
-</Segment>
-<NestedTitle id="transform-database" Tag="h4" parent="transform.">database?</NestedTitle>
-<Segment>
-<Section type="parameters">
-<InlineSection>
-**Type** [<code class="type">D1DatabaseArgs</code>](https://www.pulumi.com/registry/packages/cloudflare/api-docs/d1database/#inputs)<code class="symbol"> | </code><code class="symbol">(</code><code class="primitive">args</code><code class="symbol">: </code>[<code class="type">D1DatabaseArgs</code>](https://www.pulumi.com/registry/packages/cloudflare/api-docs/d1database/#inputs)<code class="symbol"> => </code><code class="primitive">void</code><code class="symbol">)</code>
-</InlineSection>
-</Section>
-Transform the D1 resource.
-
 </Segment>
 </div>

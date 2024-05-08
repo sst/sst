@@ -85,6 +85,109 @@ new SnsTopic(name, args?, opts?)
 </Section>
 </Segment>
 
+## SnsTopicArgs
+### fifo?
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">boolean</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+
+<InlineSection>
+**Default** <code class="primitive">false</code>
+</InlineSection>
+FIFO (First-In-First-Out) topics are designed to provide strict message ordering.
+
+:::caution
+Changing a standard topic to a FIFO topic or the other way around will result in the destruction and recreation of the topic.
+:::
+
+```js
+{
+  fifo: true
+}
+```
+</Segment>
+### transform?
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Object</code>
+</InlineSection>
+- <p>[<code class="key">topic?</code>](#transform-topic)</p>
+</Section>
+[Transform](/docs/components#transform) how this component creates its underlying
+resources.
+
+</Segment>
+<NestedTitle id="transform-topic" Tag="h4" parent="transform.">topic?</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** [<code class="type">TopicArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/sns/topic/#inputs)<code class="symbol"> | </code><code class="symbol">(</code><code class="primitive">args</code><code class="symbol">: </code>[<code class="type">TopicArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/sns/topic/#inputs)<code class="symbol"> => </code><code class="primitive">void</code><code class="symbol">)</code>
+</InlineSection>
+</Section>
+Transform the SNS topic resource.
+
+</Segment>
+
+## Properties
+
+### arn
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Output</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+The ARN of the SNS topic.
+</Segment>
+
+### name
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Output</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+The name of the SNS topic.
+</Segment>
+
+### nodes
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Object</code>
+</InlineSection>
+- <p>[<code class="key">topic</code>](#nodes-topic)</p>
+</Section>
+The underlying [resources](/docs/components/#nodes) this component creates.
+</Segment>
+<NestedTitle id="nodes-topic" Tag="h4" parent="nodes.">topic</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** [<code class="type">Topic</code>](https://www.pulumi.com/registry/packages/aws/api-docs/sns/topic/)
+</InlineSection>
+</Section>
+The Amazon SNS topic.
+</Segment>
+
+## SDK
+
+The following are accessible through the [SDK](/docs/reference/sdk/) at runtime.
+
+### arn
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">string</code>
+</InlineSection>
+</Section>
+The ARN of the SNS topic.
+</Segment>
+
 ## Methods
 
 ### subscribe
@@ -276,109 +379,6 @@ sst.aws.SnsTopic.subscribeQueue(topicArn, queueArn, {
   }
 });
 ```
-</Segment>
-
-## Properties
-
-### arn
-<Segment>
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">Output</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
-</InlineSection>
-</Section>
-The ARN of the SNS topic.
-</Segment>
-
-### name
-<Segment>
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">Output</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
-</InlineSection>
-</Section>
-The name of the SNS topic.
-</Segment>
-
-### nodes
-<Segment>
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">Object</code>
-</InlineSection>
-- <p>[<code class="key">topic</code>](#nodes-topic)</p>
-</Section>
-The underlying [resources](/docs/components/#nodes) this component creates.
-</Segment>
-<NestedTitle id="nodes-topic" Tag="h4" parent="nodes.">topic</NestedTitle>
-<Segment>
-<Section type="parameters">
-<InlineSection>
-**Type** [<code class="type">Topic</code>](https://www.pulumi.com/registry/packages/aws/api-docs/sns/topic/)
-</InlineSection>
-</Section>
-The Amazon SNS topic.
-</Segment>
-
-## Links
-
-The following are accessible through the [SDK](/docs/reference/sdk/) at runtime.
-
-### arn
-<Segment>
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">string</code>
-</InlineSection>
-</Section>
-The ARN of the SNS topic.
-</Segment>
-
-## SnsTopicArgs
-### fifo?
-<Segment>
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">boolean</code><code class="symbol">&gt;</code>
-</InlineSection>
-</Section>
-
-<InlineSection>
-**Default** <code class="primitive">false</code>
-</InlineSection>
-FIFO (First-In-First-Out) topics are designed to provide strict message ordering.
-
-:::caution
-Changing a standard topic to a FIFO topic or the other way around will result in the destruction and recreation of the topic.
-:::
-
-```js
-{
-  fifo: true
-}
-```
-</Segment>
-### transform?
-<Segment>
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">Object</code>
-</InlineSection>
-- <p>[<code class="key">topic?</code>](#transform-topic)</p>
-</Section>
-[Transform](/docs/components#transform) how this component creates its underlying
-resources.
-
-</Segment>
-<NestedTitle id="transform-topic" Tag="h4" parent="transform.">topic?</NestedTitle>
-<Segment>
-<Section type="parameters">
-<InlineSection>
-**Type** [<code class="type">TopicArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/sns/topic/#inputs)<code class="symbol"> | </code><code class="symbol">(</code><code class="primitive">args</code><code class="symbol">: </code>[<code class="type">TopicArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/sns/topic/#inputs)<code class="symbol"> => </code><code class="primitive">void</code><code class="symbol">)</code>
-</InlineSection>
-</Section>
-Transform the SNS topic resource.
-
 </Segment>
 
 ## SnsTopicSubscriberArgs

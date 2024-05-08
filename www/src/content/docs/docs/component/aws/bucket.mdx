@@ -82,191 +82,6 @@ new Bucket(name, args?, opts?)
 </Section>
 </Segment>
 
-## Methods
-
-### subscribe
-<Segment>
-<Section type="signature">
-```ts
-subscribe(subscriber, args?)
-```
-</Section>
-
-<Section type="parameters">
-#### Parameters
-- <p><code class="key">subscriber</code> <code class="primitive">string</code><code class="symbol"> | </code>[<code class="type">FunctionArgs</code>](/docs/component/aws/function/#functionargs)</p>
-The function that'll be notified.
-- <p><code class="key">args?</code> [<code class="type">BucketSubscriberArgs</code>](#bucketsubscriberargs)</p>
-Configure the subscription.
-</Section>
-
-<InlineSection>
-**Returns** <code class="primitive">Output</code><code class="symbol">&lt;</code>[<code class="type">BucketLambdaSubscriber</code>](/docs/component/aws/bucket-lambda-subscriber/)<code class="symbol">&gt;</code>
-</InlineSection>
-Subscribe to events from this bucket.
-
-```js
-bucket.subscribe("src/subscriber.handler");
-```
-
-Subscribe to specific S3 events.
-
-```js
-bucket.subscribe({
-  handler: "src/subscriber.handler",
-  link: [bucket] // ensures subscriber can access bucket files
-}, {
-  events: ["s3:ObjectCreated:*", "s3:ObjectRemoved:*"]
-});
-```
-
-Subscribe to specific S3 events from a specific folder.
-
-```js
-bucket.subscribe("src/subscriber.handler", {
-  filterPrefix: "images/",
-  events: ["s3:ObjectCreated:*", "s3:ObjectRemoved:*"]
-});
-```
-
-Customize the subscriber function.
-
-```js
-bucket.subscribe({
-  handler: "src/subscriber.handler",
-  timeout: "60 seconds",
-});
-```
-</Segment>
-
-### static subscribe
-<Segment>
-<Section type="signature">
-```ts
-Bucket.subscribe(bucketArn, subscriber, args?)
-```
-</Section>
-
-<Section type="parameters">
-#### Parameters
-- <p><code class="key">bucketArn</code> <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code></p>
-The ARN of the S3 bucket to subscribe to.
-- <p><code class="key">subscriber</code> <code class="primitive">string</code><code class="symbol"> | </code>[<code class="type">FunctionArgs</code>](/docs/component/aws/function/#functionargs)</p>
-The function that'll be notified.
-- <p><code class="key">args?</code> [<code class="type">BucketSubscriberArgs</code>](#bucketsubscriberargs)</p>
-Configure the subscription.
-</Section>
-
-<InlineSection>
-**Returns** <code class="primitive">Output</code><code class="symbol">&lt;</code>[<code class="type">BucketLambdaSubscriber</code>](/docs/component/aws/bucket-lambda-subscriber/)<code class="symbol">&gt;</code>
-</InlineSection>
-Subscribe to events of an S3 bucket that was not created in your app.
-
-For example, let's say you have an existing S3 bucket with the following ARN.
-
-```js
-const bucketArn = "arn:aws:s3:::my-bucket";
-```
-
-You can subscribe to it by passing in the ARN.
-
-```js
-sst.aws.Bucket.subscribe(bucketArn, "src/subscriber.handler");
-```
-
-Subscribe to specific S3 events.
-
-```js
-sst.aws.Bucket.subscribe(bucketArn, "src/subscriber.handler", {
-  events: ["s3:ObjectCreated:*", "s3:ObjectRemoved:*"]
-});
-```
-
-Subscribe to specific S3 events from a specific folder.
-
-```js
-sst.aws.Bucket.subscribe(bucketArn, "src/subscriber.handler", {
-  filterPrefix: "images/",
-  events: ["s3:ObjectCreated:*", "s3:ObjectRemoved:*"]
-});
-```
-
-Customize the subscriber function.
-
-```js
-sst.aws.Bucket.subscribe(bucketArn, {
-  handler: "src/subscriber.handler",
-  timeout: "60 seconds",
-});
-```
-</Segment>
-
-## Properties
-
-### arn
-<Segment>
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">Output</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
-</InlineSection>
-</Section>
-The ARN of the S3 Bucket.
-</Segment>
-
-### domain
-<Segment>
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">Output</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
-</InlineSection>
-</Section>
-The domain name of the bucket
-</Segment>
-
-### name
-<Segment>
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">Output</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
-</InlineSection>
-</Section>
-The generated name of the S3 Bucket.
-</Segment>
-
-### nodes
-<Segment>
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">Object</code>
-</InlineSection>
-- <p>[<code class="key">bucket</code>](#nodes-bucket)</p>
-</Section>
-The underlying [resources](/docs/components/#nodes) this component creates.
-</Segment>
-<NestedTitle id="nodes-bucket" Tag="h4" parent="nodes.">bucket</NestedTitle>
-<Segment>
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">Output</code><code class="symbol">&lt;</code>[<code class="type">BucketV2</code>](https://www.pulumi.com/registry/packages/aws/api-docs/s3/bucketv2/)<code class="symbol">&gt;</code>
-</InlineSection>
-</Section>
-The Amazon S3 bucket.
-</Segment>
-
-## Links
-
-The following are accessible through the [SDK](/docs/reference/sdk/) at runtime.
-
-### name
-<Segment>
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">string</code>
-</InlineSection>
-</Section>
-The generated name of the S3 Bucket.
-</Segment>
-
 ## BucketArgs
 ### cors?
 <Segment>
@@ -492,6 +307,191 @@ Transform the S3 Bucket Policy resource.
 </Section>
 Transform the public access block resource that's attached to the Bucket.
 
+</Segment>
+
+## Properties
+
+### arn
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Output</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+The ARN of the S3 Bucket.
+</Segment>
+
+### domain
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Output</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+The domain name of the bucket
+</Segment>
+
+### name
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Output</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+The generated name of the S3 Bucket.
+</Segment>
+
+### nodes
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Object</code>
+</InlineSection>
+- <p>[<code class="key">bucket</code>](#nodes-bucket)</p>
+</Section>
+The underlying [resources](/docs/components/#nodes) this component creates.
+</Segment>
+<NestedTitle id="nodes-bucket" Tag="h4" parent="nodes.">bucket</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Output</code><code class="symbol">&lt;</code>[<code class="type">BucketV2</code>](https://www.pulumi.com/registry/packages/aws/api-docs/s3/bucketv2/)<code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+The Amazon S3 bucket.
+</Segment>
+
+## SDK
+
+The following are accessible through the [SDK](/docs/reference/sdk/) at runtime.
+
+### name
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">string</code>
+</InlineSection>
+</Section>
+The generated name of the S3 Bucket.
+</Segment>
+
+## Methods
+
+### subscribe
+<Segment>
+<Section type="signature">
+```ts
+subscribe(subscriber, args?)
+```
+</Section>
+
+<Section type="parameters">
+#### Parameters
+- <p><code class="key">subscriber</code> <code class="primitive">string</code><code class="symbol"> | </code>[<code class="type">FunctionArgs</code>](/docs/component/aws/function/#functionargs)</p>
+The function that'll be notified.
+- <p><code class="key">args?</code> [<code class="type">BucketSubscriberArgs</code>](#bucketsubscriberargs)</p>
+Configure the subscription.
+</Section>
+
+<InlineSection>
+**Returns** <code class="primitive">Output</code><code class="symbol">&lt;</code>[<code class="type">BucketLambdaSubscriber</code>](/docs/component/aws/bucket-lambda-subscriber/)<code class="symbol">&gt;</code>
+</InlineSection>
+Subscribe to events from this bucket.
+
+```js
+bucket.subscribe("src/subscriber.handler");
+```
+
+Subscribe to specific S3 events.
+
+```js
+bucket.subscribe({
+  handler: "src/subscriber.handler",
+  link: [bucket] // ensures subscriber can access bucket files
+}, {
+  events: ["s3:ObjectCreated:*", "s3:ObjectRemoved:*"]
+});
+```
+
+Subscribe to specific S3 events from a specific folder.
+
+```js
+bucket.subscribe("src/subscriber.handler", {
+  filterPrefix: "images/",
+  events: ["s3:ObjectCreated:*", "s3:ObjectRemoved:*"]
+});
+```
+
+Customize the subscriber function.
+
+```js
+bucket.subscribe({
+  handler: "src/subscriber.handler",
+  timeout: "60 seconds",
+});
+```
+</Segment>
+
+### static subscribe
+<Segment>
+<Section type="signature">
+```ts
+Bucket.subscribe(bucketArn, subscriber, args?)
+```
+</Section>
+
+<Section type="parameters">
+#### Parameters
+- <p><code class="key">bucketArn</code> <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code></p>
+The ARN of the S3 bucket to subscribe to.
+- <p><code class="key">subscriber</code> <code class="primitive">string</code><code class="symbol"> | </code>[<code class="type">FunctionArgs</code>](/docs/component/aws/function/#functionargs)</p>
+The function that'll be notified.
+- <p><code class="key">args?</code> [<code class="type">BucketSubscriberArgs</code>](#bucketsubscriberargs)</p>
+Configure the subscription.
+</Section>
+
+<InlineSection>
+**Returns** <code class="primitive">Output</code><code class="symbol">&lt;</code>[<code class="type">BucketLambdaSubscriber</code>](/docs/component/aws/bucket-lambda-subscriber/)<code class="symbol">&gt;</code>
+</InlineSection>
+Subscribe to events of an S3 bucket that was not created in your app.
+
+For example, let's say you have an existing S3 bucket with the following ARN.
+
+```js
+const bucketArn = "arn:aws:s3:::my-bucket";
+```
+
+You can subscribe to it by passing in the ARN.
+
+```js
+sst.aws.Bucket.subscribe(bucketArn, "src/subscriber.handler");
+```
+
+Subscribe to specific S3 events.
+
+```js
+sst.aws.Bucket.subscribe(bucketArn, "src/subscriber.handler", {
+  events: ["s3:ObjectCreated:*", "s3:ObjectRemoved:*"]
+});
+```
+
+Subscribe to specific S3 events from a specific folder.
+
+```js
+sst.aws.Bucket.subscribe(bucketArn, "src/subscriber.handler", {
+  filterPrefix: "images/",
+  events: ["s3:ObjectCreated:*", "s3:ObjectRemoved:*"]
+});
+```
+
+Customize the subscriber function.
+
+```js
+sst.aws.Bucket.subscribe(bucketArn, {
+  handler: "src/subscriber.handler",
+  timeout: "60 seconds",
+});
+```
 </Segment>
 
 ## BucketSubscriberArgs

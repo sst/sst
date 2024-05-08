@@ -81,6 +81,109 @@ new Queue(name, args?, opts?)
 </Section>
 </Segment>
 
+## QueueArgs
+### fifo?
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">boolean</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+
+<InlineSection>
+**Default** <code class="primitive">false</code>
+</InlineSection>
+FIFO or _first-in-first-out_ queues are designed to guarantee that messages are processed exactly once and in the order that they are sent.
+
+:::caution
+Changing a standard queue to a FIFO queue (or the other way around) will cause the queue to be destroyed and recreated.
+:::
+
+```js
+{
+  fifo: true
+}
+```
+</Segment>
+### transform?
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Object</code>
+</InlineSection>
+- <p>[<code class="key">queue?</code>](#transform-queue)</p>
+</Section>
+[Transform](/docs/components#transform) how this component creates its underlying
+resources.
+
+</Segment>
+<NestedTitle id="transform-queue" Tag="h4" parent="transform.">queue?</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** [<code class="type">QueueArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/sqs/queue/#inputs)<code class="symbol"> | </code><code class="symbol">(</code><code class="primitive">args</code><code class="symbol">: </code>[<code class="type">QueueArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/sqs/queue/#inputs)<code class="symbol"> => </code><code class="primitive">void</code><code class="symbol">)</code>
+</InlineSection>
+</Section>
+Transform the SQS queue resource.
+
+</Segment>
+
+## Properties
+
+### arn
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Output</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+The ARN of the SQS queue.
+</Segment>
+
+### nodes
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Object</code>
+</InlineSection>
+- <p>[<code class="key">queue</code>](#nodes-queue)</p>
+</Section>
+The underlying [resources](/docs/components/#nodes) this component creates.
+</Segment>
+<NestedTitle id="nodes-queue" Tag="h4" parent="nodes.">queue</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** [<code class="type">Queue</code>](https://www.pulumi.com/registry/packages/aws/api-docs/sqs/queue/)
+</InlineSection>
+</Section>
+The Amazon SQS queue.
+</Segment>
+
+### url
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Output</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+The SQS queue URL.
+</Segment>
+
+## SDK
+
+The following are accessible through the [SDK](/docs/reference/sdk/) at runtime.
+
+### url
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">string</code>
+</InlineSection>
+</Section>
+The SQS queue URL.
+</Segment>
+
 ## Methods
 
 ### subscribe
@@ -189,109 +292,6 @@ sst.aws.Queue.subscribe(queueArn, {
   timeout: "60 seconds"
 });
 ```
-</Segment>
-
-## Properties
-
-### arn
-<Segment>
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">Output</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
-</InlineSection>
-</Section>
-The ARN of the SQS queue.
-</Segment>
-
-### nodes
-<Segment>
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">Object</code>
-</InlineSection>
-- <p>[<code class="key">queue</code>](#nodes-queue)</p>
-</Section>
-The underlying [resources](/docs/components/#nodes) this component creates.
-</Segment>
-<NestedTitle id="nodes-queue" Tag="h4" parent="nodes.">queue</NestedTitle>
-<Segment>
-<Section type="parameters">
-<InlineSection>
-**Type** [<code class="type">Queue</code>](https://www.pulumi.com/registry/packages/aws/api-docs/sqs/queue/)
-</InlineSection>
-</Section>
-The Amazon SQS queue.
-</Segment>
-
-### url
-<Segment>
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">Output</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
-</InlineSection>
-</Section>
-The SQS queue URL.
-</Segment>
-
-## Links
-
-The following are accessible through the [SDK](/docs/reference/sdk/) at runtime.
-
-### url
-<Segment>
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">string</code>
-</InlineSection>
-</Section>
-The SQS queue URL.
-</Segment>
-
-## QueueArgs
-### fifo?
-<Segment>
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">boolean</code><code class="symbol">&gt;</code>
-</InlineSection>
-</Section>
-
-<InlineSection>
-**Default** <code class="primitive">false</code>
-</InlineSection>
-FIFO or _first-in-first-out_ queues are designed to guarantee that messages are processed exactly once and in the order that they are sent.
-
-:::caution
-Changing a standard queue to a FIFO queue (or the other way around) will cause the queue to be destroyed and recreated.
-:::
-
-```js
-{
-  fifo: true
-}
-```
-</Segment>
-### transform?
-<Segment>
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">Object</code>
-</InlineSection>
-- <p>[<code class="key">queue?</code>](#transform-queue)</p>
-</Section>
-[Transform](/docs/components#transform) how this component creates its underlying
-resources.
-
-</Segment>
-<NestedTitle id="transform-queue" Tag="h4" parent="transform.">queue?</NestedTitle>
-<Segment>
-<Section type="parameters">
-<InlineSection>
-**Type** [<code class="type">QueueArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/sqs/queue/#inputs)<code class="symbol"> | </code><code class="symbol">(</code><code class="primitive">args</code><code class="symbol">: </code>[<code class="type">QueueArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/sqs/queue/#inputs)<code class="symbol"> => </code><code class="primitive">void</code><code class="symbol">)</code>
-</InlineSection>
-</Section>
-Transform the SQS queue resource.
-
 </Segment>
 
 ## QueueSubscriberArgs

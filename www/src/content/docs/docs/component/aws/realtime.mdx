@@ -33,21 +33,8 @@ const server = new sst.aws.Realtime("MyServer", {
 });
 ```
 
-Once set up, you can use the [`RealtimeAuthHandler`](#realtimeauthhandler) SDK to
-authorize the client.
-
-```js title="src/authorizer.ts"
-export const handler = RealtimeAuthHandler(async (token) => {
-  // Validate the token
-  console.log(token);
-
-  // Return the topics to subscribe and publish
-  return {
-    subscribe: [`${Resource.App.name}/${Resource.App.stage}/chat/room1`],
-    publish: [`${Resource.App.name}/${Resource.App.stage}/chat/room1`],
-  };
-});
-```
+Use the [`RealtimeAuthHandler`](#realtimeauthhandler) function in the SDK to authorize
+the client, and grant permissions to subscribe and publish to topics.
 
 #### Publish and receive messages in your frontend
 
@@ -107,48 +94,43 @@ new Realtime(name, args, opts?)
 </Section>
 </Segment>
 
-## Methods
-
-### subscribe
+## RealtimeArgs
+### authorizer
 <Segment>
-<Section type="signature">
-```ts
-subscribe(subscriber, args)
-```
-</Section>
-
 <Section type="parameters">
-#### Parameters
-- <p><code class="key">subscriber</code> <code class="primitive">string</code><code class="symbol"> | </code>[<code class="type">FunctionArgs</code>](/docs/component/aws/function/#functionargs)</p>
-The function that'll be notified.
-- <p><code class="key">args</code> [<code class="type">RealtimeSubscriberArgs</code>](#realtimesubscriberargs)</p>
-Configure the subscription.
-</Section>
-
 <InlineSection>
-**Returns** <code class="primitive">Output</code><code class="symbol">&lt;</code>[<code class="type">RealtimeLambdaSubscriber</code>](/docs/component/aws/realtime-lambda-subscriber/)<code class="symbol">&gt;</code>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol"> | </code>[<code class="type">FunctionArgs</code>](/docs/component/aws/function/#functionargs)<code class="symbol">&gt;</code>
 </InlineSection>
-Subscribe to this Realtime server.
+</Section>
+The Lambda function that'll be used to authorize the client on connection.
 
 ```js
-server.subscribe("src/subscriber.handler", {
-  filter: `${$app.name}/${$app.stage}/chat/room1`
-});
+{
+  authorizer: "src/authorizer.handler"
+}
 ```
+</Segment>
+### transform?
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Object</code>
+</InlineSection>
+- <p>[<code class="key">authorizer?</code>](#transform-authorizer)</p>
+</Section>
+[Transform](/docs/components#transform) how this subscription creates its underlying
+resources.
 
-Customize the subscriber function.
+</Segment>
+<NestedTitle id="transform-authorizer" Tag="h4" parent="transform.">authorizer?</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** [<code class="type">AuthorizerArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/iot/authorizer/#inputs)<code class="symbol"> | </code><code class="symbol">(</code><code class="primitive">args</code><code class="symbol">: </code>[<code class="type">AuthorizerArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/iot/authorizer/#inputs)<code class="symbol"> => </code><code class="primitive">void</code><code class="symbol">)</code>
+</InlineSection>
+</Section>
+Transform the IoT authorizer resource.
 
-```js
-server.subscribe(
-  {
-    handler: "src/subscriber.handler",
-    timeout: "60 seconds"
-  },
-  {
-    filter: `${$app.name}/${$app.stage}/chat/room1`
-  }
-);
-```
 </Segment>
 
 ## Properties
@@ -203,97 +185,9 @@ The IoT authorizer function resource.
 The IoT authorizer resource.
 </Segment>
 
-## RealtimeArgs
-### authorizer
-<Segment>
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol"> | </code>[<code class="type">FunctionArgs</code>](/docs/component/aws/function/#functionargs)<code class="symbol">&gt;</code>
-</InlineSection>
-</Section>
-The Lambda function that'll be used to authorize the client on connection.
-
-```js
-{
-  authorizer: "src/authorizer.handler"
-}
-```
-</Segment>
-### transform?
-<Segment>
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">Object</code>
-</InlineSection>
-- <p>[<code class="key">authorizer?</code>](#transform-authorizer)</p>
-</Section>
-[Transform](/docs/components#transform) how this subscription creates its underlying
-resources.
-
-</Segment>
-<NestedTitle id="transform-authorizer" Tag="h4" parent="transform.">authorizer?</NestedTitle>
-<Segment>
-<Section type="parameters">
-<InlineSection>
-**Type** [<code class="type">AuthorizerArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/iot/authorizer/#inputs)<code class="symbol"> | </code><code class="symbol">(</code><code class="primitive">args</code><code class="symbol">: </code>[<code class="type">AuthorizerArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/iot/authorizer/#inputs)<code class="symbol"> => </code><code class="primitive">void</code><code class="symbol">)</code>
-</InlineSection>
-</Section>
-Transform the IoT authorizer resource.
-
-</Segment>
-
-## RealtimeSubscriberArgs
-### filter
-<Segment>
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
-</InlineSection>
-</Section>
-Filter the topics that'll be processed by the subscriber.
-
-:::tip
-Learn more about [topic filters](https://docs.aws.amazon.com/iot/latest/developerguide/topics.html#topicfilters).
-:::
-
-Subscribe to a specific topic.
-```js
-{
-  filter: `${$app.name}/${$app.stage}/chat/room1`
-}
-```
-
-Subscribe to all topics under a prefix.
-```js
-{
-  filter: `${$app.name}/${$app.stage}/chat/#`
-}
-```
-</Segment>
-### transform?
-<Segment>
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">Object</code>
-</InlineSection>
-- <p>[<code class="key">topicRule?</code>](#transform-topicrule)</p>
-</Section>
-[Transform](/docs/components#transform) how this subscription creates its underlying
-resources.
-
-</Segment>
-<NestedTitle id="transform-topicrule" Tag="h4" parent="transform.">topicRule?</NestedTitle>
-<Segment>
-<Section type="parameters">
-<InlineSection>
-**Type** [<code class="type">TopicRuleArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/iot/topicrule/#inputs)<code class="symbol"> | </code><code class="symbol">(</code><code class="primitive">args</code><code class="symbol">: </code>[<code class="type">TopicRuleArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/iot/topicrule/#inputs)<code class="symbol"> => </code><code class="primitive">void</code><code class="symbol">)</code>
-</InlineSection>
-</Section>
-Transform the IoT topic rule resource.
-
-</Segment>
-
 ## SDK
+
+The following are accessible through the [SDK](/docs/reference/sdk/) at runtime.
 
 ### RealtimeAuthHandler
 <Segment>
@@ -383,5 +277,100 @@ And to subscribe to all topics under a specific prefix.
   subscribe: ["chat/#"]
 }
 ```
+</Segment>
+
+## Methods
+
+### subscribe
+<Segment>
+<Section type="signature">
+```ts
+subscribe(subscriber, args)
+```
+</Section>
+
+<Section type="parameters">
+#### Parameters
+- <p><code class="key">subscriber</code> <code class="primitive">string</code><code class="symbol"> | </code>[<code class="type">FunctionArgs</code>](/docs/component/aws/function/#functionargs)</p>
+The function that'll be notified.
+- <p><code class="key">args</code> [<code class="type">RealtimeSubscriberArgs</code>](#realtimesubscriberargs)</p>
+Configure the subscription.
+</Section>
+
+<InlineSection>
+**Returns** <code class="primitive">Output</code><code class="symbol">&lt;</code>[<code class="type">RealtimeLambdaSubscriber</code>](/docs/component/aws/realtime-lambda-subscriber/)<code class="symbol">&gt;</code>
+</InlineSection>
+Subscribe to this Realtime server.
+
+```js
+server.subscribe("src/subscriber.handler", {
+  filter: `${$app.name}/${$app.stage}/chat/room1`
+});
+```
+
+Customize the subscriber function.
+
+```js
+server.subscribe(
+  {
+    handler: "src/subscriber.handler",
+    timeout: "60 seconds"
+  },
+  {
+    filter: `${$app.name}/${$app.stage}/chat/room1`
+  }
+);
+```
+</Segment>
+
+## RealtimeSubscriberArgs
+### filter
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+Filter the topics that'll be processed by the subscriber.
+
+:::tip
+Learn more about [topic filters](https://docs.aws.amazon.com/iot/latest/developerguide/topics.html#topicfilters).
+:::
+
+Subscribe to a specific topic.
+```js
+{
+  filter: `${$app.name}/${$app.stage}/chat/room1`
+}
+```
+
+Subscribe to all topics under a prefix.
+```js
+{
+  filter: `${$app.name}/${$app.stage}/chat/#`
+}
+```
+</Segment>
+### transform?
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Object</code>
+</InlineSection>
+- <p>[<code class="key">topicRule?</code>](#transform-topicrule)</p>
+</Section>
+[Transform](/docs/components#transform) how this subscription creates its underlying
+resources.
+
+</Segment>
+<NestedTitle id="transform-topicrule" Tag="h4" parent="transform.">topicRule?</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** [<code class="type">TopicRuleArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/iot/topicrule/#inputs)<code class="symbol"> | </code><code class="symbol">(</code><code class="primitive">args</code><code class="symbol">: </code>[<code class="type">TopicRuleArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/iot/topicrule/#inputs)<code class="symbol"> => </code><code class="primitive">void</code><code class="symbol">)</code>
+</InlineSection>
+</Section>
+Transform the IoT topic rule resource.
+
 </Segment>
 </div>

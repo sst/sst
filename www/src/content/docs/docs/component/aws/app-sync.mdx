@@ -60,223 +60,6 @@ new AppSync(name, args, opts?)
 </Section>
 </Segment>
 
-## Methods
-
-### addDataSource
-<Segment>
-<Section type="signature">
-```ts
-addDataSource(args)
-```
-</Section>
-
-<Section type="parameters">
-#### Parameters
-- <p><code class="key">args</code> [<code class="type">AppSyncDataSourceArgs</code>](#appsyncdatasourceargs)</p>
-Configure the data source.
-</Section>
-
-<InlineSection>
-**Returns** [<code class="type">AppSyncDataSource</code>](/docs/component/aws/app-sync-data-source/)
-</InlineSection>
-Add a data source to this AppSync API.
-
-Add a Lambda function as a data source.
-
-```js
-api.addDataSource({
-  name: "lambdaDS",
-  lambda: "src/lambda.handler"
-});
-```
-
-Customize the Lambda function.
-
-```js
-api.addDataSource({
-  name: "lambdaDS",
-  lambda: {
-    handler: "src/lambda.handler",
-    timeout: "60 seconds"
-  }
-});
-```
-
-Add a DynamoDB table as a data source.
-
-```js
-api.addDataSource({
-  name: "dynamoDS",
-  dynamodb: "arn:aws:dynamodb:us-east-1:123456789012:table/my-table"
-})
-```
-</Segment>
-
-### addFunction
-<Segment>
-<Section type="signature">
-```ts
-addFunction(args)
-```
-</Section>
-
-<Section type="parameters">
-#### Parameters
-- <p><code class="key">args</code> [<code class="type">AppSyncFunctionArgs</code>](#appsyncfunctionargs)</p>
-Configure the function.
-</Section>
-
-<InlineSection>
-**Returns** [<code class="type">AppSyncFunction</code>](/docs/component/aws/app-sync-function/)
-</InlineSection>
-Add a function to this AppSync API.
-
-Add a function using a Lambda data source.
-
-```js
-api.addFunction({
-  name: "myFunction",
-  dataSource: "lambdaDS",
-});
-```
-
-Add a function using a DynamoDB data source.
-
-```js
-api.addResolver("Query user", {
-  name: "myFunction",
-  dataSource: "dynamoDS",
-  requestTemplate: `{
-    "version": "2017-02-28",
-    "operation": "Scan",
-  }`,
-  responseTemplate: `{
-    "users": $utils.toJson($context.result.items)
-  }`,
-});
-```
-</Segment>
-
-### addResolver
-<Segment>
-<Section type="signature">
-```ts
-addResolver(operation, args)
-```
-</Section>
-
-<Section type="parameters">
-#### Parameters
-- <p><code class="key">operation</code> <code class="primitive">string</code></p>
-The type and name of the operation.
-- <p><code class="key">args</code> [<code class="type">AppSyncResolverArgs</code>](#appsyncresolverargs)</p>
-Configure the resolver.
-</Section>
-
-<InlineSection>
-**Returns** [<code class="type">AppSyncResolver</code>](/docs/component/aws/app-sync-resolver/)
-</InlineSection>
-Add a resolver to this AppSync API.
-
-Add a resolver using a Lambda data source.
-
-```js
-api.addResolver("Query user", {
-  dataSource: "lambdaDS",
-});
-```
-
-Add a resolver using a DynamoDB data source.
-
-```js
-api.addResolver("Query user", {
-  dataSource: "dynamoDS",
-  requestTemplate: `{
-    "version": "2017-02-28",
-    "operation": "Scan",
-  }`,
-  responseTemplate: `{
-    "users": $utils.toJson($context.result.items)
-  }`,
-});
-```
-
-Add a pipeline resolver.
-
-```js
-api.addResolver("Query user", {
-  functions: [
-    "MyFunction1",
-    "MyFunction2"
-  ]
-  code: `
-    export function request(ctx) {
-      return {};
-    }
-    export function response(ctx) {
-      return ctx.result;
-    }
-  `,
-});
-```
-</Segment>
-
-## Properties
-
-### id
-<Segment>
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">Output</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
-</InlineSection>
-</Section>
-The GraphQL API id.
-</Segment>
-
-### nodes
-<Segment>
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">Object</code>
-</InlineSection>
-- <p>[<code class="key">api</code>](#nodes-api)</p>
-</Section>
-The underlying [resources](/docs/components/#nodes) this component creates.
-</Segment>
-<NestedTitle id="nodes-api" Tag="h4" parent="nodes.">api</NestedTitle>
-<Segment>
-<Section type="parameters">
-<InlineSection>
-**Type** [<code class="type">GraphQLApi</code>](https://www.pulumi.com/registry/packages/aws/api-docs/appsync/graphqlapi/)
-</InlineSection>
-</Section>
-The Amazon AppSync GraphQL API.
-</Segment>
-
-### url
-<Segment>
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">Output</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
-</InlineSection>
-</Section>
-The URL of the GraphQL API.
-</Segment>
-
-## Links
-
-The following are accessible through the [SDK](/docs/reference/sdk/) at runtime.
-
-### url
-<Segment>
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">string</code>
-</InlineSection>
-</Section>
-The URL of the GraphQL API.
-</Segment>
-
 ## AppSyncArgs
 ### domain?
 <Segment>
@@ -479,6 +262,223 @@ Transform the AppSync GraphQL API resource.
 </Section>
 Transform the AppSync domain name resource.
 
+</Segment>
+
+## Properties
+
+### id
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Output</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+The GraphQL API id.
+</Segment>
+
+### nodes
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Object</code>
+</InlineSection>
+- <p>[<code class="key">api</code>](#nodes-api)</p>
+</Section>
+The underlying [resources](/docs/components/#nodes) this component creates.
+</Segment>
+<NestedTitle id="nodes-api" Tag="h4" parent="nodes.">api</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** [<code class="type">GraphQLApi</code>](https://www.pulumi.com/registry/packages/aws/api-docs/appsync/graphqlapi/)
+</InlineSection>
+</Section>
+The Amazon AppSync GraphQL API.
+</Segment>
+
+### url
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Output</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+The URL of the GraphQL API.
+</Segment>
+
+## SDK
+
+The following are accessible through the [SDK](/docs/reference/sdk/) at runtime.
+
+### url
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">string</code>
+</InlineSection>
+</Section>
+The URL of the GraphQL API.
+</Segment>
+
+## Methods
+
+### addDataSource
+<Segment>
+<Section type="signature">
+```ts
+addDataSource(args)
+```
+</Section>
+
+<Section type="parameters">
+#### Parameters
+- <p><code class="key">args</code> [<code class="type">AppSyncDataSourceArgs</code>](#appsyncdatasourceargs)</p>
+Configure the data source.
+</Section>
+
+<InlineSection>
+**Returns** [<code class="type">AppSyncDataSource</code>](/docs/component/aws/app-sync-data-source/)
+</InlineSection>
+Add a data source to this AppSync API.
+
+Add a Lambda function as a data source.
+
+```js
+api.addDataSource({
+  name: "lambdaDS",
+  lambda: "src/lambda.handler"
+});
+```
+
+Customize the Lambda function.
+
+```js
+api.addDataSource({
+  name: "lambdaDS",
+  lambda: {
+    handler: "src/lambda.handler",
+    timeout: "60 seconds"
+  }
+});
+```
+
+Add a DynamoDB table as a data source.
+
+```js
+api.addDataSource({
+  name: "dynamoDS",
+  dynamodb: "arn:aws:dynamodb:us-east-1:123456789012:table/my-table"
+})
+```
+</Segment>
+
+### addFunction
+<Segment>
+<Section type="signature">
+```ts
+addFunction(args)
+```
+</Section>
+
+<Section type="parameters">
+#### Parameters
+- <p><code class="key">args</code> [<code class="type">AppSyncFunctionArgs</code>](#appsyncfunctionargs)</p>
+Configure the function.
+</Section>
+
+<InlineSection>
+**Returns** [<code class="type">AppSyncFunction</code>](/docs/component/aws/app-sync-function/)
+</InlineSection>
+Add a function to this AppSync API.
+
+Add a function using a Lambda data source.
+
+```js
+api.addFunction({
+  name: "myFunction",
+  dataSource: "lambdaDS",
+});
+```
+
+Add a function using a DynamoDB data source.
+
+```js
+api.addResolver("Query user", {
+  name: "myFunction",
+  dataSource: "dynamoDS",
+  requestTemplate: `{
+    "version": "2017-02-28",
+    "operation": "Scan",
+  }`,
+  responseTemplate: `{
+    "users": $utils.toJson($context.result.items)
+  }`,
+});
+```
+</Segment>
+
+### addResolver
+<Segment>
+<Section type="signature">
+```ts
+addResolver(operation, args)
+```
+</Section>
+
+<Section type="parameters">
+#### Parameters
+- <p><code class="key">operation</code> <code class="primitive">string</code></p>
+The type and name of the operation.
+- <p><code class="key">args</code> [<code class="type">AppSyncResolverArgs</code>](#appsyncresolverargs)</p>
+Configure the resolver.
+</Section>
+
+<InlineSection>
+**Returns** [<code class="type">AppSyncResolver</code>](/docs/component/aws/app-sync-resolver/)
+</InlineSection>
+Add a resolver to this AppSync API.
+
+Add a resolver using a Lambda data source.
+
+```js
+api.addResolver("Query user", {
+  dataSource: "lambdaDS",
+});
+```
+
+Add a resolver using a DynamoDB data source.
+
+```js
+api.addResolver("Query user", {
+  dataSource: "dynamoDS",
+  requestTemplate: `{
+    "version": "2017-02-28",
+    "operation": "Scan",
+  }`,
+  responseTemplate: `{
+    "users": $utils.toJson($context.result.items)
+  }`,
+});
+```
+
+Add a pipeline resolver.
+
+```js
+api.addResolver("Query user", {
+  functions: [
+    "MyFunction1",
+    "MyFunction2"
+  ]
+  code: `
+    export function request(ctx) {
+      return {};
+    }
+    export function response(ctx) {
+      return ctx.result;
+    }
+  `,
+});
+```
 </Segment>
 
 ## AppSyncDataSourceArgs

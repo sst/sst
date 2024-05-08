@@ -340,7 +340,9 @@ async function generateGlobalConfigDoc(module: TypeDoc.DeclarationReflection) {
       renderBodyBegin(),
       renderAbout(module),
       renderVariables(module),
-      renderFunctions(module, useModuleFunctions(module), "Functions"),
+      renderFunctions(module, useModuleFunctions(module), {
+        title: "Functions",
+      }),
       renderBodyEnd(),
     ]
       .flat()
@@ -389,7 +391,9 @@ async function generateDnsDoc(module: TypeDoc.DeclarationReflection) {
       renderImports(outputFilePath),
       renderBodyBegin(),
       renderAbout(module),
-      renderFunctions(module, useModuleFunctions(module), "Functions"),
+      renderFunctions(module, useModuleFunctions(module), {
+        title: "Functions",
+      }),
       renderInterfacesAtH2Level(module),
       renderBodyEnd(),
     ]
@@ -404,6 +408,7 @@ async function generateComponentDoc(
 ) {
   console.info(`Generating ${component.name}...`);
   const sourceFile = component.sources![0].fileName;
+  const className = useClassName(component);
 
   // Remove leading `components/`
   // module.name = "components/aws/bucket"
@@ -420,23 +425,37 @@ async function generateComponentDoc(
         useClassName(component),
         `Reference doc for the \`${useClassProviderNamespace(
           component
-        )}.${useClassName(component)}\` component.`
+        )}.${className}\` component.`
       ),
       renderSourceMessage(sourceFile),
       renderImports(outputFilePath),
       renderBodyBegin(),
       renderAbout(component),
       renderConstructor(component),
-      renderMethods(component),
+      renderInterfacesAtH2Level(component, {
+        filter: (c) => c.name === `${className}Args`,
+      }),
       renderProperties(component),
-      renderLinks(component),
-      renderInterfacesAtH2Level(component),
-      ...(sdk
-        ? [
-            renderFunctions(sdk, useModuleFunctions(sdk), "SDK"),
-            renderInterfacesAtH3Level(sdk),
-          ]
-        : []),
+      ...(() => {
+        const lines = [
+          ...renderLinks(component),
+          ...(sdk ? renderFunctions(sdk, useModuleFunctions(sdk)) : []),
+          ...(sdk ? renderInterfacesAtH3Level(sdk) : []),
+        ];
+        return lines.length
+          ? [
+              ``,
+              `## SDK`,
+              ``,
+              `The following are accessible through the [SDK](/docs/reference/sdk/) at runtime.`,
+              ...lines,
+            ]
+          : [];
+      })(),
+      renderMethods(component),
+      renderInterfacesAtH2Level(component, {
+        filter: (c) => c.name !== `${className}Args`,
+      }),
       renderBodyEnd(),
     ]
       .flat()
@@ -674,6 +693,8 @@ function renderType(
       return `[<code class="type">${
         type.name
       }</code>](#${type.name.toLowerCase()})`;
+    } else if (type.name === "T") {
+      return "T";
     }
 
     // @ts-expect-error
@@ -907,13 +928,13 @@ function renderVariables(module: TypeDoc.DeclarationReflection) {
 function renderFunctions(
   module: TypeDoc.DeclarationReflection,
   fns: TypeDoc.DeclarationReflection[],
-  title: string
+  opts?: { title?: string }
 ) {
   const lines: string[] = [];
 
   if (!fns.length) return lines;
 
-  lines.push(``, `## ${title}`);
+  if (opts?.title) lines.push(``, `## ${opts?.title}`);
 
   for (const f of fns) {
     console.debug(` - function ${f.name}`);
@@ -1133,12 +1154,6 @@ function renderLinks(module: TypeDoc.DeclarationReflection) {
   const method = useClassGetSSTLinkMethod(module);
   if (!method) return lines;
 
-  lines.push(``, `## Links`);
-  lines.push(
-    ``,
-    `The following are accessible through the [SDK](/docs/reference/sdk/) at runtime.`
-  );
-
   // Validate getSSTLink() return type
   const returnType = method.signatures![0].type as TypeDoc.ReflectionType;
   if (
@@ -1212,11 +1227,16 @@ function renderLinks(module: TypeDoc.DeclarationReflection) {
   return lines;
 }
 
-function renderInterfacesAtH2Level(module: TypeDoc.DeclarationReflection) {
+function renderInterfacesAtH2Level(
+  module: TypeDoc.DeclarationReflection,
+  opts: {
+    filter?: (c: TypeDoc.DeclarationReflection) => boolean;
+  } = {}
+) {
   const lines: string[] = [];
-  const interfaces = useModuleInterfaces(module).filter(
-    (c) => !c.comment?.modifierTags.has("@internal")
-  );
+  const interfaces = useModuleInterfaces(module)
+    .filter((c) => !c.comment?.modifierTags.has("@internal"))
+    .filter((c) => !opts.filter || opts.filter(c));
 
   for (const int of interfaces) {
     console.debug(` - interface ${int.name}`);
@@ -1598,7 +1618,7 @@ function useNestedTypes(
         ? useNestedTypes(t, `${prefix}[]`, depth)
         : useNestedTypes(t, prefix, depth)
     );
-  if (type.type === "reflection")
+  if (type.type === "reflection" && type.declaration.children?.length)
     return type.declaration.children!.flatMap((subType) => [
       { prefix, subType, depth },
       ...(subType.kind === TypeDoc.ReflectionKind.Property
@@ -1745,7 +1765,7 @@ async function buildSdk() {
     },
     entryPoints: [
       "../sdk/js/src/realtime/index.ts",
-      "../sdk/js/src/vector-client.ts",
+      "../sdk/js/src/vector/index.ts",
     ],
     tsconfig: "../sdk/js/tsconfig.json",
   });

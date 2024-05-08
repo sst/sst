@@ -62,6 +62,30 @@ new Kv(name, args?, opts?)
 </Section>
 </Segment>
 
+## KvArgs
+### transform?
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Object</code>
+</InlineSection>
+- <p>[<code class="key">namespace?</code>](#transform-namespace)</p>
+</Section>
+[Transform](/docs/components/#transform) how this component creates its underlying
+resources.
+
+</Segment>
+<NestedTitle id="transform-namespace" Tag="h4" parent="transform.">namespace?</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** [<code class="type">WorkersKvNamespaceArgs</code>](https://www.pulumi.com/registry/packages/cloudflare/api-docs/workerskvnamespace/#inputs)<code class="symbol"> | </code><code class="symbol">(</code><code class="primitive">args</code><code class="symbol">: </code>[<code class="type">WorkersKvNamespaceArgs</code>](https://www.pulumi.com/registry/packages/cloudflare/api-docs/workerskvnamespace/#inputs)<code class="symbol"> => </code><code class="primitive">void</code><code class="symbol">)</code>
+</InlineSection>
+</Section>
+Transform the R2 KV namespace resource.
+
+</Segment>
+
 ## Properties
 
 ### id
@@ -92,29 +116,5 @@ The underlying [resources](/docs/components/#nodes) this component creates.
 </InlineSection>
 </Section>
 The Cloudflare KV namespace.
-</Segment>
-
-## KvArgs
-### transform?
-<Segment>
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">Object</code>
-</InlineSection>
-- <p>[<code class="key">namespace?</code>](#transform-namespace)</p>
-</Section>
-[Transform](/docs/components/#transform) how this component creates its underlying
-resources.
-
-</Segment>
-<NestedTitle id="transform-namespace" Tag="h4" parent="transform.">namespace?</NestedTitle>
-<Segment>
-<Section type="parameters">
-<InlineSection>
-**Type** [<code class="type">WorkersKvNamespaceArgs</code>](https://www.pulumi.com/registry/packages/cloudflare/api-docs/workerskvnamespace/#inputs)<code class="symbol"> | </code><code class="symbol">(</code><code class="primitive">args</code><code class="symbol">: </code>[<code class="type">WorkersKvNamespaceArgs</code>](https://www.pulumi.com/registry/packages/cloudflare/api-docs/workerskvnamespace/#inputs)<code class="symbol"> => </code><code class="primitive">void</code><code class="symbol">)</code>
-</InlineSection>
-</Section>
-Transform the R2 KV namespace resource.
-
 </Segment>
 </div>

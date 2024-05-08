@@ -51,49 +51,6 @@ new Cdn(name, args, opts?)
 </Section>
 </Segment>
 
-## Properties
-
-### domainUrl
-<Segment>
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">undefined</code><code class="symbol"> | </code><code class="primitive">Output</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
-</InlineSection>
-</Section>
-If the custom domain is enabled, this is the URL of the distribution with the
-custom domain.
-</Segment>
-
-### nodes
-<Segment>
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">Object</code>
-</InlineSection>
-- <p>[<code class="key">distribution</code>](#nodes-distribution)</p>
-</Section>
-The underlying [resources](/docs/components/#nodes) this component creates.
-</Segment>
-<NestedTitle id="nodes-distribution" Tag="h4" parent="nodes.">distribution</NestedTitle>
-<Segment>
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">Output</code><code class="symbol">&lt;</code>[<code class="type">Distribution</code>](https://www.pulumi.com/registry/packages/aws/api-docs/cloudfront/distribution/)<code class="symbol">&gt;</code>
-</InlineSection>
-</Section>
-The Amazon CloudFront distribution.
-</Segment>
-
-### url
-<Segment>
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">Output</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
-</InlineSection>
-</Section>
-The CloudFront URL of the distribution.
-</Segment>
-
 ## CdnArgs
 ### comment?
 <Segment>
@@ -413,6 +370,49 @@ Whether to wait for the CloudFront distribution to be deployed before
 completing the deployment of the app. This is necessary if you need to use the
 distribution URL in other resources.
 
+</Segment>
+
+## Properties
+
+### domainUrl
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">undefined</code><code class="symbol"> | </code><code class="primitive">Output</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+If the custom domain is enabled, this is the URL of the distribution with the
+custom domain.
+</Segment>
+
+### nodes
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Object</code>
+</InlineSection>
+- <p>[<code class="key">distribution</code>](#nodes-distribution)</p>
+</Section>
+The underlying [resources](/docs/components/#nodes) this component creates.
+</Segment>
+<NestedTitle id="nodes-distribution" Tag="h4" parent="nodes.">distribution</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Output</code><code class="symbol">&lt;</code>[<code class="type">Distribution</code>](https://www.pulumi.com/registry/packages/aws/api-docs/cloudfront/distribution/)<code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+The Amazon CloudFront distribution.
+</Segment>
+
+### url
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Output</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+The CloudFront URL of the distribution.
 </Segment>
 
 ## CdnDomainArgs

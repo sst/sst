@@ -69,58 +69,6 @@ new CognitoIdentityPool(name, args?, opts?)
 </Section>
 </Segment>
 
-## Properties
-
-### id
-<Segment>
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">Output</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
-</InlineSection>
-</Section>
-The Cognito identity pool ID.
-</Segment>
-
-### nodes
-<Segment>
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">Object</code>
-</InlineSection>
-- <p>[<code class="key">authenticatedRole</code>](#nodes-authenticatedrole)</p>
-- <p>[<code class="key">identityPool</code>](#nodes-identitypool)</p>
-- <p>[<code class="key">unauthenticatedRole</code>](#nodes-unauthenticatedrole)</p>
-</Section>
-The underlying [resources](/docs/components/#nodes) this component creates.
-</Segment>
-<NestedTitle id="nodes-authenticatedrole" Tag="h4" parent="nodes.">authenticatedRole</NestedTitle>
-<Segment>
-<Section type="parameters">
-<InlineSection>
-**Type** [<code class="type">Role</code>](https://www.pulumi.com/registry/packages/aws/api-docs/iam/role/)
-</InlineSection>
-</Section>
-The authenticated IAM role.
-</Segment>
-<NestedTitle id="nodes-identitypool" Tag="h4" parent="nodes.">identityPool</NestedTitle>
-<Segment>
-<Section type="parameters">
-<InlineSection>
-**Type** [<code class="type">IdentityPool</code>](https://www.pulumi.com/registry/packages/aws/api-docs/cognito/identitypool/)
-</InlineSection>
-</Section>
-The Amazon Cognito identity pool.
-</Segment>
-<NestedTitle id="nodes-unauthenticatedrole" Tag="h4" parent="nodes.">unauthenticatedRole</NestedTitle>
-<Segment>
-<Section type="parameters">
-<InlineSection>
-**Type** [<code class="type">Role</code>](https://www.pulumi.com/registry/packages/aws/api-docs/iam/role/)
-</InlineSection>
-</Section>
-The unauthenticated IAM role.
-</Segment>
-
 ## CognitoIdentityPoolArgs
 ### permissions?
 <Segment>
@@ -322,5 +270,57 @@ The Cognito user pool client ID.
 </Section>
 The Cognito user pool ID.
 
+</Segment>
+
+## Properties
+
+### id
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Output</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+The Cognito identity pool ID.
+</Segment>
+
+### nodes
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Object</code>
+</InlineSection>
+- <p>[<code class="key">authenticatedRole</code>](#nodes-authenticatedrole)</p>
+- <p>[<code class="key">identityPool</code>](#nodes-identitypool)</p>
+- <p>[<code class="key">unauthenticatedRole</code>](#nodes-unauthenticatedrole)</p>
+</Section>
+The underlying [resources](/docs/components/#nodes) this component creates.
+</Segment>
+<NestedTitle id="nodes-authenticatedrole" Tag="h4" parent="nodes.">authenticatedRole</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** [<code class="type">Role</code>](https://www.pulumi.com/registry/packages/aws/api-docs/iam/role/)
+</InlineSection>
+</Section>
+The authenticated IAM role.
+</Segment>
+<NestedTitle id="nodes-identitypool" Tag="h4" parent="nodes.">identityPool</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** [<code class="type">IdentityPool</code>](https://www.pulumi.com/registry/packages/aws/api-docs/cognito/identitypool/)
+</InlineSection>
+</Section>
+The Amazon Cognito identity pool.
+</Segment>
+<NestedTitle id="nodes-unauthenticatedrole" Tag="h4" parent="nodes.">unauthenticatedRole</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** [<code class="type">Role</code>](https://www.pulumi.com/registry/packages/aws/api-docs/iam/role/)
+</InlineSection>
+</Section>
+The unauthenticated IAM role.
 </Segment>
 </div>

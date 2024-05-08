@@ -3,9 +3,11 @@ import {
   InvokeCommand,
   InvokeCommandOutput,
 } from "@aws-sdk/client-lambda";
-import { Resource } from "./resource.js";
+import { Resource } from "../resource.js";
 
-export type IngestEvent = {
+const lambda = new LambdaClient();
+
+export interface IngestEvent {
   /**
    * The text used to generate the embedding vector.
    * At least one of `text` or `image` must be provided.
@@ -43,9 +45,9 @@ export type IngestEvent = {
    * ```
    */
   metadata: Record<string, any>;
-};
+}
 
-export type RetrieveEvent = {
+export interface RetrieveEvent {
   /**
    * The text prompt used to retrieve embeddings.
    * At least one of `text` or `image` must be provided.
@@ -81,18 +83,22 @@ export type RetrieveEvent = {
    * }
    * ```
    * This will match the embedding with metadata:
+   * ```js
    *  {
    *    type: "movie",
    *    name: "Spiderman",
    *    release: "2001",
    *  }
+   * ```
    *
    * But not the embedding with metadata:
+   * ```js
    *  {
    *    type: "book",
    *    name: "Spiderman",
    *    release: "2001",
    *  }
+   * ```
    */
   include: Record<string, any>;
   /**
@@ -110,18 +116,22 @@ export type RetrieveEvent = {
    * }
    * ```
    * This will match the embedding with metadata:
+   * ```js
    *  {
    *    type: "movie",
    *    name: "A Beautiful Mind",
    *    release: "2001",
    *  }
+   * ```
    *
    * But not the embedding with metadata:
+   * ```js
    *  {
    *    type: "book",
    *    name: "Spiderman",
    *    release: "2001",
    *  }
+   * ```
    */
   exclude?: Record<string, any>;
   /**
@@ -150,9 +160,9 @@ export type RetrieveEvent = {
    * ```
    */
   count?: number;
-};
+}
 
-export type RemoveEvent = {
+export interface RemoveEvent {
   /**
    * The metadata used to filter the removal of embeddings.
    * Only embeddings with metadata that match the provided fields will be removed.
@@ -166,16 +176,18 @@ export type RemoveEvent = {
    * }
    * ```
    * To remove embeddings for all movies:
+   * ```js
    *  {
    *   include: {
    *    type: "movie",
    *   }
    *  }
+   * ```
    */
   include: Record<string, any>;
-};
+}
 
-type RetriveResponse = {
+export interface RetrieveResponse {
   /**
    * Metadata for the event in JSON format that was provided when ingesting the embedding.
    */
@@ -184,10 +196,35 @@ type RetriveResponse = {
    * The similarity score between the prompt and the retrieved embedding.
    */
   score: number;
-};
+}
 
-const lambda = new LambdaClient();
+export interface VectorClientResponse {
+  ingest: (event: IngestEvent) => Promise<void>;
+  retrieve: (event: RetrieveEvent) => Promise<RetrieveResponse>;
+  remove: (event: RemoveEvent) => Promise<void>;
+}
 
+/**
+ * Create a client to interact with the Vector database.
+ * @example
+ * ```js
+ * import { VectorClient } from "sst";
+ * const client = VectorClient("MyVectorDB");
+ *
+ * // Ingest a text into the vector db
+ * await client.ingest({
+ *   text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+ *   metadata: { type: "movie", genre: "comedy" },
+ * });
+ *
+ * // Retrieve embeddings similar to the provided text
+ * const result = await client.retrieve({
+ *   text: "Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+ *   include: { type: "movie" },
+ *   exclude: { genre: "thriller" },
+ * });
+ * ```
+ */
 export function VectorClient<
   T extends keyof {
     // @ts-expect-error
@@ -197,7 +234,7 @@ export function VectorClient<
         : key
       : never]: Resource[key];
   },
->(name: T) {
+>(name: T): VectorClientResponse {
   return {
     ingest: async (event: IngestEvent) => {
       const ret = await lambda.send(
@@ -205,7 +242,7 @@ export function VectorClient<
           // @ts-expect-error
           FunctionName: Resource[name].ingestor,
           Payload: JSON.stringify(event),
-        }),
+        })
       );
 
       parsePayload(ret, "Failed to ingest into the vector db");
@@ -217,11 +254,11 @@ export function VectorClient<
           // @ts-expect-error
           FunctionName: Resource[name].retriever,
           Payload: JSON.stringify(event),
-        }),
+        })
       );
-      return parsePayload<RetriveResponse>(
+      return parsePayload<RetrieveResponse>(
         ret,
-        "Failed to retrieve from the vector db",
+        "Failed to retrieve from the vector db"
       );
     },
 
@@ -231,7 +268,7 @@ export function VectorClient<
           // @ts-expect-error
           FunctionName: Resource[name].remover,
           Payload: JSON.stringify(event),
-        }),
+        })
       );
       parsePayload(ret, "Failed to remove from the vector db");
     },

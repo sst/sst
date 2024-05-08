@@ -93,99 +93,6 @@ new Postgres(name, args?, opts?)
 </Section>
 </Segment>
 
-## Properties
-
-### clusterArn
-<Segment>
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">Output</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
-</InlineSection>
-</Section>
-The ARN of the RDS Cluster.
-</Segment>
-
-### database
-<Segment>
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">Output</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
-</InlineSection>
-</Section>
-The name of the database.
-</Segment>
-
-### nodes
-<Segment>
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">Object</code>
-</InlineSection>
-- <p>[<code class="key">cluster</code>](#nodes-cluster)</p>
-- <p>[<code class="key">instance</code>](#nodes-instance)</p>
-</Section>
-</Segment>
-<NestedTitle id="nodes-cluster" Tag="h4" parent="nodes.">cluster</NestedTitle>
-<Segment>
-<Section type="parameters">
-<InlineSection>
-**Type** [<code class="type">Cluster</code>](https://www.pulumi.com/registry/packages/aws/api-docs/rds/cluster/)
-</InlineSection>
-</Section>
-</Segment>
-<NestedTitle id="nodes-instance" Tag="h4" parent="nodes.">instance</NestedTitle>
-<Segment>
-<Section type="parameters">
-<InlineSection>
-**Type** [<code class="type">ClusterInstance</code>](https://www.pulumi.com/registry/packages/aws/api-docs/rds/clusterinstance/)
-</InlineSection>
-</Section>
-</Segment>
-
-### secretArn
-<Segment>
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">Output</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
-</InlineSection>
-</Section>
-The ARN of the master user secret.
-</Segment>
-
-## Links
-
-The following are accessible through the [SDK](/docs/reference/sdk/) at runtime.
-
-### clusterArn
-<Segment>
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">string</code>
-</InlineSection>
-</Section>
-The ARN of the RDS Cluster.
-</Segment>
-
-### database
-<Segment>
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">string</code>
-</InlineSection>
-</Section>
-The name of the database.
-</Segment>
-
-### secretArn
-<Segment>
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">string</code>
-</InlineSection>
-</Section>
-The ARN of the master user secret.
-</Segment>
-
 ## PostgresArgs
 ### databaseName?
 <Segment>
@@ -416,5 +323,98 @@ subnets.
 </Section>
 A list of VPC security group IDs.
 
+</Segment>
+
+## Properties
+
+### clusterArn
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Output</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+The ARN of the RDS Cluster.
+</Segment>
+
+### database
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Output</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+The name of the database.
+</Segment>
+
+### nodes
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Object</code>
+</InlineSection>
+- <p>[<code class="key">cluster</code>](#nodes-cluster)</p>
+- <p>[<code class="key">instance</code>](#nodes-instance)</p>
+</Section>
+</Segment>
+<NestedTitle id="nodes-cluster" Tag="h4" parent="nodes.">cluster</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** [<code class="type">Cluster</code>](https://www.pulumi.com/registry/packages/aws/api-docs/rds/cluster/)
+</InlineSection>
+</Section>
+</Segment>
+<NestedTitle id="nodes-instance" Tag="h4" parent="nodes.">instance</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** [<code class="type">ClusterInstance</code>](https://www.pulumi.com/registry/packages/aws/api-docs/rds/clusterinstance/)
+</InlineSection>
+</Section>
+</Segment>
+
+### secretArn
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Output</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+The ARN of the master user secret.
+</Segment>
+
+## SDK
+
+The following are accessible through the [SDK](/docs/reference/sdk/) at runtime.
+
+### clusterArn
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">string</code>
+</InlineSection>
+</Section>
+The ARN of the RDS Cluster.
+</Segment>
+
+### database
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">string</code>
+</InlineSection>
+</Section>
+The name of the database.
+</Segment>
+
+### secretArn
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">string</code>
+</InlineSection>
+</Section>
+The ARN of the master user secret.
 </Segment>
 </div>
