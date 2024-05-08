@@ -7,7 +7,6 @@ import { hashStringToPrettyString, sanitizeToPascalCase } from "../naming";
 import { RealtimeLambdaSubscriber } from "./realtime-lambda-subscriber";
 
 export interface RealtimeArgs {
-  authorizer: Input<string | FunctionArgs>;
   /**
    * The Lambda function that'll be used to authorize the client on connection.
    * @example
@@ -15,6 +14,12 @@ export interface RealtimeArgs {
    * {
    *   authorizer: "src/authorizer.handler"
    * }
+   * ```
+   */
+  authorizer: Input<string | FunctionArgs>;
+  /**
+   * [Transform](/docs/components#transform) how this subscription creates its underlying
+   * resources.
    */
   transform?: {
     /**

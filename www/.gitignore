@@ -24,3 +24,4 @@ pnpm-debug.log*
 components-doc.json
 examples-doc.json
 cli-doc.json
+sdk-doc.json

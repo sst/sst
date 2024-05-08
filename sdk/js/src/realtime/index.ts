@@ -1,3 +1,43 @@
+import type { IoTCustomAuthorizerHandler } from "aws-lambda";
+
+export interface RealtimeAuthResult {
+  /**
+   * The topics the client can subscribe to.
+   * @example
+   * For example, this subscribes to specific topics.
+   * ```js
+   * {
+   *   subscribe: ["chat/room1", "chat/room2"]
+   * }
+   * ```
+   *
+   * And to subscribe to all topics under a specific prefix.
+   * ```js
+   * {
+   *   subscribe: ["chat/#"]
+   * }
+   * ```
+   */
+  subscribe?: string[];
+  /**
+   * The topics the client can publish to.
+   * @example
+   * For example, this publishes to specific topics.
+   * ```js
+   * {
+   *   publish: ["chat/room1", "chat/room2"]
+   * }
+   * ```
+   * And to publish to all topics under a specific prefix.
+   * ```js
+   * {
+   *   publish: ["chat/#"]
+   * }
+   * ```
+   */
+  publish?: string[];
+}
+
 /**
  * Creates an authorization handler for the `Realtime` component, that validates
  * the token and grants permissions for the topics the client can subscribe and publish to.
@@ -20,12 +60,12 @@
  * ```
  */
 export function RealtimeAuthHandler(
-  input: (token: string) => Promise<{ subscribe: string[]; publish: string[] }>
-) {
-  return async (evt: any, context: any) => {
+  input: (token: string) => Promise<RealtimeAuthResult>
+): IoTCustomAuthorizerHandler {
+  return async (evt, context) => {
     const [, , , region, accountId] = context.invokedFunctionArn.split(":");
     const token = Buffer.from(
-      evt.protocolData.mqtt.password,
+      evt.protocolData.mqtt?.password ?? "",
       "base64"
     ).toString();
     const ret = await input(token);
@@ -71,7 +111,7 @@ export function RealtimeAuthHandler(
                   {
                     Action: "iot:Publish",
                     Effect: "Allow",
-                    Resource: ret.subscribe.map(
+                    Resource: ret.publish.map(
                       (t) => `arn:aws:iot:${region}:${accountId}:topic/${t}`
                     ),
                   },

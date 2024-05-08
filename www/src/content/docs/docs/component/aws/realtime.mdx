@@ -1,0 +1,331 @@
+---
+title: Realtime
+description: Reference doc for the `sst.aws.Realtime` component.
+---
+
+{/* DO NOT EDIT. AUTO-GENERATED FROM "pkg/platform/src/components/aws/realtime.ts" */}
+
+import Segment from '../../../../../../src/components/tsdoc/Segment.astro';
+import Section from '../../../../../../src/components/tsdoc/Section.astro';
+import NestedTitle from '../../../../../../src/components/tsdoc/NestedTitle.astro';
+import InlineSection from '../../../../../../src/components/tsdoc/InlineSection.astro';
+
+<div class="tsdoc">
+
+<Section type="about">
+The `Realtime` component lets you connect to the [Amazon IoT WebSocket endpoint](https://docs.aws.amazon.com/sns/latest/dg/sns-create-topic.html) in your app.
+
+#### Create a realtime endpoint
+
+```ts
+const server = new sst.aws.Realtime("MyServer", {
+  authorizer: "src/authorizer.handler"
+});
+```
+
+#### Add a subscriber
+
+```ts
+server.subscribe("src/subscriber.handler");
+```
+</Section>
+
+---
+
+## Constructor
+
+<Segment>
+<Section type="signature">
+```ts
+new Realtime(name, args, opts?)
+```
+</Section>
+
+<Section type="parameters">
+#### Parameters
+- <p><code class="key">name</code> <code class="primitive">string</code></p>
+- <p><code class="key">args</code> [<code class="type">RealtimeArgs</code>](#realtimeargs)</p>
+- <p><code class="key">opts?</code> [<code class="type">ComponentResourceOptions</code>](https://www.pulumi.com/docs/concepts/options/)</p>
+</Section>
+</Segment>
+
+## Methods
+
+### subscribe
+<Segment>
+<Section type="signature">
+```ts
+subscribe(subscriber, args?)
+```
+</Section>
+
+<Section type="parameters">
+#### Parameters
+- <p><code class="key">subscriber</code> <code class="primitive">string</code><code class="symbol"> | </code>[<code class="type">FunctionArgs</code>](/docs/component/aws/function/#functionargs)</p>
+The function that'll be notified.
+- <p><code class="key">args?</code> [<code class="type">RealtimeSubscriberArgs</code>](#realtimesubscriberargs)</p>
+Configure the subscription.
+</Section>
+
+<InlineSection>
+**Returns** <code class="primitive">Output</code><code class="symbol">&lt;</code>[<code class="type">RealtimeLambdaSubscriber</code>](/docs/component/aws/realtime-lambda-subscriber/)<code class="symbol">&gt;</code>
+</InlineSection>
+Subscribe to this Realtime server.
+
+```js
+server.subscribe("src/subscriber.handler");
+```
+
+Add a topic filter to the subscription.
+
+```js
+server.subscribe("src/subscriber.handler", {
+  filter: "chat/room1"
+});
+```
+
+Customize the subscriber function.
+
+```js
+server.subscribe({
+  handler: "src/subscriber.handler",
+  timeout: "60 seconds"
+});
+```
+</Segment>
+
+## Properties
+
+### authorizer
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Output</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+The name of the IoT authorizer.
+</Segment>
+
+### endpoint
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Output</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+The IoT endpoint.
+</Segment>
+
+### nodes
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Object</code>
+</InlineSection>
+- <p>[<code class="key">authHandler</code>](#nodes-authhandler)</p>
+- <p>[<code class="key">authorizer</code>](#nodes-authorizer)</p>
+</Section>
+The underlying [resources](/docs/components/#nodes) this component creates.
+</Segment>
+<NestedTitle id="nodes-authhandler" Tag="h4" parent="nodes.">authHandler</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Output</code><code class="symbol">&lt;</code>[<code class="type">Function</code>](/docs/component/aws/function/)<code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+The IoT authorizer function resource.
+</Segment>
+<NestedTitle id="nodes-authorizer" Tag="h4" parent="nodes.">authorizer</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** [<code class="type">Authorizer</code>](https://www.pulumi.com/registry/packages/aws/api-docs/iot/authorizer/)
+</InlineSection>
+</Section>
+The IoT authorizer resource.
+</Segment>
+
+## RealtimeArgs
+### authorizer
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol"> | </code>[<code class="type">FunctionArgs</code>](/docs/component/aws/function/#functionargs)<code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+The Lambda function that'll be used to authorize the client on connection.
+
+```js
+{
+  authorizer: "src/authorizer.handler"
+}
+```
+</Segment>
+### transform?
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Object</code>
+</InlineSection>
+- <p>[<code class="key">authorizer?</code>](#transform-authorizer)</p>
+</Section>
+[Transform](/docs/components#transform) how this subscription creates its underlying
+resources.
+
+</Segment>
+<NestedTitle id="transform-authorizer" Tag="h4" parent="transform.">authorizer?</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** [<code class="type">AuthorizerArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/iot/authorizer/#inputs)<code class="symbol"> | </code><code class="symbol">(</code><code class="primitive">args</code><code class="symbol">: </code>[<code class="type">AuthorizerArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/iot/authorizer/#inputs)<code class="symbol"> => </code><code class="primitive">void</code><code class="symbol">)</code>
+</InlineSection>
+</Section>
+Transform the IoT authorizer resource.
+
+</Segment>
+
+## RealtimeSubscriberArgs
+### filter?
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+Filter the topics that'll be processed by the subscriber,
+
+:::tip
+Learn more about [topic filters](https://docs.aws.amazon.com/iot/latest/developerguide/topics.html#topicfilters).
+:::
+
+For example, this subscribes to a specific topic.
+```js
+{
+  filter: "chat/room1"
+}
+```
+
+And to subscribe to all topics under a specific prefix.
+```js
+{
+  filter: "chat/#"
+}
+```
+</Segment>
+### transform?
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Object</code>
+</InlineSection>
+- <p>[<code class="key">topicRule?</code>](#transform-topicrule)</p>
+</Section>
+[Transform](/docs/components#transform) how this subscription creates its underlying
+resources.
+
+</Segment>
+<NestedTitle id="transform-topicrule" Tag="h4" parent="transform.">topicRule?</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** [<code class="type">TopicRuleArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/iot/topicrule/#inputs)<code class="symbol"> | </code><code class="symbol">(</code><code class="primitive">args</code><code class="symbol">: </code>[<code class="type">TopicRuleArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/iot/topicrule/#inputs)<code class="symbol"> => </code><code class="primitive">void</code><code class="symbol">)</code>
+</InlineSection>
+</Section>
+Transform the IoT topic rule resource.
+
+</Segment>
+
+## SDK
+
+### RealtimeAuthHandler
+<Segment>
+<Section type="signature">
+```ts
+RealtimeAuthHandler(input)
+```
+</Section>
+
+<Section type="parameters">
+#### Parameters
+- <p><code class="key">input</code> <code class="primitive">(token: <code class="primitive">string</code>) => <code class="primitive">Promise</code><code class="symbol">&lt;</code>[<code class="type">RealtimeAuthResult</code>](#realtimeauthresult)<code class="symbol">&gt;</code></code></p>
+</Section>
+
+<InlineSection>
+**Returns** [<code class="type">IoTCustomAuthorizerHandler</code>](https://github.com/DefinitelyTyped/DefinitelyTyped/blob/master/types/aws-lambda/trigger/iot-authorizer.d.ts)
+</InlineSection>
+Creates an authorization handler for the `Realtime` component, that validates
+the token and grants permissions for the topics the client can subscribe and publish to.
+
+```js
+import { RealtimeAuthHandler } from "sst";
+
+export const handler = RealtimeAuthHandler(async (token) => {
+  // Validate the token
+  console.log(token);
+
+  // Return the topics to subscribe and publish
+  return {
+    subscribe: ["chat/room1"],
+    publish: ["chat/room1"],
+  };
+});
+
+```
+</Segment>
+### RealtimeAuthResult
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Object</code>
+</InlineSection>
+- <p>[<code class="key">publish?</code>](#realtimeauthresult-publish)</p>
+- <p>[<code class="key">subscribe?</code>](#realtimeauthresult-subscribe)</p>
+</Section>
+</Segment>
+<NestedTitle id="realtimeauthresult-publish" Tag="h4" parent="RealtimeAuthResult.">publish?</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">string</code><code class="symbol">[]</code>
+</InlineSection>
+</Section>
+The topics the client can publish to.
+
+For example, this publishes to specific topics.
+```js
+{
+  publish: ["chat/room1", "chat/room2"]
+}
+```
+And to publish to all topics under a specific prefix.
+```js
+{
+  publish: ["chat/#"]
+}
+```
+</Segment>
+<NestedTitle id="realtimeauthresult-subscribe" Tag="h4" parent="RealtimeAuthResult.">subscribe?</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">string</code><code class="symbol">[]</code>
+</InlineSection>
+</Section>
+The topics the client can subscribe to.
+
+For example, this subscribes to specific topics.
+```js
+{
+  subscribe: ["chat/room1", "chat/room2"]
+}
+```
+
+And to subscribe to all topics under a specific prefix.
+```js
+{
+  subscribe: ["chat/#"]
+}
+```
+</Segment>
+</div>

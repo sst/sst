@@ -57,6 +57,7 @@ const sidebar = [
       { label: "Router", link: "/docs/component/aws/router/" },
       { label: "Cluster", link: "/docs/component/aws/cluster/" },
       { label: "Dynamo", link: "/docs/component/aws/dynamo/" },
+      { label: "Realtime", link: "/docs/component/aws/realtime/" },
       { label: "SnsTopic", link: "/docs/component/aws/sns-topic/" },
       { label: "Function", link: "/docs/component/aws/function/" },
       { label: "AppSync", link: "/docs/component/aws/app-sync/" },
@@ -160,6 +161,10 @@ const sidebar = [
       {
         label: "DynamoLambdaSubscriber",
         link: "/docs/component/aws/dynamo-lambda-subscriber/",
+      },
+      {
+        label: "RealtimeLambdaSubscriber",
+        link: "/docs/component/aws/realtime-lambda-subscriber/",
       },
       {
         label: "SnsTopicLambdaSubscriber",
