@@ -44,7 +44,7 @@ export interface RealtimeAuthResult {
  *
  * @example
  * ```js
- * import { RealtimeAuthHandler } from "sst";
+ * import { RealtimeAuthHandler, Resource } from "sst";
  *
  * export const handler = RealtimeAuthHandler(async (token) => {
  *   // Validate the token
@@ -52,11 +52,10 @@ export interface RealtimeAuthResult {
  *
  *   // Return the topics to subscribe and publish
  *   return {
- *     subscribe: ["chat/room1"],
- *     publish: ["chat/room1"],
+ *     subscribe: [`${Resource.App.name}/${Resource.App.stage}/chat/room1`],
+ *     publish: [`${Resource.App.name}/${Resource.App.stage}/chat/room1`],
  *   };
  * });
- *
  * ```
  */
 export function RealtimeAuthHandler(

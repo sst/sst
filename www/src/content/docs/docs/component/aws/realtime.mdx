@@ -13,9 +13,19 @@ import InlineSection from '../../../../../../src/components/tsdoc/InlineSection.
 <div class="tsdoc">
 
 <Section type="about">
-The `Realtime` component lets you connect to the [Amazon IoT WebSocket endpoint](https://docs.aws.amazon.com/sns/latest/dg/sns-create-topic.html) in your app.
+The `Realtime` component lets you publish and subscribe to messages in realtime.
 
-#### Create a realtime endpoint
+- It offers a topic-based messaging network using [AWS IoT](https://docs.aws.amazon.com/iot/latest/developerguide/what-is-aws-iot.html).
+- Lets you publish and subscribe to messages using WebSocket in the browser and from your server.
+- Provides an [SDK](#sdk) to authorize clients, and grants permissions to subscribe and publish to topics.
+
+:::note
+There is only 1 IoT endpoint per region per AWS account. Messages from all apps and
+stages are published to the same IoT endpoint. Make sure to prefix the topics by the
+app and stage name.
+:::
+
+#### Use realtime endpoint in your app
 
 ```ts
 const server = new sst.aws.Realtime("MyServer", {
@@ -23,10 +33,58 @@ const server = new sst.aws.Realtime("MyServer", {
 });
 ```
 
-#### Add a subscriber
+Once set up, you can use the [`RealtimeAuthHandler`](#realtimeauthhandler) SDK to
+authorize the client.
+
+```js title="src/authorizer.ts"
+export const handler = RealtimeAuthHandler(async (token) => {
+  // Validate the token
+  console.log(token);
+
+  // Return the topics to subscribe and publish
+  return {
+    subscribe: [`${Resource.App.name}/${Resource.App.stage}/chat/room1`],
+    publish: [`${Resource.App.name}/${Resource.App.stage}/chat/room1`],
+  };
+});
+```
+
+#### Publish and receive messages in your frontend
 
 ```ts
-server.subscribe("src/subscriber.handler");
+const client = new mqtt.MqttClient();
+const connection = client.new_connection(config);
+
+// Subscribe messages
+connection.on("message", (topic, payload) => {
+  // handle the message
+});
+
+// Publish messages
+connection.publish(topic, payload, mqtt.QoS.AtLeastOnce);
+```
+
+#### Subscribe messages in your backend
+
+```ts
+server.subscribe("src/subscriber.handler", {
+  filter: `${$app.name}/${$app.stage}/chat/room1`
+});
+```
+
+#### Publish message from your backend
+
+```ts
+import { IoTDataPlaneClient, PublishCommand } from "@aws-sdk/client-iot-data-plane";
+const data = new IoTDataPlaneClient();
+await data.send(
+  new PublishCommand({
+    payload: Buffer.from(
+      JSON.stringify({ message: "Hello world" })
+    ),
+    topic: `${Resource.App.name}/${Resource.App.stage}/chat/room1`,
+  })
+);
 ```
 </Section>
 
@@ -55,7 +113,7 @@ new Realtime(name, args, opts?)
 <Segment>
 <Section type="signature">
 ```ts
-subscribe(subscriber, args?)
+subscribe(subscriber, args)
 ```
 </Section>
 
@@ -63,7 +121,7 @@ subscribe(subscriber, args?)
 #### Parameters
 - <p><code class="key">subscriber</code> <code class="primitive">string</code><code class="symbol"> | </code>[<code class="type">FunctionArgs</code>](/docs/component/aws/function/#functionargs)</p>
 The function that'll be notified.
-- <p><code class="key">args?</code> [<code class="type">RealtimeSubscriberArgs</code>](#realtimesubscriberargs)</p>
+- <p><code class="key">args</code> [<code class="type">RealtimeSubscriberArgs</code>](#realtimesubscriberargs)</p>
 Configure the subscription.
 </Section>
 
@@ -73,24 +131,23 @@ Configure the subscription.
 Subscribe to this Realtime server.
 
 ```js
-server.subscribe("src/subscriber.handler");
-```
-
-Add a topic filter to the subscription.
-
-```js
 server.subscribe("src/subscriber.handler", {
-  filter: "chat/room1"
+  filter: `${$app.name}/${$app.stage}/chat/room1`
 });
 ```
 
 Customize the subscriber function.
 
 ```js
-server.subscribe({
-  handler: "src/subscriber.handler",
-  timeout: "60 seconds"
-});
+server.subscribe(
+  {
+    handler: "src/subscriber.handler",
+    timeout: "60 seconds"
+  },
+  {
+    filter: `${$app.name}/${$app.stage}/chat/room1`
+  }
+);
 ```
 </Segment>
 
@@ -186,30 +243,30 @@ Transform the IoT authorizer resource.
 </Segment>
 
 ## RealtimeSubscriberArgs
-### filter?
+### filter
 <Segment>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
-Filter the topics that'll be processed by the subscriber,
+Filter the topics that'll be processed by the subscriber.
 
 :::tip
 Learn more about [topic filters](https://docs.aws.amazon.com/iot/latest/developerguide/topics.html#topicfilters).
 :::
 
-For example, this subscribes to a specific topic.
+Subscribe to a specific topic.
 ```js
 {
-  filter: "chat/room1"
+  filter: `${$app.name}/${$app.stage}/chat/room1`
 }
 ```
 
-And to subscribe to all topics under a specific prefix.
+Subscribe to all topics under a prefix.
 ```js
 {
-  filter: "chat/#"
+  filter: `${$app.name}/${$app.stage}/chat/#`
 }
 ```
 </Segment>
@@ -258,7 +315,7 @@ Creates an authorization handler for the `Realtime` component, that validates
 the token and grants permissions for the topics the client can subscribe and publish to.
 
 ```js
-import { RealtimeAuthHandler } from "sst";
+import { RealtimeAuthHandler, Resource } from "sst";
 
 export const handler = RealtimeAuthHandler(async (token) => {
   // Validate the token
@@ -266,11 +323,10 @@ export const handler = RealtimeAuthHandler(async (token) => {
 
   // Return the topics to subscribe and publish
   return {
-    subscribe: ["chat/room1"],
-    publish: ["chat/room1"],
+    subscribe: [`${Resource.App.name}/${Resource.App.stage}/chat/room1`],
+    publish: [`${Resource.App.name}/${Resource.App.stage}/chat/room1`],
   };
 });
-
 ```
 </Segment>
 ### RealtimeAuthResult

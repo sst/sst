@@ -85,30 +85,30 @@ The IoT topic rule.
 </Segment>
 
 ## Args
-### filter?
+### filter
 <Segment>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
-Filter the topics that'll be processed by the subscriber,
+Filter the topics that'll be processed by the subscriber.
 
 :::tip
 Learn more about [topic filters](https://docs.aws.amazon.com/iot/latest/developerguide/topics.html#topicfilters).
 :::
 
-For example, this subscribes to a specific topic.
+Subscribe to a specific topic.
 ```js
 {
-  filter: "chat/room1"
+  filter: `${$app.name}/${$app.stage}/chat/room1`
 }
 ```
 
-And to subscribe to all topics under a specific prefix.
+Subscribe to all topics under a prefix.
 ```js
 {
-  filter: "chat/#"
+  filter: `${$app.name}/${$app.stage}/chat/#`
 }
 ```
 </Segment>

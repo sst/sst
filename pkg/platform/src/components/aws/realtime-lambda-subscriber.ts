@@ -46,7 +46,7 @@ export class RealtimeLambdaSubscriber extends Component {
 
     const self = this;
     const iot = output(args.iot);
-    const filter = normalizeFilter();
+    const filter = output(args.filter);
     const fn = createFunction();
     const rule = createRule();
     const permission = createPermission();
@@ -54,10 +54,6 @@ export class RealtimeLambdaSubscriber extends Component {
     this.fn = fn;
     this.permission = permission;
     this.rule = rule;
-
-    function normalizeFilter() {
-      return output(args.filter ?? "#");
-    }
 
     function createFunction() {
       return Function.fromDefinition(

@@ -31,28 +31,28 @@ export interface RealtimeArgs {
 
 export interface RealtimeSubscriberArgs {
   /**
-   * Filter the topics that'll be processed by the subscriber,
+   * Filter the topics that'll be processed by the subscriber.
    *
    * :::tip
    * Learn more about [topic filters](https://docs.aws.amazon.com/iot/latest/developerguide/topics.html#topicfilters).
    * :::
    *
    * @example
-   * For example, this subscribes to a specific topic.
+   * Subscribe to a specific topic.
    * ```js
    * {
-   *   filter: "chat/room1"
+   *   filter: `${$app.name}/${$app.stage}/chat/room1`
    * }
    * ```
    *
-   * And to subscribe to all topics under a specific prefix.
+   * Subscribe to all topics under a prefix.
    * ```js
    * {
-   *   filter: "chat/#"
+   *   filter: `${$app.name}/${$app.stage}/chat/#`
    * }
    * ```
    */
-  filter?: Input<string>;
+  filter: Input<string>;
   /**
    * [Transform](/docs/components#transform) how this subscription creates its underlying
    * resources.
@@ -66,11 +66,21 @@ export interface RealtimeSubscriberArgs {
 }
 
 /**
- * The `Realtime` component lets you connect to the [Amazon IoT WebSocket endpoint](https://docs.aws.amazon.com/sns/latest/dg/sns-create-topic.html) in your app.
+ * The `Realtime` component lets you publish and subscribe to messages in realtime.
+ *
+ * - It offers a topic-based messaging network using [AWS IoT](https://docs.aws.amazon.com/iot/latest/developerguide/what-is-aws-iot.html).
+ * - Lets you publish and subscribe to messages using WebSocket in the browser and from your server.
+ * - Provides an [SDK](#sdk) to authorize clients, and grants permissions to subscribe and publish to topics.
+ *
+ * :::note
+ * There is only 1 IoT endpoint per region per AWS account. Messages from all apps and
+ * stages are published to the same IoT endpoint. Make sure to prefix the topics by the
+ * app and stage name.
+ * :::
  *
  * @example
  *
- * #### Create a realtime endpoint
+ * #### Use realtime endpoint in your app
  *
  * ```ts
  * const server = new sst.aws.Realtime("MyServer", {
@@ -78,10 +88,45 @@ export interface RealtimeSubscriberArgs {
  * });
  * ```
  *
- * #### Add a subscriber
+ * Use the [`RealtimeAuthHandler`](#realtimeauthhandler) function in the SDK to authorize
+ * the client, and grant permissions to subscribe and publish to topics.
+ *
+ * #### Publish and receive messages in your frontend
  *
  * ```ts
- * server.subscribe("src/subscriber.handler");
+ * const client = new mqtt.MqttClient();
+ * const connection = client.new_connection(config);
+ *
+ * // Subscribe messages
+ * connection.on("message", (topic, payload) => {
+ *   // handle the message
+ * });
+ *
+ * // Publish messages
+ * connection.publish(topic, payload, mqtt.QoS.AtLeastOnce);
+ * ```
+ *
+ * #### Subscribe messages in your backend
+ *
+ * ```ts
+ * server.subscribe("src/subscriber.handler", {
+ *   filter: `${$app.name}/${$app.stage}/chat/room1`
+ * });
+ * ```
+ *
+ * #### Publish message from your backend
+ *
+ * ```ts
+ * import { IoTDataPlaneClient, PublishCommand } from "@aws-sdk/client-iot-data-plane";
+ * const data = new IoTDataPlaneClient();
+ * await data.send(
+ *   new PublishCommand({
+ *     payload: Buffer.from(
+ *       JSON.stringify({ message: "Hello world" })
+ *     ),
+ *     topic: `${Resource.App.name}/${Resource.App.stage}/chat/room1`,
+ *   })
+ * );
  * ```
  */
 export class Realtime extends Component {
@@ -192,29 +237,28 @@ export class Realtime extends Component {
    * @example
    *
    * ```js
-   * server.subscribe("src/subscriber.handler");
-   * ```
-   *
-   * Add a topic filter to the subscription.
-   *
-   * ```js
    * server.subscribe("src/subscriber.handler", {
-   *   filter: "chat/room1"
+   *   filter: `${$app.name}/${$app.stage}/chat/room1`
    * });
    * ```
    *
    * Customize the subscriber function.
    *
    * ```js
-   * server.subscribe({
-   *   handler: "src/subscriber.handler",
-   *   timeout: "60 seconds"
-   * });
+   * server.subscribe(
+   *   {
+   *     handler: "src/subscriber.handler",
+   *     timeout: "60 seconds"
+   *   },
+   *   {
+   *     filter: `${$app.name}/${$app.stage}/chat/room1`
+   *   }
+   * );
    * ```
    */
   public subscribe(
     subscriber: string | FunctionArgs,
-    args: RealtimeSubscriberArgs = {},
+    args: RealtimeSubscriberArgs,
   ) {
     return all([subscriber, args.filter]).apply(([subscriber, filter]) => {
       const prefix = sanitizeToPascalCase(this.constructorName);
