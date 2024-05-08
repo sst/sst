@@ -466,8 +466,8 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 					continue
 				}
 				defer typesFile.Close()
-				typesFile.WriteString(`/* tslint:disable */`)
-				typesFile.WriteString(`/* eslint-disable */`)
+				typesFile.WriteString(`/* tslint:disable */` + "\n")
+				typesFile.WriteString(`/* eslint-disable */` + "\n")
 				typesFile.WriteString(`import "sst"` + "\n")
 				typesFile.WriteString(`declare module "sst" {` + "\n")
 				typesFile.WriteString("  export interface Resource " + inferTypes(links, "  ") + "\n")
