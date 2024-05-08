@@ -6,16 +6,9 @@ export default $config({
       name: "aws-solid-start",
       removal: input?.stage === "production" ? "retain" : "remove",
       home: "aws",
-      providers: {
-        aws: {
-          region: "us-west-1",
-        },
-      },
     };
   },
   async run() {
-    new sst.aws.SolidStart("MyApp", {
-      buildCommand: "bun run build",
-    });
+    new sst.aws.SolidStart("MyWeb");
   },
 });

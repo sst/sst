@@ -77,6 +77,22 @@ func CmdInit(cli *Cli) error {
 		template = "astro"
 		break
 
+	case slices.ContainsFunc(hints, func(s string) bool { return strings.HasPrefix(s, "app.config") }):
+		fmt.Println("  SolidStart detected. This will...")
+		fmt.Println("   - create an sst.config.ts")
+		fmt.Println("   - modify the app.config.ts")
+		fmt.Println("   - add the sst sdk to package.json")
+		template = "solid-start"
+		break
+
+	case slices.ContainsFunc(hints, func(s string) bool { return strings.HasPrefix(s, "nuxt.config") }):
+		fmt.Println("  Nuxt detected. This will...")
+		fmt.Println("   - create an sst.config.ts")
+		fmt.Println("   - modify the nuxt.config.ts")
+		fmt.Println("   - add the sst sdk to package.json")
+		template = "nuxt"
+		break
+
 	case slices.ContainsFunc(hints, func(s string) bool { return strings.HasPrefix(s, "svelte.config") }):
 		fmt.Println("  SvelteKit detected. This will...")
 		fmt.Println("   - create an sst.config.ts")

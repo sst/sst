@@ -177,7 +177,10 @@ func Create(templateName string, home string) error {
 				return err
 			}
 			defer file.Close()
-			file.WriteString(packed)
+			_, err = file.WriteString(packed)
+			if err != nil {
+				return err
+			}
 
 			break
 

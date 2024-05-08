@@ -2,18 +2,19 @@
   "name": "example-hackernews",
   "type": "module",
   "scripts": {
-    "dev": "vinxi dev",
     "build": "vinxi build",
+    "dev": "vinxi dev",
     "start": "vinxi start"
   },
   "dependencies": {
     "@solidjs/router": "^0.13.3",
     "@solidjs/start": "^1.0.0-rc.0",
     "solid-js": "^1.8.17",
+    "sst": "ion",
     "vinxi": "^0.3.11"
   },
   "engines": {
-    "node": ">=18"
+    "node": "\u003e=18"
   },
   "overrides": {
     "nitropack": "npm:nitropack-nightly@2.10.0-28585081.346a4950"

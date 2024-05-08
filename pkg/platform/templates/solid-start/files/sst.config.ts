@@ -3,12 +3,12 @@
 export default $config({
   app(input) {
     return {
-      name: "aws-nuxt",
+      name: "{{.App}}",
       removal: input?.stage === "production" ? "retain" : "remove",
-      home: "aws",
+      home: "{{.Home}}",
     };
   },
   async run() {
-    new sst.aws.SolidStart("MyWeb");
+    new sst.{{.Home}}.SolidStart("MyWeb");
   },
 });
