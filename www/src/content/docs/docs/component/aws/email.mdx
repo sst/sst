@@ -16,43 +16,80 @@ import InlineSection from '../../../../../../src/components/tsdoc/InlineSection.
 The `Email` component lets you send emails in your app.
 It uses [Amazon Simple Email Service](https://aws.amazon.com/ses/).
 
-You can enable sending from an email address or all email addresses in a domain.
+You can configure it to send emails from a specific email address or from any email addresses
+in a domain.
+
+:::tip
+New AWS SES accounts are in _sandbox mode_ and need to [request production access](https://docs.aws.amazon.com/ses/latest/dg/request-production-access.html).
+:::
+
+By default, new AWS SES accounts are in the _sandbox mode_ and can only send
+email to verified email addresses and domains. It also limits your account has to a sending
+quota. To remove these restrictions, you need to [request production access](https://docs.aws.amazon.com/ses/latest/dg/request-production-access.html).
 
 #### Sending from an email address
 
 For using an email address as the sender, you need to verify the email address.
-When you deploy your app, you will receive an email from AWS SES to verify the
-email address. You need to click the link in the email to verify.
+
+```ts
+const email = new sst.aws.Email("MyEmail", {
+  sender: "spongebob@example.com",
+});
+```
+
+#### Sending from a domain
+
+When you use a domain as the sender, you'll need to verify that you own the domain.
 
 ```ts
 new sst.aws.Email("MyEmail", {
-  sender: "john.smith@gmail.com",
+  sender: "example.com"
 });
 ```
 
-#### Sending from all email addresses in a domain
-
-When you use a domain as the sender, you don't need to verify individual email
-addresses in the domain. Once you verify the domain, you can send emails from
-**all email addresses in the domain**.
-
-To verify the domain, you need to add the verification records to your domain DNS.
-The component will create the DNS records for you.
-
-In addition, the component will also create a DMARC record for the domain with the
-default value: `v=DMARC1; p=none;`.
+#### Configuring DMARC
 
 ```ts
-new sst.aws.Email("MyEmailDomain", {
-  sender: "domain.com",
+new sst.aws.Email("MyEmail", {
+  sender: "example.com",
+  dmarc: "v=DMARC1; p=quarantine; adkim=s; aspf=s;"
 });
 ```
 
-:::note
-By default, your AWS SES accounts is in the Amazon SES sandbox. You can only send
-email to verified email addresses and domains. And your account has a limited sending
-quota. To remove these restrictions, you need to [request production access](https://docs.aws.amazon.com/ses/latest/dg/request-production-access.html).
-:::
+#### Link to a resource
+
+You can link it to a function or your Next.js app to send emails.
+
+```ts {3}
+const api = new sst.aws.Function("MyApi", {
+  handler: "sender.handler",
+  link: [email]
+});
+```
+
+Now in your function you can use the AWS SES SDK to send emails.
+
+```ts title="sender.ts" {1, 8}
+import { Resource } from "sst";
+import { SESv2Client, SendEmailCommand } from "@aws-sdk/client-sesv2";
+
+const client = new SESv2Client();
+
+await client.send(
+  new SendEmailCommand({
+    FromEmailAddress: Resource.MyEmail.sender,
+    Destination: {
+      ToAddresses: ["patrick@example.com"]
+    },
+    Content: {
+      Simple: {
+        Subject: { Data: "Hello World!" },
+        Body: { Text: { Data: "Sent from my SST app." } }
+      }
+    }
+  })
+);
+```
 </Section>
 
 ---
@@ -103,7 +140,7 @@ The Amazon SES identity.
 **Type** <code class="primitive">Output</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
-The sender email address or domain.
+The sender email address or domain name.
 </Segment>
 
 ## Links
@@ -117,7 +154,7 @@ The following are accessible through the [SDK](/docs/reference/sdk/) at runtime.
 **Type** <code class="primitive">string</code>
 </InlineSection>
 </Section>
-The sender email address or domain.
+The sender email address or domain name.
 </Segment>
 
 ## EmailArgs
@@ -132,8 +169,8 @@ The sender email address or domain.
 <InlineSection>
 **Default** <code class="primitive">"v=DMARC1; p=none;"</code>
 </InlineSection>
-The DMARC policy for the domain. SST will create a DNS record with the DMARC policy.
-You will get an error if you specify this for email address senders.
+The DMARC policy for the domain. This'll create a DNS record with the given DMARC policy.
+Only specify this if you are using a domain name as the `sender`.
 
 ```js
 {
@@ -152,9 +189,8 @@ You will get an error if you specify this for email address senders.
 <InlineSection>
 **Default** <code class="primitive">sst.aws.dns</code>
 </InlineSection>
-The DNS adapter you want to use for managing DNS records. You should only
-specify this for domain senders. You will get an error if you specify this
-for email address senders.
+The DNS adapter you want to use for managing DNS records. Only specify this if you
+are using a domain name as the `sender`.
 
 :::note
 If `dns` is set to `false`, you have to add the DNS records manually to verify
@@ -186,22 +222,45 @@ Domain is hosted on Cloudflare.
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
-The email address or domain that you want to send email from.
+The email address or domain name that you want to send emails from.
 
-Using an email address as the sender
+:::note
+You'll need to verify the email address or domain you are using.
+:::
+
+Using an email address as the sender. You'll need to verify the email address.
+When you deploy your app, you will receive an email from AWS SES with a link to verify the
+email address.
 
 ```ts
-new sst.aws.Email("MyEmail", {
-  sender: "john.smith@gmail.com",
-});
+{
+  sender: "john.smith@gmail.com"
+}
 ```
 
-Using a domain as the sender
+Using a domain name as the sender. You'll need to verify that you own the domain.
+Once you verified, you can send emails from any email addresses in the domain.
+
+:::tip
+SST can automatically verify the domain for the `dns` adapter that's specified.
+:::
+
+To verify the domain, you need to add the verification records to your domain's DNS.
+This can be done automatically for the supported `dns` adapters.
 
 ```ts
-new sst.aws.Email("MyEmailDomain", {
-  sender: "domain.com",
-});
+{
+  sender: "example.com"
+}
+```
+
+If the domain is hosted on Cloudflare.
+
+```ts
+{
+  sender: "example.com",
+  dns: sst.cloudflare.dns()
+}
 ```
 </Segment>
 ### transform?

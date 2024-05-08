@@ -1,10 +1,7 @@
 // This is a custom Lambda URL handler which imports the Remix server
 // build and performs the Remix server rendering.
 
-import {
-  createRequestHandler as createNodeRequestHandler,
-  readableStreamToString,
-} from "@remix-run/node";
+import { createRequestHandler as createNodeRequestHandler } from "@remix-run/node";
 
 /**
  * Common binary MIME types
@@ -103,52 +100,38 @@ function convertApigRequestToNode(event) {
   });
 }
 
-async function convertNodeResponseToApig(nodeResponse) {
-  const contentType = nodeResponse.headers.get("Content-Type");
-  const isBase64Encoded = isBinaryType(contentType);
-
-  // Build cookies
-  // note: AWS API Gateway will send back set-cookies outside of response headers.
-  const cookies = [];
-  for (let [key, values] of Object.entries(nodeResponse.headers.raw())) {
-    if (key.toLowerCase() === "set-cookie") {
-      for (let value of values) {
-        cookies.push(value);
-      }
-    }
-  }
-
-  if (cookies.length) {
-    nodeResponse.headers.delete("Set-Cookie");
-  }
-
-  // Build body
-  let body;
-  if (nodeResponse.body) {
-    if (isBase64Encoded) {
-      body = await readableStreamToString(nodeResponse.body, "base64");
-    } else {
-      body = await nodeResponse.text();
-    }
-  }
-
-  return {
-    statusCode: nodeResponse.status,
-    headers: Object.fromEntries(nodeResponse.headers.entries()),
-    cookies,
-    body,
-    isBase64Encoded,
-  };
-}
-
 const createApigHandler = (build) => {
   const requestHandler = createNodeRequestHandler(build, process.env.NODE_ENV);
 
-  return async (event) => {
+  return awslambda.streamifyResponse(async (event, responseStream) => {
     const request = convertApigRequestToNode(event);
     const response = await requestHandler(request);
-    return convertNodeResponseToApig(response);
-  };
+    const httpResponseMetadata = {
+      statusCode: response.status,
+      headers: {
+        ...Object.fromEntries(response.headers.entries()),
+        "Transfer-Encoding": "chunked",
+      },
+    };
+    if (response.body) {
+      const reader = response.body;
+      const writer = awslambda.HttpResponseStream.from(
+        responseStream,
+        httpResponseMetadata,
+      );
+      await streamToNodeStream(reader.getReader(), responseStream);
+      writer.end();
+    }
+  });
+};
+
+const streamToNodeStream = async (reader, writer) => {
+  let readResult = await reader.read();
+  while (!readResult.done) {
+    writer.write(readResult.value);
+    readResult = await reader.read();
+  }
+  writer.end();
 };
 
 export const handler = createApigHandler(remixServerBuild);

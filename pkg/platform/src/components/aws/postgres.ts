@@ -116,7 +116,7 @@ export interface PostgresArgs {
    * }
    * ```
    *
-   * Or create a new `Vpc` component.
+   * Or create a `Vpc` component.
    *
    * ```js
    * const myVpc = new sst.aws.Vpc("MyVpc");

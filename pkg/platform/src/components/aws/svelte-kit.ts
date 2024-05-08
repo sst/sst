@@ -311,7 +311,7 @@ export interface SvelteKitArgs extends SsrSiteArgs {
  * You can use the [SDK](/docs/reference/sdk/) to access the linked resources
  * in your SvelteKit app.
  *
- * ```ts title="app/root.tsx"
+ * ```ts title="src/routes/+page.server.ts"
  * import { Resource } from "sst";
  *
  * console.log(Resource.MyBucket.name);
@@ -535,7 +535,7 @@ export class SvelteKit extends Component implements Link.Linkable {
   public get nodes() {
     return {
       /**
-       * The AWS Lambda server function that renders the site.
+       * The AWS Lambda server function that renders the app.
        */
       server: this.server,
       /**

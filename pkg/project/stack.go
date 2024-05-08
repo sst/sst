@@ -731,8 +731,11 @@ func decrypt(input interface{}) interface{} {
 	case map[string]interface{}:
 		if cast["plaintext"] != nil {
 			var parsed any
-			json.Unmarshal([]byte(cast["plaintext"].(string)), &parsed)
-			return parsed
+			str, ok := cast["plaintext"].(string)
+			if ok {
+				json.Unmarshal([]byte(str), &parsed)
+				return parsed
+			}
 		}
 		for key, value := range cast {
 			cast[key] = decrypt(value)

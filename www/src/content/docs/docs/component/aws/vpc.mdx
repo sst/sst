@@ -13,21 +13,26 @@ import InlineSection from '../../../../../../src/components/tsdoc/InlineSection.
 <div class="tsdoc">
 
 <Section type="about">
-The `Vpc` component lets you add a VPC to your app. It uses [Amazon VPC](https://docs.aws.amazon.com/vpc/).
+The `Vpc` component lets you add a VPC to your app. It uses [Amazon VPC](https://docs.aws.amazon.com/vpc/). This is useful for services like RDS and Fargate that need to be hosted inside
+a VPC.
 
-By default, it creates a VPC with 2 Availability Zones. The following resources are created within the VPC:
-- A public subnet in each availability zone.
-- A private subnet in each availability zone.
-- An Internet Gateway. All traffic from the public subnets is routed to the Internet Gateway.
-- A NAT Gateway in each availability zone. All traffic from the private subnets is routed to the NAT Gateway in the same availability zone.
-- A Security Group.
+This creates a VPC with 2 Availability Zones by default. It also created The following
+resources:
+5. A security group.
+1. A public subnet in each AZ.
+2. A private subnet in each AZ.
+3. An Internet Gateway, all the traffic from the public subnets are routed through it.
+4. A NAT Gateway in each AZ. All the traffic from the private subnets are routed to the
+   NAT Gateway in the same AZ.
 
-:::caution
-NAT Gateways are billed per hour and per gigabyte of data processed. By default,
-this component creates a NAT Gateway in each availability zone. Make sure to review
-the [pricing](https://aws.amazon.com/vpc/pricing/) and adjust the number of availability
-zones accordingly.
+:::note
+By default, this creates two NAT Gateways, one in each AZ. And it roughly costs $33 per
+NAT Gateway per month.
 :::
+
+NAT Gateways are billed per hour and per gigabyte of data processed. By default,
+this creates a NAT Gateway in each AZ. And this would be roughly $33 per NAT
+Gateway per month. Make sure to [review the pricing](https://aws.amazon.com/vpc/pricing/).
 
 #### Create a VPC
 
@@ -35,7 +40,7 @@ zones accordingly.
 new sst.aws.Vpc("MyVPC");
 ```
 
-#### Create a VPC with 3 Availability Zones
+#### Create it with 3 Availability Zones
 
 ```ts
 new sst.aws.Vpc("MyVPC", {
@@ -217,11 +222,12 @@ A list of VPC security group IDs.
 <InlineSection>
 **Default** <code class="primitive">2</code>
 </InlineSection>
-Number of Availability Zones for the VPC.
+Number of Availability Zones or AZs for the VPC. By default, it creates a VPC with 2
+AZs since services like RDS and Fargate need at least 2 AZs.
 
 ```ts
 {
-  az: 3,
+  az: 3
 }
 ```
 </Segment>
