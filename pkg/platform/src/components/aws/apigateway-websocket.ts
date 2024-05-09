@@ -20,6 +20,7 @@ import { RETENTION } from "./logging";
 import { dns as awsDns } from "./dns.js";
 import { ApiGatewayV2DomainArgs } from "./helpers/apigatewayv2-domain";
 import { ApiGatewayWebSocketRoute } from "./apigateway-websocket-route";
+import { setupApiGatewayAccount } from "./helpers/apigateway-account";
 
 export interface ApiGatewayWebSocketArgs {
   /**
@@ -220,6 +221,7 @@ export class ApiGatewayWebSocket
     const accessLog = normalizeAccessLog();
     const domain = normalizeDomain();
 
+    const apigAccount = setupApiGatewayAccount(name);
     const api = createApi();
     const logGroup = createLogGroup();
     const stage = createStage();
@@ -327,7 +329,7 @@ export class ApiGatewayWebSocket
             }),
           },
         }),
-        { parent },
+        { parent, dependsOn: apigAccount },
       );
     }
 
