@@ -65,12 +65,19 @@ function addTransformationToEnsureUniqueComponentNames() {
       return;
     }
 
-    if (componentNames.has(args.name)) {
+    const lcName = args.name.toLowerCase();
+    if (lcName === "app") {
+      throw new VisibleError(
+        `Component name "${args.name}" is reserved. Please choose a different name for your "${args.type}" component.`,
+      );
+    }
+
+    if (componentNames.has(lcName)) {
       throw new VisibleError(
         `Invalid component name "${args.name}". Component names must be unique.`,
       );
     }
-    componentNames.add(args.name);
+    componentNames.add(lcName);
 
     if (!args.name.match(/^[A-Z][a-zA-Z0-9]*$/)) {
       throw new VisibleError(
