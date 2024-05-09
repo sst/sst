@@ -1748,6 +1748,7 @@ async function buildComponents() {
       "../pkg/platform/src/components/aws/vector.ts",
       "../pkg/platform/src/components/aws/astro.ts",
       "../pkg/platform/src/components/aws/nextjs.ts",
+      "../pkg/platform/src/components/aws/nuxt.ts",
       "../pkg/platform/src/components/aws/realtime.ts",
       "../pkg/platform/src/components/aws/realtime-lambda-subscriber.ts",
       "../pkg/platform/src/components/aws/remix.ts",
