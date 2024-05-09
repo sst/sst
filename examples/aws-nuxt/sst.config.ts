@@ -9,6 +9,6 @@ export default $config({
     };
   },
   async run() {
-    new sst.aws.SolidStart("MyWeb");
+    new sst.aws.Nuxt("MyWeb");
   },
 });
