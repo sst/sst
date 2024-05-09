@@ -11,7 +11,7 @@
           {
             "op": "add",
             "path": "/overrides/nitropack",
-            "value": "npm:nitropack-nightly"
+            "value": "npm:nitropack-nightly@latest"
           }
         ],
         "regex": [

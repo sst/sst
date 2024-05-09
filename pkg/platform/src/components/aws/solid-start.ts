@@ -402,7 +402,8 @@ export class SolidStart extends Component implements Link.Linkable {
       return all([outputPath, buildMeta]).apply(([outputPath, buildMeta]) => {
         const serverConfig = {
           description: "Server handler for Solid",
-          handler: path.join(outputPath, ".output", "server", "index.handler"),
+          handler: "index.handler",
+          bundle: path.join(outputPath, ".output", "server"),
         };
 
         return validatePlan({

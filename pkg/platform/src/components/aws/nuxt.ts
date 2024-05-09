@@ -346,8 +346,8 @@ export class Nuxt extends Component implements Link.Linkable {
       _hint: $dev
         ? undefined
         : all([this.cdn.domainUrl, this.cdn.url]).apply(
-          ([domainUrl, url]) => domainUrl ?? url,
-        ),
+            ([domainUrl, url]) => domainUrl ?? url,
+          ),
       _metadata: {
         mode: $dev ? "placeholder" : "deployed",
         path: sitePath,
@@ -402,7 +402,8 @@ export class Nuxt extends Component implements Link.Linkable {
       return all([outputPath, buildMeta]).apply(([outputPath, buildMeta]) => {
         const serverConfig = {
           description: "Server handler for Nuxt",
-          handler: path.join(outputPath, ".output", "server", "index.handler"),
+          handler: "index.handler",
+          bundle: path.join(outputPath, ".output", "server"),
         };
 
         return validatePlan({
