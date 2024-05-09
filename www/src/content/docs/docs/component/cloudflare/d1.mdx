@@ -119,4 +119,22 @@ The underlying [resources](/docs/components/#nodes) this component creates.
 </Section>
 The Cloudflare D1 database.
 </Segment>
+
+## SDK
+
+The following are accessible through the [SDK](/docs/reference/sdk/) at runtime.
+
+### Bindings
+<Segment>
+when you link a D1 database, the database will be available to the worker and you can
+query it using the [API methods documented here](https://developers.cloudflare.com/d1/build-with-d1/d1-client-api/).
+
+```ts title="index.ts" {3}
+import { Resource } from "sst";
+
+await Resource.MyDatabase.prepare(
+  "SELECT id FROM todo ORDER BY id DESC LIMIT 1",
+).first();
+```
+</Segment>
 </div>

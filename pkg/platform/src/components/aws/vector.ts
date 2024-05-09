@@ -123,6 +123,7 @@ export class Vector
   extends Component
   implements Link.Linkable, Link.AWS.Linkable
 {
+  private postgres: Postgres;
   private ingestHandler: Function;
   private retrieveHandler: Function;
   private removeHandler: Function;
@@ -147,6 +148,7 @@ export class Vector
     const retrieveHandler = createRetrieveHandler();
     const removeHandler = createRemoveHandler();
 
+    this.postgres = postgres;
     this.ingestHandler = ingestHandler;
     this.retrieveHandler = retrieveHandler;
     this.removeHandler = removeHandler;
@@ -209,10 +211,10 @@ export class Vector
         `${name}Ingestor`,
         {
           description: `${name} ingest handler`,
-          bundle: buildBundlePath(),
+          bundle: useBundlePath(),
           handler: "index.ingest",
-          environment: buildHandlerEnvironment(),
-          permissions: buildHandlerPermissions(),
+          environment: useHandlerEnvironment(),
+          permissions: useHandlerPermissions(),
         },
         { parent },
       );
@@ -223,10 +225,10 @@ export class Vector
         `${name}Retriever`,
         {
           description: `${name} retrieve handler`,
-          bundle: buildBundlePath(),
+          bundle: useBundlePath(),
           handler: "index.retrieve",
-          environment: buildHandlerEnvironment(),
-          permissions: buildHandlerPermissions(),
+          environment: useHandlerEnvironment(),
+          permissions: useHandlerPermissions(),
         },
         { parent },
       );
@@ -237,20 +239,20 @@ export class Vector
         `${name}Remover`,
         {
           description: `${name} remove handler`,
-          bundle: buildBundlePath(),
+          bundle: useBundlePath(),
           handler: "index.remove",
-          environment: buildHandlerEnvironment(),
-          permissions: buildHandlerPermissions(),
+          environment: useHandlerEnvironment(),
+          permissions: useHandlerPermissions(),
         },
         { parent },
       );
     }
 
-    function buildBundlePath() {
+    function useBundlePath() {
       return path.join($cli.paths.platform, "dist", "vector-handler");
     }
 
-    function buildHandlerEnvironment() {
+    function useHandlerEnvironment() {
       return all([model, openAiApiKey]).apply(([model, openAiApiKey]) => ({
         CLUSTER_ARN: postgres.nodes.cluster.arn,
         SECRET_ARN: postgres.nodes.cluster.masterUserSecrets[0].secretArn,
@@ -267,7 +269,7 @@ export class Vector
       }));
     }
 
-    function buildHandlerPermissions() {
+    function useHandlerPermissions() {
       return [
         {
           actions: ["bedrock:InvokeModel"],
@@ -288,33 +290,27 @@ export class Vector
   }
 
   /**
-   * The name of the ingestor Lambda function.
+   * The underlying [resources](/docs/components/#nodes) this component creates.
    */
-  public get ingestor() {
-    return this.ingestHandler.name;
-  }
-
-  /**
-   * The name of the retriever Lambda function.
-   */
-  public get retriever() {
-    return this.retrieveHandler.name;
-  }
-
-  /**
-   * The name of the remover Lambda function.
-   */
-  public get remover() {
-    return this.removeHandler.name;
+  public get nodes() {
+    return {
+      /**
+       * The Postgres database.
+       */
+      postgres: this.postgres,
+    };
   }
 
   /** @internal */
   public getSSTLink() {
     return {
       properties: {
-        ingestor: this.ingestor,
-        retriever: this.retriever,
-        remover: this.remover,
+        /** @internal */
+        ingestor: this.ingestHandler.name,
+        /** @internal */
+        retriever: this.retrieveHandler.name,
+        /** @internal */
+        remover: this.removeHandler.name,
       },
     };
   }

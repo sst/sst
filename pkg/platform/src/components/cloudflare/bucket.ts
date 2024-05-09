@@ -75,7 +75,18 @@ export class Bucket extends Component implements Link.Cloudflare.Linkable {
       );
     }
   }
+
   /**
+   * when you link a bucket, the bucket will be available to the worker and you can
+   * interact with it using the [bucket methods documented here](https://developers.cloudflare.com/r2/api/workers/workers-api-reference/#bucket-method-definitions).
+   *
+   * @example
+   * ```ts title="index.ts" {3}
+   * import { Resource } from "sst";
+   *
+   * await Resource.MyBucket.list();
+   * ```
+   *
    * @internal
    */
   getCloudflareBinding(): Link.Cloudflare.Binding {

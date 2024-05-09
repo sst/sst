@@ -75,6 +75,18 @@ export class D1 extends Component implements Link.Cloudflare.Linkable {
   }
 
   /**
+   * when you link a D1 database, the database will be available to the worker and you can
+   * query it using the [API methods documented here](https://developers.cloudflare.com/d1/build-with-d1/d1-client-api/).
+   *
+   * @example
+   * ```ts title="index.ts" {3}
+   * import { Resource } from "sst";
+   *
+   * await Resource.MyDatabase.prepare(
+   *   "SELECT id FROM todo ORDER BY id DESC LIMIT 1",
+   * ).first();
+   * ```
+   *
    * @internal
    */
   getCloudflareBinding(): Link.Cloudflare.Binding {

@@ -439,6 +439,7 @@ async function generateComponentDoc(
       ...(() => {
         const lines = [
           ...renderLinks(component),
+          ...renderCloudflareBindings(component),
           ...(sdk ? renderFunctions(sdk, useModuleFunctions(sdk)) : []),
           ...(sdk ? renderInterfacesAtH3Level(sdk) : []),
         ];
@@ -668,6 +669,7 @@ function renderType(
       Function: "function",
       FunctionArgs: "function",
       FunctionPermissionArgs: "function",
+      Postgres: "postgres",
       PostgresArgs: "postgres",
       QueueLambdaSubscriber: "queue-lambda-subscriber",
       RealtimeLambdaSubscriber: "realtime-lambda-subscriber",
@@ -694,7 +696,7 @@ function renderType(
         type.name
       }</code>](#${type.name.toLowerCase()})`;
     } else if (type.name === "T") {
-      return "T";
+      return `<code class="primitive">string</code>`;
     }
 
     // @ts-expect-error
@@ -1151,7 +1153,7 @@ function renderProperties(module: TypeDoc.DeclarationReflection) {
 
 function renderLinks(module: TypeDoc.DeclarationReflection) {
   const lines: string[] = [];
-  const method = useClassGetSSTLinkMethod(module);
+  const method = useClassMethodByName(module, "getSSTLink");
   if (!method) return lines;
 
   // Validate getSSTLink() return type
@@ -1172,58 +1174,87 @@ function renderLinks(module: TypeDoc.DeclarationReflection) {
     );
   }
 
-  for (const link of propertiesType.declaration.children) {
-    console.debug(` - link ${link.name}`);
+  const links = propertiesType.declaration.children.filter(
+    (c) => !c.comment?.modifierTags.has("@internal")
+  );
+  if (!links.length) return lines;
 
-    let linkType: TypeDoc.SomeType | undefined;
+  lines.push(
+    ``,
+    `### Links`,
+    `<Segment>`,
+    `<Section type="parameters">`,
+    ...links.flatMap((link) => {
+      console.debug(` - link ${link.name}`);
 
-    // Convert Output<T> => T
-    if (
-      link.type &&
-      link.type.type === "reference" &&
-      link.type.name === "Output" &&
-      (link.type.typeArguments![0].type === "intrinsic" ||
-        link.type.typeArguments![0].type === "union")
-    ) {
-      linkType = link.type.typeArguments![0];
-    }
-    // Convert Output<T> | undefined => T | undefined
-    else if (link.type && link.type.type === "union") {
-      linkType = link.type;
-      linkType.types = linkType.types.map((t) =>
-        t.type === "reference" && t.name === "Output" ? t.typeArguments![0] : t
-      );
-    }
+      let linkType: TypeDoc.SomeType | undefined;
 
-    if (!linkType) {
-      // @ts-expect-error
-      delete link.type._project;
-      console.error(link.type);
-      throw new Error(
-        `Failed to render link ${link.name} b/c link value does not match type \`Output<intrinsic>\`, \`Output<intrinsic | undefined>\`, or \`Output<intrinsic> | undefined\``
-      );
-    }
+      // Convert Output<T> => T
+      if (
+        link.type &&
+        link.type.type === "reference" &&
+        link.type.name === "Output" &&
+        (link.type.typeArguments![0].type === "intrinsic" ||
+          link.type.typeArguments![0].type === "union")
+      ) {
+        linkType = link.type.typeArguments![0];
+      }
+      // Convert Output<T> | undefined => T | undefined
+      else if (link.type && link.type.type === "union") {
+        linkType = link.type;
+        linkType.types = linkType.types.map((t) =>
+          t.type === "reference" && t.name === "Output"
+            ? t.typeArguments![0]
+            : t
+        );
+      }
 
-    // Find the getter property that matches the link name
-    const getter = useClassGetters(module).find((g) => g.name === link.name);
-    if (!getter)
-      throw new Error(
-        `Failed to render link ${link.name} b/c cannot find a getter property with the matching name`
-      );
+      if (!linkType) {
+        // @ts-expect-error
+        delete link.type._project;
+        console.error(link.type);
+        throw new Error(
+          `Failed to render link ${link.name} b/c link value does not match type \`Output<intrinsic>\`, \`Output<intrinsic | undefined>\`, or \`Output<intrinsic> | undefined\``
+        );
+      }
 
-    lines.push(
-      ``,
-      `### ${renderName(link)}`,
-      `<Segment>`,
-      `<Section type="parameters">`,
-      `<InlineSection>`,
-      `**Type** ${renderType(module, linkType)}`,
-      `</InlineSection>`,
-      `</Section>`,
-      ...renderDescription(getter.getSignature!),
-      `</Segment>`
-    );
-  }
+      // Find the getter property that matches the link name
+      const getter = useClassGetters(module).find((g) => g.name === link.name);
+      if (!getter)
+        throw new Error(
+          `Failed to render link ${link.name} b/c cannot find a getter property with the matching name`
+        );
+
+      return [
+        `- <p><code class="key">${renderName(link)}</code> ${renderType(
+          module,
+          linkType
+        )}</p>`,
+        ...renderDescription(getter.getSignature!),
+      ];
+    }),
+    `</Section>`,
+    `</Segment>`
+  );
+
+  return lines;
+}
+
+function renderCloudflareBindings(module: TypeDoc.DeclarationReflection) {
+  const lines: string[] = [];
+  const method = useClassMethodByName(module, "getCloudflareBinding");
+  if (!method) return lines;
+
+  lines.push(
+    ``,
+    `### Bindings`,
+    `<Segment>`,
+    ...renderDescription(method.signatures![0]),
+    ``,
+    ...renderExamples(method.signatures![0]),
+    `</Segment>`
+  );
+
   return lines;
 }
 
@@ -1578,14 +1609,13 @@ function useClassMethods(module: TypeDoc.DeclarationReflection) {
         !c.signatures[0].comment?.modifierTags.has("@internal")
     );
 }
-function useClassGetSSTLinkMethod(module: TypeDoc.DeclarationReflection) {
-  return useClass(module).children?.find(
-    (c) =>
-      c.kind === TypeDoc.ReflectionKind.Method &&
-      !c.flags.isExternal &&
-      c.signatures &&
-      c.signatures[0].name === "getSSTLink"
-  );
+function useClassMethodByName(
+  module: TypeDoc.DeclarationReflection,
+  methodName: string
+) {
+  return useClass(module)
+    .getChildrenByKind(TypeDoc.ReflectionKind.Method)
+    .find((c) => !c.flags.isExternal && c.signatures?.[0].name === methodName);
 }
 function useClassGetters(module: TypeDoc.DeclarationReflection) {
   return (useClass(module).children ?? []).filter(

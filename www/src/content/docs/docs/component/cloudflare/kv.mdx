@@ -117,4 +117,20 @@ The underlying [resources](/docs/components/#nodes) this component creates.
 </Section>
 The Cloudflare KV namespace.
 </Segment>
+
+## SDK
+
+The following are accessible through the [SDK](/docs/reference/sdk/) at runtime.
+
+### Bindings
+<Segment>
+when you link a KV storage, the storage will be available to the worker and you can
+interact with it using the [API methods documented here](https://developers.cloudflare.com/kv/api/).
+
+```ts title="index.ts" {3}
+import { Resource } from "sst";
+
+await Resource.MyStorage.get("someKey");
+```
+</Segment>
 </div>

@@ -152,69 +152,29 @@ Transform the Postgres component.
 
 ## Properties
 
-### ingestor
+### nodes
 <Segment>
 <Section type="parameters">
 <InlineSection>
-**Type** <code class="primitive">Output</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
+**Type** <code class="primitive">Object</code>
 </InlineSection>
+- <p>[<code class="key">postgres</code>](#nodes-postgres)</p>
 </Section>
-The name of the ingestor Lambda function.
+The underlying [resources](/docs/components/#nodes) this component creates.
 </Segment>
-
-### remover
+<NestedTitle id="nodes-postgres" Tag="h4" parent="nodes.">postgres</NestedTitle>
 <Segment>
 <Section type="parameters">
 <InlineSection>
-**Type** <code class="primitive">Output</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
+**Type** [<code class="type">Postgres</code>](/docs/component/aws/postgres/)
 </InlineSection>
 </Section>
-The name of the remover Lambda function.
-</Segment>
-
-### retriever
-<Segment>
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">Output</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
-</InlineSection>
-</Section>
-The name of the retriever Lambda function.
+The Postgres database.
 </Segment>
 
 ## SDK
 
 The following are accessible through the [SDK](/docs/reference/sdk/) at runtime.
-
-### ingestor
-<Segment>
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">string</code>
-</InlineSection>
-</Section>
-The name of the ingestor Lambda function.
-</Segment>
-
-### remover
-<Segment>
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">string</code>
-</InlineSection>
-</Section>
-The name of the remover Lambda function.
-</Segment>
-
-### retriever
-<Segment>
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">string</code>
-</InlineSection>
-</Section>
-The name of the retriever Lambda function.
-</Segment>
 
 ### VectorClient
 <Segment>
@@ -226,7 +186,7 @@ VectorClient(name)
 
 <Section type="parameters">
 #### Parameters
-- <p><code class="key">name</code> T</p>
+- <p><code class="key">name</code> <code class="primitive">string</code></p>
 </Section>
 
 <InlineSection>

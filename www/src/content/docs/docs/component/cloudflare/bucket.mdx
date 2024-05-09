@@ -117,4 +117,20 @@ The underlying [resources](/docs/components/#nodes) this component creates.
 </Section>
 The Cloudflare R2 Bucket.
 </Segment>
+
+## SDK
+
+The following are accessible through the [SDK](/docs/reference/sdk/) at runtime.
+
+### Bindings
+<Segment>
+when you link a bucket, the bucket will be available to the worker and you can
+interact with it using the [bucket methods documented here](https://developers.cloudflare.com/r2/api/workers/workers-api-reference/#bucket-method-definitions).
+
+```ts title="index.ts" {3}
+import { Resource } from "sst";
+
+await Resource.MyBucket.list();
+```
+</Segment>
 </div>

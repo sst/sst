@@ -73,6 +73,16 @@ export class Kv extends Component implements Link.Cloudflare.Linkable {
   }
 
   /**
+   * when you link a KV storage, the storage will be available to the worker and you can
+   * interact with it using the [API methods documented here](https://developers.cloudflare.com/kv/api/).
+   *
+   * @example
+   * ```ts title="index.ts" {3}
+   * import { Resource } from "sst";
+   *
+   * await Resource.MyStorage.get("someKey");
+   * ```
+   *
    * @internal
    */
   getCloudflareBinding(): Link.Cloudflare.Binding {

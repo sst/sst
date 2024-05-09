@@ -491,6 +491,19 @@ export class Worker
   }
 
   /**
+   * When you link a worker (WorkerA) to another worker (WorkerB), it automatically creates
+   * a service binding between the workers. It allows WorkerA to call WorkerB without going
+   * through a publicly-accessible URL.
+   *
+   * @example
+   * ```ts title="index.ts" {3}
+   * import { Resource } from "sst";
+   *
+   * await Resource.WorkerB.fetch(request);
+   * ```
+   *
+   * [Learn more about binding Workers.](https://developers.cloudflare.com/workers/runtime-apis/bindings/service-bindings/)
+   *
    * @internal
    */
   public getCloudflareBinding(): Link.Cloudflare.Binding {
