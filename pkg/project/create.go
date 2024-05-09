@@ -42,6 +42,12 @@ type patchStep struct {
 	} `json:"regex"`
 }
 
+type jsonPatch struct {
+	Op    string      `json:"op"`
+	Path  string      `json:"path"`
+	Value interface{} `json:"value"`
+}
+
 type gitignoreStep struct {
 	Name string `json:"name"`
 	Path string `json:"path"`
@@ -160,6 +166,27 @@ func Create(templateName string, home string) error {
 			}
 
 			if string(patchStep.Patch) != "" {
+				var patches []jsonPatch
+				err := json.Unmarshal(patchStep.Patch, &patches)
+				if err != nil {
+					return err
+				}
+				for _, patch := range patches {
+					if patch.Op == "add" {
+						splits := strings.Split(patch.Path, "/")
+						for i := range splits {
+							path := strings.Join(splits[:i], "/")
+							match := value.Find(path)
+							if match == nil {
+								fill := `[{"op":"add","path":"` + path + `","value":{}}]`
+								err := value.Patch([]byte(fill))
+								if err != nil {
+									return err
+								}
+							}
+						}
+					}
+				}
 				err = value.Patch(patchStep.Patch)
 				if err != nil {
 					return err

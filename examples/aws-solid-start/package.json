@@ -3,7 +3,7 @@
   "type": "module",
   "scripts": {
     "build": "vinxi build",
-    "dev": "vinxi dev",
+    "dev": "sst dev sst dev vinxi dev",
     "start": "vinxi start"
   },
   "dependencies": {
@@ -17,6 +17,7 @@
     "node": "\u003e=18"
   },
   "overrides": {
-    "nitropack": "npm:nitropack-nightly@2.10.0-28585081.346a4950"
+    "foo": "bar",
+    "nitropack": "npm:nitropack-nightly"
   }
 }
