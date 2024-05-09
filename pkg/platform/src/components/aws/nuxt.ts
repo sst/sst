@@ -242,7 +242,7 @@ export interface NuxtArgs extends SsrSiteArgs {
 }
 
 /**
- * The `Nuxt` component lets you deploy a [SolidStart](https://start.solidjs.com) app to AWS.
+ * The `Nuxt` component lets you deploy a [Nuxt](https://nuxt.com) app to AWS.
  *
  * @example
  *
@@ -256,11 +256,11 @@ export interface NuxtArgs extends SsrSiteArgs {
  *
  * #### Change the path
  *
- * Deploys the Nuxt app in the `my-solid-app/` directory.
+ * Deploys the Nuxt app in the `my-nuxt-app/` directory.
  *
  * ```js {2}
  * new sst.aws.Nuxt("MyWeb", {
- *   path: "my-solid-app/"
+ *   path: "my-nuxt-app/"
  * });
  * ```
  *
@@ -346,8 +346,8 @@ export class Nuxt extends Component implements Link.Linkable {
       _hint: $dev
         ? undefined
         : all([this.cdn.domainUrl, this.cdn.url]).apply(
-            ([domainUrl, url]) => domainUrl ?? url,
-          ),
+          ([domainUrl, url]) => domainUrl ?? url,
+        ),
       _metadata: {
         mode: $dev ? "placeholder" : "deployed",
         path: sitePath,
@@ -401,7 +401,7 @@ export class Nuxt extends Component implements Link.Linkable {
     function buildPlan() {
       return all([outputPath, buildMeta]).apply(([outputPath, buildMeta]) => {
         const serverConfig = {
-          description: "Server handler for Solid",
+          description: "Server handler for Nuxt",
           handler: path.join(outputPath, ".output", "server", "index.handler"),
         };
 

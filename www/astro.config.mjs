@@ -47,6 +47,7 @@ const sidebar = [
     items: [
       { label: "Vpc", link: "/docs/component/aws/vpc/" },
       { label: "Cron", link: "/docs/component/aws/cron/" },
+      { label: "Nuxt", link: "/docs/component/aws/nuxt/" },
       { label: "Astro", link: "/docs/component/aws/astro/" },
       { label: "Email", link: "/docs/component/aws/email/" },
       { label: "Remix", link: "/docs/component/aws/remix/" },
