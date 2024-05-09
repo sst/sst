@@ -404,6 +404,7 @@ export class SolidStart extends Component implements Link.Linkable {
           description: "Server handler for Solid",
           handler: "index.handler",
           bundle: path.join(outputPath, ".output", "server"),
+          streaming: true,
         };
 
         return validatePlan({
@@ -416,7 +417,6 @@ export class SolidStart extends Component implements Link.Linkable {
           origins: {
             server: {
               server: {
-                streaming: true,
                 function: serverConfig,
               },
             },

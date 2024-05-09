@@ -29,10 +29,7 @@ import { BaseSsrSiteArgs } from "../base/base-ssr-site.js";
 
 type CloudFrontFunctionConfig = { injections: string[] };
 type EdgeFunctionConfig = { function: Unwrap<FunctionArgs> };
-type ServerOriginConfig = {
-  function: Unwrap<FunctionArgs>;
-  streaming?: boolean;
-};
+type ServerOriginConfig = { function: Unwrap<FunctionArgs> };
 type ImageOptimizationOriginConfig = {
   function: Unwrap<FunctionArgs>;
 };
@@ -541,9 +538,8 @@ function handler(event) {
             ...(permissions ?? []),
             ...(props.function.permissions ?? []),
           ]),
-          streaming: props.streaming,
           injections: args.warm
-            ? [useServerFunctionWarmingInjection(props.streaming)]
+            ? [useServerFunctionWarmingInjection(props.function.streaming)]
             : [],
           link: output(args.link).apply((link) => [
             ...(props.function.link ?? []),

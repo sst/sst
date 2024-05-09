@@ -505,8 +505,8 @@ export class Nextjs extends Component implements Link.Linkable {
       _hint: $dev
         ? undefined
         : all([this.cdn.domainUrl, this.cdn.url]).apply(
-          ([domainUrl, url]) => domainUrl ?? url,
-        ),
+            ([domainUrl, url]) => domainUrl ?? url,
+          ),
       _metadata: {
         mode: $dev ? "placeholder" : "deployed",
         path: sitePath,
@@ -788,39 +788,39 @@ export class Nextjs extends Component implements Link.Linkable {
               },
               ...(revalidationQueueArn
                 ? [
-                  {
-                    actions: [
-                      "sqs:SendMessage",
-                      "sqs:GetQueueAttributes",
-                      "sqs:GetQueueUrl",
-                    ],
-                    resources: [revalidationQueueArn],
-                  },
-                ]
+                    {
+                      actions: [
+                        "sqs:SendMessage",
+                        "sqs:GetQueueAttributes",
+                        "sqs:GetQueueUrl",
+                      ],
+                      resources: [revalidationQueueArn],
+                    },
+                  ]
                 : []),
               ...(revalidationTableArn
                 ? [
-                  {
-                    actions: [
-                      "dynamodb:BatchGetItem",
-                      "dynamodb:GetRecords",
-                      "dynamodb:GetShardIterator",
-                      "dynamodb:Query",
-                      "dynamodb:GetItem",
-                      "dynamodb:Scan",
-                      "dynamodb:ConditionCheckItem",
-                      "dynamodb:BatchWriteItem",
-                      "dynamodb:PutItem",
-                      "dynamodb:UpdateItem",
-                      "dynamodb:DeleteItem",
-                      "dynamodb:DescribeTable",
-                    ],
-                    resources: [
-                      revalidationTableArn,
-                      `${revalidationTableArn}/*`,
-                    ],
-                  },
-                ]
+                    {
+                      actions: [
+                        "dynamodb:BatchGetItem",
+                        "dynamodb:GetRecords",
+                        "dynamodb:GetShardIterator",
+                        "dynamodb:Query",
+                        "dynamodb:GetItem",
+                        "dynamodb:Scan",
+                        "dynamodb:ConditionCheckItem",
+                        "dynamodb:BatchWriteItem",
+                        "dynamodb:PutItem",
+                        "dynamodb:UpdateItem",
+                        "dynamodb:DeleteItem",
+                        "dynamodb:DescribeTable",
+                      ],
+                      resources: [
+                        revalidationTableArn,
+                        `${revalidationTableArn}/*`,
+                      ],
+                    },
+                  ]
                 : []),
             ],
           };
@@ -899,9 +899,9 @@ export class Nextjs extends Component implements Link.Linkable {
                         description: `${name} server`,
                         bundle: path.join(outputPath, value.bundle),
                         handler: value.handler,
+                        streaming: value.streaming,
                         ...defaultFunctionProps,
                       },
-                      streaming: value.streaming,
                     },
                   },
                 ];

@@ -355,8 +355,8 @@ export class Astro extends Component implements Link.Linkable {
       _hint: $dev
         ? undefined
         : all([this.cdn.domainUrl, this.cdn.url]).apply(
-          ([domainUrl, url]) => domainUrl ?? url,
-        ),
+            ([domainUrl, url]) => domainUrl ?? url,
+          ),
       _metadata: {
         mode: $dev ? "placeholder" : "deployed",
         path: sitePath,
@@ -431,6 +431,7 @@ export class Astro extends Component implements Link.Linkable {
         const edge = buildMeta.deploymentStrategy === "edge";
         const serverConfig = {
           handler: path.join(outputPath, "dist", "server", "entry.handler"),
+          streaming: buildMeta.responseMode === "stream",
         };
         const plan: Plan = {
           edge,
@@ -514,7 +515,6 @@ export class Astro extends Component implements Link.Linkable {
             plan.origins.regionalServer = {
               server: {
                 function: serverConfig,
-                streaming: buildMeta.responseMode === "stream",
               },
             };
 
@@ -663,10 +663,11 @@ function useCloudFrontRoutingInjection(buildMetadata: BuildMetaConfig) {
     var matchedRoute = findFirstMatch(findMatches(request.uri, routeData));
     if (matchedRoute[0]) {
       if (!matchedRoute[1] && !/^.*\\.[^\\/]+$/.test(request.uri)) {
-        ${buildMetadata.pageResolution === "file"
-      ? `request.uri = request.uri === "/" ? "/index.html" : request.uri.replace(/\\/?$/, ".html");`
-      : `request.uri = request.uri.replace(/\\/?$/, "/index.html");`
-    }
+        ${
+          buildMetadata.pageResolution === "file"
+            ? `request.uri = request.uri === "/" ? "/index.html" : request.uri.replace(/\\/?$/, ".html");`
+            : `request.uri = request.uri.replace(/\\/?$/, "/index.html");`
+        }
       } else if (matchedRoute[1] === 2) {
         var redirectPath = matchedRoute[2];
         matchedRoute[0].exec(request.uri).forEach((match, index) => {
