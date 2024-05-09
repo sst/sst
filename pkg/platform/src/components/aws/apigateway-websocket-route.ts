@@ -35,7 +35,7 @@ export interface Args extends ApiGatewayWebSocketRouteArgs {
 }
 
 /**
- * The `ApiGatewayWebSocketLambdaRoute` component is internally used by the `ApiGatewayWebSocket`
+ * The `ApiGatewayWebSocketRoute` component is internally used by the `ApiGatewayWebSocket`
  * component to add routes to [AWS API Gateway WebSocket API](https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-websocket-api.html).
  *
  * :::caution
@@ -44,7 +44,7 @@ export interface Args extends ApiGatewayWebSocketRouteArgs {
  *
  * You'll find this component returned by the `route` method of the `ApiGatewayWebSocket` component.
  */
-export class ApiGatewayWebSocketLambdaRoute extends Component {
+export class ApiGatewayWebSocketRoute extends Component {
   private readonly fn: Output<Function>;
   private readonly permission: aws.lambda.Permission;
   private readonly apiRoute: aws.apigatewayv2.Route;
@@ -147,6 +147,6 @@ export class ApiGatewayWebSocketLambdaRoute extends Component {
   }
 }
 
-const __pulumiType = "sst:aws:ApiGatewayWebSocketLambdaRoute";
+const __pulumiType = "sst:aws:ApiGatewayWebSocketRoute";
 // @ts-expect-error
-ApiGatewayWebSocketLambdaRoute.__pulumiType = __pulumiType;
+ApiGatewayWebSocketRoute.__pulumiType = __pulumiType;

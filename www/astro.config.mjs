@@ -176,8 +176,8 @@ const sidebar = [
         link: "/docs/component/aws/apigatewayv2-lambda-route/",
       },
       {
-        label: "ApiGatewayWebSocketLambdaRoute",
-        link: "/docs/component/aws/apigateway-websocket-lambda-route/",
+        label: "ApiGatewayWebSocketRoute",
+        link: "/docs/component/aws/apigateway-websocket-route/",
       },
     ],
   },

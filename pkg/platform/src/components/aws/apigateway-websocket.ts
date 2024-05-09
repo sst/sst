@@ -19,7 +19,7 @@ import { DnsValidatedCertificate } from "./dns-validated-certificate";
 import { RETENTION } from "./logging";
 import { dns as awsDns } from "./dns.js";
 import { ApiGatewayV2DomainArgs } from "./helpers/apigatewayv2-domain";
-import { ApiGatewayWebSocketLambdaRoute } from "./apigateway-websocket-lambda-route";
+import { ApiGatewayWebSocketRoute } from "./apigateway-websocket-route";
 
 export interface ApiGatewayWebSocketArgs {
   /**
@@ -198,7 +198,8 @@ export interface ApiGatewayWebSocketRouteArgs {
  */
 export class ApiGatewayWebSocket
   extends Component
-  implements Link.Linkable, Link.AWS.Linkable {
+  implements Link.Linkable, Link.AWS.Linkable
+{
   private constructorName: string;
   private constructorArgs: ApiGatewayWebSocketArgs;
   private api: aws.apigatewayv2.Api;
@@ -426,9 +427,9 @@ export class ApiGatewayWebSocket
     //       trailing slash, the API fails with the error {"message":"Not Found"}
     return this.apigDomain && this.apiMapping
       ? all([this.apigDomain.domainName, this.apiMapping.apiMappingKey]).apply(
-        ([domain, key]) =>
-          key ? `wss://${domain}/${key}/` : `wss://${domain}`,
-      )
+          ([domain, key]) =>
+            key ? `wss://${domain}/${key}/` : `wss://${domain}`,
+        )
       : interpolate`${this.api.apiEndpoint}/${this.stage.name}`;
   }
 
@@ -530,7 +531,7 @@ export class ApiGatewayWebSocket
         : hashStringToPrettyString(`${this.api.id}${route}`, 6),
     );
 
-    return new ApiGatewayWebSocketLambdaRoute(`${prefix}Route${suffix}`, {
+    return new ApiGatewayWebSocketRoute(`${prefix}Route${suffix}`, {
       api: {
         name: prefix,
         id: this.api.id,
