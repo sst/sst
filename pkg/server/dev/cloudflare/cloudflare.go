@@ -86,8 +86,8 @@ func Start(ctx context.Context, proj *project.Project, args map[string]interface
 							slog.Info("error dialing websocket", "error", err)
 							continue
 						}
-						go func() {
-							defer delete(tails, warp.FunctionID)
+						go func(functionID string) {
+							defer delete(tails, functionID)
 							for {
 								msg := &TailEvent{}
 								err := conn.ReadJSON(msg)
@@ -97,11 +97,11 @@ func Start(ctx context.Context, proj *project.Project, args map[string]interface
 								}
 
 								bus.Publish(&WorkerInvokedEvent{
-									WorkerID:  warp.FunctionID,
+									WorkerID:  functionID,
 									TailEvent: msg,
 								})
 							}
-						}()
+						}(warp.FunctionID)
 					}
 
 					if _, ok := builds[warp.FunctionID]; ok {
