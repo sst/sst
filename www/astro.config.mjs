@@ -13,6 +13,7 @@ const sidebar = [
     label: "Get Started",
     items: [
       { label: "API", link: "/docs/start/aws/api/" },
+      { label: "Solid", link: "/docs/start/aws/solid/" },
       { label: "tRPC", link: "/docs/start/aws/trpc/" },
       { label: "Hono", link: "/docs/start/aws/hono/" },
       { label: "Astro", link: "/docs/start/aws/astro/" },
@@ -61,8 +62,8 @@ const sidebar = [
       { label: "Realtime", link: "/docs/component/aws/realtime/" },
       { label: "SnsTopic", link: "/docs/component/aws/sns-topic/" },
       { label: "Function", link: "/docs/component/aws/function/" },
-      { label: "AppSync", link: "/docs/component/aws/app-sync/" },
       { label: "Postgres", link: "/docs/component/aws/postgres/" },
+      { label: "AppSync", link: "/docs/component/aws/app-sync/" },
       { label: "SvelteKit", link: "/docs/component/aws/svelte-kit/" },
       { label: "StaticSite", link: "/docs/component/aws/static-site/" },
       { label: "SolidStart", link: "/docs/component/aws/solid-start/" },
