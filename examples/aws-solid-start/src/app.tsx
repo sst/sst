@@ -1,22 +1,49 @@
-import { Router } from "@solidjs/router";
-import { FileRoutes } from "@solidjs/start/router";
-import { Suspense } from "solid-js";
+import { Resource } from "sst";
+import { createAsync } from "@solidjs/router";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import "./app.css";
-import Nav from "./components/nav";
+
+async function presignedUrl() {
+  "use server";
+  const command = new PutObjectCommand({
+    Key: crypto.randomUUID(),
+    Bucket: Resource.MyBucket.name,
+  });
+  return await getSignedUrl(new S3Client({}), command);
+}
+
+export const route = {
+  load: () => presignedUrl(),
+};
 
 export default function App() {
+  const url = createAsync(() => presignedUrl());
+
   return (
-    <Router
-      root={props => (
-        <>
-          <Nav />
-          <Suspense fallback={<div class="news-list-nav">Loading...</div>}>
-            {props.children}
-          </Suspense>
-        </>
-      )}
-    >
-      <FileRoutes />
-    </Router>
+    <main>
+      <h1>Hello world!</h1>
+      <form
+        onSubmit={async (e) => {
+          e.preventDefault();
+
+          const file = (e.target as HTMLFormElement).file.files?.[0]!;
+
+          const image = await fetch(url() as string, {
+            body: file,
+            method: "PUT",
+            headers: {
+              "Content-Type": file.type,
+              "Content-Disposition": `attachment; filename="${file.name}"`,
+            },
+          });
+
+          window.location.href = image.url.split("?")[0];
+        }}
+      >
+        <input name="file" type="file" accept="image/png, image/jpeg" />
+        <button type="submit">Upload</button>
+      </form>
+    </main>
   );
 }

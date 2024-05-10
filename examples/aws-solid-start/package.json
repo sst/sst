@@ -1,23 +1,24 @@
 {
-  "name": "example-hackernews",
+  "name": "example-bare",
   "type": "module",
   "scripts": {
     "build": "vinxi build",
-    "dev": "sst dev sst dev vinxi dev",
+    "dev": "sst dev vinxi dev",
     "start": "vinxi start"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.572.0",
+    "@aws-sdk/s3-request-presigner": "^3.572.0",
     "@solidjs/router": "^0.13.3",
-    "@solidjs/start": "^1.0.0-rc.0",
+    "@solidjs/start": "1.0.0-rc.0",
     "solid-js": "^1.8.17",
     "sst": "ion",
     "vinxi": "^0.3.11"
   },
   "engines": {
-    "node": "\u003e=18"
+    "node": ">=18"
   },
   "overrides": {
-    "foo": "bar",
-    "nitropack": "npm:nitropack-nightly"
+    "nitropack": "npm:nitropack-nightly@latest"
   }
 }
