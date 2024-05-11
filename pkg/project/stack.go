@@ -167,6 +167,7 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 		env["SST_SECRET_"+key] = value
 	}
 	env["PULUMI_CONFIG_PASSPHRASE"] = passphrase
+	env["NODE_OPTIONS"] = "--enable-source-maps --no-deprecation"
 
 	cli := map[string]interface{}{
 		"command": input.Command,
