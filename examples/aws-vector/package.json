@@ -13,6 +13,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "openai": "^4.44.0",
     "sst": "3.0.2"
   }
 }

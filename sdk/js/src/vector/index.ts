@@ -7,32 +7,20 @@ import { Resource } from "../resource.js";
 
 const lambda = new LambdaClient();
 
-export interface IngestEvent {
+export interface PutEvent {
   /**
-   * The text used to generate the embedding vector.
-   * At least one of `text` or `image` must be provided.
+   * The vector to store in the database.
    * @example
    * ```js
    * {
-   *   text: "This is an example text.",
+   *   vector: [32.4, 6.55, 11.2, 10.3, 87.9],
    * }
    * ```
    */
-  text?: string;
-  /**
-   * The base64 representation of the image used to generate the embedding vector.
-   * At least one of `text` or `image` must be provided.
-   * @example
-   * ```js
-   * {
-   *   image: await fs.readFile("./file.jpg").toString("base64"),
-   * }
-   * ```
-   */
-  image?: string;
+  vector: number[];
   /**
    * Metadata for the event in JSON format.
-   * This metadata will be used to filter when retrieving and removing embeddings.
+   * This metadata will be used to filter when quering and removing vectors.
    * @example
    * ```js
    * {
@@ -47,32 +35,20 @@ export interface IngestEvent {
   metadata: Record<string, any>;
 }
 
-export interface RetrieveEvent {
+export interface QueryEvent {
   /**
-   * The text prompt used to retrieve embeddings.
-   * At least one of `text` or `image` must be provided.
+   * The vector used to query the database.
    * @example
    * ```js
    * {
-   *   text: "This is an example text.",
+   *   vector: [32.4, 6.55, 11.2, 10.3, 87.9],
    * }
    * ```
    */
-  text?: string;
+  vector: number[];
   /**
-   * The base64 representation of the image prompt used to retrive embeddings.
-   * At least one of `text` or `image` must be provided.
-   * @example
-   * ```js
-   * {
-   *   image: await fs.readFile("./file.jpg").toString("base64"),
-   * }
-   * ```
-   */
-  image?: string;
-  /**
-   * The metadata used to filter the retrieval of embeddings.
-   * Only embeddings with metadata that match the provided fields will be returned.
+   * The metadata used to filter the vectors.
+   * Only vectors that match the provided fields will be returned.
    * @example
    * ```js
    * {
@@ -82,7 +58,7 @@ export interface RetrieveEvent {
    *   }
    * }
    * ```
-   * This will match the embedding with metadata:
+   * This will match the vector with metadata:
    * ```js
    *  {
    *    type: "movie",
@@ -91,7 +67,7 @@ export interface RetrieveEvent {
    *  }
    * ```
    *
-   * But not the embedding with metadata:
+   * But not the vector with metadata:
    * ```js
    *  {
    *    type: "book",
@@ -102,7 +78,7 @@ export interface RetrieveEvent {
    */
   include: Record<string, any>;
   /**
-   * Exclude embeddings with metadata that match the provided fields.
+   * Exclude vectors with metadata that match the provided fields.
    * @example
    * ```js
    * {
@@ -115,7 +91,7 @@ export interface RetrieveEvent {
    *   }
    * }
    * ```
-   * This will match the embedding with metadata:
+   * This will match the vector with metadata:
    * ```js
    *  {
    *    type: "movie",
@@ -124,7 +100,7 @@ export interface RetrieveEvent {
    *  }
    * ```
    *
-   * But not the embedding with metadata:
+   * But not the vector with metadata:
    * ```js
    *  {
    *    type: "book",
@@ -135,11 +111,11 @@ export interface RetrieveEvent {
    */
   exclude?: Record<string, any>;
   /**
-   * The threshold of similarity between the prompt and the retrieved embeddings.
-   * Only embeddings with a similarity score higher than the threshold will be returned.
+   * The threshold of similarity between the prompt and the queried vectors.
+   * Only vectors with a similarity score higher than the threshold will be returned.
    * Expected value is between 0 and 1.
-   * - 0 means the prompt and the retrieved embeddings are completely different.
-   * - 1 means the prompt and the retrieved embeddings are identical.
+   * - 0 means the prompt and the queried vectors are completely different.
+   * - 1 means the prompt and the queried vectors are identical.
    * @default `0`
    * @example
    * ```js
@@ -164,10 +140,10 @@ export interface RetrieveEvent {
 
 export interface RemoveEvent {
   /**
-   * The metadata used to filter the removal of embeddings.
-   * Only embeddings with metadata that match the provided fields will be removed.
+   * The metadata used to filter the removal of vectors.
+   * Only vectors with metadata that match the provided fields will be removed.
    * @example
-   * To remove embeddings for movie with id "movie-123":
+   * To remove vectors for movie with id "movie-123":
    * ```js
    * {
    *   include: {
@@ -175,7 +151,7 @@ export interface RemoveEvent {
    *   }
    * }
    * ```
-   * To remove embeddings for all movies:
+   * To remove vectors for all movies:
    * ```js
    *  {
    *   include: {
@@ -187,20 +163,20 @@ export interface RemoveEvent {
   include: Record<string, any>;
 }
 
-export interface RetrieveResponse {
+export interface QueryResponse {
   /**
-   * Metadata for the event in JSON format that was provided when ingesting the embedding.
+   * Metadata for the event in JSON format that was provided when storing the vector.
    */
   metadata: Record<string, any>;
   /**
-   * The similarity score between the prompt and the retrieved embedding.
+   * The similarity score between the prompt and the queried vector.
    */
   score: number;
 }
 
 export interface VectorClientResponse {
-  ingest: (event: IngestEvent) => Promise<void>;
-  retrieve: (event: RetrieveEvent) => Promise<RetrieveResponse>;
+  put: (event: PutEvent) => Promise<void>;
+  query: (event: QueryEvent) => Promise<QueryResponse>;
   remove: (event: RemoveEvent) => Promise<void>;
 }
 
@@ -211,15 +187,15 @@ export interface VectorClientResponse {
  * import { VectorClient } from "sst";
  * const client = VectorClient("MyVectorDB");
  *
- * // Ingest a text into the vector db
- * await client.ingest({
- *   text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+ * // Store a vector into the db
+ * await client.put({
+ *   vector: [32.4, 6.55, 11.2, 10.3, 87.9],
  *   metadata: { type: "movie", genre: "comedy" },
  * });
  *
- * // Retrieve embeddings similar to the provided text
- * const result = await client.retrieve({
- *   text: "Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+ * // Query vectors similar to the provided vector
+ * const result = await client.query({
+ *   vector: [32.4, 6.55, 11.2, 10.3, 87.9],
  *   include: { type: "movie" },
  *   exclude: { genre: "thriller" },
  * });
@@ -236,37 +212,34 @@ export function VectorClient<
   },
 >(name: T): VectorClientResponse {
   return {
-    ingest: async (event: IngestEvent) => {
+    put: async (event: PutEvent) => {
       const ret = await lambda.send(
         new InvokeCommand({
           // @ts-expect-error
-          FunctionName: Resource[name].ingestor,
+          FunctionName: Resource[name].putFunction,
           Payload: JSON.stringify(event),
         })
       );
 
-      parsePayload(ret, "Failed to ingest into the vector db");
+      parsePayload(ret, "Failed to store into the vector db");
     },
 
-    retrieve: async (event: RetrieveEvent) => {
+    query: async (event: QueryEvent) => {
       const ret = await lambda.send(
         new InvokeCommand({
           // @ts-expect-error
-          FunctionName: Resource[name].retriever,
+          FunctionName: Resource[name].queryFunction,
           Payload: JSON.stringify(event),
         })
       );
-      return parsePayload<RetrieveResponse>(
-        ret,
-        "Failed to retrieve from the vector db"
-      );
+      return parsePayload<QueryResponse>(ret, "Failed to query the vector db");
     },
 
     remove: async (event: RemoveEvent) => {
       const ret = await lambda.send(
         new InvokeCommand({
           // @ts-expect-error
-          FunctionName: Resource[name].remover,
+          FunctionName: Resource[name].removeFunction,
           Payload: JSON.stringify(event),
         })
       );

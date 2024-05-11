@@ -5,24 +5,24 @@ import {
 } from "@aws-sdk/client-rds-data";
 import { useClient } from "../helpers/client.js";
 
-export interface PostgresTableInputs {
-  clusterArn: Input<string>;
-  secretArn: Input<string>;
-  databaseName: Input<string>;
-  tableName: Input<string>;
-  vectorSize: Input<number>;
-}
-
 interface Inputs {
   clusterArn: string;
   secretArn: string;
   databaseName: string;
   tableName: string;
-  vectorSize: number;
+  dimension: number;
 }
 
 interface Outputs {
-  vectorSize: Inputs["vectorSize"];
+  dimension: Inputs["dimension"];
+}
+
+export interface PostgresTableInputs {
+  clusterArn: Input<Inputs["clusterArn"]>;
+  secretArn: Input<Inputs["secretArn"]>;
+  databaseName: Input<Inputs["databaseName"]>;
+  tableName: Input<Inputs["tableName"]>;
+  dimension: Input<Inputs["dimension"]>;
 }
 
 class Provider implements dynamic.ResourceProvider {
@@ -35,7 +35,7 @@ class Provider implements dynamic.ResourceProvider {
     await this.createMetadataIndex(inputs);
     return {
       id: inputs.tableName,
-      outs: { vectorSize: inputs.vectorSize },
+      outs: { dimension: inputs.dimension },
     };
   }
 
@@ -47,14 +47,14 @@ class Provider implements dynamic.ResourceProvider {
     await this.createDatabase(news);
     await this.enablePgvectorExtension(news);
     await this.enablePgtrgmExtension(news);
-    if (olds.vectorSize !== news.vectorSize) {
+    if (olds.dimension !== news.dimension) {
       await this.removeTable(news);
     }
     await this.createTable(news);
     await this.createEmbeddingIndex(news);
     await this.createMetadataIndex(news);
     return {
-      outs: { vectorSize: news.vectorSize },
+      outs: { dimension: news.dimension },
     };
   }
 
@@ -121,7 +121,7 @@ class Provider implements dynamic.ResourceProvider {
           database: inputs.databaseName,
           sql: `create table ${inputs.tableName} (
             id bigserial primary key,
-            embedding vector(${inputs.vectorSize}),
+            embedding vector(${inputs.dimension}),
             metadata jsonb
           );`,
         }),
@@ -179,12 +179,12 @@ class Provider implements dynamic.ResourceProvider {
   }
 }
 
-export class EmbeddingsTable extends dynamic.Resource {
+export class VectorTable extends dynamic.Resource {
   constructor(
     name: string,
     args: PostgresTableInputs,
     opts?: CustomResourceOptions,
   ) {
-    super(new Provider(), `${name}.sst.aws.EmbeddingsTable`, args, opts);
+    super(new Provider(), `${name}.sst.aws.VectorTable`, args, opts);
   }
 }

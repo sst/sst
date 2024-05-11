@@ -17,15 +17,14 @@ export default $config({
     };
   },
   async run() {
+    const OpenAiApiKey = new sst.Secret("OpenAiApiKey");
     const vector = new sst.aws.Vector("MyVectorDB", {
-      model: "text-embedding-ada-002",
-      //model: "amazon.titan-embed-image-v1",
-      openAiApiKey: new sst.Secret("OpenAiApiKey").value,
+      dimension: 1536,
     });
 
     const seeder = new sst.aws.Function("Seeder", {
       handler: "index.seeder",
-      link: [vector],
+      link: [OpenAiApiKey, vector],
       copyFiles: [
         { from: "iron-man.jpg", to: "iron-man.jpg" },
         {
@@ -47,7 +46,7 @@ export default $config({
 
     const app = new sst.aws.Function("MyApp", {
       handler: "index.app",
-      link: [vector],
+      link: [OpenAiApiKey, vector],
       url: true,
     });
 

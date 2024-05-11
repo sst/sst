@@ -1,64 +1,34 @@
 import path from "path";
-import {
-  ComponentResourceOptions,
-  all,
-  interpolate,
-  output,
-} from "@pulumi/pulumi";
+import { ComponentResourceOptions } from "@pulumi/pulumi";
 import { Component, Transform, transform } from "../component.js";
 import { Postgres, PostgresArgs } from "./postgres.js";
-import { EmbeddingsTable } from "./providers/embeddings-table.js";
+import { VectorTable } from "./providers/vector-table.js";
 import { Function } from "./function.js";
 import { Link } from "../link.js";
-import { VisibleError } from "../error.js";
 import { Input } from "../input.js";
-
-const ModelInfo = {
-  "amazon.titan-embed-text-v1": { provider: "bedrock" as const, size: 1536 },
-  "amazon.titan-embed-image-v1": { provider: "bedrock" as const, size: 1024 },
-  "text-embedding-ada-002": { provider: "openai" as const, size: 1536 },
-  "text-embedding-3-small": { provider: "openai" as const, size: 1536 },
-  "text-embedding-3-large": { provider: "openai" as const, size: 2000 },
-};
 
 export interface VectorArgs {
   /**
-   * The model used for generating the vectors. Supports AWS' and OpenAI's models.
+   * The dimension size of each vector.
    *
-   * To use OpenAI's `text-embedding-ada-002`, `text-embedding-3-small`, or `text-embedding-3-large` model, you'll need to pass in an `openAiApiKey`.
-   *
-   * :::tip
-   * To use OpenAI's models, you'll need to pass in an `openAiApiKey`.
+   * :::note
+   * The maximum supported dimension is 2000. To store vectors with greater dimension,
+   * use dimensionality reduction to reduce the dimension to 2000 or less. OpenAI supports
+   * [dimensionality reduction](https://platform.openai.com/docs/api-reference/embeddings/create#embeddings-create-dimensions) automatically when generating embeddings.
    * :::
    *
-   * OpenAI's `text-embedding-3-large` model produces embeddings with 3072 dimensions. This is [scaled down](https://platform.openai.com/docs/guides/embeddings/use-cases) to 2000 dimensions to store it in Postgres. The Postgres database in this component can store up to 2000 dimensions with a pgvector [HNSW index](https://github.com/pgvector/pgvector?tab=readme-ov-file#hnsw).
-   *
-   * @default `"amazon.titan-embed-text-v1"`
-   * @example
-   * ```js
-   *
-   * {
-   *   model: "amazon.titan-embed-image-v1"
-   * }
-   * ```
-   */
-  model?: Input<keyof typeof ModelInfo>;
-  /**
-   * Your OpenAI API key. This is needed only if you're using the `text-embedding-ada-002`, `text-embedding-3-small`, or `text-embedding-3-small` model.
-   *
-   * :::tip
-   * Use `sst.Secret` to store your API key securely.
+   * :::caution
+   * Changing the dimension will cause the data to be cleared.
    * :::
    *
    * @example
    * ```js
-   *
    * {
-   *   openAiApiKey: "<your-api-key>"
+   *   dimension: 1536
    * }
    * ```
    */
-  openAiApiKey?: Input<string>;
+  dimension: Input<number>;
   /**
    * [Transform](/docs/components#transform) how this component creates its underlying
    * resources.
@@ -74,26 +44,16 @@ export interface VectorArgs {
 /**
  * The `Vector` component lets you store and retrieve vector data in your app.
  *
- * - It uses an LLM to generate the embedding.
- * - Stores it in a vector database powered by [RDS Postgres Serverless v2](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/aurora-serverless-v2.html).
- * - Provides a [SDK](/docs/reference/sdk/) to ingest, retrieve, and remove the vector data.
+ * - It uses a vector database powered by [RDS Postgres Serverless v2](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/aurora-serverless-v2.html).
+ * - Provides a [SDK](/docs/reference/sdk/) to query, put, and remove the vector data.
  *
  * @example
  *
  * #### Create the database
  *
  * ```ts
- * const vector = new sst.aws.Vector("MyVectorDB");
- * ```
- *
- * #### Change the model
- *
- * Optionally, use a different model, like OpenAI's `text-embedding-3-small` model. You'll need to pass in your OpenAI API key.
- *
- * ```ts {3}
- * new sst.aws.Vector("MyVectorDB", {
- *   openAiApiKey: new sst.aws.Secret("OpenAiApiKey").value,
- *   model: "text-embedding-3-small"
+ * const vector = new sst.aws.Vector("MyVectorDB", {
+ *   dimension: 1536
  * });
  * ```
  *
@@ -112,10 +72,8 @@ export interface VectorArgs {
  * ```ts title="app/page.tsx" {3}
  * import { VectorClient } from "sst";
  *
- * const vector = VectorClient("MyVectorDB");
- *
- * await vector.retrieve({
- *   text: "Some text to search for"
+ * await VectorClient("MyVectorDB").query({
+ *   vector: [32.4, 6.55, 11.2, 10.3, 87.9]
  * });
  * ```
  */
@@ -124,61 +82,26 @@ export class Vector
   implements Link.Linkable, Link.AWS.Linkable
 {
   private postgres: Postgres;
-  private ingestHandler: Function;
-  private retrieveHandler: Function;
+  private queryHandler: Function;
+  private putHandler: Function;
   private removeHandler: Function;
 
-  constructor(
-    name: string,
-    args?: VectorArgs,
-    opts?: ComponentResourceOptions,
-  ) {
+  constructor(name: string, args: VectorArgs, opts?: ComponentResourceOptions) {
     super(__pulumiType, name, args, opts);
 
     const parent = this;
-    const model = normalizeModel();
-    const vectorSize = normalizeVectorSize();
-    const openAiApiKey = normalizeOpenAiApiKey();
-    const databaseName = normalizeDatabaseName();
     const tableName = normalizeTableName();
 
     const postgres = createDB();
     createDBTable();
-    const ingestHandler = createIngestHandler();
-    const retrieveHandler = createRetrieveHandler();
+    const queryHandler = createQueryHandler();
+    const putHandler = createPutHandler();
     const removeHandler = createRemoveHandler();
 
     this.postgres = postgres;
-    this.ingestHandler = ingestHandler;
-    this.retrieveHandler = retrieveHandler;
+    this.queryHandler = queryHandler;
+    this.putHandler = putHandler;
     this.removeHandler = removeHandler;
-
-    function normalizeModel() {
-      return output(args?.model).apply((model) => {
-        if (model && !ModelInfo[model])
-          throw new Error(`Invalid model: ${model}`);
-        return model ?? "amazon.titan-embed-image-v1";
-      });
-    }
-
-    function normalizeOpenAiApiKey() {
-      return all([model, args?.openAiApiKey]).apply(([model, openAiApiKey]) => {
-        if (ModelInfo[model].provider === "openai" && !openAiApiKey) {
-          throw new VisibleError(
-            `Please pass in the OPENAI_API_KEY via environment variable to use the ${model} model. You can get your API keys here: https://platform.openai.com/api-keys`,
-          );
-        }
-        return openAiApiKey;
-      });
-    }
-
-    function normalizeVectorSize() {
-      return model.apply((model) => ModelInfo[model].size);
-    }
-
-    function normalizeDatabaseName() {
-      return $app.stage;
-    }
 
     function normalizeTableName() {
       return "embeddings";
@@ -193,42 +116,44 @@ export class Vector
     }
 
     function createDBTable() {
-      new EmbeddingsTable(
+      new VectorTable(
         `${name}Table`,
         {
           clusterArn: postgres.nodes.cluster.arn,
           secretArn: postgres.nodes.cluster.masterUserSecrets[0].secretArn,
-          databaseName,
+          databaseName: postgres.database,
           tableName,
-          vectorSize,
+          dimension: args.dimension,
         },
         { parent, dependsOn: postgres.nodes.instance },
       );
     }
 
-    function createIngestHandler() {
+    function createQueryHandler() {
       return new Function(
-        `${name}Ingestor`,
+        `${name}Query`,
         {
-          description: `${name} ingest handler`,
+          description: `${name} query handler`,
           bundle: useBundlePath(),
-          handler: "index.ingest",
+          handler: "index.query",
           environment: useHandlerEnvironment(),
           permissions: useHandlerPermissions(),
+          live: false,
         },
         { parent },
       );
     }
 
-    function createRetrieveHandler() {
+    function createPutHandler() {
       return new Function(
-        `${name}Retriever`,
+        `${name}Put`,
         {
-          description: `${name} retrieve handler`,
+          description: `${name} put handler`,
           bundle: useBundlePath(),
-          handler: "index.retrieve",
+          handler: "index.put",
           environment: useHandlerEnvironment(),
           permissions: useHandlerPermissions(),
+          live: false,
         },
         { parent },
       );
@@ -236,13 +161,14 @@ export class Vector
 
     function createRemoveHandler() {
       return new Function(
-        `${name}Remover`,
+        `${name}Remove`,
         {
           description: `${name} remove handler`,
           bundle: useBundlePath(),
           handler: "index.remove",
           environment: useHandlerEnvironment(),
           permissions: useHandlerPermissions(),
+          live: false,
         },
         { parent },
       );
@@ -253,30 +179,16 @@ export class Vector
     }
 
     function useHandlerEnvironment() {
-      return all([model, openAiApiKey]).apply(([model, openAiApiKey]) => ({
+      return {
         CLUSTER_ARN: postgres.nodes.cluster.arn,
         SECRET_ARN: postgres.nodes.cluster.masterUserSecrets[0].secretArn,
-        DATABASE_NAME: databaseName,
+        DATABASE_NAME: postgres.database,
         TABLE_NAME: tableName,
-        MODEL: model,
-        MODEL_PROVIDER: ModelInfo[model].provider,
-        ...(openAiApiKey
-          ? {
-              OPENAI_API_KEY: openAiApiKey,
-              OPENAI_MODEL_DIMENSIONS: ModelInfo[model].size.toString(),
-            }
-          : {}),
-      }));
+      };
     }
 
     function useHandlerPermissions() {
       return [
-        {
-          actions: ["bedrock:InvokeModel"],
-          resources: [
-            interpolate`arn:aws:bedrock:us-east-1::foundation-model/*`,
-          ],
-        },
         {
           actions: ["secretsmanager:GetSecretValue"],
           resources: [postgres.nodes.cluster.masterUserSecrets[0].secretArn],
@@ -306,11 +218,11 @@ export class Vector
     return {
       properties: {
         /** @internal */
-        ingestor: this.ingestHandler.name,
+        queryFunction: this.queryHandler.name,
         /** @internal */
-        retriever: this.retrieveHandler.name,
+        putFunction: this.putHandler.name,
         /** @internal */
-        remover: this.removeHandler.name,
+        removeFunction: this.removeHandler.name,
       },
     };
   }
@@ -321,8 +233,8 @@ export class Vector
       {
         actions: ["lambda:InvokeFunction"],
         resources: [
-          this.ingestHandler.nodes.function.arn,
-          this.retrieveHandler.nodes.function.arn,
+          this.queryHandler.nodes.function.arn,
+          this.putHandler.nodes.function.arn,
           this.removeHandler.nodes.function.arn,
         ],
       },

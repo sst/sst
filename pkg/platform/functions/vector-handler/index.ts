@@ -2,22 +2,15 @@ import {
   RDSDataClient,
   ExecuteStatementCommand,
 } from "@aws-sdk/client-rds-data";
-import {
-  BedrockRuntimeClient,
-  InvokeModelCommand,
-} from "@aws-sdk/client-bedrock-runtime";
-import { OpenAI } from "openai";
 import { useClient } from "../../src/components/aws/helpers/client";
 
-export type IngestEvent = {
-  text?: string;
-  image?: string;
+export type PutEvent = {
+  vector: number[];
   metadata: Record<string, any>;
 };
 
-export type RetrieveEvent = {
-  text?: string;
-  image?: string;
+export type QueryEvent = {
+  vector: number[];
   include: Record<string, any>;
   exclude?: Record<string, any>;
   threshold?: number;
@@ -28,90 +21,19 @@ export type RemoveEvent = {
   include: Record<string, any>;
 };
 
-const {
-  CLUSTER_ARN,
-  SECRET_ARN,
-  DATABASE_NAME,
-  TABLE_NAME,
-  MODEL,
-  MODEL_PROVIDER,
-  // modal provider dependent (optional)
-  OPENAI_API_KEY,
-  OPENAI_MODEL_DIMENSIONS,
-} = process.env;
+const { CLUSTER_ARN, SECRET_ARN, DATABASE_NAME, TABLE_NAME } = process.env;
 
-export async function ingest(event: IngestEvent) {
-  const embedding = await generateEmbedding(event.text, event.image);
+export async function put(event: PutEvent) {
   const metadata = JSON.stringify(event.metadata);
-  await storeEmbedding(metadata, embedding);
-}
-export async function retrieve(event: RetrieveEvent) {
-  const embedding = await generateEmbedding(event.text, event.image);
-  const include = JSON.stringify(event.include);
-  // The return type of JSON.stringify() is always "string".
-  // This is wrong when "event.exclude" is undefined.
-  const exclude = JSON.stringify(event.exclude) as string | undefined;
-  const result = await queryEmbeddings(
-    include,
-    exclude,
-    embedding,
-    event.threshold ?? 0,
-    event.count ?? 10,
-  );
-  return {
-    results: result,
-  };
-}
-export async function remove(event: RemoveEvent) {
-  const include = JSON.stringify(event.include);
-  await removeEmbedding(include);
-}
-
-async function generateEmbedding(text?: string, image?: string) {
-  if (MODEL_PROVIDER === "openai") {
-    return await generateEmbeddingOpenAI(text!);
-  }
-  return await generateEmbeddingBedrock(text, image);
-}
-
-async function generateEmbeddingOpenAI(text: string) {
-  const openAi = new OpenAI({ apiKey: OPENAI_API_KEY });
-  const embeddingResponse = await openAi.embeddings.create({
-    model: MODEL!,
-    input: text,
-    encoding_format: "float",
-    dimensions:
-      MODEL === "text-embedding-ada-002"
-        ? undefined
-        : parseInt(OPENAI_MODEL_DIMENSIONS!),
-  });
-  return embeddingResponse.data[0].embedding;
-}
-
-async function generateEmbeddingBedrock(text?: string, image?: string) {
-  const ret = await useClient(BedrockRuntimeClient).send(
-    new InvokeModelCommand({
-      body: JSON.stringify({
-        inputText: text,
-        inputImage: image,
-      }),
-      modelId: MODEL,
-      contentType: "application/json",
-      accept: "*/*",
-    }),
-  );
-  const payload = JSON.parse(Buffer.from(ret.body.buffer).toString());
-  return payload.embedding;
-}
-
-async function storeEmbedding(metadata: string, embedding: number[]) {
   await useClient(RDSDataClient).send(
     new ExecuteStatementCommand({
       resourceArn: CLUSTER_ARN,
       secretArn: SECRET_ARN,
       database: DATABASE_NAME,
-      sql: `INSERT INTO ${TABLE_NAME} (embedding, metadata)
-              VALUES (ARRAY[${embedding.join(",")}], :metadata)`,
+      sql: [
+        `INSERT INTO ${TABLE_NAME} (embedding, metadata)`,
+        `VALUES (ARRAY[${event.vector.join(",")}], :metadata)`,
+      ].join(" "),
       parameters: [
         {
           name: "metadata",
@@ -122,31 +44,33 @@ async function storeEmbedding(metadata: string, embedding: number[]) {
     }),
   );
 }
-
-async function queryEmbeddings(
-  include: string,
-  exclude: string | undefined,
-  embedding: number[],
-  threshold: number,
-  count: number,
-) {
+export async function query(event: QueryEvent) {
+  const include = JSON.stringify(event.include);
+  // The return type of JSON.stringify() is always "string".
+  // This is wrong when "event.exclude" is undefined.
+  const exclude = JSON.stringify(event.exclude) as string | undefined;
+  const threshold = event.threshold ?? 0;
+  const count = event.count ?? 10;
   const ret = await useClient(RDSDataClient).send(
     new ExecuteStatementCommand({
       resourceArn: CLUSTER_ARN,
       secretArn: SECRET_ARN,
       database: DATABASE_NAME,
-      sql: `SELECT metadata, embedding <=> string_to_array(:vector, ',')::float[]::vector AS score FROM ${TABLE_NAME}
-                WHERE embedding <=> string_to_array(:vector, ',')::float[]::vector < ${
-                  1 - threshold
-                }
-                AND metadata @> :include
-                ${exclude ? "AND NOT metadata @> :exclude" : ""}
-                ORDER BY score
-                LIMIT ${count}`,
+      sql: [
+        `SELECT metadata, embedding <=> string_to_array(:vector, ',')::float[]::vector AS score`,
+        `FROM ${TABLE_NAME}`,
+        `WHERE embedding <=> string_to_array(:vector, ',')::float[]::vector < ${
+          1 - threshold
+        }`,
+        `AND metadata @> :include`,
+        `${exclude ? "AND NOT metadata @> :exclude" : ""}`,
+        `ORDER BY score`,
+        `LIMIT ${count}`,
+      ].join(" "),
       parameters: [
         {
           name: "vector",
-          value: { stringValue: embedding.join(",") },
+          value: { stringValue: event.vector.join(",") },
         },
         {
           name: "include",
@@ -166,13 +90,15 @@ async function queryEmbeddings(
     }),
   );
 
-  return ret.records?.map((record) => ({
-    metadata: JSON.parse(record[0].stringValue!),
-    score: 1 - record[1].doubleValue!,
-  }));
+  return {
+    results: ret.records?.map((record) => ({
+      metadata: JSON.parse(record[0].stringValue!),
+      score: 1 - record[1].doubleValue!,
+    })),
+  };
 }
-
-async function removeEmbedding(include: string) {
+export async function remove(event: RemoveEvent) {
+  const include = JSON.stringify(event.include);
   await useClient(RDSDataClient).send(
     new ExecuteStatementCommand({
       resourceArn: CLUSTER_ARN,

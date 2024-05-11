@@ -1,6 +1,8 @@
 import fs from "fs/promises";
-import { VectorClient } from "sst";
+import { OpenAI } from "openai";
+import { VectorClient, Resource } from "sst";
 const client = VectorClient("MyVectorDB");
+const openAi = new OpenAI({ apiKey: Resource.OpenAiApiKey.value });
 
 const tags = [
   { id: "tag1", text: "Not from Earth" },
@@ -48,8 +50,9 @@ export const seeder = async () => {
   // Ingest tags
   for (const tag of tags) {
     console.log("ingesting tag", tag.id);
-    await client.ingest({
-      text: tag.text,
+    const vector = await generateEmbeddingOpenAI(tag.text);
+    await client.put({
+      vector,
       metadata: { type: "tag", id: tag.id },
     });
   }
@@ -59,10 +62,10 @@ export const seeder = async () => {
     console.log("ingesting movie", movie.id);
     const imageBuffer = await fs.readFile(movie.poster);
     const image = imageBuffer.toString("base64");
+    const vector = await generateEmbeddingOpenAI(movie.summary);
 
-    await client.ingest({
-      text: movie.summary,
-      image,
+    await client.put({
+      vector,
       metadata: { type: "movie", id: movie.id },
     });
   }
@@ -74,8 +77,11 @@ export const seeder = async () => {
 };
 
 export const app = async (event) => {
-  const ret = await client.retrieve({
-    text: event.queryStringParameters?.text,
+  const vector = await generateEmbeddingOpenAI(
+    event.queryStringParameters?.text
+  );
+  const ret = await client.query({
+    vector,
     include: { type: "movie" },
     exclude: { id: "movie1" },
   });
@@ -85,3 +91,13 @@ export const app = async (event) => {
     body: JSON.stringify(ret, null, 2),
   };
 };
+
+async function generateEmbeddingOpenAI(text: string) {
+  const embeddingResponse = await openAi.embeddings.create({
+    model: "text-embedding-ada-002",
+    input: text,
+    encoding_format: "float",
+  });
+
+  return embeddingResponse.data[0].embedding;
+}

@@ -12,7 +12,6 @@
     "protobufjs"
   ],
   "dependencies": {
-    "@aws-sdk/client-bedrock-runtime": "3.478.0",
     "@aws-sdk/client-cloudfront": "3.478.0",
     "@aws-sdk/client-cloudwatch-logs": "3.478.0",
     "@aws-sdk/client-ecr": "3.478.0",
@@ -47,7 +46,6 @@
     "@tsconfig/node18": "18.2.2",
     "@types/archiver": "6.0.2",
     "@types/aws-lambda": "^8.10.133",
-    "openai": "4.29.2",
     "vitest": "^1.2.2"
   },
   "overrides": {

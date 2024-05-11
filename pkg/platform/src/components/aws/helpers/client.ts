@@ -21,12 +21,14 @@ export const useClient = <C extends any>(
     };
   })();
   return new client({
-    region: opts?.region || process.env.SST_AWS_REGION,
-    credentials: {
-      accessKeyId: process.env.SST_AWS_ACCESS_KEY_ID,
-      sessionToken: process.env.SST_AWS_SESSION_TOKEN,
-      secretAccessKey: process.env.SST_AWS_SECRET_ACCESS_KEY,
-    },
+    region: opts?.region ?? process.env.SST_AWS_REGION,
+    credentials: process.env.SST_AWS_ACCESS_KEY_ID
+      ? {
+          accessKeyId: process.env.SST_AWS_ACCESS_KEY_ID,
+          sessionToken: process.env.SST_AWS_SESSION_TOKEN,
+          secretAccessKey: process.env.SST_AWS_SECRET_ACCESS_KEY,
+        }
+      : undefined,
     retryStrategy: new StandardRetryStrategy(async () => 10000, {
       retryDecider: (e: any) => {
         // Handle no internet connection => retry
