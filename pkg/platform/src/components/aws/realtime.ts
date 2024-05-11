@@ -1,6 +1,7 @@
 import { ComponentResourceOptions, Output, all, output } from "@pulumi/pulumi";
 import * as aws from "@pulumi/aws";
 import { Component, Transform, transform } from "../component";
+import { Link } from "../link";
 import type { Input } from "../input";
 import { Function, FunctionArgs } from "./function";
 import { hashStringToPrettyString, sanitizeToPascalCase } from "../naming";
@@ -129,7 +130,7 @@ export interface RealtimeSubscriberArgs {
  * );
  * ```
  */
-export class Realtime extends Component {
+export class Realtime extends Component implements Link.Linkable {
   private readonly constructorName: string;
   private readonly authHadler: Output<Function>;
   private readonly iotAuthorizer: aws.iot.Authorizer;
@@ -278,6 +279,16 @@ export class Realtime extends Component {
         ...args,
       });
     });
+  }
+
+  /** @internal */
+  public getSSTLink() {
+    return {
+      properties: {
+        endpoint: this.endpoint,
+        authorizer: this.authorizer,
+      },
+    };
   }
 }
 

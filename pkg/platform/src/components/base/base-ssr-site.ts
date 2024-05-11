@@ -161,7 +161,12 @@ export function buildApp(
       // Build link environment variables to inject
       const linkData = Link.build(links || []);
       const linkEnvs = output(linkData).apply((linkData) => {
-        const envs: Record<string, string> = {};
+        const envs: Record<string, string> = {
+          SST_RESOURCE_App: JSON.stringify({
+            name: $app.name,
+            stage: $app.stage,
+          }),
+        };
         for (const datum of linkData) {
           envs[`SST_RESOURCE_${datum.name}`] = JSON.stringify(datum.properties);
         }
