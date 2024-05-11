@@ -1,5 +1,5 @@
 ---
-title: Realtime apps in AWS and SST
+title: Realtime apps in AWS with SST
 description: Use SST to build and deploy a realtime chat app to AWS.
 ---
 
@@ -262,7 +262,7 @@ Here we are going to publish and subscribe to a _topic_ called `sst-chat` and it
 
 ## 4. Create a connection
 
-When our chat component loads, it'll create a new connection to our realtime component. Add the following below the imports in `components/chat.tsx`.
+When our chat component loads, it'll create a new connection to our realtime service. Add the following below the imports in `components/chat.tsx`.
 
 ```ts title="components/chat.tsx"
 function createConnection(endpoint: string, authorizer: string) {
