@@ -19,6 +19,9 @@ export const useProvider = (region: aws.Region) => {
   const provider = new aws.Provider(`AwsProvider.sst.${region}`, {
     ...config,
     region,
+    defaultTags: {
+      tags: output(aws.getDefaultTags()).apply((result) => result.tags),
+    },
   });
   cache.set(region, provider);
   return provider;
