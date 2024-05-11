@@ -1,0 +1,24 @@
+{
+  "name": "aws-realtime-nextjs",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "build": "next build",
+    "dev": "sst dev next dev",
+    "lint": "next lint",
+    "start": "next start"
+  },
+  "dependencies": {
+    "aws-iot-device-sdk-v2": "^1.19.5",
+    "next": "14.2.3",
+    "react": "^18",
+    "react-dom": "^18",
+    "sst": "ion"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "@types/react": "^18",
+    "@types/react-dom": "^18",
+    "typescript": "^5"
+  }
+}

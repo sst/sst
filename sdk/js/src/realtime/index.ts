@@ -14,7 +14,7 @@ export interface RealtimeAuthResult {
    * And to subscribe to all topics under a specific prefix.
    * ```js
    * {
-   *   subscribe: ["chat/#"]
+   *   subscribe: ["chat/*"]
    * }
    * ```
    */
@@ -31,7 +31,7 @@ export interface RealtimeAuthResult {
    * And to publish to all topics under a specific prefix.
    * ```js
    * {
-   *   publish: ["chat/#"]
+   *   publish: ["chat/*"]
    * }
    * ```
    */
@@ -84,37 +84,37 @@ export function RealtimeAuthHandler(
             },
             ...(ret.subscribe
               ? [
-                  {
-                    Action: "iot:Receive",
-                    Effect: "Allow",
-                    Resource: ret.subscribe.map(
-                      (t) => `arn:aws:iot:${region}:${accountId}:topic/${t}`
-                    ),
-                  },
-                ]
+                {
+                  Action: "iot:Receive",
+                  Effect: "Allow",
+                  Resource: ret.subscribe.map(
+                    (t) => `arn:aws:iot:${region}:${accountId}:topic/${t}`
+                  ),
+                },
+              ]
               : []),
             ...(ret.subscribe
               ? [
-                  {
-                    Action: "iot:Subscribe",
-                    Effect: "Allow",
-                    Resource: ret.subscribe.map(
-                      (t) =>
-                        `arn:aws:iot:${region}:${accountId}:topicfilter/${t}`
-                    ),
-                  },
-                ]
+                {
+                  Action: "iot:Subscribe",
+                  Effect: "Allow",
+                  Resource: ret.subscribe.map(
+                    (t) =>
+                      `arn:aws:iot:${region}:${accountId}:topicfilter/${t}`
+                  ),
+                },
+              ]
               : []),
             ...(ret.publish
               ? [
-                  {
-                    Action: "iot:Publish",
-                    Effect: "Allow",
-                    Resource: ret.publish.map(
-                      (t) => `arn:aws:iot:${region}:${accountId}:topic/${t}`
-                    ),
-                  },
-                ]
+                {
+                  Action: "iot:Publish",
+                  Effect: "Allow",
+                  Resource: ret.publish.map(
+                    (t) => `arn:aws:iot:${region}:${accountId}:topic/${t}`
+                  ),
+                },
+              ]
               : []),
           ],
         },

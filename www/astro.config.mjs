@@ -22,6 +22,7 @@ const sidebar = [
       { label: "Svelte", link: "/docs/start/aws/svelte/" },
       { label: "Drizzle", link: "/docs/start/aws/drizzle/" },
       { label: "Next.js", link: "/docs/start/aws/nextjs/" },
+      { label: "Realtime", link: "/docs/start/aws/realtime/" },
       { label: "Container", link: "/docs/start/aws/container/" },
       {
         label: "Cloudflare",
