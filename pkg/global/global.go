@@ -15,7 +15,7 @@ import (
 	"strings"
 )
 
-const PULUMI_VERSION = "v3.112.0"
+const PULUMI_VERSION = "v3.115.2"
 const BUN_VERSION = "1.1.0"
 
 var configDir = (func() string {

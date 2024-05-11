@@ -46,6 +46,7 @@ type StackInput struct {
 	OnEvent func(event *StackEvent)
 	OnFiles func(files []string)
 	Command string
+	Target  []string
 	Dev     bool
 }
 
@@ -490,6 +491,11 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 	switch input.Command {
 	case "up":
 		_, err = stack.Up(ctx,
+			upOptionFunc(func(opts *optup.Options) {
+				opts.ContinueOnError = true
+			}),
+			optup.Target(input.Target),
+			optup.TargetDependents(),
 			optup.ProgressStreams(),
 			optup.ErrorProgressStreams(),
 			optup.EventStreams(stream),
@@ -497,6 +503,9 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 
 	case "destroy":
 		_, err = stack.Destroy(ctx,
+			optdestroy.ContinueOnError(),
+			optdestroy.Target(input.Target),
+			optdestroy.TargetDependents(),
 			optdestroy.ProgressStreams(),
 			optdestroy.ErrorProgressStreams(),
 			optdestroy.EventStreams(stream),
@@ -504,6 +513,7 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 
 	case "refresh":
 		_, err = stack.Refresh(ctx,
+			optrefresh.Target(input.Target),
 			optrefresh.ProgressStreams(),
 			optrefresh.ErrorProgressStreams(),
 			optrefresh.EventStreams(stream),
@@ -751,4 +761,11 @@ func decrypt(input interface{}) interface{} {
 	default:
 		return cast
 	}
+}
+
+type upOptionFunc func(*optup.Options)
+
+// ApplyOption is an implementation detail
+func (o upOptionFunc) ApplyOption(opts *optup.Options) {
+	o(opts)
 }

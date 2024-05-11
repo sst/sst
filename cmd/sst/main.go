@@ -423,6 +423,15 @@ var Root = Command{
 					"```",
 				}, "\n"),
 			},
+			Flags: []Flag{
+				{
+					Name: "target",
+					Description: Description{
+						Short: "Comma seperated list of target URNs",
+						Long:  "Comma seperated list of target URNs",
+					},
+				},
+			},
 			Examples: []Example{
 				{
 					Content: "sst deploy --stage=production",
@@ -441,9 +450,14 @@ var Root = Command{
 				ui := ui.New(ui.ProgressModeDeploy)
 				defer ui.Destroy()
 				ui.Header(version, p.App().Name, p.App().Stage)
+				target := []string{}
+				if cli.String("target") != "" {
+					target = strings.Split(cli.String("target"), ",")
+				}
 				err = p.Stack.Run(cli.Context, &project.StackInput{
 					Command: "up",
 					OnEvent: ui.StackEvent,
+					Target:  target,
 				})
 				if err != nil {
 					return err
@@ -1004,6 +1018,16 @@ var Root = Command{
 					"```",
 				}, "\n"),
 			},
+			Flags: []Flag{
+				{
+					Name: "target",
+					Type: "string",
+					Description: Description{
+						Short: "Comma seperated list of target URNs",
+						Long:  "Comma seperated list of target URNs",
+					},
+				},
+			},
 			Run: func(cli *Cli) error {
 				p, err := initProject(cli)
 				if err != nil {
@@ -1013,9 +1037,14 @@ var Root = Command{
 				ui := ui.New(ui.ProgressModeRemove)
 				defer ui.Destroy()
 				ui.Header(version, p.App().Name, p.App().Stage)
+				target := []string{}
+				if cli.String("target") != "" {
+					target = strings.Split(cli.String("target"), ",")
+				}
 				err = p.Stack.Run(cli.Context, &project.StackInput{
 					Command: "destroy",
 					OnEvent: ui.StackEvent,
+					Target:  target,
 				})
 				if err != nil {
 					return err
@@ -1251,6 +1280,16 @@ var Root = Command{
 					"This is useful for cases where you want to ensure that your local state is in sync with your cloud provider.",
 				}, "\n"),
 			},
+			Flags: []Flag{
+				{
+					Name: "target",
+					Type: "string",
+					Description: Description{
+						Short: "Comma seperated list of target URNs",
+						Long:  "Comma seperated list of target URNs",
+					},
+				},
+			},
 			Run: func(cli *Cli) error {
 				p, err := initProject(cli)
 				if err != nil {
@@ -1260,9 +1299,14 @@ var Root = Command{
 				ui := ui.New(ui.ProgressModeRefresh)
 				defer ui.Destroy()
 				ui.Header(version, p.App().Name, p.App().Stage)
+				target := []string{}
+				if cli.String("target") != "" {
+					target = strings.Split(cli.String("target"), ",")
+				}
 				err = p.Stack.Run(cli.Context, &project.StackInput{
 					Command: "refresh",
 					OnEvent: ui.StackEvent,
+					Target:  target,
 				})
 				if err != nil {
 					return err
@@ -1323,6 +1367,9 @@ var Root = Command{
 
 func (c *Command) registerFlags(parsed map[string]interface{}) {
 	for _, f := range c.Flags {
+		if parsed[f.Name] != nil {
+			continue
+		}
 		if f.Type == "string" {
 			parsed[f.Name] = flag.String(f.Name, "", "")
 		}
