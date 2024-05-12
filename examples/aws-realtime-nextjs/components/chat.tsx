@@ -37,6 +37,7 @@ export default function Chat(
       const message = new TextDecoder("utf8").decode(new Uint8Array(payload));
       setMessages((prev) => [...prev, message]);
     });
+    connection.on("error", console.error);
 
     connection.connect();
 
