@@ -23,7 +23,9 @@ export function createSessionBuilder<
     async verify(token: string): Promise<SessionValue> {
       const auth = Object.values(Resource).find((value) => value.publicKey);
       if (!auth) {
-        throw new Error("No auth resource found");
+        throw new Error(
+          "No auth resource found. Make sure to link the auth resource to this function.",
+        );
       }
       const publicKey = auth.publicKey;
       const result = await jwtVerify(
