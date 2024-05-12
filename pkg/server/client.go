@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"context"
 	"encoding/json"
+	"fmt"
 	"log/slog"
 	"net/http"
 	"os"
@@ -91,7 +92,8 @@ func Connect(ctx context.Context, input ConnectInput) error {
 			event := Event{}
 			err = json.Unmarshal(line, &event)
 			if err != nil {
-				return
+				fmt.Println("weird json", err, string(line))
+				continue
 			}
 			input.OnEvent(event)
 		}

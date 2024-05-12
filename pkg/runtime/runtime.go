@@ -126,10 +126,12 @@ func Run(ctx context.Context, input *RunInput) (Worker, error) {
 }
 
 func ShouldRebuild(runtime string, functionID string, file string) bool {
-	slog.Info("checking if function should be rebuilt", "runtime", runtime, "functionID", functionID, "file", file)
+	slog.Info("checking if function should be rebuilt", "runtime", runtime, "functionID", functionID, "file", file, "runtime", runtime)
 	r, ok := GetRuntime(runtime)
 	if !ok {
 		return false
 	}
-	return r.ShouldRebuild(functionID, file)
+	result := r.ShouldRebuild(functionID, file)
+	slog.Info("should rebuild", "result", result, "functionID", functionID)
+	return result
 }

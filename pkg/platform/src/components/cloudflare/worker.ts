@@ -269,18 +269,21 @@ export class Worker
         cloudflare: {},
       },
 
-      _live: all([name, args.handler, args.build]).apply(
-        ([name, handler, build]) => ({
-          functionID: name,
-          links: [],
-          handler,
-          runtime: "worker",
-          properties: {
-            accountID: sst.cloudflare.DEFAULT_ACCOUNT_ID,
-            scriptName: script.name,
-            build,
-          },
-        }),
+      _live: all([name, args.handler, args.build, args.live]).apply(
+        ([name, handler, build, live]) =>
+          !$dev || !live
+            ? undefined
+            : {
+                functionID: name,
+                links: [],
+                handler,
+                runtime: "worker",
+                properties: {
+                  accountID: sst.cloudflare.DEFAULT_ACCOUNT_ID,
+                  scriptName: script.name,
+                  build,
+                },
+              },
       ),
       _metadata: {
         handler: args.handler,
