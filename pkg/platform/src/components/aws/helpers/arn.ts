@@ -54,14 +54,14 @@ export function parseDynamoStreamArn(streamArn: string) {
   return { tableName };
 }
 
-export function parseEventBus(arn: string) {
+export function parseEventBusArn(arn: string) {
   // arn:aws:events:region:account-id:event-bus/bus-name
-  const tableName = arn.split("/")[1];
-  if (!arn.startsWith("arn:") || !tableName)
+  const busName = arn.split("/")[1];
+  if (!arn.startsWith("arn:") || !busName)
     throw new VisibleError(
       `The provided ARN "${arn}" is not a EventBridge event bus ARN.`,
     );
-  return { tableName };
+  return { busName };
 }
 
 export function parseElasticSearch(arn: string) {

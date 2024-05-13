@@ -4,6 +4,7 @@ export * from "./app-sync.js";
 export * from "./astro.js";
 export * from "./auth.js";
 export * from "./bucket.js";
+export * from "./bus.js";
 export * from "./cluster.js";
 export * from "./cognito-identity-pool.js";
 export * from "./cognito-user-pool.js";
