@@ -25,13 +25,14 @@
  *
  * The `Config` object takes two functions: [`app`](#app-2) and [`run`](#run).
  *
- * The `app` function is evaluated right when your app loads. It's used to define the app config and its providers.
+ * The `app` function is evaluated right when your app loads. It's used to define the app config and its providers. You can add
  *
  * :::note
- * You can Pulumi code in the `run` function not the `app` function.
+ * You need TypeScript 5 to see the types in your config.
  * :::
  *
- * While the `run` function is where you define your resources using SST or Pulumi's components.
+ * You can add Pulumi code in the `run` function not the `app` function. While the `run`
+ * function is where you define your resources using SST or Pulumi's components.
  *
  * :::tip
  * The [Global](/docs/reference/global/) library can help you with your app config and resources.
