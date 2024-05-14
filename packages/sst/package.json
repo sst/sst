@@ -63,7 +63,7 @@
     "@smithy/signature-v4": "^2.0.16",
     "@trpc/server": "9.16.0",
     "adm-zip": "^0.5.10",
-    "aws-cdk-lib": "2.132.1",
+    "aws-cdk-lib": "2.141.0",
     "aws-iot-device-sdk": "^2.2.13",
     "aws-sdk": "^2.1501.0",
     "builtin-modules": "3.2.0",
