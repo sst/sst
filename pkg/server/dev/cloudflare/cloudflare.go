@@ -125,6 +125,10 @@ func Start(ctx context.Context, proj *project.Project, args map[string]interface
 					continue
 				}
 				for workerID, warp := range complete.Warps {
+					if warp.Runtime != "worker" {
+						continue
+					}
+
 					if runtime.ShouldRebuild(warp.Runtime, workerID, file.Path) {
 						output, err := runtime.Build(ctx, &runtime.BuildInput{
 							Warp:    warp,
