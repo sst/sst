@@ -62,7 +62,7 @@ export interface App {
    * version: "0.0.300"
    * ```
    *
-   * Also takes a range.
+   * Also supports semver ranges.
    * ```ts
    * version: ">= 0.0.300"
    * ```
