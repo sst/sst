@@ -15,24 +15,14 @@ import InlineSection from '../../../../../../src/components/tsdoc/InlineSection.
 <Section type="about">
 The `Vector` component lets you store and retrieve vector data in your app.
 
-- It uses an LLM to generate the embedding.
-- Stores it in a vector database powered by [RDS Postgres Serverless v2](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/aurora-serverless-v2.html).
-- Provides a [SDK](/docs/reference/sdk/) to ingest, retrieve, and remove the vector data.
+- It uses a vector database powered by [RDS Postgres Serverless v2](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/aurora-serverless-v2.html).
+- Provides a [SDK](/docs/reference/sdk/) to query, put, and remove the vector data.
 
 #### Create the database
 
 ```ts
-const vector = new sst.aws.Vector("MyVectorDB");
-```
-
-#### Change the model
-
-Optionally, use a different model, like OpenAI's `text-embedding-3-small` model. You'll need to pass in your OpenAI API key.
-
-```ts {3}
-new sst.aws.Vector("MyVectorDB", {
-  openAiApiKey: new sst.aws.Secret("OpenAiApiKey").value,
-  model: "text-embedding-3-small"
+const vector = new sst.aws.Vector("MyVectorDB", {
+  dimension: 1536
 });
 ```
 
@@ -51,10 +41,8 @@ Once linked, you can query it in your function code using the [SDK](/docs/refere
 ```ts title="app/page.tsx" {3}
 import { VectorClient } from "sst";
 
-const vector = VectorClient("MyVectorDB");
-
-await vector.retrieve({
-  text: "Some text to search for"
+await VectorClient("MyVectorDB").query({
+  vector: [32.4, 6.55, 11.2, 10.3, 87.9]
 });
 ```
 </Section>
@@ -66,64 +54,41 @@ await vector.retrieve({
 <Segment>
 <Section type="signature">
 ```ts
-new Vector(name, args?, opts?)
+new Vector(name, args, opts?)
 ```
 </Section>
 
 <Section type="parameters">
 #### Parameters
 - <p><code class="key">name</code> <code class="primitive">string</code></p>
-- <p><code class="key">args?</code> [<code class="type">VectorArgs</code>](#vectorargs)</p>
+- <p><code class="key">args</code> [<code class="type">VectorArgs</code>](#vectorargs)</p>
 - <p><code class="key">opts?</code> [<code class="type">ComponentResourceOptions</code>](https://www.pulumi.com/docs/concepts/options/)</p>
 </Section>
 </Segment>
 
 ## VectorArgs
-### model?
+### dimension
 <Segment>
 <Section type="parameters">
 <InlineSection>
-**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="symbol">&ldquo;</code><code class="primitive">amazon.titan-embed-text-v1</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">amazon.titan-embed-image-v1</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">text-embedding-ada-002</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">text-embedding-3-small</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">text-embedding-3-large</code><code class="symbol">&rdquo;</code><code class="symbol">&gt;</code>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">number</code><code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
+The dimension size of each vector.
 
-<InlineSection>
-**Default** <code class="primitive">"amazon.titan-embed-text-v1"</code>
-</InlineSection>
-The model used for generating the vectors. Supports AWS' and OpenAI's models.
-
-To use OpenAI's `text-embedding-ada-002`, `text-embedding-3-small`, or `text-embedding-3-large` model, you'll need to pass in an `openAiApiKey`.
-
-:::tip
-To use OpenAI's models, you'll need to pass in an `openAiApiKey`.
+:::note
+The maximum supported dimension is 2000. To store vectors with greater dimension,
+use dimensionality reduction to reduce the dimension to 2000 or less. OpenAI supports
+[dimensionality reduction](https://platform.openai.com/docs/api-reference/embeddings/create#embeddings-create-dimensions) automatically when generating embeddings.
 :::
 
-OpenAI's `text-embedding-3-large` model produces embeddings with 3072 dimensions. This is [scaled down](https://platform.openai.com/docs/guides/embeddings/use-cases) to 2000 dimensions to store it in Postgres. The Postgres database in this component can store up to 2000 dimensions with a pgvector [HNSW index](https://github.com/pgvector/pgvector?tab=readme-ov-file#hnsw).
-
-```js
-
-{
-  model: "amazon.titan-embed-image-v1"
-}
-```
-</Segment>
-### openAiApiKey?
-<Segment>
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
-</InlineSection>
-</Section>
-Your OpenAI API key. This is needed only if you're using the `text-embedding-ada-002`, `text-embedding-3-small`, or `text-embedding-3-small` model.
-
-:::tip
-Use `sst.Secret` to store your API key securely.
+:::caution
+Changing the dimension will cause the data to be cleared.
 :::
 
 ```js
-
 {
-  openAiApiKey: "<your-api-key>"
+  dimension: 1536
 }
 ```
 </Segment>
@@ -198,48 +163,31 @@ Create a client to interact with the Vector database.
 import { VectorClient } from "sst";
 const client = VectorClient("MyVectorDB");
 
-// Ingest a text into the vector db
-await client.ingest({
-  text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+// Store a vector into the db
+await client.put({
+  vector: [32.4, 6.55, 11.2, 10.3, 87.9],
   metadata: { type: "movie", genre: "comedy" },
 });
 
-// Retrieve embeddings similar to the provided text
-const result = await client.retrieve({
-  text: "Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+// Query vectors similar to the provided vector
+const result = await client.query({
+  vector: [32.4, 6.55, 11.2, 10.3, 87.9],
   include: { type: "movie" },
   exclude: { genre: "thriller" },
 });
 ```
 </Segment>
-### IngestEvent
+### PutEvent
 <Segment>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Object</code>
 </InlineSection>
-- <p>[<code class="key">image?</code>](#ingestevent-image)</p>
-- <p>[<code class="key">metadata</code>](#ingestevent-metadata)</p>
-- <p>[<code class="key">text?</code>](#ingestevent-text)</p>
+- <p>[<code class="key">metadata</code>](#putevent-metadata)</p>
+- <p>[<code class="key">vector</code>](#putevent-vector)</p>
 </Section>
 </Segment>
-<NestedTitle id="ingestevent-image" Tag="h4" parent="IngestEvent.">image?</NestedTitle>
-<Segment>
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">string</code>
-</InlineSection>
-</Section>
-The base64 representation of the image used to generate the embedding vector.
-At least one of `text` or `image` must be provided.
-
-```js
-{
-  image: await fs.readFile("./file.jpg").toString("base64"),
-}
-```
-</Segment>
-<NestedTitle id="ingestevent-metadata" Tag="h4" parent="IngestEvent.">metadata</NestedTitle>
+<NestedTitle id="putevent-metadata" Tag="h4" parent="PutEvent.">metadata</NestedTitle>
 <Segment>
 <Section type="parameters">
 <InlineSection>
@@ -247,7 +195,7 @@ At least one of `text` or `image` must be provided.
 </InlineSection>
 </Section>
 Metadata for the event in JSON format.
-This metadata will be used to filter when retrieving and removing embeddings.
+This metadata will be used to filter when quering and removing vectors.
 
 ```js
 {
@@ -259,73 +207,35 @@ This metadata will be used to filter when retrieving and removing embeddings.
 }
 ```
 </Segment>
-<NestedTitle id="ingestevent-text" Tag="h4" parent="IngestEvent.">text?</NestedTitle>
+<NestedTitle id="putevent-vector" Tag="h4" parent="PutEvent.">vector</NestedTitle>
 <Segment>
 <Section type="parameters">
 <InlineSection>
-**Type** <code class="primitive">string</code>
+**Type** <code class="primitive">number</code><code class="symbol">[]</code>
 </InlineSection>
 </Section>
-The text used to generate the embedding vector.
-At least one of `text` or `image` must be provided.
+The vector to store in the database.
 
 ```js
 {
-  text: "This is an example text.",
+  vector: [32.4, 6.55, 11.2, 10.3, 87.9],
 }
 ```
 </Segment>
-### RemoveEvent
+### QueryEvent
 <Segment>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Object</code>
 </InlineSection>
-- <p>[<code class="key">include</code>](#removeevent-include)</p>
+- <p>[<code class="key">count?</code>](#queryevent-count)</p>
+- <p>[<code class="key">exclude?</code>](#queryevent-exclude)</p>
+- <p>[<code class="key">include</code>](#queryevent-include)</p>
+- <p>[<code class="key">threshold?</code>](#queryevent-threshold)</p>
+- <p>[<code class="key">vector</code>](#queryevent-vector)</p>
 </Section>
 </Segment>
-<NestedTitle id="removeevent-include" Tag="h4" parent="RemoveEvent.">include</NestedTitle>
-<Segment>
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">Record</code><code class="symbol">&lt;</code><code class="primitive">string</code>, <code class="primitive">any</code><code class="symbol">&gt;</code>
-</InlineSection>
-</Section>
-The metadata used to filter the removal of embeddings.
-Only embeddings with metadata that match the provided fields will be removed.
-
-To remove embeddings for movie with id "movie-123":
-```js
-{
-  include: {
-    id: "movie-123",
-  }
-}
-```
-To remove embeddings for all movies:
-```js
- {
-  include: {
-   type: "movie",
-  }
- }
-```
-</Segment>
-### RetrieveEvent
-<Segment>
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">Object</code>
-</InlineSection>
-- <p>[<code class="key">count?</code>](#retrieveevent-count)</p>
-- <p>[<code class="key">exclude?</code>](#retrieveevent-exclude)</p>
-- <p>[<code class="key">image?</code>](#retrieveevent-image)</p>
-- <p>[<code class="key">include</code>](#retrieveevent-include)</p>
-- <p>[<code class="key">text?</code>](#retrieveevent-text)</p>
-- <p>[<code class="key">threshold?</code>](#retrieveevent-threshold)</p>
-</Section>
-</Segment>
-<NestedTitle id="retrieveevent-count" Tag="h4" parent="RetrieveEvent.">count?</NestedTitle>
+<NestedTitle id="queryevent-count" Tag="h4" parent="QueryEvent.">count?</NestedTitle>
 <Segment>
 <Section type="parameters">
 <InlineSection>
@@ -344,14 +254,14 @@ The number of results to return.
 }
 ```
 </Segment>
-<NestedTitle id="retrieveevent-exclude" Tag="h4" parent="RetrieveEvent.">exclude?</NestedTitle>
+<NestedTitle id="queryevent-exclude" Tag="h4" parent="QueryEvent.">exclude?</NestedTitle>
 <Segment>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Record</code><code class="symbol">&lt;</code><code class="primitive">string</code>, <code class="primitive">any</code><code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
-Exclude embeddings with metadata that match the provided fields.
+Exclude vectors with metadata that match the provided fields.
 
 ```js
 {
@@ -364,7 +274,7 @@ Exclude embeddings with metadata that match the provided fields.
   }
 }
 ```
-This will match the embedding with metadata:
+This will match the vector with metadata:
 ```js
  {
    type: "movie",
@@ -373,7 +283,7 @@ This will match the embedding with metadata:
  }
 ```
 
-But not the embedding with metadata:
+But not the vector with metadata:
 ```js
  {
    type: "book",
@@ -382,31 +292,15 @@ But not the embedding with metadata:
  }
 ```
 </Segment>
-<NestedTitle id="retrieveevent-image" Tag="h4" parent="RetrieveEvent.">image?</NestedTitle>
-<Segment>
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">string</code>
-</InlineSection>
-</Section>
-The base64 representation of the image prompt used to retrive embeddings.
-At least one of `text` or `image` must be provided.
-
-```js
-{
-  image: await fs.readFile("./file.jpg").toString("base64"),
-}
-```
-</Segment>
-<NestedTitle id="retrieveevent-include" Tag="h4" parent="RetrieveEvent.">include</NestedTitle>
+<NestedTitle id="queryevent-include" Tag="h4" parent="QueryEvent.">include</NestedTitle>
 <Segment>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Record</code><code class="symbol">&lt;</code><code class="primitive">string</code>, <code class="primitive">any</code><code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
-The metadata used to filter the retrieval of embeddings.
-Only embeddings with metadata that match the provided fields will be returned.
+The metadata used to filter the vectors.
+Only vectors that match the provided fields will be returned.
 
 ```js
 {
@@ -416,7 +310,7 @@ Only embeddings with metadata that match the provided fields will be returned.
   }
 }
 ```
-This will match the embedding with metadata:
+This will match the vector with metadata:
 ```js
  {
    type: "movie",
@@ -425,7 +319,7 @@ This will match the embedding with metadata:
  }
 ```
 
-But not the embedding with metadata:
+But not the vector with metadata:
 ```js
  {
    type: "book",
@@ -434,23 +328,7 @@ But not the embedding with metadata:
  }
 ```
 </Segment>
-<NestedTitle id="retrieveevent-text" Tag="h4" parent="RetrieveEvent.">text?</NestedTitle>
-<Segment>
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">string</code>
-</InlineSection>
-</Section>
-The text prompt used to retrieve embeddings.
-At least one of `text` or `image` must be provided.
-
-```js
-{
-  text: "This is an example text.",
-}
-```
-</Segment>
-<NestedTitle id="retrieveevent-threshold" Tag="h4" parent="RetrieveEvent.">threshold?</NestedTitle>
+<NestedTitle id="queryevent-threshold" Tag="h4" parent="QueryEvent.">threshold?</NestedTitle>
 <Segment>
 <Section type="parameters">
 <InlineSection>
@@ -461,11 +339,11 @@ At least one of `text` or `image` must be provided.
 <InlineSection>
 **Default** <code class="primitive">0</code>
 </InlineSection>
-The threshold of similarity between the prompt and the retrieved embeddings.
-Only embeddings with a similarity score higher than the threshold will be returned.
+The threshold of similarity between the prompt and the queried vectors.
+Only vectors with a similarity score higher than the threshold will be returned.
 Expected value is between 0 and 1.
-- 0 means the prompt and the retrieved embeddings are completely different.
-- 1 means the prompt and the retrieved embeddings are identical.
+- 0 means the prompt and the queried vectors are completely different.
+- 1 means the prompt and the queried vectors are identical.
 
 ```js
 {
@@ -473,35 +351,86 @@ Expected value is between 0 and 1.
 }
 ```
 </Segment>
-### RetrieveResponse
+<NestedTitle id="queryevent-vector" Tag="h4" parent="QueryEvent.">vector</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">number</code><code class="symbol">[]</code>
+</InlineSection>
+</Section>
+The vector used to query the database.
+
+```js
+{
+  vector: [32.4, 6.55, 11.2, 10.3, 87.9],
+}
+```
+</Segment>
+### QueryResponse
 <Segment>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Object</code>
 </InlineSection>
-- <p>[<code class="key">metadata</code>](#retrieveresponse-metadata)</p>
-- <p>[<code class="key">score</code>](#retrieveresponse-score)</p>
+- <p>[<code class="key">metadata</code>](#queryresponse-metadata)</p>
+- <p>[<code class="key">score</code>](#queryresponse-score)</p>
 </Section>
 </Segment>
-<NestedTitle id="retrieveresponse-metadata" Tag="h4" parent="RetrieveResponse.">metadata</NestedTitle>
+<NestedTitle id="queryresponse-metadata" Tag="h4" parent="QueryResponse.">metadata</NestedTitle>
 <Segment>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Record</code><code class="symbol">&lt;</code><code class="primitive">string</code>, <code class="primitive">any</code><code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
-Metadata for the event in JSON format that was provided when ingesting the embedding.
+Metadata for the event in JSON format that was provided when storing the vector.
 
 </Segment>
-<NestedTitle id="retrieveresponse-score" Tag="h4" parent="RetrieveResponse.">score</NestedTitle>
+<NestedTitle id="queryresponse-score" Tag="h4" parent="QueryResponse.">score</NestedTitle>
 <Segment>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">number</code>
 </InlineSection>
 </Section>
-The similarity score between the prompt and the retrieved embedding.
+The similarity score between the prompt and the queried vector.
 
+</Segment>
+### RemoveEvent
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Object</code>
+</InlineSection>
+- <p>[<code class="key">include</code>](#removeevent-include)</p>
+</Section>
+</Segment>
+<NestedTitle id="removeevent-include" Tag="h4" parent="RemoveEvent.">include</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Record</code><code class="symbol">&lt;</code><code class="primitive">string</code>, <code class="primitive">any</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+The metadata used to filter the removal of vectors.
+Only vectors with metadata that match the provided fields will be removed.
+
+To remove vectors for movie with id "movie-123":
+```js
+{
+  include: {
+    id: "movie-123",
+  }
+}
+```
+To remove vectors for all movies:
+```js
+ {
+  include: {
+   type: "movie",
+  }
+ }
+```
 </Segment>
 ### VectorClientResponse
 <Segment>
@@ -509,16 +438,25 @@ The similarity score between the prompt and the retrieved embedding.
 <InlineSection>
 **Type** <code class="primitive">Object</code>
 </InlineSection>
-- <p>[<code class="key">ingest</code>](#vectorclientresponse-ingest)</p>
+- <p>[<code class="key">put</code>](#vectorclientresponse-put)</p>
+- <p>[<code class="key">query</code>](#vectorclientresponse-query)</p>
 - <p>[<code class="key">remove</code>](#vectorclientresponse-remove)</p>
-- <p>[<code class="key">retrieve</code>](#vectorclientresponse-retrieve)</p>
 </Section>
 </Segment>
-<NestedTitle id="vectorclientresponse-ingest" Tag="h4" parent="VectorClientResponse.">ingest</NestedTitle>
+<NestedTitle id="vectorclientresponse-put" Tag="h4" parent="VectorClientResponse.">put</NestedTitle>
 <Segment>
 <Section type="parameters">
 <InlineSection>
-**Type** <code class="primitive">(event: [<code class="type">IngestEvent</code>](#ingestevent)) => <code class="primitive">Promise</code><code class="symbol">&lt;</code><code class="primitive">void</code><code class="symbol">&gt;</code></code>
+**Type** <code class="primitive">(event: [<code class="type">PutEvent</code>](#putevent)) => <code class="primitive">Promise</code><code class="symbol">&lt;</code><code class="primitive">void</code><code class="symbol">&gt;</code></code>
+</InlineSection>
+</Section>
+
+</Segment>
+<NestedTitle id="vectorclientresponse-query" Tag="h4" parent="VectorClientResponse.">query</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">(event: [<code class="type">QueryEvent</code>](#queryevent)) => <code class="primitive">Promise</code><code class="symbol">&lt;</code>[<code class="type">QueryResponse</code>](#queryresponse)<code class="symbol">&gt;</code></code>
 </InlineSection>
 </Section>
 
@@ -528,15 +466,6 @@ The similarity score between the prompt and the retrieved embedding.
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">(event: [<code class="type">RemoveEvent</code>](#removeevent)) => <code class="primitive">Promise</code><code class="symbol">&lt;</code><code class="primitive">void</code><code class="symbol">&gt;</code></code>
-</InlineSection>
-</Section>
-
-</Segment>
-<NestedTitle id="vectorclientresponse-retrieve" Tag="h4" parent="VectorClientResponse.">retrieve</NestedTitle>
-<Segment>
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">(event: [<code class="type">RetrieveEvent</code>](#retrieveevent)) => <code class="primitive">Promise</code><code class="symbol">&lt;</code>[<code class="type">RetrieveResponse</code>](#retrieveresponse)<code class="symbol">&gt;</code></code>
 </InlineSection>
 </Section>
 

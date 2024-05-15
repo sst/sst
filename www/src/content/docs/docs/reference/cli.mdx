@@ -233,6 +233,12 @@ This is different from SST v2, in that you needed to run `sst dev` and `sst bind
 sst deploy
 ```
 </Section>
+
+<Section type="parameters">
+#### Flags
+- <p><code class="key">target</code> <code class="primitive"></code></p>
+Comma seperated list of target URNs
+</Section>
 Deploy your application. By default, it deploys to your personal stage.
 
 Optionally, deploy your app to a specific stage.
@@ -522,6 +528,12 @@ This is useful if you want to run multiple commands, all while accessing the lin
 sst remove
 ```
 </Section>
+
+<Section type="parameters">
+#### Flags
+- <p><code class="key">target</code> <code class="primitive">string</code></p>
+Comma seperated list of target URNs
+</Section>
 Removes your application. By default, it removes your personal stage.
 
 :::tip
@@ -621,6 +633,12 @@ Disable telemetry.
 ```sh frame="none"
 sst refresh
 ```
+</Section>
+
+<Section type="parameters">
+#### Flags
+- <p><code class="key">target</code> <code class="primitive">string</code></p>
+Comma seperated list of target URNs
 </Section>
 Compares your local state with the state of the resources in the cloud provider. Any changes that are found are adopted into your local state.
 

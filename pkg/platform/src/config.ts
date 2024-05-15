@@ -45,13 +45,24 @@
 
 export interface App {
   /**
-   * Optional required version for sst.
+   * The version of SST supported by the app. The CLI will fail any commands if the version does
+   * not match.
    *
    * :::tip
-   * Commands will fail if the version does not match.
+   * Useful in CI where you don't want it to automatically deploy with a new version of SST.
    * :::
    *
+   * @default The latest version of SST.
+   *
    * @example
+   *
+   * Takes a specific version.
+   *
+   * ```ts
+   * version: "0.0.300"
+   * ```
+   *
+   * Also takes a range.
    * ```ts
    * version: ">= 0.0.300"
    * ```

@@ -189,6 +189,16 @@ The IoT authorizer resource.
 
 The following are accessible through the [SDK](/docs/reference/sdk/) at runtime.
 
+### Links
+<Segment>
+<Section type="parameters">
+- <p><code class="key">authorizer</code> <code class="primitive">string</code></p>
+The name of the IoT authorizer.
+- <p><code class="key">endpoint</code> <code class="primitive">string</code></p>
+The IoT endpoint.
+</Section>
+</Segment>
+
 ### RealtimeAuthHandler
 <Segment>
 <Section type="signature">
@@ -251,7 +261,7 @@ For example, this publishes to specific topics.
 And to publish to all topics under a specific prefix.
 ```js
 {
-  publish: ["chat/#"]
+  publish: ["chat/*"]
 }
 ```
 </Segment>
@@ -274,7 +284,7 @@ For example, this subscribes to specific topics.
 And to subscribe to all topics under a specific prefix.
 ```js
 {
-  subscribe: ["chat/#"]
+  subscribe: ["chat/*"]
 }
 ```
 </Segment>
