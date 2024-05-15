@@ -170,7 +170,7 @@ const DEFAULT_CACHE_POLICY_ALLOWED_HEADERS = [
   "next-router-state-tree",
   "next-url",
   "x-prerender-bypass",
-  "x-prerender-revalidate"
+  "x-prerender-revalidate",
 ];
 
 type NextjsSiteNormalizedProps = NextjsSiteProps & SsrSiteNormalizedProps;
@@ -245,7 +245,7 @@ export class NextjsSite extends SsrSite {
     this.handleMissingSourcemap();
 
     if (this.isPerRouteLoggingEnabled()) {
-      //this.disableDefaultLogging();
+      this.disableDefaultLogging();
       this.uploadSourcemaps();
     }
 
