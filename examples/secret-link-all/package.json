@@ -1,0 +1,18 @@
+{
+  "name": "secret-link-all",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" \u0026\u0026 exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "sst": "ion"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "8.10.137"
+  }
+}
