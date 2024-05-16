@@ -185,9 +185,29 @@ The `aws.getXXXXOutput` functions typically return an object of type _`Output<pr
 
 ---
 
-## Home
+## State
 
-The state of the deployed resources and your secrets are uploaded to a bucket in your provider. We call this the `home` of your app.
+You app generates some _state_ that is uploaded to your provider. This includes:
+
+1. A state file for your resources. This is a JSON file.
+2. A passphrase that is used to encrypt the secrets in your state.
+
+To do this SST creates:
+
+1. A bucket to store the state, typically named `sst-state-<hash>`. This is created in the region of your `home`. More on this below.
+2. An SSM parameter to store the passphrase used to encrypt your secrets, under `/sst/passphrase/<app>/<stage>`. Also created in the region of your `home`.
+
+:::caution
+Do not delete the SSM parameter that stores the passphrase for your app.
+:::
+
+The passphrase is used to encrypt any secrets and sensitive information. Without it SST won't be able to read the state file and deploy your app.
+
+---
+
+### Home
+
+Your `sst.config.ts` specifies which provider to use for storing your state. We call this the `home` of your app.
 
 ```ts
 {
@@ -198,7 +218,7 @@ The state of the deployed resources and your secrets are uploaded to a bucket in
 You can specify which provider you'd like to use for this. Currently `aws` and `cloudflare` are supported.
 
 :::tip
-Your state and secrets are uploaded to your `home`.
+Your state file is uploaded to your `home`.
 :::
 
 When you specify your home provider, SST assumes you'd like to use that provider in your app as well and adds it to your providers internally. So the above is equivalent to doing this.
@@ -212,7 +232,27 @@ When you specify your home provider, SST assumes you'd like to use that provider
 }
 ```
 
+This also means that if you change the region of the `aws` provider above, you are changing the region for your `home` as well.
+
 You can read more about the `home` provider in [Config](/docs/reference/config/).
+
+---
+
+### Bootstrap
+
+As SST starts deploying the resources in your app, it creates some additional _bootstrap_ resources. If your app has a Lambda function or a Docker container, then SST will create the following in the same region as the given resource:
+
+1. An assets bucket to store the function packages, typically named `sst-asset-<hash>`.
+2. An ECR repository to store container images, called `sst-asset`.
+3. An SSM parameter to store the assets bucket name and the ECR repository, stored under `/sst/bootstrap`.
+
+The SSM parameter is used to look up the location of these resources.
+
+:::tip
+Some additional bootstrap resources are created based on what your app is creating.
+:::
+
+When you remove an SST app, it does not remove the _state_ or _bootstrap_ resources. This is because it does not know if there are other apps that might be using this. So if you want to completely remove any SST created resources, you'll need to manually remove these in the regions you've deployed to.
 
 ---
 

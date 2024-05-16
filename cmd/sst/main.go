@@ -428,7 +428,7 @@ var Root = Command{
 					Name: "target",
 					Description: Description{
 						Short: "Comma seperated list of target URNs",
-						Long:  "Comma seperated list of target URNs",
+						Long:  "Comma seperated list of target URNs.",
 					},
 				},
 			},
@@ -1024,7 +1024,7 @@ var Root = Command{
 					Type: "string",
 					Description: Description{
 						Short: "Comma seperated list of target URNs",
-						Long:  "Comma seperated list of target URNs",
+						Long:  "Comma seperated list of target URNs.",
 					},
 				},
 			},
@@ -1286,7 +1286,7 @@ var Root = Command{
 					Type: "string",
 					Description: Description{
 						Short: "Comma seperated list of target URNs",
-						Long:  "Comma seperated list of target URNs",
+						Long:  "Comma seperated list of target URNs.",
 					},
 				},
 			},
