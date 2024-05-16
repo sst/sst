@@ -1,5 +1,19 @@
 # @serverless-stack/cli2
 
+## 2.41.5
+
+### Patch Changes
+
+- [#3727](https://github.com/sst/sst/pull/3727) [`0acf9c68e`](https://github.com/sst/sst/commit/0acf9c68e9731755105899e20cad1fba1b118d3c) Thanks [@neilsaccardo](https://github.com/neilsaccardo)! - NextjsSite: update OpenNext version to 2.3.8
+
+- [#3734](https://github.com/sst/sst/pull/3734) [`b2ecaeb23`](https://github.com/sst/sst/commit/b2ecaeb239f112c4493c3d03d15ca883c460f576) Thanks [@blair55](https://github.com/blair55)! - Function: add support for dotnet 8 runtime
+
+- [#3745](https://github.com/sst/sst/pull/3745) [`3835298d2`](https://github.com/sst/sst/commit/3835298d24a0d5c00228ee6a3130e4b4c417e40d) Thanks [@gtdudu](https://github.com/gtdudu)! - RDS: support postgresql engines 14.10, 15.4 and 16.1
+
+- [#3741](https://github.com/sst/sst/pull/3741) [`e3e15286c`](https://github.com/sst/sst/commit/e3e15286ca938f6812586d289bc534b62ec669bc) Thanks [@chrisdlangham](https://github.com/chrisdlangham)! - Function: logs errors to stdout for dotnet8
+
+- [#3735](https://github.com/sst/sst/pull/3735) [`10c339b91`](https://github.com/sst/sst/commit/10c339b9113bf5561bc8bed540725230696f2387) Thanks [@ZacharySpilinek](https://github.com/ZacharySpilinek)! - NextjsSite: allow overriding error responses
+
 ## 2.41.4
 
 ### Patch Changes

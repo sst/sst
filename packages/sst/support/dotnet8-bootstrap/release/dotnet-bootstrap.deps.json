@@ -1,0 +1,59 @@
+{
+  "runtimeTarget": {
+    "name": ".NETCoreApp,Version=v8.0",
+    "signature": ""
+  },
+  "compilationOptions": {},
+  "targets": {
+    ".NETCoreApp,Version=v8.0": {
+      "dotnet-bootstrap/1.0.0": {
+        "dependencies": {
+          "Amazon.Lambda.RuntimeSupport": "1.10.0"
+        },
+        "runtime": {
+          "dotnet-bootstrap.dll": {}
+        }
+      },
+      "Amazon.Lambda.Core/2.2.0": {
+        "runtime": {
+          "lib/net8.0/Amazon.Lambda.Core.dll": {
+            "assemblyVersion": "1.0.0.0",
+            "fileVersion": "1.0.0.0"
+          }
+        }
+      },
+      "Amazon.Lambda.RuntimeSupport/1.10.0": {
+        "dependencies": {
+          "Amazon.Lambda.Core": "2.2.0"
+        },
+        "runtime": {
+          "lib/net8.0/Amazon.Lambda.RuntimeSupport.dll": {
+            "assemblyVersion": "1.10.0.0",
+            "fileVersion": "1.10.0.0"
+          }
+        }
+      }
+    }
+  },
+  "libraries": {
+    "dotnet-bootstrap/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "Amazon.Lambda.Core/2.2.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-DHqKeD1CYocP0t1dJC/NaXfu+5k6AoqnQ1Hlu/J2mXpLpCyeJfY+tIqT5fpruDarUlU0NtdIH8zSkCjeinyb1A==",
+      "path": "amazon.lambda.core/2.2.0",
+      "hashPath": "amazon.lambda.core.2.2.0.nupkg.sha512"
+    },
+    "Amazon.Lambda.RuntimeSupport/1.10.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-J1NdaUV24sWALmCjzJJ6vezskeeH2NxJU7ao86rgdzW+AcgnhYjIULuKQNAx6fTl8AP/8acFsq7Jp7k156hh4A==",
+      "path": "amazon.lambda.runtimesupport/1.10.0",
+      "hashPath": "amazon.lambda.runtimesupport.1.10.0.nupkg.sha512"
+    }
+  }
+}

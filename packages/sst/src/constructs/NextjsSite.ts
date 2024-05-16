@@ -26,7 +26,13 @@ import { Provider } from "aws-cdk-lib/custom-resources";
 import { Queue } from "aws-cdk-lib/aws-sqs";
 import { SqsEventSource } from "aws-cdk-lib/aws-lambda-event-sources";
 import { Stack } from "./Stack.js";
-import { EdgeFunctionConfig, FunctionOriginConfig, SsrSite, SsrSiteNormalizedProps, SsrSiteProps } from "./SsrSite.js";
+import {
+  EdgeFunctionConfig,
+  FunctionOriginConfig,
+  SsrSite,
+  SsrSiteNormalizedProps,
+  SsrSiteProps,
+} from "./SsrSite.js";
 import { Size, toCdkSize } from "./util/size.js";
 import { Bucket } from "aws-cdk-lib/aws-s3";
 import { Effect, Policy, PolicyStatement } from "aws-cdk-lib/aws-iam";
@@ -77,12 +83,16 @@ type BaseOrigins<T extends Record<string, OpenNextOrigins>> = {
 } & T;
 
 type IEdgeFunctions<T extends Record<string, BaseFunction>> = {
-  middleware?: BaseFunction
+  middleware?: BaseFunction;
 } & T;
 
 interface OpenNextOutput<
-  Origins extends BaseOrigins<Record<string, OpenNextOrigins>> = BaseOrigins<{}>,
-  EdgeFunctions extends IEdgeFunctions<Record<string, BaseFunction>> = IEdgeFunctions<{}>
+  Origins extends BaseOrigins<
+    Record<string, OpenNextOrigins>
+  > = BaseOrigins<{}>,
+  EdgeFunctions extends IEdgeFunctions<
+    Record<string, BaseFunction>
+  > = IEdgeFunctions<{}>
 > {
   edgeFunctions: EdgeFunctions;
   origins: Origins;
@@ -101,38 +111,59 @@ interface OpenNextOutput<
 }
 
 // Just a subset of the original OpenNextConfig, only needed for properly typing
-interface OpenNextFnProps<Override extends {
-  generateDockerfile?: boolean;
-} = {}> {
+interface OpenNextFnProps<
+  Override extends {
+    generateDockerfile?: boolean;
+  } = {}
+> {
   override?: Override;
   placement?: "global" | "regional";
 }
-interface OpenNextConfig<SplittedFn extends Record<string, OpenNextFnProps> = Record<string, OpenNextFnProps>> {
+interface OpenNextConfig<
+  SplittedFn extends Record<string, OpenNextFnProps> = Record<
+    string,
+    OpenNextFnProps
+  >
+> {
   default: OpenNextFnProps;
   functions?: SplittedFn;
   middleware?: {
     external: true;
-  }
+  };
 }
 
-type InterpolatedCdkProp = Omit<FunctionOriginConfig['function'], "handler" | "bundle"> & { warm?: number };
+type InterpolatedCdkProp = Omit<
+  FunctionOriginConfig["function"],
+  "handler" | "bundle"
+> & { warm?: number };
 
 type InterpolatedCdkProps<T extends OpenNextConfig> = {
-  [K in keyof T['functions']]?: T['functions'] extends Record<string, OpenNextFnProps> ? InterpolatedCdkProp: never
+  [K in keyof T["functions"]]?: T["functions"] extends Record<
+    string,
+    OpenNextFnProps
+  >
+    ? InterpolatedCdkProp
+    : never;
 } & {
   default?: InterpolatedCdkProp;
   middleware?: InterpolatedCdkProp;
-}
+};
 
-type InterpolatedCdkOutput = CdkFunction
+type InterpolatedCdkOutput = CdkFunction;
 
 type InterpolatedCdkOutputs<T extends OpenNextConfig> = {
-  [K in keyof T["functions"]]: T['functions'] extends Record<string, OpenNextFnProps> ? InterpolatedCdkOutput: never
+  [K in keyof T["functions"]]: T["functions"] extends Record<
+    string,
+    OpenNextFnProps
+  >
+    ? InterpolatedCdkOutput
+    : never;
 } & {
   default: InterpolatedCdkOutput;
-}
+};
 
-export interface NextjsSiteProps<ONConfig extends OpenNextConfig> extends Omit<SsrSiteProps, "nodejs"> {
+export interface NextjsSiteProps<ONConfig extends OpenNextConfig>
+  extends Omit<SsrSiteProps, "nodejs"> {
   /**
    * OpenNext version for building the Next.js site.
    * @default Latest OpenNext version
@@ -214,17 +245,15 @@ export interface NextjsSiteProps<ONConfig extends OpenNextConfig> extends Omit<S
     serverCachePolicy?: NonNullable<SsrSiteProps["cdk"]>["serverCachePolicy"];
 
     servers?: InterpolatedCdkProps<ONConfig>;
-
   };
 }
 
 const LAYER_VERSION = "2";
 const DEFAULT_OPEN_NEXT_VERSION = "3.0.0-rc.15";
-const DEFAULT_CACHE_POLICY_ALLOWED_HEADERS = [
-  "x-open-next-cache-key"
-];
+const DEFAULT_CACHE_POLICY_ALLOWED_HEADERS = ["x-open-next-cache-key"];
 
-type NextjsSiteNormalizedProps<ONConfig extends OpenNextConfig> = NextjsSiteProps<ONConfig> & SsrSiteNormalizedProps
+type NextjsSiteNormalizedProps<ONConfig extends OpenNextConfig> =
+  NextjsSiteProps<ONConfig> & SsrSiteNormalizedProps;
 
 /**
  * The `NextjsSite` construct is a higher level CDK construct that makes it easy to create a Next.js app.
@@ -237,10 +266,12 @@ type NextjsSiteNormalizedProps<ONConfig extends OpenNextConfig> = NextjsSiteProp
  * });
  * ```
  */
-export class NextjsSite<ONConfig extends OpenNextConfig = OpenNextConfig> extends SsrSite {
+export class NextjsSite<
+  ONConfig extends OpenNextConfig = OpenNextConfig
+> extends SsrSite {
   declare props: NextjsSiteNormalizedProps<ONConfig> & {
-    openNextOutput: OpenNextOutput
-  }
+    openNextOutput: OpenNextOutput;
+  };
   private _routes?: ({
     route: string;
     logGroupPath: string;
@@ -262,7 +293,11 @@ export class NextjsSite<ONConfig extends OpenNextConfig = OpenNextConfig> extend
   };
   private openNextOutput?: OpenNextOutput;
 
-  constructor(scope: Construct, id: string, rawProps?: NextjsSiteProps<ONConfig>) {
+  constructor(
+    scope: Construct,
+    id: string,
+    rawProps?: NextjsSiteProps<ONConfig>
+  ) {
     const props = {
       // Default to combined for now until i figure out how to implement per-route logging
       logging: rawProps?.logging ?? "combined",
@@ -280,8 +315,10 @@ export class NextjsSite<ONConfig extends OpenNextConfig = OpenNextConfig> extend
     });
     this.openNextOutput = this.props.openNextOutput;
 
-    const disableIncrementalCache = this.openNextOutput?.additionalProps?.disableIncrementalCache ?? false;
-    const disableTagCache = this.openNextOutput?.additionalProps?.disableTagCache ?? false;
+    const disableIncrementalCache =
+      this.openNextOutput?.additionalProps?.disableIncrementalCache ?? false;
+    const disableTagCache =
+      this.openNextOutput?.additionalProps?.disableTagCache ?? false;
 
     this.handleMissingSourcemap();
 
@@ -290,9 +327,8 @@ export class NextjsSite<ONConfig extends OpenNextConfig = OpenNextConfig> extend
       //this.disableDefaultLogging();
       this.uploadSourcemaps();
     }
-    
 
-    if(this.openNextOutput?.edgeFunctions?.middleware) {
+    if (this.openNextOutput?.edgeFunctions?.middleware) {
       this.setMiddlewareEnv();
     }
 
@@ -314,15 +350,18 @@ export class NextjsSite<ONConfig extends OpenNextConfig = OpenNextConfig> extend
     if (this.doNotDeploy) return;
     const regionalServers = this.serverFunctions.reduce((acc, server) => {
       return {
-        ...acc, [
-            server.id.replace("ServerFunction", "")
-        ]: server.function 
+        ...acc,
+        [server.id.replace("ServerFunction", "")]: server.function,
       };
-    }, {} as InterpolatedCdkOutputs<ONConfig>)
-    return regionalServers
+    }, {} as InterpolatedCdkOutputs<ONConfig>);
+    return regionalServers;
   }
 
-  private createFunctionOrigin(fn: OpenNextFunctionOrigin, key: string, bucket: Bucket): FunctionOriginConfig {
+  private createFunctionOrigin(
+    fn: OpenNextFunctionOrigin,
+    key: string,
+    bucket: Bucket
+  ): FunctionOriginConfig {
     const { path: sitePath, environment, cdk } = this.props;
     const baseServerConfig = {
       description: "Next.js Server",
@@ -331,9 +370,10 @@ export class NextjsSite<ONConfig extends OpenNextConfig = OpenNextConfig> extend
         CACHE_BUCKET_KEY_PREFIX: "_cache",
         CACHE_BUCKET_REGION: Stack.of(this).region,
       },
-    }
+    };
     //@ts-expect-error
-    const functionCdkOverrides = (cdk?.servers?.[key] ?? {}) as InterpolatedCdkProp<{}>;
+    const functionCdkOverrides = (cdk?.servers?.[key] ??
+      {}) as InterpolatedCdkProp<{}>;
     return {
       type: "function" as const,
       constructId: `${key}ServerFunction`,
@@ -353,14 +393,22 @@ export class NextjsSite<ONConfig extends OpenNextConfig = OpenNextConfig> extend
       streaming: fn.streaming,
       injections: [],
       warm: functionCdkOverrides.warm,
-    }
+    };
   }
 
-  private createEcsOrigin(ecs: OpenNextECSOrigin, key: string, bucket: Bucket) : FunctionOriginConfig {
-    throw new Error('Ecs origin are not supported yet')
+  private createEcsOrigin(
+    ecs: OpenNextECSOrigin,
+    key: string,
+    bucket: Bucket
+  ): FunctionOriginConfig {
+    throw new Error("Ecs origin are not supported yet");
   }
 
-  private createEdgeOrigin(fn: BaseFunction, key: string, bucket: Bucket): EdgeFunctionConfig {
+  private createEdgeOrigin(
+    fn: BaseFunction,
+    key: string,
+    bucket: Bucket
+  ): EdgeFunctionConfig {
     const { path: sitePath, cdk, environment } = this.props;
     const baseServerConfig = {
       environment: {
@@ -368,9 +416,10 @@ export class NextjsSite<ONConfig extends OpenNextConfig = OpenNextConfig> extend
         CACHE_BUCKET_KEY_PREFIX: "_cache",
         CACHE_BUCKET_REGION: Stack.of(this).region,
       },
-    }
+    };
     //@ts-expect-error
-    const fnCdkOverrides = (cdk?.servers?.[key] ?? {}) as InterpolatedCdkProp<{}>;
+    const fnCdkOverrides = (cdk?.servers?.[key] ??
+      {}) as InterpolatedCdkProp<{}>;
     return {
       constructId: `${key}EdgeFunction`,
       function: {
@@ -381,20 +430,22 @@ export class NextjsSite<ONConfig extends OpenNextConfig = OpenNextConfig> extend
         environment: {
           ...environment,
           ...baseServerConfig.environment,
-          ...fnCdkOverrides.environment
+          ...fnCdkOverrides.environment,
         },
         ...fnCdkOverrides,
       },
-    }
+    };
   }
 
   protected plan(bucket: Bucket) {
-    const {
-      path: sitePath
-    } = this.props;
+    const { path: sitePath } = this.props;
     const imageOptimization = this.props.imageOptimization;
 
-    const openNextOutputPath = path.join(sitePath ?? ".", ".open-next", "open-next.output.json");
+    const openNextOutputPath = path.join(
+      sitePath ?? ".",
+      ".open-next",
+      "open-next.output.json"
+    );
     if (!fs.existsSync(openNextOutputPath)) {
       throw new VisibleError(
         `Failed to load ".open-next/output.json" for the "${this.id}" site.`
@@ -403,26 +454,34 @@ export class NextjsSite<ONConfig extends OpenNextConfig = OpenNextConfig> extend
     const openNextOutput = JSON.parse(
       fs.readFileSync(openNextOutputPath).toString()
     ) as OpenNextOutput;
-    const imageOpt = openNextOutput.origins.imageOptimizer as OpenNextFunctionOrigin;
+    const imageOpt = openNextOutput.origins
+      .imageOptimizer as OpenNextFunctionOrigin;
     const defaultFn = openNextOutput.origins.default;
-    const remainingFns = Object.entries(openNextOutput.origins).filter(([key, value]) => {
-      const result = key !== "imageOptimizer" && key !== "default" && key !== "s3";
-      return result;
-    }) as [string, OpenNextFunctionOrigin | OpenNextECSOrigin][];
+    const remainingFns = Object.entries(openNextOutput.origins).filter(
+      ([key, value]) => {
+        const result =
+          key !== "imageOptimizer" && key !== "default" && key !== "s3";
+        return result;
+      }
+    ) as [string, OpenNextFunctionOrigin | OpenNextECSOrigin][];
 
     const remainingOrigins = remainingFns.reduce((acc, [key, value]) => {
       acc = {
-        ...acc, [key]:
-          value.type === "ecs" ? this.createEcsOrigin(value, key, bucket) : this.createFunctionOrigin(value, key, bucket)
+        ...acc,
+        [key]:
+          value.type === "ecs"
+            ? this.createEcsOrigin(value, key, bucket)
+            : this.createFunctionOrigin(value, key, bucket),
       };
       return acc;
-    }
-      , {} as Record<string, FunctionOriginConfig>)
+    }, {} as Record<string, FunctionOriginConfig>);
 
-    const edgeFunctions = Object.entries(openNextOutput.edgeFunctions).reduce((acc, [key, value]) => {
-      return { ...acc, [key]: this.createEdgeOrigin(value, key, bucket) };
-    }, {} as Record<string, EdgeFunctionConfig>);
-
+    const edgeFunctions = Object.entries(openNextOutput.edgeFunctions).reduce(
+      (acc, [key, value]) => {
+        return { ...acc, [key]: this.createEdgeOrigin(value, key, bucket) };
+      },
+      {} as Record<string, EdgeFunctionConfig>
+    );
 
     return this.validatePlan({
       edge: false,
@@ -450,64 +509,65 @@ export class NextjsSite<ONConfig extends OpenNextConfig = OpenNextConfig> extend
             environment: {
               BUCKET_NAME: bucket.bucketName,
               BUCKET_KEY_PREFIX: "_assets",
-              ...(
-                this.props.imageOptimization?.staticImageOptimization ?
-                  { OPENNEXT_STATIC_ETAG: "true" } :
-                  {}
-              )
+              ...(this.props.imageOptimization?.staticImageOptimization
+                ? { OPENNEXT_STATIC_ETAG: "true" }
+                : {}),
             },
-            permissions: [
-              "s3"
-            ],
+            permissions: ["s3"],
             memorySize: imageOptimization?.memorySize
               ? typeof imageOptimization.memorySize === "string"
                 ? toCdkSize(imageOptimization.memorySize).toMebibytes()
                 : imageOptimization.memorySize
               : 1536,
-          }
+          },
         },
-        default: defaultFn.type === "ecs" ? this.createEcsOrigin(defaultFn, "default", bucket) : this.createFunctionOrigin(defaultFn, "default", bucket),
+        default:
+          defaultFn.type === "ecs"
+            ? this.createEcsOrigin(defaultFn, "default", bucket)
+            : this.createFunctionOrigin(defaultFn, "default", bucket),
         ...remainingOrigins,
-
       },
       //@ts-expect-error TODO: find a way to fix this typing issue
       behaviors: openNextOutput.behaviors.map((behavior) => {
         return {
           pattern: behavior.pattern === "*" ? undefined : behavior.pattern,
           origin: behavior.origin ?? "",
-          cacheType: behavior.origin === "s3" ? "static" : "server" as const,
+          cacheType: behavior.origin === "s3" ? "static" : ("server" as const),
           cfFunction: "serverCfFunction",
           edgeFunction: behavior.edgeFunction ?? "",
         };
       }),
       cachePolicyAllowedHeaders: DEFAULT_CACHE_POLICY_ALLOWED_HEADERS,
       buildId: this.getBuildId(),
-      warmerConfig: openNextOutput.additionalProps?.warmer ? {
-        function: openNextOutput.additionalProps.warmer.bundle,
-      } : undefined,
+      warmerConfig: openNextOutput.additionalProps?.warmer
+        ? {
+            function: openNextOutput.additionalProps.warmer.bundle,
+          }
+        : undefined,
       additionalProps: {
         openNextOutput: openNextOutput,
-      }
+      },
     });
   }
 
   private setMiddlewareEnv() {
     const origins = this.serverFunctions.reduce((acc, server) => {
       return {
-        ...acc, 
-        [server.function ?
-          server.id.replace("ServerFunction", "") :
-          server.id.replace("ServerContainer", "")
-        ]: 
-        {
-          host:  Fn.parseDomainName(server.fnUrl?.url ?? ""),
+        ...acc,
+        [server.function
+          ? server.id.replace("ServerFunction", "")
+          : server.id.replace("ServerContainer", "")]: {
+          host: Fn.parseDomainName(server.fnUrl?.url ?? ""),
           port: 443,
           protocol: "https",
-        }
-      }
-    }, {} as Record<string, {host: string, port: number, protocol: string}>)
-    console.log(origins)
-    this.edgeFunctions?.middleware?.addEnvironment('OPEN_NEXT_ORIGIN', Fn.toJsonString(origins))
+        },
+      };
+    }, {} as Record<string, { host: string; port: number; protocol: string }>);
+    console.log(origins);
+    this.edgeFunctions?.middleware?.addEnvironment(
+      "OPEN_NEXT_ORIGIN",
+      Fn.toJsonString(origins)
+    );
   }
 
   private createRevalidationQueue() {
@@ -536,7 +596,7 @@ export class NextjsSite<ONConfig extends OpenNextConfig = OpenNextConfig> extend
       server.addEnvironment("REVALIDATION_QUEUE_URL", queue.queueUrl);
       server.addEnvironment("REVALIDATION_QUEUE_REGION", Stack.of(this).region);
       queue.grantSendMessages(server.role!);
-    })
+    });
   }
 
   private createRevalidationTable() {
@@ -562,7 +622,7 @@ export class NextjsSite<ONConfig extends OpenNextConfig = OpenNextConfig> extend
     this.serverFunctions.forEach((server) => {
       server?.addEnvironment("CACHE_DYNAMO_TABLE", table.tableName);
       table.grantReadWriteData(server.role!);
-    })
+    });
 
     const dynamodbProviderPath = path.join(
       sitePath,
@@ -626,13 +686,14 @@ export class NextjsSite<ONConfig extends OpenNextConfig = OpenNextConfig> extend
         ...metadata.data,
         routes: this.isPerRouteLoggingEnabled()
           ? {
-            logGroupPrefix: `/sst/lambda/${(this.serverFunction as SsrFunction).functionName
+              logGroupPrefix: `/sst/lambda/${
+                (this.serverFunction as SsrFunction).functionName
               }`,
-            data: this.useRoutes()?.map(({ route, logGroupPath }) => ({
-              route,
-              logGroupPath,
-            })),
-          }
+              data: this.useRoutes()?.map(({ route, logGroupPath }) => ({
+                route,
+                logGroupPath,
+              })),
+            }
           : undefined,
       },
     };
@@ -840,8 +901,8 @@ if (event.rawPath) {
 }`;
   }
 
-// This function is used to improve cache hit ratio by setting the cache key based on the request headers and the path
-// next/image only need the accept header, and this header is not useful for the rest of the query
+  // This function is used to improve cache hit ratio by setting the cache key based on the request headers and the path
+  // next/image only need the accept header, and this header is not useful for the rest of the query
   private useCloudFrontFunctionCacheHeaderKey() {
     return `
 function getHeader(key) {
@@ -869,7 +930,7 @@ function getHeader(key) {
   
   var hashedKey = crypto.createHash('md5').update(cacheKey).digest('hex');
   request.headers["x-open-next-cache-key"] = {value: hashedKey};
-  `
+  `;
   }
 
   // Inject the CloudFront viewer country, region, latitude, and longitude headers into the request headers
@@ -891,7 +952,7 @@ if(request.headers["cloudfront-viewer-latitude"]) {
 if(request.headers["cloudfront-viewer-longitude"]) {
   request.headers["x-open-next-longitude"] = request.headers["cloudfront-viewer-longitude"];
 }
-    `
+    `;
   }
 
   private getBuildId() {

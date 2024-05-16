@@ -1293,8 +1293,8 @@ export class Service extends Construct implements SSTConstruct {
                           ([pk, pv]) => `${pk}=${pv}`
                         )
                       : []
-                    ).join(","),
-                  ],
+                    )
+                  ].join(","),,
               ]
             : []),
           this.props.path,
