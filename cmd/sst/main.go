@@ -1011,6 +1011,8 @@ var Root = Command{
 					"The resources in your app are removed based on the `removal` setting in your `sst.config.ts`.",
 					":::",
 					"",
+					"This does not remove the SST _state_ and _bootstrap_ resources in your account. This is because these might still be in use by other apps. You can remove them manually if you want to reset your account, [learn more](docs/providers/#state).",
+					"",
 					"Optionally, remove your app from a specific stage.",
 					"",
 					"```bash frame=\"none\" frame=\"none\"",
