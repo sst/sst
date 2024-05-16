@@ -373,7 +373,7 @@ export class NextjsSite<
     };
     //@ts-expect-error
     const functionCdkOverrides = (cdk?.servers?.[key] ??
-      {}) as InterpolatedCdkProp<{}>;
+      {}) as InterpolatedCdkProp;
     return {
       type: "function" as const,
       constructId: `${key}ServerFunction`,
@@ -418,8 +418,7 @@ export class NextjsSite<
       },
     };
     //@ts-expect-error
-    const fnCdkOverrides = (cdk?.servers?.[key] ??
-      {}) as InterpolatedCdkProp<{}>;
+    const fnCdkOverrides = (cdk?.servers?.[key] ?? {}) as InterpolatedCdkProp;
     return {
       constructId: `${key}EdgeFunction`,
       function: {
@@ -557,7 +556,7 @@ export class NextjsSite<
         [server.function
           ? server.id.replace("ServerFunction", "")
           : server.id.replace("ServerContainer", "")]: {
-          host: Fn.parseDomainName(server.fnUrl?.url ?? ""),
+          host: Fn.parseDomainName(server.url ?? ""),
           port: 443,
           protocol: "https",
         },
