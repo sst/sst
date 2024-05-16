@@ -174,17 +174,6 @@ export interface NextjsSiteProps<ONConfig extends OpenNextConfig>
    */
   openNextVersion?: string;
   /**
-   * How the logs are stored in CloudWatch
-   * - "combined" - Logs from all routes are stored in the same log group.
-   * - "per-route" - Logs from each route are stored in a separate log group.
-   * @default "per-route"
-   * @example
-   * ```js
-   * logging: "combined",
-   * ```
-   */
-  logging?: "combined" | "per-route";
-  /**
    * The server function is deployed to Lambda in a single region. Alternatively, you can enable this option to deploy to Lambda@Edge.
    * @default false
    */
@@ -248,7 +237,6 @@ export interface NextjsSiteProps<ONConfig extends OpenNextConfig>
   };
 }
 
-const LAYER_VERSION = "2";
 const DEFAULT_OPEN_NEXT_VERSION = "3.0.0-rc.15";
 const DEFAULT_CACHE_POLICY_ALLOWED_HEADERS = ["x-open-next-cache-key"];
 
@@ -296,14 +284,8 @@ export class NextjsSite<
   constructor(
     scope: Construct,
     id: string,
-    rawProps?: NextjsSiteProps<ONConfig>
+    props: NextjsSiteProps<ONConfig> = {}
   ) {
-    const props = {
-      // Default to combined for now until i figure out how to implement per-route logging
-      logging: rawProps?.logging ?? "combined",
-      ...rawProps,
-    };
-
     super(scope, id, {
       buildCommand: [
         "npx",
@@ -321,12 +303,6 @@ export class NextjsSite<
       this.openNextOutput?.additionalProps?.disableTagCache ?? false;
 
     this.handleMissingSourcemap();
-
-    // TODO: see how to implement that
-    if (this.isPerRouteLoggingEnabled()) {
-      //this.disableDefaultLogging();
-      this.uploadSourcemaps();
-    }
 
     if (this.openNextOutput?.edgeFunctions?.middleware) {
       this.setMiddlewareEnv();
@@ -677,38 +653,10 @@ export class NextjsSite<
   }
 
   public getConstructMetadata() {
-    const metadata = this.getConstructMetadataBase();
     return {
-      ...metadata,
       type: "NextjsSite" as const,
-      data: {
-        ...metadata.data,
-        routes: this.isPerRouteLoggingEnabled()
-          ? {
-              logGroupPrefix: `/sst/lambda/${
-                (this.serverFunction as SsrFunction).functionName
-              }`,
-              data: this.useRoutes()?.map(({ route, logGroupPath }) => ({
-                route,
-                logGroupPath,
-              })),
-            }
-          : undefined,
-      },
+      ...this.getConstructMetadataBase(),
     };
-  }
-
-  // Should be useless now since we copy only the necessary files
-  private removeSourcemaps() {
-    const { path: sitePath } = this.props;
-    const files = globSync("**/*.js.map", {
-      cwd: path.join(sitePath, ".open-next", "server-function"),
-      nodir: true,
-      dot: true,
-    });
-    for (const file of files) {
-      fs.rmSync(path.join(sitePath, ".open-next", "server-function", file));
-    }
   }
 
   private useRoutes() {
@@ -874,32 +822,6 @@ export class NextjsSite<
     }
   }
 
-  private useServerFunctionPerRouteLoggingInjection() {
-    return `
-if (event.rawPath) {
-  const routeData = ${JSON.stringify(
-    // @ts-expect-error
-    this.useRoutes().map(({ regexMatch, prefixMatch, logGroupPath }) => ({
-      regex: regexMatch,
-      prefix: prefixMatch,
-      logGroupPath,
-    }))
-  )}.find(({ regex, prefix }) => {
-    if (regex) return event.rawPath.match(new RegExp(regex));
-    if (prefix) return event.rawPath === prefix || (event.rawPath === prefix + "/");
-    return false;
-  });
-  if (routeData) {
-    console.log("::sst::" + JSON.stringify({
-      action:"log.split",
-      properties: {
-        logGroupName:"/sst/lambda/" + context.functionName + routeData.logGroupPath,
-      },
-    }));
-  }
-}`;
-  }
-
   // This function is used to improve cache hit ratio by setting the cache key based on the request headers and the path
   // next/image only need the accept header, and this header is not useful for the rest of the query
   private useCloudFrontFunctionCacheHeaderKey() {
@@ -1033,14 +955,6 @@ if(request.headers["cloudfront-viewer-longitude"]) {
     return sourcemapPath;
   }
 
-  private isPerRouteLoggingEnabled() {
-    return (
-      !this.doNotDeploy &&
-      !this.props.edge &&
-      this.props.logging === "per-route"
-    );
-  }
-
   private handleMissingSourcemap() {
     if (this.doNotDeploy || this.props.edge) return;
 
@@ -1050,53 +964,6 @@ if(request.headers["cloudfront-viewer-longitude"]) {
     if (!hasMissingSourcemap) return;
 
     (this.serverFunction as SsrFunction)._overrideMissingSourcemap();
-  }
-
-  private disableDefaultLogging() {
-    const stack = Stack.of(this);
-    const server = this.serverFunction as SsrFunction;
-
-    const policy = new Policy(this, "DisableLoggingPolicy", {
-      statements: [
-        new PolicyStatement({
-          effect: Effect.DENY,
-          actions: [
-            "logs:CreateLogGroup",
-            "logs:CreateLogStream",
-            "logs:PutLogEvents",
-          ],
-          resources: [
-            `arn:aws:logs:${stack.region}:${stack.account}:log-group:/aws/lambda/${server.functionName}`,
-            `arn:aws:logs:${stack.region}:${stack.account}:log-group:/aws/lambda/${server.functionName}:*`,
-          ],
-        }),
-      ],
-    });
-    server.role?.attachInlinePolicy(policy);
-  }
-
-  private uploadSourcemaps() {
-    const stack = Stack.of(this);
-    const server = this.serverFunction as SsrFunction;
-
-    this.useRoutes().forEach(({ sourcemapPath, sourcemapKey }) => {
-      if (!sourcemapPath || !sourcemapKey) return;
-
-      useDeferredTasks().add(async () => {
-        // zip sourcemap
-        const zipPath = `${sourcemapPath}.gz.zip`;
-        const data = await fs.promises.readFile(sourcemapPath);
-        await fs.promises.writeFile(zipPath, zlib.gzipSync(data));
-        const asset = new Asset(this, `Sourcemap-${sourcemapKey}`, {
-          path: zipPath,
-        });
-
-        useFunctions().sourcemaps.add(stack.stackName, {
-          asset,
-          tarKey: path.join(server.functionArn, sourcemapKey),
-        });
-      });
-    });
   }
 
   private static buildCloudWatchRouteName(route: string) {
