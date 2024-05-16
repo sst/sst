@@ -1,8 +1,6 @@
 import fs from "fs";
 import path from "path";
-import zlib from "zlib";
 import crypto from "crypto";
-import { globSync } from "glob";
 import { Construct } from "constructs";
 import {
   Duration as CdkDuration,
@@ -35,14 +33,11 @@ import {
 } from "./SsrSite.js";
 import { Size, toCdkSize } from "./util/size.js";
 import { Bucket } from "aws-cdk-lib/aws-s3";
-import { Effect, Policy, PolicyStatement } from "aws-cdk-lib/aws-iam";
+import { PolicyStatement } from "aws-cdk-lib/aws-iam";
 import { RetentionDays } from "aws-cdk-lib/aws-logs";
 import { VisibleError } from "../error.js";
 import { CachePolicyProps } from "aws-cdk-lib/aws-cloudfront";
 import { SsrFunction } from "./SsrFunction.js";
-import { Asset } from "aws-cdk-lib/aws-s3-assets";
-import { useFunctions } from "./Function.js";
-import { useDeferredTasks } from "./deferred_task.js";
 import { Logger } from "../logger.js";
 type BaseFunction = {
   handler: string;
@@ -110,60 +105,7 @@ interface OpenNextOutput<
   };
 }
 
-// Just a subset of the original OpenNextConfig, only needed for properly typing
-interface OpenNextFnProps<
-  Override extends {
-    generateDockerfile?: boolean;
-  } = {}
-> {
-  override?: Override;
-  placement?: "global" | "regional";
-}
-interface OpenNextConfig<
-  SplittedFn extends Record<string, OpenNextFnProps> = Record<
-    string,
-    OpenNextFnProps
-  >
-> {
-  default: OpenNextFnProps;
-  functions?: SplittedFn;
-  middleware?: {
-    external: true;
-  };
-}
-
-type InterpolatedCdkProp = Omit<
-  FunctionOriginConfig["function"],
-  "handler" | "bundle"
-> & { warm?: number };
-
-type InterpolatedCdkProps<T extends OpenNextConfig> = {
-  [K in keyof T["functions"]]?: T["functions"] extends Record<
-    string,
-    OpenNextFnProps
-  >
-    ? InterpolatedCdkProp
-    : never;
-} & {
-  default?: InterpolatedCdkProp;
-  middleware?: InterpolatedCdkProp;
-};
-
-type InterpolatedCdkOutput = CdkFunction;
-
-type InterpolatedCdkOutputs<T extends OpenNextConfig> = {
-  [K in keyof T["functions"]]: T["functions"] extends Record<
-    string,
-    OpenNextFnProps
-  >
-    ? InterpolatedCdkOutput
-    : never;
-} & {
-  default: InterpolatedCdkOutput;
-};
-
-export interface NextjsSiteProps<ONConfig extends OpenNextConfig>
-  extends Omit<SsrSiteProps, "nodejs"> {
+export interface NextjsSiteProps extends Omit<SsrSiteProps, "nodejs"> {
   /**
    * OpenNext version for building the Next.js site.
    * @default Latest OpenNext version
@@ -232,16 +174,13 @@ export interface NextjsSiteProps<ONConfig extends OpenNextConfig>
      * ```
      */
     serverCachePolicy?: NonNullable<SsrSiteProps["cdk"]>["serverCachePolicy"];
-
-    servers?: InterpolatedCdkProps<ONConfig>;
   };
 }
 
 const DEFAULT_OPEN_NEXT_VERSION = "3.0.0-rc.15";
 const DEFAULT_CACHE_POLICY_ALLOWED_HEADERS = ["x-open-next-cache-key"];
 
-type NextjsSiteNormalizedProps<ONConfig extends OpenNextConfig> =
-  NextjsSiteProps<ONConfig> & SsrSiteNormalizedProps;
+type NextjsSiteNormalizedProps = NextjsSiteProps & SsrSiteNormalizedProps;
 
 /**
  * The `NextjsSite` construct is a higher level CDK construct that makes it easy to create a Next.js app.
@@ -254,12 +193,8 @@ type NextjsSiteNormalizedProps<ONConfig extends OpenNextConfig> =
  * });
  * ```
  */
-export class NextjsSite<
-  ONConfig extends OpenNextConfig = OpenNextConfig
-> extends SsrSite {
-  declare props: NextjsSiteNormalizedProps<ONConfig> & {
-    openNextOutput: OpenNextOutput;
-  };
+export class NextjsSite extends SsrSite {
+  declare props: NextjsSiteNormalizedProps;
   private _routes?: ({
     route: string;
     logGroupPath: string;
@@ -281,11 +216,7 @@ export class NextjsSite<
   };
   private openNextOutput?: OpenNextOutput;
 
-  constructor(
-    scope: Construct,
-    id: string,
-    props: NextjsSiteProps<ONConfig> = {}
-  ) {
+  constructor(scope: Construct, id: string, props: NextjsSiteProps = {}) {
     super(scope, id, {
       buildCommand: [
         "npx",
@@ -295,7 +226,6 @@ export class NextjsSite<
       ].join(" "),
       ...props,
     });
-    this.openNextOutput = this.props.openNextOutput;
 
     const disableIncrementalCache =
       this.openNextOutput?.additionalProps?.disableIncrementalCache ?? false;
@@ -322,17 +252,6 @@ export class NextjsSite<
     );
   }
 
-  public get regionalServersCdk() {
-    if (this.doNotDeploy) return;
-    const regionalServers = this.serverFunctions.reduce((acc, server) => {
-      return {
-        ...acc,
-        [server.id.replace("ServerFunction", "")]: server.function,
-      };
-    }, {} as InterpolatedCdkOutputs<ONConfig>);
-    return regionalServers;
-  }
-
   private createFunctionOrigin(
     fn: OpenNextFunctionOrigin,
     key: string,
@@ -347,9 +266,6 @@ export class NextjsSite<
         CACHE_BUCKET_REGION: Stack.of(this).region,
       },
     };
-    //@ts-expect-error
-    const functionCdkOverrides = (cdk?.servers?.[key] ??
-      {}) as InterpolatedCdkProp;
     return {
       type: "function" as const,
       constructId: `${key}ServerFunction`,
@@ -364,11 +280,9 @@ export class NextjsSite<
           ...environment,
           ...baseServerConfig.environment,
         },
-        ...functionCdkOverrides,
       },
       streaming: fn.streaming,
       injections: [],
-      warm: functionCdkOverrides.warm,
     };
   }
 
@@ -393,8 +307,6 @@ export class NextjsSite<
         CACHE_BUCKET_REGION: Stack.of(this).region,
       },
     };
-    //@ts-expect-error
-    const fnCdkOverrides = (cdk?.servers?.[key] ?? {}) as InterpolatedCdkProp;
     return {
       constructId: `${key}EdgeFunction`,
       function: {
@@ -405,9 +317,7 @@ export class NextjsSite<
         environment: {
           ...environment,
           ...baseServerConfig.environment,
-          ...fnCdkOverrides.environment,
         },
-        ...fnCdkOverrides,
       },
     };
   }
@@ -429,27 +339,18 @@ export class NextjsSite<
     const openNextOutput = JSON.parse(
       fs.readFileSync(openNextOutputPath).toString()
     ) as OpenNextOutput;
+    this.openNextOutput = openNextOutput;
+
     const imageOpt = openNextOutput.origins
       .imageOptimizer as OpenNextFunctionOrigin;
-    const defaultFn = openNextOutput.origins.default;
-    const remainingFns = Object.entries(openNextOutput.origins).filter(
+    const defaultOrigin = openNextOutput.origins.default;
+    const remainingOrigins = Object.entries(openNextOutput.origins).filter(
       ([key, value]) => {
         const result =
           key !== "imageOptimizer" && key !== "default" && key !== "s3";
         return result;
       }
     ) as [string, OpenNextFunctionOrigin | OpenNextECSOrigin][];
-
-    const remainingOrigins = remainingFns.reduce((acc, [key, value]) => {
-      acc = {
-        ...acc,
-        [key]:
-          value.type === "ecs"
-            ? this.createEcsOrigin(value, key, bucket)
-            : this.createFunctionOrigin(value, key, bucket),
-      };
-      return acc;
-    }, {} as Record<string, FunctionOriginConfig>);
 
     const edgeFunctions = Object.entries(openNextOutput.edgeFunctions).reduce(
       (acc, [key, value]) => {
@@ -497,31 +398,33 @@ export class NextjsSite<
           },
         },
         default:
-          defaultFn.type === "ecs"
-            ? this.createEcsOrigin(defaultFn, "default", bucket)
-            : this.createFunctionOrigin(defaultFn, "default", bucket),
-        ...remainingOrigins,
+          defaultOrigin.type === "ecs"
+            ? this.createEcsOrigin(defaultOrigin, "default", bucket)
+            : this.createFunctionOrigin(defaultOrigin, "default", bucket),
+        ...Object.fromEntries(
+          remainingOrigins.map(([key, value]) => [
+            key,
+            value.type === "ecs"
+              ? this.createEcsOrigin(value, key, bucket)
+              : this.createFunctionOrigin(value, key, bucket),
+          ])
+        ),
       },
-      //@ts-expect-error TODO: find a way to fix this typing issue
       behaviors: openNextOutput.behaviors.map((behavior) => {
         return {
           pattern: behavior.pattern === "*" ? undefined : behavior.pattern,
-          origin: behavior.origin ?? "",
-          cacheType: behavior.origin === "s3" ? "static" : ("server" as const),
+          origin: behavior.origin!,
+          cacheType: behavior.origin === "s3" ? "static" : "server",
           cfFunction: "serverCfFunction",
           edgeFunction: behavior.edgeFunction ?? "",
         };
       }),
-      cachePolicyAllowedHeaders: DEFAULT_CACHE_POLICY_ALLOWED_HEADERS,
       buildId: this.getBuildId(),
-      warmerConfig: openNextOutput.additionalProps?.warmer
+      warmer: openNextOutput.additionalProps?.warmer
         ? {
             function: openNextOutput.additionalProps.warmer.bundle,
           }
         : undefined,
-      additionalProps: {
-        openNextOutput: openNextOutput,
-      },
     });
   }
 
@@ -538,7 +441,6 @@ export class NextjsSite<
         },
       };
     }, {} as Record<string, { host: string; port: number; protocol: string }>);
-    console.log(origins);
     this.edgeFunctions?.middleware?.addEnvironment(
       "OPEN_NEXT_ORIGIN",
       Fn.toJsonString(origins)

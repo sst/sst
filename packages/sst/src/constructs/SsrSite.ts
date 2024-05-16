@@ -57,7 +57,6 @@ import {
   FunctionCode as CfFunctionCode,
   FunctionEventType as CfFunctionEventType,
   ErrorResponse,
-  OriginProtocolPolicy,
 } from "aws-cdk-lib/aws-cloudfront";
 import {
   S3Origin,
@@ -99,8 +98,14 @@ import { transformSync } from "esbuild";
 
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 
-export type CloudFrontFunctionConfig = { constructId: string; injections: string[] };
-export type EdgeFunctionConfig = { constructId: string; function: EdgeFunctionProps };
+export type CloudFrontFunctionConfig = {
+  constructId: string;
+  injections: string[];
+};
+export type EdgeFunctionConfig = {
+  constructId: string;
+  function: EdgeFunctionProps;
+};
 export type FunctionOriginConfig = {
   type: "function";
   constructId: string;
@@ -132,11 +137,11 @@ export type OriginGroupConfig = {
 type OriginsMap = Record<string, S3Origin | HttpOrigin | OriginGroup>;
 
 export type Plan = ReturnType<SsrSite["validatePlan"]>;
-export interface SsrSiteNodeJSProps extends NodeJSProps { }
-export interface SsrDomainProps extends DistributionDomainProps { }
-export interface SsrSiteFileOptions extends BaseSiteFileOptions { }
-export interface SsrSiteReplaceProps extends BaseSiteReplaceProps { }
-export interface SsrCdkDistributionProps extends BaseSiteCdkDistributionProps { }
+export interface SsrSiteNodeJSProps extends NodeJSProps {}
+export interface SsrDomainProps extends DistributionDomainProps {}
+export interface SsrSiteFileOptions extends BaseSiteFileOptions {}
+export interface SsrSiteReplaceProps extends BaseSiteReplaceProps {}
+export interface SsrCdkDistributionProps extends BaseSiteCdkDistributionProps {}
 export interface SsrSiteProps {
   /**
    * Bind resources for the function
@@ -243,8 +248,7 @@ export interface SsrSiteProps {
   environment?: Record<string, string>;
   /**
    * The number of server functions to keep warm. This option is only supported for the regional mode.
-   * @deprecated should be set by function
-   * @default server function is not kept warm
+   * @default Server function is not kept warm
    */
   warm?: number;
   regional?: {
@@ -479,7 +483,7 @@ export interface SsrSiteProps {
       | "architecture"
       | "logRetention"
     > &
-    Pick<FunctionProps, "copyFiles">;
+      Pick<FunctionProps, "copyFiles">;
     /**
      * @hidden Need to fix tsdoc generation to support the `Plan` type
      */
@@ -597,7 +601,6 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
     buildApp();
     const plan = this.plan(bucket);
     transformPlan();
-    this.props = { ...props, ...plan.additionalProps };
     validateTimeout();
 
     // Create CloudFront
@@ -760,16 +763,14 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
 
       const warmParams = warmConfig.map((config) => ({
         concurrency: config.concurrency,
-        function: config.function.functionName
-      }))
-
+        function: config.function.functionName,
+      }));
 
       // Create warmer function
       const warmer = new CdkFunction(self, "WarmerFunction", {
         description: "SSR warmer",
         code: Code.fromAsset(
-          plan.warmerConfig?.function ??
-          path.join(__dirname, "../support/ssr-warmer")
+          plan.warmer?.function ?? path.join(__dirname, "../support/ssr-warmer")
         ),
         runtime: Runtime.NODEJS_18_X,
         handler: "index.handler",
@@ -879,11 +880,11 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
           responseHeadersPolicy: cdk?.responseHeadersPolicy,
           functionAssociations: cfFunction
             ? [
-              {
-                eventType: CfFunctionEventType.VIEWER_REQUEST,
-                function: cfFunction,
-              },
-            ]
+                {
+                  eventType: CfFunctionEventType.VIEWER_REQUEST,
+                  function: cfFunction,
+                },
+              ]
             : undefined,
         };
       } else if (behavior.cacheType === "server") {
@@ -901,33 +902,33 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
           functionAssociations: [
             ...(cfFunction
               ? [
-                {
-                  eventType: CfFunctionEventType.VIEWER_REQUEST,
-                  function: cfFunction,
-                },
-              ]
+                  {
+                    eventType: CfFunctionEventType.VIEWER_REQUEST,
+                    function: cfFunction,
+                  },
+                ]
               : []),
             ...(cdk?.distribution?.defaultBehavior?.functionAssociations || []),
           ],
           edgeLambdas: [
             ...(edgeFunction
               ? [
-                {
-                  includeBody: true,
-                  eventType: LambdaEdgeEventType.ORIGIN_REQUEST,
-                  functionVersion: edgeFunction.currentVersion,
-                },
-              ]
+                  {
+                    includeBody: true,
+                    eventType: LambdaEdgeEventType.ORIGIN_REQUEST,
+                    functionVersion: edgeFunction.currentVersion,
+                  },
+                ]
               : []),
             ...(regional?.enableServerUrlIamAuth
               ? [
-                {
-                  includeBody: true,
-                  eventType: LambdaEdgeEventType.ORIGIN_REQUEST,
-                  functionVersion:
-                    useFunctionUrlSigningFunction().currentVersion,
-                },
-              ]
+                  {
+                    includeBody: true,
+                    eventType: LambdaEdgeEventType.ORIGIN_REQUEST,
+                    functionVersion:
+                      useFunctionUrlSigningFunction().currentVersion,
+                  },
+                ]
               : []),
             ...(cdk?.distribution?.defaultBehavior?.edgeLambdas || []),
           ],
@@ -1155,8 +1156,8 @@ function handler(event) {
       );
       const fileSizeLimit = app.isRunningSSTTest()
         ? // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore: "sstTestFileSizeLimitOverride" not exposed in props
-        props.sstTestFileSizeLimitOverride || 200
+          // @ts-ignore: "sstTestFileSizeLimitOverride" not exposed in props
+          props.sstTestFileSizeLimitOverride || 200
         : 200;
       const result = spawn.sync(
         "node",
@@ -1530,7 +1531,6 @@ function handler(event) {
   protected getConstructMetadataBase() {
     return {
       data: {
-        edge: this.edge,
         mode: this.doNotDeploy
           ? ("placeholder" as const)
           : ("deployed" as const),
@@ -1538,6 +1538,7 @@ function handler(event) {
         runtime: this.props.runtime,
         customDomainUrl: this.customDomainUrl,
         url: this.url,
+        edge: this.edge,
         server: (this.serverFunctionForDev || this.serverFunction)
           ?.functionArn!,
         secrets: (this.props.bind || [])
@@ -1560,21 +1561,22 @@ function handler(event) {
       variables: {
         url: this.doNotDeploy
           ? {
-            type: "plain",
-            value: this.props.dev?.url ?? "localhost",
-          }
+              type: "plain",
+              value: this.props.dev?.url ?? "localhost",
+            }
           : {
-            // Do not set real value b/c we don't want to make the Lambda function
-            // depend on the Site. B/c often the site depends on the Api, causing
-            // a CloudFormation circular dependency if the Api and the Site belong
-            // to different stacks.
-            type: "site_url",
-            value: this.customDomainUrl || this.url!,
-          },
+              // Do not set real value b/c we don't want to make the Lambda function
+              // depend on the Site. B/c often the site depends on the Api, causing
+              // a CloudFormation circular dependency if the Api and the Site belong
+              // to different stacks.
+              type: "site_url",
+              value: this.customDomainUrl || this.url!,
+            },
       },
       permissions: {
         "ssm:GetParameters": [
-          `arn:${Stack.of(this).partition}:ssm:${app.region}:${app.account
+          `arn:${Stack.of(this).partition}:ssm:${app.region}:${
+            app.account
           }:parameter${getParameterPath(this, "url")}`,
         ],
       },
@@ -1615,11 +1617,9 @@ function handler(event) {
       allowedHeaders?: string[];
     };
     buildId?: string;
-    warmerConfig?: {
+    warmer?: {
       function: string;
-      schedule?: Schedule;
     };
-    additionalProps?: Record<string, any>;
   }) {
     return input;
   }
