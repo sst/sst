@@ -540,7 +540,7 @@ Removes your application. By default, it removes your personal stage.
 The resources in your app are removed based on the `removal` setting in your `sst.config.ts`.
 :::
 
-This does not remove the SST _state_ and _bootstrap_ resources in your account. This is because these might still be in use by other apps. You can remove them manually if you want to reset your account, [learn more](docs/providers/#state).
+This does not remove the SST _state_ and _bootstrap_ resources in your account as these might still be in use by other apps. You can remove them manually if you want to reset your account, [learn more](docs/providers/#state).
 
 Optionally, remove your app from a specific stage.
 
@@ -642,8 +642,17 @@ sst refresh
 - <p><code class="key">target</code> <code class="primitive">string</code></p>
 Comma seperated list of target URNs.
 </Section>
-Compares your local state with the state of the resources in the cloud provider. Any changes that are found are adopted into your local state.
+Compares your local state with the state of the resources in the cloud provider. Any changes that are found are adopted into your local state. It will:
 
-This is useful for cases where you want to ensure that your local state is in sync with your cloud provider.
+1. Go through every single resource in your state.
+2. Make a call to the cloud provider to check the resource.
+   - If the configs are different, it'll **update the state** to reflect the change.
+   - If the resource doesn't exist anymore, it'll **remove it from the state**.
+
+:::note
+The `sst refresh` does not make changes to the resources in the cloud provider.
+:::
+
+This is useful for cases where you want to ensure that your local state is in sync with your cloud provider. [Learn more about how state works](/docs/providers/#how-state-works).
 </Segment>
 </div>
