@@ -100,7 +100,7 @@ download_and_install
 add_to_path() {
     local config_file=$1
     local command=$2
-    
+
     if [[ -w $config_file ]]; then
         echo -e "\n# sst" >> "$config_file"
         echo "$command" >> "$config_file"
@@ -123,6 +123,9 @@ case $current_shell in
     ;;
     bash)
         config_files="$HOME/.bashrc $HOME/.bash_profile $XDG_CONFIG_HOME/bash/.bashrc $XDG_CONFIG_HOME/bash/.bash_profile"
+    ;;
+    ash)
+        config_files="$HOME/.ashrc $HOME/.profile /etc/profile"
     ;;
     *)
         # Default case if none of the above matches
@@ -152,6 +155,9 @@ if [[ ":$PATH:" != *":$INSTALL_DIR:"* ]]; then
             add_to_path "$config_file" "export PATH=$INSTALL_DIR:\$PATH"
         ;;
         bash)
+            add_to_path "$config_file" "export PATH=$INSTALL_DIR:\$PATH"
+        ;;
+        ash)
             add_to_path "$config_file" "export PATH=$INSTALL_DIR:\$PATH"
         ;;
         *)
