@@ -422,7 +422,7 @@ export class NextjsSite extends SsrSite {
       buildId: this.getBuildId(),
       warmer: openNextOutput.additionalProps?.warmer
         ? {
-            function: openNextOutput.additionalProps.warmer.bundle,
+            function: path.join(sitePath, openNextOutput.additionalProps.warmer.bundle),
           }
         : undefined,
     });
