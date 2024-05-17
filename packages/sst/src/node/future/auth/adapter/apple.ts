@@ -1,5 +1,5 @@
 import querystring from 'node:querystring';
-import { generators, Issuer } from 'openid-client';
+import {BaseClient, generators, Issuer} from 'openid-client';
 
 import { useBody, useCookie, useDomainName, usePathParam, useResponse } from '../../../api/index.js';
 import { Adapter } from './adapter.js';
@@ -13,19 +13,27 @@ import { OauthConfig } from './oauth.js';
 // userinfo_endpoint are not included in the response.
 // await Issuer.discover("https://appleid.apple.com/.well-known/openid-configuration/");
 
-const issuer = await Issuer.discover(
-  "https://appleid.apple.com/.well-known/openid-configuration"
-)
+let realIssuer: Issuer<BaseClient>;
+
+const issuer = new Proxy({}, {
+  get: async function(target, prop: string){
+    if(!realIssuer){
+      realIssuer = await Issuer.discover("https://appleid.apple.com/.well-known/openid-configuration");
+    }
+    return realIssuer[prop];
+  }
+})
 
 export const AppleAdapter =
   /* @__PURE__ */
   (config: OauthConfig) => {
+
     return async function () {
       const step = usePathParam("step");
       const callback = "https://" + useDomainName() + "/callback";
       console.log("callback", callback);
 
-      const client = new issuer.Client({
+      const client = new (issuer as Issuer<BaseClient>).Client({
         client_id: config.clientID,
         client_secret: config.clientSecret,
         redirect_uris: [callback],
