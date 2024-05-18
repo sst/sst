@@ -137,7 +137,7 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 	_, err = s.PullState()
 	if err != nil {
 		if errors.Is(err, provider.ErrStateNotFound) {
-			if input.Command != "up" {
+			if input.Command != "deploy" {
 				return ErrStageNotFound
 			}
 		} else {
