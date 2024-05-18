@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/nrednav/cuid2"
 	"github.com/pulumi/pulumi/sdk/v3/go/auto"
 	"github.com/pulumi/pulumi/sdk/v3/go/auto/events"
 	"github.com/pulumi/pulumi/sdk/v3/go/auto/optdestroy"
@@ -123,7 +124,8 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 		Command: input.Command,
 	}})
 
-	err := s.Lock()
+	updateID := cuid2.Generate()
+	err := s.Lock(updateID, input.Command)
 	if err != nil {
 		if err == provider.ErrLockExists {
 			input.OnEvent(&StackEvent{ConcurrentUpdateEvent: &ConcurrentUpdateEvent{}})
@@ -142,7 +144,7 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 			return err
 		}
 	}
-	defer s.PushState()
+	defer s.PushState(updateID)
 
 	passphrase, err := provider.Passphrase(s.project.home, s.project.app.Name, s.project.app.Stage)
 	if err != nil {
@@ -490,7 +492,7 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 	slog.Info("running stack command", "cmd", input.Command)
 	switch input.Command {
 	case "up":
-		_, err = stack.Up(ctx,
+		result, upErr := stack.Up(ctx,
 			upOptionFunc(func(opts *optup.Options) {
 				opts.ContinueOnError = true
 			}),
@@ -500,6 +502,9 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 			optup.ErrorProgressStreams(),
 			optup.EventStreams(stream),
 		)
+		err = upErr
+		summary, _ := json.MarshalIndent(result.Summary, "", "  ")
+		fmt.Println(string(summary))
 
 	case "destroy":
 		_, err = stack.Destroy(ctx,
@@ -554,10 +559,8 @@ func (s *stack) Import(ctx context.Context, input *ImportOptions) error {
 		parent, err = resource.ParseURN(urnPrefix + parentType + "::" + parentName)
 	}
 
-	fmt.Println(urn)
-	fmt.Println(parent)
-
-	err = provider.Lock(s.project.home, s.project.app.Name, s.project.app.Stage)
+	updateID := cuid2.Generate()
+	err = provider.Lock(s.project.home, updateID, "import", s.project.app.Name, s.project.app.Stage)
 	if err != nil {
 		return err
 	}
@@ -670,11 +673,11 @@ func (s *stack) Import(ctx context.Context, input *ImportOptions) error {
 	if err != nil {
 		return err
 	}
-	return s.PushState()
+	return s.PushState(updateID)
 }
 
-func (s *stack) Lock() error {
-	return provider.Lock(s.project.home, s.project.app.Name, s.project.app.Stage)
+func (s *stack) Lock(updateID string, command string) error {
+	return provider.Lock(s.project.home, updateID, command, s.project.app.Name, s.project.app.Stage)
 }
 
 func (s *stack) Unlock() error {
@@ -720,10 +723,11 @@ func (s *stack) PullState() (string, error) {
 	return path, nil
 }
 
-func (s *stack) PushState() error {
+func (s *stack) PushState(version string) error {
 	pulumiDir := filepath.Join(s.project.PathWorkingDir(), ".pulumi")
 	return provider.PushState(
 		s.project.home,
+		version,
 		s.project.app.Name,
 		s.project.app.Stage,
 		filepath.Join(pulumiDir, "stacks", s.project.app.Name, fmt.Sprintf("%v.json", s.project.app.Stage)),

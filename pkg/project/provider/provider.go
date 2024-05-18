@@ -19,7 +19,7 @@ type Home interface {
 	Bootstrap(app, stage string) error
 
 	getData(key, app, stage string) (io.Reader, error)
-	putData(key, app, stage string, data io.Reader) error
+	putData(key, app, stage string, metadata map[string]string, data io.Reader) error
 	removeData(key, app, stage string) error
 
 	setPassphrase(app, stage string, passphrase string) error
@@ -111,7 +111,7 @@ func PutLinks(backend Home, app, stage string, data map[string]interface{}) erro
 	if data == nil || len(data) == 0 {
 		return nil
 	}
-	return putData(backend, "link", app, stage, true, data)
+	return putData(backend, "link", app, stage, true, map[string]string{}, data)
 }
 
 func GetSecrets(backend Home, app, stage string) (map[string]string, error) {
@@ -128,16 +128,18 @@ func PutSecrets(backend Home, app, stage string, data map[string]string) error {
 	if data == nil {
 		return nil
 	}
-	return putData(backend, "secret", app, stage, true, data)
+	return putData(backend, "secret", app, stage, true, map[string]string{}, data)
 }
 
-func PushState(backend Home, app, stage string, from string) error {
+func PushState(backend Home, updateID string, app, stage string, from string) error {
 	slog.Info("pushing state", "app", app, "stage", stage, "from", from)
 	file, err := os.Open(from)
 	if err != nil {
 		return nil
 	}
-	return backend.putData("app", app, stage, file)
+	return backend.putData("app", app, stage, map[string]string{
+		"updateID": updateID,
+	}, file)
 }
 
 var ErrStateNotFound = fmt.Errorf("state not found")
@@ -164,10 +166,12 @@ func PullState(backend Home, app, stage string, out string) error {
 }
 
 type lockData struct {
-	Created time.Time `json:"created"`
+	Created  time.Time `json:"created"`
+	UpdateID string    `json:"updateID"`
+	Command  string    `json:"command"`
 }
 
-func Lock(backend Home, app, stage string) error {
+func Lock(backend Home, updateID, command, app, stage string) error {
 	slog.Info("locking", "app", app, "stage", stage)
 	var lockData lockData
 	err := getData(backend, "lock", app, stage, false, &lockData)
@@ -178,7 +182,9 @@ func Lock(backend Home, app, stage string) error {
 		return ErrLockExists
 	}
 	lockData.Created = time.Now()
-	err = putData(backend, "lock", app, stage, false, lockData)
+	lockData.UpdateID = updateID
+	lockData.Command = command
+	err = putData(backend, "lock", app, stage, false, map[string]string{}, lockData)
 	if err != nil {
 		return err
 	}
@@ -190,7 +196,7 @@ func Unlock(backend Home, app, stage string) error {
 	return removeData(backend, "lock", app, stage)
 }
 
-func putData(backend Home, key, app, stage string, encrypt bool, data interface{}) error {
+func putData(backend Home, key, app, stage string, encrypt bool, metadata map[string]string, data interface{}) error {
 	slog.Info("putting data", "key", key, "app", app, "stage", stage)
 	jsonBytes, err := json.Marshal(data)
 	if err != nil {
@@ -219,7 +225,7 @@ func putData(backend Home, key, app, stage string, encrypt bool, data interface{
 		}
 		jsonBytes = gcm.Seal(nonce, nonce, jsonBytes, nil)
 	}
-	return backend.putData(key, app, stage, bytes.NewReader(jsonBytes))
+	return backend.putData(key, app, stage, metadata, bytes.NewReader(jsonBytes))
 }
 
 func getData(backend Home, key, app, stage string, encrypted bool, out interface{}) error {

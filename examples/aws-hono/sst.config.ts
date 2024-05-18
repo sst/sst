@@ -16,6 +16,9 @@ export default $config({
       url: true,
       link: [bucket],
       handler: "index.handler",
+      environment: {
+        FOO: "bar",
+      },
     });
 
     return {

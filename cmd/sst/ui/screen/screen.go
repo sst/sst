@@ -1,9 +1,11 @@
 package screen
 
 import (
+	"bufio"
 	"fmt"
 	"io"
 	"os/exec"
+	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
@@ -12,8 +14,7 @@ import (
 func Start() error {
 	model := Root{
 		processes: []*exec.Cmd{
-			exec.Command("ping", "google.com"),
-			exec.Command("ping", "yahoo.com"),
+			exec.Command("ping", "-i", "0.1", "google.com"),
 			exec.Command("node"),
 		},
 		stdin:    make([]io.WriteCloser, 3),
@@ -27,13 +28,9 @@ func Start() error {
 		stdin, _ := process.StdinPipe()
 		process.Start()
 		go func(i int, stdout io.ReadCloser) {
-			for {
-				buf := make([]byte, 1024)
-				n, err := stdout.Read(buf)
-				if err != nil {
-					return
-				}
-				model.stdout[i] += string(buf[:n])
+			scanner := bufio.NewScanner(stdout)
+			for scanner.Scan() {
+				model.stdout[i] += scanner.Text() + "\n"
 				p.Send(1)
 			}
 		}(i, stdout)
@@ -105,10 +102,52 @@ func (m Root) Update(raw tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m Root) View() string {
-	return m.sidebarView()
+	if m.width == 0 || m.height == 0 {
+		return ""
+	}
+	heightPadding := 1
+	widthPadding := 3
+	height := m.height - heightPadding*2
+
+	sidebar := m.ViewSidebar()
+	sidebarWidth := lipgloss.Width(sidebar)
+
+	mainWidth := m.width - widthPadding*2 - sidebarWidth
+	main := m.ViewMain()
+	lines := strings.Split(lipgloss.NewStyle().Width(mainWidth).Render(
+		m.stdout[m.selected],
+	), "\n")
+	if len(lines) < height {
+		padding := height - len(lines)
+		for i := 0; i < padding; i++ {
+			lines = append(lines, "")
+		}
+	}
+	if len(lines) > height {
+		lines = lines[len(lines)-height-1:]
+	}
+	main = strings.Join(lines, "\n")
+
+	return lipgloss.
+		NewStyle().
+		MaxWidth(m.width).
+		MaxHeight(m.height).
+		Padding(heightPadding, widthPadding).
+		Render(
+			lipgloss.JoinHorizontal(
+				lipgloss.Top,
+				lipgloss.NewStyle().Width(sidebarWidth).Render(sidebar),
+				"   ",
+				lipgloss.NewStyle().Width(mainWidth).MaxHeight(height).Render(main),
+			),
+		)
 }
 
-func (m Root) sidebarView() string {
+func (m Root) ViewMain() string {
+	return m.stdout[m.selected]
+}
+
+func (m Root) ViewSidebar() string {
 	width := 0
 	choices := make([]string, len(m.processes))
 	for i, process := range m.processes {
@@ -131,20 +170,10 @@ func (m Root) sidebarView() string {
 		choices[i] = s.Width(width).Render(fmt.Sprintf("(%d)", i), "+", choice)
 	}
 
-	return lipgloss.JoinHorizontal(
-		lipgloss.Top,
-		lipgloss.
-			NewStyle().
-			Height(m.height).
-			BorderStyle(lipgloss.NormalBorder()).
-			BorderRight(true).
-			Render(lipgloss.JoinVertical(
-				lipgloss.Left,
-				choices...,
-			)),
-		lipgloss.NewStyle().MaxWidth(m.width-width).MaxHeight(m.height).AlignVertical(lipgloss.Bottom).Render(m.stdout[m.selected]),
+	return lipgloss.JoinVertical(
+		lipgloss.Left,
+		choices...,
 	)
-
 }
 
 var ColorForeground = lipgloss.AdaptiveColor{Light: "16", Dark: "231"}

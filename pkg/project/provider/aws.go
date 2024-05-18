@@ -234,12 +234,13 @@ func (a *AwsProvider) getData(key, app, stage string) (io.Reader, error) {
 	return result.Body, nil
 }
 
-func (a *AwsProvider) putData(key, app, stage string, data io.Reader) error {
+func (a *AwsProvider) putData(key, app, stage string, metadata map[string]string, data io.Reader) error {
 	s3Client := s3.NewFromConfig(a.config)
 
 	_, err := s3Client.PutObject(context.TODO(), &s3.PutObjectInput{
 		Bucket:      aws.String(a.bootstrap.State),
 		Key:         aws.String(a.pathForData(key, app, stage)),
+		Metadata:    metadata,
 		Body:        data,
 		ContentType: aws.String("application/json"),
 	})

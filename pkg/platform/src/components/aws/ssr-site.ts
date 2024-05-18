@@ -732,7 +732,7 @@ function handler(event) {
           comment: `${name} app`,
           origins: Object.values(origins),
           originGroups: Object.values(originGroups),
-          defaultRootObject: "",
+          defaultRootObject: plan.defaultRootObject ?? "",
           defaultCacheBehavior: buildBehavior(
             plan.behaviors.find((behavior) => !behavior.pattern)!,
           ),
@@ -995,6 +995,7 @@ export function validatePlan<
     cfFunction?: keyof CloudFrontFunctions;
     edgeFunction?: keyof EdgeFunctions;
   }[];
+  defaultRootObject?: aws.cloudfront.DistributionArgs["defaultRootObject"];
   errorResponses?: aws.types.input.cloudfront.DistributionCustomErrorResponse[];
   serverCachePolicy?: {
     allowedHeaders?: string[];

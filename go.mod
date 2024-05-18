@@ -20,6 +20,7 @@ require (
 	github.com/joho/godotenv v1.5.1
 	github.com/kkqy/gokvpairs v0.0.0-20230324183058-304261169787
 	github.com/manifoldco/promptui v0.9.0
+	github.com/nrednav/cuid2 v1.0.0
 	github.com/posthog/posthog-go v0.0.0-20240221135834-4944045455b4
 	github.com/pulumi/pulumi/sdk/v3 v3.115.2
 	github.com/spf13/pflag v1.0.5

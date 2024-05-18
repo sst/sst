@@ -17,6 +17,7 @@ import (
 	"time"
 
 	"github.com/charmbracelet/huh"
+	"github.com/nrednav/cuid2"
 	flag "github.com/spf13/pflag"
 
 	"github.com/briandowns/spinner"
@@ -1344,7 +1345,8 @@ var Root = Command{
 						}
 						defer p.Cleanup()
 
-						err = p.Stack.Lock()
+						deploymentID := cuid2.Generate()
+						err = p.Stack.Lock(deploymentID, "edit")
 						if err != nil {
 							return util.NewReadableError(err, "Could not lock state")
 						}
@@ -1368,7 +1370,7 @@ var Root = Command{
 						if err := cmd.Wait(); err != nil {
 							return util.NewReadableError(err, "Editor exited with error")
 						}
-						return p.Stack.PushState()
+						return p.Stack.PushState(deploymentID)
 					},
 				},
 			},

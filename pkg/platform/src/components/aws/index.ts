@@ -26,6 +26,7 @@ export * from "./static-site.js";
 export * from "./svelte-kit.js";
 export * from "./vector.js";
 export * from "./vpc.js";
+export * from "./react.js";
 
 // internal components
 export * from "./cdn.js";
