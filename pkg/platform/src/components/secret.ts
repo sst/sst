@@ -98,7 +98,7 @@ export class Secret extends Component implements Link.Linkable {
     this._name = name;
     this._placeholder = placeholder;
     const value = process.env["SST_SECRET_" + this._name] ?? this._placeholder;
-    if (!value) {
+    if (typeof value !== "string") {
       throw new SecretMissingError(this._name);
     }
     this._value = value;
