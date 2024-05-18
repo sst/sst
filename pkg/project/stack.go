@@ -530,25 +530,27 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 		summary = result.Summary
 	}
 
-	var parsed provider.Summary
-	parsed.UpdateID = updateID
-	parsed.TimeStarted = summary.StartTime
-	parsed.TimeCompleted = *summary.EndTime
-	if match, ok := (*summary.ResourceChanges)["same"]; ok {
-		parsed.ResourceSame = match
-	}
-	if match, ok := (*summary.ResourceChanges)["create"]; ok {
-		parsed.ResourceCreated = match
-	}
-	if match, ok := (*summary.ResourceChanges)["update"]; ok {
-		parsed.ResourceUpdated = match
-	}
-	if match, ok := (*summary.ResourceChanges)["delete"]; ok {
-		parsed.ResourceDeleted = match
-	}
-	err = provider.PutSummary(s.project.home, s.project.app.Name, s.project.app.Stage, updateID, parsed)
-	if err != nil {
-		return err
+	if summary.ResourceChanges != nil {
+		var parsed provider.Summary
+		parsed.UpdateID = updateID
+		parsed.TimeStarted = summary.StartTime
+		parsed.TimeCompleted = *summary.EndTime
+		if match, ok := (*summary.ResourceChanges)["same"]; ok {
+			parsed.ResourceSame = match
+		}
+		if match, ok := (*summary.ResourceChanges)["create"]; ok {
+			parsed.ResourceCreated = match
+		}
+		if match, ok := (*summary.ResourceChanges)["update"]; ok {
+			parsed.ResourceUpdated = match
+		}
+		if match, ok := (*summary.ResourceChanges)["delete"]; ok {
+			parsed.ResourceDeleted = match
+		}
+		err = provider.PutSummary(s.project.home, s.project.app.Name, s.project.app.Stage, updateID, parsed)
+		if err != nil {
+			return err
+		}
 	}
 
 	slog.Info("done running stack command")
