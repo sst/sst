@@ -531,6 +531,7 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 	}
 
 	var parsed provider.Summary
+	parsed.UpdateID = updateID
 	parsed.TimeStarted = summary.StartTime
 	parsed.TimeCompleted = *summary.EndTime
 	if match, ok := (*summary.ResourceChanges)["same"]; ok {
