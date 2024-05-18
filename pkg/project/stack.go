@@ -490,9 +490,11 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 	}()
 
 	slog.Info("running stack command", "cmd", input.Command)
+	var summary auto.UpdateSummary
+
 	switch input.Command {
 	case "deploy":
-		result, upErr := stack.Up(ctx,
+		result, derr := stack.Up(ctx,
 			upOptionFunc(func(opts *optup.Options) {
 				opts.ContinueOnError = true
 			}),
@@ -502,12 +504,11 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 			optup.ErrorProgressStreams(),
 			optup.EventStreams(stream),
 		)
-		err = upErr
-		summary, _ := json.MarshalIndent(result.Summary, "", "  ")
-		fmt.Println(string(summary))
+		err = derr
+		summary = result.Summary
 
 	case "remove":
-		_, err = stack.Destroy(ctx,
+		result, derr := stack.Destroy(ctx,
 			optdestroy.ContinueOnError(),
 			optdestroy.Target(input.Target),
 			optdestroy.TargetDependents(),
@@ -515,14 +516,38 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 			optdestroy.ErrorProgressStreams(),
 			optdestroy.EventStreams(stream),
 		)
+		err = derr
+		summary = result.Summary
 
 	case "refresh":
-		_, err = stack.Refresh(ctx,
+		result, derr := stack.Refresh(ctx,
 			optrefresh.Target(input.Target),
 			optrefresh.ProgressStreams(),
 			optrefresh.ErrorProgressStreams(),
 			optrefresh.EventStreams(stream),
 		)
+		err = derr
+		summary = result.Summary
+	}
+
+	var parsed provider.Summary
+	parsed.TimeStarted = summary.StartTime
+	parsed.TimeEnded = *summary.EndTime
+	if match, ok := (*summary.ResourceChanges)["same"]; ok {
+		parsed.ResourcesUnchanged = match
+	}
+	if match, ok := (*summary.ResourceChanges)["create"]; ok {
+		parsed.ResourcesCreated = match
+	}
+	if match, ok := (*summary.ResourceChanges)["update"]; ok {
+		parsed.ResourcesUpdated = match
+	}
+	if match, ok := (*summary.ResourceChanges)["delete"]; ok {
+		parsed.ResourcesDeleted = match
+	}
+	err = provider.PutSummary(s.project.home, s.project.app.Name, s.project.app.Stage, updateID, parsed)
+	if err != nil {
+		return err
 	}
 
 	slog.Info("done running stack command")

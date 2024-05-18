@@ -106,12 +106,27 @@ func GetLinks(backend Home, app, stage string) (map[string]interface{}, error) {
 	return data, err
 }
 
+type Summary struct {
+	TimeStarted       string `json:"timeStarted"`
+	TimeEnded         string `json:"timeEnded"`
+	ResourceUpdated   int    `json:"resourceUpdated"`
+	ResourceCreated   int    `json:"resourceCreated"`
+	ResourceDeleted   int    `json:"resourceDeleted"`
+	ResourceUnchanged int    `json:"resourceUnchanged"`
+}
+
 func PutLinks(backend Home, app, stage string, data map[string]interface{}) error {
 	slog.Info("putting links", "app", app, "stage", stage)
 	if data == nil || len(data) == 0 {
 		return nil
 	}
 	return putData(backend, "link", app, stage, true, map[string]string{}, data)
+}
+
+func PutSummary(backend Home, app, stage, updateID string, summary Summary) error {
+	slog.Info("putting summary", "app", app, "stage", stage)
+	return putData(backend, "summary", app, stage+"/"+updateID, false, map[string]string{}, summary)
+
 }
 
 func GetSecrets(backend Home, app, stage string) (map[string]string, error) {
