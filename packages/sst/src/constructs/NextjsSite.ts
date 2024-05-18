@@ -428,6 +428,9 @@ export class NextjsSite extends SsrSite {
             ),
           }
         : undefined,
+      serverCachePolicy: {
+        allowedHeaders: DEFAULT_CACHE_POLICY_ALLOWED_HEADERS,
+      }
     });
   }
 
