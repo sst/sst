@@ -22,13 +22,6 @@
           }
         ]
       }
-    },
-    {
-      "type": "npm",
-      "properties": {
-        "file": "package.json",
-        "package": "astro-sst"
-      }
     }
   ]
 }
