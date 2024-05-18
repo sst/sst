@@ -178,7 +178,6 @@ export interface NextjsSiteProps extends Omit<SsrSiteProps, "nodejs"> {
 }
 
 const DEFAULT_OPEN_NEXT_VERSION = "3.0.1";
-const DEFAULT_CACHE_POLICY_ALLOWED_HEADERS = ["x-open-next-cache-key"];
 
 type NextjsSiteNormalizedProps = NextjsSiteProps & SsrSiteNormalizedProps;
 
@@ -244,12 +243,6 @@ export class NextjsSite extends SsrSite {
         this.createRevalidationTable();
       }
     }
-  }
-
-  public static override buildDefaultServerCachePolicyProps(): CachePolicyProps {
-    return super.buildDefaultServerCachePolicyProps(
-      DEFAULT_CACHE_POLICY_ALLOWED_HEADERS
-    );
   }
 
   private createFunctionOrigin(
@@ -429,8 +422,8 @@ export class NextjsSite extends SsrSite {
           }
         : undefined,
       serverCachePolicy: {
-        allowedHeaders: DEFAULT_CACHE_POLICY_ALLOWED_HEADERS,
-      }
+        allowedHeaders: ["x-open-next-cache-key"],
+      },
     });
   }
 

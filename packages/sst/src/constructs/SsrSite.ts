@@ -1260,11 +1260,20 @@ function handler(event) {
       const allowedHeaders = plan.serverCachePolicy?.allowedHeaders ?? [];
       singletonCachePolicy =
         singletonCachePolicy ??
-        new CachePolicy(
-          self,
-          "ServerCache",
-          SsrSite.buildDefaultServerCachePolicyProps(allowedHeaders)
-        );
+        new CachePolicy(self, "ServerCache", {
+          queryStringBehavior: CacheQueryStringBehavior.all(),
+          headerBehavior:
+            allowedHeaders.length > 0
+              ? CacheHeaderBehavior.allowList(...allowedHeaders)
+              : CacheHeaderBehavior.none(),
+          cookieBehavior: CacheCookieBehavior.none(),
+          defaultTtl: CdkDuration.days(0),
+          maxTtl: CdkDuration.days(365),
+          minTtl: CdkDuration.days(0),
+          enableAcceptEncodingBrotli: true,
+          enableAcceptEncodingGzip: true,
+          comment: "SST server response cache policy",
+        });
       return singletonCachePolicy;
     }
 
@@ -1454,25 +1463,6 @@ function handler(event) {
         dependsOn: s3DeployCRs,
       });
     }
-  }
-
-  protected static buildDefaultServerCachePolicyProps(
-    allowedHeaders: string[]
-  ): CachePolicyProps {
-    return {
-      queryStringBehavior: CacheQueryStringBehavior.all(),
-      headerBehavior:
-        allowedHeaders.length > 0
-          ? CacheHeaderBehavior.allowList(...allowedHeaders)
-          : CacheHeaderBehavior.none(),
-      cookieBehavior: CacheCookieBehavior.none(),
-      defaultTtl: CdkDuration.days(0),
-      maxTtl: CdkDuration.days(365),
-      minTtl: CdkDuration.days(0),
-      enableAcceptEncodingBrotli: true,
-      enableAcceptEncodingGzip: true,
-      comment: "SST server response cache policy",
-    };
   }
 
   /**
