@@ -31,7 +31,7 @@ func startDeployer(ctx context.Context, p *project.Project) (util.CleanupFunc, e
 		defer wg.Done()
 		for {
 			p.Stack.Run(ctx, &project.StackInput{
-				Command: "up",
+				Command: "deploy",
 				Dev:     true,
 				OnEvent: func(event *project.StackEvent) {
 					bus.Publish(event)
