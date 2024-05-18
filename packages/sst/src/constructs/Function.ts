@@ -84,8 +84,8 @@ const supportedRuntimes = {
   java11: CDKRuntime.JAVA_11,
   java17: CDKRuntime.JAVA_17,
   java21: CDKRuntime.JAVA_21,
-  "go1.x": CDKRuntime.PROVIDED_AL2,
-  go: CDKRuntime.PROVIDED_AL2,
+  "go1.x": CDKRuntime.PROVIDED_AL2023,
+  go: CDKRuntime.PROVIDED_AL2023,
 };
 
 export type Runtime = keyof typeof supportedRuntimes;
