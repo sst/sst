@@ -1,5 +1,21 @@
 # @serverless-stack/cli2
 
+## 2.42.0
+
+### Minor Changes
+
+- [#3764](https://github.com/sst/sst/pull/3764) [`3c62d50b7`](https://github.com/sst/sst/commit/3c62d50b79daa22d1fd1d4c4e160d506f18d3c0f) Thanks [@berenddeboer](https://github.com/berenddeboer)! - chore: update aws-cdk-lib to 2.142.1 from 2.132.1.
+
+### Patch Changes
+
+- [#3722](https://github.com/sst/sst/pull/3722) [`6f8fb48f2`](https://github.com/sst/sst/commit/6f8fb48f2b6dd195a732114abf33bd4e9f68439f) Thanks [@adrianisk](https://github.com/adrianisk)! - Fix cacheTo Function/container prop
+
+- [#3729](https://github.com/sst/sst/pull/3729) [`7026c46db`](https://github.com/sst/sst/commit/7026c46dbbedcc3f2936db4002644a56704ef47c) Thanks [@jamesgibbons92](https://github.com/jamesgibbons92)! - [Function]: Update go runtime
+
+- [#3759](https://github.com/sst/sst/pull/3759) [`b51f1fb75`](https://github.com/sst/sst/commit/b51f1fb75901353537d5e34cd8a3b3f99c08ba04) Thanks [@adminCitify](https://github.com/adminCitify)! - RDS: support postgresql13.12
+
+- [#3762](https://github.com/sst/sst/pull/3762) [`17069475e`](https://github.com/sst/sst/commit/17069475e073eb117327a27a6712e164d5fe64c2) Thanks [@lostra01](https://github.com/lostra01)! - Proxy issuer calls to avoid timeouts on unused auth adapters
+
 ## 2.41.5
 
 ### Patch Changes
