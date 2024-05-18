@@ -107,12 +107,13 @@ func GetLinks(backend Home, app, stage string) (map[string]interface{}, error) {
 }
 
 type Summary struct {
-	TimeStarted       string `json:"timeStarted"`
-	TimeEnded         string `json:"timeEnded"`
-	ResourceUpdated   int    `json:"resourceUpdated"`
-	ResourceCreated   int    `json:"resourceCreated"`
-	ResourceDeleted   int    `json:"resourceDeleted"`
-	ResourceUnchanged int    `json:"resourceUnchanged"`
+	UpdateID        string `json:"updateID"`
+	TimeStarted     string `json:"timeStarted"`
+	TimeCompleted   string `json:"timeCompleted"`
+	ResourceUpdated int    `json:"resourceUpdated"`
+	ResourceCreated int    `json:"resourceCreated"`
+	ResourceDeleted int    `json:"resourceDeleted"`
+	ResourceSame    int    `json:"resourceSame"`
 }
 
 func PutLinks(backend Home, app, stage string, data map[string]interface{}) error {

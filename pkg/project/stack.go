@@ -532,18 +532,18 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 
 	var parsed provider.Summary
 	parsed.TimeStarted = summary.StartTime
-	parsed.TimeEnded = *summary.EndTime
+	parsed.TimeCompleted = *summary.EndTime
 	if match, ok := (*summary.ResourceChanges)["same"]; ok {
-		parsed.ResourcesUnchanged = match
+		parsed.ResourceSame = match
 	}
 	if match, ok := (*summary.ResourceChanges)["create"]; ok {
-		parsed.ResourcesCreated = match
+		parsed.ResourceCreated = match
 	}
 	if match, ok := (*summary.ResourceChanges)["update"]; ok {
-		parsed.ResourcesUpdated = match
+		parsed.ResourceUpdated = match
 	}
 	if match, ok := (*summary.ResourceChanges)["delete"]; ok {
-		parsed.ResourcesDeleted = match
+		parsed.ResourceDeleted = match
 	}
 	err = provider.PutSummary(s.project.home, s.project.app.Name, s.project.app.Stage, updateID, parsed)
 	if err != nil {
