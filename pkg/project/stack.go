@@ -491,7 +491,7 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 
 	slog.Info("running stack command", "cmd", input.Command)
 	switch input.Command {
-	case "up":
+	case "deploy":
 		result, upErr := stack.Up(ctx,
 			upOptionFunc(func(opts *optup.Options) {
 				opts.ContinueOnError = true
@@ -506,7 +506,7 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 		summary, _ := json.MarshalIndent(result.Summary, "", "  ")
 		fmt.Println(string(summary))
 
-	case "destroy":
+	case "remove":
 		_, err = stack.Destroy(ctx,
 			optdestroy.ContinueOnError(),
 			optdestroy.Target(input.Target),

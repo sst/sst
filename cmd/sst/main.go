@@ -456,7 +456,7 @@ var Root = Command{
 					target = strings.Split(cli.String("target"), ",")
 				}
 				err = p.Stack.Run(cli.Context, &project.StackInput{
-					Command: "up",
+					Command: "deploy",
 					OnEvent: ui.StackEvent,
 					Target:  target,
 				})
@@ -1045,7 +1045,7 @@ var Root = Command{
 					target = strings.Split(cli.String("target"), ",")
 				}
 				err = p.Stack.Run(cli.Context, &project.StackInput{
-					Command: "destroy",
+					Command: "remove",
 					OnEvent: ui.StackEvent,
 					Target:  target,
 				})
