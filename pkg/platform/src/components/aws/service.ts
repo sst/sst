@@ -117,9 +117,9 @@ export class Service extends Component implements Link.Linkable {
     this._url = !self.loadBalancer
       ? undefined
       : all([self.domain, self.loadBalancer?.dnsName]).apply(
-        ([domain, loadBalancer]) =>
-          domain ? `https://${domain}/` : `http://${loadBalancer}`,
-      );
+          ([domain, loadBalancer]) =>
+            domain ? `https://${domain}/` : `http://${loadBalancer}`,
+        );
 
     registerHint();
     registerReceiver();
@@ -451,12 +451,13 @@ export class Service extends Component implements Link.Linkable {
         transform(args.transform?.taskRole, {
           assumeRolePolicy: !$dev
             ? aws.iam.assumeRolePolicyForPrincipal({
-              Service: "ecs-tasks.amazonaws.com",
-            })
+                Service: "ecs-tasks.amazonaws.com",
+              })
             : aws.iam.assumeRolePolicyForPrincipal({
-              AWS: interpolate`arn:aws:iam::${aws.getCallerIdentityOutput().accountId
+                AWS: interpolate`arn:aws:iam::${
+                  aws.getCallerIdentityOutput().accountId
                 }:root`,
-            }),
+              }),
           inlinePolicies: policy.apply(({ statements }) =>
             statements ? [{ name: "inline", policy: policy.json }] : [],
           ),
@@ -662,7 +663,9 @@ export class Service extends Component implements Link.Linkable {
     function registerReceiver() {
       self.registerOutputs({
         _receiver: imageArgs.apply((imageArgs) => ({
-          directory: imageArgs.context,
+          directory: path.dirname(
+            path.join(imageArgs.context, imageArgs.dockerfile ?? "Dockerfile"),
+          ),
           links: linkData.apply((input) => input.map((item) => item.name)),
           environment: args.environment,
           aws: {
