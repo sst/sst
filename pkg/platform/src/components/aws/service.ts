@@ -311,7 +311,9 @@ export class Service extends Component implements Link.Linkable {
         transform(args.transform?.image, {
           build: imageArgsNew.apply((imageArgs) => ({
             context: path.join($cli.paths.root, imageArgs.context),
-            dockerfile: imageArgs.dockerfile,
+            dockerfile: imageArgs.dockerfile
+              ? path.join($cli.paths.root, imageArgs.dockerfile)
+              : undefined,
             args: imageArgs.args,
             platform: imageArgs.platform,
           })),
