@@ -3,6 +3,7 @@ module github.com/sst/ion
 go 1.21.3
 
 require (
+	github.com/ActiveState/vt10x v1.3.1
 	github.com/Masterminds/semver/v3 v3.2.1
 	github.com/aws/aws-sdk-go-v2 v1.24.1
 	github.com/aws/aws-sdk-go-v2/config v1.26.6
@@ -12,10 +13,12 @@ require (
 	github.com/briandowns/spinner v1.23.0
 	github.com/charmbracelet/huh v0.3.0
 	github.com/cloudflare/cloudflare-go v0.89.0
+	github.com/creack/pty v1.1.21
 	github.com/eclipse/paho.mqtt.golang v1.4.3
 	github.com/evanw/esbuild v0.20.2
 	github.com/fatih/color v1.16.0
 	github.com/fsnotify/fsnotify v1.7.0
+	github.com/gdamore/tcell v1.4.0
 	github.com/gorilla/websocket v1.5.0
 	github.com/joho/godotenv v1.5.1
 	github.com/kkqy/gokvpairs v0.0.0-20230324183058-304261169787
@@ -23,13 +26,20 @@ require (
 	github.com/nrednav/cuid2 v1.0.0
 	github.com/posthog/posthog-go v0.0.0-20240221135834-4944045455b4
 	github.com/pulumi/pulumi/sdk/v3 v3.115.2
+	github.com/rivo/tview v0.0.0-20240519092312-a2885dd403f3
 	github.com/spf13/pflag v1.0.5
 	github.com/twitchtv/twirp v8.1.3+incompatible
 	golang.org/x/exp v0.0.0-20240325151524-a685a6edb6d8
 	google.golang.org/protobuf v1.33.0
 )
 
-require github.com/catppuccin/go v0.2.0 // indirect
+require (
+	github.com/Netflix/go-expect v0.0.0-20180615182759-c93bf25de8e8 // indirect
+	github.com/catppuccin/go v0.2.0 // indirect
+	github.com/gdamore/encoding v1.0.0 // indirect
+	github.com/gdamore/tcell/v2 v2.7.1 // indirect
+	github.com/kr/pty v1.1.1 // indirect
+)
 
 require (
 	dario.cat/mergo v1.0.0 // indirect
@@ -127,7 +137,7 @@ require (
 	golang.org/x/sync v0.6.0
 	golang.org/x/sys v0.19.0 // indirect
 	golang.org/x/term v0.19.0 // indirect
-	golang.org/x/text v0.14.0 // indirect
+	golang.org/x/text v0.15.0 // indirect
 	golang.org/x/time v0.5.0 // indirect
 	golang.org/x/tools v0.19.0 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20240325203815-454cdb8f5daa // indirect
