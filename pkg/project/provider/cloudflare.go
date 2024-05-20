@@ -109,7 +109,7 @@ func (c *CloudflareProvider) Bootstrap(app, stage string) error {
 //go:linkname makeRequestContext github.com/cloudflare/cloudflare-go.(*API).makeRequestContext
 func makeRequestContext(*cloudflare.API, context.Context, string, string, interface{}) ([]byte, error)
 
-func (c *CloudflareProvider) putData(kind, app, stage string, metadata map[string]string, data io.Reader) error {
+func (c *CloudflareProvider) putData(kind, app, stage string, data io.Reader) error {
 	path := filepath.Join(kind, app, stage)
 	_, err := makeRequestContext(c.api, context.Background(), http.MethodPut, "/accounts/"+c.identifier.Identifier+"/r2/buckets/"+c.bootstrap.State+"/objects/"+path, data)
 	if err != nil {
@@ -141,7 +141,7 @@ func (c *CloudflareProvider) removeData(kind, app, stage string) error {
 
 // these should go into secrets manager once it's out of beta
 func (c *CloudflareProvider) setPassphrase(app, stage string, passphrase string) error {
-	return c.putData("passphrase", app, stage, map[string]string{}, bytes.NewReader([]byte(passphrase)))
+	return c.putData("passphrase", app, stage, bytes.NewReader([]byte(passphrase)))
 }
 
 func (c *CloudflareProvider) getPassphrase(app, stage string) (string, error) {

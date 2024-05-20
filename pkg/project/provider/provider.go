@@ -9,17 +9,19 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"math"
 	"os"
 	"time"
 
 	"golang.org/x/exp/slog"
+	"golang.org/x/sync/errgroup"
 )
 
 type Home interface {
 	Bootstrap(app, stage string) error
 
 	getData(key, app, stage string) (io.Reader, error)
-	putData(key, app, stage string, metadata map[string]string, data io.Reader) error
+	putData(key, app, stage string, data io.Reader) error
 	removeData(key, app, stage string) error
 
 	setPassphrase(app, stage string, passphrase string) error
@@ -121,12 +123,12 @@ func PutLinks(backend Home, app, stage string, data map[string]interface{}) erro
 	if data == nil || len(data) == 0 {
 		return nil
 	}
-	return putData(backend, "link", app, stage, true, map[string]string{}, data)
+	return putData(backend, "link", app, stage, true, data)
 }
 
 func PutSummary(backend Home, app, stage, updateID string, summary Summary) error {
 	slog.Info("putting summary", "app", app, "stage", stage)
-	return putData(backend, "summary", app, stage+"/"+updateID, false, map[string]string{}, summary)
+	return putData(backend, "summary", app, stage+"/"+updateID, false, summary)
 
 }
 
@@ -144,7 +146,7 @@ func PutSecrets(backend Home, app, stage string, data map[string]string) error {
 	if data == nil {
 		return nil
 	}
-	return putData(backend, "secret", app, stage, true, map[string]string{}, data)
+	return putData(backend, "secret", app, stage, true, data)
 }
 
 func PushState(backend Home, updateID string, app, stage string, from string) error {
@@ -153,9 +155,19 @@ func PushState(backend Home, updateID string, app, stage string, from string) er
 	if err != nil {
 		return nil
 	}
-	return backend.putData("app", app, stage, map[string]string{
-		"updateID": updateID,
-	}, file)
+	var group errgroup.Group
+	fileBytes, err := io.ReadAll(file)
+	if err != nil {
+		return err
+	}
+	group.Go(func() error {
+		return backend.putData("app", app, stage, bytes.NewReader(fileBytes))
+	})
+	group.Go(func() error {
+		prefix := fmt.Sprintf("%020d", math.MaxInt64-time.Now().Unix())
+		return backend.putData("history", app, stage+"/"+prefix+"-"+updateID, bytes.NewReader(fileBytes))
+	})
+	return group.Wait()
 }
 
 var ErrStateNotFound = fmt.Errorf("state not found")
@@ -200,7 +212,7 @@ func Lock(backend Home, updateID, command, app, stage string) error {
 	lockData.Created = time.Now()
 	lockData.UpdateID = updateID
 	lockData.Command = command
-	err = putData(backend, "lock", app, stage, false, map[string]string{}, lockData)
+	err = putData(backend, "lock", app, stage, false, lockData)
 	if err != nil {
 		return err
 	}
@@ -212,7 +224,7 @@ func Unlock(backend Home, app, stage string) error {
 	return removeData(backend, "lock", app, stage)
 }
 
-func putData(backend Home, key, app, stage string, encrypt bool, metadata map[string]string, data interface{}) error {
+func putData(backend Home, key, app, stage string, encrypt bool, data interface{}) error {
 	slog.Info("putting data", "key", key, "app", app, "stage", stage)
 	jsonBytes, err := json.Marshal(data)
 	if err != nil {
@@ -241,7 +253,7 @@ func putData(backend Home, key, app, stage string, encrypt bool, metadata map[st
 		}
 		jsonBytes = gcm.Seal(nonce, nonce, jsonBytes, nil)
 	}
-	return backend.putData(key, app, stage, metadata, bytes.NewReader(jsonBytes))
+	return backend.putData(key, app, stage, bytes.NewReader(jsonBytes))
 }
 
 func getData(backend Home, key, app, stage string, encrypted bool, out interface{}) error {
