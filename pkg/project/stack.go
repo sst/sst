@@ -454,13 +454,7 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 				}
 			}
 
-			globalTypes := map[string]interface{}{}
-			for _, links := range types {
-				for key, value := range links {
-					globalTypes[key] = value
-				}
-			}
-			types[filepath.Join(s.project.PathWorkingDir(), "types.generated.ts")] = globalTypes
+			types[filepath.Join(s.project.PathWorkingDir(), "types.generated.ts")] = complete.Links
 
 			for path, links := range types {
 				slog.Info("generating types", "path", path, "count", len(links))
