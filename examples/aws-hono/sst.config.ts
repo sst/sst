@@ -14,6 +14,7 @@ export default $config({
     });
     const hono = new sst.aws.Function("Hono", {
       url: true,
+      link: [bucket],
       handler: "index.handler",
       environment: {
         FOO: "bar",
