@@ -2,6 +2,7 @@ package runtime
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 	"log/slog"
@@ -26,7 +27,6 @@ type Worker interface {
 type BuildInput struct {
 	Warp    project.Warp
 	Project *project.Project
-	Links   project.Links
 	Dev     bool
 }
 
@@ -42,6 +42,8 @@ type BuildOutput struct {
 
 type RunInput struct {
 	Project    *project.Project
+	Warp       project.Warp
+	Links      project.Links
 	Server     string
 	FunctionID string
 	WorkerID   string
@@ -78,13 +80,6 @@ func Build(ctx context.Context, input *BuildInput) (*BuildOutput, error) {
 	if err := os.MkdirAll(out, 0755); err != nil {
 		return nil, err
 	}
-	links := project.Links{}
-	for _, name := range input.Warp.Links {
-		value := input.Links[name]
-		links[name] = value
-	}
-	input.Links = links
-
 	result, err := runtime.Build(ctx, input)
 	if err != nil {
 		return nil, err
@@ -119,6 +114,11 @@ func Run(ctx context.Context, input *RunInput) (Worker, error) {
 	slog.Info("running function", "runtime", input.Runtime, "functionID", input.FunctionID)
 	runtime, ok := GetRuntime(input.Runtime)
 	input.Env = append(input.Env, "SST_LIVE=true")
+	for _, name := range input.Warp.Links {
+		value := input.Links[name]
+		serialized, _ := json.Marshal(value)
+		input.Env = append(input.Env, fmt.Sprintf("SST_RESOURCE_%s=%s", name, serialized))
+	}
 	if !ok {
 		return nil, fmt.Errorf("runtime not found")
 	}

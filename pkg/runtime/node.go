@@ -147,8 +147,6 @@ func (r *NodeRuntime) Build(ctx context.Context, input *BuildInput) (*BuildOutpu
 		MinifyIdentifiers: properties.Minify,
 	}
 
-	links, _ := json.Marshal(input.Links)
-
 	if isESM {
 		options.Format = esbuild.FormatESModule
 		options.Target = esbuild.ESNext
@@ -159,7 +157,6 @@ func (r *NodeRuntime) Build(ctx context.Context, input *BuildInput) (*BuildOutpu
 				`const require = topLevelCreateRequire(import.meta.url);`,
 				`import { fileURLToPath as topLevelFileUrlToPath, URL as topLevelURL } from "url"`,
 				`const __dirname = topLevelFileUrlToPath(new topLevelURL(".", import.meta.url))`,
-				`globalThis.$SST_LINKS = ` + string(links) + ";",
 				properties.Banner,
 			}, "\n"),
 		}

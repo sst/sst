@@ -241,7 +241,6 @@ func Start(
 				Warp:    warp,
 				Project: p,
 				Dev:     true,
-				Links:   complete.Links,
 			})
 			if err == nil {
 				bus.Publish(&FunctionBuildEvent{
@@ -269,6 +268,8 @@ func Start(
 			}
 			warp := complete.Warps[functionID]
 			worker, _ := runtime.Run(ctx, &runtime.RunInput{
+				Warp:       warp,
+				Links:      complete.Links,
 				Server:     server + workerID,
 				Project:    p,
 				WorkerID:   workerID,

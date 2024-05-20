@@ -110,7 +110,6 @@ func Start(ctx context.Context, proj *project.Project, args map[string]interface
 
 					output, err := runtime.Build(ctx, &runtime.BuildInput{
 						Warp:    warp,
-						Links:   complete.Links,
 						Dev:     true,
 						Project: proj,
 					})
@@ -132,7 +131,6 @@ func Start(ctx context.Context, proj *project.Project, args map[string]interface
 					if runtime.ShouldRebuild(warp.Runtime, workerID, file.Path) {
 						output, err := runtime.Build(ctx, &runtime.BuildInput{
 							Warp:    warp,
-							Links:   complete.Links,
 							Dev:     true,
 							Project: proj,
 						})
