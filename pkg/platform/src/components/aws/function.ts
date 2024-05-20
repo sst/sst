@@ -995,19 +995,22 @@ export class Function
     }
 
     function normalizeEnvironment() {
-      return all([args.environment, dev]).apply(([environment, dev]) => {
-        const result = environment ?? {};
-        result.SST_RESOURCE_App = JSON.stringify({
-          name: $app.name,
-          stage: $app.stage,
-        });
-        if (dev) {
-          result.SST_FUNCTION_ID = name;
-          result.SST_APP = $app.name;
-          result.SST_STAGE = $app.stage;
-        }
-        return result;
-      });
+      return all([args.environment, dev, args.link]).apply(
+        ([environment, dev, link]) => {
+          const result = environment ?? {};
+          result.SST_RESOURCE_App = JSON.stringify({
+            name: $app.name,
+            stage: $app.stage,
+          });
+          if (dev) {
+            result.SST_FUNCTION_ID = name;
+            result.SST_APP = $app.name;
+            result.SST_STAGE = $app.stage;
+            result.SST_LINK = (link || []).map((l) => l.urn).join(",");
+          }
+          return result;
+        },
+      );
     }
 
     function normalizeStreaming() {
