@@ -1,0 +1,16 @@
+name: aws_dart_api
+description: A starting point for an AWS Serverless Api using Dart and SST ION.
+version: 1.0.0
+publish_to: none
+
+environment:
+  sdk: ^3.4.0
+
+dependencies:
+  aws_lambda_dart_runtime:
+    git:
+      url: https://github.com/katallaxie/aws-lambda-dart-runtime
+
+dev_dependencies:
+  lints: ^3.0.0
+  test: ^1.24.0
