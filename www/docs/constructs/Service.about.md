@@ -294,6 +294,18 @@ new Service(stack, "MyService", {
 });
 ```
 
+Target build stage can also be passed in to the docker build command.
+
+```js
+new Service(stack, "MyService", {
+  path: "./service",
+  port: 3000,
+  build: {
+    target: "prod"
+  }
+});
+```
+
 ### Configuring log retention
 
 The Service construct creates a CloudWatch log group to store the logs. By default, the logs are retained indefinitely. You can configure the log retention period like this:
