@@ -1,0 +1,10 @@
+{
+  "name": "base-ts",
+  "version": "0.0.0",
+  "dependencies": {
+    "@aws-sdk/client-eventbridge": "^3.582.0",
+    "aws4fetch": "^1.0.18",
+    "sst": "^3.0.19",
+    "zod": "^3.23.8"
+  }
+}

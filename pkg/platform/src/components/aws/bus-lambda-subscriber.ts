@@ -80,7 +80,7 @@ export class BusLambdaSubscriber extends Component {
           action: "lambda:InvokeFunction",
           function: fn.arn,
           principal: "events.amazonaws.com",
-          sourceArn: bus.arn,
+          sourceArn: rule.arn,
         },
         { parent: self },
       );
@@ -99,7 +99,9 @@ export class BusLambdaSubscriber extends Component {
                   detail: pattern.detail,
                 }),
               )
-            : undefined,
+            : JSON.stringify({
+                source: [{ prefix: "" }],
+              }),
         }),
         { parent: self },
       );

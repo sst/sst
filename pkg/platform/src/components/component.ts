@@ -169,6 +169,7 @@ export class Component extends ComponentResource {
             case "aws:ecs/taskDefinition:TaskDefinition":
             case "aws:lb/targetGroup:TargetGroup":
             case "aws:s3/bucketV2:BucketV2":
+            case "aws:cloudwatch/eventBus:EventBus":
               break;
             // resources not prefixed
             case "aws:acm/certificate:Certificate":

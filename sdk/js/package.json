@@ -3,31 +3,34 @@
   "name": "sst",
   "type": "module",
   "sideEffects": false,
-  "version": "3.0.15",
+  "version": "3.0.19",
   "main": "./dist/index.js",
   "exports": {
     ".": "./dist/index.js",
-    "./*": [
-      "./dist/*/index.js",
-      "./dist/*.js"
-    ]
+    "./auth": "./dist/auth/index.js",
+    "./auth/adapter": "./dist/auth/index.js",
+    "./*": "./dist/*.js"
   },
   "scripts": {
     "build": "tsc",
     "dev": "tsc -w",
-    "release": "pnpm build && pnpm version patch && pnpm publish --no-git-checks --tag=ion --access=public"
+    "release": "bun run build && pnpm version patch && pnpm publish --no-git-checks --tag=ion --access=public"
   },
   "devDependencies": {
     "@tsconfig/node18": "^18.2.2",
     "@types/node": "^20.11.0",
+    "hono": "4.3.9",
     "typescript": "^5.3.3"
   },
   "files": [
     "dist"
   ],
+  "peerDependencies": {
+    "hono": "4.x"
+  },
   "dependencies": {
     "@aws-sdk/client-lambda": "3.478.0",
-    "hono": "4.0.1",
+    "aws4fetch": "^1.0.18",
     "jose": "5.2.3",
     "openid-client": "5.6.4"
   }

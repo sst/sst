@@ -1,5 +1,6 @@
 import { ZodObject, ZodSchema, z } from "zod";
 import { Prettify } from "../auth/handler.js";
+import { Destinations, publish } from "./destination.js";
 
 type Event = {
   type: string;
@@ -7,6 +8,15 @@ type Event = {
   $metadata: any;
   $payload: any;
 };
+
+type Target =
+  | {
+      type: "sst.aws.Bus";
+      name: string;
+    }
+  | {
+      type: "sst.aws.Queue";
+    };
 
 export function EventClient<
   MetadataFunction extends () => any,
@@ -29,13 +39,24 @@ export function EventClient<
       metadata: ReturnType<MetadataFunction>;
     }>;
     type Parsed = inferParser<Schema>;
+    type Publish = undefined extends MetadataSchema
+      ? (
+          destination: Destinations,
+          properties: Parsed["in"],
+        ) => Promise<Payload>
+      : (
+          destination: Destinations,
+          properties: Parsed["in"],
+          // @ts-expect-error
+          metadata: inferParser<MetadataSchema>["in"],
+        ) => Promise<Payload>;
     type Create = undefined extends MetadataSchema
-      ? (properties: Parsed["in"]) => Payload
+      ? (properties: Parsed["in"]) => Promise<void>
       : (
           properties: Parsed["in"],
           // @ts-expect-error
           metadata: inferParser<MetadataSchema>["in"],
-        ) => Payload;
+        ) => Promise<void>;
     const validate = validator(schema);
     async function create(properties: any, metadata?: any) {
       if (metadataValidator) {
@@ -51,9 +72,17 @@ export function EventClient<
         metadata,
       };
     }
+    async function pub(
+      destination: Destinations,
+      properties: any,
+      metadata?: any,
+    ) {
+      const payload = await create(properties, metadata);
+      return publish(destination, payload);
+    }
     return {
-      create: create as unknown as Create,
-      type,
+      create: create as Create,
+      publish: pub as Publish,
       $input: {} as Parsed["in"],
       $output: {} as Parsed["out"],
       $payload: {} as Payload,
@@ -141,3 +170,7 @@ export type inferParser<TParser extends Parser> =
 export type inferEvent<T extends { shape: ZodObject<any> }> = z.infer<
   T["shape"]
 >;
+
+const evt = EventClient({
+  validator: ZodValidator,
+});
