@@ -1345,12 +1345,19 @@ var Root = Command{
 						}
 						defer p.Cleanup()
 
-						deploymentID := cuid2.Generate()
-						err = p.Stack.Lock(deploymentID, "edit")
+						var parsed provider.Summary
+						parsed.Version = version
+						parsed.UpdateID = cuid2.Generate()
+						parsed.TimeStarted = time.Now().UTC().Format(time.RFC3339)
+						err = p.Stack.Lock(parsed.UpdateID, "edit")
 						if err != nil {
 							return util.NewReadableError(err, "Could not lock state")
 						}
 						defer p.Stack.Unlock()
+						defer func() {
+							parsed.TimeCompleted = time.Now().UTC().Format(time.RFC3339)
+							provider.PutSummary(p.Backend(), p.App().Name, p.App().Stage, parsed.UpdateID, parsed)
+						}()
 
 						path, err := p.Stack.PullState()
 						if err != nil {
@@ -1370,7 +1377,8 @@ var Root = Command{
 						if err := cmd.Wait(); err != nil {
 							return util.NewReadableError(err, "Editor exited with error")
 						}
-						return p.Stack.PushState(deploymentID)
+
+						return p.Stack.PushState(parsed.UpdateID)
 					},
 				},
 			},

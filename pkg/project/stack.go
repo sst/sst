@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/nrednav/cuid2"
 	"github.com/pulumi/pulumi/sdk/v3/go/auto"
@@ -108,8 +109,8 @@ type StackCommandEvent struct {
 }
 
 type Error struct {
-	Message string
-	URN     string
+	Message string `json:"message"`
+	URN     string `json:"urn"`
 }
 
 type StackEventStream = chan StackEvent
@@ -524,11 +525,15 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 		summary = result.Summary
 	}
 
-	if summary.ResourceChanges != nil {
-		var parsed provider.Summary
-		parsed.UpdateID = updateID
-		parsed.TimeStarted = summary.StartTime
+	var parsed provider.Summary
+	parsed.Version = s.project.Version()
+	parsed.UpdateID = updateID
+	parsed.TimeStarted = summary.StartTime
+	parsed.TimeCompleted = time.Now().Format(time.RFC3339)
+	if summary.EndTime != nil {
 		parsed.TimeCompleted = *summary.EndTime
+	}
+	if summary.ResourceChanges != nil {
 		if match, ok := (*summary.ResourceChanges)["same"]; ok {
 			parsed.ResourceSame = match
 		}
@@ -541,10 +546,17 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 		if match, ok := (*summary.ResourceChanges)["delete"]; ok {
 			parsed.ResourceDeleted = match
 		}
-		err = provider.PutSummary(s.project.home, s.project.app.Name, s.project.app.Stage, updateID, parsed)
-		if err != nil {
-			return err
-		}
+	}
+	for _, err := range complete.Errors {
+		parsed.Errors = append(parsed.Errors, provider.SummaryError{
+			URN:     err.URN,
+			Message: err.Message,
+		})
+	}
+
+	err = provider.PutSummary(s.project.home, s.project.app.Name, s.project.app.Stage, updateID, parsed)
+	if err != nil {
+		return err
 	}
 
 	slog.Info("done running stack command")
