@@ -8,3 +8,4 @@ export * from "./oauth.js";
 export * from "./spotify.js";
 export * from "./code.js";
 export * from "./apple.js";
+export type { Adapter } from "./adapter.js";
