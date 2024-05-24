@@ -73,7 +73,7 @@ export interface BusSubscriberArgs {
      * }
      * ```
      */
-    source?: string[];
+    source?: (string | any)[];
     /**
      * A JSON object of "detail" values to match against. "detail" contains the actual
      * data or information associated with the event.
@@ -101,7 +101,7 @@ export interface BusSubscriberArgs {
      * }
      * ```
      */
-    detailType?: string[];
+    detailType?: (string | any)[];
   }>;
   /**
    * [Transform](/docs/components#transform) how this subscription creates its underlying
