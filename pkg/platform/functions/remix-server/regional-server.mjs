@@ -113,15 +113,18 @@ const createApigHandler = (build) => {
         "Transfer-Encoding": "chunked",
       },
     };
-    if (response.body) {
-      const reader = response.body;
-      const writer = awslambda.HttpResponseStream.from(
+
+    const writer = awslambda.HttpResponseStream.from(
         responseStream,
         httpResponseMetadata,
-      );
-      await streamToNodeStream(reader.getReader(), responseStream);
-      writer.end();
+    );
+
+    if (response.body) {
+      await streamToNodeStream(response.body.getReader(), responseStream);
+    } else {
+      writer.write(" ");
     }
+      writer.end();
   });
 };
 
