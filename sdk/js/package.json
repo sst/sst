@@ -3,11 +3,12 @@
   "name": "sst",
   "type": "module",
   "sideEffects": false,
-  "version": "3.0.19",
+  "version": "3.0.20",
   "main": "./dist/index.js",
   "exports": {
     ".": "./dist/index.js",
     "./auth": "./dist/auth/index.js",
+    "./auth/adapter": "./dist/auth/adapter/index.js",
     "./event": "./dist/event/index.js",
     "./realtime": "./dist/realtime/index.js",
     "./*": "./dist/*.js"
