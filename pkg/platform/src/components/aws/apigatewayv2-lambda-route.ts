@@ -119,6 +119,7 @@ export class ApiGatewayV2LambdaRoute extends Component {
           const id = sanitizeToPascalCase(
             hashStringToPrettyString(
               [
+                name,
                 auth.jwt.issuer,
                 ...auth.jwt.audiences.sort(),
                 auth.jwt.identitySource ?? "",
