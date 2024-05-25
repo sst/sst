@@ -1,4 +1,4 @@
-import { ZodObject, ZodSchema, z } from "zod";
+import { ZodSchema, z } from "zod";
 import { Prettify } from "../auth/handler.js";
 
 export module event {
@@ -12,41 +12,44 @@ export module event {
   };
 
   export function builder<
-    MetadataFunction extends (type: string, properties: any) => any,
-    Validator extends (schema: any) => (input: any) => any,
-    MetadataSchema extends Parameters<Validator>[0] | undefined,
-  >(input: {
-    metadata?: MetadataSchema;
-    metadataFn?: MetadataFunction;
-    validator: Validator;
-  }) {
-    const validator = input.validator;
-    const metadataValidator = input.metadata ? validator(input.metadata) : null;
+    Metadata extends
+      | ((type: string, properties: any) => any)
+      | Parameters<Validator>[0],
+    Validator extends (
+      schema: any,
+    ) => (input: any) => any = typeof ZodValidator,
+  >(input: { validator?: Validator; metadata?: Metadata }) {
+    const validator = input.validator || ZodValidator;
     const fn = function event<
       Type extends string,
       Schema extends Parameters<Validator>[0],
     >(type: Type, schema: Schema) {
+      type MetadataOutput = Metadata extends (
+        type: string,
+        properties: any,
+      ) => any
+        ? ReturnType<Metadata>
+        : // @ts-expect-error
+          inferParser<Metadata>["out"];
       type Payload = Prettify<{
         type: Type;
         properties: Parsed["out"];
-        metadata: ReturnType<MetadataFunction>;
+        metadata: MetadataOutput;
       }>;
       type Parsed = inferParser<Schema>;
-      type Create = undefined extends MetadataSchema
+      type Create = Metadata extends (type: string, properties: any) => any
         ? (properties: Parsed["in"]) => Promise<Payload>
         : (
             properties: Parsed["in"],
             // @ts-expect-error
-            metadata: inferParser<MetadataSchema>["in"],
+            metadata: inferParser<Metadata>["in"],
           ) => Promise<Payload>;
       const validate = validator(schema);
       async function create(properties: any, metadata?: any) {
-        if (metadataValidator) {
-          metadata = metadataValidator(metadata);
-        }
-        if (input.metadataFn) {
-          metadata = input.metadataFn(type, properties);
-        }
+        metadata =
+          typeof input.metadata === "function"
+            ? input.metadata(type, properties)
+            : input.metadata(metadata);
         properties = validate(properties);
         return {
           type,
@@ -60,7 +63,7 @@ export module event {
         $input: {} as Parsed["in"],
         $output: {} as Parsed["out"],
         $payload: {} as Payload,
-        $metadata: {} as ReturnType<MetadataFunction>,
+        $metadata: {} as MetadataOutput,
       } satisfies Definition;
     };
     fn.coerce = <Events extends Definition>(
@@ -142,6 +145,4 @@ export module event {
             out: $InOut;
           }
         : never;
-
-  type inferEvent<T extends { shape: ZodObject<any> }> = z.infer<T["shape"]>;
 }

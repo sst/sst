@@ -11,7 +11,7 @@ export module bus {
     return `https://events.${region}.amazonaws.com/`;
   }
 
-  export function handle<Events extends event.Definition>(
+  export function subscriber<Events extends event.Definition>(
     _events: Events | Events[],
     cb: (
       input: {
@@ -30,16 +30,29 @@ export module bus {
     };
   }
 
-  export async function publish<Definition extends event.Definition>(
+  /** @deprecated
+   * use bus.subscriber instead
+   * */
+  export const handler = subscriber;
+
+  export async function publish<Definition extends event.Definition = any>(
     name: string | { name: string },
-    def: Definition,
+    def: Definition | string,
     properties: Definition["$input"],
     options?: {
+      metadata?: Definition["$metadata"];
       aws?: AwsOptions;
     },
   ): Promise<any> {
     const u = url(options?.aws);
-    const evt = await def.create(properties);
+    const evt =
+      typeof def === "string"
+        ? {
+            type: def,
+            properties,
+            metadata: options?.metadata || {},
+          }
+        : await def.create(properties);
     const res = await client.fetch(u, {
       method: "POST",
       aws: options?.aws,
