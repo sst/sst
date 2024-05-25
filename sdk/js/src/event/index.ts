@@ -46,10 +46,11 @@ export module event {
           ) => Promise<Payload>;
       const validate = validator(schema);
       async function create(properties: any, metadata?: any) {
-        metadata =
-          typeof input.metadata === "function"
+        metadata = input.metadata
+          ? typeof input.metadata === "function"
             ? input.metadata(type, properties)
-            : input.metadata(metadata);
+            : input.metadata(metadata)
+          : {};
         properties = validate(properties);
         return {
           type,
