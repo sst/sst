@@ -75,13 +75,13 @@ func (u *UI) StackEvent(evt *project.StackEvent) {
 	if evt.StackCommandEvent != nil {
 		u.spinner.Disable()
 
-		if evt.StackCommandEvent.Command == "up" {
+		if evt.StackCommandEvent.Command == "deploy" {
 			color.New(color.FgYellow, color.Bold).Print("~")
 			color.New(color.FgWhite, color.Bold).Println("  Deploying")
 			u.spinner.Suffix = "  Deploying..."
 		}
 
-		if evt.StackCommandEvent.Command == "destroy" {
+		if evt.StackCommandEvent.Command == "remove" {
 			color.New(color.FgRed, color.Bold).Print("~")
 			color.New(color.FgWhite, color.Bold).Println("  Removing")
 			u.spinner.Suffix = "  Removing..."

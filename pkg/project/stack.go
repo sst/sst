@@ -121,9 +121,6 @@ var ErrPassphraseInvalid = fmt.Errorf("passphrase invalid")
 
 func (s *stack) Run(ctx context.Context, input *StackInput) error {
 	slog.Info("running stack command", "cmd", input.Command)
-	input.OnEvent(&StackEvent{StackCommandEvent: &StackCommandEvent{
-		Command: input.Command,
-	}})
 
 	updateID := cuid2.Generate()
 	err := s.Lock(updateID, input.Command)
@@ -134,6 +131,10 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 		return err
 	}
 	defer s.Unlock()
+
+	input.OnEvent(&StackEvent{StackCommandEvent: &StackCommandEvent{
+		Command: input.Command,
+	}})
 
 	_, err = s.PullState()
 	if err != nil {
@@ -338,6 +339,9 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 
 				if event.DiagnosticEvent != nil && event.DiagnosticEvent.Severity == "error" {
 					if strings.HasPrefix(event.DiagnosticEvent.Message, "update failed") {
+						break
+					}
+					if strings.Contains(event.DiagnosticEvent.Message, "failed to register new resource") {
 						break
 					}
 					complete.Errors = append(complete.Errors, Error{

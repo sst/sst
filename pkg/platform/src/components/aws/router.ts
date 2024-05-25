@@ -183,6 +183,7 @@ export class Router extends Component implements Link.Linkable {
     validateRoutes();
 
     const cachePolicy = createCachePolicy();
+    const cfFunction = createCloudFrontFunction();
     const cdn = createCdn();
 
     this.cachePolicy = cachePolicy;
@@ -202,6 +203,23 @@ export class Router extends Component implements Link.Linkable {
           }
         });
       });
+    }
+
+    function createCloudFrontFunction() {
+      return new aws.cloudfront.Function(
+        `${name}CloudfrontFunction`,
+        {
+          runtime: "cloudfront-js-1.0",
+          code: [
+            `function handler(event) {`,
+            `  var request = event.request;`,
+            `  request.headers["x-forwarded-host"] = request.headers.host;`,
+            `  return request;`,
+            `}`,
+          ].join("\n"),
+        },
+        { parent },
+      );
     }
 
     function createCachePolicy() {
@@ -302,6 +320,12 @@ export class Router extends Component implements Link.Linkable {
         cachePolicyId: cachePolicy.id,
         // CloudFront's Managed-AllViewerExceptHostHeader policy
         originRequestPolicyId: "b689b0a8-53d0-40ab-baf2-68738e2966ac",
+        functionAssociations: [
+          {
+            eventType: "viewer-request",
+            functionArn: cfFunction.arn,
+          },
+        ],
       };
 
       return output(args.routes).apply((routes) => {
