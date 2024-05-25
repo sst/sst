@@ -37,13 +37,18 @@ export const OauthAdapter =
   (config: OauthConfig) => {
     return async function (routes, ctx) {
       function getClient(c: Context) {
-        const callback = c.req.url.replace(/authorize\/.*$/, "callback");
+        const callback = new URL(c.req.url);
+        callback.pathname = callback.pathname.replace(
+          /authorize\/.*$/,
+          "callback",
+        );
+        callback.host = c.req.header("x-forwarded-host") || callback.host;
         return [
           callback,
           new config.issuer.Client({
             client_id: config.clientID,
             client_secret: config.clientSecret,
-            redirect_uris: [callback],
+            redirect_uris: [callback.toString()],
             response_types: ["code"],
           }),
         ] as const;
@@ -79,7 +84,7 @@ export const OauthAdapter =
           config.issuer.metadata.userinfo_endpoint
             ? "callback"
             : "oauthCallback"
-        ](callback, query, {
+        ](callback.toString(), query, {
           code_verifier,
           state,
         });
@@ -102,7 +107,7 @@ export const OauthAdapter =
           config.issuer.metadata.userinfo_endpoint
             ? "callback"
             : "oauthCallback"
-        ](callback, Object.fromEntries(form), {
+        ](callback.toString(), Object.fromEntries(form), {
           code_verifier,
           state,
         });
