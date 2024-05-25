@@ -970,8 +970,18 @@ var Root = Command{
 					args[0],
 					args[1:]...,
 				)
+				// Get the environment variables
+				envs := os.Environ()
+
+				// Filter the environment variables to exclude AWS_PROFILE
+				filteredEnvs := make([]string, 0, len(envs))
+				for _, val := range envs {
+					if !strings.HasPrefix(val, "AWS_PROFILE=") {
+						filteredEnvs = append(filteredEnvs, val)
+					}
+				}
 				cmd.Env = append(cmd.Env,
-					os.Environ()...,
+					filteredEnvs...,
 				)
 				cmd.Env = append(cmd.Env,
 					fmt.Sprintf("PS1=%s/%s> ", p.App().Name, p.App().Stage),
