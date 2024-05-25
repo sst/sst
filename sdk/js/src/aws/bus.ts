@@ -52,7 +52,7 @@ export module bus {
             properties,
             metadata: options?.metadata || {},
           }
-        : await def.create(properties);
+        : await def.create(properties, options?.metadata);
     const res = await client.fetch(u, {
       method: "POST",
       aws: options?.aws,
@@ -67,7 +67,7 @@ export module bus {
             DetailType: evt.type,
             Detail: JSON.stringify({
               metadata: evt.metadata,
-              payload: evt.properties,
+              properties: evt.properties,
             }),
             EventBusName: typeof name === "string" ? name : name.name,
           },
