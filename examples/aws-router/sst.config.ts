@@ -19,7 +19,7 @@ export default $config({
       url: true,
     });
     const router = new sst.aws.Router("MyRouter", {
-      domain: "router.ion.sst.sh",
+      domain: "router.ion.dev.sst.dev",
       routes: {
         "/*": api.url,
       },

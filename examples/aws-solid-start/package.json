@@ -7,10 +7,10 @@
     "start": "vinxi start"
   },
   "dependencies": {
-    "@aws-sdk/client-s3": "^3.572.0",
-    "@aws-sdk/s3-request-presigner": "^3.572.0",
+    "@aws-sdk/client-s3": "^3.583.0",
+    "@aws-sdk/s3-request-presigner": "^3.583.0",
     "@solidjs/router": "^0.13.3",
-    "@solidjs/start": "1.0.0-rc.0",
+    "@solidjs/start": "1.0.0",
     "solid-js": "^1.8.17",
     "sst": "ion",
     "vinxi": "^0.3.11"
