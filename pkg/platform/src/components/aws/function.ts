@@ -1202,7 +1202,7 @@ export class Function
               content: streaming
                 ? [
                     linkInjection,
-                    `export const ${newHandlerFunction} = awslambda.streamifyResponse(async (event, context) => {`,
+                    `export const ${newHandlerFunction} = awslambda.streamifyResponse(async (event, responseStream, context) => {`,
                     ...injections,
                     `  const { ${oldHandlerFunction}: rawHandler} = await import("./${oldHandlerFileName}${newHandlerFileExt}");`,
                     `  return rawHandler(event, context);`,
