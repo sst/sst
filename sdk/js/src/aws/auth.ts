@@ -9,8 +9,7 @@ export module auth {
   export function authorizer<
     Providers extends Record<string, Adapter<any>>,
     Sessions extends SessionBuilder,
-    Result,
-  >(...args: Parameters<typeof AuthHandler<Providers, Sessions, Result>>) {
+  >(...args: Parameters<typeof AuthHandler<Providers, Sessions>>) {
     const hono = AuthHandler(...args);
     return (
       process.env.SST_LIVE ? handle(hono) : streamHandle(hono)
