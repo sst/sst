@@ -2,7 +2,7 @@ import { Handler } from "aws-lambda";
 import { Adapter } from "../auth/adapter/adapter.js";
 import { AuthHandler } from "../auth/handler.js";
 import { SessionBuilder, createSessionBuilder } from "../auth/session.js";
-import { streamHandle } from "hono/aws-lambda";
+import { handle, streamHandle } from "hono/aws-lambda";
 
 export module auth {
   export type Issuer = import("openid-client").Issuer;
@@ -11,7 +11,10 @@ export module auth {
     Sessions extends SessionBuilder,
     Result,
   >(...args: Parameters<typeof AuthHandler<Providers, Sessions, Result>>) {
-    return streamHandle(AuthHandler(...args)) as Handler<any, any>;
+    const hono = AuthHandler(...args);
+    return (
+      process.env.SST_LIVE ? handle(hono) : streamHandle(hono)
+    ) as Handler<any, any>;
   }
   export const sessions = createSessionBuilder;
 }
