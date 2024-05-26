@@ -32,6 +32,7 @@ export class Auth extends Component implements Link.Linkable {
       return new Function(`${name}Authenticator`, {
         ...args,
         url: true,
+        streaming: true,
         environment: {
           ...args.environment,
           AUTH_PRIVATE_KEY: secret(this.key.privateKeyPemPkcs8),

@@ -3,7 +3,7 @@
   "name": "sst",
   "type": "module",
   "sideEffects": false,
-  "version": "3.0.26",
+  "version": "3.0.28",
   "main": "./dist/index.js",
   "exports": {
     ".": "./dist/index.js",
@@ -43,6 +43,7 @@
   },
   "dependencies": {
     "@aws-sdk/client-lambda": "3.478.0",
+    "@tsconfig/node20": "^20.1.4",
     "aws4fetch": "^1.0.18",
     "jose": "5.2.3",
     "openid-client": "5.6.4"

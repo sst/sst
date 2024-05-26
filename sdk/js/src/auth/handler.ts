@@ -6,7 +6,7 @@ import { handle as awsHandle } from "hono/aws-lambda";
 import { Context } from "hono";
 import { deleteCookie, getCookie, setCookie } from "hono/cookie";
 
-interface OnSuccessResponder<T extends { type: any; properties: any }> {
+export interface OnSuccessResponder<T extends { type: any; properties: any }> {
   session(input: T & JWTPayload): Promise<Response>;
 }
 
