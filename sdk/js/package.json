@@ -22,13 +22,24 @@
     "@tsconfig/node18": "^18.2.2",
     "@types/node": "^20.11.0",
     "hono": "4.3.9",
-    "typescript": "^5.3.3"
+    "typescript": "^5.3.3",
+    "valibot": "0.30.0",
+    "zod": "^3.23.8"
   },
   "files": [
     "dist"
   ],
   "peerDependencies": {
-    "hono": "4.x"
+    "hono": "4.x",
+    "valibot": "0.30.x"
+  },
+  "peerDependenciesMeta": {
+    "hono": {
+      "optional": true
+    },
+    "valibot": {
+      "optional": true
+    }
   },
   "dependencies": {
     "@aws-sdk/client-lambda": "3.478.0",

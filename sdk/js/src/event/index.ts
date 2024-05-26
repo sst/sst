@@ -1,4 +1,3 @@
-import { ZodSchema, z } from "zod";
 import { Prettify } from "../auth/handler.js";
 
 export module event {
@@ -15,11 +14,9 @@ export module event {
     Metadata extends
       | ((type: string, properties: any) => any)
       | Parameters<Validator>[0],
-    Validator extends (
-      schema: any,
-    ) => (input: any) => any = typeof ZodValidator,
-  >(input: { validator?: Validator; metadata?: Metadata }) {
-    const validator = input.validator || ZodValidator;
+    Validator extends (schema: any) => (input: any) => any,
+  >(input: { validator: Validator; metadata?: Metadata }) {
+    const validator = input.validator;
     const fn = function event<
       Type extends string,
       Schema extends Parameters<Validator>[0],
@@ -76,14 +73,6 @@ export module event {
       return raw;
     };
     return fn;
-  }
-
-  export function ZodValidator<Schema extends ZodSchema>(
-    schema: Schema,
-  ): (input: z.input<Schema>) => z.output<Schema> {
-    return (input) => {
-      return schema.parse(input);
-    };
   }
 
   // Taken from tRPC
