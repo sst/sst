@@ -26,6 +26,7 @@ export const OidcAdapter = /* @__PURE__ */ (config: OidcConfig) => {
         /authorize\/.*$/,
         "callback",
       );
+      callback.search = "";
       callback.host = c.req.header("x-forwarded-host") || callback.host;
 
       const client = new config.issuer.Client({

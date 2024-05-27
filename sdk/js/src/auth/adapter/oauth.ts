@@ -42,6 +42,7 @@ export const OauthAdapter =
           /authorize\/.*$/,
           "callback",
         );
+        callback.search = "";
         callback.host = c.req.header("x-forwarded-host") || callback.host;
         return [
           callback,
