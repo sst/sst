@@ -39,7 +39,7 @@ export const OauthAdapter =
       function getClient(c: Context) {
         const callback = new URL(c.req.url);
         callback.pathname = callback.pathname.replace(
-          /authorize\/.*$/,
+          /authorize.*$/,
           "callback",
         );
         callback.search = "";

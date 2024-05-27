@@ -22,10 +22,7 @@ export const OidcAdapter = /* @__PURE__ */ (config: OidcConfig) => {
   return async function (routes, ctx) {
     routes.get("/authorize", async (c) => {
       const callback = new URL(c.req.url);
-      callback.pathname = callback.pathname.replace(
-        /authorize\/.*$/,
-        "callback",
-      );
+      callback.pathname = callback.pathname.replace(/authorize.*$/, "callback");
       callback.search = "";
       callback.host = c.req.header("x-forwarded-host") || callback.host;
 
