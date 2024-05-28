@@ -1,5 +1,3 @@
-export interface AuthResources {}
-
 export * from './proxy.js'
 export * from "./adapter/oidc.js";
 export * from "./adapter/google.js";
