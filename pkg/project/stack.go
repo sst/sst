@@ -122,7 +122,10 @@ var ErrPassphraseInvalid = fmt.Errorf("passphrase invalid")
 func (s *stack) Run(ctx context.Context, input *StackInput) error {
 	slog.Info("running stack command", "cmd", input.Command)
 
-	updateID := cuid2.Generate()
+	updateID := os.Getenv("SST_UPDATE_ID")
+	if updateID == "" || !cuid2.IsCuid(updateID) || len(updateID) != cuid2.DefaultIdLength{
+		updateID = cuid2.Generate()
+	}
 	err := s.Lock(updateID, input.Command)
 	if err != nil {
 		if err == provider.ErrLockExists {
