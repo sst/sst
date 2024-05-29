@@ -177,7 +177,7 @@ export class CognitoUserPool
   constructor(
     name: string,
     args: CognitoUserPoolArgs = {},
-    opts?: ComponentResourceOptions
+    opts?: ComponentResourceOptions,
   ) {
     super(__pulumiType, name, args, opts);
 
@@ -186,6 +186,7 @@ export class CognitoUserPool
     normalizeAliasesAndUsernames();
     const triggers = createTriggers();
     const userPool = createUserPool();
+    createPermissions();
 
     this.userPool = userPool;
 
@@ -193,7 +194,7 @@ export class CognitoUserPool
       all([args.aliases, args.usernames]).apply(([aliases, usernames]) => {
         if (aliases && usernames) {
           throw new VisibleError(
-            "You cannot set both aliases and usernames. Learn more about customizing sign-in attributes at https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-settings-attributes.html#user-pool-settings-aliases"
+            "You cannot set both aliases and usernames. Learn more about customizing sign-in attributes at https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-settings-attributes.html#user-pool-settings-aliases",
           );
         }
       });
@@ -210,11 +211,13 @@ export class CognitoUserPool
               value,
               {
                 description: `Subscribed to ${trigger} from ${name}`,
-              }
+              },
+              undefined,
+              { parent },
             );
-            return [trigger, fn];
-          })
-        )
+            return [trigger, fn.arn];
+          }),
+        ),
       );
     }
 
@@ -276,8 +279,27 @@ export class CognitoUserPool
           },
           lambdaConfig: triggers,
         }),
-        { parent }
+        { parent },
       );
+    }
+
+    function createPermissions() {
+      if (!triggers) return;
+
+      triggers.apply((triggers) => {
+        Object.entries(triggers).forEach(([trigger, functionArn]) => {
+          new aws.lambda.Permission(
+            `${name}Permission${trigger}`,
+            {
+              action: "lambda:InvokeFunction",
+              function: functionArn,
+              principal: "cognito-idp.amazonaws.com",
+              sourceArn: userPool.arn,
+            },
+            { parent },
+          );
+        });
+      });
     }
   }
 

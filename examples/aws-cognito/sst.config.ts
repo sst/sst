@@ -9,7 +9,13 @@ export default $config({
     };
   },
   async run() {
-    const userPool = new sst.aws.CognitoUserPool("MyUserPool");
+    const userPool = new sst.aws.CognitoUserPool("MyUserPool", {
+      triggers: {
+        preSignUp: {
+          handler: "index.handler",
+        },
+      },
+    });
     const client = userPool.addClient("Web");
     const identityPool = new sst.aws.CognitoIdentityPool("MyIdentityPool", {
       userPools: [
