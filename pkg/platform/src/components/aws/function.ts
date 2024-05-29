@@ -1043,7 +1043,7 @@ export class Function
         };
         const cors =
           url.cors === false
-            ? {}
+            ? undefined
             : url.cors === true || url.cors === undefined
               ? defaultCors
               : {
