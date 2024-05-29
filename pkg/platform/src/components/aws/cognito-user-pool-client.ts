@@ -1,14 +1,9 @@
-import {
-  ComponentResourceOptions,
-  Output,
-  all,
-  interpolate,
-  output,
-} from "@pulumi/pulumi";
+import { ComponentResourceOptions } from "@pulumi/pulumi";
 import * as aws from "@pulumi/aws";
 import { Component, Transform, transform } from "../component";
 import { Input } from "../input";
 import { CognitoUserPoolClientArgs } from "./cognito-user-pool.js";
+import { Link } from "../link";
 
 export interface ClientArgs extends CognitoUserPoolClientArgs {
   /**
@@ -37,7 +32,7 @@ export interface ClientArgs extends CognitoUserPoolClientArgs {
  *
  * You'll find this component returned by the `addClient` method of the `CognitoUserPool` component.
  */
-export class CognitoUserPoolClient extends Component {
+export class CognitoUserPoolClient extends Component implements Link.Linkable {
   private client: aws.cognito.UserPoolClient;
 
   constructor(name: string, args: ClientArgs, opts?: ComponentResourceOptions) {
@@ -80,6 +75,13 @@ export class CognitoUserPoolClient extends Component {
   }
 
   /**
+   * The Cognito user pool client secret.
+   */
+  public get secret() {
+    return this.client.clientSecret;
+  }
+
+  /**
    * The underlying [resources](/docs/components/#nodes) this component creates.
    */
   public get nodes() {
@@ -88,6 +90,16 @@ export class CognitoUserPoolClient extends Component {
        * The Amazon Cognito user pool client.
        */
       client: this.client,
+    };
+  }
+
+  /** @internal */
+  public getSSTLink() {
+    return {
+      properties: {
+        id: this.id,
+        secret: this.secret,
+      },
     };
   }
 }
