@@ -1197,8 +1197,7 @@ export class Function
               `${newHandlerFileName}.${newHandlerFunction}`,
             ),
             wrapper: {
-              dir: handlerDir,
-              name: `${newHandlerFileName}.mjs`,
+              name: path.posix.join(handlerDir, `${newHandlerFileName}.mjs`),
               content: streaming
                 ? [
                     linkInjection,
