@@ -16,7 +16,7 @@ export type Prettify<T> = {
   [K in keyof T]: T[K];
 } & {};
 
-export type Transform<T> = Partial<T> | ((args: T) => void);
+export type Transform<T> = Partial<T> | ((args: T) => undefined);
 export function transform<T extends object>(
   transform: Transform<T> | undefined,
   args: T,
