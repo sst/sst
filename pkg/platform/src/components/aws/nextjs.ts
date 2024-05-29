@@ -937,7 +937,7 @@ export class Nextjs extends Component implements Link.Linkable {
           if (!revalidationFunction) return;
 
           const queue = new Queue(
-            `${name}RevalidationQueue`,
+            `${name}RevalidationEvents`,
             {
               fifo: true,
               transform: {
@@ -969,6 +969,7 @@ export class Nextjs extends Component implements Link.Linkable {
               ],
               live: false,
               _ignoreCodeChanges: $dev,
+              _skipMetadata: true,
             },
             {
               transform: {
@@ -977,6 +978,7 @@ export class Nextjs extends Component implements Link.Linkable {
                 },
               },
             },
+            { parent },
           );
           return queue;
         },

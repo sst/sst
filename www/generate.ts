@@ -52,8 +52,16 @@ try {
       else if (sourceFile.endsWith("/dns.ts")) await generateDnsDoc(component);
       else {
         const sdkName = component.name.split("/")[2];
-        const sdk = sdks.find((s) => s.name === sdkName);
-        await generateComponentDoc(component, sdk);
+        const sdk = sdks.find(
+          (s) =>
+            // ie. vector
+            s.name === sdkName ||
+            // ie. aws/realtime
+            s.name === `aws/${sdkName}`
+        );
+        const sdkNamespace = sdk && useModuleOrNamespace(sdk);
+        // Handle SDK modules are namespaced (ie. aws/realtime)
+        await generateComponentDoc(component, sdkNamespace);
       }
     }
   }
@@ -863,8 +871,6 @@ function renderType(
   }
 }
 
-/** Helps with rendering Components */
-
 function renderVariables(module: TypeDoc.DeclarationReflection) {
   const lines: string[] = [];
   const vars = (module.children ?? []).filter(
@@ -1560,6 +1566,11 @@ function useModuleFunctions(module: TypeDoc.DeclarationReflection) {
     .getChildrenByKind(TypeDoc.ReflectionKind.Function)
     .filter((f) => !f.signatures![0].comment?.modifierTags.has("@internal"));
 }
+function useModuleOrNamespace(module: TypeDoc.DeclarationReflection) {
+  // Handle SDK modules are namespaced (ie. aws/realtime)
+  const namespaces = module.getChildrenByKind(TypeDoc.ReflectionKind.Namespace);
+  return namespaces.length ? namespaces[0] : module;
+}
 function useClass(module: TypeDoc.DeclarationReflection) {
   const c = module.getChildrenByKind(TypeDoc.ReflectionKind.Class);
   if (!c.length) throw new Error("Class not found");
@@ -1795,7 +1806,7 @@ async function buildSdk() {
       defaultTag: false,
     },
     entryPoints: [
-      "../sdk/js/src/realtime/index.ts",
+      "../sdk/js/src/aws/realtime.ts",
       "../sdk/js/src/vector/index.ts",
     ],
     tsconfig: "../sdk/js/tsconfig.json",

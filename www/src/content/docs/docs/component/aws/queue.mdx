@@ -188,7 +188,7 @@ The SQS queue URL.
 <Segment>
 <Section type="signature">
 ```ts
-subscribe(subscriber, args?)
+subscribe(subscriber, args?, opts?)
 ```
 </Section>
 
@@ -198,6 +198,7 @@ subscribe(subscriber, args?)
 The function that'll be notified.
 - <p><code class="key">args?</code> [<code class="type">QueueSubscriberArgs</code>](#queuesubscriberargs)</p>
 Configure the subscription.
+- <p><code class="key">opts?</code> [<code class="type">ComponentResourceOptions</code>](https://www.pulumi.com/docs/concepts/options/)</p>
 </Section>
 
 <InlineSection>
@@ -237,7 +238,7 @@ queue.subscribe({
 <Segment>
 <Section type="signature">
 ```ts
-Queue.subscribe(queueArn, subscriber, args?)
+Queue.subscribe(queueArn, subscriber, args?, opts?)
 ```
 </Section>
 
@@ -249,6 +250,7 @@ The ARN of the SQS queue to subscribe to.
 The function that'll be notified.
 - <p><code class="key">args?</code> [<code class="type">QueueSubscriberArgs</code>](#queuesubscriberargs)</p>
 Configure the subscription.
+- <p><code class="key">opts?</code> [<code class="type">ComponentResourceOptions</code>](https://www.pulumi.com/docs/concepts/options/)</p>
 </Section>
 
 <InlineSection>

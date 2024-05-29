@@ -199,17 +199,17 @@ The IoT endpoint.
 </Section>
 </Segment>
 
-### RealtimeAuthHandler
+### authorizer
 <Segment>
 <Section type="signature">
 ```ts
-RealtimeAuthHandler(input)
+authorizer(input)
 ```
 </Section>
 
 <Section type="parameters">
 #### Parameters
-- <p><code class="key">input</code> <code class="primitive">(token: <code class="primitive">string</code>) => <code class="primitive">Promise</code><code class="symbol">&lt;</code>[<code class="type">RealtimeAuthResult</code>](#realtimeauthresult)<code class="symbol">&gt;</code></code></p>
+- <p><code class="key">input</code> <code class="primitive">(token: <code class="primitive">string</code>) => <code class="primitive">Promise</code><code class="symbol">&lt;</code>[<code class="type">AuthResult</code>](#authresult)<code class="symbol">&gt;</code></code></p>
 </Section>
 
 <InlineSection>
@@ -219,9 +219,9 @@ Creates an authorization handler for the `Realtime` component, that validates
 the token and grants permissions for the topics the client can subscribe and publish to.
 
 ```js
-import { RealtimeAuthHandler, Resource } from "sst";
+import { realtime } from "sst/aws/realtime";
 
-export const handler = RealtimeAuthHandler(async (token) => {
+export const handler = realtime.authorizer(async (token) => {
   // Validate the token
   console.log(token);
 
@@ -233,17 +233,17 @@ export const handler = RealtimeAuthHandler(async (token) => {
 });
 ```
 </Segment>
-### RealtimeAuthResult
+### AuthResult
 <Segment>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Object</code>
 </InlineSection>
-- <p>[<code class="key">publish?</code>](#realtimeauthresult-publish)</p>
-- <p>[<code class="key">subscribe?</code>](#realtimeauthresult-subscribe)</p>
+- <p>[<code class="key">publish?</code>](#authresult-publish)</p>
+- <p>[<code class="key">subscribe?</code>](#authresult-subscribe)</p>
 </Section>
 </Segment>
-<NestedTitle id="realtimeauthresult-publish" Tag="h4" parent="RealtimeAuthResult.">publish?</NestedTitle>
+<NestedTitle id="authresult-publish" Tag="h4" parent="AuthResult.">publish?</NestedTitle>
 <Segment>
 <Section type="parameters">
 <InlineSection>
@@ -265,7 +265,7 @@ And to publish to all topics under a specific prefix.
 }
 ```
 </Segment>
-<NestedTitle id="realtimeauthresult-subscribe" Tag="h4" parent="RealtimeAuthResult.">subscribe?</NestedTitle>
+<NestedTitle id="authresult-subscribe" Tag="h4" parent="AuthResult.">subscribe?</NestedTitle>
 <Segment>
 <Section type="parameters">
 <InlineSection>

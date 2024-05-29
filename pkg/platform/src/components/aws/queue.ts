@@ -152,7 +152,8 @@ export interface QueueSubscriberArgs {
  */
 export class Queue
   extends Component
-  implements Link.Linkable, Link.AWS.Linkable {
+  implements Link.Linkable, Link.AWS.Linkable
+{
   private constructorName: string;
   private queue: aws.sqs.Queue;
   private isSubscribed: boolean = false;
@@ -247,6 +248,7 @@ export class Queue
   public subscribe(
     subscriber: string | FunctionArgs,
     args?: QueueSubscriberArgs,
+    opts?: ComponentResourceOptions,
   ) {
     if (this.isSubscribed)
       throw new VisibleError(
@@ -259,6 +261,7 @@ export class Queue
       this.arn,
       subscriber,
       args,
+      opts,
     );
   }
 
@@ -310,11 +313,12 @@ export class Queue
     queueArn: Input<string>,
     subscriber: string | FunctionArgs,
     args?: QueueSubscriberArgs,
+    opts?: ComponentResourceOptions,
   ) {
     const queueName = output(queueArn).apply(
       (queueArn) => parseQueueArn(queueArn).queueName,
     );
-    return this._subscribeFunction(queueName, queueArn, subscriber, args);
+    return this._subscribeFunction(queueName, queueArn, subscriber, args, opts);
   }
 
   private static _subscribeFunction(
@@ -322,6 +326,7 @@ export class Queue
     queueArn: Input<string>,
     subscriber: string | FunctionArgs,
     args: QueueSubscriberArgs = {},
+    opts?: ComponentResourceOptions,
   ) {
     return all([name, queueArn]).apply(([name, queueArn]) => {
       const prefix = sanitizeToPascalCase(name);
@@ -329,11 +334,15 @@ export class Queue
         hashStringToPrettyString(queueArn, 6),
       );
 
-      return new QueueLambdaSubscriber(`${prefix}Subscriber${suffix}`, {
-        queue: { arn: queueArn },
-        subscriber,
-        ...args,
-      });
+      return new QueueLambdaSubscriber(
+        `${prefix}Subscriber${suffix}`,
+        {
+          queue: { arn: queueArn },
+          subscriber,
+          ...args,
+        },
+        opts,
+      );
     });
   }
 
