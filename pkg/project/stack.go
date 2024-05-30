@@ -123,7 +123,7 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 	slog.Info("running stack command", "cmd", input.Command)
 
 	updateID := os.Getenv("SST_UPDATE_ID")
-	if updateID == "" || !cuid2.IsCuid(updateID) || len(updateID) != cuid2.DefaultIdLength{
+	if updateID == "" || !cuid2.IsCuid(updateID) || len(updateID) != cuid2.DefaultIdLength {
 		updateID = cuid2.Generate()
 	}
 	err := s.Lock(updateID, input.Command)
@@ -450,12 +450,12 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 					links = map[string]interface{}{}
 					types[dir] = links
 				}
-				for _, link := range complete.Links {
-					if cloudflareBindings[link] != "" && receiver.Cloudflare != nil {
-						links[link] = literal{value: `import("@cloudflare/workers-types").` + cloudflareBindings[link]}
+				for name, link := range complete.Links {
+					if cloudflareBindings[name] != "" && receiver.Cloudflare != nil {
+						links[name] = literal{value: `import("@cloudflare/workers-types").` + cloudflareBindings[name]}
 						continue
 					}
-					links[link] = complete.Links[link]
+					links[name] = link
 				}
 			}
 
