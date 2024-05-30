@@ -440,9 +440,6 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 
 			types := map[string]map[string]interface{}{}
 			for _, receiver := range complete.Receivers {
-				if len(receiver.Links) == 0 {
-					continue
-				}
 				typesPath, err := fs.FindUp(filepath.Join(s.project.PathRoot(), receiver.Directory), "tsconfig.json")
 				if err != nil {
 					continue
@@ -453,7 +450,7 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 					links = map[string]interface{}{}
 					types[dir] = links
 				}
-				for _, link := range receiver.Links {
+				for _, link := range complete.Links {
 					if cloudflareBindings[link] != "" && receiver.Cloudflare != nil {
 						links[link] = literal{value: `import("@cloudflare/workers-types").` + cloudflareBindings[link]}
 						continue
