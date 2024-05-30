@@ -1006,7 +1006,7 @@ export class Function
             result.SST_FUNCTION_ID = name;
             result.SST_APP = $app.name;
             result.SST_STAGE = $app.stage;
-            result.SST_LINK = (link || []).map((l) => l.urn).join(",");
+            // result.SST_LINK = (link || []).map((l) => l.urn).join(",");
           }
           return result;
         },
