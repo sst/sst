@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.43.0
+
+### Minor Changes
+
+- [#3567](https://github.com/sst/sst/pull/3567) [`96b99e08f`](https://github.com/sst/sst/commit/96b99e08f3cfbbbdf9f25f920be73e368b0599d0) Thanks [@conico974](https://github.com/conico974)! - NextjsSite: update to OpenNext v3
+
 ## 2.42.0
 
 ### Minor Changes
