@@ -22,6 +22,7 @@ import {
   FunctionOptions,
   Function as CdkFunction,
   FunctionUrlOptions,
+  FunctionUrl,
 } from "aws-cdk-lib/aws-lambda";
 import { Bucket } from "aws-cdk-lib/aws-s3";
 import {
@@ -82,6 +83,7 @@ export class SsrFunction extends Construct implements SSTConstruct {
   /** @internal */
   public readonly _doNotAllowOthersToBind = true;
   public function: CdkFunction;
+  private functionUrl?: FunctionUrl;
   private assetReplacer: CustomResource;
   private assetReplacerPolicy: Policy;
   private missingSourcemap?: boolean;
@@ -153,12 +155,17 @@ export class SsrFunction extends Construct implements SSTConstruct {
     return this.function.functionName;
   }
 
+  public get url() {
+    return this.functionUrl?.url;
+  }
+
   public addEnvironment(key: string, value: string) {
     return this.function.addEnvironment(key, value);
   }
 
   public addFunctionUrl(props?: FunctionUrlOptions) {
-    return this.function.addFunctionUrl(props);
+    this.functionUrl = this.function.addFunctionUrl(props);
+    return this.functionUrl;
   }
 
   public grantInvoke(grantee: IGrantable) {

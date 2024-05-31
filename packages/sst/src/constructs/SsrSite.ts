@@ -98,20 +98,27 @@ import { transformSync } from "esbuild";
 
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 
-type CloudFrontFunctionConfig = { constructId: string; injections: string[] };
-type EdgeFunctionConfig = { constructId: string; function: EdgeFunctionProps };
-type FunctionOriginConfig = {
+export type CloudFrontFunctionConfig = {
+  constructId: string;
+  injections: string[];
+};
+export type EdgeFunctionConfig = {
+  constructId: string;
+  function: EdgeFunctionProps;
+};
+export type FunctionOriginConfig = {
   type: "function";
   constructId: string;
   function: SsrFunctionProps;
   injections?: string[];
   streaming?: boolean;
+  warm?: number;
 };
-type ImageOptimizationFunctionOriginConfig = {
+export type ImageOptimizationFunctionOriginConfig = {
   type: "image-optimization-function";
   function: CdkFunctionProps;
 };
-type S3OriginConfig = {
+export type S3OriginConfig = {
   type: "s3";
   originPath?: string;
   copy: {
@@ -121,7 +128,7 @@ type S3OriginConfig = {
     versionedSubDir?: string;
   }[];
 };
-type OriginGroupConfig = {
+export type OriginGroupConfig = {
   type: "group";
   primaryOriginName: string;
   fallbackOriginName: string;
@@ -516,6 +523,8 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
   protected doNotDeploy: boolean;
   protected bucket: Bucket;
   protected serverFunction?: EdgeFunction | SsrFunction;
+  protected serverFunctions: SsrFunction[] = [];
+  protected edgeFunctions: Record<string, EdgeFunction> = {};
   private serverFunctionForDev?: SsrFunction;
   private edge?: boolean;
   private distribution: Distribution;
@@ -580,6 +589,7 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
 
     let s3DeployCRs: CustomResource[] = [];
     let ssrFunctions: SsrFunction[] = [];
+    let warmConfig: { concurrency: number; function: SsrFunction }[] = [];
     let singletonUrlSigner: EdgeFunction;
     let singletonCachePolicy: CachePolicy;
     let singletonOriginRequestPolicy: IOriginRequestPolicy;
@@ -605,6 +615,8 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
 
     this.bucket = bucket;
     this.distribution = distribution;
+    this.serverFunctions = [...ssrFunctions];
+    this.edgeFunctions = { ...edgeFunctions };
     this.serverFunction = ssrFunctions[0] ?? Object.values(edgeFunctions)[0];
     this.edge = plan.edge;
 
@@ -745,30 +757,30 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
       // note: Currently all sites have a single server function. When we add
       //       support for multiple server functions (ie. route splitting), we
       //       need to handle warming multiple functions.
-      if (!warm) return;
-
-      if (warm && plan.edge) {
-        throw new VisibleError(
-          `In the "${id}" Site, warming is currently supported only for the regional mode.`
-        );
+      if (warm && ssrFunctions[0] instanceof SsrFunction) {
+        warmConfig.push({ concurrency: warm, function: ssrFunctions[0] });
       }
 
-      if (ssrFunctions.length === 0) return;
+      const warmParams = warmConfig.map((config) => ({
+        concurrency: config.concurrency,
+        function: config.function.functionName,
+      }));
 
       // Create warmer function
       const warmer = new CdkFunction(self, "WarmerFunction", {
         description: "SSR warmer",
-        code: Code.fromAsset(path.join(__dirname, "../support/ssr-warmer")),
+        code: Code.fromAsset(
+          plan.warmer?.function ?? path.join(__dirname, "../support/ssr-warmer")
+        ),
         runtime: Runtime.NODEJS_18_X,
         handler: "index.handler",
         timeout: CdkDuration.minutes(15),
         memorySize: 128,
         environment: {
-          FUNCTION_NAME: ssrFunctions[0].functionName,
-          CONCURRENCY: warm.toString(),
+          WARM_PARAMS: JSON.stringify(warmParams),
         },
       });
-      ssrFunctions[0].grantInvoke(warmer);
+      warmConfig.forEach((config) => config.function.grantInvoke(warmer));
 
       // Create cron job
       new Rule(self, "WarmerRule", {
@@ -1028,6 +1040,10 @@ function handler(event) {
       });
       ssrFunctions.push(fn);
 
+      if (props.warm) {
+        warmConfig.push({ concurrency: props.warm, function: fn });
+      }
+
       bucket.grantReadWrite(fn?.role!);
 
       const fnUrl = fn.addFunctionUrl({
@@ -1244,11 +1260,20 @@ function handler(event) {
       const allowedHeaders = plan.serverCachePolicy?.allowedHeaders ?? [];
       singletonCachePolicy =
         singletonCachePolicy ??
-        new CachePolicy(
-          self,
-          "ServerCache",
-          SsrSite.buildDefaultServerCachePolicyProps(allowedHeaders)
-        );
+        new CachePolicy(self, "ServerCache", {
+          queryStringBehavior: CacheQueryStringBehavior.all(),
+          headerBehavior:
+            allowedHeaders.length > 0
+              ? CacheHeaderBehavior.allowList(...allowedHeaders)
+              : CacheHeaderBehavior.none(),
+          cookieBehavior: CacheCookieBehavior.none(),
+          defaultTtl: CdkDuration.days(0),
+          maxTtl: CdkDuration.days(365),
+          minTtl: CdkDuration.days(0),
+          enableAcceptEncodingBrotli: true,
+          enableAcceptEncodingGzip: true,
+          comment: "SST server response cache policy",
+        });
       return singletonCachePolicy;
     }
 
@@ -1440,25 +1465,6 @@ function handler(event) {
     }
   }
 
-  protected static buildDefaultServerCachePolicyProps(
-    allowedHeaders: string[]
-  ): CachePolicyProps {
-    return {
-      queryStringBehavior: CacheQueryStringBehavior.all(),
-      headerBehavior:
-        allowedHeaders.length > 0
-          ? CacheHeaderBehavior.allowList(...allowedHeaders)
-          : CacheHeaderBehavior.none(),
-      cookieBehavior: CacheCookieBehavior.none(),
-      defaultTtl: CdkDuration.days(0),
-      maxTtl: CdkDuration.days(365),
-      minTtl: CdkDuration.days(0),
-      enableAcceptEncodingBrotli: true,
-      enableAcceptEncodingGzip: true,
-      comment: "SST server response cache policy",
-    };
-  }
-
   /**
    * The CloudFront URL of the website.
    */
@@ -1601,6 +1607,9 @@ function handler(event) {
       allowedHeaders?: string[];
     };
     buildId?: string;
+    warmer?: {
+      function: string;
+    };
   }) {
     return input;
   }
