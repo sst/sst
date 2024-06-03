@@ -933,7 +933,7 @@ var Root = Command{
 					"",
 					"To pass arguments into the script, you'll need to prefix it using `--`.",
 					"",
-					"```bash frame=\"none\" frame=\"none\"",
+					"```bash frame=\"none\" frame=\"none\" /--(?!a)/",
 					"sst shell -- node my-script.js --arg1 --arg2",
 					"```",
 					"",

@@ -481,7 +481,7 @@ sst shell [command]
 - <p><code class="key">command?</code></p>
 A command to run.
 </Section>
-Run a command with **all the resources** linked to the environment. This is useful for running scripts against your infrastructure.
+Run a command with **all the resources linked** to the environment. This is useful for running scripts against your infrastructure.
 
 For example, let's say you have the following resources in your app.
 
@@ -506,7 +506,7 @@ Only the resources that are linked will be accessible in your script.
 
 We can now write a script that'll can access both these resources with the [JS SDK](/docs/reference/sdk/).
 
-```js title="my-script.js" "Resource.MyMainBucket.name"
+```js title="my-script.js" "Resource.MyMainBucket.name" "Resource.MyAdminBucket.name"
 import { Resource } from "sst";
 
 console.log(Resource.MyMainBucket.name, Resource.MyAdminBucket.name);
@@ -526,7 +526,7 @@ Run the command with `--` to pass arguments to it.
 
 To pass arguments into the script, you'll need to prefix it using `--`.
 
-```bash frame="none" frame="none"
+```bash frame="none" frame="none" /--(?!a)/
 sst shell -- node my-script.js --arg1 --arg2
 ```
 
