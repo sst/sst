@@ -51,11 +51,11 @@ The _stub_ function that's deployed uses a different runtime than the actual fun
 
 ---
 
-#### SST_LIVE
+### Live mode
 
-When a function is running live it sets the `SST_LIVE` environment variable to `true`.
+When a function is running live it sets the `SST_LIVE` environment variable to `true`. So in your Node.js functions you can acceess it using `process.env.SST_LIVE`.
 
-```js title="src/lambda.js" {2}
+```js title="src/lambda.js" "process.env.SST_LIVE"
 export async function main(event) {
   const body = process.env.SST_LIVE ? "Hello, Live!" : "Hello, World!";
 
@@ -67,13 +67,13 @@ export async function main(event) {
 }
 ```
 
+This is useful if you want to access some resources locally.
+
 ---
 
 #### Connect to a local DB
 
-You might have some resources that are only available locally. For example, a local database server.
-
-To connect to these, you can check the `SST_LIVE` environment variable.
+For example, when running locally you might want to connect to a local database. You can do that with the `SST_LIVE` environment variable.
 
 ```js
 const dbHost = process.env.SST_LIVE
