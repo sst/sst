@@ -340,6 +340,7 @@ export class Bus extends Component implements Link.Linkable, Link.AWS.Linkable {
     return {
       properties: {
         name: this.name,
+        arn: this.nodes.bus.arn,
       },
     };
   }
