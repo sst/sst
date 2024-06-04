@@ -490,6 +490,38 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 
 	slog.Info("running stack command", "cmd", input.Command)
 	var summary auto.UpdateSummary
+	defer func() {
+		var parsed provider.Summary
+		parsed.Version = s.project.Version()
+		parsed.UpdateID = updateID
+		parsed.TimeStarted = summary.StartTime
+		parsed.TimeCompleted = time.Now().Format(time.RFC3339)
+		if summary.EndTime != nil {
+			parsed.TimeCompleted = *summary.EndTime
+		}
+		if summary.ResourceChanges != nil {
+			if match, ok := (*summary.ResourceChanges)["same"]; ok {
+				parsed.ResourceSame = match
+			}
+			if match, ok := (*summary.ResourceChanges)["create"]; ok {
+				parsed.ResourceCreated = match
+			}
+			if match, ok := (*summary.ResourceChanges)["update"]; ok {
+				parsed.ResourceUpdated = match
+			}
+			if match, ok := (*summary.ResourceChanges)["delete"]; ok {
+				parsed.ResourceDeleted = match
+			}
+		}
+		for _, err := range complete.Errors {
+			parsed.Errors = append(parsed.Errors, provider.SummaryError{
+				URN:     err.URN,
+				Message: err.Message,
+			})
+		}
+
+		provider.PutSummary(s.project.home, s.project.app.Name, s.project.app.Stage, updateID, parsed)
+	}()
 
 	switch input.Command {
 	case "deploy":
@@ -527,40 +559,6 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 		)
 		err = derr
 		summary = result.Summary
-	}
-
-	var parsed provider.Summary
-	parsed.Version = s.project.Version()
-	parsed.UpdateID = updateID
-	parsed.TimeStarted = summary.StartTime
-	parsed.TimeCompleted = time.Now().Format(time.RFC3339)
-	if summary.EndTime != nil {
-		parsed.TimeCompleted = *summary.EndTime
-	}
-	if summary.ResourceChanges != nil {
-		if match, ok := (*summary.ResourceChanges)["same"]; ok {
-			parsed.ResourceSame = match
-		}
-		if match, ok := (*summary.ResourceChanges)["create"]; ok {
-			parsed.ResourceCreated = match
-		}
-		if match, ok := (*summary.ResourceChanges)["update"]; ok {
-			parsed.ResourceUpdated = match
-		}
-		if match, ok := (*summary.ResourceChanges)["delete"]; ok {
-			parsed.ResourceDeleted = match
-		}
-	}
-	for _, err := range complete.Errors {
-		parsed.Errors = append(parsed.Errors, provider.SummaryError{
-			URN:     err.URN,
-			Message: err.Message,
-		})
-	}
-
-	err = provider.PutSummary(s.project.home, s.project.app.Name, s.project.app.Stage, updateID, parsed)
-	if err != nil {
-		return err
 	}
 
 	slog.Info("done running stack command")
