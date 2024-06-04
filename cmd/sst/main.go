@@ -1719,27 +1719,30 @@ func configureLog(cli *Cli) {
 func getStage(cli *Cli, cfgPath string) (string, error) {
 	stage := cli.String("stage")
 	if stage == "" {
-		stage = project.LoadPersonalStage(cfgPath)
+		stage = os.Getenv("SST_STAGE")
 		if stage == "" {
-			stage = guessStage()
+			stage = project.LoadPersonalStage(cfgPath)
 			if stage == "" {
-				err := huh.NewForm(
-					huh.NewGroup(
-						huh.NewInput().Title(" Enter name for your personal stage").Prompt(" > ").Value(&stage).Validate(func(v string) error {
-							if project.InvalidStageRegex.MatchString(v) {
-								return fmt.Errorf("Invalid stage name")
-							}
-							return nil
-						}),
-					),
-				).WithTheme(huh.ThemeCatppuccin()).Run()
+				stage = guessStage()
+				if stage == "" {
+					err := huh.NewForm(
+						huh.NewGroup(
+							huh.NewInput().Title(" Enter name for your personal stage").Prompt(" > ").Value(&stage).Validate(func(v string) error {
+								if project.InvalidStageRegex.MatchString(v) {
+									return fmt.Errorf("Invalid stage name")
+								}
+								return nil
+							}),
+						),
+					).WithTheme(huh.ThemeCatppuccin()).Run()
+					if err != nil {
+						return "", err
+					}
+				}
+				err := project.SetPersonalStage(cfgPath, stage)
 				if err != nil {
 					return "", err
 				}
-			}
-			err := project.SetPersonalStage(cfgPath, stage)
-			if err != nil {
-				return "", err
 			}
 		}
 	}
