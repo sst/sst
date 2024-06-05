@@ -64,9 +64,9 @@ export interface VpcArgs {
  * The `Vpc` component lets you add a VPC to your app. It uses [Amazon VPC](https://docs.aws.amazon.com/vpc/). This is useful for services like RDS and Fargate that need to be hosted inside
  * a VPC.
  *
- * This creates a VPC with 2 Availability Zones by default. It also creates the following 
+ * This creates a VPC with 2 Availability Zones by default. It also creates the following
  * resources:
- * 
+ *
  * 1. A security group.
  * 2. A public subnet in each AZ.
  * 3. A private subnet in each AZ.
@@ -390,6 +390,74 @@ export class Vpc extends Component {
        */
       privateRouteTables: this.privateRouteTables,
     };
+  }
+
+  public static get(
+    name: string,
+    args: aws.ec2.GetVpcArgs,
+    opts?: ComponentResourceOptions,
+  ) {
+    return new VpcRef(name, args, opts);
+  }
+}
+
+class VpcRef extends Component {
+  private _vpc: Output<aws.ec2.GetVpcResult>;
+  private _publicSubnets: Output<aws.ec2.GetSubnetsResult>;
+  private _privateSubnets: Output<aws.ec2.GetSubnetsResult>;
+  private _securityGroups: Output<aws.ec2.GetSecurityGroupsResult>;
+
+  constructor(
+    name: string,
+    args: aws.ec2.GetVpcArgs,
+    opts?: ComponentResourceOptions,
+  ) {
+    super(__pulumiType + "Ref", name, args, opts);
+
+    this._vpc = aws.ec2.getVpcOutput(args);
+    this._publicSubnets = aws.ec2.getSubnetsOutput({
+      filters: [
+        { name: "vpc-id", values: [this._vpc.id] },
+        { name: "tag:Name", values: ["*Public*"] },
+      ],
+    });
+    this._privateSubnets = aws.ec2.getSubnetsOutput({
+      filters: [
+        { name: "vpc-id", values: [this._vpc.id] },
+        { name: "tag:Name", values: ["*Private*"] },
+      ],
+    });
+    this._securityGroups = aws.ec2.getSecurityGroupsOutput({
+      filters: [{ name: "vpc-id", values: [this._vpc.id] }],
+    });
+  }
+
+  /**
+   * The VPC ID.
+   */
+  public get id() {
+    return this._vpc.id;
+  }
+
+  /**
+   * A list of public subnet IDs in the VPC.
+   */
+  public get publicSubnets() {
+    return this._publicSubnets.ids;
+  }
+
+  /**
+   * A list of private subnet IDs in the VPC.
+   */
+  public get privateSubnets() {
+    return this._privateSubnets.ids;
+  }
+
+  /**
+   * A list of VPC security group IDs.
+   */
+  public get securityGroups() {
+    return this._securityGroups.ids;
   }
 }
 

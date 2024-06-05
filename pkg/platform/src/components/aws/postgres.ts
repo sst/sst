@@ -226,7 +226,8 @@ export interface PostgresArgs {
  */
 export class Postgres
   extends Component
-  implements Link.Linkable, Link.AWS.Linkable {
+  implements Link.Linkable, Link.AWS.Linkable
+{
   private cluster: aws.rds.Cluster;
   private instance: aws.rds.ClusterInstance;
   private databaseName: Output<string>;
@@ -345,13 +346,74 @@ export class Postgres
 
   /** @internal */
   public getSSTLink() {
-    return {
-      properties: {
-        clusterArn: this.clusterArn,
-        secretArn: this.secretArn,
-        database: this.database,
-      },
-    };
+    return getSSTLink(this.cluster);
+  }
+
+  /** @internal */
+  public getSSTAWSPermissions() {
+    return getSSTAWSPermissions(this.cluster);
+  }
+
+  public static get(
+    name: string,
+    args: aws.rds.GetClusterArgs,
+    opts?: ComponentResourceOptions,
+  ) {
+    return new PostgresRef(name, args, opts);
+  }
+}
+
+function getSSTLink(
+  cluster: aws.rds.Cluster | Output<aws.rds.GetClusterResult>,
+) {
+  return {
+    properties: {
+      clusterArn: cluster.arn,
+      secretArn: cluster.masterUserSecrets[0].secretArn,
+      database: cluster.databaseName,
+    },
+  };
+}
+
+function getSSTAWSPermissions(
+  cluster: aws.rds.Cluster | Output<aws.rds.GetClusterResult>,
+) {
+  return [
+    {
+      actions: ["secretsmanager:GetSecretValue"],
+      resources: [cluster.masterUserSecrets[0].secretArn],
+    },
+    {
+      actions: [
+        "rds-data:BatchExecuteStatement",
+        "rds-data:BeginTransaction",
+        "rds-data:CommitTransaction",
+        "rds-data:ExecuteStatement",
+        "rds-data:RollbackTransaction",
+      ],
+      resources: [cluster.arn],
+    },
+  ];
+}
+
+class PostgresRef
+  extends Component
+  implements Link.Linkable, Link.AWS.Linkable
+{
+  private cluster: Output<aws.rds.GetClusterResult>;
+
+  constructor(
+    name: string,
+    args: aws.rds.GetClusterOutputArgs,
+    opts?: ComponentResourceOptions,
+  ) {
+    super(__pulumiType + "Ref", name, args, opts);
+    this.cluster = aws.rds.getClusterOutput(args, opts);
+  }
+
+  /** @internal */
+  public getSSTLink() {
+    return getSSTLink(this.cluster);
   }
 
   /** @internal */
