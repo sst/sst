@@ -486,23 +486,9 @@ Run a command with **all the resources linked** to the environment. This is usef
 For example, let's say you have the following resources in your app.
 
 ```js title="sst.config.ts" {5,9}
-const myMainBucket = new sst.aws.Bucket("MyMainBucket");
-const myAdminBucket = new sst.aws.Bucket("MyAdminBucket");
-
-new sst.aws.Nextjs("MyMainWeb", {
-  link: [myMainBucket]
-});
-
-new sst.aws.Nextjs("MyAdminWeb", {
-  link: [myAdminBucket]
-});
+new sst.aws.Bucket("MyMainBucket");
+new sst.aws.Bucket("MyAdminBucket");
 ```
-
-Here we have two buckets that are linked to our Next.js apps.
-
-:::note
-Only the resources that are linked will be accessible in your script.
-:::
 
 We can now write a script that'll can access both these resources with the [JS SDK](/docs/reference/sdk/).
 
@@ -536,7 +522,7 @@ If no command is passed in, it opens a shell session with the linked resources.
 sst shell
 ```
 
-This is useful if you want to run multiple commands, all while accessing the linked resources.
+This is useful if you want to run multiple commands, all while accessing the resources in your app.
 </Segment>
 
 ### remove
