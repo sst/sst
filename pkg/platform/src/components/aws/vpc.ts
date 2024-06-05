@@ -392,6 +392,7 @@ export class Vpc extends Component {
     };
   }
 
+  /** @internal */
   public static get(
     name: string,
     args: aws.ec2.GetVpcArgs,

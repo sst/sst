@@ -226,8 +226,7 @@ export interface PostgresArgs {
  */
 export class Postgres
   extends Component
-  implements Link.Linkable, Link.AWS.Linkable
-{
+  implements Link.Linkable, Link.AWS.Linkable {
   private cluster: aws.rds.Cluster;
   private instance: aws.rds.ClusterInstance;
   private databaseName: Output<string>;
@@ -354,6 +353,7 @@ export class Postgres
     return getSSTAWSPermissions(this.cluster);
   }
 
+  /** @internal */
   public static get(
     name: string,
     args: aws.rds.GetClusterArgs,
@@ -398,8 +398,7 @@ function getSSTAWSPermissions(
 
 class PostgresRef
   extends Component
-  implements Link.Linkable, Link.AWS.Linkable
-{
+  implements Link.Linkable, Link.AWS.Linkable {
   private cluster: Output<aws.rds.GetClusterResult>;
 
   constructor(
