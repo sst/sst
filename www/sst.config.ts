@@ -67,15 +67,11 @@ export default $config({
       domain,
     });
 
-    const telemetry = new sst.aws.Router("TelemetryRouter", {
+    new sst.aws.Router("TelemetryRouter", {
       domain: "telemetry." + domain,
       routes: {
         "/*": "https://us.i.posthog.com",
       },
     });
-
-    return {
-      telemetry: telemetry.url,
-    };
   },
 });
