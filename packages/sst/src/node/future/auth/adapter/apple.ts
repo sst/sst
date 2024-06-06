@@ -3,7 +3,7 @@ import { BaseClient, generators, Issuer } from 'openid-client';
 
 import { useBody, useCookie, useDomainName, usePathParam, useResponse } from '../../../api/index.js';
 import { Adapter } from './adapter.js';
-import { OauthConfig, OauthBasicConfig } from './oauth.js';
+import { OauthBasicConfig } from './oauth.js';
 
 // This adapter support the OAuth flow with the response_mode "form_post" for now.
 // More details about the flow:
@@ -15,12 +15,16 @@ import { OauthConfig, OauthBasicConfig } from './oauth.js';
 
 let issuer: Issuer<BaseClient>;
 
+type AppleConfig = OauthBasicConfig & {
+  issuer?: Issuer
+}
+
 export const AppleAdapter =
   /* @__PURE__ */
-  (config: OauthConfig | OauthBasicConfig) => {
+  (config: AppleConfig) => {
 
     return async function () {
-      const doesConfigHasIssuer = ((config as OauthConfig).issuer) !== undefined
+      const doesConfigHasIssuer = config.issuer !== undefined
       if(!doesConfigHasIssuer && !issuer){
         issuer = await Issuer.discover("https://appleid.apple.com/.well-known/openid-configuration");
       }
