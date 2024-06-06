@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"regexp"
 	"strings"
 
 	"github.com/fatih/color"
@@ -40,6 +41,9 @@ func CmdSecretList(cli *Cli) error {
 func CmdSecretSet(cli *Cli) error {
 	key := cli.Positional(0)
 	value := cli.Positional(1)
+	if !regexp.MustCompile(`^[A-Z][a-zA-Z0-9]*$`).MatchString(key) {
+		return util.NewReadableError(nil, "Secret names must start with a capital letter and contain only letters and numbers")
+	}
 	p, err := initProject(cli)
 	if err != nil {
 		return err
