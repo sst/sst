@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"log/slog"
 	"os"
 	"path/filepath"
@@ -438,45 +439,63 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 				complete.Links[key] = value
 			}
 
-			types := map[string]map[string]interface{}{}
+			typesFileName := "sst-env.d.ts"
+			typesFilePath := filepath.Join(s.project.PathRoot(), typesFileName)
+			typesFile, _ := os.Create(typesFilePath)
+			defer typesFile.Close()
+
+			oldTypesFilePath := filepath.Join(s.project.PathWorkingDir(), "types.generated.ts")
+			oldTypesFile, _ := os.Create(oldTypesFilePath)
+			defer oldTypesFile.Close()
+
+			multi := io.MultiWriter(typesFile, oldTypesFile)
+
+			multi.Write([]byte(`/* tslint:disable */` + "\n"))
+			multi.Write([]byte(`/* eslint-disable */` + "\n"))
+			multi.Write([]byte(`import "sst"` + "\n"))
+			multi.Write([]byte(`declare module "sst" {` + "\n"))
+			multi.Write([]byte("  export interface Resource " + inferTypes(complete.Links, "  ") + "\n"))
+			multi.Write([]byte("}" + "\n"))
+			multi.Write([]byte("export {}"))
+
 			for _, receiver := range complete.Receivers {
-				typesPath, err := fs.FindUp(filepath.Join(s.project.PathRoot(), receiver.Directory), "tsconfig.json")
+				envPathHint, err := fs.FindUp(filepath.Join(s.project.PathRoot(), receiver.Directory), "tsconfig.json")
 				if err != nil {
 					continue
 				}
-				dir := filepath.Join(filepath.Dir(typesPath), "sst-env.d.ts")
-				links, ok := types[dir]
-				if !ok {
-					links = map[string]interface{}{}
-					types[dir] = links
+				envPath := filepath.Join(filepath.Dir(envPathHint), "sst-env.d.ts")
+				rel, _ := filepath.Rel(filepath.Dir(envPath), typesFilePath)
+				if rel == typesFileName && receiver.Cloudflare == nil {
+					continue
 				}
-				for name, link := range complete.Links {
-					if cloudflareBindings[name] != "" && receiver.Cloudflare != nil {
-						links[name] = literal{value: `import("@cloudflare/workers-types").` + cloudflareBindings[name]}
-						continue
+				file, _ := os.Create(envPath)
+				if rel != typesFileName {
+					file.WriteString(`/// <reference path="` + rel + `" />` + "\n")
+				}
+				defer file.Close()
+
+				if receiver.Cloudflare != nil {
+					if rel == typesFileName {
+						file.Write([]byte(`import "sst"` + "\n"))
+						file.Write([]byte(`declare module "sst" {` + "\n"))
+						file.Write([]byte("  export interface Resource " + inferTypes(complete.Links, "  ") + "\n"))
+						file.Write([]byte("}" + "\n"))
 					}
-					links[name] = link
+					bindings := map[string]interface{}{}
+					for _, link := range receiver.Links {
+						if cloudflareBindings[link] != "" {
+							bindings[link] = literal{value: `import("@cloudflare/workers-types").` + cloudflareBindings[link]}
+						}
+					}
+					if len(bindings) > 0 {
+						file.Write([]byte("// cloudflare \n"))
+						file.Write([]byte(`declare module "sst" {` + "\n"))
+						file.Write([]byte("  export interface Resource " + inferTypes(bindings, "  ") + "\n"))
+						file.Write([]byte("}" + "\n"))
+					}
 				}
 			}
 
-			types[filepath.Join(s.project.PathWorkingDir(), "types.generated.ts")] = complete.Links
-
-			for path, links := range types {
-				slog.Info("generating types", "path", path, "count", len(links))
-				typesFile, err := os.Create(path)
-				if err != nil {
-					slog.Error("failed to create types file", "path", path, "err", err)
-					continue
-				}
-				defer typesFile.Close()
-				typesFile.WriteString(`/* tslint:disable */` + "\n")
-				typesFile.WriteString(`/* eslint-disable */` + "\n")
-				typesFile.WriteString(`import "sst"` + "\n")
-				typesFile.WriteString(`declare module "sst" {` + "\n")
-				typesFile.WriteString("  export interface Resource " + inferTypes(links, "  ") + "\n")
-				typesFile.WriteString("}" + "\n")
-				typesFile.WriteString("export {}")
-			}
 			provider.PutLinks(s.project.home, s.project.app.Name, s.project.app.Stage, complete.Links)
 		}
 
