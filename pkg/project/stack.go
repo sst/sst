@@ -469,6 +469,8 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 					continue
 				}
 				file, _ := os.Create(envPath)
+				file.Write([]byte(`/* tslint:disable */` + "\n"))
+				file.Write([]byte(`/* eslint-disable */` + "\n"))
 				if rel != typesFileName {
 					file.WriteString(`/// <reference path="` + rel + `" />` + "\n")
 				}
