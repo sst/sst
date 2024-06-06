@@ -67,7 +67,7 @@ const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 
 const supportedRuntimes = {
   container: CDKRuntime.FROM_IMAGE,
-  rust: CDKRuntime.PROVIDED_AL2,
+  rust: CDKRuntime.PROVIDED_AL2023,
   "nodejs16.x": CDKRuntime.NODEJS_16_X,
   "nodejs18.x": CDKRuntime.NODEJS_18_X,
   "nodejs20.x": CDKRuntime.NODEJS_20_X,
