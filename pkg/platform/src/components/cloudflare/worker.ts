@@ -268,10 +268,9 @@ export class Worker
         environment: args.environment,
         cloudflare: {},
       },
-
       _live: all([name, args.handler, args.build, args.live]).apply(
         ([name, handler, build, live]) =>
-          !$dev || !live
+          !$dev || !live == false
             ? undefined
             : {
                 functionID: name,

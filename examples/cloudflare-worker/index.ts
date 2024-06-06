@@ -19,6 +19,9 @@ export default {
             (a, b) => a.uploaded.getTime() - b.uploaded.getTime(),
           )[0],
       );
+      if (!first) {
+        return new Response("No objects found");
+      }
       const result = await Resource.MyBucket.get(first.key);
       return new Response(result.body, {
         headers: {
