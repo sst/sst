@@ -77,12 +77,14 @@ type ProjectConfig struct {
 }
 
 var ErrInvalidStageName = fmt.Errorf("invalid stage name")
+var ErrInvalidAppName = fmt.Errorf("invalid app name")
 var ErrV2Config = fmt.Errorf("sstv2 config detected")
 var ErrBuildFailed = fmt.Errorf("")
 var ErrVersionInvalid = fmt.Errorf("invalid version")
 var ErrVersionMismatch = fmt.Errorf("")
 
 var InvalidStageRegex = regexp.MustCompile(`[^a-zA-Z0-9-]`)
+var InvalidAppRegex = regexp.MustCompile(`[^a-zA-Z0-9-]`)
 
 func New(input *ProjectConfig) (*Project, error) {
 	if InvalidStageRegex.MatchString(input.Stage) {
@@ -175,6 +177,10 @@ console.log("~j" + JSON.stringify(mod.app({
 
 			if proj.app.Name == "" {
 				return nil, fmt.Errorf("Project name is required")
+			}
+
+			if InvalidAppRegex.MatchString(proj.app.Name) {
+				return nil, ErrInvalidAppName
 			}
 
 			if proj.app.Home == "" {
