@@ -66,7 +66,7 @@ const bucket = new sst.aws.Bucket("MyBucket", {
 Now, link the bucket to our SvelteKit app.
 
 ```js title="sst.config.ts" {2}
-new sst.aws.SvelteKit"MyWeb", {
+new sst.aws.SvelteKit("MyWeb", {
   link: [bucket]
 });
 ```
