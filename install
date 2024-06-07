@@ -61,9 +61,8 @@ print_message() {
 check_version() {
     if command -v sst >/dev/null 2>&1; then
         sst_path=$(which sst)
-        sst_shebang=$(cat $sst_path | head -n1)
 
-        if [[ "$sst_shebang" == "#!/usr/bin/env node" ]]; then
+        if [[ $(cat $sst_path | head -n1) == "#!/usr/bin/env node" ]]; then
             print_message error "SST v2 is installed globally through npm. You'll need to uninstall it before proceeding."
             exit 1
         fi
