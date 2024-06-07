@@ -3,9 +3,9 @@
 import "sst"
 declare module "sst" {
   export interface Resource {
-    MySecret: {
-      type: "sst.sst.Secret"
-      value: string
+    MyBucket: {
+      name: string
+      type: "sst.aws.Bucket"
     }
     MyWeb: {
       type: "sst.aws.Remix"

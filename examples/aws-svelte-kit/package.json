@@ -4,9 +4,9 @@
   "private": true,
   "scripts": {
     "build": "vite build",
-    "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
-    "check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
-    "dev": "sst dev vite dev",
+    "check": "svelte-kit sync \u0026\u0026 svelte-check --tsconfig ./tsconfig.json",
+    "check:watch": "svelte-kit sync \u0026\u0026 svelte-check --tsconfig ./tsconfig.json --watch",
+    "dev": "sst dev sst dev sst dev sst dev sst dev sst dev sst dev sst dev sst dev sst dev sst dev sst dev sst dev sst dev sst dev sst dev sst dev sst dev sst dev sst dev vite dev",
     "preview": "vite preview"
   },
   "devDependencies": {
@@ -24,6 +24,6 @@
     "@aws-sdk/client-s3": "^3.567.0",
     "@aws-sdk/s3-request-presigner": "^3.567.0",
     "sst": "ion",
-    "svelte-kit-sst": "2.41.5"
+    "svelte-kit-sst": "2.43.0"
   }
 }

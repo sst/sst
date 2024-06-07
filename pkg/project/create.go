@@ -33,6 +33,8 @@ type npmStep struct {
 	Dev     bool   `json:"dev"`
 }
 
+type instructionsStep []string
+
 type patchStep struct {
 	Patch json.RawMessage `json:"patch"`
 	File  string          `json:"file"`
@@ -60,7 +62,7 @@ type preset struct {
 var ErrConfigExists = fmt.Errorf("sst.config.ts already exists")
 var ErrPackageJsonInvalid = fmt.Errorf("package.json is invalid")
 
-func Create(templateName string, home string) error {
+func Create(templateName string, home string) ([]string, error) {
 	gitignoreSteps := []gitignoreStep{
 		{
 			Name: "# sst",
@@ -69,36 +71,45 @@ func Create(templateName string, home string) error {
 	}
 
 	if _, err := os.Stat("sst.config.ts"); err == nil {
-		return ErrConfigExists
+		return nil, ErrConfigExists
 	}
 
 	currentDirectory, err := os.Getwd()
 	if err != nil {
-		return nil
+		return nil, nil
 	}
 	directoryName := strings.ToLower(filepath.Base(currentDirectory))
 	slog.Info("creating project", "name", directoryName)
 
 	presetBytes, err := platform.Templates.ReadFile(filepath.Join("templates", templateName, "preset.json"))
 	if err != nil {
-		return fmt.Errorf("failed to read preset.json: %w", err)
+		return nil, fmt.Errorf("failed to read preset.json: %w", err)
 	}
 	var preset preset
 	err = json.Unmarshal(presetBytes, &preset)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	packageJsons := map[string]gokvpairs.KeyValuePairs[interface{}]{}
+	instructions := []string{}
 
 	for _, step := range preset.Steps {
 		slog.Info("step", "type", step.Type)
 		switch step.Type {
+		case "instructions":
+			var instructionsStep instructionsStep
+			err = json.Unmarshal(step.Properties, &instructionsStep)
+			if err != nil {
+				return nil, err
+			}
+			instructions = append(instructions, instructionsStep...)
+			break
 		case "npm":
 			var npmStep npmStep
 			err = json.Unmarshal(step.Properties, &npmStep)
 			if err != nil {
-				return err
+				return nil, err
 			}
 			slog.Info("installing npm package", "package", npmStep.Package, "version", npmStep.Version)
 			packageJson := packageJsons[npmStep.File]
@@ -106,11 +117,11 @@ func Create(templateName string, home string) error {
 				slog.Info("reading package.json", "file", npmStep.File)
 				f, err := os.Open(npmStep.File)
 				if err != nil {
-					return err
+					return nil, err
 				}
 				err = json.NewDecoder(f).Decode(&packageJson)
 				if err != nil {
-					return err
+					return nil, err
 				}
 				packageJsons[npmStep.File] = packageJson
 			}
@@ -136,7 +147,7 @@ func Create(templateName string, home string) error {
 				slog.Info("fetching latest version", "package", npmStep.Package)
 				data, err := npm.Get(npmStep.Package, "latest")
 				if err != nil {
-					return err
+					return nil, err
 				}
 				slog.Info("latest version", "version", data.Version)
 				version = data.Version
@@ -147,7 +158,7 @@ func Create(templateName string, home string) error {
 			var patchStep patchStep
 			err = json.Unmarshal(step.Properties, &patchStep)
 			if err != nil {
-				return err
+				return nil, err
 			}
 			slog.Info("patching", "file", patchStep.File, "patch", patchStep.Patch)
 
@@ -157,19 +168,19 @@ func Create(templateName string, home string) error {
 					slog.Info("file does not exist, ignoring patch", "file", patchStep.File)
 					continue
 				}
-				return err
+				return nil, err
 			}
 
 			value, err := hujson.Parse(b)
 			if err != nil {
-				return err
+				return nil, err
 			}
 
 			if string(patchStep.Patch) != "" {
 				var patches []jsonPatch
 				err := json.Unmarshal(patchStep.Patch, &patches)
 				if err != nil {
-					return err
+					return nil, err
 				}
 				for _, patch := range patches {
 					if patch.Op == "add" {
@@ -181,7 +192,7 @@ func Create(templateName string, home string) error {
 								fill := `[{"op":"add","path":"` + path + `","value":{}}]`
 								err := value.Patch([]byte(fill))
 								if err != nil {
-									return err
+									return nil, err
 								}
 							}
 						}
@@ -189,7 +200,7 @@ func Create(templateName string, home string) error {
 				}
 				err = value.Patch(patchStep.Patch)
 				if err != nil {
-					return err
+					return nil, err
 				}
 			}
 
@@ -201,12 +212,12 @@ func Create(templateName string, home string) error {
 
 			file, err := os.Create(patchStep.File)
 			if err != nil {
-				return err
+				return nil, err
 			}
 			defer file.Close()
 			_, err = file.WriteString(packed)
 			if err != nil {
-				return err
+				return nil, err
 			}
 
 			break
@@ -261,7 +272,7 @@ func Create(templateName string, home string) error {
 				return nil
 			})
 			if err != nil {
-				return err
+				return nil, err
 			}
 			break
 
@@ -269,7 +280,7 @@ func Create(templateName string, home string) error {
 			var gitignoreStep gitignoreStep
 			err = json.Unmarshal(step.Properties, &gitignoreStep)
 			if err != nil {
-				return err
+				return nil, err
 			}
 			slog.Info("handling .gitignore", "section", gitignoreStep.Name)
 			gitignoreSteps = append(gitignoreSteps, gitignoreStep)
@@ -279,11 +290,11 @@ func Create(templateName string, home string) error {
 	for file, content := range packageJsons {
 		bytes, err := json.MarshalIndent(content, "", "  ")
 		if err != nil {
-			return err
+			return nil, err
 		}
 		err = os.WriteFile(file, bytes, 0666)
 		if err != nil {
-			return err
+			return nil, err
 		}
 	}
 
@@ -291,12 +302,12 @@ func Create(templateName string, home string) error {
 	gitignoreFilename := ".gitignore"
 	file, err := os.OpenFile(gitignoreFilename, os.O_RDWR|os.O_CREATE, 0666)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	defer file.Close()
 	bytes, err := io.ReadAll(file)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	content := string(bytes)
 
@@ -307,10 +318,10 @@ func Create(templateName string, home string) error {
 			}
 			_, err := file.WriteString("\n" + step.Name + "\n" + step.Path + "\n")
 			if err != nil {
-				return err
+				return nil, err
 			}
 		}
 	}
 
-	return nil
+	return instructions, nil
 }

@@ -29,6 +29,18 @@
         "package": "sst",
         "version": "ion"
       }
+    },
+    {
+      "type": "instructions",
+      "properties": [
+        "Next steps: update nuxt.config.ts",
+        "",
+        "export default defineNuxtConfig({",
+        "  nitro: {",
+        "    preset: \"aws-lambda\",",
+        "  },",
+        "});"
+      ]
     }
   ]
 }

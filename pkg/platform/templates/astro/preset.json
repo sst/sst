@@ -29,6 +29,18 @@
         "file": "package.json",
         "package": "astro-sst"
       }
+    },
+    {
+      "type": "instructions",
+      "properties": [
+        "Next steps: update astro.config.mjs",
+        "",
+        "import aws from \"astro-sst\";",
+        "export default defineConfig({",
+        "  output: \"server\",",
+        "  adapter: aws()",
+        "});"
+      ]
     }
   ]
 }

@@ -29,6 +29,19 @@
         "file": "package.json",
         "package": "svelte-kit-sst"
       }
+    },
+    {
+      "type": "instructions",
+      "properties": [
+        "Next steps: update svelte.config.js",
+        "",
+        "import adapter from \"svelte-kit-sst\"",
+        "const config = {",
+        "  kit: {",
+        "    adapter: adapter()",
+        "  }",
+        "};"
+      ]
     }
   ]
 }

@@ -1,1 +1,3 @@
-/// <reference path="../../sst.resources.d.ts" />
+/* tslint:disable */
+/* eslint-disable */
+/// <reference path="../../sst-env.d.ts" />

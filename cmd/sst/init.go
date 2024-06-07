@@ -80,7 +80,6 @@ func CmdInit(cli *Cli) error {
 	case slices.ContainsFunc(hints, func(s string) bool { return strings.HasPrefix(s, "app.config") }):
 		fmt.Println("  SolidStart detected. This will...")
 		fmt.Println("   - create an sst.config.ts")
-		fmt.Println("   - modify the app.config.ts")
 		fmt.Println("   - add the sst sdk to package.json")
 		template = "solid-start"
 		break
@@ -88,7 +87,6 @@ func CmdInit(cli *Cli) error {
 	case slices.ContainsFunc(hints, func(s string) bool { return strings.HasPrefix(s, "nuxt.config") }):
 		fmt.Println("  Nuxt detected. This will...")
 		fmt.Println("   - create an sst.config.ts")
-		fmt.Println("   - modify the nuxt.config.ts")
 		fmt.Println("   - add the sst sdk to package.json")
 		template = "nuxt"
 		break
@@ -96,7 +94,6 @@ func CmdInit(cli *Cli) error {
 	case slices.ContainsFunc(hints, func(s string) bool { return strings.HasPrefix(s, "svelte.config") }):
 		fmt.Println("  SvelteKit detected. This will...")
 		fmt.Println("   - create an sst.config.ts")
-		fmt.Println("   - modify the svelte.config.js")
 		fmt.Println("   - add the sst sdk to package.json")
 		template = "svelte-kit"
 		break
@@ -168,7 +165,7 @@ func CmdInit(cli *Cli) error {
 	color.New(color.FgWhite).Println("  Using: " + home)
 	fmt.Println()
 
-	err = project.Create(template, home)
+	instructions, err := project.Create(template, home)
 	if err != nil {
 		return err
 	}
@@ -220,8 +217,19 @@ func CmdInit(cli *Cli) error {
 
 	spin.Stop()
 
-	color.New(color.FgGreen, color.Bold).Print("✓")
-	color.New(color.FgWhite).Println("  Done 🎉")
+	if len(instructions) == 0 {
+		color.New(color.FgWhite).Println("  Done 🎉")
+	}
+	if len(instructions) > 0 {
+		for i, instruction := range instructions {
+			if i == 0 {
+				color.New(color.FgBlue, color.Bold).Print(">")
+				fmt.Println("  " + instruction)
+				continue
+			}
+			color.New(color.FgWhite).Println("   " + instruction)
+		}
+	}
 	fmt.Println()
 	return nil
 }

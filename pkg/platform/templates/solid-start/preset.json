@@ -29,6 +29,18 @@
         "package": "sst",
         "version": "ion"
       }
+    },
+    {
+      "type": "instructions",
+      "properties": [
+        "Next steps: update app.config.ts",
+        "",
+        "export default defineConfig({",
+        "  server: {",
+        "    preset: \"aws-lambda\",",
+        "  },",
+        "});"
+      ]
     }
   ]
 }
