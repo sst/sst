@@ -92,16 +92,16 @@ func Build(ctx context.Context, input *BuildInput) (*BuildOutput, error) {
 			if err != nil {
 				return nil, err
 			}
-			dest := filepath.Join(out, item.To)
-			if item.To == "" {
+			var dest string
+			if item.To != "" {
+				dest = filepath.Join(out, item.To)
+			} else {
 				dest = filepath.Join(out, item.From)
-				err := os.MkdirAll(filepath.Dir(dest), 0755)
-				if err != nil {
-					return nil, err
-				}
 			}
-			err = os.Symlink(from, dest)
-			if err != nil {
+			if err := os.MkdirAll(filepath.Dir(dest), 0755); err != nil {
+				return nil, err
+			}
+			if err := os.Symlink(from, dest); err != nil {
 				return nil, err
 			}
 		}
