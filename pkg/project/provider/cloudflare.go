@@ -63,7 +63,7 @@ func (c *CloudflareProvider) Init(app, stage string, args map[string]interface{}
 			return err
 		}
 		if len(accounts) == 0 {
-
+			return ErrCloudflareMissingAccount
 		}
 		accountID = accounts[0].ID
 	}
