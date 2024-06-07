@@ -103,7 +103,8 @@ function convertApigRequestToNode(event) {
 const createApigHandler = (build) => {
   const requestHandler = createNodeRequestHandler(build, process.env.NODE_ENV);
 
-  return awslambda.streamifyResponse(async (event, responseStream) => {
+  return awslambda.streamifyResponse(async (event, responseStream, context) => {
+    context.callbackWaitsForEmptyEventLoop = false;
     const request = convertApigRequestToNode(event);
     const response = await requestHandler(request);
     const httpResponseMetadata = {
@@ -115,8 +116,8 @@ const createApigHandler = (build) => {
     };
 
     const writer = awslambda.HttpResponseStream.from(
-        responseStream,
-        httpResponseMetadata,
+      responseStream,
+      httpResponseMetadata,
     );
 
     if (response.body) {
@@ -124,7 +125,7 @@ const createApigHandler = (build) => {
     } else {
       writer.write(" ");
     }
-      writer.end();
+    writer.end();
   });
 };
 
