@@ -475,7 +475,7 @@ func (u *UI) Event(evt *server.Event) {
 	}
 
 	if evt.FunctionErrorEvent != nil {
-		u.printEvent(u.getColor(evt.FunctionErrorEvent.WorkerID), color.New(color.FgRed).Sprintf("%-11s", "Error"), "")
+		u.printEvent(u.getColor(evt.FunctionErrorEvent.WorkerID), color.New(color.FgRed).Sprintf("%-11s", "Error"), u.functionName(evt.FunctionErrorEvent.FunctionID))
 		u.printEvent(u.getColor(evt.FunctionErrorEvent.WorkerID), "", evt.FunctionErrorEvent.ErrorMessage)
 		for _, item := range evt.FunctionErrorEvent.Trace {
 			if strings.Contains(item, "Error:") {
