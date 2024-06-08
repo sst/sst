@@ -951,7 +951,6 @@ export class Function
           copyFiles,
         ]).apply(
           ([name, links, handler, bundle, runtime, nodejs, copyFiles]) => {
-            if (!dev) return undefined;
             return {
               functionID: name,
               links,
