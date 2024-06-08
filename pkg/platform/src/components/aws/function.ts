@@ -10,6 +10,7 @@ import {
   output,
   all,
   interpolate,
+  unsecret,
 } from "@pulumi/pulumi";
 import * as aws from "@pulumi/aws";
 import { build } from "../../runtime/node.js";
@@ -1415,7 +1416,7 @@ export class Function
         code: new asset.FileArchive(
           path.join($cli.paths.platform, "functions", "empty-function"),
         ),
-        handler,
+        handler: unsecret(handler),
         role: args.role ?? role!.arn,
         runtime,
         timeout: timeout.apply((timeout) => toSeconds(timeout)),
