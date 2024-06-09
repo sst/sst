@@ -1,17 +1,9 @@
-import {BaseClient, Issuer} from "openid-client";
+import { BaseClient, Issuer } from "openid-client";
 import { OidcAdapter, OidcBasicConfig } from "./oidc.js";
 import { OauthAdapter, OauthBasicConfig } from "./oauth.js";
+import { Adapter } from "./adapter.js";
 
-let realIssuer: Issuer<BaseClient>;
-
-const issuer = new Proxy({}, {
-    get: async function(target, prop: string){
-        if(!realIssuer){
-            realIssuer = await Issuer.discover("https://accounts.google.com");
-        }
-        return realIssuer[prop];
-    }
-})
+let issuer: Issuer<BaseClient>;
 
 type GooglePrompt = "none" | "consent" | "select_account";
 type GoogleAccessType = "offline" | "online";
@@ -26,19 +18,24 @@ type GoogleConfig =
 
 export function GoogleAdapter(config: GoogleConfig) {
   /* @__PURE__ */
-  if (config.mode === "oauth") {
-    return OauthAdapter({
-        issuer: issuer as Issuer<BaseClient>,
+  return async function () {
+    if (!issuer) {
+      issuer = await Issuer.discover("https://accounts.google.com");
+    }
+    if (config.mode === "oauth") {
+      return OauthAdapter({
+          issuer: issuer as Issuer<BaseClient>,
+        ...config,
+        params: {
+          ...(config.accessType && { access_type: config.accessType }),
+          ...config.params,
+        },
+      })();
+    }
+    return OidcAdapter({
+      issuer: issuer as Issuer<BaseClient>,
+      scope: "openid email profile",
       ...config,
-      params: {
-        ...(config.accessType && { access_type: config.accessType }),
-        ...config.params,
-      },
-    });
-  }
-  return OidcAdapter({
-    issuer: issuer as Issuer<BaseClient>,
-    scope: "openid email profile",
-    ...config,
-  });
+    })(); 
+  } satisfies Adapter;
 }
