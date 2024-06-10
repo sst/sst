@@ -468,7 +468,10 @@ func (u *UI) Event(evt *server.Event) {
 
 	if evt.FunctionBuildEvent != nil {
 		if len(evt.FunctionBuildEvent.Errors) > 0 {
-			u.printEvent(color.FgRed, "Build Error", u.functionName(evt.FunctionBuildEvent.FunctionID)+" "+strings.Join(evt.FunctionBuildEvent.Errors, "\n"))
+			u.printEvent(color.FgRed, "Build Error", u.functionName(evt.FunctionBuildEvent.FunctionID))
+			for _, item := range evt.FunctionBuildEvent.Errors {
+				u.printEvent(color.FgRed, "", "↳ "+strings.TrimSpace(item))
+			}
 			return
 		}
 		u.printEvent(color.FgGreen, "Build", u.functionName(evt.FunctionBuildEvent.FunctionID))

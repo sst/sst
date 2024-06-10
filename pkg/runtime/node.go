@@ -175,7 +175,7 @@ func (r *NodeRuntime) Build(ctx context.Context, input *BuildInput) (*BuildOutpu
 	r.results[input.Warp.FunctionID] = result
 	errors := []string{}
 	for _, error := range result.Errors {
-		errors = append(errors, error.Text)
+		errors = append(errors, error.Text+" "+error.Location.File+":"+fmt.Sprint(error.Location.Line)+":"+fmt.Sprint(error.Location.Column))
 	}
 
 	for _, error := range result.Errors {
