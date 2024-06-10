@@ -218,6 +218,7 @@ func CmdInit(cli *Cli) error {
 	spin.Stop()
 
 	if len(instructions) == 0 {
+		color.New(color.FgGreen, color.Bold).Print("✓")
 		color.New(color.FgWhite).Println("  Done 🎉")
 	}
 	if len(instructions) > 0 {
