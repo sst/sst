@@ -19,9 +19,9 @@ export async function run(program: automation.PulumiFn) {
   addTransformationToEnsureUniqueComponentNames();
   addTransformationToCheckBucketsHaveMultiplePolicies();
 
-  Link.makeLinkable(aws.dynamodb.Table, function () {
+  Link.makeLinkable(aws.dynamodb.Table, (db) => {
     return {
-      properties: { tableName: this.name },
+      properties: { tableName: db.name },
     };
   });
   Link.AWS.makeLinkable(aws.dynamodb.Table, function () {
