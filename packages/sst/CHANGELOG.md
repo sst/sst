@@ -1,5 +1,15 @@
 # @serverless-stack/cli2
 
+## 2.43.1
+
+### Patch Changes
+
+- [#3780](https://github.com/sst/sst/pull/3780) [`64d42db1a`](https://github.com/sst/sst/commit/64d42db1a209c11befcdd40cc0abebb8db4161a2) Thanks [@vidalmatheus](https://github.com/vidalmatheus)! - fix: google and apple adapter
+
+- [#3790](https://github.com/sst/sst/pull/3790) [`a53a8d18f`](https://github.com/sst/sst/commit/a53a8d18fe34ba04407e5d0b843e3352e0948c93) Thanks [@dan-turner](https://github.com/dan-turner)! - fix: wrap output in single quotes to allow for multi-line secrets
+
+- [#3778](https://github.com/sst/sst/pull/3778) [`1ed9b3927`](https://github.com/sst/sst/commit/1ed9b3927d9741d26597ce9764ce653f7d30d7db) Thanks [@blair55](https://github.com/blair55)! - Add missing dotnet8 bootstrap support copy command
+
 ## 2.43.0
 
 ### Minor Changes
