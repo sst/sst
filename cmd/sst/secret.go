@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"io"
 	"net/http"
 	"os"
 	"regexp"
@@ -41,6 +42,30 @@ func CmdSecretList(cli *Cli) error {
 func CmdSecretSet(cli *Cli) error {
 	key := cli.Positional(0)
 	value := cli.Positional(1)
+	if value == "" {
+		stat, err := os.Stdin.Stat()
+		if err != nil {
+			return err
+		}
+		isTerminal := (stat.Mode() & os.ModeCharDevice) != 0
+		if isTerminal {
+			fmt.Print("Enter value: ")
+		}
+		reader := bufio.NewReader(os.Stdin)
+		for {
+			input, err := reader.ReadString('\n')
+			if err != nil {
+				if err == io.EOF {
+					break
+				}
+				return err
+			}
+			value += input
+			if isTerminal {
+				break
+			}
+		}
+	}
 	if !regexp.MustCompile(`^[A-Z][a-zA-Z0-9]*$`).MatchString(key) {
 		return util.NewReadableError(nil, "Secret names must start with a capital letter and contain only letters and numbers")
 	}

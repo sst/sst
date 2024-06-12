@@ -20,7 +20,7 @@ func TransformError(err error) error {
 		project.ErrStackRunFailed:            "",
 		provider.ErrLockExists:               "",
 		project.ErrVersionInvalid:            "The version range defined in the config is invalid",
-		provider.ErrCloudflareMissingAccount: "This cloudflare token does not have access to any accounts. Please make sure the token has the right permissions. You can also set the CLOUDFLARE_DEFAULT_ACCOUNT_ID environment variable to the account id you want to use.",
+		provider.ErrCloudflareMissingAccount: "The Cloudflare Account ID was not able to be determined from this token. Make sure it has permissions to fetch account information or you can set the CLOUDFLARE_DEFAULT_ACCOUNT_ID environment variable to the account id you want to use.",
 	}
 
 	readable := []error{

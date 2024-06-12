@@ -700,7 +700,7 @@ var Root = Command{
 						},
 						{
 							Name:     "value",
-							Required: true,
+							Required: false,
 							Description: Description{
 								Short: "The value of the secret",
 								Long:  "The value of the secret.",
@@ -712,6 +712,12 @@ var Root = Command{
 							Content: "sst secret set StripeSecret 123456789",
 							Description: Description{
 								Short: "Set the StripeSecret to 123456789",
+							},
+						},
+						{
+							Content: "sst secret set StripeSecret < tmp.txt",
+							Description: Description{
+								Short: "Set the StripeSecret to contents of tmp.txt",
 							},
 						},
 						{
