@@ -2,4 +2,4 @@
 "sst": patch
 ---
 
-misc(rds): make migrator methods protected
+misc(rds): expose migration methods
