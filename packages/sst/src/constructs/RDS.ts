@@ -250,9 +250,7 @@ export class RDS extends Construct implements SSTConstruct {
     // Create the migrator function
 
     if (migrations) {
-      this.validateMigrationsFileExists(migrations);
-      this.createMigrationsFunction(migrations);
-      this.createMigrationCustomResource(migrations);
+      this.runMigrations(migrations);
     }
 
     const app = this.node.root as App;
@@ -352,6 +350,12 @@ export class RDS extends Construct implements SSTConstruct {
     };
   }
 
+  public runMigrations(migrations: string, database?: string) {
+    this.validateMigrationsFileExists(migrations);
+    this.createMigrationsFunction(migrations);
+    this.createMigrationCustomResource(migrations, database);
+  }
+
   private validateRequiredProps(props: RDSProps) {
     if (!props.engine) {
       throw new Error(`Missing "engine" in the "${this.node.id}" RDS`);
@@ -415,7 +419,7 @@ export class RDS extends Construct implements SSTConstruct {
     return props;
   }
 
-  protected validateMigrationsFileExists(migrations: string) {
+  private validateMigrationsFileExists(migrations: string) {
     if (!fs.existsSync(migrations))
       throw new Error(
         `Cannot find the migrations in "${path.resolve(migrations)}".`
@@ -527,7 +531,7 @@ export class RDS extends Construct implements SSTConstruct {
     return cdk!.cluster as ServerlessCluster;
   }
 
-  protected createMigrationsFunction(migrations: string) {
+  private createMigrationsFunction(migrations: string) {
     const { engine, defaultDatabaseName } = this.props;
     const app = this.node.root as App;
 
@@ -577,10 +581,7 @@ export class RDS extends Construct implements SSTConstruct {
       "rds-migrator/index.handler";
   }
 
-  protected createMigrationCustomResource(
-    migrations: string,
-    database?: string
-  ) {
+  private createMigrationCustomResource(migrations: string, database?: string) {
     const app = this.node.root as App;
 
     // Create custom resource handler
