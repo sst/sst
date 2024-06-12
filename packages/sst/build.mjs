@@ -162,6 +162,7 @@ await Promise.all(
     "java-runtime",
     "dotnet31-bootstrap",
     "dotnet6-bootstrap",
+    "dotnet8-bootstrap",
     "nixpacks",
     "service-dev-function",
   ].map((dir) =>

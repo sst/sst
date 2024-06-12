@@ -38,11 +38,7 @@ const SessionMemo = /* @__PURE__ */ Context.memo(() => {
   if (wsProtocol) token = wsProtocol.split(",")[0].trim();
 
   if (token) {
-    const jwt = createVerifier({
-      algorithms: ["RS512"],
-      key: getPublicKey(),
-    })(token);
-    return jwt;
+    return Session.verify(token);
   }
 
   return {
@@ -85,6 +81,30 @@ function create<T extends keyof SessionTypes>(input: {
     properties: input.properties,
   });
   return token as string;
+}
+
+/**
+ * Verifies a session token and returns the session data
+ *
+ * @example
+ * ```js
+ * Session.verify()
+ * ```
+ */
+function verify<T = SessionValue>(token: string) {
+  if (token) {
+    try {
+      const jwt = createVerifier({
+        algorithms: ["RS512"],
+        key: getPublicKey(),
+      })(token);
+      return jwt as T;
+    } catch (e) {}
+  }
+  return {
+    type: "public",
+    properties: {},
+  };
 }
 
 /**
@@ -153,6 +173,7 @@ export function parameter<T extends keyof SessionTypes>(input: {
 
 export const Session = {
   create,
+  verify,
   cookie,
   parameter,
 };
