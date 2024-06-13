@@ -1,7 +1,7 @@
 import { ComponentResourceOptions } from "@pulumi/pulumi";
 import * as cloudflare from "@pulumi/cloudflare";
 import { Component, Transform, transform } from "../component";
-import { Link } from "..";
+import { Link } from "../link.js";
 
 export interface BucketArgs {
   /**
