@@ -17,6 +17,7 @@ import { Link } from "../link.js";
 import type { Input } from "../input.js";
 import { ZoneLookup } from "./providers/zone-lookup.js";
 import { VisibleError } from "../error.js";
+import { isLinkable } from "../aws/linkable.js";
 
 export interface WorkerArgs {
   /**
@@ -341,7 +342,7 @@ export class Worker
     function createAwsCredentials() {
       return output(args.link ?? []).apply((links) => {
         const permissions = links.flatMap((l) => {
-          if (!Link.AWS.isLinkable(l)) return [];
+          if (!isLinkable(l)) return [];
           return l.getSSTAWSPermissions();
         });
 

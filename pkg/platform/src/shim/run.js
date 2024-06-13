@@ -8,9 +8,9 @@ const $secrets = JSON.parse(process.env.SST_SECRETS || "{}");
 const { output, apply, all, interpolate, concat, jsonParse, jsonStringify } =
   util;
 
-const makeLinkable = Link.makeLinkable;
+const linkable = Link.linkable;
 export {
-  makeLinkable as "$linkable",
+  linkable as "$linkable",
   output as "$output",
   apply as "$apply",
   all as "$resolve",

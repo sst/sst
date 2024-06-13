@@ -6,6 +6,7 @@ import { VectorTable } from "./providers/vector-table.js";
 import { Function } from "./function.js";
 import { Link } from "../link.js";
 import { Input } from "../input.js";
+import { AWSLinkable } from "./linkable.js";
 
 export interface VectorArgs {
   /**
@@ -77,10 +78,7 @@ export interface VectorArgs {
  * });
  * ```
  */
-export class Vector
-  extends Component
-  implements Link.Linkable, Link.AWS.Linkable
-{
+export class Vector extends Component implements Link.Linkable, AWSLinkable {
   private postgres: Postgres;
   private queryHandler: Function;
   private putHandler: Function;

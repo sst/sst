@@ -8,6 +8,7 @@ import { hashStringToPrettyString, sanitizeToPascalCase } from "../naming";
 import { parseQueueArn, parseTopicArn } from "./helpers/arn";
 import { SnsTopicLambdaSubscriber } from "./sns-topic-lambda-subscriber";
 import { SnsTopicQueueSubscriber } from "./sns-topic-queue-subscriber";
+import { AWSLinkable } from "./linkable";
 
 export interface SnsTopicArgs {
   /**
@@ -149,10 +150,7 @@ export interface SnsTopicSubscriberArgs {
  * }));
  * ```
  */
-export class SnsTopic
-  extends Component
-  implements Link.Linkable, Link.AWS.Linkable
-{
+export class SnsTopic extends Component implements Link.Linkable, AWSLinkable {
   private constructorName: string;
   private topic: aws.sns.Topic;
 

@@ -6,6 +6,7 @@ import { Link } from "../link";
 import { CognitoUserPoolClient } from "./cognito-user-pool-client";
 import { Function, FunctionArgs } from "./function.js";
 import { VisibleError } from "../error";
+import { AWSLinkable } from "./linkable";
 
 export interface CognitoUserPoolArgs {
   /**
@@ -170,7 +171,7 @@ export interface CognitoUserPoolClientArgs {
  */
 export class CognitoUserPool
   extends Component
-  implements Link.Linkable, Link.AWS.Linkable
+  implements Link.Linkable, AWSLinkable
 {
   private userPool: aws.cognito.UserPool;
 

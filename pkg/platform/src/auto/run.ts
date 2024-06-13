@@ -1,5 +1,4 @@
 import { Link } from "../components/link";
-import { Hint } from "../components/hint";
 import {
   ResourceTransformationArgs,
   interpolate,
@@ -11,6 +10,7 @@ import {
 
 import aws from "@pulumi/aws";
 import { VisibleError } from "../components/error";
+import { linkable as awsLinkable } from "../components/aws";
 
 export async function run(program: automation.PulumiFn) {
   process.chdir($cli.paths.root);
@@ -19,16 +19,16 @@ export async function run(program: automation.PulumiFn) {
   addTransformationToEnsureUniqueComponentNames();
   addTransformationToCheckBucketsHaveMultiplePolicies();
 
-  Link.makeLinkable(aws.dynamodb.Table, (db) => {
+  Link.linkable(aws.dynamodb.Table, (db) => {
     return {
       properties: { tableName: db.name },
     };
   });
-  Link.AWS.makeLinkable(aws.dynamodb.Table, function () {
+  awsLinkable(aws.dynamodb.Table, function (item) {
     return [
       {
         actions: ["dynamodb:*"],
-        resources: [this.arn, interpolate`${this.arn}/*`],
+        resources: [item.arn, interpolate`${item.arn}/*`],
       },
     ];
   });

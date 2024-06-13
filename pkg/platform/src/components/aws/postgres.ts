@@ -3,6 +3,7 @@ import * as aws from "@pulumi/aws";
 import { Component, Transform, transform } from "../component";
 import { Link } from "../link";
 import { Input } from "../input.js";
+import { AWSLinkable } from "./linkable";
 
 type ACU = `${number} ACU`;
 
@@ -224,9 +225,7 @@ export interface PostgresArgs {
  * });
  * ```
  */
-export class Postgres
-  extends Component
-  implements Link.Linkable, Link.AWS.Linkable {
+export class Postgres extends Component implements Link.Linkable, AWSLinkable {
   private cluster: aws.rds.Cluster;
   private instance: aws.rds.ClusterInstance;
   private databaseName: Output<string>;
@@ -396,9 +395,7 @@ function getSSTAWSPermissions(
   ];
 }
 
-class PostgresRef
-  extends Component
-  implements Link.Linkable, Link.AWS.Linkable {
+class PostgresRef extends Component implements Link.Linkable, AWSLinkable {
   private cluster: Output<aws.rds.GetClusterResult>;
 
   constructor(

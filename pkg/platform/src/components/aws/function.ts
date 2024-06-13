@@ -24,6 +24,7 @@ import { VisibleError } from "../error.js";
 import type { Input } from "../input.js";
 import { prefixName } from "../naming.js";
 import { RETENTION } from "./logging.js";
+import { AWSLinkable, isLinkable } from "./linkable.js";
 
 export type FunctionPermissionArgs = {
   /**
@@ -877,10 +878,7 @@ export interface FunctionArgs {
  * Or override it entirely by passing in your own function `bundle`.
  *
  */
-export class Function
-  extends Component
-  implements Link.Linkable, Link.AWS.Linkable
-{
+export class Function extends Component implements Link.Linkable, AWSLinkable {
   private function: Output<aws.lambda.Function>;
   private role?: aws.iam.Role;
   private logGroup: aws.cloudwatch.LogGroup;
@@ -998,7 +996,7 @@ export class Function
 
     function normalizeEnvironment() {
       return all([args.environment, dev, args.link]).apply(
-        ([environment, dev, link]) => {
+        ([environment, dev]) => {
           const result = environment ?? {};
           result.SST_RESOURCE_App = JSON.stringify({
             name: $app.name,
@@ -1093,7 +1091,7 @@ export class Function
     function buildLinkPermissions() {
       return output(args.link ?? []).apply((links) =>
         links.flatMap((l) => {
-          if (!Link.AWS.isLinkable(l)) return [];
+          if (!isLinkable(l)) return [];
           return l.getSSTAWSPermissions();
         }),
       );

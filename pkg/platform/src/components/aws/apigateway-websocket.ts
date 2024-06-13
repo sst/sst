@@ -21,6 +21,7 @@ import { dns as awsDns } from "./dns.js";
 import { ApiGatewayV2DomainArgs } from "./helpers/apigatewayv2-domain";
 import { ApiGatewayWebSocketRoute } from "./apigateway-websocket-route";
 import { setupApiGatewayAccount } from "./helpers/apigateway-account";
+import { AWSLinkable } from "./linkable";
 
 export interface ApiGatewayWebSocketArgs {
   /**
@@ -199,7 +200,7 @@ export interface ApiGatewayWebSocketRouteArgs {
  */
 export class ApiGatewayWebSocket
   extends Component
-  implements Link.Linkable, Link.AWS.Linkable
+  implements Link.Linkable, AWSLinkable
 {
   private constructorName: string;
   private constructorArgs: ApiGatewayWebSocketArgs;

@@ -11,6 +11,7 @@ import {
 } from "../naming";
 import { parseEventBusArn } from "./helpers/arn";
 import { BusLambdaSubscriber } from "./bus-lambda-subscriber";
+import { AWSLinkable } from "./linkable";
 
 export interface BusArgs {
   /**
@@ -165,7 +166,7 @@ export interface BusSubscriberArgs {
  * }));
  * ```
  */
-export class Bus extends Component implements Link.Linkable, Link.AWS.Linkable {
+export class Bus extends Component implements Link.Linkable, AWSLinkable {
   private constructorName: string;
   private bus: aws.cloudwatch.EventBus;
 

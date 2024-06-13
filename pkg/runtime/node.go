@@ -177,7 +177,6 @@ func (r *NodeRuntime) Build(ctx context.Context, input *BuildInput) (*BuildOutpu
 	for _, error := range result.Errors {
 		errors = append(errors, error.Text+" "+error.Location.File+":"+fmt.Sprint(error.Location.Line)+":"+fmt.Sprint(error.Location.Column))
 	}
-
 	for _, error := range result.Errors {
 		slog.Error("esbuild error", "error", error)
 	}

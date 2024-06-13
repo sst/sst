@@ -27,6 +27,7 @@ import {
 } from "./cluster";
 import { RETENTION } from "./logging.js";
 import { prefixName } from "../naming";
+import { isLinkable } from "./linkable";
 
 export interface ServiceArgs extends ClusterServiceArgs {
   /**
@@ -265,7 +266,7 @@ export class Service extends Component implements Link.Linkable {
     function buildLinkPermissions() {
       return output(args.link ?? []).apply((links) =>
         links.flatMap((l) => {
-          if (!Link.AWS.isLinkable(l)) return [];
+          if (!isLinkable(l)) return [];
           return l.getSSTAWSPermissions();
         }),
       );

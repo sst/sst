@@ -11,6 +11,7 @@ import { Link } from "../link";
 import { Input } from "../input";
 import { Dns } from "../dns";
 import { dns as awsDns } from "./dns.js";
+import { AWSLinkable } from "./linkable";
 
 export interface EmailArgs {
   /**
@@ -176,7 +177,7 @@ export interface EmailArgs {
  * ```ts title="sender.ts" {1, 8}
  * import { Resource } from "sst";
  * import { SESv2Client, SendEmailCommand } from "@aws-sdk/client-sesv2";
- * 
+ *
  * const client = new SESv2Client();
  *
  * await client.send(
@@ -195,9 +196,7 @@ export interface EmailArgs {
  * );
  * ```
  */
-export class Email
-  extends Component
-  implements Link.Linkable, Link.AWS.Linkable {
+export class Email extends Component implements Link.Linkable, AWSLinkable {
   private _sender: Output<string>;
   private identity: aws.sesv2.EmailIdentity;
 

@@ -8,6 +8,7 @@ import { VisibleError } from "../error";
 import { hashStringToPrettyString, sanitizeToPascalCase } from "../naming";
 import { parseQueueArn } from "./helpers/arn";
 import { QueueLambdaSubscriber } from "./queue-lambda-subscriber";
+import { AWSLinkable } from "./linkable";
 
 export interface QueueArgs {
   /**
@@ -150,10 +151,7 @@ export interface QueueSubscriberArgs {
  * }));
  * ```
  */
-export class Queue
-  extends Component
-  implements Link.Linkable, Link.AWS.Linkable
-{
+export class Queue extends Component implements Link.Linkable, AWSLinkable {
   private constructorName: string;
   private queue: aws.sqs.Queue;
   private isSubscribed: boolean = false;

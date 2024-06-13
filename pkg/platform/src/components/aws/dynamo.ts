@@ -13,6 +13,7 @@ import { FunctionArgs } from "./function";
 import { hashStringToPrettyString, sanitizeToPascalCase } from "../naming";
 import { parseDynamoStreamArn } from "./helpers/arn";
 import { DynamoLambdaSubscriber } from "./dynamo-lambda-subscriber";
+import { AWSLinkable } from "./linkable";
 
 export interface DynamoArgs {
   /**
@@ -346,10 +347,7 @@ export interface DynamoSubscriberArgs {
  * }));
  * ```
  */
-export class Dynamo
-  extends Component
-  implements Link.Linkable, Link.AWS.Linkable
-{
+export class Dynamo extends Component implements Link.Linkable, AWSLinkable {
   private constructorName: string;
   private table: Output<aws.dynamodb.Table>;
   private isStreamEnabled: boolean = false;

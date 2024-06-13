@@ -1,4 +1,5 @@
 /// <reference path="./.sst/platform/config.d.ts" />
+
 export default $config({
   app(input) {
     return {
@@ -6,20 +7,18 @@ export default $config({
       removal: input?.stage === "production" ? "retain" : "remove",
       home: "aws",
       providers: {
-        "@sst-provider/supabase": {
-          accessToken: process.env.SUPABASE_ACCESS_TOKEN,
-        },
         random: true,
+        supabase: true,
       },
     };
   },
   async run() {
-    $linkable(supabase.Project, function () {
+    sst.linkable(supabase.Project, function (item) {
       return {
         properties: {
-          user: $interpolate`postgres.${this.id}`,
-          password: this.databasePassword,
-          host: $interpolate`aws-0-${this.region}.pooler.supabase.com`,
+          user: $interpolate`postgres.${item.id}`,
+          password: item.databasePassword,
+          host: $interpolate`aws-0-${item.region}.pooler.supabase.com`,
           port: 5432,
           database: "postgres",
         },

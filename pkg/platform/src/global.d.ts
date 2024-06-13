@@ -56,7 +56,7 @@ declare global {
   export import sst = _sst;
 
   /** @internal */
-  export const $linkable: typeof import("./components/link").Link.makeLinkable;
+  export const $linkable: typeof import("./components/link").Link.linkable;
 
   /**
    * A convenience reference to the the [`util`](https://www.pulumi.com/docs/reference/pkg/nodejs/pulumi/pulumi/) module from Pulumi.

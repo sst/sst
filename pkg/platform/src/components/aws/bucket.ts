@@ -21,6 +21,7 @@ import { Duration, toSeconds } from "../duration";
 import { VisibleError } from "../error";
 import { parseBucketArn } from "./helpers/arn";
 import { BucketLambdaSubscriber } from "./bucket-lambda-subscriber";
+import { AWSLinkable } from "./linkable";
 
 interface BucketCorsArgs {
   /**
@@ -287,10 +288,7 @@ export interface BucketSubscriberArgs {
  *  await getSignedUrl(new S3Client({}), command);
  * ```
  */
-export class Bucket
-  extends Component
-  implements Link.Linkable, Link.AWS.Linkable
-{
+export class Bucket extends Component implements Link.Linkable, AWSLinkable {
   private constructorName: string;
   private bucket: Output<aws.s3.BucketV2>;
   private isSubscribed: boolean = false;
