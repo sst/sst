@@ -143,6 +143,12 @@ export const useNodeHandler = (): RuntimeHandler => {
       const forceExternal = [
         "sharp",
         "pg-native",
+        "@node-rs/argon2",
+        "@node-rs/bcrypt",
+        "@node-rs/crc32",
+        "@node-rs/jsonwebtoken",
+        "@node-rs/jieba",
+        "@node-rs/xxhash",
         ...(isESM || input.props.runtime !== "nodejs16.x" ? [] : ["aws-sdk"]),
       ];
       const { external, ...override } = nodejs.esbuild || {};
