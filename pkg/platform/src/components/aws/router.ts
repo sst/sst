@@ -76,9 +76,9 @@ export interface RouterArgs {
    * ```js
    * {
    *   routes: {
-   *     "/api/*.json": "example1.com",
-   *     "/api/*": "example2.com",
-   *     "/*.xml": "example3.com",
+   *     "/api/*.json": "https://example1.com",
+   *     "/api/*": "https://example2.com",
+   *     "/*.xml": "https://example3.com",
    * }
    * ```
    *
@@ -125,7 +125,7 @@ export interface RouterArgs {
  * ```ts
  * new sst.aws.Router("MyRouter", {
  *   routes: {
- *     "/*": "some-internal-service.com"
+ *     "/*": "https://some-internal-service.com"
  *   }
  * });
  * ```
@@ -150,7 +150,7 @@ export interface RouterArgs {
  * ```ts {4}
  * new sst.aws.Router("MyRouter", {
  *   routes: {
- *     "/*": "myapp.com",
+ *     "/*": "https://myapp.com",
  *     "/api/*": myFunction.url
  *   }
  * });

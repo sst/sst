@@ -18,15 +18,20 @@ export default $config({
       handler: "api.handler",
       url: true,
     });
+    const bucket = new sst.aws.Bucket("MyBucket", {
+      public: true,
+    });
     const router = new sst.aws.Router("MyRouter", {
       domain: "router.ion.dev.sst.dev",
       routes: {
-        "/*": api.url,
+        "/api/*": api.url,
+        "/*": $interpolate`https://${bucket.domain}`,
       },
     });
 
     return {
       router: router.url,
+      bucket: bucket.domain,
     };
   },
 });
