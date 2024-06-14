@@ -1,9 +1,7 @@
 import * as path from "path";
 import * as fs from "fs";
 import * as TypeDoc from "typedoc";
-
 import config from "./config";
-import { render } from "astro/compiler-runtime";
 
 type CliCommand = {
   name: string;
