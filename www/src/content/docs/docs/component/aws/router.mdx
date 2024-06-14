@@ -23,7 +23,7 @@ You can use this the `routes` to route to function URLs, other domains, or any c
 ```ts
 new sst.aws.Router("MyRouter", {
   routes: {
-    "/*": "some-internal-service.com"
+    "/*": "https://some-internal-service.com"
   }
 });
 ```
@@ -48,7 +48,7 @@ new sst.aws.Router("MyRouter", {
 ```ts {4}
 new sst.aws.Router("MyRouter", {
   routes: {
-    "/*": "myapp.com",
+    "/*": "https://myapp.com",
     "/api/*": myFunction.url
   }
 });
@@ -327,9 +327,9 @@ Suppose you have the following three routes.
 ```js
 {
   routes: {
-    "/api/*.json": "example1.com",
-    "/api/*": "example2.com",
-    "/*.xml": "example3.com",
+    "/api/*.json": "https://example1.com",
+    "/api/*": "https://example2.com",
+    "/*.xml": "https://example3.com",
 }
 ```
 

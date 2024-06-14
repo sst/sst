@@ -39,7 +39,7 @@ export default $config({
 
 The `Config` object takes two functions: [`app`](#app-2) and [`run`](#run).
 
-The `app` function is evaluated right when your app loads. It's used to define the app config and its providers. You can add
+The `app` function is evaluated right when your app loads. It's used to define the app config and its providers.
 
 :::note
 You need TypeScript 5 to see the types in your config.
@@ -56,6 +56,248 @@ The run function also has access to a list of [Global](/docs/reference/global/) 
 </Section>
 
 ---
+
+## Config
+### console?
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Object</code>
+</InlineSection>
+- <p>[<code class="key">autodeploy</code>](#console-autodeploy) <code class="primitive">Object</code></p>
+  - <p>[<code class="key">runner?</code>](#console-autodeploy-runner)</p>
+  - <p>[<code class="key">target</code>](#console-autodeploy-target)</p>
+</Section>
+This config lets you configure SST Console.
+
+</Segment>
+<NestedTitle id="console-autodeploy" Tag="h4" parent="console.">autodeploy</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Object</code>
+</InlineSection>
+</Section>
+The config for SST Console's Autodeploy feature.
+
+```ts
+console: {
+  autodeploy: {
+    target(event) {
+      if (event.type === "push" && event.branch === "main") {
+        return { stage: "production" };
+      }
+    }
+  }
+}
+```
+</Segment>
+
+<NestedTitle id="console-autodeploy-runner" Tag="h5" parent="console.autodeploy.">runner?</NestedTitle>
+<Segment>
+<Section type="signature">
+```ts
+runner(input)
+```
+</Section>
+
+<Section type="parameters">
+**Parameters**
+- <p><code class="key">input</code> [<code class="type">RunnerInput</code>](#runnerinput)</p>
+</Section>
+
+<InlineSection>
+**Returns** [<code class="type">Runner</code>](#runner)
+</InlineSection>
+Configs the machine that will run the build.
+
+When a git event is received, Autodeploy will run the `runner` function to
+determine the type of machine required to run the build. For example:
+
+```ts
+runner(input) {
+  return {
+    engine: "codebuild",
+    architecture: "arm64",
+    size: "large",
+    timeout: "20 minutes",
+  }
+}
+```
+
+This tells Autodeploy to use a Linux ARM64 machine with 8 GB of memory and 4 vCPUs.
+If a build runner with such configurations have not been previously created,
+one will be created.
+
+:::note
+Build runners that have not been used for 7 days will be automatically deleted.
+:::
+
+</Segment>
+
+<NestedTitle id="console-autodeploy-target" Tag="h5" parent="console.autodeploy.">target</NestedTitle>
+<Segment>
+<Section type="signature">
+```ts
+target(input)
+```
+</Section>
+
+<Section type="parameters">
+**Parameters**
+- <p><code class="key">input</code> [<code class="type">PushEvent</code>](#pushevent)<code class="symbol"> | </code>[<code class="type">PullRequestEvent</code>](#pullrequestevent)</p>
+</Section>
+
+<InlineSection>
+**Returns** [<code class="type">Target</code>](#target)
+</InlineSection>
+Defines the stage the app will be deployed to.
+
+When a git event is received, Autodeploy will run the `target` function with
+the git event. The following events are supported:
+- `push`: When code is push to a branch.
+```json
+{
+  type: "push",
+  repo: {
+    id: 1296269,
+    owner: "octocat",
+    repo: "Hello-World"
+  },
+  branch: "main",
+  commit: {
+    id: "b7e7c4c559e0e5b4bc6f8d98e0e5e5e5e5e5e5e5",
+    message: "Update the README with new information"
+  },
+  sender: {
+    id: 1,
+    username: "octocat"
+  }
+}
+```
+
+- `pull_request`: When a pull request is opened or code is updated.
+```json
+{
+  type: "push",
+  repo: {
+    id: 1296269,
+    owner: "octocat",
+    repo: "Hello-World"
+  },
+  number: 1347,
+  base: "main",
+  head: "changes",
+  commit: {
+    id: "b7e7c4c559e0e5b4bc6f8d98e0e5e5e5e5e5e5e5",
+    message: "Update the README with new information"
+  },
+  sender: {
+    id: 1,
+    username: "octocat"
+  }
+}
+```
+
+With these events, you can setup auto deployment from the main branch to the production stage.
+```ts
+target(event) {
+  if (event.type === "push" && event.branch === "main") {
+    return { stage: "production" };
+  }
+}
+```
+
+You can also setup a workflow where each pull request is deployed to a new stage.
+```ts
+target(event) {
+  if (event.type === "push" && event.branch === "main") {
+    return { stage: "production" };
+  }
+  else if (event.type === "pull_request") {
+    return { stage: `pr-${event.number}` };
+  }
+}
+```
+
+</Segment>
+
+### app
+<Segment>
+<Section type="signature">
+```ts
+app(input)
+```
+</Section>
+
+<Section type="parameters">
+#### Parameters
+- <p><code class="key">input</code> [<code class="type">AppInput</code>](#appinput)</p>
+</Section>
+
+<InlineSection>
+**Returns** [<code class="type">App</code>](#app)
+</InlineSection>
+The config for your app. It needs to return an object of type [`App`](#app-1).
+
+:::tip
+The `app` function is evaluated when your app loads.
+:::
+
+```ts
+app(input) {
+  return {
+    name: "my-sst-app",
+    home: "aws",
+    providers: {
+      aws: true,
+      cloudflare: {
+        accountId: "6fef9ed9089bb15de3e4198618385de2"
+      }
+    },
+    removal: input.stage === "production" ? "retain" : "remove"
+  };
+},
+```
+</Segment>
+
+### run
+<Segment>
+<Section type="signature">
+```ts
+run()
+```
+</Section>
+
+<InlineSection>
+**Returns** <code class="primitive">Promise</code><code class="symbol">&lt;</code><code class="primitive">void</code><code class="symbol"> | </code><code class="primitive">Record</code><code class="symbol">&lt;</code><code class="primitive">string</code>, <code class="primitive">any</code><code class="symbol">&gt;</code><code class="symbol">&gt;</code>
+</InlineSection>
+An async function that lets you define the resources in your app.
+
+:::note
+You can use SST and Pulumi components only in the `run` function.
+:::
+
+You can optionally return an object that'll be displayed as the output in the CLI.
+
+For example, here we return the name of the bucket we created.
+
+```ts
+async run() {
+  const bucket = new sst.aws.Bucket("MyBucket");
+
+  return {
+    bucket: bucket.name
+  };
+}
+```
+
+This will display the following in the CLI.
+
+```bash frame=\"none\"
+bucket: bucket-jOaikGu4rla
+```
+</Segment>
 
 ## App
 ### home
@@ -272,80 +514,383 @@ If not passed in, it'll use the username of your local machine, or prompt you fo
 
 </Segment>
 
-## Config
-### app
+## PullRequestEvent
+### base
 <Segment>
-<Section type="signature">
-```ts
-app(input)
-```
-</Section>
-
 <Section type="parameters">
-#### Parameters
-- <p><code class="key">input</code> [<code class="type">AppInput</code>](#appinput)</p>
-</Section>
-
 <InlineSection>
-**Returns** [<code class="type">App</code>](#app)
+**Type** <code class="primitive">string</code>
 </InlineSection>
-The config for your app. It needs to return an object of type [`App`](#app-1).
+</Section>
+The base branch of the pull request. This is the branch the code is being merged into.
 
-:::tip
-The `app` function is evaluated when your app loads.
-:::
-
-```ts
-app(input) {
-  return {
-    name: "my-sst-app",
-    home: "aws",
-    providers: {
-      aws: true,
-      cloudflare: {
-        accountId: "6fef9ed9089bb15de3e4198618385de2"
-      }
-    },
-    removal: input.stage === "production" ? "retain" : "remove"
-  };
-},
-```
 </Segment>
-### run
+### commit
 <Segment>
-<Section type="signature">
-```ts
-run()
-```
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Object</code>
+</InlineSection>
+- <p>[<code class="key">id</code>](#commit-id)</p>
+- <p>[<code class="key">message</code>](#commit-message)</p>
+</Section>
+The commit information.
+
+</Segment>
+<NestedTitle id="commit-id" Tag="h4" parent="commit.">id</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">string</code>
+</InlineSection>
+</Section>
+The ID of the commit.
+
+</Segment>
+<NestedTitle id="commit-message" Tag="h4" parent="commit.">message</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">string</code>
+</InlineSection>
+</Section>
+The commit message.
+
+</Segment>
+### head
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">string</code>
+</InlineSection>
+</Section>
+The head branch of the pull request. This is the branch the code is coming from.
+
+</Segment>
+### number
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">number</code>
+</InlineSection>
+</Section>
+The pull request number.
+
+</Segment>
+### repo
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Object</code>
+</InlineSection>
+- <p>[<code class="key">id</code>](#repo-id)</p>
+- <p>[<code class="key">owner</code>](#repo-owner)</p>
+- <p>[<code class="key">repo</code>](#repo-repo)</p>
+</Section>
+The repository the event is coming from.
+
+</Segment>
+<NestedTitle id="repo-id" Tag="h4" parent="repo.">id</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">number</code>
+</InlineSection>
+</Section>
+The ID of the repository.
+
+</Segment>
+<NestedTitle id="repo-owner" Tag="h4" parent="repo.">owner</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">string</code>
+</InlineSection>
+</Section>
+The owner of the repository.
+
+</Segment>
+<NestedTitle id="repo-repo" Tag="h4" parent="repo.">repo</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">string</code>
+</InlineSection>
+</Section>
+The name of the repository.
+
+</Segment>
+### sender
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Object</code>
+</InlineSection>
+- <p>[<code class="key">id</code>](#sender-id)</p>
+- <p>[<code class="key">username</code>](#sender-username)</p>
+</Section>
+The user pushed the code.
+
+</Segment>
+<NestedTitle id="sender-id" Tag="h4" parent="sender.">id</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">number</code>
+</InlineSection>
+</Section>
+The ID of the user.
+
+</Segment>
+<NestedTitle id="sender-username" Tag="h4" parent="sender.">username</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">string</code>
+</InlineSection>
+</Section>
+The username of the user.
+
+</Segment>
+### type
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="symbol">&ldquo;</code><code class="primitive">pull_request</code><code class="symbol">&rdquo;</code>
+</InlineSection>
+</Section>
+Git pull request event type.
+
+</Segment>
+
+## PushEvent
+### branch
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">string</code>
+</InlineSection>
+</Section>
+The branch the push event is coming from.
+
+</Segment>
+### commit
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Object</code>
+</InlineSection>
+- <p>[<code class="key">id</code>](#commit-id-1)</p>
+- <p>[<code class="key">message</code>](#commit-message-1)</p>
+</Section>
+The commit information.
+
+</Segment>
+<NestedTitle id="commit-id-1" Tag="h4" parent="commit.">id</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">string</code>
+</InlineSection>
+</Section>
+The ID of the commit.
+
+</Segment>
+<NestedTitle id="commit-message-1" Tag="h4" parent="commit.">message</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">string</code>
+</InlineSection>
+</Section>
+The commit message.
+
+</Segment>
+### repo
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Object</code>
+</InlineSection>
+- <p>[<code class="key">id</code>](#repo-id-1)</p>
+- <p>[<code class="key">owner</code>](#repo-owner-1)</p>
+- <p>[<code class="key">repo</code>](#repo-repo-1)</p>
+</Section>
+The repository the event is coming from.
+
+</Segment>
+<NestedTitle id="repo-id-1" Tag="h4" parent="repo.">id</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">number</code>
+</InlineSection>
+</Section>
+The ID of the repository.
+
+</Segment>
+<NestedTitle id="repo-owner-1" Tag="h4" parent="repo.">owner</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">string</code>
+</InlineSection>
+</Section>
+The owner of the repository.
+
+</Segment>
+<NestedTitle id="repo-repo-1" Tag="h4" parent="repo.">repo</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">string</code>
+</InlineSection>
+</Section>
+The name of the repository.
+
+</Segment>
+### sender
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Object</code>
+</InlineSection>
+- <p>[<code class="key">id</code>](#sender-id-1)</p>
+- <p>[<code class="key">username</code>](#sender-username-1)</p>
+</Section>
+The user pushed the code.
+
+</Segment>
+<NestedTitle id="sender-id-1" Tag="h4" parent="sender.">id</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">number</code>
+</InlineSection>
+</Section>
+The ID of the user.
+
+</Segment>
+<NestedTitle id="sender-username-1" Tag="h4" parent="sender.">username</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">string</code>
+</InlineSection>
+</Section>
+The username of the user.
+
+</Segment>
+### type
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="symbol">&ldquo;</code><code class="primitive">push</code><code class="symbol">&rdquo;</code>
+</InlineSection>
+</Section>
+Git push request event type.
+
+</Segment>
+
+## Runner
+### architecture?
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="symbol">&ldquo;</code><code class="primitive">x86_64</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">arm64</code><code class="symbol">&rdquo;</code>
+</InlineSection>
 </Section>
 
 <InlineSection>
-**Returns** <code class="primitive">Promise</code><code class="symbol">&lt;</code><code class="primitive">void</code><code class="symbol"> | </code><code class="primitive">Record</code><code class="symbol">&lt;</code><code class="primitive">string</code>, <code class="primitive">any</code><code class="symbol">&gt;</code><code class="symbol">&gt;</code>
+**Default** <code class="primitive">x86_64</code>
 </InlineSection>
-An async function that lets you define the resources in your app.
+The architecture of the AWS CodeBuild build environment.
 
-:::note
-You can use SST and Pulumi components only in the `run` function.
-:::
+</Segment>
+### engine
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="symbol">&ldquo;</code><code class="primitive">codebuild</code><code class="symbol">&rdquo;</code>
+</InlineSection>
+</Section>
+The service used to run the build. Currently, only AWS CodeBuild is supported.
 
-You can optionally return an object that'll be displayed as the output in the CLI.
+</Segment>
+### size?
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="symbol">&ldquo;</code><code class="primitive">small</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">medium</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">large</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">xlarge</code><code class="symbol">&rdquo;</code>
+</InlineSection>
+</Section>
 
-For example, here we return the name of the bucket we created.
+<InlineSection>
+**Default** <code class="primitive">small</code>
+</InlineSection>
+The size of the AWS CodeBuild build environment.
 
-```ts
-async run() {
-  const bucket = new sst.aws.Bucket("MyBucket");
+For `x86_64` architecture:
+- `small`: 3 GB memory, 2 vCPUs
+- `medium`: 7 GB memory, 4 vCPUs
+- `large`: 15 GB memory, 8 vCPUs
+- `xlarge`: 30 GB memory, 16 vCPUs
 
-  return {
-    bucket: bucket.name
-  };
-}
-```
+For `arm64` architecture, only `small` and `large` are supported:
+- `small`: 4 GB memory, 2 vCPUs
+- `large`: 8 GB memory, 4 vCPUs
 
-This will display the following in the CLI.
+Read more about the [CodeBuild build environment](https://docs.aws.amazon.com/codebuild/latest/userguide/build-env-ref-compute-types.html).
 
-```bash frame=\"none\"
-bucket: bucket-jOaikGu4rla
-```
+</Segment>
+### timeout?
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="symbol">&ldquo;</code><code class="primitive">$\{number\} minute</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">$\{number\} minutes</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">$\{number\} hour</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">$\{number\} hours</code><code class="symbol">&rdquo;</code>
+</InlineSection>
+</Section>
+
+<InlineSection>
+**Default** <code class="primitive">1 hour</code>
+</InlineSection>
+The timeout for the build. CodeBuild supports a timeout of up to 8 hours.
+
+</Segment>
+
+## RunnerInput
+### stage
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">string</code>
+</InlineSection>
+</Section>
+The stage the app will be deployed to.
+
+</Segment>
+
+## Target
+### env?
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Record</code><code class="symbol">&lt;</code><code class="primitive">string</code>, <code class="primitive">string</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+The environment variables that will be set in the build environment.
+
+You will be able to access these environment variables in your SST app.
+
+</Segment>
+### stage
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">string</code>
+</InlineSection>
+</Section>
+The stage the app will be deployed to.
+
 </Segment>
 </div>

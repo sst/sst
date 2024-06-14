@@ -25,7 +25,7 @@
  *
  * The `Config` object takes two functions: [`app`](#app-2) and [`run`](#run).
  *
- * The `app` function is evaluated right when your app loads. It's used to define the app config and its providers. You can add
+ * The `app` function is evaluated right when your app loads. It's used to define the app config and its providers.
  *
  * :::note
  * You need TypeScript 5 to see the types in your config.
@@ -42,6 +42,10 @@
  *
  * @packageDocumentation
  */
+
+type Prettify<T> = {
+  [K in keyof T]: T[K];
+} & {};
 
 export interface App {
   /**
@@ -231,6 +235,151 @@ export interface AppInput {
   stage: string;
 }
 
+export interface Runner {
+  /**
+   * The service used to run the build. Currently, only AWS CodeBuild is supported.
+   */
+  engine: "codebuild";
+  /**
+   * The timeout for the build. CodeBuild supports a timeout of up to 8 hours.
+   * @default `1 hour`
+   */
+  timeout?: `${number} ${"minute" | "minutes" | "hour" | "hours"}`;
+  /**
+   * The architecture of the AWS CodeBuild build environment.
+   * @default `x86_64`
+   */
+  architecture?: "x86_64" | "arm64";
+  /**
+   * The size of the AWS CodeBuild build environment.
+   *
+   * For `x86_64` architecture:
+   * - `small`: 3 GB memory, 2 vCPUs
+   * - `medium`: 7 GB memory, 4 vCPUs
+   * - `large`: 15 GB memory, 8 vCPUs
+   * - `xlarge`: 30 GB memory, 16 vCPUs
+   *
+   * For `arm64` architecture, only `small` and `large` are supported:
+   * - `small`: 4 GB memory, 2 vCPUs
+   * - `large`: 8 GB memory, 4 vCPUs
+   *
+   * Read more about the [CodeBuild build environment](https://docs.aws.amazon.com/codebuild/latest/userguide/build-env-ref-compute-types.html).
+   * @default `small`
+   */
+  size?: "small" | "medium" | "large" | "xlarge";
+}
+
+export interface RunnerInput {
+  /**
+   * The stage the app will be deployed to.
+   */
+  stage: string;
+}
+
+export interface Target {
+  /**
+   * The stage the app will be deployed to.
+   */
+  stage: string;
+  /**
+   * The environment variables that will be set in the build environment.
+   *
+   * You will be able to access these environment variables in your SST app.
+   */
+  env?: Record<string, string>;
+}
+
+interface GitSender {
+  /**
+   * The ID of the user.
+   */
+  id: number;
+  /**
+   * The username of the user.
+   */
+  username: string;
+}
+
+interface GitCommit {
+  /**
+   * The ID of the commit.
+   */
+  id: string;
+  /**
+   * The commit message.
+   */
+  message: string;
+}
+
+interface GitRepo {
+  /**
+   * The ID of the repository.
+   */
+  id: number;
+  /**
+   * The owner of the repository.
+   */
+  owner: string;
+  /**
+   * The name of the repository.
+   */
+  repo: string;
+}
+
+export interface PushEvent {
+  /**
+   * Git push request event type.
+   */
+  type: "push";
+  /**
+   * The repository the event is coming from.
+   */
+  repo: Prettify<GitRepo>;
+  /**
+   * The branch the push event is coming from.
+   */
+  branch: string;
+  /**
+   * The commit information.
+   */
+  commit: Prettify<GitCommit>;
+  /**
+   * The user pushed the code.
+   */
+  sender: Prettify<GitSender>;
+}
+
+export interface PullRequestEvent {
+  /**
+   * Git pull request event type.
+   */
+  type: "pull_request";
+  /**
+   * The repository the event is coming from.
+   */
+  repo: Prettify<GitRepo>;
+  /**
+   * The pull request number.
+   */
+  number: number;
+  /**
+   * The base branch of the pull request. This is the branch the code is being merged into.
+   */
+  base: string;
+  /**
+   * The head branch of the pull request. This is the branch the code is coming from.
+   */
+  head: string;
+  /**
+   * The commit information.
+   */
+  commit: Prettify<GitCommit>;
+  /**
+   * The user pushed the code.
+   */
+  sender: Prettify<GitSender>;
+}
+
 export interface Config {
   /**
    * The config for your app. It needs to return an object of type [`App`](#app-1).
@@ -258,6 +407,127 @@ export interface Config {
    * ```
    */
   app(input: AppInput): App;
+  /**
+   * This config lets you configure SST Console.
+   */
+  console?: {
+    /**
+     * The config for SST Console's Autodeploy feature.
+     *
+     * @example
+     *
+     * ```ts
+     * console: {
+     *   autodeploy: {
+     *     target(event) {
+     *       if (event.type === "push" && event.branch === "main") {
+     *         return { stage: "production" };
+     *       }
+     *     }
+     *   }
+     * }
+     * ```
+     */
+    autodeploy: {
+      /**
+       * Configs the machine that will run the build.
+       *
+       * When a git event is received, Autodeploy will run the `runner` function to
+       * determine the type of machine required to run the build. For example:
+       *
+       * ```ts
+       * runner(input) {
+       *   return {
+       *     engine: "codebuild",
+       *     architecture: "arm64",
+       *     size: "large",
+       *     timeout: "20 minutes",
+       *   }
+       * }
+       * ```
+       *
+       * This tells Autodeploy to use a Linux ARM64 machine with 8 GB of memory and 4 vCPUs.
+       * If a build runner with such configurations have not been previously created,
+       * one will be created.
+       *
+       * :::note
+       * Build runners that have not been used for 7 days will be automatically deleted.
+       * :::
+       */
+      runner?(input: RunnerInput): Runner;
+      /**
+       * Defines the stage the app will be deployed to.
+       *
+       * When a git event is received, Autodeploy will run the `target` function with
+       * the git event. The following events are supported:
+       * - `push`: When code is push to a branch.
+       * ```json
+       * {
+       *   type: "push",
+       *   repo: {
+       *     id: 1296269,
+       *     owner: "octocat",
+       *     repo: "Hello-World"
+       *   },
+       *   branch: "main",
+       *   commit: {
+       *     id: "b7e7c4c559e0e5b4bc6f8d98e0e5e5e5e5e5e5e5",
+       *     message: "Update the README with new information"
+       *   },
+       *   sender: {
+       *     id: 1,
+       *     username: "octocat"
+       *   }
+       * }
+       * ```
+       *
+       * - `pull_request`: When a pull request is opened or code is updated.
+       * ```json
+       * {
+       *   type: "push",
+       *   repo: {
+       *     id: 1296269,
+       *     owner: "octocat",
+       *     repo: "Hello-World"
+       *   },
+       *   number: 1347,
+       *   base: "main",
+       *   head: "changes",
+       *   commit: {
+       *     id: "b7e7c4c559e0e5b4bc6f8d98e0e5e5e5e5e5e5e5",
+       *     message: "Update the README with new information"
+       *   },
+       *   sender: {
+       *     id: 1,
+       *     username: "octocat"
+       *   }
+       * }
+       * ```
+       *
+       * With these events, you can setup auto deployment from the main branch to the production stage.
+       * ```ts
+       * target(event) {
+       *   if (event.type === "push" && event.branch === "main") {
+       *     return { stage: "production" };
+       *   }
+       * }
+       * ```
+       *
+       * You can also setup a workflow where each pull request is deployed to a new stage.
+       * ```ts
+       * target(event) {
+       *   if (event.type === "push" && event.branch === "main") {
+       *     return { stage: "production" };
+       *   }
+       *   else if (event.type === "pull_request") {
+       *     return { stage: `pr-${event.number}` };
+       *   }
+       * }
+       * ```
+       */
+      target(input: PushEvent | PullRequestEvent): Target;
+    };
+  };
   /**
    * An async function that lets you define the resources in your app.
    *
