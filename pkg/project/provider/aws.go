@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"log/slog"
+	"os"
 	"path/filepath"
 	"strings"
 	"sync"
@@ -55,6 +56,9 @@ const BOOTSTRAP_VERSION = 1
 
 func (a *AwsProvider) Init(app string, stage string, args map[string]interface{}) error {
 	ctx := context.Background()
+	if os.Getenv("SST_AWS_NO_PROFILE") != "" {
+		delete(args, "profile")
+	}
 	cfg, err := config.LoadDefaultConfig(
 		ctx,
 		func(lo *config.LoadOptions) error {
