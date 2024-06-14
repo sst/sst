@@ -12,7 +12,7 @@ export function linkable<T>(
   obj: { new (...args: any[]): T },
   cb: (resource: T) => FunctionPermissionArgs[],
 ) {
-  obj.prototype.getSSTAwsPermissions = function () {
+  obj.prototype.getSSTAWSPermissions = function () {
     return cb(this);
   };
 }
