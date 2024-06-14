@@ -525,7 +525,7 @@ export interface Config {
        * }
        * ```
        */
-      target(input: PushEvent | PullRequestEvent): Target;
+      target(input: PushEvent | PullRequestEvent): Target | undefined;
     };
   };
   /**
