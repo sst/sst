@@ -251,7 +251,7 @@ export interface Runner {
    */
   architecture?: "x86_64" | "arm64";
   /**
-   * The size of the AWS CodeBuild build environment.
+   * The compute size of the AWS CodeBuild build environment.
    *
    * For `x86_64` architecture:
    * - `small`: 3 GB memory, 2 vCPUs
@@ -266,7 +266,7 @@ export interface Runner {
    * Read more about the [CodeBuild build environment](https://docs.aws.amazon.com/codebuild/latest/userguide/build-env-ref-compute-types.html).
    * @default `small`
    */
-  size?: "small" | "medium" | "large" | "xlarge";
+  compute?: "small" | "medium" | "large" | "xlarge";
 }
 
 export interface RunnerInput {
@@ -440,7 +440,7 @@ export interface Config {
        *   return {
        *     engine: "codebuild",
        *     architecture: "arm64",
-       *     size: "large",
+       *     compute: "large",
        *     timeout: "20 minutes",
        *   }
        * }
