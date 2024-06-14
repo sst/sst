@@ -82,6 +82,7 @@ export async function build(
               `import { createRequire as topLevelCreateRequire } from 'module';`,
               `const require = topLevelCreateRequire(import.meta.url);`,
               `import { fileURLToPath as topLevelFileUrlToPath, URL as topLevelURL } from "url"`,
+              `const __filename = topLevelFileUrlToPath(import.meta.url)`,
               `const __dirname = topLevelFileUrlToPath(new topLevelURL(".", import.meta.url))`,
               `globalThis.$SST_LINKS = ${JSON.stringify(links)};`,
               nodejs.banner || "",
