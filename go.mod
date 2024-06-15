@@ -3,7 +3,7 @@ module github.com/sst/ion
 go 1.21.3
 
 require (
-	github.com/ActiveState/vt10x v1.3.1
+	git.sr.ht/~rockorager/tcell-term v0.10.0
 	github.com/Masterminds/semver/v3 v3.2.1
 	github.com/aws/aws-sdk-go-v2 v1.24.1
 	github.com/aws/aws-sdk-go-v2/config v1.26.6
@@ -13,20 +13,19 @@ require (
 	github.com/briandowns/spinner v1.23.0
 	github.com/charmbracelet/huh v0.3.0
 	github.com/cloudflare/cloudflare-go v0.89.0
-	github.com/creack/pty v1.1.21
 	github.com/eclipse/paho.mqtt.golang v1.4.3
 	github.com/evanw/esbuild v0.20.2
 	github.com/fatih/color v1.16.0
 	github.com/fsnotify/fsnotify v1.7.0
-	github.com/gdamore/tcell v1.4.0
+	github.com/gdamore/tcell/v2 v2.7.4
 	github.com/gorilla/websocket v1.5.0
 	github.com/joho/godotenv v1.5.1
 	github.com/kkqy/gokvpairs v0.0.0-20230324183058-304261169787
+	github.com/liamg/termutil v0.0.0-20201124192529-c50fc538a599
 	github.com/manifoldco/promptui v0.9.0
 	github.com/nrednav/cuid2 v1.0.0
 	github.com/posthog/posthog-go v0.0.0-20240221135834-4944045455b4
 	github.com/pulumi/pulumi/sdk/v3 v3.115.2
-	github.com/rivo/tview v0.0.0-20240519092312-a2885dd403f3
 	github.com/spf13/pflag v1.0.5
 	github.com/twitchtv/twirp v8.1.3+incompatible
 	golang.org/x/exp v0.0.0-20240325151524-a685a6edb6d8
@@ -34,11 +33,9 @@ require (
 )
 
 require (
-	github.com/Netflix/go-expect v0.0.0-20180615182759-c93bf25de8e8 // indirect
 	github.com/catppuccin/go v0.2.0 // indirect
+	github.com/creack/pty v1.1.17 // indirect
 	github.com/gdamore/encoding v1.0.0 // indirect
-	github.com/gdamore/tcell/v2 v2.7.1 // indirect
-	github.com/kr/pty v1.1.1 // indirect
 )
 
 require (
@@ -122,7 +119,6 @@ require (
 	github.com/sergi/go-diff v1.3.2-0.20230802210424-5b0b94c5c0d3 // indirect
 	github.com/skeema/knownhosts v1.2.2 // indirect
 	github.com/spf13/cobra v1.8.0 // indirect
-	github.com/stretchr/objx v0.5.0 // indirect
 	github.com/tailscale/hujson v0.0.0-20221223112325-20486734a56a
 	github.com/texttheater/golang-levenshtein v1.0.1 // indirect
 	github.com/tweekmonster/luser v0.0.0-20161003172636-3fa38070dbd7 // indirect
@@ -131,7 +127,7 @@ require (
 	github.com/xanzy/ssh-agent v0.3.3 // indirect
 	github.com/zclconf/go-cty v1.14.4 // indirect
 	go.uber.org/atomic v1.11.0 // indirect
-	golang.org/x/crypto v0.22.0 // indirect
+	golang.org/x/crypto v0.22.0
 	golang.org/x/mod v0.16.0 // indirect
 	golang.org/x/net v0.23.0 // indirect
 	golang.org/x/sync v0.6.0

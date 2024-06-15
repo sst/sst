@@ -1,7 +1,6 @@
 package screen
 
 import (
-	"bufio"
 	"fmt"
 	"io"
 	"os/exec"
@@ -15,6 +14,7 @@ func Start() error {
 	model := Root{
 		processes: []*exec.Cmd{
 			exec.Command("ping", "-i", "0.1", "google.com"),
+			exec.Command("ping", "yahoo.com"),
 			exec.Command("node"),
 		},
 		stdin:    make([]io.WriteCloser, 3),
@@ -28,9 +28,13 @@ func Start() error {
 		stdin, _ := process.StdinPipe()
 		process.Start()
 		go func(i int, stdout io.ReadCloser) {
-			scanner := bufio.NewScanner(stdout)
-			for scanner.Scan() {
-				model.stdout[i] += scanner.Text() + "\n"
+			for {
+				buf := make([]byte, 1024)
+				n, err := stdout.Read(buf)
+				if err != nil {
+					return
+				}
+				model.stdout[i] += string(buf[:n])
 				p.Send(1)
 			}
 		}(i, stdout)
@@ -113,7 +117,7 @@ func (m Root) View() string {
 	sidebarWidth := lipgloss.Width(sidebar)
 
 	mainWidth := m.width - widthPadding*2 - sidebarWidth
-	main := m.ViewMain()
+	main := m.ViewMain(mainWidth, height)
 	lines := strings.Split(lipgloss.NewStyle().Width(mainWidth).Render(
 		m.stdout[m.selected],
 	), "\n")
@@ -126,7 +130,6 @@ func (m Root) View() string {
 	if len(lines) > height {
 		lines = lines[len(lines)-height-1:]
 	}
-	main = strings.Join(lines, "\n")
 
 	return lipgloss.
 		NewStyle().
@@ -143,7 +146,9 @@ func (m Root) View() string {
 		)
 }
 
-func (m Root) ViewMain() string {
+func (m Root) ViewMain(width, height int) string {
+	lines := strings.Split(lipgloss.NewStyle().Width(width).Render(m.stdout[m.selected]), "\n")
+	return strings.Join(lines, "\n")
 	return m.stdout[m.selected]
 }
 
