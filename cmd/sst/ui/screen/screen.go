@@ -37,7 +37,7 @@ func Start() error {
 				}
 			}
 		}()
-		go term.Run(proc, updateChan, height, width)
+		go term.Run(updateChan, height, width)
 	}
 	_, err := p.Run()
 	return err
