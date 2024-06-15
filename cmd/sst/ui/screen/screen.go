@@ -1,40 +1,43 @@
 package screen
 
 import (
-	"bufio"
 	"fmt"
-	"io"
-	"os/exec"
-	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/liamg/termutil/pkg/termutil"
 )
+
+var width = uint16(100)
+var height = uint16(50)
 
 func Start() error {
 	model := Root{
-		processes: []*exec.Cmd{
-			exec.Command("ping", "-i", "0.1", "google.com"),
-			exec.Command("node"),
+		processes: []string{
+			"zsh",
+			"top",
 		},
-		stdin:    make([]io.WriteCloser, 3),
-		stdout:   make([]string, 3),
-		tab:      "sidebar",
-		selected: 0,
+		terminals: []*termutil.Terminal{},
+		tab:       "sidebar",
+		selected:  0,
+	}
+	for range model.processes {
+		term := termutil.New()
+		model.terminals = append(model.terminals, term)
 	}
 	p := tea.NewProgram(model, tea.WithAltScreen())
-	for i, process := range model.processes {
-		stdout, _ := process.StdoutPipe()
-		stdin, _ := process.StdinPipe()
-		process.Start()
-		go func(i int, stdout io.ReadCloser) {
-			scanner := bufio.NewScanner(stdout)
-			for scanner.Scan() {
-				model.stdout[i] += scanner.Text() + "\n"
-				p.Send(1)
+	for index, proc := range model.processes {
+		term := model.terminals[index]
+		updateChan := make(chan struct{}, 1)
+		go func() {
+			for {
+				select {
+				case <-updateChan:
+					p.Send(TerminalUpdateMsg{})
+				}
 			}
-		}(i, stdout)
-		model.stdin[i] = stdin
+		}()
+		go term.Run(proc, updateChan, height, width)
 	}
 	_, err := p.Run()
 	return err
@@ -43,11 +46,13 @@ func Start() error {
 type Root struct {
 	width     int
 	height    int
-	processes []*exec.Cmd
-	stdin     []io.WriteCloser
-	stdout    []string
+	processes []string
+	terminals []*termutil.Terminal
 	selected  int
 	tab       string
+}
+
+type TerminalUpdateMsg struct {
 }
 
 func (m Root) Init() tea.Cmd {
@@ -92,9 +97,6 @@ func (m Root) Update(raw tea.Msg) (tea.Model, tea.Cmd) {
 				}
 			}
 		default:
-			if m.tab == "main" {
-				m.stdin[m.selected].Write([]byte(msg.String()))
-			}
 		}
 
 	}
@@ -107,26 +109,10 @@ func (m Root) View() string {
 	}
 	heightPadding := 1
 	widthPadding := 3
-	height := m.height - heightPadding*2
 
 	sidebar := m.ViewSidebar()
 	sidebarWidth := lipgloss.Width(sidebar)
-
-	mainWidth := m.width - widthPadding*2 - sidebarWidth
 	main := m.ViewMain()
-	lines := strings.Split(lipgloss.NewStyle().Width(mainWidth).Render(
-		m.stdout[m.selected],
-	), "\n")
-	if len(lines) < height {
-		padding := height - len(lines)
-		for i := 0; i < padding; i++ {
-			lines = append(lines, "")
-		}
-	}
-	if len(lines) > height {
-		lines = lines[len(lines)-height-1:]
-	}
-	main = strings.Join(lines, "\n")
 
 	return lipgloss.
 		NewStyle().
@@ -138,20 +124,36 @@ func (m Root) View() string {
 				lipgloss.Top,
 				lipgloss.NewStyle().Width(sidebarWidth).Render(sidebar),
 				"   ",
-				lipgloss.NewStyle().Width(mainWidth).MaxHeight(height).Render(main),
+				main,
 			),
 		)
 }
 
 func (m Root) ViewMain() string {
-	return m.stdout[m.selected]
+	if len(m.terminals) == 0 {
+		return ""
+	}
+	term := m.terminals[m.selected]
+	buf := term.GetActiveBuffer()
+	result := ""
+	for y := uint16(0); y < height; y++ {
+		for x := uint16(0); x < width; x++ {
+			cell := buf.GetCell(x, y)
+			if cell != nil {
+				result += string(cell.Rune().Rune)
+			}
+		}
+
+		result += "\n"
+	}
+	return result
 }
 
 func (m Root) ViewSidebar() string {
 	width := 0
 	choices := make([]string, len(m.processes))
 	for i, process := range m.processes {
-		name := process.Path
+		name := process
 		choices[i] = name
 		if len(name) > width {
 			width = len(name)
