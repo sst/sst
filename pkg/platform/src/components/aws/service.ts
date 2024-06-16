@@ -582,7 +582,7 @@ export class Service extends Component implements Link.Linkable {
     }
 
     function createAutoScaling() {
-      new aws.appautoscaling.Target(
+      const target = new aws.appautoscaling.Target(
         `${name}AutoScalingTarget`,
         {
           serviceNamespace: "ecs",
@@ -597,7 +597,7 @@ export class Service extends Component implements Link.Linkable {
       new aws.appautoscaling.Policy(
         `${name}AutoScalingCpuPolicy`,
         {
-          serviceNamespace: "ecs",
+          serviceNamespace: target.serviceNamespace,
           scalableDimension: "ecs:service:DesiredCount",
           resourceId: interpolate`service/${cluster.name}/${service.name}`,
           policyType: "TargetTrackingScaling",
@@ -614,7 +614,7 @@ export class Service extends Component implements Link.Linkable {
       new aws.appautoscaling.Policy(
         `${name}AutoScalingMemoryPolicy`,
         {
-          serviceNamespace: "ecs",
+          serviceNamespace: target.serviceNamespace,
           scalableDimension: "ecs:service:DesiredCount",
           resourceId: interpolate`service/${cluster.name}/${service.name}`,
           policyType: "TargetTrackingScaling",
