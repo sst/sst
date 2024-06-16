@@ -598,8 +598,8 @@ export class Service extends Component implements Link.Linkable {
         `${name}AutoScalingCpuPolicy`,
         {
           serviceNamespace: target.serviceNamespace,
-          scalableDimension: "ecs:service:DesiredCount",
-          resourceId: interpolate`service/${cluster.name}/${service.name}`,
+          scalableDimension: target.scalableDimension,
+          resourceId: target.resourceId,
           policyType: "TargetTrackingScaling",
           targetTrackingScalingPolicyConfiguration: {
             predefinedMetricSpecification: {
@@ -615,8 +615,8 @@ export class Service extends Component implements Link.Linkable {
         `${name}AutoScalingMemoryPolicy`,
         {
           serviceNamespace: target.serviceNamespace,
-          scalableDimension: "ecs:service:DesiredCount",
-          resourceId: interpolate`service/${cluster.name}/${service.name}`,
+          scalableDimension: target.scalableDimension,
+          resourceId: target.resourceId,
           policyType: "TargetTrackingScaling",
           targetTrackingScalingPolicyConfiguration: {
             predefinedMetricSpecification: {
