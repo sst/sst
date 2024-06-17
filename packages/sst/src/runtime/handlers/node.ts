@@ -260,6 +260,7 @@ export const useNodeHandler = (): RuntimeHandler => {
             "--platform=linux",
             "--omit=dev",
             "--no-optional",
+            "--force",
             input.props.architecture === "arm_64"
               ? "--arch=arm64"
               : "--arch=x64",
