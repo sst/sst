@@ -100,7 +100,7 @@ export interface CognitoUserPoolArgs {
     /**
      * ARN of the lambda function to modify claims in ID and access tokens.
      */
-    preTokenGenerationConfig?: string | FunctionArgs;
+    preTokenGeneration?: string | FunctionArgs;
     /**
      * ARN of the lambda function to migrate a user from another directory when they sign in to your user pool.
      */
