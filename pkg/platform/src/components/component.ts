@@ -104,6 +104,8 @@ export class Component extends ComponentResource {
                   ),
               };
               break;
+            case "aws:apigateway/authorizer:Authorizer":
+            case "aws:apigateway/restApi:RestApi":
             case "aws:apigatewayv2/api:Api":
             case "aws:apigatewayv2/authorizer:Authorizer":
             case "aws:cognito/userPool:UserPool":
@@ -174,6 +176,11 @@ export class Component extends ComponentResource {
             // resources not prefixed
             case "aws:acm/certificate:Certificate":
             case "aws:acm/certificateValidation:CertificateValidation":
+            case "aws:apigateway/deployment:Deployment":
+            case "aws:apigateway/integration:Integration":
+            case "aws:apigateway/method:Method":
+            case "aws:apigateway/resource:Resource":
+            case "aws:apigateway/stage:Stage":
             case "aws:apigatewayv2/apiMapping:ApiMapping":
             case "aws:apigatewayv2/domainName:DomainName":
             case "aws:apigatewayv2/integration:Integration":

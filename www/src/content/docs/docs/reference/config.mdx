@@ -119,7 +119,7 @@ runner(input) {
   return {
     engine: "codebuild",
     architecture: "arm64",
-    size: "large",
+    compute: "large",
     timeout: "20 minutes",
   }
 }
@@ -807,17 +807,7 @@ Git push request event type.
 The architecture of the AWS CodeBuild build environment.
 
 </Segment>
-### engine
-<Segment>
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="symbol">&ldquo;</code><code class="primitive">codebuild</code><code class="symbol">&rdquo;</code>
-</InlineSection>
-</Section>
-The service used to run the build. Currently, only AWS CodeBuild is supported.
-
-</Segment>
-### size?
+### compute?
 <Segment>
 <Section type="parameters">
 <InlineSection>
@@ -828,7 +818,7 @@ The service used to run the build. Currently, only AWS CodeBuild is supported.
 <InlineSection>
 **Default** <code class="primitive">small</code>
 </InlineSection>
-The size of the AWS CodeBuild build environment.
+The compute size of the AWS CodeBuild build environment.
 
 For `x86_64` architecture:
 - `small`: 3 GB memory, 2 vCPUs
@@ -841,6 +831,16 @@ For `arm64` architecture, only `small` and `large` are supported:
 - `large`: 8 GB memory, 4 vCPUs
 
 Read more about the [CodeBuild build environment](https://docs.aws.amazon.com/codebuild/latest/userguide/build-env-ref-compute-types.html).
+
+</Segment>
+### engine
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="symbol">&ldquo;</code><code class="primitive">codebuild</code><code class="symbol">&rdquo;</code>
+</InlineSection>
+</Section>
+The service used to run the build. Currently, only AWS CodeBuild is supported.
 
 </Segment>
 ### timeout?

@@ -664,6 +664,8 @@ function renderType(
     }
     // types in different doc
     const externalModule = {
+      ApiGatewayV1Authorizer: "apigatewayv1-authorizer",
+      ApiGatewayV1LambdaRoute: "apigatewayv1-lambda-route",
       ApiGatewayV2LambdaRoute: "apigatewayv2-lambda-route",
       ApiGatewayWebSocketRoute: "apigateway-websocket-route",
       AppSyncDataSource: "app-sync-data-source",
@@ -1749,6 +1751,9 @@ async function buildComponents() {
       "../pkg/platform/src/components/secret.ts",
       "../pkg/platform/src/components/aws/apigateway-websocket.ts",
       "../pkg/platform/src/components/aws/apigateway-websocket-route.ts",
+      "../pkg/platform/src/components/aws/apigatewayv1.ts",
+      "../pkg/platform/src/components/aws/apigatewayv1-authorizer.ts",
+      "../pkg/platform/src/components/aws/apigatewayv1-lambda-route.ts",
       "../pkg/platform/src/components/aws/apigatewayv2.ts",
       "../pkg/platform/src/components/aws/apigatewayv2-lambda-route.ts",
       "../pkg/platform/src/components/aws/app-sync.ts",

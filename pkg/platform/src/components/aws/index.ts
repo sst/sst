@@ -1,3 +1,4 @@
+export * from "./apigatewayv1.js";
 export * from "./apigatewayv2.js";
 export * from "./apigateway-websocket.js";
 export * from "./app-sync.js";

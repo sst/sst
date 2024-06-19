@@ -1,0 +1,261 @@
+---
+title: ApiGatewayV1Authorizer
+description: Reference doc for the `sst.aws.ApiGatewayV1Authorizer` component.
+---
+
+{/* DO NOT EDIT. AUTO-GENERATED FROM "pkg/platform/src/components/aws/apigatewayv1-authorizer.ts" */}
+
+import Segment from '../../../../../../src/components/tsdoc/Segment.astro';
+import Section from '../../../../../../src/components/tsdoc/Section.astro';
+import NestedTitle from '../../../../../../src/components/tsdoc/NestedTitle.astro';
+import InlineSection from '../../../../../../src/components/tsdoc/InlineSection.astro';
+
+<div class="tsdoc">
+
+<Section type="about">
+The `ApiGatewayV1Authorizer` component is internally used by the `ApiGatewayV1` component
+to add authorizers to [Amazon API Gateway REST API](https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-rest-api.html).
+
+:::caution
+This component is not intended for public use.
+:::
+
+You'll find this component returned by the `addAuthorizer` method of the `ApiGatewayV1` component.
+</Section>
+
+---
+
+## Constructor
+
+<Segment>
+<Section type="signature">
+```ts
+new ApiGatewayV1Authorizer(name, args, opts?)
+```
+</Section>
+
+<Section type="parameters">
+#### Parameters
+- <p><code class="key">name</code> <code class="primitive">string</code></p>
+- <p><code class="key">args</code> [<code class="type">AuthorizerArgs</code>](#authorizerargs)</p>
+- <p><code class="key">opts?</code> [<code class="type">ComponentResourceOptions</code>](https://www.pulumi.com/docs/concepts/options/)</p>
+</Section>
+</Segment>
+
+## Properties
+
+### id
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Output</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+The id of the authorizer.
+</Segment>
+
+### nodes
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Object</code>
+</InlineSection>
+- <p>[<code class="key">authorizer</code>](#nodes-authorizer)</p>
+- <p>[<code class="key">function</code>](#nodes-function)</p>
+</Section>
+The underlying [resources](/docs/components/#nodes) this component creates.
+</Segment>
+<NestedTitle id="nodes-authorizer" Tag="h4" parent="nodes.">authorizer</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** [<code class="type">Authorizer</code>](https://www.pulumi.com/registry/packages/aws/api-docs/apigateway/authorizer/)
+</InlineSection>
+</Section>
+The Amazon AppSync DataSource.
+</Segment>
+<NestedTitle id="nodes-function" Tag="h4" parent="nodes.">function</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Output</code><code class="symbol">&lt;</code>[<code class="type">Function</code>](/docs/component/aws/function/)<code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+The Lambda function used by the data source.
+</Segment>
+
+## AuthorizerArgs
+### api
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Object</code><code class="symbol">&gt;</code>
+</InlineSection>
+- <p>[<code class="key">executionArn</code>](#api-executionarn)</p>
+- <p>[<code class="key">id</code>](#api-id)</p>
+- <p>[<code class="key">name</code>](#api-name)</p>
+</Section>
+The api to use for the route.
+
+</Segment>
+<NestedTitle id="api-executionarn" Tag="h4" parent="api.">executionArn</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+The execution ARN of the api.
+
+</Segment>
+<NestedTitle id="api-id" Tag="h4" parent="api.">id</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+The ID of the api.
+
+</Segment>
+<NestedTitle id="api-name" Tag="h4" parent="api.">name</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+The name of the api.
+
+</Segment>
+### identitySource?
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+
+<InlineSection>
+**Default** <code class="primitive">"method.request.header.Authorization"</code>
+</InlineSection>
+Specifies where to extract the authorization token from the request.
+
+```js
+{
+  identitySource: "method.request.header.AccessToken"
+}
+```
+</Segment>
+### name
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">string</code>
+</InlineSection>
+</Section>
+The name of the authorizer.
+
+```js
+{
+  name: "myAuthorizer",
+  tokenFunction: "src/authorizer.index",
+}
+```
+</Segment>
+### requestFunction?
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol"> | </code>[<code class="type">FunctionArgs</code>](/docs/component/aws/function/#functionargs)<code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+The Lambda REQUEST authorizer function.
+
+```js
+{
+  name: "myAuthorizer",
+  requestFunction: "src/authorizer.index",
+}
+```
+</Segment>
+### tokenFunction?
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol"> | </code>[<code class="type">FunctionArgs</code>](/docs/component/aws/function/#functionargs)<code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+The Lambda TOKEN authorizer function.
+
+```js
+{
+  name: "myAuthorizer",
+  tokenFunction: "src/authorizer.index",
+}
+```
+</Segment>
+### transform?
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Object</code>
+</InlineSection>
+- <p>[<code class="key">authorizer?</code>](#transform-authorizer)</p>
+</Section>
+[Transform](/docs/components#transform) how this component creates its underlying
+resources.
+
+</Segment>
+<NestedTitle id="transform-authorizer" Tag="h4" parent="transform.">authorizer?</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** [<code class="type">AuthorizerArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/apigateway/authorizer/#inputs)<code class="symbol"> | </code><code class="symbol">(</code><code class="primitive">args</code><code class="symbol">: </code>[<code class="type">AuthorizerArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/apigateway/authorizer/#inputs)<code class="symbol"> => </code><code class="primitive">void</code><code class="symbol">)</code>
+</InlineSection>
+</Section>
+Transform the API Gateway authorizer resource.
+
+</Segment>
+### ttl?
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">number</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+
+<InlineSection>
+**Default** <code class="primitive">300</code>
+</InlineSection>
+Time to live for cached authorizer results in seconds.
+
+```js
+{
+  ttl: 30
+}
+```
+</Segment>
+### userPools?
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code><code class="symbol">[]</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+A list of user pools used for the authorizer.
+
+```js
+{
+  name: "myAuthorizer",
+  userPools: [userPool.arn],
+}
+```
+
+Where `userPool` is:
+
+```js
+const userPool = new aws.cognito.UserPool();
+```
+</Segment>
+</div>

@@ -1,0 +1,794 @@
+---
+title: ApiGatewayV1
+description: Reference doc for the `sst.aws.ApiGatewayV1` component.
+---
+
+{/* DO NOT EDIT. AUTO-GENERATED FROM "pkg/platform/src/components/aws/apigatewayv1.ts" */}
+
+import Segment from '../../../../../../src/components/tsdoc/Segment.astro';
+import Section from '../../../../../../src/components/tsdoc/Section.astro';
+import NestedTitle from '../../../../../../src/components/tsdoc/NestedTitle.astro';
+import InlineSection from '../../../../../../src/components/tsdoc/InlineSection.astro';
+
+<div class="tsdoc">
+
+<Section type="about">
+The `ApiGatewayV1` component lets you add an [Amazon API Gateway REST API](https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-rest-api.html) to your app.
+
+#### Create the API
+
+```ts
+const api = new sst.aws.ApiGatewayV1("MyApi");
+```
+
+#### Add routes
+
+```ts
+api.route("GET /", "src/get.handler");
+api.route("POST /", "src/post.handler");
+api.deploy();
+```
+
+:::note
+You need to call the `deploy` method after you've added all your routes.
+:::
+
+#### Configure the routes
+
+You can configure the route and its handler function.
+
+```ts
+api.route("GET /", "src/get.handler", { auth: { iam: true } });
+api.route("POST /", { handler: "src/post.handler", memory: "2048 MB" });
+```
+
+#### Set defaults for all routes
+
+You can use the `transform` to set some defaults for all your routes. For example,
+instead of setting the `memory` for each route.
+
+```ts
+api.route("GET /", { handler: "src/get.handler", memory: "2048 MB" });
+api.route("POST /", { handler: "src/post.handler", memory: "2048 MB" });
+```
+
+You can set it through the `transform`.
+
+```ts {5}
+new sst.aws.ApiGatewayV1("MyApi", {
+  transform: {
+    route: {
+      handler: {
+        memory: "2048 MB"
+      }
+    }
+  }
+});
+
+api.route("GET /", "src/get.handler");
+api.route("POST /", "src/post.handler");
+```
+</Section>
+
+---
+
+## Constructor
+
+<Segment>
+<Section type="signature">
+```ts
+new ApiGatewayV1(name, args?, opts?)
+```
+</Section>
+
+<Section type="parameters">
+#### Parameters
+- <p><code class="key">name</code> <code class="primitive">string</code></p>
+- <p><code class="key">args?</code> [<code class="type">ApiGatewayV1Args</code>](#apigatewayv1args)</p>
+- <p><code class="key">opts?</code> [<code class="type">ComponentResourceOptions</code>](https://www.pulumi.com/docs/concepts/options/)</p>
+</Section>
+</Segment>
+
+## ApiGatewayV1Args
+### accessLog?
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Object</code><code class="symbol">&gt;</code>
+</InlineSection>
+- <p>[<code class="key">retention?</code>](#accesslog-retention)</p>
+</Section>
+
+<InlineSection>
+**Default** <code class="primitive">&lcub;retention: "forever"&rcub;</code>
+</InlineSection>
+Configure the [API Gateway logs](https://docs.aws.amazon.com/apigateway/latest/developerguide/view-cloudwatch-log-events-in-cloudwatch-console.html) in CloudWatch. By default, access logs are enabled and kept forever.
+
+```js
+{
+  accessLog: {
+    retention: "1 week"
+  }
+}
+```
+</Segment>
+<NestedTitle id="accesslog-retention" Tag="h4" parent="accessLog.">retention?</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="symbol">&ldquo;</code><code class="primitive">1 day</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">3 days</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">5 days</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">1 week</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">2 weeks</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">1 month</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">2 months</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">3 months</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">4 months</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">5 months</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">6 months</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">1 year</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">13 months</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">18 months</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">2 years</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">3 years</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">5 years</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">6 years</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">7 years</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">8 years</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">9 years</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">10 years</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">forever</code><code class="symbol">&rdquo;</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+
+<InlineSection>
+**Default** <code class="primitive">forever</code>
+</InlineSection>
+The duration the API Gateway logs are kept in CloudWatch.
+
+</Segment>
+### endpoint?
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Object</code><code class="symbol">&gt;</code>
+</InlineSection>
+- <p>[<code class="key">type</code>](#endpoint-type)</p>
+- <p>[<code class="key">vpcEndpointIds?</code>](#endpoint-vpcendpointids)</p>
+</Section>
+
+<InlineSection>
+**Default** <code class="primitive">&lcub;type: "edge"&rcub;</code>
+</InlineSection>
+Configure the [API Gateway endpoint](https://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-api-endpoint-types.html).
+
+```js
+{
+  endpoint: {
+    type: "regional"
+  }
+}
+```
+</Segment>
+<NestedTitle id="endpoint-type" Tag="h4" parent="endpoint.">type</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="symbol">&ldquo;</code><code class="primitive">edge</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">regional</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">private</code><code class="symbol">&rdquo;</code>
+</InlineSection>
+</Section>
+The type of the API Gateway REST API endpoint.
+
+</Segment>
+<NestedTitle id="endpoint-vpcendpointids" Tag="h4" parent="endpoint.">vpcEndpointIds?</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code><code class="symbol">[]</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+The VPC endpoint IDs for the private endpoint.
+
+</Segment>
+### transform?
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Object</code>
+</InlineSection>
+- <p>[<code class="key">accessLog?</code>](#transform-accesslog)</p>
+- <p>[<code class="key">api?</code>](#transform-api)</p>
+- <p>[<code class="key">deployment?</code>](#transform-deployment)</p>
+- <p>[<code class="key">route?</code>](#transform-route) <code class="primitive">Object</code></p>
+  - <p>[<code class="key">args?</code>](#transform-route-args)</p>
+  - <p>[<code class="key">handler?</code>](#transform-route-handler)</p>
+- <p>[<code class="key">stage?</code>](#transform-stage)</p>
+</Section>
+[Transform](/docs/components#transform) how this component creates its underlying
+resources.
+
+</Segment>
+<NestedTitle id="transform-accesslog" Tag="h4" parent="transform.">accessLog?</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** [<code class="type">LogGroupArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/cloudwatch/loggroup/#inputs)<code class="symbol"> | </code><code class="symbol">(</code><code class="primitive">args</code><code class="symbol">: </code>[<code class="type">LogGroupArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/cloudwatch/loggroup/#inputs)<code class="symbol"> => </code><code class="primitive">void</code><code class="symbol">)</code>
+</InlineSection>
+</Section>
+Transform the CloudWatch LogGroup resource used for access logs.
+
+</Segment>
+<NestedTitle id="transform-api" Tag="h4" parent="transform.">api?</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** [<code class="type">RestApiArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/apigateway/restapi/#inputs)<code class="symbol"> | </code><code class="symbol">(</code><code class="primitive">args</code><code class="symbol">: </code>[<code class="type">RestApiArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/apigateway/restapi/#inputs)<code class="symbol"> => </code><code class="primitive">void</code><code class="symbol">)</code>
+</InlineSection>
+</Section>
+Transform the API Gateway REST API resource.
+
+</Segment>
+<NestedTitle id="transform-deployment" Tag="h4" parent="transform.">deployment?</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** [<code class="type">DeploymentArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/apigateway/deployment/#inputs)<code class="symbol"> | </code><code class="symbol">(</code><code class="primitive">args</code><code class="symbol">: </code>[<code class="type">DeploymentArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/apigateway/deployment/#inputs)<code class="symbol"> => </code><code class="primitive">void</code><code class="symbol">)</code>
+</InlineSection>
+</Section>
+Transform the API Gateway REST API deployment resource.
+
+</Segment>
+<NestedTitle id="transform-route" Tag="h4" parent="transform.">route?</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Object</code>
+</InlineSection>
+</Section>
+Transform the routes. This is called for every route that is added.
+
+:::note
+This is applied right before the resource is created. So it overrides the
+props set by the route.
+:::
+
+You can use this to set any common props for all the routes and their handler function.
+Like the other transforms, you can either pass in an object or a callback.
+
+Here we are ensuring that all handler functions of our routes have a memory of `2048 MB`.
+
+```js
+{
+  transform: {
+    route: {
+      handler: {
+        memory: "2048 MB"
+      },
+    }
+  }
+}
+```
+
+Enable IAM auth for all our routes.
+
+```js
+{
+  transform: {
+    route: {
+      args: (props) => {
+        props.auth = { iam: true };
+      }
+    }
+  }
+}
+```
+</Segment>
+<NestedTitle id="transform-route-args" Tag="h5" parent="transform.route.">args?</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** [<code class="type">ApiGatewayV1RouteArgs</code>](#apigatewayv1routeargs)<code class="symbol"> | </code><code class="symbol">(</code><code class="primitive">args</code><code class="symbol">: </code>[<code class="type">ApiGatewayV1RouteArgs</code>](#apigatewayv1routeargs)<code class="symbol"> => </code><code class="primitive">void</code><code class="symbol">)</code>
+</InlineSection>
+</Section>
+Transform the arguments for the route.
+
+</Segment>
+<NestedTitle id="transform-route-handler" Tag="h5" parent="transform.route.">handler?</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** [<code class="type">FunctionArgs</code>](/docs/component/aws/function/#functionargs)<code class="symbol"> | </code><code class="symbol">(</code><code class="primitive">args</code><code class="symbol">: </code>[<code class="type">FunctionArgs</code>](/docs/component/aws/function/#functionargs)<code class="symbol"> => </code><code class="primitive">void</code><code class="symbol">)</code>
+</InlineSection>
+</Section>
+Transform the handler function of the route.
+
+</Segment>
+<NestedTitle id="transform-stage" Tag="h4" parent="transform.">stage?</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** [<code class="type">StageArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/apigateway/stage/#inputs)<code class="symbol"> | </code><code class="symbol">(</code><code class="primitive">args</code><code class="symbol">: </code>[<code class="type">StageArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/apigateway/stage/#inputs)<code class="symbol"> => </code><code class="primitive">void</code><code class="symbol">)</code>
+</InlineSection>
+</Section>
+Transform the API Gateway REST API stage resource.
+
+</Segment>
+
+## Properties
+
+### nodes
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Object</code>
+</InlineSection>
+- <p>[<code class="key">api</code>](#nodes-api)</p>
+- <p>[<code class="key">logGroup</code>](#nodes-loggroup)</p>
+</Section>
+The underlying [resources](/docs/components/#nodes) this component creates.
+</Segment>
+<NestedTitle id="nodes-api" Tag="h4" parent="nodes.">api</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** [<code class="type">RestApi</code>](https://www.pulumi.com/registry/packages/aws/api-docs/apigateway/restapi/)
+</InlineSection>
+</Section>
+The Amazon API Gateway REST API
+</Segment>
+<NestedTitle id="nodes-loggroup" Tag="h4" parent="nodes.">logGroup</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">undefined</code><code class="symbol"> | </code>[<code class="type">LogGroup</code>](https://www.pulumi.com/registry/packages/aws/api-docs/cloudwatch/loggroup/)
+</InlineSection>
+</Section>
+The CloudWatch LogGroup for the access logs.
+</Segment>
+
+### url
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Output</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+The URL of the API.
+</Segment>
+
+## SDK
+
+The following are accessible through the [SDK](/docs/reference/sdk/) at runtime.
+
+### Links
+<Segment>
+<Section type="parameters">
+- <p><code class="key">url</code> <code class="primitive">string</code></p>
+The URL of the API.
+</Section>
+</Segment>
+
+## Methods
+
+### addAuthorizer
+<Segment>
+<Section type="signature">
+```ts
+addAuthorizer(args)
+```
+</Section>
+
+<Section type="parameters">
+#### Parameters
+- <p><code class="key">args</code> [<code class="type">ApiGatewayV1AuthorizerArgs</code>](#apigatewayv1authorizerargs)</p>
+Configure the authorizer.
+</Section>
+
+<InlineSection>
+**Returns** [<code class="type">ApiGatewayV1Authorizer</code>](/docs/component/aws/apigatewayv1-authorizer/)
+</InlineSection>
+Add an authorizer to the API Gateway REST API.
+
+Here's how you add a Lambda TOKEN authorizer.
+
+```js
+api.addAuthorizer({
+  name: "myAuthorizer",
+  tokenFunction: "src/authorizer.index",
+});
+```
+
+Add a Lambda REQUEST authorizer.
+
+```js
+api.addAuthorizer({
+  name: "myAuthorizer",
+  requestFunction: "src/authorizer.index",
+});
+```
+
+Add a Cognito User Pool authorizer.
+
+```js
+const userPool = new aws.cognito.UserPool();
+api.addAuthorizer({
+  name: "myAuthorizer",
+  userPools: [userPool.arn],
+});
+```
+
+Customize the authorizer.
+
+```js
+api.addAuthorizer({
+  name: "myAuthorizer",
+  tokenFunction: "src/authorizer.index",
+  ttl: 30,
+});
+```
+</Segment>
+
+### deploy
+<Segment>
+<Section type="signature">
+```ts
+deploy()
+```
+</Section>
+
+<InlineSection>
+**Returns** <code class="primitive">void</code>
+</InlineSection>
+Create a deployment for the API Gateway REST API.
+
+</Segment>
+
+### route
+<Segment>
+<Section type="signature">
+```ts
+route(route, handler, args?)
+```
+</Section>
+
+<Section type="parameters">
+#### Parameters
+- <p><code class="key">route</code> <code class="primitive">string</code></p>
+The path for the route.
+- <p><code class="key">handler</code> <code class="primitive">string</code><code class="symbol"> | </code>[<code class="type">FunctionArgs</code>](/docs/component/aws/function/#functionargs)</p>
+The function that'll be invoked.
+- <p><code class="key">args?</code> [<code class="type">ApiGatewayV1RouteArgs</code>](#apigatewayv1routeargs)</p>
+Configure the route.
+</Section>
+
+<InlineSection>
+**Returns** [<code class="type">ApiGatewayV1LambdaRoute</code>](/docs/component/aws/apigatewayv1-lambda-route/)
+</InlineSection>
+Add a route to the API Gateway REST API. The route is a combination of an HTTP method and a path, `{METHOD} /{path}`.
+
+A method could be one of `GET`, `POST`, `PUT`, `DELETE`, `PATCH`, `HEAD`, `OPTIONS`, or `ANY`. Here `ANY` matches any HTTP method.
+
+The path can be a combination of
+- Literal segments, `/notes`, `/notes/new`, etc.
+- Parameter segments, `/notes/{noteId}`, `/notes/{noteId}/attachments/{attachmentId}`, etc.
+- Greedy segments, `/{proxy+}`, `/notes/{proxy+}`,  etc. The `{proxy+}` segment is a greedy segment that matches all child paths. It needs to be at the end of the path.
+
+:::tip
+The `{proxy+}` is a greedy segment, it matches all its child paths.
+:::
+
+:::note
+You cannot have duplicate routes.
+:::
+
+When a request comes in, the API Gateway will look for the most specific match.
+
+Here's how you add a simple route.
+
+```js
+api.route("GET /", "src/get.handler");
+```
+
+Match any HTTP method.
+
+```js
+api.route("ANY /", "src/route.handler");
+```
+
+Add a default route.
+
+```js
+api.route("GET /", "src/get.handler")
+api.route($default, "src/default.handler");
+```
+
+Add a parameterized route.
+
+```js
+api.route("GET /notes/{id}", "src/get.handler");
+```
+
+Add a greedy route.
+
+```js
+api.route("GET /notes/{proxy+}", "src/greedy.handler");
+```
+
+Enable auth for a route.
+
+```js
+api.route("GET /", "src/get.handler")
+api.route("POST /", "src/post.handler", {
+  auth: {
+    iam: true
+  }
+});
+```
+
+Customize the route handler.
+
+```js
+api.route("GET /", {
+  handler: "src/get.handler",
+  memory: "2048 MB"
+});
+```
+</Segment>
+
+## ApiGatewayV1AuthorizerArgs
+### identitySource?
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+
+<InlineSection>
+**Default** <code class="primitive">"method.request.header.Authorization"</code>
+</InlineSection>
+Specifies where to extract the authorization token from the request.
+
+```js
+{
+  identitySource: "method.request.header.AccessToken"
+}
+```
+</Segment>
+### name
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">string</code>
+</InlineSection>
+</Section>
+The name of the authorizer.
+
+```js
+{
+  name: "myAuthorizer",
+  tokenFunction: "src/authorizer.index",
+}
+```
+</Segment>
+### requestFunction?
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol"> | </code>[<code class="type">FunctionArgs</code>](/docs/component/aws/function/#functionargs)<code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+The Lambda REQUEST authorizer function.
+
+```js
+{
+  name: "myAuthorizer",
+  requestFunction: "src/authorizer.index",
+}
+```
+</Segment>
+### tokenFunction?
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol"> | </code>[<code class="type">FunctionArgs</code>](/docs/component/aws/function/#functionargs)<code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+The Lambda TOKEN authorizer function.
+
+```js
+{
+  name: "myAuthorizer",
+  tokenFunction: "src/authorizer.index",
+}
+```
+</Segment>
+### transform?
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Object</code>
+</InlineSection>
+- <p>[<code class="key">authorizer?</code>](#transform-authorizer)</p>
+</Section>
+[Transform](/docs/components#transform) how this component creates its underlying
+resources.
+
+</Segment>
+<NestedTitle id="transform-authorizer" Tag="h4" parent="transform.">authorizer?</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** [<code class="type">AuthorizerArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/apigateway/authorizer/#inputs)<code class="symbol"> | </code><code class="symbol">(</code><code class="primitive">args</code><code class="symbol">: </code>[<code class="type">AuthorizerArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/apigateway/authorizer/#inputs)<code class="symbol"> => </code><code class="primitive">void</code><code class="symbol">)</code>
+</InlineSection>
+</Section>
+Transform the API Gateway authorizer resource.
+
+</Segment>
+### ttl?
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">number</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+
+<InlineSection>
+**Default** <code class="primitive">300</code>
+</InlineSection>
+Time to live for cached authorizer results in seconds.
+
+```js
+{
+  ttl: 30
+}
+```
+</Segment>
+### userPools?
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code><code class="symbol">[]</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+A list of user pools used for the authorizer.
+
+```js
+{
+  name: "myAuthorizer",
+  userPools: [userPool.arn],
+}
+```
+
+Where `userPool` is:
+
+```js
+const userPool = new aws.cognito.UserPool();
+```
+</Segment>
+
+## ApiGatewayV1RouteArgs
+### auth?
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Object</code><code class="symbol">&gt;</code>
+</InlineSection>
+- <p>[<code class="key">cognito?</code>](#auth-cognito) <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Object</code><code class="symbol">&gt;</code></p>
+  - <p>[<code class="key">authorizer</code>](#auth-cognito-authorizer)</p>
+  - <p>[<code class="key">scopes?</code>](#auth-cognito-scopes)</p>
+- <p>[<code class="key">custom?</code>](#auth-custom)</p>
+- <p>[<code class="key">iam?</code>](#auth-iam)</p>
+</Section>
+Enable auth for your REST API.
+
+```js
+{
+  auth: {
+    iam: true
+  }
+}
+```
+</Segment>
+<NestedTitle id="auth-cognito" Tag="h4" parent="auth.">cognito?</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Object</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+Enable Cognito User Pool authorization for a given API route.
+
+You can configure JWT auth.
+
+```js
+{
+  auth: {
+    cognito: {
+      authorizer: myAuthorizer.id,
+      scopes: ["read:profile", "write:profile"],
+    }
+  }
+}
+```
+
+Where `myAuthorizer` is:
+
+```js
+const userPool = new aws.cognito.UserPool();
+const myAuthorizer = api.addAuthorizer({
+  name: "MyAuthorizer",
+  userPools: [userPool.arn],
+});
+```
+</Segment>
+<NestedTitle id="auth-cognito-authorizer" Tag="h5" parent="auth.cognito.">authorizer</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+Authorizer ID of the Cognito User Pool authorizer.
+
+</Segment>
+<NestedTitle id="auth-cognito-scopes" Tag="h5" parent="auth.cognito.">scopes?</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code><code class="symbol">[]</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+Defines the permissions or access levels that the authorization token grants.
+
+</Segment>
+<NestedTitle id="auth-custom" Tag="h4" parent="auth.">custom?</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+Enable custom Lambda authorization for a given API route. Pass in the authorizer ID.
+
+```js
+{
+  auth: {
+    custom: myAuthorizer.id
+  }
+}
+```
+
+Where `myAuthorizer` is:
+
+```js
+const userPool = new aws.cognito.UserPool();
+const myAuthorizer = api.addAuthorizer({
+  name: "MyAuthorizer",
+  userPools: [userPool.arn],
+});
+```
+</Segment>
+<NestedTitle id="auth-iam" Tag="h4" parent="auth.">iam?</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">true</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+Enable IAM authorization for a given API route. When IAM auth is enabled, clients need to use Signature Version 4 to sign their requests with their AWS credentials.
+
+</Segment>
+### transform?
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Object</code>
+</InlineSection>
+- <p>[<code class="key">integration?</code>](#transform-integration)</p>
+- <p>[<code class="key">route?</code>](#transform-route-1)</p>
+</Section>
+[Transform](/docs/components#transform) how this component creates its underlying
+resources.
+
+</Segment>
+<NestedTitle id="transform-integration" Tag="h4" parent="transform.">integration?</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** [<code class="type">IntegrationArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/apigateway/integration/#inputs)<code class="symbol"> | </code><code class="symbol">(</code><code class="primitive">args</code><code class="symbol">: </code>[<code class="type">IntegrationArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/apigateway/integration/#inputs)<code class="symbol"> => </code><code class="primitive">void</code><code class="symbol">)</code>
+</InlineSection>
+</Section>
+Transform the API Gateway HTTP API integration resource.
+
+</Segment>
+<NestedTitle id="transform-route-1" Tag="h4" parent="transform.">route?</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** [<code class="type">RouteArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/apigatewayv2/route/#inputs)<code class="symbol"> | </code><code class="symbol">(</code><code class="primitive">args</code><code class="symbol">: </code>[<code class="type">RouteArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/apigatewayv2/route/#inputs)<code class="symbol"> => </code><code class="primitive">void</code><code class="symbol">)</code>
+</InlineSection>
+</Section>
+Transform the API Gateway HTTP API route resource.
+
+</Segment>
+</div>
