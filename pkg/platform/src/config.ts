@@ -246,24 +246,24 @@ export interface Runner {
    */
   timeout?: `${number} ${"minute" | "minutes" | "hour" | "hours"}`;
   /**
-   * The architecture of the AWS CodeBuild build environment.
+   * The architecture of the build machine.
    * @default `x86_64`
    */
   architecture?: "x86_64" | "arm64";
   /**
-   * The compute size of the AWS CodeBuild build environment.
+   * The compute size of the build environment.
    *
-   * For `x86_64` architecture:
-   * - `small`: 3 GB memory, 2 vCPUs
-   * - `medium`: 7 GB memory, 4 vCPUs
-   * - `large`: 15 GB memory, 8 vCPUs
-   * - `xlarge`: 30 GB memory, 16 vCPUs
+   * For `x86_64`, it can be the following:
+   * - `small`: 3 GB, 2 vCPUs
+   * - `medium`: 7 GB, 4 vCPUs
+   * - `large`: 15 GB, 8 vCPUs
+   * - `xlarge`: 30 GB, 16 vCPUs
    *
    * For `arm64` architecture, only `small` and `large` are supported:
-   * - `small`: 4 GB memory, 2 vCPUs
-   * - `large`: 8 GB memory, 4 vCPUs
+   * - `small`: 4 GB, 2 vCPUs
+   * - `large`: 8 GB, 4 vCPUs
    *
-   * Read more about the [CodeBuild build environment](https://docs.aws.amazon.com/codebuild/latest/userguide/build-env-ref-compute-types.html).
+   * Read more about the [CodeBuild build environments](https://docs.aws.amazon.com/codebuild/latest/userguide/build-env-ref-compute-types.html).
    * @default `small`
    */
   compute?: "small" | "medium" | "large" | "xlarge";
@@ -408,11 +408,11 @@ export interface Config {
    */
   app(input: AppInput): App;
   /**
-   * This config lets you configure SST Console.
+   * Configure how your app works with the SST Console. [Learn more about Autodeploy](/docs/console#autodeploy).
    */
   console?: {
     /**
-     * The config for SST Console's Autodeploy feature.
+     * Configure how the Console auto-deploy's your app.
      *
      * @example
      *
@@ -430,81 +430,71 @@ export interface Config {
      */
     autodeploy: {
       /**
-       * Configs the machine that will run the build.
+       * Optionally configure the runner that will run the build.
        *
-       * When a git event is received, Autodeploy will run the `runner` function to
-       * determine the type of machine required to run the build. For example:
+       * When a git event is received, Autodeploy will first run the `target` function
+       * to determine the stage the app will be deployed to. It'll then run the
+       * `runner` function with the stage to determine the type of machine
+       * that'll be used.
+       *
+       * It uses this to create a _runner_ — a
+       * [AWS CodeBuild](https://aws.amazon.com/codebuild/) project and an IAM Role,
+       * in **your account**.
+       *
+       * :::note
+       * Runners are shared across all apps in the same account and region.
+       * :::
+       *
+       * By default it uses:
        *
        * ```ts
        * runner(input) {
        *   return {
        *     engine: "codebuild",
-       *     architecture: "arm64",
-       *     compute: "large",
-       *     timeout: "20 minutes",
-       *   }
+       *     architecture: "x86_64",
+       *     compute: "small",
+       *     timeout: "1 hour"
+       *   };
        * }
        * ```
        *
-       * This tells Autodeploy to use a Linux ARM64 machine with 8 GB of memory and 4 vCPUs.
-       * If a build runner with such configurations have not been previously created,
-       * one will be created.
+       * Once a runner is created, it can be used to run multiple builds of the same
+       * machine config concurrently.
        *
        * :::note
-       * Build runners that have not been used for 7 days will be automatically deleted.
+       * A runner can run multiple builds concurrently.
        * :::
+       *
+       * You are only charged for the number of build
+       * minutes that you use. The pricing is based on the machine config used.
+       * [Learn more about CodeBuild pricing](https://aws.amazon.com/codebuild/pricing/).
+       *
+       * You can also configure the runner based on the stage.
+       *
+       * ```ts {2}
+       * runner(input) {
+       *   return input.stage.includes("prod")
+       *     ? {
+       *       engine: "codebuild",
+       *       compute: "large",
+       *       timeout: "1 hour"
+       *     }
+       *     : {
+       *       engine: "codebuild",
+       *       compute: "small"
+       *     };
+       * }
+       * ```
+       *
+       * If a runner with the given config has been been previously created,
+       * it'll be resused. The Console will also automatically remove runners that
+       * have not been used for more than 7 days.
        */
       runner?(input: RunnerInput): Runner;
       /**
-       * Defines the stage the app will be deployed to.
+       * Defines the stage the app will be auto-deployed to. For example, to auto-deploy
+       * to the `production` stage when you git push to the `main` branch.
        *
-       * When a git event is received, Autodeploy will run the `target` function with
-       * the git event. The following events are supported:
-       * - `push`: When code is push to a branch.
-       * ```json
-       * {
-       *   type: "push",
-       *   repo: {
-       *     id: 1296269,
-       *     owner: "octocat",
-       *     repo: "Hello-World"
-       *   },
-       *   branch: "main",
-       *   commit: {
-       *     id: "b7e7c4c559e0e5b4bc6f8d98e0e5e5e5e5e5e5e5",
-       *     message: "Update the README with new information"
-       *   },
-       *   sender: {
-       *     id: 1,
-       *     username: "octocat"
-       *   }
-       * }
-       * ```
-       *
-       * - `pull_request`: When a pull request is opened or code is updated.
-       * ```json
-       * {
-       *   type: "push",
-       *   repo: {
-       *     id: 1296269,
-       *     owner: "octocat",
-       *     repo: "Hello-World"
-       *   },
-       *   number: 1347,
-       *   base: "main",
-       *   head: "changes",
-       *   commit: {
-       *     id: "b7e7c4c559e0e5b4bc6f8d98e0e5e5e5e5e5e5e5",
-       *     message: "Update the README with new information"
-       *   },
-       *   sender: {
-       *     id: 1,
-       *     username: "octocat"
-       *   }
-       * }
-       * ```
-       *
-       * With these events, you can setup auto deployment from the main branch to the production stage.
        * ```ts
        * target(event) {
        *   if (event.type === "push" && event.branch === "main") {
@@ -513,7 +503,73 @@ export interface Config {
        * }
        * ```
        *
-       * You can also setup a workflow where each pull request is deployed to a new stage.
+       * When a git event is received, Autodeploy will run the `target` function with
+       * the git event. This function should return the stage the app will be deployed to.
+       *
+       * :::tip
+       * Use the git event to configure the stage your app will be deployed to.
+       * :::
+       *
+       * The stage that is returned is then compared to the deployment target set in the
+       * app settings in the Console. If the stage matches a deployment target, the app will
+       * be deployed to the AWS account of that target.
+       *
+       * :::caution
+       * If a target is not returned, the app will not be deployed.
+       * :::
+       *
+       * The following git events are supported:
+       *
+       * - **`push`**, when you git push to a branch. For example, a git push to the `main` branch.
+       *
+       *   ```js
+       *   {
+       *     type: "push",
+       *     repo: {
+       *       id: 1296269,
+       *       owner: "octocat",
+       *       repo: "Hello-World"
+       *     },
+       *     branch: "main",
+       *     commit: {
+       *       id: "b7e7c4c559e0e5b4bc6f8d98e0e5e5e5e5e5e5e5",
+       *       message: "Update the README with new information"
+       *     },
+       *     sender: {
+       *       id: 1,
+       *       username: "octocat"
+       *     }
+       *   }
+       *   ```
+       *
+       * - `pull_request`, when a pull request is opened or updated. For example, pull request
+       *   `#1347` from the `feature` branch to the `main` branch.
+       *
+       *   ```js
+       *   {
+       *     type: "pull_request",
+       *     repo: {
+       *       id: 1296269,
+       *       owner: "octocat",
+       *       repo: "Hello-World"
+       *     },
+       *     number: 1347,
+       *     base: "main",
+       *     head: "changes",
+       *     commit: {
+       *       id: "b7e7c4c559e0e5b4bc6f8d98e0e5e5e5e5e5e5e5",
+       *       message: "Update the README with new information"
+       *     },
+       *     sender: {
+       *       id: 1,
+       *       username: "octocat"
+       *     }
+       *   }
+       *   ```
+       *
+       * You can use these events to setup a workflow. For example, where each git push to
+       * `main` deploys the `production` stage. And any pull request is deployed to a new stage.
+       *
        * ```ts
        * target(event) {
        *   if (event.type === "push" && event.branch === "main") {
