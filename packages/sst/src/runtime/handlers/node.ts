@@ -259,6 +259,7 @@ export const useNodeHandler = (): RuntimeHandler => {
             "npm install",
             "--omit=dev",
             "--no-optional",
+            "--force",
             "--platform=linux",
             input.props.architecture === "arm_64"
               ? "--arch=arm64"
