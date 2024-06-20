@@ -9,9 +9,6 @@ import * as aws from "@pulumi/aws";
 import { Component, Transform, transform } from "../component";
 import { Function, FunctionArgs } from "./function";
 import { ApiGatewayV2RouteArgs } from "./apigatewayv2";
-import { hashStringToPrettyString, sanitizeToPascalCase } from "../naming";
-
-const authorizers: Record<string, aws.apigatewayv2.Authorizer> = {};
 
 export interface Args extends ApiGatewayV2RouteArgs {
   /**
@@ -65,7 +62,6 @@ export class ApiGatewayV2LambdaRoute extends Component {
     const fn = createFunction();
     const permission = createPermission();
     const integration = createIntegration();
-    const authArgs = createAuthorizer();
     const apiRoute = createApiRoute();
 
     this.fn = fn;
@@ -111,54 +107,18 @@ export class ApiGatewayV2LambdaRoute extends Component {
       );
     }
 
-    function createAuthorizer() {
-      return output(args.auth).apply((auth) => {
+    function createApiRoute() {
+      const authArgs = output(args.auth).apply((auth) => {
         if (auth?.iam) return { authorizationType: "AWS_IAM" };
-        if (auth?.jwt) {
-          // Build authorizer name
-          const id = sanitizeToPascalCase(
-            hashStringToPrettyString(
-              [
-                name,
-                auth.jwt.issuer,
-                ...auth.jwt.audiences.sort(),
-                auth.jwt.identitySource ?? "",
-              ].join(""),
-              6,
-            ),
-          );
-
-          const authorizer =
-            authorizers[id] ??
-            new aws.apigatewayv2.Authorizer(
-              `${name}Authorizer${id}`,
-              transform(args.transform?.authorizer, {
-                apiId: api.id,
-                authorizerType: "JWT",
-                identitySources: [
-                  auth.jwt.identitySource ?? "$request.header.Authorization",
-                ],
-                jwtConfiguration: {
-                  audiences: auth.jwt.audiences,
-                  issuer: auth.jwt.issuer,
-                },
-              }),
-            );
-          authorizers[id] = authorizer;
-
+        if (auth?.jwt)
           return {
             authorizationType: "JWT",
             authorizationScopes: auth.jwt.scopes,
-            authorizerId: authorizer.id,
+            authorizerId: auth.jwt.authorizer,
           };
-        }
-        return {
-          authorizationType: "NONE",
-        };
+        return { authorizationType: "NONE" };
       });
-    }
 
-    function createApiRoute() {
       return authArgs.apply(
         (authArgs) =>
           new aws.apigatewayv2.Route(

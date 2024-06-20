@@ -146,9 +146,7 @@ The name of the cluster.
 </InlineSection>
 - <p>[<code class="key">iam?</code>](#auth-iam)</p>
 - <p>[<code class="key">jwt?</code>](#auth-jwt) <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Object</code><code class="symbol">&gt;</code></p>
-  - <p>[<code class="key">audiences</code>](#auth-jwt-audiences)</p>
-  - <p>[<code class="key">identitySource?</code>](#auth-jwt-identitysource)</p>
-  - <p>[<code class="key">issuer</code>](#auth-jwt-issuer)</p>
+  - <p>[<code class="key">authorizer</code>](#auth-jwt-authorizer)</p>
   - <p>[<code class="key">scopes?</code>](#auth-jwt-scopes)</p>
 </Section>
 Enable auth for your HTTP API.
@@ -190,67 +188,23 @@ You can configure JWT auth.
 {
   auth: {
     jwt: {
-      issuer: "https://issuer.com/",
-      audiences: ["https://api.example.com"],
-      scopes: ["read:profile", "write:profile"],
-      identitySource: "$request.header.AccessToken"
+      authorizer: myAuthorizer.id,
+      scopes: ["read:profile", "write:profile"]
     }
   }
 }
 ```
 
-You can also use Cognito as the identity provider.
-
-```js
-{
-  auth: {
-    jwt: {
-      audiences: [userPoolClient.id],
-      issuer: $interpolate`https://cognito-idp.${aws.getArnOutput(userPool).region}.amazonaws.com/${userPool.id}`,
-    }
-  }
-}
-```
-
-Where `userPool` and `userPoolClient` are:
-
-```js
-const userPool = new aws.cognito.UserPool();
-const userPoolClient = new aws.cognito.UserPoolClient();
-```
+Where `myAuthorizer` is created by calling the `addAuthorizer` method.
 </Segment>
-<NestedTitle id="auth-jwt-audiences" Tag="h5" parent="auth.jwt.">audiences</NestedTitle>
-<Segment>
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code><code class="symbol">[]</code><code class="symbol">&gt;</code>
-</InlineSection>
-</Section>
-List of the intended recipients of the JWT. A valid JWT must provide an `aud` that matches at least one entry in this list.
-
-</Segment>
-<NestedTitle id="auth-jwt-identitysource" Tag="h5" parent="auth.jwt.">identitySource?</NestedTitle>
+<NestedTitle id="auth-jwt-authorizer" Tag="h5" parent="auth.jwt.">authorizer</NestedTitle>
 <Segment>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
-
-<InlineSection>
-**Default** <code class="primitive">"$request.header.Authorization"</code>
-</InlineSection>
-Specifies where to extract the JWT from the request.
-
-</Segment>
-<NestedTitle id="auth-jwt-issuer" Tag="h5" parent="auth.jwt.">issuer</NestedTitle>
-<Segment>
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
-</InlineSection>
-</Section>
-Base domain of the identity provider that issues JSON Web Tokens.
+Authorizer ID of the JWT authorizer.
 
 </Segment>
 <NestedTitle id="auth-jwt-scopes" Tag="h5" parent="auth.jwt.">scopes?</NestedTitle>
@@ -297,22 +251,11 @@ The route function.
 <InlineSection>
 **Type** <code class="primitive">Object</code>
 </InlineSection>
-- <p>[<code class="key">authorizer?</code>](#transform-authorizer)</p>
 - <p>[<code class="key">integration?</code>](#transform-integration)</p>
 - <p>[<code class="key">route?</code>](#transform-route)</p>
 </Section>
 [Transform](/docs/components#transform) how this component creates its underlying
 resources.
-
-</Segment>
-<NestedTitle id="transform-authorizer" Tag="h4" parent="transform.">authorizer?</NestedTitle>
-<Segment>
-<Section type="parameters">
-<InlineSection>
-**Type** [<code class="type">AuthorizerArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/apigatewayv2/authorizer/#inputs)<code class="symbol"> | </code><code class="symbol">(</code><code class="primitive">args</code><code class="symbol">: </code>[<code class="type">AuthorizerArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/apigatewayv2/authorizer/#inputs)<code class="symbol"> => </code><code class="primitive">void</code><code class="symbol">)</code>
-</InlineSection>
-</Section>
-Transform the API Gateway authorizer resource.
 
 </Segment>
 <NestedTitle id="transform-integration" Tag="h4" parent="transform.">integration?</NestedTitle>

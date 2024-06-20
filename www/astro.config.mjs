@@ -158,6 +158,10 @@ const sidebar = [
         link: "/docs/component/aws/apigatewayv1-authorizer/",
       },
       {
+        label: "ApiGatewayV2Authorizer",
+        link: "/docs/component/aws/apigatewayv2-authorizer/",
+      },
+      {
         label: "QueueLambdaSubscriber",
         link: "/docs/component/aws/queue-lambda-subscriber/",
       },
