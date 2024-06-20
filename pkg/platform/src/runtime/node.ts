@@ -160,7 +160,7 @@ export async function build(
           ),
         }),
       );
-      const cmd = ["npm install"];
+      const cmd = ["npm", "install", "--force"];
       if (installPackages.includes("sharp")) {
         cmd.push(
           "--os=linux --libc=glibc",
