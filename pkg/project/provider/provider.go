@@ -203,6 +203,7 @@ func PullState(backend Home, app, stage string, out string) error {
 type lockData struct {
 	Created  time.Time `json:"created"`
 	UpdateID string    `json:"updateID"`
+	RunID    string    `json:"runID"`
 	Command  string    `json:"command"`
 }
 
@@ -216,6 +217,7 @@ func Lock(backend Home, updateID, command, app, stage string) error {
 	if !lockData.Created.IsZero() {
 		return ErrLockExists
 	}
+	lockData.RunID = os.Getenv("SST_RUN_ID")
 	lockData.Created = time.Now()
 	lockData.UpdateID = updateID
 	lockData.Command = command
