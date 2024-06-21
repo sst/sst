@@ -310,7 +310,7 @@ func (u *UI) StackEvent(evt *project.StackEvent) {
 
 		if evt.DiagnosticEvent.Severity == "info" {
 			u.spinner.Disable()
-			fmt.Println(parseError(evt.DiagnosticEvent.Message)[0])
+			fmt.Println(strings.TrimRight(evt.DiagnosticEvent.Message, "\n"))
 			u.spinner.Enable()
 		}
 
