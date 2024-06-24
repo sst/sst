@@ -1,5 +1,13 @@
 # @serverless-stack/cli2
 
+## 2.43.3
+
+### Patch Changes
+
+- [#3782](https://github.com/sst/sst/pull/3782) [`be041741c`](https://github.com/sst/sst/commit/be041741cfffbd71145a14c35a5bb230f392596a) Thanks [@henrycrib](https://github.com/henrycrib)! - Function: update rust runtime to PROVIDED_AL2023
+
+- [#3785](https://github.com/sst/sst/pull/3785) [`da3770f9b`](https://github.com/sst/sst/commit/da3770f9baffdf994766d5e0075f830626ff08f1) Thanks [@relsunkaev](https://github.com/relsunkaev)! - NextjsSite: respect runtime and memorySize configs
+
 ## 2.43.2
 
 ### Patch Changes
