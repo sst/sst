@@ -83,6 +83,7 @@ func run() error {
 	signal.Notify(interruptChannel, syscall.SIGINT)
 	go func() {
 		<-interruptChannel
+		slog.Info("interrupted")
 		cancel()
 	}()
 
@@ -448,7 +449,7 @@ var Root = Command{
 				}
 				defer p.Cleanup()
 
-				ui := ui.New(ui.ProgressModeDeploy)
+				ui := ui.New(cli.Context, ui.ProgressModeDeploy)
 				defer ui.Destroy()
 				ui.Header(version, p.App().Name, p.App().Stage)
 				target := []string{}
@@ -1057,7 +1058,7 @@ var Root = Command{
 					return err
 				}
 				defer p.Cleanup()
-				ui := ui.New(ui.ProgressModeRemove)
+				ui := ui.New(cli.Context, ui.ProgressModeRemove)
 				defer ui.Destroy()
 				ui.Header(version, p.App().Name, p.App().Stage)
 				target := []string{}
@@ -1328,7 +1329,7 @@ var Root = Command{
 					return err
 				}
 				defer p.Cleanup()
-				ui := ui.New(ui.ProgressModeRefresh)
+				ui := ui.New(cli.Context, ui.ProgressModeRefresh)
 				defer ui.Destroy()
 				ui.Header(version, p.App().Name, p.App().Stage)
 				target := []string{}

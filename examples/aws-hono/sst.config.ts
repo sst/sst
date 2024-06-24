@@ -20,7 +20,6 @@ export default $config({
         FOO: "bar",
       },
     });
-
     return {
       api: hono.url,
     };

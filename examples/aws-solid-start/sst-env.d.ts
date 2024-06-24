@@ -7,6 +7,10 @@ declare module "sst" {
       name: string
       type: "sst.aws.Bucket"
     }
+    MyWeb: {
+      type: "sst.aws.SolidStart"
+      url: string
+    }
   }
 }
 export {}

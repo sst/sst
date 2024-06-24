@@ -1,15 +1,15 @@
 package ui
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
-	"log/slog"
 	"net/url"
 	"os"
 	"strings"
 	"time"
 
-	"github.com/briandowns/spinner"
+	tea "github.com/charmbracelet/bubbletea"
 	"github.com/fatih/color"
 	"github.com/pulumi/pulumi/sdk/v3/go/common/apitype"
 	"github.com/pulumi/pulumi/sdk/v3/go/common/resource"
@@ -32,86 +32,101 @@ const (
 )
 
 type UI struct {
-	spinner     *spinner.Spinner
 	mode        ProgressMode
 	hasProgress bool
 	pending     map[string]string
 	dedupe      map[string]bool
 	timing      map[string]time.Time
-	hints       map[string]string
 	parents     map[string]string
-	footer      string
 	colors      map[string]color.Attribute
 	workerTime  map[string]time.Time
 	complete    *project.CompleteEvent
 	skipped     int
+	footer      *tea.Program
+	buffer      []interface{}
+	hasBlank    bool
 }
 
-func New(mode ProgressMode) *UI {
+func New(ctx context.Context, mode ProgressMode) *UI {
 	result := &UI{
-		spinner:    spinner.New(spinner.CharSets[14], 100*time.Millisecond),
+		footer:     NewFooter(),
 		mode:       mode,
 		colors:     map[string]color.Attribute{},
 		workerTime: map[string]time.Time{},
+		hasBlank:   false,
 	}
 	result.Reset()
 	return result
+}
+
+func (u *UI) print(args ...interface{}) {
+	u.buffer = append(u.buffer, args...)
+}
+
+func (u *UI) printf(tmpl string, args ...interface{}) {
+	u.buffer = append(u.buffer, fmt.Sprintf(tmpl, args...))
+}
+
+func (u *UI) println(args ...interface{}) {
+	u.buffer = append(u.buffer, args...)
+	u.footer.Send(lineMsg(fmt.Sprint(u.buffer...)))
+	u.buffer = []interface{}{}
+	u.hasBlank = false
+}
+
+func (u *UI) blank() {
+	if u.hasBlank {
+		return
+	}
+	u.println()
+	u.hasBlank = true
 }
 
 func (u *UI) Reset() {
 	u.hasProgress = false
 	u.skipped = 0
 	u.parents = map[string]string{}
-	u.hints = map[string]string{}
 	u.pending = map[string]string{}
 	u.dedupe = map[string]bool{}
 	u.timing = map[string]time.Time{}
+	u.buffer = []interface{}{}
 }
 
 func (u *UI) StackEvent(evt *project.StackEvent) {
+	u.footer.Send(evt)
 	if evt.ConcurrentUpdateEvent != nil {
 		u.printEvent(color.FgRed, "Locked", "A concurrent update was detected on the app. Run `sst unlock` to remove the lock and try again.")
 	}
 	if evt.StackCommandEvent != nil {
-		u.spinner.Disable()
-
+		u.blank()
 		if evt.StackCommandEvent.Command == "deploy" {
-			color.New(color.FgYellow, color.Bold).Print("~")
-			color.New(color.FgWhite, color.Bold).Println("  Deploying")
-			u.spinner.Suffix = "  Deploying..."
+			u.println(
+				color.New(color.FgYellow, color.Bold).Sprint("~"),
+				color.New(color.FgWhite, color.Bold).Sprint("  Deploying"),
+			)
 		}
-
 		if evt.StackCommandEvent.Command == "remove" {
-			color.New(color.FgRed, color.Bold).Print("~")
-			color.New(color.FgWhite, color.Bold).Println("  Removing")
-			u.spinner.Suffix = "  Removing..."
+			u.println(
+				color.New(color.FgRed, color.Bold).Sprint("~"),
+				color.New(color.FgWhite, color.Bold).Sprint("  Removing"),
+			)
 		}
-
 		if evt.StackCommandEvent.Command == "refresh" {
-			color.New(color.FgBlue, color.Bold).Print("~")
-			color.New(color.FgWhite, color.Bold).Println("  Refreshing")
-			u.spinner.Suffix = "  Refreshing..."
+			u.println(
+				color.New(color.FgBlue, color.Bold).Sprint("~"),
+				color.New(color.FgWhite, color.Bold).Sprint("  Refreshing"),
+			)
 		}
-
-		fmt.Println()
-		u.spinner.Start()
-		u.spinner.Disable()
+		u.blank()
 		return
 	}
 
-	if evt.SummaryEvent != nil {
-		u.spinner.Suffix = "  Finalizing..."
-	}
-
 	if evt.BuildFailedEvent != nil {
-		u.spinner.Disable()
 		u.printEvent(color.FgRed, "Error", evt.BuildFailedEvent.Error)
 	}
 
 	if evt.StdOutEvent != nil {
-		u.spinner.Disable()
-		fmt.Println(evt.StdOutEvent.Text)
-		u.spinner.Enable()
+		u.println(evt.StdOutEvent.Text)
 		return
 	}
 
@@ -133,164 +148,73 @@ func (u *UI) StackEvent(evt *project.StackEvent) {
 			// Do not print anything for skipped resources
 			if u.mode == ProgressModeDeploy || u.mode == ProgressModeDev {
 				u.skipped++
-				u.spinner.Suffix = fmt.Sprintf("  Deploying (%v skipped)...", u.skipped)
-				u.spinner.Enable()
 			}
-			return
-		}
-
-		if evt.ResourcePreEvent.Metadata.Op == apitype.OpCreate {
-			u.printProgress(Progress{
-				Color: color.FgYellow,
-				Label: "Creating",
-				URN:   evt.ResourcePreEvent.Metadata.URN,
-			})
-			return
-		}
-
-		if evt.ResourcePreEvent.Metadata.Op == apitype.OpUpdate {
-			u.printProgress(Progress{
-				Color: color.FgYellow,
-				Label: "Updating",
-				URN:   evt.ResourcePreEvent.Metadata.URN,
-			})
-			return
-		}
-
-		if evt.ResourcePreEvent.Metadata.Op == apitype.OpCreateReplacement {
-			u.printProgress(Progress{
-				Color: color.FgYellow,
-				Label: "Creating",
-				URN:   evt.ResourcePreEvent.Metadata.URN,
-			})
-			return
-		}
-
-		if evt.ResourcePreEvent.Metadata.Op == apitype.OpDeleteReplaced {
-			u.printProgress(Progress{
-				Color: color.FgYellow,
-				Label: "Deleting",
-				URN:   evt.ResourcePreEvent.Metadata.URN,
-			})
-			return
-		}
-
-		if evt.ResourcePreEvent.Metadata.Op == apitype.OpReplace {
-			u.printProgress(Progress{
-				Color: color.FgYellow,
-				Label: "Creating",
-				URN:   evt.ResourcePreEvent.Metadata.URN,
-			})
-			return
-		}
-
-		if evt.ResourcePreEvent.Metadata.Op == apitype.OpDelete {
-			u.printProgress(Progress{
-				Color: color.FgYellow,
-				Label: "Deleting",
-				URN:   evt.ResourcePreEvent.Metadata.URN,
-			})
-			return
-		}
-
-		if evt.ResourcePreEvent.Metadata.Op == apitype.OpRefresh {
-			u.printProgress(Progress{
-				Color: color.FgYellow,
-				Label: "Refreshing",
-				URN:   evt.ResourcePreEvent.Metadata.URN,
-			})
 			return
 		}
 	}
 
 	if evt.ResOutputsEvent != nil {
-		// if evt.ResOutputsEvent.Metadata.Type == "pulumi:pulumi:Stack" && evt.ResOutputsEvent.Metadata.Op != apitype.OpDelete {
-		// 	u.outputs = evt.ResOutputsEvent.Metadata.New.Outputs
-		// 	return
-		// }
 		if evt.ResOutputsEvent.Metadata.Type == "pulumi:pulumi:Stack" {
 			return
 		}
 
-		if evt.ResOutputsEvent.Metadata.New != nil {
-			if hint, ok := evt.ResOutputsEvent.Metadata.New.Outputs["_hint"]; ok {
-				stringHint, ok := hint.(string)
-				if ok {
-					u.hints[evt.ResOutputsEvent.Metadata.URN] = stringHint
-				} else {
-					slog.Info("hint is not a string", "hint", hint)
-				}
-			}
-		}
-
-		if evt.ResOutputsEvent.Metadata.Type == "sst:aws:Nextjs" && evt.ResOutputsEvent.Metadata.Op == apitype.OpCreate && false {
-			u.footer = "🎉 Congrats on your new site!"
-		}
-
 		duration := time.Since(u.timing[evt.ResOutputsEvent.Metadata.URN]).Round(time.Millisecond)
 		if evt.ResOutputsEvent.Metadata.Op == apitype.OpSame && u.mode == ProgressModeRefresh {
-			u.printProgress(Progress{
-				Color:    color.FgGreen,
-				Label:    "Refreshed",
-				Final:    true,
-				URN:      evt.ResOutputsEvent.Metadata.URN,
-				Duration: duration,
-			})
+			u.printProgress(
+				color.FgGreen,
+				"Refreshed",
+				duration,
+				evt.ResOutputsEvent.Metadata.URN,
+			)
 			return
 		}
 		if evt.ResOutputsEvent.Metadata.Op == apitype.OpCreate {
-			u.printProgress(Progress{
-				Color:    color.FgGreen,
-				Label:    "Created",
-				Final:    true,
-				URN:      evt.ResOutputsEvent.Metadata.URN,
-				Duration: duration,
-			})
+			u.printProgress(
+				color.FgGreen,
+				"Created",
+				duration,
+				evt.ResOutputsEvent.Metadata.URN,
+			)
 		}
 		if evt.ResOutputsEvent.Metadata.Op == apitype.OpUpdate {
-			u.printProgress(Progress{
-				Color:    color.FgGreen,
-				Label:    "Updated",
-				Final:    true,
-				URN:      evt.ResOutputsEvent.Metadata.URN,
-				Duration: duration,
-			})
+			u.printProgress(
+				color.FgGreen,
+				"Updated",
+				duration,
+				evt.ResOutputsEvent.Metadata.URN,
+			)
 		}
 		if evt.ResOutputsEvent.Metadata.Op == apitype.OpDelete {
-			u.printProgress(Progress{
-				Color:    color.FgHiBlack,
-				Label:    "Deleted",
-				Final:    true,
-				URN:      evt.ResOutputsEvent.Metadata.URN,
-				Duration: duration,
-			})
+			u.printProgress(
+				color.FgHiBlack,
+				"Deleted",
+				duration,
+				evt.ResOutputsEvent.Metadata.URN,
+			)
 		}
 		if evt.ResOutputsEvent.Metadata.Op == apitype.OpDeleteReplaced {
-			u.printProgress(Progress{
-				Color:    color.FgHiBlack,
-				Label:    "Deleted",
-				Final:    true,
-				URN:      evt.ResOutputsEvent.Metadata.URN,
-				Duration: duration,
-			})
+			u.printProgress(
+				color.FgHiBlack,
+				"Deleted",
+				duration,
+				evt.ResOutputsEvent.Metadata.URN,
+			)
 		}
 		if evt.ResOutputsEvent.Metadata.Op == apitype.OpCreateReplacement {
-			u.printProgress(Progress{
-				Color:    color.FgGreen,
-				Label:    "Created",
-				Final:    true,
-				URN:      evt.ResOutputsEvent.Metadata.URN,
-				Duration: duration,
-			})
+			u.printProgress(
+				color.FgGreen,
+				"Created",
+				duration,
+				evt.ResOutputsEvent.Metadata.URN,
+			)
 		}
 		if evt.ResOutputsEvent.Metadata.Op == apitype.OpReplace {
-			u.printProgress(Progress{
-				Color:    color.FgGreen,
-				Label:    "Created",
-				Final:    true,
-				URN:      evt.ResOutputsEvent.Metadata.URN,
-				Duration: duration,
-			})
+			u.printProgress(
+				color.FgGreen,
+				"Created",
+				duration,
+				evt.ResOutputsEvent.Metadata.URN,
+			)
 		}
 	}
 
@@ -299,119 +223,107 @@ func (u *UI) StackEvent(evt *project.StackEvent) {
 
 	if evt.DiagnosticEvent != nil {
 		if evt.DiagnosticEvent.Severity == "error" {
-			u.printProgress(Progress{
-				URN:     evt.DiagnosticEvent.URN,
-				Color:   color.FgRed,
-				Final:   true,
-				Label:   "Error",
-				Message: parseError(evt.DiagnosticEvent.Message),
-			})
+			message := []string{u.formatURN(evt.DiagnosticEvent.URN)}
+			message = append(message, parseError(evt.DiagnosticEvent.Message)...)
+			u.printEvent(color.FgRed, "Error", message...)
 		}
 
 		if evt.DiagnosticEvent.Severity == "info" {
-			u.spinner.Disable()
-			fmt.Println(strings.TrimRight(evt.DiagnosticEvent.Message, "\n"))
-			u.spinner.Enable()
+			u.printEvent(
+				color.FgHiBlack,
+				"Log",
+				strings.TrimSpace(evt.DiagnosticEvent.Message),
+			)
 		}
 
 		if evt.DiagnosticEvent.Severity == "info#err" {
 			if strings.HasPrefix(evt.DiagnosticEvent.Message, "Downloading provider") {
 				u.printEvent(color.FgMagenta, "Info", strings.TrimSpace(evt.DiagnosticEvent.Message))
 			} else {
-				u.spinner.Disable()
-				fmt.Println(parseError(evt.DiagnosticEvent.Message)[0])
-				u.spinner.Enable()
+				u.printEvent(
+					color.FgHiBlack,
+					"Log",
+					evt.DiagnosticEvent.Message,
+				)
 			}
 		}
 	}
 
 	if evt.CompleteEvent != nil {
 		u.complete = evt.CompleteEvent
-		u.spinner.Disable()
-		defer fmt.Println()
-		if u.hasProgress {
-			fmt.Println()
-		}
+		u.blank()
 		if len(evt.CompleteEvent.Errors) == 0 && evt.CompleteEvent.Finished {
-			color.New(color.FgGreen, color.Bold).Print(IconCheck)
-			if !u.hasProgress {
+			u.print(color.New(color.FgGreen, color.Bold).Sprint(IconCheck))
+			if len(u.timing) == 0 {
 				if u.mode == ProgressModeRemove {
-					color.New(color.FgWhite, color.Bold).Println("  No resources to remove")
+					u.print(color.New(color.FgWhite, color.Bold).Sprint("  No resources to remove"))
 				} else {
-					color.New(color.FgWhite, color.Bold).Println("  No changes")
+					u.print(color.New(color.FgWhite, color.Bold).Sprint("  No changes"))
 				}
 			}
-			if u.hasProgress {
+			if len(u.timing) > 0 {
 				if u.mode == ProgressModeRemove {
-					color.New(color.FgWhite, color.Bold).Println("  Removed")
+					u.print(color.New(color.FgWhite, color.Bold).Sprint("  Removed"))
 				}
 				if u.mode == ProgressModeDeploy || u.mode == ProgressModeDev {
-					color.New(color.FgWhite, color.Bold).Println("  Complete")
+					u.print(color.New(color.FgWhite, color.Bold).Sprint("  Complete"))
 				}
 				if u.mode == ProgressModeRefresh {
-					color.New(color.FgWhite, color.Bold).Println("  Refreshed")
+					u.print(color.New(color.FgWhite, color.Bold).Sprint("  Refreshed"))
 				}
 			}
+			u.println()
 			if len(evt.CompleteEvent.Hints) > 0 {
 				for k, v := range evt.CompleteEvent.Hints {
 					splits := strings.Split(k, "::")
-					color.New(color.FgHiBlack).Print("   ")
-					color.New(color.FgHiBlack, color.Bold).Print(splits[len(splits)-1] + ": ")
-					color.New(color.FgWhite).Println(v)
+					u.println(
+						color.New(color.FgHiBlack).Sprint("   "),
+						color.New(color.FgHiBlack, color.Bold).Sprint(splits[len(splits)-1]+": "),
+						color.New(color.FgWhite).Sprint(v),
+					)
 				}
 			}
 			if len(evt.CompleteEvent.Outputs) > 0 {
 				if len(evt.CompleteEvent.Hints) > 0 {
-					color.New(color.FgHiBlack).Println("   ---")
+					u.println(color.New(color.FgHiBlack).Sprint("   ---"))
 				}
 				for k, v := range evt.CompleteEvent.Outputs {
-					color.New(color.FgHiBlack).Print("   ")
-					color.New(color.FgHiBlack, color.Bold).Print(k + ": ")
-					color.New(color.FgWhite).Println(v)
+					u.println(
+						color.New(color.FgHiBlack).Sprint("   "),
+						color.New(color.FgHiBlack, color.Bold).Sprint(k+": "),
+						color.New(color.FgWhite).Sprint(v),
+					)
 				}
 			}
-			if u.footer != "" {
-				fmt.Println()
-				fmt.Println(u.footer)
-			}
-			return
 		}
 
 		if len(evt.CompleteEvent.Errors) == 0 && !evt.CompleteEvent.Finished {
-			color.New(color.FgRed, color.Bold).Print("\n" + IconX)
-			color.New(color.FgWhite, color.Bold).Println("  Interrupted")
-			return
+			u.println(
+				color.New(color.FgRed, color.Bold).Sprint(IconX),
+				color.New(color.FgWhite, color.Bold).Sprint("  Interrupted"),
+			)
 		}
 
-		color.New(color.FgRed, color.Bold).Print(IconX)
-		color.New(color.FgWhite, color.Bold).Println("  Failed")
+		if len(evt.CompleteEvent.Errors) > 0 {
+			u.println(
+				color.New(color.FgRed, color.Bold).Sprint(IconX),
+				color.New(color.FgWhite, color.Bold).Sprint("  Failed"),
+			)
 
-		for _, status := range evt.CompleteEvent.Errors {
-			if status.URN != "" {
-				color.New(color.FgRed, color.Bold).Println("   " + u.formatURN(status.URN))
+			for _, status := range evt.CompleteEvent.Errors {
+				if status.URN != "" {
+					u.println(color.New(color.FgRed, color.Bold).Sprint("   " + u.formatURN(status.URN)))
+				}
+				u.println(color.New(color.FgWhite).Sprint("   " + strings.Join(parseError(status.Message), "\n   ")))
 			}
-			color.New(color.FgWhite).Println("   " + strings.Join(parseError(status.Message), "\n   "))
 		}
-	}
-}
 
-var COLORS = []color.Attribute{
-	color.FgMagenta,
-	color.FgCyan,
-	color.FgGreen,
-	color.FgWhite,
-}
-
-func (u *UI) getColor(input string) color.Attribute {
-	result, ok := u.colors[input]
-	if !ok {
-		result = COLORS[len(u.colors)%len(COLORS)]
-		u.colors[input] = result
+		u.blank()
 	}
-	return result
 }
 
 func (u *UI) Event(evt *server.Event) {
+	u.footer.Send(evt)
 	if evt.FunctionInvokedEvent != nil {
 		u.workerTime[evt.FunctionInvokedEvent.WorkerID] = time.Now()
 		u.printEvent(u.getColor(evt.FunctionInvokedEvent.WorkerID), color.New(color.FgWhite, color.Bold).Sprintf("%-11s", "Invoke"), u.functionName(evt.FunctionInvokedEvent.FunctionID))
@@ -489,6 +401,22 @@ func (u *UI) Event(evt *server.Event) {
 	}
 }
 
+var COLORS = []color.Attribute{
+	color.FgMagenta,
+	color.FgCyan,
+	color.FgGreen,
+	color.FgWhite,
+}
+
+func (u *UI) getColor(input string) color.Attribute {
+	result, ok := u.colors[input]
+	if !ok {
+		result = COLORS[len(u.colors)%len(COLORS)]
+		u.colors[input] = result
+	}
+	return result
+}
+
 func (u *UI) functionName(functionID string) string {
 	if u.complete == nil {
 		return functionID
@@ -504,45 +432,58 @@ func (u *UI) functionName(functionID string) string {
 	return functionID
 }
 
-func (u *UI) printEvent(barColor color.Attribute, label string, message string) {
-	if u.spinner.Active() {
-		u.spinner.Disable()
-		defer u.spinner.Enable()
+func (u *UI) printProgress(barColor color.Attribute, label string, duration time.Duration, urn string) {
+	message := u.formatURN(urn)
+	if duration > time.Second {
+		message += fmt.Sprintf(" (%.1fs)", duration.Seconds())
 	}
-	color.New(barColor, color.Bold).Print("|  ")
+	u.printEvent(barColor, label, message)
+}
+
+func (u *UI) printEvent(barColor color.Attribute, label string, message ...string) {
+	u.print(color.New(barColor, color.Bold).Sprint("|  "))
 	if label != "" {
-		color.New(color.FgHiBlack).Print(fmt.Sprintf("%-11s", label), " ")
+		u.print(color.New(color.FgHiBlack).Sprint(fmt.Sprintf("%-11s", label), " "))
 	}
-	color.New(color.FgHiBlack).Print(message)
-	fmt.Println()
+	if len(message) > 0 {
+		u.print(color.New(color.FgHiBlack).Sprint(message[0]))
+	}
+	u.println()
+	for _, msg := range message[1:] {
+		u.print(color.New(barColor, color.Bold).Sprint("|  "))
+		u.println(color.New(color.FgHiBlack).Sprint(msg))
+	}
 	u.hasProgress = true
 }
 
-func (u *UI) Interrupt() {
-	u.spinner.Suffix = "  Interrupting..."
-}
-
 func (u *UI) Destroy() {
-	u.spinner.Stop()
+	u.footer.Quit()
+	u.footer.Wait()
 }
 
 func (u *UI) Header(version, app, stage string) {
-	color.New(color.FgCyan, color.Bold).Print("SST ❍ ion " + version + "  ")
-	color.New(color.FgHiBlack).Print("ready!")
-	fmt.Println()
-	fmt.Println()
-	color.New(color.FgCyan, color.Bold).Print("➜  ")
+	u.println(
+		color.New(color.FgCyan, color.Bold).Sprint("SST ❍ ion "+version),
+		color.New(color.FgHiBlack).Sprint(" ready!"),
+	)
+	u.blank()
+	u.println(
+		color.New(color.FgCyan, color.Bold).Sprint("➜  "),
+		color.New(color.FgWhite, color.Bold).Sprintf("%-12s", "App:"),
+		color.New(color.FgHiBlack).Sprint(app),
+	)
+	u.println(
+		color.New(color.FgWhite, color.Bold).Sprintf("   %-12s", "Stage:"),
+		color.New(color.FgHiBlack).Sprint(stage),
+	)
 
-	color.New(color.FgWhite, color.Bold).Printf("%-12s", "App:")
-	color.New(color.FgHiBlack).Println(app)
-
-	color.New(color.FgWhite, color.Bold).Printf("   %-12s", "Stage:")
-	color.New(color.FgHiBlack).Println(stage)
 	if u.mode == ProgressModeDev {
-		color.New(color.FgWhite, color.Bold).Printf("   %-12s", "Console:")
-		color.New(color.FgHiBlack).Println("https://console.sst.dev/local/" + app + "/" + stage)
+		u.println(
+			color.New(color.FgWhite, color.Bold).Sprintf("   %-12s", "Console:"),
+			color.New(color.FgHiBlack).Sprint("https://console.sst.dev/local/"+app+"/"+stage),
+		)
 	}
-	fmt.Println()
+	u.blank()
 }
 
 func (u *UI) formatURN(urn string) string {
@@ -574,41 +515,6 @@ func (u *UI) formatURN(urn string) string {
 		result = child.Name() + " " + child.Type().DisplayName() + " → " + result
 	}
 	return result
-}
-
-type Progress struct {
-	Color   color.Attribute
-	Label   string
-	URN     string
-	Final   bool
-	Message []string
-	time.Duration
-}
-
-func (u *UI) printProgress(progress Progress) {
-	u.spinner.Disable()
-	defer u.spinner.Enable()
-	dedupeKey := progress.URN + progress.Label
-	// if u.dedupe[dedupeKey] {
-	// 	return
-	// }
-	u.dedupe[dedupeKey] = true
-
-	color.New(progress.Color, color.Bold).Print("|  ")
-	color.New(color.FgHiBlack).Print(fmt.Sprintf("%-11s", progress.Label), " ", u.formatURN(progress.URN))
-	if progress.Duration > time.Second {
-		color.New(color.FgHiBlack).Printf(" (%.1fs)", progress.Duration.Seconds())
-	}
-	if len(progress.Message) > 0 {
-		color.New(color.FgWhite).Print(" " + progress.Message[0])
-		for _, item := range progress.Message[1:] {
-			fmt.Println()
-			color.New(progress.Color, color.Bold).Print("|  ")
-			color.New(color.FgWhite).Print(strings.TrimSpace(item))
-		}
-	}
-	fmt.Println()
-	u.hasProgress = true
 }
 
 func Success(msg string) {

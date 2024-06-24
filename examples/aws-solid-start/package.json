@@ -3,7 +3,7 @@
   "type": "module",
   "scripts": {
     "build": "vinxi build",
-    "dev": "sst dev vinxi dev",
+    "dev": "vinxi dev",
     "start": "vinxi start"
   },
   "dependencies": {

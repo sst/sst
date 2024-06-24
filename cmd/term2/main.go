@@ -5,6 +5,8 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"reflect"
+	"time"
 
 	tcellterm "git.sr.ht/~rockorager/tcell-term"
 	"github.com/gdamore/tcell/v2"
@@ -17,12 +19,53 @@ type model struct {
 	focus    string
 	selected int
 
-	commands []string
-	vts      []*tcellterm.VT
+	panes []*pane
 
 	main          *views.ViewPort
 	sidebar       *views.ViewPort
 	sidebarWidget *views.BoxLayout
+}
+
+type PaneStatus int
+
+const (
+	PaneStatusRunning PaneStatus = iota
+	PaneStatusStopped
+	PaneStatusClearing
+)
+
+type pane struct {
+	vt     *tcellterm.VT
+	args   []string
+	status PaneStatus
+	title  string
+	cmd    *exec.Cmd
+}
+
+func (p *pane) Start() error {
+	if p.status == PaneStatusStopped {
+		p.status = PaneStatusClearing
+		p.vt.Start(exec.Command("clear"))
+		return nil
+	}
+	cmd := exec.Command(p.args[0], p.args[1:]...)
+	err := p.vt.Start(cmd)
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+	p.status = PaneStatusRunning
+	return nil
+}
+
+func (p *pane) Restart() error {
+	p.vt.Close()
+	return nil
+}
+
+func (p *pane) Kill() error {
+	p.vt.Close()
+	return nil
 }
 
 var PAD_HEIGHT = 1
@@ -31,13 +74,33 @@ var SIDEBAR_WIDTH = 20
 
 // Update is the main event handler. It should only be called by the main thread
 func (m *model) Update(ev tcell.Event) {
+	log.Println(reflect.TypeOf(ev))
 	switch ev := ev.(type) {
 	case *tcell.EventKey:
 		switch ev.Key() {
+		case 256:
+			switch ev.Rune() {
+			case 'k':
+				if m.focus == "sidebar" {
+					m.SelectedPane().Kill()
+					return
+				}
+			case 'r':
+				if m.focus == "sidebar" {
+					if m.SelectedPane().status == PaneStatusRunning {
+						m.SelectedPane().Restart()
+					}
+					if m.SelectedPane().status == PaneStatusStopped {
+						m.SelectedPane().Start()
+					}
+					m.Draw()
+					return
+				}
+			}
 		case tcell.KeyCtrlC:
 			if m.focus == "sidebar" {
-				for _, vt := range m.vts {
-					vt.Close()
+				for _, p := range m.panes {
+					p.vt.Close()
 				}
 				m.screen.Fini()
 				return
@@ -47,37 +110,42 @@ func (m *model) Update(ev tcell.Event) {
 			if m.focus == "sidebar" {
 				m.SidebarMove(1)
 				m.Draw()
-				m.screen.Show()
 			}
 		case tcell.KeyUp:
 			if m.focus == "sidebar" {
 				m.SidebarMove(-1)
 				m.Draw()
-				m.screen.Show()
 				return
 			}
 
-		case tcell.KeyEscape:
+		case tcell.KeyCtrlZ:
 			if m.focus == "main" {
 				m.focus = "sidebar"
 				m.Draw()
-				m.screen.Show()
 				return
 			}
 
 		case tcell.KeyEnter:
 			if m.focus == "sidebar" {
-				m.focus = "main"
-				m.SidebarMove(0)
+				selected := m.SelectedPane()
+				if selected.status == PaneStatusRunning {
+					m.focus = "main"
+				}
+
+				if selected.status == PaneStatusStopped {
+					selected.Start()
+					m.main.Clear()
+					m.screen.Show()
+				}
+
 				m.Draw()
-				m.screen.Show()
 				return
 			}
 		}
 
 		if m.focus == "main" {
-			m.vts[m.selected].HandleEvent(ev)
-			m.vts[m.selected].Draw()
+			m.panes[m.selected].vt.HandleEvent(ev)
+			m.panes[m.selected].vt.Draw()
 		}
 
 	case *tcell.EventResize:
@@ -88,16 +156,36 @@ func (m *model) Update(ev tcell.Event) {
 
 	case *tcellterm.EventRedraw:
 		m.Draw()
-		m.screen.Show()
 		return
 
 	case *tcellterm.EventClosed:
-		m.screen.Clear()
-		m.screen.Fini()
+		for index, pane := range m.panes {
+			if pane.vt == ev.VT() {
+
+				if pane.status == PaneStatusRunning {
+					pane.status = PaneStatusStopped
+					if index == m.selected {
+						m.focus = "sidebar"
+					}
+				}
+
+				if pane.status == PaneStatusClearing {
+					p := pane
+					go func() {
+						time.Sleep(100 * time.Millisecond)
+						p.Start()
+						m.screen.PostEvent(&tcellterm.EventRedraw{})
+					}()
+				}
+			}
+		}
+		m.Draw()
 		return
 
 	case *tcell.EventPaste:
-		m.vts[m.selected].HandleEvent(ev)
+		if m.focus == "main" {
+			m.panes[m.selected].vt.HandleEvent(ev)
+		}
 		return
 
 	case *tcellterm.EventPanic:
@@ -120,9 +208,8 @@ func main() {
 	log.SetOutput(f)
 	var err error
 	m := &model{
-		focus:    "sidebar",
-		vts:      []*tcellterm.VT{},
-		commands: []string{"zsh", "top"},
+		focus: "sidebar",
+		panes: []*pane{},
 	}
 	m.screen, err = tcell.NewScreen()
 	if err != nil {
@@ -143,14 +230,21 @@ func main() {
 	m.sidebarWidget = stack
 	m.Resize(m.screen.Size())
 
-	for _, cmd := range m.commands {
+	for _, args := range [][]string{
+		{"ping", "google.com"},
+		{"zsh"},
+	} {
 		term := tcellterm.New()
 		term.SetSurface(m.main)
 		term.Attach(m.HandleEvent)
 		term.Logger = log.New(f, "", log.Flags())
-		cmd := exec.Command(cmd)
-		err = term.Start(cmd)
-		m.vts = append(m.vts, term)
+		p := &pane{
+			vt:    term,
+			args:  args,
+			title: args[0],
+		}
+		p.Start()
+		m.panes = append(m.panes, p)
 	}
 
 	for {
@@ -163,42 +257,52 @@ func main() {
 }
 
 func (m *model) Draw() {
-	vt := m.vts[m.selected]
-	vt.Draw()
+	m.SelectedPane().vt.Draw()
 	m.DrawCursor()
 	for _, w := range m.sidebarWidget.Widgets() {
 		m.sidebarWidget.RemoveWidget(w)
 	}
 
-	for index, item := range m.commands {
+	for index, item := range m.panes {
 		title := views.NewTextBar()
+		style := tcell.StyleDefault
 		if index == m.selected {
-			bg := tcell.ColorGray
+			style = style.Background(tcell.ColorGray)
 			if m.focus == "sidebar" {
-				bg = tcell.ColorOrangeRed
+				style = style.Background(tcell.ColorOrangeRed)
 			}
-			title.SetStyle(tcell.StyleDefault.Background(bg).Foreground(tcell.ColorWhite))
+			style = style.Foreground(tcell.ColorWhite)
 		}
-		title.SetLeft(" "+item, tcell.StyleDefault)
+
+		text := item.title
+		title.SetStyle(style)
+		title.SetLeft(" "+text, tcell.StyleDefault)
+		if item.status == PaneStatusStopped {
+			title.SetRight("(-)", tcell.StyleDefault)
+		}
 		m.sidebarWidget.AddWidget(title, 0)
 	}
 	m.sidebarWidget.Draw()
+
+	m.screen.Show()
 }
 
 func (m *model) Resize(width int, height int) {
 	m.sidebar.Resize(PAD_WIDTH, PAD_HEIGHT, SIDEBAR_WIDTH, height-PAD_HEIGHT*2)
 	m.main.Resize(PAD_WIDTH+SIDEBAR_WIDTH+PAD_WIDTH, PAD_HEIGHT, width-PAD_WIDTH-SIDEBAR_WIDTH-PAD_WIDTH-PAD_WIDTH, height-PAD_HEIGHT*2)
+	mw, mh := m.main.Size()
+	for _, p := range m.panes {
+		p.vt.Resize(mw, mh)
+	}
 }
 
 func (m *model) DrawCursor() {
 	if m.focus == "sidebar" {
-		log.Println("hide cursor")
 		m.screen.HideCursor()
 		return
 	}
 	if m.focus == "main" {
-		row, col, style, vis := m.vts[m.selected].Cursor()
-		log.Println("setting cursor", row, col, vis)
+		row, col, style, vis := m.panes[m.selected].vt.Cursor()
 		if vis {
 			m.screen.SetCursorStyle(style)
 			m.screen.ShowCursor(col+PAD_WIDTH+SIDEBAR_WIDTH+PAD_WIDTH, row+PAD_HEIGHT)
@@ -214,8 +318,11 @@ func (m *model) SidebarMove(offset int) {
 		m.selected = 0
 	}
 
-	if m.selected >= len(m.commands) {
-		m.selected = len(m.commands) - 1
+	if m.selected >= len(m.panes) {
+		m.selected = len(m.panes) - 1
 	}
+}
 
+func (m *model) SelectedPane() *pane {
+	return m.panes[m.selected]
 }
