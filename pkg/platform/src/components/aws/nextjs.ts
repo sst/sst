@@ -25,7 +25,7 @@ import { Cache } from "./providers/cache.js";
 import { Queue } from "./queue.js";
 import { buildApp } from "../base/base-ssr-site.js";
 
-const DEFAULT_OPEN_NEXT_VERSION = "3.0.0-rc.16";
+const DEFAULT_OPEN_NEXT_VERSION = "3.0.2";
 const DEFAULT_CACHE_POLICY_ALLOWED_HEADERS = ["x-open-next-cache-key"];
 
 type BaseFunction = {
@@ -317,7 +317,7 @@ export interface NextjsArgs extends SsrSiteArgs {
    * @example
    * ```js
    * {
-   *   openNextVersion: "3.0.0-rc.3"
+   *   openNextVersion: "3.0.2"
    * }
    * ```
    */
