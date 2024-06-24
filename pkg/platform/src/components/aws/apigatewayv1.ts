@@ -19,6 +19,7 @@ import { VisibleError } from "../error";
 import { RETENTION } from "./logging";
 import { ApiGatewayV1LambdaRoute } from "./apigatewayv1-lambda-route";
 import { ApiGatewayV1Authorizer } from "./apigatewayv1-authorizer";
+import { setupApiGatewayAccount } from "./helpers/apigateway-account";
 
 export interface ApiGatewayV1Args {
   /**
@@ -397,6 +398,7 @@ export class ApiGatewayV1 extends Component implements Link.Linkable {
 
     const region = normalizeRegion();
     const endpoint = normalizeEndpoint();
+    const apigAccount = setupApiGatewayAccount(name);
     const api = createApi();
 
     this.resources["/"] = api.rootResourceId;
@@ -439,7 +441,7 @@ export class ApiGatewayV1 extends Component implements Link.Linkable {
         transform(args.transform?.api, {
           endpointConfiguration: endpoint,
         }),
-        { parent },
+        { parent, dependsOn: apigAccount },
       );
     }
   }
