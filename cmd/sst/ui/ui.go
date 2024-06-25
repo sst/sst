@@ -48,7 +48,21 @@ type UI struct {
 	hasBlank   bool
 }
 
-func New(ctx context.Context, mode ProgressMode) *UI {
+type Options struct {
+	Silent bool
+}
+
+type Option func(*Options)
+
+func WithSilent(u *Options) {
+	u.Silent = true
+}
+
+func New(ctx context.Context, mode ProgressMode, options ...Option) *UI {
+	opts := &Options{}
+	for _, option := range options {
+		option(opts)
+	}
 	isTTY := terminal.IsTerminal(int(os.Stdout.Fd()))
 	slog.Info("initializing ui", "isTTY", isTTY)
 	result := &UI{
@@ -57,7 +71,7 @@ func New(ctx context.Context, mode ProgressMode) *UI {
 		workerTime: map[string]time.Time{},
 		hasBlank:   false,
 	}
-	if isTTY {
+	if isTTY && !opts.Silent {
 		result.footer = NewFooter()
 	}
 	result.Reset()
