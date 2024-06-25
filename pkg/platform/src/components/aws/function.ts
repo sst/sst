@@ -474,7 +474,7 @@ export interface FunctionArgs {
    *   url: {
    *     authorization: "iam",
    *     cors: {
-   *       allowedOrigins: ['https://example.com']
+   *       allowOrigins: ['https://example.com']
    *     }
    *   }
    * }
@@ -513,8 +513,8 @@ export interface FunctionArgs {
          * {
          *   url: {
          *     cors: {
-         *       allowedMethods: ["GET", "POST"],
-         *       allowedOrigins: ["https://example.com"]
+         *       allowMethods: ["GET", "POST"],
+         *       allowOrigins: ["https://example.com"]
          *     }
          *   }
          * }
