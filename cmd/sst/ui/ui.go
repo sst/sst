@@ -13,6 +13,7 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/muesli/reflow/wordwrap"
 	"github.com/pulumi/pulumi/sdk/v3/go/common/apitype"
 	"github.com/pulumi/pulumi/sdk/v3/go/common/resource"
 	"github.com/sst/ion/pkg/project"
@@ -93,7 +94,8 @@ func (u *UI) println(args ...interface{}) {
 		fmt.Println(lineMsg(fmt.Sprint(u.buffer...)))
 	}
 	if u.footer != nil {
-		u.footer.Println(u.buffer...)
+		width, _, _ := terminal.GetSize(int(os.Stdout.Fd()))
+		u.footer.Println(wordwrap.String(fmt.Sprint(u.buffer...), width))
 	}
 	u.buffer = []interface{}{}
 	u.hasBlank = false
