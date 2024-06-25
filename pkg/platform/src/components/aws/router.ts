@@ -113,10 +113,8 @@ export interface RouterArgs {
 }
 
 /**
- * The `Router` component lets you use a CloudFront distribution to route requests to different
- * parts of your app.
- *
- * You can use this the `routes` to route to function URLs, other domains, or any component that has a URL.
+ * The `Router` component lets you use a CloudFront distribution to direct requests to various parts of your application. 
+ * The `routes` prop can route requests to function URLs, different domains, or any component that has an associated URL.
  *
  * @example
  *
