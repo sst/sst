@@ -254,7 +254,7 @@ func (u *UI) StackEvent(evt *project.StackEvent) {
 				u.printEvent(
 					TEXT_DIM,
 					"Log",
-					evt.DiagnosticEvent.Message,
+					strings.TrimSpace(evt.DiagnosticEvent.Message),
 				)
 			}
 		}
