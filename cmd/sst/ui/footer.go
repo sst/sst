@@ -124,11 +124,14 @@ func (m footer) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 
 		if msg.ResOutputsEvent != nil {
-			for i, r := range m.pending {
+			next := []*apitype.ResourcePreEvent{}
+			for _, r := range m.pending {
 				if r.Metadata.URN == msg.ResOutputsEvent.Metadata.URN {
-					m.pending = append(m.pending[:i], m.pending[i+1:]...)
+					continue
 				}
+				next = append(next, r)
 			}
+			m.pending = next
 		}
 
 		if msg.DiagnosticEvent != nil {
