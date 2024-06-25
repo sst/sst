@@ -235,58 +235,100 @@ export interface AppInput {
   stage: string;
 }
 
-export interface Runner {
-  /**
-   * The service used to run the build. Currently, only AWS CodeBuild is supported.
-   */
-  engine: "codebuild";
-  /**
-   * The timeout for the build. CodeBuild supports a timeout of up to 8 hours.
-   * @default `1 hour`
-   */
-  timeout?: `${number} ${"minute" | "minutes" | "hour" | "hours"}`;
-  /**
-   * The architecture of the build machine.
-   * @default `x86_64`
-   */
-  architecture?: "x86_64" | "arm64";
-  /**
-   * The compute size of the build environment.
-   *
-   * For `x86_64`, it can be the following:
-   * - `small`: 3 GB, 2 vCPUs
-   * - `medium`: 7 GB, 4 vCPUs
-   * - `large`: 15 GB, 8 vCPUs
-   * - `xlarge`: 30 GB, 16 vCPUs
-   *
-   * For `arm64` architecture, only `small` and `large` are supported:
-   * - `small`: 4 GB, 2 vCPUs
-   * - `large`: 8 GB, 4 vCPUs
-   *
-   * Read more about the [CodeBuild build environments](https://docs.aws.amazon.com/codebuild/latest/userguide/build-env-ref-compute-types.html).
-   * @default `small`
-   */
-  compute?: "small" | "medium" | "large" | "xlarge";
-}
-
-export interface RunnerInput {
-  /**
-   * The stage the app will be deployed to.
-   */
-  stage: string;
-}
-
 export interface Target {
   /**
    * The stage the app will be deployed to.
    */
   stage: string;
   /**
-   * The environment variables that will be set in the build environment.
+   * Optionally configure the runner that will run the build.
    *
-   * You will be able to access these environment variables in your SST app.
+   * It uses this to create a _runner_ — a
+   * [AWS CodeBuild](https://aws.amazon.com/codebuild/) project and an IAM Role,
+   * in **your account**.
+   *
+   * :::note
+   * Runners are shared across all apps in the same account and region.
+   * :::
+   *
+   * By default it uses:
+   *
+   * ```ts
+   * runner(input) {
+   *   return {
+   *     engine: "codebuild",
+   *     architecture: "x86_64",
+   *     compute: "small",
+   *     timeout: "1 hour"
+   *   };
+   * }
+   * ```
+   *
+   * Once a runner is created, it can be used to run multiple builds of the same
+   * machine config concurrently.
+   *
+   * :::note
+   * A runner can run multiple builds concurrently.
+   * :::
+   *
+   * You are only charged for the number of build
+   * minutes that you use. The pricing is based on the machine config used.
+   * [Learn more about CodeBuild pricing](https://aws.amazon.com/codebuild/pricing/).
+   *
+   * You can also configure the runner based on the stage.
+   *
+   * ```ts {2}
+   * runner(input) {
+   *   return input.stage.includes("prod")
+   *     ? {
+   *       engine: "codebuild",
+   *       compute: "large",
+   *       timeout: "1 hour"
+   *     }
+   *     : {
+   *       engine: "codebuild",
+   *       compute: "small"
+   *     };
+   * }
+   * ```
+   *
+   * If a runner with the given config has been been previously created,
+   * it'll be resused. The Console will also automatically remove runners that
+   * have not been used for more than 7 days.
    */
-  env?: Record<string, string>;
+  runner?: {
+    /**
+     * The service used to run the build. Currently, only AWS CodeBuild is supported.
+     */
+    engine: "codebuild";
+    /**
+     * The timeout for the build. CodeBuild supports a timeout of up to 8 hours.
+     * @default `1 hour`
+     */
+    timeout?: `${number} ${"minute" | "minutes" | "hour" | "hours"}`;
+    /**
+     * The architecture of the build machine.
+     * @default `x86_64`
+     */
+    architecture?: "x86_64" | "arm64";
+    /**
+     * The compute size of the build environment.
+     *
+     * For `x86_64`, it can be the following:
+     * - `small`: 3 GB, 2 vCPUs
+     * - `medium`: 7 GB, 4 vCPUs
+     * - `large`: 15 GB, 8 vCPUs
+     * - `xlarge`: 30 GB, 16 vCPUs
+     *
+     * For `arm64` architecture, only `small` and `large` are supported:
+     * - `small`: 4 GB, 2 vCPUs
+     * - `large`: 8 GB, 4 vCPUs
+     *
+     * Read more about the [CodeBuild build environments](https://docs.aws.amazon.com/codebuild/latest/userguide/build-env-ref-compute-types.html).
+     * @default `small`
+     */
+    compute?: "small" | "medium" | "large" | "xlarge";
+  };
 }
 
 interface GitSender {
@@ -326,11 +368,15 @@ interface GitRepo {
   repo: string;
 }
 
-export interface PushEvent {
+export interface BranchEvent {
   /**
-   * Git push request event type.
+   * Git branch event type.
    */
-  type: "push";
+  type: "branch";
+  /**
+   * Git branch event action.
+   */
+  action: "pushed" | "removed";
   /**
    * The repository the event is coming from.
    */
@@ -354,6 +400,10 @@ export interface PullRequestEvent {
    * Git pull request event type.
    */
   type: "pull_request";
+  /**
+   * Git pull request event action.
+   */
+  action: "pushed" | "removed";
   /**
    * The repository the event is coming from.
    */
@@ -412,7 +462,7 @@ export interface Config {
    */
   console?: {
     /**
-     * Configure how the Console auto-deploy's your app.
+     * Configure how the Console auto-deploys your app.
      *
      * @example
      *
@@ -429,68 +479,6 @@ export interface Config {
      * ```
      */
     autodeploy: {
-      /**
-       * Optionally configure the runner that will run the build.
-       *
-       * When a git event is received, Autodeploy will first run the `target` function
-       * to determine the stage the app will be deployed to. It'll then run the
-       * `runner` function with the stage to determine the type of machine
-       * that'll be used.
-       *
-       * It uses this to create a _runner_ — a
-       * [AWS CodeBuild](https://aws.amazon.com/codebuild/) project and an IAM Role,
-       * in **your account**.
-       *
-       * :::note
-       * Runners are shared across all apps in the same account and region.
-       * :::
-       *
-       * By default it uses:
-       *
-       * ```ts
-       * runner(input) {
-       *   return {
-       *     engine: "codebuild",
-       *     architecture: "x86_64",
-       *     compute: "small",
-       *     timeout: "1 hour"
-       *   };
-       * }
-       * ```
-       *
-       * Once a runner is created, it can be used to run multiple builds of the same
-       * machine config concurrently.
-       *
-       * :::note
-       * A runner can run multiple builds concurrently.
-       * :::
-       *
-       * You are only charged for the number of build
-       * minutes that you use. The pricing is based on the machine config used.
-       * [Learn more about CodeBuild pricing](https://aws.amazon.com/codebuild/pricing/).
-       *
-       * You can also configure the runner based on the stage.
-       *
-       * ```ts {2}
-       * runner(input) {
-       *   return input.stage.includes("prod")
-       *     ? {
-       *       engine: "codebuild",
-       *       compute: "large",
-       *       timeout: "1 hour"
-       *     }
-       *     : {
-       *       engine: "codebuild",
-       *       compute: "small"
-       *     };
-       * }
-       * ```
-       *
-       * If a runner with the given config has been been previously created,
-       * it'll be resused. The Console will also automatically remove runners that
-       * have not been used for more than 7 days.
-       */
-      runner?(input: RunnerInput): Runner;
       /**
        * Defines the stage the app will be auto-deployed to. For example, to auto-deploy
        * to the `production` stage when you git push to the `main` branch.
@@ -520,11 +508,12 @@ export interface Config {
        *
        * The following git events are supported:
        *
-       * - **`push`**, when you git push to a branch. For example, a git push to the `main` branch.
+       * - **`branch`**, when a branch is updated or deleted. For example, a git push to the `main` branch.
        *
        *   ```js
        *   {
-       *     type: "push",
+       *     type: "branch",
+       *     action: "pushed",
        *     repo: {
        *       id: 1296269,
        *       owner: "octocat",
@@ -542,12 +531,13 @@ export interface Config {
        *   }
        *   ```
        *
-       * - `pull_request`, when a pull request is opened or updated. For example, pull request
+       * - `pull_request`, when a pull request is updated or deleted. For example, pull request
        *   `#1347` from the `feature` branch to the `main` branch.
        *
        *   ```js
        *   {
        *     type: "pull_request",
+       *     action: "pushed",
        *     repo: {
        *       id: 1296269,
        *       owner: "octocat",
@@ -555,7 +545,7 @@ export interface Config {
        *     },
        *     number: 1347,
        *     base: "main",
-       *     head: "changes",
+       *     head: "feature",
        *     commit: {
        *       id: "b7e7c4c559e0e5b4bc6f8d98e0e5e5e5e5e5e5e5",
        *       message: "Update the README with new information"
@@ -581,7 +571,7 @@ export interface Config {
        * }
        * ```
        */
-      target(input: PushEvent | PullRequestEvent): Target | undefined;
+      target(input: BranchEvent | PullRequestEvent): Target | undefined;
     };
   };
   /**

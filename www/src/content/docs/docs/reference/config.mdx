@@ -65,7 +65,6 @@ The run function also has access to a list of [Global](/docs/reference/global/) 
 **Type** <code class="primitive">Object</code>
 </InlineSection>
 - <p>[<code class="key">autodeploy</code>](#console-autodeploy) <code class="primitive">Object</code></p>
-  - <p>[<code class="key">runner?</code>](#console-autodeploy-runner)</p>
   - <p>[<code class="key">target</code>](#console-autodeploy-target)</p>
 </Section>
 Configure how your app works with the SST Console. [Learn more about Autodeploy](/docs/console#autodeploy).
@@ -78,7 +77,7 @@ Configure how your app works with the SST Console. [Learn more about Autodeploy]
 **Type** <code class="primitive">Object</code>
 </InlineSection>
 </Section>
-Configure how the Console auto-deploy's your app.
+Configure how the Console auto-deploys your app.
 
 ```ts
 console: {
@@ -93,84 +92,6 @@ console: {
 ```
 </Segment>
 
-<NestedTitle id="console-autodeploy-runner" Tag="h5" parent="console.autodeploy.">runner?</NestedTitle>
-<Segment>
-<Section type="signature">
-```ts
-runner(input)
-```
-</Section>
-
-<Section type="parameters">
-**Parameters**
-- <p><code class="key">input</code> [<code class="type">RunnerInput</code>](#runnerinput)</p>
-</Section>
-
-<InlineSection>
-**Returns** [<code class="type">Runner</code>](#runner)
-</InlineSection>
-Optionally configure the runner that will run the build.
-
-When a git event is received, Autodeploy will first run the `target` function
-to determine the stage the app will be deployed to. It'll then run the
-`runner` function with the stage to determine the type of machine
-that'll be used.
-
-It uses this to create a _runner_ — a
-[AWS CodeBuild](https://aws.amazon.com/codebuild/) project and an IAM Role,
-in **your account**.
-
-:::note
-Runners are shared across all apps in the same account and region.
-:::
-
-By default it uses:
-
-```ts
-runner(input) {
-  return {
-    engine: "codebuild",
-    architecture: "x86_64",
-    compute: "small",
-    timeout: "1 hour"
-  };
-}
-```
-
-Once a runner is created, it can be used to run multiple builds of the same
-machine config concurrently.
-
-:::note
-A runner can run multiple builds concurrently.
-:::
-
-You are only charged for the number of build
-minutes that you use. The pricing is based on the machine config used.
-[Learn more about CodeBuild pricing](https://aws.amazon.com/codebuild/pricing/).
-
-You can also configure the runner based on the stage.
-
-```ts {2}
-runner(input) {
-  return input.stage.includes("prod")
-    ? {
-      engine: "codebuild",
-      compute: "large",
-      timeout: "1 hour"
-    }
-    : {
-      engine: "codebuild",
-      compute: "small"
-    };
-}
-```
-
-If a runner with the given config has been been previously created,
-it'll be resused. The Console will also automatically remove runners that
-have not been used for more than 7 days.
-
-</Segment>
-
 <NestedTitle id="console-autodeploy-target" Tag="h5" parent="console.autodeploy.">target</NestedTitle>
 <Segment>
 <Section type="signature">
@@ -181,7 +102,7 @@ target(input)
 
 <Section type="parameters">
 **Parameters**
-- <p><code class="key">input</code> [<code class="type">PushEvent</code>](#pushevent)<code class="symbol"> | </code>[<code class="type">PullRequestEvent</code>](#pullrequestevent)</p>
+- <p><code class="key">input</code> [<code class="type">BranchEvent</code>](#branchevent)<code class="symbol"> | </code>[<code class="type">PullRequestEvent</code>](#pullrequestevent)</p>
 </Section>
 
 <InlineSection>
@@ -215,11 +136,12 @@ If a target is not returned, the app will not be deployed.
 
 The following git events are supported:
 
-- **`push`**, when you git push to a branch. For example, a git push to the `main` branch.
+- **`branch`**, when a branch is updated or deleted. For example, a git push to the `main` branch.
 
   ```js
   {
-    type: "push",
+    type: "branch",
+    action: "pushed",
     repo: {
       id: 1296269,
       owner: "octocat",
@@ -237,12 +159,13 @@ The following git events are supported:
   }
   ```
 
-- `pull_request`, when a pull request is opened or updated. For example, pull request
+- `pull_request`, when a pull request is updated or deleted. For example, pull request
   `#1347` from the `feature` branch to the `main` branch.
 
   ```js
   {
     type: "pull_request",
+    action: "pushed",
     repo: {
       id: 1296269,
       owner: "octocat",
@@ -250,7 +173,7 @@ The following git events are supported:
     },
     number: 1347,
     base: "main",
-    head: "changes",
+    head: "feature",
     commit: {
       id: "b7e7c4c559e0e5b4bc6f8d98e0e5e5e5e5e5e5e5",
       message: "Update the README with new information"
@@ -570,15 +493,25 @@ If not passed in, it'll use the username of your local machine, or prompt you fo
 
 </Segment>
 
-## PullRequestEvent
-### base
+## BranchEvent
+### action
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="symbol">&ldquo;</code><code class="primitive">pushed</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">removed</code><code class="symbol">&rdquo;</code>
+</InlineSection>
+</Section>
+Git branch event action.
+
+</Segment>
+### branch
 <Segment>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">string</code>
 </InlineSection>
 </Section>
-The base branch of the pull request. This is the branch the code is being merged into.
+The branch the push event is coming from.
 
 </Segment>
 ### commit
@@ -611,26 +544,6 @@ The ID of the commit.
 </InlineSection>
 </Section>
 The commit message.
-
-</Segment>
-### head
-<Segment>
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">string</code>
-</InlineSection>
-</Section>
-The head branch of the pull request. This is the branch the code is coming from.
-
-</Segment>
-### number
-<Segment>
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">number</code>
-</InlineSection>
-</Section>
-The pull request number.
 
 </Segment>
 ### repo
@@ -712,22 +625,32 @@ The username of the user.
 <Segment>
 <Section type="parameters">
 <InlineSection>
-**Type** <code class="symbol">&ldquo;</code><code class="primitive">pull_request</code><code class="symbol">&rdquo;</code>
+**Type** <code class="symbol">&ldquo;</code><code class="primitive">branch</code><code class="symbol">&rdquo;</code>
 </InlineSection>
 </Section>
-Git pull request event type.
+Git branch event type.
 
 </Segment>
 
-## PushEvent
-### branch
+## PullRequestEvent
+### action
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="symbol">&ldquo;</code><code class="primitive">pushed</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">removed</code><code class="symbol">&rdquo;</code>
+</InlineSection>
+</Section>
+Git pull request event action.
+
+</Segment>
+### base
 <Segment>
 <Section type="parameters">
 <InlineSection>
 **Type** <code class="primitive">string</code>
 </InlineSection>
 </Section>
-The branch the push event is coming from.
+The base branch of the pull request. This is the branch the code is being merged into.
 
 </Segment>
 ### commit
@@ -760,6 +683,26 @@ The ID of the commit.
 </InlineSection>
 </Section>
 The commit message.
+
+</Segment>
+### head
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">string</code>
+</InlineSection>
+</Section>
+The head branch of the pull request. This is the branch the code is coming from.
+
+</Segment>
+### number
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">number</code>
+</InlineSection>
+</Section>
+The pull request number.
 
 </Segment>
 ### repo
@@ -841,15 +784,82 @@ The username of the user.
 <Segment>
 <Section type="parameters">
 <InlineSection>
-**Type** <code class="symbol">&ldquo;</code><code class="primitive">push</code><code class="symbol">&rdquo;</code>
+**Type** <code class="symbol">&ldquo;</code><code class="primitive">pull_request</code><code class="symbol">&rdquo;</code>
 </InlineSection>
 </Section>
-Git push request event type.
+Git pull request event type.
 
 </Segment>
 
-## Runner
-### architecture?
+## Target
+### runner?
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Object</code>
+</InlineSection>
+- <p>[<code class="key">architecture?</code>](#runner-architecture)</p>
+- <p>[<code class="key">compute?</code>](#runner-compute)</p>
+- <p>[<code class="key">engine</code>](#runner-engine)</p>
+- <p>[<code class="key">timeout?</code>](#runner-timeout)</p>
+</Section>
+Optionally configure the runner that will run the build.
+
+It uses this to create a _runner_ — a
+[AWS CodeBuild](https://aws.amazon.com/codebuild/) project and an IAM Role,
+in **your account**.
+
+:::note
+Runners are shared across all apps in the same account and region.
+:::
+
+By default it uses:
+
+```ts
+runner(input) {
+  return {
+    engine: "codebuild",
+    architecture: "x86_64",
+    compute: "small",
+    timeout: "1 hour"
+  };
+}
+```
+
+Once a runner is created, it can be used to run multiple builds of the same
+machine config concurrently.
+
+:::note
+A runner can run multiple builds concurrently.
+:::
+
+You are only charged for the number of build
+minutes that you use. The pricing is based on the machine config used.
+[Learn more about CodeBuild pricing](https://aws.amazon.com/codebuild/pricing/).
+
+You can also configure the runner based on the stage.
+
+```ts {2}
+runner(input) {
+  return input.stage.includes("prod")
+    ? {
+      engine: "codebuild",
+      compute: "large",
+      timeout: "1 hour"
+    }
+    : {
+      engine: "codebuild",
+      compute: "small"
+    };
+}
+```
+
+If a runner with the given config has been been previously created,
+it'll be resused. The Console will also automatically remove runners that
+have not been used for more than 7 days.
+
+</Segment>
+<NestedTitle id="runner-architecture" Tag="h4" parent="runner.">architecture?</NestedTitle>
 <Segment>
 <Section type="parameters">
 <InlineSection>
@@ -863,7 +873,7 @@ Git push request event type.
 The architecture of the build machine.
 
 </Segment>
-### compute?
+<NestedTitle id="runner-compute" Tag="h4" parent="runner.">compute?</NestedTitle>
 <Segment>
 <Section type="parameters">
 <InlineSection>
@@ -889,7 +899,7 @@ For `arm64` architecture, only `small` and `large` are supported:
 Read more about the [CodeBuild build environments](https://docs.aws.amazon.com/codebuild/latest/userguide/build-env-ref-compute-types.html).
 
 </Segment>
-### engine
+<NestedTitle id="runner-engine" Tag="h4" parent="runner.">engine</NestedTitle>
 <Segment>
 <Section type="parameters">
 <InlineSection>
@@ -899,7 +909,7 @@ Read more about the [CodeBuild build environments](https://docs.aws.amazon.com/c
 The service used to run the build. Currently, only AWS CodeBuild is supported.
 
 </Segment>
-### timeout?
+<NestedTitle id="runner-timeout" Tag="h4" parent="runner.">timeout?</NestedTitle>
 <Segment>
 <Section type="parameters">
 <InlineSection>
@@ -911,32 +921,6 @@ The service used to run the build. Currently, only AWS CodeBuild is supported.
 **Default** <code class="primitive">1 hour</code>
 </InlineSection>
 The timeout for the build. CodeBuild supports a timeout of up to 8 hours.
-
-</Segment>
-
-## RunnerInput
-### stage
-<Segment>
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">string</code>
-</InlineSection>
-</Section>
-The stage the app will be deployed to.
-
-</Segment>
-
-## Target
-### env?
-<Segment>
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">Record</code><code class="symbol">&lt;</code><code class="primitive">string</code>, <code class="primitive">string</code><code class="symbol">&gt;</code>
-</InlineSection>
-</Section>
-The environment variables that will be set in the build environment.
-
-You will be able to access these environment variables in your SST app.
 
 </Segment>
 ### stage

@@ -889,7 +889,7 @@ Enable it and configure the options.
   url: {
     authorization: "iam",
     cors: {
-      allowedOrigins: ['https://example.com']
+      allowOrigins: ['https://example.com']
     }
   }
 }
@@ -942,8 +942,8 @@ Only enable the `GET` and `POST` methods for `https://example.com`.
 {
   url: {
     cors: {
-      allowedMethods: ["GET", "POST"],
-      allowedOrigins: ["https://example.com"]
+      allowMethods: ["GET", "POST"],
+      allowOrigins: ["https://example.com"]
     }
   }
 }
