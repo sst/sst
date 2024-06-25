@@ -17,6 +17,7 @@ import { Hint } from "../hint.js";
 import { Link } from "../link.js";
 import { Cache } from "./providers/cache.js";
 import { buildApp } from "../base/base-ssr-site.js";
+import { VisibleError } from "../error.js";
 
 export interface SolidStartArgs extends SsrSiteArgs {
   /**
@@ -324,7 +325,18 @@ export class SolidStart extends Component implements Link.Linkable {
     const parent = this;
     const { sitePath, partition } = prepare(args, opts);
     const { access, bucket } = createBucket(parent, name, partition, args);
-    const outputPath = buildApp(name, args, sitePath);
+    const outputPath = buildApp(name, args, sitePath).apply((output) => {
+      if (
+        !fs.existsSync(
+          path.join(output, ".output/server/chunks/_/aws-lambda-streaming.mjs"),
+        )
+      ) {
+        throw new VisibleError(
+          'SolidStart app does not seem to be configured with the right preset. Be sure to specify `preset: "aws-lambda-streaming"` in your `app.config.ts`.',
+        );
+      }
+      return output;
+    });
     const { buildMeta } = loadBuildOutput();
     const plan = buildPlan();
     const { distribution, ssrFunctions, edgeFunctions } =
