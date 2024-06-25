@@ -121,9 +121,8 @@ func Start(ctx context.Context, p *project.Project, mux *http.ServeMux) {
 				ws.WriteJSON(map[string]interface{}{
 					"type": "cli.dev",
 					"properties": CliDevEvent{
-						App:    p.App().Name,
-						Stage:  p.App().Stage,
-						Region: "us-east-1",
+						App:   p.App().Name,
+						Stage: p.App().Stage,
 					},
 				})
 				all := []*Invocation{}
