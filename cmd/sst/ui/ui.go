@@ -9,6 +9,7 @@ import (
 	"os"
 	"strings"
 	"time"
+	"unicode"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
@@ -92,7 +93,7 @@ func (u *UI) println(args ...interface{}) {
 		fmt.Println(lineMsg(fmt.Sprint(u.buffer...)))
 	}
 	if u.footer != nil {
-		u.footer.Send(lineMsg(fmt.Sprint(u.buffer...)))
+		u.footer.Println(u.buffer...)
 	}
 	u.buffer = []interface{}{}
 	u.hasBlank = false
@@ -257,7 +258,7 @@ func (u *UI) StackEvent(evt *project.StackEvent) {
 			u.printEvent(
 				TEXT_DIM,
 				"Log",
-				strings.TrimSpace(evt.DiagnosticEvent.Message),
+				strings.TrimRightFunc(evt.DiagnosticEvent.Message, unicode.IsSpace),
 			)
 		}
 
@@ -268,7 +269,7 @@ func (u *UI) StackEvent(evt *project.StackEvent) {
 				u.printEvent(
 					TEXT_DIM,
 					"Log",
-					strings.TrimSpace(evt.DiagnosticEvent.Message),
+					strings.TrimRightFunc(evt.DiagnosticEvent.Message, unicode.IsSpace),
 				)
 			}
 		}
