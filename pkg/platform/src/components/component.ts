@@ -153,6 +153,7 @@ export class Component extends ComponentResource {
             case "cloudflare:index/d1Database:D1Database":
             case "cloudflare:index/r2Bucket:R2Bucket":
             case "cloudflare:index/workerScript:WorkerScript":
+            case "cloudflare:index/queue:Queue":
               overrides = {
                 name: prefixName(64, args.name).toLowerCase(),
               };
