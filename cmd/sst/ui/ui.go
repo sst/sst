@@ -16,6 +16,7 @@ import (
 	"github.com/pulumi/pulumi/sdk/v3/go/common/resource"
 	"github.com/sst/ion/pkg/project"
 	"github.com/sst/ion/pkg/server"
+	"golang.org/x/crypto/ssh/terminal"
 )
 
 type ProgressMode string
@@ -48,12 +49,16 @@ type UI struct {
 }
 
 func New(ctx context.Context, mode ProgressMode) *UI {
+	isTTY := terminal.IsTerminal(int(os.Stdout.Fd()))
+	slog.Info("initializing ui", "isTTY", isTTY)
 	result := &UI{
-		footer:     NewFooter(),
 		mode:       mode,
 		colors:     map[string]lipgloss.Style{},
 		workerTime: map[string]time.Time{},
 		hasBlank:   false,
+	}
+	if isTTY {
+		result.footer = NewFooter()
 	}
 	result.Reset()
 	return result
@@ -69,7 +74,12 @@ func (u *UI) printf(tmpl string, args ...interface{}) {
 
 func (u *UI) println(args ...interface{}) {
 	u.buffer = append(u.buffer, args...)
-	u.footer.Send(lineMsg(fmt.Sprint(u.buffer...)))
+	if u.footer == nil {
+		fmt.Println(lineMsg(fmt.Sprint(u.buffer...)))
+	}
+	if u.footer != nil {
+		u.footer.Send(lineMsg(fmt.Sprint(u.buffer...)))
+	}
 	u.buffer = []interface{}{}
 	u.hasBlank = false
 }
@@ -92,7 +102,9 @@ func (u *UI) Reset() {
 }
 
 func (u *UI) StackEvent(evt *project.StackEvent) {
-	u.footer.Send(evt)
+	if u.footer != nil {
+		u.footer.Send(evt)
+	}
 	if evt.ConcurrentUpdateEvent != nil {
 		u.printEvent(TEXT_DANGER, "Locked", "A concurrent update was detected on the app. Run `sst unlock` to remove the lock and try again.")
 	}
@@ -322,7 +334,9 @@ func (u *UI) StackEvent(evt *project.StackEvent) {
 }
 
 func (u *UI) Event(evt *server.Event) {
-	u.footer.Send(evt)
+	if u.footer != nil {
+		u.footer.Send(evt)
+	}
 	if evt.FunctionInvokedEvent != nil {
 		u.workerTime[evt.FunctionInvokedEvent.WorkerID] = time.Now()
 		u.printEvent(u.getColor(evt.FunctionInvokedEvent.WorkerID), TEXT_NORMAL_BOLD.Render(fmt.Sprintf("%-11s", "Invoke")), u.functionName(evt.FunctionInvokedEvent.FunctionID))
@@ -459,10 +473,12 @@ func (u *UI) printEvent(barColor lipgloss.Style, label string, message ...string
 }
 
 func (u *UI) Destroy() {
-	u.footer.Quit()
-	slog.Info("waiting for footer to quit")
-	u.footer.Wait()
-	fmt.Println()
+	if u.footer != nil {
+		u.footer.Quit()
+		slog.Info("waiting for footer to quit")
+		u.footer.Wait()
+		fmt.Println()
+	}
 }
 
 func (u *UI) Header(version, app, stage string) {

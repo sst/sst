@@ -2,6 +2,7 @@ package ui
 
 import (
 	"fmt"
+	"log/slog"
 	"os"
 	"strings"
 	"syscall"
@@ -35,6 +36,7 @@ type op struct {
 }
 
 func NewFooter() *tea.Program {
+	slog.Info("initialized footer ui")
 	f := footer{
 		spinner: spinner.New(),
 		lines:   []string{},
