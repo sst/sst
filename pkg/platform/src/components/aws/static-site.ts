@@ -386,9 +386,11 @@ export class StaticSite extends Component implements Link.Linkable {
     }
 
     function createCloudfrontFunction() {
-      return new aws.cloudfront.Function(`${name}Function`, {
-        runtime: "cloudfront-js-1.0",
-        code: `
+      return new aws.cloudfront.Function(
+        `${name}Function`,
+        {
+          runtime: "cloudfront-js-1.0",
+          code: `
     function handler(event) {
         var request = event.request;
         var uri = request.uri;
@@ -400,7 +402,11 @@ export class StaticSite extends Component implements Link.Linkable {
         }
         return request;
     }`,
-      });
+        },
+        {
+          parent,
+        },
+      );
     }
 
     function createS3Bucket() {
