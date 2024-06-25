@@ -36,6 +36,8 @@ export default $config({
     });
     // Deploys the current directory as a static site
     new sst.aws.StaticSite("MySite", {
+      path: "./dist",
+      /*
       transform: {
         cdn: (args) => {
           // @ts-expect-error
@@ -47,6 +49,7 @@ export default $config({
           ];
         },
       },
+      */
     });
   },
 });

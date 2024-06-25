@@ -460,6 +460,7 @@ func (u *UI) printEvent(barColor lipgloss.Style, label string, message ...string
 func (u *UI) Destroy() {
 	u.footer.Quit()
 	u.footer.Wait()
+	fmt.Println()
 }
 
 func (u *UI) Header(version, app, stage string) {
