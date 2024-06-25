@@ -10,7 +10,7 @@ import (
 	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/fatih/color"
+	"github.com/charmbracelet/lipgloss"
 	"github.com/pulumi/pulumi/sdk/v3/go/common/apitype"
 	"github.com/pulumi/pulumi/sdk/v3/go/common/resource"
 	"github.com/sst/ion/pkg/project"
@@ -32,26 +32,25 @@ const (
 )
 
 type UI struct {
-	mode        ProgressMode
-	hasProgress bool
-	pending     map[string]string
-	dedupe      map[string]bool
-	timing      map[string]time.Time
-	parents     map[string]string
-	colors      map[string]color.Attribute
-	workerTime  map[string]time.Time
-	complete    *project.CompleteEvent
-	skipped     int
-	footer      *tea.Program
-	buffer      []interface{}
-	hasBlank    bool
+	mode       ProgressMode
+	pending    map[string]string
+	dedupe     map[string]bool
+	timing     map[string]time.Time
+	parents    map[string]string
+	colors     map[string]lipgloss.Style
+	workerTime map[string]time.Time
+	complete   *project.CompleteEvent
+	skipped    int
+	footer     *tea.Program
+	buffer     []interface{}
+	hasBlank   bool
 }
 
 func New(ctx context.Context, mode ProgressMode) *UI {
 	result := &UI{
 		footer:     NewFooter(),
 		mode:       mode,
-		colors:     map[string]color.Attribute{},
+		colors:     map[string]lipgloss.Style{},
 		workerTime: map[string]time.Time{},
 		hasBlank:   false,
 	}
@@ -83,7 +82,6 @@ func (u *UI) blank() {
 }
 
 func (u *UI) Reset() {
-	u.hasProgress = false
 	u.skipped = 0
 	u.parents = map[string]string{}
 	u.pending = map[string]string{}
@@ -95,26 +93,26 @@ func (u *UI) Reset() {
 func (u *UI) StackEvent(evt *project.StackEvent) {
 	u.footer.Send(evt)
 	if evt.ConcurrentUpdateEvent != nil {
-		u.printEvent(color.FgRed, "Locked", "A concurrent update was detected on the app. Run `sst unlock` to remove the lock and try again.")
+		u.printEvent(TEXT_DANGER, "Locked", "A concurrent update was detected on the app. Run `sst unlock` to remove the lock and try again.")
 	}
 	if evt.StackCommandEvent != nil {
 		u.blank()
 		if evt.StackCommandEvent.Command == "deploy" {
 			u.println(
-				color.New(color.FgYellow, color.Bold).Sprint("~"),
-				color.New(color.FgWhite, color.Bold).Sprint("  Deploying"),
+				TEXT_WARNING_BOLD.Render("~"),
+				TEXT_NORMAL_BOLD.Render("  Deploying"),
 			)
 		}
 		if evt.StackCommandEvent.Command == "remove" {
 			u.println(
-				color.New(color.FgRed, color.Bold).Sprint("~"),
-				color.New(color.FgWhite, color.Bold).Sprint("  Removing"),
+				TEXT_DANGER_BOLD.Render("~"),
+				TEXT_NORMAL_BOLD.Render("  Removing"),
 			)
 		}
 		if evt.StackCommandEvent.Command == "refresh" {
 			u.println(
-				color.New(color.FgBlue, color.Bold).Sprint("~"),
-				color.New(color.FgWhite, color.Bold).Sprint("  Refreshing"),
+				TEXT_INFO_BOLD.Render("~"),
+				TEXT_NORMAL_BOLD.Render("  Refreshing"),
 			)
 		}
 		u.blank()
@@ -122,7 +120,7 @@ func (u *UI) StackEvent(evt *project.StackEvent) {
 	}
 
 	if evt.BuildFailedEvent != nil {
-		u.printEvent(color.FgRed, "Error", evt.BuildFailedEvent.Error)
+		u.printEvent(TEXT_DANGER, "Error", evt.BuildFailedEvent.Error)
 	}
 
 	if evt.StdOutEvent != nil {
@@ -161,7 +159,7 @@ func (u *UI) StackEvent(evt *project.StackEvent) {
 		duration := time.Since(u.timing[evt.ResOutputsEvent.Metadata.URN]).Round(time.Millisecond)
 		if evt.ResOutputsEvent.Metadata.Op == apitype.OpSame && u.mode == ProgressModeRefresh {
 			u.printProgress(
-				color.FgGreen,
+				TEXT_SUCCESS,
 				"Refreshed",
 				duration,
 				evt.ResOutputsEvent.Metadata.URN,
@@ -170,7 +168,7 @@ func (u *UI) StackEvent(evt *project.StackEvent) {
 		}
 		if evt.ResOutputsEvent.Metadata.Op == apitype.OpCreate {
 			u.printProgress(
-				color.FgGreen,
+				TEXT_SUCCESS,
 				"Created",
 				duration,
 				evt.ResOutputsEvent.Metadata.URN,
@@ -178,7 +176,7 @@ func (u *UI) StackEvent(evt *project.StackEvent) {
 		}
 		if evt.ResOutputsEvent.Metadata.Op == apitype.OpUpdate {
 			u.printProgress(
-				color.FgGreen,
+				TEXT_SUCCESS,
 				"Updated",
 				duration,
 				evt.ResOutputsEvent.Metadata.URN,
@@ -186,7 +184,7 @@ func (u *UI) StackEvent(evt *project.StackEvent) {
 		}
 		if evt.ResOutputsEvent.Metadata.Op == apitype.OpDelete {
 			u.printProgress(
-				color.FgHiBlack,
+				TEXT_DIM,
 				"Deleted",
 				duration,
 				evt.ResOutputsEvent.Metadata.URN,
@@ -194,7 +192,7 @@ func (u *UI) StackEvent(evt *project.StackEvent) {
 		}
 		if evt.ResOutputsEvent.Metadata.Op == apitype.OpDeleteReplaced {
 			u.printProgress(
-				color.FgHiBlack,
+				TEXT_DIM,
 				"Deleted",
 				duration,
 				evt.ResOutputsEvent.Metadata.URN,
@@ -202,7 +200,7 @@ func (u *UI) StackEvent(evt *project.StackEvent) {
 		}
 		if evt.ResOutputsEvent.Metadata.Op == apitype.OpCreateReplacement {
 			u.printProgress(
-				color.FgGreen,
+				TEXT_SUCCESS,
 				"Created",
 				duration,
 				evt.ResOutputsEvent.Metadata.URN,
@@ -210,7 +208,7 @@ func (u *UI) StackEvent(evt *project.StackEvent) {
 		}
 		if evt.ResOutputsEvent.Metadata.Op == apitype.OpReplace {
 			u.printProgress(
-				color.FgGreen,
+				TEXT_SUCCESS,
 				"Created",
 				duration,
 				evt.ResOutputsEvent.Metadata.URN,
@@ -225,12 +223,12 @@ func (u *UI) StackEvent(evt *project.StackEvent) {
 		if evt.DiagnosticEvent.Severity == "error" {
 			message := []string{u.formatURN(evt.DiagnosticEvent.URN)}
 			message = append(message, parseError(evt.DiagnosticEvent.Message)...)
-			u.printEvent(color.FgRed, "Error", message...)
+			u.printEvent(TEXT_DANGER, "Error", message...)
 		}
 
 		if evt.DiagnosticEvent.Severity == "info" {
 			u.printEvent(
-				color.FgHiBlack,
+				TEXT_DIM,
 				"Log",
 				strings.TrimSpace(evt.DiagnosticEvent.Message),
 			)
@@ -238,10 +236,10 @@ func (u *UI) StackEvent(evt *project.StackEvent) {
 
 		if evt.DiagnosticEvent.Severity == "info#err" {
 			if strings.HasPrefix(evt.DiagnosticEvent.Message, "Downloading provider") {
-				u.printEvent(color.FgMagenta, "Info", strings.TrimSpace(evt.DiagnosticEvent.Message))
+				u.printEvent(TEXT_INFO, "Info", strings.TrimSpace(evt.DiagnosticEvent.Message))
 			} else {
 				u.printEvent(
-					color.FgHiBlack,
+					TEXT_DIM,
 					"Log",
 					evt.DiagnosticEvent.Message,
 				)
@@ -253,23 +251,23 @@ func (u *UI) StackEvent(evt *project.StackEvent) {
 		u.complete = evt.CompleteEvent
 		u.blank()
 		if len(evt.CompleteEvent.Errors) == 0 && evt.CompleteEvent.Finished {
-			u.print(color.New(color.FgGreen, color.Bold).Sprint(IconCheck))
+			u.print(TEXT_SUCCESS_BOLD.Render(IconCheck))
 			if len(u.timing) == 0 {
 				if u.mode == ProgressModeRemove {
-					u.print(color.New(color.FgWhite, color.Bold).Sprint("  No resources to remove"))
+					u.print(TEXT_NORMAL_BOLD.Render("  No resources to remove"))
 				} else {
-					u.print(color.New(color.FgWhite, color.Bold).Sprint("  No changes"))
+					u.print(TEXT_NORMAL_BOLD.Render("  No changes"))
 				}
 			}
 			if len(u.timing) > 0 {
 				if u.mode == ProgressModeRemove {
-					u.print(color.New(color.FgWhite, color.Bold).Sprint("  Removed"))
+					u.print(TEXT_NORMAL_BOLD.Render("  Removed"))
 				}
 				if u.mode == ProgressModeDeploy || u.mode == ProgressModeDev {
-					u.print(color.New(color.FgWhite, color.Bold).Sprint("  Complete"))
+					u.print(TEXT_NORMAL_BOLD.Render("  Complete"))
 				}
 				if u.mode == ProgressModeRefresh {
-					u.print(color.New(color.FgWhite, color.Bold).Sprint("  Refreshed"))
+					u.print(TEXT_NORMAL_BOLD.Render("  Refreshed"))
 				}
 			}
 			u.println()
@@ -277,21 +275,21 @@ func (u *UI) StackEvent(evt *project.StackEvent) {
 				for k, v := range evt.CompleteEvent.Hints {
 					splits := strings.Split(k, "::")
 					u.println(
-						color.New(color.FgHiBlack).Sprint("   "),
-						color.New(color.FgHiBlack, color.Bold).Sprint(splits[len(splits)-1]+": "),
-						color.New(color.FgWhite).Sprint(v),
+						TEXT_DIM_BOLD.Render("   "),
+						TEXT_DIM_BOLD.Render(splits[len(splits)-1]+": "),
+						TEXT_NORMAL.Render(v),
 					)
 				}
 			}
 			if len(evt.CompleteEvent.Outputs) > 0 {
 				if len(evt.CompleteEvent.Hints) > 0 {
-					u.println(color.New(color.FgHiBlack).Sprint("   ---"))
+					u.println(TEXT_DIM_BOLD.Render("   ---"))
 				}
 				for k, v := range evt.CompleteEvent.Outputs {
 					u.println(
-						color.New(color.FgHiBlack).Sprint("   "),
-						color.New(color.FgHiBlack, color.Bold).Sprint(k+": "),
-						color.New(color.FgWhite).Sprint(v),
+						TEXT_DIM_BOLD.Render("   "),
+						TEXT_DIM_BOLD.Render(k+": "),
+						TEXT_NORMAL.Render(fmt.Sprint(v)),
 					)
 				}
 			}
@@ -299,22 +297,22 @@ func (u *UI) StackEvent(evt *project.StackEvent) {
 
 		if len(evt.CompleteEvent.Errors) == 0 && !evt.CompleteEvent.Finished {
 			u.println(
-				color.New(color.FgRed, color.Bold).Sprint(IconX),
-				color.New(color.FgWhite, color.Bold).Sprint("  Interrupted"),
+				TEXT_DANGER_BOLD.Render(IconX),
+				TEXT_NORMAL_BOLD.Render("  Interrupted"),
 			)
 		}
 
 		if len(evt.CompleteEvent.Errors) > 0 {
 			u.println(
-				color.New(color.FgRed, color.Bold).Sprint(IconX),
-				color.New(color.FgWhite, color.Bold).Sprint("  Failed"),
+				TEXT_DANGER_BOLD.Render(IconX),
+				TEXT_NORMAL_BOLD.Render("  Failed"),
 			)
 
 			for _, status := range evt.CompleteEvent.Errors {
 				if status.URN != "" {
-					u.println(color.New(color.FgRed, color.Bold).Sprint("   " + u.formatURN(status.URN)))
+					u.println(TEXT_DANGER_BOLD.Render("   " + u.formatURN(status.URN)))
 				}
-				u.println(color.New(color.FgWhite).Sprint("   " + strings.Join(parseError(status.Message), "\n   ")))
+				u.println(TEXT_NORMAL.Render("   " + strings.Join(parseError(status.Message), "\n   ")))
 			}
 		}
 
@@ -326,7 +324,7 @@ func (u *UI) Event(evt *server.Event) {
 	u.footer.Send(evt)
 	if evt.FunctionInvokedEvent != nil {
 		u.workerTime[evt.FunctionInvokedEvent.WorkerID] = time.Now()
-		u.printEvent(u.getColor(evt.FunctionInvokedEvent.WorkerID), color.New(color.FgWhite, color.Bold).Sprintf("%-11s", "Invoke"), u.functionName(evt.FunctionInvokedEvent.FunctionID))
+		u.printEvent(u.getColor(evt.FunctionInvokedEvent.WorkerID), TEXT_NORMAL_BOLD.Render(fmt.Sprintf("%-11s", "Invoke")), u.functionName(evt.FunctionInvokedEvent.FunctionID))
 	}
 
 	if evt.FunctionResponseEvent != nil {
@@ -343,18 +341,22 @@ func (u *UI) Event(evt *server.Event) {
 
 	if evt.WorkerBuildEvent != nil {
 		if len(evt.WorkerBuildEvent.Errors) > 0 {
-			u.printEvent(color.FgRed, "Build Error", u.functionName(evt.WorkerBuildEvent.WorkerID)+" "+strings.Join(evt.WorkerBuildEvent.Errors, "\n"))
+			u.printEvent(TEXT_DANGER, "Build Error", u.functionName(evt.WorkerBuildEvent.WorkerID)+" "+strings.Join(evt.WorkerBuildEvent.Errors, "\n"))
 			return
 		}
-		u.printEvent(color.FgGreen, "Build", u.functionName(evt.WorkerBuildEvent.WorkerID))
+		u.printEvent(TEXT_INFO, "Build", u.functionName(evt.WorkerBuildEvent.WorkerID))
 	}
 
 	if evt.WorkerUpdatedEvent != nil {
-		u.printEvent(color.FgBlue, "Reload", u.functionName(evt.WorkerUpdatedEvent.WorkerID))
+		u.printEvent(TEXT_INFO, "Reload", u.functionName(evt.WorkerUpdatedEvent.WorkerID))
 	}
 	if evt.WorkerInvokedEvent != nil {
 		url, _ := url.Parse(evt.WorkerInvokedEvent.TailEvent.Event.Request.URL)
-		u.printEvent(u.getColor(evt.WorkerInvokedEvent.WorkerID), color.New(color.FgWhite, color.Bold).Sprintf("%-11s", "Invoke"), u.functionName(evt.WorkerInvokedEvent.WorkerID)+" "+evt.WorkerInvokedEvent.TailEvent.Event.Request.Method+" "+url.Path)
+		u.printEvent(
+			u.getColor(evt.WorkerInvokedEvent.WorkerID),
+			TEXT_NORMAL_BOLD.Render(fmt.Sprintf("%-11s", "Invoke")),
+			u.functionName(evt.WorkerInvokedEvent.WorkerID)+" "+evt.WorkerInvokedEvent.TailEvent.Event.Request.Method+" "+url.Path,
+		)
 
 		for _, log := range evt.WorkerInvokedEvent.TailEvent.Logs {
 			duration := time.UnixMilli(log.Timestamp).Sub(time.UnixMilli(evt.WorkerInvokedEvent.TailEvent.EventTimestamp))
@@ -380,17 +382,17 @@ func (u *UI) Event(evt *server.Event) {
 
 	if evt.FunctionBuildEvent != nil {
 		if len(evt.FunctionBuildEvent.Errors) > 0 {
-			u.printEvent(color.FgRed, "Build Error", u.functionName(evt.FunctionBuildEvent.FunctionID))
+			u.printEvent(TEXT_DANGER, "Build Error", u.functionName(evt.FunctionBuildEvent.FunctionID))
 			for _, item := range evt.FunctionBuildEvent.Errors {
-				u.printEvent(color.FgRed, "", "↳ "+strings.TrimSpace(item))
+				u.printEvent(TEXT_DANGER, "", "↳ "+strings.TrimSpace(item))
 			}
 			return
 		}
-		u.printEvent(color.FgGreen, "Build", u.functionName(evt.FunctionBuildEvent.FunctionID))
+		u.printEvent(TEXT_SUCCESS, "Build", u.functionName(evt.FunctionBuildEvent.FunctionID))
 	}
 
 	if evt.FunctionErrorEvent != nil {
-		u.printEvent(u.getColor(evt.FunctionErrorEvent.WorkerID), color.New(color.FgRed).Sprintf("%-11s", "Error"), u.functionName(evt.FunctionErrorEvent.FunctionID))
+		u.printEvent(u.getColor(evt.FunctionErrorEvent.WorkerID), TEXT_DANGER.Render(fmt.Sprintf("%-11s", "Error")), u.functionName(evt.FunctionErrorEvent.FunctionID))
 		u.printEvent(u.getColor(evt.FunctionErrorEvent.WorkerID), "", evt.FunctionErrorEvent.ErrorMessage)
 		for _, item := range evt.FunctionErrorEvent.Trace {
 			if strings.Contains(item, "Error:") {
@@ -401,14 +403,14 @@ func (u *UI) Event(evt *server.Event) {
 	}
 }
 
-var COLORS = []color.Attribute{
-	color.FgMagenta,
-	color.FgCyan,
-	color.FgGreen,
-	color.FgWhite,
+var COLORS = []lipgloss.Style{
+	lipgloss.NewStyle().Foreground(lipgloss.Color("13")),
+	lipgloss.NewStyle().Foreground(lipgloss.Color("14")),
+	lipgloss.NewStyle().Foreground(lipgloss.Color("2")),
+	lipgloss.NewStyle().Foreground(lipgloss.Color("12")),
 }
 
-func (u *UI) getColor(input string) color.Attribute {
+func (u *UI) getColor(input string) lipgloss.Style {
 	result, ok := u.colors[input]
 	if !ok {
 		result = COLORS[len(u.colors)%len(COLORS)]
@@ -432,7 +434,7 @@ func (u *UI) functionName(functionID string) string {
 	return functionID
 }
 
-func (u *UI) printProgress(barColor color.Attribute, label string, duration time.Duration, urn string) {
+func (u *UI) printProgress(barColor lipgloss.Style, label string, duration time.Duration, urn string) {
 	message := u.formatURN(urn)
 	if duration > time.Second {
 		message += fmt.Sprintf(" (%.1fs)", duration.Seconds())
@@ -440,20 +442,19 @@ func (u *UI) printProgress(barColor color.Attribute, label string, duration time
 	u.printEvent(barColor, label, message)
 }
 
-func (u *UI) printEvent(barColor color.Attribute, label string, message ...string) {
-	u.print(color.New(barColor, color.Bold).Sprint("|  "))
+func (u *UI) printEvent(barColor lipgloss.Style, label string, message ...string) {
+	u.print(barColor.Copy().Bold(true).Render("|  "))
 	if label != "" {
-		u.print(color.New(color.FgHiBlack).Sprint(fmt.Sprintf("%-11s", label), " "))
+		u.print(TEXT_DIM.Render(fmt.Sprint(fmt.Sprintf("%-11s", label), " ")))
 	}
 	if len(message) > 0 {
-		u.print(color.New(color.FgHiBlack).Sprint(message[0]))
+		u.print(TEXT_DIM.Render(message[0]))
 	}
 	u.println()
 	for _, msg := range message[1:] {
-		u.print(color.New(barColor, color.Bold).Sprint("|  "))
-		u.println(color.New(color.FgHiBlack).Sprint(msg))
+		u.print(barColor.Copy().Bold(true).Render("|  "))
+		u.println(TEXT_DIM.Render(msg))
 	}
-	u.hasProgress = true
 }
 
 func (u *UI) Destroy() {
@@ -463,24 +464,24 @@ func (u *UI) Destroy() {
 
 func (u *UI) Header(version, app, stage string) {
 	u.println(
-		color.New(color.FgCyan, color.Bold).Sprint("SST ❍ ion "+version),
-		color.New(color.FgHiBlack).Sprint(" ready!"),
+		TEXT_HIGHLIGHT_BOLD.Render("SST ❍ ion "+version),
+		TEXT_DIM.Render("  ready!"),
 	)
 	u.blank()
 	u.println(
-		color.New(color.FgCyan, color.Bold).Sprint("➜  "),
-		color.New(color.FgWhite, color.Bold).Sprintf("%-12s", "App:"),
-		color.New(color.FgHiBlack).Sprint(app),
+		TEXT_HIGHLIGHT_BOLD.Render("➜  "),
+		TEXT_NORMAL_BOLD.Render(fmt.Sprintf("%-12s", "App:")),
+		TEXT_DIM.Render(app),
 	)
 	u.println(
-		color.New(color.FgWhite, color.Bold).Sprintf("   %-12s", "Stage:"),
-		color.New(color.FgHiBlack).Sprint(stage),
+		TEXT_NORMAL_BOLD.Render(fmt.Sprintf("   %-12s", "Stage:")),
+		TEXT_DIM.Render(stage),
 	)
 
 	if u.mode == ProgressModeDev {
 		u.println(
-			color.New(color.FgWhite, color.Bold).Sprintf("   %-12s", "Console:"),
-			color.New(color.FgHiBlack).Sprint("https://console.sst.dev/local/"+app+"/"+stage),
+			TEXT_NORMAL_BOLD.Render(fmt.Sprintf("   %-12s", "Console:")),
+			TEXT_DIM.Render("https://console.sst.dev/local/"+app+"/"+stage),
 		)
 	}
 	u.blank()
@@ -518,11 +519,11 @@ func (u *UI) formatURN(urn string) string {
 }
 
 func Success(msg string) {
-	os.Stderr.WriteString(color.New(color.FgGreen, color.Bold).Sprint(IconCheck + "  "))
-	os.Stderr.WriteString(color.New(color.FgWhite).Sprintln(msg))
+	os.Stderr.WriteString(TEXT_SUCCESS_BOLD.Render(IconCheck + "  "))
+	os.Stderr.WriteString(TEXT_NORMAL.Render(fmt.Sprintln(msg)))
 }
 
 func Error(msg string) {
-	os.Stderr.WriteString(color.New(color.FgRed, color.Bold).Sprint(IconX + "  "))
-	os.Stderr.WriteString(color.New(color.FgWhite).Sprintln(msg))
+	os.Stderr.WriteString(TEXT_DANGER_BOLD.Render(IconX + "  "))
+	os.Stderr.WriteString(TEXT_NORMAL.Render(fmt.Sprintln(msg)))
 }

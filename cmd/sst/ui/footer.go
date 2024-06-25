@@ -140,12 +140,25 @@ func (m footer) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 var TEXT_HIGHLIGHT = lipgloss.NewStyle().Foreground(lipgloss.Color("14"))
+var TEXT_HIGHLIGHT_BOLD = TEXT_HIGHLIGHT.Copy().Bold(true)
+
 var TEXT_DIM = lipgloss.NewStyle().Foreground(lipgloss.Color("8"))
+var TEXT_DIM_BOLD = TEXT_DIM.Copy().Bold(true)
+
 var TEXT_NORMAL = lipgloss.NewStyle().Foreground(lipgloss.Color("15"))
+var TEXT_NORMAL_BOLD = TEXT_NORMAL.Copy().Bold(true)
+
 var TEXT_WARNING = lipgloss.NewStyle().Foreground(lipgloss.Color("11"))
+var TEXT_WARNING_BOLD = TEXT_WARNING.Copy().Bold(true)
+
 var TEXT_DANGER = lipgloss.NewStyle().Foreground(lipgloss.Color("1"))
+var TEXT_DANGER_BOLD = TEXT_DANGER.Copy().Bold(true)
+
 var TEXT_SUCCESS = lipgloss.NewStyle().Foreground(lipgloss.Color("2"))
+var TEXT_SUCCESS_BOLD = TEXT_SUCCESS.Copy().Bold(true)
+
 var TEXT_INFO = lipgloss.NewStyle().Foreground(lipgloss.Color("4"))
+var TEXT_INFO_BOLD = TEXT_INFO.Copy().Bold(true)
 
 func (m footer) View() string {
 	result := []string{}
