@@ -676,7 +676,7 @@ function handler(event) {
           {
             comment: "SST server response cache policy",
             defaultTtl: 0,
-            maxTtl: 365,
+            maxTtl: 31536000, // 1 year
             minTtl: 0,
             parametersInCacheKeyAndForwardedToOrigin: {
               cookiesConfig: {
