@@ -1204,7 +1204,7 @@ export class Function extends Component implements Link.Linkable, AWSLinkable {
                     `export const ${newHandlerFunction} = awslambda.streamifyResponse(async (event, responseStream, context) => {`,
                     ...injections,
                     `  const { ${oldHandlerFunction}: rawHandler} = await import("./${oldHandlerFileName}${newHandlerFileExt}");`,
-                    `  return rawHandler(event, context);`,
+                    `  return rawHandler(event, responseStream, context);`,
                     `});`,
                   ].join("\n")
                 : [
