@@ -43,4 +43,4 @@ jobs:
           ./scripts/build-functions
           cd ../../www
           go run ../cmd/sst telemetry disable
-          go run ../cmd/sst deploy --stage=production --verbose
+          go run ../cmd/sst deploy --stage=production

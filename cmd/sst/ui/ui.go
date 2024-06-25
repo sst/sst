@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"net/url"
 	"os"
 	"strings"
@@ -459,6 +460,7 @@ func (u *UI) printEvent(barColor lipgloss.Style, label string, message ...string
 
 func (u *UI) Destroy() {
 	u.footer.Quit()
+	slog.Info("waiting for footer to quit")
 	u.footer.Wait()
 	fmt.Println()
 }
