@@ -61,7 +61,7 @@ func Start(ctx context.Context, root string) (util.CleanupFunc, error) {
 				if !ok {
 					return
 				}
-				if !event.Has(fsnotify.Write) {
+				if !event.Has(fsnotify.Write) && !event.Has(fsnotify.Create) {
 					slog.Info("ignoring file event", "path", event.Name, "op", event.Op)
 					continue
 				}
