@@ -930,38 +930,42 @@ export class Function extends Component implements Link.Linkable, AWSLinkable {
     this.registerOutputs({
       _receiver: args._skipMetadata
         ? undefined
-        : all([args.bundle, args.handler]).apply(([bundle, handler]) => ({
-            directory: bundle || handler,
-            links,
-            environment,
-            aws: {
-              role: role?.arn,
-            },
-          })),
-      _live: all([dev]).apply(([dev]) => {
-        if (!dev) return undefined;
-        return all([
-          name,
-          links,
-          args.handler,
-          args.bundle,
-          args.runtime,
-          args.nodejs,
-          copyFiles,
-        ]).apply(
-          ([name, links, handler, bundle, runtime, nodejs, copyFiles]) => {
-            return {
-              functionID: name,
+        : unsecret(
+            all([args.bundle, args.handler]).apply(([bundle, handler]) => ({
+              directory: bundle || handler,
               links,
-              handler: handler,
-              bundle: bundle,
-              runtime: runtime || "nodejs20.x",
-              copyFiles,
-              properties: nodejs,
-            };
-          },
-        );
-      }),
+              environment,
+              aws: {
+                role: role?.arn,
+              },
+            })),
+          ),
+      _live: unsecret(
+        all([dev]).apply(([dev]) => {
+          if (!dev) return undefined;
+          return all([
+            name,
+            links,
+            args.handler,
+            args.bundle,
+            args.runtime,
+            args.nodejs,
+            copyFiles,
+          ]).apply(
+            ([name, links, handler, bundle, runtime, nodejs, copyFiles]) => {
+              return {
+                functionID: name,
+                links,
+                handler: handler,
+                bundle: bundle,
+                runtime: runtime || "nodejs20.x",
+                copyFiles,
+                properties: nodejs,
+              };
+            },
+          );
+        }),
+      ),
       _metadata: {
         handler: args.handler,
         internal: args._skipMetadata,
