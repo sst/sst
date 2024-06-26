@@ -20,9 +20,6 @@ export default $config({
         FOO: "bar",
       },
     });
-    throw new Error(
-      "This is a stupid error fuck you lol fuck me ok what ever bro fine this is suepr long but cool",
-    );
     return {
       api: hono.url,
     };

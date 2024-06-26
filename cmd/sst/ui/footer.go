@@ -75,6 +75,9 @@ func (m footer) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.lines = append(m.lines, string(msg))
 	case tea.KeyMsg:
 		switch msg.String() {
+		case "ctrl+l":
+			m.lines = []string{}
+			cmds = append(cmds, tea.ClearScreen)
 		case "ctrl+c":
 			pid := os.Getpid()
 			syscall.Kill(pid, syscall.SIGINT)
