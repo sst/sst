@@ -218,8 +218,6 @@ console.log("~j" + JSON.stringify(mod.app({
 			}
 			continue
 		}
-
-		fmt.Println(line)
 	}
 	if err := scanner.Err(); err != nil {
 		return nil, err

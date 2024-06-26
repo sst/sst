@@ -2,7 +2,6 @@ package bus
 
 import (
 	"context"
-	"fmt"
 	"log/slog"
 	"reflect"
 	"sync"
@@ -76,10 +75,4 @@ func Listen[T Event](ctx context.Context, example T) <-chan T {
 	}()
 
 	return events
-}
-
-func Next[T Event](input T) {
-	t := reflect.TypeOf((*T)(nil)).Elem()
-	fmt.Println("subscribed to", t)
-
 }

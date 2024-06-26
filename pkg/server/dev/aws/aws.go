@@ -486,7 +486,7 @@ func Start(
 			write := io.MultiWriter(conn, buf)
 			_, err = io.Copy(write, read)
 			if err != nil {
-				fmt.Println("Error writing to the connection:", err)
+				slog.Error("error writing to the connection", "error", err)
 			}
 			resp, err := http.ReadResponse(bufio.NewReader(buf), nil)
 			if err == nil {

@@ -13,6 +13,7 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/charmbracelet/x/ansi"
 	"github.com/muesli/reflow/wordwrap"
 	"github.com/pulumi/pulumi/sdk/v3/go/common/apitype"
 	"github.com/pulumi/pulumi/sdk/v3/go/common/resource"
@@ -91,11 +92,12 @@ func (u *UI) printf(tmpl string, args ...interface{}) {
 func (u *UI) println(args ...interface{}) {
 	u.buffer = append(u.buffer, args...)
 	if u.footer == nil {
-		fmt.Println(lineMsg(fmt.Sprint(u.buffer...)))
+		fmt.Println(fmt.Sprint(u.buffer...))
 	}
 	if u.footer != nil {
 		width, _, _ := terminal.GetSize(int(os.Stdout.Fd()))
 		u.footer.Println(wordwrap.String(fmt.Sprint(u.buffer...), width))
+		// u.footer.Send(lineMsg(fmt.Sprint(u.buffer...)))
 	}
 	u.buffer = []interface{}{}
 	u.hasBlank = false
@@ -120,7 +122,7 @@ func (u *UI) Reset() {
 
 func (u *UI) StackEvent(evt *project.StackEvent) {
 	if u.footer != nil {
-		u.footer.Send(evt)
+		defer u.footer.Send(evt)
 	}
 	if evt.ConcurrentUpdateEvent != nil {
 		u.printEvent(TEXT_DANGER, "Locked", "A concurrent update was detected on the app. Run `sst unlock` to remove the lock and try again.")
@@ -237,12 +239,6 @@ func (u *UI) StackEvent(evt *project.StackEvent) {
 			)
 		}
 		if evt.ResOutputsEvent.Metadata.Op == apitype.OpReplace {
-			u.printProgress(
-				TEXT_SUCCESS,
-				"Created",
-				duration,
-				evt.ResOutputsEvent.Metadata.URN,
-			)
 		}
 	}
 
@@ -257,21 +253,23 @@ func (u *UI) StackEvent(evt *project.StackEvent) {
 		}
 
 		if evt.DiagnosticEvent.Severity == "info" {
-			u.printEvent(
-				TEXT_DIM,
-				"Log",
-				strings.TrimRightFunc(evt.DiagnosticEvent.Message, unicode.IsSpace),
-			)
+			for _, line := range strings.Split(strings.TrimRightFunc(ansi.Strip(evt.DiagnosticEvent.Message), unicode.IsSpace), "\n") {
+				u.printEvent(
+					TEXT_DIM,
+					"Log",
+					line,
+				)
+			}
 		}
 
 		if evt.DiagnosticEvent.Severity == "info#err" {
 			if strings.HasPrefix(evt.DiagnosticEvent.Message, "Downloading provider") {
-				u.printEvent(TEXT_INFO, "Info", strings.TrimSpace(evt.DiagnosticEvent.Message))
+				u.printEvent(TEXT_INFO, "Info", strings.TrimSpace(ansi.Strip(evt.DiagnosticEvent.Message)))
 			} else {
 				u.printEvent(
 					TEXT_DIM,
 					"Log",
-					strings.TrimRightFunc(evt.DiagnosticEvent.Message, unicode.IsSpace),
+					strings.TrimRightFunc(ansi.Strip(evt.DiagnosticEvent.Message), unicode.IsSpace),
 				)
 			}
 		}
@@ -352,7 +350,7 @@ func (u *UI) StackEvent(evt *project.StackEvent) {
 
 func (u *UI) Event(evt *server.Event) {
 	if u.footer != nil {
-		u.footer.Send(evt)
+		defer u.footer.Send(evt)
 	}
 	if evt.FunctionInvokedEvent != nil {
 		u.workerTime[evt.FunctionInvokedEvent.WorkerID] = time.Now()

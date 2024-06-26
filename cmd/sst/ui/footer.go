@@ -10,7 +10,6 @@ import (
 	"github.com/charmbracelet/bubbles/spinner"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-	"github.com/fatih/color"
 	"github.com/pulumi/pulumi/sdk/v3/go/common/apitype"
 	"github.com/pulumi/pulumi/sdk/v3/go/common/resource"
 	"github.com/sst/ion/pkg/project"
@@ -43,7 +42,9 @@ func NewFooter() *tea.Program {
 	}
 	f.spinner.Spinner = spinner.MiniDot
 	f.Reset()
-	p := tea.NewProgram(f, tea.WithoutSignalHandler())
+	p := tea.NewProgram(f,
+		tea.WithFPS(16),
+		tea.WithoutSignalHandler())
 	go p.Run()
 	return p
 }
@@ -124,17 +125,13 @@ func (m footer) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 
 		if msg.ResOutputsEvent != nil {
-			next := []*apitype.ResourcePreEvent{}
-			for _, r := range m.pending {
-				if r.Metadata.URN == msg.ResOutputsEvent.Metadata.URN {
-					continue
-				}
-				next = append(next, r)
-			}
-			m.pending = next
+			m.removePending(msg.ResOutputsEvent.Metadata.URN)
 		}
 
 		if msg.DiagnosticEvent != nil {
+			if msg.DiagnosticEvent.URN != "" {
+				m.removePending(msg.DiagnosticEvent.URN)
+			}
 		}
 	}
 
@@ -171,7 +168,6 @@ func (m footer) View() string {
 		result = append(result, line)
 	}
 	if m.complete == nil {
-
 		if m.complete == nil {
 			for _, r := range m.pending {
 				label := "Creating"
@@ -208,7 +204,7 @@ func (m footer) View() string {
 				}
 			}
 			if m.skipped > 0 {
-				label += fmt.Sprintf(" (%d skipped)...", m.skipped)
+				label = fmt.Sprintf("%-11s [%d skipped]", label, m.skipped)
 			}
 			result = append(result, m.spinner.View()+"  "+label)
 		}
@@ -218,13 +214,15 @@ func (m footer) View() string {
 	return lipgloss.NewStyle().Width(m.width).Render(lipgloss.JoinVertical(lipgloss.Top, result...))
 }
 
-func (m footer) printEvent(barColor color.Attribute, label string, message string) {
-	color.New(barColor, color.Bold).Print("|  ")
-	if label != "" {
-		color.New(color.FgHiBlack).Print(fmt.Sprintf("%-11s", label), " ")
+func (u *footer) removePending(urn string) {
+	next := []*apitype.ResourcePreEvent{}
+	for _, r := range u.pending {
+		if r.Metadata.URN == urn {
+			continue
+		}
+		next = append(next, r)
 	}
-	color.New(color.FgHiBlack).Print(message)
-	fmt.Println()
+	u.pending = next
 }
 
 func (u *footer) formatURN(urn string) string {

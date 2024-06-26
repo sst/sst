@@ -117,7 +117,7 @@ func CmdDev(cli *Cli) error {
 			processExit := make(chan interface{})
 			err := cmd.Start()
 			if err != nil {
-				fmt.Println(err)
+				slog.Error("error starting command", "err", err.Error())
 				cli.Cancel()
 				return
 			}
@@ -149,7 +149,6 @@ func CmdDev(cli *Cli) error {
 						if !reflect.DeepEqual(oldValue, value) {
 							cmd.Process.Signal(os.Interrupt)
 							cmd.Wait()
-							fmt.Println("Restarting...")
 							break loop
 						}
 					}
@@ -159,7 +158,7 @@ func CmdDev(cli *Cli) error {
 		}
 	}()
 
-  state := &server.State{}
+	state := &server.State{}
 	// fmt.Print("\033[H\033[2J")
 	silent := cli.Bool("silent")
 	u := ui.New(cli.Context, ui.ProgressModeDev, func(o *ui.Options) {
@@ -182,12 +181,6 @@ func CmdDev(cli *Cli) error {
 				cli.Cancel()
 				return
 			}
-			// if event.PreludeEvent != nil && hasTarget && runOnce {
-			// 	fmt.Println()
-			// 	color.New(color.FgYellow, color.Bold).Print("~")
-			// 	color.New(color.FgWhite, color.Bold).Println("  Deploying")
-			// 	return
-			// }
 			if event.CompleteEvent != nil {
 				if hasTarget {
 					if !runOnce && (!event.CompleteEvent.Finished || len(event.CompleteEvent.Errors) > 0) {

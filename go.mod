@@ -34,6 +34,7 @@ require (
 
 require (
 	github.com/catppuccin/go v0.2.0 // indirect
+	github.com/charmbracelet/x/ansi v0.1.2 // indirect
 	github.com/creack/pty v1.1.17 // indirect
 	github.com/gdamore/encoding v1.0.0 // indirect
 )

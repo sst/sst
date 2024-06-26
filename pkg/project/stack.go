@@ -721,8 +721,6 @@ func (s *stack) Import(ctx context.Context, input *ImportOptions) error {
 		return err
 	}
 
-	fmt.Println("imported")
-	fmt.Println("refreshing")
 	_, err = stack.Refresh(ctx, optrefresh.Target([]string{string(urn)}))
 	if err != nil {
 		return err
