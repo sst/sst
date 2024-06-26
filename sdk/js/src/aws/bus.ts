@@ -6,8 +6,8 @@ import { EventBridgeEvent, EventBridgeHandler } from "aws-lambda";
 export module bus {
   export type Name = Extract<typeof Resource, { type: "sst.aws.Bus" }>["name"];
 
-  function url(options?: AwsOptions) {
-    const region = options?.region || client.region;
+  function url(region?: string, options?: AwsOptions) {
+    if (options?.region) region = options.region;
     return `https://events.${region}.amazonaws.com/`;
   }
 
@@ -44,7 +44,8 @@ export module bus {
       aws?: AwsOptions;
     },
   ): Promise<any> {
-    const u = url(options?.aws);
+    const c = await client();
+    const u = url(c.region, options?.aws);
     const evt =
       typeof def === "string"
         ? {
@@ -53,7 +54,7 @@ export module bus {
             metadata: options?.metadata || {},
           }
         : await def.create(properties, options?.metadata);
-    const res = await client.fetch(u, {
+    const res = await c.fetch(u, {
       method: "POST",
       aws: options?.aws,
       headers: {

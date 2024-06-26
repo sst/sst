@@ -1,4 +1,8 @@
-import { IoTCustomAuthorizerHandler } from "aws-lambda";
+import {
+  Context,
+  IoTCustomAuthorizerEvent,
+  IoTCustomAuthorizerHandler,
+} from "aws-lambda";
 
 export module realtime {
   export interface AuthResult {
@@ -59,10 +63,8 @@ export module realtime {
    * });
    * ```
    */
-  export function authorizer(
-    input: (token: string) => Promise<AuthResult>,
-  ): IoTCustomAuthorizerHandler {
-    return async (evt, context) => {
+  export function authorizer(input: (token: string) => Promise<AuthResult>) {
+    return async (evt: IoTCustomAuthorizerEvent, context: Context) => {
       const [, , , region, accountId] = context.invokedFunctionArn.split(":");
       const token = Buffer.from(
         evt.protocolData.mqtt?.password ?? "",
