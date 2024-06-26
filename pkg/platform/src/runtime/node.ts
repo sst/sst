@@ -160,12 +160,17 @@ export async function build(
           ),
         }),
       );
-      const cmd = ["npm", "install", "--force"];
+      const cmd = [
+        "npm install",
+        "--force",
+        "--platform=linux",
+        input.architecture === "arm64" ? "--arch=arm64" : "--arch=x64",
+        // support npm versions 10 and above
+        "--os=linux",
+        input.architecture === "arm64" ? "--cpu=arm64" : "--cpu=x64",
+      ];
       if (installPackages.includes("sharp")) {
-        cmd.push(
-          "--os=linux --libc=glibc",
-          input.architecture === "arm64" ? "--arch=arm64" : "--arch=x64",
-        );
+        cmd.push("--libc=glibc");
       }
       await new Promise<void>((resolve, reject) => {
         exec(cmd.join(" "), { cwd: out }, (error) => {
