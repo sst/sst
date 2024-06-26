@@ -13,13 +13,13 @@ _Note: Ion is generally available and recommended for new SST users. We are work
 
 ## Installation
 
-```
+```bash
 curl -fsSL https://ion.sst.dev/install | bash
 ```
 
-To install a specific version:
+To install a specific version.
 
-```
+```bash
 curl -fsSL https://ion.sst.dev/install | VERSION=0.0.403 bash
 ```
 

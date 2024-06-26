@@ -357,7 +357,9 @@ View the [full example](https://github.com/sst/ion/tree/dev/examples/aws-router)
 Deploy a simple HTML file as a static site with S3 and CloudFront.
 ```ts title="sst.config.ts"
 // Deploys the current directory as a static site
-new sst.aws.StaticSite("MySite");
+new sst.aws.StaticSite("MySite", {
+  path: "./dist",
+});
 ```
 
 View the [full example](https://github.com/sst/ion/tree/dev/examples/aws-static-site).
