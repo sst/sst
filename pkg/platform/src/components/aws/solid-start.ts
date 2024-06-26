@@ -326,15 +326,14 @@ export class SolidStart extends Component implements Link.Linkable {
     const { sitePath, partition } = prepare(args, opts);
     const { access, bucket } = createBucket(parent, name, partition, args);
     const outputPath = buildApp(name, args, sitePath).apply((output) => {
-      // if (
-      //   !fs.existsSync(
-      //     path.join(output, ".output/server/chunks/_/aws-lambda-streaming.mjs"),
-      //   )
-      // ) {
-      //   throw new VisibleError(
-      //     'SolidStart app does not seem to be configured with the right preset. Be sure to specify `preset: "aws-lambda-streaming"` in your `app.config.ts`.',
-      //   );
-      // }
+      const nitro = JSON.parse(
+        fs.readFileSync(path.join(output, ".output/nitro.json")).toString(),
+      );
+      if (nitro.preset !== "aws-lambda-streaming") {
+        throw new VisibleError(
+          'SolidStart app does not seem to be configured with the right preset. Be sure to specify `preset: "aws-lambda-streaming"` in your `app.config.ts`.',
+        );
+      }
       return output;
     });
     const { buildMeta } = loadBuildOutput();
