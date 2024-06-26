@@ -108,7 +108,7 @@ export async function build(
     minify: nodejs.minify,
     ...override,
   };
-
+  Object.assign(options, nodejs.esbuild);
   try {
     const result = await esbuild.build(options);
 
