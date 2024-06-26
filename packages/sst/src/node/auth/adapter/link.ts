@@ -18,12 +18,13 @@ interface LinkConfig {
     claims: Record<string, any>
   ) => Promise<APIGatewayProxyStructuredResultV2>;
   onError: () => Promise<APIGatewayProxyStructuredResultV2>;
+  expiresInMs?: number;
 }
 
 export const LinkAdapter = /* @__PURE__ */ createAdapter(
   (config: LinkConfig) => {
     const signer = createSigner({
-      expiresIn: 1000 * 60 * 10,
+      expiresIn: config.expiresInMs || 1000 * 60 * 10,
       key: getPrivateKey(),
       algorithm: "RS512",
     });
