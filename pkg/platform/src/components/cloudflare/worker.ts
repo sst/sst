@@ -271,7 +271,7 @@ export class Worker
       },
       _live: all([name, args.handler, args.build, args.live]).apply(
         ([name, handler, build, live]) =>
-          !$dev || !live == false
+          !$dev || live == false
             ? undefined
             : {
                 functionID: name,
