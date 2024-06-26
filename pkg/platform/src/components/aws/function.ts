@@ -931,14 +931,19 @@ export class Function extends Component implements Link.Linkable, AWSLinkable {
       _receiver: args._skipMetadata
         ? undefined
         : unsecret(
-            all([args.bundle, args.handler]).apply(([bundle, handler]) => ({
-              directory: bundle || handler,
-              links,
-              environment,
-              aws: {
-                role: role?.arn,
-              },
-            })),
+            all([args.bundle, args.handler, environment, region]).apply(
+              ([bundle, handler, env, region]) => ({
+                directory: bundle || handler,
+                links,
+                environment: {
+                  ...env,
+                  AWS_REGION: region,
+                },
+                aws: {
+                  role: role?.arn,
+                },
+              }),
+            ),
           ),
       _live: unsecret(
         all([dev]).apply(([dev]) => {

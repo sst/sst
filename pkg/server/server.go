@@ -234,7 +234,6 @@ func (s *Server) Start(parentContext context.Context) error {
 			"AWS_ACCESS_KEY_ID":     *result.Credentials.AccessKeyId,
 			"AWS_SECRET_ACCESS_KEY": *result.Credentials.SecretAccessKey,
 			"AWS_SESSION_TOKEN":     *result.Credentials.SessionToken,
-			"AWS_REGION":            awsProvider.Config().Region,
 		}
 
 		jsonCredentials, err := json.Marshal(credentials)
