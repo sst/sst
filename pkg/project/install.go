@@ -11,6 +11,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"regexp"
+	"strings"
 
 	"github.com/sst/ion/pkg/global"
 	"github.com/sst/ion/pkg/npm"
@@ -176,7 +177,7 @@ func (p *Project) fetchDeps() error {
 		for scanner.Scan() {
 			matches := pulumiTypePattern.FindStringSubmatch(scanner.Text())
 			if len(matches) > 1 {
-				entry.Alias = matches[1]
+				entry.Alias = strings.ReplaceAll(matches[1], "-", "")
 				break
 			}
 		}

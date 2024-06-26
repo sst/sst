@@ -1,11 +1,11 @@
 /// <reference path="./.sst/platform/config.d.ts" />
-
 export default $config({
   app(input) {
     return {
       name: "aws-hono",
       home: "aws",
       removal: input?.stage === "production" ? "retain" : "remove",
+      providers: { "aws-native": true },
     };
   },
   async run() {
