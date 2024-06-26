@@ -16,15 +16,16 @@ import (
 )
 
 type footer struct {
-	spinner   spinner.Model
-	mode      ProgressMode
-	complete  *project.CompleteEvent
-	parents   map[string]string
-	summary   bool
-	cancelled bool
-	lines     []string
-	pending   []*apitype.ResourcePreEvent
-	skipped   int
+	spinner     spinner.Model
+	mode        ProgressMode
+	complete    *project.CompleteEvent
+	parents     map[string]string
+	summary     bool
+	cancelled   bool
+	lines       []string
+	pending     []*apitype.ResourcePreEvent
+	skipped     int
+	exitConfirm bool
 
 	width  int
 	height int
@@ -75,13 +76,23 @@ func (m footer) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.lines = append(m.lines, string(msg))
 	case tea.KeyMsg:
 		switch msg.String() {
+		case "esc":
+			if m.exitConfirm {
+				m.exitConfirm = false
+			}
 		case "ctrl+l":
 			m.lines = []string{}
 			cmds = append(cmds, tea.ClearScreen)
 		case "ctrl+c":
-			pid := os.Getpid()
-			syscall.Kill(pid, syscall.SIGINT)
-			m.cancelled = true
+			if m.exitConfirm {
+				pid := os.Getpid()
+				syscall.Kill(pid, syscall.SIGINT)
+				m.cancelled = true
+			}
+
+			if !m.exitConfirm {
+				m.exitConfirm = true
+			}
 			break
 		}
 	case *project.StackEvent:
@@ -210,6 +221,10 @@ func (m footer) View() string {
 				label = fmt.Sprintf("%-11s [%d skipped]", label, m.skipped)
 			}
 			result = append(result, m.spinner.View()+"  "+label)
+		}
+
+		if m.exitConfirm {
+			result = append(result, TEXT_DANGER_BOLD.Render("|  ")+"Press Ctrl+C again to exit")
 		}
 
 		result = append(result, "")
