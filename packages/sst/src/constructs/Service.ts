@@ -458,6 +458,19 @@ export interface ServiceProps {
      * ```
      */
     cacheTo?: ServiceContainerCacheProps;
+    /**
+     * Target build stage to pass to the docker build command.
+     * @default No --target flag is passed to the build command
+     * @example
+     * ```js
+     * {
+     *   build: {
+     *     target: 'prod'
+     *   }
+     * }
+     * ```
+     */
+    target?: string;
   };
   dev?: {
     /**
@@ -1292,11 +1305,11 @@ export class Service extends Construct implements SSTConstruct {
                       ? Object.entries(build?.cacheTo?.params).map(
                           ([pk, pv]) => `${pk}=${pv}`
                         )
-                      : []
-                    )
-                  ].join(","),,
+                      : []),
+                  ].join(","),
               ]
             : []),
+          ...(build?.target ? [`--target ${build.target}`] : []),
           this.props.path,
         ].join(" "),
         {
