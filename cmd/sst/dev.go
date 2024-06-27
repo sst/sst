@@ -159,7 +159,6 @@ func CmdDev(cli *Cli) error {
 	}()
 
 	state := &server.State{}
-	// fmt.Print("\033[H\033[2J")
 	silent := cli.Bool("silent")
 	u := ui.New(cli.Context, ui.ProgressModeDev, func(o *ui.Options) {
 		o.Silent = silent

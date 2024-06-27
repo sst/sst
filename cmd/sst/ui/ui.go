@@ -75,7 +75,7 @@ func New(ctx context.Context, mode ProgressMode, options ...Option) *UI {
 		hasBlank:   false,
 	}
 	if isTTY && !opts.Silent {
-		result.footer = NewFooter()
+		result.footer = NewFooter(mode)
 	}
 	result.Reset()
 	return result
@@ -553,11 +553,9 @@ func (u *UI) formatURN(urn string) string {
 }
 
 func Success(msg string) {
-	os.Stderr.WriteString(TEXT_SUCCESS_BOLD.Render(IconCheck + "  "))
-	os.Stderr.WriteString(TEXT_NORMAL.Render(fmt.Sprintln(msg)))
+	fmt.Fprint(os.Stderr, strings.TrimSpace(TEXT_SUCCESS_BOLD.Render(IconX)+" "+TEXT_NORMAL.Render(fmt.Sprintln(msg))))
 }
 
 func Error(msg string) {
-	os.Stderr.WriteString(TEXT_DANGER_BOLD.Render(IconX + "  "))
-	os.Stderr.WriteString(TEXT_NORMAL.Render(fmt.Sprintln(msg)))
+	fmt.Fprint(os.Stderr, strings.TrimSpace(TEXT_DANGER_BOLD.Render(IconX)+" "+TEXT_NORMAL.Render(fmt.Sprintln(msg))))
 }

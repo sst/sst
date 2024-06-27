@@ -35,11 +35,12 @@ type op struct {
 	urn string
 }
 
-func NewFooter() *tea.Program {
+func NewFooter(mode ProgressMode) *tea.Program {
 	slog.Info("initialized footer ui")
 	f := footer{
 		spinner: spinner.New(),
 		lines:   []string{},
+		mode:    mode,
 	}
 	f.spinner.Spinner = spinner.MiniDot
 	f.Reset()
@@ -84,7 +85,7 @@ func (m footer) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.lines = []string{}
 			cmds = append(cmds, tea.ClearScreen)
 		case "ctrl+c":
-			if m.exitConfirm {
+			if m.exitConfirm || m.mode == ProgressModeDev {
 				pid := os.Getpid()
 				syscall.Kill(pid, syscall.SIGINT)
 				m.cancelled = true
@@ -99,17 +100,17 @@ func (m footer) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if msg.StackCommandEvent != nil {
 			m.Reset()
 			cmds = append(cmds, tea.HideCursor)
-			if msg.StackCommandEvent.Command == "refresh" {
-				m.mode = ProgressModeRefresh
-			}
+			// if msg.StackCommandEvent.Command == "refresh" {
+			// 	m.mode = ProgressModeRefresh
+			// }
 
-			if msg.StackCommandEvent.Command == "remove" {
-				m.mode = ProgressModeRemove
-			}
+			// if msg.StackCommandEvent.Command == "remove" {
+			// 	m.mode = ProgressModeRemove
+			// }
 
-			if msg.StackCommandEvent.Command == "deploy" {
-				m.mode = ProgressModeDeploy
-			}
+			// if msg.StackCommandEvent.Command == "deploy" {
+			// 	m.mode = ProgressModeDeploy
+			// }
 		}
 
 		if msg.CompleteEvent != nil {
@@ -213,7 +214,7 @@ func (m footer) View() string {
 				if m.mode == ProgressModeRefresh {
 					label = "Refreshing"
 				}
-				if m.mode == ProgressModeDeploy {
+				if m.mode == ProgressModeDeploy || m.mode == ProgressModeDev {
 					label = "Deploying"
 				}
 			}
