@@ -492,7 +492,6 @@ func (u *UI) Destroy() {
 		u.footer.Quit()
 		slog.Info("waiting for footer to quit")
 		u.footer.Wait()
-		fmt.Println()
 	}
 }
 
