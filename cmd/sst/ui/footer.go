@@ -226,8 +226,6 @@ func (m footer) View() string {
 		if m.exitConfirm {
 			result = append(result, TEXT_DANGER_BOLD.Render("|  ")+"Press Ctrl+C again to exit")
 		}
-
-		result = append(result, "")
 	}
 	return lipgloss.NewStyle().Width(m.width).Render(lipgloss.JoinVertical(lipgloss.Top, result...))
 }
