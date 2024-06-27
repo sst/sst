@@ -552,7 +552,7 @@ func (u *UI) formatURN(urn string) string {
 }
 
 func Success(msg string) {
-	fmt.Fprint(os.Stderr, strings.TrimSpace(TEXT_SUCCESS_BOLD.Render(IconX)+" "+TEXT_NORMAL.Render(fmt.Sprintln(msg))))
+	fmt.Fprint(os.Stderr, strings.TrimSpace(TEXT_SUCCESS_BOLD.Render(IconCheck)+" "+TEXT_NORMAL.Render(fmt.Sprintln(msg))))
 }
 
 func Error(msg string) {
