@@ -91,7 +91,8 @@ func CmdDev(cli *Cli) error {
 					cmd.Env = append(cmd.Env, envVar)
 				}
 
-				result, err := http.Get("http://localhost:13557/api/receiver/env?receiverID=" + dir)
+				addr, _ := server.GetExisting(cfgPath, stage)
+				result, err := http.Get("http://" + addr + "/api/receiver/env?receiverID=" + dir)
 				if err != nil {
 					slog.Info("receiver env err", "err", err.Error())
 					continue

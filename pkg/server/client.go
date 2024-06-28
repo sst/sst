@@ -21,7 +21,7 @@ type ConnectInput struct {
 }
 
 func Connect(ctx context.Context, input ConnectInput) error {
-	addr, err := findExisting(input.CfgPath, input.Stage)
+	addr, err := GetExisting(input.CfgPath, input.Stage)
 	if err != nil {
 		return err
 	}
@@ -51,7 +51,7 @@ func Connect(ctx context.Context, input ConnectInput) error {
 
 		slog.Info("waiting for server to start")
 		for {
-			addr, _ = findExisting(input.CfgPath, input.Stage)
+			addr, _ = GetExisting(input.CfgPath, input.Stage)
 			if addr != "" {
 				break
 			}

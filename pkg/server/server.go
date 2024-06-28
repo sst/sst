@@ -63,7 +63,7 @@ func resolveServerFile(cfgPath, stage string) string {
 	return filepath.Join(project.ResolveWorkingDir(cfgPath), stage+".server")
 }
 
-func findExisting(cfgPath, stage string) (string, error) {
+func GetExisting(cfgPath, stage string) (string, error) {
 	path := resolveServerFile(cfgPath, stage)
 	contents, err := os.ReadFile(path)
 	if err != nil {
@@ -332,19 +332,23 @@ func (s *Server) broadcast(event *Event) {
 }
 
 func findAvailablePort() (int, error) {
-	listener, err := net.Listen("tcp", "localhost:13557")
-	if err != nil {
-		if opError, ok := err.(*net.OpError); ok && opError.Op == "listen" {
-			if syscallErr, ok := opError.Err.(*os.SyscallError); ok && syscallErr.Syscall == "bind" {
-				if errno, ok := syscallErr.Err.(syscall.Errno); ok && errno == syscall.EADDRINUSE {
-					return 0, ErrServerAlreadyRunning
+	port := 13557
+	for {
+		listener, err := net.Listen("tcp", fmt.Sprintf("localhost:%d", port))
+		if err != nil {
+			if opError, ok := err.(*net.OpError); ok && opError.Op == "listen" {
+				if syscallErr, ok := opError.Err.(*os.SyscallError); ok && syscallErr.Syscall == "bind" {
+					if errno, ok := syscallErr.Err.(syscall.Errno); ok && errno == syscall.EADDRINUSE {
+						port++
+						continue
+					}
 				}
 			}
+			return 0, err
 		}
-		return 0, err
-	}
-	defer listener.Close()
+		defer listener.Close()
 
-	addr := listener.Addr().(*net.TCPAddr)
-	return addr.Port, nil
+		addr := listener.Addr().(*net.TCPAddr)
+		return addr.Port, nil
+	}
 }

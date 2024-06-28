@@ -13,6 +13,7 @@ import (
 	"github.com/sst/ion/cmd/sst/ui"
 	"github.com/sst/ion/internal/util"
 	"github.com/sst/ion/pkg/project/provider"
+	"github.com/sst/ion/pkg/server"
 )
 
 func CmdSecretList(cli *Cli) error {
@@ -84,7 +85,10 @@ func CmdSecretSet(cli *Cli) error {
 	if err != nil {
 		return util.NewReadableError(err, "Could not set secret")
 	}
-	http.Post("http://localhost:13557/api/deploy", "application/json", strings.NewReader("{}"))
+	addr, _ := server.GetExisting(p.PathConfig(), p.App().Stage)
+	if addr != "" {
+		http.Post("http://"+addr+"/api/deploy", "application/json", strings.NewReader("{}"))
+	}
 	ui.Success(fmt.Sprintf("Set \"%s\" for stage \"%s\". Run \"sst deploy\" to update.", key, p.App().Stage))
 	return nil
 }
@@ -125,7 +129,10 @@ func CmdSecretLoad(cli *Cli) error {
 	if err != nil {
 		return util.NewReadableError(err, "Could not set secret")
 	}
-	http.Post("http://localhost:13557/api/deploy", "application/json", strings.NewReader("{}"))
+	addr, _ := server.GetExisting(p.PathConfig(), p.App().Stage)
+	if addr != "" {
+		http.Post("http://"+addr+"/api/deploy", "application/json", strings.NewReader("{}"))
+	}
 	ui.Success("Run \"sst deploy\" to update.")
 	return nil
 }
