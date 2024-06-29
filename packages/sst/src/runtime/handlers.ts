@@ -214,19 +214,18 @@ export const useFunctionBuilder = lazy(() => {
   watcher.subscribe("file.changed", async (evt) => {
     try {
       const functions = useFunctions();
-      for (const [functionID, info] of Object.entries(functions.all)) {
-        const handler = handlers.for(info.runtime!);
-        if (
-          !handler?.shouldBuild({
-            functionID,
-            file: evt.properties.file,
-          })
-        )
-          continue;
+      await Promise.all(Object.entries(functions.all).map(async ([functionID, info]) => {
+        const handler = handlers.for(info.runtime);
+        if (!handler?.shouldBuild({
+          functionID,
+          file: evt.properties.file,
+        }))
+          return;
         await result.build(functionID);
-        Logger.debug("Rebuilt function", functionID);
-      }
-    } catch {}
+        console.log("Rebuilt function", functionID);
+      }));
+    }
+    catch { }
   });
 
   return result;
