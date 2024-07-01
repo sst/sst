@@ -230,6 +230,7 @@ func (s *Server) Start(parentContext context.Context) error {
 			env["AWS_SECRET_ACCESS_KEY"] = *result.Credentials.SecretAccessKey
 			env["AWS_SESSION_TOKEN"] = *result.Credentials.SessionToken
 		}
+		env["SST_RESOURCE_App"] = fmt.Sprintf(`{"name": "%s", "stage": "%s" }`, s.project.App().Name, s.project.App().Stage)
 
 		jsonCredentials, err := json.Marshal(env)
 		if err != nil {
