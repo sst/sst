@@ -3,4 +3,5 @@
 bun build ./functions/cf-static-site-router-worker/index.ts --target=node --outdir ./dist/cf-static-site-router-worker/
 bun build ./functions/cf-ssr-site-router-worker/index.ts --target=node --outdir ./dist/cf-ssr-site-router-worker/
 bun build ./functions/nodejs-runtime/index.ts --target=node --outdir ./dist/nodejs-runtime/
+bun build ./functions/nodejs-runtime/loop.ts --target=node --outdir ./dist/nodejs-runtime/
 node ./scripts/build.mjs
