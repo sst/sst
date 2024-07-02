@@ -543,9 +543,6 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 	switch input.Command {
 	case "deploy":
 		result, derr := stack.Up(ctx,
-			upOptionFunc(func(opts *optup.Options) {
-				opts.ContinueOnError = true
-			}),
 			optup.Target(input.Target),
 			optup.TargetDependents(),
 			optup.ProgressStreams(),
