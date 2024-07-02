@@ -241,56 +241,35 @@ export interface Target {
    */
   stage: string;
   /**
-   * Optionally configure the runner that will run the build.
+   * Configure the runner that will run the build.
    *
    * It uses this to create a _runner_ — a
    * [AWS CodeBuild](https://aws.amazon.com/codebuild/) project and an IAM Role,
-   * in **your account**.
+   * in **your account**. By default it uses:
+   *
+   * ```ts
+   * {
+   *   engine: "codebuild",
+   *   architecture: "x86_64",
+   *   compute: "small",
+   *   timeout: "1 hour"
+   * }
+   * ```
    *
    * :::note
    * Runners are shared across all apps in the same account and region.
    * :::
    *
-   * By default it uses:
-   *
-   * ```ts
-   * runner(input) {
-   *   return {
-   *     engine: "codebuild",
-   *     architecture: "x86_64",
-   *     compute: "small",
-   *     timeout: "1 hour"
-   *   };
-   * }
-   * ```
-   *
    * Once a runner is created, it can be used to run multiple builds of the same
    * machine config concurrently.
-   *
-   * :::note
-   * A runner can run multiple builds concurrently.
-   * :::
    *
    * You are only charged for the number of build
    * minutes that you use. The pricing is based on the machine config used.
    * [Learn more about CodeBuild pricing](https://aws.amazon.com/codebuild/pricing/).
    *
-   * You can also configure the runner based on the stage.
-   *
-   * ```ts {2}
-   * runner(input) {
-   *   return input.stage.includes("prod")
-   *     ? {
-   *       engine: "codebuild",
-   *       compute: "large",
-   *       timeout: "1 hour"
-   *     }
-   *     : {
-   *       engine: "codebuild",
-   *       compute: "small"
-   *     };
-   * }
-   * ```
+   * :::note
+   * A runner can run multiple builds concurrently.
+   * :::
    *
    * If a runner with the given config has been been previously created,
    * it'll be resused. The Console will also automatically remove runners that
@@ -355,57 +334,142 @@ interface GitCommit {
 
 interface GitRepo {
   /**
-   * The ID of the repository.
+   * The ID of the repo. This is usually a number.
    */
   id: number;
   /**
-   * The owner of the repository.
+   * The name of the owner or org the repo to belongs to.
    */
   owner: string;
   /**
-   * The name of the repository.
+   * The name of the repo.
    */
   repo: string;
 }
 
+/**
+ * A git event for when a branch is updated or deleted. For example:
+ * ```js
+ * {
+ *   type: "branch",
+ *   action: "pushed",
+ *   repo: {
+ *     id: 1296269,
+ *     owner: "octocat",
+ *     repo: "Hello-World"
+ *   },
+ *   branch: "main",
+ *   commit: {
+ *     id: "b7e7c4c559e0e5b4bc6f8d98e0e5e5e5e5e5e5e5",
+ *     message: "Update the README with new information"
+ *   },
+ *   sender: {
+ *     id: 1,
+ *     username: "octocat"
+ *   }
+ * }
+ * ```
+ */
 export interface BranchEvent {
   /**
-   * Git branch event type.
+   * The git event type, for the `BranchEvent` it's `branch`.
    */
   type: "branch";
   /**
-   * Git branch event action.
+   * The type of the git action.
+   *
+   * - `pushed` is when you git push to a branch
+   * - `removed` is when a branch is removed
    */
   action: "pushed" | "removed";
   /**
-   * The repository the event is coming from.
+   * The Git repository the event is coming from. This might look like:
+   *
+   * ```js
+   * {
+   *   id: 1296269,
+   *   owner: "octocat",
+   *   repo: "Hello-World"
+   * }
+   * ```
    */
   repo: Prettify<GitRepo>;
   /**
-   * The branch the push event is coming from.
+   * The name of the branch the event is coming from.
    */
   branch: string;
   /**
-   * The commit information.
+   * Info about the commit in the event. This might look like:
+   * 
+   * ```js
+   * {
+   *   id: "b7e7c4c559e0e5b4bc6f8d98e0e5e5e5e5e5e5e5",
+   *   message: "Update the README with new information"
+   * }
+   * ```
    */
   commit: Prettify<GitCommit>;
   /**
-   * The user pushed the code.
+   * The user that generated the event. For example:
+   *
+   * ```js
+   * {
+   *   id: 1,
+   *   username: "octocat"
+   * }
+   * ```
    */
   sender: Prettify<GitSender>;
 }
 
+/**
+ * A git event for when a pull request is updated or deleted. For exampple:
+ *
+ * ```js
+ * {
+ *   type: "pull_request",
+ *   action: "pushed",
+ *   repo: {
+ *     id: 1296269,
+ *     owner: "octocat",
+ *     repo: "Hello-World"
+ *   },
+ *   number: 1347,
+ *   base: "main",
+ *   head: "feature",
+ *   commit: {
+ *     id: "b7e7c4c559e0e5b4bc6f8d98e0e5e5e5e5e5e5e5",
+ *     message: "Update the README with new information"
+ *   },
+ *   sender: {
+ *     id: 1,
+ *     username: "octocat"
+ *   }
+ * }
+ * ```
+ */
 export interface PullRequestEvent {
   /**
-   * Git pull request event type.
+   * The git event type, for the `PullRequestEvent` it's `pull_request`.
    */
   type: "pull_request";
   /**
-   * Git pull request event action.
+   * The type of the git action.
+   *
+   * - `pushed` is when you git push to a branch
+   * - `removed` is when a branch is removed
    */
   action: "pushed" | "removed";
   /**
-   * The repository the event is coming from.
+   * The Git repository the event is coming from. This might look like:
+   *
+   * ```js
+   * {
+   *   id: 1296269,
+   *   owner: "octocat",
+   *   repo: "Hello-World"
+   * }
+   * ```
    */
   repo: Prettify<GitRepo>;
   /**
@@ -413,19 +477,33 @@ export interface PullRequestEvent {
    */
   number: number;
   /**
-   * The base branch of the pull request. This is the branch the code is being merged into.
+   * The base branch of the PR. This is the branch the code is being merged into.
    */
   base: string;
   /**
-   * The head branch of the pull request. This is the branch the code is coming from.
+   * The head branch of the PR. This is the branch the code is coming from.
    */
   head: string;
   /**
-   * The commit information.
+   * Info about the commit in the event. This might look like:
+   * 
+   * ```js
+   * {
+   *   id: "b7e7c4c559e0e5b4bc6f8d98e0e5e5e5e5e5e5e5",
+   *   message: "Update the README with new information"
+   * }
+   * ```
    */
   commit: Prettify<GitCommit>;
   /**
-   * The user pushed the code.
+   * The user that generated the event. For example:
+   *
+   * ```js
+   * {
+   *   id: 1,
+   *   username: "octocat"
+   * }
+   * ```
    */
   sender: Prettify<GitSender>;
 }
@@ -462,111 +540,114 @@ export interface Config {
    */
   console?: {
     /**
-     * Configure how the Console auto-deploys your app.
+     * Auto-deploys your app when you _git push_ to your repo. Uses
+     * [AWS CodeBuild](https://aws.amazon.com/codebuild/) in your account to run the build.
      *
-     * @example
+     * You are only charged for the number of build
+     * minutes that you use. The pricing is based on the machine config used.
+     * [Learn more about CodeBuild pricing](https://aws.amazon.com/codebuild/pricing/).
      *
-     * ```ts
-     * console: {
-     *   autodeploy: {
-     *     target(event) {
-     *       if (event.type === "push" && event.branch === "main") {
-     *         return { stage: "production" };
-     *       }
-     *     }
-     *   }
-     * }
-     * ```
+     * By default, this auto-deploys when you _git push_ to a:
+     *
+     * - **branch**: The stage name is a sanitized version of the branch name. When a branch
+     *   is removed, the stage is **not removed**.
+     * - **pull request**: The stage name is `pr-<number>`. When a pull request is closed,
+     *   the stage **is removed**.
+     *
+     * :::note
+     * You need to configure an environment in the Console to be able to auto-deploy to it.
+     * :::
+     *
+     * You can pass in your own `target` function to customize this behaviour and the machine
+     * that'll be used to run the build.
+     *
+     * @default Auto-deploys branches and PRs.
      */
     autodeploy: {
       /**
-       * Defines the stage the app will be auto-deployed to. For example, to auto-deploy
-       * to the `production` stage when you git push to the `main` branch.
+       * Defines the stage the app will be auto-deployed to.
+       *
+       * When a git event is received, Autodeploy will run the `target` function with the
+       * git event. This function should return the stage the app will be deployed to.
+       * Or `undefined` if the deploy should be skipped.
+       *
+       * :::tip
+       * Use the git event to configure how your app will be auto-deployed.
+       * :::
+       *
+       * By default, this is what the `target` function looks like:
+       *
+       * ```ts
+       * console: {
+       *   autodeploy: {
+       *     target(event) {
+       *       if (event.type === "branch" && event.action === "pushed") {
+       *         return {
+       *           stage: event.branch
+       *             .replace(/[^a-zA-Z0-9-]/g, "-")
+       *             .replace(/-+/g, "-")
+       *             .replace(/^-/g, "")
+       *             .replace(/-$/g, "")
+       *         };
+       *       }
+       *
+       *       if (event.type === "pull_request") {
+       *         return { stage: `pr-${event.number}` };
+       *       }
+       *     }
+       *   }
+       * }
+       * ```
+       *
+       * Here we are sanitizing the branch name to generate the stage name. We are also
+       * only deploying when _pushed_ to a branch, and **not** when a branch is removed.
+       *
+       * :::note
+       * If a target is not returned, the app will not be deployed.
+       * :::
+       *
+       * You can change the default behavior by passing in your own `target` function.
+       * For example, to auto-deploy to the `production` stage when you git push to the
+       * `main` branch.
        *
        * ```ts
        * target(event) {
-       *   if (event.type === "push" && event.branch === "main") {
+       *   if (event.type === "pushed" && event.branch === "main") {
        *     return { stage: "production" };
        *   }
        * }
        * ```
        *
-       * When a git event is received, Autodeploy will run the `target` function with
-       * the git event. This function should return the stage the app will be deployed to.
+       * If you don't want to auto-deploy for a given event, you can return `undefined`. For
+       * example, to skip any deploys to the `staging` stage.
        *
-       * :::tip
-       * Use the git event to configure the stage your app will be deployed to.
-       * :::
-       *
-       * The stage that is returned is then compared to the deployment target set in the
-       * app settings in the Console. If the stage matches a deployment target, the app will
-       * be deployed to the AWS account of that target.
-       *
-       * :::caution
-       * If a target is not returned, the app will not be deployed.
-       * :::
-       *
-       * The following git events are supported:
-       *
-       * - **`branch`**, when a branch is updated or deleted. For example, a git push to the `main` branch.
-       *
-       *   ```js
-       *   {
-       *     type: "branch",
-       *     action: "pushed",
-       *     repo: {
-       *       id: 1296269,
-       *       owner: "octocat",
-       *       repo: "Hello-World"
-       *     },
-       *     branch: "main",
-       *     commit: {
-       *       id: "b7e7c4c559e0e5b4bc6f8d98e0e5e5e5e5e5e5e5",
-       *       message: "Update the README with new information"
-       *     },
-       *     sender: {
-       *       id: 1,
-       *       username: "octocat"
-       *     }
+       * ```ts {2}
+       * target(event) {
+       *   if (event.branch === "staging") return;
+       *   if (event.type === "pushed" && event.branch === "main") {
+       *     return { stage: "production" };
        *   }
-       *   ```
+       * }
+       * ```
        *
-       * - `pull_request`, when a pull request is updated or deleted. For example, pull request
-       *   `#1347` from the `feature` branch to the `main` branch.
+       * The stage that is returned is then compared to the envrionments set in the
+       * app settings in the Console. If the stage matches a deployment target, the stage will
+       * be deployed to that environment. If no matching environment is found, the
+       * deploy will be skipped.
        *
-       *   ```js
-       *   {
-       *     type: "pull_request",
-       *     action: "pushed",
-       *     repo: {
-       *       id: 1296269,
-       *       owner: "octocat",
-       *       repo: "Hello-World"
-       *     },
-       *     number: 1347,
-       *     base: "main",
-       *     head: "feature",
-       *     commit: {
-       *       id: "b7e7c4c559e0e5b4bc6f8d98e0e5e5e5e5e5e5e5",
-       *       message: "Update the README with new information"
-       *     },
-       *     sender: {
-       *       id: 1,
-       *       username: "octocat"
-       *     }
-       *   }
-       *   ```
-       *
-       * You can use these events to setup a workflow. For example, where each git push to
-       * `main` deploys the `production` stage. And any pull request is deployed to a new stage.
+       * In addition to the `stage` you can also configure the `runner` that will run the build.
+       * For example, to use a larger machine for the `production` stage.
        *
        * ```ts
        * target(event) {
-       *   if (event.type === "push" && event.branch === "main") {
-       *     return { stage: "production" };
-       *   }
-       *   else if (event.type === "pull_request") {
-       *     return { stage: `pr-${event.number}` };
+       *   if (event.type === "pushed" && event.branch === "main") {
+       *     return {
+       *       stage: "production"
+       *       runner: {
+       *         engine: "codebuild",
+       *         compute: "large"
+       *       };
+       *     };
        *   }
        * }
        * ```

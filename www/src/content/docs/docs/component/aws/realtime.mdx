@@ -213,7 +213,7 @@ authorizer(input)
 </Section>
 
 <InlineSection>
-**Returns** [<code class="type">IoTCustomAuthorizerHandler</code>](https://github.com/DefinitelyTyped/DefinitelyTyped/blob/master/types/aws-lambda/trigger/iot-authorizer.d.ts)
+**Returns** <code class="primitive">(evt: [<code class="type">IoTCustomAuthorizerEvent</code>](https://github.com/DefinitelyTyped/DefinitelyTyped/blob/master/types/aws-lambda/trigger/iot-authorizer.d.ts), context: [<code class="type">Context</code>](https://github.com/DefinitelyTyped/DefinitelyTyped/blob/master/types/aws-lambda/handler.d.ts)) => <code class="primitive">Promise</code><code class="symbol">&lt;</code><code class="primitive">Object</code><code class="symbol">&gt;</code></code>
 </InlineSection>
 Creates an authorization handler for the `Realtime` component, that validates
 the token and grants permissions for the topics the client can subscribe and publish to.
