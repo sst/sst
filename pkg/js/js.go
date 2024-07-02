@@ -5,7 +5,6 @@ import (
 	"log/slog"
 	"path/filepath"
 	"strings"
-	"time"
 
 	esbuild "github.com/evanw/esbuild/pkg/api"
 )
@@ -20,10 +19,7 @@ type EvalOptions struct {
 }
 
 func Build(input EvalOptions) (esbuild.BuildResult, error) {
-	outfile := filepath.Join(input.Dir,
-		"eval",
-		fmt.Sprintf("eval-%v.mjs", time.Now().UnixMilli()),
-	)
+	outfile := filepath.Join(input.Dir, "sst.config.mjs")
 	slog.Info("esbuild building")
 	result := esbuild.Build(esbuild.BuildOptions{
 		Banner: map[string]string{

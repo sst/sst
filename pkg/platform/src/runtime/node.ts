@@ -184,13 +184,11 @@ export async function build(
 
     const moveSourcemap = async () => {
       if (nodejs.sourcemap) return;
-
       const map = Object.keys(result.metafile?.outputs || {}).find((item) =>
         item.endsWith(".map"),
       );
       if (!map) return;
-
-      const oldPath = path.resolve(out, map);
+      const oldPath = path.resolve($cli.paths.platform, map);
       const newPath = path.join(sourcemapOut, path.basename(map));
       await fs.rename(oldPath, newPath);
       return newPath;
