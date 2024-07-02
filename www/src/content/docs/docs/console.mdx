@@ -402,10 +402,10 @@ To get started with Autodeploy:
    Next you can configure a branch or PR environment by selecting the **stage** you want deployed to an **AWS account**. You can optionally configure **environment variables** as well.
 
    :::note
-   By default, the stage names are generated based on the branch or PR that's configured.
+   Stage names by default are generated based on the branch or PR that's configured.
    :::
 
-   By default, stages are based on the branch name or PR. Branch names are sanitized, while PRs use the `pr-<number>` pattern. This can be configured, we'll look at this below.
+   By default, stages are based on the branch name or PR. We'll look at this in detail below.
 
 4. **Git push**
 
@@ -423,7 +423,7 @@ To get started with Autodeploy:
 
 ---
 
-#### Configure
+#### Config
 
 The above behavior can be configured through the [`console.autodeploy`](/docs/reference/config/#console-autodeploy) option in the `sst.config.ts`.
 
@@ -445,6 +445,26 @@ console: {
 ```
 
 Read more about this over on the [Config doc](/docs/reference/config/#console-autodeploy).
+
+---
+
+#### Environments
+
+The Console needs to know which account it needs to autodeploy into. You configure this under **App's Settings** > **Autodeploy**. Each environment takes a stage name. This is the stage that is being deployed. It also takes the AWS account and any envrionment variables needed for the build process.
+
+The stage names come from the git event. By default:
+
+1. A git push to a branch triggers an auto-deploy on the stage with the same name. The branch names are sanitized to only letters/numbers and hyphens.
+
+2. A git push to a PR, triggers a deploy in a stage with the name `pr-<number>`.
+
+As mentioned, above you can customize this through your `sst.config.ts`.
+
+:::tip
+You can specify a pattern to match the stage name in your environments.
+:::
+
+If multiple stages share the same environment, you can use a glob pattern. For example, `pr-*` matches all stages that start with `pr-`.
 
 ---
 
