@@ -102,6 +102,21 @@ You need to configure an environment in the Console to be able to auto-deploy to
 You can pass in your own `target` function to customize this behaviour and the machine
 that'll be used to run the build.
 
+```ts
+console: {
+  autodeploy: {
+    target(event) {
+      if (event.type === "pushed" && event.branch === "main") {
+        return {
+          stage: "production"
+          runner: { engine: "codebuild", compute: "large" };
+        };
+      }
+    }
+  }
+}
+```
+
 </Segment>
 
 <NestedTitle id="console-autodeploy-target" Tag="h5" parent="console.autodeploy.">target</NestedTitle>
@@ -133,23 +148,19 @@ Use the git event to configure how your app will be auto-deployed.
 By default, this is what the `target` function looks like:
 
 ```ts
-console: {
-  autodeploy: {
-    target(event) {
-      if (event.type === "branch" && event.action === "pushed") {
-        return {
-          stage: event.branch
-            .replace(/[^a-zA-Z0-9-]/g, "-")
-            .replace(/-+/g, "-")
-            .replace(/^-/g, "")
-            .replace(/-$/g, "")
-        };
-      }
+target(event) {
+  if (event.type === "branch" && event.action === "pushed") {
+    return {
+      stage: event.branch
+        .replace(/[^a-zA-Z0-9-]/g, "-")
+        .replace(/-+/g, "-")
+        .replace(/^-/g, "")
+        .replace(/-$/g, "")
+    };
+  }
 
-      if (event.type === "pull_request") {
-        return { stage: `pr-${event.number}` };
-      }
-    }
+  if (event.type === "pull_request") {
+    return { stage: `pr-${event.number}` };
   }
 }
 ```
@@ -185,10 +196,10 @@ target(event) {
 }
 ```
 
-The stage that is returned is then compared to the envrionments set in the
-app settings in the Console. If the stage matches a deployment target, the stage will
-be deployed to that environment. If no matching environment is found, the
-deploy will be skipped.
+The stage that is returned is then compared to the environments set in the
+[app settings in the Console](/docs/console/#setup). If the stage matches a deployment
+target, the stage will be deployed to that environment. If no matching environment is
+found, the deploy will be skipped.
 
 In addition to the `stage` you can also configure the `runner` that will run the build.
 For example, to use a larger machine for the `production` stage.
