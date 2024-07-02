@@ -4,10 +4,10 @@ import {
   Output,
   output,
 } from "@pulumi/pulumi";
-import * as aws from "@pulumi/aws";
 import { Component, transform } from "../component";
 import { Function, FunctionArgs } from "./function";
 import { SnsTopicSubscriberArgs } from "./sns-topic";
+import { lambda, sns } from "@pulumi/aws";
 
 export interface Args extends SnsTopicSubscriberArgs {
   /**
@@ -37,8 +37,8 @@ export interface Args extends SnsTopicSubscriberArgs {
  */
 export class SnsTopicLambdaSubscriber extends Component {
   private readonly fn: Output<Function>;
-  private readonly permission: aws.lambda.Permission;
-  private readonly subscription: aws.sns.TopicSubscription;
+  private readonly permission: lambda.Permission;
+  private readonly subscription: sns.TopicSubscription;
 
   constructor(name: string, args: Args, opts?: ComponentResourceOptions) {
     super(__pulumiType, name, args, opts);
@@ -66,7 +66,7 @@ export class SnsTopicLambdaSubscriber extends Component {
     }
 
     function createPermission() {
-      return new aws.lambda.Permission(
+      return new lambda.Permission(
         `${name}Permission`,
         {
           action: "lambda:InvokeFunction",
@@ -79,7 +79,7 @@ export class SnsTopicLambdaSubscriber extends Component {
     }
 
     function createSubscription() {
-      return new aws.sns.TopicSubscription(
+      return new sns.TopicSubscription(
         `${name}Subscription`,
         transform(args?.transform?.subscription, {
           topic: topic.arn,
@@ -96,7 +96,6 @@ export class SnsTopicLambdaSubscriber extends Component {
    * The underlying [resources](/docs/components/#nodes) this component creates.
    */
   public get nodes() {
-    const self = this;
     return {
       /**
        * The Lambda function that'll be notified.

@@ -1,7 +1,7 @@
-import { ComponentResourceOptions, Output, all, output } from "@pulumi/pulumi";
-import * as aws from "@pulumi/aws";
+import { ComponentResourceOptions, Output, all } from "@pulumi/pulumi";
 import { Component, Transform, transform } from "../component";
 import { Input } from "../input";
+import { ec2, getAvailabilityZonesOutput } from "@pulumi/aws";
 
 export interface VpcArgs {
   /**
@@ -24,39 +24,39 @@ export interface VpcArgs {
     /**
      * Transform the EC2 VPC resource.
      */
-    vpc?: Transform<aws.ec2.VpcArgs>;
+    vpc?: Transform<ec2.VpcArgs>;
     /**
      * Transform the EC2 Internet Gateway resource.
      */
-    internetGateway?: Transform<aws.ec2.InternetGatewayArgs>;
+    internetGateway?: Transform<ec2.InternetGatewayArgs>;
     /**
      * Transform the EC2 NAT Gateway resource.
      */
-    natGateway?: Transform<aws.ec2.NatGatewayArgs>;
+    natGateway?: Transform<ec2.NatGatewayArgs>;
     /**
      * Transform the EC2 Elastic IP resource.
      */
-    elasticIp?: Transform<aws.ec2.EipArgs>;
+    elasticIp?: Transform<ec2.EipArgs>;
     /**
      * Transform the EC2 Security Group resource.
      */
-    securityGroup?: Transform<aws.ec2.SecurityGroupArgs>;
+    securityGroup?: Transform<ec2.SecurityGroupArgs>;
     /**
      * Transform the EC2 public subnet resource.
      */
-    publicSubnet?: Transform<aws.ec2.SubnetArgs>;
+    publicSubnet?: Transform<ec2.SubnetArgs>;
     /**
      * Transform the EC2 private subnet resource.
      */
-    privateSubnet?: Transform<aws.ec2.SubnetArgs>;
+    privateSubnet?: Transform<ec2.SubnetArgs>;
     /**
      * Transform the EC2 route table resource for the public subnet.
      */
-    publicRouteTable?: Transform<aws.ec2.RouteTableArgs>;
+    publicRouteTable?: Transform<ec2.RouteTableArgs>;
     /**
      * Transform the EC2 route table resource for the private subnet.
      */
-    privateRouteTable?: Transform<aws.ec2.RouteTableArgs>;
+    privateRouteTable?: Transform<ec2.RouteTableArgs>;
   };
 }
 
@@ -100,15 +100,15 @@ export interface VpcArgs {
  * ```
  */
 export class Vpc extends Component {
-  private vpc: aws.ec2.Vpc;
-  private internetGateway: aws.ec2.InternetGateway;
-  private securityGroup: aws.ec2.SecurityGroup;
-  private natGateways: Output<aws.ec2.NatGateway[]>;
-  private elasticIps: Output<aws.ec2.Eip[]>;
-  private _publicSubnets: Output<aws.ec2.Subnet[]>;
-  private _privateSubnets: Output<aws.ec2.Subnet[]>;
-  private publicRouteTables: Output<aws.ec2.RouteTable[]>;
-  private privateRouteTables: Output<aws.ec2.RouteTable[]>;
+  private vpc: ec2.Vpc;
+  private internetGateway: ec2.InternetGateway;
+  private securityGroup: ec2.SecurityGroup;
+  private natGateways: Output<ec2.NatGateway[]>;
+  private elasticIps: Output<ec2.Eip[]>;
+  private _publicSubnets: Output<ec2.Subnet[]>;
+  private _privateSubnets: Output<ec2.Subnet[]>;
+  private publicRouteTables: Output<ec2.RouteTable[]>;
+  private privateRouteTables: Output<ec2.RouteTable[]>;
 
   constructor(name: string, args?: VpcArgs, opts?: ComponentResourceOptions) {
     super(__pulumiType, name, args, opts);
@@ -135,7 +135,7 @@ export class Vpc extends Component {
     this.privateRouteTables = privateRouteTables;
 
     function normalizeAz() {
-      const zones = aws.getAvailabilityZonesOutput({
+      const zones = getAvailabilityZonesOutput({
         state: "available",
       });
       return all([zones, args?.az ?? 2]).apply(([zones, az]) =>
@@ -146,7 +146,7 @@ export class Vpc extends Component {
     }
 
     function createVpc() {
-      return new aws.ec2.Vpc(
+      return new ec2.Vpc(
         `${name}Vpc`,
         transform(args?.transform?.vpc, {
           cidrBlock: "10.0.0.0/16",
@@ -158,7 +158,7 @@ export class Vpc extends Component {
     }
 
     function createInternetGateway() {
-      return new aws.ec2.InternetGateway(
+      return new ec2.InternetGateway(
         `${name}InternetGateway`,
         transform(args?.transform?.internetGateway, {
           vpcId: vpc.id,
@@ -168,7 +168,7 @@ export class Vpc extends Component {
     }
 
     function createSecurityGroup() {
-      return new aws.ec2.SecurityGroup(
+      return new ec2.SecurityGroup(
         `${name}SecurityGroup`,
         transform(args?.transform?.securityGroup, {
           vpcId: vpc.id,
@@ -196,7 +196,7 @@ export class Vpc extends Component {
     function createNatGateways() {
       const ret = publicSubnets.apply((subnets) =>
         subnets.map((subnet, i) => {
-          const elasticIp = new aws.ec2.Eip(
+          const elasticIp = new ec2.Eip(
             `${name}ElasticIp${i + 1}`,
             transform(args?.transform?.elasticIp, {
               vpc: true,
@@ -204,7 +204,7 @@ export class Vpc extends Component {
             { parent },
           );
 
-          const natGateway = new aws.ec2.NatGateway(
+          const natGateway = new ec2.NatGateway(
             `${name}NatGateway${i + 1}`,
             transform(args?.transform?.natGateway, {
               subnetId: subnet.id,
@@ -225,7 +225,7 @@ export class Vpc extends Component {
     function createPublicSubnets() {
       const ret = zones.apply((zones) =>
         zones.map((zone, i) => {
-          const subnet = new aws.ec2.Subnet(
+          const subnet = new ec2.Subnet(
             `${name}PublicSubnet${i + 1}`,
             transform(args?.transform?.publicSubnet, {
               vpcId: vpc.id,
@@ -236,7 +236,7 @@ export class Vpc extends Component {
             { parent },
           );
 
-          const routeTable = new aws.ec2.RouteTable(
+          const routeTable = new ec2.RouteTable(
             `${name}PublicRouteTable${i + 1}`,
             transform(args?.transform?.publicRouteTable, {
               vpcId: vpc.id,
@@ -250,7 +250,7 @@ export class Vpc extends Component {
             { parent },
           );
 
-          new aws.ec2.RouteTableAssociation(
+          new ec2.RouteTableAssociation(
             `${name}PublicRouteTableAssociation${i + 1}`,
             {
               subnetId: subnet.id,
@@ -272,7 +272,7 @@ export class Vpc extends Component {
     function createPrivateSubnets() {
       const ret = zones.apply((zones) =>
         zones.map((zone, i) => {
-          const subnet = new aws.ec2.Subnet(
+          const subnet = new ec2.Subnet(
             `${name}PrivateSubnet${i + 1}`,
             transform(args?.transform?.privateSubnet, {
               vpcId: vpc.id,
@@ -282,7 +282,7 @@ export class Vpc extends Component {
             { parent },
           );
 
-          const routeTable = new aws.ec2.RouteTable(
+          const routeTable = new ec2.RouteTable(
             `${name}PrivateRouteTable${i + 1}`,
             transform(args?.transform?.privateRouteTable, {
               vpcId: vpc.id,
@@ -296,7 +296,7 @@ export class Vpc extends Component {
             { parent },
           );
 
-          new aws.ec2.RouteTableAssociation(
+          new ec2.RouteTableAssociation(
             `${name}PrivateRouteTableAssociation${i + 1}`,
             {
               subnetId: subnet.id,
@@ -395,7 +395,7 @@ export class Vpc extends Component {
   /** @internal */
   public static get(
     name: string,
-    args: aws.ec2.GetVpcArgs,
+    args: ec2.GetVpcArgs,
     opts?: ComponentResourceOptions,
   ) {
     return new VpcRef(name, args, opts);
@@ -403,32 +403,32 @@ export class Vpc extends Component {
 }
 
 class VpcRef extends Component {
-  private _vpc: Output<aws.ec2.GetVpcResult>;
-  private _publicSubnets: Output<aws.ec2.GetSubnetsResult>;
-  private _privateSubnets: Output<aws.ec2.GetSubnetsResult>;
-  private _securityGroups: Output<aws.ec2.GetSecurityGroupsResult>;
+  private _vpc: Output<ec2.GetVpcResult>;
+  private _publicSubnets: Output<ec2.GetSubnetsResult>;
+  private _privateSubnets: Output<ec2.GetSubnetsResult>;
+  private _securityGroups: Output<ec2.GetSecurityGroupsResult>;
 
   constructor(
     name: string,
-    args: aws.ec2.GetVpcArgs,
+    args: ec2.GetVpcArgs,
     opts?: ComponentResourceOptions,
   ) {
     super(__pulumiType + "Ref", name, args, opts);
 
-    this._vpc = aws.ec2.getVpcOutput(args);
-    this._publicSubnets = aws.ec2.getSubnetsOutput({
+    this._vpc = ec2.getVpcOutput(args);
+    this._publicSubnets = ec2.getSubnetsOutput({
       filters: [
         { name: "vpc-id", values: [this._vpc.id] },
         { name: "tag:Name", values: ["*Public*"] },
       ],
     });
-    this._privateSubnets = aws.ec2.getSubnetsOutput({
+    this._privateSubnets = ec2.getSubnetsOutput({
       filters: [
         { name: "vpc-id", values: [this._vpc.id] },
         { name: "tag:Name", values: ["*Private*"] },
       ],
     });
-    this._securityGroups = aws.ec2.getSecurityGroupsOutput({
+    this._securityGroups = ec2.getSecurityGroupsOutput({
       filters: [{ name: "vpc-id", values: [this._vpc.id] }],
     });
   }

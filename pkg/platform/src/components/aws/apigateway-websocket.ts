@@ -5,7 +5,6 @@ import {
   interpolate,
   output,
 } from "@pulumi/pulumi";
-import * as aws from "@pulumi/aws";
 import { Component, Prettify, Transform, transform } from "../component";
 import { Link } from "../link";
 import type { Input } from "../input";
@@ -22,6 +21,7 @@ import { ApiGatewayV2DomainArgs } from "./helpers/apigatewayv2-domain";
 import { ApiGatewayWebSocketRoute } from "./apigateway-websocket-route";
 import { setupApiGatewayAccount } from "./helpers/apigateway-account";
 import { AWSLinkable } from "./linkable";
+import { apigatewayv2, cloudwatch } from "@pulumi/aws";
 
 export interface ApiGatewayWebSocketArgs {
   /**
@@ -85,19 +85,19 @@ export interface ApiGatewayWebSocketArgs {
     /**
      * Transform the API Gateway WebSocket API resource.
      */
-    api?: Transform<aws.apigatewayv2.ApiArgs>;
+    api?: Transform<apigatewayv2.ApiArgs>;
     /**
      * Transform the API Gateway WebSocket API stage resource.
      */
-    stage?: Transform<aws.apigatewayv2.StageArgs>;
+    stage?: Transform<apigatewayv2.StageArgs>;
     /**
      * Transform the API Gateway WebSocket API domain name resource.
      */
-    domainName?: Transform<aws.apigatewayv2.DomainNameArgs>;
+    domainName?: Transform<apigatewayv2.DomainNameArgs>;
     /**
      * Transform the CloudWatch LogGroup resource used for access logs.
      */
-    accessLog?: Transform<aws.cloudwatch.LogGroupArgs>;
+    accessLog?: Transform<cloudwatch.LogGroupArgs>;
     /**
      * Transform the routes. This can be used to customize the handler function and
      * the arguments for each route.
@@ -162,11 +162,11 @@ export interface ApiGatewayWebSocketRouteArgs {
     /**
      * Transform the API Gateway WebSocket API integration resource.
      */
-    integration?: Transform<aws.apigatewayv2.IntegrationArgs>;
+    integration?: Transform<apigatewayv2.IntegrationArgs>;
     /**
      * Transform the API Gateway WebSocket API route resource.
      */
-    route?: Transform<aws.apigatewayv2.RouteArgs>;
+    route?: Transform<apigatewayv2.RouteArgs>;
   };
 }
 
@@ -204,11 +204,11 @@ export class ApiGatewayWebSocket
 {
   private constructorName: string;
   private constructorArgs: ApiGatewayWebSocketArgs;
-  private api: aws.apigatewayv2.Api;
-  private stage: aws.apigatewayv2.Stage;
-  private apigDomain?: aws.apigatewayv2.DomainName;
-  private apiMapping?: Output<aws.apigatewayv2.ApiMapping>;
-  private logGroup: aws.cloudwatch.LogGroup;
+  private api: apigatewayv2.Api;
+  private stage: apigatewayv2.Stage;
+  private apigDomain?: apigatewayv2.DomainName;
+  private apiMapping?: Output<apigatewayv2.ApiMapping>;
+  private logGroup: cloudwatch.LogGroup;
 
   constructor(
     name: string,
@@ -277,7 +277,7 @@ export class ApiGatewayWebSocket
     }
 
     function createApi() {
-      return new aws.apigatewayv2.Api(
+      return new apigatewayv2.Api(
         `${name}Api`,
         transform(args.transform?.api, {
           protocolType: "WEBSOCKET",
@@ -288,7 +288,7 @@ export class ApiGatewayWebSocket
     }
 
     function createLogGroup() {
-      return new aws.cloudwatch.LogGroup(
+      return new cloudwatch.LogGroup(
         `${name}AccessLog`,
         transform(args.transform?.accessLog, {
           name: `/aws/vendedlogs/apis/${prefixName(64, name)}`,
@@ -301,7 +301,7 @@ export class ApiGatewayWebSocket
     }
 
     function createStage() {
-      return new aws.apigatewayv2.Stage(
+      return new apigatewayv2.Stage(
         `${name}Stage`,
         transform(args.transform?.stage, {
           apiId: api.id,
@@ -354,7 +354,7 @@ export class ApiGatewayWebSocket
     function createDomainName() {
       if (!domain || !certificateArn) return;
 
-      return new aws.apigatewayv2.DomainName(
+      return new apigatewayv2.DomainName(
         `${name}DomainName`,
         transform(args.transform?.domainName, {
           domainName: domain?.name,
@@ -405,7 +405,7 @@ export class ApiGatewayWebSocket
 
       return domain.path?.apply(
         (path) =>
-          new aws.apigatewayv2.ApiMapping(
+          new apigatewayv2.ApiMapping(
             `${name}DomainMapping`,
             {
               apiId: api.id,

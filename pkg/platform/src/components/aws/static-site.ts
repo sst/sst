@@ -1,7 +1,6 @@
 import fs from "fs";
 import path from "path";
 import crypto from "crypto";
-import * as aws from "@pulumi/aws";
 import {
   ComponentResourceOptions,
   all,
@@ -10,7 +9,7 @@ import {
 } from "@pulumi/pulumi";
 import { Cdn, CdnArgs } from "./cdn.js";
 import { Bucket, BucketArgs } from "./bucket.js";
-import { Component, Prettify, Transform, transform } from "../component.js";
+import { Component, Transform, transform } from "../component.js";
 import { Link } from "../link.js";
 import { Input } from "../input.js";
 import { globSync } from "glob";
@@ -22,6 +21,7 @@ import {
   cleanup,
   prepare,
 } from "../base/base-static-site.js";
+import { cloudfront, iam } from "@pulumi/aws";
 
 export interface StaticSiteArgs extends BaseStaticSiteArgs {
   /**
@@ -378,7 +378,7 @@ export class StaticSite extends Component implements Link.Linkable {
     });
 
     function createCloudFrontOriginAccessIdentity() {
-      return new aws.cloudfront.OriginAccessIdentity(
+      return new cloudfront.OriginAccessIdentity(
         `${name}OriginAccessIdentity`,
         {},
         { parent },
@@ -386,7 +386,7 @@ export class StaticSite extends Component implements Link.Linkable {
     }
 
     function createCloudfrontFunction() {
-      return new aws.cloudfront.Function(
+      return new cloudfront.Function(
         `${name}Function`,
         {
           runtime: "cloudfront-js-1.0",
@@ -414,7 +414,7 @@ export class StaticSite extends Component implements Link.Linkable {
         transform(args.transform?.assets, {
           transform: {
             policy: (policyArgs) => {
-              const newPolicy = aws.iam.getPolicyDocumentOutput({
+              const newPolicy = iam.getPolicyDocumentOutput({
                 statements: [
                   {
                     principals: [

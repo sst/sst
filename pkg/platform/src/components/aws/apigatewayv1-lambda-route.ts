@@ -5,12 +5,10 @@ import {
   interpolate,
   output,
 } from "@pulumi/pulumi";
-import * as aws from "@pulumi/aws";
 import { Component, Transform, transform } from "../component";
 import { Function, FunctionArgs } from "./function";
 import { ApiGatewayV1RouteArgs } from "./apigatewayv1";
-
-const authorizers: Record<string, aws.apigateway.Authorizer> = {};
+import { apigateway, lambda } from "@pulumi/aws";
 
 export interface Args extends ApiGatewayV1RouteArgs {
   /**
@@ -61,8 +59,8 @@ export interface Args extends ApiGatewayV1RouteArgs {
  */
 export class ApiGatewayV1LambdaRoute extends Component {
   private readonly fn: Output<Function>;
-  private readonly permission: aws.lambda.Permission;
-  private readonly integration: aws.apigateway.Integration;
+  private readonly permission: lambda.Permission;
+  private readonly integration: apigateway.Integration;
 
   constructor(name: string, args: Args, opts?: ComponentResourceOptions) {
     super(__pulumiType, name, args, opts);
@@ -80,7 +78,7 @@ export class ApiGatewayV1LambdaRoute extends Component {
     this.integration = integration;
 
     function createMethod() {
-      const { method, path, resourceId, auth } = args;
+      const { method, resourceId, auth } = args;
 
       const authArgs = output(auth).apply((auth) => {
         if (auth?.iam) return { authorization: "AWS_IAM" };
@@ -97,7 +95,7 @@ export class ApiGatewayV1LambdaRoute extends Component {
 
       return authArgs.apply(
         (authArgs) =>
-          new aws.apigateway.Method(
+          new apigateway.Method(
             `${name}Method`,
             {
               restApi: api.id,
@@ -127,7 +125,7 @@ export class ApiGatewayV1LambdaRoute extends Component {
     }
 
     function createPermission() {
-      return new aws.lambda.Permission(
+      return new lambda.Permission(
         `${name}Permissions`,
         {
           action: "lambda:InvokeFunction",
@@ -140,7 +138,7 @@ export class ApiGatewayV1LambdaRoute extends Component {
     }
 
     function createIntegration() {
-      return new aws.apigateway.Integration(
+      return new apigateway.Integration(
         `${name}Integration`,
         transform(args.transform?.integration, {
           restApi: api.id,
@@ -159,7 +157,6 @@ export class ApiGatewayV1LambdaRoute extends Component {
    * The underlying [resources](/docs/components/#nodes) this component creates.
    */
   public get nodes() {
-    const self = this;
     return {
       /**
        * The Lambda function.

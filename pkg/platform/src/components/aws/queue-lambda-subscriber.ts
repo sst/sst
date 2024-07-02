@@ -4,10 +4,10 @@ import {
   Output,
   output,
 } from "@pulumi/pulumi";
-import * as aws from "@pulumi/aws";
 import { Component, transform } from "../component";
 import { Function, FunctionArgs } from "./function";
 import { QueueSubscriberArgs } from "./queue";
+import { lambda } from "@pulumi/aws";
 
 export interface Args extends QueueSubscriberArgs {
   /**
@@ -37,7 +37,7 @@ export interface Args extends QueueSubscriberArgs {
  */
 export class QueueLambdaSubscriber extends Component {
   private readonly fn: Output<Function>;
-  private readonly eventSourceMapping: aws.lambda.EventSourceMapping;
+  private readonly eventSourceMapping: lambda.EventSourceMapping;
 
   constructor(name: string, args: Args, opts?: ComponentResourceOptions) {
     super(__pulumiType, name, args, opts);
@@ -75,7 +75,7 @@ export class QueueLambdaSubscriber extends Component {
     }
 
     function createEventSourceMapping() {
-      return new aws.lambda.EventSourceMapping(
+      return new lambda.EventSourceMapping(
         `${name}EventSourceMapping`,
         transform(args.transform?.eventSourceMapping, {
           eventSourceArn: queue.arn,

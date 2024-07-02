@@ -3,7 +3,6 @@ import path from "path";
 import crypto from "crypto";
 import { globSync } from "glob";
 import { ComponentResourceOptions, Output, all } from "@pulumi/pulumi";
-import * as aws from "@pulumi/aws";
 import { Size } from "../size.js";
 import { Function } from "./function.js";
 import {
@@ -24,6 +23,7 @@ import type { Input } from "../input.js";
 import { Cache } from "./providers/cache.js";
 import { Queue } from "./queue.js";
 import { buildApp } from "../base/base-ssr-site.js";
+import { dynamodb, lambda } from "@pulumi/aws";
 
 const DEFAULT_OPEN_NEXT_VERSION = "3.0.2";
 const DEFAULT_CACHE_POLICY_ALLOWED_HEADERS = ["x-open-next-cache-key"];
@@ -989,7 +989,7 @@ export class Nextjs extends Component implements Link.Linkable {
       return openNextOutput.apply((openNextOutput) => {
         if (openNextOutput.additionalProps?.disableTagCache) return;
 
-        return new aws.dynamodb.Table(
+        return new dynamodb.Table(
           `${name}RevalidationTable`,
           {
             attributes: [
@@ -1074,7 +1074,7 @@ export class Nextjs extends Component implements Link.Linkable {
             },
             { parent },
           );
-          new aws.lambda.Invocation(
+          new lambda.Invocation(
             `${name}RevalidationSeed`,
             {
               functionName: seedFn.nodes.function.name,

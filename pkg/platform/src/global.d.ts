@@ -241,6 +241,5 @@ declare global {
       work: string;
       platform: string;
     };
-    home: string;
   };
 }

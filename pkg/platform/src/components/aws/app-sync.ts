@@ -1,6 +1,5 @@
 import fs from "fs/promises";
 import { ComponentResourceOptions, interpolate, output } from "@pulumi/pulumi";
-import * as aws from "@pulumi/aws";
 import { Component, Transform, transform } from "../component";
 import { Link } from "../link";
 import type { Input } from "../input";
@@ -14,6 +13,7 @@ import { dns as awsDns } from "./dns.js";
 import { Dns } from "../dns";
 import { DnsValidatedCertificate } from "./dns-validated-certificate";
 import { useProvider } from "./helpers/provider";
+import { appsync, iam } from "@pulumi/aws";
 
 export interface AppSyncArgs {
   /**
@@ -173,11 +173,11 @@ export interface AppSyncArgs {
     /**
      * Transform the AppSync GraphQL API resource.
      */
-    api?: Transform<aws.appsync.GraphQLApiArgs>;
+    api?: Transform<appsync.GraphQLApiArgs>;
     /**
      * Transform the AppSync domain name resource.
      */
-    domainName?: Transform<aws.appsync.DomainNameArgs>;
+    domainName?: Transform<appsync.DomainNameArgs>;
   };
 }
 
@@ -290,11 +290,11 @@ export interface AppSyncDataSourceArgs {
     /**
      * Transform the AppSync DataSource resource.
      */
-    dataSource?: Transform<aws.appsync.DataSourceArgs>;
+    dataSource?: Transform<appsync.DataSourceArgs>;
     /**
      * Transform the AppSync DataSource service role resource.
      */
-    serviceRole?: Transform<aws.iam.RoleArgs>;
+    serviceRole?: Transform<iam.RoleArgs>;
   };
 }
 
@@ -377,7 +377,7 @@ export interface AppSyncResolverArgs {
     /**
      * Transform the AppSync Resolver resource.
      */
-    resolver?: Transform<aws.appsync.ResolverArgs>;
+    resolver?: Transform<appsync.ResolverArgs>;
   };
 }
 
@@ -447,7 +447,7 @@ export interface AppSyncFunctionArgs {
     /**
      * Transform the AppSync Function resource.
      */
-    function?: Transform<aws.appsync.FunctionArgs>;
+    function?: Transform<appsync.FunctionArgs>;
   };
 }
 
@@ -483,8 +483,8 @@ export interface AppSyncFunctionArgs {
  */
 export class AppSync extends Component implements Link.Linkable {
   private constructorName: string;
-  private api: aws.appsync.GraphQLApi;
-  private domainName?: aws.appsync.DomainName;
+  private api: appsync.GraphQLApi;
+  private domainName?: appsync.DomainName;
 
   constructor(
     name: string,
@@ -542,7 +542,7 @@ export class AppSync extends Component implements Link.Linkable {
     }
 
     function createGraphQLApi() {
-      return new aws.appsync.GraphQLApi(
+      return new appsync.GraphQLApi(
         `${name}Api`,
         transform(args.transform?.api, {
           schema,
@@ -573,7 +573,7 @@ export class AppSync extends Component implements Link.Linkable {
     function createDomainName() {
       if (!domain || !certificateArn) return;
 
-      const domainName = new aws.appsync.DomainName(
+      const domainName = new appsync.DomainName(
         `${name}DomainName`,
         transform(args.transform?.domainName, {
           domainName: domain?.name,
@@ -582,7 +582,7 @@ export class AppSync extends Component implements Link.Linkable {
         { parent },
       );
 
-      new aws.appsync.DomainNameApiAssociation(`${name}DomainAssociation`, {
+      new appsync.DomainNameApiAssociation(`${name}DomainAssociation`, {
         apiId: api.id,
         domainName: domainName.domainName,
       });

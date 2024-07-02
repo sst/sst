@@ -1,7 +1,7 @@
 import { ComponentResourceOptions, Input } from "@pulumi/pulumi";
-import * as aws from "@pulumi/aws";
 import { Component, transform } from "../component";
 import { AppSyncFunctionArgs } from "./app-sync";
+import { appsync } from "@pulumi/aws";
 
 export interface FunctionArgs extends AppSyncFunctionArgs {
   /**
@@ -21,7 +21,7 @@ export interface FunctionArgs extends AppSyncFunctionArgs {
  * You'll find this component returned by the `addFunction` method of the `AppSync` component.
  */
 export class AppSyncFunction extends Component {
-  private readonly fn: aws.appsync.Function;
+  private readonly fn: appsync.Function;
 
   constructor(
     name: string,
@@ -37,7 +37,7 @@ export class AppSyncFunction extends Component {
     this.fn = fn;
 
     function createFunction() {
-      return new aws.appsync.Function(
+      return new appsync.Function(
         `${name}Function`,
         transform(args.transform?.function, {
           apiId: args.apiId,
@@ -62,7 +62,6 @@ export class AppSyncFunction extends Component {
    * The underlying [resources](/docs/components/#nodes) this component creates.
    */
   public get nodes() {
-    const self = this;
     return {
       /**
        * The Amazon AppSync Function.

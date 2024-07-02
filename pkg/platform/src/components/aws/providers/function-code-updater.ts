@@ -1,5 +1,4 @@
 import { CustomResourceOptions, Input, Output, dynamic } from "@pulumi/pulumi";
-import * as aws from "@pulumi/aws";
 import {
   LambdaClient,
   UpdateFunctionCodeCommand,
@@ -47,8 +46,8 @@ class Provider implements dynamic.ResourceProvider {
   }
 
   async update(
-    id: string,
-    olds: any,
+    _id: string,
+    _olds: any,
     news: Inputs,
   ): Promise<dynamic.UpdateResult<Outputs>> {
     const version = await this.updateCode(news);

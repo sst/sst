@@ -1,9 +1,9 @@
 import { ComponentResourceOptions, interpolate, output } from "@pulumi/pulumi";
-import * as aws from "@pulumi/aws";
 import { Component, Transform, transform } from "../component";
 import { FunctionArgs } from "./function.js";
 import { Input } from "../input";
 import { prefixName } from "../naming";
+import { cognito, getRegionOutput, iam } from "@pulumi/aws";
 
 export interface CognitoIdentityPoolArgs {
   /**
@@ -74,15 +74,15 @@ export interface CognitoIdentityPoolArgs {
     /**
      * Transform the Cognito identity pool resource.
      */
-    identityPool?: Transform<aws.cognito.IdentityPoolArgs>;
+    identityPool?: Transform<cognito.IdentityPoolArgs>;
     /**
      * Transform the authenticated IAM role resource.
      */
-    authenticatedRole?: Transform<aws.iam.RoleArgs>;
+    authenticatedRole?: Transform<iam.RoleArgs>;
     /**
      * Transform the unauthenticated IAM role resource.
      */
-    unauthenticatedRole?: Transform<aws.iam.RoleArgs>;
+    unauthenticatedRole?: Transform<iam.RoleArgs>;
   };
 }
 
@@ -124,9 +124,9 @@ export interface CognitoIdentityPoolArgs {
  * ```
  */
 export class CognitoIdentityPool extends Component {
-  private identityPool: aws.cognito.IdentityPool;
-  private authRole: aws.iam.Role;
-  private unauthRole: aws.iam.Role;
+  private identityPool: cognito.IdentityPool;
+  private authRole: iam.Role;
+  private unauthRole: iam.Role;
 
   constructor(
     name: string,
@@ -148,11 +148,11 @@ export class CognitoIdentityPool extends Component {
     this.unauthRole = unauthRole;
 
     function getRegion() {
-      return aws.getRegionOutput(undefined, { provider: opts?.provider }).name;
+      return getRegionOutput(undefined, { provider: opts?.provider }).name;
     }
 
     function createIdentityPool() {
-      return new aws.cognito.IdentityPool(
+      return new cognito.IdentityPool(
         `${name}IdentityPool`,
         transform(args.transform?.identityPool, {
           identityPoolName: prefixName(128, name),
@@ -173,7 +173,7 @@ export class CognitoIdentityPool extends Component {
 
     function createAuthRole() {
       const policy = output(args.permissions).apply((permissions) =>
-        aws.iam.getPolicyDocumentOutput({
+        iam.getPolicyDocumentOutput({
           statements: [
             {
               effect: "Allow",
@@ -189,10 +189,10 @@ export class CognitoIdentityPool extends Component {
         }),
       );
 
-      return new aws.iam.Role(
+      return new iam.Role(
         `${name}AuthRole`,
         transform(args.transform?.authenticatedRole, {
-          assumeRolePolicy: aws.iam.getPolicyDocumentOutput({
+          assumeRolePolicy: iam.getPolicyDocumentOutput({
             statements: [
               {
                 effect: "Allow",
@@ -226,7 +226,7 @@ export class CognitoIdentityPool extends Component {
 
     function createUnauthRole() {
       const policy = output(args.permissions).apply((permissions) =>
-        aws.iam.getPolicyDocumentOutput({
+        iam.getPolicyDocumentOutput({
           statements: [
             {
               effect: "Allow",
@@ -238,10 +238,10 @@ export class CognitoIdentityPool extends Component {
         }),
       );
 
-      return new aws.iam.Role(
+      return new iam.Role(
         `${name}UnauthRole`,
         transform(args.transform?.unauthenticatedRole, {
-          assumeRolePolicy: aws.iam.getPolicyDocumentOutput({
+          assumeRolePolicy: iam.getPolicyDocumentOutput({
             statements: [
               {
                 effect: "Allow",
@@ -274,7 +274,7 @@ export class CognitoIdentityPool extends Component {
     }
 
     function createRoleAttachment() {
-      return new aws.cognito.IdentityPoolRoleAttachment(
+      return new cognito.IdentityPoolRoleAttachment(
         `${name}RoleAttachment`,
         {
           identityPoolId: identityPool.id,

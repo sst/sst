@@ -1,8 +1,8 @@
 import { ComponentResourceOptions, Input, output } from "@pulumi/pulumi";
-import * as aws from "@pulumi/aws";
 import { Component, transform } from "../component";
 import { SnsTopicSubscriberArgs } from "./sns-topic";
 import { parseQueueArn } from "./helpers/arn";
+import { iam, sns, sqs } from "@pulumi/aws";
 
 export interface Args extends SnsTopicSubscriberArgs {
   /**
@@ -31,14 +31,13 @@ export interface Args extends SnsTopicSubscriberArgs {
  * You'll find this component returned by the `subscribe` method of the `SnsTopic` component.
  */
 export class SnsTopicQueueSubscriber extends Component {
-  private readonly policy: aws.sqs.QueuePolicy;
-  private readonly subscription: aws.sns.TopicSubscription;
+  private readonly policy: sqs.QueuePolicy;
+  private readonly subscription: sns.TopicSubscription;
 
   constructor(name: string, args: Args, opts?: ComponentResourceOptions) {
     super(__pulumiType, name, args, opts);
 
     const queueArn = output(args.queue);
-    const self = this;
     const topic = output(args.topic);
     const policy = createPolicy();
     const subscription = createSubscription();
@@ -47,9 +46,9 @@ export class SnsTopicQueueSubscriber extends Component {
     this.subscription = subscription;
 
     function createPolicy() {
-      return new aws.sqs.QueuePolicy(`${name}Policy`, {
+      return new sqs.QueuePolicy(`${name}Policy`, {
         queueUrl: queueArn.apply((arn) => parseQueueArn(arn).queueUrl),
-        policy: aws.iam.getPolicyDocumentOutput({
+        policy: iam.getPolicyDocumentOutput({
           statements: [
             {
               actions: ["sqs:SendMessage"],
@@ -74,7 +73,7 @@ export class SnsTopicQueueSubscriber extends Component {
     }
 
     function createSubscription() {
-      return new aws.sns.TopicSubscription(
+      return new sns.TopicSubscription(
         `${name}Subscription`,
         transform(args?.transform?.subscription, {
           topic: topic.arn,
@@ -90,7 +89,6 @@ export class SnsTopicQueueSubscriber extends Component {
    * The underlying [resources](/docs/components/#nodes) this component creates.
    */
   public get nodes() {
-    const self = this;
     return {
       /**
        * The SQS queue policy.

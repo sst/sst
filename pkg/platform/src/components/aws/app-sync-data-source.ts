@@ -4,12 +4,12 @@ import {
   Output,
   output,
 } from "@pulumi/pulumi";
-import * as aws from "@pulumi/aws";
 import { Component, transform } from "../component";
 import { Function } from "./function";
 import { VisibleError } from "../error";
 import { AppSyncDataSourceArgs } from "./app-sync";
 import { parseDynamoArn } from "./helpers/arn";
+import { appsync, iam } from "@pulumi/aws";
 
 export interface DataSourceArgs extends AppSyncDataSourceArgs {
   /**
@@ -33,9 +33,9 @@ export interface DataSourceArgs extends AppSyncDataSourceArgs {
  * You'll find this component returned by the `addDataSource` method of the `AppSync` component.
  */
 export class AppSyncDataSource extends Component {
-  private readonly dataSource: aws.appsync.DataSource;
+  private readonly dataSource: appsync.DataSource;
   private readonly lambda?: Output<sst.aws.Function>;
-  private readonly serviceRole?: aws.iam.Role;
+  private readonly serviceRole?: iam.Role;
 
   constructor(
     name: string,
@@ -106,10 +106,10 @@ export class AppSyncDataSource extends Component {
       )
         return;
 
-      return new aws.iam.Role(
+      return new iam.Role(
         `${name}ServiceRole`,
         transform(args.transform?.serviceRole, {
-          assumeRolePolicy: aws.iam.getPolicyDocumentOutput({
+          assumeRolePolicy: iam.getPolicyDocumentOutput({
             statements: [
               {
                 actions: ["sts:AssumeRole"],
@@ -125,7 +125,7 @@ export class AppSyncDataSource extends Component {
           inlinePolicies: [
             {
               name: "inline",
-              policy: aws.iam.getPolicyDocumentOutput({
+              policy: iam.getPolicyDocumentOutput({
                 statements: [
                   ...(lambda
                     ? [{ actions: ["lambda:*"], resources: [lambda.arn] }]
@@ -167,7 +167,7 @@ export class AppSyncDataSource extends Component {
     }
 
     function createDataSource() {
-      return new aws.appsync.DataSource(
+      return new appsync.DataSource(
         `${name}DataSource`,
         transform(args.transform?.dataSource, {
           apiId,

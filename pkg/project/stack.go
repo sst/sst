@@ -184,7 +184,6 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 			"work":     s.project.PathWorkingDir(),
 			"platform": s.project.PathPlatformDir(),
 		},
-		"env": env,
 	}
 	cliBytes, err := json.Marshal(cli)
 	if err != nil {

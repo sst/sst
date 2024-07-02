@@ -9,7 +9,6 @@ import {
   output,
   secret,
 } from "@pulumi/pulumi";
-import * as aws from "@pulumi/aws";
 import * as docker from "@pulumi/docker";
 import { Component, transform } from "../component";
 import { toGBs, toMBs } from "../size";
@@ -26,8 +25,17 @@ import {
   supportedMemories,
 } from "./cluster";
 import { RETENTION } from "./logging.js";
-import { prefixName } from "../naming";
 import { isLinkable } from "./linkable";
+import {
+  appautoscaling,
+  cloudwatch,
+  ecr,
+  ecs,
+  getCallerIdentityOutput,
+  getRegionOutput,
+  iam,
+  lb,
+} from "@pulumi/aws";
 
 export interface ServiceArgs extends ClusterServiceArgs {
   /**
@@ -60,10 +68,10 @@ export interface ServiceArgs extends ClusterServiceArgs {
  * This component is returned by the `addService` method of the `Cluster` component.
  */
 export class Service extends Component implements Link.Linkable {
-  private readonly service?: aws.ecs.Service;
-  private readonly taskRole: aws.iam.Role;
-  private readonly taskDefinition?: aws.ecs.TaskDefinition;
-  private readonly loadBalancer?: aws.lb.LoadBalancer;
+  private readonly service?: ecs.Service;
+  private readonly taskRole: iam.Role;
+  private readonly taskDefinition?: ecs.TaskDefinition;
+  private readonly loadBalancer?: lb.LoadBalancer;
   private readonly domain?: Output<string | undefined>;
   private readonly _url?: Output<string>;
 
@@ -126,7 +134,7 @@ export class Service extends Component implements Link.Linkable {
     registerReceiver();
 
     function normalizeRegion() {
-      return aws.getRegionOutput(undefined, {
+      return getRegionOutput(undefined, {
         provider: opts?.provider,
       }).name;
     }
@@ -302,7 +310,7 @@ export class Service extends Component implements Link.Linkable {
       const repo = region.apply((region) =>
         bootstrap.forRegion(region).then((d) => d.ecr),
       );
-      const authToken = aws.ecr.getAuthorizationTokenOutput({
+      const authToken = ecr.getAuthorizationTokenOutput({
         registryId: repo.registryId,
       });
 
@@ -332,7 +340,7 @@ export class Service extends Component implements Link.Linkable {
     function createLoadBalancer() {
       if (!pub) return {};
 
-      const loadBalancer = new aws.lb.LoadBalancer(
+      const loadBalancer = new lb.LoadBalancer(
         `${name}LoadBalancer`,
         transform(args.transform?.loadBalancer, {
           internal: false,
@@ -349,8 +357,8 @@ export class Service extends Component implements Link.Linkable {
       );
 
       const ret = all([pub.ports, certificateArn]).apply(([ports, cert]) => {
-        const listeners: Record<string, aws.lb.Listener> = {};
-        const targets: Record<string, aws.lb.TargetGroup> = {};
+        const listeners: Record<string, lb.Listener> = {};
+        const targets: Record<string, lb.TargetGroup> = {};
 
         ports.forEach((port) => {
           const forwardProtocol = port.forwardProtocol.toUpperCase();
@@ -358,7 +366,7 @@ export class Service extends Component implements Link.Linkable {
           const targetId = `${forwardProtocol}${forwardPort}`;
           const target =
             targets[targetId] ??
-            new aws.lb.TargetGroup(
+            new lb.TargetGroup(
               `${name}Target${targetId}`,
               transform(args.transform?.target, {
                 // TargetGroup names allow for 32 chars, but an 8 letter suffix
@@ -383,7 +391,7 @@ export class Service extends Component implements Link.Linkable {
           const listenerId = `${listenProtocol}${listenPort}`;
           const listener =
             listeners[listenerId] ??
-            new aws.lb.Listener(
+            new lb.Listener(
               `${name}Listener${listenerId}`,
               transform(args.transform?.listener, {
                 loadBalancerArn: loadBalancer.arn,
@@ -429,7 +437,7 @@ export class Service extends Component implements Link.Linkable {
     }
 
     function createLogGroup() {
-      return new aws.cloudwatch.LogGroup(
+      return new cloudwatch.LogGroup(
         `${name}LogGroup`,
         transform(args.transform?.logGroup, {
           name: interpolate`/sst/cluster/${cluster.name}/${name}`,
@@ -444,21 +452,21 @@ export class Service extends Component implements Link.Linkable {
     function createTaskRole() {
       const policy = all([args.permissions || [], linkPermissions]).apply(
         ([argsPermissions, linkPermissions]) =>
-          aws.iam.getPolicyDocumentOutput({
+          iam.getPolicyDocumentOutput({
             statements: [...argsPermissions, ...linkPermissions],
           }),
       );
 
-      return new aws.iam.Role(
+      return new iam.Role(
         `${name}TaskRole`,
         transform(args.transform?.taskRole, {
           assumeRolePolicy: !$dev
-            ? aws.iam.assumeRolePolicyForPrincipal({
+            ? iam.assumeRolePolicyForPrincipal({
                 Service: "ecs-tasks.amazonaws.com",
               })
-            : aws.iam.assumeRolePolicyForPrincipal({
+            : iam.assumeRolePolicyForPrincipal({
                 AWS: interpolate`arn:aws:iam::${
-                  aws.getCallerIdentityOutput().accountId
+                  getCallerIdentityOutput().accountId
                 }:root`,
               }),
           inlinePolicies: policy.apply(({ statements }) =>
@@ -470,10 +478,10 @@ export class Service extends Component implements Link.Linkable {
     }
 
     function createExecutionRole() {
-      return new aws.iam.Role(
+      return new iam.Role(
         `${name}ExecutionRole`,
         {
-          assumeRolePolicy: aws.iam.assumeRolePolicyForPrincipal({
+          assumeRolePolicy: iam.assumeRolePolicyForPrincipal({
             Service: "ecs-tasks.amazonaws.com",
           }),
           managedPolicyArns: [
@@ -485,7 +493,7 @@ export class Service extends Component implements Link.Linkable {
     }
 
     function createTaskDefinition() {
-      return new aws.ecs.TaskDefinition(
+      return new ecs.TaskDefinition(
         `${name}Task`,
         transform(args.transform?.taskDefinition, {
           family: interpolate`${cluster.name}-${name}`,
@@ -550,7 +558,7 @@ export class Service extends Component implements Link.Linkable {
     }
 
     function createService() {
-      return new aws.ecs.Service(
+      return new ecs.Service(
         `${name}Service`,
         transform(args.transform?.service, {
           name,
@@ -582,7 +590,7 @@ export class Service extends Component implements Link.Linkable {
     }
 
     function createAutoScaling() {
-      const target = new aws.appautoscaling.Target(
+      const target = new appautoscaling.Target(
         `${name}AutoScalingTarget`,
         {
           serviceNamespace: "ecs",
@@ -594,7 +602,7 @@ export class Service extends Component implements Link.Linkable {
         { parent: self },
       );
 
-      new aws.appautoscaling.Policy(
+      new appautoscaling.Policy(
         `${name}AutoScalingCpuPolicy`,
         {
           serviceNamespace: target.serviceNamespace,
@@ -611,7 +619,7 @@ export class Service extends Component implements Link.Linkable {
         { parent: self },
       );
 
-      new aws.appautoscaling.Policy(
+      new appautoscaling.Policy(
         `${name}AutoScalingMemoryPolicy`,
         {
           serviceNamespace: target.serviceNamespace,

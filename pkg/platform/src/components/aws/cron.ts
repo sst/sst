@@ -1,8 +1,8 @@
 import { ComponentResourceOptions, output, Output } from "@pulumi/pulumi";
-import * as aws from "@pulumi/aws";
 import { Component, Transform, transform } from "../component";
 import { Function, FunctionArgs } from "./function";
 import { Input } from "../input.js";
+import { cloudwatch, lambda } from "@pulumi/aws";
 
 export interface CronArgs {
   /**
@@ -66,11 +66,11 @@ export interface CronArgs {
     /**
      * Transform the EventBridge Rule resource.
      */
-    rule?: Transform<aws.cloudwatch.EventRuleArgs>;
+    rule?: Transform<cloudwatch.EventRuleArgs>;
     /**
      * Transform the EventBridge Target resource.
      */
-    target?: Transform<aws.cloudwatch.EventTargetArgs>;
+    target?: Transform<cloudwatch.EventTargetArgs>;
   };
 }
 
@@ -104,8 +104,8 @@ export interface CronArgs {
  */
 export class Cron extends Component {
   private fn: Output<Function>;
-  private rule: aws.cloudwatch.EventRule;
-  private target: aws.cloudwatch.EventTarget;
+  private rule: cloudwatch.EventRule;
+  private target: cloudwatch.EventTarget;
 
   constructor(name: string, args: CronArgs, opts?: ComponentResourceOptions) {
     super(__pulumiType, name, args, opts);
@@ -130,7 +130,7 @@ export class Cron extends Component {
     }
 
     function createRule() {
-      return new aws.cloudwatch.EventRule(
+      return new cloudwatch.EventRule(
         `${name}Rule`,
         transform(args.transform?.rule, {
           scheduleExpression: args.schedule,
@@ -140,7 +140,7 @@ export class Cron extends Component {
     }
 
     function createTarget() {
-      return new aws.cloudwatch.EventTarget(
+      return new cloudwatch.EventTarget(
         `${name}Target`,
         transform(args.transform?.target, {
           arn: fn.arn,
@@ -151,7 +151,7 @@ export class Cron extends Component {
     }
 
     function createPermission() {
-      return new aws.lambda.Permission(
+      return new lambda.Permission(
         `${name}Permission`,
         {
           action: "lambda:InvokeFunction",

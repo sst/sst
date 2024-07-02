@@ -1,5 +1,4 @@
-import { ComponentResourceOptions, Output, all, output } from "@pulumi/pulumi";
-import * as aws from "@pulumi/aws";
+import { ComponentResourceOptions, all, output } from "@pulumi/pulumi";
 import { Component, Transform, transform } from "../component";
 import { Link } from "../link";
 import type { Input } from "../input";
@@ -9,6 +8,7 @@ import { hashStringToPrettyString, sanitizeToPascalCase } from "../naming";
 import { parseQueueArn } from "./helpers/arn";
 import { QueueLambdaSubscriber } from "./queue-lambda-subscriber";
 import { AWSLinkable } from "./linkable";
+import { lambda, sqs } from "@pulumi/aws";
 
 export interface QueueArgs {
   /**
@@ -35,7 +35,7 @@ export interface QueueArgs {
     /**
      * Transform the SQS queue resource.
      */
-    queue?: Transform<aws.sqs.QueueArgs>;
+    queue?: Transform<sqs.QueueArgs>;
   };
 }
 
@@ -96,7 +96,7 @@ export interface QueueSubscriberArgs {
     /**
      * Transform the Lambda Event Source Mapping resource.
      */
-    eventSourceMapping?: Transform<aws.lambda.EventSourceMappingArgs>;
+    eventSourceMapping?: Transform<lambda.EventSourceMappingArgs>;
   };
 }
 
@@ -153,7 +153,7 @@ export interface QueueSubscriberArgs {
  */
 export class Queue extends Component implements Link.Linkable, AWSLinkable {
   private constructorName: string;
-  private queue: aws.sqs.Queue;
+  private queue: sqs.Queue;
   private isSubscribed: boolean = false;
 
   constructor(name: string, args?: QueueArgs, opts?: ComponentResourceOptions) {
@@ -172,7 +172,7 @@ export class Queue extends Component implements Link.Linkable, AWSLinkable {
     }
 
     function createQueue() {
-      return new aws.sqs.Queue(
+      return new sqs.Queue(
         `${name}Queue`,
         transform(args?.transform?.queue, {
           fifoQueue: fifo,

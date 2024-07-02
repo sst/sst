@@ -1,11 +1,11 @@
 import { ComponentResourceOptions, all, output } from "@pulumi/pulumi";
-import * as aws from "@pulumi/aws";
 import { DnsValidatedCertificate } from "./dns-validated-certificate.js";
 import { Bucket } from "./bucket.js";
 import { Component } from "../component.js";
 import { useProvider } from "./helpers/provider.js";
 import { Input } from "../input.js";
 import { Dns } from "../dns.js";
+import { cloudfront, s3 } from "@pulumi/aws";
 
 /**
  * Properties to configure an HTTPS Redirect
@@ -57,7 +57,7 @@ export class HttpsRedirect extends Component {
 
     const bucket = new Bucket(`${name}Bucket`, {}, { parent });
 
-    const bucketWebsite = new aws.s3.BucketWebsiteConfigurationV2(
+    const bucketWebsite = new s3.BucketWebsiteConfigurationV2(
       `${name}BucketWebsite`,
       {
         bucket: bucket.name,
@@ -69,7 +69,7 @@ export class HttpsRedirect extends Component {
       { parent },
     );
 
-    const distribution = new aws.cloudfront.Distribution(
+    const distribution = new cloudfront.Distribution(
       `${name}Distribution`,
       {
         enabled: true,

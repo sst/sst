@@ -1,9 +1,9 @@
 import { ComponentResourceOptions, output, Output } from "@pulumi/pulumi";
-import * as aws from "@pulumi/aws";
 import { Component, Transform, transform } from "../component";
 import { Link } from "../link";
 import { Input } from "../input.js";
 import { AWSLinkable } from "./linkable";
+import { rds } from "@pulumi/aws";
 
 type ACU = `${number} ACU`;
 
@@ -150,15 +150,15 @@ export interface PostgresArgs {
     /**
      * Transform the RDS subnet group.
      */
-    subnetGroup?: Transform<aws.rds.SubnetGroupArgs>;
+    subnetGroup?: Transform<rds.SubnetGroupArgs>;
     /**
      * Transform the RDS Cluster.
      */
-    cluster?: Transform<aws.rds.ClusterArgs>;
+    cluster?: Transform<rds.ClusterArgs>;
     /**
      * Transform the database instance in the RDS Cluster.
      */
-    instance?: Transform<aws.rds.ClusterInstanceArgs>;
+    instance?: Transform<rds.ClusterInstanceArgs>;
   };
 }
 
@@ -226,8 +226,8 @@ export interface PostgresArgs {
  * ```
  */
 export class Postgres extends Component implements Link.Linkable, AWSLinkable {
-  private cluster: aws.rds.Cluster;
-  private instance: aws.rds.ClusterInstance;
+  private cluster: rds.Cluster;
+  private instance: rds.ClusterInstance;
   private databaseName: Output<string>;
 
   constructor(
@@ -270,7 +270,7 @@ export class Postgres extends Component implements Link.Linkable, AWSLinkable {
     function createSubnetGroup() {
       if (!args?.vpc) return;
 
-      return new aws.rds.SubnetGroup(
+      return new rds.SubnetGroup(
         `${name}SubnetGroup`,
         transform(args?.transform?.subnetGroup, {
           subnetIds: output(args.vpc).privateSubnets,
@@ -280,10 +280,10 @@ export class Postgres extends Component implements Link.Linkable, AWSLinkable {
     }
 
     function createCluster() {
-      return new aws.rds.Cluster(
+      return new rds.Cluster(
         `${name}Cluster`,
         transform(args?.transform?.cluster, {
-          engine: aws.rds.EngineType.AuroraPostgresql,
+          engine: rds.EngineType.AuroraPostgresql,
           engineMode: "provisioned",
           engineVersion: version,
           databaseName,
@@ -300,12 +300,12 @@ export class Postgres extends Component implements Link.Linkable, AWSLinkable {
     }
 
     function createInstance() {
-      return new aws.rds.ClusterInstance(
+      return new rds.ClusterInstance(
         `${name}Instance`,
         transform(args?.transform?.instance, {
           clusterIdentifier: cluster.id,
           instanceClass: "db.serverless",
-          engine: aws.rds.EngineType.AuroraPostgresql,
+          engine: rds.EngineType.AuroraPostgresql,
           engineVersion: cluster.engineVersion,
           dbSubnetGroupName: subnetGroup?.name,
         }),
@@ -355,16 +355,14 @@ export class Postgres extends Component implements Link.Linkable, AWSLinkable {
   /** @internal */
   public static get(
     name: string,
-    args: aws.rds.GetClusterArgs,
+    args: rds.GetClusterArgs,
     opts?: ComponentResourceOptions,
   ) {
     return new PostgresRef(name, args, opts);
   }
 }
 
-function getSSTLink(
-  cluster: aws.rds.Cluster | Output<aws.rds.GetClusterResult>,
-) {
+function getSSTLink(cluster: rds.Cluster | Output<rds.GetClusterResult>) {
   return {
     properties: {
       clusterArn: cluster.arn,
@@ -375,7 +373,7 @@ function getSSTLink(
 }
 
 function getSSTAWSPermissions(
-  cluster: aws.rds.Cluster | Output<aws.rds.GetClusterResult>,
+  cluster: rds.Cluster | Output<rds.GetClusterResult>,
 ) {
   return [
     {
@@ -396,15 +394,15 @@ function getSSTAWSPermissions(
 }
 
 class PostgresRef extends Component implements Link.Linkable, AWSLinkable {
-  private cluster: Output<aws.rds.GetClusterResult>;
+  private cluster: Output<rds.GetClusterResult>;
 
   constructor(
     name: string,
-    args: aws.rds.GetClusterOutputArgs,
+    args: rds.GetClusterOutputArgs,
     opts?: ComponentResourceOptions,
   ) {
     super(__pulumiType + "Ref", name, args, opts);
-    this.cluster = aws.rds.getClusterOutput(args, opts);
+    this.cluster = rds.getClusterOutput(args, opts);
   }
 
   /** @internal */

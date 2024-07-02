@@ -1,9 +1,9 @@
 import { ComponentResourceOptions } from "@pulumi/pulumi";
-import * as aws from "@pulumi/aws";
 import { Component, Transform, transform } from "../component";
 import { Input } from "../input";
 import { CognitoUserPoolClientArgs } from "./cognito-user-pool.js";
 import { Link } from "../link";
+import { cognito } from "@pulumi/aws";
 
 export interface ClientArgs extends CognitoUserPoolClientArgs {
   /**
@@ -18,7 +18,7 @@ export interface ClientArgs extends CognitoUserPoolClientArgs {
     /**
      * Transform the Cognito user pool client resource.
      */
-    client?: Transform<aws.cognito.UserPoolClientArgs>;
+    client?: Transform<cognito.UserPoolClientArgs>;
   };
 }
 
@@ -33,7 +33,7 @@ export interface ClientArgs extends CognitoUserPoolClientArgs {
  * You'll find this component returned by the `addClient` method of the `CognitoUserPool` component.
  */
 export class CognitoUserPoolClient extends Component implements Link.Linkable {
-  private client: aws.cognito.UserPoolClient;
+  private client: cognito.UserPoolClient;
 
   constructor(name: string, args: ClientArgs, opts?: ComponentResourceOptions) {
     super(__pulumiType, name, args, opts);
@@ -45,7 +45,7 @@ export class CognitoUserPoolClient extends Component implements Link.Linkable {
     this.client = client;
 
     function createClient() {
-      return new aws.cognito.UserPoolClient(
+      return new cognito.UserPoolClient(
         `${name}Client`,
         transform(args.transform?.client, {
           name,

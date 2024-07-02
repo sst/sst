@@ -1,12 +1,12 @@
-import { ComponentResourceOptions, Output } from "@pulumi/pulumi";
-import * as aws from "@pulumi/aws";
+import { ComponentResourceOptions } from "@pulumi/pulumi";
 import * as docker from "@pulumi/docker";
-import { Component, Prettify, Transform, transform } from "../component";
+import { Component, Transform, transform } from "../component";
 import { Input } from "../input";
 import { Dns } from "../dns";
 import { FunctionArgs } from "./function";
 import { Service } from "./service";
 import { RETENTION } from "./logging.js";
+import { cloudwatch, ecs, iam, lb } from "@pulumi/aws";
 
 export const supportedCpus = {
   "0.25 vCPU": 256,
@@ -169,7 +169,7 @@ export interface ClusterArgs {
     /**
      * Transform the ECS Cluster resource.
      */
-    cluster?: Transform<aws.ecs.ClusterArgs>;
+    cluster?: Transform<ecs.ClusterArgs>;
   };
 }
 
@@ -293,105 +293,105 @@ export interface ClusterServiceArgs {
     domain?: Input<
       | string
       | {
-        /**
-         * The custom domain you want to use.
-         *
-         * @example
-         * ```js
-         * {
-         *   domain: {
-         *     name: "example.com"
-         *   }
-         * }
-         * ```
-         *
-         * Can also include subdomains based on the current stage.
-         *
-         * ```js
-         * {
-         *   domain: {
-         *     name: `${$app.stage}.example.com`
-         *   }
-         * }
-         * ```
-         */
-        name: Input<string>;
-        /**
-         * The ARN of an ACM (AWS Certificate Manager) certificate that proves ownership of the
-         * domain. By default, a certificate is created and validated automatically.
-         *
-         * :::tip
-         * You need to pass in a `cert` for domains that are not hosted on supported `dns` providers.
-         * :::
-         *
-         * To manually set up a domain on an unsupported provider, you'll need to:
-         *
-         * 1. [Validate that you own the domain](https://docs.aws.amazon.com/acm/latest/userguide/domain-ownership-validation.html) by creating an ACM certificate. You can either validate it by setting a DNS record or by verifying an email sent to the domain owner.
-         * 2. Once validated, set the certificate ARN as the `cert` and set `dns` to `false`.
-         * 3. Add the DNS records in your provider to point to the load balancer endpoint.
-         *
-         * @example
-         * ```js
-         * {
-         *   domain: {
-         *     name: "example.com",
-         *     dns: false,
-         *     cert: "arn:aws:acm:us-east-1:112233445566:certificate/3a958790-8878-4cdc-a396-06d95064cf63"
-         *   }
-         * }
-         * ```
-         */
-        cert?: Input<string>;
-        /**
-         * The DNS provider to use for the domain. Defaults to the AWS.
-         *
-         * Takes an adapter that can create the DNS records on the provider. This can automate
-         * validating the domain and setting up the DNS routing.
-         *
-         * Supports Route 53, Cloudflare, and Vercel adapters. For other providers, you'll need
-         * to set `dns` to `false` and pass in a certificate validating ownership via `cert`.
-         *
-         * @default `sst.aws.dns`
-         *
-         * @example
-         *
-         * Specify the hosted zone ID for the Route 53 domain.
-         *
-         * ```js
-         * {
-         *   domain: {
-         *     name: "example.com",
-         *     dns: sst.aws.dns({
-         *       zone: "Z2FDTNDATAQYW2"
-         *     })
-         *   }
-         * }
-         * ```
-         *
-         * Use a domain hosted on Cloudflare, needs the Cloudflare provider.
-         *
-         * ```js
-         * {
-         *   domain: {
-         *     name: "example.com",
-         *     dns: sst.cloudflare.dns()
-         *   }
-         * }
-         * ```
-         *
-         * Use a domain hosted on Vercel, needs the Vercel provider.
-         *
-         * ```js
-         * {
-         *   domain: {
-         *     name: "example.com",
-         *     dns: sst.vercel.dns()
-         *   }
-         * }
-         * ```
-         */
-        dns?: Input<false | (Dns & {})>;
-      }
+          /**
+           * The custom domain you want to use.
+           *
+           * @example
+           * ```js
+           * {
+           *   domain: {
+           *     name: "example.com"
+           *   }
+           * }
+           * ```
+           *
+           * Can also include subdomains based on the current stage.
+           *
+           * ```js
+           * {
+           *   domain: {
+           *     name: `${$app.stage}.example.com`
+           *   }
+           * }
+           * ```
+           */
+          name: Input<string>;
+          /**
+           * The ARN of an ACM (AWS Certificate Manager) certificate that proves ownership of the
+           * domain. By default, a certificate is created and validated automatically.
+           *
+           * :::tip
+           * You need to pass in a `cert` for domains that are not hosted on supported `dns` providers.
+           * :::
+           *
+           * To manually set up a domain on an unsupported provider, you'll need to:
+           *
+           * 1. [Validate that you own the domain](https://docs.aws.amazon.com/acm/latest/userguide/domain-ownership-validation.html) by creating an ACM certificate. You can either validate it by setting a DNS record or by verifying an email sent to the domain owner.
+           * 2. Once validated, set the certificate ARN as the `cert` and set `dns` to `false`.
+           * 3. Add the DNS records in your provider to point to the load balancer endpoint.
+           *
+           * @example
+           * ```js
+           * {
+           *   domain: {
+           *     name: "example.com",
+           *     dns: false,
+           *     cert: "arn:aws:acm:us-east-1:112233445566:certificate/3a958790-8878-4cdc-a396-06d95064cf63"
+           *   }
+           * }
+           * ```
+           */
+          cert?: Input<string>;
+          /**
+           * The DNS provider to use for the domain. Defaults to the AWS.
+           *
+           * Takes an adapter that can create the DNS records on the provider. This can automate
+           * validating the domain and setting up the DNS routing.
+           *
+           * Supports Route 53, Cloudflare, and Vercel adapters. For other providers, you'll need
+           * to set `dns` to `false` and pass in a certificate validating ownership via `cert`.
+           *
+           * @default `sst.aws.dns`
+           *
+           * @example
+           *
+           * Specify the hosted zone ID for the Route 53 domain.
+           *
+           * ```js
+           * {
+           *   domain: {
+           *     name: "example.com",
+           *     dns: sst.aws.dns({
+           *       zone: "Z2FDTNDATAQYW2"
+           *     })
+           *   }
+           * }
+           * ```
+           *
+           * Use a domain hosted on Cloudflare, needs the Cloudflare provider.
+           *
+           * ```js
+           * {
+           *   domain: {
+           *     name: "example.com",
+           *     dns: sst.cloudflare.dns()
+           *   }
+           * }
+           * ```
+           *
+           * Use a domain hosted on Vercel, needs the Vercel provider.
+           *
+           * ```js
+           * {
+           *   domain: {
+           *     name: "example.com",
+           *     dns: sst.vercel.dns()
+           *   }
+           * }
+           * ```
+           */
+          dns?: Input<false | (Dns & {})>;
+        }
     >;
     /**
      * Configure the port mappings the public endpoint listens to and forwards to the service.
@@ -694,31 +694,31 @@ export interface ClusterServiceArgs {
     /**
      * Transform the ECS Service resource.
      */
-    service?: Transform<aws.ecs.ServiceArgs>;
+    service?: Transform<ecs.ServiceArgs>;
     /**
      * Transform the ECS Task IAM Role resource.
      */
-    taskRole?: Transform<aws.iam.RoleArgs>;
+    taskRole?: Transform<iam.RoleArgs>;
     /**
      * Transform the ECS Task Definition resource.
      */
-    taskDefinition?: Transform<aws.ecs.TaskDefinitionArgs>;
+    taskDefinition?: Transform<ecs.TaskDefinitionArgs>;
     /**
      * Transform the AWS Load Balancer resource.
      */
-    loadBalancer?: Transform<aws.lb.LoadBalancerArgs>;
+    loadBalancer?: Transform<lb.LoadBalancerArgs>;
     /**
      * Transform the AWS Load Balancer listener resource.
      */
-    listener?: Transform<aws.lb.ListenerArgs>;
+    listener?: Transform<lb.ListenerArgs>;
     /**
      * Transform the AWS Load Balancer target group resource.
      */
-    target?: Transform<aws.lb.TargetGroupArgs>;
+    target?: Transform<lb.TargetGroupArgs>;
     /**
      * Transform the CloudWatch log group resource.
      */
-    logGroup?: Transform<aws.cloudwatch.LogGroupArgs>;
+    logGroup?: Transform<cloudwatch.LogGroupArgs>;
   };
 }
 
@@ -792,7 +792,7 @@ export interface ClusterServiceArgs {
  */
 export class Cluster extends Component {
   private args: ClusterArgs;
-  private cluster: aws.ecs.Cluster;
+  private cluster: ecs.Cluster;
 
   constructor(
     name: string,
@@ -809,7 +809,7 @@ export class Cluster extends Component {
     this.cluster = cluster;
 
     function createCluster() {
-      return new aws.ecs.Cluster(
+      return new ecs.Cluster(
         `${name}Cluster`,
         transform(args.transform?.cluster, {}),
         { parent },

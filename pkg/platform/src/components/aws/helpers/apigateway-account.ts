@@ -1,7 +1,7 @@
-import * as aws from "@pulumi/aws";
+import { apigateway, iam } from "@pulumi/aws";
 
 export function setupApiGatewayAccount(namePrefix: string) {
-  const account = aws.apigateway.Account.get(
+  const account = apigateway.Account.get(
     `${namePrefix}APIGatewayAccount`,
     "APIGatewayAccount",
   );
@@ -9,7 +9,7 @@ export function setupApiGatewayAccount(namePrefix: string) {
   return account.cloudwatchRoleArn.apply((arn) => {
     if (arn) return account;
 
-    const role = new aws.iam.Role(
+    const role = new iam.Role(
       `APIGatewayPushToCloudWatchLogsRole`,
       {
         assumeRolePolicy: JSON.stringify({
@@ -31,7 +31,7 @@ export function setupApiGatewayAccount(namePrefix: string) {
       { retainOnDelete: true },
     );
 
-    return new aws.apigateway.Account(`${namePrefix}APIGatewayAccountSetup`, {
+    return new apigateway.Account(`${namePrefix}APIGatewayAccountSetup`, {
       cloudwatchRoleArn: role.arn,
     });
   });

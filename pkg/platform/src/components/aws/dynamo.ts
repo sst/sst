@@ -5,7 +5,6 @@ import {
   interpolate,
   output,
 } from "@pulumi/pulumi";
-import * as aws from "@pulumi/aws";
 import { Component, Transform, transform } from "../component";
 import { Link } from "../link";
 import type { Input } from "../input";
@@ -14,6 +13,7 @@ import { hashStringToPrettyString, sanitizeToPascalCase } from "../naming";
 import { parseDynamoStreamArn } from "./helpers/arn";
 import { DynamoLambdaSubscriber } from "./dynamo-lambda-subscriber";
 import { AWSLinkable } from "./linkable";
+import { dynamodb, lambda } from "@pulumi/aws";
 
 export interface DynamoArgs {
   /**
@@ -165,7 +165,7 @@ export interface DynamoArgs {
     /**
      * Transform the DynamoDB Table resource.
      */
-    table?: Transform<aws.dynamodb.TableArgs>;
+    table?: Transform<dynamodb.TableArgs>;
   };
 }
 
@@ -241,7 +241,7 @@ export interface DynamoSubscriberArgs {
     /**
      * Transform the Lambda Event Source Mapping resource.
      */
-    eventSourceMapping?: Transform<aws.lambda.EventSourceMappingArgs>;
+    eventSourceMapping?: Transform<lambda.EventSourceMappingArgs>;
   };
 }
 
@@ -349,7 +349,7 @@ export interface DynamoSubscriberArgs {
  */
 export class Dynamo extends Component implements Link.Linkable, AWSLinkable {
   private constructorName: string;
-  private table: Output<aws.dynamodb.Table>;
+  private table: Output<dynamodb.Table>;
   private isStreamEnabled: boolean = false;
 
   constructor(
@@ -376,7 +376,7 @@ export class Dynamo extends Component implements Link.Linkable, AWSLinkable {
         args.stream,
       ]).apply(
         ([fields, primaryIndex, globalIndexes, localIndexes, stream]) =>
-          new aws.dynamodb.Table(
+          new dynamodb.Table(
             `${name}Table`,
             transform(args.transform?.table, {
               attributes: Object.entries(fields).map(([name, type]) => ({

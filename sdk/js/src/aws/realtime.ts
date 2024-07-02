@@ -1,8 +1,4 @@
-import {
-  Context,
-  IoTCustomAuthorizerEvent,
-  IoTCustomAuthorizerHandler,
-} from "aws-lambda";
+import { Context, IoTCustomAuthorizerEvent } from "aws-lambda";
 
 export module realtime {
   export interface AuthResult {

@@ -31,13 +31,13 @@
  * @packageDocumentation
  */
 
-import * as aws from "@pulumi/aws";
 import { AliasRecord, Dns, Record } from "../dns";
 import { sanitizeToPascalCase } from "../naming";
 import { HostedZoneLookup } from "./providers/hosted-zone-lookup";
 import { ComponentResourceOptions, output } from "@pulumi/pulumi";
 import { Transform, transform } from "../component";
 import { Input } from "../input";
+import { route53 } from "@pulumi/aws";
 
 export interface DnsArgs {
   /**
@@ -62,7 +62,7 @@ export interface DnsArgs {
     /**
      * Transform the AWS Route 53 record resource.
      */
-    record?: Transform<aws.route53.RecordArgs>;
+    record?: Transform<route53.RecordArgs>;
   };
 }
 
@@ -130,7 +130,7 @@ export function dns(args: DnsArgs = {}) {
 
   function _createRecord(
     namePrefix: string,
-    partial: Omit<aws.route53.RecordArgs, "zoneId">,
+    partial: Omit<route53.RecordArgs, "zoneId">,
     opts: ComponentResourceOptions,
   ) {
     return output(partial).apply((partial) => {
@@ -154,7 +154,7 @@ export function dns(args: DnsArgs = {}) {
       }
 
       function createRecord() {
-        return new aws.route53.Record(
+        return new route53.Record(
           `${namePrefix}${partial.type}Record${nameSuffix}`,
           transform(args.transform?.record, {
             zoneId,

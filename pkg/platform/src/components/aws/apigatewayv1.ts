@@ -5,7 +5,6 @@ import {
   jsonStringify,
   output,
 } from "@pulumi/pulumi";
-import * as aws from "@pulumi/aws";
 import { Component, Transform, transform } from "../component";
 import { Link } from "../link";
 import type { Input } from "../input";
@@ -20,6 +19,12 @@ import { RETENTION } from "./logging";
 import { ApiGatewayV1LambdaRoute } from "./apigatewayv1-lambda-route";
 import { ApiGatewayV1Authorizer } from "./apigatewayv1-authorizer";
 import { setupApiGatewayAccount } from "./helpers/apigateway-account";
+import {
+  apigateway,
+  cloudwatch,
+  apigatewayv2,
+  getRegionOutput,
+} from "@pulumi/aws";
 
 export interface ApiGatewayV1Args {
   /**
@@ -71,19 +76,19 @@ export interface ApiGatewayV1Args {
     /**
      * Transform the API Gateway REST API resource.
      */
-    api?: Transform<aws.apigateway.RestApiArgs>;
+    api?: Transform<apigateway.RestApiArgs>;
     /**
      * Transform the API Gateway REST API stage resource.
      */
-    stage?: Transform<aws.apigateway.StageArgs>;
+    stage?: Transform<apigateway.StageArgs>;
     /**
      * Transform the API Gateway REST API deployment resource.
      */
-    deployment?: Transform<aws.apigateway.DeploymentArgs>;
+    deployment?: Transform<apigateway.DeploymentArgs>;
     /**
      * Transform the CloudWatch LogGroup resource used for access logs.
      */
-    accessLog?: Transform<aws.cloudwatch.LogGroupArgs>;
+    accessLog?: Transform<cloudwatch.LogGroupArgs>;
     /**
      * Transform the routes. This is called for every route that is added.
      *
@@ -219,7 +224,7 @@ export interface ApiGatewayV1AuthorizerArgs {
     /**
      * Transform the API Gateway authorizer resource.
      */
-    authorizer?: Transform<aws.apigateway.AuthorizerArgs>;
+    authorizer?: Transform<apigateway.AuthorizerArgs>;
   };
 }
 
@@ -309,11 +314,11 @@ export interface ApiGatewayV1RouteArgs {
     /**
      * Transform the API Gateway HTTP API integration resource.
      */
-    integration?: Transform<aws.apigateway.IntegrationArgs>;
+    integration?: Transform<apigateway.IntegrationArgs>;
     /**
      * Transform the API Gateway HTTP API route resource.
      */
-    route?: Transform<aws.apigatewayv2.RouteArgs>;
+    route?: Transform<apigatewayv2.RouteArgs>;
   };
 }
 
@@ -379,13 +384,13 @@ export interface ApiGatewayV1RouteArgs {
 export class ApiGatewayV1 extends Component implements Link.Linkable {
   private constructorName: string;
   private constructorArgs: ApiGatewayV1Args;
-  private api: aws.apigateway.RestApi;
+  private api: apigateway.RestApi;
   private region: Output<string>;
   private triggers: Record<string, Output<string>> = {};
   private resources: Record<string, Output<string>> = {};
   private routes: ApiGatewayV1LambdaRoute[] = [];
-  private stage?: aws.apigateway.Stage;
-  private logGroup?: aws.cloudwatch.LogGroup;
+  private stage?: apigateway.Stage;
+  private logGroup?: cloudwatch.LogGroup;
 
   constructor(
     name: string,
@@ -412,7 +417,7 @@ export class ApiGatewayV1 extends Component implements Link.Linkable {
     });
 
     function normalizeRegion() {
-      return aws.getRegionOutput(undefined, { provider: opts?.provider }).name;
+      return getRegionOutput(undefined, { provider: opts?.provider }).name;
     }
 
     function normalizeEndpoint() {
@@ -436,7 +441,7 @@ export class ApiGatewayV1 extends Component implements Link.Linkable {
     }
 
     function createApi() {
-      return new aws.apigateway.RestApi(
+      return new apigateway.RestApi(
         `${name}Api`,
         transform(args.transform?.api, {
           endpointConfiguration: endpoint,
@@ -566,7 +571,7 @@ export class ApiGatewayV1 extends Component implements Link.Linkable {
         const suffix = sanitizeToPascalCase(
           hashStringToPrettyString([this.api.id, subPath].join(""), 6),
         );
-        const resource = new aws.apigateway.Resource(
+        const resource = new apigateway.Resource(
           `${prefix}Resource${suffix}`,
           {
             restApi: this.api.id,
@@ -718,7 +723,7 @@ export class ApiGatewayV1 extends Component implements Link.Linkable {
     }
 
     function createDeployment() {
-      return new aws.apigateway.Deployment(
+      return new apigateway.Deployment(
         `${name}Deployment`,
         transform(args.transform?.deployment, {
           restApi: api.id,
@@ -729,7 +734,7 @@ export class ApiGatewayV1 extends Component implements Link.Linkable {
     }
 
     function createLogGroup() {
-      return new aws.cloudwatch.LogGroup(
+      return new cloudwatch.LogGroup(
         `${name}AccessLog`,
         transform(args.transform?.accessLog, {
           name: `/aws/vendedlogs/apis/${prefixName(64, name)}`,
@@ -742,7 +747,7 @@ export class ApiGatewayV1 extends Component implements Link.Linkable {
     }
 
     function createStage() {
-      return new aws.apigateway.Stage(
+      return new apigateway.Stage(
         `${name}Stage`,
         transform(args.transform?.stage, {
           restApi: api.id,

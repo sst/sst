@@ -1,14 +1,14 @@
-import { ComponentResourceOptions, Output, all, output } from "@pulumi/pulumi";
-import * as aws from "@pulumi/aws";
+import { ComponentResourceOptions, all, output } from "@pulumi/pulumi";
 import { Component, Transform, transform } from "../component";
 import { Link } from "../link";
 import type { Input } from "../input";
 import { FunctionArgs } from "./function";
 import { hashStringToPrettyString, sanitizeToPascalCase } from "../naming";
-import { parseQueueArn, parseTopicArn } from "./helpers/arn";
+import { parseTopicArn } from "./helpers/arn";
 import { SnsTopicLambdaSubscriber } from "./sns-topic-lambda-subscriber";
 import { SnsTopicQueueSubscriber } from "./sns-topic-queue-subscriber";
 import { AWSLinkable } from "./linkable";
+import { sns } from "@pulumi/aws";
 
 export interface SnsTopicArgs {
   /**
@@ -35,7 +35,7 @@ export interface SnsTopicArgs {
     /**
      * Transform the SNS topic resource.
      */
-    topic?: Transform<aws.sns.TopicArgs>;
+    topic?: Transform<sns.TopicArgs>;
   };
 }
 
@@ -91,7 +91,7 @@ export interface SnsTopicSubscriberArgs {
     /**
      * Transform the SNS topic Subscription resource.
      */
-    subscription?: Transform<aws.sns.TopicSubscriptionArgs>;
+    subscription?: Transform<sns.TopicSubscriptionArgs>;
   };
 }
 
@@ -152,7 +152,7 @@ export interface SnsTopicSubscriberArgs {
  */
 export class SnsTopic extends Component implements Link.Linkable, AWSLinkable {
   private constructorName: string;
-  private topic: aws.sns.Topic;
+  private topic: sns.Topic;
 
   constructor(
     name: string,
@@ -174,7 +174,7 @@ export class SnsTopic extends Component implements Link.Linkable, AWSLinkable {
     }
 
     function createTopic() {
-      return new aws.sns.Topic(
+      return new sns.Topic(
         `${name}Topic`,
         transform(args.transform?.topic, {
           fifoTopic: fifo,

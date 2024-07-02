@@ -1,5 +1,4 @@
 import { ComponentResourceOptions, all, output } from "@pulumi/pulumi";
-import * as aws from "@pulumi/aws";
 import { Component, Transform, transform } from "../component";
 import { Input } from "../input";
 import { Link } from "../link";
@@ -7,6 +6,7 @@ import { CognitoUserPoolClient } from "./cognito-user-pool-client";
 import { Function, FunctionArgs } from "./function.js";
 import { VisibleError } from "../error";
 import { AWSLinkable } from "./linkable";
+import { cognito, lambda } from "@pulumi/aws";
 
 export interface CognitoUserPoolArgs {
   /**
@@ -118,7 +118,7 @@ export interface CognitoUserPoolArgs {
     /**
      * Transform the Cognito user pool resource.
      */
-    userPool?: Transform<aws.cognito.UserPoolArgs>;
+    userPool?: Transform<cognito.UserPoolArgs>;
   };
 }
 
@@ -131,7 +131,7 @@ export interface CognitoUserPoolClientArgs {
     /**
      * Transform the Cognito user pool client resource.
      */
-    client?: Transform<aws.cognito.UserPoolClientArgs>;
+    client?: Transform<cognito.UserPoolClientArgs>;
   };
 }
 
@@ -173,7 +173,7 @@ export class CognitoUserPool
   extends Component
   implements Link.Linkable, AWSLinkable
 {
-  private userPool: aws.cognito.UserPool;
+  private userPool: cognito.UserPool;
 
   constructor(
     name: string,
@@ -223,7 +223,7 @@ export class CognitoUserPool
     }
 
     function createUserPool() {
-      return new aws.cognito.UserPool(
+      return new cognito.UserPool(
         `${name}UserPool`,
         transform(args.transform?.userPool, {
           aliasAttributes:
@@ -289,7 +289,7 @@ export class CognitoUserPool
 
       triggers.apply((triggers) => {
         Object.entries(triggers).forEach(([trigger, functionArn]) => {
-          new aws.lambda.Permission(
+          new lambda.Permission(
             `${name}Permission${trigger}`,
             {
               action: "lambda:InvokeFunction",

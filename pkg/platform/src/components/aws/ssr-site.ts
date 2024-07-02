@@ -11,7 +11,6 @@ import {
   ComponentResource,
   ComponentResourceOptions,
 } from "@pulumi/pulumi";
-import * as aws from "@pulumi/aws";
 import { Cdn, CdnArgs } from "./cdn.js";
 import { Function, FunctionArgs } from "./function.js";
 import { DistributionInvalidation } from "./providers/distribution-invalidation.js";
@@ -26,6 +25,14 @@ import { Cron } from "./cron.js";
 import { OriginAccessIdentity } from "./providers/origin-access-identity.js";
 import { BaseSiteFileOptions } from "../base/base-site.js";
 import { BaseSsrSiteArgs } from "../base/base-ssr-site.js";
+import {
+  cloudfront,
+  getPartitionOutput,
+  getRegionOutput,
+  iam,
+  lambda,
+  types,
+} from "@pulumi/aws";
 
 type CloudFrontFunctionConfig = { injections: string[] };
 type EdgeFunctionConfig = { function: Unwrap<FunctionArgs> };
@@ -144,12 +151,12 @@ export function prepare(args: SsrSiteArgs, opts: ComponentResourceOptions) {
   }
 
   function normalizePartition() {
-    return aws.getPartitionOutput(undefined, { provider: opts?.provider })
+    return getPartitionOutput(undefined, { provider: opts?.provider })
       .partition;
   }
 
   function normalizeRegion() {
-    return aws.getRegionOutput(undefined, { provider: opts?.provider }).name;
+    return getRegionOutput(undefined, { provider: opts?.provider }).name;
   }
 
   function checkSupportedRegion() {
@@ -196,7 +203,7 @@ export function createBucket(
       transform(args.transform?.assets, {
         transform: {
           policy: (policyArgs) => {
-            const newPolicy = aws.iam.getPolicyDocumentOutput({
+            const newPolicy = iam.getPolicyDocumentOutput({
               statements: [
                 {
                   principals: [
@@ -240,7 +247,7 @@ export function createServersAndDistribution(
 ) {
   return all([outputPath, plan]).apply(([outputPath, plan]) => {
     const ssrFunctions: Function[] = [];
-    let singletonCachePolicy: aws.cloudfront.CachePolicy;
+    let singletonCachePolicy: cloudfront.CachePolicy;
 
     const bucketFile = uploadAssets();
     const cfFunctions = createCloudFrontFunctions();
@@ -388,11 +395,11 @@ export function createServersAndDistribution(
     }
 
     function createCloudFrontFunctions() {
-      const functions: Record<string, aws.cloudfront.Function> = {};
+      const functions: Record<string, cloudfront.Function> = {};
 
       Object.entries(plan.cloudFrontFunctions ?? {}).forEach(
         ([fnName, { injections }]) => {
-          functions[fnName] = new aws.cloudfront.Function(
+          functions[fnName] = new cloudfront.Function(
             `${name}CloudfrontFunction${sanitizeToPascalCase(fnName)}`,
             {
               runtime: "cloudfront-js-1.0",
@@ -460,10 +467,8 @@ function handler(event) {
     }
 
     function buildOrigins() {
-      const origins: Record<
-        string,
-        aws.types.input.cloudfront.DistributionOrigin
-      > = {};
+      const origins: Record<string, types.input.cloudfront.DistributionOrigin> =
+        {};
 
       Object.entries(plan.origins ?? {}).forEach(([name, props]) => {
         if (props.s3) {
@@ -484,7 +489,7 @@ function handler(event) {
     function buildOriginGroups() {
       const originGroups: Record<
         string,
-        aws.types.input.cloudfront.DistributionOriginGroup
+        types.input.cloudfront.DistributionOriginGroup
       > = {};
 
       Object.entries(plan.origins ?? {}).forEach(([name, props]) => {
@@ -671,7 +676,7 @@ function handler(event) {
     function useServerBehaviorCachePolicy() {
       singletonCachePolicy =
         singletonCachePolicy ??
-        new aws.cloudfront.CachePolicy(
+        new cloudfront.CachePolicy(
           `${name}ServerCachePolicy`,
           {
             comment: "SST server response cache policy",
@@ -752,7 +757,7 @@ function handler(event) {
     }
 
     function allowServerFunctionInvalidateDistribution() {
-      const policy = new aws.iam.Policy(
+      const policy = new iam.Policy(
         `${name}InvalidationPolicy`,
         {
           policy: interpolate`{
@@ -777,7 +782,7 @@ function handler(event) {
             .digest("hex")
             .substring(0, 4);
 
-          new aws.iam.RolePolicyAttachment(
+          new iam.RolePolicyAttachment(
             `${name}InvalidationPolicyAttachment${uniqueHash}`,
             {
               policyArn: policy.arn,
@@ -836,7 +841,7 @@ function handler(event) {
       );
 
       // Prewarm on deploy
-      new aws.lambda.Invocation(
+      new lambda.Invocation(
         `${name}Prewarm`,
         {
           functionName: cron.nodes.job.name,
@@ -995,8 +1000,8 @@ export function validatePlan<
     cfFunction?: keyof CloudFrontFunctions;
     edgeFunction?: keyof EdgeFunctions;
   }[];
-  defaultRootObject?: aws.cloudfront.DistributionArgs["defaultRootObject"];
-  errorResponses?: aws.types.input.cloudfront.DistributionCustomErrorResponse[];
+  defaultRootObject?: cloudfront.DistributionArgs["defaultRootObject"];
+  errorResponses?: types.input.cloudfront.DistributionCustomErrorResponse[];
   serverCachePolicy?: {
     allowedHeaders?: string[];
   };

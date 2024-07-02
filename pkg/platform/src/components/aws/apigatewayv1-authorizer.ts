@@ -5,11 +5,11 @@ import {
   interpolate,
   output,
 } from "@pulumi/pulumi";
-import * as aws from "@pulumi/aws";
 import { Component, transform } from "../component";
 import { Function } from "./function";
 import { VisibleError } from "../error";
 import { ApiGatewayV1AuthorizerArgs } from "./apigatewayv1";
+import { apigateway, lambda } from "@pulumi/aws";
 
 export interface AuthorizerArgs extends ApiGatewayV1AuthorizerArgs {
   /**
@@ -42,9 +42,9 @@ export interface AuthorizerArgs extends ApiGatewayV1AuthorizerArgs {
  * You'll find this component returned by the `addAuthorizer` method of the `ApiGatewayV1` component.
  */
 export class ApiGatewayV1Authorizer extends Component {
-  private readonly authorizer: aws.apigateway.Authorizer;
+  private readonly authorizer: apigateway.Authorizer;
   private readonly fn?: Output<sst.aws.Function>;
-  private readonly permission?: aws.lambda.Permission;
+  private readonly permission?: lambda.Permission;
 
   constructor(
     name: string,
@@ -105,7 +105,7 @@ export class ApiGatewayV1Authorizer extends Component {
     function createPermission() {
       if (!fn) return;
 
-      return new aws.lambda.Permission(
+      return new lambda.Permission(
         `${name}Permission`,
         {
           action: "lambda:InvokeFunction",
@@ -118,7 +118,7 @@ export class ApiGatewayV1Authorizer extends Component {
     }
 
     function createAuthorizer() {
-      return new aws.apigateway.Authorizer(
+      return new apigateway.Authorizer(
         `${name}Authorizer`,
         transform(args.transform?.authorizer, {
           restApi: api.id,

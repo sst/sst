@@ -856,9 +856,9 @@ var Root = Command{
 						if err != nil {
 							return util.NewReadableError(err, "Could not set secret")
 						}
-						server, _ := server.GetExisting(p.PathConfig(), p.App().Stage)
-						if server != "" {
-							http.Post("http://"+server+"/api/deploy", "application/json", strings.NewReader("{}"))
+						addr, _ := server.GetExisting(p.PathConfig(), p.App().Stage)
+						if addr != "" {
+							http.Post("http://"+addr+"/api/deploy", "application/json", strings.NewReader("{}"))
 						}
 						ui.Success(fmt.Sprintf("Removed \"%s\" for stage \"%s\"", key, p.App().Stage))
 						return nil

@@ -5,7 +5,6 @@ import {
   all,
   Output,
 } from "@pulumi/pulumi";
-import * as aws from "@pulumi/aws";
 import { RandomId } from "@pulumi/random";
 import {
   prefixName,
@@ -22,6 +21,7 @@ import { VisibleError } from "../error";
 import { parseBucketArn } from "./helpers/arn";
 import { BucketLambdaSubscriber } from "./bucket-lambda-subscriber";
 import { AWSLinkable } from "./linkable";
+import { iam, s3 } from "@pulumi/aws";
 
 interface BucketCorsArgs {
   /**
@@ -144,19 +144,19 @@ export interface BucketArgs {
     /**
      * Transform the S3 Bucket resource.
      */
-    bucket?: Transform<aws.s3.BucketV2Args>;
+    bucket?: Transform<s3.BucketV2Args>;
     /**
      * Transform the S3 Bucket CORS configuration resource.
      */
-    cors?: Transform<aws.s3.BucketCorsConfigurationV2Args>;
+    cors?: Transform<s3.BucketCorsConfigurationV2Args>;
     /**
      * Transform the S3 Bucket Policy resource.
      */
-    policy?: Transform<aws.s3.BucketPolicyArgs>;
+    policy?: Transform<s3.BucketPolicyArgs>;
     /**
      * Transform the public access block resource that's attached to the Bucket.
      */
-    publicAccessBlock?: Transform<aws.s3.BucketPublicAccessBlockArgs>;
+    publicAccessBlock?: Transform<s3.BucketPublicAccessBlockArgs>;
   };
 }
 
@@ -232,7 +232,7 @@ export interface BucketSubscriberArgs {
     /**
      * Transform the S3 Bucket Notification resource.
      */
-    notification?: Transform<aws.s3.BucketNotificationArgs>;
+    notification?: Transform<s3.BucketNotificationArgs>;
   };
 }
 
@@ -290,7 +290,7 @@ export interface BucketSubscriberArgs {
  */
 export class Bucket extends Component implements Link.Linkable, AWSLinkable {
   private constructorName: string;
-  private bucket: Output<aws.s3.BucketV2>;
+  private bucket: Output<s3.BucketV2>;
   private isSubscribed: boolean = false;
 
   constructor(
@@ -335,12 +335,12 @@ export class Bucket extends Component implements Link.Linkable, AWSLinkable {
         );
       }
 
-      return new aws.s3.BucketV2(`${name}Bucket`, input, { parent });
+      return new s3.BucketV2(`${name}Bucket`, input, { parent });
     }
 
     function createPublicAccess() {
       return publicAccess.apply((publicAccess) => {
-        return new aws.s3.BucketPublicAccessBlock(
+        return new s3.BucketPublicAccessBlock(
           `${name}PublicAccessBlock`,
           transform(args?.transform?.publicAccessBlock, {
             bucket: bucket.bucket,
@@ -378,11 +378,11 @@ export class Bucket extends Component implements Link.Linkable, AWSLinkable {
           ],
         });
 
-        return new aws.s3.BucketPolicy(
+        return new s3.BucketPolicy(
           `${name}Policy`,
           transform(args?.transform?.policy, {
             bucket: bucket.bucket,
-            policy: aws.iam.getPolicyDocumentOutput({ statements }).json,
+            policy: iam.getPolicyDocumentOutput({ statements }).json,
           }),
           {
             parent,
@@ -396,7 +396,7 @@ export class Bucket extends Component implements Link.Linkable, AWSLinkable {
       return output(args?.cors).apply((cors) => {
         if (cors === false) return;
 
-        return new aws.s3.BucketCorsConfigurationV2(
+        return new s3.BucketCorsConfigurationV2(
           `${name}Cors`,
           transform(args?.transform?.cors, {
             bucket: bucket.bucket,

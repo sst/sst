@@ -5,13 +5,13 @@ import {
   interpolate,
   output,
 } from "@pulumi/pulumi";
-import * as aws from "@pulumi/aws";
 import { Component, Transform, transform } from "../component";
 import { Link } from "../link";
 import { Input } from "../input";
 import { Dns } from "../dns";
 import { dns as awsDns } from "./dns.js";
 import { AWSLinkable } from "./linkable";
+import { ses, sesv2 } from "@pulumi/aws";
 
 export interface EmailArgs {
   /**
@@ -113,7 +113,7 @@ export interface EmailArgs {
     /**
      * Transform the SES identity resource.
      */
-    identity?: Transform<aws.sesv2.EmailIdentityArgs>;
+    identity?: Transform<sesv2.EmailIdentityArgs>;
   };
 }
 
@@ -198,7 +198,7 @@ export interface EmailArgs {
  */
 export class Email extends Component implements Link.Linkable, AWSLinkable {
   private _sender: Output<string>;
-  private identity: aws.sesv2.EmailIdentity;
+  private identity: sesv2.EmailIdentity;
 
   constructor(name: string, args: EmailArgs, opts?: ComponentResourceOptions) {
     super(__pulumiType, name, args, opts);
@@ -246,7 +246,7 @@ export class Email extends Component implements Link.Linkable, AWSLinkable {
     }
 
     function createIdentity() {
-      return new aws.sesv2.EmailIdentity(
+      return new sesv2.EmailIdentity(
         `${name}Identity`,
         transform(args.transform?.identity, { emailIdentity: args.sender }),
         { parent },
@@ -290,7 +290,7 @@ export class Email extends Component implements Link.Linkable, AWSLinkable {
     }
 
     function waitForVerification() {
-      new aws.ses.DomainIdentityVerification(
+      new ses.DomainIdentityVerification(
         `${name}Verification`,
         {
           domain: args.sender,

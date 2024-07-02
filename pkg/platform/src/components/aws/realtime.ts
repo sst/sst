@@ -1,11 +1,11 @@
-import { ComponentResourceOptions, Output, all, output } from "@pulumi/pulumi";
-import * as aws from "@pulumi/aws";
+import { ComponentResourceOptions, Output, all } from "@pulumi/pulumi";
 import { Component, Transform, transform } from "../component";
 import { Link } from "../link";
 import type { Input } from "../input";
 import { Function, FunctionArgs } from "./function";
 import { hashStringToPrettyString, sanitizeToPascalCase } from "../naming";
 import { RealtimeLambdaSubscriber } from "./realtime-lambda-subscriber";
+import { iot, lambda } from "@pulumi/aws";
 
 export interface RealtimeArgs {
   /**
@@ -26,7 +26,7 @@ export interface RealtimeArgs {
     /**
      * Transform the IoT authorizer resource.
      */
-    authorizer?: Transform<aws.iot.AuthorizerArgs>;
+    authorizer?: Transform<iot.AuthorizerArgs>;
   };
 }
 
@@ -62,7 +62,7 @@ export interface RealtimeSubscriberArgs {
     /**
      * Transform the IoT topic rule resource.
      */
-    topicRule?: Transform<aws.iot.TopicRuleArgs>;
+    topicRule?: Transform<iot.TopicRuleArgs>;
   };
 }
 
@@ -133,7 +133,7 @@ export interface RealtimeSubscriberArgs {
 export class Realtime extends Component implements Link.Linkable {
   private readonly constructorName: string;
   private readonly authHadler: Output<Function>;
-  private readonly iotAuthorizer: aws.iot.Authorizer;
+  private readonly iotAuthorizer: iot.Authorizer;
   private readonly iotEndpoint: Output<string>;
 
   constructor(
@@ -149,7 +149,7 @@ export class Realtime extends Component implements Link.Linkable {
     const iotAuthorizer = createAuthorizer();
     createPermission();
 
-    this.iotEndpoint = aws.iot.getEndpointOutput({
+    this.iotEndpoint = iot.getEndpointOutput({
       endpointType: "iot:Data-ATS",
     }).endpointAddress;
     this.constructorName = name;
@@ -175,7 +175,7 @@ export class Realtime extends Component implements Link.Linkable {
     }
 
     function createAuthorizer() {
-      return new aws.iot.Authorizer(
+      return new iot.Authorizer(
         `${name}Authorizer`,
         transform(args.transform?.authorizer, {
           signingDisabled: true,
@@ -186,7 +186,7 @@ export class Realtime extends Component implements Link.Linkable {
     }
 
     function createPermission() {
-      return new aws.lambda.Permission(
+      return new lambda.Permission(
         `${name}Permission`,
         {
           action: "lambda:InvokeFunction",

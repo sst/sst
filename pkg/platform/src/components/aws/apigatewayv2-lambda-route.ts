@@ -5,10 +5,10 @@ import {
   interpolate,
   output,
 } from "@pulumi/pulumi";
-import * as aws from "@pulumi/aws";
 import { Component, Transform, transform } from "../component";
 import { Function, FunctionArgs } from "./function";
 import { ApiGatewayV2RouteArgs } from "./apigatewayv2";
+import { apigatewayv2, lambda } from "@pulumi/aws";
 
 export interface Args extends ApiGatewayV2RouteArgs {
   /**
@@ -48,9 +48,9 @@ export interface Args extends ApiGatewayV2RouteArgs {
  */
 export class ApiGatewayV2LambdaRoute extends Component {
   private readonly fn: Output<Function>;
-  private readonly permission: aws.lambda.Permission;
-  private readonly apiRoute: Output<aws.apigatewayv2.Route>;
-  private readonly integration: aws.apigatewayv2.Integration;
+  private readonly permission: lambda.Permission;
+  private readonly apiRoute: Output<apigatewayv2.Route>;
+  private readonly integration: apigatewayv2.Integration;
 
   constructor(name: string, args: Args, opts?: ComponentResourceOptions) {
     super(__pulumiType, name, args, opts);
@@ -82,7 +82,7 @@ export class ApiGatewayV2LambdaRoute extends Component {
     }
 
     function createPermission() {
-      return new aws.lambda.Permission(
+      return new lambda.Permission(
         `${name}Permissions`,
         {
           action: "lambda:InvokeFunction",
@@ -95,7 +95,7 @@ export class ApiGatewayV2LambdaRoute extends Component {
     }
 
     function createIntegration() {
-      return new aws.apigatewayv2.Integration(
+      return new apigatewayv2.Integration(
         `${name}Integration`,
         transform(args.transform?.integration, {
           apiId: api.id,
@@ -121,7 +121,7 @@ export class ApiGatewayV2LambdaRoute extends Component {
 
       return authArgs.apply(
         (authArgs) =>
-          new aws.apigatewayv2.Route(
+          new apigatewayv2.Route(
             `${name}Route`,
             transform(args.transform?.route, {
               apiId: api.id,
@@ -139,7 +139,6 @@ export class ApiGatewayV2LambdaRoute extends Component {
    * The underlying [resources](/docs/components/#nodes) this component creates.
    */
   public get nodes() {
-    const self = this;
     return {
       /**
        * The Lambda function.

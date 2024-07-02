@@ -5,10 +5,10 @@ import {
   interpolate,
   output,
 } from "@pulumi/pulumi";
-import * as aws from "@pulumi/aws";
 import { Component, transform } from "../component";
 import { Function, FunctionArgs } from "./function";
 import { BusSubscriberArgs } from "./bus";
+import { cloudwatch, lambda } from "@pulumi/aws";
 
 export interface Args extends BusSubscriberArgs {
   /**
@@ -42,9 +42,9 @@ export interface Args extends BusSubscriberArgs {
  */
 export class BusLambdaSubscriber extends Component {
   private readonly fn: Output<Function>;
-  private readonly permission: aws.lambda.Permission;
-  private readonly rule: aws.cloudwatch.EventRule;
-  private readonly target: aws.cloudwatch.EventTarget;
+  private readonly permission: lambda.Permission;
+  private readonly rule: cloudwatch.EventRule;
+  private readonly target: cloudwatch.EventTarget;
 
   constructor(name: string, args: Args, opts?: ComponentResourceOptions) {
     super(__pulumiType, name, args, opts);
@@ -74,7 +74,7 @@ export class BusLambdaSubscriber extends Component {
     }
 
     function createPermission() {
-      return new aws.lambda.Permission(
+      return new lambda.Permission(
         `${name}Permission`,
         {
           action: "lambda:InvokeFunction",
@@ -87,7 +87,7 @@ export class BusLambdaSubscriber extends Component {
     }
 
     function createRule() {
-      return new aws.cloudwatch.EventRule(
+      return new cloudwatch.EventRule(
         `${name}Rule`,
         transform(args?.transform?.rule, {
           eventBusName: bus.name,
@@ -108,7 +108,7 @@ export class BusLambdaSubscriber extends Component {
     }
 
     function createTarget() {
-      return new aws.cloudwatch.EventTarget(
+      return new cloudwatch.EventTarget(
         `${name}Target`,
         transform(args?.transform?.target, {
           arn: fn.arn,
@@ -124,7 +124,6 @@ export class BusLambdaSubscriber extends Component {
    * The underlying [resources](/docs/components/#nodes) this component creates.
    */
   public get nodes() {
-    const self = this;
     return {
       /**
        * The Lambda function that'll be notified.

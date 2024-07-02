@@ -1,5 +1,4 @@
 import { ComponentResourceOptions, all, output } from "@pulumi/pulumi";
-import * as aws from "@pulumi/aws";
 import { Component, Transform, transform } from "../component";
 import { Link } from "../link";
 import type { Input } from "../input";
@@ -12,6 +11,7 @@ import {
 import { parseEventBusArn } from "./helpers/arn";
 import { BusLambdaSubscriber } from "./bus-lambda-subscriber";
 import { AWSLinkable } from "./linkable";
+import { cloudwatch } from "@pulumi/aws";
 
 export interface BusArgs {
   /**
@@ -22,7 +22,7 @@ export interface BusArgs {
     /**
      * Transform the EventBus resource.
      */
-    bus?: Transform<aws.cloudwatch.EventBusArgs>;
+    bus?: Transform<cloudwatch.EventBusArgs>;
   };
 }
 
@@ -112,11 +112,11 @@ export interface BusSubscriberArgs {
     /**
      * Transform the EventBus rule resource.
      */
-    rule?: Transform<aws.cloudwatch.EventRuleArgs>;
+    rule?: Transform<cloudwatch.EventRuleArgs>;
     /**
      * Transform the EventBus target resource.
      */
-    target?: Transform<aws.cloudwatch.EventTargetArgs>;
+    target?: Transform<cloudwatch.EventTargetArgs>;
   };
 }
 
@@ -168,7 +168,7 @@ export interface BusSubscriberArgs {
  */
 export class Bus extends Component implements Link.Linkable, AWSLinkable {
   private constructorName: string;
-  private bus: aws.cloudwatch.EventBus;
+  private bus: cloudwatch.EventBus;
 
   constructor(
     name: string,
@@ -185,7 +185,7 @@ export class Bus extends Component implements Link.Linkable, AWSLinkable {
     this.bus = bus;
 
     function createBus() {
-      return new aws.cloudwatch.EventBus(
+      return new cloudwatch.EventBus(
         `${name}Bus`,
         transform(args.transform?.bus, {
           name: prefixName(256, name),

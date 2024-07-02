@@ -1,10 +1,10 @@
 import { output, runtime } from "@pulumi/pulumi";
-import * as aws from "@pulumi/aws";
 import { lazy } from "../../../util/lazy";
+import { Provider, Region, getDefaultTags } from "@pulumi/aws";
 
-const useProviderCache = lazy(() => new Map<string, aws.Provider>());
+const useProviderCache = lazy(() => new Map<string, Provider>());
 
-export const useProvider = (region: aws.Region) => {
+export const useProvider = (region: Region) => {
   const cache = useProviderCache();
   const existing = cache.get(region);
   if (existing) return existing;
@@ -16,11 +16,11 @@ export const useProvider = (region: aws.Region) => {
     if (prefix !== "aws") continue;
     config[real] = value;
   }
-  const provider = new aws.Provider(`AwsProvider.sst.${region}`, {
+  const provider = new Provider(`AwsProvider.sst.${region}`, {
     ...config,
     region,
     defaultTags: {
-      tags: output(aws.getDefaultTags()).apply((result) => result.tags),
+      tags: output(getDefaultTags()).apply((result) => result.tags),
     },
   });
   cache.set(region, provider);

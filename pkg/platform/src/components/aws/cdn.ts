@@ -4,7 +4,6 @@ import {
   output,
   interpolate,
 } from "@pulumi/pulumi";
-import * as aws from "@pulumi/aws";
 import { DnsValidatedCertificate } from "./dns-validated-certificate.js";
 import { HttpsRedirect } from "./https-redirect.js";
 import { useProvider } from "./helpers/provider.js";
@@ -13,6 +12,7 @@ import { Input } from "../input.js";
 import { DistributionDeploymentWaiter } from "./providers/distribution-deployment-waiter.js";
 import { Dns } from "../dns.js";
 import { dns as awsDns } from "./dns.js";
+import { cloudfront } from "@pulumi/aws";
 
 export interface CdnDomainArgs {
   /**
@@ -107,7 +107,7 @@ export interface CdnDomainArgs {
   /**
    * The DNS provider to use for the domain. Defaults to the AWS.
    *
-   * Takes an adapter that can create the DNS records on the provider. This can automate 
+   * Takes an adapter that can create the DNS records on the provider. This can automate
    * validating the domain and setting up the DNS routing.
    *
    * Supports Route 53, Cloudflare, and Vercel adapters. For other providers, you'll need
@@ -163,27 +163,27 @@ export interface CdnArgs {
   /**
    * One or more origins for this distribution.
    */
-  origins: aws.cloudfront.DistributionArgs["origins"];
+  origins: cloudfront.DistributionArgs["origins"];
   /**
    * One or more origin groups for this distribution.
    */
-  originGroups?: aws.cloudfront.DistributionArgs["originGroups"];
+  originGroups?: cloudfront.DistributionArgs["originGroups"];
   /**
    * The default cache behavior for this distribution.
    */
-  defaultCacheBehavior: aws.cloudfront.DistributionArgs["defaultCacheBehavior"];
+  defaultCacheBehavior: cloudfront.DistributionArgs["defaultCacheBehavior"];
   /**
    * An ordered list of cache behaviors for this distribution. Listed in order of precedence. The first cache behavior will have precedence 0.
    */
-  orderedCacheBehaviors?: aws.cloudfront.DistributionArgs["orderedCacheBehaviors"];
+  orderedCacheBehaviors?: cloudfront.DistributionArgs["orderedCacheBehaviors"];
   /**
    * An object you want CloudFront to return when a user requests the root URL. For example, the `index.html`.
    */
-  defaultRootObject?: aws.cloudfront.DistributionArgs["defaultRootObject"];
+  defaultRootObject?: cloudfront.DistributionArgs["defaultRootObject"];
   /**
    * One or more custom error responses.
    */
-  customErrorResponses?: aws.cloudfront.DistributionArgs["customErrorResponses"];
+  customErrorResponses?: cloudfront.DistributionArgs["customErrorResponses"];
   /**
    * Set a custom domain for your distribution.
    *
@@ -243,7 +243,7 @@ export interface CdnArgs {
     /**
      * Transform the CloudFront distribution resource.
      */
-    distribution: Transform<aws.cloudfront.DistributionArgs>;
+    distribution: Transform<cloudfront.DistributionArgs>;
   };
 }
 
@@ -269,7 +269,7 @@ export interface CdnArgs {
  * ```
  */
 export class Cdn extends Component {
-  private distribution: Output<aws.cloudfront.Distribution>;
+  private distribution: Output<cloudfront.Distribution>;
   private _domainUrl?: Output<string>;
 
   constructor(name: string, args: CdnArgs, opts?: ComponentResourceOptions) {
@@ -340,7 +340,7 @@ export class Cdn extends Component {
     }
 
     function createDistribution() {
-      return new aws.cloudfront.Distribution(
+      return new cloudfront.Distribution(
         `${name}Distribution`,
         transform(args.transform?.distribution, {
           comment: args.comment,
@@ -361,13 +361,13 @@ export class Cdn extends Component {
             : [],
           viewerCertificate: certificateArn
             ? {
-              acmCertificateArn: certificateArn,
-              sslSupportMethod: "sni-only",
-              minimumProtocolVersion: "TLSv1.2_2021",
-            }
+                acmCertificateArn: certificateArn,
+                sslSupportMethod: "sni-only",
+                minimumProtocolVersion: "TLSv1.2_2021",
+              }
             : {
-              cloudfrontDefaultCertificate: true,
-            },
+                cloudfrontDefaultCertificate: true,
+              },
           waitForDeployment: false,
         }),
         {

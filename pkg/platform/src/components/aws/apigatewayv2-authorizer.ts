@@ -1,7 +1,7 @@
 import { ComponentResourceOptions, Input, output } from "@pulumi/pulumi";
-import * as aws from "@pulumi/aws";
 import { Component, transform } from "../component";
 import { ApiGatewayV2AuthorizerArgs } from "./apigatewayv2";
+import { apigatewayv2 } from "@pulumi/aws";
 
 export interface AuthorizerArgs extends ApiGatewayV2AuthorizerArgs {
   /**
@@ -30,7 +30,7 @@ export interface AuthorizerArgs extends ApiGatewayV2AuthorizerArgs {
  * You'll find this component returned by the `addAuthorizer` method of the `ApiGatewayV2` component.
  */
 export class ApiGatewayV2Authorizer extends Component {
-  private readonly authorizer: aws.apigatewayv2.Authorizer;
+  private readonly authorizer: apigatewayv2.Authorizer;
 
   constructor(
     name: string,
@@ -49,7 +49,7 @@ export class ApiGatewayV2Authorizer extends Component {
     this.authorizer = authorizer;
 
     function createAuthorizer() {
-      return new aws.apigatewayv2.Authorizer(
+      return new apigatewayv2.Authorizer(
         `${name}Authorizer`,
         transform(args.transform?.authorizer, {
           apiId: api.id,
@@ -80,7 +80,6 @@ export class ApiGatewayV2Authorizer extends Component {
    * The underlying [resources](/docs/components/#nodes) this component creates.
    */
   public get nodes() {
-    const self = this;
     return {
       /**
        * The Amazon AppSync DataSource.

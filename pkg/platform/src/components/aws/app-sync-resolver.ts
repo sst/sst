@@ -1,9 +1,8 @@
 import { ComponentResourceOptions, Input, output } from "@pulumi/pulumi";
-import * as aws from "@pulumi/aws";
 import { Component, transform } from "../component";
 import { AppSyncResolverArgs } from "./app-sync";
-import { normalize } from "path";
 import { VisibleError } from "../error";
+import { appsync } from "@pulumi/aws";
 
 export interface ResolverArgs extends AppSyncResolverArgs {
   /**
@@ -31,7 +30,7 @@ export interface ResolverArgs extends AppSyncResolverArgs {
  * You'll find this component returned by the `addResolver` method of the `AppSync` component.
  */
 export class AppSyncResolver extends Component {
-  private readonly resolver: aws.appsync.Resolver;
+  private readonly resolver: appsync.Resolver;
 
   constructor(
     name: string,
@@ -64,7 +63,7 @@ export class AppSyncResolver extends Component {
     }
 
     function createResolver() {
-      return new aws.appsync.Resolver(
+      return new appsync.Resolver(
         `${name}Resolver`,
         transform(args.transform?.resolver, {
           apiId: args.apiId,
@@ -94,7 +93,6 @@ export class AppSyncResolver extends Component {
    * The underlying [resources](/docs/components/#nodes) this component creates.
    */
   public get nodes() {
-    const self = this;
     return {
       /**
        * The Amazon AppSync Resolver.

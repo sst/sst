@@ -5,10 +5,11 @@ import {
   interpolate,
   output,
 } from "@pulumi/pulumi";
-import * as aws from "@pulumi/aws";
 import { Component, transform } from "../component";
 import { Function, FunctionArgs } from "./function";
 import { RealtimeSubscriberArgs } from "./realtime";
+import { lambda } from "@pulumi/aws";
+import { TopicRule } from "@pulumi/aws/iot";
 
 export interface Args extends RealtimeSubscriberArgs {
   /**
@@ -38,8 +39,8 @@ export interface Args extends RealtimeSubscriberArgs {
  */
 export class RealtimeLambdaSubscriber extends Component {
   private readonly fn: Output<Function>;
-  private readonly permission: aws.lambda.Permission;
-  private readonly rule: aws.iot.TopicRule;
+  private readonly permission: lambda.Permission;
+  private readonly rule: TopicRule;
 
   constructor(name: string, args: Args, opts?: ComponentResourceOptions) {
     super(__pulumiType, name, args, opts);
@@ -68,7 +69,7 @@ export class RealtimeLambdaSubscriber extends Component {
     }
 
     function createRule() {
-      return new aws.iot.TopicRule(
+      return new TopicRule(
         `${name}Rule`,
         transform(args?.transform?.topicRule, {
           sqlVersion: "2016-03-23",
@@ -81,7 +82,7 @@ export class RealtimeLambdaSubscriber extends Component {
     }
 
     function createPermission() {
-      return new aws.lambda.Permission(
+      return new lambda.Permission(
         `${name}Permission`,
         {
           action: "lambda:InvokeFunction",
@@ -98,7 +99,6 @@ export class RealtimeLambdaSubscriber extends Component {
    * The underlying [resources](/docs/components/#nodes) this component creates.
    */
   public get nodes() {
-    const self = this;
     return {
       /**
        * The Lambda function that'll be notified.

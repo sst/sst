@@ -3,6 +3,7 @@ import { createInterface } from "node:readline";
 
 interface WorkerStartMessage {
   type: "worker.start";
+  workerID: string;
 }
 interface WorkerStopMessage {
   type: "worker.stop";

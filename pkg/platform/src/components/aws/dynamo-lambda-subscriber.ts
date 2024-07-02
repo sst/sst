@@ -4,10 +4,10 @@ import {
   Output,
   output,
 } from "@pulumi/pulumi";
-import * as aws from "@pulumi/aws";
 import { Component, transform } from "../component";
 import { Function, FunctionArgs } from "./function";
 import { DynamoSubscriberArgs } from "./dynamo";
+import { lambda } from "@pulumi/aws";
 
 export interface Args extends DynamoSubscriberArgs {
   /**
@@ -37,7 +37,7 @@ export interface Args extends DynamoSubscriberArgs {
  */
 export class DynamoLambdaSubscriber extends Component {
   private readonly fn: Output<Function>;
-  private readonly eventSourceMapping: aws.lambda.EventSourceMapping;
+  private readonly eventSourceMapping: lambda.EventSourceMapping;
 
   constructor(name: string, args: Args, opts?: ComponentResourceOptions) {
     super(__pulumiType, name, args, opts);
@@ -74,7 +74,7 @@ export class DynamoLambdaSubscriber extends Component {
     }
 
     function createEventSourceMapping() {
-      return new aws.lambda.EventSourceMapping(
+      return new lambda.EventSourceMapping(
         `${name}EventSourceMapping`,
         transform(args.transform?.eventSourceMapping, {
           eventSourceArn: dynamo.streamArn,
@@ -96,7 +96,6 @@ export class DynamoLambdaSubscriber extends Component {
    * The underlying [resources](/docs/components/#nodes) this component creates.
    */
   public get nodes() {
-    const self = this;
     return {
       /**
        * The Lambda function that'll be notified.

@@ -1,8 +1,8 @@
 import { ComponentResourceOptions, Output, all } from "@pulumi/pulumi";
-import * as aws from "@pulumi/aws";
 import { Component } from "../component";
 import { Input } from "../input.js";
 import { Dns } from "../dns";
+import { acm } from "@pulumi/aws";
 
 /**
  * Properties to create a DNS validated certificate managed by AWS Certificate Manager.
@@ -24,8 +24,8 @@ export interface DnsValidatedCertificateArgs {
 
 export class DnsValidatedCertificate extends Component {
   private certificateValidation:
-    | aws.acm.CertificateValidation
-    | Output<aws.acm.CertificateValidation>;
+    | acm.CertificateValidation
+    | Output<acm.CertificateValidation>;
 
   constructor(
     name: string,
@@ -42,7 +42,7 @@ export class DnsValidatedCertificate extends Component {
     this.certificateValidation = validateCertificate();
 
     function createCertificate() {
-      return new aws.acm.Certificate(
+      return new acm.Certificate(
         `${name}Certificate`,
         {
           domainName,
@@ -71,7 +71,7 @@ export class DnsValidatedCertificate extends Component {
     }
 
     function validateCertificate() {
-      return new aws.acm.CertificateValidation(
+      return new acm.CertificateValidation(
         `${name}Validation`,
         {
           certificateArn: certificate.arn,

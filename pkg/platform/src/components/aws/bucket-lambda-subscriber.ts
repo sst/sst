@@ -5,10 +5,10 @@ import {
   interpolate,
   output,
 } from "@pulumi/pulumi";
-import * as aws from "@pulumi/aws";
 import { Component, transform } from "../component";
 import { Function, FunctionArgs } from "./function";
 import { BucketSubscriberArgs } from "./bucket";
+import { lambda, s3 } from "@pulumi/aws";
 
 export interface Args extends BucketSubscriberArgs {
   /**
@@ -46,8 +46,8 @@ export interface Args extends BucketSubscriberArgs {
  */
 export class BucketLambdaSubscriber extends Component {
   private readonly fn: Output<Function>;
-  private readonly permission: aws.lambda.Permission;
-  private readonly notification: aws.s3.BucketNotification;
+  private readonly permission: lambda.Permission;
+  private readonly notification: s3.BucketNotification;
 
   constructor(name: string, args: Args, opts?: ComponentResourceOptions) {
     super(__pulumiType, name, args, opts);
@@ -96,7 +96,7 @@ export class BucketLambdaSubscriber extends Component {
     }
 
     function createPermission() {
-      return new aws.lambda.Permission(
+      return new lambda.Permission(
         `${name}Permission`,
         {
           action: "lambda:InvokeFunction",
@@ -109,7 +109,7 @@ export class BucketLambdaSubscriber extends Component {
     }
 
     function createNotification() {
-      return new aws.s3.BucketNotification(
+      return new s3.BucketNotification(
         `${name}Notification`,
         transform(args.transform?.notification, {
           bucket: bucket.name,
@@ -132,7 +132,6 @@ export class BucketLambdaSubscriber extends Component {
    * The underlying [resources](/docs/components/#nodes) this component creates.
    */
   public get nodes() {
-    const self = this;
     return {
       /**
        * The Lambda function that'll be notified.

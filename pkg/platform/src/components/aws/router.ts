@@ -1,9 +1,9 @@
 import { ComponentResourceOptions, all, output } from "@pulumi/pulumi";
-import * as aws from "@pulumi/aws";
-import { Component, Prettify, Transform, transform } from "../component";
+import { Component, Transform, transform } from "../component";
 import { Link } from "../link";
 import type { Input } from "../input";
 import { Cdn, CdnArgs } from "./cdn";
+import { cloudfront, types } from "@pulumi/aws";
 
 export interface RouterArgs {
   /**
@@ -104,7 +104,7 @@ export interface RouterArgs {
     /**
      * Transform the Cache Policy that's attached to each CloudFront behavior.
      */
-    cachePolicy?: Transform<aws.cloudfront.CachePolicyArgs>;
+    cachePolicy?: Transform<cloudfront.CachePolicyArgs>;
     /**
      * Transform the CloudFront CDN resource.
      */
@@ -113,7 +113,7 @@ export interface RouterArgs {
 }
 
 /**
- * The `Router` component lets you use a CloudFront distribution to direct requests to various parts of your application. 
+ * The `Router` component lets you use a CloudFront distribution to direct requests to various parts of your application.
  * The `routes` prop can route requests to function URLs, different domains, or any component that has an associated URL.
  *
  * @example
@@ -167,7 +167,7 @@ export interface RouterArgs {
  */
 export class Router extends Component implements Link.Linkable {
   private cdn: Cdn;
-  private cachePolicy: aws.cloudfront.CachePolicy;
+  private cachePolicy: cloudfront.CachePolicy;
 
   constructor(
     name: string,
@@ -204,7 +204,7 @@ export class Router extends Component implements Link.Linkable {
     }
 
     function createCloudFrontFunction() {
-      return new aws.cloudfront.Function(
+      return new cloudfront.Function(
         `${name}CloudfrontFunction`,
         {
           runtime: "cloudfront-js-1.0",
@@ -221,7 +221,7 @@ export class Router extends Component implements Link.Linkable {
     }
 
     function createCachePolicy() {
-      return new aws.cloudfront.CachePolicy(
+      return new cloudfront.CachePolicy(
         `${name}CachePolicy`,
         transform(args.transform?.cachePolicy, {
           comment: `${name} router cache policy`,
@@ -262,7 +262,7 @@ export class Router extends Component implements Link.Linkable {
             (behaviors) =>
               behaviors.filter(
                 (b) => b.pathPattern,
-              ) as aws.types.input.cloudfront.DistributionOrderedCacheBehavior[],
+              ) as types.input.cloudfront.DistributionOrderedCacheBehavior[],
           ),
           domain: args.domain,
           wait: true,

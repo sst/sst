@@ -4,16 +4,16 @@ import {
   output,
   secret,
 } from "@pulumi/pulumi";
-import * as aws from "@pulumi/aws";
 import { Component, Transform } from "../component";
 import { Link } from "../link";
 import { FunctionArgs, Function } from "./function";
 import { PrivateKey } from "@pulumi/tls";
+import { s3 } from "@pulumi/aws";
 
 export interface AuthArgs {
   authenticator: FunctionArgs;
   transform?: {
-    bucketPolicy?: Transform<aws.s3.BucketPolicyArgs>;
+    bucketPolicy?: Transform<s3.BucketPolicyArgs>;
   };
 }
 
