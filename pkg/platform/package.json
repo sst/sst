@@ -7,7 +7,11 @@
     "test": "vitest run",
     "dev": "tsc --watch --noEmit"
   },
-  "trustedDependencies": ["esbuild", "protobufjs"],
+  "sideEffects": false,
+  "trustedDependencies": [
+    "esbuild",
+    "protobufjs"
+  ],
   "dependencies": {
     "@aws-sdk/client-cloudfront": "3.478.0",
     "@aws-sdk/client-cloudwatch-logs": "3.478.0",

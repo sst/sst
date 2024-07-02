@@ -19,7 +19,7 @@ type EvalOptions struct {
 }
 
 func Build(input EvalOptions) (esbuild.BuildResult, error) {
-	outfile := filepath.Join(input.Dir, "sst.config.mjs")
+	outfile := filepath.Join(input.Dir, ".sst", "platform", "sst.config.mjs")
 	slog.Info("esbuild building")
 	result := esbuild.Build(esbuild.BuildOptions{
 		Banner: map[string]string{
@@ -34,7 +34,7 @@ const __dirname = topLevelFileUrlToPath(new topLevelURL(".", import.meta.url))
 		MainFields: []string{"module", "main"},
 		Format:     esbuild.FormatESModule,
 		Platform:   esbuild.PlatformNode,
-		Sourcemap:  esbuild.SourceMapInline,
+		Sourcemap:  esbuild.SourceMapLinked,
 		Stdin: &esbuild.StdinOptions{
 			Contents:   input.Code,
 			ResolveDir: input.Dir,

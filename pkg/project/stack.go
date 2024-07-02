@@ -201,7 +201,7 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 	}
 
 	buildResult, err := js.Build(js.EvalOptions{
-		Dir: s.project.PathPlatformDir(),
+		Dir: s.project.PathRoot(),
 		Define: map[string]string{
 			"$app": string(appBytes),
 			"$cli": string(cliBytes),
@@ -228,7 +228,7 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 		})
 		return err
 	}
-	outfile := buildResult.OutputFiles[0].Path
+	outfile := buildResult.OutputFiles[1].Path
 
 	if input.OnFiles != nil {
 		var meta = map[string]interface{}{}

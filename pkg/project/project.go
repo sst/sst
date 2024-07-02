@@ -120,7 +120,7 @@ func New(input *ProjectConfig) (*Project, error) {
 	})
 	buildResult, err := js.Build(
 		js.EvalOptions{
-			Dir:    proj.PathPlatformDir(),
+			Dir:    proj.PathRoot(),
 			Banner: `function $config(input) { return input }`,
 			Define: map[string]string{
 				"$input": string(inputBytes),
@@ -142,7 +142,7 @@ console.log("~j" + JSON.stringify(mod.app({
 	}
 
 	slog.Info("evaluating config")
-	node := exec.Command("node", "--no-warnings", string(buildResult.OutputFiles[0].Path))
+	node := exec.Command("node", "--no-warnings", string(buildResult.OutputFiles[1].Path))
 	output, err := node.CombinedOutput()
 	slog.Info("config evaluated")
 	if err != nil {

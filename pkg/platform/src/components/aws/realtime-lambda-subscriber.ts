@@ -9,7 +9,7 @@ import { Component, transform } from "../component";
 import { Function, FunctionArgs } from "./function";
 import { RealtimeSubscriberArgs } from "./realtime";
 import { lambda } from "@pulumi/aws";
-import { TopicRule } from "@pulumi/aws/iot";
+import { iot } from "@pulumi/aws";
 
 export interface Args extends RealtimeSubscriberArgs {
   /**
@@ -40,13 +40,13 @@ export interface Args extends RealtimeSubscriberArgs {
 export class RealtimeLambdaSubscriber extends Component {
   private readonly fn: Output<Function>;
   private readonly permission: lambda.Permission;
-  private readonly rule: TopicRule;
+  private readonly rule: iot.TopicRule;
 
   constructor(name: string, args: Args, opts?: ComponentResourceOptions) {
     super(__pulumiType, name, args, opts);
 
     const self = this;
-    const iot = output(args.iot);
+    const normalizedIot = output(args.iot);
     const filter = output(args.filter);
     const fn = createFunction();
     const rule = createRule();
@@ -61,7 +61,7 @@ export class RealtimeLambdaSubscriber extends Component {
         `${name}Handler`,
         args.subscriber,
         {
-          description: interpolate`Subscribed to ${iot.name} on ${filter}`,
+          description: interpolate`Subscribed to ${normalizedIot.name} on ${filter}`,
         },
         undefined,
         { parent: self },
@@ -69,7 +69,7 @@ export class RealtimeLambdaSubscriber extends Component {
     }
 
     function createRule() {
-      return new TopicRule(
+      return new iot.TopicRule(
         `${name}Rule`,
         transform(args?.transform?.topicRule, {
           sqlVersion: "2016-03-23",
