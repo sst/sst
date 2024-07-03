@@ -488,6 +488,12 @@ export interface ServiceProps {
   };
   cdk?: {
     /**
+     * AWS has a limit of 20 cache policies per account. To reuse a cache policy, provide the ID here.
+     *
+     * @default - a new cache policy will be created.
+     */
+    cachePolicyId?: string;
+    /**
      * By default, SST creates a CloudFront distribution. Pass in a value to override the default settings this construct uses to create the CDK `Distribution` internally. Alternatively, set this to `false` to skip creating the distribution.
      * @default true
      * @example
@@ -1104,17 +1110,19 @@ export class Service extends Construct implements SSTConstruct {
     // Do not create distribution if disabled or if ALB was not created (ie. disabled)
     if (!alb || cdk?.cloudfrontDistribution === false) return;
 
-    const cachePolicy = new CachePolicy(this, "CachePolicy", {
-      queryStringBehavior: CacheQueryStringBehavior.all(),
-      headerBehavior: CacheHeaderBehavior.none(),
-      cookieBehavior: CacheCookieBehavior.none(),
-      defaultTtl: CdkDuration.days(0),
-      maxTtl: CdkDuration.days(365),
-      minTtl: CdkDuration.days(0),
-      enableAcceptEncodingBrotli: true,
-      enableAcceptEncodingGzip: true,
-      comment: "SST server response cache policy",
-    });
+    const cachePolicy = cdk?.cachePolicyId
+      ? CachePolicy.fromCachePolicyId(this, "CachePolicy", cdk.cachePolicyId)
+      : new CachePolicy(this, "CachePolicy", {
+          queryStringBehavior: CacheQueryStringBehavior.all(),
+          headerBehavior: CacheHeaderBehavior.none(),
+          cookieBehavior: CacheCookieBehavior.none(),
+          defaultTtl: CdkDuration.days(0),
+          maxTtl: CdkDuration.days(365),
+          minTtl: CdkDuration.days(0),
+          enableAcceptEncodingBrotli: true,
+          enableAcceptEncodingGzip: true,
+          comment: "SST server response cache policy",
+        });
 
     return new Distribution(this, "CDN", {
       customDomain,
