@@ -400,7 +400,7 @@ export interface BranchEvent {
   branch: string;
   /**
    * Info about the commit in the event. This might look like:
-   * 
+   *
    * ```js
    * {
    *   id: "b7e7c4c559e0e5b4bc6f8d98e0e5e5e5e5e5e5e5",
@@ -486,7 +486,7 @@ export interface PullRequestEvent {
   head: string;
   /**
    * Info about the commit in the event. This might look like:
-   * 
+   *
    * ```js
    * {
    *   id: "b7e7c4c559e0e5b4bc6f8d98e0e5e5e5e5e5e5e5",
@@ -567,8 +567,8 @@ export interface Config {
      *     target(event) {
      *       if (event.type === "pushed" && event.branch === "main") {
      *         return {
-     *           stage: "production"
-     *           runner: { engine: "codebuild", compute: "large" };
+     *           stage: "production",
+     *           runner: { engine: "codebuild", compute: "large" }
      *         };
      *       }
      *     }
