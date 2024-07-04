@@ -355,8 +355,8 @@ export class SvelteKit extends Component implements Link.Linkable {
       _hint: $dev
         ? undefined
         : all([this.cdn.domainUrl, this.cdn.url]).apply(
-          ([domainUrl, url]) => domainUrl ?? url,
-        ),
+            ([domainUrl, url]) => domainUrl ?? url,
+          ),
       _metadata: {
         mode: $dev ? "placeholder" : "deployed",
         path: sitePath,
@@ -388,26 +388,44 @@ export class SvelteKit extends Component implements Link.Linkable {
     }
 
     function loadBuildMetadata() {
+      const serverPath = ".svelte-kit/svelte-kit-sst/server";
       const assetsPath = ".svelte-kit/svelte-kit-sst/client";
-      return outputPath.apply((outputPath) => ({
-        serverPath: ".svelte-kit/svelte-kit-sst/server",
-        serverFiles: ".svelte-kit/svelte-kit-sst/prerendered",
-        prerenderedPath: ".svelte-kit/svelte-kit-sst/prerendered",
-        assetsPath,
-        assetsVersionedSubDir: "_app",
-        // create 1 behaviour for each top level asset file/folder
-        staticRoutes: fs
-          .readdirSync(path.join(outputPath, assetsPath))
-          .map((item) =>
-            fs.statSync(path.join(outputPath, assetsPath, item)).isDirectory()
-              ? `${item}/*`
-              : item,
-          ),
-      }));
+
+      return outputPath.apply((outputPath) => {
+        let basePath = "";
+        try {
+          const manifest = fs
+            .readFileSync(path.join(serverPath, "manifest.js"))
+            .toString();
+          const appDir = manifest.match(/appDir: "(.+?)"/)?.[1];
+          const appPath = manifest.match(/appPath: "(.+?)"/)?.[1];
+          if (appDir && appPath && appPath.endsWith(appDir)) {
+            basePath = appPath.substring(0, appPath.length - appDir.length);
+          }
+        } catch (e) {}
+
+        return {
+          basePath,
+          serverPath,
+          serverFiles: ".svelte-kit/svelte-kit-sst/prerendered",
+          prerenderedPath: ".svelte-kit/svelte-kit-sst/prerendered",
+          assetsPath,
+          assetsVersionedSubDir: "_app",
+          // create 1 behaviour for each top level asset file/folder
+          staticRoutes: fs
+            .readdirSync(path.join(outputPath, assetsPath))
+            .map((item) =>
+              fs.statSync(path.join(outputPath, assetsPath, item)).isDirectory()
+                ? `${basePath}${item}/*`
+                : `${basePath}${item}`,
+            ),
+        };
+      });
     }
 
     function loadBuildMetadataPlaceholder() {
       return {
+        basePath: "",
         serverPath: ".svelte-kit/svelte-kit-sst/server",
         serverFiles: undefined,
         prerenderedPath: "placeholder",
@@ -440,11 +458,11 @@ export class SvelteKit extends Component implements Link.Linkable {
             },
             copyFiles: buildMeta.serverFiles
               ? [
-                {
-                  from: path.join(outputPath, buildMeta.serverFiles),
-                  to: "prerendered",
-                },
-              ]
+                  {
+                    from: path.join(outputPath, buildMeta.serverFiles),
+                    to: "prerendered",
+                  },
+                ]
               : undefined,
           };
 
@@ -460,29 +478,29 @@ export class SvelteKit extends Component implements Link.Linkable {
             },
             edgeFunctions: edge
               ? {
-                server: { function: serverConfig },
-              }
+                  server: { function: serverConfig },
+                }
               : undefined,
             origins: {
               ...(edge
                 ? {}
                 : {
-                  server: {
-                    server: { function: serverConfig },
-                  },
-                }),
+                    server: {
+                      server: { function: serverConfig },
+                    },
+                  }),
               s3: {
                 s3: {
                   copy: [
                     {
                       from: buildMeta.assetsPath,
-                      to: "",
+                      to: buildMeta.basePath,
                       cached: true,
                       versionedSubDir: buildMeta.assetsVersionedSubDir,
                     },
                     {
                       from: buildMeta.prerenderedPath,
-                      to: "",
+                      to: buildMeta.basePath,
                       cached: false,
                     },
                   ],
@@ -492,16 +510,16 @@ export class SvelteKit extends Component implements Link.Linkable {
             behaviors: [
               edge
                 ? {
-                  cacheType: "server",
-                  cfFunction: "serverCfFunction",
-                  edgeFunction: "server",
-                  origin: "s3",
-                }
+                    cacheType: "server",
+                    cfFunction: "serverCfFunction",
+                    edgeFunction: "server",
+                    origin: "s3",
+                  }
                 : {
-                  cacheType: "server",
-                  cfFunction: "serverCfFunction",
-                  origin: "server",
-                },
+                    cacheType: "server",
+                    cfFunction: "serverCfFunction",
+                    origin: "server",
+                  },
               ...buildMeta.staticRoutes.map(
                 (route) =>
                   ({
