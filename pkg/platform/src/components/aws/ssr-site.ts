@@ -236,6 +236,29 @@ export function createBucket(
   }
 }
 
+export function createDevServer(
+  parent: ComponentResource,
+  name: string,
+  args: SsrSiteArgs,
+) {
+  return new Function(
+    `${name}DevServer`,
+    transform(args.transform?.server, {
+      description: `${name} dev server`,
+      runtime: "nodejs20.x",
+      timeout: "20 seconds",
+      memory: "128 MB",
+      bundle: path.join($cli.paths.platform, "functions", "empty-function"),
+      handler: "index.handler",
+      environment: args.environment,
+      permissions: args.permissions,
+      link: args.link,
+      live: false,
+    }),
+    { parent },
+  );
+}
+
 export function createServersAndDistribution(
   parent: ComponentResource,
   name: string,
@@ -345,7 +368,7 @@ export function createServersAndDistribution(
             bucketName: bucket.name,
             files: bucketFiles,
           },
-          { parent, ignoreChanges: $dev ? ["*"] : undefined },
+          { parent },
         );
       });
     }
@@ -455,7 +478,6 @@ function handler(event) {
                 },
               },
               live: false,
-              _ignoreCodeChanges: $dev,
             },
             { provider: useProvider("us-east-1"), parent },
           );
@@ -552,7 +574,6 @@ function handler(event) {
           ]),
           url: true,
           live: false,
-          _ignoreCodeChanges: $dev,
         }),
         { parent },
       );
@@ -591,7 +612,6 @@ function handler(event) {
           ...props.function,
           url: true,
           live: false,
-          _ignoreCodeChanges: $dev,
           _skipMetadata: true,
         },
         { parent },
@@ -749,7 +769,6 @@ function handler(event) {
             })),
           customErrorResponses: plan.errorResponses,
           domain: args.domain,
-          wait: !$dev,
         }),
         // create distribution after assets are uploaded
         { dependsOn: bucketFile, parent },
@@ -946,10 +965,7 @@ function handler(event) {
               version: invalidationBuildId,
               wait: invalidation.wait,
             },
-            {
-              parent,
-              ignoreChanges: $dev ? ["*"] : undefined,
-            },
+            { parent },
           );
         },
       );

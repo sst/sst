@@ -9,6 +9,7 @@ import {
   Plan,
   SsrSiteArgs,
   createBucket,
+  createDevServer,
   createServersAndDistribution,
   prepare,
   useCloudFrontFunctionHostHeaderInjection,
@@ -446,9 +447,9 @@ export interface NextjsArgs extends SsrSiteArgs {
  * ```
  */
 export class Nextjs extends Component implements Link.Linkable {
-  private cdn: Output<Cdn>;
-  private assets: Bucket;
-  private server: Output<Function>;
+  private cdn?: Output<Cdn>;
+  private assets?: Bucket;
+  private server?: Output<Function>;
 
   constructor(
     name: string,
@@ -469,6 +470,17 @@ export class Nextjs extends Component implements Link.Linkable {
     const parent = this;
     const buildCommand = normalizeBuildCommand();
     const { sitePath, partition, region } = prepare(args, opts);
+    if ($dev) {
+      this.registerOutputs({
+        _metadata: {
+          mode: "placeholder",
+          path: sitePath,
+          server: createDevServer(parent, name, args).arn,
+        },
+      });
+      return;
+    }
+
     const { access, bucket } = createBucket(parent, name, partition, args);
     const outputPath = buildApp(name, args, sitePath, buildCommand);
     const {
@@ -502,13 +514,11 @@ export class Nextjs extends Component implements Link.Linkable {
     this.cdn = distribution;
     this.server = serverFunction;
     this.registerOutputs({
-      _hint: $dev
-        ? undefined
-        : all([this.cdn.domainUrl, this.cdn.url]).apply(
-            ([domainUrl, url]) => domainUrl ?? url,
-          ),
+      _hint: all([this.cdn.domainUrl, this.cdn.url]).apply(
+        ([domainUrl, url]) => domainUrl ?? url,
+      ),
       _metadata: {
-        mode: $dev ? "placeholder" : "deployed",
+        mode: "deployed",
         path: sitePath,
         url: distribution.apply((d) => d.domainUrl ?? d.url),
         edge: plan.edge,
@@ -530,29 +540,6 @@ export class Nextjs extends Component implements Link.Linkable {
     }
 
     function loadBuildOutput() {
-      const cache = new Cache(
-        `${name}OpenNextOutput`,
-        {
-          data: $dev ? loadOpenNextOutputPlaceholder() : loadOpenNextOutput(),
-        },
-        {
-          parent,
-          ignoreChanges: $dev ? ["*"] : undefined,
-        },
-      );
-
-      return {
-        openNextOutput: cache.data as ReturnType<typeof loadOpenNextOutput>,
-        buildId: loadBuildId(),
-        routesManifest: loadRoutesManifest(),
-        appPathRoutesManifest: loadAppPathRoutesManifest(),
-        appPathsManifest: loadAppPathsManifest(),
-        pagesManifest: loadPagesManifest(),
-        prerenderManifest: loadPrerenderManifest(),
-      };
-    }
-
-    function loadOpenNextOutput() {
       return outputPath.apply((outputPath) => {
         const openNextOutputPath = path.join(
           outputPath,
@@ -574,63 +561,20 @@ export class Nextjs extends Component implements Link.Linkable {
             bundle: ".open-next/dynamodb-provider",
           };
         }
-        return json;
+        return {
+          openNextOutput: json,
+          buildId: loadBuildId(),
+          routesManifest: loadRoutesManifest(),
+          appPathRoutesManifest: loadAppPathRoutesManifest(),
+          appPathsManifest: loadAppPathsManifest(),
+          pagesManifest: loadPagesManifest(),
+          prerenderManifest: loadPrerenderManifest(),
+        };
       });
-    }
-
-    function loadOpenNextOutputPlaceholder() {
-      // Configure origins and behaviors based on the Next.js app from quick start
-      return outputPath.apply((outputPath) => ({
-        edgeFunctions: {},
-        origins: {
-          s3: {
-            type: "s3",
-            originPath: "_assets",
-            // do not upload anything
-            copy: [],
-          },
-          imageOptimizer: {
-            type: "function",
-            handler: "index.handler",
-            bundle: path.join(
-              outputPath,
-              ".open-next/image-optimization-function",
-            ),
-            streaming: false,
-          },
-          default: {
-            type: "function",
-            handler: "index.handler",
-            bundle: path.join(
-              outputPath,
-              ".open-next/server-functions/default",
-            ),
-            streaming: false,
-          },
-        },
-        behaviors: [
-          { pattern: "_next/image*", origin: "imageOptimizer" },
-          { pattern: "_next/data/*", origin: "default" },
-          { pattern: "*", origin: "default" },
-          { pattern: "BUILD_ID", origin: "s3" },
-          { pattern: "_next/*", origin: "s3" },
-          { pattern: "favicon.ico", origin: "s3" },
-          { pattern: "next.svg", origin: "s3" },
-          { pattern: "vercel.svg", origin: "s3" },
-        ],
-        additionalProps: {
-          // skip creating revalidation queue
-          disableIncrementalCache: true,
-          // skip creating revalidation table
-          disableTagCache: true,
-        },
-      }));
     }
 
     function loadBuildId() {
       return outputPath.apply((outputPath) => {
-        if ($dev) return "mock-build-id";
-
         try {
           return fs
             .readFileSync(path.join(outputPath, ".next/BUILD_ID"))
@@ -646,8 +590,6 @@ export class Nextjs extends Component implements Link.Linkable {
 
     function loadRoutesManifest() {
       return outputPath.apply((outputPath) => {
-        if ($dev) return { dynamicRoutes: [], staticRoutes: [] };
-
         try {
           const content = fs
             .readFileSync(path.join(outputPath, ".next/routes-manifest.json"))
@@ -678,8 +620,6 @@ export class Nextjs extends Component implements Link.Linkable {
       // }
 
       return outputPath.apply((outputPath) => {
-        if ($dev) return {};
-
         try {
           const content = fs
             .readFileSync(
@@ -695,8 +635,6 @@ export class Nextjs extends Component implements Link.Linkable {
 
     function loadAppPathsManifest() {
       return outputPath.apply((outputPath) => {
-        if ($dev) return {};
-
         try {
           const content = fs
             .readFileSync(
@@ -712,8 +650,6 @@ export class Nextjs extends Component implements Link.Linkable {
 
     function loadPagesManifest() {
       return outputPath.apply((outputPath) => {
-        if ($dev) return {};
-
         try {
           const content = fs
             .readFileSync(
@@ -729,8 +665,6 @@ export class Nextjs extends Component implements Link.Linkable {
 
     function loadPrerenderManifest() {
       return outputPath.apply((outputPath) => {
-        if ($dev) return { version: 0, routes: {} };
-
         try {
           const content = fs
             .readFileSync(
@@ -968,7 +902,6 @@ export class Nextjs extends Component implements Link.Linkable {
                 },
               ],
               live: false,
-              _ignoreCodeChanges: $dev,
               _skipMetadata: true,
             },
             {
@@ -1069,7 +1002,6 @@ export class Nextjs extends Component implements Link.Linkable {
                 CACHE_DYNAMO_TABLE: revalidationTable!.name,
               },
               live: false,
-              _ignoreCodeChanges: $dev,
               _skipMetadata: true,
             },
             { parent },
@@ -1085,7 +1017,7 @@ export class Nextjs extends Component implements Link.Linkable {
                 RequestType: "Create",
               }),
             },
-            { parent, ignoreChanges: $dev ? ["*"] : undefined },
+            { parent },
           );
         },
       );
@@ -1356,7 +1288,7 @@ if(request.headers["cloudfront-viewer-longitude"]) {
    * Otherwise, it's the autogenerated CloudFront URL.
    */
   public get url() {
-    return all([this.cdn.domainUrl, this.cdn.url]).apply(
+    return all([this.cdn?.domainUrl, this.cdn?.url]).apply(
       ([domainUrl, url]) => domainUrl ?? url,
     );
   }

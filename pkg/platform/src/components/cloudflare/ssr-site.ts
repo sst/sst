@@ -161,7 +161,7 @@ export function createRouter(
             })),
           ),
         },
-        { parent, ignoreChanges: $dev ? ["*"] : undefined },
+        { parent },
       );
     }
 
@@ -223,7 +223,6 @@ export function createRouter(
             ...(link ?? []),
           ]),
           live: false,
-          _ignoreCodeChanges: $dev,
         },
         { parent },
       );

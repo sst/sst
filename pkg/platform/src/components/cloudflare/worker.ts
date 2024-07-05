@@ -161,10 +161,6 @@ export interface WorkerArgs {
   };
   /**
    * @internal
-   */
-  _ignoreCodeChanges?: boolean;
-  /**
-   * @internal
    * Placehodler for future feature.
    */
   live?: boolean;

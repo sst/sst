@@ -784,10 +784,6 @@ export interface FunctionArgs {
   /**
    * @internal
    */
-  _ignoreCodeChanges?: boolean;
-  /**
-   * @internal
-   */
   _skipMetadata?: boolean;
 }
 
@@ -1116,17 +1112,6 @@ export class Function extends Component implements Link.Linkable, AWSLinkable {
 
     function buildHandler() {
       return dev.apply((dev) => {
-        if (args._ignoreCodeChanges) {
-          return {
-            bundle: path.join(
-              $cli.paths.platform,
-              "functions",
-              "empty-function",
-            ),
-            handler: "index.handler",
-          };
-        }
-
         if (dev) {
           return {
             handler: "bootstrap",
@@ -1398,9 +1383,6 @@ export class Function extends Component implements Link.Linkable, AWSLinkable {
         },
         {
           parent,
-          ignoreChanges: args._ignoreCodeChanges
-            ? ["key", "source"]
-            : undefined,
           retainOnDelete: true,
         },
       );
@@ -1456,12 +1438,7 @@ export class Function extends Component implements Link.Linkable, AWSLinkable {
       transformed.architectures = all([transformed.architectures, dev]).apply(
         ([architectures, dev]) => (dev ? ["x86_64"] : architectures!),
       );
-      return new lambda.Function(`${name}Function`, transformed, {
-        parent,
-        ignoreChanges: args._ignoreCodeChanges
-          ? ["code", "handler"]
-          : undefined,
-      });
+      return new lambda.Function(`${name}Function`, transformed, { parent });
     }
 
     function createUrl() {
