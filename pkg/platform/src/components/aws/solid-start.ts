@@ -14,9 +14,7 @@ import {
 import { Cdn } from "./cdn.js";
 import { Bucket } from "./bucket.js";
 import { Component } from "../component.js";
-import { Hint } from "../hint.js";
 import { Link } from "../link.js";
-import { Cache } from "./providers/cache.js";
 import { buildApp } from "../base/base-ssr-site.js";
 import { VisibleError } from "../error.js";
 

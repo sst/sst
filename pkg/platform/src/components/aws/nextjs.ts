@@ -21,7 +21,6 @@ import { Component } from "../component.js";
 import { Link } from "../link.js";
 import { VisibleError } from "../error.js";
 import type { Input } from "../input.js";
-import { Cache } from "./providers/cache.js";
 import { Queue } from "./queue.js";
 import { buildApp } from "../base/base-ssr-site.js";
 import { dynamodb, lambda } from "@pulumi/aws";

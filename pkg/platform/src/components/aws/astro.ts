@@ -1,7 +1,7 @@
 import fs from "fs";
 import path from "path";
 import type { BuildMetaConfig, BuildMetaFileName } from "astro-sst/build-meta";
-import { ComponentResourceOptions, Output, all, output } from "@pulumi/pulumi";
+import { ComponentResourceOptions, Output, all } from "@pulumi/pulumi";
 import { Function } from "./function.js";
 import {
   Plan,
@@ -15,10 +15,8 @@ import {
 } from "./ssr-site.js";
 import { Cdn } from "./cdn.js";
 import { Bucket } from "./bucket.js";
-import { Component, transform } from "./../component.js";
-import { Hint } from "./../hint.js";
+import { Component } from "./../component.js";
 import { Link } from "../link.js";
-import { Cache } from "./providers/cache.js";
 import { buildApp } from "../base/base-ssr-site.js";
 
 export interface AstroArgs extends SsrSiteArgs {
