@@ -1,11 +1,8 @@
-package main
+package multiplexer
 
 import (
-	"fmt"
-	"log"
-	"os"
+	"log/slog"
 	"os/exec"
-	"reflect"
 	"time"
 
 	tcellterm "git.sr.ht/~rockorager/tcell-term"
@@ -13,7 +10,7 @@ import (
 	"github.com/gdamore/tcell/v2/views"
 )
 
-type model struct {
+type Model struct {
 	screen tcell.Screen
 
 	focus    string
@@ -26,44 +23,49 @@ type model struct {
 	sidebarWidget *views.BoxLayout
 }
 
-type PaneStatus int
+type paneStatus int
 
 const (
-	PaneStatusRunning PaneStatus = iota
-	PaneStatusStopped
-	PaneStatusClearing
+	paneStatusRunning paneStatus = iota
+	paneStatusStopped
+	paneStatusClearing
 )
 
 type pane struct {
-	vt     *tcellterm.VT
-	args   []string
-	status PaneStatus
-	title  string
-	cmd    *exec.Cmd
+	key      string
+	vt       *tcellterm.VT
+	args     []string
+	cwd      string
+	status   paneStatus
+	title    string
+	cmd      *exec.Cmd
+	killable bool
 }
 
-func (p *pane) Start() error {
-	if p.status == PaneStatusStopped {
-		p.status = PaneStatusClearing
+func (p *pane) start() error {
+	if p.status == paneStatusStopped {
+		p.status = paneStatusClearing
 		p.vt.Start(exec.Command("clear"))
 		return nil
 	}
 	cmd := exec.Command(p.args[0], p.args[1:]...)
+	if p.cwd != "" {
+		cmd.Dir = p.cwd
+	}
 	err := p.vt.Start(cmd)
 	if err != nil {
-		log.Println(err)
 		return err
 	}
-	p.status = PaneStatusRunning
+	p.status = paneStatusRunning
 	return nil
 }
 
-func (p *pane) Restart() error {
+func (p *pane) restart() error {
 	p.vt.Close()
 	return nil
 }
 
-func (p *pane) Kill() error {
+func (p *pane) kill() error {
 	p.vt.Close()
 	return nil
 }
@@ -72,73 +74,76 @@ var PAD_HEIGHT = 1
 var PAD_WIDTH = 2
 var SIDEBAR_WIDTH = 20
 
-// Update is the main event handler. It should only be called by the main thread
-func (m *model) Update(ev tcell.Event) {
-	log.Println(reflect.TypeOf(ev))
+// update is the main event handler. It should only be called by the main thread
+func (m *Model) update(ev tcell.Event) {
 	switch ev := ev.(type) {
 	case *tcell.EventKey:
 		switch ev.Key() {
 		case 256:
 			switch ev.Rune() {
+			case 'c':
+				if m.focus == "sidebar" && m.selectedPane().killable {
+					m.selectedPane().kill()
+					return
+				}
+			case 'j':
+				if m.focus == "sidebar" {
+					m.sidebarMove(1)
+					m.draw()
+				}
 			case 'k':
 				if m.focus == "sidebar" {
-					m.SelectedPane().Kill()
-					return
+					m.sidebarMove(-1)
+					m.draw()
 				}
+
 			case 'r':
 				if m.focus == "sidebar" {
-					if m.SelectedPane().status == PaneStatusRunning {
-						m.SelectedPane().Restart()
+					if m.selectedPane().status == paneStatusRunning {
+						m.selectedPane().restart()
 					}
-					if m.SelectedPane().status == PaneStatusStopped {
-						m.SelectedPane().Start()
+					if m.selectedPane().status == paneStatusStopped {
+						m.selectedPane().start()
 					}
-					m.Draw()
+					m.draw()
 					return
 				}
-			}
-		case tcell.KeyCtrlC:
-			if m.focus == "sidebar" {
-				for _, p := range m.panes {
-					p.vt.Close()
-				}
-				m.screen.Fini()
-				return
 			}
 
 		case tcell.KeyDown:
 			if m.focus == "sidebar" {
-				m.SidebarMove(1)
-				m.Draw()
+				m.sidebarMove(1)
+				m.draw()
 			}
+
 		case tcell.KeyUp:
 			if m.focus == "sidebar" {
-				m.SidebarMove(-1)
-				m.Draw()
+				m.sidebarMove(-1)
+				m.draw()
 				return
 			}
 
 		case tcell.KeyCtrlZ:
 			if m.focus == "main" {
 				m.focus = "sidebar"
-				m.Draw()
+				m.draw()
 				return
 			}
 
 		case tcell.KeyEnter:
-			if m.focus == "sidebar" {
-				selected := m.SelectedPane()
-				if selected.status == PaneStatusRunning {
+			if m.focus == "sidebar" && m.selectedPane().killable {
+				selected := m.selectedPane()
+				if selected.status == paneStatusRunning {
 					m.focus = "main"
 				}
 
-				if selected.status == PaneStatusStopped {
-					selected.Start()
+				if selected.status == paneStatusStopped {
+					selected.start()
 					m.main.Clear()
 					m.screen.Show()
 				}
 
-				m.Draw()
+				m.draw()
 				return
 			}
 		}
@@ -149,37 +154,37 @@ func (m *model) Update(ev tcell.Event) {
 		}
 
 	case *tcell.EventResize:
-		m.Resize(ev.Size())
-		m.Draw()
+		m.resize(ev.Size())
+		m.draw()
 		m.screen.Sync()
 		return
 
 	case *tcellterm.EventRedraw:
-		m.Draw()
+		m.draw()
 		return
 
 	case *tcellterm.EventClosed:
 		for index, pane := range m.panes {
 			if pane.vt == ev.VT() {
 
-				if pane.status == PaneStatusRunning {
-					pane.status = PaneStatusStopped
+				if pane.status == paneStatusRunning {
+					pane.status = paneStatusStopped
 					if index == m.selected {
 						m.focus = "sidebar"
 					}
 				}
 
-				if pane.status == PaneStatusClearing {
+				if pane.status == paneStatusClearing {
 					p := pane
 					go func() {
 						time.Sleep(100 * time.Millisecond)
-						p.Start()
+						p.start()
 						m.screen.PostEvent(&tcellterm.EventRedraw{})
 					}()
 				}
 			}
 		}
-		m.Draw()
+		m.draw()
 		return
 
 	case *tcell.EventPaste:
@@ -191,71 +196,84 @@ func (m *model) Update(ev tcell.Event) {
 	case *tcellterm.EventPanic:
 		m.screen.Clear()
 		m.screen.Fini()
-		fmt.Println(ev.Error)
 	}
 	return
 }
 
-// HandleEvent is used to handle events from underlying widgets. Any events
+// handleEvent is used to handle events from underlying widgets. Any events
 // which redraw must be executed in the main goroutine by posting the event back
 // to tcell
-func (m *model) HandleEvent(ev tcell.Event) {
+func (m *Model) handleEvent(ev tcell.Event) {
 	m.screen.PostEvent(ev)
 }
 
-func main() {
+func New() (*Model, error) {
 	var err error
-	m := &model{
+	m := &Model{
 		focus: "sidebar",
 		panes: []*pane{},
 	}
 	m.screen, err = tcell.NewScreen()
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "%v\n", err)
-		os.Exit(1)
+		return nil, err
 	}
-	if err = m.screen.Init(); err != nil {
-		fmt.Fprintf(os.Stderr, "%v\n", err)
-		os.Exit(1)
-	}
-	m.screen.EnablePaste()
-
 	m.sidebar = views.NewViewPort(m.screen, 0, 0, 0, 0)
 	m.main = views.NewViewPort(m.screen, 0, 0, 0, 0)
-
 	stack := views.NewBoxLayout(views.Vertical)
 	stack.SetView(m.sidebar)
 	m.sidebarWidget = stack
-	m.Resize(m.screen.Size())
+	return m, nil
+}
 
-	for _, args := range [][]string{
-		{"ping", "google.com"},
-		{"zsh"},
-	} {
-		term := tcellterm.New()
-		term.SetSurface(m.main)
-		term.Attach(m.HandleEvent)
-		p := &pane{
-			vt:    term,
-			args:  args,
-			title: args[0],
-		}
-		p.Start()
-		m.panes = append(m.panes, p)
+func (m *Model) Start() error {
+	if err := m.screen.Init(); err != nil {
+		return err
 	}
-
+	m.screen.EnablePaste()
+	m.resize(m.screen.Size())
 	for {
 		ev := m.screen.PollEvent()
 		if ev == nil {
 			break
 		}
-		m.Update(ev)
+		if casted, ok := ev.(*tcell.EventKey); ok && casted.Key() == tcell.KeyCtrlC && m.focus == "sidebar" {
+			for _, p := range m.panes {
+				slog.Info("killing pane", "pane", p.title)
+				p.vt.Close()
+			}
+			break
+		}
+		m.update(ev)
 	}
+	m.screen.Fini()
+	slog.Info("multiplexer done")
+	return nil
 }
 
-func (m *model) Draw() {
-	m.SelectedPane().vt.Draw()
-	m.DrawCursor()
+func (m *Model) AddPane(key string, args []string, title string, cwd string, killable bool) {
+	term := tcellterm.New()
+	term.SetSurface(m.main)
+	term.Attach(m.handleEvent)
+	for _, p := range m.panes {
+		if p.key == key {
+			return
+		}
+	}
+	p := &pane{
+		key:      key,
+		vt:       term,
+		cwd:      cwd,
+		args:     args,
+		title:    title,
+		killable: killable,
+	}
+	m.panes = append(m.panes, p)
+	p.start()
+}
+
+func (m *Model) draw() {
+	m.selectedPane().vt.Draw()
+	m.drawCursor()
 	for _, w := range m.sidebarWidget.Widgets() {
 		m.sidebarWidget.RemoveWidget(w)
 	}
@@ -274,9 +292,38 @@ func (m *model) Draw() {
 		text := item.title
 		title.SetStyle(style)
 		title.SetLeft(" "+text, tcell.StyleDefault)
-		if item.status == PaneStatusStopped {
+		if item.status == paneStatusStopped {
 			title.SetRight("(-)", tcell.StyleDefault)
 		}
+		m.sidebarWidget.AddWidget(title, 0)
+	}
+	m.sidebarWidget.AddWidget(views.NewSpacer(), 1)
+	selectedPane := m.selectedPane()
+	if selectedPane.killable && m.focus == "sidebar" {
+		if selectedPane.status == paneStatusRunning {
+			title := views.NewTextBar()
+			title.SetStyle(tcell.StyleDefault)
+			title.SetLeft("[c]     kill", tcell.StyleDefault)
+			m.sidebarWidget.AddWidget(title, 0)
+
+			title = views.NewTextBar()
+			title.SetStyle(tcell.StyleDefault)
+			title.SetLeft("[enter] focus", tcell.StyleDefault)
+			m.sidebarWidget.AddWidget(title, 0)
+		}
+
+		if selectedPane.status == paneStatusStopped {
+			title := views.NewTextBar()
+			title.SetStyle(tcell.StyleDefault)
+			title.SetLeft("[enter] start", tcell.StyleDefault)
+			m.sidebarWidget.AddWidget(title, 0)
+		}
+	}
+
+	if m.focus == "main" {
+		title := views.NewTextBar()
+		title.SetStyle(tcell.StyleDefault)
+		title.SetLeft("[ctrl-z] sidebar", tcell.StyleDefault)
 		m.sidebarWidget.AddWidget(title, 0)
 	}
 	m.sidebarWidget.Draw()
@@ -284,7 +331,7 @@ func (m *model) Draw() {
 	m.screen.Show()
 }
 
-func (m *model) Resize(width int, height int) {
+func (m *Model) resize(width int, height int) {
 	m.sidebar.Resize(PAD_WIDTH, PAD_HEIGHT, SIDEBAR_WIDTH, height-PAD_HEIGHT*2)
 	m.main.Resize(PAD_WIDTH+SIDEBAR_WIDTH+PAD_WIDTH, PAD_HEIGHT, width-PAD_WIDTH-SIDEBAR_WIDTH-PAD_WIDTH-PAD_WIDTH, height-PAD_HEIGHT*2)
 	mw, mh := m.main.Size()
@@ -293,7 +340,7 @@ func (m *model) Resize(width int, height int) {
 	}
 }
 
-func (m *model) DrawCursor() {
+func (m *Model) drawCursor() {
 	if m.focus == "sidebar" {
 		m.screen.HideCursor()
 		return
@@ -309,7 +356,7 @@ func (m *model) DrawCursor() {
 	}
 }
 
-func (m *model) SidebarMove(offset int) {
+func (m *Model) sidebarMove(offset int) {
 	m.selected += offset
 	if m.selected < 0 {
 		m.selected = 0
@@ -320,6 +367,6 @@ func (m *model) SidebarMove(offset int) {
 	}
 }
 
-func (m *model) SelectedPane() *pane {
+func (m *Model) selectedPane() *pane {
 	return m.panes[m.selected]
 }

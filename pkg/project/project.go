@@ -230,6 +230,7 @@ console.log("~j" + JSON.stringify(mod.app({
 }
 
 func (proj *Project) LoadHome() error {
+	slog.Info("loading home")
 	loadedProviders := make(map[string]provider.Provider)
 	for key, args := range proj.app.Providers {
 		var match provider.Provider

@@ -47,10 +47,9 @@ type Event struct {
 	FunctionErrorEvent    *aws.FunctionErrorEvent
 	FunctionLogEvent      *aws.FunctionLogEvent
 	FunctionBuildEvent    *aws.FunctionBuildEvent
-
-	WorkerBuildEvent   *cloudflare.WorkerBuildEvent
-	WorkerUpdatedEvent *cloudflare.WorkerUpdatedEvent
-	WorkerInvokedEvent *cloudflare.WorkerInvokedEvent
+	WorkerBuildEvent      *cloudflare.WorkerBuildEvent
+	WorkerUpdatedEvent    *cloudflare.WorkerUpdatedEvent
+	WorkerInvokedEvent    *cloudflare.WorkerInvokedEvent
 }
 
 type StateEvent struct {

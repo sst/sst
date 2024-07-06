@@ -1,7 +1,7 @@
 import fs from "fs";
 import path from "path";
 import type { BuildMetaConfig, BuildMetaFileName } from "astro-sst/build-meta";
-import { ComponentResourceOptions, Output, all } from "@pulumi/pulumi";
+import { ComponentResourceOptions, Output, all, output } from "@pulumi/pulumi";
 import { Function } from "./function.js";
 import {
   Plan,
@@ -372,6 +372,19 @@ export class Astro extends Component implements Link.Linkable {
         url: distribution.apply((d) => d.domainUrl ?? d.url),
         edge: plan.edge,
         server: serverFunction.arn,
+        dev: {
+          command: "npm run dev",
+        },
+      },
+      _receiver: {
+        directory: sitePath,
+        links: [],
+        environment: output(args.environment).apply((env) => ({
+          ...env,
+        })),
+        dev: {
+          command: "npm run dev",
+        },
       },
     });
 

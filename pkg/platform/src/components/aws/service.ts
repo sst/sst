@@ -674,9 +674,12 @@ export class Service extends Component implements Link.Linkable {
     function registerReceiver() {
       self.registerOutputs({
         _receiver: imageArgs.apply((imageArgs) => ({
-          directory: path.dirname(
-            path.join(imageArgs.context, imageArgs.dockerfile ?? "Dockerfile"),
+          directory: path.join(
+            imageArgs.dockerfile
+              ? path.dirname(imageArgs.dockerfile)
+              : imageArgs.context,
           ),
+          dev: args.dev,
           links: linkData.apply((input) => input.map((item) => item.name)),
           environment: {
             ...args.environment,
