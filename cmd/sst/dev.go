@@ -13,6 +13,7 @@ import (
 	"sync"
 
 	"github.com/sst/ion/cmd/sst/cli"
+	"github.com/sst/ion/cmd/sst/mosaic"
 	"github.com/sst/ion/cmd/sst/ui"
 	"github.com/sst/ion/internal/util"
 	"github.com/sst/ion/pkg/project"
@@ -20,6 +21,9 @@ import (
 )
 
 func CmdDev(cli *cli.Cli) error {
+	if _, ok := os.LookupEnv("SST_SERVER"); ok {
+		return mosaic.CmdMosaic(cli)
+	}
 	var args []string
 	for _, arg := range cli.Arguments() {
 		args = append(args, strings.Fields(arg)...)

@@ -2,6 +2,7 @@ package multiplexer
 
 import (
 	"log/slog"
+	"os"
 	"os/exec"
 	"time"
 
@@ -40,6 +41,7 @@ type pane struct {
 	title    string
 	cmd      *exec.Cmd
 	killable bool
+	env      []string
 }
 
 func (p *pane) start() error {
@@ -49,6 +51,7 @@ func (p *pane) start() error {
 		return nil
 	}
 	cmd := exec.Command(p.args[0], p.args[1:]...)
+	cmd.Env = append(p.env, os.Environ()...)
 	if p.cwd != "" {
 		cmd.Dir = p.cwd
 	}
@@ -250,7 +253,7 @@ func (m *Model) Start() error {
 	return nil
 }
 
-func (m *Model) AddPane(key string, args []string, title string, cwd string, killable bool) {
+func (m *Model) AddPane(key string, args []string, title string, cwd string, killable bool, env ...string) {
 	term := tcellterm.New()
 	term.SetSurface(m.main)
 	term.Attach(m.handleEvent)
@@ -266,6 +269,7 @@ func (m *Model) AddPane(key string, args []string, title string, cwd string, kil
 		args:     args,
 		title:    title,
 		killable: killable,
+		env:      env,
 	}
 	m.panes = append(m.panes, p)
 	p.start()

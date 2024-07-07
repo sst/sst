@@ -41,10 +41,13 @@ const __dirname = topLevelFileUrlToPath(new topLevelURL(".", import.meta.url))
 			Sourcefile: "eval.ts",
 			Loader:     esbuild.LoaderTS,
 		},
-		Packages: esbuild.PackagesDefault,
+		NodePaths: []string{
+			filepath.Join(input.Dir, ".sst", ".platform", "node_modules"),
+		},
 		External: []string{
 			"@pulumi/*",
 			"@pulumiverse/*",
+			"@sst-provider/*",
 			"@aws-sdk/*",
 			"esbuild",
 			"archiver",

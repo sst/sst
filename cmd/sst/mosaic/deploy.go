@@ -1,6 +1,8 @@
 package mosaic
 
 import (
+	"os"
+
 	"github.com/pulumi/pulumi/sdk/v3/go/common/apitype"
 	"github.com/sst/ion/cmd/sst/cli"
 	"github.com/sst/ion/cmd/sst/mosaic/aws"
@@ -10,7 +12,11 @@ import (
 )
 
 func CmdMosaicDeploy(c *cli.Cli) error {
-	evts, err := server.Stream(c.Context, "http://localhost:13557",
+	url := "http://localhost:13557"
+	if match, ok := os.LookupEnv("SST_SERVER"); ok {
+		url = match
+	}
+	evts, err := server.Stream(c.Context, url,
 		project.StackCommandEvent{},
 		project.ConcurrentUpdateEvent{},
 		project.StackCommandEvent{},
