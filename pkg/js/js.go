@@ -42,7 +42,7 @@ const __dirname = topLevelFileUrlToPath(new topLevelURL(".", import.meta.url))
 			Loader:     esbuild.LoaderTS,
 		},
 		NodePaths: []string{
-			filepath.Join(input.Dir, ".sst", ".platform", "node_modules"),
+			filepath.Join(input.Dir, ".sst", "platform", "node_modules"),
 		},
 		External: []string{
 			"@pulumi/*",
