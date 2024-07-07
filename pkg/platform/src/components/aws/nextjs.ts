@@ -476,6 +476,12 @@ export class Nextjs extends Component implements Link.Linkable {
           path: sitePath,
           server: createDevServer(parent, name, args).arn,
         },
+        _dev: {
+          directory: sitePath,
+          dev: {
+            command: "npm run dev",
+          },
+        },
       });
       return;
     }

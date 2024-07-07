@@ -319,6 +319,11 @@ export function cleanup(
 ) {
   return {
     _hint: url,
+    _dev: {
+      directory: sitePath,
+      environment: environment,
+      command: "npm run dev",
+    },
     _receiver: all([sitePath, environment]).apply(
       ([sitePath, environment]) => ({
         directory: sitePath,

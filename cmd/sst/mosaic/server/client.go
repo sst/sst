@@ -83,8 +83,8 @@ func Stream(ctx context.Context, url string, types ...interface{}) (chan any, er
 	return out, nil
 }
 
-func Env(ctx context.Context, receiverID string, url string) (map[string]string, error) {
-	req, err := http.NewRequestWithContext(ctx, "GET", url+"/api/env?receiverID="+receiverID, nil)
+func Env(ctx context.Context, directory string, url string) (map[string]string, error) {
+	req, err := http.NewRequestWithContext(ctx, "GET", url+"/api/env?directory="+directory, nil)
 	if err != nil {
 		return nil, err
 	}

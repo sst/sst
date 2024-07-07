@@ -87,7 +87,8 @@ func CmdMosaic(c *cli.Cli) error {
 	if err != nil {
 		return err
 	}
-	for name, args := range p.App().Providers {
+	for name, a := range p.App().Providers {
+		args := a
 		switch name {
 		case "aws":
 			wg.Go(func() error {
@@ -127,13 +128,13 @@ func CmdMosaic(c *cli.Cli) error {
 			case unknown := <-evts:
 				switch evt := unknown.(type) {
 				case *project.CompleteEvent:
-					for _, r := range evt.Receivers {
-						if r.Dev.Command == "" {
+					for _, d := range evt.Devs {
+						if d.Command == "" {
 							continue
 						}
-						dir := filepath.Join(cwd, r.Directory)
-						slog.Info("mosaic", "receiver", r.Name, "directory", dir)
-						multi.AddPane(r.Name, append([]string{currentExecutable, "mosaic"}, strings.Split(r.Dev.Command, " ")...), r.Name, dir, true)
+						dir := filepath.Join(cwd, d.Directory)
+						slog.Info("mosaic", "dev", d.Name, "directory", dir)
+						multi.AddPane(d.Name, append([]string{currentExecutable, "mosaic"}, strings.Split(d.Command, " ")...), d.Name, dir, true)
 					}
 					break
 				}

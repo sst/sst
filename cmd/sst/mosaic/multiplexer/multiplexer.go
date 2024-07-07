@@ -283,17 +283,19 @@ func (m *Model) draw() {
 		style := tcell.StyleDefault
 		if index == m.selected {
 			style = style.Background(tcell.ColorGray)
+			style = style.Bold(true)
 			if m.focus == "sidebar" {
 				style = style.Background(tcell.ColorOrangeRed)
 			}
 			style = style.Foreground(tcell.ColorWhite)
+			title.SetRight("< ", style)
 		}
 
 		text := item.title
 		title.SetStyle(style)
 		title.SetLeft(" "+text, tcell.StyleDefault)
 		if item.status == paneStatusStopped {
-			title.SetRight("(-)", tcell.StyleDefault)
+			title.SetRight("- ", tcell.StyleDefault)
 		}
 		m.sidebarWidget.AddWidget(title, 0)
 	}

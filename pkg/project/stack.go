@@ -65,10 +65,19 @@ type Receiver struct {
 	AwsRole     string              `json:"awsRole"`
 	Cloudflare  *CloudflareReceiver `json:"cloudflare"`
 	Aws         *AwsReceiver        `json:"aws"`
-	Dev         struct {
-		Command string `json:"command"`
-	} `json:"dev"`
 }
+
+type Dev struct {
+	Name        string            `json:"name"`
+	Command     string            `json:"command"`
+	Directory   string            `json:"directory"`
+	Links       []string          `json:"links"`
+	Environment map[string]string `json:"environment"`
+	Aws         *struct {
+		Role string `json:"role"`
+	} `json:"aws"`
+}
+type Devs map[string]Dev
 
 type CloudflareReceiver struct {
 }
@@ -98,6 +107,7 @@ type CompleteEvent struct {
 	Links     Links
 	Warps     Warps
 	Receivers Receivers
+	Devs      Devs
 	Outputs   map[string]interface{}
 	Hints     map[string]string
 	Errors    []Error
@@ -801,6 +811,7 @@ func getCompletedEvent(ctx context.Context, stack auto.Stack) (*CompleteEvent, e
 	complete := &CompleteEvent{
 		Links:     Links{},
 		Receivers: Receivers{},
+		Devs:      Devs{},
 		Warps:     Warps{},
 		Hints:     map[string]string{},
 		Outputs:   map[string]interface{}{},
@@ -827,6 +838,14 @@ func getCompletedEvent(ctx context.Context, stack auto.Stack) (*CompleteEvent, e
 			json.Unmarshal(data, &entry)
 			entry.Name = resource.URN.Name()
 			complete.Receivers[entry.Directory] = entry
+		}
+
+		if match, ok := outputs["_dev"].(map[string]interface{}); ok {
+			data, _ := json.Marshal(match)
+			var entry Dev
+			json.Unmarshal(data, &entry)
+			entry.Name = resource.URN.Name()
+			complete.Devs[entry.Name] = entry
 		}
 
 		if hint, ok := outputs["_hint"].(string); ok {

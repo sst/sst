@@ -679,7 +679,22 @@ export class Service extends Component implements Link.Linkable {
               ? path.dirname(imageArgs.dockerfile)
               : imageArgs.context,
           ),
-          dev: args.dev,
+          links: linkData.apply((input) => input.map((item) => item.name)),
+          environment: {
+            ...args.environment,
+            AWS_REGION: region,
+          },
+          aws: {
+            role: taskRole.arn,
+          },
+        })),
+        _dev: imageArgs.apply((imageArgs) => ({
+          directory: path.join(
+            imageArgs.dockerfile
+              ? path.dirname(imageArgs.dockerfile)
+              : imageArgs.context,
+          ),
+          command: output(args.dev).apply((v) => v?.command),
           links: linkData.apply((input) => input.map((item) => item.name)),
           environment: {
             ...args.environment,
