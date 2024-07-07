@@ -1,10 +1,5 @@
-import { CustomResourceOptions, Input, dynamic, output } from "@pulumi/pulumi";
-import {
-  CloudFrontClient,
-  CreateInvalidationCommand,
-  waitUntilInvalidationCompleted,
-} from "@aws-sdk/client-cloudfront";
-import { useClient } from "../helpers/client.js";
+import { CustomResourceOptions, Input, dynamic } from "@pulumi/pulumi";
+import { awsFetch } from "../helpers/client.js";
 
 // CloudFront allows you to specify up to 3,000 paths in a single invalidation
 // https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/cloudfront-limits.html#limits-invalidations
@@ -41,14 +36,13 @@ class Provider implements dynamic.ResourceProvider {
   }
 
   async handle(inputs: Inputs) {
-    const client = useClient(CloudFrontClient);
-    const ids = await this.invalidate(client, inputs);
+    const ids = await this.invalidate(inputs);
     if (inputs.wait) {
-      await this.waitForInvalidation(client, inputs, ids);
+      await this.waitForInvalidation(inputs, ids);
     }
   }
 
-  async invalidate(client: CloudFrontClient, inputs: Inputs) {
+  async invalidate(inputs: Inputs) {
     const { distributionId, paths } = inputs;
 
     // Split paths into files and wildcard paths
@@ -74,30 +68,32 @@ class Provider implements dynamic.ResourceProvider {
         ...pathsWildcard.slice(i * WILDCARD_LIMIT, (i + 1) * WILDCARD_LIMIT),
       ];
       invalidationIds.push(
-        await this.invalidateChunk(client, distributionId, stepPaths),
+        await this.invalidateChunk(distributionId, stepPaths),
       );
     }
     return invalidationIds;
   }
 
-  async invalidateChunk(
-    client: CloudFrontClient,
-    distributionId: string,
-    paths: string[],
-  ) {
-    const result = await client.send(
-      new CreateInvalidationCommand({
-        DistributionId: distributionId,
-        InvalidationBatch: {
-          CallerReference: Date.now().toString(),
-          Paths: {
-            Quantity: paths.length,
-            Items: paths,
-          },
-        },
-      }),
+  async invalidateChunk(distributionId: string, paths: string[]) {
+    const result = await awsFetch(
+      "cloudfront",
+      `/distribution/${distributionId}/invalidation`,
+      {
+        method: "post",
+        body: [
+          `<InvalidationBatch xmlns="http://cloudfront.amazonaws.com/doc/2020-05-31/">`,
+          `<CallerReference>${Date.now().toString()}</CallerReference>`,
+          `<Paths>`,
+          `<Items>`,
+          ...paths.map((p) => `<Path>${p}</Path>`),
+          `</Items>`,
+          `<Quantity>${paths.length}</Quantity>`,
+          `</Paths>`,
+          `</InvalidationBatch>`,
+        ].join(""),
+      },
     );
-    const invalidationId = result.Invalidation?.Id;
+    const invalidationId = result.Id;
 
     if (!invalidationId) {
       throw new Error("Invalidation ID not found");
@@ -106,24 +102,20 @@ class Provider implements dynamic.ResourceProvider {
     return invalidationId;
   }
 
-  async waitForInvalidation(
-    client: CloudFrontClient,
-    inputs: Inputs,
-    invalidationIds: string[],
-  ) {
+  async waitForInvalidation(inputs: Inputs, invalidationIds: string[]) {
     const { distributionId } = inputs;
     for (const invalidationId of invalidationIds) {
       try {
-        await waitUntilInvalidationCompleted(
-          {
-            client,
-            maxWaitTime: 600,
-          },
-          {
-            DistributionId: distributionId,
-            Id: invalidationId,
-          },
-        );
+        const waitTill = Date.now() + 600000; // 10 minutes
+        while (Date.now() < waitTill) {
+          const result = await awsFetch(
+            "cloudfront",
+            `/distribution/${distributionId}/invalidation/${invalidationId}`,
+            { method: "get" },
+          );
+          if (result.Status === "Completed") break;
+          await new Promise((resolve) => setTimeout(resolve, 5000));
+        }
       } catch (e) {
         // supress errors
         //console.error(e);

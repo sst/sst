@@ -1,10 +1,5 @@
 import { CustomResourceOptions, Input, Output, dynamic } from "@pulumi/pulumi";
-import {
-  LambdaClient,
-  UpdateFunctionCodeCommand,
-  GetFunctionCommand,
-} from "@aws-sdk/client-lambda";
-import { useClient } from "../helpers/client.js";
+import { awsFetch } from "../helpers/client.js";
 
 export interface FunctionCodeUpdaterInputs {
   s3Bucket: Input<string>;
@@ -56,35 +51,39 @@ class Provider implements dynamic.ResourceProvider {
   }
 
   async updateCode(inputs: Inputs) {
-    const client = useClient(LambdaClient, {
-      region: inputs.region,
-      retrableErrors: [
-        // Lambda is not ready to accept updates right after creation
-        "ServiceException",
-      ],
-    });
-    const ret = await client.send(
-      new UpdateFunctionCodeCommand({
-        FunctionName: inputs.functionName,
-        S3Bucket: inputs.s3Bucket,
-        S3Key: inputs.s3Key,
-      }),
+    const ret = await awsFetch(
+      "lambda",
+      `/functions/${inputs.functionName}/code`,
+      {
+        method: "put",
+        body: JSON.stringify({
+          S3Bucket: inputs.s3Bucket,
+          S3Key: inputs.s3Key,
+        }),
+      },
+      {
+        region: inputs.region,
+        retrableErrors: [
+          // Lambda is not ready to accept updates right after creation
+          "ServiceException",
+        ],
+      },
     );
     return ret.Version ?? "unknown";
   }
 
   async waitForUpdate(inputs: Inputs): Promise<void> {
-    const client = useClient(LambdaClient, {
-      region: inputs.region,
-      retrableErrors: [
-        // Lambda is not ready to accept updates right after creation
-        "ServiceException",
-      ],
-    });
-    const ret = await client.send(
-      new GetFunctionCommand({
-        FunctionName: inputs.functionName,
-      }),
+    const ret = await awsFetch(
+      "lambda",
+      `/functions/${inputs.functionName}`,
+      { method: "get" },
+      {
+        region: inputs.region,
+        retrableErrors: [
+          // Lambda is not ready to accept updates right after creation
+          "ServiceException",
+        ],
+      },
     );
     if (ret.Configuration?.LastUpdateStatus === "Successful") return;
 

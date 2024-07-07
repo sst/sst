@@ -1,9 +1,5 @@
 import { CustomResourceOptions, Input, Output, dynamic } from "@pulumi/pulumi";
-import {
-  CloudFrontClient,
-  GetDistributionCommand,
-} from "@aws-sdk/client-cloudfront";
-import { useClient } from "../helpers/client.js";
+import { awsFetch } from "../helpers/client.js";
 
 export interface DistributionDeploymentWaiterInputs {
   distributionId: Input<Inputs["distributionId"]>;
@@ -44,15 +40,15 @@ class Provider implements dynamic.ResourceProvider {
     if (!inputs.wait) return;
 
     const { distributionId } = inputs;
-    const client = useClient(CloudFrontClient);
     const start = Date.now();
 
     do {
-      const result = await client.send(
-        new GetDistributionCommand({
-          Id: distributionId,
-        }),
+      const result = await awsFetch(
+        "cloudfront",
+        `/distribution/${distributionId}`,
+        { method: "get" },
       );
+      console.log("RESULT", result);
       if (result.Distribution?.Status === "Deployed") return;
 
       // wait for 5 seconds

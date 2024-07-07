@@ -1,9 +1,5 @@
 import { CustomResourceOptions, Input, dynamic } from "@pulumi/pulumi";
-import {
-  RDSDataClient,
-  ExecuteStatementCommand,
-} from "@aws-sdk/client-rds-data";
-import { useClient } from "../helpers/client.js";
+import { awsFetch } from "../helpers/client.js";
 
 interface Inputs {
   clusterArn: string;
@@ -59,15 +55,15 @@ class Provider implements dynamic.ResourceProvider {
   }
 
   async createDatabase(inputs: Inputs) {
-    const client = useClient(RDSDataClient);
     try {
-      await client.send(
-        new ExecuteStatementCommand({
+      await awsFetch("rds-data", "/Execute", {
+        method: "post",
+        body: JSON.stringify({
           resourceArn: inputs.clusterArn,
           secretArn: inputs.secretArn,
           sql: `create database ${inputs.databaseName}`,
         }),
-      );
+      });
     } catch (error: any) {
       // ERROR: database "playground_frank" already exists; SQLState: 42P04
       if (error.message.endsWith("SQLState: 42P04")) return;
@@ -76,16 +72,16 @@ class Provider implements dynamic.ResourceProvider {
   }
 
   async enablePgvectorExtension(inputs: Inputs) {
-    const client = useClient(RDSDataClient);
     try {
-      await client.send(
-        new ExecuteStatementCommand({
+      await awsFetch("rds-data", "/Execute", {
+        method: "post",
+        body: JSON.stringify({
           resourceArn: inputs.clusterArn,
           secretArn: inputs.secretArn,
           database: inputs.databaseName,
           sql: `create extension vector;`,
         }),
-      );
+      });
     } catch (error: any) {
       // ERROR: extension "vector" already exists; SQLState: 42710
       if (error.message.endsWith("SQLState: 42710")) return;
@@ -94,16 +90,16 @@ class Provider implements dynamic.ResourceProvider {
   }
 
   async enablePgtrgmExtension(inputs: Inputs) {
-    const client = useClient(RDSDataClient);
     try {
-      await client.send(
-        new ExecuteStatementCommand({
+      await awsFetch("rds-data", "/Execute", {
+        method: "post",
+        body: JSON.stringify({
           resourceArn: inputs.clusterArn,
           secretArn: inputs.secretArn,
           database: inputs.databaseName,
           sql: `create extension pg_trgm;`,
         }),
-      );
+      });
     } catch (error: any) {
       // ERROR: extension "vector" already exists; SQLState: 42710
       if (error.message.endsWith("SQLState: 42710")) return;
@@ -112,10 +108,10 @@ class Provider implements dynamic.ResourceProvider {
   }
 
   async createTable(inputs: Inputs) {
-    const client = useClient(RDSDataClient);
     try {
-      await client.send(
-        new ExecuteStatementCommand({
+      await awsFetch("rds-data", "/Execute", {
+        method: "post",
+        body: JSON.stringify({
           resourceArn: inputs.clusterArn,
           secretArn: inputs.secretArn,
           database: inputs.databaseName,
@@ -125,7 +121,7 @@ class Provider implements dynamic.ResourceProvider {
             metadata jsonb
           );`,
         }),
-      );
+      });
     } catch (error: any) {
       // ERROR: relation "embeddings" already exists; SQLState: 42P07
       if (error.message.endsWith("SQLState: 42P07")) return;
@@ -134,26 +130,28 @@ class Provider implements dynamic.ResourceProvider {
   }
 
   async removeTable(inputs: Inputs) {
-    await useClient(RDSDataClient).send(
-      new ExecuteStatementCommand({
+    await awsFetch("rds-data", "/Execute", {
+      method: "post",
+      body: JSON.stringify({
         resourceArn: inputs.clusterArn,
         secretArn: inputs.secretArn,
         database: inputs.databaseName,
         sql: `drop table if exists ${inputs.tableName};`,
       }),
-    );
+    });
   }
 
   async createEmbeddingIndex(inputs: Inputs) {
     try {
-      await useClient(RDSDataClient).send(
-        new ExecuteStatementCommand({
+      await awsFetch("rds-data", "/Execute", {
+        method: "post",
+        body: JSON.stringify({
           resourceArn: inputs.clusterArn,
           secretArn: inputs.secretArn,
           database: inputs.databaseName,
           sql: `create index on ${inputs.tableName} using hnsw (embedding vector_cosine_ops);`,
         }),
-      );
+      });
     } catch (error: any) {
       // ERROR: relation "embeddings" already exists; SQLState: 42P07
       if (error.message.endsWith("SQLState: 42P07")) return;
@@ -163,14 +161,15 @@ class Provider implements dynamic.ResourceProvider {
 
   async createMetadataIndex(inputs: Inputs) {
     try {
-      await useClient(RDSDataClient).send(
-        new ExecuteStatementCommand({
+      await awsFetch("rds-data", "/Execute", {
+        method: "post",
+        body: JSON.stringify({
           resourceArn: inputs.clusterArn,
           secretArn: inputs.secretArn,
           database: inputs.databaseName,
           sql: `create index on ${inputs.tableName} using gin (metadata);`,
         }),
-      );
+      });
     } catch (error: any) {
       // ERROR: relation "embeddings" already exists; SQLState: 42P07
       if (error.message.endsWith("SQLState: 42P07")) return;

@@ -1,11 +1,5 @@
-import { CustomResourceOptions, Input, Output, dynamic } from "@pulumi/pulumi";
-import {
-  CloudFrontClient,
-  GetCloudFrontOriginAccessIdentityCommand,
-  CreateCloudFrontOriginAccessIdentityCommand,
-  DeleteCloudFrontOriginAccessIdentityCommand,
-} from "@aws-sdk/client-cloudfront";
-import { useClient } from "../helpers/client.js";
+import { CustomResourceOptions, dynamic } from "@pulumi/pulumi";
+import { awsFetch } from "../helpers/client.js";
 
 interface Inputs {}
 
@@ -17,15 +11,18 @@ export interface OriginAccessIdentity {}
 
 class Provider implements dynamic.ResourceProvider {
   async create(inputs: Inputs): Promise<dynamic.CreateResult<Outputs>> {
-    const client = useClient(CloudFrontClient);
-
-    const ret = await client.send(
-      new CreateCloudFrontOriginAccessIdentityCommand({
-        CloudFrontOriginAccessIdentityConfig: {
-          CallerReference: Date.now().toString(),
-          Comment: "Created by SST",
-        },
-      }),
+    const ret = await awsFetch(
+      "cloudfront",
+      "/origin-access-identity/cloudfront",
+      {
+        method: "post",
+        body: JSON.stringify({
+          CloudFrontOriginAccessIdentityConfig: {
+            CallerReference: Date.now().toString(),
+            Comment: "Created by SST",
+          },
+        }),
+      },
     );
     const id = ret.CloudFrontOriginAccessIdentity?.Id!;
 
@@ -33,18 +30,18 @@ class Provider implements dynamic.ResourceProvider {
   }
 
   async delete(id: string, outs: Outputs): Promise<void> {
-    const client = useClient(CloudFrontClient);
-
-    const ret = await client.send(
-      new GetCloudFrontOriginAccessIdentityCommand({ Id: id }),
+    const ret = await awsFetch(
+      "cloudfront",
+      `/origin-access-identity/cloudfront/${id}`,
+      { method: "get" },
     );
 
-    await client.send(
-      new DeleteCloudFrontOriginAccessIdentityCommand({
-        Id: id,
+    await awsFetch("cloudfront", `/origin-access-identity/cloudfront/${id}`, {
+      method: "delete",
+      headers: {
         IfMatch: ret.ETag,
-      }),
-    );
+      },
+    });
   }
 }
 
