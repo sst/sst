@@ -342,6 +342,16 @@ export class SvelteKit extends Component implements Link.Linkable {
           edge,
           server: server.arn,
         },
+        _receiver: {
+          directory: sitePath,
+          links: output(args.link || [])
+            .apply(Link.build)
+            .apply((links) => links.map((link) => link.name)),
+          aws: {
+            role: server.nodes.role.arn,
+          },
+          environment: args.environment,
+        },
         _dev: {
           directory: sitePath,
           links: output(args.link || [])

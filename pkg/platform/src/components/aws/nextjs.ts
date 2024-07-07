@@ -2,7 +2,7 @@ import fs from "fs";
 import path from "path";
 import crypto from "crypto";
 import { globSync } from "glob";
-import { ComponentResourceOptions, Output, all } from "@pulumi/pulumi";
+import { ComponentResourceOptions, Output, all, output } from "@pulumi/pulumi";
 import { Size } from "../size.js";
 import { Function } from "./function.js";
 import {
@@ -470,17 +470,33 @@ export class Nextjs extends Component implements Link.Linkable {
     const buildCommand = normalizeBuildCommand();
     const { sitePath, partition, region } = prepare(args, opts);
     if ($dev) {
+      const server = createDevServer(parent, name, args);
       this.registerOutputs({
         _metadata: {
           mode: "placeholder",
           path: sitePath,
-          server: createDevServer(parent, name, args).arn,
+          server: server.arn,
+        },
+        _receiver: {
+          directory: sitePath,
+          links: output(args.link || [])
+            .apply(Link.build)
+            .apply((links) => links.map((link) => link.name)),
+          aws: {
+            role: server.nodes.role.arn,
+          },
+          environment: args.environment,
         },
         _dev: {
           directory: sitePath,
-          dev: {
-            command: "npm run dev",
+          links: output(args.link || [])
+            .apply(Link.build)
+            .apply((links) => links.map((link) => link.name)),
+          aws: {
+            role: server.nodes.role.arn,
           },
+          environment: args.environment,
+          command: "npm run dev",
         },
       });
       return;
