@@ -13,11 +13,12 @@ import (
 	"github.com/briandowns/spinner"
 	"github.com/fatih/color"
 	"github.com/manifoldco/promptui"
+	"github.com/sst/ion/cmd/sst/cli"
 	"github.com/sst/ion/internal/util"
 	"github.com/sst/ion/pkg/project"
 )
 
-func CmdInit(cli *Cli) error {
+func CmdInit(cli *cli.Cli) error {
 	if _, err := os.Stat("sst.config.ts"); err == nil {
 		color.New(color.FgRed, color.Bold).Print("×")
 		color.New(color.FgWhite, color.Bold).Println("  SST project already exists")

@@ -2,10 +2,8 @@ package ui
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"log/slog"
-	"net/url"
 	"os"
 	"strings"
 	"time"
@@ -17,8 +15,8 @@ import (
 	"github.com/muesli/reflow/wordwrap"
 	"github.com/pulumi/pulumi/sdk/v3/go/common/apitype"
 	"github.com/pulumi/pulumi/sdk/v3/go/common/resource"
+	"github.com/sst/ion/cmd/sst/mosaic/aws"
 	"github.com/sst/ion/pkg/project"
-	"github.com/sst/ion/pkg/server"
 	"golang.org/x/crypto/ssh/terminal"
 )
 
@@ -113,6 +111,7 @@ func (u *UI) blank() {
 
 func (u *UI) Reset() {
 	u.skipped = 0
+	u.complete = nil
 	u.parents = map[string]string{}
 	u.pending = map[string]string{}
 	u.dedupe = map[string]bool{}
@@ -120,135 +119,163 @@ func (u *UI) Reset() {
 	u.buffer = []interface{}{}
 }
 
-func (u *UI) StackEvent(evt *project.StackEvent) {
+func (u *UI) Event(unknown interface{}) {
 	if u.footer != nil {
-		defer u.footer.Send(evt)
+		defer u.footer.Send(unknown)
 	}
-	if evt.ConcurrentUpdateEvent != nil {
+	switch evt := unknown.(type) {
+
+	case *aws.FunctionInvokedEvent:
+		u.workerTime[evt.WorkerID] = time.Now()
+		u.printEvent(u.getColor(evt.WorkerID), TEXT_NORMAL_BOLD.Render(fmt.Sprintf("%-11s", "Invoke")), u.functionName(evt.FunctionID))
+
+	case *aws.FunctionResponseEvent:
+		duration := time.Since(u.workerTime[evt.WorkerID]).Round(time.Millisecond)
+		formattedDuration := fmt.Sprintf("took %.9s", fmt.Sprintf("+%v", duration))
+		u.printEvent(u.getColor(evt.WorkerID), "Done", formattedDuration)
+
+	case *aws.FunctionLogEvent:
+		duration := time.Since(u.workerTime[evt.WorkerID]).Round(time.Millisecond)
+		formattedDuration := fmt.Sprintf("%.9s", fmt.Sprintf("+%v", duration))
+		u.printEvent(u.getColor(evt.WorkerID), formattedDuration, evt.Line)
+
+	case *aws.FunctionBuildEvent:
+		if len(evt.Errors) > 0 {
+			u.printEvent(TEXT_DANGER, "Build Error", u.functionName(evt.FunctionID))
+			for _, item := range evt.Errors {
+				u.printEvent(TEXT_DANGER, "", "↳ "+strings.TrimSpace(item))
+			}
+			return
+		}
+		u.printEvent(TEXT_SUCCESS, "Build", u.functionName(evt.FunctionID))
+
+	case *aws.FunctionErrorEvent:
+		u.printEvent(u.getColor(evt.WorkerID), TEXT_DANGER.Render(fmt.Sprintf("%-11s", "Error")), u.functionName(evt.FunctionID))
+		u.printEvent(u.getColor(evt.WorkerID), "", evt.ErrorMessage)
+		for _, item := range evt.Trace {
+			if strings.Contains(item, "Error:") {
+				continue
+			}
+			u.printEvent(u.getColor(evt.WorkerID), "", "↳ "+strings.TrimSpace(item))
+		}
+
+	case *project.ConcurrentUpdateEvent:
 		u.printEvent(TEXT_DANGER, "Locked", "A concurrent update was detected on the app. Run `sst unlock` to remove the lock and try again.")
-	}
-	if evt.StackCommandEvent != nil {
+
+	case *project.StackCommandEvent:
 		u.blank()
-		if evt.StackCommandEvent.Command == "deploy" {
+		if evt.Command == "deploy" {
 			u.println(
 				TEXT_WARNING_BOLD.Render("~"),
 				TEXT_NORMAL_BOLD.Render("  Deploying"),
 			)
 		}
-		if evt.StackCommandEvent.Command == "remove" {
+		if evt.Command == "remove" {
 			u.println(
 				TEXT_DANGER_BOLD.Render("~"),
 				TEXT_NORMAL_BOLD.Render("  Removing"),
 			)
 		}
-		if evt.StackCommandEvent.Command == "refresh" {
+		if evt.Command == "refresh" {
 			u.println(
 				TEXT_INFO_BOLD.Render("~"),
 				TEXT_NORMAL_BOLD.Render("  Refreshing"),
 			)
 		}
 		u.blank()
-		return
-	}
 
-	if evt.BuildFailedEvent != nil {
-		u.printEvent(TEXT_DANGER, "Error", evt.BuildFailedEvent.Error)
-	}
+	case *project.BuildFailedEvent:
+		u.printEvent(TEXT_DANGER, "Error", evt.Error)
 
-	if evt.ResourcePreEvent != nil {
-		u.timing[evt.ResourcePreEvent.Metadata.URN] = time.Now()
-		if evt.ResourcePreEvent.Metadata.Type == "pulumi:pulumi:Stack" {
+	case *apitype.ResourcePreEvent:
+		u.timing[evt.Metadata.URN] = time.Now()
+		if evt.Metadata.Type == "pulumi:pulumi:Stack" {
 			return
 		}
 
-		if evt.ResourcePreEvent.Metadata.Old != nil && evt.ResourcePreEvent.Metadata.Old.Parent != "" {
-			u.parents[evt.ResourcePreEvent.Metadata.URN] = evt.ResourcePreEvent.Metadata.Old.Parent
+		if evt.Metadata.Old != nil && evt.Metadata.Old.Parent != "" {
+			u.parents[evt.Metadata.URN] = evt.Metadata.Old.Parent
 		}
 
-		if evt.ResourcePreEvent.Metadata.New != nil && evt.ResourcePreEvent.Metadata.New.Parent != "" {
-			u.parents[evt.ResourcePreEvent.Metadata.URN] = evt.ResourcePreEvent.Metadata.New.Parent
+		if evt.Metadata.New != nil && evt.Metadata.New.Parent != "" {
+			u.parents[evt.Metadata.URN] = evt.Metadata.New.Parent
 		}
 
-		if evt.ResourcePreEvent.Metadata.Op == apitype.OpSame {
+		if evt.Metadata.Op == apitype.OpSame {
 			// Do not print anything for skipped resources
 			if u.mode == ProgressModeDeploy || u.mode == ProgressModeDev {
 				u.skipped++
 			}
 			return
 		}
-	}
 
-	if evt.ResOutputsEvent != nil {
-		if evt.ResOutputsEvent.Metadata.Type == "pulumi:pulumi:Stack" {
+	case *apitype.ResOutputsEvent:
+		if evt.Metadata.Type == "pulumi:pulumi:Stack" {
 			return
 		}
 
-		duration := time.Since(u.timing[evt.ResOutputsEvent.Metadata.URN]).Round(time.Millisecond)
-		if evt.ResOutputsEvent.Metadata.Op == apitype.OpSame && u.mode == ProgressModeRefresh {
+		duration := time.Since(u.timing[evt.Metadata.URN]).Round(time.Millisecond)
+		if evt.Metadata.Op == apitype.OpSame && u.mode == ProgressModeRefresh {
 			u.printProgress(
 				TEXT_SUCCESS,
 				"Refreshed",
 				duration,
-				evt.ResOutputsEvent.Metadata.URN,
+				evt.Metadata.URN,
 			)
 			return
 		}
-		if evt.ResOutputsEvent.Metadata.Op == apitype.OpCreate {
+		if evt.Metadata.Op == apitype.OpCreate {
 			u.printProgress(
 				TEXT_SUCCESS,
 				"Created",
 				duration,
-				evt.ResOutputsEvent.Metadata.URN,
+				evt.Metadata.URN,
 			)
 		}
-		if evt.ResOutputsEvent.Metadata.Op == apitype.OpUpdate {
+		if evt.Metadata.Op == apitype.OpUpdate {
 			u.printProgress(
 				TEXT_SUCCESS,
 				"Updated",
 				duration,
-				evt.ResOutputsEvent.Metadata.URN,
+				evt.Metadata.URN,
 			)
 		}
-		if evt.ResOutputsEvent.Metadata.Op == apitype.OpDelete {
+		if evt.Metadata.Op == apitype.OpDelete {
 			u.printProgress(
 				TEXT_DIM,
 				"Deleted",
 				duration,
-				evt.ResOutputsEvent.Metadata.URN,
+				evt.Metadata.URN,
 			)
 		}
-		if evt.ResOutputsEvent.Metadata.Op == apitype.OpDeleteReplaced {
+		if evt.Metadata.Op == apitype.OpDeleteReplaced {
 			u.printProgress(
 				TEXT_DIM,
 				"Deleted",
 				duration,
-				evt.ResOutputsEvent.Metadata.URN,
+				evt.Metadata.URN,
 			)
 		}
-		if evt.ResOutputsEvent.Metadata.Op == apitype.OpCreateReplacement {
+		if evt.Metadata.Op == apitype.OpCreateReplacement {
 			u.printProgress(
 				TEXT_SUCCESS,
 				"Created",
 				duration,
-				evt.ResOutputsEvent.Metadata.URN,
+				evt.Metadata.URN,
 			)
 		}
-		if evt.ResOutputsEvent.Metadata.Op == apitype.OpReplace {
+		if evt.Metadata.Op == apitype.OpReplace {
 		}
-	}
 
-	if evt.ResOpFailedEvent != nil {
-	}
-
-	if evt.DiagnosticEvent != nil {
-		if evt.DiagnosticEvent.Severity == "error" {
-			message := []string{u.formatURN(evt.DiagnosticEvent.URN)}
-			message = append(message, parseError(evt.DiagnosticEvent.Message)...)
+	case *apitype.DiagnosticEvent:
+		if evt.Severity == "error" {
+			message := []string{u.formatURN(evt.URN)}
+			message = append(message, parseError(evt.Message)...)
 			u.printEvent(TEXT_DANGER, "Error", message...)
 		}
 
-		if evt.DiagnosticEvent.Severity == "info" {
-			for _, line := range strings.Split(strings.TrimRightFunc(ansi.Strip(evt.DiagnosticEvent.Message), unicode.IsSpace), "\n") {
+		if evt.Severity == "info" {
+			for _, line := range strings.Split(strings.TrimRightFunc(ansi.Strip(evt.Message), unicode.IsSpace), "\n") {
 				u.printEvent(
 					TEXT_DIM,
 					"Log",
@@ -257,23 +284,25 @@ func (u *UI) StackEvent(evt *project.StackEvent) {
 			}
 		}
 
-		if evt.DiagnosticEvent.Severity == "info#err" {
-			if strings.HasPrefix(evt.DiagnosticEvent.Message, "Downloading provider") {
-				u.printEvent(TEXT_INFO, "Info", strings.TrimSpace(ansi.Strip(evt.DiagnosticEvent.Message)))
+		if evt.Severity == "info#err" {
+			if strings.HasPrefix(evt.Message, "Downloading provider") {
+				u.printEvent(TEXT_INFO, "Info", strings.TrimSpace(ansi.Strip(evt.Message)))
 			} else {
 				u.printEvent(
 					TEXT_DIM,
 					"Log",
-					strings.TrimRightFunc(ansi.Strip(evt.DiagnosticEvent.Message), unicode.IsSpace),
+					strings.TrimRightFunc(ansi.Strip(evt.Message), unicode.IsSpace),
 				)
 			}
 		}
-	}
 
-	if evt.CompleteEvent != nil {
-		u.complete = evt.CompleteEvent
+	case *project.CompleteEvent:
+		if evt.Old {
+			break
+		}
+		u.complete = evt
 		u.blank()
-		if len(evt.CompleteEvent.Errors) == 0 && evt.CompleteEvent.Finished {
+		if len(evt.Errors) == 0 && evt.Finished {
 			u.print(TEXT_SUCCESS_BOLD.Render(IconCheck))
 			if len(u.timing) == 0 {
 				if u.mode == ProgressModeRemove {
@@ -294,8 +323,8 @@ func (u *UI) StackEvent(evt *project.StackEvent) {
 				}
 			}
 			u.println()
-			if len(evt.CompleteEvent.Hints) > 0 {
-				for k, v := range evt.CompleteEvent.Hints {
+			if len(evt.Hints) > 0 {
+				for k, v := range evt.Hints {
 					splits := strings.Split(k, "::")
 					u.println(
 						TEXT_DIM_BOLD.Render("   "),
@@ -304,11 +333,11 @@ func (u *UI) StackEvent(evt *project.StackEvent) {
 					)
 				}
 			}
-			if len(evt.CompleteEvent.Outputs) > 0 {
-				if len(evt.CompleteEvent.Hints) > 0 {
+			if len(evt.Outputs) > 0 {
+				if len(evt.Hints) > 0 {
 					u.println(TEXT_DIM_BOLD.Render("   ---"))
 				}
-				for k, v := range evt.CompleteEvent.Outputs {
+				for k, v := range evt.Outputs {
 					u.println(
 						TEXT_DIM_BOLD.Render("   "),
 						TEXT_DIM_BOLD.Render(k+": "),
@@ -318,20 +347,20 @@ func (u *UI) StackEvent(evt *project.StackEvent) {
 			}
 		}
 
-		if len(evt.CompleteEvent.Errors) == 0 && !evt.CompleteEvent.Finished {
+		if len(evt.Errors) == 0 && !evt.Finished {
 			u.println(
 				TEXT_DANGER_BOLD.Render(IconX),
 				TEXT_NORMAL_BOLD.Render("  Interrupted"),
 			)
 		}
 
-		if len(evt.CompleteEvent.Errors) > 0 {
+		if len(evt.Errors) > 0 {
 			u.println(
 				TEXT_DANGER_BOLD.Render(IconX),
 				TEXT_NORMAL_BOLD.Render("  Failed"),
 			)
 
-			for _, status := range evt.CompleteEvent.Errors {
+			for _, status := range evt.Errors {
 				if status.URN != "" {
 					u.println(TEXT_DANGER_BOLD.Render("   " + u.formatURN(status.URN)))
 				}
@@ -341,91 +370,46 @@ func (u *UI) StackEvent(evt *project.StackEvent) {
 
 		u.blank()
 	}
-}
 
-func (u *UI) Event(evt *server.Event) {
-	if u.footer != nil {
-		defer u.footer.Send(evt)
-	}
-	if evt.FunctionInvokedEvent != nil {
-		u.workerTime[evt.FunctionInvokedEvent.WorkerID] = time.Now()
-		u.printEvent(u.getColor(evt.FunctionInvokedEvent.WorkerID), TEXT_NORMAL_BOLD.Render(fmt.Sprintf("%-11s", "Invoke")), u.functionName(evt.FunctionInvokedEvent.FunctionID))
-	}
+	// if evt.WorkerBuildEvent != nil {
+	// 	if len(evt.WorkerBuildEvent.Errors) > 0 {
+	// 		u.printEvent(TEXT_DANGER, "Build Error", u.functionName(evt.WorkerBuildEvent.WorkerID)+" "+strings.Join(evt.WorkerBuildEvent.Errors, "\n"))
+	// 		return
+	// 	}
+	// 	u.printEvent(TEXT_INFO, "Build", u.functionName(evt.WorkerBuildEvent.WorkerID))
+	// }
+	// if evt.WorkerUpdatedEvent != nil {
+	// 	u.printEvent(TEXT_INFO, "Reload", u.functionName(evt.WorkerUpdatedEvent.WorkerID))
+	// }
+	// if evt.WorkerInvokedEvent != nil {
+	// 	url, _ := url.Parse(evt.WorkerInvokedEvent.TailEvent.Event.Request.URL)
+	// 	u.printEvent(
+	// 		u.getColor(evt.WorkerInvokedEvent.WorkerID),
+	// 		TEXT_NORMAL_BOLD.Render(fmt.Sprintf("%-11s", "Invoke")),
+	// 		u.functionName(evt.WorkerInvokedEvent.WorkerID)+" "+evt.WorkerInvokedEvent.TailEvent.Event.Request.Method+" "+url.Path,
+	// 	)
 
-	if evt.FunctionResponseEvent != nil {
-		duration := time.Since(u.workerTime[evt.FunctionResponseEvent.WorkerID]).Round(time.Millisecond)
-		formattedDuration := fmt.Sprintf("took %.9s", fmt.Sprintf("+%v", duration))
-		u.printEvent(u.getColor(evt.FunctionResponseEvent.WorkerID), "Done", formattedDuration)
-	}
+	// 	for _, log := range evt.WorkerInvokedEvent.TailEvent.Logs {
+	// 		duration := time.UnixMilli(log.Timestamp).Sub(time.UnixMilli(evt.WorkerInvokedEvent.TailEvent.EventTimestamp))
+	// 		formattedDuration := fmt.Sprintf("%.9s", fmt.Sprintf("+%v", duration))
 
-	if evt.FunctionLogEvent != nil {
-		duration := time.Since(u.workerTime[evt.FunctionLogEvent.WorkerID]).Round(time.Millisecond)
-		formattedDuration := fmt.Sprintf("%.9s", fmt.Sprintf("+%v", duration))
-		u.printEvent(u.getColor(evt.FunctionLogEvent.WorkerID), formattedDuration, evt.FunctionLogEvent.Line)
-	}
+	// 		line := []string{}
+	// 		for _, part := range log.Message {
+	// 			switch v := part.(type) {
+	// 			case string:
+	// 				line = append(line, v)
+	// 			case map[string]interface{}:
+	// 				data, _ := json.Marshal(v)
+	// 				line = append(line, string(data))
+	// 			}
+	// 		}
 
-	if evt.WorkerBuildEvent != nil {
-		if len(evt.WorkerBuildEvent.Errors) > 0 {
-			u.printEvent(TEXT_DANGER, "Build Error", u.functionName(evt.WorkerBuildEvent.WorkerID)+" "+strings.Join(evt.WorkerBuildEvent.Errors, "\n"))
-			return
-		}
-		u.printEvent(TEXT_INFO, "Build", u.functionName(evt.WorkerBuildEvent.WorkerID))
-	}
-
-	if evt.WorkerUpdatedEvent != nil {
-		u.printEvent(TEXT_INFO, "Reload", u.functionName(evt.WorkerUpdatedEvent.WorkerID))
-	}
-	if evt.WorkerInvokedEvent != nil {
-		url, _ := url.Parse(evt.WorkerInvokedEvent.TailEvent.Event.Request.URL)
-		u.printEvent(
-			u.getColor(evt.WorkerInvokedEvent.WorkerID),
-			TEXT_NORMAL_BOLD.Render(fmt.Sprintf("%-11s", "Invoke")),
-			u.functionName(evt.WorkerInvokedEvent.WorkerID)+" "+evt.WorkerInvokedEvent.TailEvent.Event.Request.Method+" "+url.Path,
-		)
-
-		for _, log := range evt.WorkerInvokedEvent.TailEvent.Logs {
-			duration := time.UnixMilli(log.Timestamp).Sub(time.UnixMilli(evt.WorkerInvokedEvent.TailEvent.EventTimestamp))
-			formattedDuration := fmt.Sprintf("%.9s", fmt.Sprintf("+%v", duration))
-
-			line := []string{}
-			for _, part := range log.Message {
-				switch v := part.(type) {
-				case string:
-					line = append(line, v)
-				case map[string]interface{}:
-					data, _ := json.Marshal(v)
-					line = append(line, string(data))
-				}
-			}
-
-			for _, item := range strings.Split(strings.Join(line, " "), "\n") {
-				u.printEvent(u.getColor(evt.WorkerInvokedEvent.WorkerID), formattedDuration, item)
-			}
-		}
-		u.printEvent(u.getColor(evt.WorkerInvokedEvent.WorkerID), "Done", evt.WorkerInvokedEvent.TailEvent.Outcome)
-	}
-
-	if evt.FunctionBuildEvent != nil {
-		if len(evt.FunctionBuildEvent.Errors) > 0 {
-			u.printEvent(TEXT_DANGER, "Build Error", u.functionName(evt.FunctionBuildEvent.FunctionID))
-			for _, item := range evt.FunctionBuildEvent.Errors {
-				u.printEvent(TEXT_DANGER, "", "↳ "+strings.TrimSpace(item))
-			}
-			return
-		}
-		u.printEvent(TEXT_SUCCESS, "Build", u.functionName(evt.FunctionBuildEvent.FunctionID))
-	}
-
-	if evt.FunctionErrorEvent != nil {
-		u.printEvent(u.getColor(evt.FunctionErrorEvent.WorkerID), TEXT_DANGER.Render(fmt.Sprintf("%-11s", "Error")), u.functionName(evt.FunctionErrorEvent.FunctionID))
-		u.printEvent(u.getColor(evt.FunctionErrorEvent.WorkerID), "", evt.FunctionErrorEvent.ErrorMessage)
-		for _, item := range evt.FunctionErrorEvent.Trace {
-			if strings.Contains(item, "Error:") {
-				continue
-			}
-			u.printEvent(u.getColor(evt.FunctionErrorEvent.WorkerID), "", "↳ "+strings.TrimSpace(item))
-		}
-	}
+	// 		for _, item := range strings.Split(strings.Join(line, " "), "\n") {
+	// 			u.printEvent(u.getColor(evt.WorkerInvokedEvent.WorkerID), formattedDuration, item)
+	// 		}
+	// 	}
+	// 	u.printEvent(u.getColor(evt.WorkerInvokedEvent.WorkerID), "Done", evt.WorkerInvokedEvent.TailEvent.Outcome)
+	// }
 }
 
 var COLORS = []lipgloss.Style{

@@ -1,6 +1,6 @@
 import fs from "fs";
 import path from "path";
-import { ComponentResourceOptions, Output, all } from "@pulumi/pulumi";
+import { ComponentResourceOptions, Output, all, output } from "@pulumi/pulumi";
 import { Function } from "./function.js";
 import {
   SsrSiteArgs,
@@ -324,11 +324,23 @@ export class SolidStart extends Component implements Link.Linkable {
     const parent = this;
     const { sitePath, partition } = prepare(args, opts);
     if ($dev) {
+      const server = createDevServer(parent, name, args);
       this.registerOutputs({
         _metadata: {
           mode: "placeholder",
           path: sitePath,
-          server: createDevServer(parent, name, args).arn,
+          server: server.arn,
+        },
+        _dev: {
+          directory: sitePath,
+          links: output(args.link || [])
+            .apply(Link.build)
+            .apply((links) => links.map((link) => link.name)),
+          aws: {
+            role: server.nodes.role.arn,
+          },
+          environment: args.environment,
+          command: "npm run dev",
         },
       });
       return;

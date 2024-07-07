@@ -34,9 +34,9 @@ type stack struct {
 
 type StackEvent struct {
 	events.EngineEvent
-	StdOutEvent           *StdOutEvent
 	ConcurrentUpdateEvent *ConcurrentUpdateEvent
 	CompleteEvent         *CompleteEvent
+	OldCompleteEvent      *CompleteEvent
 	StackCommandEvent     *StackCommandEvent
 	BuildFailedEvent      *BuildFailedEvent
 }
@@ -53,15 +53,12 @@ type StackInput struct {
 	Dev     bool
 }
 
-type StdOutEvent struct {
-	Text string
-}
-
 type ConcurrentUpdateEvent struct{}
 
 type Links map[string]interface{}
 
 type Receiver struct {
+	Name        string              `json:"name"`
 	Directory   string              `json:"directory"`
 	Links       []string            `json:"links"`
 	Environment map[string]string   `json:"environment"`
@@ -69,6 +66,18 @@ type Receiver struct {
 	Cloudflare  *CloudflareReceiver `json:"cloudflare"`
 	Aws         *AwsReceiver        `json:"aws"`
 }
+
+type Dev struct {
+	Name        string            `json:"name"`
+	Command     string            `json:"command"`
+	Directory   string            `json:"directory"`
+	Links       []string          `json:"links"`
+	Environment map[string]string `json:"environment"`
+	Aws         *struct {
+		Role string `json:"role"`
+	} `json:"aws"`
+}
+type Devs map[string]Dev
 
 type CloudflareReceiver struct {
 }
@@ -98,10 +107,12 @@ type CompleteEvent struct {
 	Links     Links
 	Warps     Warps
 	Receivers Receivers
+	Devs      Devs
 	Outputs   map[string]interface{}
 	Hints     map[string]string
 	Errors    []Error
 	Finished  bool
+	Old       bool
 	Resources []apitype.ResourceV3
 }
 
@@ -285,6 +296,18 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 	}
 	slog.Info("built stack")
 
+	go func() {
+		completed, err := getCompletedEvent(ctx, stack)
+		if err != nil {
+			return
+		}
+		completed.Finished = true
+		completed.Old = true
+		input.OnEvent(&StackEvent{
+			OldCompleteEvent: completed,
+		})
+	}()
+
 	config := auto.ConfigMap{}
 	for provider, args := range s.project.app.Providers {
 		for key, value := range args.(map[string]interface{}) {
@@ -317,15 +340,8 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 	}
 	defer eventlog.Close()
 
-	complete := &CompleteEvent{
-		Links:     Links{},
-		Receivers: Receivers{},
-		Warps:     Warps{},
-		Hints:     map[string]string{},
-		Outputs:   map[string]interface{}{},
-		Errors:    []Error{},
-		Finished:  false,
-	}
+	errors := []Error{}
+	finished := false
 
 	go func() {
 		for {
@@ -344,7 +360,7 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 					if strings.Contains(event.DiagnosticEvent.Message, "failed to register new resource") {
 						break
 					}
-					complete.Errors = append(complete.Errors, Error{
+					errors = append(errors, Error{
 						Message: event.DiagnosticEvent.Message,
 						URN:     event.DiagnosticEvent.URN,
 					})
@@ -353,7 +369,7 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 				input.OnEvent(&StackEvent{EngineEvent: event})
 
 				if event.SummaryEvent != nil {
-					complete.Finished = true
+					finished = true
 				}
 
 				bytes, err := json.Marshal(event)
@@ -367,59 +383,35 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 	}()
 
 	defer func() {
-		slog.Info("stack command complete")
-		defer input.OnEvent(&StackEvent{CompleteEvent: complete})
-
-		rawDeploment, _ := stack.Export(context.Background())
-		var deployment apitype.DeploymentV3
-		json.Unmarshal(rawDeploment.Deployment, &deployment)
-
-		if len(deployment.Resources) == 0 {
-			return
+		complete, err := getCompletedEvent(ctx, stack)
+		if err != nil {
+			panic(err)
 		}
-		complete.Resources = deployment.Resources
+		complete.Finished = finished
+		complete.Errors = errors
+		defer input.OnEvent(&StackEvent{CompleteEvent: complete})
 
 		cloudflareBindings := map[string]string{}
 		for _, resource := range complete.Resources {
 			outputs := decrypt(resource.Outputs).(map[string]interface{})
-			if match, ok := outputs["_live"].(map[string]interface{}); ok {
-				data, _ := json.Marshal(match)
-				var entry Warp
-				json.Unmarshal(data, &entry)
-				complete.Warps[entry.FunctionID] = entry
-			}
-			if match, ok := outputs["_receiver"].(map[string]interface{}); ok {
-				data, _ := json.Marshal(match)
-				var entry Receiver
-				json.Unmarshal(data, &entry)
-				complete.Receivers[entry.Directory] = entry
-			}
-
-			if hint, ok := outputs["_hint"].(string); ok {
-				complete.Hints[string(resource.URN)] = hint
-			}
-
 			if match, ok := outputs["r2BucketBindings"].([]interface{}); ok {
 				for _, binding := range match {
 					item := binding.(map[string]interface{})
 					cloudflareBindings[item["name"].(string)] = "R2Bucket"
 				}
 			}
-
 			if match, ok := outputs["d1DatabaseBindings"].([]interface{}); ok {
 				for _, binding := range match {
 					item := binding.(map[string]interface{})
 					cloudflareBindings[item["name"].(string)] = "D1Database"
 				}
 			}
-
 			if match, ok := outputs["kvNamespaceBindings"].([]interface{}); ok {
 				for _, binding := range match {
 					item := binding.(map[string]interface{})
 					cloudflareBindings[item["name"].(string)] = "KVNamespace"
 				}
 			}
-
 			if match, ok := outputs["serviceBindings"].([]interface{}); ok {
 				for _, binding := range match {
 					item := binding.(map[string]interface{})
@@ -428,81 +420,66 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 			}
 		}
 
-		outputs := decrypt(deployment.Resources[0].Outputs).(map[string]interface{})
-		linksOutput, ok := outputs["_links"]
-		if ok {
-			for key, value := range linksOutput.(map[string]interface{}) {
-				complete.Links[key] = value
-			}
+		typesFileName := "sst-env.d.ts"
+		typesFilePath := filepath.Join(s.project.PathRoot(), typesFileName)
+		typesFile, _ := os.Create(typesFilePath)
+		defer typesFile.Close()
 
-			typesFileName := "sst-env.d.ts"
-			typesFilePath := filepath.Join(s.project.PathRoot(), typesFileName)
-			typesFile, _ := os.Create(typesFilePath)
-			defer typesFile.Close()
+		oldTypesFilePath := filepath.Join(s.project.PathWorkingDir(), "types.generated.ts")
+		oldTypesFile, _ := os.Create(oldTypesFilePath)
+		defer oldTypesFile.Close()
 
-			oldTypesFilePath := filepath.Join(s.project.PathWorkingDir(), "types.generated.ts")
-			oldTypesFile, _ := os.Create(oldTypesFilePath)
-			defer oldTypesFile.Close()
+		multi := io.MultiWriter(typesFile, oldTypesFile)
 
-			multi := io.MultiWriter(typesFile, oldTypesFile)
+		multi.Write([]byte(`/* tslint:disable */` + "\n"))
+		multi.Write([]byte(`/* eslint-disable */` + "\n"))
+		multi.Write([]byte(`import "sst"` + "\n"))
+		multi.Write([]byte(`declare module "sst" {` + "\n"))
+		multi.Write([]byte("  export interface Resource " + inferTypes(complete.Links, "  ") + "\n"))
+		multi.Write([]byte("}" + "\n"))
+		multi.Write([]byte("export {}"))
 
-			multi.Write([]byte(`/* tslint:disable */` + "\n"))
-			multi.Write([]byte(`/* eslint-disable */` + "\n"))
-			multi.Write([]byte(`import "sst"` + "\n"))
-			multi.Write([]byte(`declare module "sst" {` + "\n"))
-			multi.Write([]byte("  export interface Resource " + inferTypes(complete.Links, "  ") + "\n"))
-			multi.Write([]byte("}" + "\n"))
-			multi.Write([]byte("export {}"))
-
-			for _, receiver := range complete.Receivers {
-				envPathHint, err := fs.FindUp(filepath.Join(s.project.PathRoot(), receiver.Directory), "tsconfig.json")
-				if err != nil {
-					continue
-				}
-				envPath := filepath.Join(filepath.Dir(envPathHint), "sst-env.d.ts")
-				rel, _ := filepath.Rel(filepath.Dir(envPath), typesFilePath)
-				if rel == typesFileName && receiver.Cloudflare == nil {
-					continue
-				}
-				file, _ := os.Create(envPath)
-				file.Write([]byte(`/* tslint:disable */` + "\n"))
-				file.Write([]byte(`/* eslint-disable */` + "\n"))
-				if rel != typesFileName {
-					file.WriteString(`/// <reference path="` + rel + `" />` + "\n")
-				}
-				defer file.Close()
-
-				if receiver.Cloudflare != nil {
-					if rel == typesFileName {
-						file.Write([]byte(`import "sst"` + "\n"))
-						file.Write([]byte(`declare module "sst" {` + "\n"))
-						file.Write([]byte("  export interface Resource " + inferTypes(complete.Links, "  ") + "\n"))
-						file.Write([]byte("}" + "\n"))
-					}
-					bindings := map[string]interface{}{}
-					for _, link := range receiver.Links {
-						if cloudflareBindings[link] != "" {
-							bindings[link] = literal{value: `import("@cloudflare/workers-types").` + cloudflareBindings[link]}
-						}
-					}
-					if len(bindings) > 0 {
-						file.Write([]byte("// cloudflare \n"))
-						file.Write([]byte(`declare module "sst" {` + "\n"))
-						file.Write([]byte("  export interface Resource " + inferTypes(bindings, "  ") + "\n"))
-						file.Write([]byte("}" + "\n"))
-					}
-				}
-			}
-
-			provider.PutLinks(s.project.home, s.project.app.Name, s.project.app.Stage, complete.Links)
-		}
-
-		for key, value := range outputs {
-			if strings.HasPrefix(key, "_") {
+		for _, receiver := range complete.Receivers {
+			envPathHint, err := fs.FindUp(filepath.Join(s.project.PathRoot(), receiver.Directory), "tsconfig.json")
+			if err != nil {
 				continue
 			}
-			complete.Outputs[key] = value
+			envPath := filepath.Join(filepath.Dir(envPathHint), "sst-env.d.ts")
+			rel, _ := filepath.Rel(filepath.Dir(envPath), typesFilePath)
+			if rel == typesFileName && receiver.Cloudflare == nil {
+				continue
+			}
+			file, _ := os.Create(envPath)
+			file.Write([]byte(`/* tslint:disable */` + "\n"))
+			file.Write([]byte(`/* eslint-disable */` + "\n"))
+			if rel != typesFileName {
+				file.WriteString(`/// <reference path="` + rel + `" />` + "\n")
+			}
+			defer file.Close()
+
+			if receiver.Cloudflare != nil {
+				if rel == typesFileName {
+					file.Write([]byte(`import "sst"` + "\n"))
+					file.Write([]byte(`declare module "sst" {` + "\n"))
+					file.Write([]byte("  export interface Resource " + inferTypes(complete.Links, "  ") + "\n"))
+					file.Write([]byte("}" + "\n"))
+				}
+				bindings := map[string]interface{}{}
+				for _, link := range receiver.Links {
+					if cloudflareBindings[link] != "" {
+						bindings[link] = literal{value: `import("@cloudflare/workers-types").` + cloudflareBindings[link]}
+					}
+				}
+				if len(bindings) > 0 {
+					file.Write([]byte("// cloudflare \n"))
+					file.Write([]byte(`declare module "sst" {` + "\n"))
+					file.Write([]byte("  export interface Resource " + inferTypes(bindings, "  ") + "\n"))
+					file.Write([]byte("}" + "\n"))
+				}
+			}
 		}
+
+		provider.PutLinks(s.project.home, s.project.app.Name, s.project.app.Stage, complete.Links)
 	}()
 
 	slog.Info("running stack command", "cmd", input.Command)
@@ -530,7 +507,7 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 				parsed.ResourceDeleted = match
 			}
 		}
-		for _, err := range complete.Errors {
+		for _, err := range errors {
 			parsed.Errors = append(parsed.Errors, provider.SummaryError{
 				URN:     err.URN,
 				Message: err.Message,
@@ -800,6 +777,7 @@ func decrypt(input interface{}) interface{} {
 				json.Unmarshal([]byte(str), &parsed)
 				return parsed
 			}
+			return cast["plaintext"]
 		}
 		for key, value := range cast {
 			cast[key] = decrypt(value)
@@ -820,4 +798,75 @@ type upOptionFunc func(*optup.Options)
 // ApplyOption is an implementation detail
 func (o upOptionFunc) ApplyOption(opts *optup.Options) {
 	o(opts)
+}
+
+func getCompletedEvent(ctx context.Context, stack auto.Stack) (*CompleteEvent, error) {
+	exported, err := stack.Export(ctx)
+	if err != nil {
+		return nil, err
+	}
+	slog.Info("stack command complete")
+	var deployment apitype.DeploymentV3
+	json.Unmarshal(exported.Deployment, &deployment)
+	complete := &CompleteEvent{
+		Links:     Links{},
+		Receivers: Receivers{},
+		Devs:      Devs{},
+		Warps:     Warps{},
+		Hints:     map[string]string{},
+		Outputs:   map[string]interface{}{},
+		Errors:    []Error{},
+		Finished:  false,
+		Resources: []apitype.ResourceV3{},
+	}
+	if len(deployment.Resources) == 0 {
+		return complete, nil
+	}
+	complete.Resources = deployment.Resources
+
+	for _, resource := range complete.Resources {
+		outputs := decrypt(resource.Outputs).(map[string]interface{})
+		if match, ok := outputs["_live"].(map[string]interface{}); ok {
+			data, _ := json.Marshal(match)
+			var entry Warp
+			json.Unmarshal(data, &entry)
+			complete.Warps[entry.FunctionID] = entry
+		}
+		if match, ok := outputs["_receiver"].(map[string]interface{}); ok {
+			data, _ := json.Marshal(match)
+			var entry Receiver
+			json.Unmarshal(data, &entry)
+			entry.Name = resource.URN.Name()
+			complete.Receivers[entry.Directory] = entry
+		}
+
+		if match, ok := outputs["_dev"].(map[string]interface{}); ok {
+			data, _ := json.Marshal(match)
+			var entry Dev
+			json.Unmarshal(data, &entry)
+			entry.Name = resource.URN.Name()
+			complete.Devs[entry.Name] = entry
+		}
+
+		if hint, ok := outputs["_hint"].(string); ok {
+			complete.Hints[string(resource.URN)] = hint
+		}
+	}
+
+	outputs := decrypt(deployment.Resources[0].Outputs).(map[string]interface{})
+	linksOutput, ok := outputs["_links"]
+	if ok {
+		for key, value := range linksOutput.(map[string]interface{}) {
+			complete.Links[key] = value
+		}
+	}
+
+	for key, value := range outputs {
+		if strings.HasPrefix(key, "_") {
+			continue
+		}
+		complete.Outputs[key] = value
+	}
+
+	return complete, nil
 }

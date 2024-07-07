@@ -720,6 +720,10 @@ export interface ClusterServiceArgs {
      */
     logGroup?: Transform<cloudwatch.LogGroupArgs>;
   };
+
+  dev?: Input<{
+    command: string;
+  }>;
 }
 
 /**

@@ -10,14 +10,15 @@ import (
 	"strings"
 
 	"github.com/fatih/color"
+	"github.com/sst/ion/cmd/sst/cli"
 	"github.com/sst/ion/cmd/sst/ui"
 	"github.com/sst/ion/internal/util"
 	"github.com/sst/ion/pkg/project/provider"
 	"github.com/sst/ion/pkg/server"
 )
 
-func CmdSecretList(cli *Cli) error {
-	p, err := initProject(cli)
+func CmdSecretList(c *cli.Cli) error {
+	p, err := c.InitProject()
 	if err != nil {
 		return err
 	}
@@ -40,9 +41,9 @@ func CmdSecretList(cli *Cli) error {
 	return nil
 }
 
-func CmdSecretSet(cli *Cli) error {
-	key := cli.Positional(0)
-	value := cli.Positional(1)
+func CmdSecretSet(c *cli.Cli) error {
+	key := c.Positional(0)
+	value := c.Positional(1)
 	if value == "" {
 		stat, err := os.Stdin.Stat()
 		if err != nil {
@@ -70,7 +71,7 @@ func CmdSecretSet(cli *Cli) error {
 	if !regexp.MustCompile(`^[A-Z][a-zA-Z0-9]*$`).MatchString(key) {
 		return util.NewReadableError(nil, "Secret names must start with a capital letter and contain only letters and numbers")
 	}
-	p, err := initProject(cli)
+	p, err := c.InitProject()
 	if err != nil {
 		return err
 	}
@@ -93,9 +94,9 @@ func CmdSecretSet(cli *Cli) error {
 	return nil
 }
 
-func CmdSecretLoad(cli *Cli) error {
-	filePath := cli.Positional(0)
-	p, err := initProject(cli)
+func CmdSecretLoad(c *cli.Cli) error {
+	filePath := c.Positional(0)
+	p, err := c.InitProject()
 	if err != nil {
 		return err
 	}

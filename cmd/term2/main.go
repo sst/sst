@@ -204,8 +204,6 @@ func (m *model) HandleEvent(ev tcell.Event) {
 }
 
 func main() {
-	f, _ := os.Create("recording.log")
-	log.SetOutput(f)
 	var err error
 	m := &model{
 		focus: "sidebar",
@@ -237,7 +235,6 @@ func main() {
 		term := tcellterm.New()
 		term.SetSurface(m.main)
 		term.Attach(m.HandleEvent)
-		term.Logger = log.New(f, "", log.Flags())
 		p := &pane{
 			vt:    term,
 			args:  args,

@@ -12,15 +12,20 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/sst/ion/cmd/sst/cli"
+	"github.com/sst/ion/cmd/sst/mosaic"
 	"github.com/sst/ion/cmd/sst/ui"
 	"github.com/sst/ion/internal/util"
 	"github.com/sst/ion/pkg/project"
 	"github.com/sst/ion/pkg/server"
 )
 
-func CmdDev(cli *Cli) error {
+func CmdDev(cli *cli.Cli) error {
+	if _, ok := os.LookupEnv("SST_SERVER"); ok {
+		return mosaic.CmdMosaic(cli)
+	}
 	var args []string
-	for _, arg := range cli.arguments {
+	for _, arg := range cli.Arguments() {
 		args = append(args, strings.Fields(arg)...)
 	}
 	slog.Info("args", "args", args, "length", len(args))
@@ -31,7 +36,7 @@ func CmdDev(cli *Cli) error {
 		return util.NewReadableError(err, "Could not find sst.config.ts")
 	}
 
-	stage, err := getStage(cli, cfgPath)
+	stage, err := cli.Stage(cfgPath)
 	if err != nil {
 		return util.NewReadableError(err, "Could not find stage")
 	}

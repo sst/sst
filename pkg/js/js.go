@@ -41,10 +41,13 @@ const __dirname = topLevelFileUrlToPath(new topLevelURL(".", import.meta.url))
 			Sourcefile: "eval.ts",
 			Loader:     esbuild.LoaderTS,
 		},
-		Packages: esbuild.PackagesExternal,
+		NodePaths: []string{
+			filepath.Join(input.Dir, ".sst", ".platform", "node_modules"),
+		},
 		External: []string{
 			"@pulumi/*",
 			"@pulumiverse/*",
+			"@sst-provider/*",
 			"@aws-sdk/*",
 			"esbuild",
 			"archiver",
@@ -59,12 +62,7 @@ const __dirname = topLevelFileUrlToPath(new topLevelURL(".", import.meta.url))
 	})
 	if len(result.Errors) > 0 {
 		for _, err := range result.Errors {
-			slog.Error("esbuild error",
-				"text", err.Text,
-				"location.file", err.Location.File,
-				"location.line", err.Location.Line,
-				"column", err.Location.Column,
-			)
+			slog.Error("esbuild error", "text", err.Text)
 		}
 		return result, fmt.Errorf("%s", FormatError(result.Errors))
 	}
@@ -76,6 +74,10 @@ const __dirname = topLevelFileUrlToPath(new topLevelURL(".", import.meta.url))
 func FormatError(input []esbuild.Message) string {
 	lines := []string{}
 	for _, err := range input {
+		if err.Location == nil {
+			lines = append(lines, fmt.Sprintf("%v", err.Text))
+			continue
+		}
 		lines = append(lines, fmt.Sprintf("%v:%v:%v: %v", err.Location.File, err.Location.Line, err.Location.Column, err.Text))
 	}
 	return strings.Join(lines, "\n")
