@@ -22,6 +22,7 @@ import {
   prepare,
 } from "../base/base-static-site.js";
 import { cloudfront, iam } from "@pulumi/aws";
+import { URL_UNAVAILABLE } from "./linkable.js";
 
 export interface StaticSiteArgs extends BaseStaticSiteArgs {
   /**
@@ -697,7 +698,8 @@ export class StaticSite extends Component implements Link.Linkable {
   public getSSTLink() {
     return {
       properties: {
-        url: this.url,
+        url:
+          this.url?.apply((url) => url || URL_UNAVAILABLE) || URL_UNAVAILABLE,
       },
     };
   }
