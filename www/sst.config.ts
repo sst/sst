@@ -19,6 +19,19 @@ export default $config({
       },
     };
   },
+  console: {
+    autodeploy: {
+      target(event) {
+        if (
+          event.type === "branch" &&
+          event.branch === "dev" &&
+          event.action === "pushed"
+        ) {
+          return { stage: "production" };
+        }
+      },
+    },
+  },
   async run() {
     const isPersonal = $app.stage !== "production" && $app.stage !== "dev";
     const domain =
