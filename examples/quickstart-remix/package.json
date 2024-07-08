@@ -2,7 +2,6 @@
   "name": "quickstart-remix",
   "private": true,
   "sideEffects": false,
-  "type": "module",
   "scripts": {
     "build": "remix build",
     "dev": "sst bind remix dev",
