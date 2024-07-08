@@ -84,7 +84,7 @@ func (m *Model) update(ev tcell.Event) {
 		switch ev.Key() {
 		case 256:
 			switch ev.Rune() {
-			case 'c':
+			case 'x':
 				if m.focus == "sidebar" && m.selectedPane().killable {
 					m.selectedPane().kill()
 					return
@@ -283,53 +283,81 @@ func (m *Model) draw() {
 	}
 
 	for index, item := range m.panes {
-		title := views.NewTextBar()
-		style := tcell.StyleDefault
-		if index == m.selected {
-			style = style.Background(tcell.ColorGray)
-			style = style.Bold(true)
-			if m.focus == "sidebar" {
-				style = style.Background(tcell.ColorOrangeRed)
+		if item.status == paneStatusRunning {
+			title := views.NewTextBar()
+			style := tcell.StyleDefault
+			if item.status == paneStatusStopped {
+				style = style.Foreground(tcell.ColorGray)
 			}
-			style = style.Foreground(tcell.ColorWhite)
-			title.SetRight("< ", style)
-		}
+			if index == m.selected {
+				style = style.Bold(true)
+				style = style.Foreground(tcell.ColorWhite)
+				if m.focus == "sidebar" {
+					style = style.Background(tcell.ColorOrangeRed)
+				}
+			}
 
-		text := item.title
-		title.SetStyle(style)
-		title.SetLeft(" "+text, tcell.StyleDefault)
-		if item.status == paneStatusStopped {
-			title.SetRight("- ", tcell.StyleDefault)
+			text := item.title
+			title.SetStyle(style)
+			title.SetLeft(" "+text, tcell.StyleDefault)
+			m.sidebarWidget.AddWidget(title, 0)
 		}
-		m.sidebarWidget.AddWidget(title, 0)
+	}
+	spacer := views.NewTextBar()
+	spacer.SetLeft("──────────────────────", tcell.StyleDefault.Foreground(tcell.ColorGray))
+	m.sidebarWidget.AddWidget(spacer, 0)
+	for index, item := range m.panes {
+		if item.status == paneStatusStopped {
+			title := views.NewTextBar()
+			style := tcell.StyleDefault
+			if item.status == paneStatusStopped {
+				style = style.Foreground(tcell.ColorGray)
+			}
+			if index == m.selected {
+				style = style.Bold(true)
+				style = style.Foreground(tcell.ColorWhite)
+				if m.focus == "sidebar" {
+					style = style.Background(tcell.ColorOrangeRed)
+				}
+			}
+
+			text := item.title
+			title.SetStyle(style)
+			title.SetLeft(" "+text, tcell.StyleDefault)
+			m.sidebarWidget.AddWidget(title, 0)
+		}
 	}
 	m.sidebarWidget.AddWidget(views.NewSpacer(), 1)
 	selectedPane := m.selectedPane()
 	if selectedPane.killable && m.focus == "sidebar" {
 		if selectedPane.status == paneStatusRunning {
 			title := views.NewTextBar()
-			title.SetStyle(tcell.StyleDefault)
-			title.SetLeft("[c]     kill", tcell.StyleDefault)
+			title.SetStyle(tcell.StyleDefault.Foreground(tcell.ColorGray))
+			title.SetLeft("[x]", tcell.StyleDefault)
+			title.SetRight("kill", tcell.StyleDefault.Foreground(tcell.ColorGray))
 			m.sidebarWidget.AddWidget(title, 0)
 
 			title = views.NewTextBar()
-			title.SetStyle(tcell.StyleDefault)
-			title.SetLeft("[enter] focus", tcell.StyleDefault)
+			title.SetStyle(tcell.StyleDefault.Foreground(tcell.ColorGray))
+			title.SetLeft("[enter]", tcell.StyleDefault)
+			title.SetRight("focus", tcell.StyleDefault.Foreground(tcell.ColorGray))
 			m.sidebarWidget.AddWidget(title, 0)
 		}
 
 		if selectedPane.status == paneStatusStopped {
 			title := views.NewTextBar()
-			title.SetStyle(tcell.StyleDefault)
-			title.SetLeft("[enter] start", tcell.StyleDefault)
+			title.SetStyle(tcell.StyleDefault.Foreground(tcell.ColorGray))
+			title.SetLeft("[enter]", tcell.StyleDefault)
+			title.SetRight("start", tcell.StyleDefault)
 			m.sidebarWidget.AddWidget(title, 0)
 		}
 	}
 
 	if m.focus == "main" {
 		title := views.NewTextBar()
-		title.SetStyle(tcell.StyleDefault)
-		title.SetLeft("[ctrl-z] sidebar", tcell.StyleDefault)
+		title.SetStyle(tcell.StyleDefault.Foreground(tcell.ColorGray))
+		title.SetLeft("[ctl-z]", tcell.StyleDefault)
+		title.SetRight("sidebar", tcell.StyleDefault)
 		m.sidebarWidget.AddWidget(title, 0)
 	}
 	m.sidebarWidget.Draw()
