@@ -30,6 +30,11 @@ export default $config({
           return { stage: "production" };
         }
       },
+      workflow(context) {
+        context.install();
+        context.shell("goenv install 1.21.3 && goenv global 1.21.3");
+        context.deploy();
+      },
     },
   },
   async run() {
