@@ -31,8 +31,14 @@ export const awsFetch = async (
     retrableErrors?: string[];
   } = {},
 ) => {
+  if (process.env.SST_RUN_ID) {
+    console.log("debug: importing aws4fetch");
+  }
   const sourcePath = "aws4fetch";
   const { AwsClient } = await import(sourcePath);
+  if (process.env.SST_RUN_ID) {
+    console.log("debug: imported aws4fetch");
+  }
   const region = opts?.region ?? process.env.SST_AWS_REGION ?? "us-east-1";
   if (process.env.SST_RUN_ID) {
     console.log({ region });
