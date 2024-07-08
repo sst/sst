@@ -8,6 +8,8 @@ import config from '../../../../config.ts';
 
 export const github  = config.github;
 
+SST is a framework that makes it easy to build modern full-stack applications on your own infrastructure.
+
 Ion is a new engine for deploying [SST](https://sst.dev) apps. It uses [Pulumi](https://www.pulumi.com) and [Terraform](https://www.terraform.io), as opposed to CDK and CloudFormation.
 
 :::note
@@ -16,24 +18,7 @@ Ion is open source, does not require a Pulumi account, and only depends on the o
 
 Ion is generally available and **recommended for new SST users**. We are working on a migration path for SST v2 users. Once Ion is stable, it’ll be released as SST v3. [Read the full announcement](https://sst.dev/blog/moving-away-from-cdk.html).
 
----
-
-Aside from the underlying engine, there are a couple of other differences between SST v2 and Ion.
-
-- There are no _"stacks"_ or stack resource limits.
-- There are no npm packages, just a CLI and the `sst.config.ts`.
-- Resource _binding_ is now called _linking_ and works across cloud providers.
-- The `bind` command has been merged into the `dev` command. You won't need to run both of them.
-
 If you are new to SST, here's how it works.
-
----
-
-SST is a framework that makes it easy to build modern full-stack applications on your own infrastructure.
-
-:::note
-Ion currently **supports Node.js** applications on **macOS, Linux, and WSL**. Support for other runtimes and OSes are on the roadmap.
-:::
 
 ---
 
@@ -155,7 +140,7 @@ Read more about [transforms](/docs/components#transforms).
 
 ### Extend
 
-If you want to add a feature to your app that's not supported by SST's components yet, you can use Pulumi components directly in your SST app. This is because components in SST are built on Pulumi components.
+If you want to add a feature to your app that's not supported by SST's components yet, you can use Pulumi/Terraform components directly in your SST app. This is because components in SST are built on Pulumi components.
 
 ```js title="sst.config.ts"
 new aws.s3.BucketV2("b", {
@@ -248,6 +233,10 @@ To make this all work, Ion comes with a [CLI](/docs/reference/cli/) that you ins
 curl -fsSL https://ion.sst.dev/install | bash
 ```
 
+:::note
+Ion currently supports **macOS, Linux, and WSL**. Support for Windows is on the roadmap.
+:::
+
 The CLI currently supports macOS, Linux, and WSL.
 
 ---
@@ -260,7 +249,7 @@ The CLI includes a `dev` command that starts a local development environment.
 sst dev
 ```
 
-It lets you make and test changes to your function live, without having to redeploy them.
+It lets you make and test changes to your functions live, without having to redeploy them.
 
 :::tip
 The `sst dev` command runs your functions _**live**_, letting you test changes to your functions in milliseconds. [Learn more](/docs/live/).
@@ -298,15 +287,7 @@ sst deploy
 
 ---
 
-#### Personal stage
-
-By default, your app is deployed to your _personal stage_. The name of your personal stage is your username in the local machine. This is cached in the `.sst/stage` file.
-
-You can override this to deploy to separate stages or environments.
-
----
-
-#### Environments
+#### Stages
 
 The `deploy` command can also deploy your app to a specific stage or environment.
 
@@ -321,12 +302,35 @@ npx sst deploy --stage=pr-123
 npx sst deploy --stage=prod
 ```
 
-This lets you create separate environments for development, production, pull-requests, or branches. Learn more about [stages](/docs/reference/cli#stage).
+This lets you create separate environments for your app. Learn more about [stages](/docs/reference/cli#stage).
 
 ---
 
 ## Console
 
-Once your app is in production, you can use the [SST Console](/docs/console/) to monitor and manage your app — [**console.sst.dev**](https://console.sst.dev)
+Once you are ready to go to production, you can use the [SST Console](/docs/console/) to **auto-deploy** your app, create **preview environments**, and **monitor** for any issues.
 
-[![SST Console](../../../assets/docs/sst-console-logs.png)](https://console.sst.dev)
+![SST Console](../../../assets/docs/sst-console-autodeploy-config.png)
+
+Learn more about the [Console](/docs/console/).
+
+{/*
+
+---
+
+Aside from the underlying engine, there are a couple of other differences between SST v2 and Ion.
+
+- There are no _"stacks"_ or stack resource limits.
+- There are no npm packages, just a CLI and the `sst.config.ts`.
+- Resource _binding_ is now called _linking_ and works across cloud providers.
+- The `bind` command has been merged into the `dev` command. You won't need to run both of them.
+
+---
+
+#### Personal stage
+
+By default, your app is deployed to your _personal stage_. The name of your personal stage is your username in the local machine. This is cached in the `.sst/stage` file.
+
+You can override this to deploy to separate stages or environments.
+
+*/}
