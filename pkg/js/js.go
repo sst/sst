@@ -22,7 +22,7 @@ type EvalOptions struct {
 
 func Build(input EvalOptions) (esbuild.BuildResult, error) {
 	outfile := filepath.Join(input.Dir, ".sst", "platform", fmt.Sprintf("sst.config.%v.mjs", time.Now().UnixMilli()))
-	slog.Info("esbuild building", outfile)
+	slog.Info("esbuild building", "out", outfile)
 	result := esbuild.Build(esbuild.BuildOptions{
 		Banner: map[string]string{
 			"js": `
