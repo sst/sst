@@ -24,6 +24,7 @@ import type { Input } from "../input.js";
 import { Queue } from "./queue.js";
 import { buildApp } from "../base/base-ssr-site.js";
 import { dynamodb, lambda } from "@pulumi/aws";
+import { URL_UNAVAILABLE } from "./linkable.js";
 
 const DEFAULT_OPEN_NEXT_VERSION = "3.0.2";
 const DEFAULT_CACHE_POLICY_ALLOWED_HEADERS = ["x-open-next-cache-key"];
@@ -1340,7 +1341,8 @@ if(request.headers["cloudfront-viewer-longitude"]) {
   public getSSTLink() {
     return {
       properties: {
-        url: this.url,
+        url:
+          this.url?.apply((url) => url || URL_UNAVAILABLE) || URL_UNAVAILABLE,
       },
     };
   }

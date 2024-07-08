@@ -1,5 +1,7 @@
 import { FunctionPermissionArgs } from "./function";
 
+export const URL_UNAVAILABLE = "URL_UNAVAILABLE_IN_DEV_MODE";
+
 export interface AWSLinkable {
   getSSTAWSPermissions(): FunctionPermissionArgs[];
 }

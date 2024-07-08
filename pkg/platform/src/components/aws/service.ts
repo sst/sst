@@ -25,7 +25,7 @@ import {
   supportedMemories,
 } from "./cluster";
 import { RETENTION } from "./logging.js";
-import { isLinkable } from "./linkable";
+import { URL_UNAVAILABLE, isLinkable } from "./linkable";
 import {
   appautoscaling,
   cloudwatch,
@@ -772,7 +772,8 @@ export class Service extends Component implements Link.Linkable {
   public getSSTLink() {
     return {
       properties: {
-        url: this._url,
+        url:
+          this._url?.apply((url) => url || URL_UNAVAILABLE) || URL_UNAVAILABLE,
       },
     };
   }

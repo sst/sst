@@ -17,6 +17,7 @@ import { Component } from "../component.js";
 import { Link } from "../link.js";
 import { buildApp } from "../base/base-ssr-site.js";
 import { VisibleError } from "../error.js";
+import { URL_UNAVAILABLE } from "./linkable.js";
 
 export interface SolidStartArgs extends SsrSiteArgs {
   /**
@@ -513,7 +514,8 @@ export class SolidStart extends Component implements Link.Linkable {
   public getSSTLink() {
     return {
       properties: {
-        url: this.url,
+        url:
+          this.url?.apply((url) => url || URL_UNAVAILABLE) || URL_UNAVAILABLE,
       },
     };
   }

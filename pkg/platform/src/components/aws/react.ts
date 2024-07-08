@@ -23,6 +23,7 @@ import { Component } from "../component.js";
 import { Link } from "../link.js";
 import type { Input } from "../input.js";
 import { buildApp } from "../base/base-ssr-site.js";
+import { URL_UNAVAILABLE } from "./linkable.js";
 
 export interface ReactArgs extends SsrSiteArgs {
   /**
@@ -646,7 +647,8 @@ export class React extends Component implements Link.Linkable {
   public getSSTLink() {
     return {
       properties: {
-        url: this.url,
+        url:
+          this.url?.apply((url) => url || URL_UNAVAILABLE) || URL_UNAVAILABLE,
       },
     };
   }

@@ -18,6 +18,7 @@ import { Bucket } from "./bucket.js";
 import { Component } from "./../component.js";
 import { Link } from "../link.js";
 import { buildApp } from "../base/base-ssr-site.js";
+import { URL_UNAVAILABLE } from "./linkable.js";
 
 export interface AstroArgs extends SsrSiteArgs {
   /**
@@ -620,7 +621,8 @@ export class Astro extends Component implements Link.Linkable {
   public getSSTLink() {
     return {
       properties: {
-        url: this.url,
+        url:
+          this.url?.apply((url) => url || URL_UNAVAILABLE) || URL_UNAVAILABLE,
       },
     };
   }
