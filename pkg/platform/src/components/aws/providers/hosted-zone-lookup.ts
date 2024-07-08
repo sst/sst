@@ -1,5 +1,10 @@
 import { CustomResourceOptions, Input, Output, dynamic } from "@pulumi/pulumi";
-import { awsFetch } from "../helpers/client.js";
+import {
+  Route53Client,
+  ListHostedZonesCommand,
+  ListHostedZonesCommandOutput,
+} from "@aws-sdk/client-route-53";
+import { useClient } from "../helpers/client.js";
 
 interface Inputs {
   domain: string;
@@ -33,14 +38,14 @@ class Provider implements dynamic.ResourceProvider {
   }
 
   async lookup(domain: string) {
+    const client = useClient(Route53Client);
+
     // Get all hosted zones in the account
-    const zones = [];
+    const zones: ListHostedZonesCommandOutput["HostedZones"] = [];
     let nextMarker: string | undefined;
     do {
-      const res = await awsFetch(
-        "route53",
-        nextMarker ? `/hostedzone?marker=${nextMarker}` : "/hostedzone",
-        { method: "get" },
+      const res = await client.send(
+        new ListHostedZonesCommand({ Marker: nextMarker }),
       );
       zones.push(...(res.HostedZones || []));
       nextMarker = res.NextMarker;

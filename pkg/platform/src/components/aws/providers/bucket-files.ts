@@ -1,6 +1,7 @@
 import fs from "fs";
 import { CustomResourceOptions, Input, dynamic } from "@pulumi/pulumi";
-import { awsFetch } from "../helpers/client.js";
+import { S3Client, PutObjectCommand, S3 } from "@aws-sdk/client-s3";
+import { useClient } from "../helpers/client.js";
 
 export interface BucketFile {
   source: string;
@@ -46,6 +47,7 @@ class Provider implements dynamic.ResourceProvider {
   ) {
     const oldFilesMap = new Map(oldFiles.map((f) => [f.key, f]));
 
+    const s3 = useClient(S3Client);
     await Promise.all(
       files.map(async (file) => {
         const oldFile = oldFilesMap.get(file.key);
@@ -58,19 +60,14 @@ class Provider implements dynamic.ResourceProvider {
           return;
         }
 
-        await awsFetch(
-          "s3",
-          `https://${bucketName}.s3.us-east-1.amazonaws.com/${file.key}`,
-          {
-            method: "put",
-            body: await fs.promises.readFile(file.source),
-            headers: {
-              ...(file.contentType ? { "Content-Type": file.contentType } : {}),
-              ...(file.cacheControl
-                ? { "Cache-Control": file.cacheControl }
-                : {}),
-            },
-          },
+        await s3.send(
+          new PutObjectCommand({
+            Bucket: bucketName,
+            Key: file.key,
+            Body: await fs.promises.readFile(file.source),
+            CacheControl: file.cacheControl,
+            ContentType: file.contentType,
+          }),
         );
       }),
     );
