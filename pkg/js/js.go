@@ -3,8 +3,10 @@ package js
 import (
 	"fmt"
 	"log/slog"
+	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	esbuild "github.com/evanw/esbuild/pkg/api"
 )
@@ -19,8 +21,8 @@ type EvalOptions struct {
 }
 
 func Build(input EvalOptions) (esbuild.BuildResult, error) {
-	outfile := filepath.Join(input.Dir, ".sst", "platform", "sst.config.mjs")
-	slog.Info("esbuild building")
+	outfile := filepath.Join(input.Dir, ".sst", "platform", fmt.Sprintf("sst.config.%v.mjs", time.Now().UnixMilli()))
+	slog.Info("esbuild building", outfile)
 	result := esbuild.Build(esbuild.BuildOptions{
 		Banner: map[string]string{
 			"js": `
@@ -81,4 +83,10 @@ func FormatError(input []esbuild.Message) string {
 		lines = append(lines, fmt.Sprintf("%v:%v:%v: %v", err.Location.File, err.Location.Line, err.Location.Column, err.Text))
 	}
 	return strings.Join(lines, "\n")
+}
+
+func Cleanup(result esbuild.BuildResult) {
+	for _, file := range result.OutputFiles {
+		os.Remove(file.Path)
+	}
 }

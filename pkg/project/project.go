@@ -140,6 +140,7 @@ console.log("~j" + JSON.stringify(mod.app({
 	if err != nil {
 		return nil, fmt.Errorf("%w%s", ErrBuildFailed, err)
 	}
+	defer js.Cleanup(buildResult)
 
 	slog.Info("evaluating config")
 	node := exec.Command("node", "--no-warnings", string(buildResult.OutputFiles[1].Path))

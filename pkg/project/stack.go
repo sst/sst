@@ -239,6 +239,7 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 		})
 		return err
 	}
+	defer js.Cleanup(buildResult)
 	outfile := buildResult.OutputFiles[1].Path
 
 	if input.OnFiles != nil {
