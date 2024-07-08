@@ -34,6 +34,10 @@ export const awsFetch = async (
   const sourcePath = "aws4fetch";
   const { AwsClient } = await import(sourcePath);
   const region = opts?.region ?? process.env.SST_AWS_REGION ?? "us-east-1";
+  if (process.env.SST_RUN_ID) {
+    console.log({ region });
+  }
+
   const client = new AwsClient({
     ...(process.env.SST_AWS_ACCESS_KEY_ID
       ? {
@@ -58,6 +62,9 @@ export const awsFetch = async (
         s3: `placeholder`,
       }[service] + uri;
 
+  if (process.env.SST_RUN_ID) {
+    console.error({ endpoint });
+  }
   return fetch(endpoint, request);
 
   async function fetch(url: string, request: RequestInit, attempts = 0) {
