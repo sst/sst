@@ -97,14 +97,6 @@ func (m *Model) update(ev tcell.Event) {
 				}
 			}
 
-		case tcell.KeyCtrlU:
-			m.selectedPane().vt.ScrollUp(1)
-			m.draw()
-
-		case tcell.KeyCtrlD:
-			m.selectedPane().vt.ScrollDown(1)
-			m.draw()
-
 		case tcell.KeyDown:
 			if m.focus == "sidebar" {
 				m.sidebarMove(1)
