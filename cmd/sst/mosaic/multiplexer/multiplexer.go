@@ -4,6 +4,7 @@ import (
 	"log/slog"
 	"os"
 	"os/exec"
+	"sort"
 	"time"
 
 	tcellterm "git.sr.ht/~rockorager/tcell-term"
@@ -63,11 +64,6 @@ func (p *pane) start() error {
 	return nil
 }
 
-func (p *pane) restart() error {
-	p.vt.Close()
-	return nil
-}
-
 func (p *pane) kill() error {
 	p.vt.Close()
 	return nil
@@ -99,19 +95,15 @@ func (m *Model) update(ev tcell.Event) {
 					m.sidebarMove(-1)
 					m.draw()
 				}
-
-			case 'r':
-				if m.focus == "sidebar" {
-					if m.selectedPane().status == paneStatusRunning {
-						m.selectedPane().restart()
-					}
-					if m.selectedPane().status == paneStatusStopped {
-						m.selectedPane().start()
-					}
-					m.draw()
-					return
-				}
 			}
+
+		case tcell.KeyCtrlU:
+			m.selectedPane().vt.ScrollUp(1)
+			m.draw()
+
+		case tcell.KeyCtrlD:
+			m.selectedPane().vt.ScrollDown(1)
+			m.draw()
 
 		case tcell.KeyDown:
 			if m.focus == "sidebar" {
@@ -142,10 +134,11 @@ func (m *Model) update(ev tcell.Event) {
 
 				if selected.status == paneStatusStopped {
 					selected.start()
+					m.sortPanes()
+					// m.focus = "main"
 					m.main.Clear()
 					m.screen.Show()
 				}
-
 				m.draw()
 				return
 			}
@@ -172,6 +165,7 @@ func (m *Model) update(ev tcell.Event) {
 
 				if pane.status == paneStatusRunning {
 					pane.status = paneStatusStopped
+					m.sortPanes()
 					if index == m.selected {
 						m.focus = "sidebar"
 					}
@@ -182,6 +176,7 @@ func (m *Model) update(ev tcell.Event) {
 					go func() {
 						time.Sleep(100 * time.Millisecond)
 						p.start()
+						m.sortPanes()
 						m.screen.PostEvent(&tcellterm.EventRedraw{})
 					}()
 				}
@@ -273,6 +268,7 @@ func (m *Model) AddPane(key string, args []string, title string, cwd string, kil
 	}
 	m.panes = append(m.panes, p)
 	p.start()
+	m.sortPanes()
 }
 
 func (m *Model) draw() {
@@ -281,52 +277,28 @@ func (m *Model) draw() {
 	for _, w := range m.sidebarWidget.Widgets() {
 		m.sidebarWidget.RemoveWidget(w)
 	}
-
+	running := len(m.panes)
 	for index, item := range m.panes {
-		if item.status == paneStatusRunning {
-			title := views.NewTextBar()
-			style := tcell.StyleDefault
-			if item.status == paneStatusStopped {
-				style = style.Foreground(tcell.ColorGray)
-			}
-			if index == m.selected {
-				style = style.Bold(true)
-				if m.focus == "sidebar" {
-					style = style.Foreground(tcell.ColorOrange)
-					// style = style.Background(tcell.ColorOrangeRed)
-				}
-			}
-
-			text := item.title
-			title.SetStyle(style)
-			title.SetLeft(" "+text, tcell.StyleDefault)
-			m.sidebarWidget.AddWidget(title, 0)
+		if index > 0 && m.panes[index-1].status != paneStatusStopped && item.status == paneStatusStopped {
+			spacer := views.NewTextBar()
+			spacer.SetLeft("──────────────────────", tcell.StyleDefault.Foreground(tcell.ColorGray))
+			m.sidebarWidget.AddWidget(spacer, 0)
 		}
-	}
-	spacer := views.NewTextBar()
-	spacer.SetLeft("──────────────────────", tcell.StyleDefault.Foreground(tcell.ColorGray))
-	m.sidebarWidget.AddWidget(spacer, 0)
-	for index, item := range m.panes {
+		style := tcell.StyleDefault
 		if item.status == paneStatusStopped {
-			title := views.NewTextBar()
-			style := tcell.StyleDefault
-			if item.status == paneStatusStopped {
-				style = style.Foreground(tcell.ColorGray)
-			}
-			if index == m.selected {
-				style = style.Bold(true)
-				if m.focus == "sidebar" {
-					style = style.Foreground(tcell.ColorOrange)
-				} else {
-					style = style.Foreground(tcell.ColorDarkCyan)
-				}
-			}
-
-			text := item.title
-			title.SetStyle(style)
-			title.SetLeft(" "+text, tcell.StyleDefault)
-			m.sidebarWidget.AddWidget(title, 0)
+			style = style.Foreground(tcell.ColorGray)
+			running--
 		}
+		if index == m.selected {
+			style = style.Bold(true)
+			if m.focus == "sidebar" {
+				style = style.Foreground(tcell.ColorOrange)
+			}
+		}
+		title := views.NewTextBar()
+		title.SetStyle(style)
+		title.SetLeft(" "+item.title, tcell.StyleDefault)
+		m.sidebarWidget.AddWidget(title, 0)
 	}
 	m.sidebarWidget.AddWidget(views.NewSpacer(), 1)
 	selectedPane := m.selectedPane()
@@ -368,7 +340,9 @@ func (m *Model) draw() {
 	for i := 0; i < height; i++ {
 		m.screen.SetContent(SIDEBAR_WIDTH-1, i, '│', nil, borderStyle)
 	}
-	m.screen.SetContent(SIDEBAR_WIDTH-1, 3, '┤', nil, borderStyle)
+	if running < len(m.panes) {
+		m.screen.SetContent(SIDEBAR_WIDTH-1, running, '┤', nil, borderStyle)
+	}
 	m.screen.Show()
 }
 
@@ -408,4 +382,26 @@ func (m *Model) sidebarMove(offset int) {
 
 func (m *Model) selectedPane() *pane {
 	return m.panes[m.selected]
+}
+
+func (m *Model) sortPanes() {
+	key := m.selectedPane().key
+	sort.Slice(m.panes, func(i, j int) bool {
+		if m.panes[i].killable && !m.panes[j].killable {
+			return false
+		}
+		if m.panes[i].status != paneStatusStopped && m.panes[j].status == paneStatusStopped {
+			return true
+		}
+		if m.panes[i].status == paneStatusStopped && m.panes[j].status != paneStatusStopped {
+			return false
+		}
+		return len(m.panes[i].title) < len(m.panes[j].title)
+	})
+	for i, p := range m.panes {
+		if p.key == key {
+			m.selected = i
+			return
+		}
+	}
 }
