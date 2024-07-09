@@ -145,6 +145,7 @@ func CmdMosaic(c *cli.Cli) error {
 							d.Name,
 							append([]string{currentExecutable, "mosaic", "--"},
 								strings.Split(d.Command, " ")...),
+							// 𝝺 λ
 							"→ "+d.Name,
 							dir,
 							true,

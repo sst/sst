@@ -73,8 +73,8 @@ func (p *pane) kill() error {
 	return nil
 }
 
-var PAD_HEIGHT = 1
-var PAD_WIDTH = 2
+var PAD_HEIGHT = 0
+var PAD_WIDTH = 0
 var SIDEBAR_WIDTH = 20
 
 // update is the main event handler. It should only be called by the main thread
@@ -291,9 +291,9 @@ func (m *Model) draw() {
 			}
 			if index == m.selected {
 				style = style.Bold(true)
-				style = style.Foreground(tcell.ColorWhite)
 				if m.focus == "sidebar" {
-					style = style.Background(tcell.ColorOrangeRed)
+					style = style.Foreground(tcell.ColorOrange)
+					// style = style.Background(tcell.ColorOrangeRed)
 				}
 			}
 
@@ -315,9 +315,10 @@ func (m *Model) draw() {
 			}
 			if index == m.selected {
 				style = style.Bold(true)
-				style = style.Foreground(tcell.ColorWhite)
 				if m.focus == "sidebar" {
-					style = style.Background(tcell.ColorOrangeRed)
+					style = style.Foreground(tcell.ColorOrange)
+				} else {
+					style = style.Foreground(tcell.ColorDarkCyan)
 				}
 			}
 
@@ -333,22 +334,22 @@ func (m *Model) draw() {
 		if selectedPane.status == paneStatusRunning {
 			title := views.NewTextBar()
 			title.SetStyle(tcell.StyleDefault.Foreground(tcell.ColorGray))
-			title.SetLeft("[x]", tcell.StyleDefault)
-			title.SetRight("kill", tcell.StyleDefault.Foreground(tcell.ColorGray))
+			title.SetLeft(" [x]", tcell.StyleDefault)
+			title.SetRight("kill  ", tcell.StyleDefault.Foreground(tcell.ColorGray))
 			m.sidebarWidget.AddWidget(title, 0)
 
 			title = views.NewTextBar()
 			title.SetStyle(tcell.StyleDefault.Foreground(tcell.ColorGray))
-			title.SetLeft("[enter]", tcell.StyleDefault)
-			title.SetRight("focus", tcell.StyleDefault.Foreground(tcell.ColorGray))
+			title.SetLeft(" [enter]", tcell.StyleDefault)
+			title.SetRight("focus  ", tcell.StyleDefault.Foreground(tcell.ColorGray))
 			m.sidebarWidget.AddWidget(title, 0)
 		}
 
 		if selectedPane.status == paneStatusStopped {
 			title := views.NewTextBar()
 			title.SetStyle(tcell.StyleDefault.Foreground(tcell.ColorGray))
-			title.SetLeft("[enter]", tcell.StyleDefault)
-			title.SetRight("start", tcell.StyleDefault)
+			title.SetLeft(" [enter]", tcell.StyleDefault)
+			title.SetRight("start  ", tcell.StyleDefault)
 			m.sidebarWidget.AddWidget(title, 0)
 		}
 	}
@@ -356,12 +357,18 @@ func (m *Model) draw() {
 	if m.focus == "main" {
 		title := views.NewTextBar()
 		title.SetStyle(tcell.StyleDefault.Foreground(tcell.ColorGray))
-		title.SetLeft("[ctl-z]", tcell.StyleDefault)
-		title.SetRight("sidebar", tcell.StyleDefault)
+		title.SetLeft(" [ctl-z]", tcell.StyleDefault)
+		title.SetRight("sidebar  ", tcell.StyleDefault)
 		m.sidebarWidget.AddWidget(title, 0)
 	}
 	m.sidebarWidget.Draw()
 
+	_, height := m.screen.Size()
+	borderStyle := tcell.StyleDefault.Foreground(tcell.ColorGray)
+	for i := 0; i < height; i++ {
+		m.screen.SetContent(SIDEBAR_WIDTH-1, i, '│', nil, borderStyle)
+	}
+	m.screen.SetContent(SIDEBAR_WIDTH-1, 3, '┤', nil, borderStyle)
 	m.screen.Show()
 }
 
@@ -384,8 +391,6 @@ func (m *Model) drawCursor() {
 		if vis {
 			m.screen.SetCursorStyle(style)
 			m.screen.ShowCursor(col+PAD_WIDTH+SIDEBAR_WIDTH+PAD_WIDTH, row+PAD_HEIGHT)
-		} else {
-			m.screen.HideCursor()
 		}
 	}
 }
