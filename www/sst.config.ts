@@ -33,6 +33,7 @@ export default $config({
       workflow(context) {
         context.install();
         context.shell("goenv install 1.21.3 && goenv global 1.21.3");
+        context.shell("cd pkg/platform && ./scripts/build-functions");
         context.deploy();
       },
     },
