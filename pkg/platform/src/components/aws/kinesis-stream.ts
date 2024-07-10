@@ -140,7 +140,7 @@ export class KinesisStream
         `${name}Stream`,
         transform(args?.transform?.stream, {
           streamModeDetails: {
-            streamMode: "PROVISIONED",
+            streamMode: "ON_DEMAND",
           },
         }),
         { parent },
