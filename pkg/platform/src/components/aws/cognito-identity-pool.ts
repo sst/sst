@@ -2,7 +2,9 @@ import { ComponentResourceOptions, interpolate, output } from "@pulumi/pulumi";
 import { Component, Transform, transform } from "../component";
 import { FunctionArgs } from "./function.js";
 import { Input } from "../input";
+import { Link } from "../link";
 import { prefixName } from "../naming";
+import { AWSLinkable } from "./linkable";
 import { cognito, getRegionOutput, iam } from "@pulumi/aws";
 
 export interface CognitoIdentityPoolArgs {
@@ -123,7 +125,10 @@ export interface CognitoIdentityPoolArgs {
  * });
  * ```
  */
-export class CognitoIdentityPool extends Component {
+export class CognitoIdentityPool
+  extends Component
+  implements Link.Linkable, AWSLinkable
+{
   private identityPool: cognito.IdentityPool;
   private authRole: iam.Role;
   private unauthRole: iam.Role;
@@ -313,6 +318,25 @@ export class CognitoIdentityPool extends Component {
        */
       unauthenticatedRole: this.unauthRole,
     };
+  }
+
+  /** @internal */
+  public getSSTLink() {
+    return {
+      properties: {
+        id: this.id,
+      },
+    };
+  }
+
+  /** @internal */
+  public getSSTAWSPermissions() {
+    return [
+      {
+        actions: ["cognito-identity:*"],
+        resources: [this.identityPool.arn],
+      },
+    ];
   }
 }
 
