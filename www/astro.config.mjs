@@ -68,6 +68,7 @@ const sidebar = [
       { label: "SvelteKit", link: "/docs/component/aws/svelte-kit/" },
       { label: "StaticSite", link: "/docs/component/aws/static-site/" },
       { label: "SolidStart", link: "/docs/component/aws/solid-start/" },
+      { label: "KinesisStream", link: "/docs/component/aws/kinesis-stream/" },
       {
         label: "ApiGatewayV1",
         link: "/docs/component/aws/apigatewayv1/",
@@ -196,6 +197,10 @@ const sidebar = [
       {
         label: "ApiGatewayWebSocketRoute",
         link: "/docs/component/aws/apigateway-websocket-route/",
+      },
+      {
+        label: "KinesisStreamLambdaSubscriber",
+        link: "/docs/component/aws/kinesis-stream-lambda-subscriber/",
       },
     ],
   },

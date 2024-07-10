@@ -14,6 +14,7 @@ export * from "./dns.js";
 export * from "./dynamo.js";
 export * from "./email.js";
 export * from "./function.js";
+export * from "./kinesis-stream.js";
 export * from "./nextjs.js";
 export * from "./postgres.js";
 export * from "./queue.js";

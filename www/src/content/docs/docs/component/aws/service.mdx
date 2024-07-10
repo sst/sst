@@ -117,6 +117,25 @@ The amount of CPU allocated to the container in this service.
 }
 ```
 </Segment>
+### dev?
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Object</code><code class="symbol">&gt;</code>
+</InlineSection>
+- <p>[<code class="key">command</code>](#dev-command)</p>
+</Section>
+
+</Segment>
+<NestedTitle id="dev-command" Tag="h4" parent="dev.">command</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">string</code>
+</InlineSection>
+</Section>
+
+</Segment>
 ### environment?
 <Segment>
 <Section type="parameters">
@@ -1004,7 +1023,7 @@ The following are accessible through the [SDK](/docs/reference/sdk/) at runtime.
 ### Links
 <Segment>
 <Section type="parameters">
-- <p><code class="key">url</code> <code class="primitive">undefined</code><code class="symbol"> | </code><code class="primitive">string</code></p>
+- <p><code class="key">url</code> <code class="primitive">string</code><code class="symbol"> | </code><code class="primitive">string</code></p>
 The URL of the service.
 
 If `public.domain` is set, this is the URL with the custom domain.

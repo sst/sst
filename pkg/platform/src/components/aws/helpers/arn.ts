@@ -54,6 +54,16 @@ export function parseDynamoStreamArn(streamArn: string) {
   return { tableName };
 }
 
+export function parseKinesisStreamArn(streamArn: string) {
+  // ie. "arn:aws:kinesis:us-east-1:123456789012:stream/MyStream";
+  const streamName = streamArn.split(":")[5]?.split("/")[1];
+  if (!streamArn.startsWith("arn:aws:kinesis:") || !streamName)
+    throw new VisibleError(
+      `The provided ARN "${streamArn}" is not a Kinesis stream ARN.`,
+    );
+  return { streamName };
+}
+
 export function parseEventBusArn(arn: string) {
   // arn:aws:events:region:account-id:event-bus/bus-name
   const busName = arn.split("/")[1];

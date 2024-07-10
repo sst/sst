@@ -1,0 +1,173 @@
+---
+title: KinesisStreamLambdaSubscriber
+description: Reference doc for the `sst.aws.KinesisStreamLambdaSubscriber` component.
+---
+
+{/* DO NOT EDIT. AUTO-GENERATED FROM "pkg/platform/src/components/aws/kinesis-stream-lambda-subscriber.ts" */}
+
+import Segment from '../../../../../../src/components/tsdoc/Segment.astro';
+import Section from '../../../../../../src/components/tsdoc/Section.astro';
+import NestedTitle from '../../../../../../src/components/tsdoc/NestedTitle.astro';
+import InlineSection from '../../../../../../src/components/tsdoc/InlineSection.astro';
+
+<div class="tsdoc">
+
+<Section type="about">
+The `KinesisStreamLambdaSubscriber` component is internally used by the `KinesisStream` component to
+add consumer to [Amazon Kinesis Data Streams](https://docs.aws.amazon.com/streams/latest/dev/introduction.html).
+
+:::caution
+This component is not intended for public use.
+:::
+
+You'll find this component returned by the `subscribe` method of the `KinesisStream` component.
+</Section>
+
+---
+
+## Constructor
+
+<Segment>
+<Section type="signature">
+```ts
+new KinesisStreamLambdaSubscriber(name, args, opts?)
+```
+</Section>
+
+<Section type="parameters">
+#### Parameters
+- <p><code class="key">name</code> <code class="primitive">string</code></p>
+- <p><code class="key">args</code> [<code class="type">Args</code>](#args)</p>
+- <p><code class="key">opts?</code> [<code class="type">ComponentResourceOptions</code>](https://www.pulumi.com/docs/concepts/options/)</p>
+</Section>
+</Segment>
+
+## Properties
+
+### nodes
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Object</code>
+</InlineSection>
+- <p>[<code class="key">eventSourceMapping</code>](#nodes-eventsourcemapping)</p>
+- <p>[<code class="key">function</code>](#nodes-function)</p>
+</Section>
+The underlying [resources](/docs/components/#nodes) this component creates.
+</Segment>
+<NestedTitle id="nodes-eventsourcemapping" Tag="h4" parent="nodes.">eventSourceMapping</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** [<code class="type">EventSourceMapping</code>](https://www.pulumi.com/registry/packages/aws/api-docs/lambda/eventsourcemapping/)
+</InlineSection>
+</Section>
+The Lambda event source mapping.
+</Segment>
+<NestedTitle id="nodes-function" Tag="h4" parent="nodes.">function</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Output</code><code class="symbol">&lt;</code>[<code class="type">Function</code>](/docs/component/aws/function/)<code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+The Lambda function that'll be notified.
+</Segment>
+
+## Args
+### filters?
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Record</code><code class="symbol">&lt;</code><code class="primitive">string</code>, <code class="primitive">any</code><code class="symbol">&gt;</code><code class="symbol">&gt;</code><code class="symbol">[]</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+Filter the events that'll be processed by the `subscribers` functions.
+
+:::tip
+You can pass in up to 5 different filters.
+:::
+
+You can pass in up to 5 different filter policies. These will logically ORed together. Meaning that if any single policy matches, the record will be processed. Learn more about the [filter rule syntax](https://docs.aws.amazon.com/lambda/latest/dg/invocation-eventfiltering.html#filtering-syntax).
+
+For example, if you Kinesis stream contains events in this JSON format.
+```js
+{
+  record: 12345,
+  order: {
+    type: "buy",
+    stock: "ANYCO",
+    quantity: 1000
+  }
+}
+```
+
+To process only those events where the `type` is `buy`.
+```js
+{
+  filters: [
+    {
+      data: {
+        order: {
+          type: ["buy"],
+        },
+      },
+    },
+  ],
+}
+```
+</Segment>
+### stream
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Object</code><code class="symbol">&gt;</code>
+</InlineSection>
+- <p>[<code class="key">arn</code>](#stream-arn)</p>
+</Section>
+The Kinesis stream to use.
+
+</Segment>
+<NestedTitle id="stream-arn" Tag="h4" parent="stream.">arn</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+The ARN of the stream.
+
+</Segment>
+### subscriber
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol"> | </code>[<code class="type">FunctionArgs</code>](/docs/component/aws/function/#functionargs)<code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+The subscriber function.
+
+</Segment>
+### transform?
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Object</code>
+</InlineSection>
+- <p>[<code class="key">eventSourceMapping?</code>](#transform-eventsourcemapping)</p>
+</Section>
+[Transform](/docs/components#transform) how this component creates its underlying
+resources.
+
+</Segment>
+<NestedTitle id="transform-eventsourcemapping" Tag="h4" parent="transform.">eventSourceMapping?</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** [<code class="type">EventSourceMappingArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/lambda/eventsourcemapping/#inputs)<code class="symbol"> | </code><code class="symbol">(</code><code class="primitive">args</code><code class="symbol">: </code>[<code class="type">EventSourceMappingArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/lambda/eventsourcemapping/#inputs)<code class="symbol"> => </code><code class="primitive">void</code><code class="symbol">)</code>
+</InlineSection>
+</Section>
+Transform the Lambda Event Source Mapping resource.
+
+</Segment>
+</div>

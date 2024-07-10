@@ -875,7 +875,7 @@ The underlying [resources](/docs/components/#nodes) this component creates.
 <Segment>
 <Section type="parameters">
 <InlineSection>
-**Type** [<code class="type">Bucket</code>](/docs/component/aws/bucket/)
+**Type** <code class="primitive">undefined</code><code class="symbol"> | </code>[<code class="type">Bucket</code>](/docs/component/aws/bucket/)
 </InlineSection>
 </Section>
 The Amazon S3 Bucket that stores the assets.
@@ -884,7 +884,7 @@ The Amazon S3 Bucket that stores the assets.
 <Segment>
 <Section type="parameters">
 <InlineSection>
-**Type** <code class="primitive">Output</code><code class="symbol">&lt;</code>[<code class="type">Cdn</code>](/docs/component/aws/cdn/)<code class="symbol">&gt;</code>
+**Type** <code class="primitive">undefined</code><code class="symbol"> | </code><code class="primitive">Output</code><code class="symbol">&lt;</code>[<code class="type">Cdn</code>](/docs/component/aws/cdn/)<code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
 The Amazon CloudFront CDN that serves the site.
@@ -893,7 +893,7 @@ The Amazon CloudFront CDN that serves the site.
 <Segment>
 <Section type="parameters">
 <InlineSection>
-**Type** <code class="primitive">Output</code><code class="symbol">&lt;</code>[<code class="type">Function</code>](/docs/component/aws/function/)<code class="symbol">&gt;</code>
+**Type** <code class="primitive">undefined</code><code class="symbol"> | </code><code class="primitive">Output</code><code class="symbol">&lt;</code>[<code class="type">Function</code>](/docs/component/aws/function/)<code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
 The AWS Lambda server function that renders the site.
@@ -903,7 +903,7 @@ The AWS Lambda server function that renders the site.
 <Segment>
 <Section type="parameters">
 <InlineSection>
-**Type** <code class="primitive">Output</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
+**Type** <code class="primitive">undefined</code><code class="symbol"> | </code><code class="primitive">Output</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
 The URL of the Astro site.
@@ -919,7 +919,7 @@ The following are accessible through the [SDK](/docs/reference/sdk/) at runtime.
 ### Links
 <Segment>
 <Section type="parameters">
-- <p><code class="key">url</code> <code class="primitive">string</code></p>
+- <p><code class="key">url</code> <code class="primitive">string</code><code class="symbol"> | </code><code class="primitive">string</code></p>
 The URL of the Astro site.
 
 If the `domain` is set, this is the URL with the custom domain.

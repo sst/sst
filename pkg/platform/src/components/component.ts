@@ -119,6 +119,7 @@ export class Component extends ComponentResource {
               break;
             case "aws:appautoscaling/policy:Policy":
             case "aws:dynamodb/table:Table":
+            case "aws:kinesis/stream:Stream":
             case "aws:ecs/cluster:Cluster":
               overrides = { name: prefixName(255, args.name) };
               break;
