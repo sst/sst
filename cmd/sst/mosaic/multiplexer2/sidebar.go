@@ -9,7 +9,7 @@ import (
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/gdamore/tcell/v2/views"
-	"github.com/sst/ion/cmd/sst/mosaic/multiplexer2/switcher/ecma48"
+	"github.com/sst/ion/cmd/sst/mosaic/multiplexer2/ecma48"
 )
 
 var PAD_HEIGHT = 0

@@ -4,10 +4,10 @@ import (
 	"bufio"
 	"fmt"
 	"io"
-	"log"
+	"log/slog"
 	"sync/atomic"
 
-	"github.com/sst/ion/cmd/sst/mosaic/multiplexer2/switcher/ecma48"
+	"github.com/sst/ion/cmd/sst/mosaic/multiplexer2/ecma48"
 )
 
 type Parser struct {
@@ -143,7 +143,7 @@ func (v *VTerm) ProcessStdout(pty io.ReadWriter) {
 					}
 					v.UsingAltScreen = x.On
 				default:
-					log.Printf("Unrecognized DEC Private Mode: %d", x.Code)
+					slog.Warn("Unrecognized DEC Private Mode", "code", x.Code)
 				}
 
 			case ecma48.CursorMovement:
@@ -285,9 +285,7 @@ func (v *VTerm) ProcessStdout(pty io.ReadWriter) {
 				v.Cursor.Style.Underline = bool(x)
 
 			case ecma48.Unrecognized:
-				log.Printf("?? %q", output.Raw)
 			default:
-				log.Printf("Unrecognized parser output: %+v", x)
 			}
 		}
 	}

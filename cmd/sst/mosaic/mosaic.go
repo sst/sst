@@ -13,7 +13,7 @@ import (
 	"github.com/sst/ion/cmd/sst/mosaic/aws"
 	"github.com/sst/ion/cmd/sst/mosaic/bus"
 	"github.com/sst/ion/cmd/sst/mosaic/deployer"
-	"github.com/sst/ion/cmd/sst/mosaic/multiplexer2/switcher"
+	"github.com/sst/ion/cmd/sst/mosaic/multiplexer2"
 	"github.com/sst/ion/cmd/sst/mosaic/server"
 	"github.com/sst/ion/cmd/sst/mosaic/watcher"
 	"github.com/sst/ion/pkg/project"
@@ -113,17 +113,15 @@ func CmdMosaic(c *cli.Cli) error {
 	})
 
 	currentExecutable, _ := os.Executable()
-	sw := switcher.NewSidebar(c.Context)
-	// multi, err := multiplexer.New()
+	multi := multiplexer.New(c.Context)
 	multiEnv := []string{
 		fmt.Sprintf("SST_SERVER=http://localhost:%v", server.Port),
 		"SST_STAGE=" + p.App().Stage,
 	}
-	sw.AddProcess("deploy", []string{currentExecutable, "mosaic-deploy"}, "⑆ SST", "", false, multiEnv...)
-	// sw.AddProcess("shell", []string{currentExecutable, "shell"}, "Shell", "", true, multiEnv...)
+	multi.AddProcess("deploy", []string{currentExecutable, "mosaic-deploy"}, "⑆ SST", "", false, multiEnv...)
 	go func() {
 		defer c.Cancel()
-		sw.Start()
+		multi.Start()
 	}()
 
 	wg.Go(func() error {
@@ -142,7 +140,7 @@ func CmdMosaic(c *cli.Cli) error {
 						}
 						dir := filepath.Join(cwd, d.Directory)
 						slog.Info("mosaic", "dev", d.Name, "directory", dir)
-						sw.AddProcess(
+						multi.AddProcess(
 							d.Name,
 							append([]string{currentExecutable, "mosaic", "--"},
 								strings.Split(d.Command, " ")...),

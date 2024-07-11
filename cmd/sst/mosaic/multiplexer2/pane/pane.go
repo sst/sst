@@ -12,8 +12,8 @@ import (
 
 	"github.com/aaronjanse/3mux/wm"
 	"github.com/charmbracelet/x/xpty"
-	"github.com/sst/ion/cmd/sst/mosaic/multiplexer2/switcher/ecma48"
-	"github.com/sst/ion/cmd/sst/mosaic/multiplexer2/switcher/vterm"
+	"github.com/sst/ion/cmd/sst/mosaic/multiplexer2/ecma48"
+	"github.com/sst/ion/cmd/sst/mosaic/multiplexer2/vterm"
 )
 
 // A Pane is a tiling unit representing a terminal

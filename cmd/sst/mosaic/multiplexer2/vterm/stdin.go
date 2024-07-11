@@ -1,6 +1,6 @@
 package vterm
 
-import "github.com/sst/ion/cmd/sst/mosaic/multiplexer2/switcher/ecma48"
+import "github.com/sst/ion/cmd/sst/mosaic/multiplexer2/ecma48"
 
 // TODO: handle DEC private modes
 

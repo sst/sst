@@ -5,7 +5,7 @@ A Char is a character printed using a given cursor (which is stored alongside th
 */
 package vterm
 
-import "github.com/sst/ion/cmd/sst/mosaic/multiplexer2/switcher/ecma48"
+import "github.com/sst/ion/cmd/sst/mosaic/multiplexer2/ecma48"
 
 // ScrollingRegion holds the state for an ANSI scrolling region
 type ScrollingRegion struct {

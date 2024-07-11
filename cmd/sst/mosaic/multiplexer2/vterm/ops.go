@@ -1,6 +1,6 @@
 package vterm
 
-import "github.com/sst/ion/cmd/sst/mosaic/multiplexer2/switcher/ecma48"
+import "github.com/sst/ion/cmd/sst/mosaic/multiplexer2/ecma48"
 
 func (v *VTerm) ScrollbackReset() {
 	if v.ScrollbackPos != 0 {

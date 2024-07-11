@@ -1,6 +1,6 @@
 package multiplexer
 
-import "github.com/sst/ion/cmd/sst/mosaic/multiplexer2/switcher/pane"
+import "github.com/sst/ion/cmd/sst/mosaic/multiplexer2/pane"
 
 type process struct {
 	key      string
