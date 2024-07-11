@@ -423,6 +423,81 @@ export interface BranchEvent {
 }
 
 /**
+ * A git event for when a tag is created or deleted. For example:
+ * ```js
+ * {
+ *   type: "tag",
+ *   action: "pushed",
+ *   repo: {
+ *     id: 1296269,
+ *     owner: "octocat",
+ *     repo: "Hello-World"
+ *   },
+ *   tag: "v1.5.2",
+ *   commit: {
+ *     id: "b7e7c4c559e0e5b4bc6f8d98e0e5e5e5e5e5e5e5",
+ *     message: "Update the README with new information"
+ *   },
+ *   sender: {
+ *     id: 1,
+ *     username: "octocat"
+ *   }
+ * }
+ * ```
+ */
+export interface TagEvent {
+  /**
+   * The git event type, for the `TagEvent` it's `tag`.
+   */
+  type: "tag";
+  /**
+   * The type of the git action.
+   *
+   * - `pushed` is when you create a tag
+   * - `removed` is when a tag is removed
+   */
+  action: "pushed" | "removed";
+  /**
+   * The Git repository the event is coming from. This might look like:
+   *
+   * ```js
+   * {
+   *   id: 1296269,
+   *   owner: "octocat",
+   *   repo: "Hello-World"
+   * }
+   * ```
+   */
+  repo: Prettify<GitRepo>;
+  /**
+   * The name of the tag.
+   */
+  tag: string;
+  /**
+   * Info about the commit in the event. This might look like:
+   *
+   * ```js
+   * {
+   *   id: "b7e7c4c559e0e5b4bc6f8d98e0e5e5e5e5e5e5e5",
+   *   message: "Update the README with new information"
+   * }
+   * ```
+   */
+  commit: Prettify<GitCommit>;
+  /**
+   * The user that generated the event. For example:
+   *
+   * ```js
+   * {
+   *   id: 1,
+   *   username: "octocat"
+   * }
+   * ```
+   */
+  sender: Prettify<GitSender>;
+}
+
+/**
  * A git event for when a pull request is updated or deleted. For exampple:
  *
  * ```js
@@ -456,8 +531,8 @@ export interface PullRequestEvent {
   /**
    * The type of the git action.
    *
-   * - `pushed` is when you git push to a branch
-   * - `removed` is when a branch is removed
+   * - `pushed` is when you git push to the base branch of the PR
+   * - `removed` is when the PR is closed or merged
    */
   action: "pushed" | "removed";
   /**
@@ -663,7 +738,9 @@ export interface Config {
        * }
        * ```
        */
-      target(input: BranchEvent | PullRequestEvent): Target | undefined;
+      target(
+        input: BranchEvent | PullRequestEvent | TagEvent,
+      ): Target | undefined;
     };
   };
   /**
