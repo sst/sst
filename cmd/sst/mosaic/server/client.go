@@ -64,7 +64,7 @@ func Stream(ctx context.Context, url string, types ...interface{}) (chan any, er
 				var msg Message
 				err := decoder.Decode(&msg)
 				if err != nil {
-					continue
+					return
 				}
 				prototype, ok := registry[msg.Type]
 				if !ok {

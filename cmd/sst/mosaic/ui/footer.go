@@ -36,7 +36,6 @@ type op struct {
 }
 
 func NewFooter(mode ProgressMode) *tea.Program {
-	slog.Info("initialized footer ui")
 	f := footer{
 		spinner: spinner.New(),
 		lines:   []string{},
@@ -44,10 +43,12 @@ func NewFooter(mode ProgressMode) *tea.Program {
 	}
 	f.spinner.Spinner = spinner.MiniDot
 	f.Reset()
+	slog.Info("new tea program")
 	p := tea.NewProgram(f,
 		tea.WithFPS(16),
 		tea.WithoutSignalHandler())
 	go p.Run()
+	slog.Info("initialized footer ui")
 	return p
 }
 

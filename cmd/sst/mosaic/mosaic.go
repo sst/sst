@@ -13,7 +13,7 @@ import (
 	"github.com/sst/ion/cmd/sst/mosaic/aws"
 	"github.com/sst/ion/cmd/sst/mosaic/bus"
 	"github.com/sst/ion/cmd/sst/mosaic/deployer"
-	"github.com/sst/ion/cmd/sst/mosaic/multiplexer"
+	"github.com/sst/ion/cmd/sst/mosaic/multiplexer2/switcher"
 	"github.com/sst/ion/cmd/sst/mosaic/server"
 	"github.com/sst/ion/cmd/sst/mosaic/watcher"
 	"github.com/sst/ion/pkg/project"
@@ -42,6 +42,7 @@ func CmdMosaic(c *cli.Cli) error {
 		for {
 			select {
 			case <-c.Context.Done():
+				fmt.Println("")
 				return nil
 			case _, ok := <-evts:
 				if !ok {
@@ -112,18 +113,18 @@ func CmdMosaic(c *cli.Cli) error {
 	})
 
 	currentExecutable, _ := os.Executable()
-	multi, err := multiplexer.New()
+	sw := switcher.NewSidebar(c.Context)
+	// multi, err := multiplexer.New()
 	multiEnv := []string{
 		fmt.Sprintf("SST_SERVER=http://localhost:%v", server.Port),
 		"SST_STAGE=" + p.App().Stage,
 	}
-	multi.AddPane("deploy", []string{currentExecutable, "mosaic-deploy"}, "⑆ SST", "", false, multiEnv...)
-	// multi.AddPane("shell", []string{currentExecutable, "shell"}, "Shell", "", true, multiEnv...)
-
-	wg.Go(func() error {
+	sw.AddProcess("deploy", []string{currentExecutable, "mosaic-deploy"}, "⑆ SST", "", false, multiEnv...)
+	// sw.AddProcess("shell", []string{currentExecutable, "shell"}, "Shell", "", true, multiEnv...)
+	go func() {
 		defer c.Cancel()
-		return multi.Start()
-	})
+		sw.Start()
+	}()
 
 	wg.Go(func() error {
 		evts := bus.Subscribe(&project.CompleteEvent{})
@@ -141,7 +142,7 @@ func CmdMosaic(c *cli.Cli) error {
 						}
 						dir := filepath.Join(cwd, d.Directory)
 						slog.Info("mosaic", "dev", d.Name, "directory", dir)
-						multi.AddPane(
+						sw.AddProcess(
 							d.Name,
 							append([]string{currentExecutable, "mosaic", "--"},
 								strings.Split(d.Command, " ")...),
@@ -163,7 +164,10 @@ func CmdMosaic(c *cli.Cli) error {
 		return deployer.Start(c.Context, p)
 	})
 
-	return wg.Wait()
+	err = wg.Wait()
+	slog.Info("done mosaic", "err", err)
+	return err
+
 }
 
 func diff(a map[string]string, b map[string]string) bool {

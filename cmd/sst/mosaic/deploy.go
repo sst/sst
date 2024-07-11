@@ -1,6 +1,7 @@
 package mosaic
 
 import (
+	"log/slog"
 	"os"
 
 	"github.com/pulumi/pulumi/sdk/v3/go/common/apitype"
@@ -37,6 +38,7 @@ func CmdMosaicDeploy(c *cli.Cli) error {
 	}
 
 	u := ui.New(c.Context, ui.ProgressModeDev)
+	slog.Info("initialized ui")
 	u.Header("dev", "app", "foo")
 	for {
 		select {

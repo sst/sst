@@ -164,6 +164,7 @@ func CmdDev(cli *cli.Cli) error {
 		}
 	}()
 
+	slog.Info("starting server")
 	state := &server.State{}
 	silent := cli.Bool("silent")
 	u := ui.New(cli.Context, ui.ProgressModeDev, func(o *ui.Options) {

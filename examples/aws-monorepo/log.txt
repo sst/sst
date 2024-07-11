@@ -1,0 +1,96 @@
+ptmx 17
+RESIZE 170 45
+INFO locking app=aws-monorepo stage=thdxr
+INFO getting data key=lock app=aws-monorepo stage=thdxr
+INFO putting data key=lock app=aws-monorepo stage=thdxr
+Unrecognized DEC Private Mode: 25
+Unrecognized DEC Private Mode: 25
+INFO pulling state app=aws-monorepo stage=thdxr out=/home/thdxr/dev/projects/sst/ion/examples/aws-monorepo/.sst/.pulumi/stacks/aws-monorepo/thdxr.json
+INFO getting passphrase app=aws-monorepo stage=thdxr
+INFO getting data key=secret app=aws-monorepo stage=thdxr
+ptmx 28
+INFO putting summary app=aws-monorepo stage=thdxr
+INFO putting data key=summary app=aws-monorepo stage=thdxr/w9g0412c1mz1ie1uzyl5zv4p
+INFO putting links app=aws-monorepo stage=thdxr
+INFO putting data key=link app=aws-monorepo stage=thdxr
+INFO getting passphrase app=aws-monorepo stage=thdxr
+scrolling up
+INFO pushing state app=aws-monorepo stage=thdxr from=/home/thdxr/dev/projects/sst/ion/examples/aws-monorepo/.sst/.pulumi/stacks/aws-monorepo/thdxr.json
+scrolling up
+INFO unlocking app=aws-monorepo stage=thdxr
+scrolling up
+scrolling up
+scrolling down
+scrolling down
+scrolling up
+scrolling up
+scrolling up
+scrolling up
+scrolling up
+scrolling up
+scrolling up
+scrolling up
+scrolling up
+scrolling up
+scrolling down
+scrolling down
+scrolling down
+scrolling down
+scrolling down
+scrolling down
+scrolling down
+scrolling down
+scrolling down
+scrolling down
+scrolling down
+scrolling down
+scrolling down
+scrolling down
+scrolling up
+scrolling up
+scrolling up
+scrolling up
+scrolling up
+scrolling up
+scrolling up
+scrolling up
+scrolling up
+scrolling up
+scrolling up
+scrolling up
+scrolling down
+scrolling down
+scrolling down
+scrolling up
+scrolling up
+scrolling up
+scrolling down
+scrolling up
+scrolling up
+scrolling up
+scrolling up
+scrolling up
+scrolling up
+scrolling up
+scrolling up
+scrolling up
+scrolling up
+scrolling up
+scrolling up
+scrolling down
+scrolling down
+scrolling down
+scrolling down
+scrolling down
+scrolling down
+scrolling down
+scrolling down
+scrolling down
+process exited /tmp/go-build2328704737/b001/exe/sst
+ptmx 9
+scrolling up
+scrolling up
+scrolling up
+scrolling up
+process exited /tmp/go-build2328704737/b001/exe/sst
+process exited /tmp/go-build2328704737/b001/exe/sst

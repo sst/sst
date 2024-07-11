@@ -96,27 +96,23 @@ func (m *Model) update(ev tcell.Event) {
 					m.draw()
 				}
 			}
-
 		case tcell.KeyDown:
 			if m.focus == "sidebar" {
 				m.sidebarMove(1)
 				m.draw()
 			}
-
 		case tcell.KeyUp:
 			if m.focus == "sidebar" {
 				m.sidebarMove(-1)
 				m.draw()
 				return
 			}
-
 		case tcell.KeyCtrlZ:
 			if m.focus == "main" {
 				m.focus = "sidebar"
 				m.draw()
 				return
 			}
-
 		case tcell.KeyEnter:
 			if m.focus == "sidebar" && m.selectedPane().killable {
 				selected := m.selectedPane()
