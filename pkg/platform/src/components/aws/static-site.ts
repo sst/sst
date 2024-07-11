@@ -575,10 +575,12 @@ export class StaticSite extends Component implements Link.Linkable {
                 {
                   errorCode: 403,
                   responsePagePath: interpolate`/${args.errorPage}`,
+                  responseCode: 403,
                 },
                 {
                   errorCode: 404,
                   responsePagePath: interpolate`/${args.errorPage}`,
+                  responseCode: 404,
                 },
               ]
             : [
