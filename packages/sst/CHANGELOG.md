@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.43.4
+
+### Patch Changes
+
+- [`d39eb43a4`](https://github.com/sst/sst/commit/d39eb43a4d3dc3791bc2439ce6d9bb0ce4efbd0d) Thanks [@fwang](https://github.com/fwang)! - Service: support reusing cache policy
+
 ## 2.43.3
 
 ### Patch Changes
