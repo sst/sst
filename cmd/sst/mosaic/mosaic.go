@@ -118,7 +118,7 @@ func CmdMosaic(c *cli.Cli) error {
 		fmt.Sprintf("SST_SERVER=http://localhost:%v", server.Port),
 		"SST_STAGE=" + p.App().Stage,
 	}
-	multi.AddProcess("deploy", []string{currentExecutable, "mosaic-deploy"}, "⑆ SST", "", false, multiEnv...)
+	multi.AddProcess("deploy", []string{currentExecutable, "mosaic-deploy"}, "⑆", "SST", "", false, multiEnv...)
 	go func() {
 		defer c.Cancel()
 		multi.Start()
@@ -145,7 +145,8 @@ func CmdMosaic(c *cli.Cli) error {
 							append([]string{currentExecutable, "mosaic", "--"},
 								strings.Split(d.Command, " ")...),
 							// 𝝺 λ
-							"→ "+d.Name,
+							"→",
+							d.Name,
 							dir,
 							true,
 							multiEnv...,

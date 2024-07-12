@@ -143,10 +143,6 @@ func (t *Pane) HandleStdin(in ecma48.Output) {
 	t.VT.RefreshCursor()
 }
 
-func (t *Pane) DrawCursor() {
-	t.renderer.SetCursor(t.renderRect.X+t.VT.Cursor.X, t.renderRect.Y+t.VT.Cursor.Y)
-}
-
 func (t *Pane) Kill() {
 	t.VT.Kill()
 	// FIXME: handle error
