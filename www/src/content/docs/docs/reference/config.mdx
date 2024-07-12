@@ -129,7 +129,7 @@ target(input)
 
 <Section type="parameters">
 **Parameters**
-- <p><code class="key">input</code> [<code class="type">BranchEvent</code>](#branchevent)<code class="symbol"> | </code>[<code class="type">PullRequestEvent</code>](#pullrequestevent)</p>
+- <p><code class="key">input</code> [<code class="type">BranchEvent</code>](#branchevent)<code class="symbol"> | </code>[<code class="type">TagEvent</code>](#tagevent)<code class="symbol"> | </code>[<code class="type">PullRequestEvent</code>](#pullrequestevent)</p>
 </Section>
 
 <InlineSection>
@@ -733,8 +733,8 @@ A git event for when a pull request is updated or deleted. For exampple:
 </Section>
 The type of the git action.
 
-- `pushed` is when you git push to a branch
-- `removed` is when a branch is removed
+- `pushed` is when you git push to the base branch of the PR
+- `removed` is when the PR is closed or merged
 
 </Segment>
 ### base
@@ -904,6 +904,192 @@ The username of the user.
 </InlineSection>
 </Section>
 The git event type, for the `PullRequestEvent` it's `pull_request`.
+
+</Segment>
+
+## TagEvent
+
+A git event for when a tag is created or deleted. For example:
+```js
+{
+  type: "tag",
+  action: "pushed",
+  repo: {
+    id: 1296269,
+    owner: "octocat",
+    repo: "Hello-World"
+  },
+  tag: "v1.5.2",
+  commit: {
+    id: "b7e7c4c559e0e5b4bc6f8d98e0e5e5e5e5e5e5e5",
+    message: "Update the README with new information"
+  },
+  sender: {
+    id: 1,
+    username: "octocat"
+  }
+}
+```
+### action
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="symbol">&ldquo;</code><code class="primitive">pushed</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">removed</code><code class="symbol">&rdquo;</code>
+</InlineSection>
+</Section>
+The type of the git action.
+
+- `pushed` is when you create a tag
+- `removed` is when a tag is removed
+
+</Segment>
+### commit
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Object</code>
+</InlineSection>
+- <p>[<code class="key">id</code>](#commit-id-2)</p>
+- <p>[<code class="key">message</code>](#commit-message-2)</p>
+</Section>
+Info about the commit in the event. This might look like:
+
+```js
+{
+  id: "b7e7c4c559e0e5b4bc6f8d98e0e5e5e5e5e5e5e5",
+  message: "Update the README with new information"
+}
+```
+
+</Segment>
+<NestedTitle id="commit-id-2" Tag="h4" parent="commit.">id</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">string</code>
+</InlineSection>
+</Section>
+The ID of the commit.
+
+</Segment>
+<NestedTitle id="commit-message-2" Tag="h4" parent="commit.">message</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">string</code>
+</InlineSection>
+</Section>
+The commit message.
+
+</Segment>
+### repo
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Object</code>
+</InlineSection>
+- <p>[<code class="key">id</code>](#repo-id-2)</p>
+- <p>[<code class="key">owner</code>](#repo-owner-2)</p>
+- <p>[<code class="key">repo</code>](#repo-repo-2)</p>
+</Section>
+The Git repository the event is coming from. This might look like:
+
+```js
+{
+  id: 1296269,
+  owner: "octocat",
+  repo: "Hello-World"
+}
+```
+
+</Segment>
+<NestedTitle id="repo-id-2" Tag="h4" parent="repo.">id</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">number</code>
+</InlineSection>
+</Section>
+The ID of the repo. This is usually a number.
+
+</Segment>
+<NestedTitle id="repo-owner-2" Tag="h4" parent="repo.">owner</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">string</code>
+</InlineSection>
+</Section>
+The name of the owner or org the repo to belongs to.
+
+</Segment>
+<NestedTitle id="repo-repo-2" Tag="h4" parent="repo.">repo</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">string</code>
+</InlineSection>
+</Section>
+The name of the repo.
+
+</Segment>
+### sender
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Object</code>
+</InlineSection>
+- <p>[<code class="key">id</code>](#sender-id-2)</p>
+- <p>[<code class="key">username</code>](#sender-username-2)</p>
+</Section>
+The user that generated the event. For example:
+
+```js
+{
+  id: 1,
+  username: "octocat"
+}
+```
+
+</Segment>
+<NestedTitle id="sender-id-2" Tag="h4" parent="sender.">id</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">number</code>
+</InlineSection>
+</Section>
+The ID of the user.
+
+</Segment>
+<NestedTitle id="sender-username-2" Tag="h4" parent="sender.">username</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">string</code>
+</InlineSection>
+</Section>
+The username of the user.
+
+</Segment>
+### tag
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">string</code>
+</InlineSection>
+</Section>
+The name of the tag.
+
+</Segment>
+### type
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="symbol">&ldquo;</code><code class="primitive">tag</code><code class="symbol">&rdquo;</code>
+</InlineSection>
+</Section>
+The git event type, for the `TagEvent` it's `tag`.
 
 </Segment>
 

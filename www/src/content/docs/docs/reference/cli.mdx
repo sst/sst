@@ -188,15 +188,15 @@ The command to run
 <Section type="parameters">
 #### Flags
 - <p><code class="key">silent</code> <code class="primitive">boolean</code></p>
-Do not output function invocation logs
+Don't show logs from function invocation
 </Section>
-Run your app in development mode. Optionally, pass in a command to start your frontend as well.
+Run your app in development mode.
 
 ```bash frame="none"
 sst dev
 ```
 
-You can also pass in a command to start your frontend with it.
+Optionally, pass in a command to start your frontend as well.
 
 ```bash frame="none"
 sst dev next dev
@@ -211,9 +211,12 @@ sst dev "next dev --turbo"
 Dev mode does a few things:
 
 1. Starts a local server
-2. Watches your app config and re-deploys your changes
+2. Watches your `sst.config.ts` and re-deploys changes
 3. Run your functions [Live](/docs/live/)
-4. If you pass in a `command`, it'll:
+4. Skip deploying resources that should be run locally
+   - Containers
+   - CDNs in the site components
+5. If you pass in a `command`, it'll:
    - Load your [linked resources](/docs/linking) in the environment
    - And run the command
 
