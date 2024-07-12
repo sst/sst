@@ -81,7 +81,7 @@ func (s *Multiplexer) Start() {
 
 			switch evt := unknown.(type) {
 			case *drawEvent:
-				s.Draw()
+				s.draw()
 				continue
 
 			case *cursorEvent:
@@ -99,7 +99,7 @@ func (s *Multiplexer) Start() {
 				for _, p := range s.processes {
 					p.pane.SetRenderRect(s.mainRect())
 				}
-				s.Draw()
+				s.draw()
 				s.screen.Sync()
 				continue
 
@@ -137,20 +137,20 @@ func (s *Multiplexer) Start() {
 					if selected != nil {
 						log.Println("scrolling up")
 						selected.scrollUp(1)
-						s.Draw()
+						s.draw()
 						continue
 					}
 				case tcell.KeyCtrlD:
 					if selected != nil {
 						log.Println("scrolling down")
 						selected.scrollDown(1)
-						s.Draw()
+						s.draw()
 						continue
 					}
 				case tcell.KeyEnter:
 					if s.focused && selected != nil && selected.isScrolling() {
 						selected.scrollReset()
-						s.Draw()
+						s.draw()
 						s.screen.Sync()
 						continue
 					}

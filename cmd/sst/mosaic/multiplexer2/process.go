@@ -61,7 +61,7 @@ func (s *Multiplexer) AddProcess(key string, args []string, icon string, title s
 			s.blur()
 		}
 		s.sort()
-		s.Draw()
+		s.draw()
 	})
 	proc.pane = p
 	if index == -1 {
@@ -77,7 +77,7 @@ func (s *Multiplexer) AddProcess(key string, args []string, icon string, title s
 		s.processes[index] = proc
 	}
 	s.sort()
-	s.Draw()
+	s.draw()
 }
 
 func (s *process) scrollUp(offset int) {

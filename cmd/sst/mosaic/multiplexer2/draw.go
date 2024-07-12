@@ -9,7 +9,7 @@ import (
 	"github.com/sst/ion/cmd/sst/mosaic/multiplexer2/ecma48"
 )
 
-func (s *Multiplexer) Draw() {
+func (s *Multiplexer) draw() {
 	defer s.screen.Show()
 	for _, w := range s.stack.Widgets() {
 		s.stack.RemoveWidget(w)
@@ -131,14 +131,14 @@ func (s *Multiplexer) move(offset int) {
 		index = len(s.processes) - 1
 	}
 	s.selected = index
-	s.Draw()
+	s.draw()
 	s.screen.Sync()
 }
 
 func (s *Multiplexer) focus() {
 	s.focused = true
 	s.selectedProcess().pane.UpdateSelection(true)
-	s.Draw()
+	s.draw()
 }
 
 func (s *Multiplexer) blur() {
@@ -149,7 +149,7 @@ func (s *Multiplexer) blur() {
 		selected.scrollReset()
 	}
 	s.screen.HideCursor()
-	s.Draw()
+	s.draw()
 }
 
 func (s *Multiplexer) sort() {
