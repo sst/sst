@@ -92,8 +92,8 @@ func (u *UI) println(args ...interface{}) {
 		fmt.Println(fmt.Sprint(u.buffer...))
 	}
 	if u.footer != nil {
-		fmt.Println(fmt.Sprint(u.buffer...))
 		// u.footer.Send(lineMsg(fmt.Sprint(u.buffer...)))
+		u.footer.Printf(fmt.Sprint(u.buffer...))
 	}
 	u.buffer = []interface{}{}
 	u.hasBlank = false

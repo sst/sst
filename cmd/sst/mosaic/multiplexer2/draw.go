@@ -1,7 +1,6 @@
 package multiplexer
 
 import (
-	"log/slog"
 	"sort"
 
 	"github.com/gdamore/tcell/v2"
@@ -17,7 +16,7 @@ func (s *Multiplexer) draw() {
 	selected := s.selectedProcess()
 
 	for index, item := range s.processes {
-		if index > 0 && !s.processes[index-1].pane.IsDead() && item.pane.IsDead() {
+		if index > 0 && !s.processes[index-1].dead && item.dead {
 			spacer := views.NewTextBar()
 			spacer.SetLeft("──────────────────────", tcell.StyleDefault.Foreground(tcell.ColorGray))
 			s.stack.AddWidget(spacer, 0)
@@ -36,7 +35,7 @@ func (s *Multiplexer) draw() {
 	}
 	s.stack.AddWidget(views.NewSpacer(), 1)
 	if selected != nil && selected.killable && !s.focused {
-		if !selected.pane.IsDead() {
+		if !selected.dead {
 			title := views.NewTextBar()
 			title.SetStyle(tcell.StyleDefault.Foreground(tcell.ColorGray))
 			title.SetLeft(" [x]", tcell.StyleDefault)
@@ -50,7 +49,7 @@ func (s *Multiplexer) draw() {
 			s.stack.AddWidget(title, 0)
 		}
 
-		if selected.pane.IsDead() {
+		if selected.dead {
 			title := views.NewTextBar()
 			title.SetStyle(tcell.StyleDefault.Foreground(tcell.ColorGray))
 			title.SetLeft(" [enter]", tcell.StyleDefault)
@@ -70,37 +69,16 @@ func (s *Multiplexer) draw() {
 	for i := 0; i < s.height; i++ {
 		s.screen.SetContent(SIDEBAR_WIDTH-1, i, '│', nil, borderStyle)
 	}
-	for i := 0; i < s.height; i++ {
-		s.screen.SetContent(SIDEBAR_WIDTH, i, rune(0), nil, tcell.StyleDefault)
-	}
 
 	// render virtual terminal
 	if selected != nil {
-		if s.focused && !selected.isScrolling() {
-			s.screen.ShowCursor(selected.cursorX, selected.cursorY)
+		selected.vt.Draw()
+		if s.focused {
+			y, x, _, _ := selected.vt.Cursor()
+			s.screen.ShowCursor(SIDEBAR_WIDTH+1+x, y+PAD_HEIGHT)
 		}
-		if selected.isScrolling() || !s.focused {
+		if !s.focused {
 			s.screen.HideCursor()
-		}
-		scrollback := selected.pane.VT.Scrollback
-		offset := 0
-		if selected.isScrolling() {
-			for i := selected.scrollStart; i < len(scrollback); i++ {
-				cols := scrollback[i]
-				s.drawRow(offset, cols)
-				offset++
-			}
-		}
-		slog.Info("draw", "offset", offset, "scroll", selected.scrollStart, "max", len(scrollback))
-		for _, cols := range selected.pane.VT.Screen {
-			s.drawRow(offset, cols)
-			offset++
-		}
-		// fill remaining rows with empty cells
-		for row := len(selected.pane.VT.Screen); row < s.height; row++ {
-			for col := 0; col < s.width; col++ {
-				s.screen.SetContent(SIDEBAR_WIDTH+col+1, row, rune(0), nil, tcell.StyleDefault)
-			}
 		}
 	}
 }
@@ -132,12 +110,10 @@ func (s *Multiplexer) move(offset int) {
 	}
 	s.selected = index
 	s.draw()
-	s.screen.Sync()
 }
 
 func (s *Multiplexer) focus() {
 	s.focused = true
-	s.selectedProcess().pane.UpdateSelection(true)
 	s.draw()
 }
 
@@ -145,7 +121,6 @@ func (s *Multiplexer) blur() {
 	s.focused = false
 	selected := s.selectedProcess()
 	if selected != nil {
-		selected.pane.UpdateSelection(false)
 		selected.scrollReset()
 	}
 	s.screen.HideCursor()
@@ -161,10 +136,10 @@ func (s *Multiplexer) sort() {
 		if s.processes[i].killable && !s.processes[i].killable {
 			return false
 		}
-		if !s.processes[i].pane.IsDead() && s.processes[j].pane.IsDead() {
+		if !s.processes[i].dead && s.processes[j].dead {
 			return true
 		}
-		if s.processes[i].pane.IsDead() && !s.processes[j].pane.IsDead() {
+		if s.processes[i].dead && !s.processes[j].dead {
 			return false
 		}
 		return len(s.processes[i].title) < len(s.processes[j].title)

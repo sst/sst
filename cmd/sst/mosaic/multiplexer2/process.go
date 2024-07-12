@@ -1,108 +1,83 @@
 package multiplexer
 
 import (
-	"github.com/sst/ion/cmd/sst/mosaic/multiplexer2/pane"
-	"log/slog"
+	"os"
+	"os/exec"
+
+	"github.com/gdamore/tcell/v2"
+	tcellterm "github.com/sst/ion/cmd/sst/mosaic/multiplexer2/tcell-term"
 )
 
+type vterm struct {
+	Resize func(int, int)
+	Start  func(cmd *exec.Cmd) error
+}
+
 type process struct {
-	icon        string
-	scrollStart int
-	cursorX     int
-	cursorY     int
-	key         string
-	args        []string
-	title       string
-	dir         string
-	killable    bool
-	env         []string
-	pane        *pane.Pane
+	icon     string
+	key      string
+	args     []string
+	title    string
+	dir      string
+	killable bool
+	env      []string
+	vt       *tcellterm.VT
+	dead     bool
 }
 
 func (s *Multiplexer) AddProcess(key string, args []string, icon string, title string, cwd string, killable bool, env ...string) {
-	index := -1
-	for i, p := range s.processes {
+	for _, p := range s.processes {
 		if p.key == key {
-			if p.pane.IsDead() {
-				index = i
-				break
-			}
 			return
 		}
 	}
 	proc := &process{
-		icon:        icon,
-		key:         key,
-		dir:         cwd,
-		title:       title,
-		args:        args,
-		killable:    killable,
-		env:         env,
-		scrollStart: -1,
+		icon:     icon,
+		key:      key,
+		dir:      cwd,
+		title:    title,
+		args:     args,
+		killable: killable,
+		env:      env,
 	}
-	renderer := &renderer{
-		cursor: func(x, y int) {
-			proc.cursorX = x
-			proc.cursorY = y
-			if s.selectedProcess() == proc {
-				s.screen.PostEvent(&drawEvent{})
-			}
-		},
-		render: func() {
-			if s.selectedProcess() == proc {
-				s.screen.PostEvent(&drawEvent{})
-			}
-		},
-	}
-	p := pane.NewPane(renderer, args, cwd, env...)
-	p.SetRenderRect(s.mainRect())
-	p.SetDeathHandler(func(err error) {
-		if s.processes[s.selected] == proc {
-			s.blur()
-		}
-		s.sort()
-		s.draw()
+	term := tcellterm.New()
+	term.SetSurface(s.main)
+	term.Attach(func(ev tcell.Event) {
+		s.screen.PostEvent(ev)
 	})
-	proc.pane = p
-	if index == -1 {
-		// adding new process
-		s.processes = append(s.processes, proc)
-		p.UpdateSelection(false)
-		if len(s.processes) == 1 {
-			// activate first process to be added
-			s.move(-99)
-		}
-	} else {
-		p.UpdateSelection(true)
-		s.processes[index] = proc
-	}
+	proc.vt = term
+	proc.start()
+	s.processes = append(s.processes, proc)
 	s.sort()
 	s.draw()
 }
 
-func (s *process) scrollUp(offset int) {
-	if !s.isScrolling() {
-		s.scrollStart = len(s.pane.VT.Scrollback)
+func (p *process) start() error {
+	cmd := exec.Command(p.args[0], p.args[1:]...)
+	cmd.Env = append(p.env, os.Environ()...)
+	if p.dir != "" {
+		cmd.Dir = p.dir
 	}
-	s.scrollStart = s.scrollStart - offset
-	s.scrollStart = max(0, s.scrollStart)
-	slog.Info("scroll up", "scroll", s.scrollStart, "max", len(s.pane.VT.Scrollback))
+	err := p.vt.Start(cmd)
+	if err != nil {
+		return err
+	}
+	p.dead = false
+	return nil
+}
+
+func (s *process) scrollUp(offset int) {
+	s.vt.ScrollUp(offset)
 }
 
 func (s *process) scrollDown(offset int) {
-	if !s.isScrolling() {
-		return
-	}
-	s.scrollStart = s.scrollStart + offset
-	if s.scrollStart >= len(s.pane.VT.Scrollback) {
-		s.scrollReset()
-	}
+	s.vt.ScrollDown(offset)
 }
 
 func (s *process) scrollReset() {
-	s.scrollStart = -1
+	s.vt.ScrollReset()
 }
 
 func (s *process) isScrolling() bool {
-	return s.scrollStart != -1
+	return s.vt.IsScrolling()
 }

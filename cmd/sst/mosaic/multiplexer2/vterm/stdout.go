@@ -69,6 +69,7 @@ func (v *VTerm) ProcessStdout(pty io.ReadWriter) {
 			case ecma48.OSCCursorQuery:
 				response := fmt.Sprintf("\x1b[%d;%dR", v.Cursor.Y+1, v.Cursor.X+1)
 				pty.Write([]byte(response))
+				break
 			case ecma48.Char:
 				v.putChar(x.Rune, x.IsWide)
 			case ecma48.Backspace:
