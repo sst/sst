@@ -182,6 +182,7 @@ func (s *Multiplexer) Start() {
 						if selected.killable {
 							if selected.dead {
 								selected.start()
+								s.draw()
 								continue
 							}
 							s.focus()

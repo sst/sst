@@ -81,3 +81,7 @@ func (s *process) scrollReset() {
 func (s *process) isScrolling() bool {
 	return s.vt.IsScrolling()
 }
+
+func (s *process) scrollable() bool {
+	return s.vt.Scrollable()
+}

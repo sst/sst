@@ -488,6 +488,10 @@ func (vt *VT) ScrollReset() {
 	vt.scroll = -1
 }
 
+func (vt *VT) Scrollable() bool {
+	return len(vt.primaryScrollback) > 0
+}
+
 func (vt *VT) IsScrolling() bool {
 	return vt.scroll != -1
 }

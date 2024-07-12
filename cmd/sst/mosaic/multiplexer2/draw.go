@@ -1,7 +1,10 @@
 package multiplexer
 
 import (
+	"slices"
 	"sort"
+	"strings"
+	"unicode/utf8"
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/gdamore/tcell/v2/views"
@@ -34,34 +37,49 @@ func (s *Multiplexer) draw() {
 		s.stack.AddWidget(title, 0)
 	}
 	s.stack.AddWidget(views.NewSpacer(), 1)
+
+	hotkeys := map[string]string{}
 	if selected != nil && selected.killable && !s.focused {
 		if !selected.dead {
-			title := views.NewTextBar()
-			title.SetStyle(tcell.StyleDefault.Foreground(tcell.ColorGray))
-			title.SetLeft(" [x]", tcell.StyleDefault)
-			title.SetRight("kill  ", tcell.StyleDefault.Foreground(tcell.ColorGray))
-			s.stack.AddWidget(title, 0)
-
-			title = views.NewTextBar()
-			title.SetStyle(tcell.StyleDefault.Foreground(tcell.ColorGray))
-			title.SetLeft(" [enter]", tcell.StyleDefault)
-			title.SetRight("focus  ", tcell.StyleDefault.Foreground(tcell.ColorGray))
-			s.stack.AddWidget(title, 0)
+			hotkeys["x"] = "kill"
+			hotkeys["enter"] = "focus"
 		}
 
 		if selected.dead {
-			title := views.NewTextBar()
-			title.SetStyle(tcell.StyleDefault.Foreground(tcell.ColorGray))
-			title.SetLeft(" [enter]", tcell.StyleDefault)
-			title.SetRight("start  ", tcell.StyleDefault)
-			s.stack.AddWidget(title, 0)
+			hotkeys["enter"] = "start"
 		}
 	}
+	if !s.focused {
+		hotkeys["j/k/↓/↑"] = "up/down"
+	}
 	if s.focused {
+		hotkeys["ctrl-z"] = "sidebar"
+	}
+	if selected != nil && selected.isScrolling() && (s.focused || !selected.killable) {
+		hotkeys["enter"] = "reset"
+	}
+	if selected.scrollable() {
+		hotkeys["ctrl-u/d"] = "scroll"
+	}
+	// sort hotkeys
+	keys := make([]string, 0, len(hotkeys))
+	for key := range hotkeys {
+		keys = append(keys, key)
+	}
+	slices.SortFunc(keys, func(i, j string) int {
+		ilength := utf8.RuneCountInString(i)
+		jlength := utf8.RuneCountInString(j)
+		if ilength != jlength {
+			return ilength - jlength
+		}
+		return strings.Compare(i, j)
+	})
+	for _, key := range keys {
+		label := hotkeys[key]
 		title := views.NewTextBar()
 		title.SetStyle(tcell.StyleDefault.Foreground(tcell.ColorGray))
-		title.SetLeft(" [ctl-z]", tcell.StyleDefault)
-		title.SetRight("sidebar  ", tcell.StyleDefault)
+		title.SetLeft(" "+key, tcell.StyleDefault.Foreground(tcell.ColorWhite).Bold(true))
+		title.SetRight(label+"  ", tcell.StyleDefault)
 		s.stack.AddWidget(title, 0)
 	}
 	s.stack.Draw()
