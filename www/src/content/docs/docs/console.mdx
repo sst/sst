@@ -3,9 +3,11 @@ title: Console
 description: Manage and monitor your apps with the SST Console.
 ---
 
-The Console is a web based dashboard to manage your SST apps. With it you can invoke functions, debug issues, view logs, and manage all your apps, with your team — [**console.sst.dev**](https://console.sst.dev)
+import { Tabs, TabItem } from '@astrojs/starlight/components';
 
-[![SST Console](../../../assets/docs/sst-console-logs.png)](https://console.sst.dev)
+The Console is a web based dashboard to manage your SST apps. With it you can **invoke functions**, **debug issues**, **view logs**, and **_git push to deploy_** your apps, with your team — [**console.sst.dev**](https://console.sst.dev)
+
+[![SST Console](../../../assets/docs/console/sst-console-home.png)](https://console.sst.dev)
 
 :::tip
 The Console is completely optional and comes with a generous free tier.
@@ -230,11 +232,11 @@ A couple of things to note.
 
 Here are a few of the things the Console does for you.
 
-1. [Logs](#logs) — View logs from the functions in your app
-2. [Issues](#issues) — Get real-time alerts for any errors in your functions
-3. [Local logs](#local-logs) — View logs from your local `sst dev` session
-4. [Resources](#resources) — View the resources in your app and their history
-5. [Autodeploy](#autodeploy) — Auto-deploy your app when you _git push_ to your repo
+1. [**Logs**](#logs): View logs from the functions in your app
+2. [**Issues**](#issues): Get real-time alerts for any errors in your functions
+3. [**Local logs**](#local-logs): View logs from your local `sst dev` session
+4. [**Resources**](#resources): View the resources in your app and their history
+5. [**Autodeploy**](#autodeploy): Auto-deploy your app when you _git push_ to your repo
 
 ---
 
@@ -246,11 +248,15 @@ With the Console, you don't need to go to CloudWatch to look at the logs for you
 - Live logs
 - Jump to a specific time
 
+![SST Console logs](../../../assets/docs/console/sst-console-logs.png)
+
 ---
 
 ### Issues
 
 The Console will automatically show you any errors in your Lambda functions in real-time. And notify you through Slack or email.
+
+![SST Console Issues](../../../assets/docs/console/sst-console-issues.png)
 
 With Issues, there is:
 
@@ -313,6 +319,8 @@ There's a soft limit of 10K issues per hour per workspace. If your account goes 
 
 When the Console starts up, it checks if you are running `sst dev` locally. If so, then it'll show you real-time logs from your local terminal. This works by connecting to a local server that's run as a part of the SST CLI.
 
+![SST Console local logs](../../../assets/docs/console/sst-console-local.png)
+
 :::info
 The local server only allows access from `localhost` and `console.sst.dev`.
 :::
@@ -353,6 +361,8 @@ The Console shows you the complete [state of the resources](/docs/providers#stat
 4. The full URN of the resource
 5. The update where the resource was created or modified
 
+![SST Console resources](../../../assets/docs/console/sst-console-resources.png)
+
 ---
 
 #### Update history
@@ -366,6 +376,8 @@ It also shows the SST command that was run that triggered the update. If the upd
 ### Autodeploy
 
 The Console can auto-deploy your apps when you _git push_ to your repo. Autodeploy uses [AWS CodeBuild](https://aws.amazon.com/codebuild/) in your account to run the build.
+
+![SST Console Autodeploy](../../../assets/docs/console/sst-console-autodeploy.png)
 
 :::note
 Autodeploy is currently free while in beta.
