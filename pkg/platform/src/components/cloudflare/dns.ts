@@ -24,7 +24,7 @@
  * {
  *   domain: {
  *     name: "example.com",
- *     dns: sst.aws.dns({
+ *     dns: sst.cloudflare.dns({
  *       zone: "415e6f4653b6d95b775d350f32119abb"
  *     })
  *   }
