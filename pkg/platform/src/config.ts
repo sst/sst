@@ -470,7 +470,7 @@ export interface TagEvent {
    */
   repo: Prettify<GitRepo>;
   /**
-   * The name of the tag.
+   * The name of the tag. For example, `v1.5.2`.
    */
   tag: string;
   /**
@@ -661,8 +661,8 @@ export interface Config {
        * git event. This function should return the stage the app will be deployed to.
        * Or `undefined` if the deploy should be skipped.
        *
-       * :::tip
-       * Use the git event to configure how your app will be auto-deployed.
+       * :::note
+       * Git push events for branches, pull requests, and tags are currently supported.
        * :::
        *
        * By default, this is what the `target` function looks like:
@@ -688,8 +688,8 @@ export interface Config {
        * Here we are sanitizing the branch name to generate the stage name. We are also
        * only deploying when _pushed_ to a branch, and **not** when a branch is removed.
        *
-       * :::note
-       * If a target is not returned, the app will not be deployed.
+       * :::tip
+       * Use the git event to configure how your app will be auto-deployed.
        * :::
        *
        * You can change the default behavior by passing in your own `target` function.
@@ -720,6 +720,10 @@ export interface Config {
        * [app settings in the Console](/docs/console/#setup). If the stage matches a deployment
        * target, the stage will be deployed to that environment. If no matching environment is
        * found, the deploy will be skipped.
+       *
+       * :::note
+       * If a target is not returned, the app will not be deployed.
+       * :::
        *
        * In addition to the `stage` you can also configure the `runner` that will run the build.
        * For example, to use a larger machine for the `production` stage.
