@@ -322,21 +322,29 @@ Head over to the local Next.js app in your browser, `http://localhost:3000` and 
 Now let's deploy your app to AWS.
 
 ```bash
-sst deploy
+sst deploy --stage production
 ```
+
+You can use any stage name here but it's good to create a new stage for production.
 
 Congrats! Your app should now be live!
 
 ![SST Realtime Next.js app](../../../../../assets/docs/start/sst-realtime-nextjs-app.png)
 
----
-
-## Next steps
-
-As a next step you can:
+Next you can:
 
 - Let users create chat rooms
 - Save them to a database
 - Only show messages from the right chat rooms
 
 This'll help you build realtime apps for production.
+
+---
+
+## Connect the console
+
+As a next step, you can setup the [SST Console](/docs/console/) to _**git push to deploy**_ your app and monitor it for any issues. 
+
+![SST Console Autodeploy](../../../../../assets/docs/start/sst-console-autodeploy.png)
+
+You can [create a free account](https://console.sst.dev) and connect it to your AWS account.
