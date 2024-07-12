@@ -312,6 +312,13 @@ export class CognitoUserPool
   }
 
   /**
+   * The Cognito user pool ARN.
+   */
+  public get arn() {
+    return this.userPool.arn;
+  }
+
+  /**
    * The underlying [resources](/docs/components/#nodes) this component creates.
    */
   public get nodes() {
