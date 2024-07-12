@@ -188,7 +188,7 @@ The command to run
 <Section type="parameters">
 #### Flags
 - <p><code class="key">silent</code> <code class="primitive">boolean</code></p>
-Don't show logs from function invocation
+Don't show logs from function invocations
 </Section>
 Run your app in development mode.
 
@@ -213,9 +213,9 @@ Dev mode does a few things:
 1. Starts a local server
 2. Watches your `sst.config.ts` and re-deploys changes
 3. Run your functions [Live](/docs/live/)
-4. Skip deploying resources that should be run locally
-   - Containers
-   - CDNs in the site components
+4. Skip components that should be run locally
+   - `Service`
+   - Frontends like, `Nextjs`, `Remix`, `Astro`, `SvelteKit`, etc.
 5. If you pass in a `command`, it'll:
    - Load your [linked resources](/docs/linking) in the environment
    - And run the command
