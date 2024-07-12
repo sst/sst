@@ -25,7 +25,9 @@
 .sl-markdown-content :not(h1, h2, h3, h4, h5, h6)
   + :is(h1, h2, h3, h4, h5, h6):not(:where(.not-content *)),
 .sl-markdown-content :not(a, strong, em, del, span, input, code)
-  + hr:not(:where(.not-content *)) {
+  + hr:not(:where(.not-content *)),
+.sl-markdown-content hr:not(:where(.not-content *)) + :not(a, strong, em, del, span, input, code, :where(.not-content *))
+{
   margin-top: 3.5rem;
 }
 
@@ -186,7 +188,7 @@
 .sl-markdown-content .expressive-code .ec-line.mark > .code,
 .sl-markdown-content .expressive-code .ec-line.ins > .code,
 .sl-markdown-content .expressive-code .ec-line.del > .code {
-  border-inline-start: none;
+  border-inline-start-color: transparent;
 }
 .sl-markdown-content .expressive-code .ec-line mark:before,
 .sl-markdown-content .expressive-code .ec-line ins:before,

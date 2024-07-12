@@ -6,8 +6,12 @@ import sst from "astro-sst";
 
 const sidebar = [
   {
-    label: "What is Ion",
+    label: "Intro",
     link: "/docs/",
+  },
+  {
+    label: "Workflow",
+    link: "/docs/workflow/",
   },
   {
     label: "Get Started",
@@ -42,6 +46,14 @@ const sidebar = [
       { label: "Console", link: "/docs/console/" },
       { label: "Providers", link: "/docs/providers/" },
       { label: "Components", link: "/docs/components/" },
+    ],
+  },
+  {
+    label: "How to",
+    items: [
+      // { label: "Migrate from SST", link: "/docs/migrate-from-sst/" },
+      // { label: "Import Resources", link: "/docs/import-resources/" },
+      { label: "Custom Domains", link: "/docs/custom-domains/" },
     ],
   },
   {
@@ -108,14 +120,6 @@ const sidebar = [
       { label: "Global", link: "/docs/reference/global/" },
       { label: "Config", link: "/docs/reference/config/" },
       { label: "Secret", link: "/docs/component/secret/" },
-    ],
-  },
-  {
-    label: "How to",
-    items: [
-      // { label: "Migrate from SST", link: "/docs/migrate-from-sst/" },
-      // { label: "Import Resources", link: "/docs/import-resources/" },
-      { label: "Custom Domains", link: "/docs/custom-domains/" },
     ],
   },
   {
