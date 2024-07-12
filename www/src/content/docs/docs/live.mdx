@@ -1,15 +1,15 @@
 ---
 title: Live
-description: Make changes and test your functions in milliseconds.
+description: Make changes to your Lambda functions in milliseconds.
 ---
 
-Live is a feature of SST that lets you test changes made to your functions in milliseconds. Your changes work without having to redeploy. And they can be invoked remotely.
+Live is a feature of SST that lets you test changes made to your AWS Lambda functions in milliseconds. Your changes work without having to redeploy. And they can be invoked remotely.
 
 :::tip
 By default, `sst dev` will run all the functions in your app _"live"_.
 :::
 
-It works by proxying requests from your cloud provider to your local machine, executing it locally, and proxying the response back.
+It works by proxying requests from AWS to your local machine, executing it locally, and proxying the response back.
 
 
 ---
@@ -30,7 +30,7 @@ This setup of running your functions locally and proxying the results back allow
 
 ## How it works
 
-On AWS, Live uses [IoT over WebSocket](https://docs.aws.amazon.com/iot/latest/developerguide/protocols.html) to communicate between your local machine and the remote Lambda function.
+Live uses [IoT over WebSocket](https://docs.aws.amazon.com/iot/latest/developerguide/protocols.html) to communicate between your local machine and the remote Lambda function.
 
 :::note
 Every AWS account comes with a AWS IoT Core endpoint by default.
@@ -45,9 +45,42 @@ This is roughly what the flow looks like:
 5. Next, it runs the local version of the function and publishes an event with the function response as the payload. The local version is run as a Node.js Worker.
 6. Finally, the stub Lambda function receives the event and responds with the payload.
 
-:::tip
-The _stub_ function that's deployed uses a different runtime than the actual function.
-:::
+---
+
+### Quirks
+
+There are a couple of quirks with this setup that are worth noting.
+
+1. **Initial IoT delay**
+
+   New AWS accounts (or accounts that have not previously used AWS IoT Core) need around **10 minutes** before it can be used. The `sst dev` CLI starts this up as early as possible but you might run into this error.
+
+   ```
+   failed to connect to mqtt: network Error : dial tcp: lookup
+   xxx.iot.eu-central-1.amazonaws.com: no such host
+   ```
+
+   This will only happen once in that account.
+
+2. **Runtime change**
+
+   The stub function that's deployed uses a **different runtime** than your Lambda function. You might run into this when you change the runtime in your config but the runtime of the Lambda function in the AWS Console doesn't change.
+
+   :::tip
+   The _stub_ function that’s deployed uses a different runtime than the actual function.
+   :::
+
+   We use a different runtime because we want the function to be as fast as possible at proxying requests.
+
+3. **Live mode persists**
+
+   If you kill the `sst dev` CLI, your functions are not run locally anymore but the stub function in AWS are still there. This means that it'll attempt to proxy requests to your machine and timeout.
+
+   :::tip
+   Only use `sst dev` in your personal stage.
+   :::
+
+   You can fix this by running `sst deploy` and it'll deploy the real version of your app. But the next time you run `sst dev` it'll need to deploy the stub back. This'll take a couple of minutes. So we recommend only using your personal stages for `sst dev`. And avoid flipping back and forth between `dev` and `deploy`.
 
 ---
 
