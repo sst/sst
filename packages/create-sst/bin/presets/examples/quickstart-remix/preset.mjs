@@ -9,9 +9,10 @@ export default [
       "@types/react-dom",
       "aws-cdk-lib@2.91.0",
       "constructs@10.2.69",
-      "eslint",
+      "eslint@^8.57.0",
       "sst",
       "typescript",
+      "vite"
     ],
     dev: true,
   }),

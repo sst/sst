@@ -2,10 +2,11 @@
   "name": "@@app",
   "private": true,
   "sideEffects": false,
+  "type": "module",
   "scripts": {
-    "build": "remix build",
-    "dev": "sst bind remix dev",
-    "start": "remix-serve build",
+    "build": "remix vite:build",
+    "dev": "sst bind remix vite:dev",
+    "start": "remix-serve ./build/server/index.js",
     "typecheck": "tsc",
     "sst:deploy": "sst deploy",
     "sst:dev": "sst dev"
