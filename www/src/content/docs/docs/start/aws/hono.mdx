@@ -119,7 +119,13 @@ export const handler = handle(app);
 We are directly accessing our S3 bucket with `Resource.MyBucket.name`.
 :::
 
-Add the relevant imports.
+Install the npm packages.
+
+```bash
+npm install hono sst @aws-sdk/client-s3 @aws-sdk/s3-request-presigner
+```
+
+Then add the relevant imports.
 
 ```ts title="index.ts"
 import { Resource } from "sst";
@@ -136,11 +142,6 @@ import { handle } from "hono/aws-lambda";
 const s3 = new S3Client({});
 ```
 
-And install the npm packages.
-
-```bash
-npm install hono @aws-sdk/client-s3 @aws-sdk/s3-request-presigner
-```
 
 ---
 
