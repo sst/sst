@@ -52,7 +52,7 @@ export interface DynamoArgs {
      */
     hashKey: Input<string>;
     /**
-     * The hash key field of the index. This field needs to be defined in the `fields`.
+     * The range key field of the index. This field needs to be defined in the `fields`.
      */
     rangeKey?: Input<string>;
   }>;
