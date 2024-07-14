@@ -257,13 +257,16 @@ export const useNodeHandler = (): RuntimeHandler => {
           );
           const cmd = [
             "npm install",
-            "--platform=linux",
             "--omit=dev",
             "--no-optional",
             "--force",
+            "--platform=linux",
             input.props.architecture === "arm_64"
               ? "--arch=arm64"
               : "--arch=x64",
+            // support npm versions 10 and above
+            "--os=linux",
+            input.props.architecture === "arm_64" ? "--cpu=arm64" : "--cpu=x64",
           ];
 
           if (installPackages.includes("sharp")) {
