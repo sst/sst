@@ -36,7 +36,7 @@ jobs:
       - run: bun i --frozen-lockfile
       - run: git reset --hard
 
-      - uses: goreleaser/goreleaser-action@v4
+      - uses: goreleaser/goreleaser-action@v6
         with:
           distribution: goreleaser
           version: latest
