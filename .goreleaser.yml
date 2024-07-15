@@ -69,5 +69,6 @@ changelog:
   filters:
     exclude:
       - '^docs:'
+      - '^doc:'
       - '^test:'
 
