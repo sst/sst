@@ -7,7 +7,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/sst/ion/pkg/platform"
+	"github.com/sst/ion/platform"
 )
 
 func (p *Project) CheckPlatform(version string) bool {

@@ -9,7 +9,9 @@ import (
 	"path/filepath"
 )
 
-//go:embed dist/* src/* functions/* package.json bun.lockb tsconfig.json
+// go:generate ../scripts/build
+//
+//go:embed dist/* src/* functions/* package.json tsconfig.json
 var files embed.FS
 
 //go:embed templates/*

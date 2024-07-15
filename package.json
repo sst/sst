@@ -2,10 +2,7 @@
   "name": "ion",
   "workspaces": [
     "www",
-    "pkg/platform",
+    "platform",
     "sdk/js"
-  ],
-  "devDependencies": {
-    "@types/aws-lambda": "^8.10.137"
-  }
+  ]
 }

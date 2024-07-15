@@ -3,7 +3,6 @@ module github.com/sst/ion
 go 1.21.3
 
 require (
-	git.sr.ht/~rockorager/tcell-term v0.10.0
 	github.com/Masterminds/semver/v3 v3.2.1
 	github.com/aaronjanse/3mux v1.1.0
 	github.com/aws/aws-sdk-go-v2 v1.24.1
@@ -16,6 +15,7 @@ require (
 	github.com/charmbracelet/x/ansi v0.1.2
 	github.com/charmbracelet/x/xpty v0.1.0
 	github.com/cloudflare/cloudflare-go v0.89.0
+	github.com/creack/pty v1.1.21
 	github.com/eclipse/paho.mqtt.golang v1.4.3
 	github.com/evanw/esbuild v0.20.2
 	github.com/fatih/color v1.16.0
@@ -29,6 +29,7 @@ require (
 	github.com/posthog/posthog-go v0.0.0-20240221135834-4944045455b4
 	github.com/pulumi/pulumi/sdk/v3 v3.115.2
 	github.com/spf13/pflag v1.0.5
+	github.com/stretchr/testify v1.9.0
 	github.com/twitchtv/twirp v8.1.3+incompatible
 	golang.org/x/exp v0.0.0-20240325151524-a685a6edb6d8
 	google.golang.org/protobuf v1.33.0
@@ -42,9 +43,10 @@ require (
 	github.com/charmbracelet/x/term v0.1.0 // indirect
 	github.com/charmbracelet/x/termios v0.1.0 // indirect
 	github.com/charmbracelet/x/windows v0.1.0 // indirect
-	github.com/creack/pty v1.1.21 // indirect
+	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/erikgeiser/coninput v0.0.0-20211004153227-1c3628e74d0f // indirect
 	github.com/gdamore/encoding v1.0.0 // indirect
+	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/xo/terminfo v0.0.0-20220910002029-abceb7e1c41e // indirect
 )
 
@@ -106,7 +108,7 @@ require (
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/mattn/go-localereader v0.0.1 // indirect
-	github.com/mattn/go-runewidth v0.0.15 // indirect
+	github.com/mattn/go-runewidth v0.0.15
 	github.com/mitchellh/go-ps v1.0.0 // indirect
 	github.com/mitchellh/go-wordwrap v1.0.1 // indirect
 	github.com/muesli/ansi v0.0.0-20230316100256-276c6243b2f6 // indirect
@@ -142,7 +144,7 @@ require (
 	golang.org/x/net v0.23.0 // indirect
 	golang.org/x/sync v0.6.0
 	golang.org/x/sys v0.20.0 // indirect
-	golang.org/x/term v0.19.0
+	golang.org/x/term v0.19.0 // indirect
 	golang.org/x/text v0.15.0 // indirect
 	golang.org/x/time v0.5.0 // indirect
 	golang.org/x/tools v0.19.0 // indirect
