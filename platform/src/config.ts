@@ -113,7 +113,8 @@ export interface App {
    */
   removal?: "remove" | "retain" | "retain-all";
   /**
-   * The providers that are being used in this app. SST supports all [Pulumi's providers](https://www.pulumi.com/registry/). This allows you to use the components from these providers in your app.
+   * The providers that are being used in this app. This allows you to use the components from these providers in your app.
+   * Check out the full list in the [Directory](/docs/providers#directory).
    *
    * For example, if you use the [AWS Classic](https://www.pulumi.com/registry/packages/aws/) provider, you can use the `aws` components in your app.
    *
