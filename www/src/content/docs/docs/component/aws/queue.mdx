@@ -3,7 +3,7 @@ title: Queue
 description: Reference doc for the `sst.aws.Queue` component.
 ---
 
-{/* DO NOT EDIT. AUTO-GENERATED FROM "pkg/platform/src/components/aws/queue.ts" */}
+{/* DO NOT EDIT. AUTO-GENERATED FROM "platform/src/components/aws/queue.ts" */}
 
 import Segment from '../../../../../../src/components/tsdoc/Segment.astro';
 import Section from '../../../../../../src/components/tsdoc/Section.astro';
@@ -82,6 +82,58 @@ new Queue(name, args?, opts?)
 </Segment>
 
 ## QueueArgs
+### dlq?
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol"> | </code><code class="primitive">Object</code><code class="symbol">&gt;</code>
+</InlineSection>
+- <p>[<code class="key">queue</code>](#dlq-queue)</p>
+- <p>[<code class="key">retry</code>](#dlq-retry)</p>
+</Section>
+
+<InlineSection>
+**Default** No dead-letter queue
+</InlineSection>
+Configure a dead-letter queue (DLQ) for this queue. A dead-letter queue is used to store messages that can't be processed successfully by the subscriber function after the retry limit is reached.
+
+For example, to create a dead-letter queue and link it to the main queue.
+```js
+const deadLetterQueue = new sst.aws.Queue("DeadLetterQueue");
+
+new sst.aws.Queue("MyQueue", {
+  dlq: deadLetterQueue.arn,
+});
+```
+
+By default, the main queue will retry processing the message 3 times before sending it to the dead-letter queue. You can customize the retry limit.
+```js
+new sst.aws.Queue("MyQueue", {
+  dlq: {
+    queue: deadLetterQueue.arn,
+    retry: 5,
+  }
+});
+```
+</Segment>
+<NestedTitle id="dlq-queue" Tag="h4" parent="dlq.">queue</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+
+</Segment>
+<NestedTitle id="dlq-retry" Tag="h4" parent="dlq.">retry</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">number</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+
+</Segment>
 ### fifo?
 <Segment>
 <Section type="parameters">

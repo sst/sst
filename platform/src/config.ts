@@ -11,19 +11,23 @@
  * /// <reference path="./.sst/platform/config.d.ts" />
  *
  * export default $config({
+ *   // Your app's config
  *   app(input) {
  *     return {
  *       name: "my-sst-app",
  *       home: "aws"
  *     };
  *   },
+ *   // Your app's resources
  *   async run() {
  *     new sst.aws.Bucket("MyBucket");
  *   }
  * });
  * ```
  *
- * The `Config` object takes two functions: [`app`](#app-2) and [`run`](#run).
+ * The `Config` object takes two functions:
+ * 1. [`app`](#app-2) — Your config
+ * 2. [`run`](#run) — Your resources
  *
  * The `app` function is evaluated right when your app loads. It's used to define the app config and its providers.
  *
@@ -39,6 +43,13 @@
  * :::
  *
  * The run function also has access to a list of [Global](/docs/reference/global/) `$` variables and functions. These serve as the context for your app config.
+ * 
+ * :::caution
+ * Do not `import` the provider packages in your `sst.config.ts`.
+ * :::
+ *
+ * Since SST manages importing your provider packages, it's recommended not to add any imports
+ * in your `sst.config.ts`.
  *
  * @packageDocumentation
  */
