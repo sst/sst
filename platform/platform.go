@@ -9,8 +9,7 @@ import (
 	"path/filepath"
 )
 
-// go:generate ../scripts/build
-//
+//go:generate ../scripts/build
 //go:embed dist/* src/* functions/* package.json tsconfig.json
 var files embed.FS
 
