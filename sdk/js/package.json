@@ -16,6 +16,7 @@
   "scripts": {
     "build": "tsc",
     "dev": "tsc -w"
+    "release": "./scripts/release.ts"
   },
   "devDependencies": {
     "@tsconfig/node20": "20.1.4",
