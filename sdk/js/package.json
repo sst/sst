@@ -3,7 +3,7 @@
   "name": "sst",
   "type": "module",
   "sideEffects": false,
-  "version": "3.0.37",
+  "version": "0.0.0",
   "main": "./dist/index.js",
   "exports": {
     ".": "./dist/index.js",
@@ -16,15 +16,16 @@
   "scripts": {
     "build": "tsc",
     "dev": "tsc -w",
-    "release": "bun run build && pnpm version patch && pnpm publish --no-git-checks --tag=ion --access=public"
+    "release": "./scripts/release.ts"
   },
   "devDependencies": {
-    "@tsconfig/node18": "^18.2.2",
-    "@types/node": "^20.11.0",
+    "@tsconfig/node20": "20.1.4",
+    "@types/bun": "^1.1.6",
+    "@types/node": "20.11.0",
     "hono": "4.3.9",
-    "typescript": "^5.3.3",
+    "typescript": "5.3.3",
     "valibot": "0.30.0",
-    "zod": "^3.23.8"
+    "zod": "3.23.8"
   },
   "files": [
     "dist"
@@ -41,9 +42,9 @@
       "optional": true
     }
   },
+  "optionalDependencies": {},
   "dependencies": {
     "@aws-sdk/client-lambda": "3.478.0",
-    "@tsconfig/node20": "^20.1.4",
     "aws4fetch": "^1.0.18",
     "jose": "5.2.3",
     "openid-client": "5.6.4"

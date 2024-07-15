@@ -14,7 +14,7 @@ import (
 
 	"github.com/kkqy/gokvpairs"
 	"github.com/sst/ion/pkg/npm"
-	"github.com/sst/ion/pkg/platform"
+	"github.com/sst/ion/platform"
 	"github.com/tailscale/hujson"
 )
 
