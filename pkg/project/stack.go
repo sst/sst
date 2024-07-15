@@ -386,7 +386,7 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 	defer func() {
 		complete, err := getCompletedEvent(ctx, stack)
 		if err != nil {
-			panic(err)
+			return
 		}
 		complete.Finished = finished
 		complete.Errors = errors
