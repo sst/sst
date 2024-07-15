@@ -45,6 +45,10 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.SST_GITHUB_TOKEN }}
           AUR_KEY: ${{ secrets.AUR_KEY }}
 
-      - run: cd sdk/js && bun run release
+      - run:
+          npm config set //registry.npmjs.org/:_authToken $NODE_AUTH_TOKEN
+          npm whoami
+          cd sdk/js
+          bun run release
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
