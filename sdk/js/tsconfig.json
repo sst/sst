@@ -10,5 +10,8 @@
     "moduleResolution": "NodeNext",
     "isolatedModules": true,
     "downlevelIteration": true,
-  }
+  },
+  "exclude": [
+    "scripts"
+  ]
 }
