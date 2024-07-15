@@ -53,4 +53,5 @@ jobs:
 
       - run: |
           cd sdk/js
+          bun run build
           bun run release
