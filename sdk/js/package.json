@@ -19,6 +19,7 @@
   },
   "devDependencies": {
     "@tsconfig/node20": "20.1.4",
+    "@types/bun": "^1.1.6",
     "@types/node": "20.11.0",
     "hono": "4.3.9",
     "typescript": "5.3.3",
