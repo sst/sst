@@ -3,8 +3,7 @@ project_name: sst
 before:
   hooks:
     - go mod tidy
-    - bash -c 'GOARCH=amd64 GOOS=linux go build -o ./pkg/platform/dist/bridge/bootstrap ./pkg/platform/bridge'
-    - bash -c 'cd ./pkg/platform && ./scripts/build-functions'
+    - ./platform/scripts/build
     - go test ./cmd/... ./pkg/...
 builds:
   - env:
