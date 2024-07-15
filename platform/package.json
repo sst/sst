@@ -39,6 +39,7 @@
     "aws4fetch": "1.0.18",
     "esbuild": "0.20.2",
     "glob": "10.3.10",
+    "@tsconfig/node18": "18.2.2",
     "path-to-regexp": "6.2.1",
     "prettier": "3.1.1",
     "typescript": "5.3.3"
@@ -46,7 +47,6 @@
   "devDependencies": {
     "@aws-sdk/client-iot": "3.501.0",
     "@pulumiverse/vercel": "1.11.0",
-    "@tsconfig/node18": "18.2.2",
     "@types/archiver": "6.0.2",
     "@types/aws-lambda": "8.10.133",
     "vitest": "^1.2.2"
