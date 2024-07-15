@@ -10,7 +10,7 @@ export const github  = config.github;
 
 SST is a framework that makes it easy to build modern full-stack applications on your own infrastructure.
 
-What makes SST different is that your _entire_ app is **defined in code** — in a single `sst.config.ts` file. This includes your databases, buckets, queues, your Stripe webhooks, or anything else you need.
+What makes SST different is that your _entire_ app is **defined in code** — in a single `sst.config.ts` file. This includes your databases, buckets, queues, your Stripe webhooks, or any one of the **150+ providers**.
 
 With SST, **everything is automated**.
 
@@ -176,9 +176,9 @@ Read more about [transforms](/docs/components#transforms).
 
 SST has components for AWS and Cloudflare that make these services easier to use.
 
-But it also supports **any Pulumi or Terraform component** directly in your `sst.config.ts`. This is because components in SST are built on Pulumi components.
+However it also supports components from any one of the 150+ Pulumi/Terraform providers. This is because components in SST are built on Pulumi components.
 
-For example, you can even use Vercel for your frontends.
+For example, you can use Vercel for your frontends.
 
 ```ts title="sst.config.ts"
 new vercel.Project("MyFrontend", {
@@ -186,7 +186,7 @@ new vercel.Project("MyFrontend", {
 });
 ```
 
-Read more about [providers](/docs/providers) and check out the full list in the [Directory](/docs/providers#directory)
+Read more about [Providers](/docs/providers) and check out the full list in the [Directory](/docs/providers#directory)
 
 ---
 

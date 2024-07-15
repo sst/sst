@@ -42,6 +42,7 @@ const sidebar = [
     label: "Concepts",
     items: [
       { label: "Live", link: "/docs/live/" },
+      { label: "State", link: "/docs/state/" },
       { label: "Linking", link: "/docs/linking/" },
       { label: "Console", link: "/docs/console/" },
       { label: "Providers", link: "/docs/providers/" },

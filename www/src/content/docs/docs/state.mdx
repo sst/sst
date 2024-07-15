@@ -3,15 +3,25 @@ title: State
 description: Tracking the infrastructure created by your app.
 ---
 
-You app generates some _state_ that is uploaded to your provider. This includes:
+When you deploy your app, SST creates a state file locally to keep track of the state of the infrastructure in your app.
+
+So when you make a change, it'll allow SST to do a diff with the state and only deploy what's changed.
+
+---
+
+The state of your app includes:
 
 1. A state file for your resources. This is a JSON file.
 2. A passphrase that is used to encrypt the secrets in your state.
 
-We'll look at how the state works in detail below but to do store it SST creates:
+Aside from these, SST also creates some other resources when your app is first deployed. We'll look at this below. 
 
-1. A bucket to store the state, typically named `sst-state-<hash>`. This is created in the region of your `home`. More on this below.
-2. An SSM parameter to store the passphrase used to encrypt your secrets, under `/sst/passphrase/<app>/<stage>`. Also created in the region of your `home`.
+---
+
+The state is generated locally but is backed up to your provider using:
+
+1. A **bucket** to store the state, typically named `sst-state-<hash>`. This is created in the region of your `home`. More on this below.
+2. An **SSM parameter** to store the passphrase used to encrypt your secrets, under `/sst/passphrase/<app>/<stage>`. Also created in the region of your `home`.
 
 :::danger
 Do not delete the SSM parameter that stores the passphrase for your app.
@@ -21,7 +31,7 @@ The passphrase is used to encrypt any secrets and sensitive information. Without
 
 ---
 
-### Home
+## Home
 
 Your `sst.config.ts` specifies which provider to use for storing your state. We call this the `home` of your app.
 
@@ -54,7 +64,7 @@ You can read more about the `home` provider in [Config](/docs/reference/config/)
 
 ---
 
-### Bootstrap
+## Bootstrap
 
 As SST starts deploying the resources in your app, it creates some additional _bootstrap_ resources. If your app has a Lambda function or a Docker container, then SST will create the following in the same region as the given resource:
 
@@ -72,7 +82,7 @@ When you remove an SST app, it does not remove the _state_ or _bootstrap_ resour
 
 ---
 
-### How state works
+## How it works
 
 The state file is a JSON representation of all the low level resources created by your app. It is a cached version of the state of resources in the cloud provider.
 
@@ -91,7 +101,7 @@ So when you do a deploy the following happens.
 
 ---
 
-#### Going out of sync
+### Out of sync
 
 This process works fine till you manually go change these resources through the cloud provider's console. This will cause the **state and the resources to not be in sync** anymore. This can cause an issue in some cases.
 
@@ -105,7 +115,7 @@ Say we've deployed a `Function` with it set to `{ timeout: 10 seconds" }`. At th
 
 ---
 
-##### Change the resource
+#### Change the resource
 
 - We now go change the timeout to 20 seconds in the AWS Console.
   - The config and state are out of sync with the resource since they are still set to 10 seconds.
@@ -116,7 +126,7 @@ The config and state will stay out of sync with the resource.
 
 ---
 
-##### Change the config
+#### Change the config
 
 - If we change our config to `{ timeout: 30 seconds" }` and do a deploy.
 - The config and state will have some differences.
@@ -127,7 +137,7 @@ The config, state, and resource are back being in sync.
 
 ---
 
-##### Remove the resource
+#### Remove the resource
 
 - Next we go to the AWS Console and remove the function.
   - The config and state still have the function with the timeout set to 30 seconds.
@@ -140,7 +150,7 @@ Your deploys will fail moving forward because the your state shows that a resour
 
 ---
 
-#### Refresh the state
+### Refresh
 
 To fix scenarios where the resources in the cloud are out of sync with the state of your app, you'll need to run.
 
