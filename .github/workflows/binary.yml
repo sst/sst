@@ -23,6 +23,12 @@ jobs:
         with:
           bun-version: latest
 
+      - run:
+          npm config set //registry.npmjs.org/:_authToken $NODE_AUTH_TOKEN
+          npm whoami
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
       - run: git fetch --force --tags
 
       - uses: actions/setup-go@v4
@@ -46,9 +52,5 @@ jobs:
           AUR_KEY: ${{ secrets.AUR_KEY }}
 
       - run:
-          npm config set //registry.npmjs.org/:_authToken $NODE_AUTH_TOKEN
-          npm whoami
           cd sdk/js
           bun run release
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
