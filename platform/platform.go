@@ -10,7 +10,7 @@ import (
 )
 
 //go:generate ../scripts/build
-//go:embed dist/* src/* functions/* package.json tsconfig.json
+//go:embed dist/* src/* functions/* package.json tsconfig.json bun.lockb
 var files embed.FS
 
 //go:embed templates/*
