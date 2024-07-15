@@ -23,7 +23,7 @@ jobs:
         with:
           bun-version: latest
 
-      - run:
+      - run: |
           npm config set //registry.npmjs.org/:_authToken $NODE_AUTH_TOKEN
           npm whoami
         env:
@@ -51,6 +51,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.SST_GITHUB_TOKEN }}
           AUR_KEY: ${{ secrets.AUR_KEY }}
 
-      - run:
+      - run: |
           cd sdk/js
           bun run release
