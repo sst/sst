@@ -1,6 +1,8 @@
 #!/usr/bin/env bun
 
 import { $ } from "bun";
+import fs from "fs/promises";
+import path from "path";
 
 import metafile from "../../../dist/metadata.json";
 import artifacts from "../../../dist/artifacts.json";
@@ -8,11 +10,15 @@ import pkg from "../package.json";
 const nextPkg = JSON.parse(JSON.stringify(pkg));
 nextPkg.version = metafile.version;
 nextPkg.optionalDependencies = nextPkg.optionalDependencies || {};
+const snapshot = nextPkg.version.includes("0.0.0");
+if (snapshot) {
+  console.log("snapshot mode");
+}
+
+console.log("publishing", nextPkg.version);
 
 await $`bun run build`;
 
-import fs from "fs/promises";
-import path from "path";
 const cpus = {
   arm64: "arm64",
   amd64: "x64",
@@ -20,7 +26,7 @@ const cpus = {
 };
 
 const tmp = `tmp`;
-const dirs = [];
+const binaryPackages = [];
 for (const artifact of artifacts) {
   if (artifact.type !== "Binary") continue;
   const os = artifact.goos;
@@ -40,7 +46,7 @@ for (const artifact of artifacts) {
     JSON.stringify(
       {
         name,
-        version: metafile.version,
+        version: nextPkg.version,
         os: [os],
         cpu: [cpu],
         bin: {
@@ -51,17 +57,18 @@ for (const artifact of artifacts) {
       2,
     ),
   );
-  nextPkg.optionalDependencies[name] = metafile.version;
-  dirs.push(dir);
+  nextPkg.optionalDependencies[name] = nextPkg.version;
+  binaryPackages.push(dir);
 }
 
+const tag = snapshot ? "ion-snapshot" : "ion";
 try {
-  for (const dir of dirs) {
-    await $`cd ${dir} && npm publish --access public`;
+  for (const dir of binaryPackages) {
+    await $`cd ${dir} && npm publish --access public --tag ${tag}`;
   }
   console.log(nextPkg);
   await Bun.write("package.json", JSON.stringify(nextPkg, null, 2));
-  // await $`npm publish --access public --tag ion`;
+  await $`npm publish --access public --tag ${tag}`;
 } finally {
   await Bun.write("package.json", JSON.stringify(pkg, null, 2));
   await fs.rmdir(tmp, { recursive: true });
