@@ -312,7 +312,7 @@ export interface NextjsArgs extends SsrSiteArgs {
    * This does not automatically update to the latest OpenNext version. It remains pinned to the version of SST you have.
    * :::
    *
-   * By default, this is pinned to the version of OpenNext that was released with the SST version you are using. You can [find this in the source](https://github.com/sst/ion/blob/dev/pkg/platform/src/components/aws/nextjs.ts) under `DEFAULT_OPEN_NEXT_VERSION`.
+   * By default, this is pinned to the version of OpenNext that was released with the SST version you are using. You can [find this in the source](https://github.com/sst/ion/blob/dev/platform/src/components/aws/nextjs.ts) under `DEFAULT_OPEN_NEXT_VERSION`.
    *
    * @default The latest version of OpenNext
    * @example
