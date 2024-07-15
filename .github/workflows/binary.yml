@@ -46,4 +46,4 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.SST_GITHUB_TOKEN }}
           AUR_KEY: ${{ secrets.AUR_KEY }}
 
-      - run: cd platform && bun run release
+      - run: cd sdk/js && bun run release
