@@ -539,7 +539,7 @@ func (vt *VT) drawRow(row int, cols []cell) {
 			content = ' '
 			w = 1
 		}
-		vt.surface.SetContent(col, row, content, cell.combining, cell.attrs)
+		vt.surface.SetContent(col, row, content, []rune{}, cell.attrs)
 		if w == 0 {
 			w = 1
 		}
@@ -549,6 +549,10 @@ func (vt *VT) drawRow(row int, cols []cell) {
 		builder := strings.Builder{}
 		for col := 0; col < len(cols); col++ {
 			cell := cols[col]
+			if cell.content == '\x00' {
+				builder.WriteRune(' ')
+				continue
+			}
 			builder.WriteRune(cell.content)
 		}
 	}

@@ -9,7 +9,6 @@ import (
 	"time"
 	"unicode"
 
-	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/charmbracelet/x/ansi"
 	"github.com/pulumi/pulumi/sdk/v3/go/common/apitype"
@@ -43,7 +42,7 @@ type UI struct {
 	workerTime map[string]time.Time
 	complete   *project.CompleteEvent
 	skipped    int
-	footer     *tea.Program
+	footer     *footer
 	buffer     []interface{}
 	hasBlank   bool
 }
@@ -75,6 +74,7 @@ func New(ctx context.Context, mode ProgressMode, options ...Option) *UI {
 		result.footer = NewFooter(mode)
 	}
 	result.Reset()
+	go result.footer.Start(ctx)
 	return result
 }
 
@@ -92,8 +92,7 @@ func (u *UI) println(args ...interface{}) {
 		fmt.Println(fmt.Sprint(u.buffer...))
 	}
 	if u.footer != nil {
-		// u.footer.Send(lineMsg(fmt.Sprint(u.buffer...)))
-		u.footer.Printf(fmt.Sprint(u.buffer...))
+		u.footer.Send(lineMsg(fmt.Sprint(u.buffer...)))
 	}
 	u.buffer = []interface{}{}
 	u.hasBlank = false
@@ -314,10 +313,10 @@ func (u *UI) Event(unknown interface{}) {
 					u.print(TEXT_NORMAL_BOLD.Render("  Removed"))
 				}
 				if u.mode == ProgressModeDeploy || u.mode == ProgressModeDev {
-					u.print(TEXT_NORMAL_BOLD.Render("  Complete"))
+					u.print(TEXT_NORMAL_BOLD.Render("  Complete "))
 				}
 				if u.mode == ProgressModeRefresh {
-					u.print(TEXT_NORMAL_BOLD.Render("  Refreshed"))
+					u.print(TEXT_NORMAL_BOLD.Render("  Refreshed    "))
 				}
 			}
 			u.println()
@@ -348,14 +347,14 @@ func (u *UI) Event(unknown interface{}) {
 		if len(evt.Errors) == 0 && !evt.Finished {
 			u.println(
 				TEXT_DANGER_BOLD.Render(IconX),
-				TEXT_NORMAL_BOLD.Render("  Interrupted"),
+				TEXT_NORMAL_BOLD.Render("  Interrupted    "),
 			)
 		}
 
 		if len(evt.Errors) > 0 {
 			u.println(
 				TEXT_DANGER_BOLD.Render(IconX),
-				TEXT_NORMAL_BOLD.Render("  Failed"),
+				TEXT_NORMAL_BOLD.Render("  Failed    "),
 			)
 
 			for _, status := range evt.Errors {
@@ -466,9 +465,9 @@ func (u *UI) printEvent(barColor lipgloss.Style, label string, message ...string
 
 func (u *UI) Destroy() {
 	if u.footer != nil {
-		u.footer.Quit()
+		// u.footer.Quit()
 		slog.Info("waiting for footer to quit")
-		u.footer.Wait()
+		// u.footer.Wait()
 	}
 }
 

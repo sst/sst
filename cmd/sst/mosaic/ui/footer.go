@@ -1,59 +1,124 @@
 package ui
 
 import (
+	"bytes"
+	"context"
 	"fmt"
-	"log/slog"
 	"os"
 	"strings"
 	"syscall"
+	"time"
 
 	"github.com/charmbracelet/bubbles/spinner"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/charmbracelet/x/ansi"
 	"github.com/pulumi/pulumi/sdk/v3/go/common/apitype"
 	"github.com/pulumi/pulumi/sdk/v3/go/common/resource"
 	"github.com/sst/ion/pkg/project"
+	"golang.org/x/crypto/ssh/terminal"
 )
 
 type footer struct {
-	spinner     spinner.Model
 	mode        ProgressMode
 	complete    *project.CompleteEvent
 	parents     map[string]string
 	summary     bool
 	cancelled   bool
-	lines       []string
 	pending     []*apitype.ResourcePreEvent
 	skipped     int
 	exitConfirm bool
 
+	spinner int
+
+	input chan any
+
 	width  int
 	height int
+
+	previous string
 }
 
 type op struct {
 	urn string
 }
 
-func NewFooter(mode ProgressMode) *tea.Program {
+func NewFooter(mode ProgressMode) *footer {
 	f := footer{
-		spinner: spinner.New(),
-		lines:   []string{},
-		mode:    mode,
+		mode:  mode,
+		input: make(chan any),
 	}
-	f.spinner.Spinner = spinner.MiniDot
 	f.Reset()
-	slog.Info("new tea program")
-	p := tea.NewProgram(f,
-		tea.WithFPS(16),
-		tea.WithoutSignalHandler())
-	go p.Run()
-	slog.Info("initialized footer ui")
-	return p
+	return &f
 }
 
-func (m footer) Init() tea.Cmd {
-	return m.spinner.Tick
+func (m *footer) Send(input any) {
+	m.input <- input
+}
+
+type spinnerTick struct{}
+
+func (m *footer) Start(ctx context.Context) {
+	ticker := time.NewTicker(time.Millisecond * 100)
+	defer ticker.Stop()
+	go func() {
+		for range ticker.C {
+			m.Send(&spinnerTick{})
+		}
+	}()
+	os.Stdout.WriteString("\033[2l")
+	os.Stdout.WriteString(ansi.HideCursor)
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case val := <-m.input:
+			switch evt := val.(type) {
+			case lineMsg:
+				m.Render("")
+				fmt.Println(evt)
+			default:
+				m.Update(val)
+			}
+			next := m.View()
+			m.Render(next)
+		}
+	}
+}
+
+func (m *footer) Render(next string) {
+	oldLines := strings.Split(m.previous, "\n")
+	nextLines := strings.Split(next, "\n")
+	width, _, _ := terminal.GetSize(int(os.Stdout.Fd()))
+
+	out := &bytes.Buffer{}
+
+	if next == m.previous {
+		return
+	}
+
+	if len(oldLines) > 0 {
+		for i := range oldLines {
+			out.WriteString(ansi.EraseEntireLine)
+			if i < len(oldLines)-1 {
+				out.WriteString(ansi.CursorUp1)
+			}
+		}
+	}
+
+	for i, line := range nextLines {
+		if i == 0 {
+			out.WriteByte('\r')
+		}
+		truncated := ansi.Truncate(line, width, "…")
+		out.WriteString(truncated)
+		if i < len(nextLines)-1 {
+			out.WriteString("\r\n")
+		}
+	}
+	out.WriteString(ansi.CursorLeft(10000))
+	os.Stdout.Write(out.Bytes())
+	m.previous = next
 }
 
 type lineMsg string
@@ -67,24 +132,21 @@ func (m *footer) Reset() {
 	m.cancelled = false
 }
 
-func (m footer) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (m *footer) Update(msg tea.Msg) {
 	var cmds []tea.Cmd
 
 	switch msg := msg.(type) {
+	case *spinnerTick:
+		m.spinner++
 	case tea.WindowSizeMsg:
 		m.width = msg.Width
 		m.height = msg.Height
-	case lineMsg:
-		m.lines = append(m.lines, string(msg))
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "esc":
 			if m.exitConfirm {
 				m.exitConfirm = false
 			}
-		case "ctrl+l":
-			m.lines = []string{}
-			cmds = append(cmds, tea.ClearScreen)
 		case "ctrl+c":
 			if m.exitConfirm || m.mode == ProgressModeDev {
 				pid := os.Getpid()
@@ -130,11 +192,6 @@ func (m footer) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.removePending(msg.URN)
 		}
 	}
-
-	var cmd tea.Cmd
-	m.spinner, cmd = m.spinner.Update(msg)
-	cmds = append(cmds, cmd)
-	return m, tea.Batch(cmds...)
 }
 
 var TEXT_HIGHLIGHT = lipgloss.NewStyle().Foreground(lipgloss.Color("14"))
@@ -158,11 +215,9 @@ var TEXT_SUCCESS_BOLD = TEXT_SUCCESS.Copy().Bold(true)
 var TEXT_INFO = lipgloss.NewStyle().Foreground(lipgloss.Color("4"))
 var TEXT_INFO_BOLD = TEXT_INFO.Copy().Bold(true)
 
-func (m footer) View() string {
+func (m *footer) View() string {
+	spinner := spinner.MiniDot.Frames[m.spinner%len(spinner.MiniDot.Frames)]
 	result := []string{}
-	for _, line := range m.lines {
-		result = append(result, line)
-	}
 	if m.complete == nil {
 		if m.complete == nil {
 			for _, r := range m.pending {
@@ -182,7 +237,7 @@ func (m footer) View() string {
 				if r.Metadata.Op == apitype.OpCreate {
 					label = "Creating"
 				}
-				result = append(result, fmt.Sprintf("%s  %-11s %s", m.spinner.View(), label, m.formatURN(r.Metadata.URN)))
+				result = append(result, fmt.Sprintf("%s  %-11s %s", spinner, label, m.formatURN(r.Metadata.URN)))
 			}
 		}
 
@@ -202,7 +257,7 @@ func (m footer) View() string {
 			if m.skipped > 0 {
 				label = fmt.Sprintf("%-11s [%d skipped]", label, m.skipped)
 			}
-			result = append(result, m.spinner.View()+"  "+label)
+			result = append(result, spinner+"  "+label)
 		}
 
 		if m.exitConfirm {
