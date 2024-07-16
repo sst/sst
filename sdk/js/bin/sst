@@ -18,7 +18,8 @@ try {
 }
 
 try {
-  execFileSync(resolved, {
+  execFileSync(resolved, process.argv.slice(2),
+    {
     stdio: "inherit", 
   })
 } catch (ex) {
