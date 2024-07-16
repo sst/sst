@@ -19,7 +19,7 @@ The `Astro` component lets you deploy an [Astro](https://astro.build) site to AW
 
 Deploy the Astro site that's in the project root.
 
-```js
+```js title="sst.config.ts"
 new sst.aws.Astro("MyWeb");
 ```
 
@@ -27,7 +27,7 @@ new sst.aws.Astro("MyWeb");
 
 Deploys the Astro site in the `my-astro-app/` directory.
 
-```js {2}
+```js {2} title="sst.config.ts"
 new sst.aws.Astro("MyWeb", {
   path: "my-astro-app/"
 });
@@ -37,7 +37,7 @@ new sst.aws.Astro("MyWeb", {
 
 Set a custom domain for your Astro site.
 
-```js {2}
+```js {2} title="sst.config.ts"
 new sst.aws.Astro("MyWeb", {
   domain: "my-app.com"
 });
@@ -47,7 +47,7 @@ new sst.aws.Astro("MyWeb", {
 
 Redirect `www.my-app.com` to `my-app.com`.
 
-```js {4}
+```js {4} title="sst.config.ts"
 new sst.aws.Astro("MyWeb", {
   domain: {
     name: "my-app.com",
@@ -61,7 +61,7 @@ new sst.aws.Astro("MyWeb", {
 [Link resources](/docs/linking/) to your Astro site. This will grant permissions
 to the resources and allow you to access it in your site.
 
-```ts {4}
+```ts {4} title="sst.config.ts"
 const bucket = new sst.aws.Bucket("MyBucket");
 
 new sst.aws.Astro("MyWeb", {
@@ -299,6 +299,33 @@ If you want to use a different build command.
 ```js
 {
   buildCommand: "yarn build"
+}
+```
+</Segment>
+### cachePolicy?
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+
+<InlineSection>
+**Default** A new cache plolicy is created
+</InlineSection>
+Configure the Astro site to use an existing CloudFront cache policy.
+
+:::note
+CloudFront has a limit of 20 cache policies per account, though you can request a limit
+increase.
+:::
+
+By default, a new cache policy is created for it. This allows you to reuse an existing
+policy instead of creating a new one.
+
+```js
+{
+  cachePolicy: "658327ea-f89d-4fab-a63d-7e88639e58f6"
 }
 ```
 </Segment>

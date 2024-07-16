@@ -69,38 +69,62 @@ export interface RealtimeSubscriberArgs {
 /**
  * The `Realtime` component lets you publish and subscribe to messages in realtime.
  *
- * - It offers a topic-based messaging network using [AWS IoT](https://docs.aws.amazon.com/iot/latest/developerguide/what-is-aws-iot.html).
- * - Lets you publish and subscribe to messages using WebSocket in the browser and from your server.
- * - Provides an [SDK](#sdk) to authorize clients, and grants permissions to subscribe and publish to topics.
+ * It offers a **topic-based** messaging network using [AWS IoT](https://docs.aws.amazon.com/iot/latest/developerguide/what-is-aws-iot.html). Letting you publish and subscribe to messages using
+ * a WebSocket in the browser and your server.
+ *
+ * Also, provides an [SDK](#sdk) to authorize clients, grant permissions to subscribe, and
+ * publish to topics.
  *
  * :::note
- * There is only 1 IoT endpoint per region per AWS account. Messages from all apps and
+ * IoT is shared across all apps and stages in your AWS account. So you need to prefix the
+ * topics by the app and stage name.
+ * :::
+ *
+ * There is **only 1 IoT endpoint** per region per AWS account. Messages from all apps and
  * stages are published to the same IoT endpoint. Make sure to prefix the topics by the
  * app and stage name.
- * :::
  *
  * @example
  *
- * #### Use realtime endpoint in your app
+ * #### Create a realtime endpoint
  *
- * ```ts
+ * ```ts title="sst.config.ts"
  * const server = new sst.aws.Realtime("MyServer", {
  *   authorizer: "src/authorizer.handler"
  * });
  * ```
  *
- * Use the [`RealtimeAuthHandler`](#realtimeauthhandler) function in the SDK to authorize
- * the client, and grant permissions to subscribe and publish to topics.
+ * #### Authorize the client
+ *
+ * ```ts title="src/authorizer.ts" "realtime.authorizer"
+ * import { Resource } from "sst/aws";
+ * import { realtime } from "sst/aws/realtime";
+ * 
+ * export const handler = realtime.authorizer(async (token) => {
+ *   // Validate the token
+ * 
+ *   // Return the topics to subscribe and publish
+ *   return {
+ *     subscribe: [`${Resource.App.name}/${Resource.App.stage}/chat/room1`],
+ *     publish: [`${Resource.App.name}/${Resource.App.stage}/chat/room1`],
+ *   };
+ * });
+ * ```
  *
  * #### Publish and receive messages in your frontend
  *
- * ```ts
+ * ```ts title="app/page.tsx"
+ * import { Resource } from "sst/aws";
+ *
  * const client = new mqtt.MqttClient();
+ * // Configure with
+ * // - Resource.Realtime.endpoint
+ * // - Resource.Realtime.authorizer
  * const connection = client.new_connection(config);
  *
  * // Subscribe messages
  * connection.on("message", (topic, payload) => {
- *   // handle the message
+ *   // Handle the message
  * });
  *
  * // Publish messages
@@ -109,7 +133,7 @@ export interface RealtimeSubscriberArgs {
  *
  * #### Subscribe messages in your backend
  *
- * ```ts
+ * ```ts title="sst.config.ts"
  * server.subscribe("src/subscriber.handler", {
  *   filter: `${$app.name}/${$app.stage}/chat/room1`
  * });
@@ -117,7 +141,7 @@ export interface RealtimeSubscriberArgs {
  *
  * #### Publish message from your backend
  *
- * ```ts
+ * ```ts title="src/lambda.ts"
  * import { IoTDataPlaneClient, PublishCommand } from "@aws-sdk/client-iot-data-plane";
  * const data = new IoTDataPlaneClient();
  * await data.send(
@@ -237,7 +261,7 @@ export class Realtime extends Component implements Link.Linkable {
    *
    * @example
    *
-   * ```js
+   * ```js title="sst.config.ts"
    * server.subscribe("src/subscriber.handler", {
    *   filter: `${$app.name}/${$app.stage}/chat/room1`
    * });
@@ -245,7 +269,7 @@ export class Realtime extends Component implements Link.Linkable {
    *
    * Customize the subscriber function.
    *
-   * ```js
+   * ```js title="sst.config.ts"
    * server.subscribe(
    *   {
    *     handler: "src/subscriber.handler",

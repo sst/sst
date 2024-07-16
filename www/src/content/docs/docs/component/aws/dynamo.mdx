@@ -17,7 +17,7 @@ The `Dynamo` component lets you add an [Amazon DynamoDB](https://aws.amazon.com/
 
 #### Minimal example
 
-```ts
+```ts title="sst.config.ts"
 const table = new sst.aws.Dynamo("MyTable", {
   fields: {
     userId: "string",
@@ -31,7 +31,7 @@ const table = new sst.aws.Dynamo("MyTable", {
 
 Optionally add a global index to the table.
 
-```ts {8-10}
+```ts {8-10} title="sst.config.ts"
 new sst.aws.Dynamo("MyTable", {
   fields: {
     userId: "string",
@@ -49,7 +49,7 @@ new sst.aws.Dynamo("MyTable", {
 
 Optionally add a local index to the table.
 
-```ts {8-10}
+```ts {8-10} title="sst.config.ts"
 new sst.aws.Dynamo("MyTable", {
   fields: {
     userId: "string",
@@ -67,7 +67,7 @@ new sst.aws.Dynamo("MyTable", {
 
 To subscribe to a [DynamoDB Stream](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Streams.html), start by enabling it.
 
-```ts {7}
+```ts {7} title="sst.config.ts"
 const table = new sst.aws.Dynamo("MyTable", {
   fields: {
     userId: "string",
@@ -80,7 +80,7 @@ const table = new sst.aws.Dynamo("MyTable", {
 
 Then, subscribing to it.
 
-```ts
+```ts title="sst.config.ts"
 table.subscribe("src/subscriber.handler");
 ```
 
@@ -88,7 +88,7 @@ table.subscribe("src/subscriber.handler");
 
 You can link the table to other resources, like a function or your Next.js app.
 
-```ts
+```ts title="sst.config.ts"
 new sst.aws.Nextjs("MyWeb", {
   link: [table]
 });
@@ -96,7 +96,7 @@ new sst.aws.Nextjs("MyWeb", {
 
 Once linked, you can query the table through your app.
 
-```ts title="app/page.tsx" {1,7}
+```ts title="app/page.tsx" {1,8}
 import { Resource } from "sst";
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import { DynamoDBDocumentClient, QueryCommand } from "@aws-sdk/lib-dynamodb";
@@ -276,7 +276,7 @@ The range key field of the index. This field needs to be defined in the `fields`
 </Section>
 
 <InlineSection>
-**Default** Not enabled
+**Default** Disabled
 </InlineSection>
 Enable [DynamoDB Streams](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Streams.html) for the table.
 
@@ -332,14 +332,15 @@ Transform the DynamoDB Table resource.
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
-The field of the table to store the Time to Live (TTL) timestamp in. This field should
+The field in the table to store the _Time to Live_ or TTL timestamp in. This field should
 be of type `number`. When the TTL timestamp is reached, the item will be deleted.
 
-Learn more about [Time to Live (TTL)](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/TTL.html).
+Read more about [Time to Live](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/TTL.html).
 
+Here the TTL field in our table is called `expireAt`.
 ```js
 {
-  ttl: "expireAt",
+  ttl: "expireAt"
 }
 ```
 </Segment>
@@ -425,13 +426,13 @@ Subscribe to the DynamoDB Stream of this table.
 You'll first need to enable the `stream` before subscribing to it.
 :::
 
-```js
+```js title="sst.config.ts"
 table.subscribe("src/subscriber.handler");
 ```
 
 Add a filter to the subscription.
 
-```js
+```js title="sst.config.ts"
 table.subscribe("src/subscriber.handler", {
   filters: [
     {
@@ -449,7 +450,7 @@ table.subscribe("src/subscriber.handler", {
 
 Customize the subscriber function.
 
-```js
+```js title="sst.config.ts"
 table.subscribe({
   handler: "src/subscriber.handler",
   timeout: "60 seconds"
@@ -482,19 +483,19 @@ Subscribe to the DynamoDB stream of a table that was not created in your app.
 
 For example, let's say you have a DynamoDB stream ARN of an existing table.
 
-```js
+```js title="sst.config.ts"
 const streamArn = "arn:aws:dynamodb:us-east-1:123456789012:table/MyTable/stream/2024-02-25T23:17:55.264";
 ```
 
 You can subscribe to it by passing in the ARN.
 
-```js
+```js title="sst.config.ts"
 sst.aws.Dynamo.subscribe(streamArn, "src/subscriber.handler");
 ```
 
 Add a filter to the subscription.
 
-```js
+```js title="sst.config.ts"
 sst.aws.Dynamo.subscribe(streamArn, "src/subscriber.handler", {
   filters: [
     {
@@ -512,7 +513,7 @@ sst.aws.Dynamo.subscribe(streamArn, "src/subscriber.handler", {
 
 Customize the subscriber function.
 
-```js
+```js title="sst.config.ts"
 sst.aws.Dynamo.subscribe(streamArn, {
   handler: "src/subscriber.handler",
   timeout: "60 seconds"

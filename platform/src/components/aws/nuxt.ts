@@ -240,11 +240,18 @@ export interface NuxtArgs extends SsrSiteArgs {
    */
   vpc?: SsrSiteArgs["vpc"];
   /**
-   * Configure the Nuxt app to use an existing CloudFront cache policy. By default,
-   * a new cache policy is created. Note that CloudFront has a limit of 20 cache
-   * policies per account. This allows you to reuse an existing policy instead of
-   * creating a new one.
+   * Configure the Nuxt app to use an existing CloudFront cache policy.
+   *
+   * :::note
+   * CloudFront has a limit of 20 cache policies per account, though you can request a limit
+   * increase.
+   * :::
+   *
+   * By default, a new cache policy is created for it. This allows you to reuse an existing
+   * policy instead of creating a new one.
+   *
    * @default A new cache plolicy is created
+   *
    * @example
    * ```js
    * {
@@ -264,7 +271,7 @@ export interface NuxtArgs extends SsrSiteArgs {
  *
  * Deploy a Nuxt app that's in the project root.
  *
- * ```js
+ * ```js title="sst.config.ts"
  * new sst.aws.Nuxt("MyWeb");
  * ```
  *
@@ -272,7 +279,7 @@ export interface NuxtArgs extends SsrSiteArgs {
  *
  * Deploys the Nuxt app in the `my-nuxt-app/` directory.
  *
- * ```js {2}
+ * ```js {2} title="sst.config.ts"
  * new sst.aws.Nuxt("MyWeb", {
  *   path: "my-nuxt-app/"
  * });
@@ -282,7 +289,7 @@ export interface NuxtArgs extends SsrSiteArgs {
  *
  * Set a custom domain for your Nuxt app.
  *
- * ```js {2}
+ * ```js {2} title="sst.config.ts"
  * new sst.aws.Nuxt("MyWeb", {
  *   domain: "my-app.com"
  * });
@@ -292,7 +299,7 @@ export interface NuxtArgs extends SsrSiteArgs {
  *
  * Redirect `www.my-app.com` to `my-app.com`.
  *
- * ```js {4}
+ * ```js {4} title="sst.config.ts"
  * new sst.aws.Nuxt("MyWeb", {
  *   domain: {
  *     name: "my-app.com",
@@ -306,7 +313,7 @@ export interface NuxtArgs extends SsrSiteArgs {
  * [Link resources](/docs/linking/) to your Nuxt app. This will grant permissions
  * to the resources and allow you to access it in your app.
  *
- * ```ts {4}
+ * ```ts {4} title="sst.config.ts"
  * const bucket = new sst.aws.Bucket("MyBucket");
  *
  * new sst.aws.Nuxt("MyWeb", {
@@ -317,7 +324,7 @@ export interface NuxtArgs extends SsrSiteArgs {
  * You can use the [SDK](/docs/reference/sdk/) to access the linked resources
  * in your Nuxt app.
  *
- * ```ts title="src/app.tsx"
+ * ```ts title="server/api/index.ts"
  * import { Resource } from "sst";
  *
  * console.log(Resource.MyBucket.name);

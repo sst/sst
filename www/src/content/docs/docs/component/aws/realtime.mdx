@@ -15,36 +15,60 @@ import InlineSection from '../../../../../../src/components/tsdoc/InlineSection.
 <Section type="about">
 The `Realtime` component lets you publish and subscribe to messages in realtime.
 
-- It offers a topic-based messaging network using [AWS IoT](https://docs.aws.amazon.com/iot/latest/developerguide/what-is-aws-iot.html).
-- Lets you publish and subscribe to messages using WebSocket in the browser and from your server.
-- Provides an [SDK](#sdk) to authorize clients, and grants permissions to subscribe and publish to topics.
+It offers a **topic-based** messaging network using [AWS IoT](https://docs.aws.amazon.com/iot/latest/developerguide/what-is-aws-iot.html). Letting you publish and subscribe to messages using
+a WebSocket in the browser and your server.
+
+Also, provides an [SDK](#sdk) to authorize clients, grant permissions to subscribe, and
+publish to topics.
 
 :::note
-There is only 1 IoT endpoint per region per AWS account. Messages from all apps and
-stages are published to the same IoT endpoint. Make sure to prefix the topics by the
-app and stage name.
+IoT is shared across all apps and stages in your AWS account. So you need to prefix the
+topics by the app and stage name.
 :::
 
-#### Use realtime endpoint in your app
+There is **only 1 IoT endpoint** per region per AWS account. Messages from all apps and
+stages are published to the same IoT endpoint. Make sure to prefix the topics by the
+app and stage name.
 
-```ts
+#### Create a realtime endpoint
+
+```ts title="sst.config.ts"
 const server = new sst.aws.Realtime("MyServer", {
   authorizer: "src/authorizer.handler"
 });
 ```
 
-Use the [`RealtimeAuthHandler`](#realtimeauthhandler) function in the SDK to authorize
-the client, and grant permissions to subscribe and publish to topics.
+#### Authorize the client
+
+```ts title="src/authorizer.ts" "realtime.authorizer"
+import { Resource } from "sst/aws";
+import { realtime } from "sst/aws/realtime";
+
+export const handler = realtime.authorizer(async (token) => {
+  // Validate the token
+
+  // Return the topics to subscribe and publish
+  return {
+    subscribe: [`${Resource.App.name}/${Resource.App.stage}/chat/room1`],
+    publish: [`${Resource.App.name}/${Resource.App.stage}/chat/room1`],
+  };
+});
+```
 
 #### Publish and receive messages in your frontend
 
-```ts
+```ts title="app/page.tsx"
+import { Resource } from "sst/aws";
+
 const client = new mqtt.MqttClient();
+// Configure with
+// - Resource.Realtime.endpoint
+// - Resource.Realtime.authorizer
 const connection = client.new_connection(config);
 
 // Subscribe messages
 connection.on("message", (topic, payload) => {
-  // handle the message
+  // Handle the message
 });
 
 // Publish messages
@@ -53,7 +77,7 @@ connection.publish(topic, payload, mqtt.QoS.AtLeastOnce);
 
 #### Subscribe messages in your backend
 
-```ts
+```ts title="sst.config.ts"
 server.subscribe("src/subscriber.handler", {
   filter: `${$app.name}/${$app.stage}/chat/room1`
 });
@@ -61,7 +85,7 @@ server.subscribe("src/subscriber.handler", {
 
 #### Publish message from your backend
 
-```ts
+```ts title="src/lambda.ts"
 import { IoTDataPlaneClient, PublishCommand } from "@aws-sdk/client-iot-data-plane";
 const data = new IoTDataPlaneClient();
 await data.send(
@@ -215,10 +239,11 @@ authorizer(input)
 <InlineSection>
 **Returns** <code class="primitive">(evt: [<code class="type">IoTCustomAuthorizerEvent</code>](https://github.com/DefinitelyTyped/DefinitelyTyped/blob/master/types/aws-lambda/trigger/iot-authorizer.d.ts), context: [<code class="type">Context</code>](https://github.com/DefinitelyTyped/DefinitelyTyped/blob/master/types/aws-lambda/handler.d.ts)) => <code class="primitive">Promise</code><code class="symbol">&lt;</code><code class="primitive">Object</code><code class="symbol">&gt;</code></code>
 </InlineSection>
-Creates an authorization handler for the `Realtime` component, that validates
+Creates an authorization handler for the `Realtime` component. It validates
 the token and grants permissions for the topics the client can subscribe and publish to.
 
-```js
+```js title="src/authorizer.ts" "realtime.authorizer"
+import { Resource } from "sst/aws";
 import { realtime } from "sst/aws/realtime";
 
 export const handler = realtime.authorizer(async (token) => {

@@ -13,21 +13,21 @@ export interface PutEvent {
    * @example
    * ```js
    * {
-   *   vector: [32.4, 6.55, 11.2, 10.3, 87.9],
+   *   vector: [32.4, 6.55, 11.2, 10.3, 87.9]
    * }
    * ```
    */
   vector: number[];
   /**
-   * Metadata for the event in JSON format.
-   * This metadata will be used to filter when quering and removing vectors.
+   * Metadata for the event as JSON.
+   * This will be used to filter when querying and removing vectors.
    * @example
    * ```js
    * {
    *   metadata: {
    *     type: "movie",
    *     id: "movie-123",
-   *     name: "Spiderman",
+   *     name: "Spiderman"
    *   }
    * }
    * ```
@@ -41,7 +41,7 @@ export interface QueryEvent {
    * @example
    * ```js
    * {
-   *   vector: [32.4, 6.55, 11.2, 10.3, 87.9],
+   *   vector: [32.4, 6.55, 11.2, 10.3, 87.9]
    * }
    * ```
    */
@@ -50,29 +50,30 @@ export interface QueryEvent {
    * The metadata used to filter the vectors.
    * Only vectors that match the provided fields will be returned.
    * @example
+   * Given this filter.
    * ```js
    * {
    *   include: {
    *     type: "movie",
-   *     release: "2001",
+   *     release: "2001"
    *   }
    * }
    * ```
-   * This will match the vector with metadata:
+   * It will match a vector with the metadata:
    * ```js
-   *  {
-   *    type: "movie",
-   *    name: "Spiderman",
-   *    release: "2001",
-   *  }
+   * {
+   *   type: "movie",
+   *   name: "Spiderman",
+   *   release: "2001"
+   * }
    * ```
    *
-   * But not the vector with metadata:
+   * But not a vector with this metadata:
    * ```js
    *  {
    *    type: "book",
    *    name: "Spiderman",
-   *    release: "2001",
+   *    release: "2001"
    *  }
    * ```
    */
@@ -80,32 +81,33 @@ export interface QueryEvent {
   /**
    * Exclude vectors with metadata that match the provided fields.
    * @example
+   * Given this filter.
    * ```js
    * {
    *   include: {
    *     type: "movie",
-   *     release: "2001",
+   *     release: "2001"
    *   },
    *   exclude: {
-   *     name: "Spiderman",
+   *     name: "Spiderman"
    *   }
    * }
    * ```
-   * This will match the vector with metadata:
+   * This will match a vector with metadata:
    * ```js
    *  {
    *    type: "movie",
    *    name: "A Beautiful Mind",
-   *    release: "2001",
+   *    release: "2001"
    *  }
    * ```
    *
-   * But not the vector with metadata:
+   * But not a vector with the metadata:
    * ```js
    *  {
    *    type: "book",
    *    name: "Spiderman",
-   *    release: "2001",
+   *    release: "2001"
    *  }
    * ```
    */
@@ -113,14 +115,16 @@ export interface QueryEvent {
   /**
    * The threshold of similarity between the prompt and the queried vectors.
    * Only vectors with a similarity score higher than the threshold will be returned.
-   * Expected value is between 0 and 1.
-   * - 0 means the prompt and the queried vectors are completely different.
-   * - 1 means the prompt and the queried vectors are identical.
+   *
+   * This will return values is between 0 and 1.
+   * - `0` means the prompt and the queried vectors are completely different.
+   * - `1` means the prompt and the queried vectors are identical.
+   *
    * @default `0`
    * @example
    * ```js
    * {
-   *   threshold: 0.5,
+   *   threshold: 0.5
    * }
    * ```
    */
@@ -131,7 +135,7 @@ export interface QueryEvent {
    * @example
    * ```js
    * {
-   *   count: 10,
+   *   count: 10
    * }
    * ```
    */
@@ -143,7 +147,7 @@ export interface RemoveEvent {
    * The metadata used to filter the removal of vectors.
    * Only vectors with metadata that match the provided fields will be removed.
    * @example
-   * To remove vectors for movie with id "movie-123":
+   * To remove vectors for movie with id `movie-123`:
    * ```js
    * {
    *   include: {
@@ -151,7 +155,7 @@ export interface RemoveEvent {
    *   }
    * }
    * ```
-   * To remove vectors for all movies:
+   * To remove vectors for all _movies_:
    * ```js
    *  {
    *   include: {
@@ -165,7 +169,7 @@ export interface RemoveEvent {
 
 export interface QueryResponse {
   /**
-   * Metadata for the event in JSON format that was provided when storing the vector.
+   * Metadata for the event that was provided when storing the vector.
    */
   metadata: Record<string, any>;
   /**
@@ -175,25 +179,61 @@ export interface QueryResponse {
 }
 
 export interface VectorClientResponse {
+  /**
+   * Store a vector into the database.
+   * @example
+   * ```ts title="src/lambda.ts"
+   * await client.put({
+   *   vector: [32.4, 6.55, 11.2, 10.3, 87.9],
+   *   metadata: { type: "movie", genre: "comedy" },
+   * });
+   * ```
+   */
   put: (event: PutEvent) => Promise<void>;
+  /**
+   * Query vectors that are similar to the given vector
+   * @example
+   * ```ts title="src/lambda.ts"
+   * const result = await client.query({
+   *   vector: [32.4, 6.55, 11.2, 10.3, 87.9],
+   *   include: { type: "movie" },
+   *   exclude: { genre: "thriller" },
+   * });
+   * ```
+   */
   query: (event: QueryEvent) => Promise<QueryResponse>;
+  /**
+   * Remove vectors from the database.
+   * @example
+   * ```ts title="src/lambda.ts"
+   * await client.remove({
+   *   include: { type: "movie" },
+   * });
+   * ```
+   */
   remove: (event: RemoveEvent) => Promise<void>;
 }
 
 /**
  * Create a client to interact with the Vector database.
  * @example
- * ```js
+ * ```ts title="src/lambda.ts"
  * import { VectorClient } from "sst";
  * const client = VectorClient("MyVectorDB");
+ * ```
  *
- * // Store a vector into the db
+ * Store a vector into the db
+ *
+ * ```ts title="src/lambda.ts"
  * await client.put({
  *   vector: [32.4, 6.55, 11.2, 10.3, 87.9],
  *   metadata: { type: "movie", genre: "comedy" },
  * });
+ * ```
  *
- * // Query vectors similar to the provided vector
+ * Query vectors that are similar to the given vector
+ *
+ * ```ts title="src/lambda.ts"
  * const result = await client.query({
  *   vector: [32.4, 6.55, 11.2, 10.3, 87.9],
  *   include: { type: "movie" },
@@ -205,10 +245,10 @@ export function VectorClient<
   T extends keyof {
     // @ts-expect-error
     [key in keyof Resource as "sst.aws.Vector" extends Resource[key]["type"]
-      ? string extends key
-        ? never
-        : key
-      : never]: Resource[key];
+    ? string extends key
+    ? never
+    : key
+    : never]: Resource[key];
   },
 >(name: T): VectorClientResponse {
   return {

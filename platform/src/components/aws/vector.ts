@@ -12,11 +12,9 @@ export interface VectorArgs {
   /**
    * The dimension size of each vector.
    *
-   * :::note
    * The maximum supported dimension is 2000. To store vectors with greater dimension,
    * use dimensionality reduction to reduce the dimension to 2000 or less. OpenAI supports
    * [dimensionality reduction](https://platform.openai.com/docs/api-reference/embeddings/create#embeddings-create-dimensions) automatically when generating embeddings.
-   * :::
    *
    * :::caution
    * Changing the dimension will cause the data to be cleared.
@@ -52,7 +50,7 @@ export interface VectorArgs {
  *
  * #### Create the database
  *
- * ```ts
+ * ```ts title="sst.config.ts"
  * const vector = new sst.aws.Vector("MyVectorDB", {
  *   dimension: 1536
  * });
@@ -62,7 +60,7 @@ export interface VectorArgs {
  *
  * You can link it to other resources, like a function or your Next.js app.
  *
- * ```ts
+ * ```ts title="sst.config.ts"
  * new sst.aws.Nextjs("MyWeb", {
  *   link: [vector]
  * });
@@ -70,7 +68,7 @@ export interface VectorArgs {
  *
  * Once linked, you can query it in your function code using the [SDK](/docs/reference/sdk/).
  *
- * ```ts title="app/page.tsx" {3}
+ * ```ts title="app/page.tsx"
  * import { VectorClient } from "sst";
  *
  * await VectorClient("MyVectorDB").query({

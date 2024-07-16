@@ -249,11 +249,18 @@ export interface RemixArgs extends SsrSiteArgs {
    */
   vpc?: SsrSiteArgs["vpc"];
   /**
-   * Configure the Remix app to use an existing CloudFront cache policy. By default,
-   * a new cache policy is created. Note that CloudFront has a limit of 20 cache
-   * policies per account. This allows you to reuse an existing policy instead of
-   * creating a new one.
+   * Configure the Remix app to use an existing CloudFront cache policy.
+   *
+   * :::note
+   * CloudFront has a limit of 20 cache policies per account, though you can request a limit
+   * increase.
+   * :::
+   *
+   * By default, a new cache policy is created for it. This allows you to reuse an existing
+   * policy instead of creating a new one.
+   *
    * @default A new cache plolicy is created
+   *
    * @example
    * ```js
    * {
@@ -273,7 +280,7 @@ export interface RemixArgs extends SsrSiteArgs {
  *
  * Deploy a Remix app that's in the project root.
  *
- * ```js
+ * ```js title="sst.config.ts"
  * new sst.aws.Remix("MyWeb");
  * ```
  *
@@ -281,7 +288,7 @@ export interface RemixArgs extends SsrSiteArgs {
  *
  * Deploys the Remix app in the `my-remix-app/` directory.
  *
- * ```js {2}
+ * ```js {2} title="sst.config.ts"
  * new sst.aws.Remix("MyWeb", {
  *   path: "my-remix-app/"
  * });
@@ -291,7 +298,7 @@ export interface RemixArgs extends SsrSiteArgs {
  *
  * Set a custom domain for your Remix app.
  *
- * ```js {2}
+ * ```js {2} title="sst.config.ts"
  * new sst.aws.Remix("MyWeb", {
  *   domain: "my-app.com"
  * });
@@ -301,7 +308,7 @@ export interface RemixArgs extends SsrSiteArgs {
  *
  * Redirect `www.my-app.com` to `my-app.com`.
  *
- * ```js {4}
+ * ```js {4} title="sst.config.ts"
  * new sst.aws.Remix("MyWeb", {
  *   domain: {
  *     name: "my-app.com",
@@ -315,7 +322,7 @@ export interface RemixArgs extends SsrSiteArgs {
  * [Link resources](/docs/linking/) to your Remix app. This will grant permissions
  * to the resources and allow you to access it in your app.
  *
- * ```ts {4}
+ * ```ts {4} title="sst.config.ts"
  * const bucket = new sst.aws.Bucket("MyBucket");
  *
  * new sst.aws.Remix("MyWeb", {
@@ -480,21 +487,21 @@ export class Remix extends Component implements Link.Linkable {
             },
             edgeFunctions: edge
               ? {
-                  server: {
-                    function: serverConfig,
-                  },
-                }
+                server: {
+                  function: serverConfig,
+                },
+              }
               : undefined,
             origins: {
               ...(edge
                 ? {}
                 : {
+                  server: {
                     server: {
-                      server: {
-                        function: serverConfig,
-                      },
+                      function: serverConfig,
                     },
-                  }),
+                  },
+                }),
               s3: {
                 s3: {
                   copy: [
@@ -511,16 +518,16 @@ export class Remix extends Component implements Link.Linkable {
             behaviors: [
               edge
                 ? {
-                    cacheType: "server",
-                    cfFunction: "serverCfFunction",
-                    edgeFunction: "server",
-                    origin: "s3",
-                  }
+                  cacheType: "server",
+                  cfFunction: "serverCfFunction",
+                  edgeFunction: "server",
+                  origin: "s3",
+                }
                 : {
-                    cacheType: "server",
-                    cfFunction: "serverCfFunction",
-                    origin: "server",
-                  },
+                  cacheType: "server",
+                  cfFunction: "serverCfFunction",
+                  origin: "server",
+                },
               ...buildMeta.staticRoutes.map(
                 (route) =>
                   ({

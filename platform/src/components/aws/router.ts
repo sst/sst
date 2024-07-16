@@ -120,7 +120,7 @@ export interface RouterArgs {
  *
  * #### Minimal example
  *
- * ```ts
+ * ```ts title="sst.config.ts"
  * new sst.aws.Router("MyRouter", {
  *   routes: {
  *     "/*": "https://some-internal-service.com"
@@ -130,7 +130,7 @@ export interface RouterArgs {
  *
  * #### Route to a function URL
  *
- * ```ts
+ * ```ts title="sst.config.ts"
  * const myFunction = new sst.aws.Function("MyFunction", {
  *   handler: "src/api.handler",
  *   url: true,
@@ -145,7 +145,7 @@ export interface RouterArgs {
  *
  * #### Route all API requests separately
  *
- * ```ts {4}
+ * ```ts {4} title="sst.config.ts"
  * new sst.aws.Router("MyRouter", {
  *   routes: {
  *     "/*": "https://myapp.com",
@@ -156,7 +156,7 @@ export interface RouterArgs {
  *
  * #### Add a custom domain
  *
- * ```ts {2}
+ * ```ts {2} title="sst.config.ts"
  * new sst.aws.Router("MyRouter", {
  *   domain: "myapp.com",
  *   routes: {

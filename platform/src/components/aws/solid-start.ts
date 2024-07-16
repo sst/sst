@@ -241,10 +241,16 @@ export interface SolidStartArgs extends SsrSiteArgs {
    */
   vpc?: SsrSiteArgs["vpc"];
   /**
-   * Configure the SolidStart app to use an existing CloudFront cache policy. By default,
-   * a new cache policy is created. Note that CloudFront has a limit of 20 cache
-   * policies per account. This allows you to reuse an existing policy instead of
-   * creating a new one.
+   * Configure the SolidStart app app to use an existing CloudFront cache policy.
+   *
+   * :::note
+   * CloudFront has a limit of 20 cache policies per account, though you can request a limit
+   * increase.
+   * :::
+   *
+   * By default, a new cache policy is created for it. This allows you to reuse an existing
+   * policy instead of creating a new one.
+   *
    * @default A new cache plolicy is created
    * @example
    * ```js

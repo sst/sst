@@ -132,7 +132,7 @@ export interface DynamoArgs {
    * - `old-image`: The entire item before it was modified.
    * - `new-and-old-images`:	Both the new and the old items. A good default to use since it contains all the data.
    * - `keys-only`: Only the keys of the fields of the modified items. If you are worried about the costs, you can use this since it stores the least amount of data.
-   * @default Not enabled
+   * @default Disabled
    * @example
    * ```js
    * {
@@ -144,15 +144,16 @@ export interface DynamoArgs {
     "keys-only" | "new-image" | "old-image" | "new-and-old-images"
   >;
   /**
-   * The field of the table to store the Time to Live (TTL) timestamp in. This field should
+   * The field in the table to store the _Time to Live_ or TTL timestamp in. This field should
    * be of type `number`. When the TTL timestamp is reached, the item will be deleted.
    *
-   * Learn more about [Time to Live (TTL)](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/TTL.html).
+   * Read more about [Time to Live](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/TTL.html).
    *
    * @example
+   * Here the TTL field in our table is called `expireAt`.
    * ```js
    * {
-   *   ttl: "expireAt",
+   *   ttl: "expireAt"
    * }
    * ```
    */
@@ -252,7 +253,7 @@ export interface DynamoSubscriberArgs {
  *
  * #### Minimal example
  *
- * ```ts
+ * ```ts title="sst.config.ts"
  * const table = new sst.aws.Dynamo("MyTable", {
  *   fields: {
  *     userId: "string",
@@ -266,7 +267,7 @@ export interface DynamoSubscriberArgs {
  *
  * Optionally add a global index to the table.
  *
- * ```ts {8-10}
+ * ```ts {8-10} title="sst.config.ts"
  * new sst.aws.Dynamo("MyTable", {
  *   fields: {
  *     userId: "string",
@@ -284,7 +285,7 @@ export interface DynamoSubscriberArgs {
  *
  * Optionally add a local index to the table.
  *
- * ```ts {8-10}
+ * ```ts {8-10} title="sst.config.ts"
  * new sst.aws.Dynamo("MyTable", {
  *   fields: {
  *     userId: "string",
@@ -302,7 +303,7 @@ export interface DynamoSubscriberArgs {
  *
  * To subscribe to a [DynamoDB Stream](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Streams.html), start by enabling it.
  *
- * ```ts {7}
+ * ```ts {7} title="sst.config.ts"
  * const table = new sst.aws.Dynamo("MyTable", {
  *   fields: {
  *     userId: "string",
@@ -315,7 +316,7 @@ export interface DynamoSubscriberArgs {
  *
  * Then, subscribing to it.
  *
- * ```ts
+ * ```ts title="sst.config.ts"
  * table.subscribe("src/subscriber.handler");
  * ```
  *
@@ -323,7 +324,7 @@ export interface DynamoSubscriberArgs {
  *
  * You can link the table to other resources, like a function or your Next.js app.
  *
- * ```ts
+ * ```ts title="sst.config.ts"
  * new sst.aws.Nextjs("MyWeb", {
  *   link: [table]
  * });
@@ -331,7 +332,7 @@ export interface DynamoSubscriberArgs {
  *
  * Once linked, you can query the table through your app.
  *
- * ```ts title="app/page.tsx" {1,7}
+ * ```ts title="app/page.tsx" {1,8}
  * import { Resource } from "sst";
  * import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
  * import { DynamoDBDocumentClient, QueryCommand } from "@aws-sdk/lib-dynamodb";
@@ -397,9 +398,9 @@ export class Dynamo extends Component implements Link.Linkable, AWSLinkable {
                 args.ttl === undefined
                   ? undefined
                   : {
-                      attributeName: args.ttl,
-                      enabled: true,
-                    },
+                    attributeName: args.ttl,
+                    enabled: true,
+                  },
               globalSecondaryIndexes: Object.entries(globalIndexes ?? {}).map(
                 ([name, index]) => ({
                   name,
@@ -460,13 +461,13 @@ export class Dynamo extends Component implements Link.Linkable, AWSLinkable {
    *
    * @example
    *
-   * ```js
+   * ```js title="sst.config.ts"
    * table.subscribe("src/subscriber.handler");
    * ```
    *
    * Add a filter to the subscription.
    *
-   * ```js
+   * ```js title="sst.config.ts"
    * table.subscribe("src/subscriber.handler", {
    *   filters: [
    *     {
@@ -484,7 +485,7 @@ export class Dynamo extends Component implements Link.Linkable, AWSLinkable {
    *
    * Customize the subscriber function.
    *
-   * ```js
+   * ```js title="sst.config.ts"
    * table.subscribe({
    *   handler: "src/subscriber.handler",
    *   timeout: "60 seconds"
@@ -522,19 +523,19 @@ export class Dynamo extends Component implements Link.Linkable, AWSLinkable {
    *
    * For example, let's say you have a DynamoDB stream ARN of an existing table.
    *
-   * ```js
+   * ```js title="sst.config.ts"
    * const streamArn = "arn:aws:dynamodb:us-east-1:123456789012:table/MyTable/stream/2024-02-25T23:17:55.264";
    * ```
    *
    * You can subscribe to it by passing in the ARN.
    *
-   * ```js
+   * ```js title="sst.config.ts"
    * sst.aws.Dynamo.subscribe(streamArn, "src/subscriber.handler");
    * ```
    *
    * Add a filter to the subscription.
    *
-   * ```js
+   * ```js title="sst.config.ts"
    * sst.aws.Dynamo.subscribe(streamArn, "src/subscriber.handler", {
    *   filters: [
    *     {
@@ -552,7 +553,7 @@ export class Dynamo extends Component implements Link.Linkable, AWSLinkable {
    *
    * Customize the subscriber function.
    *
-   * ```js
+   * ```js title="sst.config.ts"
    * sst.aws.Dynamo.subscribe(streamArn, {
    *   handler: "src/subscriber.handler",
    *   timeout: "60 seconds"

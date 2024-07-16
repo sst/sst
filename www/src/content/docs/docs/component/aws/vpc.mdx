@@ -37,13 +37,13 @@ Gateway per month. Make sure to [review the pricing](https://aws.amazon.com/vpc/
 
 #### Create a VPC
 
-```ts
+```ts title="sst.config.ts"
 new sst.aws.Vpc("MyVPC");
 ```
 
 #### Create it with 3 Availability Zones
 
-```ts
+```ts title="sst.config.ts"
 new sst.aws.Vpc("MyVPC", {
   az: 3,
 });

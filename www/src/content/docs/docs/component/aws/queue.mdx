@@ -17,7 +17,7 @@ The `Queue` component lets you add a serverless queue to your app. It uses [Amaz
 
 #### Create a queue
 
-```ts
+```ts title="sst.config.ts"
 const queue = new sst.aws.Queue("MyQueue");
 ```
 
@@ -25,7 +25,7 @@ const queue = new sst.aws.Queue("MyQueue");
 
 You can optionally make it a FIFO queue.
 
-```ts {2}
+```ts {2} title="sst.config.ts"
 new sst.aws.Queue("MyQueue", {
   fifo: true
 });
@@ -33,7 +33,7 @@ new sst.aws.Queue("MyQueue", {
 
 #### Add a subscriber
 
-```ts
+```ts title="sst.config.ts"
 queue.subscribe("src/subscriber.handler");
 ```
 
@@ -41,7 +41,7 @@ queue.subscribe("src/subscriber.handler");
 
 You can link the queue to other resources, like a function or your Next.js app.
 
-```ts
+```ts title="sst.config.ts"
 new sst.aws.Nextjs("MyWeb", {
   link: [queue]
 });
@@ -91,27 +91,31 @@ new Queue(name, args?, opts?)
 - <p>[<code class="key">queue</code>](#dlq-queue)</p>
 - <p>[<code class="key">retry</code>](#dlq-retry)</p>
 </Section>
+Optionally add a dead-letter queue or DLQ for this queue.
 
-<InlineSection>
-**Default** No dead-letter queue
-</InlineSection>
-Configure a dead-letter queue (DLQ) for this queue. A dead-letter queue is used to store messages that can't be processed successfully by the subscriber function after the retry limit is reached.
+A dead-letter queue is used to store messages that can't be processed successfully by the
+subscriber function after the `retry` limit is reached.
 
-For example, to create a dead-letter queue and link it to the main queue.
-```js
-const deadLetterQueue = new sst.aws.Queue("DeadLetterQueue");
+This takes either the ARN of the dead-letter queue or an object to configure how the
+dead-letter queue is used.
+
+For example, here's how you can create a dead-letter queue and link it to the main queue.
+
+```ts title="sst.config.ts" {4}
+const deadLetterQueue = new sst.aws.Queue("MyDLQ");
 
 new sst.aws.Queue("MyQueue", {
   dlq: deadLetterQueue.arn,
 });
 ```
 
-By default, the main queue will retry processing the message 3 times before sending it to the dead-letter queue. You can customize the retry limit.
-```js
+By default, the main queue will retry processing the message 3 times before sending it to the dead-letter queue. You can customize this.
+
+```ts title="sst.config.ts" {3}
 new sst.aws.Queue("MyQueue", {
   dlq: {
-    queue: deadLetterQueue.arn,
     retry: 5,
+    queue: deadLetterQueue.arn,
   }
 });
 ```
@@ -123,6 +127,7 @@ new sst.aws.Queue("MyQueue", {
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
+The ARN of the dead-letter queue.
 
 </Segment>
 <NestedTitle id="dlq-retry" Tag="h4" parent="dlq.">retry</NestedTitle>
@@ -132,6 +137,11 @@ new sst.aws.Queue("MyQueue", {
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">number</code><code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
+
+<InlineSection>
+**Default** <code class="primitive">3</code>
+</InlineSection>
+The number of times the main queue will retry the message before sending it to the dead-letter queue.
 
 </Segment>
 ### fifo?
@@ -258,13 +268,13 @@ Configure the subscription.
 </InlineSection>
 Subscribe to this queue.
 
-```js
+```js title="sst.config.ts"
 queue.subscribe("src/subscriber.handler");
 ```
 
 Add a filter to the subscription.
 
-```js
+```js title="sst.config.ts"
 queue.subscribe("src/subscriber.handler", {
   filters: [
     {
@@ -278,7 +288,7 @@ queue.subscribe("src/subscriber.handler", {
 
 Customize the subscriber function.
 
-```js
+```js title="sst.config.ts"
 queue.subscribe({
   handler: "src/subscriber.handler",
   timeout: "60 seconds"
@@ -312,19 +322,19 @@ Subscribe to an SQS queue that was not created in your app.
 
 For example, let's say you have an existing SQS queue with the following ARN.
 
-```js
+```js title="sst.config.ts"
 const queueArn = "arn:aws:sqs:us-east-1:123456789012:MyQueue";
 ```
 
 You can subscribe to it by passing in the ARN.
 
-```js
+```js title="sst.config.ts"
 sst.aws.Queue.subscribe(queueArn, "src/subscriber.handler");
 ```
 
 Add a filter to the subscription.
 
-```js
+```js title="sst.config.ts"
 sst.aws.Queue.subscribe(queueArn, "src/subscriber.handler", {
   filters: [
     {
@@ -338,7 +348,7 @@ sst.aws.Queue.subscribe(queueArn, "src/subscriber.handler", {
 
 Customize the subscriber function.
 
-```js
+```js title="sst.config.ts"
 sst.aws.Queue.subscribe(queueArn, {
   handler: "src/subscriber.handler",
   timeout: "60 seconds"

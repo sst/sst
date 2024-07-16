@@ -136,7 +136,7 @@ export interface EmailArgs {
  *
  * For using an email address as the sender, you need to verify the email address.
  *
- * ```ts
+ * ```ts title="sst.config.ts"
  * const email = new sst.aws.Email("MyEmail", {
  *   sender: "spongebob@example.com",
  * });
@@ -146,7 +146,7 @@ export interface EmailArgs {
  *
  * When you use a domain as the sender, you'll need to verify that you own the domain.
  *
- * ```ts
+ * ```ts title="sst.config.ts"
  * new sst.aws.Email("MyEmail", {
  *   sender: "example.com"
  * });
@@ -154,7 +154,7 @@ export interface EmailArgs {
  *
  * #### Configuring DMARC
  *
- * ```ts
+ * ```ts title="sst.config.ts"
  * new sst.aws.Email("MyEmail", {
  *   sender: "example.com",
  *   dmarc: "v=DMARC1; p=quarantine; adkim=s; aspf=s;"
@@ -165,7 +165,7 @@ export interface EmailArgs {
  *
  * You can link it to a function or your Next.js app to send emails.
  *
- * ```ts {3}
+ * ```ts {3} title="sst.config.ts"
  * const api = new sst.aws.Function("MyApi", {
  *   handler: "sender.handler",
  *   link: [email]

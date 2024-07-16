@@ -83,7 +83,7 @@ export interface CronArgs {
  *
  * Pass in a `schedule` and a `job` function that'll be executed.
  *
- * ```ts
+ * ```ts title="sst.config.ts"
  * new sst.aws.Cron("MyCronJob", {
  *   job: "src/cron.handler",
  *   schedule: "rate(1 minute)"
@@ -92,7 +92,7 @@ export interface CronArgs {
  *
  * #### Customize the function
  *
- * ```js
+ * ```js title="sst.config.ts"
  * new sst.aws.Cron("MyCronJob", {
  *   schedule: "rate(1 minute)",
  *   job: {

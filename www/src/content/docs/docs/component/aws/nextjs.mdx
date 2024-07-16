@@ -21,7 +21,7 @@ output to a format that can be deployed to AWS.
 
 Deploy the Next.js app that's in the project root.
 
-```js
+```js title="sst.config.ts"
 new sst.aws.Nextjs("MyWeb");
 ```
 
@@ -29,7 +29,7 @@ new sst.aws.Nextjs("MyWeb");
 
 Deploys a Next.js app in the `my-next-app/` directory.
 
-```js {2}
+```js {2} title="sst.config.ts"
 new sst.aws.Nextjs("MyWeb", {
   path: "my-next-app/"
 });
@@ -39,7 +39,7 @@ new sst.aws.Nextjs("MyWeb", {
 
 Set a custom domain for your Next.js app.
 
-```js {2}
+```js {2} title="sst.config.ts"
 new sst.aws.Nextjs("MyWeb", {
   domain: "my-app.com"
 });
@@ -49,7 +49,7 @@ new sst.aws.Nextjs("MyWeb", {
 
 Redirect `www.my-app.com` to `my-app.com`.
 
-```js {4}
+```js {4} title="sst.config.ts"
 new sst.aws.Nextjs("MyWeb", {
   domain: {
     name: "my-app.com",
@@ -63,7 +63,7 @@ new sst.aws.Nextjs("MyWeb", {
 [Link resources](/docs/linking/) to your Next.js app. This will grant permissions
 to the resources and allow you to access it in your app.
 
-```ts {4}
+```ts {4} title="sst.config.ts"
 const bucket = new sst.aws.Bucket("MyBucket");
 
 new sst.aws.Nextjs("MyWeb", {
@@ -304,6 +304,33 @@ If you want to use a custom `build` script from your `package.json`.
 ```js
 {
   buildCommand: "npm run build"
+}
+```
+</Segment>
+### cachePolicy?
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+
+<InlineSection>
+**Default** A new cache plolicy is created
+</InlineSection>
+Configure the Next.js app to use an existing CloudFront cache policy.
+
+:::note
+CloudFront has a limit of 20 cache policies per account, though you can request a limit
+increase.
+:::
+
+By default, a new cache policy is created for it. This allows you to reuse an existing
+policy instead of creating a new one.
+
+```js
+{
+  cachePolicy: "658327ea-f89d-4fab-a63d-7e88639e58f6"
 }
 ```
 </Segment>
@@ -594,11 +621,13 @@ Takes values between 128 MB and 10240 MB in 1 MB increments.
 </Section>
 
 <InlineSection>
-**Default** false
+**Default** <code class="primitive">false</code>
 </InlineSection>
-If set to true, already computed image will return 304 Not Modified.
-This means that image needs to be **immutable**, the etag will be computed
-based on the image href, format and width and the next BUILD_ID.
+If set to true, a previously computed image will return _304 Not Modified_.
+This means that image needs to be **immutable**.
+
+The etag will be computed based on the image href, format and width and the next
+BUILD_ID.
 
 ```js
 {

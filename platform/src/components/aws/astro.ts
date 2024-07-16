@@ -245,10 +245,16 @@ export interface AstroArgs extends SsrSiteArgs {
    */
   vpc?: SsrSiteArgs["vpc"];
   /**
-   * Configure the Astro site to use an existing CloudFront cache policy. By default,
-   * a new cache policy is created. Note that CloudFront has a limit of 20 cache
-   * policies per account. This allows you to reuse an existing policy instead of
-   * creating a new one.
+   * Configure the Astro site to use an existing CloudFront cache policy.
+   *
+   * :::note
+   * CloudFront has a limit of 20 cache policies per account, though you can request a limit
+   * increase.
+   * :::
+   *
+   * By default, a new cache policy is created for it. This allows you to reuse an existing
+   * policy instead of creating a new one.
+   *
    * @default A new cache plolicy is created
    * @example
    * ```js
@@ -271,7 +277,7 @@ const BUILD_META_FILE_NAME: BuildMetaFileName = "sst.buildMeta.json";
  *
  * Deploy the Astro site that's in the project root.
  *
- * ```js
+ * ```js title="sst.config.ts"
  * new sst.aws.Astro("MyWeb");
  * ```
  *
@@ -279,7 +285,7 @@ const BUILD_META_FILE_NAME: BuildMetaFileName = "sst.buildMeta.json";
  *
  * Deploys the Astro site in the `my-astro-app/` directory.
  *
- * ```js {2}
+ * ```js {2} title="sst.config.ts"
  * new sst.aws.Astro("MyWeb", {
  *   path: "my-astro-app/"
  * });
@@ -289,7 +295,7 @@ const BUILD_META_FILE_NAME: BuildMetaFileName = "sst.buildMeta.json";
  *
  * Set a custom domain for your Astro site.
  *
- * ```js {2}
+ * ```js {2} title="sst.config.ts"
  * new sst.aws.Astro("MyWeb", {
  *   domain: "my-app.com"
  * });
@@ -299,7 +305,7 @@ const BUILD_META_FILE_NAME: BuildMetaFileName = "sst.buildMeta.json";
  *
  * Redirect `www.my-app.com` to `my-app.com`.
  *
- * ```js {4}
+ * ```js {4} title="sst.config.ts"
  * new sst.aws.Astro("MyWeb", {
  *   domain: {
  *     name: "my-app.com",
@@ -313,7 +319,7 @@ const BUILD_META_FILE_NAME: BuildMetaFileName = "sst.buildMeta.json";
  * [Link resources](/docs/linking/) to your Astro site. This will grant permissions
  * to the resources and allow you to access it in your site.
  *
- * ```ts {4}
+ * ```ts {4} title="sst.config.ts"
  * const bucket = new sst.aws.Bucket("MyBucket");
  *
  * new sst.aws.Astro("MyWeb", {
@@ -667,11 +673,10 @@ function useCloudFrontRoutingInjection(buildMetadata: BuildMetaConfig) {
     var matchedRoute = findFirstMatch(findMatches(request.uri, routeData));
     if (matchedRoute[0]) {
       if (!matchedRoute[1] && !/^.*\\.[^\\/]+$/.test(request.uri)) {
-        ${
-          buildMetadata.pageResolution === "file"
-            ? `request.uri = request.uri === "/" ? "/index.html" : request.uri.replace(/\\/?$/, ".html");`
-            : `request.uri = request.uri.replace(/\\/?$/, "/index.html");`
-        }
+        ${buildMetadata.pageResolution === "file"
+      ? `request.uri = request.uri === "/" ? "/index.html" : request.uri.replace(/\\/?$/, ".html");`
+      : `request.uri = request.uri.replace(/\\/?$/, "/index.html");`
+    }
       } else if (matchedRoute[1] === 2) {
         var redirectPath = matchedRoute[2];
         matchedRoute[0].exec(request.uri).forEach((match, index) => {

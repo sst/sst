@@ -5,14 +5,14 @@ export module realtime {
     /**
      * The topics the client can subscribe to.
      * @example
-     * For example, this subscribes to specific topics.
+     * For example, this subscribes to two specific topics.
      * ```js
      * {
      *   subscribe: ["chat/room1", "chat/room2"]
      * }
      * ```
      *
-     * And to subscribe to all topics under a specific prefix.
+     * And to subscribe to all topics under a given prefix.
      * ```js
      * {
      *   subscribe: ["chat/*"]
@@ -23,13 +23,13 @@ export module realtime {
     /**
      * The topics the client can publish to.
      * @example
-     * For example, this publishes to specific topics.
+     * For example, this publishes to two specific topics.
      * ```js
      * {
      *   publish: ["chat/room1", "chat/room2"]
      * }
      * ```
-     * And to publish to all topics under a specific prefix.
+     * And to publish to all topics under a given prefix.
      * ```js
      * {
      *   publish: ["chat/*"]
@@ -40,11 +40,12 @@ export module realtime {
   }
 
   /**
-   * Creates an authorization handler for the `Realtime` component, that validates
+   * Creates an authorization handler for the `Realtime` component. It validates
    * the token and grants permissions for the topics the client can subscribe and publish to.
    *
    * @example
-   * ```js
+   * ```js title="src/authorizer.ts" "realtime.authorizer"
+   * import { Resource } from "sst/aws";
    * import { realtime } from "sst/aws/realtime";
    *
    * export const handler = realtime.authorizer(async (token) => {
@@ -83,37 +84,37 @@ export module realtime {
               },
               ...(ret.subscribe
                 ? [
-                    {
-                      Action: "iot:Receive",
-                      Effect: "Allow",
-                      Resource: ret.subscribe.map(
-                        (t) => `arn:aws:iot:${region}:${accountId}:topic/${t}`,
-                      ),
-                    },
-                  ]
+                  {
+                    Action: "iot:Receive",
+                    Effect: "Allow",
+                    Resource: ret.subscribe.map(
+                      (t) => `arn:aws:iot:${region}:${accountId}:topic/${t}`,
+                    ),
+                  },
+                ]
                 : []),
               ...(ret.subscribe
                 ? [
-                    {
-                      Action: "iot:Subscribe",
-                      Effect: "Allow",
-                      Resource: ret.subscribe.map(
-                        (t) =>
-                          `arn:aws:iot:${region}:${accountId}:topicfilter/${t}`,
-                      ),
-                    },
-                  ]
+                  {
+                    Action: "iot:Subscribe",
+                    Effect: "Allow",
+                    Resource: ret.subscribe.map(
+                      (t) =>
+                        `arn:aws:iot:${region}:${accountId}:topicfilter/${t}`,
+                    ),
+                  },
+                ]
                 : []),
               ...(ret.publish
                 ? [
-                    {
-                      Action: "iot:Publish",
-                      Effect: "Allow",
-                      Resource: ret.publish.map(
-                        (t) => `arn:aws:iot:${region}:${accountId}:topic/${t}`,
-                      ),
-                    },
-                  ]
+                  {
+                    Action: "iot:Publish",
+                    Effect: "Allow",
+                    Resource: ret.publish.map(
+                      (t) => `arn:aws:iot:${region}:${accountId}:topic/${t}`,
+                    ),
+                  },
+                ]
                 : []),
             ],
           },

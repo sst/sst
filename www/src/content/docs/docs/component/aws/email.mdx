@@ -31,7 +31,7 @@ quota. To remove these restrictions, you need to [request production access](htt
 
 For using an email address as the sender, you need to verify the email address.
 
-```ts
+```ts title="sst.config.ts"
 const email = new sst.aws.Email("MyEmail", {
   sender: "spongebob@example.com",
 });
@@ -41,7 +41,7 @@ const email = new sst.aws.Email("MyEmail", {
 
 When you use a domain as the sender, you'll need to verify that you own the domain.
 
-```ts
+```ts title="sst.config.ts"
 new sst.aws.Email("MyEmail", {
   sender: "example.com"
 });
@@ -49,7 +49,7 @@ new sst.aws.Email("MyEmail", {
 
 #### Configuring DMARC
 
-```ts
+```ts title="sst.config.ts"
 new sst.aws.Email("MyEmail", {
   sender: "example.com",
   dmarc: "v=DMARC1; p=quarantine; adkim=s; aspf=s;"
@@ -60,7 +60,7 @@ new sst.aws.Email("MyEmail", {
 
 You can link it to a function or your Next.js app to send emails.
 
-```ts {3}
+```ts {3} title="sst.config.ts"
 const api = new sst.aws.Function("MyApi", {
   handler: "sender.handler",
   link: [email]

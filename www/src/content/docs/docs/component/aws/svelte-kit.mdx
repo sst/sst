@@ -300,6 +300,33 @@ If you want to use a different build command.
 }
 ```
 </Segment>
+### cachePolicy?
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+
+<InlineSection>
+**Default** A new cache plolicy is created
+</InlineSection>
+Configure the SvelteKit app to use an existing CloudFront cache policy.
+
+:::note
+CloudFront has a limit of 20 cache policies per account, though you can request a limit
+increase.
+:::
+
+By default, a new cache policy is created for it. This allows you to reuse an existing
+policy instead of creating a new one.
+
+```js
+{
+  cachePolicy: "658327ea-f89d-4fab-a63d-7e88639e58f6"
+}
+```
+</Segment>
 ### domain?
 <Segment>
 <Section type="parameters">

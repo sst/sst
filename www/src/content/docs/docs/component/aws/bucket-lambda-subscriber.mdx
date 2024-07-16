@@ -128,7 +128,7 @@ The name of the bucket.
 <InlineSection>
 **Default** All S3 events
 </InlineSection>
-The S3 event types that will trigger the notification.
+A list of S3 event types that'll trigger the notification.
 
 ```js
 {
@@ -145,7 +145,7 @@ The S3 event types that will trigger the notification.
 </Section>
 An S3 object key prefix that will trigger the notification.
 
-All the objects in the `images/` folder.
+To filter for all the objects in the `images/` folder.
 ```js
 {
   filterPrefix: "images/"
@@ -161,7 +161,7 @@ All the objects in the `images/` folder.
 </Section>
 An S3 object key suffix that will trigger the notification.
 
-All the objects with the `.jpg` suffix.
+To filter for all the objects with the `.jpg` suffix.
 ```js
 {
  filterSuffix: ".jpg"

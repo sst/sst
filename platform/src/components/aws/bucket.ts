@@ -162,7 +162,7 @@ export interface BucketArgs {
 
 export interface BucketSubscriberArgs {
   /**
-   * The S3 event types that will trigger the notification.
+   * A list of S3 event types that'll trigger the notification.
    * @default All S3 events
    * @example
    * ```js
@@ -205,7 +205,7 @@ export interface BucketSubscriberArgs {
   /**
    * An S3 object key prefix that will trigger the notification.
    * @example
-   * All the objects in the `images/` folder.
+   * To filter for all the objects in the `images/` folder.
    * ```js
    * {
    *   filterPrefix: "images/"
@@ -216,7 +216,7 @@ export interface BucketSubscriberArgs {
   /**
    * An S3 object key suffix that will trigger the notification.
    * @example
-   * All the objects with the `.jpg` suffix.
+   * To filter for all the objects with the `.jpg` suffix.
    * ```js
    * {
    *  filterSuffix: ".jpg"
@@ -244,7 +244,7 @@ export interface BucketSubscriberArgs {
  *
  * #### Minimal example
  *
- * ```ts
+ * ```ts title="sst.config.ts"
  * const bucket = new sst.aws.Bucket("MyBucket");
  * ```
  *
@@ -252,7 +252,7 @@ export interface BucketSubscriberArgs {
  *
  * Enable `public` read access for all the files in the bucket. Useful for hosting public files.
  *
- * ```ts
+ * ```ts title="sst.config.ts"
  * new sst.aws.Bucket("MyBucket", {
  *   public: true
  * });
@@ -260,7 +260,7 @@ export interface BucketSubscriberArgs {
  *
  * #### Add a subscriber
  *
- * ```ts
+ * ```ts title="sst.config.ts"
  * bucket.subscribe("src/subscriber.handler");
  * ```
  *
@@ -268,7 +268,7 @@ export interface BucketSubscriberArgs {
  *
  * You can link the bucket to other resources, like a function or your Next.js app.
  *
- * ```ts
+ * ```ts title="sst.config.ts"
  * new sst.aws.Nextjs("MyWeb", {
  *   link: [bucket]
  * });
@@ -467,16 +467,16 @@ export class Bucket extends Component implements Link.Linkable, AWSLinkable {
    *
    * @example
    *
-   * ```js
+   * ```js title="sst.config.ts"
    * bucket.subscribe("src/subscriber.handler");
    * ```
    *
-   * Subscribe to specific S3 events.
+   * Subscribe to specific S3 events. The `link` ensures the subscriber can access the bucket.
    *
-   * ```js
+   * ```js title="sst.config.ts" "link: [bucket]"
    * bucket.subscribe({
    *   handler: "src/subscriber.handler",
-   *   link: [bucket] // ensures subscriber can access bucket files
+   *   link: [bucket]
    * }, {
    *   events: ["s3:ObjectCreated:*", "s3:ObjectRemoved:*"]
    * });
@@ -484,7 +484,7 @@ export class Bucket extends Component implements Link.Linkable, AWSLinkable {
    *
    * Subscribe to specific S3 events from a specific folder.
    *
-   * ```js
+   * ```js title="sst.config.ts" {2}
    * bucket.subscribe("src/subscriber.handler", {
    *   filterPrefix: "images/",
    *   events: ["s3:ObjectCreated:*", "s3:ObjectRemoved:*"]
@@ -493,7 +493,7 @@ export class Bucket extends Component implements Link.Linkable, AWSLinkable {
    *
    * Customize the subscriber function.
    *
-   * ```js
+   * ```js title="sst.config.ts"
    * bucket.subscribe({
    *   handler: "src/subscriber.handler",
    *   timeout: "60 seconds",
@@ -530,19 +530,19 @@ export class Bucket extends Component implements Link.Linkable, AWSLinkable {
    *
    * For example, let's say you have an existing S3 bucket with the following ARN.
    *
-   * ```js
+   * ```js title="sst.config.ts"
    * const bucketArn = "arn:aws:s3:::my-bucket";
    * ```
    *
    * You can subscribe to it by passing in the ARN.
    *
-   * ```js
+   * ```js title="sst.config.ts"
    * sst.aws.Bucket.subscribe(bucketArn, "src/subscriber.handler");
    * ```
    *
    * Subscribe to specific S3 events.
    *
-   * ```js
+   * ```js title="sst.config.ts"
    * sst.aws.Bucket.subscribe(bucketArn, "src/subscriber.handler", {
    *   events: ["s3:ObjectCreated:*", "s3:ObjectRemoved:*"]
    * });
@@ -550,7 +550,7 @@ export class Bucket extends Component implements Link.Linkable, AWSLinkable {
    *
    * Subscribe to specific S3 events from a specific folder.
    *
-   * ```js
+   * ```js title="sst.config.ts" {2}
    * sst.aws.Bucket.subscribe(bucketArn, "src/subscriber.handler", {
    *   filterPrefix: "images/",
    *   events: ["s3:ObjectCreated:*", "s3:ObjectRemoved:*"]
@@ -559,7 +559,7 @@ export class Bucket extends Component implements Link.Linkable, AWSLinkable {
    *
    * Customize the subscriber function.
    *
-   * ```js
+   * ```js title="sst.config.ts"
    * sst.aws.Bucket.subscribe(bucketArn, {
    *   handler: "src/subscriber.handler",
    *   timeout: "60 seconds",

@@ -87,13 +87,13 @@ export interface VpcArgs {
  *
  * #### Create a VPC
  *
- * ```ts
+ * ```ts title="sst.config.ts"
  * new sst.aws.Vpc("MyVPC");
  * ```
  *
  * #### Create it with 3 Availability Zones
  *
- * ```ts
+ * ```ts title="sst.config.ts"
  * new sst.aws.Vpc("MyVPC", {
  *   az: 3,
  * });
