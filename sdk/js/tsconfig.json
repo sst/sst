@@ -12,6 +12,7 @@
     "downlevelIteration": true,
   },
   "exclude": [
-    "scripts"
+    "scripts",
+    "dist"
   ]
 }

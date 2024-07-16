@@ -17,6 +17,7 @@ if (snapshot) {
 
 console.log("publishing", nextPkg.version);
 
+await fs.rmdir("dist", { recursive: true });
 await $`bun run build`;
 
 const cpus = {
