@@ -24,7 +24,7 @@ export interface Args extends ApiGatewayV2BaseRouteArgs {
  * This component is not intended for public use.
  * :::
  *
- * You'll find this component returned by the `urlRoute` method of the `ApiGatewayV2` component.
+ * You'll find this component returned by the `routeUrl` method of the `ApiGatewayV2` component.
  */
 export class ApiGatewayV2UrlRoute extends Component {
   private readonly apiRoute: Output<apigatewayv2.Route>;
