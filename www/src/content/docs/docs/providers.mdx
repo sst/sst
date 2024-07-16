@@ -1,6 +1,6 @@
 ---
 title: Providers
-description: Providers allow you to interact with the cloud services. 
+description: Providers allow you to interact with cloud services. 
 ---
 
 A provider is what allows SST to interact with the APIs of various cloud services. These are packages that can be installed in your `sst.config.ts`.
@@ -202,7 +202,7 @@ You might want to create multiple providers in cases where some resources in you
 
 Let's look at an example. Assume your app is normally deployed to `us-west-1`. But you need to create an ACM certificate that needs to be deployed to `us-east-1`.
 
-```ts {1, 8} title="sst.config.ts"
+```ts {1} title="sst.config.ts" "{ provider: useast1 }"
 const useast1 = new aws.Provider("useast1", { region: "us-east-1" });
 
 new sst.aws.Function("MyFunction, "src/lambda.handler");
