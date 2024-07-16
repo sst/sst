@@ -49,9 +49,6 @@ for (const artifact of artifacts) {
         version: nextPkg.version,
         os: [os],
         cpu: [cpu],
-        bin: {
-          sst: path.join("bin", binary),
-        },
       },
       null,
       2,

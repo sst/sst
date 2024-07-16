@@ -1,0 +1,16 @@
+#!/usr/bin/env node
+
+import path from "path";
+import { execFileSync } from "child_process" 
+const name = `sst-${process.platform}-${process.arch}`;
+const binary = process.platform === "win32" ? "sst.exe" : "sst";
+try {
+  const resolved = require.resolve(path.join(name, "bin", binary));
+  execFileSync(resolved, {
+    stdio: "inherit", 
+  })
+} catch (e) {
+  console.error(
+    `It seems that your package manager failed to install the right version of the SST CLI for your platform. You can try manually installing the "${name}" package.`,
+  );
+}

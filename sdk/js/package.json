@@ -28,7 +28,8 @@
     "zod": "3.23.8"
   },
   "files": [
-    "dist"
+    "dist",
+    "bin"
   ],
   "peerDependencies": {
     "hono": "4.x",
