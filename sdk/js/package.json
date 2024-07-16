@@ -31,6 +31,9 @@
     "dist",
     "bin"
   ],
+  "bin": {
+    "sst": "./bin/sst"
+  },
   "peerDependencies": {
     "hono": "4.x",
     "valibot": "0.30.x"
