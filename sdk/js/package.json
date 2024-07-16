@@ -32,7 +32,7 @@
     "bin"
   ],
   "bin": {
-    "sst": "./bin/sst"
+    "sst": "./bin/sst.mjs"
   },
   "peerDependencies": {
     "hono": "4.x",
