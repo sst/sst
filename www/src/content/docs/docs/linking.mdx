@@ -5,11 +5,11 @@ description: Link resources together and access them in a typesafe and secure wa
 
 import { Tabs, TabItem } from '@astrojs/starlight/components';
 
-Resource linking is a feature of SST that allows you to link resources together and access them in a typesafe and secure way.
+Resource Linking  allows you to access your **infrastructure** in your **runtime code** in a typesafe and secure way.
 
 1. Create a resource that you want to link to. For example, a bucket.
 
-   ```js {6,11}
+   ```ts title="sst.config.ts" {6,11}
    const bucket = new sst.aws.Bucket("MyBucket");
    ```
 
@@ -17,28 +17,28 @@ Resource linking is a feature of SST that allows you to link resources together 
 
    <Tabs>
      <TabItem label="Next.js">
-     ```js {2}
+     ```ts title="sst.config.ts" {2}
      new sst.aws.Nextjs("MyWeb", {
        link: [bucket]
      });
      ```
      </TabItem>
      <TabItem label="Remix">
-     ```js {2}
+     ```ts title="sst.config.ts" {2}
      new sst.aws.Remix("MyWeb", {
        link: [bucket]
      });
      ```
      </TabItem>
      <TabItem label="Astro">
-     ```js {2}
+     ```ts title="sst.config.ts" {2}
      new sst.aws.Astro("MyWeb", {
        link: [bucket]
      });
      ```
      </TabItem>
      <TabItem label="Function">
-     ```js {3}
+     ```ts title="sst.config.ts" {3}
      new sst.aws.Function("MyFunction", {
        handler: "src/lambda.handler",
        link: [bucket]
@@ -47,7 +47,7 @@ Resource linking is a feature of SST that allows you to link resources together 
      </TabItem>
    </Tabs>
 
-3. Use the [SDK](/docs/reference/sdk/) to access the linked resource in a typesafe way.
+3. Use the [SDK](/docs/reference/sdk/) to access the linked resource in your runtime in a typesafe way.
 
    <Tabs>
      <TabItem label="Next.js">
@@ -119,15 +119,15 @@ For the frontends, you'll need to wrap your frontend in the `sst dev` command.
 
 At high level when you link a resource to a function or frontend, the following happens:
 
-1. The function is given permission to access the linked resource.
-
-2. The _links_ that the resource exposes are injected into the function package.
+1. The _links_ that the resource exposes are injected into the function package.
 
    :::tip
    The links a component exposes are listed in its API reference. For example, you can [view a Bucket's links here](/docs/component/aws/bucket/#links).
    :::
 
-3. The types to access these links are generated.
+2. The types to access these links are generated.
+
+3. The function is given permission to access the linked resource.
 
 ---
 
@@ -147,7 +147,7 @@ This is why when you are running your frontend locally, it needs to be wrapped i
 
 ---
 
-### Generating types
+## Generating types
 
 When you run `sst dev` or `sst deploy`, it generates the types to access the linked resources. These are generated as:
 

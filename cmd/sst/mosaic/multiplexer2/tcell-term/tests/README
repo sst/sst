@@ -1,0 +1,6 @@
+All tests in this directory should be compared against a known good terminal.
+Personally, I compare to foot, but alacritty is known to be good too. The tests
+can be run by 'cat'ing them to the terminal
+
+These tests are pulled from:
+https://github.com/alacritty/alacritty/tree/master/alacritty_terminal/tests/ref

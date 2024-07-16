@@ -119,7 +119,13 @@ export const handler = handle(app);
 We are directly accessing our S3 bucket with `Resource.MyBucket.name`.
 :::
 
-Add the relevant imports.
+Install the npm packages.
+
+```bash
+npm install hono sst @aws-sdk/client-s3 @aws-sdk/s3-request-presigner
+```
+
+Then add the relevant imports.
 
 ```ts title="index.ts"
 import { Resource } from "sst";
@@ -136,11 +142,6 @@ import { handle } from "hono/aws-lambda";
 const s3 = new S3Client({});
 ```
 
-And install the npm packages.
-
-```bash
-npm install hono @aws-sdk/client-s3 @aws-sdk/s3-request-presigner
-```
 
 ---
 
@@ -191,15 +192,18 @@ Now head over to `https://gyrork2ll35rsuml2yr4lifuqu0tsjft.lambda-url.us-east-1.
 Now let's deploy your app.
 
 ```bash
-sst deploy
+sst deploy --stage production
 ```
+
+You can use any stage name here but it's good to create a new stage for production.
 
 ---
 
 ## Connect the console
 
-As a next step, you can manage your app and view issues in the [SST Console](/docs/console/).
+As a next step, you can setup the [SST Console](/docs/console/) to _**git push to deploy**_ your app and monitor it for any issues. 
 
-![Issues in Hono API app in SST Console](../../../../../assets/docs/start/issues-in-hono-api-app-in-the-sst-console.png)
+![SST Console Autodeploy](../../../../../assets/docs/start/sst-console-autodeploy.png)
 
 You can [create a free account](https://console.sst.dev) and connect it to your AWS account.
+

@@ -21,5 +21,6 @@ export default $config({
       link: [bucket],
       handler: "index.latest",
     });
+    api.routeUrl("GET /url", "https://google.com");
   },
 });

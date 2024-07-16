@@ -169,17 +169,26 @@ This should print out `Sent!` and you should get an email. You might have to che
 
 Now let's deploy your app.
 
+
 ```bash
-sst deploy
+sst deploy --stage production
 ```
 
----
+You can use any stage name here but it's good to create a new stage for production.
 
-## Next steps
-
-As a next step you can:
+Next for production you can:
 
 1. [Request production access](https://docs.aws.amazon.com/ses/latest/dg/request-production-access.html) for SES
 2. And [use your domain](/docs/component/aws/email/) to send emails
 
 This'll let you send emails from your domain to any email address.
+
+---
+
+## Connect the console
+
+As a next step, you can setup the [SST Console](/docs/console/) to _**git push to deploy**_ your app and monitor it for any issues. 
+
+![SST Console Autodeploy](../../../../../assets/docs/start/sst-console-autodeploy.png)
+
+You can [create a free account](https://console.sst.dev) and connect it to your AWS account.

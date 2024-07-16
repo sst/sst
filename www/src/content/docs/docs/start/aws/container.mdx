@@ -242,12 +242,22 @@ Now head over to `http://localhost:80/latest` in your browser and it'll download
 Now let's deploy your app.
 
 ```bash
-sst deploy
+sst deploy --stage production
 ```
 
-This'll give the URL of your Express app deployed as a Fargate service.
+You can use any stage name here but it's good to create a new stage for production. This'll give the URL of your Express app deployed as a Fargate service.
 
 ```bash
 ✓  Complete
    MyService: http://jayair-MyServiceLoadBala-592628062.us-east-1.elb.amazonaws.com
 ```
+
+---
+
+## Connect the console
+
+As a next step, you can setup the [SST Console](/docs/console/) to _**git push to deploy**_ your app and monitor it for any issues. 
+
+![SST Console Autodeploy](../../../../../assets/docs/start/sst-console-autodeploy.png)
+
+You can [create a free account](https://console.sst.dev) and connect it to your AWS account.

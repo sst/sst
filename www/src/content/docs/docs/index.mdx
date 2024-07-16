@@ -1,12 +1,20 @@
 ---
 title: What is Ion
-description: Ion is a new deployment engine for SST.
+description: Build full-stack apps on your own infrastructure.
 ---
 
 import { Tabs, TabItem } from '@astrojs/starlight/components';
 import config from '../../../../config.ts';
 
 export const github  = config.github;
+
+SST is a framework that makes it easy to build modern full-stack applications on your own infrastructure.
+
+What makes SST different is that your _entire_ app is **defined in code** — in a single `sst.config.ts` file. This includes your databases, buckets, queues, your Stripe webhooks, or any one of the **150+ providers**.
+
+With SST, **everything is automated**.
+
+---
 
 Ion is a new engine for deploying [SST](https://sst.dev) apps. It uses [Pulumi](https://www.pulumi.com) and [Terraform](https://www.terraform.io), as opposed to CDK and CloudFormation.
 
@@ -16,55 +24,52 @@ Ion is open source, does not require a Pulumi account, and only depends on the o
 
 Ion is generally available and **recommended for new SST users**. We are working on a migration path for SST v2 users. Once Ion is stable, it’ll be released as SST v3. [Read the full announcement](https://sst.dev/blog/moving-away-from-cdk.html).
 
----
-
-Aside from the underlying engine, there are a couple of other differences between SST v2 and Ion.
-
-- There are no _"stacks"_ or stack resource limits.
-- There are no npm packages, just a CLI and the `sst.config.ts`.
-- Resource _binding_ is now called _linking_ and works across cloud providers.
-- The `bind` command has been merged into the `dev` command. You won't need to run both of them.
-
 If you are new to SST, here's how it works.
-
----
-
-SST is a framework that makes it easy to build modern full-stack applications on your own infrastructure.
-
-:::note
-Ion currently **supports Node.js** applications on **macOS, Linux, and WSL**. Support for other runtimes and OSes are on the roadmap.
-:::
 
 ---
 
 ## Frontend
 
-You start by defining, _**in code**_, the frontend you are using. Or if you don't have a frontend, you can start with an API.
+You start by defining parts of your app, _**in code**_. For example, your frontend. Or if you don't have a frontend, your API.
 
 <Tabs>
   <TabItem label="Next.js">
-  ```js title="sst.config.ts"
+  ```ts title="sst.config.ts"
   new sst.aws.Nextjs("MyWeb", {
     domain: "my-app.com"
   });
   ```
   </TabItem>
   <TabItem label="Remix">
-  ```js title="sst.config.ts"
+  ```ts title="sst.config.ts"
   new sst.aws.Remix("MyWeb", {
     domain: "my-app.com"
   });
   ```
   </TabItem>
   <TabItem label="Astro">
-  ```js title="sst.config.ts"
+  ```ts title="sst.config.ts"
   new sst.aws.Astro("MyWeb", {
     domain: "my-app.com"
   });
   ```
   </TabItem>
+  <TabItem label="Svelte">
+  ```ts title="sst.config.ts"
+  new sst.aws.SvelteKit("MyWeb", {
+    domain: "my-app.com"
+  });
+  ```
+  </TabItem>
+  <TabItem label="Solid">
+  ```ts title="sst.config.ts"
+  new sst.aws.SolidStart("MyWeb", {
+    domain: "my-app.com"
+  });
+  ```
+  </TabItem>
   <TabItem label="API">
-  ```js title="sst.config.ts"
+  ```ts title="sst.config.ts"
   new sst.aws.ApiGatewayV2("MyApi", {
     domain: "api.my-app.com"
   });
@@ -72,17 +77,17 @@ You start by defining, _**in code**_, the frontend you are using. Or if you don'
   </TabItem>
 </Tabs>
 
-Support for other frontends are on the roadmap.
+Your app might even have multiple frontends.
 
 ---
 
 ## Backend
 
-Just like configuring the frontend, you can configure backend features _in code_. Features like cron jobs, buckets, queues, databases, and more.
+Just like the frontend, you can configure backend features _in code_. Features like cron jobs, buckets, queues, databases, and more.
 
 <Tabs>
   <TabItem label="Cron">
-  ```js title="sst.config.ts"
+  ```ts title="sst.config.ts"
   new sst.aws.Cron("MyCronJob", {
     job: "src/cron.handler",
     schedule: "rate(1 minute)"
@@ -90,31 +95,45 @@ Just like configuring the frontend, you can configure backend features _in code_
   ```
   </TabItem>
   <TabItem label="Bucket">
-  ```js title="sst.config.ts"
+  ```ts title="sst.config.ts"
   new sst.aws.Bucket("MyBucket");
   ```
   </TabItem>
+  <TabItem label="Email">
+  ```ts title="sst.config.ts"
+  new sst.aws.Email("MyEmail", {
+    sender: "example.com"
+  });
+  ```
+  </TabItem>
+  <TabItem label="Realtime">
+  ```ts title="sst.config.ts"
+  new sst.aws.Realtime("MyServer", {
+    authorizer: "src/authorizer.handler"
+  });
+  ```
+  </TabItem>
   <TabItem label="Queue">
-  ```js title="sst.config.ts"
+  ```ts title="sst.config.ts"
   const myQueue = new sst.aws.Queue("MyQueue");
 
   myQueue.subscribe("src/subscriber.handler");
   ```
   </TabItem>
   <TabItem label="Postgres">
-  ```js title="sst.config.ts"
+  ```ts title="sst.config.ts"
   new sst.aws.Postgres("MyDatabase");
   ```
   </TabItem>
 </Tabs>
 
-You can check out the full list of components on the sidebar.
+You can check out the full list of components in the sidebar.
 
 ---
 
 ## Infrastructure
 
-The above snippets are called **Components**. They are a way of defining the features of your application in code. You can define any feature of your application with them.
+The above are called **Components**. They are a way of defining the features of your application in code. You can define any feature of your application with them.
 
 In the above examples, they create the necessary infrastructure in your AWS account. All without using the AWS Console.
 
@@ -128,7 +147,7 @@ SST's components come with sensible defaults designed to get you started. But th
 
 For example, the `sst.aws.Function` can be configured with all the common Lambda function props.
 
-```js {3,4} title="sst.config.ts"
+```ts {3,4} title="sst.config.ts"
 new sst.aws.Function("MyFunction", {
   handler: "src/lambda.handler",
   timeout: "3 minutes",
@@ -138,7 +157,7 @@ new sst.aws.Function("MyFunction", {
 
 But with SST you can take it a step further and transform how the Function component creates its low level infrastructure. For example, the Function component also creates an IAM Role. You can transform the IAM Role using the `transform` prop.
 
-```js {3-7} title="sst.config.ts"
+```ts {3-7} title="sst.config.ts"
 new sst.aws.Function("MyFunction", {
   handler: "src/lambda.handler",
   transform: {
@@ -153,20 +172,21 @@ Read more about [transforms](/docs/components#transforms).
 
 ---
 
-### Extend
+### Providers
 
-If you want to add a feature to your app that's not supported by SST's components yet, you can use Pulumi components directly in your SST app. This is because components in SST are built on Pulumi components.
+SST has components for AWS and Cloudflare that make these services easier to use.
 
-```js title="sst.config.ts"
-new aws.s3.BucketV2("b", {
-  bucket: "mybucket",
-  tags: {
-    Name: "My bucket"
-  }
+However it also supports components from any one of the 150+ Pulumi/Terraform providers. This is because components in SST are built on Pulumi components.
+
+For example, you can use Vercel for your frontends.
+
+```ts title="sst.config.ts"
+new vercel.Project("MyFrontend", {
+  name: "my-nextjs-app"
 });
 ```
 
-You can also use any provider in the [Pulumi Registry](https://www.pulumi.com/registry/). Read more about [providers](/docs/providers).
+Read more about [Providers](/docs/providers) and check out the full list in the [Directory](/docs/providers#directory)
 
 ---
 
@@ -176,7 +196,7 @@ Once you've added a couple of features, SST can help you link them together. Thi
 
 Let's say your app has a Next.js frontend and an S3 bucket for file uploads. You can `link` the bucket to your Next.js app.
 
-```js title="sst.config.ts" {4}
+```ts title="sst.config.ts" {4}
 const bucket = new sst.aws.Bucket("MyBucket");
 
 new sst.aws.Nextjs("MyWeb", {
@@ -186,7 +206,7 @@ new sst.aws.Nextjs("MyWeb", {
 
 You can then use SST's [SDK](/docs/reference/sdk/) to access the S3 bucket in your Next.js app.
 
-```ts title="app/page.tsx"
+```ts title="app/page.tsx" "Resource.MyBucket.name"
 import { Resource } from "sst";
 
 console.log(Resource.MyBucket.name);
@@ -242,11 +262,15 @@ Learn more about our [monorepo setup](/docs/examples/#aws-monorepo).
 
 ## CLI
 
-To make this all work, Ion comes with a [CLI](/docs/reference/cli/) that you install globally.
+To make this all work, SST comes with a [CLI](/docs/reference/cli/) that you install globally.
 
 ```bash
 curl -fsSL https://ion.sst.dev/install | bash
 ```
+
+:::note
+SST currently supports **macOS, Linux, and WSL**. Support for Windows is on the roadmap.
+:::
 
 The CLI currently supports macOS, Linux, and WSL.
 
@@ -260,7 +284,7 @@ The CLI includes a `dev` command that starts a local development environment.
 sst dev
 ```
 
-It lets you make and test changes to your function live, without having to redeploy them.
+It lets you make and test changes to your functions live, without having to redeploy them.
 
 :::tip
 The `sst dev` command runs your functions _**live**_, letting you test changes to your functions in milliseconds. [Learn more](/docs/live/).
@@ -293,40 +317,41 @@ You can also use this command to start your frontend locally, and it'll automati
 When you're ready to deploy your app, you can use the `deploy` command.
 
 ```bash
-sst deploy
+sst deploy --stage production
 ```
 
 ---
 
-#### Personal stage
-
-By default, your app is deployed to your _personal stage_. The name of your personal stage is your username in the local machine. This is cached in the `.sst/stage` file.
-
-You can override this to deploy to separate stages or environments.
-
----
-
-#### Environments
+#### Stages
 
 The `deploy` command can also deploy your app to a specific stage or environment.
 
 ```bash
 # Deploy to dev
-npx sst deploy --stage=dev
+npx sst deploy --stage dev
 
 # Deploy a PR environment
-npx sst deploy --stage=pr-123
-
-# Deploy to production
-npx sst deploy --stage=prod
+npx sst deploy --stage pr-123
 ```
 
-This lets you create separate environments for development, production, pull-requests, or branches. Learn more about [stages](/docs/reference/cli#stage).
+This lets you create separate environments for your app. Learn more about [stages](/docs/reference/cli#stage).
 
 ---
 
 ## Console
 
-Once your app is in production, you can use the [SST Console](/docs/console/) to monitor and manage your app — [**console.sst.dev**](https://console.sst.dev)
+Once you are ready to go to production, you can use the [SST Console](/docs/console/) to **auto-deploy** your app, create **preview environments**, and **monitor** for any issues.
 
-[![SST Console](../../../assets/docs/sst-console-logs.png)](https://console.sst.dev)
+![SST Console](../../../assets/docs/sst-console-home.png)
+
+Learn more about the [Console](/docs/console/).
+
+---
+
+#### Next steps
+
+1. Create your first SST app
+   - [Deploy a Next.js app to AWS](/docs/start/aws/nextjs/)
+   - [Send emails from your API](/docs/start/aws/email/)
+   - [Build a Hono API with on Cloudflare](/docs/start/cloudflare/hono/)
+2. [Learn about the SST workflow](/docs/workflow/)

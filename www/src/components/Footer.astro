@@ -14,15 +14,15 @@ let editUrl = Astro.props.editUrl;
 // Change path for component source files
 if (slug.startsWith("docs/component/")) {
   editUrl = new URL(
-    `pkg/platform/src/components/${slug.replace("docs/component/", "")}.ts`, editLink
+    `platform/src/components/${slug.replace("docs/component/", "")}.ts`, editLink
   );
 }
 // Change path for reference source files
 else if (slug === "docs/reference/config") {
-  editUrl = new URL("pkg/platform/src/config.ts", editLink);
+  editUrl = new URL("platform/src/config.ts", editLink);
 }
 else if (slug === "docs/reference/global") {
-  editUrl = new URL("pkg/platform/src/global.d.ts", editLink);
+  editUrl = new URL("platform/src/global.d.ts", editLink);
 }
 else if (slug === "docs/reference/cli") {
   editUrl = new URL("cmd/sst/main.go", editLink);

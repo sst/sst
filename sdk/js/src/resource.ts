@@ -57,6 +57,10 @@ export const Resource = new Proxy(raw, {
     if (prop in raw) {
       return raw[prop];
     }
-    throw new Error(`"${prop}" is not linked`);
+    let msg = `"${prop}" is not linked`;
+    if (env.AWS_LAMBDA_FUNCTION_NAME) {
+      msg += ` to ${env.AWS_LAMBDA_FUNCTION_NAME}`;
+    }
+    throw new Error(msg);
   },
 }) as Resource;

@@ -13,9 +13,12 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
+
+	"github.com/pulumi/pulumi/sdk/v3"
 )
 
-const PULUMI_VERSION = "v3.115.2"
+var PulumiVersion = "v" + sdk.Version.String()
+
 const BUN_VERSION = "1.1.0"
 
 var configDir = (func() string {
@@ -47,11 +50,7 @@ func NeedsPulumi() bool {
 	}
 
 	version := strings.TrimSpace(string(output))
-	if version != PULUMI_VERSION {
-		return true
-	}
-
-	return false
+	return version != PulumiVersion
 }
 
 func InstallPulumi() error {
@@ -83,7 +82,7 @@ func InstallPulumi() error {
 		fileExtension = ".zip"
 	}
 
-	url := fmt.Sprintf("https://github.com/pulumi/pulumi/releases/download/%v/pulumi-%s-%s%s", PULUMI_VERSION, PULUMI_VERSION, osArch, fileExtension)
+	url := fmt.Sprintf("https://github.com/pulumi/pulumi/releases/download/%v/pulumi-%s-%s%s", PulumiVersion, PulumiVersion, osArch, fileExtension)
 	slog.Info("pulumi downloading", "url", url)
 
 	resp, err := http.Get(url)
@@ -139,10 +138,7 @@ func NeedsBun() bool {
 		return true
 	}
 	version := strings.TrimSpace(string(output))
-	if version != BUN_VERSION {
-		return true
-	}
-	return false
+	return version != BUN_VERSION
 }
 
 func InstallBun() error {

@@ -1,21 +1,13 @@
 ---
 title: Providers
-description: Providers are the services that you can use in your app.
+description: Providers allow you to interact with cloud services. 
 ---
 
-A provider is the infrastructure service that you can use in your app. It's listed in your `sst.config.ts` under `providers`.
+A provider is what allows SST to interact with the APIs of various cloud services. These are packages that can be installed in your `sst.config.ts`.
 
-```ts title="sst.config.ts"
-{
-  providers: {
-    aws: true
-  }
-}
-```
+SST is built on Pulumi/Terraform and **supports 150+ providers**. This includes the major clouds like AWS, Azure, and GCP; but also services like Cloudflare, Stripe, Vercel, Auth0, etc.
 
-:::tip
-SST supports all [Pulumi providers](https://www.pulumi.com/registry/) and components.
-:::
+Check out the full list in the [Directory](#directory).
 
 ---
 
@@ -29,13 +21,29 @@ sst add <provider>
 
 This command adds the provider to your config, installs the packages, and adds the namespace of the provider to your globals.
 
+:::caution
+Do not `import` the provider packages in your `sst.config.ts`.
+:::
+
+SST manages these packages internally and you do not need to import the package in your `sst.config.ts`.
+
 :::tip
 Your app can have multiple providers.
 :::
 
+The name of a provider comes from the **name of the package** in the [Directory](#directory). For example, `sst add planetscale`, will add the following to your `sst.config.ts`.
+
+```ts title="sst.config.ts"
+{
+  providers: {
+    planetscale: true
+  }
+}
+```
+
 You can add multiple providers to your app.
 
-```ts
+```ts title="sst.config.ts"
 {
   providers: {
     aws: true,
@@ -43,8 +51,6 @@ You can add multiple providers to your app.
   }
 }
 ```
-
-The name of a provider comes from the **URL of the provider** in the Pulumi Registry. For example, `https://www.pulumi.com/registry/packages/aws/` is the URL of the AWS Classic provider. So the name of the provider here is `aws`.
 
 Learn more about the [`sst add`](/docs/reference/cli/#add) command.
 
@@ -54,7 +60,7 @@ Learn more about the [`sst add`](/docs/reference/cli/#add) command.
 
 You can configure a provider in your `sst.config.ts`. For example, to change the region for AWS.
 
-```ts
+```ts title="sst.config.ts"
 {
   providers: {
     aws: {
@@ -64,7 +70,7 @@ You can configure a provider in your `sst.config.ts`. For example, to change the
 }
 ```
 
-You can check out the available list of options that you can configure for a provider over on the Pulumi docs. For example, here are the ones for [AWS](https://www.pulumi.com/registry/packages/aws/api-docs/provider/#inputs) and [Cloudflare](https://www.pulumi.com/registry/packages/cloudflare/api-docs/provider/#inputs).
+You can check out the available list of options that you can configure for a provider over on the provider's docs. For example, here are the ones for [AWS](https://www.pulumi.com/registry/packages/aws/api-docs/provider/#inputs) and [Cloudflare](https://www.pulumi.com/registry/packages/cloudflare/api-docs/provider/#inputs).
 
 ---
 
@@ -72,7 +78,7 @@ You can check out the available list of options that you can configure for a pro
 
 In addition to these options, you can also pass in the version of the provider you want to use. By default, SST uses the latest version.
 
-```ts
+```ts title="sst.config.ts"
 {
   providers: {
     aws: {
@@ -94,7 +100,7 @@ export CLOUDFLARE_API_TOKEN=aaaaaaaa_aaaaaaaaaaaa_aaaaaaaa
 
 However, some providers also allow you to pass in the credentials through the config.
 
-```ts
+```ts title="sst.config.ts"
 {
   providers: {
     cloudflare: {
@@ -110,20 +116,11 @@ Learn more about [configuring providers](/docs/reference/config/#providers).
 
 ## Components
 
-There are two types of [components](/docs/components/) in your app.
-
-1. Native SST components, namespaced under `sst.*`
-2. And Pulumi components, namespaced under `<provider>.*`
-
-The `sst add` command injects the provider into the globals of your config.
-
-:::tip
-You don't need to `import` from a Pulumi provider package, the `sst add` command injects it into the globals.
-:::
+The provider packages come with components that you can use in your app. 
 
 For example, running `sst add aws` will allow you to use all the components under the `aws` namepsace.
 
-```js
+```ts title="sst.config.ts"
 new aws.s3.BucketV2("b", {
   bucket: "mybucket",
   tags: {
@@ -132,7 +129,9 @@ new aws.s3.BucketV2("b", {
 });
 ```
 
-Here we are using the [BucketV2](https://www.pulumi.com/registry/packages/aws/api-docs/s3/bucketv2/) component from the [AWS Classic](https://www.pulumi.com/registry/packages/aws/) provider.
+Aside from components in the providers, SST also has a list of built-in components. These are typically higher level components that make it easy to add features to your app.
+
+You can check these out in the sidebar. Learn more about [Components](/docs/components/).
 
 ---
 
@@ -142,7 +141,7 @@ Aside from the components, there are a collection of functions that are exposed 
 
 For example, to get the AWS account being used in your app.
 
-```ts
+```ts title="sst.config.ts"
 const current = await aws.getCallerIdentity({});
 
 const accountId = current.accountId;
@@ -152,7 +151,7 @@ const callerUser = current.userId;
 
 Or to get the current region.
 
-```ts
+```ts title="sst.config.ts"
 const current = await aws.getRegion({});
 
 const region = current.name;
@@ -161,7 +160,7 @@ const region = current.name;
 
 ---
 
-### Output versions
+#### Output versions
 
 The above are _async_ methods that return promises. That means that if you call these in your app, they'll block the deployment of any resources that are defined after it.
 
@@ -171,7 +170,7 @@ Outputs don't block your deployments.
 
 So we instead recommend using the _Output_ version of these functions. For example, if we wanted to set the above as environment variables in a function, we would do something like this
 
-```ts
+```ts title="sst.config.ts"
 new sst.aws.Function("MyFunction, {
   handler: "src/lambda.handler",
   environment: {
@@ -185,183 +184,15 @@ The `aws.getXXXXOutput` functions typically return an object of type _`Output<pr
 
 ---
 
-## State
+## Instances
 
-You app generates some _state_ that is uploaded to your provider. This includes:
+You can create multiple instances of a provider that's in your config. By default SST creates one instance of each provider in your `sst.config.ts` with the defaults. By you can create multiple instances in your app.  
 
-1. A state file for your resources. This is a JSON file.
-2. A passphrase that is used to encrypt the secrets in your state.
-
-We'll look at how the state works in detail below but to do store it SST creates:
-
-1. A bucket to store the state, typically named `sst-state-<hash>`. This is created in the region of your `home`. More on this below.
-2. An SSM parameter to store the passphrase used to encrypt your secrets, under `/sst/passphrase/<app>/<stage>`. Also created in the region of your `home`.
-
-:::danger
-Do not delete the SSM parameter that stores the passphrase for your app.
-:::
-
-The passphrase is used to encrypt any secrets and sensitive information. Without it SST won't be able to read the state file and deploy your app.
-
----
-
-### Home
-
-Your `sst.config.ts` specifies which provider to use for storing your state. We call this the `home` of your app.
-
-```ts
-{
-  home: "aws"
-}
-```
-
-You can specify which provider you'd like to use for this. Currently `aws` and `cloudflare` are supported.
-
-:::tip
-Your state file is uploaded to your `home`.
-:::
-
-When you specify your home provider, SST assumes you'd like to use that provider in your app as well and adds it to your providers internally. So the above is equivalent to doing this.
-
-```ts
-{
-  home: "aws",
-  providers: {
-    aws: true
-  }
-}
-```
-
-This also means that if you change the region of the `aws` provider above, you are changing the region for your `home` as well.
-
-You can read more about the `home` provider in [Config](/docs/reference/config/).
-
----
-
-### Bootstrap
-
-As SST starts deploying the resources in your app, it creates some additional _bootstrap_ resources. If your app has a Lambda function or a Docker container, then SST will create the following in the same region as the given resource:
-
-1. An assets bucket to store the function packages, typically named `sst-asset-<hash>`.
-2. An ECR repository to store container images, called `sst-asset`.
-3. An SSM parameter to store the assets bucket name and the ECR repository, stored under `/sst/bootstrap`.
-
-The SSM parameter is used to look up the location of these resources.
-
-:::tip
-Some additional bootstrap resources are created based on what your app is creating.
-:::
-
-When you remove an SST app, it does not remove the _state_ or _bootstrap_ resources. This is because it does not know if there are other apps that might be using this. So if you want to completely remove any SST created resources, you'll need to manually remove these in the regions you've deployed to.
-
----
-
-### How state works
-
-The state file is a JSON representation of all the low level resources created by your app. It is a cached version of the state of resources in the cloud provider.
-
-:::tip
-The state file is a cached version of the resources that've been created by your app.
-:::
-
-So when you do a deploy the following happens.
-
-1. The components in the `sst.config.ts` get converted into low level resource definitions. These get compared to the the state file.
-2. The differences between the two are turned into API calls that are made to your cloud provider.
-   - If there's a new resource, it gets created.
-   - If a resource has been removed, it gets removed.
-   - If there's a change in config of the resource, it gets applied.
-3. The state file is updated to reflected the new state of these resources. Now the `sst.config.ts`, the state file, and the resources in the cloud provider are all in sync.
-
----
-
-#### Going out of sync
-
-This process works fine till you manually go change these resources through the cloud provider's console. This will cause the **state and the resources to not be in sync** anymore. This can cause an issue in some cases.
-
-:::caution
-If you manually change the resources in your cloud provider, they will go out of sync with your app's state. 
-:::
-
-Let's look at a couple of scenarios.
-
-Say we've deployed a `Function` with it set to `{ timeout: 10 seconds" }`. At this point, the config, state, and resource are in sync.
-
----
-
-##### Change the resource
-
-- We now go change the timeout to 20 seconds in the AWS Console.
-  - The config and state are out of sync with the resource since they are still set to 10 seconds.
-- Now if we deploy our app, the config will be comapred to the state.
-  - It'll find no differences and so it won't update the resource.
-
-The config and state will stay out of sync with the resource.
-
----
-
-##### Change the config
-
-- If we change our config to `{ timeout: 30 seconds" }` and do a deploy.
-- The config and state will have some differences.
-- SST will make a call to AWS to set the timeout of the resource to 30 seconds.
-  - Once updated, it'll update the state file to match the current state of the resource.
-
-The config, state, and resource are back being in sync. 
-
----
-
-##### Remove the resource
-
-- Next we go to the AWS Console and remove the function.
-  - The config and state still have the function with the timeout set to 30 seconds.
-- If we change our config to `{ timeout: 60 seconds }` and do a deploy.
-- The config and state will be different.
-- SST will make a call to update the timeout of the resource to 60 seconds.
-  - But this call to AWS will fail because the function doesn't exist.
-
-Your deploys will fail moving forward because the your state shows that a resource exists but it doesn't anymore. To fix this, you'll need to _refresh_ your state file.
-
----
-
-#### Refresh the state
-
-To fix scenarios where the resources in the cloud are out of sync with the state of your app, you'll need to run.
-
-```bash
-sst refresh
-```
-
-This command does a couple of simple things:
-
-1. It goes through every single resource in your state.
-2. Makes a call to the cloud provider to check the resource.
-   - If the configs are different, it'll **update the state** to reflect the change.
-   - If the resource doesn't exist anymore, it'll **remove it from the state**.
-
-:::note
-The `sst refresh` does not make changes to the resources in the cloud provider.
-:::
-
-Now the state and the resources are in sync. So if we take the scenario from above where we removed the function from the AWS Console but not from our config or state. To fix it, we'll need to:
-
-- Run `sst refresh`
-  - This will remove the function from the state as well.
-- Now if we change our config to `{ timeout: 60 seconds }` and do a deploy.
-- The config and state will be compared and it'll find that a function with that config doesn't exist.
-- So SST will make a call to AWS to create a new function with the given config.
-
-In general we do not recommend manually changing resources in a cloud provider since it puts your state out of sync. But if you find yourself in a situation where this happens, you can use the `sst refresh` command to put them back in sync.
-
----
-
-## Multiple providers
-
-Aside from the providers that are listed in the `providers` in your config, you can create your own providers. This is useful for multi-region or multi-account deployments.
-
-```ts
+```ts title="sst.config.ts"
 const useast1 = new aws.Provider("AnotherAWS");
 ```
+
+This is useful for multi-region or multi-account deployments.
 
 ---
 
@@ -371,7 +202,7 @@ You might want to create multiple providers in cases where some resources in you
 
 Let's look at an example. Assume your app is normally deployed to `us-west-1`. But you need to create an ACM certificate that needs to be deployed to `us-east-1`.
 
-```ts {1, 8}
+```ts {1} title="sst.config.ts" "{ provider: useast1 }"
 const useast1 = new aws.Provider("useast1", { region: "us-east-1" });
 
 new sst.aws.Function("MyFunction, "src/lambda.handler");
@@ -383,3 +214,177 @@ new aws.acm.Certificate("cert", {
 ```
 
 Here the function is created in your default region, `us-west-1`. While the certificate is created in `us-east-1`.
+
+---
+
+## Directory
+
+Below is the full list of providers that SST supports.
+
+Install any of the following using `sst add <name>`, where `name` is the package name. For example, `sst add auth0`.
+
+| Provider                         | Package                                                           | Docs                                                               |
+|----------------------------------|------------------------------------------------------------------|--------------------------------------------------------------------|
+| ACI      | `@netascode/aci` | [Docs](https://www.pulumi.com/registry/packages/aci) |
+| ACME     | `@pulumiverse/acme` | [Docs](https://www.pulumi.com/registry/packages/acme) |
+| Aiven    | `aiven` | [Docs](https://www.pulumi.com/registry/packages/aiven) |
+| Akamai   | `akamai` | [Docs](https://www.pulumi.com/registry/packages/akamai) |
+| Alibaba Cloud  | `alicloud` | [Docs](https://www.pulumi.com/registry/packages/alicloud) |
+| Amazon EKS | `eks` | [Docs](https://www.pulumi.com/registry/packages/eks) |
+| Aquasec                          | `@pulumiverse/aquasec`                 | [Docs](https://www.pulumi.com/registry/packages/aquasec) |
+| Artifactory                      | `artifactory`              | [Docs](https://www.pulumi.com/registry/packages/artifactory) |
+| Astra DB                         | `@pulumiverse/astra`                     | [Docs](https://www.pulumi.com/registry/packages/astra) |
+| Auth0                            | `auth0`                          | [Docs](https://www.pulumi.com/registry/packages/auth0) |
+| Auto Deploy                      | `auto-deploy`              | [Docs](https://www.pulumi.com/registry/packages/auto-deploy) |
+| AWS API Gateway                  | `aws-apigateway`            | [Docs](https://www.pulumi.com/registry/packages/aws-apigateway) |
+| AWS Classic                       | `aws`                               | [Docs](https://www.pulumi.com/registry/packages/aws/) |
+| AWS Control Tower                | `@lbrlabs/pulumi-awscontroltower` | [Docs](https://www.pulumi.com/registry/packages/awscontroltower) |
+| AWS IAM                          | `aws-iam`                          | [Docs](https://www.pulumi.com/registry/packages/aws-iam) |
+| AWS Native                       | `aws-native`                | [Docs](https://www.pulumi.com/registry/packages/aws-native) |
+| AWS QuickStart Aurora Postgres   | `aws-quickstart-aurora-postgres`| [Docs](https://www.pulumi.com/registry/packages/aws-quickstart-aurora-postgres) |
+| AWS QuickStart Redshift          | `aws-quickstart-redshift`     | [Docs](https://www.pulumi.com/registry/packages/aws-quickstart-redshift) |
+| AWS QuickStart VPC               | `aws-quickstart-vpc`               | [Docs](https://www.pulumi.com/registry/packages/aws-quickstart-vpc) |
+| AWS S3 Replicated Bucket         | `aws-s3-replicated-bucket`          | [Docs](https://www.pulumi.com/registry/packages/aws-s3-replicated-bucket) |
+| AWS Static Website               | `aws-static-website`     | [Docs](https://www.pulumi.com/registry/packages/aws-static-website) |
+| AWSx                             | `awsx`                            | [Docs](https://www.pulumi.com/registry/packages/awsx) |
+| AzAPI                            | `@ediri/azapi`                          | [Docs](https://www.pulumi.com/registry/packages/azapi) |
+| Azure Active Directory | `azuread`                         | [Docs](https://www.pulumi.com/registry/packages/azuread) |
+| Azure Classic                    | `azure`                  | [Docs](https://www.pulumi.com/registry/packages/azure) |
+| Azure Justrun                           | `pulumi-azure-justrun`                        | [Docs](https://www.pulumi.com/registry/packages/azure-justrun) |
+| Azure Native                            | `azure-native` | [Docs](https://www.pulumi.com/registry/packages/azure-native) |
+| Azure Quickstart ACR Geo Replication    | `azure-quickstart-acr-geo-replication`     | [Docs](https://www.pulumi.com/registry/packages/azure-quickstart-acr-geo-replication) |
+| Azure QuickStart ACR Geo Replication    | `azure-quickstart-acr-geo-replication` | [Docs](https://www.pulumi.com/registry/packages/azure-quickstart-acr-geo-replication/) |
+| Azure Static Website                    | `azure-static-website`                 | [Docs](https://www.pulumi.com/registry/packages/azure-static-website) |
+| AzureDevOps                      | `azuredevops`                      | [Docs](https://www.pulumi.com/registry/packages/azuredevops) |
+| Buildkite                               | `@pulumiverse/buildkite`                     | [Docs](https://www.pulumi.com/registry/packages/buildkite) |
+| Checkly                                 | `@checkly/pulumi`                              | [Docs](https://www.pulumi.com/registry/packages/checkly) |
+| Cisco Catalyst SD-WAN                   | `sdwan`                                  | [Docs](https://www.pulumi.com/registry/packages/sdwan) |
+| Cisco ISE| `ise` | [Docs](https://www.pulumi.com/registry/packages/ise/) |
+| Civo     | `civo` | [Docs](https://www.pulumi.com/registry/packages/civo) |
+| Cloud-Init | `cloudinit` | [Docs](https://www.pulumi.com/registry/packages/cloudinit) |
+| CloudAMQP                               | `cloudamqp`                          | [Docs](https://www.pulumi.com/registry/packages/cloudamqp) |
+| Cloudflare                               | `cloudflare`                          | [Docs](https://www.pulumi.com/registry/packages/cloudflare/) |
+| CockroachDB | `@pulumiverse/cockroach` | [Docs](https://www.pulumi.com/registry/packages/cockroach/) |
+| Confluent  | `confluentcloud` | [Docs](https://www.pulumi.com/registry/packages/confluentcloud/) |
+| Consul   | `consul` | [Docs](https://www.pulumi.com/registry/packages/consul) |
+| Control Plane | `@pulumiverse/cpln` | [Docs](https://www.pulumi.com/registry/packages/cpln/) |
+| Databricks | `databricks` | [Docs](https://www.pulumi.com/registry/packages/databricks) |
+| Datadog  | `datadog` | [Docs](https://www.pulumi.com/registry/packages/datadog) |
+| dbt Cloud  | `dbtcloud` | [Docs](https://www.pulumi.com/registry/packages/dbtcloud/) |
+| DigitalOcean                            | `digitalocean`                    | [Docs](https://www.pulumi.com/registry/packages/digitalocean) |
+| DNSimple  | `dnsimple` | [Docs](https://www.pulumi.com/registry/packages/dnsimple) |
+| Docker   | `docker` | [Docs](https://www.pulumi.com/registry/packages/docker) |
+| Docker Build  | `docker-build` | [Docs](https://www.pulumi.com/registry/packages/docker-build) |
+| Doppler   | `@pulumiverse/doppler` | [Docs](https://www.pulumi.com/registry/packages/doppler) |
+| Dynatrace                               | `@pulumiverse/dynatrace`                          | [Docs](https://www.pulumi.com/registry/packages/dynatrace) |
+| Elastic Cloud                           | `ec`                    | [Docs](https://www.pulumi.com/registry/packages/ec/) |
+| Equinix  | `@equinix-labs/pulumi-equinix` | [Docs](https://www.pulumi.com/registry/packages/equinix/) |
+| ESXi Native | `@pulumiverse/esxi-native` | [Docs](https://www.pulumi.com/registry/packages/esxi-native) |
+| Event Store Cloud | `@eventstore/pulumi-eventstorecloud` | [Docs](https://www.pulumi.com/registry/packages/eventstorecloud/) |
+| Exoscale  | `@pulumiverse/exoscale` | [Docs](https://www.pulumi.com/registry/packages/exoscale) |
+| F5 BIG-IP  | `f5bigip` | [Docs](https://www.pulumi.com/registry/packages/f5bigip) |
+| Fastly                                  | `fastly`                                | [Docs](https://www.pulumi.com/registry/packages/fastly) |
+| Flux      | `@worawat/flux` | [Docs](https://www.pulumi.com/registry/packages/flux) |
+| Fortios   | `@pulumiverse/fortios` | [Docs](https://www.pulumi.com/registry/packages/fortios) |
+| FusionAuth  | `pulumi-fusionauth` | [Docs](https://www.pulumi.com/registry/packages/fusionauth) |
+| Gandi     | `@pulumiverse/gandi` | [Docs](https://www.pulumi.com/registry/packages/gandi) |
+| GCP Global CloudRun  | `gcp-global-cloudrun` | [Docs](https://www.pulumi.com/registry/packages/gcp-global-cloudrun) |
+| Genesis Cloud | `@genesiscloud/pulumi-genesiscloud` | [Docs](https://www.pulumi.com/registry/packages/genesiscloud/) |
+| GitHub   | `github` | [Docs](https://www.pulumi.com/registry/packages/github) |
+| GitLab   | `gitlab` | [Docs](https://www.pulumi.com/registry/packages/gitlab) |
+| Google Cloud Classic                    | `gcp`     | [Docs](https://www.pulumi.com/registry/packages/gcp) |
+| Google Cloud Native                     | `google-native`                         | [Docs](https://www.pulumi.com/registry/packages/google-native/) |
+| Google Cloud Static Website | `google-cloud-static-website` | [Docs](https://www.pulumi.com/registry/packages/google-cloud-static-website/) |
+| Grafana                                 | `@pulumiverse/grafana`                              | [Docs](https://www.pulumi.com/registry/packages/grafana) |
+| Harbor    | `@pulumiverse/harbor` | [Docs](https://www.pulumi.com/registry/packages/harbor) |
+| Harness   | `harness` | [Docs](https://www.pulumi.com/registry/packages/harness) |
+| HashiCorp Vault   | `vault` | [Docs](https://www.pulumi.com/registry/packages/vault) |
+| HCP       | `@grapl/pulumi-hcp` | [Docs](https://www.pulumi.com/registry/packages/hcp) |
+| Hetzner Cloud | `hcloud` | [Docs](https://www.pulumi.com/registry/packages/hcloud) |
+| Impart Security    | `@impart-security/pulumi-impart` | [Docs](https://www.pulumi.com/registry/packages/impart/) |
+| InfluxDB  | `@komminarlabs/influxdb` | [Docs](https://www.pulumi.com/registry/packages/influxdb) |
+| Kafka    | `kafka` | [Docs](https://www.pulumi.com/registry/packages/kafka) |
+| Keycloak                         | `keycloak`                    | [Docs](https://www.pulumi.com/registry/packages/keycloak) |
+| Kong     | `kong` | [Docs](https://www.pulumi.com/registry/packages/kong) |
+| Koyeb    | `@koyeb/pulumi-koyeb` | [Docs](https://www.pulumi.com/registry/packages/koyeb) |
+| Kubernetes                       | `kubernetes`                       | [Docs](https://www.pulumi.com/registry/packages/kubernetes) |
+| Kubernetes Cert Manager    | `kubernetes-cert-manager` | [Docs](https://www.pulumi.com/registry/packages/kubernetes-cert-manager) |
+| Kubernetes CoreDNS       | `kubernetes-coredns` | [Docs](https://www.pulumi.com/registry/packages/kubernetes-coredns) |
+| LaunchDarkly                     | `@lbrlabs/pulumi-lauchdarkly`            | [Docs](https://www.pulumi.com/registry/packages/launchdarkly) |
+| LBr Labs EKS     | `@lbrlabs/pulumi-eks` | [Docs](https://www.pulumi.com/registry/packages/lbrlabs-eks) |
+| libvirt  | `libvirt` | [Docs](https://www.pulumi.com/registry/packages/libvirt) |
+| Linode   | `linode` | [Docs](https://www.pulumi.com/registry/packages/linode) |
+| Mailgun  | `mailgun` | [Docs](https://www.pulumi.com/registry/packages/mailgun) |
+| Matchbox  | `@pulumiverse/matchbox` | [Docs](https://www.pulumi.com/registry/packages/matchbox) |
+| Miniflux  | `aws-miniflux` | [Docs](https://www.pulumi.com/registry/packages/aws-miniflux/) |
+| MinIO     | `minio` | [Docs](https://www.pulumi.com/registry/packages/minio) |
+| MongoDB Atlas                     | `mongodbatlas`            | [Docs](https://www.pulumi.com/registry/packages/mongodbatlas) |
+| MSSQL     | `@pulumiverse/mssql` | [Docs](https://www.pulumi.com/registry/packages/mssql) |
+| MySQL     | `mysql` | [Docs](https://www.pulumi.com/registry/packages/mysql) |
+| New Relic    | `newrelic` | [Docs](https://www.pulumi.com/registry/packages/newrelic) |
+| NGINX Ingress Controller | `kubernetes-ingress-nginx` | [Docs](https://www.pulumi.com/registry/packages/kubernetes-ingress-nginx/) |
+| ngrok     | `@pierskarsenbarg/ngrok` | [Docs](https://www.pulumi.com/registry/packages/ngrok) |
+| Nomad     | `nomad` | [Docs](https://www.pulumi.com/registry/packages/nomad) |
+| NS1                              | `ns1`                              | [Docs](https://www.pulumi.com/registry/packages/ns1) |
+| Nuage     | `nuage` | [Docs](https://www.pulumi.com/registry/packages/nuage) |
+| Nutanix   | `@pierskarsenbarg/nutanix` | [Docs](https://www.pulumi.com/registry/packages/nutanix) |
+| Okta      | `okta` | [Docs](https://www.pulumi.com/registry/packages/okta) |
+| OneLogin  | `onelogin` | [Docs](https://www.pulumi.com/registry/packages/onelogin) |
+| OpenStack                        | `openstack`                  | [Docs](https://www.pulumi.com/registry/packages/openstack) |
+| Opsgenie  | `opsgenie` | [Docs](https://www.pulumi.com/registry/packages/opsgenie) |
+| Oracle Cloud Infrastructure | `oci` | [Docs](https://www.pulumi.com/registry/packages/oci) |
+| OVHCloud  | `@ovh-devrelteam/pulumi-ovh` | [Docs](https://www.pulumi.com/registry/packages/ovh) |
+| PagerDuty                        | `pagerduty`                  | [Docs](https://www.pulumi.com/registry/packages/pagerduty) |
+| Pinecone | `@pinecone-database/pulumi` | [Docs](https://www.pulumi.com/registry/packages/pinecone) |
+| PlanetScale                      | `planetscale`                  | [Docs](https://github.com/sst/pulumi-planetscale) |
+| Port     | `@port-labs/port` | [Docs](https://www.pulumi.com/registry/packages/port) |
+| PostgreSQL                       | `postgresql`                | [Docs](https://www.pulumi.com/registry/packages/postgresql) |
+| Prodvana | `@prodvana/pulumi-prodvana` | [Docs](https://www.pulumi.com/registry/packages/prodvana) |
+| Proxmox Virtual Environment | `@muhlba91/pulumi-proxmoxve` | [Docs](https://www.pulumi.com/registry/packages/proxmoxve) |
+| Pulumi Cloud | `pulumiservice` | [Docs](https://www.pulumi.com/registry/packages/pulumiservice) |
+| purrl    | `@pulumiverse/purrl` | [Docs](https://www.pulumi.com/registry/packages/purrl) |
+| Qovery   | `@ediri/qovery` | [Docs](https://www.pulumi.com/registry/packages/qovery) |
+| RabbitMQ                         | `rabbitmq`                    | [Docs](https://www.pulumi.com/registry/packages/rabbitmq) |
+| Rancher2                         | `rancher2`                    | [Docs](https://www.pulumi.com/registry/packages/rancher2) |
+| random   | `random` | [Docs](https://www.pulumi.com/registry/packages/random) |
+| Redis Cloud | `@rediscloud/pulumi-rediscloud` | [Docs](https://www.pulumi.com/registry/packages/rediscloud) |
+| Rootly   | `@rootly/pulumi` | [Docs](https://www.pulumi.com/registry/packages/rootly) |
+| Runpod   | `@runpod-infra/pulumi` | [Docs](https://www.pulumi.com/registry/packages/runpod) |
+| Scaleway | `@pulumiverse/scaleway` | [Docs](https://www.pulumi.com/registry/packages/scaleway) |
+| Sentry   | `@pulumiverse/sentry` | [Docs](https://www.pulumi.com/registry/packages/sentry) |
+| SignalFx | `signalfx` | [Docs](https://www.pulumi.com/registry/packages/signalfx) |
+| Slack    | `slack` | [Docs](https://www.pulumi.com/registry/packages/slack) |
+| Snowflake                        | `snowflake`                  | [Docs](https://www.pulumi.com/registry/packages/snowflake) |
+| Splight  | `@splightplatform/pulumi-splight` | [Docs](https://www.pulumi.com/registry/packages/splight) |
+| Splunk                           | `splunk`                        | [Docs](https://www.pulumi.com/registry/packages/splunk) |
+| Spotinst | `spotinst` | [Docs](https://www.pulumi.com/registry/packages/spotinst) |
+| Statuscake | `@pulumiverse/statuscake` | [Docs](https://www.pulumi.com/registry/packages/statuscake) |
+| Strata Cloud Manager | `scm`           | [Docs](https://www.pulumi.com/registry/packages/scm) |
+| Stripe                           | `pulumi-stripe`                        | [Docs](https://github.com/georgegebbett/pulumi-stripe) |
+| StrongDM | `@pierskarsenbarg/sdm` | [Docs](https://www.pulumi.com/registry/packages/sdm/) |
+| Sumo Logic                       | `sumologic`                  | [Docs](https://www.pulumi.com/registry/packages/sumologic) |
+| Sumo Logic | `sumologic` | [Docs](https://www.pulumi.com/registry/packages/sumologic) |
+| Supabase                         | `supabase`                        | [Docs](https://github.com/sst/pulumi-supabase) |
+| Symbiosis | `@symbiosis-cloud/symbiosis-pulumi` | [Docs](https://www.pulumi.com/registry/packages/symbiosis) |
+| Synced Folder | `synced-folder` | [Docs](https://www.pulumi.com/registry/packages/synced-folder) |
+| Tailscale                        | `tailscale`                  | [Docs](https://www.pulumi.com/registry/packages/tailscale) |
+| Talos Linux    | `@pulumiverse/talos` | [Docs](https://www.pulumi.com/registry/packages/talos) |
+| Time     | `@pulumiverse/time` | [Docs](https://www.pulumi.com/registry/packages/time) |
+| TLS      | `tls` | [Docs](https://www.pulumi.com/registry/packages/tls) |
+| Twingate  | `@twingate/pulumi-twingate` | [Docs](https://www.pulumi.com/registry/packages/twingate) |
+| Unifi    | `@pulumiverse/unifi` | [Docs](https://www.pulumi.com/registry/packages/unifi) |
+| Upstash                           | `@upstash/pulumi`                        | [Docs](https://www.pulumi.com/registry/packages/upstash) |
+| Venafi                            | `venafi`                          | [Docs](https://www.pulumi.com/registry/packages/venafi) |
+| Venafi   | `venafi` | [Docs](https://www.pulumi.com/registry/packages/venafi) |
+| Vercel                            | `@pulumiverse/vercel`                          | [Docs](https://www.pulumi.com/registry/packages/vercel) |
+| VMware vSphere                    | `vsphere`                        | [Docs](https://www.pulumi.com/registry/packages/vsphere) |
+| Volcengine | `@volcengine/pulumi` | [Docs](https://www.pulumi.com/registry/packages/volcengine) |
+| vSphere  | `vsphere` | [Docs](https://www.pulumi.com/registry/packages/vsphere) |
+| Vultr                             | `@ediri/vultr`                            | [Docs](https://www.pulumi.com/registry/packages/vultr) |
+| Wavefront                         | `wavefront`                    | [Docs](https://www.pulumi.com/registry/packages/wavefront) |
+| Yandex   | `yandex` | [Docs](https://www.pulumi.com/registry/packages/yandex) |
+| Zitadel  | `@pulumiverse/zitadel` | [Docs](https://www.pulumi.com/registry/packages/zitadel) |
+| Zscaler Internet Access| `@bdzscaler/pulumi-zia` | [Docs](https://www.pulumi.com/registry/packages/zia/) |
+| Zscaler Private Access | `@bdzscaler/pulumi-zpa` | [Docs](https://www.pulumi.com/registry/packages/zpa/) |
+
+Any missing providers or typos? Feel free to _Edit this page_ and submit a PR.

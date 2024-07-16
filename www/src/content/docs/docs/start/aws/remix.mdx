@@ -154,8 +154,10 @@ Head over to the local Remix app in your browser, `http://localhost:5173` and tr
 Now let's deploy your app to AWS.
 
 ```bash
-sst deploy
+sst deploy --stage production
 ```
+
+You can use any stage name here but it's good to create a new stage for production.
 
 Congrats! Your site should now be live!
 
@@ -165,8 +167,8 @@ Congrats! Your site should now be live!
 
 ## Connect the console
 
-As a next step, you can manage your app and view issues in the [SST Console](/docs/console/).
+As a next step, you can setup the [SST Console](/docs/console/) to _**git push to deploy**_ your app and monitor it for any issues. 
 
-![Issues in Remix app in SST Console](../../../../../assets/docs/start/issues-in-remix-app-in-the-sst-console.png)
+![SST Console Autodeploy](../../../../../assets/docs/start/sst-console-autodeploy.png)
 
 You can [create a free account](https://console.sst.dev) and connect it to your AWS account.

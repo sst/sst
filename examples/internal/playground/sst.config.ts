@@ -8,6 +8,24 @@ export default $config({
       home: "aws",
     };
   },
+  console: {
+    autodeploy: {
+      target(event) {
+        if (
+          event.type === "branch" &&
+          event.branch === "dev" &&
+          event.action === "pushed"
+        ) {
+          return { stage: "dev" };
+        }
+      },
+      workflow(context) {
+        context.install();
+        context.shell("cd examples/internal/playground && npm install");
+        context.deploy();
+      },
+    },
+  },
   async run() {
     const bucket = new sst.aws.Bucket("MyBucket", {
       public: true,

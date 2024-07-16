@@ -3,6 +3,17 @@ import * as fs from "fs";
 import * as TypeDoc from "typedoc";
 import config from "./config";
 
+process.on("uncaughtException", (err) => {
+  restoreCode();
+  console.error("There was an uncaught error", err);
+  process.exit(1);
+});
+process.on("unhandledRejection", (reason, promise) => {
+  restoreCode();
+  console.error("Unhandled Rejection at:", promise, "reason:", reason);
+  process.exit(1);
+});
+
 type CliCommand = {
   name: string;
   hidden: boolean;
@@ -35,40 +46,37 @@ function useLinkHashes(module: TypeDoc.DeclarationReflection) {
   return v;
 }
 
-try {
-  await configureLogger();
-  await patchCode();
-  if (!cmd || cmd === "components") {
-    const components = await buildComponents();
-    const sdks = await buildSdk();
+configureLogger();
+patchCode();
+if (!cmd || cmd === "components") {
+  const components = await buildComponents();
+  const sdks = await buildSdk();
 
-    for (const component of components) {
-      const sourceFile = component.sources![0].fileName;
-      if (sourceFile === "pkg/platform/src/global-config.d.ts")
-        await generateGlobalConfigDoc(component);
-      else if (sourceFile === "pkg/platform/src/config.ts")
-        await generateConfigDoc(component);
-      else if (sourceFile.endsWith("/dns.ts")) await generateDnsDoc(component);
-      else {
-        const sdkName = component.name.split("/")[2];
-        const sdk = sdks.find(
-          (s) =>
-            // ie. vector
-            s.name === sdkName ||
-            // ie. aws/realtime
-            s.name === `aws/${sdkName}`
-        );
-        const sdkNamespace = sdk && useModuleOrNamespace(sdk);
-        // Handle SDK modules are namespaced (ie. aws/realtime)
-        await generateComponentDoc(component, sdkNamespace);
-      }
+  for (const component of components) {
+    const sourceFile = component.sources![0].fileName;
+    if (sourceFile === "platform/src/global-config.d.ts")
+      await generateGlobalConfigDoc(component);
+    else if (sourceFile === "platform/src/config.ts")
+      await generateConfigDoc(component);
+    else if (sourceFile.endsWith("/dns.ts")) await generateDnsDoc(component);
+    else {
+      const sdkName = component.name.split("/")[2];
+      const sdk = sdks.find(
+        (s) =>
+          // ie. vector
+          s.name === sdkName ||
+          // ie. aws/realtime
+          s.name === `aws/${sdkName}`
+      );
+      const sdkNamespace = sdk && useModuleOrNamespace(sdk);
+      // Handle SDK modules are namespaced (ie. aws/realtime)
+      await generateComponentDoc(component, sdkNamespace);
     }
   }
-  if (!cmd || cmd === "cli") await generateCliDoc();
-  if (!cmd || cmd === "examples") await generateExamplesDocs();
-} finally {
-  await restoreCode();
 }
+if (!cmd || cmd === "cli") await generateCliDoc();
+if (!cmd || cmd === "examples") await generateExamplesDocs();
+restoreCode();
 
 function generateCliDoc() {
   const content = fs.readFileSync("cli-doc.json");
@@ -343,7 +351,7 @@ async function generateGlobalConfigDoc(module: TypeDoc.DeclarationReflection) {
     outputFilePath,
     [
       renderHeader("Global", "Reference doc for the Global `$` library."),
-      renderSourceMessage("pkg/platform/src/global.d.ts"),
+      renderSourceMessage("platform/src/global.d.ts"),
       renderImports(outputFilePath),
       renderBodyBegin(),
       renderAbout(module),
@@ -668,6 +676,7 @@ function renderType(
       ApiGatewayV1LambdaRoute: "apigatewayv1-lambda-route",
       ApiGatewayV2Authorizer: "apigatewayv2-authorizer",
       ApiGatewayV2LambdaRoute: "apigatewayv2-lambda-route",
+      ApiGatewayV2UrlRoute: "apigatewayv2-url-route",
       ApiGatewayWebSocketRoute: "apigateway-websocket-route",
       AppSyncDataSource: "app-sync-data-source",
       AppSyncFunction: "app-sync-function",
@@ -685,6 +694,7 @@ function renderType(
       Postgres: "postgres",
       PostgresArgs: "postgres",
       QueueLambdaSubscriber: "queue-lambda-subscriber",
+      KinesisStreamLambdaSubscriber: "kinesis-stream-lambda-subscriber",
       RealtimeLambdaSubscriber: "realtime-lambda-subscriber",
       Service: "service",
       SnsTopicLambdaSubscriber: "sns-topic-lambda-subscriber",
@@ -760,7 +770,7 @@ function renderType(
       //  preferValues: false,
       //  name: 'DistributionCustomErrorResponse',
       //  _target: ReflectionSymbolId {
-      //    fileName: '/Users/frank/Sites/ion/pkg/platform/node_modules/@pulumi/aws/types/input.d.ts',
+      //    fileName: '/Users/frank/Sites/ion/platform/node_modules/@pulumi/aws/types/input.d.ts',
       //    qualifiedName: 'cloudfront.DistributionCustomErrorResponse',
       //    pos: 427276,
       //    transientId: NaN
@@ -797,7 +807,7 @@ function renderType(
       //  preferValues: false,
       //  name: 'BucketV2',
       //  _target: ReflectionSymbolId {
-      //    fileName: '/Users/frank/Sites/ion/pkg/platform/node_modules/@pulumi/aws/s3/bucketV2.d.ts',
+      //    fileName: '/Users/frank/Sites/ion/platform/node_modules/@pulumi/aws/s3/bucketV2.d.ts',
       //    qualifiedName: 'BucketV2',
       //    pos: 127,
       //    transientId: NaN
@@ -1562,8 +1572,8 @@ function renderTransformCallbackType() {
 function isModuleComponent(module: TypeDoc.DeclarationReflection) {
   const sourceFile = module.sources![0].fileName;
   return (
-    sourceFile !== "pkg/platform/src/config.ts" &&
-    sourceFile !== "pkg/platform/src/global-config.d.ts" &&
+    sourceFile !== "platform/src/config.ts" &&
+    sourceFile !== "platform/src/global-config.d.ts" &&
     !sourceFile.endsWith("/dns.ts")
   );
 }
@@ -1596,16 +1606,16 @@ function useClassName(module: TypeDoc.DeclarationReflection) {
 function useClassProviderNamespace(module: TypeDoc.DeclarationReflection) {
   // "sources": [
   //   {
-  //     "fileName": "pkg/platform/src/components/aws/astro.ts",
+  //     "fileName": "platform/src/components/aws/astro.ts",
   //     "line": 280,
   //     "character": 13,
-  //     "url": "https://github.com/sst/ion/blob/0776cea/pkg/platform/src/components/aws/astro.ts#L280"
+  //     "url": "https://github.com/sst/ion/blob/0776cea/platform/src/components/aws/astro.ts#L280"
   //   }
   // ],
   const fileName = useClass(module).sources![0].fileName;
-  if (!fileName.startsWith("pkg/platform/src/components/"))
+  if (!fileName.startsWith("platform/src/components/"))
     throw new Error(
-      `Fail to generate class namespace from class fileName ${fileName}. Expected to start with "pkg/platform/src/components/"`
+      `Fail to generate class namespace from class fileName ${fileName}. Expected to start with "platform/src/components/"`
     );
 
   const namespace = fileName.split("/").slice(-2, -1)[0];
@@ -1700,20 +1710,17 @@ function configureLogger() {
   console.debug = () => {};
 }
 
-async function patchCode() {
+function patchCode() {
   // patch Input
   fs.renameSync(
-    "../pkg/platform/src/components/input.ts",
-    "../pkg/platform/src/components/input.ts.bk"
+    "../platform/src/components/input.ts",
+    "../platform/src/components/input.ts.bk"
   );
-  fs.copyFileSync(
-    "./input-patch.ts",
-    "../pkg/platform/src/components/input.ts"
-  );
+  fs.copyFileSync("./input-patch.ts", "../platform/src/components/input.ts");
   // patch global
-  const globalType = fs.readFileSync("../pkg/platform/src/global.d.ts");
+  const globalType = fs.readFileSync("../platform/src/global.d.ts");
   fs.writeFileSync(
-    "../pkg/platform/src/global-config.d.ts",
+    "../platform/src/global-config.d.ts",
     globalType
       .toString()
       .trim()
@@ -1727,14 +1734,14 @@ async function patchCode() {
   );
 }
 
-async function restoreCode() {
+function restoreCode() {
   // restore Input
   fs.renameSync(
-    "../pkg/platform/src/components/input.ts.bk",
-    "../pkg/platform/src/components/input.ts"
+    "../platform/src/components/input.ts.bk",
+    "../platform/src/components/input.ts"
   );
   // restore global
-  fs.rmSync("../pkg/platform/src/global-config.d.ts");
+  fs.rmSync("../platform/src/global-config.d.ts");
 }
 
 async function buildComponents() {
@@ -1747,62 +1754,65 @@ async function buildComponents() {
       defaultTag: false,
     },
     entryPoints: [
-      "../pkg/platform/src/config.ts",
-      "../pkg/platform/src/global-config.d.ts",
-      "../pkg/platform/src/components/secret.ts",
-      "../pkg/platform/src/components/aws/apigateway-websocket.ts",
-      "../pkg/platform/src/components/aws/apigateway-websocket-route.ts",
-      "../pkg/platform/src/components/aws/apigatewayv1.ts",
-      "../pkg/platform/src/components/aws/apigatewayv1-authorizer.ts",
-      "../pkg/platform/src/components/aws/apigatewayv1-lambda-route.ts",
-      "../pkg/platform/src/components/aws/apigatewayv2.ts",
-      "../pkg/platform/src/components/aws/apigatewayv2-authorizer.ts",
-      "../pkg/platform/src/components/aws/apigatewayv2-lambda-route.ts",
-      "../pkg/platform/src/components/aws/app-sync.ts",
-      "../pkg/platform/src/components/aws/app-sync-data-source.ts",
-      "../pkg/platform/src/components/aws/app-sync-function.ts",
-      "../pkg/platform/src/components/aws/app-sync-resolver.ts",
-      "../pkg/platform/src/components/aws/bucket.ts",
-      "../pkg/platform/src/components/aws/bucket-lambda-subscriber.ts",
-      "../pkg/platform/src/components/aws/cluster.ts",
-      "../pkg/platform/src/components/aws/cognito-identity-pool.ts",
-      "../pkg/platform/src/components/aws/cognito-user-pool.ts",
-      "../pkg/platform/src/components/aws/cognito-user-pool-client.ts",
-      "../pkg/platform/src/components/aws/cron.ts",
-      "../pkg/platform/src/components/aws/dynamo.ts",
-      "../pkg/platform/src/components/aws/dynamo-lambda-subscriber.ts",
-      "../pkg/platform/src/components/aws/email.ts",
-      "../pkg/platform/src/components/aws/function.ts",
-      "../pkg/platform/src/components/aws/postgres.ts",
-      "../pkg/platform/src/components/aws/vector.ts",
-      "../pkg/platform/src/components/aws/astro.ts",
-      "../pkg/platform/src/components/aws/nextjs.ts",
-      "../pkg/platform/src/components/aws/nuxt.ts",
-      "../pkg/platform/src/components/aws/realtime.ts",
-      "../pkg/platform/src/components/aws/realtime-lambda-subscriber.ts",
-      "../pkg/platform/src/components/aws/remix.ts",
-      "../pkg/platform/src/components/aws/queue.ts",
-      "../pkg/platform/src/components/aws/queue-lambda-subscriber.ts",
-      "../pkg/platform/src/components/aws/router.ts",
-      "../pkg/platform/src/components/aws/service.ts",
-      "../pkg/platform/src/components/aws/sns-topic.ts",
-      "../pkg/platform/src/components/aws/sns-topic-lambda-subscriber.ts",
-      "../pkg/platform/src/components/aws/sns-topic-queue-subscriber.ts",
-      "../pkg/platform/src/components/aws/solid-start.ts",
-      "../pkg/platform/src/components/aws/static-site.ts",
-      "../pkg/platform/src/components/aws/svelte-kit.ts",
-      "../pkg/platform/src/components/aws/vpc.ts",
-      "../pkg/platform/src/components/cloudflare/worker.ts",
-      "../pkg/platform/src/components/cloudflare/bucket.ts",
-      "../pkg/platform/src/components/cloudflare/d1.ts",
-      "../pkg/platform/src/components/cloudflare/kv.ts",
+      "../platform/src/config.ts",
+      "../platform/src/global-config.d.ts",
+      "../platform/src/components/secret.ts",
+      "../platform/src/components/aws/apigateway-websocket.ts",
+      "../platform/src/components/aws/apigateway-websocket-route.ts",
+      "../platform/src/components/aws/apigatewayv1.ts",
+      "../platform/src/components/aws/apigatewayv1-authorizer.ts",
+      "../platform/src/components/aws/apigatewayv1-lambda-route.ts",
+      "../platform/src/components/aws/apigatewayv2.ts",
+      "../platform/src/components/aws/apigatewayv2-authorizer.ts",
+      "../platform/src/components/aws/apigatewayv2-lambda-route.ts",
+      "../platform/src/components/aws/apigatewayv2-url-route.ts",
+      "../platform/src/components/aws/app-sync.ts",
+      "../platform/src/components/aws/app-sync-data-source.ts",
+      "../platform/src/components/aws/app-sync-function.ts",
+      "../platform/src/components/aws/app-sync-resolver.ts",
+      "../platform/src/components/aws/bucket.ts",
+      "../platform/src/components/aws/bucket-lambda-subscriber.ts",
+      "../platform/src/components/aws/cluster.ts",
+      "../platform/src/components/aws/cognito-identity-pool.ts",
+      "../platform/src/components/aws/cognito-user-pool.ts",
+      "../platform/src/components/aws/cognito-user-pool-client.ts",
+      "../platform/src/components/aws/cron.ts",
+      "../platform/src/components/aws/dynamo.ts",
+      "../platform/src/components/aws/dynamo-lambda-subscriber.ts",
+      "../platform/src/components/aws/email.ts",
+      "../platform/src/components/aws/function.ts",
+      "../platform/src/components/aws/postgres.ts",
+      "../platform/src/components/aws/vector.ts",
+      "../platform/src/components/aws/astro.ts",
+      "../platform/src/components/aws/nextjs.ts",
+      "../platform/src/components/aws/nuxt.ts",
+      "../platform/src/components/aws/realtime.ts",
+      "../platform/src/components/aws/realtime-lambda-subscriber.ts",
+      "../platform/src/components/aws/remix.ts",
+      "../platform/src/components/aws/queue.ts",
+      "../platform/src/components/aws/queue-lambda-subscriber.ts",
+      "../platform/src/components/aws/kinesis-stream.ts",
+      "../platform/src/components/aws/kinesis-stream-lambda-subscriber.ts",
+      "../platform/src/components/aws/router.ts",
+      "../platform/src/components/aws/service.ts",
+      "../platform/src/components/aws/sns-topic.ts",
+      "../platform/src/components/aws/sns-topic-lambda-subscriber.ts",
+      "../platform/src/components/aws/sns-topic-queue-subscriber.ts",
+      "../platform/src/components/aws/solid-start.ts",
+      "../platform/src/components/aws/static-site.ts",
+      "../platform/src/components/aws/svelte-kit.ts",
+      "../platform/src/components/aws/vpc.ts",
+      "../platform/src/components/cloudflare/worker.ts",
+      "../platform/src/components/cloudflare/bucket.ts",
+      "../platform/src/components/cloudflare/d1.ts",
+      "../platform/src/components/cloudflare/kv.ts",
       // internal
-      "../pkg/platform/src/components/aws/dns.ts",
-      "../pkg/platform/src/components/cloudflare/dns.ts",
-      "../pkg/platform/src/components/vercel/dns.ts",
-      "../pkg/platform/src/components/aws/cdn.ts",
+      "../platform/src/components/aws/dns.ts",
+      "../platform/src/components/cloudflare/dns.ts",
+      "../platform/src/components/vercel/dns.ts",
+      "../platform/src/components/aws/cdn.ts",
     ],
-    tsconfig: "../pkg/platform/tsconfig.json",
+    tsconfig: "../platform/tsconfig.json",
   });
 
   const project = await app.convert();

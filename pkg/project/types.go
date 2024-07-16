@@ -41,6 +41,8 @@ func inferTypes(input map[string]interface{}, indentArgs ...string) string {
 				builder.WriteString("number")
 			case float32:
 				builder.WriteString("number")
+			case bool:
+				builder.WriteString("boolean")
 			case map[string]interface{}:
 				builder.WriteString(inferTypes(value.(map[string]interface{}), indent+"  "))
 			}

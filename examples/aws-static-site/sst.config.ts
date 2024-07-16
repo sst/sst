@@ -9,14 +9,14 @@ export default $config({
   app(input) {
     return {
       name: "aws-static-site",
-      providers: {
-        aws: {},
-      },
+      home: "aws",
       removal: input?.stage === "production" ? "retain" : "remove",
     };
   },
   async run() {
     // Deploys the current directory as a static site
-    new sst.aws.StaticSite("MySite");
+    new sst.aws.StaticSite("MySite", {
+      path: "./dist",
+    });
   },
 });

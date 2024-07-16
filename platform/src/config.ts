@@ -1,0 +1,797 @@
+/**
+ * The `sst.config.ts` file is used to configure your SST app and its resources.
+ *
+ * ```ts
+ * $config(input: Config): Config
+ * ```
+ *
+ * You specify it using the `$config` function. This takes an object of type [`Config`](#config).
+ *
+ * ```ts title="sst.config.ts"
+ * /// <reference path="./.sst/platform/config.d.ts" />
+ *
+ * export default $config({
+ *   // Your app's config
+ *   app(input) {
+ *     return {
+ *       name: "my-sst-app",
+ *       home: "aws"
+ *     };
+ *   },
+ *   // Your app's resources
+ *   async run() {
+ *     new sst.aws.Bucket("MyBucket");
+ *   }
+ * });
+ * ```
+ *
+ * The `Config` object takes two functions:
+ * 1. [`app`](#app-2) — Your config
+ * 2. [`run`](#run) — Your resources
+ *
+ * The `app` function is evaluated right when your app loads. It's used to define the app config and its providers.
+ *
+ * :::note
+ * You need TypeScript 5 to see the types in your config.
+ * :::
+ *
+ * You can add Pulumi code in the `run` function not the `app` function. While the `run`
+ * function is where you define your resources using SST or Pulumi's components.
+ *
+ * :::tip
+ * The [Global](/docs/reference/global/) library can help you with your app config and resources.
+ * :::
+ *
+ * The run function also has access to a list of [Global](/docs/reference/global/) `$` variables and functions. These serve as the context for your app config.
+ * 
+ * :::caution
+ * Do not `import` the provider packages in your `sst.config.ts`.
+ * :::
+ *
+ * Since SST manages importing your provider packages, it's recommended not to add any imports
+ * in your `sst.config.ts`.
+ *
+ * @packageDocumentation
+ */
+
+type Prettify<T> = {
+  [K in keyof T]: T[K];
+} & {};
+
+export interface App {
+  /**
+   * The version of SST supported by the app. The CLI will fail any commands if the version does
+   * not match.
+   *
+   * :::tip
+   * Useful in CI where you don't want it to automatically deploy with a new version of SST.
+   * :::
+   *
+   * @default The latest version of SST.
+   *
+   * @example
+   *
+   * Takes a specific version.
+   *
+   * ```ts
+   * version: "0.0.300"
+   * ```
+   *
+   * Also supports semver ranges.
+   * ```ts
+   * version: ">= 0.0.300"
+   * ```
+   */
+  version?: string;
+
+  /**
+   * The name of the app. This is used to prefix the names of the resources in your app.
+   *
+   * :::caution
+   * If you change the name of your app, it'll redeploy your app with new resources. The old resources will be orphaned.
+   * :::
+   *
+   * This means that you don't want to change the name of your app without removing the old resources first.
+   *
+   * @example
+   *
+   * ```ts
+   * {
+   *   name: "my-sst-app"
+   * }
+   * ```
+   */
+  name: string;
+  /**
+   * Configure how your resources are handled on `sst remove`:
+   *
+   * - `remove`: Remove all your resources on remove.
+   * - `retain`: Retains S3 buckets and DynamoDB tables, and remove all other resources.
+   * - `retain-all`: Retains all your resources on remove.
+   *
+   * :::tip
+   * It's a good idea to use `retain` for your production stage.
+   * :::
+   *
+   * @default `"retain"`
+   * @example
+   * Retain resources if it's the _production_ stage, otherwise remove all resources.
+   * ```ts
+   * {
+   *   removal: input.stage === "production" ? "retain" : "remove"
+   * }
+   * ```
+   */
+  removal?: "remove" | "retain" | "retain-all";
+  /**
+   * The providers that are being used in this app. This allows you to use the components from these providers in your app.
+   * Check out the full list in the [Directory](/docs/providers#directory).
+   *
+   * For example, if you use the [AWS Classic](https://www.pulumi.com/registry/packages/aws/) provider, you can use the `aws` components in your app.
+   *
+   * ```ts
+   * import * as aws from "@pulumi/aws";
+   *
+   * new aws.s3.BucketV2("b", {
+   *   bucket: "mybucket"
+   * });
+   * ```
+   *
+   * :::note
+   * By default, your `home` provider is included in the `providers` list.
+   * :::
+   *
+   * If you don't set a `provider` it uses your `home` provider with the default config. So if you set `home` to `aws`, it's the same as doing:
+   *
+   * ```ts
+   * {
+   *   home: "aws",
+   *   providers: {
+   *     aws: true
+   *   }
+   * }
+   * ```
+   *
+   * @default The `home` provider.
+   *
+   * @example
+   *
+   * You can also configure the provider props. Here's the config for some common providers:
+   * - [AWS](https://www.pulumi.com/registry/packages/aws/api-docs/provider/#inputs)
+   * - [Cloudflare](https://www.pulumi.com/registry/packages/cloudflare/api-docs/provider/#inputs)
+   *
+   * For example, to change the region for AWS.
+   *
+   * ```ts
+   * {
+   *   providers: {
+   *     aws: {
+   *       region: "us-west-2"
+   *     }
+   *   }
+   * }
+   * ```
+   *
+   * You also add multiple providers.
+   *
+   * ```ts
+   * {
+   *   providers: {
+   *     aws: true,
+   *     cloudflare: true
+   *   }
+   * }
+   * ```
+   *
+   * By default, we use the latest version of a provider. But you can optionally specify a version.
+   *
+   * ```ts
+   * {
+   *   providers: {
+   *     aws: {
+   *       version: "6.27.0"
+   *     }
+   *   }
+   * }
+   * ```
+   */
+  providers?: Record<string, any>;
+
+  /**
+   * The provider SST will use to store the state for your app. The state keeps track of all your resources and secrets. The state is generated locally and backed up in your cloud provider.
+   *
+   * :::tip
+   * SST uses the `home` provider to store the state for your app.
+   * :::
+   *
+   * Currently supports AWS and Cloudflare.
+   *
+   * Setting the `home` provider is the same as setting the `providers` list. So if you set `home` to `aws`, it's the same as doing:
+   *
+   * ```ts
+   * {
+   *   home: "aws",
+   *   providers: {
+   *     aws: true
+   *   }
+   * }
+   * ```
+   *
+   * If you want to configure your home provider, you can:
+   *
+   * ```ts
+   * {
+   *   home: "aws",
+   *   providers: {
+   *     aws: {
+   *       region: "us-west-2"
+   *     }
+   *   }
+   * }
+   * ```
+   *
+   */
+  home: "aws" | "cloudflare";
+}
+
+export interface AppInput {
+  /**
+   * The stage this app is running on. This is a string that can be passed in through the CLI.
+   *
+   * :::tip
+   * Changing the stage will redeploy your app to a new stage with new resources. The old resources will still be around in the old stage.
+   * :::
+   *
+   * If not passed in, it'll use the username of your local machine, or prompt you for it.
+   */
+  stage: string;
+}
+
+export interface Target {
+  /**
+   * The stage the app will be deployed to.
+   */
+  stage: string;
+  /**
+   * Configure the runner that will run the build.
+   *
+   * It uses this to create a _runner_ — a
+   * [AWS CodeBuild](https://aws.amazon.com/codebuild/) project and an IAM Role,
+   * in **your account**. By default it uses:
+   *
+   * ```ts
+   * {
+   *   engine: "codebuild",
+   *   architecture: "x86_64",
+   *   compute: "small",
+   *   timeout: "1 hour"
+   * }
+   * ```
+   *
+   * :::note
+   * Runners are shared across all apps in the same account and region.
+   * :::
+   *
+   * Once a runner is created, it can be used to run multiple builds of the same
+   * machine config concurrently.
+   *
+   * You are only charged for the number of build
+   * minutes that you use. The pricing is based on the machine config used.
+   * [Learn more about CodeBuild pricing](https://aws.amazon.com/codebuild/pricing/).
+   *
+   * :::note
+   * A runner can run multiple builds concurrently.
+   * :::
+   *
+   * If a runner with the given config has been been previously created,
+   * it'll be resused. The Console will also automatically remove runners that
+   * have not been used for more than 7 days.
+   */
+  runner?: {
+    /**
+     * The service used to run the build. Currently, only AWS CodeBuild is supported.
+     */
+    engine: "codebuild";
+    /**
+     * The timeout for the build. CodeBuild supports a timeout of up to 8 hours.
+     * @default `1 hour`
+     */
+    timeout?: `${number} ${"minute" | "minutes" | "hour" | "hours"}`;
+    /**
+     * The architecture of the build machine.
+     * @default `x86_64`
+     */
+    architecture?: "x86_64" | "arm64";
+    /**
+     * The compute size of the build environment.
+     *
+     * For `x86_64`, it can be the following:
+     * - `small`: 3 GB, 2 vCPUs
+     * - `medium`: 7 GB, 4 vCPUs
+     * - `large`: 15 GB, 8 vCPUs
+     * - `xlarge`: 30 GB, 16 vCPUs
+     *
+     * For `arm64` architecture, only `small` and `large` are supported:
+     * - `small`: 4 GB, 2 vCPUs
+     * - `large`: 8 GB, 4 vCPUs
+     *
+     * Read more about the [CodeBuild build environments](https://docs.aws.amazon.com/codebuild/latest/userguide/build-env-ref-compute-types.html).
+     * @default `small`
+     */
+    compute?: "small" | "medium" | "large" | "xlarge";
+  };
+}
+
+interface GitSender {
+  /**
+   * The ID of the user.
+   */
+  id: number;
+  /**
+   * The username of the user.
+   */
+  username: string;
+}
+
+interface GitCommit {
+  /**
+   * The ID of the commit.
+   */
+  id: string;
+  /**
+   * The commit message.
+   */
+  message: string;
+}
+
+interface GitRepo {
+  /**
+   * The ID of the repo. This is usually a number.
+   */
+  id: number;
+  /**
+   * The name of the owner or org the repo to belongs to.
+   */
+  owner: string;
+  /**
+   * The name of the repo.
+   */
+  repo: string;
+}
+
+/**
+ * A git event for when a branch is updated or deleted. For example:
+ * ```js
+ * {
+ *   type: "branch",
+ *   action: "pushed",
+ *   repo: {
+ *     id: 1296269,
+ *     owner: "octocat",
+ *     repo: "Hello-World"
+ *   },
+ *   branch: "main",
+ *   commit: {
+ *     id: "b7e7c4c559e0e5b4bc6f8d98e0e5e5e5e5e5e5e5",
+ *     message: "Update the README with new information"
+ *   },
+ *   sender: {
+ *     id: 1,
+ *     username: "octocat"
+ *   }
+ * }
+ * ```
+ */
+export interface BranchEvent {
+  /**
+   * The git event type, for the `BranchEvent` it's `branch`.
+   */
+  type: "branch";
+  /**
+   * The type of the git action.
+   *
+   * - `pushed` is when you git push to a branch
+   * - `removed` is when a branch is removed
+   */
+  action: "pushed" | "removed";
+  /**
+   * The Git repository the event is coming from. This might look like:
+   *
+   * ```js
+   * {
+   *   id: 1296269,
+   *   owner: "octocat",
+   *   repo: "Hello-World"
+   * }
+   * ```
+   */
+  repo: Prettify<GitRepo>;
+  /**
+   * The name of the branch the event is coming from.
+   */
+  branch: string;
+  /**
+   * Info about the commit in the event. This might look like:
+   *
+   * ```js
+   * {
+   *   id: "b7e7c4c559e0e5b4bc6f8d98e0e5e5e5e5e5e5e5",
+   *   message: "Update the README with new information"
+   * }
+   * ```
+   */
+  commit: Prettify<GitCommit>;
+  /**
+   * The user that generated the event. For example:
+   *
+   * ```js
+   * {
+   *   id: 1,
+   *   username: "octocat"
+   * }
+   * ```
+   */
+  sender: Prettify<GitSender>;
+}
+
+/**
+ * A git event for when a tag is created or deleted. For example:
+ * ```js
+ * {
+ *   type: "tag",
+ *   action: "pushed",
+ *   repo: {
+ *     id: 1296269,
+ *     owner: "octocat",
+ *     repo: "Hello-World"
+ *   },
+ *   tag: "v1.5.2",
+ *   commit: {
+ *     id: "b7e7c4c559e0e5b4bc6f8d98e0e5e5e5e5e5e5e5",
+ *     message: "Update the README with new information"
+ *   },
+ *   sender: {
+ *     id: 1,
+ *     username: "octocat"
+ *   }
+ * }
+ * ```
+ */
+export interface TagEvent {
+  /**
+   * The git event type, for the `TagEvent` it's `tag`.
+   */
+  type: "tag";
+  /**
+   * The type of the git action.
+   *
+   * - `pushed` is when you create a tag
+   * - `removed` is when a tag is removed
+   */
+  action: "pushed" | "removed";
+  /**
+   * The Git repository the event is coming from. This might look like:
+   *
+   * ```js
+   * {
+   *   id: 1296269,
+   *   owner: "octocat",
+   *   repo: "Hello-World"
+   * }
+   * ```
+   */
+  repo: Prettify<GitRepo>;
+  /**
+   * The name of the tag. For example, `v1.5.2`.
+   */
+  tag: string;
+  /**
+   * Info about the commit in the event. This might look like:
+   *
+   * ```js
+   * {
+   *   id: "b7e7c4c559e0e5b4bc6f8d98e0e5e5e5e5e5e5e5",
+   *   message: "Update the README with new information"
+   * }
+   * ```
+   */
+  commit: Prettify<GitCommit>;
+  /**
+   * The user that generated the event. For example:
+   *
+   * ```js
+   * {
+   *   id: 1,
+   *   username: "octocat"
+   * }
+   * ```
+   */
+  sender: Prettify<GitSender>;
+}
+
+/**
+ * A git event for when a pull request is updated or deleted. For exampple:
+ *
+ * ```js
+ * {
+ *   type: "pull_request",
+ *   action: "pushed",
+ *   repo: {
+ *     id: 1296269,
+ *     owner: "octocat",
+ *     repo: "Hello-World"
+ *   },
+ *   number: 1347,
+ *   base: "main",
+ *   head: "feature",
+ *   commit: {
+ *     id: "b7e7c4c559e0e5b4bc6f8d98e0e5e5e5e5e5e5e5",
+ *     message: "Update the README with new information"
+ *   },
+ *   sender: {
+ *     id: 1,
+ *     username: "octocat"
+ *   }
+ * }
+ * ```
+ */
+export interface PullRequestEvent {
+  /**
+   * The git event type, for the `PullRequestEvent` it's `pull_request`.
+   */
+  type: "pull_request";
+  /**
+   * The type of the git action.
+   *
+   * - `pushed` is when you git push to the base branch of the PR
+   * - `removed` is when the PR is closed or merged
+   */
+  action: "pushed" | "removed";
+  /**
+   * The Git repository the event is coming from. This might look like:
+   *
+   * ```js
+   * {
+   *   id: 1296269,
+   *   owner: "octocat",
+   *   repo: "Hello-World"
+   * }
+   * ```
+   */
+  repo: Prettify<GitRepo>;
+  /**
+   * The pull request number.
+   */
+  number: number;
+  /**
+   * The base branch of the PR. This is the branch the code is being merged into.
+   */
+  base: string;
+  /**
+   * The head branch of the PR. This is the branch the code is coming from.
+   */
+  head: string;
+  /**
+   * Info about the commit in the event. This might look like:
+   *
+   * ```js
+   * {
+   *   id: "b7e7c4c559e0e5b4bc6f8d98e0e5e5e5e5e5e5e5",
+   *   message: "Update the README with new information"
+   * }
+   * ```
+   */
+  commit: Prettify<GitCommit>;
+  /**
+   * The user that generated the event. For example:
+   *
+   * ```js
+   * {
+   *   id: 1,
+   *   username: "octocat"
+   * }
+   * ```
+   */
+  sender: Prettify<GitSender>;
+}
+
+export interface Config {
+  /**
+   * The config for your app. It needs to return an object of type [`App`](#app-1).
+   *
+   * :::tip
+   * The `app` function is evaluated when your app loads.
+   * :::
+   *
+   * @example
+   *
+   * ```ts
+   * app(input) {
+   *   return {
+   *     name: "my-sst-app",
+   *     home: "aws",
+   *     providers: {
+   *       aws: true,
+   *       cloudflare: {
+   *         accountId: "6fef9ed9089bb15de3e4198618385de2"
+   *       }
+   *     },
+   *     removal: input.stage === "production" ? "retain" : "remove"
+   *   };
+   * },
+   * ```
+   */
+  app(input: AppInput): App;
+  /**
+   * Configure how your app works with the SST Console. [Learn more about Autodeploy](/docs/console#autodeploy).
+   */
+  console?: {
+    /**
+     * Auto-deploys your app when you _git push_ to your repo. Uses
+     * [AWS CodeBuild](https://aws.amazon.com/codebuild/) in your account to run the build.
+     *
+     * You are only charged for the number of build
+     * minutes that you use. The pricing is based on the machine config used.
+     * [Learn more about CodeBuild pricing](https://aws.amazon.com/codebuild/pricing/).
+     *
+     * By default, this auto-deploys when you _git push_ to a:
+     *
+     * - **branch**: The stage name is a sanitized version of the branch name. When a branch
+     *   is removed, the stage is **not removed**.
+     * - **pull request**: The stage name is `pr-<number>`. When a pull request is closed,
+     *   the stage **is removed**.
+     *
+     * :::note
+     * You need to configure an environment in the Console to be able to auto-deploy to it.
+     * :::
+     *
+     * You can pass in your own `target` function to customize this behaviour and the machine
+     * that'll be used to run the build.
+     *
+     * ```ts
+     * console: {
+     *   autodeploy: {
+     *     target(event) {
+     *       if (event.type === "pushed" && event.branch === "main") {
+     *         return {
+     *           stage: "production",
+     *           runner: { engine: "codebuild", compute: "large" }
+     *         };
+     *       }
+     *     }
+     *   }
+     * }
+     * ```
+     *
+     * @default Auto-deploys branches and PRs.
+     */
+    autodeploy: {
+      /**
+       * Defines the stage the app will be auto-deployed to.
+       *
+       * When a git event is received, Autodeploy will run the `target` function with the
+       * git event. This function should return the stage the app will be deployed to.
+       * Or `undefined` if the deploy should be skipped.
+       *
+       * :::note
+       * Git push events for branches, pull requests, and tags are currently supported.
+       * :::
+       *
+       * By default, this is what the `target` function looks like:
+       *
+       * ```ts
+       * target(event) {
+       *   if (event.type === "branch" && event.action === "pushed") {
+       *     return {
+       *       stage: event.branch
+       *         .replace(/[^a-zA-Z0-9-]/g, "-")
+       *         .replace(/-+/g, "-")
+       *         .replace(/^-/g, "")
+       *         .replace(/-$/g, "")
+       *     };
+       *   }
+       *
+       *   if (event.type === "pull_request") {
+       *     return { stage: `pr-${event.number}` };
+       *   }
+       * }
+       * ```
+       *
+       * Here we are sanitizing the branch name to generate the stage name. We are also
+       * only deploying when _pushed_ to a branch, and **not** when a branch is removed.
+       *
+       * :::tip
+       * Use the git event to configure how your app will be auto-deployed.
+       * :::
+       *
+       * You can change the default behavior by passing in your own `target` function.
+       * For example, to auto-deploy to the `production` stage when you git push to the
+       * `main` branch.
+       *
+       * ```ts
+       * target(event) {
+       *   if (event.type === "pushed" && event.branch === "main") {
+       *     return { stage: "production" };
+       *   }
+       * }
+       * ```
+       *
+       * If you don't want to auto-deploy for a given event, you can return `undefined`. For
+       * example, to skip any deploys to the `staging` stage.
+       *
+       * ```ts {2}
+       * target(event) {
+       *   if (event.branch === "staging") return;
+       *   if (event.type === "pushed" && event.branch === "main") {
+       *     return { stage: "production" };
+       *   }
+       * }
+       * ```
+       *
+       * The stage that is returned is then compared to the environments set in the
+       * [app settings in the Console](/docs/console/#setup). If the stage matches a deployment
+       * target, the stage will be deployed to that environment. If no matching environment is
+       * found, the deploy will be skipped.
+       *
+       * :::note
+       * If a target is not returned, the app will not be deployed.
+       * :::
+       *
+       * In addition to the `stage` you can also configure the `runner` that will run the build.
+       * For example, to use a larger machine for the `production` stage.
+       *
+       * ```ts
+       * target(event) {
+       *   if (event.type === "pushed" && event.branch === "main") {
+       *     return {
+       *       stage: "production"
+       *       runner: {
+       *         engine: "codebuild",
+       *         compute: "large"
+       *       };
+       *     };
+       *   }
+       * }
+       * ```
+       */
+      target(
+        input: BranchEvent | PullRequestEvent | TagEvent,
+      ): Target | undefined;
+    };
+  };
+  /**
+   * An async function that lets you define the resources in your app.
+   *
+   * :::note
+   * You can use SST and Pulumi components only in the `run` function.
+   * :::
+   *
+   * You can optionally return an object that'll be displayed as the output in the CLI.
+   *
+   * @example
+   *
+   * For example, here we return the name of the bucket we created.
+   *
+   * ```ts
+   * async run() {
+   *   const bucket = new sst.aws.Bucket("MyBucket");
+   *
+   *   return {
+   *     bucket: bucket.name
+   *   };
+   * }
+   * ```
+   *
+   * This will display the following in the CLI.
+   *
+   * ```bash frame=\"none\"
+   * bucket: bucket-jOaikGu4rla
+   * ```
+   */
+  run(): Promise<Record<string, any> | void>;
+}
+
+/** @internal */
+export function $config(input: Config): Config {
+  return input;
+}

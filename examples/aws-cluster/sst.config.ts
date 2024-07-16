@@ -10,7 +10,7 @@ export default $config({
   },
   async run() {
     const bucket = new sst.aws.Bucket("MyBucket", {
-      public: true
+      public: true,
     });
 
     const vpc = new sst.aws.Vpc("MyVpc");
@@ -19,9 +19,7 @@ export default $config({
 
     cluster.addService("MyService", {
       public: {
-        ports: [
-          { listen: "80/http" },
-        ],
+        ports: [{ listen: "80/http" }],
       },
       link: [bucket],
     });

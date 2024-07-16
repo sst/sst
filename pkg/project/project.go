@@ -120,10 +120,8 @@ func New(input *ProjectConfig) (*Project, error) {
 	})
 	buildResult, err := js.Build(
 		js.EvalOptions{
-			Dir: tmp,
-			Banner: `
-      function $config(input) { return input }
-      `,
+			Dir:    proj.PathRoot(),
+			Banner: `function $config(input) { return input }`,
 			Define: map[string]string{
 				"$input": string(inputBytes),
 			},
@@ -142,9 +140,10 @@ console.log("~j" + JSON.stringify(mod.app({
 	if err != nil {
 		return nil, fmt.Errorf("%w%s", ErrBuildFailed, err)
 	}
+	defer js.Cleanup(buildResult)
 
 	slog.Info("evaluating config")
-	node := exec.Command("node", "--no-warnings", buildResult.OutputFiles[0].Path)
+	node := exec.Command("node", "--no-warnings", string(buildResult.OutputFiles[1].Path))
 	output, err := node.CombinedOutput()
 	slog.Info("config evaluated")
 	if err != nil {
@@ -218,8 +217,6 @@ console.log("~j" + JSON.stringify(mod.app({
 			}
 			continue
 		}
-
-		fmt.Println(line)
 	}
 	if err := scanner.Err(); err != nil {
 		return nil, err
@@ -234,6 +231,7 @@ console.log("~j" + JSON.stringify(mod.app({
 }
 
 func (proj *Project) LoadHome() error {
+	slog.Info("loading home")
 	loadedProviders := make(map[string]provider.Provider)
 	for key, args := range proj.app.Providers {
 		var match provider.Provider

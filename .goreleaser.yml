@@ -1,9 +1,9 @@
+version: 2
 project_name: sst
 before:
   hooks:
     - go mod tidy
-    - bash -c 'GOARCH=amd64 GOOS=linux go build -o ./pkg/platform/dist/bridge/bootstrap ./pkg/platform/bridge'
-    - bash -c 'cd ./pkg/platform && ./scripts/build-functions'
+    - bash -c "cd ./platform && bun run build"
     - go test ./cmd/... ./pkg/...
 builds:
   - env:
@@ -32,7 +32,7 @@ archives:
 checksum:
   name_template: 'checksums.txt'
 snapshot:
-  name_template: "{{ incpatch .Version }}-next"
+  name_template: "0.0.0-{{ .Timestamp }}"
 aurs:
   - homepage: "https://github.com/sst/ion"
     description: "Deploy anything"
@@ -69,5 +69,7 @@ changelog:
   filters:
     exclude:
       - '^docs:'
+      - '^doc:'
       - '^test:'
+      - '^tweak:'
 

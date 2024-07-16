@@ -166,6 +166,10 @@ func (r *NodeRuntime) Build(ctx context.Context, input *BuildInput) (*BuildOutpu
 		options.Target = esbuild.ESNext
 	}
 
+	if properties.ESBuild.Target != 0 {
+		options.Target = properties.ESBuild.Target
+	}
+
 	buildContext, ok := r.contexts[input.Warp.FunctionID]
 	if !ok {
 		buildContext, _ = esbuild.Context(options)

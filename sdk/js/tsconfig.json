@@ -2,6 +2,7 @@
   "$schema": "https://json.schemastore.org/tsconfig",
   "extends": "@tsconfig/node20/tsconfig.json",
   "compilerOptions": {
+    "resolveJsonModule": true,
     "preserveSymlinks": true,
     "outDir": "dist",
     "declaration": true,
@@ -9,5 +10,9 @@
     "moduleResolution": "NodeNext",
     "isolatedModules": true,
     "downlevelIteration": true,
-  }
+  },
+  "exclude": [
+    "scripts",
+    "dist"
+  ]
 }

@@ -23,6 +23,12 @@ curl -fsSL https://ion.sst.dev/install | bash
 The CLI currently supports macOS, Linux, and WSL. Windows support is coming soon.
 :::
 
+To install a specific version.
+
+```bash "VERSION=0.0.403"
+curl -fsSL https://ion.sst.dev/install | VERSION=0.0.403 bash
+```
+
 #### With a package manager
 
 You can also use a package manager to install the CLI.
@@ -182,15 +188,15 @@ The command to run
 <Section type="parameters">
 #### Flags
 - <p><code class="key">silent</code> <code class="primitive">boolean</code></p>
-Do not output function invocation logs
+Don't show logs from function invocations
 </Section>
-Run your app in development mode. Optionally, pass in a command to start your frontend as well.
+Run your app in development mode.
 
 ```bash frame="none"
 sst dev
 ```
 
-You can also pass in a command to start your frontend with it.
+Optionally, pass in a command to start your frontend as well.
 
 ```bash frame="none"
 sst dev next dev
@@ -205,9 +211,12 @@ sst dev "next dev --turbo"
 Dev mode does a few things:
 
 1. Starts a local server
-2. Watches your app config and re-deploys your changes
+2. Watches your `sst.config.ts` and re-deploys changes
 3. Run your functions [Live](/docs/live/)
-4. If you pass in a `command`, it'll:
+4. Skip components that should be run locally
+   - `Service`
+   - Frontends like, `Nextjs`, `Remix`, `Astro`, `SvelteKit`, etc.
+5. If you pass in a `command`, it'll:
    - Load your [linked resources](/docs/linking) in the environment
    - And run the command
 
@@ -281,10 +290,7 @@ This command will:
 }
 ```
 
-You can use any provider listed in the [Pulumi Registry](https://www.pulumi.com/registry/).
-The name of a provider comes from the **URL of the provider** in the Pulumi Registry.
-
-For example, `https://www.pulumi.com/registry/packages/aws/` is the URL of the AWS Clasic provider. So the name of the provider here is `aws`.
+You can use any provider listed in the [Directory](/docs/providers#directory).
 
 :::note
 Running `sst add aws` above is the same as manually adding the provider to your config and running `sst install`.

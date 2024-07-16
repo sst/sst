@@ -1,0 +1,12 @@
+#!/bin/bash
+
+ORIGINAL_DIR=$(pwd)
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." && pwd )"
+echo "moving to $SCRIPT_DIR"
+
+bun build ./functions/cf-static-site-router-worker/index.ts --target=node --outdir ./dist/cf-static-site-router-worker/
+bun build ./functions/cf-ssr-site-router-worker/index.ts --target=node --outdir ./dist/cf-ssr-site-router-worker/
+bun build ./functions/nodejs-runtime/index.ts --target=node --outdir ./dist/nodejs-runtime/
+bun build ./functions/nodejs-runtime/loop.ts --target=node --outdir ./dist/nodejs-runtime/
+GOARCH=amd64 GOOS=linux go build -o ./dist/bridge/bootstrap ./functions/bridge
+node ./scripts/build.mjs

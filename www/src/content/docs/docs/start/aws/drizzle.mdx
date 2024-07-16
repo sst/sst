@@ -43,7 +43,7 @@ Add Drizzle to your project. We're also adding the RDS client that Drizzle will 
 npm install @aws-sdk/client-rds-data drizzle-orm drizzle-kit
 ```
 
-Drizzle ORM is will be used to query our database, while Drizzle Kit will allow us to run migrations. It also comes Drizzle Studio, a query browser.
+Drizzle ORM is will be used to query our database, while Drizzle Kit will allow us to run migrations. It also comes with Drizzle Studio, a query browser.
 
 :::note
 Data API for Aurora Postgres Serverless v2 is still being [rolled out in all regions](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/Concepts.Aurora_Fea_Regions_DB-eng.Feature.ServerlessV2.html#Concepts.Aurora_Fea_Regions_DB-eng.Feature.ServerlessV2.apg).
@@ -260,5 +260,18 @@ You should see this in the Drizzle Studio as well.
 Finally, let's deploy your app.
 
 ```bash
-sst deploy
+sst deploy --stage production
 ```
+
+You can use any stage name here but it's good to create a new stage for production.
+
+---
+
+## Connect the console
+
+As a next step, you can setup the [SST Console](/docs/console/) to _**git push to deploy**_ your app and monitor it for any issues. 
+
+![SST Console Autodeploy](../../../../../assets/docs/start/sst-console-autodeploy.png)
+
+You can [create a free account](https://console.sst.dev) and connect it to your AWS account.
+

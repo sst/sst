@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+set -e
+goreleaser build --clean --snapshot --skip validate
+cd sdk/js
+bun run release

@@ -12,15 +12,20 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/sst/ion/cmd/sst/cli"
+	"github.com/sst/ion/cmd/sst/mosaic"
 	"github.com/sst/ion/cmd/sst/ui"
 	"github.com/sst/ion/internal/util"
 	"github.com/sst/ion/pkg/project"
 	"github.com/sst/ion/pkg/server"
 )
 
-func CmdDev(cli *Cli) error {
+func CmdDev(cli *cli.Cli) error {
+	if _, ok := os.LookupEnv("SST_SERVER"); ok {
+		return mosaic.CmdMosaic(cli)
+	}
 	var args []string
-	for _, arg := range cli.arguments {
+	for _, arg := range cli.Arguments() {
 		args = append(args, strings.Fields(arg)...)
 	}
 	slog.Info("args", "args", args, "length", len(args))
@@ -31,7 +36,7 @@ func CmdDev(cli *Cli) error {
 		return util.NewReadableError(err, "Could not find sst.config.ts")
 	}
 
-	stage, err := getStage(cli, cfgPath)
+	stage, err := cli.Stage(cfgPath)
 	if err != nil {
 		return util.NewReadableError(err, "Could not find stage")
 	}
@@ -91,7 +96,8 @@ func CmdDev(cli *Cli) error {
 					cmd.Env = append(cmd.Env, envVar)
 				}
 
-				result, err := http.Get("http://localhost:13557/api/receiver/env?receiverID=" + dir)
+				addr, _ := server.GetExisting(cfgPath, stage)
+				result, err := http.Get("http://" + addr + "/api/receiver/env?receiverID=" + dir)
 				if err != nil {
 					slog.Info("receiver env err", "err", err.Error())
 					continue
@@ -117,7 +123,7 @@ func CmdDev(cli *Cli) error {
 			processExit := make(chan interface{})
 			err := cmd.Start()
 			if err != nil {
-				fmt.Println(err)
+				slog.Error("error starting command", "err", err.Error())
 				cli.Cancel()
 				return
 			}
@@ -149,7 +155,6 @@ func CmdDev(cli *Cli) error {
 						if !reflect.DeepEqual(oldValue, value) {
 							cmd.Process.Signal(os.Interrupt)
 							cmd.Wait()
-							fmt.Println("Restarting...")
 							break loop
 						}
 					}
@@ -159,11 +164,13 @@ func CmdDev(cli *Cli) error {
 		}
 	}()
 
+	slog.Info("starting server")
 	state := &server.State{}
-	// fmt.Print("\033[H\033[2J")
-	u := ui.New(ui.ProgressModeDev)
-	defer u.Destroy()
 	silent := cli.Bool("silent")
+	u := ui.New(cli.Context, ui.ProgressModeDev, func(o *ui.Options) {
+		o.Silent = silent
+	})
+	defer u.Destroy()
 	err = server.Connect(cli.Context, server.ConnectInput{
 		CfgPath: cfgPath,
 		Stage:   stage,
@@ -180,12 +187,6 @@ func CmdDev(cli *Cli) error {
 				cli.Cancel()
 				return
 			}
-			// if event.PreludeEvent != nil && hasTarget && runOnce {
-			// 	fmt.Println()
-			// 	color.New(color.FgYellow, color.Bold).Print("~")
-			// 	color.New(color.FgWhite, color.Bold).Println("  Deploying")
-			// 	return
-			// }
 			if event.CompleteEvent != nil {
 				if hasTarget {
 					if !runOnce && (!event.CompleteEvent.Finished || len(event.CompleteEvent.Errors) > 0) {

@@ -1,0 +1,180 @@
+---
+title: State
+description: Tracking the infrastructure created by your app.
+---
+
+When you deploy your app, SST creates a state file locally to keep track of the state of the infrastructure in your app.
+
+So when you make a change, it'll allow SST to do a diff with the state and only deploy what's changed.
+
+---
+
+The state of your app includes:
+
+1. A state file for your resources. This is a JSON file.
+2. A passphrase that is used to encrypt the secrets in your state.
+
+Aside from these, SST also creates some other resources when your app is first deployed. We'll look at this below. 
+
+---
+
+The state is generated locally but is backed up to your provider using:
+
+1. A **bucket** to store the state, typically named `sst-state-<hash>`. This is created in the region of your `home`. More on this below.
+2. An **SSM parameter** to store the passphrase used to encrypt your secrets, under `/sst/passphrase/<app>/<stage>`. Also created in the region of your `home`.
+
+:::danger
+Do not delete the SSM parameter that stores the passphrase for your app.
+:::
+
+The passphrase is used to encrypt any secrets and sensitive information. Without it SST won't be able to read the state file and deploy your app.
+
+---
+
+## Home
+
+Your `sst.config.ts` specifies which provider to use for storing your state. We call this the `home` of your app.
+
+```ts title="sst.config.ts"
+{
+  home: "aws"
+}
+```
+
+You can specify which provider you'd like to use for this. Currently `aws` and `cloudflare` are supported.
+
+:::tip
+Your state file is uploaded to your `home`.
+:::
+
+When you specify your home provider, SST assumes you'd like to use that provider in your app as well and adds it to your providers internally. So the above is equivalent to doing this.
+
+```ts title="sst.config.ts"
+{
+  home: "aws",
+  providers: {
+    aws: true
+  }
+}
+```
+
+This also means that if you change the region of the `aws` provider above, you are changing the region for your `home` as well.
+
+You can read more about the `home` provider in [Config](/docs/reference/config/).
+
+---
+
+## Bootstrap
+
+As SST starts deploying the resources in your app, it creates some additional _bootstrap_ resources. If your app has a Lambda function or a Docker container, then SST will create the following in the same region as the given resource:
+
+1. An assets bucket to store the function packages, typically named `sst-asset-<hash>`.
+2. An ECR repository to store container images, called `sst-asset`.
+3. An SSM parameter to store the assets bucket name and the ECR repository, stored under `/sst/bootstrap`.
+
+The SSM parameter is used to look up the location of these resources.
+
+:::tip
+Some additional bootstrap resources are created based on what your app is creating.
+:::
+
+When you remove an SST app, it does not remove the _state_ or _bootstrap_ resources. This is because it does not know if there are other apps that might be using this. So if you want to completely remove any SST created resources, you'll need to manually remove these in the regions you've deployed to.
+
+---
+
+## How it works
+
+The state file is a JSON representation of all the low level resources created by your app. It is a cached version of the state of resources in the cloud provider.
+
+:::tip
+The state file is a cached version of the resources that've been created by your app.
+:::
+
+So when you do a deploy the following happens.
+
+1. The components in the `sst.config.ts` get converted into low level resource definitions. These get compared to the the state file.
+2. The differences between the two are turned into API calls that are made to your cloud provider.
+   - If there's a new resource, it gets created.
+   - If a resource has been removed, it gets removed.
+   - If there's a change in config of the resource, it gets applied.
+3. The state file is updated to reflected the new state of these resources. Now the `sst.config.ts`, the state file, and the resources in the cloud provider are all in sync.
+
+---
+
+### Out of sync
+
+This process works fine till you manually go change these resources through the cloud provider's console. This will cause the **state and the resources to not be in sync** anymore. This can cause an issue in some cases.
+
+:::caution
+If you manually change the resources in your cloud provider, they will go out of sync with your app's state. 
+:::
+
+Let's look at a couple of scenarios.
+
+Say we've deployed a `Function` with it set to `{ timeout: 10 seconds" }`. At this point, the config, state, and resource are in sync.
+
+---
+
+#### Change the resource
+
+- We now go change the timeout to 20 seconds in the AWS Console.
+  - The config and state are out of sync with the resource since they are still set to 10 seconds.
+- Now if we deploy our app, the config will be comapred to the state.
+  - It'll find no differences and so it won't update the resource.
+
+The config and state will stay out of sync with the resource.
+
+---
+
+#### Change the config
+
+- If we change our config to `{ timeout: 30 seconds" }` and do a deploy.
+- The config and state will have some differences.
+- SST will make a call to AWS to set the timeout of the resource to 30 seconds.
+  - Once updated, it'll update the state file to match the current state of the resource.
+
+The config, state, and resource are back being in sync. 
+
+---
+
+#### Remove the resource
+
+- Next we go to the AWS Console and remove the function.
+  - The config and state still have the function with the timeout set to 30 seconds.
+- If we change our config to `{ timeout: 60 seconds }` and do a deploy.
+- The config and state will be different.
+- SST will make a call to update the timeout of the resource to 60 seconds.
+  - But this call to AWS will fail because the function doesn't exist.
+
+Your deploys will fail moving forward because the your state shows that a resource exists but it doesn't anymore. To fix this, you'll need to _refresh_ your state file.
+
+---
+
+### Refresh
+
+To fix scenarios where the resources in the cloud are out of sync with the state of your app, you'll need to run.
+
+```bash
+sst refresh
+```
+
+This command does a couple of simple things:
+
+1. It goes through every single resource in your state.
+2. Makes a call to the cloud provider to check the resource.
+   - If the configs are different, it'll **update the state** to reflect the change.
+   - If the resource doesn't exist anymore, it'll **remove it from the state**.
+
+:::note
+The `sst refresh` does not make changes to the resources in the cloud provider.
+:::
+
+Now the state and the resources are in sync. So if we take the scenario from above where we removed the function from the AWS Console but not from our config or state. To fix it, we'll need to:
+
+- Run `sst refresh`
+  - This will remove the function from the state as well.
+- Now if we change our config to `{ timeout: 60 seconds }` and do a deploy.
+- The config and state will be compared and it'll find that a function with that config doesn't exist.
+- So SST will make a call to AWS to create a new function with the given config.
+
+In general we do not recommend manually changing resources in a cloud provider since it puts your state out of sync. But if you find yourself in a situation where this happens, you can use the `sst refresh` command to put them back in sync.

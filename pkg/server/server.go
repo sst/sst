@@ -47,10 +47,9 @@ type Event struct {
 	FunctionErrorEvent    *aws.FunctionErrorEvent
 	FunctionLogEvent      *aws.FunctionLogEvent
 	FunctionBuildEvent    *aws.FunctionBuildEvent
-
-	WorkerBuildEvent   *cloudflare.WorkerBuildEvent
-	WorkerUpdatedEvent *cloudflare.WorkerUpdatedEvent
-	WorkerInvokedEvent *cloudflare.WorkerInvokedEvent
+	WorkerBuildEvent      *cloudflare.WorkerBuildEvent
+	WorkerUpdatedEvent    *cloudflare.WorkerUpdatedEvent
+	WorkerInvokedEvent    *cloudflare.WorkerInvokedEvent
 }
 
 type StateEvent struct {
@@ -63,7 +62,7 @@ func resolveServerFile(cfgPath, stage string) string {
 	return filepath.Join(project.ResolveWorkingDir(cfgPath), stage+".server")
 }
 
-func findExisting(cfgPath, stage string) (string, error) {
+func GetExisting(cfgPath, stage string) (string, error) {
 	path := resolveServerFile(cfgPath, stage)
 	contents, err := os.ReadFile(path)
 	if err != nil {
@@ -209,35 +208,30 @@ func (s *Server) Start(parentContext context.Context) error {
 			http.Error(w, "receiver not found", http.StatusBadRequest)
 			return
 		}
-		if receiver.AwsRole == "" {
-			slog.Info("receiver does not have aws role", "receiverID", receiverID)
-			http.Error(w, "receiver does not have aws role", http.StatusBadRequest)
-			return
-		}
 
-		prov, _ := s.project.Provider("aws")
-		awsProvider := prov.(*provider.AwsProvider)
-		stsClient := sts.NewFromConfig(awsProvider.Config())
-		sessionName := "sst-dev"
-		result, err := stsClient.AssumeRole(r.Context(), &sts.AssumeRoleInput{
-			RoleArn:         &receiver.AwsRole,
-			RoleSessionName: &sessionName,
-			DurationSeconds: awssdk.Int32(43200),
-		})
-		if err != nil {
-			slog.Info("error assuming role", "err", err.Error())
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
+		env := map[string]string{}
+		if receiver.Aws != nil && receiver.Aws.Role != "" {
+			prov, _ := s.project.Provider("aws")
+			awsProvider := prov.(*provider.AwsProvider)
+			stsClient := sts.NewFromConfig(awsProvider.Config())
+			sessionName := "sst-dev"
+			result, err := stsClient.AssumeRole(r.Context(), &sts.AssumeRoleInput{
+				RoleArn:         &receiver.Aws.Role,
+				RoleSessionName: &sessionName,
+				DurationSeconds: awssdk.Int32(3600),
+			})
+			if err != nil {
+				slog.Info("error assuming role", "err", err.Error())
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+			env["AWS_ACCESS_KEY_ID"] = *result.Credentials.AccessKeyId
+			env["AWS_SECRET_ACCESS_KEY"] = *result.Credentials.SecretAccessKey
+			env["AWS_SESSION_TOKEN"] = *result.Credentials.SessionToken
 		}
+		env["SST_RESOURCE_App"] = fmt.Sprintf(`{"name": "%s", "stage": "%s" }`, s.project.App().Name, s.project.App().Stage)
 
-		credentials := map[string]string{
-			"AWS_ACCESS_KEY_ID":     *result.Credentials.AccessKeyId,
-			"AWS_SECRET_ACCESS_KEY": *result.Credentials.SecretAccessKey,
-			"AWS_SESSION_TOKEN":     *result.Credentials.SessionToken,
-			"AWS_REGION":            awsProvider.Config().Region,
-		}
-
-		jsonCredentials, err := json.Marshal(credentials)
+		jsonCredentials, err := json.Marshal(env)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -333,19 +327,23 @@ func (s *Server) broadcast(event *Event) {
 }
 
 func findAvailablePort() (int, error) {
-	listener, err := net.Listen("tcp", "localhost:13557")
-	if err != nil {
-		if opError, ok := err.(*net.OpError); ok && opError.Op == "listen" {
-			if syscallErr, ok := opError.Err.(*os.SyscallError); ok && syscallErr.Syscall == "bind" {
-				if errno, ok := syscallErr.Err.(syscall.Errno); ok && errno == syscall.EADDRINUSE {
-					return 0, ErrServerAlreadyRunning
+	port := 13557
+	for {
+		listener, err := net.Listen("tcp", fmt.Sprintf("localhost:%d", port))
+		if err != nil {
+			if opError, ok := err.(*net.OpError); ok && opError.Op == "listen" {
+				if syscallErr, ok := opError.Err.(*os.SyscallError); ok && syscallErr.Syscall == "bind" {
+					if errno, ok := syscallErr.Err.(syscall.Errno); ok && errno == syscall.EADDRINUSE {
+						port++
+						continue
+					}
 				}
 			}
+			return 0, err
 		}
-		return 0, err
-	}
-	defer listener.Close()
+		defer listener.Close()
 
-	addr := listener.Addr().(*net.TCPAddr)
-	return addr.Port, nil
+		addr := listener.Addr().(*net.TCPAddr)
+		return addr.Port, nil
+	}
 }

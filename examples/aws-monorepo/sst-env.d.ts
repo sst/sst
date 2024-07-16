@@ -6,6 +6,7 @@ declare module "sst" {
     Api: {
       name: string
       type: "sst.aws.Function"
+      url: string
     }
     Database: {
       name: string

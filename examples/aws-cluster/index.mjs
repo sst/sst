@@ -3,7 +3,12 @@ import express from "express";
 import { Resource } from "sst";
 import { Upload } from "@aws-sdk/lib-storage";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
-import { S3Client, GetObjectCommand, ListObjectsV2Command } from "@aws-sdk/client-s3";
+import {
+  S3Client,
+  GetObjectCommand,
+  ListObjectsV2Command,
+} from "@aws-sdk/client-s3";
+import { client } from "sst/aws/client";
 
 const PORT = 80;
 
@@ -11,8 +16,11 @@ const app = express();
 const s3 = new S3Client({});
 const upload = multer({ storage: multer.memoryStorage() });
 
-app.get("/", (req, res) => {
-  res.send("Hello World!")
+console.log(process.env);
+console.log(await client());
+app.get("/", async (req, res) => {
+  console.log(c);
+  res.send("Hello World!");
 });
 
 app.post("/", upload.single("file"), async (req, res) => {
@@ -20,7 +28,7 @@ app.post("/", upload.single("file"), async (req, res) => {
   const params = {
     Bucket: Resource.MyBucket.name,
     Key: file.originalname,
-    Body: file.buffer
+    Body: file.buffer,
   };
 
   const upload = new Upload({
@@ -37,10 +45,12 @@ app.get("/latest", async (req, res) => {
   const objects = await s3.send(
     new ListObjectsV2Command({
       Bucket: Resource.MyBucket.name,
-    })
+    }),
   );
 
-  const latestFile = objects.Contents.sort((a, b) => b.LastModified - a.LastModified)[0];
+  const latestFile = objects.Contents.sort(
+    (a, b) => b.LastModified - a.LastModified,
+  )[0];
 
   const command = new GetObjectCommand({
     Key: latestFile.Key,

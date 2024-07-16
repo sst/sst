@@ -61,6 +61,10 @@ func Start(ctx context.Context, root string) (util.CleanupFunc, error) {
 				if !ok {
 					return
 				}
+				if event.Op&(fsnotify.Write|fsnotify.Create) == 0 {
+					slog.Info("ignoring file event", "path", event.Name, "op", event.Op)
+					continue
+				}
 				slog.Info("file event", "path", event.Name, "op", event.Op)
 				if time.Since(limiter[event.Name]) > 500*time.Millisecond {
 					limiter[event.Name] = time.Now()

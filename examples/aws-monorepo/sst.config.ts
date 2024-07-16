@@ -7,12 +7,12 @@
  * to AWS.
  *
  * While, [drop-in mode](/docs/#drop-in-mode) is great for simple projects, we recommend using
- * this template for projects that are going to have multiple packages. 
+ * this template for projects that are going to have multiple packages.
  *
  * #### Project structure
  *
  * The app is split into the separate `packages/` and an `infra/` directory.
- * 
+ *
  * ```txt {2}
  * my-sst-app
  * ├─ sst.config.ts
@@ -84,7 +84,7 @@
  *   ```bash
  *   npm run shell src/example.ts
  *   ```
- *   
+ *
  *  #### Infrastructure
  *
  *  The `infra/` directory allows you to logically split the infrastructure of your app into

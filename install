@@ -8,6 +8,8 @@ YELLOW='\033[1;33m'
 ORANGE='\033[38;2;255;140;0m'
 NC='\033[0m' # No Color
 
+requested_version=${VERSION:-}
+
 os=$(uname -s | tr '[:upper:]' '[:lower:]')
 if [[ "$os" == "darwin" ]]; then
     os="mac"
@@ -36,12 +38,17 @@ esac
 INSTALL_DIR=$HOME/.sst/bin
 mkdir -p "$INSTALL_DIR"
 
-url="https://github.com/sst/ion/releases/latest/download/$filename"
+if [ -z "$requested_version" ]; then
+    url="https://github.com/sst/ion/releases/latest/download/$filename"
+    specific_version=$(curl -s https://api.github.com/repos/sst/ion/releases/latest | awk -F'"' '/"tag_name": "/ {gsub(/^v/, "", $4); print $4}')
 
-latest_version=$(curl -s https://api.github.com/repos/sst/ion/releases/latest | awk -F'"' '/"tag_name": "/ {gsub(/^v/, "", $4); print $4}')
-if [[ $? -ne 0 ]]; then
-    echo "${RED}Failed to fetch latest version${NC}"
-    exit 1
+    if [[ $? -ne 0 ]]; then
+        echo "${RED}Failed to fetch version information${NC}"
+        exit 1
+    fi
+else
+    url="https://github.com/sst/ion/releases/download/v${requested_version}/$filename"
+    specific_version=$requested_version
 fi
 
 print_message() {
@@ -62,31 +69,24 @@ check_version() {
     if command -v sst >/dev/null 2>&1; then
         sst_path=$(which sst)
 
-        if [[ $(cat $sst_path | head -n1) == "#!/usr/bin/env node" ]]; then
+        if [[ $(cat $sst_path | LC_CTYPE=C tr -d '\0' | head -n1) == "#!/usr/bin/env node" ]]; then
             print_message error "SST v2 is installed globally through npm. You'll need to uninstall it before proceeding."
             exit 1
         fi
 
         installed_version=$(sst version)
 
-        if [[ "$installed_version" != "$latest_version" ]]; then
+        if [[ "$installed_version" != "$specific_version" ]]; then
             print_message info "Installed version: ${YELLOW}$installed_version."
-
-            # print_message info "Version ${YELLOW}$installed_version${GREEN} is installed, upgrading to ${YELLOW}$latest_version${GREEN}? [Y/n]${NC}"
-            # read -n 1 -r
-            # echo
-            # if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-            #     exit 1
-            # fi
         else
-            print_message info "Latest version ${YELLOW}$latest_version${GREEN} already installed"
+            print_message info "Version ${YELLOW}$specific_version${GREEN} already installed"
             exit 0
         fi
     fi
 }
 
 download_and_install() {
-    print_message info "Downloading latest ${ORANGE}SST ❍ ion ${GREEN}version: ${YELLOW}$latest_version ${GREEN}..."
+    print_message info "Downloading ${ORANGE}SST ❍ ion ${GREEN}version: ${YELLOW}$specific_version ${GREEN}..."
     mkdir -p ssttmp && cd ssttmp
     curl -# -L $url | tar xz
     mv sst $INSTALL_DIR
@@ -95,6 +95,7 @@ download_and_install() {
 
 check_version
 download_and_install
+
 
 add_to_path() {
     local config_file=$1

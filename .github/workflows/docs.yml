@@ -1,3 +1,5 @@
+# temporarily disabled
+
 name: docs
 
 on:
@@ -29,7 +31,7 @@ jobs:
 
       - uses: actions/setup-go@v4
         with:
-          go-version: '>=1.21.0'
+          go-version: ">=1.21.0"
 
       - name: mod
         run: go mod download
@@ -43,4 +45,4 @@ jobs:
           ./scripts/build-functions
           cd ../../www
           go run ../cmd/sst telemetry disable
-          go run ../cmd/sst deploy --stage=production --verbose
+          go run ../cmd/sst deploy --stage=production

@@ -55,7 +55,7 @@ async run() {
   });
 
   return {
-    api: api.url,
+    api: trpc.url,
     client: client.url,
   };
 }
@@ -186,15 +186,18 @@ This will print out `Hello Patrick Star!`.
 Now let's deploy your app.
 
 ```bash
-sst deploy
+sst deploy --stage production
 ```
+
+You can use any stage name here but it's good to create a new stage for production.
 
 ---
 
 ## Connect the console
 
-As a next step, you can manage your app and view issues in the [SST Console](/docs/console/).
+As a next step, you can setup the [SST Console](/docs/console/) to _**git push to deploy**_ your app and monitor it for any issues. 
 
-![Issues in tRPC app in SST Console](../../../../../assets/docs/start/issues-in-trpc-app-in-the-sst-console.png)
+![SST Console Autodeploy](../../../../../assets/docs/start/sst-console-autodeploy.png)
 
 You can [create a free account](https://console.sst.dev) and connect it to your AWS account.
+

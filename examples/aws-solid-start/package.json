@@ -3,17 +3,17 @@
   "type": "module",
   "scripts": {
     "build": "vinxi build",
-    "dev": "sst dev vinxi dev",
+    "dev": "vinxi dev",
     "start": "vinxi start"
   },
   "dependencies": {
-    "@aws-sdk/client-s3": "^3.583.0",
-    "@aws-sdk/s3-request-presigner": "^3.583.0",
-    "@solidjs/router": "^0.13.3",
-    "@solidjs/start": "1.0.0",
+    "@aws-sdk/client-s3": "^3.600.0",
+    "@aws-sdk/s3-request-presigner": "^3.600.0",
+    "@solidjs/router": "^0.13.6",
+    "@solidjs/start": "1.0.2",
     "solid-js": "^1.8.17",
     "sst": "ion",
-    "vinxi": "^0.3.11"
+    "vinxi": "^0.3.12"
   },
   "engines": {
     "node": ">=18"

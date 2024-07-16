@@ -3,9 +3,11 @@ title: Console
 description: Manage and monitor your apps with the SST Console.
 ---
 
-The Console is a web based dashboard to manage your SST apps. With it you can invoke functions, debug issues, view logs, and manage all your apps, with your team — [**console.sst.dev**](https://console.sst.dev)
+import { Tabs, TabItem } from '@astrojs/starlight/components';
 
-[![SST Console](../../../assets/docs/sst-console-logs.png)](https://console.sst.dev)
+The Console is a web based dashboard to manage your SST apps. With it you can **invoke functions**, **debug issues**, **view logs**, and **_git push to deploy_** your apps, with your team — [**console.sst.dev**](https://console.sst.dev)
+
+[![SST Console](../../../assets/docs/console/sst-console-home.png)](https://console.sst.dev)
 
 :::tip
 The Console is completely optional and comes with a generous free tier.
@@ -46,117 +48,6 @@ Currently the Console only supports apps **deployed to AWS**.
 3. **Invite your team**
 
    Use the email address of your teammates to invite them. They just need to login with the email you've used and they'll be able to join your workspace.
-
----
-
-## Features
-
-Here are a few of the things the Console does for you.
-
----
-
-### Logs
-
-With the Console, you don't need to go to CloudWatch to look at the logs for your functions. You can view:
-
-- Past logs
-- Live logs
-- Jump to a specific time
-
----
-
-### Issues
-
-The Console will automatically show you any errors in your Lambda functions in real-time. And notify you through Slack or email.
-
-With Issues, there is:
-
-- **Nothing to setup**, no code to instrument
-- **Source maps** are supported **automatically**
-- **No impact on performance** or cold starts, since the functions aren't modified
-
-:::tip
-Issues works out of the box and has no impact on performance or cold starts.
-:::
-
----
-
-#### Behind the scenes
-
-Here's how it works.
-
-1. When an app is deployed or when an account is first synced, we add a log subscriber to your Lambda functions. 
-   - There's a maximum of 2 subscribers allowed. More on this below.
-2. The subscriber filters for anything that looks like an error and processes those log lines.
-3. It applies the source maps to the error stack trace.
-4. Finally, it groups similar looking errors together.
-
----
-
-#### Log subscriber
-
-The process of adding a log subscriber to your Lambda functions might fail. This can happen if:
-
-- We don't have enough permissions to add a subscriber. In this case, update the permissions that you've granted to the Console.
-- We've hit the limit for the number of subscribers. To fix this, you can remove one of the existing subscribers.
-
-You can see these errors in the Issues tab. Once you've fixed these issues, you can hit **Retry** and it'll try attaching the subscriber again. 
-
----
-
-#### Error detection
-
-Issues reports Lambda function failures. In addition, for Node.js it reports errors that are logged using `console.error(new Error("my-error"))`.
-
-:::tip
-In Node.js functions you can use `console.error` to report your errors.
-:::
-
-For the Console to automatically report your errors, you need to pass in an error object with the `console.error` call.
-
-```js title="src/lambda.ts"
-console.error(new Error("my-error"));
-```
-
----
-
-#### Limits
-
-There's a soft limit of 10K issues per hour per workspace. If your account goes over this limit, Issues will be temporarily paused. You can [contact us][contact-us] if this happens.
-
----
-
-### Local logs
-
-When the Console starts up, it checks if you are running `sst dev` locally. If so, then it'll show you real-time logs from your local terminal. This works by connecting to a local server that's run as a part of the SST CLI.
-
-:::info
-The local server only allows access from `localhost` and `console.sst.dev`.
-:::
-
-The local logs works in all browsers and environments. But for certain browsers like Safari or Brave, and Gitpod, it needs some additional configuration.
-
----
-
-#### Safari & Brave
-
-Certain browsers like Safari and Brave require the local connection between the browser and the `sst dev` CLI to be running on HTTPS.
-
-SST can integrate with mkcert to automatically generate a self-signed certificate. If you need support for this, feel free to open an issue on GitHub.
-
----
-
-#### Gitpod
-
-If you are using [Gitpod](https://www.gitpod.io/), you can use the Gitpod Local Companion app to connect to the `sst dev`  process running inside your Gitpod workspace.
-
-To get started:
-
-1. [Install Gitpod Local Companion app](https://www.gitpod.io/blog/local-app#installation)
-2. [Run the Companion app](https://www.gitpod.io/blog/local-app#running)
-3. Navigate to Console in the browser
-
-The companion app runs locally and creates a tunnelled connection to your Gitpod workspace.
 
 ---
 
@@ -335,6 +226,267 @@ A couple of things to note.
 - There's also a soft limit for Issues on all accounts.
 - For volume pricing, feel free to [contact us][contact-us].
 
+---
+
+## Features
+
+Here are a few of the things the Console does for you.
+
+1. [**Logs**](#logs): View logs from the functions in your app
+2. [**Issues**](#issues): Get real-time alerts for any errors in your functions
+3. [**Local logs**](#local-logs): View logs from your local `sst dev` session
+4. [**Resources**](#resources): View the resources in your app and their history
+5. [**Autodeploy**](#autodeploy): Auto-deploy your app when you _git push_ to your repo
+
+---
+
+### Logs
+
+With the Console, you don't need to go to CloudWatch to look at the logs for your functions. You can view:
+
+- Past logs
+- Live logs
+- Jump to a specific time
+
+![SST Console logs](../../../assets/docs/console/sst-console-logs.png)
+
+---
+
+### Issues
+
+The Console will automatically show you any errors in your Lambda functions in real-time. And notify you through Slack or email.
+
+![SST Console Issues](../../../assets/docs/console/sst-console-issues.png)
+
+With Issues, there is:
+
+- **Nothing to setup**, no code to instrument
+- **Source maps** are supported **automatically**
+- **No impact on performance** or cold starts, since the functions aren't modified
+
+:::tip
+Issues works out of the box and has no impact on performance or cold starts.
+:::
+
+---
+
+#### Behind the scenes
+
+Here's how it works.
+
+1. When an app is deployed or when an account is first synced, we add a log subscriber to your Lambda functions. 
+   - There's a maximum of 2 subscribers allowed. More on this below.
+2. The subscriber filters for anything that looks like an error and processes those log lines.
+3. It applies the source maps to the error stack trace.
+4. Finally, it groups similar looking errors together.
+
+---
+
+#### Log subscriber
+
+The process of adding a log subscriber to your Lambda functions might fail. This can happen if:
+
+- We don't have enough permissions to add a subscriber. In this case, update the permissions that you've granted to the Console.
+- We've hit the limit for the number of subscribers. To fix this, you can remove one of the existing subscribers.
+
+You can see these errors in the Issues tab. Once you've fixed these issues, you can hit **Retry** and it'll try attaching the subscriber again. 
+
+---
+
+#### Error detection
+
+Issues reports Lambda function failures. In addition, for Node.js it reports errors that are logged using `console.error(new Error("my-error"))`.
+
+:::tip
+In Node.js functions you can use `console.error` to report your errors.
+:::
+
+For the Console to automatically report your errors, you need to pass in an error object with the `console.error` call.
+
+```js title="src/lambda.ts"
+console.error(new Error("my-error"));
+```
+
+---
+
+#### Limits
+
+There's a soft limit of 10K issues per hour per workspace. If your account goes over this limit, Issues will be temporarily paused. You can [contact us][contact-us] if this happens.
+
+---
+
+### Local logs
+
+When the Console starts up, it checks if you are running `sst dev` locally. If so, then it'll show you real-time logs from your local terminal. This works by connecting to a local server that's run as a part of the SST CLI.
+
+![SST Console local logs](../../../assets/docs/console/sst-console-local.png)
+
+:::info
+The local server only allows access from `localhost` and `console.sst.dev`.
+:::
+
+The local logs works in all browsers and environments. But for certain browsers like Safari or Brave, and Gitpod, it needs some additional configuration.
+
+---
+
+#### Safari & Brave
+
+Certain browsers like Safari and Brave require the local connection between the browser and the `sst dev` CLI to be running on HTTPS.
+
+SST can integrate with mkcert to automatically generate a self-signed certificate. If you need support for this, feel free to open an issue on GitHub.
+
+---
+
+#### Gitpod
+
+If you are using [Gitpod](https://www.gitpod.io/), you can use the Gitpod Local Companion app to connect to the `sst dev`  process running inside your Gitpod workspace.
+
+To get started:
+
+1. [Install Gitpod Local Companion app](https://www.gitpod.io/blog/local-app#installation)
+2. [Run the Companion app](https://www.gitpod.io/blog/local-app#running)
+3. Navigate to Console in the browser
+
+The companion app runs locally and creates a tunnelled connection to your Gitpod workspace.
+
+---
+
+### Resources
+
+The Console shows you the complete [state of the resources](/docs/state/) in your app. You can view:
+
+1. Each resource in your app 
+2. The relation between resources
+3. The outputs of a given resource
+4. The full URN of the resource
+5. The update where the resource was created or modified
+
+![SST Console resources](../../../assets/docs/console/sst-console-resources.png)
+
+---
+
+#### Update history
+
+The Console also tracks all the updates that were made to your app. And the resources that were modified as a part of the update.
+
+It also shows the SST command that was run that triggered the update. If the update was a part of an [Autodeploy](#autodeploy), it shows the related git commit as well.
+
+---
+
+### Autodeploy
+
+The Console can auto-deploy your apps when you _git push_ to your repo. Autodeploy uses [AWS CodeBuild](https://aws.amazon.com/codebuild/) in your account to run the build.
+
+![SST Console Autodeploy](../../../assets/docs/console/sst-console-autodeploy.png)
+
+:::note
+Autodeploy is currently free while in beta.
+:::
+
+You are only charged for the number of build minutes that you use. The pricing is based on the machine config used. [Learn more about CodeBuild pricing](https://aws.amazon.com/codebuild/pricing/).
+
+:::tip
+You can configure how Autodeploy works through your `sst.config.ts`.
+:::
+
+By default, a small CodeBuild machine is used. But you can configure this, we'll look at how below.
+
+---
+
+#### Setup
+
+To get started with Autodeploy:
+
+1. **Enable the GitHub integration**
+
+   Head over to your **Workspace settings** >  **Integrations** and enable GitHub. This will ask you to login to GitHub and you'll be asked to pick the GitHub organization or user you want to link to.
+
+   :::tip
+   You can only associate your workspace with a single GitHub org.
+   :::
+
+   If you have multiple GitHub orgs, you can create multiple workspaces in the Console.
+
+2. **Connect a repo**
+
+   To auto-deploy an app, head over to the **App's Settings** > **Autodeploy** and select the repo for the app.
+
+3. **Configure an environment**
+
+   Next you can configure a branch or PR environment by selecting the **stage** you want deployed to an **AWS account**. You can optionally configure **environment variables** as well.
+
+   :::note
+   Stage names by default are generated based on the branch or PR that's configured.
+   :::
+
+   By default, stages are based on the branch name or PR. We'll look at this in detail below.
+
+4. **Git push**
+
+   Finally, _git push_ to the environment you configured and head over to your app's **Autodeploy** tab to see it in action.
+
+   :::note
+   PR stages are removed when the PR is closed while branch stages are not.
+   :::
+
+   For example, if you configures a branch environment for the stage `production`, any git pushes to the `production` branch will be auto-deployed. Similarly, if you create a new PR, say PR#12, the Console will auto-deploy a stage called `pr-12`.
+
+5. **Setup alerts**
+
+   Once your deploys are working, you can set the Console to send alerts for your deploys. Head over to your **Workspace Settings** > **Alerts** and add a new alert to be notified on any Autodeploys, or only on Autodeploy errors.
+
+---
+
+#### Config
+
+The above behavior can be configured through the [`console.autodeploy`](/docs/reference/config/#console-autodeploy) option in the `sst.config.ts`.
+
+For example, if you want git pushes to the `main` branch auto-deploy the `production` stage and use a _large_ build machine, you set something like this in youe `sst.config.ts`.
+
+```ts title="sst.config.ts"
+console: {
+  autodeploy: {
+    target(event) {
+      if (event.type === "pushed" && event.branch === "main") {
+        return {
+          stage: "production",
+          runner: { engine: "codebuild", compute: "large" }
+        };
+      }
+    }
+  }
+}
+```
+
+Read more about this over on the [Config doc](/docs/reference/config/#console-autodeploy).
+
+---
+
+#### Environments
+
+The Console needs to know which account it needs to autodeploy into. You configure this under **App's Settings** > **Autodeploy**. Each environment takes:
+
+1. **Stage**
+
+   The stage that is being deployed. By default, the stage name comes from the name of the branch. Branch names are sanitized to only letters/numbers and hyphens. So for example:
+   - A push to a branch called `production` will deploy a stage called `production`.
+   - A push to PR#12 will deploy to a stage called `pr-12`.
+
+   As mentioned, above you can customize this through your `sst.config.ts`.
+
+   :::tip
+   You can specify a pattern to match the stage name in your environments.
+   :::
+
+   If multiple stages share the same environment, you can use a glob pattern. For example, `pr-*` matches all stages that start with `pr-`.
+
+2. **AWS Account**
+
+   The AWS account that you are deploying to.
+
+3. **Environment Variables**
+
+   Any environment variables you need for the build process. These are made available under `process.env.*` in your `sst.config.ts`.
 
 ---
 

@@ -6,8 +6,12 @@ import sst from "astro-sst";
 
 const sidebar = [
   {
-    label: "What is Ion",
+    label: "Intro",
     link: "/docs/",
+  },
+  {
+    label: "Workflow",
+    link: "/docs/workflow/",
   },
   {
     label: "Get Started",
@@ -38,10 +42,19 @@ const sidebar = [
     label: "Concepts",
     items: [
       { label: "Live", link: "/docs/live/" },
+      { label: "State", link: "/docs/state/" },
       { label: "Linking", link: "/docs/linking/" },
       { label: "Console", link: "/docs/console/" },
       { label: "Providers", link: "/docs/providers/" },
       { label: "Components", link: "/docs/components/" },
+    ],
+  },
+  {
+    label: "How to",
+    items: [
+      // { label: "Migrate from SST", link: "/docs/migrate-from-sst/" },
+      // { label: "Import Resources", link: "/docs/import-resources/" },
+      { label: "Custom Domains", link: "/docs/custom-domains/" },
     ],
   },
   {
@@ -68,6 +81,7 @@ const sidebar = [
       { label: "SvelteKit", link: "/docs/component/aws/svelte-kit/" },
       { label: "StaticSite", link: "/docs/component/aws/static-site/" },
       { label: "SolidStart", link: "/docs/component/aws/solid-start/" },
+      { label: "KinesisStream", link: "/docs/component/aws/kinesis-stream/" },
       {
         label: "ApiGatewayV1",
         link: "/docs/component/aws/apigatewayv1/",
@@ -107,14 +121,6 @@ const sidebar = [
       { label: "Global", link: "/docs/reference/global/" },
       { label: "Config", link: "/docs/reference/config/" },
       { label: "Secret", link: "/docs/component/secret/" },
-    ],
-  },
-  {
-    label: "How to",
-    items: [
-      // { label: "Migrate from SST", link: "/docs/migrate-from-sst/" },
-      // { label: "Import Resources", link: "/docs/import-resources/" },
-      { label: "Custom Domains", link: "/docs/custom-domains/" },
     ],
   },
   {
@@ -190,12 +196,20 @@ const sidebar = [
         link: "/docs/component/aws/apigatewayv1-lambda-route/",
       },
       {
+        label: "ApiGatewayV2UrlRoute",
+        link: "/docs/component/aws/apigatewayv2-url-route/",
+      },
+      {
         label: "ApiGatewayV2LambdaRoute",
         link: "/docs/component/aws/apigatewayv2-lambda-route/",
       },
       {
         label: "ApiGatewayWebSocketRoute",
         link: "/docs/component/aws/apigateway-websocket-route/",
+      },
+      {
+        label: "KinesisStreamLambdaSubscriber",
+        link: "/docs/component/aws/kinesis-stream-lambda-subscriber/",
       },
     ],
   },
