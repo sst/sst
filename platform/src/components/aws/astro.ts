@@ -244,6 +244,20 @@ export interface AstroArgs extends SsrSiteArgs {
    * ```
    */
   vpc?: SsrSiteArgs["vpc"];
+  /**
+   * Configure the Astro site to use an existing CloudFront cache policy. By default,
+   * a new cache policy is created. Note that CloudFront has a limit of 20 cache
+   * policies per account. This allows you to reuse an existing policy instead of
+   * creating a new one.
+   * @default A new cache plolicy is created
+   * @example
+   * ```js
+   * {
+   *   cachePolicy: "658327ea-f89d-4fab-a63d-7e88639e58f6"
+   * }
+   * ```
+   */
+  cachePolicy?: SsrSiteArgs["cachePolicy"];
 }
 
 const BUILD_META_FILE_NAME: BuildMetaFileName = "sst.buildMeta.json";

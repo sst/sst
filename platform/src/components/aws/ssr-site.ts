@@ -59,6 +59,7 @@ export type Plan = ReturnType<typeof validatePlan>;
 export interface SsrSiteArgs extends BaseSsrSiteArgs {
   domain?: CdnArgs["domain"];
   permissions?: FunctionArgs["permissions"];
+  cachePolicy?: Input<string>;
   warm?: Input<number>;
   invalidation?: Input<
     | false
@@ -667,7 +668,7 @@ function handler(event) {
           ],
           cachedMethods: ["GET", "HEAD"],
           compress: true,
-          cachePolicyId: useServerBehaviorCachePolicy().id,
+          cachePolicyId: args.cachePolicy ?? useServerBehaviorCachePolicy().id,
           // CloudFront's Managed-AllViewerExceptHostHeader policy
           originRequestPolicyId: "b689b0a8-53d0-40ab-baf2-68738e2966ac",
           functionAssociations: cfFunction
