@@ -3,54 +3,73 @@ title: Components
 description: Components are the building blocks of your app.
 ---
 
-Every SST app is made up of components. Components in turn create one or more pieces of low level infrastructure. Components wrap these up into logical units that represent the high level concepts of your app.
+Every SST app is made up of components. These are logical units that represent features in your app; like your frontends, APIs, databases, or queues.
 
-For example, `sst.aws.Function` lets you add a Lambda function to your app, while `sst.aws.Nextjs` lets you deploy your Next.js app.
+There are two types of components in SST:
 
-SST's components use [Pulumi](https://www.pulumi.com/docs/concepts/resources/components/) behind the scenes to create the low level infrastructure. These are generated from [Terraform modules](https://developer.hashicorp.com/terraform). SST allows you to customize how these are created.
+1. Built-in components — High level components built by the SST team
+2. Provider components — Low level components from the providers
 
-:::tip
-You can create any type of infrastructure even if SST doesn't support it directly.
-:::
-
-You can also use any Pulumi component in your SST app. This is useful if you want to create infrastructure that SST doesn't support yet.
-
-{/*
+Let's look at them below.
 
 ---
 
 ## Background
 
-Most providers like the AWS one are fairly low level, meaning that you need to understand how AWS works at a low level. For example, it takes around 70 low level AWS resources to deploy a Next.js app on AWS.
+Most [providers](/docs/providers/) like AWS are made up of low level resources. And it takes quite a number of these to put together something like a frontend or an API. For example, it takes around 70 low level AWS resources to create a Next.js app on AWS.
 
-As a result, these providers have been traditionally used by DevOps or Platform engineers. To address this, SST has its own version of the AWS (and Cloudflare) provider.
+As a result, Infrastructure as Code has been traditionally only been used by DevOps or Platform engineers.
 
-*/}
+To fix this, SST has components that can help you with the most common features in your app.
 
 ---
 
-## Providers
+## Built-in
 
-There are two types of components in your app.
+The built-in components in SST, the ones you see in the sidebar, are designed to make it really easy to create the various parts of your app.
 
-1. Native SST components, namespaced under `sst.*`
-2. And Pulumi components, namespaced under `<provider>.*`
+For example, you don't need to know a lot of AWS details to deploy your Next.js frontend:
 
-A provider is the infrastructure service that the component is deployed to. SST's components currently deploy to two providers.
+```ts title="sst.config.ts"
+new sst.aws.Nextjs("MyWeb", {
+  domain: "my-app.com"
+});
+```
 
-- **AWS**
+And because this is all in code, it's straightforward to configure this further.
 
-  These components are namespaced under `sst.aws.*`. Internally they use Pulumi's [AWS Classic](https://www.pulumi.com/registry/packages/aws/) provider.
+```ts title="sst.config.ts"
+new sst.aws.Nextjs("MyWeb", {
+  domain: "my-app.com",
+  path: "packages/web",
+  imageOptimization: {
+    memory: "512 MB"
+  },
+  buildCommand: "npm run build"
+});
+```
 
-- **Cloudflare**
-
-  These components are namespaced under `sst.cloudflare.*`. Internally they use Pulumi's [Cloudflare](https://www.pulumi.com/registry/packages/cloudflare/) provider.
+You can even take this a step further and completely transform how the low level resources are created. We'll look at this below.
 
 :::tip
-SST supports all [Pulumi providers](https://www.pulumi.com/registry/) and components.
+Aside from the built-in SST components, all the [Pulumi/Terraform providers](/docs/providers#directory) are supported as well.
 :::
 
-Learn more about [providers](/docs/providers/).
+Currently SST has built-in components for two cloud providers.
+
+---
+
+### AWS
+
+The AWS built-in components are designed to make it easy to work with AWS. 
+
+These components are namespaced under **`sst.aws.*`** and listed under AWS in the sidebar. Internally they use Pulumi's [AWS Classic](https://www.pulumi.com/registry/packages/aws/) provider.
+
+---
+
+### Cloudflare
+
+These components are namespaced under **`sst.cloudflare.*`** and listed under Cloudflare in the sidebar. Internally they use Pulumi's [Cloudflare](https://www.pulumi.com/registry/packages/cloudflare/) provider.
 
 ---
 
@@ -70,7 +89,7 @@ Each component takes the following:
 
 Here's an example of creating a `Function` component:
 
-```ts
+```ts title="sst.config.ts"
 const function = new sst.aws.Function("MyFunction", {
   handler: "src/lambda.handler"
 });
@@ -83,7 +102,6 @@ const function = new sst.aws.Function("MyFunction", {
 There are two guidelines to follow when naming your components:
 
 1. Component names are global across your entire app.
-
 2. Use PascalCase for the component name. For example, `MyFunction` instead of `myFunction` or `my_function`.
 
 These make it possible to [link resources](/docs/linking/) together in your SST app.
@@ -162,7 +180,7 @@ Set global defaults for your components with `$transform`.
 
 For example, to set a default runtime for all function components.
 
-```ts
+```ts title="sst.config.ts"
 $transform(sst.aws.Function, (args, opts) => {
   args.runtime = "nodejs18.x";
 })
@@ -171,7 +189,7 @@ $transform(sst.aws.Function, (args, opts) => {
 Here, `args` and `opts` are what you'd pass to the `Function` component. Recall the 
 signature of the `Function` component:
 
-```ts
+```ts title="sst.config.ts"
 new sst.aws.Function(name: string, args: FunctionArgs, opts?: pulumi.ComponentResourceOptions)
 ```
 
@@ -227,7 +245,7 @@ This makes it so that parts of your app are not blocked and all your resources a
 
 For example, let's create a function with a url.
 
-```ts
+```ts title="sst.config.ts"
 const myFunction = new sst.aws.Function("MyFunction", {
   url: true,
   handler: "src/lambda.handler"
@@ -236,7 +254,7 @@ const myFunction = new sst.aws.Function("MyFunction", {
 
 Here, `myFunction.url` is of type `Output<string>`. We want to use this function url as a route in our router.
 
-```ts {3}
+```ts {3} title="sst.config.ts"
 new sst.aws.Router("MyRouter", {
   routes: {
     "/api": myFunction.url
@@ -246,7 +264,7 @@ new sst.aws.Router("MyRouter", {
 
 The route arg takes `Input<string>`, which means it can take a string or an output. This creates a dependency internally. So the router will be deployed after the function has been. However, other components that are not dependent on this function can be deployed concurrently.
 
-You can learn more about [Input and Output types on the Pulumi docs](https://www.pulumi.com/docs/concepts/inputs-outputs/).
+You can read more about [Input and Output types on the Pulumi docs](https://www.pulumi.com/docs/concepts/inputs-outputs/).
 
 ---
 
@@ -256,7 +274,7 @@ Since outputs are values that are yet to be resolved, you cannot use them in reg
 
 For example, let's take the function url from above. We cannot do the following.
 
-```ts
+```ts title="sst.config.ts"
 const newUrl = myFunction.url + "/foo";
 ```
 
@@ -264,7 +282,7 @@ This is because the value of the output is not known at the time of this operati
 
 The easiest way to work with an output is using `.apply`. It'll allow you to apply an operation on the output and return a new output.
 
-```ts
+```ts title="sst.config.ts"
 const newUrl = myFunction.url.apply((value) => value + "/foo");
 ```
 
@@ -282,17 +300,17 @@ To make it a little easier to work with outputs, we have the following global he
 
 This let's you do.
 
-```ts
+```ts title="sst.config.ts"
 const newUrl = $concat(myFunction.url, "/foo");
 ```
 
 Instead of the apply.
 
-```ts
+```ts title="sst.config.ts"
 const newUrl = myFunction.url.apply((value) => value + "/foo");
 ```
 
-Learn more about [`$concat`](/docs/reference/global/#concat).
+Read more about [`$concat`](/docs/reference/global/#concat).
 
 ---
 
@@ -300,17 +318,17 @@ Learn more about [`$concat`](/docs/reference/global/#concat).
 
 This let's you do.
 
-```ts
+```ts title="sst.config.ts"
 const newUrl = $interpolate`${myFunction.url}/foo`;
 ```
 
 Instead of the apply.
 
-```ts
+```ts title="sst.config.ts"
 const newUrl = myFunction.url.apply((value) => value + "/foo");
 ```
 
-Learn more about [`$interpolate`](/docs/reference/global/#interpolate).
+Read more about [`$interpolate`](/docs/reference/global/#interpolate).
 
 ---
 
@@ -318,7 +336,7 @@ Learn more about [`$interpolate`](/docs/reference/global/#interpolate).
 
 This is for outputs that are JSON strings. So instead of doing this.
 
-```ts
+```ts title="sst.config.ts"
 const policy = policyStr.apply((policy) =>
   JSON.parse(policy)
 );
@@ -326,11 +344,11 @@ const policy = policyStr.apply((policy) =>
 
 You can.
 
-```ts
+```ts title="sst.config.ts"
 const policy = $jsonParse(policyStr);
 ```
 
-Learn more about [`$jsonParse`](/docs/reference/global/#jsonParse).
+Read more about [`$jsonParse`](/docs/reference/global/#jsonParse).
 
 ---
 
@@ -338,7 +356,7 @@ Learn more about [`$jsonParse`](/docs/reference/global/#jsonParse).
 
 Similarly, for outputs that are JSON objects. Instead of doing a stringify after an apply. 
 
-```ts
+```ts title="sst.config.ts"
 const policy = policyObj.apply((policy) =>
   JSON.stringify(policy)
 );
@@ -346,11 +364,11 @@ const policy = policyObj.apply((policy) =>
 
 You can.
 
-```ts
+```ts title="sst.config.ts"
 const policy = $jsonStringify(policyObj);
 ```
 
-Learn more about [`$jsonStringify`](/docs/reference/global/#jsonStringify).
+Read more about [`$jsonStringify`](/docs/reference/global/#jsonStringify).
 
 ---
 
@@ -358,11 +376,11 @@ Learn more about [`$jsonStringify`](/docs/reference/global/#jsonStringify).
 
 And finally when you are working with a list of outputs and you want to resolve them all together.
 
-```ts
+```ts title="sst.config.ts"
 $resolve([bucket.name, worker.url]).apply(([bucketName, workerUrl]) => {
   console.log(`Bucket: ${bucketName}`);
   console.log(`Worker: ${workerUrl}`);
 })
 ```
 
-Learn more about [`$resolve`](/docs/reference/global/#resolve).
+Read more about [`$resolve`](/docs/reference/global/#resolve).
