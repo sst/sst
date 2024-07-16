@@ -314,6 +314,27 @@ export class Postgres extends Component implements Link.Linkable, AWSLinkable {
     }
   }
 
+  /**
+   * The ARN of the RDS Cluster.
+   */
+  public get clusterArn() {
+    return this.cluster.arn;
+  }
+
+  /**
+   * The ARN of the master user secret.
+   */
+  public get secretArn() {
+    return this.cluster.masterUserSecrets[0].secretArn;
+  }
+
+  /**
+   * The name of the database.
+   */
+  public get database() {
+    return this.databaseName;
+  }
+
   public get nodes() {
     return {
       cluster: this.cluster,

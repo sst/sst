@@ -532,14 +532,13 @@ api.addAuthorizer({
 <Segment>
 <Section type="signature">
 ```ts
-route(route, handler, args?)
+route(rawRoute, handler, args?)
 ```
 </Section>
 
 <Section type="parameters">
 #### Parameters
-- <p><code class="key">route</code> <code class="primitive">string</code></p>
-The path for the route.
+- <p><code class="key">rawRoute</code> <code class="primitive">string</code></p>
 - <p><code class="key">handler</code> <code class="primitive">string</code><code class="symbol"> | </code>[<code class="type">FunctionArgs</code>](/docs/component/aws/function/#functionargs)</p>
 The function that'll be invoked.
 - <p><code class="key">args?</code> [<code class="type">ApiGatewayV2RouteArgs</code>](#apigatewayv2routeargs)</p>
@@ -548,6 +547,104 @@ Configure the route.
 
 <InlineSection>
 **Returns** [<code class="type">ApiGatewayV2LambdaRoute</code>](/docs/component/aws/apigatewayv2-lambda-route/)
+</InlineSection>
+Add a route to the API Gateway HTTP API. The route is a combination of
+- An HTTP method and a path, `{METHOD} /{path}`.
+- Or a `$default` route.
+
+:::tip
+The `$default` route is a default or catch-all route. It'll match if no other route matches.
+:::
+
+A method could be one of `GET`, `POST`, `PUT`, `DELETE`, `PATCH`, `HEAD`, `OPTIONS`, or `ANY`. Here `ANY` matches any HTTP method.
+
+The path can be a combination of
+- Literal segments, `/notes`, `/notes/new`, etc.
+- Parameter segments, `/notes/{noteId}`, `/notes/{noteId}/attachments/{attachmentId}`, etc.
+- Greedy segments, `/{proxy+}`, `/notes/{proxy+}`,  etc. The `{proxy+}` segment is a greedy segment that matches all child paths. It needs to be at the end of the path.
+
+:::tip
+The `{proxy+}` is a greedy segment, it matches all its child paths.
+:::
+
+The `$default` is a reserved keyword for the default route. It'll be matched if no other route matches.
+
+:::note
+You cannot have duplicate routes.
+:::
+
+When a request comes in, the API Gateway will look for the most specific match. If no route matches, the `$default` route will be invoked.
+
+Here's how you add a simple route.
+
+```js
+api.route("GET /", "src/get.handler");
+```
+
+Match any HTTP method.
+
+```js
+api.route("ANY /", "src/route.handler");
+```
+
+Add a default route.
+
+```js
+api.route("GET /", "src/get.handler")
+api.route($default, "src/default.handler");
+```
+
+Add a parameterized route.
+
+```js
+api.route("GET /notes/{id}", "src/get.handler");
+```
+
+Add a greedy route.
+
+```js
+api.route("GET /notes/{proxy+}", "src/greedy.handler");
+```
+
+Enable auth for a route.
+
+```js
+api.route("GET /", "src/get.handler")
+api.route("POST /", "src/post.handler", {
+  auth: {
+    iam: true
+  }
+});
+```
+
+Customize the route handler.
+
+```js
+api.route("GET /", {
+  handler: "src/get.handler",
+  memory: "2048 MB"
+});
+```
+</Segment>
+
+### urlRoute
+<Segment>
+<Section type="signature">
+```ts
+urlRoute(rawRoute, url, args?)
+```
+</Section>
+
+<Section type="parameters">
+#### Parameters
+- <p><code class="key">rawRoute</code> <code class="primitive">string</code></p>
+- <p><code class="key">url</code> <code class="primitive">string</code></p>
+- <p><code class="key">args?</code> [<code class="type">ApiGatewayV2RouteArgs</code>](#apigatewayv2routeargs)</p>
+Configure the route.
+</Section>
+
+<InlineSection>
+**Returns** [<code class="type">ApiGatewayV2UrlRoute</code>](/docs/component/aws/apigatewayv2-url-route/)
 </InlineSection>
 Add a route to the API Gateway HTTP API. The route is a combination of
 - An HTTP method and a path, `{METHOD} /{path}`.

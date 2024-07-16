@@ -7,28 +7,13 @@ import {
 } from "@pulumi/pulumi";
 import { Component, Transform, transform } from "../component";
 import { Function, FunctionArgs } from "./function";
-import { ApiGatewayV2RouteArgs } from "./apigatewayv2";
 import { apigatewayv2, lambda } from "@pulumi/aws";
+import {
+  ApiGatewayV2BaseRouteArgs,
+  createApiRoute,
+} from "./apigatewayv2-base-route";
 
-export interface Args extends ApiGatewayV2RouteArgs {
-  /**
-   * The cluster to use for the service.
-   */
-  api: Input<{
-    /**
-     * The name of the cluster.
-     */
-    name: Input<string>;
-    /**
-     * The ID of the cluster.
-     */
-    id: Input<string>;
-    /**
-     * The execution ARN of the cluster.
-     */
-    executionArn: Input<string>;
-  }>;
-  route: Input<string>;
+export interface Args extends ApiGatewayV2BaseRouteArgs {
   /**
    * The route function.
    */
@@ -62,7 +47,7 @@ export class ApiGatewayV2LambdaRoute extends Component {
     const fn = createFunction();
     const permission = createPermission();
     const integration = createIntegration();
-    const apiRoute = createApiRoute();
+    const apiRoute = createApiRoute(name, args, integration.id, self);
 
     this.fn = fn;
     this.permission = permission;
@@ -104,33 +89,6 @@ export class ApiGatewayV2LambdaRoute extends Component {
           payloadFormatVersion: "2.0",
         }),
         { parent: self, dependsOn: [permission] },
-      );
-    }
-
-    function createApiRoute() {
-      const authArgs = output(args.auth).apply((auth) => {
-        if (auth?.iam) return { authorizationType: "AWS_IAM" };
-        if (auth?.jwt)
-          return {
-            authorizationType: "JWT",
-            authorizationScopes: auth.jwt.scopes,
-            authorizerId: auth.jwt.authorizer,
-          };
-        return { authorizationType: "NONE" };
-      });
-
-      return authArgs.apply(
-        (authArgs) =>
-          new apigatewayv2.Route(
-            `${name}Route`,
-            transform(args.transform?.route, {
-              apiId: api.id,
-              routeKey: route,
-              target: interpolate`integrations/${integration.id}`,
-              ...authArgs,
-            }),
-            { parent: self },
-          ),
       );
     }
   }

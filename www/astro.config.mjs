@@ -196,6 +196,10 @@ const sidebar = [
         link: "/docs/component/aws/apigatewayv1-lambda-route/",
       },
       {
+        label: "ApiGatewayV2UrlRoute",
+        link: "/docs/component/aws/apigatewayv2-url-route/",
+      },
+      {
         label: "ApiGatewayV2LambdaRoute",
         link: "/docs/component/aws/apigatewayv2-lambda-route/",
       },

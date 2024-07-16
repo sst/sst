@@ -16,6 +16,7 @@ import { ApiGatewayV2DomainArgs } from "./helpers/apigatewayv2-domain";
 import { ApiGatewayV2LambdaRoute } from "./apigatewayv2-lambda-route";
 import { ApiGatewayV2Authorizer } from "./apigatewayv2-authorizer";
 import { apigatewayv2, cloudwatch } from "@pulumi/aws";
+import { ApiGatewayV2UrlRoute } from "./apigatewayv2-url-route";
 
 export interface ApiGatewayV2Args {
   /**
@@ -686,14 +687,14 @@ export class ApiGatewayV2 extends Component implements Link.Linkable {
    * ```
    */
   public route(
-    route: string,
+    rawRoute: string,
     handler: string | FunctionArgs,
     args: ApiGatewayV2RouteArgs = {},
   ) {
-    const routeNormalized = parseRoute();
+    const route = this.parseRoute(rawRoute);
     const prefix = this.constructorName;
     const suffix = sanitizeToPascalCase(
-      hashStringToPrettyString([this.api.id, routeNormalized].join(""), 6),
+      hashStringToPrettyString([this.api.id, route].join(""), 6),
     );
 
     return new ApiGatewayV2LambdaRoute(`${prefix}Route${suffix}`, {
@@ -702,44 +703,97 @@ export class ApiGatewayV2 extends Component implements Link.Linkable {
         id: this.api.id,
         executionArn: this.api.executionArn,
       },
-      route: routeNormalized,
+      route,
       handler,
       handlerTransform: this.constructorArgs.transform?.route?.handler,
       ...transform(this.constructorArgs.transform?.route?.args, args),
     });
+  }
 
-    function parseRoute() {
-      if (route.toLowerCase() === "$default") return "$default";
+  /**
+   * Add a URL route to the API Gateway HTTP API.
+   *
+   * @param route The path for the route.
+   * @param url The URL to forward to.
+   * @param args Configure the route.
+   *
+   * @example
+   * Here's how you add a simple route.
+   *
+   * ```js
+   * api.urlRoute("GET /", "https://google.com");
+   * ```
+   *
+   * Enable auth for a route.
+   *
+   * ```js
+   * api.urlRoute("GET /", "https://google.com")
+   * api.urlRoute("POST /", "https://google.com", {
+   *   auth: {
+   *     iam: true
+   *   }
+   * });
+   * ```
+   */
+  public urlRoute(
+    rawRoute: string,
+    url: string,
+    args: ApiGatewayV2RouteArgs = {},
+  ) {
+    const route = this.parseRoute(rawRoute);
+    return new ApiGatewayV2UrlRoute(this.buildRouteId(route), {
+      api: {
+        name: this.constructorName,
+        id: this.api.id,
+        executionArn: this.api.executionArn,
+      },
+      route,
+      url,
+      ...transform(this.constructorArgs.transform?.route?.args, args),
+    });
+  }
 
-      const parts = route.split(" ");
-      if (parts.length !== 2) {
-        throw new VisibleError(
-          `Invalid route ${route}. A route must be in the format "METHOD /path".`,
-        );
-      }
-      const [methodRaw, path] = route.split(" ");
-      const method = methodRaw.toUpperCase();
-      if (
-        ![
-          "ANY",
-          "DELETE",
-          "GET",
-          "HEAD",
-          "OPTIONS",
-          "PATCH",
-          "POST",
-          "PUT",
-        ].includes(method)
-      )
-        throw new VisibleError(`Invalid method ${methodRaw} in route ${route}`);
+  private parseRoute(rawRoute: string) {
+    if (rawRoute.toLowerCase() === "$default") return "$default";
 
-      if (!path.startsWith("/"))
-        throw new VisibleError(
-          `Invalid path ${path} in route ${route}. Path must start with "/".`,
-        );
-
-      return `${method} ${path}`;
+    const parts = rawRoute.split(" ");
+    if (parts.length !== 2) {
+      throw new VisibleError(
+        `Invalid route ${rawRoute}. A route must be in the format "METHOD /path".`,
+      );
     }
+    const [methodRaw, path] = rawRoute.split(" ");
+    const method = methodRaw.toUpperCase();
+    if (
+      ![
+        "ANY",
+        "DELETE",
+        "GET",
+        "HEAD",
+        "OPTIONS",
+        "PATCH",
+        "POST",
+        "PUT",
+      ].includes(method)
+    )
+      throw new VisibleError(
+        `Invalid method ${methodRaw} in route ${rawRoute}`,
+      );
+
+    if (!path.startsWith("/"))
+      throw new VisibleError(
+        `Invalid path ${path} in route ${rawRoute}. Path must start with "/".`,
+      );
+
+    return `${method} ${path}`;
+  }
+
+  private buildRouteId(route: string) {
+    const prefix = this.constructorName;
+    const suffix = sanitizeToPascalCase(
+      hashStringToPrettyString([this.api.id, route].join(""), 6),
+    );
+    return `${prefix}Route${suffix}`;
   }
 
   /**

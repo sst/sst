@@ -46,40 +46,37 @@ function useLinkHashes(module: TypeDoc.DeclarationReflection) {
   return v;
 }
 
-try {
-  configureLogger();
-  patchCode();
-  if (!cmd || cmd === "components") {
-    const components = await buildComponents();
-    const sdks = await buildSdk();
+configureLogger();
+patchCode();
+if (!cmd || cmd === "components") {
+  const components = await buildComponents();
+  const sdks = await buildSdk();
 
-    for (const component of components) {
-      const sourceFile = component.sources![0].fileName;
-      if (sourceFile === "platform/src/global-config.d.ts")
-        await generateGlobalConfigDoc(component);
-      else if (sourceFile === "platform/src/config.ts")
-        await generateConfigDoc(component);
-      else if (sourceFile.endsWith("/dns.ts")) await generateDnsDoc(component);
-      else {
-        const sdkName = component.name.split("/")[2];
-        const sdk = sdks.find(
-          (s) =>
-            // ie. vector
-            s.name === sdkName ||
-            // ie. aws/realtime
-            s.name === `aws/${sdkName}`,
-        );
-        const sdkNamespace = sdk && useModuleOrNamespace(sdk);
-        // Handle SDK modules are namespaced (ie. aws/realtime)
-        await generateComponentDoc(component, sdkNamespace);
-      }
+  for (const component of components) {
+    const sourceFile = component.sources![0].fileName;
+    if (sourceFile === "platform/src/global-config.d.ts")
+      await generateGlobalConfigDoc(component);
+    else if (sourceFile === "platform/src/config.ts")
+      await generateConfigDoc(component);
+    else if (sourceFile.endsWith("/dns.ts")) await generateDnsDoc(component);
+    else {
+      const sdkName = component.name.split("/")[2];
+      const sdk = sdks.find(
+        (s) =>
+          // ie. vector
+          s.name === sdkName ||
+          // ie. aws/realtime
+          s.name === `aws/${sdkName}`
+      );
+      const sdkNamespace = sdk && useModuleOrNamespace(sdk);
+      // Handle SDK modules are namespaced (ie. aws/realtime)
+      await generateComponentDoc(component, sdkNamespace);
     }
   }
-  if (!cmd || cmd === "cli") await generateCliDoc();
-  if (!cmd || cmd === "examples") await generateExamplesDocs();
-} finally {
-  restoreCode();
 }
+if (!cmd || cmd === "cli") await generateCliDoc();
+if (!cmd || cmd === "examples") await generateExamplesDocs();
+restoreCode();
 
 function generateCliDoc() {
   const content = fs.readFileSync("cli-doc.json");
@@ -99,7 +96,7 @@ function generateCliDoc() {
       renderBodyEnd(),
     ]
       .flat()
-      .join("\n"),
+      .join("\n")
   );
 
   function renderCliAbout() {
@@ -112,7 +109,7 @@ function generateCliDoc() {
       renderCliDescription(json.description),
       `</Section>`,
       ``,
-      `---`,
+      `---`
     );
     return lines;
   }
@@ -135,7 +132,7 @@ function generateCliDoc() {
         `</InlineSection>`,
         `</Section>`,
         renderCliDescription(f.description),
-        `</Segment>`,
+        `</Segment>`
       );
     }
     return lines;
@@ -158,7 +155,7 @@ function generateCliDoc() {
           '```sh frame="none"',
           `sst ${renderCliCommandUsage(cmd)}`,
           "```",
-          `</Section>`,
+          `</Section>`
         );
       }
 
@@ -172,7 +169,7 @@ function generateCliDoc() {
             `- <p><code class="key">${renderCliArgName(a)}</code></p>`,
             renderCliDescription(a.description),
           ]),
-          `</Section>`,
+          `</Section>`
         );
       }
 
@@ -184,11 +181,11 @@ function generateCliDoc() {
           `#### Flags`,
           ...cmd.flags.flatMap((f) => [
             `- <p><code class="key">${f.name}</code> ${renderCliFlagType(
-              f.type,
+              f.type
             )}</p>`,
             renderCliDescription(f.description),
           ]),
-          `</Section>`,
+          `</Section>`
         );
       }
 
@@ -203,7 +200,7 @@ function generateCliDoc() {
             .flatMap((s) => [
               `- <p>[<code class="key">${s.name}</code>](#${cmd.name}-${s.name})</p>`,
             ]),
-          `</Section>`,
+          `</Section>`
         );
       }
 
@@ -216,7 +213,7 @@ function generateCliDoc() {
         .flatMap((subcmd) => {
           lines.push(
             `<NestedTitle id="${cmd.name}-${subcmd.name}" Tag="h4" parent="${cmd.name} ">${subcmd.name}</NestedTitle>`,
-            `<Segment>`,
+            `<Segment>`
           );
 
           // usage
@@ -225,7 +222,7 @@ function generateCliDoc() {
             '```sh frame="none"',
             `sst ${cmd.name} ${renderCliCommandUsage(subcmd)}`,
             "```",
-            `</Section>`,
+            `</Section>`
           );
 
           // subcommand args
@@ -237,7 +234,7 @@ function generateCliDoc() {
                 `- <p><code class="key">${a.name}</code></p>`,
                 renderCliDescription(a.description),
               ]),
-              `</Section>`,
+              `</Section>`
             );
           }
 
@@ -250,7 +247,7 @@ function generateCliDoc() {
                 `- <p><code class="key">${f.name}</code></p>`,
                 renderCliDescription(f.description),
               ]),
-              `</Section>`,
+              `</Section>`
             );
           }
 
@@ -274,7 +271,7 @@ function generateCliDoc() {
 
     parts.push(command.name);
     command.args.forEach((arg) =>
-      arg.required ? parts.push(`<${arg.name}>`) : parts.push(`[${arg.name}]`),
+      arg.required ? parts.push(`<${arg.name}>`) : parts.push(`[${arg.name}]`)
     );
     return parts.join(" ");
   }
@@ -312,7 +309,7 @@ async function generateExamplesDocs() {
       }),
     ]
       .flat()
-      .join("\n"),
+      .join("\n")
   );
 
   function renderIntro() {
@@ -365,7 +362,7 @@ async function generateGlobalConfigDoc(module: TypeDoc.DeclarationReflection) {
       renderBodyEnd(),
     ]
       .flat()
-      .join("\n"),
+      .join("\n")
   );
 }
 
@@ -386,7 +383,7 @@ async function generateConfigDoc(module: TypeDoc.DeclarationReflection) {
       renderBodyEnd(),
     ]
       .flat()
-      .join("\n"),
+      .join("\n")
   );
 }
 
@@ -406,7 +403,7 @@ async function generateDnsDoc(module: TypeDoc.DeclarationReflection) {
     [
       renderHeader(
         `${title} DNS Adapter`,
-        `Reference doc for the \`sst.${dnsProvider}.dns\` adapter.`,
+        `Reference doc for the \`sst.${dnsProvider}.dns\` adapter.`
       ),
       renderSourceMessage(sourceFile),
       renderImports(outputFilePath),
@@ -419,13 +416,13 @@ async function generateDnsDoc(module: TypeDoc.DeclarationReflection) {
       renderBodyEnd(),
     ]
       .flat()
-      .join("\n"),
+      .join("\n")
   );
 }
 
 async function generateComponentDoc(
   component: TypeDoc.DeclarationReflection,
-  sdk?: TypeDoc.DeclarationReflection,
+  sdk?: TypeDoc.DeclarationReflection
 ) {
   console.info(`Generating ${component.name}...`);
   const sourceFile = component.sources![0].fileName;
@@ -436,7 +433,7 @@ async function generateComponentDoc(
   // module.name = "components/secret"
   const outputFilePath = path.join(
     "src/content/docs/docs/component",
-    `${component.name.split("/").slice(1).join("/")}.mdx`,
+    `${component.name.split("/").slice(1).join("/")}.mdx`
   );
 
   fs.writeFileSync(
@@ -445,8 +442,8 @@ async function generateComponentDoc(
       renderHeader(
         useClassName(component),
         `Reference doc for the \`${useClassProviderNamespace(
-          component,
-        )}.${className}\` component.`,
+          component
+        )}.${className}\` component.`
       ),
       renderSourceMessage(sourceFile),
       renderImports(outputFilePath),
@@ -481,7 +478,7 @@ async function generateComponentDoc(
       renderBodyEnd(),
     ]
       .flat()
-      .join("\n"),
+      .join("\n")
   );
 }
 
@@ -523,7 +520,7 @@ function renderBodyEnd() {
 
 function renderType(
   module: TypeDoc.DeclarationReflection,
-  type: TypeDoc.SomeType,
+  type: TypeDoc.SomeType
 ) {
   return renderSomeType(type);
 
@@ -619,7 +616,7 @@ function renderType(
   function renderArrayType(type: TypeDoc.ArrayType) {
     return type.elementType.type === "union"
       ? `<code class="symbol">(</code>${renderSomeType(
-          type.elementType,
+          type.elementType
         )}<code class="symbol">)[]</code>`
       : `${renderSomeType(type.elementType)}<code class="symbol">[]</code>`;
   }
@@ -679,6 +676,7 @@ function renderType(
       ApiGatewayV1LambdaRoute: "apigatewayv1-lambda-route",
       ApiGatewayV2Authorizer: "apigatewayv2-authorizer",
       ApiGatewayV2LambdaRoute: "apigatewayv2-lambda-route",
+      ApiGatewayV2UrlRoute: "apigatewayv2-url-route",
       ApiGatewayWebSocketRoute: "apigateway-websocket-route",
       AppSyncDataSource: "app-sync-data-source",
       AppSyncFunction: "app-sync-function",
@@ -759,7 +757,7 @@ function renderType(
   }
   function renderPulumiProviderType(type: TypeDoc.ReferenceType) {
     const ret = ((type as any)._target.fileName as string).match(
-      "node_modules/@pulumi/([^/]+)/(.+).d.ts",
+      "node_modules/@pulumi/([^/]+)/(.+).d.ts"
     )!;
     const provider = ret[1].toLocaleLowerCase(); // ie. aws
     const cls = ret[2].toLocaleLowerCase(); // ie. s3/Bucket
@@ -824,7 +822,7 @@ function renderType(
   }
   function renderAwsLambdaType(type: TypeDoc.ReferenceType) {
     const ret = ((type as any)._target.fileName as string).match(
-      "node_modules/@types/aws-lambda/(.+)",
+      "node_modules/@types/aws-lambda/(.+)"
     )!;
     const filePath = ret[1];
     // Resource types
@@ -847,7 +845,7 @@ function renderType(
   }
   function renderVercelType(type: TypeDoc.ReferenceType) {
     const ret = ((type as any)._target.fileName as string).match(
-      "node_modules/@pulumiverse/([^/]+)/(.+).d.ts",
+      "node_modules/@pulumiverse/([^/]+)/(.+).d.ts"
     )!;
     const provider = ret[1].toLocaleLowerCase(); // ie. vercel
     const cls = ret[2].toLocaleLowerCase(); // ie. dnsRecord
@@ -876,13 +874,11 @@ function renderType(
     const parameters = (signature.parameters ?? [])
       .map(
         (parameter) =>
-          `${renderSignatureArg(parameter)}: ${renderSomeType(
-            parameter.type!,
-          )}`,
+          `${renderSignatureArg(parameter)}: ${renderSomeType(parameter.type!)}`
       )
       .join(", ");
     return `<code class="primitive">(${parameters}) => ${renderSomeType(
-      signature.type!,
+      signature.type!
     )}</code>`;
   }
   function renderObjectType(type: TypeDoc.ReflectionType) {
@@ -895,7 +891,7 @@ function renderVariables(module: TypeDoc.DeclarationReflection) {
   const vars = (module.children ?? []).filter(
     (c) =>
       c.kind === TypeDoc.ReflectionKind.Variable &&
-      !c.comment?.modifierTags.has("@internal"),
+      !c.comment?.modifierTags.has("@internal")
   );
 
   if (!vars.length) return lines;
@@ -904,7 +900,7 @@ function renderVariables(module: TypeDoc.DeclarationReflection) {
   // in TypeDoc. So we'll replace $app's type with the $APP interface.
   const type$app = vars.find((v) => v.name === "$app");
   const interface$app = useModuleInterfaces(module).find(
-    (i) => i.name === "$APP",
+    (i) => i.name === "$APP"
   );
   if (type$app && interface$app) {
     // @ts-expect-error
@@ -945,8 +941,8 @@ function renderVariables(module: TypeDoc.DeclarationReflection) {
           `</Section>`,
           ...renderDescription(subType),
           `</Segment>`,
-        ],
-      ),
+        ]
+      )
     );
   }
   return lines;
@@ -955,7 +951,7 @@ function renderVariables(module: TypeDoc.DeclarationReflection) {
 function renderFunctions(
   module: TypeDoc.DeclarationReflection,
   fns: TypeDoc.DeclarationReflection[],
-  opts?: { title?: string },
+  opts?: { title?: string }
 ) {
   const lines: string[] = [];
 
@@ -973,7 +969,7 @@ function renderFunctions(
       "```ts",
       renderSignature(f.signatures![0]),
       "```",
-      `</Section>`,
+      `</Section>`
     );
 
     // parameters
@@ -1000,12 +996,12 @@ function renderFunctions(
 
           return [
             `- <p><code class="key">${renderSignatureArg(
-              param,
+              param
             )}</code> ${type}</p>`,
             ...renderDescription(param),
           ];
         }),
-        `</Section>`,
+        `</Section>`
       );
     }
 
@@ -1014,7 +1010,7 @@ function renderFunctions(
       ...renderDescription(f.signatures![0]),
       ``,
       ...renderExamples(f.signatures![0]),
-      `</Segment>`,
+      `</Segment>`
     );
   }
   return lines;
@@ -1037,7 +1033,7 @@ function renderAbout(module: TypeDoc.DeclarationReflection) {
   if (examples.length) {
     lines.push(
       ``,
-      ...examples.map((example) => renderTdComment(example.content)),
+      ...examples.map((example) => renderTdComment(example.content))
     );
   }
 
@@ -1058,7 +1054,7 @@ function renderConstructor(module: TypeDoc.DeclarationReflection) {
     "```ts",
     renderSignature(signature),
     "```",
-    `</Section>`,
+    `</Section>`
   );
 
   // parameters
@@ -1069,11 +1065,11 @@ function renderConstructor(module: TypeDoc.DeclarationReflection) {
       `#### Parameters`,
       ...signature.parameters.flatMap((param) => [
         `- <p><code class="key">${renderSignatureArg(
-          param,
+          param
         )}</code> ${renderType(module, param.type!)}</p>`,
         ...renderDescription(param),
       ]),
-      `</Section>`,
+      `</Section>`
     );
   }
 
@@ -1093,7 +1089,7 @@ function renderMethods(module: TypeDoc.DeclarationReflection) {
       renderMethod(module, m, {
         methodTitle: `### ${m.flags.isStatic ? "static " : ""}${renderName(m)}`,
         parametersTitle: `#### Parameters`,
-      }),
+      })
     ),
   ];
 }
@@ -1101,7 +1097,7 @@ function renderMethods(module: TypeDoc.DeclarationReflection) {
 function renderMethod(
   module: TypeDoc.DeclarationReflection,
   method: TypeDoc.DeclarationReflection,
-  opts: { methodTitle: string; parametersTitle: string },
+  opts: { methodTitle: string; parametersTitle: string }
 ) {
   if (method.kind !== TypeDoc.ReflectionKind.Method) return [];
   const lines = [];
@@ -1114,7 +1110,7 @@ function renderMethod(
     (method.flags.isStatic ? `${useClassName(module)}.` : "") +
       renderSignature(method.signatures![0]),
     "```",
-    `</Section>`,
+    `</Section>`
   );
 
   // parameters
@@ -1125,11 +1121,11 @@ function renderMethod(
       opts.parametersTitle,
       ...method.signatures![0].parameters.flatMap((param) => [
         `- <p><code class="key">${renderSignatureArg(
-          param,
+          param
         )}</code> ${renderType(module, param.type!)}</p>`,
         ...renderDescription(param),
       ]),
-      `</Section>`,
+      `</Section>`
     );
   }
 
@@ -1138,7 +1134,7 @@ function renderMethod(
     ...renderDescription(method.signatures![0]),
     ``,
     ...renderExamples(method.signatures![0]),
-    `</Segment>`,
+    `</Segment>`
   );
   return lines;
 }
@@ -1184,8 +1180,8 @@ function renderProperties(module: TypeDoc.DeclarationReflection) {
             ? renderDescription(subType)
             : renderDescription(subType.getSignature!)),
           `</Segment>`,
-        ],
-      ),
+        ]
+      )
     );
   }
   return lines;
@@ -1203,19 +1199,19 @@ function renderLinks(module: TypeDoc.DeclarationReflection) {
     returnType.declaration.children?.[0].name !== "properties"
   ) {
     throw new Error(
-      "Failed to render links b/c getSSTLink() return value does not match { properties }",
+      "Failed to render links b/c getSSTLink() return value does not match { properties }"
     );
   }
   const propertiesType = returnType.declaration.children[0]
     .type as TypeDoc.ReflectionType;
   if (!propertiesType.declaration.children?.length) {
     throw new Error(
-      "Failed to render links b/c getSSTLink() returned 0 link values",
+      "Failed to render links b/c getSSTLink() returned 0 link values"
     );
   }
 
   const links = propertiesType.declaration.children.filter(
-    (c) => !c.comment?.modifierTags.has("@internal"),
+    (c) => !c.comment?.modifierTags.has("@internal")
   );
   if (!links.length) return lines;
 
@@ -1245,7 +1241,7 @@ function renderLinks(module: TypeDoc.DeclarationReflection) {
         linkType.types = linkType.types.map((t) =>
           t.type === "reference" && t.name === "Output"
             ? t.typeArguments![0]
-            : t,
+            : t
         );
       }
 
@@ -1254,7 +1250,7 @@ function renderLinks(module: TypeDoc.DeclarationReflection) {
         delete link.type._project;
         console.error(link.type);
         throw new Error(
-          `Failed to render link ${link.name} b/c link value does not match type \`Output<intrinsic>\`, \`Output<intrinsic | undefined>\`, or \`Output<intrinsic> | undefined\``,
+          `Failed to render link ${link.name} b/c link value does not match type \`Output<intrinsic>\`, \`Output<intrinsic | undefined>\`, or \`Output<intrinsic> | undefined\``
         );
       }
 
@@ -1262,19 +1258,19 @@ function renderLinks(module: TypeDoc.DeclarationReflection) {
       const getter = useClassGetters(module).find((g) => g.name === link.name);
       if (!getter)
         throw new Error(
-          `Failed to render link ${link.name} b/c cannot find a getter property with the matching name`,
+          `Failed to render link ${link.name} b/c cannot find a getter property with the matching name`
         );
 
       return [
         `- <p><code class="key">${renderName(link)}</code> ${renderType(
           module,
-          linkType,
+          linkType
         )}</p>`,
         ...renderDescription(getter.getSignature!),
       ];
     }),
     `</Section>`,
-    `</Segment>`,
+    `</Segment>`
   );
 
   return lines;
@@ -1292,7 +1288,7 @@ function renderCloudflareBindings(module: TypeDoc.DeclarationReflection) {
     ...renderDescription(method.signatures![0]),
     ``,
     ...renderExamples(method.signatures![0]),
-    `</Segment>`,
+    `</Segment>`
   );
 
   return lines;
@@ -1302,7 +1298,7 @@ function renderInterfacesAtH2Level(
   module: TypeDoc.DeclarationReflection,
   opts: {
     filter?: (c: TypeDoc.DeclarationReflection) => boolean;
-  } = {},
+  } = {}
 ) {
   const lines: string[] = [];
   const interfaces = useModuleInterfaces(module)
@@ -1343,21 +1339,21 @@ function renderInterfacesAtH2Level(
               return subType.kind === TypeDoc.ReflectionKind.Method
                 ? renderMethod(module, subType, {
                     methodTitle: `<NestedTitle id="${useLinkHashes(module).get(
-                      subType,
+                      subType
                     )}" Tag="${
                       depth === 0 ? "h4" : "h5"
                     }" parent="${prefix}.">${renderName(
-                      subType,
+                      subType
                     )}</NestedTitle>`,
                     parametersTitle: `**Parameters**`,
                   })
                 : [
                     `<NestedTitle id="${useLinkHashes(module).get(
-                      subType,
+                      subType
                     )}" Tag="${
                       depth === 0 ? "h4" : "h5"
                     }" parent="${prefix}.">${renderName(
-                      subType,
+                      subType
                     )}</NestedTitle>`,
                     `<Segment>`,
                     `<Section type="parameters">`,
@@ -1371,8 +1367,8 @@ function renderInterfacesAtH2Level(
                     ...renderExamples(subType),
                     `</Segment>`,
                   ];
-            },
-          ),
+            }
+          )
         );
       } else if (prop.kind === TypeDoc.ReflectionKind.Method) {
         console.debug(`   - interface method ${prop.name}`);
@@ -1382,7 +1378,7 @@ function renderInterfacesAtH2Level(
               prop.flags.isStatic ? "static " : ""
             }${renderName(prop)}`,
             parametersTitle: `#### Parameters`,
-          }),
+          })
         );
       }
     }
@@ -1394,7 +1390,7 @@ function renderInterfacesAtH2Level(
 function renderInterfacesAtH3Level(module: TypeDoc.DeclarationReflection) {
   const lines: string[] = [];
   const interfaces = useModuleInterfaces(module).filter(
-    (c) => !c.comment?.modifierTags.has("@internal"),
+    (c) => !c.comment?.modifierTags.has("@internal")
   );
 
   // props
@@ -1433,8 +1429,8 @@ function renderInterfacesAtH3Level(module: TypeDoc.DeclarationReflection) {
           ``,
           ...renderExamples(subType),
           `</Segment>`,
-        ],
-      ),
+        ]
+      )
     );
   }
 
@@ -1456,7 +1452,7 @@ function renderSignatureArg(prop: TypeDoc.ParameterReflection) {
         ` - defaultValue is set, ie. "(args: FooArgs = {})`,
         ``,
         `But in this case, the default value is not "{}". Hence not supported.`,
-      ].join("\n"),
+      ].join("\n")
     );
 
   return `${prop.name}${prop.flags.isOptional || prop.defaultValue ? "?" : ""}`;
@@ -1466,7 +1462,7 @@ function renderDescription(
   prop:
     | TypeDoc.DeclarationReflection
     | TypeDoc.ParameterReflection
-    | TypeDoc.SignatureReflection,
+    | TypeDoc.SignatureReflection
 ) {
   if (!prop.comment?.summary) return [];
   return [renderTdComment(prop.comment?.summary)];
@@ -1474,10 +1470,10 @@ function renderDescription(
 
 function renderDefaultTag(
   module: TypeDoc.DeclarationReflection,
-  prop: TypeDoc.DeclarationReflection,
+  prop: TypeDoc.DeclarationReflection
 ) {
   const defaultTag = prop.comment?.blockTags.find(
-    (tag) => tag.tag === "@default",
+    (tag) => tag.tag === "@default"
   );
   if (!defaultTag) return [];
   return [
@@ -1500,7 +1496,7 @@ function renderDefaultTag(
 
 function renderReturnValue(
   module: TypeDoc.DeclarationReflection,
-  prop: TypeDoc.SignatureReflection,
+  prop: TypeDoc.SignatureReflection
 ) {
   return [
     ``,
@@ -1512,7 +1508,7 @@ function renderReturnValue(
 
 function renderNestedTypeList(
   module: TypeDoc.DeclarationReflection,
-  prop: TypeDoc.DeclarationReflection | TypeDoc.SignatureReflection,
+  prop: TypeDoc.DeclarationReflection | TypeDoc.SignatureReflection
 ) {
   return useNestedTypes(prop.type!, prop.name).map(
     ({ depth, prefix, subType }) => {
@@ -1536,14 +1532,14 @@ function renderNestedTypeList(
       const hash = generateHash();
       useLinkHashes(module).set(subType, hash);
       return `${" ".repeat(depth * 2)}- <p>[<code class="key">${renderName(
-        subType,
+        subType
       )}</code>](#${hash})${type}</p>`;
-    },
+    }
   );
 }
 
 function renderExamples(
-  prop: TypeDoc.DeclarationReflection | TypeDoc.SignatureReflection,
+  prop: TypeDoc.DeclarationReflection | TypeDoc.SignatureReflection
 ) {
   return (prop.comment?.blockTags ?? [])
     .filter((tag) => tag.tag === "@example")
@@ -1619,7 +1615,7 @@ function useClassProviderNamespace(module: TypeDoc.DeclarationReflection) {
   const fileName = useClass(module).sources![0].fileName;
   if (!fileName.startsWith("platform/src/components/"))
     throw new Error(
-      `Fail to generate class namespace from class fileName ${fileName}. Expected to start with "platform/src/components/"`,
+      `Fail to generate class namespace from class fileName ${fileName}. Expected to start with "platform/src/components/"`
     );
 
   const namespace = fileName.split("/").slice(-2, -1)[0];
@@ -1632,7 +1628,7 @@ function useClassComment(module: TypeDoc.DeclarationReflection) {
 }
 function useClassConstructor(module: TypeDoc.DeclarationReflection) {
   const constructor = useClass(module).children?.find(
-    (c) => c.kind === TypeDoc.ReflectionKind.Constructor,
+    (c) => c.kind === TypeDoc.ReflectionKind.Constructor
   );
   if (!constructor) throw new Error("Constructor not found");
   return constructor;
@@ -1645,12 +1641,12 @@ function useClassMethods(module: TypeDoc.DeclarationReflection) {
         !c.flags.isExternal &&
         !c.flags.isPrivate &&
         c.signatures &&
-        !c.signatures[0].comment?.modifierTags.has("@internal"),
+        !c.signatures[0].comment?.modifierTags.has("@internal")
     );
 }
 function useClassMethodByName(
   module: TypeDoc.DeclarationReflection,
-  methodName: string,
+  methodName: string
 ) {
   return useClass(module)
     .getChildrenByKind(TypeDoc.ReflectionKind.Method)
@@ -1658,20 +1654,20 @@ function useClassMethodByName(
 }
 function useClassGetters(module: TypeDoc.DeclarationReflection) {
   return (useClass(module).children ?? []).filter(
-    (c) => c.kind === TypeDoc.ReflectionKind.Accessor && c.flags.isPublic,
+    (c) => c.kind === TypeDoc.ReflectionKind.Accessor && c.flags.isPublic
   );
 }
 function useInterfaceProps(i: TypeDoc.DeclarationReflection) {
   if (!i.children?.length) throw new Error(`Interface ${i.name} has no props`);
 
   return i.children.filter(
-    (child) => !child.comment?.modifierTags.has("@internal"),
+    (child) => !child.comment?.modifierTags.has("@internal")
   );
 }
 function useNestedTypes(
   type: TypeDoc.SomeType,
   prefix: string = "",
-  depth: number = 0,
+  depth: number = 0
 ): {
   subType: TypeDoc.DeclarationReflection;
   prefix: string;
@@ -1685,7 +1681,7 @@ function useNestedTypes(
     return (type.typeArguments ?? []).flatMap((t) =>
       type.package === "typescript" && type.name === "Record"
         ? useNestedTypes(t, `${prefix}[]`, depth)
-        : useNestedTypes(t, prefix, depth),
+        : useNestedTypes(t, prefix, depth)
     );
   if (type.type === "reflection" && type.declaration.children?.length)
     return type.declaration.children!.flatMap((subType) => [
@@ -1697,7 +1693,7 @@ function useNestedTypes(
         ? useNestedTypes(
             subType.getSignature?.type!,
             `${prefix}.${subType.name}`,
-            depth + 1,
+            depth + 1
           )
         : []),
     ]);
@@ -1718,7 +1714,7 @@ function patchCode() {
   // patch Input
   fs.renameSync(
     "../platform/src/components/input.ts",
-    "../platform/src/components/input.ts.bk",
+    "../platform/src/components/input.ts.bk"
   );
   fs.copyFileSync("./input-patch.ts", "../platform/src/components/input.ts");
   // patch global
@@ -1734,7 +1730,7 @@ function patchCode() {
       // change `export import $util` to `export const $util` b/c TypeDoc
       // tries to traverse the import and fails. We don't need to look into $util
       // anyways as we will link to the pulumi docs.
-      .replace("export import $util", "export const $util"),
+      .replace("export import $util", "export const $util")
   );
 }
 
@@ -1742,7 +1738,7 @@ function restoreCode() {
   // restore Input
   fs.renameSync(
     "../platform/src/components/input.ts.bk",
-    "../platform/src/components/input.ts",
+    "../platform/src/components/input.ts"
   );
   // restore global
   fs.rmSync("../platform/src/global-config.d.ts");
@@ -1769,6 +1765,7 @@ async function buildComponents() {
       "../platform/src/components/aws/apigatewayv2.ts",
       "../platform/src/components/aws/apigatewayv2-authorizer.ts",
       "../platform/src/components/aws/apigatewayv2-lambda-route.ts",
+      "../platform/src/components/aws/apigatewayv2-url-route.ts",
       "../platform/src/components/aws/app-sync.ts",
       "../platform/src/components/aws/app-sync-data-source.ts",
       "../platform/src/components/aws/app-sync-function.ts",
@@ -1875,6 +1872,6 @@ async function buildExamples() {
     (c) =>
       c.kind === TypeDoc.ReflectionKind.Module &&
       c.children?.length === 1 &&
-      c.children[0].comment,
+      c.children[0].comment
   );
 }
