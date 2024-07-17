@@ -1266,7 +1266,7 @@ function renderLinks(module: TypeDoc.DeclarationReflection) {
           module,
           linkType
         )}</p>`,
-        ...renderDescription(getter.getSignature!),
+        ...renderDescription(getter.getSignature!, { indent: true }),
       ];
     }),
     `</Section>`,
@@ -1462,10 +1462,19 @@ function renderDescription(
   prop:
     | TypeDoc.DeclarationReflection
     | TypeDoc.ParameterReflection
-    | TypeDoc.SignatureReflection
+    | TypeDoc.SignatureReflection,
+  opts?: { indent: true }
 ) {
   if (!prop.comment?.summary) return [];
-  return [renderTdComment(prop.comment?.summary)];
+  const str = renderTdComment(prop.comment?.summary);
+  return opts?.indent
+    ? [
+        str
+          .split("\n")
+          .map((line) => `  ${line}`)
+          .join("\n"),
+      ]
+    : [str];
 }
 
 function renderDefaultTag(

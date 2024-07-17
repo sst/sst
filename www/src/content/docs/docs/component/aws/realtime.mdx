@@ -217,9 +217,9 @@ The following are accessible through the [SDK](/docs/reference/sdk/) at runtime.
 <Segment>
 <Section type="parameters">
 - <p><code class="key">authorizer</code> <code class="primitive">string</code></p>
-The name of the IoT authorizer.
+  The name of the IoT authorizer.
 - <p><code class="key">endpoint</code> <code class="primitive">string</code></p>
-The IoT endpoint.
+  The IoT endpoint.
 </Section>
 </Segment>
 
@@ -277,13 +277,13 @@ export const handler = realtime.authorizer(async (token) => {
 </Section>
 The topics the client can publish to.
 
-For example, this publishes to specific topics.
+For example, this publishes to two specific topics.
 ```js
 {
   publish: ["chat/room1", "chat/room2"]
 }
 ```
-And to publish to all topics under a specific prefix.
+And to publish to all topics under a given prefix.
 ```js
 {
   publish: ["chat/*"]
@@ -299,14 +299,14 @@ And to publish to all topics under a specific prefix.
 </Section>
 The topics the client can subscribe to.
 
-For example, this subscribes to specific topics.
+For example, this subscribes to two specific topics.
 ```js
 {
   subscribe: ["chat/room1", "chat/room2"]
 }
 ```
 
-And to subscribe to all topics under a specific prefix.
+And to subscribe to all topics under a given prefix.
 ```js
 {
   subscribe: ["chat/*"]
@@ -337,7 +337,7 @@ Configure the subscription.
 </InlineSection>
 Subscribe to this Realtime server.
 
-```js
+```js title="sst.config.ts"
 server.subscribe("src/subscriber.handler", {
   filter: `${$app.name}/${$app.stage}/chat/room1`
 });
@@ -345,7 +345,7 @@ server.subscribe("src/subscriber.handler", {
 
 Customize the subscriber function.
 
-```js
+```js title="sst.config.ts"
 server.subscribe(
   {
     handler: "src/subscriber.handler",
