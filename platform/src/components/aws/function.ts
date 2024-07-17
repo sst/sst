@@ -1432,7 +1432,7 @@ export class Function extends Component implements Link.Linkable, AWSLinkable {
           `${name}Url`,
           {
             functionName: fn.name,
-            authorizationType: url.authorization.toUpperCase(),
+            authorizationType: url.authorization === "iam" ? "AWS_IAM" : "NONE",
             invokeMode: streaming.apply((streaming) =>
               streaming ? "RESPONSE_STREAM" : "BUFFERED",
             ),
