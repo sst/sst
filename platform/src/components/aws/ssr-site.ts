@@ -122,6 +122,10 @@ export interface SsrSiteArgs extends BaseSsrSiteArgs {
      */
     server?: Transform<FunctionArgs>;
     /**
+     * Transform the image optimization Function resource.
+     */
+    imageOptimization?: Transform<FunctionArgs>;
+    /**
      * Transform the CloudFront CDN resource.
      */
     cdn?: Transform<CdnArgs>;
@@ -599,7 +603,7 @@ function handler(event) {
     ) {
       const fn = new Function(
         `${name}${sanitizeToPascalCase(fnName)}`,
-        {
+        transform(args.transform?.imageOptimization, {
           timeout: "25 seconds",
           logging: {
             retention: "3 days",
@@ -614,7 +618,7 @@ function handler(event) {
           url: true,
           live: false,
           _skipMetadata: true,
-        },
+        }),
         { parent },
       );
 
