@@ -107,6 +107,42 @@ export interface SsrSiteArgs extends BaseSsrSiteArgs {
         paths?: Input<"all" | "versioned" | string[]>;
       }
   >;
+  /**
+   * Configure the Lambda function used for server.
+   * @default `{architecture: "x86_64", memory: "1024 MB"}`
+   */
+  server?: {
+    /**
+     * The amount of memory allocated to the server function.
+     * Takes values between 128 MB and 10240 MB in 1 MB increments.
+     *
+     * @default `"1024 MB"`
+     * @example
+     * ```js
+     * {
+     *   server: {
+     *     memory: "2048 MB"
+     *   }
+     * }
+     * ```
+     */
+    memory?: FunctionArgs["memory"];
+    /**
+     * The [architecture](https://docs.aws.amazon.com/lambda/latest/dg/foundation-arch.html)
+     * of the server function.
+     *
+     * @default `"x86_64"`
+     * @example
+     * ```js
+     * {
+     *   server: {
+     *     architecture: "arm64"
+     *   }
+     * }
+     * ```
+     */
+    architecture?: FunctionArgs["architecture"];
+  };
   vpc?: FunctionArgs["vpc"];
   /**
    * [Transform](/docs/components#transform) how this component creates its underlying
@@ -555,7 +591,10 @@ function handler(event) {
           description: `${name} server`,
           runtime: "nodejs20.x",
           timeout: "20 seconds",
-          memory: "1024 MB",
+          memory: output(args.server?.memory).apply((v) => v ?? "1024 MB"),
+          architecture: output(args.server?.architecture).apply(
+            (v) => v ?? "x86_64",
+          ),
           vpc: args.vpc,
           ...props.function,
           nodejs: {

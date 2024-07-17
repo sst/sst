@@ -781,6 +781,66 @@ The resourcess specified using the [IAM ARN format](https://docs.aws.amazon.com/
 }
 ```
 </Segment>
+### server?
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Object</code>
+</InlineSection>
+- <p>[<code class="key">architecture?</code>](#server-architecture)</p>
+- <p>[<code class="key">memory?</code>](#server-memory)</p>
+</Section>
+
+<InlineSection>
+**Default** <code class="primitive">&lcub;architecture: "x86_64", memory: "1024 MB"&rcub;</code>
+</InlineSection>
+Configure the Lambda function used for server.
+
+</Segment>
+<NestedTitle id="server-architecture" Tag="h4" parent="server.">architecture?</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="symbol">&ldquo;</code><code class="primitive">x86_64</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">arm64</code><code class="symbol">&rdquo;</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+
+<InlineSection>
+**Default** <code class="primitive">"x86_64"</code>
+</InlineSection>
+The [architecture](https://docs.aws.amazon.com/lambda/latest/dg/foundation-arch.html)
+of the server function.
+
+```js
+{
+  server: {
+    architecture: "arm64"
+  }
+}
+```
+</Segment>
+<NestedTitle id="server-memory" Tag="h4" parent="server.">memory?</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="symbol">&ldquo;</code><code class="primitive">$\{number\} MB</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">$\{number\} GB</code><code class="symbol">&rdquo;</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+
+<InlineSection>
+**Default** <code class="primitive">"1024 MB"</code>
+</InlineSection>
+The amount of memory allocated to the server function.
+Takes values between 128 MB and 10240 MB in 1 MB increments.
+
+```js
+{
+  server: {
+    memory: "2048 MB"
+  }
+}
+```
+</Segment>
 ### transform?
 <Segment>
 <Section type="parameters">
@@ -789,6 +849,7 @@ The resourcess specified using the [IAM ARN format](https://docs.aws.amazon.com/
 </InlineSection>
 - <p>[<code class="key">assets?</code>](#transform-assets)</p>
 - <p>[<code class="key">cdn?</code>](#transform-cdn)</p>
+- <p>[<code class="key">imageOptimization?</code>](#transform-imageoptimization)</p>
 - <p>[<code class="key">server?</code>](#transform-server)</p>
 </Section>
 [Transform](/docs/components#transform) how this component creates its underlying
@@ -813,6 +874,16 @@ Transform the Bucket resource used for uploading the assets.
 </InlineSection>
 </Section>
 Transform the CloudFront CDN resource.
+
+</Segment>
+<NestedTitle id="transform-imageoptimization" Tag="h4" parent="transform.">imageOptimization?</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** [<code class="type">FunctionArgs</code>](/docs/component/aws/function/#functionargs)<code class="symbol"> | </code><code class="symbol">(</code><code class="primitive">args</code><code class="symbol">: </code>[<code class="type">FunctionArgs</code>](/docs/component/aws/function/#functionargs)<code class="symbol"> => </code><code class="primitive">void</code><code class="symbol">)</code>
+</InlineSection>
+</Section>
+Transform the image optimization Function resource.
 
 </Segment>
 <NestedTitle id="transform-server" Tag="h4" parent="transform.">server?</NestedTitle>
