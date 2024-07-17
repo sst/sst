@@ -1,9 +1,33 @@
-import { Input, Output, runtime, output, all } from "@pulumi/pulumi";
+import {
+  Input,
+  Output,
+  runtime,
+  output,
+  all,
+  ComponentResource,
+} from "@pulumi/pulumi";
 import { FunctionPermissionArgs } from "./aws/function.js";
 
 export module Link {
   export interface Definition {
     properties: Input<Record<string, any>>;
+  }
+
+  class LinkRef extends ComponentResource {
+    constructor(target: string, properties: any) {
+      super(
+        "sst:sst:LinkRef",
+        target + "LinkRef",
+        {
+          properties,
+        },
+        {},
+      );
+      this.registerOutputs({
+        target: output(target),
+        properties: output(properties),
+      });
+    }
   }
 
   let links: Record<string, Record<string, any>> = {};
@@ -18,12 +42,8 @@ export module Link {
           if (links[args.name]) {
             throw new Error(`Component name ${args.name} is not unique`);
           }
-
           const link = resource.getSSTLink();
-          links[args.name] = output(link.properties).apply((props) => ({
-            type: args.type.replaceAll(":", "."),
-            ...props,
-          }));
+          new LinkRef(args.name, link.properties);
         }
       });
       return {

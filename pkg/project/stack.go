@@ -852,16 +852,13 @@ func getCompletedEvent(ctx context.Context, stack auto.Stack) (*CompleteEvent, e
 		if hint, ok := outputs["_hint"].(string); ok {
 			complete.Hints[string(resource.URN)] = hint
 		}
-	}
 
-	outputs := decrypt(deployment.Resources[0].Outputs).(map[string]interface{})
-	linksOutput, ok := outputs["_links"]
-	if ok {
-		for key, value := range linksOutput.(map[string]interface{}) {
-			complete.Links[key] = value
+		if resource.Type == "sst:sst:LinkRef" && outputs["target"] != nil && outputs["properties"] != nil {
+			complete.Links[outputs["target"].(string)] = outputs["properties"].(map[string]interface{})
 		}
 	}
 
+	outputs := decrypt(deployment.Resources[0].Outputs).(map[string]interface{})
 	for key, value := range outputs {
 		if strings.HasPrefix(key, "_") {
 			continue
