@@ -186,7 +186,7 @@ resources.
 **Type** [<code class="type">QueueArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/sqs/queue/#inputs)<code class="symbol"> | </code><code class="symbol">(</code><code class="primitive">args</code><code class="symbol">: </code>[<code class="type">QueueArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/sqs/queue/#inputs)<code class="symbol"> => </code><code class="primitive">void</code><code class="symbol">)</code>
 </InlineSection>
 </Section>
-Transform the SQS queue resource.
+Transform the SQS Queue resource.
 
 </Segment>
 
@@ -199,7 +199,7 @@ Transform the SQS queue resource.
 **Type** <code class="primitive">Output</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
-The ARN of the SQS queue.
+The ARN of the SQS Queue.
 </Segment>
 
 ### nodes
@@ -219,7 +219,7 @@ The underlying [resources](/docs/components/#nodes) this component creates.
 **Type** [<code class="type">Queue</code>](https://www.pulumi.com/registry/packages/aws/api-docs/sqs/queue/)
 </InlineSection>
 </Section>
-The Amazon SQS queue.
+The Amazon SQS Queue.
 </Segment>
 
 ### url
@@ -229,7 +229,7 @@ The Amazon SQS queue.
 **Type** <code class="primitive">Output</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
-The SQS queue URL.
+The SQS Queue URL.
 </Segment>
 
 ## SDK
@@ -241,7 +241,7 @@ The following are accessible through the [SDK](/docs/reference/sdk/) at runtime.
 <Section type="parameters">
 - <p><code class="key">url</code> <code class="primitive">string</code></p>
 
-  The SQS queue URL.
+  The SQS Queue URL.
 </Section>
 </Segment>
 
@@ -308,7 +308,7 @@ Queue.subscribe(queueArn, subscriber, args?, opts?)
 <Section type="parameters">
 #### Parameters
 - <p><code class="key">queueArn</code> <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code></p>
-The ARN of the SQS queue to subscribe to.
+The ARN of the SQS Queue to subscribe to.
 - <p><code class="key">subscriber</code> <code class="primitive">string</code><code class="symbol"> | </code>[<code class="type">FunctionArgs</code>](/docs/component/aws/function/#functionargs)</p>
 The function that'll be notified.
 - <p><code class="key">args?</code> [<code class="type">QueueSubscriberArgs</code>](#queuesubscriberargs)</p>
@@ -319,9 +319,9 @@ Configure the subscription.
 <InlineSection>
 **Returns** <code class="primitive">Output</code><code class="symbol">&lt;</code>[<code class="type">QueueLambdaSubscriber</code>](/docs/component/aws/queue-lambda-subscriber/)<code class="symbol">&gt;</code>
 </InlineSection>
-Subscribe to an SQS queue that was not created in your app.
+Subscribe to an SQS Queue that was not created in your app.
 
-For example, let's say you have an existing SQS queue with the following ARN.
+For example, let's say you have an existing SQS Queue with the following ARN.
 
 ```js title="sst.config.ts"
 const queueArn = "arn:aws:sqs:us-east-1:123456789012:MyQueue";

@@ -12,19 +12,19 @@ import { apigateway, lambda } from "@pulumi/aws";
 
 export interface Args extends ApiGatewayV1RouteArgs {
   /**
-   * The api to use for the route.
+   * The API Gateway to use for the route.
    */
   api: Input<{
     /**
-     * The name of the api.
+     * The name of the API Gateway.
      */
     name: Input<string>;
     /**
-     * The ID of the api.
+     * The ID of the API Gateway.
      */
     id: Input<string>;
     /**
-     * The execution ARN of the api.
+     * The execution ARN of the API Gateway.
      */
     executionArn: Input<string>;
   }>;
@@ -44,14 +44,17 @@ export interface Args extends ApiGatewayV1RouteArgs {
    * The route function.
    */
   handler: Input<string | FunctionArgs>;
+  /**
+   * @internal
+   */
   handlerTransform?: Transform<FunctionArgs>;
 }
 
 /**
  * The `ApiGatewayV1LambdaRoute` component is internally used by the `ApiGatewayV1` component
- * to add routes to [Amazon API Gateway REST API](https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-rest-api.html).
+ * to add routes to your [API Gateway REST API](https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-rest-api.html).
  *
- * :::caution
+ * :::note
  * This component is not intended to be created directly.
  * :::
  *

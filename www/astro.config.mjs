@@ -160,6 +160,10 @@ const sidebar = [
         link: "/docs/component/aws/cognito-user-pool-client/",
       },
       {
+        label: "ApiGatewayV2UrlRoute",
+        link: "/docs/component/aws/apigatewayv2-url-route/",
+      },
+      {
         label: "ApiGatewayV1Authorizer",
         link: "/docs/component/aws/apigatewayv1-authorizer/",
       },
@@ -194,10 +198,6 @@ const sidebar = [
       {
         label: "ApiGatewayV1LambdaRoute",
         link: "/docs/component/aws/apigatewayv1-lambda-route/",
-      },
-      {
-        label: "ApiGatewayV2UrlRoute",
-        link: "/docs/component/aws/apigatewayv2-url-route/",
       },
       {
         label: "ApiGatewayV2LambdaRoute",

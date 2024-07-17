@@ -18,7 +18,7 @@ your app.
 
 #### Minimal example
 
-```ts
+```ts title="sst.config.ts"
 const storage = new sst.cloudflare.Kv("MyStorage");
 ```
 
@@ -26,7 +26,7 @@ const storage = new sst.cloudflare.Kv("MyStorage");
 
 You can link KV to a worker.
 
-```ts {3}
+```ts {3} title="sst.config.ts"
 new sst.cloudflare.Worker("MyWorker", {
   handler: "./index.ts",
   link: [storage],
@@ -95,7 +95,7 @@ Transform the R2 KV namespace resource.
 **Type** <code class="primitive">Output</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
-The generated id of the KV namespace.
+The generated ID of the KV namespace.
 </Segment>
 
 ### nodes
@@ -124,8 +124,8 @@ The following are accessible through the [SDK](/docs/reference/sdk/) at runtime.
 
 ### Bindings
 <Segment>
-when you link a KV storage, the storage will be available to the worker and you can
-interact with it using the [API methods documented here](https://developers.cloudflare.com/kv/api/).
+When you link a KV storage, the storage will be available to the worker and you can
+interact with it using its [API methods](https://developers.cloudflare.com/kv/api/).
 
 ```ts title="index.ts" {3}
 import { Resource } from "sst";

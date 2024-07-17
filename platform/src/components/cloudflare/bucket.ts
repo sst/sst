@@ -24,7 +24,7 @@ export interface BucketArgs {
  *
  * #### Minimal example
  *
- * ```ts
+ * ```ts title="sst.config.ts"
  * const bucket = new sst.cloudflare.Bucket("MyBucket");
  * ```
  *
@@ -32,7 +32,7 @@ export interface BucketArgs {
  *
  * You can link the bucket to a worker.
  *
- * ```ts {3}
+ * ```ts {3} title="sst.config.ts"
  * new sst.cloudflare.Worker("MyWorker", {
  *   handler: "./index.ts",
  *   link: [bucket],
@@ -77,8 +77,8 @@ export class Bucket extends Component implements Link.Cloudflare.Linkable {
   }
 
   /**
-   * when you link a bucket, the bucket will be available to the worker and you can
-   * interact with it using the [bucket methods documented here](https://developers.cloudflare.com/r2/api/workers/workers-api-reference/#bucket-method-definitions).
+   * When you link a bucket to a worker, you can interact with it using these
+   * [Bucket methods](https://developers.cloudflare.com/r2/api/workers/workers-api-reference/#bucket-method-definitions).
    *
    * @example
    * ```ts title="index.ts" {3}

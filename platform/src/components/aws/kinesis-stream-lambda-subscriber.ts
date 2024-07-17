@@ -23,9 +23,9 @@ export interface Args extends KinesisStreamLambdaSubscriberArgs {
 
 /**
  * The `KinesisStreamLambdaSubscriber` component is internally used by the `KinesisStream` component to
- * add consumer to [Amazon Kinesis Data Streams](https://docs.aws.amazon.com/streams/latest/dev/introduction.html).
+ * add a consumer to [Amazon Kinesis Data Streams](https://docs.aws.amazon.com/streams/latest/dev/introduction.html).
  *
- * :::caution
+ * :::note
  * This component is not intended to be created directly.
  * :::
  *

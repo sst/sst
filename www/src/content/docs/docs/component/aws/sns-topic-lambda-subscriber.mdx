@@ -14,9 +14,9 @@ import InlineSection from '../../../../../../src/components/tsdoc/InlineSection.
 
 <Section type="about">
 The `SnsTopicLambdaSubscriber` component is internally used by the `SnsTopic` component
-to add subscriptions to [Amazon SNS topic](https://docs.aws.amazon.com/sns/latest/dg/sns-create-topic.html).
+to add subscriptions to your [Amazon SNS Topic](https://docs.aws.amazon.com/sns/latest/dg/sns-create-topic.html).
 
-:::caution
+:::note
 This component is not intended to be created directly.
 :::
 
@@ -81,7 +81,7 @@ The Lambda permission.
 **Type** [<code class="type">TopicSubscription</code>](https://www.pulumi.com/registry/packages/aws/api-docs/sns/topicsubscription/)
 </InlineSection>
 </Section>
-The SNS topic subscription.
+The SNS Topic subscription.
 </Segment>
 
 ## Args
@@ -101,7 +101,7 @@ an attribute assigned to the message, then the policy rejects the message.
 Learn more about [subscription filter policies](https://docs.aws.amazon.com/sns/latest/dg/sns-subscription-filter-policies.html).
 :::
 
-For example, if your SNS topic message contains this in a JSON format.
+For example, if your SNS Topic message contains this in a JSON format.
 ```js
 {
   store: "example_corp",
@@ -150,7 +150,7 @@ The subscriber function.
 </InlineSection>
 - <p>[<code class="key">arn</code>](#topic-arn)</p>
 </Section>
-The topic to use.
+The Topic to use.
 
 </Segment>
 <NestedTitle id="topic-arn" Tag="h4" parent="topic.">arn</NestedTitle>
@@ -160,7 +160,7 @@ The topic to use.
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
-The ARN of the topic.
+The ARN of the Topic.
 
 </Segment>
 ### transform?
@@ -182,7 +182,7 @@ resources.
 **Type** [<code class="type">TopicSubscriptionArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/sns/topicsubscription/#inputs)<code class="symbol"> | </code><code class="symbol">(</code><code class="primitive">args</code><code class="symbol">: </code>[<code class="type">TopicSubscriptionArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/sns/topicsubscription/#inputs)<code class="symbol"> => </code><code class="primitive">void</code><code class="symbol">)</code>
 </InlineSection>
 </Section>
-Transform the SNS topic Subscription resource.
+Transform the SNS Topic Subscription resource.
 
 </Segment>
 </div>

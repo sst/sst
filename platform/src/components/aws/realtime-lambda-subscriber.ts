@@ -13,7 +13,7 @@ import { iot } from "@pulumi/aws";
 
 export interface Args extends RealtimeSubscriberArgs {
   /**
-   * The IoT websocket server to use.
+   * The IoT WebSocket server to use.
    */
   iot: Input<{
     /**
@@ -29,9 +29,9 @@ export interface Args extends RealtimeSubscriberArgs {
 
 /**
  * The `RealtimeLambdaSubscriber` component is internally used by the `Realtime` component
- * to add subscriptions to [AWS IoT endpoint](https://docs.aws.amazon.com/iot/latest/developerguide/what-is-aws-iot.html).
+ * to add subscriptions to the [AWS IoT endpoint](https://docs.aws.amazon.com/iot/latest/developerguide/what-is-aws-iot.html).
  *
- * :::caution
+ * :::note
  * This component is not intended to be created directly.
  * :::
  *
@@ -109,7 +109,7 @@ export class RealtimeLambdaSubscriber extends Component {
        */
       permission: this.permission,
       /**
-       * The IoT topic rule.
+       * The IoT Topic rule.
        */
       rule: this.rule,
     };

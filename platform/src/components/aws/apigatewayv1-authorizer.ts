@@ -13,19 +13,19 @@ import { apigateway, lambda } from "@pulumi/aws";
 
 export interface AuthorizerArgs extends ApiGatewayV1AuthorizerArgs {
   /**
-   * The api to use for the route.
+   * The API Gateway to use for the route.
    */
   api: Input<{
     /**
-     * The name of the api.
+     * The name of the API Gateway.
      */
     name: Input<string>;
     /**
-     * The ID of the api.
+     * The ID of the API Gateway.
      */
     id: Input<string>;
     /**
-     * The execution ARN of the api.
+     * The execution ARN of the API Gateway.
      */
     executionArn: Input<string>;
   }>;
@@ -35,7 +35,7 @@ export interface AuthorizerArgs extends ApiGatewayV1AuthorizerArgs {
  * The `ApiGatewayV1Authorizer` component is internally used by the `ApiGatewayV1` component
  * to add authorizers to [Amazon API Gateway REST API](https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-rest-api.html).
  *
- * :::caution
+ * :::note
  * This component is not intended to be created directly.
  * :::
  *
@@ -135,7 +135,7 @@ export class ApiGatewayV1Authorizer extends Component {
   }
 
   /**
-   * The id of the authorizer.
+   * The ID of the authorizer.
    */
   public get id() {
     return this.authorizer.id;
@@ -148,11 +148,11 @@ export class ApiGatewayV1Authorizer extends Component {
     const self = this;
     return {
       /**
-       * The Amazon AppSync DataSource.
+       * The API Gateway Authorizer.
        */
       authorizer: this.authorizer,
       /**
-       * The Lambda function used by the data source.
+       * The Lambda function used by the authorizer.
        */
       get function() {
         if (!self.fn)

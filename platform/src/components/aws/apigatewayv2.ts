@@ -195,6 +195,12 @@ export interface ApiGatewayV2AuthorizerArgs {
   jwt: Input<{
     /**
      * Base domain of the identity provider that issues JSON Web Tokens.
+     * @example
+     * ```js
+     * {
+     *   issuer: "https://issuer.com/"
+     * }
+     * ```
      */
     issuer: Input<string>;
     /**
@@ -642,7 +648,7 @@ export class ApiGatewayV2 extends Component implements Link.Linkable {
    *
    * When a request comes in, the API Gateway will look for the most specific match. If no route matches, the `$default` route will be invoked.
    *
-   * @param route The path for the route.
+   * @param rawRoute The path for the route.
    * @param handler The function that'll be invoked.
    * @param args Configure the route.
    *
@@ -725,7 +731,7 @@ export class ApiGatewayV2 extends Component implements Link.Linkable {
   /**
    * Add a URL route to the API Gateway HTTP API.
    *
-   * @param route The path for the route.
+   * @param rawRoute The path for the route.
    * @param url The URL to forward to.
    * @param args Configure the route.
    *

@@ -16,7 +16,7 @@ import InlineSection from '../../../../../../src/components/tsdoc/InlineSection.
 The `CognitoUserPoolClient` component is internally used by the `CognitoUserPool`
 component to add clients to your [Amazon Cognito user pool](https://docs.aws.amazon.com/cognito/latest/developerguide/cognito-user-identity-pools.html).
 
-:::caution
+:::note
 This component is not intended to be created directly.
 :::
 
@@ -51,7 +51,7 @@ new CognitoUserPoolClient(name, args, opts?)
 **Type** <code class="primitive">Output</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
-The Cognito user pool client ID.
+The Cognito User Pool client ID.
 </Segment>
 
 ### nodes
@@ -71,7 +71,7 @@ The underlying [resources](/docs/components/#nodes) this component creates.
 **Type** [<code class="type">UserPoolClient</code>](https://www.pulumi.com/registry/packages/aws/api-docs/cognito/userpoolclient/)
 </InlineSection>
 </Section>
-The Amazon Cognito user pool client.
+The Cognito User Pool client.
 </Segment>
 
 ### secret
@@ -81,7 +81,7 @@ The Amazon Cognito user pool client.
 **Type** <code class="primitive">Output</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
-The Cognito user pool client secret.
+The Cognito User Pool client secret.
 </Segment>
 
 ## SDK
@@ -93,10 +93,10 @@ The following are accessible through the [SDK](/docs/reference/sdk/) at runtime.
 <Section type="parameters">
 - <p><code class="key">id</code> <code class="primitive">string</code></p>
 
-  The Cognito user pool client ID.
+  The Cognito User Pool client ID.
 - <p><code class="key">secret</code> <code class="primitive">string</code></p>
 
-  The Cognito user pool client secret.
+  The Cognito User Pool client secret.
 </Section>
 </Segment>
 
@@ -120,7 +120,7 @@ resources.
 **Type** [<code class="type">UserPoolClientArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/cognito/userpoolclient/#inputs)<code class="symbol"> | </code><code class="symbol">(</code><code class="primitive">args</code><code class="symbol">: </code>[<code class="type">UserPoolClientArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/cognito/userpoolclient/#inputs)<code class="symbol"> => </code><code class="primitive">void</code><code class="symbol">)</code>
 </InlineSection>
 </Section>
-Transform the Cognito user pool client resource.
+Transform the Cognito User Pool client resource.
 
 </Segment>
 ### userPool

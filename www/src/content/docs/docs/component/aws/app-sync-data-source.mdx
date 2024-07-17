@@ -16,7 +16,7 @@ import InlineSection from '../../../../../../src/components/tsdoc/InlineSection.
 The `AppSyncDataSource` component is internally used by the `AppSync` component to add
 data sources to [AWS AppSync](https://docs.aws.amazon.com/appsync/latest/devguide/what-is-appsync.html).
 
-:::caution
+:::note
 This component is not intended to be created directly.
 :::
 
@@ -91,7 +91,7 @@ The Lambda function used by the data source.
 **Type** [<code class="type">Role</code>](https://www.pulumi.com/registry/packages/aws/api-docs/iam/role/)
 </InlineSection>
 </Section>
-The DataSource service IAM role.
+The DataSource service's IAM role.
 </Segment>
 
 ## DataSourceArgs
@@ -126,7 +126,6 @@ The ARN for the DynamoDB table.
 
 ```js
 {
-  name: "dynamoDS",
   dynamodb: "arn:aws:dynamodb:us-east-1:123456789012:table/my-table"
 }
 ```
@@ -202,11 +201,13 @@ Or the handler.
 Or the function args.
 
 ```js
+{
   lambda: {
     handler: "src/lambda.handler",
     timeout: "60 seconds"
   }
 }
+```
 </Segment>
 ### name
 <Segment>
@@ -251,7 +252,6 @@ Configure the RDS data source.
 
 ```js
 {
-  name: "rdsDS",
   rds: {
     cluster: "arn:aws:rds:us-east-1:123456789012:cluster:my-cluster",
     credentials: "arn:aws:secretsmanager:us-east-1:123456789012:secret:my-secret"

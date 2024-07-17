@@ -212,11 +212,13 @@ export interface AppSyncDataSourceArgs {
    * Or the function args.
    *
    * ```js
+   * {
    *   lambda: {
    *     handler: "src/lambda.handler",
    *     timeout: "60 seconds"
    *   }
    * }
+   * ```
    */
   lambda?: Input<string | FunctionArgs>;
   /**
@@ -224,7 +226,6 @@ export interface AppSyncDataSourceArgs {
    * @example
    * ```js
    * {
-   *   name: "dynamoDS",
    *   dynamodb: "arn:aws:dynamodb:us-east-1:123456789012:table/my-table"
    * }
    * ```
@@ -275,7 +276,6 @@ export interface AppSyncDataSourceArgs {
    * @example
    * ```js
    * {
-   *   name: "rdsDS",
    *   rds: {
    *     cluster: "arn:aws:rds:us-east-1:123456789012:cluster:my-cluster",
    *     credentials: "arn:aws:secretsmanager:us-east-1:123456789012:secret:my-secret"

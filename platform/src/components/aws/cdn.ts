@@ -250,7 +250,7 @@ export interface CdnArgs {
 /**
  * The `Cdn` component is internally used by other components to deploy a CDN to AWS. It uses [Amazon CloudFront](https://aws.amazon.com/cloudfront/) and [Amazon Route 53](https://aws.amazon.com/route53/) to manage custom domains.
  *
- * :::caution
+ * :::note
  * This component is not intended to be created directly.
  * :::
  *
@@ -258,7 +258,7 @@ export interface CdnArgs {
  *
  * You'll find this component exposed in the `transform` of other components. And you can customize the args listed here. For example:
  *
- * ```ts
+ * ```ts title="sst.config.ts"
  * new sst.aws.Nextjs("MyWeb", {
  *   transform: {
  *     cdn: (args) => {

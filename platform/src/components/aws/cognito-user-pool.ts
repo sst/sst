@@ -55,58 +55,101 @@ export interface CognitoUserPoolArgs {
    * {
    *   triggers: {
    *     preAuthentication: "src/preAuthentication.handler",
-   *     postAuthentication: "src/postAuthentication.handler",
-   *   },
+   *     postAuthentication: "src/postAuthentication.handler"
+   *   }
    * }
    * ```
    */
   triggers?: Input<{
     /**
-     * ARN of the lambda function to present a custom challenge and its answer.
+     * Triggered after the user successfully responds to the previous challenge, and a new
+     * challenge needs to be created.
+     *
+     * Takes the function ARN, or the handler path, or the function args.
      */
     createAuthChallenge?: string | FunctionArgs;
     /**
-     * ARN of the custom email sender function.
+     * Triggered during events like user sign-up, password recovery, email/phone number
+     * verification, and when an admin creates a user. Use this trigger to customize the
+     * email provider.
+     *
+     * Takes the function ARN, or the handler path, or the function args.
      */
     customEmailSender?: string | FunctionArgs;
     /**
-     * ARN of the lambda function to add customization and localization of verification, recovery, and MFA messages.
+     * Triggered during events like user sign-up, password recovery, email/phone number
+     * verification, and when an admin creates a user. Use this trigger to customize the
+     * message that is sent to your users.
+     *
+     * Takes the function ARN, or the handler path, or the function args.
      */
     customMessage?: string | FunctionArgs;
     /**
-     * ARN of the custom SMS sender function.
+     * Triggered when an SMS message needs to be sent, such as for MFA or verification codes.
+     * Use this trigger to customize the SMS provider.
+     *
+     * Takes the function ARN, or the handler path, or the function args.
      */
     customSmsSender?: string | FunctionArgs;
     /**
+     * Triggered after each challenge response to determine the next action. Evaluates whether the
+     * user has completed the authentication process or if additional challenges are needed.
      * ARN of the lambda function to name a custom challenge.
+     *
+     * Takes the function ARN, or the handler path, or the function args.
      */
     defineAuthChallenge?: string | FunctionArgs;
     /**
-     * ARN of the lambda function to add custom logging and analytics for authenticated sessions.
+     * Triggered after a successful authentication event. Use this to perform custom actions,
+     * such as logging or modifying user attributes, after the user is authenticated.
+     *
+     * Takes the function ARN, or the handler path, or the function args.
      */
     postAuthentication?: string | FunctionArgs;
     /**
-     * ARN of the lambda function to customize welcome messages and log events for custom analytics.
+     * Triggered after a user is successfully confirmed; sign-up or email/phone number
+     * verification. Use this to perform additional actions, like sending a welcome email or
+     * initializing user data, after user confirmation.
+     *
+     * Takes the function ARN, or the handler path, or the function args.
      */
     postConfirmation?: string | FunctionArgs;
     /**
-     * ARN of the lambda function to modify or deny sign-in with custom logic.
+     * Triggered before the authentication process begins. Use this to implement custom
+     * validation or checks (like checking if the user is banned) before continuing
+     * authentication.
+     *
+     * Takes the function ARN, or the handler path, or the function args.
      */
     preAuthentication?: string | FunctionArgs;
     /**
-     * ARN of the lambda function to validate users when they sign up and customize their attributes.
+     * Triggered before the user sign-up process completes. Use this to perform custom
+     * validation, auto-confirm users, or auto-verify attributes based on custom logic.
+     *
+     * Takes the function ARN, or the handler path, or the function args.
      */
     preSignUp?: string | FunctionArgs;
     /**
-     * ARN of the lambda function to modify claims in ID and access tokens.
+     * Triggered before tokens are generated in the authentication process. Use this to
+     * customize or add claims to the tokens that will be generated and returned to the user.
+     *
+     * Takes the function ARN, or the handler path, or the function args.
      */
     preTokenGeneration?: string | FunctionArgs;
     /**
-     * ARN of the lambda function to migrate a user from another directory when they sign in to your user pool.
+     * Triggered when a user attempts to sign in but does not exist in the current user pool.
+     * Use this to import and validate users from an existing user directory into the
+     * Cognito User Pool during sign-in.
+     *
+     * Takes the function ARN, or the handler path, or the function args.
      */
     userMigration?: string | FunctionArgs;
     /**
-     * ARN of the lambda function to compare user answer to expected answer for a custom challenge.
+     * Triggered after the user responds to a custom authentication challenge. Use this to
+     * verify the user's response to the challenge and determine whether to continue
+     * authenticating the user.
+     *
+     * Takes the function ARN, or the handler path, or the function args.
      */
     verifyAuthChallengeResponse?: string | FunctionArgs;
   }>;
@@ -129,7 +172,7 @@ export interface CognitoUserPoolClientArgs {
    */
   transform?: {
     /**
-     * Transform the Cognito user pool client resource.
+     * Transform the Cognito User Pool client resource.
      */
     client?: Transform<cognito.UserPoolClientArgs>;
   };
@@ -140,13 +183,13 @@ export interface CognitoUserPoolClientArgs {
  *
  * #### Create the user pool
  *
- * ```ts
+ * ```ts title="sst.config.ts"
  * const userPool = new sst.aws.CognitoUserPool("MyUserPool");
  * ```
  *
  * #### Login using email
  *
- * ```ts
+ * ```ts title="sst.config.ts"
  * new sst.aws.CognitoUserPool("MyUserPool", {
  *   usernames: ["email"]
  * });
@@ -154,7 +197,7 @@ export interface CognitoUserPoolClientArgs {
  *
  * #### Configure triggers
  *
- * ```ts
+ * ```ts title="sst.config.ts"
  * new sst.aws.CognitoUserPool("MyUserPool", {
  *   triggers: {
  *     preAuthentication: "src/preAuthentication.handler",
@@ -165,14 +208,13 @@ export interface CognitoUserPoolClientArgs {
  *
  * #### Add a client
  *
- * ```ts
+ * ```ts title="sst.config.ts"
  * userPool.addClient("Web");
  * ```
  */
 export class CognitoUserPool
   extends Component
-  implements Link.Linkable, AWSLinkable
-{
+  implements Link.Linkable, AWSLinkable {
   private userPool: cognito.UserPool;
 
   constructor(

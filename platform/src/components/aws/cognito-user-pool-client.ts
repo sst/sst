@@ -16,7 +16,7 @@ export interface ClientArgs extends CognitoUserPoolClientArgs {
    */
   transform?: {
     /**
-     * Transform the Cognito user pool client resource.
+     * Transform the Cognito User Pool client resource.
      */
     client?: Transform<cognito.UserPoolClientArgs>;
   };
@@ -26,7 +26,7 @@ export interface ClientArgs extends CognitoUserPoolClientArgs {
  * The `CognitoUserPoolClient` component is internally used by the `CognitoUserPool`
  * component to add clients to your [Amazon Cognito user pool](https://docs.aws.amazon.com/cognito/latest/developerguide/cognito-user-identity-pools.html).
  *
- * :::caution
+ * :::note
  * This component is not intended to be created directly.
  * :::
  *
@@ -68,14 +68,14 @@ export class CognitoUserPoolClient extends Component implements Link.Linkable {
   }
 
   /**
-   * The Cognito user pool client ID.
+   * The Cognito User Pool client ID.
    */
   public get id() {
     return this.client.id;
   }
 
   /**
-   * The Cognito user pool client secret.
+   * The Cognito User Pool client secret.
    */
   public get secret() {
     return this.client.clientSecret;
@@ -87,7 +87,7 @@ export class CognitoUserPoolClient extends Component implements Link.Linkable {
   public get nodes() {
     return {
       /**
-       * The Amazon Cognito user pool client.
+       * The Cognito User Pool client.
        */
       client: this.client,
     };

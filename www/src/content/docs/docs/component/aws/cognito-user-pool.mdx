@@ -17,13 +17,13 @@ The `CognitoUserPool` component lets you add a [Amazon Cognito user pool](https:
 
 #### Create the user pool
 
-```ts
+```ts title="sst.config.ts"
 const userPool = new sst.aws.CognitoUserPool("MyUserPool");
 ```
 
 #### Login using email
 
-```ts
+```ts title="sst.config.ts"
 new sst.aws.CognitoUserPool("MyUserPool", {
   usernames: ["email"]
 });
@@ -31,7 +31,7 @@ new sst.aws.CognitoUserPool("MyUserPool", {
 
 #### Configure triggers
 
-```ts
+```ts title="sst.config.ts"
 new sst.aws.CognitoUserPool("MyUserPool", {
   triggers: {
     preAuthentication: "src/preAuthentication.handler",
@@ -42,7 +42,7 @@ new sst.aws.CognitoUserPool("MyUserPool", {
 
 #### Add a client
 
-```ts
+```ts title="sst.config.ts"
 userPool.addClient("Web");
 ```
 </Section>
@@ -142,8 +142,8 @@ Configure triggers for this User Pool
 {
   triggers: {
     preAuthentication: "src/preAuthentication.handler",
-    postAuthentication: "src/postAuthentication.handler",
-  },
+    postAuthentication: "src/postAuthentication.handler"
+  }
 }
 ```
 </Segment>
@@ -154,7 +154,10 @@ Configure triggers for this User Pool
 **Type** <code class="primitive">string</code><code class="symbol"> | </code>[<code class="type">FunctionArgs</code>](/docs/component/aws/function/#functionargs)
 </InlineSection>
 </Section>
-ARN of the lambda function to present a custom challenge and its answer.
+Triggered after the user successfully responds to the previous challenge, and a new
+challenge needs to be created.
+
+Takes the function ARN, or the handler path, or the function args.
 
 </Segment>
 <NestedTitle id="triggers-customemailsender" Tag="h4" parent="triggers.">customEmailSender?</NestedTitle>
@@ -164,7 +167,11 @@ ARN of the lambda function to present a custom challenge and its answer.
 **Type** <code class="primitive">string</code><code class="symbol"> | </code>[<code class="type">FunctionArgs</code>](/docs/component/aws/function/#functionargs)
 </InlineSection>
 </Section>
-ARN of the custom email sender function.
+Triggered during events like user sign-up, password recovery, email/phone number
+verification, and when an admin creates a user. Use this trigger to customize the
+email provider.
+
+Takes the function ARN, or the handler path, or the function args.
 
 </Segment>
 <NestedTitle id="triggers-custommessage" Tag="h4" parent="triggers.">customMessage?</NestedTitle>
@@ -174,7 +181,11 @@ ARN of the custom email sender function.
 **Type** <code class="primitive">string</code><code class="symbol"> | </code>[<code class="type">FunctionArgs</code>](/docs/component/aws/function/#functionargs)
 </InlineSection>
 </Section>
-ARN of the lambda function to add customization and localization of verification, recovery, and MFA messages.
+Triggered during events like user sign-up, password recovery, email/phone number
+verification, and when an admin creates a user. Use this trigger to customize the
+message that is sent to your users.
+
+Takes the function ARN, or the handler path, or the function args.
 
 </Segment>
 <NestedTitle id="triggers-customsmssender" Tag="h4" parent="triggers.">customSmsSender?</NestedTitle>
@@ -184,7 +195,10 @@ ARN of the lambda function to add customization and localization of verification
 **Type** <code class="primitive">string</code><code class="symbol"> | </code>[<code class="type">FunctionArgs</code>](/docs/component/aws/function/#functionargs)
 </InlineSection>
 </Section>
-ARN of the custom SMS sender function.
+Triggered when an SMS message needs to be sent, such as for MFA or verification codes.
+Use this trigger to customize the SMS provider.
+
+Takes the function ARN, or the handler path, or the function args.
 
 </Segment>
 <NestedTitle id="triggers-defineauthchallenge" Tag="h4" parent="triggers.">defineAuthChallenge?</NestedTitle>
@@ -194,7 +208,11 @@ ARN of the custom SMS sender function.
 **Type** <code class="primitive">string</code><code class="symbol"> | </code>[<code class="type">FunctionArgs</code>](/docs/component/aws/function/#functionargs)
 </InlineSection>
 </Section>
+Triggered after each challenge response to determine the next action. Evaluates whether the
+user has completed the authentication process or if additional challenges are needed.
 ARN of the lambda function to name a custom challenge.
+
+Takes the function ARN, or the handler path, or the function args.
 
 </Segment>
 <NestedTitle id="triggers-postauthentication" Tag="h4" parent="triggers.">postAuthentication?</NestedTitle>
@@ -204,7 +222,10 @@ ARN of the lambda function to name a custom challenge.
 **Type** <code class="primitive">string</code><code class="symbol"> | </code>[<code class="type">FunctionArgs</code>](/docs/component/aws/function/#functionargs)
 </InlineSection>
 </Section>
-ARN of the lambda function to add custom logging and analytics for authenticated sessions.
+Triggered after a successful authentication event. Use this to perform custom actions,
+such as logging or modifying user attributes, after the user is authenticated.
+
+Takes the function ARN, or the handler path, or the function args.
 
 </Segment>
 <NestedTitle id="triggers-postconfirmation" Tag="h4" parent="triggers.">postConfirmation?</NestedTitle>
@@ -214,7 +235,11 @@ ARN of the lambda function to add custom logging and analytics for authenticated
 **Type** <code class="primitive">string</code><code class="symbol"> | </code>[<code class="type">FunctionArgs</code>](/docs/component/aws/function/#functionargs)
 </InlineSection>
 </Section>
-ARN of the lambda function to customize welcome messages and log events for custom analytics.
+Triggered after a user is successfully confirmed; sign-up or email/phone number
+verification. Use this to perform additional actions, like sending a welcome email or
+initializing user data, after user confirmation.
+
+Takes the function ARN, or the handler path, or the function args.
 
 </Segment>
 <NestedTitle id="triggers-preauthentication" Tag="h4" parent="triggers.">preAuthentication?</NestedTitle>
@@ -224,7 +249,11 @@ ARN of the lambda function to customize welcome messages and log events for cust
 **Type** <code class="primitive">string</code><code class="symbol"> | </code>[<code class="type">FunctionArgs</code>](/docs/component/aws/function/#functionargs)
 </InlineSection>
 </Section>
-ARN of the lambda function to modify or deny sign-in with custom logic.
+Triggered before the authentication process begins. Use this to implement custom
+validation or checks (like checking if the user is banned) before continuing
+authentication.
+
+Takes the function ARN, or the handler path, or the function args.
 
 </Segment>
 <NestedTitle id="triggers-presignup" Tag="h4" parent="triggers.">preSignUp?</NestedTitle>
@@ -234,7 +263,10 @@ ARN of the lambda function to modify or deny sign-in with custom logic.
 **Type** <code class="primitive">string</code><code class="symbol"> | </code>[<code class="type">FunctionArgs</code>](/docs/component/aws/function/#functionargs)
 </InlineSection>
 </Section>
-ARN of the lambda function to validate users when they sign up and customize their attributes.
+Triggered before the user sign-up process completes. Use this to perform custom
+validation, auto-confirm users, or auto-verify attributes based on custom logic.
+
+Takes the function ARN, or the handler path, or the function args.
 
 </Segment>
 <NestedTitle id="triggers-pretokengeneration" Tag="h4" parent="triggers.">preTokenGeneration?</NestedTitle>
@@ -244,7 +276,10 @@ ARN of the lambda function to validate users when they sign up and customize the
 **Type** <code class="primitive">string</code><code class="symbol"> | </code>[<code class="type">FunctionArgs</code>](/docs/component/aws/function/#functionargs)
 </InlineSection>
 </Section>
-ARN of the lambda function to modify claims in ID and access tokens.
+Triggered before tokens are generated in the authentication process. Use this to
+customize or add claims to the tokens that will be generated and returned to the user.
+
+Takes the function ARN, or the handler path, or the function args.
 
 </Segment>
 <NestedTitle id="triggers-usermigration" Tag="h4" parent="triggers.">userMigration?</NestedTitle>
@@ -254,7 +289,11 @@ ARN of the lambda function to modify claims in ID and access tokens.
 **Type** <code class="primitive">string</code><code class="symbol"> | </code>[<code class="type">FunctionArgs</code>](/docs/component/aws/function/#functionargs)
 </InlineSection>
 </Section>
-ARN of the lambda function to migrate a user from another directory when they sign in to your user pool.
+Triggered when a user attempts to sign in but does not exist in the current user pool.
+Use this to import and validate users from an existing user directory into the
+Cognito User Pool during sign-in.
+
+Takes the function ARN, or the handler path, or the function args.
 
 </Segment>
 <NestedTitle id="triggers-verifyauthchallengeresponse" Tag="h4" parent="triggers.">verifyAuthChallengeResponse?</NestedTitle>
@@ -264,7 +303,11 @@ ARN of the lambda function to migrate a user from another directory when they si
 **Type** <code class="primitive">string</code><code class="symbol"> | </code>[<code class="type">FunctionArgs</code>](/docs/component/aws/function/#functionargs)
 </InlineSection>
 </Section>
-ARN of the lambda function to compare user answer to expected answer for a custom challenge.
+Triggered after the user responds to a custom authentication challenge. Use this to
+verify the user's response to the challenge and determine whether to continue
+authenticating the user.
+
+Takes the function ARN, or the handler path, or the function args.
 
 </Segment>
 ### usernames?
@@ -396,7 +439,7 @@ resources.
 **Type** [<code class="type">UserPoolClientArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/cognito/userpoolclient/#inputs)<code class="symbol"> | </code><code class="symbol">(</code><code class="primitive">args</code><code class="symbol">: </code>[<code class="type">UserPoolClientArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/cognito/userpoolclient/#inputs)<code class="symbol"> => </code><code class="primitive">void</code><code class="symbol">)</code>
 </InlineSection>
 </Section>
-Transform the Cognito user pool client resource.
+Transform the Cognito User Pool client resource.
 
 </Segment>
 </div>

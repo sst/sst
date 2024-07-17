@@ -2,7 +2,7 @@
  * The Vercel DNS Adapter is used to create DNS records to manage domains hosted on [Vercel](https://vercel.com/docs/projects/domains/working-with-domains).
  *
  * :::note
- * You need to [add the Cloudflare provider](/docs/providers/#install) to use this adapter.
+ * You need to [add the Vercel provider](/docs/providers/#directory) to use this adapter.
  * :::
  *
  * This adapter is passed in as `domain.dns` when setting a custom domain; where `example.com`
@@ -29,7 +29,7 @@
  *
  * 3. Add a `VERCEL_API_TOKEN` environment variable with the access token value. If the domain
  * belongs to a team, also add a `VERCEL_TEAM_ID` environment variable with the Team ID. You can
- * find your Team ID inside your team's general project settings on the Vercel dashboard.
+ * find your Team ID inside your team's general project settings in the Vercel dashboard.
  *
  * @packageDocumentation
  */

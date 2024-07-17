@@ -24,7 +24,7 @@ export interface KvArgs {
  *
  * #### Minimal example
  *
- * ```ts
+ * ```ts title="sst.config.ts"
  * const storage = new sst.cloudflare.Kv("MyStorage");
  * ```
  *
@@ -32,7 +32,7 @@ export interface KvArgs {
  *
  * You can link KV to a worker.
  *
- * ```ts {3}
+ * ```ts {3} title="sst.config.ts"
  * new sst.cloudflare.Worker("MyWorker", {
  *   handler: "./index.ts",
  *   link: [storage],
@@ -73,8 +73,8 @@ export class Kv extends Component implements Link.Cloudflare.Linkable {
   }
 
   /**
-   * when you link a KV storage, the storage will be available to the worker and you can
-   * interact with it using the [API methods documented here](https://developers.cloudflare.com/kv/api/).
+   * When you link a KV storage, the storage will be available to the worker and you can
+   * interact with it using its [API methods](https://developers.cloudflare.com/kv/api/).
    *
    * @example
    * ```ts title="index.ts" {3}
@@ -95,7 +95,7 @@ export class Kv extends Component implements Link.Cloudflare.Linkable {
   }
 
   /**
-   * The generated id of the KV namespace.
+   * The generated ID of the KV namespace.
    */
   public get id() {
     return this.namespace.id;

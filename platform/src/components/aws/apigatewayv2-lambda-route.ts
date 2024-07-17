@@ -18,14 +18,17 @@ export interface Args extends ApiGatewayV2BaseRouteArgs {
    * The route function.
    */
   handler: Input<string | FunctionArgs>;
+  /**
+   * @internal
+   */
   handlerTransform?: Transform<FunctionArgs>;
 }
 
 /**
  * The `ApiGatewayV2LambdaRoute` component is internally used by the `ApiGatewayV2` component
- * to add routes to [Amazon API Gateway HTTP API](https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api.html).
+ * to add routes to your [API Gateway HTTP API](https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api.html).
  *
- * :::caution
+ * :::note
  * This component is not intended to be created directly.
  * :::
  *

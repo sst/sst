@@ -27,9 +27,9 @@ export interface Args extends QueueSubscriberArgs {
 
 /**
  * The `QueueLambdaSubscriber` component is internally used by the `Queue` component to
- * add consumer to [Amazon SQS](https://aws.amazon.com/sqs/).
+ * add a consumer to [Amazon SQS](https://aws.amazon.com/sqs/).
  *
- * :::caution
+ * :::note
  * This component is not intended to be created directly.
  * :::
  *

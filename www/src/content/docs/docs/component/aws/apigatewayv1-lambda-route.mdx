@@ -14,9 +14,9 @@ import InlineSection from '../../../../../../src/components/tsdoc/InlineSection.
 
 <Section type="about">
 The `ApiGatewayV1LambdaRoute` component is internally used by the `ApiGatewayV1` component
-to add routes to [Amazon API Gateway REST API](https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-rest-api.html).
+to add routes to your [API Gateway REST API](https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-rest-api.html).
 
-:::caution
+:::note
 This component is not intended to be created directly.
 :::
 
@@ -95,7 +95,7 @@ The Lambda permission.
 - <p>[<code class="key">id</code>](#api-id)</p>
 - <p>[<code class="key">name</code>](#api-name)</p>
 </Section>
-The api to use for the route.
+The API Gateway to use for the route.
 
 </Segment>
 <NestedTitle id="api-executionarn" Tag="h4" parent="api.">executionArn</NestedTitle>
@@ -105,7 +105,7 @@ The api to use for the route.
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
-The execution ARN of the api.
+The execution ARN of the API Gateway.
 
 </Segment>
 <NestedTitle id="api-id" Tag="h4" parent="api.">id</NestedTitle>
@@ -115,7 +115,7 @@ The execution ARN of the api.
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
-The ID of the api.
+The ID of the API Gateway.
 
 </Segment>
 <NestedTitle id="api-name" Tag="h4" parent="api.">name</NestedTitle>
@@ -125,7 +125,7 @@ The ID of the api.
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
-The name of the api.
+The name of the API Gateway.
 
 </Segment>
 ### auth?
@@ -250,15 +250,6 @@ When IAM auth is enabled, clients need to use Signature Version 4 to sign their 
 </InlineSection>
 </Section>
 The route function.
-
-</Segment>
-### handlerTransform?
-<Segment>
-<Section type="parameters">
-<InlineSection>
-**Type** [<code class="type">FunctionArgs</code>](/docs/component/aws/function/#functionargs)<code class="symbol"> | </code><code class="symbol">(</code><code class="primitive">args</code><code class="symbol">: </code>[<code class="type">FunctionArgs</code>](/docs/component/aws/function/#functionargs)<code class="symbol"> => </code><code class="primitive">void</code><code class="symbol">)</code>
-</InlineSection>
-</Section>
 
 </Segment>
 ### method

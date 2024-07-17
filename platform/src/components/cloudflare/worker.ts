@@ -95,13 +95,13 @@ export interface WorkerArgs {
      *
      * :::tip
      * Check out the _JS tab_ in the code snippets in the esbuild docs for the
-     * [build options](https://esbuild.github.io/api/#build).
+     * [`BuildOptions`](https://esbuild.github.io/api/#build).
      * :::
      *
      */
     esbuild?: Input<BuildOptions>;
     /**
-     * Enable or disable if the worker code is minified when bundled.
+     * Disable if the worker code should be minified when bundled.
      *
      * @default `true`
      *
@@ -136,7 +136,7 @@ export interface WorkerArgs {
   /**
    * Key-value pairs that are set as [Worker environment variables](https://developers.cloudflare.com/workers/configuration/environment-variables/).
    *
-   * They can be accessed in your function through `env.<key>`.
+   * They can be accessed in your worker through `env.<key>`.
    *
    * @example
    *
@@ -173,7 +173,7 @@ export interface WorkerArgs {
  *
  * #### Minimal example
  *
- * ```ts
+ * ```ts title="sst.config.ts"
  * new sst.cloudflare.Worker("MyWorker", {
  *   handler: "src/worker.handler"
  * });
@@ -184,7 +184,7 @@ export interface WorkerArgs {
  * [Link resources](/docs/linking/) to the Worker. This will handle the credentials
  * and allow you to access it in your handler.
  *
- * ```ts {5}
+ * ```ts {5} title="sst.config.ts"
  * const bucket = new sst.aws.Bucket("MyBucket");
  *
  * new sst.cloudflare.Worker("MyWorker", {
@@ -196,7 +196,7 @@ export interface WorkerArgs {
  * You can use the [SDK](/docs/reference/sdk/) to access the linked resources
  * in your handler.
  *
- * ```ts title="src/worker.ts"
+ * ```ts title="src/worker.ts" {3}
  * import { Resource } from "sst";
  *
  * console.log(Resource.MyBucket.name);
@@ -206,7 +206,7 @@ export interface WorkerArgs {
  *
  * Enable worker URLs to invoke the worker over HTTP.
  *
- * ```ts {3}
+ * ```ts {3} title="sst.config.ts"
  * new sst.cloudflare.Worker("MyWorker", {
  *   handler: "src/worker.handler",
  *   url: true
@@ -217,7 +217,7 @@ export interface WorkerArgs {
  *
  * Customize how SST uses [esbuild](https://esbuild.github.io/) to bundle your worker code with the `build` property.
  *
- * ```ts
+ * ```ts title="sst.config.ts" {3-5}
  * new sst.cloudflare.Worker("MyWorker", {
  *   handler: "src/worker.handler",
  *   build: {
@@ -228,8 +228,7 @@ export interface WorkerArgs {
  */
 export class Worker
   extends Component
-  implements Link.Cloudflare.Linkable, Link.Linkable
-{
+  implements Link.Cloudflare.Linkable, Link.Linkable {
   private script: Output<cf.WorkerScript>;
   private workerUrl: WorkerUrl;
   private workerDomain?: cf.WorkerDomain;
@@ -269,16 +268,16 @@ export class Worker
           !$dev || live == false
             ? undefined
             : {
-                functionID: name,
-                links: [],
-                handler,
-                runtime: "worker",
-                properties: {
-                  accountID: sst.cloudflare.DEFAULT_ACCOUNT_ID,
-                  scriptName: script.name,
-                  build,
-                },
+              functionID: name,
+              links: [],
+              handler,
+              runtime: "worker",
+              properties: {
+                accountID: sst.cloudflare.DEFAULT_ACCOUNT_ID,
+                scriptName: script.name,
+                build,
               },
+            },
       ),
       _metadata: {
         handler: args.handler,
@@ -401,11 +400,11 @@ export class Worker
               plainTextBindings: [
                 ...(iamCredentials
                   ? [
-                      {
-                        name: "AWS_ACCESS_KEY_ID",
-                        text: iamCredentials.id,
-                      },
-                    ]
+                    {
+                      name: "AWS_ACCESS_KEY_ID",
+                      text: iamCredentials.id,
+                    },
+                  ]
                   : []),
                 ...Object.entries(environment ?? {}).map(([key, value]) => ({
                   name: key,
@@ -416,11 +415,11 @@ export class Worker
               secretTextBindings: [
                 ...(iamCredentials
                   ? [
-                      {
-                        name: "AWS_SECRET_ACCESS_KEY",
-                        text: iamCredentials.secret,
-                      },
-                    ]
+                    {
+                      name: "AWS_SECRET_ACCESS_KEY",
+                      text: iamCredentials.secret,
+                    },
+                  ]
                   : []),
                 ...(bindings.secretTextBindings || []),
               ],
@@ -489,7 +488,7 @@ export class Worker
   }
 
   /**
-   * When you link a worker (WorkerA) to another worker (WorkerB), it automatically creates
+   * When you link a worker, say WorkerA, to another worker, WorkerB; it automatically creates
    * a service binding between the workers. It allows WorkerA to call WorkerB without going
    * through a publicly-accessible URL.
    *
@@ -500,7 +499,7 @@ export class Worker
    * await Resource.WorkerB.fetch(request);
    * ```
    *
-   * [Learn more about binding Workers.](https://developers.cloudflare.com/workers/runtime-apis/bindings/service-bindings/)
+   * Read more about [binding Workers](https://developers.cloudflare.com/workers/runtime-apis/bindings/service-bindings/).
    *
    * @internal
    */

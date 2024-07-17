@@ -14,7 +14,7 @@ export interface FunctionArgs extends AppSyncFunctionArgs {
  * The `AppSyncFunction` component is internally used by the `AppSync` component to add
  * functions to [AWS AppSync](https://docs.aws.amazon.com/appsync/latest/devguide/what-is-appsync.html).
  *
- * :::caution
+ * :::note
  * This component is not intended to be created directly.
  * :::
  *

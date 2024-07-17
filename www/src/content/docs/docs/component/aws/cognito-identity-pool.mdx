@@ -15,9 +15,9 @@ import InlineSection from '../../../../../../src/components/tsdoc/InlineSection.
 <Section type="about">
 The `CognitoIdentityPool` component lets you add a [Amazon Cognito identity pool](https://docs.aws.amazon.com/cognito/latest/developerguide/cognito-identity.html) to your app.
 
-#### Creating the identity pool
+#### Create the identity pool
 
-```ts
+```ts title="sst.config.ts"
 new sst.aws.CognitoIdentityPool("MyIdentityPool", {
   userPools: [
     {
@@ -30,7 +30,7 @@ new sst.aws.CognitoIdentityPool("MyIdentityPool", {
 
 #### Configure permissions for authenticated users
 
-```ts
+```ts title="sst.config.ts"
 new sst.aws.CognitoIdentityPool("MyIdentityPool", {
   userPools: [
     {
@@ -238,7 +238,7 @@ Transform the unauthenticated IAM role resource.
 - <p>[<code class="key">client</code>](#userpools-client)</p>
 - <p>[<code class="key">userPool</code>](#userpools-userpool)</p>
 </Section>
-Configure Cognito user pools as identity providers to your identity pool.
+Configure Cognito User Pools as identity providers to your identity pool.
 
 ```ts
 {
@@ -246,8 +246,8 @@ Configure Cognito user pools as identity providers to your identity pool.
     {
       userPool: "us-east-1_QY6Ly46JH",
       client: "6va5jg3cgtrd170sgokikjm5m6"
-    },
-  ],
+    }
+  ]
 }
 ```
 </Segment>
@@ -258,7 +258,7 @@ Configure Cognito user pools as identity providers to your identity pool.
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
-The Cognito user pool client ID.
+The Cognito User Pool client ID.
 
 </Segment>
 <NestedTitle id="userpools-userpool" Tag="h4" parent="userPools[].">userPool</NestedTitle>

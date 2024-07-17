@@ -177,13 +177,13 @@ export interface ApiGatewayWebSocketRouteArgs {
  *
  * #### Create the API
  *
- * ```ts
+ * ```ts title="sst.config.ts"
  * const api = new sst.aws.ApiGatewayWebSocket("MyApi");
  * ```
  *
  * #### Add a custom domain
  *
- * ```js {2}
+ * ```js {2} title="sst.config.ts"
  * new sst.aws.ApiGatewayWebSocket("MyApi", {
  *   domain: "api.example.com"
  * });
@@ -191,7 +191,7 @@ export interface ApiGatewayWebSocketRouteArgs {
  *
  * #### Add routes
  *
- * ```ts
+ * ```ts title="sst.config.ts"
  * api.route("$connect", "src/connect.handler");
  * api.route("$disconnect", "src/disconnect.handler");
  * api.route("$default", "src/default.handler");
@@ -200,8 +200,7 @@ export interface ApiGatewayWebSocketRouteArgs {
  */
 export class ApiGatewayWebSocket
   extends Component
-  implements Link.Linkable, AWSLinkable
-{
+  implements Link.Linkable, AWSLinkable {
   private constructorName: string;
   private constructorArgs: ApiGatewayWebSocketArgs;
   private api: apigatewayv2.Api;
@@ -430,9 +429,9 @@ export class ApiGatewayWebSocket
     //       trailing slash, the API fails with the error {"message":"Not Found"}
     return this.apigDomain && this.apiMapping
       ? all([this.apigDomain.domainName, this.apiMapping.apiMappingKey]).apply(
-          ([domain, key]) =>
-            key ? `wss://${domain}/${key}/` : `wss://${domain}`,
-        )
+        ([domain, key]) =>
+          key ? `wss://${domain}/${key}/` : `wss://${domain}`,
+      )
       : interpolate`${this.api.apiEndpoint}/${this.stage.name}`;
   }
 
@@ -464,7 +463,7 @@ export class ApiGatewayWebSocket
   public get nodes() {
     return {
       /**
-       * The Amazon API Gateway HTTP API
+       * The Amazon API Gateway V2 API.
        */
       api: this.api,
       /**
@@ -478,12 +477,12 @@ export class ApiGatewayWebSocket
    * Add a route to the API Gateway WebSocket API.
    *
    * There are three predefined routes:
-   * - $connect: when the client connects to the API
-   * - $disconnect: when the client or the server disconnects from the API
-   * - $default: the default or catch-all route
+   * - `$connect`: When the client connects to the API.
+   * - `$disconnect`: When the client or the server disconnects from the API.
+   * - `$default`: The default or catch-all route.
    *
    * In addition, you can create custom routes. When a request comes in, the API Gateway
-   * will look the specific route defined by the user. If no route matches, the `$default`
+   * will look for the specific route defined by the user. If no route matches, the `$default`
    * route will be invoked.
    *
    * @param route The path for the route.
@@ -491,21 +490,21 @@ export class ApiGatewayWebSocket
    * @param args Configure the route.
    *
    * @example
-   * Here's how you add a simple route.
+   * Add a simple route.
    *
-   * ```js
+   * ```js title="sst.config.ts"
    * api.route("sendMessage", "src/sendMessage.handler");
    * ```
    *
-   * Add a default route.
+   * Add a predefined route.
    *
-   * ```js
+   * ```js title="sst.config.ts"
    * api.route("$default", "src/default.handler");
    * ```
    *
    * Enable auth for a route.
    *
-   * ```js
+   * ```js title="sst.config.ts"
    * api.route("sendMessage", "src/sendMessage.handler", {
    *   auth: {
    *     iam: true
@@ -515,7 +514,7 @@ export class ApiGatewayWebSocket
    *
    * Customize the route handler.
    *
-   * ```js
+   * ```js title="sst.config.ts"
    * api.route("sendMessage", {
    *   handler: "src/sendMessage.handler",
    *   memory: "2048 MB"

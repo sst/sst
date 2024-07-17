@@ -17,13 +17,13 @@ The `ApiGatewayWebSocket` component lets you add an [Amazon API Gateway WebSocke
 
 #### Create the API
 
-```ts
+```ts title="sst.config.ts"
 const api = new sst.aws.ApiGatewayWebSocket("MyApi");
 ```
 
 #### Add a custom domain
 
-```js {2}
+```js {2} title="sst.config.ts"
 new sst.aws.ApiGatewayWebSocket("MyApi", {
   domain: "api.example.com"
 });
@@ -31,7 +31,7 @@ new sst.aws.ApiGatewayWebSocket("MyApi", {
 
 #### Add routes
 
-```ts
+```ts title="sst.config.ts"
 api.route("$connect", "src/connect.handler");
 api.route("$disconnect", "src/disconnect.handler");
 api.route("$default", "src/default.handler");
@@ -410,7 +410,7 @@ The underlying [resources](/docs/components/#nodes) this component creates.
 **Type** [<code class="type">Api</code>](https://www.pulumi.com/registry/packages/aws/api-docs/apigatewayv2/api/)
 </InlineSection>
 </Section>
-The Amazon API Gateway HTTP API
+The Amazon API Gateway V2 API.
 </Segment>
 <NestedTitle id="nodes-loggroup" Tag="h4" parent="nodes.">logGroup</NestedTitle>
 <Segment>
@@ -481,29 +481,29 @@ Configure the route.
 Add a route to the API Gateway WebSocket API.
 
 There are three predefined routes:
-- $connect: when the client connects to the API
-- $disconnect: when the client or the server disconnects from the API
-- $default: the default or catch-all route
+- `$connect`: When the client connects to the API.
+- `$disconnect`: When the client or the server disconnects from the API.
+- `$default`: The default or catch-all route.
 
 In addition, you can create custom routes. When a request comes in, the API Gateway
-will look the specific route defined by the user. If no route matches, the `$default`
+will look for the specific route defined by the user. If no route matches, the `$default`
 route will be invoked.
 
-Here's how you add a simple route.
+Add a simple route.
 
-```js
+```js title="sst.config.ts"
 api.route("sendMessage", "src/sendMessage.handler");
 ```
 
-Add a default route.
+Add a predefined route.
 
-```js
+```js title="sst.config.ts"
 api.route("$default", "src/default.handler");
 ```
 
 Enable auth for a route.
 
-```js
+```js title="sst.config.ts"
 api.route("sendMessage", "src/sendMessage.handler", {
   auth: {
     iam: true
@@ -513,7 +513,7 @@ api.route("sendMessage", "src/sendMessage.handler", {
 
 Customize the route handler.
 
-```js
+```js title="sst.config.ts"
 api.route("sendMessage", {
   handler: "src/sendMessage.handler",
   memory: "2048 MB"

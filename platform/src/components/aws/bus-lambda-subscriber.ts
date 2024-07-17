@@ -34,7 +34,7 @@ export interface Args extends BusSubscriberArgs {
  * The `BusLambdaSubscriber` component is internally used by the `Bus` component
  * to add subscriptions to [Amazon EventBridge Event Bus](https://docs.aws.amazon.com/eventbridge/latest/userguide/eb-event-bus.html).
  *
- * :::caution
+ * :::note
  * This component is not intended to be created directly.
  * :::
  *

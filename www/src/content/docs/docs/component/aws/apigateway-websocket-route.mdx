@@ -14,9 +14,9 @@ import InlineSection from '../../../../../../src/components/tsdoc/InlineSection.
 
 <Section type="about">
 The `ApiGatewayWebSocketRoute` component is internally used by the `ApiGatewayWebSocket`
-component to add routes to [AWS API Gateway WebSocket API](https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-websocket-api.html).
+component to add routes to your [API Gateway WebSocket API](https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-websocket-api.html).
 
-:::caution
+:::note
 This component is not intended to be created directly.
 :::
 
@@ -105,7 +105,7 @@ The API Gateway HTTP API route.
 - <p>[<code class="key">id</code>](#api-id)</p>
 - <p>[<code class="key">name</code>](#api-name)</p>
 </Section>
-The cluster to use for the service.
+The API Gateway to use for the service.
 
 </Segment>
 <NestedTitle id="api-executionarn" Tag="h4" parent="api.">executionArn</NestedTitle>
@@ -115,7 +115,7 @@ The cluster to use for the service.
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
-The execution ARN of the cluster.
+The execution ARN of the API Gateway.
 
 </Segment>
 <NestedTitle id="api-id" Tag="h4" parent="api.">id</NestedTitle>
@@ -125,7 +125,7 @@ The execution ARN of the cluster.
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
-The ID of the cluster.
+The ID of the API Gateway.
 
 </Segment>
 <NestedTitle id="api-name" Tag="h4" parent="api.">name</NestedTitle>
@@ -135,7 +135,7 @@ The ID of the cluster.
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
-The name of the cluster.
+The name of the API Gateway.
 
 </Segment>
 ### auth?
@@ -177,15 +177,7 @@ Enable IAM authorization for a given API route. When IAM auth is enabled, client
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol"> | </code>[<code class="type">FunctionArgs</code>](/docs/component/aws/function/#functionargs)<code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
-
-</Segment>
-### handlerTransform?
-<Segment>
-<Section type="parameters">
-<InlineSection>
-**Type** [<code class="type">FunctionArgs</code>](/docs/component/aws/function/#functionargs)<code class="symbol"> | </code><code class="symbol">(</code><code class="primitive">args</code><code class="symbol">: </code>[<code class="type">FunctionArgs</code>](/docs/component/aws/function/#functionargs)<code class="symbol"> => </code><code class="primitive">void</code><code class="symbol">)</code>
-</InlineSection>
-</Section>
+The function that’ll be invoked.
 
 </Segment>
 ### route
@@ -195,6 +187,7 @@ Enable IAM authorization for a given API route. When IAM auth is enabled, client
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
+The path for the route.
 
 </Segment>
 ### transform?

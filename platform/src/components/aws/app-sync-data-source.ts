@@ -26,7 +26,7 @@ export interface DataSourceArgs extends AppSyncDataSourceArgs {
  * The `AppSyncDataSource` component is internally used by the `AppSync` component to add
  * data sources to [AWS AppSync](https://docs.aws.amazon.com/appsync/latest/devguide/what-is-appsync.html).
  *
- * :::caution
+ * :::note
  * This component is not intended to be created directly.
  * :::
  *
@@ -234,7 +234,7 @@ export class AppSyncDataSource extends Component {
         return self.lambda;
       },
       /**
-       * The DataSource service IAM role.
+       * The DataSource service's IAM role.
        */
       get serviceRole() {
         if (!self.serviceRole)

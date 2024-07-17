@@ -60,7 +60,7 @@ export interface RealtimeSubscriberArgs {
    */
   transform?: {
     /**
-     * Transform the IoT topic rule resource.
+     * Transform the IoT Topic rule resource.
      */
     topicRule?: Transform<iot.TopicRuleArgs>;
   };

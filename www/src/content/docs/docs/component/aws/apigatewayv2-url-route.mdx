@@ -16,7 +16,7 @@ import InlineSection from '../../../../../../src/components/tsdoc/InlineSection.
 The `ApiGatewayV2UrlRoute` component is internally used by the `ApiGatewayV2` component
 to add routes to [Amazon API Gateway HTTP API](https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api.html).
 
-:::caution
+:::note
 This component is not intended to be created directly.
 :::
 
@@ -85,7 +85,7 @@ The API Gateway HTTP API route.
 - <p>[<code class="key">id</code>](#api-id)</p>
 - <p>[<code class="key">name</code>](#api-name)</p>
 </Section>
-The cluster to use for the service.
+The API Gateway to use for the route.
 
 </Segment>
 <NestedTitle id="api-executionarn" Tag="h4" parent="api.">executionArn</NestedTitle>
@@ -95,7 +95,7 @@ The cluster to use for the service.
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
-The execution ARN of the cluster.
+The execution ARN of the API Gateway.
 
 </Segment>
 <NestedTitle id="api-id" Tag="h4" parent="api.">id</NestedTitle>
@@ -105,7 +105,7 @@ The execution ARN of the cluster.
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
-The ID of the cluster.
+The ID of the API Gateway.
 
 </Segment>
 <NestedTitle id="api-name" Tag="h4" parent="api.">name</NestedTitle>
@@ -115,7 +115,7 @@ The ID of the cluster.
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
-The name of the cluster.
+The name of the API Gateway.
 
 </Segment>
 ### auth?
@@ -204,6 +204,7 @@ Defines the permissions or access levels that the JWT grants. If the JWT does no
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
+The path for the route.
 
 </Segment>
 ### transform?
@@ -246,6 +247,12 @@ Transform the API Gateway HTTP API route resource.
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
+The URL to route to.
 
+```js
+{
+  url: "https://example.com"
+}
+```
 </Segment>
 </div>

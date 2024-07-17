@@ -16,7 +16,7 @@ import InlineSection from '../../../../../../src/components/tsdoc/InlineSection.
 The `ApiGatewayV1Authorizer` component is internally used by the `ApiGatewayV1` component
 to add authorizers to [Amazon API Gateway REST API](https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-rest-api.html).
 
-:::caution
+:::note
 This component is not intended to be created directly.
 :::
 
@@ -51,7 +51,7 @@ new ApiGatewayV1Authorizer(name, args, opts?)
 **Type** <code class="primitive">Output</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
-The id of the authorizer.
+The ID of the authorizer.
 </Segment>
 
 ### nodes
@@ -72,7 +72,7 @@ The underlying [resources](/docs/components/#nodes) this component creates.
 **Type** [<code class="type">Authorizer</code>](https://www.pulumi.com/registry/packages/aws/api-docs/apigateway/authorizer/)
 </InlineSection>
 </Section>
-The Amazon AppSync DataSource.
+The API Gateway Authorizer.
 </Segment>
 <NestedTitle id="nodes-function" Tag="h4" parent="nodes.">function</NestedTitle>
 <Segment>
@@ -81,7 +81,7 @@ The Amazon AppSync DataSource.
 **Type** <code class="primitive">Output</code><code class="symbol">&lt;</code>[<code class="type">Function</code>](/docs/component/aws/function/)<code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
-The Lambda function used by the data source.
+The Lambda function used by the authorizer.
 </Segment>
 
 ## AuthorizerArgs
@@ -95,7 +95,7 @@ The Lambda function used by the data source.
 - <p>[<code class="key">id</code>](#api-id)</p>
 - <p>[<code class="key">name</code>](#api-name)</p>
 </Section>
-The api to use for the route.
+The API Gateway to use for the route.
 
 </Segment>
 <NestedTitle id="api-executionarn" Tag="h4" parent="api.">executionArn</NestedTitle>
@@ -105,7 +105,7 @@ The api to use for the route.
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
-The execution ARN of the api.
+The execution ARN of the API Gateway.
 
 </Segment>
 <NestedTitle id="api-id" Tag="h4" parent="api.">id</NestedTitle>
@@ -115,7 +115,7 @@ The execution ARN of the api.
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
-The ID of the api.
+The ID of the API Gateway.
 
 </Segment>
 <NestedTitle id="api-name" Tag="h4" parent="api.">name</NestedTitle>
@@ -125,7 +125,7 @@ The ID of the api.
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
-The name of the api.
+The name of the API Gateway.
 
 </Segment>
 ### identitySource?

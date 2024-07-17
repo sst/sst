@@ -6,25 +6,25 @@ import { iam, sns, sqs } from "@pulumi/aws";
 
 export interface Args extends SnsTopicSubscriberArgs {
   /**
-   * The topic to use.
+   * The SNS Topic to use.
    */
   topic: Input<{
     /**
-     * The ARN of the topic.
+     * The ARN of the SNS Topic.
      */
     arn: Input<string>;
   }>;
   /**
-   * The ARN of the queue.
+   * The ARN of the SQS Queue.
    */
   queue: Input<string>;
 }
 
 /**
  * The `SnsTopicQueueSubscriber` component is internally used by the `SnsTopic` component
- * to add subscriptions to [Amazon SNS topic](https://docs.aws.amazon.com/sns/latest/dg/sns-create-topic.html).
+ * to add subscriptions to your [Amazon SNS Topic](https://docs.aws.amazon.com/sns/latest/dg/sns-create-topic.html).
  *
- * :::caution
+ * :::note
  * This component is not intended to be created directly.
  * :::
  *
@@ -91,11 +91,11 @@ export class SnsTopicQueueSubscriber extends Component {
   public get nodes() {
     return {
       /**
-       * The SQS queue policy.
+       * The SQS Queue policy.
        */
       policy: this.policy,
       /**
-       * The SNS topic subscription.
+       * The SNS Topic subscription.
        */
       subscription: this.subscription,
     };

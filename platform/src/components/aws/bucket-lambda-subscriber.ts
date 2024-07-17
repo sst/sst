@@ -25,7 +25,7 @@ export interface Args extends BucketSubscriberArgs {
     arn: Input<string>;
   }>;
   /**
-   * The subscriber id.
+   * The subscriber ID.
    */
   subscriberId: Input<string>;
   /**
@@ -38,7 +38,7 @@ export interface Args extends BucketSubscriberArgs {
  * The `BucketLambdaSubscriber` component is internally used by the `Bucket` component to
  * add bucket notifications to [AWS S3 Bucket](https://aws.amazon.com/s3/).
  *
- * :::caution
+ * :::note
  * This component is not intended to be created directly.
  * :::
  *

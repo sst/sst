@@ -29,7 +29,7 @@ export interface Args extends DynamoSubscriberArgs {
  * The `DynamoLambdaSubscriber` component is internally used by the `Dynamo` component to
  * add stream subscriptions to [Amazon DynamoDB](https://aws.amazon.com/dynamodb/).
  *
- * :::caution
+ * :::note
  * This component is not intended to be created directly.
  * :::
  *

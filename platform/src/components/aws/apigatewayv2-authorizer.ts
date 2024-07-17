@@ -5,15 +5,15 @@ import { apigatewayv2 } from "@pulumi/aws";
 
 export interface AuthorizerArgs extends ApiGatewayV2AuthorizerArgs {
   /**
-   * The api to use for the route.
+   * The API Gateway to use for the route.
    */
   api: Input<{
     /**
-     * The name of the api.
+     * The name of the API Gateway.
      */
     name: Input<string>;
     /**
-     * The ID of the api.
+     * The ID of the API Gateway.
      */
     id: Input<string>;
   }>;
@@ -23,7 +23,7 @@ export interface AuthorizerArgs extends ApiGatewayV2AuthorizerArgs {
  * The `ApiGatewayV2Authorizer` component is internally used by the `ApiGatewayV2` component
  * to add authorizers to [Amazon API Gateway HTTP API](https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api.html).
  *
- * :::caution
+ * :::note
  * This component is not intended to be created directly.
  * :::
  *
@@ -70,7 +70,7 @@ export class ApiGatewayV2Authorizer extends Component {
   }
 
   /**
-   * The id of the authorizer.
+   * The ID of the authorizer.
    */
   public get id() {
     return this.authorizer.id;
@@ -82,7 +82,7 @@ export class ApiGatewayV2Authorizer extends Component {
   public get nodes() {
     return {
       /**
-       * The Amazon AppSync DataSource.
+       * The API Gateway V2 authorizer.
        */
       authorizer: this.authorizer,
     };
