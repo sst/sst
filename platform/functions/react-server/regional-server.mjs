@@ -113,6 +113,7 @@ const createApigHandler = (build) => {
         ...Object.fromEntries(response.headers.entries()),
         "Transfer-Encoding": "chunked",
       },
+      cookies: response.headers.getSetCookie(),
     };
     if (response.body) {
       const reader = response.body;

@@ -113,6 +113,7 @@ const createApigHandler = (build) => {
         ...Object.fromEntries(response.headers.entries()),
         "Transfer-Encoding": "chunked",
       },
+      cookies: response.headers.getSetCookie(),
     };
 
     const writer = awslambda.HttpResponseStream.from(
