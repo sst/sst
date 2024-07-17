@@ -42,6 +42,8 @@ import { lazy } from "./util/lazy.js";
 
 const CDK_STACK_NAME = "CDKToolkit";
 const SST_STACK_NAME = "SSTBootstrap";
+const SST_STACK_DESCRIPTION =
+  "This stack includes resources needed to deploy SST apps into this environment";
 const OUTPUT_VERSION = "Version";
 const OUTPUT_BUCKET = "BucketName";
 const LATEST_VERSION = "7.3";
@@ -113,7 +115,7 @@ async function loadCDKStatus() {
     }
 
     // Check CDK bootstrap stack is up to date
-    // note: there is no a programmatical way to get the minimal required version
+    // note: there is no a programmatic way to get the minimal required version
     //       of CDK bootstrap stack. We are going to hardcode it to 14 for now,
     //       which is the latest version as of CDK v2.62.2
     let version: number | undefined;
@@ -206,10 +208,12 @@ export async function bootstrapSST(cdkBucket: string) {
   // Create bootstrap stack
   const app = new App();
   const stackName = bootstrap?.stackName || SST_STACK_NAME;
+  const stackDescription = bootstrap?.stackDescription || SST_STACK_DESCRIPTION;
   const stack = new Stack(app, stackName, {
     env: {
       region,
     },
+    description: stackDescription,
     synthesizer: new DefaultStackSynthesizer({
       qualifier: cdk?.qualifier,
       bootstrapStackVersionSsmParameter: cdk?.bootstrapStackVersionSsmParameter,
