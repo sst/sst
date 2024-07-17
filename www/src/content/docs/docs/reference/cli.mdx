@@ -15,7 +15,16 @@ import InlineSection from '../../../../../src/components/tsdoc/InlineSection.ast
 <Section type="about">
 The CLI helps you manage your SST apps.
 
-```bash title="Install"
+If you are using SST as a part of your Node project, we recommend installing it locally.
+```bash "sst@ion"
+npm install sst@ion
+```
+:::caution
+You need the `@ion` tag to install the Ion version of SST.
+:::
+---
+If you are not using Node, you can install the CLI globally.
+```bash
 curl -fsSL https://ion.sst.dev/install | bash
 ```
 
@@ -28,7 +37,7 @@ To install a specific version.
 ```bash "VERSION=0.0.403"
 curl -fsSL https://ion.sst.dev/install | VERSION=0.0.403 bash
 ```
-
+---
 #### With a package manager
 
 You can also use a package manager to install the CLI.
@@ -51,19 +60,7 @@ You can also use a package manager to install the CLI.
   The CLI is available as downloadable binaries in the [releases](https://github.com/sst/ion/releases/latest). Download the `.deb` or `.rpm` and install with `sudo dpkg -i` and `sudo rpm -i`.
 
   For Arch Linux, it's available in the [aur](https://aur.archlinux.org/packages/sst-bin).
-
-- **Windows**
-
-  The CLI is available via [Scoop](https://scoop.sh/), and as a downloadable binary in the [releases](https://github.com/sst/ion/releases/latest).
-
-  ```bash
-  scoop bucket add sst https://github.com/sst/scoop-bucket.git
-  scoop install sst
-
-  # Upgrade
-  scoop update sst
-  ```
-
+---
 #### Usage
 
 Once installed you can run the commands using.
@@ -75,9 +72,9 @@ sst [command]
 The CLI takes a few global flags. For example, the deploy command takes the `--stage` flag
 
 ```bash
-sst deploy --stage=production
+sst deploy --stage production
 ```
-
+---
 #### Environment variables
 
 You can access any environment variables set in the CLI in your `sst.config.ts` file. For example, running:
@@ -103,7 +100,7 @@ Will let you access `ENV_VAR` through `process.env.ENV_VAR`.
 Set the stage the CLI is running on.
 
 ```bash frame="none"
-sst [command] --stage=production
+sst [command] --stage production
 ```
 
 The stage is a string that is used to prefix the resources in your app. This allows you to have multiple _environments_ of your app running in the same account.
@@ -137,6 +134,22 @@ sst [command] --verbose
 
 </Segment>
 
+### y
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">boolean</code>
+</InlineSection>
+</Section>
+
+Skip interactive confirmation for detected framework.
+
+```bash
+sst init -y
+```
+
+</Segment>
+
 ### help
 <Segment>
 <Section type="parameters">
@@ -150,7 +163,7 @@ Prints help for the given command.
 sst [command] --help
 ```
 
-Or for the global help.
+Or the global help.
 
 ```sh frame="none"
 sst --help
@@ -253,7 +266,13 @@ Deploy your application. By default, it deploys to your personal stage.
 Optionally, deploy your app to a specific stage.
 
 ```bash frame="none"
-sst deploy --stage=production
+sst deploy --stage production
+```
+Optionally, deploy specific resources by passing in a list of their URNs.
+You can get the URN of a resource from the [Console](/docs/console/#resources).
+
+```bash frame="none"
+sst deploy --target urn:pulumi:prod::www::sst:aws:Astro::Astro,urn:pulumi:prod::www::sst:aws:Bucket::Assets
 ```
 </Segment>
 
@@ -377,7 +396,7 @@ sst secret set StripeSecret dev_123456789
 Optionally, set the secret in a specific stage.
 
 ```bash frame="none"
-sst secret set StripeSecret prod_123456789 --stage=production
+sst secret set StripeSecret prod_123456789 --stage production
 ```
 
 To set something like an RSA key, you can first save it to a file.
@@ -427,7 +446,7 @@ KEY_2=VALUE2
 Optionally, set the secrets in a specific stage.
 
 ```bash frame="none"
-sst secret load ./prod.env --stage=production
+sst secret load ./prod.env --stage production
 ```
 
 
@@ -455,7 +474,7 @@ sst secret remove StripeSecret
 Optionally, remove a secret in a specific stage.
 
 ```bash frame="none" frame="none"
-sst secret remove StripeSecret --stage=production
+sst secret remove StripeSecret --stage production
 ```
 </Segment>
 <NestedTitle id="secret-list" Tag="h4" parent="secret ">list</NestedTitle>
@@ -470,7 +489,7 @@ Lists all the secrets.
 Optionally, list the secrets in a specific stage.
 
 ```bash frame="none" frame="none"
-sst secret list --stage=production
+sst secret list --stage production
 ```
 </Segment>
 
@@ -555,7 +574,14 @@ This does not remove the SST _state_ and _bootstrap_ resources in your account a
 Optionally, remove your app from a specific stage.
 
 ```bash frame="none" frame="none"
-sst remove --stage=production
+sst remove --stage production
+```
+```
+Optionally, remove specific resources by passing in a list of their URNs.
+You can get the URN of a resource from the [Console](/docs/console/#resources).
+
+```bash frame="none"
+sst remove --target urn:pulumi:prod::www::sst:aws:Astro::Astro,urn:pulumi:prod::www::sst:aws:Bucket::Assets
 ```
 </Segment>
 
@@ -662,6 +688,12 @@ Compares your local state with the state of the resources in the cloud provider.
 :::note
 The `sst refresh` does not make changes to the resources in the cloud provider.
 :::
+Optionally, refresh specific resources by passing in a list of their URNs.
+You can get the URN of a resource from the [Console](/docs/console/#resources).
+
+```bash frame="none"
+sst refresh --target urn:pulumi:prod::www::sst:aws:Astro::Astro,urn:pulumi:prod::www::sst:aws:Bucket::Assets
+```
 
 This is useful for cases where you want to ensure that your local state is in sync with your cloud provider. [Learn more about how state works](/docs/providers/#how-state-works).
 </Segment>

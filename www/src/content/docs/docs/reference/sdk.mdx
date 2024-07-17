@@ -3,7 +3,9 @@ title: SDK
 description: Interact with linked resources in your functions in a typesafe way.
 ---
 
-The JS SDK is an [npm package](https://www.npmjs.com/package/sst) that allows you to access linked resources in your functions and frontends in a typesafe way.
+The JS SDK is an [npm package](https://www.npmjs.com/package/sst) that you can use in your runtime code to interact with your infrastructure.
+
+You can use the SDK in your **functions**, **frontends**, and **container applications**. You can access links from components in a typesafe way. And some components come with SDK clients that you can use.
 
 :::tip
 You'll first need to [link a resource](/docs/linking/) to your function or frontend to be able to access it.
@@ -17,17 +19,23 @@ Currently, the SDK is only available for JavaScript and TypeScript. Support for 
 
 Install the [npm package](https://www.npmjs.com/package/sst).
 
-```bash
+```bash "sst@ion"
 npm install sst@ion
 ```
 
 :::caution
-You need the `@ion` tag to install the Ion version of the SST package.
+You need the `@ion` tag to install the Ion version of SST.
 :::
 
 ---
 
 ## Usage
+
+The SDK allows you to access links from your components and some components come with a client that you can use.
+
+---
+
+### Links
 
 Import `Resource` to access the linked resources.
 
@@ -54,10 +62,26 @@ new sst.aws.Function("MyFunction", {
 
 ---
 
-## How it works
+#### How it works
 
 In the above example, `Resource.MyBucket.name` works because it's been injected into the function package on `sst dev` and `sst deploy`.
 
 For functions, this is injected into the [`globalThis`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/globalThis) using [esbuild](https://esbuild.github.io/) and for frontends, it's injected into the `process.env` object.
 
 The JS SDK first checks the `process.env` and then the `globalThis` for the linked resources. You can [read more about how the links are injected](/docs/linking/#injecting-links).
+
+---
+
+### Client
+
+Components like the [`Realtime`](/docs/component/aws/realtime/) component come with a client that you can use.
+
+```ts
+import { realtime } from "sst/aws/realtime";
+
+export const handler = realtime.authorizer(async (token) => {
+  // Validate the token
+});
+```
+
+For example, `realtime.authorizer` let's you create the handler for the authorizer function that `Realtime` needs.
