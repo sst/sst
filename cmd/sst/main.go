@@ -229,7 +229,7 @@ var root = &cli.Command{
 		{
 			Name: "y",
 			Type: "bool",
-			Description: Description{
+			Description: cli.Description{
 				Short: "Skip interactive confirmation",
 				Long: strings.Join([]string{
 					"",
