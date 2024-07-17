@@ -17,7 +17,7 @@ The `AppSyncFunction` component is internally used by the `AppSync` component to
 functions to [AWS AppSync](https://docs.aws.amazon.com/appsync/latest/devguide/what-is-appsync.html).
 
 :::caution
-This component is not intended for public use.
+This component is not intended to be created directly.
 :::
 
 You'll find this component returned by the `addFunction` method of the `AppSync` component.
@@ -97,7 +97,7 @@ The function code that contains the request and response functions.
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
-The data source this resolver is using. This only applies for "unit" resolvers.
+The data source this resolver is using.
 
 ```js
 {
@@ -116,7 +116,7 @@ The name of the AppSync function.
 
 ```js
 {
-  name: "myFunction",
+  name: "myFunction"
 }
 ```
 </Segment>
@@ -131,7 +131,6 @@ The function request mapping template.
 
 ```js
 {
-  dataSource: "dynamoDS",
   requestTemplate: `{
     "version": "2018-05-29",
     "operation": "Scan",
@@ -150,7 +149,6 @@ The function response mapping template.
 
 ```js
 {
-  dataSource: "dynamoDS",
   responseTemplate: `{
     "users": $utils.toJson($context.result.items)
   }`,

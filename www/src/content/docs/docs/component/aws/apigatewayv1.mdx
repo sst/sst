@@ -17,15 +17,16 @@ The `ApiGatewayV1` component lets you add an [Amazon API Gateway REST API](https
 
 #### Create the API
 
-```ts
+```ts title="sst.config.ts"
 const api = new sst.aws.ApiGatewayV1("MyApi");
 ```
 
 #### Add routes
 
-```ts
+```ts title="sst.config.ts"
 api.route("GET /", "src/get.handler");
 api.route("POST /", "src/post.handler");
+
 api.deploy();
 ```
 
@@ -35,11 +36,23 @@ You need to call the `deploy` method after you've added all your routes.
 
 #### Configure the routes
 
-You can configure the route and its handler function.
+You can configure the route.
 
-```ts
-api.route("GET /", "src/get.handler", { auth: { iam: true } });
-api.route("POST /", { handler: "src/post.handler", memory: "2048 MB" });
+```ts title="sst.config.ts"
+api.route("GET /", "src/get.handler", {
+  auth: { iam: true }
+});
+```
+
+#### Configure the route handler
+
+You can configure the route handler function.
+
+```ts title="sst.config.ts"
+api.route("POST /", {
+  handler: "src/post.handler",
+  memory: "2048 MB"
+});
 ```
 
 #### Set defaults for all routes
@@ -47,14 +60,14 @@ api.route("POST /", { handler: "src/post.handler", memory: "2048 MB" });
 You can use the `transform` to set some defaults for all your routes. For example,
 instead of setting the `memory` for each route.
 
-```ts
+```ts title="sst.config.ts"
 api.route("GET /", { handler: "src/get.handler", memory: "2048 MB" });
 api.route("POST /", { handler: "src/post.handler", memory: "2048 MB" });
 ```
 
 You can set it through the `transform`.
 
-```ts {5}
+```ts {5} title="sst.config.ts"
 new sst.aws.ApiGatewayV1("MyApi", {
   transform: {
     route: {
@@ -156,7 +169,13 @@ Configure the [API Gateway endpoint](https://docs.aws.amazon.com/apigateway/late
 **Type** <code class="symbol">&ldquo;</code><code class="primitive">edge</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">regional</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">private</code><code class="symbol">&rdquo;</code>
 </InlineSection>
 </Section>
-The type of the API Gateway REST API endpoint.
+The type of the API Gateway REST API endpoint. By default, it's an `edge` endpoint, meaning
+that a CloudFront distribution is created for the API.
+
+On the other hand, a `regional` endpoint is an endpoint that is deployed in a specific AWS
+region.
+
+And a `private` endpoint is deployed within your VPC.
 
 </Segment>
 <NestedTitle id="endpoint-vpcendpointids" Tag="h4" parent="endpoint.">vpcEndpointIds?</NestedTitle>
@@ -166,7 +185,7 @@ The type of the API Gateway REST API endpoint.
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code><code class="symbol">[]</code><code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
-The VPC endpoint IDs for the private endpoint.
+The VPC endpoint IDs for the `private` endpoint.
 
 </Segment>
 ### transform?
@@ -242,7 +261,7 @@ Here we are ensuring that all handler functions of our routes have a memory of `
     route: {
       handler: {
         memory: "2048 MB"
-      },
+      }
     }
   }
 }
@@ -369,41 +388,42 @@ Configure the authorizer.
 </InlineSection>
 Add an authorizer to the API Gateway REST API.
 
-Here's how you add a Lambda TOKEN authorizer.
+Add a Lambda token authorizer.
 
-```js
+```js title="sst.config.ts"
 api.addAuthorizer({
   name: "myAuthorizer",
-  tokenFunction: "src/authorizer.index",
+  tokenFunction: "src/authorizer.index"
 });
 ```
 
 Add a Lambda REQUEST authorizer.
 
-```js
+```js title="sst.config.ts"
 api.addAuthorizer({
   name: "myAuthorizer",
-  requestFunction: "src/authorizer.index",
+  requestFunction: "src/authorizer.index"
 });
 ```
 
 Add a Cognito User Pool authorizer.
 
-```js
+```js title="sst.config.ts"
 const userPool = new aws.cognito.UserPool();
+
 api.addAuthorizer({
   name: "myAuthorizer",
-  userPools: [userPool.arn],
+  userPools: [userPool.arn]
 });
 ```
 
 Customize the authorizer.
 
-```js
+```js title="sst.config.ts"
 api.addAuthorizer({
   name: "myAuthorizer",
   tokenFunction: "src/authorizer.index",
-  ttl: 30,
+  ttl: 30
 });
 ```
 </Segment>
@@ -420,6 +440,13 @@ deploy()
 **Returns** <code class="primitive">void</code>
 </InlineSection>
 Create a deployment for the API Gateway REST API.
+
+:::note
+You need to call this after you've added all your routes.
+:::
+
+Due to the way API Gateway V1 is created internally, you'll need to call this method after
+you've added all your routes.
 
 </Segment>
 
@@ -457,46 +484,46 @@ The path can be a combination of
 The `{proxy+}` is a greedy segment, it matches all its child paths.
 :::
 
+When a request comes in, the API Gateway will look for the most specific match.
+
 :::note
 You cannot have duplicate routes.
 :::
 
-When a request comes in, the API Gateway will look for the most specific match.
+Add a simple route.
 
-Here's how you add a simple route.
-
-```js
+```js title="sst.config.ts"
 api.route("GET /", "src/get.handler");
 ```
 
 Match any HTTP method.
 
-```js
+```js title="sst.config.ts"
 api.route("ANY /", "src/route.handler");
 ```
 
 Add a default route.
 
-```js
+```js title="sst.config.ts"
 api.route("GET /", "src/get.handler")
 api.route($default, "src/default.handler");
 ```
 
 Add a parameterized route.
 
-```js
+```js title="sst.config.ts"
 api.route("GET /notes/{id}", "src/get.handler");
 ```
 
 Add a greedy route.
 
-```js
+```js title="sst.config.ts"
 api.route("GET /notes/{proxy+}", "src/greedy.handler");
 ```
 
 Enable auth for a route.
 
-```js
+```js title="sst.config.ts"
 api.route("GET /", "src/get.handler")
 api.route("POST /", "src/post.handler", {
   auth: {
@@ -507,7 +534,7 @@ api.route("POST /", "src/post.handler", {
 
 Customize the route handler.
 
-```js
+```js title="sst.config.ts"
 api.route("GET /", {
   handler: "src/get.handler",
   memory: "2048 MB"
@@ -546,8 +573,7 @@ The name of the authorizer.
 
 ```js
 {
-  name: "myAuthorizer",
-  tokenFunction: "src/authorizer.index",
+  name: "myAuthorizer"
 }
 ```
 </Segment>
@@ -558,12 +584,11 @@ The name of the authorizer.
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol"> | </code>[<code class="type">FunctionArgs</code>](/docs/component/aws/function/#functionargs)<code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
-The Lambda REQUEST authorizer function.
+The Lambda request authorizer function. Takes the handler path or the function args.
 
 ```js
 {
-  name: "myAuthorizer",
-  requestFunction: "src/authorizer.index",
+  requestFunction: "src/authorizer.index"
 }
 ```
 </Segment>
@@ -574,12 +599,11 @@ The Lambda REQUEST authorizer function.
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol"> | </code>[<code class="type">FunctionArgs</code>](/docs/component/aws/function/#functionargs)<code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
-The Lambda TOKEN authorizer function.
+The Lambda token authorizer function. Takes the handler path or the function args.
 
 ```js
 {
-  name: "myAuthorizer",
-  tokenFunction: "src/authorizer.index",
+  tokenFunction: "src/authorizer.index"
 }
 ```
 </Segment>
@@ -631,12 +655,12 @@ Time to live for cached authorizer results in seconds.
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code><code class="symbol">[]</code><code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
-A list of user pools used for the authorizer.
+A list of user pools used as the authorizer.
 
 ```js
 {
   name: "myAuthorizer",
-  userPools: [userPool.arn],
+  userPools: [userPool.arn]
 }
 ```
 
@@ -686,7 +710,7 @@ You can configure JWT auth.
   auth: {
     cognito: {
       authorizer: myAuthorizer.id,
-      scopes: ["read:profile", "write:profile"],
+      scopes: ["read:profile", "write:profile"]
     }
   }
 }
@@ -696,9 +720,10 @@ Where `myAuthorizer` is:
 
 ```js
 const userPool = new aws.cognito.UserPool();
+
 const myAuthorizer = api.addAuthorizer({
   name: "MyAuthorizer",
-  userPools: [userPool.arn],
+  userPools: [userPool.arn]
 });
 ```
 </Segment>
@@ -745,7 +770,7 @@ Where `myAuthorizer` is:
 const userPool = new aws.cognito.UserPool();
 const myAuthorizer = api.addAuthorizer({
   name: "MyAuthorizer",
-  userPools: [userPool.arn],
+  userPools: [userPool.arn]
 });
 ```
 </Segment>
@@ -756,7 +781,9 @@ const myAuthorizer = api.addAuthorizer({
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">true</code><code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
-Enable IAM authorization for a given API route. When IAM auth is enabled, clients need to use Signature Version 4 to sign their requests with their AWS credentials.
+Enable IAM authorization for a given API route.
+
+When IAM auth is enabled, clients need to use Signature Version 4 to sign their requests with their AWS credentials.
 
 </Segment>
 ### transform?

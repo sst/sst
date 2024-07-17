@@ -33,7 +33,7 @@ export interface KinesisStreamLambdaSubscriberArgs {
    * You can pass in up to 5 different filter policies. These will logically ORed together. Meaning that if any single policy matches, the record will be processed. Learn more about the [filter rule syntax](https://docs.aws.amazon.com/lambda/latest/dg/invocation-eventfiltering.html#filtering-syntax).
    *
    * @example
-   * For example, if you Kinesis stream contains events in this JSON format.
+   * For example, if your Kinesis stream contains events in this JSON format.
    * ```js
    * {
    *   record: 12345,
@@ -81,13 +81,13 @@ export interface KinesisStreamLambdaSubscriberArgs {
  *
  * #### Minimal example
  *
- * ```ts
+ * ```ts title="sst.config.ts"
  * const stream = new sst.aws.KinesisStream("MyStream");
  * ```
  *
  * #### Subscribe to a stream
  *
- * ```ts
+ * ```ts title="sst.config.ts"
  * stream.subscribe("src/subscriber.handler");
  * ```
  *
@@ -95,7 +95,7 @@ export interface KinesisStreamLambdaSubscriberArgs {
  *
  * You can link the stream to other resources, like a function or your Next.js app.
  *
- * ```ts {2}
+ * ```ts {2} title="sst.config.ts"
  * new sst.aws.Nextjs("MyWeb", {
  *   link: [stream]
  * });
@@ -118,8 +118,7 @@ export interface KinesisStreamLambdaSubscriberArgs {
  */
 export class KinesisStream
   extends Component
-  implements Link.Linkable, Link.AWS.Linkable
-{
+  implements Link.Linkable, Link.AWS.Linkable {
   private constructorName: string;
   private stream: aws.kinesis.Stream;
 
@@ -156,13 +155,13 @@ export class KinesisStream
    *
    * @example
    *
-   * ```js
+   * ```js title="sst.config.ts"
    * stream.subscribe("src/subscriber.handler");
    * ```
    *
    * Add a filter to the subscription.
    *
-   * ```js
+   * ```js title="sst.config.ts"
    * stream.subscribe("src/subscriber.handler", {
    *   filters: [
    *     {
@@ -178,7 +177,7 @@ export class KinesisStream
    *
    * Customize the subscriber function.
    *
-   * ```js
+   * ```js title="sst.config.ts"
    * stream.subscribe({
    *   handler: "src/subscriber.handler",
    *   timeout: "60 seconds"
@@ -208,19 +207,19 @@ export class KinesisStream
    *
    * For example, let's say you have the ARN of an existing Kinesis stream.
    *
-   * ```js
+   * ```js title="sst.config.ts"
    * const streamArn = "arn:aws:kinesis:us-east-1:123456789012:stream/MyStream";
    * ```
    *
    * You can subscribe to it by passing in the ARN.
    *
-   * ```js
+   * ```js title="sst.config.ts"
    * sst.aws.KinesisStream.subscribe(streamArn, "src/subscriber.handler");
    * ```
    *
    * Add a filter to the subscription.
    *
-   * ```js
+   * ```js title="sst.config.ts"
    * sst.aws.KinesisStream.subscribe(streamArn, "src/subscriber.handler", {
    *   filters: [
    *     {
@@ -236,7 +235,7 @@ export class KinesisStream
    *
    * Customize the subscriber function.
    *
-   * ```js
+   * ```js title="sst.config.ts"
    * sst.aws.KinesisStream.subscribe(streamArn, {
    *   handler: "src/subscriber.handler",
    *   timeout: "60 seconds"

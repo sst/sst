@@ -24,7 +24,7 @@ export interface AuthorizerArgs extends ApiGatewayV2AuthorizerArgs {
  * to add authorizers to [Amazon API Gateway HTTP API](https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api.html).
  *
  * :::caution
- * This component is not intended for public use.
+ * This component is not intended to be created directly.
  * :::
  *
  * You'll find this component returned by the `addAuthorizer` method of the `ApiGatewayV2` component.

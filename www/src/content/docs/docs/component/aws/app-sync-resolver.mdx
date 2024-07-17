@@ -17,7 +17,7 @@ The `AppSyncResolver` component is internally used by the `AppSync` component to
 resolvers to [AWS AppSync](https://docs.aws.amazon.com/appsync/latest/devguide/what-is-appsync.html).
 
 :::caution
-This component is not intended for public use.
+This component is not intended to be created directly.
 :::
 
 You'll find this component returned by the `addResolver` method of the `AppSync` component.
@@ -97,7 +97,7 @@ The function code that contains the request and response functions.
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
-The data source this resolver is using. This only applies for "unit" resolvers.
+The data source this resolver is using. This only applies for `unit` resolvers.
 
 ```js
 {
@@ -122,7 +122,7 @@ The field name from the schema defined.
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">[]</code><code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
-The functions this resolver is using. This only applies for "pipeline" resolvers.
+The functions this resolver is using. This only applies for `pipeline` resolvers.
 
 ```js
 {
@@ -156,16 +156,15 @@ The type of the resolver.
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
-For "unit" resolvers, this is the request mapping template. And for "pipeline"
+For `unit` resolvers, this is the request mapping template. And for `pipeline`
 resolvers, this is the before mapping template.
 
 ```js
 {
-  dataSource: "dynamoDS",
   requestTemplate: `{
     "version": "2017-02-28",
-    "operation": "Scan",
-  }`,
+    "operation": "Scan"
+  }`
 }
 ```
 </Segment>
@@ -176,15 +175,14 @@ resolvers, this is the before mapping template.
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
-For "unit" resolvers, this is the response mapping template. And for "pipeline"
+For `unit` resolvers, this is the response mapping template. And for `pipeline`
 resolvers, this is the after mapping template.
 
 ```js
 {
-  dataSource: "dynamoDS",
   responseTemplate: `{
     "users": $utils.toJson($context.result.items)
-  }`,
+  }`
 }
 ```
 </Segment>

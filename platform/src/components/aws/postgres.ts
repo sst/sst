@@ -179,20 +179,20 @@ export interface PostgresArgs {
  *
  * #### Create the database
  *
- * ```js
+ * ```js title="sst.config.ts"
  * const database = new sst.aws.Postgres("MyDatabase");
  * ```
  *
  * #### Use a VPC
  *
- * ```js
+ * ```js title="sst.config.ts"
  * const vpc = new sst.aws.Vpc("MyVpc");
  * const database = new sst.aws.Postgres("MyDatabase", { vpc });
  * ```
  *
  * #### Change the scaling config
  *
- * ```js
+ * ```js title="sst.config.ts"
  * new sst.aws.Postgres("MyDatabase", {
  *   scaling: {
  *     min: "2 ACU",
@@ -205,7 +205,7 @@ export interface PostgresArgs {
  *
  * You can link your database to other resources, like a function or your Next.js app.
  *
- * ```ts
+ * ```ts title="sst.config.ts"
  * new sst.aws.Nextjs("MyWeb", {
  *   link: [database]
  * });

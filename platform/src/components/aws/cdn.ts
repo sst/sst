@@ -251,7 +251,7 @@ export interface CdnArgs {
  * The `Cdn` component is internally used by other components to deploy a CDN to AWS. It uses [Amazon CloudFront](https://aws.amazon.com/cloudfront/) and [Amazon Route 53](https://aws.amazon.com/route53/) to manage custom domains.
  *
  * :::caution
- * This component is used internally and not intended for public use.
+ * This component is not intended to be created directly.
  * :::
  *
  * @example
@@ -361,13 +361,13 @@ export class Cdn extends Component {
             : [],
           viewerCertificate: certificateArn
             ? {
-                acmCertificateArn: certificateArn,
-                sslSupportMethod: "sni-only",
-                minimumProtocolVersion: "TLSv1.2_2021",
-              }
+              acmCertificateArn: certificateArn,
+              sslSupportMethod: "sni-only",
+              minimumProtocolVersion: "TLSv1.2_2021",
+            }
             : {
-                cloudfrontDefaultCertificate: true,
-              },
+              cloudfrontDefaultCertificate: true,
+            },
           waitForDeployment: false,
         }),
         {

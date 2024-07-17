@@ -241,7 +241,7 @@ export interface SolidStartArgs extends SsrSiteArgs {
    */
   vpc?: SsrSiteArgs["vpc"];
   /**
-   * Configure the SolidStart app app to use an existing CloudFront cache policy.
+   * Configure the SolidStart app to use an existing CloudFront cache policy.
    *
    * :::note
    * CloudFront has a limit of 20 cache policies per account, though you can request a limit
@@ -271,7 +271,7 @@ export interface SolidStartArgs extends SsrSiteArgs {
  *
  * Deploy a SolidStart app that's in the project root.
  *
- * ```js
+ * ```js title="sst.config.ts"
  * new sst.aws.SolidStart("MyWeb");
  * ```
  *
@@ -279,7 +279,7 @@ export interface SolidStartArgs extends SsrSiteArgs {
  *
  * Deploys the SolidStart app in the `my-solid-app/` directory.
  *
- * ```js {2}
+ * ```js {2} title="sst.config.ts"
  * new sst.aws.SolidStart("MyWeb", {
  *   path: "my-solid-app/"
  * });
@@ -289,7 +289,7 @@ export interface SolidStartArgs extends SsrSiteArgs {
  *
  * Set a custom domain for your SolidStart app.
  *
- * ```js {2}
+ * ```js {2} title="sst.config.ts"
  * new sst.aws.SolidStart("MyWeb", {
  *   domain: "my-app.com"
  * });
@@ -299,7 +299,7 @@ export interface SolidStartArgs extends SsrSiteArgs {
  *
  * Redirect `www.my-app.com` to `my-app.com`.
  *
- * ```js {4}
+ * ```js {4} title="sst.config.ts"
  * new sst.aws.SolidStart("MyWeb", {
  *   domain: {
  *     name: "my-app.com",
@@ -313,7 +313,7 @@ export interface SolidStartArgs extends SsrSiteArgs {
  * [Link resources](/docs/linking/) to your SolidStart app. This will grant permissions
  * to the resources and allow you to access it in your app.
  *
- * ```ts {4}
+ * ```ts {4} title="sst.config.ts"
  * const bucket = new sst.aws.Bucket("MyBucket");
  *
  * new sst.aws.SolidStart("MyWeb", {

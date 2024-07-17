@@ -47,7 +47,7 @@ export interface ApiGatewayV2DomainArgs {
    * There's an extra trailing slash when a base path is set.
    * :::
    *
-   * Be default there is no base path, so if the `name` is `api.example.com`, the full URL will be `https://api.example.com`.
+   * By default there is no base path, so if the `name` is `api.example.com`, the full URL will be `https://api.example.com`.
    */
   path?: Input<string>;
   /**

@@ -15,7 +15,7 @@ export interface FunctionArgs extends AppSyncFunctionArgs {
  * functions to [AWS AppSync](https://docs.aws.amazon.com/appsync/latest/devguide/what-is-appsync.html).
  *
  * :::caution
- * This component is not intended for public use.
+ * This component is not intended to be created directly.
  * :::
  *
  * You'll find this component returned by the `addFunction` method of the `AppSync` component.
@@ -48,9 +48,9 @@ export class AppSyncFunction extends Component {
           code: args.code,
           runtime: args.code
             ? {
-                name: "APPSYNC_JS",
-                runtimeVersion: "1.0.0",
-              }
+              name: "APPSYNC_JS",
+              runtimeVersion: "1.0.0",
+            }
             : undefined,
         }),
         { parent: self },

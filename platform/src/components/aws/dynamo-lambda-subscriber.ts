@@ -30,7 +30,7 @@ export interface Args extends DynamoSubscriberArgs {
  * add stream subscriptions to [Amazon DynamoDB](https://aws.amazon.com/dynamodb/).
  *
  * :::caution
- * This component is not intended for public use.
+ * This component is not intended to be created directly.
  * :::
  *
  * You'll find this component returned by the `subscribe` method of the `Dynamo` component.
@@ -81,10 +81,10 @@ export class DynamoLambdaSubscriber extends Component {
           functionName: fn.name,
           filterCriteria: args.filters
             ? output(args.filters).apply((filters) => ({
-                filters: filters.map((filter) => ({
-                  pattern: JSON.stringify(filter),
-                })),
-              }))
+              filters: filters.map((filter) => ({
+                pattern: JSON.stringify(filter),
+              })),
+            }))
             : undefined,
           startingPosition: "LATEST",
         }),

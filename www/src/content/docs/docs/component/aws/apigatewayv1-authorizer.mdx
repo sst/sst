@@ -17,7 +17,7 @@ The `ApiGatewayV1Authorizer` component is internally used by the `ApiGatewayV1` 
 to add authorizers to [Amazon API Gateway REST API](https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-rest-api.html).
 
 :::caution
-This component is not intended for public use.
+This component is not intended to be created directly.
 :::
 
 You'll find this component returned by the `addAuthorizer` method of the `ApiGatewayV1` component.
@@ -158,8 +158,7 @@ The name of the authorizer.
 
 ```js
 {
-  name: "myAuthorizer",
-  tokenFunction: "src/authorizer.index",
+  name: "myAuthorizer"
 }
 ```
 </Segment>
@@ -170,12 +169,11 @@ The name of the authorizer.
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol"> | </code>[<code class="type">FunctionArgs</code>](/docs/component/aws/function/#functionargs)<code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
-The Lambda REQUEST authorizer function.
+The Lambda request authorizer function. Takes the handler path or the function args.
 
 ```js
 {
-  name: "myAuthorizer",
-  requestFunction: "src/authorizer.index",
+  requestFunction: "src/authorizer.index"
 }
 ```
 </Segment>
@@ -186,12 +184,11 @@ The Lambda REQUEST authorizer function.
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol"> | </code>[<code class="type">FunctionArgs</code>](/docs/component/aws/function/#functionargs)<code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
-The Lambda TOKEN authorizer function.
+The Lambda token authorizer function. Takes the handler path or the function args.
 
 ```js
 {
-  name: "myAuthorizer",
-  tokenFunction: "src/authorizer.index",
+  tokenFunction: "src/authorizer.index"
 }
 ```
 </Segment>
@@ -243,12 +240,12 @@ Time to live for cached authorizer results in seconds.
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code><code class="symbol">[]</code><code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
-A list of user pools used for the authorizer.
+A list of user pools used as the authorizer.
 
 ```js
 {
   name: "myAuthorizer",
-  userPools: [userPool.arn],
+  userPools: [userPool.arn]
 }
 ```
 

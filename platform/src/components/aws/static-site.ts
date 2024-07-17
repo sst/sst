@@ -145,46 +145,46 @@ export interface StaticSiteArgs extends BaseStaticSiteArgs {
   invalidation?: Input<
     | false
     | {
-        /**
-         * Configure if `sst deploy` should wait for the CloudFront cache invalidation to finish.
-         *
-         * :::tip
-         * For non-prod environments it might make sense to pass in `false`.
-         * :::
-         *
-         * Waiting for the CloudFront cache invalidation process to finish ensures that the new content will be served once the deploy finishes. However, this process can sometimes take more than 5 mins.
-         * @default `false`
-         * @example
-         * ```js
-         * {
-         *   invalidation: {
-         *     wait: true
-         *   }
-         * }
-         * ```
-         */
-        wait?: Input<boolean>;
-        /**
-         * The paths to invalidate.
-         *
-         * You can either pass in an array of glob patterns to invalidate specific files. Or you can use the built-in option `all` to invalidation all files when any file changes.
-         *
-         * :::note
-         * Invalidating `all` counts as one invalidation, while each glob pattern counts as a single invalidation path.
-         * :::
-         * @default `"all"`
-         * @example
-         * Invalidate the `index.html` and all files under the `products/` route.
-         * ```js
-         * {
-         *   invalidation: {
-         *     paths: ["/index.html", "/products/*"]
-         *   }
-         * }
-         * ```
-         */
-        paths?: Input<"all" | string[]>;
-      }
+      /**
+       * Configure if `sst deploy` should wait for the CloudFront cache invalidation to finish.
+       *
+       * :::tip
+       * For non-prod environments it might make sense to pass in `false`.
+       * :::
+       *
+       * Waiting for the CloudFront cache invalidation process to finish ensures that the new content will be served once the deploy finishes. However, this process can sometimes take more than 5 mins.
+       * @default `false`
+       * @example
+       * ```js
+       * {
+       *   invalidation: {
+       *     wait: true
+       *   }
+       * }
+       * ```
+       */
+      wait?: Input<boolean>;
+      /**
+       * The paths to invalidate.
+       *
+       * You can either pass in an array of glob patterns to invalidate specific files. Or you can use the built-in option `all` to invalidation all files when any file changes.
+       *
+       * :::note
+       * Invalidating `all` counts as one invalidation, while each glob pattern counts as a single invalidation path.
+       * :::
+       * @default `"all"`
+       * @example
+       * Invalidate the `index.html` and all files under the `products/` route.
+       * ```js
+       * {
+       *   invalidation: {
+       *     paths: ["/index.html", "/products/*"]
+       *   }
+       * }
+       * ```
+       */
+      paths?: Input<"all" | string[]>;
+    }
   >;
   /**
    * [Transform](/docs/components#transform) how this component creates its underlying
@@ -213,7 +213,7 @@ export interface StaticSiteArgs extends BaseStaticSiteArgs {
  *
  * Simply uploads the current directory as a static site.
  *
- * ```js
+ * ```js title="sst.config.ts"
  * new sst.aws.StaticSite("MyWeb");
  * ```
  *
@@ -221,7 +221,7 @@ export interface StaticSiteArgs extends BaseStaticSiteArgs {
  *
  * Change the `path` that should be uploaded.
  *
- * ```js
+ * ```js title="sst.config.ts"
  * new sst.aws.StaticSite("MyWeb", {
  *   path: "path/to/site"
  * });
@@ -247,7 +247,7 @@ export interface StaticSiteArgs extends BaseStaticSiteArgs {
  *
  * Use [Vite](https://vitejs.dev) to deploy a React/Vue/Svelte/etc. SPA by specifying the `build` config.
  *
- * ```js
+ * ```js title="sst.config.ts"
  * new sst.aws.StaticSite("MyWeb", {
  *   build: {
  *     command: "npm run build",
@@ -260,7 +260,7 @@ export interface StaticSiteArgs extends BaseStaticSiteArgs {
  *
  * Use [Jekyll](https://jekyllrb.com) to deploy a static site.
  *
- * ```js
+ * ```js title="sst.config.ts"
  * new sst.aws.StaticSite("MyWeb", {
  *   errorPage: "404.html",
  *   build: {
@@ -274,7 +274,7 @@ export interface StaticSiteArgs extends BaseStaticSiteArgs {
  *
  * Use [Gatsby](https://www.gatsbyjs.com) to deploy a static site.
  *
- * ```js
+ * ```js title="sst.config.ts"
  * new sst.aws.StaticSite("MyWeb", {
  *   errorPage: "404.html",
  *   build: {
@@ -288,7 +288,7 @@ export interface StaticSiteArgs extends BaseStaticSiteArgs {
  *
  * Use [Angular](https://angular.dev) to deploy a SPA.
  *
- * ```js
+ * ```js title="sst.config.ts"
  * new sst.aws.StaticSite("MyWeb", {
  *   build: {
  *     command: "ng build --output-path dist",
@@ -301,7 +301,7 @@ export interface StaticSiteArgs extends BaseStaticSiteArgs {
  *
  * Set a custom domain for your site.
  *
- * ```js {2}
+ * ```js {2} title="sst.config.ts"
  * new sst.aws.StaticSite("MyWeb", {
  *   domain: "my-app.com"
  * });
@@ -311,7 +311,7 @@ export interface StaticSiteArgs extends BaseStaticSiteArgs {
  *
  * Redirect `www.my-app.com` to `my-app.com`.
  *
- * ```js {4}
+ * ```js {4} title="sst.config.ts"
  * new sst.aws.StaticSite("MyWeb", {
  *   domain: {
  *     name: "my-app.com",
@@ -330,7 +330,7 @@ export interface StaticSiteArgs extends BaseStaticSiteArgs {
  *
  * For some static site generators like Vite, [environment variables](https://vitejs.dev/guide/env-and-mode) prefixed with `VITE_` can be accessed in the browser.
  *
- * ```ts {5-7}
+ * ```ts {5-7} title="sst.config.ts"
  * const bucket = new sst.aws.Bucket("MyBucket");
  *
  * new sst.aws.StaticSite("MyWeb", {
@@ -572,29 +572,29 @@ export class StaticSite extends Component implements Link.Linkable {
           defaultRootObject: indexPage,
           customErrorResponses: args.errorPage
             ? [
-                {
-                  errorCode: 403,
-                  responsePagePath: interpolate`/${args.errorPage}`,
-                  responseCode: 403,
-                },
-                {
-                  errorCode: 404,
-                  responsePagePath: interpolate`/${args.errorPage}`,
-                  responseCode: 404,
-                },
-              ]
+              {
+                errorCode: 403,
+                responsePagePath: interpolate`/${args.errorPage}`,
+                responseCode: 403,
+              },
+              {
+                errorCode: 404,
+                responsePagePath: interpolate`/${args.errorPage}`,
+                responseCode: 404,
+              },
+            ]
             : [
-                {
-                  errorCode: 403,
-                  responsePagePath: interpolate`/${indexPage}`,
-                  responseCode: 200,
-                },
-                {
-                  errorCode: 404,
-                  responsePagePath: interpolate`/${indexPage}`,
-                  responseCode: 200,
-                },
-              ],
+              {
+                errorCode: 403,
+                responsePagePath: interpolate`/${indexPage}`,
+                responseCode: 200,
+              },
+              {
+                errorCode: 404,
+                responsePagePath: interpolate`/${indexPage}`,
+                responseCode: 200,
+              },
+            ],
           defaultCacheBehavior: {
             targetOriginId: "s3",
             viewerProtocolPolicy: "redirect-to-https",

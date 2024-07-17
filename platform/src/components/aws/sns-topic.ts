@@ -106,7 +106,7 @@ export interface SnsTopicSubscriberArgs {
  *
  * #### Create a topic
  *
- * ```ts
+ * ```ts title="sst.config.ts"
  * const topic = new sst.aws.SnsTopic("MyTopic");
  * ```
  *
@@ -114,7 +114,7 @@ export interface SnsTopicSubscriberArgs {
  *
  * You can optionally make it a FIFO topic.
  *
- * ```ts {2}
+ * ```ts {2} title="sst.config.ts"
  * new sst.aws.SnsTopic("MyTopic", {
  *   fifo: true
  * });
@@ -122,7 +122,7 @@ export interface SnsTopicSubscriberArgs {
  *
  * #### Add a subscriber
  *
- * ```ts
+ * ```ts title="sst.config.ts"
  * topic.subscribe("src/subscriber.handler");
  * ```
  *
@@ -130,7 +130,7 @@ export interface SnsTopicSubscriberArgs {
  *
  * You can link the topic to other resources, like a function or your Next.js app.
  *
- * ```ts
+ * ```ts title="sst.config.ts"
  * new sst.aws.Nextjs("MyWeb", {
  *   link: [topic]
  * });
@@ -218,13 +218,13 @@ export class SnsTopic extends Component implements Link.Linkable, AWSLinkable {
    *
    * @example
    *
-   * ```js
+   * ```js title="sst.config.ts"
    * topic.subscribe("src/subscriber.handler");
    * ```
    *
    * Add a filter to the subscription.
    *
-   * ```js
+   * ```js title="sst.config.ts"
    * topic.subscribe("src/subscriber.handler", {
    *   filter: {
    *     price_usd: [{numeric: [">=", 100]}]
@@ -234,7 +234,7 @@ export class SnsTopic extends Component implements Link.Linkable, AWSLinkable {
    *
    * Customize the subscriber function.
    *
-   * ```js
+   * ```js title="sst.config.ts"
    * topic.subscribe({
    *   handler: "src/subscriber.handler",
    *   timeout: "60 seconds"
@@ -264,19 +264,19 @@ export class SnsTopic extends Component implements Link.Linkable, AWSLinkable {
    *
    * For example, let's say you have an existing SNS topic with the following ARN.
    *
-   * ```js
+   * ```js title="sst.config.ts"
    * const topicArn = "arn:aws:sns:us-east-1:123456789012:MyTopic";
    * ```
    *
    * You can subscribe to it by passing in the ARN.
    *
-   * ```js
+   * ```js title="sst.config.ts"
    * sst.aws.SnsTopic.subscribe(topicArn, "src/subscriber.handler");
    * ```
    *
    * Add a filter to the subscription.
    *
-   * ```js
+   * ```js title="sst.config.ts"
    * sst.aws.SnsTopic.subscribe(topicArn, "src/subscriber.handler", {
    *   filter: {
    *     price_usd: [{numeric: [">=", 100]}]
@@ -286,7 +286,7 @@ export class SnsTopic extends Component implements Link.Linkable, AWSLinkable {
    *
    * Customize the subscriber function.
    *
-   * ```js
+   * ```js title="sst.config.ts"
    * sst.aws.SnsTopic.subscribe(topicArn, {
    *   handler: "src/subscriber.handler",
    *   timeout: "60 seconds"
@@ -341,19 +341,19 @@ export class SnsTopic extends Component implements Link.Linkable, AWSLinkable {
    *
    * For example, let's say you have a queue.
    *
-   * ```js
+   * ```js title="sst.config.ts"
    * const queue = sst.aws.Queue("MyQueue");
    * ```
    *
    * You can subscribe to this topic with it.
    *
-   * ```js
+   * ```js title="sst.config.ts"
    * topic.subscribeQueue(queue.arn);
    * ```
    *
    * Add a filter to the subscription.
    *
-   * ```js
+   * ```js title="sst.config.ts"
    * topic.subscribeQueue(queue.arn, {
    *   filter: {
    *     price_usd: [{numeric: [">=", 100]}]
@@ -384,20 +384,20 @@ export class SnsTopic extends Component implements Link.Linkable, AWSLinkable {
    *
    * For example, let's say you have an existing SNS topic and SQS queue with the following ARNs.
    *
-   * ```js
+   * ```js title="sst.config.ts"
    * const topicArn = "arn:aws:sns:us-east-1:123456789012:MyTopic";
    * const queueArn = "arn:aws:sqs:us-east-1:123456789012:MyQueue";
    * ```
    *
    * You can subscribe to the topic with the queue.
    *
-   * ```js
+   * ```js title="sst.config.ts"
    * sst.aws.SnsTopic.subscribeQueue(topicArn, queueArn);
    * ```
    *
    * Add a filter to the subscription.
    *
-   * ```js
+   * ```js title="sst.config.ts"
    * sst.aws.SnsTopic.subscribeQueue(topicArn, queueArn, {
    *   filter: {
    *     price_usd: [{numeric: [">=", 100]}]

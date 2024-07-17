@@ -17,7 +17,7 @@ The `AppSyncDataSource` component is internally used by the `AppSync` component 
 data sources to [AWS AppSync](https://docs.aws.amazon.com/appsync/latest/devguide/what-is-appsync.html).
 
 :::caution
-This component is not intended for public use.
+This component is not intended to be created directly.
 :::
 
 You'll find this component returned by the `addDataSource` method of the `AppSync` component.
@@ -142,7 +142,6 @@ The ARN for the Elasticsearch domain.
 
 ```js
 {
-  name: "elasticSearchDS",
   elasticSearch: "arn:aws:es:us-east-1:123456789012:domain/my-domain"
 }
 ```
@@ -158,7 +157,6 @@ The ARN for the EventBridge event bus.
 
 ```js
 {
-  name: "eventBridgeDS",
   eventBridge: "arn:aws:events:us-east-1:123456789012:event-bus/my-event-bus"
 }
 ```
@@ -174,7 +172,6 @@ The URL for the HTTP endpoint.
 
 ```js
 {
-  name: "httpDS",
   http: "https://api.example.com"
 }
 ```
@@ -190,10 +187,26 @@ The ARN for the Lambda function.
 
 ```js
 {
-  name: "lambdaDS",
   lambda: "arn:aws:lambda:us-east-1:123456789012:function:my-function"
 }
 ```
+
+Or the handler.
+
+```js
+{
+  lambda: "src/lambda.handler"
+}
+```
+
+Or the function args.
+
+```js
+  lambda: {
+    handler: "src/lambda.handler",
+    timeout: "60 seconds"
+  }
+}
 </Segment>
 ### name
 <Segment>
@@ -206,7 +219,6 @@ The name of the data source.
 
 ```js
 {
-  name: "lambdaDS",
   lambda: "arn:aws:lambda:us-east-1:123456789012:function:my-function"
 }
 ```
@@ -222,7 +234,6 @@ The ARN for the OpenSearch domain.
 
 ```js
 {
-  name: "openSearchDS",
   openSearch: "arn:aws:opensearch:us-east-1:123456789012:domain/my-domain"
 }
 ```
@@ -236,7 +247,7 @@ The ARN for the OpenSearch domain.
 - <p>[<code class="key">cluster</code>](#rds-cluster)</p>
 - <p>[<code class="key">credentials</code>](#rds-credentials)</p>
 </Section>
-Configuring RDS data source.
+Configure the RDS data source.
 
 ```js
 {

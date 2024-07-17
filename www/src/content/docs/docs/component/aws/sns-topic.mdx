@@ -21,7 +21,7 @@ The difference between an `SnsTopic` and a `Queue` is that with a topic you can 
 
 #### Create a topic
 
-```ts
+```ts title="sst.config.ts"
 const topic = new sst.aws.SnsTopic("MyTopic");
 ```
 
@@ -29,7 +29,7 @@ const topic = new sst.aws.SnsTopic("MyTopic");
 
 You can optionally make it a FIFO topic.
 
-```ts {2}
+```ts {2} title="sst.config.ts"
 new sst.aws.SnsTopic("MyTopic", {
   fifo: true
 });
@@ -37,7 +37,7 @@ new sst.aws.SnsTopic("MyTopic", {
 
 #### Add a subscriber
 
-```ts
+```ts title="sst.config.ts"
 topic.subscribe("src/subscriber.handler");
 ```
 
@@ -45,7 +45,7 @@ topic.subscribe("src/subscriber.handler");
 
 You can link the topic to other resources, like a function or your Next.js app.
 
-```ts
+```ts title="sst.config.ts"
 new sst.aws.Nextjs("MyWeb", {
   link: [topic]
 });
@@ -210,13 +210,13 @@ Configure the subscription.
 </InlineSection>
 Subscribe to this SNS topic.
 
-```js
+```js title="sst.config.ts"
 topic.subscribe("src/subscriber.handler");
 ```
 
 Add a filter to the subscription.
 
-```js
+```js title="sst.config.ts"
 topic.subscribe("src/subscriber.handler", {
   filter: {
     price_usd: [{numeric: [">=", 100]}]
@@ -226,7 +226,7 @@ topic.subscribe("src/subscriber.handler", {
 
 Customize the subscriber function.
 
-```js
+```js title="sst.config.ts"
 topic.subscribe({
   handler: "src/subscriber.handler",
   timeout: "60 seconds"
@@ -257,19 +257,19 @@ Subscribe to this SNS topic with an SQS queue.
 
 For example, let's say you have a queue.
 
-```js
+```js title="sst.config.ts"
 const queue = sst.aws.Queue("MyQueue");
 ```
 
 You can subscribe to this topic with it.
 
-```js
+```js title="sst.config.ts"
 topic.subscribeQueue(queue.arn);
 ```
 
 Add a filter to the subscription.
 
-```js
+```js title="sst.config.ts"
 topic.subscribeQueue(queue.arn, {
   filter: {
     price_usd: [{numeric: [">=", 100]}]
@@ -303,19 +303,19 @@ Subscribe to an SNS topic that was not created in your app.
 
 For example, let's say you have an existing SNS topic with the following ARN.
 
-```js
+```js title="sst.config.ts"
 const topicArn = "arn:aws:sns:us-east-1:123456789012:MyTopic";
 ```
 
 You can subscribe to it by passing in the ARN.
 
-```js
+```js title="sst.config.ts"
 sst.aws.SnsTopic.subscribe(topicArn, "src/subscriber.handler");
 ```
 
 Add a filter to the subscription.
 
-```js
+```js title="sst.config.ts"
 sst.aws.SnsTopic.subscribe(topicArn, "src/subscriber.handler", {
   filter: {
     price_usd: [{numeric: [">=", 100]}]
@@ -325,7 +325,7 @@ sst.aws.SnsTopic.subscribe(topicArn, "src/subscriber.handler", {
 
 Customize the subscriber function.
 
-```js
+```js title="sst.config.ts"
 sst.aws.SnsTopic.subscribe(topicArn, {
   handler: "src/subscriber.handler",
   timeout: "60 seconds"
@@ -358,20 +358,20 @@ Subscribe to an existing SNS topic with a previously created SQS queue.
 
 For example, let's say you have an existing SNS topic and SQS queue with the following ARNs.
 
-```js
+```js title="sst.config.ts"
 const topicArn = "arn:aws:sns:us-east-1:123456789012:MyTopic";
 const queueArn = "arn:aws:sqs:us-east-1:123456789012:MyQueue";
 ```
 
 You can subscribe to the topic with the queue.
 
-```js
+```js title="sst.config.ts"
 sst.aws.SnsTopic.subscribeQueue(topicArn, queueArn);
 ```
 
 Add a filter to the subscription.
 
-```js
+```js title="sst.config.ts"
 sst.aws.SnsTopic.subscribeQueue(topicArn, queueArn, {
   filter: {
     price_usd: [{numeric: [">=", 100]}]

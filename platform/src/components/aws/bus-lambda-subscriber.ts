@@ -35,7 +35,7 @@ export interface Args extends BusSubscriberArgs {
  * to add subscriptions to [Amazon EventBridge Event Bus](https://docs.aws.amazon.com/eventbridge/latest/userguide/eb-event-bus.html).
  *
  * :::caution
- * This component is not intended for public use.
+ * This component is not intended to be created directly.
  * :::
  *
  * You'll find this component returned by the `subscribe` method of the `Bus` component.
@@ -93,15 +93,15 @@ export class BusLambdaSubscriber extends Component {
           eventBusName: bus.name,
           eventPattern: args.pattern
             ? output(args.pattern).apply((pattern) =>
-                JSON.stringify({
-                  "detail-type": pattern.detailType,
-                  source: pattern.source,
-                  detail: pattern.detail,
-                }),
-              )
-            : JSON.stringify({
-                source: [{ prefix: "" }],
+              JSON.stringify({
+                "detail-type": pattern.detailType,
+                source: pattern.source,
+                detail: pattern.detail,
               }),
+            )
+            : JSON.stringify({
+              source: [{ prefix: "" }],
+            }),
         }),
         { parent: self },
       );

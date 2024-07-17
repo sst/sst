@@ -39,7 +39,7 @@ export interface Args extends ApiGatewayWebSocketRouteArgs {
  * component to add routes to [AWS API Gateway WebSocket API](https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-websocket-api.html).
  *
  * :::caution
- * This component is not intended for public use.
+ * This component is not intended to be created directly.
  * :::
  *
  * You'll find this component returned by the `route` method of the `ApiGatewayWebSocket` component.

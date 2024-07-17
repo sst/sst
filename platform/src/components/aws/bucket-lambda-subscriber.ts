@@ -39,7 +39,7 @@ export interface Args extends BucketSubscriberArgs {
  * add bucket notifications to [AWS S3 Bucket](https://aws.amazon.com/s3/).
  *
  * :::caution
- * This component is not intended for public use.
+ * This component is not intended to be created directly.
  * :::
  *
  * You'll find this component returned by the `subscribe` method of the `Bucket` component.
@@ -57,17 +57,17 @@ export class BucketLambdaSubscriber extends Component {
     const events = args.events
       ? output(args.events)
       : output([
-          "s3:ObjectCreated:*",
-          "s3:ObjectRemoved:*",
-          "s3:ObjectRestore:*",
-          "s3:ReducedRedundancyLostObject",
-          "s3:Replication:*",
-          "s3:LifecycleExpiration:*",
-          "s3:LifecycleTransition",
-          "s3:IntelligentTiering",
-          "s3:ObjectTagging:*",
-          "s3:ObjectAcl:Put",
-        ]);
+        "s3:ObjectCreated:*",
+        "s3:ObjectRemoved:*",
+        "s3:ObjectRestore:*",
+        "s3:ReducedRedundancyLostObject",
+        "s3:Replication:*",
+        "s3:LifecycleExpiration:*",
+        "s3:LifecycleTransition",
+        "s3:IntelligentTiering",
+        "s3:ObjectTagging:*",
+        "s3:ObjectAcl:Put",
+      ]);
 
     const fn = createFunction();
     const permission = createPermission();
@@ -86,8 +86,8 @@ export class BucketLambdaSubscriber extends Component {
             events.length < 5
               ? `Subscribed to ${name} on ${events.join(", ")}`
               : `Subscribed to ${name} on ${events
-                  .slice(0, 3)
-                  .join(", ")}, and ${events.length - 3} more events`,
+                .slice(0, 3)
+                .join(", ")}, and ${events.length - 3} more events`,
           ),
         },
         undefined,

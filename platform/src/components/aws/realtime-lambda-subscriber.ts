@@ -32,7 +32,7 @@ export interface Args extends RealtimeSubscriberArgs {
  * to add subscriptions to [AWS IoT endpoint](https://docs.aws.amazon.com/iot/latest/developerguide/what-is-aws-iot.html).
  *
  * :::caution
- * This component is not intended for public use.
+ * This component is not intended to be created directly.
  * :::
  *
  * You'll find this component returned by the `subscribe` method of the `Realtime` component.

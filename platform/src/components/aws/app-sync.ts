@@ -62,108 +62,108 @@ export interface AppSyncArgs {
   domain?: Input<
     | string
     | {
-        /**
-         * The custom domain you want to use.
-         *
-         * @example
-         * ```js
-         * {
-         *   domain: {
-         *     name: "example.com"
-         *   }
-         * }
-         * ```
-         *
-         * Can also include subdomains based on the current stage.
-         *
-         * ```js
-         * {
-         *   domain: {
-         *     name: `${$app.stage}.example.com`
-         *   }
-         * }
-         * ```
-         */
-        name: Input<string>;
-        /**
-         * The ARN of an ACM (AWS Certificate Manager) certificate that proves ownership of the
-         * domain. By default, a certificate is created and validated automatically.
-         *
-         * The certificate will be created in the `us-east-1` region as required by AWS AppSync.
-         * If you are creating your own certificate, you must also create it in `us-east-1`.
-         *
-         * :::tip
-         * You need to pass in a `cert` for domains that are not hosted on supported `dns` providers.
-         * :::
-         *
-         * To manually set up a domain on an unsupported provider, you'll need to:
-         *
-         * 1. [Validate that you own the domain](https://docs.aws.amazon.com/acm/latest/userguide/domain-ownership-validation.html) by creating an ACM certificate. You can either validate it by setting a DNS record or by verifying an email sent to the domain owner.
-         * 2. Once validated, set the certificate ARN as the `cert` and set `dns` to `false`.
-         * 3. Add the DNS records in your provider to point to the API Gateway URL.
-         *
-         * @example
-         * ```js
-         * {
-         *   domain: {
-         *     name: "example.com",
-         *     dns: false,
-         *     cert: "arn:aws:acm:us-east-1:112233445566:certificate/3a958790-8878-4cdc-a396-06d95064cf63"
-         *   }
-         * }
-         * ```
-         */
-        cert?: Input<string>;
-        /**
-         * The DNS provider to use for the domain. Defaults to the AWS.
-         *
-         * Takes an adapter that can create the DNS records on the provider. This can automate
-         * validating the domain and setting up the DNS routing.
-         *
-         * Supports Route 53, Cloudflare, and Vercel adapters. For other providers, you'll need
-         * to set `dns` to `false` and pass in a certificate validating ownership via `cert`.
-         *
-         * @default `sst.aws.dns`
-         *
-         * @example
-         *
-         * Specify the hosted zone ID for the Route 53 domain.
-         *
-         * ```js
-         * {
-         *   domain: {
-         *     name: "example.com",
-         *     dns: sst.aws.dns({
-         *       zone: "Z2FDTNDATAQYW2"
-         *     })
-         *   }
-         * }
-         * ```
-         *
-         * Use a domain hosted on Cloudflare, needs the Cloudflare provider.
-         *
-         * ```js
-         * {
-         *   domain: {
-         *     name: "example.com",
-         *     dns: sst.cloudflare.dns()
-         *   }
-         * }
-         * ```
-         *
-         * Use a domain hosted on Vercel, needs the Vercel provider.
-         *
-         * ```js
-         * {
-         *   domain: {
-         *     name: "example.com",
-         *     dns: sst.vercel.dns()
-         *   }
-         * }
-         * ```
-         */
-        dns?: Input<false | (Dns & {})>;
-      }
+      /**
+       * The custom domain you want to use.
+       *
+       * @example
+       * ```js
+       * {
+       *   domain: {
+       *     name: "example.com"
+       *   }
+       * }
+       * ```
+       *
+       * Can also include subdomains based on the current stage.
+       *
+       * ```js
+       * {
+       *   domain: {
+       *     name: `${$app.stage}.example.com`
+       *   }
+       * }
+       * ```
+       */
+      name: Input<string>;
+      /**
+       * The ARN of an ACM (AWS Certificate Manager) certificate that proves ownership of the
+       * domain. By default, a certificate is created and validated automatically.
+       *
+       * The certificate will be created in the `us-east-1` region as required by AWS AppSync.
+       * If you are creating your own certificate, you must also create it in `us-east-1`.
+       *
+       * :::tip
+       * You need to pass in a `cert` for domains that are not hosted on supported `dns` providers.
+       * :::
+       *
+       * To manually set up a domain on an unsupported provider, you'll need to:
+       *
+       * 1. [Validate that you own the domain](https://docs.aws.amazon.com/acm/latest/userguide/domain-ownership-validation.html) by creating an ACM certificate. You can either validate it by setting a DNS record or by verifying an email sent to the domain owner.
+       * 2. Once validated, set the certificate ARN as the `cert` and set `dns` to `false`.
+       * 3. Add the DNS records in your provider to point to the API Gateway URL.
+       *
+       * @example
+       * ```js
+       * {
+       *   domain: {
+       *     name: "example.com",
+       *     dns: false,
+       *     cert: "arn:aws:acm:us-east-1:112233445566:certificate/3a958790-8878-4cdc-a396-06d95064cf63"
+       *   }
+       * }
+       * ```
+       */
+      cert?: Input<string>;
+      /**
+       * The DNS provider to use for the domain. Defaults to the AWS.
+       *
+       * Takes an adapter that can create the DNS records on the provider. This can automate
+       * validating the domain and setting up the DNS routing.
+       *
+       * Supports Route 53, Cloudflare, and Vercel adapters. For other providers, you'll need
+       * to set `dns` to `false` and pass in a certificate validating ownership via `cert`.
+       *
+       * @default `sst.aws.dns`
+       *
+       * @example
+       *
+       * Specify the hosted zone ID for the Route 53 domain.
+       *
+       * ```js
+       * {
+       *   domain: {
+       *     name: "example.com",
+       *     dns: sst.aws.dns({
+       *       zone: "Z2FDTNDATAQYW2"
+       *     })
+       *   }
+       * }
+       * ```
+       *
+       * Use a domain hosted on Cloudflare, needs the Cloudflare provider.
+       *
+       * ```js
+       * {
+       *   domain: {
+       *     name: "example.com",
+       *     dns: sst.cloudflare.dns()
+       *   }
+       * }
+       * ```
+       *
+       * Use a domain hosted on Vercel, needs the Vercel provider.
+       *
+       * ```js
+       * {
+       *   domain: {
+       *     name: "example.com",
+       *     dns: sst.vercel.dns()
+       *   }
+       * }
+       * ```
+       */
+      dns?: Input<false | (Dns & {})>;
+    }
   >;
   /**
    * [Transform](/docs/components#transform) how this component creates its underlying
@@ -187,7 +187,6 @@ export interface AppSyncDataSourceArgs {
    * @example
    * ```js
    * {
-   *   name: "lambdaDS",
    *   lambda: "arn:aws:lambda:us-east-1:123456789012:function:my-function"
    * }
    * ```
@@ -198,10 +197,26 @@ export interface AppSyncDataSourceArgs {
    * @example
    * ```js
    * {
-   *   name: "lambdaDS",
    *   lambda: "arn:aws:lambda:us-east-1:123456789012:function:my-function"
    * }
    * ```
+   *
+   * Or the handler.
+   *
+   * ```js
+   * {
+   *   lambda: "src/lambda.handler"
+   * }
+   * ```
+   *
+   * Or the function args.
+   *
+   * ```js
+   *   lambda: {
+   *     handler: "src/lambda.handler",
+   *     timeout: "60 seconds"
+   *   }
+   * }
    */
   lambda?: Input<string | FunctionArgs>;
   /**
@@ -220,7 +235,6 @@ export interface AppSyncDataSourceArgs {
    * @example
    * ```js
    * {
-   *   name: "elasticSearchDS",
    *   elasticSearch: "arn:aws:es:us-east-1:123456789012:domain/my-domain"
    * }
    * ```
@@ -231,7 +245,6 @@ export interface AppSyncDataSourceArgs {
    * @example
    * ```js
    * {
-   *   name: "eventBridgeDS",
    *   eventBridge: "arn:aws:events:us-east-1:123456789012:event-bus/my-event-bus"
    * }
    * ```
@@ -242,7 +255,6 @@ export interface AppSyncDataSourceArgs {
    * @example
    * ```js
    * {
-   *   name: "httpDS",
    *   http: "https://api.example.com"
    * }
    * ```
@@ -253,14 +265,13 @@ export interface AppSyncDataSourceArgs {
    * @example
    * ```js
    * {
-   *   name: "openSearchDS",
    *   openSearch: "arn:aws:opensearch:us-east-1:123456789012:domain/my-domain"
    * }
    * ```
    */
   openSearch?: Input<string>;
   /**
-   * Configuring RDS data source.
+   * Configure the RDS data source.
    * @example
    * ```js
    * {
@@ -311,7 +322,7 @@ export interface AppSyncResolverArgs {
    */
   kind?: Input<"unit" | "pipeline">;
   /**
-   * The data source this resolver is using. This only applies for "unit" resolvers.
+   * The data source this resolver is using. This only applies for `unit` resolvers.
    * @example
    * ```js
    * {
@@ -321,7 +332,7 @@ export interface AppSyncResolverArgs {
    */
   dataSource?: Input<string>;
   /**
-   * The functions this resolver is using. This only applies for "pipeline" resolvers.
+   * The functions this resolver is using. This only applies for `pipeline` resolvers.
    * @example
    * ```js
    * {
@@ -341,30 +352,28 @@ export interface AppSyncResolverArgs {
    */
   code?: Input<string>;
   /**
-   * For "unit" resolvers, this is the request mapping template. And for "pipeline"
+   * For `unit` resolvers, this is the request mapping template. And for `pipeline`
    * resolvers, this is the before mapping template.
    * @example
    * ```js
    * {
-   *   dataSource: "dynamoDS",
    *   requestTemplate: `{
    *     "version": "2017-02-28",
-   *     "operation": "Scan",
-   *   }`,
+   *     "operation": "Scan"
+   *   }`
    * }
    * ```
    */
   requestTemplate?: Input<string>;
   /**
-   * For "unit" resolvers, this is the response mapping template. And for "pipeline"
+   * For `unit` resolvers, this is the response mapping template. And for `pipeline`
    * resolvers, this is the after mapping template.
    * @example
    * ```js
    * {
-   *   dataSource: "dynamoDS",
    *   responseTemplate: `{
    *     "users": $utils.toJson($context.result.items)
-   *   }`,
+   *   }`
    * }
    * ```
    */
@@ -387,13 +396,13 @@ export interface AppSyncFunctionArgs {
    * @example
    * ```js
    * {
-   *   name: "myFunction",
+   *   name: "myFunction"
    * }
    * ```
    */
   name: string;
   /**
-   * The data source this resolver is using. This only applies for "unit" resolvers.
+   * The data source this resolver is using.
    * @example
    * ```js
    * {
@@ -417,7 +426,6 @@ export interface AppSyncFunctionArgs {
    * @example
    * ```js
    * {
-   *   dataSource: "dynamoDS",
    *   requestTemplate: `{
    *     "version": "2018-05-29",
    *     "operation": "Scan",
@@ -431,7 +439,6 @@ export interface AppSyncFunctionArgs {
    * @example
    * ```js
    * {
-   *   dataSource: "dynamoDS",
    *   responseTemplate: `{
    *     "users": $utils.toJson($context.result.items)
    *   }`,
@@ -458,7 +465,7 @@ export interface AppSyncFunctionArgs {
  *
  * #### Create a GraphQL API
  *
- * ```ts
+ * ```ts title="sst.config.ts"
  * const api = new sst.aws.AppSync("MyApi", {
  *   schema: "schema.graphql",
  * });
@@ -466,7 +473,7 @@ export interface AppSyncFunctionArgs {
  *
  * #### Add a data source
  *
- * ```ts
+ * ```ts title="sst.config.ts"
  * const lambdaDS = api.addDataSource({
  *   name: "lambdaDS",
  *   lambda: "src/lambda.handler",
@@ -475,7 +482,7 @@ export interface AppSyncFunctionArgs {
  *
  * #### Add a resolver
  *
- * ```ts
+ * ```ts title="sst.config.ts"
  * api.addResolver("Query user", {
  *   dataSource: lambdaDS.name,
  * });
@@ -622,7 +629,7 @@ export class AppSync extends Component implements Link.Linkable {
   }
 
   /**
-   * The GraphQL API id.
+   * The GraphQL API ID.
    */
   public get id() {
     return this.api.id;
@@ -658,7 +665,7 @@ export class AppSync extends Component implements Link.Linkable {
    *
    * Add a Lambda function as a data source.
    *
-   * ```js
+   * ```js title="sst.config.ts"
    * api.addDataSource({
    *   name: "lambdaDS",
    *   lambda: "src/lambda.handler"
@@ -667,7 +674,7 @@ export class AppSync extends Component implements Link.Linkable {
    *
    * Customize the Lambda function.
    *
-   * ```js
+   * ```js title="sst.config.ts"
    * api.addDataSource({
    *   name: "lambdaDS",
    *   lambda: {
@@ -679,7 +686,7 @@ export class AppSync extends Component implements Link.Linkable {
    *
    * Add a DynamoDB table as a data source.
    *
-   * ```js
+   * ```js title="sst.config.ts"
    * api.addDataSource({
    *   name: "dynamoDS",
    *   dynamodb: "arn:aws:dynamodb:us-east-1:123456789012:table/my-table"
@@ -707,7 +714,7 @@ export class AppSync extends Component implements Link.Linkable {
    *
    * Add a function using a Lambda data source.
    *
-   * ```js
+   * ```js title="sst.config.ts"
    * api.addFunction({
    *   name: "myFunction",
    *   dataSource: "lambdaDS",
@@ -716,7 +723,7 @@ export class AppSync extends Component implements Link.Linkable {
    *
    * Add a function using a DynamoDB data source.
    *
-   * ```js
+   * ```js title="sst.config.ts"
    * api.addResolver("Query user", {
    *   name: "myFunction",
    *   dataSource: "dynamoDS",
@@ -751,7 +758,7 @@ export class AppSync extends Component implements Link.Linkable {
    *
    * Add a resolver using a Lambda data source.
    *
-   * ```js
+   * ```js title="sst.config.ts"
    * api.addResolver("Query user", {
    *   dataSource: "lambdaDS",
    * });
@@ -759,7 +766,7 @@ export class AppSync extends Component implements Link.Linkable {
    *
    * Add a resolver using a DynamoDB data source.
    *
-   * ```js
+   * ```js title="sst.config.ts"
    * api.addResolver("Query user", {
    *   dataSource: "dynamoDS",
    *   requestTemplate: `{
@@ -774,7 +781,7 @@ export class AppSync extends Component implements Link.Linkable {
    *
    * Add a pipeline resolver.
    *
-   * ```js
+   * ```js title="sst.config.ts"
    * api.addResolver("Query user", {
    *   functions: [
    *     "MyFunction1",

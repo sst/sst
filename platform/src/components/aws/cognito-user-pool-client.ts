@@ -27,7 +27,7 @@ export interface ClientArgs extends CognitoUserPoolClientArgs {
  * component to add clients to your [Amazon Cognito user pool](https://docs.aws.amazon.com/cognito/latest/developerguide/cognito-user-identity-pools.html).
  *
  * :::caution
- * This component is not intended for public use.
+ * This component is not intended to be created directly.
  * :::
  *
  * You'll find this component returned by the `addClient` method of the `CognitoUserPool` component.

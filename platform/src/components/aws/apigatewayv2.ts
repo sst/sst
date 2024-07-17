@@ -114,7 +114,7 @@ export interface ApiGatewayV2Args {
      *     route: {
      *       handler: {
      *         memory: "2048 MB"
-     *       },
+     *       }
      *     }
      *   }
      * }
@@ -153,7 +153,7 @@ export interface ApiGatewayV2AuthorizerArgs {
    * @example
    * ```js
    * {
-   *   name: "myAuthorizer",
+   *   name: "myAuthorizer"
    * }
    * ```
    */
@@ -162,7 +162,7 @@ export interface ApiGatewayV2AuthorizerArgs {
    * Create a JWT or JSON Web Token authorizer that can be used by the routes.
    *
    * @example
-   * You can configure JWT auth.
+   * Configure JWT auth.
    *
    * ```js
    * {
@@ -294,13 +294,13 @@ export interface ApiGatewayV2RouteArgs {
  *
  * #### Create the API
  *
- * ```ts
+ * ```ts title="sst.config.ts"
  * const api = new sst.aws.ApiGatewayV2("MyApi");
  * ```
  *
  * #### Add a custom domain
  *
- * ```js {2}
+ * ```js {2} title="sst.config.ts"
  * new sst.aws.ApiGatewayV2("MyApi", {
  *   domain: "api.example.com"
  * });
@@ -308,18 +308,30 @@ export interface ApiGatewayV2RouteArgs {
  *
  * #### Add routes
  *
- * ```ts
+ * ```ts title="sst.config.ts"
  * api.route("GET /", "src/get.handler");
  * api.route("POST /", "src/post.handler");
  * ```
  *
  * #### Configure the routes
  *
- * You can configure the route and its handler function.
+ * You can configure the route.
  *
- * ```ts
- * api.route("GET /", "src/get.handler", { auth: { iam: true } });
- * api.route("POST /", { handler: "src/post.handler", memory: "2048 MB" });
+ * ```ts title="sst.config.ts"
+ * api.route("GET /", "src/get.handler", {
+ *   auth: { iam: true }
+ * });
+ * ```
+ *
+ * #### Configure the route handler
+ *
+ * You can configure the route handler function.
+ *
+ * ```ts title="sst.config.ts"
+ * api.route("POST /", {
+ *   handler: "src/post.handler",
+ *   memory: "2048 MB"
+ * });
  * ```
  *
  * #### Set defaults for all routes
@@ -327,14 +339,14 @@ export interface ApiGatewayV2RouteArgs {
  * You can use the `transform` to set some defaults for all your routes. For example,
  * instead of setting the `memory` for each route.
  *
- * ```ts
+ * ```ts title="sst.config.ts"
  * api.route("GET /", { handler: "src/get.handler", memory: "2048 MB" });
  * api.route("POST /", { handler: "src/post.handler", memory: "2048 MB" });
  * ```
  *
  * You can set it through the `transform`.
  *
- * ```ts {5}
+ * ```ts {5} title="sst.config.ts"
  * new sst.aws.ApiGatewayV2("MyApi", {
  *   transform: {
  *     route: {
@@ -580,9 +592,9 @@ export class ApiGatewayV2 extends Component implements Link.Linkable {
     //       trailing slash, the API fails with the error {"message":"Not Found"}
     return this.apigDomain && this.apiMapping
       ? all([this.apigDomain.domainName, this.apiMapping.apiMappingKey]).apply(
-          ([domain, key]) =>
-            key ? `https://${domain}/${key}/` : `https://${domain}`,
-        )
+        ([domain, key]) =>
+          key ? `https://${domain}/${key}/` : `https://${domain}`,
+      )
       : this.api.apiEndpoint;
   }
 
@@ -635,40 +647,40 @@ export class ApiGatewayV2 extends Component implements Link.Linkable {
    * @param args Configure the route.
    *
    * @example
-   * Here's how you add a simple route.
+   * Add a simple route.
    *
-   * ```js
+   * ```js title="sst.config.ts"
    * api.route("GET /", "src/get.handler");
    * ```
    *
    * Match any HTTP method.
    *
-   * ```js
+   * ```js title="sst.config.ts"
    * api.route("ANY /", "src/route.handler");
    * ```
    *
    * Add a default route.
    *
-   * ```js
+   * ```js title="sst.config.ts"
    * api.route("GET /", "src/get.handler")
    * api.route($default, "src/default.handler");
    * ```
    *
    * Add a parameterized route.
    *
-   * ```js
+   * ```js title="sst.config.ts"
    * api.route("GET /notes/{id}", "src/get.handler");
    * ```
    *
    * Add a greedy route.
    *
-   * ```js
+   * ```js title="sst.config.ts"
    * api.route("GET /notes/{proxy+}", "src/greedy.handler");
    * ```
    *
    * Enable auth for a route.
    *
-   * ```js
+   * ```js title="sst.config.ts"
    * api.route("GET /", "src/get.handler")
    * api.route("POST /", "src/post.handler", {
    *   auth: {
@@ -679,7 +691,7 @@ export class ApiGatewayV2 extends Component implements Link.Linkable {
    *
    * Customize the route handler.
    *
-   * ```js
+   * ```js title="sst.config.ts"
    * api.route("GET /", {
    *   handler: "src/get.handler",
    *   memory: "2048 MB"
@@ -718,16 +730,15 @@ export class ApiGatewayV2 extends Component implements Link.Linkable {
    * @param args Configure the route.
    *
    * @example
-   * Here's how you add a simple route.
+   * Add a simple route.
    *
-   * ```js
+   * ```js title="sst.config.ts"
    * api.routeUrl("GET /", "https://google.com");
    * ```
    *
    * Enable auth for a route.
    *
-   * ```js
-   * api.routeUrl("GET /", "https://google.com")
+   * ```js title="sst.config.ts"
    * api.routeUrl("POST /", "https://google.com", {
    *   auth: {
    *     iam: true
@@ -801,9 +812,9 @@ export class ApiGatewayV2 extends Component implements Link.Linkable {
    *
    * @param args Configure the authorizer.
    * @example
-   * Here's how you add a JWT authorizer.
+   * Add a JWT authorizer.
    *
-   * ```js
+   * ```js title="sst.config.ts"
    * api.addAuthorizer({
    *   name: "myAuthorizer",
    *   jwt: {

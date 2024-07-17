@@ -30,7 +30,7 @@ export interface Args extends QueueSubscriberArgs {
  * add consumer to [Amazon SQS](https://aws.amazon.com/sqs/).
  *
  * :::caution
- * This component is not intended for public use.
+ * This component is not intended to be created directly.
  * :::
  *
  * You'll find this component returned by the `subscribe` method of the `Queue` component.

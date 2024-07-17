@@ -476,7 +476,7 @@ export interface FunctionArgs {
    * }
    * ```
    *
-   * Enable it and configure the options.
+   * Configure the authorization and CORS settings for the endpoint.
    * ```js
    * {
    *   url: {
@@ -491,45 +491,45 @@ export interface FunctionArgs {
   url?: Input<
     | boolean
     | {
-        /**
-         * The authorization used for the function URL. Supports [IAM authorization](https://docs.aws.amazon.com/lambda/latest/dg/urls-auth.html).
-         * @default `"none"`
-         * @example
-         * ```js
-         * {
-         *   url: {
-         *     authorization: "iam"
-         *   }
-         * }
-         * ```
-         */
-        authorization?: Input<"none" | "iam">;
-        /**
-         * Customize the CORS (Cross-origin resource sharing) settings for the function URL.
-         * @default `true`
-         * @example
-         * Disable CORS.
-         * ```js
-         * {
-         *   url: {
-         *     cors: true
-         *   }
-         * }
-         * ```
-         * Only enable the `GET` and `POST` methods for `https://example.com`.
-         * ```js
-         * {
-         *   url: {
-         *     cors: {
-         *       allowMethods: ["GET", "POST"],
-         *       allowOrigins: ["https://example.com"]
-         *     }
-         *   }
-         * }
-         * ```
-         */
-        cors?: Input<boolean | Prettify<FunctionUrlCorsArgs>>;
-      }
+      /**
+       * The authorization used for the function URL. Supports [IAM authorization](https://docs.aws.amazon.com/lambda/latest/dg/urls-auth.html).
+       * @default `"none"`
+       * @example
+       * ```js
+       * {
+       *   url: {
+       *     authorization: "iam"
+       *   }
+       * }
+       * ```
+       */
+      authorization?: Input<"none" | "iam">;
+      /**
+       * Customize the CORS (Cross-origin resource sharing) settings for the function URL.
+       * @default `true`
+       * @example
+       * Disable CORS.
+       * ```js
+       * {
+       *   url: {
+       *     cors: true
+       *   }
+       * }
+       * ```
+       * Only enable the `GET` and `POST` methods for `https://example.com`.
+       * ```js
+       * {
+       *   url: {
+       *     cors: {
+       *       allowMethods: ["GET", "POST"],
+       *       allowOrigins: ["https://example.com"]
+       *     }
+       *   }
+       * }
+       * ```
+       */
+      cors?: Input<boolean | Prettify<FunctionUrlCorsArgs>>;
+    }
   >;
   /**
    * Configure how your function is bundled.
@@ -570,8 +570,12 @@ export interface FunctionArgs {
      * This will allow your functions to be able to use these dependencies when deployed. They
      * just won't be tree shaken. You however still need to have them in your `package.json`.
      *
+     * :::caution
+     * Packages listed here still need to be in your `package.json`.
+     * :::
+     *
      * Esbuild will ignore them while traversing the imports in your code. So these are the
-     * package names as seen in the imports. It also works on packages that are not directly
+     * **package names as seen in the imports**. It also works on packages that are not directly
      * imported by your code.
      *
      * @example
@@ -602,13 +606,13 @@ export interface FunctionArgs {
      *
      * :::tip
      * Check out the _JS tab_ in the code snippets in the esbuild docs for the
-     * [build options](https://esbuild.github.io/api/#build).
+     * [`BuildOptions`](https://esbuild.github.io/api/#build).
      * :::
      *
      */
     esbuild?: Input<BuildOptions>;
     /**
-     * Enable or disable if the function code is minified when bundled.
+     * Disable if the function code is minified when bundled.
      *
      * @default `true`
      *
@@ -638,14 +642,14 @@ export interface FunctionArgs {
      */
     format?: Input<"cjs" | "esm">;
     /**
-     * Configure if source maps are added to the function bundle for **production**. Since they
+     * Configure if source maps are added to the function bundle when **deployed**. Since they
      * increase payload size and potentially cold starts, they are not added by default.
      * However, they are always generated during `sst dev`.
      *
      * :::tip[SST Console]
      * For the [Console](/docs/console/), source maps are always generated and uploaded
-     * to your bootstrap bucket. These are then downloaded and used to displayed
-     * in the console.
+     * to your bootstrap bucket. These are then downloaded and used to display
+     * Issues in the console.
      * :::
      *
      * @default `false`
@@ -801,7 +805,7 @@ export interface FunctionArgs {
  *
  * Pass in the path to your handler function.
  *
- * ```ts
+ * ```ts title="sst.config.ts"
  * new sst.aws.Function("MyFunction", {
  *   handler: "src/lambda.handler"
  * });
@@ -811,7 +815,7 @@ export interface FunctionArgs {
  *
  * Pass in additional Lambda config.
  *
- * ```ts {3,4}
+ * ```ts {3,4} title="sst.config.ts"
  * new sst.aws.Function("MyFunction", {
  *   handler: "src/lambda.handler",
  *   timeout: "3 minutes",
@@ -824,7 +828,7 @@ export interface FunctionArgs {
  * [Link resources](/docs/linking/) to the function. This will grant permissions
  * to the resources and allow you to access it in your handler.
  *
- * ```ts {5}
+ * ```ts {5} title="sst.config.ts"
  * const bucket = new sst.aws.Bucket("MyBucket");
  *
  * new sst.aws.Function("MyFunction", {
@@ -846,7 +850,7 @@ export interface FunctionArgs {
  *
  * Set environment variables for the function. Available in your handler as `process.env`.
  *
- * ```ts {4}
+ * ```ts {4} title="sst.config.ts"
  * new sst.aws.Function("MyFunction", {
  *   handler: "src/lambda.handler",
  *   environment: {
@@ -859,7 +863,7 @@ export interface FunctionArgs {
  *
  * Enable function URLs to invoke the function over HTTP.
  *
- * ```ts {3}
+ * ```ts {3} title="sst.config.ts"
  * new sst.aws.Function("MyFunction", {
  *   handler: "src/lambda.handler",
  *   url: true
@@ -868,9 +872,10 @@ export interface FunctionArgs {
  *
  * #### Bundling
  *
- * Customize how SST uses [esbuild](https://esbuild.github.io/) to bundle your worker code with the `nodejs` property.
+ * Customize how SST uses [esbuild](https://esbuild.github.io/) to bundle your function code
+ * with the `nodejs` property.
  *
- * ```ts
+ * ```ts title="sst.config.ts" {3-5}
  * new sst.aws.Function("MyFunction", {
  *   handler: "src/lambda.handler",
  *   nodejs: {
@@ -1043,10 +1048,10 @@ export class Function extends Component implements Link.Linkable, AWSLinkable {
             : url.cors === true || url.cors === undefined
               ? defaultCors
               : {
-                  ...defaultCors,
-                  ...url.cors,
-                  maxAge: url.cors.maxAge && toSeconds(url.cors.maxAge),
-                };
+                ...defaultCors,
+                ...url.cors,
+                maxAge: url.cors.maxAge && toSeconds(url.cors.maxAge),
+              };
 
         return { authorization, cors };
       });
@@ -1150,12 +1155,12 @@ export class Function extends Component implements Link.Linkable, AWSLinkable {
 
           const linkInjection = hasLinkInjections
             ? linkData
-                .map((item) => [
-                  `process.env.SST_RESOURCE_${item.name} = ${JSON.stringify(
-                    JSON.stringify(item.properties),
-                  )};\n`,
-                ])
-                .join("")
+              .map((item) => [
+                `process.env.SST_RESOURCE_${item.name} = ${JSON.stringify(
+                  JSON.stringify(item.properties),
+                )};\n`,
+              ])
+              .join("")
             : "";
 
           const parsed = path.posix.parse(handler);
@@ -1185,21 +1190,21 @@ export class Function extends Component implements Link.Linkable, AWSLinkable {
               name: path.posix.join(handlerDir, `${newHandlerFileName}.mjs`),
               content: streaming
                 ? [
-                    linkInjection,
-                    `export const ${newHandlerFunction} = awslambda.streamifyResponse(async (event, responseStream, context) => {`,
-                    ...injections,
-                    `  const { ${oldHandlerFunction}: rawHandler} = await import("./${oldHandlerFileName}${newHandlerFileExt}");`,
-                    `  return rawHandler(event, responseStream, context);`,
-                    `});`,
-                  ].join("\n")
+                  linkInjection,
+                  `export const ${newHandlerFunction} = awslambda.streamifyResponse(async (event, responseStream, context) => {`,
+                  ...injections,
+                  `  const { ${oldHandlerFunction}: rawHandler} = await import("./${oldHandlerFileName}${newHandlerFileExt}");`,
+                  `  return rawHandler(event, responseStream, context);`,
+                  `});`,
+                ].join("\n")
                 : [
-                    linkInjection,
-                    `export const ${newHandlerFunction} = async (event, context) => {`,
-                    ...injections,
-                    `  const { ${oldHandlerFunction}: rawHandler} = await import("./${oldHandlerFileName}${newHandlerFileExt}");`,
-                    `  return rawHandler(event, context);`,
-                    `};`,
-                  ].join("\n"),
+                  linkInjection,
+                  `export const ${newHandlerFunction} = async (event, context) => {`,
+                  ...injections,
+                  `  const { ${oldHandlerFunction}: rawHandler} = await import("./${oldHandlerFileName}${newHandlerFileExt}");`,
+                  `  return rawHandler(event, context);`,
+                  `};`,
+                ].join("\n"),
             },
           };
         },
@@ -1221,11 +1226,11 @@ export class Function extends Component implements Link.Linkable, AWSLinkable {
               ...linkPermissions,
               ...(dev
                 ? [
-                    {
-                      actions: ["iot:*"],
-                      resources: ["*"],
-                    },
-                  ]
+                  {
+                    actions: ["iot:*"],
+                    resources: ["*"],
+                  },
+                ]
                 : []),
             ],
           }),
@@ -1236,29 +1241,28 @@ export class Function extends Component implements Link.Linkable, AWSLinkable {
         transform(args.transform?.role, {
           assumeRolePolicy: !$dev
             ? iam.assumeRolePolicyForPrincipal({
-                Service: "lambda.amazonaws.com",
-              })
+              Service: "lambda.amazonaws.com",
+            })
             : iam.getPolicyDocumentOutput({
-                statements: [
-                  {
-                    actions: ["sts:AssumeRole"],
-                    principals: [
-                      {
-                        type: "Service",
-                        identifiers: ["lambda.amazonaws.com"],
-                      },
-                      {
-                        type: "AWS",
-                        identifiers: [
-                          interpolate`arn:aws:iam::${
-                            getCallerIdentityOutput().accountId
+              statements: [
+                {
+                  actions: ["sts:AssumeRole"],
+                  principals: [
+                    {
+                      type: "Service",
+                      identifiers: ["lambda.amazonaws.com"],
+                    },
+                    {
+                      type: "AWS",
+                      identifiers: [
+                        interpolate`arn:aws:iam::${getCallerIdentityOutput().accountId
                           }:root`,
-                        ],
-                      },
-                    ],
-                  },
-                ],
-              }).json,
+                      ],
+                    },
+                  ],
+                },
+              ],
+            }).json,
           // if there are no statements, do not add an inline policy.
           // adding an inline policy with no statements will cause an error.
           inlinePolicies: policy.apply(({ statements }) =>
@@ -1268,8 +1272,8 @@ export class Function extends Component implements Link.Linkable, AWSLinkable {
             "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
             ...(args.vpc
               ? [
-                  "arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole",
-                ]
+                "arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole",
+              ]
               : []),
           ],
         }),
@@ -1333,9 +1337,9 @@ export class Function extends Component implements Link.Linkable, AWSLinkable {
               entry.isDir
                 ? archive.directory(entry.from, entry.to, { date: new Date(0) })
                 : archive.file(entry.from, {
-                    name: entry.to,
-                    date: new Date(0),
-                  });
+                  name: entry.to,
+                  date: new Date(0),
+                });
               //if (mode === "start") {
               //  try {
               //    const dir = path.dirname(toPath);

@@ -279,7 +279,7 @@ export interface SvelteKitArgs extends SsrSiteArgs {
  *
  * Deploy a SvelteKit app that's in the project root.
  *
- * ```js
+ * ```js title="sst.config.ts"
  * new sst.aws.SvelteKit("MyWeb");
  * ```
  *
@@ -287,7 +287,7 @@ export interface SvelteKitArgs extends SsrSiteArgs {
  *
  * Deploys the SvelteKit app in the `my-svelte-app/` directory.
  *
- * ```js {2}
+ * ```js {2} title="sst.config.ts"
  * new sst.aws.SvelteKit("MyWeb", {
  *   path: "my-svelte-app/"
  * });
@@ -297,7 +297,7 @@ export interface SvelteKitArgs extends SsrSiteArgs {
  *
  * Set a custom domain for your SvelteKit app.
  *
- * ```js {2}
+ * ```js {2} title="sst.config.ts"
  * new sst.aws.SvelteKit("MyWeb", {
  *   domain: "my-app.com"
  * });
@@ -307,7 +307,7 @@ export interface SvelteKitArgs extends SsrSiteArgs {
  *
  * Redirect `www.my-app.com` to `my-app.com`.
  *
- * ```js {4}
+ * ```js {4} title="sst.config.ts"
  * new sst.aws.SvelteKit("MyWeb", {
  *   domain: {
  *     name: "my-app.com",
@@ -321,7 +321,7 @@ export interface SvelteKitArgs extends SsrSiteArgs {
  * [Link resources](/docs/linking/) to your SvelteKit app. This will grant permissions
  * to the resources and allow you to access it in your app.
  *
- * ```ts {4}
+ * ```ts {4} title="sst.config.ts"
  * const bucket = new sst.aws.Bucket("MyBucket");
  *
  * new sst.aws.SvelteKit("MyWeb", {
