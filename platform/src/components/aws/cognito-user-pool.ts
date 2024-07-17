@@ -230,16 +230,16 @@ export class CognitoUserPool
             args.aliases &&
             output(args.aliases).apply((aliases) => [
               ...(aliases.includes("email") ? ["email"] : []),
-              ...(aliases.includes("phone") ? ["phoneNumber"] : []),
+              ...(aliases.includes("phone") ? ["phone_number"] : []),
               ...(aliases.includes("preferred_username")
-                ? ["perferredUsername"]
+                ? ["preferred_username"]
                 : []),
             ]),
           usernameAttributes:
             args.usernames &&
             output(args.usernames).apply((usernames) => [
               ...(usernames.includes("email") ? ["email"] : []),
-              ...(usernames.includes("phone") ? ["phoneNumber"] : []),
+              ...(usernames.includes("phone") ? ["phone_number"] : []),
             ]),
           accountRecoverySetting: {
             recoveryMechanisms: [
@@ -266,7 +266,7 @@ export class CognitoUserPool
             const attributes = [...aliases, ...usernames];
             return [
               ...(attributes.includes("email") ? ["email"] : []),
-              ...(attributes.includes("phone") ? ["phoneNumber"] : []),
+              ...(attributes.includes("phone") ? ["phone_number"] : []),
             ];
           }),
           emailConfiguration: {
