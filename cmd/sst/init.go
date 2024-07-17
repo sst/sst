@@ -132,12 +132,14 @@ func CmdInit(cli *cli.Cli) error {
 		HideHelp:     true,
 	}
 
-	_, confirm, err := p.Run()
-	if err != nil {
-		return util.NewReadableError(err, "")
-	}
-	if confirm == "No" {
-		return nil
+	if !cli.Bool("y"){
+		_, confirm, err := p.Run()
+		if err != nil {
+			return util.NewReadableError(err, "")
+		}
+		if confirm == "No" {
+			return nil
+		}
 	}
 
 	color.New(color.FgGreen, color.Bold).Print("✓")
