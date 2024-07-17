@@ -14,7 +14,7 @@ export module Link {
   }
 
   class LinkRef extends ComponentResource {
-    constructor(target: string, properties: any) {
+    constructor(target: string, type: string, properties: any) {
       super(
         "sst:sst:LinkRef",
         target + "LinkRef",
@@ -24,8 +24,11 @@ export module Link {
         {},
       );
       this.registerOutputs({
-        target: output(target),
-        properties: output(properties),
+        target: target,
+        properties: {
+          type: type.replaceAll(":", "."),
+          ...properties,
+        },
       });
     }
   }
@@ -43,7 +46,7 @@ export module Link {
             throw new Error(`Component name ${args.name} is not unique`);
           }
           const link = resource.getSSTLink();
-          new LinkRef(args.name, link.properties);
+          new LinkRef(args.name, args.type, link.properties);
         }
       });
       return {
