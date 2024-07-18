@@ -187,7 +187,7 @@ export interface AppSyncDataSourceArgs {
    * @example
    * ```js
    * {
-   *   lambda: "arn:aws:lambda:us-east-1:123456789012:function:my-function"
+   *   name: "lambdaDS"
    * }
    * ```
    */

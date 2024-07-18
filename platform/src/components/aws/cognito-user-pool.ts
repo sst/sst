@@ -65,7 +65,7 @@ export interface CognitoUserPoolArgs {
      * Triggered after the user successfully responds to the previous challenge, and a new
      * challenge needs to be created.
      *
-     * Takes the handler path, or the function args.
+     * Takes the handler path or the function args.
      */
     createAuthChallenge?: string | FunctionArgs;
     /**
