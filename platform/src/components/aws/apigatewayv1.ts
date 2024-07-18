@@ -28,9 +28,22 @@ import {
 
 export interface ApiGatewayV1Args {
   /**
-   * Configure the [API Gateway endpoint](https://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-api-endpoint-types.html).
+   * Configure the [API Gateway REST API endpoint](https://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-api-endpoint-types.html).
+   *
+   * By default, it's an `edge` endpoint, meaning that a CloudFront distribution is created
+   * for the API. This could help in cases where requests are geographically distributed.
+   *
+   * On the other hand, `regional` endpoints are deployed in a specific AWS region and are
+   * intended to be accessed directly by clients within or near that region.
+   *
+   * And a `private` endpoints allow access to the API only from within a specified
+   * Amazon VPC (Virtual Private Cloud) using VPC endpoints. These endpoints do not expose
+   * the API to the public internet.
+   *
    * @default `{type: "edge"}`
    * @example
+   *
+   * To create a regional endpoint.
    * ```js
    * {
    *   endpoint: {
@@ -38,16 +51,20 @@ export interface ApiGatewayV1Args {
    *   }
    * }
    * ```
+   *
+   * And to create a private endpoint.
+   * ```js
+   * {
+   *   endpoint: {
+   *     type: "private",
+   *     vpcEndpointIds: ["vpce-0dccab6fb1e828f36"]
+   *   }
+   * }
+   * ```
    */
   endpoint?: Input<{
     /**
-     * The type of the API Gateway REST API endpoint. By default, it's an `edge` endpoint, meaning
-     * that a CloudFront distribution is created for the API.
-     *
-     * On the other hand, a `regional` endpoint is an endpoint that is deployed in a specific AWS
-     * region.
-     *
-     * And a `private` endpoint is deployed within your VPC.
+     * The type of the API Gateway REST API endpoint.
      */
     type: "edge" | "regional" | "private";
     /**
@@ -452,9 +469,9 @@ export class ApiGatewayV1 extends Component implements Link.Linkable {
           ? { types: "REGIONAL" }
           : endpoint.type === "private"
             ? {
-              types: "PRIVATE",
-              vpcEndpointIds: endpoint.vpcEndpointIds,
-            }
+                types: "PRIVATE",
+                vpcEndpointIds: endpoint.vpcEndpointIds,
+              }
             : { types: "EDGE" };
       });
     }
