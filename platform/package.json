@@ -27,7 +27,7 @@
     "@pulumi/aws": "6.28.1",
     "@pulumi/cloudflare": "5.24.1",
     "@pulumi/docker": "4.5.3",
-    "@pulumi/pulumi": "3.112.0",
+    "@pulumi/pulumi": "3.115.2",
     "@pulumi/random": "4.15.0",
     "@pulumi/tls": "5.0.1",
     "@smithy/smithy-client": "2.1.18",

@@ -17,7 +17,7 @@ import (
 	"github.com/pulumi/pulumi/sdk/v3"
 )
 
-var PulumiVersion = "v" + sdk.Version.String()
+var PULUMI_VERSION = "v" + sdk.Version.String()
 
 const BUN_VERSION = "1.1.0"
 
@@ -50,7 +50,7 @@ func NeedsPulumi() bool {
 	}
 
 	version := strings.TrimSpace(string(output))
-	return version != PulumiVersion
+	return version != PULUMI_VERSION
 }
 
 func InstallPulumi() error {
@@ -82,7 +82,7 @@ func InstallPulumi() error {
 		fileExtension = ".zip"
 	}
 
-	url := fmt.Sprintf("https://github.com/pulumi/pulumi/releases/download/%v/pulumi-%s-%s%s", PulumiVersion, PulumiVersion, osArch, fileExtension)
+	url := fmt.Sprintf("https://github.com/pulumi/pulumi/releases/download/%v/pulumi-%s-%s%s", PULUMI_VERSION, PULUMI_VERSION, osArch, fileExtension)
 	slog.Info("pulumi downloading", "url", url)
 
 	resp, err := http.Get(url)
