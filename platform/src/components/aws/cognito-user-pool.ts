@@ -65,7 +65,7 @@ export interface CognitoUserPoolArgs {
      * Triggered after the user successfully responds to the previous challenge, and a new
      * challenge needs to be created.
      *
-     * Takes the function ARN, or the handler path, or the function args.
+     * Takes the handler path, or the function args.
      */
     createAuthChallenge?: string | FunctionArgs;
     /**
@@ -73,7 +73,7 @@ export interface CognitoUserPoolArgs {
      * verification, and when an admin creates a user. Use this trigger to customize the
      * email provider.
      *
-     * Takes the function ARN, or the handler path, or the function args.
+     * Takes the handler path or the function args.
      */
     customEmailSender?: string | FunctionArgs;
     /**
@@ -81,14 +81,14 @@ export interface CognitoUserPoolArgs {
      * verification, and when an admin creates a user. Use this trigger to customize the
      * message that is sent to your users.
      *
-     * Takes the function ARN, or the handler path, or the function args.
+     * Takes the handler path or the function args.
      */
     customMessage?: string | FunctionArgs;
     /**
      * Triggered when an SMS message needs to be sent, such as for MFA or verification codes.
      * Use this trigger to customize the SMS provider.
      *
-     * Takes the function ARN, or the handler path, or the function args.
+     * Takes the handler path or the function args.
      */
     customSmsSender?: string | FunctionArgs;
     /**
@@ -96,14 +96,14 @@ export interface CognitoUserPoolArgs {
      * user has completed the authentication process or if additional challenges are needed.
      * ARN of the lambda function to name a custom challenge.
      *
-     * Takes the function ARN, or the handler path, or the function args.
+     * Takes the handler path or the function args.
      */
     defineAuthChallenge?: string | FunctionArgs;
     /**
      * Triggered after a successful authentication event. Use this to perform custom actions,
      * such as logging or modifying user attributes, after the user is authenticated.
      *
-     * Takes the function ARN, or the handler path, or the function args.
+     * Takes the handler path or the function args.
      */
     postAuthentication?: string | FunctionArgs;
     /**
@@ -111,7 +111,7 @@ export interface CognitoUserPoolArgs {
      * verification. Use this to perform additional actions, like sending a welcome email or
      * initializing user data, after user confirmation.
      *
-     * Takes the function ARN, or the handler path, or the function args.
+     * Takes the handler path or the function args.
      */
     postConfirmation?: string | FunctionArgs;
     /**
@@ -119,21 +119,21 @@ export interface CognitoUserPoolArgs {
      * validation or checks (like checking if the user is banned) before continuing
      * authentication.
      *
-     * Takes the function ARN, or the handler path, or the function args.
+     * Takes the handler path or the function args.
      */
     preAuthentication?: string | FunctionArgs;
     /**
      * Triggered before the user sign-up process completes. Use this to perform custom
      * validation, auto-confirm users, or auto-verify attributes based on custom logic.
      *
-     * Takes the function ARN, or the handler path, or the function args.
+     * Takes the handler path or the function args.
      */
     preSignUp?: string | FunctionArgs;
     /**
      * Triggered before tokens are generated in the authentication process. Use this to
      * customize or add claims to the tokens that will be generated and returned to the user.
      *
-     * Takes the function ARN, or the handler path, or the function args.
+     * Takes the handler path or the function args.
      */
     preTokenGeneration?: string | FunctionArgs;
     /**
@@ -141,7 +141,7 @@ export interface CognitoUserPoolArgs {
      * Use this to import and validate users from an existing user directory into the
      * Cognito User Pool during sign-in.
      *
-     * Takes the function ARN, or the handler path, or the function args.
+     * Takes the handler path or the function args.
      */
     userMigration?: string | FunctionArgs;
     /**
@@ -149,7 +149,7 @@ export interface CognitoUserPoolArgs {
      * verify the user's response to the challenge and determine whether to continue
      * authenticating the user.
      *
-     * Takes the function ARN, or the handler path, or the function args.
+     * Takes the handler path or the function args.
      */
     verifyAuthChallengeResponse?: string | FunctionArgs;
   }>;
@@ -214,7 +214,8 @@ export interface CognitoUserPoolClientArgs {
  */
 export class CognitoUserPool
   extends Component
-  implements Link.Linkable, AWSLinkable {
+  implements Link.Linkable, AWSLinkable
+{
   private userPool: cognito.UserPool;
 
   constructor(
