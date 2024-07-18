@@ -16,7 +16,7 @@
  * });
  * ```
  *
- * The variables contain the context of the app that's being run. While the functions help you work with the [Outputs of components](/docs/components##inputs--outputs).
+ * The **variables** contain the context of the app that's being run. While the **functions** help you work with the [Outputs of components](/docs/components##inputs--outputs).
  *
  * @packageDocumentation
  */
@@ -49,7 +49,7 @@ interface $APP
      * The providers currently being used in the app.
      */
     providers: App["providers"];
-  }> {}
+  }> { }
 
 declare global {
   // @ts-expect-error
@@ -89,14 +89,14 @@ declare global {
    *
    * @example
    * Say you had a couple of S3 Buckets:
-   * ```ts
+   * ```ts title="sst.config.ts"
    * const bucket1 = new sst.aws.Bucket("MyBucket1");
    * const bucket2 = new sst.aws.Bucket("MyBucket2");
    * ```
    *
    * You can run a function after both of them are resolved:
    *
-   * ```ts
+   * ```ts title="sst.config.ts"
    * $resolve([bucket1.name, bucket2.name]).apply(([value1, value2]) =>
    *   console.log({ value1, value2 })
    * );
@@ -109,18 +109,18 @@ declare global {
    * @example
    * This is takes care of resolving the Output values for you. Say you had a bucket:
    *
-   * ```ts
+   * ```ts title="sst.config.ts"
    * const bucket = new sst.aws.Bucket("MyBucket");
    * ```
    *
    * Instead of resolving the bucket name first:
    *
-   * ```ts
+   * ```ts title="sst.config.ts"
    * const description = bucket.name.apply(name => `This is a bucket named ${name}`);
    * ```
    *
    * You can directly do this:
-   * ```ts
+   * ```ts title="sst.config.ts"
    * const description = $interpolate`This is a bucket named ${bucket.name}`;
    * ```
    */
@@ -132,13 +132,13 @@ declare global {
    * @example
    * This is takes care of resolving the Output values for you. Say you had a bucket:
    *
-   * ```ts
+   * ```ts title="sst.config.ts"
    * const bucket = new sst.aws.Bucket("MyBucket");
    * ```
    *
    * Instead of having to resolve the bucket name first::
    *
-   * ```ts
+   * ```ts title="sst.config.ts"
    * const description = bucket.name.apply(name =>
    *   "This is a bucket named ".concat(name)
    * );
@@ -146,7 +146,7 @@ declare global {
    *
    * You can directly do this:
    *
-   * ```ts
+   * ```ts title="sst.config.ts"
    * const description = $concat("This is a bucket named ", bucket.name);
    * ```
    */
@@ -158,7 +158,7 @@ declare global {
    * @example
    * So for example, instead of doing of resolving the value first:
    *
-   * ```ts
+   * ```ts title="sst.config.ts"
    * const policy = policyStr.apply((policy) =>
    *   JSON.parse(policy)
    * );
@@ -166,7 +166,7 @@ declare global {
    *
    * You can directly do this:
    *
-   * ```ts
+   * ```ts title="sst.config.ts"
    * const policy = $jsonParse(policyStr);
    * ```
    */
@@ -178,7 +178,7 @@ declare global {
    * @example
    * So for example, instead of doing of resolving the value first:
    *
-   * ```ts
+   * ```ts title="sst.config.ts"
    * const policy = policyObj.apply((policy) =>
    *   JSON.stringify(policy)
    * );
@@ -186,7 +186,7 @@ declare global {
    *
    * You can directly do this:
    *
-   * ```ts
+   * ```ts title="sst.config.ts"
    * const policy = $jsonStringify(policyObj);
    * ```
    */
@@ -212,7 +212,7 @@ declare global {
    *
    * For example, to set a default runtime for all function components.
    *
-   * ```ts
+   * ```ts title="sst.config.ts"
    * $transform(sst.aws.Function, (args, opts) => {
    *   args.runtime = "nodejs18.x";
    * })
@@ -221,7 +221,7 @@ declare global {
    * Here, `args` and `opts` are what you'd pass to the `Function` component. Recall the
    * signature of the `Function` component:
    *
-   * ```ts
+   * ```ts title="sst.config.ts"
    * new sst.aws.Function(name: string, args: FunctionArgs, opts?: pulumi.ComponentResourceOptions)
    * ```
    */

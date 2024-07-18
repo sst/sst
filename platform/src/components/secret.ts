@@ -23,7 +23,7 @@ export class SecretMissingError extends VisibleError {
  * @example
  *
  * #### Create a secret
- * ```ts
+ * ```ts title="sst.config.ts"
  * const secret = new sst.Secret("MySecret");
  * ```
  *
@@ -35,7 +35,7 @@ export class SecretMissingError extends VisibleError {
  * Useful for cases where you might use a secret for values that aren't sensitive, so you can just set them in code.
  * :::
  *
- * ```ts
+ * ```ts title="sst.config.ts"
  * const secret = new sst.Secret("MySecret", "my-secret-placeholder-value");
  * ```
  *
@@ -63,7 +63,7 @@ export class SecretMissingError extends VisibleError {
  *
  * You can link the secret to other resources, like a function or your Next.js app.
  *
- * ```ts
+ * ```ts title="sst.config.ts"
  * new sst.aws.Nextjs("MyWeb", {
  *   link: [secret]
  * });

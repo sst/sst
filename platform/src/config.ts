@@ -127,16 +127,6 @@ export interface App {
    * The providers that are being used in this app. This allows you to use the components from these providers in your app.
    * Check out the full list in the [Directory](/docs/providers#directory).
    *
-   * For example, if you use the [AWS Classic](https://www.pulumi.com/registry/packages/aws/) provider, you can use the `aws` components in your app.
-   *
-   * ```ts
-   * import * as aws from "@pulumi/aws";
-   *
-   * new aws.s3.BucketV2("b", {
-   *   bucket: "mybucket"
-   * });
-   * ```
-   *
    * :::note
    * By default, your `home` provider is included in the `providers` list.
    * :::
@@ -238,7 +228,7 @@ export interface AppInput {
   /**
    * The stage this app is running on. This is a string that can be passed in through the CLI.
    *
-   * :::tip
+   * :::caution
    * Changing the stage will redeploy your app to a new stage with new resources. The old resources will still be around in the old stage.
    * :::
    *

@@ -134,22 +134,6 @@ sst [command] --verbose
 
 </Segment>
 
-### y
-<Segment>
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">boolean</code>
-</InlineSection>
-</Section>
-
-Skip interactive confirmation for detected framework.
-
-```bash
-sst init -y
-```
-
-</Segment>
-
 ### help
 <Segment>
 <Section type="parameters">
@@ -178,6 +162,18 @@ sst --help
 ```sh frame="none"
 sst init
 ```
+</Section>
+
+<Section type="parameters">
+#### Flags
+- <p><code class="key">yes</code> <code class="primitive">boolean</code></p>
+
+Skip interactive confirmation for detected framework.
+
+```bash
+sst init --yes
+```
+
 </Section>
 Initialize a new project in the current directory. This will create a `sst.config.ts` and `sst install` your providers.
 

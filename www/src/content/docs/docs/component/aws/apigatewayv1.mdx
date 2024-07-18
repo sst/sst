@@ -152,12 +152,33 @@ The duration the API Gateway logs are kept in CloudWatch.
 <InlineSection>
 **Default** <code class="primitive">&lcub;type: "edge"&rcub;</code>
 </InlineSection>
-Configure the [API Gateway endpoint](https://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-api-endpoint-types.html).
+Configure the [API Gateway REST API endpoint](https://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-api-endpoint-types.html).
 
+By default, it's an `edge` endpoint, meaning that a CloudFront distribution is created
+for the API. This could help in cases where requests are geographically distributed.
+
+On the other hand, `regional` endpoints are deployed in a specific AWS region and are
+intended to be accessed directly by clients within or near that region.
+
+And a `private` endpoints allow access to the API only from within a specified
+Amazon VPC (Virtual Private Cloud) using VPC endpoints. These endpoints do not expose
+the API to the public internet.
+
+To create a regional endpoint.
 ```js
 {
   endpoint: {
     type: "regional"
+  }
+}
+```
+
+And to create a private endpoint.
+```js
+{
+  endpoint: {
+    type: "private",
+    vpcEndpointIds: ["vpce-0dccab6fb1e828f36"]
   }
 }
 ```
@@ -169,13 +190,7 @@ Configure the [API Gateway endpoint](https://docs.aws.amazon.com/apigateway/late
 **Type** <code class="symbol">&ldquo;</code><code class="primitive">edge</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">regional</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">private</code><code class="symbol">&rdquo;</code>
 </InlineSection>
 </Section>
-The type of the API Gateway REST API endpoint. By default, it's an `edge` endpoint, meaning
-that a CloudFront distribution is created for the API.
-
-On the other hand, a `regional` endpoint is an endpoint that is deployed in a specific AWS
-region.
-
-And a `private` endpoint is deployed within your VPC.
+The type of the API Gateway REST API endpoint.
 
 </Segment>
 <NestedTitle id="endpoint-vpcendpointids" Tag="h4" parent="endpoint.">vpcEndpointIds?</NestedTitle>

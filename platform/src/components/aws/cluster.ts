@@ -723,6 +723,9 @@ export interface ClusterServiceArgs {
     logGroup?: Transform<cloudwatch.LogGroupArgs>;
   };
 
+  /**
+   * @internal
+   */
   dev?: Input<{
     command: string;
   }>;
