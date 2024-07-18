@@ -6,7 +6,7 @@ import { VectorTable } from "./providers/vector-table.js";
 import { Function } from "./function.js";
 import { Link } from "../link.js";
 import { Input } from "../input.js";
-import { AWSLinkable } from "./linkable.js";
+import { permission } from "./permission.js";
 
 export interface VectorArgs {
   /**
@@ -76,7 +76,7 @@ export interface VectorArgs {
  * });
  * ```
  */
-export class Vector extends Component implements Link.Linkable, AWSLinkable {
+export class Vector extends Component implements Link.Linkable {
   private postgres: Postgres;
   private queryHandler: Function;
   private putHandler: Function;
@@ -220,21 +220,17 @@ export class Vector extends Component implements Link.Linkable, AWSLinkable {
         /** @internal */
         removeFunction: this.removeHandler.name,
       },
+      include: [
+        permission({
+          actions: ["lambda:InvokeFunction"],
+          resources: [
+            this.queryHandler.nodes.function.arn,
+            this.putHandler.nodes.function.arn,
+            this.removeHandler.nodes.function.arn,
+          ],
+        }),
+      ],
     };
-  }
-
-  /** @internal */
-  public getSSTAWSPermissions() {
-    return [
-      {
-        actions: ["lambda:InvokeFunction"],
-        resources: [
-          this.queryHandler.nodes.function.arn,
-          this.putHandler.nodes.function.arn,
-          this.removeHandler.nodes.function.arn,
-        ],
-      },
-    ];
   }
 }
 

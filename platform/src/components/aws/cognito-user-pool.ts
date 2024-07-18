@@ -5,8 +5,8 @@ import { Link } from "../link";
 import { CognitoUserPoolClient } from "./cognito-user-pool-client";
 import { Function, FunctionArgs } from "./function.js";
 import { VisibleError } from "../error";
-import { AWSLinkable } from "./linkable";
 import { cognito, lambda } from "@pulumi/aws";
+import { permission } from "./permission";
 
 export interface CognitoUserPoolArgs {
   /**
@@ -212,10 +212,7 @@ export interface CognitoUserPoolClientArgs {
  * userPool.addClient("Web");
  * ```
  */
-export class CognitoUserPool
-  extends Component
-  implements Link.Linkable, AWSLinkable
-{
+export class CognitoUserPool extends Component implements Link.Linkable {
   private userPool: cognito.UserPool;
 
   constructor(
@@ -398,17 +395,13 @@ export class CognitoUserPool
       properties: {
         id: this.id,
       },
+      include: [
+        permission({
+          actions: ["cognito-idp:*"],
+          resources: [this.userPool.arn],
+        }),
+      ],
     };
-  }
-
-  /** @internal */
-  public getSSTAWSPermissions() {
-    return [
-      {
-        actions: ["cognito-idp:*"],
-        resources: [this.userPool.arn],
-      },
-    ];
   }
 }
 

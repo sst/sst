@@ -62,11 +62,6 @@ export class Auth extends Component implements Link.Linkable {
       },
     };
   }
-
-  /** @internal */
-  public getSSTAWSPermissions() {
-    return [];
-  }
 }
 
 const __pulumiType = "sst:aws:Auth";

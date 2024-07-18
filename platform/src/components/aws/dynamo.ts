@@ -12,8 +12,8 @@ import { FunctionArgs } from "./function";
 import { hashStringToPrettyString, sanitizeToPascalCase } from "../naming";
 import { parseDynamoStreamArn } from "./helpers/arn";
 import { DynamoLambdaSubscriber } from "./dynamo-lambda-subscriber";
-import { AWSLinkable } from "./linkable";
 import { dynamodb, lambda } from "@pulumi/aws";
+import { permission } from "./permission";
 
 export interface DynamoArgs {
   /**
@@ -348,7 +348,7 @@ export interface DynamoSubscriberArgs {
  * }));
  * ```
  */
-export class Dynamo extends Component implements Link.Linkable, AWSLinkable {
+export class Dynamo extends Component implements Link.Linkable {
   private constructorName: string;
   private table: Output<dynamodb.Table>;
   private isStreamEnabled: boolean = false;
@@ -398,9 +398,9 @@ export class Dynamo extends Component implements Link.Linkable, AWSLinkable {
                 args.ttl === undefined
                   ? undefined
                   : {
-                    attributeName: args.ttl,
-                    enabled: true,
-                  },
+                      attributeName: args.ttl,
+                      enabled: true,
+                    },
               globalSecondaryIndexes: Object.entries(globalIndexes ?? {}).map(
                 ([name, index]) => ({
                   name,
@@ -604,17 +604,13 @@ export class Dynamo extends Component implements Link.Linkable, AWSLinkable {
       properties: {
         name: this.name,
       },
+      include: [
+        permission({
+          actions: ["dynamodb:*"],
+          resources: [this.arn, interpolate`${this.arn}/*`],
+        }),
+      ],
     };
-  }
-
-  /** @internal */
-  public getSSTAWSPermissions() {
-    return [
-      {
-        actions: ["dynamodb:*"],
-        resources: [this.arn, interpolate`${this.arn}/*`],
-      },
-    ];
   }
 }
 

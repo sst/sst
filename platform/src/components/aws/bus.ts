@@ -10,8 +10,8 @@ import {
 } from "../naming";
 import { parseEventBusArn } from "./helpers/arn";
 import { BusLambdaSubscriber } from "./bus-lambda-subscriber";
-import { AWSLinkable } from "./linkable";
 import { cloudwatch } from "@pulumi/aws";
+import { permission } from "./permission";
 
 export interface BusArgs {
   /**
@@ -166,7 +166,7 @@ export interface BusSubscriberArgs {
  * }));
  * ```
  */
-export class Bus extends Component implements Link.Linkable, AWSLinkable {
+export class Bus extends Component implements Link.Linkable {
   private constructorName: string;
   private bus: cloudwatch.EventBus;
 
@@ -343,17 +343,13 @@ export class Bus extends Component implements Link.Linkable, AWSLinkable {
         name: this.name,
         arn: this.nodes.bus.arn,
       },
+      include: [
+        permission({
+          actions: ["events:*"],
+          resources: [this.nodes.bus.arn],
+        }),
+      ],
     };
-  }
-
-  /** @internal */
-  public getSSTAWSPermissions() {
-    return [
-      {
-        actions: ["events:*"],
-        resources: [this.nodes.bus.arn],
-      },
-    ];
   }
 }
 

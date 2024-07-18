@@ -2,10 +2,12 @@ export * as aws from "./aws";
 export * as cloudflare from "./cloudflare";
 export * as vercel from "./vercel";
 export * from "./secret";
-export * from "./resource";
+export * from "./linkable";
 
-import { Link as LinkModule } from "./link.js";
-export const linkable = LinkModule.makeLinkable;
+import { Link } from "./link.js";
 
-/** @deprecated Use sst.linkable and sst.aws.linkable instead */
-export const Link = LinkModule;
+/**
+ * @deprecated
+ * Use sst.Linkable.wrap instead.
+ */
+export const linkable = Link.linkable;

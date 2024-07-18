@@ -7,8 +7,8 @@ import { hashStringToPrettyString, sanitizeToPascalCase } from "../naming";
 import { parseTopicArn } from "./helpers/arn";
 import { SnsTopicLambdaSubscriber } from "./sns-topic-lambda-subscriber";
 import { SnsTopicQueueSubscriber } from "./sns-topic-queue-subscriber";
-import { AWSLinkable } from "./linkable";
 import { sns } from "@pulumi/aws";
+import { permission } from "./permission";
 
 export interface SnsTopicArgs {
   /**
@@ -150,7 +150,7 @@ export interface SnsTopicSubscriberArgs {
  * }));
  * ```
  */
-export class SnsTopic extends Component implements Link.Linkable, AWSLinkable {
+export class SnsTopic extends Component implements Link.Linkable {
   private constructorName: string;
   private topic: sns.Topic;
 
@@ -445,17 +445,13 @@ export class SnsTopic extends Component implements Link.Linkable, AWSLinkable {
       properties: {
         arn: this.arn,
       },
+      include: [
+        permission({
+          actions: ["sns:*"],
+          resources: [this.arn],
+        }),
+      ],
     };
-  }
-
-  /** @internal */
-  public getSSTAWSPermissions() {
-    return [
-      {
-        actions: ["sns:*"],
-        resources: [this.arn],
-      },
-    ];
   }
 }
 

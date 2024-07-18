@@ -2,6 +2,7 @@ import { ComponentResourceOptions } from "@pulumi/pulumi";
 import * as cloudflare from "@pulumi/cloudflare";
 import { Component, Transform, transform } from "../component";
 import { Link } from "../link.js";
+import { binding } from "./binding.js";
 
 export interface BucketArgs {
   /**
@@ -48,7 +49,7 @@ export interface BucketArgs {
  * await Resource.MyBucket.list();
  * ```
  */
-export class Bucket extends Component implements Link.Cloudflare.Linkable {
+export class Bucket extends Component implements Link.Linkable {
   private bucket: cloudflare.R2Bucket;
 
   constructor(
@@ -89,12 +90,14 @@ export class Bucket extends Component implements Link.Cloudflare.Linkable {
    *
    * @internal
    */
-  getCloudflareBinding(): Link.Cloudflare.Binding {
+  getSSTLink() {
     return {
-      type: "r2BucketBindings",
-      properties: {
-        bucketName: this.bucket.name,
-      },
+      properties: {},
+      include: [
+        binding("r2BucketBindings", {
+          bucketName: this.bucket.name,
+        }),
+      ],
     };
   }
 

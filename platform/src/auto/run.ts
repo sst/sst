@@ -9,8 +9,9 @@ import {
 } from "@pulumi/pulumi";
 
 import { VisibleError } from "../components/error";
-import { linkable as awsLinkable } from "../components/aws";
 import { dynamodb } from "@pulumi/aws";
+import { Linkable } from "../components";
+import { permission } from "../components/aws/permission.js";
 
 export async function run(program: automation.PulumiFn) {
   process.chdir($cli.paths.root);
@@ -19,19 +20,15 @@ export async function run(program: automation.PulumiFn) {
   addTransformationToEnsureUniqueComponentNames();
   addTransformationToCheckBucketsHaveMultiplePolicies();
 
-  Link.makeLinkable(dynamodb.Table, (db) => {
-    return {
-      properties: { tableName: db.name },
-    };
-  });
-  awsLinkable(dynamodb.Table, function (item) {
-    return [
-      {
+  Linkable.wrap(dynamodb.Table, (item) => ({
+    properties: { tableName: item.name },
+    include: [
+      permission({
         actions: ["dynamodb:*"],
         resources: [item.arn, interpolate`${item.arn}/*`],
-      },
-    ];
-  });
+      }),
+    ],
+  }));
   Link.reset();
   const outputs = (await program()) || {};
   return outputs;

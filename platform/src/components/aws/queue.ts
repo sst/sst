@@ -12,8 +12,8 @@ import { VisibleError } from "../error";
 import { hashStringToPrettyString, sanitizeToPascalCase } from "../naming";
 import { parseQueueArn } from "./helpers/arn";
 import { QueueLambdaSubscriber } from "./queue-lambda-subscriber";
-import { AWSLinkable } from "./linkable";
 import { lambda, sqs } from "@pulumi/aws";
+import { permission } from "./permission.js";
 
 export interface QueueArgs {
   /**
@@ -66,16 +66,16 @@ export interface QueueArgs {
   dlq?: Input<
     | string
     | {
-      /**
-       * The ARN of the dead-letter queue.
-       */
-      queue: Input<string>;
-      /**
-       * The number of times the main queue will retry the message before sending it to the dead-letter queue.
-       * @default `3`
-       */
-      retry: Input<number>;
-    }
+        /**
+         * The ARN of the dead-letter queue.
+         */
+        queue: Input<string>;
+        /**
+         * The number of times the main queue will retry the message before sending it to the dead-letter queue.
+         * @default `3`
+         */
+        retry: Input<number>;
+      }
   >;
   /**
    * [Transform](/docs/components#transform) how this component creates its underlying
@@ -201,7 +201,7 @@ export interface QueueSubscriberArgs {
  * }));
  * ```
  */
-export class Queue extends Component implements Link.Linkable, AWSLinkable {
+export class Queue extends Component implements Link.Linkable {
   private constructorName: string;
   private queue: sqs.Queue;
   private isSubscribed: boolean = false;
@@ -415,17 +415,13 @@ export class Queue extends Component implements Link.Linkable, AWSLinkable {
       properties: {
         url: this.url,
       },
+      include: [
+        permission({
+          actions: ["sqs:*"],
+          resources: [this.arn],
+        }),
+      ],
     };
-  }
-
-  /** @internal */
-  public getSSTAWSPermissions() {
-    return [
-      {
-        actions: ["sqs:*"],
-        resources: [this.arn],
-      },
-    ];
   }
 }
 

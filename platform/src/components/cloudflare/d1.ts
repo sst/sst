@@ -2,6 +2,7 @@ import { ComponentResourceOptions } from "@pulumi/pulumi";
 import * as cloudflare from "@pulumi/cloudflare";
 import { Component, Transform, transform } from "../component";
 import { Link } from "../link";
+import { binding } from "./binding";
 
 export interface D1Args {
   /**
@@ -50,7 +51,7 @@ export interface D1Args {
  * ).first();
  * ```
  */
-export class D1 extends Component implements Link.Cloudflare.Linkable {
+export class D1 extends Component implements Link.Linkable {
   private database: cloudflare.D1Database;
 
   constructor(name: string, args?: D1Args, opts?: ComponentResourceOptions) {
@@ -89,12 +90,14 @@ export class D1 extends Component implements Link.Cloudflare.Linkable {
    *
    * @internal
    */
-  getCloudflareBinding(): Link.Cloudflare.Binding {
+  getSSTLink() {
     return {
-      type: "d1DatabaseBindings",
-      properties: {
-        databaseId: this.database.id,
-      },
+      properties: {},
+      include: [
+        binding("d1DatabaseBindings", {
+          databaseId: this.database.id,
+        }),
+      ],
     };
   }
 

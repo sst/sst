@@ -2,8 +2,8 @@ import { ComponentResourceOptions, output, Output } from "@pulumi/pulumi";
 import { Component, Transform, transform } from "../component";
 import { Link } from "../link";
 import { Input } from "../input.js";
-import { AWSLinkable } from "./linkable";
 import { rds } from "@pulumi/aws";
+import { permission } from "./permission";
 
 type ACU = `${number} ACU`;
 
@@ -225,7 +225,7 @@ export interface PostgresArgs {
  * });
  * ```
  */
-export class Postgres extends Component implements Link.Linkable, AWSLinkable {
+export class Postgres extends Component implements Link.Linkable {
   private cluster: rds.Cluster;
   private instance: rds.ClusterInstance;
   private databaseName: Output<string>;
@@ -348,11 +348,6 @@ export class Postgres extends Component implements Link.Linkable, AWSLinkable {
   }
 
   /** @internal */
-  public getSSTAWSPermissions() {
-    return getSSTAWSPermissions(this.cluster);
-  }
-
-  /** @internal */
   public static get(
     name: string,
     args: rds.GetClusterArgs,
@@ -362,38 +357,35 @@ export class Postgres extends Component implements Link.Linkable, AWSLinkable {
   }
 }
 
-function getSSTLink(cluster: rds.Cluster | Output<rds.GetClusterResult>) {
+function getSSTLink(
+  cluster: rds.Cluster | Output<rds.GetClusterResult>,
+): Link.Definition {
   return {
     properties: {
       clusterArn: cluster.arn,
       secretArn: cluster.masterUserSecrets[0].secretArn,
       database: cluster.databaseName,
     },
+    include: [
+      permission({
+        actions: ["secretsmanager:GetSecretValue"],
+        resources: [cluster.masterUserSecrets[0].secretArn],
+      }),
+      permission({
+        actions: [
+          "rds-data:BatchExecuteStatement",
+          "rds-data:BeginTransaction",
+          "rds-data:CommitTransaction",
+          "rds-data:ExecuteStatement",
+          "rds-data:RollbackTransaction",
+        ],
+        resources: [cluster.arn],
+      }),
+    ],
   };
 }
 
-function getSSTAWSPermissions(
-  cluster: rds.Cluster | Output<rds.GetClusterResult>,
-) {
-  return [
-    {
-      actions: ["secretsmanager:GetSecretValue"],
-      resources: [cluster.masterUserSecrets[0].secretArn],
-    },
-    {
-      actions: [
-        "rds-data:BatchExecuteStatement",
-        "rds-data:BeginTransaction",
-        "rds-data:CommitTransaction",
-        "rds-data:ExecuteStatement",
-        "rds-data:RollbackTransaction",
-      ],
-      resources: [cluster.arn],
-    },
-  ];
-}
-
-class PostgresRef extends Component implements Link.Linkable, AWSLinkable {
+class PostgresRef extends Component implements Link.Linkable {
   private cluster: Output<rds.GetClusterResult>;
 
   constructor(
@@ -428,26 +420,6 @@ class PostgresRef extends Component implements Link.Linkable, AWSLinkable {
   /** @internal */
   public getSSTLink() {
     return getSSTLink(this.cluster);
-  }
-
-  /** @internal */
-  public getSSTAWSPermissions() {
-    return [
-      {
-        actions: ["secretsmanager:GetSecretValue"],
-        resources: [this.cluster.masterUserSecrets[0].secretArn],
-      },
-      {
-        actions: [
-          "rds-data:BatchExecuteStatement",
-          "rds-data:BeginTransaction",
-          "rds-data:CommitTransaction",
-          "rds-data:ExecuteStatement",
-          "rds-data:RollbackTransaction",
-        ],
-        resources: [this.cluster.arn],
-      },
-    ];
   }
 }
 

@@ -20,8 +20,8 @@ import { dns as awsDns } from "./dns.js";
 import { ApiGatewayV2DomainArgs } from "./helpers/apigatewayv2-domain";
 import { ApiGatewayWebSocketRoute } from "./apigateway-websocket-route";
 import { setupApiGatewayAccount } from "./helpers/apigateway-account";
-import { AWSLinkable } from "./linkable";
 import { apigatewayv2, cloudwatch } from "@pulumi/aws";
+import { permission } from "./permission";
 
 export interface ApiGatewayWebSocketArgs {
   /**
@@ -198,9 +198,7 @@ export interface ApiGatewayWebSocketRouteArgs {
  * api.route("sendMessage", "src/sendMessage.handler");
  * ```
  */
-export class ApiGatewayWebSocket
-  extends Component
-  implements Link.Linkable, AWSLinkable {
+export class ApiGatewayWebSocket extends Component implements Link.Linkable {
   private constructorName: string;
   private constructorArgs: ApiGatewayWebSocketArgs;
   private api: apigatewayv2.Api;
@@ -429,9 +427,9 @@ export class ApiGatewayWebSocket
     //       trailing slash, the API fails with the error {"message":"Not Found"}
     return this.apigDomain && this.apiMapping
       ? all([this.apigDomain.domainName, this.apiMapping.apiMappingKey]).apply(
-        ([domain, key]) =>
-          key ? `wss://${domain}/${key}/` : `wss://${domain}`,
-      )
+          ([domain, key]) =>
+            key ? `wss://${domain}/${key}/` : `wss://${domain}`,
+        )
       : interpolate`${this.api.apiEndpoint}/${this.stage.name}`;
   }
 
@@ -553,17 +551,13 @@ export class ApiGatewayWebSocket
         url: this.url,
         managementEndpoint: this.managementEndpoint,
       },
+      include: [
+        permission({
+          actions: ["execute-api:ManageConnections"],
+          resources: [interpolate`${this.api.executionArn}/*/*/@connections/*`],
+        }),
+      ],
     };
-  }
-
-  /** @internal */
-  public getSSTAWSPermissions() {
-    return [
-      {
-        actions: ["execute-api:ManageConnections"],
-        resources: [interpolate`${this.api.executionArn}/*/*/@connections/*`],
-      },
-    ];
   }
 }
 

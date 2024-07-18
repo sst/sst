@@ -15,8 +15,9 @@ import { WorkerUrl } from "./providers/worker-url.js";
 import { Link } from "../link.js";
 import type { Input } from "../input.js";
 import { ZoneLookup } from "./providers/zone-lookup.js";
-import { isLinkable } from "../aws/linkable.js";
 import { iam } from "@pulumi/aws";
+import { Permission } from "../aws/permission.js";
+import { Binding, binding } from "./binding.js";
 
 export interface WorkerArgs {
   /**
@@ -226,9 +227,7 @@ export interface WorkerArgs {
  * });
  * ```
  */
-export class Worker
-  extends Component
-  implements Link.Cloudflare.Linkable, Link.Linkable {
+export class Worker extends Component implements Link.Linkable {
   private script: Output<cf.WorkerScript>;
   private workerUrl: WorkerUrl;
   private workerDomain?: cf.WorkerDomain;
@@ -268,16 +267,16 @@ export class Worker
           !$dev || live == false
             ? undefined
             : {
-              functionID: name,
-              links: [],
-              handler,
-              runtime: "worker",
-              properties: {
-                accountID: sst.cloudflare.DEFAULT_ACCOUNT_ID,
-                scriptName: script.name,
-                build,
+                functionID: name,
+                links: [],
+                handler,
+                runtime: "worker",
+                properties: {
+                  accountID: sst.cloudflare.DEFAULT_ACCOUNT_ID,
+                  scriptName: script.name,
+                  build,
+                },
               },
-            },
       ),
       _metadata: {
         handler: args.handler,
@@ -299,47 +298,38 @@ export class Worker
             }),
           },
         ],
-      } as Record<
-        ReturnType<Link.Cloudflare.Linkable["getCloudflareBinding"]>["type"],
-        any[]
-      >;
+      } as Record<Binding["type"], any[]>;
       if (!args.link) return result;
       return output(args.link).apply((links) => {
         for (let link of links) {
-          if (Link.Cloudflare.isLinkable(link)) {
-            const name = output(link.urn).apply(
-              (uri) => uri.split("::").at(-1)!,
-            );
-            const binding = link.getCloudflareBinding();
-            if (!result[binding.type]) result[binding.type] = [];
-            result[binding.type].push({
+          if (!Link.isLinkable(link)) continue;
+          const name = output(link.urn).apply((uri) => uri.split("::").at(-1)!);
+          const item = link.getSSTLink();
+          const b = item.include?.find(
+            (i) => i.type === "cloudflare.binding",
+          ) as ReturnType<typeof binding>;
+          if (b) {
+            if (!result[b.binding]) result[b.binding] = [];
+            result[b.binding].push({
               name,
-              ...binding.properties,
+              ...b.properties,
             });
             continue;
           }
-          if (Link.isLinkable(link)) {
-            const name = output(link.urn).apply(
-              (uri) => uri.split("::").at(-1)!,
-            );
-            if (!result.secretTextBindings) result.secretTextBindings = [];
-            result.secretTextBindings.push({
-              name,
-              text: jsonStringify(link.getSSTLink().properties),
-            });
-          }
+          if (!result.secretTextBindings) result.secretTextBindings = [];
+          result.secretTextBindings.push({
+            name,
+            text: jsonStringify(item.properties),
+          });
         }
         return result;
       });
     }
 
     function createAwsCredentials() {
-      return output(args.link ?? []).apply((links) => {
-        const permissions = links.flatMap((l) => {
-          if (!isLinkable(l)) return [];
-          return l.getSSTAWSPermissions();
-        });
-
+      return output(
+        Link.getInclude<Permission>("aws.permission", args.link),
+      ).apply((permissions) => {
         if (permissions.length === 0) return;
 
         const user = new iam.User(
@@ -400,11 +390,11 @@ export class Worker
               plainTextBindings: [
                 ...(iamCredentials
                   ? [
-                    {
-                      name: "AWS_ACCESS_KEY_ID",
-                      text: iamCredentials.id,
-                    },
-                  ]
+                      {
+                        name: "AWS_ACCESS_KEY_ID",
+                        text: iamCredentials.id,
+                      },
+                    ]
                   : []),
                 ...Object.entries(environment ?? {}).map(([key, value]) => ({
                   name: key,
@@ -415,11 +405,11 @@ export class Worker
               secretTextBindings: [
                 ...(iamCredentials
                   ? [
-                    {
-                      name: "AWS_SECRET_ACCESS_KEY",
-                      text: iamCredentials.secret,
-                    },
-                  ]
+                      {
+                        name: "AWS_SECRET_ACCESS_KEY",
+                        text: iamCredentials.secret,
+                      },
+                    ]
                   : []),
                 ...(bindings.secretTextBindings || []),
               ],
@@ -503,23 +493,16 @@ export class Worker
    *
    * @internal
    */
-  public getCloudflareBinding(): Link.Cloudflare.Binding {
-    return {
-      type: "serviceBindings",
-      properties: {
-        service: this.script.id,
-      },
-    };
-  }
-
-  /**
-   * @internal
-   */
-  public getSSTLink() {
+  getSSTLink() {
     return {
       properties: {
         url: this.url,
       },
+      include: [
+        binding("serviceBindings", {
+          service: this.script.id,
+        }),
+      ],
     };
   }
 }

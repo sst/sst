@@ -2,6 +2,7 @@ import { ComponentResourceOptions } from "@pulumi/pulumi";
 import * as cloudflare from "@pulumi/cloudflare";
 import { Component, Transform, transform } from "../component";
 import { Link } from "../link";
+import { binding } from "./binding";
 
 export interface QueueArgs {
   /**
@@ -20,7 +21,7 @@ export interface QueueArgs {
  * The `Queue` component lets you add a [Cloudflare Queue](https://developers.cloudflare.com/queues/) to
  * your app.
  */
-export class Queue extends Component implements Link.Cloudflare.Linkable {
+export class Queue extends Component implements Link.Linkable {
   private queue: cloudflare.Queue;
 
   constructor(name: string, args?: QueueArgs, opts?: ComponentResourceOptions) {
@@ -44,15 +45,14 @@ export class Queue extends Component implements Link.Cloudflare.Linkable {
     }
   }
 
-  /**
-   * @internal
-   */
-  getCloudflareBinding(): Link.Cloudflare.Binding {
+  getSSTLink() {
     return {
-      type: "queueBindings",
-      properties: {
-        queue: this.queue.id,
-      },
+      properties: {},
+      include: [
+        binding("queueBindings", {
+          queue: this.queue.id,
+        }),
+      ],
     };
   }
 

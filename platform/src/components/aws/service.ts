@@ -25,7 +25,7 @@ import {
   supportedMemories,
 } from "./cluster";
 import { RETENTION } from "./logging.js";
-import { URL_UNAVAILABLE, isLinkable } from "./linkable";
+import { URL_UNAVAILABLE } from "./linkable";
 import {
   appautoscaling,
   cloudwatch,
@@ -36,6 +36,7 @@ import {
   iam,
   lb,
 } from "@pulumi/aws";
+import { Permission } from "./permission";
 
 export interface ServiceArgs extends ClusterServiceArgs {
   /**
@@ -272,12 +273,7 @@ export class Service extends Component implements Link.Linkable {
     }
 
     function buildLinkPermissions() {
-      return output(args.link ?? []).apply((links) =>
-        links.flatMap((l) => {
-          if (!isLinkable(l)) return [];
-          return l.getSSTAWSPermissions();
-        }),
-      );
+      return Link.getInclude<Permission>("aws.permission", args.link);
     }
 
     function createImage() {
@@ -453,7 +449,13 @@ export class Service extends Component implements Link.Linkable {
       const policy = all([args.permissions || [], linkPermissions]).apply(
         ([argsPermissions, linkPermissions]) =>
           iam.getPolicyDocumentOutput({
-            statements: [...argsPermissions, ...linkPermissions],
+            statements: [
+              ...argsPermissions,
+              ...linkPermissions.map((item) => ({
+                actions: item.actions,
+                resources: item.resources,
+              })),
+            ],
           }),
       );
 

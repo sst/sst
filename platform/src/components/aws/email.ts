@@ -10,8 +10,8 @@ import { Link } from "../link";
 import { Input } from "../input";
 import { Dns } from "../dns";
 import { dns as awsDns } from "./dns.js";
-import { AWSLinkable } from "./linkable";
 import { ses, sesv2 } from "@pulumi/aws";
+import { permission } from "./permission";
 
 export interface EmailArgs {
   /**
@@ -196,7 +196,7 @@ export interface EmailArgs {
  * );
  * ```
  */
-export class Email extends Component implements Link.Linkable, AWSLinkable {
+export class Email extends Component implements Link.Linkable {
   private _sender: Output<string>;
   private identity: sesv2.EmailIdentity;
 
@@ -325,17 +325,13 @@ export class Email extends Component implements Link.Linkable, AWSLinkable {
       properties: {
         sender: this._sender,
       },
+      include: [
+        permission({
+          actions: ["ses:*"],
+          resources: [this.identity.arn],
+        }),
+      ],
     };
-  }
-
-  /** @internal */
-  public getSSTAWSPermissions() {
-    return [
-      {
-        actions: ["ses:*"],
-        resources: [this.identity.arn],
-      },
-    ];
   }
 }
 

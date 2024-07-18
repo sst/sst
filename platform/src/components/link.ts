@@ -6,14 +6,19 @@ import {
   all,
   ComponentResource,
 } from "@pulumi/pulumi";
-import { FunctionPermissionArgs } from "./aws/function.js";
 
 export module Link {
-  export interface Definition {
-    properties: Input<Record<string, any>>;
+  export interface Definition<
+    Properties extends Record<string, any> = Record<string, any>,
+  > {
+    properties: Properties;
+    include?: {
+      type: string;
+      [key: string]: any;
+    }[];
   }
 
-  class LinkRef extends ComponentResource {
+  export class Ref extends ComponentResource {
     constructor(target: string, type: string, properties: any) {
       super(
         "sst:sst:LinkRef",
@@ -33,20 +38,20 @@ export module Link {
     }
   }
 
-  let links: Record<string, Record<string, any>> = {};
   export function reset() {
-    links = {};
+    const links = new Set<string>();
     runtime.registerStackTransformation((args) => {
       const resource = args.resource;
       process.nextTick(() => {
         if (Link.isLinkable(resource) && !args.opts.parent) {
           // Ensure linkable resources have unique names. This includes all
           // SST components and non-SST components that are linkable.
-          if (links[args.name]) {
+          if (links.has(args.name)) {
             throw new Error(`Component name ${args.name} is not unique`);
           }
           const link = resource.getSSTLink();
-          new LinkRef(args.name, args.type, link.properties);
+          new Ref(args.name, args.type, link.properties);
+          links.add(args.name);
         }
       });
       return {
@@ -68,99 +73,41 @@ export module Link {
   export function build(links: any[]) {
     return links
       .filter((l) => isLinkable(l))
-      .map((l) => {
+      .map((l: Linkable) => {
         const link = l.getSSTLink();
-        return all([l.urn, link.properties]).apply(([urn, properties]) => ({
+        return all([l.urn, link]).apply(([urn, link]) => ({
           name: urn.split("::").at(-1)!,
           properties: {
-            ...properties,
-            type: urn.split("::").at(-2)!,
+            ...link.properties,
+            type: urn.split("::").at(-2),
           },
         }));
       });
   }
 
-  export function makeLinkable<T>(
+  export function getInclude<T>(
+    type: string,
+    input?: Input<any[]>,
+  ): Output<T[]> {
+    if (!input) return output([]);
+    return output(input).apply((links) => {
+      return links.filter(isLinkable).flatMap((l: Linkable) => {
+        const link = l.getSSTLink();
+        return (link.include || []).filter((i) => i.type === type) as T[];
+      });
+    });
+  }
+
+  /** @deprecated
+   * Use sst.Linkable.wrap instead.
+   */
+  export function linkable<T>(
     obj: { new (...args: any[]): T },
     cb: (resource: T) => Definition,
   ) {
+    console.warn("sst.linkable is deprecated. Use sst.Linkable.wrap instead.");
     obj.prototype.getSSTLink = function () {
       return cb(this);
     };
-  }
-
-  export function list() {
-    return links;
-  }
-
-  export module Cloudflare {
-    export type Binding =
-      | {
-          type: "kvNamespaceBindings";
-          properties: {
-            namespaceId: Input<string>;
-          };
-        }
-      | {
-          type: "serviceBindings";
-          properties: {
-            service: Input<string>;
-          };
-        }
-      | {
-          type: "secretTextBindings";
-          properties: {
-            text: Input<string>;
-          };
-        }
-      | {
-          type: "plainTextBindings";
-          properties: {
-            text: Input<string>;
-          };
-        }
-      | {
-          type: "queueBindings";
-          properties: {
-            queue: Input<string>;
-          };
-        }
-      | {
-          type: "r2BucketBindings";
-          properties: {
-            bucketName: Input<string>;
-          };
-        }
-      | {
-          type: "d1DatabaseBindings";
-          properties: {
-            databaseId: Input<string>;
-          };
-        };
-    export interface Linkable {
-      urn: Output<string>;
-      getCloudflareBinding(): Binding;
-    }
-
-    export function isLinkable(obj: any): obj is Linkable {
-      return "getCloudflareBinding" in obj;
-    }
-  }
-
-  export module AWS {
-    export interface Linkable {
-      getSSTAWSPermissions(): FunctionPermissionArgs[];
-    }
-
-    export function isLinkable(obj: any): obj is Linkable {
-      return "getSSTAWSPermissions" in obj;
-    }
-
-    export function makeLinkable<T>(
-      obj: { new (...args: any[]): T },
-      cb: (this: T) => FunctionPermissionArgs[],
-    ) {
-      obj.prototype.getSSTAWSPermissions = cb;
-    }
   }
 }

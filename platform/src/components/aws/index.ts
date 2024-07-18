@@ -30,6 +30,7 @@ export * from "./vector.js";
 export * from "./vpc.js";
 export * from "./react.js";
 export { linkable } from "./linkable.js";
+export { permission } from "./permission.js";
 
 // internal components
 export * from "./cdn.js";

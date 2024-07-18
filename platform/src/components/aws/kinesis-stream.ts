@@ -1,6 +1,6 @@
 import * as aws from "@pulumi/aws";
 
-import { ComponentResourceOptions, Output, all, output } from "@pulumi/pulumi";
+import { ComponentResourceOptions, all, output } from "@pulumi/pulumi";
 import { Component, Transform, transform } from "../component.js";
 import { Input } from "../input.js";
 import { Link } from "../link.js";
@@ -8,6 +8,7 @@ import { hashStringToPrettyString, sanitizeToPascalCase } from "../naming.js";
 import { FunctionArgs } from "./function.js";
 import { KinesisStreamLambdaSubscriber } from "./kinesis-stream-lambda-subscriber.js";
 import { parseKinesisStreamArn } from "./helpers/arn.js";
+import { permission } from "./permission.js";
 
 export interface KinesisStreamArgs {
   /**
@@ -116,9 +117,7 @@ export interface KinesisStreamLambdaSubscriberArgs {
  * }));
  * ```
  */
-export class KinesisStream
-  extends Component
-  implements Link.Linkable, Link.AWS.Linkable {
+export class KinesisStream extends Component implements Link.Linkable {
   private constructorName: string;
   private stream: aws.kinesis.Stream;
 
@@ -310,17 +309,13 @@ export class KinesisStream
       properties: {
         name: this.stream.name,
       },
+      include: [
+        permission({
+          actions: ["kinesis:*"],
+          resources: [this.nodes.stream.arn],
+        }),
+      ],
     };
-  }
-
-  /** @internal */
-  getSSTAWSPermissions() {
-    return [
-      {
-        actions: ["kinesis:*"],
-        resources: [this.nodes.stream.arn],
-      },
-    ];
   }
 }
 

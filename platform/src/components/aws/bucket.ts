@@ -20,8 +20,8 @@ import { Duration, toSeconds } from "../duration";
 import { VisibleError } from "../error";
 import { parseBucketArn } from "./helpers/arn";
 import { BucketLambdaSubscriber } from "./bucket-lambda-subscriber";
-import { AWSLinkable } from "./linkable";
 import { iam, s3 } from "@pulumi/aws";
+import { permission } from "./permission";
 
 interface BucketCorsArgs {
   /**
@@ -288,7 +288,7 @@ export interface BucketSubscriberArgs {
  *  await getSignedUrl(new S3Client({}), command);
  * ```
  */
-export class Bucket extends Component implements Link.Linkable, AWSLinkable {
+export class Bucket extends Component implements Link.Linkable {
   private constructorName: string;
   private bucket: Output<s3.BucketV2>;
   private isSubscribed: boolean = false;
@@ -630,17 +630,13 @@ export class Bucket extends Component implements Link.Linkable, AWSLinkable {
       properties: {
         name: this.name,
       },
+      include: [
+        permission({
+          actions: ["s3:*"],
+          resources: [this.arn, interpolate`${this.arn}/*`],
+        }),
+      ],
     };
-  }
-
-  /** @internal */
-  public getSSTAWSPermissions() {
-    return [
-      {
-        actions: ["s3:*"],
-        resources: [this.arn, interpolate`${this.arn}/*`],
-      },
-    ];
   }
 }
 
