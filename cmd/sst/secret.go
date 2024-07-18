@@ -64,6 +64,7 @@ func CmdSecretSet(c *cli.Cli) error {
 			}
 			value += input
 			if isTerminal {
+				value = strings.TrimRight(value, "\n")
 				break
 			}
 		}
