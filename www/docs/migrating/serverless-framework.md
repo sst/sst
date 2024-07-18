@@ -372,7 +372,7 @@ AWS_PROFILE=production npx sst deploy --stage prod --region us-west-1
 
 If you are using the Serverless Dashboard, you can try out [Seed](https://seed.run) instead. It supports Serverless Framework and SST. So you can deploy the hybrid app that we've created here.
 
-Seed has a fully-managed CI/CD pipeline, monitoring, real-time alerts, and deploys a lot faster thanks to the [Incremental Deploys](https://seed.run/docs/what-are-incremental-deploys). It also gives you a great birds eye view of all your environments.
+Seed has a fully-managed CI/CD pipeline, [infrastructure monitoring](https://middleware.io/blog/what-is-infrastructure-monitoring/), real-time alerts, and deploys a lot faster thanks to the [Incremental Deploys](https://seed.run/docs/what-are-incremental-deploys). It also gives you a great birds eye view of all your environments.
 
 ## Lambda Function Triggers
 
