@@ -772,8 +772,7 @@ export class Service extends Component implements Link.Linkable {
   public getSSTLink() {
     return {
       properties: {
-        url:
-          this._url?.apply((url) => url || URL_UNAVAILABLE) || URL_UNAVAILABLE,
+        url: output(this._url).apply((url) => url || URL_UNAVAILABLE),
       },
     };
   }

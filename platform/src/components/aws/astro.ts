@@ -641,8 +641,7 @@ export class Astro extends Component implements Link.Linkable {
   public getSSTLink() {
     return {
       properties: {
-        url:
-          this.url?.apply((url) => url || URL_UNAVAILABLE) || URL_UNAVAILABLE,
+        url: output(this.url).apply((url) => url || URL_UNAVAILABLE),
       },
     };
   }
@@ -673,10 +672,11 @@ function useCloudFrontRoutingInjection(buildMetadata: BuildMetaConfig) {
     var matchedRoute = findFirstMatch(findMatches(request.uri, routeData));
     if (matchedRoute[0]) {
       if (!matchedRoute[1] && !/^.*\\.[^\\/]+$/.test(request.uri)) {
-        ${buildMetadata.pageResolution === "file"
-      ? `request.uri = request.uri === "/" ? "/index.html" : request.uri.replace(/\\/?$/, ".html");`
-      : `request.uri = request.uri.replace(/\\/?$/, "/index.html");`
-    }
+        ${
+          buildMetadata.pageResolution === "file"
+            ? `request.uri = request.uri === "/" ? "/index.html" : request.uri.replace(/\\/?$/, ".html");`
+            : `request.uri = request.uri.replace(/\\/?$/, "/index.html");`
+        }
       } else if (matchedRoute[1] === 2) {
         var redirectPath = matchedRoute[2];
         matchedRoute[0].exec(request.uri).forEach((match, index) => {

@@ -661,8 +661,7 @@ export class React extends Component implements Link.Linkable {
   public getSSTLink() {
     return {
       properties: {
-        url:
-          this.url?.apply((url) => url || URL_UNAVAILABLE) || URL_UNAVAILABLE,
+        url: output(this.url).apply((url) => url || URL_UNAVAILABLE),
       },
     };
   }
