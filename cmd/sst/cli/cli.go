@@ -60,6 +60,7 @@ func New(ctx context.Context, cancel context.CancelFunc, root *Command, version 
 		Context:   ctx,
 		cancel:    cancel,
 	}
+	cli.configureLog()
 	if cliParseError != nil {
 		return nil, cli.PrintHelp()
 	}

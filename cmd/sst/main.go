@@ -77,7 +77,6 @@ func run() error {
 	}()
 	c, err := cli.New(ctx, cancel, root, version)
 	if err != nil {
-		c.PrintHelp()
 		return err
 	}
 	spin := spinner.New(spinner.CharSets[14], 100*time.Millisecond)
@@ -224,22 +223,6 @@ var root = &cli.Command{
 			},
 		},
 		{
-			Name: "y",
-			Type: "bool",
-			Description: cli.Description{
-				Short: "Skip interactive confirmation",
-				Long: strings.Join([]string{
-					"",
-					"Skip interactive confirmation for detected framework.",
-					"",
-					"```bash",
-					"sst init -y",
-					"```",
-					"",
-				}, "\n"),
-			},
-		},
-		{
 			Name: "help",
 			Type: "bool",
 			Description: cli.Description{
@@ -272,6 +255,24 @@ var root = &cli.Command{
 				}, "\n"),
 			},
 			Run: CmdInit,
+			Flags: []cli.Flag{
+				{
+					Name: "yes",
+					Type: "bool",
+					Description: cli.Description{
+						Short: "Skip interactive confirmation",
+						Long: strings.Join([]string{
+							"",
+							"Skip interactive confirmation for detected framework.",
+							"",
+							"```bash",
+							"sst init --yes",
+							"```",
+							"",
+						}, "\n"),
+					},
+				},
+			},
 		},
 		{
 			Name:   "mosaic",
