@@ -7,5 +7,5 @@
     "isolatedModules": true,
     "downlevelIteration": true
   },
-  "exclude": ["templates"]
+  "exclude": ["templates", "functions"]
 }

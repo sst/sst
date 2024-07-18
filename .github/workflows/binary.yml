@@ -41,6 +41,7 @@ jobs:
       # TODO remove temporary workaround
       - run: bun i --frozen-lockfile
       - run: git reset --hard
+      - run: cd platform && bun tsc --noEmit
 
       - uses: goreleaser/goreleaser-action@v6
         with:
