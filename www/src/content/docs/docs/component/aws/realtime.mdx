@@ -225,11 +225,21 @@ The following are accessible through the [SDK](/docs/reference/sdk/) at runtime.
 </Section>
 </Segment>
 
+<Section type="about">
+Import the `realtime` SDK.
+
+```js title="src/authorizer.ts"
+import { realtime } from "sst/aws/realtime";
+```
+</Section>
+
+---
+
 ### authorizer
 <Segment>
 <Section type="signature">
 ```ts
-authorizer(input)
+realtime.authorizer(input)
 ```
 </Section>
 
@@ -245,7 +255,7 @@ Creates an authorization handler for the `Realtime` component. It validates
 the token and grants permissions for the topics the client can subscribe and publish to.
 
 ```js title="src/authorizer.ts" "realtime.authorizer"
-import { Resource } from "sst/aws";
+import { Resource } from "sst";
 import { realtime } from "sst/aws/realtime";
 
 export const handler = realtime.authorizer(async (token) => {

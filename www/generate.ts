@@ -354,7 +354,7 @@ async function generateGlobalConfigDoc(module: TypeDoc.DeclarationReflection) {
       renderSourceMessage("platform/src/global.d.ts"),
       renderImports(outputFilePath),
       renderBodyBegin(),
-      renderAbout(module),
+      renderAbout(useModuleComment(module)),
       renderVariables(module),
       renderFunctions(module, useModuleFunctions(module), {
         title: "Functions",
@@ -377,7 +377,7 @@ async function generateConfigDoc(module: TypeDoc.DeclarationReflection) {
       renderSourceMessage(sourceFile),
       renderImports(outputFilePath),
       renderBodyBegin(),
-      renderAbout(module),
+      renderAbout(useModuleComment(module)),
       renderInterfacesAtH2Level(module, { filter: (c) => c.name === "Config" }),
       renderInterfacesAtH2Level(module, { filter: (c) => c.name !== "Config" }),
       renderBodyEnd(),
@@ -408,7 +408,7 @@ async function generateDnsDoc(module: TypeDoc.DeclarationReflection) {
       renderSourceMessage(sourceFile),
       renderImports(outputFilePath),
       renderBodyBegin(),
-      renderAbout(module),
+      renderAbout(useModuleComment(module)),
       renderFunctions(module, useModuleFunctions(module), {
         title: "Functions",
       }),
@@ -448,7 +448,7 @@ async function generateComponentDoc(
       renderSourceMessage(sourceFile),
       renderImports(outputFilePath),
       renderBodyBegin(),
-      renderAbout(component),
+      renderAbout(useClassComment(component)),
       renderConstructor(component),
       renderInterfacesAtH2Level(component, {
         filter: (c) => c.name === `${className}Args`,
@@ -458,7 +458,16 @@ async function generateComponentDoc(
         const lines = [
           ...renderLinks(component),
           ...renderCloudflareBindings(component),
-          ...(sdk ? renderFunctions(sdk, useModuleFunctions(sdk)) : []),
+          ...(sdk && sdk.name === "realtime"
+            ? renderAbout(useModuleComment(sdk))
+            : []),
+          ...(sdk
+            ? renderFunctions(
+                sdk,
+                useModuleFunctions(sdk),
+                sdk.name === "realtime" ? { prefix: sdk.name } : undefined
+              )
+            : []),
           ...(sdk ? renderInterfacesAtH3Level(sdk) : []),
         ];
         return lines.length
@@ -951,7 +960,7 @@ function renderVariables(module: TypeDoc.DeclarationReflection) {
 function renderFunctions(
   module: TypeDoc.DeclarationReflection,
   fns: TypeDoc.DeclarationReflection[],
-  opts?: { title?: string }
+  opts?: { title?: string; prefix?: string }
 ) {
   const lines: string[] = [];
 
@@ -967,7 +976,8 @@ function renderFunctions(
     lines.push(
       `<Section type="signature">`,
       "```ts",
-      renderSignature(f.signatures![0]),
+      (opts?.prefix ? `${opts.prefix}.` : "") +
+        renderSignature(f.signatures![0]),
       "```",
       `</Section>`
     );
@@ -1016,12 +1026,9 @@ function renderFunctions(
   return lines;
 }
 
-function renderAbout(module: TypeDoc.DeclarationReflection) {
+function renderAbout(comment: TypeDoc.Comment) {
   console.debug(` - about`);
   const lines = [];
-  const comment = isModuleComponent(module)
-    ? useClassComment(module)
-    : useModuleComment(module);
 
   lines.push(``, `<Section type="about">`);
 
