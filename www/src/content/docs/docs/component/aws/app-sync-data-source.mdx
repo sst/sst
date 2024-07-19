@@ -182,15 +182,7 @@ The URL for the HTTP endpoint.
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol"> | </code>[<code class="type">FunctionArgs</code>](/docs/component/aws/function/#functionargs)<code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
-The ARN for the Lambda function.
-
-```js
-{
-  lambda: "arn:aws:lambda:us-east-1:123456789012:function:my-function"
-}
-```
-
-Or the handler.
+The handler for the Lambda function.
 
 ```js
 {
@@ -220,7 +212,7 @@ The name of the data source.
 
 ```js
 {
-  lambda: "arn:aws:lambda:us-east-1:123456789012:function:my-function"
+  name: "lambdaDS"
 }
 ```
 </Segment>

@@ -357,9 +357,7 @@ export class Postgres extends Component implements Link.Linkable {
   }
 }
 
-function getSSTLink(
-  cluster: rds.Cluster | Output<rds.GetClusterResult>,
-): Link.Definition {
+function getSSTLink(cluster: rds.Cluster | Output<rds.GetClusterResult>) {
   return {
     properties: {
       clusterArn: cluster.arn,
