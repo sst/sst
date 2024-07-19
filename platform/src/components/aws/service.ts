@@ -569,7 +569,7 @@ export class Service extends Component implements Link.Linkable {
           desiredCount: scaling.min,
           launchType: "FARGATE",
           networkConfiguration: {
-            assignPublicIp: true,
+            assignPublicIp: false,
             subnets: vpc.privateSubnets,
             securityGroups: vpc.securityGroups,
           },
