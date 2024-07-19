@@ -206,6 +206,9 @@ func (u *UI) Event(unknown interface{}) {
 			return
 		}
 
+	case *apitype.ResOpFailedEvent:
+		break
+
 	case *apitype.ResOutputsEvent:
 		if evt.Metadata.Type == "pulumi:pulumi:Stack" {
 			return
@@ -220,6 +223,14 @@ func (u *UI) Event(unknown interface{}) {
 				evt.Metadata.URN,
 			)
 			return
+		}
+		if evt.Metadata.Op == apitype.OpImport {
+			u.printProgress(
+				TEXT_SUCCESS,
+				"Imported",
+				duration,
+				evt.Metadata.URN,
+			)
 		}
 		if evt.Metadata.Op == apitype.OpCreate {
 			u.printProgress(
@@ -362,6 +373,19 @@ func (u *UI) Event(unknown interface{}) {
 					u.println(TEXT_DANGER_BOLD.Render("   " + u.formatURN(status.URN)))
 				}
 				u.println(TEXT_NORMAL.Render("   " + strings.Join(parseError(status.Message), "\n   ")))
+			}
+		}
+
+		if len(evt.ImportDiffs) > 0 {
+			u.blank()
+			u.println(TEXT_NORMAL_BOLD.Render("   Import Errors"))
+
+			for _, diff := range evt.ImportDiffs {
+				u.print(TEXT_NORMAL.Render("   " + u.formatURN(diff.URN)))
+				u.print(TEXT_NORMAL_BOLD.Render(" " + diff.Input))
+				u.print(TEXT_NORMAL.Render(" should be "))
+				u.print(TEXT_INFO.Render(fmt.Sprintf("%v ", diff.Old)))
+				u.println(TEXT_DIM.Render(fmt.Sprintf("(was %v)", diff.New)))
 			}
 		}
 

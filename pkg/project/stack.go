@@ -104,16 +104,24 @@ type Warp struct {
 type Warps map[string]Warp
 
 type CompleteEvent struct {
-	Links     Links
-	Warps     Warps
-	Receivers Receivers
-	Devs      Devs
-	Outputs   map[string]interface{}
-	Hints     map[string]string
-	Errors    []Error
-	Finished  bool
-	Old       bool
-	Resources []apitype.ResourceV3
+	Links       Links
+	Warps       Warps
+	Receivers   Receivers
+	Devs        Devs
+	Outputs     map[string]interface{}
+	Hints       map[string]string
+	Errors      []Error
+	Finished    bool
+	Old         bool
+	Resources   []apitype.ResourceV3
+	ImportDiffs []ImportDiff
+}
+
+type ImportDiff struct {
+	URN   string
+	Input string
+	Old   interface{}
+	New   interface{}
 }
 
 type StackCommandEvent struct {
@@ -343,6 +351,7 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 
 	errors := []Error{}
 	finished := false
+	importDiffs := []ImportDiff{}
 
 	go func() {
 		for {
@@ -365,6 +374,21 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 						Message: event.DiagnosticEvent.Message,
 						URN:     event.DiagnosticEvent.URN,
 					})
+				}
+
+				if event.ResOpFailedEvent != nil {
+					if event.ResOpFailedEvent.Metadata.Op == apitype.OpImport {
+						for _, name := range event.ResOpFailedEvent.Metadata.Diffs {
+							old := event.ResOpFailedEvent.Metadata.Old.Inputs[name]
+							next := event.ResOpFailedEvent.Metadata.New.Inputs[name]
+							importDiffs = append(importDiffs, ImportDiff{
+								URN:   event.ResOpFailedEvent.Metadata.URN,
+								Input: name,
+								Old:   old,
+								New:   next,
+							})
+						}
+					}
 				}
 
 				input.OnEvent(&StackEvent{EngineEvent: event})
@@ -390,6 +414,7 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 		}
 		complete.Finished = finished
 		complete.Errors = errors
+		complete.ImportDiffs = importDiffs
 		defer input.OnEvent(&StackEvent{CompleteEvent: complete})
 
 		cloudflareBindings := map[string]string{}
@@ -811,15 +836,16 @@ func getCompletedEvent(ctx context.Context, stack auto.Stack) (*CompleteEvent, e
 	var deployment apitype.DeploymentV3
 	json.Unmarshal(exported.Deployment, &deployment)
 	complete := &CompleteEvent{
-		Links:     Links{},
-		Receivers: Receivers{},
-		Devs:      Devs{},
-		Warps:     Warps{},
-		Hints:     map[string]string{},
-		Outputs:   map[string]interface{}{},
-		Errors:    []Error{},
-		Finished:  false,
-		Resources: []apitype.ResourceV3{},
+		Links:       Links{},
+		ImportDiffs: []ImportDiff{},
+		Receivers:   Receivers{},
+		Devs:        Devs{},
+		Warps:       Warps{},
+		Hints:       map[string]string{},
+		Outputs:     map[string]interface{}{},
+		Errors:      []Error{},
+		Finished:    false,
+		Resources:   []apitype.ResourceV3{},
 	}
 	if len(deployment.Resources) == 0 {
 		return complete, nil

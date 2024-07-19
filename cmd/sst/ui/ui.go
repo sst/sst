@@ -193,6 +193,14 @@ func (u *UI) StackEvent(evt *project.StackEvent) {
 			)
 			return
 		}
+		if evt.ResOutputsEvent.Metadata.Op == apitype.OpImport {
+			u.printProgress(
+				TEXT_SUCCESS,
+				"Imported",
+				duration,
+				evt.ResOutputsEvent.Metadata.URN,
+			)
+		}
 		if evt.ResOutputsEvent.Metadata.Op == apitype.OpCreate {
 			u.printProgress(
 				TEXT_SUCCESS,
@@ -336,6 +344,19 @@ func (u *UI) StackEvent(evt *project.StackEvent) {
 					u.println(TEXT_DANGER_BOLD.Render("   " + u.formatURN(status.URN)))
 				}
 				u.println(TEXT_NORMAL.Render("   " + strings.Join(parseError(status.Message), "\n   ")))
+			}
+		}
+
+		if len(evt.CompleteEvent.ImportDiffs) > 0 {
+			u.blank()
+			u.println(TEXT_NORMAL_BOLD.Render("   Import Errors"))
+
+			for _, diff := range evt.CompleteEvent.ImportDiffs {
+				u.print(TEXT_NORMAL.Render("   " + u.formatURN(diff.URN)))
+				u.print(TEXT_NORMAL_BOLD.Render(" " + diff.Input))
+				u.print(TEXT_NORMAL.Render(" should be "))
+				u.print(TEXT_INFO.Render(fmt.Sprintf("%v ", diff.Old)))
+				u.println(TEXT_DIM.Render(fmt.Sprintf("(was %v)", diff.New)))
 			}
 		}
 

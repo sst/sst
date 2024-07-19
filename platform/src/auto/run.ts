@@ -52,6 +52,13 @@ function addTransformationToRetainResourcesOnDelete() {
     }
     return undefined;
   });
+  runtime.registerStackTransformation((args) => {
+    if ("import" in args.opts && args.opts.import) {
+      if (!args.opts.ignoreChanges) args.opts.ignoreChanges = [];
+      args.opts.ignoreChanges.push("tags");
+    }
+    return args;
+  });
 }
 
 function addTransformationToEnsureUniqueComponentNames() {
