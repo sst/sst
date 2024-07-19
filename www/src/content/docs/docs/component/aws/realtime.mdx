@@ -211,9 +211,12 @@ The IoT authorizer resource.
 
 ## SDK
 
-The following are accessible through the [SDK](/docs/reference/sdk/) at runtime.
+Use the [SDK](/docs/reference/sdk/) in your runtime to interact with your infrastructure.
+
+---
 
 ### Links
+This is accessible through the `Resource` object in the [SDK](/docs/reference/sdk/#links).
 <Segment>
 <Section type="parameters">
 - <p><code class="key">authorizer</code> <code class="primitive">string</code></p>
@@ -226,7 +229,7 @@ The following are accessible through the [SDK](/docs/reference/sdk/) at runtime.
 </Segment>
 
 <Section type="about">
-Import the `realtime` SDK.
+The `realtime` client SDK is available through the following.
 
 ```js title="src/authorizer.ts"
 import { realtime } from "sst/aws/realtime";
@@ -255,17 +258,14 @@ Creates an authorization handler for the `Realtime` component. It validates
 the token and grants permissions for the topics the client can subscribe and publish to.
 
 ```js title="src/authorizer.ts" "realtime.authorizer"
-import { Resource } from "sst";
-import { realtime } from "sst/aws/realtime";
-
 export const handler = realtime.authorizer(async (token) => {
   // Validate the token
   console.log(token);
 
   // Return the topics to subscribe and publish
   return {
-    subscribe: [`${Resource.App.name}/${Resource.App.stage}/chat/room1`],
-    publish: [`${Resource.App.name}/${Resource.App.stage}/chat/room1`],
+    subscribe: ["*"],
+    publish: ["*"],
   };
 });
 ```

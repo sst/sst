@@ -1,7 +1,7 @@
 import { Context, IoTCustomAuthorizerEvent } from "aws-lambda";
 
 /**
- * Import the `realtime` SDK.
+ * The `realtime` client SDK is available through the following.
  *
  * @example
  * ```js title="src/authorizer.ts"
@@ -53,17 +53,14 @@ export module realtime {
    *
    * @example
    * ```js title="src/authorizer.ts" "realtime.authorizer"
-   * import { Resource } from "sst";
-   * import { realtime } from "sst/aws/realtime";
-   *
    * export const handler = realtime.authorizer(async (token) => {
    *   // Validate the token
    *   console.log(token);
    *
    *   // Return the topics to subscribe and publish
    *   return {
-   *     subscribe: [`${Resource.App.name}/${Resource.App.stage}/chat/room1`],
-   *     publish: [`${Resource.App.name}/${Resource.App.stage}/chat/room1`],
+   *     subscribe: ["*"],
+   *     publish: ["*"],
    *   };
    * });
    * ```
@@ -92,37 +89,37 @@ export module realtime {
               },
               ...(ret.subscribe
                 ? [
-                    {
-                      Action: "iot:Receive",
-                      Effect: "Allow",
-                      Resource: ret.subscribe.map(
-                        (t) => `arn:aws:iot:${region}:${accountId}:topic/${t}`
-                      ),
-                    },
-                  ]
+                  {
+                    Action: "iot:Receive",
+                    Effect: "Allow",
+                    Resource: ret.subscribe.map(
+                      (t) => `arn:aws:iot:${region}:${accountId}:topic/${t}`
+                    ),
+                  },
+                ]
                 : []),
               ...(ret.subscribe
                 ? [
-                    {
-                      Action: "iot:Subscribe",
-                      Effect: "Allow",
-                      Resource: ret.subscribe.map(
-                        (t) =>
-                          `arn:aws:iot:${region}:${accountId}:topicfilter/${t}`
-                      ),
-                    },
-                  ]
+                  {
+                    Action: "iot:Subscribe",
+                    Effect: "Allow",
+                    Resource: ret.subscribe.map(
+                      (t) =>
+                        `arn:aws:iot:${region}:${accountId}:topicfilter/${t}`
+                    ),
+                  },
+                ]
                 : []),
               ...(ret.publish
                 ? [
-                    {
-                      Action: "iot:Publish",
-                      Effect: "Allow",
-                      Resource: ret.publish.map(
-                        (t) => `arn:aws:iot:${region}:${accountId}:topic/${t}`
-                      ),
-                    },
-                  ]
+                  {
+                    Action: "iot:Publish",
+                    Effect: "Allow",
+                    Resource: ret.publish.map(
+                      (t) => `arn:aws:iot:${region}:${accountId}:topic/${t}`
+                    ),
+                  },
+                ]
                 : []),
             ],
           },
