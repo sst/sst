@@ -225,7 +225,7 @@ func (p *Project) generateProviderLock() error {
 			version = "latest"
 		}
 		wg.Go(func() error {
-			for _, prefix := range []string{"@sst-provider/", "@pulumi/", ""} {
+			for _, prefix := range []string{"@sst-provider/", "@pulumi/", "@pulumiverse/", "@", ""} {
 				pkg, err := npm.Get(prefix+n, version.(string))
 				if err != nil {
 					continue
