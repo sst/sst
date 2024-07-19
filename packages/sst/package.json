@@ -79,7 +79,7 @@
     "dotenv": "^16.0.3",
     "esbuild": "0.18.13",
     "express": "^4.18.2",
-    "fast-jwt": "^3.1.1",
+    "fast-jwt": "^4.0.1",
     "get-port": "^6.1.2",
     "glob": "^10.0.0",
     "graphql": "*",
