@@ -274,7 +274,7 @@ export interface Target {
    * :::
    *
    * If a runner with the given config has been been previously created,
-   * it'll be resused. The Console will also automatically remove runners that
+   * it'll be reused. The Console will also automatically remove runners that
    * have not been used for more than 7 days.
    */
   runner?: {
