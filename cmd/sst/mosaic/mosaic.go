@@ -119,10 +119,11 @@ func CmdMosaic(c *cli.Cli) error {
 		"SST_STAGE=" + p.App().Stage,
 	}
 	multi.AddProcess("deploy", []string{currentExecutable, "mosaic-deploy"}, "⑆", "SST", "", false, multiEnv...)
-	go func() {
+	wg.Go(func() error {
 		defer c.Cancel()
 		multi.Start()
-	}()
+		return nil
+	})
 
 	wg.Go(func() error {
 		evts := bus.Subscribe(&project.CompleteEvent{})

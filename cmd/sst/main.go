@@ -267,7 +267,7 @@ var root = &cli.Command{
 					Type: "bool",
 					Description: cli.Description{
 						Short: "Skip interactive confirmation",
-						Long: "Skip interactive confirmation for detected framework.",
+						Long:  "Skip interactive confirmation for detected framework.",
 					},
 				},
 			},
