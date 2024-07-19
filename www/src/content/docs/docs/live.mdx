@@ -86,7 +86,7 @@ There are a couple of quirks with this setup that are worth noting.
 
 ### Live mode
 
-When a function is running live it sets the `SST_LIVE` environment variable to `true`. So in your Node.js functions you can acceess it using `process.env.SST_LIVE`.
+When a function is running live it sets the `SST_LIVE` environment variable to `true`. So in your Node.js functions you can access it using `process.env.SST_LIVE`.
 
 ```js title="src/lambda.js" "process.env.SST_LIVE"
 export async function main(event) {
