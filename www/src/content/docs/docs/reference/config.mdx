@@ -117,7 +117,7 @@ that'll be used to run the build.
 console: {
   autodeploy: {
     target(event) {
-      if (event.type === "pushed" && event.branch === "main") {
+      if (event.type === "branch" && event.branch === "main" && event.action === "pushed") {
         return {
           stage: "production",
           runner: { engine: "codebuild", compute: "large" }
@@ -189,7 +189,7 @@ For example, to auto-deploy to the `production` stage when you git push to the
 
 ```ts
 target(event) {
-  if (event.type === "pushed" && event.branch === "main") {
+  if (event.type === "branch" && event.branch === "main" && event.action === "pushed") {
     return { stage: "production" };
   }
 }
@@ -200,8 +200,8 @@ example, to skip any deploys to the `staging` stage.
 
 ```ts {2}
 target(event) {
-  if (event.branch === "staging") return;
-  if (event.type === "pushed" && event.branch === "main") {
+  if (event.type === "branch" && event.branch === "staging") return;
+  if (event.type === "branch" && event.branch === "main" && event.action === "pushed") {
     return { stage: "production" };
   }
 }
@@ -221,7 +221,7 @@ For example, to use a larger machine for the `production` stage.
 
 ```ts
 target(event) {
-  if (event.type === "pushed" && event.branch === "main") {
+  if (event.type === "branch" && event.branch === "main" && event.action === "pushed") {
     return {
       stage: "production"
       runner: {

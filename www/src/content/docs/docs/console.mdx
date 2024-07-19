@@ -447,7 +447,7 @@ For example, if you want git pushes to the `main` branch auto-deploy the `produc
 console: {
   autodeploy: {
     target(event) {
-      if (event.type === "pushed" && event.branch === "main") {
+      if (event.type === "branch" && event.branch === "main" && event.action === "pushed") {
         return {
           stage: "production",
           runner: { engine: "codebuild", compute: "large" }

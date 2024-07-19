@@ -642,7 +642,11 @@ export interface Config {
      * console: {
      *   autodeploy: {
      *     target(event) {
-     *       if (event.type === "pushed" && event.branch === "main") {
+     *       if (
+     *         event.type === "branch" &&
+     *         event.branch === "main" &&
+     *         event.action === "pushed"
+     *        ) {
      *         return {
      *           stage: "production",
      *           runner: { engine: "codebuild", compute: "large" }
@@ -700,7 +704,7 @@ export interface Config {
        *
        * ```ts
        * target(event) {
-       *   if (event.type === "pushed" && event.branch === "main") {
+       *   if (event.type === "branch" && event.branch === "main" && event.action === "pushed") {
        *     return { stage: "production" };
        *   }
        * }
@@ -711,8 +715,8 @@ export interface Config {
        *
        * ```ts {2}
        * target(event) {
-       *   if (event.branch === "staging") return;
-       *   if (event.type === "pushed" && event.branch === "main") {
+       *   if (event.type === "branch" && event.branch === "staging") return;
+       *   if (event.type === "branch" && event.branch === "main" && event.action === "pushed") {
        *     return { stage: "production" };
        *   }
        * }
@@ -732,7 +736,7 @@ export interface Config {
        *
        * ```ts
        * target(event) {
-       *   if (event.type === "pushed" && event.branch === "main") {
+       *   if (event.type === "branch" && event.branch === "main" && event.action === "pushed") {
        *     return {
        *       stage: "production"
        *       runner: {
