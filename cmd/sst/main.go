@@ -1169,69 +1169,6 @@ var root = &cli.Command{
 			},
 		},
 		{
-			Name:   "import-unstable",
-			Hidden: true,
-			Description: cli.Description{
-				Short: "(unstable)Import existing resource",
-			},
-			Args: []cli.Argument{
-				{
-					Name:     "type",
-					Required: true,
-					Description: cli.Description{
-						Short: "The type of the resource",
-					},
-				},
-				{
-					Name:     "name",
-					Required: true,
-					Description: cli.Description{
-						Short: "The name of the resource",
-					},
-				},
-				{
-					Name:     "id",
-					Required: true,
-					Description: cli.Description{
-						Short: "The id of the resource",
-					},
-				},
-			},
-			Flags: []cli.Flag{
-				{
-					Type: "string",
-					Name: "parent",
-					Description: cli.Description{
-						Short: "The parent resource",
-					},
-				},
-			},
-			Run: func(c *cli.Cli) error {
-				resourceType := c.Positional(0)
-				name := c.Positional(1)
-				id := c.Positional(2)
-				parent := c.String("parent")
-
-				p, err := c.InitProject()
-				if err != nil {
-					return err
-				}
-				defer p.Cleanup()
-
-				err = p.Stack.Import(c.Context, &project.ImportOptions{
-					Type:   resourceType,
-					Name:   name,
-					ID:     id,
-					Parent: parent,
-				})
-				if err != nil {
-					return err
-				}
-
-				return nil
-			},
-		},
-		{
 			Name:   "server",
 			Hidden: true,
 			Run: func(c *cli.Cli) error {

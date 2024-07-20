@@ -9,15 +9,6 @@ export default $config({
     };
   },
   async run() {
-    const bucket = new aws.s3.BucketV2(
-      "MyBucket",
-      {
-        bucket: "aws-import-my-bucket",
-      },
-      {
-        retainOnDelete: true,
-        import: "aws-import-my-bucket",
-      },
-    );
+    const bucket = aws.s3.BucketV2.get("MyBucket", "aws-import-my-bucket");
   },
 });
