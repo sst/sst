@@ -27,6 +27,7 @@ import (
 type AwsProvider struct {
 	config      aws.Config
 	bootstrap   *awsBootstrapData
+	profile     string
 	credentials sync.Once
 }
 
@@ -35,12 +36,14 @@ func (a *AwsProvider) Env() (map[string]string, error) {
 	if err != nil {
 		return nil, err
 	}
-
 	env := map[string]string{}
 	env["SST_AWS_ACCESS_KEY_ID"] = creds.AccessKeyID
 	env["SST_AWS_SECRET_ACCESS_KEY"] = creds.SecretAccessKey
 	env["SST_AWS_SESSION_TOKEN"] = creds.SessionToken
 	env["SST_AWS_REGION"] = a.config.Region
+	if a.profile != "" {
+		env["AWS_PROFILE"] = a.profile
+	}
 	return env, nil
 }
 
@@ -92,6 +95,13 @@ func (a *AwsProvider) Init(app string, stage string, args map[string]interface{}
 	}
 	slog.Info("credentials found")
 	a.config = cfg
+	// if profile is set in args it gets saved to the provider and always used for removing resources
+	// this isn't ideal because people may use different profile names for the same stage
+	// so we wipe it from args and put it in env which is not saved to the state
+	if profile, ok := args["profile"].(string); ok && profile != "" {
+		a.profile = profile
+		delete(args, "profile")
+	}
 	defaultTags, ok := args["defaultTags"].(map[string]interface{})
 	if !ok {
 		defaultTags = map[string]interface{}{}

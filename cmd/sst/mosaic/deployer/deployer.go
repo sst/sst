@@ -33,7 +33,7 @@ func Start(ctx context.Context, p *project.Project) error {
 				}
 			case *watcher.FileChangedEvent, *DeployRequestedEvent:
 				if evt, ok := evt.(*watcher.FileChangedEvent); !ok || watchedFiles[evt.Path] {
-					p.Stack.Run(ctx, &project.StackInput{
+					p.Run(ctx, &project.StackInput{
 						Command: "deploy",
 						Dev:     true,
 						OnEvent: func(event *project.StackEvent) {

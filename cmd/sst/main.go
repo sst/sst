@@ -423,7 +423,7 @@ var root = &cli.Command{
 				if c.String("target") != "" {
 					target = strings.Split(c.String("target"), ",")
 				}
-				err = p.Stack.Run(c.Context, &project.StackInput{
+				err = p.Run(c.Context, &project.StackInput{
 					Command: "deploy",
 					OnEvent: ui.StackEvent,
 					Target:  target,
@@ -1039,7 +1039,7 @@ var root = &cli.Command{
 				if c.String("target") != "" {
 					target = strings.Split(c.String("target"), ",")
 				}
-				err = p.Stack.Run(c.Context, &project.StackInput{
+				err = p.Run(c.Context, &project.StackInput{
 					Command: "remove",
 					OnEvent: ui.StackEvent,
 					Target:  target,
@@ -1069,7 +1069,7 @@ var root = &cli.Command{
 				}
 				defer p.Cleanup()
 
-				err = p.Stack.Cancel()
+				err = p.Cancel()
 				if err != nil {
 					return err
 				}
@@ -1253,7 +1253,7 @@ var root = &cli.Command{
 				if c.String("target") != "" {
 					target = strings.Split(c.String("target"), ",")
 				}
-				err = p.Stack.Run(c.Context, &project.StackInput{
+				err = p.Run(c.Context, &project.StackInput{
 					Command: "refresh",
 					OnEvent: ui.StackEvent,
 					Target:  target,
@@ -1287,17 +1287,17 @@ var root = &cli.Command{
 						parsed.Version = version
 						parsed.UpdateID = cuid2.Generate()
 						parsed.TimeStarted = time.Now().UTC().Format(time.RFC3339)
-						err = p.Stack.Lock(parsed.UpdateID, "edit")
+						err = p.Lock(parsed.UpdateID, "edit")
 						if err != nil {
 							return util.NewReadableError(err, "Could not lock state")
 						}
-						defer p.Stack.Unlock()
+						defer p.Unlock()
 						defer func() {
 							parsed.TimeCompleted = time.Now().UTC().Format(time.RFC3339)
 							provider.PutSummary(p.Backend(), p.App().Name, p.App().Stage, parsed.UpdateID, parsed)
 						}()
 
-						path, err := p.Stack.PullState()
+						path, err := p.PullState()
 						if err != nil {
 							return util.NewReadableError(err, "Could not pull state")
 						}
@@ -1316,7 +1316,7 @@ var root = &cli.Command{
 							return util.NewReadableError(err, "Editor exited with error")
 						}
 
-						return p.Stack.PushState(parsed.UpdateID)
+						return p.PushState(parsed.UpdateID)
 					},
 				},
 			},

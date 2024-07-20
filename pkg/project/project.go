@@ -42,8 +42,6 @@ type Project struct {
 	home            provider.Home
 	env             map[string]string
 	loadedProviders map[string]provider.Provider
-
-	Stack *stack
 }
 
 func Discover() (string, error) {
@@ -98,9 +96,6 @@ func New(input *ProjectConfig) (*Project, error) {
 		root:    rootPath,
 		config:  input.Config,
 		env:     map[string]string{},
-	}
-	proj.Stack = &stack{
-		project: proj,
 	}
 	tmp := proj.PathWorkingDir()
 

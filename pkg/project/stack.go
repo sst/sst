@@ -27,10 +27,6 @@ import (
 	"github.com/sst/ion/pkg/project/provider"
 )
 
-type stack struct {
-	project *Project
-}
-
 type StackEvent struct {
 	events.EngineEvent
 	ConcurrentUpdateEvent *ConcurrentUpdateEvent
@@ -138,24 +134,24 @@ var ErrStackRunFailed = fmt.Errorf("stack run had errors")
 var ErrStageNotFound = fmt.Errorf("stage not found")
 var ErrPassphraseInvalid = fmt.Errorf("passphrase invalid")
 
-func (s *stack) Run(ctx context.Context, input *StackInput) error {
+func (p *Project) Run(ctx context.Context, input *StackInput) error {
 	slog.Info("running stack command", "cmd", input.Command)
 
 	updateID := cuid2.Generate()
-	err := s.Lock(updateID, input.Command)
+	err := p.Lock(updateID, input.Command)
 	if err != nil {
 		if err == provider.ErrLockExists {
 			input.OnEvent(&StackEvent{ConcurrentUpdateEvent: &ConcurrentUpdateEvent{}})
 		}
 		return err
 	}
-	defer s.Unlock()
+	defer p.Unlock()
 
 	input.OnEvent(&StackEvent{StackCommandEvent: &StackCommandEvent{
 		Command: input.Command,
 	}})
 
-	_, err = s.PullState()
+	_, err = p.PullState()
 	if err != nil {
 		if errors.Is(err, provider.ErrStateNotFound) {
 			if input.Command != "deploy" {
@@ -165,20 +161,20 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 			return err
 		}
 	}
-	defer s.PushState(updateID)
+	defer p.PushState(updateID)
 
-	passphrase, err := provider.Passphrase(s.project.home, s.project.app.Name, s.project.app.Stage)
+	passphrase, err := provider.Passphrase(p.home, p.app.Name, p.app.Stage)
 	if err != nil {
 		return err
 	}
 
-	secrets, err := provider.GetSecrets(s.project.home, s.project.app.Name, s.project.app.Stage)
+	secrets, err := provider.GetSecrets(p.home, p.app.Name, p.app.Stage)
 	if err != nil {
 		return ErrPassphraseInvalid
 	}
 
 	env := map[string]string{}
-	for key, value := range s.project.Env() {
+	for key, value := range p.Env() {
 		env[key] = value
 	}
 	for _, value := range os.Environ() {
@@ -198,34 +194,34 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 		"dev":     input.Dev,
 		"paths": map[string]string{
 			"home":     global.ConfigDir(),
-			"root":     s.project.PathRoot(),
-			"work":     s.project.PathWorkingDir(),
-			"platform": s.project.PathPlatformDir(),
+			"root":     p.PathRoot(),
+			"work":     p.PathWorkingDir(),
+			"platform": p.PathPlatformDir(),
 		},
 	}
 	cliBytes, err := json.Marshal(cli)
 	if err != nil {
 		return err
 	}
-	appBytes, err := json.Marshal(s.project.app)
+	appBytes, err := json.Marshal(p.app)
 	if err != nil {
 		return err
 	}
 
 	providerShim := []string{}
-	for _, entry := range s.project.lock {
+	for _, entry := range p.lock {
 		providerShim = append(providerShim, fmt.Sprintf("import * as %s from '%s'", entry.Alias, entry.Package))
 		providerShim = append(providerShim, fmt.Sprintf("globalThis.%s = %s", entry.Alias, entry.Alias))
 	}
 
 	buildResult, err := js.Build(js.EvalOptions{
-		Dir: s.project.PathRoot(),
+		Dir: p.PathRoot(),
 		Define: map[string]string{
 			"$app": string(appBytes),
 			"$cli": string(cliBytes),
 			"$dev": fmt.Sprintf("%v", input.Dev),
 		},
-		Inject: []string{filepath.Join(s.project.PathWorkingDir(), "platform/src/shim/run.js")},
+		Inject: []string{filepath.Join(p.PathWorkingDir(), "platform/src/shim/run.js")},
 		Code: fmt.Sprintf(`
       import { run } from "%v";
       %v
@@ -233,9 +229,9 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
       const result = await run(mod.run)
       export default result
     `,
-			filepath.Join(s.project.PathWorkingDir(), "platform/src/auto/run.ts"),
+			filepath.Join(p.PathWorkingDir(), "platform/src/auto/run.ts"),
 			strings.Join(providerShim, "\n"),
-			s.project.PathRoot(),
+			p.PathRoot(),
 		),
 	})
 	if err != nil {
@@ -276,13 +272,13 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 	}
 	ws, err := auto.NewLocalWorkspace(ctx,
 		auto.Pulumi(pulumi),
-		auto.WorkDir(s.project.PathWorkingDir()),
+		auto.WorkDir(p.PathWorkingDir()),
 		auto.PulumiHome(global.ConfigDir()),
 		auto.Project(workspace.Project{
-			Name:    tokens.PackageName(s.project.app.Name),
+			Name:    tokens.PackageName(p.app.Name),
 			Runtime: workspace.NewProjectRuntimeInfo("nodejs", nil),
 			Backend: &workspace.ProjectBackend{
-				URL: fmt.Sprintf("file://%v", s.project.PathWorkingDir()),
+				URL: fmt.Sprintf("file://%v", p.PathWorkingDir()),
 			},
 			Main: outfile,
 		}),
@@ -296,7 +292,7 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 	slog.Info("built workspace")
 
 	stack, err := auto.UpsertStack(ctx,
-		s.project.app.Stage,
+		p.app.Stage,
 		ws,
 	)
 	if err != nil {
@@ -317,7 +313,7 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 	}()
 
 	config := auto.ConfigMap{}
-	for provider, args := range s.project.app.Providers {
+	for provider, args := range p.app.Providers {
 		for key, value := range args.(map[string]interface{}) {
 			switch v := value.(type) {
 			case map[string]interface{}:
@@ -342,7 +338,7 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 	slog.Info("built config")
 
 	stream := make(chan events.EngineEvent)
-	eventlog, err := os.Create(filepath.Join(s.project.PathWorkingDir(), "event.log"))
+	eventlog, err := os.Create(filepath.Join(p.PathWorkingDir(), "event.log"))
 	if err != nil {
 		return err
 	}
@@ -446,11 +442,11 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 		}
 
 		typesFileName := "sst-env.d.ts"
-		typesFilePath := filepath.Join(s.project.PathRoot(), typesFileName)
+		typesFilePath := filepath.Join(p.PathRoot(), typesFileName)
 		typesFile, _ := os.Create(typesFilePath)
 		defer typesFile.Close()
 
-		oldTypesFilePath := filepath.Join(s.project.PathWorkingDir(), "types.generated.ts")
+		oldTypesFilePath := filepath.Join(p.PathWorkingDir(), "types.generated.ts")
 		oldTypesFile, _ := os.Create(oldTypesFilePath)
 		defer oldTypesFile.Close()
 
@@ -465,7 +461,7 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 		multi.Write([]byte("export {}\n"))
 
 		for _, receiver := range complete.Receivers {
-			envPathHint, err := fs.FindUp(filepath.Join(s.project.PathRoot(), receiver.Directory), "tsconfig.json")
+			envPathHint, err := fs.FindUp(filepath.Join(p.PathRoot(), receiver.Directory), "tsconfig.json")
 			if err != nil {
 				continue
 			}
@@ -505,14 +501,14 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 			file.WriteString("export {}\n")
 		}
 
-		provider.PutLinks(s.project.home, s.project.app.Name, s.project.app.Stage, complete.Links)
+		provider.PutLinks(p.home, p.app.Name, p.app.Stage, complete.Links)
 	}()
 
 	slog.Info("running stack command", "cmd", input.Command)
 	var summary auto.UpdateSummary
 	defer func() {
 		var parsed provider.Summary
-		parsed.Version = s.project.Version()
+		parsed.Version = p.Version()
 		parsed.UpdateID = updateID
 		parsed.TimeStarted = summary.StartTime
 		parsed.TimeCompleted = time.Now().Format(time.RFC3339)
@@ -540,7 +536,7 @@ func (s *stack) Run(ctx context.Context, input *StackInput) error {
 			})
 		}
 
-		provider.PutSummary(s.project.home, s.project.app.Name, s.project.app.Stage, updateID, parsed)
+		provider.PutSummary(p.home, p.app.Name, p.app.Stage, updateID, parsed)
 	}()
 
 	switch input.Command {
@@ -593,12 +589,12 @@ type ImportOptions struct {
 	Parent string
 }
 
-func (s *stack) Lock(updateID string, command string) error {
-	return provider.Lock(s.project.home, updateID, command, s.project.app.Name, s.project.app.Stage)
+func (s *Project) Lock(updateID string, command string) error {
+	return provider.Lock(s.home, updateID, command, s.app.Name, s.app.Stage)
 }
 
-func (s *stack) Unlock() error {
-	dir := s.project.PathWorkingDir()
+func (s *Project) Unlock() error {
+	dir := s.PathWorkingDir()
 	files, err := os.ReadDir(dir)
 	if err != nil {
 		return err
@@ -613,25 +609,25 @@ func (s *stack) Unlock() error {
 		}
 	}
 
-	return provider.Unlock(s.project.home, s.project.app.Name, s.project.app.Stage)
+	return provider.Unlock(s.home, s.app.Name, s.app.Stage)
 }
 
-func (s *stack) PullState() (string, error) {
-	pulumiDir := filepath.Join(s.project.PathWorkingDir(), ".pulumi")
+func (s *Project) PullState() (string, error) {
+	pulumiDir := filepath.Join(s.PathWorkingDir(), ".pulumi")
 	err := os.RemoveAll(pulumiDir)
 	if err != nil {
 		return "", err
 	}
-	appDir := filepath.Join(pulumiDir, "stacks", s.project.app.Name)
+	appDir := filepath.Join(pulumiDir, "stacks", s.app.Name)
 	err = os.MkdirAll(appDir, 0755)
 	if err != nil {
 		return "", err
 	}
-	path := filepath.Join(appDir, fmt.Sprintf("%v.json", s.project.app.Stage))
+	path := filepath.Join(appDir, fmt.Sprintf("%v.json", s.app.Stage))
 	err = provider.PullState(
-		s.project.home,
-		s.project.app.Name,
-		s.project.app.Stage,
+		s.home,
+		s.app.Name,
+		s.app.Stage,
 		path,
 	)
 	if err != nil {
@@ -640,22 +636,22 @@ func (s *stack) PullState() (string, error) {
 	return path, nil
 }
 
-func (s *stack) PushState(version string) error {
-	pulumiDir := filepath.Join(s.project.PathWorkingDir(), ".pulumi")
+func (s *Project) PushState(version string) error {
+	pulumiDir := filepath.Join(s.PathWorkingDir(), ".pulumi")
 	return provider.PushState(
-		s.project.home,
+		s.home,
 		version,
-		s.project.app.Name,
-		s.project.app.Stage,
-		filepath.Join(pulumiDir, "stacks", s.project.app.Name, fmt.Sprintf("%v.json", s.project.app.Stage)),
+		s.app.Name,
+		s.app.Stage,
+		filepath.Join(pulumiDir, "stacks", s.app.Name, fmt.Sprintf("%v.json", s.app.Stage)),
 	)
 }
 
-func (s *stack) Cancel() error {
+func (s *Project) Cancel() error {
 	return provider.Unlock(
-		s.project.home,
-		s.project.app.Name,
-		s.project.app.Stage,
+		s.home,
+		s.app.Name,
+		s.app.Stage,
 	)
 }
 
