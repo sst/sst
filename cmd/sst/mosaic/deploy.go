@@ -1,7 +1,6 @@
 package mosaic
 
 import (
-	"fmt"
 	"log/slog"
 	"os"
 
@@ -37,7 +36,6 @@ func CmdMosaicDeploy(c *cli.Cli) error {
 	if err != nil {
 		return err
 	}
-	fmt.Println(url)
 
 	u := ui.New(c.Context, ui.WithDev)
 	slog.Info("initialized ui")
