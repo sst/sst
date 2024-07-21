@@ -4,12 +4,14 @@
   "workspaces": [
     "packages/*"
   ],
-  "scripts": {},
+  "scripts": {
+    "dev": "sst dev"
+  },
   "devDependencies": {
     "@tsconfig/node20": "^20.1.4",
     "typescript": "5.3.3"
   },
   "dependencies": {
-    "sst": "^3.0.13"
+    "sst": "^0.1.7"
   }
 }
