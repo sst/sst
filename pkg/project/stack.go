@@ -266,7 +266,7 @@ func (p *Project) Run(ctx context.Context, input *StackInput) error {
 		})
 		return err
 	}
-	// defer js.Cleanup(buildResult)
+	defer js.Cleanup(buildResult)
 	outfile := buildResult.OutputFiles[1].Path
 
 	if input.OnFiles != nil {
@@ -625,23 +625,19 @@ func (s *Project) Lock(updateID string, command string) error {
 }
 
 func (s *Project) Unlock() error {
-	/*
-		dir := s.PathWorkingDir()
-		files, err := os.ReadDir(dir)
-		if err != nil {
-			return err
-		}
-
-			for _, file := range files {
-				if strings.HasPrefix(file.Name(), "Pulumi") {
-					err := os.Remove(filepath.Join(dir, file.Name()))
-					if err != nil {
-						return err
-					}
-				}
+	dir := s.PathWorkingDir()
+	files, err := os.ReadDir(dir)
+	if err != nil {
+		return err
+	}
+	for _, file := range files {
+		if strings.HasPrefix(file.Name(), "Pulumi") {
+			err := os.Remove(filepath.Join(dir, file.Name()))
+			if err != nil {
+				return err
 			}
-	*/
-
+		}
+	}
 	return provider.Unlock(s.home, s.app.Name, s.app.Stage)
 }
 
