@@ -21,34 +21,34 @@ import (
 type ProgressMode string
 
 const (
-	ProgressModeDev     ProgressMode = "dev"
 	ProgressModeDeploy  ProgressMode = "deploy"
 	ProgressModeRemove  ProgressMode = "remove"
 	ProgressModeRefresh ProgressMode = "refresh"
 )
 
 const (
-	IconX     = "×"
+	IconX     = "✕"
 	IconCheck = "✔︎"
 )
 
 type UI struct {
 	mode       ProgressMode
-	pending    map[string]string
 	dedupe     map[string]bool
 	timing     map[string]time.Time
 	parents    map[string]string
 	colors     map[string]lipgloss.Style
 	workerTime map[string]time.Time
 	complete   *project.CompleteEvent
-	skipped    int
 	footer     *footer
 	buffer     []interface{}
 	hasBlank   bool
+	hasHeader  bool
+	options    *Options
 }
 
 type Options struct {
 	Silent bool
+	Dev    bool
 }
 
 type Option func(*Options)
@@ -57,7 +57,11 @@ func WithSilent(u *Options) {
 	u.Silent = true
 }
 
-func New(ctx context.Context, mode ProgressMode, options ...Option) *UI {
+func WithDev(u *Options) {
+	u.Dev = true
+}
+
+func New(ctx context.Context, options ...Option) *UI {
 	opts := &Options{}
 	for _, option := range options {
 		option(opts)
@@ -65,15 +69,15 @@ func New(ctx context.Context, mode ProgressMode, options ...Option) *UI {
 	isTTY := terminal.IsTerminal(int(os.Stdout.Fd()))
 	slog.Info("initializing ui", "isTTY", isTTY)
 	result := &UI{
-		mode:       mode,
 		colors:     map[string]lipgloss.Style{},
 		workerTime: map[string]time.Time{},
 		hasBlank:   false,
+		options:    opts,
 	}
 	if isTTY && !opts.Silent {
-		result.footer = NewFooter(mode)
+		result.footer = NewFooter()
 	}
-	result.Reset()
+	result.reset()
 	go result.footer.Start(ctx)
 	return result
 }
@@ -106,11 +110,9 @@ func (u *UI) blank() {
 	u.hasBlank = true
 }
 
-func (u *UI) Reset() {
-	u.skipped = 0
+func (u *UI) reset() {
 	u.complete = nil
 	u.parents = map[string]string{}
-	u.pending = map[string]string{}
 	u.dedupe = map[string]bool{}
 	u.timing = map[string]time.Time{}
 	u.buffer = []interface{}{}
@@ -157,23 +159,29 @@ func (u *UI) Event(unknown interface{}) {
 		}
 
 	case *project.ConcurrentUpdateEvent:
+		u.reset()
 		u.printEvent(TEXT_DANGER, "Locked", "A concurrent update was detected on the app. Run `sst unlock` to remove the lock and try again.")
 
 	case *project.StackCommandEvent:
+		u.reset()
+		u.header("", evt.App, evt.Stage)
 		u.blank()
 		if evt.Command == "deploy" {
+			u.mode = ProgressModeDeploy
 			u.println(
 				TEXT_WARNING_BOLD.Render("~"),
 				TEXT_NORMAL_BOLD.Render("  Deploying"),
 			)
 		}
 		if evt.Command == "remove" {
+			u.mode = ProgressModeRemove
 			u.println(
 				TEXT_DANGER_BOLD.Render("~"),
 				TEXT_NORMAL_BOLD.Render("  Removing"),
 			)
 		}
 		if evt.Command == "refresh" {
+			u.mode = ProgressModeRefresh
 			u.println(
 				TEXT_INFO_BOLD.Render("~"),
 				TEXT_NORMAL_BOLD.Render("  Refreshing"),
@@ -199,10 +207,6 @@ func (u *UI) Event(unknown interface{}) {
 		}
 
 		if evt.Metadata.Op == apitype.OpSame {
-			// Do not print anything for skipped resources
-			if u.mode == ProgressModeDeploy || u.mode == ProgressModeDev {
-				u.skipped++
-			}
 			return
 		}
 
@@ -323,7 +327,7 @@ func (u *UI) Event(unknown interface{}) {
 				if u.mode == ProgressModeRemove {
 					u.print(TEXT_NORMAL_BOLD.Render("  Removed"))
 				}
-				if u.mode == ProgressModeDeploy || u.mode == ProgressModeDev {
+				if u.mode == ProgressModeDeploy {
 					u.print(TEXT_NORMAL_BOLD.Render("  Complete "))
 				}
 				if u.mode == ProgressModeRefresh {
@@ -489,13 +493,14 @@ func (u *UI) printEvent(barColor lipgloss.Style, label string, message ...string
 
 func (u *UI) Destroy() {
 	if u.footer != nil {
-		// u.footer.Quit()
-		slog.Info("waiting for footer to quit")
-		// u.footer.Wait()
+		u.footer.Destroy()
 	}
 }
 
-func (u *UI) Header(version, app, stage string) {
+func (u *UI) header(version, app, stage string) {
+	if u.hasHeader {
+		return
+	}
 	u.println(
 		TEXT_HIGHLIGHT_BOLD.Render("SST ❍ ion "+version),
 		TEXT_DIM.Render("  ready!"),
@@ -511,13 +516,14 @@ func (u *UI) Header(version, app, stage string) {
 		TEXT_DIM.Render(stage),
 	)
 
-	if u.mode == ProgressModeDev {
+	if u.options.Dev {
 		u.println(
 			TEXT_NORMAL_BOLD.Render(fmt.Sprintf("   %-12s", "Console:")),
 			TEXT_DIM.Render("https://console.sst.dev/local/"+app+"/"+stage),
 		)
 	}
 	u.blank()
+	u.hasHeader = true
 }
 
 func (u *UI) formatURN(urn string) string {
@@ -552,9 +558,9 @@ func (u *UI) formatURN(urn string) string {
 }
 
 func Success(msg string) {
-	fmt.Fprint(os.Stderr, strings.TrimSpace(TEXT_SUCCESS_BOLD.Render(IconCheck)+" "+TEXT_NORMAL.Render(fmt.Sprintln(msg))))
+	fmt.Fprint(os.Stderr, strings.TrimSpace(TEXT_SUCCESS_BOLD.Render(IconCheck)+"  "+TEXT_NORMAL.Render(fmt.Sprintln(msg))))
 }
 
 func Error(msg string) {
-	fmt.Fprint(os.Stderr, strings.TrimSpace(TEXT_DANGER_BOLD.Render(IconX)+" "+TEXT_NORMAL.Render(fmt.Sprintln(msg))))
+	fmt.Fprint(os.Stderr, strings.TrimSpace(TEXT_DANGER_BOLD.Render(IconX)+"  "+TEXT_NORMAL.Render(fmt.Sprintln(msg))))
 }

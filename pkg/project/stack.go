@@ -9,6 +9,7 @@ import (
 	"log/slog"
 	"os"
 	"path/filepath"
+	"reflect"
 	"strings"
 	"time"
 
@@ -42,6 +43,7 @@ type BuildFailedEvent struct {
 
 type StackInput struct {
 	OnEvent func(event *StackEvent)
+	Out     chan interface{}
 	OnFiles func(files []string)
 	Command string
 	Target  []string
@@ -120,6 +122,9 @@ type ImportDiff struct {
 }
 
 type StackCommandEvent struct {
+	App     string
+	Stage   string
+	Config  string
 	Command string
 }
 
@@ -137,19 +142,35 @@ var ErrPassphraseInvalid = fmt.Errorf("passphrase invalid")
 func (p *Project) Run(ctx context.Context, input *StackInput) error {
 	slog.Info("running stack command", "cmd", input.Command)
 
+	publish := func(evt any) {
+		if input.Out != nil {
+			input.Out <- evt
+		}
+	}
+
+	input.OnEvent(&StackEvent{StackCommandEvent: &StackCommandEvent{
+		App:     p.app.Name,
+		Stage:   p.app.Stage,
+		Config:  p.PathConfig(),
+		Command: input.Command,
+	}})
+	publish(&StackCommandEvent{
+		App:     p.app.Name,
+		Stage:   p.app.Stage,
+		Config:  p.PathConfig(),
+		Command: input.Command,
+	})
+
 	updateID := cuid2.Generate()
 	err := p.Lock(updateID, input.Command)
 	if err != nil {
 		if err == provider.ErrLockExists {
 			input.OnEvent(&StackEvent{ConcurrentUpdateEvent: &ConcurrentUpdateEvent{}})
+			publish(&ConcurrentUpdateEvent{})
 		}
 		return err
 	}
 	defer p.Unlock()
-
-	input.OnEvent(&StackEvent{StackCommandEvent: &StackCommandEvent{
-		Command: input.Command,
-	}})
 
 	_, err = p.PullState()
 	if err != nil {
@@ -240,9 +261,12 @@ func (p *Project) Run(ctx context.Context, input *StackInput) error {
 				Error: err.Error(),
 			},
 		})
+		publish(&BuildFailedEvent{
+			Error: err.Error(),
+		})
 		return err
 	}
-	defer js.Cleanup(buildResult)
+	// defer js.Cleanup(buildResult)
 	outfile := buildResult.OutputFiles[1].Path
 
 	if input.OnFiles != nil {
@@ -310,6 +334,7 @@ func (p *Project) Run(ctx context.Context, input *StackInput) error {
 		input.OnEvent(&StackEvent{
 			OldCompleteEvent: completed,
 		})
+		publish(completed)
 	}()
 
 	config := auto.ConfigMap{}
@@ -387,6 +412,9 @@ func (p *Project) Run(ctx context.Context, input *StackInput) error {
 				}
 
 				input.OnEvent(&StackEvent{EngineEvent: event})
+				for _, field := range getNotNilFields(event) {
+					publish(field)
+				}
 
 				if event.SummaryEvent != nil {
 					finished = true
@@ -403,7 +431,9 @@ func (p *Project) Run(ctx context.Context, input *StackInput) error {
 	}()
 
 	defer func() {
-		complete, err := getCompletedEvent(ctx, stack)
+		slog.Info("parsing state")
+		defer slog.Info("done parsing state")
+		complete, err := getCompletedEvent(context.Background(), stack)
 		if err != nil {
 			return
 		}
@@ -411,6 +441,7 @@ func (p *Project) Run(ctx context.Context, input *StackInput) error {
 		complete.Errors = errors
 		complete.ImportDiffs = importDiffs
 		defer input.OnEvent(&StackEvent{CompleteEvent: complete})
+		defer publish(complete)
 
 		cloudflareBindings := map[string]string{}
 		for _, resource := range complete.Resources {
@@ -594,20 +625,22 @@ func (s *Project) Lock(updateID string, command string) error {
 }
 
 func (s *Project) Unlock() error {
-	dir := s.PathWorkingDir()
-	files, err := os.ReadDir(dir)
-	if err != nil {
-		return err
-	}
-
-	for _, file := range files {
-		if strings.HasPrefix(file.Name(), "Pulumi") {
-			err := os.Remove(filepath.Join(dir, file.Name()))
-			if err != nil {
-				return err
-			}
+	/*
+		dir := s.PathWorkingDir()
+		files, err := os.ReadDir(dir)
+		if err != nil {
+			return err
 		}
-	}
+
+			for _, file := range files {
+				if strings.HasPrefix(file.Name(), "Pulumi") {
+					err := os.Remove(filepath.Join(dir, file.Name()))
+					if err != nil {
+						return err
+					}
+				}
+			}
+	*/
 
 	return provider.Unlock(s.home, s.app.Name, s.app.Stage)
 }
@@ -693,7 +726,6 @@ func getCompletedEvent(ctx context.Context, stack auto.Stack) (*CompleteEvent, e
 	if err != nil {
 		return nil, err
 	}
-	slog.Info("stack command complete")
 	var deployment apitype.DeploymentV3
 	json.Unmarshal(exported.Deployment, &deployment)
 	complete := &CompleteEvent{
@@ -755,4 +787,32 @@ func getCompletedEvent(ctx context.Context, stack auto.Stack) (*CompleteEvent, e
 	}
 
 	return complete, nil
+}
+
+func getNotNilFields(v interface{}) []interface{} {
+	result := []interface{}{}
+	val := reflect.ValueOf(v)
+	if val.Kind() == reflect.Ptr {
+		val = val.Elem()
+	}
+	if val.Kind() != reflect.Struct {
+		result = append(result, v)
+		return result
+	}
+
+	for i := 0; i < val.NumField(); i++ {
+		field := val.Field(i)
+		switch field.Kind() {
+		case reflect.Struct:
+			result = append(result, getNotNilFields(field.Interface())...)
+			break
+		case reflect.Ptr, reflect.Interface, reflect.Slice, reflect.Map, reflect.Chan, reflect.Func:
+			if !field.IsNil() {
+				result = append(result, field.Interface())
+			}
+			break
+		}
+	}
+
+	return result
 }

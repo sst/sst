@@ -55,6 +55,7 @@ func (s *Server) Start(ctx context.Context, p *project.Project) error {
 	})
 
 	s.Mux.HandleFunc("/stream", func(w http.ResponseWriter, r *http.Request) {
+		bus.Publish(&deployer.DeployRequestedEvent{})
 		w.Header().Add("content-type", "application/x-ndjson")
 		w.WriteHeader(http.StatusOK)
 		slog.Info("subscribed", "addr", r.RemoteAddr)

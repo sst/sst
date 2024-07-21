@@ -20,6 +20,13 @@ func Start(ctx context.Context, p *project.Project) error {
 	watchedFiles := make(map[string]bool)
 	events := bus.Subscribe(ctx, &watcher.FileChangedEvent{}, &DeployRequestedEvent{}, &WatchedFilesEvent{})
 	bus.Publish(&DeployRequestedEvent{})
+	out := make(chan interface{})
+	go func() {
+		for evt := range out {
+			bus.Publish(evt)
+		}
+	}()
+	defer close(out)
 	for {
 		slog.Info("deployer waiting for trigger")
 		select {
@@ -33,12 +40,13 @@ func Start(ctx context.Context, p *project.Project) error {
 				}
 			case *watcher.FileChangedEvent, *DeployRequestedEvent:
 				if evt, ok := evt.(*watcher.FileChangedEvent); !ok || watchedFiles[evt.Path] {
+					slog.Info("deployer deploying")
 					p.Run(ctx, &project.StackInput{
 						Command: "deploy",
 						Dev:     true,
 						OnEvent: func(event *project.StackEvent) {
-							publishFields(event)
 						},
+						Out: out,
 						OnFiles: func(files []string) {
 							bus.Publish(&WatchedFilesEvent{files})
 						},

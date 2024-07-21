@@ -37,9 +37,8 @@ func CmdMosaicDeploy(c *cli.Cli) error {
 		return err
 	}
 
-	u := ui.New(c.Context, ui.ProgressModeDev)
+	u := ui.New(c.Context, ui.WithDev)
 	slog.Info("initialized ui")
-	u.Header("dev", "app", "foo")
 	for {
 		select {
 		case <-c.Context.Done():

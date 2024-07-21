@@ -21,7 +21,7 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/sst/ion/cmd/sst/cli"
 	"github.com/sst/ion/cmd/sst/mosaic"
-	"github.com/sst/ion/cmd/sst/ui"
+	"github.com/sst/ion/cmd/sst/mosaic/ui"
 	"github.com/sst/ion/internal/util"
 	"github.com/sst/ion/pkg/global"
 	"github.com/sst/ion/pkg/project"
@@ -409,30 +409,7 @@ var root = &cli.Command{
 					},
 				},
 			},
-			Run: func(c *cli.Cli) error {
-				p, err := c.InitProject()
-				if err != nil {
-					return err
-				}
-				defer p.Cleanup()
-
-				ui := ui.New(c.Context, ui.ProgressModeDeploy)
-				defer ui.Destroy()
-				ui.Header(version, p.App().Name, p.App().Stage)
-				target := []string{}
-				if c.String("target") != "" {
-					target = strings.Split(c.String("target"), ",")
-				}
-				err = p.Run(c.Context, &project.StackInput{
-					Command: "deploy",
-					OnEvent: ui.StackEvent,
-					Target:  target,
-				})
-				if err != nil {
-					return err
-				}
-				return nil
-			},
+			Run: CmdDeploy,
 		},
 		{
 			Name: "add",
@@ -1026,29 +1003,7 @@ var root = &cli.Command{
 					},
 				},
 			},
-			Run: func(c *cli.Cli) error {
-				p, err := c.InitProject()
-				if err != nil {
-					return err
-				}
-				defer p.Cleanup()
-				ui := ui.New(c.Context, ui.ProgressModeRemove)
-				defer ui.Destroy()
-				ui.Header(version, p.App().Name, p.App().Stage)
-				target := []string{}
-				if c.String("target") != "" {
-					target = strings.Split(c.String("target"), ",")
-				}
-				err = p.Run(c.Context, &project.StackInput{
-					Command: "remove",
-					OnEvent: ui.StackEvent,
-					Target:  target,
-				})
-				if err != nil {
-					return err
-				}
-				return nil
-			},
+			Run: CmdRemove,
 		},
 		{
 			Name: "unlock",
@@ -1240,29 +1195,7 @@ var root = &cli.Command{
 					},
 				},
 			},
-			Run: func(c *cli.Cli) error {
-				p, err := c.InitProject()
-				if err != nil {
-					return err
-				}
-				defer p.Cleanup()
-				ui := ui.New(c.Context, ui.ProgressModeRefresh)
-				defer ui.Destroy()
-				ui.Header(version, p.App().Name, p.App().Stage)
-				target := []string{}
-				if c.String("target") != "" {
-					target = strings.Split(c.String("target"), ",")
-				}
-				err = p.Run(c.Context, &project.StackInput{
-					Command: "refresh",
-					OnEvent: ui.StackEvent,
-					Target:  target,
-				})
-				if err != nil {
-					return err
-				}
-				return nil
-			},
+			Run: CmdRefresh,
 		},
 		{
 			Name:   "state",
