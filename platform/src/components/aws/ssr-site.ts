@@ -448,6 +448,7 @@ export function createServersAndDistribution(
         [".pdf"]: { mime: "application/pdf", isText: false },
         [".zip"]: { mime: "application/zip", isText: false },
         [".wasm"]: { mime: "application/wasm", isText: false },
+        [".webmanifest"]: { mime: "application/manifest+json", isText: true },
       };
       const extensionData = extensions[ext as keyof typeof extensions];
       const mime = extensionData?.mime ?? "application/octet-stream";
