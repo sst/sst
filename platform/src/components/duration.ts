@@ -14,6 +14,14 @@ export type DurationMinutes = `${number} ${
   | "minute"
   | "minutes"}`;
 
+export type DurationHours = `${number} ${
+  | "second"
+  | "seconds"
+  | "minute"
+  | "minutes"
+  | "hour"
+  | "hours"}`;
+
 export function toSeconds(duration: Duration | DurationMinutes) {
   const [count, unit] = duration.split(" ");
   const countNum = parseInt(count);

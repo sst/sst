@@ -13,6 +13,7 @@ import { hashStringToPrettyString, sanitizeToPascalCase } from "../naming";
 import { parseQueueArn } from "./helpers/arn";
 import { QueueLambdaSubscriber } from "./queue-lambda-subscriber";
 import { lambda, sqs } from "@pulumi/aws";
+import { DurationHours, toSeconds } from "../duration";
 import { permission } from "./permission.js";
 
 export interface QueueArgs {
@@ -32,6 +33,23 @@ export interface QueueArgs {
    * ```
    */
   fifo?: Input<boolean>;
+  /**
+   * Visibility timeout is a period of time during which a message is temporarily
+   * invisible to other consumers after a consumer has retrieved it from the queue.
+   * This mechanism prevents other consumers from processing the same message
+   * concurrently, ensuring that each message is processed only once.
+   *
+   * This timeout can range from 0 seconds to 12 hours.
+   *
+   * @default `"30 seconds"`
+   * @example
+   * ```js
+   * {
+   *   visibilityTimeout: "1 hour"
+   * }
+   * ```
+   */
+  visibilityTimeout?: Input<DurationHours>;
   /**
    * Optionally add a dead-letter queue or DLQ for this queue.
    *
@@ -212,6 +230,7 @@ export class Queue extends Component implements Link.Linkable {
     const parent = this;
     const fifo = normalizeFifo();
     const dlq = normalizeDlq();
+    const visibilityTimeout = normalizeVisibilityTimeout();
 
     const queue = createQueue();
 
@@ -230,11 +249,18 @@ export class Queue extends Component implements Link.Linkable {
       );
     }
 
+    function normalizeVisibilityTimeout() {
+      return output(args?.visibilityTimeout).apply((v) => v ?? "30 seconds");
+    }
+
     function createQueue() {
       return new sqs.Queue(
         `${name}Queue`,
         transform(args?.transform?.queue, {
           fifoQueue: fifo,
+          visibilityTimeoutSeconds: visibilityTimeout.apply((v) =>
+            toSeconds(v),
+          ),
           redrivePolicy:
             dlq &&
             jsonStringify({

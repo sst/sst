@@ -189,6 +189,30 @@ resources.
 Transform the SQS Queue resource.
 
 </Segment>
+### visibilityTimeout?
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="symbol">&ldquo;</code><code class="primitive">$\{number\} minute</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">$\{number\} minutes</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">$\{number\} hour</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">$\{number\} hours</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">$\{number\} second</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">$\{number\} seconds</code><code class="symbol">&rdquo;</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+
+<InlineSection>
+**Default** <code class="primitive">"30 seconds"</code>
+</InlineSection>
+Visibility timeout is a period of time during which a message is temporarily
+invisible to other consumers after a consumer has retrieved it from the queue.
+This mechanism prevents other consumers from processing the same message
+concurrently, ensuring that each message is processed only once.
+
+This timeout can range from 0 seconds to 12 hours.
+
+```js
+{
+  visibilityTimeout: "1 hour"
+}
+```
+</Segment>
 
 ## Properties
 
