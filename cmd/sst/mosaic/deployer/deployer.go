@@ -19,7 +19,6 @@ func Start(ctx context.Context, p *project.Project) error {
 	defer slog.Info("deployer done")
 	watchedFiles := make(map[string]bool)
 	events := bus.Subscribe(ctx, &watcher.FileChangedEvent{}, &DeployRequestedEvent{}, &WatchedFilesEvent{})
-	bus.Publish(&DeployRequestedEvent{})
 	out := make(chan interface{})
 	go func() {
 		for evt := range out {

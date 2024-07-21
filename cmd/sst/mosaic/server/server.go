@@ -55,11 +55,11 @@ func (s *Server) Start(ctx context.Context, p *project.Project) error {
 	})
 
 	s.Mux.HandleFunc("/stream", func(w http.ResponseWriter, r *http.Request) {
-		bus.Publish(&deployer.DeployRequestedEvent{})
 		w.Header().Add("content-type", "application/x-ndjson")
 		w.WriteHeader(http.StatusOK)
 		slog.Info("subscribed", "addr", r.RemoteAddr)
 		flusher, _ := w.(http.Flusher)
+		flusher.Flush()
 		ctx := r.Context()
 		events := bus.SubscribeAll()
 		if complete != nil {
@@ -88,6 +88,7 @@ func (s *Server) Start(ctx context.Context, p *project.Project) error {
 	})
 
 	s.Mux.HandleFunc(("/api/deploy"), func(w http.ResponseWriter, r *http.Request) {
+		slog.Info("deploy requested")
 		bus.Publish(&deployer.DeployRequestedEvent{})
 	})
 

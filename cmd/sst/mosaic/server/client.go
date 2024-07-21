@@ -100,3 +100,15 @@ func Env(ctx context.Context, directory string, url string) (map[string]string, 
 	}
 	return result, nil
 }
+
+func Deploy(ctx context.Context, url string) error {
+	req, err := http.NewRequestWithContext(ctx, "POST", url+"/api/deploy", nil)
+	if err != nil {
+		return err
+	}
+	_, err = http.DefaultClient.Do(req)
+	if err != nil {
+		return err
+	}
+	return nil
+}
