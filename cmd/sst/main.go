@@ -1261,7 +1261,9 @@ var root = &cli.Command{
 						if editor == "" {
 							editor = "vim"
 						}
-						cmd := exec.Command(editor, path)
+						editorArgs := append(strings.Fields(editor), path)
+						fmt.Println(editorArgs)
+						cmd := exec.Command(editorArgs[0], editorArgs[1:]...)
 						cmd.Stdin = os.Stdin
 						cmd.Stdout = os.Stdout
 						cmd.Stderr = os.Stderr
