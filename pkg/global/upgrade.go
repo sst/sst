@@ -10,8 +10,11 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"regexp"
 	"runtime"
 	"strings"
+
+	"github.com/sst/ion/pkg/npm"
 )
 
 func Upgrade(existingVersion string, nextVersion string) (string, error) {
@@ -102,6 +105,44 @@ func Upgrade(existingVersion string, nextVersion string) (string, error) {
 	}
 
 	return nextVersion, nil
+}
+
+func UpgradeNode(existingVersion string, nextVersion string) (map[string]string, error) {
+	result := make(map[string]string)
+	if nextVersion == "" {
+		pkg, err := npm.Get("sst", "ion")
+		if err != nil {
+			return result, err
+		}
+		nextVersion = pkg.Version
+	}
+
+	files, err := filepath.Glob("**/*/package.json")
+	files = append(files, "package.json")
+	if err != nil {
+		return result, err
+	}
+	re := regexp.MustCompile(`"sst": "[^"]+"`)
+	for _, file := range files {
+		if strings.HasPrefix(file, ".sst") {
+			continue
+		}
+		data, err := os.ReadFile(file)
+		if err != nil {
+			continue
+		}
+		matches := re.FindAll(data, -1)
+		if len(matches) == 0 {
+			continue
+		}
+		data = re.ReplaceAll(data, []byte(`"sst": "`+nextVersion+`"`))
+		err = os.WriteFile(file, data, 0666)
+		if err != nil {
+			return result, err
+		}
+		result[file] = nextVersion
+	}
+	return result, nil
 }
 
 func untar(reader io.Reader, target string) error {

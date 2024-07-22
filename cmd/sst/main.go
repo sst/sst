@@ -35,7 +35,7 @@ var version = "dev"
 func main() {
 	// check if node_modules/.bin/sst exists
 	nodeModulesBinPath := filepath.Join("node_modules", ".bin", "sst")
-	if _, err := os.Stat(nodeModulesBinPath); err == nil {
+	if _, err := os.Stat(nodeModulesBinPath); err == nil && os.Getenv("SST_SKIP_LOCAL") != "true" {
 		// forward command to node_modules/.bin/sst
 		fmt.Println(ui.TEXT_WARNING_BOLD.Render("Warning: ") + "You are using a global installation of SST but you also have a local installation specified in your package.json. The local installation will be used but you should typically run it through your package manager.")
 		cmd := exec.Command(nodeModulesBinPath, os.Args[1:]...)
@@ -43,6 +43,7 @@ func main() {
 		cmd.Stderr = os.Stderr
 		cmd.Stdin = os.Stdin
 		cmd.Env = os.Environ()
+		cmd.Env = append(cmd.Env, "SST_SKIP_LOCAL=true")
 		if err := cmd.Run(); err != nil {
 			os.Exit(1)
 		}
@@ -1081,25 +1082,7 @@ var root = &cli.Command{
 					},
 				},
 			},
-			Run: func(cli *cli.Cli) error {
-				newVersion, err := global.Upgrade(
-					version,
-					cli.Positional(0),
-				)
-				if err != nil {
-					return err
-				}
-				newVersion = strings.TrimPrefix(newVersion, "v")
-
-				color.New(color.FgGreen, color.Bold).Print(ui.IconCheck)
-				if newVersion == version {
-					color.New(color.FgWhite).Printf("  Already on latest %s\n", version)
-				} else {
-					color.New(color.FgWhite).Printf("  Upgraded %s ➜ ", version)
-					color.New(color.FgCyan, color.Bold).Println(newVersion)
-				}
-				return nil
-			},
+			Run: CmdUpgrade,
 		},
 		{
 			Name: "telemetry", Description: cli.Description{
