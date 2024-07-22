@@ -468,7 +468,7 @@ export function createServersAndDistribution(
           functions[fnName] = new cloudfront.Function(
             `${name}CloudfrontFunction${sanitizeToPascalCase(fnName)}`,
             {
-              name: prefixName(63, `${name}-${fnName}`),
+              // name: prefixName(63, `${name}-${sanifnName}`),
               runtime: "cloudfront-js-1.0",
               code: `
 function handler(event) {
