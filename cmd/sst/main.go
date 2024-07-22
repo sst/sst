@@ -33,6 +33,21 @@ import (
 var version = "dev"
 
 func main() {
+	// check if node_modules/.bin/sst exists
+	nodeModulesBinPath := filepath.Join("node_modules", ".bin", "sst")
+	if _, err := os.Stat(nodeModulesBinPath); err == nil {
+		// forward command to node_modules/.bin/sst
+		fmt.Println(ui.TEXT_WARNING_BOLD.Render("Warning: ") + "You are using a global installation of SST but you also have a local installation specified in your package.json. The local installation will be used but you should typically run it through your package manager.")
+		cmd := exec.Command(nodeModulesBinPath, os.Args[1:]...)
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+		cmd.Stdin = os.Stdin
+		cmd.Env = os.Environ()
+		if err := cmd.Run(); err != nil {
+			os.Exit(1)
+		}
+		return
+	}
 	telemetry.SetVersion(version)
 	defer telemetry.Close()
 	telemetry.Track("cli.start", map[string]interface{}{
