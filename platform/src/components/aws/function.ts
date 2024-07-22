@@ -190,6 +190,21 @@ export interface FunctionArgs {
    */
   live?: Input<false>;
   /**
+   * The name for the function. This is displayed in the AWS Console.
+   *
+   * :::note
+   * Changing the name will create a new function and delete the old one.
+   * :::
+   *
+   * @example
+   * ```js
+   * {
+   *   name: ""
+   * }
+   * ```
+   */
+  name?: Input<string>;
+  /**
    * A description for the function. This is displayed in the AWS Console.
    * @example
    * ```js
@@ -1389,6 +1404,7 @@ export class Function extends Component implements Link.Linkable {
 
     function createFunction() {
       const transformed = transform(args.transform?.function, {
+        name: args.name,
         description: all([args.description, dev]).apply(([description, dev]) =>
           dev
             ? description

@@ -81,7 +81,10 @@ export class Component extends ComponentResource {
               break;
             case "aws:cloudwatch/eventRule:EventRule":
             case "aws:iam/user:User":
+              overrides = { name: prefixName(64, args.name) };
+              break;
             case "aws:lambda/function:Function":
+              if (args.props.name) break;
               overrides = { name: prefixName(64, args.name) };
               break;
             case "aws:sqs/queue:Queue":
