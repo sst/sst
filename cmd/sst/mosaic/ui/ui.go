@@ -76,9 +76,9 @@ func New(ctx context.Context, options ...Option) *UI {
 	}
 	if isTTY && !opts.Silent {
 		result.footer = NewFooter()
+		go result.footer.Start(ctx)
 	}
 	result.reset()
-	go result.footer.Start(ctx)
 	return result
 }
 
