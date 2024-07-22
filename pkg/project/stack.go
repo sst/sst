@@ -479,6 +479,11 @@ func (p *Project) Run(ctx context.Context, input *StackInput) error {
 			}
 		}
 
+		outputsFilePath := filepath.Join(p.PathWorkingDir(), "outputs.json")
+		outputsFile, _ := os.Create(outputsFilePath)
+		defer outputsFile.Close()
+		json.NewEncoder(outputsFile).Encode(complete.Outputs)
+
 		typesFileName := "sst-env.d.ts"
 		typesFilePath := filepath.Join(p.PathRoot(), typesFileName)
 		typesFile, _ := os.Create(typesFilePath)
