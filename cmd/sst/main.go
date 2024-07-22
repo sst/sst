@@ -35,7 +35,7 @@ var version = "dev"
 func main() {
 	// check if node_modules/.bin/sst exists
 	nodeModulesBinPath := filepath.Join("node_modules", ".bin", "sst")
-	if _, err := os.Stat(nodeModulesBinPath); err == nil && os.Getenv("SST_SKIP_LOCAL") != "true" {
+	if _, err := os.Stat(nodeModulesBinPath); err == nil && os.Getenv("npm_config_user_agent") == "" && os.Getenv("SST_SKIP_LOCAL") != "true" && version != "dev" {
 		// forward command to node_modules/.bin/sst
 		fmt.Println(ui.TEXT_WARNING_BOLD.Render("Warning: ") + "You are using a global installation of SST but you also have a local installation specified in your package.json. The local installation will be used but you should typically run it through your package manager.")
 		cmd := exec.Command(nodeModulesBinPath, os.Args[1:]...)
@@ -426,6 +426,31 @@ var root = &cli.Command{
 				},
 			},
 			Run: CmdDeploy,
+		},
+		{
+			Name: "preview",
+			Description: cli.Description{
+				Short: "Deploy your application",
+				Long:  strings.Join([]string{}, "\n"),
+			},
+			Flags: []cli.Flag{
+				{
+					Name: "target",
+					Description: cli.Description{
+						Short: "Comma seperated list of target URNs",
+						Long:  "Comma seperated list of target URNs.",
+					},
+				},
+			},
+			Examples: []cli.Example{
+				{
+					Content: "sst preview --stage production",
+					Description: cli.Description{
+						Short: "Preview changes to production",
+					},
+				},
+			},
+			Run: CmdPreview,
 		},
 		{
 			Name: "add",
