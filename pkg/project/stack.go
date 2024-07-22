@@ -17,6 +17,7 @@ import (
 	"github.com/pulumi/pulumi/sdk/v3/go/auto"
 	"github.com/pulumi/pulumi/sdk/v3/go/auto/events"
 	"github.com/pulumi/pulumi/sdk/v3/go/auto/optdestroy"
+	"github.com/pulumi/pulumi/sdk/v3/go/auto/optpreview"
 	"github.com/pulumi/pulumi/sdk/v3/go/auto/optrefresh"
 	"github.com/pulumi/pulumi/sdk/v3/go/auto/optup"
 	"github.com/pulumi/pulumi/sdk/v3/go/common/apitype"
@@ -162,17 +163,19 @@ func (p *Project) Run(ctx context.Context, input *StackInput) error {
 	})
 
 	updateID := cuid2.Generate()
-	err := p.Lock(updateID, input.Command)
-	if err != nil {
-		if err == provider.ErrLockExists {
-			input.OnEvent(&StackEvent{ConcurrentUpdateEvent: &ConcurrentUpdateEvent{}})
-			publish(&ConcurrentUpdateEvent{})
+	if input.Command != "diff" {
+		err := p.Lock(updateID, input.Command)
+		if err != nil {
+			if err == provider.ErrLockExists {
+				input.OnEvent(&StackEvent{ConcurrentUpdateEvent: &ConcurrentUpdateEvent{}})
+				publish(&ConcurrentUpdateEvent{})
+			}
+			return err
 		}
-		return err
+		defer p.Unlock()
 	}
-	defer p.Unlock()
 
-	_, err = p.PullState()
+	_, err := p.PullState()
 	if err != nil {
 		if errors.Is(err, provider.ErrStateNotFound) {
 			if input.Command != "deploy" {
@@ -182,13 +185,14 @@ func (p *Project) Run(ctx context.Context, input *StackInput) error {
 			return err
 		}
 	}
-	defer p.PushState(updateID)
+	if input.Command != "diff" {
+		defer p.PushState(updateID)
+	}
 
 	passphrase, err := provider.Passphrase(p.home, p.app.Name, p.app.Stage)
 	if err != nil {
 		return err
 	}
-
 	secrets, err := provider.GetSecrets(p.home, p.app.Name, p.app.Stage)
 	if err != nil {
 		return ErrPassphraseInvalid
@@ -442,6 +446,9 @@ func (p *Project) Run(ctx context.Context, input *StackInput) error {
 		complete.ImportDiffs = importDiffs
 		defer input.OnEvent(&StackEvent{CompleteEvent: complete})
 		defer publish(complete)
+		if input.Command == "diff" {
+			return
+		}
 
 		cloudflareBindings := map[string]string{}
 		for _, resource := range complete.Resources {
@@ -544,6 +551,9 @@ func (p *Project) Run(ctx context.Context, input *StackInput) error {
 	slog.Info("running stack command", "cmd", input.Command)
 	var summary auto.UpdateSummary
 	defer func() {
+		if input.Command == "diff" {
+			return
+		}
 		var parsed provider.Summary
 		parsed.Version = p.Version()
 		parsed.UpdateID = updateID
@@ -572,7 +582,6 @@ func (p *Project) Run(ctx context.Context, input *StackInput) error {
 				Message: err.Message,
 			})
 		}
-
 		provider.PutSummary(p.home, p.app.Name, p.app.Stage, updateID, parsed)
 	}()
 
@@ -609,6 +618,15 @@ func (p *Project) Run(ctx context.Context, input *StackInput) error {
 		)
 		err = derr
 		summary = result.Summary
+	case "diff":
+		_, derr := stack.Preview(ctx,
+			optpreview.Diff(),
+			optpreview.Target(input.Target),
+			optpreview.ProgressStreams(),
+			optpreview.ErrorProgressStreams(),
+			optpreview.EventStreams(stream),
+		)
+		err = derr
 	}
 
 	slog.Info("done running stack command")
@@ -617,6 +635,10 @@ func (p *Project) Run(ctx context.Context, input *StackInput) error {
 		return ErrStackRunFailed
 	}
 	return nil
+}
+
+type PreviewInput struct {
+	Out chan interface{}
 }
 
 type ImportOptions struct {

@@ -30,7 +30,9 @@ require (
 	github.com/pulumi/pulumi/sdk/v3 v3.115.2
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.9.0
+	github.com/tidwall/gjson v1.17.1
 	github.com/twitchtv/twirp v8.1.3+incompatible
+	github.com/yalp/jsonpath v0.0.0-20180802001716-5cc68e5049a0
 	golang.org/x/exp v0.0.0-20240325151524-a685a6edb6d8
 	google.golang.org/protobuf v1.33.0
 )
@@ -47,6 +49,8 @@ require (
 	github.com/erikgeiser/coninput v0.0.0-20211004153227-1c3628e74d0f // indirect
 	github.com/gdamore/encoding v1.0.0 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
+	github.com/tidwall/match v1.1.1 // indirect
+	github.com/tidwall/pretty v1.2.0 // indirect
 	github.com/xo/terminfo v0.0.0-20220910002029-abceb7e1c41e // indirect
 )
 

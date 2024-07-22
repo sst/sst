@@ -15,6 +15,7 @@ import (
 	"github.com/pulumi/pulumi/sdk/v3/go/common/resource"
 	"github.com/sst/ion/cmd/sst/mosaic/aws"
 	"github.com/sst/ion/pkg/project"
+
 	"golang.org/x/crypto/ssh/terminal"
 )
 
@@ -24,6 +25,7 @@ const (
 	ProgressModeDeploy  ProgressMode = "deploy"
 	ProgressModeRemove  ProgressMode = "remove"
 	ProgressModeRefresh ProgressMode = "refresh"
+	ProgressModeDiff    ProgressMode = "diff"
 )
 
 const (
@@ -170,21 +172,28 @@ func (u *UI) Event(unknown interface{}) {
 			u.mode = ProgressModeDeploy
 			u.println(
 				TEXT_WARNING_BOLD.Render("~"),
-				TEXT_NORMAL_BOLD.Render("  Deploying"),
+				TEXT_NORMAL_BOLD.Render("  Deploy"),
 			)
 		}
 		if evt.Command == "remove" {
 			u.mode = ProgressModeRemove
 			u.println(
 				TEXT_DANGER_BOLD.Render("~"),
-				TEXT_NORMAL_BOLD.Render("  Removing"),
+				TEXT_NORMAL_BOLD.Render("  Remove"),
 			)
 		}
 		if evt.Command == "refresh" {
 			u.mode = ProgressModeRefresh
 			u.println(
 				TEXT_INFO_BOLD.Render("~"),
-				TEXT_NORMAL_BOLD.Render("  Refreshing"),
+				TEXT_NORMAL_BOLD.Render("  Refresh"),
+			)
+		}
+		if evt.Command == "diff" {
+			u.mode = ProgressModeDiff
+			u.println(
+				TEXT_INFO_BOLD.Render("~"),
+				TEXT_NORMAL_BOLD.Render("  Diff"),
 			)
 		}
 		u.blank()
@@ -281,7 +290,7 @@ func (u *UI) Event(unknown interface{}) {
 
 	case *apitype.DiagnosticEvent:
 		if evt.Severity == "error" {
-			message := []string{u.formatURN(evt.URN)}
+			message := []string{u.FormatURN(evt.URN)}
 			message = append(message, parseError(evt.Message)...)
 			u.printEvent(TEXT_DANGER, "Error", message...)
 		}
@@ -324,15 +333,20 @@ func (u *UI) Event(unknown interface{}) {
 				}
 			}
 			if len(u.timing) > 0 {
+				label := ""
 				if u.mode == ProgressModeRemove {
-					u.print(TEXT_NORMAL_BOLD.Render("  Removed"))
+					label = "Removed"
 				}
 				if u.mode == ProgressModeDeploy {
-					u.print(TEXT_NORMAL_BOLD.Render("  Complete "))
+					label = "Complete"
 				}
 				if u.mode == ProgressModeRefresh {
-					u.print(TEXT_NORMAL_BOLD.Render("  Refreshed    "))
+					label = "Refreshed"
 				}
+				if u.mode == ProgressModeDiff {
+					label = "Generated"
+				}
+				u.print(TEXT_NORMAL_BOLD.Render("  " + label + "    "))
 			}
 			u.println()
 			if len(evt.Hints) > 0 {
@@ -374,7 +388,7 @@ func (u *UI) Event(unknown interface{}) {
 
 			for _, status := range evt.Errors {
 				if status.URN != "" {
-					u.println(TEXT_DANGER_BOLD.Render("   " + u.formatURN(status.URN)))
+					u.println(TEXT_DANGER_BOLD.Render("   " + u.FormatURN(status.URN)))
 				}
 				u.println(TEXT_NORMAL.Render("   " + strings.Join(parseError(status.Message), "\n   ")))
 			}
@@ -385,7 +399,7 @@ func (u *UI) Event(unknown interface{}) {
 			u.println(TEXT_NORMAL_BOLD.Render("   Import Errors"))
 
 			for _, diff := range evt.ImportDiffs {
-				u.print(TEXT_NORMAL.Render("   " + u.formatURN(diff.URN)))
+				u.print(TEXT_NORMAL.Render("   " + u.FormatURN(diff.URN)))
 				u.print(TEXT_NORMAL_BOLD.Render(" " + diff.Input))
 				u.print(TEXT_NORMAL.Render(" should be "))
 				u.print(TEXT_INFO.Render(fmt.Sprintf("%v ", diff.Old)))
@@ -469,7 +483,7 @@ func (u *UI) functionName(functionID string) string {
 }
 
 func (u *UI) printProgress(barColor lipgloss.Style, label string, duration time.Duration, urn string) {
-	message := u.formatURN(urn)
+	message := u.FormatURN(urn)
 	if duration > time.Second {
 		message += fmt.Sprintf(" (%.1fs)", duration.Seconds())
 	}
@@ -526,7 +540,7 @@ func (u *UI) header(version, app, stage string) {
 	u.hasHeader = true
 }
 
-func (u *UI) formatURN(urn string) string {
+func (u *UI) FormatURN(urn string) string {
 	if urn == "" {
 		return ""
 	}

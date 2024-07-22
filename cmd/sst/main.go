@@ -428,9 +428,9 @@ var root = &cli.Command{
 			Run: CmdDeploy,
 		},
 		{
-			Name: "preview",
+			Name: "diff",
 			Description: cli.Description{
-				Short: "Deploy your application",
+				Short: "See what changes will be made",
 				Long:  strings.Join([]string{}, "\n"),
 			},
 			Flags: []cli.Flag{
@@ -441,16 +441,26 @@ var root = &cli.Command{
 						Long:  "Comma seperated list of target URNs.",
 					},
 				},
-			},
-			Examples: []cli.Example{
 				{
-					Content: "sst preview --stage production",
+					Name: "dev",
+					Type: "bool",
 					Description: cli.Description{
-						Short: "Preview changes to production",
+						Short: "Compare to sst dev",
+						Long: strings.Join([]string{
+							"Compare to sst dev",
+						}, "\n"),
 					},
 				},
 			},
-			Run: CmdPreview,
+			Examples: []cli.Example{
+				{
+					Content: "sst diff --stage production",
+					Description: cli.Description{
+						Short: "See changes to production",
+					},
+				},
+			},
+			Run: CmdDiff,
 		},
 		{
 			Name: "add",

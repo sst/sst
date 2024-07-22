@@ -138,6 +138,9 @@ func (m *footer) Update(msg any) {
 	case *project.StackCommandEvent:
 		m.Reset()
 		m.started = true
+		if msg.Command == "diff" {
+			m.mode = ProgressModeDiff
+		}
 		if msg.Command == "refresh" {
 			m.mode = ProgressModeRefresh
 		}
@@ -234,6 +237,9 @@ func (m *footer) View(width int) string {
 	}
 	label := "Finalizing"
 	if !m.summary {
+		if m.mode == ProgressModeDiff {
+			label = "Generating"
+		}
 		if m.mode == ProgressModeRemove {
 			label = "Removing"
 		}
