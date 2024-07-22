@@ -511,9 +511,15 @@ func (p *Project) Run(ctx context.Context, input *StackInput) error {
 
 			if receiver.Cloudflare != nil {
 				if rel == typesFileName {
+					nonCloudflareLinks := map[string]interface{}{}
+					for _, link := range receiver.Links {
+						if cloudflareBindings[link] == "" {
+							nonCloudflareLinks[link] = complete.Links[link]
+						}
+					}
 					file.WriteString("import \"sst\"\n")
 					file.WriteString("declare module \"sst\" {\n")
-					file.WriteString("  export interface Resource " + inferTypes(complete.Links, "  ") + "\n")
+					file.WriteString("  export interface Resource " + inferTypes(nonCloudflareLinks, "  ") + "\n")
 					file.WriteString("}" + "\n")
 				}
 				bindings := map[string]interface{}{}
