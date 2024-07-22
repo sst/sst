@@ -141,6 +141,184 @@ Configure the [API Gateway logs](https://docs.aws.amazon.com/apigateway/latest/d
 The duration the API Gateway logs are kept in CloudWatch.
 
 </Segment>
+### cors?
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">boolean</code><code class="symbol"> | </code><code class="primitive">Object</code><code class="symbol">&gt;</code>
+</InlineSection>
+- <p>[<code class="key">allowCredentials?</code>](#cors-allowcredentials)</p>
+- <p>[<code class="key">allowHeaders?</code>](#cors-allowheaders)</p>
+- <p>[<code class="key">allowMethods?</code>](#cors-allowmethods)</p>
+- <p>[<code class="key">allowOrigins?</code>](#cors-alloworigins)</p>
+- <p>[<code class="key">exposeHeaders?</code>](#cors-exposeheaders)</p>
+- <p>[<code class="key">maxAge?</code>](#cors-maxage)</p>
+</Section>
+
+<InlineSection>
+**Default** <code class="primitive">true</code>
+</InlineSection>
+Customize the CORS (Cross-origin resource sharing) settings for your HTTP API.
+
+Disable CORS.
+```js
+{
+  cors: false
+}
+```
+Only enable the `GET` and `POST` methods for `https://example.com`.
+```js
+{
+  cors: {
+    allowMethods: ["GET", "POST"],
+    allowOrigins: ["https://example.com"]
+  }
+}
+```
+</Segment>
+<NestedTitle id="cors-allowcredentials" Tag="h4" parent="cors.">allowCredentials?</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">boolean</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+
+<InlineSection>
+**Default** <code class="primitive">false</code>
+</InlineSection>
+Allow cookies or other credentials in requests to the HTTP API.
+
+```js
+{
+  cors: {
+    allowCredentials: true
+  }
+}
+```
+</Segment>
+<NestedTitle id="cors-allowheaders" Tag="h4" parent="cors.">allowHeaders?</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code><code class="symbol">[]</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+
+<InlineSection>
+**Default** <code class="primitive">["*"]</code>
+</InlineSection>
+The HTTP headers that origins can include in requests to the HTTP API.
+
+```js
+{
+  cors: {
+    allowHeaders: ["date", "keep-alive", "x-custom-header"]
+  }
+}
+```
+</Segment>
+<NestedTitle id="cors-allowmethods" Tag="h4" parent="cors.">allowMethods?</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Input</code><code class="symbol">&lt;</code><code class="symbol">&ldquo;</code><code class="primitive">DELETE</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">GET</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">HEAD</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">OPTIONS</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">PATCH</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">POST</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">PUT</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">\*</code><code class="symbol">&rdquo;</code><code class="symbol">&gt;</code><code class="symbol">[]</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+
+<InlineSection>
+**Default** <code class="primitive">["*"]</code>
+</InlineSection>
+The HTTP methods that are allowed when calling the HTTP API.
+
+```js
+{
+  cors: {
+    allowMethods: ["GET", "POST", "DELETE"]
+  }
+}
+```
+Or the wildcard for all methods.
+```js
+{
+  cors: {
+    allowMethods: ["*"]
+  }
+}
+```
+</Segment>
+<NestedTitle id="cors-alloworigins" Tag="h4" parent="cors.">allowOrigins?</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code><code class="symbol">[]</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+
+<InlineSection>
+**Default** <code class="primitive">["*"]</code>
+</InlineSection>
+The origins that can access the HTTP API.
+
+```js
+{
+  cors: {
+    allowOrigins: ["https://www.example.com", "http://localhost:60905"]
+  }
+}
+```
+Or the wildcard for all origins.
+```js
+{
+  cors: {
+    allowOrigins: ["*"]
+  }
+}
+```
+</Segment>
+<NestedTitle id="cors-exposeheaders" Tag="h4" parent="cors.">exposeHeaders?</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code><code class="symbol">[]</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+
+<InlineSection>
+**Default** <code class="primitive">[]</code>
+</InlineSection>
+The HTTP headers you want to expose in your function to an origin that calls the HTTP API.
+
+```js
+{
+  cors: {
+    exposeHeaders: ["date", "keep-alive", "x-custom-header"]
+  }
+}
+```
+</Segment>
+<NestedTitle id="cors-maxage" Tag="h4" parent="cors.">maxAge?</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="symbol">&ldquo;</code><code class="primitive">$\{number\} minute</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">$\{number\} minutes</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">$\{number\} hour</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">$\{number\} hours</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">$\{number\} second</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">$\{number\} seconds</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">$\{number\} day</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">$\{number\} days</code><code class="symbol">&rdquo;</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+
+<InlineSection>
+**Default** <code class="primitive">"0 seconds"</code>
+</InlineSection>
+The maximum amount of time the browser can cache results of a preflight request. By
+default the browser doesn't cache the results. The maximum value is `86400 seconds` or `1 day`.
+
+```js
+{
+  cors: {
+    maxAge: "1 day"
+  }
+}
+```
+</Segment>
 ### domain?
 <Segment>
 <Section type="parameters">

@@ -512,7 +512,7 @@ export interface FunctionArgs {
          * ```js
          * {
          *   url: {
-         *     cors: true
+         *     cors: false
          *   }
          * }
          * ```

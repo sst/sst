@@ -15,8 +15,111 @@ import { dns as awsDns } from "./dns.js";
 import { ApiGatewayV2DomainArgs } from "./helpers/apigatewayv2-domain";
 import { ApiGatewayV2LambdaRoute } from "./apigatewayv2-lambda-route";
 import { ApiGatewayV2Authorizer } from "./apigatewayv2-authorizer";
-import { apigatewayv2, cloudwatch } from "@pulumi/aws";
+import { apigatewayv2, cloudwatch, types } from "@pulumi/aws";
 import { ApiGatewayV2UrlRoute } from "./apigatewayv2-url-route";
+import { Duration, toSeconds } from "../duration";
+
+interface ApiGatewayV2CorsArgs {
+  /**
+   * Allow cookies or other credentials in requests to the HTTP API.
+   * @default `false`
+   * @example
+   * ```js
+   * {
+   *   cors: {
+   *     allowCredentials: true
+   *   }
+   * }
+   * ```
+   */
+  allowCredentials?: Input<boolean>;
+  /**
+   * The HTTP headers that origins can include in requests to the HTTP API.
+   * @default `["*"]`
+   * @example
+   * ```js
+   * {
+   *   cors: {
+   *     allowHeaders: ["date", "keep-alive", "x-custom-header"]
+   *   }
+   * }
+   * ```
+   */
+  allowHeaders?: Input<Input<string>[]>;
+  /**
+   * The origins that can access the HTTP API.
+   * @default `["*"]`
+   * @example
+   * ```js
+   * {
+   *   cors: {
+   *     allowOrigins: ["https://www.example.com", "http://localhost:60905"]
+   *   }
+   * }
+   * ```
+   * Or the wildcard for all origins.
+   * ```js
+   * {
+   *   cors: {
+   *     allowOrigins: ["*"]
+   *   }
+   * }
+   * ```
+   */
+  allowOrigins?: Input<Input<string>[]>;
+  /**
+   * The HTTP methods that are allowed when calling the HTTP API.
+   * @default `["*"]`
+   * @example
+   * ```js
+   * {
+   *   cors: {
+   *     allowMethods: ["GET", "POST", "DELETE"]
+   *   }
+   * }
+   * ```
+   * Or the wildcard for all methods.
+   * ```js
+   * {
+   *   cors: {
+   *     allowMethods: ["*"]
+   *   }
+   * }
+   * ```
+   */
+  allowMethods?: Input<
+    Input<
+      "*" | "DELETE" | "GET" | "HEAD" | "OPTIONS" | "PATCH" | "POST" | "PUT"
+    >[]
+  >;
+  /**
+   * The HTTP headers you want to expose in your function to an origin that calls the HTTP API.
+   * @default `[]`
+   * @example
+   * ```js
+   * {
+   *   cors: {
+   *     exposeHeaders: ["date", "keep-alive", "x-custom-header"]
+   *   }
+   * }
+   * ```
+   */
+  exposeHeaders?: Input<Input<string>[]>;
+  /**
+   * The maximum amount of time the browser can cache results of a preflight request. By
+   * default the browser doesn't cache the results. The maximum value is `86400 seconds` or `1 day`.
+   * @default `"0 seconds"`
+   * @example
+   * ```js
+   * {
+   *   cors: {
+   *     maxAge: "1 day"
+   *   }
+   * }
+   * ```
+   */
+  maxAge?: Input<Duration>;
+}
 
 export interface ApiGatewayV2Args {
   /**
@@ -53,6 +156,27 @@ export interface ApiGatewayV2Args {
    * ```
    */
   domain?: Input<string | Prettify<ApiGatewayV2DomainArgs>>;
+  /**
+   * Customize the CORS (Cross-origin resource sharing) settings for your HTTP API.
+   * @default `true`
+   * @example
+   * Disable CORS.
+   * ```js
+   * {
+   *   cors: false
+   * }
+   * ```
+   * Only enable the `GET` and `POST` methods for `https://example.com`.
+   * ```js
+   * {
+   *   cors: {
+   *     allowMethods: ["GET", "POST"],
+   *     allowOrigins: ["https://example.com"]
+   *   }
+   * }
+   * ```
+   */
+  cors?: Input<boolean | Prettify<ApiGatewayV2CorsArgs>>;
   /**
    * Configure the [API Gateway logs](https://docs.aws.amazon.com/apigateway/latest/developerguide/view-cloudwatch-log-events-in-cloudwatch-console.html) in CloudWatch. By default, access logs are enabled and kept forever.
    * @default `{retention: "forever"}`
@@ -386,6 +510,7 @@ export class ApiGatewayV2 extends Component implements Link.Linkable {
 
     const accessLog = normalizeAccessLog();
     const domain = normalizeDomain();
+    const cors = normalizeCors();
 
     const api = createApi();
     const logGroup = createLogGroup();
@@ -439,17 +564,31 @@ export class ApiGatewayV2 extends Component implements Link.Linkable {
       });
     }
 
+    function normalizeCors() {
+      return output(args.cors).apply((cors) => {
+        if (cors === false) return {};
+
+        const defaultCors: types.input.apigatewayv2.ApiCorsConfiguration = {
+          allowHeaders: ["*"],
+          allowMethods: ["*"],
+          allowOrigins: ["*"],
+        };
+        return cors === true || cors === undefined
+          ? defaultCors
+          : {
+              ...defaultCors,
+              ...cors,
+              maxAge: cors.maxAge && toSeconds(cors.maxAge),
+            };
+      });
+    }
+
     function createApi() {
       return new apigatewayv2.Api(
         `${name}Api`,
         transform(args.transform?.api, {
           protocolType: "HTTP",
-          corsConfiguration: {
-            allowCredentials: false,
-            allowHeaders: ["*"],
-            allowMethods: ["*"],
-            allowOrigins: ["*"],
-          },
+          corsConfiguration: cors,
         }),
         { parent },
       );
@@ -598,9 +737,9 @@ export class ApiGatewayV2 extends Component implements Link.Linkable {
     //       trailing slash, the API fails with the error {"message":"Not Found"}
     return this.apigDomain && this.apiMapping
       ? all([this.apigDomain.domainName, this.apiMapping.apiMappingKey]).apply(
-        ([domain, key]) =>
-          key ? `https://${domain}/${key}/` : `https://${domain}`,
-      )
+          ([domain, key]) =>
+            key ? `https://${domain}/${key}/` : `https://${domain}`,
+        )
       : this.api.apiEndpoint;
   }
 
