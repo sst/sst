@@ -17,7 +17,7 @@ import { DistributionInvalidation } from "./providers/distribution-invalidation.
 import { useProvider } from "./helpers/provider.js";
 import { Bucket, BucketArgs } from "./bucket.js";
 import { BucketFile, BucketFiles } from "./providers/bucket-files.js";
-import { sanitizeToPascalCase } from "../naming.js";
+import { prefixName, sanitizeToPascalCase } from "../naming.js";
 import { Input } from "../input.js";
 import { transform, type Prettify, type Transform } from "../component.js";
 import { VisibleError } from "../error.js";
@@ -393,7 +393,8 @@ export function createServersAndDistribution(
                       key: path.posix.join(copy.to, file),
                       hash,
                       cacheControl: fileOption.cacheControl,
-                      contentType: fileOption.contentType ?? getContentType(file, "UTF-8"),
+                      contentType:
+                        fileOption.contentType ?? getContentType(file, "UTF-8"),
                     };
                   }),
                 )),
@@ -467,6 +468,7 @@ export function createServersAndDistribution(
           functions[fnName] = new cloudfront.Function(
             `${name}CloudfrontFunction${sanitizeToPascalCase(fnName)}`,
             {
+              name: prefixName(63, `${name}-${fnName}`),
               runtime: "cloudfront-js-1.0",
               code: `
 function handler(event) {
