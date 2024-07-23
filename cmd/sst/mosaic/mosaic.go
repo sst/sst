@@ -130,7 +130,7 @@ func CmdMosaic(c *cli.Cli) error {
 			"SST_STAGE=" + p.App().Stage,
 		}
 		multi.AddProcess("deploy", []string{currentExecutable, "ui", "--filter=sst"}, "⑆", "SST", "", false, multiEnv...)
-		multi.AddProcess("function", []string{currentExecutable, "ui", "--filter=function"}, "⑆", "Function", "", false, multiEnv...)
+		multi.AddProcess("function", []string{currentExecutable, "ui", "--filter=function"}, "𝝺", "Function", "", false, multiEnv...)
 		wg.Go(func() error {
 			defer c.Cancel()
 			multi.Start()
