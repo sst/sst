@@ -5,6 +5,7 @@
     "@aws-monorepo/core": "*"
   },
   "devDependencies": {
-    "@types/aws-lambda": "^8.10.137"
+    "@types/aws-lambda": "^8.10.137",
+    "sst": "0.1.17"
   }
 }

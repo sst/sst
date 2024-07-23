@@ -6,5 +6,8 @@
       "./src/*/index.ts",
       "./src/*.ts"
     ]
+  },
+  "devDependencies": {
+    "sst": "0.1.17"
   }
 }

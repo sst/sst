@@ -58,6 +58,7 @@ func (p *process) start() error {
 	if p.dir != "" {
 		cmd.Dir = p.dir
 	}
+	p.vt.Clear()
 	err := p.vt.Start(cmd)
 	if err != nil {
 		return err

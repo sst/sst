@@ -4,11 +4,11 @@ import (
 	"context"
 	"log/slog"
 	"os"
+	"os/exec"
 	"syscall"
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/gdamore/tcell/v2/views"
-	"github.com/sst/ion/cmd/sst/mosaic/multiplexer2/ecma48"
 	tcellterm "github.com/sst/ion/cmd/sst/mosaic/multiplexer2/tcell-term"
 )
 
@@ -27,20 +27,6 @@ type Multiplexer struct {
 	root      *views.ViewPort
 	main      *views.ViewPort
 	stack     *views.BoxLayout
-	renderer  *renderer
-}
-
-type renderer struct {
-	cursor func(x, y int)
-	render func()
-}
-
-func (r *renderer) SetCursor(x, y int) {
-	r.cursor(x, y)
-}
-
-func (r *renderer) HandleCh(ch ecma48.PositionedChar) {
-	r.render()
 }
 
 func New(ctx context.Context) *Multiplexer {
@@ -117,6 +103,7 @@ func (s *Multiplexer) Start() {
 				for index, proc := range s.processes {
 					if proc.vt == evt.VT() {
 						if !proc.dead {
+							proc.vt.Start(exec.Command("echo", "\n[process exited]"))
 							proc.dead = true
 							s.sort()
 							if index == s.selected {

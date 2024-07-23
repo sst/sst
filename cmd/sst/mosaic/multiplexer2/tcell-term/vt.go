@@ -545,17 +545,6 @@ func (vt *VT) drawRow(row int, cols []cell) {
 		}
 		col += 1
 	}
-	if row == 8 {
-		builder := strings.Builder{}
-		for col := 0; col < len(cols); col++ {
-			cell := cols[col]
-			if cell.content == '\x00' {
-				builder.WriteRune(' ')
-				continue
-			}
-			builder.WriteRune(cell.content)
-		}
-	}
 }
 
 func (vt *VT) HandleEvent(e tcell.Event) bool {
@@ -581,4 +570,8 @@ func (vt *VT) HandleEvent(e tcell.Event) bool {
 		vt.pty.WriteString(str)
 	}
 	return false
+}
+
+func (vt *VT) Clear() {
+	vt.ris()
 }

@@ -25,6 +25,9 @@ func (s *Multiplexer) draw() {
 			s.stack.AddWidget(spacer, 0)
 		}
 		style := tcell.StyleDefault
+		if item.dead {
+			style = style.Foreground(tcell.ColorGray)
+		}
 		if index == s.selected {
 			style = style.Bold(true)
 			if !s.focused {
