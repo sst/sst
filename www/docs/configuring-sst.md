@@ -85,6 +85,7 @@ Here's the full list of config options that can be returned:
 - **`bootstrap`**
   - **`bucketName`** The name to use for the SST bootstrap bucket
   - **`stackName`** The name to use for the SST bootstrap stack
+  - **`stackDescription`** The description to use for the SST bootstrap stack
   - **`tags`** Tags to use for the SST bootstrap stack
   - **`useCdkBucket`** Use the S3 bucket created by the CDK bootstrap process instead of creating a new one
 - **`cdk`**
