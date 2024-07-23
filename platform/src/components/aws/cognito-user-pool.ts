@@ -159,7 +159,7 @@ export interface CognitoUserPoolArgs {
    */
   transform?: {
     /**
-     * Transform the Cognito user pool resource.
+     * Transform the Cognito User Pool resource.
      */
     userPool?: Transform<cognito.UserPoolArgs>;
   };
@@ -179,7 +179,7 @@ export interface CognitoUserPoolClientArgs {
 }
 
 /**
- * The `CognitoUserPool` component lets you add a [Amazon Cognito user pool](https://docs.aws.amazon.com/cognito/latest/developerguide/cognito-user-identity-pools.html) to your app.
+ * The `CognitoUserPool` component lets you add a [Amazon Cognito User Pool](https://docs.aws.amazon.com/cognito/latest/developerguide/cognito-user-identity-pools.html) to your app.
  *
  * #### Create the user pool
  *
@@ -345,14 +345,14 @@ export class CognitoUserPool extends Component implements Link.Linkable {
   }
 
   /**
-   * The Cognito user pool ID.
+   * The Cognito User Pool ID.
    */
   public get id() {
     return this.userPool.id;
   }
 
   /**
-   * The Cognito user pool ARN.
+   * The Cognito User Pool ARN.
    */
   public get arn() {
     return this.userPool.arn;
@@ -364,7 +364,7 @@ export class CognitoUserPool extends Component implements Link.Linkable {
   public get nodes() {
     return {
       /**
-       * The Amazon Cognito user pool.
+       * The Amazon Cognito User Pool.
        */
       userPool: this.userPool,
     };
