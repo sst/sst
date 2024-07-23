@@ -2,8 +2,10 @@ package ui
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log/slog"
+	"net/url"
 	"os"
 	"strings"
 	"time"
@@ -14,6 +16,7 @@ import (
 	"github.com/pulumi/pulumi/sdk/v3/go/common/apitype"
 	"github.com/pulumi/pulumi/sdk/v3/go/common/resource"
 	"github.com/sst/ion/cmd/sst/mosaic/aws"
+	"github.com/sst/ion/cmd/sst/mosaic/cloudflare"
 	"github.com/sst/ion/pkg/project"
 
 	"golang.org/x/crypto/ssh/terminal"
@@ -372,14 +375,12 @@ func (u *UI) Event(unknown interface{}) {
 				}
 			}
 		}
-
 		if len(evt.Errors) == 0 && !evt.Finished {
 			u.println(
 				TEXT_DANGER_BOLD.Render(IconX),
 				TEXT_NORMAL_BOLD.Render("  Interrupted    "),
 			)
 		}
-
 		if len(evt.Errors) > 0 {
 			u.println(
 				TEXT_DANGER_BOLD.Render(IconX),
@@ -393,7 +394,6 @@ func (u *UI) Event(unknown interface{}) {
 				u.println(TEXT_NORMAL.Render("   " + strings.Join(parseError(status.Message), "\n   ")))
 			}
 		}
-
 		if len(evt.ImportDiffs) > 0 {
 			u.blank()
 			u.println(TEXT_NORMAL_BOLD.Render("   Import Errors"))
@@ -406,49 +406,44 @@ func (u *UI) Event(unknown interface{}) {
 				u.println(TEXT_DIM.Render(fmt.Sprintf("(was %v)", diff.New)))
 			}
 		}
-
 		u.blank()
+	case *cloudflare.WorkerBuildEvent:
+		if len(evt.Errors) > 0 {
+			u.printEvent(TEXT_DANGER, "Build Error", u.functionName(evt.WorkerID)+" "+strings.Join(evt.Errors, "\n"))
+			return
+		}
+		u.printEvent(TEXT_INFO, "Build", u.functionName(evt.WorkerID))
+	case *cloudflare.WorkerUpdatedEvent:
+		u.printEvent(TEXT_INFO, "Reload", u.functionName(evt.WorkerID))
+	case *cloudflare.WorkerInvokedEvent:
+		url, _ := url.Parse(evt.TailEvent.Event.Request.URL)
+		u.printEvent(
+			u.getColor(evt.WorkerID),
+			TEXT_NORMAL_BOLD.Render(fmt.Sprintf("%-11s", "Invoke")),
+			u.functionName(evt.WorkerID)+" "+evt.TailEvent.Event.Request.Method+" "+url.Path,
+		)
+		for _, log := range evt.TailEvent.Logs {
+			duration := time.UnixMilli(log.Timestamp).Sub(time.UnixMilli(evt.TailEvent.EventTimestamp))
+			formattedDuration := fmt.Sprintf("%.9s", fmt.Sprintf("+%v", duration))
+
+			line := []string{}
+			for _, part := range log.Message {
+				switch v := part.(type) {
+				case string:
+					line = append(line, v)
+				case map[string]interface{}:
+					data, _ := json.Marshal(v)
+					line = append(line, string(data))
+				}
+			}
+
+			for _, item := range strings.Split(strings.Join(line, " "), "\n") {
+				u.printEvent(u.getColor(evt.WorkerID), formattedDuration, item)
+			}
+		}
+		u.printEvent(u.getColor(evt.WorkerID), "Done", evt.TailEvent.Outcome)
 	}
 
-	// if evt.WorkerBuildEvent != nil {
-	// 	if len(evt.WorkerBuildEvent.Errors) > 0 {
-	// 		u.printEvent(TEXT_DANGER, "Build Error", u.functionName(evt.WorkerBuildEvent.WorkerID)+" "+strings.Join(evt.WorkerBuildEvent.Errors, "\n"))
-	// 		return
-	// 	}
-	// 	u.printEvent(TEXT_INFO, "Build", u.functionName(evt.WorkerBuildEvent.WorkerID))
-	// }
-	// if evt.WorkerUpdatedEvent != nil {
-	// 	u.printEvent(TEXT_INFO, "Reload", u.functionName(evt.WorkerUpdatedEvent.WorkerID))
-	// }
-	// if evt.WorkerInvokedEvent != nil {
-	// 	url, _ := url.Parse(evt.WorkerInvokedEvent.TailEvent.Event.Request.URL)
-	// 	u.printEvent(
-	// 		u.getColor(evt.WorkerInvokedEvent.WorkerID),
-	// 		TEXT_NORMAL_BOLD.Render(fmt.Sprintf("%-11s", "Invoke")),
-	// 		u.functionName(evt.WorkerInvokedEvent.WorkerID)+" "+evt.WorkerInvokedEvent.TailEvent.Event.Request.Method+" "+url.Path,
-	// 	)
-
-	// 	for _, log := range evt.WorkerInvokedEvent.TailEvent.Logs {
-	// 		duration := time.UnixMilli(log.Timestamp).Sub(time.UnixMilli(evt.WorkerInvokedEvent.TailEvent.EventTimestamp))
-	// 		formattedDuration := fmt.Sprintf("%.9s", fmt.Sprintf("+%v", duration))
-
-	// 		line := []string{}
-	// 		for _, part := range log.Message {
-	// 			switch v := part.(type) {
-	// 			case string:
-	// 				line = append(line, v)
-	// 			case map[string]interface{}:
-	// 				data, _ := json.Marshal(v)
-	// 				line = append(line, string(data))
-	// 			}
-	// 		}
-
-	// 		for _, item := range strings.Split(strings.Join(line, " "), "\n") {
-	// 			u.printEvent(u.getColor(evt.WorkerInvokedEvent.WorkerID), formattedDuration, item)
-	// 		}
-	// 	}
-	// 	u.printEvent(u.getColor(evt.WorkerInvokedEvent.WorkerID), "Done", evt.WorkerInvokedEvent.TailEvent.Outcome)
-	// }
 }
 
 var COLORS = []lipgloss.Style{

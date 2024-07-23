@@ -7,6 +7,7 @@ import (
 	"github.com/pulumi/pulumi/sdk/v3/go/common/apitype"
 	"github.com/sst/ion/cmd/sst/cli"
 	"github.com/sst/ion/cmd/sst/mosaic/aws"
+	"github.com/sst/ion/cmd/sst/mosaic/cloudflare"
 	"github.com/sst/ion/cmd/sst/mosaic/server"
 	"github.com/sst/ion/cmd/sst/mosaic/ui"
 	"github.com/sst/ion/pkg/project"
@@ -18,6 +19,9 @@ func CmdMosaicDeploy(c *cli.Cli) error {
 		url = match
 	}
 	evts, err := server.Stream(c.Context, url,
+		cloudflare.WorkerBuildEvent{},
+		cloudflare.WorkerUpdatedEvent{},
+		cloudflare.WorkerInvokedEvent{},
 		project.StackCommandEvent{},
 		project.ConcurrentUpdateEvent{},
 		project.StackCommandEvent{},
