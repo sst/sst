@@ -107,7 +107,10 @@ export class ApiGatewayWebSocketRoute extends Component {
         transform(args.transform?.integration, {
           apiId: api.id,
           integrationType: "AWS_PROXY",
-          integrationUri: fn.arn,
+          integrationUri: fn.arn.apply((arn) => {
+            const [, partition, , region] = arn.split(":");
+            return `arn:${partition}:apigateway:${region}:lambda:path/2015-03-31/functions/${arn}/invocations`;
+          }),
         }),
         { parent: self, dependsOn: [permission] },
       );
