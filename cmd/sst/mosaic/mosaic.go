@@ -13,7 +13,7 @@ import (
 	"github.com/sst/ion/cmd/sst/mosaic/aws"
 	"github.com/sst/ion/cmd/sst/mosaic/bus"
 	"github.com/sst/ion/cmd/sst/mosaic/deployer"
-	"github.com/sst/ion/cmd/sst/mosaic/multiplexer2"
+	"github.com/sst/ion/cmd/sst/mosaic/multiplexer"
 	"github.com/sst/ion/cmd/sst/mosaic/server"
 	"github.com/sst/ion/cmd/sst/mosaic/watcher"
 	"github.com/sst/ion/pkg/project"

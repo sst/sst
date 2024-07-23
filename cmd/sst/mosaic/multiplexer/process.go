@@ -5,7 +5,7 @@ import (
 	"os/exec"
 
 	"github.com/gdamore/tcell/v2"
-	tcellterm "github.com/sst/ion/cmd/sst/mosaic/multiplexer2/tcell-term"
+	tcellterm "github.com/sst/ion/cmd/sst/mosaic/multiplexer/tcell-term"
 )
 
 type vterm struct {

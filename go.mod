@@ -4,7 +4,6 @@ go 1.21.3
 
 require (
 	github.com/Masterminds/semver/v3 v3.2.1
-	github.com/aaronjanse/3mux v1.1.0
 	github.com/aws/aws-sdk-go-v2 v1.24.1
 	github.com/aws/aws-sdk-go-v2/config v1.26.6
 	github.com/aws/aws-sdk-go-v2/service/iot v1.49.0
@@ -13,7 +12,6 @@ require (
 	github.com/briandowns/spinner v1.23.0
 	github.com/charmbracelet/huh v0.3.0
 	github.com/charmbracelet/x/ansi v0.1.2
-	github.com/charmbracelet/x/xpty v0.1.0
 	github.com/cloudflare/cloudflare-go v0.89.0
 	github.com/creack/pty v1.1.21
 	github.com/eclipse/paho.mqtt.golang v1.4.3
@@ -30,7 +28,6 @@ require (
 	github.com/pulumi/pulumi/sdk/v3 v3.115.2
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.9.0
-	github.com/tidwall/gjson v1.17.1
 	github.com/twitchtv/twirp v8.1.3+incompatible
 	github.com/yalp/jsonpath v0.0.0-20180802001716-5cc68e5049a0
 	golang.org/x/exp v0.0.0-20240325151524-a685a6edb6d8
@@ -39,19 +36,9 @@ require (
 
 require (
 	github.com/catppuccin/go v0.2.0 // indirect
-	github.com/charmbracelet/x/conpty v0.1.0 // indirect
-	github.com/charmbracelet/x/errors v0.0.0-20240508181413-e8d8b6e2de86 // indirect
-	github.com/charmbracelet/x/input v0.1.0 // indirect
-	github.com/charmbracelet/x/term v0.1.0 // indirect
-	github.com/charmbracelet/x/termios v0.1.0 // indirect
-	github.com/charmbracelet/x/windows v0.1.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
-	github.com/erikgeiser/coninput v0.0.0-20211004153227-1c3628e74d0f // indirect
 	github.com/gdamore/encoding v1.0.0 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
-	github.com/tidwall/match v1.1.1 // indirect
-	github.com/tidwall/pretty v1.2.0 // indirect
-	github.com/xo/terminfo v0.0.0-20220910002029-abceb7e1c41e // indirect
 )
 
 require (
@@ -77,7 +64,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.21.7 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sts v1.26.7
 	github.com/aws/smithy-go v1.19.0 // indirect
-	github.com/aymanbagabas/go-osc52/v2 v2.0.1 // indirect
+	github.com/aymanbagabas/go-osc52/v2 v2.0.1
 	github.com/blang/semver v3.5.1+incompatible // indirect
 	github.com/charmbracelet/bubbles v0.18.0
 	github.com/charmbracelet/bubbletea v0.25.0

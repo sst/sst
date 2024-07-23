@@ -2,14 +2,17 @@ package multiplexer
 
 import (
 	"context"
+	"encoding/base64"
+	"fmt"
 	"log/slog"
 	"os"
 	"os/exec"
 	"syscall"
+	"time"
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/gdamore/tcell/v2/views"
-	tcellterm "github.com/sst/ion/cmd/sst/mosaic/multiplexer2/tcell-term"
+	tcellterm "github.com/sst/ion/cmd/sst/mosaic/multiplexer/tcell-term"
 )
 
 var PAD_HEIGHT = 0
@@ -27,6 +30,9 @@ type Multiplexer struct {
 	root      *views.ViewPort
 	main      *views.ViewPort
 	stack     *views.BoxLayout
+
+	dragging bool
+	click    *tcell.EventMouse
 }
 
 func New(ctx context.Context) *Multiplexer {
@@ -35,6 +41,7 @@ func New(ctx context.Context) *Multiplexer {
 	result.processes = []*process{}
 	result.screen, _ = tcell.NewScreen()
 	result.screen.Init()
+	result.screen.EnableMouse()
 	result.screen.Show()
 	width, height := result.screen.Size()
 	result.width = width
@@ -84,6 +91,60 @@ func (s *Multiplexer) Start() {
 			selected := s.selectedProcess()
 
 			switch evt := unknown.(type) {
+
+			case *tcell.EventMouse:
+				if evt.Buttons()&tcell.WheelUp != 0 {
+					s.scrollUp(1)
+					continue
+				}
+				if evt.Buttons()&tcell.WheelDown != 0 {
+					s.scrollDown(1)
+					continue
+				}
+				if evt.Buttons() == tcell.ButtonNone {
+					if s.dragging && selected != nil {
+						copied := selected.vt.Copy()
+						slog.Info(copied)
+						// copy to clipboard
+						// base64 encode copied
+						encoded := base64.StdEncoding.EncodeToString([]byte(copied))
+						fmt.Fprintf(os.Stderr, "\x1b]52;c;%s\x07", encoded)
+					}
+					s.dragging = false
+					continue
+				}
+				if evt.Buttons()&tcell.ButtonPrimary != 0 {
+					x, y := evt.Position()
+					if x < SIDEBAR_WIDTH && y < len(s.processes) && !s.dragging {
+						s.selected = y
+						s.blur()
+						continue
+					}
+					if x > SIDEBAR_WIDTH {
+						if !s.dragging && s.click != nil && time.Since(s.click.When()) < time.Millisecond*500 {
+							oldX, oldY := s.click.Position()
+							if oldX == x && oldY == y {
+								selected.vt.SelectStart(0, y)
+								selected.vt.SelectEnd(s.width-1, y)
+								s.dragging = true
+								s.draw()
+								continue
+							}
+						}
+						s.click = evt
+						offsetX := x - SIDEBAR_WIDTH - 1
+						if s.dragging {
+							selected.vt.SelectEnd(offsetX, y)
+						}
+						if !s.dragging {
+							s.dragging = true
+							selected.vt.SelectStart(offsetX, y)
+						}
+						s.draw()
+						continue
+					}
+				}
+				break
 
 			case *tcell.EventResize:
 				slog.Info("resize")
@@ -146,16 +207,12 @@ func (s *Multiplexer) Start() {
 					}
 				case tcell.KeyCtrlU:
 					if selected != nil {
-						selected.scrollUp(s.height/2 + 1)
-						s.draw()
-						s.screen.Sync()
+						s.scrollUp(s.height/2 + 1)
 						continue
 					}
 				case tcell.KeyCtrlD:
 					if selected != nil {
-						selected.scrollDown(s.height/2 + 1)
-						s.draw()
-						s.screen.Sync()
+						s.scrollDown(s.height/2 + 1)
 						continue
 					}
 				case tcell.KeyEnter:
@@ -198,4 +255,23 @@ func (s *Multiplexer) Start() {
 			}
 		}
 	}
+}
+
+func (s *Multiplexer) scrollDown(n int) {
+	selected := s.selectedProcess()
+	if selected == nil {
+		return
+	}
+	selected.scrollDown(n)
+	s.draw()
+	s.screen.Sync()
+}
+
+func (s *Multiplexer) scrollUp(n int) {
+	selected := s.selectedProcess()
+	if selected == nil {
+		return
+	}
+	selected.scrollUp(n)
+	s.draw()
 }

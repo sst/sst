@@ -10,6 +10,7 @@ import (
 	"strings"
 	"sync"
 	"syscall"
+	"unicode"
 
 	"github.com/creack/pty"
 	"github.com/gdamore/tcell/v2"
@@ -61,6 +62,16 @@ type VT struct {
 	events       chan tcell.Event
 
 	mouseBtn tcell.ButtonMask
+
+	selection *selection
+}
+
+type selection struct {
+	content strings.Builder
+	startX  int
+	startY  int
+	endX    int
+	endY    int
 }
 
 type cursorState struct {
@@ -86,6 +97,12 @@ func New() *VT {
 		Logger: log.New(io.Discard, "", log.Flags()),
 		OSC8:   true,
 		scroll: -1,
+		selection: &selection{
+			startX: 0,
+			startY: 0,
+			endX:   -1,
+			endY:   -1,
+		},
 		charsets: charsets{
 			designations: map[charsetDesignator]charset{
 				g0: ascii,
@@ -504,6 +521,7 @@ func (vt *VT) Draw() {
 		return
 	}
 	offset := 0
+	vt.selection.content = strings.Builder{}
 	if vt.IsScrolling() {
 		for x := vt.scroll; x < len(vt.primaryScrollback); x += 1 {
 			if offset >= vt.height() {
@@ -520,17 +538,14 @@ func (vt *VT) Draw() {
 		vt.drawRow(offset, vt.activeScreen[cols])
 		offset++
 	}
-	// for _, s := range buf.getVisibleSixels() {
-	// 	fmt.Printf("\033[%d;%dH", s.Sixel.Y, s.Sixel.X)
-	// 	// DECSIXEL Introducer(\033P0;0;8q) + DECGRA ("1;1): Set Raster Attributes
-	// 	os.Stdout.Write([]byte{0x1b, 0x50, 0x30, 0x3b, 0x30, 0x3b, 0x38, 0x71, 0x22, 0x31, 0x3b, 0x31})
-	// 	os.Stdout.Write(s.Sixel.Data)
-	// 	// string terminator(ST)
-	// 	os.Stdout.Write([]byte{0x1b, 0x5c})
-	// }
 }
 
 func (vt *VT) drawRow(row int, cols []cell) {
+	scrollOffset := len(vt.primaryScrollback)
+	if vt.scroll != -1 {
+		scrollOffset = vt.scroll
+	}
+	builder := strings.Builder{}
 	for col := 0; col < len(cols); {
 		cell := cols[col]
 		w := cell.width
@@ -539,11 +554,20 @@ func (vt *VT) drawRow(row int, cols []cell) {
 			content = ' '
 			w = 1
 		}
-		vt.surface.SetContent(col, row, content, []rune{}, cell.attrs)
+		style := cell.attrs
+		if vt.selection != nil && isCellSelected(col, row+scrollOffset, vt.selection.startX, vt.selection.startY, vt.selection.endX, vt.selection.endY) {
+			style = style.Reverse(true)
+			builder.WriteRune(content)
+		}
+		vt.surface.SetContent(col, row, content, cell.combining, style)
 		if w == 0 {
 			w = 1
 		}
 		col += 1
+	}
+	if builder.Len() > 0 {
+		vt.selection.content.WriteString(strings.TrimRight(builder.String(), " "))
+		vt.selection.content.WriteRune('\n')
 	}
 }
 
@@ -574,4 +598,59 @@ func (vt *VT) HandleEvent(e tcell.Event) bool {
 
 func (vt *VT) Clear() {
 	vt.ris()
+}
+
+func (vt *VT) Copy() string {
+	return strings.TrimRightFunc(vt.selection.content.String(), unicode.IsSpace)
+}
+
+func (vt *VT) SelectStart(x int, y int) {
+	scrollOffset := len(vt.primaryScrollback)
+	if vt.scroll != -1 {
+		scrollOffset = vt.scroll
+	}
+	y += scrollOffset
+	vt.selection = &selection{
+		startX: x,
+		startY: y,
+		endX:   -1,
+		endY:   -1,
+	}
+}
+
+func (vt *VT) SelectEnd(x int, y int) {
+	scrollOffset := len(vt.primaryScrollback)
+	if vt.scroll != -1 {
+		scrollOffset = vt.scroll
+	}
+	y += scrollOffset
+	vt.selection.endX = x
+	vt.selection.endY = y
+}
+
+func isCellSelected(x, y, startX, startY, endX, endY int) bool {
+	if endX < 0 || endY < 0 {
+		return false
+	}
+	// Normalize the selection coordinates
+	minY, maxY := startY, endY
+	minX, maxX := startX, endX
+	if endY < startY || endY == startY && endX < startX {
+		minY, maxY = endY, startY
+		minX, maxX = endX, startX
+	}
+	// Check if the cell is within the selection
+	if y > minY && y < maxY {
+		return true // Full line selected
+	}
+	if y == minY && y == maxY {
+		return x >= minX && x <= maxX // Single line selection
+	}
+	if y == minY {
+		return x >= minX // First line of multi-line selection
+	}
+	if y == maxY {
+		return x <= maxX // Last line of multi-line selection
+	}
+	return false
 }

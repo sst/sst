@@ -612,7 +612,7 @@ func (vt *VT) rep(ps int) {
 	}
 	ch := vt.activeScreen[vt.cursor.row][col-1]
 	for i := 0; i < ps; i += 1 {
-		if col + column(i) == vt.margin.right {
+		if col+column(i) == vt.margin.right {
 			return
 		}
 		vt.activeScreen[vt.cursor.row][vt.cursor.col+column(i)].content = ch.content

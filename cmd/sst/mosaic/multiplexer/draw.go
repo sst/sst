@@ -8,7 +8,6 @@ import (
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/gdamore/tcell/v2/views"
-	"github.com/sst/ion/cmd/sst/mosaic/multiplexer2/ecma48"
 )
 
 func (s *Multiplexer) draw() {
@@ -99,23 +98,6 @@ func (s *Multiplexer) draw() {
 		if !s.focused {
 			s.screen.HideCursor()
 		}
-	}
-}
-
-func (s *Multiplexer) drawRow(row int, cols []ecma48.StyledChar) {
-	for col, cell := range cols {
-		style := tcell.
-			StyleDefault.
-			Bold(cell.Bold).
-			Italic(cell.Italic).
-			Underline(cell.Underline)
-		if cell.Style.Fg.ColorMode != ecma48.ColorNone && cell.Style.Fg.Code != 0 {
-			style = style.Foreground(tcell.PaletteColor(int(cell.Style.Fg.Code)))
-		}
-		if cell.Style.Bg.ColorMode != ecma48.ColorNone && cell.Style.Bg.Code != 0 {
-			style = style.Background(tcell.PaletteColor(int(cell.Style.Bg.Code)))
-		}
-		s.screen.SetContent(SIDEBAR_WIDTH+col+1, row, cell.Rune, nil, style)
 	}
 }
 
