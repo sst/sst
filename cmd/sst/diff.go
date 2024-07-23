@@ -92,6 +92,9 @@ func CmdDiff(c *cli.Cli) error {
 		}
 		sort.Strings(sorted)
 		for _, path := range sorted {
+			if path == "__provider" {
+				continue
+			}
 			diff := output.Metadata.DetailedDiff[path]
 			label := ""
 			if diff.Kind == apitype.DiffUpdate {
