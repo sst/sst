@@ -129,7 +129,8 @@ func CmdMosaic(c *cli.Cli) error {
 			fmt.Sprintf("SST_SERVER=http://localhost:%v", server.Port),
 			"SST_STAGE=" + p.App().Stage,
 		}
-		multi.AddProcess("deploy", []string{currentExecutable, "mosaic-deploy"}, "⑆", "SST", "", false, multiEnv...)
+		multi.AddProcess("deploy", []string{currentExecutable, "ui", "--filter=sst"}, "⑆", "SST", "", false, multiEnv...)
+		multi.AddProcess("function", []string{currentExecutable, "ui", "--filter=function"}, "⑆", "Function", "", false, multiEnv...)
 		wg.Go(func() error {
 			defer c.Cancel()
 			multi.Start()
@@ -172,7 +173,7 @@ func CmdMosaic(c *cli.Cli) error {
 
 	if c.Bool("simple") {
 		wg.Go(func() error {
-			return CmdMosaicDeploy(c)
+			return CmdUI(c)
 		})
 	}
 

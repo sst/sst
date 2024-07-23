@@ -304,9 +304,19 @@ var root = &cli.Command{
 			Run:    mosaic.CmdMosaic,
 		},
 		{
-			Name:   "mosaic-deploy",
+			Name:   "ui",
 			Hidden: true,
-			Run:    mosaic.CmdMosaicDeploy,
+			Run:    mosaic.CmdUI,
+			Flags: []cli.Flag{
+				{
+					Name: "filter",
+					Type: "string",
+					Description: cli.Description{
+						Short: "Filter events",
+						Long:  "Filter events.",
+					},
+				},
+			},
 		},
 		{
 			Name: "dev",
