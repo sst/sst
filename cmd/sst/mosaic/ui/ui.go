@@ -30,7 +30,7 @@ const (
 
 const (
 	IconX     = "✕"
-	IconCheck = "+"
+	IconCheck = "✓"
 )
 
 type UI struct {
