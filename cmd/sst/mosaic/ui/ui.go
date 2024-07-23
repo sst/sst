@@ -324,7 +324,7 @@ func (u *UI) Event(unknown interface{}) {
 		u.complete = evt
 		u.blank()
 		if len(evt.Errors) == 0 && evt.Finished {
-			u.print(TEXT_SUCCESS_BOLD.Render(IconCheck))
+			u.print(TEXT_SUCCESS_BOLD.Render("+"))
 			if len(u.timing) == 0 {
 				if u.mode == ProgressModeRemove {
 					u.print(TEXT_NORMAL_BOLD.Render("  No resources to remove"))

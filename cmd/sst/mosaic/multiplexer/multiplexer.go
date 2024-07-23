@@ -94,11 +94,11 @@ func (s *Multiplexer) Start() {
 
 			case *tcell.EventMouse:
 				if evt.Buttons()&tcell.WheelUp != 0 {
-					s.scrollUp(1)
+					s.scrollUp(-3)
 					continue
 				}
 				if evt.Buttons()&tcell.WheelDown != 0 {
-					s.scrollDown(1)
+					s.scrollDown(-3)
 					continue
 				}
 				if evt.Buttons() == tcell.ButtonNone {
