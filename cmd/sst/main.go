@@ -289,7 +289,17 @@ var root = &cli.Command{
 			},
 		},
 		{
-			Name:   "mosaic",
+			Name: "mosaic",
+			Flags: []cli.Flag{
+				{
+					Name: "simple",
+					Type: "bool",
+					Description: cli.Description{
+						Short: "Run in simple mode",
+						Long:  "Run in simple mode.",
+					},
+				},
+			},
 			Hidden: true,
 			Run:    mosaic.CmdMosaic,
 		},
