@@ -168,10 +168,10 @@ func (m *footer) Update(msg any) {
 		if msg.Metadata.New != nil && msg.Metadata.New.Parent != "" {
 			m.parents[msg.Metadata.URN] = msg.Metadata.New.Parent
 		}
-		if msg.Metadata.Op == apitype.OpSame {
+		if msg.Metadata.Op == apitype.OpSame || msg.Metadata.Op == apitype.OpRead {
 			m.skipped++
 		}
-		if msg.Metadata.Op != apitype.OpSame {
+		if msg.Metadata.Op != apitype.OpSame && msg.Metadata.Op != apitype.OpRead {
 			m.pending = append(m.pending, msg)
 		}
 	case *apitype.SummaryEvent:

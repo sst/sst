@@ -256,14 +256,6 @@ func (u *UI) Event(unknown interface{}) {
 				evt.Metadata.URN,
 			)
 		}
-		if evt.Metadata.Op == apitype.OpRead {
-			u.printProgress(
-				TEXT_SUCCESS,
-				"Read",
-				duration,
-				evt.Metadata.URN,
-			)
-		}
 		if evt.Metadata.Op == apitype.OpUpdate {
 			u.printProgress(
 				TEXT_SUCCESS,
