@@ -127,6 +127,9 @@ func UpgradeNode(existingVersion string, nextVersion string) (map[string]string,
 		if strings.HasPrefix(file, ".sst") {
 			continue
 		}
+		if strings.Contains(file, "node_modules") {
+			continue
+		}
 		data, err := os.ReadFile(file)
 		if err != nil {
 			continue
