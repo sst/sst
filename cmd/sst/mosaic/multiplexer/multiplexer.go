@@ -83,176 +83,183 @@ func (s *Multiplexer) Start() {
 		case <-s.ctx.Done():
 			return
 		default:
-			unknown := s.screen.PollEvent()
-			if unknown == nil {
-				break
-			}
-
-			selected := s.selectedProcess()
-
-			switch evt := unknown.(type) {
-
-			case *tcell.EventMouse:
-				if evt.Buttons()&tcell.WheelUp != 0 {
-					s.scrollUp(3)
-					continue
+			func() {
+				defer func() {
+					if r := recover(); r != nil {
+						slog.Error("panic in ui loop", "recovery", r)
+					}
+				}()
+				unknown := s.screen.PollEvent()
+				if unknown == nil {
+					return
 				}
-				if evt.Buttons()&tcell.WheelDown != 0 {
-					s.scrollDown(3)
-					continue
-				}
-				if evt.Buttons() == tcell.ButtonNone {
-					if s.dragging && selected != nil {
-						copied := selected.vt.Copy()
-						slog.Info(copied)
-						// copy to clipboard
-						// base64 encode copied
-						encoded := base64.StdEncoding.EncodeToString([]byte(copied))
-						fmt.Fprintf(os.Stderr, "\x1b]52;c;%s\x07", encoded)
-					}
-					s.dragging = false
-					continue
-				}
-				if evt.Buttons()&tcell.ButtonPrimary != 0 {
-					x, y := evt.Position()
-					if x < SIDEBAR_WIDTH && y < len(s.processes) && !s.dragging {
-						s.selected = y
-						s.blur()
-						continue
-					}
-					if x > SIDEBAR_WIDTH {
-						if !s.dragging && s.click != nil && time.Since(s.click.When()) < time.Millisecond*500 {
-							oldX, oldY := s.click.Position()
-							if oldX == x && oldY == y {
-								selected.vt.SelectStart(0, y)
-								selected.vt.SelectEnd(s.width-1, y)
-								s.dragging = true
-								s.draw()
-								continue
-							}
-						}
-						s.click = evt
-						offsetX := x - SIDEBAR_WIDTH - 1
-						if s.dragging {
-							selected.vt.SelectEnd(offsetX, y)
-						}
-						if !s.dragging {
-							s.dragging = true
-							selected.vt.SelectStart(offsetX, y)
-						}
-						s.draw()
-						continue
-					}
-				}
-				break
 
-			case *tcell.EventResize:
-				slog.Info("resize")
-				s.resize(evt.Size())
-				s.draw()
-				s.screen.Sync()
-				continue
+				selected := s.selectedProcess()
 
-			case *tcellterm.EventRedraw:
-				if selected != nil && selected.vt == evt.VT() {
-					selected.vt.Draw()
-					s.screen.Show()
-				}
-				continue
+				switch evt := unknown.(type) {
 
-			case *tcellterm.EventClosed:
-				for index, proc := range s.processes {
-					if proc.vt == evt.VT() {
-						if !proc.dead {
-							proc.vt.Start(exec.Command("echo", "\n[process exited]"))
-							proc.dead = true
-							s.sort()
-							if index == s.selected {
-								s.blur()
-							}
-						}
-					}
-				}
-				s.draw()
-				continue
-
-			case *tcell.EventKey:
-				switch evt.Key() {
-				case 256:
-					switch evt.Rune() {
-					case 'j':
-						if !s.focused {
-							s.move(1)
-							continue
-						}
-					case 'k':
-						if !s.focused {
-							s.move(-1)
-							continue
-						}
-					case 'x':
-						if selected.killable && !selected.dead && !s.focused {
-							selected.vt.Close()
-						}
-					}
-				case tcell.KeyUp:
-					if !s.focused {
-						s.move(-1)
-						continue
-					}
-				case tcell.KeyDown:
-					if !s.focused {
-						s.move(1)
-						continue
-					}
-				case tcell.KeyCtrlU:
-					if selected != nil {
-						s.scrollUp(s.height/2 + 1)
-						continue
-					}
-				case tcell.KeyCtrlD:
-					if selected != nil {
-						s.scrollDown(s.height/2 + 1)
-						continue
-					}
-				case tcell.KeyEnter:
-					if selected != nil && selected.isScrolling() && (s.focused || !selected.killable) {
-						selected.scrollReset()
-						s.draw()
-						s.screen.Sync()
-						continue
-					}
-					if !s.focused {
-						if selected.killable {
-							if selected.dead {
-								selected.start()
-								s.sort()
-								s.draw()
-								continue
-							}
-							s.focus()
-						}
-						continue
-					}
-				case tcell.KeyCtrlC:
-					if !s.focused {
-						pid := os.Getpid()
-						process, _ := os.FindProcess(pid)
-						process.Signal(syscall.SIGINT)
+				case *tcell.EventMouse:
+					if evt.Buttons()&tcell.WheelUp != 0 {
+						s.scrollUp(3)
 						return
 					}
-				case tcell.KeyCtrlZ:
-					if s.focused {
-						s.blur()
-						continue
+					if evt.Buttons()&tcell.WheelDown != 0 {
+						s.scrollDown(3)
+						return
+					}
+					if evt.Buttons() == tcell.ButtonNone {
+						if s.dragging && selected != nil {
+							copied := selected.vt.Copy()
+							slog.Info(copied)
+							// copy to clipboard
+							// base64 encode copied
+							encoded := base64.StdEncoding.EncodeToString([]byte(copied))
+							fmt.Fprintf(os.Stderr, "\x1b]52;c;%s\x07", encoded)
+						}
+						s.dragging = false
+						return
+					}
+					if evt.Buttons()&tcell.ButtonPrimary != 0 {
+						x, y := evt.Position()
+						if x < SIDEBAR_WIDTH && y < len(s.processes) && !s.dragging {
+							s.selected = y
+							s.blur()
+							return
+						}
+						if x > SIDEBAR_WIDTH {
+							if !s.dragging && s.click != nil && time.Since(s.click.When()) < time.Millisecond*500 {
+								oldX, oldY := s.click.Position()
+								if oldX == x && oldY == y {
+									selected.vt.SelectStart(0, y)
+									selected.vt.SelectEnd(s.width-1, y)
+									s.dragging = true
+									s.draw()
+									return
+								}
+							}
+							s.click = evt
+							offsetX := x - SIDEBAR_WIDTH - 1
+							if s.dragging {
+								selected.vt.SelectEnd(offsetX, y)
+							}
+							if !s.dragging {
+								s.dragging = true
+								selected.vt.SelectStart(offsetX, y)
+							}
+							s.draw()
+							return
+						}
+					}
+					break
+
+				case *tcell.EventResize:
+					slog.Info("resize")
+					s.resize(evt.Size())
+					s.draw()
+					s.screen.Sync()
+					return
+
+				case *tcellterm.EventRedraw:
+					if selected != nil && selected.vt == evt.VT() {
+						selected.vt.Draw()
+						s.screen.Show()
+					}
+					return
+
+				case *tcellterm.EventClosed:
+					for index, proc := range s.processes {
+						if proc.vt == evt.VT() {
+							if !proc.dead {
+								proc.vt.Start(exec.Command("echo", "\n[process exited]"))
+								proc.dead = true
+								s.sort()
+								if index == s.selected {
+									s.blur()
+								}
+							}
+						}
+					}
+					s.draw()
+					return
+
+				case *tcell.EventKey:
+					switch evt.Key() {
+					case 256:
+						switch evt.Rune() {
+						case 'j':
+							if !s.focused {
+								s.move(1)
+								return
+							}
+						case 'k':
+							if !s.focused {
+								s.move(-1)
+								return
+							}
+						case 'x':
+							if selected.killable && !selected.dead && !s.focused {
+								selected.vt.Close()
+							}
+						}
+					case tcell.KeyUp:
+						if !s.focused {
+							s.move(-1)
+							return
+						}
+					case tcell.KeyDown:
+						if !s.focused {
+							s.move(1)
+							return
+						}
+					case tcell.KeyCtrlU:
+						if selected != nil {
+							s.scrollUp(s.height/2 + 1)
+							return
+						}
+					case tcell.KeyCtrlD:
+						if selected != nil {
+							s.scrollDown(s.height/2 + 1)
+							return
+						}
+					case tcell.KeyEnter:
+						if selected != nil && selected.isScrolling() && (s.focused || !selected.killable) {
+							selected.scrollReset()
+							s.draw()
+							s.screen.Sync()
+							return
+						}
+						if !s.focused {
+							if selected.killable {
+								if selected.dead {
+									selected.start()
+									s.sort()
+									s.draw()
+									return
+								}
+								s.focus()
+							}
+							return
+						}
+					case tcell.KeyCtrlC:
+						if !s.focused {
+							pid := os.Getpid()
+							process, _ := os.FindProcess(pid)
+							process.Signal(syscall.SIGINT)
+							return
+						}
+					case tcell.KeyCtrlZ:
+						if s.focused {
+							s.blur()
+							return
+						}
+					}
+
+					if selected != nil && s.focused && !selected.isScrolling() {
+						selected.vt.HandleEvent(evt)
+						s.draw()
 					}
 				}
-
-				if selected != nil && s.focused && !selected.isScrolling() {
-					selected.vt.HandleEvent(evt)
-					s.draw()
-				}
-			}
+			}()
 		}
 	}
 }
