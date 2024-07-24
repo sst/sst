@@ -7,7 +7,8 @@ import { Link } from "../link.js";
 import { VisibleError } from "../error.js";
 import { Input } from "../input.js";
 import { Prettify } from "../component.js";
-import { BaseSiteFileOptions } from "./base-site.js";
+import { BaseSiteFileOptions, limiter } from "./base-site.js";
+import { Semaphore } from "../../util/semaphore.js";
 
 export interface BaseStaticSiteArgs {
   path?: Input<string>;
@@ -277,15 +278,16 @@ export function buildApp(
   environment: ReturnType<typeof prepare>["environment"],
 ) {
   return all([build, sitePath, environment]).apply(
-    ([build, sitePath, environment]) => {
+    async ([build, sitePath, environment]) => {
       if ($dev)
         return path.join($cli.paths.platform, "functions", "empty-site");
       if (!build) return sitePath;
 
       // Run build
       if (!process.env.SKIP) {
-        console.debug(`Running "${build.command}" script`);
         try {
+          await limiter.acquire("build for " + name);
+          console.debug(`running "${build.command}" script for ${name}`);
           execSync(build.command, {
             cwd: sitePath,
             stdio: "inherit",
@@ -296,6 +298,8 @@ export function buildApp(
           });
         } catch (e) {
           throw new VisibleError(`There was a problem building "${name}".`);
+        } finally {
+          limiter.release();
         }
       }
 

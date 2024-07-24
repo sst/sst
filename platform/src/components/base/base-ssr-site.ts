@@ -6,7 +6,7 @@ import { Prettify } from "../component";
 import { Input } from "../input";
 import { Link } from "../link.js";
 import { VisibleError } from "../error.js";
-import { BaseSiteFileOptions } from "./base-site";
+import { BaseSiteFileOptions, limiter } from "./base-site";
 
 export interface BaseSsrSiteArgs {
   assets?: Input<{
@@ -174,9 +174,10 @@ export function buildApp(
       });
 
       // Run build
-      return linkEnvs.apply((linkEnvs) => {
-        console.debug(`Running "${cmd}" script`);
+      return linkEnvs.apply(async (linkEnvs) => {
         try {
+          await limiter.acquire("build for " + name);
+          console.debug(`running "${cmd}" script for ${name}`);
           execSync(cmd, {
             cwd: sitePath,
             stdio: "inherit",
@@ -193,6 +194,8 @@ export function buildApp(
           });
         } catch (e) {
           throw new VisibleError(`There was a problem building "${name}".`);
+        } finally {
+          limiter.release();
         }
 
         return sitePath;

@@ -1,3 +1,5 @@
+import { Semaphore } from "../../util/semaphore";
+
 export interface BaseSiteFileOptions {
   /**
    * A glob pattern or array of glob patterns of files to apply these options to.
@@ -17,3 +19,7 @@ export interface BaseSiteFileOptions {
    */
   contentType?: string;
 }
+
+export const limiter = new Semaphore(
+  parseInt(process.env.SST_SITE_BUILD_CONCURRENCY || "4"),
+);
