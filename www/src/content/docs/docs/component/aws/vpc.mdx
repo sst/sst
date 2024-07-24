@@ -342,4 +342,40 @@ A list of public subnet IDs in the VPC.
 </Section>
 A list of VPC security group IDs.
 </Segment>
+
+## Methods
+
+### static get
+<Segment>
+<Section type="signature">
+```ts
+Vpc.get(name, vpcID)
+```
+</Section>
+
+<Section type="parameters">
+#### Parameters
+- <p><code class="key">name</code> <code class="primitive">string</code></p>
+The name of the component.
+- <p><code class="key">vpcID</code> <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code></p>
+The id of the VPC.
+</Section>
+
+<InlineSection>
+**Returns** [<code class="type">Vpc</code>](.)
+</InlineSection>
+Reference an existing VPC instance with the given VPC ID. This is useful when you
+created a VPC in one stage and you want to reference it in another stage.
+
+Imagine you created a VPC in the `dev` stage. And in your perosonal stage, ie. `frank`,
+instead of creating a new VPC, you want to reuse the same VPC from `dev`.
+
+```ts title="sst.config.ts"
+const vpc = $app.stage === "frank"
+  ? sst.aws.Vpc.get("MyVPC", "vpc-0be8fa4de860618bb")
+  : new sst.aws.Vpc("MyVPC");
+```
+
+Here `vpc-0be8fa4de860618bb` is the ID of the VPC created in the `dev` stage.
+</Segment>
 </div>

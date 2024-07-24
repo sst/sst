@@ -405,4 +405,40 @@ This is accessible through the `Resource` object in the [SDK](/docs/reference/sd
   The ARN of the master user secret.
 </Section>
 </Segment>
+
+## Methods
+
+### static get
+<Segment>
+<Section type="signature">
+```ts
+Postgres.get(name, clusterName)
+```
+</Section>
+
+<Section type="parameters">
+#### Parameters
+- <p><code class="key">name</code> <code class="primitive">string</code></p>
+The name of the component.
+- <p><code class="key">clusterName</code> <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code></p>
+The name of the RDS cluster.
+</Section>
+
+<InlineSection>
+**Returns** [<code class="type">Postgres</code>](.)
+</InlineSection>
+Reference an existing Postgres cluster with the given cluster name. This is useful
+when you created a cluster in one stage and you want to reference it in another stage.
+
+Imagine you created a cluster in the `dev` stage. And in your perosonal stage, ie. `frank`,
+instead of creating a new cluster, you want to reuse the same cluster from `dev`.
+
+```ts title="sst.config.ts"
+const database = $app.stage === "frank"
+  ? sst.aws.Postgres.get("MyDatabase", "app-dev-mydatabase")
+  ? new sst.aws.Postgres("MyDatabase");
+```
+
+Here `app-dev-mydatabase` is the name of the cluster created in the `dev` stage.
+</Segment>
 </div>

@@ -374,18 +374,34 @@ Disable running this function [Live](/docs/live/) in `sst dev`.
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Object</code><code class="symbol">&gt;</code>
 </InlineSection>
+- <p>[<code class="key">format?</code>](#logging-format)</p>
 - <p>[<code class="key">retention?</code>](#logging-retention)</p>
 </Section>
 
 <InlineSection>
-**Default** <code class="primitive">&lcub;retention: "forever"&rcub;</code>
+**Default** <code class="primitive">&lcub;retention: "forever", format: "text"&rcub;</code>
 </InlineSection>
 Configure the function logs in CloudWatch.
+
+</Segment>
+<NestedTitle id="logging-format" Tag="h4" parent="logging.">format?</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="symbol">&ldquo;</code><code class="primitive">text</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">json</code><code class="symbol">&rdquo;</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+
+<InlineSection>
+**Default** <code class="primitive">"text"</code>
+</InlineSection>
+The [log format](https://docs.aws.amazon.com/lambda/latest/dg/monitoring-cloudwatchlogs-advanced.html)
+of the Lambda function.
 
 ```js
 {
   logging: {
-    retention: "1 week"
+    format: "json"
   }
 }
 ```
@@ -403,6 +419,13 @@ Configure the function logs in CloudWatch.
 </InlineSection>
 The duration the function logs are kept in CloudWatch.
 
+```js
+{
+  logging: {
+    retention: "1 week"
+  }
+}
+```
 </Segment>
 ### memory?
 <Segment>
@@ -427,6 +450,25 @@ And might end up being more [cost effective](https://docs.aws.amazon.com/lambda/
 ```js
 {
   memory: "10240 MB"
+}
+```
+</Segment>
+### name?
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+The name for the function. This is displayed in the AWS Console.
+
+:::note
+Changing the name will create a new function and delete the old one.
+:::
+
+```js
+{
+  name: ""
 }
 ```
 </Segment>
