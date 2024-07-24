@@ -240,39 +240,42 @@ export function createBucket(
 
   function createS3Bucket() {
     return new Bucket(
-      `${name}Assets`,
-      transform(args.transform?.assets, {
-        transform: {
-          policy: (policyArgs) => {
-            const newPolicy = iam.getPolicyDocumentOutput({
-              statements: [
-                {
-                  principals: [
-                    {
-                      type: "AWS",
-                      identifiers: [
-                        interpolate`arn:${partition}:iam::cloudfront:user/CloudFront Origin Access Identity ${access.id}`,
-                      ],
-                    },
-                  ],
-                  actions: ["s3:GetObject"],
-                  resources: [interpolate`${bucket.arn}/*`],
-                },
-              ],
-            }).json;
+      ...transform(
+        args.transform?.assets,
+        `${name}Assets`,
+        {
+          transform: {
+            policy: (policyArgs) => {
+              const newPolicy = iam.getPolicyDocumentOutput({
+                statements: [
+                  {
+                    principals: [
+                      {
+                        type: "AWS",
+                        identifiers: [
+                          interpolate`arn:${partition}:iam::cloudfront:user/CloudFront Origin Access Identity ${access.id}`,
+                        ],
+                      },
+                    ],
+                    actions: ["s3:GetObject"],
+                    resources: [interpolate`${bucket.arn}/*`],
+                  },
+                ],
+              }).json;
 
-            policyArgs.policy = output([policyArgs.policy, newPolicy]).apply(
-              ([policy, newPolicy]) => {
-                const policyJson = JSON.parse(policy as string);
-                const newPolicyJson = JSON.parse(newPolicy as string);
-                policyJson.Statement.push(...newPolicyJson.Statement);
-                return JSON.stringify(policyJson);
-              },
-            );
+              policyArgs.policy = output([policyArgs.policy, newPolicy]).apply(
+                ([policy, newPolicy]) => {
+                  const policyJson = JSON.parse(policy as string);
+                  const newPolicyJson = JSON.parse(newPolicy as string);
+                  policyJson.Statement.push(...newPolicyJson.Statement);
+                  return JSON.stringify(policyJson);
+                },
+              );
+            },
           },
         },
-      }),
-      { parent, retainOnDelete: false },
+        { parent, retainOnDelete: false },
+      ),
     );
   }
 }
@@ -283,20 +286,23 @@ export function createDevServer(
   args: SsrSiteArgs,
 ) {
   return new Function(
-    `${name}DevServer`,
-    transform(args.transform?.server, {
-      description: `${name} dev server`,
-      runtime: "nodejs20.x",
-      timeout: "20 seconds",
-      memory: "128 MB",
-      bundle: path.join($cli.paths.platform, "functions", "empty-function"),
-      handler: "index.handler",
-      environment: args.environment,
-      permissions: args.permissions,
-      link: args.link,
-      live: false,
-    }),
-    { parent },
+    ...transform(
+      args.transform?.server,
+      `${name}DevServer`,
+      {
+        description: `${name} dev server`,
+        runtime: "nodejs20.x",
+        timeout: "20 seconds",
+        memory: "128 MB",
+        bundle: path.join($cli.paths.platform, "functions", "empty-function"),
+        handler: "index.handler",
+        environment: args.environment,
+        permissions: args.permissions,
+        link: args.link,
+        live: false,
+      },
+      { parent },
+    ),
   );
 }
 
@@ -589,40 +595,43 @@ function handler(event) {
 
     function buildServerOrigin(fnName: string, props: ServerOriginConfig) {
       const fn = new Function(
-        `${name}${sanitizeToPascalCase(fnName)}`,
-        transform(args.transform?.server, {
-          description: `${name} server`,
-          runtime: "nodejs20.x",
-          timeout: "20 seconds",
-          memory: output(args.server?.memory).apply((v) => v ?? "1024 MB"),
-          architecture: output(args.server?.architecture).apply(
-            (v) => v ?? "x86_64",
-          ),
-          vpc: args.vpc,
-          ...props.function,
-          nodejs: {
-            format: "esm" as const,
-            ...props.function.nodejs,
+        ...transform(
+          args.transform?.server,
+          `${name}${sanitizeToPascalCase(fnName)}`,
+          {
+            description: `${name} server`,
+            runtime: "nodejs20.x",
+            timeout: "20 seconds",
+            memory: output(args.server?.memory).apply((v) => v ?? "1024 MB"),
+            architecture: output(args.server?.architecture).apply(
+              (v) => v ?? "x86_64",
+            ),
+            vpc: args.vpc,
+            ...props.function,
+            nodejs: {
+              format: "esm" as const,
+              ...props.function.nodejs,
+            },
+            environment: output(args.environment).apply((environment) => ({
+              ...environment,
+              ...props.function.environment,
+            })),
+            permissions: output(args.permissions).apply((permissions) => [
+              ...(permissions ?? []),
+              ...(props.function.permissions ?? []),
+            ]),
+            injections: args.warm
+              ? [useServerFunctionWarmingInjection(props.function.streaming)]
+              : [],
+            link: output(args.link).apply((link) => [
+              ...(props.function.link ?? []),
+              ...(link ?? []),
+            ]),
+            url: true,
+            live: false,
           },
-          environment: output(args.environment).apply((environment) => ({
-            ...environment,
-            ...props.function.environment,
-          })),
-          permissions: output(args.permissions).apply((permissions) => [
-            ...(permissions ?? []),
-            ...(props.function.permissions ?? []),
-          ]),
-          injections: args.warm
-            ? [useServerFunctionWarmingInjection(props.function.streaming)]
-            : [],
-          link: output(args.link).apply((link) => [
-            ...(props.function.link ?? []),
-            ...(link ?? []),
-          ]),
-          url: true,
-          live: false,
-        }),
-        { parent },
+          { parent },
+        ),
       );
       ssrFunctions.push(fn);
 
@@ -644,24 +653,27 @@ function handler(event) {
       props: ImageOptimizationOriginConfig,
     ) {
       const fn = new Function(
-        `${name}${sanitizeToPascalCase(fnName)}`,
-        transform(args.transform?.imageOptimization, {
-          timeout: "25 seconds",
-          logging: {
-            retention: "3 days",
-          },
-          permissions: [
-            {
-              actions: ["s3:GetObject"],
-              resources: [interpolate`${bucket.arn}/*`],
+        ...transform(
+          args.transform?.imageOptimization,
+          `${name}${sanitizeToPascalCase(fnName)}`,
+          {
+            timeout: "25 seconds",
+            logging: {
+              retention: "3 days",
             },
-          ],
-          ...props.function,
-          url: true,
-          live: false,
-          _skipMetadata: true,
-        }),
-        { parent },
+            permissions: [
+              {
+                actions: ["s3:GetObject"],
+                resources: [interpolate`${bucket.arn}/*`],
+              },
+            ],
+            ...props.function,
+            url: true,
+            live: false,
+            _skipMetadata: true,
+          },
+          { parent },
+        ),
       );
 
       return {
@@ -799,26 +811,29 @@ function handler(event) {
 
     function createDistribution() {
       return new Cdn(
-        `${name}Cdn`,
-        transform(args.transform?.cdn, {
-          comment: `${name} app`,
-          origins: Object.values(origins),
-          originGroups: Object.values(originGroups),
-          defaultRootObject: plan.defaultRootObject ?? "",
-          defaultCacheBehavior: buildBehavior(
-            plan.behaviors.find((behavior) => !behavior.pattern)!,
-          ),
-          orderedCacheBehaviors: plan.behaviors
-            .filter((behavior) => behavior.pattern)
-            .map((behavior) => ({
-              pathPattern: behavior.pattern!,
-              ...buildBehavior(behavior),
-            })),
-          customErrorResponses: plan.errorResponses,
-          domain: args.domain,
-        }),
-        // create distribution after assets are uploaded
-        { dependsOn: bucketFile, parent },
+        ...transform(
+          args.transform?.cdn,
+          `${name}Cdn`,
+          {
+            comment: `${name} app`,
+            origins: Object.values(origins),
+            originGroups: Object.values(originGroups),
+            defaultRootObject: plan.defaultRootObject ?? "",
+            defaultCacheBehavior: buildBehavior(
+              plan.behaviors.find((behavior) => !behavior.pattern)!,
+            ),
+            orderedCacheBehaviors: plan.behaviors
+              .filter((behavior) => behavior.pattern)
+              .map((behavior) => ({
+                pathPattern: behavior.pattern!,
+                ...buildBehavior(behavior),
+              })),
+            customErrorResponses: plan.errorResponses,
+            domain: args.domain,
+          },
+          // create distribution after assets are uploaded
+          { dependsOn: bucketFile, parent },
+        ),
       );
     }
 

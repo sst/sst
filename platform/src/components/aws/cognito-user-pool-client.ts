@@ -46,23 +46,26 @@ export class CognitoUserPoolClient extends Component implements Link.Linkable {
 
     function createClient() {
       return new cognito.UserPoolClient(
-        `${name}Client`,
-        transform(args.transform?.client, {
-          name,
-          userPoolId: args.userPool,
-          allowedOauthFlows: ["implicit", "code"],
-          allowedOauthFlowsUserPoolClient: true,
-          allowedOauthScopes: [
-            "profile",
-            "phone",
-            "email",
-            "openid",
-            "aws.cognito.signin.user.admin",
-          ],
-          callbackUrls: ["https://example.com"],
-          supportedIdentityProviders: ["COGNITO"],
-        }),
-        { parent },
+        ...transform(
+          args.transform?.client,
+          `${name}Client`,
+          {
+            name,
+            userPoolId: args.userPool,
+            allowedOauthFlows: ["implicit", "code"],
+            allowedOauthFlowsUserPoolClient: true,
+            allowedOauthScopes: [
+              "profile",
+              "phone",
+              "email",
+              "openid",
+              "aws.cognito.signin.user.admin",
+            ],
+            callbackUrls: ["https://example.com"],
+            supportedIdentityProviders: ["COGNITO"],
+          },
+          { parent },
+        ),
       );
     }
   }

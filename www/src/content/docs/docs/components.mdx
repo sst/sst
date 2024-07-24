@@ -137,10 +137,10 @@ For example, here's what the `transform` prop looks like for the [Function](/doc
 The type for these callbacks is similar. Here's what the `role` callback looks like:
 
 ```ts
-RoleArgs | (args: RoleArgs => void)
+RoleArgs | (args: RoleArgs, opts: pulumi.ComponentResourceOptions, name: string) => void
 ```
 
-So this takes either a `RoleArgs` object or a function that takes `RoleArgs`. Where [RoleArgs](https://www.pulumi.com/registry/packages/aws/api-docs/iam/role/#inputs) is the props for the role that's passed to Pulumi.
+So this takes either a `RoleArgs` object or a function that takes `RoleArgs`. Where [args, opts, and name](https://www.pulumi.com/registry/packages/aws/api-docs/iam/role/#constructor-syntax) are the arguments for the role constructor passed to Pulumi.
 
 This allows you to either:
 
@@ -165,6 +165,7 @@ This allows you to either:
     transform: {
       role: (args) => {
         args.name = `${args.name}-MyRole`;
+        opts.retainOnDelete = true;
       }
     }
   }

@@ -74,13 +74,17 @@ export class SnsTopicQueueSubscriber extends Component {
 
     function createSubscription() {
       return new sns.TopicSubscription(
-        `${name}Subscription`,
-        transform(args?.transform?.subscription, {
-          topic: topic.arn,
-          protocol: "sqs",
-          endpoint: queueArn,
-          filterPolicy: JSON.stringify(args.filter ?? {}),
-        }),
+        ...transform(
+          args?.transform?.subscription,
+          `${name}Subscription`,
+          {
+            topic: topic.arn,
+            protocol: "sqs",
+            endpoint: queueArn,
+            filterPolicy: JSON.stringify(args.filter ?? {}),
+          },
+          {},
+        ),
       );
     }
   }

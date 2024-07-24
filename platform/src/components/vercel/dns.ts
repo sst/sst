@@ -75,15 +75,18 @@ export function dns(args: DnsArgs) {
   function useCAARecord(namePrefix: string, opts: ComponentResourceOptions) {
     if (!caaRecord) {
       caaRecord = new vercel.DnsRecord(
-        `${namePrefix}CAARecord`,
-        transform(args.transform?.record, {
-          domain: args.domain,
-          type: "CAA",
-          name: "",
-          value: `0 issue "amazonaws.com"`,
-          teamId: sst.vercel.DEFAULT_TEAM_ID,
-        }),
-        opts,
+        ...transform(
+          args.transform?.record,
+          `${namePrefix}CAARecord`,
+          {
+            domain: args.domain,
+            type: "CAA",
+            name: "",
+            value: `0 issue "amazonaws.com"`,
+            teamId: sst.vercel.DEFAULT_TEAM_ID,
+          },
+          opts,
+        ),
       );
     }
     return caaRecord;
@@ -111,16 +114,19 @@ export function dns(args: DnsArgs) {
 
       function createRecord() {
         return new vercel.DnsRecord(
-          `${namePrefix}${record.type}Record${nameSuffix}`,
-          transform(args.transform?.record, {
-            domain: args.domain,
-            type: record.type,
-            name: recordName,
-            value: record.value,
-            teamId: sst.vercel.DEFAULT_TEAM_ID,
-            ttl: 60,
-          }),
-          { ...opts, dependsOn: [useCAARecord(namePrefix, opts)] },
+          ...transform(
+            args.transform?.record,
+            `${namePrefix}${record.type}Record${nameSuffix}`,
+            {
+              domain: args.domain,
+              type: record.type,
+              name: recordName,
+              value: record.value,
+              teamId: sst.vercel.DEFAULT_TEAM_ID,
+              ttl: 60,
+            },
+            { ...opts, dependsOn: [useCAARecord(namePrefix, opts)] },
+          ),
         );
       }
     });

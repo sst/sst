@@ -312,24 +312,27 @@ export class Service extends Component implements Link.Linkable {
 
       // Build image
       return new docker.Image(
-        `${name}Image`,
-        transform(args.transform?.image, {
-          build: imageArgsNew.apply((imageArgs) => ({
-            context: path.join($cli.paths.root, imageArgs.context),
-            dockerfile: imageArgs.dockerfile
-              ? path.join($cli.paths.root, imageArgs.dockerfile)
-              : undefined,
-            args: imageArgs.args,
-            platform: imageArgs.platform,
-          })),
-          imageName: interpolate`${repo.url}:${name}`,
-          registry: authToken.apply((authToken) => ({
-            password: secret(authToken.password),
-            username: authToken.userName,
-            server: authToken.proxyEndpoint,
-          })),
-        }),
-        { parent: self },
+        ...transform(
+          args.transform?.image,
+          `${name}Image`,
+          {
+            build: imageArgsNew.apply((imageArgs) => ({
+              context: path.join($cli.paths.root, imageArgs.context),
+              dockerfile: imageArgs.dockerfile
+                ? path.join($cli.paths.root, imageArgs.dockerfile)
+                : undefined,
+              args: imageArgs.args,
+              platform: imageArgs.platform,
+            })),
+            imageName: interpolate`${repo.url}:${name}`,
+            registry: authToken.apply((authToken) => ({
+              password: secret(authToken.password),
+              username: authToken.userName,
+              server: authToken.proxyEndpoint,
+            })),
+          },
+          { parent: self },
+        ),
       );
     }
 
@@ -337,19 +340,22 @@ export class Service extends Component implements Link.Linkable {
       if (!pub) return {};
 
       const loadBalancer = new lb.LoadBalancer(
-        `${name}LoadBalancer`,
-        transform(args.transform?.loadBalancer, {
-          internal: false,
-          loadBalancerType: pub.ports.apply((ports) =>
-            ports[0].listenProtocol.startsWith("http")
-              ? "application"
-              : "network",
-          ),
-          subnets: vpc.publicSubnets,
-          securityGroups: vpc.securityGroups,
-          enableCrossZoneLoadBalancing: true,
-        }),
-        { parent: self },
+        ...transform(
+          args.transform?.loadBalancer,
+          `${name}LoadBalancer`,
+          {
+            internal: false,
+            loadBalancerType: pub.ports.apply((ports) =>
+              ports[0].listenProtocol.startsWith("http")
+                ? "application"
+                : "network",
+            ),
+            subnets: vpc.publicSubnets,
+            securityGroups: vpc.securityGroups,
+            enableCrossZoneLoadBalancing: true,
+          },
+          { parent: self },
+        ),
       );
 
       const ret = all([pub.ports, certificateArn]).apply(([ports, cert]) => {
@@ -363,22 +369,25 @@ export class Service extends Component implements Link.Linkable {
           const target =
             targets[targetId] ??
             new lb.TargetGroup(
-              `${name}Target${targetId}`,
-              transform(args.transform?.target, {
-                // TargetGroup names allow for 32 chars, but an 8 letter suffix
-                // ie. "-1234567" is automatically added.
-                // - If we don't specify "name" or "namePrefix", we need to ensure
-                //   the component name is less than 24 chars. Hard to guarantee.
-                // - If we specify "name", we need to ensure the $app-$stage-$name
-                //   if less than 32 chars. Hard to guarantee.
-                // - Hence we will use "namePrefix".
-                namePrefix: forwardProtocol,
-                port: forwardPort,
-                protocol: forwardProtocol,
-                targetType: "ip",
-                vpcId: vpc.id,
-              }),
-              { parent: self },
+              ...transform(
+                args.transform?.target,
+                `${name}Target${targetId}`,
+                {
+                  // TargetGroup names allow for 32 chars, but an 8 letter suffix
+                  // ie. "-1234567" is automatically added.
+                  // - If we don't specify "name" or "namePrefix", we need to ensure
+                  //   the component name is less than 24 chars. Hard to guarantee.
+                  // - If we specify "name", we need to ensure the $app-$stage-$name
+                  //   if less than 32 chars. Hard to guarantee.
+                  // - Hence we will use "namePrefix".
+                  namePrefix: forwardProtocol,
+                  port: forwardPort,
+                  protocol: forwardProtocol,
+                  targetType: "ip",
+                  vpcId: vpc.id,
+                },
+                { parent: self },
+              ),
             );
           targets[targetId] = target;
 
@@ -388,22 +397,25 @@ export class Service extends Component implements Link.Linkable {
           const listener =
             listeners[listenerId] ??
             new lb.Listener(
-              `${name}Listener${listenerId}`,
-              transform(args.transform?.listener, {
-                loadBalancerArn: loadBalancer.arn,
-                port: listenPort,
-                protocol: listenProtocol,
-                certificateArn: ["HTTPS", "TLS"].includes(listenProtocol)
-                  ? cert
-                  : undefined,
-                defaultActions: [
-                  {
-                    type: "forward",
-                    targetGroupArn: target.arn,
-                  },
-                ],
-              }),
-              { parent: self },
+              ...transform(
+                args.transform?.listener,
+                `${name}Listener${listenerId}`,
+                {
+                  loadBalancerArn: loadBalancer.arn,
+                  port: listenPort,
+                  protocol: listenProtocol,
+                  certificateArn: ["HTTPS", "TLS"].includes(listenProtocol)
+                    ? cert
+                    : undefined,
+                  defaultActions: [
+                    {
+                      type: "forward",
+                      targetGroupArn: target.arn,
+                    },
+                  ],
+                },
+                { parent: self },
+              ),
             );
           listeners[listenerId] = listener;
         });
@@ -434,14 +446,17 @@ export class Service extends Component implements Link.Linkable {
 
     function createLogGroup() {
       return new cloudwatch.LogGroup(
-        `${name}LogGroup`,
-        transform(args.transform?.logGroup, {
-          name: interpolate`/sst/cluster/${cluster.name}/${name}`,
-          retentionInDays: logging.apply(
-            (logging) => RETENTION[logging.retention],
-          ),
-        }),
-        { parent: self },
+        ...transform(
+          args.transform?.logGroup,
+          `${name}LogGroup`,
+          {
+            name: interpolate`/sst/cluster/${cluster.name}/${name}`,
+            retentionInDays: logging.apply(
+              (logging) => RETENTION[logging.retention],
+            ),
+          },
+          { parent: self },
+        ),
       );
     }
 
@@ -460,22 +475,25 @@ export class Service extends Component implements Link.Linkable {
       );
 
       return new iam.Role(
-        `${name}TaskRole`,
-        transform(args.transform?.taskRole, {
-          assumeRolePolicy: !$dev
-            ? iam.assumeRolePolicyForPrincipal({
-                Service: "ecs-tasks.amazonaws.com",
-              })
-            : iam.assumeRolePolicyForPrincipal({
-                AWS: interpolate`arn:aws:iam::${
-                  getCallerIdentityOutput().accountId
-                }:root`,
-              }),
-          inlinePolicies: policy.apply(({ statements }) =>
-            statements ? [{ name: "inline", policy: policy.json }] : [],
-          ),
-        }),
-        { parent: self },
+        ...transform(
+          args.transform?.taskRole,
+          `${name}TaskRole`,
+          {
+            assumeRolePolicy: !$dev
+              ? iam.assumeRolePolicyForPrincipal({
+                  Service: "ecs-tasks.amazonaws.com",
+                })
+              : iam.assumeRolePolicyForPrincipal({
+                  AWS: interpolate`arn:aws:iam::${
+                    getCallerIdentityOutput().accountId
+                  }:root`,
+                }),
+            inlinePolicies: policy.apply(({ statements }) =>
+              statements ? [{ name: "inline", policy: policy.json }] : [],
+            ),
+          },
+          { parent: self },
+        ),
       );
     }
 
@@ -496,98 +514,106 @@ export class Service extends Component implements Link.Linkable {
 
     function createTaskDefinition() {
       return new ecs.TaskDefinition(
-        `${name}Task`,
-        transform(args.transform?.taskDefinition, {
-          family: interpolate`${cluster.name}-${name}`,
-          trackLatest: true,
-          cpu: cpu.apply((v) => toNumber(v).toString()),
-          memory: memory.apply((v) => toMBs(v).toString()),
-          networkMode: "awsvpc",
-          ephemeralStorage: {
-            sizeInGib: storage.apply((v) => toGBs(v)),
-          },
-          requiresCompatibilities: ["FARGATE"],
-          runtimePlatform: {
-            cpuArchitecture: architecture.apply((v) => v.toUpperCase()),
-            operatingSystemFamily: "LINUX",
-          },
-          executionRoleArn: executionRole.arn,
-          taskRoleArn: taskRole.arn,
-          containerDefinitions: $jsonStringify([
-            {
-              name,
-              image: image.repoDigest,
-              pseudoTerminal: true,
-              portMappings: pub?.ports.apply((ports) =>
-                ports
-                  .map((port) => port.forwardPort)
-                  // ensure unique ports
-                  .filter((value, index, self) => self.indexOf(value) === index)
-                  .map((value) => ({ containerPort: value })),
-              ),
-              logConfiguration: {
-                logDriver: "awslogs",
-                options: {
-                  "awslogs-group": logGroup.name,
-                  "awslogs-region": region,
-                  "awslogs-stream-prefix": "/service",
-                },
-              },
-              environment: all([args.environment ?? [], linkData]).apply(
-                ([env, linkData]) => [
-                  ...Object.entries(env).map(([name, value]) => ({
-                    name,
-                    value,
-                  })),
-                  ...linkData.map((d) => ({
-                    name: `SST_RESOURCE_${d.name}`,
-                    value: JSON.stringify(d.properties),
-                  })),
-                  {
-                    name: "SST_RESOURCE_App",
-                    value: JSON.stringify({
-                      name: $app.name,
-                      stage: $app.stage,
-                    }),
-                  },
-                ],
-              ),
+        ...transform(
+          args.transform?.taskDefinition,
+          `${name}Task`,
+          {
+            family: interpolate`${cluster.name}-${name}`,
+            trackLatest: true,
+            cpu: cpu.apply((v) => toNumber(v).toString()),
+            memory: memory.apply((v) => toMBs(v).toString()),
+            networkMode: "awsvpc",
+            ephemeralStorage: {
+              sizeInGib: storage.apply((v) => toGBs(v)),
             },
-          ]),
-        }),
-        { parent: self },
+            requiresCompatibilities: ["FARGATE"],
+            runtimePlatform: {
+              cpuArchitecture: architecture.apply((v) => v.toUpperCase()),
+              operatingSystemFamily: "LINUX",
+            },
+            executionRoleArn: executionRole.arn,
+            taskRoleArn: taskRole.arn,
+            containerDefinitions: $jsonStringify([
+              {
+                name,
+                image: image.repoDigest,
+                pseudoTerminal: true,
+                portMappings: pub?.ports.apply((ports) =>
+                  ports
+                    .map((port) => port.forwardPort)
+                    // ensure unique ports
+                    .filter(
+                      (value, index, self) => self.indexOf(value) === index,
+                    )
+                    .map((value) => ({ containerPort: value })),
+                ),
+                logConfiguration: {
+                  logDriver: "awslogs",
+                  options: {
+                    "awslogs-group": logGroup.name,
+                    "awslogs-region": region,
+                    "awslogs-stream-prefix": "/service",
+                  },
+                },
+                environment: all([args.environment ?? [], linkData]).apply(
+                  ([env, linkData]) => [
+                    ...Object.entries(env).map(([name, value]) => ({
+                      name,
+                      value,
+                    })),
+                    ...linkData.map((d) => ({
+                      name: `SST_RESOURCE_${d.name}`,
+                      value: JSON.stringify(d.properties),
+                    })),
+                    {
+                      name: "SST_RESOURCE_App",
+                      value: JSON.stringify({
+                        name: $app.name,
+                        stage: $app.stage,
+                      }),
+                    },
+                  ],
+                ),
+              },
+            ]),
+          },
+          { parent: self },
+        ),
       );
     }
 
     function createService() {
       return new ecs.Service(
-        `${name}Service`,
-        transform(args.transform?.service, {
-          name,
-          cluster: cluster.arn,
-          taskDefinition: taskDefinition.arn,
-          desiredCount: scaling.min,
-          launchType: "FARGATE",
-          networkConfiguration: {
-            assignPublicIp: false,
-            subnets: vpc.privateSubnets,
-            securityGroups: vpc.securityGroups,
+        ...transform(
+          args.transform?.service,
+          `${name}Service`,
+          {
+            name,
+            cluster: cluster.arn,
+            taskDefinition: taskDefinition.arn,
+            desiredCount: scaling.min,
+            launchType: "FARGATE",
+            networkConfiguration: {
+              assignPublicIp: false,
+              subnets: vpc.privateSubnets,
+              securityGroups: vpc.securityGroups,
+            },
+            deploymentCircuitBreaker: {
+              enable: true,
+              rollback: true,
+            },
+            loadBalancers:
+              targets &&
+              targets.apply((targets) =>
+                Object.values(targets).map((target) => ({
+                  targetGroupArn: target.arn,
+                  containerName: name,
+                  containerPort: target.port.apply((port) => port!),
+                })),
+              ),
           },
-          deploymentCircuitBreaker: {
-            enable: true,
-            rollback: true,
-          },
-          loadBalancers:
-            targets &&
-            targets.apply((targets) =>
-              Object.values(targets).map((target) => ({
-                targetGroupArn: target.arn,
-                containerName: name,
-                containerPort: target.port.apply((port) => port!),
-              })),
-            ),
-        }),
-        { parent: self },
+          { parent: self },
+        ),
       );
     }
 

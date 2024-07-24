@@ -63,12 +63,15 @@ export class Kv extends Component implements Link.Linkable {
 
     function createNamespace() {
       return new cloudflare.WorkersKvNamespace(
-        `${name}Namespace`,
-        transform(args?.transform?.namespace, {
-          title: name,
-          accountId: sst.cloudflare.DEFAULT_ACCOUNT_ID,
-        }),
-        { parent },
+        ...transform(
+          args?.transform?.namespace,
+          `${name}Namespace`,
+          {
+            title: name,
+            accountId: sst.cloudflare.DEFAULT_ACCOUNT_ID,
+          },
+          { parent },
+        ),
       );
     }
   }

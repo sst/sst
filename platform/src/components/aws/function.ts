@@ -1265,48 +1265,51 @@ export class Function extends Component implements Link.Linkable {
       );
 
       return new iam.Role(
-        `${name}Role`,
-        transform(args.transform?.role, {
-          assumeRolePolicy: !$dev
-            ? iam.assumeRolePolicyForPrincipal({
-                Service: "lambda.amazonaws.com",
-              })
-            : iam.getPolicyDocumentOutput({
-                statements: [
-                  {
-                    actions: ["sts:AssumeRole"],
-                    principals: [
-                      {
-                        type: "Service",
-                        identifiers: ["lambda.amazonaws.com"],
-                      },
-                      {
-                        type: "AWS",
-                        identifiers: [
-                          interpolate`arn:aws:iam::${
-                            getCallerIdentityOutput().accountId
-                          }:root`,
-                        ],
-                      },
-                    ],
-                  },
-                ],
-              }).json,
-          // if there are no statements, do not add an inline policy.
-          // adding an inline policy with no statements will cause an error.
-          inlinePolicies: policy.apply(({ statements }) =>
-            statements ? [{ name: "inline", policy: policy.json }] : [],
-          ),
-          managedPolicyArns: [
-            "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
-            ...(args.vpc
-              ? [
-                  "arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole",
-                ]
-              : []),
-          ],
-        }),
-        { parent },
+        ...transform(
+          args.transform?.role,
+          `${name}Role`,
+          {
+            assumeRolePolicy: !$dev
+              ? iam.assumeRolePolicyForPrincipal({
+                  Service: "lambda.amazonaws.com",
+                })
+              : iam.getPolicyDocumentOutput({
+                  statements: [
+                    {
+                      actions: ["sts:AssumeRole"],
+                      principals: [
+                        {
+                          type: "Service",
+                          identifiers: ["lambda.amazonaws.com"],
+                        },
+                        {
+                          type: "AWS",
+                          identifiers: [
+                            interpolate`arn:aws:iam::${
+                              getCallerIdentityOutput().accountId
+                            }:root`,
+                          ],
+                        },
+                      ],
+                    },
+                  ],
+                }).json,
+            // if there are no statements, do not add an inline policy.
+            // adding an inline policy with no statements will cause an error.
+            inlinePolicies: policy.apply(({ statements }) =>
+              statements ? [{ name: "inline", policy: policy.json }] : [],
+            ),
+            managedPolicyArns: [
+              "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ...(args.vpc
+                ? [
+                    "arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole",
+                  ]
+                : []),
+            ],
+          },
+          { parent },
+        ),
       );
     }
 
@@ -1406,58 +1409,73 @@ export class Function extends Component implements Link.Linkable {
 
     function createLogGroup() {
       return new cloudwatch.LogGroup(
-        `${name}LogGroup`,
-        transform(args.transform?.logGroup, {
-          name: `/aws/lambda/${prefixName(64, `${name}Function`)}`,
-          retentionInDays: logging.apply(
-            (logging) => RETENTION[logging.retention],
-          ),
-        }),
-        { parent },
+        ...transform(
+          args.transform?.logGroup,
+          `${name}LogGroup`,
+          {
+            name: `/aws/lambda/${prefixName(64, `${name}Function`)}`,
+            retentionInDays: logging.apply(
+              (logging) => RETENTION[logging.retention],
+            ),
+          },
+          { parent },
+        ),
       );
     }
 
     function createFunction() {
-      const transformed = transform(args.transform?.function, {
-        name: args.name,
-        description: all([args.description, dev]).apply(([description, dev]) =>
-          dev
-            ? description
-              ? `${description.substring(0, 240)} (live)`
-              : "live"
-            : `${description ?? ""}`,
-        ),
-        code: new asset.FileArchive(
-          path.join($cli.paths.platform, "functions", "empty-function"),
-        ),
-        handler: unsecret(handler),
-        role: args.role ?? role!.arn,
-        runtime,
-        timeout: timeout.apply((timeout) => toSeconds(timeout)),
-        memorySize: memory.apply((memory) => toMBs(memory)),
-        environment: {
-          variables: environment,
-        },
-        architectures,
-        loggingConfig: {
-          logFormat: logging.apply((logging) =>
-            logging.format === "json" ? "JSON" : "Text",
+      const transformed = transform(
+        args.transform?.function,
+        `${name}Function`,
+        {
+          name: args.name,
+          description: all([args.description, dev]).apply(
+            ([description, dev]) =>
+              dev
+                ? description
+                  ? `${description.substring(0, 240)} (live)`
+                  : "live"
+                : `${description ?? ""}`,
           ),
-          logGroup: logGroup.name,
+          code: new asset.FileArchive(
+            path.join($cli.paths.platform, "functions", "empty-function"),
+          ),
+          handler: unsecret(handler),
+          role: args.role ?? role!.arn,
+          runtime,
+          timeout: timeout.apply((timeout) => toSeconds(timeout)),
+          memorySize: memory.apply((memory) => toMBs(memory)),
+          environment: {
+            variables: environment,
+          },
+          architectures,
+          loggingConfig: {
+            logFormat: logging.apply((logging) =>
+              logging.format === "json" ? "JSON" : "Text",
+            ),
+            logGroup: logGroup.name,
+          },
+          vpcConfig: args.vpc && {
+            securityGroupIds: output(args.vpc).securityGroups,
+            subnetIds: output(args.vpc).subnets,
+          },
+          layers: args.layers,
         },
-        vpcConfig: args.vpc && {
-          securityGroupIds: output(args.vpc).securityGroups,
-          subnetIds: output(args.vpc).subnets,
+        { parent },
+      );
+      return new lambda.Function(
+        transformed[0],
+        {
+          ...transformed[1],
+          runtime: all([transformed[1].runtime, dev]).apply(([runtime, dev]) =>
+            dev ? "provided.al2023" : runtime!,
+          ),
+          architectures: all([transformed[1].architectures, dev]).apply(
+            ([architectures, dev]) => (dev ? ["x86_64"] : architectures!),
+          ),
         },
-        layers: args.layers,
-      });
-      transformed.runtime = all([transformed.runtime, dev]).apply(
-        ([runtime, dev]) => (dev ? "provided.al2023" : runtime!),
+        transformed[2],
       );
-      transformed.architectures = all([transformed.architectures, dev]).apply(
-        ([architectures, dev]) => (dev ? ["x86_64"] : architectures!),
-      );
-      return new lambda.Function(`${name}Function`, transformed, { parent });
     }
 
     function createUrl() {
@@ -1559,25 +1577,31 @@ export class Function extends Component implements Link.Linkable {
     return output(definition).apply((definition) => {
       if (typeof definition === "string") {
         return new Function(
-          name,
-          transform(argsTransform, { handler: definition, ...override }),
-          opts,
+          ...transform(
+            argsTransform,
+            name,
+            { handler: definition, ...override },
+            opts || {},
+          ),
         );
       } else if (definition.handler) {
         return new Function(
-          name,
-          transform(argsTransform, {
-            ...definition,
-            ...override,
-            permissions: all([
-              definition.permissions,
-              override?.permissions,
-            ]).apply(([permissions, overridePermissions]) => [
-              ...(permissions ?? []),
-              ...(overridePermissions ?? []),
-            ]),
-          }),
-          opts,
+          ...transform(
+            argsTransform,
+            name,
+            {
+              ...definition,
+              ...override,
+              permissions: all([
+                definition.permissions,
+                override?.permissions,
+              ]).apply(([permissions, overridePermissions]) => [
+                ...(permissions ?? []),
+                ...(overridePermissions ?? []),
+              ]),
+            },
+            opts || {},
+          ),
         );
       }
       throw new Error(`Invalid function definition for the "${name}" Function`);

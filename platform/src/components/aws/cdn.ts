@@ -341,38 +341,42 @@ export class Cdn extends Component {
 
     function createDistribution() {
       return new cloudfront.Distribution(
-        `${name}Distribution`,
-        transform(args.transform?.distribution, {
-          comment: args.comment,
-          enabled: true,
-          origins: args.origins,
-          originGroups: args.originGroups,
-          defaultCacheBehavior: args.defaultCacheBehavior,
-          orderedCacheBehaviors: args.orderedCacheBehaviors,
-          defaultRootObject: args.defaultRootObject,
-          customErrorResponses: args.customErrorResponses,
-          restrictions: {
-            geoRestriction: {
-              restrictionType: "none",
+        ...transform(
+          args.transform?.distribution,
+          `${name}Distribution`,
+          {
+            comment: args.comment,
+            enabled: true,
+            origins: args.origins,
+            originGroups: args.originGroups,
+            defaultCacheBehavior: args.defaultCacheBehavior,
+            orderedCacheBehaviors: args.orderedCacheBehaviors,
+            defaultRootObject: args.defaultRootObject,
+            customErrorResponses: args.customErrorResponses,
+            restrictions: {
+              geoRestriction: {
+                restrictionType: "none",
+              },
             },
+            aliases: domain
+              ? output(domain).apply((domain) => [
+                  domain.name,
+                  ...domain.aliases,
+                ])
+              : [],
+            viewerCertificate: certificateArn
+              ? {
+                  acmCertificateArn: certificateArn,
+                  sslSupportMethod: "sni-only",
+                  minimumProtocolVersion: "TLSv1.2_2021",
+                }
+              : {
+                  cloudfrontDefaultCertificate: true,
+                },
+            waitForDeployment: false,
           },
-          aliases: domain
-            ? output(domain).apply((domain) => [domain.name, ...domain.aliases])
-            : [],
-          viewerCertificate: certificateArn
-            ? {
-              acmCertificateArn: certificateArn,
-              sslSupportMethod: "sni-only",
-              minimumProtocolVersion: "TLSv1.2_2021",
-            }
-            : {
-              cloudfrontDefaultCertificate: true,
-            },
-          waitForDeployment: false,
-        }),
-        {
-          parent,
-        },
+          { parent },
+        ),
       );
     }
 

@@ -155,12 +155,15 @@ export function dns(args: DnsArgs = {}) {
 
       function createRecord() {
         return new route53.Record(
-          `${namePrefix}${partial.type}Record${nameSuffix}`,
-          transform(args.transform?.record, {
-            zoneId,
-            ...partial,
-          }),
-          opts,
+          ...transform(
+            args.transform?.record,
+            `${namePrefix}${partial.type}Record${nameSuffix}`,
+            {
+              zoneId,
+              ...partial,
+            },
+            opts,
+          ),
         );
       }
     });

@@ -57,17 +57,17 @@ export class BucketLambdaSubscriber extends Component {
     const events = args.events
       ? output(args.events)
       : output([
-        "s3:ObjectCreated:*",
-        "s3:ObjectRemoved:*",
-        "s3:ObjectRestore:*",
-        "s3:ReducedRedundancyLostObject",
-        "s3:Replication:*",
-        "s3:LifecycleExpiration:*",
-        "s3:LifecycleTransition",
-        "s3:IntelligentTiering",
-        "s3:ObjectTagging:*",
-        "s3:ObjectAcl:Put",
-      ]);
+          "s3:ObjectCreated:*",
+          "s3:ObjectRemoved:*",
+          "s3:ObjectRestore:*",
+          "s3:ReducedRedundancyLostObject",
+          "s3:Replication:*",
+          "s3:LifecycleExpiration:*",
+          "s3:LifecycleTransition",
+          "s3:IntelligentTiering",
+          "s3:ObjectTagging:*",
+          "s3:ObjectAcl:Put",
+        ]);
 
     const fn = createFunction();
     const permission = createPermission();
@@ -86,8 +86,8 @@ export class BucketLambdaSubscriber extends Component {
             events.length < 5
               ? `Subscribed to ${name} on ${events.join(", ")}`
               : `Subscribed to ${name} on ${events
-                .slice(0, 3)
-                .join(", ")}, and ${events.length - 3} more events`,
+                  .slice(0, 3)
+                  .join(", ")}, and ${events.length - 3} more events`,
           ),
         },
         undefined,
@@ -110,20 +110,23 @@ export class BucketLambdaSubscriber extends Component {
 
     function createNotification() {
       return new s3.BucketNotification(
-        `${name}Notification`,
-        transform(args.transform?.notification, {
-          bucket: bucket.name,
-          lambdaFunctions: [
-            {
-              id: interpolate`Notification${args.subscriberId}`,
-              lambdaFunctionArn: fn.arn,
-              events,
-              filterPrefix: args.filterPrefix,
-              filterSuffix: args.filterSuffix,
-            },
-          ],
-        }),
-        { parent: self, dependsOn: [permission] },
+        ...transform(
+          args.transform?.notification,
+          `${name}Notification`,
+          {
+            bucket: bucket.name,
+            lambdaFunctions: [
+              {
+                id: interpolate`Notification${args.subscriberId}`,
+                lambdaFunctionArn: fn.arn,
+                events,
+                filterPrefix: args.filterPrefix,
+                filterSuffix: args.filterSuffix,
+              },
+            ],
+          },
+          { parent: self, dependsOn: [permission] },
+        ),
       );
     }
   }

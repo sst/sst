@@ -247,9 +247,12 @@ export class Email extends Component implements Link.Linkable {
 
     function createIdentity() {
       return new sesv2.EmailIdentity(
-        `${name}Identity`,
-        transform(args.transform?.identity, { emailIdentity: args.sender }),
-        { parent },
+        ...transform(
+          args.transform?.identity,
+          `${name}Identity`,
+          { emailIdentity: args.sender },
+          { parent },
+        ),
       );
     }
 

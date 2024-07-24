@@ -67,12 +67,15 @@ export class Bucket extends Component implements Link.Linkable {
 
     function createBucket() {
       return new cloudflare.R2Bucket(
-        `${name}Bucket`,
-        transform(args?.transform?.bucket, {
-          name,
-          accountId: sst.cloudflare.DEFAULT_ACCOUNT_ID,
-        }),
-        { parent },
+        ...transform(
+          args?.transform?.bucket,
+          `${name}Bucket`,
+          {
+            name,
+            accountId: sst.cloudflare.DEFAULT_ACCOUNT_ID,
+          },
+          { parent },
+        ),
       );
     }
   }

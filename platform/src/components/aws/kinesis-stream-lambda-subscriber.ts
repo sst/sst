@@ -75,20 +75,23 @@ export class KinesisStreamLambdaSubscriber extends Component {
 
     function createEventSourceMapping() {
       return new aws.lambda.EventSourceMapping(
-        `${name}EventSourceMapping`,
-        transform(args.transform?.eventSourceMapping, {
-          eventSourceArn: stream.arn,
-          functionName: fn.name,
-          startingPosition: "LATEST",
-          filterCriteria: args.filters && {
-            filters: output(args.filters).apply((filters) =>
-              filters.map((filter) => ({
-                pattern: JSON.stringify(filter),
-              })),
-            ),
+        ...transform(
+          args.transform?.eventSourceMapping,
+          `${name}EventSourceMapping`,
+          {
+            eventSourceArn: stream.arn,
+            functionName: fn.name,
+            startingPosition: "LATEST",
+            filterCriteria: args.filters && {
+              filters: output(args.filters).apply((filters) =>
+                filters.map((filter) => ({
+                  pattern: JSON.stringify(filter),
+                })),
+              ),
+            },
           },
-        }),
-        { parent: self },
+          { parent: self },
+        ),
       );
     }
   }

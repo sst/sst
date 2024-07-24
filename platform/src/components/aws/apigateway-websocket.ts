@@ -275,59 +275,68 @@ export class ApiGatewayWebSocket extends Component implements Link.Linkable {
 
     function createApi() {
       return new apigatewayv2.Api(
-        `${name}Api`,
-        transform(args.transform?.api, {
-          protocolType: "WEBSOCKET",
-          routeSelectionExpression: "$request.body.action",
-        }),
-        { parent },
+        ...transform(
+          args.transform?.api,
+          `${name}Api`,
+          {
+            protocolType: "WEBSOCKET",
+            routeSelectionExpression: "$request.body.action",
+          },
+          { parent },
+        ),
       );
     }
 
     function createLogGroup() {
       return new cloudwatch.LogGroup(
-        `${name}AccessLog`,
-        transform(args.transform?.accessLog, {
-          name: `/aws/vendedlogs/apis/${prefixName(64, name)}`,
-          retentionInDays: accessLog.apply(
-            (accessLog) => RETENTION[accessLog.retention],
-          ),
-        }),
-        { parent },
+        ...transform(
+          args.transform?.accessLog,
+          `${name}AccessLog`,
+          {
+            name: `/aws/vendedlogs/apis/${prefixName(64, name)}`,
+            retentionInDays: accessLog.apply(
+              (accessLog) => RETENTION[accessLog.retention],
+            ),
+          },
+          { parent },
+        ),
       );
     }
 
     function createStage() {
       return new apigatewayv2.Stage(
-        `${name}Stage`,
-        transform(args.transform?.stage, {
-          apiId: api.id,
-          autoDeploy: true,
-          name: "$default",
-          accessLogSettings: {
-            destinationArn: logGroup.arn,
-            format: JSON.stringify({
-              // request info
-              requestTime: `"$context.requestTime"`,
-              requestId: `"$context.requestId"`,
-              eventType: `"$context.eventType"`,
-              routeKey: `"$context.routeKey"`,
-              status: `$context.status`, // integer value, do not wrap in quotes
-              // integration info
-              integrationRequestId: `"$context.awsEndpointRequestId"`,
-              integrationStatus: `"$context.integrationStatus"`,
-              integrationLatency: `"$context.integrationLatency"`,
-              integrationServiceStatus: `"$context.integration.integrationStatus"`,
-              // caller info
-              ip: `"$context.identity.sourceIp"`,
-              userAgent: `"$context.identity.userAgent"`,
-              //cognitoIdentityId:`"$context.identity.cognitoIdentityId"`, // not supported in us-west-2 region
-              connectedAt: `"$context.connectedAt"`,
-              connectionId: `"$context.connectionId"`,
-            }),
+        ...transform(
+          args.transform?.stage,
+          `${name}Stage`,
+          {
+            apiId: api.id,
+            autoDeploy: true,
+            name: "$default",
+            accessLogSettings: {
+              destinationArn: logGroup.arn,
+              format: JSON.stringify({
+                // request info
+                requestTime: `"$context.requestTime"`,
+                requestId: `"$context.requestId"`,
+                eventType: `"$context.eventType"`,
+                routeKey: `"$context.routeKey"`,
+                status: `$context.status`, // integer value, do not wrap in quotes
+                // integration info
+                integrationRequestId: `"$context.awsEndpointRequestId"`,
+                integrationStatus: `"$context.integrationStatus"`,
+                integrationLatency: `"$context.integrationLatency"`,
+                integrationServiceStatus: `"$context.integration.integrationStatus"`,
+                // caller info
+                ip: `"$context.identity.sourceIp"`,
+                userAgent: `"$context.identity.userAgent"`,
+                //cognitoIdentityId:`"$context.identity.cognitoIdentityId"`, // not supported in us-west-2 region
+                connectedAt: `"$context.connectedAt"`,
+                connectionId: `"$context.connectionId"`,
+              }),
+            },
           },
-        }),
-        { parent, dependsOn: apigAccount },
+          { parent, dependsOn: apigAccount },
+        ),
       );
     }
 
@@ -352,16 +361,19 @@ export class ApiGatewayWebSocket extends Component implements Link.Linkable {
       if (!domain || !certificateArn) return;
 
       return new apigatewayv2.DomainName(
-        `${name}DomainName`,
-        transform(args.transform?.domainName, {
-          domainName: domain?.name,
-          domainNameConfiguration: {
-            certificateArn,
-            endpointType: "REGIONAL",
-            securityPolicy: "TLS_1_2",
+        ...transform(
+          args.transform?.domainName,
+          `${name}DomainName`,
+          {
+            domainName: domain?.name,
+            domainNameConfiguration: {
+              certificateArn,
+              endpointType: "REGIONAL",
+              securityPolicy: "TLS_1_2",
+            },
           },
-        }),
-        { parent },
+          { parent },
+        ),
       );
     }
 
@@ -531,17 +543,28 @@ export class ApiGatewayWebSocket extends Component implements Link.Linkable {
         : hashStringToPrettyString(`${this.api.id}${route}`, 6),
     );
 
-    return new ApiGatewayWebSocketRoute(`${prefix}Route${suffix}`, {
-      api: {
-        name: prefix,
-        id: this.api.id,
-        executionArn: this.api.executionArn,
+    const transformed = transform(
+      this.constructorArgs.transform?.route?.args,
+      `${prefix}Route${suffix}`,
+      args,
+      {},
+    );
+
+    return new ApiGatewayWebSocketRoute(
+      transformed[0],
+      {
+        api: {
+          name: prefix,
+          id: this.api.id,
+          executionArn: this.api.executionArn,
+        },
+        route,
+        handler,
+        handlerTransform: this.constructorArgs.transform?.route?.handler,
+        ...transformed[1],
       },
-      route,
-      handler,
-      handlerTransform: this.constructorArgs.transform?.route?.handler,
-      ...transform(this.constructorArgs.transform?.route?.args, args),
-    });
+      transformed[2],
+    );
   }
 
   /** @internal */

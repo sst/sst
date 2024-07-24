@@ -99,10 +99,10 @@ export interface RealtimeSubscriberArgs {
  * ```ts title="src/authorizer.ts" "realtime.authorizer"
  * import { Resource } from "sst/aws";
  * import { realtime } from "sst/aws/realtime";
- * 
+ *
  * export const handler = realtime.authorizer(async (token) => {
  *   // Validate the token
- * 
+ *
  *   // Return the topics to subscribe and publish
  *   return {
  *     subscribe: [`${Resource.App.name}/${Resource.App.stage}/chat/room1`],
@@ -200,12 +200,15 @@ export class Realtime extends Component implements Link.Linkable {
 
     function createAuthorizer() {
       return new iot.Authorizer(
-        `${name}Authorizer`,
-        transform(args.transform?.authorizer, {
-          signingDisabled: true,
-          authorizerFunctionArn: authHadler.arn,
-        }),
-        { parent },
+        ...transform(
+          args.transform?.authorizer,
+          `${name}Authorizer`,
+          {
+            signingDisabled: true,
+            authorizerFunctionArn: authHadler.arn,
+          },
+          { parent },
+        ),
       );
     }
 

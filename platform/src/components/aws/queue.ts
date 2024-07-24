@@ -255,20 +255,23 @@ export class Queue extends Component implements Link.Linkable {
 
     function createQueue() {
       return new sqs.Queue(
-        `${name}Queue`,
-        transform(args?.transform?.queue, {
-          fifoQueue: fifo,
-          visibilityTimeoutSeconds: visibilityTimeout.apply((v) =>
-            toSeconds(v),
-          ),
-          redrivePolicy:
-            dlq &&
-            jsonStringify({
-              deadLetterTargetArn: dlq.queue,
-              maxReceiveCount: dlq.retry,
-            }),
-        }),
-        { parent },
+        ...transform(
+          args?.transform?.queue,
+          `${name}Queue`,
+          {
+            fifoQueue: fifo,
+            visibilityTimeoutSeconds: visibilityTimeout.apply((v) =>
+              toSeconds(v),
+            ),
+            redrivePolicy:
+              dlq &&
+              jsonStringify({
+                deadLetterTargetArn: dlq.queue,
+                maxReceiveCount: dlq.retry,
+              }),
+          },
+          { parent },
+        ),
       );
     }
   }

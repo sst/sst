@@ -331,17 +331,22 @@ export class Bucket extends Component implements Link.Linkable {
     }
 
     function createBucket() {
-      const input = transform(args?.transform?.bucket, {
-        forceDestroy: true,
-      });
+      const transformed = transform(
+        args?.transform?.bucket,
+        `${name}Bucket`,
+        {
+          forceDestroy: true,
+        },
+        { parent },
+      );
 
-      if (!input.bucket) {
+      if (!transformed[1].bucket) {
         const randomId = new RandomId(
           `${name}Id`,
           { byteLength: 6 },
           { parent },
         );
-        input.bucket = randomId.dec.apply((dec) =>
+        transformed[1].bucket = randomId.dec.apply((dec) =>
           prefixName(
             63,
             name,
@@ -350,21 +355,24 @@ export class Bucket extends Component implements Link.Linkable {
         );
       }
 
-      return new s3.BucketV2(`${name}Bucket`, input, { parent });
+      return new s3.BucketV2(...transformed);
     }
 
     function createPublicAccess() {
       return publicAccess.apply((publicAccess) => {
         return new s3.BucketPublicAccessBlock(
-          `${name}PublicAccessBlock`,
-          transform(args?.transform?.publicAccessBlock, {
-            bucket: bucket.bucket,
-            blockPublicAcls: true,
-            blockPublicPolicy: !publicAccess,
-            ignorePublicAcls: true,
-            restrictPublicBuckets: !publicAccess,
-          }),
-          { parent },
+          ...transform(
+            args?.transform?.publicAccessBlock,
+            `${name}PublicAccessBlock`,
+            {
+              bucket: bucket.bucket,
+              blockPublicAcls: true,
+              blockPublicPolicy: !publicAccess,
+              ignorePublicAcls: true,
+              restrictPublicBuckets: !publicAccess,
+            },
+            { parent },
+          ),
         );
       });
     }
@@ -394,15 +402,18 @@ export class Bucket extends Component implements Link.Linkable {
         });
 
         return new s3.BucketPolicy(
-          `${name}Policy`,
-          transform(args?.transform?.policy, {
-            bucket: bucket.bucket,
-            policy: iam.getPolicyDocumentOutput({ statements }).json,
-          }),
-          {
-            parent,
-            dependsOn: publicAccessBlock,
-          },
+          ...transform(
+            args?.transform?.policy,
+            `${name}Policy`,
+            {
+              bucket: bucket.bucket,
+              policy: iam.getPolicyDocumentOutput({ statements }).json,
+            },
+            {
+              parent,
+              dependsOn: publicAccessBlock,
+            },
+          ),
         );
       });
     }
@@ -412,26 +423,29 @@ export class Bucket extends Component implements Link.Linkable {
         if (cors === false) return;
 
         return new s3.BucketCorsConfigurationV2(
-          `${name}Cors`,
-          transform(args?.transform?.cors, {
-            bucket: bucket.bucket,
-            corsRules: [
-              {
-                allowedHeaders: cors?.allowHeaders ?? ["*"],
-                allowedMethods: cors?.allowMethods ?? [
-                  "DELETE",
-                  "GET",
-                  "HEAD",
-                  "POST",
-                  "PUT",
-                ],
-                allowedOrigins: cors?.allowOrigins ?? ["*"],
-                exposeHeaders: cors?.exposeHeaders,
-                maxAgeSeconds: toSeconds(cors?.maxAge ?? "0 seconds"),
-              },
-            ],
-          }),
-          { parent },
+          ...transform(
+            args?.transform?.cors,
+            `${name}Cors`,
+            {
+              bucket: bucket.bucket,
+              corsRules: [
+                {
+                  allowedHeaders: cors?.allowHeaders ?? ["*"],
+                  allowedMethods: cors?.allowMethods ?? [
+                    "DELETE",
+                    "GET",
+                    "HEAD",
+                    "POST",
+                    "PUT",
+                  ],
+                  allowedOrigins: cors?.allowOrigins ?? ["*"],
+                  exposeHeaders: cors?.exposeHeaders,
+                  maxAgeSeconds: toSeconds(cors?.maxAge ?? "0 seconds"),
+                },
+              ],
+            },
+            { parent },
+          ),
         );
       });
     }

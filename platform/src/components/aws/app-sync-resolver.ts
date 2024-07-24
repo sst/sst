@@ -64,27 +64,30 @@ export class AppSyncResolver extends Component {
 
     function createResolver() {
       return new appsync.Resolver(
-        `${name}Resolver`,
-        transform(args.transform?.resolver, {
-          apiId: args.apiId,
-          kind: kind.apply((kind) => kind.toUpperCase()),
-          type: args.type,
-          field: args.field,
-          dataSource: args.dataSource,
-          requestTemplate: args.requestTemplate,
-          responseTemplate: args.responseTemplate,
-          code: args.code,
-          runtime: args.code
-            ? {
-              name: "APPSYNC_JS",
-              runtimeVersion: "1.0.0",
-            }
-            : undefined,
-          pipelineConfig: args.functions
-            ? { functions: args.functions }
-            : undefined,
-        }),
-        { parent: self },
+        ...transform(
+          args.transform?.resolver,
+          `${name}Resolver`,
+          {
+            apiId: args.apiId,
+            kind: kind.apply((kind) => kind.toUpperCase()),
+            type: args.type,
+            field: args.field,
+            dataSource: args.dataSource,
+            requestTemplate: args.requestTemplate,
+            responseTemplate: args.responseTemplate,
+            code: args.code,
+            runtime: args.code
+              ? {
+                  name: "APPSYNC_JS",
+                  runtimeVersion: "1.0.0",
+                }
+              : undefined,
+            pipelineConfig: args.functions
+              ? { functions: args.functions }
+              : undefined,
+          },
+          { parent: self },
+        ),
       );
     }
   }

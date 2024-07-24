@@ -131,22 +131,28 @@ export class Cron extends Component {
 
     function createRule() {
       return new cloudwatch.EventRule(
-        `${name}Rule`,
-        transform(args.transform?.rule, {
-          scheduleExpression: args.schedule,
-        }),
-        { parent },
+        ...transform(
+          args.transform?.rule,
+          `${name}Rule`,
+          {
+            scheduleExpression: args.schedule,
+          },
+          { parent },
+        ),
       );
     }
 
     function createTarget() {
       return new cloudwatch.EventTarget(
-        `${name}Target`,
-        transform(args.transform?.target, {
-          arn: fn.arn,
-          rule: rule.name,
-        }),
-        { parent },
+        ...transform(
+          args.transform?.target,
+          `${name}Target`,
+          {
+            arn: fn.arn,
+            rule: rule.name,
+          },
+          { parent },
+        ),
       );
     }
 

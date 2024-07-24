@@ -35,12 +35,15 @@ export class Queue extends Component implements Link.Linkable {
 
     function create() {
       return new cloudflare.Queue(
-        `${name}Queue`,
-        transform(args?.transform?.queue, {
-          name,
-          accountId: sst.cloudflare.DEFAULT_ACCOUNT_ID,
-        }),
-        { parent },
+        ...transform(
+          args?.transform?.queue,
+          `${name}Queue`,
+          {
+            name,
+            accountId: sst.cloudflare.DEFAULT_ACCOUNT_ID,
+          },
+          { parent },
+        ),
       );
     }
   }

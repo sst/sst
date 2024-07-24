@@ -50,21 +50,24 @@ export class ApiGatewayV2Authorizer extends Component {
 
     function createAuthorizer() {
       return new apigatewayv2.Authorizer(
-        `${name}Authorizer`,
-        transform(args.transform?.authorizer, {
-          apiId: api.id,
-          authorizerType: "JWT",
-          identitySources: [
-            jwt.apply(
-              (jwt) => jwt.identitySource ?? "$request.header.Authorization",
-            ),
-          ],
-          jwtConfiguration: jwt.apply((jwt) => ({
-            audiences: jwt.audiences,
-            issuer: jwt.issuer,
-          })),
-        }),
-        { parent: self },
+        ...transform(
+          args.transform?.authorizer,
+          `${name}Authorizer`,
+          {
+            apiId: api.id,
+            authorizerType: "JWT",
+            identitySources: [
+              jwt.apply(
+                (jwt) => jwt.identitySource ?? "$request.header.Authorization",
+              ),
+            ],
+            jwtConfiguration: jwt.apply((jwt) => ({
+              audiences: jwt.audiences,
+              issuer: jwt.issuer,
+            })),
+          },
+          { parent: self },
+        ),
       );
     }
   }

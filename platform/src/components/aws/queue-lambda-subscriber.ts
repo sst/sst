@@ -76,19 +76,22 @@ export class QueueLambdaSubscriber extends Component {
 
     function createEventSourceMapping() {
       return new lambda.EventSourceMapping(
-        `${name}EventSourceMapping`,
-        transform(args.transform?.eventSourceMapping, {
-          eventSourceArn: queue.arn,
-          functionName: fn.name,
-          filterCriteria: args.filters && {
-            filters: output(args.filters).apply((filters) =>
-              filters.map((filter) => ({
-                pattern: JSON.stringify(filter),
-              })),
-            ),
+        ...transform(
+          args.transform?.eventSourceMapping,
+          `${name}EventSourceMapping`,
+          {
+            eventSourceArn: queue.arn,
+            functionName: fn.name,
+            filterCriteria: args.filters && {
+              filters: output(args.filters).apply((filters) =>
+                filters.map((filter) => ({
+                  pattern: JSON.stringify(filter),
+                })),
+              ),
+            },
           },
-        }),
-        { parent: self },
+          { parent: self },
+        ),
       );
     }
   }

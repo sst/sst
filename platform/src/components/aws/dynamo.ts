@@ -378,46 +378,49 @@ export class Dynamo extends Component implements Link.Linkable {
       ]).apply(
         ([fields, primaryIndex, globalIndexes, localIndexes, stream]) =>
           new dynamodb.Table(
-            `${name}Table`,
-            transform(args.transform?.table, {
-              attributes: Object.entries(fields).map(([name, type]) => ({
-                name,
-                type: type === "string" ? "S" : type === "number" ? "N" : "B",
-              })),
-              billingMode: "PAY_PER_REQUEST",
-              hashKey: primaryIndex.hashKey,
-              rangeKey: primaryIndex.rangeKey,
-              streamEnabled: Boolean(stream),
-              streamViewType: stream
-                ? stream.toUpperCase().replaceAll("-", "_")
-                : undefined,
-              pointInTimeRecovery: {
-                enabled: true,
+            ...transform(
+              args.transform?.table,
+              `${name}Table`,
+              {
+                attributes: Object.entries(fields).map(([name, type]) => ({
+                  name,
+                  type: type === "string" ? "S" : type === "number" ? "N" : "B",
+                })),
+                billingMode: "PAY_PER_REQUEST",
+                hashKey: primaryIndex.hashKey,
+                rangeKey: primaryIndex.rangeKey,
+                streamEnabled: Boolean(stream),
+                streamViewType: stream
+                  ? stream.toUpperCase().replaceAll("-", "_")
+                  : undefined,
+                pointInTimeRecovery: {
+                  enabled: true,
+                },
+                ttl:
+                  args.ttl === undefined
+                    ? undefined
+                    : {
+                        attributeName: args.ttl,
+                        enabled: true,
+                      },
+                globalSecondaryIndexes: Object.entries(globalIndexes ?? {}).map(
+                  ([name, index]) => ({
+                    name,
+                    hashKey: index.hashKey,
+                    rangeKey: index.rangeKey,
+                    projectionType: "ALL",
+                  }),
+                ),
+                localSecondaryIndexes: Object.entries(localIndexes ?? {}).map(
+                  ([name, index]) => ({
+                    name,
+                    rangeKey: index.rangeKey,
+                    projectionType: "ALL",
+                  }),
+                ),
               },
-              ttl:
-                args.ttl === undefined
-                  ? undefined
-                  : {
-                      attributeName: args.ttl,
-                      enabled: true,
-                    },
-              globalSecondaryIndexes: Object.entries(globalIndexes ?? {}).map(
-                ([name, index]) => ({
-                  name,
-                  hashKey: index.hashKey,
-                  rangeKey: index.rangeKey,
-                  projectionType: "ALL",
-                }),
-              ),
-              localSecondaryIndexes: Object.entries(localIndexes ?? {}).map(
-                ([name, index]) => ({
-                  name,
-                  rangeKey: index.rangeKey,
-                  projectionType: "ALL",
-                }),
-              ),
-            }),
-            { parent },
+              { parent },
+            ),
           ),
       );
     }

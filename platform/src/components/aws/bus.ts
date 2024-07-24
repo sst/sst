@@ -186,11 +186,14 @@ export class Bus extends Component implements Link.Linkable {
 
     function createBus() {
       return new cloudwatch.EventBus(
-        `${name}Bus`,
-        transform(args.transform?.bus, {
-          name: prefixName(256, name),
-        }),
-        { parent },
+        ...transform(
+          args.transform?.bus,
+          `${name}Bus`,
+          {
+            name: prefixName(256, name),
+          },
+          { parent },
+        ),
       );
     }
   }

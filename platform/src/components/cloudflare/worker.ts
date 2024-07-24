@@ -378,43 +378,46 @@ export class Worker extends Component implements Link.Linkable {
       return all([handler, args.environment, iamCredentials, bindings]).apply(
         async ([handler, environment, iamCredentials, bindings]) =>
           new cf.WorkerScript(
-            `${name}Script`,
-            transform(args.transform?.worker, {
-              name,
-              accountId: sst.cloudflare.DEFAULT_ACCOUNT_ID,
-              content: (await fs.readFile(handler)).toString(),
-              module: true,
-              compatibilityDate: "2024-04-04",
-              compatibilityFlags: ["nodejs_compat"],
-              ...bindings,
-              plainTextBindings: [
-                ...(iamCredentials
-                  ? [
-                      {
-                        name: "AWS_ACCESS_KEY_ID",
-                        text: iamCredentials.id,
-                      },
-                    ]
-                  : []),
-                ...Object.entries(environment ?? {}).map(([key, value]) => ({
-                  name: key,
-                  text: value,
-                })),
-                ...(bindings.plainTextBindings || []),
-              ],
-              secretTextBindings: [
-                ...(iamCredentials
-                  ? [
-                      {
-                        name: "AWS_SECRET_ACCESS_KEY",
-                        text: iamCredentials.secret,
-                      },
-                    ]
-                  : []),
-                ...(bindings.secretTextBindings || []),
-              ],
-            }),
-            { parent },
+            ...transform(
+              args.transform?.worker,
+              `${name}Script`,
+              {
+                name,
+                accountId: sst.cloudflare.DEFAULT_ACCOUNT_ID,
+                content: (await fs.readFile(handler)).toString(),
+                module: true,
+                compatibilityDate: "2024-04-04",
+                compatibilityFlags: ["nodejs_compat"],
+                ...bindings,
+                plainTextBindings: [
+                  ...(iamCredentials
+                    ? [
+                        {
+                          name: "AWS_ACCESS_KEY_ID",
+                          text: iamCredentials.id,
+                        },
+                      ]
+                    : []),
+                  ...Object.entries(environment ?? {}).map(([key, value]) => ({
+                    name: key,
+                    text: value,
+                  })),
+                  ...(bindings.plainTextBindings || []),
+                ],
+                secretTextBindings: [
+                  ...(iamCredentials
+                    ? [
+                        {
+                          name: "AWS_SECRET_ACCESS_KEY",
+                          text: iamCredentials.secret,
+                        },
+                      ]
+                    : []),
+                  ...(bindings.secretTextBindings || []),
+                ],
+              },
+              { parent },
+            ),
           ),
       );
     }

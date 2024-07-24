@@ -106,15 +106,18 @@ export function dns(args: DnsArgs = {}) {
 
       function createRecord() {
         return new cloudflare.Record(
-          `${namePrefix}${record.type}Record${nameSuffix}`,
-          transform(args.transform?.record, {
-            zoneId,
-            name: record.name,
-            value: record.value,
-            type: record.type,
-            ttl: 60,
-          }),
-          opts,
+          ...transform(
+            args.transform?.record,
+            `${namePrefix}${record.type}Record${nameSuffix}`,
+            {
+              zoneId,
+              name: record.name,
+              value: record.value,
+              type: record.type,
+              ttl: 60,
+            },
+            opts,
+          ),
         );
       }
     });

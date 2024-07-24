@@ -135,13 +135,16 @@ export class KinesisStream extends Component implements Link.Linkable {
 
     function createStream() {
       return new aws.kinesis.Stream(
-        `${name}Stream`,
-        transform(args?.transform?.stream, {
-          streamModeDetails: {
-            streamMode: "ON_DEMAND",
+        ...transform(
+          args?.transform?.stream,
+          `${name}Stream`,
+          {
+            streamModeDetails: {
+              streamMode: "ON_DEMAND",
+            },
           },
-        }),
-        { parent },
+          { parent },
+        ),
       );
     }
   }

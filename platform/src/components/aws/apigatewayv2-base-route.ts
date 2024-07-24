@@ -47,14 +47,17 @@ export function createApiRoute(
   return authArgs.apply(
     (authArgs) =>
       new apigatewayv2.Route(
-        `${name}Route`,
-        transform(args.transform?.route, {
-          apiId: output(args.api).id,
-          routeKey: args.route,
-          target: interpolate`integrations/${integrationId}`,
-          ...authArgs,
-        }),
-        { parent },
+        ...transform(
+          args.transform?.route,
+          `${name}Route`,
+          {
+            apiId: output(args.api).id,
+            routeKey: args.route,
+            target: interpolate`integrations/${integrationId}`,
+            ...authArgs,
+          },
+          { parent },
+        ),
       ),
   );
 }

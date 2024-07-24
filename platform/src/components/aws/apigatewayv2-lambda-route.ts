@@ -84,14 +84,17 @@ export class ApiGatewayV2LambdaRoute extends Component {
 
     function createIntegration() {
       return new apigatewayv2.Integration(
-        `${name}Integration`,
-        transform(args.transform?.integration, {
-          apiId: api.id,
-          integrationType: "AWS_PROXY",
-          integrationUri: fn.arn,
-          payloadFormatVersion: "2.0",
-        }),
-        { parent: self, dependsOn: [permission] },
+        ...transform(
+          args.transform?.integration,
+          `${name}Integration`,
+          {
+            apiId: api.id,
+            integrationType: "AWS_PROXY",
+            integrationUri: fn.arn,
+            payloadFormatVersion: "2.0",
+          },
+          { parent: self, dependsOn: [permission] },
+        ),
       );
     }
   }

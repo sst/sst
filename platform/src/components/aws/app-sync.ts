@@ -542,12 +542,15 @@ export class AppSync extends Component implements Link.Linkable {
 
     function createGraphQLApi() {
       return new appsync.GraphQLApi(
-        `${name}Api`,
-        transform(args.transform?.api, {
-          schema,
-          authenticationType: "API_KEY",
-        }),
-        { parent },
+        ...transform(
+          args.transform?.api,
+          `${name}Api`,
+          {
+            schema,
+            authenticationType: "API_KEY",
+          },
+          { parent },
+        ),
       );
     }
 
@@ -573,12 +576,15 @@ export class AppSync extends Component implements Link.Linkable {
       if (!domain || !certificateArn) return;
 
       const domainName = new appsync.DomainName(
-        `${name}DomainName`,
-        transform(args.transform?.domainName, {
-          domainName: domain?.name,
-          certificateArn,
-        }),
-        { parent },
+        ...transform(
+          args.transform?.domainName,
+          `${name}DomainName`,
+          {
+            domainName: domain?.name,
+            certificateArn,
+          },
+          { parent },
+        ),
       );
 
       new appsync.DomainNameApiAssociation(`${name}DomainAssociation`, {

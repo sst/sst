@@ -51,10 +51,17 @@ export function createKvStorage(
   name: string,
   args: SsrSiteArgs,
 ) {
-  return new Kv(`${name}Assets`, transform(args.transform?.assets, {}), {
-    parent,
-    retainOnDelete: false,
-  });
+  return new Kv(
+    ...transform(
+      args.transform?.assets,
+      `${name}Assets`,
+      {},
+      {
+        parent,
+        retainOnDelete: false,
+      },
+    ),
+  );
 }
 
 export function createRouter(

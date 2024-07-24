@@ -88,34 +88,40 @@ export class BusLambdaSubscriber extends Component {
 
     function createRule() {
       return new cloudwatch.EventRule(
-        `${name}Rule`,
-        transform(args?.transform?.rule, {
-          eventBusName: bus.name,
-          eventPattern: args.pattern
-            ? output(args.pattern).apply((pattern) =>
-              JSON.stringify({
-                "detail-type": pattern.detailType,
-                source: pattern.source,
-                detail: pattern.detail,
-              }),
-            )
-            : JSON.stringify({
-              source: [{ prefix: "" }],
-            }),
-        }),
-        { parent: self },
+        ...transform(
+          args?.transform?.rule,
+          `${name}Rule`,
+          {
+            eventBusName: bus.name,
+            eventPattern: args.pattern
+              ? output(args.pattern).apply((pattern) =>
+                  JSON.stringify({
+                    "detail-type": pattern.detailType,
+                    source: pattern.source,
+                    detail: pattern.detail,
+                  }),
+                )
+              : JSON.stringify({
+                  source: [{ prefix: "" }],
+                }),
+          },
+          { parent: self },
+        ),
       );
     }
 
     function createTarget() {
       return new cloudwatch.EventTarget(
-        `${name}Target`,
-        transform(args?.transform?.target, {
-          arn: fn.arn,
-          rule: rule.name,
-          eventBusName: bus.name,
-        }),
-        { parent: self, dependsOn: [permission] },
+        ...transform(
+          args?.transform?.target,
+          `${name}Target`,
+          {
+            arn: fn.arn,
+            rule: rule.name,
+            eventBusName: bus.name,
+          },
+          { parent: self, dependsOn: [permission] },
+        ),
       );
     }
   }

@@ -107,101 +107,112 @@ export class AppSyncDataSource extends Component {
         return;
 
       return new iam.Role(
-        `${name}ServiceRole`,
-        transform(args.transform?.serviceRole, {
-          assumeRolePolicy: iam.getPolicyDocumentOutput({
-            statements: [
+        ...transform(
+          args.transform?.serviceRole,
+          `${name}ServiceRole`,
+          {
+            assumeRolePolicy: iam.getPolicyDocumentOutput({
+              statements: [
+                {
+                  actions: ["sts:AssumeRole"],
+                  principals: [
+                    {
+                      type: "Service",
+                      identifiers: ["appsync.amazonaws.com"],
+                    },
+                  ],
+                },
+              ],
+            }).json,
+            inlinePolicies: [
               {
-                actions: ["sts:AssumeRole"],
-                principals: [
-                  {
-                    type: "Service",
-                    identifiers: ["appsync.amazonaws.com"],
-                  },
-                ],
+                name: "inline",
+                policy: iam.getPolicyDocumentOutput({
+                  statements: [
+                    ...(lambda
+                      ? [{ actions: ["lambda:*"], resources: [lambda.arn] }]
+                      : []),
+                    ...(args.dynamodb
+                      ? [
+                          {
+                            actions: ["dynamodb:*"],
+                            resources: [args.dynamodb],
+                          },
+                        ]
+                      : []),
+                    ...(args.elasticSearch
+                      ? [
+                          {
+                            actions: ["es:*"],
+                            resources: [args.elasticSearch],
+                          },
+                        ]
+                      : []),
+                    ...(args.eventBridge
+                      ? [
+                          {
+                            actions: ["events:*"],
+                            resources: [args.eventBridge],
+                          },
+                        ]
+                      : []),
+                    ...(args.openSearch
+                      ? [
+                          {
+                            actions: ["opensearch:*"],
+                            resources: [args.openSearch],
+                          },
+                        ]
+                      : []),
+                  ],
+                }).json,
               },
             ],
-          }).json,
-          inlinePolicies: [
-            {
-              name: "inline",
-              policy: iam.getPolicyDocumentOutput({
-                statements: [
-                  ...(lambda
-                    ? [{ actions: ["lambda:*"], resources: [lambda.arn] }]
-                    : []),
-                  ...(args.dynamodb
-                    ? [{ actions: ["dynamodb:*"], resources: [args.dynamodb] }]
-                    : []),
-                  ...(args.elasticSearch
-                    ? [
-                      {
-                        actions: ["es:*"],
-                        resources: [args.elasticSearch],
-                      },
-                    ]
-                    : []),
-                  ...(args.eventBridge
-                    ? [
-                      {
-                        actions: ["events:*"],
-                        resources: [args.eventBridge],
-                      },
-                    ]
-                    : []),
-                  ...(args.openSearch
-                    ? [
-                      {
-                        actions: ["opensearch:*"],
-                        resources: [args.openSearch],
-                      },
-                    ]
-                    : []),
-                ],
-              }).json,
-            },
-          ],
-        }),
-        { parent: self },
+          },
+          { parent: self },
+        ),
       );
     }
 
     function createDataSource() {
       return new appsync.DataSource(
-        `${name}DataSource`,
-        transform(args.transform?.dataSource, {
-          apiId,
-          type,
-          name: args.name,
-          serviceRoleArn: serviceRole?.arn,
-          lambdaConfig: lambda ? { functionArn: lambda.arn } : undefined,
-          dynamodbConfig: args.dynamodb
-            ? {
-              tableName: output(args.dynamodb).apply(
-                (arn) => parseDynamoArn(arn).tableName,
-              ),
-            }
-            : undefined,
-          elasticsearchConfig: args.elasticSearch
-            ? { endpoint: args.elasticSearch }
-            : undefined,
-          eventBridgeConfig: args.eventBridge
-            ? { eventBusArn: args.eventBridge }
-            : undefined,
-          httpConfig: args.http ? { endpoint: args.http } : undefined,
-          opensearchserviceConfig: args.openSearch
-            ? { endpoint: args.openSearch }
-            : undefined,
-          relationalDatabaseConfig: args.rds
-            ? {
-              httpEndpointConfig: {
-                dbClusterIdentifier: output(args.rds).cluster,
-                awsSecretStoreArn: output(args.rds).credentials,
-              },
-            }
-            : undefined,
-        }),
-        { parent: self },
+        ...transform(
+          args.transform?.dataSource,
+          `${name}DataSource`,
+          {
+            apiId,
+            type,
+            name: args.name,
+            serviceRoleArn: serviceRole?.arn,
+            lambdaConfig: lambda ? { functionArn: lambda.arn } : undefined,
+            dynamodbConfig: args.dynamodb
+              ? {
+                  tableName: output(args.dynamodb).apply(
+                    (arn) => parseDynamoArn(arn).tableName,
+                  ),
+                }
+              : undefined,
+            elasticsearchConfig: args.elasticSearch
+              ? { endpoint: args.elasticSearch }
+              : undefined,
+            eventBridgeConfig: args.eventBridge
+              ? { eventBusArn: args.eventBridge }
+              : undefined,
+            httpConfig: args.http ? { endpoint: args.http } : undefined,
+            opensearchserviceConfig: args.openSearch
+              ? { endpoint: args.openSearch }
+              : undefined,
+            relationalDatabaseConfig: args.rds
+              ? {
+                  httpEndpointConfig: {
+                    dbClusterIdentifier: output(args.rds).cluster,
+                    awsSecretStoreArn: output(args.rds).credentials,
+                  },
+                }
+              : undefined,
+          },
+          { parent: self },
+        ),
       );
     }
   }

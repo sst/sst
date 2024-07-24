@@ -56,6 +56,7 @@ function addTransformationToRetainResourcesOnDelete() {
     if ("import" in args.opts && args.opts.import) {
       if (!args.opts.ignoreChanges) args.opts.ignoreChanges = [];
       args.opts.ignoreChanges.push("tags");
+      args.opts.ignoreChanges.push("tagsAll");
     }
     return args;
   });

@@ -119,17 +119,20 @@ export class ApiGatewayV1Authorizer extends Component {
 
     function createAuthorizer() {
       return new apigateway.Authorizer(
-        `${name}Authorizer`,
-        transform(args.transform?.authorizer, {
-          restApi: api.id,
-          type,
-          name: args.name,
-          providerArns: args.userPools,
-          authorizerUri: fn?.nodes.function.invokeArn,
-          authorizerResultTtlInSeconds: args.ttl,
-          identitySource: args.identitySource,
-        }),
-        { parent: self },
+        ...transform(
+          args.transform?.authorizer,
+          `${name}Authorizer`,
+          {
+            restApi: api.id,
+            type,
+            name: args.name,
+            providerArns: args.userPools,
+            authorizerUri: fn?.nodes.function.invokeArn,
+            authorizerResultTtlInSeconds: args.ttl,
+            identitySource: args.identitySource,
+          },
+          { parent: self },
+        ),
       );
     }
   }

@@ -585,59 +585,68 @@ export class ApiGatewayV2 extends Component implements Link.Linkable {
 
     function createApi() {
       return new apigatewayv2.Api(
-        `${name}Api`,
-        transform(args.transform?.api, {
-          protocolType: "HTTP",
-          corsConfiguration: cors,
-        }),
-        { parent },
+        ...transform(
+          args.transform?.api,
+          `${name}Api`,
+          {
+            protocolType: "HTTP",
+            corsConfiguration: cors,
+          },
+          { parent },
+        ),
       );
     }
 
     function createLogGroup() {
       return new cloudwatch.LogGroup(
-        `${name}AccessLog`,
-        transform(args.transform?.accessLog, {
-          name: `/aws/vendedlogs/apis/${prefixName(64, name)}`,
-          retentionInDays: accessLog.apply(
-            (accessLog) => RETENTION[accessLog.retention],
-          ),
-        }),
-        { parent },
+        ...transform(
+          args.transform?.accessLog,
+          `${name}AccessLog`,
+          {
+            name: `/aws/vendedlogs/apis/${prefixName(64, name)}`,
+            retentionInDays: accessLog.apply(
+              (accessLog) => RETENTION[accessLog.retention],
+            ),
+          },
+          { parent },
+        ),
       );
     }
 
     function createStage() {
       new apigatewayv2.Stage(
-        `${name}Stage`,
-        transform(args.transform?.stage, {
-          apiId: api.id,
-          autoDeploy: true,
-          name: "$default",
-          accessLogSettings: {
-            destinationArn: logGroup.arn,
-            format: JSON.stringify({
-              // request info
-              requestTime: `"$context.requestTime"`,
-              requestId: `"$context.requestId"`,
-              httpMethod: `"$context.httpMethod"`,
-              path: `"$context.path"`,
-              routeKey: `"$context.routeKey"`,
-              status: `$context.status`, // integer value, do not wrap in quotes
-              responseLatency: `$context.responseLatency`, // integer value, do not wrap in quotes
-              // integration info
-              integrationRequestId: `"$context.integration.requestId"`,
-              integrationStatus: `"$context.integration.status"`,
-              integrationLatency: `"$context.integration.latency"`,
-              integrationServiceStatus: `"$context.integration.integrationStatus"`,
-              // caller info
-              ip: `"$context.identity.sourceIp"`,
-              userAgent: `"$context.identity.userAgent"`,
-              //cognitoIdentityId:`"$context.identity.cognitoIdentityId"`, // not supported in us-west-2 region
-            }),
+        ...transform(
+          args.transform?.stage,
+          `${name}Stage`,
+          {
+            apiId: api.id,
+            autoDeploy: true,
+            name: "$default",
+            accessLogSettings: {
+              destinationArn: logGroup.arn,
+              format: JSON.stringify({
+                // request info
+                requestTime: `"$context.requestTime"`,
+                requestId: `"$context.requestId"`,
+                httpMethod: `"$context.httpMethod"`,
+                path: `"$context.path"`,
+                routeKey: `"$context.routeKey"`,
+                status: `$context.status`, // integer value, do not wrap in quotes
+                responseLatency: `$context.responseLatency`, // integer value, do not wrap in quotes
+                // integration info
+                integrationRequestId: `"$context.integration.requestId"`,
+                integrationStatus: `"$context.integration.status"`,
+                integrationLatency: `"$context.integration.latency"`,
+                integrationServiceStatus: `"$context.integration.integrationStatus"`,
+                // caller info
+                ip: `"$context.identity.sourceIp"`,
+                userAgent: `"$context.identity.userAgent"`,
+                //cognitoIdentityId:`"$context.identity.cognitoIdentityId"`, // not supported in us-west-2 region
+              }),
+            },
           },
-        }),
-        { parent },
+          { parent },
+        ),
       );
     }
 
@@ -662,16 +671,19 @@ export class ApiGatewayV2 extends Component implements Link.Linkable {
       if (!domain || !certificateArn) return;
 
       return new apigatewayv2.DomainName(
-        `${name}DomainName`,
-        transform(args.transform?.domainName, {
-          domainName: domain?.name,
-          domainNameConfiguration: {
-            certificateArn,
-            endpointType: "REGIONAL",
-            securityPolicy: "TLS_1_2",
+        ...transform(
+          args.transform?.domainName,
+          `${name}DomainName`,
+          {
+            domainName: domain?.name,
+            domainNameConfiguration: {
+              certificateArn,
+              endpointType: "REGIONAL",
+              securityPolicy: "TLS_1_2",
+            },
           },
-        }),
-        { parent },
+          { parent },
+        ),
       );
     }
 
@@ -854,17 +866,27 @@ export class ApiGatewayV2 extends Component implements Link.Linkable {
       hashStringToPrettyString([this.api.id, route].join(""), 6),
     );
 
-    return new ApiGatewayV2LambdaRoute(`${prefix}Route${suffix}`, {
-      api: {
-        name: prefix,
-        id: this.api.id,
-        executionArn: this.api.executionArn,
+    const transformed = transform(
+      this.constructorArgs.transform?.route?.args,
+      `${prefix}Route${suffix}`,
+      args,
+      {},
+    );
+    return new ApiGatewayV2LambdaRoute(
+      transformed[0],
+      {
+        api: {
+          name: prefix,
+          id: this.api.id,
+          executionArn: this.api.executionArn,
+        },
+        route,
+        handler,
+        handlerTransform: this.constructorArgs.transform?.route?.handler,
+        ...transformed[1],
       },
-      route,
-      handler,
-      handlerTransform: this.constructorArgs.transform?.route?.handler,
-      ...transform(this.constructorArgs.transform?.route?.args, args),
-    });
+      transformed[2],
+    );
   }
 
   /**
@@ -897,16 +919,26 @@ export class ApiGatewayV2 extends Component implements Link.Linkable {
     args: ApiGatewayV2RouteArgs = {},
   ) {
     const route = this.parseRoute(rawRoute);
-    return new ApiGatewayV2UrlRoute(this.buildRouteId(route), {
-      api: {
-        name: this.constructorName,
-        id: this.api.id,
-        executionArn: this.api.executionArn,
+    const transformed = transform(
+      this.constructorArgs.transform?.route?.args,
+      this.buildRouteId(route),
+      args,
+      {},
+    );
+    return new ApiGatewayV2UrlRoute(
+      transformed[0],
+      {
+        api: {
+          name: this.constructorName,
+          id: this.api.id,
+          executionArn: this.api.executionArn,
+        },
+        route,
+        url,
+        ...transformed[1],
       },
-      route,
-      url,
-      ...transform(this.constructorArgs.transform?.route?.args, args),
-    });
+      transformed[2],
+    );
   }
 
   private parseRoute(rawRoute: string) {

@@ -70,14 +70,17 @@ export class RealtimeLambdaSubscriber extends Component {
 
     function createRule() {
       return new iot.TopicRule(
-        `${name}Rule`,
-        transform(args?.transform?.topicRule, {
-          sqlVersion: "2016-03-23",
-          sql: interpolate`SELECT * FROM '${filter}'`,
-          enabled: true,
-          lambdas: [{ functionArn: fn.arn }],
-        }),
-        { parent: self },
+        ...transform(
+          args?.transform?.topicRule,
+          `${name}Rule`,
+          {
+            sqlVersion: "2016-03-23",
+            sql: interpolate`SELECT * FROM '${filter}'`,
+            enabled: true,
+            lambdas: [{ functionArn: fn.arn }],
+          },
+          { parent: self },
+        ),
       );
     }
 

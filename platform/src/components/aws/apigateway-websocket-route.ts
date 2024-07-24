@@ -103,32 +103,38 @@ export class ApiGatewayWebSocketRoute extends Component {
 
     function createIntegration() {
       return new apigatewayv2.Integration(
-        `${name}Integration`,
-        transform(args.transform?.integration, {
-          apiId: api.id,
-          integrationType: "AWS_PROXY",
-          integrationUri: fn.arn.apply((arn) => {
-            const [, partition, , region] = arn.split(":");
-            return `arn:${partition}:apigateway:${region}:lambda:path/2015-03-31/functions/${arn}/invocations`;
-          }),
-        }),
-        { parent: self, dependsOn: [permission] },
+        ...transform(
+          args.transform?.integration,
+          `${name}Integration`,
+          {
+            apiId: api.id,
+            integrationType: "AWS_PROXY",
+            integrationUri: fn.arn.apply((arn) => {
+              const [, partition, , region] = arn.split(":");
+              return `arn:${partition}:apigateway:${region}:lambda:path/2015-03-31/functions/${arn}/invocations`;
+            }),
+          },
+          { parent: self, dependsOn: [permission] },
+        ),
       );
     }
 
     function createApiRoute() {
       return new apigatewayv2.Route(
-        `${name}Route`,
-        transform(args.transform?.route, {
-          apiId: api.id,
-          routeKey: route,
-          target: interpolate`integrations/${integration.id}`,
-          authorizationType: all([args.route, args.auth]).apply(
-            ([route, auth]) =>
-              route === "$connect" && auth?.iam ? "AWS_IAM" : "NONE",
-          ),
-        }),
-        { parent: self },
+        ...transform(
+          args.transform?.route,
+          `${name}Route`,
+          {
+            apiId: api.id,
+            routeKey: route,
+            target: interpolate`integrations/${integration.id}`,
+            authorizationType: all([args.route, args.auth]).apply(
+              ([route, auth]) =>
+                route === "$connect" && auth?.iam ? "AWS_IAM" : "NONE",
+            ),
+          },
+          { parent: self },
+        ),
       );
     }
   }

@@ -105,9 +105,12 @@ export class Vector extends Component implements Link.Linkable {
 
     function createDB() {
       return new Postgres(
-        `${name}Database`,
-        transform(args?.transform?.postgres, {}),
-        { parent },
+        ...transform(
+          args?.transform?.postgres,
+          `${name}Database`,
+          {},
+          { parent },
+        ),
       );
     }
 

@@ -16,20 +16,24 @@ export type Prettify<T> = {
   [K in keyof T]: T[K];
 } & {};
 
-export type Transform<T> = Partial<T> | ((args: T) => undefined);
+export type Transform<T> =
+  | Partial<T>
+  | ((args: T, opts: $util.CustomResourceOptions, name: string) => undefined);
 export function transform<T extends object>(
   transform: Transform<T> | undefined,
+  name: string,
   args: T,
+  opts: $util.CustomResourceOptions,
 ) {
   // Case: transform is a function
   if (typeof transform === "function") {
-    transform(args);
-    return args;
+    transform(args, opts, name);
+    return [name, args, opts] as const;
   }
 
   // Case: no transform
   // Case: transform is an argument
-  return { ...args, ...transform };
+  return [name, { ...args, ...transform }, opts] as const;
 }
 
 export class Component extends ComponentResource {

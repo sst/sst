@@ -478,11 +478,14 @@ export class ApiGatewayV1 extends Component implements Link.Linkable {
 
     function createApi() {
       return new apigateway.RestApi(
-        `${name}Api`,
-        transform(args.transform?.api, {
-          endpointConfiguration: endpoint,
-        }),
-        { parent, dependsOn: apigAccount },
+        ...transform(
+          args.transform?.api,
+          `${name}Api`,
+          {
+            endpointConfiguration: endpoint,
+          },
+          { parent, dependsOn: apigAccount },
+        ),
       );
     }
   }
@@ -627,19 +630,31 @@ export class ApiGatewayV1 extends Component implements Link.Linkable {
     const suffix = sanitizeToPascalCase(
       hashStringToPrettyString([this.api.id, method, path].join(""), 6),
     );
-    const apigRoute = new ApiGatewayV1LambdaRoute(`${prefix}Route${suffix}`, {
-      api: {
-        name: prefix,
-        id: this.api.id,
-        executionArn: this.api.executionArn,
+
+    const transformed = transform(
+      this.constructorArgs.transform?.route?.args,
+      `${prefix}Route${suffix}`,
+      args,
+      {},
+    );
+
+    const apigRoute = new ApiGatewayV1LambdaRoute(
+      transformed[0],
+      {
+        api: {
+          name: prefix,
+          id: this.api.id,
+          executionArn: this.api.executionArn,
+        },
+        method,
+        path,
+        resourceId: this.resources[path],
+        handler,
+        handlerTransform: this.constructorArgs.transform?.route?.handler,
+        ...transformed[1],
       },
-      method,
-      path,
-      resourceId: this.resources[path],
-      handler,
-      handlerTransform: this.constructorArgs.transform?.route?.handler,
-      ...transform(this.constructorArgs.transform?.route?.args, args),
-    });
+      transformed[2],
+    );
 
     this.routes.push(apigRoute);
     return apigRoute;
@@ -768,60 +783,69 @@ export class ApiGatewayV1 extends Component implements Link.Linkable {
 
     function createDeployment() {
       return new apigateway.Deployment(
-        `${name}Deployment`,
-        transform(args.transform?.deployment, {
-          restApi: api.id,
-          triggers,
-        }),
-        { parent, dependsOn: routes.map((route) => route.nodes.integration) },
+        ...transform(
+          args.transform?.deployment,
+          `${name}Deployment`,
+          {
+            restApi: api.id,
+            triggers,
+          },
+          { parent, dependsOn: routes.map((route) => route.nodes.integration) },
+        ),
       );
     }
 
     function createLogGroup() {
       return new cloudwatch.LogGroup(
-        `${name}AccessLog`,
-        transform(args.transform?.accessLog, {
-          name: `/aws/vendedlogs/apis/${prefixName(64, name)}`,
-          retentionInDays: accessLog.apply(
-            (accessLog) => RETENTION[accessLog.retention],
-          ),
-        }),
-        { parent },
+        ...transform(
+          args.transform?.accessLog,
+          `${name}AccessLog`,
+          {
+            name: `/aws/vendedlogs/apis/${prefixName(64, name)}`,
+            retentionInDays: accessLog.apply(
+              (accessLog) => RETENTION[accessLog.retention],
+            ),
+          },
+          { parent },
+        ),
       );
     }
 
     function createStage() {
       return new apigateway.Stage(
-        `${name}Stage`,
-        transform(args.transform?.stage, {
-          restApi: api.id,
-          stageName: $app.stage,
-          deployment: deployment.id,
-          accessLogSettings: {
-            destinationArn: logGroup.arn,
-            format: JSON.stringify({
-              // request info
-              requestTime: `"$context.requestTime"`,
-              requestId: `"$context.requestId"`,
-              httpMethod: `"$context.httpMethod"`,
-              path: `"$context.path"`,
-              resourcePath: `"$context.resourcePath"`,
-              status: `$context.status`, // integer value, do not wrap in quotes
-              responseLatency: `$context.responseLatency`, // integer value, do not wrap in quotes
-              xrayTraceId: `"$context.xrayTraceId"`,
-              // integration info
-              functionResponseStatus: `"$context.integration.status"`,
-              integrationRequestId: `"$context.integration.requestId"`,
-              integrationLatency: `"$context.integration.latency"`,
-              integrationServiceStatus: `"$context.integration.integrationStatus"`,
-              // caller info
-              ip: `"$context.identity.sourceIp"`,
-              userAgent: `"$context.identity.userAgent"`,
-              principalId: `"$context.authorizer.principalId"`,
-            }),
+        ...transform(
+          args.transform?.stage,
+          `${name}Stage`,
+          {
+            restApi: api.id,
+            stageName: $app.stage,
+            deployment: deployment.id,
+            accessLogSettings: {
+              destinationArn: logGroup.arn,
+              format: JSON.stringify({
+                // request info
+                requestTime: `"$context.requestTime"`,
+                requestId: `"$context.requestId"`,
+                httpMethod: `"$context.httpMethod"`,
+                path: `"$context.path"`,
+                resourcePath: `"$context.resourcePath"`,
+                status: `$context.status`, // integer value, do not wrap in quotes
+                responseLatency: `$context.responseLatency`, // integer value, do not wrap in quotes
+                xrayTraceId: `"$context.xrayTraceId"`,
+                // integration info
+                functionResponseStatus: `"$context.integration.status"`,
+                integrationRequestId: `"$context.integration.requestId"`,
+                integrationLatency: `"$context.integration.latency"`,
+                integrationServiceStatus: `"$context.integration.integrationStatus"`,
+                // caller info
+                ip: `"$context.identity.sourceIp"`,
+                userAgent: `"$context.identity.userAgent"`,
+                principalId: `"$context.authorizer.principalId"`,
+              }),
+            },
           },
-        }),
-        { parent },
+          { parent },
+        ),
       );
     }
   }

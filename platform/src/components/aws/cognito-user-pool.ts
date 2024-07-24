@@ -264,63 +264,67 @@ export class CognitoUserPool extends Component implements Link.Linkable {
 
     function createUserPool() {
       return new cognito.UserPool(
-        `${name}UserPool`,
-        transform(args.transform?.userPool, {
-          aliasAttributes:
-            args.aliases &&
-            output(args.aliases).apply((aliases) => [
-              ...(aliases.includes("email") ? ["email"] : []),
-              ...(aliases.includes("phone") ? ["phone_number"] : []),
-              ...(aliases.includes("preferred_username")
-                ? ["preferred_username"]
-                : []),
-            ]),
-          usernameAttributes:
-            args.usernames &&
-            output(args.usernames).apply((usernames) => [
-              ...(usernames.includes("email") ? ["email"] : []),
-              ...(usernames.includes("phone") ? ["phone_number"] : []),
-            ]),
-          accountRecoverySetting: {
-            recoveryMechanisms: [
-              {
-                name: "verified_phone_number",
-                priority: 1,
-              },
-              {
-                name: "verified_email",
-                priority: 2,
-              },
-            ],
+        ...transform(
+          args.transform?.userPool,
+          `${name}UserPool`,
+          {
+            aliasAttributes:
+              args.aliases &&
+              output(args.aliases).apply((aliases) => [
+                ...(aliases.includes("email") ? ["email"] : []),
+                ...(aliases.includes("phone") ? ["phone_number"] : []),
+                ...(aliases.includes("preferred_username")
+                  ? ["preferred_username"]
+                  : []),
+              ]),
+            usernameAttributes:
+              args.usernames &&
+              output(args.usernames).apply((usernames) => [
+                ...(usernames.includes("email") ? ["email"] : []),
+                ...(usernames.includes("phone") ? ["phone_number"] : []),
+              ]),
+            accountRecoverySetting: {
+              recoveryMechanisms: [
+                {
+                  name: "verified_phone_number",
+                  priority: 1,
+                },
+                {
+                  name: "verified_email",
+                  priority: 2,
+                },
+              ],
+            },
+            adminCreateUserConfig: {
+              allowAdminCreateUserOnly: false,
+            },
+            usernameConfiguration: {
+              caseSensitive: false,
+            },
+            autoVerifiedAttributes: all([
+              args.aliases || [],
+              args.usernames || [],
+            ]).apply(([aliases, usernames]) => {
+              const attributes = [...aliases, ...usernames];
+              return [
+                ...(attributes.includes("email") ? ["email"] : []),
+                ...(attributes.includes("phone") ? ["phone_number"] : []),
+              ];
+            }),
+            emailConfiguration: {
+              emailSendingAccount: "COGNITO_DEFAULT",
+            },
+            verificationMessageTemplate: {
+              defaultEmailOption: "CONFIRM_WITH_CODE",
+              emailMessage:
+                "The verification code to your new account is {####}",
+              emailSubject: "Verify your new account",
+              smsMessage: "The verification code to your new account is {####}",
+            },
+            lambdaConfig: triggers,
           },
-          adminCreateUserConfig: {
-            allowAdminCreateUserOnly: false,
-          },
-          usernameConfiguration: {
-            caseSensitive: false,
-          },
-          autoVerifiedAttributes: all([
-            args.aliases || [],
-            args.usernames || [],
-          ]).apply(([aliases, usernames]) => {
-            const attributes = [...aliases, ...usernames];
-            return [
-              ...(attributes.includes("email") ? ["email"] : []),
-              ...(attributes.includes("phone") ? ["phone_number"] : []),
-            ];
-          }),
-          emailConfiguration: {
-            emailSendingAccount: "COGNITO_DEFAULT",
-          },
-          verificationMessageTemplate: {
-            defaultEmailOption: "CONFIRM_WITH_CODE",
-            emailMessage: "The verification code to your new account is {####}",
-            emailSubject: "Verify your new account",
-            smsMessage: "The verification code to your new account is {####}",
-          },
-          lambdaConfig: triggers,
-        }),
-        { parent },
+          { parent },
+        ),
       );
     }
 

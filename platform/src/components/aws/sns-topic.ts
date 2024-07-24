@@ -175,11 +175,14 @@ export class SnsTopic extends Component implements Link.Linkable {
 
     function createTopic() {
       return new sns.Topic(
-        `${name}Topic`,
-        transform(args.transform?.topic, {
-          fifoTopic: fifo,
-        }),
-        { parent },
+        ...transform(
+          args.transform?.topic,
+          `${name}Topic`,
+          {
+            fifoTopic: fifo,
+          },
+          { parent },
+        ),
       );
     }
   }

@@ -282,45 +282,54 @@ export class Postgres extends Component implements Link.Linkable {
       if (!args?.vpc) return;
 
       return new rds.SubnetGroup(
-        `${name}SubnetGroup`,
-        transform(args?.transform?.subnetGroup, {
-          subnetIds: output(args.vpc).privateSubnets,
-        }),
-        { parent },
+        ...transform(
+          args?.transform?.subnetGroup,
+          `${name}SubnetGroup`,
+          {
+            subnetIds: output(args.vpc).privateSubnets,
+          },
+          { parent },
+        ),
       );
     }
 
     function createCluster() {
       return new rds.Cluster(
-        `${name}Cluster`,
-        transform(args?.transform?.cluster, {
-          engine: rds.EngineType.AuroraPostgresql,
-          engineMode: "provisioned",
-          engineVersion: version,
-          databaseName,
-          masterUsername: "postgres",
-          manageMasterUserPassword: true,
-          serverlessv2ScalingConfiguration: scaling,
-          skipFinalSnapshot: true,
-          enableHttpEndpoint: true,
-          dbSubnetGroupName: subnetGroup?.name,
-          vpcSecurityGroupIds: args?.vpc && output(args.vpc).securityGroups,
-        }),
-        { parent },
+        ...transform(
+          args?.transform?.cluster,
+          `${name}Cluster`,
+          {
+            engine: rds.EngineType.AuroraPostgresql,
+            engineMode: "provisioned",
+            engineVersion: version,
+            databaseName,
+            masterUsername: "postgres",
+            manageMasterUserPassword: true,
+            serverlessv2ScalingConfiguration: scaling,
+            skipFinalSnapshot: true,
+            enableHttpEndpoint: true,
+            dbSubnetGroupName: subnetGroup?.name,
+            vpcSecurityGroupIds: args?.vpc && output(args.vpc).securityGroups,
+          },
+          { parent },
+        ),
       );
     }
 
     function createInstance() {
       return new rds.ClusterInstance(
-        `${name}Instance`,
-        transform(args?.transform?.instance, {
-          clusterIdentifier: cluster.id,
-          instanceClass: "db.serverless",
-          engine: rds.EngineType.AuroraPostgresql,
-          engineVersion: cluster.engineVersion,
-          dbSubnetGroupName: subnetGroup?.name,
-        }),
-        { parent },
+        ...transform(
+          args?.transform?.instance,
+          `${name}Instance`,
+          {
+            clusterIdentifier: cluster.id,
+            instanceClass: "db.serverless",
+            engine: rds.EngineType.AuroraPostgresql,
+            engineVersion: cluster.engineVersion,
+            dbSubnetGroupName: subnetGroup?.name,
+          },
+          { parent },
+        ),
       );
     }
   }

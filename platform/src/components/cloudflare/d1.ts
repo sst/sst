@@ -65,12 +65,15 @@ export class D1 extends Component implements Link.Linkable {
 
     function createDB() {
       return new cloudflare.D1Database(
-        `${name}Database`,
-        transform(args?.transform?.database, {
-          name,
-          accountId: sst.cloudflare.DEFAULT_ACCOUNT_ID,
-        }),
-        { parent },
+        ...transform(
+          args?.transform?.database,
+          `${name}Database`,
+          {
+            name,
+            accountId: sst.cloudflare.DEFAULT_ACCOUNT_ID,
+          },
+          { parent },
+        ),
       );
     }
   }

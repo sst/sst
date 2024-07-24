@@ -411,36 +411,40 @@ export class StaticSite extends Component implements Link.Linkable {
 
     function createS3Bucket() {
       return new Bucket(
-        `${name}Assets`,
-        transform(args.transform?.assets, {
-          transform: {
-            policy: (policyArgs) => {
-              const newPolicy = iam.getPolicyDocumentOutput({
-                statements: [
-                  {
-                    principals: [
-                      {
-                        type: "AWS",
-                        identifiers: [access.iamArn],
-                      },
-                    ],
-                    actions: ["s3:GetObject"],
-                    resources: [interpolate`${bucket.arn}/*`],
-                  },
-                ],
-              }).json;
-              policyArgs.policy = output([policyArgs.policy, newPolicy]).apply(
-                ([policy, newPolicy]) => {
+        ...transform(
+          args.transform?.assets,
+          `${name}Assets`,
+          {
+            transform: {
+              policy: (policyArgs) => {
+                const newPolicy = iam.getPolicyDocumentOutput({
+                  statements: [
+                    {
+                      principals: [
+                        {
+                          type: "AWS",
+                          identifiers: [access.iamArn],
+                        },
+                      ],
+                      actions: ["s3:GetObject"],
+                      resources: [interpolate`${bucket.arn}/*`],
+                    },
+                  ],
+                }).json;
+                policyArgs.policy = output([
+                  policyArgs.policy,
+                  newPolicy,
+                ]).apply(([policy, newPolicy]) => {
                   const policyJson = JSON.parse(policy as string);
                   const newPolicyJson = JSON.parse(newPolicy as string);
                   policyJson.Statement.push(...newPolicyJson.Statement);
                   return JSON.stringify(policyJson);
-                },
-              );
+                });
+              },
             },
           },
-        }),
-        { parent, retainOnDelete: false },
+          { parent, retainOnDelete: false },
+        ),
       );
     }
 
@@ -556,65 +560,68 @@ export class StaticSite extends Component implements Link.Linkable {
 
     function createDistribution() {
       return new Cdn(
-        `${name}Cdn`,
-        transform(args.transform?.cdn, {
-          comment: `${name} site`,
-          origins: [
-            {
-              originId: "s3",
-              domainName: bucket.nodes.bucket.bucketRegionalDomainName,
-              originPath: "",
-              s3OriginConfig: {
-                originAccessIdentity: access.cloudfrontAccessIdentityPath,
-              },
-            },
-          ],
-          defaultRootObject: indexPage,
-          customErrorResponses: args.errorPage
-            ? [
-                {
-                  errorCode: 403,
-                  responsePagePath: interpolate`/${args.errorPage}`,
-                  responseCode: 403,
-                },
-                {
-                  errorCode: 404,
-                  responsePagePath: interpolate`/${args.errorPage}`,
-                  responseCode: 404,
-                },
-              ]
-            : [
-                {
-                  errorCode: 403,
-                  responsePagePath: interpolate`/${indexPage}`,
-                  responseCode: 200,
-                },
-                {
-                  errorCode: 404,
-                  responsePagePath: interpolate`/${indexPage}`,
-                  responseCode: 200,
-                },
-              ],
-          defaultCacheBehavior: {
-            targetOriginId: "s3",
-            viewerProtocolPolicy: "redirect-to-https",
-            allowedMethods: ["GET", "HEAD", "OPTIONS"],
-            cachedMethods: ["GET", "HEAD"],
-            compress: true,
-            // CloudFront's managed CachingOptimized policy
-            cachePolicyId: "658327ea-f89d-4fab-a63d-7e88639e58f6",
-            functionAssociations: [
+        ...transform(
+          args.transform?.cdn,
+          `${name}Cdn`,
+          {
+            comment: `${name} site`,
+            origins: [
               {
-                eventType: "viewer-request",
-                functionArn: cloudfrontFunction.arn,
+                originId: "s3",
+                domainName: bucket.nodes.bucket.bucketRegionalDomainName,
+                originPath: "",
+                s3OriginConfig: {
+                  originAccessIdentity: access.cloudfrontAccessIdentityPath,
+                },
               },
             ],
+            defaultRootObject: indexPage,
+            customErrorResponses: args.errorPage
+              ? [
+                  {
+                    errorCode: 403,
+                    responsePagePath: interpolate`/${args.errorPage}`,
+                    responseCode: 403,
+                  },
+                  {
+                    errorCode: 404,
+                    responsePagePath: interpolate`/${args.errorPage}`,
+                    responseCode: 404,
+                  },
+                ]
+              : [
+                  {
+                    errorCode: 403,
+                    responsePagePath: interpolate`/${indexPage}`,
+                    responseCode: 200,
+                  },
+                  {
+                    errorCode: 404,
+                    responsePagePath: interpolate`/${indexPage}`,
+                    responseCode: 200,
+                  },
+                ],
+            defaultCacheBehavior: {
+              targetOriginId: "s3",
+              viewerProtocolPolicy: "redirect-to-https",
+              allowedMethods: ["GET", "HEAD", "OPTIONS"],
+              cachedMethods: ["GET", "HEAD"],
+              compress: true,
+              // CloudFront's managed CachingOptimized policy
+              cachePolicyId: "658327ea-f89d-4fab-a63d-7e88639e58f6",
+              functionAssociations: [
+                {
+                  eventType: "viewer-request",
+                  functionArn: cloudfrontFunction.arn,
+                },
+              ],
+            },
+            domain: args.domain,
+            wait: !$dev,
           },
-          domain: args.domain,
-          wait: !$dev,
-        }),
-        // create distribution after s3 upload finishes
-        { dependsOn: bucketFile, parent },
+          // create distribution after s3 upload finishes
+          { dependsOn: bucketFile, parent },
+        ),
       );
     }
 

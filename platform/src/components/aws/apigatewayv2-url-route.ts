@@ -53,14 +53,17 @@ export class ApiGatewayV2UrlRoute extends Component {
 
     function createIntegration() {
       return new apigatewayv2.Integration(
-        `${name}Integration`,
-        transform(args.transform?.integration, {
-          apiId: api.id,
-          integrationType: "HTTP_PROXY",
-          integrationUri: args.url,
-          integrationMethod: "ANY",
-        }),
-        { parent: self },
+        ...transform(
+          args.transform?.integration,
+          `${name}Integration`,
+          {
+            apiId: api.id,
+            integrationType: "HTTP_PROXY",
+            integrationUri: args.url,
+            integrationMethod: "ANY",
+          },
+          { parent: self },
+        ),
       );
     }
   }

@@ -175,49 +175,58 @@ export class Vpc extends Component {
 
     function createVpc() {
       return new ec2.Vpc(
-        `${name}Vpc`,
-        transform(args?.transform?.vpc, {
-          cidrBlock: "10.0.0.0/16",
-          enableDnsSupport: true,
-          enableDnsHostnames: true,
-        }),
-        { parent },
+        ...transform(
+          args?.transform?.vpc,
+          `${name}Vpc`,
+          {
+            cidrBlock: "10.0.0.0/16",
+            enableDnsSupport: true,
+            enableDnsHostnames: true,
+          },
+          { parent },
+        ),
       );
     }
 
     function createInternetGateway() {
       return new ec2.InternetGateway(
-        `${name}InternetGateway`,
-        transform(args?.transform?.internetGateway, {
-          vpcId: vpc.id,
-        }),
-        { parent },
+        ...transform(
+          args?.transform?.internetGateway,
+          `${name}InternetGateway`,
+          {
+            vpcId: vpc.id,
+          },
+          { parent },
+        ),
       );
     }
 
     function createSecurityGroup() {
       return new ec2.SecurityGroup(
-        `${name}SecurityGroup`,
-        transform(args?.transform?.securityGroup, {
-          vpcId: vpc.id,
-          egress: [
-            {
-              fromPort: 0,
-              toPort: 0,
-              protocol: "-1",
-              cidrBlocks: ["0.0.0.0/0"],
-            },
-          ],
-          ingress: [
-            {
-              fromPort: 0,
-              toPort: 0,
-              protocol: "-1",
-              cidrBlocks: ["0.0.0.0/0"],
-            },
-          ],
-        }),
-        { parent },
+        ...transform(
+          args?.transform?.securityGroup,
+          `${name}SecurityGroup`,
+          {
+            vpcId: vpc.id,
+            egress: [
+              {
+                fromPort: 0,
+                toPort: 0,
+                protocol: "-1",
+                cidrBlocks: ["0.0.0.0/0"],
+              },
+            ],
+            ingress: [
+              {
+                fromPort: 0,
+                toPort: 0,
+                protocol: "-1",
+                cidrBlocks: ["0.0.0.0/0"],
+              },
+            ],
+          },
+          { parent },
+        ),
       );
     }
 
@@ -225,20 +234,26 @@ export class Vpc extends Component {
       const ret = publicSubnets.apply((subnets) =>
         subnets.map((subnet, i) => {
           const elasticIp = new ec2.Eip(
-            `${name}ElasticIp${i + 1}`,
-            transform(args?.transform?.elasticIp, {
-              vpc: true,
-            }),
-            { parent },
+            ...transform(
+              args?.transform?.elasticIp,
+              `${name}ElasticIp${i + 1}`,
+              {
+                vpc: true,
+              },
+              { parent },
+            ),
           );
 
           const natGateway = new ec2.NatGateway(
-            `${name}NatGateway${i + 1}`,
-            transform(args?.transform?.natGateway, {
-              subnetId: subnet.id,
-              allocationId: elasticIp.id,
-            }),
-            { parent },
+            ...transform(
+              args?.transform?.natGateway,
+              `${name}NatGateway${i + 1}`,
+              {
+                subnetId: subnet.id,
+                allocationId: elasticIp.id,
+              },
+              { parent },
+            ),
           );
           return { elasticIp, natGateway };
         }),
@@ -254,28 +269,34 @@ export class Vpc extends Component {
       const ret = zones.apply((zones) =>
         zones.map((zone, i) => {
           const subnet = new ec2.Subnet(
-            `${name}PublicSubnet${i + 1}`,
-            transform(args?.transform?.publicSubnet, {
-              vpcId: vpc.id,
-              cidrBlock: `10.0.${i + 1}.0/24`,
-              availabilityZone: zone,
-              mapPublicIpOnLaunch: true,
-            }),
-            { parent },
+            ...transform(
+              args?.transform?.publicSubnet,
+              `${name}PublicSubnet${i + 1}`,
+              {
+                vpcId: vpc.id,
+                cidrBlock: `10.0.${i + 1}.0/24`,
+                availabilityZone: zone,
+                mapPublicIpOnLaunch: true,
+              },
+              { parent },
+            ),
           );
 
           const routeTable = new ec2.RouteTable(
-            `${name}PublicRouteTable${i + 1}`,
-            transform(args?.transform?.publicRouteTable, {
-              vpcId: vpc.id,
-              routes: [
-                {
-                  cidrBlock: "0.0.0.0/0",
-                  gatewayId: internetGateway.id,
-                },
-              ],
-            }),
-            { parent },
+            ...transform(
+              args?.transform?.publicRouteTable,
+              `${name}PublicRouteTable${i + 1}`,
+              {
+                vpcId: vpc.id,
+                routes: [
+                  {
+                    cidrBlock: "0.0.0.0/0",
+                    gatewayId: internetGateway.id,
+                  },
+                ],
+              },
+              { parent },
+            ),
           );
 
           new ec2.RouteTableAssociation(
@@ -301,27 +322,33 @@ export class Vpc extends Component {
       const ret = zones.apply((zones) =>
         zones.map((zone, i) => {
           const subnet = new ec2.Subnet(
-            `${name}PrivateSubnet${i + 1}`,
-            transform(args?.transform?.privateSubnet, {
-              vpcId: vpc.id,
-              cidrBlock: `10.0.${zones.length + i + 1}.0/24`,
-              availabilityZone: zone,
-            }),
-            { parent },
+            ...transform(
+              args?.transform?.privateSubnet,
+              `${name}PrivateSubnet${i + 1}`,
+              {
+                vpcId: vpc.id,
+                cidrBlock: `10.0.${zones.length + i + 1}.0/24`,
+                availabilityZone: zone,
+              },
+              { parent },
+            ),
           );
 
           const routeTable = new ec2.RouteTable(
-            `${name}PrivateRouteTable${i + 1}`,
-            transform(args?.transform?.privateRouteTable, {
-              vpcId: vpc.id,
-              routes: [
-                {
-                  cidrBlock: "0.0.0.0/0",
-                  natGatewayId: natGateways[i].id,
-                },
-              ],
-            }),
-            { parent },
+            ...transform(
+              args?.transform?.privateRouteTable,
+              `${name}PrivateRouteTable${i + 1}`,
+              {
+                vpcId: vpc.id,
+                routes: [
+                  {
+                    cidrBlock: "0.0.0.0/0",
+                    natGatewayId: natGateways[i].id,
+                  },
+                ],
+              },
+              { parent },
+            ),
           );
 
           new ec2.RouteTableAssociation(

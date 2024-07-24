@@ -142,16 +142,19 @@ export class ApiGatewayV1LambdaRoute extends Component {
 
     function createIntegration() {
       return new apigateway.Integration(
-        `${name}Integration`,
-        transform(args.transform?.integration, {
-          restApi: api.id,
-          resourceId: args.resourceId,
-          httpMethod: method.httpMethod,
-          integrationHttpMethod: "POST",
-          type: "AWS_PROXY",
-          uri: fn.nodes.function.invokeArn,
-        }),
-        { parent: self, dependsOn: [permission] },
+        ...transform(
+          args.transform?.integration,
+          `${name}Integration`,
+          {
+            restApi: api.id,
+            resourceId: args.resourceId,
+            httpMethod: method.httpMethod,
+            integrationHttpMethod: "POST",
+            type: "AWS_PROXY",
+            uri: fn.nodes.function.invokeArn,
+          },
+          { parent: self, dependsOn: [permission] },
+        ),
       );
     }
   }

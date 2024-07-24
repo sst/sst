@@ -155,21 +155,24 @@ export class CognitoIdentityPool extends Component implements Link.Linkable {
 
     function createIdentityPool() {
       return new cognito.IdentityPool(
-        `${name}IdentityPool`,
-        transform(args.transform?.identityPool, {
-          identityPoolName: prefixName(128, name),
-          allowUnauthenticatedIdentities: true,
-          cognitoIdentityProviders:
-            args.userPools &&
-            output(args.userPools).apply((userPools) =>
-              userPools.map((v) => ({
-                clientId: v.client,
-                providerName: interpolate`cognito-idp.${region}.amazonaws.com/${v.userPool}`,
-              })),
-            ),
-          supportedLoginProviders: {},
-        }),
-        { parent },
+        ...transform(
+          args.transform?.identityPool,
+          `${name}IdentityPool`,
+          {
+            identityPoolName: prefixName(128, name),
+            allowUnauthenticatedIdentities: true,
+            cognitoIdentityProviders:
+              args.userPools &&
+              output(args.userPools).apply((userPools) =>
+                userPools.map((v) => ({
+                  clientId: v.client,
+                  providerName: interpolate`cognito-idp.${region}.amazonaws.com/${v.userPool}`,
+                })),
+              ),
+            supportedLoginProviders: {},
+          },
+          { parent },
+        ),
       );
     }
 
@@ -192,37 +195,40 @@ export class CognitoIdentityPool extends Component implements Link.Linkable {
       );
 
       return new iam.Role(
-        `${name}AuthRole`,
-        transform(args.transform?.authenticatedRole, {
-          assumeRolePolicy: iam.getPolicyDocumentOutput({
-            statements: [
-              {
-                effect: "Allow",
-                principals: [
-                  {
-                    type: "Federated",
-                    identifiers: ["cognito-identity.amazonaws.com"],
-                  },
-                ],
-                actions: ["sts:AssumeRoleWithWebIdentity"],
-                conditions: [
-                  {
-                    test: "StringEquals",
-                    variable: "cognito-identity.amazonaws.com:aud",
-                    values: [identityPool.id],
-                  },
-                  {
-                    test: "ForAnyValue:StringLike",
-                    variable: "cognito-identity.amazonaws.com:amr",
-                    values: ["authenticated"],
-                  },
-                ],
-              },
-            ],
-          }).json,
-          inlinePolicies: [{ name: "inline", policy: policy.json }],
-        }),
-        { parent },
+        ...transform(
+          args.transform?.authenticatedRole,
+          `${name}AuthRole`,
+          {
+            assumeRolePolicy: iam.getPolicyDocumentOutput({
+              statements: [
+                {
+                  effect: "Allow",
+                  principals: [
+                    {
+                      type: "Federated",
+                      identifiers: ["cognito-identity.amazonaws.com"],
+                    },
+                  ],
+                  actions: ["sts:AssumeRoleWithWebIdentity"],
+                  conditions: [
+                    {
+                      test: "StringEquals",
+                      variable: "cognito-identity.amazonaws.com:aud",
+                      values: [identityPool.id],
+                    },
+                    {
+                      test: "ForAnyValue:StringLike",
+                      variable: "cognito-identity.amazonaws.com:amr",
+                      values: ["authenticated"],
+                    },
+                  ],
+                },
+              ],
+            }).json,
+            inlinePolicies: [{ name: "inline", policy: policy.json }],
+          },
+          { parent },
+        ),
       );
     }
 
@@ -241,37 +247,40 @@ export class CognitoIdentityPool extends Component implements Link.Linkable {
       );
 
       return new iam.Role(
-        `${name}UnauthRole`,
-        transform(args.transform?.unauthenticatedRole, {
-          assumeRolePolicy: iam.getPolicyDocumentOutput({
-            statements: [
-              {
-                effect: "Allow",
-                principals: [
-                  {
-                    type: "Federated",
-                    identifiers: ["cognito-identity.amazonaws.com"],
-                  },
-                ],
-                actions: ["sts:AssumeRoleWithWebIdentity"],
-                conditions: [
-                  {
-                    test: "StringEquals",
-                    variable: "cognito-identity.amazonaws.com:aud",
-                    values: [identityPool.id],
-                  },
-                  {
-                    test: "ForAnyValue:StringLike",
-                    variable: "cognito-identity.amazonaws.com:amr",
-                    values: ["unauthenticated"],
-                  },
-                ],
-              },
-            ],
-          }).json,
-          inlinePolicies: [{ name: "inline", policy: policy.json }],
-        }),
-        { parent },
+        ...transform(
+          args.transform?.unauthenticatedRole,
+          `${name}UnauthRole`,
+          {
+            assumeRolePolicy: iam.getPolicyDocumentOutput({
+              statements: [
+                {
+                  effect: "Allow",
+                  principals: [
+                    {
+                      type: "Federated",
+                      identifiers: ["cognito-identity.amazonaws.com"],
+                    },
+                  ],
+                  actions: ["sts:AssumeRoleWithWebIdentity"],
+                  conditions: [
+                    {
+                      test: "StringEquals",
+                      variable: "cognito-identity.amazonaws.com:aud",
+                      values: [identityPool.id],
+                    },
+                    {
+                      test: "ForAnyValue:StringLike",
+                      variable: "cognito-identity.amazonaws.com:amr",
+                      values: ["unauthenticated"],
+                    },
+                  ],
+                },
+              ],
+            }).json,
+            inlinePolicies: [{ name: "inline", policy: policy.json }],
+          },
+          { parent },
+        ),
       );
     }
 

@@ -80,14 +80,17 @@ export class SnsTopicLambdaSubscriber extends Component {
 
     function createSubscription() {
       return new sns.TopicSubscription(
-        `${name}Subscription`,
-        transform(args?.transform?.subscription, {
-          topic: topic.arn,
-          protocol: "lambda",
-          endpoint: fn.arn,
-          filterPolicy: JSON.stringify(args.filter ?? {}),
-        }),
-        { parent: self, dependsOn: [permission] },
+        ...transform(
+          args?.transform?.subscription,
+          `${name}Subscription`,
+          {
+            topic: topic.arn,
+            protocol: "lambda",
+            endpoint: fn.arn,
+            filterPolicy: JSON.stringify(args.filter ?? {}),
+          },
+          { parent: self, dependsOn: [permission] },
+        ),
       );
     }
   }

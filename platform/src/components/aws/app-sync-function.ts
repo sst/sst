@@ -38,22 +38,25 @@ export class AppSyncFunction extends Component {
 
     function createFunction() {
       return new appsync.Function(
-        `${name}Function`,
-        transform(args.transform?.function, {
-          apiId: args.apiId,
-          name: args.name,
-          dataSource: args.dataSource,
-          requestMappingTemplate: args.requestMappingTemplate,
-          responseMappingTemplate: args.responseMappingTemplate,
-          code: args.code,
-          runtime: args.code
-            ? {
-              name: "APPSYNC_JS",
-              runtimeVersion: "1.0.0",
-            }
-            : undefined,
-        }),
-        { parent: self },
+        ...transform(
+          args.transform?.function,
+          `${name}Function`,
+          {
+            apiId: args.apiId,
+            name: args.name,
+            dataSource: args.dataSource,
+            requestMappingTemplate: args.requestMappingTemplate,
+            responseMappingTemplate: args.responseMappingTemplate,
+            code: args.code,
+            runtime: args.code
+              ? {
+                  name: "APPSYNC_JS",
+                  runtimeVersion: "1.0.0",
+                }
+              : undefined,
+          },
+          { parent: self },
+        ),
       );
     }
   }

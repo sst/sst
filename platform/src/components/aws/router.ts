@@ -222,27 +222,30 @@ export class Router extends Component implements Link.Linkable {
 
     function createCachePolicy() {
       return new cloudfront.CachePolicy(
-        `${name}CachePolicy`,
-        transform(args.transform?.cachePolicy, {
-          comment: `${name} router cache policy`,
-          defaultTtl: 0,
-          maxTtl: 31536000, // 1 year
-          minTtl: 0,
-          parametersInCacheKeyAndForwardedToOrigin: {
-            cookiesConfig: {
-              cookieBehavior: "none",
+        ...transform(
+          args.transform?.cachePolicy,
+          `${name}CachePolicy`,
+          {
+            comment: `${name} router cache policy`,
+            defaultTtl: 0,
+            maxTtl: 31536000, // 1 year
+            minTtl: 0,
+            parametersInCacheKeyAndForwardedToOrigin: {
+              cookiesConfig: {
+                cookieBehavior: "none",
+              },
+              headersConfig: {
+                headerBehavior: "none",
+              },
+              queryStringsConfig: {
+                queryStringBehavior: "all",
+              },
+              enableAcceptEncodingBrotli: true,
+              enableAcceptEncodingGzip: true,
             },
-            headersConfig: {
-              headerBehavior: "none",
-            },
-            queryStringsConfig: {
-              queryStringBehavior: "all",
-            },
-            enableAcceptEncodingBrotli: true,
-            enableAcceptEncodingGzip: true,
           },
-        }),
-        { parent },
+          { parent },
+        ),
       );
     }
 
@@ -251,23 +254,26 @@ export class Router extends Component implements Link.Linkable {
       const behaviors = buildBehaviors();
 
       return new Cdn(
-        `${name}Cdn`,
-        transform(args.transform?.cdn, {
-          comment: `${name} router`,
-          origins,
-          defaultCacheBehavior: behaviors.apply(
-            (behaviors) => behaviors.find((b) => !b.pathPattern)!,
-          ),
-          orderedCacheBehaviors: behaviors.apply(
-            (behaviors) =>
-              behaviors.filter(
-                (b) => b.pathPattern,
-              ) as types.input.cloudfront.DistributionOrderedCacheBehavior[],
-          ),
-          domain: args.domain,
-          wait: true,
-        }),
-        { parent },
+        ...transform(
+          args.transform?.cdn,
+          `${name}Cdn`,
+          {
+            comment: `${name} router`,
+            origins,
+            defaultCacheBehavior: behaviors.apply(
+              (behaviors) => behaviors.find((b) => !b.pathPattern)!,
+            ),
+            orderedCacheBehaviors: behaviors.apply(
+              (behaviors) =>
+                behaviors.filter(
+                  (b) => b.pathPattern,
+                ) as types.input.cloudfront.DistributionOrderedCacheBehavior[],
+            ),
+            domain: args.domain,
+            wait: true,
+          },
+          { parent },
+        ),
       );
     }
 

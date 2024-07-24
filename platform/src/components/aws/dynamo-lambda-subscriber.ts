@@ -75,19 +75,23 @@ export class DynamoLambdaSubscriber extends Component {
 
     function createEventSourceMapping() {
       return new lambda.EventSourceMapping(
-        `${name}EventSourceMapping`,
-        transform(args.transform?.eventSourceMapping, {
-          eventSourceArn: dynamo.streamArn,
-          functionName: fn.name,
-          filterCriteria: args.filters
-            ? output(args.filters).apply((filters) => ({
-              filters: filters.map((filter) => ({
-                pattern: JSON.stringify(filter),
-              })),
-            }))
-            : undefined,
-          startingPosition: "LATEST",
-        }),
+        ...transform(
+          args.transform?.eventSourceMapping,
+          `${name}EventSourceMapping`,
+          {
+            eventSourceArn: dynamo.streamArn,
+            functionName: fn.name,
+            filterCriteria: args.filters
+              ? output(args.filters).apply((filters) => ({
+                  filters: filters.map((filter) => ({
+                    pattern: JSON.stringify(filter),
+                  })),
+                }))
+              : undefined,
+            startingPosition: "LATEST",
+          },
+          {},
+        ),
       );
     }
   }
