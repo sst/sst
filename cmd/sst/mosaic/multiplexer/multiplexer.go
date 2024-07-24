@@ -83,16 +83,17 @@ func (s *Multiplexer) Start() {
 		case <-s.ctx.Done():
 			return
 		default:
+			unknown := s.screen.PollEvent()
+			if unknown == nil {
+				continue
+			}
+			shouldBreak := false
 			func() {
 				defer func() {
 					if r := recover(); r != nil {
-						slog.Error("panic in ui loop", "recovery", r)
+						slog.Error("panic", "recovery", r)
 					}
 				}()
-				unknown := s.screen.PollEvent()
-				if unknown == nil {
-					return
-				}
 
 				selected := s.selectedProcess()
 
@@ -245,6 +246,7 @@ func (s *Multiplexer) Start() {
 							pid := os.Getpid()
 							process, _ := os.FindProcess(pid)
 							process.Signal(syscall.SIGINT)
+							shouldBreak = true
 							return
 						}
 					case tcell.KeyCtrlZ:
@@ -260,6 +262,9 @@ func (s *Multiplexer) Start() {
 					}
 				}
 			}()
+			if shouldBreak {
+				return
+			}
 		}
 	}
 }
