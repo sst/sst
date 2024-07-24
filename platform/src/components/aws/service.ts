@@ -725,6 +725,7 @@ export class Service extends Component implements Link.Linkable {
           aws: {
             role: taskRole.arn,
           },
+          autostart: output(args.dev?.autostart).apply((val) => val ?? true),
           directory: output(args.dev?.directory).apply(
             (dir) =>
               dir ||
