@@ -7,6 +7,7 @@ import { FunctionArgs } from "./function";
 import { Service } from "./service";
 import { RETENTION } from "./logging.js";
 import { cloudwatch, ecs, iam, lb } from "@pulumi/aws";
+import { DevArgs } from "../dev";
 
 export const supportedCpus = {
   "0.25 vCPU": 256,
@@ -173,7 +174,7 @@ export interface ClusterArgs {
   };
 }
 
-export interface ClusterServiceArgs {
+export interface ClusterServiceArgs extends DevArgs {
   /**
    * Configure the docker build command for building the image.
    *
@@ -722,13 +723,6 @@ export interface ClusterServiceArgs {
      */
     logGroup?: Transform<cloudwatch.LogGroupArgs>;
   };
-
-  /**
-   * @internal
-   */
-  dev?: Input<{
-    command: string;
-  }>;
 }
 
 /**

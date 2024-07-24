@@ -717,12 +717,6 @@ export class Service extends Component implements Link.Linkable {
           },
         })),
         _dev: imageArgs.apply((imageArgs) => ({
-          directory: path.join(
-            imageArgs.dockerfile
-              ? path.dirname(imageArgs.dockerfile)
-              : imageArgs.context,
-          ),
-          command: output(args.dev).apply((v) => v?.command),
           links: linkData.apply((input) => input.map((item) => item.name)),
           environment: {
             ...args.environment,
@@ -731,6 +725,16 @@ export class Service extends Component implements Link.Linkable {
           aws: {
             role: taskRole.arn,
           },
+          directory: output(args.dev?.directory).apply(
+            (dir) =>
+              dir ||
+              path.join(
+                imageArgs.dockerfile
+                  ? path.dirname(imageArgs.dockerfile)
+                  : imageArgs.context,
+              ),
+          ),
+          command: args.dev?.command,
         })),
       });
     }

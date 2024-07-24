@@ -78,7 +78,7 @@ func (s *Multiplexer) draw() {
 		label := hotkeys[key]
 		title := views.NewTextBar()
 		title.SetStyle(tcell.StyleDefault.Foreground(tcell.ColorGray))
-		title.SetLeft(" "+key, tcell.StyleDefault.Foreground(tcell.ColorWhite).Bold(true))
+		title.SetLeft(" "+key, tcell.StyleDefault.Foreground(tcell.ColorGray).Bold(true))
 		title.SetRight(label+"  ", tcell.StyleDefault)
 		s.stack.AddWidget(title, 0)
 	}

@@ -3,8 +3,13 @@ package server
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
+	"os"
+	"path/filepath"
 	"reflect"
+
+	"github.com/sst/ion/pkg/project"
 )
 
 type Message struct {
@@ -28,6 +33,27 @@ func (r *registry) Register(v interface{}) {
 func (r *registry) Get(name string) (reflect.Type, bool) {
 	t, ok := r.types[name]
 	return t, ok
+}
+
+func resolveServerFile(cfgPath, stage string) string {
+	return filepath.Join(project.ResolveWorkingDir(cfgPath), stage+".server")
+}
+
+var ErrServerNotFound = errors.New("server not found")
+
+func Discover(cfgPath string, stage string) (string, error) {
+	if env := os.Getenv("SST_SERVER"); env != "" {
+		return env, nil
+	}
+	resolved := resolveServerFile(cfgPath, stage)
+	contents, err := os.ReadFile(resolved)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return "", ErrServerNotFound
+		}
+		return "", err
+	}
+	return string(contents), nil
 }
 
 func Stream(ctx context.Context, url string, types ...interface{}) (chan any, error) {

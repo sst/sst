@@ -1,9 +1,8 @@
-package mosaic
+package main
 
 import (
 	"fmt"
 	"log/slog"
-	"os"
 
 	"github.com/pulumi/pulumi/sdk/v3/go/common/apitype"
 	"github.com/sst/ion/cmd/sst/cli"
@@ -15,15 +14,19 @@ import (
 )
 
 func CmdUI(c *cli.Cli) error {
-	url := "http://localhost:13557"
-	if match, ok := os.LookupEnv("SST_SERVER"); ok {
-		url = match
+	url, err := server.Discover("", "")
+	if err != nil {
+		return err
 	}
 	types := []interface{}{}
 	filter := c.String("filter")
 	if filter == "function" || filter == "" {
-		fmt.Println(ui.TEXT_HIGHLIGHT_BOLD.Render("Function Logs"))
-		fmt.Println()
+		if filter != "" {
+			fmt.Println(ui.TEXT_HIGHLIGHT_BOLD.Render("Function Logs"))
+			fmt.Println()
+			fmt.Println(ui.TEXT_DIM.Render("Waiting for invocations..."))
+			fmt.Println()
+		}
 		types = append(types,
 			cloudflare.WorkerBuildEvent{},
 			cloudflare.WorkerUpdatedEvent{},

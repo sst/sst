@@ -17,8 +17,9 @@ import { Component } from "../component.js";
 import { Link } from "../link.js";
 import { buildApp } from "../base/base-ssr-site.js";
 import { URL_UNAVAILABLE } from "./linkable.js";
+import { DevArgs } from "../dev.js";
 
-export interface NuxtArgs extends SsrSiteArgs {
+export interface NuxtArgs extends SsrSiteArgs, DevArgs {
   /**
    * The number of instances of the [server function](#nodes-server) to keep warm. This is useful for cases where you are experiencing long cold starts. The default is to not keep any instances warm.
    *
@@ -363,7 +364,6 @@ export class Nuxt extends Component implements Link.Linkable {
           environment: args.environment,
         },
         _dev: {
-          directory: sitePath,
           links: output(args.link || [])
             .apply(Link.build)
             .apply((links) => links.map((link) => link.name)),
@@ -371,7 +371,13 @@ export class Nuxt extends Component implements Link.Linkable {
             role: server.nodes.role.arn,
           },
           environment: args.environment,
-          command: "npm run dev",
+          autostart: output(args.dev?.autostart).apply((val) => val ?? true),
+          directory: output(args.dev?.directory).apply(
+            (dir) => dir || sitePath,
+          ),
+          command: output(args.dev?.command).apply(
+            (val) => val || "npm run dev",
+          ),
         },
       });
       return;

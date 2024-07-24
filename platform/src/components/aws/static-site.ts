@@ -23,8 +23,9 @@ import {
 } from "../base/base-static-site.js";
 import { cloudfront, iam } from "@pulumi/aws";
 import { URL_UNAVAILABLE } from "./linkable.js";
+import { DevArgs } from "../dev.js";
 
-export interface StaticSiteArgs extends BaseStaticSiteArgs {
+export interface StaticSiteArgs extends BaseStaticSiteArgs, DevArgs {
   /**
    * Path to the directory where your static site is located. By default this assumes your static site is in the root of your SST app.
    *
@@ -395,7 +396,7 @@ export class StaticSite extends Component implements Link.Linkable {
     this.cdn = distribution;
 
     this.registerOutputs({
-      _hint: this.url,
+      ...cleanup(sitePath, environment, this.url, args.dev),
       _metadata: {
         mode: "deployed",
         path: sitePath,

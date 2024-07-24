@@ -18,8 +18,9 @@ import { Link } from "../link.js";
 import type { Input } from "../input.js";
 import { buildApp } from "../base/base-ssr-site.js";
 import { URL_UNAVAILABLE } from "./linkable.js";
+import { DevArgs } from "../dev.js";
 
-export interface SvelteKitArgs extends SsrSiteArgs {
+export interface SvelteKitArgs extends SsrSiteArgs, DevArgs {
   /**
    * The number of instances of the [server function](#nodes-server) to keep warm. This is useful for cases where you are experiencing long cold starts. The default is to not keep any instances warm.
    *
@@ -374,7 +375,6 @@ export class SvelteKit extends Component implements Link.Linkable {
           environment: args.environment,
         },
         _dev: {
-          directory: sitePath,
           links: output(args.link || [])
             .apply(Link.build)
             .apply((links) => links.map((link) => link.name)),
@@ -382,7 +382,13 @@ export class SvelteKit extends Component implements Link.Linkable {
             role: server.nodes.role.arn,
           },
           environment: args.environment,
-          command: "npm run dev",
+          directory: output(args.dev?.directory).apply(
+            (dir) => dir || sitePath,
+          ),
+          autostart: output(args.dev?.autostart).apply((val) => val ?? true),
+          command: output(args.dev?.command).apply(
+            (val) => val || "npm run dev",
+          ),
         },
       });
       return;

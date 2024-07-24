@@ -3,10 +3,11 @@ package main
 import (
 	"errors"
 
+	"github.com/sst/ion/cmd/sst/mosaic/aws"
+	"github.com/sst/ion/cmd/sst/mosaic/server"
 	"github.com/sst/ion/internal/util"
 	"github.com/sst/ion/pkg/project"
 	"github.com/sst/ion/pkg/project/provider"
-	"github.com/sst/ion/pkg/server/dev/aws"
 )
 
 func TransformError(err error) error {
@@ -21,6 +22,7 @@ func TransformError(err error) error {
 		provider.ErrLockExists:               "",
 		project.ErrVersionInvalid:            "The version range defined in the config is invalid",
 		provider.ErrCloudflareMissingAccount: "The Cloudflare Account ID was not able to be determined from this token. Make sure it has permissions to fetch account information or you can set the CLOUDFLARE_DEFAULT_ACCOUNT_ID environment variable to the account id you want to use.",
+		server.ErrServerNotFound:             "Ensure `sst dev` session is running where you sst.config.ts is. If you do not want to use the multiplexer you can start `sst dev --mode=basic` instead.",
 	}
 
 	readable := []error{

@@ -15,7 +15,7 @@ export const handler: APIGatewayProxyHandlerV2 = async (evt) => {
   if (evt.requestContext.http.method === "POST") {
     const result = await db
       .insert(todo)
-      .values({ title: "Todo", description: crypto.randomUUID() })
+      .values({ title: "Todo", id: crypto.randomUUID() })
       .returning()
       .execute();
 

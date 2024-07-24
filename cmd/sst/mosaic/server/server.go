@@ -156,6 +156,9 @@ func (s *Server) Start(ctx context.Context, p *project.Project) error {
 	}
 	server.Addr = fmt.Sprintf("0.0.0.0:%d", s.Port)
 	slog.Info("server", "addr", server.Addr)
+	serverPath := resolveServerFile(p.PathConfig(), p.App().Stage)
+	os.WriteFile(serverPath, []byte("http://"+server.Addr), 0644)
+	defer os.Remove(serverPath)
 	wg.Go(func() error {
 		go server.ListenAndServe()
 		<-ctx.Done()

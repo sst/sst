@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"log/slog"
-	"net/http"
 	"os"
 	"os/exec"
 	"os/signal"
@@ -20,13 +19,12 @@ import (
 	"github.com/fatih/color"
 	"github.com/joho/godotenv"
 	"github.com/sst/ion/cmd/sst/cli"
-	"github.com/sst/ion/cmd/sst/mosaic"
+	"github.com/sst/ion/cmd/sst/mosaic/server"
 	"github.com/sst/ion/cmd/sst/mosaic/ui"
 	"github.com/sst/ion/internal/util"
 	"github.com/sst/ion/pkg/global"
 	"github.com/sst/ion/pkg/project"
 	"github.com/sst/ion/pkg/project/provider"
-	"github.com/sst/ion/pkg/server"
 	"github.com/sst/ion/pkg/telemetry"
 )
 
@@ -289,24 +287,9 @@ var root = &cli.Command{
 			},
 		},
 		{
-			Name: "mosaic",
-			Flags: []cli.Flag{
-				{
-					Name: "simple",
-					Type: "bool",
-					Description: cli.Description{
-						Short: "Run in simple mode",
-						Long:  "Run in simple mode.",
-					},
-				},
-			},
-			Hidden: true,
-			Run:    mosaic.CmdMosaic,
-		},
-		{
 			Name:   "ui",
 			Hidden: true,
-			Run:    mosaic.CmdUI,
+			Run:    CmdUI,
 			Flags: []cli.Flag{
 				{
 					Name: "filter",
@@ -335,10 +318,10 @@ var root = &cli.Command{
 					"sst dev next dev",
 					"```",
 					"",
-					"To pass in a flag to your command, wrap it in quotes.",
+					"To pass in a flag to your command, use --",
 					"",
 					"```bash frame=\"none\"",
-					"sst dev \"next dev --turbo\"",
+					"sst dev -- next dev --turbo",
 					"```",
 					"",
 					"Dev mode does a few things:",
@@ -370,11 +353,11 @@ var root = &cli.Command{
 			},
 			Flags: []cli.Flag{
 				{
-					Name: "silent",
-					Type: "bool",
+					Name: "mode",
+					Type: "string",
 					Description: cli.Description{
-						Short: "Don't show function invocation logs",
-						Long:  "Don't show logs from function invocations",
+						Short: "Use mode=basic to turn off multiplexer",
+						Long:  "Use mode=basic to turn off multiplexer",
 					},
 				},
 			},
@@ -390,23 +373,23 @@ var root = &cli.Command{
 				{
 					Content: "sst dev",
 					Description: cli.Description{
-						Short: "",
+						Short: "Brings up your entire app - should be all you need",
 					},
 				},
 				{
 					Content: "sst dev next dev",
 					Description: cli.Description{
-						Short: "Start dev mode for SST and Next.js",
+						Short: "Start a command connected to a running sst dev session",
 					},
 				},
 				{
-					Content: "sst dev \"next dev --turbo\"",
+					Content: "sst dev -- next dev --turbo",
 					Description: cli.Description{
-						Short: "When passing flags wrap command in quotes",
+						Short: "Use -- to pass flags to the command",
 					},
 				},
 			},
-			Run: CmdDev,
+			Run: CmdMosaic,
 		},
 		{
 			Name: "deploy",
@@ -862,9 +845,9 @@ var root = &cli.Command{
 						if err != nil {
 							return util.NewReadableError(err, "Could not set secret")
 						}
-						addr, _ := server.GetExisting(p.PathConfig(), p.App().Stage)
-						if addr != "" {
-							http.Post("http://"+addr+"/api/deploy", "application/json", strings.NewReader("{}"))
+						url, _ := server.Discover(p.PathConfig(), p.App().Stage)
+						if url != "" {
+							server.Deploy(c.Context, url)
 						}
 						ui.Success(fmt.Sprintf("Removed \"%s\" for stage \"%s\"", key, p.App().Stage))
 						return nil
@@ -1174,31 +1157,6 @@ var root = &cli.Command{
 						return telemetry.Disable()
 					},
 				},
-			},
-		},
-		{
-			Name:   "server",
-			Hidden: true,
-			Run: func(c *cli.Cli) error {
-				project, err := c.InitProject()
-				if err != nil {
-					return err
-				}
-				defer project.Cleanup()
-
-				s, err := server.New(project)
-				if err != nil {
-					return err
-				}
-
-				err = s.Start(c.Context)
-				if err != nil {
-					if err == server.ErrServerAlreadyRunning {
-						return util.NewReadableError(err, "Another instance of SST is already running")
-					}
-					return err
-				}
-				return nil
 			},
 		},
 		{

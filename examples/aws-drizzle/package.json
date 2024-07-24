@@ -1,15 +1,16 @@
 {
   "name": "aws-drizzle",
   "version": "0.0.0",
+  "type": "module",
   "scripts": {
     "db": "sst shell drizzle-kit",
     "db:studio": "sst shell drizzle-kit studio"
   },
   "dependencies": {
-    "@aws-sdk/client-rds-data": "^3.564.0",
-    "@types/aws-lambda": "^8.10.137",
-    "drizzle-kit": "0.20.17-e38e63d",
-    "drizzle-orm": "^0.30.10",
-    "sst": "^3.0.4"
+    "@aws-sdk/client-rds-data": "^3.616.0",
+    "@types/aws-lambda": "^8.10.142",
+    "drizzle-kit": "0.23.0",
+    "drizzle-orm": "^0.32.1",
+    "sst": "^0.1.29"
   }
 }

@@ -12,6 +12,10 @@ declare module "sst" {
       type: "sst.aws.Astro"
       url: string
     }
+    Astro2: {
+      type: "sst.aws.Astro"
+      url: string
+    }
     Database: {
       name: string
       type: "sst.aws.Dynamo"

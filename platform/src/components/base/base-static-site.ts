@@ -9,6 +9,7 @@ import { Input } from "../input.js";
 import { Prettify } from "../component.js";
 import { BaseSiteFileOptions, limiter } from "./base-site.js";
 import { Semaphore } from "../../util/semaphore.js";
+import { DevArgs } from "../dev.js";
 
 export interface BaseStaticSiteArgs {
   path?: Input<string>;
@@ -317,16 +318,18 @@ export function buildApp(
 }
 
 export function cleanup(
-  url: Output<string>,
   sitePath: ReturnType<typeof prepare>["sitePath"],
   environment: ReturnType<typeof prepare>["environment"],
+  url?: Output<string>,
+  dev?: DevArgs["dev"],
 ) {
   return {
     _hint: url,
     _dev: {
-      directory: sitePath,
       environment: environment,
-      command: "npm run dev",
+      command: output(dev?.command).apply((val) => val || "npm run dev"),
+      directory: output(dev?.directory).apply((dir) => dir || sitePath),
+      autostart: output(dev?.autostart).apply((val) => val ?? true),
     },
     _receiver: all([sitePath, environment]).apply(
       ([sitePath, environment]) => ({

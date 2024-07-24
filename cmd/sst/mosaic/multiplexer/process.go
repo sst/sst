@@ -25,7 +25,7 @@ type process struct {
 	dead     bool
 }
 
-func (s *Multiplexer) AddProcess(key string, args []string, icon string, title string, cwd string, killable bool, env ...string) {
+func (s *Multiplexer) AddProcess(key string, args []string, icon string, title string, cwd string, killable bool, autostart bool, env ...string) {
 	for _, p := range s.processes {
 		if p.key == key {
 			return
@@ -39,6 +39,7 @@ func (s *Multiplexer) AddProcess(key string, args []string, icon string, title s
 		args:     args,
 		killable: killable,
 		env:      env,
+		dead:     !autostart,
 	}
 	term := tcellterm.New()
 	term.SetSurface(s.main)
@@ -46,7 +47,13 @@ func (s *Multiplexer) AddProcess(key string, args []string, icon string, title s
 		s.screen.PostEvent(ev)
 	})
 	proc.vt = term
-	proc.start()
+	if autostart {
+		proc.start()
+	}
+	if !autostart {
+		proc.vt.Start(exec.Command("echo", key+" has autostart disabled, press enter to start."))
+		proc.dead = true
+	}
 	s.processes = append(s.processes, proc)
 	s.sort()
 	s.draw()

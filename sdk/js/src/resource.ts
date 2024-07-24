@@ -57,6 +57,11 @@ export const Resource = new Proxy(raw, {
     if (prop in raw) {
       return raw[prop];
     }
+    if (!env.SST_RESOURCE_App) {
+      throw new Error(
+        "It does not look like SST links are active. If this is in local development and you are not starting this process through the multiplexer, wrap your command with `sst dev -- <command>`",
+      );
+    }
     let msg = `"${prop}" is not linked`;
     if (env.AWS_LAMBDA_FUNCTION_NAME) {
       msg += ` to ${env.AWS_LAMBDA_FUNCTION_NAME}`;

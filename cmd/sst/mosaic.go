@@ -1,4 +1,4 @@
-package mosaic
+package main
 
 import (
 	"fmt"
@@ -25,21 +25,42 @@ import (
 func CmdMosaic(c *cli.Cli) error {
 	cwd, _ := os.Getwd()
 	var wg errgroup.Group
-	var args []string
-	for _, arg := range c.Arguments() {
-		args = append(args, strings.Fields(arg)...)
-	}
-	if len(args) > 0 {
-		url := "http://localhost:13557"
-		if match, ok := os.LookupEnv("SST_SERVER"); ok {
-			url = match
+
+	// spawning child process
+	if len(c.Arguments()) > 0 {
+		var args []string
+		for _, arg := range c.Arguments() {
+			args = append(args, strings.Fields(arg)...)
 		}
+		slog.Info("dev mode with target", "args", c.Arguments())
+		cfgPath, err := project.Discover()
+		stage, err := c.Stage(cfgPath)
+		if err != nil {
+			return err
+		}
+		url, err := server.Discover(cfgPath, stage)
+		if err != nil {
+			return err
+		}
+		slog.Info("found server", "url", url)
 		evts, err := server.Stream(c.Context, url, project.CompleteEvent{})
 		if err != nil {
 			return err
 		}
+		cwd, _ := os.Getwd()
+		currentDir := cwd
+		for {
+			newPath := filepath.Join(currentDir, "node_modules", ".bin") + string(os.PathListSeparator) + os.Getenv("PATH")
+			os.Setenv("PATH", newPath)
+			parentDir := filepath.Dir(currentDir)
+			if parentDir == currentDir {
+				break
+			}
+			currentDir = parentDir
+		}
 		var cmd *exec.Cmd
 		env := map[string]string{}
+		restarting := false
 		for {
 			select {
 			case <-c.Context.Done():
@@ -55,10 +76,12 @@ func CmdMosaic(c *cli.Cli) error {
 				}
 				if diff(env, nextEnv) {
 					if cmd != nil {
+						restarting = true
 						cmd.Process.Signal(syscall.SIGINT)
 						cmd.Wait()
 						fmt.Println("restarting...")
 					}
+					restarting = false
 					cmd := exec.Command(
 						args[0],
 						args[1:]...,
@@ -71,6 +94,13 @@ func CmdMosaic(c *cli.Cli) error {
 					cmd.Stdout = os.Stdout
 					cmd.Stderr = os.Stderr
 					cmd.Start()
+					go func() {
+						cmd.Wait()
+						if restarting {
+							return
+						}
+						c.Cancel()
+					}()
 				}
 				env = nextEnv
 			}
@@ -123,14 +153,15 @@ func CmdMosaic(c *cli.Cli) error {
 
 	currentExecutable, _ := os.Executable()
 
-	if !c.Bool("simple") {
+	mode := c.String("mode")
+	if mode == "" {
 		multi := multiplexer.New(c.Context)
 		multiEnv := []string{
 			fmt.Sprintf("SST_SERVER=http://localhost:%v", server.Port),
 			"SST_STAGE=" + p.App().Stage,
 		}
-		multi.AddProcess("deploy", []string{currentExecutable, "ui", "--filter=sst"}, "⑆", "SST", "", false, multiEnv...)
-		multi.AddProcess("function", []string{currentExecutable, "ui", "--filter=function"}, "𝝺", "Function", "", false, multiEnv...)
+		multi.AddProcess("deploy", []string{currentExecutable, "ui", "--filter=sst"}, "⑆", "SST", "", false, true, multiEnv...)
+		multi.AddProcess("function", []string{currentExecutable, "ui", "--filter=function"}, "λ", "Functions", "", false, true, multiEnv...)
 		wg.Go(func() error {
 			defer c.Cancel()
 			multi.Start()
@@ -154,13 +185,14 @@ func CmdMosaic(c *cli.Cli) error {
 							slog.Info("mosaic", "dev", d.Name, "directory", dir)
 							multi.AddProcess(
 								d.Name,
-								append([]string{currentExecutable, "mosaic", "--"},
+								append([]string{currentExecutable, "dev", "--"},
 									strings.Split(d.Command, " ")...),
 								// 𝝺 λ
 								"→",
 								d.Name,
 								dir,
 								true,
+								d.Autostart,
 								multiEnv...,
 							)
 						}
@@ -171,7 +203,7 @@ func CmdMosaic(c *cli.Cli) error {
 		})
 	}
 
-	if c.Bool("simple") {
+	if mode == "basic" {
 		wg.Go(func() error {
 			return CmdUI(c)
 		})

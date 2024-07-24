@@ -69,6 +69,7 @@ type Dev struct {
 	Name        string            `json:"name"`
 	Command     string            `json:"command"`
 	Directory   string            `json:"directory"`
+	Autostart   bool              `json:"autostart"`
 	Links       []string          `json:"links"`
 	Environment map[string]string `json:"environment"`
 	Aws         *struct {
