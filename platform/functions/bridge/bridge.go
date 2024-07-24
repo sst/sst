@@ -22,7 +22,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/iot"
 	MQTT "github.com/eclipse/paho.mqtt.golang"
-	"github.com/sst/ion/pkg/server/dev/aws/iot_writer"
+	"github.com/sst/ion/cmd/sst/mosaic/aws/iot_writer"
 )
 
 var version = "0.0.1"
