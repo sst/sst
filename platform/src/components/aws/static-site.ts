@@ -377,9 +377,14 @@ export class StaticSite extends Component implements Link.Linkable {
           }),
         ),
         _dev: {
-          directory: sitePath,
-          environment,
-          command: "npm run dev",
+          environment: environment,
+          command: output(args.dev?.command).apply(
+            (val) => val || "npm run dev",
+          ),
+          directory: output(args.dev?.directory).apply(
+            (dir) => dir || sitePath,
+          ),
+          autostart: output(args.dev?.autostart).apply((val) => val ?? true),
         },
       });
       return;
