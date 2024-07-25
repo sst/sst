@@ -1,4 +1,9 @@
 import { CustomResourceOptions, Input, Output, dynamic } from "@pulumi/pulumi";
+import {
+  LambdaClient,
+  UpdateFunctionCodeCommand,
+  GetFunctionCommand,
+} from "@aws-sdk/client-lambda";
 import { useClient } from "../helpers/client.js";
 
 export interface FunctionCodeUpdaterInputs {
@@ -51,10 +56,7 @@ class Provider implements dynamic.ResourceProvider {
   }
 
   async updateCode(inputs: Inputs) {
-    const { LambdaClient, UpdateFunctionCodeCommand } = await import(
-      "@aws-sdk/client-lambda"
-    );
-    const client = await useClient(LambdaClient, {
+    const client = useClient(LambdaClient, {
       region: inputs.region,
       retrableErrors: [
         // Lambda is not ready to accept updates right after creation
@@ -72,10 +74,7 @@ class Provider implements dynamic.ResourceProvider {
   }
 
   async waitForUpdate(inputs: Inputs): Promise<void> {
-    const { LambdaClient, GetFunctionCommand } = await import(
-      "@aws-sdk/client-lambda"
-    );
-    const client = await useClient(LambdaClient, {
+    const client = useClient(LambdaClient, {
       region: inputs.region,
       retrableErrors: [
         // Lambda is not ready to accept updates right after creation

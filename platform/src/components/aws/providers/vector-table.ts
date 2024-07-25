@@ -1,4 +1,8 @@
 import { CustomResourceOptions, Input, dynamic } from "@pulumi/pulumi";
+import {
+  RDSDataClient,
+  ExecuteStatementCommand,
+} from "@aws-sdk/client-rds-data";
 import { useClient } from "../helpers/client.js";
 
 interface Inputs {
@@ -55,10 +59,7 @@ class Provider implements dynamic.ResourceProvider {
   }
 
   async createDatabase(inputs: Inputs) {
-    const { RDSDataClient, ExecuteStatementCommand } = await import(
-      "@aws-sdk/client-rds-data"
-    );
-    const client = await useClient(RDSDataClient);
+    const client = useClient(RDSDataClient);
     try {
       await client.send(
         new ExecuteStatementCommand({
@@ -75,10 +76,7 @@ class Provider implements dynamic.ResourceProvider {
   }
 
   async enablePgvectorExtension(inputs: Inputs) {
-    const { RDSDataClient, ExecuteStatementCommand } = await import(
-      "@aws-sdk/client-rds-data"
-    );
-    const client = await useClient(RDSDataClient);
+    const client = useClient(RDSDataClient);
     try {
       await client.send(
         new ExecuteStatementCommand({
@@ -96,10 +94,7 @@ class Provider implements dynamic.ResourceProvider {
   }
 
   async enablePgtrgmExtension(inputs: Inputs) {
-    const { RDSDataClient, ExecuteStatementCommand } = await import(
-      "@aws-sdk/client-rds-data"
-    );
-    const client = await useClient(RDSDataClient);
+    const client = useClient(RDSDataClient);
     try {
       await client.send(
         new ExecuteStatementCommand({
@@ -117,10 +112,7 @@ class Provider implements dynamic.ResourceProvider {
   }
 
   async createTable(inputs: Inputs) {
-    const { RDSDataClient, ExecuteStatementCommand } = await import(
-      "@aws-sdk/client-rds-data"
-    );
-    const client = await useClient(RDSDataClient);
+    const client = useClient(RDSDataClient);
     try {
       await client.send(
         new ExecuteStatementCommand({
@@ -142,11 +134,7 @@ class Provider implements dynamic.ResourceProvider {
   }
 
   async removeTable(inputs: Inputs) {
-    const { RDSDataClient, ExecuteStatementCommand } = await import(
-      "@aws-sdk/client-rds-data"
-    );
-    const client = await useClient(RDSDataClient);
-    await client.send(
+    await useClient(RDSDataClient).send(
       new ExecuteStatementCommand({
         resourceArn: inputs.clusterArn,
         secretArn: inputs.secretArn,
@@ -158,11 +146,7 @@ class Provider implements dynamic.ResourceProvider {
 
   async createEmbeddingIndex(inputs: Inputs) {
     try {
-      const { RDSDataClient, ExecuteStatementCommand } = await import(
-        "@aws-sdk/client-rds-data"
-      );
-      const client = await useClient(RDSDataClient);
-      await client.send(
+      await useClient(RDSDataClient).send(
         new ExecuteStatementCommand({
           resourceArn: inputs.clusterArn,
           secretArn: inputs.secretArn,
@@ -179,11 +163,7 @@ class Provider implements dynamic.ResourceProvider {
 
   async createMetadataIndex(inputs: Inputs) {
     try {
-      const { RDSDataClient, ExecuteStatementCommand } = await import(
-        "@aws-sdk/client-rds-data"
-      );
-      const client = await useClient(RDSDataClient);
-      await client.send(
+      await useClient(RDSDataClient).send(
         new ExecuteStatementCommand({
           resourceArn: inputs.clusterArn,
           secretArn: inputs.secretArn,

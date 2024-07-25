@@ -37,12 +37,12 @@ export const bootstrap = {
       return bootstrapBuckets[region]!;
     }
 
-    const bucket = (async () => {
-      const ssm = await useClient(SSMClient, { region });
-      const s3 = await useClient(S3Client, { region });
-      const ecr = await useClient(ECRClient, { region });
+    const ssm = useClient(SSMClient, { region });
+    const s3 = useClient(S3Client, { region });
+    const ecr = useClient(ECRClient, { region });
 
-      try {
+    try {
+      const bucket = (async () => {
         // check if already bootstrapped
         const data = await getSsmData();
         if (data.bucket && data.ecr && data.version) return data;
@@ -146,13 +146,12 @@ export const bootstrap = {
             }),
           );
         }
-      } finally {
-        s3.destroy();
-        ssm.destroy();
-        ecr.destroy();
-      }
-    })();
+      })();
 
-    return (bootstrapBuckets[region] = bucket);
+      return (bootstrapBuckets[region] = bucket);
+    } finally {
+      s3.destroy();
+      ssm.destroy();
+    }
   },
 };

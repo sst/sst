@@ -1,4 +1,9 @@
 import { CustomResourceOptions, Input, Output, dynamic } from "@pulumi/pulumi";
+import {
+  Route53Client,
+  ListHostedZonesCommand,
+  ListHostedZonesCommandOutput,
+} from "@aws-sdk/client-route-53";
 import { useClient } from "../helpers/client.js";
 
 interface Inputs {
@@ -33,13 +38,10 @@ class Provider implements dynamic.ResourceProvider {
   }
 
   async lookup(domain: string) {
-    const { Route53Client, ListHostedZonesCommand } = await import(
-      "@aws-sdk/client-route-53"
-    );
-    const client = await useClient(Route53Client);
+    const client = useClient(Route53Client);
 
     // Get all hosted zones in the account
-    const zones = [];
+    const zones: ListHostedZonesCommandOutput["HostedZones"] = [];
     let nextMarker: string | undefined;
     do {
       const res = await client.send(

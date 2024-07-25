@@ -1,4 +1,9 @@
 import { CustomResourceOptions, Input, dynamic, output } from "@pulumi/pulumi";
+import {
+  CloudFrontClient,
+  CreateInvalidationCommand,
+  waitUntilInvalidationCompleted,
+} from "@aws-sdk/client-cloudfront";
 import { useClient } from "../helpers/client.js";
 
 // CloudFront allows you to specify up to 3,000 paths in a single invalidation
@@ -36,13 +41,14 @@ class Provider implements dynamic.ResourceProvider {
   }
 
   async handle(inputs: Inputs) {
-    const ids = await this.invalidate(inputs);
+    const client = useClient(CloudFrontClient);
+    const ids = await this.invalidate(client, inputs);
     if (inputs.wait) {
-      await this.waitForInvalidation(inputs, ids);
+      await this.waitForInvalidation(client, inputs, ids);
     }
   }
 
-  async invalidate(inputs: Inputs) {
+  async invalidate(client: CloudFrontClient, inputs: Inputs) {
     const { distributionId, paths } = inputs;
 
     // Split paths into files and wildcard paths
@@ -68,17 +74,17 @@ class Provider implements dynamic.ResourceProvider {
         ...pathsWildcard.slice(i * WILDCARD_LIMIT, (i + 1) * WILDCARD_LIMIT),
       ];
       invalidationIds.push(
-        await this.invalidateChunk(distributionId, stepPaths),
+        await this.invalidateChunk(client, distributionId, stepPaths),
       );
     }
     return invalidationIds;
   }
 
-  async invalidateChunk(distributionId: string, paths: string[]) {
-    const { CloudFrontClient, CreateInvalidationCommand } = await import(
-      "@aws-sdk/client-cloudfront"
-    );
-    const client = await useClient(CloudFrontClient);
+  async invalidateChunk(
+    client: CloudFrontClient,
+    distributionId: string,
+    paths: string[],
+  ) {
     const result = await client.send(
       new CreateInvalidationCommand({
         DistributionId: distributionId,
@@ -100,11 +106,11 @@ class Provider implements dynamic.ResourceProvider {
     return invalidationId;
   }
 
-  async waitForInvalidation(inputs: Inputs, invalidationIds: string[]) {
-    const { CloudFrontClient, waitUntilInvalidationCompleted } = await import(
-      "@aws-sdk/client-cloudfront"
-    );
-    const client = await useClient(CloudFrontClient);
+  async waitForInvalidation(
+    client: CloudFrontClient,
+    inputs: Inputs,
+    invalidationIds: string[],
+  ) {
     const { distributionId } = inputs;
     for (const invalidationId of invalidationIds) {
       try {
