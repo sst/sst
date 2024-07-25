@@ -113,7 +113,7 @@ type CompleteEvent struct {
 	Finished    bool
 	Old         bool
 	Resources   []apitype.ResourceV3
-	ImportDiffs []ImportDiff
+	ImportDiffs map[string][]ImportDiff
 }
 
 type ImportDiff struct {
@@ -376,7 +376,7 @@ func (p *Project) Run(ctx context.Context, input *StackInput) error {
 
 	errors := []Error{}
 	finished := false
-	importDiffs := []ImportDiff{}
+	importDiffs := map[string][]ImportDiff{}
 
 	go func() {
 		for {
@@ -406,7 +406,11 @@ func (p *Project) Run(ctx context.Context, input *StackInput) error {
 						for _, name := range event.ResOpFailedEvent.Metadata.Diffs {
 							old := event.ResOpFailedEvent.Metadata.Old.Inputs[name]
 							next := event.ResOpFailedEvent.Metadata.New.Inputs[name]
-							importDiffs = append(importDiffs, ImportDiff{
+							diffs, ok := importDiffs[event.ResOpFailedEvent.Metadata.URN]
+							if !ok {
+								diffs = []ImportDiff{}
+							}
+							importDiffs[event.ResOpFailedEvent.Metadata.URN] = append(diffs, ImportDiff{
 								URN:   event.ResOpFailedEvent.Metadata.URN,
 								Input: name,
 								Old:   old,
@@ -760,7 +764,7 @@ func getCompletedEvent(ctx context.Context, stack auto.Stack) (*CompleteEvent, e
 	json.Unmarshal(exported.Deployment, &deployment)
 	complete := &CompleteEvent{
 		Links:       Links{},
-		ImportDiffs: []ImportDiff{},
+		ImportDiffs: map[string][]ImportDiff{},
 		Receivers:   Receivers{},
 		Devs:        Devs{},
 		Warps:       Warps{},

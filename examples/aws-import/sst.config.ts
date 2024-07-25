@@ -9,6 +9,14 @@ export default $config({
     };
   },
   async run() {
-    const bucket = aws.s3.BucketV2.get("MyBucket", "aws-import-my-bucket");
+    new sst.aws.Bucket("MyBucket", {
+      transform: {
+        bucket(args, opts) {
+          opts.import = "aws-import-my-bucket";
+          args.bucket = "aws-import-my-bucket";
+          args.forceDestroy = undefined;
+        },
+      },
+    });
   },
 });
