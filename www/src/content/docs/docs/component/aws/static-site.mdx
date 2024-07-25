@@ -402,6 +402,55 @@ The path is relative to the root of your site, `path`.
 }
 ```
 </Segment>
+### dev?
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Object</code>
+</InlineSection>
+- <p>[<code class="key">autostart?</code>](#dev-autostart)</p>
+- <p>[<code class="key">command?</code>](#dev-command)</p>
+- <p>[<code class="key">directory?</code>](#dev-directory)</p>
+- <p>[<code class="key">url?</code>](#dev-url)</p>
+</Section>
+
+</Segment>
+<NestedTitle id="dev-autostart" Tag="h4" parent="dev.">autostart?</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">boolean</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+
+</Segment>
+<NestedTitle id="dev-command" Tag="h4" parent="dev.">command?</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+
+</Segment>
+<NestedTitle id="dev-directory" Tag="h4" parent="dev.">directory?</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+
+</Segment>
+<NestedTitle id="dev-url" Tag="h4" parent="dev.">url?</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+
+</Segment>
 ### domain?
 <Segment>
 <Section type="parameters">
@@ -882,7 +931,7 @@ The underlying [resources](/docs/components/#nodes) this component creates.
 <Segment>
 <Section type="parameters">
 <InlineSection>
-**Type** [<code class="type">Bucket</code>](/docs/component/aws/bucket/)
+**Type** <code class="primitive">undefined</code><code class="symbol"> | </code>[<code class="type">Bucket</code>](/docs/component/aws/bucket/)
 </InlineSection>
 </Section>
 The Amazon S3 Bucket that stores the assets.
@@ -891,7 +940,7 @@ The Amazon S3 Bucket that stores the assets.
 <Segment>
 <Section type="parameters">
 <InlineSection>
-**Type** [<code class="type">Cdn</code>](/docs/component/aws/cdn/)
+**Type** <code class="primitive">undefined</code><code class="symbol"> | </code>[<code class="type">Cdn</code>](/docs/component/aws/cdn/)
 </InlineSection>
 </Section>
 The Amazon CloudFront CDN that serves the site.
@@ -901,7 +950,7 @@ The Amazon CloudFront CDN that serves the site.
 <Segment>
 <Section type="parameters">
 <InlineSection>
-**Type** <code class="primitive">Output</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
+**Type** <code class="primitive">undefined</code><code class="symbol"> | </code><code class="primitive">Output</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
 The URL of the website.
