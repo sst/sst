@@ -1,10 +1,4 @@
 import { CustomResourceOptions, Input, Output, dynamic } from "@pulumi/pulumi";
-import {
-  CloudFrontClient,
-  GetCloudFrontOriginAccessIdentityCommand,
-  CreateCloudFrontOriginAccessIdentityCommand,
-  DeleteCloudFrontOriginAccessIdentityCommand,
-} from "@aws-sdk/client-cloudfront";
 import { useClient } from "../helpers/client.js";
 
 interface Inputs {}
@@ -17,7 +11,9 @@ export interface OriginAccessIdentity {}
 
 class Provider implements dynamic.ResourceProvider {
   async create(inputs: Inputs): Promise<dynamic.CreateResult<Outputs>> {
-    const client = useClient(CloudFrontClient);
+    const { CloudFrontClient, CreateCloudFrontOriginAccessIdentityCommand } =
+      await import("@aws-sdk/client-cloudfront");
+    const client = await useClient(CloudFrontClient);
 
     const ret = await client.send(
       new CreateCloudFrontOriginAccessIdentityCommand({
@@ -33,7 +29,12 @@ class Provider implements dynamic.ResourceProvider {
   }
 
   async delete(id: string, outs: Outputs): Promise<void> {
-    const client = useClient(CloudFrontClient);
+    const {
+      CloudFrontClient,
+      GetCloudFrontOriginAccessIdentityCommand,
+      DeleteCloudFrontOriginAccessIdentityCommand,
+    } = await import("@aws-sdk/client-cloudfront");
+    const client = await useClient(CloudFrontClient);
 
     const ret = await client.send(
       new GetCloudFrontOriginAccessIdentityCommand({ Id: id }),

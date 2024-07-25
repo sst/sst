@@ -1,8 +1,4 @@
 import { CustomResourceOptions, Input, Output, dynamic } from "@pulumi/pulumi";
-import {
-  CloudFrontClient,
-  GetDistributionCommand,
-} from "@aws-sdk/client-cloudfront";
 import { useClient } from "../helpers/client.js";
 
 export interface DistributionDeploymentWaiterInputs {
@@ -43,8 +39,11 @@ class Provider implements dynamic.ResourceProvider {
   async handle(inputs: Inputs) {
     if (!inputs.wait) return;
 
+    const { CloudFrontClient, GetDistributionCommand } = await import(
+      "@aws-sdk/client-cloudfront"
+    );
+    const client = await useClient(CloudFrontClient);
     const { distributionId } = inputs;
-    const client = useClient(CloudFrontClient);
     const start = Date.now();
 
     do {

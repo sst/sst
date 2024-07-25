@@ -1,6 +1,5 @@
 import fs from "fs";
 import { CustomResourceOptions, Input, dynamic } from "@pulumi/pulumi";
-import { S3Client, PutObjectCommand, S3 } from "@aws-sdk/client-s3";
 import { useClient } from "../helpers/client.js";
 
 export interface BucketFile {
@@ -45,9 +44,11 @@ class Provider implements dynamic.ResourceProvider {
     files: BucketFile[],
     oldFiles: BucketFile[],
   ) {
+    const { S3Client, PutObjectCommand } = await import("@aws-sdk/client-s3");
+    const s3 = await useClient(S3Client);
+
     const oldFilesMap = new Map(oldFiles.map((f) => [f.key, f]));
 
-    const s3 = useClient(S3Client);
     await Promise.all(
       files.map(async (file) => {
         const oldFile = oldFilesMap.get(file.key);
