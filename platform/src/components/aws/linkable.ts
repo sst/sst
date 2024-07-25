@@ -1,7 +1,7 @@
 import { VisibleError } from "../error";
 import { FunctionPermissionArgs } from "./function";
 
-export const URL_UNAVAILABLE = "URL_UNAVAILABLE_IN_DEV_MODE";
+export const URL_UNAVAILABLE = "http://url-unavailable-in-dev.mode";
 
 /** @deprecated
  * instead try

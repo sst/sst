@@ -118,6 +118,7 @@ export default $config({
 
     return {
       api: infra.api.url,
+      astro: infra.astro.url,
     };
   },
 });
