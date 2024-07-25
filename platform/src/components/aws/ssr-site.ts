@@ -33,6 +33,7 @@ import {
   lambda,
   types,
 } from "@pulumi/aws";
+import { DevArgs } from "../dev.js";
 
 type CloudFrontFunctionConfig = { injections: string[] };
 type EdgeFunctionConfig = { function: Unwrap<FunctionArgs> };
@@ -56,7 +57,7 @@ type OriginGroupConfig = {
 };
 
 export type Plan = ReturnType<typeof validatePlan>;
-export interface SsrSiteArgs extends BaseSsrSiteArgs {
+export interface SsrSiteArgs extends BaseSsrSiteArgs, DevArgs {
   domain?: CdnArgs["domain"];
   permissions?: FunctionArgs["permissions"];
   cachePolicy?: Input<string>;

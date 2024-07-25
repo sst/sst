@@ -345,6 +345,7 @@ policy instead of creating a new one.
 - <p>[<code class="key">directory?</code>](#dev-directory)</p>
 - <p>[<code class="key">url?</code>](#dev-url)</p>
 </Section>
+Configure the behavior in the `sst dev` mode.
 
 </Segment>
 <NestedTitle id="dev-autostart" Tag="h4" parent="dev.">autostart?</NestedTitle>
@@ -355,6 +356,11 @@ policy instead of creating a new one.
 </InlineSection>
 </Section>
 
+<InlineSection>
+**Default** <code class="primitive">true</code>
+</InlineSection>
+Whether to start the dev server automatically.
+
 </Segment>
 <NestedTitle id="dev-command" Tag="h4" parent="dev.">command?</NestedTitle>
 <Segment>
@@ -363,6 +369,11 @@ policy instead of creating a new one.
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
+
+<InlineSection>
+**Default** The `start` script in `package.json`
+</InlineSection>
+The command to run in the `sst dev` mode.
 
 </Segment>
 <NestedTitle id="dev-directory" Tag="h4" parent="dev.">directory?</NestedTitle>
@@ -373,6 +384,11 @@ policy instead of creating a new one.
 </InlineSection>
 </Section>
 
+<InlineSection>
+**Default** <code class="primitive">"."</code>
+</InlineSection>
+Path to the directory to watch for changes.
+
 </Segment>
 <NestedTitle id="dev-url" Tag="h4" parent="dev.">url?</NestedTitle>
 <Segment>
@@ -381,6 +397,11 @@ policy instead of creating a new one.
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
+
+<InlineSection>
+**Default** <code class="primitive">"http://url-unavailable-in-dev.mode"</code>
+</InlineSection>
+The URL in the `sst dev` mode.
 
 </Segment>
 ### domain?
@@ -1149,7 +1170,7 @@ The AWS Lambda server function that renders the app.
 <Segment>
 <Section type="parameters">
 <InlineSection>
-**Type** <code class="primitive">undefined</code><code class="symbol"> | </code><code class="primitive">Output</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
+**Type** <code class="primitive">Output</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
 The URL of the Next.js app.
