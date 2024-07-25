@@ -291,6 +291,14 @@ func Start(
 			return true
 		}
 
+		for unknown := range evts {
+			casted, ok := unknown.(*project.CompleteEvent)
+			if !ok {
+				continue
+			}
+			complete = casted
+			break
+		}
 		for {
 			select {
 			case <-ctx.Done():
