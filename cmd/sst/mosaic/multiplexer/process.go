@@ -51,7 +51,7 @@ func (s *Multiplexer) AddProcess(key string, args []string, icon string, title s
 		proc.start()
 	}
 	if !autostart {
-		proc.vt.Start(exec.Command("echo", key+" has autostart disabled, press enter to start."))
+		proc.vt.Start(exec.Command("echo", key+" has auto-start disabled, press enter to start."))
 		proc.dead = true
 	}
 	s.processes = append(s.processes, proc)
