@@ -4,18 +4,6 @@
       "type": "copy"
     },
     {
-      "type": "patch",
-      "properties": {
-        "file": "package.json",
-        "regex": [
-          {
-            "find": "\"dev\":\\s*\"([^\"]+)\"",
-            "replace": "\"dev\": \"sst dev $1\""
-          }
-        ]
-      }
-    },
-    {
       "type": "npm",
       "properties": {
         "file": "package.json",

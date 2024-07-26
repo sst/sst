@@ -13,12 +13,6 @@
             "path": "/overrides/nitropack",
             "value": "npm:nitropack-nightly@latest"
           }
-        ],
-        "regex": [
-          {
-            "find": "\"dev\":\\s*\"([^\"]+)\"",
-            "replace": "\"dev\": \"sst dev $1\""
-          }
         ]
       }
     },
