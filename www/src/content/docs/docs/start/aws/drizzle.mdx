@@ -9,10 +9,7 @@ We are going to use Drizzle and SST to manage and deploy an Amazon Postgres RDS 
 You can [view the source](https://github.com/sst/ion/tree/dev/examples/aws-drizzle) of this example in our repo.
 :::
 
-Before you get started:
-
-1. [Configure your AWS credentials](https://docs.sst.dev/advanced/iam-credentials#loading-from-a-file)
-2. [Install the SST CLI](/docs/reference/cli)
+Before you get started, make sure to [configure your AWS credentials](https://docs.sst.dev/advanced/iam-credentials#loading-from-a-file).
 
 ---
 
@@ -25,15 +22,20 @@ mkdir my-drizzle-app && cd my-drizzle-app
 npm init -y
 ```
 
+---
+
 #### Init SST
 
-Now let's initialize SST in our app. Make sure you have the [CLI installed](/docs/reference/cli/).
+Now let's initialize SST in our app. Make sure to add the `@ion` part.
 
-```bash
-sst init
+```bash "sst@ion"
+npx sst@ion init
+npm install
 ```
 
-This'll detect that you are in a plain Node.js project and create a `sst.config.ts` file in the root.
+Select the defaults and pick **AWS**. This'll create a `sst.config.ts` file in your project root.
+
+---
 
 #### Init Drizzle
 
@@ -73,6 +75,8 @@ async run() {
 },
 ```
 
+---
+
 #### Add an API
 
 We'll also add an API to query our database. Add the following to your `sst.config.ts` below the database config.
@@ -91,18 +95,20 @@ return {
 
 We are linking our database to the API.
 
+---
+
 #### Start dev mode
 
 Start your app in dev mode. This runs your functions [_Live_](/docs/live/).
 
 ```bash
-sst dev
+npx sst dev
 ```
 
 It'll take a few minutes to create your database. Once complete, you'll see this.
 
 ```bash frame="none"
-✔  Complete
++  Complete
    api: https://ouu5vovpxllyn5b6ot2nn6vdsa0hvcuj.lambda-url.us-east-1.on.aws
 ```
 
@@ -160,6 +166,8 @@ npm run db generate
 
 This in turn runs `sst shell drizzle-kit generate` and creates a new migration in the `migrations/` directory.
 
+---
+
 #### Apply the migration
 
 Now we can apply our migration using.
@@ -169,6 +177,8 @@ npm run db migrate
 ```
 
 This should create our new schema.
+
+---
 
 #### Drizzle Studio
 
@@ -260,7 +270,7 @@ You should see this in the Drizzle Studio as well.
 Finally, let's deploy your app.
 
 ```bash
-sst deploy --stage production
+npx sst deploy --stage production
 ```
 
 You can use any stage name here but it's good to create a new stage for production.
