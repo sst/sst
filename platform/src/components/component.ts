@@ -84,6 +84,7 @@ export class Component extends ComponentResource {
               };
               break;
             case "aws:cloudwatch/eventRule:EventRule":
+            case "aws:cloudfront/function:Function":
             case "aws:iam/user:User":
               overrides = { name: prefixName(64, args.name) };
               break;
@@ -204,7 +205,6 @@ export class Component extends ComponentResource {
             case "aws:iam/userPolicy:UserPolicy":
             case "aws:cloudfront/cachePolicy:CachePolicy":
             case "aws:cloudfront/distribution:Distribution":
-            case "aws:cloudfront/function:Function":
             case "aws:cloudfront/originAccessIdentity:OriginAccessIdentity":
             case "aws:cloudwatch/eventRule:EventRule":
             case "aws:cloudwatch/eventTarget:EventTarget":
