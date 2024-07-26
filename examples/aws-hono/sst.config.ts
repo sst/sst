@@ -6,7 +6,6 @@ export default $config({
       name: "aws-hono",
       home: "aws",
       removal: input?.stage === "production" ? "retain" : "remove",
-      foo: "ok",
     };
   },
   async run() {
@@ -16,7 +15,6 @@ export default $config({
     const hono = new sst.aws.Function("Hono", {
       url: true,
       link: [bucket],
-      environment: {},
       handler: "index.handler",
     });
     return {
