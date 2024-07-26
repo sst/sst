@@ -326,7 +326,6 @@ export function createServersAndDistribution(
     const origins = buildOrigins();
     const originGroups = buildOriginGroups();
     const distribution = createDistribution();
-    allowServerFunctionInvalidateDistribution();
     createDistributionInvalidation();
     createWarmer();
 
@@ -519,6 +518,14 @@ function handler(event) {
                 ...environment,
                 ...props.environment,
               })),
+              permissions: output(args.permissions).apply((permissions) => [
+                {
+                  actions: ["cloudfront:CreateInvalidation"],
+                  resources: ["*"],
+                },
+                ...(permissions ?? []),
+                ...(props.permissions ?? []),
+              ]),
               link: output(args.link).apply((link) => [
                 ...(props.link ?? []),
                 ...(link ?? []),
@@ -618,6 +625,10 @@ function handler(event) {
               ...props.function.environment,
             })),
             permissions: output(args.permissions).apply((permissions) => [
+              {
+                actions: ["cloudfront:CreateInvalidation"],
+                resources: ["*"],
+              },
               ...(permissions ?? []),
               ...(props.function.permissions ?? []),
             ]),
@@ -836,44 +847,6 @@ function handler(event) {
           { dependsOn: bucketFile, parent },
         ),
       );
-    }
-
-    function allowServerFunctionInvalidateDistribution() {
-      const policy = new iam.Policy(
-        `${name}InvalidationPolicy`,
-        {
-          policy: interpolate`{
-            "Version": "2012-10-17",
-            "Statement": [
-              {
-                "Action": "cloudfront:CreateInvalidation",
-                "Effect": "Allow",
-                "Resource": "${distribution.nodes.distribution.arn}"
-              }
-            ]
-          }`,
-        },
-        { parent },
-      );
-
-      for (const fn of [...ssrFunctions, ...Object.values(edgeFunctions)]) {
-        fn.nodes.function.name.apply((functionName) => {
-          const uniqueHash = crypto
-            .createHash("md5")
-            .update(functionName)
-            .digest("hex")
-            .substring(0, 4);
-
-          new iam.RolePolicyAttachment(
-            `${name}InvalidationPolicyAttachment${uniqueHash}`,
-            {
-              policyArn: policy.arn,
-              role: fn.nodes.role!.name,
-            },
-            { parent },
-          );
-        });
-      }
     }
 
     function createWarmer() {
