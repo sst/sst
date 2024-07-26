@@ -10,10 +10,11 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "devDependencies": {
-    "sst": "3.0.1-7"
-  },
   "dependencies": {
-    "@aws-sdk/client-sesv2": "^3.515.0"
+    "@aws-sdk/client-sesv2": "^3.515.0",
+    "sst": "ion"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "8.10.142"
   }
 }
