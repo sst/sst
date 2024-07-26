@@ -61,6 +61,21 @@ export interface DnsArgs {
    */
   zone?: Input<string>;
   /**
+   * Set to `true` to allow the creation of new DNS records that can replace existing ones.
+   *
+   * This is useful for switching a domain to a new site without removing old DNS records,
+   * helping to prevent downtime.
+   *
+   * @default `false`
+   * @example
+   * ```js
+   * {
+   *   override: true
+   * }
+   * ```
+   */
+  override?: Input<boolean>;
+  /**
    * [Transform](/docs/components#transform) how this component creates its underlying
    * resources.
    */
@@ -115,6 +130,7 @@ export function dns(args: DnsArgs = {}) {
               value: record.value,
               type: record.type,
               ttl: 60,
+              allowOverwrite: args.override,
             },
             opts,
           ),

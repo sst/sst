@@ -65,6 +65,28 @@ dns(args?)
 </Segment>
 
 ## DnsArgs
+### override?
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">boolean</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+
+<InlineSection>
+**Default** <code class="primitive">false</code>
+</InlineSection>
+Set to `true` to allow the creation of new DNS records that can replace existing ones.
+
+This is useful for switching a domain to a new site without removing old DNS records,
+helping to prevent downtime.
+
+```js
+{
+  override: true
+}
+```
+</Segment>
 ### transform?
 <Segment>
 <Section type="parameters">
