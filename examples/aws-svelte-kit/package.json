@@ -6,7 +6,7 @@
     "build": "vite build",
     "check": "svelte-kit sync \u0026\u0026 svelte-check --tsconfig ./tsconfig.json",
     "check:watch": "svelte-kit sync \u0026\u0026 svelte-check --tsconfig ./tsconfig.json --watch",
-    "dev": "sst dev sst dev sst dev sst dev sst dev sst dev sst dev sst dev sst dev sst dev sst dev sst dev sst dev sst dev sst dev sst dev sst dev sst dev sst dev sst dev vite dev",
+    "dev": "vite dev",
     "preview": "vite preview"
   },
   "devDependencies": {
