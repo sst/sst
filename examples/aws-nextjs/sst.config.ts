@@ -13,7 +13,6 @@ export default $config({
       public: true,
     });
     new sst.aws.Nextjs("MyWeb", {
-      domain: "ion.next.sst.sh",
       link: [bucket],
     });
   },

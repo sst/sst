@@ -9,10 +9,7 @@ We are going to create an Astro site, add an S3 Bucket for file uploads, and dep
 You can [view the source](https://github.com/sst/ion/tree/dev/examples/aws-astro) of this example in our repo.
 :::
 
-Before you get started:
-
-1. [Configure your AWS credentials](https://docs.sst.dev/advanced/iam-credentials#loading-from-a-file)
-2. [Install the SST CLI](/docs/reference/cli)
+Before you get started, make sure to [configure your AWS credentials](https://docs.sst.dev/advanced/iam-credentials#loading-from-a-file).
 
 ---
 
@@ -25,27 +22,43 @@ npm create astro@latest
 cd aws-astro
 ```
 
+We are picking all the default options.
+
+---
+
 #### Init SST
 
-Now let's initialize SST in our app. Make sure you have the [CLI installed](/docs/reference/cli/).
+Now let's initialize SST in our app. Make sure to add the `@ion` part.
 
-```bash
-sst init
+```bash "sst@ion"
+npx sst@ion init
+npm install
 ```
 
-This'll detect that you are in an Astro project and create a `sst.config.ts` file in the root.
+Select the defaults and pick **AWS**. This'll create a `sst.config.ts` file in your project root.
+
+It'll also ask you to update your `astro.config.mjs` with something like this.
+
+```diff lang="js" title="astro.config.mjs"
++ import aws from "astro-sst";
+
+export default defineConfig({
++  output: "server",
++  adapter: aws()
+});
+```
+
+---
 
 #### Start dev mode
 
-Start the dev mode for your Astro site and link it to SST.
+Run the following to start dev mode. This'll start SST and your Astro site.
 
 ```bash
-npm run dev
+npx sst dev
 ```
 
-:::note
-You are starting `astro dev` wrapped in `sst dev astro dev`.
-:::
+Once complete, click on **MyWeb** in the sidebar and open your Astro site in your browser.
 
 ---
 
@@ -184,7 +197,7 @@ Head over to the local Astro site in your browser, `http://localhost:4321` and t
 Now let's deploy your app to AWS.
 
 ```bash
-sst deploy --stage production
+npx sst deploy --stage production
 ```
 
 You can use any stage name here but it's good to create a new stage for production.

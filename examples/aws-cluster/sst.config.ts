@@ -21,6 +21,9 @@ export default $config({
       public: {
         ports: [{ listen: "80/http" }],
       },
+      dev: {
+        command: "node --watch index.mjs",
+      },
       link: [bucket],
     });
   },

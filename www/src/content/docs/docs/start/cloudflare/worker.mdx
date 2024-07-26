@@ -9,10 +9,7 @@ We are going to build an API with a Cloudflare Worker, add an R2 bucket for file
 You can [view the source](https://github.com/sst/ion/tree/dev/examples/cloudflare-worker) of this example in our repo.
 :::
 
-Before you get started:
-
-1. [Create your Cloudflare API token](https://developers.cloudflare.com/fundamentals/api/get-started/create-token/)
-2. [Install the SST CLI](/docs/reference/cli)
+Before you get started, make sure to [Create your Cloudflare API token](https://developers.cloudflare.com/fundamentals/api/get-started/create-token/).
 
 ---
 
@@ -25,15 +22,20 @@ mkdir my-worker && cd my-worker
 npm init -y
 ```
 
+---
+
 #### Init SST
 
-Now let's initialize SST in our app. Make sure you have the [CLI installed](/docs/reference/cli/).
+Now let's initialize SST in our app. Make sure to add the `@ion` part.
 
-```bash
-sst init
+```bash "sst@ion"
+npx sst@ion init
+npm install
 ```
 
-This'll create a `sst.config.ts` file in your project root.
+Select the defaults and pick **Cloudflare**. This'll create a `sst.config.ts` file in your project root.
+
+---
 
 #### Set the Cloudflare API token
 
@@ -150,13 +152,13 @@ We are getting a list of the files in the files in the bucket with `Resource.MyB
 Start your app in dev mode.
 
 ```bash
-sst dev
+npx sst dev
 ```
 
 This will give you the URL of your API.
 
 ```bash frame="none"
-✔  Complete
++  Complete
    api: https://start-cloudflare-jayair-myworkerscript.sst-15d.workers.dev
 ```
 
@@ -179,7 +181,7 @@ Now head over to `https://start-cloudflare-jayair-myworkerscript.sst-15d.workers
 Finally, let's deploy your app!
 
 ```bash
-sst deploy --stage production
+npx sst deploy --stage production
 ```
 
 You can use any stage name here but it's good to create a new stage for production.

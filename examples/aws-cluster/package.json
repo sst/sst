@@ -3,9 +3,6 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
-  "scripts": {
-    "dev": "sst dev \"node --watch index.mjs\""
-  },
   "keywords": [],
   "author": "",
   "license": "ISC",
@@ -15,7 +12,7 @@
     "@aws-sdk/s3-request-presigner": "^3.556.0",
     "express": "^4.19.2",
     "multer": "^1.4.5-lts.1",
-    "sst": "^3.0.37"
+    "sst": "ion"
   },
   "devDependencies": {
     "@types/aws-lambda": "8.10.137"
