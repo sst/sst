@@ -450,13 +450,13 @@ export class Astro extends Component implements Link.Linkable {
         const plan: Plan = {
           edge,
           cloudFrontFunctions: {
-            serverCfFunction: {
+            server: {
               injections: [
                 useCloudFrontFunctionHostHeaderInjection(),
                 useCloudFrontRoutingInjection(buildMeta),
               ],
             },
-            serverCfFunctionHostOnly: {
+            serverHostOnly: {
               injections: [useCloudFrontFunctionHostHeaderInjection()],
             },
           },
@@ -487,7 +487,7 @@ export class Astro extends Component implements Link.Linkable {
           plan.behaviors.push(
             {
               cacheType: "server",
-              cfFunction: "serverCfFunction",
+              cfFunction: "server",
               edgeFunction: "edgeServer",
               origin: "staticsServer",
             },
@@ -518,7 +518,7 @@ export class Astro extends Component implements Link.Linkable {
           if (isStatic) {
             plan.behaviors.push({
               cacheType: "static",
-              cfFunction: "serverCfFunction",
+              cfFunction: "server",
               origin: "staticsServer",
             });
           } else {
@@ -543,7 +543,7 @@ export class Astro extends Component implements Link.Linkable {
             plan.behaviors.push(
               {
                 cacheType: "server",
-                cfFunction: "serverCfFunction",
+                cfFunction: "server",
                 origin: "fallthroughServer",
                 allowedMethods: ["GET", "HEAD", "OPTIONS"],
               },
@@ -563,7 +563,7 @@ export class Astro extends Component implements Link.Linkable {
                 (route) =>
                   ({
                     cacheType: "server",
-                    cfFunction: "serverCfFunctionHostOnly",
+                    cfFunction: "serverHostOnly",
                     pattern: route,
                     origin: "regionalServer",
                   }) as const,
