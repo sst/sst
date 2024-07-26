@@ -157,15 +157,14 @@ func CmdInit(cli *cli.Cli) error {
 		if err != nil {
 			return util.NewReadableError(err, "")
 		}
+		color.New(color.FgGreen, color.Bold).Print("✓")
+		color.New(color.FgWhite).Println("  Using: " + home)
+		fmt.Println()
 	}
 
 	if template == "js" {
 		template = "js-" + home
 	}
-
-	color.New(color.FgGreen, color.Bold).Print("✓")
-	color.New(color.FgWhite).Println("  Using: " + home)
-	fmt.Println()
 
 	instructions, err := project.Create(template, home)
 	if err != nil {
