@@ -277,6 +277,16 @@ export class Component extends ComponentResource {
             opts: args.opts,
           };
         },
+        (args) => {
+          let override = {};
+          if (args.type === "aws:cloudfront/function:Function") {
+            override = { deleteBeforeReplace: false };
+          }
+          return {
+            props: args.props,
+            opts: { ...args.opts, ...override },
+          };
+        },
         ...(opts?.transformations ?? []),
       ],
       ...opts,

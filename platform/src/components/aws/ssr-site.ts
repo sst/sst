@@ -482,7 +482,7 @@ function handler(event) {
   return request;
 }`,
             },
-            { parent, deleteBeforeReplace: false },
+            { parent },
           );
         },
       );
