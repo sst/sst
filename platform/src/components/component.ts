@@ -270,7 +270,8 @@ export class Component extends ComponentResource {
             );
 
           // name is already set
-          if (args.props[rule.field]) return;
+          if (args.props[rule.field] && !args.type.startsWith("cloudflare:"))
+            return;
 
           return {
             props: { ...args.props, [rule.field]: rule.cb() },
