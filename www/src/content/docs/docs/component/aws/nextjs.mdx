@@ -300,10 +300,11 @@ The default `max-age` is set to 1 year.
 </InlineSection>
 The command used internally to build your Next.js app. It uses OpenNext with the `openNextVersion`.
 
-If you want to use a custom `build` script from your `package.json`.
+If you want to use a custom `build` script from your `package.json`. This is useful if you have a custom build process or want to use a different version of OpenNext.
+open-next by default uses the `build` script for building next-js app in your `package.json`. You can customize the build command in open-next configuration.
 ```js
 {
-  buildCommand: "npm run build"
+  buildCommand: "npm run build:open-next"
 }
 ```
 </Segment>
@@ -316,7 +317,7 @@ If you want to use a custom `build` script from your `package.json`.
 </Section>
 
 <InlineSection>
-**Default** A new cache plolicy is created
+**Default** A new cache policy is created
 </InlineSection>
 Configure the Next.js app to use an existing CloudFront cache policy.
 

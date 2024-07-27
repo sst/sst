@@ -1774,6 +1774,28 @@ function patchCode() {
       // anyways as we will link to the pulumi docs.
       .replace("export import $util", "export const $util")
   );
+  // patch Linkable
+  fs.cpSync(
+    "../platform/src/components/linkable.ts",
+    "../platform/src/components/linkable.ts.bk"
+  );
+  fs.writeFileSync(
+    "../platform/src/components/linkable.ts",
+    fs
+      .readFileSync("../platform/src/components/linkable.ts")
+      .toString()
+      .trim()
+      // replace generic <Properties>
+      .replace("properties: Properties", "properties: Record<string, any>")
+      .replace(
+        "public get properties() {",
+        "public get properties(): Record<string, any> {"
+      )
+      // replace generic <Resource>
+      .replaceAll(`: Resource`, `: "RESOURCE_CLASS"`)
+      // replace Definition.include
+      .replace(/include\?\: \{[^}]*\}/, `include: any`)
+  );
 }
 
 function restoreCode() {
@@ -1784,6 +1806,11 @@ function restoreCode() {
   );
   // restore global
   fs.rmSync("../platform/src/global-config.d.ts");
+  // restore Linkable
+  fs.renameSync(
+    "../platform/src/components/linkable.ts.bk",
+    "../platform/src/components/linkable.ts"
+  );
 }
 
 async function buildComponents() {
@@ -1798,6 +1825,7 @@ async function buildComponents() {
     entryPoints: [
       "../platform/src/config.ts",
       "../platform/src/global-config.d.ts",
+      "../platform/src/components/linkable.ts",
       "../platform/src/components/secret.ts",
       "../platform/src/components/aws/apigateway-websocket.ts",
       "../platform/src/components/aws/apigateway-websocket-route.ts",

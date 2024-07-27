@@ -121,6 +121,7 @@ const sidebar = [
       { label: "Global", link: "/docs/reference/global/" },
       { label: "Config", link: "/docs/reference/config/" },
       { label: "Secret", link: "/docs/component/secret/" },
+      { label: "Linkable", link: "/docs/component/linkable/" },
     ],
   },
   {
