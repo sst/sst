@@ -60,6 +60,9 @@ func (s *Multiplexer) draw() {
 	if selected != nil && selected.isScrolling() && (s.focused || !selected.killable) {
 		hotkeys["enter"] = "reset"
 	}
+	if selected.vt.HasSelection() {
+		hotkeys["enter"] = "copy"
+	}
 	hotkeys["ctrl-u/d"] = "scroll"
 	// sort hotkeys
 	keys := make([]string, 0, len(hotkeys))

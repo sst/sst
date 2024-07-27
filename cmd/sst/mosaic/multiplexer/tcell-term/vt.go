@@ -628,6 +628,17 @@ func (vt *VT) SelectEnd(x int, y int) {
 	vt.selection.endY = y
 }
 
+func (vt *VT) HasSelection() bool {
+	return vt.selection.endX != -1 && vt.selection.endY != -1
+}
+
+func (vt *VT) ClearSelection() {
+	vt.selection.startX = 0
+	vt.selection.startY = 0
+	vt.selection.endX = -1
+	vt.selection.endY = -1
+}
+
 func isCellSelected(x, y, startX, startY, endX, endY int) bool {
 	if endX < 0 || endY < 0 {
 		return false

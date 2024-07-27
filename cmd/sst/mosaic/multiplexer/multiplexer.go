@@ -50,6 +50,9 @@ func New(ctx context.Context) *Multiplexer {
 	result.main = views.NewViewPort(result.screen, 0, 0, 0, 0)
 	result.stack = views.NewBoxLayout(views.Vertical)
 	result.stack.SetView(result.root)
+	if os.Getenv("TMUX") != "" {
+		exec.Command("tmux", "set-option", "-p", "set-clipboard", "on").Run()
+	}
 	return result
 }
 
@@ -111,11 +114,8 @@ func (s *Multiplexer) Start() {
 					if evt.Buttons() == tcell.ButtonNone {
 						if s.dragging && selected != nil {
 							copied := selected.vt.Copy()
-							slog.Info(copied)
-							// copy to clipboard
-							// base64 encode copied
 							encoded := base64.StdEncoding.EncodeToString([]byte(copied))
-							fmt.Fprintf(os.Stderr, "\x1b]52;c;%s\x07", encoded)
+							fmt.Fprintf(os.Stdout, "\x1b]52;c;%s\x07", encoded)
 						}
 						s.dragging = false
 						return
@@ -223,6 +223,14 @@ func (s *Multiplexer) Start() {
 							return
 						}
 					case tcell.KeyEnter:
+						if selected != nil && selected.vt.HasSelection() {
+							copied := selected.vt.Copy()
+							encoded := base64.StdEncoding.EncodeToString([]byte(copied))
+							fmt.Fprintf(os.Stdout, "\x1b]52;c;%s\x07", encoded)
+							selected.vt.ClearSelection()
+							s.draw()
+							return
+						}
 						if selected != nil && selected.isScrolling() && (s.focused || !selected.killable) {
 							selected.scrollReset()
 							s.draw()

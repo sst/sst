@@ -22,7 +22,7 @@ func TransformError(err error) error {
 		provider.ErrLockExists:               "",
 		project.ErrVersionInvalid:            "The version range defined in the config is invalid",
 		provider.ErrCloudflareMissingAccount: "The Cloudflare Account ID was not able to be determined from this token. Make sure it has permissions to fetch account information or you can set the CLOUDFLARE_DEFAULT_ACCOUNT_ID environment variable to the account id you want to use.",
-		server.ErrServerNotFound:             "Starting from sst v0.1.32 `sst dev` can bring up all of the processes in your application in a single window. Simply run `sst dev` in the same directory as your `sst.config.ts`. If this is not clear check out the monorepo example here: https://github.com/sst/ion/tree/dev/examples/aws-monorepo\n   If you prefer running your processes in different terminal windows, you can start just the deploy process by running `sst dev --mode=basic` and then bring up your process with `sst dev -- <command>` in another terminal window.",
+		server.ErrServerNotFound:             "You are currently trying to run a frontend or some other process on its own - starting from sst v0.1.32 `sst dev` can bring up all of the processes in your application in a single window. Simply run `sst dev` in the same directory as your `sst.config.ts`. If this is not clear check out the monorepo example here: https://github.com/sst/ion/tree/dev/examples/aws-monorepo\n\n   If you prefer running your processes in different terminal windows, you can start just the deploy process by running `sst dev --mode=basic` and then bring up your process with `sst dev -- <command>` in another terminal window.",
 	}
 
 	readable := []error{
