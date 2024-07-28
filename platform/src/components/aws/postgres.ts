@@ -339,13 +339,16 @@ export class Postgres extends Component implements Link.Linkable {
     }
   }
 
-  private _dbSecret?: Output<secretsmanager.GetSecretVersionResult>;
+  private _dbSecret?: Output<secretsmanager.GetSecretVersionResult> | undefined;
   private get secret() {
-    if (this._dbSecret) return this._dbSecret;
-    this._dbSecret = secretsmanager.getSecretVersionOutput({
-      secretId: this.secretArn,
+    return this.secretArn.apply((val) => {
+      if (this._dbSecret) return this._dbSecret;
+      if (!val) return;
+      this._dbSecret = secretsmanager.getSecretVersionOutput({
+        secretId: val,
+      });
+      return this._dbSecret;
     });
-    return this._dbSecret;
   }
 
   /**
@@ -369,10 +372,15 @@ export class Postgres extends Component implements Link.Linkable {
 
   /** The password of the master user. */
   public get password() {
-    const parsed = jsonParse(
-      this.secret.secretString.apply((secret) => secret || "{}"),
-    ) as Output<{ username: string; password: string }>;
-    return parsed.password;
+    return this.cluster.masterPassword.apply((val) => {
+      if (val) return;
+      const parsed = jsonParse(
+        this.secret.apply((secret) =>
+          secret ? secret.secretString : output("{}"),
+        ),
+      ) as Output<{ username: string; password: string }>;
+      return parsed.password;
+    });
   }
 
   /**
