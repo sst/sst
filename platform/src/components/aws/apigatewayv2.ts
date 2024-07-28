@@ -216,7 +216,7 @@ export interface ApiGatewayV2Args {
     /**
      * Transform the CloudWatch LogGroup resource used for access logs.
      */
-    accessLog?: Transform<cloudwatch.LogGroupArgs>;
+    logGroup?: Transform<cloudwatch.LogGroupArgs>;
     /**
      * Transform the routes. This is called for every route that is added.
      *
@@ -600,7 +600,7 @@ export class ApiGatewayV2 extends Component implements Link.Linkable {
     function createLogGroup() {
       return new cloudwatch.LogGroup(
         ...transform(
-          args.transform?.accessLog,
+          args.transform?.logGroup,
           `${name}AccessLog`,
           {
             name: `/aws/vendedlogs/apis/${prefixName(64, name)}`,
@@ -759,11 +759,22 @@ export class ApiGatewayV2 extends Component implements Link.Linkable {
    * The underlying [resources](/docs/components/#nodes) this component creates.
    */
   public get nodes() {
+    const self = this;
     return {
       /**
-       * The Amazon API Gateway HTTP API
+       * The Amazon API Gateway HTTP API.
        */
       api: this.api,
+      /**
+       * The API Gateway HTTP API domain name.
+       */
+      get domainName() {
+        if (!self.apigDomain)
+          throw new Error(
+            `"nodes.domainName" is not available when a "domain" is configured.`,
+          );
+        return self.apigDomain;
+      },
       /**
        * The CloudWatch LogGroup for the access logs.
        */
