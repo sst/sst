@@ -1,8 +1,13 @@
-import { ComponentResourceOptions, output, Output } from "@pulumi/pulumi";
+import {
+  ComponentResourceOptions,
+  jsonParse,
+  output,
+  Output,
+} from "@pulumi/pulumi";
 import { Component, Transform, transform } from "../component";
 import { Link } from "../link";
 import { Input } from "../input.js";
-import { rds } from "@pulumi/aws";
+import { rds, secretsmanager } from "@pulumi/aws";
 import { permission } from "./permission";
 
 type ACU = `${number} ACU`;
@@ -334,6 +339,15 @@ export class Postgres extends Component implements Link.Linkable {
     }
   }
 
+  private _dbSecret?: Output<secretsmanager.GetSecretVersionResult>;
+  private get secret() {
+    if (this._dbSecret) return this._dbSecret;
+    this._dbSecret = secretsmanager.getSecretVersionOutput({
+      secretId: this.secretArn,
+    });
+    return this._dbSecret;
+  }
+
   /**
    * The ARN of the RDS Cluster.
    */
@@ -346,6 +360,19 @@ export class Postgres extends Component implements Link.Linkable {
    */
   public get secretArn() {
     return this.cluster.masterUserSecrets[0].secretArn;
+  }
+
+  /** The username of the master user. */
+  public get username() {
+    return this.cluster.masterUsername;
+  }
+
+  /** The password of the master user. */
+  public get password() {
+    const parsed = jsonParse(
+      this.secret.secretString.apply((secret) => secret || "{}"),
+    ) as Output<{ username: string; password: string }>;
+    return parsed.password;
   }
 
   /**
@@ -369,6 +396,10 @@ export class Postgres extends Component implements Link.Linkable {
         clusterArn: this.cluster.arn,
         secretArn: this.cluster.masterUserSecrets[0].secretArn,
         database: this.cluster.databaseName,
+        username: this.cluster.masterUsername,
+        password: this.password,
+        port: this.instance.port,
+        host: this.instance.endpoint,
       },
       include: [
         permission({
@@ -421,7 +452,11 @@ export class Postgres extends Component implements Link.Linkable {
         return instances.instanceIdentifiers[0];
       }),
     );
-    return new Postgres(name, { ref: true, cluster, instance } as PostgresArgs);
+    return new Postgres(name, {
+      ref: true,
+      cluster,
+      instance,
+    } as PostgresArgs);
   }
 }
 
