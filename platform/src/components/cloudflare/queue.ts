@@ -39,7 +39,7 @@ export class Queue extends Component implements Link.Linkable {
           args?.transform?.queue,
           `${name}Queue`,
           {
-            name,
+            name: "",
             accountId: sst.cloudflare.DEFAULT_ACCOUNT_ID,
           },
           { parent },

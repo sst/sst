@@ -69,7 +69,7 @@ export class D1 extends Component implements Link.Linkable {
           args?.transform?.database,
           `${name}Database`,
           {
-            name,
+            name: "",
             accountId: sst.cloudflare.DEFAULT_ACCOUNT_ID,
           },
           { parent },

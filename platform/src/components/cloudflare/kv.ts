@@ -67,7 +67,7 @@ export class Kv extends Component implements Link.Linkable {
           args?.transform?.namespace,
           `${name}Namespace`,
           {
-            title: name,
+            title: "",
             accountId: sst.cloudflare.DEFAULT_ACCOUNT_ID,
           },
           { parent },

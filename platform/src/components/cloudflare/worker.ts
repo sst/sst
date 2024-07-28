@@ -382,7 +382,7 @@ export class Worker extends Component implements Link.Linkable {
               args.transform?.worker,
               `${name}Script`,
               {
-                name,
+                name: "",
                 accountId: sst.cloudflare.DEFAULT_ACCOUNT_ID,
                 content: (await fs.readFile(handler)).toString(),
                 module: true,

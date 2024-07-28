@@ -71,7 +71,7 @@ export class Bucket extends Component implements Link.Linkable {
           args?.transform?.bucket,
           `${name}Bucket`,
           {
-            name,
+            name: "",
             accountId: sst.cloudflare.DEFAULT_ACCOUNT_ID,
           },
           { parent },
