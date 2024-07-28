@@ -14,7 +14,7 @@ export interface Definition<
    * }
    * ```
    */
-  properties: Record<string, any>;
+  properties: Properties;
   /**
    * Defining AWS permissions or Cloudflare bindings for the linkable resource.
    * @example
@@ -44,7 +44,10 @@ export interface Definition<
    * }
    * ```
    */
-  include: any[];
+  include?: {
+    type: string;
+    [key: string]: any;
+  }[];
 }
 
 /**
@@ -83,7 +86,7 @@ export class Linkable<T extends Record<string, any>>
     return output(this._name);
   }
 
-  public get properties(): Record<string, any> {
+  public get properties() {
     return this._definition.properties;
   }
 
@@ -129,8 +132,8 @@ export class Linkable<T extends Record<string, any>>
    * ```
    */
   public static wrap<Resource>(
-    cls: { new (...args: any[]): "RESOURCE_CLASS" },
-    cb: (resource: "RESOURCE_CLASS") => Definition,
+    cls: { new (...args: any[]): Resource },
+    cb: (resource: Resource) => Definition,
   ) {
     cls.prototype.getSSTLink = function () {
       return cb(this);

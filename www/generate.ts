@@ -1794,7 +1794,7 @@ function patchCode() {
       // replace generic <Resource>
       .replaceAll(`: Resource`, `: "RESOURCE_CLASS"`)
       // replace Definition.include
-      .replace(/include\?\: \{[^}]*\}/, `include: any`)
+      .replace(/include\?\: \{[^}]*\}/, `include?: any`)
   );
 }
 
